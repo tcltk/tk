@@ -476,7 +476,7 @@ GetRGBA(
  *----------------------------------------------------------------------
  */
 
-static Bool
+static bool
 SetCGColorComponents(
     SystemColorDatum *entry,
     unsigned long pixel,
@@ -506,47 +506,6 @@ SetCGColorComponents(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXInDarkMode --
- *
- *      Tests whether the given window's NSView has a DarkAqua Appearance.
- *
- * Results:
- *      Returns true if the NSView is in DarkMode, false if not.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Bool
-TkMacOSXInDarkMode(Tk_Window tkwin)
-{
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    if (@available(macOS 10.14, *)) {
-	TkWindow *winPtr = (TkWindow*) tkwin;
-	NSAppearanceName name;
-	NSView *view = nil;
-	if (winPtr && winPtr->privatePtr) {
-	    view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
-	}
-	if (view) {
-	    name = [[view effectiveAppearance] name];
-	} else {
-	    name = [[NSApp effectiveAppearance] name];
-	}
-	return (name == NSAppearanceNameDarkAqua);
-    }
-#else
-    (void) tkwin;
-#endif
-    return false;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkSetMacColor --
  *
  *	Sets the components of a CGColorRef from an XColor pixel value.  The
@@ -563,7 +522,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkSetMacColor(
     unsigned long pixel,	/* Pixel value to convert. */
     void *macColor)		/* CGColorRef to modify. */
@@ -572,9 +531,9 @@ TkSetMacColor(
     // seem to depend on appearance
     BOOL useDarkAppearance = NO;
 
-    return TkSetMacColor2(pixel, macColor, useDarkAppearance);
+    return TkSetMacColor2(pixel, (CGColorRef *)macColor, useDarkAppearance);
 }
-int
+bool
 TkSetMacColor2(
     unsigned long pixel,	/* Pixel value to convert. */
     CGColorRef *color,		/* CGColorRef to modify. */

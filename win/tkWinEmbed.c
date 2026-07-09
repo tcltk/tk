@@ -962,7 +962,7 @@ Tk_GetEmbeddedHWnd(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetEmbeddedMenuHWND --
+ * TkGetEmbeddedMenuHWND --
  *
  *	This function returns the embedded menu window id.
  *
@@ -977,7 +977,7 @@ Tk_GetEmbeddedHWnd(
  */
 
 HWND
-Tk_GetEmbeddedMenuHWND(
+TkGetEmbeddedMenuHWND(
     Tk_Window tkwin)
 {
     TkWindow *winPtr = (TkWindow*)tkwin;
@@ -1094,7 +1094,7 @@ EmbedWindowDeleted(
 
     prevPtr = NULL;
     containerPtr = tsdPtr->firstContainerPtr;
-    while (1) {
+    while (true) {
 	if (containerPtr == NULL) return;
 	if (containerPtr->embeddedPtr == winPtr) {
 	    containerPtr->embeddedHWnd = NULL;

@@ -171,9 +171,9 @@ MODULE_SCOPE int TtkGetOptionValue(
  * Helper routines for scrolling widgets (see scroll.c).
  */
 typedef struct {
-    int	first;		/* First visible item */
-    int	last;		/* Last visible item */
-    int	total;		/* Total #items */
+    Tcl_Size	first;		/* First visible item */
+    Tcl_Size	last;		/* Last visible item */
+    Tcl_Size	total;		/* Total #items */
     Tcl_Obj	*scrollCmdObj;	/* Widget option */
 } Scrollable;
 
@@ -186,8 +186,8 @@ MODULE_SCOPE int TtkScrollviewCommand(
     Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle);
 
 MODULE_SCOPE void TtkUpdateScrollInfo(ScrollHandle h);
-MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst, int updateScrollInfo);
-MODULE_SCOPE void TtkScrolled(ScrollHandle, int first, int last, int total);
+MODULE_SCOPE void TtkScrollTo(ScrollHandle, Tcl_Size newFirst, bool updateScrollInfo);
+MODULE_SCOPE void TtkScrolled(ScrollHandle, Tcl_Size first, Tcl_Size last, Tcl_Size total);
 MODULE_SCOPE void TtkScrollbarUpdateRequired(ScrollHandle);
 
 /*
@@ -228,10 +228,10 @@ MODULE_SCOPE Tcl_Obj *Ttk_NewTagSetObj(Ttk_TagSet);
 
 MODULE_SCOPE void Ttk_FreeTagSet(Ttk_TagSet);
 
-MODULE_SCOPE int Ttk_TagSetContains(Ttk_TagSet, Ttk_Tag tag);
-MODULE_SCOPE int Ttk_TagSetAdd(Ttk_TagSet, Ttk_Tag tag);
-MODULE_SCOPE int Ttk_TagSetAddSet(Ttk_TagSet, Ttk_TagSet);
-MODULE_SCOPE int Ttk_TagSetRemove(Ttk_TagSet, Ttk_Tag tag);
+MODULE_SCOPE bool Ttk_TagSetContains(Ttk_TagSet, Ttk_Tag tag);
+MODULE_SCOPE bool Ttk_TagSetAdd(Ttk_TagSet, Ttk_Tag tag);
+MODULE_SCOPE void Ttk_TagSetAddSet(Ttk_TagSet, Ttk_TagSet);
+MODULE_SCOPE bool Ttk_TagSetRemove(Ttk_TagSet, Ttk_Tag tag);
 
 MODULE_SCOPE void Ttk_TagSetDefaults(Ttk_TagTable, Ttk_Style, void *);
 MODULE_SCOPE void Ttk_TagSetValues(Ttk_TagTable, Ttk_TagSet, void *record);

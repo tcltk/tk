@@ -39,7 +39,7 @@ static Tcl_ThreadDataKey dataKey;
  * Forward declarations of procedures used in this file.
  */
 
-static int		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
+static bool		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
 			    int state);
 static void		InitializeEvent(XEvent *eventPtr, TkWindow *winPtr,
 			    int type, int x, int y, int state, int detail);
@@ -76,7 +76,7 @@ InitializeEvent(
     eventPtr->xany.display = winPtr->display;
 
     eventPtr->xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
-    eventPtr->xcrossing.time = TkpGetMS();
+    eventPtr->xcrossing.time = TkGetMS();
     eventPtr->xcrossing.x_root = x;
     eventPtr->xcrossing.y_root = y;
 
@@ -110,7 +110,7 @@ InitializeEvent(
  *	enter/leave events that are needed.
  *
  * Results:
- *	Returns 1 if enter/leave events were generated.
+ *	Returns true if enter/leave events were generated.
  *
  * Side effects:
  *	May insert events into the Tk event queue.
@@ -118,13 +118,13 @@ InitializeEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 GenerateEnterLeave(
     TkWindow *winPtr,		/* Current Tk window (or NULL). */
     int x, int y,		/* Current mouse position in root coords. */
     int state)			/* State flags. */
 {
-    int crossed = 0;		/* 1 if mouse crossed a window boundary */
+    bool crossed = false;		/* true if mouse crossed a window boundary */
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     TkWindow *restrictWinPtr = tsdPtr->restrictWinPtr;
@@ -185,7 +185,7 @@ GenerateEnterLeave(
 
 		TkInOutEvents(&event, lastWinPtr, winPtr, LeaveNotify,
 			EnterNotify, TCL_QUEUE_TAIL);
-		crossed = 1;
+		crossed = true;
 	    }
 	}
 	tsdPtr->lastWinPtr = winPtr;
@@ -555,7 +555,7 @@ UpdateCursor(
 	}
 	winPtr = winPtr->parentPtr;
     }
-    TkpSetCursor((TkpCursor) cursor);
+    TkpSetCursor(cursor);
 }
 
 /*

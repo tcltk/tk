@@ -2,6 +2,21 @@
 # Diverse tests for ttk
 #
 
+# NOTES
+#
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -702,6 +717,90 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     # depending on platform, versions, improvements...)
     expr {[llength [ttk::style theme styles alt]] > 0}
 } -result 1
+
+# test for ttk::label
+# test for "-textangle" option for ttk::labels
+test ttk::label-1.1 {configuration option: "textangle" for ttk::label} -setup {
+    ttk::label .l -borderwidth 2 -font {Helvetica -12 bold}
+    pack .l
+    update
+} -body {
+    .l configure -textangle 10.5
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {10.5}
+test ttk::label-1.2 {configuration option: "textangle" for ttk::label} -setup {
+    ttk::label .l -borderwidth 2 -font {Helvetica -12 bold}
+    pack .l
+    update
+} -body {
+    .l configure -textangle 0 -text "Hello World"
+    update
+    set w [winfo reqwidth .l]
+    set h [winfo reqheight .l]
+    .l configure -textangle 90
+    update
+    expr {[winfo reqwidth .l] == $h && [winfo reqheight .l] == $w}
+} -cleanup {
+    destroy .l
+    unset w h
+} -result {1}
+test ttk::label-1.3 {configuration option: "textangle" for ttk::label} -setup {
+    ttk::label .l -borderwidth 2 -font {Helvetica -12 bold}
+    pack .l
+    update
+} -body {
+    .l configure -textangle 45 -text "Hello World"
+    update
+    expr {[winfo reqwidth .l] == [winfo reqheight .l]}
+} -cleanup {
+    destroy .l
+} -result {1}
+test ttk::label-1.4 {configuration option: "textangle" for ttk::label: no value} -body {
+    ttk::label .l -textangle
+}  -returnCodes error -result {wrong # args: should be "ttk::label pathName ?-option value ...?"}
+test ttk::label-1.5 {configuration option: "textangle" for ttk::label: invalid value} -body {
+    ttk::label .l -textangle A
+}  -returnCodes error -result {expected floating-point number or "" but got "A"}
+test ttk::label-1.6 {configuration option: "textangle" for ttk::label: out of range value} -body {
+    ttk::label .l -textangle -1
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {-1}
+test ttk::label-1.7 {configuration option: "textangle" for ttk::label: wrap around} -setup {
+    ttk::label .l -borderwidth 2 -font {Helvetica -12 bold} -text "Hello World"
+    pack .l
+    update
+} -body {
+    set w [winfo reqwidth .l]
+    set h [winfo reqheight .l]
+    .l configure -textangle 360
+    update
+    expr {[winfo reqwidth .l] == $w && [winfo reqheight .l] == $h}
+} -cleanup {
+    destroy .l
+    unset w h
+} -result {1}
+test ttk::label-1.8 {configuration option: "textangle" for ttk::label: minimum value} -body {
+    ttk::label .l -textangle 0
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {0}
+test ttk::label-1.9 {configuration option: "textangle" for ttk::label: maximum value} -body {
+    ttk::label .l -textangle 359.9
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {359.9}
+test ttk::label-1.10 {configuration option: "textangle" for ttk::label: default value} -body {
+    ttk::label .l
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {}
 
 #
 # TESTFILE CLEANUP

@@ -58,7 +58,7 @@ typedef struct TkDisplayFocusInfo {
     int forceFocus;		/* Associated with focusOnMapPtr: non-zero
 				 * means claim the focus even if some other
 				 * application currently has it. */
-    unsigned long focusSerial;	/* Serial number of last request this
+    size_t focusSerial;	/* Serial number of last request this
 				 * application made to change the focus on
 				 * this display. Used to identify stale focus
 				 * notifications coming from the X server. */
@@ -246,7 +246,7 @@ Tk_FocusObjCmd(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkFocusFilterEvent(
     TkWindow *winPtr,		/* Window that focus event is directed to. */
     XEvent *eventPtr)		/* FocusIn, FocusOut, Enter, or Leave
@@ -272,7 +272,7 @@ TkFocusFilterEvent(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkWindow *newFocusPtr;
-    int retValue, delta;
+    bool retValue;
 
     /*
      * If this was a generated event, just turn off the generated flag and
@@ -281,7 +281,7 @@ TkFocusFilterEvent(
 
     if ((eventPtr->xfocus.send_event & GENERATED_FOCUS_EVENT_MAGIC) == GENERATED_FOCUS_EVENT_MAGIC) {
 	eventPtr->xfocus.send_event &= ~GENERATED_FOCUS_EVENT_MAGIC;
-	return 1;
+	return true;
     }
 
     /*
@@ -295,7 +295,7 @@ TkFocusFilterEvent(
     if ((eventPtr->xfocus.mode == EMBEDDED_APP_WANTS_FOCUS)
 	    && (eventPtr->type == FocusIn)) {
 	TkSetFocusWin(winPtr, eventPtr->xfocus.detail);
-	return 0;
+	return false;
     }
 
     /*
@@ -304,7 +304,7 @@ TkFocusFilterEvent(
      * won't be processed) if it's a FocusIn or FocusOut event.
      */
 
-    retValue = 0;
+    retValue = false;
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
     if (eventPtr->type == FocusIn) {
 	/*
@@ -362,7 +362,7 @@ TkFocusFilterEvent(
 	    return retValue;
 	}
     } else {
-	retValue = 1;
+	retValue = true;
 	if (eventPtr->xcrossing.detail == NotifyInferior) {
 	    return retValue;
 	}
@@ -398,8 +398,7 @@ TkFocusFilterEvent(
      * Tk 4.2 there was always a nop marker generated.
      */
 
-    delta = eventPtr->xfocus.serial - displayFocusPtr->focusSerial;
-    if (delta < 0) {
+    if (eventPtr->xfocus.serial < displayFocusPtr->focusSerial) {
 	return retValue;
     }
 
@@ -542,7 +541,8 @@ TkSetFocusWin(
     ToplevelFocusInfo *tlFocusPtr;
     DisplayFocusInfo *displayFocusPtr;
     TkWindow *topLevelPtr;
-    int allMapped, serial;
+    size_t serial;
+    bool allMapped;
 
     /*
      * Don't set focus if window is already dead. [Bug 3574708]
@@ -575,7 +575,7 @@ TkSetFocusWin(
      * mapped.
      */
 
-    allMapped = 1;
+    allMapped = true;
     for (topLevelPtr = winPtr; ; topLevelPtr = topLevelPtr->parentPtr) {
 	if (topLevelPtr == NULL) {
 
@@ -587,7 +587,7 @@ TkSetFocusWin(
 	    return;
 	}
 	if (!(topLevelPtr->flags & TK_MAPPED)) {
-	    allMapped = 0;
+	    allMapped = false;
 	}
 	if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 	    break;

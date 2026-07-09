@@ -3,9 +3,9 @@ on:
   push:
     branches:
     - "main"
-    - "core-9-0-branch"
+    - "core-9-1-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 env:
@@ -19,11 +19,11 @@ jobs:
         working-directory: tk/macosx
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Check out Tcl 9.1
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: main
@@ -64,18 +64,18 @@ jobs:
           - 'mem'
         options:
           - '--enable-aqua'
-          - '--disable-aqua'
+          - '--disable-aqua --disable-bidi'
     defaults:
       run:
         shell: bash
         working-directory: tk/unix
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Check out Tcl 9.1
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: main

@@ -1,8 +1,7 @@
 # constraints.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It defines test constraints that are used by several test files in the
-# Tk test suite.
+# This file is sourced into each test file by "main.tcl". It defines test
+# constraints that are used by several test files in the Tk test suite.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,7 +11,7 @@ namespace import -force tcltest::testConstraint
 #
 # OPERATING SYSTEM
 #
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnCILinux [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 if {$tcl_platform(os) eq "Darwin"} {
     scan $tcl_platform(osVersion) "%d" macosVersion
 }
@@ -26,7 +25,6 @@ testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 testConstraint win32 [expr {[tk windowingsystem] eq "win32"}]
-testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint aquaOrWin32 [expr {
     ([tk windowingsystem] eq "win32") || [testConstraint aqua]
 }]
@@ -36,6 +34,12 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
+
+# This constraint is for running an aqua test only when user interaction is
+# possible, not on a CI runner.  Some actions, such as writing to the
+# filesystem, require that the user review and dismiss a system dialog, which
+# cannot be done on a CI runner.
+testConstraint notMacCI [expr {[testConstraint notAqua] || ![info exists ::env(CI)]}]
 
 # constraint based on whether our display is secure
 testutils import child
@@ -78,7 +82,6 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 }
 
 testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-testConstraint withoutXft [expr {![testConstraint withXft]}]
 unset fs
 
 # Expected results of some tests on Linux rely on availability of the "times"
@@ -153,7 +156,6 @@ testConstraint defaultPseudocolor8 [expr {
 #
 # VARIOUS
 #
-testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
     [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])

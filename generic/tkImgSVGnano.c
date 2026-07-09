@@ -77,7 +77,7 @@ static int		RasterizeSVG(Tcl_Interp *interp,
 static double		GetScaleFromParameters(NSVGimage *nsvgImage,
 			    RastOpts *ropts, int *widthPtr, int *heightPtr);
 static NSVGcache *	GetCachePtr(Tcl_Interp *interp);
-static int		CacheSVG(Tcl_Interp *interp, void *dataOrChan,
+static bool		CacheSVG(Tcl_Interp *interp, void *dataOrChan,
 			    Tcl_Obj *formatObj, NSVGimage *nsvgImage,
 			    RastOpts *ropts);
 static NSVGimage *	GetCachedSVG(Tcl_Interp *interp, void *dataOrChan,
@@ -390,7 +390,7 @@ ParseSVGWithOptions(
     double dpi = 96.0;
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;
-    int parameterScaleSeen = 0;
+    bool parameterScaleSeen = false;
     static const char *const fmtOptions[] = {
 	"-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
     };
@@ -460,10 +460,10 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"only one of -scale, -scaletoheight, -scaletowidth may be given", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
-	    parameterScaleSeen = 1;
+	    parameterScaleSeen = true;
 	    break;
 	default:
 	    break;
@@ -481,7 +481,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-dpi value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_DPI",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -494,7 +494,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scale value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -507,7 +507,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scaletoheight value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -520,7 +520,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scaletowidth value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -586,7 +586,7 @@ RasterizeSVG(
     if (rast == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "RASTERIZER_ERROR",
-		NULL);
+		(char *)NULL);
 	goto cleanAST;
     }
 
@@ -739,14 +739,14 @@ GetCachePtr(
  *	Add the given svg image informations to the cache for further usage.
  *
  * Results:
- *	Return 1 on success, and 0 otherwise.
+ *	Return true on success, and false otherwise.
  *
  * Side effects:
  *
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 CacheSVG(
     Tcl_Interp *interp,
     void *dataOrChan,
@@ -766,9 +766,9 @@ CacheSVG(
 	}
 	cachePtr->nsvgImage = nsvgImage;
 	cachePtr->ropts = *ropts;
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
 /*

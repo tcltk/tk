@@ -176,7 +176,7 @@ test systray-15 {systray icon creation, create one per interp} -setup {
 } -result {}
 
 test systray-16 {systray icon creation from a bitmap, on Linux and macOS only} -constraints {
-    nonwin
+    macOrUnix
 } -setup {
     set data1 {
 	#define foo_width 16
@@ -231,7 +231,7 @@ test sysnotify-2.1 {system notification stems from a systray icon on Windows} -c
     tk sysnotify {Alert} {This is an alert}
 } -returnCodes error -result {must create a system tray icon with the "tk systray" command first}
 test sysnotify-2.2 {system notification is not linked to any systray icon on X11 or aqua} -constraints {
-    nonwin
+    macOrUnix
 } -setup {
     catch {tk systray destroy}
 } -body {

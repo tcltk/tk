@@ -31,6 +31,7 @@ typedef struct {
     Tcl_Obj	*justifyObj;
     Tcl_Obj	*wrapLengthObj;
     Tcl_Obj	*embossedObj;
+    Tcl_Obj	*angleObj;
 
     /*
      * Computed resources:
@@ -39,7 +40,10 @@ typedef struct {
     Tk_TextLayout	textLayout;
     int		width;
     int		height;
-    int			embossed;
+    double	angle;
+    int		xoffset;
+    int		yoffset;
+    int		embossed;
 
 } TextElement;
 
@@ -47,6 +51,8 @@ typedef struct {
  * NB: Keep in sync with label element option table.
  */
 static const Ttk_ElementOptionSpec TextElementOptions[] = {
+    { "-textangle", TK_OPTION_DOUBLE,
+	offsetof(TextElement,angleObj), "0.0"},
     { "-text", TK_OPTION_STRING,
 	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
@@ -78,10 +84,25 @@ static int TextSetup(TextElement *text, Tk_Window tkwin)
     Tk_GetJustifyFromObj(NULL, text->justifyObj, &justify);
     Tk_GetPixelsFromObj(NULL, tkwin, text->wrapLengthObj, &wrapLength);
     Tcl_GetBooleanFromObj(NULL, text->embossedObj, &text->embossed);
+    if (TCL_OK != Tcl_GetDoubleFromObj(NULL, text->angleObj, &text->angle)) {
+
+	/*
+	 * Default value (empty string and invalid value (like "A")
+	 * Example: ttk::style configure TNotebook.Tab -textangle ""
+	 */
+
+	text->angle = 0;
+    }
+    text->xoffset = 0.0;
+    text->yoffset = 0.0;
 
     text->textLayout = Tk_ComputeTextLayout(
 	    text->tkfont, string, -1/*numChars*/, wrapLength, justify,
 	    0/*flags*/, &text->width, &text->height);
+    if (text->angle != 0.0) {
+	TkAdjustAngledTextLayout(text->angle, &text->width, &text->height,
+		&text->xoffset, &text->yoffset);
+    }
 
     return 1;
 }
@@ -131,7 +152,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
-    TkRegion clipRegion = NULL;
+    Region clipRegion = NULL;
 
     gcValues.font = Tk_FontId(text->tkfont);
     gcValues.foreground = color->pixel;
@@ -151,25 +172,39 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     if (b.width < text->width || b.height < text->height) {
 	XRectangle rect;
 
-	clipRegion = TkCreateRegion();
+	clipRegion = XCreateRegion();
 	rect.x = b.x;
 	rect.y = b.y;
 	rect.width = b.width + (text->embossed ? 1 : 0);
 	rect.height = b.height + (text->embossed ? 1 : 0);
-	TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
-	TkSetRegion(Tk_Display(tkwin), gc1, clipRegion);
-	TkSetRegion(Tk_Display(tkwin), gc2, clipRegion);
-#ifdef HAVE_XFT
+	XUnionRectWithRegion(&rect, clipRegion, clipRegion);
+	XSetRegion(Tk_Display(tkwin), gc1, clipRegion);
+	XSetRegion(Tk_Display(tkwin), gc2, clipRegion);
+#if defined(HAVE_XFT) || defined(HAVE_BIDI)
 	TkUnixSetXftClipRegion(clipRegion);
 #endif
     }
 
     if (text->embossed) {
-	Tk_DrawTextLayout(Tk_Display(tkwin), d, gc2,
-	    text->textLayout, b.x+1, b.y+1, 0/*firstChar*/, -1/*lastChar*/);
+	if (text->angle != 0.0) {
+	    TkDrawAngledTextLayout(Tk_Display(tkwin), d, gc2,
+		    text->textLayout, b.x+1 + text->xoffset,
+		    b.y+1 + text->yoffset, text->angle,
+		    0/*firstChar*/, -1/*lastChar*/);
+	} else {
+	    Tk_DrawTextLayout(Tk_Display(tkwin), d, gc2,
+		    text->textLayout, b.x+1, b.y+1, 0/*firstChar*/, -1/*lastChar*/);
+	}
     }
-    Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
-	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
+    if (text->angle != 0.0) {
+	TkDrawAngledTextLayout(Tk_Display(tkwin), d, gc1,
+		text->textLayout, b.x + text->xoffset,
+		b.y + text->yoffset, text->angle,
+		0/*firstChar*/, -1/*lastChar*/);
+    } else {
+	Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
+		text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
+    }
 
     if (text->underlineObj != NULL) {
 	TkGetIntForIndex(text->underlineObj, TCL_INDEX_NONE, 0, &underline);
@@ -180,21 +215,33 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	}
 	if (underline != INT_MIN) {
 	    if (text->embossed) {
-		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
-			text->textLayout, b.x+1, b.y+1, underline);
+		if (text->angle != 0.0) {
+		    TkUnderlineAngledTextLayout(Tk_Display(tkwin), d, gc2,
+			    text->textLayout, b.x+1 + text->xoffset,
+			    b.y+1 + text->yoffset, text->angle, underline);
+		} else {
+		    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
+			    text->textLayout, b.x+1, b.y+1, underline);
+		}
 	    }
-	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc1,
-		    text->textLayout, b.x, b.y, underline);
+	    if (text->angle != 0.0) {
+		TkUnderlineAngledTextLayout(Tk_Display(tkwin), d, gc1,
+			text->textLayout, b.x + text->xoffset,
+			b.y + text->yoffset, text->angle, underline);
+	    } else {
+		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc1,
+			text->textLayout, b.x, b.y, underline);
+	    }
 	}
     }
 
     if (clipRegion != NULL) {
-#ifdef HAVE_XFT
+#if defined(HAVE_XFT) || defined(HAVE_BIDI)
 	TkUnixSetXftClipRegion(NULL);
 #endif
 	XSetClipMask(Tk_Display(tkwin), gc1, None);
 	XSetClipMask(Tk_Display(tkwin), gc2, None);
-	TkDestroyRegion(clipRegion);
+	XDestroyRegion(clipRegion);
     }
     Tk_FreeGC(Tk_Display(tkwin), gc1);
     Tk_FreeGC(Tk_Display(tkwin), gc2);
@@ -204,6 +251,7 @@ static void TextElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -266,6 +314,7 @@ static void cTextElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -427,6 +476,7 @@ static void ImageElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -521,6 +571,8 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     /* Text element part:
      * NB: Keep in sync with TextElementOptions.
      */
+    { "-textangle", TK_OPTION_DOUBLE,
+	offsetof(LabelElement,text.angleObj), "0.0"},
     { "-text", TK_OPTION_STRING,
 	offsetof(LabelElement,text.textObj), "" },
     { "-font", TK_OPTION_FONT,
@@ -639,6 +691,7 @@ static void LabelElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))

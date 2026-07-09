@@ -195,6 +195,9 @@ Must be one of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 \fBLeft\fR means that the lines' left edges all line up, \fBcenter\fR
 means that the lines' centers are aligned, and \fBright\fR means
 that the lines' right edges line up.
+.OP \-locale locale Locale
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .OP \-orient orient Orient
 For widgets that can lay themselves out with either a horizontal
 or vertical orientation, such as scrollbars, this option specifies
@@ -300,6 +303,12 @@ redefine the keyboard traversal scripts.
 Specifies a string to be displayed inside the widget.  The way in which
 the string is displayed depends on the particular widget and may be
 determined by other options, such as \fB\-anchor\fR or \fB\-justify\fR.
+.OP \-textangle textangle Angle
+Tells how many degrees to rotate the text anticlockwise
+about the positioning point for the text; it may have any floating-point value
+from 0.0 to 360.0. For example, if the option value is \fB90\fR, then the
+text will be drawn vertically from bottom to top.
+This option defaults to \fB0.0\fR.
 .OP \-textvariable textVariable Variable
 Specifies the name of a global variable.  The value of the variable is a text
 string to be displayed inside the widget;  if the variable value changes

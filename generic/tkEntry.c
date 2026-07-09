@@ -87,7 +87,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
-	offsetof(Entry, exportSelection), 0, 0, 0},
+	offsetof(Entry, exportSelection), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -122,6 +122,8 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
+	"C", TCL_INDEX_NONE, offsetof(Entry, locale), 0, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	DEF_ENTRY_PLACEHOLDER, offsetof(Entry, placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -225,7 +227,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
-	offsetof(Entry, exportSelection), 0, 0, 0},
+	offsetof(Entry, exportSelection), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -266,6 +268,8 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
+	"C", TCL_INDEX_NONE, offsetof(Entry, locale), 0, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	DEF_ENTRY_PLACEHOLDER, offsetof(Entry, placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -317,7 +321,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
-	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), 0, 0, 0},
+	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_ENTRY_SCROLL_COMMAND, offsetof(Entry, scrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -534,7 +538,7 @@ Tk_EntryObjCmd(
     entryPtr->selectLast	= TCL_INDEX_NONE;
 
     entryPtr->cursor		= NULL;
-    entryPtr->exportSelection	= 1;
+    entryPtr->exportSelection	= true;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
@@ -783,7 +787,7 @@ EntryWidgetObjCmd(
 		    "bad scan option \"%s\": must be dragto or mark",
 		    minorCmd));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
-		    minorCmd, NULL);
+		    minorCmd, (char *)NULL);
 	    goto error;
 	}
 	break;
@@ -968,7 +972,7 @@ EntryWidgetObjCmd(
 	    switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction,
 		    &count)) {
 	    case TK_SCROLL_MOVETO:
-		index = (int) ((fraction * entryPtr->numChars) + 0.5);
+		index = (int) ((fraction * (double)entryPtr->numChars) + 0.5);
 		break;
 	    case TK_SCROLL_PAGES: {
 		int charsPerPage;
@@ -1114,7 +1118,7 @@ ConfigureEntry(
     Tcl_Obj *oldValues = NULL;
     Tcl_Obj *oldFormat = NULL;
     int error;
-    int oldExport = 0;
+    bool oldExport = false;
     int valuesChanged = 0;
     double oldFrom = 0.0;
     double oldTo = 0.0;
@@ -1140,7 +1144,7 @@ ConfigureEntry(
      * value.
      */
 
-    oldExport = (entryPtr->exportSelection) && (!Tcl_IsSafe(entryPtr->interp));
+    oldExport = (entryPtr->exportSelection) && !Tcl_IsSafe(entryPtr->interp);
     if (entryPtr->type == TK_SPINBOX) {
 	oldValues = sbPtr->valueObj;
 	oldFormat = sbPtr->reqFormatObj;
@@ -1221,7 +1225,7 @@ ConfigureEntry(
 			    "bad spinbox format specifier \"%s\"",
 			    Tcl_GetString(sbPtr->reqFormatObj)));
 		    Tcl_SetErrorCode(interp, "TK", "SPINBOX", "FORMAT_SANITY",
-			    NULL);
+			    (char *)NULL);
 		    continue;
 		}
 		if ((sscanf(fmt, "%%%d.%d%[f]", &min, &max, fbuf) == 3)
@@ -1385,7 +1389,8 @@ ConfigureEntry(
 	    } else if (dvalue < sbPtr->fromValue) {
 		dvalue = sbPtr->fromValue;
 	    }
-	    snprintf(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat, dvalue);
+	    TkFormatDouble(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat,
+		    dvalue);
 
 	    /*
 	     * No check for error return here as well, because any possible
@@ -1881,22 +1886,22 @@ DisplayEntry(
 		 * behavior.
 		 */
 
-		points[0].x = startx + offset;
-		points[0].y = starty + (offset ? 0 : -1);
-		points[1].x = startx + xWidth/2 + offset;
-		points[1].y = starty - tHeight + (offset ? 0 : -1);
-		points[2].x = startx + xWidth + offset;
+		points[0].x = (short)(startx + offset);
+		points[0].y = (short)(starty + (offset ? 0 : -1));
+		points[1].x = (short)(startx + xWidth/2 + offset);
+		points[1].y = (short)(starty - tHeight + (offset ? 0 : -1));
+		points[2].x = (short)(startx + xWidth + offset);
 		points[2].y = points[0].y;
 		XFillPolygon(entryPtr->display, pixmap, entryPtr->textGC,
 			points, 3, Convex, CoordModeOrigin);
 
 		starty = inset + height + pad + space;
 		offset = (sbPtr->selElement == SEL_BUTTONDOWN);
-		points[0].x = startx + 1 + offset;
-		points[0].y = starty + (offset ? 1 : 0);
-		points[1].x = startx + xWidth/2 + offset;
-		points[1].y = starty + tHeight + (offset ? 0 : -1);
-		points[2].x = startx - 1 + xWidth + offset;
+		points[0].x = (short)(startx + 1 + offset);
+		points[0].y = (short)(starty + (offset ? 1 : 0));
+		points[1].x = (short)(startx + xWidth/2 + offset);
+		points[1].y = (short)(starty + tHeight + (offset ? 0 : -1));
+		points[2].x = (short)(startx - 1 + xWidth + offset);
 		points[2].y = points[0].y;
 		XFillPolygon(entryPtr->display, pixmap, entryPtr->textGC,
 			points, 3, Convex, CoordModeOrigin);
@@ -1972,8 +1977,8 @@ EntryComputeGeometry(
     Entry *entryPtr)		/* Widget record for entry. */
 {
     int totalLength, overflow, rightX;
-    Tcl_Size maxOffScreen;
-    int height, width, i;
+    Tcl_Size i, maxOffScreen;
+    int height, width;
     Tk_FontMetrics fm;
     char *p;
 
@@ -1991,7 +1996,7 @@ EntryComputeGeometry(
     if (entryPtr->showCharObj != NULL) {
 	int ch;
 	char buf[6];
-	int size;
+	Tcl_Size size;
 
 	/*
 	 * Normalize the special character so we can safely duplicate it in
@@ -2021,7 +2026,7 @@ EntryComputeGeometry(
 
     Tk_FreeTextLayout(entryPtr->placeholderLayout);
     if (entryPtr->placeholderObj) {
-	entryPtr->placeholderChars = strlen(Tcl_GetString(entryPtr->placeholderObj));
+	entryPtr->placeholderChars = Tcl_GetCharLength(entryPtr->placeholderObj);
 	entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
 		Tcl_GetString(entryPtr->placeholderObj), entryPtr->placeholderChars, 0,
 		entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, NULL);
@@ -2258,14 +2263,14 @@ DeleteChars(
     Tcl_Size index,			/* Index of first character to delete. */
     Tcl_Size count)			/* How many characters to delete. */
 {
-    int byteIndex, byteCount, newByteCount;
+    Tcl_Size byteIndex, byteCount, newByteCount;
     const char *string;
     char *newStr, *toDelete;
 
     if (index + count > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
     }
-    if ((int)count <= 0) {
+    if (count <= 0) {
 	return TCL_OK;
     }
 
@@ -2448,7 +2453,8 @@ EntrySetValue(
     const char *value)		/* New text to display in entry. */
 {
     const char *oldSource;
-    int valueLen, malloced = 0;
+    size_t valueLen;
+    bool malloced = false;
 
     if (strcmp(value, entryPtr->string) == 0) {
 	return;
@@ -2468,7 +2474,7 @@ EntrySetValue(
 
 	strcpy(tmp, value);
 	value = tmp;
-	malloced = 1;
+	malloced = true;
 
 	entryPtr->flags |= VALIDATE_VAR;
 	(void) EntryValidateChange(entryPtr, NULL, value, TCL_INDEX_NONE,
@@ -2712,7 +2718,7 @@ GetEntryIndex(
 		    Tk_PathName(entryPtr->tkwin)));
 	    Tcl_SetErrorCode(interp, "TK",
 		    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
-		    "NO_SELECTION", NULL);
+		    "NO_SELECTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (length < 5) {
@@ -2763,7 +2769,7 @@ GetEntryIndex(
 		    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
 	    Tcl_SetErrorCode(interp, "TK",
 		    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
-		    "BAD_INDEX", NULL);
+		    "BAD_INDEX", (char *)NULL);
 	    return TCL_ERROR;
     }
     return TCL_OK;
@@ -3051,7 +3057,7 @@ EntryVisibleRange(
     double *lastPtr)		/* Return position of char just after last
 				 * visible one. */
 {
-    int charsInWindow;
+    Tcl_Size charsInWindow;
 
     if (entryPtr->numChars == 0) {
 	*firstPtr = 0.0;
@@ -3060,7 +3066,7 @@ EntryVisibleRange(
 	charsInWindow = Tk_PointToChar(entryPtr->textLayout,
 		Tk_Width(entryPtr->tkwin) - entryPtr->inset
 		- entryPtr->xWidth - entryPtr->layoutX - 1, 0);
-	if (charsInWindow < (int)entryPtr->numChars) {
+	if (charsInWindow < entryPtr->numChars) {
 	    charsInWindow++;
 	}
 	charsInWindow -= entryPtr->leftIndex;
@@ -3068,9 +3074,9 @@ EntryVisibleRange(
 	    charsInWindow = 1;
 	}
 
-	*firstPtr = (double) entryPtr->leftIndex / entryPtr->numChars;
+	*firstPtr = (double) entryPtr->leftIndex / (double) entryPtr->numChars;
 	*lastPtr = (double) (entryPtr->leftIndex + charsInWindow)
-		/ entryPtr->numChars;
+		/ (double) entryPtr->numChars;
     }
 }
 
@@ -3545,14 +3551,14 @@ ExpandPercents(
      Tcl_DString *dsPtr)	/* Dynamic string in which to append new
 				 * command. */
 {
-    int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
+    Tcl_Size length, spaceNeeded;
+    int cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
-    int number, length;
+    int number, ch;
     const char *string;
-    int ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
-    while (1) {
+    while (true) {
 	if (*before == '\0') {
 	    break;
 	}
@@ -3753,7 +3759,7 @@ Tk_SpinboxObjCmd(
     entryPtr->selectLast	= TCL_INDEX_NONE;
 
     entryPtr->cursor		= NULL;
-    entryPtr->exportSelection	= 1;
+    entryPtr->exportSelection	= true;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
@@ -4058,7 +4064,7 @@ SpinboxWidgetObjCmd(
 		    "bad scan option \"%s\": must be dragto or mark",
 		    minorCmd));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
-		    minorCmd, NULL);
+		    minorCmd, (char *)NULL);
 	    goto error;
 	}
 	break;
@@ -4283,7 +4289,7 @@ SpinboxWidgetObjCmd(
 	    switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction,
 		    &count)) {
 	    case TK_SCROLL_MOVETO:
-		index = ((fraction * entryPtr->numChars) + 0.5);
+		index = (Tcl_Size)((fraction * (double)entryPtr->numChars) + 0.5);
 		break;
 	    case TK_SCROLL_PAGES: {
 		int charsPerPage;
@@ -4502,7 +4508,8 @@ SpinboxInvoke(
 		    dvalue = sbPtr->toValue;
 		}
 	    }
-	    snprintf(sbPtr->formatBuf, TCL_DOUBLE_SPACE, sbPtr->valueFormat, dvalue);
+	    TkFormatDouble(sbPtr->formatBuf, TCL_DOUBLE_SPACE, sbPtr->valueFormat,
+		    dvalue);
 	    code = EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }

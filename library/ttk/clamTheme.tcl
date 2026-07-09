@@ -10,6 +10,7 @@ namespace eval ttk::theme::clam {
     array set colors {
 	-disabledfg		"#999999"
 	-frame			"#dcdad5"
+	-foreground		"#000000"
 	-window			"#ffffff"
 	-dark			"#cfcdc8"
 	-darker			"#bab5ab"
@@ -26,7 +27,7 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure "." \
 	    -background $colors(-frame) \
-	    -foreground black \
+	    -foreground $colors(-foreground) \
 	    -bordercolor $colors(-darkest) \
 	    -darkcolor $colors(-dark) \
 	    -lightcolor $colors(-lighter) \
@@ -95,18 +96,21 @@ namespace eval ttk::theme::clam {
 		    disabled		  $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p -arrowpadding 2.25p -padding 3.75p \
-	    -relief raised
+	# N.B.: The values of the -arrowsize option for the styles
+	# TMenubutton, TCombobox, TSpinbox, and TScrollbar must be specified
+	# in pixels, because they are used in SVG images for chevrons.
 
-	ttk::style configure TEntry -padding 1 -insertwidth 1
+	ttk::style configure TMenubutton -width -11 -padding 3.75p \
+	    -arrowsize 5 -arrowpadding 2.25p -relief raised
+
+	ttk::style configure TEntry -padding 0.75p -insertwidth 0.75p
 	ttk::style map TEntry \
 	    -background [list readonly $colors(-frame)] \
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
-	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
-	    -arrowsize 10.5p
+	ttk::style configure TCombobox -padding 0.75p -insertwidth 0.75p \
+	    -arrowsize 4 -arrowpadding 2.25p
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -118,33 +122,11 @@ namespace eval ttk::theme::clam {
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
+	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
+	    -arrowsize 3 -arrowpadding {2.25p 1.5p} -insertwidth 0.75p
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
-	    -bordercolor [list focus $colors(-selectbg)]
-
-	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
-	ttk::style map TNotebook.Tab \
-	    -padding {selected {4.5p 3p 4.5p 1.5p}} \
-	    -background [list selected $colors(-frame) {} $colors(-darker)] \
-	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
-
-	# Treeview:
-	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised -padding 2.25p
-	ttk::style configure Item -indicatorsize 9p \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
-	ttk::style configure Treeview -background $colors(-window) \
-	    -stripedbackground $colors(-lighter) -indent 15p
-	ttk::setTreeviewRowHeight
-	ttk::style configure Treeview.Separator \
-	    -background $colors(-lighter)
-	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TLabelframe \
@@ -152,13 +134,55 @@ namespace eval ttk::theme::clam {
 	    -borderwidth 2 -relief raised
 
 	ttk::style configure TScrollbar -gripsize 7.5p \
-	    -arrowsize 10.5p -width 10.5p
+	    -arrowpadding 2.25p -arrowsize 4
 
 	ttk::style configure TScale -gripsize 7.5p \
 	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure TProgressbar -background $colors(-frame) \
 	    -arrowsize 10.5p -sliderlength 22.5p
+
+	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
+	ttk::style map TNotebook.Tab \
+	    -padding {selected {4.5p 3p 4.5p 1.5p}} \
+	    -background [list selected $colors(-frame) {} $colors(-darker)] \
+	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
+
+	# N.B.: The values of the -indicatorsize option for the
+	# treeview-related styles Heading and Item must be specified
+	# in pixels, because they are used in SVG images for chevrons.
+
+	# Treeview
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised -padding 2.25p \
+	    -indicatorsize 4 -indicatormargin {3p 1.5p 1.5p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Item -indicatorsize 4 \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item -indicatorsize 6p  \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
+	ttk::style map CheckTreeview.Item \
+	    -indicatorbackground [list disabled $colors(-frame)] \
+	    -indicatorforeground [list disabled $colors(-disabledfg)]
+	ttk::style configure Treeview.Separator \
+	    -background $colors(-lighter)
+	ttk::style configure Treeview \
+	    -background $colors(-window) \
+	    -stripedbackground $colors(-lighter) -indent 15p
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
+	ttk::style map Treeview \
+	    -background [list	disabled $colors(-frame) \
+				background $colors(-darkest) \
+				selected $colors(-selectbg) \
+				active $colors(-lighter)] \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-selectfg) \
+				selected $colors(-selectfg) \
+				active $colors(-foreground)] \
+	    -bordercolor [list	focus $colors(-selectbg)]
 
 	ttk::style configure Sash -sashthickness 4.5p -gripsize 15p
     }

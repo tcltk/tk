@@ -533,7 +533,7 @@ DisplayFileProc(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkUnixDoOneXEvent(
     Tcl_Time *timePtr)		/* Specifies the absolute time when the call
 				 * should time out. */
@@ -550,7 +550,7 @@ TkUnixDoOneXEvent(
      */
 
     if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
-	return 1;
+	return true;
     }
 
     /*
@@ -625,7 +625,7 @@ TkUnixDoOneXEvent(
 	}
     }
     if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
-	return 1;
+	return true;
     }
 
     /*
@@ -636,7 +636,7 @@ TkUnixDoOneXEvent(
 	Tcl_GetTime(&now);
 	if ((now.sec > timePtr->sec) || ((now.sec == timePtr->sec)
 		&& (now.usec > timePtr->usec))) {
-	    return 0;
+	    return false;
 	}
     }
 
@@ -645,7 +645,7 @@ TkUnixDoOneXEvent(
      * though we dealt with it. (JYL&SS)
      */
 
-    return 1;
+    return true;
 }
 
 /*

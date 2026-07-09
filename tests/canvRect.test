@@ -197,7 +197,7 @@ test canvRect-4.4 {ConfigureRectOval procedure} -body {
 
 # I can't come up with any good tests for DeleteRectOval.
 
-test canvRect-5.1.1 {ComputeRectOvalBbox procedure} -constraints nonwin -body {
+test canvRect-5.1.1 {ComputeRectOvalBbox procedure} -constraints macOrUnix -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 20 15 10 5
     .c bbox x

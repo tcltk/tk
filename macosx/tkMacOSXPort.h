@@ -43,12 +43,6 @@
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xfuncproto.h>
-#include <X11/Xutil.h>
 
 /*
  * The following macro defines the type of the mask arguments to
@@ -118,7 +112,7 @@
  * The following functions are not used on the Mac, so we stub them out.
  */
 
-#define TkpCmapStressed(tkwin,colormap) (0)
+#define TkpCmapStressed(tkwin,colormap) (false)
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)

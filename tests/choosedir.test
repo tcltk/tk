@@ -29,7 +29,7 @@ testutils import dialog
 #
 
 proc EnterDirsByKey {parent dirs} {
-    if {$parent == "."} {
+    if {$parent eq "."} {
 	set w .__tk_choosedir
     } else {
 	set w $parent.__tk_choosedir

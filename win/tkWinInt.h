@@ -139,6 +139,13 @@ MODULE_SCOPE const int tkpWinBltModes[];
 #define TK_3D_DARK2 TK_3D_DARK_GC+2
 
 /*
+ * Defines for tkTextDisp.c and tkFont.c
+ */
+
+#define TK_LAYOUT_WITH_BASE_CHUNKS	1
+#define TK_DRAW_IN_CONTEXT		1
+
+/*
  * Internal functions used by more than one source file.
  */
 
@@ -167,13 +174,25 @@ MODULE_SCOPE HICON TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
 
 MODULE_SCOPE void TkWinDisplayChanged(Display *display);
 MODULE_SCOPE void TkWinCleanupContainerList(void);
+MODULE_SCOPE LRESULT TkWinEmbeddedEventProc(HWND, UINT, WPARAM, LPARAM);
+MODULE_SCOPE unsigned int TkWinGetModifierState(void);
+MODULE_SCOPE HPALETTE TkWinGetSystemPalette(void);
+MODULE_SCOPE int TkWinIndexOfColor(XColor *colorPtr);
+MODULE_SCOPE HWND TkWinGetWrapperWindow(Tk_Window tkwin);
+MODULE_SCOPE HPALETTE TkWinSelectPalette(HDC, Colormap);
+
 
 /*
- * Used by tkWinWm.c for embedded menu handling. May become public.
+ * Used by tkWinWm.c for embedded menu handling.
  */
 
-MODULE_SCOPE HWND Tk_GetMenuHWND(Tk_Window tkwin);
-MODULE_SCOPE HWND Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
+MODULE_SCOPE HWND TkGetMenuHWND(Tk_Window tkwin);
+MODULE_SCOPE HWND TkGetEmbeddedMenuHWND(Tk_Window tkwin);
+MODULE_SCOPE void TkWinCancelMouseTimer(void);
+MODULE_SCOPE int TkWinHandleMenuEvent(HWND *, UINT *, WPARAM *, LPARAM *, LRESULT *);
+MODULE_SCOPE void TkWinSetMenu(Tk_Window, HMENU);
+MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const char *);
+
 
 /*
  * The following allows us to cache these encoding for multiple functions.

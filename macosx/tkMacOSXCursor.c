@@ -532,11 +532,11 @@ TkMacOSXInstallCursor(
 
 void
 TkpSetCursor(
-    TkpCursor cursor)
+    Cursor cursor)
 {
-    int cursorChanged = 1;
+    bool cursorChanged = true;
 
-    if (cursor == NULL) {
+    if (cursor == None) {
 	/*
 	 * This is a little tricky. We can't really tell whether
 	 * gCurrentCursor is NULL because it was NULL last time around or
@@ -548,7 +548,7 @@ TkpSetCursor(
 	gCurrentCursor = NULL;
     } else {
 	if (gCurrentCursor == (TkMacOSXCursor *) cursor) {
-	    cursorChanged = 0;
+	    cursorChanged = false;
 	}
 	gCurrentCursor = (TkMacOSXCursor *) cursor;
     }

@@ -66,7 +66,7 @@ typedef struct {
 
     int scanMarkX;		/* X-position at which scan started (e.g.
 				 * button was pressed here). */
-    int scanMarkIndex;		/* Character index of character that was at
+    Tcl_Size scanMarkIndex;		/* Character index of character that was at
 				 * left of window when scan started. */
 
     /*
@@ -83,7 +83,7 @@ typedef struct {
 				 * background. */
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    int exportSelection;	/* Non-zero means tie internal entry selection
+    bool exportSelection;	/* True means tie internal entry selection
 				 * to X selection. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Text color in normal mode. */
@@ -181,8 +181,9 @@ typedef struct {
     XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
     GC placeholderGC;		/* For drawing placeholder text. */
     int placeholderX;		/* Origin for layout. */
-    int placeholderLeftIndex;	/* Character index of left-most character
+    Tcl_Size placeholderLeftIndex;	/* Character index of left-most character
 				 * visible in window. */
+    char locale[8];	/* locale */
 } Entry;
 
 /*
@@ -212,7 +213,7 @@ typedef struct {
      * Spinbox specific fields for use with configuration settings above.
      */
 
-    int wrap;			/* whether to wrap around when spinning */
+    bool wrap;			/* whether to wrap around when spinning */
 
     int selElement;		/* currently selected control */
     int curElement;		/* currently mouseover control */
@@ -237,8 +238,8 @@ typedef struct {
 
     Tcl_Obj *valueObj;		/* Values List. */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
-    int eIndex;			/* Holds the current index into elements */
-    int nElements;		/* Holds the current count of elements */
+    Tcl_Size eIndex;			/* Holds the current index into elements */
+    Tcl_Size nElements;		/* Holds the current count of elements */
 } Spinbox;
 
 /*
@@ -295,6 +296,8 @@ enum state {
 enum selelement {
     SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NONE, SEL_NULL, SEL_ENTRY
 };
+
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
 
 /*
  * Declaration of functions used in the implementation of the native side of

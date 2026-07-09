@@ -71,7 +71,7 @@ This cannot be changed, setting the [encoding system] has no effect.
 .PP
 The \fIpriority\fR arguments to the \fBoption\fR command are
 normally specified symbolically using one of the following values:
-.IP \fBwidgetDefault\fR3
+.IP \fBwidgetDefault\fR
 Level 20.  Used for default values hard-coded into widgets.
 .IP \fBstartupFile\fR
 Level 40.  Used for options specified in application-specific

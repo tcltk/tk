@@ -316,7 +316,7 @@ FindClosestColor(
      * something succeeds.
      */
 
-    while (1) {
+    while (true) {
 	if (stressPtr->numColors == 0) {
 	    Tcl_Panic("FindClosestColor ran out of colors");
 	}
@@ -424,7 +424,7 @@ DeleteStressedCmap(
  */
 
 #undef TkpCmapStressed
-int
+bool
 TkpCmapStressed(
     Tk_Window tkwin,		/* Window that identifies the display
 				 * containing the colormap. */
@@ -435,10 +435,10 @@ TkpCmapStressed(
     for (stressPtr = ((TkWindow *) tkwin)->dispPtr->stressPtr;
 	    stressPtr != NULL; stressPtr = stressPtr->nextPtr) {
 	if (stressPtr->colormap == colormap) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 

@@ -4,8 +4,14 @@
     #ifndef _TKCONFIG
     #define _TKCONFIG
 
+/* Define if ATK and Atk-bridge are available */
+#undef HAVE_ATK
+
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
+
+/* Define to 1 if bidirectional text support is enabled */
+#undef HAVE_BIDI
 
 /* Defined when compiler supports casting to union type. */
 #undef HAVE_CAST_TO_UNION
@@ -24,6 +30,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the 'harfbuzz' library (-lharfbuzz). */
+#undef HAVE_LIBHARFBUZZ
 
 /* Define to 1 if you have the 'Xft' library (-lXft). */
 #undef HAVE_LIBXFT
@@ -90,6 +99,9 @@
 
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
+
+/* Have we turned on XRender (photo image compositing)? */
+#undef HAVE_XRENDER
 
 /* Is XScreenSaver available? */
 #undef HAVE_XSS

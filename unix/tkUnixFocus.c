@@ -81,7 +81,7 @@ TkpChangeFocus(
 	 */
 
 	XGetInputFocus(dispPtr->display, &window, &dummy);
-	while (1) {
+	while (true) {
 	    winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
 	    if ((winPtr2 != NULL) && (winPtr2->mainPtr == winPtr->mainPtr)) {
 		break;
@@ -92,7 +92,7 @@ TkpChangeFocus(
 	    XQueryTree(dispPtr->display, window, &root, &parent, &children,
 		    &numChildren);
 	    if (children != NULL) {
-		XFree((void *) children);
+		XFree(children);
 	    }
 	    if (parent == root) {
 		goto done;

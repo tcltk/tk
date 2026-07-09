@@ -35,6 +35,7 @@ static int		GenerateUpdates(
 			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
+static void		GenerateWMDestroyEvent(Tk_Window tkwin);
 
 #pragma mark TKApplication(TKWindowEvent)
 
@@ -293,11 +294,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	TkGenWMDestroyEvent((Tk_Window)winPtr);
+	GenerateWMDestroyEvent((Tk_Window)winPtr);
     }
 
     /*
-     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
+     * If necessary, GenerateWMDestroyEvent() handles [close]ing the window, so
      * can always return NO from -windowShouldClose: for a Tk window.
      */
 
@@ -307,6 +308,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 // Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
@@ -317,6 +321,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 // Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -525,38 +532,6 @@ static void RefocusGrabWindow(void *data) {
 @end
 
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWillDrawWidget --
- *
- *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. If not, it may be desirable
- *      for the display procedure to simply clear the REDRAW_PENDING flag
- *      and return.  The widget can be recorded in order to schedule a
- *      redraw, via an Expose event, from within drawRect.
- *
- *      This is also needed for some tests, especially of the Text widget,
- *      which record data in a global Tcl variable and assume that display
- *      procedures will be run in a predictable sequence as Tcl idle tasks.
- *
- * Results:
- *      True if called from the drawRect method of a TKContentView with
- *      tkwin NULL or pointing to a widget in the current focusView.
- *
- * Side effects:
- *	Currently none.  One day the tkwin parameter may be recorded to
- *      handle redrawing the widget later.
- *
- *----------------------------------------------------------------------
- */
-// This stub is no longer used, but is expected by the stub mechanism.
-int
-TkpWillDrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-    return false;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -860,7 +835,7 @@ TkGenWMConfigureEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenWMDestroyEvent --
+ * GenerateWMDestroyEvent --
  *
  *	Generate a WM Destroy event for Tk.
  *
@@ -874,7 +849,7 @@ TkGenWMConfigureEvent(
  */
 
 void
-TkGenWMDestroyEvent(
+GenerateWMDestroyEvent(
     Tk_Window tkwin)
 {
     XEvent event;
@@ -1216,9 +1191,9 @@ ExposeRestrictProc(
 /*
  * In macOS 10.14 and later this method is called when a user changes between
  * light and dark mode or changes the accent color. The implementation
- * generates two virtual events.  The first is either <<LightAqua>> or
- * <<DarkAqua>>, depending on the view's current effective appearance.  The
- * second is <<AppearnceChanged>> and has a data string describing the
+ * generates two virtual events.  The first is either <<LightAppearance>> or
+ * <<DarkAppearance>>, depending on the view's current effective appearance.
+ * The second is <<AppearnceChanged>> and has a data string describing the
  * effective appearance of the view and the current accent and highlight
  * colors.
  */
@@ -1245,11 +1220,17 @@ static const char *const accentNames[] = {
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     static const char *defaultColor = NULL;
+    const char *newAppearance;
 
-    if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
+    if (effectiveAppearanceName == NSAppearanceNameDarkAqua
+	    || effectiveAppearanceName == NSAppearanceNameVibrantDark
+	    || effectiveAppearanceName == NSAppearanceNameAccessibilityHighContrastDarkAqua
+	    || effectiveAppearanceName == NSAppearanceNameAccessibilityHighContrastVibrantDark) {
+	newAppearance = "dark";
+	Tk_SendVirtualEvent(tkwin, "DarkAppearance", NULL);
+    } else {
+	newAppearance = "light";
+	Tk_SendVirtualEvent(tkwin, "LightAppearance", NULL);
     }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
@@ -1262,9 +1243,9 @@ static const char *const accentNames[] = {
     const char *highlightName = highlight ? highlight.UTF8String: defaultColor;
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
-	     effectiveAppearanceName.UTF8String, accentName,
-	     highlightName);
-    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
+	     newAppearance, accentName, highlightName);
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+			Tcl_NewStringObj(data, TCL_INDEX_NONE));
     // Force a redraw of the view.
     [self setFrameSize:self.frame.size];
 
@@ -1323,7 +1304,7 @@ static const char *const accentNames[] = {
     event.virt.event = Tk_WindowId(tkwin);
     event.virt.root = XRootWindow(Tk_Display(tkwin), 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, winPtr->window, NULL, NULL,
 	    &event.virt.x_root, &event.virt.y_root, &x, &y, &event.virt.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.virt.x, &event.virt.y);

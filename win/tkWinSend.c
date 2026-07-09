@@ -442,7 +442,7 @@ FindInterpreterObject(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "no application named \"%s\"", name));
 		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		}
 
@@ -885,7 +885,7 @@ TkWinSend_SetExcepInfo(
  * ----------------------------------------------------------------------
  */
 
-int
+void
 TkWinSend_QueueCommand(
     Tcl_Interp *interp,
     Tcl_Obj *cmdPtr)
@@ -908,8 +908,6 @@ TkWinSend_QueueCommand(
     }
 
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
-
-    return 0;
 }
 
 /*

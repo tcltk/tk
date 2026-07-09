@@ -1,8 +1,8 @@
 #   fileicons.tcl --
 #
 #   Procedures for retrieving system-native file icons if
-#   such functions are available, and a fallback set set 
-#   of stock file icons for use in Tk. The SVG icons 
+#   such functions are available, and a fallback set set
+#   of stock file icons for use in Tk. The SVG icons
 #   are from the Tango Project and have been placed in the public
 #   domain: http://creativecommons.org/publicdomain/zero/1.0/
 #
@@ -5221,7 +5221,7 @@ set ::tk::icons::svgData(image) {
 
 
 
-  
+
 <cc:License
    rdf:about="http://creativecommons.org/publicdomain/zero/1.0/"><cc:permits
      rdf:resource="http://creativecommons.org/ns#Reproduction" /><cc:permits
@@ -5475,8 +5475,8 @@ set ::tk::icons::svgData(image) {
 
 
 
-	
-	
+
+
 
 
 
@@ -5664,7 +5664,7 @@ set ::tk::icons::svgData(image) {
      sodipodi:nodetypes="ccccc" /></g></svg>
 }
 
-set ::tk::icons::svgData(mail) {	 
+set ::tk::icons::svgData(mail) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -9217,18 +9217,18 @@ proc ::tk::icons::svgPhoto {name size} {
     variable cache
 
     if {![info exists svgData($name)]} {
-        error "No SVG icon named \"$name\""
+	error "No SVG icon named \"$name\""
     }
 
     set key "${name}@${size}"
 
     if {[info exists cache($key)] && [lsearch [image names] $cache($key)] >= 0} {
-        return $cache($key)
+	return $cache($key)
     }
 
     set img [image create photo \
-        -format [list svg -scaletoheight $size] \
-        -data $svgData($name)
+	-format [list svg -scaletoheight $size] \
+	-data $svgData($name)
     ]
 
     set cache($key) $img
@@ -9237,21 +9237,30 @@ proc ::tk::icons::svgPhoto {name size} {
 
 proc ::tk::fileicon {filename size} {
     if {[tk windowingsystem] eq "win32"} {
-        # Snap to closest standard Windows icon size: 16, 32, 48, 256
-        set sizes {16 32 48 256}
-        set newsize [lindex $sizes 0]
-        set mindiff [expr {abs($size - $newsize)}]
-        foreach s $sizes {
-            set diff [expr {abs($size - $s)}]
-            if {$diff < $mindiff} {
-                set mindiff $diff
-                set newsize $s
-            }
-        }
-        return [::tk::fileicon::_getwinicon $filename $newsize]
+	# Snap to closest standard Windows icon size: 16, 32, 48, 256
+	set sizes {16 32 48 256}
+	set newsize [lindex $sizes 0]
+	set mindiff [expr {abs($size - $newsize)}]
+	foreach s $sizes {
+	    set diff [expr {abs($size - $s)}]
+	    if {$diff < $mindiff} {
+		set mindiff $diff
+		set newsize $s
+	    }
+	}
+
+	# Return the same icon for all volumes, incl. the virtual filesystems
+	if {$filename in [file volumes]} {
+	    set filename "C:/"
+	}
+	return [::tk::fileicon::_getwinicon $filename $newsize]
     }
     if {[tk windowingsystem] eq "aqua"} {
-        return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
+	# Return the same icon for all volumes, incl. the virtual filesystems
+	if {$filename in [file volumes]} {
+	    set filename "/"
+	}
+	return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
     }
     if {[tk windowingsystem] eq "x11"} {
 	set ext [string tolower [file extension $filename]]
@@ -9313,5 +9322,3 @@ proc ::tk::fileicon {filename size} {
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
 	 {fileicon ::tk::fileicon}]
-
-

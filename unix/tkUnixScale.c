@@ -124,11 +124,11 @@ DisplayVerticalScale(
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->vertTickRightX;
-	drawnAreaPtr->y = scalePtr->inset;
-	drawnAreaPtr->width = scalePtr->vertTroughX + scaleWidth
-		+ 2 * borderWidth - scalePtr->vertTickRightX;
-	drawnAreaPtr->height -= 2 * scalePtr->inset;
+	drawnAreaPtr->x = (short)scalePtr->vertTickRightX;
+	drawnAreaPtr->y = (short)scalePtr->inset;
+	drawnAreaPtr->width = (short)(scalePtr->vertTroughX + scaleWidth
+		+ 2 * borderWidth - scalePtr->vertTickRightX);
+	drawnAreaPtr->height -= (short)(2 * scalePtr->inset);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -279,7 +279,7 @@ DisplayVerticalValue(
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     Tcl_Size length = strlen(valueString);
@@ -344,11 +344,11 @@ DisplayHorizontalScale(
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->inset;
-	drawnAreaPtr->y = scalePtr->horizValueY;
-	drawnAreaPtr->width -= 2*scalePtr->inset;
-	drawnAreaPtr->height = scalePtr->horizTroughY + scaleWidth
-		+ 2 * borderWidth - scalePtr->horizValueY;
+	drawnAreaPtr->x = (short)scalePtr->inset;
+	drawnAreaPtr->y = (short)scalePtr->horizValueY;
+	drawnAreaPtr->width -= (short)(2*scalePtr->inset);
+	drawnAreaPtr->height = (short)(scalePtr->horizTroughY + scaleWidth
+		+ 2 * borderWidth - scalePtr->horizValueY);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -370,7 +370,7 @@ DisplayHorizontalScale(
 
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
-	    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+	    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
 		    scalePtr->fromValue) < 0) {
 		valueString[TCL_DOUBLE_SPACE - 1] = '\0';
 	    }
@@ -380,7 +380,7 @@ DisplayHorizontalScale(
 		tickInterval *= ticks / maxTicks;
 	    }
 	    tickValue = scalePtr->fromValue;
-	    while (1) {
+	    while (true) {
 		/*
 		 * The TkRoundValueToResolution call gets rid of accumulated
 		 * round-off errors, if any.
@@ -508,7 +508,7 @@ DisplayHorizontalValue(
     x = TkScaleValueToPixel(scalePtr, value);
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     Tcl_Size length = strlen(valueString);
@@ -578,7 +578,7 @@ TkpDisplayScale(
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
 	Tcl_Preserve(interp);
-	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+	if (TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {
 	    string[TCL_DOUBLE_SPACE - 1] = '\0';
 	}
@@ -616,8 +616,8 @@ TkpDisplayScale(
 #endif /* TK_NO_DOUBLE_BUFFERING */
     drawnArea.x = 0;
     drawnArea.y = 0;
-    drawnArea.width = Tk_Width(tkwin);
-    drawnArea.height = Tk_Height(tkwin);
+    drawnArea.width = (short)Tk_Width(tkwin);
+    drawnArea.height = (short)Tk_Height(tkwin);
 
     /*
      * Much of the redisplay is done totally differently for horizontal and

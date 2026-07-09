@@ -31,7 +31,7 @@ Ttk_BoxContains(Ttk_Box box, int x, int y)
 	&& box.y <= y && y < box.y + box.height;
 }
 
-int
+bool
 TtkBoxEqual(Ttk_Box box1, Ttk_Box box2)
 {
     return box1.x == box2.x && box1.y == box2.y
@@ -528,6 +528,7 @@ struct Ttk_LayoutNode_
     Ttk_State		state;		/* Current state */
     Ttk_Box		parcel;		/* allocated parcel */
     Ttk_LayoutNode	*next, *child;
+    NodeDrawCache	*drawCache;	/* Per-node render cache (ttkNodeCache.c) */
 };
 
 static Ttk_LayoutNode *Ttk_NewLayoutNode(
@@ -540,6 +541,7 @@ static Ttk_LayoutNode *Ttk_NewLayoutNode(
     node->state = 0u;
     node->next = node->child = 0;
     node->parcel = Ttk_MakeBox(0,0,0,0);
+    node->drawCache = NULL;
 
     return node;
 }
@@ -549,6 +551,7 @@ static void Ttk_FreeLayoutNode(Ttk_LayoutNode *node)
     while (node) {
 	Ttk_LayoutNode *next = node->next;
 	Ttk_FreeLayoutNode(node->child);
+	TtkFreeNodeDrawCache(node->drawCache);
 	Tcl_Free(node);
 	node = next;
     }
@@ -1120,9 +1123,13 @@ void Ttk_PlaceLayout(Ttk_Layout layout, Ttk_State state, Ttk_Box b)
 /*
  * Ttk_DrawLayout --
  *	Draw a layout tree.
+ *
+ * Each node's element is drawn through TtkDrawCachedElement (ttkNodeCache.c),
+ * which owns the per-node render cache.  This file only walks the tree.
  */
+
 static void Ttk_DrawNodeList(
-    Ttk_Layout layout, Ttk_State state, Ttk_LayoutNode *node, Drawable d)
+    NodeDrawContext *ctx, Ttk_State state, Ttk_LayoutNode *node)
 {
     for (; node; node = node->next)
     {
@@ -1134,23 +1141,27 @@ static void Ttk_DrawNodeList(
 	}
 
 	if (node->child && border) {
-	    Ttk_DrawNodeList(layout, substate, node->child, d);
+	    Ttk_DrawNodeList(ctx, substate, node->child);
 	}
 
-	Ttk_DrawElement(
-	    node->eclass,
-	    layout->style,layout->recordPtr,layout->optionTable,layout->tkwin,
-	    d, node->parcel, state | node->state);
+	TtkDrawCachedElement(ctx, node->eclass, &node->drawCache,
+		node->parcel, state | node->state);
 
 	if (node->child && !border) {
-	    Ttk_DrawNodeList(layout, substate, node->child, d);
+	    Ttk_DrawNodeList(ctx, substate, node->child);
 	}
     }
 }
 
 void Ttk_DrawLayout(Ttk_Layout layout, Ttk_State state, Drawable d)
 {
-    Ttk_DrawNodeList(layout, state, layout->root, d);
+    NodeDrawContext *ctx = TtkNodeDrawBegin(
+	    layout->style, layout->recordPtr, layout->optionTable,
+	    layout->tkwin, d);
+
+    Ttk_DrawNodeList(ctx, state, layout->root);
+
+    TtkNodeDrawEnd(ctx);
 }
 
 /*------------------------------------------------------------------------

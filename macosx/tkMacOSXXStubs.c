@@ -281,7 +281,7 @@ XkbOpenDisplay(
 	display->proto_minor_version = [[cgVers objectAtIndex:2] integerValue];
     }
     if (!vendor[0]) {
-	snprintf(vendor, sizeof(vendor), "Apple AppKit %g",
+	TkFormatDouble(vendor, sizeof(vendor), "Apple AppKit %g",
 		NSAppKitVersionNumber);
     }
     display->vendor = vendor;
@@ -520,7 +520,7 @@ XChangeProperty(
     TCL_UNUSED(Atom),
     TCL_UNUSED(int),
     TCL_UNUSED(int),
-    TCL_UNUSED(_Xconst unsigned char *),
+    TCL_UNUSED(const unsigned char *),
     TCL_UNUSED(int))
 {
     Debugger();
@@ -728,7 +728,7 @@ int
 XLookupColor(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Colormap),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(XColor *),
     TCL_UNUSED(XColor *))
 {
@@ -1161,7 +1161,7 @@ TkGetDefaultScreenName(
  *----------------------------------------------------------------------
  */
 
-long
+long long
 Tk_GetUserInactiveTime(
     TCL_UNUSED(Display *))
 {
@@ -1176,7 +1176,7 @@ Tk_GetUserInactiveTime(
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {
-	return -1l;
+	return -1;
     }
 
     result = IORegistryEntryCreateCFProperties(regEntry, &props,
@@ -1184,7 +1184,7 @@ Tk_GetUserInactiveTime(
     IOObjectRelease(regEntry);
 
     if (result != KERN_SUCCESS || props == NULL) {
-	return -1l;
+	return -1;
     }
 
     timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
@@ -1202,12 +1202,12 @@ Tk_GetUserInactiveTime(
      * If the idle time reported by the system is larger than the elapsed
      * time since the last reset, return the elapsed time.
      */
-    long elapsed = (long)(TkpGetMS() - lastInactivityReset);
+    long elapsed = (long)(TkGetMS() - lastInactivityReset);
     if (ret > elapsed) {
 	ret = elapsed;
     }
 
-    return ret;
+    return (long long)(ret);
 }
 
 /*
@@ -1231,7 +1231,7 @@ void
 Tk_ResetUserInactiveTime(
     TCL_UNUSED(Display *))
 {
-    lastInactivityReset = TkpGetMS();
+    lastInactivityReset = TkGetMS();
 }
 
 /*

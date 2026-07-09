@@ -204,7 +204,7 @@ test busy-4.3 {tk busy configure non-busy window} -setup {
     destroy .f
 } -returnCodes error -result {cannot find busy window ".f"}
 
-test busy-4.4 {tk busy configure} -constraints {nonwin} -setup {
+test busy-4.4 {tk busy configure} -constraints macOrUnix -setup {
     pack [frame .f]
     tk busy hold .f
     update
@@ -226,7 +226,7 @@ test busy-4.4-win {tk busy configure} -constraints {win} -setup {
     destroy .f
 } -result {{-cursor cursor Cursor wait wait}}
 
-test busy-4.5 {tk busy configure} -constraints {nonwin} -setup {
+test busy-4.5 {tk busy configure} -constraints macOrUnix -setup {
     pack [frame .f]
     tk busy hold .f -cursor hand2
     update
@@ -259,7 +259,7 @@ test busy-4.6 {tk busy configure invalid option} -setup {
     destroy .f
 } -returnCodes error -result {unknown option "-invalidOption"}
 
-test busy-4.7 {tk busy configure valid option} -constraints {nonwin} -setup {
+test busy-4.7 {tk busy configure valid option} -constraints macOrUnix -setup {
     pack [frame .f]
     tk busy hold .f
     update
@@ -282,7 +282,7 @@ test busy-4.7-win {tk busy configure valid option} -constraints {win} -setup {
 } -result {-cursor cursor Cursor wait wait}
 
 test busy-4.8 {tk busy configure valid option} -constraints {
-    nonwin
+    macOrUnix
 } -setup {
     pack [frame .f]
     tk busy hold .f -cursor circle

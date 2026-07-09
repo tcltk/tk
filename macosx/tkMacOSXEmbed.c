@@ -1076,7 +1076,7 @@ EmbedWindowDeleted(
 
     prevPtr = NULL;
     containerPtr = firstContainerPtr;
-    while (1) {
+    while (true) {
 	if (containerPtr == NULL) {
 	    return;
 	}

@@ -786,7 +786,7 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t.f
     proc bgerror args {
 	global msg
-	if {$msg == ""} {
+	if {$msg eq ""} {
 	    lappend msg $args
 	}
     }
@@ -889,7 +889,8 @@ test textWind-10.9 {EmbWinLayoutProc procedure, steal window from self} -setup {
     destroy .t.b
 } -result {1.3}
 
-test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
+test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} -constraints {!win32} -setup {
+    # Font changes on Windows cause issues with this test.
     .t delete 1.0 end
     destroy .f
 } -body {

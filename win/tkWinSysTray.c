@@ -15,16 +15,18 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWinInt.h"
 #include "tkInt.h"
 #include <windows.h>
-#include <shellapi.h>
 #include <shobjidl.h>
 #include <propvarutil.h>
 #include <propkey.h>
 #include "tkWin.h"
-#include "tkWinInt.h"
 #include "tkWinIco.h"
 
+#ifndef NOTIFYICON_VERSION_4
+#   define NOTIFYICON_VERSION_4 4
+#endif
 
 /*
  * Based extensively on the winico extension and sample code from Microsoft.
@@ -364,7 +366,7 @@ GetIcoPtr(
     Tcl_Obj *obj)
 {
     IcoInfo *icoPtr;
-    unsigned id;
+    int id;
     const char *string = Tcl_GetString(obj);
     const char *start;
     char *end;
@@ -385,7 +387,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-	"\" does not exist", NULL);
+	"\" does not exist", (char *)NULL);
     return NULL;
 }
 
@@ -744,7 +746,7 @@ TaskbarHandlerProc(
 	for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
 	    if (icoInterpPtr->hwnd == hwnd) {
 		for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
-		    if (icoPtr->id == wParam) {
+		    if (icoPtr->id == (int)wParam) {
 			if (icoPtr->taskbar_command != NULL) {
 			    TaskbarEval(icoPtr, wParam, lParam);
 			}
@@ -968,7 +970,7 @@ WinSystrayCmd(
 		if (i+1 >= objc) {
 		    Tcl_AppendResult(interp,
 			    "missing value for option \"", Tcl_GetString(objv[i]),
-			    "\"", NULL);
+			    "\"", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		switch (opt) {
@@ -1086,7 +1088,7 @@ WinSysNotifyCmd(
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
 	Tcl_AppendResult(interp, "unknown subcommand \"",
-	    Tcl_GetString(objv[1]), "\": must be notify", NULL);
+	    Tcl_GetString(objv[1]), "\": must be notify", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1104,12 +1106,12 @@ WinSysNotifyCmd(
     if (!appidSet) {
 	Tk_Window mainWin = Tk_MainWindow(interp);
 	if (mainWin == NULL) {
-	    Tcl_AppendResult(interp, "No main window available", NULL);
+	    Tcl_AppendResult(interp, "No main window available", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
-	    Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
+	    Tcl_AppendResult(interp, "Failed to obtain window title", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1171,7 +1173,7 @@ WinSysNotifyCmd(
 	sprintf_s(buf, sizeof(buf),
 		  "Notification failed (error %lu)",
 		  GetLastError());
-	Tcl_AppendResult(interp, buf, NULL);
+	Tcl_AppendResult(interp, buf, (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1219,11 +1221,11 @@ WinIcoInit(
 	    icoInterpPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
-	/* 
-	* This command is defined in tkWinIco.c, but that file does not have 
-	* any hooks for script command creation. 
+	/*
+	* This command is defined in tkWinIco.c, but that file does not have
+	* any hooks for script command creation.
 	*/
-	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	Tcl_CreateObjCommand2(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
 	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,

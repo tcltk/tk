@@ -155,7 +155,7 @@ typedef struct {
      */
 
     int paletteLen;		/* Number of PLTE entries (1..256). */
-    int useTRNS;		/* Flag to indicate whether there was a
+    bool useTRNS;		/* Flag to indicate whether there was a
 				 * palette given. */
     struct {
 	unsigned char red;
@@ -1023,7 +1023,7 @@ ReadChunkHeader(
 			    " \"%s\"", typeString));
 		}
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
-			"UNSUPPORTED_CRITICAL", NULL);
+			"UNSUPPORTED_CRITICAL", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1037,7 +1037,7 @@ ReadChunkHeader(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "invalid chunk type", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
-			    "INVALID_CHUNK", NULL);
+			    "INVALID_CHUNK", (char *)NULL);
 		    return TCL_ERROR;
 		}
 	    }
@@ -1267,7 +1267,7 @@ ReadIHDR(
     Tcl_Size chunkSz;
     unsigned long crc;
     unsigned long width, height;
-    int mismatch;
+    bool mismatch;
 
     /*
      * Read the appropriate number of bytes for the PNG signature.
@@ -1281,7 +1281,7 @@ ReadIHDR(
      * Compare the read bytes to the expected signature.
      */
 
-    mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ);
+    mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ) != 0;
 
     /*
      * If reading from string, reset position and try base64 decode.
@@ -1296,7 +1296,7 @@ ReadIHDR(
 	    return TCL_ERROR;
 	}
 
-	mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ);
+	mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ) != 0;
     }
 
     if (mismatch) {
@@ -1630,7 +1630,7 @@ ReadTRNS(
 	} else {
 	    pngPtr->transVal[0] = buffer[1];
 	}
-	pngPtr->useTRNS = 1;
+	pngPtr->useTRNS = true;
 	break;
 
     case PNG_COLOR_RGB:
@@ -1658,7 +1658,7 @@ ReadTRNS(
 	    pngPtr->transVal[1] = buffer[3];
 	    pngPtr->transVal[2] = buffer[5];
 	}
-	pngPtr->useTRNS = 1;
+	pngPtr->useTRNS = true;
 	break;
     }
 
@@ -2219,7 +2219,7 @@ ReadIDAT(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"extra data after end of zlib stream", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -2262,7 +2262,7 @@ ReadIDAT(
 			"extra data after final scan line of final phase",
 			-1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -2446,7 +2446,7 @@ ParseFormat(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-alpha value must be between 0.0 and 1.0", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_ALPHA",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    break;
@@ -2941,7 +2941,7 @@ StringMatchPNG(
 
     png.strDataBuf = Tcl_GetByteArrayFromObj(pObjData, &png.strDataLen);
 
-    if (ReadIHDR(interp, &png) == TCL_OK) {
+    if (png.strDataBuf != NULL && ReadIHDR(interp, &png) == TCL_OK) {
 	*widthPtr = png.block.width;
 	*heightPtr = png.block.height;
 	match = 1;

@@ -97,7 +97,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-indicatoron", "indicatorOn", "IndicatorOn",
 	DEF_MENUBUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkMenuButton, indicatorOn),
-	0, 0, 0},
+	TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_MENUBUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkMenuButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
@@ -274,7 +274,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->anchor = TK_ANCHOR_CENTER;
     mbPtr->justify = TK_JUSTIFY_CENTER;
     mbPtr->textLayout = NULL;
-    mbPtr->indicatorOn = 0;
+    mbPtr->indicatorOn = false;
     mbPtr->indicatorWidth = 0;
     mbPtr->indicatorHeight = 0;
     mbPtr->direction = DIRECTION_FLUSH;

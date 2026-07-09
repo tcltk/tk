@@ -1,8 +1,8 @@
 # testutils.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It implements the testutils mechanism which is used to import utility procs
-# into test files that need them.
+# This file is sourced into each test file by "main.tcl". It implements the
+# testutils mechanism which is used to import utility procs into test files
+# that need them.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -66,10 +66,10 @@ namespace eval ::tk::test::generic {
     #      happens just before the notification from the OS has been received,
     #      Tk will be using not yet updated info (e.g. mouse coordinates).
     #
-    #         Hickup, choke etc ... !
+    #	 Hickup, choke etc ... !
     #
-    #            *  the function SendInput() of the Win32 API
-    #            ** the callback function is TkWinChildProc()
+    #	    *  the function SendInput() of the Win32 API
+    #	    ** the callback function is TkWinChildProc()
     #
     #    This timing issue can be addressed by putting the Tk process on hold
     #    (do nothing at all) for a somewhat extended amount of time, while
@@ -148,8 +148,16 @@ namespace eval ::tk::test::generic {
     #
     proc resetWindows {} {
 	deleteWindows
+
+	# Reset the geometry of the Tk root window:
+	# - use 200x200 as a standard size
+	# - use a fixed position on the screen where we expect no interference of
+	#   areas with a special function provided by a desktop environment
+	#   (dock, hotspots, ...), i.e. away from screen borders and corners.
+	# - make it adapt its size to its children
+	wm deiconify .
+	. configure -width 200 -height 200
 	wm geometry . {}
-	raise .
 	update
     }
 
@@ -184,7 +192,7 @@ namespace eval ::tk::test::generic {
     # Arguments:
     #    subCmd : "export", "import" or "forget"
     #    args   : a sequence of domains that need to be imported/forgotten,
-    #             unused for "export"
+    #	     unused for "export"
     #
     proc testutils {subCmd args} {
 	variable importedDomains
@@ -396,7 +404,7 @@ namespace eval ::tk::test::child {
 		    set interpCount 1
 		}
 		set fd [open "|[list [::tcltest::interpreter] \
-			-geometry +0+0 -name tktest[incr interpCount]] $args" r+]
+			-geometry +100+100 -name tktest[incr interpCount]] $args" r+]
 		puts $fd "puts foo; flush stdout"
 		flush $fd
 		if {[gets $fd data] < 0} {
@@ -473,9 +481,9 @@ namespace eval ::tk::test::colors {
     # otherwise.
     #
     # Arguments:
-    #	w                : name of window in which to check.
+    #	w		: name of window in which to check.
     #	red, green, blue : intensities to use in a trial color allocation
-    #	                   to see if there are colormap entries free.
+    #			   to see if there are colormap entries free.
     #
     proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
@@ -786,16 +794,19 @@ namespace eval ::tk::test::image {
     proc imageFinish {} {
 	variable ImageNames
 	set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	set imgs [lsearch -all -inline -glob -not $imgs ::tk::icons::chevron*]
 	if {$imgs ne $ImageNames} {
-	    return -code error "images remaining: [image names] != $ImageNames"
+	    return -code error "images remaining: $imgs != $ImageNames"
 	}
 	imageCleanup
     }
 
     proc imageInit {} {
+	package require ttk
 	variable ImageNames
 	if {![info exists ImageNames]} {
 	    set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	    set ImageNames [lsearch -all -inline -glob -not $ImageNames ::tk::icons::chevron*]
 	}
 	imageCleanup
 	if {[lsort [image names]] ne $ImageNames} {
@@ -912,7 +923,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc handler {type offset count} {
@@ -923,7 +934,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc reallyBadHandler {path type offset count} {

@@ -127,7 +127,7 @@ static void		GenerateXEvent(HWND hwnd, UINT message,
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
 static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
-static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
+static bool		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
 /*
  *----------------------------------------------------------------------
@@ -173,10 +173,10 @@ TkGetServerInfo(
 
     os.dwOSVersionInfoSize = sizeof(os);
     if (getVersion == NULL || getVersion(&os) != 0) {
-        /* Should never happen but ... */
+	/* Should never happen but ... */
 	if (!GetVersionExW(&os)) {
-            memset(&os, 0, sizeof(os));
-        }
+	    memset(&os, 0, sizeof(os));
+	}
     }
     if (os.dwMajorVersion == 10 &&
 	os.dwBuildNumber >= 22000) {
@@ -190,7 +190,7 @@ TkGetServerInfo(
 	"Win32"
 #endif
     );
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 /*
@@ -434,7 +434,7 @@ TkWinDisplayChanged(
      */
 
     screen->ext_data = (XExtData *)INT2PTR(GetDeviceCaps(dc, PLANES));
-    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
+    screen->root_depth = (int)(GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data));
 
     if (screen->root_visual != NULL) {
 	Tcl_Free(screen->root_visual);
@@ -729,7 +729,7 @@ TkWinChildProc(
 
     case WM_IME_COMPOSITION:
 	result = 0;
-	if (HandleIMEComposition(hwnd, lParam) == 0) {
+	if (!HandleIMEComposition(hwnd, lParam)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
@@ -841,7 +841,7 @@ TkTranslateWinEvent(
 	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	if (winPtr) {
-	    TkWinClipboardRender(winPtr->dispPtr, wParam);
+	    TkWinClipboardRender(winPtr->dispPtr, (UINT)wParam);
 	}
 	return 1;
     }
@@ -1076,7 +1076,7 @@ GenerateXEvent(
 	event.x.type = SelectionClear;
 	event.x.xselectionclear.selection =
 		Tk_InternAtom((Tk_Window)winPtr, "CLIPBOARD");
-	event.x.xselectionclear.time = TkpGetMS();
+	event.x.xselectionclear.time = TkGetMS();
 	break;
 
     case WM_MOUSEWHEEL:
@@ -1088,7 +1088,7 @@ GenerateXEvent(
     case WM_KEYDOWN:
     case WM_KEYUP: {
 	unsigned int state = GetState(message, wParam, lParam);
-	Time time = TkpGetMS();
+	Time time = TkGetMS();
 	POINT clientPoint;
 	union {DWORD msgpos; POINTS point;} root;	/* Note: POINT and POINTS are different */
 
@@ -1194,7 +1194,7 @@ GenerateXEvent(
 
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -1;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
 		    WM_SYSCHAR);
 	    break;
@@ -1208,7 +1208,7 @@ GenerateXEvent(
 	     */
 
 	    event.x.type = KeyRelease;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    break;
 
@@ -1284,7 +1284,7 @@ GenerateXEvent(
 	case WM_UNICHAR: {
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -3;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 	    event.x.type = KeyRelease;
@@ -1584,8 +1584,8 @@ TkWinGetUnicodeEncoding(void)
  *	UNICODE values of the composed characters to TK's event queue.
  *
  * Results:
- *	If this function has processed the composition data, returns 1.
- *	Otherwise returns 0.
+ *	If this function has processed the composition data, returns true.
+ *	Otherwise returns false.
  *
  * Side effects:
  *	Key events are put into the TK event queue.
@@ -1593,7 +1593,7 @@ TkWinGetUnicodeEncoding(void)
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 HandleIMEComposition(
     HWND hwnd,			/* Window receiving the message. */
     LPARAM lParam)		/* Flags for the WM_IME_COMPOSITION message */
@@ -1607,12 +1607,12 @@ HandleIMEComposition(
 	 * Composition is not finished yet.
 	 */
 
-	return 0;
+	return false;
     }
 
     hIMC = ImmGetContext(hwnd);
     if (!hIMC) {
-	return 0;
+	return false;
     }
 
     n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
@@ -1646,7 +1646,7 @@ HandleIMEComposition(
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
 	event.xkey.subwindow = None;
 	event.xkey.state = TkWinGetModifierState();
-	event.xkey.time = TkpGetMS();
+	event.xkey.time = TkGetMS();
 	event.xkey.same_screen = True;
 
 	for (i=0; i<n; ) {
@@ -1675,7 +1675,7 @@ HandleIMEComposition(
 	Tcl_Free(buff);
     }
     ImmReleaseContext(hwnd, hIMC);
-    return 1;
+    return true;
 }
 
 /*
@@ -1763,7 +1763,7 @@ TkWinResendEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetMS --
+ * TkGetMS --
  *
  *	Return a relative time in milliseconds. It doesn't matter when the
  *	epoch was.
@@ -1778,7 +1778,7 @@ TkWinResendEvent(
  */
 
 unsigned long
-TkpGetMS(void)
+TkGetMS(void)
 {
     return GetTickCount();
 }
@@ -1927,11 +1927,12 @@ Tk_SetCaretPos(
  *----------------------------------------------------------------------
  */
 
-long
+long long
 Tk_GetUserInactiveTime(
      TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
+    DWORD inactive;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1942,7 +1943,17 @@ Tk_GetUserInactiveTime(
      * Last input info is in milliseconds, since restart time.
      */
 
-    return (GetTickCount()-li.dwTime);
+    inactive = GetTickCount() - li.dwTime;
+
+    /*
+     * DWORD is 32-bit on Windows, so clamp to its maximum to avoid returning
+     * a large inactivity interval as a negative value.
+     */
+
+    if (inactive > LONG_MAX) {
+	return LONG_MAX;
+    }
+    return (long long)inactive;
 }
 
 /*

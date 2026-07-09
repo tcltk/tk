@@ -18,6 +18,7 @@
 #ifndef _TKPORT
 #include "tkPort.h"
 #endif
+#include <X11/Xatom.h>
 
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:
@@ -145,8 +146,10 @@
 typedef struct TkColormap TkColormap;
 typedef struct TkFontAttributes TkFontAttributes;
 typedef struct TkGrabEvent TkGrabEvent;
-typedef struct TkpCursor_ *TkpCursor;
-#define TkRegion Region
+#ifndef TK_NO_DEPRECATED
+    typedef Cursor TkpCursor;
+    typedef Region TkRegion;
+#endif
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
 typedef struct Busy *TkBusy;
@@ -688,7 +691,7 @@ typedef struct TkMainInfo {
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down. For Tcl 9.1+ */
-    unsigned int ttkNbTabsStickBit;
+    unsigned int nbTabPosition, nbTabPlacement;
 				/* Information used by ttk::notebook. */
     int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
 				/* Information used by ttk::scale. */
@@ -1191,12 +1194,15 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
+MODULE_SCOPE void	TkPremultiplyRGBA(XImage *image, int src_x, int src_y,
+			    int w, int h, unsigned char *dst, int dstStride);
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
+MODULE_SCOPE unsigned long TkGetMS(void);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
 MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,
@@ -1235,6 +1241,11 @@ MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
 MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
+MODULE_SCOPE double	TkScalingLevel2(Tk_Window tkwin);
+MODULE_SCOPE int	TkGetScaledPixelValue(Tcl_Interp *interp, Tk_Window tkwin,
+			    Tcl_Obj *valuePtr, int *size);
+MODULE_SCOPE int	TkFormatDouble(char *buffer, size_t size,
+			    const char *format, double value);
 MODULE_SCOPE bool	TkObjIsEmpty(Tcl_Obj *objPtr);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);
@@ -1248,6 +1259,8 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
+MODULE_SCOPE void	TkAdjustAngledTextLayout(double angle, int *width,
+			    int *height, int *xoffset, int *yoffset);
 
 #define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
 #define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
@@ -1273,20 +1286,22 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 /*
  * These macros are just wrappers for the equivalent X Region calls.
  */
-#define TkClipBox XClipBox
-#define TkCreateRegion XCreateRegion
-#define TkDestroyRegion XDestroyRegion
-#define TkIntersectRegion XIntersectRegion
-#define TkRectInRegion XRectInRegion
-#define TkSetRegion XSetRegion
-#define TkSubtractRegion XSubtractRegion
-#define TkUnionRectWithRegion XUnionRectWithRegion
+#ifndef TK_NO_DEPRECATED
+#   define TkClipBox XClipBox
+#   define TkCreateRegion XCreateRegion
+#   define TkDestroyRegion XDestroyRegion
+#   define TkIntersectRegion XIntersectRegion
+#   define TkRectInRegion XRectInRegion
+#   define TkSetRegion XSetRegion
+#   define TkSubtractRegion XSubtractRegion
+#   define TkUnionRectWithRegion XUnionRectWithRegion
+#endif
 
-#ifdef HAVE_XFT
+#if defined(HAVE_XFT) || defined(HAVE_BIDI)
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
-MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
+MODULE_SCOPE void	TkpCopyRegion(Region dst, Region src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
@@ -1297,9 +1312,9 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
 /*
  * Unsupported commands.
  */
-
+#if 0
 MODULE_SCOPE Tcl_ObjCmdProc2 TkUnsupported1ObjCmd;
-
+#endif
 /*
  * For Tktest.
  */

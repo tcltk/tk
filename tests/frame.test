@@ -376,7 +376,7 @@ test frame-2.9 {toplevel configuration options} -constraints win -setup {
 } -cleanup {
     deleteWindows
 } -result {-use use Use {} {}}
-test frame-2.10 {toplevel configuration options} -constraints nonwin -setup {
+test frame-2.10 {toplevel configuration options} -constraints macOrUnix -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100
@@ -385,7 +385,7 @@ test frame-2.10 {toplevel configuration options} -constraints nonwin -setup {
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {can't modify -use option after widget is created}
-test frame-2.11 {toplevel configuration options} -constraints nonwin -setup {
+test frame-2.11 {toplevel configuration options} -constraints macOrUnix -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100

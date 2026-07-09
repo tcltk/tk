@@ -1,10 +1,10 @@
-! /bin/bash -norc
+#! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
 AC_INIT([tk],[9.1])
-AC_PREREQ([2.72])
+AC_PREREQ([2.73])
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a1"
+TK_PATCH_LEVEL="b1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -339,23 +339,140 @@ if test -d /usr/include/mit -a $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for freetype / fontconfig / Xft support.
+#	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
+
+    #--------------------------------------------------------------------
+    # --enable-xft (default: yes) — independent switch
+    #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
 	AS_HELP_STRING([--enable-xft],
-	    [use freetype/fontconfig/xft (default: on)]),
-	[enable_xft=$enableval], [enable_xft="default"])
+	    [use freetype/fontconfig/xft for antialiased fonts (default: yes)]),
+	[enable_xft=$enableval], [enable_xft="yes"])
+    AC_MSG_RESULT([$enable_xft])
+
     XFT_CFLAGS=""
     XFT_LIBS=""
-    if test "$enable_xft" = "no" ; then
-	AC_MSG_RESULT([$enable_xft])
-    else
+
+    #--------------------------------------------------------------------
+    # --enable-bidi (default: yes on X11) — forces Xft when enabled
+    #--------------------------------------------------------------------
+    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
+    AC_ARG_ENABLE(bidi,
+	AS_HELP_STRING([--enable-bidi],
+	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes)]),
+	[enable_bidi=$enableval], [enable_bidi="yes"])
+    AC_MSG_RESULT([$enable_bidi])
+
+    if test "$enable_bidi" = "yes"; then
+	AC_MSG_NOTICE([Bidi enabled: forcing Xft on as well])
+	if test "$enable_xft" = "no"; then
+	   enable_xft=yes
+	fi
+
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
+	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz - version check (minimum 2.8.2)
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
+        if pkg-config --exists harfbuzz; then
+            HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+            AC_MSG_RESULT([found version $HB_VERSION])
+
+            # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
+            if test -n "$HB_VERSION"; then
+                # Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
+                HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
+                HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
+                HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
+
+                REQ_MAJOR=2
+                REQ_MINOR=8
+                REQ_PATCH=2
+
+                too_old=no
+                if test $HB_MAJOR -lt $REQ_MAJOR; then
+                    too_old=yes
+                elif test $HB_MAJOR -eq $REQ_MAJOR; then
+                    if test $HB_MINOR -lt $REQ_MINOR; then
+                        too_old=yes
+                    elif test $HB_MINOR -eq $REQ_MINOR; then
+                        if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
+                            too_old=yes
+                        fi
+                    fi
+                fi
+
+                if test "$too_old" = "yes"; then
+                    AC_MSG_WARN([HarfBuzz version $HB_VERSION is too old (need >= 2.8.2).])
+                    AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
+                    enable_bidi=no
+                else
+                    AC_MSG_RESULT([HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2).])
+                fi
+            fi
+
+            if test "$enable_bidi" = "yes"; then
+                HB_CFLAGS=`pkg-config --cflags harfbuzz`
+                HB_LIBS=`pkg-config --libs harfbuzz`
+
+                tk_oldCFlags=$CFLAGS
+                tk_oldLibs=$LIBS
+                CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+                LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+                AC_CHECK_HEADER(harfbuzz/hb.h, [], [
+                    AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+                ], [#include <X11/Xlib.h>])
+
+                AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
+                    AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
+                ])
+
+                CFLAGS=$tk_oldCFlags
+                LIBS=$tk_oldLibs
+
+                BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+                AC_SUBST(HB_CFLAGS)
+                AC_SUBST(HB_LIBS)
+            fi
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz])
+        fi
+    fi
+
+    if test "$enable_bidi" = "no"; then
+	# Bidi disabled
+	BIDI_CFLAGS=""
+	HB_CFLAGS=""
+	HB_LIBS=""
+	if test "$enable_xft" = "yes" ; then
+	   UNIX_FONT_OBJS="tkUnixRFont.o"
+	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+	else
+	   UNIX_FONT_OBJS="tkUnixFont.o"
+	fi
+    fi
+
+    # Now actually enable Xft if requested (or forced by bidi)
+    if test "$enable_xft" = "yes" ; then
 	found_xft="yes"
-	dnl make sure package configurator (xft-config or pkg-config
-	dnl says that xft is present.
+
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
 	if test "$found_xft" = "no" ; then
@@ -363,47 +480,33 @@ if test $tk_aqua = no; then
 	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
 	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
-	AC_MSG_RESULT([$found_xft])
-	dnl make sure that compiling against Xft header file doesn't bomb
+
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
-	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
-		found_xft=no
-	    ],[#include <X11/Xlib.h>])
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
+
+	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [found_xft=no], [#include <X11/Xlib.h>])
+
+	    if test "$found_xft" = "yes" ; then
+		AC_CHECK_LIB(Xft, XftFontOpen, [], [found_xft=no])
+	    fi
+
+	    if test "$found_xft" = "yes" ; then
+		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		AC_CHECK_LIB(fontconfig, FcFontSort, [
+		    XFT_LIBS="$XFT_LIBS -lfontconfig"
+		], [])
+	    fi
+
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
 	fi
-	dnl make sure that linking against Xft libraries finds freetype
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
-	    AC_CHECK_LIB(Xft, XftFontOpen, [], [
-		found_xft=no
-	    ])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl make sure that linking against fontconfig libraries finds Fc* symbols
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
-	    AC_CHECK_LIB(fontconfig, FcFontSort, [
-		XFT_LIBS="$XFT_LIBS -lfontconfig"
-	    ], [])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl print a warning if xft is unusable and was specifically requested
+
 	if test "$found_xft" = "no" ; then
 	    if test "$enable_xft" = "yes" ; then
-		AC_MSG_WARN([Can't find xft configuration, or xft is unusable])
+		AC_MSG_WARN([Can't find xft configuration or xft is unusable -- falling back to classic fonts])
 	    fi
 	    enable_xft=no
 	    XFT_CFLAGS=""
@@ -412,16 +515,88 @@ if test $tk_aqua = no; then
 	    enable_xft=yes
 	fi
     fi
-    if test $enable_xft = "yes" ; then
-	UNIX_FONT_OBJS=tkUnixRFont.o
-	AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
-    else
-	UNIX_FONT_OBJS=tkUnixFont.o
-    fi
+
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
+
+    AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
+    AC_SUBST(HB_CFLAGS)
+    AC_SUBST(HB_LIBS)
+
+    # Set font system for pkgconfig
+    if test "$enable_bidi" = "yes"; then
+	FONTSYSTEM="xft"
+    elif test "$enable_xft" = "yes" ; then
+	FONTSYSTEM="xft"
+    else
+	FONTSYSTEM="core"
+    fi
+    AC_SUBST(FONTSYSTEM)
+
+else
+    # Aqua (macOS) path
+    enable_xft=no
+    enable_bidi=no
+    UNIX_FONT_OBJS="tkUnixFont.o"
+    BIDI_CFLAGS=""
+    HB_CFLAGS=""
+    HB_LIBS=""
+    FONTSYSTEM="core"
+    AC_SUBST(FONTSYSTEM)
 fi
+
+#--------------------------------------------------------------------
+#	Check for the X RENDER extension client library (Xrender), used
+#	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#--------------------------------------------------------------------
+
+XRENDER_CFLAGS=""
+XRENDER_LIBS=""
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether to use xrender])
+    AC_ARG_ENABLE(xrender,
+	AS_HELP_STRING([--enable-xrender],
+	    [use Xrender to composite photo images with alpha (default: yes)]),
+	[enable_xrender=$enableval], [enable_xrender="yes"])
+    AC_MSG_RESULT([$enable_xrender])
+
+    if test "$enable_xrender" = "yes" ; then
+	found_xrender="yes"
+	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
+	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
+	if test "$found_xrender" = "no" ; then
+	    found_xrender="yes"
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS="-lXrender"
+	fi
+
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$CFLAGS $XINCLUDES $XRENDER_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $XRENDER_LIBS $XLIBSW"
+
+	AC_CHECK_HEADER(X11/extensions/Xrender.h, [], [found_xrender=no],
+	    [#include <X11/Xlib.h>])
+	if test "$found_xrender" = "yes" ; then
+	    AC_CHECK_LIB(Xrender, XRenderQueryExtension, [], [found_xrender=no])
+	fi
+
+	CFLAGS=$tk_oldCFlags
+	LIBS=$tk_oldLibs
+
+	if test "$found_xrender" = "yes" ; then
+	    AC_DEFINE(HAVE_XRENDER, 1, [Have we turned on XRender (photo image compositing)?])
+	else
+	    AC_MSG_WARN([Can't find xrender configuration -- photo images will composite in software])
+	    enable_xrender=no
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS=""
+	fi
+    fi
+fi
+AC_SUBST(XRENDER_CFLAGS)
+AC_SUBST(XRENDER_LIBS)
 
 #--------------------------------------------------------------------
 #	Check for libcups support
@@ -439,8 +614,6 @@ if test $tk_aqua = no; then
 	AC_MSG_RESULT([$enable_libcups])
     else
 	found_cups=`cups-config 2>/dev/null`
-	dnl make sure package configurator (cups-config)
-	dnl says that libcups is present.
 	if test "$found_cups" = ""; then
 	    found_cups=no
 	else
@@ -449,12 +622,11 @@ if test $tk_aqua = no; then
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	AC_MSG_RESULT([$found_cups])
-	dnl make sure that compiling against CUPS header file doesn't bomb
 	if test "$found_cups" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(cups/cups.h, [], [
 		found_cups=no
 		CUPS_CFLAGS=""
@@ -468,39 +640,25 @@ if test $tk_aqua = no; then
     AC_SUBST(CUPS_LIBS)
 fi
 
-
 #--------------------------------------------------------------------
 #	Check for Atk support
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
-  # Combined manual check for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI using pkg-config
-  AC_MSG_CHECKING([for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI (manual pkg-config check)])
-
-  if pkg-config --exists atk \
-     && pkg-config --exists atk-bridge-2.0 \
-     && pkg-config --exists dbus-1 \
-     && pkg-config --exists glib-2.0; then
-
+  AC_MSG_CHECKING([for ATK and Atk-bridge])
+  if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
     AC_MSG_RESULT([yes])
-    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0 dbus-1 glib-2.0`"
-    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0 dbus-1 glib-2.0`"
-    AC_DEFINE([USE_ATK], [1], [Define if ATK, Atk-bridge, D-Bus, and GLib are available])
-    have_atk=yes
-    AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
+    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+    AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
   else
     AC_MSG_RESULT([no])
     ATK_CFLAGS=""
     ATK_LIBS=""
-    have_atk=no
-    AC_MSG_NOTICE([One or more accessibility dependencies not found, disabling support])
   fi
-
   AC_SUBST([ATK_CFLAGS])
   AC_SUBST([ATK_LIBS])
 fi
-
-
 
 #--------------------------------------------------------------------
 # XXX Do this last.
@@ -537,8 +695,6 @@ if test $tk_aqua = no; then
 	    ], [
 		AC_CHECK_LIB(Xss, XScreenSaverQueryInfo, [
 		    if test "$tcl_cv_ld_weak_l" = yes; then
-			# On Darwin, weak link libXss if possible,
-			# as it is only available on Tiger or later.
 			XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
 		    else
 			XLIBSW="$XLIBSW -lXss -lXext"
@@ -576,15 +732,20 @@ else
 eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
 fi
 
+eval "TK_LIB_FILE=${TK_LIB_FILE}"
+
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
 # since on some platforms TK_LIB_FILE contains shell escapes.
-
-eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 fi
+
+# Note:  in the following variable, it's important to use the absolute
+# path name of the Tcl directory rather than "..":  this is because
+# AIX remembers this path and will attempt to use it at run-time to look
+# up the Tcl library.
 
 test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
 PRIVATE_INCLUDE_DIR='$(includedir)'
@@ -592,11 +753,6 @@ HTML_DIR='$(DISTDIR)/html'
 TK_PKG_DIR='tk$(VERSION)'
 TK_RSRC_FILE='tk$(VERSION).rsrc'
 WISH_RSRC_FILE='wish$(VERSION).rsrc'
-
-# Note:  in the following variable, it's important to use the absolute
-# path name of the Tcl directory rather than "..":  this is because
-# AIX remembers this path and will attempt to use it at run-time to look
-# up the Tcl library.
 
 if test "`uname -s`" = "Darwin" ; then
     SC_ENABLE_FRAMEWORK
@@ -616,8 +772,6 @@ fi
 
 if test "$FRAMEWORK_BUILD" = "1" ; then
     AC_DEFINE(TK_FRAMEWORK, 1, [Is Tk built as a framework?])
-    # Construct a fake local framework structure to make linking with
-    # '-framework Tk' and running of tktest work
     AC_CONFIG_COMMANDS([Tk.framework], [n=Tk &&
 	f=$n.framework && v=Versions/$VERSION &&
 	rm -rf $f && mkdir -p $f/$v/Resources &&
@@ -628,7 +782,6 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     ], VERSION=${TK_VERSION} && tk_aqua=${tk_aqua})
     LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
     if test "${libdir}" = '${exec_prefix}/lib'; then
-	# override libdir default
 	libdir="/Library/Frameworks"
     fi
     TK_LIB_FILE="Tk"
@@ -637,7 +790,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="Resources/Scripts"
+    TK_PKG_DIR="${libdir}/Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"
@@ -668,7 +821,6 @@ else
     if test $tk_aqua = yes; then
 	EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
     fi
-    # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
     TK_LIB_FLAG="-ltcl9"
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
@@ -692,13 +844,7 @@ AC_ARG_ENABLE(zipfs,
     AS_HELP_STRING([--enable-zipfs],[build with Zipfs support (default: on)]),
     [tcl_ok=$enableval], [tcl_ok=yes])
 if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"; then
-    #
-    # Find a native compiler
-    #
     AX_CC_FOR_BUILD
-    #
-    # Find a native zip implementation
-    #
     SC_ZIPFS_SUPPORT
 	ZIPFS_BUILD=1
 	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
@@ -706,7 +852,6 @@ else
 	ZIPFS_BUILD=0
 	TK_ZIP_FILE=
 fi
-# Do checking message here to not mess up interleaved configure output
 AC_MSG_CHECKING([for building with zipfs])
 if test "${ZIPFS_BUILD}" = 1; then
     if test "${SHARED_BUILD}" = 0; then
@@ -715,7 +860,7 @@ if test "${ZIPFS_BUILD}" = 1; then
        INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
      else
-       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])\
+       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])
        INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
     fi
@@ -729,15 +874,13 @@ AC_SUBST(TK_ZIP_FILE)
 AC_SUBST(INSTALL_LIBRARIES)
 AC_SUBST(INSTALL_MSGS)
 
-
 #--------------------------------------------------------------------
 #       The statements below define various symbols relating to Tk
 #       stub support.
 #--------------------------------------------------------------------
 
-# Replace ${VERSION} with contents of ${TK_VERSION}
-    TK_STUB_LIB_FILE="libtkstub.a"
-    TK_STUB_LIB_FLAG="-ltkstub"
+TK_STUB_LIB_FILE="libtkstub.a"
+TK_STUB_LIB_FLAG="-ltkstub"
 eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
@@ -745,7 +888,6 @@ TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
 TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
-# Install time header dir can be set via --includedir
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
 
 #------------------------------------------------------------------------
@@ -754,13 +896,8 @@ eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
 
 AS_IF([test x"${DEMO_DIR}" = x], [DEMO_DIR='$(TK_LIBRARY)/demos'])
 eval "TK_DEMO_DIR=\"`echo ${DEMO_DIR} | tr '()' '{}'`\""
-eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
 AC_SUBST(DEMO_DIR)
 AC_SUBST(TK_DEMO_DIR)
-
-#------------------------------------------------------------------------
-# tkConfig.sh refers to this by a different name
-#------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
 
@@ -814,6 +951,12 @@ AC_SUBST(LIB_RSRC_FILE)
 AC_SUBST(APP_RSRC_FILE)
 AC_SUBST(REZ)
 AC_SUBST(REZ_FLAGS)
+
+AC_SUBST(BIDI_CFLAGS)
+AC_SUBST(HB_CFLAGS)
+AC_SUBST(HB_LIBS)
+AC_SUBST(UNIX_FONT_OBJS)
+AC_SUBST(FONTSYSTEM)
 
 AC_CONFIG_FILES([
     Makefile:../unix/Makefile.in

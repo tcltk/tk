@@ -44,13 +44,6 @@
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xproto.h>
-#include <X11/Xresource.h>
-#include <X11/Xutil.h>
 
 /*
  * The following macro defines the type of the mask arguments to
@@ -153,6 +146,22 @@
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
 	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
+#endif
+
+/*
+ * Defined by configure when the Xrender client library is available.
+ * TkImgPhotoDisplay then composites partial-alpha photo images server-side
+ * with TkpPutRGBAImage instead of the XGetImage read-back + CPU blend.
+ * Unlike macOS/Windows, TK_CAN_RENDER_RGBA is deliberately NOT defined:
+ * opaque and binary-alpha photos keep the zero-transfer XCopyArea path, and
+ * the software blend remains the runtime fallback.
+ */
+
+#ifdef HAVE_XRENDER
+MODULE_SCOPE int TkpPutRGBAImage(
+	Display *display, Drawable drawable, GC gc, XImage *image,
+	int src_x, int src_y, int dest_x, int dest_y,
+	unsigned int width, unsigned int height);
 #endif
 
 #endif /* _UNIXPORT */

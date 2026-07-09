@@ -84,12 +84,12 @@ proc _keypress {win key} {
     # a focus follows mouse will not steal away
     # the focus if the mouse is moved around.
 
-    if {[focus] != $win} {
+    if {[focus] ne $win} {
 	focus -force $win
     }
     event generate $win <Key-$keysym>
     pause 50
-    if {[focus] != $win} {
+    if {[focus] ne $win} {
 	focus -force $win
     }
     event generate $win <KeyRelease-$keysym>
@@ -114,7 +114,7 @@ proc _keypress_lookup {char} {
 	_init_keypress_lookup
     }
 
-    if {$char == ""} {
+    if {$char eq ""} {
 	error "empty char"
     }
 
@@ -180,44 +180,59 @@ proc setup_win_mousepointer {w} {
 
 # waitForWindowEvent --
 #
-#    This proc is intended to overcome latency of windowing system
-#    notifications when toplevel windows are involved. These latencies vary
-#    considerably with the window manager in use, with the system load,
-#    with configured scheduling priorities for processes, etc ...
-#    Waiting for the corresponding window events evades the trouble that is
-#    associated with the alternative: waiting or halting the Tk process for a
-#    fixed amount of time (using "after ms"). With the latter strategy it's
-#    always a gamble how much waiting time is enough on an end user's system.
-#    It also leads to long fixed waiting times in order to be on the safe side.
+#    Wait for a specific window event to be serviced from the event queue.
 #
-proc waitForWindowEvent {w event {timeout 1000}} {
-
+# Arguments:
+#    w       : the event window
+#    event   : the event type
+#    timeout : time after which waiting stops
+#
+# Result: none
+#
+proc waitForWindowEvent {w event {timeout 100}} {
     variable _windowEvent
+
+    if {! [winfo exists $w]} {
+	return -code error "window $w doesn't exist"
+    }
 
     # Use counter as a unique ID to prevent subsequent waits
     # from interfering with each other.
     set counter [incr _windowEvent(counter)]
-    set _windowEvent($counter) 1
+    set _windowEvent($counter) -1
     set savedBinding [bind $w $event]
-    bind $w $event [list +waitForWindowEvent.signal $counter]
-    set afterID [after $timeout [list set _windowEvent($counter) -1]]
-    vwait _windowEvent($counter)
-    set late [expr {$_windowEvent($counter) == -1}]
+    bind $w $event [list +waitForWindowEvent.signal $counter $w %W]
+    set afterID [after $timeout [list set ::[namespace current]::_windowEvent($counter) 0]]
+    vwait ::[namespace current]::_windowEvent($counter)
     bind $w $event $savedBinding
+    set result $_windowEvent($counter)
     unset _windowEvent($counter)
-    if {$late} {
-	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
-    } else {
+    if {$result} {
 	after cancel $afterID
+    } else {
+	return -code error "wait for $event event on $w timed out (> $timeout ms)"
     }
 }
 
-# waitForWindowEvent.signal--
+# waitForWindowEvent.signal --
 #
-#    Helper proc that records the triggering of a window event.
+#    Sets the wait variable used by proc waitForWindowEvent, thus
+#    unblocking the vwait command in that proc.
 #
-proc waitForWindowEvent.signal {counter} {
-    incr ::_windowEvent($counter)
+proc waitForWindowEvent.signal {counter w W} {
+    if {$w ne $W} {
+	# Beware that:
+	# - "w" is the name of a window as a binding tag
+	# - all children of a toplevel window carry the name of their
+	#   toplevel window as a binding tag.
+	# Therefore, this handler may be triggered by the servicing of an event
+	# on a child "W" of toplevel "w" rather than the toplevel "w" itself.
+	# Such cases are contrary to the intention of waitForWindowEvent,
+	# so we leave the wait variable untouched.
+	return
+    }
+    variable _windowEvent
+    set _windowEvent($counter) 1
 }
 
 #
@@ -1061,8 +1076,8 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.15 {pointer window is a toplevel, destination is screen root.
-    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.
-} -constraints notMacosSequoiaOrOlder -setup {
+    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on the macOS CI runner.
+} -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
 #    destroy .one
     toplevel .two
@@ -1198,8 +1213,8 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
-    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.
-} -constraints notMacosSequoiaOrOlder -setup {
+    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on macOS CI runners.
+} -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     destroy .one
     toplevel .two
@@ -1220,6 +1235,162 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     bind all <Enter> {}
     unset result
 } -result {|}
+
+test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
+    deleteWindows
+    wm geometry . 200x200+100+100
+    wm deiconify .
+    after 10; update
+    # On MS Windows with bug present:
+    # Ensure that the test body starts immediately after a MOUSE_TIMER_INTERVAL
+    set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
+    if {$pointerWin eq "."} {
+	event generate . <Motion> -warp 1 -x -50 -y 50
+    }
+    event generate . <Motion> -warp 1 -x 50 -y 50
+    waitForWindowEvent . <Enter>; # ensures that a MOUSE_TIMER_INTERVAL just ended
+    bind all <Leave> {append result "<Leave> %W"}
+    bind all <Enter> {append result "<Enter> %W"}
+    set result "|"
+} -body {
+    # Let the screen pointer perform a back and forth warp in quick succession,
+    # while immediatly providing opportunity for the event loop to service any
+    # crossing events.
+    event generate . <Motion> -warp 1 -x -50 -y 50
+    update
+    append result "|"
+    event generate . <Motion> -warp 1 -x 50 -y 50
+    update
+    append result "|"
+    # On MS Windows with bug present:
+    # The TkWinPointerEvent mechanism doesn't detect the previous changes to
+    # the position of the screen pointer because the back and forth motion
+    # happens entirely within one MOUSE_TIMER_INTERVAL. The value for the
+    # result variable in this case is: "|||"
+    set result
+} -cleanup {
+    unset result
+    bind all <Leave> {}
+    bind all <Enter> {}
+} -result "|<Leave> .|<Enter> .|"
+
+test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #8a88a19654} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    wm deiconify .
+    unset result
+} -result "|"
+
+test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer window after toplevel destroy (inside). See ticket #8a88a19654} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+100+100; # the screen pointer is inside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    wm deiconify .
+    unset result
+} -result "|"
+
+test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ticket #c3f5c85322} -setup {
+    wm geometry . 200x200+100+100
+    pack [frame .f -width 100 -height 200 -bg blue] -side right
+    update
+    event generate {} <Motion> -warp 1 -x 50 -y 100
+    update; # opportunity to service crossing events
+
+    set windowList [list "{}" . .f]
+    array set coords {
+	"A,{}" 150
+	"B,{}" 250
+	"A,." 50
+	"B,." 150
+	"A,.f" 50
+	"B,.f" 150
+	"x,{},{}" 50
+	"x,{},." -50
+	"x,{},.f" -150
+	"x,.,{}" 150
+	"x,.,." 50
+	"x,.,.f" -50
+	"x,.f,{}" 250
+	"x,.f,." 150
+	"x,.f,.f" 50
+    }
+    set i 0
+    set yPos X
+
+    bind all <Leave> {append result "<Leave> %W|"}
+    bind all <Enter> {append result "<Enter> %W|"}
+    set result "|"
+} -body {
+    # The cases below exercise a pointer warp with source window, destination
+    # window and warp window varying over the fixed set of windows in windowList,
+    # utilizing the destination of a previous warp as the source for the next one.
+    foreach destWin $windowList {
+	foreach warpWin $windowList {
+	    set srcWin $destWin
+	    set yPos [expr {$yPos ne "A"?"A":"B"}]
+	    set caseID {}
+	    foreach w [list $srcWin $destWin $warpWin] {
+		append caseID [lsearch $windowList $w]
+	    }
+	    append result "[incr i]($caseID)|"
+	    event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
+		    -x $coords(x,$destWin,$warpWin) -y $coords($yPos,$warpWin)
+	    update; # opportunity to service crossing events
+	}
+	if {$destWin eq [lindex $windowList end]} {
+	    set nextDestWin "{}"
+	} else {
+	    set nextDestWin [lindex $windowList [expr {[lsearch $windowList $destWin]+1}]]
+	}
+	set prevDestWin $destWin
+	foreach warpWin $windowList {
+	    # don't swap yPos, but srcWin and destWin2
+	    set destWin2 [expr {$prevDestWin eq $nextDestWin?$srcWin:$nextDestWin}]
+	    set srcWin $prevDestWin
+	    set prevDestWin $destWin2
+	    set caseID {}
+	    foreach w [list $srcWin $destWin2 $warpWin] {
+		append caseID [lsearch $windowList $w]
+	    }
+	    append result "[incr i]($caseID)|"
+	    event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
+		    -x $coords(x,$destWin2,$warpWin) -y $coords($yPos,$warpWin)
+	    update; # opportunity to service crossing events
+	}
+    }
+    set result
+} -cleanup {
+    unset -nocomplain caseID coords i destWin destWin2 nextDestWin prevDestWin \
+	    result srcWin yPos warpWin windowList
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .f
+} -result {|1(000)|2(001)|3(002)|4(010)|<Enter> .|5(101)|<Leave> .|6(012)|<Enter> .|7(110)|8(111)|9(112)|10(120)|<Leave> .|<Enter> .f|11(211)|<Leave> .f|<Enter> .|12(122)|<Leave> .|<Enter> .f|13(220)|14(221)|15(222)|16(200)|<Leave> .f|<Leave> .|17(021)|<Enter> .|<Enter> .f|18(202)|<Leave> .f|<Leave> .|}
 
 #
 # TESTFILE CLEANUP

@@ -40,7 +40,44 @@ assert {"testutils" in [info procs testutils]}
 #
 
 #
-# Section 1: invalid invocations
+# Testutils domain "generic"
+#
+
+test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
+    unset -nocomplain result
+    # Beware that some windowing systems / window managers impose a minimum
+    # width or height on toplevels. The following windowing systems/window managers
+    # have been investigated for imposing such a minimum size:
+    # x11: no wm (i.e. the bare display server), e16, Fluxbox, Fvwm, Icewm,
+    #      KDE/Plasma, Metacity, Openbox, TWM, WindowMaker, Xvwm
+    # win32 and macOS/aqua. Those exhibiting such a minimum size are:
+    #
+    # ws-wm		width	height
+    # ----------------------------------
+    # win32		116	1
+    # x11-KDE/Plasma	8	33
+    # x11-WindowMaker	5	5
+    # ----------------------------------
+    #
+    # Therefore, don't use a width less than 116, or a height less than 33 for
+    # this test.
+    #
+} -body {
+    . configure -width 151 -height 94
+    wm geometry . +123+123
+    resetWindows
+    lappend result [wm geometry .]
+    pack [frame .f -width 137 -height 109 -bg blue]
+    update
+    lappend result [winfo width .] [winfo height .]
+} -cleanup {
+    unset -nocomplain result
+    destroy .f
+    resetWindows
+} -result {200x200+100+100 137 109}
+
+#
+# testutils command section 1: invalid invocations
 #
 test testutils-1.1 {invalid subcommand} -constraints testutils -body {
     testutils foo
@@ -87,7 +124,7 @@ namespace eval ::tk::test::foo {
 set initVars [info vars]; lappend initVars initVars
 
 #
-# Section 2. Domain failures for forget and import
+# testutils command section 2: Domain failures for forget and import
 #
 test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
     testutils forget foo
@@ -101,7 +138,7 @@ test testutils-2.2 {duplicate import} -constraints testutils -body {
 }
 
 #
-# Section 3. Import procs
+# testutils command section 3. Import procs
 #
 test testutils-3.1 {utility proc is imported and init proc is not} -constraints testutils -body {
     testutils import foo
@@ -129,7 +166,7 @@ test testutils-3.3 {import fails: proc already exists} -constraints testutils -s
 }
 
 #
-# Section 4. Import variables
+# testutils command section 4. Import variables
 #
 test testutils-4.1 {associated variables are imported} -constraints testutils -body {
     testutils import foo
@@ -191,11 +228,7 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
 }
 
 #
-# TESTS FOR SPECIFIC TESTUTILS DOMAINS
-#
-
-#
-# Domain "timing"
+# Testutils domain "timing"
 #
 
 #

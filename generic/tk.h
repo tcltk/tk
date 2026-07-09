@@ -71,11 +71,11 @@ extern "C" {
 #   error "This header-file is for Tk 9 only"
 #endif
 #   define TK_MINOR_VERSION	1
-#   define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
+#   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
 #   define TK_RELEASE_SERIAL	1
 
 #   define TK_VERSION		"9.1"
-#   define TK_PATCH_LEVEL		"9.1a1"
+#   define TK_PATCH_LEVEL		"9.1b1"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -93,6 +93,7 @@ extern "C" {
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
+#   define NeedWidePrototypes 1
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
@@ -1249,10 +1250,7 @@ struct Tk_ImageType {
     Tk_ImagePostscriptProc *postscriptProc;
 				/* Procedure to call to produce postscript
 				 * output for the image. */
-    struct Tk_ImageType *nextPtr;
-				/* Next in list of all image types currently
-				 * known. Filled in by Tk, not by image
-				 * manager. */
+    void *reserved1;		/* reserved for future expansion */
     char *reserved;		/* reserved for future expansion */
 };
 

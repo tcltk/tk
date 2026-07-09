@@ -41,7 +41,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	childInterp eval {
 	    focus -force .
 	    set i 0
-	    while {[focus] != "."} {
+	    while {[focus] ne "."} {
 		after 100
 		incr i
 		if {$i > 10} {
@@ -359,7 +359,7 @@ in .t.b1 NotifyNonlinear
 } .t.b1}
 
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuartz
+    unix  testwrapper failsOnCILinux failsOnXQuartz
 } -body {
     focus .t.b1
     focus .
@@ -371,7 +371,7 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuartz
+    unix  testwrapper failsOnCILinux failsOnXQuartz
 } -body {
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
@@ -392,7 +392,7 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuartz
+    unix  testwrapper failsOnCILinux failsOnXQuartz
 } -body {
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
@@ -654,7 +654,7 @@ childTkProcess exit
 
 # Test 5.1 fails (before and after update)
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix testwrapper secureserver failsOnUbuntu failsOnXQuartz
+    unix testwrapper secureserver failsOnCILinux failsOnXQuartz
 } -body {
     childTkProcess create
     focusSetup
@@ -682,7 +682,7 @@ fixfocus
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
     unix  testwrapper
 } -setup {
-    eval interp delete [interp slaves]
+    eval interp delete [interp children]
 } -body {
     toplevel .t
     wm geometry .t +0+0

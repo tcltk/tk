@@ -33,7 +33,7 @@ proc killTables {} {
     deleteWindows
     foreach t {alltypes chain3 chain2 chain1 configerror internal
 	    new notenoughparams twowindows} {
-	    while {[testobjconfig info $t] != ""} {
+	    while {[testobjconfig info $t] ne ""} {
 		testobjconfig delete $t
 	    }
     }

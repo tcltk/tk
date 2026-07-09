@@ -5,30 +5,21 @@
  * on Unix-like systems based on the Gnome Accessibility Toolkit.
  * the standard accessibility library for X11 systems.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
- * Copyright (c) 2006, Marcus von Appen
- * Copyright (c) 2019-2025 Kevin Walzer
+ * Copyright © 1995 Sun Microsystems, Inc.
+ * Copyright © 2006, Marcus von Appen
+ * Copyright © 2019-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <time.h>
-#include <tcl.h>
-#include <tk.h>
 #include "tkInt.h"
 
-#ifdef USE_ATK
+#ifdef HAVE_ATK
 #include <atk/atk.h>
-#include <atk/atktext.h>
-#include <atk/atkvalue.h>
 #include <atk-bridge.h>
-#include <dbus/dbus.h>
-#include <glib.h>
 
 /* Structs for custom ATK objects bound to Tk. */
 typedef struct _TkAtkAccessible {
@@ -37,7 +28,7 @@ typedef struct _TkAtkAccessible {
     Tcl_Interp *interp;
     gint x, y, width, height;
     char *path;
-    int is_focused;
+    bool is_focused;
     int virtual_count;
 } TkAtkAccessible;
 
@@ -47,12 +38,10 @@ typedef struct _TkAtkAccessibleClass {
 
 /* Structs to map Tk roles into ATK roles. */
 
-typedef struct AtkRoleMap {
+static const struct AtkRoleMap {
     const char *tkrole;
     AtkRole atkrole;
-} AtkRoleMap;
-
-struct AtkRoleMap roleMap[] = {
+} roleMap[] = {
     {"Button", ATK_ROLE_PUSH_BUTTON},
     {"Checkbox", ATK_ROLE_CHECK_BOX},
     {"Combobox", ATK_ROLE_COMBO_BOX},
@@ -74,7 +63,7 @@ struct AtkRoleMap roleMap[] = {
     {"Canvas", ATK_ROLE_CANVAS},
     {"Scrollbar", ATK_ROLE_SCROLL_BAR},
     {"Toggleswitch", ATK_ROLE_TOGGLE_BUTTON},
-    {NULL, 0}
+    {NULL, ATK_ROLE_INVALID }
 };
 
 
@@ -173,7 +162,7 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 static int EmitSelectionChanged(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 static int EmitFocusChanged(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
-static int IsScreenReaderActive(void);
+static bool IsScreenReaderActive(void);
 int TkAtkAccessibleObjCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
@@ -206,7 +195,7 @@ static void Atk_Event_Setup(
     TCL_UNUSED(void *), /* clientData */
     int flags)
 {
-    static Tcl_Time block_time = {0, 10000};
+    Tcl_Time block_time = {0, 10000};
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -327,7 +316,7 @@ static gboolean tk_grab_focus(AtkComponent *component)
    Tcl_Eval(acc->interp, cmd);
 
    /* Update internal state. */
-   acc->is_focused = 1;
+   acc->is_focused = true;
    AtkObject *obj = ATK_OBJECT(acc);
 
    /* Force ATK notifications for focus change. */
@@ -444,7 +433,7 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 	if (attrs) {
 	    Tcl_HashEntry *roleEntry = Tcl_FindHashEntry(attrs, "role");
 	    if (roleEntry) {
-		const char *result = Tcl_GetString(Tcl_GetHashValue(roleEntry));
+		const char *result = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(roleEntry));
 		if (result) {
 		    for (int i = 0; roleMap[i].tkrole != NULL; i++) {
 			if (strcmp(roleMap[i].tkrole, result) == 0) {
@@ -509,7 +498,7 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
     Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
     if (!nameEntry) return NULL;
 
-    const char *name = Tcl_GetString(Tcl_GetHashValue(nameEntry));
+    const char *name = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(nameEntry));
     return name ? g_utf8_make_valid(name, -1) : NULL;
 }
 
@@ -546,7 +535,7 @@ static gchar *GetAtkDescriptionForWidget(Tk_Window win)
     Tcl_HashEntry *descriptionEntry = Tcl_FindHashEntry(attrs, "description");
     if (!descriptionEntry) return NULL;
 
-    const char *description = Tcl_GetString(Tcl_GetHashValue(descriptionEntry));
+    const char *description = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(descriptionEntry));
     return description ? g_utf8_make_valid(description, -1) : NULL;
 }
 
@@ -601,7 +590,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 		if (attrs) {
 		    Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
 		    if (stateEntry) {
-			const char *state = Tcl_GetString(Tcl_GetHashValue(stateEntry));
+			const char *state = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(stateEntry));
 			if (state && (strcmp(state, "disabled") == 0 || strcmp(state, "readonly") == 0)) {
 			    is_editable = 0;
 			}
@@ -675,7 +664,7 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
 
     if (!valueEntry) return NULL;
 
-    const char *value = Tcl_GetString(Tcl_GetHashValue(valueEntry));
+    const char *value = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(valueEntry));
     return value ? g_utf8_make_valid(value, -1) : NULL;
 }
 
@@ -830,7 +819,7 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
 	role == ATK_ROLE_RADIO_BUTTON) {
 
 	const char *value = GetAtkValueForWidget(acc->tkwin);
-	gboolean checked = (value && value[0] != '0');
+	bool checked = (value && value[0] != '0');
 
 	atk_object_notify_state_change(
 	    ATK_OBJECT(acc),
@@ -1254,7 +1243,7 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 	TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
 	if (focusPtr == (TkWindow*)tkwin) {
 	    TkAtkAccessible *tkAcc = (TkAtkAccessible *)acc;
-	    tkAcc->is_focused = 1;
+	    tkAcc->is_focused = true;
 	    atk_object_notify_state_change(acc, ATK_STATE_FOCUSED, TRUE);
 	    g_signal_emit_by_name(acc, "focus-event", TRUE);
 
@@ -1357,7 +1346,7 @@ static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
     TkAtkAccessible *focusedTkAcc = (TkAtkAccessible *)focusedAcc;
 
     /* Update focus state. */
-    focusedTkAcc->is_focused = 1;
+    focusedTkAcc->is_focused = true;
     atk_object_notify_state_change(focusedAcc, ATK_STATE_FOCUSED, TRUE);
     g_signal_emit_by_name(focusedAcc, "focus-event", TRUE);
 
@@ -1417,7 +1406,7 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 static AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
-	TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+	TkAtkAccessible *acc = (TkAtkAccessible *)g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
 	tk_root_accessible = ATK_OBJECT(acc);
 	atk_object_initialize(tk_root_accessible, NULL);
 	/* Set proper name and role.  */
@@ -1441,7 +1430,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
     if (existing) return existing;
 
-    TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+    TkAtkAccessible *acc = (TkAtkAccessible *)g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     acc->interp = interp;
     acc->tkwin = tkwin;
     acc->path = g_utf8_make_valid(path, -1);
@@ -1464,7 +1453,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
 	role == ATK_ROLE_TREE_ITEM || role == ATK_ROLE_COMBO_BOX ||
 	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
 	TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
-	acc->is_focused = (focusPtr == (TkWindow*)tkwin) ? 1 : 0;
+	acc->is_focused = (focusPtr == (TkWindow*)tkwin);
     }
 
     RegisterAtkObjectForTkWindow(tkwin, obj);
@@ -1656,12 +1645,12 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
     if (!acc || !acc->tkwin) return;
 
-    gboolean focused = (eventPtr->type == FocusIn);
+    bool focused = (eventPtr->type == FocusIn);
     AtkObject *obj = ATK_OBJECT(acc);
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
 
     /* Update this widget's focus state. */
-    acc->is_focused = focused ? 1 : 0;
+    acc->is_focused = focused;
     atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, focused);
     g_signal_emit_by_name(obj, "focus-event", focused);
 
@@ -1755,13 +1744,7 @@ static int EmitSelectionChanged(
     /* For checkboxes and radiobuttons, emit state-changed signal. */
     if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
 	const char *value = GetAtkValueForWidget(tkwin);
-	gboolean checked = FALSE;
-
-	if (value) {
-	    if (strcmp(value, "selected") == 0 || strcmp(value, "1") == 0) {
-		checked = TRUE;
-	    }
-	}
+	bool checked = (value != NULL) && (strcmp(value, "selected") == 0 || strcmp(value, "1") == 0);
 
 	/* Emit the state change notification */
 	atk_object_notify_state_change(obj, ATK_STATE_CHECKED, checked);
@@ -1841,9 +1824,9 @@ static int IsScreenReaderRunning(
     TCL_UNUSED(Tcl_Size), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
-    int result = IsScreenReaderActive();
+    bool result = IsScreenReaderActive();
 
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
     return TCL_OK;
 }
 
@@ -1851,16 +1834,16 @@ static int IsScreenReaderRunning(
  * Helper function to determine if screen reader is running. Separate function
  * because it can be called internally as well as a Tcl command.
  */
-static int IsScreenReaderActive(void)
+static bool IsScreenReaderActive(void)
 {
     FILE *fp = popen("pgrep -x orca", "r");
     if (!fp) return 0;
 
     char buffer[16];
-    int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
+    bool running = (fgets(buffer, sizeof(buffer), fp) != NULL);
     pclose(fp);
 
-    return running ? 1 : 0;
+    return running;
 }
 
 /*
@@ -1893,7 +1876,7 @@ int TkAtkAccessibleObjCmd(
 	return TCL_ERROR;
     }
 
-    char *windowName = Tcl_GetString(objv[1]);
+    const char *windowName = Tcl_GetString(objv[1]);
     if (!windowName) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("Window name cannot be null.", -1));
 	return TCL_ERROR;
@@ -1939,7 +1922,7 @@ int TkAtkAccessibleObjCmd(
  *----------------------------------------------------------------------
  */
 
-#ifdef USE_ATK
+#ifdef HAVE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
     /* Initialize AT-SPI bridge. */
@@ -1972,9 +1955,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
 	return TCL_ERROR;
     }
-
-    Tk_MakeWindowExist(mainWin);
-    Tk_MapWindow(mainWin);
 
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {

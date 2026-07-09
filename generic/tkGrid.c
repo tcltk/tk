@@ -1052,7 +1052,7 @@ GridRowColumnConfigureCommand(
 	if (Tcl_GetSizeIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retrieving options only integer indices are "
-		    "allowed)", NULL);
+		    "allowed)", (char *)NULL);
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_FORMAT", (char *)NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
@@ -1129,7 +1129,7 @@ GridRowColumnConfigureCommand(
     }
 
     for (j = 0; j < lObjc; j++) {
-	int allContent = 0;
+	bool allContent = false;
 
 	if (Tcl_GetSizeIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
 	    first = slot;
@@ -1146,7 +1146,7 @@ GridRowColumnConfigureCommand(
 	    if (contentPtr == NULL) {
 		continue;
 	    }
-	    allContent = 1;
+	    allContent = true;
 	} else if (TkGetWindowFromObj(NULL, tkwin, lObjv[j], &content)
 		== TCL_OK) {
 	    /*
@@ -1254,7 +1254,7 @@ GridRowColumnConfigureCommand(
 	    if (contentPtr != NULL) {
 		contentPtr = contentPtr->nextPtr;
 	    }
-	} while ((allContent == 1) && (contentPtr != NULL));
+	} while (allContent && (contentPtr != NULL));
     }
     Tcl_DecrRefCount(listCopy);
 

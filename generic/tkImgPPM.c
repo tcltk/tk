@@ -671,7 +671,7 @@ ReadPPMFileHeader(
 	 * Skip comments and white space.
 	 */
 
-	while (1) {
+	while (true) {
 	    while (isspace(UCHAR(c))) {
 		if (Tcl_Read(chan, &c, 1) != 1) {
 		    return 0;
@@ -767,6 +767,9 @@ ReadPPMStringHeader(
     unsigned char *dataBuffer;
 
     dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
+    if (!dataBuffer) {
+	return 0;
+    }
 
     /*
      * Read 4 space-separated fields from the string, ignoring comments (any
@@ -783,7 +786,7 @@ ReadPPMStringHeader(
 	 * Skip comments and white space.
 	 */
 
-	while (1) {
+	while (true) {
 	    while (isspace(UCHAR(c))) {
 		if (dataSize-- < 1) {
 		    return 0;

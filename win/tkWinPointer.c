@@ -22,10 +22,10 @@
  * Declarations of static variables used in this file.
  */
 
-static int captured = 0;		/* 1 if mouse is currently captured. */
 static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
-static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
+static bool mouseTimerSet = false;		/* true if the mouse timer is active. */
+static bool captured = false;		/* 1 if mouse is currently captured. */
 
 /*
  * Forward declarations of procedures used in this file.
@@ -148,7 +148,7 @@ TkWinPointerEvent(
     Tk_UpdatePointer(tkwin, pos.x, pos.y, state);
 
     if ((captured || tkwin) && !mouseTimerSet) {
-	mouseTimerSet = 1;
+	mouseTimerSet = true;
 	mouseTimer = Tcl_CreateTimerHandler(MOUSE_TIMER_INTERVAL,
 		MouseTimerProc, NULL);
     }
@@ -239,7 +239,7 @@ MouseTimerProc(
 {
     POINT pos;
 
-    mouseTimerSet = 0;
+    mouseTimerSet = false;
 
     GetCursorPos(&pos);
     TkWinPointerEvent(NULL, pos.x, pos.y);
@@ -266,7 +266,7 @@ TkWinCancelMouseTimer(void)
 {
     if (mouseTimerSet) {
 	Tcl_DeleteTimerHandler(mouseTimer);
-	mouseTimerSet = 0;
+	mouseTimerSet = false;
     }
 }
 
@@ -433,14 +433,22 @@ void
 TkpWarpPointer(
     TkDisplay *dispPtr)
 {
+    int rootx, rooty;
+    unsigned int modifierState;
+
     if (dispPtr->warpWindow) {
 	RECT r;
-
 	GetWindowRect(Tk_GetHWND(Tk_WindowId(dispPtr->warpWindow)), &r);
 	TkSetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
     } else {
 	TkSetCursorPos(dispPtr->warpX, dispPtr->warpY);
     }
+
+    XQueryPointer(dispPtr->display, None, NULL, NULL, &rootx, &rooty,
+	    NULL, NULL, &modifierState);
+    Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
+	    dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, rootx, rooty, modifierState);
 }
 
 /*
@@ -595,11 +603,10 @@ void
 TkpSetCapture(
     TkWindow *winPtr)		/* Capture window, or NULL. */
 {
-    if (winPtr) {
+    captured = winPtr != NULL;
+    if (captured) {
 	SetCapture(Tk_GetHWND(Tk_WindowId(winPtr)));
-	captured = 1;
     } else {
-	captured = 0;
 	ReleaseCapture();
     }
 }

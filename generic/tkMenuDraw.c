@@ -248,6 +248,12 @@ TkMenuConfigureDrawOptions(
 	gcValues.stipple = menuPtr->gray;
 	newGC = Tk_GetGC(menuPtr->tkwin,
 	    GCForeground|GCFillStyle|GCStipple, &gcValues);
+    } else {
+	/* If we are unable to create the gray50 bitmap, just create a GC with
+	 * the same mask as the disabledGC.  We cannot resuse the disabledGC
+	 * because they get freed separately.
+	 */
+	newGC = Tk_GetGC(menuPtr->tkwin, mask, &gcValues);
     }
     if (menuPtr->disabledImageGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledImageGC);
@@ -620,7 +626,6 @@ DisplayMenu(
     TkMenuEntry *mePtr;
     Tk_Window tkwin = menuPtr->tkwin;
     Tcl_Size index;
-    int strictMotif;
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;
     int width;
@@ -643,7 +648,10 @@ DisplayMenu(
 		Tk_Height(tkwin) - 2 * borderWidth, 0, TK_RELIEF_FLAT);
     }
 
-    strictMotif = Tk_StrictMotif(menuPtr->tkwin);
+    DrawMenuFlags drawingParameters = DRAW_MENU_ENTRY_ARROW;
+    if (Tk_StrictMotif(menuPtr->tkwin)) {
+	drawingParameters = (DrawMenuFlags)(drawingParameters | DRAW_MENU_ENTRY_STRICTMOTIF);
+    }
 
     /*
      * See note in ComputeMenuGeometry. We don't want to be doing font metrics
@@ -668,7 +676,7 @@ DisplayMenu(
 
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
 		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
-		mePtr->height, strictMotif, 1);
+		mePtr->height, drawingParameters);
 
 	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
 
@@ -988,14 +996,16 @@ AdjustMenuCoords(
 	*yPtr += mePtr->y + mePtr->height;
     } else {
 	int borderWidth, activeBorderWidth;
+	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+	int scaled2 = (int)round(2*scalingLevel);
 
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	*xPtr += Tk_Width(menuPtr->tkwin) - borderWidth	- activeBorderWidth
-		- 2;
-	*yPtr += mePtr->y + activeBorderWidth + 2;
+		- scaled2;
+	*yPtr += mePtr->y + activeBorderWidth + scaled2;
     }
 }
 

@@ -56,10 +56,10 @@ typedef struct TagSearch {
     int type;			/* Search type (see #defs below) */
     Tcl_Size id;			/* Item id for searches by id */
     const char *string;		/* Tag expression string */
-    int stringIndex;		/* Current position in string scan */
-    int stringLength;		/* Length of tag expression string */
+    Tcl_Size stringIndex;		/* Current position in string scan */
+    Tcl_Size stringLength;		/* Length of tag expression string */
     char *rewritebuffer;	/* Tag string (after removing escapes) */
-    unsigned int rewritebufferAllocated;
+    size_t rewritebufferAllocated;
 				/* Available space for rewrites. */
     TagSearchExpr *expr;	/* Compiled tag expression. */
 } TagSearch;
@@ -400,7 +400,7 @@ static inline void
 ItemCursor(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int index)
+    Tcl_Size index)
 {
     itemPtr->typePtr->icursorProc((Tk_Canvas) canvasPtr, itemPtr, index);
 }
@@ -409,8 +409,8 @@ static inline void
 ItemDelChars(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int first,
-    int last)
+    Tcl_Size first,
+    Tcl_Size last)
 {
     itemPtr->typePtr->dCharsProc((Tk_Canvas) canvasPtr, itemPtr, first, last);
 }
@@ -456,7 +456,7 @@ static inline void
 ItemInsert(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int beforeThis,
+    Tcl_Size beforeThis,
     Tcl_Obj *toInsert)
 {
     itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
@@ -501,7 +501,7 @@ static inline Tcl_Size
 ItemSelection(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int offset,
+    Tcl_Size offset,
     char *buffer,
     Tcl_Size maxBytes)
 {
@@ -510,7 +510,7 @@ ItemSelection(
     }
 
     return itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
-	    offset, buffer, (int)maxBytes);
+	    offset, buffer, maxBytes);
 }
 
 static inline void
@@ -600,7 +600,7 @@ DefaultRotateImplementation(
 	     * Write the coordinates back into the item.
 	     */
 
-	    newObjv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+	    newObjv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
 	    for (i=0 ; i<objc ; i++) {
 		newObjv[i] = Tcl_NewDoubleObj(coordv[i]);
 		Tcl_IncrRefCount(newObjv[i]);
@@ -1491,10 +1491,10 @@ CanvasWidgetCmd(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
-	    int i;
+	    Tcl_Size i;
 	    Tcl_Obj *resultObj = Tcl_NewObj();
 
-	    for (i = 0; i < (int)itemPtr->numTags; i++) {
+	    for (i = 0; i < itemPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
 			Tcl_NewStringObj(itemPtr->tagPtr[i], TCL_INDEX_NONE));
 	    }
@@ -4103,7 +4103,7 @@ TagSearchScanExpr(
 		 * Remove trailing whitespace.
 		 */
 
-		while (1) {
+		while (true) {
 		    c = *--tag;
 
 		    /*
@@ -4799,7 +4799,7 @@ FindItems(
 	    return TCL_OK;
 	}
 	closestDist = ItemPoint(canvasPtr, itemPtr, coords, halo);
-	while (1) {
+	while (true) {
 	    double newDist;
 
 	    /*
@@ -4819,7 +4819,7 @@ FindItems(
 	     * the starting item.
 	     */
 
-	    while (1) {
+	    while (true) {
 		itemPtr = itemPtr->nextPtr;
 		if (itemPtr == NULL) {
 		    itemPtr = canvasPtr->firstItemPtr;

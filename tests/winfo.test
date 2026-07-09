@@ -164,10 +164,24 @@ test winfo-4.7 {"winfo containing" command} -setup {
 
     set x [winfo containing -display .t.f [expr {[winfo rootx .t]+600}] \
 	[expr {[winfo rooty .t.f]+450}]]
-    expr {($x == ".") || ($x == "")}
+    expr {($x eq ".") || ($x eq "")}
 } -cleanup {
     destroy .t
 } -result 1
+test winfo-4.8 {"winfo containing": don't consider unmapped toplevel windows (bug #591829e948-B)} -setup {
+    wm geometry . 200x200+100+100
+    after 10; update
+    wm withdraw .
+} -body {
+    toplevel .one
+    wm geometry .one 200x200+350+100
+    after 10; update
+    wm withdraw .one
+    after 10; update
+    winfo containing 450 200
+} -cleanup {
+    wm deiconify .
+} -result ""
 
 testutils import child
 
@@ -180,7 +194,12 @@ test winfo-5.2 {"winfo interps" command} -body {
 test winfo-5.3 {"winfo interps" command} -body {
     winfo interps -displayof geek
 } -returnCodes error -result {bad window path name "geek"}
-test winfo-5.4 {"winfo interps" command} -constraints unix -body {
+
+# The winfo command does not work on macOS CI runnters because it requires writing
+# to a database file, which in turn requires interactively dismissing a system
+# privacy dialog
+
+test winfo-5.4 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkInterp child
     set appname [child eval tk appname]
     set res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
@@ -188,7 +207,7 @@ test winfo-5.4 {"winfo interps" command} -constraints unix -body {
     lappend res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
     set res
 } -result {1 0}
-test winfo-5.5 {"winfo interps" command} -constraints unix -body {
+test winfo-5.5 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkInterp child
     set appname [child eval tk appname]
     set res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
@@ -196,7 +215,7 @@ test winfo-5.5 {"winfo interps" command} -constraints unix -body {
     lappend res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
     set res
 } -result {1 0}
-test winfo-5.6 {"winfo interps" command} -constraints unix -body {
+test winfo-5.6 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkProcess create
     set appname [childTkProcess eval [list tk appname]]
     set res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
@@ -204,7 +223,7 @@ test winfo-5.6 {"winfo interps" command} -constraints unix -body {
     lappend res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
     set res
 } -result {1 0}
-test winfo-5.7 {"winfo interps" command} -constraints unix -body {
+test winfo-5.7 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkProcess create
     set appname [childTkProcess eval [list tk appname]]
     set res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
@@ -280,8 +299,6 @@ test winfo-8.1 {"winfo pointerx" command} -setup {
     update
 } -body {
     catch [winfo pointerx .b]
-} -body {
-    catch [winfo pointerx .b]
 } -result 1
 test winfo-8.2 {"winfo pointery" command} -setup {
     destroy .b
@@ -289,8 +306,6 @@ test winfo-8.2 {"winfo pointery" command} -setup {
     update
 } -body {
     catch [winfo pointery .b]
-} -body {
-    catch [winfo pointerx .b]
 } -result 1
 test winfo-8.3 {"winfo pointerxy" command} -setup {
     destroy .b
@@ -298,8 +313,6 @@ test winfo-8.3 {"winfo pointerxy" command} -setup {
     update
 } -body {
     catch [winfo pointerxy .b]
-} -body {
-    catch [winfo pointerx .b]
 } -result 1
 
 
@@ -312,7 +325,7 @@ test winfo-9.2 {"winfo viewable" command} -body {
 test winfo-9.3 {"winfo viewable" command} -body {
     winfo viewable .
 } -result 1
-test winfo-9.4 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+test winfo-9.4 {"winfo viewable" command} -constraints {failsOnCILinux failsOnXQuartz} -body {
     wm iconify .
     winfo viewable .
 } -cleanup {
@@ -341,7 +354,7 @@ test winfo-9.6 {"winfo viewable" command} -setup {
 } -cleanup {
     deleteWindows
 } -result {0 0}
-test winfo-9.7 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+test winfo-9.7 {"winfo viewable" command} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     deleteWindows
 } -body {
     frame .f1 -width 100 -height 100 -relief raised -bd 2
@@ -368,22 +381,22 @@ test winfo-10.3 {"winfo visualid" command} -body {
 } -result 2
 
 
-test winfo-11.1 {"winfo visualid" command} -body {
+test winfo-11.1 {"winfo visualsavailable" command} -body {
     winfo visualsavailable
 } -returnCodes error -result {wrong # args: should be "winfo visualsavailable window ?includeids?"}
-test winfo-11.2 {"winfo visualid" command} -body {
+test winfo-11.2 {"winfo visualsavailable" command} -body {
     winfo visualsavailable gorp
 } -returnCodes error -result {bad window path name "gorp"}
-test winfo-11.3 {"winfo visualid" command} -body {
+test winfo-11.3 {"winfo visualsavailable" command} -body {
     winfo visualsavailable . includeids foo
 } -returnCodes error -result {wrong # args: should be "winfo visualsavailable window ?includeids?"}
-test winfo-11.4 {"winfo visualid" command} -body {
+test winfo-11.4 {"winfo visualsavailable" command} -body {
     llength [lindex [winfo visualsa .] 0]
 } -result 2
-test winfo-11.5 {"winfo visualid" command} -body {
+test winfo-11.5 {"winfo visualsavailable" command} -body {
     llength [lindex [winfo visualsa . includeids] 0]
 } -result 3
-test winfo-11.6 {"winfo visualid" command} -body {
+test winfo-11.6 {"winfo visualsavailable" command} -body {
     set x [lindex [lindex [winfo visualsa . includeids] 0] 2]
     expr {$x + 2 - $x}
 } -result 2
@@ -473,15 +486,15 @@ test winfo-13.4 {[winfo containing] with embedded windows} -setup {
 } -result 0
 
 
-test winfo-14.1 {usage} -body {
+test winfo-14.1 {"winfo ismapped" command, usage} -body {
     winfo ismapped
 } -returnCodes error -result {wrong # args: should be "winfo ismapped window"}
 
-test winfo-14.2 {usage} -body {
+test winfo-14.2 {"winfo ismapped" command, usage} -body {
     winfo ismapped . .
 } -returnCodes error -result {wrong # args: should be "winfo ismapped window"}
 
-test winfo-14.3 {initially unmapped} -setup {
+test winfo-14.3 {"winfo ismapped" command, new toplevel is initially unmapped} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -490,7 +503,7 @@ test winfo-14.3 {initially unmapped} -setup {
     destroy .t
 } -result 0
 
-test winfo-14.4 {mapped at idle time} -setup {
+test winfo-14.4 {"winfo ismapped" command, new toplevel is mapped at idle time} -setup {
     destroy .t
 } -body {
     toplevel .t

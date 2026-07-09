@@ -12,6 +12,7 @@
  */
 
 #include "tkInt.h"
+#include <locale.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -1241,7 +1242,8 @@ TkMakeEnsemble(
  *
  * TkScalingLevel --
  *
- *	Returns the display's DPI scaling level as 1.0, 1.25, 1.5, ....
+ *	Returns the display's DPI scaling value as a decimal value where
+ *	0.9 is 90%, 1.0 is 100%, 1.1 is 110%, 2.0 is 200%, etc.
  *
  * Results:
  *      The scaling level.
@@ -1256,6 +1258,33 @@ double
 TkScalingLevel(
     Tk_Window tkwin)
 {
+    Screen *screenPtr = Tk_Screen(tkwin);
+
+    return 25.4/72.0*WidthOfScreen(screenPtr)/WidthMMOfScreen(screenPtr)*0.75;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkScalingLevel2 --
+ *
+ *	Returns the display's DPI scaling level as 0.25, 0.5, 0.75, 1.0,
+ *	1.25, 1.5, 1.75, ..., corresponding to the value of the variable
+ *	tk::scalingPct.
+ *
+ * Results:
+ *      The scaling level.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkScalingLevel2(
+    Tk_Window tkwin)
+{
     Tcl_Interp *interp = Tk_Interp(tkwin);
     Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
 	    TCL_GLOBAL_ONLY);
@@ -1266,6 +1295,43 @@ TkScalingLevel(
 	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
 	return scalingPct / 100.0;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetScaledPixelValue --
+ *
+ *	Returns a scaled pixel value for a given screen unit value.
+ *
+ * Results:
+ *      The scaled screen unit value in pixels or TCL_ERROR for error.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkGetScaledPixelValue(
+    Tcl_Interp *interp,		/* Used for reporting errors. */
+    Tk_Window tkwin,
+    Tcl_Obj *valuePtr,		/* Value to scale */
+    int *size)			/* Return value */
+{
+    double d;
+
+    if (Tcl_GetDoubleFromObj(NULL, valuePtr, &d) == TCL_OK) {
+	/* Unscaled pixel value, so do scaling */
+	*size = (int)round(d * TkScalingLevel(tkwin));
+    } else if (Tk_GetDoublePixelsFromObj(interp, tkwin, valuePtr, &d) == TCL_OK) {
+	/* Other screen units value, already scaled  */
+	*size = (int)round(d);
+    } else {
+	return TCL_ERROR;
+    }
+    return TCL_OK;
 }
 
 /*
@@ -1302,6 +1368,65 @@ Tk_SendVirtualEvent(
     if (detail) Tcl_IncrRefCount(detail); // Event code will DecrRefCount
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkFormatDouble --
+ *
+ *	Format a floating-point value with a printf-style format, like
+ *	snprintf(), but always using '.' as the decimal separator regardless
+ *	of the process LC_NUMERIC locale.
+ *
+ *	Tcl treats numbers as locale-independent: the decimal separator is
+ *	always '.' and Tcl forces LC_NUMERIC to "C" during initialization (see
+ *	TclpSetInitialEncodings).  However an embedding application (e.g. a
+ *	Python program using tkinter) may set LC_NUMERIC to a locale that uses
+ *	another separator after Tcl is initialized.  Plain snprintf() would
+ *	then format e.g. 0.1 as "0,1", which is not a valid Tcl number and
+ *	fails to parse when read back from a linked variable or a widget
+ *	subcommand result.  This wrapper normalizes the separator back to '.'.
+ *
+ * Results:
+ *	The return value of snprintf(): the number of characters that would
+ *	have been written had the buffer been large enough (excluding the
+ *	terminating NUL), or a negative value on error.
+ *
+ * Side effects:
+ *	Writes the formatted string to buffer.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkFormatDouble(
+    char *buffer,		/* Where to store the formatted string. */
+    size_t size,		/* Size of buffer in bytes. */
+    const char *format,		/* A printf-style format containing a single
+				 * floating-point conversion, e.g. "%.4g". */
+    double value)		/* The value to format. */
+{
+    int length = snprintf(buffer, size, format, value);
+    const char *decimal = localeconv()->decimal_point;
+
+    /*
+     * snprintf() above honours LC_NUMERIC.  If that locale uses a single-byte
+     * decimal separator other than '.' (e.g. ',' in many European locales),
+     * replace it so the result stays a valid Tcl number.  printf's "%f"/"%e"/
+     * "%g" conversions emit at most one such separator and never a thousands
+     * separator, so a single replacement is sufficient.
+     */
+
+    if (length > 0 && decimal[0] != '.' && decimal[1] == '\0') {
+	size_t scan = ((size_t)length < size) ? (size_t)length : size - 1;
+	char *p = (char *)memchr(buffer, decimal[0], scan);
+
+	if (p != NULL) {
+	    *p = '.';
+	}
+    }
+    return length;
 }
 
 /*

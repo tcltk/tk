@@ -338,7 +338,7 @@ typedef struct WaitRestrictInfo {
  * Forward declarations for functions defined in this file:
  */
 
-static int		ComputeReparentGeometry(WmInfo *wmPtr);
+static bool		ComputeReparentGeometry(WmInfo *wmPtr);
 static void		ConfigureEvent(WmInfo *wmPtr,
 			    XConfigureEvent *eventPtr);
 static void		CreateWrapper(WmInfo *wmPtr);
@@ -1821,7 +1821,11 @@ WmForgetCmd(
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
 
-    if (Tk_IsTopLevel(frameWin)) {
+    /*
+     * Tk ticket c77b426d: avoid panic on usage after wm forget
+     */
+
+    if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
 	TkFocusJoin(winPtr);
 	Tk_UnmapWindow(frameWin);
 	TkWmDeadWindow(winPtr);
@@ -4267,7 +4271,7 @@ ReparentEvent(
 
     handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
     wmPtr->reparent = reparentEventPtr->parent;
-    while (1) {
+    while (true) {
 	if (XQueryTree(wrapperPtr->display, wmPtr->reparent, &dummy2,
 		&ancestor, &children, &dummy) == 0) {
 	    Tk_DeleteErrorHandler(handler);
@@ -4309,7 +4313,7 @@ ReparentEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ComputeReparentGeometry(
     WmInfo *wmPtr)		/* Information about toplevel window whose
 				 * reparent info is to be recomputed. */
@@ -4338,7 +4342,7 @@ ComputeReparentGeometry(
 
 	wmPtr->reparent = None;
 	wmPtr->xInParent = wmPtr->yInParent = 0;
-	return 0;
+	return false;
     }
     wmPtr->xInParent = xOffset + bd;
     wmPtr->yInParent = yOffset + bd;
@@ -4392,7 +4396,7 @@ ComputeReparentGeometry(
 	printf("     wmPtr %p coords %d,%d, offsets %d %d\n",
 		wmPtr, wmPtr->x, wmPtr->y, wmPtr->xInParent, wmPtr->yInParent);
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -5407,7 +5411,7 @@ WaitForMapNotify(
     XEvent event;
     int code;
 
-    while (1) {
+    while (true) {
 	if (mapped) {
 	    if (winPtr->flags & TK_MAPPED) {
 		break;
@@ -5761,7 +5765,7 @@ Tk_GetRootCoords(
      */
 
     x = y = 0;
-    while (1) {
+    while (true) {
 	x += winPtr->changes.x + winPtr->changes.border_width;
 	y += winPtr->changes.y + winPtr->changes.border_width;
 	if ((winPtr->wmInfoPtr != NULL)
@@ -5905,7 +5909,7 @@ Tk_CoordsToWindow(
      */
 
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1, NULL, NULL);
-    while (1) {
+    while (true) {
 	if (XTranslateCoordinates(Tk_Display(tkwin), parent, window,
 		x, y, &childX, &childY, &child) == False) {
 	    /*
@@ -6008,7 +6012,7 @@ Tk_CoordsToWindow(
      * process on that child.
      */
 
-    while (1) {
+    while (true) {
 	nextPtr = NULL;
 	for (childPtr = winPtr->childList; childPtr != NULL;
 		childPtr = childPtr->nextPtr) {
@@ -7417,7 +7421,7 @@ UpdateCommand(
  *	toplevel window.
  *
  * Results:
- *	0 on error, 1 otherwise
+ *	false on error, true otherwise
  *
  * Side effects:
  *	May minimize, restore, or withdraw a window.
@@ -7425,7 +7429,7 @@ UpdateCommand(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
      TkWindow *winPtr,		/* Toplevel window to operate on. */
      int state)			/* One of IconicState, NormalState, or
@@ -7437,25 +7441,25 @@ TkpWmSetState(
 	wmPtr->hints.initial_state = WithdrawnState;
 	wmPtr->withdrawn = 1;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		winPtr->screenNum) == 0) {
-	    return 0;
+	    return false;
 	}
 	WaitForMapNotify(winPtr, 0);
     } else if (state == NormalState) {
 	wmPtr->hints.initial_state = NormalState;
 	wmPtr->withdrawn = 0;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (wmPtr->withdrawn) {
 	    UpdateHints(winPtr);
@@ -7464,13 +7468,13 @@ TkpWmSetState(
 	} else {
 	    if (XIconifyWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		    winPtr->screenNum) == 0) {
-		return 0;
+		return false;
 	    }
 	    WaitForMapNotify(winPtr, 0);
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*
@@ -7508,6 +7512,35 @@ RemapWindows(
 		    win_attr.x, win_attr.y);
 	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowIsDark --
+ *
+ *      Tests whether the given window is in "dark mode"..
+ *      Assigns true if the window is in dark mode, false if not.
+ *
+ * Results:
+ *      Returns a standard Tcl result code.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpWindowIsDark(
+    TCL_UNUSED(Tk_Window),
+    bool *isdark)
+{
+    /*
+     * Always returns false for X11.
+     */
+    *isdark = false;
+    return TCL_OK;
 }
 
 /*

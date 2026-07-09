@@ -102,7 +102,7 @@ error if tried.
 .RE
 .\" METHOD: fileicon
 .TP
-\fBtk fileicon \fIfile size\fR 
+\fBtk fileicon \fIfile size\fR
 .
 Displays a system-native file icon.  For more details see the
 \fBfileicon\fR manual page.

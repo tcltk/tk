@@ -15,7 +15,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * TkCreateRegion --
+ * XCreateRegion --
  *
  *	Construct an empty region.
  *
@@ -28,18 +28,18 @@
  *----------------------------------------------------------------------
  */
 
-TkRegion
-TkCreateRegion(void)
+Region
+XCreateRegion(void)
 {
     RECT rect;
     memset(&rect, 0, sizeof(RECT));
-    return (TkRegion) CreateRectRgnIndirect(&rect);
+    return (Region)CreateRectRgnIndirect(&rect);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkDestroyRegion --
+ * XDestroyRegion --
  *
  *	Destroy the specified region.
  *
@@ -53,8 +53,8 @@ TkCreateRegion(void)
  */
 
 int
-TkDestroyRegion(
-    TkRegion r)
+XDestroyRegion(
+    Region r)
 {
     DeleteObject((HRGN) r);
     return Success;
@@ -63,7 +63,7 @@ TkDestroyRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkClipBox --
+ * XClipBox --
  *
  *	Computes the bounding box of a region.
  *
@@ -77,8 +77,8 @@ TkDestroyRegion(
  */
 
 int
-TkClipBox(
-    TkRegion r,
+XClipBox(
+    Region r,
     XRectangle* rect_return)
 {
     RECT rect;
@@ -94,7 +94,7 @@ TkClipBox(
 /*
  *----------------------------------------------------------------------
  *
- * TkIntersectRegion --
+ * XIntersectRegion --
  *
  *	Compute the intersection of two regions.
  *
@@ -108,10 +108,10 @@ TkClipBox(
  */
 
 int
-TkIntersectRegion(
-    TkRegion sra,
-    TkRegion srb,
-    TkRegion dr_return)
+XIntersectRegion(
+    Region sra,
+    Region srb,
+    Region dr_return)
 {
     CombineRgn((HRGN) dr_return, (HRGN) sra, (HRGN) srb, RGN_AND);
     return Success;
@@ -120,7 +120,7 @@ TkIntersectRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkUnionRectWithRegion --
+ * XUnionRectWithRegion --
  *
  *	Create the union of a source region and a rectangle.
  *
@@ -134,10 +134,10 @@ TkIntersectRegion(
  */
 
 int
-TkUnionRectWithRegion(
+XUnionRectWithRegion(
     XRectangle *rectangle,
-    TkRegion src_region,
-    TkRegion dest_region_return)
+    Region src_region,
+    Region dest_region_return)
 {
     HRGN rectRgn = CreateRectRgn(rectangle->x, rectangle->y,
 	    rectangle->x + rectangle->width, rectangle->y + rectangle->height);
@@ -167,7 +167,7 @@ TkUnionRectWithRegion(
 
 void
 TkpBuildRegionFromAlphaData(
-    TkRegion region,
+    Region region,
     unsigned int x, unsigned int y,
 				/* Where in region to update. */
     unsigned int width, unsigned int height,
@@ -222,7 +222,7 @@ TkpBuildRegionFromAlphaData(
 /*
  *----------------------------------------------------------------------
  *
- * TkRectInRegion --
+ * XRectInRegion --
  *
  *	Test whether a given rectangle overlaps with a region.
  *
@@ -237,8 +237,8 @@ TkpBuildRegionFromAlphaData(
  */
 
 int
-TkRectInRegion(
-    TkRegion r,			/* Region to inspect */
+XRectInRegion(
+    Region r,			/* Region to inspect */
     int x, int y,		/* Top-left of rectangle */
     unsigned int width,		/* Width of rectangle */
     unsigned int height)	/* Height of rectangle */
@@ -254,7 +254,7 @@ TkRectInRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkSubtractRegion --
+ * XSubtractRegion --
  *
  *	Compute the set-difference of two regions.
  *
@@ -268,10 +268,10 @@ TkRectInRegion(
  */
 
 int
-TkSubtractRegion(
-    TkRegion sra,
-    TkRegion srb,
-    TkRegion dr_return)
+XSubtractRegion(
+    Region sra,
+    Region srb,
+    Region dr_return)
 {
     CombineRgn((HRGN) dr_return, (HRGN) sra, (HRGN) srb, RGN_DIFF);
     return Success;
@@ -295,8 +295,8 @@ TkSubtractRegion(
 
 void
 TkpCopyRegion(
-    TkRegion dst,
-    TkRegion src)
+    Region dst,
+    Region src)
 {
     CombineRgn((HRGN)dst, (HRGN)src, NULL, RGN_COPY);
 }

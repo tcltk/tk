@@ -188,7 +188,7 @@ TkImgPhotoConfigureInstance(
 
     if ((modelPtr->flags & IMAGE_CHANGED)
 	    || (instancePtr->colorTablePtr != colorTablePtr)) {
-	TkClipBox(modelPtr->validRegion, &validBox);
+	XClipBox(modelPtr->validRegion, &validBox);
 	if ((validBox.width > 0) && (validBox.height > 0)) {
 	    TkImgDitherInstance(instancePtr, validBox.x, validBox.y,
 		    validBox.width, validBox.height);
@@ -224,7 +224,8 @@ TkImgPhotoGet(
     PhotoModel *modelPtr = (PhotoModel *)modelData;
     PhotoInstance *instancePtr;
     Colormap colormap;
-    int mono, nRed, nGreen, nBlue, numVisuals;
+    bool mono;
+    int nRed, nGreen, nBlue, numVisuals;
     XVisualInfo visualInfo, *visInfoPtr;
     char buf[TCL_INTEGER_SPACE * 3];
     XColor *white, *black;
@@ -323,7 +324,7 @@ TkImgPhotoGet(
 
     nRed = 2;
     nGreen = nBlue = 0;
-    mono = 1;
+    mono = true;
     instancePtr->visualInfo = *visInfoPtr;
 #if (!defined(_WIN32) && !defined(MAC_OSX_TK))
     gcmask = 0;
@@ -335,7 +336,7 @@ TkImgPhotoGet(
 	nRed = 1 << CountBits(visInfoPtr->red_mask);
 	nGreen = 1 << CountBits(visInfoPtr->green_mask);
 	nBlue = 1 << CountBits(visInfoPtr->blue_mask);
-	mono = 0;
+	mono = false;
 #if (!defined(_WIN32) && !defined(MAC_OSX_TK))
 	if (visInfoPtr->depth > 24) {
 	    gcValues.plane_mask = visInfoPtr->red_mask
@@ -351,14 +352,14 @@ TkImgPhotoGet(
 	    nRed = 32;
 	    nGreen = 32;
 	    nBlue = 32;
-	    mono = 0;
+	    mono = false;
 	} else if (visInfoPtr->depth >= 3) {
 	    const int *ip = paletteChoice[visInfoPtr->depth - 3];
 
 	    nRed = ip[0];
 	    nGreen = ip[1];
 	    nBlue = ip[2];
-	    mono = 0;
+	    mono = false;
 	}
 	break;
     case GrayScale:
@@ -615,6 +616,55 @@ BlendComplexAlpha(
 /*
  *----------------------------------------------------------------------
  *
+ * TkPremultiplyRGBA --
+ *
+ *	Copy a w x h sub-rect of an RGBA image (4 bytes/pixel, not
+ *	premultiplied) into a buffer of the given byte stride, as
+ *	premultiplied BGRA: byte order B,G,R,A, with each color channel
+ *	multiplied by its alpha.  Used by the platform TkpPutRGBAImage
+ *	implementations.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Fills in dst.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkPremultiplyRGBA(
+    XImage *image,		/* Source image; RGBA, not premultiplied. */
+    int src_x, int src_y,	/* Top-left of the sub-rect within image. */
+    int w, int h,		/* Size of the sub-rect. */
+    unsigned char *dst,		/* Destination buffer, premultiplied BGRA. */
+    int dstStride)		/* Bytes per destination row. */
+{
+    int x, y;
+
+    for (y = 0; y < h; y++) {
+	unsigned char *s = (unsigned char *) image->data
+		+ (size_t) (src_y + y) * image->bytes_per_line
+		+ (size_t) src_x * 4;
+	unsigned char *o = dst + (size_t) y * dstStride;
+
+	for (x = 0; x < w; x++) {
+	    unsigned int a = s[3];
+
+	    o[0] = (unsigned char) ((s[2] * a + 127) / 255);	/* B */
+	    o[1] = (unsigned char) ((s[1] * a + 127) / 255);	/* G */
+	    o[2] = (unsigned char) ((s[0] * a + 127) / 255);	/* R */
+	    o[3] = (unsigned char) a;				/* A */
+	    s += 4;
+	    o += 4;
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkImgPhotoDisplay --
  *
  *	This function is invoked to draw a photo image.
@@ -681,6 +731,40 @@ TkImgPhotoDisplay(
 	Tk_ErrorHandler handler;
 	XImage *bgImg = NULL;
 
+#ifdef HAVE_XRENDER
+	/*
+	 * Try the server-side XRender composite first (TkpPutRGBAImage); it
+	 * avoids the XGetImage read-back and the per-pixel CPU blend below.
+	 * Fall through to the software blend when the server lacks RENDER or
+	 * the drawable has no usable picture format.
+	 */
+
+	/*
+	 * Note: bitmap_pad must be 8, 16 or 32 -- Xlib's XCreateImage
+	 * returns NULL otherwise (the macOS TK_CAN_RENDER_RGBA branch
+	 * passes 0, but only its Xlib emulation accepts that).
+	 */
+
+	unsigned char *rgbaPixels = instancePtr->modelPtr->pix32;
+	XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0,
+		(char *) rgbaPixels, (unsigned int) instancePtr->width,
+		(unsigned int) instancePtr->height, 32,
+		(unsigned int) (4 * instancePtr->width));
+
+	if (photo != NULL) {
+	    int result = TkpPutRGBAImage(display, drawable, instancePtr->gc,
+		    photo, imageX, imageY, drawableX, drawableY,
+		    (unsigned int) width, (unsigned int) height);
+
+	    photo->data = NULL;
+	    XDestroyImage(photo);
+	    if (result == Success) {
+		(void) XFlush(display);
+		return;
+	    }
+	}
+#endif /* HAVE_XRENDER */
+
 	/*
 	 * Create an error handler to suppress the case where the input was
 	 * not properly constrained, which can cause an X error. [Bug 979239]
@@ -722,7 +806,7 @@ TkImgPhotoDisplay(
 	 */
 
     fallBack:
-	TkSetRegion(display, instancePtr->gc,
+	XSetRegion(display, instancePtr->gc,
 		instancePtr->modelPtr->validRegion);
 	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
 		drawableY - imageY);
@@ -812,7 +896,7 @@ TkImgPhotoInstanceSetSize(
     Pixmap newPixmap;
 
     modelPtr = instancePtr->modelPtr;
-    TkClipBox(modelPtr->validRegion, &validBox);
+    XClipBox(modelPtr->validRegion, &validBox);
 
     if ((instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)
@@ -948,7 +1032,8 @@ IsValidPalette(
 				 * is to be applied. */
     const char *palette)	/* Palette specification string. */
 {
-    int nRed, nGreen, nBlue, mono, numColors;
+    int nRed, nGreen, nBlue, numColors;
+    bool mono;
     char *endp;
 
     /*
@@ -962,7 +1047,7 @@ IsValidPalette(
     }
 
     if (*endp == 0) {
-	mono = 1;
+	mono = true;
 	nGreen = nBlue = nRed;
     } else {
 	palette = endp + 1;
@@ -977,7 +1062,7 @@ IsValidPalette(
 		|| (nBlue > 256)) {
 	    return 0;
 	}
-	mono = 0;
+	mono = false;
     }
 
     switch (instancePtr->visualInfo.c_class) {
@@ -1200,7 +1285,8 @@ AllocateColors(
     ColorTable *colorPtr)	/* Pointer to the color table requiring colors
 				 * to be allocated. */
 {
-    int i, r, g, b, rMult, mono;
+    int i, r, g, b, rMult;
+    bool mono;
     int numColors, nRed, nGreen, nBlue;
     double fr, fg, fb, igam;
     XColor *colors;
@@ -1323,16 +1409,16 @@ AllocateColors(
 
 	pixels = (unsigned long *)Tcl_Alloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
-	    if (!XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
-		    &colors[i])) {
+	    if (XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
+		    &colors[i]) == 0) {
 		/*
 		 * Can't get all the colors we want in the default colormap;
 		 * first try freeing colors from other unused color tables.
 		 */
 
 		if (!ReclaimColors(&colorPtr->id, numColors - i)
-			|| !XAllocColor(colorPtr->id.display,
-			colorPtr->id.colormap, &colors[i])) {
+			|| XAllocColor(colorPtr->id.display,
+			colorPtr->id.colormap, &colors[i]) == 0) {
 		    /*
 		     * Still can't allocate the color.
 		     */
@@ -1361,7 +1447,7 @@ AllocateColors(
 		 * Fall back to 1-bit monochrome display.
 		 */
 
-		mono = 1;
+		mono = true;
 	    } else {
 		/*
 		 * Reduce the number of shades of each primary to about 3/4 of
@@ -1674,7 +1760,8 @@ TkImgDitherInstance(
     PhotoModel *modelPtr = instancePtr->modelPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
-    int nLines, bigEndian, i, c, x, y, xEnd, doDithering = 1;
+    int nLines, bigEndian, i, c, x, y, xEnd;
+    bool doDithering = true;
     int bitsPerPixel, bytesPerLine, lineLength;
     unsigned char *srcLinePtr;
     schar *errLinePtr;
@@ -1693,7 +1780,7 @@ TkImgDitherInstance(
 		&nGreen, &nBlue);
 	if ((nRed >= 256)
 		&& ((result == 1) || ((nGreen >= 256) && (nBlue >= 256)))) {
-	    doDithering = 0;
+	    doDithering = false;
 	}
     }
 
