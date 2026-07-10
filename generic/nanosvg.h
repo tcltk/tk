@@ -3251,12 +3251,14 @@ NSVGimage* nsvgParseFromFile(const char* filename, const char* units, float dpi)
 	size_t size;
 	char* data = NULL;
 	NSVGimage* image = NULL;
+	long lsize;
 
 	fp = fopen(filename, "rb");
 	if (!fp) goto error;
 	if (fseek(fp, 0, SEEK_END)) goto error;
-	size = ftell(fp);
-	if (size == -1l) goto error;
+	lsize = ftell(fp);
+	if (lsize == -1l) goto error;
+	size = (size_t)lsize;
 	if (fseek(fp, 0, SEEK_SET)) goto error;
 	data = (char*)NANOSVG_malloc(size+1);
 	if (data == NULL) goto error;
