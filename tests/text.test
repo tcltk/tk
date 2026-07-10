@@ -7421,6 +7421,44 @@ test text-27.31 {"edit info" works w/o arguments} -body {
 } -cleanup {
     destroy .t
 } -result {0}
+test text-27.32 {edit reset disposes retained tag undo tokens} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t insert end "hello\nworld"
+    .t tag add x 1.1 1.3
+    .t tag add y 2.1 2.3
+    .t edit reset
+    # Without the fix the retained "tag add" tokens survived the reset,
+    # and the next undo removed the tags from the whole widget.
+    list [.t edit canundo] [catch {.t edit undo}] [.t tag ranges x] [.t tag ranges y]
+} -cleanup {
+    destroy .t
+} -result {0 1 {1.1 1.3} {2.1 2.3}}
+test text-27.33 {edit reset undo/redo return codes} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t insert end "hello"
+    list [catch {.t edit reset undo}] [catch {.t edit reset redo}] [catch {.t edit reset}]
+} -cleanup {
+    destroy .t
+} -result {0 0 0}
+test text-27.35 {clear widget with undo tokens holding tagged characters} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add B 1.3 1.6
+    .t tag configure B -elide 1
+    .t delete 1.4 1.7
+    .t clear
+    .t debug 0
+    .t get 1.0 end-1c
+} -cleanup {
+    destroy .t
+} -result {}
 test text-27.29 {bug ab839efc5f - .text edit undo inserts separators} -setup {
     destroy .t
 } -body {

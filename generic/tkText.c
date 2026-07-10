@@ -3281,6 +3281,15 @@ ClearText(
 
     tkBTreeDebug = false; /* debugging is not wanted here */
 
+    /*
+     * Reset the undo stack before anything will be freed, the undo tokens
+     * (including the retained ones) are holding references to tags, marks,
+     * and segments.
+     */
+
+    ClearRetainedUndoTokens(sharedTextPtr);
+    TkTextUndoResetStack(sharedTextPtr->undoStack);
+
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	/*
 	 * Always clean up the widget-specific tags first. Common tags (i.e. most)
@@ -9119,6 +9128,12 @@ TextEditCmd(
 		if (TestIfPerformingUndoRedo(interp, sharedTextPtr, NULL))
 		    return TCL_ERROR;
 
+		/*
+		 * Also dispose of the retained undo tokens (see
+		 * TkTextTagAddRetainedUndo), otherwise they would join
+		 * the undo stack after this reset.
+		 */
+		ClearRetainedUndoTokens(sharedTextPtr);
 		TkTextUndoClearStack(sharedTextPtr->undoStack);
 		sharedTextPtr->undoLevel = 0;
 		sharedTextPtr->pushSeparator = false;
@@ -9144,6 +9159,8 @@ TextEditCmd(
 		    return TCL_ERROR;
 
 		if (stack[0] == 'u') {
+		    /* The retained undo tokens belong to the undo stack. */
+		    ClearRetainedUndoTokens(sharedTextPtr);
 		    TkTextUndoClearUndoStack(sharedTextPtr->undoStack);
 		    sharedTextPtr->undoLevel = 0;
 		    sharedTextPtr->pushSeparator = false;
@@ -9154,7 +9171,7 @@ TextEditCmd(
 		    TkTextUndoClearRedoStack(sharedTextPtr->undoStack);
 		}
 	    }
-	    return TCL_ERROR;
+	    return TCL_OK;
 	}
 	break;
     case EDIT_SEPARATOR: {
