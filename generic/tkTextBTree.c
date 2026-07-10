@@ -7316,21 +7316,21 @@ DeleteRange(
     if (flags & DELETE_LASTLINE) {
 	lastNewlineSegPtr = TkTextGetUndeletableNewline(linePtr2);
 	/*
-	 * If a link has been pulled into the range then it will be re-added
-	 * at the same place (the last newline cannot be elided, so a merge
-	 * cannot happen here): the surrogate newline belongs after this
-	 * link, not after the elided content preceding it.
+	 * Remember the segment in front of the start of the deletion range,
+	 * the surrogate newline will be inserted after this segment (see end
+	 * of this function). Note that the last newline may be elided: in
+	 * this case the link of this region lies inside of the range, and
+	 * will be re-added at the start of the range (see "Re-add saved
+	 * branch or link segment" below). The insertion of the surrogate
+	 * works with the byte position, so it always lands outside of any
+	 * elided region (after a re-added link, and before a re-added
+	 * branch), because a link has left gravity, and a branch has right
+	 * gravity.
 	 */
-	beforeSurrogate = pulledLinkPtr ? pulledLinkPtr : firstSegPtr->prevPtr;
+	beforeSurrogate = firstSegPtr->prevPtr;
 
 	while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
 	    beforeSurrogate = beforeSurrogate->prevPtr;
-	}
-	if (!beforeSurrogate) {
-	    TkTextLine *prevLinePtr = linePtr1->prevPtr;
-	    if (prevLinePtr) {
-		beforeSurrogate = prevLinePtr->lastPtr;
-	    }
 	}
     } else {
 	lastNewlineSegPtr = NULL;
@@ -7936,8 +7936,21 @@ DeleteRange(
 	if (beforeSurrogate) {
 	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
 	    TkTextIndexSetSegment(&index, beforeSurrogate);
+	    if (beforeSurrogate->size > 0) {
+		/*
+		 * The surrogate belongs behind this segment, but
+		 * TkTextIndexSetSegment has addressed its first byte.
+		 */
+		TkTextIndexSetByteIndex(&index,
+			TkTextIndexGetByteIndex(&index) + beforeSurrogate->size);
+	    }
 	} else {
-	    TkTextIndexSetupToStartOfText(&index, NULL, sharedTextPtr->tree);
+	    /*
+	     * The deletion started at the beginning of linePtr1 (possibly
+	     * start of text): this is where the surrogate belongs.
+	     */
+	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
+	    TkTextIndexSetToStartOfLine2(&index, linePtr1);
 	}
 	DEBUG(tkBTreeDebug = false); /* otherwise protected segment will be complained */
 	TkBTreeInsertChars(sharedTextPtr->tree, &index, "\n",

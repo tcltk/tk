@@ -1593,6 +1593,87 @@ test btree-14.30 {pulled switches do not swallow boundary marks} -setup {
     destroy .t
 } -result {1.2 1.2}
 
+test btree-14.31 {delete to end with elided final newline, full round trip} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t insert end "abcdefgh"
+    .t tag add E0 1.2 end
+    .t tag configure E0 -elide 1
+    set res [list]
+    .t delete 1.4 end
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E0]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E0]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E0]
+    .t edit undo
+    .t delete 1.4 end
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E0]
+} -cleanup {
+    destroy .t
+} -result {abcd {1.2 1.4} abcdefgh {1.2 2.0} abcd {1.2 1.4} abcd {1.2 1.4}}
+
+test btree-14.32 {delete to end with tagged (non-elided) final newline} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t insert end "abcdefgh"
+    .t tag add T0 1.6 end
+    .t mark set insert 1.0
+    .t mark set current 1.0
+    .t delete 1.4 end
+    list [.t get 1.0 end-1c] [.t tag ranges T0]
+} -cleanup {
+    destroy .t
+} -result {abcd {}}
+
+test btree-14.33 {whole document elided, delete all, undo} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t insert end "abcdefgh"
+    .t tag add E0 1.0 end
+    .t tag configure E0 -elide 1
+    .t delete 1.0 end
+    set res [list [.t get 1.0 end-1c] [.t tag ranges E0]]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E0]
+} -cleanup {
+    destroy .t
+} -result {{} {} abcdefgh {1.0 2.0}}
+
+test btree-14.34 {multiline delete to end, elided region crosses final newline} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t insert end "line1\nline2\nline3"
+    .t tag add E0 2.3 end
+    .t tag configure E0 -elide 1
+    .t mark set insert 1.0
+    .t mark set current 1.0
+    .t delete 2.1 end
+    set res [list [.t get 1.0 end-1c] [.t tag ranges E0]]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E0]
+} -cleanup {
+    destroy .t
+} -result [list "line1\nl" {} "line1\nline2\nline3" {2.3 4.0}]
+
+test btree-14.35 {delete to end starting at a line start} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t insert end "line1\nline2"
+    .t tag add T0 2.2 end
+    .t mark set insert 1.0
+    .t mark set current 1.0
+    .t delete 2.0 end
+    list [.t get 1.0 end-1c] [.t index end]
+} -cleanup {
+    destroy .t
+} -result [list "line1\n" 3.0]
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {
