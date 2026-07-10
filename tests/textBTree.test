@@ -1283,6 +1283,162 @@ test btree-14.17 {multiline deletes crossing elided region boundaries} -setup {
     destroy .t
 } -result [list "aaa\nbcc\nddd" {2.0 2.1} "aaa\nbd\neee" "aaa\n\neee"]
 
+test btree-14.18 {undo of a delete inside a multiline elided region (elided newline)} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc\nddd"
+    .t tag add B 2.1 3.2
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 2.2 3.1
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t tag ranges B]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "aaa\nbbcc\nddd" "aaa\nbbb\nccc\nddd" {2.1 3.2} "aaa\nbc\nddd" "aaa\nbbcc\nddd" {2.1 3.2}]
+
+test btree-14.19 {undo of a multiline delete crossing the end of an elided region} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc\nddd"
+    .t tag add B 2.0 2.3
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 2.1 3.1
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t tag ranges B]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "aaa\nbcc\nddd" {2.0 2.1} "aaa\nbbb\nccc\nddd" {2.0 2.3} "aaa\n\nccc\nddd" "aaa\nbcc\nddd" {2.0 2.3}]
+
+test btree-14.20 {undo of a multiline delete covering the start of an elided region} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc\nddd"
+    .t tag add B 3.0 3.3
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 2.1 3.1
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t tag ranges B]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "aaa\nbcc\nddd" {2.1 2.3} "aaa\nbbb\nccc\nddd" {3.0 3.3} "aaa\nbcc\nddd" {3.0 3.3}]
+
+test btree-14.21 {undo of a multiline delete spanning two elided regions} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc\nddd\neee"
+    .t tag add E1 2.0 2.3
+    .t tag add E2 4.0 4.3
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    set res [list]
+    .t delete 2.1 4.2
+    lappend res [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E1] [.t tag ranges E2]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t tag ranges E1] [.t tag ranges E2]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "aaa\nbd\neee" "aaa\n\neee" "aaa\nbbb\nccc\nddd\neee" {2.0 2.3} {4.0 4.3} "aaa\nbd\neee" {2.0 2.3} {4.0 4.3}]
+
+test btree-14.22 {undo of a multiline delete covering a whole elided region} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc"
+    .t tag add B 2.0 2.3
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 1.1 3.2
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t tag ranges B]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "ac" "aaa\nbbb\nccc" {2.0 2.3} "ac" {2.0 2.3}]
+
+test btree-14.23 {no join of delete undo tokens holding switches} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t debug 1
+    .t insert end "aXXYYb"
+    .t tag add B 1.1 1.5
+    .t tag configure B -elide 1
+    .t edit reset
+    .t delete 1.1 1.3
+    .t delete 1.1 1.3
+    set res [list [.t get 1.0 end-1c]]
+    while {[.t edit canundo]} { .t edit undo }
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    while {[.t edit canredo]} { .t edit redo }
+    lappend res [.t get 1.0 end-1c]
+    while {[.t edit canundo]} { .t edit undo }
+    lappend res [.t tag ranges B]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {ab aXXYYb {1.1 1.5} ab {1.1 1.5}}
+
+test btree-14.24 {delete of the newline before a line starting with an elided region} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaaa\nbbbb"
+    .t tag add B 2.0 2.3
+    .t tag configure B -elide 1
+    .t delete 1.4 2.0
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {aaaabbbb {1.4 1.7} aaaab}
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {
