@@ -1527,6 +1527,72 @@ test btree-14.28 {delete adjacent to a single elided region, with marks at the b
     destroy .t
 } -result {atrrf}
 
+test btree-14.29 {two overlapping deletes capturing the same switch, then stack teardown} -setup {
+    destroy .t
+} -body {
+    # The re-inserted link of the first token used to be re-captured by the
+    # second delete, corrupting the chains of both undo tokens.
+    foreach teardown {reset destroy} {
+	text .t -undo 1
+	.t insert 1.0 "aaabbbccc"
+	.t tag configure B -elide 1
+	.t tag add B 1.3 1.6
+	.t delete 1.4 1.7
+	.t delete 1.2 1.5
+	if {$teardown eq "reset"} { .t edit reset }
+	destroy .t
+    }
+    text .t -undo 1
+    .t debug 1
+    .t insert 1.0 "aaabbbccc"
+    .t tag configure B -elide 1
+    .t tag add B 1.3 1.6
+    .t edit reset
+    .t delete 1.4 1.7
+    .t delete 1.2 1.5
+    set res [list [.t get 1.0 end-1c]]
+    while {[.t edit canundo]} { .t edit undo }
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    while {[.t edit canredo]} { .t edit redo }
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aac aaabbbccc {1.3 1.6} aac}
+
+test btree-14.30 {pulled switches do not swallow boundary marks} -setup {
+    destroy .t
+} -body {
+    set res [list]
+    # link at the start boundary, left gravity mark between link and range
+    text .t
+    .t debug 1
+    .t insert end "aaXbbbb\ncccc"
+    .t tag add E 1.1 1.2
+    .t tag configure E -elide 1
+    .t mark set m 1.2
+    .t mark gravity m left
+    .t delete -marks 1.2 1.4
+    lappend res [expr {[catch {.t index m} pos] ? "gone" : $pos}]
+    .t debug 0
+    destroy .t
+    # branch at the end boundary, right gravity mark between range and branch
+    text .t
+    .t debug 1
+    .t insert end "aaaaXbb\ncccc"
+    .t tag add E 1.4 1.5
+    .t tag configure E -elide 1
+    .t mark set m 1.4
+    .t mark gravity m right
+    .t delete -marks 1.2 1.4
+    lappend res [expr {[catch {.t index m} pos] ? "gone" : $pos}]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {1.2 1.2}
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

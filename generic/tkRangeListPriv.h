@@ -133,7 +133,7 @@ TkRangeListContainsRange(
     int high)
 {
     const TkRange *range = TkRangeListFind(ranges, low);
-    return range && range->high <= high;
+    return range && high <= range->high;
 }
 
 

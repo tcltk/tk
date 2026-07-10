@@ -6074,10 +6074,12 @@ JoinSections(
 	    }
 	}
 
+	TkTextSection *nextSectionPtr = sectionPtr->nextPtr;
+
 	if (sectionPtr->prevPtr) {
-	    sectionPtr->prevPtr->nextPtr = sectionPtr->nextPtr;
+	    sectionPtr->prevPtr->nextPtr = nextSectionPtr;
 	}
-	sectionPtr->nextPtr->prevPtr = sectionPtr->prevPtr;
+	nextSectionPtr->prevPtr = sectionPtr->prevPtr;
 	FreeSection(sectionPtr);
 
 	if (lengthRHS + length > MAX_TEXT_SEGS) {
@@ -6085,7 +6087,7 @@ JoinSections(
 	     * Right shift operation has exceeded MAX_TEXT_SEGS, so we
 	     * have to split the right neighbor.
 	     */
-	    SplitSection(sectionPtr->nextPtr);
+	    SplitSection(nextSectionPtr);
 	}
     } else if (length > NUM_TEXT_SEGS) {
 	int lengthRHS, shift;
@@ -7118,12 +7120,12 @@ MoveSegmentToLeft(
 
     /*
      * We don't care about the sections, they will be rebuilt later,
-     * but ensure that the order of the sections will not change.
+     * but ensure that the order of the sections will not change. An
+     * emptied section is left in place, the rebuild will recycle it
+     * (freeing it here would leave it linked in the section chain).
      */
 
-    if (--movePtr->sectionPtr->length == 0) {
-	FreeSection(movePtr->sectionPtr);
-    }
+    movePtr->sectionPtr->length -= 1;
     movePtr->sectionPtr = branchPtr->sectionPtr;
 }
 
@@ -7153,13 +7155,13 @@ MoveSegmentToRight(
 
     /*
      * We don't care about the sections, they will be rebuilt later,
-     * but ensure that the order of the sections will not change.
+     * but ensure that the order of the sections will not change. An
+     * emptied section is left in place, the rebuild will recycle it
+     * (freeing it here would leave it linked in the section chain).
      */
 
-    if (--linkPtr->sectionPtr->length == 0) {
-	FreeSection(linkPtr->sectionPtr);
-    }
-    linkPtr->sectionPtr = movePtr->sectionPtr;
+    movePtr->sectionPtr->length -= 1;
+    movePtr->sectionPtr = linkPtr->sectionPtr;
 }
 
 static void
@@ -7230,24 +7232,28 @@ DeleteRange(
 
 	if (!sharedTextPtr->steadyMarks || !TkTextIsStableMark(firstSegPtr)) {
 	    for (segPtr = firstSegPtr->prevPtr; segPtr && segPtr->size == 0; segPtr = segPtr->prevPtr) {
-		if (segPtr->typePtr == &tkTextBranchType) {
-		    /* firstSegPtr will become predecessor of this branch */
-		    MoveSegmentToLeft(segPtr, firstSegPtr);
-		    segPtr = firstSegPtr;
-		} else if (segPtr->typePtr == &tkTextLinkType) {
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
 		    /*
-		     * An elided region ends exactly at the start of the range.
-		     * Pull the link into the range: either it merges with a
-		     * region adjacent to the end of the range, or it will be
-		     * re-added at the same place (see "Re-add saved branch or
-		     * link segment" below).
+		     * Either an elided region starts exactly at the start of
+		     * the range (branch), or one ends exactly there (link).
+		     * Move the switch into the range, over the boundary mark,
+		     * but not over intermediate marks - these do not belong
+		     * to the range. A pulled link either merges with a region
+		     * adjacent to the end of the range, or it will be re-added
+		     * at the same place (see "Re-add saved branch or link
+		     * segment" below).
 		     */
-		    MoveSegmentToLeft(segPtr, firstSegPtr);
-		    if (!firstSegPtr->prevPtr) {
-			/* the pulled link was heading this line */
-			firstSegPtr->sectionPtr->linePtr->segPtr = firstSegPtr;
+		    TkTextLine *headLinePtr = segPtr->sectionPtr->linePtr;
+		    TkTextSegment *newHeadPtr = segPtr->nextPtr;
+
+		    if (segPtr->typePtr == &tkTextLinkType) {
+			pulledLinkPtr = segPtr;
 		    }
-		    pulledLinkPtr = segPtr;
+		    /* the switch will become the successor of firstSegPtr */
+		    MoveSegmentToRight(firstSegPtr, segPtr);
+		    if (headLinePtr->segPtr == segPtr) {
+			headLinePtr->segPtr = newHeadPtr;
+		    }
 		    segPtr = firstSegPtr;
 		}
 	    }
@@ -7259,16 +7265,15 @@ DeleteRange(
 		    /*
 		     * Either the range is ending inside an elided region
 		     * (link), or an elided region starts exactly at the end
-		     * of the range (branch): lastSegPtr will become the
-		     * successor of this switch. If lastSegPtr was heading
-		     * the line then its old successor is the new head.
+		     * of the range (branch): move the switch into the range,
+		     * over the boundary mark, but not over intermediate marks.
 		     */
 		    TkTextLine *headLinePtr = lastSegPtr->sectionPtr->linePtr;
-		    TkTextSegment *newHeadPtr = lastSegPtr->nextPtr;
 
-		    MoveSegmentToRight(segPtr, lastSegPtr);
+		    /* the switch will become the predecessor of lastSegPtr */
+		    MoveSegmentToLeft(lastSegPtr, segPtr);
 		    if (headLinePtr->segPtr == lastSegPtr) {
-			headLinePtr->segPtr = newHeadPtr;
+			headLinePtr->segPtr = segPtr;
 		    }
 		    segPtr = lastSegPtr;
 		}
@@ -7569,6 +7574,16 @@ DeleteRange(
 		} else {
 		    (prevSavePtr = savePtr)->nextPtr = NULL;
 		    savePtr->sectionPtr = NULL;
+		    if (savePtr->typePtr->group == SEG_GROUP_BRANCH) {
+			/*
+			 * This switch may also be enrolled as a re-inserted
+			 * segment in an earlier undo token; the walk of that
+			 * token follows nextPtr as soon as the section pointer
+			 * is cleared. Keep the chain pointer of a dead switch
+			 * unused: it stays a standalone tail.
+			 */
+			prevSavePtr = NULL;
+		    }
 		}
 	    }
 

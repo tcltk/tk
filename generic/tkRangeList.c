@@ -248,7 +248,7 @@ TkRangeListContainsAny(
 	return false;
     }
 
-    if (entry->high == low + 1 && ++entry == last) {
+    if (entry->high == low - 1 && ++entry == last) {
 	return false;
     }
 
