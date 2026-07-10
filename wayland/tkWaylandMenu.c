@@ -81,6 +81,8 @@ MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
 MODULE_SCOPE void TkWaylandMenubarDestroy(TkWindow *winPtr);
 MODULE_SCOPE int TkWaylandLoadNamedFontIntoContext(NVGcontext *vg, const char *tkFontName);
 MODULE_SCOPE void TkWaylandPopupDrawBorderWithShadow(TkWaylandPopup *popup);
+MODULE_SCOPE int TkWaylandMenubarActivateFirst(TkWindow *winPtr);
+MODULE_SCOPE void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
 
 /*
  * Menu popup stack.
@@ -4437,6 +4439,148 @@ TkWaylandMenuGetTopmostWindow(void)
         return (Tk_Window)menuStack[menuStackDepth - 1].menuPtr->tkwin;
     }
     return NULL;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarActivateFirst --
+ *
+ *      Activate the first usable entry in the menubar (typically for
+ *      keyboard menu activation, e.g. Alt or F10) and post its cascade
+ *      menu if it is a CASCADE_ENTRY.
+ *
+ * Results:
+ *      Returns 1 if a menubar entry was activated (and possibly posted),
+ *      0 if there is no menubar or no usable entries.
+ *
+ * Side effects:
+ *      Activates an entry in the menubar and may post a top-level menu.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenubarActivateFirst(TkWindow *winPtr)
+{
+    WmInfo *wmPtr;
+    TkMenu *menuPtr;
+    int i;
+
+    if (!winPtr) {
+        return 0;
+    }
+
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr || !wmPtr->menubarMenuPtr || !wmPtr->menubarPopup) {
+        MENU_LOG("TkWaylandMenubarActivateFirst: no menubar for window");
+        return 0;
+    }
+
+    menuPtr = wmPtr->menubarMenuPtr;
+
+    MENU_LOG("TkWaylandMenubarActivateFirst: activating first entry in menubar");
+
+    /* Find the first non-disabled entry (preferring CASCADE entries). */
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        if (!mePtr) continue;
+
+        if (mePtr->state == ENTRY_DISABLED) {
+            continue;
+        }
+
+        /* Activate it. */
+        TkActivateMenuEntry(menuPtr, i);
+        TkEventuallyRedrawMenu(menuPtr, NULL);
+
+        /* If it's a cascade, post its menu. */
+        if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
+            TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
+                menuPtr->interp, mePtr->namePtr);
+
+            if (menuRefPtr && menuRefPtr->menuPtr) {
+                TkMenu *cascadePtr = menuRefPtr->menuPtr;
+                int cascadeW, cascadeH;
+
+                TkRecomputeMenu(cascadePtr);
+                cascadeW = cascadePtr->totalWidth;
+                cascadeH = cascadePtr->totalHeight;
+                if (cascadeW <= 0) cascadeW = 1;
+                if (cascadeH <= 0) cascadeH = 1;
+
+                menuPtr->postedCascade = mePtr;
+
+                MENU_LOG("TkWaylandMenubarActivateFirst: posting first cascade '%s'",
+                         Tcl_GetString(mePtr->namePtr));
+
+                TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+                    mePtr->x, wmPtr->menuHeight, 0, 0,
+                    cascadeW, cascadeH, /*isRoot=*/1);
+
+                return 1;
+            }
+        }
+
+        /* Non-cascade entry: just activate it. */
+        return 1;
+    }
+
+    MENU_LOG("TkWaylandMenubarActivateFirst: no usable entries found");
+    return 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarMove --
+ *
+ *     Move left/right on the menubar. If any submenu is open, close it first.
+ *
+ * Results:
+ *      Next or previous menubar entry activated. 
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenubarMove(TkWindow *winPtr, int direction)
+{
+    if (!winPtr) return;
+
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr || !wmPtr->menubarMenuPtr) return;
+
+    TkMenu *menuPtr = wmPtr->menubarMenuPtr;
+
+    /* Always close any open popups when moving on menubar. */
+    if (TkWaylandMenuGetDepth() > 0) {
+        TkWaylandMenuPopToDepth(0);
+    }
+
+    int current = menuPtr->active;
+    int count = menuPtr->numEntries;
+    if (count <= 0) return;
+
+    int newIdx = current;
+    for (int i = 1; i <= count; i++) {
+        int idx = (current + direction * i + count) % count;
+        TkMenuEntry *me = menuPtr->entries[idx];
+        if (me && me->state != ENTRY_DISABLED) {
+            newIdx = idx;
+            break;
+        }
+    }
+
+    if (newIdx != current) {
+        TkActivateMenuEntry(menuPtr, newIdx);
+        TkWaylandMenuRedrawActive();
+        MENU_LOG("Menubar highlight moved %s: %d → %d", 
+                 direction > 0 ? "right" : "left", current, newIdx);
+    }
 }
 
 /*
