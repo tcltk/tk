@@ -65,7 +65,8 @@ static void Fill3DRectangle(
     int relief)			/* Indicates 3D effect: TK_RELIEF_FLAT,
 				 * TK_RELIEF_RAISED, TK_RELIEF_SUNKEN, etc. */
 {
-    if (borderWidth == 1 && width >= 2 && height >= 2 &&
+    if ((borderWidth == 1 || borderWidth == 2) &&
+	    width >= 2*borderWidth && height >= 2*borderWidth &&
 	    (relief == TK_RELIEF_RAISED || relief == TK_RELIEF_SUNKEN)) {
 	GC flatGC  = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
@@ -79,6 +80,17 @@ static void Fill3DRectangle(
 
 	nGC = wGC = (relief == TK_RELIEF_RAISED ? lightGC : darkGC);
 	sGC = eGC = (relief == TK_RELIEF_RAISED ? darkGC : lightGC);
+
+	XDrawLine(Tk_Display(tkwin), drawable, nGC, x1, y1, x2-1, y1);	/* N */
+	XDrawLine(Tk_Display(tkwin), drawable, wGC, x1, y1, x1, y2-1);	/* W */
+	XDrawLine(Tk_Display(tkwin), drawable, sGC, x1, y2, x2, y2);	/* S */
+	XDrawLine(Tk_Display(tkwin), drawable, eGC, x2, y1, x2, y2);	/* E */
+
+	if (borderWidth == 1) {
+	    return;
+	}
+
+	++x1; ++y1; --x2; --y2;
 
 	XDrawLine(Tk_Display(tkwin), drawable, nGC, x1, y1, x2-1, y1);	/* N */
 	XDrawLine(Tk_Display(tkwin), drawable, wGC, x1, y1, x1, y2-1);	/* W */
@@ -1906,19 +1918,20 @@ static void TabElementDraw(
 	 * Draw slightly outside of the allocated parcel,
 	 * to overwrite the client area border.
 	 */
+	int incr = (int)round(scalingLevel);
 	switch (nbTabPlcStickBit) {
 	    default:
 	    case TTK_STICK_S:
-		b.height += 1;
+		b.height += incr;
 		break;
 	    case TTK_STICK_N:
-		b.height += 1; b.y -= 1;
+		b.height += incr; b.y -= incr;
 		break;
 	    case TTK_STICK_E:
-		b.width += 1;
+		b.width += incr;
 		break;
 	    case TTK_STICK_W:
-		b.width += 1; b.x -= 1;
+		b.width += incr; b.x -= incr;
 		break;
 	}
 

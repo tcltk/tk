@@ -158,16 +158,17 @@ static void FrameControlElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     FrameControlElementData *p = (FrameControlElementData *)clientData;
+    int cx = GETMETRIC(p->cxId);
+    int cy = GETMETRIC(p->cyId);
     double scalingLevel = TkScalingLevel(tkwin);
-    int cx = (int)round(GETMETRIC(p->cxId)*scalingLevel);
-    int cy = (int)round(GETMETRIC(p->cyId)*scalingLevel);
 
     if ((p->cxId & _FIXEDSIZE) && cx == BASE_DIM) {
-	/*
-	 * Update the corresponding element of the array FrameControlElements
-	 */
-	p->cxId = FIXEDSIZE((unsigned long)cx);
-	p->cyId = FIXEDSIZE((unsigned long)cy);
+	cx *= scalingLevel;
+	cy *= scalingLevel;
+    } else {
+	double scalingFactor = scalingLevel / TkStartScalingLevel(tkwin);
+	cx *= scalingFactor;
+	cy *= scalingFactor;
     }
 
     if (p->cxId & _HALFMETRIC) cx /= 2;
@@ -226,12 +227,12 @@ static void BorderElementSize(
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
 
     paddingPtr->left = paddingPtr->right =
-	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingFactor);
     paddingPtr->top = paddingPtr->bottom =
-	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingFactor);
 }
 
 static void BorderElementDraw(
@@ -290,12 +291,12 @@ static void FieldElementSize(
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
 
     paddingPtr->left = paddingPtr->right =
-	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingFactor);
     paddingPtr->top = paddingPtr->bottom =
-	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingFactor);
 }
 
 static void FieldElementDraw(
@@ -359,15 +360,15 @@ static void ButtonBorderElementSize(
     Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
     int relief = TK_RELIEF_RAISED;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     short int cx, cy;
 
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
-    cx = (short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
-    cy = (short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+    cx = (short)round(GetSystemMetrics(SM_CXEDGE) * scalingFactor);
+    cy = (short)round(GetSystemMetrics(SM_CYEDGE) * scalingFactor);
 
     /* Space for default indicator:
      */
@@ -604,16 +605,16 @@ static void ThumbElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     ThumbElement *thumbPtr = (ThumbElement *)elementRecord;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
     Ttk_Orient orient;
 
     Ttk_GetOrientFromObj(NULL, thumbPtr->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	*widthPtr = (int)round(GetSystemMetrics(SM_CXHTHUMB)*scalingLevel);
-	*heightPtr = (int)round(GetSystemMetrics(SM_CYHSCROLL)*scalingLevel);
+	*widthPtr = (int)round(GetSystemMetrics(SM_CXHTHUMB) * scalingFactor);
+	*heightPtr = (int)round(GetSystemMetrics(SM_CYHSCROLL) * scalingFactor);
     } else {
-	*widthPtr = (int)round(GetSystemMetrics(SM_CXVSCROLL)*scalingLevel);
-	*heightPtr = (int)round(GetSystemMetrics(SM_CYVTHUMB)*scalingLevel);
+	*widthPtr = (int)round(GetSystemMetrics(SM_CXVSCROLL) * scalingFactor);
+	*heightPtr = (int)round(GetSystemMetrics(SM_CYVTHUMB) * scalingFactor);
     }
 }
 
@@ -672,17 +673,17 @@ static void SliderElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     SliderElement *slider = (SliderElement *)elementRecord;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
     Ttk_Orient orient;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	*widthPtr = (int)round((GetSystemMetrics(SM_CXHTHUMB) * scalingLevel) / 2);
-	*heightPtr = (int)round(GetSystemMetrics(SM_CYHSCROLL) * scalingLevel);
+	*widthPtr = (int)round((GetSystemMetrics(SM_CXHTHUMB) * scalingFactor) / 2);
+	*heightPtr = (int)round(GetSystemMetrics(SM_CYHSCROLL) * scalingFactor);
 	*widthPtr |= 1;
     } else {
-	*widthPtr = (int)round(GetSystemMetrics(SM_CXVSCROLL) * scalingLevel);
-	*heightPtr = (int)round((GetSystemMetrics(SM_CYVTHUMB) * scalingLevel) / 2);
+	*widthPtr = (int)round(GetSystemMetrics(SM_CXVSCROLL) * scalingFactor);
+	*heightPtr = (int)round((GetSystemMetrics(SM_CYVTHUMB) * scalingFactor) / 2);
 	*heightPtr |= 1;
     }
 }
@@ -782,8 +783,7 @@ static void TabElementDraw(
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     XPoint pts[6];
-    double scalingLevel = TkScalingLevel(tkwin);
-    int cut = (int)round(2 * scalingLevel);
+    int cut = (int)round(2 * TkScalingLevel(tkwin));
     Display *disp = Tk_Display(tkwin);
     int once = 1, borderWidth = 1;
 
@@ -976,12 +976,12 @@ static void ClientElementSize(
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
 
     paddingPtr->left = paddingPtr->right =
-	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingFactor);
     paddingPtr->top = paddingPtr->bottom =
-	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingFactor);
 }
 
 static void ClientElementDraw(
