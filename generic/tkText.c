@@ -5150,7 +5150,8 @@ InsertChars(
     FindNewTopPosition(sharedTextPtr, textPosition, index1Ptr, NULL, length);
 
     TkrTextChanged(sharedTextPtr, NULL, index1Ptr, index1Ptr);
-    undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
+    /* A full stack evicts its oldest atom when the new one is pushed. */
+    undoInfoPtr = sharedTextPtr->undoStack ? &undoInfo : NULL;
     startIndex = *index1Ptr;
     TkTextIndexToByteIndex(&startIndex); /* we need the byte position after insertion */
 
@@ -5897,7 +5898,8 @@ DeleteIndexRange(
     InitPosition(sharedTextPtr, textPosition);
     FindNewTopPosition(sharedTextPtr, textPosition, &index1, &index2, 0);
 
-    undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
+    /* A full stack evicts its oldest atom when the new one is pushed. */
+    undoInfoPtr = sharedTextPtr->undoStack ? &undoInfo : NULL;
     TkBTreeDeleteIndexRange(sharedTextPtr, &index1, &index2, flags, undoInfoPtr);
 
     /*

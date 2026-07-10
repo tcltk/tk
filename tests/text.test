@@ -7459,6 +7459,29 @@ test text-27.35 {clear widget with undo tokens holding tagged characters} -setup
 } -cleanup {
     destroy .t
 } -result {}
+test text-27.36 {full -maxundo stack evicts the oldest atom instead of retaining stale tokens} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -maxundo 2 -autoseparators 0
+    .t debug 1
+    .t insert end "abcdefghij"
+    .t edit reset
+    # Four deletes but the stack keeps only the last two; before the fix the
+    # older tokens were kept and later replayed against the shifted content.
+    foreach i {1 2 3 4} {
+	.t edit separator
+	.t delete 1.0 1.1
+	.t edit separator
+    }
+    set res [list [.t get 1.0 end-1c]]
+    set n 0
+    while {[.t edit canundo]} { .t edit undo; incr n }
+    lappend res $n [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {efghij 2 cdefghij}
 test text-27.29 {bug ab839efc5f - .text edit undo inserts separators} -setup {
     destroy .t
 } -body {

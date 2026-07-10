@@ -582,7 +582,7 @@ TkTextWindowCmd(
 	}
 	TextChanged(&index);
 
-	if (!TkTextUndoStackIsFull(sharedTextPtr->undoStack)) {
+	if (sharedTextPtr->undoStack) {
 	    UndoTokenLinkSegment *token;
 
 	    assert(sharedTextPtr->undoStack);
