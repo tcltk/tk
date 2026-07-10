@@ -1452,8 +1452,15 @@ UndoDeletePerform(
 		reinsertFirstSegment = 0;
 	    } else if (prevPtr != segPtr) {
 		DEBUG(segPtr->sectionPtr = NULL);
-		LinkSegment(linePtr, prevPtr, segPtr);
-		if (segPtr->typePtr->group != SEG_GROUP_BRANCH) {
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		    /*
+		     * LinkSwitch respects the ordering rules with marks (a
+		     * branch will never be followed by marks, and a link will
+		     * never be preceded by marks).
+		     */
+		    LinkSwitch(linePtr, prevPtr, segPtr);
+		} else {
+		    LinkSegment(linePtr, prevPtr, segPtr);
 		    /* Keep the section length bounded (MAX_TEXT_SEGS). */
 		    SplitSection(segPtr->sectionPtr);
 		}
@@ -5210,7 +5217,12 @@ ReInsertSegment(
 	prevPtr = SplitSeg(&index, NULL);
     }
 
-    LinkSegment(linePtr, prevPtr, segPtr);
+    if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+	/* LinkSwitch respects the ordering rules with marks. */
+	LinkSwitch(linePtr, prevPtr, segPtr);
+    } else {
+	LinkSegment(linePtr, prevPtr, segPtr);
+    }
     SplitSection(segPtr->sectionPtr);
     TkBTreeIncrEpoch(sharedTextPtr->tree);
 }
@@ -7101,6 +7113,7 @@ MoveSegmentToLeft(
     if (branchPtr->prevPtr) {
 	branchPtr->prevPtr->nextPtr = movePtr;
     }
+    movePtr->prevPtr = branchPtr->prevPtr;
     branchPtr->prevPtr = movePtr;
 
     /*
@@ -7135,6 +7148,7 @@ MoveSegmentToRight(
     if (linkPtr->nextPtr) {
 	linkPtr->nextPtr->prevPtr = movePtr;
     }
+    movePtr->nextPtr = linkPtr->nextPtr;
     linkPtr->nextPtr = movePtr;
 
     /*
@@ -7168,6 +7182,7 @@ DeleteRange(
     TkTextSegment *prevSavePtr;
     TkTextSegment *savedLinkPtr;
     TkTextSegment *savedBranchPtr;
+    TkTextSegment *pulledLinkPtr;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -7203,6 +7218,8 @@ DeleteRange(
 
     assert(firstSegPtr->nextPtr);
 
+    pulledLinkPtr = NULL;
+
     if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	/*
 	 * Include the surrounding branches and links into the deletion range.
@@ -7217,15 +7234,42 @@ DeleteRange(
 		    /* firstSegPtr will become predecessor of this branch */
 		    MoveSegmentToLeft(segPtr, firstSegPtr);
 		    segPtr = firstSegPtr;
+		} else if (segPtr->typePtr == &tkTextLinkType) {
+		    /*
+		     * An elided region ends exactly at the start of the range.
+		     * Pull the link into the range: either it merges with a
+		     * region adjacent to the end of the range, or it will be
+		     * re-added at the same place (see "Re-add saved branch or
+		     * link segment" below).
+		     */
+		    MoveSegmentToLeft(segPtr, firstSegPtr);
+		    if (!firstSegPtr->prevPtr) {
+			/* the pulled link was heading this line */
+			firstSegPtr->sectionPtr->linePtr->segPtr = firstSegPtr;
+		    }
+		    pulledLinkPtr = segPtr;
+		    segPtr = firstSegPtr;
 		}
 	    }
 	}
 
 	if (!sharedTextPtr->steadyMarks || !TkTextIsStableMark(lastSegPtr)) {
 	    for (segPtr = lastSegPtr->nextPtr; segPtr && segPtr->size == 0; segPtr = segPtr->nextPtr) {
-		if (segPtr->typePtr == &tkTextLinkType) {
-		    /* lastSegPtr will become successor of this link */
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		    /*
+		     * Either the range is ending inside an elided region
+		     * (link), or an elided region starts exactly at the end
+		     * of the range (branch): lastSegPtr will become the
+		     * successor of this switch. If lastSegPtr was heading
+		     * the line then its old successor is the new head.
+		     */
+		    TkTextLine *headLinePtr = lastSegPtr->sectionPtr->linePtr;
+		    TkTextSegment *newHeadPtr = lastSegPtr->nextPtr;
+
 		    MoveSegmentToRight(segPtr, lastSegPtr);
+		    if (headLinePtr->segPtr == lastSegPtr) {
+			headLinePtr->segPtr = newHeadPtr;
+		    }
 		    segPtr = lastSegPtr;
 		}
 	    }
@@ -7266,7 +7310,13 @@ DeleteRange(
 
     if (flags & DELETE_LASTLINE) {
 	lastNewlineSegPtr = TkTextGetUndeletableNewline(linePtr2);
-	beforeSurrogate = firstSegPtr->prevPtr;
+	/*
+	 * If a link has been pulled into the range then it will be re-added
+	 * at the same place (the last newline cannot be elided, so a merge
+	 * cannot happen here): the surrogate newline belongs after this
+	 * link, not after the elided content preceding it.
+	 */
+	beforeSurrogate = pulledLinkPtr ? pulledLinkPtr : firstSegPtr->prevPtr;
 
 	while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
 	    beforeSurrogate = beforeSurrogate->prevPtr;
@@ -7627,10 +7677,11 @@ DeleteRange(
     /*
      * Re-add saved branch or link segment to the start of the deleted range.
      * If both a link and a branch have been saved, then the deletion range
-     * started inside one elided region and ended inside another one. The
-     * remnants of both regions are merging into a single region: connect
-     * the outer switches and dispose of the saved pair, because adjacent
-     * switches are not allowed.
+     * started inside one elided region and ended inside another one, or the
+     * range is delimited by an immediately adjacent elided region on either
+     * side. The remnants of both regions are merging into a single region:
+     * connect the outer switches and dispose of the saved pair, because
+     * adjacent switches are not allowed.
      */
 
     if (savedLinkPtr && savedBranchPtr) {
@@ -7639,6 +7690,7 @@ DeleteRange(
 
 	assert(branchPtr->typePtr == &tkTextBranchType);
 	assert(linkPtr->typePtr == &tkTextLinkType);
+	assert(!insertSurrogate || savedLinkPtr != pulledLinkPtr);
 	branchPtr->body.branch.nextPtr = linkPtr;
 	linkPtr->body.link.prevPtr = branchPtr;
 	if (undoInfo) {
