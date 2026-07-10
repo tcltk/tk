@@ -5295,6 +5295,60 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.1 {line metrics invalidation after multiline deletes crossing elided regions} -setup {
+    destroy .t1
+    text .t1 -undo 1
+} -body {
+    # The first delete used to truncate the invalidation range list wrongly,
+    # the second one then violated its canonical form (TkRangeListDelete).
+    .t1 insert end "zywpvvdzt\nlsxsczwly\ncawfnkdv\nkqogfvwtfu"
+    .t1 tag add E0 4.2 4.5
+    .t1 tag configure E0 -elide 1
+    .t1 tag add E1 3.4 3.8
+    .t1 tag configure E1 -elide 1
+    .t1 delete 3.1 4.6
+    .t1 delete 1.3 2.4
+    .t1 get 1.0 end-1c
+} -cleanup {
+    destroy .t1
+} -result "zywczwly\ncwtfu"
+
+test textDisp-38.2 {deleting a middle line with synchronized metrics (range list gap)} -setup {
+    destroy .t1
+    text .t1
+} -body {
+    pack .t1
+    .t1 insert end "aaa\nbbb\nccc\nddd\neee"
+    .t1 tag add E1 2.0 2.3
+    .t1 tag configure E1 -elide 1
+    .t1 tag add E2 4.0 4.3
+    .t1 tag configure E2 -elide 1
+    update
+    .t1 delete 3.0 4.0
+    update
+    .t1 get 1.0 end-1c
+} -cleanup {
+    destroy .t1
+} -result "aaa\nbbb\nddd\neee"
+
+test textDisp-38.3 {burst of deletes across elided regions keeps the range list consistent} -setup {
+    destroy .t1
+    text .t1
+} -body {
+    .t1 insert end "aaaa\nbbbb\ncccc\ndddd\neeee\nffff"
+    .t1 tag add E1 2.1 2.3
+    .t1 tag configure E1 -elide 1
+    .t1 tag add E2 5.1 5.3
+    .t1 tag configure E2 -elide 1
+    .t1 delete 4.1 5.2
+    .t1 delete 2.2 3.3
+    .t1 delete 1.1 2.1
+    .t1 delete 1.0 2.0
+    .t1 get 1.0 end-1c
+} -cleanup {
+    destroy .t1
+} -result "dee\nffff"
+
 #
 # TESTFILE CLEANUP
 #
