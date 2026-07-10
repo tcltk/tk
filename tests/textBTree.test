@@ -1073,6 +1073,216 @@ test btree-14.7 {Bug [ad458a3a72] - elide toggling and editing across mixed LTR/
     destroy .t
 } -result "abfمرحباX\n"
 
+test btree-14.8 {delete spanning two disjoint elided regions} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaabbbcccdddeee"
+    .t tag add E1 1.3 1.6
+    .t tag add E2 1.9 1.12
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    .t delete 1.4 1.11
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {aaabdeee aaaeee}
+
+test btree-14.9 {delete spanning two adjacent elided regions} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaabbbcccddd"
+    .t tag add E1 1.2 1.5
+    .t tag add E2 1.6 1.9
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    .t delete 1.3 1.8
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {aaacddd aaddd}
+
+test btree-14.10 {delete whole line containing two elided regions} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaabbbcccddd"
+    .t tag add E1 1.1 1.4
+    .t tag add E2 1.8 1.11
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    .t delete 1.0 1.12
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {{} {}}
+
+test btree-14.11 {delete spanning three elided regions} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aabbccddeeffgg"
+    .t tag add E1 1.2 1.4
+    .t tag add E2 1.6 1.8
+    .t tag add E3 1.10 1.12
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    .t tag configure E3 -elide 1
+    .t delete 1.3 1.13
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {aabg aag}
+
+test btree-14.12 {undo of a delete crossing the end of an elided region} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add B 1.3 1.6
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 1.4 1.7
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aaabcc aaabbbccc {1.3 1.6} aaabcc aaabbbccc {1.3 1.6}}
+
+test btree-14.13 {undo of a delete covering the start of an elided region} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add B 1.3 1.6
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 1.1 1.5
+    lappend res [.t get 1.0 end-1c] [.t count -displaychars 1.0 end-1c] [.t tag ranges B]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {abccc 4 {1.1 1.2} aaabbbccc {1.3 1.6} abccc}
+
+test btree-14.14 {undo of a delete covering a whole elided region} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add B 1.3 1.6
+    .t tag configure B -elide 1
+    set res [list]
+    .t delete 1.3 1.6
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aaaccc aaabbbccc {1.3 1.6} aaaccc aaaccc}
+
+test btree-14.15 {undo of a delete spanning two elided regions} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaabbbcccdddeee"
+    .t tag add E1 1.3 1.6
+    .t tag add E2 1.9 1.12
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    set res [list]
+    .t delete 1.4 1.11
+    lappend res [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E1] [.t tag ranges E2]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aaabdeee aaaeee aaabbbcccdddeee {1.3 1.6} {1.9 1.12} aaabdeee aaabbbcccdddeee}
+
+test btree-14.16 {destroy widget with undo tokens holding elision switches} -setup {
+    destroy .t
+} -body {
+    foreach del {{1.4 1.7} {1.1 1.5} {1.3 1.6}} {
+	text .t -undo 1
+	.t debug 1
+	.t insert end "aaabbbccc"
+	.t tag add B 1.3 1.6
+	.t tag configure B -elide 1
+	.t delete {*}$del
+	destroy .t
+    }
+    text .t -undo 1
+    .t debug 1
+    .t insert end "aaabbbcccdddeee"
+    .t tag add E1 1.3 1.6
+    .t tag add E2 1.9 1.12
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    .t delete 1.4 1.11
+    destroy .t
+} -cleanup {
+    destroy .t
+} -result {}
+
+test btree-14.17 {multiline deletes crossing elided region boundaries} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    set res [list]
+    .t insert end "aaa\nbbb\nccc\nddd"
+    .t tag add B 2.0 2.3
+    .t tag configure B -elide 1
+    .t delete 2.1 3.1
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B]
+    .t delete 1.0 end
+    .t insert end "aaa\nbbb\nccc\nddd\neee"
+    .t tag add E1 2.0 2.3
+    .t tag add E2 4.0 4.3
+    .t tag configure E1 -elide 1
+    .t tag configure E2 -elide 1
+    .t delete 2.1 4.2
+    lappend res [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "aaa\nbcc\nddd" {2.0 2.1} "aaa\nbd\neee" "aaa\n\neee"]
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {
