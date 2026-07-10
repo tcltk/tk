@@ -2849,7 +2849,7 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-Tcl_Size TreeviewCountItems(TreeItem *parent, int hidden, int recurse) {
+Tcl_Size TreeviewCountItems(TreeItem *parent, bool hidden, bool recurse) {
     Tcl_Size count = 0;
     TreeItem *item;
 
@@ -3291,13 +3291,13 @@ static Tcl_Size FindIndex(
 	if (fn == index_first) {
 	    index = 0;
 	} else if (fn == index_last) {
-	    index = TreeviewCountItems(item, 1, 0) - 1;
+	    index = TreeviewCountItems(item, true, false) - 1;
 	} else {
-	    index = TreeviewCountItems(item, 1, 0);
+	    index = TreeviewCountItems(item, true, false);
 	}
 
     } else if ((Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
-	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, 1, &index) == TCL_OK)) {
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, true, false)-1, 1, &index) == TCL_OK)) {
 	/* Index number, end-n, m+n, or m-n */
 	if (index < 0 || index > LONG_MAX - 4) {
 	    index = -1;
@@ -3337,7 +3337,7 @@ static int FindItemByIndex(
 	}
 
     } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
-	TkGetIntForIndex(indexObj, TreeviewCountItems(item, 1, 0)-1, endIsSize, &index) == TCL_OK) {
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, true, false)-1, endIsSize, &index) == TCL_OK) {
 	/* Index number, end-n, m+n, or m-n */
 
 	*found = item->children;
@@ -5928,7 +5928,7 @@ static int TreeviewSearchCommand(
 	initCol = firstCol;
 	finalCol = lastCol;
 
-	if (!(intArray = (int *)Tcl_Alloc(sizeof(Tcl_Size)*lastCol))) {
+	if (!(intArray = (int *)Tcl_Alloc(sizeof(int)*lastCol))) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("not enough memory", -1));
 	    Tcl_SetErrorCode(interp, "TCL", "MEMORY", (char *)NULL);
 	    return TCL_ERROR;
@@ -5956,7 +5956,7 @@ static int TreeviewSearchCommand(
 	firstCol = 0;
 
 	if (Tcl_ListObjLength(interp, columnsObj, &lastCol) != TCL_OK ||
-		!(intArray = (int *)Tcl_Alloc(sizeof(Tcl_Size)*lastCol))) {
+		!(intArray = (int *)Tcl_Alloc(sizeof(int)*lastCol))) {
 	    return TCL_ERROR;
 	}
 	initCol = firstCol;
@@ -6590,7 +6590,7 @@ static int SortItems(
     }
 
     item = parent->children;
-    length = TreeviewCountItems(parent, 1, 0);
+    length = TreeviewCountItems(parent, true, false);
 
     /* Allocate storage for sort elements. */
     elmArrSize = length * sizeof(SortElement);
