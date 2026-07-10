@@ -491,11 +491,11 @@ typedef struct {
     Tcl_Obj *paddingObj;	/* internal padding */
     Tcl_Size nTitleColumns;	/* -titlecolumns */
     Tcl_Size nTitleItems;	/* -titleitems */
-    int striped;		/* -striped option */
+    bool striped;		/* -striped option */
+    bool isCell;		/* "cell" select mode? (-selecttype option)*/
 
     Tcl_Obj *showObj;		/* -show list */
     Tcl_Obj *selectModeObj;	/* -selectmode option */
-    Tcl_Obj *selectTypeObj;	/* -selecttype option */
 
     Scrollable xscroll;
     ScrollHandle xscrollHandle;
@@ -510,12 +510,11 @@ typedef struct {
     int titleWidth;		/* Width of non-scrolled columns */
     int titleRows;		/* Height of non-scrolled items, in rows */
     int totalRows;		/* Height of non-hidden items, in rows */
-    int rowPosNeedsUpdate;	/* Internal rowPos data needs update */
     Ttk_Box headingArea;	/* Display area for column headings */
     Ttk_Box treeArea;		/* Display area for tree */
     int slack;			/* Slack space (see Resizing section) */
     unsigned showFlags;		/* bitmask of subparts to display */
-    unsigned typeFlags;		/* which select mode */
+    bool rowPosNeedsUpdate;	/* Internal rowPos data needs update */
 } TreePart;
 
 typedef struct {
@@ -529,10 +528,6 @@ typedef struct {
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
 #define SHOW_CHANGED		(USER_MASK<<3)
 #define HEIGHT_CHANGED		(USER_MASK<<4)
-#define TYPE_CHANGED		(USER_MASK<<5)
-
-#define TYPE_ITEM	(0x1)	/* Item slect mode */
-#define TYPE_CELL	(0x2)	/* Cell select mode */
 
 static const char *const SelectModeStrings[] = {
 	"none", "single", "browse", "extended", "multiple", NULL };
@@ -553,8 +548,8 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
 	0, SelectModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
-	"item", offsetof(Treeview,tree.selectTypeObj), TCL_INDEX_NONE,
-	0, SelectTypeStrings, TYPE_CHANGED },
+	"item", TCL_INDEX_NONE, offsetof(Treeview,tree.isCell),
+	TK_OPTION_VAR(bool), SelectTypeStrings, 0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
@@ -570,7 +565,7 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 	TK_OPTION_VAR(Tcl_Size), 0, GEOMETRY_CHANGED},
     {TK_OPTION_BOOLEAN, "-striped", "striped", "Striped",
 	DEF_STRIPED, TCL_INDEX_NONE, offsetof(Treeview,tree.striped),
-	0, 0, GEOMETRY_CHANGED},
+	TK_OPTION_VAR(bool), 0, GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	NULL, offsetof(Treeview, tree.xscroll.scrollCmdObj), TCL_INDEX_NONE,
@@ -1354,8 +1349,8 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr) {
     tv->tree.titleWidth = 0;
     tv->tree.titleRows = 0;
     tv->tree.totalRows = 0;
-    tv->tree.rowPosNeedsUpdate = 1;
-    tv->tree.striped = 0;
+    tv->tree.rowPosNeedsUpdate = true;
+    tv->tree.striped = false;
     tv->tree.columns = NULL;
     tv->tree.displayColumns = NULL;
     tv->tree.showFlags = ~0;
@@ -1483,16 +1478,11 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
 	    tv->tree.showObj,showStrings, &tv->tree.showFlags) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((mask & TYPE_CHANGED) && GetEnumSetFromObj(interp,tv->tree.selectTypeObj,
-	    SelectTypeStrings, &tv->tree.typeFlags) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
     if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    tv->tree.rowPosNeedsUpdate = 1;
+    tv->tree.rowPosNeedsUpdate = true;
 
     if (mask & (SHOW_CHANGED | DCOLUMNS_CHANGED)) {
 	RecomputeSlack(tv);
@@ -1597,7 +1587,7 @@ static int ConfigureItem(
 	if (item->imagespec) { TtkFreeImageSpec(item->imagespec); }
 	item->imagespec = newImageSpec;
     }
-    tv->tree.rowPosNeedsUpdate = 1;
+    tv->tree.rowPosNeedsUpdate = true;
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
 
@@ -1741,7 +1731,7 @@ static void UpdatePositionTree(Treeview *tv) {
     tv->tree.titleRows = 0;
     UpdatePositionItem(tv, tv->tree.root, 0, &rowPos, &itemPos, &visiblePos);
     tv->tree.totalRows = rowPos;
-    tv->tree.rowPosNeedsUpdate = 0;
+    tv->tree.rowPosNeedsUpdate = false;
 }
 
 /* + IdentifyItem --
@@ -2136,7 +2126,7 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     if (item != tv->tree.focus || tv->tree.focusCol) {
 	state &= ~TTK_STATE_FOCUS;
     }
-    if (tv->tree.typeFlags == TYPE_CELL || item != tv->tree.current) {
+    if (tv->tree.isCell || item != tv->tree.current) {
 	state &= ~TTK_STATE_ACTIVE;
     }
 
@@ -2241,7 +2231,7 @@ static void DrawSeparators(Treeview *tv, Drawable d) {
  */
  static void OverrideStriped(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem) {
-    int striped = item->visiblePos % 2 && tv->tree.striped;
+    bool striped = (item->visiblePos % 2) && tv->tree.striped;
     if (striped && displayItem->stripedBgObj) {
 	displayItem->backgroundObj = displayItem->stripedBgObj;
 	displayItem->stripedBgObj = NULL;
@@ -2362,7 +2352,7 @@ static void DrawCells(
 	if (!title && i <  tv->tree.nTitleColumns) continue;
 	if (!title && x <  tv->tree.titleWidth) continue;
 
-	if (tv->tree.typeFlags == TYPE_CELL && item == tv->tree.current &&
+	if (tv->tree.isCell && item == tv->tree.current &&
 		i == tv->tree.currentCol) {
 	    displayItemUsed = &displayItemCellActive;
 	    cellState |= TTK_STATE_ACTIVE;
@@ -2474,7 +2464,7 @@ static void DrawItem(
 	Tk_Anchor textAnchor, imageAnchor = DEFAULT_IMAGEANCHOR;
 	Ttk_Padding cellPadding = {(short)indent, 0, 0, 0};
 
-	if (tv->tree.typeFlags == TYPE_CELL && item == tv->tree.current &&
+	if (tv->tree.isCell && item == tv->tree.current &&
 		tv->tree.currentCol == 0) {
 	    displayItemUsed = &displayItemActive;
 	    cellState |= TTK_STATE_ACTIVE;
@@ -2820,7 +2810,7 @@ static int TreeviewChildrenCommand(
 	}
 
 	Tcl_Free(newChildren);
-	tv->tree.rowPosNeedsUpdate = 1;
+	tv->tree.rowPosNeedsUpdate = true;
 	TtkRedisplayWidget(&tv->core);
 
 	/* Event updates */
@@ -4012,7 +4002,7 @@ static int TreeviewCollapseExpand(
 
     /* Update widget if any changes were made */
     if (changed) {
-	tv->tree.rowPosNeedsUpdate = 1;
+	tv->tree.rowPosNeedsUpdate = true;
 	TtkRedisplayWidget(&tv->core);
     }
     Tcl_DecrRefCount(openObj);
@@ -4110,7 +4100,7 @@ static int TreeviewHideUnhide(
 
     /* Update widget if any changes were made */
     if (changed) {
-	tv->tree.rowPosNeedsUpdate = 1;
+	tv->tree.rowPosNeedsUpdate = true;
 	TtkRedisplayWidget(&tv->core);
     }
     Tcl_Free(items);
@@ -4287,7 +4277,7 @@ static int TreeviewInsertCommand(
     Tcl_SetHashValue(entryPtr, newItem);
     newItem->entryPtr = entryPtr;
     InsertItem(parent, sibling, newItem);
-    tv->tree.rowPosNeedsUpdate = 1;
+    tv->tree.rowPosNeedsUpdate = true;
     TtkRedisplayWidget(&tv->core);
 
     Tcl_SetObjResult(interp, newItem->idObj);
@@ -4355,7 +4345,7 @@ static int TreeviewDetachCommand(
 	tv->tree.currentCol = -1;
     }
 
-    tv->tree.rowPosNeedsUpdate = 1;
+    tv->tree.rowPosNeedsUpdate = true;
     TtkRedisplayWidget(&tv->core);
     Tcl_Free(items);
 
@@ -4508,7 +4498,7 @@ static int TreeviewDeleteCommand(
     if (selChange) {
 	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     }
-    tv->tree.rowPosNeedsUpdate = 1;
+    tv->tree.rowPosNeedsUpdate = true;
     TtkRedisplayWidget(&tv->core);
 
     /* Event updates */
@@ -4596,7 +4586,7 @@ static int TreeviewMoveCommand(
     DetachItem(item);
     InsertItem(parent, sibling, item);
 
-    tv->tree.rowPosNeedsUpdate = 1;
+    tv->tree.rowPosNeedsUpdate = true;
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
 }
@@ -4662,7 +4652,7 @@ static int TreeviewSeeCommand(
 	    parent->openObj = unshareObj(parent->openObj);
 	    Tcl_SetBooleanObj(parent->openObj, 1);
 	    parent->state |= TTK_STATE_OPEN;
-	    tv->tree.rowPosNeedsUpdate = 1;
+	    tv->tree.rowPosNeedsUpdate = true;
 	    TtkRedisplayWidget(&tv->core);
 	}
     }
@@ -5728,9 +5718,6 @@ static int TreeviewSearchCommand(
     };
     int matchType = SEARCH_EXACT;
     sortModes_t dataType = TYPE_ASCII;
-
-    /* Use this to have type default to -selecttype value. */
-    /* type = strcmp(Tcl_GetString(tv->tree.selectTypeObj), "cell") != 0;*/
 
     if (objc < 4 || objc > 25) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-options ...? pattern");
@@ -6890,7 +6877,7 @@ static int TreeviewSortCommand(
 
     /* Update widget */
     if (result == TCL_OK) {
-	tv->tree.rowPosNeedsUpdate = 1;
+	tv->tree.rowPosNeedsUpdate = true;
 	TtkRedisplayWidget(&tv->core);
     }
     return result;
