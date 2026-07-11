@@ -90,6 +90,7 @@ extern void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
 extern int  TkWaylandMenuActive(void);
 extern Tk_Window TkWaylandMenuGetTopmostWindow(void);
 extern int  TkWaylandMenuGetDepth(void);
+extern int  TkWaylandMenuStackRootIsMenubar(void);
 extern void TkWaylandMenuPopToDepth(int depth);
 extern Tk_Window TkWaylandMenuGetParentWindow(void);
 extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
@@ -1578,13 +1579,23 @@ TkWaylandKeyCallback(GLFWwindow *window,
 			/* Go back one submenu level. */
 			TkWaylandMenuPopToDepth(stackDepth - 1);
 			TkWaylandMenuRedrawActive();
+		    } else if (TkWaylandMenuStackRootIsMenubar()) {
+			/*
+			 * Top-level popup menu -> go back to the menubar.
+			 * The menubar itself is never pushed onto menuStack[], so
+			 * TkWaylandMenuGetParentWindow() (which only finds cascade-
+			 * of-cascade parents at depth>=2) can't locate it here.
+			 * winPtr is already the toplevel that owns this GLFW window
+			 * and its menubar, so use it directly.
+			 */
+			TkWaylandMenubarMove(winPtr, -1);
 		    } else {
-			/* Top-level popup menu → go back to menubar. */
-			TkWindow *menubarWin = (TkWindow *)TkWaylandMenuGetParentWindow();
-			if (menubarWin) {
-			    TkWaylandMenuPopToDepth(0);
-			    TkWaylandMenubarMove(menubarWin, -1);
-			}
+			/*
+			 * This chain is rooted at a menubutton (or a context menu),
+			 * not the real menubar. Navigation here must stay
+			 * self-contained -- do nothing rather than hand off to a
+			 * menubar the popup was never part of.
+			 */
 		    }
 		}
 		break;
@@ -1604,13 +1615,19 @@ TkWaylandKeyCallback(GLFWwindow *window,
 		    if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
 			/* Open submenu if possible. */
 			TkWaylandMenuOpenCascade(menuPtr, mePtr);
-		    } else if (stackDepth == 1) {
-			/* In top-level menu, no cascade → move to next menubar item. */
-			TkWindow *menubarWin = (TkWindow *)TkWaylandMenuGetParentWindow();
-			if (menubarWin) {
-			    TkWaylandMenuPopToDepth(0);
-			    TkWaylandMenubarMove(menubarWin, +1);
-			}
+		    } else if (stackDepth == 1 && TkWaylandMenuStackRootIsMenubar()) {
+			/*
+			 * In top-level menu, no cascade -> move to next menubar
+			 * item. Same fix as Left: use winPtr directly instead of
+			 * TkWaylandMenuGetParentWindow(), which returns NULL when
+			 * only a top-level dropdown (depth==1) is posted.
+			 *
+			 * Gated on TkWaylandMenuStackRootIsMenubar(): if this chain
+			 * is rooted at a menubutton (or context menu) instead of
+			 * the real menubar, there is no "next menubar item" to go
+			 * to -- stay self-contained and do nothing.
+			 */
+			TkWaylandMenubarMove(winPtr, +1);
 		    }
 		}
 		break;

@@ -93,11 +93,26 @@ typedef struct {
     TkMenu         *menuPtr;
     TkWaylandPopup *popup;
     int x, y, w, h;   /* Toplevel-surface-local rect. */
+    int rootIsMenubar; /* True if the root (index 0) of this chain was
+                         * posted by TkWaylandMenubarMove/ActivateFirst
+                         * (a real menubar cascade). False for chains
+                         * rooted at a menubutton (-menu) post or a
+                         * right-click context menu. Only meaningful via
+                         * menuStack[0]; nested cascades share their
+                         * root's value. */
 } MenuStackEntry;
 
 static MenuStackEntry menuStack[TK_WAYLAND_MENU_STACK_MAX];
 static int            menuStackDepth = 0;
 static int menuDismissedByClick = 0;
+
+/*
+ * Set immediately before a *root* (isRoot=1) call to
+ * TkWaylandPostMenuAtAnchor to record whether that root came from the
+ * real menubar. Read once, at push time, into the new root entry's
+ * rootIsMenubar field.
+ */
+static int pendingRootIsMenubar = 0;
 
 /* Forward declarations for static functions. */
 static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
@@ -520,7 +535,7 @@ TkpComputeMenubarGeometry(
         GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height);
 
         /* Minimal height - just font height plus small padding. */
-        int minHeight = fmPtr->linespace + 4;
+        int minHeight = fmPtr->linespace + 2;
         if (height < minHeight) {
             height = minHeight;
         }
@@ -529,7 +544,6 @@ TkpComputeMenubarGeometry(
             maxHeight = height;
         }
 
-        mePtr->height = height + 4; /* Minimal padding. */
         if (mePtr->type == SEPARATOR_ENTRY) {
             mePtr->width = 10;
         } else {
@@ -591,11 +605,11 @@ TkpComputeMenubarGeometry(
     /* Use maxHeight for all entries. */
     for (i = 0; i < menuPtr->numEntries; i++) {
         mePtr = menuPtr->entries[i];
-        mePtr->height = maxHeight + 4;
+        mePtr->height = maxHeight + 2;
     }
 
     menuPtr->totalWidth = windowWidth;
-    menuPtr->totalHeight = maxHeight + 6;
+    menuPtr->totalHeight = maxHeight + 2;
 
     MENU_LOG("TkpComputeMenubarGeometry: totalWidth=%d, totalHeight=%d, numEntries=%d",
              menuPtr->totalWidth, menuPtr->totalHeight, menuPtr->numEntries);
@@ -2348,6 +2362,7 @@ TkpPostMenu(
         return TCL_ERROR;
     }
 
+    pendingRootIsMenubar = 0;
     return TkWaylandPostMenuAtAnchor(interp, menuPtr,
         x, y, 1, 1, popupW, popupH, 1);
 }
@@ -2425,6 +2440,7 @@ TkpMenuButtonPostMenu(
     MENU_LOG("TkpMenuButtonPostMenu: button at (%d,%d) %dx%d, popup %dx%d",
              x, y, btnW, btnH, popupW, popupH);
 
+    pendingRootIsMenubar = 0;
     return TkWaylandPostMenuAtAnchor(interp, menuPtr,
         x, y + btnH, btnW, 1,
         popupW, popupH, 1);
@@ -2454,6 +2470,16 @@ MenuStackPop(
         menuStackDepth--;
         MenuStackEntry *entry = &menuStack[menuStackDepth];
 
+        /*
+         * Capture what we need for cleanup *before* the memset below
+         * zeroes the entry out -- otherwise the Tk_DeleteEventHandler
+         * guard below always sees a NULL menuPtr and never runs, leaving
+         * a stale StructureNotifyMask handler registered on the menu's
+         * tkwin pointing at MenuStackWindowEventProc.
+         */
+        TkMenu *poppedMenuPtr = entry->menuPtr;
+        Tk_Window poppedTkwin = poppedMenuPtr ? poppedMenuPtr->tkwin : NULL;
+
         if (entry->menuPtr && entry->menuPtr->postedCascade) {
             TkPostSubmenu(entry->menuPtr->interp, entry->menuPtr, NULL);
             entry->menuPtr->postedCascade = NULL;
@@ -2470,9 +2496,9 @@ MenuStackPop(
         }
 
         memset(entry, 0, sizeof(*entry));
-        if (entry->menuPtr && entry->menuPtr->tkwin) {
-            Tk_DeleteEventHandler(entry->menuPtr->tkwin, StructureNotifyMask,
-            MenuStackWindowEventProc, (ClientData)entry->menuPtr);
+        if (poppedTkwin) {
+            Tk_DeleteEventHandler(poppedTkwin, StructureNotifyMask,
+            MenuStackWindowEventProc, (ClientData)poppedMenuPtr);
         }
     }
 }
@@ -2801,6 +2827,11 @@ TkWaylandPostMenuAtAnchor(
     entry->y = postY;
     entry->w = popupW;
     entry->h = popupH;
+    if (isRoot) {
+        entry->rootIsMenubar = pendingRootIsMenubar;
+    } else {
+        entry->rootIsMenubar = menuStack[0].rootIsMenubar;
+    }
     
     Tk_CreateEventHandler(menuPtr->tkwin, StructureNotifyMask,
                        MenuStackWindowEventProc, (ClientData)menuPtr);
@@ -3088,8 +3119,10 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
         int w = mePtr->width;
         int h = mePtr->height;
 
-        /* Draw active background if active. */
-        if (mePtr->state == ENTRY_ACTIVE) {
+        bool isHighlighted = (i == menuPtr->active);
+
+        /* Draw active background if this entry is currently highlighted. */
+        if (isHighlighted) {
             nvgBeginPath(vg);
             nvgRect(vg, x, y, w, h);
             nvgFillColor(vg, activeBgColor);
@@ -3114,7 +3147,7 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
             NVGcolor labelColor = textColor;
             if (mePtr->state == ENTRY_DISABLED) {
                 labelColor = nvgRGBA(128, 128, 128, 255);
-            } else if (mePtr->state == ENTRY_ACTIVE && menuPtr->activeFgPtr) {
+            } else if (isHighlighted && menuPtr->activeFgPtr) {
                 XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->activeFgPtr);
                 if (color) {
                     labelColor = TkWaylandXColorToNVG(color);
@@ -3958,6 +3991,7 @@ TkWaylandMenubarHandleClick(
                          Tcl_GetString(mePtr->namePtr),
                          mePtr->x, wmPtr->menuHeight, cascadeW, cascadeH);
 
+                pendingRootIsMenubar = 1;
                 TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                     mePtr->x, wmPtr->menuHeight, 0, 0,
                     cascadeW, cascadeH, /*isRoot=*/1);
@@ -4187,6 +4221,38 @@ MODULE_SCOPE int
 TkWaylandMenuGetDepth(void)
 {
     return menuStackDepth;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuStackRootIsMenubar --
+ *
+ *      Returns true if the currently posted menu chain (if any) is
+ *      rooted at a real menubar cascade (posted via
+ *      TkWaylandMenubarMove/TkWaylandMenubarActivateFirst), as opposed
+ *      to being rooted at a menubutton's -menu or a right-click context
+ *      menu. Used by keyboard navigation to decide whether Left/Right at
+ *      the top of the chain should hand off to the menubar or stay
+ *      self-contained within the current popup.
+ *
+ * Results:
+ *      1 if rooted at the menubar, 0 otherwise (including when nothing
+ *      is posted).
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenuStackRootIsMenubar(void)
+{
+    if (menuStackDepth == 0) {
+        return 0;
+    }
+    return menuStack[0].rootIsMenubar;
 }
 
 /*
@@ -4460,6 +4526,69 @@ TkWaylandMenuGetTopmostWindow(void)
  *---------------------------------------------------------------------------
  */
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenubarPostCascadeAtEntry --
+ *
+ *      Shared helper that posts the top-level cascade menu associated
+ *      with a menubar entry (if it is a CASCADE_ENTRY). Used both when
+ *      first activating the menubar (F10/Alt) and when moving between
+ *      menubar entries with the Left/Right arrow keys, so that the
+ *      newly-highlighted entry's dropdown replaces the one that was
+ *      just closed.
+ *
+ * Results:
+ *      Returns 1 if a cascade was posted, 0 otherwise (e.g. the entry
+ *      is not a cascade, or its menu reference could not be resolved).
+ *
+ * Side effects:
+ *      Posts cascadePtr as a root-level menu popup anchored below the
+ *      menubar entry.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+MenubarPostCascadeAtEntry(
+    WmInfo *wmPtr,
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr)
+{
+    TkMenuReferences *menuRefPtr;
+    TkMenu *cascadePtr;
+    int cascadeW, cascadeH;
+
+    if (!mePtr || mePtr->type != CASCADE_ENTRY || mePtr->namePtr == NULL) {
+        return 0;
+    }
+
+    menuRefPtr = TkFindMenuReferencesObj(menuPtr->interp, mePtr->namePtr);
+    if (!menuRefPtr || !menuRefPtr->menuPtr) {
+        return 0;
+    }
+
+    cascadePtr = menuRefPtr->menuPtr;
+
+    TkRecomputeMenu(cascadePtr);
+    cascadeW = cascadePtr->totalWidth;
+    cascadeH = cascadePtr->totalHeight;
+    if (cascadeW <= 0) cascadeW = 1;
+    if (cascadeH <= 0) cascadeH = 1;
+
+    menuPtr->postedCascade = mePtr;
+
+    MENU_LOG("MenubarPostCascadeAtEntry: posting cascade '%s' at x=%d",
+             Tcl_GetString(mePtr->namePtr), mePtr->x);
+
+    pendingRootIsMenubar = 1;
+    TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+        mePtr->x, wmPtr->menuHeight, 0, 0,
+        cascadeW, cascadeH, /*isRoot=*/1);
+
+    return 1;
+}
+
 MODULE_SCOPE int
 TkWaylandMenubarActivateFirst(TkWindow *winPtr)
 {
@@ -4492,37 +4621,11 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
 
         /* Activate it. */
         TkActivateMenuEntry(menuPtr, i);
-        TkEventuallyRedrawMenu(menuPtr, NULL);
+        Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
+        TkpDisplayMenu((void *)menuPtr);
 
-        /* If it's a cascade, post its menu. */
-        if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
-            TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
-                menuPtr->interp, mePtr->namePtr);
-
-            if (menuRefPtr && menuRefPtr->menuPtr) {
-                TkMenu *cascadePtr = menuRefPtr->menuPtr;
-                int cascadeW, cascadeH;
-
-                TkRecomputeMenu(cascadePtr);
-                cascadeW = cascadePtr->totalWidth;
-                cascadeH = cascadePtr->totalHeight;
-                if (cascadeW <= 0) cascadeW = 1;
-                if (cascadeH <= 0) cascadeH = 1;
-
-                menuPtr->postedCascade = mePtr;
-
-                MENU_LOG("TkWaylandMenubarActivateFirst: posting first cascade '%s'",
-                         Tcl_GetString(mePtr->namePtr));
-
-                TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
-                    mePtr->x, wmPtr->menuHeight, 0, 0,
-                    cascadeW, cascadeH, /*isRoot=*/1);
-
-                return 1;
-            }
-        }
-
-        /* Non-cascade entry: just activate it. */
+        /* If it's a cascade, post its menu; either way this entry is used. */
+        MenubarPostCascadeAtEntry(wmPtr, menuPtr, mePtr);
         return 1;
     }
 
@@ -4556,8 +4659,17 @@ TkWaylandMenubarMove(TkWindow *winPtr, int direction)
 
     TkMenu *menuPtr = wmPtr->menubarMenuPtr;
 
+    /*
+     * Remember whether a dropdown was actually posted before we move.
+     * If the user only has the menubar highlight active (no dropdown
+     * open yet), Left/Right should just move the highlight, matching
+     * typical menu-mode behavior. If a dropdown *is* open, Left/Right
+     * should close it and immediately open the next entry's dropdown.
+     */
+    int wasPosted = (TkWaylandMenuGetDepth() > 0);
+
     /* Always close any open popups when moving on menubar. */
-    if (TkWaylandMenuGetDepth() > 0) {
+    if (wasPosted) {
         TkWaylandMenuPopToDepth(0);
     }
 
@@ -4577,9 +4689,28 @@ TkWaylandMenubarMove(TkWindow *winPtr, int direction)
 
     if (newIdx != current) {
         TkActivateMenuEntry(menuPtr, newIdx);
-        TkWaylandMenuRedrawActive();
-        MENU_LOG("Menubar highlight moved %s: %d → %d", 
+
+        /*
+         * TkWaylandMenuRedrawActive() only redraws menuStack[depth-1] --
+         * but the menubar itself is never pushed onto menuStack[], so
+         * once the dropdown is popped (depth==0, the common case here),
+         * that call is a silent no-op and the highlight change on the
+         * menubar strip never gets painted. TkEventuallyRedrawMenu()
+         * alone just queues a deferred idle callback, which may not run
+         * before the user expects to see feedback. Force an immediate,
+         * synchronous redraw of the menubar's own popup instead, same
+         * pattern used in MenuMouseMotion for the equivalent problem.
+         */
+        Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
+        TkpDisplayMenu((void *)menuPtr);
+
+        MENU_LOG("Menubar highlight moved %s: %d -> %d",
                  direction > 0 ? "right" : "left", current, newIdx);
+
+        if (wasPosted) {
+            TkMenuEntry *newEntry = menuPtr->entries[newIdx];
+            MenubarPostCascadeAtEntry(wmPtr, menuPtr, newEntry);
+        }
     }
 }
 
