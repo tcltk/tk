@@ -85,6 +85,7 @@ extern void TkWaylandMenuRedrawActive(void);
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 extern int  TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
                                              int button);
+extern int  TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
 extern int TkWaylandMenubarActivateFirst(TkWindow *winPtr);
 extern void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
 extern int  TkWaylandMenuActive(void);
@@ -1053,6 +1054,14 @@ TkWaylandCursorEnterCallback(
     glfwGetWindowPos(window, &winX, &winY);
     
     /*
+     * Menubar intercept: the always-visible menubar strip is not part of
+     * the popup stack and has no window of its own to receive motion
+     * events, so it must be hit-tested explicitly here, regardless of
+     * whether a menu popup is currently active.
+     */
+    TkWaylandMenubarHandleMotion(winPtr, (int)xpos, (int)ypos);
+
+    /*
      * Menu intercept: while a popup menu stack is active, cursor enter/leave
      * events are forwarded to the menu hit-test logic. This ensures that
      * menu highlights update even if the cursor briefly leaves the GLFW
@@ -1125,6 +1134,16 @@ TkWaylandCursorPosCallback(
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
+
+    /*
+     * Menubar intercept: same reasoning as TkWaylandCursorEnterCallback --
+     * the menubar strip needs hover updates regardless of whether a menu
+     * popup is currently posted, and it isn't reachable through
+     * TkWaylandMenuHandlePointerMotion() below (that only hit-tests
+     * menuStack[] entries, and the menubar itself is never pushed onto
+     * that stack).
+     */
+    TkWaylandMenubarHandleMotion(winPtr, (int)xpos, (int)ypos);
 
     /*
      * Menu intercept: while a popup menu stack is active all pointer motion

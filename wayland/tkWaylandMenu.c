@@ -128,6 +128,8 @@ static void TkWaylandClampPopupGeometry(int *xPtr, int *yPtr, int *wPtr, int *hP
 static void TkWaylandComputeCascadeAnchor(int level, TkMenuEntry *mePtr,
     int cascadeW, int cascadeH, int *outX, int *outY);
 static void TkpDisplayMenu(void *clientData);
+static int  MenubarPostCascadeAtEntry(WmInfo *wmPtr, TkMenu *menuPtr,
+    TkMenuEntry *mePtr);
 static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
 static void MenuBarDeferredSetup(void *clientData);
 static void MenubarResizeIdleProc(void *clientData);
@@ -139,7 +141,11 @@ MODULE_SCOPE void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
 MODULE_SCOPE int TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
     int button);
+MODULE_SCOPE int TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
 MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
+MODULE_SCOPE int  TkWaylandMenuGetDepth(void);
+MODULE_SCOPE int  TkWaylandMenuStackRootIsMenubar(void);
+MODULE_SCOPE void TkWaylandMenuPopToDepth(int depth);
 
 /* Geometry helper functions. */
 static void GetMenuIndicatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
@@ -1705,11 +1711,16 @@ DrawMenuEntryAccelerator(
         nvgLineTo(vg, px + arrowW, py + arrowH/2);
         nvgClosePath(vg);
 
-        if (mePtr->state == ENTRY_ACTIVE) {
-            nvgFillColor(vg, activeBorder ? TkWaylandXColorToNVG(Tk_3DBorderColor(activeBorder)) : nvgRGB(0, 0, 0));
-        } else {
-            nvgFillColor(vg, textColor);
-        }
+        /*
+         * Always use textColor here -- it's already resolved by the
+         * caller to the correct contrasting color for both the active
+         * and inactive states (activeFgPtr vs fgPtr). Using
+         * Tk_3DBorderColor(activeBorder) for the active case instead
+         * painted the arrow the same color as the active background
+         * fill in DrawMenuEntryBackground, making it invisible exactly
+         * when the entry became highlighted.
+         */
+        nvgFillColor(vg, textColor);
         nvgFill(vg);
 
     } else if (mePtr->accelPtr != NULL) {
@@ -4008,6 +4019,102 @@ TkWaylandMenubarHandleClick(
     }
 
     return 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarHandleMotion --
+ *
+ *      Hit-test pointer motion against the menubar of winPtr and update
+ *      the hover highlight accordingly. There is no window/subsurface of
+ *      its own for the menubar strip to receive motion events on (like
+ *      TkWaylandMenubarHandleClick, this works off raw toplevel-local
+ *      coordinates), so this must be called explicitly from the GLFW
+ *      cursor-position/enter callbacks rather than relying on any
+ *      per-window event delivery.
+ *
+ *      If a dropdown is already posted and rooted at this menubar (see
+ *      TkWaylandMenuStackRootIsMenubar), hovering a different top-level
+ *      entry closes the current dropdown and opens the hovered one,
+ *      mirroring keyboard Left/Right navigation. If no dropdown is
+ *      posted (or the posted one belongs to an unrelated menubutton),
+ *      motion here only updates the highlight.
+ *
+ * Results:
+ *      1 if the pointer is within the menubar strip's vertical band
+ *      (whether or not it landed on a specific entry), 0 if it's
+ *      outside that band and the caller should treat this as an
+ *      ordinary Tk pointer event instead.
+ *
+ * Side effects:
+ *      May activate/deactivate a menubar entry and redraw the strip;
+ *      may pop and re-post a dropdown.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenubarHandleMotion(
+    TkWindow *winPtr,
+    int x, int y)
+{
+    WmInfo *wmPtr;
+    TkMenu *menuPtr;
+    int i;
+
+    if (!winPtr) {
+        return 0;
+    }
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr || !wmPtr->menubarMenuPtr || !wmPtr->menubarPopup) {
+        return 0;
+    }
+
+    menuPtr = wmPtr->menubarMenuPtr;
+
+    if (x < 0 || y < 0 || y >= wmPtr->menuHeight) {
+        /*
+         * Pointer is outside the menubar strip. Clear any hover
+         * highlight, but only if it isn't backed by an actually-posted
+         * dropdown for this menubar (e.g. the pointer moved down into
+         * that dropdown's own popup, which is a separate subsurface
+         * outside this y-range -- the highlight on the strip above it
+         * should stay put while its dropdown is open).
+         */
+        if (menuPtr->active != -1 &&
+            !(TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar())) {
+            TkActivateMenuEntry(menuPtr, -1);
+            Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
+            TkpDisplayMenu((void *)menuPtr);
+        }
+        return 0;
+    }
+
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        if (!mePtr) continue;
+        if (x < mePtr->x || x >= mePtr->x + mePtr->width) continue;
+
+        if (mePtr->state != ENTRY_DISABLED && menuPtr->active != i) {
+            TkActivateMenuEntry(menuPtr, i);
+            Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
+            TkpDisplayMenu((void *)menuPtr);
+
+            /*
+             * If a menubar-rooted dropdown is already open, follow the
+             * mouse to the newly-hovered entry too, same as Left/Right.
+             */
+            if (TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar()) {
+                TkWaylandMenuPopToDepth(0);
+                MenubarPostCascadeAtEntry(wmPtr, menuPtr, mePtr);
+            }
+        }
+        return 1;
+    }
+
+    /* Inside the strip's band but not over any entry (e.g. padding). */
+    return 1;
 }
 
 /*
