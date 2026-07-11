@@ -1242,7 +1242,7 @@ TkMakeEnsemble(
  *
  * TkScalingLevel --
  *
- *	Returns the display's DPI scaling value as a decimal value where
+ *	Returns the display's DPI scaling level as a decimal value, where
  *	0.9 is 90%, 1.0 is 100%, 1.1 is 110%, 2.0 is 200%, etc.
  *
  * Results:
@@ -1288,13 +1288,57 @@ TkScalingLevel2(
     Tcl_Interp *interp = Tk_Interp(tkwin);
     Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
 	    TCL_GLOBAL_ONLY);
-    if (scalingPctPtr == NULL) {
+    if (scalingPctPtr == NULL) {			/* not expected */
 	return 1.0;
     } else {
 	int scalingPct;
 	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
 	return scalingPct / 100.0;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkStartScalingLevel --
+ *
+ *	Returns the display's DPI scaling level at application start time.
+ *	When invoked for the first time, the function retrieves this value
+ *	from the floating point variable tk::startScalingLevel and saves
+ *	it in a static variable; subsequent invocations simply return the
+ *	value of that static variable.
+ *
+ * Results:
+ *      The start scaling level.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkStartScalingLevel(
+    Tk_Window tkwin)
+{
+    static double startScalingLevel = 0.0;
+
+    if (startScalingLevel == 0.0) {
+	Tcl_Interp *interp = Tk_Interp(tkwin);
+	Tcl_Obj *startScalingLevelPtr = Tcl_GetVar2Ex(interp,
+	    "::tk::startScalingLevel", NULL, TCL_GLOBAL_ONLY);
+	if (startScalingLevelPtr == NULL) {		/* not expected */
+	    startScalingLevel = 1.0;
+	} else {
+	    Tcl_GetDoubleFromObj(interp, startScalingLevelPtr,
+		&startScalingLevel);
+	    if (startScalingLevel == 0.0) {		/* not expected */
+		startScalingLevel = 1.0;
+	    }
+	}
+    }
+
+    return startScalingLevel;
 }
 
 /*
