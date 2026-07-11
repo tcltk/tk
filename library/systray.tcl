@@ -112,6 +112,163 @@ namespace eval ::tk::systray {
 	}
     }
 
+    # --- Wayland tk_popup emulation -------------------------------------
+    # Wayland has no native popup-menu positioning support usable from a
+    # system tray callback, so when a -button1/-button3 command invokes
+    # tk_popup we substitute a plain toplevel built from the menu's
+    # entries (label + command) laid out as vertically packed buttons.
+    variable _traymenu_win  "._traymenu"
+    variable _popup_installed 0
+    variable _popup_shown 0
+
+    # Wraps a configured -button1/-button3 command. On Wayland, tk_popup
+    # is renamed out of the way before the command runs (so any call to
+    # tk_popup made during, or as a result of, the command -- directly or
+    # through an intervening proc -- is caught, since Tcl resolves the
+    # command name dynamically rather than lexically). If the command
+    # completes without ever having triggered the substitute window,
+    # tk_popup is restored immediately; otherwise restoration happens
+    # later, when the substitute window is dismissed or hidden.
+    proc _dispatch_button {cmd} {
+	variable _popup_shown
+	if {$cmd eq "" || [tk windowingsystem] ne "wayland"} {
+	    uplevel #0 $cmd
+	    return
+	}
+	_install_tray_popup
+	set _popup_shown 0
+	uplevel #0 $cmd
+	if {!$_popup_shown} {
+	    _restore_tk_popup
+	}
+    }
+
+    # Temporarily replaces the global tk_popup command with one that
+    # builds our substitute menu window instead of posting a real menu.
+    proc _install_tray_popup {} {
+	variable _popup_installed
+	if {$_popup_installed} {
+	    return
+	}
+	rename ::tk_popup ::tk::systray::_tk_popup_orig
+	proc ::tk_popup {menu x y {entry {}}} {
+	    ::tk::systray::_show_traymenu $menu
+	}
+	set _popup_installed 1
+    }
+
+    # Restores the real tk_popup command.
+    proc _restore_tk_popup {} {
+	variable _popup_installed
+	if {!$_popup_installed} {
+	    return
+	}
+	catch {rename ::tk_popup {}}
+	rename ::tk::systray::_tk_popup_orig ::tk_popup
+	set _popup_installed 0
+    }
+
+    # Builds and shows the substitute tray-menu toplevel from the given
+    # menu widget's entries.
+    proc _show_traymenu {menu} {
+	variable _traymenu_win
+	variable _popup_shown
+	set w $_traymenu_win
+
+	if {[winfo exists $w]} {
+	    ::destroy $w
+	}
+
+	if {![winfo exists $menu]} {
+	    _restore_tk_popup
+	    return
+	}
+
+	set _popup_shown 1
+
+	toplevel $w
+	wm title $w "Tray Menu"
+	wm resizable $w 0 0
+	wm protocol $w WM_DELETE_WINDOW ::tk::systray::_dismiss_traymenu
+
+	set end [$menu index end]
+	if {$end ne "none"} {
+	    for {set i 0} {$i <= $end} {incr i} {
+		set type [$menu type $i]
+		if {$type eq "separator" || $type eq "tearoff"} {
+		    continue
+		}
+		if {[catch {$menu entrycget $i -label} label]} {
+		    continue
+		}
+		if {[catch {$menu entrycget $i -command} cmd]} {
+		    continue
+		}
+		ttk::button $w.btn$i -text $label \
+		    -command [list ::tk::systray::_traymenu_select $cmd]
+		pack $w.btn$i -fill both -expand no
+	    }
+	}
+
+	update idletasks
+	set x [winfo pointerx $w]
+	set y [winfo pointery $w]
+	wm geometry $w +$x+$y
+
+	wm deiconify $w
+	raise $w
+	focus -force $w
+
+	# Wayland forbids one client from grabbing another's input, so a
+	# global pointer grab can't detect outside clicks here. Instead,
+	# rely on the toplevel losing real window-manager focus when the
+	# user clicks elsewhere -- clicking one of our own buttons only
+	# moves Tk's internal focus within this toplevel and does not
+	# generate this event.
+	bind $w <FocusOut> {+ ::tk::systray::_traymenu_focusout %W}
+	bind $w <Escape> {::tk::systray::_dismiss_traymenu}
+    }
+
+    # Runs the selected entry's command after withdrawing the window.
+    proc _traymenu_select {cmd} {
+	_dismiss_traymenu
+	uplevel #0 $cmd
+    }
+
+    # Only the toplevel's own FocusOut matters, not one bubbling up
+    # from a child; defer the actual check to let focus settle first.
+    proc _traymenu_focusout {W} {
+	variable _traymenu_win
+	if {$W ne $_traymenu_win} {
+	    return
+	}
+	after idle ::tk::systray::_traymenu_check_focus
+    }
+
+    # Dismisses the window if focus landed outside it.
+    proc _traymenu_check_focus {} {
+	variable _traymenu_win
+	set w $_traymenu_win
+	if {![winfo exists $w] || [winfo ismapped $w] == 0} {
+	    return
+	}
+	set f [focus]
+	if {$f eq "" || [winfo toplevel $f] ne $w} {
+	    _dismiss_traymenu
+	}
+    }
+
+    # Withdraws the substitute menu window and restores tk_popup.
+    proc _dismiss_traymenu {} {
+	variable _traymenu_win
+	set w $_traymenu_win
+	if {[winfo exists $w]} {
+	    wm withdraw $w
+	}
+	_restore_tk_popup
+    }
+    # ----------------------------------------------------------------------
+
     namespace export create configure destroy exists
     namespace ensemble create
 }
@@ -325,7 +482,8 @@ proc ::tk::systray::create {args} {
 	    }
 		"wayland" {
 		_systray create [dict get $values -image] [dict get $values -text] \
-        [dict get $values -button1] [dict get $values -button3]
+        [list ::tk::systray::_dispatch_button [dict get $values -button1]] \
+        [list ::tk::systray::_dispatch_button [dict get $values -button3]]
 	    }
 	    "aqua" {
 		_systray create [dict get $values -image] [dict get $values -text] \
@@ -384,16 +542,18 @@ proc ::tk::systray::configure {args} {
 	    }
 		"wayland" {
 	   if {[dict exists $args -image]} {
-	        _systray modify image [dict get $args -image]
+	        _systray configure -image [dict get $args -image]
 	    }
 	    if {[dict exists $args -text]} {
-	        _systray modify text [dict get $args -text]
+	        _systray configure -text [dict get $args -text]
 	    }
 	    if {[dict exists $args -button1]} {
-	        _systray modify b1_callback [dict get $args -button1]
+	        _systray configure -button1 \
+	            [list ::tk::systray::_dispatch_button [dict get $args -button1]]
 	    }
 	    if {[dict exists $args -button3]} {
-	        _systray modify b3_callback [dict get $args -button3]
+	        _systray configure -button3 \
+	            [list ::tk::systray::_dispatch_button [dict get $args -button3]]
 	    }
 	    }
 	    "aqua" {
