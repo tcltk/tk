@@ -80,6 +80,7 @@ typedef struct {
 
     /* dbusmenu support */
     TkMenu *menuPtr;                  /* resolved Tk menu, if any */
+    int hasDBusMenu;                  /* flag: suppress native tk_popup */
     int item_id;
 
     int redisplayPending;
@@ -111,6 +112,12 @@ static int global_item_id = 0;
  * SubstituteButtonPercents --
  *
  *	Expand %X, %Y, and %% in a button command string.
+ *
+ * Results:
+ *	A new Tcl_Obj with the substituted command.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -144,17 +151,26 @@ SubstituteButtonPercents(Tcl_Obj *cmdObj, int x, int y)
  * InvokeButtonCommand --
  *
  *	Execute the Tcl command bound to a button press.
+ *  Suppress if dbusmenu is handling the menu (prevents native tk_popup).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May evaluate a Tcl script; errors are backgrounded.
  *
  *----------------------------------------------------------------------
  */
+ 
 static void
 InvokeButtonCommand(DockIcon *icon, int button, int x, int y)
 {
     Tcl_Obj *cmdObj = (button == 1) ? icon->b1Command : icon->b3Command;
     if (!cmdObj) return;
 
-    /* Skip local execution if it's a tk_popup (menu handled by dbusmenu) */
-    if (strstr(Tcl_GetString(cmdObj), "tk_popup") != NULL) {
+    /* Skip local execution if dbusmenu is active (menu handled via D-Bus). */
+    if (icon->hasDBusMenu || strstr(Tcl_GetString(cmdObj), "tk_popup") != NULL) {
+		fprintf(stderr, "menu!\n");
         return;
     }
 
@@ -170,8 +186,14 @@ InvokeButtonCommand(DockIcon *icon, int button, int x, int y)
  *
  * DetectMenuFromCallback --
  *
- *	Heuristically detect if a callback contains a tk_popup command;
- *	if so, resolve the menu and store it in icon->menuPtr for dbusmenu.
+ *	Improved heuristic to detect tk_popup and resolve the menu for dbusmenu.
+ *  Supports more command forms (e.g., lists, variables).
+ *
+ * Results:
+ *	Sets icon->menuPtr and icon->hasDBusMenu if a menu is found.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -179,35 +201,57 @@ static void
 DetectMenuFromCallback(DockIcon *icon, Tcl_Obj *cmdObj)
 {
     if (!cmdObj) return;
+
+    icon->hasDBusMenu = 0;
+    icon->menuPtr = NULL;
+
     const char *script = Tcl_GetString(cmdObj);
+    if (!script) return;
+
+    /* Look for tk_popup (case sensitive, as Tcl commands usually are) */
     const char *p = strstr(script, "tk_popup");
     if (!p) return;
 
+    /* Advance past tk_popup */
     p += strlen("tk_popup");
     while (*p && isspace((unsigned char)*p)) p++;
     if (!*p) return;
 
+    /* Extract potential menu name (handle simple cases, lists, etc.) */
     const char *q = p;
     while (*q && (isalnum((unsigned char)*q) || *q == '.' || *q == '_' ||
-                  *q == ':' || *q == '-')) q++;
+                  *q == ':' || *q == '-' || *q == '$' || *q == '[' || *q == '{')) {
+        q++;
+    }
     if (q == p) return;
 
     char *menuName = (char *)Tcl_Alloc(q - p + 1);
     memcpy(menuName, p, q - p);
     menuName[q - p] = '\0';
 
+    /* Resolve the window/menu */
     TkWindow *winPtr = (TkWindow *)Tk_NameToWindow(icon->interp, menuName,
                                                     icon->tkwin);
     Tcl_Free(menuName);
+
     if (winPtr && winPtr->instanceData) {
         icon->menuPtr = (TkMenu *)winPtr->instanceData;
+        icon->hasDBusMenu = 1;  /* Flag to suppress native popup */
     }
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * DBus Method Callbacks (SNI)
+ * method_activate --
+ *
+ *	D-Bus method handler for "Activate" (primary button click).
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	Invokes the button-1 command.
  *
  *----------------------------------------------------------------------
  */
@@ -221,6 +265,21 @@ static int method_activate(sd_bus_message *m, void *userdata,
     return sd_bus_reply_method_return(m, "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * method_secondary_activate --
+ *
+ *	D-Bus method handler for "SecondaryActivate" (right‑click or middle‑click).
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	Invokes the button-3 command.
+ *
+ *----------------------------------------------------------------------
+ */
 static int method_secondary_activate(sd_bus_message *m, void *userdata,
                                      sd_bus_error *ret_error) {
     DockIcon *icon = (DockIcon *)userdata;
@@ -231,6 +290,21 @@ static int method_secondary_activate(sd_bus_message *m, void *userdata,
     return sd_bus_reply_method_return(m, "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * method_context_menu --
+ *
+ *	D-Bus method handler for "ContextMenu" (request to show context menu).
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	Invokes the button-3 command (menu is handled via dbusmenu if available).
+ *
+ *----------------------------------------------------------------------
+ */
 static int method_context_menu(sd_bus_message *m, void *userdata,
                                sd_bus_error *ret_error) {
     DockIcon *icon = (DockIcon *)userdata;
@@ -241,6 +315,21 @@ static int method_context_menu(sd_bus_message *m, void *userdata,
     return sd_bus_reply_method_return(m, "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * method_scroll --
+ *
+ *	D-Bus method handler for "Scroll" (mouse wheel events).
+ *
+ * Results:
+ *	Standard sd-bus return code (currently not implemented).
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int method_scroll(sd_bus_message *m, void *userdata,
                          sd_bus_error *ret_error) {
     /* Scroll not implemented */
@@ -250,7 +339,15 @@ static int method_scroll(sd_bus_message *m, void *userdata,
 /*
  *----------------------------------------------------------------------
  *
- * DBus Property Getters (SNI)
+ * property_get_category --
+ *
+ *	D-Bus property getter for "Category".
+ *
+ * Results:
+ *	Standard sd-bus return code; appends the category string.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -269,6 +366,21 @@ static int property_get_category(sd_bus *bus, const char *path,
     return sd_bus_message_append(reply, "s", cat);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * property_get_status --
+ *
+ *	D-Bus property getter for "Status".
+ *
+ * Results:
+ *	Standard sd-bus return code; appends the status string.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int property_get_status(sd_bus *bus, const char *path,
                                const char *interface, const char *property,
                                sd_bus_message *reply, void *userdata,
@@ -283,6 +395,21 @@ static int property_get_status(sd_bus *bus, const char *path,
     return sd_bus_message_append(reply, "s", status);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * property_get_icon_name --
+ *
+ *	D-Bus property getter for "IconName" (returns empty string).
+ *
+ * Results:
+ *	Standard sd-bus return code; appends an empty string.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int property_get_icon_name(sd_bus *bus, const char *path,
                                   const char *interface, const char *property,
                                   sd_bus_message *reply, void *userdata,
@@ -290,6 +417,21 @@ static int property_get_icon_name(sd_bus *bus, const char *path,
     return sd_bus_message_append(reply, "s", "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * property_get_icon_pixmap --
+ *
+ *	D-Bus property getter for "IconPixmap" – returns ARGB32 pixmap data.
+ *
+ * Results:
+ *	Standard sd-bus return code; appends the pixmap array if available.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int property_get_icon_pixmap(sd_bus *bus, const char *path,
                                     const char *interface, const char *property,
                                     sd_bus_message *reply, void *userdata,
@@ -312,6 +454,21 @@ static int property_get_icon_pixmap(sd_bus *bus, const char *path,
     return 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * property_get_tooltip --
+ *
+ *	D-Bus property getter for "ToolTip".
+ *
+ * Results:
+ *	Standard sd-bus return code; appends the tooltip structure.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int property_get_tooltip(sd_bus *bus, const char *path,
                                 const char *interface, const char *property,
                                 sd_bus_message *reply, void *userdata,
@@ -333,6 +490,21 @@ static int property_get_tooltip(sd_bus *bus, const char *path,
     return 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * property_get_menu --
+ *
+ *	D-Bus property getter for "Menu" – returns the dbusmenu object path.
+ *
+ * Results:
+ *	Standard sd-bus return code; appends the menu object path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int property_get_menu(sd_bus *bus, const char *path,
                              const char *interface, const char *property,
                              sd_bus_message *reply, void *userdata,
@@ -386,7 +558,21 @@ static const sd_bus_vtable dbusmenu_vtable[] = {
     SD_BUS_VTABLE_END
 };
 
-/* Helper: find a menu entry by its D-Bus ID (address) */
+/*
+ *----------------------------------------------------------------------
+ *
+ * FindMenuEntryByID --
+ *
+ *	Recursively search a TkMenu for an entry matching the given D‑Bus ID.
+ *
+ * Results:
+ *	Returns a pointer to the TkMenuEntry if found, else NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static TkMenuEntry *
 FindMenuEntryByID(TkMenu *menu, int id) {
     if (!menu || !menu->entries) return NULL;
@@ -402,6 +588,21 @@ FindMenuEntryByID(TkMenu *menu, int id) {
     return NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * AppendEntryProperties --
+ *
+ *	Append the properties of a menu entry as a D‑Bus dictionary.
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 AppendEntryProperties(sd_bus_message *reply, TkMenuEntry *mePtr) {
     int r;
@@ -453,6 +654,21 @@ AppendEntryProperties(sd_bus_message *reply, TkMenuEntry *mePtr) {
     return sd_bus_message_close_container(reply);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * BuildMenuChildren --
+ *
+ *	Recursively build the D‑Bus representation of a menu's children.
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 BuildMenuChildren(TkMenu *childMenu, int depth, sd_bus_message *reply) {
     int r;
@@ -487,6 +703,21 @@ BuildMenuChildren(TkMenu *childMenu, int depth, sd_bus_message *reply) {
     return sd_bus_message_close_container(reply);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * dbusmenu_get_layout --
+ *
+ *	D-Bus method handler for "GetLayout" – returns the menu structure.
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 dbusmenu_get_layout(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     DockIcon *icon = (DockIcon *)userdata;
@@ -530,6 +761,21 @@ dbusmenu_get_layout(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) 
     return 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * dbusmenu_about_to_show --
+ *
+ *	D-Bus method handler for "AboutToShow" – can be used for -postcommand.
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	None (currently no -postcommand support).
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 dbusmenu_about_to_show(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     int id;
@@ -539,6 +785,21 @@ dbusmenu_about_to_show(sd_bus_message *m, void *userdata, sd_bus_error *ret_erro
     return sd_bus_reply_method_return(m, "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * dbusmenu_event --
+ *
+ *	D-Bus method handler for "Event" – handles menu item clicks.
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	May evaluate the command associated with a clicked menu item.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 dbusmenu_event(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     DockIcon *icon = (DockIcon *)userdata;
@@ -562,6 +823,21 @@ dbusmenu_event(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     return sd_bus_reply_method_return(m, "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * dbusmenu_get_group_properties --
+ *
+ *	D-Bus method handler for "GetGroupProperties" – returns empty.
+ *
+ * Results:
+ *	Standard sd-bus return code.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 dbusmenu_get_group_properties(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     sd_bus_message *reply = NULL;
@@ -576,6 +852,21 @@ dbusmenu_get_group_properties(sd_bus_message *m, void *userdata, sd_bus_error *r
     return 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * dbusmenu_property_get_version --
+ *
+ *	D-Bus property getter for "Version" – returns 3.
+ *
+ * Results:
+ *	Standard sd-bus return code; appends the version.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static int
 dbusmenu_property_get_version(sd_bus *bus, const char *path, const char *interface,
                               const char *property, sd_bus_message *reply,
@@ -589,6 +880,12 @@ dbusmenu_property_get_version(sd_bus *bus, const char *path, const char *interfa
  * ProcessDBusEvents --
  *
  *	Timer callback to process pending D‑Bus messages.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Processes all pending D‑Bus messages; reschedules itself.
  *
  *----------------------------------------------------------------------
  */
@@ -607,6 +904,12 @@ ProcessDBusEvents(void *clientData) {
  * CaptureIconPixmap --
  *
  *	Capture the Tk photo pixels into the icon's ARGB32 buffer.
+ *
+ * Results:
+ *	Returns 1 on success, 0 on failure.
+ *
+ * Side effects:
+ *	Allocates and fills icon->iconArgb; frees any previous buffer.
  *
  *----------------------------------------------------------------------
  */
@@ -645,9 +948,15 @@ CaptureIconPixmap(DockIcon *icon) {
 /*
  *----------------------------------------------------------------------
  *
- * UpdateIndicatorIcon / Status / Tooltip --
+ * UpdateIndicatorIcon --
  *
- *	Emit the corresponding D‑Bus signals.
+ *	Emit the "NewIcon" D‑Bus signal to notify that the icon image changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sends a D‑Bus signal.
  *
  *----------------------------------------------------------------------
  */
@@ -659,6 +968,21 @@ UpdateIndicatorIcon(DockIcon *icon) {
     sd_bus_flush(icon->bus);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * UpdateIndicatorStatus --
+ *
+ *	Emit the "NewStatus" D‑Bus signal to notify that the status changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sends a D‑Bus signal.
+ *
+ *----------------------------------------------------------------------
+ */
 static void
 UpdateIndicatorStatus(DockIcon *icon) {
     if (!icon->bus) return;
@@ -679,6 +1003,21 @@ UpdateIndicatorStatus(DockIcon *icon) {
     sd_bus_flush(icon->bus);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * UpdateTooltip --
+ *
+ *	Emit the "NewToolTip" D‑Bus signal to notify that the tooltip changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sends a D‑Bus signal.
+ *
+ *----------------------------------------------------------------------
+ */
 static void
 UpdateTooltip(DockIcon *icon) {
     if (!icon->bus) return;
@@ -693,6 +1032,12 @@ UpdateTooltip(DockIcon *icon) {
  * RegisterStatusNotifierItem --
  *
  *	Register the item on the session bus.
+ *
+ * Results:
+ *	Returns 0 on success, negative error code on failure.
+ *
+ * Side effects:
+ *	Acquires a D‑Bus name, adds object vtables, registers with the watcher.
  *
  *----------------------------------------------------------------------
  */
@@ -769,6 +1114,12 @@ RegisterStatusNotifierItem(DockIcon *icon) {
  *
  *	Unregister and clean up D‑Bus resources.
  *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Releases the bus name, closes and unrefs the bus connection.
+ *
  *----------------------------------------------------------------------
  */
 static void
@@ -788,9 +1139,15 @@ UnregisterStatusNotifierItem(DockIcon *icon) {
 /*
  *----------------------------------------------------------------------
  *
- * TrayIconImageChanged / RedisplayIdle --
+ * TrayIconRedisplayIdle --
  *
- *	Callback when the Tk image changes; update the icon pixmap.
+ *	Idle callback to update the icon after a change in the Tk image.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Captures the new pixmap and emits a signal.
  *
  *----------------------------------------------------------------------
  */
@@ -804,6 +1161,21 @@ TrayIconRedisplayIdle(void *cd) {
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TrayIconImageChanged --
+ *
+ *	Callback invoked when the Tk image is modified or resized.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Schedules an idle update of the tray icon.
+ *
+ *----------------------------------------------------------------------
+ */
 static void
 TrayIconImageChanged(void *cd, int x, int y, int w, int h, int imgw, int imgh) {
     DockIcon *icon = (DockIcon *)cd;
@@ -825,6 +1197,12 @@ TrayIconImageChanged(void *cd, int x, int y, int w, int h, int imgw, int imgh) {
  *	  create imageName tooltipText button1Callback button3Callback
  *	  modify option value
  *	  destroy
+ *
+ * Results:
+ *	Standard Tcl command return value (TCL_OK or TCL_ERROR).
+ *
+ * Side effects:
+ *	Creates, modifies, or destroys a systray icon; may evaluate Tcl scripts.
  *
  *----------------------------------------------------------------------
  */
@@ -851,7 +1229,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
             return TCL_ERROR;
         }
         if (objc != 6) {
-            Tcl_WrongNumArgs(interp, 2, objv, "imageName tooltipText button1Callback button3Callback");
+            Tcl_WrongNumArgs(interp, 2, objv, "image text button1 button3");
             return TCL_ERROR;
         }
 
@@ -876,6 +1254,8 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
         icon->dbus_status = STATUS_ACTIVE;
         icon->category = CATEGORY_APPLICATION_STATUS;
         icon->item_id = ++global_item_id;
+        icon->hasDBusMenu = 0;
+        icon->menuPtr = NULL;
 
         /* Store image name */
         icon->imageObj = objv[2];
@@ -956,18 +1336,18 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
             icon->tooltip = (char *)Tcl_Alloc(strlen(Tcl_GetString(value)) + 1);
             strcpy(icon->tooltip, Tcl_GetString(value));
             UpdateTooltip(icon);
-        } else if (strcmp(option, "b1_callback") == 0) {
+        } else if (strcmp(option, "button1") == 0) {
             if (icon->b1Command) Tcl_DecrRefCount(icon->b1Command);
             icon->b1Command = value;
             Tcl_IncrRefCount(icon->b1Command);
             DetectMenuFromCallback(icon, icon->b1Command);
-        } else if (strcmp(option, "b3_callback") == 0) {
+        } else if (strcmp(option, "button3") == 0) {
             if (icon->b3Command) Tcl_DecrRefCount(icon->b3Command);
             icon->b3Command = value;
             Tcl_IncrRefCount(icon->b3Command);
             DetectMenuFromCallback(icon, icon->b3Command);
         } else {
-            Tcl_AppendResult(interp, "unknown option: must be image, text, b1_callback, or b3_callback", NULL);
+            Tcl_AppendResult(interp, "unknown option: must be image, text, button1, or button3", NULL);
             return TCL_ERROR;
         }
         return TCL_OK;
@@ -993,6 +1373,12 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
  *
  *	Free all resources held by the systray icon.
  *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Releases all allocated memory and D‑Bus resources.
+ *
  *----------------------------------------------------------------------
  */
 static void
@@ -1015,6 +1401,9 @@ WaylandSystrayDeleteProc(void *clientData) {
     if (icon->object_path) Tcl_Free(icon->object_path);
     if (icon->menu_path) Tcl_Free(icon->menu_path);
 
+    icon->hasDBusMenu = 0;
+    icon->menuPtr = NULL;
+
     Tcl_Free(icon);
     *iconPtr = NULL;
 }
@@ -1025,6 +1414,12 @@ WaylandSystrayDeleteProc(void *clientData) {
  * Tktray_Init --
  *
  *	Create the ::tk::systray::_systray command.
+ *
+ * Results:
+ *	Standard Tcl initialization return value.
+ *
+ * Side effects:
+ *	Creates a new Tcl command.
  *
  *----------------------------------------------------------------------
  */
