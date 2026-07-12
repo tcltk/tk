@@ -122,6 +122,7 @@ static int global_item_id = 0;
  *
  *----------------------------------------------------------------------
  */
+
 static Tcl_Obj *
 SubstituteButtonPercents(Tcl_Obj *cmdObj, int x, int y)
 {
@@ -161,6 +162,7 @@ SubstituteButtonPercents(Tcl_Obj *cmdObj, int x, int y)
  *
  *----------------------------------------------------------------------
  */
+
 static void
 InvokeButtonCommand(DockIcon *icon, int button, int x, int y)
 {
@@ -217,6 +219,7 @@ static int method_activate(sd_bus_message *m, void *userdata,
  *
  *----------------------------------------------------------------------
  */
+
 static int method_secondary_activate(sd_bus_message *m, void *userdata,
                                      sd_bus_error *ret_error) {
     DockIcon *icon = (DockIcon *)userdata;
@@ -243,6 +246,7 @@ static int method_secondary_activate(sd_bus_message *m, void *userdata,
  *
  *----------------------------------------------------------------------
  */
+
 static int method_context_menu(sd_bus_message *m, void *userdata,
                                sd_bus_error *ret_error) {
     fprintf(stderr, "[tkSNI] ContextMenu called\n");
@@ -265,6 +269,7 @@ static int method_context_menu(sd_bus_message *m, void *userdata,
  *
  *----------------------------------------------------------------------
  */
+
 static int method_scroll(sd_bus_message *m, void *userdata,
                          sd_bus_error *ret_error) {
     /* Scroll not implemented. */
@@ -287,6 +292,7 @@ static int method_scroll(sd_bus_message *m, void *userdata,
  *
  *----------------------------------------------------------------------
  */
+
 static int method_provide_xdg_activation(sd_bus_message *m, void *userdata,
                                          sd_bus_error *ret_error) {
     const char *token = NULL;
@@ -310,6 +316,7 @@ static int method_provide_xdg_activation(sd_bus_message *m, void *userdata,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_category(sd_bus *bus, const char *path,
                                  const char *interface, const char *property,
                                  sd_bus_message *reply, void *userdata,
@@ -340,6 +347,7 @@ static int property_get_category(sd_bus *bus, const char *path,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_status(sd_bus *bus, const char *path,
                                const char *interface, const char *property,
                                sd_bus_message *reply, void *userdata,
@@ -369,6 +377,7 @@ static int property_get_status(sd_bus *bus, const char *path,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_icon_name(sd_bus *bus, const char *path,
                                   const char *interface, const char *property,
                                   sd_bus_message *reply, void *userdata,
@@ -391,6 +400,7 @@ static int property_get_icon_name(sd_bus *bus, const char *path,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_icon_pixmap(sd_bus *bus, const char *path,
                                     const char *interface, const char *property,
                                     sd_bus_message *reply, void *userdata,
@@ -428,6 +438,7 @@ static int property_get_icon_pixmap(sd_bus *bus, const char *path,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_tooltip(sd_bus *bus, const char *path,
                                 const char *interface, const char *property,
                                 sd_bus_message *reply, void *userdata,
@@ -469,6 +480,7 @@ static int property_get_tooltip(sd_bus *bus, const char *path,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_menu(sd_bus *bus, const char *path,
                              const char *interface, const char *property,
                              sd_bus_message *reply, void *userdata,
@@ -493,6 +505,7 @@ static int property_get_menu(sd_bus *bus, const char *path,
  *
  *----------------------------------------------------------------------
  */
+
 static int property_get_item_is_menu(sd_bus *bus, const char *path,
                                      const char *interface, const char *property,
                                      sd_bus_message *reply, void *userdata,
@@ -539,6 +552,7 @@ static const sd_bus_vtable status_notifier_item_vtable[] = {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 RefreshProperties(void *clientData) {
     DockIcon *icon = (DockIcon *)clientData;
@@ -566,6 +580,7 @@ RefreshProperties(void *clientData) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 ProcessDBusEvents(void *clientData) {
     DockIcon *icon = (DockIcon *)clientData;
@@ -590,6 +605,7 @@ ProcessDBusEvents(void *clientData) {
  *
  *----------------------------------------------------------------------
  */
+
 static int
 CaptureIconPixmap(DockIcon *icon) {
     if (!icon->image || !icon->imageObj) return 0;
@@ -637,6 +653,7 @@ CaptureIconPixmap(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 UpdateIndicatorIcon(DockIcon *icon) {
     if (!icon->bus) return;
@@ -660,6 +677,7 @@ UpdateIndicatorIcon(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 UpdateIndicatorStatus(DockIcon *icon) {
     if (!icon->bus) return;
@@ -696,6 +714,7 @@ UpdateIndicatorStatus(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 UpdateTooltip(DockIcon *icon) {
     if (!icon->bus) return;
@@ -731,6 +750,7 @@ UpdateTooltip(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static int
 RegisterWithWatcher(DockIcon *icon) {
     if (!icon->bus || !icon->bus_name) return -EINVAL;
@@ -772,6 +792,7 @@ RegisterWithWatcher(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static int
 WatcherOwnerChanged(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) {
     DockIcon *icon = (DockIcon *)userdata;
@@ -806,6 +827,7 @@ WatcherOwnerChanged(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) 
  *
  *----------------------------------------------------------------------
  */
+
 static int
 RegisterStatusNotifierItem(DockIcon *icon) {
     int r;
@@ -846,7 +868,8 @@ RegisterStatusNotifierItem(DockIcon *icon) {
 
     /* Watch for the watcher restarting (common on GNOME, where it's
      * implemented by a Shell extension rather than a system service)
-     * so we can re-register with whichever instance owns the name. */
+     * so we can re-register with whichever instance owns the name.
+     */
     r = sd_bus_add_match(icon->bus, &icon->watcherMatchSlot,
                          "type='signal',"
                          "sender='org.freedesktop.DBus',"
@@ -871,7 +894,8 @@ RegisterStatusNotifierItem(DockIcon *icon) {
     icon->busTimer = Tcl_CreateTimerHandler(50, ProcessDBusEvents, icon);
 
     /* Schedule property refreshes at staggered intervals to ensure the
-     * GNOME extension picks up all properties after proxy init. */
+     * GNOME extension picks up all properties after proxy init.
+     */
     icon->refreshTimer = Tcl_CreateTimerHandler(300, (Tcl_TimerProc *)RefreshProperties, icon);
     /* Extra refreshes for tooltip which is particularly finicky on GNOME */
     Tcl_CreateTimerHandler(1200, (Tcl_TimerProc *)UpdateTooltip, icon);
@@ -895,6 +919,7 @@ RegisterStatusNotifierItem(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 UnregisterStatusNotifierItem(DockIcon *icon) {
     if (icon->refreshTimer) {
@@ -936,6 +961,7 @@ UnregisterStatusNotifierItem(DockIcon *icon) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 TrayIconRedisplayIdle(void *cd) {
     DockIcon *icon = (DockIcon *)cd;
@@ -961,6 +987,7 @@ TrayIconRedisplayIdle(void *cd) {
  *
  *----------------------------------------------------------------------
  */
+
 static void
 TrayIconImageChanged(void *cd, int x, int y, int w, int h, int imgw, int imgh) {
     DockIcon *icon = (DockIcon *)cd;
@@ -991,6 +1018,7 @@ TrayIconImageChanged(void *cd, int x, int y, int w, int h, int imgw, int imgh) {
  *
  *----------------------------------------------------------------------
  */
+
 static int
 WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
                      Tcl_Size objc, Tcl_Obj *const objv[]) {
@@ -1160,6 +1188,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
  *
  *----------------------------------------------------------------------
  */
+
 static void
 WaylandSystrayDeleteProc(void *clientData) {
     DockIcon **iconPtr = (DockIcon **)clientData;
@@ -1198,6 +1227,7 @@ WaylandSystrayDeleteProc(void *clientData) {
  *
  *----------------------------------------------------------------------
  */
+
 int
 Tktray_Init(Tcl_Interp *interp) {
     DockIcon **iconPtr = (DockIcon **)Tcl_Alloc(sizeof(DockIcon *));

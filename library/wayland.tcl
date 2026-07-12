@@ -10,7 +10,9 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
     
-if {[tk windowingsystem] eq "wayland"} {	
+if {[tk windowingsystem] eq "wayland"} {
+
+    # Clipboard commands.
 
     # Rename the "clipboard" command to add support for the Wayland system
     # clipboard via the wl-clipboard command line tools. GLFW's clipboard
@@ -131,17 +133,6 @@ if {[tk windowingsystem] eq "wayland"} {
 		}
 	    }
 	}
-
-	# No <<Copy>>/<<Cut>>/<<Paste>> bindings here. Tk's own library
-	# bindings for Entry/Text (and friends) already call "clipboard"
-	# and "selection" under the hood, and those are the commands
-	# wrapped above. Adding bind all <<...>> scripts on top of that
-	# just raced against the native class bindtag bindings -- which
-	# run first and end in "break" -- so the custom scripts never
-	# fired, while the *native* bindings, now backed by working
-	# wl-copy/wl-paste, did the real work and were the actual source
-	# of the keyboard-shortcut/selection-state problems. Wrapping at
-	# the command level is sufficient on its own.
     }
     # end of Wayland commands
 }

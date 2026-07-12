@@ -3035,7 +3035,7 @@ MenuDrawIntoPopup(
  *
  * MenuDrawMenubarIntoPopup --
  *
- * Render a menubar into its strip popup.
+ * Render a menubar into its strip popup with proper active state handling.
  *
  * Results:
  * None.
@@ -3063,21 +3063,21 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     Tk_FontMetrics fm;
     Tk_GetFontMetrics(tkfont, &fm);
 
-    /* Get colors from menu configuration. */
-    NVGcolor bgColor = nvgRGB(230, 230, 230);
-    NVGcolor textColor = nvgRGB(0, 0, 0);
-    NVGcolor activeBgColor = nvgRGB(200, 200, 200);
+    /* Standard Tk color setup. */
+    NVGcolor bgColor       = nvgRGB(230, 230, 230);
+    NVGcolor textColor     = nvgRGB(0, 0, 0);
+    NVGcolor activeBgColor = nvgRGB(180, 200, 255);
+    NVGcolor activeFgColor = nvgRGB(0, 0, 0);         
 
+    /* Normal background */
     if (menuPtr->borderPtr != NULL) {
         Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, menuPtr->borderPtr);
         if (border) {
-            XColor *color = Tk_3DBorderColor(border);
-            if (color) {
-                bgColor = TkWaylandXColorToNVG(color);
-            }
+            bgColor = TkWaylandXColorToNVG(Tk_3DBorderColor(border));
         }
     }
 
+    /* Normal foreground (-foreground). */
     if (menuPtr->fgPtr != NULL) {
         XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->fgPtr);
         if (color) {
@@ -3085,13 +3085,19 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
         }
     }
 
+    /* Active background (-activebackground). */
     if (menuPtr->activeBorderPtr != NULL) {
         Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, menuPtr->activeBorderPtr);
         if (border) {
-            XColor *color = Tk_3DBorderColor(border);
-            if (color) {
-                activeBgColor = TkWaylandXColorToNVG(color);
-            }
+            activeBgColor = TkWaylandXColorToNVG(Tk_3DBorderColor(border));
+        }
+    }
+
+    /* Active foreground (-activeforeground). */
+    if (menuPtr->activeFgPtr != NULL) {
+        XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->activeFgPtr);
+        if (color) {
+            activeFgColor = TkWaylandXColorToNVG(color);
         }
     }
 
@@ -3130,20 +3136,28 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
         int w = mePtr->width;
         int h = mePtr->height;
 
-        bool isHighlighted = (i == menuPtr->active);
+        /* Highlight when mouse is over it OR its submenu is open. */
+        bool isHighlighted = (i == menuPtr->active) ||
+                             (mePtr == menuPtr->postedCascade);
 
-        /* Draw active background if this entry is currently highlighted. */
+        MENU_LOG("Menubar entry %d '%s' active=%d highlighted=%d",
+                 i,
+                 mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
+                 menuPtr->active,
+                 isHighlighted);
+
+        /* Draw background + highlight. */
         if (isHighlighted) {
             nvgBeginPath(vg);
             nvgRect(vg, x, y, w, h);
-            nvgFillColor(vg, activeBgColor);
+            nvgFillColor(vg, activeBgColor);     /* -activebackground */
             nvgFill(vg);
 
-            /* Draw border for active entry. */
+            /* Visible active border. */
             nvgBeginPath(vg);
             nvgRect(vg, x, y, w, h);
-            nvgStrokeWidth(vg, 1.0f);
-            nvgStrokeColor(vg, nvgRGB(150, 150, 150));
+            nvgStrokeWidth(vg, 2.0f);
+            nvgStrokeColor(vg, nvgRGB(60, 100, 220));
             nvgStroke(vg);
         }
 
@@ -3155,14 +3169,12 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
                 len = (int)strlen(label);
             }
 
-            NVGcolor labelColor = textColor;
+            NVGcolor labelColor = textColor;   /* normal -foreground */
+
             if (mePtr->state == ENTRY_DISABLED) {
                 labelColor = nvgRGBA(128, 128, 128, 255);
-            } else if (isHighlighted && menuPtr->activeFgPtr) {
-                XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->activeFgPtr);
-                if (color) {
-                    labelColor = TkWaylandXColorToNVG(color);
-                }
+            } else if (isHighlighted) {
+                labelColor = activeFgColor;    /* -activeforeground */
             }
 
             if (fontId >= 0 && len > 0) {
@@ -3174,7 +3186,7 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
         }
     }
 
-    /* Draw bottom line. */
+    /* Draw bottom separator line. */
     nvgBeginPath(vg);
     nvgMoveTo(vg, 0, (float)menuH - 0.5f);
     nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
@@ -3182,7 +3194,6 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     nvgStrokeColor(vg, nvgRGB(180, 180, 180));
     nvgStroke(vg);
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -3945,11 +3956,8 @@ TkWaylandMenubarHandleClick(
     TkMenu *menuPtr;
     int i;
 
-    if (!winPtr) {
-        return 0;
-    }
+    if (!winPtr) return 0;
     wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-
     if (!wmPtr || !wmPtr->menubarMenuPtr || !wmPtr->menubarPopup) {
         return 0;
     }
@@ -3962,22 +3970,19 @@ TkWaylandMenubarHandleClick(
 
     menuPtr = wmPtr->menubarMenuPtr;
 
-    MENU_LOG("TkWaylandMenubarHandleClick: x=%d y=%d menuHeight=%d",
-             x, y, wmPtr->menuHeight);
+    MENU_LOG("TkWaylandMenubarHandleClick: x=%d y=%d menuHeight=%d", x, y, wmPtr->menuHeight);
 
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
-        if (!mePtr) {
-            continue;
-        }
-        if (x < mePtr->x || x >= mePtr->x + mePtr->width) {
-            continue;
-        }
+        if (!mePtr) continue;
+        if (x < mePtr->x || x >= mePtr->x + mePtr->width) continue;
 
-        /* Click landed on entry i of the menubar. */
+        /* Click landed on this entry. */
         if (mePtr->state == ENTRY_DISABLED) {
             return 1;
         }
+
+        TkActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
 
         if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
             TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
@@ -3993,28 +3998,24 @@ TkWaylandMenubarHandleClick(
                 if (cascadeW <= 0) cascadeW = 1;
                 if (cascadeH <= 0) cascadeH = 1;
 
-                /* Activate the cascade entry and mark it as posted. */
-                TkActivateMenuEntry(menuPtr, i);
                 menuPtr->postedCascade = mePtr;
 
-                MENU_LOG("TkWaylandMenubarHandleClick: posting cascade "
-                         "'%s' at (%d,%d) %dx%d",
-                         Tcl_GetString(mePtr->namePtr),
-                         mePtr->x, wmPtr->menuHeight, cascadeW, cascadeH);
+                MENU_LOG("TkWaylandMenubarHandleClick: posting cascade '%s'",
+                         Tcl_GetString(mePtr->namePtr));
 
                 pendingRootIsMenubar = 1;
                 TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                     mePtr->x, wmPtr->menuHeight, 0, 0,
                     cascadeW, cascadeH, /*isRoot=*/1);
 
-                TkEventuallyRedrawMenu(menuPtr, NULL);
+                /* Force redraw so the highlight stays visible. */
+                Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
+                TkpDisplayMenu((void *)menuPtr);
             }
         } else {
-            /* Non-cascade entry clicked - activate it. */
-            TkActivateMenuEntry(menuPtr, i);
+            /* Non-cascade entry. */
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
-
         return 1;
     }
 
@@ -4074,19 +4075,12 @@ TkWaylandMenubarHandleMotion(
     menuPtr = wmPtr->menubarMenuPtr;
 
     if (x < 0 || y < 0 || y >= wmPtr->menuHeight) {
-        /*
-         * Pointer is outside the menubar strip. Clear any hover
-         * highlight, but only if it isn't backed by an actually-posted
-         * dropdown for this menubar (e.g. the pointer moved down into
-         * that dropdown's own popup, which is a separate subsurface
-         * outside this y-range -- the highlight on the strip above it
-         * should stay put while its dropdown is open).
-         */
+        /* Pointer left the menubar stripk */
         if (menuPtr->active != -1 &&
             !(TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar())) {
             TkActivateMenuEntry(menuPtr, -1);
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
-            TkpDisplayMenu((void *)menuPtr);
+            TkpDisplayMenu((void *)menuPtr);   /* Force redraw. */
         }
         return 0;
     }
@@ -4094,26 +4088,31 @@ TkWaylandMenubarHandleMotion(
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
-        if (x < mePtr->x || x >= mePtr->x + mePtr->width) continue;
 
+        if (x < mePtr->x || x >= mePtr->x + mePtr->width) {
+            continue;
+        }
+
+        /* Found the entry under the cursor. */
         if (mePtr->state != ENTRY_DISABLED && menuPtr->active != i) {
             TkActivateMenuEntry(menuPtr, i);
+
+            /* Force immediate redraw of the menubar. */
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
             TkpDisplayMenu((void *)menuPtr);
 
             /*
-             * If a menubar-rooted dropdown is already open, follow the
-             * mouse to the newly-hovered entry too, same as Left/Right.
+             * If a dropdown is already open, switch to this entry's menu.
              */
             if (TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar()) {
                 TkWaylandMenuPopToDepth(0);
                 MenubarPostCascadeAtEntry(wmPtr, menuPtr, mePtr);
             }
         }
-        return 1;
+        return 1;   /* Mouse is over menubar. */
     }
 
-    /* Inside the strip's band but not over any entry (e.g. padding). */
+    /* Inside menubar area but not over any entry (padding). */
     return 1;
 }
 

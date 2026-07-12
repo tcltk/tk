@@ -488,10 +488,6 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-Button-1>
 
-	trace add variable ::tk_strictMotif write ::tk::EventMotifBindings
-	set ::tk_strictMotif $::tk_strictMotif
-	# On unix, we want to always display entry/text selection,
-	# regardless of which window has focus
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {

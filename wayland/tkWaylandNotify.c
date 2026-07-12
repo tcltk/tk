@@ -1389,6 +1389,38 @@ TkWaylandKeyCallback(GLFWwindow *window,
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
 
+    /*
+     * Duplicate-event guard.
+     *
+     * Something is delivering a second key-down for the same physical
+     * actuation of Control-v -- and, in principle, for every other
+     * Ctrl-combo, just less visibly. Earlier this guard only coalesced
+     * two back-to-back events with an *identical* action (PRESS+PRESS).
+     * That didn't fix it, which means the second delivery is most
+     * likely arriving as PRESS followed almost immediately by REPEAT --
+     * a different `action` value -- so the action-matching check let it
+     * straight through. Broadened here to coalesce any PRESS/REPEAT for
+     * the same scancode that arrives within the window, regardless of
+     * which of the two actions it is tagged with. 12ms is comfortably
+     * below any real OS auto-repeat interval (even fast repeat-rate
+     * settings top out well above that), so genuine held-key repeat for
+     * navigation/deletion keys is unaffected.
+     */
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        static int    lastScancode = -1;
+        static double lastTime     = -1.0;
+        double now = glfwGetTime();
+
+        if (scancode == lastScancode &&
+            lastTime >= 0.0 && (now - lastTime) < 0.012) {
+            lastTime = now;
+            return;
+        }
+
+        lastScancode = scancode;
+        lastTime     = now;
+    }
+
     TkWaylandUpdateKeyboardModifiers(mods);
 
     uint32_t xkb_keycode = (uint32_t)(scancode + 8);
@@ -1397,6 +1429,12 @@ TkWaylandKeyCallback(GLFWwindow *window,
     int isFunctionKey = (keysym >= XKB_KEY_F1 && keysym <= XKB_KEY_F35);
     int isAccelChord  = (mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT |
                                  GLFW_MOD_SUPER)) != 0;
+
+    if (isAccelChord && action != GLFW_RELEASE) {
+        fprintf(stderr,
+                "AccelChord: scancode=%d action=%d mods=0x%x keysym=0x%lx time=%f\n",
+                scancode, action, mods, (unsigned long)keysym, glfwGetTime());
+    }
 
     bool imeHandled = false;
 
@@ -1545,7 +1583,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
                 event.xkey.time = CurrentTime;
                 event.xkey.state = glfwModifierState;
-                event.xkey.keycode = (KeyCode)xkb_keycode;
+                event.xkey.keycode = (KeyCode)scancode;
                 event.xkey.same_screen = True;
 
                 Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1578,7 +1616,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         event.xkey.x_root      = winPtr->changes.x + (int)xpos;
         event.xkey.y_root      = winPtr->changes.y + (int)ypos;
         event.xkey.state       = glfwModifierState;
-        event.xkey.keycode     = (KeyCode)xkb_keycode;
+        event.xkey.keycode     = (KeyCode)scancode;
         event.xkey.same_screen = True;
 
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1606,7 +1644,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         event.xkey.x_root      = winPtr->changes.x + (int)xpos;
         event.xkey.y_root      = winPtr->changes.y + (int)ypos;
         event.xkey.state       = glfwModifierState;
-        event.xkey.keycode     = (KeyCode)xkb_keycode;
+        event.xkey.keycode     = (KeyCode)scancode;
         event.xkey.same_screen = True;
 
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
