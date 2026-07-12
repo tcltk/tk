@@ -132,75 +132,16 @@ if {[tk windowingsystem] eq "wayland"} {
 	    }
 	}
 
-	bind all <<Paste>> {
-	    set _w %W
-	    if {[catch {wayland_clipboard_get} _text]} { set _text "" }
-	    if {$_text eq ""} break
-
-	    switch -- [winfo class $_w] {
-		Text {
-		    if {[%W tag ranges sel] ne {}} {
-			%W delete sel.first sel.last
-		    }
-		    %W insert insert $_text
-		    %W see insert
-		}
-		Entry - Spinbox - Combobox {
-		    if {[%W selection present]} {
-			%W delete sel.first sel.last
-		    }
-		    %W insert insert $_text
-		}
-		default {
-		    break
-		}
-	    }
-	    break
-	}
-
-	bind all <<Copy>> {
-	    set _w %W
-	    switch -- [winfo class $_w] {
-		Text {
-		    if {[%W tag ranges sel] eq {}} break
-		    set _text [%W get sel.first sel.last]
-		    wayland_clipboard_put $_text
-		}
-		Entry - Spinbox - Combobox {
-		    if {![%W selection present]} break
-		    set _text [string range [%W get] \
-				   [%W index sel.first] [%W index sel.last]]
-		    wayland_clipboard_put $_text
-		}
-		default {
-		    break
-		}
-	    }
-	    break
-	}
-
-	bind all <<Cut>> {
-	    set _w %W
-	    switch -- [winfo class $_w] {
-		Text {
-		    if {[%W tag ranges sel] eq {}} break
-		    set _text [%W get sel.first sel.last]
-		    wayland_clipboard_put $_text
-		    %W delete sel.first sel.last
-		}
-		Entry - Spinbox - Combobox {
-		    if {![%W selection present]} break
-		    set _text [string range [%W get] \
-				   [%W index sel.first] [%W index sel.last]]
-		    wayland_clipboard_put $_text
-		    %W delete sel.first sel.last
-		}
-		default {
-		    break
-		}
-	    }
-	    break
-	}
+	# No <<Copy>>/<<Cut>>/<<Paste>> bindings here. Tk's own library
+	# bindings for Entry/Text (and friends) already call "clipboard"
+	# and "selection" under the hood, and those are the commands
+	# wrapped above. Adding bind all <<...>> scripts on top of that
+	# just raced against the native class bindtag bindings -- which
+	# run first and end in "break" -- so the custom scripts never
+	# fired, while the *native* bindings, now backed by working
+	# wl-copy/wl-paste, did the real work and were the actual source
+	# of the keyboard-shortcut/selection-state problems. Wrapping at
+	# the command level is sufficient on its own.
     }
     # end of Wayland commands
 }

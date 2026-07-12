@@ -68,7 +68,7 @@ extern int  TkWaylandIbusCreateContext(Tcl_Interp *interp, Tk_Window tkwin);
 extern void TkWaylandIbusFocusIn(Tk_Window tkwin);
 extern void TkWaylandIbusFocusOut(Tk_Window tkwin);
 extern bool  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
-                                    uint32_t keycode, uint32_t state);
+				     uint32_t keycode, uint32_t state);
 extern void RemoveIbusContext(Tk_Window tkwin);
 extern TkXKBState xkbState;
 
@@ -84,7 +84,7 @@ extern void TkWaylandMenuHandlePointerMotion(int x, int y);
 extern void TkWaylandMenuRedrawActive(void);
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 extern int  TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
-                                             int button);
+					int button);
 extern int  TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
 extern int TkWaylandMenubarActivateFirst(TkWindow *winPtr);
 extern void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
@@ -118,8 +118,8 @@ typedef struct ThreadSpecificData {
 
 static Tcl_ThreadDataKey dataKey;
 
-#define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
-    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
+#define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *)	\
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 /*
  * Global state for mouse buttons and modifiers.
@@ -393,24 +393,24 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 
     int fd = wl_display_get_fd(display);
 
-    /* Always drain pending redraw before deciding block time */
+    /* Always drain pending redraw before deciding block time. */
     TkWaylandDisplayAllWindows();
 
-    /* Drain IME/IBus messages without blocking */
+    /* Drain IME/IBus messages without blocking. */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
 
-    /* Poll GLFW once per cycle — never inside CheckProc */
+    /* Poll GLFW once per cycle — never inside CheckProc. */
     glfwPollEvents();
 
-    /* Schedule display idle only when needed */
+    /* Schedule display idle only when needed. */
     if (TkWaylandHasPendingRedraw()) {
         Tcl_SetMaxBlockTime(&noBlock);
         return;
     }
 
-    /* Check Wayland fd readiness */
+    /* Check Wayland fd readiness. */
     struct pollfd pfd = {
         .fd      = fd,
         .events  = POLLIN,
@@ -420,10 +420,10 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
     int r = poll(&pfd, 1, 0);
 
     if (r > 0 && (pfd.revents & POLLIN)) {
-        /* Wayland has events — do not block */
+        /* Wayland has events — do not block. */
         Tcl_SetMaxBlockTime(&noBlock);
     } else {
-        /* Nothing pending — allow a tiny sleep */
+        /* Nothing pending — allow a tiny sleep. */
         Tcl_SetMaxBlockTime(&tinyBlock);
     }
 }
@@ -459,18 +459,18 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
         return;
     }
 
-    /* Drain IME/IBus messages — never block */
+    /* Drain IME/IBus messages — never block. */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
 
-    /* Drain Wayland events */
+    /* Drain Wayland events. */
     struct wl_display *display = glfwGetWaylandDisplay();
     if (display) {
         wl_display_dispatch_pending(display);
     }
 
-    /* Drain redraw */
+    /* Drain redraw. */
     TkWaylandDisplayAllWindows();
 }
 
@@ -505,7 +505,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 
     /* Prevent re-entrancy. */
     if (tsdPtr->shutdownInProgress == 1) {
-       return;
+	return;
     }
 
     /* Remove event source. */
@@ -556,9 +556,9 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 
 void
 TkWaylandQueueExposeEvent(
-    TkWindow *winPtr,
-    int       x, int y,
-    int       width, int height)
+			  TkWindow *winPtr,
+			  int       x, int y,
+			  int       width, int height)
 {
     XEvent event;
     TkWindow *childPtr;
@@ -581,12 +581,12 @@ TkWaylandQueueExposeEvent(
     
     /* Queue it. */
     printf("Queuing Expose(%lu) for %s in %dx%d\n",
-		event.xexpose.serial, Tk_PathName(winPtr), width, height);
+	   event.xexpose.serial, Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
 #if 0
     /* Recurse through the children of this window. */
-    #if 1
+#if 1
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
@@ -595,7 +595,7 @@ TkWaylandQueueExposeEvent(
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
 				  Tk_Height(childPtr));
     }
-    #endif
+#endif
 #endif
 }
 
@@ -623,26 +623,26 @@ TkWaylandQueueExposeEvent(
 
 static void TkWaylandWindowCloseCallback(GLFWwindow *window);
 static void TkWaylandFramebufferSizeCallback(GLFWwindow *window,
-					  int width, int height);
+					     int width, int height);
 static void TkWaylandWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
 static void TkWaylandWindowFocusCallback(GLFWwindow *window, int focused);
 static void TkWaylandWindowIconifyCallback(GLFWwindow *window, int iconified);
 static void TkWaylandWindowMaximizeCallback(GLFWwindow *window, int maximized);
 static void TkWaylandCursorPosCallback(GLFWwindow *window,
-				    double xpos, double ypos);
+				       double xpos, double ypos);
 static void TkWaylandMouseButtonCallback(GLFWwindow *window,
-				      int button, int action, int mods);
+					 int button, int action, int mods);
 static void TkWaylandScrollCallback(GLFWwindow *window,
-				 double xoffset, double yoffset);
+				    double xoffset, double yoffset);
 static void TkWaylandKeyCallback(GLFWwindow *window, int key,
-			      int scancode, int action, int mods);
+				 int scancode, int action, int mods);
 static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
 static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
 static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 
 MODULE_SCOPE void
 TkWaylandSetupCallbacks(
-    GLFWwindow *glfwWindow)
+			GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkWaylandWindowCloseCallback);
     glfwSetFramebufferSizeCallback (glfwWindow, TkWaylandFramebufferSizeCallback);
@@ -661,7 +661,7 @@ TkWaylandSetupCallbacks(
 
 MODULE_SCOPE void
 TkWaylandClearCallbacks(
-    GLFWwindow *glfwWindow)
+			GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback        (glfwWindow, NULL);
     glfwSetFramebufferSizeCallback    (glfwWindow, NULL);
@@ -732,9 +732,9 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
 
 static void
 TkWaylandFramebufferSizeCallback(
-    GLFWwindow *window,
-    int width,
-    int height)
+				 GLFWwindow *window,
+				 int width,
+				 int height)
 {
     
     /* Validate parameters. */
@@ -835,9 +835,9 @@ TkWaylandFramebufferSizeCallback(
  
 static void
 TkWaylandWindowPosCallback(
-    GLFWwindow *window,
-    int xpos,
-    int ypos)
+			   GLFWwindow *window,
+			   int xpos,
+			   int ypos)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
@@ -845,7 +845,7 @@ TkWaylandWindowPosCallback(
         return;
     }
     fprintf(stderr, "TkWaylandWindowPosCallback: %s -> to %d+%d\n",
-	   Tk_PathName(winPtr), xpos, ypos);
+	    Tk_PathName(winPtr), xpos, ypos);
 
     winPtr->changes.x = xpos;
     winPtr->changes.y = ypos;
@@ -870,8 +870,8 @@ TkWaylandWindowPosCallback(
  
 static void
 TkWaylandWindowFocusCallback(
-    GLFWwindow *window,
-    int focused)
+			     GLFWwindow *window,
+			     int focused)
 {
     fprintf(stderr, "TkWaylandWindowFocusCallback\n");
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
@@ -931,8 +931,8 @@ TkWaylandWindowFocusCallback(
 
 static void
 TkWaylandWindowIconifyCallback(
-    GLFWwindow *window,
-    int iconified)
+			       GLFWwindow *window,
+			       int iconified)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     fprintf(stderr, "TkWaylandWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
@@ -987,8 +987,8 @@ TkWaylandWindowIconifyCallback(
 
 static void
 TkWaylandWindowMaximizeCallback(
-    GLFWwindow *window,
-    int maximized)
+				GLFWwindow *window,
+				int maximized)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     
@@ -1026,8 +1026,8 @@ TkWaylandWindowMaximizeCallback(
 
 static void
 TkWaylandCursorEnterCallback(
-    GLFWwindow *window,
-    int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
+			     GLFWwindow *window,
+			     int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     double xpos, ypos;
@@ -1037,7 +1037,7 @@ TkWaylandCursorEnterCallback(
         return;
     }
 
-     glfwGetCursorPos(window, &xpos, &ypos);
+    glfwGetCursorPos(window, &xpos, &ypos);
     
     /*
      * Menubar intercept: the always-visible menubar strip is not part of
@@ -1055,7 +1055,7 @@ TkWaylandCursorEnterCallback(
      */
     if (TkWaylandMenuPopupActive()) {
         TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
-        /* Force immediate redraw of the menu to show highlight changes */
+        /* Force immediate redraw of the menu to show highlight changes. */
         TkWaylandMenuRedrawActive();
     }
 
@@ -1075,8 +1075,8 @@ TkWaylandCursorEnterCallback(
      * port (every toplevel is treated as sitting at (0,0)).
      */
     Tk_UpdatePointer(target, (int) xpos, (int) ypos,
-            glfwButtonState | glfwModifierState);
- }
+		     glfwButtonState | glfwModifierState);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1084,9 +1084,9 @@ TkWaylandCursorEnterCallback(
  * TkWaylandCursorPosCallback --
  *
  *       Called when cursor position changes.  Hands the position to the
-+ *      generic pointer module (tkPointer.c), which owns the generation of
-+ *      MotionNotify, EnterNotify and LeaveNotify events, applies
-+ *      grab/restrict routing, and updates the cursor via TkpSetCursor.
+ + *      generic pointer module (tkPointer.c), which owns the generation of
+ + *      MotionNotify, EnterNotify and LeaveNotify events, applies
+ + *      grab/restrict routing, and updates the cursor via TkpSetCursor.
  *
  * Results:
  *      None.
@@ -1099,9 +1099,9 @@ TkWaylandCursorEnterCallback(
  
 static void
 TkWaylandCursorPosCallback(
-    GLFWwindow *window,
-    double xpos,
-    double ypos)
+			   GLFWwindow *window,
+			   double xpos,
+			   double ypos)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
@@ -1140,8 +1140,8 @@ TkWaylandCursorPosCallback(
      * every toplevel is treated as having position (0, 0).
      */
     Tk_UpdatePointer(Tk_CoordsToWindow((int) xpos, (int) ypos,
-            (Tk_Window) winPtr), (int) xpos, (int) ypos,
-            glfwButtonState | glfwModifierState);
+				       (Tk_Window) winPtr), (int) xpos, (int) ypos,
+		     glfwButtonState | glfwModifierState);
 }
 
 /*
@@ -1165,10 +1165,10 @@ TkWaylandCursorPosCallback(
 
 static void
 TkWaylandMouseButtonCallback(
-    GLFWwindow *window,
-    int button,
-    int action,
-    int mods)
+			     GLFWwindow *window,
+			     int button,
+			     int action,
+			     int mods)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     double xpos, ypos;
@@ -1210,19 +1210,19 @@ TkWaylandMouseButtonCallback(
     if (TkWaylandMenuPopupActive()) {
         if (action == GLFW_PRESS) {
             int evdevBtn = (button == GLFW_MOUSE_BUTTON_LEFT)   ? 0x110 :
-                           (button == GLFW_MOUSE_BUTTON_RIGHT)  ? 0x111 : 0x112;
+		(button == GLFW_MOUSE_BUTTON_RIGHT)  ? 0x111 : 0x112;
             TkWaylandMenuHandlePointerButton(
-                (int)xpos, (int)ypos,
-                evdevBtn,
-                WL_POINTER_BUTTON_STATE_PRESSED);
-            /* Force redraw after button click to update state */
+					     (int)xpos, (int)ypos,
+					     evdevBtn,
+					     WL_POINTER_BUTTON_STATE_PRESSED);
+            /* Force redraw after button click to update state. */
             TkWaylandMenuRedrawActive();
         }
         /* Swallow both press and release — do not deliver to Tk widgets. */
         return;
     }
     Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
-			    (Tk_Window) winPtr);
+					 (Tk_Window) winPtr);
 
     /* Update modifier state. */
     glfwModifierState = 0;
@@ -1246,28 +1246,28 @@ TkWaylandMouseButtonCallback(
      * number and are dropped, matching the other ports' five-button limit.
      */
     switch (button) {
-        case GLFW_MOUSE_BUTTON_LEFT:
-            buttonMask = Button1Mask;
-            break;
+    case GLFW_MOUSE_BUTTON_LEFT:
+	buttonMask = Button1Mask;
+	break;
 
-        case GLFW_MOUSE_BUTTON_MIDDLE:
-            buttonMask = Button2Mask;
-            break;
+    case GLFW_MOUSE_BUTTON_MIDDLE:
+	buttonMask = Button2Mask;
+	break;
 
-        case GLFW_MOUSE_BUTTON_RIGHT:
-            buttonMask = Button3Mask;
-            break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+	buttonMask = Button3Mask;
+	break;
 
-        case GLFW_MOUSE_BUTTON_4:	/* back -> X button 8 */
-            buttonMask = Button4Mask;
-            break;
+    case GLFW_MOUSE_BUTTON_4:	/* back -> X button 8 */
+	buttonMask = Button4Mask;
+	break;
 
-        case GLFW_MOUSE_BUTTON_5:	/* forward -> X button 9 */
-            buttonMask = Button5Mask;
-            break;
+    case GLFW_MOUSE_BUTTON_5:	/* forward -> X button 9 */
+	buttonMask = Button5Mask;
+	break;
 
-        default:
-            return;
+    default:
+	return;
     }
 
     /* Update button state. */
@@ -1287,7 +1287,7 @@ TkWaylandMouseButtonCallback(
      * implicit-grab (restrict window) routing.
      */
     Tk_UpdatePointer(target, (int) xpos, (int) ypos,
-            glfwButtonState | glfwModifierState);
+		     glfwButtonState | glfwModifierState);
 }
 
 /*
@@ -1308,9 +1308,9 @@ TkWaylandMouseButtonCallback(
 
 static void
 TkWaylandScrollCallback(
-    GLFWwindow *window,
-    double xoffset,
-    double yoffset)
+			GLFWwindow *window,
+			double xoffset,
+			double yoffset)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
@@ -1391,19 +1391,16 @@ TkWaylandKeyCallback(GLFWwindow *window,
 
     TkWaylandUpdateKeyboardModifiers(mods);
 
-    fprintf(stderr,
-        "GLFW key=%d scancode=%d action=%d mods=%d\n",
-        key, scancode, action, mods);
-
     uint32_t xkb_keycode = (uint32_t)(scancode + 8);
     KeySym keysym = xkb_state_key_get_one_sym(xkbState.state, xkb_keycode);
 
-    char name[64];
-    xkb_keysym_get_name(keysym, name, sizeof(name));
-    fprintf(stderr, "keysym = 0x%lx (%s)\n",
-            (unsigned long)keysym, name);
-	
-    /* IME handling. */
+    int isFunctionKey = (keysym >= XKB_KEY_F1 && keysym <= XKB_KEY_F35);
+    int isAccelChord  = (mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT |
+                                 GLFW_MOD_SUPER)) != 0;
+
+    bool imeHandled = false;
+
+    /* IME handling: only block function keys and accelerator chords */
     if (action == GLFW_PRESS) {
         uint32_t keyval = (uint32_t)keysym;
 
@@ -1415,24 +1412,32 @@ TkWaylandKeyCallback(GLFWwindow *window,
         if (mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
         if (mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
 
-        /* IME must NOT swallow function keys. */
-        if (!(keysym >= XKB_KEY_F1 && keysym <= XKB_KEY_F35)) {
-            if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
-                return;
-            }
+        /*
+         * IME must NOT see function keys or accelerator chords (Ctrl/Alt/Super),
+         * but it SHOULD see navigation keys (Return, Backspace, Delete, arrows)
+         * so that composition (e.g., Japanese IME) works correctly.
+         */
+        if (!isFunctionKey && !isAccelChord) {
+            imeHandled = TkWaylandIbusProcessKey((Tk_Window)winPtr,
+                                                 keyval, xkb_keycode, state);
         }
+
+        if (imeHandled) {
+            return; /* IME consumed it */
+        }
+        /* Otherwise fall through to menu navigation or normal Tk */
     }
 
     /* F10 - toggle or activate menubar. */
     if (action == GLFW_PRESS && keysym == XKB_KEY_F10) {
-	if (!TkWaylandMenuActive()) {
-	    TkWaylandMenubarActivateFirst(winPtr);
-	 
-	} else {
-	    TkWaylandMenuDismissAll();
-	}
-	return;
+        if (!TkWaylandMenuActive()) {
+            TkWaylandMenubarActivateFirst(winPtr);
+        } else {
+            TkWaylandMenuDismissAll();
+        }
+        return;
     }
+
     /* Full keyboard navigation if menu active. */
     if (TkWaylandMenuActive()) {
         Tk_Window menuWin = TkWaylandMenuGetTopmostWindow();
@@ -1454,139 +1459,118 @@ TkWaylandKeyCallback(GLFWwindow *window,
 
             switch (keysym) {
             /* Up / down. */
-	    case XKB_KEY_Up:
-	    case XKB_KEY_KP_Up:
-	    case XKB_KEY_Down:
-	    case XKB_KEY_KP_Down: {
-		int dir = (keysym == XKB_KEY_Up || keysym == XKB_KEY_KP_Up) ? -1 : 1;
-		int current = menuPtr->active;
-		int count = menuPtr->numEntries;
-		int newIdx = current;
+            case XKB_KEY_Up:
+            case XKB_KEY_KP_Up:
+            case XKB_KEY_Down:
+            case XKB_KEY_KP_Down: {
+                int dir = (keysym == XKB_KEY_Up || keysym == XKB_KEY_KP_Up) ? -1 : 1;
+                int current = menuPtr->active;
+                int count = menuPtr->numEntries;
+                int newIdx = current;
 
-		for (int i = 1; i <= count; i++) {
-		    int idx = (current + dir * i + count) % count;
-		    TkMenuEntry *me = menuPtr->entries[idx];
-		    if (me && me->type != SEPARATOR_ENTRY && me->state != ENTRY_DISABLED) {
-			newIdx = idx;
-			break;
-		    }
-		}
+                for (int i = 1; i <= count; i++) {
+                    int idx = (current + dir * i + count) % count;
+                    TkMenuEntry *me = menuPtr->entries[idx];
+                    if (me && me->type != SEPARATOR_ENTRY && me->state != ENTRY_DISABLED) {
+                        newIdx = idx;
+                        break;
+                    }
+                }
 
-		if (newIdx != current) {
-		    TkActivateMenuEntry(menuPtr, newIdx);
-		    TkWaylandMenuRedrawActive();
-		}
-		break;
-	    }
+                if (newIdx != current) {
+                    TkActivateMenuEntry(menuPtr, newIdx);
+                    TkWaylandMenuRedrawActive();
+                }
+                break;
+            }
 
-	     /* Left. */
-	    case XKB_KEY_Left:
-	    case XKB_KEY_KP_Left:
-		if (stackDepth == 0) break;
+            /* Left. */
+            case XKB_KEY_Left:
+            case XKB_KEY_KP_Left:
+                if (stackDepth == 0) break;
 
-		if (isMenubar) {
-		    /* Pure menubar navigation. */
-		    TkWaylandMenubarMove(winPtr, -1);
-		} 
-		else {
-		    /* We are in a submenu. */
-		    if (stackDepth > 1) {
-			/* Go back one submenu level. */
-			TkWaylandMenuPopToDepth(stackDepth - 1);
-			TkWaylandMenuRedrawActive();
-		    } else if (TkWaylandMenuStackRootIsMenubar()) {
-			/*
-			 * Top-level popup menu -> go back to the menubar.
-			 * The menubar itself is never pushed onto menuStack[], so
-			 * TkWaylandMenuGetParentWindow() (which only finds cascade-
-			 * of-cascade parents at depth>=2) can't locate it here.
-			 * winPtr is already the toplevel that owns this GLFW window
-			 * and its menubar, so use it directly.
-			 */
-			TkWaylandMenubarMove(winPtr, -1);
-		    } else {
-			/*
-			 * This chain is rooted at a menubutton (or a context menu),
-			 * not the real menubar. Navigation here must stay
-			 * self-contained -- do nothing rather than hand off to a
-			 * menubar the popup was never part of.
-			 */
-		    }
-		}
-		break;
+                if (isMenubar) {
+                    /* Pure menubar navigation. */
+                    TkWaylandMenubarMove(winPtr, -1);
+                } else {
+                    /* We are in a submenu. */
+                    if (stackDepth > 1) {
+                        /* Go back one submenu level. */
+                        TkWaylandMenuPopToDepth(stackDepth - 1);
+                        TkWaylandMenuRedrawActive();
+                    } else if (TkWaylandMenuStackRootIsMenubar()) {
+                        /*
+                         * Top-level popup menu -> go back to the menubar.
+                         */
+                        TkWaylandMenubarMove(winPtr, -1);
+                    } else {
+                        /* Chain rooted at menubutton/context menu: stay self-contained. */
+                    }
+                }
+                break;
 
-             /* Right. */
-	    case XKB_KEY_Right:
-	    case XKB_KEY_KP_Right:
-		if (stackDepth == 0) break;
+            /* Right. */
+            case XKB_KEY_Right:
+            case XKB_KEY_KP_Right:
+                if (stackDepth == 0) break;
 
-		if (isMenubar) {
-		    TkWaylandMenubarMove(winPtr, +1);
-		} 
-		else {
-		    TkMenuEntry *mePtr = (menuPtr->active >= 0) ? 
-			menuPtr->entries[menuPtr->active] : NULL;
+                if (isMenubar) {
+                    TkWaylandMenubarMove(winPtr, +1);
+                } else {
+                    TkMenuEntry *mePtr = (menuPtr->active >= 0) ?
+                        menuPtr->entries[menuPtr->active] : NULL;
 
-		    if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
-			/* Open submenu if possible. */
-			TkWaylandMenuOpenCascade(menuPtr, mePtr);
-		    } else if (stackDepth == 1 && TkWaylandMenuStackRootIsMenubar()) {
-			/*
-			 * In top-level menu, no cascade -> move to next menubar
-			 * item. Same fix as Left: use winPtr directly instead of
-			 * TkWaylandMenuGetParentWindow(), which returns NULL when
-			 * only a top-level dropdown (depth==1) is posted.
-			 *
-			 * Gated on TkWaylandMenuStackRootIsMenubar(): if this chain
-			 * is rooted at a menubutton (or context menu) instead of
-			 * the real menubar, there is no "next menubar item" to go
-			 * to -- stay self-contained and do nothing.
-			 */
-			TkWaylandMenubarMove(winPtr, +1);
-		    }
-		}
-		break;
+                    if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
+                        /* Open submenu if possible. */
+                        TkWaylandMenuOpenCascade(menuPtr, mePtr);
+                    } else if (stackDepth == 1 && TkWaylandMenuStackRootIsMenubar()) {
+                        /*
+                         * In top-level menu, no cascade -> move to next menubar item.
+                         */
+                        TkWaylandMenubarMove(winPtr, +1);
+                    }
+                }
+                break;
 
             /* Enter / space. */
-	    case XKB_KEY_Return:
-	    case XKB_KEY_KP_Enter:
-	    case XKB_KEY_space:
-		if (menuPtr->active >= 0) {
-		    TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
-		    if (mePtr) {
-			if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
-			    TkWaylandMenuOpenCascade(menuPtr, mePtr);
-			} else if (mePtr->type != SEPARATOR_ENTRY) {
-			    TkInvokeMenu(menuPtr->interp, menuPtr, menuPtr->active);
-			    TkWaylandMenuDismissAll();
-			}
-		    }
-		}
-		break;
+            case XKB_KEY_Return:
+            case XKB_KEY_KP_Enter:
+            case XKB_KEY_space:
+                if (menuPtr->active >= 0) {
+                    TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
+                    if (mePtr) {
+                        if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
+                            TkWaylandMenuOpenCascade(menuPtr, mePtr);
+                        } else if (mePtr->type != SEPARATOR_ENTRY) {
+                            TkInvokeMenu(menuPtr->interp, menuPtr, menuPtr->active);
+                            TkWaylandMenuDismissAll();
+                        }
+                    }
+                }
+                break;
 
-	    default:
-		/* Forward other keys to Tk. */
-		{
-		    XEvent event = {0};
-		    event.type = KeyPress;
-		    event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
-		    event.xkey.send_event = False;
-		    event.xkey.display = winPtr->display;
-		    event.xkey.window = Tk_WindowId(menuWin);
-		    event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
-		    event.xkey.time = CurrentTime;
-		    event.xkey.state = glfwModifierState;
-		    event.xkey.keycode = (KeyCode)xkb_keycode;
-		    event.xkey.same_screen = True;
+            default: {
+                /* Forward other keys to Tk. */
+                XEvent event = {0};
+                event.type = KeyPress;
+                event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
+                event.xkey.send_event = False;
+                event.xkey.display = winPtr->display;
+                event.xkey.window = Tk_WindowId(menuWin);
+                event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
+                event.xkey.time = CurrentTime;
+                event.xkey.state = glfwModifierState;
+                event.xkey.keycode = (KeyCode)xkb_keycode;
+                event.xkey.same_screen = True;
 
-		    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-		}
-		break;
+                Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+                break;
+            }
             }
         }
         return;
     }
-    
+
     /* Normal Tk keypress events. */
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
@@ -1615,7 +1599,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
 
-	/* Normal Tk keyrelease events. */
+    /* Normal Tk keyrelease events. */
     if (action == GLFW_RELEASE) {
         TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
         if (!focusWin) focusWin = winPtr;
@@ -1643,6 +1627,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1714,7 +1699,7 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
 	    Tk_PathName(winPtr));
 	    	
     TkWaylandQueueExposeEvent(winPtr,
-        0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }
 
 /*
