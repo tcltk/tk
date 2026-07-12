@@ -1166,10 +1166,7 @@ TkWaylandMenubarCreateOrResize(
         if (curW == mbW && curH == mbH) {
             MENU_LOG("TkWaylandMenubarCreateOrResize: redrawing existing popup");
 
-            if (TkWaylandPopupBeginDraw(wmPtr->menubarPopup) == TCL_OK) {
-                MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-                TkWaylandPopupEndDraw(wmPtr->menubarPopup);
-            }
+            MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 
             wmPtr->popup = wmPtr->menubarPopup;
             return;
@@ -1181,10 +1178,7 @@ TkWaylandMenubarCreateOrResize(
 
         if (TkWaylandPopupResize(wmPtr->menubarPopup, mbW, mbH) == TCL_OK) {
 
-            if (TkWaylandPopupBeginDraw(wmPtr->menubarPopup) == TCL_OK) {
-                MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-                TkWaylandPopupEndDraw(wmPtr->menubarPopup);
-            }
+            MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 
             wmPtr->popup = wmPtr->menubarPopup;
             return;
@@ -1212,10 +1206,7 @@ TkWaylandMenubarCreateOrResize(
     wmPtr->popup = wmPtr->menubarPopup;
 
     /* Draw into new popup. */
-    if (TkWaylandPopupBeginDraw(wmPtr->menubarPopup) == TCL_OK) {
-        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-        TkWaylandPopupEndDraw(wmPtr->menubarPopup);
-    }
+    MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 }
 
 
@@ -3053,8 +3044,14 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
         return;
     }
 
+    if (TkWaylandPopupBeginDraw(popup) != TCL_OK) {
+        MENU_LOG("MenuDrawMenubarIntoPopup: BeginDraw failed");
+        return;
+    }
+
     NVGcontext *vg = TkWaylandPopupGetNVGContext(popup);
     if (!vg) {
+        TkWaylandPopupEndDraw(popup);
         return;
     }
 
@@ -3063,41 +3060,17 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     Tk_FontMetrics fm;
     Tk_GetFontMetrics(tkfont, &fm);
 
-    /* Standard Tk color setup. */
-    NVGcolor bgColor       = nvgRGB(230, 230, 230);
-    NVGcolor textColor     = nvgRGB(0, 0, 0);
-    NVGcolor activeBgColor = nvgRGB(180, 200, 255);
-    NVGcolor activeFgColor = nvgRGB(0, 0, 0);         
+    /* Standard Tk color setup (menu-wide -background fallback only;
+     * per-entry and -activebackground/-activeforeground/-foreground
+     * resolution now happens inside TkpDrawMenuEntry, mirroring the
+     * dropdown/popup entry drawing path). */
+    NVGcolor bgColor = nvgRGB(230, 230, 230);
 
     /* Normal background */
     if (menuPtr->borderPtr != NULL) {
         Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, menuPtr->borderPtr);
         if (border) {
             bgColor = TkWaylandXColorToNVG(Tk_3DBorderColor(border));
-        }
-    }
-
-    /* Normal foreground (-foreground). */
-    if (menuPtr->fgPtr != NULL) {
-        XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->fgPtr);
-        if (color) {
-            textColor = TkWaylandXColorToNVG(color);
-        }
-    }
-
-    /* Active background (-activebackground). */
-    if (menuPtr->activeBorderPtr != NULL) {
-        Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, menuPtr->activeBorderPtr);
-        if (border) {
-            activeBgColor = TkWaylandXColorToNVG(Tk_3DBorderColor(border));
-        }
-    }
-
-    /* Active foreground (-activeforeground). */
-    if (menuPtr->activeFgPtr != NULL) {
-        XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->activeFgPtr);
-        if (color) {
-            activeFgColor = TkWaylandXColorToNVG(color);
         }
     }
 
@@ -3110,80 +3083,33 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
 
-    /* Ensure font is loaded. */
-    WaylandFont *fontPtr = (WaylandFont *)tkfont;
-    int fontId = EnsureNvgFont(fontPtr, vg);
-    if (fontId < 0) {
-        fontId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
-        if (fontId < 0) {
-            fontId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
-        }
-    }
-
-    if (fontId >= 0) {
-        nvgFontFaceId(vg, fontId);
-        nvgFontSize(vg, (float)fm.linespace);
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-    }
-
-    /* Draw each entry. */
+    /* Draw each entry via the shared entry-drawing path so menubar
+     * cascades get the same per-entry -background/-activebackground/
+     * -foreground/-activeforeground/-font resolution (with fallback to
+     * menu-wide options) as popup/dropdown entries. */
     for (int i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
 
-        int x = mePtr->x;
-        int y = mePtr->y;
-        int w = mePtr->width;
-        int h = mePtr->height;
+        Tk_Font entryFont = tkfont;
+        Tk_FontMetrics entryMetrics = fm;
+        if (mePtr->fontPtr != NULL) {
+            Tk_Font f = Tk_GetFontFromObj(tkwin, mePtr->fontPtr);
+            if (f) {
+                entryFont = f;
+                Tk_GetFontMetrics(entryFont, &entryMetrics);
+            }
+        }
 
-        /* Highlight when mouse is over it OR its submenu is open. */
-        bool isHighlighted = (i == menuPtr->active) ||
-                             (mePtr == menuPtr->postedCascade);
-
-        MENU_LOG("Menubar entry %d '%s' active=%d highlighted=%d",
+        MENU_LOG("Menubar entry %d '%s' active=%d state=%d",
                  i,
                  mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
                  menuPtr->active,
-                 isHighlighted);
+                 mePtr->state);
 
-        /* Draw background + highlight. */
-        if (isHighlighted) {
-            nvgBeginPath(vg);
-            nvgRect(vg, x, y, w, h);
-            nvgFillColor(vg, activeBgColor);     /* -activebackground */
-            nvgFill(vg);
-
-            /* Visible active border. */
-            nvgBeginPath(vg);
-            nvgRect(vg, x, y, w, h);
-            nvgStrokeWidth(vg, 2.0f);
-            nvgStrokeColor(vg, nvgRGB(60, 100, 220));
-            nvgStroke(vg);
-        }
-
-        /* Draw label. */
-        if (mePtr->labelPtr) {
-            const char *label = Tcl_GetString(mePtr->labelPtr);
-            int len = mePtr->labelLength;
-            if (len <= 0) {
-                len = (int)strlen(label);
-            }
-
-            NVGcolor labelColor = textColor;   /* normal -foreground */
-
-            if (mePtr->state == ENTRY_DISABLED) {
-                labelColor = nvgRGBA(128, 128, 128, 255);
-            } else if (isHighlighted) {
-                labelColor = activeFgColor;    /* -activeforeground */
-            }
-
-            if (fontId >= 0 && len > 0) {
-                nvgFillColor(vg, labelColor);
-                float tx = (float)(x + 8);
-                float ty = (float)(y + fm.ascent + 2);
-                nvgText(vg, tx, ty, label, label + len);
-            }
-        }
+        TkpDrawMenuEntry(mePtr, None, entryFont, &entryMetrics,
+                         mePtr->x, mePtr->y, mePtr->width, mePtr->height,
+                         DRAW_MENU_ENTRY_ARROW);
     }
 
     /* Draw bottom separator line. */
@@ -3193,6 +3119,8 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     nvgStrokeWidth(vg, 1.0f);
     nvgStrokeColor(vg, nvgRGB(180, 180, 180));
     nvgStroke(vg);
+
+    TkWaylandPopupEndDraw(popup);
 }
 /*
  *----------------------------------------------------------------------
