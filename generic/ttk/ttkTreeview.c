@@ -3806,7 +3806,7 @@ static int TreeviewSetCommand(
     TreeColumn *column = NULL;
     Tcl_Size columnNumber;
 
-    if (objc < 3) {
+    if (objc < 3 || (objc > 4 && (objc % 2) == 0)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item ?column? ?value? ?column value ...?");
 	return TCL_ERROR;
     }
