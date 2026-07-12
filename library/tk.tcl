@@ -979,7 +979,7 @@ if {$::ttk::library ne ""} {
 if {[tk windowingsystem] eq "wayland"} {
     after idle rename_wayland_clipboard
 }
-
+
 # Local Variables:
 # mode: tcl
 # fill-column: 78

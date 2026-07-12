@@ -33,7 +33,6 @@
 #include <systemd/sd-bus.h>
 
 #ifdef SD_BUS_ERROR_NULL
-extern int    ibus_fd;
 extern sd_bus *ibus_bus;
 #endif
 
@@ -594,6 +593,8 @@ MODULE_SCOPE GLFWwindow *TkWaylandCreateWindow(
 
 
 MODULE_SCOPE void        TkWaylandDestroyWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE void        TkWaylandCursorPointerWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE void        TkWaylandCursorForgetWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE Drawable    TkWaylandGetDrawable(GLFWwindow *w);
 MODULE_SCOPE TkWindow*   TkWaylandGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow* TkWaylandGetGLFWwindowFromDrawable(Drawable drawable);
@@ -680,7 +681,6 @@ typedef struct {
 } TkXKBState;
 
 /* Variable for IME. */
-extern int ibus_fd;
 extern sd_bus *ibus_bus;
 /*
  *----------------------------------------------------------------------
@@ -733,6 +733,7 @@ MODULE_SCOPE void     TkWaylandApplyGC(NVGcontext *vg, GC gc);
 
 MODULE_SCOPE bool  TkWaylandKeyInit();
 MODULE_SCOPE void  TkWaylandKeyCleanup();
+MODULE_SCOPE void  TkWaylandIbusFdClose(void);
 MODULE_SCOPE void  TkWaylandUpdateKeyboardModifiers(int glfw_mods);
 MODULE_SCOPE void  TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint);
 char* TkWaylandGetStoredText(TkWindow *winPtr);

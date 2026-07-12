@@ -757,36 +757,9 @@ int (*XSynchronize(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * XGrabPointer --
- *
- *	Grab the pointer. No-op in Wayland port.
- *
- * Results:
- *	Always returns GrabSuccess.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
+ * XGrabPointer, XUngrabPointer and XDefineCursor are implemented by the
+ * generic pointer module (generic/tkPointer.c), which this port links.
  */
-
-int
-XGrabPointer(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Bool),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Cursor),
-    TCL_UNUSED(Time))
-{
-    /* No-op - pointer grabbing not supported in Wayland. */
-    return GrabSuccess;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1387,33 +1360,12 @@ XCreatePixmapCursor(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * XParseColor --
- *
- *	Parse color string. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (False).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
+ * XParseColor is intentionally NOT stubbed here: the real implementation
+ * (hex specs + X11 color name table) comes from xlib/xcolors.c, which is
+ * compiled into WAYLAND_OBJS just as the macOS port does via AQUA_OBJS.
+ * Generic code (TkParseColor in tkColor.c, photo image ParseColorAsStandard
+ * in tkImgListFormat.c, tkImgBmap.c, tkCursor.c) depends on it succeeding.
  */
-
-Status
-XParseColor(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Colormap),
-    const char *spec,  /* Note: const char*, not char* */
-    TCL_UNUSED(XColor *))
-{
-    /* No-op - color parsing handled by NanoVG/Tk. */
-    (void)spec;  /* Suppress unused parameter warning */
-    return 0;
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -1793,31 +1745,6 @@ XDestroyIC(
 {
     /* No-op - input contexts not used in Wayland port. */
     return;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XUngrabPointer --
- *
- *	Ungrab the pointer. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XUngrabPointer(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Time))
-{
-    /* No-op - pointer grabbing not supported in Wayland. */
-    return 0;
 }
 
 /*
@@ -3056,32 +2983,6 @@ XGetInputFocus(
     TCL_UNUSED(int *))
 {
     /* No-op - input focus tracked by GLFW. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XDefineCursor --
- *
- *	Define window cursor. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XDefineCursor(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Cursor))
-{
-    /* No-op - cursor handling via GLFW. */
     return 0;
 }
 

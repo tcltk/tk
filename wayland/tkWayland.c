@@ -93,12 +93,14 @@ TkGetDefaultScreenName(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_UpdatePointer --
+ * TkGetMS --
  *
- *	Unused function in UNIX
+ *	Return a relative time in milliseconds. It doesn't matter when the
+ *	epoch was. Used by the generic pointer module (tkPointer.c) to
+ *	timestamp synthesized events.
  *
  * Results:
- *	None.
+ *	Number of milliseconds.
  *
  * Side effects:
  *	None.
@@ -106,17 +108,13 @@ TkGetDefaultScreenName(
  *----------------------------------------------------------------------
  */
 
-void
-Tk_UpdatePointer(
-    TCL_UNUSED(Tk_Window),	/* Window to which pointer event is reported.*/
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),		/* Pointer location in x, y root coords. */
-    TCL_UNUSED(int))		/* Modifier state mask. */
+unsigned long
+TkGetMS(void)
 {
-  /* In GLFW, pointer position is managed by GLFW callbacks.
-   * This function might be used to manually update cursor position
-   * in some edge cases.
-   */
+    Tcl_Time now;
+
+    Tcl_GetTime(&now);
+    return (unsigned long) now.sec * 1000 + now.usec / 1000;
 }
 
 /*

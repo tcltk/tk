@@ -39,6 +39,17 @@
 	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 
 /*
+ * XParseColor (xlib/xcolors.c) uses this to fill in XColor.pixel.  The
+ * Wayland port encodes pixels as 0x00RRGGBB (see TkpGetColor in
+ * tkWaylandColor.c and TkWaylandPixelToNVG in tkWaylandInit.c), so decode
+ * the 16-bit-per-channel XColor the same way.
+ */
+
+#define TkpGetPixel(p) (((((unsigned long)(p)->red >> 8) & 0xff) << 16) \
+	| ((((unsigned long)(p)->green >> 8) & 0xff) << 8) \
+	| (((unsigned long)(p)->blue >> 8) & 0xff))
+
+/*
  * The following macro defines the type of the mask arguments to
  * select:
  */
@@ -109,6 +120,17 @@ MODULE_SCOPE int TkpPutRGBAImage(
 		     Display* display, Drawable drawable, GC gc, XImage* image,
 		     int src_x, int src_y, int dest_x, int dest_y,
 		     unsigned int width, unsigned int height);
+
+/*
+ * Platform hooks used by the generic pointer module (tkPointer.c), which
+ * this port compiles in place of the X11 server-side pointer machinery.
+ */
+
+struct TkWindow;
+MODULE_SCOPE void	TkpSetCursor(Cursor cursor);
+MODULE_SCOPE void	TkpSetCapture(struct TkWindow *winPtr);
+MODULE_SCOPE Tk_Window	TkpGetCapture(void);
+MODULE_SCOPE void	TkPointerDeadWindow(struct TkWindow *winPtr);
 
 /* This avoids having to implement XKeysymToString and XStringToKeysym */
 #define REDO_KEYSYM_LOOKUP

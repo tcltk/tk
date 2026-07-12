@@ -354,7 +354,18 @@ static unsigned char* ParseXBMData(const char* data, int* width, int* height,
 static unsigned int ParseColor(const char* colorName);
 static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
       int width, int height, int xHot, int yHot);
-void TkpSetCursor(Cursor cursor);
+
+/*
+ * Cursor application state. TkpSetCursor receives a bare Cursor XID with
+ * no window argument, so we track (a) the GLFW window currently containing
+ * the pointer (fed by the enter/motion callbacks in tkWaylandNotify.c) and
+ * (b) every GLFW window whose cursor we have overridden, so that
+ * TkpSetCursor(None) can restore the compositor default everywhere.
+ */
+
+static GLFWwindow *pointerWindow = NULL;
+static Tcl_HashTable appliedCursors;	/* GLFWwindow* -> TkWaylandCursor* */
+static int appliedCursorsInit = 0;
 
 /*
  *----------------------------------------------------------------------
@@ -1043,12 +1054,10 @@ cleanup:
     }
 
     /*
-     * We have the cursor data. Force the updating and
-     * display of the cursor.
+     * No display side effect here: applying the cursor is the job of
+     * UpdateCursor in tkPointer.c, which calls TkpSetCursor whenever the
+     * pointer state changes.
      */
-    if (cursorPtr != NULL && tkwin != NULL) {
-        TkpSetCursor( (Cursor) cursorPtr->info.cursor );
-    }
 
     return (TkCursor *) cursorPtr;
 
@@ -1177,9 +1186,9 @@ TkpFreeCursor(
  *
  *	Since info.cursor is set to the TkWaylandCursor pointer itself
  *	(matching the macOS pattern), we cast directly back with no hash
- *	table lookup. The GLFW window was captured at cursor-creation time
- *	in TkGetCursorByName, so no window argument or generic-layer access
- *	is needed here.
+ *	table lookup. The cursor is applied to the GLFW window currently
+ *	containing the pointer; None restores the default cursor on every
+ *	window this module has touched.
  *
  * Results:
  *	None.
@@ -1194,53 +1203,116 @@ void
 TkpSetCursor(
     Cursor cursor)		/* Tk_Cursor or None */
 {
-    static Tcl_HashTable gCursorCache;
-    static int          gCursorCacheInitialized = 0;
-
     TkWaylandCursor *waylandCursorPtr;
     GLFWwindow *window;
     Tcl_HashEntry *entry;
+    Tcl_HashSearch search;
     int isNew;
 
-    /* Initialize cursor cache on first use. */
-    if (!gCursorCacheInitialized) {
-        Tcl_InitHashTable(&gCursorCache, TCL_ONE_WORD_KEYS);
-        gCursorCacheInitialized = 1;
+    if (!appliedCursorsInit) {
+        Tcl_InitHashTable(&appliedCursors, TCL_ONE_WORD_KEYS);
+        appliedCursorsInit = 1;
     }
 
     if (cursor == None) {
-        Tcl_DeleteHashTable(&gCursorCache);
-        Tcl_InitHashTable(&gCursorCache, TCL_ONE_WORD_KEYS);
+        /*
+         * None carries no window argument, so restore the compositor
+         * default on every window we overrode and forget them all.
+         */
+        for (entry = Tcl_FirstHashEntry(&appliedCursors, &search);
+                entry != NULL; entry = Tcl_NextHashEntry(&search)) {
+            GLFWwindow *w = (GLFWwindow *)Tcl_GetHashKey(&appliedCursors,
+                    entry);
+
+            glfwSetCursor(w, NULL);
+        }
+        Tcl_DeleteHashTable(&appliedCursors);
+        Tcl_InitHashTable(&appliedCursors, TCL_ONE_WORD_KEYS);
         return;
     }
 
     waylandCursorPtr = (TkWaylandCursor *)(uintptr_t)cursor;
+    if (waylandCursorPtr->cursor == NULL) {
+        return;
+    }
 
-    window = waylandCursorPtr->glfwWindow;
+    /*
+     * Prefer the window that currently contains the pointer: cursor
+     * structs are shared across windows by the generic cursor cache, so
+     * the GLFW window recorded at allocation time may be a different
+     * toplevel. Fall back to the recorded window (e.g. XDefineCursor
+     * while no enter event has been seen yet).
+     */
+    window = pointerWindow ? pointerWindow : waylandCursorPtr->glfwWindow;
     if (window == NULL) {
         return;
     }
 
-    /* Check cache for this specific window. */
-    entry = Tcl_FindHashEntry(&gCursorCache, (char *)window);
-    if (entry != NULL) {
-        TkWaylandCursor *cached = (TkWaylandCursor *)Tcl_GetHashValue(entry);
-        if (cached == waylandCursorPtr) {
-            return;                    /* No change — best case. */
-        }
-    }
-
-    /* If necessary, update cache. */
-    if (entry == NULL) {
-        entry = Tcl_CreateHashEntry(&gCursorCache, (char *)window, &isNew);
+    entry = Tcl_CreateHashEntry(&appliedCursors, (char *)window, &isNew);
+    if (!isNew &&
+            (TkWaylandCursor *)Tcl_GetHashValue(entry) == waylandCursorPtr) {
+        return;			/* Already displayed on this window. */
     }
     Tcl_SetHashValue(entry, waylandCursorPtr);
+    glfwSetCursor(window, waylandCursorPtr->cursor);
+}
 
-    /* Apply cursor. */
-    if (waylandCursorPtr->cursor == NULL) {
-        glfwSetCursor(window, NULL);
-    } else {
-        glfwSetCursor(window, waylandCursorPtr->cursor);
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandCursorPointerWindow --
+ *
+ *	Record which GLFW window currently contains the pointer (or NULL).
+ *	Called from the GLFW enter/motion callbacks so that TkpSetCursor
+ *	applies cursors to the surface under the pointer.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates the cursor module's notion of the pointer window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandCursorPointerWindow(
+    GLFWwindow *window)
+{
+    pointerWindow = window;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandCursorForgetWindow --
+ *
+ *	Drop any cursor state referring to a GLFW window that is about to
+ *	be destroyed, so the None-reset path never touches a dead handle.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Removes the window from the applied-cursor table.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandCursorForgetWindow(
+    GLFWwindow *window)
+{
+    if (appliedCursorsInit) {
+        Tcl_HashEntry *entry = Tcl_FindHashEntry(&appliedCursors,
+                (char *)window);
+
+        if (entry != NULL) {
+            Tcl_DeleteHashEntry(entry);
+        }
+    }
+    if (pointerWindow == window) {
+        pointerWindow = NULL;
     }
 }
 

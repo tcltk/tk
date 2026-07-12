@@ -1320,10 +1320,12 @@ TkWmFocusToplevel(
  *
  * TkGetPointerCoords --
  *
- *	Get mouse pointer coordinates (not implemented on Wayland).
+ *	Get the root coordinates of the mouse pointer, as reported by the
+ *	GLFW window of the given window's toplevel.
  *
  * Results:
- *	Sets *xPtr and *yPtr to -1.
+ *	Sets *xPtr and *yPtr to the pointer position, or to -1 if it
+ *	cannot be determined.
  *
  * Side effects:
  *	None.
@@ -1333,11 +1335,15 @@ TkWmFocusToplevel(
 
 void
 TkGetPointerCoords(
-		   TCL_UNUSED(Tk_Window),
-		   int *xPtr,
-		   int *yPtr)
+    Tk_Window tkwin,
+    int *xPtr,
+    int *yPtr)
 {
-    *xPtr = *yPtr = -1;
+    /* Window XIDs are TkWindow pointers in this port. */
+    if (tkwin == NULL || !XQueryPointer(NULL, (Window)(TkWindow *)tkwin,
+	    NULL, NULL, xPtr, yPtr, NULL, NULL, NULL)) {
+	*xPtr = *yPtr = -1;
+    }
 }
 
 /*
@@ -3057,14 +3063,18 @@ WmStateCmd(
     enum { OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN, OPT_ICON, OPT_ZOOMED };
     int idx;
 
-    /* Early argument check. */
-    if (objc > 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "pathName ?state?");
+    /*
+     * The dispatcher in Tk_WmObjCmd has already shifted objv past
+     * "wm state window": objc==0 is the query form, objv[0] is the
+     * new state (same convention as WmTitleCmd et al).
+     */
+    if (objc > 1) {
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName state ?state?");
         return TCL_ERROR;
     }
 
     /* Query current state. */
-    if (objc == 1) {
+    if (objc == 0) {
         if (wmPtr->iconFor) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj("icon", -1));
         }
@@ -3084,7 +3094,7 @@ WmStateCmd(
     }
 
     /* Get requested state. */
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], opts, sizeof(char *),
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], opts, sizeof(char *),
                                   "state", TCL_EXACT, &idx) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -3124,7 +3134,10 @@ WmStateCmd(
             break;
 
         case OPT_WITHDRAWN:
-            TkpWmSetState(winPtr, WithdrawnState);
+            /* Same path as "wm withdraw" (WmWithdrawCmd). */
+            wmPtr->withdrawn = 1;
+            wmPtr->initialState = WithdrawnState;
+            TkWmUnmapWindow(winPtr);
             break;
 
         case OPT_ICON:
@@ -4245,13 +4258,14 @@ XCreateSimpleWindow(
  *
  * XDestroyWindow --
  *
- *	No-op.  (Destroy a window and all its subwindows.)
+ *	Destroy a window. The GLFW surface is torn down elsewhere; here we
+ *	only clean up the generic pointer module's per-window state.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	None
+ *	May clear the grab/restrict/last-window state in tkPointer.c.
  *
  *----------------------------------------------------------------------
  */
@@ -4259,8 +4273,12 @@ XCreateSimpleWindow(
 int
 XDestroyWindow(
     TCL_UNUSED(Display *), /* display */
-    TCL_UNUSED(Window))    /* window */
+    Window window)
 {
+    /* Window XIDs are TkWindow pointers in this port. */
+    if (window != None) {
+	TkPointerDeadWindow((TkWindow *)window);
+    }
     return Success;
 }
 
@@ -4792,18 +4810,8 @@ XChangeWindowAttributes(
             attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
 
-#if 0
-    if (valuemask & CWCursor) {
-        /*
-         * info.cursor is set to the TkWaylandCursor pointer itself, so
-         * attributes->cursor is already the platform struct cast to Cursor.
-         * Pass it directly to TkpSetCursor — no hash lookup needed.
-         */
-        TkpSetCursor(attributes->cursor);
-    }
-    #endif
-
-    /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
+    /* CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
+       CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
        All are maintained by Tk's own attribute tables; no GLFW action. */
 
     return Success;

@@ -489,7 +489,8 @@ WAYLAND_OBJS            = \
      tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandPopup.o tkWaylandScale.o \
      tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
-     tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
+     tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o tkPointer.o xcolors.o \
+     $(WAYLAND_UNIX_OBJS)
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
@@ -647,7 +648,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c \
     $(WAYLAND_DIR)/tkWaylandSysTray.c $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c \
     $(WAYLAND_DIR)/tkWaylandWm.c $(WAYLAND_DIR)/xdg-shell-protocol.c $(UNIX_DIR)/bidi/SheenBidi.c \
-    $(WAYLAND_UNIX_SRCS)
+    $(GENERIC_DIR)/tkPointer.c $(WAYLAND_UNIX_SRCS)
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h \

@@ -583,12 +583,8 @@ TkWaylandShutdown(TCL_UNUSED(void *))
 
     /* Remove the IBus file handler first so the event loop stops
      * delivering stale signals after windows begin to be destroyed. */
-    extern int ibus_fd;          /* defined in tkWaylandKey.c */
     extern sd_bus *ibus_bus;
-    if (ibus_fd >= 0) {
-        Tcl_DeleteFileHandler(ibus_fd);
-        ibus_fd = -1;
-    }
+    TkWaylandIbusFdClose();
     if (ibus_bus) {
         sd_bus_unref(ibus_bus);
         ibus_bus = NULL;
@@ -795,6 +791,8 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
     if (shutdownInProgress) {
 	return;
     }
+    /* Drop cursor-module references before the handle goes stale. */
+    TkWaylandCursorForgetWindow(glfwWindow);
     destroyGlfwTkInfo(glfwWindow);
     glfwDestroyWindow(glfwWindow);
 

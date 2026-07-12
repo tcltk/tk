@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1959,8 +1960,43 @@ static int CmdProcessKey(ClientData clientData,
 }
 
 
-/* Global to track the current D-Bus file descriptor. */
-int ibus_fd = -1;
+/*
+ * Tk-owned dup of the IBus D-Bus socket fd that the Tcl file handler is
+ * registered on, plus the sd_bus fd it was duplicated from.  libsystemd
+ * closes its own fd when the connection dies, so the handler must live on
+ * an fd whose lifetime Tk controls.
+ */
+static int ibus_fd = -1;
+static int ibus_src_fd = -1;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandIbusFdClose --
+ *
+ *   Remove the Tcl file handler for the IBus D-Bus socket and close the
+ *   Tk-owned dup it was registered on.  Safe to call whether or not a
+ *   handler is currently registered.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Deletes the Tcl file handler and closes the dup'd fd.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandIbusFdClose(void)
+{
+    if (ibus_fd >= 0) {
+        Tcl_DeleteFileHandler(ibus_fd);
+        close(ibus_fd);
+        ibus_fd = -1;
+    }
+    ibus_src_fd = -1;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -2012,8 +2048,20 @@ IbusBusHandler(
     }
     if (count > 0) {
         fprintf(stderr, "    Processed %d IBus message(s)\n", count);
-    } else if (r < 0) {
+    }
+    /* Deliberately not "else if": an error can follow successfully
+     * processed messages in the same drain loop, so this runs even
+     * when count > 0. */
+    if (r < 0) {
         fprintf(stderr, "    sd_bus_process error: %s\n", strerror(-r));
+
+        /*
+         * The connection is dead and libsystemd has already closed its
+         * own fd.  Drop the handler and our dup now; if the bus is in
+         * fact still usable, IbusEventSetup re-registers on the next
+         * event-loop pass.
+         */
+        TkWaylandIbusFdClose();
     }
 }
 
@@ -2048,13 +2096,26 @@ IbusEventSetup(
     int fd = sd_bus_get_fd(ibus_bus);
     if (fd < 0) return;
 
-    if (fd != ibus_fd) {
-        if (ibus_fd >= 0) {
-            Tcl_DeleteFileHandler(ibus_fd);
+    if (fd != ibus_src_fd) {
+        TkWaylandIbusFdClose();
+
+        /*
+         * Register on a dup so the handler's fd number stays valid even
+         * after libsystemd closes its own fd on disconnect; the dup
+         * shares the socket's open file description, so epoll readiness
+         * is identical.
+         */
+        int dupfd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
+        if (dupfd < 0) {
+            fprintf(stderr, "IbusEventSetup: dup of fd=%d failed: %s\n",
+                    fd, strerror(errno));
+            return;
         }
-        Tcl_CreateFileHandler(fd, TCL_READABLE, IbusBusHandler, ibus_bus);
-        ibus_fd = fd;
-        fprintf(stderr, "IbusEventSetup: Registered handler for fd=%d\n", fd);
+        Tcl_CreateFileHandler(dupfd, TCL_READABLE, IbusBusHandler, ibus_bus);
+        ibus_fd = dupfd;
+        ibus_src_fd = fd;
+        fprintf(stderr, "IbusEventSetup: Registered handler for fd=%d (dup of %d)\n",
+                dupfd, fd);
     }
 }
 
