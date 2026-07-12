@@ -1400,7 +1400,14 @@ TkWaylandKeyCallback(GLFWwindow *window,
 
     bool imeHandled = false;
 
-    /* IME handling: only block function keys and accelerator chords */
+    /*
+     * IME gating:
+     * - IME receives ALL keys except:
+     *     * function keys
+     *     * accelerator chords (Ctrl/Alt/Super)
+     * - If IME handles the key, stop.
+     * - Otherwise ALWAYS fall through to Tk/menu.
+     */
     if (action == GLFW_PRESS) {
         uint32_t keyval = (uint32_t)keysym;
 
@@ -1412,23 +1419,17 @@ TkWaylandKeyCallback(GLFWwindow *window,
         if (mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
         if (mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
 
-        /*
-         * IME must NOT see function keys or accelerator chords (Ctrl/Alt/Super),
-         * but it SHOULD see navigation keys (Return, Backspace, Delete, arrows)
-         * so that composition (e.g., Japanese IME) works correctly.
-         */
         if (!isFunctionKey && !isAccelChord) {
             imeHandled = TkWaylandIbusProcessKey((Tk_Window)winPtr,
                                                  keyval, xkb_keycode, state);
         }
 
         if (imeHandled) {
-            return; /* IME consumed it */
+            return;
         }
-        /* Otherwise fall through to menu navigation or normal Tk */
     }
 
-    /* F10 - toggle or activate menubar. */
+    /* F10 toggles menubar. */
     if (action == GLFW_PRESS && keysym == XKB_KEY_F10) {
         if (!TkWaylandMenuActive()) {
             TkWaylandMenubarActivateFirst(winPtr);
@@ -1438,7 +1439,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         return;
     }
 
-    /* Full keyboard navigation if menu active. */
+    /* Menu navigation. */
     if (TkWaylandMenuActive()) {
         Tk_Window menuWin = TkWaylandMenuGetTopmostWindow();
         if (!menuWin) return;
@@ -1451,14 +1452,14 @@ TkWaylandKeyCallback(GLFWwindow *window,
         bool isMenubar = (menuPtr->menuType == MENUBAR);
 
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-            /* Escape dismisses everything. */
+
             if (keysym == XKB_KEY_Escape) {
                 TkWaylandMenuHandleEscape();
                 return;
             }
 
             switch (keysym) {
-            /* Up / down. */
+
             case XKB_KEY_Up:
             case XKB_KEY_KP_Up:
             case XKB_KEY_Down:
@@ -1484,32 +1485,22 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 break;
             }
 
-            /* Left. */
             case XKB_KEY_Left:
             case XKB_KEY_KP_Left:
                 if (stackDepth == 0) break;
 
                 if (isMenubar) {
-                    /* Pure menubar navigation. */
                     TkWaylandMenubarMove(winPtr, -1);
                 } else {
-                    /* We are in a submenu. */
                     if (stackDepth > 1) {
-                        /* Go back one submenu level. */
                         TkWaylandMenuPopToDepth(stackDepth - 1);
                         TkWaylandMenuRedrawActive();
                     } else if (TkWaylandMenuStackRootIsMenubar()) {
-                        /*
-                         * Top-level popup menu -> go back to the menubar.
-                         */
                         TkWaylandMenubarMove(winPtr, -1);
-                    } else {
-                        /* Chain rooted at menubutton/context menu: stay self-contained. */
                     }
                 }
                 break;
 
-            /* Right. */
             case XKB_KEY_Right:
             case XKB_KEY_KP_Right:
                 if (stackDepth == 0) break;
@@ -1521,18 +1512,13 @@ TkWaylandKeyCallback(GLFWwindow *window,
                         menuPtr->entries[menuPtr->active] : NULL;
 
                     if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
-                        /* Open submenu if possible. */
                         TkWaylandMenuOpenCascade(menuPtr, mePtr);
                     } else if (stackDepth == 1 && TkWaylandMenuStackRootIsMenubar()) {
-                        /*
-                         * In top-level menu, no cascade -> move to next menubar item.
-                         */
                         TkWaylandMenubarMove(winPtr, +1);
                     }
                 }
                 break;
 
-            /* Enter / space. */
             case XKB_KEY_Return:
             case XKB_KEY_KP_Enter:
             case XKB_KEY_space:
@@ -1550,7 +1536,6 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 break;
 
             default: {
-                /* Forward other keys to Tk. */
                 XEvent event = {0};
                 event.type = KeyPress;
                 event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
@@ -1571,7 +1556,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         return;
     }
 
-    /* Normal Tk keypress events. */
+    /* Normal Tk keypress. */
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
         if (!focusWin) focusWin = winPtr;
@@ -1599,7 +1584,7 @@ TkWaylandKeyCallback(GLFWwindow *window,
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
 
-    /* Normal Tk keyrelease events. */
+    /* Normal Tk keyrelease. */
     if (action == GLFW_RELEASE) {
         TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
         if (!focusWin) focusWin = winPtr;
@@ -1627,7 +1612,6 @@ TkWaylandKeyCallback(GLFWwindow *window,
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
