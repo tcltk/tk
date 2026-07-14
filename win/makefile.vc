@@ -469,7 +469,6 @@ $(TKLIB): $(TKOBJS)
 	$(DLLCMD) @<<
 $**
 <<
-	$(_VC_MANIFEST_EMBED_DLL)
 	@if exist $*.exp del $*.exp
 
 $(TKIMPLIB): $(TKLIB)
@@ -482,17 +481,14 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 
 $(WISH): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(GUIEXECMD) -stack:2300000 $**
-	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(WISHC): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(CONEXECMD) -stack:2300000 $**
-	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(GUIEXECMD) -stack:2300000 $**
-	$(_VC_MANIFEST_EMBED_EXE)
 
 $(TKSCRIPTZIP): .PHONY
 	@echo Building Tk library zip file
@@ -524,7 +520,6 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
 	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
-	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
 # Regenerate the stubs files.  [Development use only]

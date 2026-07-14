@@ -1612,7 +1612,7 @@ test Bbox-15.19 {Title Rows No Scroll} -setup {
 	set res [list [cell_bbox .tv red]]
 	.tv yview 400
 	update
-	
+
 	lappend res [cell_bbox .tv red]
 	return $res
     } -match {glob} -result {{{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
@@ -3702,113 +3702,117 @@ test Set-37.6 {Invalid display column} -body {
 	.tv set red #4
     } -result {Column #4 out of range} -returnCodes {1}
 
-test Set-37.7 {Get All} -body {
+test Set-37.7 {Invalid argc} -body {
+	.tv set red Hex #FF0000 Decimal
+    } -result {wrong # args: should be ".tv set item ?column? ?value? ?column value ...?"} -returnCodes {1}
+
+test Set-37.8 {Get All} -body {
 	.tv set red
     } -result {{#0} Red Hex #FF0000 Decimal 16711680 Float 18568347.648}
 
-test Set-37.8 {Get tree column} -body {
+test Set-37.9 {Get tree column} -body {
 	.tv set red #0
     } -result {Red}
 
-test Set-37.9 {Set tree column} -body {
+test Set-37.10 {Set tree column} -body {
 	.tv set red #0 Rojo
 	.tv set red #0
     } -result {Rojo}
 
-test Set-37.10 {Check tree column} -body {
+test Set-37.11 {Check tree column} -body {
 	.tv item red -text
     } -result {Rojo}
 
-test Set-37.11 {Get by column name} -body {
+test Set-37.12 {Get by column name} -body {
 	.tv set red Hex
     } -result {#FF0000}
 
-test Set-37.12 {Set by column name} -body {
+test Set-37.13 {Set by column name} -body {
 	.tv set red Hex #012345
 	.tv set red Hex
     } -result {#012345}
 
-test Set-37.13 {Check by column name} -body {
+test Set-37.14 {Check by column name} -body {
 	lindex [.tv item red -values] 0
     } -result {#012345}
 
-test Set-37.14 {Get by column number} -body {
+test Set-37.15 {Get by column number} -body {
 	.tv set red 1
     } -result {16711680}
 
-test Set-37.15 {Set by column number} -body {
+test Set-37.16 {Set by column number} -body {
 	.tv set red 1 123
 	.tv set red 1
     } -result {123}
 
-test Set-37.16 {Check by column number} -body {
+test Set-37.17 {Check by column number} -body {
 	lindex [.tv item red -values] 1
     } -result {123}
 
-test Set-37.17 {Get by display column number} -body {
+test Set-37.18 {Get by display column number} -body {
 	.tv set red #3
     } -result {18568347.648}
 
-test Set-37.18 {Set by display column number} -body {
+test Set-37.19 {Set by display column number} -body {
 	.tv set red #3 1234.5678
 	.tv set red #3
     } -result {1234.5678}
 
-test Set-37.19 {Check by display column number} -body {
+test Set-37.20 {Check by display column number} -body {
 	lindex [.tv item red -values] 2
     } -result {1234.5678}
 
-test Set-37.20 {Set multiple} -body {
+test Set-37.21 {Set multiple} -body {
 	.tv set blue #0 Azul Hex #987654 1 987654321 #3 9876.543210
 	.tv set blue
     } -result {{#0} Azul Hex #987654 Decimal 987654321 Float 9876.543210}
 
-test Set-37.21 {Set tree column} -body {
+test Set-37.22 {Set tree column} -body {
 	.tv set green #0 new
 	.tv set green #0
     } -result {new}
 
-test Set-37.22 {Get with no tree column} -setup {
+test Set-37.23 {Get with no tree column} -setup {
 	.tv insert {} end -id test
     } -body {
 	.tv set test #0
     }
 
-test Set-37.23 {Set with no tree column} -body {
+test Set-37.24 {Set with no tree column} -body {
 	.tv set test #0 Test
 	.tv set test #0
     } -result {Test}
 
-test Set-37.24 {Get with no values} -body {
+test Set-37.25 {Get with no values} -body {
 	.tv set test 0
     }
 
-test Set-37.25 {Set with no values} -body {
+test Set-37.26 {Set with no values} -body {
 	.tv set test 2 345.678
 	.tv set test 2
     } -result {345.678}
 
-test Set-37.26 {Detached Item} -setup {
+test Set-37.27 {Detached Item} -setup {
 	.tv detach white
     } -body {
 	.tv set white #0 new
 	.tv set white #0
     } -result {new}
 
-test Set-37.27 {Root item} -body {
+test Set-37.28 {Root item} -body {
 	.tv set {}
     } -result {{#0} {} Hex {} Decimal {} Float {}}
 
-test Set-37.28 {Root get} -body {
+test Set-37.29 {Root get} -body {
 	.tv set {} #0
     }
 
-test Set-37.29 {Root set} -body {
+test Set-37.30 {Root set} -body {
 	.tv set {} #0 Rainbow
 	.tv set {} #0
     } -result {Rainbow}
 
-test Set-37.30 {Cleanup} -body {
+test Set-37.31 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 

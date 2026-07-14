@@ -519,6 +519,7 @@ static void GenericElementSize(
     Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
     HRESULT result;
     SIZE size;
 
@@ -540,11 +541,16 @@ static void GenericElementSize(
 	    /*
 	     * The process is PerMonitorV2 DPI-aware (see wish.exe.manifest),
 	     * so the Visual Styles API already reports sizes scaled to the
-	     * monitor DPI.  Do not scale again here; doing so over-sizes the
-	     * element box and forces DrawThemeBackground to stretch the part.
+	     * monitor DPI.  Do not scale again here by TkScalingLevel(tkwin);
+	     * doing so over-sizes the element box and forces
+	     * DrawThemeBackground to stretch the part.  Instead, scale by
+	     * TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using
+	     * this scaling factor, the element box will be stretched to the
+	     * *expected* size, and not stretched at all in the most common
+	     * case that Tk's scaling factor was not changed via "tk scaling".
 	     */
-	    *widthPtr = size.cx;
-	    *heightPtr = size.cy;
+	    *widthPtr = (int)round(size.cx * scalingFactor);
+	    *heightPtr = (int)round(size.cy * scalingFactor);
 	}
     }
 
@@ -623,6 +629,7 @@ GenericSizedElementSize(
     Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
@@ -633,13 +640,16 @@ GenericSizedElementSize(
 
     /*
      * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
-     * returns values for the monitor DPI under PerMonitorV2 awareness, so the
-     * results are used as-is rather than scaled again by TkScalingLevel.
+     * returns values for the monitor DPI under PerMonitorV2 awareness.  Scale
+     * by TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using this
+     * scaling factor, the element box will be stretched to the *expected*
+     * size, and not stretched at all in the most common case that Tk's
+     * scaling factor was not changed via "tk scaling".
      */
-    *widthPtr = GetThemeSysSize(NULL,
-	(elementData->info->flags >> 8) & 0xff);
-    *heightPtr = GetThemeSysSize(NULL,
-	elementData->info->flags & 0xff);
+    *widthPtr = (int)round(GetThemeSysSize(NULL,
+	(elementData->info->flags >> 8) & 0xff) * scalingFactor);
+    *heightPtr = (int)round(GetThemeSysSize(NULL,
+	elementData->info->flags & 0xff) * scalingFactor);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
     }
