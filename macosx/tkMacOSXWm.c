@@ -1849,11 +1849,15 @@ WmSetAttribute(
 		} else {
 		    styleMaskValue |= styleMaskBits[index].bitvalue;
 		}
-		/*
-		 * Be sure not to change the fullscreen bit.
-		 */
-		styleMaskValue |= (NSWindowStyleMaskFullScreen & macWindow.styleMask);
 	    }
+	    /*
+	     * Be sure not to change the fullscreen bit! Clearing the
+	     * fullscreen bit for a window which is in fullscreen mode causes
+	     * an exception.  This is handled outside of the loop above because
+	     * that loop does not run if the command argument is an empty list.
+	     * See ticket [393f9b0ab8].
+	     */
+	    styleMaskValue |= (NSWindowStyleMaskFullScreen & macWindow.styleMask);
 	    /*
 	     * A resizable docmodal NSWindow or NSPanel does not work
 	     * correctly.  It cannot be resized from the top edge.  Other bits,
