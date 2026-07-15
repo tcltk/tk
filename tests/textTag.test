@@ -364,6 +364,17 @@ test textTag-1.42 {configuration options, tag -locale overrides widget -locale} 
     .t tag configure x -locale {}
     .t configure -locale C
 } -result {nl_NL nl_NL tcl8}
+test textTag-1.43 {widget -locale change triggers relayout} -body {
+    # Changing the widget -locale must invalidate the layout so that
+    # [.t locale] reflects the new value; it used to stay "C" until an
+    # unrelated relayout (e.g. a -lang change) happened.
+    .t configure -locale C ; update
+    set before [.t locale 1.0]
+    .t configure -locale fr_FR ; update
+    list $before [.t locale 1.0]
+} -cleanup {
+    .t configure -locale C
+} -result {C fr_FR}
 
 
 test textTag-2.1 {TkTextTagCmd - "add" option} -body {

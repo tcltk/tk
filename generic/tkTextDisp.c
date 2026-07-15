@@ -13279,7 +13279,7 @@ AdjustForTab(
 	    if (data->maxX - data->tabOverhang >= 0) {
 		desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
 	    } else {
-		desired = data->maxX - data->tabOverhang - width;
+		desired = tabX - width;
 	    }
 	    data->tabApplied = 0;
 	    break;

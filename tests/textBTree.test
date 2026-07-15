@@ -1073,6 +1073,72 @@ test btree-14.7 {Bug [ad458a3a72] - elide toggling and editing across mixed LTR/
     destroy .t
 } -result "abfمرحباX\n"
 
+test btree-14.8 {tag remove at head of an elided range keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "abcdef"
+    .t tag add A 1.0 1.4
+    .t tag configure A -elide 1
+    .t tag remove A 1.0 1.2  ; # used to leave a protected branch -> panic
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "abef\n"
+
+test btree-14.9 {tag delete of overlapping elided tags keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add A 1.0 1.6
+    .t tag add B 1.3 1.9
+    .t tag configure A -elide 1
+    .t tag configure B -elide 1
+    .t tag delete A B  ; # used to leave a protected segment -> panic
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "aaabbbccc\n"
+
+test btree-14.10 {enclosing elide tag over an already elided inner range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaaXXXbbbccc"
+    .t tag add A 1.3 1.6
+    .t tag configure A -elide 1
+    .t tag add B 1.1 1.9
+    .t tag configure B -elide 1  ; # enclosing elide used to abort (SegmentIsElided)
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "accc\n"
+test btree-14.11 {load into a widget preserving tags keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    # [load] swaps the B-tree for a fresh one without clearing tags; the
+    # preserved tags used to keep a rootPtr into the destroyed tree, so the
+    # next AddTagToNode left them inconsistent -> panic under the checker.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add A 1.0 1.6
+    .t tag add B 1.3 1.9
+    .t tag configure A -elide 1
+    .t load [.t inspect]
+    .t debug 0
+    .t get 1.0 end
+} -cleanup {
+    destroy .t
+} -result "aaabbbccc\n"
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

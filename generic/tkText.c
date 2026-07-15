@@ -280,7 +280,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-lang", "lang", "Lang",
 	 NULL, offsetof(TkText, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
-	"C", TCL_INDEX_NONE, offsetof(TkText, locale), 0, &TkLocaleOption, 0},
+	"C", TCL_INDEX_NONE, offsetof(TkText, locale), 0, &TkLocaleOption, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndoDepth), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_INT, "-maxundosize", "maxUndoSize", "MaxUndoSize",
@@ -3381,6 +3381,22 @@ ClearText(
 	TkBitClear(sharedTextPtr->usedTags);
 	DEBUG(memset(sharedTextPtr->tagLookup, 0,
 		TkBitSize(sharedTextPtr->usedTags)*sizeof(TkTextTag *)));
+    } else {
+	/*
+	 * The tree has been replaced with a fresh (empty) one, but the tags are
+	 * being preserved (e.g. [load]). Their rootPtr still points into the
+	 * destroyed tree; reset it so AddTagToNode rebuilds it on reload.
+	 */
+	Tcl_HashSearch search;
+	Tcl_HashEntry *hPtr;
+
+	for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
+		hPtr; hPtr = Tcl_NextHashEntry(&search)) {
+	    ((TkTextTag *)Tcl_GetHashValue(hPtr))->rootPtr = NULL;
+	}
+	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
+	    tPtr->selTagPtr->rootPtr = NULL;
+	}
     }
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
@@ -8018,6 +8034,8 @@ TextChecksumCmd(
 	case SEG_GROUP_BRANCH:
 	    if (segPtr->typePtr == &tkTextBranchType && (what & TK_DUMP_DISPLAY)) {
 		segPtr = segPtr->body.branch.nextPtr;
+		/* The link may live on a later line. */
+		linePtr = segPtr->sectionPtr->linePtr;
 	    }
 	    break;
 	}
