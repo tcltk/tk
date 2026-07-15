@@ -9320,6 +9320,63 @@ ContentBeforeLink(
     return segPtr;
 }
 
+
+/*
+ * Find the boundaries of the maximal elided range (per the current tag
+ * information, independent of the possibly inconsistent switch structure)
+ * around the given elided content segment: the first content segment of the
+ * range, and the last one. Used to bound the recompute of a range which
+ * still ends in a dangling switch after a walk (see UpdateElideInfo).
+ */
+
+static TkTextSegment *
+ScanElidedRangeStart(
+    const TkSharedText *sharedTextPtr,
+    TkTextSegment *contentPtr)
+{
+    TkTextSegment *segPtr = contentPtr;
+    TkTextSegment *prevPtr;
+
+    assert(contentPtr->tagInfoPtr);
+
+    while ((prevPtr = GetPrevTagInfoSegment(segPtr))
+	    && SegmentIsElided(sharedTextPtr, prevPtr, NULL)) {
+	segPtr = prevPtr;
+    }
+    /* the content before the range establishes the entry state of the walk */
+    return prevPtr ? prevPtr : segPtr;
+}
+
+static TkTextSegment *
+ScanElidedRangeEnd(
+    const TkSharedText *sharedTextPtr,
+    TkTextSegment *contentPtr)
+{
+    TkTextSegment *segPtr = contentPtr;
+
+    assert(contentPtr->tagInfoPtr);
+
+    while (1) {
+	TkTextSegment *nextPtr = segPtr->nextPtr;
+
+	while (nextPtr && !nextPtr->tagInfoPtr) {
+	    nextPtr = nextPtr->nextPtr;
+	}
+	if (!nextPtr) {
+	    TkTextLine *nextLinePtr = segPtr->sectionPtr->linePtr->nextPtr;
+
+	    if (!nextLinePtr) {
+		return segPtr;
+	    }
+	    nextPtr = GetFirstTagInfoSegment(NULL, nextLinePtr);
+	}
+	if (!SegmentIsElided(sharedTextPtr, nextPtr, NULL)) {
+	    return segPtr;
+	}
+	segPtr = nextPtr;
+    }
+}
+
 static void
 UpdateElideInfo(
     TkSharedText *sharedTextPtr,
@@ -9383,6 +9440,7 @@ UpdateElideInfo(
 
     assert(tagPtr || reason != ELISION_HAS_BEEN_ADDED);
     assert(tagPtr || reason == ELISION_HAS_BEEN_CHANGED || TkBTreeHaveElidedSegments(sharedTextPtr));
+
 
     /*
      * This function assumes that the start/end points are already protected.
@@ -9575,9 +9633,9 @@ UpdateElideInfo(
 	    int somethingHasChanged = 0;
 	    int transitionHandled = 0;
 				/* A kept switch already realizes the elide
-				 * transition at this segment; a removed switch
-				 * must not swallow it, the insertion below
-				 * still has to run. */
+				 * transition at this segment; otherwise a
+				 * removed switch must not swallow it, the
+				 * insertion below still has to run. */
 
 	    if (prevBranchPtr) {
 		if (!shouldBeElided || actualElided) {
@@ -9621,6 +9679,12 @@ UpdateElideInfo(
 		    } else if (deletedBranchPtr) {
 			TkBTreeFreeSegment(prevBranchPtr);
 		    } else {
+			/*
+			 * The fork is expired with the removal - a surviving
+			 * link still claiming this branch must not read it as
+			 * a mutual pairing.
+			 */
+			prevBranchPtr->body.branch.nextPtr = NULL;
 			deletedBranchPtr = prevBranchPtr;
 		    }
 		    if (danglingBranchPtr && danglingLinkPtr) {
@@ -9669,6 +9733,8 @@ UpdateElideInfo(
 		    } else if (deletedLinkPtr) {
 			TkBTreeFreeSegment(prevLinkPtr);
 		    } else {
+			/* The fork is expired with the removal, see the branch case. */
+			prevLinkPtr->body.link.prevPtr = NULL;
 			deletedLinkPtr = prevLinkPtr;
 		    }
 		    if (danglingBranchPtr && danglingLinkPtr) {
@@ -9688,11 +9754,25 @@ UpdateElideInfo(
 		     * pending branch would be connected to the wrong link
 		     * at the end of the pass.
 		     */
-		    newBranchPtr->body.branch.nextPtr = prevLinkPtr;
-		    prevLinkPtr->body.link.prevPtr = newBranchPtr;
 		    if (prevLinkPtr == danglingLinkPtr) {
+			/* resolved by this pairing */
 			danglingLinkPtr = NULL;
 		    }
+		    if (!danglingBranchPtr
+			    && prevLinkPtr->body.link.prevPtr
+			    && prevLinkPtr->body.link.prevPtr != newBranchPtr
+			    && prevLinkPtr->body.link.prevPtr->sectionPtr
+			    && prevLinkPtr->body.link.prevPtr->body.branch.nextPtr == prevLinkPtr) {
+			/*
+			 * The kept link was mutually paired (a switch restored
+			 * verbatim by an undo may claim any partner): its old
+			 * branch keeps opening an elided range, remember it
+			 * for positional re-pairing.
+			 */
+			danglingBranchPtr = prevLinkPtr->body.link.prevPtr;
+		    }
+		    newBranchPtr->body.branch.nextPtr = prevLinkPtr;
+		    prevLinkPtr->body.link.prevPtr = newBranchPtr;
 		    newBranchPtr = NULL;
 		    keptBranchPtr = NULL;
 		    transitionHandled = 1;
@@ -9704,18 +9784,57 @@ UpdateElideInfo(
 		     * verbatim by an undo, nested within the walked range):
 		     * reconnect them.
 		     */
-		    keptBranchPtr->body.branch.nextPtr = prevLinkPtr;
-		    prevLinkPtr->body.link.prevPtr = keptBranchPtr;
 		    if (prevLinkPtr == danglingLinkPtr) {
+			/* resolved by this pairing */
 			danglingLinkPtr = NULL;
 		    }
 		    if (keptBranchPtr == danglingBranchPtr) {
 			danglingBranchPtr = NULL;
 		    }
+		    if (!danglingBranchPtr
+			    && prevLinkPtr->body.link.prevPtr
+			    && prevLinkPtr->body.link.prevPtr->sectionPtr
+			    && prevLinkPtr->body.link.prevPtr->body.branch.nextPtr == prevLinkPtr) {
+			/* See the newBranchPtr case above. */
+			danglingBranchPtr = prevLinkPtr->body.link.prevPtr;
+		    }
+		    if (!danglingLinkPtr
+			    && keptBranchPtr->body.branch.nextPtr
+			    && keptBranchPtr->body.branch.nextPtr->sectionPtr
+			    && keptBranchPtr->body.branch.nextPtr->body.link.prevPtr == keptBranchPtr) {
+			/*
+			 * The kept branch was mutually paired as well: its old
+			 * link keeps closing an elided range ahead, remember it
+			 * for positional re-pairing.
+			 */
+			danglingLinkPtr = keptBranchPtr->body.branch.nextPtr;
+		    }
+		    keptBranchPtr->body.branch.nextPtr = prevLinkPtr;
+		    prevLinkPtr->body.link.prevPtr = keptBranchPtr;
 		    keptBranchPtr = NULL;
 		    transitionHandled = 1;
 		} else {
 		    /* The kept link closes the current elided range. */
+		    if (keptBranchPtr
+			    && keptBranchPtr->body.branch.nextPtr != prevLinkPtr) {
+			/*
+			 * The link claims the kept branch, but the branch does
+			 * not point back: its fork has been stolen by a switch
+			 * restored verbatim (an undo rewrites both directions).
+			 * The walk has validated from the actual tag state that
+			 * this branch opens the range this link closes, so
+			 * enforce the reciprocity; the thief keeps a one-way
+			 * claim and is re-paired (or removed) positionally.
+			 */
+			if (!danglingLinkPtr
+				&& keptBranchPtr->body.branch.nextPtr
+				&& keptBranchPtr->body.branch.nextPtr->sectionPtr
+				&& keptBranchPtr->body.branch.nextPtr->body.link.prevPtr
+					== keptBranchPtr) {
+			    danglingLinkPtr = keptBranchPtr->body.branch.nextPtr;
+			}
+			keptBranchPtr->body.branch.nextPtr = prevLinkPtr;
+		    }
 		    keptBranchPtr = NULL;
 		    transitionHandled = 1;
 		}
@@ -9728,6 +9847,8 @@ UpdateElideInfo(
 
 		    if (deletedBranchPtr) {
 			lastBranchPtr = deletedBranchPtr;
+			/* like a fresh branch: the old fork is expired */
+			lastBranchPtr->body.branch.nextPtr = NULL;
 			deletedBranchPtr = NULL;
 		    } else {
 			lastBranchPtr = MakeBranch();
@@ -9801,11 +9922,27 @@ UpdateElideInfo(
 
 		    if (deletedLinkPtr) {
 			lastLinkPtr = deletedLinkPtr;
+			/* like a fresh link: the old fork is expired */
+			lastLinkPtr->body.link.prevPtr = NULL;
 			deletedLinkPtr = NULL;
 		    } else {
 			lastLinkPtr = MakeLink();
 		    }
 
+		    if (!danglingLinkPtr
+			    && lastBranchPtr->body.branch.nextPtr
+			    && lastBranchPtr->body.branch.nextPtr != lastLinkPtr
+			    && lastBranchPtr->body.branch.nextPtr->sectionPtr
+			    && lastBranchPtr->body.branch.nextPtr->body.link.prevPtr
+				    == lastBranchPtr) {
+			/*
+			 * The branch closing here was mutually paired: its old
+			 * link keeps closing an elided range ahead (the range
+			 * is being cut short), remember it for positional
+			 * re-pairing.
+			 */
+			danglingLinkPtr = lastBranchPtr->body.branch.nextPtr;
+		    }
 		    /* connect the branches */
 		    lastBranchPtr->body.branch.nextPtr = lastLinkPtr;
 		    lastLinkPtr->body.link.prevPtr = lastBranchPtr;
@@ -9868,6 +10005,8 @@ UpdateElideInfo(
 	    } else {
 		if (deletedLinkPtr) {
 		    lastLinkPtr = deletedLinkPtr;
+		    /* like a fresh link: the old fork is expired */
+		    lastLinkPtr->body.link.prevPtr = NULL;
 		    deletedLinkPtr = NULL;
 		} else {
 		    lastLinkPtr = MakeLink();
@@ -9900,6 +10039,104 @@ UpdateElideInfo(
     if (anyChanges) {
 	/* The branches and links are influencing the section structure. */
 	RebuildSections(sharedTextPtr, linePtr, 1);
+    }
+
+    /*
+     * A dangling switch may be left over when a re-pairing of this walk took
+     * the partner of a mutually paired switch lying beyond the processed
+     * range (pairings crossed by switches which an undo restored verbatim).
+     * Decide from the actual elide state at its position: a dangling link
+     * whose preceding content is not elided (mirrored for a branch) does not
+     * close an elided range anymore and has to go; otherwise it still closes
+     * a real range whose repair lies beyond this walk (e.g. the tail of a
+     * split zone missing its opening branch) - recompute that range, the
+     * sub-walk pairs or disposes the dangling switch positionally.
+     */
+
+    if (danglingLinkPtr) {
+	TkTextSegment *contentPtr = GetPrevTagInfoSegment(danglingLinkPtr);
+
+	if (contentPtr && !SegmentIsElided(sharedTextPtr, contentPtr, NULL)) {
+	    TkTextLine *removeLinePtr = danglingLinkPtr->sectionPtr->linePtr;
+
+	    if (danglingLinkPtr == *firstSegPtr) {
+		(*firstSegPtr = (*firstSegPtr)->nextPtr)->protectionFlag = 1;
+	    }
+	    if (danglingLinkPtr == *lastSegPtr) {
+		(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
+	    }
+	    danglingLinkPtr->protectionFlag = 0;
+	    UnlinkSegmentAndCleanup(sharedTextPtr, danglingLinkPtr);
+	    /* annihilation marker, in case the switch is enrolled in a token */
+	    danglingLinkPtr->body.link.prevPtr = NULL;
+	    TkBTreeFreeSegment(danglingLinkPtr);
+	    RebuildSections(sharedTextPtr, removeLinePtr, 1);
+	    if (removeLinePtr->logicalLine) {
+		removeLinePtr->changed = 1;
+	    }
+	    TkTextInvalidateLineMetrics(sharedTextPtr, NULL, removeLinePtr, 0,
+		    TK_TEXT_INVALIDATE_ELIDE);
+	    danglingLinkPtr = NULL;
+	} else if (contentPtr) {
+	    TkTextSegment *fPtr = ScanElidedRangeStart(sharedTextPtr, contentPtr);
+	    TkTextSegment *lPtr = ScanElidedRangeEnd(sharedTextPtr, contentPtr);
+
+	    assert(fPtr->tagInfoPtr);
+	    assert(lPtr->tagInfoPtr);
+	    fPtr->protectionFlag = 1;
+	    lPtr->protectionFlag = 1;
+	    danglingLinkPtr = NULL; /* owned by the sub-walk now */
+	    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+	    if (fPtr != endSegPtr) {
+		CleanupSplitPoint(fPtr, sharedTextPtr);
+	    }
+	    if (lPtr != fPtr && lPtr != endSegPtr) {
+		CleanupSplitPoint(lPtr, sharedTextPtr);
+	    }
+	}
+    }
+
+    if (danglingBranchPtr) {
+	TkTextSegment *contentPtr = GetNextTagInfoSegment(danglingBranchPtr->nextPtr);
+
+	if (!SegmentIsElided(sharedTextPtr, contentPtr, NULL)) {
+	    TkTextLine *removeLinePtr = danglingBranchPtr->sectionPtr->linePtr;
+
+	    if (danglingBranchPtr == *firstSegPtr) {
+		(*firstSegPtr = (*firstSegPtr)->nextPtr)->protectionFlag = 1;
+	    }
+	    if (danglingBranchPtr == *lastSegPtr) {
+		(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
+	    }
+	    danglingBranchPtr->protectionFlag = 0;
+	    UnlinkSegmentAndCleanup(sharedTextPtr, danglingBranchPtr);
+	    /* annihilation marker, in case the switch is enrolled in a token */
+	    danglingBranchPtr->body.branch.nextPtr = NULL;
+	    TkBTreeFreeSegment(danglingBranchPtr);
+	    RebuildSections(sharedTextPtr, removeLinePtr, 1);
+	    if (removeLinePtr->logicalLine) {
+		removeLinePtr->changed = 1;
+	    }
+	    TkTextInvalidateLineMetrics(sharedTextPtr, NULL, removeLinePtr, 0,
+		    TK_TEXT_INVALIDATE_ELIDE);
+	    danglingBranchPtr = NULL;
+	} else {
+	    TkTextSegment *fPtr = ScanElidedRangeStart(sharedTextPtr, contentPtr);
+	    TkTextSegment *lPtr = ScanElidedRangeEnd(sharedTextPtr, contentPtr);
+
+	    assert(fPtr->tagInfoPtr);
+	    assert(lPtr->tagInfoPtr);
+	    fPtr->protectionFlag = 1;
+	    lPtr->protectionFlag = 1;
+	    danglingBranchPtr = NULL; /* owned by the sub-walk now */
+	    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+	    if (fPtr != endSegPtr) {
+		CleanupSplitPoint(fPtr, sharedTextPtr);
+	    }
+	    if (lPtr != fPtr && lPtr != endSegPtr) {
+		CleanupSplitPoint(lPtr, sharedTextPtr);
+	    }
+	}
     }
 
     if (endSegPtr != *lastSegPtr) {
