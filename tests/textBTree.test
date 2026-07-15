@@ -2551,6 +2551,54 @@ test btree-14.83 {nested restore with a wide section between the two links} -set
     destroy .t
 } -result {2.5 2.10}
 
+test btree-14.84 {undo of tag clear drops a non-undoable elide tag: recompute the elide info} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The clear-undo overwrites the tag sets of the restored range with the
+    # recorded snapshots; an elide tag excluded from undo which was added
+    # after the clear is silently dropped by that overwrite, so the elide
+    # topology (switches, logicalLine flags) must be recomputed as well
+    # (panic "wrong logicalLine flag").
+    .t debug 1
+    .t insert end "abcd\nefgh"
+    .t tag configure E1 -elide 1 -undo 0
+    .t tag configure T0 -underline 0
+    .t edit reset
+    .t tag add T0 1.2 2.2
+    .t tag clear 1.2 2.2
+    .t tag add E1 1.1 2.3
+    .t edit undo
+    set res [list [.t tag ranges E1] [.t tag ranges T0]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.1 1.2 2.2 2.3} {}}
+
+test btree-14.85 {undo of tag clear drops an elide tag: switches within one line} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # Single line variant: the stale pair used to leave a misplaced
+    # branch/link instead of a wrong logicalLine flag.
+    .t debug 1
+    .t insert end "hglaglqyvszpz"
+    .t tag configure E1 -elide 1 -undo 0
+    .t tag configure T0 -underline 0
+    .t edit reset
+    .t tag add T0 1.8 1.11
+    .t tag clear 1.8 1.11
+    .t tag add E1 1.6 1.11
+    .t edit separator
+    .t edit undo
+    set res [list [.t tag ranges E1] [.t tag ranges T0]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.6 1.8} {}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

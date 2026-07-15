@@ -2110,10 +2110,20 @@ UndoClearTagsPerform(
 		assert(segPtr->size <= size);
 		size -= segPtr->size;
 		offs += segPtr->size;
-		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->affectGeometryTags)) {
+		/*
+		 * The restore may drop tags as well as reintroduce them (e.g.
+		 * an elide tag excluded from undo which was added after the
+		 * clear), so the overwritten tag set decides as well whether
+		 * the elide info has to be recomputed.
+		 */
+		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->affectGeometryTags)
+			|| TkTextTagSetIntersectsBits(segPtr->tagInfoPtr,
+				sharedTextPtr->affectGeometryTags)) {
 		    affectsDisplayGeometry = true;
 		}
-		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->elisionTags)) {
+		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->elisionTags)
+			|| TkTextTagSetIntersectsBits(segPtr->tagInfoPtr,
+				sharedTextPtr->elisionTags)) {
 		    updateElideInfo = 1;
 		}
 		TkTextTagSetDecrRefCount(segPtr->tagInfoPtr);
