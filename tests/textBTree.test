@@ -2312,6 +2312,33 @@ test btree-14.72 {undo and redo of tag clear over an elide tag} -setup {
     destroy .t
 } -result {{} aaabbbccc {} aaabbbccc}
 
+test btree-14.73 {tag add of an elide tag: undo record must be set up before the elide update} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # UpdateElideInfo merges the char segments neighboring a removed switch
+    # (zones merging as the elision extends); the segments recorded for the
+    # undo range were freed before being converted to indices.
+    .t debug 1
+    .t tag configure E -elide 1
+    .t insert end "abcdefghij0123456789ABCDEFGHIJ"
+    .t tag add E 1.20 1.23
+    .t insert 1.3 pqr
+    .t tag add E 1.0 1.22
+    .t insert 1.16 pqr
+    .t delete 1.9 1.18
+    .t tag add E 1.14 1.27
+    set res [list [.t get 1.0 end-1c] [.t tag ranges E]]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges E]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {abcpqrdefr3456789ABCDEFGHIJ {1.0 1.27} {} abcpqrdefr3456789ABCDEFGHIJ {1.0 1.27}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

@@ -10645,23 +10645,13 @@ TkBTreeTag(
 
     TreeTagNode(rootPtr, &data, 0, firstPtr, lastPtr, 1);
 
-    if (add && (tagPtr->elide >= 0)) {
-	/*
-	 * In case of elision we have to inspect each segment, because a
-	 * Branch or a Link segment has to be inserted/removed if required.
-	 *
-	 * NOTE: Currently, when using elision (tag option -elide), TkBTreeTag
-	 * can be considerably slower than without. In return the lookup, whether
-	 * a segment is elided, is super-fast now, and this has more importance -
-	 * in general inserting/removing an elided range will be done only once,
-	 * but the lookup for the elision option is a frequent use case.
-	 *
-	 * Note that UpdateElideInfo needs the new state when adding the tag,
-	 * so we are doing this after the tag has been added.
-	 */
-
-	UpdateElideInfo(sharedTextPtr, tagPtr, &segPtr1, &segPtr2, ELISION_HAS_BEEN_ADDED);
-    }
+    /*
+     * The undo information has to be set up before the elision update:
+     * UpdateElideInfo merges the char segments neighboring a removed
+     * switch, which can free the segments recorded in data.firstSegPtr/
+     * data.lastSegPtr. The positions are not affected by the update (the
+     * switches have zero size).
+     */
 
     if (undoInfo && (data.sizeOfLengths > 0 || data.currLength > 0)) {
 	TkTextIndex index1 = *indexPtr1;
@@ -10754,6 +10744,24 @@ TkBTreeTag(
     }
 
     assert(data.lengths == data.lengthsBuf);
+
+    if (add && (tagPtr->elide >= 0)) {
+	/*
+	 * In case of elision we have to inspect each segment, because a
+	 * Branch or a Link segment has to be inserted/removed if required.
+	 *
+	 * NOTE: Currently, when using elision (tag option -elide), TkBTreeTag
+	 * can be considerably slower than without. In return the lookup, whether
+	 * a segment is elided, is super-fast now, and this has more importance -
+	 * in general inserting/removing an elided range will be done only once,
+	 * but the lookup for the elision option is a frequent use case.
+	 *
+	 * Note that UpdateElideInfo needs the new state when adding the tag,
+	 * so we are doing this after the tag has been added.
+	 */
+
+	UpdateElideInfo(sharedTextPtr, tagPtr, &segPtr1, &segPtr2, ELISION_HAS_BEEN_ADDED);
+    }
 
     CleanupSplitPoint(segPtr1, sharedTextPtr);
     if (segPtr1 != segPtr2) {
