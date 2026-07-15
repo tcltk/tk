@@ -7801,12 +7801,20 @@ DeleteRange(
 	TkBTreeFreeSegment(savedLinkPtr);
 	TkBTreeFreeSegment(savedBranchPtr);
     } else if (savedLinkPtr) {
-	savedLinkPtr->tagInfoPtr = NULL; /* discard counterpart stashed by LinkDeleteProc */
+	if (savedLinkPtr->tagInfoPtr) {
+	    /* discard counterpart stashed by LinkDeleteProc */
+	    TkBTreeFreeSegment((TkTextSegment *) savedLinkPtr->tagInfoPtr);
+	    savedLinkPtr->tagInfoPtr = NULL;
+	}
 	savedLinkPtr->sectionPtr = NULL; /* sections are rebuilt just below */
 	LinkSwitch(linePtr1, firstSegPtr, savedLinkPtr);
 	linePtr1->numLinks += 1;
     } else if (savedBranchPtr) {
-	savedBranchPtr->tagInfoPtr = NULL; /* discard counterpart stashed by BranchDeleteProc */
+	if (savedBranchPtr->tagInfoPtr) {
+	    /* discard counterpart stashed by BranchDeleteProc */
+	    TkBTreeFreeSegment((TkTextSegment *) savedBranchPtr->tagInfoPtr);
+	    savedBranchPtr->tagInfoPtr = NULL;
+	}
 	savedBranchPtr->sectionPtr = NULL; /* sections are rebuilt just below */
 	LinkSwitch(linePtr1, firstSegPtr, savedBranchPtr);
 	linePtr1->numBranches += 1;
@@ -16423,12 +16431,22 @@ BranchDeleteProc(
     }
 
     if (flags & DELETE_BRANCHES) {
-	segPtr->tagInfoPtr = NULL; /* this may still hold the counterpart (see below) */
+	if (segPtr->tagInfoPtr) {
+	    /* this still holds the stashed counterpart (see below) */
+	    TkBTreeFreeSegment((TkTextSegment *) segPtr->tagInfoPtr);
+	    segPtr->tagInfoPtr = NULL;
+	}
 	TkBTreeFreeSegment(segPtr);
 	return 1;
     }
 
-    /* Save old relationships for undo (we misuse an unused pointer). */
+    /*
+     * Save old relationships for undo (we misuse an unused pointer). The
+     * stash holds a reference: the counterpart may be annihilated by an
+     * elision update before the token performs (see UpdateElideInfo), the
+     * restore proc has to see the annihilation marker, not freed memory.
+     */
+    segPtr->body.branch.nextPtr->refCount += 1;
     segPtr->tagInfoPtr = (TkTextTagSet *) segPtr->body.branch.nextPtr;
     return 0;
 }
@@ -16456,9 +16474,23 @@ BranchRestoreProc(
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     if (segPtr->tagInfoPtr) {
-	/* Restore old relationship. */
-	segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+	TkTextSegment *counterpartPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+
 	segPtr->tagInfoPtr = NULL;
+	if (!counterpartPtr->body.link.prevPtr) {
+	    /*
+	     * The stashed counterpart has been annihilated by an elision
+	     * update (see UpdateElideInfo), the old relationship cannot be
+	     * restored. Drop this switch too, the elide topology is
+	     * recomputed from the tags after the restore.
+	     */
+	    TkBTreeFreeSegment(counterpartPtr);
+	    TkBTreeFreeSegment(segPtr);
+	    return 0;
+	}
+	/* Restore old relationship, and release the stash reference. */
+	segPtr->body.branch.nextPtr = counterpartPtr;
+	TkBTreeFreeSegment(counterpartPtr);
     } else if (!segPtr->body.branch.nextPtr) {
 	/*
 	 * This switch has been annihilated by an elision update while it was
@@ -16626,12 +16658,20 @@ LinkDeleteProc(
     }
 
     if (flags & DELETE_BRANCHES) {
-	segPtr->tagInfoPtr = NULL; /* this may still hold the counterpart (see below) */
+	if (segPtr->tagInfoPtr) {
+	    /* this still holds the stashed counterpart (see below) */
+	    TkBTreeFreeSegment((TkTextSegment *) segPtr->tagInfoPtr);
+	    segPtr->tagInfoPtr = NULL;
+	}
 	TkBTreeFreeSegment(segPtr);
 	return 1;
     }
 
-    /* Save old relationships for undo (we have misused an unused pointer). */
+    /*
+     * Save old relationships for undo (we have misused an unused pointer).
+     * The stash holds a reference, see BranchDeleteProc.
+     */
+    segPtr->body.link.prevPtr->refCount += 1;
     segPtr->tagInfoPtr = (TkTextTagSet *) segPtr->body.link.prevPtr;
     return 0;
 }
@@ -16659,9 +16699,18 @@ LinkRestoreProc(
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     if (segPtr->tagInfoPtr) {
-	/* Restore old relationship (misuse of an unused pointer). */
-	segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+	TkTextSegment *counterpartPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+
 	segPtr->tagInfoPtr = NULL;
+	if (!counterpartPtr->body.branch.nextPtr) {
+	    /* Stashed counterpart annihilated, see BranchRestoreProc. */
+	    TkBTreeFreeSegment(counterpartPtr);
+	    TkBTreeFreeSegment(segPtr);
+	    return 0;
+	}
+	/* Restore old relationship (misuse of an unused pointer). */
+	segPtr->body.link.prevPtr = counterpartPtr;
+	TkBTreeFreeSegment(counterpartPtr);
     } else if (!segPtr->body.link.prevPtr) {
 	/* Annihilated while enrolled in this token, see BranchRestoreProc. */
 	TkBTreeFreeSegment(segPtr);

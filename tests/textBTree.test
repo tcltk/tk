@@ -2104,6 +2104,29 @@ test btree-14.57 {link variant: redo of an insert adjacent to an elided range en
     destroy .t
 } -result [list {} "bhbxx\nill" {1.0 1.3}]
 
+test btree-14.58 {undo of a delete merging two elided ranges, unelided in the meantime} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The switches dying inside the deletion stash their counterparts in
+    # the token; the counterparts die afterwards by the un-eliding. The
+    # stale stashes must be detected and dropped at the undo.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add E0 1.0 1.3
+    .t tag add E0 1.6 1.9
+    .t tag configure E0 -elide 1
+    .t edit separator
+    .t delete 1.1 1.7
+    .t tag configure E0 -elide 0
+    .t edit undo
+    set res [list [.t get 1.0 end-1c] [.t tag ranges E0] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aaabbbccc {1.0 1.3 1.6 1.9} aaabbbccc}
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {
