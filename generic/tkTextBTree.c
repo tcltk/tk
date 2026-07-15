@@ -12646,8 +12646,18 @@ TkBTreeStartSearch(
 	} else {
 	    TkTextLine *linePtr = segPtr->sectionPtr->linePtr;
 
+	    if (linePtr == TkTextIndexGetLine(indexPtr2)) {
+		/* the rest of the range lies inside this segment */
+		return;
+	    }
+	    linePtr = linePtr->nextPtr;
 	    if (linePtr == TkTextIndexGetLine(indexPtr2)
-		    || (linePtr = linePtr->nextPtr) == TkTextIndexGetLine(indexPtr2)) {
+		    && TkTextIndexIsStartOfLine(indexPtr2)) {
+		/*
+		 * The next line is the end line, but only its start: nothing
+		 * left to search. Otherwise the end line has to be searched
+		 * as well - a toggle at its head was missed here before.
+		 */
 		return;
 	    }
 	    TkTextIndexSetToStartOfLine2(&searchPtr->curIndex, linePtr);

@@ -3384,6 +3384,31 @@ test btree-14.98 {undo of a tag clear: consume the skip on exact segment fit} -s
     destroy .t
 } -result {{1.0 1.3} {1.4 3.2} {} {2.1 3.2} {1.0 1.3} {1.4 3.2}}
 
+test btree-14.99 {tag search: range start inside the segment ending a line} -setup {
+    destroy .t
+    text .t
+} -body {
+    # When the search start falls inside a segment which terminates its line
+    # (an unsplit line, e.g. an index on the newline), the search jumped to
+    # the next line and gave up when that line was the end line - missing
+    # every toggle on it: tag nextrange returned nothing, and tag remove
+    # (whose FindSplitPoints probes the range with this search) silently
+    # kept the tag.
+    .t debug 1
+    .t insert end "abcdefgh\nijklmnop\nqrstuvwx"
+    .t tag configure T0 -underline 1
+    .t tag add T0 2.0 2.1
+    set res [list [.t tag nextrange T0 1.8 2.5]]
+    .t tag remove T0 1.8 2.5
+    lappend res [.t tag ranges T0]
+    .t tag add T0 2.0 2.1
+    lappend res [.t tag nextrange T0 1.8 2.0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{2.0 2.1} {} {}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
