@@ -2773,6 +2773,705 @@ test btree-14.91 {elide recompute walk: link insertion search anchored on a mark
     destroy .t
 } -result {1 {} {1.1 1.3 1.8 1.9}}
 
+test btree-14.92 {elide walk: a removed switch must not swallow the transition} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+    # The number of displayed chars must match the elision by tags (E0/E1
+    # are the only elide tags, both -elide 1, so plain range union applies).
+    proc elideConsistent-14-92 {w} {
+	set iv {}
+	foreach t {E0 E1} {
+	    foreach {a b} [$w tag ranges $t] {
+		lappend iv [list [$w count -chars 1.0 $a] [$w count -chars 1.0 $b]]
+	    }
+	}
+	set hidden 0
+	set last -1
+	foreach r [lsort -integer -index 0 $iv] {
+	    lassign $r a b
+	    if {$a < $last} { set a $last }
+	    if {$b > $a} { incr hidden [expr {$b - $a}] ; set last $b }
+	}
+	set total [$w count -chars 1.0 end]
+	expr {[$w count -displaychars 1.0 end] == $total - $hidden}
+    }
+} -body {
+    # Undoing the delete restores the chars without their -undo 0 elide tag,
+    # and the recompute finds a link where elision now starts: the walk
+    # removed the link but the else-if chain swallowed the transition of the
+    # content segment behind it, leaving the still elided remainder of the
+    # zone without an opening branch (silent, the display shows tagged-elided
+    # text) - the pending E1 close then detonates a later undo. Recorded fuzz
+    # scenario (fuzz_tagops seed 969 variant, P12 detonator).
+    .t debug 1
+    .t insert end "lgepvgspifn\nhilnuomspypcqclcoizgbazi"
+    foreach {t opts} {E0 {-elide 1} E1 {-elide 1 -undo 0} T0 {-underline 0} T1 {-undo 0 -underline 0}} {
+	.t tag configure $t {*}$opts
+    }
+    .t edit reset
+    .t tag add E0 1.0 1.1
+    .t edit separator
+    .t tag remove T0 1.3 1.10
+    .t edit separator
+    .t tag add T1 1.1 1.5
+    .t edit separator
+    .t tag add E0 2.7 2.15
+    .t edit separator
+    .t tag add E1 2.9 2.22
+    .t edit separator
+    .t tag add E0 1.3 1.5
+    .t edit separator
+    .t delete 1.1 2.22
+    .t edit separator
+    .t tag add T1 1.1 1.3
+    .t edit separator
+    .t tag add E1 1.1 1.3
+    .t edit separator
+    .t tag remove T1 1.1 1.3
+    .t edit separator
+    .t tag remove E0 1.2 1.3
+    .t edit separator
+    .t tag add E0 1.1 1.3
+    .t edit separator
+    .t edit undo
+    set res [elideConsistent-14-92 .t]
+    while {[.t edit canundo]} { .t edit undo }
+    lappend res [string equal [.t get 1.0 end-1c] "lgepvgspifn\nhilnuomspypcqclcoizgbazi"]
+    lappend res [elideConsistent-14-92 .t]
+    while {[.t edit canredo]} { .t edit redo }
+    while {[.t edit canundo]} { .t edit undo }
+    while {[.t edit canredo]} { .t edit redo }
+    lappend res [elideConsistent-14-92 .t]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+    rename elideConsistent-14-92 {}
+} -result {1 1 1 1}
+
+test btree-14.93 {elide walk: enforce reciprocity when the kept link claims the kept branch} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # A restored switch rewrites both directions of its old pairing and
+    # steals a counterpart which the previous reconcile had re-paired. The
+    # walk then met the orphaned link claiming the kept branch one-way and
+    # trusted it without checking reciprocity, leaving the pairing crossed
+    # (BranchCheckProc: related link is not pointing to this branch).
+    # Recorded fuzz sequence (fuzz_tagops seed 99).
+    .t debug on
+    .t insert end ktrrfgnzkgkhlltyqizicuec
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1 -undo 0
+    .t tag configure T0 -underline 0
+    .t tag configure T1 -undo 0 -underline 0
+    .t edit reset
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t insert 1.10 dd
+    .t edit separator
+    .t edit canredo
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t insert 1.13 qqq
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.13 > 1.8
+    .t compare 1.8 == 1.13
+    .t tag add E1 1.8 1.13
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.5 > 1.15
+    .t compare 1.5 == 1.15
+    .t tag remove T0 1.5 1.15
+    .t edit separator
+    .t edit canredo
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.8 > 1.16
+    .t compare 1.8 == 1.16
+    .t tag add E0 1.8 1.16
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.4 > 1.26
+    .t compare 1.4 == 1.26
+    .t tag remove E0 1.4 1.26
+    .t edit separator
+    .t edit canredo
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.3 > 1.17
+    .t compare 1.3 == 1.17
+    .t tag remove T0 1.3 1.17
+    .t edit separator
+    .t edit canundo
+    .t edit undo
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.22 > 1.8
+    .t compare 1.8 == 1.22
+    .t tag add E1 1.8 1.22
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.12 > 1.12
+    .t compare 1.12 == 1.12
+    .t edit canredo
+    .t edit redo
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.11 > 1.7
+    .t compare 1.7 == 1.11
+    .t tag add T1 1.7 1.11
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.4 > 1.28
+    .t compare 1.4 == 1.28
+    .t tag add E0 1.4 1.28
+    .t edit separator
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    set res [list [string length [.t get 1.0 end-1c]] [.t tag ranges E0] [.t tag ranges E1]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {29 {1.4 1.28} {1.8 1.10 1.12 1.13 1.16 1.25}}
+
+test btree-14.94 {elide walk: a link insertion must not silently orphan the mutual old fork} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # A link inserted by the walk re-wires the open branch away from its
+    # mutual link; the orphan keeps closing an elided range ahead and must be
+    # remembered for positional re-pairing (dangling), otherwise the post
+    # loop pairs a pending branch with a link stolen from another mutual
+    # pair (LinkCheckProc: related branch is not pointing to this link).
+    # Recorded fuzz sequence (fuzz_tagops seed 683, multiline).
+    .t debug on
+    .t insert end {gwodrykyt
+pnukgwqdbhmyxvqdxt
+gktecqwnscpozqkggbn
+ktjshczjwpqxw}
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1 -undo 0
+    .t tag configure T0 -underline 0
+    .t tag configure T1 -undo 0 -underline 0
+    .t edit reset
+    .t index end-1c
+    .t count -chars 4.0 {4.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 4.13 > 2.7
+    .t compare 2.7 == 4.13
+    .t tag add T1 2.7 4.13
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 4.0 {4.0 lineend}
+    .t compare 1.1 > 4.3
+    .t compare 1.1 == 4.3
+    .t tag add T0 1.1 4.3
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 1.0 > 2.11
+    .t compare 1.0 == 2.11
+    .t tag add T1 1.0 2.11
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 4.0 {4.0 lineend}
+    .t compare 1.9 > 4.6
+    .t compare 1.9 == 4.6
+    .t tag add T0 1.9 4.6
+    .t edit separator
+    .t edit canundo
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 3.0 {3.0 lineend}
+    .t compare 1.7 > 3.14
+    .t compare 1.7 == 3.14
+    .t tag add T1 1.7 3.14
+    .t edit separator
+    .t index end-1c
+    .t count -chars 4.0 {4.0 lineend}
+    .t index end-1c
+    .t count -chars 3.0 {3.0 lineend}
+    .t compare 4.13 > 3.19
+    .t compare 3.19 == 4.13
+    .t tag remove T0 3.19 4.13
+    .t edit separator
+    .t index end-1c
+    .t count -chars 4.0 {4.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 4.13 > 2.0
+    .t compare 2.0 == 4.13
+    .t tag add E1 2.0 4.13
+    .t edit separator
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 2.9 > 1.7
+    .t compare 1.7 == 2.9
+    .t tag add E0 1.7 2.9
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 1.1 > 2.2
+    .t compare 1.1 == 2.2
+    .t delete 1.1 2.2
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.9 > 1.17
+    .t compare 1.9 == 1.17
+    .t tag add E0 1.9 1.17
+    .t edit separator
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 2.17 > 2.17
+    .t compare 2.17 == 2.17
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 2.13 > 2.10
+    .t compare 2.10 == 2.13
+    .t delete 2.10 2.13
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.13 > 1.9
+    .t compare 1.9 == 1.13
+    .t delete 1.9 1.13
+    .t edit separator
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 2.14 > 1.8
+    .t compare 1.8 == 2.14
+    .t tag add E0 1.8 2.14
+    .t edit separator
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    set res [list [string length [.t get 1.0 end-1c]] [.t tag ranges E0] [.t tag ranges E1]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {44 {1.1 2.14} {1.1 3.13}}
+
+test btree-14.95 {elide walk: dangling switch beyond the range resolved by elide state} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The re-pairing of a kept link takes the kept branch away from its
+    # mutual old fork which lies beyond the processed range; the leftover
+    # dangling link is resolved at walk exit from the actual elide state at
+    # its position (remove when the preceding content is not elided anymore,
+    # recompute the surrounding tag-elided range otherwise). Recorded fuzz
+    # sequence (fuzz_tagops seed 847, multiline).
+    .t debug on
+    .t insert end {mglwzjrvyvhhrmntppswcsixwjx
+phflavrk}
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1 -undo 0
+    .t tag configure T0 -underline 0
+    .t tag configure T1 -undo 0 -underline 0
+    .t edit reset
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.6 > 1.2
+    .t compare 1.2 == 1.6
+    .t tag remove T1 1.2 1.6
+    .t edit separator
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 2.3 > 2.5
+    .t compare 2.3 == 2.5
+    .t tag remove E0 2.3 2.5
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.23 > 1.0
+    .t compare 1.0 == 1.23
+    .t tag clear 1.0 1.23
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.2 > 1.6
+    .t compare 1.2 == 1.6
+    .t tag add E0 1.2 1.6
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.19 > 1.11
+    .t compare 1.11 == 1.19
+    .t tag add T1 1.11 1.19
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.2 > 1.19
+    .t compare 1.2 == 1.19
+    .t delete 1.2 1.19
+    .t edit separator
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 2.3 > 1.4
+    .t compare 1.4 == 2.3
+    .t tag add E0 1.4 2.3
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.2 > 1.1
+    .t compare 1.1 == 1.2
+    .t tag add E1 1.1 1.2
+    .t edit separator
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 2.3 > 2.5
+    .t compare 2.3 == 2.5
+    .t tag add E1 2.3 2.5
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 1.8 > 2.4
+    .t compare 1.8 == 2.4
+    .t tag remove E0 1.8 2.4
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.9 > 1.3
+    .t compare 1.3 == 1.9
+    .t delete 1.3 1.9
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.1 > 1.3
+    .t compare 1.1 == 1.3
+    .t tag add T1 1.1 1.3
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t insert 1.0 uuu
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.1 > 1.1
+    .t compare 1.1 == 1.1
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 2.0 {2.0 lineend}
+    .t compare 1.0 > 2.4
+    .t compare 1.0 == 2.4
+    .t tag add T1 1.0 2.4
+    .t edit separator
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t index end-1c
+    .t count -chars 1.0 {1.0 lineend}
+    .t compare 1.3 > 1.1
+    .t compare 1.1 == 1.3
+    .t delete 1.1 1.3
+    .t edit separator
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit undo
+    .t edit canundo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    .t edit redo
+    .t edit canredo
+    set res [list [string length [.t get 1.0 end-1c]] [.t tag ranges E0] [.t tag ranges E1]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {14 {} {1.2 1.3 2.3 2.5}}
+
+test btree-14.96 {tag clear across nodes: backward bound anchored on the range end} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The restriction of the processed range anchored the backward search
+    # for the last tagged segment one char before the range START (typo),
+    # asserting (or corrupting the restricted range) on every tag clear
+    # crossing two level-0 nodes (> 32 lines); the restricted end must also
+    # lie one past the found segment, and the backstep must not use display
+    # counting (an elided tail would be jumped over).
+    .t debug 1
+    for {set i 1} {$i <= 300} {incr i} { .t insert end "line$i abcdefgh\n" }
+    .t tag configure T0 -underline 1
+    .t tag configure E0 -elide 1
+    .t tag add T0 5.2 5.6
+    .t tag add T0 250.2 250.6
+    .t tag clear 4.0 251.0
+    set res [list [.t tag ranges T0]]
+    .t tag add E0 249.0 250.0
+    .t tag add T0 249.2 249.6
+    .t tag add T0 2.0 2.4
+    .t tag add T0 280.0 280.4
+    .t tag clear 100.0 250.0
+    lappend res [.t tag ranges T0] [.t tag ranges E0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{} {2.0 2.4 280.0 280.4} {}}
+
+test btree-14.97 {undo of a tag clear crossing nodes: flush every dirty node} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The restore walk of UndoClearTagsPerform only refreshed the node tag
+    # sums when a node boundary was crossed while flushing line changes: a
+    # node left while skipping the gap between two restored chunks kept
+    # stale sums (panic "sum of node tag information is wrong"), also
+    # reachable with a mono-node clear when an insertion changes the node
+    # partition between the clear and its undo.
+    .t debug 1
+    for {set i 1} {$i <= 300} {incr i} { .t insert end "line$i abcdefgh\n" }
+    .t tag configure T0 -underline 1
+    .t tag add T0 5.2 5.6
+    .t tag add T0 250.2 250.6
+    .t edit reset
+    .t tag clear 4.0 251.0
+    .t edit separator
+    .t edit undo
+    set res [list [.t tag ranges T0]]
+    .t edit redo
+    lappend res [.t tag ranges T0]
+    .t edit undo
+    for {set i 0} {$i < 10} {incr i} { .t insert end "x$i y\n" }
+    .t edit separator
+    .t tag clear 4.0 251.0
+    .t edit separator
+    for {set i 0} {$i < 10} {incr i} { .t insert end "z$i w\n" }
+    .t edit separator
+    .t edit undo
+    .t edit undo
+    lappend res [.t tag ranges T0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{5.2 5.6 250.2 250.6} {} {5.2 5.6 250.2 250.6}}
+
+test btree-14.98 {undo of a tag clear: consume the skip on exact segment fit} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The split consuming a chunk's skip was guarded by size != segPtr->size:
+    # when the chunk size coincides with the current segment size (layout
+    # after the post-clear joins), the skip was swallowed - the chunk was
+    # restored shifted to the left and its tail was never restored (silent).
+    .t debug 1
+    .t insert end "abcdefgh\nijklmnop\nqrstuvwx"
+    .t tag configure T0 -underline 1
+    .t tag configure T1 -overstrike 1
+    .t tag add T0 1.0 1.3
+    .t tag add T1 1.4 3.2
+    .t edit reset
+    .t tag clear 1.0 2.1
+    .t edit undo
+    set res [list [.t tag ranges T0] [.t tag ranges T1]]
+    .t edit redo
+    lappend res [.t tag ranges T0] [.t tag ranges T1]
+    .t edit undo
+    lappend res [.t tag ranges T0] [.t tag ranges T1]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.0 1.3} {1.4 3.2} {} {2.1 3.2} {1.0 1.3} {1.4 3.2}}
+
+test btree-14.99 {tag search: range start inside the segment ending a line} -setup {
+    destroy .t
+    text .t
+} -body {
+    # When the search start falls inside a segment which terminates its line
+    # (an unsplit line, e.g. an index on the newline), the search jumped to
+    # the next line and gave up when that line was the end line - missing
+    # every toggle on it: tag nextrange returned nothing, and tag remove
+    # (whose FindSplitPoints probes the range with this search) silently
+    # kept the tag.
+    .t debug 1
+    .t insert end "abcdefgh\nijklmnop\nqrstuvwx"
+    .t tag configure T0 -underline 1
+    .t tag add T0 2.0 2.1
+    set res [list [.t tag nextrange T0 1.8 2.5]]
+    .t tag remove T0 1.8 2.5
+    lappend res [.t tag ranges T0]
+    .t tag add T0 2.0 2.1
+    lappend res [.t tag nextrange T0 1.8 2.0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{2.0 2.1} {} {}}
+
+test btree-14.100 {elide walk: adjacent switches left by a verbatim restore} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # Undoing the delete which had merged two adjacent elided zones restores
+    # the inner switches verbatim, next to the switches the previous
+    # reconcile had settled: the walk only remembered the last switch of an
+    # adjacent run, the overwritten one survived unprocessed (mismatch in
+    # the number of links and branches; with a link alone in its section the
+    # removal also used to corrupt the section list). The -undo 0 elide tag
+    # is essential: the restored chars come back untagged, so the zones must
+    # be recomputed instead of restored.
+    .t debug 1
+    .t insert end "abcde"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1 -undo 0
+    .t edit reset
+    .t tag add E0 1.2 1.3
+    .t edit separator
+    .t tag add E1 1.0 1.1
+    .t edit separator
+    .t delete 1.1 1.2
+    .t edit separator
+    .t delete 1.0 1.4
+    .t edit separator
+    while {[.t edit canundo]} { .t edit undo }
+    set res [list [string equal [.t get 1.0 end-1c] "abcde"] [.t tag ranges E0] [.t tag ranges E1]]
+    while {[.t edit canredo]} { .t edit redo }
+    while {[.t edit canundo]} { .t edit undo }
+    lappend res [string equal [.t get 1.0 end-1c] "abcde"] [.t tag ranges E0] [.t tag ranges E1]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {1 {} {} 1 {} {}}
+
+test btree-14.101 {adding a suppressor tag starting inside an elided range} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Adding a tag configured -elide 0 (an explicit suppressor) over a range
+    # starting inside an elided zone un-hides the range start: the walk has
+    # to close the zone there and searches the enclosing branch, but the
+    # anchor is evaluated with the new tag state and the search asserted
+    # (the branch belongs to the old state - evaluate without the tag, like
+    # ELISION_WILL_BE_REMOVED does).
+    .t debug 1
+    .t insert end "abcdefghij"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 0
+    .t tag add E0 1.2 1.8
+    .t tag add E1 1.4 1.6
+    set res [list [.t count -displaychars 1.0 end]]
+    .t tag remove E1 1.4 1.6
+    lappend res [.t count -displaychars 1.0 end]
+    .t tag add E1 1.2 1.8
+    lappend res [.t count -displaychars 1.0 end]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {7 5 11}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
