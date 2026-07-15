@@ -1945,6 +1945,104 @@ test btree-14.49 {undo multiline delete across the branch and the elided newline
     destroy .t
 } -result [list {2.2 3.1} "aaa\nbbcc"]
 
+test btree-14.50 {untagged insert at the junction of adjacent elide tags splits the range} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The inserted char receives the intersection of the neighboring tag
+    # sets (tagging mode "within"), which elides nothing: the enclosing
+    # branch/link pair has to be split (the char used to stay hidden).
+    .t debug 1
+    .t insert end "abcdefgh"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1
+    .t tag add E0 1.1 1.4
+    .t tag add E1 1.4 1.6
+    .t insert 1.4 "i"
+    set res [list [.t count -displaychars 1.0 end] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {5 aigh}
+
+test btree-14.51 {elided insert after an untagged insert at an elide tag junction} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Used to panic (mismatch in number of links and branches): the next
+    # UpdateElideInfo run was bounded by the non-elided island and stole
+    # the link of the enclosing range.
+    .t debug 1
+    .t insert end "abcdefgh"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1
+    .t tag add E0 1.1 1.4
+    .t tag add E1 1.4 1.6
+    .t insert 1.4 "i"
+    .t insert 1.2 "s"
+    set res [list [.t count -displaychars 1.0 end] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {5 aigh}
+
+test btree-14.52 {untagged insert at elide tag junction, multiline zones} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "abc\ndefgh\nxyz"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1
+    .t tag add E0 1.1 2.3
+    .t tag add E1 2.3 3.2
+    .t insert 2.3 "i"
+    .t insert 2.1 "s"
+    set res [list [.t count -displaychars 1.0 end] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {4 aiz}
+
+test btree-14.53 {delete up to the branch after an untagged insert at a junction} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Used to panic (misplaced branch), fuzz seed 251 family.
+    .t debug 1
+    .t insert end "abcdefgh"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1
+    .t tag add E0 1.1 1.4
+    .t tag add E1 1.4 1.6
+    .t insert 1.4 "i"
+    .t delete 1.1 1.4
+    set res [list [.t get 1.0 end-1c] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aiefgh aigh}
+
+test btree-14.54 {insert at the end boundary of an elided range stays outside} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "abcdefgh"
+    .t tag configure E0 -elide 1
+    .t tag add E0 1.1 1.6
+    .t insert 1.6 "i"
+    set res [list [.t count -displaychars 1.0 end] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {5 aigh}
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

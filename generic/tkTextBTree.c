@@ -4998,6 +4998,50 @@ TkBTreeInsertChars(
 		hyphenElideTagPtr = NULL;
 	    }
 	}
+    } else if (!hyphenElideTagPtr && TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	TkTextSegment *predPtr = firstSegPtr->prevPtr;
+	TkTextLine *prevLinePtr = firstSegPtr->sectionPtr->linePtr->prevPtr;
+
+	/*
+	 * The new segments are not elided, but they may have been inserted
+	 * inside an elided range: this happens when the insertion point is
+	 * the meeting point of two distinct elide tags, because the new
+	 * segments received the intersection of the neighboring tag sets,
+	 * which does not contain the elide tags anymore. Then the elided
+	 * range has to be split, a branch/link pair must not span non-elided
+	 * content. Search the preceding content segment, but do not skip
+	 * branches or links: content inserted right after a link (or right
+	 * before a branch) lies outside of any elided range.
+	 */
+
+	while (predPtr && !predPtr->tagInfoPtr && predPtr->typePtr->group != SEG_GROUP_BRANCH) {
+	    predPtr = predPtr->prevPtr; /* skip marks */
+	}
+	if (!predPtr && prevLinePtr) {
+	    predPtr = prevLinePtr->lastPtr; /* newline of previous line */
+	}
+	if (predPtr
+		&& predPtr->tagInfoPtr
+		&& SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	    /*
+	     * Recompute the elide topology of the whole enclosing range: the
+	     * new segments split it, and the closing link of the trailing
+	     * part lies beyond the insertion point.
+	     */
+
+	    TkTextSegment *fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    TkTextSegment *lPtr = TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, predPtr);
+
+	    fPtr->protectionFlag = 1;
+	    lPtr->protectionFlag = 1;
+
+	    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+
+	    CleanupSplitPoint(fPtr, sharedTextPtr);
+	    if (fPtr != lPtr) {
+		CleanupSplitPoint(lPtr, sharedTextPtr);
+	    }
+	}
     }
 
     if (hyphenElideTagPtr) {
