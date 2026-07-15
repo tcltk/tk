@@ -11471,7 +11471,14 @@ TkBTreeClearTags(
 	memset(&data, 0, sizeof(data));
 	rootPtr = TkBTreeGetRoot(sharedTextPtr->tree); /* we must start at top level */
 
-	if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	if (wholeText && TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	    /*
+	     * All the tags will be gone, so all the switches have to go. A
+	     * partial clear is handled after the tags have been cleared (a
+	     * recompute, see below): a range boundary may lie inside of an
+	     * elided range, whose outside part keeps its tags, so stripping
+	     * the range would orphan the switches of such a range.
+	     */
 	    UpdateElideInfo(sharedTextPtr, NULL, &segPtr1, &segPtr2, ELISION_WILL_BE_REMOVED);
 	}
 
@@ -11521,7 +11528,12 @@ TkBTreeClearTags(
 	    anyChanges = CheckIfAnyTagIsAffected(sharedTextPtr, affectedTagInfoPtr, discardSelection);
 
 	    if (undoToken) {
+		/*
+		 * Nothing may have been recorded even with changes made: the
+		 * cleared range may only carry tags excluded from undo.
+		 */
 		if (anyChanges
+			&& data.firstSegPtr
 			&& !TkTextTagBitContainsSet(sharedTextPtr->selectionTags, affectedTagInfoPtr)) {
 		    TkTextIndex index1 = startIndex;
 		    TkTextIndex index2 = endIndex;
@@ -11554,6 +11566,37 @@ TkBTreeClearTags(
 		}
 		if (linePtr2 && !TkTextIndexIsStartOfLine(&endIndex)) {
 		    RecomputeLineTagInfo(linePtr2, NULL, sharedTextPtr);
+		}
+
+		if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
+		    /*
+		     * Recompute the elide topology of the cleared range from
+		     * the current tag information, extended to the boundaries
+		     * of the enclosing elided ranges (a range boundary may
+		     * lie inside of an elided range which shrinks with this
+		     * clearing).
+		     */
+
+		    TkTextSegment *fPtr = segPtr1;
+		    TkTextSegment *lPtr = segPtr2;
+		    TkTextSegment *predPtr = GetPrevTagInfoSegment(segPtr1);
+
+		    if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+			fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+		    }
+		    if (lPtr->tagInfoPtr && SegmentIsElided(sharedTextPtr, lPtr, NULL)) {
+			lPtr = ContentBeforeLink(
+				TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, lPtr));
+		    }
+		    fPtr->protectionFlag = 1;
+		    lPtr->protectionFlag = 1;
+		    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+		    if (fPtr != segPtr1 && fPtr != segPtr2) {
+			CleanupSplitPoint(fPtr, sharedTextPtr);
+		    }
+		    if (lPtr != fPtr && lPtr != segPtr1 && lPtr != segPtr2) {
+			CleanupSplitPoint(lPtr, sharedTextPtr);
+		    }
 		}
 	    }
 
@@ -13087,7 +13130,6 @@ TkBTreeFindNextTagged(
     const TkSharedText *sharedTextPtr = TkTextIndexGetShared(indexPtr1);
     const TkTextLine *linePtr = TkTextIndexGetLine(indexPtr1);
     const TkTextSegment *lastPtr = TkTextIndexGetFirstSegment(indexPtr2, NULL);
-    const TkText *textPtr;
     const Node *nodePtr;
 
     /*
@@ -13102,11 +13144,19 @@ TkBTreeFindNextTagged(
 	}
     }
 
+    if (lastPtr->sectionPtr->linePtr == linePtr) {
+	/*
+	 * The end of the search range lies within the first line: the walks
+	 * below would never encounter the boundary segment, and would return
+	 * tagged segments beyond the range.
+	 */
+	return NULL;
+    }
+
     /*
      * At second, search for line containing any tag in current node.
      */
 
-    textPtr = indexPtr1->textPtr;
     nodePtr = linePtr->parentPtr;
 
     if (linePtr != nodePtr->lastPtr && TagSetTestBits(nodePtr->tagonPtr, discardTags)) {
@@ -13126,12 +13176,12 @@ TkBTreeFindNextTagged(
 	return NULL;
     }
 
-    if (textPtr && textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
+    {
 	int lineNo1 = TkBTreeLinesTo(sharedTextPtr->tree, NULL, nodePtr->linePtr, NULL);
 	int lineNo2 = TkTextIndexGetLineNumber(indexPtr2, NULL);
 
 	if (lineNo1 > lineNo2) {
-	    /* We've found a node after text end, so return NULL. */
+	    /* We've found a node after the end of the search range. */
 	    return NULL;
 	}
     }
@@ -13419,7 +13469,6 @@ TkBTreeFindPrevTagged(
     const TkBitField *selTags = discardSelection ? sharedTextPtr->selectionTags : NULL;
     const TkTextLine *linePtr = TkTextIndexGetLine(indexPtr1);
     TkTextSegment *firstPtr = TkTextIndexGetFirstSegment(indexPtr2, NULL);
-    const TkText *textPtr;
     const Node *nodePtr;
 
     /*
@@ -13434,11 +13483,19 @@ TkBTreeFindPrevTagged(
 	}
     }
 
+    if (firstPtr->sectionPtr->linePtr == linePtr) {
+	/*
+	 * The end of the search range lies within the first line: the walks
+	 * below would never encounter the boundary segment, and would return
+	 * tagged segments beyond the range.
+	 */
+	return NULL;
+    }
+
     /*
      * At second, search for line containing any tag in current node.
      */
 
-    textPtr = indexPtr1->textPtr;
     nodePtr = linePtr->parentPtr;
 
     if (linePtr != nodePtr->linePtr && TagSetTestBits(nodePtr->tagonPtr, selTags)) {
@@ -13458,12 +13515,12 @@ TkBTreeFindPrevTagged(
 	return NULL;
     }
 
-    if (textPtr && textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
-	int lineNo1 = TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, nodePtr->lastPtr, NULL);
+    {
+	int lineNo1 = TkBTreeLinesTo(sharedTextPtr->tree, NULL, nodePtr->lastPtr, NULL);
 	int lineNo2 = TkTextIndexGetLineNumber(indexPtr2, NULL);
 
 	if (lineNo1 < lineNo2) {
-	    /* We've found a node before text start, so return NULL. */
+	    /* We've found a node before the end of the search range. */
 	    return NULL;
 	}
     }

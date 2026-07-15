@@ -2339,6 +2339,65 @@ test btree-14.73 {tag add of an elide tag: undo record must be set up before the
     destroy .t
 } -result {abcpqrdefr3456789ABCDEFGHIJ {1.0 1.27} {} abcpqrdefr3456789ABCDEFGHIJ {1.0 1.27}}
 
+test btree-14.74 {tag clear of an untagged range, tagged content beyond the range} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # TkBTreeFindNextTagged returned a tagged segment beyond the search
+    # range (the boundary lies within the first line, the node walk never
+    # encounters it), so FindSplitPoints proceeded on the empty range and
+    # produced twice the same split segment.
+    .t debug 1
+    .t insert end "abcdef\nghijkl"
+    .t tag configure E -elide 1
+    .t tag add E 2.1 2.3
+    .t tag clear 1.0 1.3
+    set res [list [.t get 1.0 end-1c] [.t tag ranges E]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "abcdef\nghijkl" {2.1 2.3}]
+
+test btree-14.75 {tag clear of content carrying only tags excluded from undo} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # Changes are made but nothing is recorded for undo: the undo range
+    # setup dereferenced the null record.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.3 1.6
+    .t edit separator
+    .t tag clear 1.2 1.7
+    set res [list [.t tag ranges B] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{} aaabbbccc}
+
+test btree-14.76 {tag clear of a subrange of an elided range} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The pre-clear strip of the range orphaned the switches of the
+    # enclosing elided range (branch removed, link kept); the elide
+    # topology is recomputed from the new tags after the clearing now.
+    .t debug 1
+    .t insert end "abcdefghij"
+    .t tag configure E -elide 1
+    .t tag add E 1.2 1.8
+    .t edit separator
+    .t tag clear 1.2 1.5
+    set res [list [.t tag ranges E] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.5 1.8} abcdeij}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
