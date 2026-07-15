@@ -3445,6 +3445,33 @@ test btree-14.100 {elide walk: adjacent switches left by a verbatim restore} -se
     destroy .t
 } -result {1 {} {} 1 {} {}}
 
+test btree-14.101 {adding a suppressor tag starting inside an elided range} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Adding a tag configured -elide 0 (an explicit suppressor) over a range
+    # starting inside an elided zone un-hides the range start: the walk has
+    # to close the zone there and searches the enclosing branch, but the
+    # anchor is evaluated with the new tag state and the search asserted
+    # (the branch belongs to the old state - evaluate without the tag, like
+    # ELISION_WILL_BE_REMOVED does).
+    .t debug 1
+    .t insert end "abcdefghij"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 0
+    .t tag add E0 1.2 1.8
+    .t tag add E1 1.4 1.6
+    set res [list [.t count -displaychars 1.0 end]]
+    .t tag remove E1 1.4 1.6
+    lappend res [.t count -displaychars 1.0 end]
+    .t tag add E1 1.2 1.8
+    lappend res [.t count -displaychars 1.0 end]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {7 5 11}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

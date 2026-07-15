@@ -9957,11 +9957,30 @@ UpdateElideInfo(
 			    anchorPtr = GetPrevTagInfoSegment(anchorPtr);
 			    assert(anchorPtr);
 			}
+			int disabledTag = 0;
+
 			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
 			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
 			}
-			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, anchorPtr);
+			if (tagPtr && reason == ELISION_HAS_BEEN_ADDED && tagPtr->elide == 0
+				&& tagPtr->textPtr != (TkText *) tagPtr) {
+			    /*
+			     * An added suppressor (-elide 0) un-hides the anchor,
+			     * but the searched branch belongs to the enclosing
+			     * range of the old state: evaluate without the tag
+			     * (same trick as ELISION_WILL_BE_REMOVED - the tag
+			     * filter only applies with a non-NULL peer).
+			     */
+			    oldTextPtr = tagPtr->textPtr;
+			    tagPtr->textPtr = (TkText *) tagPtr;
+			    disabledTag = 1;
+			}
+			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr,
+				disabledTag ? sharedTextPtr->peers : NULL, anchorPtr);
 			assert(lastBranchPtr->typePtr == &tkTextBranchType);
+			if (disabledTag) {
+			    tagPtr->textPtr = oldTextPtr;
+			}
 			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
 			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
 			}
