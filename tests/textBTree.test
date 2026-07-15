@@ -1742,6 +1742,209 @@ test btree-14.39 {delete to end starting at a line start} -setup {
     destroy .t
 } -result [list "line1\n" 3.0]
 
+test btree-14.40 {undo delete of tail of elided range, elide tag has -undo 0} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.3 1.6
+    .t delete 1.4 1.7
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aaabbbccc {1.3 1.4} aaabbccc aaabcc {1.3 1.4} aaacc aaabbbccc {1.3 1.4} aaabbccc}
+
+test btree-14.41 {undo delete of head of elided range, elide tag has -undo 0} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.3 1.6
+    .t delete 1.1 1.5
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit undo
+    lappend res [.t get 1.0 end-1c] [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aaabbbccc {1.5 1.6} aaabbccc abccc {1.1 1.2} accc aaabbbccc {1.5 1.6} aaabbccc}
+
+test btree-14.42 {undo delete of middle of elided range splits it, -undo 0} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # No switch lies in the deleted range; the restored chars are not
+    # tagged anymore, the range has to be split (used to stay hidden).
+    .t debug 1
+    .t insert end "aaabbbbbccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.3 1.8
+    .t delete 1.4 1.7
+    .t edit undo
+    set res [list [.t tag ranges B] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.3 1.4 1.7 1.8} aaabbbccc}
+
+test btree-14.43 {undo delete of a whole elided range, -undo 0: no ghost zone} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The saved switches must not resurrect an elided range whose tag
+    # is gone from the restored chars.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.3 1.6
+    .t delete 1.2 1.7
+    set res {}
+    .t edit undo
+    lappend res [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t edit undo
+    lappend res [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{} aaabbbccc aacc {} aaabbbccc}
+
+test btree-14.44 {undo delete, elided range covered by -undo 0 and -undo 1 tags} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # C is restored and keeps the range elided, B is not restored.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag configure C -elide 1 -undo 1
+    .t tag add B 1.3 1.6
+    .t tag add C 1.3 1.6
+    .t delete 1.4 1.7
+    .t edit undo
+    set res [list [.t tag ranges B] [.t tag ranges C] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.3 1.4} {1.3 1.6} aaaccc}
+
+test btree-14.45 {undo delete spanning two elided ranges merged by the deletion, -undo 0} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aabbccddee"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.2 1.4
+    .t tag add B 1.6 1.8
+    .t delete 1.3 1.7
+    set res [list [.t get 1.0 end-1c] [.t tag ranges B]]
+    .t edit undo
+    lappend res [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {aabdee {1.2 1.4} {1.2 1.3 1.7 1.8} aabccdee}
+
+test btree-14.46 {undo delete of elided range unelided in the meantime} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The tag is restored but does not elide anymore; the saved switches
+    # must not be restored.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -elide 1
+    .t tag add B 1.3 1.6
+    .t delete 1.2 1.7
+    .t tag configure B -elide 0
+    .t edit undo
+    set res [list [.t tag ranges B] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.3 1.6} aaabbbccc}
+
+test btree-14.47 {undo delete of range whose tag became elided in the meantime} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # No switch in the token; the restored range must become elided.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag configure B -undo 1
+    .t tag add B 1.3 1.6
+    .t delete 1.2 1.7
+    .t tag configure B -elide 1
+    .t edit undo
+    set res [list [.t tag ranges B] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.3 1.6} aaaccc}
+
+test btree-14.48 {undo delete in multiline elided range with elided newline, -undo 0} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.2 3.1
+    set res {}
+    .t delete 2.1 3.1
+    .t edit undo
+    lappend res [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t edit redo
+    .t edit undo
+    lappend res [.t tag ranges B] [.t get -displaychars 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list {1.2 2.1} "aabb\nccc" {1.2 2.1} "aabb\nccc"]
+
+test btree-14.49 {undo multiline delete across the branch and the elided newline, -undo 0} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    .t debug 1
+    .t insert end "aaa\nbbb\nccc"
+    .t tag configure B -elide 1 -undo 0
+    .t tag add B 1.2 3.1
+    .t delete 1.1 2.2
+    .t edit undo
+    set res [list [.t tag ranges B] [.t get -displaychars 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list {2.2 3.1} "aaa\nbbcc"]
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

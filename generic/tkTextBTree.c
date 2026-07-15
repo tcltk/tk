@@ -1336,6 +1336,7 @@ UndoDeletePerform(
     int changeToLineCount = 0;
     int changeToLogicalLineCount = 0;
     int reinsertFirstSegment = 1;
+    int reconcileElide = 0;
     int size = 0;
     unsigned i;
     DEBUG(int hasZeroSize);
@@ -1538,6 +1539,7 @@ UndoDeletePerform(
     tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
     additionalTagoffPtr = TagSetIntersect(additionalTagoffPtr, linePtr->tagonPtr, sharedTextPtr);
     tagoffPtr = TagSetJoinComplementTo(tagoffPtr, additionalTagoffPtr, &tagonPtr, sharedTextPtr);
+    reconcileElide = TkTextTagSetIntersectsBits(tagonPtr, sharedTextPtr->elisionTags);
     tagoffPtr = TkTextTagSetRemove(tagoffPtr, nodePtr->tagoffPtr);
     tagonPtr = TkTextTagSetRemove(tagonPtr, nodePtr->tagonPtr);
     tagonPtr = TkTextTagSetRemove(tagonPtr, tagoffPtr);
@@ -1626,6 +1628,39 @@ UndoDeletePerform(
 
     TkTextInvalidateLineMetrics(sharedTextPtr, NULL,
 	    startLinePtr, changeToLineCount, TK_TEXT_INVALIDATE_INSERT);
+
+    /*
+     * The switches have been restored verbatim, but the restored chars may
+     * carry other tags than at the time of the deletion (tags configured
+     * with -undo 0 are not restored, and the elide state of a tag may have
+     * been reconfigured meanwhile). Recompute the elide topology of the
+     * restored range from the current tag information, extended to the
+     * boundaries of the enclosing elided ranges (an affected switch may
+     * lie outside of the restored range).
+     */
+
+    if (reconcileElide || TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	TkTextSegment *fPtr = GetFirstTagInfoSegment(NULL, startLinePtr);
+	TkTextSegment *lPtr = linePtr->lastPtr;
+	TkTextSegment *predPtr = startLinePtr->prevPtr ? startLinePtr->prevPtr->lastPtr : NULL;
+	TkTextSegment *succPtr = linePtr->nextPtr
+		? GetFirstTagInfoSegment(NULL, linePtr->nextPtr) : NULL;
+
+	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	}
+	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
+	    lPtr = TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr);
+	}
+	fPtr->protectionFlag = 1;
+	lPtr->protectionFlag = 1;
+	UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+	CleanupSplitPoint(fPtr, sharedTextPtr);
+	if (fPtr != lPtr) {
+	    CleanupSplitPoint(lPtr, sharedTextPtr);
+	}
+	TkBTreeIncrEpoch(sharedTextPtr->tree);
+    }
 
     TK_BTREE_DEBUG(TkBTreeCheck((TkTextBTree) treePtr));
 
@@ -9017,10 +9052,15 @@ UpdateElideInfo(
      *		state as long as we are computing this predecessing elide state.
      *
      * 4. All tags will be removed from the specified region.
+     *
+     * 5. tagPtr is NULL and reason is ELISION_HAS_BEEN_CHANGED: recompute the
+     *    elide topology of the region from the current tag information (used
+     *    after undo/redo, where the restored switches may not match the
+     *    restored tags anymore).
      */
 
-    assert(tagPtr || reason == ELISION_WILL_BE_REMOVED);
-    assert(tagPtr || TkBTreeHaveElidedSegments(sharedTextPtr));
+    assert(tagPtr || reason != ELISION_HAS_BEEN_ADDED);
+    assert(tagPtr || reason == ELISION_HAS_BEEN_CHANGED || TkBTreeHaveElidedSegments(sharedTextPtr));
 
     /*
      * This function assumes that the start/end points are already protected.
@@ -9197,7 +9237,8 @@ UpdateElideInfo(
 	}
 
 	if (segPtr->tagInfoPtr) {
-	    int shouldBeElided = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
+	    int shouldBeElided = (tagPtr || reason == ELISION_HAS_BEEN_CHANGED)
+		    ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
 
 	    if (prevBranchPtr) {
@@ -9392,9 +9433,9 @@ UpdateElideInfo(
 	    danglingLinkPtr = NULL;
 	}
 	if (!lastLinkPtr) {
-	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
+	    if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 	    actualElided = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
-	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
+	    if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 
 	    if (actualElided) {
 		/*
