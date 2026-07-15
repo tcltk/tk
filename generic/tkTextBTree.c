@@ -5774,11 +5774,20 @@ UnlinkSegment(
     segPtr->sectionPtr->linePtr->size -= segPtr->size;
     if (--segPtr->sectionPtr->length == 0) {
 	/*
-	 * This can happen in rare cases, e.g. the line is starting with a Branch.
-	 * We have to free the unused section.
+	 * This can happen in rare cases, e.g. the line is starting with a
+	 * Branch, or a link alone in its section is removed. We have to
+	 * free the unused section - unchaining it from both sides, the
+	 * section is not necessarily the first one of the line.
 	 */
-	FreeSection(segPtr->sectionPtr);
-	segPtr->nextPtr->sectionPtr->prevPtr = NULL;
+	TkTextSection *sectionPtr = segPtr->sectionPtr;
+
+	if (sectionPtr->prevPtr) {
+	    sectionPtr->prevPtr->nextPtr = sectionPtr->nextPtr;
+	}
+	if (sectionPtr->nextPtr) {
+	    sectionPtr->nextPtr->prevPtr = sectionPtr->prevPtr;
+	}
+	FreeSection(sectionPtr);
     } else {
 	segPtr->sectionPtr->size -= segPtr->size;
     }
@@ -9398,6 +9407,104 @@ ScanElidedRangeEnd(
     }
 }
 
+/*
+ * Remove a positionally expired switch during the walk of UpdateElideInfo:
+ * the bookkeeping shared by every removal site - protected range boundary
+ * fixups, dangling partner tracking with reconnection, and the annihilation
+ * or parking of the removed segment. The caller resets its walk cursors and
+ * accounts the change.
+ */
+
+static void
+RemoveExpiredSwitch(
+    TkSharedText *sharedTextPtr,
+    TkTextSegment *switchPtr,
+    TkTextSegment **firstSegPtr,
+    TkTextSegment **lastSegPtr,
+    TkTextSegment **danglingBranchPtr,
+    TkTextSegment **danglingLinkPtr,
+    TkTextSegment **deletedBranchPtr,
+    TkTextSegment **deletedLinkPtr)
+{
+    int isBranch = switchPtr->typePtr == &tkTextBranchType;
+
+    assert(isBranch || switchPtr->typePtr == &tkTextLinkType);
+    /* a link may be removed after its branch, when the count is already zero */
+    assert(!isBranch || TkBTreeHaveElidedSegments(sharedTextPtr));
+    assert(!isBranch || switchPtr->sectionPtr->linePtr->numBranches > 0);
+
+    if (switchPtr == *firstSegPtr) {
+	(*firstSegPtr = (*firstSegPtr)->nextPtr)->protectionFlag = 1;
+    }
+    if (switchPtr == *lastSegPtr) {
+	(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
+    }
+    if (isBranch) {
+	if (switchPtr == *danglingBranchPtr) {
+	    *danglingBranchPtr = NULL;
+	}
+	if (switchPtr->body.branch.nextPtr
+		&& switchPtr->body.branch.nextPtr->sectionPtr
+		&& switchPtr->body.branch.nextPtr->body.link.prevPtr == switchPtr) {
+	    /*
+	     * The partner link survives outside of the processed range
+	     * and has lost its branch, remember it for reconnection.
+	     */
+	    *danglingLinkPtr = switchPtr->body.branch.nextPtr;
+	}
+    } else {
+	if (switchPtr == *danglingLinkPtr) {
+	    *danglingLinkPtr = NULL;
+	}
+	if (switchPtr->body.link.prevPtr
+		&& switchPtr->body.link.prevPtr->sectionPtr
+		&& switchPtr->body.link.prevPtr->body.branch.nextPtr == switchPtr) {
+	    /*
+	     * The partner branch survives outside of the processed range
+	     * and has lost its link, remember it for reconnection.
+	     */
+	    *danglingBranchPtr = switchPtr->body.link.prevPtr;
+	}
+    }
+    /* Clear the transient protection before parking for reuse. */
+    switchPtr->protectionFlag = 0;
+    UnlinkSegmentAndCleanup(sharedTextPtr, switchPtr);
+    if (switchPtr->refCount > 1) {
+	/*
+	 * Still enrolled in an undo/redo token (see DeleteRange). The
+	 * counterpart may die with this annihilation, the relation cannot
+	 * survive: mark the switch as annihilated (NULL fork), the restore
+	 * proc will drop it; and don't park it for reuse.
+	 */
+	if (isBranch) {
+	    switchPtr->body.branch.nextPtr = NULL;
+	} else {
+	    switchPtr->body.link.prevPtr = NULL;
+	}
+	TkBTreeFreeSegment(switchPtr);
+    } else if (*(isBranch ? deletedBranchPtr : deletedLinkPtr)) {
+	TkBTreeFreeSegment(switchPtr);
+    } else {
+	/*
+	 * The fork is expired with the removal - a surviving switch still
+	 * claiming this one must not read it as a mutual pairing.
+	 */
+	if (isBranch) {
+	    switchPtr->body.branch.nextPtr = NULL;
+	    *deletedBranchPtr = switchPtr;
+	} else {
+	    switchPtr->body.link.prevPtr = NULL;
+	    *deletedLinkPtr = switchPtr;
+	}
+    }
+    if (*danglingBranchPtr && *danglingLinkPtr) {
+	/* Reconnect the surviving partners with each other. */
+	(*danglingBranchPtr)->body.branch.nextPtr = *danglingLinkPtr;
+	(*danglingLinkPtr)->body.link.prevPtr = *danglingBranchPtr;
+	*danglingBranchPtr = *danglingLinkPtr = NULL;
+    }
+}
+
 static void
 UpdateElideInfo(
     TkSharedText *sharedTextPtr,
@@ -9664,56 +9771,9 @@ UpdateElideInfo(
 		     * Remove expired branch.
 		     */
 
-		    assert(TkBTreeHaveElidedSegments(sharedTextPtr));
-		    assert(prevBranchPtr->sectionPtr->linePtr->numBranches > 0);
-
-		    if (prevBranchPtr == *firstSegPtr) {
-			(*firstSegPtr = (*firstSegPtr)->nextPtr)->protectionFlag = 1;
-		    }
-		    if (prevBranchPtr == *lastSegPtr) {
-			(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
-		    }
-		    if (prevBranchPtr == danglingBranchPtr) {
-			danglingBranchPtr = NULL;
-		    }
-		    if (prevBranchPtr->body.branch.nextPtr->sectionPtr
-			    && prevBranchPtr->body.branch.nextPtr->body.link.prevPtr == prevBranchPtr) {
-			/*
-			 * The partner link survives outside of the processed range
-			 * and has lost its branch, remember it for reconnection.
-			 */
-			danglingLinkPtr = prevBranchPtr->body.branch.nextPtr;
-		    }
-		    /* Clear the transient protection before parking for reuse. */
-		    prevBranchPtr->protectionFlag = 0;
-		    UnlinkSegmentAndCleanup(sharedTextPtr, prevBranchPtr);
-		    if (prevBranchPtr->refCount > 1) {
-			/*
-			 * Still enrolled in an undo/redo token (see DeleteRange).
-			 * The counterpart may die with this annihilation, the
-			 * relation cannot survive: mark the switch as annihilated
-			 * (NULL fork), the restore proc will drop it; and don't
-			 * park it for reuse.
-			 */
-			prevBranchPtr->body.branch.nextPtr = NULL;
-			TkBTreeFreeSegment(prevBranchPtr);
-		    } else if (deletedBranchPtr) {
-			TkBTreeFreeSegment(prevBranchPtr);
-		    } else {
-			/*
-			 * The fork is expired with the removal - a surviving
-			 * link still claiming this branch must not read it as
-			 * a mutual pairing.
-			 */
-			prevBranchPtr->body.branch.nextPtr = NULL;
-			deletedBranchPtr = prevBranchPtr;
-		    }
-		    if (danglingBranchPtr && danglingLinkPtr) {
-			/* Reconnect the surviving partners with each other. */
-			danglingBranchPtr->body.branch.nextPtr = danglingLinkPtr;
-			danglingLinkPtr->body.link.prevPtr = danglingBranchPtr;
-			danglingBranchPtr = danglingLinkPtr = NULL;
-		    }
+		    RemoveExpiredSwitch(sharedTextPtr, prevBranchPtr,
+			    firstSegPtr, lastSegPtr, &danglingBranchPtr,
+			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		} else {
@@ -9727,43 +9787,9 @@ UpdateElideInfo(
 		     * Remove expired link.
 		     */
 
-		    if (prevLinkPtr == *firstSegPtr) {
-			(*firstSegPtr = (*firstSegPtr)->nextPtr)->protectionFlag = 1;
-		    }
-		    if (prevLinkPtr == *lastSegPtr) {
-			(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
-		    }
-		    if (prevLinkPtr == danglingLinkPtr) {
-			danglingLinkPtr = NULL;
-		    }
-		    if (prevLinkPtr->body.link.prevPtr->sectionPtr
-			    && prevLinkPtr->body.link.prevPtr->body.branch.nextPtr == prevLinkPtr) {
-			/*
-			 * The partner branch survives outside of the processed range
-			 * and has lost its link, remember it for reconnection.
-			 */
-			danglingBranchPtr = prevLinkPtr->body.link.prevPtr;
-		    }
-		    /* Clear the transient protection before parking for reuse. */
-		    prevLinkPtr->protectionFlag = 0;
-		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
-		    if (prevLinkPtr->refCount > 1) {
-			/* Enrolled in an undo/redo token, see the branch case above. */
-			prevLinkPtr->body.link.prevPtr = NULL;
-			TkBTreeFreeSegment(prevLinkPtr);
-		    } else if (deletedLinkPtr) {
-			TkBTreeFreeSegment(prevLinkPtr);
-		    } else {
-			/* The fork is expired with the removal, see the branch case. */
-			prevLinkPtr->body.link.prevPtr = NULL;
-			deletedLinkPtr = prevLinkPtr;
-		    }
-		    if (danglingBranchPtr && danglingLinkPtr) {
-			/* Reconnect the surviving partners with each other. */
-			danglingBranchPtr->body.branch.nextPtr = danglingLinkPtr;
-			danglingLinkPtr->body.link.prevPtr = danglingBranchPtr;
-			danglingBranchPtr = danglingLinkPtr = NULL;
-		    }
+		    RemoveExpiredSwitch(sharedTextPtr, prevLinkPtr,
+			    firstSegPtr, lastSegPtr, &danglingBranchPtr,
+			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		} else if (newBranchPtr) {
@@ -9988,9 +10014,38 @@ UpdateElideInfo(
 	    actualElided = shouldBeElided;
 	    prevBranchPtr = prevLinkPtr = NULL;
 	} else if (segPtr->typePtr == &tkTextBranchType) {
+	    if (prevBranchPtr || prevLinkPtr) {
+		/*
+		 * Adjacent switches (transient, left by switches restored
+		 * verbatim by an undo): a branch pending right before another
+		 * branch is a duplicate opening, a link pending right before
+		 * a branch would form a zero-width visible gap - either way
+		 * the pending switch has to go, and the newly walked one is
+		 * decided by the next content segment as usual. Without this
+		 * the pending switch was silently overwritten and survived
+		 * unprocessed.
+		 */
+		RemoveExpiredSwitch(sharedTextPtr,
+			prevBranchPtr ? prevBranchPtr : prevLinkPtr,
+			firstSegPtr, lastSegPtr, &danglingBranchPtr,
+			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
+		if (!startLinePtr) { startLinePtr = linePtr; }
+		endLinePtr = linePtr;
+		anyChanges = 1;
+	    }
 	    lastBranchPtr = prevBranchPtr = segPtr;
 	    lastLinkPtr = prevLinkPtr = NULL;
 	} else if (segPtr->typePtr == &tkTextLinkType) {
+	    if (prevBranchPtr || prevLinkPtr) {
+		/* see above: a duplicate closing, or an empty elided section */
+		RemoveExpiredSwitch(sharedTextPtr,
+			prevBranchPtr ? prevBranchPtr : prevLinkPtr,
+			firstSegPtr, lastSegPtr, &danglingBranchPtr,
+			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
+		if (!startLinePtr) { startLinePtr = linePtr; }
+		endLinePtr = linePtr;
+		anyChanges = 1;
+	    }
 	    lastBranchPtr = prevBranchPtr = NULL;
 	    lastLinkPtr = prevLinkPtr = segPtr;
 	}
