@@ -3281,6 +3281,15 @@ ClearText(
 
     tkBTreeDebug = false; /* debugging is not wanted here */
 
+    /*
+     * Reset the undo stack before anything will be freed, the undo tokens
+     * (including the retained ones) are holding references to tags, marks,
+     * and segments.
+     */
+
+    ClearRetainedUndoTokens(sharedTextPtr);
+    TkTextUndoResetStack(sharedTextPtr->undoStack);
+
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	/*
 	 * Always clean up the widget-specific tags first. Common tags (i.e. most)
@@ -5157,7 +5166,8 @@ InsertChars(
     FindNewTopPosition(sharedTextPtr, textPosition, index1Ptr, NULL, length);
 
     TkrTextChanged(sharedTextPtr, NULL, index1Ptr, index1Ptr);
-    undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
+    /* A full stack evicts its oldest atom when the new one is pushed. */
+    undoInfoPtr = sharedTextPtr->undoStack ? &undoInfo : NULL;
     startIndex = *index1Ptr;
     TkTextIndexToByteIndex(&startIndex); /* we need the byte position after insertion */
 
@@ -5904,7 +5914,8 @@ DeleteIndexRange(
     InitPosition(sharedTextPtr, textPosition);
     FindNewTopPosition(sharedTextPtr, textPosition, &index1, &index2, 0);
 
-    undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
+    /* A full stack evicts its oldest atom when the new one is pushed. */
+    undoInfoPtr = sharedTextPtr->undoStack ? &undoInfo : NULL;
     TkBTreeDeleteIndexRange(sharedTextPtr, &index1, &index2, flags, undoInfoPtr);
 
     /*
@@ -9137,6 +9148,12 @@ TextEditCmd(
 		if (TestIfPerformingUndoRedo(interp, sharedTextPtr, NULL))
 		    return TCL_ERROR;
 
+		/*
+		 * Also dispose of the retained undo tokens (see
+		 * TkTextTagAddRetainedUndo), otherwise they would join
+		 * the undo stack after this reset.
+		 */
+		ClearRetainedUndoTokens(sharedTextPtr);
 		TkTextUndoClearStack(sharedTextPtr->undoStack);
 		sharedTextPtr->undoLevel = 0;
 		sharedTextPtr->pushSeparator = false;
@@ -9162,6 +9179,8 @@ TextEditCmd(
 		    return TCL_ERROR;
 
 		if (stack[0] == 'u') {
+		    /* The retained undo tokens belong to the undo stack. */
+		    ClearRetainedUndoTokens(sharedTextPtr);
 		    TkTextUndoClearUndoStack(sharedTextPtr->undoStack);
 		    sharedTextPtr->undoLevel = 0;
 		    sharedTextPtr->pushSeparator = false;
@@ -9172,7 +9191,7 @@ TextEditCmd(
 		    TkTextUndoClearRedoStack(sharedTextPtr->undoStack);
 		}
 	    }
-	    return TCL_ERROR;
+	    return TCL_OK;
 	}
 	break;
     case EDIT_SEPARATOR: {

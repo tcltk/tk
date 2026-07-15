@@ -213,7 +213,9 @@ static TkTextSegment *	SplitSeg(const TkTextIndex *indexPtr, SplitInfo *splitInf
 static TkTextSegment *	PrepareInsertIntoCharSeg(TkTextSegment *segPtr,
 			    unsigned offset, SplitInfo *splitInfo);
 static void		SplitSection(TkTextSection *sectionPtr);
+static void		SplitSectionAtSwitch(TkTextSegment *segPtr);
 static void		JoinSections(TkTextSection *sectionPtr);
+static void		PropagateChangeOfNumBranches(Node *nodePtr, int changeToNumBranches);
 static void		FreeSections(TkTextSection *sectionPtr);
 static TkTextSegment *	UnlinkSegment(TkTextSegment *segPtr);
 static void		UnlinkSegmentAndCleanup(const TkSharedText *sharedTextPtr,
@@ -1333,7 +1335,6 @@ UndoDeletePerform(
     unsigned numSegments = undoToken->numSegments - 1;
     int changeToLineCount = 0;
     int changeToLogicalLineCount = 0;
-    int changeToBranchCount = 0;
     int reinsertFirstSegment = 1;
     int size = 0;
     unsigned i;
@@ -1380,6 +1381,9 @@ UndoDeletePerform(
 	if (segPtr->sectionPtr) {
 	    if (prevPtr != segPtr) {
 		TkTextSection *sectionPtr;
+		TkTextSection *leftSectionPtr;
+		TkTextLine *srcLinePtr;
+		int sole;
 
 		assert(segPtr->typePtr != &tkTextCharType);
 
@@ -1388,8 +1392,47 @@ UndoDeletePerform(
 		 */
 
 		sectionPtr = segPtr->sectionPtr;
+		leftSectionPtr = sectionPtr->prevPtr;
+		srcLinePtr = sectionPtr->linePtr;
+		sole = (sectionPtr->length == 1);
+
+		/*
+		 * A re-inserted switch moves to the restore position, possibly
+		 * into another line: remove it from the counters of its current
+		 * line, it will be counted again after linking (see below).
+		 */
+
+		if (segPtr->typePtr == &tkTextBranchType) {
+		    assert(srcLinePtr->numBranches > 0);
+		    srcLinePtr->numBranches -= 1;
+		    PropagateChangeOfNumBranches(srcLinePtr->parentPtr, -1);
+		} else if (segPtr->typePtr == &tkTextLinkType) {
+		    assert(srcLinePtr->numLinks > 0);
+		    srcLinePtr->numLinks -= 1;
+		}
+
 		UnlinkSegment(segPtr);
-		JoinSections(sectionPtr);
+		if (!sole) {
+		    /* Otherwise UnlinkSegment has already freed the section. */
+		    JoinSections(sectionPtr);
+		}
+		if (segPtr->typePtr == &tkTextLinkType && leftSectionPtr) {
+		    /*
+		     * The unlinked link was heading its section, the section
+		     * before may have lost its permission to be short.
+		     */
+		    JoinSections(leftSectionPtr);
+		}
+	    }
+	    if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		/*
+		 * The token owns a reference to this re-inserted switch (see
+		 * DeleteRange), but the segment array will be freed below
+		 * without releasing it: release it now, the tree keeps the
+		 * segment alive.
+		 */
+		assert(segPtr->refCount > 1);
+		TkBTreeFreeSegment(segPtr);
 	    }
 	} else {
 	    size += segPtr->size;
@@ -1409,7 +1452,35 @@ UndoDeletePerform(
 		reinsertFirstSegment = 0;
 	    } else if (prevPtr != segPtr) {
 		DEBUG(segPtr->sectionPtr = NULL);
-		LinkSegment(linePtr, prevPtr, segPtr);
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		    /*
+		     * LinkSwitch respects the ordering rules with marks (a
+		     * branch will never be followed by marks, and a link will
+		     * never be preceded by marks).
+		     */
+		    LinkSwitch(linePtr, prevPtr, segPtr);
+		} else {
+		    LinkSegment(linePtr, prevPtr, segPtr);
+		    /* Keep the section length bounded (MAX_TEXT_SEGS). */
+		    SplitSection(segPtr->sectionPtr);
+		}
+	    }
+	    if (prevPtr != segPtr && segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		/*
+		 * Neither LinkSegment nor ReInsertSegment restructure the
+		 * sections around a switch (a link must head a section, a
+		 * branch must terminate one), nor do they count switches;
+		 * and only the last line will be rebuilt after this loop.
+		 * Note that the final rebuild will see correct counters,
+		 * so it will not propagate a change again.
+		 */
+		SplitSectionAtSwitch(segPtr);
+		if (segPtr->typePtr == &tkTextLinkType) {
+		    linePtr->numLinks += 1;
+		} else {
+		    linePtr->numBranches += 1;
+		    PropagateChangeOfNumBranches(linePtr->parentPtr, 1);
+		}
 	    }
 	    if (segPtr->typePtr == &tkTextCharType) {
 		assert(!segPtr->typePtr->restoreProc);
@@ -1428,7 +1499,12 @@ UndoDeletePerform(
 			    linePtr, segPtr->nextPtr);
 		    AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		    changeToLineCount += 1;
-		    changeToLogicalLineCount += linePtr->logicalLine;
+		    /*
+		     * Count the flag of the new line, the restored newline may
+		     * be elided. The flags of already existing lines are not
+		     * affected by this split.
+		     */
+		    changeToLogicalLineCount += newLinePtr->logicalLine;
 		    RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
 		    tagonPtr = TkTextTagSetJoin(tagonPtr, linePtr->tagonPtr);
 		    tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
@@ -1531,8 +1607,12 @@ UndoDeletePerform(
      * insertion point, then rebalance the tree if necessary.
      */
 
+    /*
+     * Restored switches have already been propagated (see above), so the
+     * change in number of branches is zero here.
+     */
     SubtractPixelCount2(treePtr, nodePtr, -changeToLineCount, -changeToLogicalLineCount,
-	    -changeToBranchCount, -size, changeToPixelInfo);
+	    0, -size, changeToPixelInfo);
     linePtr->parentPtr->numChildren += changeToLineCount;
 
     if (nodePtr->numChildren > MAX_CHILDREN) {
@@ -1715,13 +1795,27 @@ RedoInsertInspect(
     Tcl_Obj *objPtr = Tcl_NewObj();
     TkTextSegment **segments = ((const UndoTokenDelete *) item)->segments;
     unsigned numSegments = ((const UndoTokenDelete *) item)->numSegments;
-    const TkTextSegment *segPtr;
+    TkTextSegment **lastSegment = segments + numSegments;
+    const TkTextSegment *segPtr = numSegments > 0 ? *segments++ : NULL;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", TCL_INDEX_NONE));
 
-    for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
+    /*
+     * Also walk the chained segments, like UndoDeleteInspect does, the
+     * entries of the array may be heads of chains.
+     */
+
+    while (segPtr) {
 	assert(segPtr->typePtr->inspectProc);
 	Tcl_ListObjAppendElement(NULL, objPtr, segPtr->typePtr->inspectProc(sharedTextPtr, segPtr));
+
+	if (segPtr->nextPtr && !segPtr->sectionPtr) {
+	    segPtr = segPtr->nextPtr;
+	} else if (segments == lastSegment) {
+	    segPtr = NULL;
+	} else {
+	    segPtr = *segments++;
+	}
     }
 
     return objPtr;
@@ -2607,6 +2701,47 @@ TkBTreeJoinUndoInsert(
 /*
  *----------------------------------------------------------------------
  *
+ * UndoDeleteTokenContainsSwitch --
+ *
+ *	Test whether the given delete token has recorded a branch or a
+ *	link segment.
+ *
+ * Results:
+ *	Return whether a switch has been recorded.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+UndoDeleteTokenContainsSwitch(
+    const UndoTokenDelete *token)
+{
+    TkTextSegment * const *segments = token->segments;
+    TkTextSegment * const *lastSegment = segments + token->numSegments;
+    const TkTextSegment *segPtr = token->numSegments > 0 ? *segments++ : NULL;
+
+    while (segPtr) {
+	if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+	    return true;
+	}
+	if (segPtr->nextPtr && !segPtr->sectionPtr) {
+	    segPtr = segPtr->nextPtr;
+	} else if (segments == lastSegment) {
+	    segPtr = NULL;
+	} else {
+	    segPtr = *segments++;
+	}
+    }
+
+    return false;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkBTreeJoinUndoDelete --
  *
  *	Joins an undo token with another token.
@@ -2631,6 +2766,16 @@ TkBTreeJoinUndoDelete(
     struct UndoTokenDelete *myToken2 = (UndoTokenDelete *) token2;
 
     if (myToken1->inclusive != myToken2->inclusive) {
+	return 0;
+    }
+
+    if (UndoDeleteTokenContainsSwitch(myToken1) || UndoDeleteTokenContainsSwitch(myToken2)) {
+	/*
+	 * A switch (branch or link) that survived the first deletion may have
+	 * been captured again by the second one; joining would then record
+	 * the shared segment twice, and the undo would restore it twice.
+	 * Keep the tokens separate, they belong to the same undo atom anyway.
+	 */
 	return 0;
     }
 
@@ -5072,7 +5217,12 @@ ReInsertSegment(
 	prevPtr = SplitSeg(&index, NULL);
     }
 
-    LinkSegment(linePtr, prevPtr, segPtr);
+    if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+	/* LinkSwitch respects the ordering rules with marks. */
+	LinkSwitch(linePtr, prevPtr, segPtr);
+    } else {
+	LinkSegment(linePtr, prevPtr, segPtr);
+    }
     SplitSection(segPtr->sectionPtr);
     TkBTreeIncrEpoch(sharedTextPtr->tree);
 }
@@ -5556,10 +5706,10 @@ SplitSection(
     prevPtr = sectionPtr->prevPtr;
     nextPtr = sectionPtr->nextPtr;
 
-    if (prevPtr && IsBranchSection(prevPtr)) {
+    if (prevPtr && (IsBranchSection(prevPtr) || IsLinkSection(sectionPtr))) {
 	prevPtr = NULL; /* we cannot shift to the left */
     }
-    if (nextPtr && IsLinkSection(nextPtr)) {
+    if (nextPtr && (IsLinkSection(nextPtr) || IsBranchSection(sectionPtr))) {
 	nextPtr = NULL; /* we cannot shift to the right */
     }
 
@@ -5686,6 +5836,131 @@ SplitSection(
 /*
  *--------------------------------------------------------------
  *
+ * SplitSectionAtSwitch --
+ *
+ *	This function is called after a branch or link segment has been
+ *	linked into a line with LinkSegment (which does not restructure
+ *	the sections). It splits the section containing the switch so
+ *	that a link becomes the first segment of a section, and a branch
+ *	becomes the last one. The left part will be balanced with its
+ *	left neighbor if it undershoots MIN_TEXT_SEGS without being
+ *	pinned by switch boundaries.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The section containing 'segPtr' may be split, a new section may
+ *	be allocated, and the left neighbor may change or be freed.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+SplitSectionAtSwitch(
+    TkTextSegment *segPtr)	/* Newly linked branch or link segment. */
+{
+    TkTextSection *sectionPtr = segPtr->sectionPtr;
+    TkTextSection *newSectionPtr;
+    TkTextSegment *firstPtr;	/* first segment of the new right section */
+    TkTextSegment *sPtr;
+
+    assert(segPtr->typePtr->group == SEG_GROUP_BRANCH);
+    assert(sectionPtr);
+
+    if (segPtr->typePtr == &tkTextLinkType) {
+	if (sectionPtr->segPtr == segPtr) {
+	    return; /* link is already first segment of its section */
+	}
+	firstPtr = segPtr;
+    } else {
+	assert(segPtr->nextPtr); /* branch cannot be at end of line */
+	if (segPtr->nextPtr->sectionPtr != sectionPtr) {
+	    return; /* branch is already last segment of its section */
+	}
+	firstPtr = segPtr->nextPtr;
+    }
+
+    /*
+     * Carve [firstPtr .. end of section] into a new right section.
+     */
+
+    newSectionPtr = (TkTextSection *)Tcl_Alloc(sizeof(TkTextSection));
+    newSectionPtr->linePtr = sectionPtr->linePtr;
+    newSectionPtr->segPtr = firstPtr;
+    newSectionPtr->nextPtr = sectionPtr->nextPtr;
+    newSectionPtr->prevPtr = sectionPtr;
+    newSectionPtr->size = 0;
+    newSectionPtr->length = 0;
+    if (sectionPtr->nextPtr) {
+	sectionPtr->nextPtr->prevPtr = newSectionPtr;
+    }
+    sectionPtr->nextPtr = newSectionPtr;
+    DEBUG_ALLOC(tkTextCountNewSection++);
+
+    for (sPtr = firstPtr; sPtr && sPtr->sectionPtr == sectionPtr; sPtr = sPtr->nextPtr) {
+	newSectionPtr->size += sPtr->size;
+	newSectionPtr->length += 1;
+	assert(newSectionPtr->length != 0); /* test for overflow */
+	sectionPtr->size -= sPtr->size;
+	sectionPtr->length -= 1;
+	sPtr->sectionPtr = newSectionPtr;
+    }
+    assert(sectionPtr->length > 0);
+    assert(newSectionPtr->length > 0);
+
+    /*
+     * The left part may now undershoot MIN_TEXT_SEGS. This is allowed only
+     * if it is pinned by switch boundaries (see CheckSections). Otherwise
+     * balance with the left neighbor; this neighbor cannot itself be short
+     * (it was a valid unpinned section before), so both results will
+     * satisfy the constraints.
+     */
+
+    if (sectionPtr->length < MIN_TEXT_SEGS
+	    && sectionPtr->prevPtr
+	    && !IsBranchSection(sectionPtr->prevPtr)
+	    && !IsLinkSection(sectionPtr)) {
+	TkTextSection *leftPtr = sectionPtr->prevPtr;
+
+	if (leftPtr->length + sectionPtr->length <= NUM_TEXT_SEGS) {
+	    /* Dissolve the left part into the left neighbor. */
+	    leftPtr->size += sectionPtr->size;
+	    leftPtr->length += sectionPtr->length;
+	    assert(leftPtr->length != 0); /* test for overflow */
+	    for (sPtr = sectionPtr->segPtr;
+		    sPtr && sPtr->sectionPtr == sectionPtr;
+		    sPtr = sPtr->nextPtr) {
+		sPtr->sectionPtr = leftPtr;
+	    }
+	    leftPtr->nextPtr = newSectionPtr;
+	    newSectionPtr->prevPtr = leftPtr;
+	    FreeSection(sectionPtr);
+	} else {
+	    /* Borrow segments from the tail of the left neighbor. */
+	    int shift = MIN_TEXT_SEGS - sectionPtr->length;
+
+	    sPtr = sectionPtr->segPtr;
+	    for ( ; shift > 0; --shift) {
+		sPtr = sPtr->prevPtr;
+		assert(sPtr);
+		assert(sPtr->sectionPtr == leftPtr);
+		assert(sPtr->typePtr != &tkTextBranchType);
+		sPtr->sectionPtr = sectionPtr;
+		sectionPtr->size += sPtr->size;
+		sectionPtr->length += 1;
+		leftPtr->size -= sPtr->size;
+		leftPtr->length -= 1;
+	    }
+	    sectionPtr->segPtr = sPtr;
+	    assert(leftPtr->length >= MIN_TEXT_SEGS);
+	}
+    }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * JoinSections --
  *
  *	This function is called after segments has been removed from a
@@ -5799,10 +6074,12 @@ JoinSections(
 	    }
 	}
 
+	TkTextSection *nextSectionPtr = sectionPtr->nextPtr;
+
 	if (sectionPtr->prevPtr) {
-	    sectionPtr->prevPtr->nextPtr = sectionPtr->nextPtr;
+	    sectionPtr->prevPtr->nextPtr = nextSectionPtr;
 	}
-	sectionPtr->nextPtr->prevPtr = sectionPtr->prevPtr;
+	nextSectionPtr->prevPtr = sectionPtr->prevPtr;
 	FreeSection(sectionPtr);
 
 	if (lengthRHS + length > MAX_TEXT_SEGS) {
@@ -5810,7 +6087,7 @@ JoinSections(
 	     * Right shift operation has exceeded MAX_TEXT_SEGS, so we
 	     * have to split the right neighbor.
 	     */
-	    SplitSection(sectionPtr->nextPtr);
+	    SplitSection(nextSectionPtr);
 	}
     } else if (length > NUM_TEXT_SEGS) {
 	int lengthRHS, shift;
@@ -6838,16 +7115,17 @@ MoveSegmentToLeft(
     if (branchPtr->prevPtr) {
 	branchPtr->prevPtr->nextPtr = movePtr;
     }
+    movePtr->prevPtr = branchPtr->prevPtr;
     branchPtr->prevPtr = movePtr;
 
     /*
      * We don't care about the sections, they will be rebuilt later,
-     * but ensure that the order of the sections will not change.
+     * but ensure that the order of the sections will not change. An
+     * emptied section is left in place, the rebuild will recycle it
+     * (freeing it here would leave it linked in the section chain).
      */
 
-    if (--movePtr->sectionPtr->length == 0) {
-	FreeSection(movePtr->sectionPtr);
-    }
+    movePtr->sectionPtr->length -= 1;
     movePtr->sectionPtr = branchPtr->sectionPtr;
 }
 
@@ -6872,17 +7150,18 @@ MoveSegmentToRight(
     if (linkPtr->nextPtr) {
 	linkPtr->nextPtr->prevPtr = movePtr;
     }
+    movePtr->nextPtr = linkPtr->nextPtr;
     linkPtr->nextPtr = movePtr;
 
     /*
      * We don't care about the sections, they will be rebuilt later,
-     * but ensure that the order of the sections will not change.
+     * but ensure that the order of the sections will not change. An
+     * emptied section is left in place, the rebuild will recycle it
+     * (freeing it here would leave it linked in the section chain).
      */
 
-    if (--linkPtr->sectionPtr->length == 0) {
-	FreeSection(linkPtr->sectionPtr);
-    }
-    linkPtr->sectionPtr = movePtr->sectionPtr;
+    movePtr->sectionPtr->length -= 1;
+    movePtr->sectionPtr = linkPtr->sectionPtr;
 }
 
 static void
@@ -6901,10 +7180,11 @@ DeleteRange(
     TkTextSegment *nextPtr1;
     TkTextSegment *segPtr;
     TkTextSegment **segments;
-    TkTextSegment *prevLinkPtr;
     TkTextSegment *beforeSurrogate;
     TkTextSegment *prevSavePtr;
-    TkTextSegment *savedSegPtr;
+    TkTextSegment *savedLinkPtr;
+    TkTextSegment *savedBranchPtr;
+    TkTextSegment *pulledLinkPtr;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -6940,6 +7220,8 @@ DeleteRange(
 
     assert(firstSegPtr->nextPtr);
 
+    pulledLinkPtr = NULL;
+
     if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	/*
 	 * Include the surrounding branches and links into the deletion range.
@@ -6950,9 +7232,28 @@ DeleteRange(
 
 	if (!sharedTextPtr->steadyMarks || !TkTextIsStableMark(firstSegPtr)) {
 	    for (segPtr = firstSegPtr->prevPtr; segPtr && segPtr->size == 0; segPtr = segPtr->prevPtr) {
-		if (segPtr->typePtr == &tkTextBranchType) {
-		    /* firstSegPtr will become predecessor of this branch */
-		    MoveSegmentToLeft(segPtr, firstSegPtr);
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		    /*
+		     * Either an elided region starts exactly at the start of
+		     * the range (branch), or one ends exactly there (link).
+		     * Move the switch into the range, over the boundary mark,
+		     * but not over intermediate marks - these do not belong
+		     * to the range. A pulled link either merges with a region
+		     * adjacent to the end of the range, or it will be re-added
+		     * at the same place (see "Re-add saved branch or link
+		     * segment" below).
+		     */
+		    TkTextLine *headLinePtr = segPtr->sectionPtr->linePtr;
+		    TkTextSegment *newHeadPtr = segPtr->nextPtr;
+
+		    if (segPtr->typePtr == &tkTextLinkType) {
+			pulledLinkPtr = segPtr;
+		    }
+		    /* the switch will become the successor of firstSegPtr */
+		    MoveSegmentToRight(firstSegPtr, segPtr);
+		    if (headLinePtr->segPtr == segPtr) {
+			headLinePtr->segPtr = newHeadPtr;
+		    }
 		    segPtr = firstSegPtr;
 		}
 	    }
@@ -6960,9 +7261,20 @@ DeleteRange(
 
 	if (!sharedTextPtr->steadyMarks || !TkTextIsStableMark(lastSegPtr)) {
 	    for (segPtr = lastSegPtr->nextPtr; segPtr && segPtr->size == 0; segPtr = segPtr->nextPtr) {
-		if (segPtr->typePtr == &tkTextLinkType) {
-		    /* lastSegPtr will become successor of this link */
-		    MoveSegmentToRight(segPtr, lastSegPtr);
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+		    /*
+		     * Either the range is ending inside an elided region
+		     * (link), or an elided region starts exactly at the end
+		     * of the range (branch): move the switch into the range,
+		     * over the boundary mark, but not over intermediate marks.
+		     */
+		    TkTextLine *headLinePtr = lastSegPtr->sectionPtr->linePtr;
+
+		    /* the switch will become the predecessor of lastSegPtr */
+		    MoveSegmentToLeft(lastSegPtr, segPtr);
+		    if (headLinePtr->segPtr == lastSegPtr) {
+			headLinePtr->segPtr = segPtr;
+		    }
 		    segPtr = lastSegPtr;
 		}
 	    }
@@ -6981,7 +7293,8 @@ DeleteRange(
     insertSurrogate = 0;
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
-    savedSegPtr = NULL;
+    savedLinkPtr = NULL;
+    savedBranchPtr = NULL;
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE)
 	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
@@ -7002,16 +7315,22 @@ DeleteRange(
 
     if (flags & DELETE_LASTLINE) {
 	lastNewlineSegPtr = TkTextGetUndeletableNewline(linePtr2);
+	/*
+	 * Remember the segment in front of the start of the deletion range,
+	 * the surrogate newline will be inserted after this segment (see end
+	 * of this function). Note that the last newline may be elided: in
+	 * this case the link of this region lies inside of the range, and
+	 * will be re-added at the start of the range (see "Re-add saved
+	 * branch or link segment" below). The insertion of the surrogate
+	 * works with the byte position, so it always lands outside of any
+	 * elided region (after a re-added link, and before a re-added
+	 * branch), because a link has left gravity, and a branch has right
+	 * gravity.
+	 */
 	beforeSurrogate = firstSegPtr->prevPtr;
 
 	while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
 	    beforeSurrogate = beforeSurrogate->prevPtr;
-	}
-	if (!beforeSurrogate) {
-	    TkTextLine *prevLinePtr = linePtr1->prevPtr;
-	    if (prevLinePtr) {
-		beforeSurrogate = prevLinePtr->lastPtr;
-	    }
 	}
     } else {
 	lastNewlineSegPtr = NULL;
@@ -7059,7 +7378,6 @@ DeleteRange(
 
     curNodePtr = curLinePtr->parentPtr;
     assert(curLinePtr->nextPtr);
-    prevLinkPtr = NULL;
     firstSectionPtr = NULL;
     lastSectionPtr = NULL;
     byteSize = 0;
@@ -7112,29 +7430,41 @@ DeleteRange(
 	    }
 
 	    /*
-	     * Save branch or link segment before deletion.
-	     * These are restored after deletion to prevent orphaned branch/links.
+	     * Save branch or link segment if its counterpart lies outside of the
+	     * deletion range, it will be re-added after deletion. This prevents
+	     * orphaned branches/links. A link whose branch lies before the range
+	     * can only be the first switch inside the range, and a saved branch
+	     * either annihilates with the next link, or the range is ending
+	     * inside of its elided region.
 	     */
 
 	    if (segPtr->typePtr == &tkTextBranchType) {
-		assert(!savedSegPtr);
+		assert(!savedBranchPtr);
 		/* Prevent deletion of this segment */
-		savedSegPtr = segPtr;
-		savedSegPtr->refCount += 1;
+		savedBranchPtr = segPtr;
+		savedBranchPtr->refCount += 1;
 		curLinePtr->numBranches -= 1;
 		PropagateChangeOfNumBranches(curLinePtr->parentPtr, -1);
+		reInserted = (savePtr != NULL);
 	    } else if (segPtr->typePtr == &tkTextLinkType) {
-		if (segPtr->body.link.prevPtr == savedSegPtr) {
+		if (segPtr->body.link.prevPtr == savedBranchPtr) {
 		    /*
 		     * Branch and link are both within deleted range - dispose of saved branch.
 		     */
-		    TkBTreeFreeSegment(savedSegPtr);
-		    savedSegPtr = NULL;
+		    if (undoInfo) {
+			/* It's already recorded in the undo chain: record it unlinked. */
+			savedBranchPtr->nextPtr = NULL;
+			savedBranchPtr->sectionPtr = NULL;
+		    }
+		    TkBTreeFreeSegment(savedBranchPtr);
+		    savedBranchPtr = NULL;
 		} else {
-		    assert(!savedSegPtr);
+		    assert(!savedLinkPtr);
+		    assert(!savedBranchPtr);
 		    /* Prevent deletion of this segment */
-		    savedSegPtr = segPtr;
-		    savedSegPtr->refCount += 1;
+		    savedLinkPtr = segPtr;
+		    savedLinkPtr->refCount += 1;
+		    reInserted = (savePtr != NULL);
 		}
 		curLinePtr->numLinks -= 1;
 	    }
@@ -7151,58 +7481,38 @@ DeleteRange(
 		assert(segPtr != lastNewlineSegPtr);
 		assert(!TkTextIsNormalMark(segPtr) || !(flags & DELETE_MARKS));
 
-		if (prevLinkPtr && segPtr->typePtr == &tkTextBranchType) {
+		if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
 		    /*
-		     * This is a superfluous link/branch pair, delete both.
+		     * A switch refuses to die only if undo is active (otherwise
+		     * DELETE_BRANCHES is set). It leaves the tree now, kept alive
+		     * by the undo chain, and by savedBranchPtr/savedLinkPtr if it
+		     * will be re-added after this loop: release the reference
+		     * held by the tree.
 		     */
 
-		    /* make new relationship (old one is already saved) */
-		    prevLinkPtr->body.link.prevPtr->body.branch.nextPtr = segPtr->body.branch.nextPtr;
-		    segPtr->body.branch.nextPtr->body.link.prevPtr = prevLinkPtr->body.link.prevPtr;
-		    /* remove this pair from chain */
-		    nextPtr1 = segPtr->nextPtr;
-		    UnlinkSegment(segPtr);
+		    assert(undoInfo);
+		    assert(segPtr->refCount > 1);
 		    TkBTreeFreeSegment(segPtr);
-		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
-		    TkBTreeFreeSegment(prevLinkPtr);
-		    if (nextPtr1->prevPtr && nextPtr1->prevPtr->typePtr == &tkTextCharType) {
-			TkTextSegment *sPtr = CleanupCharSegments(sharedTextPtr, nextPtr1);
-			if (sPtr != nextPtr1) { nextPtr1 = nextPtr1->nextPtr; }
-		    }
-		    prevLinkPtr = NULL;
 		} else {
 		    /*
-		     * This segment refuses to die, it's either a switch with a counterpart
-		     * outside of the deletion range, or it's a mark. Link this segment
-		     * after prevPtr1.
+		     * This mark refuses to die. Link this segment after prevPtr1.
 		     */
 
 		    assert(prevPtr1);
+		    assert(segPtr->typePtr->group == SEG_GROUP_MARK);
 		    DEBUG(segPtr->sectionPtr = NULL);
+		    LinkMark(sharedTextPtr, linePtr1, prevPtr1, segPtr);
 
-		    if (segPtr->typePtr == &tkTextLinkType) {
-			assert(!prevLinkPtr);
-			prevLinkPtr = segPtr;
-			LinkSwitch(linePtr1, prevPtr1, segPtr);
+		    /*
+		     * Option 'steadymarks' is off:
+		     * 'prevPtr1' will be advanced only if the segment don't has right gravity.
+		     *
+		     * Option 'steadymarks' is on:
+		     * 'prevPtr1' will always be advanced, because we keep the order of the marks.
+		     */
 
-			if (prevPtr1->typePtr->group != SEG_GROUP_MARK) {
-			    prevPtr1 = segPtr;
-			}
-		    } else {
-			assert(segPtr->typePtr->group == SEG_GROUP_MARK);
-			LinkMark(sharedTextPtr, linePtr1, prevPtr1, segPtr);
-
-			/*
-			 * Option 'steadymarks' is off:
-			 * 'prevPtr1' will be advanced only if the segment don't has right gravity.
-			 *
-			 * Option 'steadymarks' is on:
-			 * 'prevPtr1' will always be advanced, because we keep the order of the marks.
-			 */
-
-			if (steadyMarks || segPtr->typePtr->gravity != GRAVITY_RIGHT) {
-			    prevPtr1 = segPtr;
-			}
+		    if (steadyMarks || segPtr->typePtr->gravity != GRAVITY_RIGHT) {
+			prevPtr1 = segPtr;
 		    }
 
 		    assert(segPtr->prevPtr);
@@ -7244,7 +7554,8 @@ DeleteRange(
 	    }
 
 	    if (savePtr) {
-		if (savePtr->tagInfoPtr) {
+		/* Note that switches (size == 0) misuse tagInfoPtr for their counterpart. */
+		if (savePtr->size > 0 && savePtr->tagInfoPtr) {
 		    savePtr->tagInfoPtr = TagSetRemoveBits(savePtr->tagInfoPtr,
 			    sharedTextPtr->dontUndoTags, sharedTextPtr);
 		}
@@ -7263,6 +7574,16 @@ DeleteRange(
 		} else {
 		    (prevSavePtr = savePtr)->nextPtr = NULL;
 		    savePtr->sectionPtr = NULL;
+		    if (savePtr->typePtr->group == SEG_GROUP_BRANCH) {
+			/*
+			 * This switch may also be enrolled as a re-inserted
+			 * segment in an earlier undo token; the walk of that
+			 * token follows nextPtr as soon as the section pointer
+			 * is cleared. Keep the chain pointer of a dead switch
+			 * unused: it stays a standalone tail.
+			 */
+			prevSavePtr = NULL;
+		    }
 		}
 	    }
 
@@ -7301,6 +7622,24 @@ DeleteRange(
 	 * The beginning and end of the deletion range are in different lines,
 	 * so join the two lines and discard the ending line.
 	 */
+
+	if (linePtr2->numBranches || linePtr2->numLinks) {
+	    /*
+	     * The remaining switches of the discarded line are moving into
+	     * linePtr1, transfer them, so that the final rebuild of linePtr1
+	     * will not count them as additional branches. If nodePtr2 is
+	     * still alive it keeps the branch count of the discarded line,
+	     * otherwise DeleteEmptyNode has already removed it.
+	     */
+	    linePtr1->numBranches += linePtr2->numBranches;
+	    linePtr1->numLinks += linePtr2->numLinks;
+	    if (linePtr2->numBranches) {
+		if (nodePtr2) {
+		    PropagateChangeOfNumBranches(nodePtr2, -(int) linePtr2->numBranches);
+		}
+		PropagateChangeOfNumBranches(linePtr1->parentPtr, (int) linePtr2->numBranches);
+	    }
+	}
 
 	linePtr1->lastPtr = linePtr2->lastPtr;
 	if ((linePtr1->nextPtr = linePtr2->nextPtr)) {
@@ -7352,20 +7691,43 @@ DeleteRange(
 
     /*
      * Re-add saved branch or link segment to the start of the deleted range.
+     * If both a link and a branch have been saved, then the deletion range
+     * started inside one elided region and ended inside another one, or the
+     * range is delimited by an immediately adjacent elided region on either
+     * side. The remnants of both regions are merging into a single region:
+     * connect the outer switches and dispose of the saved pair, because
+     * adjacent switches are not allowed.
      */
 
-    if (savedSegPtr) {
-	savedSegPtr->sectionPtr = NULL; /* sections are rebuilt just below */
-	LinkSwitch(linePtr1, firstSegPtr, savedSegPtr);
+    if (savedLinkPtr && savedBranchPtr) {
+	TkTextSegment *branchPtr = savedLinkPtr->body.link.prevPtr;
+	TkTextSegment *linkPtr = savedBranchPtr->body.branch.nextPtr;
 
-	if (savedSegPtr->typePtr == &tkTextBranchType) {
-	    linePtr1->numBranches += 1;
-	    PropagateChangeOfNumBranches(linePtr1->parentPtr, 1);
-	} else if (savedSegPtr->typePtr == &tkTextLinkType) {
-	    linePtr1->numLinks += 1;
-	} else {
-	    assert(!"wrong savedSegPtr type in DeleteRange"); /* this should not happen */
+	assert(branchPtr->typePtr == &tkTextBranchType);
+	assert(linkPtr->typePtr == &tkTextLinkType);
+	assert(!insertSurrogate || savedLinkPtr != pulledLinkPtr);
+	branchPtr->body.branch.nextPtr = linkPtr;
+	linkPtr->body.link.prevPtr = branchPtr;
+	if (undoInfo) {
+	    /* Both are already recorded in the undo chain: record them unlinked. */
+	    savedLinkPtr->nextPtr = NULL;
+	    savedLinkPtr->sectionPtr = NULL;
+	    savedBranchPtr->nextPtr = NULL;
+	    savedBranchPtr->sectionPtr = NULL;
 	}
+	TkBTreeFreeSegment(savedLinkPtr);
+	TkBTreeFreeSegment(savedBranchPtr);
+    } else if (savedLinkPtr) {
+	savedLinkPtr->tagInfoPtr = NULL; /* discard counterpart stashed by LinkDeleteProc */
+	savedLinkPtr->sectionPtr = NULL; /* sections are rebuilt just below */
+	LinkSwitch(linePtr1, firstSegPtr, savedLinkPtr);
+	linePtr1->numLinks += 1;
+    } else if (savedBranchPtr) {
+	savedBranchPtr->tagInfoPtr = NULL; /* discard counterpart stashed by BranchDeleteProc */
+	savedBranchPtr->sectionPtr = NULL; /* sections are rebuilt just below */
+	LinkSwitch(linePtr1, firstSegPtr, savedBranchPtr);
+	linePtr1->numBranches += 1;
+	PropagateChangeOfNumBranches(linePtr1->parentPtr, 1);
     }
 
     /*
@@ -7574,8 +7936,21 @@ DeleteRange(
 	if (beforeSurrogate) {
 	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
 	    TkTextIndexSetSegment(&index, beforeSurrogate);
+	    if (beforeSurrogate->size > 0) {
+		/*
+		 * The surrogate belongs behind this segment, but
+		 * TkTextIndexSetSegment has addressed its first byte.
+		 */
+		TkTextIndexSetByteIndex(&index,
+			TkTextIndexGetByteIndex(&index) + beforeSurrogate->size);
+	    }
 	} else {
-	    TkTextIndexSetupToStartOfText(&index, NULL, sharedTextPtr->tree);
+	    /*
+	     * The deletion started at the beginning of linePtr1 (possibly
+	     * start of text): this is where the surrogate belongs.
+	     */
+	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
+	    TkTextIndexSetToStartOfLine2(&index, linePtr1);
 	}
 	DEBUG(tkBTreeDebug = false); /* otherwise protected segment will be complained */
 	TkBTreeInsertChars(sharedTextPtr->tree, &index, "\n",
@@ -15945,6 +16320,7 @@ BranchDeleteProc(
     }
 
     if (flags & DELETE_BRANCHES) {
+	segPtr->tagInfoPtr = NULL; /* this may still hold the counterpart (see below) */
 	TkBTreeFreeSegment(segPtr);
 	return 1;
     }
@@ -15976,10 +16352,14 @@ BranchRestoreProc(
     TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
-    /* Restore old relationship. */
-    segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+    if (segPtr->tagInfoPtr) {
+	/* Restore old relationship. */
+	segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+	segPtr->tagInfoPtr = NULL;
+    } /* else this branch stayed alive in the tree, the relationship is intact */
     assert(segPtr->body.branch.nextPtr->typePtr == &tkTextLinkType);
-    segPtr->tagInfoPtr = NULL;
+    /* The counterpart may have been re-connected meanwhile (see DeleteRange). */
+    segPtr->body.branch.nextPtr->body.link.prevPtr = segPtr;
     return 1;
 }
 
@@ -16134,6 +16514,7 @@ LinkDeleteProc(
     }
 
     if (flags & DELETE_BRANCHES) {
+	segPtr->tagInfoPtr = NULL; /* this may still hold the counterpart (see below) */
 	TkBTreeFreeSegment(segPtr);
 	return 1;
     }
@@ -16165,10 +16546,14 @@ LinkRestoreProc(
     TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
-    /* Restore old relationship (misuse of an unused pointer). */
-    segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+    if (segPtr->tagInfoPtr) {
+	/* Restore old relationship (misuse of an unused pointer). */
+	segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+	segPtr->tagInfoPtr = NULL;
+    } /* else this link stayed alive in the tree, the relationship is intact */
     assert(segPtr->body.link.prevPtr->typePtr == &tkTextBranchType);
-    segPtr->tagInfoPtr = NULL;
+    /* The counterpart may have been re-connected meanwhile (see DeleteRange). */
+    segPtr->body.link.prevPtr->body.branch.nextPtr = segPtr;
     return 1;
 }
 

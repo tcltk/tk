@@ -960,7 +960,8 @@ TkTextClearTags(
     TkTextUndoInfo undoInfo;
     TkTextUndoInfo *undoInfoPtr;
 
-    undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
+    /* A full stack evicts its oldest atom when the new one is pushed. */
+    undoInfoPtr = sharedTextPtr->undoStack ? &undoInfo : NULL;
     tagPtr = TkBTreeClearTags(sharedTextPtr, textPtr, indexPtr1, indexPtr2, undoInfoPtr,
 	    discardSelection, TkTextRedrawTag);
     if (tagPtr && undoInfoPtr && undoInfo.token) {
@@ -2671,7 +2672,7 @@ ChangeTagPriority(
 	return false;
     }
 
-    if (undo && tagPtr->undo && !TkTextUndoStackIsFull(sharedTextPtr->undoStack)) {
+    if (undo && tagPtr->undo && sharedTextPtr->undoStack) {
 	UndoTokenTagPriority *token = (UndoTokenTagPriority *) tagPtr->recentChangePriorityToken;
 
 	/*

@@ -262,6 +262,8 @@ InsertCurrentAtom(
 	     * we assume that the new undo atom size is the same as the
 	     * undo size before the redo).
 	     */
+	    FreeItems(stack, &stack->current->data);
+	    ResetCurrent(stack, 0);
 	    if (stack->doingUndo) {
 		/*
 		 * We do not push this redo atom while peforming an undo, so all
@@ -270,12 +272,13 @@ InsertCurrentAtom(
 		ClearRedoStack(stack);
 	    } else {
 		/*
-		 * We do not push this undo atom, so the content becomes irreversible.
+		 * We do not push this undo atom, so the retained undo and redo
+		 * atoms cannot be replayed against the changed content anymore:
+		 * clear the stack, the content becomes irreversible.
 		 */
+		TkTextUndoClearStack(stack);
 		stack->irreversible = true;
 	    }
-	    FreeItems(stack, &stack->current->data);
-	    ResetCurrent(stack, 0);
 	    return;
 	}
     }

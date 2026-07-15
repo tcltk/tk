@@ -248,7 +248,7 @@ TkRangeListContainsAny(
 	return false;
     }
 
-    if (entry->high == low + 1 && ++entry == last) {
+    if (entry->high == low - 1 && ++entry == last) {
 	return false;
     }
 
@@ -408,6 +408,13 @@ TkRangeListAdd(
 	    /* new lower bound of current range */
 	    ranges->count += curr->low - low;
 	    curr->low = low;
+	    if (curr->high < high) {
+		/* and also new upper bound */
+		ranges->count += high - curr->high;
+		curr->high = high;
+		/* possibly we have to amalgamate succeeding items */
+		Amalgamate(ranges, curr);
+	    }
 	} else {
 	    /* insert new entry before current */
 	    curr = Insert(&ranges, curr);
@@ -610,9 +617,9 @@ TkRangeListDelete(
 
     for ( ; curr != last && curr->low < low; ++curr) {
 	if (curr->high <= high) {
-	    ranges->count -= TkRangeSpan(curr);
-	    curr->high = curr->low;
-	    ranges->count += 1;
+	    /* the tail [low, curr->high] will be deleted, keep [curr->low, low - 1] */
+	    ranges->count -= curr->high - low + 1;
+	    curr->high = low - 1;
 	} else {
 	    ranges->count -= span;
 	    curr->high -= span;
@@ -633,30 +640,24 @@ TkRangeListDelete(
 
 	if (curr->low <= high) {
 	    ranges->count -= TkRangeSpan(curr);
-	    if (curr->low <= high) {
-		curr->low = high + 1 - span;
-	    } else {
-		curr->low -= span;
-	    }
+	    curr->low = high + 1 - span;
 	    curr->high -= span;
 	    assert(curr->low <= curr->high);
 	    ranges->count += TkRangeSpan(curr);
 
 	    /* possibly we have to amalgamate with previous */
 
-	    if (curr > ranges->items) {
+	    if (curr > ranges->items && (curr - 1)->high + 1 >= curr->low) {
 		TkRange *prev = curr - 1;
 
-		if (prev->high + 1 >= curr->low) {
-		    ranges->count -= TkRangeSpan(curr);
-		    ranges->count -= TkRangeSpan(prev);
-		    prev->high = curr->high;
-		    ranges->count += TkRangeSpan(prev);
-		    next = curr + 1;
-		    memmove(curr, next, (last - curr)*sizeof(TkRange));
-		    ranges->size -= 1;
-		    last -= 1;
-		}
+		ranges->count -= TkRangeSpan(curr);
+		ranges->count -= TkRangeSpan(prev);
+		prev->high = curr->high;
+		ranges->count += TkRangeSpan(prev);
+		next = curr + 1;
+		memmove(curr, next, (last - next)*sizeof(TkRange));
+		ranges->size -= 1;
+		last -= 1;
 	    } else {
 		curr += 1;
 	    }
@@ -664,10 +665,31 @@ TkRangeListDelete(
 
 	/* reduce the rest by span: */
 
-	for ( ; curr != last; ++curr) {
+	if (curr != last) {
 	    assert(curr->low > high);
 	    curr->low -= span;
 	    curr->high -= span;
+
+	    /* the first reduced range may become adjacent to previous: amalgamate */
+
+	    if (curr > ranges->items && (curr - 1)->high + 1 >= curr->low) {
+		TkRange *prev = curr - 1;
+
+		assert(prev->high + 1 == curr->low);
+		prev->high = curr->high;
+		next = curr + 1;
+		memmove(curr, next, (last - next)*sizeof(TkRange));
+		ranges->size -= 1;
+		last -= 1;
+	    } else {
+		curr += 1;
+	    }
+
+	    for ( ; curr != last; ++curr) {
+		assert(curr->low > high);
+		curr->low -= span;
+		curr->high -= span;
+	    }
 	}
     }
 

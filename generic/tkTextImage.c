@@ -506,7 +506,7 @@ TkTextImageCmd(
 	    }
 	    TextChanged(sharedTextPtr, &index, mask);
 
-	    if (!TkTextUndoStackIsFull(sharedTextPtr->undoStack)) {
+	    if (sharedTextPtr->undoStack) {
 		UndoTokenLinkSegment *token;
 
 		assert(sharedTextPtr->undoStack);
