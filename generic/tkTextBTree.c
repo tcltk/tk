@@ -2015,6 +2015,7 @@ UndoClearTagsPerform(
     TkTextIndex startIndex, endIndex;
     unsigned n = token->changeListSize;
     int anyChanges = 0;
+    int nodeDirty = 0;
     bool affectsDisplayGeometry = false;
     int updateElideInfo = 0;
     TkTextSegment *segPtr;
@@ -2042,11 +2043,19 @@ UndoClearTagsPerform(
 		skip -= linePtr->size - offs;
 		if (anyChanges) {
 		    RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
-		    if (nodePtr != linePtr->nextPtr->parentPtr) {
-			UpdateNodeTags(sharedTextPtr, nodePtr);
-			nodePtr = linePtr->nextPtr->parentPtr;
-		    }
 		    anyChanges = 0;
+		}
+		if (nodePtr != linePtr->nextPtr->parentPtr) {
+		    /*
+		     * The node boundary may also be crossed while skipping
+		     * unchanged lines between two chunks: a dirty node has
+		     * to be flushed no matter how it is left.
+		     */
+		    if (nodeDirty) {
+			UpdateNodeTags(sharedTextPtr, nodePtr);
+			nodeDirty = 0;
+		    }
+		    nodePtr = linePtr->nextPtr->parentPtr;
 		}
 		linePtr = linePtr->nextPtr;
 		segPtr = linePtr->segPtr;
@@ -2061,11 +2070,15 @@ UndoClearTagsPerform(
 		    if (!(sectionPtr = sectionPtr->nextPtr)) {
 			if (anyChanges) {
 			    RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
-			    if (nodePtr != linePtr->nextPtr->parentPtr) {
-				UpdateNodeTags(sharedTextPtr, nodePtr);
-				nodePtr = linePtr->nextPtr->parentPtr;
-			    }
 			    anyChanges = 0;
+			}
+			if (nodePtr != linePtr->nextPtr->parentPtr) {
+			    /* see above: flush a dirty node on every crossing */
+			    if (nodeDirty) {
+				UpdateNodeTags(sharedTextPtr, nodePtr);
+				nodeDirty = 0;
+			    }
+			    nodePtr = linePtr->nextPtr->parentPtr;
 			}
 			linePtr = linePtr->nextPtr;
 			assert(linePtr);
@@ -2081,11 +2094,15 @@ UndoClearTagsPerform(
 		if (!(segPtr = segPtr->nextPtr)) {
 		    if (anyChanges) {
 			RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
-			if (nodePtr != linePtr->nextPtr->parentPtr) {
-			    UpdateNodeTags(sharedTextPtr, nodePtr);
-			    nodePtr = linePtr->nextPtr->parentPtr;
-			}
 			anyChanges = 0;
+		    }
+		    if (nodePtr != linePtr->nextPtr->parentPtr) {
+			/* see above: flush a dirty node on every crossing */
+			if (nodeDirty) {
+			    UpdateNodeTags(sharedTextPtr, nodePtr);
+			    nodeDirty = 0;
+			}
+			nodePtr = linePtr->nextPtr->parentPtr;
 		    }
 		    linePtr = linePtr->nextPtr;
 		    assert(linePtr);
@@ -2132,6 +2149,7 @@ UndoClearTagsPerform(
 		lastSegPtr = segPtr;
 		segPtr = segPtr->nextPtr;
 		anyChanges = 1;
+		nodeDirty = 1;
 		skip = 0;
 	    }
 	}

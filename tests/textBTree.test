@@ -3318,6 +3318,44 @@ test btree-14.96 {tag clear across nodes: backward bound anchored on the range e
     destroy .t
 } -result {{} {2.0 2.4 280.0 280.4} {}}
 
+test btree-14.97 {undo of a tag clear crossing nodes: flush every dirty node} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The restore walk of UndoClearTagsPerform only refreshed the node tag
+    # sums when a node boundary was crossed while flushing line changes: a
+    # node left while skipping the gap between two restored chunks kept
+    # stale sums (panic "sum of node tag information is wrong"), also
+    # reachable with a mono-node clear when an insertion changes the node
+    # partition between the clear and its undo.
+    .t debug 1
+    for {set i 1} {$i <= 300} {incr i} { .t insert end "line$i abcdefgh\n" }
+    .t tag configure T0 -underline 1
+    .t tag add T0 5.2 5.6
+    .t tag add T0 250.2 250.6
+    .t edit reset
+    .t tag clear 4.0 251.0
+    .t edit separator
+    .t edit undo
+    set res [list [.t tag ranges T0]]
+    .t edit redo
+    lappend res [.t tag ranges T0]
+    .t edit undo
+    for {set i 0} {$i < 10} {incr i} { .t insert end "x$i y\n" }
+    .t edit separator
+    .t tag clear 4.0 251.0
+    .t edit separator
+    for {set i 0} {$i < 10} {incr i} { .t insert end "z$i w\n" }
+    .t edit separator
+    .t edit undo
+    .t edit undo
+    lappend res [.t tag ranges T0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{5.2 5.6 250.2 250.6} {} {5.2 5.6 250.2 250.6}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
