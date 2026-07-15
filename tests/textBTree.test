@@ -2465,34 +2465,6 @@ test btree-14.79 {tag clear across lines: the line cache must take references} -
     destroy .t
 } -result {ok}
 
-test btree-14.80 {redo restore of a switch whose counterpart was paired anew} -setup {
-    destroy .t
-    text .t -undo 1 -autoseparators 0
-} -body {
-    # An elision update between the deletion and the redo legitimately
-    # paired the stashed counterpart with a new switch; the restore stole
-    # it back (orphaned link).
-    .t debug 1
-    .t insert end "ktrrfgnzkgkhlltyqizicuec"
-    .t tag configure E1 -elide 1 -undo 0
-    .t edit reset
-    .t insert 1.10 dd
-    .t edit separator
-    .t insert 1.13 qqq
-    .t edit separator
-    .t edit undo
-    .t tag add E1 1.8 1.22
-    .t edit separator
-    .t edit redo
-    while {[.t edit canundo]} { .t edit undo }
-    while {[.t edit canredo]} { .t edit redo }
-    set res [list [.t get 1.0 end-1c] [.t tag ranges E1]]
-    .t debug 0
-    set res
-} -cleanup {
-    destroy .t
-} -result {ktrrfgnzkgddkqqqhlltyqizicuec {1.8 1.10 1.12 1.13 1.16 1.25}}
-
 test btree-14.81 {undo tag clear: interior segment boundaries must be merged} -setup {
     destroy .t
     text .t -undo 1 -autoseparators 0

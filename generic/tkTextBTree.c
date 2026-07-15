@@ -9847,16 +9847,6 @@ UpdateElideInfo(
 	}
     }
 
-    if (keptBranchPtr && danglingLinkPtr) {
-	/* The kept branch adopts the link which lost its branch. */
-	keptBranchPtr->body.branch.nextPtr = danglingLinkPtr;
-	danglingLinkPtr->body.link.prevPtr = keptBranchPtr;
-	danglingLinkPtr = NULL;
-	if (keptBranchPtr == danglingBranchPtr) {
-	    danglingBranchPtr = NULL;
-	}
-    }
-
     if (deletedBranchPtr) { TkBTreeFreeSegment(deletedBranchPtr); }
     if (deletedLinkPtr) { TkBTreeFreeSegment(deletedLinkPtr); }
 
@@ -16878,16 +16868,12 @@ BranchRestoreProc(
 	TkTextSegment *counterpartPtr = (TkTextSegment *) segPtr->tagInfoPtr;
 
 	segPtr->tagInfoPtr = NULL;
-	if (counterpartPtr->body.link.prevPtr != segPtr) {
+	if (!counterpartPtr->body.link.prevPtr) {
 	    /*
 	     * The stashed counterpart has been annihilated by an elision
-	     * update (NULL fork, see UpdateElideInfo), or it has been
-	     * legitimately paired with another switch in the meantime (an
-	     * elision update between the deletion and this restore): the
-	     * old relationship cannot be restored. Drop this switch, the
-	     * elide topology is recomputed from the tags after the restore.
-	     * A counterpart which died into the same token still points
-	     * here, whole pairs keep restoring normally.
+	     * update (NULL fork, see UpdateElideInfo), the old relationship
+	     * cannot be restored. Drop this switch too, the elide topology
+	     * is recomputed from the tags after the restore.
 	     */
 	    TkBTreeFreeSegment(counterpartPtr);
 	    TkBTreeFreeSegment(segPtr);
@@ -17107,9 +17093,8 @@ LinkRestoreProc(
 	TkTextSegment *counterpartPtr = (TkTextSegment *) segPtr->tagInfoPtr;
 
 	segPtr->tagInfoPtr = NULL;
-	if (counterpartPtr->body.branch.nextPtr != segPtr) {
-	    /* Stashed counterpart annihilated or paired with another switch
-	     * in the meantime, see BranchRestoreProc. */
+	if (!counterpartPtr->body.branch.nextPtr) {
+	    /* Stashed counterpart annihilated, see BranchRestoreProc. */
 	    TkBTreeFreeSegment(counterpartPtr);
 	    TkBTreeFreeSegment(segPtr);
 	    return 0;
