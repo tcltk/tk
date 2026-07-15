@@ -2823,7 +2823,22 @@ TkBTreeJoinUndoDelete(
 
 	if (myToken2->endIndex.lineIndex == -1) {
 	    myToken1->endIndex = myToken2->endIndex;
+	} else if (myToken2->startIndex.lineIndex != -1
+		&& myToken2->endIndex.lineIndex > myToken2->startIndex.lineIndex
+		&& myToken1->startIndex.lineIndex != -1
+		&& myToken1->endIndex.lineIndex != -1) {
+	    /*
+	     * The second chunk spans line boundaries: its end keeps the byte
+	     * offset in the last spanned line, but the line index has to be
+	     * shifted by the newlines contained in the first chunk, which
+	     * will be restored before it.
+	     */
+	    myToken1->endIndex.lineIndex = myToken2->endIndex.lineIndex
+		    + (myToken1->endIndex.lineIndex - myToken1->startIndex.lineIndex);
+	    myToken1->endIndex.u.byteIndex = myToken2->endIndex.u.byteIndex;
+	    myToken1->surrogate = myToken2->surrogate;
 	} else if (myToken1->endIndex.lineIndex != -1) {
+	    /* the second chunk lies on a single line */
 	    myToken1->endIndex.u.byteIndex += byteSize2;
 	} else if (myToken2->endIndex.lineIndex != -1) {
 	    myToken1->endIndex.u.byteIndex = myToken2->endIndex.u.byteIndex + byteSize1;
@@ -2847,18 +2862,13 @@ TkBTreeJoinUndoDelete(
 	unsigned numSegments1 = myToken1->numSegments;
 	TkTextSegment **segments;
 
-	if (myToken2->startIndex.lineIndex == -1) {
-	    myToken1->startIndex = myToken2->startIndex;
-	} else if (myToken2->endIndex.lineIndex != -1) {
-	    myToken1->startIndex.u.byteIndex = myToken2->endIndex.u.byteIndex - byteSize1;
-	    myToken1->startIndex.lineIndex = myToken2->endIndex.lineIndex;
-	} else if (myToken1->endIndex.lineIndex != -1) {
-	    myToken1->startIndex.u.byteIndex = myToken1->endIndex.u.byteIndex - byteSize1 - byteSize2;
-	    myToken1->startIndex.lineIndex = myToken1->endIndex.lineIndex;
-	} else {
-	    myToken1->startIndex.u.byteIndex = myToken1->startIndex.u.byteIndex + byteSize1 + byteSize2;
-	    myToken1->startIndex.lineIndex = myToken1->startIndex.lineIndex;
-	}
+	/*
+	 * The joined range starts where the second chunk starts. This
+	 * position is valid in the current tree as well as after the undo,
+	 * whatever its representation (mark, or line/byte pair): nothing
+	 * before it has changed.
+	 */
+	myToken1->startIndex = myToken2->startIndex;
 
 	myToken1->numSegments += myToken2->numSegments;
 	segments = (TkTextSegment **)Tcl_Alloc(myToken1->numSegments*sizeof(segments[0]));

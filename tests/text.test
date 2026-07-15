@@ -7482,6 +7482,141 @@ test text-27.36 {full -maxundo stack evicts the oldest atom instead of retaining
 } -cleanup {
     destroy .t
 } -result {efghij 2 cdefghij}
+test text-27.37 {join of delete undo tokens, second chunk spans a newline} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    .t insert end "abcd\nefgh"
+    .t edit separator
+    .t delete 1.0 1.1
+    .t delete 1.0 2.0
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "abcd\nefgh" efgh]
+test text-27.38 {join of delete undo tokens, prepend case} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    .t insert end "abcdefghijabcdefghij"
+    .t edit separator
+    .t delete 1.5 1.20
+    .t delete 1.3 1.5
+    .t delete 1.2 1.3
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {abcdefghijabcdefghij ab}
+test text-27.39 {join of delete undo tokens, multiline deletes reaching the last line} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    set content [string repeat "aaaaaaaaaa\n" 13]aaaaaaaaaa
+    .t insert end $content
+    .t edit separator
+    .t delete 5.4 6.7
+    .t delete 5.3 6.8
+    .t delete 11.3 12.3
+    .t delete 8.2 11.3
+    .t edit undo
+    set res [.t get 1.0 end-1c]
+    .t debug 0
+    string equal $res $content
+} -cleanup {
+    destroy .t
+} -result {1}
+test text-27.40 {triple prepend join of delete undo tokens, silent corruption} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    .t insert end "abcdef"
+    .t edit separator
+    .t delete 1.3 1.6
+    .t delete 1.1 1.3
+    .t delete 1.0 1.1
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {abcdef {}}
+test text-27.41 {join of delete undo tokens, second chunk spans two newlines} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    .t insert end "ab\ncd\nef\ngh"
+    .t edit separator
+    .t delete 1.0 1.1
+    .t delete 1.0 3.0
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "ab\ncd\nef\ngh" "ef\ngh"]
+test text-27.42 {prepend join of delete undo tokens, second chunk spans a newline} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    .t insert end "abcd\nefgh"
+    .t edit separator
+    .t delete 2.0 2.2
+    .t delete 1.2 2.0
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "abcd\nefgh" abgh]
+test text-27.43 {join of delete undo tokens, second chunk eats the final newline} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1 -autoseparators 0
+    .t debug 1
+    .t insert end "ab\ncd"
+    .t edit separator
+    .t delete 1.0 1.1
+    .t delete 1.0 end
+    set res {}
+    .t edit undo
+    lappend res [.t get 1.0 end-1c]
+    .t edit redo
+    lappend res [.t get 1.0 end-1c]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result [list "ab\ncd" {}]
 test text-27.29 {bug ab839efc5f - .text edit undo inserts separators} -setup {
     destroy .t
 } -body {
