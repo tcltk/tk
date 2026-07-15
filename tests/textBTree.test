@@ -3288,6 +3288,36 @@ phflavrk}
     destroy .t
 } -result {14 {} {1.2 1.3 2.3 2.5}}
 
+test btree-14.96 {tag clear across nodes: backward bound anchored on the range end} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The restriction of the processed range anchored the backward search
+    # for the last tagged segment one char before the range START (typo),
+    # asserting (or corrupting the restricted range) on every tag clear
+    # crossing two level-0 nodes (> 32 lines); the restricted end must also
+    # lie one past the found segment, and the backstep must not use display
+    # counting (an elided tail would be jumped over).
+    .t debug 1
+    for {set i 1} {$i <= 300} {incr i} { .t insert end "line$i abcdefgh\n" }
+    .t tag configure T0 -underline 1
+    .t tag configure E0 -elide 1
+    .t tag add T0 5.2 5.6
+    .t tag add T0 250.2 250.6
+    .t tag clear 4.0 251.0
+    set res [list [.t tag ranges T0]]
+    .t tag add E0 249.0 250.0
+    .t tag add T0 249.2 249.6
+    .t tag add T0 2.0 2.4
+    .t tag add T0 280.0 280.4
+    .t tag clear 100.0 250.0
+    lappend res [.t tag ranges T0] [.t tag ranges E0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{} {2.0 2.4 280.0 280.4} {}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

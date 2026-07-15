@@ -11761,11 +11761,18 @@ TkBTreeClearTags(
 	}
 	TkTextIndexClear2(&startIndex, NULL, sharedTextPtr->tree);
 	TkTextIndexSetSegment(&startIndex, (TkTextSegment *) segPtr);
-	TkTextIndexBackChars(textPtr, indexPtr1, 1, &oneBack, COUNT_DISPLAY_INDICES);
+	/*
+	 * The backward search for the last tagged segment is anchored one
+	 * char before the (exclusive) end of the range - not the start, and
+	 * not in display counting (which would jump over an elided tail).
+	 * The restricted end is one past that segment (exclusive again).
+	 */
+	TkTextIndexBackChars(textPtr, indexPtr2, 1, &oneBack, COUNT_INDICES);
 	segPtr = TkBTreeFindPrevTagged(&oneBack, indexPtr1, discardSelection);
 	assert(segPtr);
 	TkTextIndexClear2(&endIndex, NULL, sharedTextPtr->tree);
 	TkTextIndexSetSegment(&endIndex, (TkTextSegment *) segPtr);
+	TkrTextIndexForwBytes(NULL, &endIndex, segPtr->size, &endIndex);
 	assert(TkTextIndexCompare(&startIndex, &endIndex) <= 0);
     } else {
 	startIndex = *indexPtr1;
