@@ -214,6 +214,7 @@ static TkTextSegment *	PrepareInsertIntoCharSeg(TkTextSegment *segPtr,
 			    unsigned offset, SplitInfo *splitInfo);
 static void		SplitSection(TkTextSection *sectionPtr);
 static void		SplitSectionAtSwitch(TkTextSegment *segPtr);
+static void		BalanceSectionWithLeft(TkTextSection *sectionPtr);
 static void		JoinSections(TkTextSection *sectionPtr);
 static void		PropagateChangeOfNumBranches(Node *nodePtr, int changeToNumBranches);
 static void		FreeSections(TkTextSection *sectionPtr);
@@ -5838,25 +5839,29 @@ SplitSection(
 
     if (capacityLHS + capacityRHS < length - MAX_TEXT_SEGS
 	    || (lengthRHS == 0 && capacityLHS < length - NUM_TEXT_SEGS)) {
-	if (capacityLHS) {
-	    TkTextSegment *segPtr = sectionPtr->segPtr;
-	    int i;
-
-	    for (i = capacityLHS; i < capacityLHS; ++i) {
-		sectionPtr->size -= segPtr->size;
-		sectionPtr->length -= 1;
-		sectionPtr->prevPtr->size += segPtr->size;
-		sectionPtr->prevPtr->length += 1;
-		assert(sectionPtr->prevPtr->length != 0); /* test for overflow */
-		segPtr->sectionPtr = sectionPtr->prevPtr;
-		segPtr = segPtr->nextPtr;
-		splitSegPtr = splitSegPtr->nextPtr;
-	    }
-	    sectionPtr->segPtr = segPtr;
-	}
-
 	assert(splitSegPtr);
-	assert(lengthRHS == 0 || length - capacityLHS >= MIN_TEXT_SEGS);
+	assert(lengthRHS == 0 || length >= MIN_TEXT_SEGS);
+
+	if (sectionPtr->nextPtr && length - NUM_TEXT_SEGS < MIN_TEXT_SEGS) {
+	    /*
+	     * The new right section will not be the last section of the
+	     * line, and would undershoot MIN_TEXT_SEGS with its left
+	     * boundary being an arbitrary cut, which cannot pin a short
+	     * section (see CheckSections). Move the cut to the left, both
+	     * parts will satisfy the minimum: this only triggers for
+	     * length < NUM_TEXT_SEGS + MIN_TEXT_SEGS, and NUM_TEXT_SEGS is
+	     * two times MIN_TEXT_SEGS. The walk cannot cross a switch,
+	     * a branch can only terminate the section, and a link can
+	     * only head it.
+	     */
+	    int back = MIN_TEXT_SEGS - (length - NUM_TEXT_SEGS);
+
+	    for ( ; back > 0; --back) {
+		splitSegPtr = splitSegPtr->prevPtr;
+		assert(splitSegPtr);
+		assert(splitSegPtr->typePtr->group != SEG_GROUP_BRANCH);
+	    }
+	}
 
 	newSectionPtr = (TkTextSection *)Tcl_Alloc(sizeof(TkTextSection));
 	newSectionPtr->linePtr = sectionPtr->linePtr;
@@ -6005,49 +6010,87 @@ SplitSectionAtSwitch(
     /*
      * The left part may now undershoot MIN_TEXT_SEGS. This is allowed only
      * if it is pinned by switch boundaries (see CheckSections). Otherwise
-     * balance with the left neighbor; this neighbor cannot itself be short
-     * (it was a valid unpinned section before), so both results will
-     * satisfy the constraints.
+     * balance with the left neighbor.
      */
 
     if (sectionPtr->length < MIN_TEXT_SEGS
 	    && sectionPtr->prevPtr
 	    && !IsBranchSection(sectionPtr->prevPtr)
 	    && !IsLinkSection(sectionPtr)) {
-	TkTextSection *leftPtr = sectionPtr->prevPtr;
+	BalanceSectionWithLeft(sectionPtr);
+    }
+}
 
-	if (leftPtr->length + sectionPtr->length <= NUM_TEXT_SEGS) {
-	    /* Dissolve the left part into the left neighbor. */
-	    leftPtr->size += sectionPtr->size;
-	    leftPtr->length += sectionPtr->length;
-	    assert(leftPtr->length != 0); /* test for overflow */
-	    for (sPtr = sectionPtr->segPtr;
-		    sPtr && sPtr->sectionPtr == sectionPtr;
-		    sPtr = sPtr->nextPtr) {
-		sPtr->sectionPtr = leftPtr;
-	    }
-	    leftPtr->nextPtr = newSectionPtr;
-	    newSectionPtr->prevPtr = leftPtr;
-	    FreeSection(sectionPtr);
-	} else {
-	    /* Borrow segments from the tail of the left neighbor. */
-	    int shift = MIN_TEXT_SEGS - sectionPtr->length;
+/*
+ *--------------------------------------------------------------
+ *
+ * BalanceSectionWithLeft --
+ *
+ *	Balance a section which undershoots MIN_TEXT_SEGS without being
+ *	pinned at its left boundary (see CheckSections) with its left
+ *	neighbor. The neighbor cannot itself be short (it was a valid
+ *	unpinned section before), so both results will satisfy the
+ *	constraints: either the sections are merged (at most NUM_TEXT_SEGS
+ *	segments), or MIN_TEXT_SEGS - length segments are borrowed, and
+ *	the neighbor keeps at least NUM_TEXT_SEGS - MIN_TEXT_SEGS + 1
+ *	segments, which is more than MIN_TEXT_SEGS.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The section referred to by sectionPtr may be destroyed, the left
+ *	neighbor may change.
+ *
+ *--------------------------------------------------------------
+ */
 
-	    sPtr = sectionPtr->segPtr;
-	    for ( ; shift > 0; --shift) {
-		sPtr = sPtr->prevPtr;
-		assert(sPtr);
-		assert(sPtr->sectionPtr == leftPtr);
-		assert(sPtr->typePtr != &tkTextBranchType);
-		sPtr->sectionPtr = sectionPtr;
-		sectionPtr->size += sPtr->size;
-		sectionPtr->length += 1;
-		leftPtr->size -= sPtr->size;
-		leftPtr->length -= 1;
-	    }
-	    sectionPtr->segPtr = sPtr;
-	    assert(leftPtr->length >= MIN_TEXT_SEGS);
+static void
+BalanceSectionWithLeft(
+    TkTextSection *sectionPtr)	/* Short section, not pinned at its left boundary. */
+{
+    TkTextSection *leftPtr = sectionPtr->prevPtr;
+    TkTextSegment *sPtr;
+
+    assert(leftPtr);
+    assert(sectionPtr->length > 0);
+    assert(sectionPtr->length < MIN_TEXT_SEGS);
+    assert(!IsBranchSection(leftPtr));
+    assert(!IsLinkSection(sectionPtr));
+
+    if (leftPtr->length + sectionPtr->length <= NUM_TEXT_SEGS) {
+	/* Dissolve this section into the left neighbor. */
+	leftPtr->size += sectionPtr->size;
+	leftPtr->length += sectionPtr->length;
+	assert(leftPtr->length != 0); /* test for overflow */
+	for (sPtr = sectionPtr->segPtr;
+		sPtr && sPtr->sectionPtr == sectionPtr;
+		sPtr = sPtr->nextPtr) {
+	    sPtr->sectionPtr = leftPtr;
 	}
+	leftPtr->nextPtr = sectionPtr->nextPtr;
+	if (sectionPtr->nextPtr) {
+	    sectionPtr->nextPtr->prevPtr = leftPtr;
+	}
+	FreeSection(sectionPtr);
+    } else {
+	/* Borrow segments from the tail of the left neighbor. */
+	int shift = MIN_TEXT_SEGS - sectionPtr->length;
+
+	sPtr = sectionPtr->segPtr;
+	for ( ; shift > 0; --shift) {
+	    sPtr = sPtr->prevPtr;
+	    assert(sPtr);
+	    assert(sPtr->sectionPtr == leftPtr);
+	    assert(sPtr->typePtr != &tkTextBranchType);
+	    sPtr->sectionPtr = sectionPtr;
+	    sectionPtr->size += sPtr->size;
+	    sectionPtr->length += 1;
+	    leftPtr->size -= sPtr->size;
+	    leftPtr->length -= 1;
+	}
+	sectionPtr->segPtr = sPtr;
+	assert(leftPtr->length >= MIN_TEXT_SEGS);
     }
 }
 
@@ -6182,6 +6225,18 @@ JoinSections(
 	     */
 	    SplitSection(nextSectionPtr);
 	}
+    } else if (length < MIN_TEXT_SEGS
+	    && sectionPtr->nextPtr
+	    && sectionPtr->prevPtr
+	    && !isLinkSegment
+	    && !IsBranchSection(sectionPtr->prevPtr)) {
+	/*
+	 * This section is short and pinned at its right boundary only (it
+	 * ends with a branch, or the next section starts with a link); its
+	 * left boundary is an arbitrary cut, which cannot pin a short
+	 * section (see CheckSections). Balance with the left neighbor.
+	 */
+	BalanceSectionWithLeft(sectionPtr);
     } else if (length > NUM_TEXT_SEGS) {
 	int lengthRHS, shift;
 
@@ -6349,6 +6404,44 @@ RebuildSections(
 	    }
 	    if (!segPtr || segPtr->typePtr == &tkTextLinkType) {
 		break;
+	    }
+	}
+
+	if (length == NUM_TEXT_SEGS && segPtr && segPtr->typePtr != &tkTextLinkType) {
+	    /*
+	     * The section has been closed at the quota. If the following run
+	     * is terminated by a switch boundary in less than MIN_TEXT_SEGS
+	     * segments, the resulting section would be short with its left
+	     * boundary being an arbitrary cut, which cannot pin a short
+	     * section (see CheckSections): give back some segments, both
+	     * parts will satisfy the minimum, because NUM_TEXT_SEGS is two
+	     * times MIN_TEXT_SEGS. The given back segments will be assigned
+	     * to the next section by the next iteration.
+	     */
+
+	    TkTextSegment *sPtr = segPtr;
+	    unsigned tail = 0;
+
+	    while (sPtr && tail < MIN_TEXT_SEGS) {
+		if (sPtr->typePtr == &tkTextLinkType) {
+		    break; /* the link heads the next section, boundary reached */
+		}
+		tail += 1;
+		if (sPtr->typePtr == &tkTextBranchType) {
+		    break; /* the branch terminates the run, boundary reached */
+		}
+		sPtr = sPtr->nextPtr;
+	    }
+	    if (sPtr && sPtr->typePtr->group == SEG_GROUP_BRANCH
+		    && 0 < tail && tail < MIN_TEXT_SEGS) {
+		unsigned back = MIN_TEXT_SEGS - tail;
+
+		for ( ; back > 0; --back) {
+		    segPtr = segPtr->prevPtr;
+		    sectionPtr->size -= segPtr->size;
+		    sectionPtr->length -= 1;
+		    assert(segPtr->typePtr->group != SEG_GROUP_BRANCH);
+		}
 	    }
 	}
 
@@ -7875,15 +7968,25 @@ DeleteRange(
 	 */
 
 	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)) {
+	    TkTextSection *shrunkSectionPtr = firstSegPtr->sectionPtr;
+	    int sole = shrunkSectionPtr->length == 1;
+
 	    UnlinkSegment(firstSegPtr);
 	    assert(firstSegPtr->typePtr->deleteProc);
 	    if (!firstSegPtr->typePtr->deleteProc(sharedTextPtr, firstSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
 	    }
 	    firstSegPtr->sectionPtr = NULL;
+	    if (!sole) {
+		/* The shrunk section may have lost its permission to be short. */
+		JoinSections(shrunkSectionPtr);
+	    }
 	    countChanges += 1;
 	}
 	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
+	    TkTextSection *shrunkSectionPtr = lastSegPtr->sectionPtr;
+	    int sole = shrunkSectionPtr->length == 1;
+
 	    UnlinkSegment(lastSegPtr);
 	    assert(lastSegPtr->typePtr->deleteProc);
 	    if (!lastSegPtr->typePtr->deleteProc(sharedTextPtr, lastSegPtr, flags)) {
