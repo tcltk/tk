@@ -9573,6 +9573,11 @@ UpdateElideInfo(
 	    int shouldBeElided = (tagPtr || reason == ELISION_HAS_BEEN_CHANGED)
 		    ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
+	    int transitionHandled = 0;
+				/* A kept switch already realizes the elide
+				 * transition at this segment; a removed switch
+				 * must not swallow it, the insertion below
+				 * still has to run. */
 
 	    if (prevBranchPtr) {
 		if (!shouldBeElided || actualElided) {
@@ -9629,6 +9634,7 @@ UpdateElideInfo(
 		} else {
 		    /* This kept branch opens the current elided range. */
 		    keptBranchPtr = prevBranchPtr;
+		    transitionHandled = 1;
 		}
 	    } else if (prevLinkPtr) {
 		if (shouldBeElided || !actualElided) {
@@ -9689,6 +9695,7 @@ UpdateElideInfo(
 		    }
 		    newBranchPtr = NULL;
 		    keptBranchPtr = NULL;
+		    transitionHandled = 1;
 		} else if (keptBranchPtr
 			&& prevLinkPtr->body.link.prevPtr != keptBranchPtr) {
 		    /*
@@ -9706,11 +9713,14 @@ UpdateElideInfo(
 			danglingBranchPtr = NULL;
 		    }
 		    keptBranchPtr = NULL;
+		    transitionHandled = 1;
 		} else {
 		    /* The kept link closes the current elided range. */
 		    keptBranchPtr = NULL;
+		    transitionHandled = 1;
 		}
-	    } else if (actualElided != shouldBeElided) {
+	    }
+	    if (!transitionHandled && actualElided != shouldBeElided) {
 		if (shouldBeElided) {
 		    /*
 		     * We have to insert a branch.

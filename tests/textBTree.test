@@ -2773,6 +2773,82 @@ test btree-14.91 {elide recompute walk: link insertion search anchored on a mark
     destroy .t
 } -result {1 {} {1.1 1.3 1.8 1.9}}
 
+test btree-14.92 {elide walk: a removed switch must not swallow the transition} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+    # The number of displayed chars must match the elision by tags (E0/E1
+    # are the only elide tags, both -elide 1, so plain range union applies).
+    proc elideConsistent-14-92 {w} {
+	set iv {}
+	foreach t {E0 E1} {
+	    foreach {a b} [$w tag ranges $t] {
+		lappend iv [list [$w count -chars 1.0 $a] [$w count -chars 1.0 $b]]
+	    }
+	}
+	set hidden 0
+	set last -1
+	foreach r [lsort -integer -index 0 $iv] {
+	    lassign $r a b
+	    if {$a < $last} { set a $last }
+	    if {$b > $a} { incr hidden [expr {$b - $a}] ; set last $b }
+	}
+	set total [$w count -chars 1.0 end]
+	expr {[$w count -displaychars 1.0 end] == $total - $hidden}
+    }
+} -body {
+    # Undoing the delete restores the chars without their -undo 0 elide tag,
+    # and the recompute finds a link where elision now starts: the walk
+    # removed the link but the else-if chain swallowed the transition of the
+    # content segment behind it, leaving the still elided remainder of the
+    # zone without an opening branch (silent, the display shows tagged-elided
+    # text) - the pending E1 close then detonates a later undo. Recorded fuzz
+    # scenario (fuzz_tagops seed 969 variant, P12 detonator).
+    .t debug 1
+    .t insert end "lgepvgspifn\nhilnuomspypcqclcoizgbazi"
+    foreach {t opts} {E0 {-elide 1} E1 {-elide 1 -undo 0} T0 {-underline 0} T1 {-undo 0 -underline 0}} {
+	.t tag configure $t {*}$opts
+    }
+    .t edit reset
+    .t tag add E0 1.0 1.1
+    .t edit separator
+    .t tag remove T0 1.3 1.10
+    .t edit separator
+    .t tag add T1 1.1 1.5
+    .t edit separator
+    .t tag add E0 2.7 2.15
+    .t edit separator
+    .t tag add E1 2.9 2.22
+    .t edit separator
+    .t tag add E0 1.3 1.5
+    .t edit separator
+    .t delete 1.1 2.22
+    .t edit separator
+    .t tag add T1 1.1 1.3
+    .t edit separator
+    .t tag add E1 1.1 1.3
+    .t edit separator
+    .t tag remove T1 1.1 1.3
+    .t edit separator
+    .t tag remove E0 1.2 1.3
+    .t edit separator
+    .t tag add E0 1.1 1.3
+    .t edit separator
+    .t edit undo
+    set res [elideConsistent-14-92 .t]
+    while {[.t edit canundo]} { .t edit undo }
+    lappend res [string equal [.t get 1.0 end-1c] "lgepvgspifn\nhilnuomspypcqclcoizgbazi"]
+    lappend res [elideConsistent-14-92 .t]
+    while {[.t edit canredo]} { .t edit redo }
+    while {[.t edit canundo]} { .t edit undo }
+    while {[.t edit canredo]} { .t edit redo }
+    lappend res [elideConsistent-14-92 .t]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+    rename elideConsistent-14-92 {}
+} -result {1 1 1 1}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
