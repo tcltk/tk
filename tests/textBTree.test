@@ -2599,6 +2599,71 @@ test btree-14.85 {undo of tag clear drops an elide tag: switches within one line
     destroy .t
 } -result {{1.6 1.8} {}}
 
+test btree-14.86 {tag clear: a boundary line must not reuse the other boundary's recomputed summary} -setup {
+    destroy .t
+    text .t -undo 0
+} -body {
+    # Both boundary lines share the same (tagon, tagoff) tag set objects
+    # after the multiline add; the left-amputating clear recomputes line 1
+    # as empty and used to serve that cached result to line 2, whose kept
+    # tail still carries the tag (panic "sum of node tag information is
+    # wrong (tagon)", and stale tag roots).
+    .t debug 1
+    .t insert end "abcdef\nbcd"
+    .t tag configure T0 -underline 0
+    .t tag add T0 1.3 2.2
+    .t tag clear 1.1 2.1
+    set res [.t tag ranges T0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {2.1 2.2}
+
+test btree-14.87 {redo of a tag clear after redo of the add re-aliases the boundary lines} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The interposed delete/undo de-aliases the boundary lines (the direct
+    # clear is correct), then redo of the add aliases them again: the redo
+    # of the clear replays TkBTreeClearTags and used to hit the cache.
+    .t debug 1
+    .t insert end "zuzewepkchcvogpjncp\nmiottabxjolkhhemgji"
+    .t tag configure T0 -underline 0
+    .t tag add T0 1.16 2.16
+    .t edit separator
+    .t delete 1.16 2.6
+    .t edit separator
+    .t edit undo
+    .t tag clear 1.12 2.12
+    .t edit separator
+    .t edit undo
+    .t edit undo
+    .t edit redo
+    .t edit redo
+    set res [.t tag ranges T0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {2.12 2.16}
+
+test btree-14.88 {tag clear amputating an elided multiline range from the left} -setup {
+    destroy .t
+    text .t -undo 0
+} -body {
+    .t debug 1
+    .t insert end "abcdef\nbcd"
+    .t tag configure E0 -elide 1
+    .t tag add E0 1.3 2.2
+    .t tag clear 1.1 2.1
+    set res [.t tag ranges E0]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {2.1 2.2}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

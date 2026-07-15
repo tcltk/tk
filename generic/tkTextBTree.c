@@ -10874,10 +10874,6 @@ TkBTreeTag(
 typedef struct ClearTagsData {
     unsigned skip;
     unsigned capacity;
-    TkTextTagSet *tagonPtr;
-    TkTextTagSet *tagoffPtr;
-    TkTextTagSet *newTagonPtr;
-    TkTextTagSet *newTagoffPtr;
     UndoTagChange *tagChangePtr;
     TkTextSegment *firstSegPtr;
     TkTextSegment *lastSegPtr;
@@ -11093,41 +11089,31 @@ ClearTagsFromLine(
 	if (firstPtr || lastPtr) {
 	    TkTextTagSet *tagonPtr, *tagoffPtr;
 
-	    if (linePtr->tagonPtr == data->tagonPtr && linePtr->tagoffPtr == data->tagoffPtr) {
-		/*
-		 * The cached result pointers are not owned (no reference is
-		 * held for the cache), so the replace must take its own
-		 * reference (TagSetReplace transfers, it does not increment).
-		 */
-		assert(TkTextTagSetRefCount(data->newTagonPtr) > 0);
-		TagSetAssign(&linePtr->tagonPtr, data->newTagonPtr);
-		assert(TkTextTagSetRefCount(data->newTagoffPtr) > 0);
-		TagSetAssign(&linePtr->tagoffPtr, data->newTagoffPtr);
+	    /*
+	     * A boundary line keeps an uncleared head or tail: its new tag
+	     * information is a function of the surviving segments, not of
+	     * the old (tagon, tagoff) pair, so it must not be cached by
+	     * those pointers (the two boundary lines of a range clear
+	     * different subranges). Always recompute from the segments.
+	     */
+
+	    TkTextTagSetIncrRefCount(tagonPtr = sharedTextPtr->emptyTagInfoPtr);
+	    tagoffPtr = NULL;
+
+	    for (segPtr = linePtr->segPtr; segPtr; segPtr = segPtr->nextPtr) {
+		if (segPtr->tagInfoPtr) {
+		    tagonPtr = TkTextTagSetJoin(tagonPtr, segPtr->tagInfoPtr);
+		    tagoffPtr = TagSetIntersect(tagoffPtr, segPtr->tagInfoPtr, sharedTextPtr);
+		}
+	    }
+
+	    TagSetReplace(&linePtr->tagonPtr, tagonPtr);
+
+	    if (tagoffPtr) {
+		tagoffPtr = TagSetComplementTo(tagoffPtr, linePtr->tagonPtr, sharedTextPtr);
+		TagSetReplace(&linePtr->tagoffPtr, tagoffPtr);
 	    } else {
-		data->tagonPtr = linePtr->tagonPtr;
-		data->tagoffPtr = linePtr->tagoffPtr;
-
-		TkTextTagSetIncrRefCount(tagonPtr = sharedTextPtr->emptyTagInfoPtr);
-		tagoffPtr = NULL;
-
-		for (segPtr = linePtr->segPtr; segPtr; segPtr = segPtr->nextPtr) {
-		    if (segPtr->tagInfoPtr) {
-			tagonPtr = TkTextTagSetJoin(tagonPtr, segPtr->tagInfoPtr);
-			tagoffPtr = TagSetIntersect(tagoffPtr, segPtr->tagInfoPtr, sharedTextPtr);
-		    }
-		}
-
-		TagSetReplace(&linePtr->tagonPtr, tagonPtr);
-
-		if (tagoffPtr) {
-		    tagoffPtr = TagSetComplementTo(tagoffPtr, linePtr->tagonPtr, sharedTextPtr);
-		    TagSetReplace(&linePtr->tagoffPtr, tagoffPtr);
-		} else {
-		    TagSetAssign(&linePtr->tagoffPtr, linePtr->tagonPtr);
-		}
-
-		data->newTagonPtr = linePtr->tagonPtr;
-		data->newTagoffPtr = linePtr->tagoffPtr;
+		TagSetAssign(&linePtr->tagoffPtr, linePtr->tagonPtr);
 	    }
 	} else if (discardSelection) {
 	    linePtr->tagonPtr = TagSetRemove(linePtr->tagonPtr, myAffectedTagInfoPtr, sharedTextPtr);
