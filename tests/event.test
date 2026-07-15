@@ -1323,21 +1323,21 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
 
     set windowList [list "{}" . .f]
     array set coords {
-        "A,{}" 150
-        "B,{}" 250
-        "A,." 50
-        "B,." 150
-        "A,.f" 50
-        "B,.f" 150
-        "x,{},{}" 50
-        "x,{},." -50
-        "x,{},.f" -150
-        "x,.,{}" 150
-        "x,.,." 50
-        "x,.,.f" -50
-        "x,.f,{}" 250
-        "x,.f,." 150
-        "x,.f,.f" 50
+	"A,{}" 150
+	"B,{}" 250
+	"A,." 50
+	"B,." 150
+	"A,.f" 50
+	"B,.f" 150
+	"x,{},{}" 50
+	"x,{},." -50
+	"x,{},.f" -150
+	"x,.,{}" 150
+	"x,.,." 50
+	"x,.,.f" -50
+	"x,.f,{}" 250
+	"x,.f,." 150
+	"x,.f,.f" 50
     }
     set i 0
     set yPos X
@@ -1350,43 +1350,43 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
     # window and warp window varying over the fixed set of windows in windowList,
     # utilizing the destination of a previous warp as the source for the next one.
     foreach destWin $windowList {
-        foreach warpWin $windowList {
-            set srcWin $destWin
-            set yPos [expr {$yPos ne "A"?"A":"B"}]
-            set caseID {}
-            foreach w [list $srcWin $destWin $warpWin] {
-                append caseID [lsearch $windowList $w]
-            }
-            append result "[incr i]($caseID)|"
-            event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
-                    -x $coords(x,$destWin,$warpWin) -y $coords($yPos,$warpWin)
-            update; # opportunity to service crossing events
-        }
-        if {$destWin eq [lindex $windowList end]} {
-            set nextDestWin "{}"
-        } else {
-            set nextDestWin [lindex $windowList [expr {[lsearch $windowList $destWin]+1}]]
-        }
-        set prevDestWin $destWin
-        foreach warpWin $windowList {
-            # don't swap yPos, but srcWin and destWin2
-            set destWin2 [expr {$prevDestWin eq $nextDestWin?$srcWin:$nextDestWin}]
-            set srcWin $prevDestWin
-            set prevDestWin $destWin2
-            set caseID {}
-            foreach w [list $srcWin $destWin2 $warpWin] {
-                append caseID [lsearch $windowList $w]
-            }
-            append result "[incr i]($caseID)|"
-            event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
-                    -x $coords(x,$destWin2,$warpWin) -y $coords($yPos,$warpWin)
-            update; # opportunity to service crossing events
-        }
+	foreach warpWin $windowList {
+	    set srcWin $destWin
+	    set yPos [expr {$yPos ne "A"?"A":"B"}]
+	    set caseID {}
+	    foreach w [list $srcWin $destWin $warpWin] {
+		append caseID [lsearch $windowList $w]
+	    }
+	    append result "[incr i]($caseID)|"
+	    event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
+		    -x $coords(x,$destWin,$warpWin) -y $coords($yPos,$warpWin)
+	    update; # opportunity to service crossing events
+	}
+	if {$destWin eq [lindex $windowList end]} {
+	    set nextDestWin "{}"
+	} else {
+	    set nextDestWin [lindex $windowList [expr {[lsearch $windowList $destWin]+1}]]
+	}
+	set prevDestWin $destWin
+	foreach warpWin $windowList {
+	    # don't swap yPos, but srcWin and destWin2
+	    set destWin2 [expr {$prevDestWin eq $nextDestWin?$srcWin:$nextDestWin}]
+	    set srcWin $prevDestWin
+	    set prevDestWin $destWin2
+	    set caseID {}
+	    foreach w [list $srcWin $destWin2 $warpWin] {
+		append caseID [lsearch $windowList $w]
+	    }
+	    append result "[incr i]($caseID)|"
+	    event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
+		    -x $coords(x,$destWin2,$warpWin) -y $coords($yPos,$warpWin)
+	    update; # opportunity to service crossing events
+	}
     }
     set result
 } -cleanup {
     unset -nocomplain caseID coords i destWin destWin2 nextDestWin prevDestWin \
-            result srcWin yPos warpWin windowList
+	    result srcWin yPos warpWin windowList
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .f

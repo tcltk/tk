@@ -4,6 +4,8 @@
 
 #include <windows.h>
 #include <tk.h>
+// Needed for CREATEPROCESS_MANIFEST_RESOURCE_ID
+#include <winuser.h>
 
 //
 // build-up the name suffix that defines the type of build this is.

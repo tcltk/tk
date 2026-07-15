@@ -13224,7 +13224,9 @@ AdjustForTab(
 	    desired = NextTabStop(tabWidth, x, 0);
 	}
 
-	desired %= data->maxX;
+	if (data->maxX >= 0) {
+	    desired %= data->maxX;
+	}
     } else {
 	switch (data->tabAlignment) {
 	case LEFT:
@@ -13277,7 +13279,7 @@ AdjustForTab(
 	    if (data->maxX - data->tabOverhang >= 0) {
 		desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
 	    } else {
-		desired = data->maxX - data->tabOverhang - width;
+		desired = tabX - width;
 	    }
 	    data->tabApplied = 0;
 	    break;

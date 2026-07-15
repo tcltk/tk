@@ -4401,6 +4401,29 @@ test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {
     set res
 } [list [xchar 16] [xchar 8] [xchar 16] [xchar 8]]
 
+test textDisp-26.15 {AdjustForTab procedure, default tab stops with -wrap none, Bug [5d950fd28a]} {
+    .t delete 1.0 end
+    .t configure -wrap none
+    .t insert end "a\tb"
+    set res [lindex [.t bbox 1.2] 0]
+    .t configure -wrap char
+    set res
+} [xchar 8]
+test textDisp-26.16 {AdjustForTab, numeric tab with -wrap none} {
+    # A numeric tab must align the decimal point on the tab stop
+    # regardless of the wrap mode; -wrap none (maxX == -1) used to
+    # collapse it to a single space width.
+    .t delete 1.0 end
+    .t configure -wrap none -tabs {}
+    .t tag configure num -tabs [list [expr {8*$fixedWidth}] numeric]
+    .t insert end "ab\t12.34" num
+    set noneX [lindex [.t bbox 1.5] 0] ; # the decimal point
+    .t configure -wrap word
+    set wordX [lindex [.t bbox 1.5] 0]
+    .t configure -wrap char -tabs {}
+    expr {$noneX == $wordX ? "aligned" : "none=$noneX word=$wordX"}
+} {aligned}
+
 #
 # COMMON TEST SETUP
 #

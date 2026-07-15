@@ -8814,6 +8814,22 @@ test text-41.3 {TextChecksumCmd, same content gives same checksum} -setup {
 } -cleanup {
     destroy .t .u
 } -result {1}
+test text-41.4 {TextChecksumCmd -displaytext excludes multi-line elided text} -setup {
+    destroy .t .u
+    text .t ; .t tag configure E -elide 1
+    text .u ; .u tag configure E -elide 1
+} -body {
+    # Same display ("AB"), different elided text spanning line breaks.
+    .t insert end "A" ; .t insert end "x\ny\nz" E ; .t insert end "B"
+    .u insert end "A" ; .u insert end "p\nq\nr" E ; .u insert end "B"
+    # Displayed content is identical; -displaytext must ignore the elided part
+    # (it used to re-walk the elided lines because linePtr was stale after the
+    # branch->link skip), while -text still sees the difference.
+    list [expr {[.t checksum -displaytext] == [.u checksum -displaytext]}] \
+	    [expr {[.t checksum -text] != [.u checksum -text]}]
+} -cleanup {
+    destroy .t .u
+} -result {1 1}
 
 #
 # TESTFILE CLEANUP

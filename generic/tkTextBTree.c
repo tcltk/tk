@@ -9226,6 +9226,8 @@ UpdateElideInfo(
 			 */
 			danglingLinkPtr = prevBranchPtr->body.branch.nextPtr;
 		    }
+		    /* Clear the transient protection before parking for reuse. */
+		    prevBranchPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevBranchPtr);
 		    if (deletedBranchPtr) {
 			TkBTreeFreeSegment(prevBranchPtr);
@@ -9264,6 +9266,8 @@ UpdateElideInfo(
 			 */
 			danglingBranchPtr = prevLinkPtr->body.link.prevPtr;
 		    }
+		    /* Clear the transient protection before parking for reuse. */
+		    prevLinkPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
 		    if (deletedLinkPtr) {
 			TkBTreeFreeSegment(prevLinkPtr);
@@ -9305,6 +9309,16 @@ UpdateElideInfo(
 			 */
 			lastBranchPtr = danglingBranchPtr;
 			danglingBranchPtr = NULL;
+		    }
+		    if (!lastBranchPtr && newBranchPtr) {
+			/*
+			 * A branch inserted earlier in this pass opens the current
+			 * elided range (an enclosing elide tag placed over an inner
+			 * elided range whose branch was just removed). Reuse it,
+			 * otherwise the search below would start from a segment which
+			 * is elided only by the tag being processed.
+			 */
+			lastBranchPtr = newBranchPtr;
 		    }
 		    if (!lastBranchPtr) {
 			/*

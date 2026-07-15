@@ -1073,7 +1073,75 @@ test btree-14.7 {Bug [ad458a3a72] - elide toggling and editing across mixed LTR/
     destroy .t
 } -result "abfمرحباX\n"
 
-test btree-14.8 {delete spanning two disjoint elided regions} -setup {
+test btree-14.8 {tag remove at head of an elided range keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "abcdef"
+    .t tag add A 1.0 1.4
+    .t tag configure A -elide 1
+    .t tag remove A 1.0 1.2  ; # used to leave a protected branch -> panic
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "abef\n"
+
+test btree-14.9 {tag delete of overlapping elided tags keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add A 1.0 1.6
+    .t tag add B 1.3 1.9
+    .t tag configure A -elide 1
+    .t tag configure B -elide 1
+    .t tag delete A B  ; # used to leave a protected segment -> panic
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "aaabbbccc\n"
+
+test btree-14.10 {enclosing elide tag over an already elided inner range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaaXXXbbbccc"
+    .t tag add A 1.3 1.6
+    .t tag configure A -elide 1
+    .t tag add B 1.1 1.9
+    .t tag configure B -elide 1  ; # enclosing elide used to abort (SegmentIsElided)
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "accc\n"
+test btree-14.11 {load into a widget preserving tags keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    # [load] swaps the B-tree for a fresh one without clearing tags; the
+    # preserved tags used to keep a rootPtr into the destroyed tree, so the
+    # next AddTagToNode left them inconsistent -> panic under the checker.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add A 1.0 1.6
+    .t tag add B 1.3 1.9
+    .t tag configure A -elide 1
+    .t load [.t inspect]
+    .t debug 0
+    .t get 1.0 end
+} -cleanup {
+    destroy .t
+} -result "aaabbbccc\n"
+
+
+
+test btree-14.12 {delete spanning two disjoint elided regions} -setup {
     destroy .t
     text .t
 } -body {
@@ -1090,7 +1158,7 @@ test btree-14.8 {delete spanning two disjoint elided regions} -setup {
     destroy .t
 } -result {aaabdeee aaaeee}
 
-test btree-14.9 {delete spanning two adjacent elided regions} -setup {
+test btree-14.13 {delete spanning two adjacent elided regions} -setup {
     destroy .t
     text .t
 } -body {
@@ -1107,7 +1175,7 @@ test btree-14.9 {delete spanning two adjacent elided regions} -setup {
     destroy .t
 } -result {aaacddd aaddd}
 
-test btree-14.10 {delete whole line containing two elided regions} -setup {
+test btree-14.14 {delete whole line containing two elided regions} -setup {
     destroy .t
     text .t
 } -body {
@@ -1124,7 +1192,7 @@ test btree-14.10 {delete whole line containing two elided regions} -setup {
     destroy .t
 } -result {{} {}}
 
-test btree-14.11 {delete spanning three elided regions} -setup {
+test btree-14.15 {delete spanning three elided regions} -setup {
     destroy .t
     text .t
 } -body {
@@ -1143,7 +1211,7 @@ test btree-14.11 {delete spanning three elided regions} -setup {
     destroy .t
 } -result {aabg aag}
 
-test btree-14.12 {undo of a delete crossing the end of an elided region} -setup {
+test btree-14.16 {undo of a delete crossing the end of an elided region} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1166,7 +1234,7 @@ test btree-14.12 {undo of a delete crossing the end of an elided region} -setup 
     destroy .t
 } -result {aaabcc aaabbbccc {1.3 1.6} aaabcc aaabbbccc {1.3 1.6}}
 
-test btree-14.13 {undo of a delete covering the start of an elided region} -setup {
+test btree-14.17 {undo of a delete covering the start of an elided region} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1187,7 +1255,7 @@ test btree-14.13 {undo of a delete covering the start of an elided region} -setu
     destroy .t
 } -result {abccc 4 {1.1 1.2} aaabbbccc {1.3 1.6} abccc}
 
-test btree-14.14 {undo of a delete covering a whole elided region} -setup {
+test btree-14.18 {undo of a delete covering a whole elided region} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1208,7 +1276,7 @@ test btree-14.14 {undo of a delete covering a whole elided region} -setup {
     destroy .t
 } -result {aaaccc aaabbbccc {1.3 1.6} aaaccc aaaccc}
 
-test btree-14.15 {undo of a delete spanning two elided regions} -setup {
+test btree-14.19 {undo of a delete spanning two elided regions} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1233,7 +1301,7 @@ test btree-14.15 {undo of a delete spanning two elided regions} -setup {
     destroy .t
 } -result {aaabdeee aaaeee aaabbbcccdddeee {1.3 1.6} {1.9 1.12} aaabdeee aaabbbcccdddeee}
 
-test btree-14.16 {destroy widget with undo tokens holding elision switches} -setup {
+test btree-14.20 {destroy widget with undo tokens holding elision switches} -setup {
     destroy .t
 } -body {
     foreach del {{1.4 1.7} {1.1 1.5} {1.3 1.6}} {
@@ -1258,7 +1326,7 @@ test btree-14.16 {destroy widget with undo tokens holding elision switches} -set
     destroy .t
 } -result {}
 
-test btree-14.17 {multiline deletes crossing elided region boundaries} -setup {
+test btree-14.21 {multiline deletes crossing elided region boundaries} -setup {
     destroy .t
     text .t
 } -body {
@@ -1283,7 +1351,7 @@ test btree-14.17 {multiline deletes crossing elided region boundaries} -setup {
     destroy .t
 } -result [list "aaa\nbcc\nddd" {2.0 2.1} "aaa\nbd\neee" "aaa\n\neee"]
 
-test btree-14.18 {undo of a delete inside a multiline elided region (elided newline)} -setup {
+test btree-14.22 {undo of a delete inside a multiline elided region (elided newline)} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1306,7 +1374,7 @@ test btree-14.18 {undo of a delete inside a multiline elided region (elided newl
     destroy .t
 } -result [list "aaa\nbbcc\nddd" "aaa\nbbb\nccc\nddd" {2.1 3.2} "aaa\nbc\nddd" "aaa\nbbcc\nddd" {2.1 3.2}]
 
-test btree-14.19 {undo of a multiline delete crossing the end of an elided region} -setup {
+test btree-14.23 {undo of a multiline delete crossing the end of an elided region} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1329,7 +1397,7 @@ test btree-14.19 {undo of a multiline delete crossing the end of an elided regio
     destroy .t
 } -result [list "aaa\nbcc\nddd" {2.0 2.1} "aaa\nbbb\nccc\nddd" {2.0 2.3} "aaa\n\nccc\nddd" "aaa\nbcc\nddd" {2.0 2.3}]
 
-test btree-14.20 {undo of a multiline delete covering the start of an elided region} -setup {
+test btree-14.24 {undo of a multiline delete covering the start of an elided region} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1352,7 +1420,7 @@ test btree-14.20 {undo of a multiline delete covering the start of an elided reg
     destroy .t
 } -result [list "aaa\nbcc\nddd" {2.1 2.3} "aaa\nbbb\nccc\nddd" {3.0 3.3} "aaa\nbcc\nddd" {3.0 3.3}]
 
-test btree-14.21 {undo of a multiline delete spanning two elided regions} -setup {
+test btree-14.25 {undo of a multiline delete spanning two elided regions} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1377,7 +1445,7 @@ test btree-14.21 {undo of a multiline delete spanning two elided regions} -setup
     destroy .t
 } -result [list "aaa\nbd\neee" "aaa\n\neee" "aaa\nbbb\nccc\nddd\neee" {2.0 2.3} {4.0 4.3} "aaa\nbd\neee" {2.0 2.3} {4.0 4.3}]
 
-test btree-14.22 {undo of a multiline delete covering a whole elided region} -setup {
+test btree-14.26 {undo of a multiline delete covering a whole elided region} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1400,7 +1468,7 @@ test btree-14.22 {undo of a multiline delete covering a whole elided region} -se
     destroy .t
 } -result [list "ac" "aaa\nbbb\nccc" {2.0 2.3} "ac" {2.0 2.3}]
 
-test btree-14.23 {no join of delete undo tokens holding switches} -setup {
+test btree-14.27 {no join of delete undo tokens holding switches} -setup {
     destroy .t
 } -body {
     text .t -undo 1
@@ -1424,7 +1492,7 @@ test btree-14.23 {no join of delete undo tokens holding switches} -setup {
     destroy .t
 } -result {ab aXXYYb {1.1 1.5} ab {1.1 1.5}}
 
-test btree-14.24 {delete of the newline before a line starting with an elided region} -setup {
+test btree-14.28 {delete of the newline before a line starting with an elided region} -setup {
     destroy .t
     text .t
 } -body {
@@ -1439,7 +1507,7 @@ test btree-14.24 {delete of the newline before a line starting with an elided re
     destroy .t
 } -result {aaaabbbb {1.4 1.7} aaaab}
 
-test btree-14.25 {delete of all visible text between two elided regions} -setup {
+test btree-14.29 {delete of all visible text between two elided regions} -setup {
     destroy .t
     text .t
 } -body {
@@ -1456,7 +1524,7 @@ test btree-14.25 {delete of all visible text between two elided regions} -setup 
     destroy .t
 } -result {wwa w}
 
-test btree-14.26 {delete of all visible text between two elided regions, with undo} -setup {
+test btree-14.30 {delete of all visible text between two elided regions, with undo} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1482,7 +1550,7 @@ test btree-14.26 {delete of all visible text between two elided regions, with un
     destroy .t
 } -result {wwa w wwcza {1.1 1.2} {1.4 1.5} wcz wwa w {1.1 1.2} {1.4 1.5}}
 
-test btree-14.27 {delete range delimited by elided regions on separate lines} -setup {
+test btree-14.31 {delete range delimited by elided regions on separate lines} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1505,7 +1573,7 @@ test btree-14.27 {delete range delimited by elided regions on separate lines} -s
     destroy .t
 } -result [list aaXXbb aabb "aaXa\nbXbb" {1.2 1.3} {2.1 2.2} aaXXbb]
 
-test btree-14.28 {delete adjacent to a single elided region, with marks at the boundary} -setup {
+test btree-14.32 {delete adjacent to a single elided region, with marks at the boundary} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1527,7 +1595,7 @@ test btree-14.28 {delete adjacent to a single elided region, with marks at the b
     destroy .t
 } -result {atrrf}
 
-test btree-14.29 {two overlapping deletes capturing the same switch, then stack teardown} -setup {
+test btree-14.33 {two overlapping deletes capturing the same switch, then stack teardown} -setup {
     destroy .t
 } -body {
     # The re-inserted link of the first token used to be re-captured by the
@@ -1561,7 +1629,7 @@ test btree-14.29 {two overlapping deletes capturing the same switch, then stack 
     destroy .t
 } -result {aac aaabbbccc {1.3 1.6} aac}
 
-test btree-14.30 {pulled switches do not swallow boundary marks} -setup {
+test btree-14.34 {pulled switches do not swallow boundary marks} -setup {
     destroy .t
 } -body {
     set res [list]
@@ -1593,7 +1661,7 @@ test btree-14.30 {pulled switches do not swallow boundary marks} -setup {
     destroy .t
 } -result {1.2 1.2}
 
-test btree-14.31 {delete to end with elided final newline, full round trip} -setup {
+test btree-14.35 {delete to end with elided final newline, full round trip} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1614,7 +1682,7 @@ test btree-14.31 {delete to end with elided final newline, full round trip} -set
     destroy .t
 } -result {abcd {1.2 1.4} abcdefgh {1.2 2.0} abcd {1.2 1.4} abcd {1.2 1.4}}
 
-test btree-14.32 {delete to end with tagged (non-elided) final newline} -setup {
+test btree-14.36 {delete to end with tagged (non-elided) final newline} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1628,7 +1696,7 @@ test btree-14.32 {delete to end with tagged (non-elided) final newline} -setup {
     destroy .t
 } -result {abcd {}}
 
-test btree-14.33 {whole document elided, delete all, undo} -setup {
+test btree-14.37 {whole document elided, delete all, undo} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1643,7 +1711,7 @@ test btree-14.33 {whole document elided, delete all, undo} -setup {
     destroy .t
 } -result {{} {} abcdefgh {1.0 2.0}}
 
-test btree-14.34 {multiline delete to end, elided region crosses final newline} -setup {
+test btree-14.38 {multiline delete to end, elided region crosses final newline} -setup {
     destroy .t
     text .t -undo 1
 } -body {
@@ -1660,7 +1728,7 @@ test btree-14.34 {multiline delete to end, elided region crosses final newline} 
     destroy .t
 } -result [list "line1\nl" {} "line1\nline2\nline3" {2.3 4.0}]
 
-test btree-14.35 {delete to end starting at a line start} -setup {
+test btree-14.39 {delete to end starting at a line start} -setup {
     destroy .t
     text .t -undo 1
 } -body {

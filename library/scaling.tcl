@@ -23,6 +23,8 @@ proc ::tk::ScalingPct {} {
     if {![info exists doneScalingInitX11]} {
 	set pct [::tk::ScalingInitX11 $pct]
 	set doneScalingInitX11 1
+
+	variable startScalingLevel [expr {$pct / 100.0}]
     }
 
     #

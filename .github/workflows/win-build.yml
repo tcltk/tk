@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: manifest-in-rc-only
           path: tcl
       - name: Init MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -124,7 +124,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: manifest-in-rc-only
           path: tcl
       - name: Prepare
         run: |
