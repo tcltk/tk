@@ -9761,6 +9761,8 @@ UpdateElideInfo(
 			keptBranchPtr = NULL;
 		    }
 		    if (!lastBranchPtr) {
+			TkTextSegment *anchorPtr = *firstSegPtr;
+
 			/*
 			 * The related branch is starting outside of this range,
 			 * so we have to search for it.
@@ -9768,10 +9770,19 @@ UpdateElideInfo(
 			 * and since the elide state of that segment is obtained from the tag information of
 			 * that segment, we need to temporarily restore the original elide state of the tag.
 			 */
+			if (!anchorPtr->tagInfoPtr) {
+			    /*
+			     * The range start may be a mark (a split point): anchor
+			     * the search on the preceding content, the same segment
+			     * which established the entry elide state of the walk.
+			     */
+			    anchorPtr = GetPrevTagInfoSegment(anchorPtr);
+			    assert(anchorPtr);
+			}
 			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
 			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
 			}
-			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, *firstSegPtr);
+			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, anchorPtr);
 			assert(lastBranchPtr->typePtr == &tkTextBranchType);
 			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
 			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
