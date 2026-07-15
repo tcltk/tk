@@ -255,6 +255,7 @@ static int		UndoIndexIsEqual(const TkTextUndoIndex *indexPtr1,
 			    const TkTextUndoIndex *indexPtr2);
 static void		AddTagToNode(Node *nodePtr, TkTextTag *tag, int setTagoff);
 static void		RemoveTagFromNode(Node *nodePtr, TkTextTag *tag);
+static TkTextSegment *	ContentBeforeLink(TkTextSegment *segPtr);
 static void		UpdateElideInfo(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    TkTextSegment **firstSegPtr, TkTextSegment **lastSegPtr, unsigned reason);
 static int		SegmentIsElided(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr,
@@ -1655,7 +1656,8 @@ UndoDeletePerform(
 	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
 	}
 	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
-	    lPtr = TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr);
+	    lPtr = ContentBeforeLink(
+		    TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
 	}
 	fPtr->protectionFlag = 1;
 	lPtr->protectionFlag = 1;
@@ -5045,7 +5047,8 @@ TkBTreeInsertChars(
 	     */
 
 	    TkTextSegment *fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
-	    TkTextSegment *lPtr = TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    TkTextSegment *lPtr = ContentBeforeLink(
+		    TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, predPtr));
 
 	    fPtr->protectionFlag = 1;
 	    lPtr->protectionFlag = 1;
@@ -9168,6 +9171,46 @@ FindNextLink(
     }
 
     return NULL; /* never reached */
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ContentBeforeLink --
+ *
+ *	Normalize the last segment of a range intended for UpdateElideInfo:
+ *	step back from a closing link to the preceding content segment.
+ *	UpdateElideInfo will include the link again (its range extension
+ *	walks over the trailing zero size segments), but stops at the
+ *	following content segment - passing the link itself would extend
+ *	the walk over the opening branch of a following elided range, and
+ *	an inserted branch would then be connected to the wrong link.
+ *
+ * Results:
+ *	The content segment to be used as last segment of the range.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static TkTextSegment *
+ContentBeforeLink(
+    TkTextSegment *segPtr)
+{
+    if (segPtr->typePtr == &tkTextLinkType) {
+	TkTextSegment *prevPtr = segPtr->prevPtr;
+
+	if (!prevPtr) {
+	    assert(segPtr->sectionPtr->linePtr->prevPtr);
+	    prevPtr = segPtr->sectionPtr->linePtr->prevPtr->lastPtr;
+	}
+	/* a link is never preceded by marks, and never by another switch */
+	assert(prevPtr->tagInfoPtr);
+	segPtr = prevPtr;
+    }
+    return segPtr;
 }
 
 static void
