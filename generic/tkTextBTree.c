@@ -2120,7 +2120,43 @@ UndoClearTagsPerform(
     RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
     UpdateNodeTags(sharedTextPtr, linePtr->parentPtr);
     if (updateElideInfo) {
-	UpdateElideInfo(sharedTextPtr, NULL, &firstSegPtr, &lastSegPtr, ELISION_HAS_BEEN_CHANGED);
+	/*
+	 * Recompute the elide topology of the restored range from the
+	 * current tag information, extended to the boundaries of the
+	 * enclosing elided ranges (see UndoDeletePerform). The range ends
+	 * have to be protected (contract of UpdateElideInfo).
+	 */
+
+	TkTextSegment *fPtr = firstSegPtr;
+	TkTextSegment *lPtr = lastSegPtr;
+	TkTextSegment *predPtr = GetPrevTagInfoSegment(firstSegPtr);
+	TkTextSegment *succPtr;
+	TkTextLine *nextLinePtr;
+
+	if (lastSegPtr->nextPtr) {
+	    succPtr = GetNextTagInfoSegment(lastSegPtr->nextPtr);
+	} else if ((nextLinePtr = lastSegPtr->sectionPtr->linePtr->nextPtr)) {
+	    succPtr = GetFirstTagInfoSegment(NULL, nextLinePtr);
+	} else {
+	    succPtr = NULL;
+	}
+	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	}
+	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
+	    lPtr = ContentBeforeLink(TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	}
+	firstSegPtr->protectionFlag = 1;
+	lastSegPtr->protectionFlag = 1;
+	fPtr->protectionFlag = 1;
+	lPtr->protectionFlag = 1;
+	UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+	if (fPtr != firstSegPtr && fPtr != lastSegPtr) {
+	    CleanupSplitPoint(fPtr, sharedTextPtr);
+	}
+	if (lPtr != fPtr && lPtr != firstSegPtr && lPtr != lastSegPtr) {
+	    CleanupSplitPoint(lPtr, sharedTextPtr);
+	}
     }
     firstSegPtr->protectionFlag = 1;
     lastSegPtr->protectionFlag = 1;
@@ -2800,7 +2836,7 @@ UndoDeleteTokenContainsSwitch(
 int
 TkBTreeJoinUndoDelete(
     TkTextUndoToken *token1,
-    unsigned byteSize1,
+    TCL_UNUSED(unsigned),	/* byteSize1 */
     TkTextUndoToken *token2,
     unsigned byteSize2)
 {
@@ -2825,7 +2861,13 @@ TkBTreeJoinUndoDelete(
 	unsigned numSegments1 = myToken1->numSegments;
 
 	if (myToken2->endIndex.lineIndex == -1) {
+	    /* the end of the second chunk is a mark, it survives the join */
 	    myToken1->endIndex = myToken2->endIndex;
+	} else if (myToken2->startIndex.lineIndex != -1
+		&& myToken2->endIndex.lineIndex == myToken2->startIndex.lineIndex
+		&& myToken1->endIndex.lineIndex != -1) {
+	    /* the second chunk provably lies on a single line */
+	    myToken1->endIndex.u.byteIndex += byteSize2;
 	} else if (myToken2->startIndex.lineIndex != -1
 		&& myToken2->endIndex.lineIndex > myToken2->startIndex.lineIndex
 		&& myToken1->startIndex.lineIndex != -1
@@ -2840,18 +2882,14 @@ TkBTreeJoinUndoDelete(
 		    + (myToken1->endIndex.lineIndex - myToken1->startIndex.lineIndex);
 	    myToken1->endIndex.u.byteIndex = myToken2->endIndex.u.byteIndex;
 	    myToken1->surrogate = myToken2->surrogate;
-	} else if (myToken1->endIndex.lineIndex != -1) {
-	    /* the second chunk lies on a single line */
-	    myToken1->endIndex.u.byteIndex += byteSize2;
-	} else if (myToken2->endIndex.lineIndex != -1) {
-	    myToken1->endIndex.u.byteIndex = myToken2->endIndex.u.byteIndex + byteSize1;
-	    myToken1->endIndex.lineIndex = myToken2->endIndex.lineIndex;
-	} else if (myToken2->startIndex.lineIndex != -1) {
-	    myToken1->endIndex.u.byteIndex = myToken2->startIndex.u.byteIndex + byteSize1 + byteSize2;
-	    myToken1->endIndex.lineIndex = myToken2->startIndex.lineIndex;
 	} else {
-	    myToken1->endIndex.u.byteIndex = myToken1->startIndex.u.byteIndex + byteSize1 + byteSize2;
-	    myToken1->endIndex.lineIndex = myToken1->startIndex.lineIndex;
+	    /*
+	     * The end of the joined range cannot be computed reliably: with
+	     * mark based indices (steady marks) the chunks do not tell
+	     * whether they span line boundaries. Refuse the join, the
+	     * tokens belong to the same undo atom anyway.
+	     */
+	    return 0;
 	}
 
 	myToken1->numSegments += myToken2->numSegments;
@@ -7973,6 +8011,7 @@ DeleteRange(
 	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)) {
 	    TkTextSection *shrunkSectionPtr = firstSegPtr->sectionPtr;
 	    int sole = shrunkSectionPtr->length == 1;
+	    TkTextSegment *joinPtr = firstSegPtr->prevPtr;
 
 	    UnlinkSegment(firstSegPtr);
 	    assert(firstSegPtr->typePtr->deleteProc);
@@ -7984,11 +8023,20 @@ DeleteRange(
 		/* The shrunk section may have lost its permission to be short. */
 		JoinSections(shrunkSectionPtr);
 	    }
+	    if (joinPtr && joinPtr->typePtr == &tkTextCharType) {
+		/*
+		 * The removed boundary may have separated two equal tagged
+		 * char segments (e.g. after the deletion merged two elided
+		 * ranges, with the split points being the dead switches).
+		 */
+		CleanupCharSegments(sharedTextPtr, joinPtr);
+	    }
 	    countChanges += 1;
 	}
 	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
 	    TkTextSection *shrunkSectionPtr = lastSegPtr->sectionPtr;
 	    int sole = shrunkSectionPtr->length == 1;
+	    TkTextSegment *joinPtr = lastSegPtr->prevPtr;
 
 	    UnlinkSegment(lastSegPtr);
 	    assert(lastSegPtr->typePtr->deleteProc);
@@ -8008,6 +8056,14 @@ DeleteRange(
 		lastSegPtr->sectionPtr = NULL;
 		lastSegPtr->nextPtr = NULL;
 		lastSegPtr->refCount += 1;
+	    }
+	    if (!sole) {
+		/* The shrunk section may have lost its permission to be short. */
+		JoinSections(shrunkSectionPtr);
+	    }
+	    if (joinPtr && joinPtr->sectionPtr && joinPtr->typePtr == &tkTextCharType) {
+		/* See the first boundary above. */
+		CleanupCharSegments(sharedTextPtr, joinPtr);
 	    }
 	    countChanges += 1;
 	}
@@ -9404,10 +9460,21 @@ UpdateElideInfo(
 	    assert(linePtr);
 
 	    if (linePtr != endSegPtr->sectionPtr->linePtr) {
+		/*
+		 * In recompute mode (tagPtr is NULL) a line is unaffected only
+		 * if the walk is currently outside of an elided range and the
+		 * line carries no elision relevant tags: an untagged line
+		 * inside an elided range is a transition which has to be
+		 * processed (in normal mode the range extension guarantees
+		 * that the boundary lines carry the toggled tag).
+		 */
 		while (linePtr != lastLinePtr
 			&& linePtr->numLinks == 0
 			&& linePtr->numBranches == 0
-			&& !TestTag(linePtr->tagonPtr, tagPtr)) {
+			&& (tagPtr
+			    ? !TestTag(linePtr->tagonPtr, tagPtr)
+			    : (!actualElided && !TkTextTagSetIntersectsBits(
+				    linePtr->tagonPtr, sharedTextPtr->elisionTags)))) {
 		    /* Skip (nearly) unaffected line. */
 		    if (linePtr->logicalLine == actualElided) {
 			if (nodePtr && linePtr->parentPtr != nodePtr) {
@@ -9549,6 +9616,21 @@ UpdateElideInfo(
 		    }
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
+		} else if (newBranchPtr) {
+		    /*
+		     * The kept link closes the elided range opened by the
+		     * branch inserted in this pass: connect them now. If a
+		     * further elided range follows within the walk, its
+		     * switches would reset the link bookkeeping, and the
+		     * pending branch would be connected to the wrong link
+		     * at the end of the pass.
+		     */
+		    newBranchPtr->body.branch.nextPtr = prevLinkPtr;
+		    prevLinkPtr->body.link.prevPtr = newBranchPtr;
+		    if (prevLinkPtr == danglingLinkPtr) {
+			danglingLinkPtr = NULL;
+		    }
+		    newBranchPtr = NULL;
 		}
 	    } else if (actualElided != shouldBeElided) {
 		if (shouldBeElided) {
