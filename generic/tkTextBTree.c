@@ -2110,10 +2110,20 @@ UndoClearTagsPerform(
 		assert(segPtr->size <= size);
 		size -= segPtr->size;
 		offs += segPtr->size;
-		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->affectGeometryTags)) {
+		/*
+		 * The restore may drop tags as well as reintroduce them (e.g.
+		 * an elide tag excluded from undo which was added after the
+		 * clear), so the overwritten tag set decides as well whether
+		 * the elide info has to be recomputed.
+		 */
+		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->affectGeometryTags)
+			|| TkTextTagSetIntersectsBits(segPtr->tagInfoPtr,
+				sharedTextPtr->affectGeometryTags)) {
 		    affectsDisplayGeometry = true;
 		}
-		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->elisionTags)) {
+		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->elisionTags)
+			|| TkTextTagSetIntersectsBits(segPtr->tagInfoPtr,
+				sharedTextPtr->elisionTags)) {
 		    updateElideInfo = 1;
 		}
 		TkTextTagSetDecrRefCount(segPtr->tagInfoPtr);
@@ -9738,7 +9748,21 @@ UpdateElideInfo(
 			 */
 			lastBranchPtr = newBranchPtr;
 		    }
+		    if (!lastBranchPtr && keptBranchPtr) {
+			/*
+			 * The walked branch which still opens the current elided
+			 * range closes it here (the range was cut short, e.g. by
+			 * the undo of a tag clear whose recompute starts at that
+			 * branch). Without this the search below would be entered
+			 * with a range start which is not content (the caller may
+			 * pass the branch itself, see UndoClearTagsPerform).
+			 */
+			lastBranchPtr = keptBranchPtr;
+			keptBranchPtr = NULL;
+		    }
 		    if (!lastBranchPtr) {
+			TkTextSegment *anchorPtr = *firstSegPtr;
+
 			/*
 			 * The related branch is starting outside of this range,
 			 * so we have to search for it.
@@ -9746,10 +9770,19 @@ UpdateElideInfo(
 			 * and since the elide state of that segment is obtained from the tag information of
 			 * that segment, we need to temporarily restore the original elide state of the tag.
 			 */
+			if (!anchorPtr->tagInfoPtr) {
+			    /*
+			     * The range start may be a mark (a split point): anchor
+			     * the search on the preceding content, the same segment
+			     * which established the entry elide state of the walk.
+			     */
+			    anchorPtr = GetPrevTagInfoSegment(anchorPtr);
+			    assert(anchorPtr);
+			}
 			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
 			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
 			}
-			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, *firstSegPtr);
+			lastBranchPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, anchorPtr);
 			assert(lastBranchPtr->typePtr == &tkTextBranchType);
 			if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
 			    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
@@ -10864,10 +10897,6 @@ TkBTreeTag(
 typedef struct ClearTagsData {
     unsigned skip;
     unsigned capacity;
-    TkTextTagSet *tagonPtr;
-    TkTextTagSet *tagoffPtr;
-    TkTextTagSet *newTagonPtr;
-    TkTextTagSet *newTagoffPtr;
     UndoTagChange *tagChangePtr;
     TkTextSegment *firstSegPtr;
     TkTextSegment *lastSegPtr;
@@ -11083,41 +11112,31 @@ ClearTagsFromLine(
 	if (firstPtr || lastPtr) {
 	    TkTextTagSet *tagonPtr, *tagoffPtr;
 
-	    if (linePtr->tagonPtr == data->tagonPtr && linePtr->tagoffPtr == data->tagoffPtr) {
-		/*
-		 * The cached result pointers are not owned (no reference is
-		 * held for the cache), so the replace must take its own
-		 * reference (TagSetReplace transfers, it does not increment).
-		 */
-		assert(TkTextTagSetRefCount(data->newTagonPtr) > 0);
-		TagSetAssign(&linePtr->tagonPtr, data->newTagonPtr);
-		assert(TkTextTagSetRefCount(data->newTagoffPtr) > 0);
-		TagSetAssign(&linePtr->tagoffPtr, data->newTagoffPtr);
+	    /*
+	     * A boundary line keeps an uncleared head or tail: its new tag
+	     * information is a function of the surviving segments, not of
+	     * the old (tagon, tagoff) pair, so it must not be cached by
+	     * those pointers (the two boundary lines of a range clear
+	     * different subranges). Always recompute from the segments.
+	     */
+
+	    TkTextTagSetIncrRefCount(tagonPtr = sharedTextPtr->emptyTagInfoPtr);
+	    tagoffPtr = NULL;
+
+	    for (segPtr = linePtr->segPtr; segPtr; segPtr = segPtr->nextPtr) {
+		if (segPtr->tagInfoPtr) {
+		    tagonPtr = TkTextTagSetJoin(tagonPtr, segPtr->tagInfoPtr);
+		    tagoffPtr = TagSetIntersect(tagoffPtr, segPtr->tagInfoPtr, sharedTextPtr);
+		}
+	    }
+
+	    TagSetReplace(&linePtr->tagonPtr, tagonPtr);
+
+	    if (tagoffPtr) {
+		tagoffPtr = TagSetComplementTo(tagoffPtr, linePtr->tagonPtr, sharedTextPtr);
+		TagSetReplace(&linePtr->tagoffPtr, tagoffPtr);
 	    } else {
-		data->tagonPtr = linePtr->tagonPtr;
-		data->tagoffPtr = linePtr->tagoffPtr;
-
-		TkTextTagSetIncrRefCount(tagonPtr = sharedTextPtr->emptyTagInfoPtr);
-		tagoffPtr = NULL;
-
-		for (segPtr = linePtr->segPtr; segPtr; segPtr = segPtr->nextPtr) {
-		    if (segPtr->tagInfoPtr) {
-			tagonPtr = TkTextTagSetJoin(tagonPtr, segPtr->tagInfoPtr);
-			tagoffPtr = TagSetIntersect(tagoffPtr, segPtr->tagInfoPtr, sharedTextPtr);
-		    }
-		}
-
-		TagSetReplace(&linePtr->tagonPtr, tagonPtr);
-
-		if (tagoffPtr) {
-		    tagoffPtr = TagSetComplementTo(tagoffPtr, linePtr->tagonPtr, sharedTextPtr);
-		    TagSetReplace(&linePtr->tagoffPtr, tagoffPtr);
-		} else {
-		    TagSetAssign(&linePtr->tagoffPtr, linePtr->tagonPtr);
-		}
-
-		data->newTagonPtr = linePtr->tagonPtr;
-		data->newTagoffPtr = linePtr->tagoffPtr;
+		TagSetAssign(&linePtr->tagoffPtr, linePtr->tagonPtr);
 	    }
 	} else if (discardSelection) {
 	    linePtr->tagonPtr = TagSetRemove(linePtr->tagonPtr, myAffectedTagInfoPtr, sharedTextPtr);
@@ -16873,8 +16892,12 @@ BranchRestoreProc(
 	     * The stashed counterpart has been annihilated by an elision
 	     * update (NULL fork, see UpdateElideInfo), the old relationship
 	     * cannot be restored. Drop this switch too, the elide topology
-	     * is recomputed from the tags after the restore.
+	     * is recomputed from the tags after the restore. The switch may
+	     * still be enrolled in another token (a delete which re-added
+	     * it followed by a delete which removed it), so propagate the
+	     * annihilation marker instead of leaving a dangling fork.
 	     */
+	    segPtr->body.branch.nextPtr = NULL;
 	    TkBTreeFreeSegment(counterpartPtr);
 	    TkBTreeFreeSegment(segPtr);
 	    return 0;
@@ -17095,6 +17118,7 @@ LinkRestoreProc(
 	segPtr->tagInfoPtr = NULL;
 	if (!counterpartPtr->body.branch.nextPtr) {
 	    /* Stashed counterpart annihilated, see BranchRestoreProc. */
+	    segPtr->body.link.prevPtr = NULL;
 	    TkBTreeFreeSegment(counterpartPtr);
 	    TkBTreeFreeSegment(segPtr);
 	    return 0;
