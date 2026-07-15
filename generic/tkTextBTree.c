@@ -14107,6 +14107,7 @@ TkBTreeCheck(
     const TkText *peer;
     unsigned numBranches = 0;
     unsigned numLinks = 0;
+    int insideElided = 0;
     Tcl_HashEntry *entryPtr;
     Tcl_HashSearch search;
     const char *s;
@@ -14133,6 +14134,36 @@ TkBTreeCheck(
 	    prevLinePtr = linePtr, linePtr = linePtr->nextPtr) {
 	if (!linePtr->segPtr) {
 	    Tcl_Panic("TkBTreeCheck: line has no segments");
+	}
+	/*
+	 * The switch structure must reflect the elide state given by the
+	 * tags: every content segment is elided if and only if it lies
+	 * between a branch and its link. A tagged-elided range without
+	 * switches (or the reverse) is exactly the silent corruption left
+	 * behind by an unbalanced repair of the elide topology.
+	 */
+	if (insideElided
+		|| linePtr->numLinks > 0
+		|| linePtr->numBranches > 0
+		|| TkTextTagSetIntersectsBits(linePtr->tagonPtr,
+			treePtr->sharedTextPtr->elisionTags)) {
+	    const TkTextSegment *segPtr;
+
+	    for (segPtr = linePtr->segPtr; segPtr; segPtr = segPtr->nextPtr) {
+		if (segPtr->typePtr == &tkTextBranchType) {
+		    insideElided = 1;
+		} else if (segPtr->typePtr == &tkTextLinkType) {
+		    insideElided = 0;
+		} else if (segPtr->tagInfoPtr) {
+		    if (SegmentIsElided(treePtr->sharedTextPtr, segPtr, NULL)
+			    != insideElided) {
+			Tcl_Panic("TkBTreeCheck: elide state of segment does not "
+				"match the switch structure (%s)",
+				insideElided ? "inside switches without elide tags"
+					: "tagged elided without switches");
+		    }
+		}
+	    }
 	}
 	if (linePtr->size == 0) {
 	    Tcl_Panic("TkBTreeCheck: line has size zero");
