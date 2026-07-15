@@ -1438,15 +1438,19 @@ UndoDeletePerform(
 	} else {
 	    size += segPtr->size;
 	}
-	lastPtr = segPtr;
 	DEBUG(hasZeroSize = segPtr->size == 0);
 	if (segPtr->typePtr->restoreProc && !segPtr->typePtr->restoreProc(sharedTextPtr, segPtr)) {
 	    /*
-	     * This segment couldn't be restored and has been deleted. Momently this is
-	     * possible only if this segment is a mark.
+	     * This segment couldn't be restored and has been deleted. Momently
+	     * this is possible only for marks and annihilated switches; it
+	     * must not be referenced anymore.
 	     */
 	    assert(hasZeroSize); /* otherwise we have to adjust 'size' */
+	    if (firstPtr == segPtr) {
+		firstPtr = NULL; /* the final cleanup must not touch it */
+	    }
 	} else {
+	    lastPtr = segPtr;
 	    if (reinsertFirstSegment) {
 		DEBUG(segPtr->sectionPtr = NULL);
 		ReInsertSegment(sharedTextPtr, &undoToken->startIndex, segPtr, 0);
@@ -9314,7 +9318,17 @@ UpdateElideInfo(
 		    /* Clear the transient protection before parking for reuse. */
 		    prevBranchPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevBranchPtr);
-		    if (deletedBranchPtr) {
+		    if (prevBranchPtr->refCount > 1) {
+			/*
+			 * Still enrolled in an undo/redo token (see DeleteRange).
+			 * The counterpart may die with this annihilation, the
+			 * relation cannot survive: mark the switch as annihilated
+			 * (NULL fork), the restore proc will drop it; and don't
+			 * park it for reuse.
+			 */
+			prevBranchPtr->body.branch.nextPtr = NULL;
+			TkBTreeFreeSegment(prevBranchPtr);
+		    } else if (deletedBranchPtr) {
 			TkBTreeFreeSegment(prevBranchPtr);
 		    } else {
 			deletedBranchPtr = prevBranchPtr;
@@ -9354,7 +9368,11 @@ UpdateElideInfo(
 		    /* Clear the transient protection before parking for reuse. */
 		    prevLinkPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
-		    if (deletedLinkPtr) {
+		    if (prevLinkPtr->refCount > 1) {
+			/* Enrolled in an undo/redo token, see the branch case above. */
+			prevLinkPtr->body.link.prevPtr = NULL;
+			TkBTreeFreeSegment(prevLinkPtr);
+		    } else if (deletedLinkPtr) {
 			TkBTreeFreeSegment(prevLinkPtr);
 		    } else {
 			deletedLinkPtr = prevLinkPtr;
@@ -16441,6 +16459,15 @@ BranchRestoreProc(
 	/* Restore old relationship. */
 	segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
 	segPtr->tagInfoPtr = NULL;
+    } else if (!segPtr->body.branch.nextPtr) {
+	/*
+	 * This switch has been annihilated by an elision update while it was
+	 * enrolled in this token (see UpdateElideInfo). It cannot and need
+	 * not be restored, the elide topology is recomputed from the tags
+	 * after the restore. Dispose of the token's reference.
+	 */
+	TkBTreeFreeSegment(segPtr);
+	return 0;
     } /* else this branch stayed alive in the tree, the relationship is intact */
     assert(segPtr->body.branch.nextPtr->typePtr == &tkTextLinkType);
     /* The counterpart may have been re-connected meanwhile (see DeleteRange). */
@@ -16635,6 +16662,10 @@ LinkRestoreProc(
 	/* Restore old relationship (misuse of an unused pointer). */
 	segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
 	segPtr->tagInfoPtr = NULL;
+    } else if (!segPtr->body.link.prevPtr) {
+	/* Annihilated while enrolled in this token, see BranchRestoreProc. */
+	TkBTreeFreeSegment(segPtr);
+	return 0;
     } /* else this link stayed alive in the tree, the relationship is intact */
     assert(segPtr->body.link.prevPtr->typePtr == &tkTextBranchType);
     /* The counterpart may have been re-connected meanwhile (see DeleteRange). */
