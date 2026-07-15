@@ -2664,6 +2664,34 @@ test btree-14.88 {tag clear amputating an elided multiline range from the left} 
     destroy .t
 } -result {2.1 2.2}
 
+test btree-14.89 {restore proc: drop of a switch enrolled in two tokens leaves no dangling fork} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The first delete cuts the start of the second elided range: its branch
+    # is re-added to the tree and enrolled in that token. The second delete
+    # removes it again (dies in that token, stashing the link), and the
+    # extending tag add annihilates the stashed link. On undo the newer
+    # token drops the switch (annihilated stash) - the older token must
+    # then see the annihilation marker, not a dangling fork (assert
+    # "branch.nextPtr->typePtr == &tkTextLinkType").
+    .t debug 1
+    .t insert end "abcdefghijklmnopqrst"
+    .t tag configure E0 -elide 1
+    .t edit reset
+    .t tag add E0 1.2 1.5
+    .t tag add E0 1.8 1.12
+    .t delete 1.8 1.10
+    .t delete 1.4 1.9
+    .t tag add E0 1.0 1.9
+    .t edit undo
+    set res [list [.t tag ranges E0] [.t get 1.0 end-1c]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{} abcdefghijklmnopqrst}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

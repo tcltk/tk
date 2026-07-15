@@ -16869,8 +16869,12 @@ BranchRestoreProc(
 	     * The stashed counterpart has been annihilated by an elision
 	     * update (NULL fork, see UpdateElideInfo), the old relationship
 	     * cannot be restored. Drop this switch too, the elide topology
-	     * is recomputed from the tags after the restore.
+	     * is recomputed from the tags after the restore. The switch may
+	     * still be enrolled in another token (a delete which re-added
+	     * it followed by a delete which removed it), so propagate the
+	     * annihilation marker instead of leaving a dangling fork.
 	     */
+	    segPtr->body.branch.nextPtr = NULL;
 	    TkBTreeFreeSegment(counterpartPtr);
 	    TkBTreeFreeSegment(segPtr);
 	    return 0;
@@ -17091,6 +17095,7 @@ LinkRestoreProc(
 	segPtr->tagInfoPtr = NULL;
 	if (!counterpartPtr->body.branch.nextPtr) {
 	    /* Stashed counterpart annihilated, see BranchRestoreProc. */
+	    segPtr->body.link.prevPtr = NULL;
 	    TkBTreeFreeSegment(counterpartPtr);
 	    TkBTreeFreeSegment(segPtr);
 	    return 0;
