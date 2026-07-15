@@ -2114,15 +2114,18 @@ UndoClearTagsPerform(
 		while (segPtr->size == 0) {
 		    segPtr = segPtr->nextPtr;
 		}
-		if (size != segPtr->size) {
-		    if (skip > 0) {
-			assert(skip < segPtr->size);
-			offs += skip;
-			segPtr = SplitCharSegment(segPtr, skip)->nextPtr;
-		    }
-		    if (size < segPtr->size) {
-			segPtr = SplitCharSegment(segPtr, size);
-		    }
+		/*
+		 * The skip has to be consumed even when the chunk size
+		 * coincides with the segment size, otherwise the chunk is
+		 * restored shifted to the left and its tail is lost.
+		 */
+		if (skip > 0) {
+		    assert(skip < segPtr->size);
+		    offs += skip;
+		    segPtr = SplitCharSegment(segPtr, skip)->nextPtr;
+		}
+		if (size < segPtr->size) {
+		    segPtr = SplitCharSegment(segPtr, size);
 		}
 		assert(segPtr->size <= size);
 		size -= segPtr->size;

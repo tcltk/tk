@@ -3356,6 +3356,34 @@ test btree-14.97 {undo of a tag clear crossing nodes: flush every dirty node} -s
     destroy .t
 } -result {{5.2 5.6 250.2 250.6} {} {5.2 5.6 250.2 250.6}}
 
+test btree-14.98 {undo of a tag clear: consume the skip on exact segment fit} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The split consuming a chunk's skip was guarded by size != segPtr->size:
+    # when the chunk size coincides with the current segment size (layout
+    # after the post-clear joins), the skip was swallowed - the chunk was
+    # restored shifted to the left and its tail was never restored (silent).
+    .t debug 1
+    .t insert end "abcdefgh\nijklmnop\nqrstuvwx"
+    .t tag configure T0 -underline 1
+    .t tag configure T1 -overstrike 1
+    .t tag add T0 1.0 1.3
+    .t tag add T1 1.4 3.2
+    .t edit reset
+    .t tag clear 1.0 2.1
+    .t edit undo
+    set res [list [.t tag ranges T0] [.t tag ranges T1]]
+    .t edit redo
+    lappend res [.t tag ranges T0] [.t tag ranges T1]
+    .t edit undo
+    lappend res [.t tag ranges T0] [.t tag ranges T1]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{1.0 1.3} {1.4 3.2} {} {2.1 3.2} {1.0 1.3} {1.4 3.2}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
