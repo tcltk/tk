@@ -1073,6 +1073,25 @@ test btree-14.7 {Bug [ad458a3a72] - elide toggling and editing across mixed LTR/
     destroy .t
 } -result "abfمرحباX\n"
 
+test btree-14.11 {load into a widget preserving tags keeps the B-tree consistent} -setup {
+    destroy .t
+    text .t
+} -body {
+    # [load] swaps the B-tree for a fresh one without clearing tags; the
+    # preserved tags used to keep a rootPtr into the destroyed tree, so the
+    # next AddTagToNode left them inconsistent -> panic under the checker.
+    .t debug 1
+    .t insert end "aaabbbccc"
+    .t tag add A 1.0 1.6
+    .t tag add B 1.3 1.9
+    .t tag configure A -elide 1
+    .t load [.t inspect]
+    .t debug 0
+    .t get 1.0 end
+} -cleanup {
+    destroy .t
+} -result "aaabbbccc\n"
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {
