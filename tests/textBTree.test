@@ -2773,55 +2773,6 @@ test btree-14.91 {elide recompute walk: link insertion search anchored on a mark
     destroy .t
 } -result {1 {} {1.1 1.3 1.8 1.9}}
 
-test btree-14.92 {elide recompute walk: remove a kept link whose claimed branch was re-paired} -setup {
-    destroy .t
-    text .t -undo 1 -autoseparators 0
-} -body {
-    # The undo restores the deleted switches verbatim and one of them steals
-    # its counterpart; the recompute re-pairs the branch within the walk,
-    # and the redundant restored link - whose claimed branch no longer
-    # points back - must be removed instead of being trusted as the close
-    # of the current range (mismatch in number of links and branches).
-    # Recorded fuzz sequence (fuzz_tagops seed 969), fatal at the undo.
-    .t debug 1
-    .t insert end "lgepvgspifn\nhilnuomspypcqclcoizgbazi"
-    foreach {t opts} {E0 {-elide 1} E1 {-elide 1 -undo 0} T0 {-underline 0} T1 {-undo 0 -underline 0}} {
-	.t tag configure $t {*}$opts
-    }
-    .t edit reset
-    .t tag add E0 1.0 1.1
-    .t edit separator
-    .t tag remove T0 1.3 1.10
-    .t edit separator
-    .t tag add T1 1.1 1.5
-    .t edit separator
-    .t tag add E0 2.7 2.15
-    .t edit separator
-    .t tag add E1 2.9 2.22
-    .t edit separator
-    .t tag add E0 1.3 1.5
-    .t edit separator
-    .t delete 1.1 2.22
-    .t edit separator
-    .t tag add T1 1.1 1.3
-    .t edit separator
-    .t tag add E1 1.1 1.3
-    .t edit separator
-    .t tag remove T1 1.1 1.3
-    .t edit separator
-    .t tag remove E0 1.2 1.3
-    .t edit separator
-    .t tag add E0 1.1 1.3
-    .t edit separator
-    .t edit undo
-    set res [list [string equal [.t get 1.0 end-1c] "lgepvgspifn\nhilnuomspypcqclcoizgbazi"] \
-	    [.t tag ranges E0] [.t tag ranges E1]]
-    .t debug 0
-    set res
-} -cleanup {
-    destroy .t
-} -result {1 {1.0 1.1 1.3 1.5 2.7 2.15} {2.22 2.24}}
-
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

@@ -9631,18 +9631,9 @@ UpdateElideInfo(
 		    keptBranchPtr = prevBranchPtr;
 		}
 	    } else if (prevLinkPtr) {
-		if (shouldBeElided || !actualElided
-			|| (!newBranchPtr && !keptBranchPtr
-			    && prevLinkPtr->body.link.prevPtr
-			    && prevLinkPtr->body.link.prevPtr->body.branch.nextPtr
-				    != prevLinkPtr)) {
+		if (shouldBeElided || !actualElided) {
 		    /*
-		     * Remove expired link. A kept link whose claimed branch does
-		     * not point back has lost it meanwhile (switches restored
-		     * verbatim by an undo, the branch re-paired by this walk):
-		     * the link is redundant and has to go as well - unless a
-		     * repair candidate is pending (newBranchPtr, keptBranchPtr),
-		     * those paths re-pair it below.
+		     * Remove expired link.
 		     */
 
 		    if (prevLinkPtr == *firstSegPtr) {
