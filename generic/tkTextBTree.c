@@ -214,6 +214,7 @@ static TkTextSegment *	PrepareInsertIntoCharSeg(TkTextSegment *segPtr,
 			    unsigned offset, SplitInfo *splitInfo);
 static void		SplitSection(TkTextSection *sectionPtr);
 static void		SplitSectionAtSwitch(TkTextSegment *segPtr);
+static void		BalanceSectionWithLeft(TkTextSection *sectionPtr);
 static void		JoinSections(TkTextSection *sectionPtr);
 static void		PropagateChangeOfNumBranches(Node *nodePtr, int changeToNumBranches);
 static void		FreeSections(TkTextSection *sectionPtr);
@@ -254,6 +255,7 @@ static int		UndoIndexIsEqual(const TkTextUndoIndex *indexPtr1,
 			    const TkTextUndoIndex *indexPtr2);
 static void		AddTagToNode(Node *nodePtr, TkTextTag *tag, int setTagoff);
 static void		RemoveTagFromNode(Node *nodePtr, TkTextTag *tag);
+static TkTextSegment *	ContentBeforeLink(TkTextSegment *segPtr);
 static void		UpdateElideInfo(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    TkTextSegment **firstSegPtr, TkTextSegment **lastSegPtr, unsigned reason);
 static int		SegmentIsElided(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr,
@@ -1336,6 +1338,7 @@ UndoDeletePerform(
     int changeToLineCount = 0;
     int changeToLogicalLineCount = 0;
     int reinsertFirstSegment = 1;
+    int reconcileElide = 0;
     int size = 0;
     unsigned i;
     DEBUG(int hasZeroSize);
@@ -1437,15 +1440,29 @@ UndoDeletePerform(
 	} else {
 	    size += segPtr->size;
 	}
-	lastPtr = segPtr;
 	DEBUG(hasZeroSize = segPtr->size == 0);
 	if (segPtr->typePtr->restoreProc && !segPtr->typePtr->restoreProc(sharedTextPtr, segPtr)) {
 	    /*
-	     * This segment couldn't be restored and has been deleted. Momently this is
-	     * possible only if this segment is a mark.
+	     * This segment couldn't be restored and has been deleted. Momently
+	     * this is possible only for marks and annihilated switches; it
+	     * must not be referenced anymore.
 	     */
 	    assert(hasZeroSize); /* otherwise we have to adjust 'size' */
+	    if (firstPtr == segPtr) {
+		firstPtr = NULL; /* the final cleanup must not touch it */
+	    }
 	} else {
+	    lastPtr = segPtr;
+	    if (!firstPtr) {
+		/*
+		 * The original first segment(s) of the token were dropped:
+		 * move the split point protection to the first restored
+		 * segment, the final cleanup still has to merge the left
+		 * boundary of the restored range.
+		 */
+		firstPtr = segPtr;
+		firstPtr->protectionFlag = 1;
+	    }
 	    if (reinsertFirstSegment) {
 		DEBUG(segPtr->sectionPtr = NULL);
 		ReInsertSegment(sharedTextPtr, &undoToken->startIndex, segPtr, 0);
@@ -1538,6 +1555,7 @@ UndoDeletePerform(
     tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
     additionalTagoffPtr = TagSetIntersect(additionalTagoffPtr, linePtr->tagonPtr, sharedTextPtr);
     tagoffPtr = TagSetJoinComplementTo(tagoffPtr, additionalTagoffPtr, &tagonPtr, sharedTextPtr);
+    reconcileElide = TkTextTagSetIntersectsBits(tagonPtr, sharedTextPtr->elisionTags);
     tagoffPtr = TkTextTagSetRemove(tagoffPtr, nodePtr->tagoffPtr);
     tagonPtr = TkTextTagSetRemove(tagonPtr, nodePtr->tagonPtr);
     tagonPtr = TkTextTagSetRemove(tagonPtr, tagoffPtr);
@@ -1626,6 +1644,40 @@ UndoDeletePerform(
 
     TkTextInvalidateLineMetrics(sharedTextPtr, NULL,
 	    startLinePtr, changeToLineCount, TK_TEXT_INVALIDATE_INSERT);
+
+    /*
+     * The switches have been restored verbatim, but the restored chars may
+     * carry other tags than at the time of the deletion (tags configured
+     * with -undo 0 are not restored, and the elide state of a tag may have
+     * been reconfigured meanwhile). Recompute the elide topology of the
+     * restored range from the current tag information, extended to the
+     * boundaries of the enclosing elided ranges (an affected switch may
+     * lie outside of the restored range).
+     */
+
+    if (reconcileElide || TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	TkTextSegment *fPtr = GetFirstTagInfoSegment(NULL, startLinePtr);
+	TkTextSegment *lPtr = linePtr->lastPtr;
+	TkTextSegment *predPtr = startLinePtr->prevPtr ? startLinePtr->prevPtr->lastPtr : NULL;
+	TkTextSegment *succPtr = linePtr->nextPtr
+		? GetFirstTagInfoSegment(NULL, linePtr->nextPtr) : NULL;
+
+	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	}
+	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
+	    lPtr = ContentBeforeLink(
+		    TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	}
+	fPtr->protectionFlag = 1;
+	lPtr->protectionFlag = 1;
+	UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+	CleanupSplitPoint(fPtr, sharedTextPtr);
+	if (fPtr != lPtr) {
+	    CleanupSplitPoint(lPtr, sharedTextPtr);
+	}
+	TkBTreeIncrEpoch(sharedTextPtr->tree);
+    }
 
     TK_BTREE_DEBUG(TkBTreeCheck((TkTextBTree) treePtr));
 
@@ -2078,7 +2130,43 @@ UndoClearTagsPerform(
     RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
     UpdateNodeTags(sharedTextPtr, linePtr->parentPtr);
     if (updateElideInfo) {
-	UpdateElideInfo(sharedTextPtr, NULL, &firstSegPtr, &lastSegPtr, ELISION_HAS_BEEN_CHANGED);
+	/*
+	 * Recompute the elide topology of the restored range from the
+	 * current tag information, extended to the boundaries of the
+	 * enclosing elided ranges (see UndoDeletePerform). The range ends
+	 * have to be protected (contract of UpdateElideInfo).
+	 */
+
+	TkTextSegment *fPtr = firstSegPtr;
+	TkTextSegment *lPtr = lastSegPtr;
+	TkTextSegment *predPtr = GetPrevTagInfoSegment(firstSegPtr);
+	TkTextSegment *succPtr;
+	TkTextLine *nextLinePtr;
+
+	if (lastSegPtr->nextPtr) {
+	    succPtr = GetNextTagInfoSegment(lastSegPtr->nextPtr);
+	} else if ((nextLinePtr = lastSegPtr->sectionPtr->linePtr->nextPtr)) {
+	    succPtr = GetFirstTagInfoSegment(NULL, nextLinePtr);
+	} else {
+	    succPtr = NULL;
+	}
+	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	}
+	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
+	    lPtr = ContentBeforeLink(TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	}
+	firstSegPtr->protectionFlag = 1;
+	lastSegPtr->protectionFlag = 1;
+	fPtr->protectionFlag = 1;
+	lPtr->protectionFlag = 1;
+	UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+	if (fPtr != firstSegPtr && fPtr != lastSegPtr) {
+	    CleanupSplitPoint(fPtr, sharedTextPtr);
+	}
+	if (lPtr != fPtr && lPtr != firstSegPtr && lPtr != lastSegPtr) {
+	    CleanupSplitPoint(lPtr, sharedTextPtr);
+	}
     }
     firstSegPtr->protectionFlag = 1;
     lastSegPtr->protectionFlag = 1;
@@ -2086,6 +2174,37 @@ UndoClearTagsPerform(
     if (firstSegPtr != lastSegPtr) {
 	CleanupSplitPoint(lastSegPtr, sharedTextPtr);
     }
+
+    /*
+     * The restore overwrites the tag information chunk-wise: segment
+     * boundaries lying inside a chunk (e.g. introduced by tagging changes
+     * made between the clearing and this undo, and overwritten now) may
+     * leave equal tagged adjacent char segments behind, which the cleanup
+     * of the range ends above cannot reach. Merge over the restored lines.
+     */
+
+    {
+	TkTextLine *lp = TkTextIndexGetLine(&startIndex);
+	TkTextLine *endLp = linePtr->nextPtr;
+
+	for ( ; lp != endLp; lp = lp->nextPtr) {
+	    TkTextSegment *sp = lp->segPtr;
+
+	    while (sp) {
+		if (sp->typePtr == &tkTextCharType
+			&& sp->nextPtr
+			&& sp->nextPtr->typePtr == &tkTextCharType
+			&& !sp->protectionFlag
+			&& !sp->nextPtr->protectionFlag
+			&& TkTextTagSetIsEqual(sp->tagInfoPtr, sp->nextPtr->tagInfoPtr)) {
+		    sp = JoinCharSegments(sharedTextPtr, sp); /* re-test the merged segment */
+		} else {
+		    sp = sp->nextPtr;
+		}
+	    }
+	}
+    }
+
     TkBTreeIncrEpoch((TkTextBTree)sharedTextPtr->tree);
     TkTextRedrawTag(sharedTextPtr, NULL, &startIndex, &endIndex, NULL, affectsDisplayGeometry);
 
@@ -2758,7 +2877,7 @@ UndoDeleteTokenContainsSwitch(
 int
 TkBTreeJoinUndoDelete(
     TkTextUndoToken *token1,
-    unsigned byteSize1,
+    TCL_UNUSED(unsigned),	/* byteSize1 */
     TkTextUndoToken *token2,
     unsigned byteSize2)
 {
@@ -2783,18 +2902,35 @@ TkBTreeJoinUndoDelete(
 	unsigned numSegments1 = myToken1->numSegments;
 
 	if (myToken2->endIndex.lineIndex == -1) {
+	    /* the end of the second chunk is a mark, it survives the join */
 	    myToken1->endIndex = myToken2->endIndex;
-	} else if (myToken1->endIndex.lineIndex != -1) {
+	} else if (myToken2->startIndex.lineIndex != -1
+		&& myToken2->endIndex.lineIndex == myToken2->startIndex.lineIndex
+		&& myToken1->endIndex.lineIndex != -1) {
+	    /* the second chunk provably lies on a single line */
 	    myToken1->endIndex.u.byteIndex += byteSize2;
-	} else if (myToken2->endIndex.lineIndex != -1) {
-	    myToken1->endIndex.u.byteIndex = myToken2->endIndex.u.byteIndex + byteSize1;
-	    myToken1->endIndex.lineIndex = myToken2->endIndex.lineIndex;
-	} else if (myToken2->startIndex.lineIndex != -1) {
-	    myToken1->endIndex.u.byteIndex = myToken2->startIndex.u.byteIndex + byteSize1 + byteSize2;
-	    myToken1->endIndex.lineIndex = myToken2->startIndex.lineIndex;
+	} else if (myToken2->startIndex.lineIndex != -1
+		&& myToken2->endIndex.lineIndex > myToken2->startIndex.lineIndex
+		&& myToken1->startIndex.lineIndex != -1
+		&& myToken1->endIndex.lineIndex != -1) {
+	    /*
+	     * The second chunk spans line boundaries: its end keeps the byte
+	     * offset in the last spanned line, but the line index has to be
+	     * shifted by the newlines contained in the first chunk, which
+	     * will be restored before it.
+	     */
+	    myToken1->endIndex.lineIndex = myToken2->endIndex.lineIndex
+		    + (myToken1->endIndex.lineIndex - myToken1->startIndex.lineIndex);
+	    myToken1->endIndex.u.byteIndex = myToken2->endIndex.u.byteIndex;
+	    myToken1->surrogate = myToken2->surrogate;
 	} else {
-	    myToken1->endIndex.u.byteIndex = myToken1->startIndex.u.byteIndex + byteSize1 + byteSize2;
-	    myToken1->endIndex.lineIndex = myToken1->startIndex.lineIndex;
+	    /*
+	     * The end of the joined range cannot be computed reliably: with
+	     * mark based indices (steady marks) the chunks do not tell
+	     * whether they span line boundaries. Refuse the join, the
+	     * tokens belong to the same undo atom anyway.
+	     */
+	    return 0;
 	}
 
 	myToken1->numSegments += myToken2->numSegments;
@@ -2808,18 +2944,13 @@ TkBTreeJoinUndoDelete(
 	unsigned numSegments1 = myToken1->numSegments;
 	TkTextSegment **segments;
 
-	if (myToken2->startIndex.lineIndex == -1) {
-	    myToken1->startIndex = myToken2->startIndex;
-	} else if (myToken2->endIndex.lineIndex != -1) {
-	    myToken1->startIndex.u.byteIndex = myToken2->endIndex.u.byteIndex - byteSize1;
-	    myToken1->startIndex.lineIndex = myToken2->endIndex.lineIndex;
-	} else if (myToken1->endIndex.lineIndex != -1) {
-	    myToken1->startIndex.u.byteIndex = myToken1->endIndex.u.byteIndex - byteSize1 - byteSize2;
-	    myToken1->startIndex.lineIndex = myToken1->endIndex.lineIndex;
-	} else {
-	    myToken1->startIndex.u.byteIndex = myToken1->startIndex.u.byteIndex + byteSize1 + byteSize2;
-	    myToken1->startIndex.lineIndex = myToken1->startIndex.lineIndex;
-	}
+	/*
+	 * The joined range starts where the second chunk starts. This
+	 * position is valid in the current tree as well as after the undo,
+	 * whatever its representation (mark, or line/byte pair): nothing
+	 * before it has changed.
+	 */
+	myToken1->startIndex = myToken2->startIndex;
 
 	myToken1->numSegments += myToken2->numSegments;
 	segments = (TkTextSegment **)Tcl_Alloc(myToken1->numSegments*sizeof(segments[0]));
@@ -4963,6 +5094,51 @@ TkBTreeInsertChars(
 		hyphenElideTagPtr = NULL;
 	    }
 	}
+    } else if (!hyphenElideTagPtr && TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	TkTextSegment *predPtr = firstSegPtr->prevPtr;
+	TkTextLine *prevLinePtr = firstSegPtr->sectionPtr->linePtr->prevPtr;
+
+	/*
+	 * The new segments are not elided, but they may have been inserted
+	 * inside an elided range: this happens when the insertion point is
+	 * the meeting point of two distinct elide tags, because the new
+	 * segments received the intersection of the neighboring tag sets,
+	 * which does not contain the elide tags anymore. Then the elided
+	 * range has to be split, a branch/link pair must not span non-elided
+	 * content. Search the preceding content segment, but do not skip
+	 * branches or links: content inserted right after a link (or right
+	 * before a branch) lies outside of any elided range.
+	 */
+
+	while (predPtr && !predPtr->tagInfoPtr && predPtr->typePtr->group != SEG_GROUP_BRANCH) {
+	    predPtr = predPtr->prevPtr; /* skip marks */
+	}
+	if (!predPtr && prevLinePtr) {
+	    predPtr = prevLinePtr->lastPtr; /* newline of previous line */
+	}
+	if (predPtr
+		&& predPtr->tagInfoPtr
+		&& SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	    /*
+	     * Recompute the elide topology of the whole enclosing range: the
+	     * new segments split it, and the closing link of the trailing
+	     * part lies beyond the insertion point.
+	     */
+
+	    TkTextSegment *fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    TkTextSegment *lPtr = ContentBeforeLink(
+		    TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, predPtr));
+
+	    fPtr->protectionFlag = 1;
+	    lPtr->protectionFlag = 1;
+
+	    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+
+	    CleanupSplitPoint(fPtr, sharedTextPtr);
+	    if (fPtr != lPtr) {
+		CleanupSplitPoint(lPtr, sharedTextPtr);
+	    }
+	}
     }
 
     if (hyphenElideTagPtr) {
@@ -5745,25 +5921,29 @@ SplitSection(
 
     if (capacityLHS + capacityRHS < length - MAX_TEXT_SEGS
 	    || (lengthRHS == 0 && capacityLHS < length - NUM_TEXT_SEGS)) {
-	if (capacityLHS) {
-	    TkTextSegment *segPtr = sectionPtr->segPtr;
-	    int i;
-
-	    for (i = capacityLHS; i < capacityLHS; ++i) {
-		sectionPtr->size -= segPtr->size;
-		sectionPtr->length -= 1;
-		sectionPtr->prevPtr->size += segPtr->size;
-		sectionPtr->prevPtr->length += 1;
-		assert(sectionPtr->prevPtr->length != 0); /* test for overflow */
-		segPtr->sectionPtr = sectionPtr->prevPtr;
-		segPtr = segPtr->nextPtr;
-		splitSegPtr = splitSegPtr->nextPtr;
-	    }
-	    sectionPtr->segPtr = segPtr;
-	}
-
 	assert(splitSegPtr);
-	assert(lengthRHS == 0 || length - capacityLHS >= MIN_TEXT_SEGS);
+	assert(lengthRHS == 0 || length >= MIN_TEXT_SEGS);
+
+	if (sectionPtr->nextPtr && length - NUM_TEXT_SEGS < MIN_TEXT_SEGS) {
+	    /*
+	     * The new right section will not be the last section of the
+	     * line, and would undershoot MIN_TEXT_SEGS with its left
+	     * boundary being an arbitrary cut, which cannot pin a short
+	     * section (see CheckSections). Move the cut to the left, both
+	     * parts will satisfy the minimum: this only triggers for
+	     * length < NUM_TEXT_SEGS + MIN_TEXT_SEGS, and NUM_TEXT_SEGS is
+	     * two times MIN_TEXT_SEGS. The walk cannot cross a switch,
+	     * a branch can only terminate the section, and a link can
+	     * only head it.
+	     */
+	    int back = MIN_TEXT_SEGS - (length - NUM_TEXT_SEGS);
+
+	    for ( ; back > 0; --back) {
+		splitSegPtr = splitSegPtr->prevPtr;
+		assert(splitSegPtr);
+		assert(splitSegPtr->typePtr->group != SEG_GROUP_BRANCH);
+	    }
+	}
 
 	newSectionPtr = (TkTextSection *)Tcl_Alloc(sizeof(TkTextSection));
 	newSectionPtr->linePtr = sectionPtr->linePtr;
@@ -5912,49 +6092,87 @@ SplitSectionAtSwitch(
     /*
      * The left part may now undershoot MIN_TEXT_SEGS. This is allowed only
      * if it is pinned by switch boundaries (see CheckSections). Otherwise
-     * balance with the left neighbor; this neighbor cannot itself be short
-     * (it was a valid unpinned section before), so both results will
-     * satisfy the constraints.
+     * balance with the left neighbor.
      */
 
     if (sectionPtr->length < MIN_TEXT_SEGS
 	    && sectionPtr->prevPtr
 	    && !IsBranchSection(sectionPtr->prevPtr)
 	    && !IsLinkSection(sectionPtr)) {
-	TkTextSection *leftPtr = sectionPtr->prevPtr;
+	BalanceSectionWithLeft(sectionPtr);
+    }
+}
 
-	if (leftPtr->length + sectionPtr->length <= NUM_TEXT_SEGS) {
-	    /* Dissolve the left part into the left neighbor. */
-	    leftPtr->size += sectionPtr->size;
-	    leftPtr->length += sectionPtr->length;
-	    assert(leftPtr->length != 0); /* test for overflow */
-	    for (sPtr = sectionPtr->segPtr;
-		    sPtr && sPtr->sectionPtr == sectionPtr;
-		    sPtr = sPtr->nextPtr) {
-		sPtr->sectionPtr = leftPtr;
-	    }
-	    leftPtr->nextPtr = newSectionPtr;
-	    newSectionPtr->prevPtr = leftPtr;
-	    FreeSection(sectionPtr);
-	} else {
-	    /* Borrow segments from the tail of the left neighbor. */
-	    int shift = MIN_TEXT_SEGS - sectionPtr->length;
+/*
+ *--------------------------------------------------------------
+ *
+ * BalanceSectionWithLeft --
+ *
+ *	Balance a section which undershoots MIN_TEXT_SEGS without being
+ *	pinned at its left boundary (see CheckSections) with its left
+ *	neighbor. The neighbor cannot itself be short (it was a valid
+ *	unpinned section before), so both results will satisfy the
+ *	constraints: either the sections are merged (at most NUM_TEXT_SEGS
+ *	segments), or MIN_TEXT_SEGS - length segments are borrowed, and
+ *	the neighbor keeps at least NUM_TEXT_SEGS - MIN_TEXT_SEGS + 1
+ *	segments, which is more than MIN_TEXT_SEGS.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The section referred to by sectionPtr may be destroyed, the left
+ *	neighbor may change.
+ *
+ *--------------------------------------------------------------
+ */
 
-	    sPtr = sectionPtr->segPtr;
-	    for ( ; shift > 0; --shift) {
-		sPtr = sPtr->prevPtr;
-		assert(sPtr);
-		assert(sPtr->sectionPtr == leftPtr);
-		assert(sPtr->typePtr != &tkTextBranchType);
-		sPtr->sectionPtr = sectionPtr;
-		sectionPtr->size += sPtr->size;
-		sectionPtr->length += 1;
-		leftPtr->size -= sPtr->size;
-		leftPtr->length -= 1;
-	    }
-	    sectionPtr->segPtr = sPtr;
-	    assert(leftPtr->length >= MIN_TEXT_SEGS);
+static void
+BalanceSectionWithLeft(
+    TkTextSection *sectionPtr)	/* Short section, not pinned at its left boundary. */
+{
+    TkTextSection *leftPtr = sectionPtr->prevPtr;
+    TkTextSegment *sPtr;
+
+    assert(leftPtr);
+    assert(sectionPtr->length > 0);
+    assert(sectionPtr->length < MIN_TEXT_SEGS);
+    assert(!IsBranchSection(leftPtr));
+    assert(!IsLinkSection(sectionPtr));
+
+    if (leftPtr->length + sectionPtr->length <= NUM_TEXT_SEGS) {
+	/* Dissolve this section into the left neighbor. */
+	leftPtr->size += sectionPtr->size;
+	leftPtr->length += sectionPtr->length;
+	assert(leftPtr->length != 0); /* test for overflow */
+	for (sPtr = sectionPtr->segPtr;
+		sPtr && sPtr->sectionPtr == sectionPtr;
+		sPtr = sPtr->nextPtr) {
+	    sPtr->sectionPtr = leftPtr;
 	}
+	leftPtr->nextPtr = sectionPtr->nextPtr;
+	if (sectionPtr->nextPtr) {
+	    sectionPtr->nextPtr->prevPtr = leftPtr;
+	}
+	FreeSection(sectionPtr);
+    } else {
+	/* Borrow segments from the tail of the left neighbor. */
+	int shift = MIN_TEXT_SEGS - sectionPtr->length;
+
+	sPtr = sectionPtr->segPtr;
+	for ( ; shift > 0; --shift) {
+	    sPtr = sPtr->prevPtr;
+	    assert(sPtr);
+	    assert(sPtr->sectionPtr == leftPtr);
+	    assert(sPtr->typePtr != &tkTextBranchType);
+	    sPtr->sectionPtr = sectionPtr;
+	    sectionPtr->size += sPtr->size;
+	    sectionPtr->length += 1;
+	    leftPtr->size -= sPtr->size;
+	    leftPtr->length -= 1;
+	}
+	sectionPtr->segPtr = sPtr;
+	assert(leftPtr->length >= MIN_TEXT_SEGS);
     }
 }
 
@@ -6089,6 +6307,18 @@ JoinSections(
 	     */
 	    SplitSection(nextSectionPtr);
 	}
+    } else if (length < MIN_TEXT_SEGS
+	    && sectionPtr->nextPtr
+	    && sectionPtr->prevPtr
+	    && !isLinkSegment
+	    && !IsBranchSection(sectionPtr->prevPtr)) {
+	/*
+	 * This section is short and pinned at its right boundary only (it
+	 * ends with a branch, or the next section starts with a link); its
+	 * left boundary is an arbitrary cut, which cannot pin a short
+	 * section (see CheckSections). Balance with the left neighbor.
+	 */
+	BalanceSectionWithLeft(sectionPtr);
     } else if (length > NUM_TEXT_SEGS) {
 	int lengthRHS, shift;
 
@@ -6256,6 +6486,44 @@ RebuildSections(
 	    }
 	    if (!segPtr || segPtr->typePtr == &tkTextLinkType) {
 		break;
+	    }
+	}
+
+	if (length == NUM_TEXT_SEGS && segPtr && segPtr->typePtr != &tkTextLinkType) {
+	    /*
+	     * The section has been closed at the quota. If the following run
+	     * is terminated by a switch boundary in less than MIN_TEXT_SEGS
+	     * segments, the resulting section would be short with its left
+	     * boundary being an arbitrary cut, which cannot pin a short
+	     * section (see CheckSections): give back some segments, both
+	     * parts will satisfy the minimum, because NUM_TEXT_SEGS is two
+	     * times MIN_TEXT_SEGS. The given back segments will be assigned
+	     * to the next section by the next iteration.
+	     */
+
+	    TkTextSegment *sPtr = segPtr;
+	    unsigned tail = 0;
+
+	    while (sPtr && tail < MIN_TEXT_SEGS) {
+		if (sPtr->typePtr == &tkTextLinkType) {
+		    break; /* the link heads the next section, boundary reached */
+		}
+		tail += 1;
+		if (sPtr->typePtr == &tkTextBranchType) {
+		    break; /* the branch terminates the run, boundary reached */
+		}
+		sPtr = sPtr->nextPtr;
+	    }
+	    if (sPtr && sPtr->typePtr->group == SEG_GROUP_BRANCH
+		    && 0 < tail && tail < MIN_TEXT_SEGS) {
+		unsigned back = MIN_TEXT_SEGS - tail;
+
+		for ( ; back > 0; --back) {
+		    segPtr = segPtr->prevPtr;
+		    sectionPtr->size -= segPtr->size;
+		    sectionPtr->length -= 1;
+		    assert(segPtr->typePtr->group != SEG_GROUP_BRANCH);
+		}
 	    }
 	}
 
@@ -7718,12 +7986,20 @@ DeleteRange(
 	TkBTreeFreeSegment(savedLinkPtr);
 	TkBTreeFreeSegment(savedBranchPtr);
     } else if (savedLinkPtr) {
-	savedLinkPtr->tagInfoPtr = NULL; /* discard counterpart stashed by LinkDeleteProc */
+	if (savedLinkPtr->tagInfoPtr) {
+	    /* discard counterpart stashed by LinkDeleteProc */
+	    TkBTreeFreeSegment((TkTextSegment *) savedLinkPtr->tagInfoPtr);
+	    savedLinkPtr->tagInfoPtr = NULL;
+	}
 	savedLinkPtr->sectionPtr = NULL; /* sections are rebuilt just below */
 	LinkSwitch(linePtr1, firstSegPtr, savedLinkPtr);
 	linePtr1->numLinks += 1;
     } else if (savedBranchPtr) {
-	savedBranchPtr->tagInfoPtr = NULL; /* discard counterpart stashed by BranchDeleteProc */
+	if (savedBranchPtr->tagInfoPtr) {
+	    /* discard counterpart stashed by BranchDeleteProc */
+	    TkBTreeFreeSegment((TkTextSegment *) savedBranchPtr->tagInfoPtr);
+	    savedBranchPtr->tagInfoPtr = NULL;
+	}
 	savedBranchPtr->sectionPtr = NULL; /* sections are rebuilt just below */
 	LinkSwitch(linePtr1, firstSegPtr, savedBranchPtr);
 	linePtr1->numBranches += 1;
@@ -7774,15 +8050,35 @@ DeleteRange(
 	 */
 
 	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)) {
+	    TkTextSection *shrunkSectionPtr = firstSegPtr->sectionPtr;
+	    int sole = shrunkSectionPtr->length == 1;
+	    TkTextSegment *joinPtr = firstSegPtr->prevPtr;
+
 	    UnlinkSegment(firstSegPtr);
 	    assert(firstSegPtr->typePtr->deleteProc);
 	    if (!firstSegPtr->typePtr->deleteProc(sharedTextPtr, firstSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
 	    }
 	    firstSegPtr->sectionPtr = NULL;
+	    if (!sole) {
+		/* The shrunk section may have lost its permission to be short. */
+		JoinSections(shrunkSectionPtr);
+	    }
+	    if (joinPtr && joinPtr->typePtr == &tkTextCharType) {
+		/*
+		 * The removed boundary may have separated two equal tagged
+		 * char segments (e.g. after the deletion merged two elided
+		 * ranges, with the split points being the dead switches).
+		 */
+		CleanupCharSegments(sharedTextPtr, joinPtr);
+	    }
 	    countChanges += 1;
 	}
 	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
+	    TkTextSection *shrunkSectionPtr = lastSegPtr->sectionPtr;
+	    int sole = shrunkSectionPtr->length == 1;
+	    TkTextSegment *joinPtr = lastSegPtr->prevPtr;
+
 	    UnlinkSegment(lastSegPtr);
 	    assert(lastSegPtr->typePtr->deleteProc);
 	    if (!lastSegPtr->typePtr->deleteProc(sharedTextPtr, lastSegPtr, flags)) {
@@ -7801,6 +8097,14 @@ DeleteRange(
 		lastSegPtr->sectionPtr = NULL;
 		lastSegPtr->nextPtr = NULL;
 		lastSegPtr->refCount += 1;
+	    }
+	    if (!sole) {
+		/* The shrunk section may have lost its permission to be short. */
+		JoinSections(shrunkSectionPtr);
+	    }
+	    if (joinPtr && joinPtr->sectionPtr && joinPtr->typePtr == &tkTextCharType) {
+		/* See the first boundary above. */
+		CleanupCharSegments(sharedTextPtr, joinPtr);
 	    }
 	    countChanges += 1;
 	}
@@ -8966,6 +9270,46 @@ FindNextLink(
     return NULL; /* never reached */
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * ContentBeforeLink --
+ *
+ *	Normalize the last segment of a range intended for UpdateElideInfo:
+ *	step back from a closing link to the preceding content segment.
+ *	UpdateElideInfo will include the link again (its range extension
+ *	walks over the trailing zero size segments), but stops at the
+ *	following content segment - passing the link itself would extend
+ *	the walk over the opening branch of a following elided range, and
+ *	an inserted branch would then be connected to the wrong link.
+ *
+ * Results:
+ *	The content segment to be used as last segment of the range.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static TkTextSegment *
+ContentBeforeLink(
+    TkTextSegment *segPtr)
+{
+    if (segPtr->typePtr == &tkTextLinkType) {
+	TkTextSegment *prevPtr = segPtr->prevPtr;
+
+	if (!prevPtr) {
+	    assert(segPtr->sectionPtr->linePtr->prevPtr);
+	    prevPtr = segPtr->sectionPtr->linePtr->prevPtr->lastPtr;
+	}
+	/* a link is never preceded by marks, and never by another switch */
+	assert(prevPtr->tagInfoPtr);
+	segPtr = prevPtr;
+    }
+    return segPtr;
+}
+
 static void
 UpdateElideInfo(
     TkSharedText *sharedTextPtr,
@@ -8979,6 +9323,9 @@ UpdateElideInfo(
     TkTextSegment *prevLinkPtr;
     TkTextSegment *lastLinkPtr;
     TkTextSegment *newBranchPtr;
+    TkTextSegment *keptBranchPtr;
+				/* Walked branch which still opens the current
+				 * elided range, not reconnected yet. */
     TkTextSegment *startSegPtr;
     TkTextSegment *deletedBranchPtr;
     TkTextSegment *deletedLinkPtr;
@@ -9017,10 +9364,15 @@ UpdateElideInfo(
      *		state as long as we are computing this predecessing elide state.
      *
      * 4. All tags will be removed from the specified region.
+     *
+     * 5. tagPtr is NULL and reason is ELISION_HAS_BEEN_CHANGED: recompute the
+     *    elide topology of the region from the current tag information (used
+     *    after undo/redo, where the restored switches may not match the
+     *    restored tags anymore).
      */
 
-    assert(tagPtr || reason == ELISION_WILL_BE_REMOVED);
-    assert(tagPtr || TkBTreeHaveElidedSegments(sharedTextPtr));
+    assert(tagPtr || reason != ELISION_HAS_BEEN_ADDED);
+    assert(tagPtr || reason == ELISION_HAS_BEEN_CHANGED || TkBTreeHaveElidedSegments(sharedTextPtr));
 
     /*
      * This function assumes that the start/end points are already protected.
@@ -9030,7 +9382,7 @@ UpdateElideInfo(
     assert((*lastSegPtr)->protectionFlag);
 
     linePtr = (*firstSegPtr)->sectionPtr->linePtr;
-    prevBranchPtr = lastBranchPtr = newBranchPtr = NULL;
+    prevBranchPtr = lastBranchPtr = newBranchPtr = keptBranchPtr = NULL;
     deletedBranchPtr = deletedLinkPtr = NULL;
     danglingBranchPtr = danglingLinkPtr = NULL;
     prevLinkPtr = lastLinkPtr = NULL;
@@ -9152,10 +9504,21 @@ UpdateElideInfo(
 	    assert(linePtr);
 
 	    if (linePtr != endSegPtr->sectionPtr->linePtr) {
+		/*
+		 * In recompute mode (tagPtr is NULL) a line is unaffected only
+		 * if the walk is currently outside of an elided range and the
+		 * line carries no elision relevant tags: an untagged line
+		 * inside an elided range is a transition which has to be
+		 * processed (in normal mode the range extension guarantees
+		 * that the boundary lines carry the toggled tag).
+		 */
 		while (linePtr != lastLinePtr
 			&& linePtr->numLinks == 0
 			&& linePtr->numBranches == 0
-			&& !TestTag(linePtr->tagonPtr, tagPtr)) {
+			&& (tagPtr
+			    ? !TestTag(linePtr->tagonPtr, tagPtr)
+			    : (!actualElided && !TkTextTagSetIntersectsBits(
+				    linePtr->tagonPtr, sharedTextPtr->elisionTags)))) {
 		    /* Skip (nearly) unaffected line. */
 		    if (linePtr->logicalLine == actualElided) {
 			if (nodePtr && linePtr->parentPtr != nodePtr) {
@@ -9197,7 +9560,8 @@ UpdateElideInfo(
 	}
 
 	if (segPtr->tagInfoPtr) {
-	    int shouldBeElided = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
+	    int shouldBeElided = (tagPtr || reason == ELISION_HAS_BEEN_CHANGED)
+		    ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
 
 	    if (prevBranchPtr) {
@@ -9229,7 +9593,17 @@ UpdateElideInfo(
 		    /* Clear the transient protection before parking for reuse. */
 		    prevBranchPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevBranchPtr);
-		    if (deletedBranchPtr) {
+		    if (prevBranchPtr->refCount > 1) {
+			/*
+			 * Still enrolled in an undo/redo token (see DeleteRange).
+			 * The counterpart may die with this annihilation, the
+			 * relation cannot survive: mark the switch as annihilated
+			 * (NULL fork), the restore proc will drop it; and don't
+			 * park it for reuse.
+			 */
+			prevBranchPtr->body.branch.nextPtr = NULL;
+			TkBTreeFreeSegment(prevBranchPtr);
+		    } else if (deletedBranchPtr) {
 			TkBTreeFreeSegment(prevBranchPtr);
 		    } else {
 			deletedBranchPtr = prevBranchPtr;
@@ -9242,6 +9616,9 @@ UpdateElideInfo(
 		    }
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
+		} else {
+		    /* This kept branch opens the current elided range. */
+		    keptBranchPtr = prevBranchPtr;
 		}
 	    } else if (prevLinkPtr) {
 		if (shouldBeElided || !actualElided) {
@@ -9269,7 +9646,11 @@ UpdateElideInfo(
 		    /* Clear the transient protection before parking for reuse. */
 		    prevLinkPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
-		    if (deletedLinkPtr) {
+		    if (prevLinkPtr->refCount > 1) {
+			/* Enrolled in an undo/redo token, see the branch case above. */
+			prevLinkPtr->body.link.prevPtr = NULL;
+			TkBTreeFreeSegment(prevLinkPtr);
+		    } else if (deletedLinkPtr) {
 			TkBTreeFreeSegment(prevLinkPtr);
 		    } else {
 			deletedLinkPtr = prevLinkPtr;
@@ -9282,6 +9663,42 @@ UpdateElideInfo(
 		    }
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
+		} else if (newBranchPtr) {
+		    /*
+		     * The kept link closes the elided range opened by the
+		     * branch inserted in this pass: connect them now. If a
+		     * further elided range follows within the walk, its
+		     * switches would reset the link bookkeeping, and the
+		     * pending branch would be connected to the wrong link
+		     * at the end of the pass.
+		     */
+		    newBranchPtr->body.branch.nextPtr = prevLinkPtr;
+		    prevLinkPtr->body.link.prevPtr = newBranchPtr;
+		    if (prevLinkPtr == danglingLinkPtr) {
+			danglingLinkPtr = NULL;
+		    }
+		    newBranchPtr = NULL;
+		    keptBranchPtr = NULL;
+		} else if (keptBranchPtr
+			&& prevLinkPtr->body.link.prevPtr != keptBranchPtr) {
+		    /*
+		     * The kept link closes the elided range opened by a KEPT
+		     * branch whose pairing was broken (switches restored
+		     * verbatim by an undo, nested within the walked range):
+		     * reconnect them.
+		     */
+		    keptBranchPtr->body.branch.nextPtr = prevLinkPtr;
+		    prevLinkPtr->body.link.prevPtr = keptBranchPtr;
+		    if (prevLinkPtr == danglingLinkPtr) {
+			danglingLinkPtr = NULL;
+		    }
+		    if (keptBranchPtr == danglingBranchPtr) {
+			danglingBranchPtr = NULL;
+		    }
+		    keptBranchPtr = NULL;
+		} else {
+		    /* The kept link closes the current elided range. */
+		    keptBranchPtr = NULL;
 		}
 	    } else if (actualElided != shouldBeElided) {
 		if (shouldBeElided) {
@@ -9297,6 +9714,7 @@ UpdateElideInfo(
 		    }
 		    LinkSwitch(linePtr, segPtr->prevPtr, lastBranchPtr);
 		    newBranchPtr = lastBranchPtr;
+		    keptBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		} else { /* if (actualElided) */
 		    /*
@@ -9354,7 +9772,7 @@ UpdateElideInfo(
 		    }
 		    /* finally link new segment */
 		    LinkSwitch(linePtr, segPtr->prevPtr, lastLinkPtr);
-		    newBranchPtr = lastBranchPtr = NULL;
+		    newBranchPtr = lastBranchPtr = keptBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		}
 	    }
@@ -9392,9 +9810,9 @@ UpdateElideInfo(
 	    danglingLinkPtr = NULL;
 	}
 	if (!lastLinkPtr) {
-	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
+	    if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 	    actualElided = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
-	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
+	    if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 
 	    if (actualElided) {
 		/*
@@ -10296,23 +10714,13 @@ TkBTreeTag(
 
     TreeTagNode(rootPtr, &data, 0, firstPtr, lastPtr, 1);
 
-    if (add && (tagPtr->elide >= 0)) {
-	/*
-	 * In case of elision we have to inspect each segment, because a
-	 * Branch or a Link segment has to be inserted/removed if required.
-	 *
-	 * NOTE: Currently, when using elision (tag option -elide), TkBTreeTag
-	 * can be considerably slower than without. In return the lookup, whether
-	 * a segment is elided, is super-fast now, and this has more importance -
-	 * in general inserting/removing an elided range will be done only once,
-	 * but the lookup for the elision option is a frequent use case.
-	 *
-	 * Note that UpdateElideInfo needs the new state when adding the tag,
-	 * so we are doing this after the tag has been added.
-	 */
-
-	UpdateElideInfo(sharedTextPtr, tagPtr, &segPtr1, &segPtr2, ELISION_HAS_BEEN_ADDED);
-    }
+    /*
+     * The undo information has to be set up before the elision update:
+     * UpdateElideInfo merges the char segments neighboring a removed
+     * switch, which can free the segments recorded in data.firstSegPtr/
+     * data.lastSegPtr. The positions are not affected by the update (the
+     * switches have zero size).
+     */
 
     if (undoInfo && (data.sizeOfLengths > 0 || data.currLength > 0)) {
 	TkTextIndex index1 = *indexPtr1;
@@ -10405,6 +10813,24 @@ TkBTreeTag(
     }
 
     assert(data.lengths == data.lengthsBuf);
+
+    if (add && (tagPtr->elide >= 0)) {
+	/*
+	 * In case of elision we have to inspect each segment, because a
+	 * Branch or a Link segment has to be inserted/removed if required.
+	 *
+	 * NOTE: Currently, when using elision (tag option -elide), TkBTreeTag
+	 * can be considerably slower than without. In return the lookup, whether
+	 * a segment is elided, is super-fast now, and this has more importance -
+	 * in general inserting/removing an elided range will be done only once,
+	 * but the lookup for the elision option is a frequent use case.
+	 *
+	 * Note that UpdateElideInfo needs the new state when adding the tag,
+	 * so we are doing this after the tag has been added.
+	 */
+
+	UpdateElideInfo(sharedTextPtr, tagPtr, &segPtr1, &segPtr2, ELISION_HAS_BEEN_ADDED);
+    }
 
     CleanupSplitPoint(segPtr1, sharedTextPtr);
     if (segPtr1 != segPtr2) {
@@ -10580,7 +11006,18 @@ ClearTagsFromLine(
 			    tagChangePtr = undoToken->changeList + undoToken->changeListSize++;
 			    tagChangePtr->tagInfoPtr = tagInfoPtr;
 			    tagChangePtr->size = segPtr->size;
-			    tagChangePtr->skip = data->skip;
+			    /*
+			     * The undo walk starts at the beginning of the
+			     * line of the first recorded segment (this will
+			     * become the start index of the token), so the
+			     * skip of the first entry has to be anchored
+			     * there: bytes accumulated over earlier lines of
+			     * the range (start lines without a recordable
+			     * segment: tags ending before the range, or tags
+			     * excluded from undo) do not belong into it.
+			     */
+			    tagChangePtr->skip = (undoToken->changeListSize == 1)
+				    ? (uint32_t) TkTextSegToIndex(segPtr) : data->skip;
 			    data->tagChangePtr = tagChangePtr;
 			    data->skip = 0;
 			}
@@ -10647,8 +11084,15 @@ ClearTagsFromLine(
 	    TkTextTagSet *tagonPtr, *tagoffPtr;
 
 	    if (linePtr->tagonPtr == data->tagonPtr && linePtr->tagoffPtr == data->tagoffPtr) {
-		TagSetReplace(&linePtr->tagonPtr, data->newTagonPtr);
-		TagSetReplace(&linePtr->tagoffPtr, data->newTagoffPtr);
+		/*
+		 * The cached result pointers are not owned (no reference is
+		 * held for the cache), so the replace must take its own
+		 * reference (TagSetReplace transfers, it does not increment).
+		 */
+		assert(TkTextTagSetRefCount(data->newTagonPtr) > 0);
+		TagSetAssign(&linePtr->tagonPtr, data->newTagonPtr);
+		assert(TkTextTagSetRefCount(data->newTagoffPtr) > 0);
+		TagSetAssign(&linePtr->tagoffPtr, data->newTagoffPtr);
 	    } else {
 		data->tagonPtr = linePtr->tagonPtr;
 		data->tagoffPtr = linePtr->tagoffPtr;
@@ -11114,7 +11558,14 @@ TkBTreeClearTags(
 	memset(&data, 0, sizeof(data));
 	rootPtr = TkBTreeGetRoot(sharedTextPtr->tree); /* we must start at top level */
 
-	if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	if (wholeText && TkBTreeHaveElidedSegments(sharedTextPtr)) {
+	    /*
+	     * All the tags will be gone, so all the switches have to go. A
+	     * partial clear is handled after the tags have been cleared (a
+	     * recompute, see below): a range boundary may lie inside of an
+	     * elided range, whose outside part keeps its tags, so stripping
+	     * the range would orphan the switches of such a range.
+	     */
 	    UpdateElideInfo(sharedTextPtr, NULL, &segPtr1, &segPtr2, ELISION_WILL_BE_REMOVED);
 	}
 
@@ -11164,7 +11615,12 @@ TkBTreeClearTags(
 	    anyChanges = CheckIfAnyTagIsAffected(sharedTextPtr, affectedTagInfoPtr, discardSelection);
 
 	    if (undoToken) {
+		/*
+		 * Nothing may have been recorded even with changes made: the
+		 * cleared range may only carry tags excluded from undo.
+		 */
 		if (anyChanges
+			&& data.firstSegPtr
 			&& !TkTextTagBitContainsSet(sharedTextPtr->selectionTags, affectedTagInfoPtr)) {
 		    TkTextIndex index1 = startIndex;
 		    TkTextIndex index2 = endIndex;
@@ -11197,6 +11653,37 @@ TkBTreeClearTags(
 		}
 		if (linePtr2 && !TkTextIndexIsStartOfLine(&endIndex)) {
 		    RecomputeLineTagInfo(linePtr2, NULL, sharedTextPtr);
+		}
+
+		if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
+		    /*
+		     * Recompute the elide topology of the cleared range from
+		     * the current tag information, extended to the boundaries
+		     * of the enclosing elided ranges (a range boundary may
+		     * lie inside of an elided range which shrinks with this
+		     * clearing).
+		     */
+
+		    TkTextSegment *fPtr = segPtr1;
+		    TkTextSegment *lPtr = segPtr2;
+		    TkTextSegment *predPtr = GetPrevTagInfoSegment(segPtr1);
+
+		    if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+			fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+		    }
+		    if (lPtr->tagInfoPtr && SegmentIsElided(sharedTextPtr, lPtr, NULL)) {
+			lPtr = ContentBeforeLink(
+				TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, lPtr));
+		    }
+		    fPtr->protectionFlag = 1;
+		    lPtr->protectionFlag = 1;
+		    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+		    if (fPtr != segPtr1 && fPtr != segPtr2) {
+			CleanupSplitPoint(fPtr, sharedTextPtr);
+		    }
+		    if (lPtr != fPtr && lPtr != segPtr1 && lPtr != segPtr2) {
+			CleanupSplitPoint(lPtr, sharedTextPtr);
+		    }
 		}
 	    }
 
@@ -12730,7 +13217,6 @@ TkBTreeFindNextTagged(
     const TkSharedText *sharedTextPtr = TkTextIndexGetShared(indexPtr1);
     const TkTextLine *linePtr = TkTextIndexGetLine(indexPtr1);
     const TkTextSegment *lastPtr = TkTextIndexGetFirstSegment(indexPtr2, NULL);
-    const TkText *textPtr;
     const Node *nodePtr;
 
     /*
@@ -12745,11 +13231,19 @@ TkBTreeFindNextTagged(
 	}
     }
 
+    if (lastPtr->sectionPtr->linePtr == linePtr) {
+	/*
+	 * The end of the search range lies within the first line: the walks
+	 * below would never encounter the boundary segment, and would return
+	 * tagged segments beyond the range.
+	 */
+	return NULL;
+    }
+
     /*
      * At second, search for line containing any tag in current node.
      */
 
-    textPtr = indexPtr1->textPtr;
     nodePtr = linePtr->parentPtr;
 
     if (linePtr != nodePtr->lastPtr && TagSetTestBits(nodePtr->tagonPtr, discardTags)) {
@@ -12769,12 +13263,12 @@ TkBTreeFindNextTagged(
 	return NULL;
     }
 
-    if (textPtr && textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
+    {
 	int lineNo1 = TkBTreeLinesTo(sharedTextPtr->tree, NULL, nodePtr->linePtr, NULL);
 	int lineNo2 = TkTextIndexGetLineNumber(indexPtr2, NULL);
 
 	if (lineNo1 > lineNo2) {
-	    /* We've found a node after text end, so return NULL. */
+	    /* We've found a node after the end of the search range. */
 	    return NULL;
 	}
     }
@@ -13062,7 +13556,6 @@ TkBTreeFindPrevTagged(
     const TkBitField *selTags = discardSelection ? sharedTextPtr->selectionTags : NULL;
     const TkTextLine *linePtr = TkTextIndexGetLine(indexPtr1);
     TkTextSegment *firstPtr = TkTextIndexGetFirstSegment(indexPtr2, NULL);
-    const TkText *textPtr;
     const Node *nodePtr;
 
     /*
@@ -13077,11 +13570,19 @@ TkBTreeFindPrevTagged(
 	}
     }
 
+    if (firstPtr->sectionPtr->linePtr == linePtr) {
+	/*
+	 * The end of the search range lies within the first line: the walks
+	 * below would never encounter the boundary segment, and would return
+	 * tagged segments beyond the range.
+	 */
+	return NULL;
+    }
+
     /*
      * At second, search for line containing any tag in current node.
      */
 
-    textPtr = indexPtr1->textPtr;
     nodePtr = linePtr->parentPtr;
 
     if (linePtr != nodePtr->linePtr && TagSetTestBits(nodePtr->tagonPtr, selTags)) {
@@ -13101,12 +13602,12 @@ TkBTreeFindPrevTagged(
 	return NULL;
     }
 
-    if (textPtr && textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
-	int lineNo1 = TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, nodePtr->lastPtr, NULL);
+    {
+	int lineNo1 = TkBTreeLinesTo(sharedTextPtr->tree, NULL, nodePtr->lastPtr, NULL);
 	int lineNo2 = TkTextIndexGetLineNumber(indexPtr2, NULL);
 
 	if (lineNo1 < lineNo2) {
-	    /* We've found a node before text start, so return NULL. */
+	    /* We've found a node before the end of the search range. */
 	    return NULL;
 	}
     }
@@ -15283,20 +15784,21 @@ FindBranchSegment(
     }
 
     /*
-     * At second, search for line with a branch in current node.
+     * At second, search for line with a branch in current node. Note that
+     * the first line has to be examined before giving up (the bail-out
+     * tested the predecessor, so a branch on the first line was never
+     * found when the search started two or more lines below it).
      */
 
     linePtr = linePtr->prevPtr;
     while (linePtr && linePtr->parentPtr == nodePtr) {
-	TkTextLine *prevPtr = linePtr->prevPtr;
-
 	if (linePtr->numBranches > 0) {
 	    return SearchBranchInLine(linePtr->lastPtr, startMarker);
 	}
-	if (prevPtr == firstLinePtr) {
+	if (linePtr == firstLinePtr || !linePtr->prevPtr) {
 	    return startMarker;
 	}
-	linePtr = prevPtr;
+	linePtr = linePtr->prevPtr;
     }
 
     /*
@@ -16320,12 +16822,22 @@ BranchDeleteProc(
     }
 
     if (flags & DELETE_BRANCHES) {
-	segPtr->tagInfoPtr = NULL; /* this may still hold the counterpart (see below) */
+	if (segPtr->tagInfoPtr) {
+	    /* this still holds the stashed counterpart (see below) */
+	    TkBTreeFreeSegment((TkTextSegment *) segPtr->tagInfoPtr);
+	    segPtr->tagInfoPtr = NULL;
+	}
 	TkBTreeFreeSegment(segPtr);
 	return 1;
     }
 
-    /* Save old relationships for undo (we misuse an unused pointer). */
+    /*
+     * Save old relationships for undo (we misuse an unused pointer). The
+     * stash holds a reference: the counterpart may be annihilated by an
+     * elision update before the token performs (see UpdateElideInfo), the
+     * restore proc has to see the annihilation marker, not freed memory.
+     */
+    segPtr->body.branch.nextPtr->refCount += 1;
     segPtr->tagInfoPtr = (TkTextTagSet *) segPtr->body.branch.nextPtr;
     return 0;
 }
@@ -16353,9 +16865,32 @@ BranchRestoreProc(
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     if (segPtr->tagInfoPtr) {
-	/* Restore old relationship. */
-	segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+	TkTextSegment *counterpartPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+
 	segPtr->tagInfoPtr = NULL;
+	if (!counterpartPtr->body.link.prevPtr) {
+	    /*
+	     * The stashed counterpart has been annihilated by an elision
+	     * update (NULL fork, see UpdateElideInfo), the old relationship
+	     * cannot be restored. Drop this switch too, the elide topology
+	     * is recomputed from the tags after the restore.
+	     */
+	    TkBTreeFreeSegment(counterpartPtr);
+	    TkBTreeFreeSegment(segPtr);
+	    return 0;
+	}
+	/* Restore old relationship, and release the stash reference. */
+	segPtr->body.branch.nextPtr = counterpartPtr;
+	TkBTreeFreeSegment(counterpartPtr);
+    } else if (!segPtr->body.branch.nextPtr) {
+	/*
+	 * This switch has been annihilated by an elision update while it was
+	 * enrolled in this token (see UpdateElideInfo). It cannot and need
+	 * not be restored, the elide topology is recomputed from the tags
+	 * after the restore. Dispose of the token's reference.
+	 */
+	TkBTreeFreeSegment(segPtr);
+	return 0;
     } /* else this branch stayed alive in the tree, the relationship is intact */
     assert(segPtr->body.branch.nextPtr->typePtr == &tkTextLinkType);
     /* The counterpart may have been re-connected meanwhile (see DeleteRange). */
@@ -16514,12 +17049,20 @@ LinkDeleteProc(
     }
 
     if (flags & DELETE_BRANCHES) {
-	segPtr->tagInfoPtr = NULL; /* this may still hold the counterpart (see below) */
+	if (segPtr->tagInfoPtr) {
+	    /* this still holds the stashed counterpart (see below) */
+	    TkBTreeFreeSegment((TkTextSegment *) segPtr->tagInfoPtr);
+	    segPtr->tagInfoPtr = NULL;
+	}
 	TkBTreeFreeSegment(segPtr);
 	return 1;
     }
 
-    /* Save old relationships for undo (we have misused an unused pointer). */
+    /*
+     * Save old relationships for undo (we have misused an unused pointer).
+     * The stash holds a reference, see BranchDeleteProc.
+     */
+    segPtr->body.link.prevPtr->refCount += 1;
     segPtr->tagInfoPtr = (TkTextTagSet *) segPtr->body.link.prevPtr;
     return 0;
 }
@@ -16547,9 +17090,22 @@ LinkRestoreProc(
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     if (segPtr->tagInfoPtr) {
-	/* Restore old relationship (misuse of an unused pointer). */
-	segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+	TkTextSegment *counterpartPtr = (TkTextSegment *) segPtr->tagInfoPtr;
+
 	segPtr->tagInfoPtr = NULL;
+	if (!counterpartPtr->body.branch.nextPtr) {
+	    /* Stashed counterpart annihilated, see BranchRestoreProc. */
+	    TkBTreeFreeSegment(counterpartPtr);
+	    TkBTreeFreeSegment(segPtr);
+	    return 0;
+	}
+	/* Restore old relationship (misuse of an unused pointer). */
+	segPtr->body.link.prevPtr = counterpartPtr;
+	TkBTreeFreeSegment(counterpartPtr);
+    } else if (!segPtr->body.link.prevPtr) {
+	/* Annihilated while enrolled in this token, see BranchRestoreProc. */
+	TkBTreeFreeSegment(segPtr);
+	return 0;
     } /* else this link stayed alive in the tree, the relationship is intact */
     assert(segPtr->body.link.prevPtr->typePtr == &tkTextBranchType);
     /* The counterpart may have been re-connected meanwhile (see DeleteRange). */
@@ -17006,16 +17562,25 @@ CheckSections(
 	if (sectionPtr->linePtr != linePtr) {
 	    Tcl_Panic("CheckSections: section has wrong line pointer");
 	}
-	if (numSegs < MIN_TEXT_SEGS
-		&& sectionPtr->nextPtr
-		&& (!sectionPtr->nextPtr
-		    || sectionPtr->nextPtr->segPtr->prevPtr->typePtr != &tkTextBranchType
-		    || (sectionPtr->prevPtr && sectionPtr->segPtr->typePtr != &tkTextLinkType))
-		&& (!sectionPtr->nextPtr
-		    || sectionPtr->nextPtr->segPtr->typePtr != &tkTextLinkType
-		    || (sectionPtr->prevPtr
-			&& sectionPtr->segPtr->prevPtr->typePtr != &tkTextBranchType))) {
-	    Tcl_Panic("CheckSections: too few segments in section");
+	if (numSegs < MIN_TEXT_SEGS && sectionPtr->nextPtr) {
+	    /*
+	     * A short section (not the last one of the line) is allowed only
+	     * if both of its boundaries are forced by the switch rules (a
+	     * link can only head a section, a branch can only terminate one)
+	     * or by the line start. The boundaries are tested independently,
+	     * not as pairs: during the restore phase of an undo the switch
+	     * chain may be transiently nested, which produces unmergeable
+	     * short sections between two switches of the same direction.
+	     */
+	    if (sectionPtr->prevPtr
+		    && sectionPtr->segPtr->typePtr != &tkTextLinkType
+		    && sectionPtr->segPtr->prevPtr->typePtr != &tkTextBranchType) {
+		Tcl_Panic("CheckSections: too few segments in section");
+	    }
+	    if (sectionPtr->nextPtr->segPtr->typePtr != &tkTextLinkType
+		    && sectionPtr->nextPtr->segPtr->prevPtr->typePtr != &tkTextBranchType) {
+		Tcl_Panic("CheckSections: too few segments in section");
+	    }
 	}
 	if (numSegs > MAX_TEXT_SEGS) {
 	    Tcl_Panic("CheckSections: too many segments in section");

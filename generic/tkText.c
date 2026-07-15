@@ -3292,8 +3292,9 @@ ClearText(
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	/*
-	 * Always clean up the widget-specific tags first. Common tags (i.e. most)
-	 * will only be cleaned up when the shared structure is cleaned up.
+	 * Clean up the widget-specific state first. The tags are shared
+	 * between the peers, they will be freed (once) below; here only
+	 * this peer's reference to the current tag info is released.
 	 *
 	 * We also need to clean up widget-specific marks ('insert', 'current'),
 	 * since otherwise marks will never disappear from the B-tree.
@@ -3305,14 +3306,15 @@ ClearText(
 	TkBTreeUnlinkSegment(sharedTextPtr, tPtr->insertMarkPtr);
 	TkBTreeUnlinkSegment(sharedTextPtr, tPtr->currentMarkPtr);
 	if (clearTags) {
-	    TkTextFreeAllTags(tPtr);
+	    TkTextTagSetDecrRefCount(tPtr->curTagInfoPtr);
+	    TkTextTagSetIncrRefCount(tPtr->curTagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
 	}
 	FreeEmbeddedWindows(tPtr);
 	TkTextFreeDInfo(tPtr);
-	textPtr->dInfoPtr = NULL;
-	textPtr->dontRepick = 0;
+	tPtr->dInfoPtr = NULL;
+	tPtr->dontRepick = 0;
 	tPtr->abortSelections = 1;
-	textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
+	tPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
 	tPtr->refCount -= 1;
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
 	tPtr->startLine = NULL;
@@ -3346,6 +3348,13 @@ ClearText(
     Tcl_DeleteHashTable(&sharedTextPtr->windowTable);
 
     if (clearTags) {
+	/*
+	 * The tags are shared between the peers, so they must be freed only
+	 * once (TkTextFreeAllTags does not remove the freed tags from the
+	 * hash table, calling it per peer would iterate over freed memory).
+	 */
+
+	TkTextFreeAllTags(textPtr);
 	Tcl_DeleteHashTable(&sharedTextPtr->tagTable);
 	if (sharedTextPtr->tagBindingTable) {
 	    Tk_DeleteBindingTable(sharedTextPtr->tagBindingTable);
