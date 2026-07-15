@@ -9748,6 +9748,18 @@ UpdateElideInfo(
 			 */
 			lastBranchPtr = newBranchPtr;
 		    }
+		    if (!lastBranchPtr && keptBranchPtr) {
+			/*
+			 * The walked branch which still opens the current elided
+			 * range closes it here (the range was cut short, e.g. by
+			 * the undo of a tag clear whose recompute starts at that
+			 * branch). Without this the search below would be entered
+			 * with a range start which is not content (the caller may
+			 * pass the branch itself, see UndoClearTagsPerform).
+			 */
+			lastBranchPtr = keptBranchPtr;
+			keptBranchPtr = NULL;
+		    }
 		    if (!lastBranchPtr) {
 			/*
 			 * The related branch is starting outside of this range,

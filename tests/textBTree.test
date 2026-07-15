@@ -2692,6 +2692,33 @@ test btree-14.89 {restore proc: drop of a switch enrolled in two tokens leaves n
     destroy .t
 } -result {{} abcdefghijklmnopqrst}
 
+test btree-14.90 {elide recompute walk: a link insertion pairs with the still open kept branch} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # The undone tag clear drops the non-undoable elide tag and shrinks the
+    # elided range: the recompute starts at the enclosing branch (kept), its
+    # link expires within the walk, and the closing link insertion used to
+    # ignore the kept branch and search from the range start - which is the
+    # branch itself, not content (assert in SegmentIsElided).
+    .t debug 1
+    .t insert end "abcdefghijklmnopqrst"
+    .t tag configure E0 -elide 1
+    .t tag configure E1 -elide 1 -undo 0
+    .t tag configure T0 -underline 0
+    .t edit reset
+    .t tag add E0 1.2 1.11
+    .t tag add T0 1.11 1.14
+    .t tag clear 1.6 1.14
+    .t tag add E1 1.8 1.13
+    .t edit undo
+    set res [list [.t tag ranges E0] [.t tag ranges E1] [.t tag ranges T0]]
+    .t debug 0
+    set res
+} -cleanup {
+    destroy .t
+} -result {{} {} {}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
