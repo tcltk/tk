@@ -8999,6 +8999,18 @@ test text-42.2 {ClearText with peers - widgets remain usable} -setup {
 } -cleanup {
     destroy .t .tt
 } -result {post-two post-two {1.0 1.2}}
+test text-42.3 {count -displaychars over a visible hyphen segment} -setup {
+    destroy .t
+    text .t -hyphens 1
+} -body {
+    .t insert end "abcdefgh"
+    .t tk_textInsert 1.4 "x­y"
+    # The main loop of TkTextIndexCount used to call CountCharsInSeg on
+    # the hyphen segment, which asserts on the segment type.
+    list [.t count -displaychars 1.0 end] [.t count -hyphens 1.0 end]
+} -cleanup {
+    destroy .t
+} -result {12 1}
 
 #
 # TESTFILE CLEANUP
