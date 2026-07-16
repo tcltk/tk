@@ -9035,6 +9035,22 @@ test text-27.45 {steadymarks: edit inspect with a preserved mark in the stack} -
     destroy .t
 } -result {1}
 
+test text-27.47 {edit info after deleting a tag with a retained token} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # tag delete pushes/releases the retained token and leaves a NULL slot
+    # in undoTagList (the list is not compacted); MakeStackInfoValue
+    # dereferenced the slot (SEGV on any 'edit info').
+    .t insert end "abcdef"
+    .t edit reset
+    .t tag add T1 1.0 1.2
+    .t tag delete T1
+    .t edit info -undocommands
+} -cleanup {
+    destroy .t
+} -result {{tag add}}
+
 test text-42.3 {count -displaychars over a visible hyphen segment} -setup {
     destroy .t
     text .t -hyphens 1

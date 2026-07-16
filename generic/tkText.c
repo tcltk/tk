@@ -9445,6 +9445,11 @@ MakeStackInfoValue(
     for (i = sharedTextPtr->undoTagListCount - 1; i >= 0; --i) {
 	const TkTextTag *tagPtr = sharedTextPtr->undoTagList[i];
 
+	if (!tagPtr) {
+	    /* slot of a released/pushed token (e.g. tag delete), the list
+	     * is not compacted */
+	    continue;
+	}
 	if (tagPtr->recentTagAddRemoveToken && !tagPtr->recentTagAddRemoveTokenIsNull) {
 	    Tcl_ListObjAppendElement(interp, resultPtr,
 		    GetCommand(sharedTextPtr, tagPtr->recentTagAddRemoveToken));
