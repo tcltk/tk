@@ -3472,6 +3472,31 @@ test btree-14.101 {adding a suppressor tag starting inside an elided range} -set
     destroy .t
 } -result {7 5 11}
 
+test btree-14.102 {retained tag undo token is visible to canundo/undodepth} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # A retained tag change token (kept for amalgamation with subsequent
+    # tag operations, not yet pushed) belongs to the undo stack, but
+    # "edit info -undodepth" (and the deprecated "edit canundo") only
+    # reported the physical stack: with an empty physical stack the
+    # pending tag operation was invisible, and a client draining the
+    # stack via the depth never undid it.
+    .t insert end "abcdefghij"
+    .t tag configure T0 -underline 0
+    .t edit reset
+    .t insert 1.0 "x"
+    .t edit separator
+    .t edit undo
+    .t tag add T0 1.2 1.4
+    .t edit separator
+    set res [list [.t edit info -undodepth]]
+    while {[.t edit info -undodepth] > 0} { .t edit undo }
+    lappend res [.t tag ranges T0] [.t get 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {1 {} abcdefghij}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
