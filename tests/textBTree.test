@@ -3613,6 +3613,35 @@ test btree-14.106 {insert with elided hyphen tags at the meeting point of two el
     destroy .t
 } -result {axygh}
 
+test btree-14.108 {load: content with elided ranges} -setup {
+    destroy .t
+} -body {
+    # The chaining protocol between LoadPerformElision and its callers
+    # was broken in several ways: the caller overwrote the fresh branch's
+    # nextPtr with the trailing newline, a link chained behind the
+    # previous content was immediately unlinked again, the hyphen item
+    # passed the previous char segment instead of the hyphen, and a range
+    # still open at the end of the load was never closed (the closing
+    # link heads the last line, which stops being a logical line).
+    set r {}
+    foreach data {
+	{{configure A {-elide 1}} {text aa {A}} {text bb {}} {text cc {A}} {text dd {}} {break {}}}
+	{{configure A {-elide 1}} {text aaa {}} {text bbb {A}} {break {A}} {text ccc {A}} {text ddd {}} {break {}}}
+	{{configure A {-elide 1}} {text aaa {A}} {break {A}}}
+	{{configure A {-elide 1}} {text aa {}} {hyphen {A}} {text bb {}} {break {}}}
+    } {
+	text .t
+	.t debug 1
+	.t load $data
+	lappend r [.t get -displaychars 1.0 end-1c]
+	.t debug 0
+	destroy .t
+    }
+    set r
+} -cleanup {
+    destroy .t
+} -result {bbdd aaaddd {} aabb}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

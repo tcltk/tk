@@ -217,6 +217,7 @@ static void		SplitSectionAtSwitch(TkTextSegment *segPtr);
 static void		BalanceSectionWithLeft(TkTextSection *sectionPtr);
 static void		JoinSections(TkTextSection *sectionPtr);
 static void		PropagateChangeOfNumBranches(Node *nodePtr, int changeToNumBranches);
+static void		PropagateChangeToLineCount(Node *nodePtr, int changeToLogicalLineCount);
 static void		FreeSections(TkTextSection *sectionPtr);
 static TkTextSegment *	UnlinkSegment(TkTextSegment *segPtr);
 static void		UnlinkSegmentAndCleanup(const TkSharedText *sharedTextPtr,
@@ -4047,10 +4048,9 @@ LoadPerformElision(
     TkText *textPtr,
     TkTextSegment *segPtr,	/* newly inserted segment */
     TkTextSegment **branchPtr,	/* last inserted branch segment */
-    TkTextSegment *contentPtr,	/* last char/hyphen/image/window segment in current line */
     int *isElided)		/* elided state of last inserted segment */
 {
-    TkTextSegment *nextPtr = segPtr; /* next segment to insert into line */
+    TkTextSegment *nextPtr = segPtr; /* head of the chain the caller has to link in */
     int elide = SegmentIsElided(textPtr->sharedTextPtr, segPtr, textPtr);
 
     if (elide != *isElided) {
@@ -4067,15 +4067,9 @@ LoadPerformElision(
 	    linkPtr->body.link.prevPtr = *branchPtr;
 	    linkPtr->sectionPtr = segPtr->sectionPtr;
 	    (*branchPtr)->body.branch.nextPtr = linkPtr;
-	    if (contentPtr) {
-		linkPtr->nextPtr = contentPtr->nextPtr;
-		linkPtr->prevPtr = contentPtr;
-		contentPtr->nextPtr = linkPtr;
-	    } else {
-		linkPtr->nextPtr = segPtr;
-		segPtr->prevPtr = linkPtr;
-		nextPtr = linkPtr;
-	    }
+	    linkPtr->nextPtr = segPtr;
+	    segPtr->prevPtr = linkPtr;
+	    nextPtr = linkPtr;
 	}
 
 	*isElided = elide;
@@ -4114,7 +4108,6 @@ TkBTreeLoad(
     TkTextSegment *branchPtr;
     TkTextSegment *hyphPtr;
     TkTextSegment *embPtr;
-    TkTextSegment *contentPtr;
     TkTextLine *linePtr;
     TkTextLine *newLinePtr;
     TkTextLine *startLinePtr;
@@ -4142,7 +4135,6 @@ TkBTreeLoad(
     treePtr = (BTree *) sharedTextPtr->tree;
     linePtr = startLinePtr = treePtr->rootPtr->linePtr;
     segPtr = linePtr->segPtr;
-    contentPtr = NULL;
     branchPtr = NULL;
     hyphPtr = NULL;
     tagInfoPtr = NULL;
@@ -4245,8 +4237,7 @@ TkBTreeLoad(
 		} else {
 		    nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr, 1, "\n", 1);
 		    if (sharedTextPtr->numElisionTags > 0) {
-			nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
-				&isElided);
+			nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, &isElided);
 		    }
 		    if (segPtr) {
 			segPtr->nextPtr = nextSegPtr;
@@ -4265,7 +4256,6 @@ TkBTreeLoad(
 		    changeToLogicalLineCount += 1;
 		}
 		size1 += 1;
-		contentPtr = charSegPtr;
 		segPtr = charSegPtr = NULL;
 		state = STATE_BREAK;
 		RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
@@ -4371,14 +4361,15 @@ TkBTreeLoad(
 		nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr,
 			byteLength, Tcl_GetString(argv[1]), byteLength);
 		if (sharedTextPtr->numElisionTags > 0) {
-		    nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
-			    &isElided);
+		    nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, &isElided);
 		}
 		if (segPtr) {
 		    segPtr->nextPtr = nextSegPtr;
 		    nextSegPtr->prevPtr = segPtr;
-		    nextSegPtr->nextPtr = lastPtr;
-		    lastPtr->prevPtr = nextSegPtr;
+		    /* nextSegPtr may be a switch heading the inserted chain,
+		     * the tail to append to is always the char segment */
+		    charSegPtr->nextPtr = lastPtr;
+		    lastPtr->prevPtr = charSegPtr;
 		} else {
 		    newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		    AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4386,7 +4377,7 @@ TkBTreeLoad(
 		}
 	    }
 	    size1 += byteLength;
-	    contentPtr = segPtr = charSegPtr;
+	    segPtr = charSegPtr;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
 		TkTextTagSetDecrRefCount(tagInfoPtr);
@@ -4417,20 +4408,20 @@ TkBTreeLoad(
 	    nextSegPtr = hyphPtr = MakeHyphen();
 	    TkTextTagSetIncrRefCount(hyphPtr->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
-		nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr, &isElided);
+		nextSegPtr = LoadPerformElision(textPtr, hyphPtr, &branchPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
-		nextSegPtr->nextPtr = lastPtr;
-		lastPtr->prevPtr = nextSegPtr;
+		hyphPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = hyphPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size1 += 1;
-	    contentPtr = segPtr = hyphPtr;
+	    segPtr = hyphPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 3) {
@@ -4475,7 +4466,7 @@ TkBTreeLoad(
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    segPtr = nextSegPtr;
-	    contentPtr = charSegPtr = NULL;
+	    charSegPtr = NULL;
 	    state = isInsert ? STATE_LEFT_INSERT : STATE_LEFT;
 	    break;
 	case 'r':
@@ -4514,7 +4505,7 @@ TkBTreeLoad(
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    segPtr = nextSegPtr;
-	    contentPtr = charSegPtr = NULL;
+	    charSegPtr = NULL;
 	    state = isInsert ? STATE_RIGHT_INSERT : STATE_RIGHT;
 	    break;
 	case 'e':
@@ -4559,20 +4550,20 @@ TkBTreeLoad(
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
-		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
+		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
-		nextSegPtr->nextPtr = lastPtr;
-		lastPtr->prevPtr = nextSegPtr;
+		embPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = embPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size1 += 1;
-	    contentPtr = segPtr = embPtr;
+	    segPtr = embPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
@@ -4606,20 +4597,20 @@ TkBTreeLoad(
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
-		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
+		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
-		nextSegPtr->nextPtr = lastPtr;
-		lastPtr->prevPtr = nextSegPtr;
+		embPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = embPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size1 += 1;
-	    contentPtr = segPtr = embPtr;
+	    segPtr = embPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
@@ -4647,6 +4638,10 @@ TkBTreeLoad(
 	    RebuildSections(sharedTextPtr, linePtr, 1);
 	} else {
 	    nextSegPtr = charSegPtr = MakeCharSeg(NULL, sharedTextPtr->emptyTagInfoPtr, 1, "\n", 1);
+	    if (sharedTextPtr->numElisionTags > 0) {
+		/* the added newline is not elided, this closes a pending range */
+		nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, &isElided);
+	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
@@ -4666,6 +4661,34 @@ TkBTreeLoad(
 	if (!isElided) {
 	    changeToLogicalLineCount -= 1;
 	}
+    }
+
+    if (isElided) {
+	/*
+	 * The loaded content ends inside an elided range (the newline of the
+	 * final "break" item is elided): close the range - the closing link
+	 * heads the following (last) line, which thereby stops being a
+	 * logical line.
+	 */
+
+	TkTextLine *lastLinePtr = linePtr->nextPtr;
+	TkTextSegment *linkPtr = MakeLink();
+
+	assert(state == STATE_BREAK);
+	assert(branchPtr);
+	assert(lastLinePtr);
+
+	linkPtr->body.link.prevPtr = branchPtr;
+	branchPtr->body.branch.nextPtr = linkPtr;
+	linkPtr->nextPtr = lastLinePtr->segPtr;
+	lastLinePtr->segPtr->prevPtr = linkPtr;
+	lastLinePtr->segPtr = linkPtr;
+	if (lastLinePtr->logicalLine) {
+	    lastLinePtr->logicalLine = 0;
+	    /* this line is not added/removed, propagate the flip directly */
+	    PropagateChangeToLineCount(lastLinePtr->parentPtr, -1);
+	}
+	RebuildSections(sharedTextPtr, lastLinePtr, 1);
     }
 
     TkBTreeFreeSegment(lastPtr);
