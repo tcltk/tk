@@ -3666,6 +3666,29 @@ test btree-14.108 {load: content with elided ranges} -setup {
     destroy .t
 } -result {bbdd aaaddd {} aabb}
 
+test btree-14.109 {steadymarks: undo of a mark unset (mark-based undo index)} -setup {
+    destroy .t
+    text .t -undo 1 -steadymarks 1
+} -body {
+    # The re-insertion path of a mark-based undo index (lineIndex == -1)
+    # resolved its line from lineIndex (NULL) and read the byte index
+    # from the union member which holds the anchor mark pointer (assert,
+    # arbitrary index in release builds).
+    .t debug 1
+    .t insert 1.0 "abcdefghijklmnop"
+    .t edit separator
+    for {set i 0} {$i < 5} {incr i} { .t mark set dm$i 1.10 }
+    .t mark unset dm2
+    .t edit separator
+    .t edit undo
+    set r [list [lsort [.t mark names]] [.t get 1.0 end-1c]]
+    .t edit redo
+    .t debug 0
+    lappend r [.t get 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {{current insert} {} abcdefghijklmnop}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

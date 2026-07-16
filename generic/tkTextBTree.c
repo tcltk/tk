@@ -5446,12 +5446,18 @@ ReInsertSegment(
 	linePtr = prevPtr->sectionPtr->linePtr;
 
 	if (updateNode) {
-	    TkTextIndex index;
+	    /*
+	     * The undo index is mark-based ("right behind this mark"), used
+	     * with steady marks: link directly behind the anchor. This path
+	     * used to resolve the line from lineIndex (== -1, giving NULL)
+	     * and read u.byteIndex from the union which holds the anchor
+	     * mark pointer.
+	     */
 
-	    linePtr = TkBTreeFindLine(sharedTextPtr->tree, NULL, indexPtr->lineIndex);
-	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
-	    TkTextIndexSetByteIndex2(&index, linePtr, indexPtr->u.byteIndex);
-	    TkBTreeLinkSegment(sharedTextPtr, segPtr, &index);
+	    assert(segPtr->typePtr->group == SEG_GROUP_MARK);
+	    LinkMark(sharedTextPtr, linePtr, prevPtr, segPtr);
+	    SplitSection(segPtr->sectionPtr);
+	    TkBTreeIncrEpoch(sharedTextPtr->tree);
 	    return;
 	}
     } else {
