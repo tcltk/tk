@@ -1265,9 +1265,24 @@ MakeChangeItem(
 
     if (!changePtr) {
 	if (sharedTextPtr->undoMarkListCount == sharedTextPtr->undoMarkListSize) {
+	    unsigned i;
+
 	    sharedTextPtr->undoMarkListSize = MAX(20u, 2*sharedTextPtr->undoMarkListSize);
 	    sharedTextPtr->undoMarkList = (TkTextMarkChange *)Tcl_Realloc(sharedTextPtr->undoMarkList,
 		    sharedTextPtr->undoMarkListSize * sizeof(sharedTextPtr->undoMarkList[0]));
+
+	    /*
+	     * The array may have moved, and the registered marks point
+	     * directly into it: re-synchronize.
+	     */
+
+	    for (i = 0; i < sharedTextPtr->undoMarkListCount; ++i) {
+		TkTextMarkChange *itemPtr = &sharedTextPtr->undoMarkList[i];
+
+		if (itemPtr->markPtr) {
+		    itemPtr->markPtr->body.mark.changePtr = itemPtr;
+		}
+	    }
 	}
 	changePtr = &sharedTextPtr->undoMarkList[sharedTextPtr->undoMarkListCount++];
 	memset(changePtr, 0, sizeof(*changePtr));
@@ -2177,7 +2192,11 @@ MarkInspectProc(
     const char *name;
 
     assert(!TkTextIsPrivateMark(segPtr));
-    assert(!IS_PRESERVED(segPtr));
+    /*
+     * The mark may be preserved (alive only inside the undo/redo stack,
+     * e.g. a redo token of an insert listing an unset mark); TkTextMarkName
+     * handles this case.
+     */
 
     name = TkTextMarkName(sharedTextPtr, NULL, segPtr);
     assert(name);
@@ -2246,19 +2265,32 @@ MarkDeleteProc(
     assert(segPtr->body.mark.ptr);
 
     if (segPtr->body.mark.changePtr) {
-	unsigned index;
+	unsigned index, i;
 
 	assert(sharedTextPtr->steadyMarks);
 	index = segPtr->body.mark.changePtr - sharedTextPtr->undoMarkList;
 	TkTextReleaseUndoMarkTokens(sharedTextPtr, segPtr->body.mark.changePtr);
 	memmove(sharedTextPtr->undoMarkList + index, sharedTextPtr->undoMarkList + index + 1,
-		--sharedTextPtr->undoMarkListCount - index);
+		(--sharedTextPtr->undoMarkListCount - index) * sizeof(sharedTextPtr->undoMarkList[0]));
+
+	/*
+	 * The moved entries are pointed to by their marks: re-synchronize.
+	 */
+
+	for (i = index; i < sharedTextPtr->undoMarkListCount; ++i) {
+	    TkTextMarkChange *itemPtr = &sharedTextPtr->undoMarkList[i];
+
+	    if (itemPtr->markPtr) {
+		itemPtr->markPtr->body.mark.changePtr = itemPtr;
+	    }
+	}
 	assert(!segPtr->body.mark.changePtr);
     }
 
     if (--segPtr->refCount == 0) {
 	if (IS_PRESERVED(segPtr)) {
-	    assert(sharedTextPtr->steadyMarks);
+	    /* marks referenced by undo tokens are preserved even without
+	     * steady marks */
 	    Tcl_Free(GET_NAME(segPtr));
 	} else {
 	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
@@ -2268,34 +2300,23 @@ MarkDeleteProc(
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
     } else if (!IS_PRESERVED(segPtr)) {
-	if (sharedTextPtr->steadyMarks) {
-	    /*
-	     * This case should only happen if this mark belongs to undo/redo stack.
-	     * We have to preserve the mark if not already preserved.
-	     */
+	/*
+	 * The mark is still referenced, e.g. by an undo token (this also
+	 * happens without steady marks: the boundaries of an inclusive
+	 * deletion are collected for undo). Preserve it - freeing a still
+	 * referenced mark would leave dangling pointers behind. Without
+	 * steady marks the preserved mark is discarded when the token is
+	 * restored or destroyed (see MarkRestoreProc).
+	 */
 
-	    Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
-	    const char *name = (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
-	    size_t size = strlen(name) + 1;
+	Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
+	const char *name = (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
+	size_t size = strlen(name) + 1;
 
-	    assert(sharedTextPtr->steadyMarks);
-	    segPtr->body.mark.ptr = PTR_TO_INT(memcpy(Tcl_Alloc(size), name, size));
-	    MAKE_PRESERVED(segPtr);
-	    Tcl_DeleteHashEntry(hPtr);
-	    sharedTextPtr->numMarks -= 1;
-	} else {
-	    /*
-	     * It seems that we have a bug with reference counting. So print a warning
-	     * and delete it anyway.
-	     */
-
-	    fprintf(stderr, "reference count of mark '%s' is %d (should be zero)\n",
-		    TkTextMarkName(sharedTextPtr, NULL, segPtr), segPtr->refCount);
-	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
-	    sharedTextPtr->numMarks -= 1;
-	    FREE_SEGMENT(segPtr);
-	    DEBUG_ALLOC(tkTextCountDestroySegment++);
-	}
+	segPtr->body.mark.ptr = PTR_TO_INT(memcpy(Tcl_Alloc(size), name, size));
+	MAKE_PRESERVED(segPtr);
+	Tcl_DeleteHashEntry(hPtr);
+	sharedTextPtr->numMarks -= 1;
     }
 
     return 1;
@@ -2987,7 +3008,14 @@ TkTextMarkName(
     const TkText *textPtr,		/* can be NULL */
     const TkTextSegment *markPtr)
 {
-    assert(!IS_PRESERVED(markPtr));
+    if (IS_PRESERVED(markPtr)) {
+	/*
+	 * The mark is alive only inside the undo/redo stack (e.g. listed by
+	 * a redo token of an insert covering an unset mark): the name is
+	 * preserved in place of the hash entry.
+	 */
+	return GET_NAME(markPtr);
+    }
 
     if (markPtr->insertMarkFlag) {
 	return !textPtr || textPtr == markPtr->body.mark.textPtr ? "insert" : NULL;

@@ -8999,6 +8999,54 @@ test text-42.2 {ClearText with peers - widgets remain usable} -setup {
 } -cleanup {
     destroy .t .tt
 } -result {post-two post-two {1.0 1.2}}
+test text-27.44 {steadymarks: undoMarkList moves must re-synchronize the marks} -setup {
+    destroy .t
+    text .t -undo 1 -steadymarks 1
+} -body {
+    # The registered marks point directly into the undoMarkList array;
+    # the array was reallocated (growth) and compacted (mark unset)
+    # without updating those pointers, and the compacting memmove counted
+    # elements instead of bytes (heap corruption at the first unset
+    # after a growth of the array).
+    .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
+    for {set i 0} {$i < 45} {incr i} { .t mark set dm$i 1.10 }
+    for {set i 0} {$i < 45} {incr i} { .t mark unset dm$i }
+    lsort [.t mark names]
+} -cleanup {
+    destroy .t
+} -result {current insert}
+
+test text-27.45 {steadymarks: edit inspect with a preserved mark in the stack} -setup {
+    destroy .t
+    text .t -undo 1 -steadymarks 1
+} -body {
+    # After undoing an atom which covers a mark unset, the redo stack
+    # lists the re-unset mark, which is preserved (alive only inside the
+    # stack); TkTextMarkName asserted on preserved marks and read the
+    # preserved name as a hash entry.
+    .t insert 1.0 "abcdefghijklmnop"
+    .t edit separator
+    for {set i 0} {$i < 3} {incr i} { .t mark set dm$i 1.10 }
+    .t mark unset dm1
+    .t edit separator
+    .t edit undo
+    string match *dm1* [.t edit inspect redo]
+} -cleanup {
+    destroy .t
+} -result {1}
+
+test text-42.3 {count -displaychars over a visible hyphen segment} -setup {
+    destroy .t
+    text .t -hyphens 1
+} -body {
+    .t insert end "abcdefgh"
+    .t tk_textInsert 1.4 "x­y"
+    # The main loop of TkTextIndexCount used to call CountCharsInSeg on
+    # the hyphen segment, which asserts on the segment type.
+    list [.t count -displaychars 1.0 end] [.t count -hyphens 1.0 end]
+} -cleanup {
+    destroy .t
+} -result {12 1}
 
 #
 # TESTFILE CLEANUP

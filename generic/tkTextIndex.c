@@ -3509,7 +3509,8 @@ TkTextIndexCount(
 		    }
 		} else if (segPtr->typePtr == &tkTextHyphenType) {
 		    if (type & (COUNT_HYPHENS|COUNT_INDICES)) {
-			count += CountCharsInSeg(segPtr);
+			assert(segPtr->size == 1);
+			count += 1;
 		    }
 		} else if (type & COUNT_INDICES) {
 		    assert(segPtr->size == 1);
