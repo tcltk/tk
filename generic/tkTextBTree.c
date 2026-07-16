@@ -217,6 +217,7 @@ static void		SplitSectionAtSwitch(TkTextSegment *segPtr);
 static void		BalanceSectionWithLeft(TkTextSection *sectionPtr);
 static void		JoinSections(TkTextSection *sectionPtr);
 static void		PropagateChangeOfNumBranches(Node *nodePtr, int changeToNumBranches);
+static void		PropagateChangeToLineCount(Node *nodePtr, int changeToLogicalLineCount);
 static void		FreeSections(TkTextSection *sectionPtr);
 static TkTextSegment *	UnlinkSegment(TkTextSegment *segPtr);
 static void		UnlinkSegmentAndCleanup(const TkSharedText *sharedTextPtr,
@@ -4047,10 +4048,9 @@ LoadPerformElision(
     TkText *textPtr,
     TkTextSegment *segPtr,	/* newly inserted segment */
     TkTextSegment **branchPtr,	/* last inserted branch segment */
-    TkTextSegment *contentPtr,	/* last char/hyphen/image/window segment in current line */
     int *isElided)		/* elided state of last inserted segment */
 {
-    TkTextSegment *nextPtr = segPtr; /* next segment to insert into line */
+    TkTextSegment *nextPtr = segPtr; /* head of the chain the caller has to link in */
     int elide = SegmentIsElided(textPtr->sharedTextPtr, segPtr, textPtr);
 
     if (elide != *isElided) {
@@ -4067,15 +4067,9 @@ LoadPerformElision(
 	    linkPtr->body.link.prevPtr = *branchPtr;
 	    linkPtr->sectionPtr = segPtr->sectionPtr;
 	    (*branchPtr)->body.branch.nextPtr = linkPtr;
-	    if (contentPtr) {
-		linkPtr->nextPtr = contentPtr->nextPtr;
-		linkPtr->prevPtr = contentPtr;
-		contentPtr->nextPtr = linkPtr;
-	    } else {
-		linkPtr->nextPtr = segPtr;
-		segPtr->prevPtr = linkPtr;
-		nextPtr = linkPtr;
-	    }
+	    linkPtr->nextPtr = segPtr;
+	    segPtr->prevPtr = linkPtr;
+	    nextPtr = linkPtr;
 	}
 
 	*isElided = elide;
@@ -4114,7 +4108,6 @@ TkBTreeLoad(
     TkTextSegment *branchPtr;
     TkTextSegment *hyphPtr;
     TkTextSegment *embPtr;
-    TkTextSegment *contentPtr;
     TkTextLine *linePtr;
     TkTextLine *newLinePtr;
     TkTextLine *startLinePtr;
@@ -4142,7 +4135,6 @@ TkBTreeLoad(
     treePtr = (BTree *) sharedTextPtr->tree;
     linePtr = startLinePtr = treePtr->rootPtr->linePtr;
     segPtr = linePtr->segPtr;
-    contentPtr = NULL;
     branchPtr = NULL;
     hyphPtr = NULL;
     tagInfoPtr = NULL;
@@ -4245,8 +4237,7 @@ TkBTreeLoad(
 		} else {
 		    nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr, 1, "\n", 1);
 		    if (sharedTextPtr->numElisionTags > 0) {
-			nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
-				&isElided);
+			nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, &isElided);
 		    }
 		    if (segPtr) {
 			segPtr->nextPtr = nextSegPtr;
@@ -4265,7 +4256,6 @@ TkBTreeLoad(
 		    changeToLogicalLineCount += 1;
 		}
 		size1 += 1;
-		contentPtr = charSegPtr;
 		segPtr = charSegPtr = NULL;
 		state = STATE_BREAK;
 		RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
@@ -4371,14 +4361,15 @@ TkBTreeLoad(
 		nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr,
 			byteLength, Tcl_GetString(argv[1]), byteLength);
 		if (sharedTextPtr->numElisionTags > 0) {
-		    nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
-			    &isElided);
+		    nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, &isElided);
 		}
 		if (segPtr) {
 		    segPtr->nextPtr = nextSegPtr;
 		    nextSegPtr->prevPtr = segPtr;
-		    nextSegPtr->nextPtr = lastPtr;
-		    lastPtr->prevPtr = nextSegPtr;
+		    /* nextSegPtr may be a switch heading the inserted chain,
+		     * the tail to append to is always the char segment */
+		    charSegPtr->nextPtr = lastPtr;
+		    lastPtr->prevPtr = charSegPtr;
 		} else {
 		    newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		    AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4386,7 +4377,7 @@ TkBTreeLoad(
 		}
 	    }
 	    size1 += byteLength;
-	    contentPtr = segPtr = charSegPtr;
+	    segPtr = charSegPtr;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
 		TkTextTagSetDecrRefCount(tagInfoPtr);
@@ -4417,20 +4408,20 @@ TkBTreeLoad(
 	    nextSegPtr = hyphPtr = MakeHyphen();
 	    TkTextTagSetIncrRefCount(hyphPtr->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
-		nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr, &isElided);
+		nextSegPtr = LoadPerformElision(textPtr, hyphPtr, &branchPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
-		nextSegPtr->nextPtr = lastPtr;
-		lastPtr->prevPtr = nextSegPtr;
+		hyphPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = hyphPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size1 += 1;
-	    contentPtr = segPtr = hyphPtr;
+	    segPtr = hyphPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 3) {
@@ -4475,7 +4466,7 @@ TkBTreeLoad(
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    segPtr = nextSegPtr;
-	    contentPtr = charSegPtr = NULL;
+	    charSegPtr = NULL;
 	    state = isInsert ? STATE_LEFT_INSERT : STATE_LEFT;
 	    break;
 	case 'r':
@@ -4514,7 +4505,7 @@ TkBTreeLoad(
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    segPtr = nextSegPtr;
-	    contentPtr = charSegPtr = NULL;
+	    charSegPtr = NULL;
 	    state = isInsert ? STATE_RIGHT_INSERT : STATE_RIGHT;
 	    break;
 	case 'e':
@@ -4559,20 +4550,20 @@ TkBTreeLoad(
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
-		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
+		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
-		nextSegPtr->nextPtr = lastPtr;
-		lastPtr->prevPtr = nextSegPtr;
+		embPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = embPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size1 += 1;
-	    contentPtr = segPtr = embPtr;
+	    segPtr = embPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
@@ -4606,20 +4597,20 @@ TkBTreeLoad(
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
-		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
+		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
-		nextSegPtr->nextPtr = lastPtr;
-		lastPtr->prevPtr = nextSegPtr;
+		embPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = embPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size1 += 1;
-	    contentPtr = segPtr = embPtr;
+	    segPtr = embPtr;
 	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
@@ -4647,6 +4638,10 @@ TkBTreeLoad(
 	    RebuildSections(sharedTextPtr, linePtr, 1);
 	} else {
 	    nextSegPtr = charSegPtr = MakeCharSeg(NULL, sharedTextPtr->emptyTagInfoPtr, 1, "\n", 1);
+	    if (sharedTextPtr->numElisionTags > 0) {
+		/* the added newline is not elided, this closes a pending range */
+		nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, &isElided);
+	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
@@ -4666,6 +4661,34 @@ TkBTreeLoad(
 	if (!isElided) {
 	    changeToLogicalLineCount -= 1;
 	}
+    }
+
+    if (isElided) {
+	/*
+	 * The loaded content ends inside an elided range (the newline of the
+	 * final "break" item is elided): close the range - the closing link
+	 * heads the following (last) line, which thereby stops being a
+	 * logical line.
+	 */
+
+	TkTextLine *lastLinePtr = linePtr->nextPtr;
+	TkTextSegment *linkPtr = MakeLink();
+
+	assert(state == STATE_BREAK);
+	assert(branchPtr);
+	assert(lastLinePtr);
+
+	linkPtr->body.link.prevPtr = branchPtr;
+	branchPtr->body.branch.nextPtr = linkPtr;
+	linkPtr->nextPtr = lastLinePtr->segPtr;
+	lastLinePtr->segPtr->prevPtr = linkPtr;
+	lastLinePtr->segPtr = linkPtr;
+	if (lastLinePtr->logicalLine) {
+	    lastLinePtr->logicalLine = 0;
+	    /* this line is not added/removed, propagate the flip directly */
+	    PropagateChangeToLineCount(lastLinePtr->parentPtr, -1);
+	}
+	RebuildSections(sharedTextPtr, lastLinePtr, 1);
     }
 
     TkBTreeFreeSegment(lastPtr);
@@ -5140,7 +5163,7 @@ TkBTreeInsertChars(
 		hyphenElideTagPtr = NULL;
 	    }
 	}
-    } else if (!hyphenElideTagPtr && TkBTreeHaveElidedSegments(sharedTextPtr)) {
+    } else if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	TkTextSegment *predPtr = firstSegPtr->prevPtr;
 	TkTextLine *prevLinePtr = firstSegPtr->sectionPtr->linePtr->prevPtr;
 
@@ -5184,6 +5207,15 @@ TkBTreeInsertChars(
 	    if (fPtr != lPtr) {
 		CleanupSplitPoint(lPtr, sharedTextPtr);
 	    }
+
+	    /*
+	     * The recompute is state-based, so it also built the ranges of
+	     * elided hyphens just inserted inside this range; running the
+	     * tag-based update below on top of it would anchor its branch
+	     * search on a non-elided segment.
+	     */
+
+	    hyphenElideTagPtr = NULL;
 	}
     }
 
@@ -5414,12 +5446,18 @@ ReInsertSegment(
 	linePtr = prevPtr->sectionPtr->linePtr;
 
 	if (updateNode) {
-	    TkTextIndex index;
+	    /*
+	     * The undo index is mark-based ("right behind this mark"), used
+	     * with steady marks: link directly behind the anchor. This path
+	     * used to resolve the line from lineIndex (== -1, giving NULL)
+	     * and read u.byteIndex from the union which holds the anchor
+	     * mark pointer.
+	     */
 
-	    linePtr = TkBTreeFindLine(sharedTextPtr->tree, NULL, indexPtr->lineIndex);
-	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
-	    TkTextIndexSetByteIndex2(&index, linePtr, indexPtr->u.byteIndex);
-	    TkBTreeLinkSegment(sharedTextPtr, segPtr, &index);
+	    assert(segPtr->typePtr->group == SEG_GROUP_MARK);
+	    LinkMark(sharedTextPtr, linePtr, prevPtr, segPtr);
+	    SplitSection(segPtr->sectionPtr);
+	    TkBTreeIncrEpoch(sharedTextPtr->tree);
 	    return;
 	}
     } else {
@@ -7505,6 +7543,7 @@ DeleteRange(
     TkTextSegment **segments;
     TkTextSegment *beforeSurrogate;
     TkTextSegment *prevSavePtr;
+    TkTextSegment *deferredChainPtr;
     TkTextSegment *savedLinkPtr;
     TkTextSegment *savedBranchPtr;
     TkTextSegment *pulledLinkPtr;
@@ -7616,12 +7655,14 @@ DeleteRange(
     insertSurrogate = 0;
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
+    deferredChainPtr = NULL;
     savedLinkPtr = NULL;
     savedBranchPtr = NULL;
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE)
 	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
-	    && !TkTextIsSpecialOrPrivateMark(firstSegPtr);
+	    && !TkTextIsSpecialOrPrivateMark(firstSegPtr)
+	    && ((flags & DELETE_MARKS) || !TkTextIsNormalMark(firstSegPtr));
 
     linePtr1 = sectionPtr->linePtr;
     linePtr2 = lastSegPtr->sectionPtr->linePtr;
@@ -7883,8 +7924,19 @@ DeleteRange(
 			    sharedTextPtr->dontUndoTags, sharedTextPtr);
 		}
 		if (prevSavePtr) {
-		    assert(!prevSavePtr->sectionPtr || prevSavePtr == firstSegPtr);
-		    prevSavePtr->nextPtr = savePtr;
+		    if (prevSavePtr == firstSegPtr && prevSavePtr->sectionPtr) {
+			/*
+			 * The head of the undo chain is the DELETE_INCLUSIVE
+			 * boundary, which is still linked in the tree (it is
+			 * unlinked after this loop): writing its nextPtr now
+			 * would cut off the tail of the line. Defer the chain
+			 * link until the boundary is unlinked.
+			 */
+			deferredChainPtr = savePtr;
+		    } else {
+			assert(!prevSavePtr->sectionPtr);
+			prevSavePtr->nextPtr = savePtr;
+		    }
 		} else {
 		    if (numSegments == maxSegments) {
 			maxSegments *= 2u;
@@ -8100,11 +8152,14 @@ DeleteRange(
 	assert(lastSegPtr->typePtr->group & (SEG_GROUP_MARK|SEG_GROUP_PROTECT));
 
 	/*
-	 * Do not unlink the special/private marks.
-	 * And don't forget the undo chain.
+	 * Do not unlink the special/private marks. A normal (user) mark
+	 * boundary can only die when DELETE_MARKS is set - otherwise leave
+	 * it alone, like the marks inside the range (the delete proc would
+	 * refuse to delete it). And don't forget the undo chain.
 	 */
 
-	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)) {
+	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)
+		&& ((flags & DELETE_MARKS) || !TkTextIsNormalMark(firstSegPtr))) {
 	    TkTextSection *shrunkSectionPtr = firstSegPtr->sectionPtr;
 	    int sole = shrunkSectionPtr->length == 1;
 	    TkTextSegment *joinPtr = firstSegPtr->prevPtr;
@@ -8115,6 +8170,10 @@ DeleteRange(
 		assert(!"mark refuses to die"); /* this should not happen */
 	    }
 	    firstSegPtr->sectionPtr = NULL;
+	    if (deferredChainPtr) {
+		/* now chain the saved segments behind the unlinked boundary */
+		firstSegPtr->nextPtr = deferredChainPtr;
+	    }
 	    if (!sole) {
 		/* The shrunk section may have lost its permission to be short. */
 		JoinSections(shrunkSectionPtr);
@@ -8129,16 +8188,25 @@ DeleteRange(
 	    }
 	    countChanges += 1;
 	}
-	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
+	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)
+		&& ((flags & DELETE_MARKS) || !TkTextIsNormalMark(lastSegPtr))) {
 	    TkTextSection *shrunkSectionPtr = lastSegPtr->sectionPtr;
 	    int sole = shrunkSectionPtr->length == 1;
 	    TkTextSegment *joinPtr = lastSegPtr->prevPtr;
+	    int saveLast = undoInfo && TkTextIsStableMark(lastSegPtr);
 
 	    UnlinkSegment(lastSegPtr);
+	    if (saveLast) {
+		/*
+		 * The undo token's reference must be taken before the delete
+		 * proc - without it the mark would be freed there.
+		 */
+		lastSegPtr->refCount += 1;
+	    }
 	    assert(lastSegPtr->typePtr->deleteProc);
 	    if (!lastSegPtr->typePtr->deleteProc(sharedTextPtr, lastSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
-	    } else if (undoInfo && TkTextIsStableMark(lastSegPtr)) {
+	    } else if (saveLast) {
 		assert(lastSegPtr->typePtr); /* not deleted */
 		if (prevSavePtr) {
 		    prevSavePtr->nextPtr = lastSegPtr;
@@ -8151,7 +8219,6 @@ DeleteRange(
 		}
 		lastSegPtr->sectionPtr = NULL;
 		lastSegPtr->nextPtr = NULL;
-		lastSegPtr->refCount += 1;
 	    }
 	    if (!sole) {
 		/* The shrunk section may have lost its permission to be short. */

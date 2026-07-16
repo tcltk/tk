@@ -3503,17 +3503,56 @@ ClearText(
 	/*
 	 * The tree has been replaced with a fresh (empty) one, but the tags are
 	 * being preserved (e.g. [load]). Their rootPtr still points into the
-	 * destroyed tree; reset it so AddTagToNode rebuilds it on reload.
+	 * destroyed tree; reset it so AddTagToNode rebuilds it on reload. The
+	 * shared bit fields derived from the tag configurations have just been
+	 * cleared, so rebuild them for the surviving tags as well (an elide
+	 * tag whose bit is lost does not elide anymore, an -undo 0 tag would
+	 * become undoable, ...). Same rules as TkConfigureTag.
 	 */
 	Tcl_HashSearch search;
 	Tcl_HashEntry *hPtr;
 
 	for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
 		hPtr; hPtr = Tcl_NextHashEntry(&search)) {
-	    ((TkTextTag *)Tcl_GetHashValue(hPtr))->rootPtr = NULL;
+	    TkTextTag *tagPtr = (TkTextTag *)Tcl_GetHashValue(hPtr);
+	    int affectsLineHeight = 0;
+
+	    tagPtr->rootPtr = NULL;
+
+	    if (tagPtr->tkfont && tagPtr->tkfont != textPtr->tkfont) {
+		Tk_FontMetrics fm;
+
+		Tk_GetFontMetrics(tagPtr->tkfont, &fm);
+		if (MAX(1, fm.linespace) != textPtr->lineHeight) {
+		    affectsLineHeight = 1;
+		}
+	    }
+
+	    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, tagPtr->elide >= 0);
+	    TkBitPut(sharedTextPtr->dontUndoTags, tagPtr->index, !tagPtr->undo);
+	    TkBitPut(sharedTextPtr->affectDisplayTags, tagPtr->index, tagPtr->affectsDisplay);
+	    TkBitPut(sharedTextPtr->notAffectDisplayTags, tagPtr->index, !tagPtr->affectsDisplay);
+	    TkBitPut(sharedTextPtr->affectGeometryTags, tagPtr->index,
+		    tagPtr->affectsDisplayGeometry);
+	    TkBitPut(sharedTextPtr->affectLineHeightTags, tagPtr->index, affectsLineHeight);
+	    /* tags of the hash table are never selection tags */
+	    TkBitPut(sharedTextPtr->affectDisplayNonSelTags, tagPtr->index,
+		    tagPtr->affectsDisplay);
+	    TkBitPut(sharedTextPtr->affectGeometryNonSelTags, tagPtr->index,
+		    tagPtr->affectsDisplayGeometry);
 	}
 	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
-	    tPtr->selTagPtr->rootPtr = NULL;
+	    TkTextTag *selTagPtr = tPtr->selTagPtr;
+
+	    selTagPtr->rootPtr = NULL;
+	    TkBitSet(sharedTextPtr->selectionTags, selTagPtr->index);
+	    TkBitSet(sharedTextPtr->dontUndoTags, selTagPtr->index);
+	    TkBitPut(sharedTextPtr->affectDisplayTags, selTagPtr->index,
+		    selTagPtr->affectsDisplay);
+	    TkBitPut(sharedTextPtr->notAffectDisplayTags, selTagPtr->index,
+		    !selTagPtr->affectsDisplay);
+	    TkBitPut(sharedTextPtr->affectGeometryTags, selTagPtr->index,
+		    selTagPtr->affectsDisplayGeometry);
 	}
     }
 
