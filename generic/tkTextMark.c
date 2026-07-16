@@ -1288,6 +1288,17 @@ MakeChangeItem(
 	memset(changePtr, 0, sizeof(*changePtr));
 	markPtr->body.mark.changePtr = changePtr;
 	(changePtr->markPtr = markPtr)->refCount += 1;
+
+	if (sharedTextPtr->undoStack
+		&& !TkTextUndoIsPerformingUndoRedo(sharedTextPtr->undoStack)) {
+	    /*
+	     * This new operation expires the redo history now, not only when
+	     * the retained token is eventually pushed (see
+	     * TkTextTagAddRetainedUndo).
+	     */
+
+	    TkTextUndoClearRedoStack(sharedTextPtr->undoStack);
+	}
     }
 
     return changePtr;

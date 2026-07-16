@@ -5946,6 +5946,7 @@ DeleteIndexRange(
     TkTextUndoInfo undoInfo;
     TkTextUndoInfo *undoInfoPtr;
     TkTextLine *lastLinePtr;
+    TkTextSegment *boundSegPtr1, *boundSegPtr2;
 
     if (!sharedTextPtr) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -5954,6 +5955,18 @@ DeleteIndexRange(
     if (triggerWatchInsert) {
 	TkTextIndexToByteIndex((TkTextIndex *) indexPtr1); /* mutable due to concept */
     }
+
+    /*
+     * Capture the mark boundaries before anything else: the index
+     * comparisons below normalize the indices (TkTextIndexGetLineNumber
+     * clears the cached segment pointer), but the marks are the contract
+     * of an inclusive deletion.
+     */
+
+    boundSegPtr1 = TkTextIndexGetSegment(indexPtr1);
+    boundSegPtr2 = indexPtr2 ? TkTextIndexGetSegment(indexPtr2) : NULL;
+    if (boundSegPtr1 && !TkTextIsStableMark(boundSegPtr1)) { boundSegPtr1 = NULL; }
+    if (boundSegPtr2 && !TkTextIsStableMark(boundSegPtr2)) { boundSegPtr2 = NULL; }
 
     if (TkTextIndexIsEndOfText(indexPtr1)) {
 	return true; /* nothing to delete */
@@ -5964,6 +5977,14 @@ DeleteIndexRange(
      */
 
     if (indexPtr2) {
+	/*
+	 * Note that this also rejects an empty range whose boundaries are
+	 * two marks at the same position (with -inclusive the marks are
+	 * kept alive): deleting them would require an undo atom which
+	 * restores nothing (without steady marks the marks do not survive
+	 * the undo), and whose redo resolves an empty range again.
+	 */
+
 	if (TkTextIndexCompare(indexPtr1, indexPtr2) >= 0) {
 	    return true; /* there is nothing to delete */
 	}
@@ -6064,6 +6085,21 @@ DeleteIndexRange(
 
     /* A full stack evicts its oldest atom when the new one is pushed. */
     undoInfoPtr = sharedTextPtr->undoStack ? &undoInfo : NULL;
+
+    /*
+     * Restore the mark anchors right before the tree operation: all the
+     * bookkeeping above (index comparisons, TkrTextChanged, ...) normalizes
+     * the indices and drops the cached segment pointer. Do not restore the
+     * end anchor if the end index has been adjusted (undeletable newline).
+     */
+
+    if (boundSegPtr1) {
+	TkTextIndexSetSegment(&index1, boundSegPtr1);
+    }
+    if (boundSegPtr2 && TkTextIndexIsEqual(&index2, &index3)) {
+	TkTextIndexSetSegment(&index2, boundSegPtr2);
+    }
+
     TkBTreeDeleteIndexRange(sharedTextPtr, &index1, &index2, flags, undoInfoPtr);
 
     /*
@@ -9445,6 +9481,11 @@ MakeStackInfoValue(
     for (i = sharedTextPtr->undoTagListCount - 1; i >= 0; --i) {
 	const TkTextTag *tagPtr = sharedTextPtr->undoTagList[i];
 
+	if (!tagPtr) {
+	    /* slot of a released/pushed token (e.g. tag delete), the list
+	     * is not compacted */
+	    continue;
+	}
 	if (tagPtr->recentTagAddRemoveToken && !tagPtr->recentTagAddRemoveTokenIsNull) {
 	    Tcl_ListObjAppendElement(interp, resultPtr,
 		    GetCommand(sharedTextPtr, tagPtr->recentTagAddRemoveToken));
