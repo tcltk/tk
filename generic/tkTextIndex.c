@@ -856,6 +856,7 @@ TkTextIndexGetLineNumber(
 
     if (*lineNo == -1 || indexPtr->stateEpoch != epoch) {
 	TkTextIndex *iPtr = (TkTextIndex *) indexPtr;
+	TkTextSegment *segPtr = iPtr->priv.segPtr;
 
 	if (iPtr->priv.byteIndex == -1) {
 	    assert(iPtr->priv.segPtr);
@@ -864,6 +865,17 @@ TkTextIndexGetLineNumber(
 	    assert(CheckByteIndex(iPtr, iPtr->priv.linePtr, iPtr->priv.byteIndex));
 	}
 	TkTextIndexSetEpoch(iPtr, epoch);
+	if (segPtr && !iPtr->priv.isCharSegment && segPtr->sectionPtr
+		&& segPtr->sectionPtr->linePtr == iPtr->priv.linePtr) {
+	    /*
+	     * This is a read accessor: keep the segment anchor. Unlike char
+	     * segments a mark is not epoch-volatile (same rule as
+	     * TkTextIndexGetSegment), and e.g. the mark boundaries of an
+	     * inclusive deletion were lost by the very first index
+	     * comparison.
+	     */
+	    iPtr->priv.segPtr = segPtr;
+	}
 	*lineNo = TkBTreeLinesTo(iPtr->tree, textPtr, iPtr->priv.linePtr, NULL);
     } else {
 	assert(*lineNo == (int) TkBTreeLinesTo(indexPtr->tree, textPtr, indexPtr->priv.linePtr, NULL));

@@ -2562,6 +2562,18 @@ TkTextTagAddRetainedUndo(
     sharedTextPtr->lastUndoTokenType = -1;
     tagPtr->undoTagListIndex = sharedTextPtr->undoTagListCount++;
     tagPtr->refCount += 1;
+
+    if (sharedTextPtr->undoStack && !TkTextUndoIsPerformingUndoRedo(sharedTextPtr->undoStack)) {
+	/*
+	 * This new operation expires the redo history NOW, not only when the
+	 * retained token is eventually pushed - otherwise 'edit canredo'
+	 * keeps saying yes while 'edit redo' would silently do nothing
+	 * (during an undo the retained token is the upcoming redo, then the
+	 * redo stack must be left alone).
+	 */
+
+	TkTextUndoClearRedoStack(sharedTextPtr->undoStack);
+    }
 }
 
 /*

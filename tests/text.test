@@ -9035,6 +9035,49 @@ test text-27.45 {steadymarks: edit inspect with a preserved mark in the stack} -
     destroy .t
 } -result {1}
 
+test text-27.46 {a retained tag or mark token expires the redo history immediately} -setup {
+    destroy .t .u
+    text .t -undo 1
+    text .u -undo 1 -steadymarks 1
+} -body {
+    # The redo stack used to be cleared only when the retained token was
+    # eventually pushed: 'edit canredo' kept saying yes while 'edit redo'
+    # silently did nothing (its own flush of the retained token cleared
+    # the redo stack before performing).
+    .t insert end "abc"
+    .t edit separator
+    .t insert end "def"
+    .t edit undo
+    set r [.t edit canredo]
+    .t tag add T 1.0 1.2
+    lappend r [.t edit canredo]
+    .u insert end "abc"
+    .u edit separator
+    .u insert end "def"
+    .u edit undo
+    lappend r [.u edit canredo]
+    .u mark set m 1.1
+    lappend r [.u edit canredo]
+} -cleanup {
+    destroy .t .u
+} -result {1 0 1 0}
+
+test text-27.47 {edit info after deleting a tag with a retained token} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # tag delete pushes/releases the retained token and leaves a NULL slot
+    # in undoTagList (the list is not compacted); MakeStackInfoValue
+    # dereferenced the slot (SEGV on any 'edit info').
+    .t insert end "abcdef"
+    .t edit reset
+    .t tag add T1 1.0 1.2
+    .t tag delete T1
+    .t edit info -undocommands
+} -cleanup {
+    destroy .t
+} -result {{tag add}}
+
 test text-42.3 {count -displaychars over a visible hyphen segment} -setup {
     destroy .t
     text .t -hyphens 1
