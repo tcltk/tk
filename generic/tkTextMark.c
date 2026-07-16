@@ -2192,7 +2192,11 @@ MarkInspectProc(
     const char *name;
 
     assert(!TkTextIsPrivateMark(segPtr));
-    assert(!IS_PRESERVED(segPtr));
+    /*
+     * The mark may be preserved (alive only inside the undo/redo stack,
+     * e.g. a redo token of an insert listing an unset mark); TkTextMarkName
+     * handles this case.
+     */
 
     name = TkTextMarkName(sharedTextPtr, NULL, segPtr);
     assert(name);
@@ -3014,7 +3018,14 @@ TkTextMarkName(
     const TkText *textPtr,		/* can be NULL */
     const TkTextSegment *markPtr)
 {
-    assert(!IS_PRESERVED(markPtr));
+    if (IS_PRESERVED(markPtr)) {
+	/*
+	 * The mark is alive only inside the undo/redo stack (e.g. listed by
+	 * a redo token of an insert covering an unset mark): the name is
+	 * preserved in place of the hash entry.
+	 */
+	return GET_NAME(markPtr);
+    }
 
     if (markPtr->insertMarkFlag) {
 	return !textPtr || textPtr == markPtr->body.mark.textPtr ? "insert" : NULL;
