@@ -2289,7 +2289,8 @@ MarkDeleteProc(
 
     if (--segPtr->refCount == 0) {
 	if (IS_PRESERVED(segPtr)) {
-	    assert(sharedTextPtr->steadyMarks);
+	    /* marks referenced by undo tokens are preserved even without
+	     * steady marks */
 	    Tcl_Free(GET_NAME(segPtr));
 	} else {
 	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
@@ -2299,34 +2300,23 @@ MarkDeleteProc(
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
     } else if (!IS_PRESERVED(segPtr)) {
-	if (sharedTextPtr->steadyMarks) {
-	    /*
-	     * This case should only happen if this mark belongs to undo/redo stack.
-	     * We have to preserve the mark if not already preserved.
-	     */
+	/*
+	 * The mark is still referenced, e.g. by an undo token (this also
+	 * happens without steady marks: the boundaries of an inclusive
+	 * deletion are collected for undo). Preserve it - freeing a still
+	 * referenced mark would leave dangling pointers behind. Without
+	 * steady marks the preserved mark is discarded when the token is
+	 * restored or destroyed (see MarkRestoreProc).
+	 */
 
-	    Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
-	    const char *name = (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
-	    size_t size = strlen(name) + 1;
+	Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
+	const char *name = (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
+	size_t size = strlen(name) + 1;
 
-	    assert(sharedTextPtr->steadyMarks);
-	    segPtr->body.mark.ptr = PTR_TO_INT(memcpy(Tcl_Alloc(size), name, size));
-	    MAKE_PRESERVED(segPtr);
-	    Tcl_DeleteHashEntry(hPtr);
-	    sharedTextPtr->numMarks -= 1;
-	} else {
-	    /*
-	     * It seems that we have a bug with reference counting. So print a warning
-	     * and delete it anyway.
-	     */
-
-	    fprintf(stderr, "reference count of mark '%s' is %d (should be zero)\n",
-		    TkTextMarkName(sharedTextPtr, NULL, segPtr), segPtr->refCount);
-	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
-	    sharedTextPtr->numMarks -= 1;
-	    FREE_SEGMENT(segPtr);
-	    DEBUG_ALLOC(tkTextCountDestroySegment++);
-	}
+	segPtr->body.mark.ptr = PTR_TO_INT(memcpy(Tcl_Alloc(size), name, size));
+	MAKE_PRESERVED(segPtr);
+	Tcl_DeleteHashEntry(hPtr);
+	sharedTextPtr->numMarks -= 1;
     }
 
     return 1;
