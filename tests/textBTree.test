@@ -3735,6 +3735,53 @@ test btree-14.111 {delete -inclusive without -marks leaves user mark boundaries 
     destroy .t
 } -result {20 {current insert m1 m2}}
 
+test btree-14.112 {delete -marks -inclusive spanning multiple lines} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The very first index comparison (cross-line) normalized the indices
+    # and dropped their segment anchor (TkTextIndexGetLineNumber cleared
+    # the cached segment pointer, although a mark is not epoch-volatile),
+    # so the B-tree never saw the mark boundaries: they survived an
+    # inclusive deletion. Single-line deletions were not affected (the
+    # comparison takes the same-line shortcut).
+    .t debug 1
+    .t insert 1.0 "aaaa\nbbbb"
+    .t edit separator
+    .t mark set m1 1.2
+    .t mark gravity m1 left
+    .t mark set m2 2.2
+    .t delete -marks -inclusive m1 m2
+    set r [list [.t get 1.0 end-1c] [lsort [.t mark names]]]
+    .t edit undo
+    .t edit redo
+    .t debug 0
+    lappend r [.t get 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {aabb {current insert} aabb}
+
+test btree-14.113 {delete -marks -inclusive of an empty range is a no-op} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # Anchors the intended behavior: an empty range is rejected upfront,
+    # the boundary marks are kept alive. Deleting them would require an
+    # undo atom which restores nothing (without steady marks the marks do
+    # not survive the undo), and whose redo resolves an empty range again.
+    .t debug 1
+    .t insert 1.0 "aaaaaaaaaa"
+    .t edit separator
+    .t mark set m1 1.2
+    .t mark gravity m1 left
+    .t mark set m2 1.2
+    .t delete -marks -inclusive m1 m2
+    .t debug 0
+    list [.t get 1.0 end-1c] [lsort [.t mark names]] [.t edit info -undodepth]
+} -cleanup {
+    destroy .t
+} -result {aaaaaaaaaa {current insert m1 m2} 1}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
