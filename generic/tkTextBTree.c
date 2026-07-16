@@ -256,6 +256,10 @@ static int		UndoIndexIsEqual(const TkTextUndoIndex *indexPtr1,
 static void		AddTagToNode(Node *nodePtr, TkTextTag *tag, int setTagoff);
 static void		RemoveTagFromNode(Node *nodePtr, TkTextTag *tag);
 static TkTextSegment *	ContentBeforeLink(TkTextSegment *segPtr);
+static TkTextSegment *	ScanElidedRangeStart(const TkSharedText *sharedTextPtr,
+			    TkTextSegment *contentPtr);
+static TkTextSegment *	ScanElidedRangeEnd(const TkSharedText *sharedTextPtr,
+			    TkTextSegment *contentPtr);
 static void		UpdateElideInfo(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    TkTextSegment **firstSegPtr, TkTextSegment **lastSegPtr, unsigned reason);
 static int		SegmentIsElided(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr,
@@ -1662,12 +1666,20 @@ UndoDeletePerform(
 	TkTextSegment *succPtr = linePtr->nextPtr
 		? GetFirstTagInfoSegment(NULL, linePtr->nextPtr) : NULL;
 
+	/*
+	 * The enclosing range boundaries have to be found from the tag
+	 * information (ScanElidedRange*), not from the switch structure:
+	 * the restored switches were spliced verbatim (both fork
+	 * directions), so following the forks can return a switch lying
+	 * inside the restored range, truncating the recompute span and
+	 * leaving the segments beyond it inconsistent.
+	 */
+
 	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
-	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
 	}
 	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
-	    lPtr = ContentBeforeLink(
-		    TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	    lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
 	}
 	fPtr->protectionFlag = 1;
 	lPtr->protectionFlag = 1;
@@ -2181,11 +2193,14 @@ UndoClearTagsPerform(
 	} else {
 	    succPtr = NULL;
 	}
+	/* Bound by the tag information, not the switch structure (see
+	 * UndoDeletePerform - an earlier truncated recompute may have left
+	 * verbatim forks pointing inside the range). */
 	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
-	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
 	}
 	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
-	    lPtr = ContentBeforeLink(TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	    lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
 	}
 	firstSegPtr->protectionFlag = 1;
 	lastSegPtr->protectionFlag = 1;
@@ -10464,41 +10479,19 @@ MergeTagUndoToken(
 	    && !((UndoTokenTagChange *) tagPtr->recentTagAddRemoveToken)->lengths;
 
     if (data->add == remove) {
-	if (cmp1 <= 0 && cmp2 >= 0) {
-	    if (!data->add || wholeRange) {
-		Tcl_Free(prevToken->lengths);
-		prevToken->lengths = NULL;
-		return UNDO_ANNIHILATED;
-	    }
-	    return UNDO_NEEDED;
+	/*
+	 * The two operations have opposite senses (an add following a remove,
+	 * or vice versa). The net effect of a partially overlapping pair is
+	 * mixed (part of the range has to be re-tagged on undo, another part
+	 * untagged), which a single [start,end] token of one sense cannot
+	 * express: any merge would drop one part silently. Annihilate only
+	 * when both operations cover exactly the same gap-free range (then
+	 * they compensate each other), and record separate tokens otherwise.
+	 */
+	if (cmp1 == 0 && cmp2 == 0 && wholeRange) {
+	    return UNDO_ANNIHILATED;
 	}
-	if (!wholeRange) {
-	    return UNDO_NEEDED;
-	}
-	if (cmp1 < 0 && cmp2 <= 0 && CompareIndices(indexPtr2, &prevToken->startIndex) >= 0) {
-	    MakeUndoIndex(sharedTextPtr, indexPtr1, &prevToken->startIndex, GRAVITY_LEFT);
-	    if (cmp2 > 0) {
-		MakeUndoIndex(sharedTextPtr, indexPtr2, &prevToken->endIndex, GRAVITY_RIGHT);
-	    }
-	    if (data->add) {
-		UNMARK_POINTER(prevToken->tagPtr);
-	    } else {
-		MARK_POINTER(prevToken->tagPtr);
-	    }
-	    return UNDO_MERGED;
-	}
-	if (cmp2 > 0 && cmp1 >= 0 && CompareIndices(indexPtr1, &prevToken->endIndex) <= 0) {
-	    if (cmp1 > 0) {
-		MakeUndoIndex(sharedTextPtr, indexPtr1, &prevToken->startIndex, GRAVITY_LEFT);
-	    }
-	    MakeUndoIndex(sharedTextPtr, indexPtr2, &prevToken->endIndex, GRAVITY_RIGHT);
-	    if (data->add) {
-		UNMARK_POINTER(prevToken->tagPtr);
-	    } else {
-		MARK_POINTER(prevToken->tagPtr);
-	    }
-	    return UNDO_MERGED;
-	}
+	return UNDO_NEEDED;
     } else if (wholeRange) {
 	int cmp3 = CompareIndices(indexPtr2, &prevToken->startIndex);
 	int cmp4 = CompareIndices(indexPtr1, &prevToken->endIndex);

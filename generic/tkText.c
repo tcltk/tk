@@ -512,6 +512,8 @@ static int		TriggerWatchEdit(TkText *textPtr, int userFlag, const char *operatio
 			    const char *info, int final);
 static void		TriggerUndoStackEvent(TkSharedText *sharedTextPtr);
 static void		PushRetainedUndoTokens(TkSharedText *sharedTextPtr);
+static unsigned		CountRetainedUndoItems(const TkSharedText *sharedTextPtr);
+static unsigned		CurrentUndoDepth(const TkSharedText *sharedTextPtr);
 static void		PushUndoSeparatorIfNeeded(TkSharedText *sharedTextPtr, bool autoSeparators,
 			    TkTextEditMode currentEditMode);
 static bool		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
@@ -788,6 +790,104 @@ Tk_RTextObjCmd(
     return CreateWidget(NULL, tkwin, interp, NULL, objc, objv);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * CountRetainedUndoItems --
+ *
+ *	Count the undo items which are retained for amalgamation (see
+ *	TkTextTagAddRetainedUndo and TkTextTagChangedUndoRedo) and not yet
+ *	pushed onto the undo stack. The conditions mirror exactly what
+ *	PushRetainedUndoTokens would push.
+ *
+ * Results:
+ *	Number of retained items.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static unsigned
+CountRetainedUndoItems(
+    const TkSharedText *sharedTextPtr)
+{
+    unsigned count = 0;
+    unsigned i;
+
+    for (i = 0; i < sharedTextPtr->undoTagListCount; ++i) {
+	const TkTextTag *tagPtr = sharedTextPtr->undoTagList[i];
+
+	if (tagPtr) {
+	    if (tagPtr->recentTagAddRemoveToken && !tagPtr->recentTagAddRemoveTokenIsNull) {
+		count += 1;
+	    }
+	    if (tagPtr->recentChangePriorityToken && tagPtr->savedPriority != tagPtr->priority) {
+		count += 1;
+	    }
+	}
+    }
+
+    for (i = 0; i < sharedTextPtr->undoMarkListCount; ++i) {
+	const TkTextMarkChange *changePtr = &sharedTextPtr->undoMarkList[i];
+
+	if (changePtr->toggleGravity && changePtr->savedMarkType != changePtr->markPtr->typePtr) {
+	    count += 1;
+	}
+	if (changePtr->moveMark) {
+	    count += 1;
+	}
+	if (changePtr->setMark) {
+	    count += 1;
+	}
+    }
+
+    return count;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CurrentUndoDepth --
+ *
+ *	Compute the depth of the undo stack as visible to the user. The
+ *	retained undo tokens belong to the undo stack, although they are
+ *	not yet pushed: when flushed they join the pending atom, so they
+ *	count as one more atom if that atom is still empty. Without this
+ *	a pending tag/mark change is invisible to "edit canundo" and
+ *	"edit info", and a client draining the stack with
+ *	"while {[$w edit canundo]} {$w edit undo}" would miss it.
+ *
+ * Results:
+ *	The depth of the undo stack including retained items.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static unsigned
+CurrentUndoDepth(
+    const TkSharedText *sharedTextPtr)
+{
+    unsigned depth;
+
+    if (!sharedTextPtr->undoStack) {
+	return 0;
+    }
+
+    depth = TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack);
+
+    if (TkTextUndoCountCurrentUndoItems(sharedTextPtr->undoStack) == 0
+	    && CountRetainedUndoItems(sharedTextPtr) > 0) {
+	depth += 1;
+    }
+
+    return depth;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -8983,7 +9083,7 @@ TextEditCmd(
 	     return TCL_ERROR;
 	}
 	if (textPtr->sharedTextPtr->undo) {
-	    canUndo = TkTextUndoGetCurrentUndoStackDepth(textPtr->sharedTextPtr->undoStack) > 0;
+	    canUndo = CurrentUndoDepth(textPtr->sharedTextPtr) > 0;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(canUndo));
 	break;
@@ -9360,11 +9460,11 @@ MakeEditInfoValue(
 
     switch (optionIndex) {
     case INFO_UNDOSTACKSIZE:
-	return Tcl_NewIntObj(st ? TkTextUndoCountUndoItems(st) : 0);
+	return Tcl_NewIntObj(st ? TkTextUndoCountUndoItems(st) + CountRetainedUndoItems(sharedTextPtr) : 0);
     case INFO_REDOSTACKSIZE:
 	return Tcl_NewIntObj(st ? TkTextUndoCountRedoItems(st) : 0);
     case INFO_UNDODEPTH:
-	return Tcl_NewIntObj(st ? TkTextUndoGetCurrentUndoStackDepth(st) : 0);
+	return Tcl_NewIntObj(CurrentUndoDepth(sharedTextPtr));
     case INFO_REDODEPTH:
 	return Tcl_NewIntObj(st ? TkTextUndoGetCurrentRedoStackDepth(st) : 0);
     case INFO_UNDOBYTESIZE:
