@@ -10464,41 +10464,19 @@ MergeTagUndoToken(
 	    && !((UndoTokenTagChange *) tagPtr->recentTagAddRemoveToken)->lengths;
 
     if (data->add == remove) {
-	if (cmp1 <= 0 && cmp2 >= 0) {
-	    if (!data->add || wholeRange) {
-		Tcl_Free(prevToken->lengths);
-		prevToken->lengths = NULL;
-		return UNDO_ANNIHILATED;
-	    }
-	    return UNDO_NEEDED;
+	/*
+	 * The two operations have opposite senses (an add following a remove,
+	 * or vice versa). The net effect of a partially overlapping pair is
+	 * mixed (part of the range has to be re-tagged on undo, another part
+	 * untagged), which a single [start,end] token of one sense cannot
+	 * express: any merge would drop one part silently. Annihilate only
+	 * when both operations cover exactly the same gap-free range (then
+	 * they compensate each other), and record separate tokens otherwise.
+	 */
+	if (cmp1 == 0 && cmp2 == 0 && wholeRange) {
+	    return UNDO_ANNIHILATED;
 	}
-	if (!wholeRange) {
-	    return UNDO_NEEDED;
-	}
-	if (cmp1 < 0 && cmp2 <= 0 && CompareIndices(indexPtr2, &prevToken->startIndex) >= 0) {
-	    MakeUndoIndex(sharedTextPtr, indexPtr1, &prevToken->startIndex, GRAVITY_LEFT);
-	    if (cmp2 > 0) {
-		MakeUndoIndex(sharedTextPtr, indexPtr2, &prevToken->endIndex, GRAVITY_RIGHT);
-	    }
-	    if (data->add) {
-		UNMARK_POINTER(prevToken->tagPtr);
-	    } else {
-		MARK_POINTER(prevToken->tagPtr);
-	    }
-	    return UNDO_MERGED;
-	}
-	if (cmp2 > 0 && cmp1 >= 0 && CompareIndices(indexPtr1, &prevToken->endIndex) <= 0) {
-	    if (cmp1 > 0) {
-		MakeUndoIndex(sharedTextPtr, indexPtr1, &prevToken->startIndex, GRAVITY_LEFT);
-	    }
-	    MakeUndoIndex(sharedTextPtr, indexPtr2, &prevToken->endIndex, GRAVITY_RIGHT);
-	    if (data->add) {
-		UNMARK_POINTER(prevToken->tagPtr);
-	    } else {
-		MARK_POINTER(prevToken->tagPtr);
-	    }
-	    return UNDO_MERGED;
-	}
+	return UNDO_NEEDED;
     } else if (wholeRange) {
 	int cmp3 = CompareIndices(indexPtr2, &prevToken->startIndex);
 	int cmp4 = CompareIndices(indexPtr1, &prevToken->endIndex);

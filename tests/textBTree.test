@@ -3497,6 +3497,50 @@ test btree-14.102 {retained tag undo token is visible to canundo/undodepth} -set
     destroy .t
 } -result {1 {} abcdefghij}
 
+test btree-14.103 {no tag undo annihilation when the ranges differ} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # A remove followed by an add of the SAME tag annihilated both retained
+    # undo tokens whenever the add covered the remove - even when the add
+    # exceeded it. The net effect (the excess part of the add) was then
+    # unknown to the undo stack and survived a full undo drain.
+    .t insert end "abcdefghijklmnopqrst"
+    .t tag configure T0 -underline 0
+    .t tag add T0 1.5 1.10
+    .t edit reset
+    .t tag remove T0 1.5 1.10
+    .t edit separator
+    .t tag add T0 1.2 1.10
+    .t edit separator
+    while {[.t edit info -undodepth] > 0} { .t edit undo }
+    .t tag ranges T0
+} -cleanup {
+    destroy .t
+} -result {1.5 1.10}
+
+test btree-14.104 {no merge of opposite-sense tag undo tokens} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0
+} -body {
+    # A remove overlapping the right end of a retained add token merged
+    # into it: the token was shrunk to the remove range and its sense
+    # flipped, silently dropping the left part of the recorded add, which
+    # then survived a full undo drain.
+    .t insert end "abcdefghijklmnopqrst"
+    .t tag configure T0 -underline 0
+    .t tag add T0 1.8 1.15
+    .t edit reset
+    .t tag add T0 1.2 1.8
+    .t edit separator
+    .t tag remove T0 1.5 1.12
+    .t edit separator
+    while {[.t edit info -undodepth] > 0} { .t edit undo }
+    .t tag ranges T0
+} -cleanup {
+    destroy .t
+} -result {1.8 1.15}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
