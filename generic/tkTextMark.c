@@ -1265,9 +1265,24 @@ MakeChangeItem(
 
     if (!changePtr) {
 	if (sharedTextPtr->undoMarkListCount == sharedTextPtr->undoMarkListSize) {
+	    unsigned i;
+
 	    sharedTextPtr->undoMarkListSize = MAX(20u, 2*sharedTextPtr->undoMarkListSize);
 	    sharedTextPtr->undoMarkList = (TkTextMarkChange *)Tcl_Realloc(sharedTextPtr->undoMarkList,
 		    sharedTextPtr->undoMarkListSize * sizeof(sharedTextPtr->undoMarkList[0]));
+
+	    /*
+	     * The array may have moved, and the registered marks point
+	     * directly into it: re-synchronize.
+	     */
+
+	    for (i = 0; i < sharedTextPtr->undoMarkListCount; ++i) {
+		TkTextMarkChange *itemPtr = &sharedTextPtr->undoMarkList[i];
+
+		if (itemPtr->markPtr) {
+		    itemPtr->markPtr->body.mark.changePtr = itemPtr;
+		}
+	    }
 	}
 	changePtr = &sharedTextPtr->undoMarkList[sharedTextPtr->undoMarkListCount++];
 	memset(changePtr, 0, sizeof(*changePtr));
@@ -2246,13 +2261,25 @@ MarkDeleteProc(
     assert(segPtr->body.mark.ptr);
 
     if (segPtr->body.mark.changePtr) {
-	unsigned index;
+	unsigned index, i;
 
 	assert(sharedTextPtr->steadyMarks);
 	index = segPtr->body.mark.changePtr - sharedTextPtr->undoMarkList;
 	TkTextReleaseUndoMarkTokens(sharedTextPtr, segPtr->body.mark.changePtr);
 	memmove(sharedTextPtr->undoMarkList + index, sharedTextPtr->undoMarkList + index + 1,
-		--sharedTextPtr->undoMarkListCount - index);
+		(--sharedTextPtr->undoMarkListCount - index) * sizeof(sharedTextPtr->undoMarkList[0]));
+
+	/*
+	 * The moved entries are pointed to by their marks: re-synchronize.
+	 */
+
+	for (i = index; i < sharedTextPtr->undoMarkListCount; ++i) {
+	    TkTextMarkChange *itemPtr = &sharedTextPtr->undoMarkList[i];
+
+	    if (itemPtr->markPtr) {
+		itemPtr->markPtr->body.mark.changePtr = itemPtr;
+	    }
+	}
 	assert(!segPtr->body.mark.changePtr);
     }
 
