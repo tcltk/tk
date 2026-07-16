@@ -7543,6 +7543,7 @@ DeleteRange(
     TkTextSegment **segments;
     TkTextSegment *beforeSurrogate;
     TkTextSegment *prevSavePtr;
+    TkTextSegment *deferredChainPtr;
     TkTextSegment *savedLinkPtr;
     TkTextSegment *savedBranchPtr;
     TkTextSegment *pulledLinkPtr;
@@ -7654,12 +7655,14 @@ DeleteRange(
     insertSurrogate = 0;
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
+    deferredChainPtr = NULL;
     savedLinkPtr = NULL;
     savedBranchPtr = NULL;
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE)
 	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
-	    && !TkTextIsSpecialOrPrivateMark(firstSegPtr);
+	    && !TkTextIsSpecialOrPrivateMark(firstSegPtr)
+	    && ((flags & DELETE_MARKS) || !TkTextIsNormalMark(firstSegPtr));
 
     linePtr1 = sectionPtr->linePtr;
     linePtr2 = lastSegPtr->sectionPtr->linePtr;
@@ -7921,8 +7924,19 @@ DeleteRange(
 			    sharedTextPtr->dontUndoTags, sharedTextPtr);
 		}
 		if (prevSavePtr) {
-		    assert(!prevSavePtr->sectionPtr || prevSavePtr == firstSegPtr);
-		    prevSavePtr->nextPtr = savePtr;
+		    if (prevSavePtr == firstSegPtr && prevSavePtr->sectionPtr) {
+			/*
+			 * The head of the undo chain is the DELETE_INCLUSIVE
+			 * boundary, which is still linked in the tree (it is
+			 * unlinked after this loop): writing its nextPtr now
+			 * would cut off the tail of the line. Defer the chain
+			 * link until the boundary is unlinked.
+			 */
+			deferredChainPtr = savePtr;
+		    } else {
+			assert(!prevSavePtr->sectionPtr);
+			prevSavePtr->nextPtr = savePtr;
+		    }
 		} else {
 		    if (numSegments == maxSegments) {
 			maxSegments *= 2u;
@@ -8138,11 +8152,14 @@ DeleteRange(
 	assert(lastSegPtr->typePtr->group & (SEG_GROUP_MARK|SEG_GROUP_PROTECT));
 
 	/*
-	 * Do not unlink the special/private marks.
-	 * And don't forget the undo chain.
+	 * Do not unlink the special/private marks. A normal (user) mark
+	 * boundary can only die when DELETE_MARKS is set - otherwise leave
+	 * it alone, like the marks inside the range (the delete proc would
+	 * refuse to delete it). And don't forget the undo chain.
 	 */
 
-	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)) {
+	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)
+		&& ((flags & DELETE_MARKS) || !TkTextIsNormalMark(firstSegPtr))) {
 	    TkTextSection *shrunkSectionPtr = firstSegPtr->sectionPtr;
 	    int sole = shrunkSectionPtr->length == 1;
 	    TkTextSegment *joinPtr = firstSegPtr->prevPtr;
@@ -8153,6 +8170,10 @@ DeleteRange(
 		assert(!"mark refuses to die"); /* this should not happen */
 	    }
 	    firstSegPtr->sectionPtr = NULL;
+	    if (deferredChainPtr) {
+		/* now chain the saved segments behind the unlinked boundary */
+		firstSegPtr->nextPtr = deferredChainPtr;
+	    }
 	    if (!sole) {
 		/* The shrunk section may have lost its permission to be short. */
 		JoinSections(shrunkSectionPtr);
@@ -8167,16 +8188,25 @@ DeleteRange(
 	    }
 	    countChanges += 1;
 	}
-	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
+	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)
+		&& ((flags & DELETE_MARKS) || !TkTextIsNormalMark(lastSegPtr))) {
 	    TkTextSection *shrunkSectionPtr = lastSegPtr->sectionPtr;
 	    int sole = shrunkSectionPtr->length == 1;
 	    TkTextSegment *joinPtr = lastSegPtr->prevPtr;
+	    int saveLast = undoInfo && TkTextIsStableMark(lastSegPtr);
 
 	    UnlinkSegment(lastSegPtr);
+	    if (saveLast) {
+		/*
+		 * The undo token's reference must be taken before the delete
+		 * proc - without it the mark would be freed there.
+		 */
+		lastSegPtr->refCount += 1;
+	    }
 	    assert(lastSegPtr->typePtr->deleteProc);
 	    if (!lastSegPtr->typePtr->deleteProc(sharedTextPtr, lastSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
-	    } else if (undoInfo && TkTextIsStableMark(lastSegPtr)) {
+	    } else if (saveLast) {
 		assert(lastSegPtr->typePtr); /* not deleted */
 		if (prevSavePtr) {
 		    prevSavePtr->nextPtr = lastSegPtr;
@@ -8189,7 +8219,6 @@ DeleteRange(
 		}
 		lastSegPtr->sectionPtr = NULL;
 		lastSegPtr->nextPtr = NULL;
-		lastSegPtr->refCount += 1;
 	    }
 	    if (!sole) {
 		/* The shrunk section may have lost its permission to be short. */

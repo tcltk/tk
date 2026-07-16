@@ -3689,6 +3689,49 @@ test btree-14.109 {steadymarks: undo of a mark unset (mark-based undo index)} -s
     destroy .t
 } -result {{current insert} {} abcdefghijklmnop}
 
+test btree-14.110 {delete -inclusive with user mark boundaries} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The boundary marks were freed by their delete proc while still
+    # referenced by the undo token (the token's reference on the second
+    # boundary was even taken after the proc, from freed memory), and the
+    # stitching of the undo chain overwrote the tree nextPtr of the first
+    # boundary while it was still linked, cutting off the tail of the
+    # line.
+    .t debug 1
+    .t insert 1.0 [string repeat a 35]
+    .t edit separator
+    .t mark set m1 1.2
+    .t mark set m2 1.17
+    .t mark gravity m1 left
+    .t delete -marks -inclusive m1 m2
+    set r [list [string length [.t get 1.0 end-1c]] [lsort [.t mark names]]]
+    .t edit undo
+    lappend r [string length [.t get 1.0 end-1c]]
+    .t edit redo
+    .t debug 0
+    lappend r [string length [.t get 1.0 end-1c]]
+} -cleanup {
+    destroy .t
+} -result {20 {current insert} 35 20}
+
+test btree-14.111 {delete -inclusive without -marks leaves user mark boundaries alone} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # Used to assert "mark refuses to die".
+    .t debug 1
+    .t insert 1.0 [string repeat a 35]
+    .t mark set m1 1.2
+    .t mark set m2 1.17
+    .t delete -inclusive m1 m2
+    .t debug 0
+    list [string length [.t get 1.0 end-1c]] [lsort [.t mark names]]
+} -cleanup {
+    destroy .t
+} -result {20 {current insert m1 m2}}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
