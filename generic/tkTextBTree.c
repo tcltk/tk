@@ -5140,7 +5140,7 @@ TkBTreeInsertChars(
 		hyphenElideTagPtr = NULL;
 	    }
 	}
-    } else if (!hyphenElideTagPtr && TkBTreeHaveElidedSegments(sharedTextPtr)) {
+    } else if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	TkTextSegment *predPtr = firstSegPtr->prevPtr;
 	TkTextLine *prevLinePtr = firstSegPtr->sectionPtr->linePtr->prevPtr;
 
@@ -5184,6 +5184,15 @@ TkBTreeInsertChars(
 	    if (fPtr != lPtr) {
 		CleanupSplitPoint(lPtr, sharedTextPtr);
 	    }
+
+	    /*
+	     * The recompute is state-based, so it also built the ranges of
+	     * elided hyphens just inserted inside this range; running the
+	     * tag-based update below on top of it would anchor its branch
+	     * search on a non-elided segment.
+	     */
+
+	    hyphenElideTagPtr = NULL;
 	}
     }
 
