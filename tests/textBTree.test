@@ -3613,6 +3613,30 @@ test btree-14.106 {insert with elided hyphen tags at the meeting point of two el
     destroy .t
 } -result {axygh}
 
+test btree-14.107 {load: shared tag bit fields rebuilt for surviving tags} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # ClearText clears the shared bit fields derived from the tag
+    # configurations even when the tags are preserved (clearTags=0, e.g.
+    # [load]); they were never rebuilt, so a surviving -elide 1 tag did
+    # not elide anymore (SegmentIsElided tests the bit field first) and a
+    # surviving -undo 0 tag became undoable again.
+    .t debug 1
+    .t insert end "abc"
+    .t tag configure E -elide 1
+    .t tag configure T -undo 0
+    .t tag add E 1.1 1.3
+    .t load {{text "new content"}}
+    .t tag add E 1.4 1.6
+    .t edit reset
+    .t tag add T 1.0 1.2
+    .t debug 0
+    list [.t get -displaychars 1.0 end-1c] [.t edit canundo]
+} -cleanup {
+    destroy .t
+} -result {{new ntent} 0}
+
 test btree-14.108 {load: content with elided ranges} -setup {
     destroy .t
 } -body {
