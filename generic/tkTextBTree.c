@@ -256,6 +256,10 @@ static int		UndoIndexIsEqual(const TkTextUndoIndex *indexPtr1,
 static void		AddTagToNode(Node *nodePtr, TkTextTag *tag, int setTagoff);
 static void		RemoveTagFromNode(Node *nodePtr, TkTextTag *tag);
 static TkTextSegment *	ContentBeforeLink(TkTextSegment *segPtr);
+static TkTextSegment *	ScanElidedRangeStart(const TkSharedText *sharedTextPtr,
+			    TkTextSegment *contentPtr);
+static TkTextSegment *	ScanElidedRangeEnd(const TkSharedText *sharedTextPtr,
+			    TkTextSegment *contentPtr);
 static void		UpdateElideInfo(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    TkTextSegment **firstSegPtr, TkTextSegment **lastSegPtr, unsigned reason);
 static int		SegmentIsElided(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr,
@@ -1662,12 +1666,20 @@ UndoDeletePerform(
 	TkTextSegment *succPtr = linePtr->nextPtr
 		? GetFirstTagInfoSegment(NULL, linePtr->nextPtr) : NULL;
 
+	/*
+	 * The enclosing range boundaries have to be found from the tag
+	 * information (ScanElidedRange*), not from the switch structure:
+	 * the restored switches were spliced verbatim (both fork
+	 * directions), so following the forks can return a switch lying
+	 * inside the restored range, truncating the recompute span and
+	 * leaving the segments beyond it inconsistent.
+	 */
+
 	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
-	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
 	}
 	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
-	    lPtr = ContentBeforeLink(
-		    TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	    lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
 	}
 	fPtr->protectionFlag = 1;
 	lPtr->protectionFlag = 1;
@@ -2181,11 +2193,14 @@ UndoClearTagsPerform(
 	} else {
 	    succPtr = NULL;
 	}
+	/* Bound by the tag information, not the switch structure (see
+	 * UndoDeletePerform - an earlier truncated recompute may have left
+	 * verbatim forks pointing inside the range). */
 	if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
-	    fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
+	    fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
 	}
 	if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
-	    lPtr = ContentBeforeLink(TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, succPtr));
+	    lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
 	}
 	firstSegPtr->protectionFlag = 1;
 	lastSegPtr->protectionFlag = 1;
