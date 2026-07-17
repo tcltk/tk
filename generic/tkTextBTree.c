@@ -220,7 +220,7 @@ static void		PropagateChangeOfNumBranches(Node *nodePtr, int changeToNumBranches
 static void		PropagateChangeToLineCount(Node *nodePtr, int changeToLogicalLineCount);
 static void		FreeSections(TkTextSection *sectionPtr);
 static TkTextSegment *	UnlinkSegment(TkTextSegment *segPtr);
-static void		UnlinkSegmentAndCleanup(const TkSharedText *sharedTextPtr,
+static TkTextSegment *	UnlinkSegmentAndCleanup(const TkSharedText *sharedTextPtr,
 			    TkTextSegment *segPtr);
 static unsigned		CountSegments(const TkTextSection *sectionPtr);
 static unsigned		ComputeSectionSize(const TkTextSegment *segPtr);
@@ -5750,7 +5750,10 @@ LinkSegment(
  *	it will do a cleanup with the predecessing segment.
  *
  * Results:
- *	None.
+ *	The predecessor of the unlinked segment (NULL if the segment was
+ *	heading its line). When the removal made the predecessor joinable
+ *	with the new successor, both have been freed and replaced by the
+ *	returned joined segment.
  *
  * Side effects:
  *	'segPtr' will be unlinked from its tree, possibly a cleanup will
@@ -5759,7 +5762,7 @@ LinkSegment(
  *----------------------------------------------------------------------
  */
 
-static void
+static TkTextSegment *
 UnlinkSegmentAndCleanup(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     TkTextSegment *segPtr)		/* Unlink this segment. */
@@ -5772,8 +5775,9 @@ UnlinkSegmentAndCleanup(
     UnlinkSegment(segPtr);
 
     if (prevPtr && prevPtr->typePtr == &tkTextCharType) {
-	CleanupCharSegments(sharedTextPtr, prevPtr);
+	return CleanupCharSegments(sharedTextPtr, prevPtr);
     }
+    return prevPtr;
 }
 
 /*
@@ -9501,6 +9505,8 @@ static void
 RemoveExpiredSwitch(
     TkSharedText *sharedTextPtr,
     TkTextSegment *switchPtr,
+    TkTextSegment **currSegPtr,	/* Walked segment of the caller, will be
+				 * retargeted if the removal joins it away. */
     TkTextSegment **firstSegPtr,
     TkTextSegment **lastSegPtr,
     TkTextSegment **danglingBranchPtr,
@@ -9508,6 +9514,7 @@ RemoveExpiredSwitch(
     TkTextSegment **deletedBranchPtr,
     TkTextSegment **deletedLinkPtr)
 {
+    TkTextSegment *prevPtr, *nextPtr, *mergedPtr;
     int isBranch = switchPtr->typePtr == &tkTextBranchType;
 
     assert(isBranch || switchPtr->typePtr == &tkTextLinkType);
@@ -9548,9 +9555,22 @@ RemoveExpiredSwitch(
 	    *danglingBranchPtr = switchPtr->body.link.prevPtr;
 	}
     }
+    prevPtr = switchPtr->prevPtr;
+    nextPtr = switchPtr->nextPtr;
     /* Clear the transient protection before parking for reuse. */
     switchPtr->protectionFlag = 0;
-    UnlinkSegmentAndCleanup(sharedTextPtr, switchPtr);
+    mergedPtr = UnlinkSegmentAndCleanup(sharedTextPtr, switchPtr);
+    if (mergedPtr != prevPtr && *currSegPtr == nextPtr) {
+	/*
+	 * Unlinking the switch joined its char neighbors, and the walked
+	 * segment was the successor, which is freed with the join: the walk
+	 * continues on the joined segment (same tag information). Without
+	 * this the walk reads a next pointer from freed memory - by chance
+	 * still intact in a normal build, but garbage under a debug
+	 * allocator, which silently cuts the walk short.
+	 */
+	*currSegPtr = mergedPtr;
+    }
     if (switchPtr->refCount > 1) {
 	/*
 	 * Still enrolled in an undo/redo token (see DeleteRange). The
@@ -9853,7 +9873,7 @@ UpdateElideInfo(
 		     * Remove expired branch.
 		     */
 
-		    RemoveExpiredSwitch(sharedTextPtr, prevBranchPtr,
+		    RemoveExpiredSwitch(sharedTextPtr, prevBranchPtr, &segPtr,
 			    firstSegPtr, lastSegPtr, &danglingBranchPtr,
 			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
 		    lastBranchPtr = NULL;
@@ -9869,7 +9889,7 @@ UpdateElideInfo(
 		     * Remove expired link.
 		     */
 
-		    RemoveExpiredSwitch(sharedTextPtr, prevLinkPtr,
+		    RemoveExpiredSwitch(sharedTextPtr, prevLinkPtr, &segPtr,
 			    firstSegPtr, lastSegPtr, &danglingBranchPtr,
 			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
 		    lastBranchPtr = NULL;
@@ -10127,7 +10147,7 @@ UpdateElideInfo(
 		 * unprocessed.
 		 */
 		RemoveExpiredSwitch(sharedTextPtr,
-			prevBranchPtr ? prevBranchPtr : prevLinkPtr,
+			prevBranchPtr ? prevBranchPtr : prevLinkPtr, &segPtr,
 			firstSegPtr, lastSegPtr, &danglingBranchPtr,
 			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
 		if (!startLinePtr) { startLinePtr = linePtr; }
@@ -10140,7 +10160,7 @@ UpdateElideInfo(
 	    if (prevBranchPtr || prevLinkPtr) {
 		/* see above: a duplicate closing, or an empty elided section */
 		RemoveExpiredSwitch(sharedTextPtr,
-			prevBranchPtr ? prevBranchPtr : prevLinkPtr,
+			prevBranchPtr ? prevBranchPtr : prevLinkPtr, &segPtr,
 			firstSegPtr, lastSegPtr, &danglingBranchPtr,
 			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
 		if (!startLinePtr) { startLinePtr = linePtr; }
