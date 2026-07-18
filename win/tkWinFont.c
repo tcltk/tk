@@ -2749,8 +2749,8 @@ FindSubFontForChar(
     const char *priorityFonts[] = {
 
 	/* Emoji / Symbols. */
-	"Segoe UI Emoji",
 	"Segoe UI Symbol",
+	"Segoe UI Emoji",
 	"Noto Color Emoji",
 
 	/* Simplified Chinese. */
