@@ -479,15 +479,15 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
-	 nanovg.o text-input-unstable-v3-protocol.o \
-      tkGlfwInit.o tkWayland.o  \
-     tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
-     tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
-     tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
-     tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
-     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
-     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
-     tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
+    nanovg.o text-input-unstable-v3-protocol.o tkGlfwInit.o tkWayland.o  \
+    tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
+    tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
+    tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
+    tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
+    tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
+    tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSubwindows.o \
+    tkWaylandSysTray.o tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o \
+    $(WAYLAND_UNIX_OBJS)
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
@@ -1535,6 +1535,9 @@ tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 
 tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
+
+tkWaylandSubwindows.o: $(WAYLAND_DIR)/tkWaylandSubwindows.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSubwindows.c
 
 tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSysTray.c

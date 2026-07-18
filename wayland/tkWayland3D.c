@@ -133,8 +133,10 @@ Tk_3DVerticalBevel(
     }
 
     int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
-    if (rc != TCL_OK)
-        return;
+    if (rc != TCL_OK) {
+	printf("BeginDraw failed in Tk_3DVerticalBevel\n");
+	return;
+    }
 
     switch (relief) {
     case TK_RELIEF_RAISED:
@@ -246,8 +248,10 @@ Tk_3DHorizontalBevel(
     }
 
     int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
-    if (rc != TCL_OK)
-        return;
+    if (rc != TCL_OK) {
+	printf("BeginDraw failed in Tk_3DHorizontalBevel\n");
+	return;
+    }
 
     /* Compute top/bottom half colors based on relief. */
     switch (relief) {

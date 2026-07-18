@@ -272,13 +272,23 @@ typedef struct TkWaylandPixmap {
  *
  *----------------------------------------------------------------------
  */
+typedef struct {
+    float x, y, w, h;
+} clipRect;
 
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
     Tcl_DString pendingText;
+    // Support for subwindow clipping
+    clipRect *clipRectBuffer;
+    int clipRectBufferSize;
+    int clipRectCount;
+    GLuint clipVAO;
+    GLuint clipVBO;
+    GLuint clipShader;
+    GLint fbSizeUniform;
 } glfwData;
-
 
 /*
  *----------------------------------------------------------------------
@@ -400,8 +410,9 @@ MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
 
 MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(Drawable drawable);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
+MODULE_SCOPE NVGcontext* TkGlfwGetNVGContext(Drawable drawable);
+MODULE_SCOPE NVGcontext* TkGlfwGetNVGContextForMeasure(void);
+MODULE_SCOPE void        createClipShaders(TkWindow *winPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -528,6 +539,28 @@ MODULE_SCOPE int Tktray_Init(Tcl_Interp *interp);
 MODULE_SCOPE int SysNotify_Init(Tcl_Interp *interp);
 MODULE_SCOPE int Cups_Init(Tcl_Interp *interp);
 MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Support for clipping subwindows.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void updateClipRects(TkWindow* winPtr, GLFWwindow *glfwWindow);
+MODULE_SCOPE void drawClipMask(TkWindow* winPtr, GLFWwindow* glfwWindow);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Stub functions which are not declared elsewhere. (???? Why not?)
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void TkpSetCursor(Cursor cursor);
+
 
 #endif /* _TKGLFWINT_H */
 

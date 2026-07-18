@@ -271,8 +271,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
 {
     TSD_INIT();
     Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    //Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
-    Tcl_Time oneRefresh = {0, 0};
+    Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
     /*
      * The Tcl event loop will have run all pending display procs
      * before calling this function.  Now we can swap the GL buffers
@@ -327,6 +326,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *),
 	fprintf(stderr, "CheckProc called without WINDOW_EVENTS\n");
 	return;
     }
+    TkWaylandDisplayAllWindows();
     glfwPollEvents();
 } 
 /*
@@ -592,14 +592,18 @@ TkGlfwFramebufferSizeCallback(
 	fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
 	return;
     }
-    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s -> %dx%d\n",
+	    Tk_PathName(winPtr), width, height);
+    glfwGetWindowSize(window, &(winPtr->changes.width),
+		      &(winPtr->changes.height));
+    printf("Setting Tk window size to: %dx%d\n",
+	   winPtr->changes.width, winPtr->changes.height);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
 	fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
 	return;
     }
-
     /* Rebuild the backing store FBO */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
@@ -622,10 +626,6 @@ TkGlfwFramebufferSizeCallback(
     /*
      * Inform Tk about the size change
      */
-
-    
-    glfwGetWindowSize(window, &(winPtr->changes.width),
-		      &(winPtr->changes.height));
 
     /* Reconfigure the Tk window. */
     TkDoConfigureNotify(winPtr);
@@ -1320,10 +1320,12 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
     if (!winPtr) {
 	return;
     }
+#if 0
     fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s\n",
 	    Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+#endif
 }
 
 /*

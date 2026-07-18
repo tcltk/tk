@@ -579,7 +579,6 @@ XFillRectangles(
 	printf("Failed to get color from gc - using white.\n");
         color = nvgRGB(255, 255, 255);
     }
-
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
 	// X11 would return 0 and generate a BadDrawable error.
         return BadDrawable;

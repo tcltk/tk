@@ -22,11 +22,9 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
-
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
-
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
@@ -59,7 +57,7 @@ static void GLtest(GLFWwindow *window) {
     int fbWidth = 0, fbHeight = 0;
     glfwGetWindowSize(window, &fbWidth, &fbHeight);
     glfwMakeContextCurrent(window);
-    glViewport(0, 0, fbWidth, fbHeight); // Your expected new size
+    glViewport(0, 0, fbWidth, fbHeight);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
@@ -289,8 +287,9 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-    (void) x; (void) y; (void) width; (void) height;
-#if 0  // This experiment seems to have failed.
+    printf("Tk_ClipDrawableToRect: %dx%d+%d+%d\n", width, height, x, y);
+    //(void) x; (void) y; (void) width; (void) height;
+#if 1  // This experiment seems to have failed.
        // I don't know why.
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
@@ -421,6 +420,7 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+    glfwWindowHint(GLFW_DEPTH_BITS, 24);
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
         fprintf(stderr, "TkGlfwInitialize: failed to create root window\n");
@@ -508,9 +508,8 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *
  * TkGlfwCreateWindow --
  *
- *	Create a new GLFW window sharing the global GL context.
- *	Waits for the compositor's first configure event before returning
- *	so that BeginDraw always has valid dimensions.
+ *	Create a new GLFW window.  Non-root windows share the GL context of
+ *	the root.
  *
  * Results:
  *	Returns the GLFWwindow pointer on success, NULL on failure.
@@ -558,7 +557,7 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
 	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-	/*
+	glfwWindowHint(GLFW_DEPTH_BITS, 24);	/*
 	 * Sharing the GL context makes image rendering more efficient.
 	 */
         glfwWindow = glfwCreateWindow(width, height, title ? title : "",
@@ -754,14 +753,14 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 	return;
     }
     //// This is the case where the drawable is a window.
-    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
-    fprintf(stderr, "EndDraw for %s\n", Tk_PathName(childPtr));
-    TkWindow *winPtr = childPtr;
-    while (!Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
+    fprintf(stderr, "EndDraw for drawable %lx (%s)\n", dcPtr->drawable,
+	    Tk_PathName(winPtr));
+    TkWindow *toplevelPtr = winPtr;
+    while (!Tk_IsTopLevel(toplevelPtr)) {
+	toplevelPtr = toplevelPtr->parentPtr;
     }
-    /* winPtr is the toplevel containing our drawable. */
-    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    GLFWwindow *glfwWindow = toplevelPtr->privatePtr->glfwWindow;
 
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
@@ -777,8 +776,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     glfwMakeContextCurrent(glfwWindow);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    /* Bind our backing store framebuffer. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+    /* Bind the backing store framebuffer. */
+    nvgluBindFramebuffer(toplevelPtr->privatePtr->fb);
 
     fprintf(stderr, "EndDraw: setting viewport to %dx%d\n", fbWidth, fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
@@ -788,10 +787,29 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
+    /// Eventually, this should only be called when the Invalid Clip flag
+    /// is set.
+    updateClipRects(winPtr, glfwWindow);
+    /*
+     * Draw the clip mask into the depth buffer
+     */
+    drawClipMask(winPtr, glfwWindow);
+    /*
+     * Enable clipping using the depth buffer with depth test GL_LEQUAL.  The
+     * call to drawClipMask just set the depth of each fragment inside a
+     * clipping rectangle to 0.25.  A fragment provided to the nanoVG fragment
+     * shader has depth 0.5. Since 0.5 > 0.25 the nvg fragment shader discards
+     * fragments in the clipp mask.  Since 0.5 == 0.5 the nvg pixels are drawn
+     * outside of the clip rectangles.
+     */
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    
+    /* Run all queued nanoVG drawing commands. */
     nvgEndFrame(dcPtr->vg);
-    fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
-	   Tk_PathName(childPtr), Tk_PathName(winPtr));
     nvgluBindFramebuffer(NULL);
+    fprintf(stderr, "Drew %s in toplevel %s\n",
+	   Tk_PathName(winPtr), Tk_PathName(toplevelPtr));
 
     /*
      * nvgBeginFrame calls nvgSave, but nvgEndFrame does not
@@ -802,43 +820,16 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     nvgRestore(dcPtr->vg);
 
     /*
-     * Drawing this widget covered up all of the widgets that it contains.  If
-     * we generate expose events for the children of this widget and for its
-     * siblings which are higher in the stacking order then we should have
-     * redrawn all of the widgets that we damaged.
+     * Mark the toplevel as needing display unless the dontSwap flag was set
+     * by Tk_ClipDrawableToRect.  This triggers a call to glfwSwapBuffers.
      */
 
-#if 1
-    /* Children */
-    for (TkWindow *childPtr2 = childPtr->childList;
-	 childPtr2 != NULL;
-         childPtr2 = childPtr2->nextPtr) {
-        if (!Tk_IsMapped(childPtr2)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
-                                  Tk_Height(childPtr2));
-    }
-    /* Higher siblings. */
-    for (TkWindow *childPtr2 = childPtr->nextPtr;
-	 childPtr2 != NULL;
-         childPtr2 = childPtr2->nextPtr) {
-        if (!Tk_IsMapped(childPtr2)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
-                                  Tk_Height(childPtr2));
-    }
-#endif
-
-    /*
-     * Mark the toplevel as needing display (unless we are in the middle of a
-     * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
-     */
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    ////if (!(infoPtr->flags & dontSwap)) {
-    infoPtr->flags |= needsDisplay;
-    ////}
+    if (!(infoPtr->flags & dontSwap)) {
+        infoPtr->flags |= needsDisplay;
+    } else {
+	printf("dontSwap was set - waiting\n");
+    }
 }
 
 /*
