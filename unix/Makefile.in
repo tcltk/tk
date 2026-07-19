@@ -637,7 +637,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandGC.c $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
-    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSubwindows.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
     $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c \
     $(WAYLAND_UNIX_SRCS)
