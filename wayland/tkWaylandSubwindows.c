@@ -1,5 +1,5 @@
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 /*
  * The design of Tk takes advantage of a number of features provided by X11,

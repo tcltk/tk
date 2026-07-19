@@ -13,7 +13,7 @@
 
 #include "tkInt.h"
 #include "tk3d.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLES3/gl3.h>
 #include "nanovg.h"
 
@@ -123,16 +123,16 @@ Tk_3DVerticalBevel(
 
     /* Sync cached NVG colors from XColor pointers. */
     if (borderPtr->bgColorPtr) {
-        waylandBorderPtr->bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
+        waylandBorderPtr->bgColor = TkWaylandXColorToNVG(borderPtr->bgColorPtr);
     }
     if (borderPtr->lightColorPtr) {
-        waylandBorderPtr->lightColor = TkGlfwXColorToNVG(borderPtr->lightColorPtr);
+        waylandBorderPtr->lightColor = TkWaylandXColorToNVG(borderPtr->lightColorPtr);
     }
     if (borderPtr->darkColorPtr) {
-        waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
+        waylandBorderPtr->darkColor = TkWaylandXColorToNVG(borderPtr->darkColorPtr);
     }
 
-    int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
+    int rc = TkWaylandBeginDraw(drawable, borderPtr->bgGC, &dc);
     if (rc != TCL_OK) {
 	printf("BeginDraw failed in Tk_3DVerticalBevel\n");
 	return;
@@ -195,7 +195,7 @@ Tk_3DVerticalBevel(
         break;
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 }
 
 /*
@@ -238,16 +238,16 @@ Tk_3DHorizontalBevel(
 
     /* Sync cached NVG colors from XColor pointers. */
     if (borderPtr->bgColorPtr) {
-        waylandBorderPtr->bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
+        waylandBorderPtr->bgColor = TkWaylandXColorToNVG(borderPtr->bgColorPtr);
     }
     if (borderPtr->lightColorPtr) {
-        waylandBorderPtr->lightColor = TkGlfwXColorToNVG(borderPtr->lightColorPtr);
+        waylandBorderPtr->lightColor = TkWaylandXColorToNVG(borderPtr->lightColorPtr);
     }
     if (borderPtr->darkColorPtr) {
-        waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
+        waylandBorderPtr->darkColor = TkWaylandXColorToNVG(borderPtr->darkColorPtr);
     }
 
-    int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
+    int rc = TkWaylandBeginDraw(drawable, borderPtr->bgGC, &dc);
     if (rc != TCL_OK) {
 	printf("BeginDraw failed in Tk_3DHorizontalBevel\n");
 	return;
@@ -275,7 +275,7 @@ Tk_3DHorizontalBevel(
         nvgRect(dc.vg, x, y, width, height);
         nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
         nvgFill(dc.vg);
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return;
     case TK_RELIEF_SUNKEN:
         topColor = bottomColor = topBevel ? waylandBorderPtr->darkColor :
@@ -316,7 +316,7 @@ Tk_3DHorizontalBevel(
         x2 += x2Delta;
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 }
 
 /*
@@ -405,13 +405,13 @@ TkpGetShadows(
 
     /* Cache NVG colors. */
     if (borderPtr->bgColorPtr) {
-        waylandBorderPtr->bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
+        waylandBorderPtr->bgColor = TkWaylandXColorToNVG(borderPtr->bgColorPtr);
     }
     if (borderPtr->lightColorPtr) {
-        waylandBorderPtr->lightColor = TkGlfwXColorToNVG(borderPtr->lightColorPtr);
+        waylandBorderPtr->lightColor = TkWaylandXColorToNVG(borderPtr->lightColorPtr);
     }
     if (borderPtr->darkColorPtr) {
-        waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
+        waylandBorderPtr->darkColor = TkWaylandXColorToNVG(borderPtr->darkColorPtr);
     }
 
     if (stressed && borderPtr->shadow == None) {

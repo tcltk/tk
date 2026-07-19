@@ -15,7 +15,7 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
@@ -463,8 +463,8 @@ DestroyGlfwWindow(
 	fprintf(stderr, "No glfwWindow pointer\n");
         return;
     }
-    TkGlfwClearCallbacks(glfwWindow);
-    TkGlfwDestroyWindow(glfwWindow);
+    TkWaylandClearCallbacks(glfwWindow);
+    TkWaylandDestroyWindow(glfwWindow);
     winPtr->privatePtr->glfwWindow = NULL;
 }
 
@@ -793,7 +793,7 @@ Tk_MakeWindow(
 
 	fprintf(stderr, "Creating glfwWindow %s at size %dx%d\n",
 	       Tk_PathName(tkwin), width, height);
-	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
+	glfwWindow = TkWaylandCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
             return None;
@@ -2112,7 +2112,7 @@ WmGeometryCmd(
         UpdateGeometryInfo((void *)winPtr);
 
         /* Process events to ensure callback fires before command returns */
-        ////TkGlfwProcessEvents();
+        ////TkWaylandProcessEvents();
 
         /* Verify the change actually took effect. */
         int newWidth, newHeight;

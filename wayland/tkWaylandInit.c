@@ -1,5 +1,5 @@
 /*
- * tkGlfwInit.c --
+ * tkWaylandInit.c --
  *
  *   GLFW/Wayland-specific interpreter initialization: context
  *   management, window mapping, drawing context lifecycle, color
@@ -18,7 +18,7 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
@@ -49,7 +49,7 @@ static int GlfwIsInitialized = 0;
  */
 
 GLFWwindow *mainGlfwWindow;
-static TkGlfwContext mainGlfwContext = {0};
+static TkWaylandContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
 
 #if 0
@@ -344,7 +344,7 @@ TkWaylandDisplayAllWindows()
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwErrorCallback --
+ * TkWaylandErrorCallback --
  *
  *	GLFW error callback that prints errors to stderr.
  *	Silences errors during shutdown.
@@ -359,7 +359,7 @@ TkWaylandDisplayAllWindows()
  */
 
 MODULE_SCOPE void
-TkGlfwErrorCallback(int error, const char *desc)
+TkWaylandErrorCallback(int error, const char *desc)
 {
     /* Don't print errors during shutdown. */
     if (shutdownInProgress) return;
@@ -371,7 +371,7 @@ TkGlfwErrorCallback(int error, const char *desc)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwInitialize --
+ * TkWaylandInitialize --
  *
  *	Initializes the GLFW library, and the Wayland protocols.
  *      Creates a GFLWWindow to be used for the root window and its
@@ -388,18 +388,18 @@ TkGlfwErrorCallback(int error, const char *desc)
  */
 
 MODULE_SCOPE int
-TkGlfwInitialize(void)
+TkWaylandInitialize(void)
 {
     if (GlfwIsInitialized) return TCL_OK;
 
-    glfwSetErrorCallback(TkGlfwErrorCallback);
+    glfwSetErrorCallback(TkWaylandErrorCallback);
 
 #ifdef GLFW_PLATFORM_WAYLAND
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 #endif
 
     if (!glfwInit()) {
-        fprintf(stderr, "TkGlfwInitialize: glfwInit() failed\n");
+        fprintf(stderr, "TkWaylandInitialize: glfwInit() failed\n");
         return TCL_ERROR;
     }
 
@@ -423,7 +423,7 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_DEPTH_BITS, 24);
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
-        fprintf(stderr, "TkGlfwInitialize: failed to create root window\n");
+        fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
         glfwTerminate();
         return TCL_ERROR;
     }
@@ -446,14 +446,14 @@ TkGlfwInitialize(void)
     GlfwIsInitialized = 1;
     shutdownInProgress = 0;
 
-    Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
+    Tcl_CreateExitHandler(TkWaylandShutdown, NULL);
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwShutdown --
+ * TkWaylandShutdown --
  *
  *	Orderly cleanup of GLFW resources on app shutdown.
  *	Now safely handles both exit command and root window closure.
@@ -468,7 +468,7 @@ TkGlfwInitialize(void)
  */
 
 MODULE_SCOPE void
-TkGlfwShutdown(TCL_UNUSED(void *))
+TkWaylandShutdown(TCL_UNUSED(void *))
 {
     /* Prevent recursive shutdown. */
     if (shutdownInProgress) return;
@@ -491,7 +491,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     }
 #endif
     glfwMakeContextCurrent(NULL);
-    TkGlfwClearCallbacks(mainGlfwWindow);
+    TkWaylandClearCallbacks(mainGlfwWindow);
     glfwSetErrorCallback(NULL);
     mainGlfwWindow = NULL;
     if (GlfwIsInitialized) {
@@ -506,7 +506,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwCreateWindow --
+ * TkWaylandCreateWindow --
  *
  *	Create a new GLFW window.  Non-root windows share the GL context of
  *	the root.
@@ -521,23 +521,23 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  */
 
 MODULE_SCOPE GLFWwindow *
-TkGlfwCreateWindow(
+TkWaylandCreateWindow(
     TkWindow   *winPtr,
     int         width,
     int         height,
     const char *title,
     Drawable   *drawableOut)
 {
-    fprintf(stderr, "TkGlfwCreateWindow\n");
+    fprintf(stderr, "TkWaylandCreateWindow\n");
     if (winPtr == NULL) {
-	Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
+	Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
     }
     GLFWwindow    *glfwWindow = NULL;
 
     /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
     if (!GlfwIsInitialized) {
-        if (TkGlfwInitialize() != TCL_OK)
+        if (TkWaylandInitialize() != TCL_OK)
             return NULL;
     }
     if (width  <= 1) width  = 200;
@@ -577,7 +577,7 @@ TkGlfwCreateWindow(
 	mainGlfwContext = infoPtr->context;
     }
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
-    TkGlfwSetupCallbacks(glfwWindow);
+    TkWaylandSetupCallbacks(glfwWindow);
     winPtr->privatePtr->glfwWindow = glfwWindow;
     winPtr->changes.width  = width;
     winPtr->changes.height = height;
@@ -621,7 +621,7 @@ TkGlfwCreateWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwDestroyWindow --
+ * TkWaylandDestroyWindow --
  *
  *	Destroy a GLFW window and clean up associated resources.
  *
@@ -635,9 +635,9 @@ TkGlfwCreateWindow(
  */
 
 MODULE_SCOPE void
-TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
+TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
 {
-    fprintf(stderr, "TkGlfwDestroyWindow\n");
+    fprintf(stderr, "TkWaylandDestroyWindow\n");
     if (!glfwWindow) {
 	return;
     }
@@ -650,14 +650,14 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
     /* Check if this was the last window. */
     if (Tk_GetNumMainWindows() == 0 && !shutdownInProgress) {
         /* Schedule shutdown via idle callback. */
-        Tcl_DoWhenIdle(TkGlfwShutdown, NULL);
+        Tcl_DoWhenIdle(TkWaylandShutdown, NULL);
     }
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwBeginDraw --
+ * TkWaylandBeginDraw --
  *
  *	Prepares the NanoVG context for drawing. Uses the provided
  *      dcPtr to store context-specific state.
@@ -672,7 +672,7 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
  */
 
 MODULE_SCOPE int
-TkGlfwBeginDraw(
+TkWaylandBeginDraw(
     Drawable drawable,
     GC gc,
     TkWaylandDrawingContext *dcPtr)
@@ -723,7 +723,7 @@ TkGlfwBeginDraw(
      * of the window we are drawing into.
      */
 
-    TkGlfwApplyGC(dcPtr->vg, gc);
+    TkWaylandApplyGC(dcPtr->vg, gc);
     nvgTranslate(dcPtr->vg, x, y);
     return TCL_OK;
 }
@@ -731,7 +731,7 @@ TkGlfwBeginDraw(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwEndDraw --
+ * TkWaylandEndDraw --
  *
  *      End a drawing operation.
  *
@@ -746,7 +746,7 @@ TkGlfwBeginDraw(
  */
 
 MODULE_SCOPE void
-TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
+TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) {
 	fprintf(stderr, "No drawing context!\n");
@@ -832,7 +832,7 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwGetNVGContext --
+ * TkWaylandGetNVGContext --
  *
  *	Return the NanoVG context for a drawable.
  *
@@ -847,7 +847,7 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
  */
 
 MODULE_SCOPE NVGcontext*
-TkGlfwGetNVGContext(
+TkWaylandGetNVGContext(
     Drawable drawable)
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
@@ -857,7 +857,7 @@ TkGlfwGetNVGContext(
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr || shutdownInProgress) {
-	fprintf(stderr, "TkGlfwGetNVContext: No UserPointer\n");
+	fprintf(stderr, "TkWaylandGetNVContext: No UserPointer\n");
 	return NULL;
     }
     return infoPtr->context.vg;
@@ -866,7 +866,7 @@ TkGlfwGetNVGContext(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwGetNVGContextForMeasure --
+ * TkWaylandGetNVGContextForMeasure --
  *
  *	Return the NanoVG context with the shared GL context current,
  *	suitable for font measurement outside a draw frame.
@@ -881,7 +881,7 @@ TkGlfwGetNVGContext(
  */
 
 MODULE_SCOPE NVGcontext *
-TkGlfwGetNVGContextForMeasure(void)
+TkWaylandGetNVGContextForMeasure(void)
 {
     if (!GlfwIsInitialized || !mainGlfwContext.vg || shutdownInProgress) {
         return NULL;
@@ -901,7 +901,7 @@ TkGlfwGetNVGContextForMeasure(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwXColorToNVG --
+ * TkWaylandXColorToNVG --
  *
  *	Convert an XColor structure to an NVGcolor.
  *
@@ -915,7 +915,7 @@ TkGlfwGetNVGContextForMeasure(void)
  */
 
 MODULE_SCOPE NVGcolor
-TkGlfwXColorToNVG(XColor *xcolor)
+TkWaylandXColorToNVG(XColor *xcolor)
 {
     if (!xcolor) return nvgRGBA(0, 0, 0, 255);
     return nvgRGBA(xcolor->red >> 8, xcolor->green >> 8, xcolor->blue >> 8, 255);
@@ -924,7 +924,7 @@ TkGlfwXColorToNVG(XColor *xcolor)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwPixelToNVG --
+ * TkWaylandPixelToNVG --
  *
  *	Convert a 24-bit RGB pixel value to an NVGcolor.
  *
@@ -938,7 +938,7 @@ TkGlfwXColorToNVG(XColor *xcolor)
  */
 
 MODULE_SCOPE NVGcolor
-TkGlfwPixelToNVG(unsigned long pixel)
+TkWaylandPixelToNVG(unsigned long pixel)
 {
     return nvgRGBA((pixel>>16)&0xFF, (pixel>>8)&0xFF, pixel&0xFF, 255);
 }
@@ -946,7 +946,7 @@ TkGlfwPixelToNVG(unsigned long pixel)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwApplyGC --
+ * TkWaylandApplyGC --
  *
  *	Apply settings from a graphics context to the NanoVG context.
  *
@@ -961,7 +961,7 @@ TkGlfwPixelToNVG(unsigned long pixel)
  */
 
 MODULE_SCOPE void
-TkGlfwApplyGC(NVGcontext *vg, GC gc)
+TkWaylandApplyGC(NVGcontext *vg, GC gc)
 {
     XGCValues v;
     NVGcolor  c;
@@ -970,7 +970,7 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
 
     TkWaylandGetGCValues(gc,
         GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
-    c = TkGlfwPixelToNVG(v.foreground);
+    c = TkWaylandPixelToNVG(v.foreground);
     nvgFillColor(vg, c);
     nvgStrokeColor(vg, c);
     nvgStrokeWidth(vg, v.line_width > 0 ? (float)v.line_width : 1.0f);
@@ -1015,7 +1015,7 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
 int
 TkpInit(Tcl_Interp *interp)
 {
-    if (TkGlfwInitialize() != TCL_OK) return TCL_ERROR;
+    if (TkWaylandInitialize() != TCL_OK) return TCL_ERROR;
     TkWaylandKeyInit();
     TkWaylandMenuInit();
     Tk_WaylandSetupTkNotifier();
@@ -1084,7 +1084,7 @@ TkpDisplayWarning(const char *msg, const char *title)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwGetGLFWwindow --
+ * TkWaylandGetGLFWwindow --
  *
  *	Retrieves the GLFW window associated with a Tk window.
  *
@@ -1138,7 +1138,7 @@ TkWaylandGetGLFWwindowFromDrawable(Drawable drawable)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwGetTkWindow --
+ * TkWaylandGetTkWindow --
  *
  *	Retrieves the Tk window associated with a GLFW window.
  *
@@ -1152,15 +1152,15 @@ TkWaylandGetGLFWwindowFromDrawable(Drawable drawable)
  */
 
 MODULE_SCOPE TkWindow*
-TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
+TkWaylandGetTkWindow(GLFWwindow *glfwWindow)
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr) {
-	fprintf(stderr, "TkGlfwGetTkWindow: No UserPointer.\n");
+	fprintf(stderr, "TkWaylandGetTkWindow: No UserPointer.\n");
 	return NULL;
     }
     if (!infoPtr->winPtr) {
-	fprintf(stderr, "TkGlfwGetTkWindow: No winPtr in User data.\n");
+	fprintf(stderr, "TkWaylandGetTkWindow: No winPtr in User data.\n");
 	return NULL;
     }
 

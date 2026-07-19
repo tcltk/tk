@@ -15,7 +15,7 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLES3/gl3.h>
 #include "nanovg.h"
 #include <math.h>
@@ -38,7 +38,7 @@
  * GetNVGFont --
  *
  *	Resolve a GC's font to an NVGcontext font id and pixel size.
- *	Falls back to the "sans" font registered during TkGlfwInitialize.
+ *	Falls back to the "sans" font registered during TkWaylandInitialize.
  *
  * Results:
  *	None.
@@ -121,7 +121,7 @@ XDrawString(
 
     if (!string || length <= 0) return Success;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;            
 
@@ -134,11 +134,11 @@ XDrawString(
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
-    /* Foreground color is already set by TkGlfwBeginDraw via TkGlfwApplyGC */
+    /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC */
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -178,7 +178,7 @@ XDrawImageString(
 
     if (!string || length <= 0) return Success; 
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -198,7 +198,7 @@ XDrawImageString(
     {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
-            NVGcolor bg = TkGlfwPixelToNVG(v.background);
+            NVGcolor bg = TkWaylandPixelToNVG(v.background);
             nvgBeginPath(dc.vg);
             nvgRect(dc.vg, bounds[0], bounds[1],
                     bounds[2] - bounds[0], bounds[3] - bounds[1]);
@@ -208,14 +208,14 @@ XDrawImageString(
     }
 
     /* Draw text in foreground color (restored by ApplyGC). */
-    TkGlfwApplyGC(dc.vg, gc);
+    TkWaylandApplyGC(dc.vg, gc);
     nvgFontFaceId(dc.vg, fontId);
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -244,13 +244,13 @@ XDrawPoint(
     int      y)
 {
     TkWaylandDrawingContext dc;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)x, (float)y, 1.0f, 1.0f);
     nvgFill(dc.vg);
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -283,7 +283,7 @@ XDrawPoints(
     int i;
 
     if (!points || npoints <= 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -299,7 +299,7 @@ XDrawPoints(
         nvgFill(dc.vg);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -332,7 +332,7 @@ XDrawLines(
     int i;
 
     if (npoints < 2 || points == NULL) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -350,7 +350,7 @@ XDrawLines(
     }
     nvgStroke(dc.vg);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -381,7 +381,7 @@ XDrawSegments(
     TkWaylandDrawingContext dc;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -392,7 +392,7 @@ XDrawSegments(
         nvgStroke(dc.vg);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -427,7 +427,7 @@ XFillPolygon(
     int i;
 
     if (npoints < 3 || points == NULL) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -455,7 +455,7 @@ XFillPolygon(
 
     nvgFill(dc.vg);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -487,7 +487,7 @@ XDrawRectangle(
     TkWaylandDrawingContext dc;
 
     if (width == 0 || height == 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
         return BadDrawable;
     }
@@ -495,7 +495,7 @@ XDrawRectangle(
     nvgRect(dc.vg, x, y, width, height);
     nvgStroke(dc.vg);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -526,7 +526,7 @@ XDrawRectangles(
     TkWaylandDrawingContext dc;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -537,7 +537,7 @@ XDrawRectangles(
         nvgStroke(dc.vg);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -574,12 +574,12 @@ XFillRectangles(
     
     /* Get color. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
-        color = TkGlfwPixelToNVG(v.foreground);
+        color = TkWaylandPixelToNVG(v.foreground);
     } else {
 	printf("Failed to get color from gc - using white.\n");
         color = nvgRGB(255, 255, 255);
     }
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
 	// X11 would return 0 and generate a BadDrawable error.
         return BadDrawable;
     }
@@ -593,7 +593,7 @@ XFillRectangles(
 	nvgFillColor(dc.vg, color);
 	nvgFill(dc.vg);
     }
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
                 
@@ -666,7 +666,7 @@ XDrawArc(
     float cx, cy, rx, ry, startAngle, endAngle;
 
     if (width == 0 || height == 0 || angle2 == 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -690,7 +690,7 @@ XDrawArc(
     }
     nvgStroke(dc.vg);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -721,7 +721,7 @@ XDrawArcs(
     TkWaylandDrawingContext dc;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -752,7 +752,7 @@ XDrawArcs(
         nvgStroke(dc.vg);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -788,7 +788,7 @@ XFillArc(
     float cx, cy, rx, ry, startAngle, endAngle;
 
     if (width == 0 || height == 0 || angle2 == 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -823,7 +823,7 @@ XFillArc(
     nvgClosePath(dc.vg);
     nvgFill(dc.vg);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 
@@ -855,7 +855,7 @@ XFillArcs(
     XGCValues gcValues;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
@@ -897,7 +897,7 @@ XFillArcs(
         nvgFill(dc.vg);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return Success;
 }
 

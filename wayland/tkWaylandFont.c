@@ -14,7 +14,7 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 #include <fontconfig/fontconfig.h>
 #include <nanovg.h>
@@ -476,7 +476,7 @@ Tk_MeasureChars(
  *
  *     Measures a substring using NanoVG metrics for accurate layout.
  *
- *     Uses TkGlfwGetNVGContextForMeasure() which does not require an
+ *     Uses TkWaylandGetNVGContextForMeasure() which does not require an
  *     active NanoVG frame, allowing measurement during geometry computation
  *     outside of expose handling.
  *
@@ -516,7 +516,7 @@ Tk_MeasureCharsInContext(
         maxLength = 32767;
     }
 
-    NVGcontext *vg = TkGlfwGetNVGContextForMeasure();
+    NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
     if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
         /*
          * No NVG context yet (startup before GLFW is initialised) — fall
@@ -766,7 +766,7 @@ TkpDrawAngledCharsInContext(
         return;
     }
 
-    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
+    NVGcontext *vg = TkWaylandGetNVGContext(drawable);
     if (!vg) return;
 
     if (EnsureNvgFont(fontPtr, vg) < 0) return;
@@ -1123,7 +1123,7 @@ DeleteFont(
  *
  *       2. If not found, nvgCreateFont(vg, name, filePath) is called NOW,
  *          while the correct GL context is current (guaranteed by the callers
- *          TkGlfwGetNVGContext / TkGlfwGetNVGContextForMeasure which both
+ *          TkWaylandGetNVGContext / TkWaylandGetNVGContextForMeasure which both
  *          call glfwMakeContextCurrent before returning).  The resulting
  *          atlas texture is therefore owned by that context.
  *
@@ -1212,7 +1212,7 @@ ColorFromGC(GC gc)
     if (gc) {
         XGCValues vals;
         TkWaylandGetGCValues(gc, GCForeground, &vals);
-        return TkGlfwPixelToNVG(vals.foreground);
+        return TkWaylandPixelToNVG(vals.foreground);
     }
     return nvgRGBA(0, 0, 0, 255);
 }

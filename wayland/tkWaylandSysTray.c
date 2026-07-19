@@ -14,7 +14,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1166,7 +1166,7 @@ CreateTrayIconWindow(
     /* Create GLFW window for compatibility. */
     if (!icon->glfwWindow) {
         winPtr = (TkWindow *)icon->tkwin;
-        icon->glfwWindow = TkGlfwCreateWindow(winPtr, 
+        icon->glfwWindow = TkWaylandCreateWindow(winPtr, 
             icon->imageWidth > 0 ? icon->imageWidth : 64,
             icon->imageHeight > 0 ? icon->imageHeight : 64,
             icon->trayAppId, &icon->drawable);
@@ -1201,7 +1201,7 @@ RemoveTrayIconWindow(
     UnregisterStatusNotifierItem(icon);
     
     if (icon->glfwWindow) {
-        TkGlfwDestroyWindow(icon->glfwWindow);
+        TkWaylandDestroyWindow(icon->glfwWindow);
         icon->glfwWindow = NULL;
         icon->drawable = None;
     }

@@ -13,7 +13,7 @@
 
 #include "tkInt.h"
 #include "tkColor.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -103,7 +103,7 @@ TkpGetColor(
     xcolor.flags = DoRed | DoGreen | DoBlue;
 
     /* Encode RGB into pixel as 0x00RRGGBB so GC foreground values
-     * can be decoded back to color by TkGlfwPixelToNVG. */
+     * can be decoded back to color by TkWaylandPixelToNVG. */
     xcolor.pixel = (((unsigned long)(nvgcolor.r * 255.0f + 0.5f)) << 16)
                  | (((unsigned long)(nvgcolor.g * 255.0f + 0.5f)) <<  8)
                  |  ((unsigned long)(nvgcolor.b * 255.0f + 0.5f));
@@ -371,7 +371,7 @@ ParseColorString(const char *name, NVGcolor *color)
 NVGcolor
 TkColorToNVG(TkColor *tkColPtr)
 {
-    return TkGlfwXColorToNVG(&tkColPtr->color);
+    return TkWaylandXColorToNVG(&tkColPtr->color);
 }
 
 /*

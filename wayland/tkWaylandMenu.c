@@ -12,7 +12,7 @@
 
 #include <tcl.h>
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include "tkMenu.h"
 #include <GLFW/glfw3.h>
 
@@ -1409,7 +1409,7 @@ TkpDisplayMenu(
     TkWaylandDrawingContext dc;
     
     /* Begin NanoVG drawing using unified API. */
-    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(drawable, NULL, &dc) != TCL_OK) {
         return;
     }
 
@@ -1440,7 +1440,7 @@ TkpDisplayMenu(
 			 DRAW_MENU_ENTRY_ARROW);
     }
     
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 }
 
 /*
@@ -2013,7 +2013,7 @@ MenuCursorPosCallback(
     double xpos,
     double ypos)
 {
-    TkWindow *winPtr = TkGlfwGetTkWindow(glfwWindow);
+    TkWindow *winPtr = TkWaylandGetTkWindow(glfwWindow);
     if (winPtr && winPtr->instanceData) {
         TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
         MenuMouseMotion(menuPtr, (int)xpos, (int)ypos);
@@ -2027,7 +2027,7 @@ MenuMouseButtonCallback(
     int action,
 			TCL_UNUSED(int)) /* mods */
 {
-    TkWindow *winPtr = TkGlfwGetTkWindow(glfwWindow);
+    TkWindow *winPtr = TkWaylandGetTkWindow(glfwWindow);
     if (action == GLFW_PRESS && winPtr && winPtr->instanceData) {
         TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
         double xpos, ypos;
@@ -2043,7 +2043,7 @@ MenuCursorEnterCallback(
     GLFWwindow *glfwWindow,
     int entered)
 {
-    TkWindow *winPtr = TkGlfwGetTkWindow(glfwWindow);    
+    TkWindow *winPtr = TkWaylandGetTkWindow(glfwWindow);    
     if (!entered && winPtr && winPtr->instanceData) {
         TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
         MenuMouseLeave(menuPtr);

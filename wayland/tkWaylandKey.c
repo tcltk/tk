@@ -13,7 +13,7 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <string.h>
@@ -705,7 +705,7 @@ static Time TkGetCurrentTimeMillis(void);
 
 /*
  * **************************************************
- * TkGlfwGetFocusedChild --
+ * TkWaylandGetFocusedChild --
  *
  *      Return the TkWindow that currently holds Tk's keyboard focus
  *      within the given toplevel window.  If no child widget has been
@@ -727,7 +727,7 @@ static Time TkGetCurrentTimeMillis(void);
  */
 
 MODULE_SCOPE TkWindow *
-TkGlfwGetFocusedChild(TkWindow *topPtr)
+TkWaylandGetFocusedChild(TkWindow *topPtr)
 {
     if (!topPtr) {
         return NULL;
@@ -1176,12 +1176,12 @@ XKBGetModifierState(void)
  *      Wayland wl_keyboard listener (KeyboardHandleKey).
  *
  *      This is the PRIMARY key event path.  The GLFW key callback
- *      (TkGlfwKeyCallback in tkWaylandEvent.c) must have its
+ *      (TkWaylandKeyCallback in tkWaylandEvent.c) must have its
  *      glfwSetKeyCallback and glfwSetCharCallback registrations
- *      removed from TkGlfwSetupCallbacks to prevent duplicate events:
+ *      removed from TkWaylandSetupCallbacks to prevent duplicate events:
  *
- *          Remove:  glfwSetKeyCallback(glfwWindow, TkGlfwKeyCallback);
- *          Remove:  glfwSetCharCallback(glfwWindow, TkGlfwCharCallback);
+ *          Remove:  glfwSetKeyCallback(glfwWindow, TkWaylandKeyCallback);
+ *          Remove:  glfwSetCharCallback(glfwWindow, TkWaylandCharCallback);
  *
  *      Keycode encoding:
  *        The Wayland compositor delivers raw evdev keycodes.
@@ -1225,7 +1225,7 @@ TkWaylandProcessKey(Tk_Window tkwin, unsigned int keycode, int pressed,
     }
 
     winPtr   = (TkWindow *)tkwin;
-    focusWin = TkGlfwGetFocusedChild(winPtr);
+    focusWin = TkWaylandGetFocusedChild(winPtr);
 
     /* Build X event. */
     memset(&event, 0, sizeof(XEvent));
@@ -2297,7 +2297,7 @@ SendKeySymEvent(Tk_Window tkwin, KeySym keysym, int pressed)
     }
 
     winPtr   = (TkWindow *)tkwin;
-    focusWin = TkGlfwGetFocusedChild(winPtr);
+    focusWin = TkWaylandGetFocusedChild(winPtr);
 
     memset(&event, 0, sizeof(XEvent));
     event.xkey.type        = pressed ? KeyPress : KeyRelease;
@@ -2364,7 +2364,7 @@ SendIMECommitEvent(TkIMEState *ime)
     }
 
     winPtr   = (TkWindow *)ime->tkwin;
-    focusWin = TkGlfwGetFocusedChild(winPtr);
+    focusWin = TkWaylandGetFocusedChild(winPtr);
 
     /* Generate one KeyPress/KeyRelease pair per Unicode codepoint. */
     p = ime->commit_string;

@@ -13,7 +13,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <string.h>
 
 /*
@@ -22,7 +22,7 @@
  * NVGcolor helper forwarders
  *
  *	Previously defined here; now just forward to the centralized
- *	helpers in tkGlfwInit.c / tkWaylandGC.c.
+ *	helpers in tkWaylandInit.c / tkWaylandGC.c.
  *
  *----------------------------------------------------------------------
  */
@@ -31,7 +31,7 @@ NVGcolor
 Tk_PixelToNVGColor(
     unsigned long pixel)
 {
-    return TkGlfwPixelToNVG(pixel);
+    return TkWaylandPixelToNVG(pixel);
 }
 
 NVGcolor
@@ -41,7 +41,7 @@ Tk_GCToNVGColor(
     if (gc) {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
-            return TkGlfwPixelToNVG(v.foreground);
+            return TkWaylandPixelToNVG(v.foreground);
         }
     }
     return nvgRGBA(0, 0, 0, 255);
@@ -54,7 +54,7 @@ Tk_GCToNVGBackground(
     if (gc) {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
-            return TkGlfwPixelToNVG(v.background);
+            return TkWaylandPixelToNVG(v.background);
         }
     }
     return nvgRGBA(255, 255, 255, 255);

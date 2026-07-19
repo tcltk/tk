@@ -1,5 +1,5 @@
 /*
- * tkGlfwInt.h --
+ * tkWaylandInt.h --
  *
  *	This file contains declarations that are shared among the
  *	GLFW/Wayland-specific parts of Tk.
@@ -38,7 +38,7 @@
  *----------------------------------------------------------------------
  */
 
-typedef struct TkGlfwContext {
+typedef struct TkWaylandContext {
     GLFWwindow *mainWindow;      /* Hidden shared context window - all
                                    * application windows share this context */
     NVGcontext *vg;               /* Global NanoVG context - created once
@@ -54,7 +54,7 @@ typedef struct TkGlfwContext {
                                    * (cached for performance) */
     int fbHeight;                 /* Framebuffer height of mainWindow
                                    * (cached for performance) */
-} TkGlfwContext;
+} TkWaylandContext;
 
 /*
  *----------------------------------------------------------------------
@@ -116,7 +116,7 @@ extern const char *const WmAttributeNames[];
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
     TkWindow *winPtr;
-    TkGlfwContext context;
+    TkWaylandContext context;
     unsigned int flags;
     struct glfwTkInfo *nextPtr;
 } glfwTkInfo;
@@ -358,8 +358,8 @@ bool TkWaylandDrawableIsPixmap(Drawable drawable);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int  TkGlfwInitialize(void);
-MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
+MODULE_SCOPE int  TkWaylandInitialize(void);
+MODULE_SCOPE void TkWaylandShutdown(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -371,7 +371,7 @@ MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
 
 MODULE_SCOPE GLFWwindow *TkWaylandGetGLFWwindow(TkWindow *winPtr);
 
-MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
+MODULE_SCOPE GLFWwindow *TkWaylandCreateWindow(
     TkWindow   *tkWin,
     int         width,
     int         height,
@@ -379,13 +379,13 @@ MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
     Drawable   *drawableOut);
 
 
-MODULE_SCOPE void        TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
-MODULE_SCOPE Drawable    TkGlfwGetDrawable(GLFWwindow *w);
-MODULE_SCOPE TkWindow*   TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE void        TkWaylandDestroyWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE Drawable    TkWaylandGetDrawable(GLFWwindow *w);
+MODULE_SCOPE TkWindow*   TkWaylandGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow* TkWaylandGetGLFWwindowFromDrawable(Drawable drawable);
-MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow,
+MODULE_SCOPE void        TkWaylandUpdateWindowSize(GLFWwindow *glfwWindow,
 						int width, int height);
-MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
+MODULE_SCOPE void        TkWaylandResizeWindow(GLFWwindow *w,
 					    int width, int height);
 
 /*
@@ -396,10 +396,10 @@ MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE NVGcontext* TkGlfwGetNVGContext(Drawable drawable);
-MODULE_SCOPE NVGcontext* TkGlfwGetNVGContextForMeasure(void);
+MODULE_SCOPE int         TkWaylandBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE void        TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE NVGcontext* TkWaylandGetNVGContext(Drawable drawable);
+MODULE_SCOPE NVGcontext* TkWaylandGetNVGContextForMeasure(void);
 MODULE_SCOPE void        createClipShaders(TkWindow *winPtr);
 
 /*
@@ -424,9 +424,9 @@ MODULE_SCOPE int  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void TkGlfwProcessEvents(void);
-MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow);
-MODULE_SCOPE void TkGlfwClearCallbacks(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkWaylandProcessEvents(void);
+MODULE_SCOPE void TkWaylandSetupCallbacks(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkWaylandClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
@@ -443,9 +443,9 @@ MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcolor TkGlfwXColorToNVG(XColor *xcolor);
-MODULE_SCOPE NVGcolor TkGlfwPixelToNVG(unsigned long pixel);
-MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
+MODULE_SCOPE NVGcolor TkWaylandXColorToNVG(XColor *xcolor);
+MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
+MODULE_SCOPE void     TkWaylandApplyGC(NVGcontext *vg, GC gc);
 
 /*
  *----------------------------------------------------------------------
@@ -480,7 +480,7 @@ MODULE_SCOPE void TkWaylandMenuInit(void);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
+MODULE_SCOPE void TkWaylandErrorCallback(int error, const char *description);
 
 /*
  *----------------------------------------------------------------------

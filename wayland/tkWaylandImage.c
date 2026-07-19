@@ -19,7 +19,7 @@
 #include "tkPort.h"
 #include "tkImgPhoto.h"
 #include "tkColor.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 
@@ -164,7 +164,7 @@ CreateNVGImageFromDrawableRect(
     }
 
     /* Get NanoVG context. */
-    vg = TkGlfwGetNVGContext(drawable);
+    vg = TkWaylandGetNVGContext(drawable);
     if (!vg) {
         return NULL;
     }
@@ -238,10 +238,10 @@ int TkpPutRGBAImage(
     }
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
     TkWaylandDrawingContext dc;
-    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    NVGcontext *vg = TkWaylandGetNVGContext(drawable);
+    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
-	printf("TkGlfwBeginDraw failed\n");
+	printf("TkWaylandBeginDraw failed\n");
 	return TCL_ERROR;
     }
     int imageID = nvgCreateImageRGBA(vg, width, height, 0, image->data);
@@ -251,7 +251,7 @@ int TkpPutRGBAImage(
     nvgRect(vg, dst_x, dst_y, width, height);
     nvgFillPaint(vg, paint);
     nvgFill(vg);
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return 0;
 }
 
@@ -367,7 +367,7 @@ XGetImage(
     }
 
     /* Get NanoVG context. */
-    vg = TkGlfwGetNVGContext(drawable);
+    vg = TkWaylandGetNVGContext(drawable);
     if (!vg) {
         nvgDeleteImage(vg, nvgImg->id);
         if (nvgImg->pixels) ckfree(nvgImg->pixels);
@@ -504,7 +504,7 @@ XCopyArea_PixmapToWindow(
     NVGpaint imgPaint;
     int rc;
     unsigned char *pixels = NULL; 
-    NVGcontext *vg = TkGlfwGetNVGContext(dst);
+    NVGcontext *vg = TkWaylandGetNVGContext(dst);
     if (!vg) {
 	return BadDrawable;
     }
@@ -531,7 +531,7 @@ XCopyArea_PixmapToWindow(
     }
     
     /* Begin drawing to destination window. */
-    rc = TkGlfwBeginDraw(dst, gc, &dc);
+    rc = TkWaylandBeginDraw(dst, gc, &dc);
     if (rc != TCL_OK) {
         ckfree((char *)pixels);
         return BadDrawable;
@@ -542,7 +542,7 @@ XCopyArea_PixmapToWindow(
                                   0, pixels);
     
     if (nvgImage == 0) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         ckfree((char *)pixels);
         return BadDrawable;
     }
@@ -569,7 +569,7 @@ XCopyArea_PixmapToWindow(
     
     /* Cleanup. */
     nvgDeleteImage(dc.vg, nvgImage);
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     ckfree((char *)pixels);
     
     return Success;
@@ -590,7 +590,7 @@ XCopyArea_PixmapToPixmap(
     int nvgImage;
     NVGpaint imgPaint;
     unsigned char *pixels = NULL; 
-    NVGcontext *vg = TkGlfwGetNVGContext(TkWaylandDrawableForPixmap(dstPixmap));
+    NVGcontext *vg = TkWaylandGetNVGContext(TkWaylandDrawableForPixmap(dstPixmap));
     if (!vg) {
 	return BadDrawable;
     }
@@ -729,8 +729,8 @@ XCopyPlane(
 
     /* Resolve foreground and background colors from the GC. */
     if (TkWaylandGetGCValues(gc, GCForeground | GCBackground, &gcValues) == 0) {
-        fg = TkGlfwPixelToNVG(gcValues.foreground);
-        bg = TkGlfwPixelToNVG(gcValues.background);
+        fg = TkWaylandPixelToNVG(gcValues.foreground);
+        bg = TkWaylandPixelToNVG(gcValues.background);
     } else {
         fg = nvgRGBA(0,   0,   0,   255);   /* black */
         bg = nvgRGBA(255, 255, 255, 255);   /* white */
@@ -772,14 +772,14 @@ XCopyPlane(
     ckfree((char *)srcImg);
 
     /* Begin drawing on destination. */
-    int rc = TkGlfwBeginDraw(dst, gc, &dc);
+    int rc = TkWaylandBeginDraw(dst, gc, &dc);
     if (rc != TCL_OK) {
         ckfree(expanded);
         return BadDrawable;
     }
 
     if (gc) {
-        TkGlfwApplyGC(dc.vg, gc);
+        TkWaylandApplyGC(dc.vg, gc);
     }
 
     /* Upload expanded RGBA bitmap to NanoVG. */
@@ -787,7 +787,7 @@ XCopyPlane(
     ckfree(expanded);
 
     if (imageId <= 0) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return BadAlloc;
     }
 
@@ -802,7 +802,7 @@ XCopyPlane(
     /* Clean up. */
     nvgDeleteImage(dc.vg, imageId);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 #endif
     return Success;
 }
@@ -858,19 +858,19 @@ XPutImage(
     LastKnownRequestProcessed(display)++;
 
     /* Begin drawing. */
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
 
     /* Apply GC settings. */
     if (gc) {
-        TkGlfwApplyGC(dc.vg, gc);
+        TkWaylandApplyGC(dc.vg, gc);
     }
 
     /* Convert ARGB to RGBA if needed */
     rgba_data = (unsigned char*)ckalloc(width * height * 4);
     if (!rgba_data) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return BadAlloc;
     }
 
@@ -914,7 +914,7 @@ XPutImage(
     ckfree(rgba_data);
 
     if (imageId <= 0) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return BadAlloc;
     }
 
@@ -932,7 +932,7 @@ XPutImage(
     /* Clean up. */
     nvgDeleteImage(dc.vg, imageId);
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 #endif
     return Success;
 }
