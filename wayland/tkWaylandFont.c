@@ -1090,7 +1090,8 @@ TkpGetFontPixelSize(Tk_Font tkfont)
  * InitFont --
  *
  *   Populate a WaylandFont from TkFontAttributes using FcFontSort for
- *   multi-face fallback, with explicit emoji font support.
+ *   multi-face fallback, then extract metrics from the primary face via
+ *   stb_truetype.
  *
  * Results:
  *   None.
@@ -1100,6 +1101,7 @@ TkpGetFontPixelSize(Tk_Font tkfont)
  *----------------------------------------------------------------------
  */
 
+#if 0
 static void
 InitFont(
 	 Tk_Window tkwin,
@@ -1116,10 +1118,14 @@ InitFont(
     int    basePixels;
 
     if (ptSize < 0.0) {
+        /* Explicit pixel size (Tk convention: -12 means 12px). */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
+        /* Try Tk's conversion first. */
         basePixels = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
+        /* Strong fallback for Wayland/GLFW if conversion gives tiny/no-op result. */
         if (basePixels <= 0 || basePixels == (int)ptSize || basePixels < 8) {
+            /* Standard 96 DPI scaling: 12pt → ~16px. */
             basePixels = (int)(ptSize * 4.0 / 3.0 + 0.5);
         }
     } else {
@@ -1127,8 +1133,9 @@ InitFont(
     }
     if (basePixels < 1) basePixels = 1;
 
+    /* Optional: gentle boost for modern displays (can be tuned). */
     if (basePixels < 14) {
-        basePixels = (int)(basePixels * 1.15 + 0.5);
+        basePixels = (int)(basePixels * 1.15 + 0.5);  /* ~15% boost for readability */
     }
 
     fontPtr->pixelSize = basePixels;
@@ -1136,7 +1143,7 @@ InitFont(
     int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant  == TK_FS_ITALIC);
 
-    /* Build Fontconfig pattern. */
+    /* Build Fontconfig pattern and obtain ordered font-set. */
     const char *family = faPtr->family;
     if (!family || family[0] == '\0') family = "sans-serif";
 
@@ -1203,23 +1210,142 @@ InitFont(
         face->faceIndex = fcIdx;
     }
 
-    /*
-     * Inline emoji fallback: prefer Noto Emoji as an additional face.
-     */
-    {
-        static const char *emoji_candidates[] = {
-            "Noto Emoji",
-            "Symbola",
-            "DejaVu Sans",
-            "GNU Unifont",
-            NULL
-        };
+    /* Metrics from primary face via stb_truetype. */
+    if (nfaces > 0 && fontPtr->faces[0].filePath) {
+        FILE *fd = fopen(fontPtr->faces[0].filePath, "rb");
+        if (fd) {
+            fseek(fd, 0, SEEK_END);
+            long sz = ftell(fd);
+            fseek(fd, 0, SEEK_SET);
+            unsigned char *buf = (unsigned char *)Tcl_Alloc((int)sz);
+            if (buf && (long)fread(buf, 1, sz, fd) == sz) {
+                stbtt_fontinfo info;
+                if (stbtt_InitFont(&info, buf,
+                                   stbtt_GetFontOffsetForIndex(
+							       buf, fontPtr->faces[0].faceIndex))) {
+                    float scale = stbtt_ScaleForPixelHeight(
+							    &info, (float)fontPtr->pixelSize);
+                    int asc, desc, linegap;
+                    stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
+                    fm->ascent   = (int)( asc  * scale + 0.5f);
+                    fm->descent  = (int)(-desc * scale + 0.5f);   /* Note: positive descent */
+                    int adv_W, adv_dot, lsb;
+                    stbtt_GetCodepointHMetrics(&info, 'W',  &adv_W,   &lsb);
+                    stbtt_GetCodepointHMetrics(&info, '.',  &adv_dot, &lsb);
+                    fm->maxWidth = (int)(adv_W * scale + 0.5f);
+                    fm->fixed    = (adv_W == adv_dot);
+                    fa->size     = (double)(-fontPtr->pixelSize);
+                }
+            }
+            if (buf) Tcl_Free(buf);
+            fclose(fd);
+        }
+    }
 
-        for (int e = 0; emoji_candidates[e]; e++) {
+    /* Improved fallback metrics — consistent with real fonts. */
+    if (fm->ascent == 0 && fm->descent == 0) {
+        fm->ascent   = (int)(fontPtr->pixelSize * 0.72 + 0.5);   /* tighter than 0.80 */
+        fm->descent  = (int)(fontPtr->pixelSize * 0.28 + 0.5);   /* more realistic */
+        fm->maxWidth = fontPtr->pixelSize;
+        fm->fixed    = 0;
+    }
+
+    fontPtr->underlinePos = fm->descent / 2;
+    if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
+    fontPtr->barHeight    = (int)(fontPtr->pixelSize * 0.07 + 0.5);
+    if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
+
+    fontPtr->nvgFontId = -1;
+    fontPtr->font.fid  = (Font)(uintptr_t)fontPtr;
+
+    WaylandShaper_Init(&fontPtr->shaper);
+}
+#endif
+/*
+ *----------------------------------------------------------------------
+ * InitFont --
+ *
+ *   Populate a WaylandFont from TkFontAttributes using FcFontSort for
+ *   multi-face fallback, with explicit emoji font support.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Allocates font structures, queries Fontconfig, initialises shaper.
+ *----------------------------------------------------------------------
+ */
+
+static void
+InitFont(
+	 Tk_Window tkwin,
+	 const TkFontAttributes *faPtr,
+	 WaylandFont *fontPtr)
+{
+    TkFontAttributes *fa = &fontPtr->font.fa;
+    TkFontMetrics    *fm = &fontPtr->font.fm;
+
+    *fa = *faPtr;
+
+    /* Resolve pixel size with improved scaling. */
+    double ptSize = faPtr->size;
+    int    basePixels;
+
+    if (ptSize < 0.0) {
+        basePixels = (int)(-ptSize + 0.5);
+    } else if (ptSize > 0.0) {
+        basePixels = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
+        if (basePixels <= 0 || basePixels == (int)ptSize || basePixels < 8) {
+            basePixels = (int)(ptSize * 4.0 / 3.0 + 0.5);
+        }
+    } else {
+        basePixels = 12;
+    }
+    if (basePixels < 1) basePixels = 1;
+
+    if (basePixels < 14) {
+        basePixels = (int)(basePixels * 1.15 + 0.5);
+    }
+
+    fontPtr->pixelSize = basePixels;
+
+    int bold   = (faPtr->weight == TK_FW_BOLD);
+    int italic = (faPtr->slant  == TK_FS_ITALIC);
+
+    /* Build Fontconfig pattern */
+    const char *family = faPtr->family;
+    if (!family || family[0] == '\0') family = "sans-serif";
+
+    FcPattern *pat = FcPatternCreate();
+    if (!pat) return;
+
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
+    FcPatternAddInteger(pat, FC_WEIGHT,
+                        bold   ? FC_WEIGHT_BOLD    : FC_WEIGHT_REGULAR);
+    FcPatternAddInteger(pat, FC_SLANT,
+                        italic ? FC_SLANT_ITALIC    : FC_SLANT_ROMAN);
+    FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+
+    FcConfigSubstitute(NULL, pat, FcMatchPattern);
+    FcDefaultSubstitute(pat);
+
+    FcResult   result;
+    FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
+
+    static const char *emojiFontFamilies[] = {
+		"Noto Emoji",
+        "Symbola",
+		"DejaVu Sans",
+		"GNU Unifont", 
+        NULL
+    };
+
+    if (set) {
+        for (int e = 0; emojiFontFamilies[e]; e++) {
             FcPattern *epat = FcPatternCreate();
             if (!epat) continue;
 
-            FcPatternAddString(epat, FC_FAMILY, (FcChar8 *)emoji_candidates[e]);
+            FcPatternAddString(epat, FC_FAMILY, (FcChar8 *)emojiFontFamilies[e]);
             FcPatternAddDouble(epat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
 
             FcConfigSubstitute(NULL, epat, FcMatchPattern);
@@ -1229,52 +1355,68 @@ InitFont(
             FcFontSet *eset = FcFontSort(NULL, epat, FcTrue, NULL, &eres);
 
             if (eset && eset->nfont > 0) {
-                /* Append the first match to our faces array. */
-                int idx = fontPtr->nfaces;
-                if (idx >= MAX_FACES) {
-                    FcFontSetDestroy(eset);
-                    FcPatternDestroy(epat);
-                    break;
+                /* Merge emoji font into main set. */
+                FcFontSet *newset = FcFontSetCreate();
+                for (int i = 0; i < set->nfont; i++) {
+                    FcFontSetAdd(newset, FcPatternDuplicate(set->fonts[i]));
                 }
-
-                WaylandFtFace *newFaces = (WaylandFtFace *)Tcl_Realloc(
-                    (char *)fontPtr->faces,
-                    (idx + 1) * sizeof(WaylandFtFace));
-                if (!newFaces) {
-                    FcFontSetDestroy(eset);
-                    FcPatternDestroy(epat);
-                    break;
-                }
-                fontPtr->faces = newFaces;
-                memset(&fontPtr->faces[idx], 0, sizeof(WaylandFtFace));
-
-                FcPattern *fp = eset->fonts[0];
-                FcChar8   *file = NULL;
-                if (FcPatternGetString(fp, FC_FILE, 0, &file) == FcResultMatch && file) {
-                    fontPtr->faces[idx].filePath = strdup((char *)file);
-                }
-
-                FcCharSet *cs = NULL;
-                if (FcPatternGetCharSet(fp, FC_CHARSET, 0, &cs) == FcResultMatch) {
-                    fontPtr->faces[idx].charset = FcCharSetCopy(cs);
-                }
-
-                fontPtr->faces[idx].source     = fp;    /* Keep reference */
-                fontPtr->faces[idx].faceIndex  = 0;
-                fontPtr->faces[idx].nvgFontId  = -1;
-                fontPtr->faces[idx].isLoaded   = 0;
-                fontPtr->faces[idx].nvgName[0] = '\0';
-
-                fontPtr->nfaces = idx + 1;
-
-                FcFontSetDestroy(eset);
-                FcPatternDestroy(epat);
-                break;  /* success, stop searching */
+                /* Add emoji font (avoid duplicates). */
+                FcFontSetAdd(newset, FcPatternDuplicate(eset->fonts[0]));
+                FcFontSetDestroy(set);
+                set = newset;
             }
 
             FcFontSetDestroy(eset);
             FcPatternDestroy(epat);
         }
+    }
+    /* === END EMOJI FALLBACK === */
+
+    if (!set || set->nfont == 0) {
+        /* Last-resort fallback. */
+        FcPatternDestroy(pat);
+        pat = FcPatternCreate();
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
+        FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+        FcConfigSubstitute(NULL, pat, FcMatchPattern);
+        FcDefaultSubstitute(pat);
+        set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
+    }
+
+    fontPtr->pattern = pat;
+    fontPtr->fontset = set;
+
+    int nfaces = (set && set->nfont > 0) ? set->nfont : 0;
+    if (nfaces > MAX_FACES) nfaces = MAX_FACES;
+
+    fontPtr->faces  = (WaylandFtFace *)Tcl_Alloc(
+						 (nfaces > 0 ? nfaces : 1) * sizeof(WaylandFtFace));
+    fontPtr->nfaces = nfaces;
+    memset(fontPtr->faces, 0,
+           (nfaces > 0 ? nfaces : 1) * sizeof(WaylandFtFace));
+
+    for (int i = 0; i < nfaces; i++) {
+        WaylandFtFace *face = &fontPtr->faces[i];
+        face->source     = set->fonts[i];
+        face->nvgFontId  = -1;
+        face->isLoaded   = 0;
+        face->nvgName[0] = '\0';
+
+        /* Per-face charset. */
+        FcCharSet *cs = NULL;
+        if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &cs)
+	    == FcResultMatch)
+            face->charset = FcCharSetCopy(cs);
+
+        /* File path and face index. */
+        FcChar8 *fcPath = NULL;
+        if (FcPatternGetString(set->fonts[i], FC_FILE, 0, &fcPath)
+	    == FcResultMatch && fcPath)
+            face->filePath = strdup((char *)fcPath);
+
+        int fcIdx = 0;
+        FcPatternGetInteger(set->fonts[i], FC_INDEX, 0, &fcIdx);
+        face->faceIndex = fcIdx;
     }
 
     /* Metrics from primary face via stb_truetype. */
@@ -1309,7 +1451,7 @@ InitFont(
         }
     }
 
-    /* Improved fallback metrics. */
+    /* Improved fallback metrics */
     if (fm->ascent == 0 && fm->descent == 0) {
         fm->ascent   = (int)(fontPtr->pixelSize * 0.72 + 0.5);
         fm->descent  = (int)(fontPtr->pixelSize * 0.28 + 0.5);

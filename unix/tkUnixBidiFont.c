@@ -1429,7 +1429,6 @@ X11Shaper_ShapeString(
 	if (!hasVisibleChars) continue;
 
 	/*
-	 * ---------------------------------------------------------------
 	 * Pass 1: determine subrun boundaries (script/face groups).
 	 *
 	 * This is always a forward walk in LOGICAL character order,
@@ -1437,7 +1436,6 @@ X11Shaper_ShapeString(
 	 * depends on what follows each character logically (script
 	 * changes, face/fallback-font changes, etc).  Shaping and
 	 * placement are deferred to pass 2 below.
-	 * ---------------------------------------------------------------
 	 */
 	typedef struct {
 	    int start;		 /* Logical char offset of subrun. */
@@ -1566,7 +1564,6 @@ X11Shaper_ShapeString(
 	}
 
 	/*
-	 * ---------------------------------------------------------------
 	 * Pass 2: shape and place each subrun.
 	 *
 	 * For an LTR bidi run, subruns are placed left-to-right in the
@@ -1585,7 +1582,6 @@ X11Shaper_ShapeString(
 	 * one subrun (e.g. Arabic text combined with a name or digits
 	 * that require a different face) - this was the source of the
 	 * Arabic/Hebrew reordering bug.
-	 * ---------------------------------------------------------------
 	 */
 	for (int si = 0; si < subrunCount; si++) {
 	    int listIdx = runIsRTL ? (subrunCount - 1 - si) : si;
