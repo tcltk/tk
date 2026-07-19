@@ -22,7 +22,6 @@
 #include <SheenBidi/SheenBidi.h>
 
 #include "stb_truetype.h"
-#include "noto_emoji.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -39,7 +38,6 @@
 /* Module-level state */
 
 static int  fcInitialized = 0;
-static int  emojiFontId   = -1;    /* NanoVG id for the bundled emoji font. */
 
 /* Forward declarations of static helper functions. */
 static int        GetBidiRuns(FcChar32 *ucs4, int charCount,
@@ -546,62 +544,125 @@ WaylandShaper_ShapeString(
         }
         if (!hasVisible) continue;
 
-        int subrunStart = runStart;
+        /*
+         * ------------------------------------------------------------
+         * Pass 1: determine subrun boundaries (script/face groups).
+         *
+         * This is always a forward walk in LOGICAL character order,
+         * since deciding where one subrun ends and the next begins
+         * depends on what follows each character logically (script
+         * changes, face/fallback-font changes, etc). Shaping and
+         * placement are deferred to pass 2 below.
+         * ------------------------------------------------------------
+         */
+        typedef struct {
+            int         start;   /* Logical char offset of subrun. */
+            int         len;     /* Length in chars. */
+            hb_script_t script;
+            int         faceIndex;
+        } SubRunInfo;
 
-        while (subrunStart < runStart + runLen) {
+        SubRunInfo subrunList[MAX_GLYPHS];
+        int        subrunCount = 0;
 
-            /* Find first real (non-INHERITED/COMMON) script. */
-            hb_script_t subrunScript = HB_SCRIPT_INVALID;
-            for (int ci = subrunStart; ci < runStart + runLen; ci++) {
-                hb_script_t s = hb_unicode_script(
-						  hb_unicode_funcs_get_default(), ucs4Chars[ci]);
-                if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
-                    subrunScript = s; break;
-                }
-            }
+        {
+            int subrunStart = runStart;
 
-            int anchorChar = subrunStart;
-            if (subrunScript != HB_SCRIPT_INVALID) {
+            while (subrunStart < runStart + runLen &&
+		   subrunCount < MAX_GLYPHS) {
+
+                /* Find first real (non-INHERITED/COMMON) script. */
+                hb_script_t subrunScript = HB_SCRIPT_INVALID;
                 for (int ci = subrunStart; ci < runStart + runLen; ci++) {
                     hb_script_t s = hb_unicode_script(
 						      hb_unicode_funcs_get_default(), ucs4Chars[ci]);
                     if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
-                        anchorChar = ci; break;
+                        subrunScript = s; break;
                     }
                 }
-            } else {
-                subrunScript = HB_SCRIPT_COMMON;
-            }
 
-            int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
+                int anchorChar = subrunStart;
+                if (subrunScript != HB_SCRIPT_INVALID) {
+                    for (int ci = subrunStart; ci < runStart + runLen; ci++) {
+                        hb_script_t s = hb_unicode_script(
+							  hb_unicode_funcs_get_default(), ucs4Chars[ci]);
+                        if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
+                            anchorChar = ci; break;
+                        }
+                    }
+                } else {
+                    subrunScript = HB_SCRIPT_COMMON;
+                }
 
-            /* Extend subrun while script and face are consistent. */
-            int subrunEnd = subrunStart + 1;
-            while (subrunEnd < runStart + runLen) {
-                hb_script_t s = hb_unicode_script(
-						  hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+                int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
 
-                if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
+                /* Extend subrun while script and face are consistent. */
+                int subrunEnd = subrunStart + 1;
+                while (subrunEnd < runStart + runLen) {
+                    hb_script_t s = hb_unicode_script(
+						      hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+
+                    if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
+                        int nf = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
+                        if (nf != runFaceIndex) break;
+                        subrunEnd++;
+                        continue;
+                    }
+                    if (s != subrunScript) break;
                     int nf = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
                     if (nf != runFaceIndex) break;
                     subrunEnd++;
-                    continue;
                 }
-                if (s != subrunScript) break;
-                int nf = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
-                if (nf != runFaceIndex) break;
-                subrunEnd++;
+
+                subrunList[subrunCount].start     = subrunStart;
+                subrunList[subrunCount].len       = subrunEnd - subrunStart;
+                subrunList[subrunCount].script    = subrunScript;
+                subrunList[subrunCount].faceIndex = runFaceIndex;
+                subrunCount++;
+
+                subrunStart = subrunEnd;
             }
+        }
+
+        /*
+         * ------------------------------------------------------------
+         * Pass 2: shape and place each subrun.
+         *
+         * For an LTR bidi run, subruns are placed left-to-right in the
+         * same order they occur logically (index 0 .. subrunCount-1).
+         *
+         * For an RTL bidi run, the logically *first* subrun is read
+         * LAST and therefore must end up visually rightmost; the
+         * logically *last* subrun is read FIRST and must end up
+         * visually leftmost. Since placement below always advances
+         * the pen left to right, an RTL run's subruns must be visited
+         * in REVERSE logical order so the pen reaches the logically
+         * earlier (visually rightmost) subrun last.
+         *
+         * Processing subruns in logical order regardless of run
+         * direction silently scrambles any RTL run that needs more
+         * than one subrun (e.g. Arabic text combined with a name or
+         * digits that require a different face) - this was the
+         * source of the Arabic/Hebrew reordering bug.
+         * ------------------------------------------------------------
+         */
+        for (int si = 0; si < subrunCount; si++) {
+            int listIdx = runIsRTL ? (subrunCount - 1 - si) : si;
+
+            int         subrunStart = subrunList[listIdx].start;
+            int         subrunEnd   = subrunStart + subrunList[listIdx].len;
+            hb_script_t subrunScript = subrunList[listIdx].script;
+            int         runFaceIndex = subrunList[listIdx].faceIndex;
 
             int shapeByteStart = charBounds[subrunStart];
             int shapeByteEnd   = charBounds[
-					    subrunEnd < runStart + runLen ? subrunEnd : runStart + runLen];
+						subrunEnd < runStart + runLen ? subrunEnd : runStart + runLen];
             int shapeByteLen   = shapeByteEnd - shapeByteStart;
 
-            if (shapeByteLen <= 0) { subrunStart = subrunEnd; continue; }
+            if (shapeByteLen <= 0) { continue; }
 
             hb_font_t *runHbFont = GetHbFont(fontPtr, runFaceIndex);
-            if (!runHbFont) { subrunStart = subrunEnd; continue; }
+            if (!runHbFont) { continue; }
 
             /* Shape. */
             hb_buffer_clear_contents(shaper->buffer);
@@ -624,7 +685,7 @@ WaylandShaper_ShapeString(
             hb_glyph_position_t *glyphPos   =
                 hb_buffer_get_glyph_positions(shaper->buffer, NULL);
 
-            if (!glyphInfo || !glyphPos) { subrunStart = subrunEnd; continue; }
+            if (!glyphInfo || !glyphPos) { continue; }
 
             int runPenX = 0;
             for (unsigned int gi = 0;
@@ -677,7 +738,6 @@ WaylandShaper_ShapeString(
             }
 
             globalPenX  += runPenX;
-            subrunStart  = subrunEnd;
         }
     }
 
@@ -894,7 +954,8 @@ TkWaylandFontContextDestroyed(
  * EnsureNvgFont --
  *
  *   Ensure all faces are loaded into the NanoVG context and wire up the
- *   fallback chain: face[0] → face[1] → … → emoji.
+ *   fallback chain: face[0] → face[1] → … → face[n] (Fontconfig-discovered,
+ *   including emoji coverage if a system emoji font is available).
  *
  *   CRITICAL FIX: Font IDs are per-NVG-context. We must track which
  *   fonts have been loaded for each context separately.
@@ -959,23 +1020,25 @@ EnsureNvgFont(
         }
     }
 
-    /* Wire fallback chain on the primary face. */
+    /*
+     * Wire fallback chain on the primary face.
+     *
+     * Emoji coverage is intentionally NOT special-cased here. Emoji
+     * codepoints are always forced through the HarfBuzz shaping path
+     * (see IsSimpleOnly), where each glyph's font comes from
+     * GetRunFaceIndex() walking fontPtr->faces[] - a chain built purely
+     * from Fontconfig (see InitFont/FcFontSort). A NanoVG-level fallback
+     * font registered here would only ever be reachable by NanoVG's own
+     * internal nvgText() fallback, which the shaped path never calls, so
+     * it would sit dead. This now matches the X11 backend
+     * (tkUnixBidiFont.c), which relies solely on Fontconfig-discovered
+     * faces for emoji and has no bundled emoji font at all.
+     */
     if (primaryId >= 0) {
         for (int i = 1; i < fontPtr->nfaces; i++) {
             int fb = fontPtr->faces[i].nvgFontId;
             if (fb >= 0) nvgAddFallbackFontId(vg, primaryId, fb);
         }
-        /* Bundled emoji font. */
-        int emojiId = nvgFindFont(vg, "emoji");
-        if (emojiId < 0) {
-            emojiId = nvgCreateFontMem(vg, "emoji",
-                                       NotoEmoji_Regular_ttf,
-                                       NotoEmoji_Regular_ttf_len, 0);
-            if (emojiId < 0)
-                fprintf(stderr, "tkWaylandFont: failed to load bundled emoji\n");
-        }
-        emojiFontId = emojiId;
-        if (emojiId >= 0) nvgAddFallbackFontId(vg, primaryId, emojiId);
     }
 
     /* Store the loaded font ID for this context. */
@@ -1941,8 +2004,11 @@ Tk_DrawCharsInContext(
  *   ShapedGlyphBuffer so that HarfBuzz advances and RTL reordering are
  *   reflected in the final pixel positions.
  *
- *   The NanoVG fallback chain (primary → fallback faces → emoji) is wired
- *   by EnsureNvgFont and handles any codepoint the primary face lacks.
+ *   The NanoVG fallback chain (primary → fallback faces) is wired by
+ *   EnsureNvgFont and handles any codepoint the primary face lacks in
+ *   the simple LTR path. (Emoji never take this path - see IsSimpleOnly -
+ *   so their coverage instead comes from GetRunFaceIndex() over the same
+ *   Fontconfig-discovered face list in the complex/RTL path below.)
  *
  * Results:
  *   None.
@@ -2216,7 +2282,7 @@ TkWaylandLoadNamedFontIntoContext(
     WaylandFont *fontPtr = (WaylandFont *)tkfont;
     int id = EnsureNvgFont(fontPtr, vg);
 
-    /* Don't delete the font — it's cached by Tk */
+    /* Don't delete the font — it's cached by Tk. */
     return id;
 }
 
