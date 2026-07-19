@@ -72,10 +72,10 @@ extern "C" {
 #endif
 #   define TK_MINOR_VERSION	1
 #   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
-#   define TK_RELEASE_SERIAL	0
+#   define TK_RELEASE_SERIAL	1
 
 #   define TK_VERSION		"9.1"
-#   define TK_PATCH_LEVEL		"9.1b0"
+#   define TK_PATCH_LEVEL		"9.1b1"
 
 /*
  * A special definition used to allow this header file to be included from

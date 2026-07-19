@@ -165,8 +165,8 @@ bind Entry <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete [tk::startOfCluster [%W get] [%W index insert] [$w cget -locale]] \
-		[tk::endOfCluster [%W get] [%W index insert] [$w cget -locale]]
+	%W delete [tk::startOfCluster [%W get] [%W index insert] [%W cget -locale]] \
+		[tk::endOfCluster [%W get] [%W index insert] [%W cget -locale]]
     }
 }
 bind Entry <BackSpace> {

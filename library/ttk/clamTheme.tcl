@@ -97,8 +97,8 @@ namespace eval ttk::theme::clam {
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
 	# N.B.: The values of the -arrowsize option for the styles
-	# TMenubutton, TCombobox, and TSpinbox must be specified in
-	# pixels, because they are used in SVG images for chevrons.
+	# TMenubutton, TCombobox, TSpinbox, and TScrollbar must be specified
+	# in pixels, because they are used in SVG images for chevrons.
 
 	ttk::style configure TMenubutton -width -11 -padding 3.75p \
 	    -arrowsize 5 -arrowpadding 2.25p -relief raised
@@ -128,6 +128,19 @@ namespace eval ttk::theme::clam {
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
+
+	ttk::style configure TLabelframe \
+	    -labeloutside true -labelmargins {0 0 0 3p} \
+	    -borderwidth 2 -relief raised
+
+	ttk::style configure TScrollbar -gripsize 7.5p \
+	    -arrowpadding 2.25p -arrowsize 4
+
+	ttk::style configure TScale -gripsize 7.5p \
+	    -arrowsize 10.5p -sliderlength 22.5p
+
+	ttk::style configure TProgressbar -background $colors(-frame) \
+	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \
@@ -170,19 +183,6 @@ namespace eval ttk::theme::clam {
 				selected $colors(-selectfg) \
 				active $colors(-foreground)] \
 	    -bordercolor [list	focus $colors(-selectbg)]
-
-	ttk::style configure TLabelframe \
-	    -labeloutside true -labelmargins {0 0 0 3p} \
-	    -borderwidth 2 -relief raised
-
-	ttk::style configure TScrollbar -gripsize 7.5p \
-	    -arrowpadding 2.25p -arrowsize 3p
-
-	ttk::style configure TScale -gripsize 7.5p \
-	    -arrowsize 10.5p -sliderlength 22.5p
-
-	ttk::style configure TProgressbar -background $colors(-frame) \
-	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure Sash -sashthickness 4.5p -gripsize 15p
     }

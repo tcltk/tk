@@ -24,6 +24,7 @@
 #else
   #define WIN32_XDRAWLINE_HACK 0
 #endif
+
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
   #define X11_XDRAWRECTANGLE_HACK 1
 #else
@@ -434,6 +435,9 @@ static void FieldElementDraw(
 	     */
 	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    if (X11_XDRAWRECTANGLE_HACK) {
+		XDrawPoint(disp, d, focusGC, b.x+b.width-1, b.y+b.height-1);
+	    }
 
 	    /*
 	     * Fill the inner rectangle
@@ -930,8 +934,9 @@ static void ArrowElementSize(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 	TtkArrowSize(size, direction, widthPtr, heightPtr);	/* unscaled */
 
-	*widthPtr  = (int)round(*widthPtr * scalingLevel);	/* scaled */
-	*heightPtr = (int)round(*heightPtr * scalingLevel);	/* scaled */
+	/* Scale and then round up */
+	*widthPtr  = (int)ceil(*widthPtr * scalingLevel);	/* scaled */
+	*heightPtr = (int)ceil(*heightPtr * scalingLevel);	/* scaled */
     }
 
     /* Add scaled padding */
@@ -1586,7 +1591,10 @@ static void TreeitemIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width - 1, b.height - 1);
+    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
+    if (X11_XDRAWRECTANGLE_HACK) {
+	XDrawPoint(Tk_Display(tkwin), d, gc, b.x+b.width-1, b.y+b.height-1);
+    }
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;
@@ -1649,15 +1657,6 @@ TtkAltTheme_Init(Tcl_Interp *interp)
 	    &BoxArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
 	    &BoxArrowElementSpec, INT2PTR(ARROW_DOWN));
-
-    Ttk_RegisterElement(interp, theme, "upchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
-    Ttk_RegisterElement(interp, theme, "downchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
-     Ttk_RegisterElement(interp, theme, "leftchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
-    Ttk_RegisterElement(interp, theme, "rightchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
 
     Ttk_RegisterElement(interp, theme, "Treeheading.indicator",
 	    &TreeheadingIndicatorElementSpec, INT2PTR(ARROW_DOWN));

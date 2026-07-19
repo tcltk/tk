@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="b0"
+TK_PATCH_LEVEL="b1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -790,7 +790,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="${libdir}/Resources/Scripts"
+    TK_PKG_DIR="Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"

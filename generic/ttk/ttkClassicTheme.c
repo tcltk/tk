@@ -9,7 +9,8 @@
 #include "ttkTheme.h"
 #include "ttkThemeInt.h"
 
-#define DEFAULT_BORDERWIDTH 2
+#define DEFAULT_BORDERWIDTH	2
+#define DEFAULT_ARROW_SIZE	15
 
 /*
  * Under windows, the Tk-provided XDrawLine and XDrawArc have an off-by-one
@@ -19,6 +20,12 @@
   #define WIN32_XDRAWLINE_HACK 1
 #else
   #define WIN32_XDRAWLINE_HACK 0
+#endif
+
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+  #define X11_XDRAWRECTANGLE_HACK 1
+#else
+  #define X11_XDRAWRECTANGLE_HACK 0
 #endif
 
 /*----------------------------------------------------------------------
@@ -476,22 +483,22 @@ static const Ttk_ElementSpec MenuIndicatorElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Arrow element(s).
  *
- *	Draws a solid triangle inside a box.
+ *	Draws a 3-D shaded triangle.
  *	clientData is an enum ArrowDirection pointer.
  */
 
 typedef struct {
     Tcl_Obj *sizeObj;
-    Tcl_Obj *colorObj;
+    Tcl_Obj *colorObj;		/* for BoxArrow only */
     Tcl_Obj *borderObj;
     Tcl_Obj *borderWidthObj;
-    Tcl_Obj *paddingObj;
+    Tcl_Obj *paddingObj;	/* for BoxArrow only */
     Tcl_Obj *reliefObj;
 } ArrowElement;
 
 static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(ArrowElement,sizeObj), "3p" },
+	offsetof(ArrowElement,sizeObj), STRINGIFY(DEFAULT_ARROW_SIZE) },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
@@ -499,14 +506,14 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
-	offsetof(ArrowElement,borderWidthObj), "1" },
+	offsetof(ArrowElement,borderWidthObj), STRINGIFY(DEFAULT_BORDERWIDTH) },
     { "-relief", TK_OPTION_RELIEF,
 	offsetof(ArrowElement,reliefObj), "raised"},
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void ArrowElementSize(
-    void *clientData,
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     TCL_UNUSED(Ttk_State), /* state */
@@ -515,23 +522,10 @@ static void ArrowElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    Ttk_Padding padding;
-    int size = 4;
+    int size = DEFAULT_ARROW_SIZE;
 
-    /* Get scaled size */
     TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);
-
-    /* Add scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
-    *widthPtr  += Ttk_PaddingWidth(padding);
-    *heightPtr += Ttk_PaddingHeight(padding);
-    if (*widthPtr < *heightPtr) {
-	*widthPtr = *heightPtr;
-    } else {
-	*heightPtr = *widthPtr;
-    }
+    *widthPtr = *heightPtr = size;
 }
 
 static void ArrowElementDraw(
@@ -542,47 +536,47 @@ static void ArrowElementDraw(
     Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
-    int borderWidth = 1, relief = TK_RELIEF_RAISED;
-    Ttk_Padding padding;
-    int cx = 0, cy = 0;
-    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
+    int borderWidth = DEFAULT_BORDERWIDTH;
+    int relief = TK_RELIEF_RAISED;
+    int size = b.width < b.height ? b.width : b.height;
+    XPoint points[3];
 
     TkGetScaledPixelValue(NULL, tkwin, arrow->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
-	    borderWidth, relief);
-
-    /* Apply scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
-    b = Ttk_PadBox(b, padding);
-
-    switch (direction) {
+    /*
+     * @@@ There are off-by-one pixel errors in the way these are drawn;
+     * @@@ need to take a look at Tk_Fill3DPolygon and X11 to find the
+     * @@@ exact rules.
+     */
+    switch (direction)
+    {
 	case ARROW_UP:
+	    points[2].x = b.x;		points[2].y = b.y + size;
+	    points[1].x = b.x + size/2;	points[1].y = b.y;
+	    points[0].x = b.x + size;	points[0].y = b.y + size;
+	    break;
 	case ARROW_DOWN:
-	    TtkArrowSize(b.width/2, direction, &cx, &cy);
-	    if ((b.height - cy) % 2 == 1) {
-		++cy;
-	    }
+	    points[0].x = b.x;		points[0].y = b.y;
+	    points[1].x = b.x + size/2;	points[1].y = b.y + size;
+	    points[2].x = b.x + size;	points[2].y = b.y;
 	    break;
 	case ARROW_LEFT:
-	case ARROW_RIGHT:
-	    TtkArrowSize(b.height/2, direction, &cx, &cy);
-	    if ((b.width - cx) % 2 == 1) {
-		++cx;
-	    }
+	    points[0].x = b.x;		points[0].y = b.y + size / 2;
+	    points[1].x = b.x + size;	points[1].y = b.y + size;
+	    points[2].x = b.x + size;	points[2].y = b.y;
 	    break;
-	default:
-	    return;
+	case ARROW_RIGHT:
+	    points[0].x = b.x + size;	points[0].y = b.y + size / 2;
+	    points[1].x = b.x;		points[1].y = b.y;
+	    points[2].x = b.x;		points[2].y = b.y + size;
+	    break;
     }
 
-    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    Tk_Fill3DPolygon(tkwin, d, border, points, 3, borderWidth, relief);
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {
@@ -1109,7 +1103,10 @@ static void TreeitemIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width - 1, b.height - 1);
+    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
+    if (X11_XDRAWRECTANGLE_HACK) {
+	XDrawPoint(Tk_Display(tkwin), d, gc, b.x+b.width-1, b.y+b.height-1);
+    }
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;
