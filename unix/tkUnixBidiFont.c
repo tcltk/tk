@@ -792,14 +792,32 @@ InitFont(
     Tk_ErrorHandler handler;
 
     if (!fontPtr) {
-	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
-	if (!fontPtr) {
-	    return NULL;
-	}
-	memset(fontPtr, 0, sizeof(UnixFtFont));
+    fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
+    if (!fontPtr) {
+        return NULL;
+    }
+    memset(fontPtr, 0, sizeof(UnixFtFont));
     }
 
-    FcConfigSubstitute(0, pattern, FcMatchPattern);
+    /*
+     * Ensure consistent DPI and pixel size before any font is opened.
+     * We:
+     *   - drop XFT_PIXEL_SIZE (may have been injected using Xft.dpi),
+     *   - set XFT_DPI from TkScalingLevel(tkwin),
+     *   - then run the normal Fontconfig/Xft substitution once.
+     */
+    {
+    double dpi = round(TkScalingLevel(tkwin) * 96);
+
+    /* Remove any pre-existing pixel size; Xft will recompute it. */
+    XftPatternDel(pattern, XFT_PIXEL_SIZE);
+
+    /* Force DPI to match Tk's scaling. */
+    XftPatternDel(pattern, XFT_DPI);
+    XftPatternAddDouble(pattern, XFT_DPI, dpi);
+    }
+
+    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
 
     /*
@@ -807,21 +825,21 @@ InitFont(
      */
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-	if (!fontPtr->font.fid) {
-	    Tcl_Free(fontPtr);
-	}
-	FcPatternDestroy(pattern);
-	return NULL;
+    if (!fontPtr->font.fid) {
+        Tcl_Free(fontPtr);
+    }
+    FcPatternDestroy(pattern);
+    return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
     fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
     if (!fontPtr->faces) {
-	FcFontSetDestroy(set);
-	Tcl_Free(fontPtr);
-	FcPatternDestroy(pattern);
-	return NULL;
+    FcFontSetDestroy(set);
+    Tcl_Free(fontPtr);
+    FcPatternDestroy(pattern);
+    return NULL;
     }
     fontPtr->nfaces = set->nfont;
 
@@ -829,23 +847,23 @@ InitFont(
      * Fill in information about each returned font.
      */
     for (i = 0; i < set->nfont; i++) {
-	fontPtr->faces[i].ftFont     = NULL;
-	fontPtr->faces[i].ft0Font    = NULL;
-	fontPtr->faces[i].source     = set->fonts[i];
-	fontPtr->faces[i].angle      = 0.0;
-	fontPtr->faces[i].hbFont     = NULL;
-	fontPtr->faces[i].hbBlob     = NULL;
-	fontPtr->faces[i].hbFace     = NULL;
-	fontPtr->faces[i].isLoaded   = false;
-	fontPtr->faces[i].unitsPerEm = 0.0;
-	fontPtr->faces[i].ascender   = 0.0;
-	fontPtr->faces[i].descender  = 0.0;
+    fontPtr->faces[i].ftFont     = NULL;
+    fontPtr->faces[i].ft0Font    = NULL;
+    fontPtr->faces[i].source     = set->fonts[i];
+    fontPtr->faces[i].angle      = 0.0;
+    fontPtr->faces[i].hbFont     = NULL;
+    fontPtr->faces[i].hbBlob     = NULL;
+    fontPtr->faces[i].hbFace     = NULL;
+    fontPtr->faces[i].isLoaded   = false;
+    fontPtr->faces[i].unitsPerEm = 0.0;
+    fontPtr->faces[i].ascender   = 0.0;
+    fontPtr->faces[i].descender  = 0.0;
 
-	if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
-	    fontPtr->faces[i].charset = FcCharSetCopy(charset);
-	} else {
-	    fontPtr->faces[i].charset = NULL;
-	}
+    if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
+        fontPtr->faces[i].charset = FcCharSetCopy(charset);
+    } else {
+        fontPtr->faces[i].charset = NULL;
+    }
     }
 
     /*
@@ -872,16 +890,16 @@ InitFont(
      */
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-		    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+            -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 
     ftFont = GetFont(fontPtr, 0, 0.0);
     if ((ftFont == NULL) || errorFlag) {
-	Tk_DeleteErrorHandler(handler);
-	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
-	    Tcl_Free(fontPtr);
-	}
-	return NULL;
+    Tk_DeleteErrorHandler(handler);
+    FinishedWithFont(fontPtr);
+    if (!fontPtr->font.fid) {
+        Tcl_Free(fontPtr);
+    }
+    return NULL;
     }
 
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
@@ -891,47 +909,47 @@ InitFont(
 
     Tk_DeleteErrorHandler(handler);
     if (errorFlag) {
-	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
-	    Tcl_Free(fontPtr);
-	}
-	return NULL;
+    FinishedWithFont(fontPtr);
+    if (!fontPtr->font.fid) {
+        Tcl_Free(fontPtr);
+    }
+    return NULL;
     }
 
     /*
      * Compute underline position and thickness.
      */
     {
-	TkFont *fPtr = &fontPtr->font;
+    TkFont *fPtr = &fontPtr->font;
 
-	fPtr->underlinePos = fPtr->fm.descent / 2;
+    fPtr->underlinePos = fPtr->fm.descent / 2;
 
-	errorFlag = 0;
-	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-			-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+    errorFlag = 0;
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+            -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 
-	Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
+    Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
 
-	Tk_DeleteErrorHandler(handler);
-	if (errorFlag) {
-	    FinishedWithFont(fontPtr);
-	    if (!fontPtr->font.fid) {
-		Tcl_Free(fontPtr);
-	    }
-	    return NULL;
-	}
+    Tk_DeleteErrorHandler(handler);
+    if (errorFlag) {
+        FinishedWithFont(fontPtr);
+        if (!fontPtr->font.fid) {
+        Tcl_Free(fontPtr);
+        }
+        return NULL;
+    }
 
-	fPtr->underlineHeight = iWidth / 3;
-	if (fPtr->underlineHeight == 0) {
-	    fPtr->underlineHeight = 1;
-	}
-	if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
-	    fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
-	    if (fPtr->underlineHeight == 0) {
-		fPtr->underlinePos--;
-		fPtr->underlineHeight = 1;
-	    }
-	}
+    fPtr->underlineHeight = iWidth / 3;
+    if (fPtr->underlineHeight == 0) {
+        fPtr->underlineHeight = 1;
+    }
+    if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
+        fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
+        if (fPtr->underlineHeight == 0) {
+        fPtr->underlinePos--;
+        fPtr->underlineHeight = 1;
+        }
+    }
     }
 
     return fontPtr;
