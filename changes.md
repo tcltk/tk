@@ -33,10 +33,11 @@ necessarily in Tk 8.
  - [Rotated text for label widgets](https://core.tcl-lang.org/tips/doc/trunk/tip/751.md)
  - [ttk::treeview enhancements](https://core.tcl-lang.org/tips/doc/trunk/tip/740.md)
  - [Painting performance improvements for images in ttk widgets](https://core.tcl-lang.org/tk/info/7caf9e9edcfbee42)
+ - [Locale support for word handling in text and entry](https://core.tcl-lang.org/tips/doc/trunk/tip/687.md)
+ - [Provide access to the full contents of the Info.plist file of a Tk-based macOS app](https://core.tcl-lang.org/tips/doc/trunk/tip/725.md)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
  - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
  - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
- - [BiDi support is now the default build option on X11 and harfbuzz is a hard build
- dependency](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)
+ - [BiDi support is now the default build option on X11 and harfbuzz is a hard build dependency](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)

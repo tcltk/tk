@@ -10115,7 +10115,7 @@ printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="${libdir}/Resources/Scripts"
+    TK_PKG_DIR="Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"
