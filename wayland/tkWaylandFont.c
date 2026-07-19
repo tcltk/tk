@@ -43,8 +43,12 @@ static int  fcInitialized = 0;
 static int        GetBidiRuns(FcChar32 *ucs4, int charCount,
 			      BidiRun *runs, int maxRuns);
 static bool       IsSimpleOnly(const char *str, int len);
+static bool       IsEmoji(FcChar32 uc);
+static int        GetEmojiFaceIndex(WaylandFont *fontPtr);
 static int        GetRunFaceIndex(WaylandFont *fontPtr, FcChar32 *ucs4Chars,
 				  int runStart, int runLen);
+static int        FindFaceCoveringRange(WaylandFont *fontPtr, FcChar32 *ucs4,
+					int start, int len);
 static hb_font_t *GetHbFont(WaylandFont *fontPtr, int faceIndex);
 static int        EnsureNvgFaceFont(WaylandFont *fontPtr, int faceIndex,
 				    NVGcontext *vg);
@@ -54,6 +58,7 @@ static void       DeleteFont(WaylandFont *fontPtr);
 static NVGcolor   ColorFromGC(GC gc);
 
 /*
+ *----------------------------------------------------------------------
  * IsSimpleOnly --
  *
  *   Fast-path classifier for text that does NOT require HarfBuzz shaping
@@ -131,6 +136,73 @@ IsSimpleOnly(const char *str, int len)
 
 /*
  *----------------------------------------------------------------------
+ * IsEmoji --
+ *
+ *   Determine whether a Unicode codepoint is an emoji character.
+ *   This covers the full emoji ranges including ZWJ, flags, and skin
+ *   tone modifiers. Correct emoji detection is essential for proper
+ *   fallback to the emoji font in the shaping pipeline.
+ *
+ * Results:
+ *   true if the codepoint is an emoji, false otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsEmoji(FcChar32 uc)
+{
+    return
+        (uc >= 0x1F000 && uc <= 0x1FAFF) ||   /* Main emoji blocks. */
+        (uc >= 0x1F300 && uc <= 0x1F9FF) ||
+        (uc >= 0x2600  && uc <= 0x27BF)  ||   /* Misc symbols. */
+        (uc == 0x200D) ||                     /* Zero-width joiner. */
+        (uc >= 0x1F1E6 && uc <= 0x1F1FF) ||   /* Regional indicators (flags). */
+        (uc >= 0x1F3FB && uc <= 0x1F3FF);     /* Skin tone modifiers. */
+}
+
+/*
+ *----------------------------------------------------------------------
+ * GetEmojiFaceIndex --
+ *
+ *   Find the best face for rendering emoji characters by scanning
+ *   the font's face list for a face that contains typical emoji
+ *   codepoints. This avoids adding a field to WaylandFont and
+ *   keeps the struct unchanged.
+ *
+ * Results:
+ *   Face index (0..nfaces-1) that supports emoji, or 0 as fallback.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+GetEmojiFaceIndex(WaylandFont *fontPtr)
+{
+    /* Try to find a face that clearly looks like an emoji font. */
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        FcCharSet *cs = fontPtr->faces[fi].charset;
+        if (!cs) continue;
+
+        /* Pick a face that has typical emoji codepoints. */
+        if (FcCharSetHasChar(cs, 0x1F600) ||  /* Grinning face. */
+            FcCharSetHasChar(cs, 0x1F602) ||  /* Face with tears of joy. */
+            FcCharSetHasChar(cs, 0x1F60D) ||  /* Smiling face with heart-eyes. */
+            FcCharSetHasChar(cs, 0x1F44D)) {  /* Thumbs up. */
+            return fi;
+        }
+    }
+
+    /* Fallback: primary face. */
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
  * GetBidiRuns --
  *
  *   Analyse a UCS-4 array with SheenBidi and return level runs in visual
@@ -203,6 +275,10 @@ GetBidiRuns(
  *   Choose the best WaylandFtFace for the first character of a run.
  *   Uses the direct-mapped 64-slot cache from WaylandShaper.
  *
+ *   Emoji characters are always routed to the emoji face to ensure
+ *   proper rendering of emoji sequences and to prevent partial
+ *   coverage from non-emoji fonts.
+ *
  * Results:
  *   Index of the face (0..nfaces-1) that supports the character.
  *
@@ -219,7 +295,14 @@ GetRunFaceIndex(
 		int runLen)
 {
     if (runLen <= 0 || runStart < 0) return 0;
+
     FcChar32      uc       = ucs4Chars[runStart];
+
+    /* Emoji always uses the emoji face. */
+    if (IsEmoji(uc)) {
+        return GetEmojiFaceIndex(fontPtr);
+    }
+
     WaylandShaper *shaper  = &fontPtr->shaper;
     int            cacheIdx = uc & 63;
 
@@ -239,6 +322,57 @@ GetRunFaceIndex(
     shaper->charCache[cacheIdx].uc      = uc;
     shaper->charCache[cacheIdx].faceIdx = 0;
     return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * FindFaceCoveringRange --
+ *
+ *   Find a face index that covers all characters in the given UCS-4 range.
+ *   This is used to select a single font for an entire sub-run, avoiding
+ *   face changes that would break combining marks (which have INHERITED script).
+ *
+ *   If any character in the range is an emoji, the emoji face is used
+ *   for the entire range to ensure that emoji sequences (ZWJ, skin tones,
+ *   flags) remain in a single font and shape correctly.
+ *
+ * Results:
+ *   Face index (0..nfaces-1) that covers all characters, or 0 as fallback.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+ 
+static int
+FindFaceCoveringRange(
+    WaylandFont *fontPtr,
+    FcChar32 *ucs4,
+    int start,
+    int len)
+{
+    if (len <= 0) return 0;
+
+    /* If any character in the range is an emoji, use the emoji face. */
+    for (int i = start; i < start + len; i++) {
+        if (IsEmoji(ucs4[i])) {
+            return GetEmojiFaceIndex(fontPtr);
+        }
+    }
+
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        FcCharSet *cs = fontPtr->faces[fi].charset;
+        if (!cs) continue;
+        int ok = 1;
+        for (int i = start; i < start + len; i++) {
+            if (!FcCharSetHasChar(cs, ucs4[i])) {
+                ok = 0;
+                break;
+            }
+        }
+        if (ok) return fi;
+    }
+    return 0; /* fallback to primary face */
 }
 
 /*
@@ -552,6 +686,10 @@ WaylandShaper_ShapeString(
          * depends on what follows each character logically (script
          * changes, face/fallback-font changes, etc). Shaping and
          * placement are deferred to pass 2 below.
+         *
+         * FIX: For characters with HB_SCRIPT_INHERITED or HB_SCRIPT_COMMON
+         * we do NOT break on face mismatch; they are kept with the base
+         * character to ensure combining marks are shaped together.
          */
         typedef struct {
             int         start;   /* Logical char offset of subrun. */
@@ -592,25 +730,29 @@ WaylandShaper_ShapeString(
                     subrunScript = HB_SCRIPT_COMMON;
                 }
 
-                int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
-
-                /* Extend subrun while script and face are consistent. */
+                /* Extend subrun while script is consistent.
+                 * For INHERITED/COMMON, do NOT break on face mismatch.
+                 * Only break when we encounter a different script.
+                 */
                 int subrunEnd = subrunStart + 1;
                 while (subrunEnd < runStart + runLen) {
                     hb_script_t s = hb_unicode_script(
 						      hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
 
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
-                        int nf = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
-                        if (nf != runFaceIndex) break;
+                        /* Keep extending; do not break on face mismatch. */
                         subrunEnd++;
                         continue;
                     }
                     if (s != subrunScript) break;
-                    int nf = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
-                    if (nf != runFaceIndex) break;
+                    /* If it's a real script, ensure face covers it? We'll handle face selection later. */
                     subrunEnd++;
                 }
+
+                /* Now find a face that covers the entire subrun. */
+                int runFaceIndex = FindFaceCoveringRange(fontPtr, ucs4Chars,
+                                                         subrunStart,
+                                                         subrunEnd - subrunStart);
 
                 subrunList[subrunCount].start     = subrunStart;
                 subrunList[subrunCount].len       = subrunEnd - subrunStart;
@@ -648,7 +790,22 @@ WaylandShaper_ShapeString(
             int         subrunStart = subrunList[listIdx].start;
             int         subrunEnd   = subrunStart + subrunList[listIdx].len;
             hb_script_t subrunScript = subrunList[listIdx].script;
-            int         runFaceIndex = subrunList[listIdx].faceIndex;
+            int         runFaceIndex;
+
+            /* If this subrun contains any emoji, force emoji face. */
+            bool subrunHasEmoji = false;
+            for (int ci = subrunStart; ci < subrunEnd; ci++) {
+                if (IsEmoji(ucs4Chars[ci])) {
+                    subrunHasEmoji = true;
+                    break;
+                }
+            }
+
+            if (subrunHasEmoji) {
+                runFaceIndex = GetEmojiFaceIndex(fontPtr);
+            } else {
+                runFaceIndex = subrunList[listIdx].faceIndex;
+            }
 
             int shapeByteStart = charBounds[subrunStart];
             int shapeByteEnd   = charBounds[
@@ -1103,28 +1260,22 @@ TkpGetFontPixelSize(Tk_Font tkfont)
 
 static void
 InitFont(
-	 Tk_Window tkwin,
-	 const TkFontAttributes *faPtr,
-	 WaylandFont *fontPtr)
+    Tk_Window tkwin,
+    const TkFontAttributes *faPtr,
+    WaylandFont *fontPtr)
 {
     TkFontAttributes *fa = &fontPtr->font.fa;
-    TkFontMetrics    *fm = &fontPtr->font.fm;
-
+    TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
     /* Resolve pixel size with improved scaling. */
     double ptSize = faPtr->size;
-    int    basePixels;
-
+    int basePixels;
     if (ptSize < 0.0) {
-        /* Explicit pixel size (Tk convention: -12 means 12px). */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        /* Try Tk's conversion first. */
         basePixels = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
-        /* Strong fallback for Wayland/GLFW if conversion gives tiny/no-op result. */
         if (basePixels <= 0 || basePixels == (int)ptSize || basePixels < 8) {
-            /* Standard 96 DPI scaling: 12pt → ~16px. */
             basePixels = (int)(ptSize * 4.0 / 3.0 + 0.5);
         }
     } else {
@@ -1132,42 +1283,71 @@ InitFont(
     }
     if (basePixels < 1) basePixels = 1;
 
-    /* Optional: gentle boost for modern displays (can be tuned). */
     if (basePixels < 14) {
-        basePixels = (int)(basePixels * 1.15 + 0.5);  /* ~15% boost for readability */
+        basePixels = (int)(basePixels * 1.15 + 0.5);
     }
-
     fontPtr->pixelSize = basePixels;
 
-    int bold   = (faPtr->weight == TK_FW_BOLD);
-    int italic = (faPtr->slant  == TK_FS_ITALIC);
+    int bold = (faPtr->weight == TK_FW_BOLD);
+    int italic = (faPtr->slant == TK_FS_ITALIC);
 
-    /* Build Fontconfig pattern and obtain ordered font-set. */
     const char *family = faPtr->family;
-    if (!family || family[0] == '\0') family = "sans-serif";
+
+    /*
+     * Strict sans serif defaul: 
+     * If the user did NOT explicitly request a family,
+     * we do NOT add their family to the pattern.
+     */
+    bool useSansDefault = (!family || family[0] == '\0' ||
+                           strcmp(family, "sans") == 0 ||
+                           strcmp(family, "TkDefaultFont") == 0);
 
     FcPattern *pat = FcPatternCreate();
     if (!pat) return;
 
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
+    /* Only honor explicit non-default family. */
+    if (!useSansDefault && family && family[0] != '\0') {
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
+    }
+
+    /*
+     * Sans-serif stack - order matters. 
+     * FcFontSort respects the order of FC_FAMILY entries.
+     * The first matching face becomes set->fonts[0].
+     */
+
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emoji");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
+
+    /* No FC_STYLE hints — they cause serif pollution. */
+
     FcPatternAddInteger(pat, FC_WEIGHT,
-                        bold   ? FC_WEIGHT_BOLD    : FC_WEIGHT_REGULAR);
+                        bold ? FC_WEIGHT_BOLD : FC_WEIGHT_REGULAR);
     FcPatternAddInteger(pat, FC_SLANT,
-                        italic ? FC_SLANT_ITALIC    : FC_SLANT_ROMAN);
+                        italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
     FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
 
-    FcResult   result;
+    FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
+    /* Last-resort fallback: same strict sans stack. */
     if (!set || set->nfont == 0) {
-        /* Last-resort fallback. */
         FcPatternDestroy(pat);
         pat = FcPatternCreate();
+        if (!pat) return;
+
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-        FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emoji");
+
         FcConfigSubstitute(NULL, pat, FcMatchPattern);
         FcDefaultSubstitute(pat);
         set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
@@ -1178,30 +1358,27 @@ InitFont(
 
     int nfaces = (set && set->nfont > 0) ? set->nfont : 0;
     if (nfaces > MAX_FACES) nfaces = MAX_FACES;
-
-    fontPtr->faces  = (WaylandFtFace *)Tcl_Alloc(
-						 (nfaces > 0 ? nfaces : 1) * sizeof(WaylandFtFace));
+    fontPtr->faces = (WaylandFtFace *)Tcl_Alloc(
+        (nfaces > 0 ? nfaces : 1) * sizeof(WaylandFtFace));
     fontPtr->nfaces = nfaces;
     memset(fontPtr->faces, 0,
            (nfaces > 0 ? nfaces : 1) * sizeof(WaylandFtFace));
 
     for (int i = 0; i < nfaces; i++) {
         WaylandFtFace *face = &fontPtr->faces[i];
-        face->source     = set->fonts[i];
-        face->nvgFontId  = -1;
-        face->isLoaded   = 0;
+        face->source = set->fonts[i];
+        face->nvgFontId = -1;
+        face->isLoaded = 0;
         face->nvgName[0] = '\0';
 
-        /* Per-face charset. */
         FcCharSet *cs = NULL;
         if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &cs)
-	    == FcResultMatch)
+            == FcResultMatch)
             face->charset = FcCharSetCopy(cs);
 
-        /* File path and face index. */
         FcChar8 *fcPath = NULL;
         if (FcPatternGetString(set->fonts[i], FC_FILE, 0, &fcPath)
-	    == FcResultMatch && fcPath)
+            == FcResultMatch && fcPath)
             face->filePath = strdup((char *)fcPath);
 
         int fcIdx = 0;
@@ -1221,19 +1398,20 @@ InitFont(
                 stbtt_fontinfo info;
                 if (stbtt_InitFont(&info, buf,
                                    stbtt_GetFontOffsetForIndex(
-							       buf, fontPtr->faces[0].faceIndex))) {
+                                       buf, fontPtr->faces[0].faceIndex))) {
                     float scale = stbtt_ScaleForPixelHeight(
-							    &info, (float)fontPtr->pixelSize);
+                        &info, (float)fontPtr->pixelSize);
                     int asc, desc, linegap;
                     stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                    fm->ascent   = (int)( asc  * scale + 0.5f);
-                    fm->descent  = (int)(-desc * scale + 0.5f);   /* Note: positive descent */
+                    fm->ascent = (int)(asc * scale + 0.5f);
+                    fm->descent = (int)(-desc * scale + 0.5f);
+
                     int adv_W, adv_dot, lsb;
-                    stbtt_GetCodepointHMetrics(&info, 'W',  &adv_W,   &lsb);
-                    stbtt_GetCodepointHMetrics(&info, '.',  &adv_dot, &lsb);
+                    stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
+                    stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                     fm->maxWidth = (int)(adv_W * scale + 0.5f);
-                    fm->fixed    = (adv_W == adv_dot);
-                    fa->size     = (double)(-fontPtr->pixelSize);
+                    fm->fixed = (adv_W == adv_dot);
+                    fa->size = (double)(-fontPtr->pixelSize);
                 }
             }
             if (buf) Tcl_Free(buf);
@@ -1241,22 +1419,21 @@ InitFont(
         }
     }
 
-    /* Improved fallback metrics — consistent with real fonts. */
     if (fm->ascent == 0 && fm->descent == 0) {
-        fm->ascent   = (int)(fontPtr->pixelSize * 0.72 + 0.5);   /* tighter than 0.80 */
-        fm->descent  = (int)(fontPtr->pixelSize * 0.28 + 0.5);   /* more realistic */
+        fm->ascent = (int)(fontPtr->pixelSize * 0.72 + 0.5);
+        fm->descent = (int)(fontPtr->pixelSize * 0.28 + 0.5);
         fm->maxWidth = fontPtr->pixelSize;
-        fm->fixed    = 0;
+        fm->fixed = 0;
     }
 
     fontPtr->underlinePos = fm->descent / 2;
     if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
-    fontPtr->barHeight    = (int)(fontPtr->pixelSize * 0.07 + 0.5);
+    fontPtr->barHeight = (int)(fontPtr->pixelSize * 0.07 + 0.5);
     if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
 
     fontPtr->nvgFontId = -1;
-    fontPtr->font.fid  = (Font)(uintptr_t)fontPtr;
-
+    fontPtr->font.fid = (Font)(uintptr_t)fontPtr;
+    
     WaylandShaper_Init(&fontPtr->shaper);
 }
 
