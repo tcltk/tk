@@ -1428,125 +1428,183 @@ X11Shaper_ShapeString(
 	}
 	if (!hasVisibleChars) continue;
 
-	int subrunStart = runStart;
+	/*
+	 * ---------------------------------------------------------------
+	 * Pass 1: determine subrun boundaries (script/face groups).
+	 *
+	 * This is always a forward walk in LOGICAL character order,
+	 * since deciding where one subrun ends and the next begins
+	 * depends on what follows each character logically (script
+	 * changes, face/fallback-font changes, etc).  Shaping and
+	 * placement are deferred to pass 2 below.
+	 * ---------------------------------------------------------------
+	 */
+	typedef struct {
+	    int start;		 /* Logical char offset of subrun. */
+	    int len;		    /* Length in chars. */
+	    hb_script_t script;
+	    int faceIndex;
+	} SubRunInfo;
 
-	while (subrunStart < runStart + runLen) {
+	SubRunInfo subrunList[MAX_GLYPHS];
+	int subrunCount = 0;
 
-	    /*
-	     * Detect the concrete script for this subrun.
-	     *
-	     * Walk forward skipping INHERITED/COMMON to find the first
-	     * character with a real script assignment.  If the entire
-	     * remaining run is INHERITED/COMMON (e.g. a run of emoji,
-	     * which are all HB_SCRIPT_COMMON) leave subrunScript as
-	     * HB_SCRIPT_INVALID; it is resolved below.
-	     */
-	    hb_script_t subrunScript = HB_SCRIPT_INVALID;
-	    for (int ci = subrunStart; ci < runStart + runLen; ci++) {
-		hb_script_t s = hb_unicode_script(
-		    hb_unicode_funcs_get_default(), ucs4Chars[ci]);
-		if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
-		    subrunScript = s;
-		    break;
-		}
-	    }
+	{
+	    int subrunStart = runStart;
 
-	    /*
-	     * Resolve the script and select the anchor face.
-	     *
-	     * For a run that starts with real-script characters the anchor
-	     * is the first such character (skipping leading COMMON/INHERITED
-	     * punctuation).  For a run that is entirely COMMON (emoji, math
-	     * symbols, general punctuation without a preceding context) the
-	     * anchor is subrunStart itself – GetRunFaceIndex will pick the
-	     * face that has charset coverage for the first codepoint, which
-	     * is exactly what we want (e.g. Noto Color Emoji for U+1F600).
-	     *
-	     * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
-	     * all-COMMON case so that HarfBuzz activates the correct feature
-	     * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
-	     * by colour-emoji fonts).
-	     */
-	    int anchorChar = subrunStart;
-	    if (subrunScript != HB_SCRIPT_INVALID) {
+	    while (subrunStart < runStart + runLen &&
+		   subrunCount < MAX_GLYPHS) {
+
+		/*
+		 * Detect the concrete script for this subrun.
+		 *
+		 * Walk forward skipping INHERITED/COMMON to find the first
+		 * character with a real script assignment.  If the entire
+		 * remaining run is INHERITED/COMMON (e.g. a run of emoji,
+		 * which are all HB_SCRIPT_COMMON) leave subrunScript as
+		 * HB_SCRIPT_INVALID; it is resolved below.
+		 */
+		hb_script_t subrunScript = HB_SCRIPT_INVALID;
 		for (int ci = subrunStart; ci < runStart + runLen; ci++) {
 		    hb_script_t s = hb_unicode_script(
 			hb_unicode_funcs_get_default(), ucs4Chars[ci]);
 		    if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
-			anchorChar = ci;
+			subrunScript = s;
 			break;
 		    }
 		}
-	    } else {
-		/* All-COMMON run (emoji, symbols, punctuation). */
-		subrunScript = HB_SCRIPT_COMMON;
-	    }
 
-	    int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
+		/*
+		 * Resolve the script and select the anchor face.
+		 *
+		 * For a run that starts with real-script characters the anchor
+		 * is the first such character (skipping leading COMMON/INHERITED
+		 * punctuation).  For a run that is entirely COMMON (emoji, math
+		 * symbols, general punctuation without a preceding context) the
+		 * anchor is subrunStart itself - GetRunFaceIndex will pick the
+		 * face that has charset coverage for the first codepoint, which
+		 * is exactly what we want (e.g. Noto Color Emoji for U+1F600).
+		 *
+		 * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
+		 * all-COMMON case so that HarfBuzz activates the correct feature
+		 * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
+		 * by colour-emoji fonts).
+		 */
+		int anchorChar = subrunStart;
+		if (subrunScript != HB_SCRIPT_INVALID) {
+		    for (int ci = subrunStart; ci < runStart + runLen; ci++) {
+			hb_script_t s = hb_unicode_script(
+			    hb_unicode_funcs_get_default(), ucs4Chars[ci]);
+			if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
+			    anchorChar = ci;
+			    break;
+			}
+		    }
+		} else {
+		    /* All-COMMON run (emoji, symbols, punctuation). */
+		    subrunScript = HB_SCRIPT_COMMON;
+		}
 
-	    /*
-	     * Extend the subrun while both script and face remain
-	     * consistent.
-	     *
-	     * Key rule for INHERITED/COMMON characters: absorb them only when
-	     * they map to the *same* fallback face as the current subrun.
-	     * If the face differs (e.g. a Unicode emoji following a Latin
-	     * word, where the emoji face is different from the Latin face)
-	     * break immediately so the emoji gets its own subrun with the
-	     * correct face and HB_SCRIPT_COMMON.  Without this check the
-	     * emoji would be shaped with the Latin face, producing .notdef
-	     * or the wrong monochrome glyph.
-	     */
-	    int subrunEnd = subrunStart + 1;
-	    while (subrunEnd < runStart + runLen) {
-		hb_script_t s = hb_unicode_script(
-		    hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+		int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
 
-		if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
-		    /*
-		     * Face-change check for neutral characters.
-		     * Combining marks (INHERITED) virtually always share the
-		     * base character's face, so this rarely fires for them.
-		     * Emoji (COMMON) frequently require a different face and
-		     * must be split out.
-		     */
-		    int neutralFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
-		    if (neutralFace != runFaceIndex) {
+		/*
+		 * Extend the subrun while both script and face remain
+		 * consistent.
+		 *
+		 * Key rule for INHERITED/COMMON characters: absorb them only when
+		 * they map to the *same* fallback face as the current subrun.
+		 * If the face differs (e.g. a Unicode emoji following a Latin
+		 * word, where the emoji face is different from the Latin face)
+		 * break immediately so the emoji gets its own subrun with the
+		 * correct face and HB_SCRIPT_COMMON.  Without this check the
+		 * emoji would be shaped with the Latin face, producing .notdef
+		 * or the wrong monochrome glyph.
+		 */
+		int subrunEnd = subrunStart + 1;
+		while (subrunEnd < runStart + runLen) {
+		    hb_script_t s = hb_unicode_script(
+			hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+
+		    if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
+			/*
+			 * Face-change check for neutral characters.
+			 * Combining marks (INHERITED) virtually always share the
+			 * base character's face, so this rarely fires for them.
+			 * Emoji (COMMON) frequently require a different face and
+			 * must be split out.
+			 */
+			int neutralFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
+			if (neutralFace != runFaceIndex) {
+			    break;
+			}
+			subrunEnd++;
+			continue;
+		    }
+
+		    /* Real script change -> always break. */
+		    if (s != subrunScript) {
 			break;
 		    }
+
+		    /* Same script, different face -> break. */
+		    int nextFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
+		    if (nextFace != runFaceIndex) {
+			break;
+		    }
+
 		    subrunEnd++;
-		    continue;
 		}
 
-		/* Real script change → always break. */
-		if (s != subrunScript) {
-		    break;
-		}
+		subrunList[subrunCount].start	   = subrunStart;
+		subrunList[subrunCount].len	   = subrunEnd - subrunStart;
+		subrunList[subrunCount].script	   = subrunScript;
+		subrunList[subrunCount].faceIndex = runFaceIndex;
+		subrunCount++;
 
-		/* Same script, different face → break. */
-		int nextFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
-		if (nextFace != runFaceIndex) {
-		    break;
-		}
-
-		subrunEnd++;
+		subrunStart = subrunEnd;
 	    }
+	}
 
-	    int shapeRunStart = subrunStart;
-	    int shapeRunLen   = subrunEnd - subrunStart;
+	/*
+	 * ---------------------------------------------------------------
+	 * Pass 2: shape and place each subrun.
+	 *
+	 * For an LTR bidi run, subruns are placed left-to-right in the
+	 * same order they occur logically (index 0 .. subrunCount-1).
+	 *
+	 * For an RTL bidi run, the logically *first* subrun is read
+	 * LAST and therefore must end up visually rightmost; the
+	 * logically *last* subrun is read FIRST and must end up
+	 * visually leftmost.  Since placement below always advances the
+	 * pen left to right, an RTL run's subruns must be visited in
+	 * REVERSE logical order so the pen reaches the logically
+	 * earlier (visually rightmost) subrun last.
+	 *
+	 * Processing subruns in logical order regardless of run
+	 * direction silently scrambles any RTL run that needs more than
+	 * one subrun (e.g. Arabic text combined with a name or digits
+	 * that require a different face) - this was the source of the
+	 * Arabic/Hebrew reordering bug.
+	 * ---------------------------------------------------------------
+	 */
+	for (int si = 0; si < subrunCount; si++) {
+	    int listIdx = runIsRTL ? (subrunCount - 1 - si) : si;
+
+	    int shapeRunStart	      = subrunList[listIdx].start;
+	    int shapeRunLen	      = subrunList[listIdx].len;
+	    hb_script_t subrunScript = subrunList[listIdx].script;
+	    int runFaceIndex	      = subrunList[listIdx].faceIndex;
 
 	    int shapeByteStart = charBounds[shapeRunStart];
 	    int shapeByteEnd   = charBounds[shapeRunStart + shapeRunLen];
 	    int shapeByteLen   = shapeByteEnd - shapeByteStart;
 
 	    if (shapeByteLen <= 0) {
-		subrunStart = subrunEnd;
 		continue;
 	    }
 
 	    hb_font_t *runHbFont = GetHbFont(fontPtr, runFaceIndex);
 	    if (!runHbFont) {
-		subrunStart = subrunEnd;
 		continue;
 	    }
 
@@ -1567,7 +1625,6 @@ X11Shaper_ShapeString(
 	    hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
 	    hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
 	    if (!glyphInfo || !glyphPos) {
-		subrunStart = subrunEnd;
 		continue;
 	    }
 
@@ -1673,7 +1730,6 @@ X11Shaper_ShapeString(
 	    }
 
 	    globalPenX += runPenX;
-	    subrunStart = subrunEnd;
 	}
     }
 
