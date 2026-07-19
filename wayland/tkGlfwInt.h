@@ -24,19 +24,7 @@
 #include "tkWaylandDefaults.h"
 
 #include "nanovg.h"
-
-typedef struct NVGLUframebuffer NVGLUframebuffer;
-
-/* Forward declarations for GLES2 backend functions. */
-//NVGcontext* nvgCreateGLES2(int flags);
-//void nvgDeleteGLES2(NVGcontext* ctx);
-//int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
-//GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
-
-/* Forward declarations for utils. */
-NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
-void nvgluBindFramebuffer(NVGLUframebuffer* fb);
-void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
+#include "nanovg_gl_utils.h"
 
 /*
  *----------------------------------------------------------------------
@@ -548,8 +536,8 @@ MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void updateClipRects(TkWindow* winPtr, GLFWwindow *glfwWindow);
-MODULE_SCOPE void drawClipMask(TkWindow* winPtr, GLFWwindow* glfwWindow);
+MODULE_SCOPE void tkWaylandDrawClipMask(TkWindow* winPtr,
+					GLFWwindow* glfwWindow);
 
 /*
  *----------------------------------------------------------------------

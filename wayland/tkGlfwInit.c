@@ -787,13 +787,10 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
-    /// Eventually, this should only be called when the Invalid Clip flag
-    /// is set.
-    updateClipRects(winPtr, glfwWindow);
     /*
      * Draw the clip mask into the depth buffer
      */
-    drawClipMask(winPtr, glfwWindow);
+    tkWaylandDrawClipMask(winPtr, glfwWindow);
     /*
      * Enable clipping using the depth buffer with depth test GL_LEQUAL.  The
      * call to drawClipMask just set the depth of each fragment inside a
@@ -886,8 +883,9 @@ TkGlfwGetNVGContext(
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || !mainGlfwContext.vg || shutdownInProgress)
+    if (!GlfwIsInitialized || !mainGlfwContext.vg || shutdownInProgress) {
         return NULL;
+    }
     glfwMakeContextCurrent(mainGlfwWindow);
     return mainGlfwContext.vg;
 }

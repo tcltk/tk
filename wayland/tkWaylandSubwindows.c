@@ -24,16 +24,17 @@
  * Wayland port of Tk.  The implementation uses the OpenGL depth buffer
  * associated to the backing store framebuffer of a toplevel.  (This requires
  * modifying nanoVG to ensure that an external framebuffer always has a depth
- * buffer.)  Before drawing any widget rectangles corresponding to the
- * widget's clipping region are drawn at height z=-0.5, causing them to have
- * larger depth than the plane z=0, where nanoVG does all of its drawing.  The
- * color buffer is disabled while drawing these rectangles but the depth
- * buffer is enabled, so every fragment inside a clipping rectange in the
- * plane z=0 is covered by a fragment at a higher depth.  Before calling
- * nvgEndFrame a GL_LEQUAL depth test is enabled, causing every nanoVG
- * fragment inside of a clipping rectangle * to be discarded when the nanoVG
- * fragment shader runs. (This requires modifying nanoVG to prevent it
- * from disabling the depth buffer.)
+ * buffer.)  Before drawing any widget, rectangles corresponding to the
+ * widget's clipping region are drawn at height z=-0.5 (depth 0.25), causing
+ * them to have smaller depth than the plane z=0 (depth 0.25), where nanoVG
+ * does all of its drawing.  The color buffer is disabled while drawing these
+ * rectangles but the depth buffer is enabled, so every fragment inside a
+ * clipping rectange in the plane z=0 ends up above a fragment at a lower
+ * depth.  Before calling nvgEndFrame the GL_LEQUAL depth test is enabled.
+ * This causes every nanoVG fragment inside of a clipping rectangle * to be
+ * discarded when the nanoVG fragment shader runs. (So this requires another
+ * modification to nanoVG to to prevent it from disabling the depth buffer
+ * when drawing.)
  *
  * Each Tk window owns a VAO in the GL context of its toplevel window.  The
  * VAO manages a VBO that stores the vertices used to fill the rectangular
@@ -220,8 +221,8 @@ addClipRect(
 }
 
 void updateClipRects(
-     TkWindow* winPtr,
-     GLFWwindow* glfwWindow)
+     TkWindow* winPtr,       /* The window to be updated. */
+     GLFWwindow* glfwWindow) /* The glfwWindow for its toplevel. */
 {
     printf("updateClipRects: %s\n", Tk_PathName(winPtr));
     float scale;
@@ -297,10 +298,14 @@ void updateClipRects(
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void drawClipMask(
+MODULE_SCOPE
+void tkWaylandDrawClipMask(
     TkWindow* winPtr,
     GLFWwindow* glfwWindow)
 {
+    if (1) { //// should be if the clipRects are invalid
+	updateClipRects(winPtr, glfwWindow);
+    }
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     /* Bind the framebuffer. */
     nvgluBindFramebuffer(infoPtr->winPtr->privatePtr->fb);
