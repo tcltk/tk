@@ -15,7 +15,7 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
-#include "tkWaylandInt.h"
+#include "tkWaylandWm.h"
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
@@ -47,38 +47,6 @@
 #define WM_DELETE_WINDOW    1
 #define WM_TAKE_FOCUS       2
 #define WM_SAVE_YOURSELF    3
-
-
-/*
- * WmInfo flag bits.
- */
-#define WM_NEVER_MAPPED             (1<<0)
-#define WM_UPDATE_PENDING           (1<<1)
-#define WM_NEGATIVE_X               (1<<2)
-#define WM_NEGATIVE_Y               (1<<3)
-#define WM_UPDATE_SIZE_HINTS        (1<<4)
-#define WM_SYNC_PENDING             (1<<5)
-#define WM_CREATE_PENDING           (1<<6)
-#define WM_ABOUT_TO_MAP             (1<<9)
-#define WM_MOVE_PENDING             (1<<10)
-#define WM_COLORMAPS_EXPLICIT       (1<<11)
-#define WM_ADDED_TOPLEVEL_COLORMAP  (1<<12)
-#define WM_WIDTH_NOT_RESIZABLE      (1<<13)
-#define WM_HEIGHT_NOT_RESIZABLE     (1<<14)
-#define WM_WITHDRAWN                (1<<15)
-#define WM_FULLSCREEN_PENDING       (1<<16)
-
-/* Size-hint flags. */
-#define WM_USPosition   (1<<0)
-#define WM_USSize       (1<<1)
-#define WM_PPosition    (1<<2)
-#define WM_PSize        (1<<3)
-#define WM_PMinSize     (1<<4)
-#define WM_PMaxSize     (1<<5)
-#define WM_PResizeInc   (1<<6)
-#define WM_PAspect      (1<<7)
-#define WM_PBaseSize    (1<<8)
-#define WM_PWinGravity  (1<<9)
 
 /* Window-state constants (X11 compatible). */
 #define WithdrawnState  0

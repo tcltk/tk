@@ -15,6 +15,7 @@
 #include "tkInt.h"
 #include "tkWaylandInt.h"
 #include "tkMenu.h"
+#include "tkWaylandWm.h"
 #include <GLFW/glfw3.h>
 #include <wayland-client.h>
 #include <stdbool.h>
@@ -83,6 +84,25 @@ MODULE_SCOPE int TkWaylandLoadNamedFontIntoContext(NVGcontext *vg, const char *t
 MODULE_SCOPE void TkWaylandPopupDrawBorderWithShadow(TkWaylandPopup *popup);
 MODULE_SCOPE int TkWaylandMenubarActivateFirst(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
+
+/*
+ * Post a menu as either the root of a new menu stack (isRoot != 0,
+ * dismisses any existing stack first) or as a cascade one level deeper
+ * than the current top of stack (isRoot == 0).  anchorX/Y/W/H are in
+ * toplevel-surface-local coordinates; the popup is placed below-left of
+ * the anchor by default, flipping above/left if it would not fit within
+ * the toplevel's current size.  popupW/H are the menu's natural size.
+ *
+ * Returns TCL_OK / TCL_ERROR.
+ */
+
+static int  TkWaylandPostMenuAtAnchor(Tcl_Interp *interp, TkMenu *menuPtr,
+    int anchorX, int anchorY, int anchorW, int anchorH, int popupW, int popupH,
+    int isRoot);
+
+/* Dismiss the entire menu stack (all cascades + the root menu). */
+MODULE_SCOPE void TkWaylandMenuDismissAll(void);
+
 
 /*
  * Menu popup stack.

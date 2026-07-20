@@ -23,12 +23,6 @@
 #define MENU_LOG(fmt, ...) ((void)0)
 #endif
 
-/*
- * Forward declarations for functions used from tkWaylandMenu.c
- */
-MODULE_SCOPE int TkWaylandPostMenuAtAnchor(Tcl_Interp *interp, TkMenu *menuPtr,
-                                           int anchorX, int anchorY, int anchorW, int anchorH,
-                                           int popupW, int popupH, int isRoot);
 MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
 

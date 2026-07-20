@@ -44,6 +44,7 @@
 
 #include "tkInt.h"
 #include "tkWaylandInt.h"
+#include "tkWaylandWm.h"
 
 #include <GLES3/gl3.h>
 

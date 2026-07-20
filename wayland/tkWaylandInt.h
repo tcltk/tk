@@ -18,8 +18,6 @@
 #include "tkInt.h"
 #include "tkUnixInt.h"
 #include "tkFont.h"
-#include "tkMenu.h"
-#include "tkMenubutton.h"
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 #include <xkbcommon/xkbcommon.h>
@@ -266,24 +264,6 @@ typedef struct TkWaylandContext {
 /*
  *----------------------------------------------------------------------
  *
- * ProtocolHandler – per-protocol Tcl command binding.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct ProtocolHandler {
-    int                    protocol;  /* Protocol identifier. */
-    struct ProtocolHandler *nextPtr;
-    Tcl_Interp            *interp;
-    char                   command[TKFLEXARRAY];
-} ProtocolHandler;
-
-#define HANDLER_SIZE(cmdLength) \
-    (offsetof(ProtocolHandler, command) + 1 + (cmdLength))
-
-/*
- *----------------------------------------------------------------------
- *
  * WmAttributes – per-window wm attribute state.
  *
  *----------------------------------------------------------------------
@@ -327,83 +307,6 @@ typedef struct glfwTkInfo {
     unsigned int flags;
     struct glfwTkInfo *nextPtr;
 } glfwTkInfo;
-
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWmInfo – per-toplevel window manager state.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct TkWmInfo {
-    TkWindow    *winPtr;        /* Tk window. */
-    GLFWwindow  *glfwWindow;    /* GLFW handle (NULL until first map). */
-    char        *title;
-    char        *iconName;
-    char        *leaderName;
-    TkWindow    *containerPtr;  /* Transient-for container. */
-    Tk_Window    icon;
-    Tk_Window    iconFor;
-    int          withdrawn;
-    int          initialState;  /* NormalState, IconicState, WithdrawnState */
-
-    /* Wrapper / menubar. */
-    TkWindow    *wrapperPtr;
-    Tk_Window    menubar;
-    int          menuHeight;
-    
-
-    /* Subsurface popup for OR / menu windows. */
-    TkWaylandPopup *popup;          /* Active subsurface popup for OR
-                                      * / menu windows; NULL otherwise. */
-    TkWaylandPopup *menubarPopup;   /* Subsurface popup for the menubar
-                                      * strip, if any. */
-    int          overrideRedirect;  /* Mirrors wm overrideredirect /
-                                      * TkpMakeMenuWindow. */
-    TkMenu *menubarMenuPtr;
-
-    /* Size hints. */
-    int          sizeHintsFlags;
-    int          minWidth, minHeight;
-    int          maxWidth, maxHeight;
-    Tk_Window    gridWin;
-    int          widthInc, heightInc;
-    struct { int x; int y; } minAspect, maxAspect;
-    int          reqGridWidth, reqGridHeight;
-    int          gravity;
-
-    /* Position / size. */
-    int          width, height;
-    int          x, y;
-    int          parentWidth, parentHeight;
-    int          xInParent, yInParent;
-    int          configWidth, configHeight;
-
-    /* Virtual root (compatibility). */
-    int          vRootX, vRootY;
-    int          vRootWidth, vRootHeight;
-
-    /* Misc. */
-    WmAttributes  attributes;
-    WmAttributes  reqState;
-    ProtocolHandler *protPtr;
-    Tcl_Size      cmdArgc;
-    Tcl_Obj     **cmdArgv;
-    char         *clientMachine;
-    int           flags;
-    int           numTransients;
-    int           iconDataSize;
-    unsigned char *iconDataPtr;
-    GLFWimage    *glfwIcon;
-    int           glfwIconCount;
-    int           isMapped;
-    int           lastX, lastY;
-    int           lastWidth, lastHeight;
-    struct TkWmInfo *nextPtr;
-} WmInfo;
-
 
 /*
  *----------------------------------------------------------------------
@@ -827,25 +730,6 @@ MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
 MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
 
 /*
- * Post a menu as either the root of a new menu stack (isRoot != 0,
- * dismisses any existing stack first) or as a cascade one level deeper
- * than the current top of stack (isRoot == 0).  anchorX/Y/W/H are in
- * toplevel-surface-local coordinates; the popup is placed below-left of
- * the anchor by default, flipping above/left if it would not fit within
- * the toplevel's current size.  popupW/H are the menu's natural size.
- *
- * Returns TCL_OK / TCL_ERROR.
- */
-MODULE_SCOPE int  TkWaylandPostMenuAtAnchor(
-    Tcl_Interp *interp, TkMenu *menuPtr,
-    int anchorX, int anchorY, int anchorW, int anchorH,
-    int popupW, int popupH,
-    int isRoot);
-
-/* Dismiss the entire menu stack (all cascades + the root menu). */
-MODULE_SCOPE void TkWaylandMenuDismissAll(void);
-
-/*
  * Pointer/button management. 
  */
 MODULE_SCOPE void TkWaylandMenuHandlePointerMotion(int x, int y);
@@ -868,21 +752,6 @@ MODULE_SCOPE int  TkWaylandMenuConsumeDismissClick(void);
  */
 MODULE_SCOPE int TkWaylandMenuActive(void);
 MODULE_SCOPE Tk_Window TkWaylandMenuGetTopmostWindow(void);
-
-/*
- *----------------------------------------------------------------------
- *
- * Menubutton Support
- *
- *	Posting entry points implemented in tkWaylandMenubu.c, called from
- *	the GLFW mouse-button dispatcher in tkGlfwInit.c.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void TkpMenuButtonMaybePost(TkWindow *winPtr);
-MODULE_SCOPE int  TkpMenuButtonPostMenu(TkMenuButton *mbPtr);
-
 
 /*
  *----------------------------------------------------------------------
