@@ -182,9 +182,9 @@ static bool disjoint(
     clipRect a,
     clipRect b)
 {
-    if (a.w <= 0 || a.h <= 0 || b.w < 0 || b.h <= 0 ||
+    if (a.w <= 0 || a.h <= 0 || b.w <= 0 || b.h <= 0 ||
 	a.x + a.w <= b.x || b.x + b.w <= a.x ||
-	a.y + a.w <= b.y || b.y + b.w <= a.y) {
+	a.y + a.h <= b.y || b.y + b.h <= a.y) {
 	return true;
     }
     return false;
