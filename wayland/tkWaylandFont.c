@@ -58,6 +58,8 @@ static void       DeleteFont(WaylandFont *fontPtr);
 static NVGcolor   ColorFromGC(GC gc);
 static bool       IsSerifFace(FcPattern *pat);
 static bool       IsSansSerifFace(FcPattern *pat);
+static char      *ComposeUTF8String(const char *source, int len);
+static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
 
 /*
  * Helper: Check if a face is serif.
@@ -128,6 +130,298 @@ IsSansSerifFace(FcPattern *pat)
     return false;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * UnicodeCompose --
+ *
+ *   Attempt to compose a base character and combining mark.
+ *
+ * Results:
+ *   Composed Unicode character, or 0 if no composition is possible.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static FcChar32
+UnicodeCompose(FcChar32 base, FcChar32 mark)
+{
+    /* Common Latin composition table */
+    struct {
+        FcChar32 base;
+        FcChar32 mark;
+        FcChar32 composed;
+    } compTable[] = {
+        {0x0061, 0x0300, 0x00E0}, /* a + grave = à */
+        {0x0061, 0x0301, 0x00E1}, /* a + acute = á */
+        {0x0061, 0x0302, 0x00E2}, /* a + circumflex = â */
+        {0x0061, 0x0303, 0x00E3}, /* a + tilde = ã */
+        {0x0061, 0x0308, 0x00E4}, /* a + diaeresis = ä */
+        {0x0061, 0x030A, 0x00E5}, /* a + ring = å */
+        {0x0061, 0x0304, 0x0101}, /* a + macron = ā */
+        {0x0061, 0x0306, 0x0103}, /* a + breve = ă */
+        {0x0061, 0x030B, 0x0151}, /* a + double acute = ő */
+        
+        {0x0065, 0x0300, 0x00E8}, /* e + grave = è */
+        {0x0065, 0x0301, 0x00E9}, /* e + acute = é */
+        {0x0065, 0x0302, 0x00EA}, /* e + circumflex = ê */
+        {0x0065, 0x0308, 0x00EB}, /* e + diaeresis = ë */
+        {0x0065, 0x0304, 0x0113}, /* e + macron = ē */
+        {0x0065, 0x0306, 0x0115}, /* e + breve = ĕ */
+        
+        {0x0069, 0x0300, 0x00EC}, /* i + grave = ì */
+        {0x0069, 0x0301, 0x00ED}, /* i + acute = í */
+        {0x0069, 0x0302, 0x00EE}, /* i + circumflex = î */
+        {0x0069, 0x0308, 0x00EF}, /* i + diaeresis = ï */
+        {0x0069, 0x0304, 0x012B}, /* i + macron = ī */
+        {0x0069, 0x0306, 0x012D}, /* i + breve = ĭ */
+        
+        {0x006F, 0x0300, 0x00F2}, /* o + grave = ò */
+        {0x006F, 0x0301, 0x00F3}, /* o + acute = ó */
+        {0x006F, 0x0302, 0x00F4}, /* o + circumflex = ô */
+        {0x006F, 0x0303, 0x00F5}, /* o + tilde = õ */
+        {0x006F, 0x0308, 0x00F6}, /* o + diaeresis = ö */
+        {0x006F, 0x030B, 0x0151}, /* o + double acute = ő */
+        {0x006F, 0x0304, 0x014D}, /* o + macron = ō */
+        {0x006F, 0x0306, 0x014F}, /* o + breve = ŏ */
+        
+        {0x0075, 0x0300, 0x00F9}, /* u + grave = ù */
+        {0x0075, 0x0301, 0x00FA}, /* u + acute = ú */
+        {0x0075, 0x0302, 0x00FB}, /* u + circumflex = û */
+        {0x0075, 0x0308, 0x00FC}, /* u + diaeresis = ü */
+        {0x0075, 0x0304, 0x016B}, /* u + macron = ū */
+        {0x0075, 0x0306, 0x016D}, /* u + breve = ŭ */
+        {0x0075, 0x030B, 0x0171}, /* u + double acute = ű */
+        
+        {0x006E, 0x0303, 0x00F1}, /* n + tilde = ñ */
+        
+        /* Uppercase */
+        {0x0041, 0x0300, 0x00C0}, /* A + grave = À */
+        {0x0041, 0x0301, 0x00C1}, /* A + acute = Á */
+        {0x0041, 0x0302, 0x00C2}, /* A + circumflex = Â */
+        {0x0041, 0x0303, 0x00C3}, /* A + tilde = Ã */
+        {0x0041, 0x0308, 0x00C4}, /* A + diaeresis = Ä */
+        {0x0041, 0x030A, 0x00C5}, /* A + ring = Å */
+        
+        {0x0045, 0x0300, 0x00C8}, /* E + grave = È */
+        {0x0045, 0x0301, 0x00C9}, /* E + acute = É */
+        {0x0045, 0x0302, 0x00CA}, /* E + circumflex = Ê */
+        {0x0045, 0x0308, 0x00CB}, /* E + diaeresis = Ë */
+        
+        {0x0049, 0x0300, 0x00CC}, /* I + grave = Ì */
+        {0x0049, 0x0301, 0x00CD}, /* I + acute = Í */
+        {0x0049, 0x0302, 0x00CE}, /* I + circumflex = Î */
+        {0x0049, 0x0308, 0x00CF}, /* I + diaeresis = Ï */
+        
+        {0x004F, 0x0300, 0x00D2}, /* O + grave = Ò */
+        {0x004F, 0x0301, 0x00D3}, /* O + acute = Ó */
+        {0x004F, 0x0302, 0x00D4}, /* O + circumflex = Ô */
+        {0x004F, 0x0303, 0x00D5}, /* O + tilde = Õ */
+        {0x004F, 0x0308, 0x00D6}, /* O + diaeresis = Ö */
+        
+        {0x0055, 0x0300, 0x00D9}, /* U + grave = Ù */
+        {0x0055, 0x0301, 0x00DA}, /* U + acute = Ú */
+        {0x0055, 0x0302, 0x00DB}, /* U + circumflex = Û */
+        {0x0055, 0x0308, 0x00DC}, /* U + diaeresis = Ü */
+        
+        {0x004E, 0x0303, 0x00D1}, /* N + tilde = Ñ */
+        
+        {0, 0, 0}
+    };
+    
+    for (int i = 0; compTable[i].base != 0; i++) {
+        if (compTable[i].base == base && compTable[i].mark == mark) {
+            return compTable[i].composed;
+        }
+    }
+    
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ComposeUTF8String --
+ *
+ *   Compose combining diacritical marks in a UTF-8 string.
+ *   Uses a composition table for common Latin sequences; for other
+ *   sequences it falls back to the original text.
+ *
+ * Results:
+ *   Newly allocated UTF-8 string in NFC form, or NULL on failure.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ * ComposeUTF8String --
+ *
+ *   Compose combining diacritical marks in a UTF-8 string.
+ *   Uses a composition table for common Latin sequences.
+ *
+ * Results:
+ *   Newly allocated UTF-8 string in NFC form, or NULL on failure.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static char*
+ComposeUTF8String(const char *source, int len)
+{
+    if (!source || len <= 0) return NULL;
+    
+    /* Check if there are any combining characters */
+    bool hasCombining = false;
+    for (int i = 0; i < len; ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, len - i);
+        if (clen <= 0) { i++; continue; }
+        if (uc >= 0x0300 && uc <= 0x036F) {
+            hasCombining = true;
+            break;
+        }
+        i += clen;
+    }
+    
+    if (!hasCombining) {
+        char *result = (char *)malloc(len + 1);
+        if (result) {
+            memcpy(result, source, len);
+            result[len] = '\0';
+        }
+        return result;
+    }
+    
+    /* Walk through the string and compose clusters. */
+    char *result = NULL;
+    int resultLen = 0;
+    int i = 0;
+    
+    while (i < len) {
+        FcChar32 base = 0;
+        int baseLen = 0;
+        int baseStart = i;
+        
+        /* Read the base character. */
+        if (i < len) {
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, len - i);
+            if (clen > 0) {
+                /* Check if this is a combining mark with no base (unlikely). */
+                if (uc >= 0x0300 && uc <= 0x036F) {
+                    /* No base, copy the mark as-is. */
+                    char *newResult = (char *)realloc(result, resultLen + clen + 1);
+                    if (newResult) {
+                        result = newResult;
+                        memcpy(result + resultLen, source + i, clen);
+                        resultLen += clen;
+                    }
+                    i += clen;
+                    continue;
+                }
+                base = uc;
+                baseLen = clen;
+                i += clen;
+            } else {
+                i++;
+                continue;
+            }
+        } else {
+            break;
+        }
+        
+        /* Look ahead for combining marks. */
+        FcChar32 combined = base;
+        bool hadCombining = false;
+        
+        while (i < len) {
+            FcChar32 mark;
+            int markLen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &mark, len - i);
+            if (markLen <= 0) { i++; continue; }
+            if (mark >= 0x0300 && mark <= 0x036F) {
+                /* Try to compose. */
+                FcChar32 composed = UnicodeCompose(combined, mark);
+                if (composed > 0) {
+                    combined = composed;
+                    hadCombining = true;
+                    i += markLen;
+                    continue;
+                } else if (mark == 0x0303) { /* Tilde */
+                    /* Try some common Vietnamese combinations */
+                    if (combined == 0x01B0) { /* U with horn + tilde = Ữ */
+                        combined = 0x1EEF;
+                        hadCombining = true;
+                        i += markLen;
+                        continue;
+                    } else if (combined == 0x01A0) { /* O with horn + tilde = Ỗ */
+                        combined = 0x1ED6;
+                        hadCombining = true;
+                        i += markLen;
+                        continue;
+                    } else if (combined == 0x0041 || combined == 0x0061) {
+                        /* Already handled by UnicodeCompose for A/a. */
+                    }
+                }
+                /* Cannot compose this mark; stop and keep what we have. */
+                break;
+            } else {
+                /* Not a combining mark, stop. */
+                break;
+            }
+        }
+        
+        if (hadCombining && combined != base) {
+            /* Encode composed character as UTF-8. */
+            char utf8[8];
+            int utf8Len = 0;
+            if (combined <= 0x7F) {
+                utf8[0] = (char)combined;
+                utf8Len = 1;
+            } else if (combined <= 0x7FF) {
+                utf8[0] = (char)(0xC0 | ((combined >> 6) & 0x1F));
+                utf8[1] = (char)(0x80 | (combined & 0x3F));
+                utf8Len = 2;
+            } else if (combined <= 0xFFFF) {
+                utf8[0] = (char)(0xE0 | ((combined >> 12) & 0x0F));
+                utf8[1] = (char)(0x80 | ((combined >> 6) & 0x3F));
+                utf8[2] = (char)(0x80 | (combined & 0x3F));
+                utf8Len = 3;
+            } else {
+                utf8[0] = (char)(0xF0 | ((combined >> 18) & 0x07));
+                utf8[1] = (char)(0x80 | ((combined >> 12) & 0x3F));
+                utf8[2] = (char)(0x80 | ((combined >> 6) & 0x3F));
+                utf8[3] = (char)(0x80 | (combined & 0x3F));
+                utf8Len = 4;
+            }
+            
+            char *newResult = (char *)realloc(result, resultLen + utf8Len + 1);
+            if (newResult) {
+                result = newResult;
+                memcpy(result + resultLen, utf8, utf8Len);
+                resultLen += utf8Len;
+            }
+        } else {
+            /* No composition happened; copy the base as-is. */
+            char *newResult = (char *)realloc(result, resultLen + baseLen + 1);
+            if (newResult) {
+                result = newResult;
+                memcpy(result + resultLen, source + baseStart, baseLen);
+                resultLen += baseLen;
+            }
+        }
+    }
+    
+    if (result) {
+        result[resultLen] = '\0';
+    }
+    
+    return result;
+}
 /*
  *----------------------------------------------------------------------
  * IsSimpleOnly --
@@ -202,7 +496,7 @@ IsSimpleOnly(const char *str, int len)
             (uc >= 0x1F000 && uc <= 0x1FAFF) ||
             (uc >= 0x1F300 && uc <= 0x1F9FF) ||
             uc > 0xFFFF
-        ) {
+	    ) {
             return false;
         }
 
@@ -214,6 +508,7 @@ IsSimpleOnly(const char *str, int len)
     }
     return true;
 }
+
 /*
  *----------------------------------------------------------------------
  * IsEmoji --
@@ -2427,24 +2722,6 @@ Tk_MeasureChars(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- * Tk_MeasureCharsInContext --
- *
- *   Measure a substring preserving full shaping context.
- *
- *   Simple LTR text: delegates to nvgTextGlyphPositions (cheap, exact).
- *   Complex/RTL text: uses ShapedGlyphBuffer cluster table from
- *   WaylandShaper_ShapeString with HarfBuzz advances for accurate layout.
- *
- * Results:
- *   Number of bytes consumed, and *lengthPtr = pixel width.
- *
- * Side effects:
- *   May shape the string and update internal caches.
- *----------------------------------------------------------------------
- */
-
 int
 Tk_MeasureCharsInContext(
 			 Tk_Font     tkfont,
@@ -2470,27 +2747,30 @@ Tk_MeasureCharsInContext(
     int end   = (int)(rangeStart + rangeLength);
 
     /* 
-     * Check for combining characters in the range being measured.
-     * If present, use the complex HarfBuzz path to get correct positioning.
+     * Check if the range contains combining characters.
+     * If so, we need to use the complex HarfBuzz path.
      */
     bool hasCombining = false;
+    bool hasEmoji = false;
     for (int i = start; i < end; ) {
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, end - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) { /* Combining diacritics */
+        if (uc >= 0x0300 && uc <= 0x036F) {
             hasCombining = true;
             break;
+        }
+        if (IsEmoji(uc)) {
+            hasEmoji = true;
         }
         i += clen;
     }
 
     /* 
-     * Simple LTR path: nvgTextGlyphPositions. 
-     * Only use this for strings WITHOUT combining characters.
+     * Simple LTR path: only for strings WITHOUT combining characters or emoji.
      * Combining characters must go through HarfBuzz for proper positioning.
      */
-    if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining) {
+    if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
         if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
@@ -2808,31 +3088,6 @@ Tk_DrawCharsInContext(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- * TkpDrawAngledCharsInContext --
- *
- *   Canonical rendering entry point.
- *
- *   Simple LTR: single nvgText call per visible range (unchanged speed).
- *   Complex/RTL: cluster-by-cluster nvgText calls driven by the
- *   ShapedGlyphBuffer so that HarfBuzz advances and RTL reordering are
- *   reflected in the final pixel positions.
- *
- *   The NanoVG fallback chain (primary → fallback faces) is wired by
- *   EnsureNvgFont and handles any codepoint the primary face lacks in
- *   the simple LTR path. (Emoji never take this path - see IsSimpleOnly -
- *   so their coverage instead comes from GetRunFaceIndex() over the same
- *   Fontconfig-discovered face list in the complex/RTL path below.)
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Renders text, may load fonts into NanoVG.
- *----------------------------------------------------------------------
- */
-
 void
 TkpDrawAngledCharsInContext(
     TCL_UNUSED(Display *),
@@ -2881,16 +3136,36 @@ TkpDrawAngledCharsInContext(
     }
 
     /*
-     * Check if the range actually being drawn contains any emoji. This
-     * must scan only [rangeStart, rangeStart+rangeLength) - scanning the
-     * whole source buffer (as before) meant a single emoji anywhere later
-     * in the same line forced every other sub-range on that line, e.g. a
-     * plain "Hello" segment, onto the slower per-cluster complex path too,
-     * which lays glyphs out one nvgText() call per cluster instead of one
-     * batched call and does not reproduce identical spacing.
+     * Check if the range being drawn contains combining characters.
+     * If so, compose them to NFC form for proper rendering.
      */
-    bool hasEmoji = false;
     bool hasCombining = false;
+    for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
+                                (int)(rangeStart + rangeLength) - i);
+        if (clen <= 0) { i++; continue; }
+        if (uc >= 0x0300 && uc <= 0x036F) {
+            hasCombining = true;
+            break;
+        }
+        i += clen;
+    }
+
+    char *composedSource = NULL;
+    const char *renderPtr = rangePtr;
+    const char *renderEnd = rangeEnd;
+
+    if (hasCombining) {
+        /* Compose the string to NFC form */
+        composedSource = ComposeUTF8String(source + rangeStart, (int)rangeLength);
+        if (composedSource) {
+            renderPtr = composedSource;
+            renderEnd = composedSource + strlen(composedSource);
+        }
+    }
+
+    bool hasEmoji = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
@@ -2898,61 +3173,36 @@ TkpDrawAngledCharsInContext(
         if (clen <= 0) { i++; continue; }
         if (IsEmoji(uc)) {
             hasEmoji = true;
-        }
-        /* Check for combining characters (U+0300 - U+036F). */
-        if (uc >= 0x0300 && uc <= 0x036F) {
-            hasCombining = true;
+            break;
         }
         i += clen;
     }
 
-    /* For text with combining characters but no emoji, use the fast path. */
-    if (IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji) {
-        /* Simple LTR text without emoji - single call for speed. */
+    /* For text with combining characters, use the simple path with composed text */
+    if (IsSimpleOnly(renderPtr, renderEnd - renderPtr) && !hasEmoji) {
+        /* Simple LTR text - single call for speed */
         nvgFontFaceId(vg, primaryId);
-        nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
+        nvgText(vg, 0.0f, 0.0f, renderPtr, renderEnd);
         nvgRestore(vg);
+        if (composedSource) free(composedSource);
         goto decorations;
     }
 
-    /* Complex path with per-cluster rendering for mixed fonts. */
+    /* Complex path with per-cluster rendering for mixed fonts */
     {
         ShapedGlyphBuffer sbuf;
+        const char *shapeSource = composedSource ? composedSource : source;
+        int shapeLen = composedSource ? (int)strlen(composedSource) : (int)numBytes;
+        
         if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
-                                       source, (int)numBytes, &sbuf)) {
+                                       shapeSource, shapeLen, &sbuf)) {
             nvgRestore(vg);
+            if (composedSource) free(composedSource);
             return;
         }
 
         int lastFaceId = -1;
 
-        /*
-         * Multiple HarfBuzz glyphs (e.g. a base letter + a combining
-         * accent, or the two regional-indicator codepoints of a flag)
-         * can share a single grapheme cluster and therefore report the
-         * SAME byteOffset/clusterLen.
-         *
-         * NanoVG's fontstash has no concept of Unicode mark attachment,
-         * and - in this environment - drawing an isolated combining-mark
-         * codepoint by itself produces nothing visible at all (some
-         * fallback faces only carry a usable outline for the mark when
-         * fontstash lays it out immediately after its base character).
-         * So each cluster's full UTF-8 text is still drawn in a single
-         * nvgText() call, exactly as before, to guarantee the mark is
-         * actually painted.
-         *
-         * What was wrong originally is that nvgText() lays multiple
-         * codepoints out left-to-right using the *base* letter's full
-         * advance width before placing the next character, which pushes
-         * a combining mark out to the side instead of over the base. For
-         * clusters made of more than one codepoint, we counter that by
-         * applying a negative letter-spacing scaled to the base glyph's
-         * own HarfBuzz advance width, pulling the trailing mark(s) back
-         * toward the base instead of letting them trail at full width.
-         * This is an approximation (NanoVG has no true GPOS mark
-         * positioning), not pixel-exact stacking, but keeps marks both
-         * visible and close to their base letter.
-         */
         typedef struct {
             int  start_byte;
             int  end_byte;
@@ -2974,7 +3224,6 @@ TkpDrawAngledCharsInContext(
             if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
                 continue;
 
-            /* Check if we already have this cluster. */
             int found = -1;
             for (int j = 0; j < cluster_count; j++) {
                 if (clusters[j].start_byte == bo && clusters[j].end_byte == boe) {
@@ -2993,21 +3242,18 @@ TkpDrawAngledCharsInContext(
                 clusters[found].base_advance = sbuf.glyphs[i].advanceX;
                 clusters[found].codepoint_count = 0;
 
-                /* Copy the cluster text */
                 int len = boe - bo;
                 if (len > 31) len = 31;
-                memcpy(clusters[found].text, source + bo, len);
+                memcpy(clusters[found].text, shapeSource + bo, len);
                 clusters[found].text[len] = '\0';
             }
             clusters[found].codepoint_count++;
         }
 
-        /* Render each cluster. */
         for (int i = 0; i < cluster_count; i++) {
             int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
-            /* For emoji, ensure we use the emoji face. */
             FcChar32 uc;
             if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
                              strlen(clusters[i].text)) > 0) {
@@ -3017,7 +3263,6 @@ TkpDrawAngledCharsInContext(
                         faceIdx = emojiFace;
                     }
                 } else {
-                    /* For non-emoji, ensure we use a sans-serif face. */
                     int sansFace = -1;
                     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
                         if (fontPtr->faces[fi].charset &&
@@ -3038,7 +3283,6 @@ TkpDrawAngledCharsInContext(
             int faceId = fontPtr->faces[faceIdx].nvgFontId;
             if (faceId < 0) faceId = primaryId;
 
-            /* Switch font if needed. */
             if (faceId != lastFaceId) {
                 nvgFontFaceId(vg, faceId);
                 lastFaceId = faceId;
@@ -3047,28 +3291,12 @@ TkpDrawAngledCharsInContext(
             float gx = (float)clusters[i].pen_x;
             float gy = (float)clusters[i].pen_y;
 
-            /*
-             * A cluster with more than one codepoint (base + one or more
-             * combining marks) gets pulled together: reduce the gap
-             * NanoVG would otherwise leave after the base letter's full
-             * advance so the mark lands close to/over the base instead
-             * of trailing off to the right.
-             */
-            if (clusters[i].codepoint_count > 1) {
-                float pull = (float)clusters[i].base_advance * 0.65f;
-                nvgTextLetterSpacing(vg, -pull);
-                nvgTextLetterSpacing(vg, -1);
-            }
-
             nvgText(vg, gx, gy, clusters[i].text, clusters[i].text + strlen(clusters[i].text));
-
-            if (clusters[i].codepoint_count > 1) {
-                nvgTextLetterSpacing(vg, 0.0f);
-            }
         }
     }
 
     nvgRestore(vg);
+    if (composedSource) free(composedSource);
 
 decorations:
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
@@ -3077,7 +3305,7 @@ decorations:
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-        nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
+        nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, bounds);
         runWidth = bounds[2];
 
         nvgStrokeColor(vg, ColorFromGC(gc));
