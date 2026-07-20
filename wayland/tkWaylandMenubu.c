@@ -25,6 +25,8 @@
 
 MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
+MODULE_SCOPE void TkpMenuButtonMaybePost(TkWindow *winPtr);
+MODULE_SCOPE int  TkpMenuButtonPostMenu(TkMenuButton *mbPtr);
 
 /*
  *----------------------------------------------------------------------

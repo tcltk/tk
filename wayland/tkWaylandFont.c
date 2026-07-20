@@ -56,6 +56,77 @@ static void       InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr,
 			   WaylandFont *fontPtr);
 static void       DeleteFont(WaylandFont *fontPtr);
 static NVGcolor   ColorFromGC(GC gc);
+static bool       IsSerifFace(FcPattern *pat);
+static bool       IsSansSerifFace(FcPattern *pat);
+
+/*
+ * Helper: Check if a face is serif.
+ */
+static bool
+IsSerifFace(FcPattern *pat)
+{
+    if (!pat) return false;
+    
+    FcChar8 *family = NULL;
+    if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch || !family) {
+        return false;
+    }
+    
+    const char *fam = (const char *)family;
+    
+    /* Check for explicit serif indicators. */
+    if (strcasestr(fam, "serif") && !strcasestr(fam, "sans")) {
+        return true;
+    }
+    
+    /* Known serif font families. */
+    const char *serifFamilies[] = {
+        "times", "times new roman", "georgia", "garamond", "palatino",
+        "bookman", "new century schoolbook", "utopia", "bitstream charter",
+        "cambria", "didot", "bodoni", "caslon", "baskerville",
+        "minion", "adobe caslon", "goudy", "hoefler text",
+        NULL
+    };
+    
+    for (int i = 0; serifFamilies[i]; i++) {
+        if (strcasestr(fam, serifFamilies[i])) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/*
+ * Helper: Check if a face is sans-serif.
+ */
+static bool
+IsSansSerifFace(FcPattern *pat)
+{
+    if (!pat) return false;
+    
+    FcChar8 *family = NULL;
+    if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch || !family) {
+        return false;
+    }
+    
+    const char *fam = (const char *)family;
+    
+    /* Check for explicit sans-serif indicators */
+    if (strcasestr(fam, "sans") || strcasestr(fam, "sans-serif") ||
+        strcasestr(fam, "helvetica") || strcasestr(fam, "arial") ||
+        strcasestr(fam, "verdana") || strcasestr(fam, "tahoma") ||
+        strcasestr(fam, "franklin gothic") || strcasestr(fam, "futura") ||
+        strcasestr(fam, "gill sans") || strcasestr(fam, "lucida sans") ||
+        strcasestr(fam, "myriad") || strcasestr(fam, "proxima nova") ||
+        strcasestr(fam, "open sans") || strcasestr(fam, "noto sans") ||
+        strcasestr(fam, "dejavu sans") || strcasestr(fam, "liberation sans") ||
+        strcasestr(fam, "roboto") || strcasestr(fam, "ubuntu")) {
+        return true;
+    }
+    
+    return false;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -80,6 +151,7 @@ static NVGcolor   ColorFromGC(GC gc);
  *
  * Side effects:
  *   None.
+ *----------------------------------------------------------------------
  */
 
 static bool
@@ -140,8 +212,7 @@ IsSimpleOnly(const char *str, int len)
  *
  *   Determine whether a Unicode codepoint is an emoji character.
  *   This covers the full emoji ranges including ZWJ, flags, and skin
- *   tone modifiers. Correct emoji detection is essential for proper
- *   fallback to the emoji font in the shaping pipeline.
+ *   tone modifiers.
  *
  * Results:
  *   true if the codepoint is an emoji, false otherwise.
@@ -154,13 +225,47 @@ IsSimpleOnly(const char *str, int len)
 static bool
 IsEmoji(FcChar32 uc)
 {
+    /* Extended emoji ranges - more comprehensive */
     return
-        (uc >= 0x1F000 && uc <= 0x1FAFF) ||   /* Main emoji blocks. */
+        (uc >= 0x1F000 && uc <= 0x1FAFF) ||   /* Main emoji blocks */
         (uc >= 0x1F300 && uc <= 0x1F9FF) ||
-        (uc >= 0x2600  && uc <= 0x27BF)  ||   /* Misc symbols. */
-        (uc == 0x200D) ||                     /* Zero-width joiner. */
-        (uc >= 0x1F1E6 && uc <= 0x1F1FF) ||   /* Regional indicators (flags). */
-        (uc >= 0x1F3FB && uc <= 0x1F3FF);     /* Skin tone modifiers. */
+        (uc >= 0x2600  && uc <= 0x27BF)  ||   /* Misc symbols */
+        (uc >= 0x2300  && uc <= 0x23FF)  ||   /* Misc technical */
+        (uc >= 0x2B00  && uc <= 0x2BFF)  ||   /* Misc symbols arrows */
+        (uc >= 0xFE00  && uc <= 0xFE0F)  ||   /* Variation selectors */
+        (uc == 0x200D) ||                     /* Zero-width joiner */
+        (uc >= 0x1F1E6 && uc <= 0x1F1FF) ||   /* Regional indicators (flags) */
+        (uc >= 0x1F3FB && uc <= 0x1F3FF) ||   /* Skin tone modifiers */
+        (uc >= 0x00A9 && uc <= 0x00AE)  ||   /* Copyright/registered */
+        (uc == 0x2122) ||                     /* TM */
+        (uc == 0x2139) ||                     /* Information */
+        (uc == 0x2194) || (uc == 0x2195) ||  /* Arrows */
+        (uc >= 0x2196 && uc <= 0x2199) ||
+        (uc >= 0x21A9 && uc <= 0x21AA) ||
+        (uc == 0x231A) || (uc == 0x231B) ||
+        (uc == 0x2328) ||
+        (uc >= 0x23CF && uc <= 0x23FF) ||
+        (uc >= 0x24C2 && uc <= 0x24FF) ||
+        (uc >= 0x25A0 && uc <= 0x25FF) ||
+        (uc >= 0x2600 && uc <= 0x26FF) ||
+        (uc >= 0x2700 && uc <= 0x27BF) ||
+        (uc >= 0x2934 && uc <= 0x2935) ||
+        (uc >= 0x2B05 && uc <= 0x2B07) ||
+        (uc == 0x2B1B) || (uc == 0x2B1C) ||
+        (uc == 0x2B50) || (uc == 0x2B55) ||
+        (uc == 0x3030) || (uc == 0x303D) ||
+        (uc == 0x3297) || (uc == 0x3299) ||
+        (uc >= 0x1F004 && uc <= 0x1F0CF) ||   /* Mahjong/playing cards */
+        (uc >= 0x1F170 && uc <= 0x1F251) ||   /* Enclosed alphanum */
+        (uc >= 0x1F600 && uc <= 0x1F64F) ||   /* Emoticons */
+        (uc >= 0x1F680 && uc <= 0x1F6C0) ||   /* Transport */
+        (uc >= 0x1F6C0 && uc <= 0x1F6FF) ||   /* Transport symbols */
+        (uc >= 0x1F700 && uc <= 0x1F77F) ||   /* Alchemical */
+        (uc >= 0x1F780 && uc <= 0x1F7FF) ||   /* Geometric */
+        (uc >= 0x1F800 && uc <= 0x1F8FF) ||   /* Supplemental arrows */
+        (uc >= 0x1F900 && uc <= 0x1F9FF) ||   /* Supplemental symbols */
+        (uc >= 0x1FA00 && uc <= 0x1FA6F) ||   /* Chess/symbols */
+        (uc >= 0x1FA70 && uc <= 0x1FAFF);     /* More symbols */
 }
 
 /*
@@ -169,8 +274,12 @@ IsEmoji(FcChar32 uc)
  *
  *   Find the best face for rendering emoji characters by scanning
  *   the font's face list for a face that contains typical emoji
- *   codepoints. This avoids adding a field to WaylandFont and
- *   keeps the struct unchanged.
+ *   codepoints, with a preference for actual emoji fonts.
+ *
+ *   This function tries multiple strategies to find an emoji font:
+ *   1. Check font family names for emoji indicators
+ *   2. Check for high coverage of emoji codepoints
+ *   3. Check for specific emoji fonts by name
  *
  * Results:
  *   Face index (0..nfaces-1) that supports emoji, or 0 as fallback.
@@ -183,17 +292,139 @@ IsEmoji(FcChar32 uc)
 static int
 GetEmojiFaceIndex(WaylandFont *fontPtr)
 {
-    /* Try to find a face that clearly looks like an emoji font. */
+    if (!fontPtr || fontPtr->nfaces <= 0) return 0;
+
+    /* Common emoji test codepoints - more extensive set */
+    FcChar32 emojiTestPoints[] = {
+        0x1F600, /* Grinning face */
+        0x1F602, /* Face with tears of joy */
+        0x1F60D, /* Smiling face with heart-eyes */
+        0x1F44D, /* Thumbs up */
+        0x1F64F, /* Folded hands */
+        0x1F680, /* Rocket */
+        0x2600,  /* Sun */
+        0x260E,  /* Telephone */
+        0x261D,  /* Pointing hand */
+        0x270A,  /* Raised fist */
+        0x2728,  /* Sparkles */
+        0x2B50,  /* Star */
+        0x1F3A8, /* Artist palette */
+        0x1F4A9, /* Pile of poo */
+        0x1F525, /* Fire */
+        0x1F4B0, /* Money bag */
+        0x1F3C6, /* Trophy */
+        0x1F3C8, /* Football */
+        0x1F3E0, /* House */
+        0x1F4BB  /* Laptop */
+    };
+    int numTestPoints = sizeof(emojiTestPoints) / sizeof(emojiTestPoints[0]);
+
+    /*
+     * First pass: look for a monochrome emoji font by family name.
+     * NanoVG rasterizes via stb_truetype, which only reads classic
+     * 'glyf' outlines - it cannot draw color bitmap (CBDT/CBLC) or
+     * COLR/CPAL glyphs at all, so color emoji fonts are never usable
+     * here and are explicitly skipped even if one happens to be
+     * installed on the system.
+     */
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        FcPattern *pat = fontPtr->faces[fi].source;
+        if (!pat) continue;
+
+        FcChar8 *family = NULL;
+        if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch ||
+            !family) {
+            continue;
+        }
+        const char *fam = (const char *)family;
+        bool looksLikeEmoji =
+            strcasestr(fam, "emoji") ||
+            strcasestr(fam, "twemoji") ||
+            strcasestr(fam, "emojione") ||
+            strcasestr(fam, "symbola");
+        if (!looksLikeEmoji) continue;
+        if (strcasestr(fam, "color")) continue;
+
+        /* Verify it actually has emoji coverage */
+        FcCharSet *cs = fontPtr->faces[fi].charset;
+        if (cs) {
+            int score = 0;
+            for (int i = 0; i < numTestPoints && i < 8; i++) {
+                if (FcCharSetHasChar(cs, emojiTestPoints[i])) {
+                    score++;
+                }
+            }
+            if (score >= 2) {
+                return fi;
+            }
+        }
+    }
+
+    /*
+     * Second pass: try to find any face that covers many emoji codepoints,
+     * but still require the family name to look emoji/symbol-related so
+     * an ordinary sans/serif font that merely happens to carry a couple of
+     * dingbat glyphs can't be mistaken for a dedicated emoji font (that
+     * produces the wrong, non-color, badly-metriced glyphs).
+     */
+    int bestFace = -1;
+    int bestScore = 0;
+
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
         FcCharSet *cs = fontPtr->faces[fi].charset;
         if (!cs) continue;
 
-        /* Pick a face that has typical emoji codepoints. */
-        if (FcCharSetHasChar(cs, 0x1F600) ||  /* Grinning face. */
-            FcCharSetHasChar(cs, 0x1F602) ||  /* Face with tears of joy. */
-            FcCharSetHasChar(cs, 0x1F60D) ||  /* Smiling face with heart-eyes. */
-            FcCharSetHasChar(cs, 0x1F44D)) {  /* Thumbs up. */
-            return fi;
+        FcPattern *pat = fontPtr->faces[fi].source;
+        FcChar8 *family = NULL;
+        if (pat) FcPatternGetString(pat, FC_FAMILY, 0, &family);
+        bool nameHint = family &&
+            (strcasestr((const char *)family, "emoji") ||
+             strcasestr((const char *)family, "symbol") ||
+             strcasestr((const char *)family, "dingbat"));
+        if (!nameHint) continue;
+
+        int score = 0;
+        for (int i = 0; i < numTestPoints; i++) {
+            if (FcCharSetHasChar(cs, emojiTestPoints[i])) {
+                score++;
+            }
+        }
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestFace = fi;
+        }
+    }
+
+    /* Require a majority of the test codepoints, not just a handful. */
+    if (bestFace >= 0 && bestScore >= (numTestPoints / 2)) {
+        return bestFace;
+    }
+
+    /* 
+     * Third pass: try specific monochrome emoji font paths as a last
+     * resort. Color emoji files (NotoColorEmoji.ttf etc.) are deliberately
+     * not listed here - stb_truetype can't rasterize their glyph tables,
+     * so matching one would just produce blank glyphs again. 
+     */
+    static const char *emojiFontPaths[] = {
+        "/usr/share/fonts/truetype/noto/NotoEmoji-Regular.ttf",
+        "/usr/share/fonts/noto/NotoEmoji-Regular.ttf",
+        "/usr/share/fonts/google-noto/NotoEmoji-Regular.ttf",
+        "/usr/share/fonts/truetype/ancient-scripts/Symbola.ttf",
+        "/usr/share/fonts/truetype/symbola/Symbola.ttf",
+        NULL
+    };
+
+    /* Check if any of the faces already loaded match these paths */
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        if (fontPtr->faces[fi].filePath) {
+            for (int p = 0; emojiFontPaths[p]; p++) {
+                if (strstr(fontPtr->faces[fi].filePath, emojiFontPaths[p]) ||
+                    strstr(emojiFontPaths[p], fontPtr->faces[fi].filePath)) {
+                    return fi;
+                }
+            }
         }
     }
 
@@ -279,6 +510,9 @@ GetBidiRuns(
  *   proper rendering of emoji sequences and to prevent partial
  *   coverage from non-emoji fonts.
  *
+ *   CRITICAL: This function now prioritizes sans-serif faces over serif
+ *   faces when multiple fonts cover the same character.
+ *
  * Results:
  *   Index of the face (0..nfaces-1) that supports the character.
  *
@@ -300,7 +534,11 @@ GetRunFaceIndex(
 
     /* Emoji always uses the emoji face. */
     if (IsEmoji(uc)) {
-        return GetEmojiFaceIndex(fontPtr);
+        int emojiFace = GetEmojiFaceIndex(fontPtr);
+        if (emojiFace > 0) {
+            return emojiFace;
+        }
+        return 0;
     }
 
     WaylandShaper *shaper  = &fontPtr->shaper;
@@ -310,13 +548,34 @@ GetRunFaceIndex(
         return shaper->charCache[cacheIdx].faceIdx;
     }
 
+    /* First pass: find a sans-serif face that covers this character */
+    int bestSerifFace = -1;
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-        if (fontPtr->faces[fi].charset &&
-	    FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-            shaper->charCache[cacheIdx].uc      = uc;
-            shaper->charCache[cacheIdx].faceIdx = fi;
-            return fi;
+        if (!fontPtr->faces[fi].charset ||
+            !FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+            continue;
         }
+        
+        FcPattern *pat = fontPtr->faces[fi].source;
+        if (!pat) continue;
+        
+        /* Check if this is a serif face */
+        if (IsSerifFace(pat)) {
+            if (bestSerifFace < 0) bestSerifFace = fi;
+            continue;
+        }
+        
+        /* Found a sans-serif face */
+        shaper->charCache[cacheIdx].uc      = uc;
+        shaper->charCache[cacheIdx].faceIdx = fi;
+        return fi;
+    }
+    
+    /* If we found a serif face, use it as a fallback */
+    if (bestSerifFace >= 0) {
+        shaper->charCache[cacheIdx].uc      = uc;
+        shaper->charCache[cacheIdx].faceIdx = bestSerifFace;
+        return bestSerifFace;
     }
 
     shaper->charCache[cacheIdx].uc      = uc;
@@ -336,6 +595,9 @@ GetRunFaceIndex(
  *   for the entire range to ensure that emoji sequences (ZWJ, skin tones,
  *   flags) remain in a single font and shape correctly.
  *
+ *   CRITICAL: This function now prioritizes sans-serif faces over serif
+ *   faces when multiple fonts cover the same characters.
+ *
  * Results:
  *   Face index (0..nfaces-1) that covers all characters, or 0 as fallback.
  *
@@ -353,13 +615,67 @@ FindFaceCoveringRange(
 {
     if (len <= 0) return 0;
 
-    /* If any character in the range is an emoji, use the emoji face. */
+    /* First, check if this is a combining character sequence that should be kept together */
+    bool hasEmoji = false;
+    bool hasNonEmoji = false;
     for (int i = start; i < start + len; i++) {
         if (IsEmoji(ucs4[i])) {
-            return GetEmojiFaceIndex(fontPtr);
+            hasEmoji = true;
+        } else {
+            hasNonEmoji = true;
         }
     }
 
+    /* If the range has both emoji and non-emoji, try to find a sans-serif face that covers non-emoji */
+    if (hasEmoji && hasNonEmoji) {
+        for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+            FcPattern *pat = fontPtr->faces[fi].source;
+            if (!pat) continue;
+            
+            /* Skip serif fonts */
+            if (IsSerifFace(pat)) continue;
+            
+            FcCharSet *cs = fontPtr->faces[fi].charset;
+            if (!cs) continue;
+            
+            int ok = 1;
+            for (int i = start; i < start + len; i++) {
+                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                    ok = 0;
+                    break;
+                }
+            }
+            if (ok) return fi;
+        }
+        /* Fall through to emoji-only handling */
+    }
+
+    /* If any character in the range is an emoji, use the emoji face for emoji-only runs */
+    if (hasEmoji && !hasNonEmoji) {
+        return GetEmojiFaceIndex(fontPtr);
+    }
+
+    /* First pass: find any sans-serif face that covers all characters */
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        FcPattern *pat = fontPtr->faces[fi].source;
+        if (!pat) continue;
+        
+        /* Skip serif fonts unless absolutely necessary */
+        if (IsSerifFace(pat)) continue;
+        
+        FcCharSet *cs = fontPtr->faces[fi].charset;
+        if (!cs) continue;
+        int ok = 1;
+        for (int i = start; i < start + len; i++) {
+            if (!FcCharSetHasChar(cs, ucs4[i])) {
+                ok = 0;
+                break;
+            }
+        }
+        if (ok) return fi;
+    }
+    
+    /* Second pass: any face that covers all characters (including serif) */
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
         FcCharSet *cs = fontPtr->faces[fi].charset;
         if (!cs) continue;
@@ -372,6 +688,7 @@ FindFaceCoveringRange(
         }
         if (ok) return fi;
     }
+    
     return 0; /* fallback to primary face */
 }
 
@@ -541,12 +858,23 @@ WaylandShaper_ShapeString(
             if (shaper->charCache[cacheIdx].uc == uc) {
                 fi = shaper->charCache[cacheIdx].faceIdx;
             } else {
+                /* Find a sans-serif face first */
+                int bestSerifFace = -1;
                 for (fi = 0; fi < fontPtr->nfaces; fi++) {
                     if (fontPtr->faces[fi].charset &&
-			FcCharSetHasChar(fontPtr->faces[fi].charset, uc))
+                        FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+                        FcPattern *pat = fontPtr->faces[fi].source;
+                        if (pat && IsSerifFace(pat)) {
+                            if (bestSerifFace < 0) bestSerifFace = fi;
+                            continue;
+                        }
                         break;
+                    }
                 }
-                if (fi >= fontPtr->nfaces) fi = 0;
+                if (fi >= fontPtr->nfaces) {
+                    if (bestSerifFace >= 0) fi = bestSerifFace;
+                    else fi = 0;
+                }
                 shaper->charCache[cacheIdx].uc      = uc;
                 shaper->charCache[cacheIdx].faceIdx = fi;
             }
@@ -794,15 +1122,27 @@ WaylandShaper_ShapeString(
 
             /* If this subrun contains any emoji, force emoji face. */
             bool subrunHasEmoji = false;
+            bool subrunHasNonEmoji = false;
             for (int ci = subrunStart; ci < subrunEnd; ci++) {
                 if (IsEmoji(ucs4Chars[ci])) {
                     subrunHasEmoji = true;
-                    break;
+                } else {
+                    subrunHasNonEmoji = true;
                 }
             }
 
-            if (subrunHasEmoji) {
+            if (subrunHasEmoji && !subrunHasNonEmoji) {
                 runFaceIndex = GetEmojiFaceIndex(fontPtr);
+            } else if (subrunHasEmoji && subrunHasNonEmoji) {
+                /* Mixed run - try to find a sans-serif face for non-emoji parts */
+                int mixedFace = FindFaceCoveringRange(fontPtr, ucs4Chars,
+                                                      subrunStart,
+                                                      subrunEnd - subrunStart);
+                if (mixedFace >= 0) {
+                    runFaceIndex = mixedFace;
+                } else {
+                    runFaceIndex = subrunList[listIdx].faceIndex;
+                }
             } else {
                 runFaceIndex = subrunList[listIdx].faceIndex;
             }
@@ -1294,33 +1634,56 @@ InitFont(
     const char *family = faPtr->family;
 
     /*
-     * Strict sans serif defaul: 
+     * Strict sans serif default: 
      * If the user did NOT explicitly request a family,
      * we do NOT add their family to the pattern.
      */
     bool useSansDefault = (!family || family[0] == '\0' ||
                            strcmp(family, "sans") == 0 ||
-                           strcmp(family, "TkDefaultFont") == 0);
+                           strcmp(family, "TkDefaultFont") == 0 ||
+                           strcmp(family, "TkTextFont") == 0 ||
+                           strcmp(family, "TkMenuFont") == 0 ||
+                           strcmp(family, "TkHeadingFont") == 0 ||
+                           strcmp(family, "TkCaptionFont") == 0 ||
+                           strcmp(family, "TkSmallCaptionFont") == 0 ||
+                           strcmp(family, "TkIconFont") == 0 ||
+                           strcmp(family, "TkTooltipFont") == 0);
 
     FcPattern *pat = FcPatternCreate();
     if (!pat) return;
 
+    /* CRITICAL: Force sans-serif by adding FC_FAMILY with strong preference */
     /* Only honor explicit non-default family. */
     if (!useSansDefault && family && family[0] != '\0') {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
+    } else {
+        /* Default: force sans-serif */
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     }
 
     /*
-     * Sans-serif stack - order matters. 
-     * FcFontSort respects the order of FC_FAMILY entries.
-     * The first matching face becomes set->fonts[0].
+     * Font stack - order matters for fallback.
+     * Put sans-serif first to ensure default is sans-serif, not serif.
      */
-
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
+    /* PRIMARY: sans-serif fonts with explicit preference */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emoji");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Verdana");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Tahoma");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Roboto");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Ubuntu");
+    
+    /* Emoji fonts - must come after sans to allow fallback */
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emojione");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"twemoji");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Symbola");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emoji");
 
     /* No FC_STYLE hints — they cause serif pollution. */
 
@@ -1330,34 +1693,212 @@ InitFont(
                         italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
     FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
 
+    /* CRITICAL: Set FC_HINTING and FC_AUTOHINT to improve rendering */
+    FcPatternAddBool(pat, FC_HINTING, FcTrue);
+    FcPatternAddBool(pat, FC_AUTOHINT, FcTrue);
+    
+    /* CRITICAL: Set FC_ANTIALIAS to ensure smooth text */
+    FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
+
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
 
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
-    /* Last-resort fallback: same strict sans stack. */
+    /* If the first font is serif, explicitly filter it out and find a sans-serif */
+    if (set && set->nfont > 0) {
+        FcPattern *firstPat = set->fonts[0];
+        FcChar8 *firstFamily = NULL;
+        FcPatternGetString(firstPat, FC_FAMILY, 0, &firstFamily);
+        
+        /* Check if the first font is serif */
+        bool isSerif = false;
+        if (firstFamily) {
+            const char *fam = (const char *)firstFamily;
+            if (strcasestr(fam, "serif") && !strcasestr(fam, "sans")) {
+                isSerif = true;
+            }
+            const char *serifNames[] = {
+                "times", "times new roman", "georgia", "garamond", 
+                "palatino", "bookman", "cambria", "didot", "bodoni",
+                "caslon", "baskerville", "minion", "goudy", NULL
+            };
+            for (int i = 0; serifNames[i]; i++) {
+                if (strcasestr(fam, serifNames[i])) {
+                    isSerif = true;
+                    break;
+                }
+            }
+        }
+        
+        /* If the primary font is serif, try to find a sans-serif font in the set */
+        if (isSerif && set->nfont > 1) {
+            int sansIndex = -1;
+            for (int i = 1; i < set->nfont; i++) {
+                FcChar8 *fam = NULL;
+                FcPatternGetString(set->fonts[i], FC_FAMILY, 0, &fam);
+                if (fam) {
+                    const char *f = (const char *)fam;
+                    if (strcasestr(f, "sans") || strcasestr(f, "helvetica") ||
+                        strcasestr(f, "arial") || strcasestr(f, "verdana") ||
+                        strcasestr(f, "tahoma") || strcasestr(f, "dejavu") ||
+                        strcasestr(f, "liberation") || strcasestr(f, "noto") ||
+                        strcasestr(f, "roboto") || strcasestr(f, "ubuntu")) {
+                        sansIndex = i;
+                        break;
+                    }
+                }
+            }
+            /* Swap the sans-serif font to the front */
+            if (sansIndex > 0) {
+                FcPattern *tmp = set->fonts[0];
+                set->fonts[0] = set->fonts[sansIndex];
+                set->fonts[sansIndex] = tmp;
+            }
+        }
+    }
+
+    /* Last-resort fallback: manually find a sans-serif font */
     if (!set || set->nfont == 0) {
         FcPatternDestroy(pat);
         pat = FcPatternCreate();
         if (!pat) return;
 
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emoji");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
+        FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+        FcPatternAddBool(pat, FC_HINTING, FcTrue);
+        FcPatternAddBool(pat, FC_AUTOHINT, FcTrue);
+        FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
 
         FcConfigSubstitute(NULL, pat, FcMatchPattern);
         FcDefaultSubstitute(pat);
         set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
+        
+        /* If still no font, try specific paths */
+        if (!set || set->nfont == 0) {
+            FcPatternDestroy(pat);
+            /* Try to load a specific font file */
+            const char *fontPaths[] = {
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+                "/usr/share/fonts/TTF/DejaVuSans.ttf",
+                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/arial/Arial.ttf",
+                NULL
+            };
+            
+            FcPattern *pat2 = FcPatternCreate();
+            for (int i = 0; fontPaths[i]; i++) {
+                if (access(fontPaths[i], R_OK) == 0) {
+                    FcPatternAddString(pat2, FC_FILE, (FcChar8 *)fontPaths[i]);
+                    FcPatternAddDouble(pat2, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+                    break;
+                }
+            }
+            if (pat2) {
+                set = FcFontSort(NULL, pat2, FcTrue, NULL, &result);
+                FcPatternDestroy(pat2);
+            }
+        }
     }
 
     fontPtr->pattern = pat;
     fontPtr->fontset = set;
 
+    /*
+     * FcFontSort's trim=FcTrue keeps only fonts that add Unicode coverage
+     * not already present in an earlier-ranked font. Ordinary sans/serif
+     * fonts frequently already carry a handful of glyphs from the same
+     * blocks emoji live in (Misc Symbols, Dingbats, etc. - see IsEmoji()),
+     * which is enough for trim to judge a dedicated emoji font "redundant"
+     * and drop it from the sorted set before GetEmojiFaceIndex() ever gets
+     * a chance to see it. Which ordinary font wins the sort (and therefore
+     * what trim keeps or discards) shifts with the requested family, which
+     * is why switching the default family flips emoji between "wrong
+     * glyphs" and "nothing at all". Explicitly check for an emoji-named
+     * face and splice one in via FcFontMatch if the sort didn't keep one.
+     */
+    FcPattern *guaranteedEmojiFont = NULL;
+    {
+        bool haveEmojiFace = false;
+        if (set) {
+            for (int i = 0; i < set->nfont; i++) {
+                FcChar8 *fam = NULL;
+                if (FcPatternGetString(set->fonts[i], FC_FAMILY, 0, &fam)
+                        == FcResultMatch && fam &&
+                    strcasestr((const char *)fam, "emoji") &&
+                    !strcasestr((const char *)fam, "color")) {
+                    haveEmojiFace = true;
+                    break;
+                }
+            }
+        }
+        if (!haveEmojiFace) {
+            FcPattern *ep = FcPatternCreate();
+            if (ep) {
+                /*
+                 * NanoVG rasterizes via stb_truetype, which only reads
+                 * classic 'glyf' outlines - it cannot draw color bitmap
+                 * (CBDT/CBLC, e.g. Noto Color Emoji) or COLR/CPAL (e.g.
+                 * Segoe UI/Apple Color Emoji) glyphs at all, so color
+                 * emoji fonts are never requested here.
+                 */
+                FcPatternAddString(ep, FC_FAMILY, (FcChar8 *)"Noto Emoji");
+                FcPatternAddString(ep, FC_FAMILY, (FcChar8 *)"Symbola");
+                FcPatternAddString(ep, FC_FAMILY, (FcChar8 *)"emoji");
+                FcPatternAddDouble(ep, FC_PIXEL_SIZE,
+                                   (double)fontPtr->pixelSize);
+                FcConfigSubstitute(NULL, ep, FcMatchPattern);
+                FcDefaultSubstitute(ep);
+
+                FcResult eresult;
+                FcPattern *matched = FcFontMatch(NULL, ep, &eresult);
+                FcPatternDestroy(ep);
+
+                if (matched) {
+                    FcChar8 *mfam = NULL;
+                    if (FcPatternGetString(matched, FC_FAMILY, 0, &mfam)
+                            == FcResultMatch && mfam &&
+                        strcasestr((const char *)mfam, "emoji") &&
+                        !strcasestr((const char *)mfam, "color")) {
+                        if (!set) {
+                            set = FcFontSetCreate();
+                            fontPtr->fontset = set;
+                        }
+                        if (set && FcFontSetAdd(set, matched)) {
+                            guaranteedEmojiFont = matched;
+                        } else {
+                            FcPatternDestroy(matched);
+                        }
+                    } else {
+                        FcPatternDestroy(matched);
+                    }
+                }
+            }
+        }
+    }
+
     int nfaces = (set && set->nfont > 0) ? set->nfont : 0;
     if (nfaces > MAX_FACES) nfaces = MAX_FACES;
+
+    /*
+     * If the guaranteed emoji font above got pushed past the MAX_FACES
+     * cutoff by everything ranked ahead of it, force it into the last
+     * surviving slot instead of letting it get truncated away again.
+     */
+    if (set && guaranteedEmojiFont && nfaces > 0) {
+        int emojiPos = -1;
+        for (int i = 0; i < set->nfont; i++) {
+            if (set->fonts[i] == guaranteedEmojiFont) { emojiPos = i; break; }
+        }
+        if (emojiPos >= nfaces) {
+            set->fonts[nfaces - 1] = guaranteedEmojiFont;
+        }
+    }
+
     fontPtr->faces = (WaylandFtFace *)Tcl_Alloc(
         (nfaces > 0 ? nfaces : 1) * sizeof(WaylandFtFace));
     fontPtr->nfaces = nfaces;
@@ -1875,8 +2416,12 @@ Tk_MeasureCharsInContext(
     int start = (int)rangeStart;
     int end   = (int)(rangeStart + rangeLength);
 
-    /* Simple LTR path: nvgTextGlyphPositions. */
-    if (IsSimpleOnly(source, (int)numBytes)) {
+    /* 
+     * Simple LTR path: nvgTextGlyphPositions. Decide based on the range
+     * actually being measured, not the whole source buffer, so this
+     * agrees with the same decision in TkpDrawAngledCharsInContext. 
+     */
+    if (IsSimpleOnly(source + rangeStart, (int)rangeLength)) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
         if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
@@ -2191,6 +2736,30 @@ Tk_DrawCharsInContext(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ * TkpDrawAngledCharsInContext --
+ *
+ *   Canonical rendering entry point.
+ *
+ *   Simple LTR: single nvgText call per visible range (unchanged speed).
+ *   Complex/RTL: cluster-by-cluster nvgText calls driven by the
+ *   ShapedGlyphBuffer so that HarfBuzz advances and RTL reordering are
+ *   reflected in the final pixel positions.
+ *
+ *   The NanoVG fallback chain (primary → fallback faces) is wired by
+ *   EnsureNvgFont and handles any codepoint the primary face lacks in
+ *   the simple LTR path. (Emoji never take this path - see IsSimpleOnly -
+ *   so their coverage instead comes from GetRunFaceIndex() over the same
+ *   Fontconfig-discovered face list in the complex/RTL path below.)
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Renders text, may load fonts into NanoVG.
+ *----------------------------------------------------------------------
+ */
 
 void
 TkpDrawAngledCharsInContext(
@@ -2217,7 +2786,6 @@ TkpDrawAngledCharsInContext(
     int primaryId = EnsureNvgFont(fontPtr, vg);
     if (primaryId < 0) return;
 
-    nvgFontFaceId(vg, primaryId);
     nvgFontSize(vg, (float)fontPtr->pixelSize);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
     nvgFillColor(vg, ColorFromGC(gc));
@@ -2229,6 +2797,7 @@ TkpDrawAngledCharsInContext(
     double drawX = x;
     if (rangeStart > 0) {
         float bounds[4];
+        nvgFontFaceId(vg, primaryId);
         nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
         drawX += (double)bounds[2];
     }
@@ -2239,13 +2808,42 @@ TkpDrawAngledCharsInContext(
         nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
     }
 
-    if (IsSimpleOnly(source, (int)numBytes)) {
+    /*
+     * Check if the range actually being drawn contains any emoji. This
+     * must scan only [rangeStart, rangeStart+rangeLength) - scanning the
+     * whole source buffer (as before) meant a single emoji anywhere later
+     * in the same line forced every other sub-range on that line, e.g. a
+     * plain "Hello" segment, onto the slower per-cluster complex path too,
+     * which lays glyphs out one nvgText() call per cluster instead of one
+     * batched call and does not reproduce identical spacing.
+     */
+    bool hasEmoji = false;
+    bool hasCombining = false;
+    for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
+                                (int)(rangeStart + rangeLength) - i);
+        if (clen <= 0) { i++; continue; }
+        if (IsEmoji(uc)) {
+            hasEmoji = true;
+        }
+        /* Check for combining characters (U+0300 - U+036F). */
+        if (uc >= 0x0300 && uc <= 0x036F) {
+            hasCombining = true;
+        }
+        i += clen;
+    }
+
+    /* For text with combining characters but no emoji, use the fast path. */
+    if (IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji) {
+        /* Simple LTR text without emoji - single call for speed. */
+        nvgFontFaceId(vg, primaryId);
         nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
         nvgRestore(vg);
         goto decorations;
     }
 
-    /* Complex / RTL path. */
+    /* Complex path with per-cluster rendering for mixed fonts. */
     {
         ShapedGlyphBuffer sbuf;
         if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
@@ -2254,36 +2852,106 @@ TkpDrawAngledCharsInContext(
             return;
         }
 
-        int lastFaceId = primaryId;
-
-        for (int i = 0; i < sbuf.glyphCount; i++) {
+        int lastFaceId = -1;
+        
+        /* 
+         * For combining characters, we need to render the base + combining marks together. 
+         * Group glyphs by cluster, preserving the full cluster text. 
+        */
+        typedef struct {
+            int start_byte;
+            int end_byte;
+            int face_idx;
+            int pen_x;
+            int pen_y;
+            char text[32];
+        } ClusterRenderInfo;
+        
+        ClusterRenderInfo clusters[MAX_GLYPHS];
+        int cluster_count = 0;
+        
+        for (int i = 0; i < sbuf.glyphCount && cluster_count < MAX_GLYPHS; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
             if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
                 continue;
 
-            if (i > 0 && sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset)
-                continue;
-
-            int faceIdx = sbuf.glyphs[i].faceIndex;
+            /* Check if we already have this cluster. */
+            int found = -1;
+            for (int j = 0; j < cluster_count; j++) {
+                if (clusters[j].start_byte == bo && clusters[j].end_byte == boe) {
+                    found = j;
+                    break;
+                }
+            }
+            
+            if (found < 0) {
+                found = cluster_count++;
+                clusters[found].start_byte = bo;
+                clusters[found].end_byte = boe;
+                clusters[found].face_idx = sbuf.glyphs[i].faceIndex;
+                clusters[found].pen_x = sbuf.glyphs[i].x;
+                clusters[found].pen_y = sbuf.glyphs[i].y;
+                
+                /* Copy the cluster text */
+                int len = boe - bo;
+                if (len > 31) len = 31;
+                memcpy(clusters[found].text, source + bo, len);
+                clusters[found].text[len] = '\0';
+            }
+        }
+        
+        /* Render each cluster. */
+        for (int i = 0; i < cluster_count; i++) {
+            int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+            /* For emoji, ensure we use the emoji face. */
+            FcChar32 uc;
+            if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc, 
+                             strlen(clusters[i].text)) > 0) {
+                if (IsEmoji(uc)) {
+                    int emojiFace = GetEmojiFaceIndex(fontPtr);
+                    if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) {
+                        faceIdx = emojiFace;
+                    }
+                } else {
+                    /* For non-emoji, ensure we use a sans-serif face. */
+                    int sansFace = -1;
+                    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+                        if (fontPtr->faces[fi].charset &&
+                            FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+                            FcPattern *pat = fontPtr->faces[fi].source;
+                            if (pat && !IsSerifFace(pat)) {
+                                sansFace = fi;
+                                break;
+                            }
+                        }
+                    }
+                    if (sansFace >= 0) {
+                        faceIdx = sansFace;
+                    }
+                }
+            }
 
             int faceId = fontPtr->faces[faceIdx].nvgFontId;
             if (faceId < 0) faceId = primaryId;
 
+            /* Switch font if needed. */
             if (faceId != lastFaceId) {
                 nvgFontFaceId(vg, faceId);
                 lastFaceId = faceId;
             }
 
-            float gx = (float)sbuf.glyphs[i].x;
-            float gy = (float)sbuf.glyphs[i].y;
+            float gx = (float)clusters[i].pen_x;
+            float gy = (float)clusters[i].pen_y;
 
-            const char *cl    = sbuf.glyphs[i].clusterUtf8;
-            const char *clEnd = cl + sbuf.glyphs[i].clusterUtf8Len;
-
-            nvgText(vg, gx, gy, cl, clEnd);
+            /* 
+             * For combining characters, we need to render the entire cluster text. 
+            /* This ensures accents are properly positioned by NanoVG/HarfBuzz.
+             */
+            nvgText(vg, gx, gy, clusters[i].text, clusters[i].text + strlen(clusters[i].text));
         }
     }
 
