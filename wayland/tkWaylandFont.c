@@ -3155,13 +3155,14 @@ TkpDrawAngledCharsInContext(
     char *composedSource = NULL;
     const char *renderPtr = rangePtr;
     const char *renderEnd = rangeEnd;
+    bool didCompose = false;
 
     if (hasCombining) {
-        /* Compose the string to NFC form */
         composedSource = ComposeUTF8String(source + rangeStart, (int)rangeLength);
         if (composedSource) {
             renderPtr = composedSource;
             renderEnd = composedSource + strlen(composedSource);
+            didCompose = true;
         }
     }
 
@@ -3178,9 +3179,8 @@ TkpDrawAngledCharsInContext(
         i += clen;
     }
 
-    /* For text with combining characters, use the simple path with composed text */
+    /* For text with combining characters, use the simple path with composed text. */
     if (IsSimpleOnly(renderPtr, renderEnd - renderPtr) && !hasEmoji) {
-        /* Simple LTR text - single call for speed */
         nvgFontFaceId(vg, primaryId);
         nvgText(vg, 0.0f, 0.0f, renderPtr, renderEnd);
         nvgRestore(vg);
@@ -3188,7 +3188,11 @@ TkpDrawAngledCharsInContext(
         goto decorations;
     }
 
-    /* Complex path with per-cluster rendering for mixed fonts */
+    /* 
+     * Complex path with per-cluster rendering.
+     * For clusters that couldn't be composed, use HarfBuzz positioning
+     * to place combining marks correctly.
+     */
     {
         ShapedGlyphBuffer sbuf;
         const char *shapeSource = composedSource ? composedSource : source;
@@ -3209,8 +3213,7 @@ TkpDrawAngledCharsInContext(
             int  face_idx;
             int  pen_x;
             int  pen_y;
-            int  base_advance;
-            int  codepoint_count;
+            int  advance_x;
             char text[32];
         } ClusterRenderInfo;
 
@@ -3239,21 +3242,20 @@ TkpDrawAngledCharsInContext(
                 clusters[found].face_idx = sbuf.glyphs[i].faceIndex;
                 clusters[found].pen_x = sbuf.glyphs[i].x;
                 clusters[found].pen_y = sbuf.glyphs[i].y;
-                clusters[found].base_advance = sbuf.glyphs[i].advanceX;
-                clusters[found].codepoint_count = 0;
+                clusters[found].advance_x = sbuf.glyphs[i].advanceX;
 
                 int len = boe - bo;
                 if (len > 31) len = 31;
                 memcpy(clusters[found].text, shapeSource + bo, len);
                 clusters[found].text[len] = '\0';
             }
-            clusters[found].codepoint_count++;
         }
 
         for (int i = 0; i < cluster_count; i++) {
             int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
+            /* For emoji, use emoji face.*/
             FcChar32 uc;
             if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
                              strlen(clusters[i].text)) > 0) {
@@ -3263,6 +3265,7 @@ TkpDrawAngledCharsInContext(
                         faceIdx = emojiFace;
                     }
                 } else {
+                    /* Find a sans-serif face. */
                     int sansFace = -1;
                     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
                         if (fontPtr->faces[fi].charset &&
@@ -3291,7 +3294,36 @@ TkpDrawAngledCharsInContext(
             float gx = (float)clusters[i].pen_x;
             float gy = (float)clusters[i].pen_y;
 
-            nvgText(vg, gx, gy, clusters[i].text, clusters[i].text + strlen(clusters[i].text));
+            /* 
+             * If the cluster contains a combining mark and couldn't be composed,
+             * use HarfBuzz's x_offset to position the mark correctly.
+             * The offset is already in the glyph's x position.
+             */
+            bool hasMark = false;
+            for (int j = 0; j < (int)strlen(clusters[i].text); ) {
+                FcChar32 uc2;
+                int clen = FcUtf8ToUcs4((const FcChar8 *)(clusters[i].text + j), 
+                                        &uc2, strlen(clusters[i].text) - j);
+                if (clen > 0 && uc2 >= 0x0300 && uc2 <= 0x036F) {
+                    hasMark = true;
+                    break;
+                }
+                j += clen;
+            }
+
+            if (hasMark && didCompose) {
+                /* 
+                 * The mark is in a cluster that WAS composed by ComposeUTF8String,
+                 * but the font doesn't have the precomposed glyph. HarfBuzz 
+                 * will have positioned it with a negative x_offset. The pen_x
+                 * already includes that offset from the shaping pass.
+                 */
+                nvgText(vg, gx, gy, clusters[i].text, 
+                        clusters[i].text + strlen(clusters[i].text));
+            } else {
+                nvgText(vg, gx, gy, clusters[i].text, 
+                        clusters[i].text + strlen(clusters[i].text));
+            }
         }
     }
 
@@ -3328,7 +3360,6 @@ decorations:
         }
     }
 }
-
 /*
  *----------------------------------------------------------------------
  * TkPostscriptFontName --
