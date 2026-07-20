@@ -62,8 +62,19 @@ static char      *ComposeUTF8String(const char *source, int len);
 static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
 
 /*
- * Helper: Check if a face is serif.
+ *----------------------------------------------------------------------
+ * IsSerifFace --
+ *
+ *   Check to see if a font has serifs.
+ *
+ * Results:
+ *   True if the font face has serifs, false otherwise. 
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
+     
 static bool
 IsSerifFace(FcPattern *pat)
 {
@@ -100,8 +111,19 @@ IsSerifFace(FcPattern *pat)
 }
 
 /*
- * Helper: Check if a face is sans-serif.
+ *----------------------------------------------------------------------
+ * IsSansSerifFace --
+ *
+ *   Check to see if a font has no serifs.
+ *
+ * Results:
+ *   True if the font face is sans serif, false otherwise. 
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
+
 static bool
 IsSansSerifFace(FcPattern *pat)
 {
@@ -114,7 +136,7 @@ IsSansSerifFace(FcPattern *pat)
     
     const char *fam = (const char *)family;
     
-    /* Check for explicit sans-serif indicators */
+    /* Check for explicit sans-serif indicators. */
     if (strcasestr(fam, "sans") || strcasestr(fam, "sans-serif") ||
         strcasestr(fam, "helvetica") || strcasestr(fam, "arial") ||
         strcasestr(fam, "verdana") || strcasestr(fam, "tahoma") ||
@@ -144,6 +166,36 @@ IsSansSerifFace(FcPattern *pat)
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ * UnicodeCompose --
+ *
+ *   Attempt to compose a base character and combining mark.
+ *   Extended to support Vietnamese horn letters, ring above, and their combinations.
+ *
+ * Results:
+ *   Composed Unicode character, or 0 if no composition is possible.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ * UnicodeCompose --
+ *
+ *   Attempt to compose a base character and combining mark.
+ *   Extended to support Vietnamese horn letters, ring above, and their combinations.
+ *
+ * Results:
+ *   Composed Unicode character, or 0 if no composition is possible.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
 static FcChar32
 UnicodeCompose(FcChar32 base, FcChar32 mark)
 {
@@ -153,107 +205,146 @@ UnicodeCompose(FcChar32 base, FcChar32 mark)
         FcChar32 mark;
         FcChar32 composed;
     } compTable[] = {
-        {0x0061, 0x0300, 0x00E0}, /* a + grave = à */
-        {0x0061, 0x0301, 0x00E1}, /* a + acute = á */
-        {0x0061, 0x0302, 0x00E2}, /* a + circumflex = â */
-        {0x0061, 0x0303, 0x00E3}, /* a + tilde = ã */
-        {0x0061, 0x0308, 0x00E4}, /* a + diaeresis = ä */
-        {0x0061, 0x030A, 0x00E5}, /* a + ring = å */
-        {0x0061, 0x0304, 0x0101}, /* a + macron = ā */
-        {0x0061, 0x0306, 0x0103}, /* a + breve = ă */
-        {0x0061, 0x030B, 0x0151}, /* a + double acute = ő */
+        /* -------- Latin lowercase -------- */
+        {0x0061, 0x0300, 0x00E0},  /* a + grave = à */
+        {0x0061, 0x0301, 0x00E1},  /* a + acute = á */
+        {0x0061, 0x0302, 0x00E2},  /* a + circumflex = â */
+        {0x0061, 0x0303, 0x00E3},  /* a + tilde = ã */
+        {0x0061, 0x0308, 0x00E4},  /* a + diaeresis = ä */
+        {0x0061, 0x030A, 0x00E5},  /* a + ring = å */
+        {0x0061, 0x0304, 0x0101},  /* a + macron = ā */
+        {0x0061, 0x0306, 0x0103},  /* a + breve = ă */
         
-        {0x0065, 0x0300, 0x00E8}, /* e + grave = è */
-        {0x0065, 0x0301, 0x00E9}, /* e + acute = é */
-        {0x0065, 0x0302, 0x00EA}, /* e + circumflex = ê */
-        {0x0065, 0x0308, 0x00EB}, /* e + diaeresis = ë */
-        {0x0065, 0x0304, 0x0113}, /* e + macron = ē */
-        {0x0065, 0x0306, 0x0115}, /* e + breve = ĕ */
+        {0x0065, 0x0300, 0x00E8},  /* e + grave = è */
+        {0x0065, 0x0301, 0x00E9},  /* e + acute = é */
+        {0x0065, 0x0302, 0x00EA},  /* e + circumflex = ê */
+        {0x0065, 0x0308, 0x00EB},  /* e + diaeresis = ë */
+        {0x0065, 0x0304, 0x0113},  /* e + macron = ē */
+        {0x0065, 0x0306, 0x0115},  /* e + breve = ĕ */
         
-        {0x0069, 0x0300, 0x00EC}, /* i + grave = ì */
-        {0x0069, 0x0301, 0x00ED}, /* i + acute = í */
-        {0x0069, 0x0302, 0x00EE}, /* i + circumflex = î */
-        {0x0069, 0x0308, 0x00EF}, /* i + diaeresis = ï */
-        {0x0069, 0x0304, 0x012B}, /* i + macron = ī */
-        {0x0069, 0x0306, 0x012D}, /* i + breve = ĭ */
+        {0x0069, 0x0300, 0x00EC},  /* i + grave = ì */
+        {0x0069, 0x0301, 0x00ED},  /* i + acute = í */
+        {0x0069, 0x0302, 0x00EE},  /* i + circumflex = î */
+        {0x0069, 0x0308, 0x00EF},  /* i + diaeresis = ï */
+        {0x0069, 0x0304, 0x012B},  /* i + macron = ī */
+        {0x0069, 0x0306, 0x012D},  /* i + breve = ĭ */
         
-        {0x006F, 0x0300, 0x00F2}, /* o + grave = ò */
-        {0x006F, 0x0301, 0x00F3}, /* o + acute = ó */
-        {0x006F, 0x0302, 0x00F4}, /* o + circumflex = ô */
-        {0x006F, 0x0303, 0x00F5}, /* o + tilde = õ */
-        {0x006F, 0x0308, 0x00F6}, /* o + diaeresis = ö */
-        {0x006F, 0x030B, 0x0151}, /* o + double acute = ő */
-        {0x006F, 0x0304, 0x014D}, /* o + macron = ō */
-        {0x006F, 0x0306, 0x014F}, /* o + breve = ŏ */
+        {0x006F, 0x0300, 0x00F2},  /* o + grave = ò */
+        {0x006F, 0x0301, 0x00F3},  /* o + acute = ó */
+        {0x006F, 0x0302, 0x00F4},  /* o + circumflex = ô */
+        {0x006F, 0x0303, 0x00F5},  /* o + tilde = õ */
+        {0x006F, 0x0308, 0x00F6},  /* o + diaeresis = ö */
+        {0x006F, 0x030A, 0x00F8},  /* o + ring = ø (actually slash, but ring is close) */
+        {0x006F, 0x030B, 0x0151},  /* o + double acute = ő */
+        {0x006F, 0x0304, 0x014D},  /* o + macron = ō */
+        {0x006F, 0x0306, 0x014F},  /* o + breve = ŏ */
         
-        {0x0075, 0x0300, 0x00F9}, /* u + grave = ù */
-        {0x0075, 0x0301, 0x00FA}, /* u + acute = ú */
-        {0x0075, 0x0302, 0x00FB}, /* u + circumflex = û */
-        {0x0075, 0x0308, 0x00FC}, /* u + diaeresis = ü */
-        {0x0075, 0x0304, 0x016B}, /* u + macron = ū */
-        {0x0075, 0x0306, 0x016D}, /* u + breve = ŭ */
-        {0x0075, 0x030B, 0x0171}, /* u + double acute = ű */
+        {0x0075, 0x0300, 0x00F9},  /* u + grave = ù */
+        {0x0075, 0x0301, 0x00FA},  /* u + acute = ú */
+        {0x0075, 0x0302, 0x00FB},  /* u + circumflex = û */
+        {0x0075, 0x0308, 0x00FC},  /* u + diaeresis = ü */
+        {0x0075, 0x030A, 0x016F},  /* u + ring = ů */
+        {0x0075, 0x0304, 0x016B},  /* u + macron = ū */
+        {0x0075, 0x0306, 0x016D},  /* u + breve = ŭ */
+        {0x0075, 0x030B, 0x0171},  /* u + double acute = ű */
         
-        {0x006E, 0x0303, 0x00F1}, /* n + tilde = ñ */
+        {0x006E, 0x0303, 0x00F1},  /* n + tilde = ñ */
         
-        /* Uppercase */
-        {0x0041, 0x0300, 0x00C0}, /* A + grave = À */
-        {0x0041, 0x0301, 0x00C1}, /* A + acute = Á */
-        {0x0041, 0x0302, 0x00C2}, /* A + circumflex = Â */
-        {0x0041, 0x0303, 0x00C3}, /* A + tilde = Ã */
-        {0x0041, 0x0308, 0x00C4}, /* A + diaeresis = Ä */
-        {0x0041, 0x030A, 0x00C5}, /* A + ring = Å */
+        /* -------- Latin uppercase -------- */
+        {0x0041, 0x0300, 0x00C0},  /* A + grave = À */
+        {0x0041, 0x0301, 0x00C1},  /* A + acute = Á */
+        {0x0041, 0x0302, 0x00C2},  /* A + circumflex = Â */
+        {0x0041, 0x0303, 0x00C3},  /* A + tilde = Ã */
+        {0x0041, 0x0308, 0x00C4},  /* A + diaeresis = Ä */
+        {0x0041, 0x030A, 0x00C5},  /* A + ring = Å */
+        {0x0041, 0x0304, 0x0100},  /* A + macron = Ā */
+        {0x0041, 0x0306, 0x0102},  /* A + breve = Ă */
         
-        {0x0045, 0x0300, 0x00C8}, /* E + grave = È */
-        {0x0045, 0x0301, 0x00C9}, /* E + acute = É */
-        {0x0045, 0x0302, 0x00CA}, /* E + circumflex = Ê */
-        {0x0045, 0x0308, 0x00CB}, /* E + diaeresis = Ë */
+        {0x0045, 0x0300, 0x00C8},  /* E + grave = È */
+        {0x0045, 0x0301, 0x00C9},  /* E + acute = É */
+        {0x0045, 0x0302, 0x00CA},  /* E + circumflex = Ê */
+        {0x0045, 0x0308, 0x00CB},  /* E + diaeresis = Ë */
+        {0x0045, 0x0304, 0x0112},  /* E + macron = Ē */
+        {0x0045, 0x0306, 0x0114},  /* E + breve = Ĕ */
         
-        {0x0049, 0x0300, 0x00CC}, /* I + grave = Ì */
-        {0x0049, 0x0301, 0x00CD}, /* I + acute = Í */
-        {0x0049, 0x0302, 0x00CE}, /* I + circumflex = Î */
-        {0x0049, 0x0308, 0x00CF}, /* I + diaeresis = Ï */
+        {0x0049, 0x0300, 0x00CC},  /* I + grave = Ì */
+        {0x0049, 0x0301, 0x00CD},  /* I + acute = Í */
+        {0x0049, 0x0302, 0x00CE},  /* I + circumflex = Î */
+        {0x0049, 0x0308, 0x00CF},  /* I + diaeresis = Ï */
+        {0x0049, 0x0304, 0x012A},  /* I + macron = Ī */
+        {0x0049, 0x0306, 0x012C},  /* I + breve = Ĭ */
         
-        {0x004F, 0x0300, 0x00D2}, /* O + grave = Ò */
-        {0x004F, 0x0301, 0x00D3}, /* O + acute = Ó */
-        {0x004F, 0x0302, 0x00D4}, /* O + circumflex = Ô */
-        {0x004F, 0x0303, 0x00D5}, /* O + tilde = Õ */
-        {0x004F, 0x0308, 0x00D6}, /* O + diaeresis = Ö */
+        {0x004F, 0x0300, 0x00D2},  /* O + grave = Ò */
+        {0x004F, 0x0301, 0x00D3},  /* O + acute = Ó */
+        {0x004F, 0x0302, 0x00D4},  /* O + circumflex = Ô */
+        {0x004F, 0x0303, 0x00D5},  /* O + tilde = Õ */
+        {0x004F, 0x0308, 0x00D6},  /* O + diaeresis = Ö */
+        {0x004F, 0x030A, 0x00D8},  /* O + ring = Ø (actually slash) */
+        {0x004F, 0x030B, 0x0150},  /* O + double acute = Ő */
+        {0x004F, 0x0304, 0x014C},  /* O + macron = Ō */
+        {0x004F, 0x0306, 0x014E},  /* O + breve = Ŏ */
         
-        {0x0055, 0x0300, 0x00D9}, /* U + grave = Ù */
-        {0x0055, 0x0301, 0x00DA}, /* U + acute = Ú */
-        {0x0055, 0x0302, 0x00DB}, /* U + circumflex = Û */
-        {0x0055, 0x0308, 0x00DC}, /* U + diaeresis = Ü */
+        {0x0055, 0x0300, 0x00D9},  /* U + grave = Ù */
+        {0x0055, 0x0301, 0x00DA},  /* U + acute = Ú */
+        {0x0055, 0x0302, 0x00DB},  /* U + circumflex = Û */
+        {0x0055, 0x0308, 0x00DC},  /* U + diaeresis = Ü */
+        {0x0055, 0x030A, 0x016E},  /* U + ring = Ů */
+        {0x0055, 0x0304, 0x016A},  /* U + macron = Ū */
+        {0x0055, 0x0306, 0x016C},  /* U + breve = Ŭ */
+        {0x0055, 0x030B, 0x0170},  /* U + double acute = Ű */
         
-        {0x004E, 0x0303, 0x00D1}, /* N + tilde = Ñ */
-        
+        {0x004E, 0x0303, 0x00D1},  /* N + tilde = Ñ */
+
+        /* -------- Vietnamese horn letters -------- */
+        /* 
+         * The "horn" is U+031B. The base characters are:
+         *   U+01A0 = O with horn (Ơ)  - lowercase: U+01A1 (ơ)
+         *   U+01AF = U with horn (Ư)  - lowercase: U+01B0 (ư)
+         * 
+         * These are then combined with Vietnamese tone marks:
+         *   grave (U+0300), acute (U+0301), hook above (U+0309),
+         *   tilde (U+0303), dot below (U+0323)
+         */
+
+        /* Lowercase: o with horn + tone marks */
+        {0x01A1, 0x0301, 0x1EDB},  /* ơ + acute = ớ */
+        {0x01A1, 0x0300, 0x1EDD},  /* ơ + grave = ờ */
+        {0x01A1, 0x0309, 0x1EDF},  /* ơ + hook above = ở */
+        {0x01A1, 0x0303, 0x1ED9},  /* ơ + tilde = ỗ */
+        {0x01A1, 0x0323, 0x1EE1},  /* ơ + dot below = ợ */
+
+        /* Lowercase: u with horn + tone marks */
+        {0x01B0, 0x0301, 0x1EEB},  /* ư + acute = ứ */
+        {0x01B0, 0x0300, 0x1EED},  /* ư + grave = ừ */
+        {0x01B0, 0x0309, 0x1EEF},  /* ư + hook above = ử */
+        {0x01B0, 0x0303, 0x1EF1},  /* ư + tilde = ữ */
+        {0x01B0, 0x0323, 0x1EF3},  /* ư + dot below = ự */
+
+        /* Uppercase: O with horn + tone marks */
+        {0x01A0, 0x0301, 0x1EDA},  /* Ơ + acute = Ớ */
+        {0x01A0, 0x0300, 0x1EDC},  /* Ơ + grave = Ờ */
+        {0x01A0, 0x0309, 0x1EDE},  /* Ơ + hook above = Ở */
+        {0x01A0, 0x0303, 0x1ED8},  /* Ơ + tilde = Ỗ */
+        {0x01A0, 0x0323, 0x1EE0},  /* Ơ + dot below = Ợ */
+
+        /* Uppercase: U with horn + tone marks */
+        {0x01AF, 0x0301, 0x1EEA},  /* Ư + acute = Ứ */
+        {0x01AF, 0x0300, 0x1EEC},  /* Ư + grave = Ừ */
+        {0x01AF, 0x0309, 0x1EEE},  /* Ư + hook above = Ử */
+        {0x01AF, 0x0303, 0x1EF0},  /* Ư + tilde = Ữ */
+        {0x01AF, 0x0323, 0x1EF2},  /* Ư + dot below = Ự */
+
         {0, 0, 0}
     };
-    
+
     for (int i = 0; compTable[i].base != 0; i++) {
         if (compTable[i].base == base && compTable[i].mark == mark) {
             return compTable[i].composed;
         }
     }
-    
+
     return 0;
 }
-
-/*
- *----------------------------------------------------------------------
- * ComposeUTF8String --
- *
- *   Compose combining diacritical marks in a UTF-8 string.
- *   Uses a composition table for common Latin sequences; for other
- *   sequences it falls back to the original text.
- *
- * Results:
- *   Newly allocated UTF-8 string in NFC form, or NULL on failure.
- *
- * Side effects:
- *   None.
- *----------------------------------------------------------------------
- */
 
 /*
  *----------------------------------------------------------------------
@@ -275,7 +366,7 @@ ComposeUTF8String(const char *source, int len)
 {
     if (!source || len <= 0) return NULL;
     
-    /* Check if there are any combining characters */
+    /* Check if there are any combining characters. */
     bool hasCombining = false;
     for (int i = 0; i < len; ) {
         FcChar32 uc;
@@ -422,6 +513,7 @@ ComposeUTF8String(const char *source, int len)
     
     return result;
 }
+
 /*
  *----------------------------------------------------------------------
  * IsSimpleOnly --
@@ -597,7 +689,7 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
 {
     if (!fontPtr || fontPtr->nfaces <= 0) return 0;
 
-    /* Common emoji test codepoints - more extensive set */
+    /* Common emoji test codepoints - more extensive set. */
     FcChar32 emojiTestPoints[] = {
         0x1F600, /* Grinning face */
         0x1F602, /* Face with tears of joy */
@@ -719,7 +811,7 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
         NULL
     };
 
-    /* Check if any of the faces already loaded match these paths */
+    /* Check if any of the faces already loaded match these paths. */
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
         if (fontPtr->faces[fi].filePath) {
             for (int p = 0; emojiFontPaths[p]; p++) {
@@ -813,7 +905,7 @@ GetBidiRuns(
  *   proper rendering of emoji sequences and to prevent partial
  *   coverage from non-emoji fonts.
  *
- *   This function now prioritizes sans-serif faces over serif
+ *   This function prioritizes sans-serif faces over serif
  *   faces when multiple fonts cover the same character.
  *
  * Results:
@@ -851,7 +943,7 @@ GetRunFaceIndex(
         return shaper->charCache[cacheIdx].faceIdx;
     }
 
-    /* First pass: find a sans-serif face that covers this character */
+    /* First pass: find a sans-serif face that covers this character. */
     int bestSerifFace = -1;
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
         if (!fontPtr->faces[fi].charset ||
@@ -862,19 +954,19 @@ GetRunFaceIndex(
         FcPattern *pat = fontPtr->faces[fi].source;
         if (!pat) continue;
         
-        /* Check if this is a serif face */
+        /* Check if this is a serif face. */
         if (IsSerifFace(pat)) {
             if (bestSerifFace < 0) bestSerifFace = fi;
             continue;
         }
         
-        /* Found a sans-serif face */
+        /* Found a sans-serif face. */
         shaper->charCache[cacheIdx].uc      = uc;
         shaper->charCache[cacheIdx].faceIdx = fi;
         return fi;
     }
     
-    /* If we found a serif face, use it as a fallback */
+    /* If we found a serif face, use it as a fallback. */
     if (bestSerifFace >= 0) {
         shaper->charCache[cacheIdx].uc      = uc;
         shaper->charCache[cacheIdx].faceIdx = bestSerifFace;
@@ -898,7 +990,7 @@ GetRunFaceIndex(
  *   for the entire range to ensure that emoji sequences (ZWJ, skin tones,
  *   flags) remain in a single font and shape correctly.
  *
- *   This function now prioritizes sans-serif faces over serif
+ *   This function prioritizes sans-serif faces over serif
  *   faces when multiple fonts cover the same characters.
  *
  * Results:
@@ -918,7 +1010,7 @@ FindFaceCoveringRange(
 {
     if (len <= 0) return 0;
 
-    /* First, check if this is a combining character sequence that should be kept together */
+    /* First, check if this is a combining character sequence that should be kept together. */
     bool hasEmoji = false;
     bool hasNonEmoji = false;
     for (int i = start; i < start + len; i++) {
@@ -929,13 +1021,13 @@ FindFaceCoveringRange(
         }
     }
 
-    /* If the range has both emoji and non-emoji, try to find a sans-serif face that covers non-emoji */
+    /* If the range has both emoji and non-emoji, try to find a sans-serif face that covers non-emoji. */
     if (hasEmoji && hasNonEmoji) {
         for (int fi = 0; fi < fontPtr->nfaces; fi++) {
             FcPattern *pat = fontPtr->faces[fi].source;
             if (!pat) continue;
             
-            /* Skip serif fonts */
+            /* Skip serif fonts. */
             if (IsSerifFace(pat)) continue;
             
             FcCharSet *cs = fontPtr->faces[fi].charset;
@@ -950,20 +1042,20 @@ FindFaceCoveringRange(
             }
             if (ok) return fi;
         }
-        /* Fall through to emoji-only handling */
+        /* Fall through to emoji-only handling. */
     }
 
-    /* If any character in the range is an emoji, use the emoji face for emoji-only runs */
+    /* If any character in the range is an emoji, use the emoji face for emoji-only runs. */
     if (hasEmoji && !hasNonEmoji) {
         return GetEmojiFaceIndex(fontPtr);
     }
 
-    /* First pass: find any sans-serif face that covers all characters */
+    /* First pass: find any sans-serif face that covers all characters. */
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
         FcPattern *pat = fontPtr->faces[fi].source;
         if (!pat) continue;
         
-        /* Skip serif fonts unless absolutely necessary */
+        /* Skip serif fonts unless absolutely necessary. */
         if (IsSerifFace(pat)) continue;
         
         FcCharSet *cs = fontPtr->faces[fi].charset;
@@ -978,7 +1070,7 @@ FindFaceCoveringRange(
         if (ok) return fi;
     }
     
-    /* Second pass: any face that covers all characters (including serif) */
+    /* Second pass: any face that covers all characters (including serif). */
     for (int fi = 0; fi < fontPtr->nfaces; fi++) {
         FcCharSet *cs = fontPtr->faces[fi].charset;
         if (!cs) continue;
@@ -992,7 +1084,7 @@ FindFaceCoveringRange(
         if (ok) return fi;
     }
     
-    return 0; /* fallback to primary face */
+    return 0; /* Fallback to primary face. */
 }
 
 /*
@@ -1125,7 +1217,7 @@ WaylandShaper_Destroy(WaylandShaper *s)
  *   Advances are left at 0 and filled in by NanoVG during measurement/draw.
  *
  * Results:
- *   true on success, false on failure.
+ *   True on success, false on failure.
  *
  * Side effects:
  *   Updates the shaper's string cache.
@@ -1437,7 +1529,7 @@ WaylandShaper_ShapeString(
             if (subrunHasEmoji && !subrunHasNonEmoji) {
                 runFaceIndex = GetEmojiFaceIndex(fontPtr);
             } else if (subrunHasEmoji && subrunHasNonEmoji) {
-                /* Mixed run - try to find a sans-serif face for non-emoji parts */
+                /* Mixed run - try to find a sans-serif face for non-emoji parts. */
                 int mixedFace = FindFaceCoveringRange(fontPtr, ucs4Chars,
                                                       subrunStart,
                                                       subrunEnd - subrunStart);
@@ -1872,9 +1964,11 @@ EnsureNvgFont(
             fontPtr->nvgContexts = newCtx;
             fontPtr->nvgContextCount++;
 
-            /* Register in the cross-font registry so a future
+            /*
+	     * Register in the cross-font registry so a future
              * TkWaylandFontContextDestroyed(vg) call can find and
-             * purge this entry before its address gets recycled. */
+             * purge this entry before its address gets recycled.
+	     */
             NvgFontRegEntry *reg = (NvgFontRegEntry*)malloc(sizeof(NvgFontRegEntry));
             if (reg) {
                 reg->vg = vg;
@@ -1962,7 +2056,7 @@ InitFont(
     const char *family = faPtr->family;
 
     /*
-     * Strict sans serif default: 
+     * Strict sans-serif default: 
      * If the user did NOT explicitly request a family,
      * we do NOT add their family to the pattern.
      */
@@ -2036,13 +2130,13 @@ InitFont(
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
-    /* If the first font is serif, explicitly filter it out and find a sans-serif */
+    /* If the first font is serif, explicitly filter it out and find a sans-serif. */
     if (set && set->nfont > 0) {
         FcPattern *firstPat = set->fonts[0];
         FcChar8 *firstFamily = NULL;
         FcPatternGetString(firstPat, FC_FAMILY, 0, &firstFamily);
         
-        /* Check if the first font is serif */
+        /* Check if the first font is serif. */
         bool isSerif = false;
         if (firstFamily) {
             const char *fam = (const char *)firstFamily;
@@ -2062,7 +2156,7 @@ InitFont(
             }
         }
         
-        /* If the primary font is serif, try to find a sans-serif font in the set */
+        /* If the primary font is serif, try to find a sans-serif font in the set. */
         if (isSerif && set->nfont > 1) {
             int sansIndex = -1;
             for (int i = 1; i < set->nfont; i++) {
@@ -2080,7 +2174,7 @@ InitFont(
                     }
                 }
             }
-            /* Swap the sans-serif font to the front */
+            /* Swap the sans-serif font to the front. */
             if (sansIndex > 0) {
                 FcPattern *tmp = set->fonts[0];
                 set->fonts[0] = set->fonts[sansIndex];
@@ -2089,7 +2183,7 @@ InitFont(
         }
     }
 
-    /* Last-resort fallback: manually find a sans-serif font */
+    /* Last-resort fallback: manually find a sans-serif font. */
     if (!set || set->nfont == 0) {
         FcPatternDestroy(pat);
         pat = FcPatternCreate();
@@ -2106,10 +2200,10 @@ InitFont(
         FcDefaultSubstitute(pat);
         set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
         
-        /* If still no font, try specific paths */
+        /* If still no font, try specific paths. */
         if (!set || set->nfont == 0) {
             FcPatternDestroy(pat);
-            /* Try to load a specific font file */
+            /* Try to load a specific font file. */
             const char *fontPaths[] = {
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                 "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
@@ -3360,6 +3454,7 @@ decorations:
         }
     }
 }
+
 /*
  *----------------------------------------------------------------------
  * TkPostscriptFontName --
@@ -3477,6 +3572,7 @@ TkUnixSetXftClipRegion(
  *   None.
  *----------------------------------------------------------------------
  */
+
 MODULE_SCOPE int
 TkWaylandLoadNamedFontIntoContext(
     NVGcontext *vg,
