@@ -166,36 +166,6 @@ IsSansSerifFace(FcPattern *pat)
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- * UnicodeCompose --
- *
- *   Attempt to compose a base character and combining mark.
- *   Extended to support Vietnamese horn letters, ring above, and their combinations.
- *
- * Results:
- *   Composed Unicode character, or 0 if no composition is possible.
- *
- * Side effects:
- *   None.
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- * UnicodeCompose --
- *
- *   Attempt to compose a base character and combining mark.
- *   Extended to support Vietnamese horn letters, ring above, and their combinations.
- *
- * Results:
- *   Composed Unicode character, or 0 if no composition is possible.
- *
- * Side effects:
- *   None.
- *----------------------------------------------------------------------
- */
-
 static FcChar32
 UnicodeCompose(FcChar32 base, FcChar32 mark)
 {
