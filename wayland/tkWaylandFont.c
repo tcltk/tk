@@ -166,6 +166,15 @@ IsSimpleOnly(const char *str, int len)
         int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
         if (clen <= 0) return 0;
 
+        /* 
+         * Combining diacritical marks MUST go through HarfBuzz shaping.
+         * Without HarfBuzz, NanoVG will render them as separate glyphs
+         * with full advances, breaking mark positioning.
+         */
+        if (uc >= 0x0300 && uc <= 0x036F) {  /* Combining diacritics */
+            return false;
+        }
+
         /* Force complex shaper for scripts that require it. */
         if (
             /* Hebrew / Arabic / Arabic supplements / presentation forms. */
@@ -193,7 +202,7 @@ IsSimpleOnly(const char *str, int len)
             (uc >= 0x1F000 && uc <= 0x1FAFF) ||
             (uc >= 0x1F300 && uc <= 0x1F9FF) ||
             uc > 0xFFFF
-	    ) {
+        ) {
             return false;
         }
 
@@ -205,7 +214,6 @@ IsSimpleOnly(const char *str, int len)
     }
     return true;
 }
-
 /*
  *----------------------------------------------------------------------
  * IsEmoji --
@@ -510,7 +518,7 @@ GetBidiRuns(
  *   proper rendering of emoji sequences and to prevent partial
  *   coverage from non-emoji fonts.
  *
- *   CRITICAL: This function now prioritizes sans-serif faces over serif
+ *   This function now prioritizes sans-serif faces over serif
  *   faces when multiple fonts cover the same character.
  *
  * Results:
@@ -595,7 +603,7 @@ GetRunFaceIndex(
  *   for the entire range to ensure that emoji sequences (ZWJ, skin tones,
  *   flags) remain in a single font and shape correctly.
  *
- *   CRITICAL: This function now prioritizes sans-serif faces over serif
+ *   This function now prioritizes sans-serif faces over serif
  *   faces when multiple fonts cover the same characters.
  *
  * Results:
@@ -1181,11 +1189,36 @@ WaylandShaper_ShapeString(
             if (!glyphInfo || !glyphPos) { continue; }
 
             int runPenX = 0;
+            int lastClusterByteOff  = -1;
+            bool lastClusterWasEmoji = false;
             for (unsigned int gi = 0;
                  gi < glyphCount && buffer->glyphCount < MAX_GLYPHS;
                  gi++) {
 
                 int byteOff = (int)glyphInfo[gi].cluster;
+
+                /*
+                 * Emoji glyphs are tightly advanced by the fallback face's
+                 * own metrics and read as cramped when placed next to
+                 * Latin text or other emoji. Add a proportional gap once
+                 * per finished emoji grapheme cluster, applied here at the
+                 * start of the *next* cluster so it always lands strictly
+                 * between clusters and never inside one - multi-codepoint
+                 * sequences (flags, ZWJ combos, skin-tone modifiers) share
+                 * a single byteOff/cluster and must not be pulled apart.
+                 */
+                if (byteOff != lastClusterByteOff) {
+                    if (lastClusterWasEmoji) {
+                        runPenX += (int)(fontPtr->pixelSize * 0.18 + 0.5);
+                    }
+                    FcChar32 startUc;
+                    lastClusterWasEmoji =
+                        (FcUtf8ToUcs4((const FcChar8 *)(source + byteOff),
+                                     &startUc, numBytes - byteOff) > 0) &&
+                        IsEmoji(startUc);
+                    lastClusterByteOff = byteOff;
+                }
+
                 int advX    = (int)(glyphPos[gi].x_advance / 64.0 + 0.5);
 
                 /* Cluster length. */
@@ -1450,7 +1483,7 @@ TkWaylandFontContextDestroyed(
  *   fallback chain: face[0] → face[1] → … → face[n] (Fontconfig-discovered,
  *   including emoji coverage if a system emoji font is available).
  *
- *   CRITICAL FIX: Font IDs are per-NVG-context. We must track which
+ *   Font IDs are per-NVG-context. We must track which
  *   fonts have been loaded for each context separately.
  *
  * Results:
@@ -1652,12 +1685,14 @@ InitFont(
     FcPattern *pat = FcPatternCreate();
     if (!pat) return;
 
-    /* CRITICAL: Force sans-serif by adding FC_FAMILY with strong preference */
-    /* Only honor explicit non-default family. */
+    /* 
+     * Force sans-serif by adding FC_FAMILY with strong preference. 
+     * Only honor explicit non-default family.
+     */
     if (!useSansDefault && family && family[0] != '\0') {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
     } else {
-        /* Default: force sans-serif */
+        /* Default: force sans-serif. */
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     }
 
@@ -1693,11 +1728,11 @@ InitFont(
                         italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
     FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
 
-    /* CRITICAL: Set FC_HINTING and FC_AUTOHINT to improve rendering */
+    /* Set FC_HINTING and FC_AUTOHINT to improve rendering. */
     FcPatternAddBool(pat, FC_HINTING, FcTrue);
     FcPatternAddBool(pat, FC_AUTOHINT, FcTrue);
     
-    /* CRITICAL: Set FC_ANTIALIAS to ensure smooth text */
+    /*Set FC_ANTIALIAS to ensure smooth text. */
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
@@ -2392,6 +2427,24 @@ Tk_MeasureChars(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ * Tk_MeasureCharsInContext --
+ *
+ *   Measure a substring preserving full shaping context.
+ *
+ *   Simple LTR text: delegates to nvgTextGlyphPositions (cheap, exact).
+ *   Complex/RTL text: uses ShapedGlyphBuffer cluster table from
+ *   WaylandShaper_ShapeString with HarfBuzz advances for accurate layout.
+ *
+ * Results:
+ *   Number of bytes consumed, and *lengthPtr = pixel width.
+ *
+ * Side effects:
+ *   May shape the string and update internal caches.
+ *----------------------------------------------------------------------
+ */
+
 int
 Tk_MeasureCharsInContext(
 			 Tk_Font     tkfont,
@@ -2417,11 +2470,27 @@ Tk_MeasureCharsInContext(
     int end   = (int)(rangeStart + rangeLength);
 
     /* 
-     * Simple LTR path: nvgTextGlyphPositions. Decide based on the range
-     * actually being measured, not the whole source buffer, so this
-     * agrees with the same decision in TkpDrawAngledCharsInContext. 
+     * Check for combining characters in the range being measured.
+     * If present, use the complex HarfBuzz path to get correct positioning.
      */
-    if (IsSimpleOnly(source + rangeStart, (int)rangeLength)) {
+    bool hasCombining = false;
+    for (int i = start; i < end; ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, end - i);
+        if (clen <= 0) { i++; continue; }
+        if (uc >= 0x0300 && uc <= 0x036F) { /* Combining diacritics */
+            hasCombining = true;
+            break;
+        }
+        i += clen;
+    }
+
+    /* 
+     * Simple LTR path: nvgTextGlyphPositions. 
+     * Only use this for strings WITHOUT combining characters.
+     * Combining characters must go through HarfBuzz for proper positioning.
+     */
+    if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
         if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
@@ -2525,7 +2594,10 @@ Tk_MeasureCharsInContext(
         return (int)(p - rangePtr);
     }
 
-    /* Complex / RTL path: ShapedGlyphBuffer cluster table. */
+    /* 
+     * Complex / RTL / Combining path: ShapedGlyphBuffer cluster table.
+     * This path uses HarfBuzz which correctly positions combining marks.
+     */
     ShapedGlyphBuffer sbuf;
     if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                    (int)numBytes, &sbuf)
@@ -2853,23 +2925,48 @@ TkpDrawAngledCharsInContext(
         }
 
         int lastFaceId = -1;
-        
-        /* 
-         * For combining characters, we need to render the base + combining marks together. 
-         * Group glyphs by cluster, preserving the full cluster text. 
-        */
+
+        /*
+         * Multiple HarfBuzz glyphs (e.g. a base letter + a combining
+         * accent, or the two regional-indicator codepoints of a flag)
+         * can share a single grapheme cluster and therefore report the
+         * SAME byteOffset/clusterLen.
+         *
+         * NanoVG's fontstash has no concept of Unicode mark attachment,
+         * and - in this environment - drawing an isolated combining-mark
+         * codepoint by itself produces nothing visible at all (some
+         * fallback faces only carry a usable outline for the mark when
+         * fontstash lays it out immediately after its base character).
+         * So each cluster's full UTF-8 text is still drawn in a single
+         * nvgText() call, exactly as before, to guarantee the mark is
+         * actually painted.
+         *
+         * What was wrong originally is that nvgText() lays multiple
+         * codepoints out left-to-right using the *base* letter's full
+         * advance width before placing the next character, which pushes
+         * a combining mark out to the side instead of over the base. For
+         * clusters made of more than one codepoint, we counter that by
+         * applying a negative letter-spacing scaled to the base glyph's
+         * own HarfBuzz advance width, pulling the trailing mark(s) back
+         * toward the base instead of letting them trail at full width.
+         * This is an approximation (NanoVG has no true GPOS mark
+         * positioning), not pixel-exact stacking, but keeps marks both
+         * visible and close to their base letter.
+         */
         typedef struct {
-            int start_byte;
-            int end_byte;
-            int face_idx;
-            int pen_x;
-            int pen_y;
+            int  start_byte;
+            int  end_byte;
+            int  face_idx;
+            int  pen_x;
+            int  pen_y;
+            int  base_advance;
+            int  codepoint_count;
             char text[32];
         } ClusterRenderInfo;
-        
+
         ClusterRenderInfo clusters[MAX_GLYPHS];
         int cluster_count = 0;
-        
+
         for (int i = 0; i < sbuf.glyphCount && cluster_count < MAX_GLYPHS; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
@@ -2885,7 +2982,7 @@ TkpDrawAngledCharsInContext(
                     break;
                 }
             }
-            
+
             if (found < 0) {
                 found = cluster_count++;
                 clusters[found].start_byte = bo;
@@ -2893,15 +2990,18 @@ TkpDrawAngledCharsInContext(
                 clusters[found].face_idx = sbuf.glyphs[i].faceIndex;
                 clusters[found].pen_x = sbuf.glyphs[i].x;
                 clusters[found].pen_y = sbuf.glyphs[i].y;
-                
+                clusters[found].base_advance = sbuf.glyphs[i].advanceX;
+                clusters[found].codepoint_count = 0;
+
                 /* Copy the cluster text */
                 int len = boe - bo;
                 if (len > 31) len = 31;
                 memcpy(clusters[found].text, source + bo, len);
                 clusters[found].text[len] = '\0';
             }
+            clusters[found].codepoint_count++;
         }
-        
+
         /* Render each cluster. */
         for (int i = 0; i < cluster_count; i++) {
             int faceIdx = clusters[i].face_idx;
@@ -2909,7 +3009,7 @@ TkpDrawAngledCharsInContext(
 
             /* For emoji, ensure we use the emoji face. */
             FcChar32 uc;
-            if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc, 
+            if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
                              strlen(clusters[i].text)) > 0) {
                 if (IsEmoji(uc)) {
                     int emojiFace = GetEmojiFaceIndex(fontPtr);
@@ -2947,11 +3047,24 @@ TkpDrawAngledCharsInContext(
             float gx = (float)clusters[i].pen_x;
             float gy = (float)clusters[i].pen_y;
 
-            /* 
-             * For combining characters, we need to render the entire cluster text. 
-            /* This ensures accents are properly positioned by NanoVG/HarfBuzz.
+            /*
+             * A cluster with more than one codepoint (base + one or more
+             * combining marks) gets pulled together: reduce the gap
+             * NanoVG would otherwise leave after the base letter's full
+             * advance so the mark lands close to/over the base instead
+             * of trailing off to the right.
              */
+            if (clusters[i].codepoint_count > 1) {
+                float pull = (float)clusters[i].base_advance * 0.65f;
+                nvgTextLetterSpacing(vg, -pull);
+                nvgTextLetterSpacing(vg, -1);
+            }
+
             nvgText(vg, gx, gy, clusters[i].text, clusters[i].text + strlen(clusters[i].text));
+
+            if (clusters[i].codepoint_count > 1) {
+                nvgTextLetterSpacing(vg, 0.0f);
+            }
         }
     }
 
