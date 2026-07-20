@@ -109,9 +109,9 @@ extern const char *const WmAttributeNames[];
  */
 
 /* Flag values */
-#define needsDisplay 1
-#define dontSwap     2
-#define sizeChanged  4
+#define TKWL_NEEDS_DISPLAY  1
+#define TKWL_DONT_SWAP      2
+#define TKWL_NEVER_FOCUSED  4
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;

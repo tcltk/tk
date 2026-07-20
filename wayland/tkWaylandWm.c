@@ -3655,6 +3655,7 @@ TopLevelReqProc(
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
         wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
+	fprintf(stderr, "TopLevelReqProc: rescheduling\n");
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     }
 }
@@ -3685,6 +3686,18 @@ UpdateGeometryInfo(
     int       tw, th;
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+	/* Newly created windows are created hidden and set to be focused
+	 * when they are first shown.
+	 * If a window is resized before it is has been shown, the missing
+	 * window decorations trigger a wayland error which resets the
+	 * size back to the last successful size, which will be its initial
+	 * size, 200x200.  So we need to wait for the first call to the
+	 * WindowFocusCallback before resizing it.
+	 */
+	Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
+	return;
+    }
 
     if (wmPtr == NULL) {
 	fprintf(stderr, "Cannot update geometry for a window with no WmInfo\n");

@@ -695,8 +695,10 @@ TkWaylandWindowFocusCallback(
 {
     recordCallback();
     fprintf(stderr, "TkWaylandWindowFocusCallback\n");
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
+    infoPtr->flags &= ~TKWL_NEVER_FOCUSED;
     
     if (!winPtr) {
         return;

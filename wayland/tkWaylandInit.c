@@ -143,7 +143,7 @@ static glfwTkInfo* createGlfwTkInfo(
     *infoPtr = (glfwTkInfo) {
 	.glfwWindow = glfwWindow,
 	.winPtr = winPtr,
-	.flags = 0,
+	.flags = TKWL_NEVER_FOCUSED,
 	.nextPtr = glfwTkInfoList};
     glfwTkInfoList = infoPtr;
 
@@ -287,22 +287,20 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
+#if 1
     printf("Tk_ClipDrawableToRect: %dx%d+%d+%d\n", width, height, x, y);
-    //(void) x; (void) y; (void) width; (void) height;
-#if 1  // This experiment seems to have failed.
-       // I don't know why.
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
-    //// Check for NULL
+    //// Should check for NULL
     if (width == -1 || height == -1) {
 	fprintf(stderr, "Finished double buffer section\n");
 	renderFBO(glfwWindow);
-	glfwInfoPtr->flags &= ~dontSwap;
-	glfwInfoPtr->flags |= needsDisplay;
+	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
+	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
     } else {
 	fprintf(stderr, "Starting double buffer section ====> \n");
-	glfwInfoPtr->flags |= dontSwap;
-	glfwInfoPtr->flags &= ~needsDisplay;
+	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
+	glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
     }
 #else
     (void) drawable;
@@ -333,11 +331,11 @@ TkWaylandDisplayAllWindows()
     for (glfwTkInfo* infoPtr = glfwTkInfoList;
 	 infoPtr != NULL;
 	 infoPtr = infoPtr->nextPtr) {
-	if (infoPtr->flags & needsDisplay) {
+	if (infoPtr->flags & TKWL_NEEDS_DISPLAY) {
 	    GLFWwindow *glfwWindow = infoPtr->glfwWindow;
 	    fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
 	    renderFBO(glfwWindow);
-	    infoPtr->flags &= ~needsDisplay;
+	    infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
 	}
     }
 }
@@ -822,8 +820,8 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      */
 
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    if (!(infoPtr->flags & dontSwap)) {
-        infoPtr->flags |= needsDisplay;
+    if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
+        infoPtr->flags |= TKWL_NEEDS_DISPLAY;
     } else {
 	printf("dontSwap was set - waiting\n");
     }
