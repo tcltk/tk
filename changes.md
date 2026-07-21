@@ -18,6 +18,7 @@ to the userbase.
 # Bug fixes
  - [tk inactive returns a negative value on Windows for long inactivity](https://core.tcl-lang.org/tk/tktview/3cb7c4)
  - [nanosvg possible zero malloc on file error](https://github.com/memononen/nanosvg/pull/291)
+ - [Scaling on aqua gets unexpectedly reset](https://core.tcl-lang.org/tk/tktview/fe932e)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
