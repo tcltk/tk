@@ -248,11 +248,13 @@ static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
  * IsSimpleOnly --
  *
  *    Returns 1 if the string consists of codepoints that can be
- *    handled without shaping. This includes primarily Latin
- *    and kana text from the CJK (Chinese, Japanese, Korean) ranges.
+ *    handled without shaping. This includes Latin, CJK punctuation,
+ *    Kana, and a wide range of common symbols, punctuation, and
+ *    neutral characters.
  *
  *    Note: All other scripts requiring complex shaping (Arabic, Indic,
- *    Thai, CJK, etc.) return 0 to ensure HarfBuzz handling.
+ *    Thai, CJK ideographs, emoji requiring COLR, etc.) return 0 to
+ *    ensure HarfBuzz handling.
  * ---------------------------------------------------------------
  */
 
@@ -293,7 +295,7 @@ IsSimpleOnly(const char *str, int len)
 	    (uc >= 0x0800 && uc <= 0x083F) ||	   /* Samaritan */
 	    (uc >= 0x0840 && uc <= 0x085F) ||	   /* Mandaic */
 
-	    /* CJK and others. */
+	    /* CJK and other complex scripts. */
 	    (uc >= 0x4E00 && uc <= 0x9FFF) ||	   /* CJK Unified Ideographs */
 	    (uc >= 0xAC00 && uc <= 0xD7AF) ||	   /* Hangul (Korean) */
 	    (uc >= 0x1100 && uc <= 0x11FF) ||	   /* Jamo */
@@ -301,9 +303,8 @@ IsSimpleOnly(const char *str, int len)
 	    (uc >= 0x0E00 && uc <= 0x0E7F) ||	   /* Thai */
 	    (uc >= 0x0E80 && uc <= 0x0EFF) ||	   /* Lao */
 
-	    /* Emoji and supplementary. */
+	    /* Emoji and supplementary that need COLR/CBDT shaping. */
 	    (uc >= 0x1F000 && uc <= 0x1FAFF) ||
-	    (uc >= 0x2600 && uc <= 0x27BF) ||
 	    (uc >= 0x1F300 && uc <= 0x1F9FF) ||
 	    uc > 0xFFFF) {
 
@@ -311,12 +312,64 @@ IsSimpleOnly(const char *str, int len)
 	}
 
 	/*
-	 * Safe scripts that can use the fast path:
-	 * Latin, CJK punctuation, Hiragana, Katakana.
+	 * Safe scripts/ranges that can use the fast path:
+	 * Latin, CJK punctuation + Kana, and a wide variety of
+	 * common symbols, punctuation, bullets, math operators, etc.
 	 */
 	int isSafe =
-	    (uc <= 0x024F) ||				 /* Latin + extended */
-	    (uc >= 0x3000 && uc <= 0x30FF);		   /* CJK punct + Kana */
+	    /* Basic Latin, Latin-1 Supplement, Latin Extended. */
+	    (uc <= 0x024F) ||
+
+	    /* CJK Punctuation, Hiragana, Katakana. */
+	    (uc >= 0x3000 && uc <= 0x30FF) ||
+
+	    /* General Punctuation (includes U+2022 BULLET, dashes, quotes, etc.) */
+	    (uc >= 0x2000 && uc <= 0x206F) ||
+
+	    /* Superscripts and Subscripts. */
+	    (uc >= 0x2070 && uc <= 0x209F) ||
+
+	    /* Currency Symbols. */
+	    (uc >= 0x20A0 && uc <= 0x20CF) ||
+
+	    /* Letterlike Symbols. */
+	    (uc >= 0x2100 && uc <= 0x214F) ||
+
+	    /* Number Forms. */
+	    (uc >= 0x2150 && uc <= 0x218F) ||
+
+	    /* Arrows. */
+	    (uc >= 0x2190 && uc <= 0x21FF) ||
+
+	    /* Mathematical Operators. */
+	    (uc >= 0x2200 && uc <= 0x22FF) ||
+
+	    /* Miscellaneous Technical. */
+	    (uc >= 0x2300 && uc <= 0x23FF) ||
+
+	    /* Enclosed Alphanumerics. */
+	    (uc >= 0x2460 && uc <= 0x24FF) ||
+
+	    /* Box Drawing. */
+	    (uc >= 0x2500 && uc <= 0x257F) ||
+
+	    /* Geometric Shapes (includes many bullets/dots). */
+	    (uc >= 0x25A0 && uc <= 0x25FF) ||
+
+	    /* Miscellaneous Symbols (some overlap with emoji). */
+	    (uc >= 0x2600 && uc <= 0x26FF) ||
+
+	    /* Dingbats. */
+	    (uc >= 0x2700 && uc <= 0x27BF) ||
+
+	    /* Supplemental Punctuation. */
+	    (uc >= 0x2E00 && uc <= 0x2E7F) ||
+
+	    /* Greek and Coptic (common in math/scientific text). */
+	    (uc >= 0x0370 && uc <= 0x03FF) ||
+
+	    /* Cyrillic. */
+	    (uc >= 0x0400 && uc <= 0x04FF);
 
 	if (!isSafe) {
 	    return false;
@@ -696,11 +749,8 @@ GetBidiRuns(
     BidiRun *runs,
     int maxRuns)
 {
-    if (charCount <= 0) {
-	runs[0].offset = 0;
-	runs[0].len    = 0;
-	runs[0].isRTL  = false;
-	return 1;
+    if (charCount <= 0 || runs == NULL) {
+	return 0;
     }
 
     /* Fast path: check if any strong RTL characters exist. */
@@ -722,12 +772,34 @@ GetBidiRuns(
     /* Full bidi analysis. */
     SBCodepointSequence seq = {SBStringEncodingUTF32, ucs4, (SBUInteger)charCount};
     SBAlgorithmRef algo = SBAlgorithmCreate(&seq);
+    if (!algo) {
+	/* Fallback to LTR if SheenBidi fails. */
+	runs[0].offset = 0;
+	runs[0].len    = charCount;
+	runs[0].isRTL  = false;
+	return 1;
+    }
 
     /* Use explicit LTR base level (common default for Tk apps). */
     SBParagraphRef para = SBAlgorithmCreateParagraph(algo, 0, (SBUInteger)charCount,
 						     SBLevelDefaultLTR);
+    if (!para) {
+	SBAlgorithmRelease(algo);
+	runs[0].offset = 0;
+	runs[0].len    = charCount;
+	runs[0].isRTL  = false;
+	return 1;
+    }
 
     SBLineRef line = SBParagraphCreateLine(para, 0, (SBUInteger)charCount);
+    if (!line) {
+	SBParagraphRelease(para);
+	SBAlgorithmRelease(algo);
+	runs[0].offset = 0;
+	runs[0].len    = charCount;
+	runs[0].isRTL  = false;
+	return 1;
+    }
 
     SBUInteger runCount = SBLineGetRunCount(line);
     const SBRun *bidiRuns = SBLineGetRunsPtr(line);
