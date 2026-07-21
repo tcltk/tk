@@ -235,9 +235,7 @@ namespace eval ::tk::test::generic {
 
 	    switch -- $subCmd {
 		import {
-		    if {[info exists importedDomains($ns)] && ($domain in $importedDomains($ns))} {
-			return -code error "testutils domain \"$domain\" was already imported"
-		    } else {
+		    if {(! [info exists importedDomains($ns)]) || ($domain ni $importedDomains($ns))} {
 
 			# import procs
 			if {[catch {

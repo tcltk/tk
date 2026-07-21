@@ -133,7 +133,7 @@ test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
 test testutils-2.2 {duplicate import} -constraints testutils -body {
     testutils import foo
     testutils import foo
-} -result {testutils domain "foo" was already imported} -returnCodes error -cleanup {
+} -result "" -returnCodes ok -cleanup {
     testutils forget foo
 }
 
