@@ -34,6 +34,7 @@ necessarily in Tk 8.
  - [ttk::treeview enhancements](https://core.tcl-lang.org/tips/doc/trunk/tip/740.md)
  - [Painting performance improvements for images in ttk widgets](https://core.tcl-lang.org/tk/info/7caf9e9edcfbee42)
  - [Locale support for word handling in text and entry](https://core.tcl-lang.org/tips/doc/trunk/tip/687.md)
+ - [Provide access to the full contents of the Info.plist file of a Tk-based macOS app](https://core.tcl-lang.org/tips/doc/trunk/tip/725.md)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)

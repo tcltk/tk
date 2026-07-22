@@ -305,6 +305,7 @@ InitFont(
     FcPattern *pattern,
     UnixFtFont *fontPtr)
 {
+    double dpi = round(TkScalingLevel(tkwin) * 96);
     FcFontSet *set;
     FcCharSet *charset;
     FcResult result;
@@ -316,7 +317,20 @@ InitFont(
 	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
     }
 
-    FcConfigSubstitute(0, pattern, FcMatchPattern);
+    /*
+     * Remove any pre-existing pixel size; Xft will recompute it.
+     */
+
+    XftPatternDel(pattern, XFT_PIXEL_SIZE);
+
+    /*
+     * Force DPI to match Tk's scaling.
+     */
+
+    XftPatternDel(pattern, XFT_DPI);
+    XftPatternAddDouble(pattern, XFT_DPI, dpi);
+
+    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
 
     /*

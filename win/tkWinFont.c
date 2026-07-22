@@ -2749,8 +2749,8 @@ FindSubFontForChar(
     const char *priorityFonts[] = {
 
 	/* Emoji / Symbols. */
-	"Segoe UI Emoji",
 	"Segoe UI Symbol",
+	"Segoe UI Emoji",
 	"Noto Color Emoji",
 
 	/* Simplified Chinese. */
@@ -3563,26 +3563,9 @@ LoadFontRanges(
 		SwapLong(&encTable.offset);
 	    }
 	    if (encTable.platform != 3) {
-		/*
-		 * Not Microsoft encoding.
-		 */
-
+		/* Not Microsoft encoding. */
 		continue;
 	    }
-
-	    /*
-	     * Platform 3 (Microsoft) encoding selection:
-	     * - encoding 0: Symbol fonts (do not support Unicode codepoints directly)
-	     * - encoding 1: UCS-2 / BMP with format-4 cmap subtable
-	     * - encoding 10: UCS-4 / Full Unicode with format-12 cmap subtable
-	     *
-	     * A font may have BOTH encoding 1 and encoding 10 subtables.
-	     * We must read BOTH to get complete coverage:
-	     * - Format-4 (encoding 1) covers U+0000–U+FFFF (BMP + CJK)
-	     * - Format-12 (encoding 10) covers U+0000–U+10FFFF (supplementary planes + emoji)
-	     *
-	     * We do NOT skip with continue after format-12; we read both if present.
-	     */
 
 	    if (encTable.encoding == 0) {
 		*symbolPtr = 1;
@@ -3590,20 +3573,8 @@ LoadFontRanges(
 	    }
 
 	    if (encTable.encoding == 10) {
-		/*
-		 * Platform 3, encoding 10: cmap format 12 (UCS-4).
-		 * This subtable covers the full Unicode range including
-		 * supplementary planes (emoji, historic scripts, CJK extensions).
-		 * The header at encTable.offset is:
-		 *   USHORT format   (== 12, but stored as ULONG in the
-		 *		    "fixed" 16.16 representation -- high
-		 *		    USHORT is 12, low USHORT is 0)
-		 *   ULONG  length
-		 *   ULONG  language
-		 *   ULONG  nGroups
-		 * Each group is three ULONGs: startCode, endCode, startGlyphID.
-		 */
-		ULONG fmt12hdr[4];  /* format/reserved, length, language, nGroups */
+		/* Platform 3, encoding 10: cmap format 12 (UCS-4) */
+		ULONG fmt12hdr[4];
 		if (GetFontData(hdc, cmapKey, (DWORD)encTable.offset,
 			fmt12hdr, sizeof(fmt12hdr)) == (DWORD)GDI_ERROR) {
 		    continue;
@@ -3612,20 +3583,19 @@ LoadFontRanges(
 		    SwapLong(&fmt12hdr[0]);
 		    SwapLong(&fmt12hdr[3]);
 		}
-		/* High 16 bits of fmt12hdr[0] hold the format number. */
 		if ((fmt12hdr[0] >> 16) != 12) {
 		    continue;
 		}
 		ULONG nGroups = fmt12hdr[3];
 		if (nGroups == 0 || nGroups > 0x10000) {
-		    continue;   /* sanity */
+		    continue;
 		}
 		ULONG *sg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
 		ULONG *eg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
 		size_t groupBase = encTable.offset + sizeof(fmt12hdr);
 		int ok = 1;
 		for (ULONG g = 0; g < nGroups; g++) {
-		    ULONG rec[3];    /* startCode, endCode, startGlyphID */
+		    ULONG rec[3];
 		    if (GetFontData(hdc, cmapKey,
 			    (DWORD)(groupBase + g * 12),
 			    rec, 12) == (DWORD)GDI_ERROR) {
@@ -3644,7 +3614,6 @@ LoadFontRanges(
 		    Tcl_Free(eg);
 		    continue;
 		}
-		/* Keep only the first (most complete) format-12 subtable. */
 		if (*groupCountPtr == 0) {
 		    *startGroupPtr = sg;
 		    *endGroupPtr   = eg;
@@ -3653,18 +3622,9 @@ LoadFontRanges(
 		    Tcl_Free(sg);
 		    Tcl_Free(eg);
 		}
-		/*
-		 * IMPORTANT: Do NOT continue here. We may also have encoding 1
-		 * (format-4) which covers BMP and should be parsed below.
-		 * Some fonts have both subtables; we want both for complete coverage.
-		 */
 	    }
 
 	    if (encTable.encoding != 1) {
-		/*
-		 * We've checked symbol (0), format-12 (10), and now format-4 (1).
-		 * Skip any other encodings.
-		 */
 		continue;
 	    }
 
@@ -3694,15 +3654,6 @@ LoadFontRanges(
 		    }
 		}
 		if (*symbolPtr != 0) {
-		    /*
-		     * Empirically determined: When a symbol font is loaded,
-		     * the character existence metrics obtained from the
-		     * system are mildly wrong. If the real range of the
-		     * symbol font is from 0020 to 00FE, then the metrics are
-		     * reported as F020 to F0FE. When we load a symbol font,
-		     * we must fix the character existence metrics.
-		     */
-
 		    for (k = 0; k < segCount; k++) {
 			if (((startCount[k] & 0xff00) == 0xf000)
 				&& ((endCount[k] & 0xff00) == 0xf000)) {
@@ -3715,58 +3666,39 @@ LoadFontRanges(
 	}
 
 	/*
-	 * Post-processing: Ensure we have valid character coverage data.
-	 *
-	 * If we found format-12 groups (supplementary planes) but no format-4
-	 * segments (BMP), we should create a synthetic BMP range to allow
-	 * the font lookup mechanism to work correctly. However, be conservative:
-	 * only do this if we have no segment data at all.
-	 *
-	 * Conversely, if we have format-4 but no format-12, that's fine;
-	 * supplementary-plane characters simply won't match (no emoji support).
+	 * Synthetic fallback for fonts with no real cmap data.
 	 */
-
 	if (segCount == 0 && *groupCountPtr > 0) {
-	    /*
-	     * We have format-12 groups (emoji or supplementary-plane chars)
-	     * but no format-4 segments (no BMP coverage). This is unusual.
-	     * Create a synthetic BMP segment to avoid breaking the font lookup.
-	     * The synthetic segment claims BMP coverage; actual availability
-	     * will be checked via format-12 groups for supplementary planes
-	     * and FontMapLoadPage for BMP.
-	     */
+	    /* We have format-12 but no format-4: create minimal BMP entry. */
 	    segCount = 1;
 	    cbData = segCount * sizeof(USHORT);
 	    startCount = (USHORT *)Tcl_Alloc(cbData);
 	    endCount = (USHORT *)Tcl_Alloc(cbData);
 	    startCount[0] = 0x0000;
-	    endCount[0] = 0xffff;
+	    endCount[0]   = 0xffff;
 	} else if (segCount == 0 && GetTextCharset(hdc) == ANSI_CHARSET) {
 	    /*
-	     * Bitmap/legacy font with ANSI charset. Assume it covers BMP
-	     * and let fallback search determine actual character support.
+	     * ANSI / bitmap / legacy fonts (e.g. Fixedsys).
+	     * Claim only Latin-1 range so that characters outside this
+	     * range (emoji, arrows, CJK, etc.) correctly trigger fallback.
 	     */
 	    segCount = 1;
 	    cbData = segCount * sizeof(USHORT);
 	    startCount = (USHORT *)Tcl_Alloc(cbData);
 	    endCount = (USHORT *)Tcl_Alloc(cbData);
 	    startCount[0] = 0x0000;
-	    endCount[0] = 0xffff;
+	    endCount[0]   = 0x00ff;
 	}
     } else if (GetTextCharset(hdc) == ANSI_CHARSET) {
-	/*
-	 * No cmap table found, or GetFontData failed entirely.
-	 * For ANSI charset fonts (bitmap or legacy), create a synthetic
-	 * BMP segment so the font is usable. Actual character support
-	 * will be determined by the fallback mechanism.
-	 */
+	/* GetFontData failed and we have an ANSI font. */
 	segCount = 1;
 	cbData = segCount * sizeof(USHORT);
 	startCount = (USHORT *)Tcl_Alloc(cbData);
 	endCount = (USHORT *)Tcl_Alloc(cbData);
 	startCount[0] = 0x0000;
-	endCount[0] = 0xffff;
+	endCount[0]   = 0x00ff;
     }
+
     SelectObject(hdc, hFont);
 
     *startCountPtr = startCount;
