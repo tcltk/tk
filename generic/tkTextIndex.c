@@ -2505,6 +2505,17 @@ TkpTextGetIndex(
 	    }
 	}
 	TkTextPixelIndex(textPtr, x, y, indexPtr, NULL);
+	if (textPtr->flags & DESTROYED) {
+	    /*
+	     * The widget has been destroyed while updating the display
+	     * information, the index cannot be resolved anymore.
+	     */
+	    Tcl_DStringFree(&copy);
+	    Tcl_ResetResult(interp);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", (char *)NULL);
+	    return false;
+	}
 	endOfBase = end;
 	goto gotBase;
     }

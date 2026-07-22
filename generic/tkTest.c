@@ -167,6 +167,7 @@ static Tcl_ObjCmdProc2 TestmetricsObjCmd;
 #endif
 static Tcl_ObjCmdProc2 TestobjconfigObjCmd;
 static Tcl_ObjCmdProc2 TestpixelObjCmd;
+static Tcl_ObjCmdProc2 TestqueuewindowscriptObjCmd;
 static Tk_CustomOptionSetProc CustomOptionSet;
 static Tk_CustomOptionGetProc CustomOptionGet;
 static Tk_CustomOptionRestoreProc CustomOptionRestore;
@@ -244,6 +245,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testqueuewindowscript",
+	    TestqueuewindowscriptObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testphotostringmatch",
@@ -444,6 +447,80 @@ TestdeleteappsObjCmd(
 	newAppPtr = nextPtr;
     }
 
+    return TCL_OK;
+}
+
+/*
+ * The following structure and event proc back the "testqueuewindowscript"
+ * command below.
+ */
+
+typedef struct {
+    Tcl_Event header;		/* Standard Tcl event header. */
+    Tcl_Interp *interp;		/* Interp in which to evaluate the script. */
+    Tcl_Obj *scriptObj;		/* Script to evaluate. */
+} TestScriptWindowEvent;
+
+static int
+TestScriptWindowEventProc(
+    Tcl_Event *evPtr,
+    int flags)
+{
+    TestScriptWindowEvent *sevPtr = (TestScriptWindowEvent *) evPtr;
+
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+	return 0;		/* stays on the queue */
+    }
+    if (Tcl_EvalObjEx(sevPtr->interp, sevPtr->scriptObj,
+	    TCL_EVAL_GLOBAL) != TCL_OK) {
+	Tcl_BackgroundException(sevPtr->interp, TCL_ERROR);
+    }
+    Tcl_Release(sevPtr->interp);
+    Tcl_DecrRefCount(sevPtr->scriptObj);
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestqueuewindowscriptObjCmd --
+ *
+ *	This function implements the "testqueuewindowscript" command. It
+ *	queues a Tcl event at window priority whose handler evaluates the
+ *	given script, mimicking an application event source flagged for
+ *	TCL_WINDOW_EVENTS. This allows tests to run a script from inside
+ *	restricted event loops which are servicing window events only (e.g.
+ *	the exposure pumping of UpdateDisplayInfo in tkTextDisp.c).
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Whatever the queued script does.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestqueuewindowscriptObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    TestScriptWindowEvent *sevPtr;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "script");
+	return TCL_ERROR;
+    }
+    sevPtr = (TestScriptWindowEvent *) Tcl_Alloc(sizeof(TestScriptWindowEvent));
+    sevPtr->header.proc = TestScriptWindowEventProc;
+    sevPtr->interp = interp;
+    sevPtr->scriptObj = objv[1];
+    Tcl_IncrRefCount(sevPtr->scriptObj);
+    Tcl_Preserve(interp);
+    Tcl_QueueEvent(&sevPtr->header, TCL_QUEUE_TAIL);
     return TCL_OK;
 }
 
