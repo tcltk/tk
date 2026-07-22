@@ -1722,6 +1722,9 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	ClearText(textPtr, 1);
+	if (textPtr->flags & DESTROYED) {
+	    goto done; /* the widget has been destroyed */
+	}
 	TkTextRelayoutWindow(textPtr, TK_TEXT_LINE_GEOMETRY);
 	TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
 	break;
@@ -1834,6 +1837,9 @@ TextWidgetObjCmd(
 				    ProcessConfigureNotify(textPtr, true);
 				}
 				value = TkTextCountDisplayLines(textPtr, indexPtr1, indexPtr2);
+				if (textPtr->flags & DESTROYED) {
+				    goto done; /* the widget has been destroyed */
+				}
 				if (compare > 0) {
 				    value = -value;
 				}
@@ -1900,6 +1906,9 @@ TextWidgetObjCmd(
 				int tmp = from; from = to; to = tmp;
 			    }
 			    UpdateLineMetrics(textPtr, from, to);
+			    if (textPtr->flags & DESTROYED) {
+				goto done; /* the widget has been destroyed */
+			    }
 			}
 		    }
 		    from = TkTextIndexYPixels(textPtr, &indexFrom);
@@ -2473,6 +2482,9 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	ClearText(textPtr, 0);
+	if (textPtr->flags & DESTROYED) {
+	    goto done; /* the widget has been destroyed */
+	}
 	TkTextRelayoutWindow(textPtr, TK_TEXT_LINE_GEOMETRY);
 	if ((result = TkBTreeLoad(textPtr, contentObjPtr, validOptions)) != TCL_OK) {
 	    ClearText(textPtr, 0);
@@ -2749,6 +2761,13 @@ TextWidgetObjCmd(
 	    return result;
 	}
 	textPtr = NULL;
+    } else if (textPtr->flags & DESTROYED) {
+	/*
+	 * The widget was destroyed by a reentrant event (e.g. from the event
+	 * pumping in UpdateDisplayInfo) but is kept alive by another reference.
+	 * The shared resources may already be gone, so don't touch them.
+	 */
+	return result;
     } else if (textPtr->watchCmd) {
 	TkTextTriggerWatchCursor(textPtr);
     }
@@ -3579,6 +3598,9 @@ ClearText(
     sharedTextPtr->steadyMarks = steadyMarks;
 
     TkTextResetDInfo(textPtr);
+    if (textPtr->flags & DESTROYED) {
+	return; /* the widget has been destroyed while pumping the event queue */
+    }
     sharedTextPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
     sharedTextPtr->lastUndoTokenType = -1;
 
@@ -4543,6 +4565,10 @@ TkConfigureText(
 
     if (textPtr->syncTime == 0 && (mask & TK_TEXT_SYNCHRONIZE)) {
 	UpdateLineMetrics(textPtr, 0, TkrBTreeNumLines(sharedTextPtr->tree, textPtr));
+	if (textPtr->flags & DESTROYED) {
+	    tkTextDebug = oldTextDebug;
+	    return TCL_OK; /* the widget has been destroyed */
+	}
     }
 
     /*
@@ -6423,6 +6449,14 @@ TextBlinkProc(
     if (oldFlags != textPtr->flags) {
 	int x, y, w, h;
 
+	/*
+	 * Computing the cursor bounding box may pump the event queue (via
+	 * UpdateDisplayInfo); keep the widget alive in case a serviced event
+	 * destroys it. TkTextGetCursorBbox returns false for a destroyed
+	 * widget, so TkTextRedrawRegion below is not reached in that case.
+	 */
+
+	textPtr->refCount += 1;
 	if (TkTextGetCursorBbox(textPtr, &x, &y, &w, &h)) {
 	    int borderWidth = 0, highlightWidth = 0;
 	    if (textPtr->borderWidthObj) {
@@ -6434,6 +6468,7 @@ TextBlinkProc(
 	    int inset = borderWidth + highlightWidth;
 	    TkTextRedrawRegion(textPtr, x + inset, y + inset, w, h);
 	}
+	TkTextDecrRefCountAndTestIfDestroyed(textPtr);
     }
 }
 

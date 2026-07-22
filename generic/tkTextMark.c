@@ -2613,6 +2613,10 @@ TkTextGetCursorBbox(
     if (!TkTextIndexBbox(textPtr, &index, 0, x, y, w, h, &charWidth, &thisChar)) {
 	int base, ix, iw;
 
+	if (textPtr->flags & DESTROYED) {
+	    return false; /* the widget has been destroyed */
+	}
+
 	/*
 	 * Testing whether the cursor is visible is not as trivial at it seems,
 	 * see this example:
