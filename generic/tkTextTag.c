@@ -2981,6 +2981,9 @@ TkTextPickCurrent(
     } else {
 	newDispChunkPtr = TkTextPixelIndex(textPtr,
 		textPtr->pickEvent.xcrossing.x, textPtr->pickEvent.xcrossing.y, &index, &nearby);
+	if (textPtr->flags & DESTROYED) {
+	    return; /* the widget has been destroyed */
+	}
 
 	if (newDispChunkPtr) {
 	    if (!nearby) {
@@ -3245,6 +3248,9 @@ TkTextPickCurrent(
 
 	    newDispChunkPtr = TkTextPixelIndex(textPtr,
 		    textPtr->pickEvent.xcrossing.x, textPtr->pickEvent.xcrossing.y, &index, &nearby);
+	    if (textPtr->flags & DESTROYED) {
+		goto done; /* the widget has been destroyed */
+	    }
 
 	    newLineY = nearby ? TK_TEXT_IS_NEARBY : TkTextGetYPixelFromChunk(textPtr, newDispChunkPtr);
 	    textPtr->currentMarkIndex = index;
@@ -3289,9 +3295,18 @@ TkTextPickCurrent(
 	}
     }
 
-    TkTextTagSetDecrRefCount(leaveTags);
-    TkTextTagSetDecrRefCount(enterTags);
-    TkTextTagSetDecrRefCount(newTagInfoPtr);
+  done:
+    if (!textPtr->sharedIsReleased) {
+	/*
+	 * If the widget was destroyed as the last peer while repicking pumped
+	 * the event queue, the shared resources - including emptyTagInfoPtr,
+	 * which these sets may alias - have already been freed by DestroyText.
+	 */
+
+	TkTextTagSetDecrRefCount(leaveTags);
+	TkTextTagSetDecrRefCount(enterTags);
+	TkTextTagSetDecrRefCount(newTagInfoPtr);
+    }
 }
 
 /*

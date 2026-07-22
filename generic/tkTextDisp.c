@@ -1874,6 +1874,9 @@ TkTextResetDInfo(
 
     if (textPtr->sharedTextPtr->allowUpdateLineMetrics) {
 	TkTextUpdateLineMetrics(textPtr, lineNo1, lineNo2);
+	if (textPtr->flags & DESTROYED) {
+	    return; /* the widget has been destroyed */
+	}
     }
 
     FreeDLines(textPtr, NULL, NULL, DLINE_CACHE);  /* release cached lines */
@@ -5281,6 +5284,15 @@ UpdateRestrictProc(
 {
     TkText* textPtr = (TkText *) arg;
 
+    if ((textPtr->flags & DESTROYED) || !textPtr->tkwin) {
+	/*
+	 * The widget has been destroyed while processing the event queue
+	 * (see UpdateDisplayInfo). Don't touch it anymore.
+	 */
+
+	return TK_DEFER_EVENT;
+    }
+
     /*
      * Defer events which aren't for the specified window.
      */
@@ -5383,9 +5395,21 @@ UpdateDisplayInfo(
      * still efficient. Currently the concepts of the Tk library are a bit simple.
      */
 
+    /*
+     * Keep the widget alive while pumping the queue: a serviced event may
+     * destroy it. UpdateRestrictProc bails out on a destroyed widget, and we
+     * bail out here too, so that no code below touches the freed display info.
+     * Every caller of UpdateDisplayInfo must likewise re-check the DESTROYED
+     * flag after the call before reusing textPtr or its display information.
+     */
+
+    textPtr->refCount += 1;
     prevRestrictProc = Tk_RestrictEvents(UpdateRestrictProc, textPtr, &prevRestrictArg);
     while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
     Tk_RestrictEvents(prevRestrictProc, prevRestrictArg, &prevRestrictArg);
+    if (TkTextDecrRefCountAndTestIfDestroyed(textPtr)) {
+	return; /* the widget has been destroyed */
+    }
 
     /*
      * At first, update the default style, and reset cached chunk.
@@ -7202,6 +7226,9 @@ TkTextUpdateLineMetrics(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return; /* the widget has been destroyed */
+	}
     }
 
     dInfoPtr->insideLineMetricUpdate = 1;
@@ -7904,6 +7931,9 @@ TkTextCountDisplayLines(
 
     TkTextUpdateLineMetrics(textPtr, TkTextIndexGetLineNumber(indexFrom, textPtr),
 	    TkTextIndexGetLineNumber(indexTo, textPtr));
+    if (textPtr->flags & DESTROYED) {
+	return 0; /* the widget has been destroyed */
+    }
 
     linePtr1 = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, TkTextIndexGetLine(indexFrom));
     linePtr2 = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, TkTextIndexGetLine(indexTo));
@@ -8581,6 +8611,13 @@ DisplayText(
 	return; /* the widget has been deleted */
     }
 
+    /*
+     * Keep the widget alive: recomputing the display information may pump the
+     * event queue (see UpdateDisplayInfo), and a serviced event could destroy
+     * the widget while we still have to inspect it afterwards.
+     */
+
+    textPtr->refCount += 1;
     interp = textPtr->interp;
     Tcl_Preserve(interp);
 
@@ -8588,6 +8625,9 @@ DisplayText(
 
     if (!Tk_IsMapped(textPtr->tkwin) || dInfoPtr->maxX <= dInfoPtr->x || dInfoPtr->maxY <= dInfoPtr->y) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    goto end; /* the widget has been destroyed */
+	}
 	dInfoPtr->flags &= ~REDRAW_PENDING;
 	ClearRegion(invalidRegion);
 	goto doScrollbars;
@@ -8624,6 +8664,9 @@ DisplayText(
      */
 
     UpdateDisplayInfo(textPtr);
+    if (textPtr->flags & DESTROYED) {
+	goto end; /* the widget has been destroyed */
+    }
     dInfoPtr->dLinesInvalidated = 0;
 
     /*
@@ -9084,6 +9127,7 @@ DisplayText(
 
   end:
     Tcl_Release(interp);
+    TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
 
 /*
@@ -10016,6 +10060,9 @@ TkTextSetYView(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return; /* the widget has been destroyed */
+	}
     }
 
     if ((dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr))) {
@@ -10689,6 +10736,9 @@ TkTextSeeCmd(
      */
 
     TkTextSetYView(textPtr, &index, TK_TEXT_PICKPLACE);
+    if (textPtr->flags & DESTROYED) {
+	return TCL_OK; /* the widget has been destroyed */
+    }
 
     /*
      * Now make sure that the character is in view horizontally.
@@ -10696,6 +10746,9 @@ TkTextSeeCmd(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return TCL_OK; /* the widget has been destroyed */
+	}
     }
 
     assert(dInfoPtr->maxX >= dInfoPtr->x);
@@ -10774,6 +10827,9 @@ TkrTextXviewCmd(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return TCL_OK; /* the widget has been destroyed */
+	}
     }
 
     if (objc == 2) {
@@ -11123,13 +11179,20 @@ Repick(
 {
     TkText *textPtr = (TkText *) clientData;
 
-    if (!TkTextDecrRefCountAndTestIfDestroyed(textPtr)) {
+    /*
+     * Hold on to the timer's reference across TkTextPickCurrent: repicking may
+     * pump the event queue (via TkTextPixelIndex) and a serviced event could
+     * destroy the widget. Release the reference only afterwards.
+     */
+
+    if (!(textPtr->flags & DESTROYED)) {
 	textPtr->dInfoPtr->flags &= ~REPICK_NEEDED;
 	textPtr->dInfoPtr->currChunkPtr = NULL;
 	textPtr->dInfoPtr->repickTimer = NULL;
 	textPtr->dontRepick = 0;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
     }
+    TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
 
 static void
@@ -11169,6 +11232,9 @@ TkTextYviewCmd(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return TCL_OK; /* the widget has been destroyed */
+	}
     }
 
     if (objc == 2) {
@@ -11299,6 +11365,10 @@ TkTextYviewCmd(
 	    YScrollByLines(textPtr, count);
 	    break;
 	}
+    }
+
+    if (textPtr->flags & DESTROYED) {
+	return TCL_OK; /* the widget has been destroyed */
     }
 
     if (dInfoPtr->flags & REPICK_NEEDED) {
@@ -12097,6 +12167,14 @@ TkTextPixelIndex(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    /* the widget has been destroyed */
+	    if (nearest) {
+		*nearest = 1;
+	    }
+	    *indexPtr = textPtr->topIndex;
+	    return NULL;
+	}
     }
 
     /*
@@ -12521,6 +12599,11 @@ TkTextIndexBbox(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    /* the widget has been destroyed */
+	    if (thisChar) { *thisChar = 0; }
+	    return 0;
+	}
     }
 
     /*
@@ -12863,6 +12946,9 @@ TkTextIndexLocale(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return NULL; /* the widget has been destroyed */
+	}
     }
 
     /*
@@ -12947,6 +13033,9 @@ TkTextDLineInfo(
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
+	if (textPtr->flags & DESTROYED) {
+	    return false; /* the widget has been destroyed */
+	}
     }
 
     /*
