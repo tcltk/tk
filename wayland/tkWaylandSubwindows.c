@@ -218,6 +218,11 @@ addClipRect(
 	   Tk_PathName(subwinPtr), Tk_PathName(winPtr),
 	   data->clipRectBuffer[n].w, data->clipRectBuffer[n].h,
 	   data->clipRectBuffer[n].x, data->clipRectBuffer[n].y);
+    /*
+     * Record the clipRect that will be used for the subwindow in its
+     * private data.
+     */
+    subwinPtr->privatePtr->containerRect = data->clipRectBuffer[n];
 }
 
 void updateClipRects(

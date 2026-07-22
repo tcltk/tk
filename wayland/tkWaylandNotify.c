@@ -472,7 +472,7 @@ TkWaylandQueueExposeEvent(
 static void TkWaylandWindowCloseCallback(GLFWwindow *window);
 static void TkWaylandFramebufferSizeCallback(GLFWwindow *window,
 					  int width, int height);
-static void TkWaylandWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
+////static void TkWaylandWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
 static void TkWaylandWindowFocusCallback(GLFWwindow *window, int focused);
 static void TkWaylandWindowIconifyCallback(GLFWwindow *window, int iconified);
 static void TkWaylandWindowMaximizeCallback(GLFWwindow *window, int maximized);
@@ -494,7 +494,7 @@ TkWaylandSetupCallbacks(
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkWaylandWindowCloseCallback);
     glfwSetFramebufferSizeCallback (glfwWindow, TkWaylandFramebufferSizeCallback);
-    glfwSetWindowPosCallback       (glfwWindow, TkWaylandWindowPosCallback);
+    ////    glfwSetWindowPosCallback       (glfwWindow, TkWaylandWindowPosCallback);
     glfwSetWindowFocusCallback     (glfwWindow, TkWaylandWindowFocusCallback);
     glfwSetWindowIconifyCallback   (glfwWindow, TkWaylandWindowIconifyCallback);
     glfwSetWindowMaximizeCallback  (glfwWindow, TkWaylandWindowMaximizeCallback);
@@ -513,7 +513,7 @@ TkWaylandClearCallbacks(
 {
     glfwSetWindowCloseCallback        (glfwWindow, NULL);
     glfwSetFramebufferSizeCallback    (glfwWindow, NULL);
-    glfwSetWindowPosCallback          (glfwWindow, NULL);
+    ////    glfwSetWindowPosCallback          (glfwWindow, NULL);
     glfwSetWindowFocusCallback        (glfwWindow, NULL);
     glfwSetWindowIconifyCallback      (glfwWindow, NULL);
     glfwSetWindowMaximizeCallback     (glfwWindow, NULL);
@@ -599,7 +599,7 @@ TkWaylandFramebufferSizeCallback(
     printf("Setting Tk window size to: %dx%d\n",
 	   winPtr->changes.width, winPtr->changes.height);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-    NVGcontext *vg = infoPtr->context.vg;
+    NVGcontext *vg = infoPtr->vg;
     if (vg == NULL) {
 	fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
 	return;
@@ -631,6 +631,7 @@ TkWaylandFramebufferSizeCallback(
     TkDoConfigureNotify(winPtr);
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -671,6 +672,7 @@ TkWaylandWindowPosCallback(
     winPtr->changes.y = ypos;
     TkDoConfigureNotify(winPtr);
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -848,14 +850,14 @@ TkWaylandCursorEnterCallback(
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
     double xpos, ypos;
-    int winX, winY;
+    int winX = 0, winY = 0;
 
     if (!winPtr) {
         return;
     }
 
     glfwGetCursorPos(window, &xpos, &ypos);
-    glfwGetWindowPos(window, &winX, &winY);
+    ///    glfwGetWindowPos(window, &winX, &winY);
 
     memset(&event, 0, sizeof(XEvent));
     event.type = entered ? EnterNotify : LeaveNotify;

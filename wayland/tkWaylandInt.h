@@ -29,36 +29,6 @@
 /*
  *----------------------------------------------------------------------
  *
- * Core Context Structure
- *
- *	Global state for the GLFW/Wayland backend.
- *	This structure holds the shared GL context window, the global
- *	NanoVG context, and state tracking for nested drawing operations.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct TkWaylandContext {
-    GLFWwindow *mainWindow;      /* Hidden shared context window - all
-                                   * application windows share this context */
-    NVGcontext *vg;               /* Global NanoVG context - created once
-                                   * and shared by all windows */
-    int initialized;              /* GLFW initialized flag - 1 if glfwInit()
-                                   * has been called successfully */
-    //// The rest of these fields are probably not needed.
-    int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
-                                   * currently active */
-    GLFWwindow *activeWindow;     /* Window that has the current active
-                                   * NanoVG frame (if any) */
-    int fbWidth;                  /* Framebuffer width of mainWindow
-                                   * (cached for performance) */
-    int fbHeight;                 /* Framebuffer height of mainWindow
-                                   * (cached for performance) */
-} TkWaylandContext;
-
-/*
- *----------------------------------------------------------------------
- *
  * ProtocolHandler – per-protocol Tcl command binding.
  *
  *----------------------------------------------------------------------
@@ -116,7 +86,7 @@ extern const char *const WmAttributeNames[];
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
     TkWindow *winPtr;
-    TkWaylandContext context;
+    NVGcontext *vg;
     unsigned int flags;
     struct glfwTkInfo *nextPtr;
 } glfwTkInfo;
@@ -276,6 +246,7 @@ typedef struct TkWindowPrivate {
     GLuint clipVBO;
     GLuint clipShader;
     GLint fbSizeUniform;
+    clipRect containerRect;
 } glfwData;
 
 /*

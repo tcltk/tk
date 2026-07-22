@@ -49,7 +49,6 @@ static int GlfwIsInitialized = 0;
  */
 
 GLFWwindow *mainGlfwWindow;
-static TkWaylandContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
 
 #if 0
@@ -147,20 +146,20 @@ static glfwTkInfo* createGlfwTkInfo(
 	.nextPtr = glfwTkInfoList};
     glfwTkInfoList = infoPtr;
 
-    infoPtr->context.vg = nvgCreateGLES3(NVG_ANTIALIAS
+    infoPtr->vg = nvgCreateGLES3(NVG_ANTIALIAS
 				  | NVG_STENCIL_STROKES
 				  | NVG_DEBUG);
-    if (!infoPtr->context.vg) {
+    if (!infoPtr->vg) {
         fprintf(stderr, "createGlfwTkInfo: nvgCreateGLES3() failed\n");
         glfwDestroyWindow(glfwWindow);
         glfwTerminate();
         return NULL;
     }
-    nvgCreateFontMem(infoPtr->context.vg, "sans", sans_data,
+    nvgCreateFontMem(infoPtr->vg, "sans", sans_data,
 		     (int)sans_size, 0);
-    nvgCreateFontMem(infoPtr->context.vg, "sans-bold", bold_data,
+    nvgCreateFontMem(infoPtr->vg, "sans-bold", bold_data,
 		     (int)bold_size, 0);
-    nvgCreateFontMem(infoPtr->context.vg, "mono", mono_data,
+    nvgCreateFontMem(infoPtr->vg, "mono", mono_data,
 		     (int)mono_size, 0);
     return infoPtr;
 }
@@ -180,7 +179,7 @@ static void destroyGlfwTkInfo(
 	    }
 	    glfwMakeContextCurrent(glfwWindow);
 	    glfwSetWindowUserPointer(glfwWindow, NULL);
-	    nvgDeleteGLES3(infoPtr->context.vg);
+	    nvgDeleteGLES3(infoPtr->vg);
 	    Tcl_Free(infoPtr);
 	    return;
 	}
@@ -477,17 +476,6 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         return;
     }
 
-    /* Delete NanoVG while a context still exists. */
-#if 0
-    if (mainGlfwContext.vg) {
-        /* Make the GL context of the root current if it still exists. */
-        if (mainGlfwWindow) {
-            glfwMakeContextCurrent(mainGlfwWindow);
-            nvgDeleteGLES3(mainGlfwContext.vg);
-        }
-        mainGlfwContext.vg = NULL;
-    }
-#endif
     glfwMakeContextCurrent(NULL);
     TkWaylandClearCallbacks(mainGlfwWindow);
     glfwSetErrorCallback(NULL);
@@ -569,11 +557,6 @@ TkWaylandCreateWindow(
 	glfwSwapBuffers(glfwWindow);
     }
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
-    fprintf(stderr, "nvgContext for %s is at %p\n", Tk_PathName(winPtr),
-	   infoPtr);
-    if (glfwWindow == mainGlfwWindow) {
-	mainGlfwContext = infoPtr->context;
-    }
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkWaylandSetupCallbacks(glfwWindow);
     winPtr->privatePtr->glfwWindow = glfwWindow;
@@ -590,7 +573,7 @@ TkWaylandCreateWindow(
     /* Create a framebuffer for the backing store of the window. */
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->vg,
 						     fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fb == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
@@ -699,7 +682,7 @@ TkWaylandBeginDraw(
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
     /* Set up the nanoVG drawing context for this nvgFrame */
-    dcPtr->vg = infoPtr->context.vg; 
+    dcPtr->vg = infoPtr->vg; 
     dcPtr->drawable = drawable;
 
     nvgResetTransform(dcPtr->vg);
@@ -712,8 +695,25 @@ TkWaylandBeginDraw(
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
 
-    fprintf(stderr, "BeginFrame for toplevel %s with size %dx%d and pixel ratio %f\n",
-	    Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    /* Check if the clipRect for the child is correct. */
+    if (! Tk_IsTopLevel(childPtr)) {
+	clipRect clip = childPtr->privatePtr->containerRect;
+	if (x * scale != clip.x || y * scale != clip.y) {
+	    /*
+	     * The child was moved after its container was drawn,
+	     * so the clipping rectangles are in the wrong place.
+	     * It is not clear to me why this happens, and I wish
+	     * there were an alternative to this crude workaround.
+	     */
+	    TkWindow *parentPtr = (TkWindow*) Tk_Parent(childPtr);
+	    TkWaylandQueueExposeEvent(parentPtr, 0, 0,
+		Tk_Width(parentPtr), Tk_Height(parentPtr));
+	}
+    }
+    fprintf(stderr,
+	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
+	    Tk_PathName(childPtr), Tk_PathName(winPtr),
+	    Tk_Width(winPtr), Tk_Height(winPtr), scale);
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
 
     /*
@@ -723,6 +723,7 @@ TkWaylandBeginDraw(
 
     TkWaylandApplyGC(dcPtr->vg, gc);
     nvgTranslate(dcPtr->vg, x, y);
+
     return TCL_OK;
 }
 
@@ -858,7 +859,7 @@ TkWaylandGetNVGContext(
 	fprintf(stderr, "TkWaylandGetNVContext: No UserPointer\n");
 	return NULL;
     }
-    return infoPtr->context.vg;
+    return infoPtr->vg;
 }
 
 /*
@@ -881,11 +882,13 @@ TkWaylandGetNVGContext(
 MODULE_SCOPE NVGcontext *
 TkWaylandGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || !mainGlfwContext.vg || shutdownInProgress) {
+    if (!GlfwIsInitialized || shutdownInProgress) {
         return NULL;
-    }
+    } 
+    glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
     glfwMakeContextCurrent(mainGlfwWindow);
-    return mainGlfwContext.vg;
+    Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);
+    return TkWaylandGetNVGContext(drawable);
 }
 
 /*
