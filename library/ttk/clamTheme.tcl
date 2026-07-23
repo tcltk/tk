@@ -101,7 +101,7 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
-	    -background [list readonly $colors(-frame)] \
+	    -fieldbackground [list readonly $colors(-frame)] \
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
