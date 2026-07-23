@@ -105,7 +105,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 
     # On Aqua we cannot display the dialog if the background error occurs in
     # an idle task being processed inside of [NSView drawRect]. In that case
-    #we post the dialog as an after task instead.
+    # we post the dialog as an after task instead.
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
 	if {$flag} {
