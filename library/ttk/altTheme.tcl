@@ -57,9 +57,13 @@ namespace eval ttk::theme::alt {
 		   alternate $colors(-altindicator) \
 		   disabled $colors(-frame)]
 
+	# N.B.: The values of the -arrowsize option for the styles
+	# TMenubutton, TCombobox, TSpinbox, and TScrollbar must be specified
+	# in pixels, because they are used in SVG images for arrows.
+
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 2.25p -relief raised \
-	    -arrowsize 3.75p -arrowpadding {2.25p 0 2.25p 0}
+	    -arrowsize 5 -arrowpadding {2.25p 0 2.25p 0}
 
 	ttk::style configure TEntry -padding 0.75p -insertwidth 0.75p \
 	    -focuswidth 1.5p -focuscolor $colors(-selectbg)
@@ -67,7 +71,7 @@ namespace eval ttk::theme::alt {
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -padding 0.75p -insertwidth 0.75p \
-	    -arrowsize 3p -arrowpadding {2.25p 2.25p 3p 3p} \
+	    -arrowsize 4 -arrowpadding {2.25p 2.25p 3p 3p} \
 	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -75,7 +79,7 @@ namespace eval ttk::theme::alt {
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 2.25p -arrowpadding {2.25p 2.25p 3p 2.25p} \
+	    -arrowsize 3 -arrowpadding {2.25p 2.25p 3p 3p} \
 	    -insertwidth 0.75p -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -88,7 +92,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 3p -width 10.5p -arrowpadding {1.5p 1.5p 2.25p 2.25p}
+	    -arrowsize 4 -width 10.5p -arrowpadding {1.5p 1.5p 2.25p 2.25p}
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
@@ -99,10 +103,14 @@ namespace eval ttk::theme::alt {
 	    -background [list selected $colors(-frame)] \
 	    -expand {selected {1.5p 1.5p 0.75p 0}}
 
+	# N.B.: The value of the -indicatorsize option for the
+	# treeview-related style Heading must be specified in
+	# pixels, because it is used in SVG images for arrows.
+
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding {2.25p 1 2.25p 1} \
-	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	    -indicatorsize 4 -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
