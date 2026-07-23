@@ -123,7 +123,7 @@ namespace eval ttk::theme::clam {
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 3 -arrowpadding {2.25p 1.5p} -insertwidth 0.75p
+	    -arrowsize 3 -arrowpadding 2.25p -insertwidth 0.75p
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \

@@ -7550,13 +7550,9 @@ static void TreeheadingIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    int size = 4;						/* unscaled */
+    int size = 4;
     double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
-
-    /* Get unscaled indicator size */
-    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -7564,6 +7560,10 @@ static void TreeheadingIndicatorSize(
 	*heightPtr = 0;
 	return;
     }
+
+    /* Get unscaled indicator size */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
 
     /* Scale and then round up */
     *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
@@ -7587,8 +7587,9 @@ static void TreeheadingIndicatorDraw(
     Ttk_Padding padding;
     int size = 4;
     ArrowDirection direction;
-    XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
+    int imgWidth, imgHeight;
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -7609,8 +7610,10 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    img = TtkMakeChevronImage(size, direction, strokeColor, tkwin);
-    Tk_RedrawImage(img, 0, 0, b.width, b.height, d, b.x, b.y);
+    /* Draw indicator */
+    img = TtkMakeChevronImage(size, direction, color, tkwin);
+    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d, b.x, b.y);
     Tk_FreeImage(img);
 }
 
@@ -7652,7 +7655,7 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    int size = 4;						/* unscaled */
+    int size = 4;
     double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
@@ -7688,7 +7691,7 @@ static void TreeitemIndicatorDraw(
     int size = 4;
     ArrowDirection direction =
 	    (state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
-    XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
     int imgWidth, imgHeight;
 
@@ -7703,7 +7706,7 @@ static void TreeitemIndicatorDraw(
 
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
-    img = TtkMakeChevronImage(size, direction, strokeColor, tkwin);
+    img = TtkMakeChevronImage(size, direction, color, tkwin);
     Tk_SizeOfImage(img, &imgWidth, &imgHeight);
     Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

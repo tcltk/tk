@@ -75,15 +75,19 @@ namespace eval ttk::theme::classic {
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
+	# N.B.: The values of the -arrowsize option for the
+	# styles TCombobox and TSpinbox must be specified in
+	# pixels, because they are used in SVG images for arrows.
+
 	ttk::style configure TCombobox -padding 0.75p \
-	    -arrowsize 3p -arrowpadding 2.25p
+	    -arrowsize 4 -arrowpadding 2.25p
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 2.25p -arrowpadding 2.25p
+	    -arrowsize 3 -arrowpadding 2.25p
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
@@ -105,10 +109,14 @@ namespace eval ttk::theme::classic {
 	    -focussolid 1
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
+	# N.B.: The value of the -indicatorsize option for the
+	# treeview-related style Heading must be specified in
+	# pixels, because it is used in SVG images for arrows.
+
 	# Treeview
 	ttk::style configure Heading -padding {2.25p 1 2.25p 1} \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	    -indicatorsize 4 -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]

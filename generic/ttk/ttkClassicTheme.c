@@ -574,6 +574,8 @@ static void ArrowElementDraw(
 	    points[1].x = b.x;		points[1].y = b.y;
 	    points[2].x = b.x;		points[2].y = b.y + size;
 	    break;
+	default:
+	    return;
     }
 
     Tk_Fill3DPolygon(tkwin, d, border, points, 3, borderWidth, relief);
@@ -603,13 +605,18 @@ static void BoxArrowElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    Ttk_Padding padding;
     int size = 4;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    double scalingLevel = TkScalingLevel2(tkwin);
+    Ttk_Padding padding;
 
-    /* Get scaled size */
-    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);
+    /* Get unscaled size */
+    Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
+
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
@@ -626,37 +633,35 @@ static void BoxArrowElementDraw(
     TCL_UNUSED(Ttk_State))
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 1, relief = TK_RELIEF_RAISED;
     Display *disp = Tk_Display(tkwin);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
     int w = WIN32_XDRAWLINE_HACK;
     Ttk_Padding padding;
-    int cx = 0, cy = 0;
+    int size = 4;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC arrowGC = Tk_GCForColor(arrowColor, d);
+    Tk_Image img;
+    int imgWidth, imgHeight;
 
     /* Create container box */
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, relief);
     XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-1+w);
 
-    /* Calc padding */
+    /* Apply scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Calc indicator size */
-    TtkArrowSize(b.width/2, direction, &cx, &cy);
-    if ((b.height - cy) % 2 == 1) {
-	++cy;
-    }
-
-    /* Anchor box */
-    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+    Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
     /* Draw indicator */
-    TtkFillArrow(disp, d, arrowGC, b, direction);
+    img = TtkMakeArrowImage(size, direction, arrowColor, tkwin);
+    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+	b.x, b.y + (b.height - imgHeight)/2);
+    Tk_FreeImage(img);
 }
 
 static const Ttk_ElementSpec BoxArrowElementSpec = {
@@ -940,12 +945,12 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "3p" },
+	offsetof(TreeheadingIndicator,sizeObj), "4" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void TreeheadingIndicatorSize(
-    void *clientData,
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Ttk_State state, /* state */
@@ -954,9 +959,9 @@ static void TreeheadingIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    Ttk_Padding padding;
     int size = 4;
+    double scalingLevel = TkScalingLevel2(tkwin);
+    Ttk_Padding padding;
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -965,9 +970,13 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);
+    /* Get uscaled indicator size */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+    TtkArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);	/* unscaled */
+
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
@@ -984,13 +993,12 @@ static void TreeheadingIndicatorDraw(
     Ttk_State state) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    ArrowDirection direction;
     Ttk_Padding padding;
-    int cx, cy;
-    XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    XGCValues gcvalues;
-    GC gc;
-    unsigned mask;
+    int size = 4;
+    ArrowDirection direction;
+    XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    Tk_Image img;
+    int imgWidth, imgHeight;
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -1001,31 +1009,21 @@ static void TreeheadingIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Get arrow size */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+
     if (state & TTK_STATE_SELECTED) {
 	direction = ARROW_DOWN;
-	TtkArrowSize(b.width/2, direction, &cx, &cy);
-	if ((b.height - cy) % 2 == 1) {
-	    ++cy;
-	}
     } else if (state & TTK_STATE_ALTERNATE) {
 	direction = ARROW_UP;
-	TtkArrowSize(b.width/2, direction, &cx, &cy);
-	if ((b.height - cy) % 2 == 1) {
-	    ++cy;
-	}
     } else {
 	return;
     }
 
-    /* Draw arrow */
-    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    gcvalues.foreground = borderColor->pixel;
-    gcvalues.line_width = 1;
-    mask = GCForeground | GCLineWidth;
-    gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
-    Tk_FreeGC(Tk_Display(tkwin), gc);
+    /* Draw indicator */
+    img = TtkMakeArrowImage(size, direction, color, tkwin);
+    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d, b.x, b.y);
+    Tk_FreeImage(img);
 }
 
 static const Ttk_ElementSpec TreeheadingIndicatorElementSpec = {
@@ -1110,11 +1108,11 @@ static void TreeitemIndicatorDraw(
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;
-    XDrawLine(Tk_Display(tkwin), d, gc, b.x+2, cy, b.x+b.width-3+w, cy);
+    XDrawLine(Tk_Display(tkwin), d, gc, b.x+3, cy, b.x+b.width-4+w, cy);
 
     if (!(state & TTK_STATE_OPEN)) {
 	/* turn '-' into a '+' */
-	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+2, cx, b.y+b.height-3+w);
+	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+3, cx, b.y+b.height-4+w);
     }
 }
 

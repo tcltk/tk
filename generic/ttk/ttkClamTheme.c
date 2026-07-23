@@ -651,6 +651,7 @@ typedef struct { /* Common element record for scrollbar elements */
     Tcl_Obj	*darkColorObj;
     Tcl_Obj	*arrowColorObj;
     Tcl_Obj	*arrowSizeObj;
+    Tcl_Obj	*arrowPaddingObj;
     Tcl_Obj	*gripSizeObj;
     Tcl_Obj	*sliderlengthObj;
 } ScrollbarElement;
@@ -671,7 +672,9 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(ScrollbarElement,arrowSizeObj), "3p" },
+	offsetof(ScrollbarElement,arrowSizeObj), "4" },
+    { "-arrowpadding", TK_OPTION_STRING,
+	offsetof(ScrollbarElement,arrowPaddingObj), "2.25p" },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,gripSizeObj), "7.5p" },
     { "-sliderlength", TK_OPTION_PIXELS,
@@ -720,9 +723,26 @@ static void ThumbElementSize(
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 4;
+    double scalingLevel = TkScalingLevel2(tkwin);
+    Ttk_Padding padding;
 
-    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, &size);
-    *widthPtr = *heightPtr = 2*size + 1;
+    /* Get unscaled size */
+    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
+    TtkArrowSize(size, CHEVRON_UP, widthPtr, heightPtr);	/* unscaled */
+
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+
+    /* Add scaled padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static void ThumbElementDraw(
@@ -867,38 +887,9 @@ static const Ttk_ElementSpec PbarElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Arrow element(s).
  *
- *	Draws a solid triangle inside a box.
+ *	Draws a chevron inside a box.
  *	clientData is an enum ArrowDirection pointer.
  */
-
-typedef struct {
-    Tcl_Obj *sizeObj;
-    Tcl_Obj *colorObj;
-    Tcl_Obj *paddingObj;
-    Tcl_Obj *backgroundObj;
-    Tcl_Obj *borderColorObj;
-    Tcl_Obj *lightColorObj;
-    Tcl_Obj *darkColorObj;
-} ArrowElement;
-
-/* Size does not include padding */
-static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
-    { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(ArrowElement,sizeObj), "3p" },
-    { "-arrowcolor", TK_OPTION_COLOR,
-	offsetof(ArrowElement,colorObj), "black"},
-    { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(ArrowElement,paddingObj), "2.25p" },
-    { "-background", TK_OPTION_BORDER,
-	offsetof(ArrowElement,backgroundObj), FRAME_COLOR },
-    { "-bordercolor", TK_OPTION_BORDER,
-	offsetof(ArrowElement,borderColorObj), DARKEST_COLOR },
-    { "-lightcolor", TK_OPTION_COLOR,
-	offsetof(ArrowElement,lightColorObj), LIGHT_COLOR },
-    { "-darkcolor", TK_OPTION_COLOR,
-	offsetof(ArrowElement,darkColorObj), DARK_COLOR },
-    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
-};
 
 static void ArrowElementSize(
     void *clientData,
@@ -909,29 +900,22 @@ static void ArrowElementSize(
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
-    ArrowElement *arrow = (ArrowElement *)elementRecord;
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 4;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    if (direction <= ARROW_RIGHT) {
-	/* Get scaled size */
-	TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
-	TtkArrowSize(size, direction, widthPtr, heightPtr);
-    } else {
-	double scalingLevel = TkScalingLevel2(tkwin);
+    /* Get unscaled size */
+    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
 
-	/* Get unscaled size */
-	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
-	TtkArrowSize(size, direction, widthPtr, heightPtr);	/* unscaled */
-
-	/* Scale and then round up */
-	*widthPtr  = (int)ceil(*widthPtr * scalingLevel);	/* scaled */
-	*heightPtr = (int)ceil(*heightPtr * scalingLevel);	/* scaled */
-    }
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
     if (*widthPtr < *heightPtr) {
@@ -949,78 +933,46 @@ static void ArrowElementDraw(
     Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    ArrowElement *arrow = (ArrowElement *)elementRecord;
-    XColor *backgroundColor = Tk_GetColorFromObj(tkwin, arrow->backgroundObj);
+    ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    XColor *backgroundColor = Tk_GetColorFromObj(tkwin, sb->backgroundObj);
     Ttk_Padding padding;
+    int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
+    XColor *arrowColor = Tk_GetColorFromObj(tkwin, sb->arrowColorObj);
+    Tk_Image img;
+    int imgWidth, imgHeight;
 
     /* Create container box */
-    DrawSmoothBorder(tkwin, d, b, arrow->borderColorObj,
-	arrow->lightColorObj, arrow->darkColorObj);
+    DrawSmoothBorder(tkwin, d, b, sb->borderColorObj,
+	sb->lightColorObj, sb->darkColorObj);
     XFillRectangle(Tk_Display(tkwin), d, Tk_GCForColor(backgroundColor, d),
 	b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
 
     /* Apply scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    if (direction <= ARROW_RIGHT) {
-	int cx = 0, cy = 0;
+    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
 
-	/* Calc indicator size */
-	switch (direction) {
-	    case ARROW_UP:
-	    case ARROW_DOWN:
-		TtkArrowSize(b.width/2, direction, &cx, &cy);
-		if ((b.height - cy) % 2 == 1) {
-		    ++cy;
-		}
-		break;
-	    case ARROW_LEFT:
-	    case ARROW_RIGHT:
-		TtkArrowSize(b.height/2, direction, &cx, &cy);
-		if ((b.width - cx) % 2 == 1) {
-		    ++cx;
-		}
-		break;
-	    default:
-		return;
-	}
-
-	/* Anchor box */
-	b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-
-	/* Draw indicator */
-	GC gc = Tk_GCForColor(arrowColor, d);
-	TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
-    } else {
-	int size = 4;
-	Tk_Image img;
-	int imgWidth, imgHeight;
-
-	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
-
-	/* Draw indicator */
-	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
-	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
-	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
-	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
-	Tk_FreeImage(img);
-    }
+    /* Draw indicator */
+    img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
+    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+	b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
+    Tk_FreeImage(img);
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {
     TK_STYLE_VERSION_2,
-    sizeof(ArrowElement),
-    ArrowElementOptions,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
     ArrowElementSize,
     ArrowElementDraw
 };
 
 /*
  * Modified arrow element for comboboxes and spinboxes:
- *	The width and height are different.  Inside the box a chevron is drawn.
+ *	The width and height are different.
  */
 
 static void BoxArrowElementSize(
@@ -1032,14 +984,14 @@ static void BoxArrowElementSize(
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
-    ArrowElement *arrow = (ArrowElement *)elementRecord;
-    int size = 4;						/* unscaled */
-    double scalingLevel = TkScalingLevel2(tkwin);
+    ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
     /* Get unscaled size */
-    Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
+    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
 
     /* Scale and then round up */
@@ -1047,15 +999,15 @@ static void BoxArrowElementSize(
     *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
 }
 
 static const Ttk_ElementSpec BoxArrowElementSpec = {
     TK_STYLE_VERSION_2,
-    sizeof(ArrowElement),
-    ArrowElementOptions,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
     BoxArrowElementSize,
     ArrowElementDraw
 };
