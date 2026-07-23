@@ -169,13 +169,13 @@ IsSansSerifFace(FcPattern *pat)
 static FcChar32
 UnicodeCompose(FcChar32 base, FcChar32 mark)
 {
-    /* Common Latin composition table */
+    /* Common Latin composition table. */
     struct {
         FcChar32 base;
         FcChar32 mark;
         FcChar32 composed;
     } compTable[] = {
-        /* -------- Latin lowercase -------- */
+        /* Latin lowercase. */
         {0x0061, 0x0300, 0x00E0},  /* a + grave = à */
         {0x0061, 0x0301, 0x00E1},  /* a + acute = á */
         {0x0061, 0x0302, 0x00E2},  /* a + circumflex = â */
@@ -220,7 +220,7 @@ UnicodeCompose(FcChar32 base, FcChar32 mark)
         
         {0x006E, 0x0303, 0x00F1},  /* n + tilde = ñ */
         
-        /* -------- Latin uppercase -------- */
+        /* Latin uppercase. */
         {0x0041, 0x0300, 0x00C0},  /* A + grave = À */
         {0x0041, 0x0301, 0x00C1},  /* A + acute = Á */
         {0x0041, 0x0302, 0x00C2},  /* A + circumflex = Â */
@@ -265,17 +265,7 @@ UnicodeCompose(FcChar32 base, FcChar32 mark)
         
         {0x004E, 0x0303, 0x00D1},  /* N + tilde = Ñ */
 
-        /* -------- Vietnamese horn letters -------- */
-        /* 
-         * The "horn" is U+031B. The base characters are:
-         *   U+01A0 = O with horn (Ơ)  - lowercase: U+01A1 (ơ)
-         *   U+01AF = U with horn (Ư)  - lowercase: U+01B0 (ư)
-         * 
-         * These are then combined with Vietnamese tone marks:
-         *   grave (U+0300), acute (U+0301), hook above (U+0309),
-         *   tilde (U+0303), dot below (U+0323)
-         */
-
+        /* Vietnamese. */
         /* Lowercase: o with horn + tone marks */
         {0x01A1, 0x0301, 0x1EDB},  /* ơ + acute = ớ */
         {0x01A1, 0x0300, 0x1EDD},  /* ơ + grave = ờ */
@@ -290,14 +280,14 @@ UnicodeCompose(FcChar32 base, FcChar32 mark)
         {0x01B0, 0x0303, 0x1EF1},  /* ư + tilde = ữ */
         {0x01B0, 0x0323, 0x1EF3},  /* ư + dot below = ự */
 
-        /* Uppercase: O with horn + tone marks */
+        /* Uppercase: O with horn + tone marks. */
         {0x01A0, 0x0301, 0x1EDA},  /* Ơ + acute = Ớ */
         {0x01A0, 0x0300, 0x1EDC},  /* Ơ + grave = Ờ */
         {0x01A0, 0x0309, 0x1EDE},  /* Ơ + hook above = Ở */
         {0x01A0, 0x0303, 0x1ED8},  /* Ơ + tilde = Ỗ */
         {0x01A0, 0x0323, 0x1EE0},  /* Ơ + dot below = Ợ */
 
-        /* Uppercase: U with horn + tone marks */
+        /* Uppercase: U with horn + tone marks. */
         {0x01AF, 0x0301, 0x1EEA},  /* Ư + acute = Ứ */
         {0x01AF, 0x0300, 0x1EEC},  /* Ư + grave = Ừ */
         {0x01AF, 0x0309, 0x1EEE},  /* Ư + hook above = Ử */
@@ -2059,7 +2049,7 @@ InitFont(
      * Font stack - order matters for fallback.
      * Put sans-serif first to ensure default is sans-serif, not serif.
      */
-    /* PRIMARY: sans-serif fonts with explicit preference */
+    /* Primary: sans-serif fonts with explicit preference. */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
@@ -2072,7 +2062,7 @@ InitFont(
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Roboto");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Ubuntu");
     
-    /* Emoji fonts - must come after sans to allow fallback */
+    /* Emoji fonts - must come after sans to allow fallback. */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emojione");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"twemoji");
