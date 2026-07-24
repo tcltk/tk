@@ -235,7 +235,6 @@ typedef struct WaylandFont {
 /*
  *----------------------------------------------------------------------
  *
-||||||| COMMON ANCESTOR content follows ||||||||||||||||||||||||| (line 32)
  * Core Context Structure
  *
  *	Global state for the GLFW/Wayland backend.
