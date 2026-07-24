@@ -408,6 +408,13 @@ typedef struct {
     float x, y, w, h;
 } clipRect;
 
+/*
+ * Flags for TkWindowPrivate.flags. Note this is a distinct namespace
+ * from the TKWL_* flags above, which belong to glfwTkInfo (per-toplevel
+ * state), not TkWindowPrivate (per-window state).
+ */
+#define TKWP_EXPOSE_PENDING   1
+
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
@@ -421,6 +428,7 @@ typedef struct TkWindowPrivate {
     GLuint clipShader;
     GLint fbSizeUniform;
     clipRect containerRect;
+    int flags;
 } glfwData;
 /*
  *----------------------------------------------------------------------

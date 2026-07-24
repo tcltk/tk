@@ -559,10 +559,24 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
-    
+
     if (!winPtr) return;
-    
+
+    /*
+     * If this window already has an expose pending, don't queue another.
+     * Without this, widgets whose EndDraw handling cascades exposes to
+     * each other (e.g. two siblings that are each other's "higher
+     * sibling" in the stacking order) can re-trigger one another
+     * indefinitely, starving every other widget's redraw.
+     */
+    if (winPtr->privatePtr && (winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING)) {
+        return;
+    }
+    if (winPtr->privatePtr) {
+        winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
+    }
+    fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
+
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
@@ -770,6 +784,8 @@ TkWaylandFramebufferSizeCallback(
     if (!winPtr->privatePtr) {
         fprintf(stderr, "TkWaylandFramebufferSizeCallback: privatePtr is NULL for %s -> %dx%d\n",
 	    Tk_PathName(winPtr), width, height);
+        return;
+    }
     glfwGetWindowSize(window, &(winPtr->changes.width),
 		      &(winPtr->changes.height));
     printf("Setting Tk window size to: %dx%d\n",
@@ -810,6 +826,17 @@ TkWaylandFramebufferSizeCallback(
     }
     
     fprintf(stderr, "FBO created successfully: %dx%d\n", width, height);
+
+    /*
+     * nvgluCreateFramebuffer does not clear the color attachment it
+     * allocates, and this resize path unconditionally discards the old
+     * FBO and its content along with it. Without an explicit clear here,
+     * every resize (including the handful that happen during initial
+     * layout) briefly/permanently exposes raw GPU memory as visible
+     * static in any region a widget hasn't repainted yet.
+     */
+    glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
     
     /* Update window size in Tk. */
     winPtr->changes.width = width;
@@ -828,7 +855,6 @@ TkWaylandFramebufferSizeCallback(
     glfwGetWindowSize(window, &(winPtr->changes.width),
 		      &(winPtr->changes.height));
     TkDoConfigureNotify(winPtr);
-}
 }
 
 #if 0

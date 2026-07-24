@@ -10,6 +10,7 @@
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 2026  Kevin Walzer
+ * Copyright (c) 2026  Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -281,6 +282,12 @@ static void renderFBO(
         infoPtr->winPtr->privatePtr->fb = fb;
         fprintf(stderr, "renderFBO: created framebuffer %p (%dx%d)\n", 
                 fb, fbWidth, fbHeight);
+
+        /* See the comment in TkWaylandCreateWindow: a freshly created FBO's
+         * color attachment is uninitialized GPU memory until cleared. */
+        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
+        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
     
     int fbWidth, fbHeight;
@@ -297,8 +304,30 @@ static void renderFBO(
             return;
         }
         infoPtr->winPtr->privatePtr->fb = fb;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
+        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
     
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
+                      0, 0, fbWidth, fbHeight,
+                      GL_COLOR_BUFFER_BIT,
+                      GL_NEAREST);
+    glfwSwapBuffers(glfwWindow);
+
+    /*
+     * We maintain a persistent backing-store FBO but present through a
+     * real double-buffered swap chain. A single blit+swap only updates
+     * whichever hardware buffer becomes the new back buffer; the other
+     * buffer keeps whatever it last had (potentially from an earlier,
+     * incomplete layout/paint pass), so it can go stale and reappear
+     * later when nothing keeps forcing further redraws. Blit+swap a
+     * second time so both hardware buffers show the exact same, current
+     * image.
+     */
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, fbWidth, fbHeight,
@@ -400,7 +429,7 @@ TkWaylandDisplayAllWindows()
             if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr || 
                 !infoPtr->winPtr->privatePtr->fb) {
                 /* Clear the flag to avoid repeated attempts. */
-                infoPtr->flags &= TKWL_NEEDS_DISPLAY;
+                infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
                 fprintf(stderr, "TkWaylandDisplayAllWindows: skipping %s (no FBO)\n",
                         infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
                 continue;
@@ -746,6 +775,18 @@ TkWaylandCreateWindow(
     } else {
         fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
                 Tk_PathName(winPtr), winPtr->privatePtr->fb);
+
+        /*
+         * nvgluCreateFramebuffer does not clear the color attachment it
+         * allocates -- it starts out as whatever the GPU driver happened
+         * to hand back, which shows up as visible static/noise in any
+         * region no widget's own draw call has painted yet (e.g. toplevel
+         * area outside of packed widgets). Clear it once here so newly
+         * created windows start from a known, blank state instead of
+         * garbage.
+         */
+        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
 
     if (drawableOut) {
@@ -858,6 +899,10 @@ TkWaylandBeginDraw(
     fprintf(stderr, "BeginDraw: %s in toplevel %s with offset (%d, %d)\n",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
 
+    if (childPtr->privatePtr) {
+        childPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
+    }
+
     /*
      * Now winPtr is the containing toplevel and the offsets of
      * the child are given by x and y.
@@ -886,12 +931,19 @@ TkWaylandBeginDraw(
 	    /*
 	     * The child was moved after its container was drawn,
 	     * so the clipping rectangles are in the wrong place.
-	     * It is not clear to me why this happens, and I wish
-	     * there were an alternative to this crude workaround.
 	     */
 	    TkWindow *parentPtr = (TkWindow*) Tk_Parent(childPtr);
 	    TkWaylandQueueExposeEvent(parentPtr, 0, 0,
 		Tk_Width(parentPtr), Tk_Height(parentPtr));
+
+	    /*
+	     * Record the new position so this check doesn't keep firing
+	     * on every subsequent draw of this child -- without this the
+	     * mismatch is permanently "true" and re-exposes the parent
+	     * forever.
+	     */
+	    childPtr->privatePtr->containerRect.x = x * scale;
+	    childPtr->privatePtr->containerRect.y = y * scale;
 	}
     }
     fprintf(stderr,
@@ -1094,39 +1146,17 @@ TkWaylandGetNVGContext(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandGetNVGContextForMeasure --
- *
- *	Return the NanoVG context with the shared GL context current,
- *	suitable for font measurement outside a draw frame.
- *
- * Results:
- *	Returns the NanoVG context or NULL on failure.
- *
- * Side effects:
- *	Makes the GL context for the root window current.
- *
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE NVGcontext *
 TkWaylandGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || shutdownInProgress) {
+    if (!GlfwIsInitialized || shutdownInProgress)
         return NULL;
-    }
-    
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
-    if (!glfwInfoPtr || !glfwInfoPtr->winPtr) {
-        return NULL;
-    }
-    
     glfwMakeContextCurrent(mainGlfwWindow);
     Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);
     return TkWaylandGetNVGContext(drawable);
 }
+
 /*
  *----------------------------------------------------------------------
  *
