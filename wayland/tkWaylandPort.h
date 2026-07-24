@@ -132,5 +132,6 @@ MODULE_SCOPE void	TkpSetCapture(struct TkWindow *winPtr);
 MODULE_SCOPE Tk_Window	TkpGetCapture(void);
 MODULE_SCOPE void	TkPointerDeadWindow(struct TkWindow *winPtr);
 
+
 /* This avoids having to implement XKeysymToString and XStringToKeysym */
 #define REDO_KEYSYM_LOOKUP

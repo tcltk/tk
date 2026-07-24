@@ -469,7 +469,7 @@ Tk_GetPixmap(
 
     /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
-    pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
+    pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->vg,
 					 width, height, 0);
 
     /* Check FBO completeness. */

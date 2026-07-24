@@ -235,6 +235,7 @@ typedef struct WaylandFont {
 /*
  *----------------------------------------------------------------------
  *
+||||||| COMMON ANCESTOR content follows ||||||||||||||||||||||||| (line 32)
  * Core Context Structure
  *
  *	Global state for the GLFW/Wayland backend.
@@ -251,6 +252,7 @@ typedef struct TkWaylandContext {
                                    * and shared by all windows */
     int initialized;              /* GLFW initialized flag - 1 if glfwInit()
                                    * has been called successfully */
+    //// The rest of these fields are probably not needed.
     int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
                                    * currently active */
     GLFWwindow *activeWindow;     /* Window that has the current active
@@ -260,6 +262,24 @@ typedef struct TkWaylandContext {
     int fbHeight;                 /* Framebuffer height of mainWindow
                                    * (cached for performance) */
 } TkWaylandContext;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ProtocolHandler – per-protocol Tcl command binding.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct ProtocolHandler {
+    int                    protocol;  /* Protocol identifier. */
+    struct ProtocolHandler *nextPtr;
+    Tcl_Interp            *interp;
+    char                   command[TKFLEXARRAY];
+} ProtocolHandler;
+
+#define HANDLER_SIZE(cmdLength) \
+    (offsetof(ProtocolHandler, command) + 1 + (cmdLength))
 
 /*
  *----------------------------------------------------------------------
@@ -296,14 +316,14 @@ extern const char *const WmAttributeNames[];
  */
 
 /* Flag values */
-#define needsDisplay 1
-#define dontSwap     2
-#define sizeChanged  4
+#define TKWL_NEEDS_DISPLAY  1
+#define TKWL_DONT_SWAP      2
+#define TKWL_NEVER_FOCUSED  4
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
     TkWindow *winPtr;
-    TkWaylandContext context;
+    NVGcontext *vg;
     unsigned int flags;
     struct glfwTkInfo *nextPtr;
 } glfwTkInfo;
@@ -401,6 +421,7 @@ typedef struct TkWindowPrivate {
     GLuint clipVBO;
     GLuint clipShader;
     GLint fbSizeUniform;
+    clipRect containerRect;
 } glfwData;
 /*
  *----------------------------------------------------------------------

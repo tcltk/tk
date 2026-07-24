@@ -142,8 +142,8 @@ XQueryPointer(
 
         if (getGlobal) {
             /* Get window position for global coordinates. */
-            int winX, winY;
-            glfwGetWindowPos(glfwWindow, &winX, &winY);
+            int winX = 0, winY = 0;
+            ////glfwGetWindowPos(glfwWindow, &winX, &winY);
             *root_x_return = winX + (int)cursorX;
             *root_y_return = winY + (int)cursorY;
         }
@@ -358,9 +358,12 @@ TkWaylandHandleMouseMove(
     event.xmotion.y = (int)y;
 
     /* Compute root-relative coordinates. */
+
+    int winX = 0, winY = 0;
+    ////glfwGetWindowPos(glfwWindow, &winX, &winY);
     {
-        int winX, winY;
-        glfwGetWindowPos(glfwWindow, &winX, &winY);
+        int winX = 0, winY = 0;
+        ////glfwGetWindowPos(glfwWindow, &winX, &winY);
         event.xmotion.x_root = winX + (int)x;
         event.xmotion.y_root = winY + (int)y;
     }
@@ -402,7 +405,7 @@ TkpWarpPointer(
 {
     GLFWwindow* glfwWindow;
     int x, y;
-    int winX, winY;
+    int winX = 0, winY = 0;
     double targetX, targetY;
 
     if (dispPtr->warpWindow) {
@@ -411,7 +414,7 @@ TkpWarpPointer(
 	/* Warp cursor to new position using unified architecture. */
 	glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)dispPtr->warpWindow);
 	if (glfwWindow) {
-	    glfwGetWindowPos(glfwWindow, &winX, &winY);
+	    ////glfwGetWindowPos(glfwWindow, &winX, &winY);
 	    targetX = x + dispPtr->warpX - winX;
 	    targetY = y + dispPtr->warpY - winY;
 	    glfwSetCursorPos(glfwWindow, targetX, targetY);

@@ -637,14 +637,34 @@ static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
  *
  *----------------------------------------------------------------------
  */
- 
+
+static void TkWaylandWindowCloseCallback(GLFWwindow *window);
+static void TkWaylandFramebufferSizeCallback(GLFWwindow *window,
+					  int width, int height);
+////static void TkWaylandWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
+static void TkWaylandWindowFocusCallback(GLFWwindow *window, int focused);
+static void TkWaylandWindowIconifyCallback(GLFWwindow *window, int iconified);
+static void TkWaylandWindowMaximizeCallback(GLFWwindow *window, int maximized);
+static void TkWaylandCursorPosCallback(GLFWwindow *window,
+				    double xpos, double ypos);
+static void TkWaylandMouseButtonCallback(GLFWwindow *window,
+				      int button, int action, int mods);
+static void TkWaylandScrollCallback(GLFWwindow *window,
+				 double xoffset, double yoffset);
+static void TkWaylandKeyCallback(GLFWwindow *window, int key,
+			      int scancode, int action, int mods);
+static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
+static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
+static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
+
+
 MODULE_SCOPE void
 TkWaylandSetupCallbacks(
 			GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkWaylandWindowCloseCallback);
     glfwSetFramebufferSizeCallback (glfwWindow, TkWaylandFramebufferSizeCallback);
-    glfwSetWindowPosCallback       (glfwWindow, TkWaylandWindowPosCallback);
+    ////    glfwSetWindowPosCallback       (glfwWindow, TkWaylandWindowPosCallback);
     glfwSetWindowFocusCallback     (glfwWindow, TkWaylandWindowFocusCallback);
     glfwSetWindowIconifyCallback   (glfwWindow, TkWaylandWindowIconifyCallback);
     glfwSetWindowMaximizeCallback  (glfwWindow, TkWaylandWindowMaximizeCallback);
@@ -663,7 +683,7 @@ TkWaylandClearCallbacks(
 {
     glfwSetWindowCloseCallback        (glfwWindow, NULL);
     glfwSetFramebufferSizeCallback    (glfwWindow, NULL);
-    glfwSetWindowPosCallback          (glfwWindow, NULL);
+    ////    glfwSetWindowPosCallback          (glfwWindow, NULL);
     glfwSetWindowFocusCallback        (glfwWindow, NULL);
     glfwSetWindowIconifyCallback      (glfwWindow, NULL);
     glfwSetWindowMaximizeCallback     (glfwWindow, NULL);
@@ -755,12 +775,13 @@ TkWaylandFramebufferSizeCallback(
     printf("Setting Tk window size to: %dx%d\n",
 	   winPtr->changes.width, winPtr->changes.height);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+
     if (!infoPtr) {
         fprintf(stderr, "FramebufferSizeCallback: infoPtr is NULL\n");
         return;
     }
     
-    NVGcontext *vg = infoPtr->context.vg;
+    NVGcontext *vg = infoPtr->vg;
     if (vg == NULL) {
         fprintf(stderr, "FramebufferSizeCallback: No NVG context!\n");
         return;
@@ -810,6 +831,7 @@ TkWaylandFramebufferSizeCallback(
 }
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -849,6 +871,7 @@ TkWaylandWindowPosCallback(
     winPtr->changes.y = ypos;
     TkDoConfigureNotify(winPtr);
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -872,9 +895,11 @@ TkWaylandWindowFocusCallback(
 			     int focused)
 {
     fprintf(stderr, "TkWaylandWindowFocusCallback\n");
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
 
     XEvent event;
+    infoPtr->flags &= ~TKWL_NEVER_FOCUSED;
     
     if (!winPtr) {
         return;
@@ -1033,6 +1058,33 @@ TkWaylandWindowMaximizeCallback(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandCursorEnterCallback --
+ *
+ *      Called by GLFW when the cursor enters or leaves the GLFW window
+ *      client area.  Feeds the transition to the generic pointer module
+ *      (tkPointer.c), which generates the proper Enter/Leave event chains
+ *      and, on leave.
+ *
+ *      This is distinct from the widget-level crossing logic in
+ *      TkWaylandCursorPosCallback, which tracks transitions between child
+ *      widgets while the pointer is already inside the GLFW window.
+ *      This callback handles the coarser, compositor-level event that
+ *      GLFW delivers when the pointer crosses the window border.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Queues an EnterNotify or LeaveNotify XEvent.
+ *      Resets lastWinPtr to NULL on leave so that TkWaylandCursorPosCallback
+ *      re-fires an EnterNotify for the displayed cursor.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 TkWaylandCursorEnterCallback(
 			     GLFWwindow *window,
@@ -1040,7 +1092,9 @@ TkWaylandCursorEnterCallback(
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     double xpos, ypos;
+    int winX = 0, winY = 0;
     Tk_Window target = NULL;
+    XEvent event;
 
     if (!winPtr) {
         return;
@@ -1052,7 +1106,7 @@ TkWaylandCursorEnterCallback(
      * Menubar intercept: the always-visible menubar strip is not part of
      * the popup stack and has no window of its own to receive motion
      * events, so it must be hit-tested explicitly here, regardless of
-     * whether a menu popup is currently active.
+     * whether a popup menu is currently active.
      */
     TkWaylandMenubarHandleMotion(winPtr, (int)xpos, (int)ypos);
 
@@ -1077,6 +1131,29 @@ TkWaylandCursorEnterCallback(
     if (entered) {
         target = Tk_CoordsToWindow((int) xpos, (int) ypos, (Tk_Window) winPtr);
     }
+
+  //  glfwGetWindowPos(window, &winX, &winY);
+
+    memset(&event, 0, sizeof(XEvent));
+    event.type = entered ? EnterNotify : LeaveNotify;
+    event.xcrossing.serial      = LastKnownRequestProcessed(winPtr->display)++;
+    event.xcrossing.send_event  = False;
+    event.xcrossing.display     = winPtr->display;
+    event.xcrossing.window      = Tk_WindowId((Tk_Window)winPtr);
+    event.xcrossing.root        = RootWindow(winPtr->display, winPtr->screenNum);
+    event.xcrossing.subwindow   = None;
+    event.xcrossing.time        = (Time)(glfwGetTime() * 1000.0);
+    event.xcrossing.x           = (int)xpos;
+    event.xcrossing.y           = (int)ypos;
+    event.xcrossing.x_root      = winX + (int)xpos;
+    event.xcrossing.y_root      = winY + (int)ypos;
+    event.xcrossing.mode        = NotifyNormal;
+    event.xcrossing.detail      = NotifyAncestor;
+    event.xcrossing.same_screen = True;
+    event.xcrossing.focus       = True;
+    event.xcrossing.state       = glfwButtonState | glfwModifierState;
+
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
     /*
      * On leave, clear lastWinPtr so TkWaylandCursorPosCallback generates a

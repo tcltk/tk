@@ -82,7 +82,6 @@ TkpGetColor(
     TCL_UNUSED(Tk_Window), /* tkwin */
     const char *name)
 {
-    XColor   xcolor;
     NVGcolor nvgcolor;
     TkColor *tkColPtr;
 
@@ -94,39 +93,35 @@ TkpGetColor(
         return NULL;
     }
 
-    /*
-     * Zero-initialise the entire XColor before filling in fields.
-     * Tk uses the whole struct (including pixel and pad) as a hash key
-     * inside Tk_GetGC -> CreateHashEntry.  Any uninitialised bytes cause
-     * hash collisions, table corruption, and eventual heap corruption that
-     * surfaces as crashes in completely unrelated code paths (e.g. the font
-     * cache).
-     */
-    memset(&xcolor, 0, sizeof(XColor));
-
-    /* Convert NVGcolor back to XColor */
-    xcolor.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
-    xcolor.green = (unsigned short)(nvgcolor.g * 65535.0f + 0.5f);
-    xcolor.blue  = (unsigned short)(nvgcolor.b * 65535.0f + 0.5f);
-    xcolor.flags = DoRed | DoGreen | DoBlue;
-
-    /* Encode RGB into pixel as 0x00RRGGBB so GC foreground values
-     * can be decoded back to color by TkWaylandPixelToNVG. */
-    xcolor.pixel = (((unsigned long)(nvgcolor.r * 255.0f + 0.5f)) << 16)
-                 | (((unsigned long)(nvgcolor.g * 255.0f + 0.5f)) <<  8)
-                 |  ((unsigned long)(nvgcolor.b * 255.0f + 0.5f));
-
     tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     if (tkColPtr == NULL) {
         return NULL;
     }
 
-    tkColPtr->color            = xcolor;
-    tkColPtr->colormap         = None;
-    tkColPtr->screen           = NULL;
-    tkColPtr->visual           = NULL;
-    tkColPtr->resourceRefCount = 1;
+    /*
+     * Ensure that all fields which we do not explicitly set are 0, including
+     * fields in the XColor struct which we do not use, such as pad.  This is
+     * important because Tk uses the full XColor struct as a hash key.
+     */
 
+    memset(tkColPtr, 0, sizeof(TkColor));
+
+    /* Convert NVGcolor RGB values from float to short */
+    tkColPtr->color.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
+    tkColPtr->color.green = (unsigned short)(nvgcolor.g * 65535.0f + 0.5f);
+    tkColPtr->color.blue  = (unsigned short)(nvgcolor.b * 65535.0f + 0.5f);
+    tkColPtr->color.flags = DoRed | DoGreen | DoBlue;
+
+    /*
+     * Encode the pixel value as 0x00RRGGBB.  The pixel field is used
+     * for GC foreground and background values.
+     */
+
+    tkColPtr->color.pixel = (
+	((unsigned long)(nvgcolor.r * 255.0f + 0.5f)) << 16  |
+	((unsigned long)(nvgcolor.g * 255.0f + 0.5f)) << 8   |
+	((unsigned long)(nvgcolor.b * 255.0f + 0.5f)));
+    tkColPtr->resourceRefCount = 1;
     return tkColPtr;
 }
 
@@ -137,9 +132,6 @@ TkpGetColor(
  *
  *      Allocate a new TkColor structure for the color described by the
  *      given XColor structure.
- *
- *      In the NanoVG backend, exact RGB values are always available,
- *      so this function always succeeds (subject to memory allocation).
  *
  * Results:
  *      Returns a pointer to a newly allocated TkColor structure, or
@@ -157,31 +149,29 @@ TkpGetColorByValue(
     XColor   *colorPtr)
 {
     TkColor *tkColPtr;
-    XColor   safeColor;
-
-    /*
-     * The incoming colorPtr may have uninitialized pixel/pad fields (e.g.
-     * when called from Tk internals that only set red/green/blue).
-     * Copy into a zero-initialised local to guarantee a clean hash key.
-     */
-    memset(&safeColor, 0, sizeof(XColor));
-    safeColor.red   = colorPtr->red;
-    safeColor.green = colorPtr->green;
-    safeColor.blue  = colorPtr->blue;
-    safeColor.flags = colorPtr->flags;
-    /* pixel and pad remain zero */
 
     tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     if (tkColPtr == NULL) {
         return NULL;
     }
 
-    tkColPtr->color            = safeColor;
-    tkColPtr->colormap         = None;
-    tkColPtr->screen           = NULL;
-    tkColPtr->visual           = NULL;
-    tkColPtr->resourceRefCount = 1;
+    /*
+     * Ensure that all fields which we do not explicitly set are 0, including
+     * fields in the XColor struct which we do not use, such as pad.  This is
+     * important because Tk uses the full XColor struct as a hash key.
+     */
 
+    memset(tkColPtr, 0, sizeof(TkColor));
+
+    tkColPtr->color.red   = colorPtr->red;
+    tkColPtr->color.green = colorPtr->green;
+    tkColPtr->color.blue  = colorPtr->blue;
+    tkColPtr->color.flags = colorPtr->flags;
+    tkColPtr->color.pixel = (
+	((unsigned long)(colorPtr->red >> 8)) << 16  |
+	((unsigned long)(colorPtr->green >> 8)) << 8 |
+	((unsigned long)(colorPtr->blue >> 8)));
+    tkColPtr->resourceRefCount = 1;
     return tkColPtr;
 }
 
@@ -388,7 +378,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
  *      Look up a named color from the X11 color database.
  *
  *      This table contains all standard X11 color names with their
- *      RGB values normalized to [0.0, 1.0] range.
+ *      RGB values given as floats normalized to the range [0.0, 1.0].
  *
  * Results:
  *      true if the color name was found, false otherwise.

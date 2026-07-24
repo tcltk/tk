@@ -388,9 +388,9 @@ InitializeGlfwWindow(TkWindow *winPtr)
                           wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
 
-    if (wmPtr->x != 0 || wmPtr->y != 0) {
-        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
-    }
+    ////    if (wmPtr->x != 0 || wmPtr->y != 0) {
+    ////        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
+    ////    }
 
     /* Register wm event handler */
     Tk_CreateEventHandler((Tk_Window)winPtr,
@@ -2146,7 +2146,7 @@ WmGeometryCmd(
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 	// This doesn't actually do anything.
-        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
+        ////glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
 
         /* Cancel any pending idle callback */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
@@ -3397,7 +3397,7 @@ ApplyFullscreenState(TkWindow *winPtr)
 
     if (desiredFullscreen && currentMonitor == NULL) {
         /* Transitioning from windowed to fullscreen: save current geometry. */
-        glfwGetWindowPos(glfwWindow, &wmPtr->x, &wmPtr->y);
+        //// glfwGetWindowPos(glfwWindow, &wmPtr->x, &wmPtr->y);
         glfwGetWindowSize(glfwWindow, &wmPtr->width, &wmPtr->height);
 
         /* Switch to fullscreen on the primary monitor. */
@@ -3686,6 +3686,7 @@ TopLevelReqProc(
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
         wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
+	fprintf(stderr, "TopLevelReqProc: rescheduling\n");
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     }
 }
@@ -3716,6 +3717,18 @@ UpdateGeometryInfo(
     int       tw, th;
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+	/* Newly created windows are created hidden and set to be focused
+	 * when they are first shown.
+	 * If a window is resized before it is has been shown, the missing
+	 * window decorations trigger a wayland error which resets the
+	 * size back to the last successful size, which will be its initial
+	 * size, 200x200.  So we need to wait for the first call to the
+	 * WindowFocusCallback before resizing it.
+	 */
+	Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
+	return;
+    }
 
     if (wmPtr == NULL) {
 	fprintf(stderr, "Cannot update geometry for a window with no WmInfo\n");
@@ -3798,7 +3811,7 @@ UpdateGeometryInfo(
     if ((wmPtr->flags & WM_MOVE_PENDING) ||
         wmPtr->x != winPtr->changes.x ||
         wmPtr->y != winPtr->changes.y) {
-        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
+        //// glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
     }
 #endif
@@ -4542,9 +4555,9 @@ XConfigureWindow(
     XWindowChanges *values)
 {
     GLFWwindow *gw = WindowToGLFW(window);
-    int         x  = -1, y  = -1;
+    ////    int         x  = 0, y  = 0;
     int         w  = -1, h  = -1;
-    int         moveNeeded   = 0;
+    ////    int         moveNeeded   = 0;
     int         resizeNeeded = 0;
 
     if (gw == NULL || values == NULL) {
@@ -4552,11 +4565,11 @@ XConfigureWindow(
     }
 
     /* Collect the current GLFW state to fill in un-specified fields. */
-    glfwGetWindowPos(gw,  &x, &y);
+    //// glfwGetWindowPos(gw,  &x, &y);
     glfwGetWindowSize(gw, &w, &h);
 
-    if (value_mask & CWX) { x = values->x; moveNeeded   = 1; }
-    if (value_mask & CWY) { y = values->y; moveNeeded   = 1; }
+    ////    if (value_mask & CWX) { x = values->x; moveNeeded   = 1; }
+    ////    if (value_mask & CWY) { y = values->y; moveNeeded   = 1; }
 
     if (value_mask & CWWidth)  { w = values->width;  resizeNeeded = 1; }
     if (value_mask & CWHeight) { h = values->height; resizeNeeded = 1; }
@@ -4564,9 +4577,9 @@ XConfigureWindow(
     /* CWBorderWidth: recorded for Tk bookkeeping; no GLFW equivalent. */
     /* CWSibling / CWStackMode: compositor-controlled; ignore. */
 
-    if (moveNeeded) {
-        glfwSetWindowPos(gw, x, y);
-    }
+    ////    if (moveNeeded) {
+    ////        glfwSetWindowPos(gw, x, y);
+    ////    }
     if (resizeNeeded) {
 	fprintf(stderr, "XConfigureWindow: calling glfwSetWindowSize -> %dx%d\n", w, h);
         glfwSetWindowSize(gw, w, h);
