@@ -385,14 +385,23 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
  *----------------------------------------------------------------------
  */
 
+typedef struct {
+    float x, y, w, h;
+} clipRect;
+
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
     Tcl_DString pendingText;
-    TkWaylandPopup *popup;   
-    int isPopup;           
+    // Support for subwindow clipping
+    clipRect *clipRectBuffer;
+    int clipRectBufferSize;
+    int clipRectCount;
+    GLuint clipVAO;
+    GLuint clipVBO;
+    GLuint clipShader;
+    GLint fbSizeUniform;
 } glfwData;
-
 /*
  *----------------------------------------------------------------------
  *
@@ -519,6 +528,7 @@ MODULE_SCOPE int         TkWaylandBeginDraw(Drawable drawable, GC gc, TkWaylandD
 MODULE_SCOPE void        TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkWaylandGetNVGContext(Drawable drawable);
 MODULE_SCOPE NVGcontext *TkWaylandGetNVGContextForMeasure(void);
+MODULE_SCOPE void        createClipShaders(TkWindow *winPtr);
 
 /*
  *----------------------------------------------------------------------

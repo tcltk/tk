@@ -481,16 +481,15 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
-	 nanovg.o  SheenBidi.o xdg-shell-protocol.o \
-      tkWaylandInit.o tkWayland.o  \
-     tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
-     tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
-     tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
-     tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
-     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandPopup.o tkWaylandScale.o \
-     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
-     tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o tkPointer.o xcolors.o \
-     $(WAYLAND_UNIX_OBJS)
+    nanovg.o  SheenBidi.o xdg-shell-protocol.o tkWaylandInit.o tkWayland.o  \
+    tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
+    tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
+    tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
+    tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
+    tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandPopup.o tkWaylandScale.o \
+    tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSubwindows.o \
+    tkWaylandSysTray.o tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o \
+    $(WAYLAND_UNIX_OBJS)
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
@@ -645,7 +644,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandGC.c $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandPopup.c \
-    $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c \
+    $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSubwindows.c \
     $(WAYLAND_DIR)/tkWaylandSysTray.c $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c \
     $(WAYLAND_DIR)/tkWaylandWm.c $(WAYLAND_DIR)/xdg-shell-protocol.c $(UNIX_DIR)/bidi/SheenBidi.c \
     $(GENERIC_DIR)/tkPointer.c $(WAYLAND_UNIX_SRCS)
@@ -1543,6 +1542,9 @@ tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 
 tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
+
+tkWaylandSubwindows.o: $(WAYLAND_DIR)/tkWaylandSubwindows.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSubwindows.c
 
 tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSysTray.c

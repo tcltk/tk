@@ -16,6 +16,7 @@
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tkWaylandWm.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
@@ -420,6 +421,13 @@ DestroyGlfwWindow(
 {
     fprintf(stderr, "DestroyGlfwWindow: %s\n", Tk_PathName(winPtr));
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    winPtr->privatePtr->clipRectBufferSize = 0;
+    winPtr->privatePtr->clipRectCount = 0;
+    if (winPtr->privatePtr->clipRectBuffer) {
+	printf("Freeing clipRects for %s\n", Tk_PathName(winPtr));
+	ckfree(winPtr->privatePtr->clipRectBuffer);
+	winPtr->privatePtr->clipRectBuffer = NULL;
+    }
     if (glfwWindow == NULL) {
 	fprintf(stderr, "No glfwWindow pointer\n");
         return;
@@ -478,7 +486,9 @@ TkWmMapWindow(TkWindow *winPtr)
         glfwGetWindowSize(glfwWindow, &w, &h);
 
 	/* Queue expose for entire window. */
-	TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+#if 0
+	//TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+#endif
         winPtr->flags |= TK_MAPPED;
     }
 }
@@ -763,6 +773,16 @@ Tk_MakeWindow(
     fprintf(stderr, "Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
     result = TkWaylandDrawableForTkWindow(winPtr);
 
+    if (winPtr->privatePtr == NULL) {
+	winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+	Tcl_DStringInit(&winPtr->privatePtr->pendingText);
+#define CLIPRECTBUFSIZE 8
+	winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
+	winPtr->privatePtr->clipRectBuffer = ckalloc(
+	    CLIPRECTBUFSIZE * sizeof(clipRect));
+	winPtr->privatePtr->clipRectCount = 0;
+#undef CLIPRECTBUFSIZE    
+    }
     if (Tk_IsTopLevel(winPtr)) {
 		
         /*
@@ -805,11 +825,6 @@ Tk_MakeWindow(
          * -------------------------
          */
 
-	if (winPtr->privatePtr == NULL) {
-	    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
-	    Tcl_DStringInit(&winPtr->privatePtr->pendingText);
-	}
-
         width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
 
@@ -844,14 +859,16 @@ Tk_MakeWindow(
          * -------------------------
          *
          */
-
+#if 0
       fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
 	     winPtr->changes.width, winPtr->changes.height);
 
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
 				winPtr->changes.width,
 				winPtr->changes.height);
+#endif
     }
+    createClipShaders(winPtr);
     return result;
 }
 
@@ -3717,7 +3734,7 @@ UpdateGeometryInfo(
 
     /* Don't proceed if window isn't ready. */
     if (glfwWindow == NULL || wmPtr->withdrawn) {
-	fprintf(stderr, "Cannot No glfw window\n");
+	fprintf(stderr, "UpdateGeometryInfo: No glfw window\n");
         return;
     }
 
@@ -3732,10 +3749,11 @@ UpdateGeometryInfo(
 
     /* Apply size change if needed. */
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
-	fprintf(stderr, "UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
-	       Tk_PathName(winPtr), tw, th);
+
+#if 0  //// this flag is no longer used.
 	/* Notify the FramebufferSizeCallback to use our workaround. */
 	infoPtr->flags |= sizeChanged;
+#endif
 	/*
 	 * Wayland won't allow a window to be so narrow that the title bar
 	 * can't display all of the standard controls.  If a size change is
@@ -3763,9 +3781,13 @@ UpdateGeometryInfo(
  	 * likely to happen after the window has been fully rendered, which
  	 * leads to pretty bad UX.
  	 */
+	fprintf(stderr,
+		"UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
+		Tk_PathName(winPtr), tw, th);
         glfwSetWindowSize(glfwWindow, tw, th);
 
 		/* Update the window. */
+	//// We don't really know that this is the actual size. 
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
         wmPtr->configWidth  = tw;
@@ -4282,7 +4304,8 @@ XDestroySubwindows(
  *
  * XMapWindow --
  *
- *	Called by Tk_MapWindow.  But there is nothing that we need to do.
+ *	Called by Tk_MapWindow.  Just generates an Expose event, to try
+ *      to make sure the newly mapped window gets drawn.
  *
  * Results:
  *	Success.
@@ -4295,9 +4318,12 @@ XDestroySubwindows(
 
 int
 XMapWindow(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window))
+    Display *display,
+    Window window) 
 {
+    TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
+    printf("XMapWindow: %s\n", Tk_PathName(winPtr));
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
 

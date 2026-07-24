@@ -43,16 +43,9 @@
  */
 
 #include "tkInt.h"
+#include "tkMenu.h"
 #include "tkWaylandInt.h"
 #include "tkWaylandWm.h"
-
-#include <GLES3/gl3.h>
-
-
-#define NANOVG_GLES3 1
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"
-
 #include <xkbcommon/xkbcommon.h>
 #include <GLFW/glfw3.h>
 #include <unistd.h>
@@ -375,15 +368,14 @@ TkWaylandCheckForWindowClosure(void)
  */
 
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
+TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
+		   TCL_UNUSED(int))    /* flags */
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return;
-    }
-
-    static Tcl_Time noBlock   = {0, 0};
-    static Tcl_Time tinyBlock = {0, 1000};   /* 1ms fallback */
-
+    TSD_INIT();
+    Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
+    Tcl_Time tinyBlock = {0, 1000};   /* 1ms fallback */
+    Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
+    
     struct wl_display *display = glfwGetWaylandDisplay();
     if (!display) {
         /* No Wayland display: poll GLFW but do NOT block Tcl */
@@ -394,7 +386,11 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 
     int fd = wl_display_get_fd(display);
 
-    /* Always drain pending redraw before deciding block time. */
+    /*
+     * The Tcl event loop will have run all pending display procs
+     * before calling this function.  Now we can swap the GL buffers
+     * for any window on which some drawing has been done.
+     */
     TkWaylandDisplayAllWindows();
 
     /* Drain IME/IBus messages without blocking. */
@@ -470,9 +466,9 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
     if (display) {
         wl_display_dispatch_pending(display);
     }
-
-    /* Drain redraw. */
+    
     TkWaylandDisplayAllWindows();
+    glfwPollEvents();
 }
 
 
@@ -605,22 +601,6 @@ TkWaylandQueueExposeEvent(
  * with Tk's event loop.
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandSetupCallbacks --
- *
- *      Register the standard GLFW callbacks for a window.  Called by
- *      glfwCreateWindow.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Registers all standard callbacks.
- *
- *----------------------------------------------------------------------
- */
 
 static void TkWaylandWindowCloseCallback(GLFWwindow *window);
 static void TkWaylandFramebufferSizeCallback(GLFWwindow *window,
@@ -641,6 +621,23 @@ static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
 static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
 static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetupCallbacks --
+ *
+ *      Register the standard GLFW callbacks for a window.  Called by
+ *      glfwCreateWindow.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Registers all standard callbacks.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 MODULE_SCOPE void
 TkWaylandSetupCallbacks(
 			GLFWwindow *glfwWindow)
@@ -704,7 +701,7 @@ static void DestroyWindowIdleProc(void *clientData)
 static void
 TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
-    TkWindow *winPtr = TkWaylandGetTkWindow(window);
+   TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (winPtr) {
 	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
     }
@@ -751,14 +748,12 @@ TkWaylandFramebufferSizeCallback(
     }
     
     if (!winPtr->privatePtr) {
-        fprintf(stderr, "FramebufferSizeCallback: privatePtr is NULL for %s\n", 
-                Tk_PathName(winPtr));
-        return;
-    }
-    
-    fprintf(stderr, "TkWaylandFramebufferSizeCallback: %s %dx%d\n", 
-            Tk_PathName(winPtr), width, height);
-    
+        fprintf(stderr, "TkWaylandFramebufferSizeCallback: privatePtr is NULL for %s -> %dx%d\n",
+	    Tk_PathName(winPtr), width, height);
+    glfwGetWindowSize(window, &(winPtr->changes.width),
+		      &(winPtr->changes.height));
+    printf("Setting Tk window size to: %dx%d\n",
+	   winPtr->changes.width, winPtr->changes.height);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     if (!infoPtr) {
         fprintf(stderr, "FramebufferSizeCallback: infoPtr is NULL\n");
@@ -776,7 +771,6 @@ TkWaylandFramebufferSizeCallback(
         nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
         winPtr->privatePtr->fb = NULL;
     }
-    
     /* Create new FBO with error checking. */
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
     if (!winPtr->privatePtr->fb) {
@@ -809,8 +803,11 @@ TkWaylandFramebufferSizeCallback(
      * state mid-resize.
      */
     TkWaylandMenubarResize(winPtr);
-
+    /* Reconfigure the Tk window. */    
+    glfwGetWindowSize(window, &(winPtr->changes.width),
+		      &(winPtr->changes.height));
     TkDoConfigureNotify(winPtr);
+}
 }
 
 /*
@@ -876,6 +873,7 @@ TkWaylandWindowFocusCallback(
 {
     fprintf(stderr, "TkWaylandWindowFocusCallback\n");
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
+
     XEvent event;
     
     if (!winPtr) {
@@ -937,6 +935,7 @@ TkWaylandWindowIconifyCallback(
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     fprintf(stderr, "TkWaylandWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
+
     XEvent event;
     
     if (!winPtr) {
@@ -991,6 +990,7 @@ TkWaylandWindowMaximizeCallback(
 				GLFWwindow *window,
 				int maximized)
 {
+
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     
     if (!winPtr) {
@@ -1014,13 +1014,21 @@ TkWaylandWindowMaximizeCallback(
  *      Called by GLFW when the cursor enters or leaves the GLFW window
  *      client area.  Feeds the transition to the generic pointer module
  *      (tkPointer.c), which generates the proper Enter/Leave event chains
- *      and, on leave, restores the default cursor.
+ *      and, on leave.
+ *
+ *      This is distinct from the widget-level crossing logic in
+ *      TkWaylandCursorPosCallback, which tracks transitions between child
+ *      widgets while the pointer is already inside the GLFW window.
+ *      This callback handles the coarser, compositor-level event that
+ *      GLFW delivers when the pointer crosses the window border.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      May queue crossing events and change the displayed cursor.
+ *      Queues an EnterNotify or LeaveNotify XEvent.
+ *      Resets lastWinPtr to NULL on leave so that TkWaylandCursorPosCallback
+ *      re-fires an EnterNotify for the displayed cursor.
  *
  *----------------------------------------------------------------------
  */
@@ -1071,9 +1079,10 @@ TkWaylandCursorEnterCallback(
     }
 
     /*
-     * A NULL target makes tkPointer.c generate the Leave chain and reset
-     * the cursor. Toplevel coordinates double as root coordinates in this
-     * port (every toplevel is treated as sitting at (0,0)).
+     * On leave, clear lastWinPtr so TkWaylandCursorPosCallback generates a
+     * fresh EnterNotify for the correct child widget when the pointer
+     * re-enters, rather than suppressing it because lastWinPtr still
+     * matches the stale target from before the pointer left.
      */
     Tk_UpdatePointer(target, (int) xpos, (int) ypos,
 		     glfwButtonState | glfwModifierState);
@@ -1085,9 +1094,9 @@ TkWaylandCursorEnterCallback(
  * TkWaylandCursorPosCallback --
  *
  *       Called when cursor position changes.  Hands the position to the
- + *      generic pointer module (tkPointer.c), which owns the generation of
- + *      MotionNotify, EnterNotify and LeaveNotify events, applies
- + *      grab/restrict routing, and updates the cursor via TkpSetCursor.
+ *       generic pointer module (tkPointer.c), which owns the generation of
+ *       MotionNotify, EnterNotify and LeaveNotify events, applies
+ *       grab/restrict routing, and updates the cursor via TkpSetCursor.
  *
  * Results:
  *      None.
@@ -1714,15 +1723,18 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 static void
 TkWaylandWindowRefreshCallback(GLFWwindow *window)
 {
+
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
     }
+#if 0
     fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s\n",
 	    Tk_PathName(winPtr));
 	    	
     TkWaylandQueueExposeEvent(winPtr,
 			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+#endif
 }
 
 /*
