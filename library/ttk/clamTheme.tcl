@@ -101,7 +101,8 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
-	    -fieldbackground [list readonly $colors(-frame)] \
+	    -fieldbackground [list readonly $colors(-frame) \
+				  disabled $colors(-frame)] \
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
@@ -111,7 +112,8 @@ namespace eval ttk::theme::clam {
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
 	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
-				  readonly $colors(-frame)] \
+				  readonly $colors(-frame) \
+				  disabled $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
@@ -120,7 +122,8 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
-	    -background [list readonly $colors(-frame)] \
+	    -fieldbackground [list readonly $colors(-frame) \
+				  disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 
