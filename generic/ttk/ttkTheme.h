@@ -401,9 +401,8 @@ MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
 typedef enum { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT,
 	CHEVRON_UP, CHEVRON_DOWN, CHEVRON_LEFT, CHEVRON_RIGHT } ArrowDirection;
 MODULE_SCOPE void TtkArrowSize(int h, ArrowDirection, int *widthPtr, int *heightPtr);
-MODULE_SCOPE void TtkDrawArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
-MODULE_SCOPE void TtkFillArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
-MODULE_SCOPE Tk_Image TtkMakeChevronImage(int, ArrowDirection, const XColor *, Tk_Window);
+MODULE_SCOPE Tk_Image TtkMakeArrowImage(int h, ArrowDirection, const XColor *, Tk_Window);
+MODULE_SCOPE Tk_Image TtkMakeChevronImage(int h, ArrowDirection, const XColor *, Tk_Window);
 
 #ifdef __cplusplus
 }
