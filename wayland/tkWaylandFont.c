@@ -689,7 +689,7 @@ TkDrawAngledChars(
     double y,
     double angle)
 {
-    TkpDrawAngledCharsInContext(NULL, 0, gc, tkfont,
+    TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
         source, numBytes, 0, numBytes,
         x, y, angle);
 }
