@@ -26,6 +26,7 @@ pack [addSeeDismiss $w.seeDismiss $w] -side bottom -fill x
 ## Code to populate the roots of the tree (can be more than one on Windows)
 proc populateRoots {tree} {
     set iconSize [expr {16 * $::tk::scalingPct / 100}]
+    if {$iconSize == 0} { set iconSize 16 }
     foreach dir [lsort -dictionary [file volumes]] {
 	populateTree $tree [$tree insert {} end -text $dir \
 		-image [tk fileicon [file normalize $dir] $iconSize] \
@@ -41,6 +42,7 @@ proc populateTree {tree node} {
     set path [$tree set $node fullpath]
     $tree delete [$tree children $node]
     set iconSize [expr {16 * $::tk::scalingPct / 100}]
+    if {$iconSize == 0} { set iconSize 16 }
     foreach f [lsort -dictionary [glob -nocomplain -dir $path *]] {
 	set f [file normalize $f]
 	set type [file type $f]
