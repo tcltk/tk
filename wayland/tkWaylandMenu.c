@@ -1791,89 +1791,94 @@ DrawMenuEntryAccelerator(
 
 static void
 DrawMenuEntryIndicator(
-                       TkMenu *menuPtr,
-                       TkMenuEntry *mePtr,
-                       NVGcontext *vg,
-                       TCL_UNUSED(Tk_3DBorder),  /* border */
-                       XColor *indicatorColor,
-                       XColor *disableColor,
-                       TCL_UNUSED(Tk_Font), /* tkfont */
-                       TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                       int x,
-                       int y,
-                       TCL_UNUSED(int), /* width */
-                       int height,
-                       NVGcolor textColor)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    NVGcontext *vg,
+    TCL_UNUSED(Tk_3DBorder),  /* border */
+    XColor *indicatorColor,
+    XColor *disableColor,
+    TCL_UNUSED(Tk_Font),       /* tkfont */
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int x,
+    int y,
+    TCL_UNUSED(int),           /* width */
+    int height,
+    NVGcolor textColor)
 {
-    /* Draw check-button indicator -- only when actually checked. */
-    if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn
-            && (mePtr->entryFlags & ENTRY_SELECTED)) {
-        int top, left, size;
-        int activeBorderWidth;
-        NVGcolor color;
+    int top, left;
+    int activeBorderWidth;
+    int size;
+    int radius;
+    NVGcolor outlineColor;
+    NVGcolor markColor;
 
-        Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-                            menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-        top = y + height/2;
-        left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2;
-        size = PTR2INT(mePtr->platformEntryData);
-
-        if (mePtr->state == ENTRY_DISABLED) {
-            color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
-        } else {
-            /* Honor per-entry -selectcolor when set, else fall back to textColor. */
-            color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : textColor;
-        }
-
-        /* Draw checkbox square. */
-        nvgBeginPath(vg);
-        nvgRect(vg, left - size/2, top - size/2, size, size);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgStrokeColor(vg, color);
-        nvgStroke(vg);
-
-        /* Draw check mark using NanoVG lines. */
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, left - size/3, top);
-        nvgLineTo(vg, left - size/6, top + size/3);
-        nvgLineTo(vg, left + size/3, top - size/3);
-        nvgStrokeWidth(vg, 1.5f);
-        nvgStrokeColor(vg, color);
-        nvgStroke(vg);
+    if (!mePtr->indicatorOn) {
+        return;
     }
 
-    /* Draw radio-button indicator -- only when actually selected. */
-    if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn
-            && (mePtr->entryFlags & ENTRY_SELECTED)) {
-        int top, left, radius;
-        int activeBorderWidth;
-        NVGcolor color;
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+        menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 
-        Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-                            menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-        top = y + height/2;
-        left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2;
-        radius = PTR2INT(mePtr->platformEntryData) / 2;
+    top = y + height / 2;
+    left = x + activeBorderWidth + 2 + mePtr->indicatorSpace / 2;
 
-        if (mePtr->state == ENTRY_DISABLED) {
-            color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
-        } else {
-            /* Honor per-entry -selectcolor when set, else fall back to textColor. */
-            color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : textColor;
+    size = PTR2INT(mePtr->platformEntryData);
+    radius = size / 2;
+
+    if (mePtr->state == ENTRY_DISABLED) {
+        outlineColor = disableColor ?
+            TkWaylandXColorToNVG(disableColor) :
+            nvgRGB(128, 128, 128);
+        markColor = outlineColor;
+    } else {
+        outlineColor = indicatorColor ?
+            TkWaylandXColorToNVG(indicatorColor) :
+            textColor;
+
+        /* Always draw the mark in black. */
+        markColor = nvgRGB(0, 0, 0);
+    }
+
+    if (mePtr->type == CHECK_BUTTON_ENTRY) {
+
+        /* Always draw checkbox outline. */
+        nvgBeginPath(vg);
+        nvgRect(vg,
+            left - size/2,
+            top - size/2,
+            size,
+            size);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStrokeColor(vg, outlineColor);
+        nvgStroke(vg);
+
+        /* Draw check mark only when selected. */
+        if (mePtr->entryFlags & ENTRY_SELECTED) {
+            nvgBeginPath(vg);
+            nvgMoveTo(vg, left - size/4, top);
+            nvgLineTo(vg, left, top + size/4);
+            nvgLineTo(vg, left + size/4, top - size/4);
+            nvgStrokeWidth(vg, 1.5f);
+            nvgStrokeColor(vg, markColor);
+            nvgStroke(vg);
         }
 
-        /* Draw radio circle. */
+    } else if (mePtr->type == RADIO_BUTTON_ENTRY) {
+
+        /* Always draw radio outline. */
         nvgBeginPath(vg);
         nvgCircle(vg, left, top, radius);
         nvgStrokeWidth(vg, 1.0f);
-        nvgStrokeColor(vg, color);
+        nvgStrokeColor(vg, outlineColor);
         nvgStroke(vg);
 
-        /* Fill inner circle. */
-        nvgBeginPath(vg);
-        nvgCircle(vg, left, top, radius/2);
-        nvgFillColor(vg, color);
-        nvgFill(vg);
+        /* Draw center dot only when selected. */
+        if (mePtr->entryFlags & ENTRY_SELECTED) {
+            nvgBeginPath(vg);
+            nvgCircle(vg, left, top, radius / 2);
+            nvgFillColor(vg, markColor);
+            nvgFill(vg);
+        }
     }
 }
 

@@ -904,6 +904,7 @@ TkpButtonWorldChanged(void *instanceData)
     }
 }
 
+
 /*
  * -------------------------------------------------------------------------
  * TkpDrawCheckIndicator --
@@ -911,6 +912,7 @@ TkpButtonWorldChanged(void *instanceData)
  *      Draw check/radio button indicator using NanoVG.
  *      This function is shared with menu widget and needs to be
  *      implemented for Wayland.
+ *      Follows the same visual style as menu indicators.
  *
  * Results:
  *      None.
@@ -929,7 +931,7 @@ TkpDrawCheckIndicator(
     int y,
     TCL_UNUSED(Tk_3DBorder),  /* bgBorder */
     XColor *indicatorColor,
-    XColor *selectColor,
+    TCL_UNUSED(XColor *),     /* selectColor - ignored */
     XColor *disColor,
     int on,
     int disabled,
@@ -941,64 +943,96 @@ TkpDrawCheckIndicator(
         return;
     }
 
-    int size = 0;
+    int size;
     int indicatorSize;
+    NVGcolor outlineColor;
+    NVGcolor markColor;
 
     switch (mode) {
-        case CHECK_BUTTON: indicatorSize = CHECK_BUTTON_DIM; break;
-        case CHECK_MENU:   indicatorSize = CHECK_MENU_DIM;   break;
-        case RADIO_BUTTON: indicatorSize = RADIO_BUTTON_DIM; break;
-        case RADIO_MENU:   indicatorSize = RADIO_MENU_DIM;   break;
-        default:           indicatorSize = 12;
+    case CHECK_BUTTON:
+        indicatorSize = CHECK_BUTTON_DIM;
+        break;
+    case CHECK_MENU:
+        indicatorSize = CHECK_MENU_DIM;
+        break;
+    case RADIO_BUTTON:
+        indicatorSize = RADIO_BUTTON_DIM;
+        break;
+    case RADIO_MENU:
+        indicatorSize = RADIO_MENU_DIM;
+        break;
+    default:
+        indicatorSize = 12;
+        break;
     }
 
     size = indicatorSize;
-    x = x - size/2;
-    y = y - size/2;
+    x -= size / 2;
+    y -= size / 2;
 
-    /* Background square/circle. */
-    nvgBeginPath(dc.vg);
+    if (disabled) {
+        outlineColor = disColor ?
+            TkWaylandXColorToNVG(disColor) :
+            nvgRGB(128, 128, 128);
+        markColor = outlineColor;
+    } else {
+        outlineColor = indicatorColor ?
+            TkWaylandXColorToNVG(indicatorColor) :
+            nvgRGB(0, 0, 0);
+
+        /* Always draw the check mark / radio dot in black. */
+        markColor = nvgRGB(0, 0, 0);
+    }
+
     if (mode == RADIO_BUTTON || mode == RADIO_MENU) {
+
+        /* Always draw the outer circle. */
+        nvgBeginPath(dc.vg);
         nvgCircle(dc.vg, x + size/2, y + size/2, size/2);
-    } else {
-        nvgRect(dc.vg, x, y, size, size);
-    }
+        nvgStrokeWidth(dc.vg, 1.0f);
+        nvgStrokeColor(dc.vg, outlineColor);
+        nvgStroke(dc.vg);
 
-    if (disabled && disColor) {
-        nvgFillColor(dc.vg, TkWaylandXColorToNVG(disColor));
-    } else {
-        nvgFillColor(dc.vg, TkWaylandXColorToNVG(indicatorColor));
-    }
-    nvgFill(dc.vg);
-
-    /* Draw check / radio dot / tristate. */
-    if (on == 1) {
-        if (mode == CHECK_BUTTON || mode == CHECK_MENU) {
-            nvgBeginPath(dc.vg);
-            nvgMoveTo(dc.vg, x + size/4, y + size/2);
-            nvgLineTo(dc.vg, x + size/2, y + 3*size/4);
-            nvgLineTo(dc.vg, x + 3*size/4, y + size/4);
-            nvgStrokeColor(dc.vg, TkWaylandXColorToNVG(selectColor));
-            nvgStrokeWidth(dc.vg, 2.0f);
-            nvgStroke(dc.vg);
-        } else {
+        /* Draw the center dot only when selected. */
+        if (on) {
             nvgBeginPath(dc.vg);
             nvgCircle(dc.vg, x + size/2, y + size/2, size/4);
-            nvgFillColor(dc.vg, TkWaylandXColorToNVG(selectColor));
+            nvgFillColor(dc.vg, markColor);
             nvgFill(dc.vg);
         }
-    } else if (on == 2) {  /* tristate */
+
+    } else {
+
+        /* Always draw the checkbox outline. */
         nvgBeginPath(dc.vg);
-        nvgMoveTo(dc.vg, x + size/4, y + size/2);
-        nvgLineTo(dc.vg, x + 3*size/4, y + size/2);
-        nvgStrokeColor(dc.vg, TkWaylandXColorToNVG(selectColor));
-        nvgStrokeWidth(dc.vg, 2.0f);
+        nvgRect(dc.vg, x, y, size, size);
+        nvgStrokeWidth(dc.vg, 1.0f);
+        nvgStrokeColor(dc.vg, outlineColor);
         nvgStroke(dc.vg);
+
+        if (on == 1) {
+            /* Draw check mark. */
+            nvgBeginPath(dc.vg);
+            nvgMoveTo(dc.vg, x + size/4,     y + size/2);
+            nvgLineTo(dc.vg, x + size/2,     y + 3*size/4);
+            nvgLineTo(dc.vg, x + 3*size/4,   y + size/4);
+            nvgStrokeWidth(dc.vg, 1.5f);
+            nvgStrokeColor(dc.vg, markColor);
+            nvgStroke(dc.vg);
+
+        } else if (on == 2) {
+            /* Draw tristate bar. */
+            nvgBeginPath(dc.vg);
+            nvgMoveTo(dc.vg, x + size/4,     y + size/2);
+            nvgLineTo(dc.vg, x + 3*size/4,   y + size/2);
+            nvgStrokeWidth(dc.vg, 1.5f);
+            nvgStrokeColor(dc.vg, markColor);
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
 }
-
 /*
  *----------------------------------------------------------------------
  *
