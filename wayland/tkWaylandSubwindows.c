@@ -1,3 +1,16 @@
+/*
+ * tkWaylandSubwindows.c --
+ *
+ *	This module implements subwindow clipping regions for the Wayland port
+ *	of Tk.  The implementation uses the OpenGL depth buffer associated with
+ *	the backing store framebuffer of a toplevel window.
+ *
+ * Copyright © 2026 Marc Culler
+ *
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ */
+
 #include "tkInt.h"
 #include "tkWaylandInt.h"
 
@@ -64,6 +77,24 @@ static const char* clipFragmentShader =
     "precision highp float;\n"
     "out vec4 fragColor;\n"
     "void main() {}\n";
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * createClipShaders --
+ *
+ *	Compiles and links the OpenGL shaders used to draw the clipping
+ *	rectangles.  Also creates the vertex array and buffer objects for
+ *	the window.  This function is called once per Tk window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Allocates OpenGL resources associated with winPtr.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void createClipShaders(TkWindow *winPtr) {
     TkWindow* toplevelPtr;
@@ -152,11 +183,21 @@ void createClipShaders(TkWindow *winPtr) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-/* UpdateClipRects --
+/*
+ *----------------------------------------------------------------------
  *
- * Called after configure.  TODO: We should set a ClipInvalid flag when
- * windows are created or destroyed or configured, and check the flag before
- * drawing, and call this if the flag is set.
+ * getBounds --
+ *
+ *	Computes the absolute coordinates (in the toplevel's coordinate
+ *	system) of a window, scaled by the content scale factor.
+ *
+ * Results:
+ *	Returns a clipRect structure with x, y, w, h fields.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static inline clipRect
@@ -178,6 +219,22 @@ getBounds(
 	.h = scale * Tk_Height(winPtr)};
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * disjoint --
+ *
+ *	Determines whether two axis-aligned rectangles are disjoint.
+ *
+ * Results:
+ *	Returns 1 (true) if the rectangles do not overlap, 0 (false) otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static bool disjoint(
     clipRect a,
     clipRect b)
@@ -189,6 +246,23 @@ static bool disjoint(
     }
     return false;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * addClipRect --
+ *
+ *	Adds a clipping rectangle for a subwindow to the buffer of the
+ *	parent window.  Reallocates the buffer if needed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May reallocate the clipRectBuffer; updates clipRectCount.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static inline void
 addClipRect(
@@ -224,6 +298,25 @@ addClipRect(
      */
     subwinPtr->privatePtr->containerRect = data->clipRectBuffer[n];
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * updateClipRects --
+ *
+ *	Rebuilds the list of clipping rectangles for a window based on the
+ *	current geometry of its mapped children and higher siblings.  The
+ *	rectangles are stored in the window's private data and uploaded to
+ *	the VBO.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates clipRectCount, clipRectBuffer, and the VBO contents.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
@@ -302,6 +395,25 @@ void updateClipRects(
 		 vertices, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * tkWaylandDrawClipMask --
+ *
+ *	Draws the clipping mask for the given window into the depth buffer
+ *	of the toplevel's framebuffer.  The mask consists of filled rectangles
+ *	at depth 0.25, which occlude the nanoVG drawing plane at depth 0.5
+ *	when GL_LEQUAL depth testing is used.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Modifies the depth buffer; the color buffer is untouched.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE
 void tkWaylandDrawClipMask(
