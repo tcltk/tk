@@ -68,13 +68,13 @@ proc ::tk_dialog {w title text bitmap default args} {
 #    if {$windowingsystem eq "aqua"} {
 #	after 100 {wm attributes $w -stylemask fullsizecontent}
 #    } else
-    if {$windowingsystem eq "x11"} {
+    if {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
 	wm attributes $w -type dialog
     }
 
     frame $w.bot
     frame $w.top
-    if {$windowingsystem eq "x11"} {
+    if {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
