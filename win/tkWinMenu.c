@@ -228,7 +228,7 @@ GetNewID(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     WORD curID = tsdPtr->lastCommandID;
 
-    while (1) {
+    while (true) {
 	Tcl_HashEntry *commandEntryPtr;
 	int isNew;
 
@@ -2778,7 +2778,7 @@ TkpDrawMenuEntry(
     } else {
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		adjustedX, adjustedY, width, adjustedHeight,
-		!(DRAW_MENU_ENTRY_NOUNDERLINE));
+		!(drawingParameters & DRAW_MENU_ENTRY_NOUNDERLINE));
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, adjustedX, adjustedY, width, adjustedHeight);
 	DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
@@ -3167,7 +3167,7 @@ MenuSelectEvent(
     event.virt.event = Tk_WindowId(menuPtr->tkwin);
     event.virt.root = XRootWindow(menuPtr->display, 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
 
     root.msgpos = GetMessagePos();
     event.virt.x_root = root.point.x;

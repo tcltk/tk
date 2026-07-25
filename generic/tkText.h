@@ -413,6 +413,7 @@ typedef struct TkTextTag {
 				 * dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
+    char locale[8];	/* locale */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -786,7 +787,10 @@ typedef struct TkText {
 				 * statements. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
+    char locale[8];	/* locale */
 } TkText;
+
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
 
 /*
  * Flag values for TkText records:
@@ -954,8 +958,8 @@ typedef enum {
  * Declarations for variables shared among the text-related files:
  */
 
-MODULE_SCOPE int	tkBTreeDebug;
-MODULE_SCOPE int	tkTextDebug;
+MODULE_SCOPE bool	tkBTreeDebug;
+MODULE_SCOPE bool	tkTextDebug;
 MODULE_SCOPE const Tk_SegType tkTextCharType;
 MODULE_SCOPE const Tk_SegType tkTextLeftMarkType;
 MODULE_SCOPE const Tk_SegType tkTextRightMarkType;
@@ -1013,12 +1017,12 @@ MODULE_SCOPE void	TkBTreeLinkSegment(TkTextSegment *segPtr,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextLine *TkBTreeNextLine(const TkText *textPtr,
 			    TkTextLine *linePtr);
-MODULE_SCOPE int	TkBTreeNextTag(TkTextSearch *searchPtr);
+MODULE_SCOPE bool	TkBTreeNextTag(TkTextSearch *searchPtr);
 MODULE_SCOPE int	TkBTreeNumPixels(TkTextBTree tree,
 			    const TkText *textPtr);
 MODULE_SCOPE TkTextLine *TkBTreePreviousLine(TkText *textPtr,
 			    TkTextLine *linePtr);
-MODULE_SCOPE int	TkBTreePrevTag(TkTextSearch *searchPtr);
+MODULE_SCOPE bool	TkBTreePrevTag(TkTextSearch *searchPtr);
 MODULE_SCOPE void	TkBTreeStartSearch(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
 			    TkTextSearch *searchPtr);
@@ -1037,12 +1041,14 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr,
 			    int *cursorWidthPtr);
+MODULE_SCOPE Tcl_Obj *TkTextIndexLocale(TkText *textPtr,
+			    const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
-MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
+MODULE_SCOPE bool	TkTextDLineInfo(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *basePtr);
 MODULE_SCOPE void	TkTextEmbWinDisplayProc(TkText *textPtr,

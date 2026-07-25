@@ -47,6 +47,9 @@ One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
 .\" MAYBE: .OP \-selectforeground selectForeground Background
+.OP \-locale locale Locale
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .OP \-show show Show
 If this option is specified, then the true contents of the entry
 are not displayed in the window.

@@ -14,8 +14,8 @@
 # The code below creates the default class bindings for scrollbars.
 #-------------------------------------------------------------------------
 
-# Standard Motif bindings for x11, aqua and wayland. 
-if {[tk windowingsystem] ne "win32"} {
+# Standard Motif bindings:
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "aqua"} {
 
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {
@@ -373,10 +373,16 @@ proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
     }
 
     if {[string length $orient] == 2 && $factor != 1.0} {
+	# Make sure that the array elements ::tk::Priv(xEvents) and
+	# ::tk::Priv(yEvents) exist (see bug [082a30e45a])
+
+	variable ::tk::Priv
+	if {![info exists Priv(xEvents)]} { set Priv(xEvents) 0 }
+	if {![info exists Priv(yEvents)]} { set Priv(yEvents) 0 }
+
 	# Count both the <MouseWheel> and <Shift-MouseWheel>
 	# events, and ignore the non-dominant ones
 
-	variable ::tk::Priv
 	set axis [expr {[string index $orient 0] eq "h" ? "x" : "y"}]
 	incr Priv(${axis}Events)
 	if {($Priv(xEvents) + $Priv(yEvents) > 10) &&

@@ -3,9 +3,9 @@ on:
   push:
     branches:
     - "main"
-    - "core-9-0-branch"
+    - "core-9-1-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 defaults:
@@ -29,18 +29,19 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libx11-dev
+          sudo apt-get update
+          sudo apt-get install xvfb libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -113,11 +114,11 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
@@ -125,7 +126,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install xvfb libx11-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
+          sudo apt-get install xvfb libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

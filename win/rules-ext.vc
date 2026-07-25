@@ -34,13 +34,8 @@ macro to the name of the project makefile.
 !if [$(CC) -nologo -DNDEBUG "nmakehlp.c" -link -subsystem:console > nul]
 !endif
 
-# First locate the Tcl directory that we are working with.
-!if "$(TCLDIR)" != ""
-
-_RULESDIR = $(TCLDIR:/=\)
-
 # We need a nmakehlp that will run on the host machine as part of the build.
-# if TCLSH_NATIVE is set for cross compilation, we'll try to find an associated 
+# if TCLSH_NATIVE is set for cross compilation, we'll try to find an associated
 # nmakehlp.exe that runs on the build architecture.
 !ifdef TCLSH_NATIVE
 !ifndef NMAKEHLP_NATIVE
@@ -55,6 +50,11 @@ _RULESDIR = $(TCLDIR:/=\)
 !ifndef NMAKEHLP_NATIVE
 NMAKEHLP_NATIVE=nmakehlp
 !endif
+
+# First locate the Tcl directory that we are working with.
+!if "$(TCLDIR)" != ""
+
+_RULESDIR = $(TCLDIR:/=\)
 
 !else
 
@@ -126,8 +126,14 @@ NMAKEHLPC = $(_RULESDIR)\nmakehlp.c
 !undef OUR_RULES_MINOR
 
 !if exist("$(_RULESDIR)\rules.vc")
-!message *** Using $(_RULESDIR)\rules.vc
 !include "$(_RULESDIR)\rules.vc"
+!ifndef VERBOSE
+# Backward compatibility
+VERBOSE=1
+!endif
+!if $(VERBOSE)
+!message *** Using $(_RULESDIR)\rules.vc
+!endif
 !else
 !error *** Could not locate rules.vc in $(_RULESDIR)
 !endif

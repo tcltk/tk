@@ -15,6 +15,15 @@
 #include "tkUnixInt.h"
 #endif
 
+#ifdef HAVE_XRENDER
+#include <X11/extensions/Xrender.h>
+
+#define TK_XRENDER_MIN_AREA (64 * 64)
+				/* Use XRender only at or above this many
+				 * pixels; below it the software blend is
+				 * faster (see TkpPutRGBAImage). */
+#endif
+
 /*
  * The following structure is used to pass information to ScrollRestrictProc
  * from TkScrollWindow.
@@ -232,6 +241,142 @@ TkpDrawFrameEx(
 	    highlightWidth, Tk_Width(tkwin) - 2*highlightWidth,
 	    Tk_Height(tkwin) - 2*highlightWidth, borderWidth, relief);
 }
+
+#ifdef HAVE_XRENDER
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPutRGBAImage --
+ *
+ *	Composite an RGBA image (4 bytes/pixel, NOT premultiplied) onto a
+ *	drawable with XRenderComposite (Porter-Duff
+ *	source-over).  Called by TkImgPhotoDisplay for partial-alpha photos
+ *	in place of the software BlendComplexAlpha path, which reads the
+ *	destination back with XGetImage and blends per pixel on the CPU.
+ *	Works for both window and pixmap drawables.
+ *
+ * Results:
+ *	Success, or BadDrawable when the composite could not be performed
+ *	(no RENDER extension, or no picture format for the drawable's
+ *	depth); the caller then falls back to the software blend.
+ *
+ * Side effects:
+ *	Draws onto the drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpPutRGBAImage(
+    Display *display,
+    Drawable drawable,
+    GC gc,			/* Unused: the composite is unclipped, like
+				 * the macOS and Windows implementations. */
+    XImage *image,		/* Source image; RGBA, not premultiplied. */
+    int src_x, int src_y,	/* Top-left of the sub-rect within image. */
+    int dest_x, int dest_y,	/* Top-left within drawable. */
+    unsigned int width, unsigned int height)
+{
+    Window root;
+    int x, y, eventBase, errorBase, screen = -1, i;
+    unsigned int gw, gh, bw, depth;
+    XRenderPictFormat *srcFmt, *dstFmt = NULL;
+    Pixmap srcPix;
+    GC srcGC;
+    Picture srcPic, dstPic;
+    XImage *argb;
+    char *buf;
+    int w = (int) width, h = (int) height;
+    (void) gc;
+
+    if (w <= 0 || h <= 0) {
+	return Success;
+    }
+
+    /*
+     * Below this area the fixed per-call cost (XGetGeometry round trip,
+     * scratch pixmap/picture churn) outweighs the read-back and CPU blend
+     * it replaces, so small composites are better off on the caller's
+     * software path.  Measured crossover on a software-RENDER server
+     * (Xwayland/pixman) is ~100x100; accelerated servers cross lower.
+     */
+
+    if ((unsigned long) w * h < TK_XRENDER_MIN_AREA) {
+	return BadDrawable;
+    }
+    if (!XRenderQueryExtension(display, &eventBase, &errorBase)) {
+	return BadDrawable;
+    }
+
+    /*
+     * One round trip: only a Drawable is passed in, so ask the server for
+     * its depth (and its root window, to identify the screen).
+     */
+
+    if (!XGetGeometry(display, drawable, &root, &x, &y, &gw, &gh, &bw,
+	    &depth)) {
+	return BadDrawable;
+    }
+    for (i = 0; i < ScreenCount(display); i++) {
+	if (RootWindow(display, i) == root) {
+	    screen = i;
+	    break;
+	}
+    }
+
+    if (depth == 32) {
+	dstFmt = XRenderFindStandardFormat(display, PictStandardARGB32);
+    } else if (depth == 24) {
+	dstFmt = XRenderFindStandardFormat(display, PictStandardRGB24);
+    } else if (screen >= 0
+	    && depth == (unsigned) DefaultDepth(display, screen)) {
+	dstFmt = XRenderFindVisualFormat(display,
+		DefaultVisual(display, screen));
+    }
+    srcFmt = XRenderFindStandardFormat(display, PictStandardARGB32);
+    if (dstFmt == NULL || srcFmt == NULL) {
+	return BadDrawable;
+    }
+
+    /*
+     * Stage the premultiplied sub-rect in a depth-32 scratch pixmap.
+     * TkPremultiplyRGBA writes B,G,R,A bytes; declared LSBFirst, the pixel
+     * value is 0xAARRGGBB = PictStandardARGB32 regardless of client
+     * endianness, and Xlib re-swaps for MSBFirst servers in XPutImage.  The
+     * buffer is Tcl_Alloc'ed, so detach it before XDestroyImage and free it
+     * ourselves.
+     */
+
+    buf = (char *) Tcl_Alloc((size_t) w * h * 4);
+    TkPremultiplyRGBA(image, src_x, src_y, w, h, (unsigned char *) buf, w * 4);
+
+    argb = XCreateImage(display, NULL, 32, ZPixmap, 0, buf,
+	    width, height, 32, 4 * w);
+    if (argb == NULL) {
+	Tcl_Free(buf);
+	return BadDrawable;
+    }
+    argb->byte_order = LSBFirst;	/* Bytes were written B,G,R,A. */
+
+    srcPix = XCreatePixmap(display, drawable, width, height, 32);
+    srcGC = XCreateGC(display, srcPix, 0, NULL);
+    XPutImage(display, srcPix, srcGC, argb, 0, 0, 0, 0, width, height);
+    XFreeGC(display, srcGC);
+    argb->data = NULL;
+    XDestroyImage(argb);
+    Tcl_Free(buf);
+
+    srcPic = XRenderCreatePicture(display, srcPix, srcFmt, 0, NULL);
+    dstPic = XRenderCreatePicture(display, drawable, dstFmt, 0, NULL);
+    XRenderComposite(display, PictOpOver, srcPic, None, dstPic,
+	    0, 0, 0, 0, dest_x, dest_y, width, height);
+    XRenderFreePicture(display, dstPic);
+    XRenderFreePicture(display, srcPic);
+    XFreePixmap(display, srcPix);
+    return Success;
+}
+#endif /* HAVE_XRENDER */
 
 /*
  * Local Variables:

@@ -289,6 +289,7 @@ TTK_OBJS = \
 	$(TMP_DIR)\ttkLabel.obj \
 	$(TMP_DIR)\ttkLayout.obj \
 	$(TMP_DIR)\ttkManager.obj \
+	$(TMP_DIR)\ttkNodeCache.obj \
 	$(TMP_DIR)\ttkNotebook.obj \
 	$(TMP_DIR)\ttkPanedwindow.obj \
 	$(TMP_DIR)\ttkProgress.obj \
@@ -340,7 +341,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib oleacc.lib usp10.lib
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib oleacc.lib usp10.lib dwmapi.lib msimg32.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
@@ -463,7 +464,6 @@ $(TKLIB): $(TKOBJS)
 	$(DLLCMD) @<<
 $**
 <<
-	$(_VC_MANIFEST_EMBED_DLL)
 	@if exist $*.exp del $*.exp
 
 $(TKIMPLIB): $(TKLIB)
@@ -476,17 +476,14 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 
 $(WISH): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(GUIEXECMD) -stack:2300000 $**
-	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(WISHC): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(CONEXECMD) -stack:2300000 $**
-	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(GUIEXECMD) -stack:2300000 $**
-	$(_VC_MANIFEST_EMBED_EXE)
 
 $(TKSCRIPTZIP): .PHONY
 	@echo Building Tk library zip file
@@ -518,7 +515,6 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
 	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
-	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
 # Regenerate the stubs files.  [Development use only]
@@ -599,7 +595,6 @@ install-pdbs:
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DTK_TEST /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(ROOT)\manifest.uuid:
@@ -607,7 +602,7 @@ $(ROOT)\manifest.uuid:
    git rev-parse HEAD >>$(ROOT)\manifest.uuid
 
 $(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
-	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+	copy /b $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
@@ -621,7 +616,6 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
@@ -633,7 +627,7 @@ $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
 		-Fo$@ $?
 
 $(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
-	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $(GENERICDIR)\tkWindow.c
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported

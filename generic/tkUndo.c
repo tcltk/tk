@@ -87,7 +87,7 @@ TkUndoPopStack(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkUndoInsertSeparator(
     TkUndoAtom **stack)
 {
@@ -97,9 +97,9 @@ TkUndoInsertSeparator(
 	separator = (TkUndoAtom *)Tcl_Alloc(sizeof(TkUndoAtom));
 	separator->type = TK_UNDO_SEPARATOR;
 	TkUndoPushStack(stack,separator);
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
 /*

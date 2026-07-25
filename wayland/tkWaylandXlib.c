@@ -5,7 +5,7 @@
  *  These functions are mainly no-op for compatibility. Some Xlib
  *  emulation functions are contained in other files where they are
  *  more relevant or contain acutal functionality (tkWaylandWm.c,
- *  tkWaylandGC.c. 
+ *  tkWaylandGC.c.
  *
  *
  * Copyright © 1993-1997 The Regents of the University of California /
@@ -174,7 +174,7 @@ int
 XFree(void *data)
 {
     if (data != NULL) {
-        ckfree((char *)data);
+        Tcl_Free(data);
     }
     return 1;
 }
@@ -396,7 +396,7 @@ XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 
 int
 XCloseDisplay(TCL_UNUSED(Display *))
-{ 
+{
    return 0;
 }
 
@@ -757,36 +757,9 @@ int (*XSynchronize(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * XGrabPointer --
- *
- *	Grab the pointer. No-op in Wayland port.
- *
- * Results:
- *	Always returns GrabSuccess.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
+ * XGrabPointer, XUngrabPointer and XDefineCursor are implemented by the
+ * generic pointer module (generic/tkPointer.c), which this port links.
  */
-
-int
-XGrabPointer(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Bool),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Cursor),
-    TCL_UNUSED(Time))
-{
-    /* No-op - pointer grabbing not supported in Wayland. */
-    return GrabSuccess;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1387,32 +1360,12 @@ XCreatePixmapCursor(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * XParseColor --
- *
- *	Parse color string. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (False).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
+ * XParseColor is intentionally NOT stubbed here: the real implementation
+ * (hex specs + X11 color name table) comes from xlib/xcolors.c, which is
+ * compiled into WAYLAND_OBJS just as the macOS port does via AQUA_OBJS.
+ * Generic code (TkParseColor in tkColor.c, photo image ParseColorAsStandard
+ * in tkImgListFormat.c, tkImgBmap.c, tkCursor.c) depends on it succeeding.
  */
-
-Status
-XParseColor(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Colormap),
-    const char *spec,  /* Note: const char*, not char* */
-    TCL_UNUSED(XColor *))
-{
-    /* No-op - color parsing handled by NanoVG/Tk. */
-    (void)spec;  /* Suppress unused parameter warning */
-    return 0;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1506,7 +1459,7 @@ XGetVisualInfo(
 
     /* Allocate the shared underlying Visual instance once. */
     if (cachedVisual == NULL) {
-        cachedVisual = (Visual *)ckalloc(sizeof(Visual));
+        cachedVisual = (Visual *)Tcl_Alloc(sizeof(Visual));
         if (cachedVisual != NULL) {
             memset(cachedVisual, 0, sizeof(Visual));
             cachedVisual->visualid     = 1;
@@ -1520,7 +1473,7 @@ XGetVisualInfo(
     }
 
     /* Dynamically allocate the XVisualInfo wrapper container. */
-    heapInfo = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
+    heapInfo = (XVisualInfo *)Tcl_Alloc(sizeof(XVisualInfo));
     if (heapInfo == NULL) {
         *nitems_return = 0;
         return NULL;
@@ -1541,12 +1494,12 @@ XGetVisualInfo(
 
     /* Handle criteria filters safely by mirroring incoming requirements. */
     if (vinfo_mask != 0 && vinfo_template != NULL) {
-        if ((vinfo_mask & VisualClassMask) && 
+        if ((vinfo_mask & VisualClassMask) &&
             vinfo_template->class != heapInfo->class) {
             goto match_failed;
         }
-        
-        /* If Tk requests a specific visual ID, dynamically mirror it into 
+
+        /* If Tk requests a specific visual ID, dynamically mirror it into
          * our response structure to pass the filtering check smoothly.
          */
         if (vinfo_mask & VisualIDMask) {
@@ -1569,7 +1522,7 @@ XGetVisualInfo(
     return heapInfo;
 
 match_failed:
-    ckfree((char *)heapInfo);
+    Tcl_Free(heapInfo);
     *nitems_return = 0;
     return NULL;
 }
@@ -1792,31 +1745,6 @@ XDestroyIC(
 {
     /* No-op - input contexts not used in Wayland port. */
     return;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XUngrabPointer --
- *
- *	Ungrab the pointer. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XUngrabPointer(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Time))
-{
-    /* No-op - pointer grabbing not supported in Wayland. */
-    return 0;
 }
 
 /*
@@ -2153,35 +2081,6 @@ XEqualRegion(
 /*
  *----------------------------------------------------------------------
  *
- * XCreateBitmapFromData --
- *
- *	Create a bitmap from data. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Pixmap
-XCreateBitmapFromData(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
-    const char *data,  /* Note: const char*, not char* */
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(unsigned int))
-{
-    /* No-op - bitmaps not used in Wayland port. */
-    (void)data;  /* Suppress unused parameter warning */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XFreeModifiermap --
  *
  *	Free a modifier map. No-op in Wayland port.
@@ -2340,122 +2239,6 @@ XGrabKeyboard(
 {
     /* No-op - keyboard grabbing not supported in Wayland. */
     return GrabSuccess;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DestroyImage --
- *
- *	Destroys storage associated with an image.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Deallocates the image.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-DestroyImage(
-    XImage *image)
-{
-    if (image) {
-	if (image->data) {
-	    Tcl_Free(image->data);
-	}
-	Tcl_Free(image);
-    }
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XCreateImage --
- *
- *	Allocates an XImage with the provided pixel data.  This is called by
- *      TkImgPhotoDisplay.  If TK_CAN_RENDER_RGBA is defined, as it is for the
- *      Wayland port, the XImage is passed to TkpPutRGBAImage and then
- *      destroyed.
- *
- * Results:
- *	Returns a pointer an XImage.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-XImage *
-XCreateImage(
-    Display* display,
-    TCL_UNUSED(Visual*), /* visual */
-    unsigned int depth,
-    int format,
-    int offset,
-    char* data,
-    unsigned int width,
-    unsigned int height,
-    int bitmap_pad,
-    int bytes_per_line)
-{
-    XImage *ximage;
-
-    LastKnownRequestProcessed(display)++;
-    ximage = (XImage *)Tcl_Alloc(sizeof(XImage));
-
-    ximage->height = height;
-    ximage->width = width;
-    ximage->depth = depth;
-    ximage->xoffset = offset;
-    ximage->format = format;
-    ximage->data = data;
-    ximage->obdata = NULL;
-
-    if (format == ZPixmap) {
-	ximage->bits_per_pixel = 32;
-	ximage->bitmap_unit = 32;
-    } else {
-	ximage->bits_per_pixel = 1;
-	ximage->bitmap_unit = 8;
-    }
-    if (bitmap_pad) {
-	ximage->bitmap_pad = bitmap_pad;
-    } else {
-	/*
-	 * Use 8 byte alignment.
-	 */
-
-	ximage->bitmap_pad = 64;
-    }
-    if (bytes_per_line) {
-	ximage->bytes_per_line = bytes_per_line;
-    } else {
-	ximage->bytes_per_line = (
-	    (width * ximage->bits_per_pixel +
-	    (ximage->bitmap_pad - 1)) >> 3) & ~((ximage->bitmap_pad >> 3) - 1);
-    }
-#ifdef WORDS_BIGENDIAN
-    ximage->byte_order = MSBFirst;
-    ximage->bitmap_bit_order = MSBFirst;
-#else
-    ximage->byte_order = LSBFirst;
-    ximage->bitmap_bit_order = LSBFirst;
-#endif
-    ximage->red_mask = 0x00FF0000;
-    ximage->green_mask = 0x0000FF00;
-    ximage->blue_mask = 0x000000FF;
-    ximage->f.create_image = NULL;
-    ximage->f.destroy_image = DestroyImage;
-    ximage->f.get_pixel = NULL; //// Implement ImageGetPixel;
-    ximage->f.put_pixel = NULL; //// Implement ImagePutPixel;
-    ximage->f.sub_image = NULL;
-    ximage->f.add_pixel = NULL;
-    return ximage;
 }
 
 /*
@@ -3206,32 +2989,6 @@ XGetInputFocus(
 /*
  *----------------------------------------------------------------------
  *
- * XDefineCursor --
- *
- *	Define window cursor. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XDefineCursor(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Cursor))
-{
-    /* No-op - cursor handling via GLFW. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XSetFunction --
  *
  *	Set GC function. No-op in Wayland port.
@@ -3315,19 +3072,19 @@ XSetClipRectangles(
  *
  * XGetWindowAttributes --
  *
- *	Fills an XWindowAttributes structure with visual, depth, and 
+ *	Fills an XWindowAttributes structure with visual, depth, and
  *	screen settings matching the default display configuration.
  *
- *	This function is critical for core Tk operations (such as 
- *	TkImgPhotoGet) which retrieve the geometry, visual properties, 
- *	and depths of a window before drawing images. Returning an 
+ *	This function is critical for core Tk operations (such as
+ *	TkImgPhotoGet) which retrieve the geometry, visual properties,
+ *	and depths of a window before drawing images. Returning an
  *	uninitialized or empty structure causes a crash in photo layout.
  *
  * Results:
  *	Returns 1 (True) on success, 0 (False) if attributes_return is NULL.
  *
  * Side effects:
- *	Populates the attributes_return structure with pointer references 
+ *	Populates the attributes_return structure with pointer references
  *	to the display's root visual structure and dimensions.
  *
  *----------------------------------------------------------------------
@@ -3349,7 +3106,7 @@ XGetWindowAttributes(
     /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
     if (display != NULL && display->screens != NULL) {
         Screen *screen = &display->screens[display->default_screen];
-        
+
         attributes_return->visual     = screen->root_visual;
         attributes_return->depth      = screen->root_depth;
         attributes_return->screen     = screen;
@@ -3371,8 +3128,8 @@ XGetWindowAttributes(
         attributes_return->depth  = 24;
     }
 
-    /* 
-     * Mock common default settings standard widgets look for 
+    /*
+     * Mock common default settings standard widgets look for
      * to prevent initialization failures.
      */
     attributes_return->map_state        = IsViewable;

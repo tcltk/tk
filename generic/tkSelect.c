@@ -611,7 +611,7 @@ Tk_GetSelection(
 	    ip.selPtr = selPtr;
 	    ip.nextPtr = tsdPtr->pendingPtr;
 	    tsdPtr->pendingPtr = &ip;
-	    while (1) {
+	    while (true) {
 		count = selPtr->proc(selPtr->clientData, offset, buffer,
 			TK_SEL_BYTES_AT_ONCE);
 		if ((count < 0) || (ip.selPtr == NULL)) {

@@ -14,16 +14,16 @@ spinbox \- Create and manipulate 'spinbox' value spinner widgets
 .SH SYNOPSIS
 \fBspinbox\fI pathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-highlightthickness	\-repeatinterval
-\-background	\-insertbackground	\-selectbackground
-\-borderwidth	\-insertborderwidth	\-selectborderwidth
-\-cursor	\-insertontime	\-selectforeground
-\-exportselection	\-insertwidth	\-takefocus
-\-font	\-insertofftime	\-textvariable
-\-foreground	\-justify	\-xscrollcommand
-\-highlightbackground	\-relief
-\-highlightcolor	\-repeatdelay
-\-placeholder	\-placeholderforeground
+\-activebackground	\-insertbackground	\-repeatdelay
+\-background	\-insertborderwidth	\-repeatinterval
+\-borderwidth	\-insertontime	\-selectbackground
+\-cursor	\-insertwidth	\-selectborderwidth
+\-exportselection	\-insertofftime	\-selectforeground
+\-font	\-justify	\-takefocus
+\-foreground	\-locale	\-textvariable
+\-highlightbackground	\-placeholder	\-xscrollcommand
+\-highlightcolor	\-placeholderforeground
+\-highlightthickness	\-relief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-buttonbackground buttonBackground Background

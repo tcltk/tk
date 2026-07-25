@@ -763,7 +763,7 @@ Tk_MakeWindow(
     Drawable    drawable;
     Window      result;
 
-    fprintf(stderr, "Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
+    fprintf(stderr, "Tk_MakeWindow: %s @%p\n", Tk_PathName(tkwin), winPtr);
     result = TkWaylandDrawableForTkWindow(winPtr);
 
     if (winPtr->privatePtr == NULL) {
@@ -5008,6 +5008,31 @@ XSetWMIconName(
     TCL_UNUSED(XTextProperty *))
 {
     /* Icon names are not exposed via Wayland protocols; no-op. */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowIsDark --
+ *
+ *      Tests whether the given window is in "dark mode".
+ *
+ * Results:
+ *      Returns a standard Tcl result code.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpWindowIsDark(
+    TCL_UNUSED(Tk_Window),
+    bool *isdark)
+{
+    *isdark = false;
+    return TCL_OK;
 }
 
 /*

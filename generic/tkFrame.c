@@ -1832,7 +1832,7 @@ MapFrame(
      */
 
     Tcl_Preserve(framePtr);
-    while (1) {
+    while (true) {
 	if (Tcl_DoOneEvent(TCL_IDLE_EVENTS) == 0) {
 	    break;
 	}

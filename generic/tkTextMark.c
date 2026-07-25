@@ -839,7 +839,7 @@ MarkFindNext(
 	}
     }
 
-    while (1) {
+    while (true) {
 	/*
 	 * segPtr points at the first possible candidate, or NULL if we ran
 	 * off the end of the line.
@@ -927,7 +927,7 @@ MarkFindPrev(
 	}
     }
 
-    while (1) {
+    while (true) {
 	/*
 	 * segPtr points just past the first possible candidate, or at the
 	 * beginning of the line.

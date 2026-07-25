@@ -22,8 +22,8 @@ to automatically change the displayed text.
 \-cursor	\-font	\-foreground
 \-image	\-justify	\-padding
 \-state	\-style	\-takefocus
-\-text	\-textvariable	\-underline
-\-width	\-wraplength
+\-text	\-textangle	\-textvariable
+\-underline	\-width	\-wraplength
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-background frameColor FrameColor

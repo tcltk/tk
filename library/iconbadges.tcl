@@ -193,7 +193,7 @@ image create photo ::tk::icons::!-badge -data {
 }
 
 
-if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+if {[tk windowingsystem] eq "x11"} {
 
     # ::tk::icons::IconBadge --
     # This procedure creates an icon with an overlay badge on systems that

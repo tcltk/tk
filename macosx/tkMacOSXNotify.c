@@ -470,7 +470,7 @@ TkMacOSXEventsCheckProc(
 	    } else {
 		break;
 	    }
-	} while (1);
+	} while (true);
 
 	/*
 	 * Now we can unlock the pool.

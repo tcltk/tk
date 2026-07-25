@@ -88,7 +88,7 @@ typedef struct TkUndoRedoStack {
 
 MODULE_SCOPE void	TkUndoPushStack(TkUndoAtom **stack, TkUndoAtom *elem);
 MODULE_SCOPE TkUndoAtom *TkUndoPopStack(TkUndoAtom **stack);
-MODULE_SCOPE int	TkUndoInsertSeparator(TkUndoAtom **stack);
+MODULE_SCOPE bool	TkUndoInsertSeparator(TkUndoAtom **stack);
 MODULE_SCOPE void	TkUndoClearStack(TkUndoAtom **stack);
 
 /*

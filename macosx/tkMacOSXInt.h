@@ -160,6 +160,8 @@ typedef struct TkWindowPrivate MacDrawable;
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
+MODULE_SCOPE int TkpReadPixelSRGB(Tk_Window tkwin, int x, int y,
+	unsigned char *r, unsigned char *g, unsigned char *b);
 MODULE_SCOPE void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag);
 MODULE_SCOPE void TkMacOSXMakeRealWindowExist(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXSetScrollbarGrow(TkWindow *winPtr, int flag);

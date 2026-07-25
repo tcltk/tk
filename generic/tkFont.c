@@ -2476,6 +2476,58 @@ TkDrawAngledTextLayout(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkAdjustAngledTextLayout --
+ *
+ *	Calculates the width and height of a text layout when it is
+ *	rotated by 'angle' degrees.
+ *
+ * Results:
+ *	Returns the adjusted width and height. Additionally, if not
+ *	NULL, it returns the required offsets from the origin point (nw)
+ *	so TkDrawAngledTextlayout works correctly.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+void
+TkAdjustAngledTextLayout(
+    double angle,	/* rotation angle, in degrees */
+    int *width,		/* reference to width variable (in/out) */
+    int *height,	/* reference to height variable (in/out) */
+    int *xoffset,	/* x offset from origin (out) */
+    int *yoffset)	/* y offset from origin (out) */
+{
+#define ROUND32(d) (floor((d) + 0.5))
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+    double x[3] = {(double)*width, (double)*width, 0};
+    double y[3] = {0, (double)*height, (double)*height};
+    double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+    size_t i;
+
+    for (i = 0; i < 3; i++) {
+	TkRotatePoint(0, 0, sinA, cosA, &x[i], &y[i]);
+	if (x[i] > xmax) xmax = x[i];
+	if (x[i] < xmin) xmin = x[i];
+	if (y[i] > ymax) ymax = y[i];
+	if (y[i] < ymin) ymin = y[i];
+    }
+
+    *width = ROUND32(xmax - xmin);
+    *height = ROUND32(ymax - ymin);
+
+    if (xoffset != NULL) {
+	*xoffset = ROUND32(-xmin);
+    }
+    if (yoffset != NULL) {
+	*yoffset = ROUND32(-ymin);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * Tk_UnderlineTextLayout --
  *
  *	Use the information in the Tk_TextLayout token to display an underline
@@ -3053,7 +3105,7 @@ Tk_IntersectTextLayout(
  *---------------------------------------------------------------------------
  */
 
-static inline int
+static inline bool
 PointInQuadrilateral(
     double qx[],
     double qy[],
@@ -3069,13 +3121,13 @@ PointInQuadrilateral(
 	double dy = y - qy[i];
 
 	if (sideDX*dy < sideDY*dx) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1;
+    return true;
 }
 
-static inline int
+static inline bool
 SidesIntersect(
     double ax1, double ay1, double ax2, double ay2,
     double bx1, double by1, double bx2, double by2)
@@ -3091,7 +3143,7 @@ SidesIntersect(
     r3 = (a1 * bx1) + (b1 * by1) + c1;
     r4 = (a1 * bx2) + (b1 * by2) + c1;
     if ((r3 != 0.0) && (r4 != 0.0) && (r3*r4 > 0.0)) {
-	return 0;
+	return false;
     }
 
     a2 = by2 - by1;
@@ -3100,7 +3152,7 @@ SidesIntersect(
     r1 = (a2 * ax1) + (b2 * ay1) + c2;
     r2 = (a2 * ax2) + (b2 * ay2) + c2;
     if ((r1 != 0.0) && (r2 != 0.0) && (r1*r2 > 0.0)) {
-	return 0;
+	return false;
     }
 
     denom = (a1 * b2) - (a2 * b1);
@@ -3121,14 +3173,14 @@ SidesIntersect(
     dx1 = bx1 - ax1;
     dy1 = by1 - ay1;
     if ((dx*dy1-dy*dx1 > 0.0) == (dx*(by2-ay1)-dy*(bx2-ax1) > 0.0)) {
-	return 0;
+	return false;
     }
     dx = bx2 - bx1;
     dy = by2 - by1;
     if ((dy*dx1-dx*dy1 > 0.0) == (dx*(ay2-by1)-dy*(ax2-bx1) > 0.0)) {
-	return 0;
+	return false;
     }
-    return 1;
+    return true;
 #endif
 }
 

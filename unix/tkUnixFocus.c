@@ -81,7 +81,7 @@ TkpChangeFocus(
 	 */
 
 	XGetInputFocus(dispPtr->display, &window, &dummy);
-	while (1) {
+	while (true) {
 	    winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
 	    if ((winPtr2 != NULL) && (winPtr2->mainPtr == winPtr->mainPtr)) {
 		break;

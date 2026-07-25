@@ -93,6 +93,34 @@ TkGetDefaultScreenName(
 /*
  *----------------------------------------------------------------------
  *
+ * TkGetMS --
+ *
+ *	Return a relative time in milliseconds. It doesn't matter when the
+ *	epoch was. Used by the generic pointer module (tkPointer.c) to
+ *	timestamp synthesized events.
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkGetMS(void)
+{
+    Tcl_Time now;
+
+    Tcl_GetTime(&now);
+    return (unsigned long) now.sec * 1000 + now.usec / 1000;
+}
+
+#if 0
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_UpdatePointer --
  *
  *	Unused function in UNIX
@@ -119,6 +147,7 @@ Tk_UpdatePointer(
    */
 }
 
+#endif
 /*
  *----------------------------------------------------------------------
  *
@@ -243,11 +272,11 @@ TkpBuildRegionFromAlphaData(
  *----------------------------------------------------------------------
  */
 
-long
+long long
 Tk_GetUserInactiveTime(
     TCL_UNUSED(Display*))	/* Unused with GLFW */
 {
-    long inactiveTime = -1;
+    long long inactiveTime = -1;
 
     /* With GLFW, we need platform-specific idle time detection. */
 #if defined(__linux__)

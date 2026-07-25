@@ -779,6 +779,7 @@ PlaceInfoCommand(
 {
     Content *contentPtr;
     Tcl_Obj *infoObj;
+    char relStr[TCL_DOUBLE_SPACE];
 
     contentPtr = FindContent(tkwin);
     if (contentPtr == NULL) {
@@ -791,17 +792,25 @@ PlaceInfoCommand(
 		Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
 	Tcl_AppendToObj(infoObj, " ", TCL_INDEX_NONE);
     }
-    Tcl_AppendPrintfToObj(infoObj,
-	    "-x %d -relx %.4g -y %d -rely %.4g",
-	    contentPtr->x, contentPtr->relX, contentPtr->y, contentPtr->relY);
+    /*
+     * Format the relative (floating-point) values with TkFormatDouble() so
+     * they use '.' as the decimal separator regardless of LC_NUMERIC and stay
+     * valid Tcl numbers; see TkFormatDouble in tkUtil.c.
+     */
+    Tcl_AppendPrintfToObj(infoObj, "-x %d", contentPtr->x);
+    TkFormatDouble(relStr, sizeof(relStr), "%.4g", contentPtr->relX);
+    Tcl_AppendPrintfToObj(infoObj, " -relx %s", relStr);
+    Tcl_AppendPrintfToObj(infoObj, " -y %d", contentPtr->y);
+    TkFormatDouble(relStr, sizeof(relStr), "%.4g", contentPtr->relY);
+    Tcl_AppendPrintfToObj(infoObj, " -rely %s", relStr);
     if (contentPtr->widthObj) {
 	Tcl_AppendPrintfToObj(infoObj, " -width %d", contentPtr->width);
     } else {
 	Tcl_AppendToObj(infoObj, " -width {}", TCL_INDEX_NONE);
     }
     if (contentPtr->relWidthObj) {
-	Tcl_AppendPrintfToObj(infoObj,
-		" -relwidth %.4g", contentPtr->relWidth);
+	TkFormatDouble(relStr, sizeof(relStr), "%.4g", contentPtr->relWidth);
+	Tcl_AppendPrintfToObj(infoObj, " -relwidth %s", relStr);
     } else {
 	Tcl_AppendToObj(infoObj, " -relwidth {}", TCL_INDEX_NONE);
     }
@@ -811,8 +820,8 @@ PlaceInfoCommand(
 	Tcl_AppendToObj(infoObj, " -height {}", TCL_INDEX_NONE);
     }
     if (contentPtr->relHeightObj) {
-	Tcl_AppendPrintfToObj(infoObj,
-		" -relheight %.4g", contentPtr->relHeight);
+	TkFormatDouble(relStr, sizeof(relStr), "%.4g", contentPtr->relHeight);
+	Tcl_AppendPrintfToObj(infoObj, " -relheight %s", relStr);
     } else {
 	Tcl_AppendToObj(infoObj, " -relheight {}", TCL_INDEX_NONE);
     }

@@ -537,7 +537,7 @@ TkGetBitmapData(
     height = 0;
     hotX = -1;
     hotY = -1;
-    while (1) {
+    while (true) {
 	if (NextBitmapWord(&pi) != TCL_OK) {
 	    goto error;
 	}
@@ -578,7 +578,7 @@ TkGetBitmapData(
 		goto error;
 	    }
 	} else if ((pi.word[0] == 'c') && (strcmp(pi.word, "char") == 0)) {
-	    while (1) {
+	    while (true) {
 		if (NextBitmapWord(&pi) != TCL_OK) {
 		    goto error;
 		}

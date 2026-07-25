@@ -77,7 +77,7 @@ static int		RasterizeSVG(Tcl_Interp *interp,
 static double		GetScaleFromParameters(NSVGimage *nsvgImage,
 			    RastOpts *ropts, int *widthPtr, int *heightPtr);
 static NSVGcache *	GetCachePtr(Tcl_Interp *interp);
-static int		CacheSVG(Tcl_Interp *interp, void *dataOrChan,
+static bool		CacheSVG(Tcl_Interp *interp, void *dataOrChan,
 			    Tcl_Obj *formatObj, NSVGimage *nsvgImage,
 			    RastOpts *ropts);
 static NSVGimage *	GetCachedSVG(Tcl_Interp *interp, void *dataOrChan,
@@ -739,14 +739,14 @@ GetCachePtr(
  *	Add the given svg image informations to the cache for further usage.
  *
  * Results:
- *	Return 1 on success, and 0 otherwise.
+ *	Return true on success, and false otherwise.
  *
  * Side effects:
  *
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 CacheSVG(
     Tcl_Interp *interp,
     void *dataOrChan,
@@ -766,9 +766,9 @@ CacheSVG(
 	}
 	cachePtr->nsvgImage = nsvgImage;
 	cachePtr->ropts = *ropts;
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
 /*

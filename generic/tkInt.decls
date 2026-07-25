@@ -392,6 +392,9 @@ declare 119 {
     int XUnionRectWithRegion(XRectangle *rect,
 	    Region src, Region dr_return)
 }
+declare 120 {
+    int TkpWindowIsDark(Tk_Window tkwin, bool *isdark)
+}
 declare 121 {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 }
@@ -670,9 +673,10 @@ declare 1 win {
 declare 2 win {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
-declare 3 win {
-    unsigned long TkpGetMS(void)
-}
+# removed in Tk 9.1
+#declare 3 win {
+#   unsigned long TkpGetMS(void)
+#}
 declare 4 win {
     void TkPointerDeadWindow(TkWindow *winPtr)
 }
@@ -838,9 +842,10 @@ declare 1 aqua {
 declare 2 aqua {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
-declare 3 aqua {
-    unsigned long TkpGetMS(void)
-}
+# removed in Tk 9.1
+#declare 3 aqua {
+#   unsigned long TkpGetMS(void)
+#}
 declare 4 aqua {
     void TkPointerDeadWindow(TkWindow *winPtr)
 }

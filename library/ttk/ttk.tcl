@@ -78,8 +78,8 @@ proc ::ttk::ThemeChanged {} {
 
 ### ::ttk::AppearanceChanged --
 #	Called from the C code for macOSX, after sending the virtual events
-#	<<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>> to "." and the
-#	toplevel windows.
+#	<<LightAppearance>>/<<DarkAppearance>> and <<AppearanceChanged>>
+#       to "." and the toplevel windows.
 #	Updates the elements of the Toggleswitch* and Wide.TSpinbox styles.
 #
 proc ::ttk::AppearanceChanged {} {
@@ -129,28 +129,10 @@ proc ::ttk::configureNotebookStyle {style} {
 
 ## ttk::setTreeviewRowHeight --
 #	Sets the default height of the ttk::treeview rows for the current theme.
-#	To be invoked from within the library files for the built-in themes.
+#	Obsolete, no longer needed since auto calculated.
 #
 proc ::ttk::setTreeviewRowHeight {} {
-    set font [::ttk::style lookup Treeview -font {} TkDefaultFont]
-
-    ::ttk::style configure Treeview -rowheight \
-	    [expr {[font metrics $font -linespace] + 2}]
 }
-
-# Applications should make sure that the ttk::setTreeviewRowHeight
-# procedure will be invoked whenever the virtual event <<ThemeChanged>>
-# is received (e.g., because the value of the Treeview style's -font
-# option has changed), or the virtual event <<TkWorldChanged>> with
-# the user_data field (%d) set to "FontChanged" is received.  Example:
-#
-# bindtags . [linsert [bindtags .] 1 MyMainWin]
-# bind MyMainWin <<ThemeChanged>> ttk::setTreeviewRowHeight
-# bind MyMainWin <<TkWorldChanged>> {
-#     if {"%d" eq "FontChanged"} {
-#         ttk::setTreeviewRowHeight
-#     }
-# }
 
 ### Load widget bindings.
 #
@@ -234,5 +216,8 @@ ttk::setTheme [ttk::DefaultTheme] ; rename ttk::DefaultTheme {}
 # Scale the default ttk::scale and ttk::progressbar length
 option add *TScale.length	75p widgetDefault
 option add *TProgressbar.length	75p widgetDefault
+
+# Create CheckTreeview style. Must be done after themes are loaded.
+::ttk::treeview::Create_CheckTreeview_Style
 
 #*EOF*

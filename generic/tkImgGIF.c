@@ -553,7 +553,7 @@ FileReadGIF(
      * Search for the frame from the GIF to display.
      */
 
-    while (1) {
+    while (true) {
 	if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
 	    goto error;
 	}
@@ -845,7 +845,7 @@ FileReadGIF(
      * which suits as well). We're done.
      */
 
-    while (1) {
+    while (true) {
 	if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
 	    goto error;
 	}

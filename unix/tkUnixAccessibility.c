@@ -195,7 +195,7 @@ static void Atk_Event_Setup(
     TCL_UNUSED(void *), /* clientData */
     int flags)
 {
-    static Tcl_Time block_time = {0, 10000};
+    Tcl_Time block_time = {0, 10000};
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;

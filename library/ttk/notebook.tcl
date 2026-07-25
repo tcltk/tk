@@ -99,10 +99,16 @@ proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
 #	Conditionally invoke the ttk::notebook::CycleTab proc.
 #
 proc ttk::notebook::CondCycleTab1 {w axis dir {factor 1.0}} {
+    # Make sure that the array elements ::tk::Priv(xEvents)
+    # and ::tk::Priv(yEvents) exist
+
+    variable ::tk::Priv
+    if {![info exists Priv(xEvents)]} { set Priv(xEvents) 0 }
+    if {![info exists Priv(yEvents)]} { set Priv(yEvents) 0 }
+
     # Count both the <MouseWheel> and <Shift-MouseWheel>
     # events, and ignore the non-dominant ones
 
-    variable ::tk::Priv
     incr Priv(${axis}Events)
     if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
 	    ($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||

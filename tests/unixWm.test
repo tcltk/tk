@@ -2632,7 +2632,7 @@ test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark [01] -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
+} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 
 test unixWm-60.2 {wm attributes - test} -constraints unix -body {
     destroy .t

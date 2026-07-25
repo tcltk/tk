@@ -203,7 +203,8 @@ typedef void (Ttk_CleanupProc)(void *clientData);
 enum TTKStyleVersion2 { TK_STYLE_VERSION_2 = 2 };
 
 typedef void (Ttk_ElementSizeProc)(void *clientData, void *elementRecord,
-	Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding*);
+	Tk_Window tkwin, Ttk_State state, int *widthPtr, int *heightPtr,
+	Ttk_Padding*);
 typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
 	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
@@ -397,10 +398,12 @@ MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
  * Drawing utilities for theme code:
  * (@@@ find a better home for this)
  */
-typedef enum { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } ArrowDirection;
+typedef enum { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT,
+	CHEVRON_UP, CHEVRON_DOWN, CHEVRON_LEFT, CHEVRON_RIGHT } ArrowDirection;
 MODULE_SCOPE void TtkArrowSize(int h, ArrowDirection, int *widthPtr, int *heightPtr);
 MODULE_SCOPE void TtkDrawArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
 MODULE_SCOPE void TtkFillArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
+MODULE_SCOPE Tk_Image TtkMakeChevronImage(int, ArrowDirection, const XColor *, Tk_Window);
 
 #ifdef __cplusplus
 }
