@@ -487,7 +487,7 @@ WAYLAND_OBJS            = \
     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSubwindows.o \
     tkWaylandSysTray.o tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o \
-    $(WAYLAND_UNIX_OBJS)
+    $(WAYLAND_UNIX_OBJS) tkPointer.o xcolors.o
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
