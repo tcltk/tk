@@ -317,24 +317,6 @@ static void renderFBO(
                       GL_COLOR_BUFFER_BIT,
                       GL_NEAREST);
     glfwSwapBuffers(glfwWindow);
-
-    /*
-     * We maintain a persistent backing-store FBO but present through a
-     * real double-buffered swap chain. A single blit+swap only updates
-     * whichever hardware buffer becomes the new back buffer; the other
-     * buffer keeps whatever it last had (potentially from an earlier,
-     * incomplete layout/paint pass), so it can go stale and reappear
-     * later when nothing keeps forcing further redraws. Blit+swap a
-     * second time so both hardware buffers show the exact same, current
-     * image.
-     */
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-                      0, 0, fbWidth, fbHeight,
-                      GL_COLOR_BUFFER_BIT,
-                      GL_NEAREST);
-    glfwSwapBuffers(glfwWindow);
 }
 
 /*
