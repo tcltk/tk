@@ -415,26 +415,30 @@ InitializeGlfwWindow(TkWindow *winPtr)
  *----------------------------------------------------------------------
  */
 
-static void
-DestroyGlfwWindow(
-    TkWindow *winPtr)
-{
-    fprintf(stderr, "DestroyGlfwWindow: %s\n", Tk_PathName(winPtr));
+static void DestroyGlfwWindow(TkWindow *winPtr) {
+    if (!winPtr || !winPtr->privatePtr) {
+        return;
+    }
+    
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    
+    // Clear the clip rect buffer
     winPtr->privatePtr->clipRectBufferSize = 0;
     winPtr->privatePtr->clipRectCount = 0;
     if (winPtr->privatePtr->clipRectBuffer) {
-	printf("Freeing clipRects for %s\n", Tk_PathName(winPtr));
-	ckfree(winPtr->privatePtr->clipRectBuffer);
-	winPtr->privatePtr->clipRectBuffer = NULL;
+        printf("Freeing clipRects for %s\n", Tk_PathName(winPtr));
+        ckfree(winPtr->privatePtr->clipRectBuffer);
+        winPtr->privatePtr->clipRectBuffer = NULL;
     }
-    if (glfwWindow == NULL) {
-	fprintf(stderr, "No glfwWindow pointer\n");
-        return;
+    
+    if (glfwWindow) {
+        // IMPORTANT: Detach the user pointer to prevent double-free
+        // when the GLFW window is destroyed.
+        glfwSetWindowUserPointer(glfwWindow, NULL);
+        TkWaylandClearCallbacks(glfwWindow);
+        TkWaylandDestroyWindow(glfwWindow);
+        winPtr->privatePtr->glfwWindow = NULL;
     }
-    TkWaylandClearCallbacks(glfwWindow);
-    TkWaylandDestroyWindow(glfwWindow);
-    winPtr->privatePtr->glfwWindow = NULL;
 }
 
 /*
@@ -542,43 +546,117 @@ void
 TkWmDeadWindow(
     TkWindow *winPtr)
 {
-    DestroyGlfwWindow(winPtr);
-    if (winPtr->privatePtr) {
-	if (winPtr->privatePtr->glfwWindow) {
-	    fprintf(stderr, "Freeing privatePtr with non-null glfwWindow\n");
-	}
-	Tcl_DStringFree(&winPtr->privatePtr->pendingText);
-	ckfree(winPtr->privatePtr);
-	winPtr->privatePtr = NULL;
-    }
-    WmInfo *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+    WmInfo *wmPtr;
     WmInfo *wmPtr2;
     int     i;
 
-    if (wmPtr == NULL) {
+    if (winPtr == NULL) {
         return;
     }
 
-    Tk_DeleteEventHandler((Tk_Window)winPtr,
-			  StructureNotifyMask | PropertyChangeMask,
-			  TopLevelEventProc, (void *)winPtr);
+    fprintf(stderr, "TkWmDeadWindow: %s\n", Tk_PathName(winPtr));
 
+    /*
+     * Clean up the private data. We need to be very careful here
+     * because the GLFW window might already be destroyed or invalid.
+     */
+    if (winPtr->privatePtr) {
+        GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+        
+        /* Free clip rect buffer if present. */
+        winPtr->privatePtr->clipRectBufferSize = 0;
+        winPtr->privatePtr->clipRectCount = 0;
+        if (winPtr->privatePtr->clipRectBuffer) {
+            fprintf(stderr, "Freeing clipRects for %s\n", Tk_PathName(winPtr));
+            ckfree(winPtr->privatePtr->clipRectBuffer);
+            winPtr->privatePtr->clipRectBuffer = NULL;
+        }
+        
+        /*
+         * Only try to destroy the GLFW window if it exists and is valid.
+         * Check if the window pointer is non-NULL and seems valid.
+         */
+        if (glfwWindow != NULL) {
+            /*
+             * Try to detach the user pointer first, but this might fail
+             * if the window is already destroyed. Use a try/catch style
+             * approach by checking if glfwWindow is valid.
+             */
+            fprintf(stderr, "Destroying GLFW window for %s\n", Tk_PathName(winPtr));
+            
+            /* Clear callbacks before destroying. */
+            TkWaylandClearCallbacks(glfwWindow);
+            
+            /* Destroy the GLFW window */
+            TkWaylandDestroyWindow(glfwWindow);
+            
+            /* Clear the pointer to prevent use-after-free. */
+            winPtr->privatePtr->glfwWindow = NULL;
+        }
+        
+        /* Free the pendingText DString. */
+        Tcl_DStringFree(&winPtr->privatePtr->pendingText);
+        
+        /* Free the privatePtr itself. */
+        ckfree(winPtr->privatePtr);
+        winPtr->privatePtr = NULL;
+    }
+
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+        fprintf(stderr, "TkWmDeadWindow: No WmInfo for %s\n", Tk_PathName(winPtr));
+        return;
+    }
+
+    /* Delete event handlers. */
+    Tk_DeleteEventHandler((Tk_Window)winPtr,
+                          StructureNotifyMask | PropertyChangeMask,
+                          TopLevelEventProc, (void *)winPtr);
+
+    /* Cancel any pending idle callbacks */
     if (wmPtr->flags & WM_UPDATE_PENDING) {
         Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
     }
 
+    /* Destroy wrapper window if present. */
     if (wmPtr->wrapperPtr != NULL) {
         Tk_DestroyWindow((Tk_Window)wmPtr->wrapperPtr);
         wmPtr->wrapperPtr = NULL;
     }
 
-    if (wmPtr->title)         ckfree(wmPtr->title);
-    if (wmPtr->iconName)      ckfree(wmPtr->iconName);
-    if (wmPtr->leaderName)    ckfree(wmPtr->leaderName);
-    if (wmPtr->menubar)       Tk_DestroyWindow(wmPtr->menubar);
-    if (wmPtr->icon)          Tk_DestroyWindow(wmPtr->icon);
-    if (wmPtr->iconDataPtr)   ckfree((char *)wmPtr->iconDataPtr);
+    /* Free string resources. */
+    if (wmPtr->title) {
+        ckfree(wmPtr->title);
+        wmPtr->title = NULL;
+    }
+    if (wmPtr->iconName) {
+        ckfree(wmPtr->iconName);
+        wmPtr->iconName = NULL;
+    }
+    if (wmPtr->leaderName) {
+        ckfree(wmPtr->leaderName);
+        wmPtr->leaderName = NULL;
+    }
+    if (wmPtr->clientMachine) {
+        ckfree(wmPtr->clientMachine);
+        wmPtr->clientMachine = NULL;
+    }
 
+    /* Destroy child windows. */
+    if (wmPtr->menubar) {
+        Tk_DestroyWindow(wmPtr->menubar);
+        wmPtr->menubar = NULL;
+    }
+    if (wmPtr->icon) {
+        Tk_DestroyWindow(wmPtr->icon);
+        wmPtr->icon = NULL;
+    }
+    if (wmPtr->iconDataPtr) {
+        ckfree((char *)wmPtr->iconDataPtr);
+        wmPtr->iconDataPtr = NULL;
+    }
+
+    /* Free GLFW icon resources. */
     if (wmPtr->glfwIcon != NULL) {
         for (i = 0; i < wmPtr->glfwIconCount; i++) {
             if (wmPtr->glfwIcon[i].pixels != NULL) {
@@ -586,23 +664,27 @@ TkWmDeadWindow(
             }
         }
         ckfree((char *)wmPtr->glfwIcon);
+        wmPtr->glfwIcon = NULL;
+        wmPtr->glfwIconCount = 0;
     }
 
+    /* Free protocol handlers. */
     while (wmPtr->protPtr != NULL) {
         ProtocolHandler *protPtr = wmPtr->protPtr;
         wmPtr->protPtr = protPtr->nextPtr;
         Tcl_EventuallyFree((void *)protPtr, TCL_DYNAMIC);
     }
 
+    /* Free command argv. */
     if (wmPtr->cmdArgv != NULL) {
-        /* Release refcounts acquired in WmCommandCmd. */
         Tcl_Size j;
         for (j = 0; j < wmPtr->cmdArgc; j++) {
             Tcl_DecrRefCount(wmPtr->cmdArgv[j]);
         }
         ckfree((char *)wmPtr->cmdArgv);
+        wmPtr->cmdArgv = NULL;
+        wmPtr->cmdArgc = 0;
     }
-    if (wmPtr->clientMachine)  ckfree(wmPtr->clientMachine);
 
     /* Remove from global list. */
     if (wmPtr == firstWmPtr) {
@@ -616,8 +698,11 @@ TkWmDeadWindow(
         }
     }
 
+    /* Clear the window's pointer to this WmInfo and free it. */
     winPtr->wmInfoPtr = NULL;
     ckfree((char *)wmPtr);
+    
+    fprintf(stderr, "TkWmDeadWindow: Done cleaning up %s\n", Tk_PathName(winPtr));
 }
 
 /*
