@@ -251,9 +251,7 @@ proc zoom_handler {w percent} {
     log_msg [format "Zoom %d%%" $percent]
 
     # Scale font
-    set winSys [tk windowingsystem]
-    if {($winSys eq "aqua") || ($winSys eq "x11" &&
-	    ![catch {tk::pkgconfig get fontsystem} fs] && $fs eq "xft")} {
+    if {[tk windowingsystem] eq "aqua"} {
 	# Adapt the font sizes to the new scaling factor
 	foreach font [array names ::fontSize] {
 	    set size [expr {round($::fontSize($font) * $percent / 100.0)}]
@@ -292,6 +290,7 @@ proc zoom_handler {w percent} {
 		$img configure -format $::tk::svgFmt
 	    } elseif {[string match "svg -scaletoheight*" $fmt]} {
 		set iconSize [expr {16 * $::tk::scalingPct / 100}]
+		if {$iconSize == 0} { set iconSize 16 }
 		$img configure -format [list svg -scaletoheight $iconSize]
 	    }
 	}
