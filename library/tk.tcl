@@ -488,6 +488,48 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-Button-1>
 
+	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
+	# returned when the user presses <Shift-Tab>. In order for tab
+	# traversal to work, we have to add these keysyms to the PrevWindow
+	# event. We use catch just in case the keysym isn't recognized.
+
+	# This is needed for XFree86 systems
+	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
+	catch {
+	    event add <<Cut>> <XF86Cut>
+	    event add <<Copy>> <XF86Copy>
+	    event add <<Paste>> <XF86Paste>
+	}
+    }
+    "wayland" {
+	event add <<Cut>>		<Control-x> <Control-Lock-X>
+	event add <<Copy>>		<Control-c> <Control-Lock-C>
+	event add <<Paste>>		<Control-v> <Control-Lock-V>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> 
+	event add <<Redo>>		<Control-Z> <Control-Lock-z> 
+	event add <<SelectAll>>		<Control-a>
+	event add <<NextChar>>		<Right>
+	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<PrevChar>>		<Left>
+	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<NextWord>>		<Control-Right>
+	event add <<SelectNextWord>>	<Control-Shift-Right>
+	event add <<PrevWord>>		<Control-Left>
+	event add <<SelectPrevWord>>	<Control-Shift-Left>
+	event add <<LineStart>>		<Home>
+	event add <<SelectLineStart>>	<Shift-Home>
+	event add <<LineEnd>>		<End>
+	event add <<SelectLineEnd>>	<Shift-End>
+	event add <<PrevLine>>		<Up>
+	event add <<NextLine>>		<Down>
+	event add <<SelectPrevLine>>	<Shift-Up>
+	event add <<SelectNextLine>>	<Shift-Down>
+	event add <<PrevPara>>		<Control-Up>
+	event add <<NextPara>>		<Control-Down>
+	event add <<SelectPrevPara>>	<Control-Shift-Up>
+	event add <<SelectNextPara>>	<Control-Shift-Down>
+	event add <<ToggleSelection>>	<Control-Button-1>
+
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {

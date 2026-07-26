@@ -17,8 +17,13 @@
 # latter is sourced by tk.tcl.
 
 proc ::tk::ScalingPct {} {
-    set pct [expr {[tk scaling] * 75}]
-
+    if {[tk windowingsystem] eq "wayland"} {
+	# Scaling on high DPI monitors is handled by nanovg.
+	set pct 100
+    } else {
+	set pct [expr {[tk scaling] * 75}]
+    }
+    
     variable doneScalingInitX11
     if {![info exists doneScalingInitX11]} {
 	set pct [::tk::ScalingInitX11 $pct]

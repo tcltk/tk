@@ -64,7 +64,6 @@ proc ::tk_dialog {w title text bitmap default args} {
     if {[winfo viewable [winfo toplevel [winfo parent $w]]] } {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
-
     if {$windowingsystem eq "aqua"} {
 	after 100 {wm attributes $w -stylemask fullsizecontent}
     } elseif {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
