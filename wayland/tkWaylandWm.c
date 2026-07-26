@@ -480,22 +480,40 @@ TkWmMapWindow(TkWindow *winPtr)
 
     UpdateGeometryInfo((void *)winPtr);
 
-    //// this test is probably not needed.
     if (glfwWindow) {
-        int w, h;
+        /*
+         * Blit the (already-cleared) backing-store FBO to the window's
+         * back buffer *before* making the surface visible.  Combined with
+         * the hidden-create / pre-clear path in TkWaylandCreateWindow this
+         * prevents the empty-root flicker: the first frame the compositor
+         * presents is already the intended blank Tk background colour.
+         */
+        if (winPtr->privatePtr && winPtr->privatePtr->fb) {
+            glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+            int fbWidth, fbHeight;
+            NVGLUframebuffer *fb = winPtr->privatePtr->fb;
+
+            glfwMakeContextCurrent(glfwWindow);
+            glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+            if (fb && fb->fbo != 0 && fbWidth > 0 && fbHeight > 0) {
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+                glBlitFramebuffer(0, 0, fbWidth, fbHeight,
+                                  0, 0, fbWidth, fbHeight,
+                                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                glfwSwapBuffers(glfwWindow);
+            }
+            if (infoPtr) {
+                infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+            }
+        }
 
         glfwShowWindow(glfwWindow);
 
-        /* Get the actual window size after showing. */
-        glfwGetWindowSize(glfwWindow, &w, &h);
-
-	/* Queue expose for entire window. */
-#if 0
-	//TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
-#endif
         winPtr->flags |= TK_MAPPED;
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
