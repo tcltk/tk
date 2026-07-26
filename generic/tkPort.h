@@ -14,9 +14,6 @@
 #ifndef _TKPORT
 #define _TKPORT
 
-#if defined(_WIN32)
-#   include "tkWinPort.h"
-#endif
 #ifndef _TK
 #   include "tk.h"
 #endif
