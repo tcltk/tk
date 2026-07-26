@@ -478,10 +478,6 @@ TkWaylandInitialize(void)
 
     glfwSetErrorCallback(TkWaylandErrorCallback);
 
-#ifdef GLFW_PLATFORM_WAYLAND
-    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-#endif
-
     if (!glfwInit()) {
         fprintf(stderr, "TkWaylandInitialize: glfwInit() failed\n");
         return TCL_ERROR;
@@ -492,11 +488,18 @@ TkWaylandInitialize(void)
      * GLFW on Wayland will choose EGL automatically.
      */
 
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);   /* must be TRUE on Wayland init */
+    /*
+     * Create the bootstrap window invisible.  Showing it here (even
+     * briefly) produces a visible flash of an empty / garbage frame on
+     * many Wayland compositors before Tk has drawn anything.  A hidden
+     * window is still sufficient to obtain a valid GLES context.
+     */
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
@@ -510,25 +513,29 @@ TkWaylandInitialize(void)
     }
 
     /*
-     * CRITICAL: make context current BEFORE any GL/EGL assumptions
+     * CRITICAL: make context current BEFORE any GL/EGL assumptions.
      */
     glfwMakeContextCurrent(mainGlfwWindow);
     glfwPollEvents();
 
     /*
-     * Now GL is guaranteed valid
+     * Now GL is guaranteed valid.
      */
     fprintf(stderr, "GL_VENDOR   = %s\n", glGetString(GL_VENDOR));
     fprintf(stderr, "GL_RENDERER = %s\n", glGetString(GL_RENDERER));
     fprintf(stderr, "GL_VERSION  = %s\n", glGetString(GL_VERSION));
 
     /*
-     * We hide AFTER context is fully initialized (Wayland-safe pattern).
+     * Clear the default framebuffer so the first swap (when the window
+     * is eventually mapped) presents a known blank colour rather than
+     * uninitialised GPU memory.
      */
-    glfwHideWindow(mainGlfwWindow);
+    glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glfwSwapBuffers(mainGlfwWindow);
 
     /*
-     * Wayland display (only for xdg/wl_egl_window popups if needed)
+     * Wayland display (for wl_subsurfaces/popups).
      */
     waylandDisplay = glfwGetWaylandDisplay();
     if (!waylandDisplay) {
@@ -545,7 +552,7 @@ TkWaylandInitialize(void)
     TkWaylandPopupSetMainWindow(mainGlfwWindow);
 
     /*
-     * Load fonts
+     * Load fonts for window decorations.
      */
     sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                          &sans_size);
@@ -684,17 +691,19 @@ TkWaylandCreateWindow(
 
         glfwWindow = mainGlfwWindow;
 
-        /* Make sure the root window's context is current and configured. */
+        /* Make sure the root window's context is current and configured.
+         * Keep the window hidden; TkWmMapWindow is responsible for the
+         * first show so the user never sees an unpainted frame. */
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
         glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
-        glfwShowWindow(glfwWindow);
-        glfwSwapBuffers(glfwWindow);
+        glfwHideWindow(glfwWindow);
     } else {
         /*
          * A toplevel other than the root.
          * Share the GL context with the main window for efficient rendering.
+         * Create hidden; visibility is controlled by TkWmMapWindow.
          */
         glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -714,8 +723,6 @@ TkWaylandCreateWindow(
 
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
-        glfwShowWindow(glfwWindow);
-        glfwSwapBuffers(glfwWindow);
     }
 
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
@@ -771,6 +778,18 @@ TkWaylandCreateWindow(
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
+    /*
+     * Also clear the default framebuffer and present it while the window
+     * is still hidden.  When TkWmMapWindow later calls glfwShowWindow the
+     * compositor already has a clean buffer, so an empty root window no
+     * longer flashes garbage / black on startup.
+     */
+    nvgluBindFramebuffer(NULL);
+    glViewport(0, 0, fbWidth, fbHeight);
+    glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glfwSwapBuffers(glfwWindow);
+
     if (drawableOut) {
         *drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
@@ -779,9 +798,6 @@ TkWaylandCreateWindow(
 
     return glfwWindow;
 }
-
-
-
 
 /*
  *----------------------------------------------------------------------
