@@ -1,14 +1,36 @@
-# Auto generated test cases for treeview.csv
+#
+# Tests for tags in the ttk::treeview widget
+#
 
-# Load Tcl Test package
-if {[lsearch [namespace children] ::tcltest] == -1} {
-	package require tcltest
-	namespace import ::tcltest::*
-}
+# NOTES
+#
+# * The ttk test suite holds many tests that build upon a previous one. This
+#   is not incidental; it occurs systematically for groups of contiguous tests
+#   in most ttk test files.
+#
+#   A consequence of this practice is that attempts to run tests selectively/
+#   individually using the tcltest options "-match", "-skip" or "-limitconstraints 1"
+#   lead to unintended failures. Therefore, invocations using these options
+#   may be considered invalid for the ttk test suite (but not for the
+#   corresponding core Tk tests).
+#
 
-set ::auto_path [concat [list [file dirname [file dirname [info script]]]] $::auto_path]
+#
+# TESTFILE INITIALIZATION
+#
 
-package require Tk
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 # Constraints
 ttk::style theme use default
@@ -19,14 +41,21 @@ set size [expr {[tk windowingsystem] ne "aqua" ? 9 : 10}]
 font configure TkDefaultFont -family Arial -size $size
 font configure TkHeadingFont -family Arial -size $size
 
-# Helper functions
-set colors [list red {pink maroon darkred magenta} green {chartreuse lime olive teal} blue {cyan turquoise mediumblue darkblue navy} orange {coral} yellow {gold} purple {} brown {wheat khaki} black {} white {beige} gray {silver}]
+#
+# LOCAL UTILITY PROCS
+#
+
+set colors [list red {pink maroon darkred magenta} green {chartreuse lime olive teal} \
+    blue {cyan turquoise mediumblue darkblue navy} orange {coral} yellow {gold} purple \
+    {} brown {wheat khaki} black {} white {beige} gray {silver}]
 set columns [list Color Hex Decimal Float]
+
 proc insert {w parent color} {
     lassign [winfo rgb . $color] r g b
     set num [expr {($r>>8) << 16 | ($g>>8) << 8 | ($b>>8)}]
     $w insert $parent end -id $color -text [string totitle $color] -values [list [format "#%06X" $num] $num [expr {$num*1.1111}]]
 }
+
 proc create {w} {
     ::ttk::style configure Treeview -rowheight 20 -headingheight 20
     ::ttk::treeview .tv -columns [lrange $::columns 1 end] -show {tree headings} \
@@ -56,6 +85,7 @@ proc create {w} {
     focus .tv
     return .tv
 }
+
 proc fixed_table {w} {
     ttk::style configure Treeview -font {Arial 10} -rowheight 20 -headingheight 0
     ttk::style configure Heading -font {Arial 10}
@@ -72,6 +102,7 @@ proc columns_no_stretch {w} {
     update
     update idletasks
 }
+
 proc columns_stretch {w} {
     set columns [concat #0 [$w cget -columns]]
     $w configure -columns [lrange $columns 1 end]
@@ -81,9 +112,33 @@ proc columns_stretch {w} {
     update
     update idletasks
 }
-proc lcompare {list1 list2} {foreach e1 $list1 e2 $list2 {if {$e1 ne $e2} {return 0}};return 1}
-proc checkorder {item} {set index 0; foreach child [.tv children $item] {if {[.tv index $child] != $index} {return 0} else {incr index}};return 1}
-proc wait {time} {set ::_temp 0;after $time [list set ::_temp 1];vwait ::_temp}
+
+proc lcompare {list1 list2} {
+    foreach e1 $list1 e2 $list2 {
+	if {$e1 ne $e2} {
+	    return 0
+	}
+    }
+    return 1
+}
+
+proc checkorder {item} {
+    set index 0
+    foreach child [.tv children $item] {
+	if {[.tv index $child] != $index} {
+	    return 0
+	} else {
+	    incr index
+	}
+    }
+    return 1
+}
+
+proc wait {time} {
+    set ::_temp 0
+    after $time [list set ::_temp 1];vwait ::_temp
+}
+
 proc ButtonPress {w item {column {#0}} {offset 0}} {
     focus -force $w
     $w see $item $column
@@ -107,6 +162,7 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
     update
     update idletasks
 }
+
 proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     focus -force $w
 
@@ -136,8 +192,8 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
 }
 
 proc MouseMove {w item column} {
-lassign [$w bbox $item $column] x y width height
-event generate $w <Motion> -warp 1 -when now -x $x -y $y
+    lassign [$w bbox $item $column] x y width height
+    event generate $w <Motion> -warp 1 -when now -x $x -y $y
 }
 
 # Widget Functions
@@ -1652,7 +1708,7 @@ test Bbox-15.22 {Title Rows > Number of Items} -setup {
     } -result {{0.0 1.0} {0.0 1.0}}
 
 
-test BBox-16.1 {Cleanup} -body {
+test Bbox-15.23 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
@@ -8718,6 +8774,8 @@ test Identify-89.42 {Cleanup} -body {
 font configure TkDefaultFont {*}$dfont
 font configure TkHeadingFont {*}$hfont
 
-# Cleanup
-::tcltest::cleanupTests
-return
+#
+# TESTFILE CLEANUP
+#
+
+tcltest::cleanupTests
