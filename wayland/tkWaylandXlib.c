@@ -1360,14 +1360,6 @@ XCreatePixmapCursor(
 }
 
 /*
- * XParseColor is intentionally NOT stubbed here: the real implementation
- * (hex specs + X11 color name table) comes from xlib/xcolors.c, which is
- * compiled into WAYLAND_OBJS just as the macOS port does via AQUA_OBJS.
- * Generic code (TkParseColor in tkColor.c, photo image ParseColorAsStandard
- * in tkImgListFormat.c, tkImgBmap.c, tkCursor.c) depends on it succeeding.
- */
-
-/*
  *----------------------------------------------------------------------
  *
  * XGetWMColormapWindows --

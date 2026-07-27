@@ -959,6 +959,69 @@ TkColorToNVG(TkColor *tkColPtr)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * XParseColor --
+ *
+ *      Parse a color specification string and fill an XColor structure
+ *      with the corresponding RGB values.  This is the platform-specific
+ *      implementation used by the Wayland/NanoVG backend.
+ *
+ *      Supported formats (identical to those handled by ParseColorString):
+ *        - Hexadecimal: #RGB, #RRGGBB, #RRGGBBAA, #RRRRGGGGBBBB
+ *        - Gray scale:  grayN / greyN  (N = 0..100)
+ *        - X11 named colors (complete rgb.txt set)
+ *        - X11 brightness variants: <basename>1 .. <basename>4
+ *
+ * Results:
+ *      Non-zero (true) on success, zero (false) on failure.
+ *      On success the fields red/green/blue and flags of *exact_def_return
+ *      are filled; pixel is left untouched.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Status
+XParseColor(
+    TCL_UNUSED(Display *),      /* display  – unused (no X server) */
+    TCL_UNUSED(Colormap),       /* colormap – unused (no colormaps) */
+    const char *spec,           /* color name / hex string */
+    XColor *exact_def_return)   /* OUT: filled XColor */
+{
+    NVGcolor nvg;
+
+    if (spec == NULL || exact_def_return == NULL) {
+        return 0;
+    }
+
+    /* Reject absurdly long names (same guard as TkpGetColor). */
+    if (strlen(spec) > 99) {
+        return 0;
+    }
+
+    if (!ParseColorString(spec, &nvg)) {
+        return 0;
+    }
+
+    /*
+     * Convert the normalised [0,1] floats used by NanoVG into the
+     * 16-bit unsigned shorts expected by XColor, rounding to nearest.
+     */
+    exact_def_return->red   = (unsigned short)(nvg.r * 65535.0f + 0.5f);
+    exact_def_return->green = (unsigned short)(nvg.g * 65535.0f + 0.5f);
+    exact_def_return->blue  = (unsigned short)(nvg.b * 65535.0f + 0.5f);
+    exact_def_return->flags = DoRed | DoGreen | DoBlue;
+
+    /* pixel is intentionally left alone; callers that need a pixel
+     * value obtain it later via TkpGetColor / TkpGetColorByValue. */
+
+    return 1;
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
