@@ -155,6 +155,8 @@ inline TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
 
 static void TopLevelEventProc(void *clientData, XEvent *eventPtr);
 static void TopLevelReqProc(void *clientData, Tk_Window tkwin);
+static void ApplyPendingGeometry(TkWindow *winPtr, WmInfo *wmPtr,
+			  GLFWwindow *glfwWindow);
 static void UpdateGeometryInfo(void *clientData);
 static void UpdateHints(TkWindow *winPtr);
 static void UpdateSizeHints(TkWindow *winPtr);
@@ -506,6 +508,25 @@ TkWmMapWindow(TkWindow *winPtr)
             if (infoPtr) {
                 infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
             }
+        }
+
+        /*
+         * The call to UpdateGeometryInfo() above may have deferred itself
+         * (it no-ops and reschedules via a timer while TKWL_NEVER_FOCUSED
+         * is set on a window that hasn't been focused yet). If we then
+         * showed the window as-is, the user would see it at its stale
+         * creation size until the deferred resize eventually lands --
+         * which is exactly the "not always correctly sized when mapped"
+         * bug. Apply the pending geometry here unconditionally, bypassing
+         * that gate, so what's shown always matches Tk's requested size.
+         */
+        if (!wmPtr->withdrawn) {
+            if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
+                UpdateSizeHints(winPtr);
+                wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
+            }
+            ApplyPendingGeometry(winPtr, wmPtr, glfwWindow);
+            wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
 
         glfwShowWindow(glfwWindow);
@@ -930,8 +951,18 @@ Tk_MakeWindow(
          * -------------------------
          */
 
-        width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
-        height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
+        /*
+         * Prefer the geometry manager's requested size (reqWidth/reqHeight)
+         * over winPtr->changes, which is often still at Tk's uninitialized
+         * default (1x1) at window-creation time -- pack/grid have usually
+         * already run by now, even though changes hasn't been updated to
+         * match yet.  Seeding the GLFW window with the real target size here
+         * avoids a visible/racy resize-after-show later in TkWmMapWindow.
+         */
+        width  = (winPtr->reqWidth  > 1) ? winPtr->reqWidth  :
+                 (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
+        height = (winPtr->reqHeight > 1) ? winPtr->reqHeight :
+                 (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
 
         /*
          * Create the GLFW window and get a drawable ID.
@@ -3813,13 +3844,103 @@ TopLevelReqProc(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ApplyPendingGeometry --
+ *
+ *	Computes the target size for winPtr from wmPtr/reqWidth/reqHeight
+ *	and, if it differs from the window's last-configured size, applies
+ *	it via glfwSetWindowSize.  Factored out of UpdateGeometryInfo so
+ *	that TkWmMapWindow can also call it synchronously on first map,
+ *	instead of relying solely on UpdateGeometryInfo's deferred/idle
+ *	path (which can leave glfwShowWindow revealing the window at its
+ *	stale creation size -- see TkWmMapWindow).
+ *
+ *	Caller is responsible for checking that glfwWindow is non-NULL and
+ *	that the window isn't withdrawn before calling this.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May call glfwSetWindowSize and update wmPtr->configWidth/Height
+ *	and winPtr->changes.width/height.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ApplyPendingGeometry(
+    TkWindow *winPtr,
+    WmInfo *wmPtr,
+    GLFWwindow *glfwWindow)
+{
+    int tw, th;
+
+    /* Calculate target size. The reqProc sets negative wmPtr sizes. */
+    tw = wmPtr->width  < 0 ? winPtr->reqWidth  : wmPtr->width;
+    th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
+
+    /* Ensure minimum size. */
+    if (tw < wmPtr->minWidth)  tw = wmPtr->minWidth;
+    if (th < wmPtr->minHeight) th = wmPtr->minHeight;
+
+    /* Apply size change if needed. */
+    if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
+
+	/*
+	 * Wayland won't allow a window to be so narrow that the title bar
+	 * can't display all of the standard controls.  If a size change is
+	 * requested that is smaller than that, the width will be increased,
+	 * but GLFW will not know about the increase, so it won't allocate a
+	 * correctly sized back buffer or pass the correct size to the
+	 * FramebufferSizeCallback.  This causes our backing store framebuffer
+	 * to bee too small for the window, which causes part of the window to
+	 * not be drawn.  There seems to be no way for us to detect the size
+	 * increase (yet, anyway).  So as a last resort / shameless hack we
+	 * just make sure that the window is always at least 180 logical
+	 * pixels wide -- and, for the same reason, at least as tall, since
+	 * a too-small height is subject to the identical back-buffer/
+	 * FramebufferSizeCallback mismatch.
+	 */
+	if (tw < 180) {
+	    tw = 180;
+	}
+	if (th < 180) {
+	    th = 180;
+	}
+ 	/* When GFLW initially creates a window it assumes that the window
+ 	 * will open on a screen with pixel scale factor 1.0, even if there is
+ 	 * no such screen on the system.  If this resize happens before GLFW
+ 	 * has called the WindowContentScaleFactorCallback then GLFW will
+ 	 * allocate a back buffer that has the same size as the window.  If
+ 	 * the window has odd width or height, and if the scale factor is
+ 	 * actually 2, then Wayland will generate an error and remove the
+ 	 * window from the screen.  The actual removal is asynchronous and
+ 	 * likely to happen after the window has been fully rendered, which
+ 	 * leads to pretty bad UX.
+ 	 */
+	fprintf(stderr,
+		"ApplyPendingGeometry: calling glfwSetWindowSize %s -> %dx%d\n",
+		Tk_PathName(winPtr), tw, th);
+        glfwSetWindowSize(glfwWindow, tw, th);
+
+		/* Update the window. */
+	//// We don't really know that this is the actual size. 
+        winPtr->changes.width = tw;
+        winPtr->changes.height = th;
+        wmPtr->configWidth  = tw;
+        wmPtr->configHeight = th;
+    }
+}
+
 static void
 UpdateGeometryInfo(
     void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
-    int       tw, th;
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
@@ -3856,61 +3977,7 @@ UpdateGeometryInfo(
         return;
     }
 
-    /* Calculate target size. The reqProc sets negative wmPtr sizes. */
-	  tw = wmPtr->width < 0 ? winPtr->reqWidth : wmPtr->width;
-      th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
-
-
-    /* Ensure minimum size. */
-    if (tw < wmPtr->minWidth) tw = wmPtr->minWidth;
-    if (th < wmPtr->minHeight) th = wmPtr->minHeight;
-
-    /* Apply size change if needed. */
-    if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
-
-#if 0  //// this flag is no longer used.
-	/* Notify the FramebufferSizeCallback to use our workaround. */
-	infoPtr->flags |= sizeChanged;
-#endif
-	/*
-	 * Wayland won't allow a window to be so narrow that the title bar
-	 * can't display all of the standard controls.  If a size change is
-	 * requested that is smaller than that, the width will be increased,
-	 * but GLFW will not know about the increase, so it won't allocate a
-	 * correctly sized back buffer or pass the correct size to the
-	 * FramebufferSizeCallback.  This causes our backing store framebuffer
-	 * to bee too small for the window, which causes part of the window to
-	 * not be drawn.  There seems to be no way for us to detect the size
-	 * increase (yet, anyway).  So as a last resort / shameless hack we
-	 * just make sure that the window is always at least 180 logical
-	 * pixels wide.
-	 */
-	if (tw < 180) {
-	    tw = 180;
-	}
- 	/* When GFLW initially creates a window it assumes that the window
- 	 * will open on a screen with pixel scale factor 1.0, even if there is
- 	 * no such screen on the system.  If this resize happens before GLFW
- 	 * has called the WindowContentScaleFactorCallback then GLFW will
- 	 * allocate a back buffer that has the same size as the window.  If
- 	 * the window has odd width or height, and if the scale factor is
- 	 * actually 2, then Wayland will generate an error and remove the
- 	 * window from the screen.  The actual removal is asynchronous and
- 	 * likely to happen after the window has been fully rendered, which
- 	 * leads to pretty bad UX.
- 	 */
-	fprintf(stderr,
-		"UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
-		Tk_PathName(winPtr), tw, th);
-        glfwSetWindowSize(glfwWindow, tw, th);
-
-		/* Update the window. */
-	//// We don't really know that this is the actual size. 
-        winPtr->changes.width = tw;
-        winPtr->changes.height = th;
-        wmPtr->configWidth  = tw;
-        wmPtr->configHeight = th;
-    }
+    ApplyPendingGeometry(winPtr, wmPtr, glfwWindow);
 #if 0
     /* Apply position change if needed, although this does nothing. */
     if ((wmPtr->flags & WM_MOVE_PENDING) ||
