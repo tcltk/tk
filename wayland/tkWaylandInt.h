@@ -379,20 +379,40 @@ typedef struct TkWaylandGC {
  *
  * Pixmap Structure
  *
- *	A Pixmap is a wrapper for a an NVGLUframebuffer.
+ *	A Pixmap is a wrapper for an NVGLUframebuffer, with optional
+ *	storage for 1‑bit bitmap data used by XCopyPlane.
  *
  *----------------------------------------------------------------------
  */
 
 typedef struct TkWaylandPixmap {
-    NVGLUframebuffer *fb;
-    GLFWwindow *glfwWindow;  /* The window whose GL context has the fbo.   */
-    int width;               /* It is simpler to cache the fb dimensions.  */
-    int height;
+    NVGLUframebuffer *fb;           /* OpenGL framebuffer object */
+    GLFWwindow *glfwWindow;         /* Window whose GL context owns the fbo */
+    int width;                      /* Pixmap width in pixels */
+    int height;                     /* Pixmap height in pixels */
+    int depth;                      /* Pixel depth (1 for bitmaps, 24/32 for colour) */
+    int isBitmap;                   /* 1 if this is a 1‑bit bitmap pixmap */
+    unsigned char *bitmapData;      /* Stored bitmap bits (only for isBitmap) */
+    int bitmapBytesPerLine;         /* Bytes per row in bitmapData */
 } TkWaylandPixmap;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Pixmap Helper Functions
+ *
+ *----------------------------------------------------------------------
+ */
 
 TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
+
+/* Store bitmap data in a pixmap (called from XCreateBitmapFromData) */
+MODULE_SCOPE void TkWaylandSetBitmapData(
+    Pixmap pixmap,
+    const char *data,
+    int width,
+    int height);
+
 /*
  *----------------------------------------------------------------------
  *

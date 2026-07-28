@@ -2447,38 +2447,6 @@ XNextEvent(
 /*
  *----------------------------------------------------------------------
  *
- * XGetGeometry --
- *
- *	Get window geometry. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (False).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XGetGeometry(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
-    TCL_UNUSED(Window *),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(unsigned int *),
-    TCL_UNUSED(unsigned int *),
-    TCL_UNUSED(unsigned int *),
-    TCL_UNUSED(unsigned int *))
-{
-    /* No-op - geometry tracked by Tk/GLFW. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XWarpPointer --
  *
  *	Move pointer. No-op in Wayland port.

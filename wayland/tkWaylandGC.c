@@ -801,6 +801,133 @@ XFreePixmap(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * XGetGeometry --
+ *
+ *	Xlib-compatible wrapper to get geometry information about a drawable.
+ *	Since this is a Wayland backend, we only support pixmaps; windows
+ *	return their current size from the GLFW window.
+ *
+ * Results:
+ *	Success on success, BadDrawable on failure.
+ *
+ * Side effects:
+ *	Fills in the provided geometry parameters.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XGetGeometry(
+    TCL_UNUSED(Display *),
+    Drawable drawable,
+    Window   *root_return,
+    int      *x_return,
+    int      *y_return,
+    unsigned int *width_return,
+    unsigned int *height_return,
+    unsigned int *border_width_return,
+    unsigned int *depth_return)
+{
+    GLFWwindow *glfwWindow;
+    int width, height;
+
+    /* Check for invalid parameters. */
+    if (!drawable) {
+        return BadDrawable;
+    }
+
+    /* For pixmaps, get geometry from the pixmap structure. */
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(drawable);
+        if (!pixmapPtr) {
+            return BadDrawable;
+        }
+        
+        if (root_return) *root_return = (Window)0;
+        if (x_return) *x_return = 0;
+        if (y_return) *y_return = 0;
+        if (width_return) *width_return = pixmapPtr->width;
+        if (height_return) *height_return = pixmapPtr->height;
+        if (border_width_return) *border_width_return = 0;
+        if (depth_return) *depth_return = pixmapPtr->depth;
+        
+        return Success;
+    }
+    
+    /* For windows, get geometry from the GLFW window. */
+    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    if (!glfwWindow) {
+        return BadDrawable;
+    }
+    
+    glfwGetWindowSize(glfwWindow, &width, &height);
+    
+    if (root_return) *root_return = (Window)0;
+    if (x_return) *x_return = 0;
+    if (y_return) *y_return = 0;
+    if (width_return) *width_return = (unsigned int)width;
+    if (height_return) *height_return = (unsigned int)height;
+    if (border_width_return) *border_width_return = 0;
+    if (depth_return) *depth_return = 24; /* Always 24-bit for Wayland */
+    
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetBitmapData --
+ *
+ *      Store bitmap data in a pixmap for later use by XCopyPlane and XGetImage.
+ *      This function is called by XCreateBitmapFromData to associate the
+ *      1-bit bitmap data with the pixmap.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Allocates and copies bitmap data into the pixmap structure.
+ *      The data is stored in the standard X bitmap format (LSB-first,
+ *      packed bits, with each row padded to a byte boundary).
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandSetBitmapData(
+    Pixmap pixmap,
+    const char *data,
+    int width,
+    int height)
+{
+    TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(pixmap);
+    if (!pixmapPtr || !data || width <= 0 || height <= 0) {
+        return;
+    }
+
+    /* Free any existing bitmap data. */
+    if (pixmapPtr->bitmapData) {
+        ckfree(pixmapPtr->bitmapData);
+        pixmapPtr->bitmapData = NULL;
+    }
+
+    /* Calculate bytes per line (packed bits, padded to byte boundary). */
+    int bytesPerLine = (width + 7) / 8;
+    size_t dataSize = (size_t)bytesPerLine * height;
+    
+    /* Allocate and copy the bitmap data. */
+    pixmapPtr->bitmapData = (unsigned char *)ckalloc(dataSize);
+    if (!pixmapPtr->bitmapData) {
+        return;
+    }
+    memcpy(pixmapPtr->bitmapData, data, dataSize);
+    pixmapPtr->bitmapBytesPerLine = bytesPerLine;
+    pixmapPtr->isBitmap = 1;
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
