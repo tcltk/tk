@@ -946,9 +946,7 @@ Tk_MakeWindow(
         }
 
         /*
-         * -------------------------
-         *   TOPLEVEL WINDOW (non-menu)
-         * -------------------------
+         * Toplevel window - non-menu.
          */
 
         /*
@@ -990,10 +988,7 @@ Tk_MakeWindow(
         }
     } else {
         /*
-         * -------------------------
-         *     CHILD WINDOW
-         * -------------------------
-         *
+         * Child window. 
          */
 #if 0
       fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),

@@ -2003,9 +2003,7 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-    /* ------------------------------------------------------------------ */
-    /* Pixel size.                                                        */
-    /* ------------------------------------------------------------------ */
+    /* Pixel size. */
     double ptSize = faPtr->size;
     int basePixels;
 
@@ -2065,9 +2063,7 @@ InitFont(
         return;
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Pattern construction.                                              */
-    /* ------------------------------------------------------------------ */
+	/* Pattern construction. */
     if (!useSansDefault && family && family[0] != '\0') {
         /* Explicit non-generic family – put it first. */
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
@@ -2111,12 +2107,12 @@ InitFont(
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
-    /* ------------------------------------------------------------------ */
-    /* Post-process the sorted set.                                       */
-    /* ------------------------------------------------------------------ */
 
-    /* 1. Move any remaining colour-emoji faces to the very end so they
-          can never become faces[0]. */
+
+    /* 
+     * Move any remaining color-emoji faces to the very end 
+     * so they can never become faces[0]. 
+     */
     if (set && set->nfont > 1) {
         int n = set->nfont;
         for (int i = 0; i < n; ) {
@@ -2138,8 +2134,11 @@ InitFont(
         set->nfont = n;
     }
 
-    /* 2. If we asked for a sans-like family and the primary face looks
-          like a serif, swap the first real sans face to the front. */
+    /* 
+     * If we asked for a sans-like family and the primary face 
+     * looks like a serif, swap the first real sans face 
+     * to the front. 
+     */
     if (useSansDefault && set && set->nfont > 1) {
         FcChar8 *primFam = NULL;
         FcPatternGetString(set->fonts[0], FC_FAMILY, 0, &primFam);
@@ -2179,8 +2178,10 @@ InitFont(
         }
     }
 
-    /* 3. When a concrete non-generic family was requested, pull the
-          best name match to the front (if any). */
+    /* 
+     * When a concrete non-generic family was requested, 
+     * pull the best name match to the front (if any). 
+     */
     if (!useSansDefault && family && family[0] && set && set->nfont > 0) {
         int best = -1;
         for (int i = 0; i < set->nfont; i++) {
