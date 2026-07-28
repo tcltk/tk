@@ -662,8 +662,7 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
  * +++ Arrow and chevron images.
  */
 
-/*public*/
-void TtkArrowSize(
+static void GetArrowSize(
     int h, ArrowDirection direction, int *widthPtr, int *heightPtr)
 {
     switch (direction) {
@@ -684,6 +683,21 @@ void TtkArrowSize(
     }
 }
 
+/*public*/
+void TtkGetScaledArrowSize(
+    int h, ArrowDirection direction, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr)
+{
+    double scalingLevel = TkScalingLevel2(tkwin);
+
+    /* Get unscaled size */
+    GetArrowSize(h, direction, widthPtr, heightPtr);		/* unscaled */
+
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+}
+
 static const char arrowDataFmt[] = "\
     <svg width='%d' height='%d' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <path d='%s' fill='#%s' stroke='#%s' stroke-linejoin='round'/>\n\
@@ -696,7 +710,7 @@ static void MakeArrowData(
     int width, height;
     char d[80];
 
-    TtkArrowSize(h, direction, &width, &height);
+    GetArrowSize(h, direction, &width, &height);
 
     switch (direction) {
 	case ARROW_UP:
@@ -790,7 +804,7 @@ static void MakeChevronData(
     int width, height;
     char d[80];
 
-    TtkArrowSize(h, direction, &width, &height);
+    GetArrowSize(h, direction, &width, &height);
 
     switch (direction) {
 	case CHEVRON_UP:
@@ -922,16 +936,11 @@ static void ArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, direction, tkwin, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
@@ -1013,16 +1022,11 @@ static void BoxArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, direction, tkwin, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
@@ -1125,16 +1129,11 @@ static void MenubuttonArrowElementSize(
 {
     MenubuttonArrowElement *arrow = (MenubuttonArrowElement *)elementRecord;
     int size = 5;
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
-    TtkArrowSize(size, ARROW_RIGHT, widthPtr, heightPtr);	/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, ARROW_RIGHT, tkwin, widthPtr, heightPtr);
 
     if (*widthPtr < *heightPtr) {
 	*widthPtr = *heightPtr;
@@ -1414,8 +1413,7 @@ static void TreeheadingIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    int size = 4;						/* unscaled */
-    double scalingLevel = TkScalingLevel2(tkwin);
+    int size = 4;
     Ttk_Padding padding;
 
     /* Skip if not showing indicator */
@@ -1425,13 +1423,9 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    /* Get unscaled indicator size */
+    /* Get scaled indicator width and height */
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);	/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, ARROW_DOWN, tkwin, widthPtr, heightPtr);
 
     /* Add padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
@@ -1448,9 +1442,9 @@ static void TreeheadingIndicatorDraw(
     Ttk_State state) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    Ttk_Padding padding;
     int size = 4;
     ArrowDirection direction;
+    Ttk_Padding padding;
     XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
     int imgWidth, imgHeight;
@@ -1459,10 +1453,6 @@ static void TreeheadingIndicatorDraw(
     if (!(state & TTK_STATE_USER1)) {
 	return;
     }
-
-    /* Shrink size based on padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
-    b = Ttk_PadBox(b, padding);
 
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
@@ -1473,6 +1463,10 @@ static void TreeheadingIndicatorDraw(
     } else {
 	return;
     }
+
+    /* Shrink size based on padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
+    b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
     img = TtkMakeArrowImage(size, direction, color, tkwin);
@@ -1519,18 +1513,18 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    Ttk_Padding padding;
     int size = 9;
+    Ttk_Padding padding;
 
     /* Get scaled indicator size */
     TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
     *widthPtr = *heightPtr = size;
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
 }
 
 static void TreeitemIndicatorDraw(
@@ -1563,11 +1557,11 @@ static void TreeitemIndicatorDraw(
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;
-    XDrawLine(Tk_Display(tkwin), d, gc, b.x+3, cy, b.x+b.width-4+w, cy);
+    XDrawLine(Tk_Display(tkwin), d, gc, b.x+2, cy, b.x+b.width-3+w, cy);
 
     if (!(state & TTK_STATE_OPEN)) {
 	/* turn '-' into a '+' */
-	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+3, cx, b.y+b.height-4+w);
+	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+2, cx, b.y+b.height-3+w);
     }
 }
 

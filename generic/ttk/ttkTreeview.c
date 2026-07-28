@@ -7551,7 +7551,6 @@ static void TreeheadingIndicatorSize(
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     int size = 4;
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
     /* Skip if not showing indicator */
@@ -7561,15 +7560,11 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    /* Get unscaled indicator size */
+    /* Get scaled indicator width and height */
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
+    TtkGetScaledArrowSize(size, CHEVRON_DOWN, tkwin, widthPtr, heightPtr);
 
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
-
-    /* Add padding */
+    /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -7596,10 +7591,6 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    /* Shrink size based on padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
-    b = Ttk_PadBox(b, padding);
-
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
     if (state & TTK_STATE_SELECTED) {
@@ -7609,6 +7600,10 @@ static void TreeheadingIndicatorDraw(
     } else {
 	return;
     }
+
+    /* Shrink size based on padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
+    b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
     img = TtkMakeChevronImage(size, direction, color, tkwin);
@@ -7656,16 +7651,11 @@ static void TreeitemIndicatorSize(
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     int size = 4;
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled indicator size */
+    /* Get scaled indicator width and height */
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, CHEVRON_DOWN, tkwin, widthPtr, heightPtr);
 
     /* Add padding (only scaled if not in pixels) */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);

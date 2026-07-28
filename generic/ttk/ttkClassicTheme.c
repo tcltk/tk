@@ -607,16 +607,11 @@ static void BoxArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, direction, tkwin, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
@@ -960,7 +955,6 @@ static void TreeheadingIndicatorSize(
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     int size = 4;
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
     /* Skip if not showing indicator */
@@ -970,15 +964,11 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    /* Get uscaled indicator size */
+    /* Get scaled indicator width and height */
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);	/* unscaled */
+    TtkGetScaledArrowSize(size, ARROW_DOWN, tkwin, widthPtr, heightPtr);
 
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
-
-    /* Add padding */
+    /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -993,9 +983,9 @@ static void TreeheadingIndicatorDraw(
     Ttk_State state) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    Ttk_Padding padding;
     int size = 4;
     ArrowDirection direction;
+    Ttk_Padding padding;
     XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
     int imgWidth, imgHeight;
@@ -1004,10 +994,6 @@ static void TreeheadingIndicatorDraw(
     if (!(state & TTK_STATE_USER1)) {
 	return;
     }
-
-    /* Shrink size based on padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
-    b = Ttk_PadBox(b, padding);
 
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
@@ -1018,6 +1004,10 @@ static void TreeheadingIndicatorDraw(
     } else {
 	return;
     }
+
+    /* Shrink size based on padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
+    b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
     img = TtkMakeArrowImage(size, direction, color, tkwin);
@@ -1064,18 +1054,18 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    Ttk_Padding padding;
     int size = 9;
+    Ttk_Padding padding;
 
     /* Get scaled indicator size */
     TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
     *widthPtr = *heightPtr = size;
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
 }
 
 static void TreeitemIndicatorDraw(
@@ -1108,11 +1098,11 @@ static void TreeitemIndicatorDraw(
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;
-    XDrawLine(Tk_Display(tkwin), d, gc, b.x+3, cy, b.x+b.width-4+w, cy);
+    XDrawLine(Tk_Display(tkwin), d, gc, b.x+2, cy, b.x+b.width-3+w, cy);
 
     if (!(state & TTK_STATE_OPEN)) {
 	/* turn '-' into a '+' */
-	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+3, cx, b.y+b.height-4+w);
+	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+2, cx, b.y+b.height-3+w);
     }
 }
 

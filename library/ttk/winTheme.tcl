@@ -54,7 +54,8 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-	ttk::style configure TSpinbox -padding {1.5p 0 12p 0} -insertwidth 0.75p
+	ttk::style configure TSpinbox -padding {1.5p 0.75p 12p 0.75p} \
+	    -insertwidth 0.75p
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
