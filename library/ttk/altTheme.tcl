@@ -71,7 +71,8 @@ namespace eval ttk::theme::alt {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0} \
+	ttk::style configure TSpinbox -arrowsize 7.5p \
+	    -padding {1.5p 0.75p 7.5p 0.75p} \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \

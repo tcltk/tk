@@ -72,18 +72,19 @@ namespace eval ttk::theme::classic {
 
 	ttk::style configure TEntry -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style element create Combobox.downarrow from default
 	ttk::style configure TCombobox -padding 1 -arrowsize 9p
 	ttk::style map TCombobox -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style element create Spinbox.uparrow from default
 	ttk::style element create Spinbox.downarrow from default
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
+	ttk::style configure TSpinbox -arrowsize 7.5p \
+	    -padding {1.5p 0.75p 7.5p 0.75p}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 

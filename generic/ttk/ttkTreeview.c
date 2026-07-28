@@ -4685,6 +4685,7 @@ static void TreeitemIndicatorSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
     if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
+
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
 
     *widthPtr = size + Ttk_PaddingWidth(margins);
