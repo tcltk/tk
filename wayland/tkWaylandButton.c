@@ -169,9 +169,10 @@ DrawButtonBitmap(TkButton *butPtr,
     Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
     NVGcontext *vg = TkWaylandGetNVGContext(d);
     Pixmap bitmap = butPtr->bitmap;
+#if 0
     unsigned char *bits = NULL;
     unsigned char *rgba = NULL;
-    unsigned int bm_width, bm_height, border_width, depth;
+    unsigned int border_width, depth;
     int x_hot, y_hot;
     XGCValues gcValues;
     XColor *fgColor;
@@ -180,18 +181,20 @@ DrawButtonBitmap(TkButton *butPtr,
     int i, j;
     Display *dpy;
     XImage *image = NULL;
-
+#endif
+    
     if (!bitmap) {
-        /* No bitmap: draw fallback rectangle. */
-        nvgBeginPath(vg);
-        nvgRect(vg, x, y, width, height);
-        nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
-        nvgFill(vg);
-        return;
+        goto fallback_rect;
     }
+    //// Bitmap drawing code is broken.  For now let's just draw a
+    //// blank rectangle.
+    goto fallback_rect;
 
-    /* Get bitmap dimensions using XGetGeometry. */
+#if 0 //// disable non-working code for displaying bitmaps
+    
     dpy = Tk_Display(butPtr->tkwin);
+
+    //// This will never work.  XGetGeometry is a no-op and always returns 0.
     if (!XGetGeometry(dpy, bitmap, None, &x_hot, &y_hot,
                       &bm_width, &bm_height, &border_width, &depth)) {
         /* Geometry failed — fallback. */
@@ -222,6 +225,7 @@ DrawButtonBitmap(TkButton *butPtr,
     /*
      * Read bitmap pixels via XGetImage → XGetPixel
      */
+    int bm_width, bm_height;
     image = XGetImage(dpy, bitmap,
                       0, 0, bm_width, bm_height,
                       1,          /* Only plane 0 for 1-bit bitmap */
@@ -293,7 +297,7 @@ DrawButtonBitmap(TkButton *butPtr,
         nvgFill(vg);
         nvgDeleteImage(vg, imageId);
     }
-
+    
 cleanup:
     if (image != NULL) {
         XDestroyImage(image);
@@ -305,6 +309,7 @@ cleanup:
         ckfree(bits);
     }
     return;
+#endif //// non-working code disabled.
 
 fallback_rect:
     nvgBeginPath(vg);
@@ -462,17 +467,10 @@ TkpDisplayButton(void *clientData)
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {
-        unsigned int bm_width, bm_height, border_width, depth;
-        int x_hot, y_hot;
-        Display *dpy = Tk_Display(butPtr->tkwin);
-
-        XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
-                     &bm_width, &bm_height, &border_width, &depth);
-        width = (int)bm_width;
-        height = (int)bm_height;
-        haveImage = 1;
+        Tk_SizeOfBitmap(Tk_Display(butPtr->tkwin), butPtr->bitmap,
+			&width, &height);
+	haveImage = 1;
     }
-
     haveText = (butPtr->textWidth > 0 && butPtr->textHeight > 0);
 
     /* Handle compound button (image + text). */
@@ -566,8 +564,6 @@ TkpDisplayButton(void *clientData)
         butPtr->indicatorDiameter > 2 * bd) {
 
         TkBorder *selBd = (TkBorder *)butPtr->selectBorder;
-        XColor *selColor = selBd ? selBd->bgColorPtr : NULL;
-
         int indType = (butPtr->type == TYPE_CHECK_BUTTON)
           ? CHECK_BUTTON : RADIO_BUTTON;
 
@@ -659,17 +655,19 @@ void
 TkpComputeButtonGeometry(
     TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth, txtWidth, txtHeight;
+    int width = 0, height = 0, avgWidth = 0, txtWidth = 0, txtHeight = 0;
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
     int padX, padY, borderWidth, highlightWidth, wrapLength;
     int butPtrWidth, butPtrHeight;
-
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj,
+			&highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj,
+			&borderWidth);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj,
+			&wrapLength);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
 
@@ -682,28 +680,14 @@ TkpComputeButtonGeometry(
         butPtr->inset += 5;
     }
     butPtr->indicatorSpace = 0;
-
-    width = 0;
-    height = 0;
-    txtWidth = 0;
-    txtHeight = 0;
-    avgWidth = 0;
-
     if (butPtr->image != NULL) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {
-        unsigned int bm_width, bm_height, border_width, depth;
-        int x_hot, y_hot;
-        Display *dpy = Tk_Display(butPtr->tkwin);
-
-        XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
-                     &bm_width, &bm_height, &border_width, &depth);
-        width = (int)bm_width;
-        height = (int)bm_height;
+        Tk_SizeOfBitmap(Tk_Display(butPtr->tkwin), butPtr->bitmap,
+			&width, &height);
         haveImage = 1;
     }
-
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
         Tk_FreeTextLayout(butPtr->textLayout);
 
@@ -724,7 +708,6 @@ TkpComputeButtonGeometry(
      * honor the compound bit if the button has both text and an image,
      * because otherwise it is not really a compound button.
      */
-
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
         switch ((enum compound) butPtr->compound) {
         case COMPOUND_TOP:
@@ -759,16 +742,14 @@ TkpComputeButtonGeometry(
         if (butPtrHeight > 0) {
             height = butPtrHeight;
         }
-
         if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-            butPtr->indicatorSpace = height;
+	  butPtr->indicatorSpace = height;
             if (butPtr->type == TYPE_CHECK_BUTTON) {
-                butPtr->indicatorDiameter = (65*height)/100;
+                butPtr->indicatorDiameter = (65 * height) / 100;
             } else {
-                butPtr->indicatorDiameter = (75*height)/100;
+                butPtr->indicatorDiameter = (75 * height) / 100;
             }
         }
-
         width += 2 * padX;
         height += 2 * padY;
     } else {
@@ -779,13 +760,12 @@ TkpComputeButtonGeometry(
             if (butPtrHeight > 0) {
                 height = butPtrHeight;
             }
-
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
                 butPtr->indicatorSpace = height;
                 if (butPtr->type == TYPE_CHECK_BUTTON) {
-                    butPtr->indicatorDiameter = (65*height)/100;
+                    butPtr->indicatorDiameter = (65 * height)/100;
                 } else {
-                    butPtr->indicatorDiameter = (75*height)/100;
+                    butPtr->indicatorDiameter = (75 * height)/100;
                 }
             }
         } else {
