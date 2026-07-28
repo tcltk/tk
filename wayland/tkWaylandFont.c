@@ -8,6 +8,7 @@
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
+ * Copyright © 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1717,22 +1718,30 @@ WaylandShaper_ShapeString(
 
 static int
 EnsureNvgFaceFont(
-		  WaylandFont *fontPtr,
-		  int faceIndex,
-		  NVGcontext *vg)
+    WaylandFont *fontPtr,
+    int faceIndex,
+    NVGcontext *vg)
 {
     if (faceIndex < 0 || faceIndex >= fontPtr->nfaces || !vg) return -1;
     WaylandFtFace *face = &fontPtr->faces[faceIndex];
 
+    /* Make the name unique to this WaylandFont + faceIndex.
+       Including the font pointer prevents collisions between
+       different logical fonts that happen to use the same faceIndex. */
     if (face->nvgName[0] == '\0') {
         snprintf(face->nvgName, sizeof(face->nvgName),
-                 "__wlfont_%d", faceIndex);
+                 "__wlfont_%p_%d", (void*)fontPtr, faceIndex);
     }
 
     int id = nvgFindFont(vg, face->nvgName);
-    if (id >= 0) { face->nvgFontId = id; return id; }
+    if (id >= 0) {
+        face->nvgFontId = id;
+        return id;
+    }
 
-    if (face->filePath) id = nvgCreateFont(vg, face->nvgName, face->filePath);
+    if (face->filePath) {
+        id = nvgCreateFont(vg, face->nvgName, face->filePath);
+    }
 
     face->nvgFontId = id;
     return id;
@@ -1843,8 +1852,8 @@ TkWaylandFontContextDestroyed(
 
 MODULE_SCOPE int
 EnsureNvgFont(
-	      WaylandFont *fontPtr,
-	      NVGcontext *vg)
+    WaylandFont *fontPtr,
+    NVGcontext *vg)
 {
     if (!vg || !fontPtr) return -1;
 
@@ -1862,7 +1871,9 @@ EnsureNvgFont(
     int primaryId = -1;
     for (int i = 0; i < fontPtr->nfaces; i++) {
         int id = EnsureNvgFaceFont(fontPtr, i, vg);
-        if (i == 0) primaryId = id;
+        if (i == 0) {
+            primaryId = id;
+        }
     }
 
     /* If primary failed, try system fallbacks. */
@@ -1874,7 +1885,7 @@ EnsureNvgFont(
             "/usr/share/fonts/TTF/DejaVuSans.ttf",
             "/usr/share/fonts/dejavu/DejaVuSans.ttf"
         };
-        for (int i = 0; i < sizeof(fallback_paths)/sizeof(fallback_paths[0]); i++) {
+        for (int i = 0; i < (int)(sizeof(fallback_paths)/sizeof(fallback_paths[0])); i++) {
             if (fallback_paths[i] && access(fallback_paths[i], R_OK) == 0) {
                 char name[64];
                 snprintf(name, sizeof(name), "__fallback_%p", (void*)vg);
@@ -1887,8 +1898,8 @@ EnsureNvgFont(
         if (primaryId < 0) {
             primaryId = nvgFindFont(vg, "sans");
             if (primaryId < 0) {
-                primaryId = nvgCreateFont(vg, "sans", 
-                                          "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+                primaryId = nvgCreateFont(vg, "sans",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
             }
         }
     }
@@ -1910,7 +1921,9 @@ EnsureNvgFont(
     if (primaryId >= 0) {
         for (int i = 1; i < fontPtr->nfaces; i++) {
             int fb = fontPtr->faces[i].nvgFontId;
-            if (fb >= 0) nvgAddFallbackFontId(vg, primaryId, fb);
+            if (fb >= 0) {
+                nvgAddFallbackFontId(vg, primaryId, fb);
+            }
         }
     }
 
@@ -1925,10 +1938,10 @@ EnsureNvgFont(
             fontPtr->nvgContextCount++;
 
             /*
-	     * Register in the cross-font registry so a future
+             * Register in the cross-font registry so a future
              * TkWaylandFontContextDestroyed(vg) call can find and
              * purge this entry before its address gets recycled.
-	     */
+             */
             NvgFontRegEntry *reg = (NvgFontRegEntry*)malloc(sizeof(NvgFontRegEntry));
             if (reg) {
                 reg->vg = vg;
@@ -1976,7 +1989,7 @@ TkpGetFontPixelSize(Tk_Font tkfont)
  *   None.
  *
  * Side effects:
- *   Allocates font structures, queries Fontconfig, initialises shaper.
+ *   Allocates font structures, queries Fontconfig, initializes shaper.
  *----------------------------------------------------------------------
  */
 
@@ -1990,10 +2003,12 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-    /* Resolve pixel size with improved scaling. */
+	/* Pixel side. */
     double ptSize = faPtr->size;
     int basePixels;
+
     if (ptSize < 0.0) {
+        /* Already a pixel size (common case: size = -12). */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
         basePixels = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
@@ -2003,86 +2018,82 @@ InitFont(
     } else {
         basePixels = 12;
     }
-    if (basePixels < 1) basePixels = 1;
+    if (basePixels < 1) {
+        basePixels = 1;
+    }
 
+    /* Small-size boost – keeps menus / labels readable. */
     if (basePixels < 14) {
         basePixels = (int)(basePixels * 1.15 + 0.5);
     }
     fontPtr->pixelSize = basePixels;
 
-    int bold = (faPtr->weight == TK_FW_BOLD);
-    int italic = (faPtr->slant == TK_FS_ITALIC);
+    int bold   = (faPtr->weight == TK_FW_BOLD);
+    int italic = (faPtr->slant  == TK_FS_ITALIC);
 
     const char *family = faPtr->family;
-
-    /*
-     * Strict sans-serif default: 
-     * If the user did NOT explicitly request a family,
-     * we do NOT add their family to the pattern.
-     */
-    bool useSansDefault = (!family || family[0] == '\0' ||
-                           strcmp(family, "sans") == 0 ||
-                           strcmp(family, "TkDefaultFont") == 0 ||
-                           strcmp(family, "TkTextFont") == 0 ||
-                           strcmp(family, "TkMenuFont") == 0 ||
-                           strcmp(family, "TkHeadingFont") == 0 ||
-                           strcmp(family, "TkCaptionFont") == 0 ||
-                           strcmp(family, "TkSmallCaptionFont") == 0 ||
-                           strcmp(family, "TkIconFont") == 0 ||
-                           strcmp(family, "TkTooltipFont") == 0);
+    bool useSansDefault =
+        (!family || family[0] == '\0' ||
+         strcmp(family, "sans") == 0 ||
+         strcmp(family, "TkDefaultFont") == 0 ||
+         strcmp(family, "TkTextFont") == 0 ||
+         strcmp(family, "TkMenuFont") == 0 ||
+         strcmp(family, "TkHeadingFont") == 0 ||
+         strcmp(family, "TkCaptionFont") == 0 ||
+         strcmp(family, "TkSmallCaptionFont") == 0 ||
+         strcmp(family, "TkIconFont") == 0 ||
+         strcmp(family, "TkTooltipFont") == 0);
 
     FcPattern *pat = FcPatternCreate();
-    if (!pat) return;
+    if (!pat) {
+        if (!fa->family || fa->family[0] == '\0') {
+            fa->family = Tk_GetUid("sans-serif");
+        }
+        return;
+    }
 
-    /* 
-     * Force sans-serif by adding FC_FAMILY with strong preference. 
-     * Only honor explicit non-default family.
-     */
+	/* Pattern construction. */
     if (!useSansDefault && family && family[0] != '\0') {
+        /* 
+         * Explicit family request – put it first and do not 
+         * pollute the ranking with a long list of sans-serif names. 
+         */
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
     } else {
-        /* Default: force sans-serif. */
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     }
 
-    /*
-     * Font stack - order matters for fallback.
-     * Put sans-serif first to ensure default is sans-serif, not serif.
+    /* Only inject the generic sans stack when we are in default mode. */
+    if (useSansDefault) {
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Verdana");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Tahoma");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Roboto");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Ubuntu");
+    }
+
+    /* 
+     * Monochrome emoji only – color emoji fonts are unusable 
+     * by stb_truetype / NanoVG. 
      */
-    /* Primary: sans-serif fonts with explicit preference. */
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Verdana");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Tahoma");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Roboto");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Ubuntu");
-    
-    /* Emoji fonts - must come after sans to allow fallback. */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emojione");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"twemoji");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Symbola");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"emoji");
-
-    /* No FC_STYLE hints — they cause serif pollution. */
 
     FcPatternAddInteger(pat, FC_WEIGHT,
                         bold ? FC_WEIGHT_BOLD : FC_WEIGHT_REGULAR);
     FcPatternAddInteger(pat, FC_SLANT,
                         italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
     FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
-
-    /* Set FC_HINTING and FC_AUTOHINT to improve rendering. */
-    FcPatternAddBool(pat, FC_HINTING, FcTrue);
-    FcPatternAddBool(pat, FC_AUTOHINT, FcTrue);
-    
-    /*Set FC_ANTIALIAS to ensure smooth text. */
+    FcPatternAddBool(pat, FC_HINTING,   FcTrue);
+    FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
+    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* reject color fonts */
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
@@ -2090,197 +2101,90 @@ InitFont(
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
-    /* If the first font is serif, explicitly filter it out and find a sans-serif. */
-    if (set && set->nfont > 0) {
-        FcPattern *firstPat = set->fonts[0];
-        FcChar8 *firstFamily = NULL;
-        FcPatternGetString(firstPat, FC_FAMILY, 0, &firstFamily);
-        
-        /* Check if the first font is serif. */
-        bool isSerif = false;
-        if (firstFamily) {
-            const char *fam = (const char *)firstFamily;
-            if (strcasestr(fam, "serif") && !strcasestr(fam, "sans")) {
-                isSerif = true;
+    /* 
+     * Move any remaining color-emoji faces to the very end 
+     * so they can never become faces[0]. 
+     */
+    if (set && set->nfont > 1) {
+        int n = set->nfont;
+        for (int i = 0; i < n; ) {
+            FcChar8 *file = NULL;
+            FcPatternGetString(set->fonts[i], FC_FILE, 0, &file);
+            if (file && (strcasestr((const char *)file, "ColorEmoji") ||
+                         strcasestr((const char *)file, "color-emoji") ||
+                         strcasestr((const char *)file, "NotoColor"))) {
+                FcPattern *bad = set->fonts[i];
+                memmove(&set->fonts[i], &set->fonts[i + 1],
+                        (n - i - 1) * sizeof(FcPattern *));
+                set->fonts[n - 1] = bad;
+                n--;
+                /* Do not advance i – examine the face that just slid in. */
+            } else {
+                i++;
             }
-            const char *serifNames[] = {
-                "times", "times new roman", "georgia", "garamond", 
-                "palatino", "bookman", "cambria", "didot", "bodoni",
-                "caslon", "baskerville", "minion", "goudy", NULL
-            };
-            for (int i = 0; serifNames[i]; i++) {
-                if (strcasestr(fam, serifNames[i])) {
-                    isSerif = true;
+        }
+        set->nfont = n;
+    }
+
+    /* 
+     * When the caller asks for a specific family, force the 
+     * best matching face to the front. 
+     */
+    if (!useSansDefault && family && family[0] && set && set->nfont > 0) {
+        int best = -1;
+        for (int i = 0; i < set->nfont; i++) {
+            FcChar8 *fam = NULL;
+            if (FcPatternGetString(set->fonts[i], FC_FAMILY, 0, &fam)
+                    == FcResultMatch && fam) {
+                if (strcasestr((const char *)fam, family) ||
+                    strcasestr(family, (const char *)fam)) {
+                    best = i;
                     break;
                 }
             }
         }
-        
-        /* If the primary font is serif, try to find a sans-serif font in the set. */
-        if (isSerif && set->nfont > 1) {
-            int sansIndex = -1;
-            for (int i = 1; i < set->nfont; i++) {
-                FcChar8 *fam = NULL;
-                FcPatternGetString(set->fonts[i], FC_FAMILY, 0, &fam);
-                if (fam) {
-                    const char *f = (const char *)fam;
-                    if (strcasestr(f, "sans") || strcasestr(f, "helvetica") ||
-                        strcasestr(f, "arial") || strcasestr(f, "verdana") ||
-                        strcasestr(f, "tahoma") || strcasestr(f, "dejavu") ||
-                        strcasestr(f, "liberation") || strcasestr(f, "noto") ||
-                        strcasestr(f, "roboto") || strcasestr(f, "ubuntu")) {
-                        sansIndex = i;
-                        break;
-                    }
-                }
-            }
-            /* Swap the sans-serif font to the front. */
-            if (sansIndex > 0) {
-                FcPattern *tmp = set->fonts[0];
-                set->fonts[0] = set->fonts[sansIndex];
-                set->fonts[sansIndex] = tmp;
-            }
+        if (best > 0) {
+            FcPattern *tmp = set->fonts[0];
+            set->fonts[0] = set->fonts[best];
+            set->fonts[best] = tmp;
         }
     }
 
-    /* Last-resort fallback: manually find a sans-serif font. */
+    /* Last-resort hard-coded paths if Fontconfig returned nothing. */
     if (!set || set->nfont == 0) {
         FcPatternDestroy(pat);
         pat = FcPatternCreate();
-        if (!pat) return;
-
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans");
-        FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
-        FcPatternAddBool(pat, FC_HINTING, FcTrue);
-        FcPatternAddBool(pat, FC_AUTOHINT, FcTrue);
-        FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
-
+        if (!pat) {
+            fa->family = Tk_GetUid("sans-serif");
+            return;
+        }
+        const char *fallback[] = {
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+            "/usr/share/fonts/TTF/DejaVuSans.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+            NULL
+        };
+        for (int i = 0; fallback[i]; i++) {
+            if (access(fallback[i], R_OK) == 0) {
+                FcPatternAddString(pat, FC_FILE, (FcChar8 *)fallback[i]);
+                FcPatternAddDouble(pat, FC_PIXEL_SIZE,
+                                   (double)fontPtr->pixelSize);
+                break;
+            }
+        }
         FcConfigSubstitute(NULL, pat, FcMatchPattern);
         FcDefaultSubstitute(pat);
         set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
-        
-        /* If still no font, try specific paths. */
-        if (!set || set->nfont == 0) {
-            FcPatternDestroy(pat);
-            /* Try to load a specific font file. */
-            const char *fontPaths[] = {
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-                "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
-                "/usr/share/fonts/TTF/DejaVuSans.ttf",
-                "/usr/share/fonts/dejavu/DejaVuSans.ttf",
-                "/usr/share/fonts/truetype/arial/Arial.ttf",
-                NULL
-            };
-            
-            FcPattern *pat2 = FcPatternCreate();
-            for (int i = 0; fontPaths[i]; i++) {
-                if (access(fontPaths[i], R_OK) == 0) {
-                    FcPatternAddString(pat2, FC_FILE, (FcChar8 *)fontPaths[i]);
-                    FcPatternAddDouble(pat2, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
-                    break;
-                }
-            }
-            if (pat2) {
-                set = FcFontSort(NULL, pat2, FcTrue, NULL, &result);
-                FcPatternDestroy(pat2);
-            }
-        }
     }
 
     fontPtr->pattern = pat;
     fontPtr->fontset = set;
 
-    /*
-     * FcFontSort's trim=FcTrue keeps only fonts that add Unicode coverage
-     * not already present in an earlier-ranked font. Ordinary sans/serif
-     * fonts frequently already carry a handful of glyphs from the same
-     * blocks emoji live in (Misc Symbols, Dingbats, etc. - see IsEmoji()),
-     * which is enough for trim to judge a dedicated emoji font "redundant"
-     * and drop it from the sorted set before GetEmojiFaceIndex() ever gets
-     * a chance to see it. Which ordinary font wins the sort (and therefore
-     * what trim keeps or discards) shifts with the requested family, which
-     * is why switching the default family flips emoji between "wrong
-     * glyphs" and "nothing at all". Explicitly check for an emoji-named
-     * face and splice one in via FcFontMatch if the sort didn't keep one.
-     */
-    FcPattern *guaranteedEmojiFont = NULL;
-    {
-        bool haveEmojiFace = false;
-        if (set) {
-            for (int i = 0; i < set->nfont; i++) {
-                FcChar8 *fam = NULL;
-                if (FcPatternGetString(set->fonts[i], FC_FAMILY, 0, &fam)
-                        == FcResultMatch && fam &&
-                    strcasestr((const char *)fam, "emoji") &&
-                    !strcasestr((const char *)fam, "color")) {
-                    haveEmojiFace = true;
-                    break;
-                }
-            }
-        }
-        if (!haveEmojiFace) {
-            FcPattern *ep = FcPatternCreate();
-            if (ep) {
-                /*
-                 * NanoVG rasterizes via stb_truetype, which only reads
-                 * classic 'glyf' outlines - it cannot draw color bitmap
-                 * (CBDT/CBLC, e.g. Noto Color Emoji) or COLR/CPAL (e.g.
-                 * Segoe UI/Apple Color Emoji) glyphs at all, so color
-                 * emoji fonts are never requested here.
-                 */
-                FcPatternAddString(ep, FC_FAMILY, (FcChar8 *)"Noto Emoji");
-                FcPatternAddString(ep, FC_FAMILY, (FcChar8 *)"Symbola");
-                FcPatternAddString(ep, FC_FAMILY, (FcChar8 *)"emoji");
-                FcPatternAddDouble(ep, FC_PIXEL_SIZE,
-                                   (double)fontPtr->pixelSize);
-                FcConfigSubstitute(NULL, ep, FcMatchPattern);
-                FcDefaultSubstitute(ep);
-
-                FcResult eresult;
-                FcPattern *matched = FcFontMatch(NULL, ep, &eresult);
-                FcPatternDestroy(ep);
-
-                if (matched) {
-                    FcChar8 *mfam = NULL;
-                    if (FcPatternGetString(matched, FC_FAMILY, 0, &mfam)
-                            == FcResultMatch && mfam &&
-                        strcasestr((const char *)mfam, "emoji") &&
-                        !strcasestr((const char *)mfam, "color")) {
-                        if (!set) {
-                            set = FcFontSetCreate();
-                            fontPtr->fontset = set;
-                        }
-                        if (set && FcFontSetAdd(set, matched)) {
-                            guaranteedEmojiFont = matched;
-                        } else {
-                            FcPatternDestroy(matched);
-                        }
-                    } else {
-                        FcPatternDestroy(matched);
-                    }
-                }
-            }
-        }
-    }
-
     int nfaces = (set && set->nfont > 0) ? set->nfont : 0;
-    if (nfaces > MAX_FACES) nfaces = MAX_FACES;
-
-    /*
-     * If the guaranteed emoji font above got pushed past the MAX_FACES
-     * cutoff by everything ranked ahead of it, force it into the last
-     * surviving slot instead of letting it get truncated away again.
-     */
-    if (set && guaranteedEmojiFont && nfaces > 0) {
-        int emojiPos = -1;
-        for (int i = 0; i < set->nfont; i++) {
-            if (set->fonts[i] == guaranteedEmojiFont) { emojiPos = i; break; }
-        }
-        if (emojiPos >= nfaces) {
-            set->fonts[nfaces - 1] = guaranteedEmojiFont;
-        }
+    if (nfaces > MAX_FACES) {
+        nfaces = MAX_FACES;
     }
 
     fontPtr->faces = (WaylandFtFace *)Tcl_Alloc(
@@ -2291,27 +2195,48 @@ InitFont(
 
     for (int i = 0; i < nfaces; i++) {
         WaylandFtFace *face = &fontPtr->faces[i];
-        face->source = set->fonts[i];
+        face->source    = set->fonts[i];
         face->nvgFontId = -1;
-        face->isLoaded = 0;
+        face->isLoaded  = 0;
         face->nvgName[0] = '\0';
 
         FcCharSet *cs = NULL;
         if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &cs)
-            == FcResultMatch)
+                == FcResultMatch) {
             face->charset = FcCharSetCopy(cs);
+        }
 
         FcChar8 *fcPath = NULL;
         if (FcPatternGetString(set->fonts[i], FC_FILE, 0, &fcPath)
-            == FcResultMatch && fcPath)
+                == FcResultMatch && fcPath) {
             face->filePath = strdup((char *)fcPath);
+        }
 
         int fcIdx = 0;
         FcPatternGetInteger(set->fonts[i], FC_INDEX, 0, &fcIdx);
         face->faceIndex = fcIdx;
     }
+    
+    /* Record the actual family that ended up as primary. */
 
-    /* Metrics from primary face via stb_truetype. */
+    if (nfaces > 0 && fontPtr->faces[0].source) {
+        FcChar8 *resolvedFamily = NULL;
+        if (FcPatternGetString(fontPtr->faces[0].source, FC_FAMILY, 0,
+                               &resolvedFamily) == FcResultMatch
+            && resolvedFamily) {
+            fa->family = Tk_GetUid((char *)resolvedFamily);
+        }
+    }
+    /* Safety net – never leave fa.family NULL/empty. */
+    if (!fa->family || fa->family[0] == '\0') {
+        if (!useSansDefault && family && family[0] != '\0') {
+            fa->family = Tk_GetUid(family);
+        } else {
+            fa->family = Tk_GetUid("sans-serif");
+        }
+    }
+
+    /* Metrics from the (now guaranteed usable) primary face. */
     if (nfaces > 0 && fontPtr->faces[0].filePath) {
         FILE *fd = fopen(fontPtr->faces[0].filePath, "rb");
         if (fd) {
@@ -2328,37 +2253,43 @@ InitFont(
                         &info, (float)fontPtr->pixelSize);
                     int asc, desc, linegap;
                     stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                    fm->ascent = (int)(asc * scale + 0.5f);
+                    fm->ascent  = (int)(asc  * scale + 0.5f);
                     fm->descent = (int)(-desc * scale + 0.5f);
 
                     int adv_W, adv_dot, lsb;
                     stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
                     stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                     fm->maxWidth = (int)(adv_W * scale + 0.5f);
-                    fm->fixed = (adv_W == adv_dot);
-                    fa->size = (double)(-fontPtr->pixelSize);
+                    fm->fixed    = (adv_W == adv_dot);
+                    fa->size     = (double)(-fontPtr->pixelSize);
                 }
             }
-            if (buf) Tcl_Free(buf);
+            if (buf) {
+                Tcl_Free(buf);
+            }
             fclose(fd);
         }
     }
 
     if (fm->ascent == 0 && fm->descent == 0) {
-        fm->ascent = (int)(fontPtr->pixelSize * 0.72 + 0.5);
-        fm->descent = (int)(fontPtr->pixelSize * 0.28 + 0.5);
+        fm->ascent   = (int)(fontPtr->pixelSize * 0.75 + 0.5);
+        fm->descent  = (int)(fontPtr->pixelSize * 0.25 + 0.5);
         fm->maxWidth = fontPtr->pixelSize;
-        fm->fixed = 0;
+        fm->fixed    = 0;
     }
 
     fontPtr->underlinePos = fm->descent / 2;
-    if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
+    if (fontPtr->underlinePos < 1) {
+        fontPtr->underlinePos = 1;
+    }
     fontPtr->barHeight = (int)(fontPtr->pixelSize * 0.07 + 0.5);
-    if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
+    if (fontPtr->barHeight < 1) {
+        fontPtr->barHeight = 1;
+    }
 
     fontPtr->nvgFontId = -1;
-    fontPtr->font.fid = (Font)(uintptr_t)fontPtr;
-    
+    fontPtr->font.fid  = (Font)(uintptr_t)fontPtr;
+
     WaylandShaper_Init(&fontPtr->shaper);
 }
 
@@ -2446,82 +2377,135 @@ ColorFromGC(GC gc)
 }
 
 /*
+ * Standard Tk named fonts to register at startup. Table is at file scope
+ * so both TkpFontPkgInit() and the deferred idle callback below can use it.
+ */
+static const struct {
+    const char *tkName;
+    const char *family;
+    int         points;
+    int         bold;
+    int         italic;
+} wlNamedFonts[] = {
+    { "TkDefaultFont",      "sans-serif", 10, 0, 0 },
+    { "TkTextFont",         "sans-serif", 10, 0, 0 },
+    { "TkFixedFont",        "monospace",  10, 0, 0 },
+    { "TkHeadingFont",      "sans-serif", 10, 1, 0 },
+    { "TkCaptionFont",      "sans-serif", 12, 1, 0 },
+    { "TkSmallCaptionFont", "sans-serif",  8, 0, 0 },
+    { "TkIconFont",         "sans-serif", 10, 0, 0 },
+    { "TkMenuFont",         "sans-serif", 10, 0, 0 },
+    { "TkTooltipFont",      "sans-serif",  9, 0, 0 },
+    { NULL, NULL, 0, 0, 0 }
+};
+
+/*
  *----------------------------------------------------------------------
- * TkpFontPkgInit --
+ * CreateStandardNamedFonts --
  *
- *   Initialise the font subsystem and create standard Tk named fonts.
+ *   Tcl_IdleProc that actually registers wlNamedFonts[] via
+ *   TkCreateNamedFont(). Scheduled from TkpFontPkgInit() via
+ *   Tcl_DoWhenIdle() instead of running inline - see the comment in
+ *   TkpFontPkgInit() for why running this immediately at font-package-init
+ *   time is unsafe.
+ *
+ *   By the time the event loop goes idle and this runs, Tk_Init() has
+ *   finished: the main window is fully linked back to its TkMainInfo (so
+ *   TkCreateNamedFont()'s tkwin->mainPtr->fontInfoPtr lookup is safe), and
+ *   the "font" Tcl command is registered (not that this needs it, since it
+ *   calls TkCreateNamedFont directly rather than eval'ing "font create").
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   Initialises Fontconfig, defines global Tk fonts.
+ *   Creates the standard named fonts, or reports a diagnostic for any
+ *   that fail for a reason other than already existing.
+ *----------------------------------------------------------------------
+ */
+
+static void
+CreateStandardNamedFonts(ClientData clientData)
+{
+    TkMainInfo *mainPtr = (TkMainInfo *) clientData;
+    Tcl_Interp *interp = mainPtr->interp;
+    Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
+
+    for (int i = 0; wlNamedFonts[i].tkName != NULL; i++) {
+        TkFontAttributes fa;
+        TkInitFontAttributes(&fa);
+        fa.family = Tk_GetUid(wlNamedFonts[i].family);
+        fa.size   = (double)wlNamedFonts[i].points;
+        fa.weight = wlNamedFonts[i].bold   ? TK_FW_BOLD   : TK_FW_NORMAL;
+        fa.slant  = wlNamedFonts[i].italic ? TK_FS_ITALIC : TK_FS_ROMAN;
+
+        if (TkCreateNamedFont(interp, tkwin, wlNamedFonts[i].tkName, &fa)
+                != TCL_OK) {
+            const char *msg = Tcl_GetStringResult(interp);
+            if (!msg || !strstr(msg, "already exists")) {
+                fprintf(stderr,
+                        "tkWaylandFont: failed to create named font "
+                        "\"%s\": %s\n",
+                        wlNamedFonts[i].tkName,
+                        (msg && *msg) ? msg : "(unknown error)");
+            }
+            Tcl_ResetResult(interp);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkpFontPkgInit --
+ *
+ *   Initialise the font subsystem and schedule creation of standard Tk
+ *   named fonts.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Initialises Fontconfig; schedules an idle callback that defines the
+ *   global Tk named fonts.
  *----------------------------------------------------------------------
  */
 
 void
 TkpFontPkgInit(TkMainInfo *mainPtr)
 {
-    Tcl_Interp *interp = mainPtr->interp;
-
     if (!fcInitialized) {
         FcInit();
         fcInitialized = 1;
     }
 
     /*
-     * Register standard Tk named fonts.  Use generic Fontconfig family
-     * names so Fontconfig selects the best available system font rather
-     * than requiring a specific family to be installed.
+     * Standard named-font registration used to happen right here, either
+     * via Tcl_EvalObjEx("font create ...") or via a direct
+     * TkCreateNamedFont() call. Both are unsafe at this exact point:
+     *
+     *   - TkpFontPkgInit() is called from TkFontPkgInit() during
+     *     TkCreateMainWindow(), before the "font" Tcl command has been
+     *     registered in this interpreter. Confirmed by testing: every
+     *     Tcl_EvalObjEx("font create ...") call here failed with
+     *     "invalid command name \"font\"", so none of TkDefaultFont/
+     *     TkTextFont/etc. were ever actually being created - later lookups
+     *     fell back to attributes that were never populated with a real
+     *     family, which is consistent with faPtr->family arriving
+     *     empty/NULL regardless of what was actually requested.
+     *
+     *   - Calling TkCreateNamedFont() directly here instead is *also*
+     *     unsafe: it dereferences ((TkWindow *) tkwin)->mainPtr->fontInfoPtr,
+     *     and at this point in TkCreateMainWindow() the main window is not
+     *     yet fully linked back to mainPtr, which segfaults immediately
+     *     (verified via gdb).
+     *
+     * Deferring the actual registration to a Tcl_DoWhenIdle() callback
+     * sidesteps both hazards at once: by the time the event loop goes
+     * idle, Tk_Init() has completed, so the window <-> mainPtr back-link
+     * is established and it's safe to call TkCreateNamedFont() directly
+     * (which also avoids re-parsing/evaluating a Tcl command string).
      */
-    static const struct {
-        const char *tkName;
-        const char *family;
-        int         points;
-        int         bold;
-        int         italic;
-    } namedFonts[] = {
-        { "TkDefaultFont",      "sans-serif", 10, 0, 0 },
-        { "TkTextFont",         "sans-serif", 10, 0, 0 },
-        { "TkFixedFont",        "monospace",  10, 0, 0 },
-        { "TkHeadingFont",      "sans-serif", 10, 1, 0 },
-        { "TkCaptionFont",      "sans-serif", 12, 1, 0 },
-        { "TkSmallCaptionFont", "sans-serif",  8, 0, 0 },
-        { "TkIconFont",         "sans-serif", 10, 0, 0 },
-        { "TkMenuFont",         "sans-serif", 10, 0, 0 },
-        { "TkTooltipFont",      "sans-serif",  9, 0, 0 },
-        { NULL, NULL, 0, 0, 0 }
-    };
-
-    for (int i = 0; namedFonts[i].tkName != NULL; i++) {
-        Tcl_Obj *cmd = Tcl_NewListObj(0, NULL);
-        Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("font",   -1));
-        Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("create", -1));
-        Tcl_ListObjAppendElement(NULL, cmd,
-				 Tcl_NewStringObj(namedFonts[i].tkName, -1));
-        Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-family", -1));
-        Tcl_ListObjAppendElement(NULL, cmd,
-				 Tcl_NewStringObj(namedFonts[i].family, -1));
-        Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-size", -1));
-        Tcl_ListObjAppendElement(NULL, cmd,
-				 Tcl_NewIntObj(namedFonts[i].points));
-        if (namedFonts[i].bold) {
-            Tcl_ListObjAppendElement(NULL, cmd,
-				     Tcl_NewStringObj("-weight", -1));
-            Tcl_ListObjAppendElement(NULL, cmd,
-				     Tcl_NewStringObj("bold", -1));
-        }
-        if (namedFonts[i].italic) {
-            Tcl_ListObjAppendElement(NULL, cmd,
-				     Tcl_NewStringObj("-slant", -1));
-            Tcl_ListObjAppendElement(NULL, cmd,
-				     Tcl_NewStringObj("italic", -1));
-        }
-        Tcl_IncrRefCount(cmd);
-        Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
-        Tcl_DecrRefCount(cmd);
-        Tcl_ResetResult(interp);
-    }
+    Tcl_DoWhenIdle(CreateStandardNamedFonts, (ClientData) mainPtr);
 }
 
 /*
@@ -2571,7 +2555,7 @@ TkpGetFontFromAttributes(
 			 const TkFontAttributes *faPtr)
 {
     WaylandFont *fontPtr;
-
+    
     if (tkFontPtr == NULL) {
         fontPtr = (WaylandFont *)Tcl_Alloc(sizeof(WaylandFont));
         memset(fontPtr, 0, sizeof(WaylandFont));
@@ -2581,6 +2565,11 @@ TkpGetFontFromAttributes(
     }
 
     InitFont(tkwin, faPtr, fontPtr);
+    
+    /* Guarantee the public attribute is never null after construction. */
+    if (!fontPtr->font.fa.family || fontPtr->font.fa.family[0] == '\0')
+        fontPtr->font.fa.family = Tk_GetUid("sans-serif");
+        
     return (TkFont *)fontPtr;
 }
 

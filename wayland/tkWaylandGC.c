@@ -445,6 +445,7 @@ Tk_GetPixmap(
     TkWaylandPixmap *pixmapPtr;
     GLenum           status;
     GLFWwindow      *glfwWindow;
+    GLint            prevFbo;
 
     if (width <= 0 || height <= 0) {
         return None;
@@ -467,6 +468,17 @@ Tk_GetPixmap(
     pixmapPtr->width = width;
     pixmapPtr->height = height;
 
+    /*
+     * nvgluCreateFramebuffer leaves the newly created FBO bound as the
+     * active GL_FRAMEBUFFER. Tk_GetPixmap can be called well before any
+     * window is actually redrawn (e.g. `image create bitmap` at script
+     * load time), so nothing else is guaranteed to rebind the real
+     * on-screen framebuffer afterward. Without saving/restoring here,
+     * whatever draws next -- for any window -- can silently land in
+     * this throwaway off-screen FBO instead of on screen.
+     */
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFbo);
+
     /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
     pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->vg,
@@ -481,6 +493,9 @@ Tk_GetPixmap(
     /* Clear pixmap to white. */
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    /* Restore whatever framebuffer was bound before this call. */
+    glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)prevFbo);
 
     return PixmapFromTkWaylandPixmap(pixmapPtr);
 }
