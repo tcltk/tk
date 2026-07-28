@@ -1,5 +1,5 @@
 #
-# Tests for tags in the ttk::treeview widget
+# Tests for the ttk::treeview widget
 #
 
 # NOTES
@@ -32,7 +32,10 @@ source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
 # Ensure a pristine initial window state
 resetWindows
 
-# Constraints
+#
+# COMMON TEST SETUP
+#
+
 ttk::style theme use default
 #ttk::setTheme default
 set dfont [font configure TkDefaultFont]
@@ -41,14 +44,14 @@ set size [expr {[tk windowingsystem] ne "aqua" ? 9 : 10}]
 font configure TkDefaultFont -family Arial -size $size
 font configure TkHeadingFont -family Arial -size $size
 
-#
-# LOCAL UTILITY PROCS
-#
-
 set colors [list red {pink maroon darkred magenta} green {chartreuse lime olive teal} \
     blue {cyan turquoise mediumblue darkblue navy} orange {coral} yellow {gold} purple \
     {} brown {wheat khaki} black {} white {beige} gray {silver}]
 set columns [list Color Hex Decimal Float]
+
+#
+# LOCAL UTILITY PROCS
+#
 
 proc insert {w parent color} {
     lassign [winfo rgb . $color] r g b
@@ -142,8 +145,6 @@ proc wait {time} {
 proc ButtonPress {w item {column {#0}} {offset 0}} {
     focus -force $w
     $w see $item $column
-    update
-    update idletasks
     wait 25
     lassign [$w bbox $item $column] x y wd h
 
@@ -156,7 +157,6 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
     incr y 5
     focus -force $w
     event generate $w <Button-1> -x $x -y $y
-    update idletasks
     wait 25
     event generate $w <ButtonRelease-1> -x $x -y $y
     update
@@ -185,7 +185,7 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     }
     set mod [expr {$modifier ne "" ? [format "%s-" $modifier] : ""}]
     event generate $w [format "<%sKeyPress-%s>" $mod $keysym]
-    update idletasks
+    wait 25
     event generate $w [format "<%sKeyRelease-%s>" $mod $keysym]
     update
     update idletasks
@@ -603,22 +603,22 @@ test Style-5.9 {Cleanup} -body {
 
 test Style-5.10 {Treeview with custom theme doesn't resize bug bc602049ab} -setup {
 	image create photo tvbg -data {
- iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAnXAAAJ1wG
- xbhe3AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAACJJREFUOI
- 1jPLF9+38GKgImaho2auCogaMGjho4auBQMhAAyR0DXUEyypsAAAAASUVORK5CYII=
-}
-ttk::style theme create bar-bc602049ab -parent clam -settings {
-      ttk::style element create Treeview.field image tvbg -width 0 -height 0
-}
-ttk::style theme use bar-bc602049ab
+	    iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAnXAAAJ1wG
+	    xbhe3AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAACJJREFUOI
+	    1jPLF9+38GKgImaho2auCogaMGjho4auBQMhAAyR0DXUEyypsAAAAASUVORK5CYII=
+	}
+	ttk::style theme create bar-bc602049ab -parent clam -settings {
+	    ttk::style element create Treeview.field image tvbg -width 0 -height 0
+	}
+	ttk::style theme use bar-bc602049ab
     } -body {
 	pack [ttk::treeview .tv]
-update idletasks
-set g1 [winfo geometry .tv]
-ttk::style theme use bar-bc602049ab
-update idletasks
-set g2 [winfo geometry .tv]
-expr {$g1 eq $g2 ? 1 : "$g1 --> $g2"}
+	update idletasks
+	set g1 [winfo geometry .tv]
+	ttk::style theme use bar-bc602049ab
+	update idletasks
+	set g2 [winfo geometry .tv]
+	expr {$g1 eq $g2 ? 1 : "$g1 --> $g2"}
     } -cleanup {
 	image delete tvbg
     } -result {1}
