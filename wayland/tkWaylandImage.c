@@ -415,11 +415,17 @@ TkpPutRGBAImage(
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
 
-    /* Note: Consider keeping nvgDeleteImage if you see VRAM growth. */
-    // nvgDeleteImage(dc.vg, imageId);
-
-    /* Finalize context pass, swap buffers, and flush layout changes. */
+    /*
+     * As in XCopyPlane: nvgFill() above only queues the draw, it doesn't
+     * touch the GPU. The texture must stay alive until TkWaylandEndDraw()
+     * flushes the frame (nvgEndFrame()) and NanoVG actually issues the
+     * textured draw call. Only delete the image after that point --
+     * deleting earlier (or never, as this used to do) either corrupts
+     * the render or leaks a GL texture on every call.
+     */
     TkWaylandEndDraw(&dc);
+    nvgDeleteImage(dc.vg, imageId);
+
     return 0;
 }
 
@@ -797,10 +803,19 @@ XCopyPlane(
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
 
-    /* Clean up the NanoVG image. */
+    /*
+     * IMPORTANT: nvgFill() only queues this path/paint into NanoVG's
+     * internal draw-call list -- it does not touch the GPU. The actual
+     * texture bind and draw happen later, inside nvgEndFrame(), which
+     * TkWaylandEndDraw() calls below. Deleting the image before that
+     * point (as this used to do) destroys the GL texture before NanoVG
+     * ever issues the textured draw call that references it, so the
+     * bitmap pattern never actually reaches the screen. Flush the frame
+     * first, then it's safe to delete the image.
+     */
+    TkWaylandEndDraw(&dc);
     nvgDeleteImage(dc.vg, imageId);
 
-    TkWaylandEndDraw(&dc);
     return Success;
 }
 

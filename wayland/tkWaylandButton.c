@@ -5,6 +5,7 @@
  *
  *  Copyright © 1996-1997 Sun Microsystems, Inc.
  *  Copyright © 2026 Kevin Walzer
+ *  Copyright © 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -164,20 +165,17 @@ DrawButtonBitmap(TkButton *butPtr,
                  int x,
                  int y,
                  int width,
-                 int height)
+                 int height,
+                 int *pendingImageIdOut)
 {
     Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
     NVGcontext *vg = TkWaylandGetNVGContext(d);
     Pixmap bitmap = butPtr->bitmap;
-    unsigned char *bits = NULL;
-    unsigned char *rgba = NULL;
     unsigned int bm_width, bm_height, border_width, depth;
     int x_hot, y_hot;
     XGCValues gcValues;
-    XColor *fgColor;
-    XColor fgColorValue;
+    unsigned char fg_r, fg_g, fg_b;
     int imageId;
-    int i, j;
     Display *dpy;
     XImage *image = NULL;
 
@@ -192,13 +190,13 @@ DrawButtonBitmap(TkButton *butPtr,
 
     /* Get bitmap dimensions using XGetGeometry. */
     dpy = Tk_Display(butPtr->tkwin);
-    if (!XGetGeometry(dpy, bitmap, None, &x_hot, &y_hot,
-                      &bm_width, &bm_height, &border_width, &depth)) {
+    if (XGetGeometry(dpy, bitmap, None, &x_hot, &y_hot,
+                     &bm_width, &bm_height, &border_width, &depth) != Success) {
         /* Geometry failed — fallback. */
         goto fallback_rect;
     }
 
-    /* Validate size (early exit if mismatch). */
+    /* Validate size. */
     if (bm_width != (unsigned int)width || bm_height != (unsigned int)height) {
         goto fallback_rect;
     }
@@ -213,100 +211,78 @@ DrawButtonBitmap(TkButton *butPtr,
 
     if (currentGC) {
         XGetGCValues(butPtr->display, currentGC, GCForeground, &gcValues);
-        fgColorValue.pixel = gcValues.foreground;
-        fgColor = Tk_GetColorByValue(butPtr->tkwin, &fgColorValue);
+        fg_r = (unsigned char)((gcValues.foreground >> 16) & 0xFF);
+        fg_g = (unsigned char)((gcValues.foreground >> 8)  & 0xFF);
+        fg_b = (unsigned char)(gcValues.foreground & 0xFF);
     } else {
-        fgColor = butPtr->normalFg;
+        fg_r = (unsigned char)(butPtr->normalFg->red   >> 8);
+        fg_g = (unsigned char)(butPtr->normalFg->green >> 8);
+        fg_b = (unsigned char)(butPtr->normalFg->blue  >> 8);
     }
 
     /*
-     * Read bitmap pixels via XGetImage → XGetPixel
+     * Read bitmap pixels via XGetImage.
      */
     image = XGetImage(dpy, bitmap,
                       0, 0, bm_width, bm_height,
-                      1,          /* Only plane 0 for 1-bit bitmap */
-                      XYPixmap);  /* Bitmap format */
+                      1, XYPixmap);
 
     if (image == NULL) {
         goto fallback_rect;
     }
 
-    /* Allocate buffer for packed bitmap data (1 bit per pixel, MSB-first). */
-    int packedSize = ((int)bm_width * (int)bm_height + 7) / 8;
-    bits = Tcl_Alloc(packedSize);
-    if (!bits) {
-        goto cleanup;
-    }
-
-    /* Pack the bits from XImage. */
-    int byte_idx = 0;
-    for (unsigned int yp = 0; yp < bm_height; yp++) {
-        unsigned char byte = 0;
-        int bit_count = 0;
-        for (unsigned int xp = 0; xp < bm_width; xp++) {
-            unsigned long pixel = XGetPixel(image, (int)xp, (int)yp);
-            if (pixel != 0) {
-                byte |= (1U << (7 - bit_count));   /* MSB first */
-            }
-            bit_count++;
-            if (bit_count == 8 || xp == bm_width - 1) {
-                bits[byte_idx++] = byte;
-                byte = 0;
-                bit_count = 0;
-            }
-        }
-    }
-
-    /* Allocate RGBA buffer (premultiplied or straight alpha — NanoVG handles both). */
-    rgba = Tcl_Alloc(bm_width * bm_height * 4);
+    /*
+     * Allocate RGBA buffer using malloc/free to avoid Tcl allocator issues.
+     * NanoVG uses standard malloc/free internally, so using the system
+     * allocator is safer here.
+     */
+    unsigned char *rgba = (unsigned char *)malloc(bm_width * bm_height * 4);
     if (!rgba) {
-        goto cleanup;
+        XDestroyImage(image);
+        goto fallback_rect;
     }
 
-    /* Convert packed bits → RGBA (0 = transparent black, 1 = fg color opaque). */
-    for (j = 0; j < (int)bm_height; j++) {
-        for (i = 0; i < (int)bm_width; i++) {
-            int byte_index = j * ((bm_width + 7) / 8) + (i / 8);
-            int bit_index = 7 - (i % 8);
-            int bit = (bits[byte_index] >> bit_index) & 1;
-
-            unsigned char *pixel = &rgba[(j * bm_width + i) * 4];
-            if (bit) {
-                pixel[0] = fgColor->red   >> 8;
-                pixel[1] = fgColor->green >> 8;
-                pixel[2] = fgColor->blue  >> 8;
-                pixel[3] = 255;
+    /* Convert XImage pixels directly to RGBA. */
+    for (unsigned int j = 0; j < bm_height; j++) {
+        for (unsigned int i = 0; i < bm_width; i++) {
+            unsigned long pixel = XGetPixel(image, (int)i, (int)j);
+            unsigned char *p = &rgba[(j * bm_width + i) * 4];
+            if (pixel != 0) {
+                p[0] = fg_r;
+                p[1] = fg_g;
+                p[2] = fg_b;
+                p[3] = 255;
             } else {
-                pixel[0] = pixel[1] = pixel[2] = pixel[3] = 0;
+                p[0] = p[1] = p[2] = p[3] = 0;
             }
         }
     }
 
     /* Draw via NanoVG using the RGBA image. */
     imageId = nvgCreateImageRGBA(vg, (int)bm_width, (int)bm_height, 0, rgba);
+    
+    /* Free our RGBA buffer immediately - NanoVG copies the data. */
+    free(rgba);
+    XDestroyImage(image);
+
     if (imageId > 0) {
         NVGpaint paint = nvgImagePattern(vg, x, y, bm_width, bm_height, 0,
-					 imageId, 1);
+                                         imageId, 1);
         nvgBeginPath(vg);
         nvgRect(vg, x, y, bm_width, bm_height);
         nvgFillPaint(vg, paint);
         nvgFill(vg);
-        nvgDeleteImage(vg, imageId);
-    }
 
-cleanup:
-    if (image != NULL) {
-        XDestroyImage(image);
-    }
-    if (rgba != NULL) {
-        ckfree(rgba);
-    }
-    if (bits != NULL) {
-        ckfree(bits);
+        if (pendingImageIdOut) {
+            *pendingImageIdOut = imageId;
+        }
     }
     return;
 
 fallback_rect:
+    if (image != NULL) {
+        XDestroyImage(image);
+    }
     nvgBeginPath(vg);
     nvgRect(vg, x, y, width, height);
     nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
@@ -335,7 +311,8 @@ DrawButtonImage(
     int y,
     int width,
     int height,
-    int selected)
+    int selected,
+    int *pendingImageIdOut)
 {
     if (butPtr->image) {
         Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
@@ -351,7 +328,7 @@ DrawButtonImage(
         }
     } else if (butPtr->bitmap != None) {
         /* Bitmap drawing – convert to RGBA and draw with NanoVG. */
-        DrawButtonBitmap(butPtr, x, y, width, height);
+        DrawButtonBitmap(butPtr, x, y, width, height, pendingImageIdOut);
     }
 }
 
@@ -430,6 +407,7 @@ TkpDisplayButton(void *clientData)
     int imageXOffset = 0, imageYOffset = 0;
     int padX, padY, bd, hl;
     int winWidth, winHeight;
+    int pendingBitmapImageId = -1;
     Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
     int rc = TkWaylandBeginDraw(drawable, currentGC, &dc);
     if (rc != TCL_OK) {
@@ -528,7 +506,8 @@ TkpDisplayButton(void *clientData)
 
         /* Draw image with offset. */
         DrawButtonImage(butPtr, x + imageXOffset, y + imageYOffset,
-                        width, height, (butPtr->flags & SELECTED));
+                        width, height, (butPtr->flags & SELECTED),
+                        &pendingBitmapImageId);
 
         /* Draw text with offset. */
         DrawButtonText(butPtr, x + textXOffset, y + textYOffset);
@@ -545,7 +524,8 @@ TkpDisplayButton(void *clientData)
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
         DrawButtonImage(butPtr, x, y, width, height,
-                        (butPtr->flags & SELECTED));
+                        (butPtr->flags & SELECTED),
+                        &pendingBitmapImageId);
     }
 
     /* Text only. */
@@ -639,6 +619,15 @@ TkpDisplayButton(void *clientData)
     }
     /* End drawing session. */
     TkWaylandEndDraw(&dc);
+
+    /*
+     * Only safe to delete the -bitmap texture now that nvgEndFrame()
+     * (inside TkWaylandEndDraw above) has actually flushed the queued
+     * draw call that samples it.
+     */
+    if (pendingBitmapImageId > 0) {
+        nvgDeleteImage(dc.vg, pendingBitmapImageId);
+    }
 }
 
 /*
@@ -885,7 +874,7 @@ TkpButtonWorldChanged(void *instanceData)
         gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
         newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     } else {
-        /* No disabledFg: use normal colors */
+        /* No disabledFg: use normal colors. */
         gcValues.foreground = butPtr->normalFg->pixel;
         gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
         newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
@@ -898,21 +887,21 @@ TkpButtonWorldChanged(void *instanceData)
     butPtr->disabledGC = newGC;
 
     /*
-     * CRITICAL: Do NOT create gray50 stipple bitmap.
+     * Do NOT create gray50 stipple bitmap.
      * Set butPtr->gray to None to indicate no stipple available.
      * The stipple effect for disabled buttons will be handled
      * by the Wayland compositor or through NanoVG effects.
      */
     if (butPtr->gray != None) {
-        /* If there was a previous stipple bitmap, free it */
+        /* If there was a previous stipple bitmap, free it. */
         Tk_FreeBitmap(butPtr->display, butPtr->gray);
         butPtr->gray = None;
     }
 
-    /* Recompute geometry with new settings */
+    /* Recompute geometry with new settings. */
     TkpComputeButtonGeometry(butPtr);
 
-    /* Schedule redraw if needed */
+    /* Schedule redraw if needed. */
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
             && !(butPtr->flags & REDRAW_PENDING)) {
         Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
