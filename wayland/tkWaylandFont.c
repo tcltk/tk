@@ -20,6 +20,7 @@
 #include <fontconfig/fontconfig.h>
 #include <nanovg.h>
 #include <hb.h>
+#include <hb-ot.h>
 #include <SheenBidi/SheenBidi.h>
 
 #include "stb_truetype.h"
@@ -36,8 +37,7 @@
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
 #define TK_DRAW_IN_CONTEXT		1
 
-/* Module-level state */
-
+/* Module-level state. */
 static int  fcInitialized = 0;
 
 /* Forward declarations of static helper functions. */
@@ -59,6 +59,7 @@ static void       DeleteFont(WaylandFont *fontPtr);
 static NVGcolor   ColorFromGC(GC gc);
 static bool       IsSerifFace(FcPattern *pat);
 static bool       IsSansSerifFace(FcPattern *pat);
+static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
 static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
 
@@ -147,6 +148,45 @@ IsSansSerifFace(FcPattern *pat)
         strcasestr(fam, "open sans") || strcasestr(fam, "noto sans") ||
         strcasestr(fam, "dejavu sans") || strcasestr(fam, "liberation sans") ||
         strcasestr(fam, "roboto") || strcasestr(fam, "ubuntu")) {
+        return true;
+    }
+    
+    return false;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * IsMonospaceFace --
+ *
+ *   Check to see if a font is monospaced.
+ *
+ * Results:
+ *   True if the font face is monospaced, false otherwise. 
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsMonospaceFace(FcPattern *pat)
+{
+    if (!pat) return false;
+    
+    FcChar8 *family = NULL;
+    if (FcPatternGetString(pat, FC_FAMILY, 0, &family) != FcResultMatch || !family) {
+        return false;
+    }
+    
+    const char *fam = (const char *)family;
+    
+    /* Check for monospace indicators. */
+    if (strcasestr(fam, "mono") || strcasestr(fam, "courier") ||
+        strcasestr(fam, "liberation mono") || strcasestr(fam, "dejavu mono") ||
+        strcasestr(fam, "noto mono") || strcasestr(fam, "inconsolata") ||
+        strcasestr(fam, "consolas") || strcasestr(fam, "andale mono") ||
+        strcasestr(fam, "lucida console") || strcasestr(fam, "menlo") ||
+        strcasestr(fam, "source code pro") || strcasestr(fam, "fira code")) {
         return true;
     }
     
@@ -701,7 +741,7 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
         if (!looksLikeEmoji) continue;
         if (strcasestr(fam, "color")) continue;
 
-        /* Verify it actually has emoji coverage */
+        /* Verify it actually has emoji coverage. */
         FcCharSet *cs = fontPtr->faces[fi].charset;
         if (cs) {
             int score = 0;
@@ -866,8 +906,9 @@ GetBidiRuns(
  *   proper rendering of emoji sequences and to prevent partial
  *   coverage from non-emoji fonts.
  *
- *   This function prioritizes sans-serif faces over serif
- *   faces when multiple fonts cover the same character.
+ *   This function preserves the logical font's primary face (whether
+ *   serif, sans-serif, or monospace) and only falls back to a
+ *   different face if the primary cannot cover the character.
  *
  * Results:
  *   Index of the face (0..nfaces-1) that supports the character.
@@ -904,34 +945,22 @@ GetRunFaceIndex(
         return shaper->charCache[cacheIdx].faceIdx;
     }
 
-    /* First pass: find a sans-serif face that covers this character. */
-    int bestSerifFace = -1;
-    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-        if (!fontPtr->faces[fi].charset ||
-            !FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-            continue;
-        }
-        
-        FcPattern *pat = fontPtr->faces[fi].source;
-        if (!pat) continue;
-        
-        /* Check if this is a serif face. */
-        if (IsSerifFace(pat)) {
-            if (bestSerifFace < 0) bestSerifFace = fi;
-            continue;
-        }
-        
-        /* Found a sans-serif face. */
-        shaper->charCache[cacheIdx].uc      = uc;
-        shaper->charCache[cacheIdx].faceIdx = fi;
-        return fi;
+    /* First check if the primary face covers this character. */
+    if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
+        FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
+        shaper->charCache[cacheIdx].uc = uc;
+        shaper->charCache[cacheIdx].faceIdx = 0;
+        return 0;
     }
-    
-    /* If we found a serif face, use it as a fallback. */
-    if (bestSerifFace >= 0) {
-        shaper->charCache[cacheIdx].uc      = uc;
-        shaper->charCache[cacheIdx].faceIdx = bestSerifFace;
-        return bestSerifFace;
+
+    /* Primary doesn't cover it - find the first face that does. */
+    for (int fi = 1; fi < fontPtr->nfaces; fi++) {
+        if (fontPtr->faces[fi].charset &&
+            FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+            shaper->charCache[cacheIdx].uc = uc;
+            shaper->charCache[cacheIdx].faceIdx = fi;
+            return fi;
+        }
     }
 
     shaper->charCache[cacheIdx].uc      = uc;
@@ -951,8 +980,8 @@ GetRunFaceIndex(
  *   for the entire range to ensure that emoji sequences (ZWJ, skin tones,
  *   flags) remain in a single font and shape correctly.
  *
- *   This function prioritizes sans-serif faces over serif
- *   faces when multiple fonts cover the same characters.
+ *   This function preserves the logical font's primary face and only
+ *   falls back to other faces when the primary lacks coverage.
  *
  * Results:
  *   Face index (0..nfaces-1) that covers all characters, or 0 as fallback.
@@ -982,15 +1011,23 @@ FindFaceCoveringRange(
         }
     }
 
-    /* If the range has both emoji and non-emoji, try to find a sans-serif face that covers non-emoji. */
+    /* If the range has both emoji and non-emoji, try primary first. */
     if (hasEmoji && hasNonEmoji) {
-        for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-            FcPattern *pat = fontPtr->faces[fi].source;
-            if (!pat) continue;
-            
-            /* Skip serif fonts. */
-            if (IsSerifFace(pat)) continue;
-            
+        /* Check primary face first. */
+        if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset) {
+            int ok = 1;
+            FcCharSet *cs = fontPtr->faces[0].charset;
+            for (int i = start; i < start + len; i++) {
+                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                    ok = 0;
+                    break;
+                }
+            }
+            if (ok) return 0;
+        }
+        
+        /* Then try other faces. */
+        for (int fi = 1; fi < fontPtr->nfaces; fi++) {
             FcCharSet *cs = fontPtr->faces[fi].charset;
             if (!cs) continue;
             
@@ -1011,28 +1048,21 @@ FindFaceCoveringRange(
         return GetEmojiFaceIndex(fontPtr);
     }
 
-    /* First pass: find any sans-serif face that covers all characters. */
-    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-        FcPattern *pat = fontPtr->faces[fi].source;
-        if (!pat) continue;
-        
-        /* Skip serif fonts unless absolutely necessary. */
-        if (IsSerifFace(pat)) continue;
-        
-        FcCharSet *cs = fontPtr->faces[fi].charset;
-        if (!cs) continue;
+    /* First check if primary face covers all characters. */
+    if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset) {
         int ok = 1;
+        FcCharSet *cs = fontPtr->faces[0].charset;
         for (int i = start; i < start + len; i++) {
             if (!FcCharSetHasChar(cs, ucs4[i])) {
                 ok = 0;
                 break;
             }
         }
-        if (ok) return fi;
+        if (ok) return 0;
     }
     
-    /* Second pass: any face that covers all characters (including serif). */
-    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+    /* Second pass: any other face that covers all characters. */
+    for (int fi = 1; fi < fontPtr->nfaces; fi++) {
         FcCharSet *cs = fontPtr->faces[fi].charset;
         if (!cs) continue;
         int ok = 1;
@@ -1101,6 +1131,8 @@ GetHbFont(
         face->isLoaded = 1;
         return NULL;
     }
+    
+    hb_ot_font_set_funcs(face->hbFont);   /* use OpenType hmtx / glyf metrics */
 
     /*
      * Scale is in HarfBuzz 26.6 fixed-point units (1/64 px).
@@ -1210,26 +1242,23 @@ WaylandShaper_ShapeString(
             if (clen <= 0) { i++; continue; }
 
             int cacheIdx = uc & 63;
-            int fi       = 0;
+            int fi = 0;
             if (shaper->charCache[cacheIdx].uc == uc) {
                 fi = shaper->charCache[cacheIdx].faceIdx;
             } else {
-                /* Find a sans-serif face first */
-                int bestSerifFace = -1;
-                for (fi = 0; fi < fontPtr->nfaces; fi++) {
-                    if (fontPtr->faces[fi].charset &&
-                        FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                        FcPattern *pat = fontPtr->faces[fi].source;
-                        if (pat && IsSerifFace(pat)) {
-                            if (bestSerifFace < 0) bestSerifFace = fi;
-                            continue;
+                /* Check primary face first. */
+                if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
+                    FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
+                    fi = 0;
+                } else {
+                    /* Find first face that covers this character. */
+                    for (fi = 1; fi < fontPtr->nfaces; fi++) {
+                        if (fontPtr->faces[fi].charset &&
+                            FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+                            break;
                         }
-                        break;
                     }
-                }
-                if (fi >= fontPtr->nfaces) {
-                    if (bestSerifFace >= 0) fi = bestSerifFace;
-                    else fi = 0;
+                    if (fi >= fontPtr->nfaces) fi = 0;
                 }
                 shaper->charCache[cacheIdx].uc      = uc;
                 shaper->charCache[cacheIdx].faceIdx = fi;
@@ -1490,7 +1519,7 @@ WaylandShaper_ShapeString(
             if (subrunHasEmoji && !subrunHasNonEmoji) {
                 runFaceIndex = GetEmojiFaceIndex(fontPtr);
             } else if (subrunHasEmoji && subrunHasNonEmoji) {
-                /* Mixed run - try to find a sans-serif face for non-emoji parts. */
+                /* Mixed run - try to find a face that covers non-emoji parts. */
                 int mixedFace = FindFaceCoveringRange(fontPtr, ucs4Chars,
                                                       subrunStart,
                                                       subrunEnd - subrunStart);
@@ -1555,9 +1584,10 @@ WaylandShaper_ShapeString(
                  * sequences (flags, ZWJ combos, skin-tone modifiers) share
                  * a single byteOff/cluster and must not be pulled apart.
                  */
+                 
                 if (byteOff != lastClusterByteOff) {
                     if (lastClusterWasEmoji) {
-                        runPenX += (int)(fontPtr->pixelSize * 0.18 + 0.5);
+						runPenX += (int)(fontPtr->pixelSize * 0.5 + 0.5);
                     }
                     FcChar32 startUc;
                     lastClusterWasEmoji =
@@ -2003,29 +2033,29 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-    /* Pixel size. */
+    /* Pixel size calculation - direct conversion from points to pixels.
+     * Tk uses -size for pixel sizes and +size for point sizes.
+     * For point sizes, use the standard 96 DPI conversion (1 pt = 1.333 px).
+     */
     double ptSize = faPtr->size;
     int basePixels;
 
     if (ptSize < 0.0) {
-        /* Already a pixel size (common case: size = -12). */
+        /* Negative size means pixels already. */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        basePixels = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
-        if (basePixels <= 0 || basePixels == (int)ptSize || basePixels < 8) {
-            basePixels = (int)(ptSize * 4.0 / 3.0 + 0.5);
+        /* Positive size means points - convert to pixels at 96 DPI.
+         * 1 point = 1/72 inch, 96 DPI = 96 pixels/inch,
+         * so 1 point = 96/72 = 1.333 pixels.
+         */
+        basePixels = (int)(ptSize * 96.0 / 72.0 + 0.5);
+        if (basePixels < 1) {
+            basePixels = 1;
         }
     } else {
         basePixels = 12;
     }
-    if (basePixels < 1) {
-        basePixels = 1;
-    }
 
-    /* Small-size boost – keeps menus / labels readable. */
-    if (basePixels < 14) {
-        basePixels = (int)(basePixels * 1.15 + 0.5);
-    }
     fontPtr->pixelSize = basePixels;
 
     int bold   = (faPtr->weight == TK_FW_BOLD);
@@ -2034,26 +2064,39 @@ InitFont(
     const char *family = faPtr->family;
 
     /*
-     * Treat classic generic sans names (and the Tk named fonts) as
-     * “default” so we force the sans stack instead of letting
-     * Fontconfig pick a random serif when the exact name is missing.
+     * Determine font category for fallback stack selection.
      */
-    bool useSansDefault =
-        (!family || family[0] == '\0' ||
-         strcasecmp(family, "sans") == 0 ||
-         strcasecmp(family, "sans-serif") == 0 ||
-         strcasecmp(family, "helvetica") == 0 ||
-         strcasecmp(family, "arial") == 0 ||
-         strcasecmp(family, "verdana") == 0 ||
-         strcasecmp(family, "tahoma") == 0 ||
-         strcasecmp(family, "TkDefaultFont") == 0 ||
-         strcasecmp(family, "TkTextFont") == 0 ||
-         strcasecmp(family, "TkMenuFont") == 0 ||
-         strcasecmp(family, "TkHeadingFont") == 0 ||
-         strcasecmp(family, "TkCaptionFont") == 0 ||
-         strcasecmp(family, "TkSmallCaptionFont") == 0 ||
-         strcasecmp(family, "TkIconFont") == 0 ||
-         strcasecmp(family, "TkTooltipFont") == 0);
+    bool isGenericSans = false;
+    bool isGenericSerif = false;
+    bool isGenericMono = false;
+    
+    if (!family || family[0] == '\0' ||
+        strcasecmp(family, "sans") == 0 ||
+        strcasecmp(family, "sans-serif") == 0 ||
+        strcasecmp(family, "helvetica") == 0 ||
+        strcasecmp(family, "arial") == 0 ||
+        strcasecmp(family, "verdana") == 0 ||
+        strcasecmp(family, "tahoma") == 0 ||
+        strcasecmp(family, "TkDefaultFont") == 0 ||
+        strcasecmp(family, "TkTextFont") == 0 ||
+        strcasecmp(family, "TkMenuFont") == 0 ||
+        strcasecmp(family, "TkHeadingFont") == 0 ||
+        strcasecmp(family, "TkCaptionFont") == 0 ||
+        strcasecmp(family, "TkSmallCaptionFont") == 0 ||
+        strcasecmp(family, "TkIconFont") == 0 ||
+        strcasecmp(family, "TkTooltipFont") == 0) {
+        isGenericSans = true;
+    } else if (family && (strcasestr(family, "serif") || 
+               strcasestr(family, "times") || 
+               strcasestr(family, "georgia") ||
+               strcasestr(family, "garamond") ||
+               strcasestr(family, "palatino"))) {
+        isGenericSerif = true;
+    } else if (family && (strcasestr(family, "mono") ||
+               strcasestr(family, "courier") ||
+               strcasestr(family, "fixed"))) {
+        isGenericMono = true;
+    }
 
     FcPattern *pat = FcPatternCreate();
     if (!pat) {
@@ -2063,25 +2106,45 @@ InitFont(
         return;
     }
 
-	/* Pattern construction. */
-    if (!useSansDefault && family && family[0] != '\0') {
-        /* Explicit non-generic family – put it first. */
+    /* Pattern construction - preserve requested family. */
+    if (family && family[0] != '\0') {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
-    } else {
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     }
-
+    
     /*
-     * Always keep a short, strong sans list so a missing Helvetica
-     * (or similar) never falls through to a serif.
+     * Build appropriate fallback stack based on font category.
+     * This preserves serif/mono when requested.
      */
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"FreeSans");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
-    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
+    if (isGenericSerif || (family && IsSerifFace(pat))) {
+        /* Serif fallback stack. */
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"serif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Times New Roman");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Times");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Serif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Serif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"FreeSerif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Serif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Georgia");
+    } else if (isGenericMono || (family && strcasestr(family, "courier"))) {
+        /* Monospace fallback stack. */
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"monospace");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Courier New");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Courier");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Mono");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans Mono");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"FreeMono");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Mono");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Inconsolata");
+    } else {
+        /* Sans-serif fallback stack (default). */
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"FreeSans");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
+        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
+    }
 
     /*
      * Monochrome emoji only – colour emoji fonts are unusable
@@ -2106,8 +2169,6 @@ InitFont(
 
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
-
-
 
     /* 
      * Move any remaining color-emoji faces to the very end 
@@ -2139,7 +2200,7 @@ InitFont(
      * looks like a serif, swap the first real sans face 
      * to the front. 
      */
-    if (useSansDefault && set && set->nfont > 1) {
+    if (isGenericSans && set && set->nfont > 1) {
         FcChar8 *primFam = NULL;
         FcPatternGetString(set->fonts[0], FC_FAMILY, 0, &primFam);
         bool primIsSerif = false;
@@ -2182,7 +2243,7 @@ InitFont(
      * When a concrete non-generic family was requested, 
      * pull the best name match to the front (if any). 
      */
-    if (!useSansDefault && family && family[0] && set && set->nfont > 0) {
+    if (!isGenericSans && family && family[0] && set && set->nfont > 0) {
         int best = -1;
         for (int i = 0; i < set->nfont; i++) {
             FcChar8 *fam = NULL;
@@ -2280,7 +2341,7 @@ InitFont(
     }
     /* Safety net – never leave fa.family NULL/empty. */
     if (!fa->family || fa->family[0] == '\0') {
-        if (!useSansDefault && family && family[0] != '\0') {
+        if (!isGenericSans && family && family[0] != '\0') {
             fa->family = Tk_GetUid(family);
         } else {
             fa->family = Tk_GetUid("sans-serif");
@@ -2576,13 +2637,12 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
 TkFont *
 TkpGetNativeFont(Tk_Window tkwin, const char *name)
 {
-    TkFontAttributes fa;
-    TkInitFontAttributes(&fa);
-    fa.family = Tk_GetUid(name);
-    fa.size   = -12.0;
-    fa.weight = TK_FW_NORMAL;
-    fa.slant  = TK_FS_ROMAN;
-    return TkpGetFontFromAttributes(NULL, tkwin, &fa);
+    /* Wayland has no native font-name syntax (no XLFD, no HFONT, …).
+     * Returning NULL forces the generic attribute parser so that
+     * descriptions like {Helvetica 72} and {Times 16 bold} are
+     * handled by TkpGetFontFromAttributes with the real size/weight.
+     */
+    return NULL;
 }
 
 /*
@@ -3349,7 +3409,7 @@ TkpDrawAngledCharsInContext(
             int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
-            /* For emoji, use emoji face.*/
+            /* For emoji, use emoji face. */
             FcChar32 uc;
             if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
                              strlen(clusters[i].text)) > 0) {
@@ -3359,20 +3419,19 @@ TkpDrawAngledCharsInContext(
                         faceIdx = emojiFace;
                     }
                 } else {
-                    /* Find a sans-serif face. */
-                    int sansFace = -1;
-                    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-                        if (fontPtr->faces[fi].charset &&
-                            FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                            FcPattern *pat = fontPtr->faces[fi].source;
-                            if (pat && !IsSerifFace(pat)) {
-                                sansFace = fi;
+                    /* Check primary face first. */
+                    if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
+                        FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
+                        faceIdx = 0;
+                    } else {
+                        /* Find first face that covers this character. */
+                        for (int fi = 1; fi < fontPtr->nfaces; fi++) {
+                            if (fontPtr->faces[fi].charset &&
+                                FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+                                faceIdx = fi;
                                 break;
                             }
                         }
-                    }
-                    if (sansFace >= 0) {
-                        faceIdx = sansFace;
                     }
                 }
             }
