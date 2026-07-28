@@ -2003,7 +2003,9 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-	/* Pixel side. */
+    /* ------------------------------------------------------------------ */
+    /* Pixel size.                                                        */
+    /* ------------------------------------------------------------------ */
     double ptSize = faPtr->size;
     int basePixels;
 
@@ -2032,17 +2034,28 @@ InitFont(
     int italic = (faPtr->slant  == TK_FS_ITALIC);
 
     const char *family = faPtr->family;
+
+    /*
+     * Treat classic generic sans names (and the Tk named fonts) as
+     * “default” so we force the sans stack instead of letting
+     * Fontconfig pick a random serif when the exact name is missing.
+     */
     bool useSansDefault =
         (!family || family[0] == '\0' ||
-         strcmp(family, "sans") == 0 ||
-         strcmp(family, "TkDefaultFont") == 0 ||
-         strcmp(family, "TkTextFont") == 0 ||
-         strcmp(family, "TkMenuFont") == 0 ||
-         strcmp(family, "TkHeadingFont") == 0 ||
-         strcmp(family, "TkCaptionFont") == 0 ||
-         strcmp(family, "TkSmallCaptionFont") == 0 ||
-         strcmp(family, "TkIconFont") == 0 ||
-         strcmp(family, "TkTooltipFont") == 0);
+         strcasecmp(family, "sans") == 0 ||
+         strcasecmp(family, "sans-serif") == 0 ||
+         strcasecmp(family, "helvetica") == 0 ||
+         strcasecmp(family, "arial") == 0 ||
+         strcasecmp(family, "verdana") == 0 ||
+         strcasecmp(family, "tahoma") == 0 ||
+         strcasecmp(family, "TkDefaultFont") == 0 ||
+         strcasecmp(family, "TkTextFont") == 0 ||
+         strcasecmp(family, "TkMenuFont") == 0 ||
+         strcasecmp(family, "TkHeadingFont") == 0 ||
+         strcasecmp(family, "TkCaptionFont") == 0 ||
+         strcasecmp(family, "TkSmallCaptionFont") == 0 ||
+         strcasecmp(family, "TkIconFont") == 0 ||
+         strcasecmp(family, "TkTooltipFont") == 0);
 
     FcPattern *pat = FcPatternCreate();
     if (!pat) {
@@ -2052,34 +2065,31 @@ InitFont(
         return;
     }
 
-	/* Pattern construction. */
+    /* ------------------------------------------------------------------ */
+    /* Pattern construction.                                              */
+    /* ------------------------------------------------------------------ */
     if (!useSansDefault && family && family[0] != '\0') {
-        /* 
-         * Explicit family request – put it first and do not 
-         * pollute the ranking with a long list of sans-serif names. 
-         */
+        /* Explicit non-generic family – put it first. */
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)family);
     } else {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
     }
 
-    /* Only inject the generic sans stack when we are in default mode. */
-    if (useSansDefault) {
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Verdana");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Tahoma");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Roboto");
-        FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Ubuntu");
-    }
+    /*
+     * Always keep a short, strong sans list so a missing Helvetica
+     * (or similar) never falls through to a serif.
+     */
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"sans-serif");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"DejaVu Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Liberation Sans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"FreeSans");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Arial");
+    FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Helvetica");
 
-    /* 
-     * Monochrome emoji only – color emoji fonts are unusable 
-     * by stb_truetype / NanoVG. 
+    /*
+     * Monochrome emoji only – colour emoji fonts are unusable
+     * by stb_truetype / NanoVG.
      */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Symbola");
@@ -2093,7 +2103,7 @@ InitFont(
     FcPatternAddBool(pat, FC_HINTING,   FcTrue);
     FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
-    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* reject color fonts */
+    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* reject colour fonts */
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
@@ -2101,10 +2111,12 @@ InitFont(
     FcResult result;
     FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
-    /* 
-     * Move any remaining color-emoji faces to the very end 
-     * so they can never become faces[0]. 
-     */
+    /* ------------------------------------------------------------------ */
+    /* Post-process the sorted set.                                       */
+    /* ------------------------------------------------------------------ */
+
+    /* 1. Move any remaining colour-emoji faces to the very end so they
+          can never become faces[0]. */
     if (set && set->nfont > 1) {
         int n = set->nfont;
         for (int i = 0; i < n; ) {
@@ -2126,10 +2138,49 @@ InitFont(
         set->nfont = n;
     }
 
-    /* 
-     * When the caller asks for a specific family, force the 
-     * best matching face to the front. 
-     */
+    /* 2. If we asked for a sans-like family and the primary face looks
+          like a serif, swap the first real sans face to the front. */
+    if (useSansDefault && set && set->nfont > 1) {
+        FcChar8 *primFam = NULL;
+        FcPatternGetString(set->fonts[0], FC_FAMILY, 0, &primFam);
+        bool primIsSerif = false;
+        if (primFam) {
+            const char *f = (const char *)primFam;
+            if ((strcasestr(f, "serif") && !strcasestr(f, "sans")) ||
+                strcasestr(f, "times") || strcasestr(f, "georgia") ||
+                strcasestr(f, "garamond") || strcasestr(f, "palatino") ||
+                strcasestr(f, "nimbus roman") ||
+                strcasestr(f, "liberation serif") ||
+                strcasestr(f, "free serif") ||
+                strcasestr(f, "dejavu serif")) {
+                primIsSerif = true;
+            }
+        }
+        if (primIsSerif) {
+            for (int i = 1; i < set->nfont; i++) {
+                FcChar8 *fam = NULL;
+                FcPatternGetString(set->fonts[i], FC_FAMILY, 0, &fam);
+                if (fam) {
+                    const char *f = (const char *)fam;
+                    if (strcasestr(f, "sans") ||
+                        strcasestr(f, "helvetica") ||
+                        strcasestr(f, "arial") ||
+                        strcasestr(f, "dejavu") ||
+                        strcasestr(f, "liberation sans") ||
+                        strcasestr(f, "noto sans") ||
+                        strcasestr(f, "free sans")) {
+                        FcPattern *tmp = set->fonts[0];
+                        set->fonts[0] = set->fonts[i];
+                        set->fonts[i] = tmp;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /* 3. When a concrete non-generic family was requested, pull the
+          best name match to the front (if any). */
     if (!useSansDefault && family && family[0] && set && set->nfont > 0) {
         int best = -1;
         for (int i = 0; i < set->nfont; i++) {
@@ -2216,9 +2267,8 @@ InitFont(
         FcPatternGetInteger(set->fonts[i], FC_INDEX, 0, &fcIdx);
         face->faceIndex = fcIdx;
     }
-    
-    /* Record the actual family that ended up as primary. */
 
+    /* Record the actual family that ended up as primary. */
     if (nfaces > 0 && fontPtr->faces[0].source) {
         FcChar8 *resolvedFamily = NULL;
         if (FcPatternGetString(fontPtr->faces[0].source, FC_FAMILY, 0,
