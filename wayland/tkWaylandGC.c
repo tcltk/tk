@@ -393,79 +393,25 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
- *----------------------------------------------------------------------
- *
- * TkWaylandPixmapFromPixmap --
- *
- *      Convert a Pixmap XID back to its TkWaylandPixmap pointer.
- *      The Pixmap XID is encoded as 3 + (pointer value) to maintain
- *      the low-bit tagging scheme used by TkWaylandDrawableIsPixmap.
- *
- *      Returns NULL if the pixmap is invalid (None or malformed).
- *
- * Results:
- *      Pointer to TkWaylandPixmap, or NULL if invalid.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
+ * The Pixmap XID is the unsgined int value of a pointer to a
+ * TkWaylandPixmap.
  */
 
-MODULE_SCOPE TkWaylandPixmap*
-TkWaylandPixmapFromPixmap(
+TkWaylandPixmap* TkWaylandPixmapFromPixmap(
     Pixmap pixmap)
 {
-    TkWaylandPixmap *pixmapPtr;
-    
-    /* None or invalid pixmap. */
-    if (pixmap == None || pixmap == 0) {
-        return NULL;
-    }
-    
-    /* Check that the low bits indicate this is a pixmap (not a window). */
-    if (!TkWaylandDrawableIsPixmap(pixmap)) {
-        return NULL;
-    }
-    
-    /* Strip the low 2 bits to get the pointer. */
-    pixmapPtr = (TkWaylandPixmap*)(pixmap & ~3UL);
-    
-    /* Basic sanity check: pointer should be in reasonable range. */
-    if ((uintptr_t)pixmapPtr < 0x1000) {
-        return NULL;
-    }
-    
-    return pixmapPtr;
+    return (TkWaylandPixmap*)(pixmap & ~3UL);
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * PixmapFromTkWaylandPixmap --
- *
- *      Convert a TkWaylandPixmap pointer to a Pixmap XID.
- *      The encoding is: XID = 3 + pointer, which sets the low bit
- *      so TkWaylandDrawableIsPixmap can identify it as a pixmap.
- *
- * Results:
- *      Pixmap XID, or None if pixmapPtr is NULL.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
+ * A Pixmap is a Drawable, so it must carry the low-bit tag that
+ * TkWaylandDrawableIsPixmap tests; see the XID scheme in tkWaylandWm.c.
  */
 
-static inline Pixmap
-PixmapFromTkWaylandPixmap(
+static inline Pixmap PixmapFromTkWaylandPixmap(
     TkWaylandPixmap *pixmapPtr)
 {
-    if (!pixmapPtr) {
-        return None;
-    }
-    /* XID = 3 + pointer. Low bit set identifies as pixmap. */
-    return 3 + (Pixmap)pixmapPtr;
+    return pixmapPtr ? 3 + (Pixmap)pixmapPtr : None;
 }
 
 /*
