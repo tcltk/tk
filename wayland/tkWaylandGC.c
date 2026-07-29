@@ -616,9 +616,9 @@ Tk_FreePixmap(
         if (canDelete) {
             nvgluDeleteFramebuffer(pixmapPtr->fb);
         } else {
-            /* Context is gone or mismatched – free only the wrapper */
+            /* Context is gone or mismatched – free only the wrapper. */
             if (pixmapPtr->fb->fbo) {
-                /* may already be invalid; ignore GL errors */
+                /* May already be invalid; ignore GL errors. */
                 glDeleteFramebuffers(1, &pixmapPtr->fb->fbo);
             }
             if (pixmapPtr->fb->rbo) {
