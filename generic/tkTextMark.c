@@ -576,19 +576,19 @@ TkTextMarkCmd(
 	TkTextSegment *markPtr1, *markPtr2;
 	int relation, value;
 
-	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "markName1 op markName2");
+	if (objc != 6) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "markName1 op markName2");
 	    return TCL_ERROR;
 	}
-	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[2])))) {
+	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[3])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
-		    "must be an existing mark", Tcl_GetString(objv[2])));
+		    "must be an existing mark", Tcl_GetString(objv[3])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[4])))) {
+	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[5])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
-		    "must be an existing mark", Tcl_GetString(objv[4])));
+		    "must be an existing mark", Tcl_GetString(objv[5])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -614,7 +614,7 @@ TkTextMarkCmd(
 	    }
 	}
 
-	value = TkTextTestRelation(interp, relation, Tcl_GetString(objv[3]));
+	value = TkTextTestRelation(interp, relation, Tcl_GetString(objv[4]));
 	if (value == -1) {
 	    return TCL_ERROR;
 	}
@@ -714,7 +714,7 @@ TkTextMarkCmd(
 	const char *pattern;
 	Tcl_Obj *resultObj;
 
-	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
+	if (objc > 3 && *Tcl_GetString(objv[3]) == '-') {
 	    if (strcmp(Tcl_GetString(objv[3]), "-discardspecial") == 0) {
 		discardSpecial = 1;
 		numArgs = 4;
@@ -1355,24 +1355,23 @@ ChangeGravity(
     isNormalMark = TkTextIsNormalMark(markPtr);
 
     if (!sharedTextPtr->steadyMarks) {
-	if (!textPtr || markPtr != textPtr->insertMarkPtr) {
-	    /*
-	     * We must re-insert the mark, the old rules of gravity may force
-	     * a shuffle of the existing marks.
-	     */
+	/*
+	 * We must re-insert the mark, the old rules of gravity may force
+	 * a shuffle of the existing marks. This also applies to the special
+	 * "insert" mark, otherwise the chain violates the gravity order.
+	 */
 
-	    TkTextIndex index;
+	TkTextIndex index;
 
-	    if (textPtr) {
-		TkTextIndexClear(&index, textPtr);
-	    } else {
-		TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
-	    }
-	    TkTextIndexSetSegment(&index, markPtr);
-	    TkTextIndexToByteIndex(&index);
-	    TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
-	    TkBTreeLinkSegment(sharedTextPtr, markPtr, &index);
+	if (textPtr) {
+	    TkTextIndexClear(&index, textPtr);
+	} else {
+	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
 	}
+	TkTextIndexSetSegment(&index, markPtr);
+	TkTextIndexToByteIndex(&index);
+	TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
+	TkBTreeLinkSegment(sharedTextPtr, markPtr, &index);
 
 	if (isNormalMark) {
 	    TkTextUpdateAlteredFlag(sharedTextPtr);
