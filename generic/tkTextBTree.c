@@ -5296,37 +5296,27 @@ TkBTreeInsertChars(
 
 static void
 MakeUndoIndex(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextIndex *indexPtr,	/* Convert this index. */
     TkTextUndoIndex *undoIndexPtr,	/* Pointer to resulting index. */
-    int gravity)			/* +1 = right gravity, -1 = left gravity */
+    TCL_UNUSED(int))			/* +1 = right gravity, -1 = left gravity */
 {
-    TkTextSegment *segPtr;
-
     assert(indexPtr);
-    assert(gravity == GRAVITY_LEFT || gravity == GRAVITY_RIGHT);
 
     /*
-     * At first, try to find a neighboring mark segment at the same byte
-     * index, but we cannot use the special marks "insert" and "current",
-     * and we cannot not use private marks.
+     * A neighboring mark used to be recorded as the anchor of this index
+     * ("right behind this mark"), because a mark is stable enough to act
+     * as a predecessor. But the anchor was a bare pointer: nothing kept
+     * the mark alive nor linked, and any interleaving which unlinks it
+     * (deletion of the marks of a range, unset, an homonym superseding
+     * it) left the index dangling - the resolution then answered with a
+     * wrong position, or dereferenced an unlinked segment. The positional
+     * form below is the one the widget uses without steady marks, and it
+     * is valid at replay time as well: the stack is replayed in reverse
+     * order, so the line and byte index recorded here still designate the
+     * same place. Only the order among zero-sized segments sharing that
+     * position is not preserved anymore.
      */
-
-    if (sharedTextPtr->steadyMarks
-	    && (segPtr = TkTextIndexGetSegment(indexPtr))
-	    && segPtr->typePtr->group == SEG_GROUP_MARK) {
-	TkTextSegment *searchPtr = (gravity == GRAVITY_LEFT) ? segPtr->prevPtr : segPtr->nextPtr;
-
-	while (searchPtr && TkTextIsSpecialOrPrivateMark(searchPtr)) {
-	    searchPtr = (gravity == GRAVITY_LEFT) ? searchPtr->prevPtr : searchPtr->nextPtr;
-	}
-
-	if (searchPtr && TkTextIsStableMark(searchPtr)) {
-	    undoIndexPtr->u.markPtr = searchPtr;
-	    undoIndexPtr->lineIndex = -1;
-	    return;
-	}
-    }
 
     undoIndexPtr->lineIndex = TkTextIndexGetLineNumber(indexPtr, NULL);
     undoIndexPtr->u.byteIndex = TkTextIndexGetByteIndex(indexPtr);
@@ -8527,28 +8517,19 @@ DeleteIndexRange(
 	    redoToken->startIndex = undoToken->startIndex;
 	    redoToken->endIndex = undoToken->endIndex;
 	} else {
-	    if (sharedTextPtr->steadyMarks
-		    && segPtr1
-		    && TkTextIsStableMark(segPtr1)
-		    && !(flags & DELETE_MARKS)) {
-		redoToken->startIndex.u.markPtr = segPtr1;
-		redoToken->startIndex.lineIndex = -1;
-	    } else {
-		TkTextIndex index = *indexPtr1;
-		TkTextIndexSetSegment(&index, firstPtr);
-		MakeUndoIndex(sharedTextPtr, &index, &redoToken->startIndex, GRAVITY_LEFT);
-	    }
-	    if (sharedTextPtr->steadyMarks
-		    && segPtr2
-		    && TkTextIsStableMark(segPtr2)
-		    && !(flags & DELETE_MARKS)) {
-		redoToken->endIndex.u.markPtr = segPtr2;
-		redoToken->endIndex.lineIndex = -1;
-	    } else {
-		TkTextIndex index = *indexPtr2;
-		TkTextIndexSetSegment(&index, lastPtr);
-		MakeUndoIndex(sharedTextPtr, &index, &redoToken->endIndex, GRAVITY_RIGHT);
-	    }
+	    TkTextIndex index = *indexPtr1;
+
+	    /*
+	     * The boundary marks were recorded as anchors here, see the
+	     * remarks in MakeUndoIndex: a bare pointer to a mark does not
+	     * survive the interleavings of the undo stack.
+	     */
+
+	    TkTextIndexSetSegment(&index, firstPtr);
+	    MakeUndoIndex(sharedTextPtr, &index, &redoToken->startIndex, GRAVITY_LEFT);
+	    index = *indexPtr2;
+	    TkTextIndexSetSegment(&index, lastPtr);
+	    MakeUndoIndex(sharedTextPtr, &index, &redoToken->endIndex, GRAVITY_RIGHT);
 	}
 	redoInfo->token = (TkTextUndoToken *) redoToken;
 	redoInfo->byteSize = 0;

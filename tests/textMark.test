@@ -575,6 +575,51 @@ test textMark-12.1 {steadymarks - redo of a mark set whose name is alive again} 
 } -cleanup {
     destroy .tt
 } -result {abc 1.1 {} 1.0 mk1 abc 1.1}
+
+test textMark-12.2 {steadymarks - undo of a deletion whose range was anchored on a moved mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The undo index of the deletion used to anchor on the neighbouring mark;
+    # moving the mark afterwards (a plain [mark set], without unset) made the
+    # undo restore the text at the position of the moved mark.
+    .tt debug 1
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt edit reset
+    .tt delete 1.2 1.4
+    .tt edit separator
+    .tt mark set m 1.4
+    .tt edit separator
+    while {[.tt edit canundo]} { .tt edit undo }
+    .tt debug 0
+    list [.tt get 1.0 end-1c] [.tt index m]
+} -cleanup {
+    destroy .tt
+} -result {abcdef 1.2}
+test textMark-12.3 {steadymarks - the undo of a deletion survives the death of its neighbouring marks} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # Deleting the marks of a range unlinked the segments the undo indexes of
+    # the previous deletions were anchored on; the replay then dereferenced an
+    # unlinked mark.
+    .tt debug 1
+    .tt insert end "abcdef"
+    .tt mark set m1 1.2
+    .tt mark set m2 1.4
+    .tt edit reset
+    .tt delete 1.2 1.3
+    .tt edit separator
+    .tt delete -marks 1.0 1.5
+    .tt edit separator
+    while {[.tt edit canundo]} { .tt edit undo }
+    .tt insert 1.0 X
+    .tt debug 0
+    .tt get 1.1 end-1c
+} -cleanup {
+    destroy .tt
+} -result {abcdef}
 
 #
 # TESTFILE CLEANUP
