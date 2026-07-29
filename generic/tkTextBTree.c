@@ -8476,7 +8476,12 @@ DeleteIndexRange(
 
     if (segPtr1 && TkTextIsStableMark(segPtr1)) {
 	firstPtr = segPtr1;
-	if (!(flags & DELETE_INCLUSIVE) && !(segPtr2 && TkTextIsStableMark(segPtr2))) {
+	if (!(segPtr2 && TkTextIsStableMark(segPtr2))) {
+	    /*
+	     * The other side will be a protection mark: wrap this side too,
+	     * the boundary kinds must stay symmetric. The mark becomes an
+	     * inner segment of the range (killed iff DELETE_MARKS).
+	     */
 	    LinkSegment(linePtr1, segPtr1->prevPtr, firstPtr = sharedTextPtr->protectionMark[0]);
 	    myFlags |= DELETE_INCLUSIVE;
 	}
@@ -8489,7 +8494,8 @@ DeleteIndexRange(
 
     if (segPtr2 && TkTextIsStableMark(segPtr2)) {
 	lastPtr = segPtr2;
-	if (!(flags & DELETE_INCLUSIVE) && (myFlags & DELETE_INCLUSIVE)) {
+	if (firstPtr == sharedTextPtr->protectionMark[0]) {
+	    /* See above: the boundary kinds must stay symmetric. */
 	    LinkSegment(linePtr2, segPtr2, lastPtr = sharedTextPtr->protectionMark[1]);
 	}
     } else {
