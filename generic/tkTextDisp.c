@@ -5047,10 +5047,17 @@ ComputeDisplayLineInfo(
 		(entry + 1)->byteOffset = logicalLinePtr->size;
 	    } else {
 		TkTextIndex index2 = info->index;
+		unsigned span;
+
 		TkTextIndexSetToStartOfLine2(&index2, nextLogicalLinePtr);
-		info->nextByteOffset = TkTextIndexCountBytes(&info->index, &index2);
+		span = TkTextIndexCountBytes(&info->index, &index2);
+		/*
+		 * Like in the branch above, nextByteOffset is relative to the
+		 * given index, whereas the entries are absolute.
+		 */
+		info->nextByteOffset = span - byteOffset;
 		entry->byteOffset = TkTextIndexGetByteIndex(&info->index);
-		(entry + 1)->byteOffset = entry->byteOffset + info->nextByteOffset;
+		(entry + 1)->byteOffset = entry->byteOffset + span;
 	    }
 	    info->byteOffset = byteOffset;
 	    info->isComplete = 1;

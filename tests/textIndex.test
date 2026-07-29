@@ -1144,6 +1144,20 @@ test textIndex-27.2 {TkTextGetIndex bug (wish8.6)} -body {
     .t index 1.0
 } -result {1.0}
 
+test textIndex-28.1 {ComputeDisplayLineInfo, display lineend on a line merged by elision} -body {
+    pack [text .t2 -wrap none]
+    .t2 insert end "line one\nline two\nelided three\nelided four\nline five\nline six\nline seven"
+    .t2 tag configure hide -elide 1
+    .t2 tag add hide 3.0 5.0
+    update
+    # Lines 3 to 5 form a single display line; "display lineend" used to
+    # answer with the end of the logical block instead of the end of the
+    # display line.
+    list [.t2 index {5.3 display lineend}] [.t2 index {3.4 display lineend}]
+} -cleanup {
+    destroy .t2
+} -result {5.9 5.9}
+
 #
 # TESTFILE CLEANUP
 #
