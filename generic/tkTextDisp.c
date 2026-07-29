@@ -5047,10 +5047,17 @@ ComputeDisplayLineInfo(
 		(entry + 1)->byteOffset = logicalLinePtr->size;
 	    } else {
 		TkTextIndex index2 = info->index;
+		unsigned span;
+
 		TkTextIndexSetToStartOfLine2(&index2, nextLogicalLinePtr);
-		info->nextByteOffset = TkTextIndexCountBytes(&info->index, &index2);
+		span = TkTextIndexCountBytes(&info->index, &index2);
+		/*
+		 * Like in the branch above, nextByteOffset is relative to the
+		 * given index, whereas the entries are absolute.
+		 */
+		info->nextByteOffset = span - byteOffset;
 		entry->byteOffset = TkTextIndexGetByteIndex(&info->index);
-		(entry + 1)->byteOffset = entry->byteOffset + info->nextByteOffset;
+		(entry + 1)->byteOffset = entry->byteOffset + span;
 	    }
 	    info->byteOffset = byteOffset;
 	    info->isComplete = 1;
@@ -10135,8 +10142,11 @@ TkTextSetYView(
 	    dlPtr = info.dLinePtr = info.lastDLinePtr = LayoutDLine(&tmpIndex, info.displayLineNo);
 	    SaveDisplayLines(textPtr, &info, 1);
 	}
-	GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL, NULL);
-	dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
+	if (GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL, NULL)) {
+	    dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
+	} else {
+	    dInfoPtr->newTopPixelOffset = 0;
+	}
 	textPtr->topIndex = *indexPtr;
 	TkTextIndexMakePersistent(&textPtr->topIndex);
     } else {
@@ -10623,6 +10633,12 @@ GetBbox(
      * a byteCount offset possibly spanning several logical lines in case
      * they are elided.
      */
+
+    if (!dlPtr->chunkPtr) {
+	/* Fully elided display line, it has no chunks, hence no bbox. */
+	if (thisChar) { *thisChar = 0; }
+	return 0;
+    }
 
     byteCount = TkTextIndexCountBytes(&dlPtr->index, indexPtr);
     sectionPtr = dlPtr->chunkPtr->sectionPtr;
