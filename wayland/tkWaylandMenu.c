@@ -2653,7 +2653,7 @@ TkpPostMenu(
         }
     }
     
-    /* If that didn't work, try resolving from the menu's parent chain */
+    /* If that didn't work, try resolving from the menu's parent chain. */
     if (!gw) {
         TkWindow *parent = (TkWindow *)Tk_Parent(menuPtr->tkwin);
         while (parent && !(parent->flags & TK_TOP_LEVEL)) {
@@ -2668,7 +2668,7 @@ TkpPostMenu(
         }
     }
 
-    /* Last resort: try the menu's own tkwin */
+    /* Last resort: try the menu's own tkwin. */
     if (!gw) {
         gw = TkWaylandResolveGLFWwindow(menuPtr->tkwin);
         if (gw) {
@@ -2745,7 +2745,7 @@ TkpMenuButtonPostMenu(
         return TCL_ERROR;
     }
 
-    /* Get button position and size in toplevel-local coordinates */
+    /* Get button position and size in toplevel-local coordinates. */
     TkWindow *toplevel = buttonWin;
     while (toplevel && !(toplevel->flags & TK_TOP_LEVEL)) {
         toplevel = toplevel->parentPtr;
@@ -2785,6 +2785,7 @@ TkpMenuButtonPostMenu(
      */
     return result;
 }
+
 /*
  *---------------------------------------------------------------------------
  *
