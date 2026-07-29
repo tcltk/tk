@@ -1440,15 +1440,23 @@ UndoDeletePerform(
 		 * range.
 		 */
 
-		if (sitePrevPtr && sitePrevPtr->typePtr == &tkTextCharType) {
+		if (sitePrevPtr
+			&& sitePrevPtr->typePtr == &tkTextCharType
+			&& sitePrevPtr != prevPtr
+			&& sitePrevPtr->nextPtr != prevPtr) {
+		    /*
+		     * Skipped when the site touches the insertion point of the
+		     * restoration: joining there would swallow the boundary and
+		     * the following segments would be linked behind the joined
+		     * segment, tearing the restored chain apart. The final
+		     * cleanup covers that boundary anyway.
+		     */
+
 		    TkTextSegment *siteNextPtr = sitePrevPtr->nextPtr;
 		    TkTextSegment *joinedPtr = CleanupCharSegments(sharedTextPtr, sitePrevPtr);
 
 		    if (joinedPtr != sitePrevPtr) {
 			/* The join has freed both neighbors: re-synchronize. */
-			if (prevPtr == sitePrevPtr || prevPtr == siteNextPtr) {
-			    prevPtr = joinedPtr;
-			}
 			if (lastPtr == sitePrevPtr || lastPtr == siteNextPtr) {
 			    lastPtr = joinedPtr;
 			}
