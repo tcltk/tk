@@ -377,6 +377,35 @@ test textMark-8.12 {MarkFindPrev - match pattern - discard special marks} -setup
     .t mark set current 2.0
     .t mark prev -discardspecial end ins*
 } -result {}
+
+test textMark-9.1 {ChangeGravity - the insert mark must be re-linked too} -setup {
+    destroy .tt
+    text .tt
+    .tt debug on
+} -body {
+    # Changing the gravity flips the segment type in place; without a re-link
+    # the chain violates the gravity order (left-gravity marks first), which
+    # panics the segment checker at the next edit.
+    .tt insert end "abc"
+    .tt mark set mk 1.3 right
+    .tt mark gravity insert left
+    .tt insert 1.0 x
+    list [.tt mark gravity insert] [.tt index insert]
+} -cleanup {
+    destroy .tt
+} -result {left 1.4}
+test textMark-9.2 {ChangeGravity - left gravity insert mark honored on empty widget} -setup {
+    destroy .tt
+    text .tt
+    .tt debug on
+} -body {
+    # The special mark "current" alone suffices to break the gravity order.
+    .tt mark gravity insert left
+    .tt insert 1.0 x
+    list [.tt mark gravity insert] [.tt index insert]
+} -cleanup {
+    destroy .tt
+} -result {left 1.0}
 
 #
 # TESTFILE CLEANUP

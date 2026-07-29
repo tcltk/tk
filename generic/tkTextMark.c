@@ -1355,24 +1355,23 @@ ChangeGravity(
     isNormalMark = TkTextIsNormalMark(markPtr);
 
     if (!sharedTextPtr->steadyMarks) {
-	if (!textPtr || markPtr != textPtr->insertMarkPtr) {
-	    /*
-	     * We must re-insert the mark, the old rules of gravity may force
-	     * a shuffle of the existing marks.
-	     */
+	/*
+	 * We must re-insert the mark, the old rules of gravity may force
+	 * a shuffle of the existing marks. This also applies to the special
+	 * "insert" mark, otherwise the chain violates the gravity order.
+	 */
 
-	    TkTextIndex index;
+	TkTextIndex index;
 
-	    if (textPtr) {
-		TkTextIndexClear(&index, textPtr);
-	    } else {
-		TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
-	    }
-	    TkTextIndexSetSegment(&index, markPtr);
-	    TkTextIndexToByteIndex(&index);
-	    TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
-	    TkBTreeLinkSegment(sharedTextPtr, markPtr, &index);
+	if (textPtr) {
+	    TkTextIndexClear(&index, textPtr);
+	} else {
+	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
 	}
+	TkTextIndexSetSegment(&index, markPtr);
+	TkTextIndexToByteIndex(&index);
+	TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
+	TkBTreeLinkSegment(sharedTextPtr, markPtr, &index);
 
 	if (isNormalMark) {
 	    TkTextUpdateAlteredFlag(sharedTextPtr);
