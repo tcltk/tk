@@ -437,9 +437,6 @@ TkpPutRGBAImage(
  *	Copies layout surface pixels back from the GPU to CPU memory storage
  *	via glReadPixels. Emulates standard Xlib fallback behaviors.
  *
- *	FIXED: For depth-1 pixmaps with bitmapData, expand the bits directly
- *	instead of reading from the (empty) FBO.
- *
  * Results:
  *	Returns a newly allocated XImage container, or NULL on absolute failure.
  *
@@ -653,7 +650,6 @@ XCreateBitmapFromData(
  *	drawable, using the GC's foreground and background colors.
  *	This is the critical function for drawing 1-bit bitmaps.
  *
- *	FIXED: Off-bits are now transparent (alpha=0), not opaque black.
  *
  * Results:
  *	Returns Success on success, or BadDrawable/ BadGC on failure.
