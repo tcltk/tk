@@ -6,6 +6,7 @@
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
+ * Copyright © 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -84,6 +85,7 @@ MODULE_SCOPE int TkWaylandLoadNamedFontIntoContext(NVGcontext *vg, const char *t
 MODULE_SCOPE void TkWaylandPopupDrawBorderWithShadow(TkWaylandPopup *popup);
 MODULE_SCOPE int TkWaylandMenubarActivateFirst(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
+MODULE_SCOPE TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
 
 /*
  * Post a menu as either the root of a new menu stack (isRoot != 0,
@@ -133,6 +135,45 @@ static int menuDismissedByClick = 0;
  * rootIsMenubar field.
  */
 static int pendingRootIsMenubar = 0;
+
+/*
+ * NanoVG image IDs created while drawing a menu frame.  nvgFill() only
+ * queues the textured path; the real GL draw happens inside nvgEndFrame()
+ * (called from TkWaylandPopupEndDraw).  Deleting the image before that
+ * destroys the texture mid-frame, so we hold the IDs and flush them after
+ * EndDraw.
+ */
+#define MENU_PENDING_NVG_IMAGES_MAX 64
+static int          menuPendingNvgImages[MENU_PENDING_NVG_IMAGES_MAX];
+static int          menuPendingNvgImageCount = 0;
+static NVGcontext  *menuPendingNvgImagesVg  = NULL;
+
+static void
+MenuPendingImageAdd(NVGcontext *vg, int imgId)
+{
+    if (imgId <= 0 || vg == NULL) {
+        return;
+    }
+    if (menuPendingNvgImageCount < MENU_PENDING_NVG_IMAGES_MAX) {
+        menuPendingNvgImages[menuPendingNvgImageCount++] = imgId;
+        menuPendingNvgImagesVg = vg;
+    }
+    /* On overflow we simply leak the texture for this frame. */
+}
+
+static void
+MenuPendingImagesFlush(void)
+{
+    int i;
+
+    if (menuPendingNvgImagesVg != NULL) {
+        for (i = 0; i < menuPendingNvgImageCount; i++) {
+            nvgDeleteImage(menuPendingNvgImagesVg, menuPendingNvgImages[i]);
+        }
+    }
+    menuPendingNvgImageCount = 0;
+    menuPendingNvgImagesVg = NULL;
+}
 
 /* Forward declarations for static functions. */
 static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
@@ -1778,7 +1819,25 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryIndicator --
  *
  * Draw check button or radio button indicator for a menu entry.
- * Uses the text foreground color for consistency.
+ * Uses improved styling from button widget with proper sizing and positioning.
+ *
+ * Results:
+ * None.
+ *
+ * Side effects:
+ * Renders the check/radio indicator and selection mark.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DrawMenuEntryIndicator --
+ *
+ * Draw check button or radio button indicator for a menu entry.
+ * Matches the clean styling from button widgets - white background, no outline,
+ * with proper padding.
  *
  * Results:
  * None.
@@ -1809,73 +1868,102 @@ DrawMenuEntryIndicator(
     int activeBorderWidth;
     int size;
     int radius;
-    NVGcolor outlineColor;
     NVGcolor markColor;
+    NVGcolor bgColor;
+    int isRadio = (mePtr->type == RADIO_BUTTON_ENTRY);
+    int isCheck = (mePtr->type == CHECK_BUTTON_ENTRY);
 
-    if (!mePtr->indicatorOn) {
+    if (!mePtr->indicatorOn || (!isCheck && !isRadio)) {
         return;
     }
 
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
         menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 
+    /* Calculate indicator position - centered vertically in the entry. */
     top = y + height / 2;
-    left = x + activeBorderWidth + 2 + mePtr->indicatorSpace / 2;
+    
+    /* Add proper left padding for the indicator. */
+    left = x + activeBorderWidth + 6;
 
-    size = PTR2INT(mePtr->platformEntryData);
+    /* Determine indicator size - proportional to entry height. */
+    if (isCheck) {
+        size = (65 * height) / 100;
+        if (size < 10) size = 10;
+        if (size > 22) size = 22;
+    } else { /* radio */
+        size = (75 * height) / 100;
+        if (size < 10) size = 10;
+        if (size > 22) size = 22;
+    }
     radius = size / 2;
 
+    /* Determine colors based on state. */
     if (mePtr->state == ENTRY_DISABLED) {
-        outlineColor = disableColor ?
-            TkWaylandXColorToNVG(disableColor) :
-            nvgRGB(128, 128, 128);
-        markColor = outlineColor;
+        if (disableColor) {
+            markColor = TkWaylandXColorToNVG(disableColor);
+            markColor.a = 0.5f;
+        } else {
+            markColor = nvgRGBA(160, 160, 160, 180);
+        }
+        bgColor = nvgRGBA(240, 240, 240, 255);
     } else {
-        outlineColor = indicatorColor ?
-            TkWaylandXColorToNVG(indicatorColor) :
-            textColor;
-
-        /* Always draw the mark in black. */
-        markColor = nvgRGB(0, 0, 0);
+        /* Use the indicator color if specified, otherwise use text color. */
+        if (indicatorColor) {
+            markColor = TkWaylandXColorToNVG(indicatorColor);
+        } else {
+            markColor = textColor;
+        }
+        /* Clean white background. */
+        bgColor = nvgRGBA(255, 255, 255, 255);
     }
 
-    if (mePtr->type == CHECK_BUTTON_ENTRY) {
-
-        /* Always draw checkbox outline. */
+    /* Draw the indicator with white background and no outline. */
+    if (isCheck) {
+        /* Checkbox - square with white background. */
+        
+        /* White background. */
         nvgBeginPath(vg);
-        nvgRect(vg,
+        nvgRect(vg, 
             left - size/2,
             top - size/2,
-            size,
-            size);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgStrokeColor(vg, outlineColor);
-        nvgStroke(vg);
+            size, size);
+        nvgFillColor(vg, bgColor);
+        nvgFill(vg);
 
-        /* Draw check mark only when selected. */
+        /* Draw check mark when selected. */
         if (mePtr->entryFlags & ENTRY_SELECTED) {
+            float inset = size * 0.15f;
+            float checkSize = size - 2 * inset;
+            
             nvgBeginPath(vg);
-            nvgMoveTo(vg, left - size/4, top);
-            nvgLineTo(vg, left, top + size/4);
-            nvgLineTo(vg, left + size/4, top - size/4);
-            nvgStrokeWidth(vg, 1.5f);
+            nvgMoveTo(vg, 
+                left - checkSize/3,
+                top);
+            nvgLineTo(vg, 
+                left - checkSize/8,
+                top + checkSize/2.8f);
+            nvgLineTo(vg, 
+                left + checkSize/2.8f,
+                top - checkSize/3);
+            nvgStrokeWidth(vg, 2.0f);
             nvgStrokeColor(vg, markColor);
             nvgStroke(vg);
         }
-
-    } else if (mePtr->type == RADIO_BUTTON_ENTRY) {
-
-        /* Always draw radio outline. */
+    } else if (isRadio) {
+        /* Radio button - circle with white background. */
+        
+        /* White background. */
         nvgBeginPath(vg);
         nvgCircle(vg, left, top, radius);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgStrokeColor(vg, outlineColor);
-        nvgStroke(vg);
+        nvgFillColor(vg, bgColor);
+        nvgFill(vg);
 
-        /* Draw center dot only when selected. */
+        /* Draw center dot when selected. */
         if (mePtr->entryFlags & ENTRY_SELECTED) {
+            float dotRadius = radius * 0.45f;
             nvgBeginPath(vg);
-            nvgCircle(vg, left, top, radius / 2);
+            nvgCircle(vg, left, top, dotRadius);
             nvgFillColor(vg, markColor);
             nvgFill(vg);
         }
@@ -1927,7 +2015,7 @@ DrawMenuSeparator(
  *
  * DrawMenuEntryLabel --
  *
- * Draw the label (text and/or image) for a menu entry.
+ * Draw the label (text and/or image/bitmap) for a menu entry.
  * Always uses NanoVG directly for popup rendering.
  *
  * Results:
@@ -1935,22 +2023,24 @@ DrawMenuSeparator(
  *
  * Side effects:
  * Renders the label and handles compound positioning, disabled stippling.
+ * Any NanoVG images created here are registered with MenuPendingImageAdd
+ * and must be flushed with MenuPendingImagesFlush after EndDraw.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 DrawMenuEntryLabel(
-                   TkMenu *menuPtr,
-                   TkMenuEntry *mePtr,
-                   NVGcontext *vg,
-                   Tk_Font tkfont,
-                   const Tk_FontMetrics *fmPtr,
-                   int x,
-                   int y,
-                   int width,
-                   int height,
-                   NVGcolor textColor)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    NVGcontext *vg,
+    Tk_Font tkfont,
+    const Tk_FontMetrics *fmPtr,
+    int x,
+    int y,
+    int width,
+    int height,
+    NVGcolor textColor)
 {
     int indicatorSpace = mePtr->indicatorSpace;
     int activeBorderWidth;
@@ -1967,7 +2057,7 @@ DrawMenuEntryLabel(
     int textYOffset = 0;
 
     MENU_LOG("DrawMenuEntryLabel: ENTRY - menuType=%d, labelPtr=%p, labelLength=%d, label='%s'",
-             menuPtr->menuType, (void*)mePtr->labelPtr, mePtr->labelLength,
+             menuPtr->menuType, (void *)mePtr->labelPtr, mePtr->labelLength,
              mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)");
 
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
@@ -1995,7 +2085,7 @@ DrawMenuEntryLabel(
         if (mePtr->labelPtr != NULL) {
             const char *label = Tcl_GetString(mePtr->labelPtr);
             if (mePtr->labelLength == 0) {
-                mePtr->labelLength = strlen(label);
+                mePtr->labelLength = (int)strlen(label);
             }
             textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
             textHeight = fmPtr->linespace;
@@ -2009,80 +2099,97 @@ DrawMenuEntryLabel(
         }
     }
 
-    /* Calculate relative positions for compound display. */
+    /* Compound layout offsets. */
     if (haveImage && haveText) {
-        int fullWidth = (imageWidth > textWidth ? imageWidth : textWidth);
-        switch ((enum compound) mePtr->compound) {
+        switch ((enum compound)mePtr->compound) {
         case COMPOUND_TOP:
-            textXOffset = (fullWidth - textWidth)/2;
-            textYOffset = imageHeight/2 + 2;
-            imageXOffset = (fullWidth - imageWidth)/2;
-            imageYOffset = -textHeight/2;
+            textYOffset = imageHeight + 2;
+            imageXOffset = (width - indicatorSpace - activeBorderWidth * 2
+                            - imageWidth) / 2;
+            if (imageXOffset < 0) imageXOffset = 0;
+            textXOffset = (width - indicatorSpace - activeBorderWidth * 2
+                           - textWidth) / 2;
+            if (textXOffset < 0) textXOffset = 0;
             break;
         case COMPOUND_BOTTOM:
-            textXOffset = (fullWidth - textWidth)/2;
-            textYOffset = -imageHeight/2;
-            imageXOffset = (fullWidth - imageWidth)/2;
-            imageYOffset = textHeight/2 + 2;
+            imageYOffset = textHeight + 2;
+            imageXOffset = (width - indicatorSpace - activeBorderWidth * 2
+                            - imageWidth) / 2;
+            if (imageXOffset < 0) imageXOffset = 0;
+            textXOffset = (width - indicatorSpace - activeBorderWidth * 2
+                           - textWidth) / 2;
+            if (textXOffset < 0) textXOffset = 0;
             break;
         case COMPOUND_LEFT:
             textXOffset = imageWidth + 2;
+            imageYOffset = (height - imageHeight) / 2
+                           - (height - imageHeight) / 2; /* keep 0 base; final y centers */
             textYOffset = 0;
-            imageXOffset = 0;
-            imageYOffset = 0;
             break;
         case COMPOUND_RIGHT:
-            textXOffset = 0;
-            textYOffset = 0;
             imageXOffset = textWidth + 2;
-            imageYOffset = 0;
             break;
         case COMPOUND_CENTER:
-            textXOffset = (fullWidth - textWidth)/2;
-            textYOffset = 0;
-            imageXOffset = (fullWidth - imageWidth)/2;
-            imageYOffset = 0;
+            /* Overlap; both centered. */
+            imageXOffset = (width - indicatorSpace - activeBorderWidth * 2
+                            - imageWidth) / 2;
+            if (imageXOffset < 0) imageXOffset = 0;
+            textXOffset = (width - indicatorSpace - activeBorderWidth * 2
+                           - textWidth) / 2;
+            if (textXOffset < 0) textXOffset = 0;
             break;
         case COMPOUND_NONE:
             break;
         }
     }
 
-    /* Draw image using X11 functions. */
+    /* ---- Draw image or bitmap ---- */
     if (haveImage) {
         int imageX = leftEdge + imageXOffset;
         int imageY = y + (height - imageHeight) / 2 + imageYOffset;
+        int drewRealImage = 0;
 
         if (imageX < x) imageX = x;
         if (imageY < y) imageY = y;
-        if (imageX + imageWidth > x + width) imageX = x + width - imageWidth;
-        if (imageY + imageHeight > y + height) imageY = y + height - imageHeight;
-
-        int drewRealImage = 0;
+        if (imageX + imageWidth > x + width) {
+            imageX = x + width - imageWidth;
+        }
+        if (imageY + imageHeight > y + height) {
+            imageY = y + height - imageHeight;
+        }
 
         /*
-         * Try to render actual pixel content. This only works for photo
-         * images (the common case for menu -image); other Tk_Image types
-         * have no portable way to get raw pixels without a Drawable, so
-         * they fall through to the placeholder below.
+         * Photo images: pull raw pixels via Tk_PhotoGetImage and upload
+         * to NanoVG. Prefer selectImage when the entry is selected.
          */
         if (mePtr->image != NULL) {
-            Tk_PhotoHandle photo = NULL;
+            Tk_Image drawImage = mePtr->image;
+            Tcl_Obj *nameObj = mePtr->imagePtr;
 
-            /* Try to get photo handle from imagePtr. */
-            if (mePtr->imagePtr != NULL) {
-                photo = Tk_FindPhoto(mePtr->menuPtr->interp, Tcl_GetString(mePtr->imagePtr));
+            if ((mePtr->selectImage != NULL)
+                    && (mePtr->entryFlags & ENTRY_SELECTED)) {
+                drawImage = mePtr->selectImage;
+                nameObj = mePtr->selectImagePtr;
             }
+
+            Tk_PhotoHandle photo = NULL;
+            if (nameObj != NULL) {
+                photo = Tk_FindPhoto(menuPtr->interp, Tcl_GetString(nameObj));
+            }
+            (void)drawImage; /* size already taken from mePtr->image */
 
             if (photo != NULL) {
                 Tk_PhotoImageBlock block;
-                if (Tk_PhotoGetImage(photo, &block) && block.width > 0 && block.height > 0) {
+                if (Tk_PhotoGetImage(photo, &block)
+                        && block.width > 0 && block.height > 0) {
                     int bw = block.width, bh = block.height;
-                    unsigned char *rgba = (unsigned char *)ckalloc((size_t)bw * bh * 4);
+                    size_t nbytes = (size_t)bw * (size_t)bh * 4;
+                    unsigned char *rgba = (unsigned char *)ckalloc(nbytes);
                     if (rgba) {
                         int row, col;
                         for (row = 0; row < bh; row++) {
-                            unsigned char *src = block.pixelPtr + row * block.pitch;
+                            unsigned char *src =
+                                block.pixelPtr + row * block.pitch;
                             unsigned char *dst = rgba + row * bw * 4;
                             for (col = 0; col < bw; col++) {
                                 unsigned char *sp = src + col * block.pixelSize;
@@ -2090,56 +2197,133 @@ DrawMenuEntryLabel(
                                 dp[0] = sp[block.offset[0]];
                                 dp[1] = sp[block.offset[1]];
                                 dp[2] = sp[block.offset[2]];
-                                dp[3] = (block.pixelSize >= 4) ? sp[block.offset[3]] : 255;
+                                dp[3] = (block.pixelSize >= 4)
+                                    ? sp[block.offset[3]] : 255;
                             }
                         }
 
                         int nvgImg = nvgCreateImageRGBA(vg, bw, bh, 0, rgba);
+                        ckfree(rgba);
                         if (nvgImg != 0) {
-                            NVGpaint paint = nvgImagePattern(vg, (float)imageX, (float)imageY,
-                                                              (float)imageWidth, (float)imageHeight,
-                                                              0.0f, nvgImg, 1.0f);
+                            NVGpaint paint = nvgImagePattern(vg,
+                                (float)imageX, (float)imageY,
+                                (float)imageWidth, (float)imageHeight,
+                                0.0f, nvgImg, 1.0f);
                             nvgBeginPath(vg);
-                            nvgRect(vg, imageX, imageY, imageWidth, imageHeight);
+                            nvgRect(vg, (float)imageX, (float)imageY,
+                                    (float)imageWidth, (float)imageHeight);
                             nvgFillPaint(vg, paint);
                             nvgFill(vg);
-                            nvgDeleteImage(vg, nvgImg);
+                            /* Defer delete until after nvgEndFrame. */
+                            MenuPendingImageAdd(vg, nvgImg);
                             drewRealImage = 1;
                         }
-                        ckfree(rgba);
+                    }
+                }
+            }
+        }
+
+        /*
+         * X bitmaps (-bitmap info/question/...): expand 1-bit data to
+         * RGBA using the entry text color as the on-bit color (same idea
+         * as XCopyPlane with GC foreground). Off-bits stay transparent.
+         */
+        if (!drewRealImage && mePtr->bitmapPtr != NULL) {
+            Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
+            TkWaylandPixmap *bp = TkWaylandPixmapFromPixmap(bitmap);
+
+            if (bp != NULL && bp->isBitmap && bp->bitmapData != NULL
+                    && imageWidth > 0 && imageHeight > 0) {
+                size_t numPixels = (size_t)imageWidth * (size_t)imageHeight;
+                unsigned char *rgba = (unsigned char *)ckalloc(numPixels * 4);
+                if (rgba) {
+                    unsigned char fg_r = (unsigned char)(textColor.r * 255.0f);
+                    unsigned char fg_g = (unsigned char)(textColor.g * 255.0f);
+                    unsigned char fg_b = (unsigned char)(textColor.b * 255.0f);
+                    unsigned char fg_a = (unsigned char)(textColor.a * 255.0f);
+                    int srcBytesPerLine = bp->bitmapBytesPerLine;
+                    unsigned char *srcData = bp->bitmapData;
+                    int j, i;
+
+                    for (j = 0; j < imageHeight; j++) {
+                        unsigned char *srcRowPtr =
+                            srcData + j * srcBytesPerLine;
+                        unsigned char *dstRow = rgba + j * imageWidth * 4;
+
+                        for (i = 0; i < imageWidth; i++) {
+                            int byteIndex = i / 8;
+                            int bitIndex = i % 8; /* LSB first */
+                            int bit = (srcRowPtr[byteIndex] & (1 << bitIndex))
+                                ? 1 : 0;
+
+                            if (bit) {
+                                dstRow[i * 4 + 0] = fg_r;
+                                dstRow[i * 4 + 1] = fg_g;
+                                dstRow[i * 4 + 2] = fg_b;
+                                dstRow[i * 4 + 3] = fg_a ? fg_a : 255;
+                            } else {
+                                dstRow[i * 4 + 0] = 0;
+                                dstRow[i * 4 + 1] = 0;
+                                dstRow[i * 4 + 2] = 0;
+                                dstRow[i * 4 + 3] = 0; /* transparent */
+                            }
+                        }
+                    }
+
+                    int nvgImg = nvgCreateImageRGBA(vg,
+                        imageWidth, imageHeight, 0, rgba);
+                    ckfree(rgba);
+                    if (nvgImg != 0) {
+                        NVGpaint paint = nvgImagePattern(vg,
+                            (float)imageX, (float)imageY,
+                            (float)imageWidth, (float)imageHeight,
+                            0.0f, nvgImg, 1.0f);
+                        nvgBeginPath(vg);
+                        nvgRect(vg, (float)imageX, (float)imageY,
+                                (float)imageWidth, (float)imageHeight);
+                        nvgFillPaint(vg, paint);
+                        nvgFill(vg);
+                        MenuPendingImageAdd(vg, nvgImg);
+                        drewRealImage = 1;
                     }
                 }
             }
         }
 
         if (!drewRealImage) {
-            /* Placeholder for non-photo images (e.g. bitmap-backed Tk_Image). */
+            /* Last-resort placeholder (unknown image type / missing data). */
             nvgBeginPath(vg);
-            nvgRect(vg, imageX, imageY, imageWidth, imageHeight);
+            nvgRect(vg, (float)imageX, (float)imageY,
+                    (float)imageWidth, (float)imageHeight);
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(150, 150, 150, 255));
             nvgStroke(vg);
 
             nvgBeginPath(vg);
-            nvgMoveTo(vg, imageX + 2, imageY + 2);
-            nvgLineTo(vg, imageX + imageWidth - 2, imageY + imageHeight - 2);
-            nvgMoveTo(vg, imageX + imageWidth - 2, imageY + 2);
-            nvgLineTo(vg, imageX + 2, imageY + imageHeight - 2);
+            nvgMoveTo(vg, (float)(imageX + 2), (float)(imageY + 2));
+            nvgLineTo(vg, (float)(imageX + imageWidth - 2),
+                      (float)(imageY + imageHeight - 2));
+            nvgMoveTo(vg, (float)(imageX + imageWidth - 2),
+                      (float)(imageY + 2));
+            nvgLineTo(vg, (float)(imageX + 2),
+                      (float)(imageY + imageHeight - 2));
             nvgStrokeWidth(vg, 1.0f);
             nvgStrokeColor(vg, nvgRGBA(200, 200, 200, 255));
             nvgStroke(vg);
         }
     }
 
-    /* Draw text label - ALWAYS use NVG directly. */
-    if (menuPtr->menuType == MENUBAR || (mePtr->compound != COMPOUND_NONE) || !haveImage) {
+    /* ---- Draw text label ---- */
+    if (menuPtr->menuType == MENUBAR
+            || (mePtr->compound != COMPOUND_NONE)
+            || !haveImage) {
         int textY;
 
-        /* For menubar, use a simpler vertical alignment. */
         if (menuPtr->menuType == MENUBAR) {
             textY = y + fmPtr->ascent + 2;
         } else {
-            textY = y + height / 2 + textYOffset + (fmPtr->ascent - fmPtr->descent) / 2;
+            textY = y + height / 2 + textYOffset
+                    + (fmPtr->ascent - fmPtr->descent) / 2;
         }
 
         if (mePtr->labelPtr != NULL) {
@@ -2147,44 +2331,49 @@ DrawMenuEntryLabel(
             int labelLen = mePtr->labelLength;
 
             if (labelLen == 0 && label != NULL) {
-                labelLen = strlen(label);
+                labelLen = (int)strlen(label);
             }
 
             if (labelLen > 0 && label != NULL && strlen(label) > 0) {
                 WaylandFont *fontPtr = (WaylandFont *)tkfont;
-
                 int fontId = EnsureNvgFont(fontPtr, vg);
+
                 if (fontId >= 0) {
                     nvgFontFaceId(vg, fontId);
                     nvgFontSize(vg, (float)fontPtr->pixelSize);
                     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
                     nvgFillColor(vg, textColor);
-                    nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
+                    nvgText(vg, (float)(leftEdge + textXOffset),
+                            (float)textY, label, NULL);
                 } else {
-                    int fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
+                    int fallbackId =
+                        TkWaylandLoadNamedFontIntoContext(vg, "sans");
                     if (fallbackId < 0) {
-                        fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
+                        fallbackId = TkWaylandLoadNamedFontIntoContext(
+                            vg, "TkDefaultFont");
                     }
                     if (fallbackId >= 0) {
                         nvgFontFaceId(vg, fallbackId);
                         nvgFontSize(vg, (float)fontPtr->pixelSize);
-                        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+                        nvgTextAlign(vg,
+                                     NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
                         nvgFillColor(vg, textColor);
-                        nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
+                        nvgText(vg, (float)(leftEdge + textXOffset),
+                                (float)textY, label, NULL);
                     }
                 }
 
                 DrawMenuUnderline(menuPtr, mePtr, vg, tkfont, fmPtr,
-                                  x + textXOffset, y + textYOffset, width, height,
-                                  textColor);
+                                  x + textXOffset, y + textYOffset,
+                                  width, height, textColor);
             }
         }
     }
 
-    /* Draw disabled overlay using stippling. */
+    /* Disabled overlay. */
     if (mePtr->state == ENTRY_DISABLED) {
         nvgBeginPath(vg);
-        nvgRect(vg, x, y, width, height);
+        nvgRect(vg, (float)x, (float)y, (float)width, (float)height);
         nvgFillColor(vg, nvgRGBA(200, 200, 200, 128));
         nvgFill(vg);
     }
@@ -3044,6 +3233,7 @@ MenuDrawIntoPopup(
     }
 
     TkWaylandPopupEndDraw(popup);
+    MenuPendingImagesFlush();
 }
 
 /*
@@ -3146,6 +3336,7 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     nvgStroke(vg);
 
     TkWaylandPopupEndDraw(popup);
+    MenuPendingImagesFlush();
 }
 /*
  *----------------------------------------------------------------------
