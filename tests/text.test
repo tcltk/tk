@@ -9023,10 +9023,13 @@ test text-27.45 {steadymarks: edit inspect with a preserved mark in the stack} -
     # After undoing an atom which covers a mark unset, the redo stack
     # lists the re-unset mark, which is preserved (alive only inside the
     # stack); TkTextMarkName asserted on preserved marks and read the
-    # preserved name as a hash entry.
+    # preserved name as a hash entry. The delete flushes the retained
+    # creation tokens, otherwise creation and unset annihilate and no
+    # unset token reaches the stack.
     .t insert 1.0 "abcdefghijklmnop"
     .t edit separator
     for {set i 0} {$i < 3} {incr i} { .t mark set dm$i 1.10 }
+    .t delete 1.14 1.15
     .t mark unset dm1
     .t edit separator
     .t edit undo

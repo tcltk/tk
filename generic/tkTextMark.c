@@ -38,6 +38,7 @@
 
 static void		InsertUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static int		MarkDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
+static void		MarkReleaseRef(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static Tcl_Obj *	MarkInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static int		MarkRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		MarkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
@@ -317,11 +318,11 @@ UndoToggleGravityDestroy(
     TkTextUndoToken *item,
     int reused)
 {
-    assert(!((UndoTokenToggleGravity *) item)->markPtr->body.mark.changePtr);
+    /* The mark may be alive again, possibly with a pending change item. */
 
     if (!reused) {
 	UndoTokenToggleGravity *token = (UndoTokenToggleGravity *) item;
-	MarkDeleteProc(sharedTextPtr, token->markPtr, DELETE_MARKS);
+	MarkReleaseRef(sharedTextPtr, token->markPtr);
     }
 }
 
@@ -354,11 +355,11 @@ UndoMoveMarkDestroy(
     TkTextUndoToken *item,
     int reused)
 {
-    assert(!((UndoTokenMoveMark *) item)->markPtr->body.mark.changePtr);
+    /* The mark may be alive again, possibly with a pending change item. */
 
     if (!reused) {
 	UndoTokenMoveMark *token = (UndoTokenMoveMark *) item;
-	MarkDeleteProc(sharedTextPtr, token->markPtr, DELETE_MARKS);
+	MarkReleaseRef(sharedTextPtr, token->markPtr);
     }
 }
 
@@ -421,9 +422,9 @@ UndoSetMarkDestroy(
     UndoTokenSetMark *token = (UndoTokenSetMark *) item;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
-    assert(!markPtr->body.mark.changePtr);
+    /* The mark may be alive again, possibly with a pending change item. */
 
-    MarkDeleteProc(sharedTextPtr, markPtr, DELETE_CLEANUP);
+    MarkReleaseRef(sharedTextPtr, markPtr);
 }
 
 static void
@@ -468,8 +469,8 @@ RedoSetMarkDestroy(
     RedoTokenSetMark *token = (RedoTokenSetMark *) item;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
-    assert(!markPtr->body.mark.changePtr);
-    MarkDeleteProc(sharedTextPtr, markPtr, DELETE_MARKS);
+    /* The mark may be alive again, possibly with a pending change item. */
+    MarkReleaseRef(sharedTextPtr, markPtr);
 }
 
 static void
@@ -1414,10 +1415,28 @@ UnsetMark(
     if (redoInfo) {
 	RedoTokenSetMark *token;
 	TkTextMarkChange *changePtr;
+	bool annihilate = false;
+
+	memset(redoInfo, 0, sizeof(*redoInfo));
 
 	if ((changePtr = markPtr->body.mark.changePtr)) {
+	    /*
+	     * The mark was created within the currently pending change:
+	     * creation and unset annihilate, the mark dies without an undo
+	     * trace. A pending gravity toggle is discarded as well, its undo
+	     * would act on a dead mark.
+	     */
+	    annihilate = (changePtr->setMark != NULL);
+
 	    if (changePtr->toggleGravity) {
-		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
+		if (annihilate) {
+		    Tcl_Free(changePtr->toggleGravity);
+		    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
+		    assert(markPtr->refCount > 1);
+		    markPtr->refCount -= 1;
+		} else {
+		    TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
+		}
 		changePtr->toggleGravity = NULL;
 	    }
 	    if (changePtr->moveMark) {
@@ -1436,16 +1455,17 @@ UnsetMark(
 	    }
 	}
 
-	memset(redoInfo, 0, sizeof(*redoInfo));
-	token = (RedoTokenSetMark *)Tcl_Alloc(sizeof(RedoTokenSetMark));
-	token->undoType = &redoTokenSetMarkType;
-	markPtr->refCount += 1;
-	token->markPtr = markPtr;
-	MARK_POINTER(token->markPtr);
-	TkBTreeMakeUndoIndex(sharedTextPtr, markPtr, &token->index);
-	DEBUG_ALLOC(tkTextCountNewUndoToken++);
-	redoInfo->token = (TkTextUndoToken *) token;
-	redoInfo->byteSize = 0;
+	if (!annihilate) {
+	    token = (RedoTokenSetMark *)Tcl_Alloc(sizeof(RedoTokenSetMark));
+	    token->undoType = &redoTokenSetMarkType;
+	    markPtr->refCount += 1;
+	    token->markPtr = markPtr;
+	    MARK_POINTER(token->markPtr);
+	    TkBTreeMakeUndoIndex(sharedTextPtr, markPtr, &token->index);
+	    DEBUG_ALLOC(tkTextCountNewUndoToken++);
+	    redoInfo->token = (TkTextUndoToken *) token;
+	    redoInfo->byteSize = 0;
+	}
     }
 
     sharedTextPtr->undoStackEvent = true;
@@ -2331,6 +2351,48 @@ MarkDeleteProc(
     }
 
     return 1;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * MarkReleaseRef --
+ *
+ *	Release one reference to a normal mark on behalf of a destroyed
+ *	undo token. Unlike MarkDeleteProc this function never preserves
+ *	the mark: the segment may still be alive and linked in the
+ *	B-tree, only the token's reference goes away. Preserving a
+ *	living mark would remove its hash entry and leave a preserved
+ *	segment inside the tree.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The mark is freed when the last reference goes away.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+MarkReleaseRef(
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TkTextSegment *segPtr)	/* Release one reference of this mark. */
+{
+    assert(segPtr->refCount > 0);
+    assert(TkTextIsNormalMark(segPtr));
+
+    if (--segPtr->refCount == 0) {
+	if (IS_PRESERVED(segPtr)) {
+	    Tcl_Free(GET_NAME(segPtr));
+	} else {
+	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
+	    sharedTextPtr->numMarks -= 1;
+	}
+	DEBUG(segPtr->body.mark.changePtr = (void *) 0xdeadbeef);
+	FREE_SEGMENT(segPtr);
+	DEBUG_ALLOC(tkTextCountDestroySegment++);
+    }
 }
 
 /*

@@ -377,6 +377,70 @@ test textMark-8.12 {MarkFindPrev - match pattern - discard special marks} -setup
     .t mark set current 2.0
     .t mark prev -discardspecial end ins*
 } -result {}
+
+test textMark-11.1 {steadymarks - create+unset in the same pending change annihilate} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    # The creation token is still retained when the mark is unset: the pair
+    # annihilates, the mark dies without an undo trace, and the undo reaches
+    # the previous atom.
+    .tt insert end "abcdef"
+    .tt edit separator
+    .tt mark set m 1.2
+    .tt mark unset m
+    set r [list [.tt mark exists m] [.tt edit canundo]]
+    .tt edit undo
+    lappend r [.tt mark exists m] [.tt get 1.0 end-1c]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {0 1 0 {}}
+test textMark-11.2 {steadymarks - undo of mark unset revives the mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    # The creation token is flushed to the undo stack by the delete; the
+    # unset then records its own token. Undoing it must revive the mark and
+    # not preserve it again: the revived mark was re-preserved when the
+    # consumed token was destroyed - hash entry gone, preserved segment left
+    # inside the tree (MarkCheckProc panic at the next run of the checkers).
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt delete 1.4 1.5
+    .tt edit separator
+    .tt mark unset m
+    .tt edit undo
+    set r [list [.tt mark exists m] [.tt mark names -discardspecial *]]
+    .tt mark set m 1.2
+    lappend r [llength [lsearch -exact -all [.tt dump -mark 1.0 end] m]]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {1 m 1}
+test textMark-11.3 {steadymarks - undo/redo drain around a revived mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt delete 1.4 1.5
+    .tt edit separator
+    .tt mark unset m
+    .tt edit undo
+    .tt edit redo
+    .tt edit undo
+    set r [.tt mark exists m]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {1}
 
 #
 # TESTFILE CLEANUP
