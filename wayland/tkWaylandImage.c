@@ -545,11 +545,21 @@ Pixmap
 XCreateBitmapFromData(
     Display      *display,
     Drawable      d,
-    TCL_UNUSED(const char *), /* data */
+    const char   *data,
     unsigned int  width,
     unsigned int  height)
 {
-    return Tk_GetPixmap(display, d, (int)width, (int)height, 1);
+    Pixmap result = Tk_GetPixmap(display, d, (int)width, (int)height, 1);
+    TkWaylandPixmap *pm = (TkWaylandPixmap*)result;
+    /*
+     * We save the XBM data in the TkWaylandPixmap struct for
+     * use when displaying the pixmap.  We have to make a copy because
+     * the data is not static when the bitmap comes from a file.
+     */
+    size_t dataSize = ((width + 7)/8) * height;
+    pm->xbm_bits = Tcl_Alloc(dataSize);
+    memcpy(pm->xbm_bits, data, dataSize);
+    return result;
 }
 
 /*
@@ -557,32 +567,107 @@ XCreateBitmapFromData(
  *
  * XCopyPlane --
  *
- *	Stub implementation for XCopyPlane. Not used in the Wayland
- *	backend; provided solely for Xlib compatibility.
+ *	In Tk, XCopyArea is called to draw bitmaps in labels or buttons.  This
+ *      implementation focuses on that application.  It expects the source
+ *      drawable to be a Pixmap of depth 1. In the wayland port this means
+ *      that the Pixmap can be cast to a pointer to a TkWaylandPixmap struct
+ *      which contains xbm data for a bitmap.  The destination drawable is
+ *      expected to be a window.  Also, this function expects to be called
+ *      after TkWaylandBeginDraw, so nanovg drawing has been initialized.
  *
  * Results:
- *	Always returns Success.
+ *	Returns BadDrawable if the drawables are not of the correct type,
+ *      Success if they are.
  *
  * Side effects:
- *	None.
+ *	Draws the source bitmap in the destination.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XCopyPlane(
-	   TCL_UNUSED(Display *), /* display */
-	   TCL_UNUSED(Drawable), /* src */
-	   TCL_UNUSED(Drawable),  /* dst */
-	   TCL_UNUSED(GC), /* gc */
-	   TCL_UNUSED(int), /* src_x */
-	   TCL_UNUSED(int), /* src_y */
-	   TCL_UNUSED(unsigned int), /* width */
-	   TCL_UNUSED(unsigned int), /* height */
-	   TCL_UNUSED(int), /* dest_x */
-	   TCL_UNUSED(int), /* dest_y */
-	   TCL_UNUSED(unsigned long)) /* plane */
+   Display *display,
+   Drawable src,
+   Drawable dst,
+   GC gc,
+   int src_x,
+   int src_y,
+   unsigned int width,
+   unsigned int height,
+   int dst_x,
+   int dst_y,
+   TCL_UNUSED(unsigned long)) /* plane */
 {
+    if (!TkWaylandDrawableIsPixmap(src)) {
+	printf("XCopyPlane: source drawable must be a pixmap!\n");
+	return BadDrawable;  // Not actually checked - FIX ME
+    }
+    TkWaylandPixmap *bitmap = TkWaylandPixmapFromDrawable(src);
+    if (bitmap->depth != 1) {
+	printf("XCopyPlane: source drawable must have depth 1!\n");
+	return BadDrawable; // Not actually checked - FIX ME
+    }
+    if (TkWaylandDrawableIsPixmap(dst)) {
+	printf("XCopyPlane: destination drawable must be a window!\n");
+	return BadDrawable; // Not actually checked - FIX ME
+    }
+    if (bitmap->width != (int)width || bitmap->height != (int)height) {
+	printf("XCopyPlane: Invalid dimensions for bitmap!\n");
+	return BadDrawable; // Not actually checked - FIX ME
+    }
+    /*
+     * Convert the xbm data in the bitmap to an RGBA image
+     * with RGB white and A either 0 or 255.  (When nanoVG
+     * paints, it *multiplies* by the RGBA values.)
+     */
+    unsigned char rgba[4 * width * height];
+    memset(rgba, 255, 4 * width * height);
+    unsigned int xbm_bytes_per_row = (width + 7) / 8;
+    const unsigned char *data = bitmap->xbm_bits;
+    int ind = 3;
+    for (unsigned row = 0, i = 0; row < height; i += width, row++) {
+        for (unsigned col = 0; col < width; col++, ind += 4) {
+	    div_t qr = div(col, 8);
+	    int xbm_byte = row * xbm_bytes_per_row + qr.quot;
+	    int xbm_bit = qr.rem;
+	    int bit_value = (data[xbm_byte] >> xbm_bit) & 1;
+	    if (bit_value == 0) {
+		rgba[ind] = 0;
+	    }
+        }
+    }
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            printf("%s", rgba[4 * (r * width + c) + 3] ? "X" : " ");
+        }
+	printf("\n");
+    }
+    printf("\n");
+    NVGcontext *vg = TkWaylandGetNVGContext(dst);
+    int nvg_image_id = nvgCreateImageRGBA(vg, width, height, 0, rgba);
+    if (!nvg_image_id) {
+	Tcl_Panic("Failed to create image\n");
+    }
+    XGCValues v;
+    TkWaylandGetGCValues(gc, GCForeground, &v);
+    NVGcolor fg = TkWaylandPixelToNVG(v.foreground);
+    //NVGcolor red = nvgRGBA(255, 0, 0, 255);
+    NVGpaint img_paint = nvgImagePattern(
+	vg, dst_x, dst_y, width, height, 0.0f, //angle
+	nvg_image_id, 1.0f); //alpha multiplier
+    img_paint.innerColor = fg;
+    img_paint.outerColor = fg;
+    nvgBeginPath(vg);
+    nvgRect(vg, dst_x, dst_y, width, height);
+    nvgFillPaint(vg, img_paint);
+    nvgFill(vg);
+#if 0
+    nvgBeginPath(vg);
+    nvgRect(vg, dst_x, dst_y, width, height);
+    nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
+    nvgFill(vg);
+#endif
     return Success;
 }
 

@@ -161,11 +161,8 @@ inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
 }
 
 inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmapPtr) {
-    fprintf(stderr, "~~~~~~~~~~~~~~~~~~~~~~~~ Generating drawable for %p\n", pixmapPtr);
     if (pixmapPtr != NULL) {
-	fprintf(stderr, "~~~~~~~~~~~~ returning drawable %lx for pixmapPtr %p\n",
-	       3 + (Drawable) pixmapPtr, pixmapPtr);
-	return 3 + (Drawable) pixmapPtr;
+	return ((Drawable) pixmapPtr) + 1UL;
     } else {
 	return None;
     }

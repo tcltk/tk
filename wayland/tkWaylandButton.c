@@ -169,6 +169,7 @@ DrawButtonBitmap(TkButton *butPtr,
     Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
     NVGcontext *vg = TkWaylandGetNVGContext(d);
     Pixmap bitmap = butPtr->bitmap;
+    GC currentGC;
 #if 0
     unsigned char *bits = NULL;
     unsigned char *rgba = NULL;
@@ -179,17 +180,30 @@ DrawButtonBitmap(TkButton *butPtr,
     XColor fgColorValue;
     int imageId;
     int i, j;
-    Display *dpy;
     XImage *image = NULL;
 #endif
-    
     if (!bitmap) {
         goto fallback_rect;
     }
-    //// Bitmap drawing code is broken.  For now let's just draw a
-    //// blank rectangle.
-    goto fallback_rect;
-
+    /* Get the appropriate graphics context for the button state. */
+    if (butPtr->state == STATE_DISABLED && butPtr->disabledFg) {
+        currentGC = butPtr->disabledGC;
+    } else if (butPtr->state == STATE_ACTIVE &&
+	       !Tk_StrictMotif(butPtr->tkwin)) {
+        currentGC = butPtr->activeTextGC;
+    } else {
+      currentGC = butPtr->normalTextGC;
+    }
+    if (currentGC) {
+        XCopyPlane(butPtr->display,
+		   TkWaylandDrawableForPixmap(butPtr->bitmap),
+		   TkWaylandDrawableForTkWindow((TkWindow *)butPtr->tkwin),
+		   currentGC, 0, 0, width, height, x, y, 1);
+	return;
+    } else {
+        printf("No graphics context for drawing bitmap\n");
+	goto fallback_rect;
+    }
 #if 0 //// disable non-working code for displaying bitmaps
     
     dpy = Tk_Display(butPtr->tkwin);

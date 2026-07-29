@@ -383,7 +383,7 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
- * The Pixmap XID is the unsgined int value of a pointer to a
+ * The Pixmap XID is the unsigned int value of a pointer to a
  * TkWaylandPixmap.
  */
 
@@ -411,10 +411,10 @@ static inline Pixmap PixmapFromTkWaylandPixmap(
  *      used.  Note that the GL context is shared between windows.
  *
  * Results:
- *      Returns a Drawable associated to a Pixmap.
+ *      Returns the Pixmap associated to a new TkWaylandPixmap structure.
  *
  * Side effects:
- *      Allocates an NVGLUframebuffer.
+ *      Allocates a TkWaylandPixmap and its NVGLUframebuffer.
  *
  *----------------------------------------------------------------------
  */
@@ -425,7 +425,7 @@ Tk_GetPixmap(
     Drawable drawable,
     int      width,
     int      height,
-    TCL_UNUSED(int)) /* depth */
+    int      depth)
 {
     TkWaylandPixmap *pixmapPtr;
     GLenum           status;
@@ -433,6 +433,17 @@ Tk_GetPixmap(
 
     if (width <= 0 || height <= 0) {
         return None;
+    }
+
+    pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
+    memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
+    pixmapPtr->depth = depth;
+    pixmapPtr->width = width;
+    pixmapPtr->height = height;
+
+    if (depth == 1) {
+	/* The xbm data will be added by XCreateBitmapFromData. */
+	return PixmapFromTkWaylandPixmap(pixmapPtr);
     }
 
     if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
@@ -445,12 +456,8 @@ Tk_GetPixmap(
 	return None;
     }
 
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
-    memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
     pixmapPtr->glfwWindow = glfwWindow;
-    pixmapPtr->width = width;
-    pixmapPtr->height = height;
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
 
     /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
@@ -466,7 +473,6 @@ Tk_GetPixmap(
     /* Clear pixmap to white. */
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
     return PixmapFromTkWaylandPixmap(pixmapPtr);
 }
 
