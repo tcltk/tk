@@ -290,6 +290,7 @@ proc zoom_handler {w percent} {
 		$img configure -format $::tk::svgFmt
 	    } elseif {[string match "svg -scaletoheight*" $fmt]} {
 		set iconSize [expr {16 * $::tk::scalingPct / 100}]
+		if {$iconSize == 0} { set iconSize 16 }
 		$img configure -format [list svg -scaletoheight $iconSize]
 	    }
 	}

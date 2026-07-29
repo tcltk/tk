@@ -105,7 +105,8 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TEntry -padding 0.75p -insertwidth 0.75p
 	ttk::style map TEntry \
-	    -background [list readonly $colors(-frame)] \
+	    -fieldbackground [list readonly $colors(-frame) \
+				  disabled $colors(-frame)] \
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
@@ -115,17 +116,19 @@ namespace eval ttk::theme::clam {
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
 	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
-				  readonly $colors(-frame)] \
+				  readonly $colors(-frame) \
+				  disabled $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 3 -arrowpadding {2.25p 1.5p} -insertwidth 0.75p
+	ttk::style configure TSpinbox -padding {1.5p 0.75p 7.5p 0.75p} \
+	    -arrowsize 3 -arrowpadding 2.25p -insertwidth 0.75p
 	ttk::style map TSpinbox \
-	    -background [list readonly $colors(-frame)] \
+	    -fieldbackground [list readonly $colors(-frame) \
+				  disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 

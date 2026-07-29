@@ -923,25 +923,25 @@ static const Ttk_ElementSpec TabElementSpec =
  */
 
 #define TREE_SORT_CHEVRON_SIZE	3
-#define TREE_SORT_CHEVRON_COLOR	"#808080"
+#define TREE_SORT_CHEVRON_COLOR	"#5f6265"
 
 static void TreeSortElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
-    TCL_UNUSED(Ttk_State), /* state */
+    Ttk_State state,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
-    double scalingLevel = TkScalingLevel2(tkwin);
-
-    /* Get unscaled indicator size */
-    TtkArrowSize(TREE_SORT_CHEVRON_SIZE, CHEVRON_DOWN, widthPtr, heightPtr);
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);           /* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);          /* scaled */
+    if (state & TTK_STATE_USER1) {
+	/* Get scaled indicator width and height */
+	TtkGetScaledArrowSize(TREE_SORT_CHEVRON_SIZE, CHEVRON_DOWN, tkwin,
+	    widthPtr, heightPtr);
+    } else {
+	*widthPtr = 0;
+	*heightPtr = 0;
+    }
 }
 
 static void TreeSortElementDraw(
@@ -952,7 +952,7 @@ static void TreeSortElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    if ((state & TTK_STATE_USER1)) {
+    if (state & TTK_STATE_USER1) {
 	/* GenericElementDraw(clientData, elementRecord, tkwin, d, b, state); */
 
 	/*
@@ -963,7 +963,7 @@ static void TreeSortElementDraw(
 	 */
 
 	ArrowDirection direction;
-	XColor *strokeColor = Tk_GetColor(NULL, tkwin, TREE_SORT_CHEVRON_COLOR);
+	XColor *color;
 	Tk_Image img;
 	int imgWidth, imgHeight;
 
@@ -975,12 +975,13 @@ static void TreeSortElementDraw(
 	    return;
 	}
 
+	color = Tk_GetColor(NULL, tkwin, TREE_SORT_CHEVRON_COLOR);
 	img = TtkMakeChevronImage(TREE_SORT_CHEVRON_SIZE, direction,
-	    strokeColor, tkwin);
-	Tk_FreeColor(strokeColor);
+	    color, tkwin);
+	Tk_FreeColor(color);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
-	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
+	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2 + 1);
 	Tk_FreeImage(img);
     }
 }

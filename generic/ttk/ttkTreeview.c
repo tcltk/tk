@@ -7550,13 +7550,8 @@ static void TreeheadingIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    int size = 4;						/* unscaled */
-    double scalingLevel = TkScalingLevel2(tkwin);
+    int size = 4;
     Ttk_Padding padding;
-
-    /* Get unscaled indicator size */
-    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -7565,11 +7560,11 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    /* Get scaled indicator width and height */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+    TtkGetScaledArrowSize(size, CHEVRON_DOWN, tkwin, widthPtr, heightPtr);
 
-    /* Add padding */
+    /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -7587,17 +7582,14 @@ static void TreeheadingIndicatorDraw(
     Ttk_Padding padding;
     int size = 4;
     ArrowDirection direction;
-    XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
+    int imgWidth, imgHeight;
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
 	return;
     }
-
-    /* Shrink size based on padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
-    b = Ttk_PadBox(b, padding);
 
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
@@ -7609,8 +7601,14 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    img = TtkMakeChevronImage(size, direction, strokeColor, tkwin);
-    Tk_RedrawImage(img, 0, 0, b.width, b.height, d, b.x, b.y);
+    /* Shrink size based on padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
+    b = Ttk_PadBox(b, padding);
+
+    /* Draw indicator */
+    img = TtkMakeChevronImage(size, direction, color, tkwin);
+    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d, b.x, b.y);
     Tk_FreeImage(img);
 }
 
@@ -7652,17 +7650,12 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    int size = 4;						/* unscaled */
-    double scalingLevel = TkScalingLevel2(tkwin);
+    int size = 4;
     Ttk_Padding padding;
 
-    /* Get unscaled indicator size */
+    /* Get scaled indicator width and height */
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, CHEVRON_DOWN, tkwin, widthPtr, heightPtr);
 
     /* Add padding (only scaled if not in pixels) */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
@@ -7688,7 +7681,7 @@ static void TreeitemIndicatorDraw(
     int size = 4;
     ArrowDirection direction =
 	    (state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
-    XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
     int imgWidth, imgHeight;
 
@@ -7703,7 +7696,7 @@ static void TreeitemIndicatorDraw(
 
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
-    img = TtkMakeChevronImage(size, direction, strokeColor, tkwin);
+    img = TtkMakeChevronImage(size, direction, color, tkwin);
     Tk_SizeOfImage(img, &imgWidth, &imgHeight);
     Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

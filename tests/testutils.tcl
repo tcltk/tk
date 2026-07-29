@@ -792,6 +792,7 @@ namespace eval ::tk::test::image {
     proc imageFinish {} {
 	variable ImageNames
 	set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	set imgs [lsearch -all -inline -glob -not $imgs ::tk::icons::arrow*]
 	set imgs [lsearch -all -inline -glob -not $imgs ::tk::icons::chevron*]
 	if {$imgs ne $ImageNames} {
 	    return -code error "images remaining: $imgs != $ImageNames"
@@ -804,6 +805,7 @@ namespace eval ::tk::test::image {
 	variable ImageNames
 	if {![info exists ImageNames]} {
 	    set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	    set ImageNames [lsearch -all -inline -glob -not $ImageNames ::tk::icons::arrow*]
 	    set ImageNames [lsearch -all -inline -glob -not $ImageNames ::tk::icons::chevron*]
 	}
 	imageCleanup
