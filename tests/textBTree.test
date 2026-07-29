@@ -3782,6 +3782,29 @@ test btree-14.113 {delete -marks -inclusive of an empty range is a no-op} -setup
     destroy .t
 } -result {aaaaaaaaaa {current insert m1 m2} 1}
 
+test btree-14.114 {undo of a delete with a mark moved away from the collapse point} -setup {
+    destroy .t
+    text .t -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The mark inside the deleted range is referenced by the delete token
+    # and stays linked (collapsed); moving it afterwards left it away at
+    # undo time, and the delete undo unlinked it from its site without
+    # joining the two char segments left adjacent (CharCheckProc panic).
+    # The mark itself was created inside the atom, hence it does not
+    # survive the undo.
+    .t debug 1
+    .t insert end "abcdefgh"
+    .t edit reset
+    .t mark set m 1.5
+    .t replace 1.2 1.7 z
+    .t mark set m 1.1
+    .t edit undo
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists m]
+} -cleanup {
+    destroy .t
+} -result {abcdefgh 0}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

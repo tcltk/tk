@@ -1391,6 +1391,7 @@ UndoDeletePerform(
 		TkTextSection *sectionPtr;
 		TkTextSection *leftSectionPtr;
 		TkTextLine *srcLinePtr;
+		TkTextSegment *sitePrevPtr;
 		int sole;
 
 		assert(segPtr->typePtr != &tkTextCharType);
@@ -1402,6 +1403,7 @@ UndoDeletePerform(
 		sectionPtr = segPtr->sectionPtr;
 		leftSectionPtr = sectionPtr->prevPtr;
 		srcLinePtr = sectionPtr->linePtr;
+		sitePrevPtr = segPtr->prevPtr;
 		sole = (sectionPtr->length == 1);
 
 		/*
@@ -1430,6 +1432,30 @@ UndoDeletePerform(
 		     * before may have lost its permission to be short.
 		     */
 		    JoinSections(leftSectionPtr);
+		}
+
+		/*
+		 * The neighbors at the vacated site may be joinable now; the
+		 * final cleanup only covers the boundaries of the restored
+		 * range.
+		 */
+
+		if (sitePrevPtr && sitePrevPtr->typePtr == &tkTextCharType) {
+		    TkTextSegment *siteNextPtr = sitePrevPtr->nextPtr;
+		    TkTextSegment *joinedPtr = CleanupCharSegments(sharedTextPtr, sitePrevPtr);
+
+		    if (joinedPtr != sitePrevPtr) {
+			/* The join has freed both neighbors: re-synchronize. */
+			if (prevPtr == sitePrevPtr || prevPtr == siteNextPtr) {
+			    prevPtr = joinedPtr;
+			}
+			if (lastPtr == sitePrevPtr || lastPtr == siteNextPtr) {
+			    lastPtr = joinedPtr;
+			}
+			if (prevSegPtr == sitePrevPtr || prevSegPtr == siteNextPtr) {
+			    prevSegPtr = joinedPtr;
+			}
+		    }
 		}
 	    }
 	    if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
