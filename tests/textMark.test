@@ -441,6 +441,28 @@ test textMark-11.3 {steadymarks - undo/redo drain around a revived mark} -setup 
 } -cleanup {
     destroy .tt
 } -result {1}
+test textMark-11.4 {steadymarks - undo of a mark move restores the position} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    # The re-insertion of the mark used the index just computed for the redo
+    # token (the current position) instead of the saved one: undoing a move
+    # was a positional no-op.
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt delete 1.5 1.6
+    .tt edit separator
+    .tt mark set m 1.4
+    .tt edit undo
+    set r [.tt index m]
+    .tt edit redo
+    lappend r [.tt index m]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {1.2 1.4}
 
 #
 # TESTFILE CLEANUP

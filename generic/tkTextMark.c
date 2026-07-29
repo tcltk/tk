@@ -339,8 +339,14 @@ UndoMoveMarkPerform(
     assert(!token->markPtr->body.mark.changePtr);
 
     if (redoInfo) {
-	TkBTreeMakeUndoIndex(sharedTextPtr, token->markPtr, &index);
-	token->index = index;
+	TkTextUndoIndex redoIndex;
+
+	/*
+	 * Don't clobber 'index': the mark must be re-inserted at the saved
+	 * position, whereas the redo token receives the current one.
+	 */
+	TkBTreeMakeUndoIndex(sharedTextPtr, token->markPtr, &redoIndex);
+	token->index = redoIndex;
 	redoInfo->token = undoInfo->token;
 	redoInfo->token->undoType = isRedo ? &undoTokenMoveMarkType : &redoTokenMoveMarkType;
     }
