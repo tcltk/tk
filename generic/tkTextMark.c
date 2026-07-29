@@ -576,19 +576,19 @@ TkTextMarkCmd(
 	TkTextSegment *markPtr1, *markPtr2;
 	int relation, value;
 
-	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "markName1 op markName2");
+	if (objc != 6) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "markName1 op markName2");
 	    return TCL_ERROR;
 	}
-	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[2])))) {
+	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[3])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
-		    "must be an existing mark", Tcl_GetString(objv[2])));
+		    "must be an existing mark", Tcl_GetString(objv[3])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[4])))) {
+	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[5])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
-		    "must be an existing mark", Tcl_GetString(objv[4])));
+		    "must be an existing mark", Tcl_GetString(objv[5])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -614,7 +614,7 @@ TkTextMarkCmd(
 	    }
 	}
 
-	value = TkTextTestRelation(interp, relation, Tcl_GetString(objv[3]));
+	value = TkTextTestRelation(interp, relation, Tcl_GetString(objv[4]));
 	if (value == -1) {
 	    return TCL_ERROR;
 	}

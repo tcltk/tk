@@ -385,6 +385,31 @@ test textMark-8.12 {MarkFindPrev - match pattern - discard special marks} -setup
     .t mark set current 2.0
     .t mark prev -discardspecial end ins*
 } -result {}
+
+test textMark-10.1 {TkTextMarkCmd - "compare" option - argument parsing} -returnCodes error -body {
+    .t mark compare a <
+} -result {wrong # args: should be ".t mark compare markName1 op markName2"}
+test textMark-10.2 {TkTextMarkCmd - "compare" option - unknown mark} -setup {
+    .t mark unset {*}[.t mark names]
+} -returnCodes error -body {
+    .t mark compare gorp == insert
+} -result {bad comparison operand "gorp": must be an existing mark}
+test textMark-10.3 {TkTextMarkCmd - "compare" option} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set m1 1.1
+    .t mark set m2 2.0
+    list [.t mark compare m1 < m2] [.t mark compare m2 < m1] [.t mark compare m1 == m1]
+} -result {1 0 1}
+test textMark-10.4 {TkTextMarkCmd - "compare" option - same position uses chain order} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set m1 1.1
+    .t mark set m2 1.1
+    # Both marks are at the same position: the chain order decides, the
+    # comparison must stay antisymmetric.
+    list [.t mark compare m1 == m2] [expr {[.t mark compare m1 < m2] != [.t mark compare m2 < m1]}]
+} -result {0 1}
 
 #
 # TESTFILE CLEANUP
