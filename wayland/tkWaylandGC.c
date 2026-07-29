@@ -393,25 +393,79 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
- * The Pixmap XID is the unsgined int value of a pointer to a
- * TkWaylandPixmap.
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPixmapFromPixmap --
+ *
+ *      Convert a Pixmap XID back to its TkWaylandPixmap pointer.
+ *      The Pixmap XID is encoded as 3 + (pointer value) to maintain
+ *      the low-bit tagging scheme used by TkWaylandDrawableIsPixmap.
+ *
+ *      Returns NULL if the pixmap is invalid (None or malformed).
+ *
+ * Results:
+ *      Pointer to TkWaylandPixmap, or NULL if invalid.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
  */
 
-TkWaylandPixmap* TkWaylandPixmapFromPixmap(
+MODULE_SCOPE TkWaylandPixmap*
+TkWaylandPixmapFromPixmap(
     Pixmap pixmap)
 {
-    return (TkWaylandPixmap*)(pixmap & ~3UL);
+    TkWaylandPixmap *pixmapPtr;
+    
+    /* None or invalid pixmap. */
+    if (pixmap == None || pixmap == 0) {
+        return NULL;
+    }
+    
+    /* Check that the low bits indicate this is a pixmap (not a window). */
+    if (!TkWaylandDrawableIsPixmap(pixmap)) {
+        return NULL;
+    }
+    
+    /* Strip the low 2 bits to get the pointer. */
+    pixmapPtr = (TkWaylandPixmap*)(pixmap & ~3UL);
+    
+    /* Basic sanity check: pointer should be in reasonable range. */
+    if ((uintptr_t)pixmapPtr < 0x1000) {
+        return NULL;
+    }
+    
+    return pixmapPtr;
 }
 
 /*
- * A Pixmap is a Drawable, so it must carry the low-bit tag that
- * TkWaylandDrawableIsPixmap tests; see the XID scheme in tkWaylandWm.c.
+ *----------------------------------------------------------------------
+ *
+ * PixmapFromTkWaylandPixmap --
+ *
+ *      Convert a TkWaylandPixmap pointer to a Pixmap XID.
+ *      The encoding is: XID = 3 + pointer, which sets the low bit
+ *      so TkWaylandDrawableIsPixmap can identify it as a pixmap.
+ *
+ * Results:
+ *      Pixmap XID, or None if pixmapPtr is NULL.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
  */
 
-static inline Pixmap PixmapFromTkWaylandPixmap(
+static inline Pixmap
+PixmapFromTkWaylandPixmap(
     TkWaylandPixmap *pixmapPtr)
 {
-    return pixmapPtr ? 3 + (Pixmap)pixmapPtr : None;
+    if (!pixmapPtr) {
+        return None;
+    }
+    /* XID = 3 + pointer. Low bit set identifies as pixmap. */
+    return 3 + (Pixmap)pixmapPtr;
 }
 
 /*
@@ -467,6 +521,7 @@ Tk_GetPixmap(
     pixmapPtr->glfwWindow = glfwWindow;
     pixmapPtr->width = width;
     pixmapPtr->height = height;
+    pixmapPtr->depth = 24;  /* Default depth */
 
     /*
      * nvgluCreateFramebuffer leaves the newly created FBO bound as the
@@ -521,11 +576,64 @@ Tk_FreePixmap(
     TCL_UNUSED(Display *),
     Pixmap pixmap)
 {
-    TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(pixmap);
-    if (pixmapPtr->fb) {
-	glfwMakeContextCurrent(pixmapPtr->glfwWindow);
-	nvgluDeleteFramebuffer(pixmapPtr->fb);
+    TkWaylandPixmap *pixmapPtr;
+
+    if (pixmap == None || pixmap == 0) {
+        return;
     }
+
+    pixmapPtr = TkWaylandPixmapFromPixmap(pixmap);
+    if (!pixmapPtr) {
+        return;
+    }
+
+    /* Already freed. */
+    if (pixmapPtr->fb == NULL && pixmapPtr->bitmapData == NULL) {
+        return;
+    }
+
+    if (pixmapPtr->fb) {
+        GLFWwindow *win = pixmapPtr->glfwWindow
+                          ? pixmapPtr->glfwWindow
+                          : mainGlfwWindow;
+
+        /*
+         * Only attempt NanoVG / GL cleanup when we still have a live
+         * window *and* its NanoVG context is the one that owns the FBO.
+         * Otherwise just free the C structures; the GL objects are
+         * already gone (or will be destroyed with the context).
+         */
+        int canDelete = 0;
+        if (win && !glfwWindowShouldClose(win)) {
+            glfwMakeContextCurrent(win);
+            glfwTkInfo *info = glfwGetWindowUserPointer(win);
+            if (info && info->vg &&
+                pixmapPtr->fb->ctx == info->vg) {
+                canDelete = 1;
+            }
+        }
+
+        if (canDelete) {
+            nvgluDeleteFramebuffer(pixmapPtr->fb);
+        } else {
+            /* Context is gone or mismatched – free only the wrapper */
+            if (pixmapPtr->fb->fbo) {
+                /* may already be invalid; ignore GL errors */
+                glDeleteFramebuffers(1, &pixmapPtr->fb->fbo);
+            }
+            if (pixmapPtr->fb->rbo) {
+                glDeleteRenderbuffers(1, &pixmapPtr->fb->rbo);
+            }
+            free(pixmapPtr->fb);
+        }
+        pixmapPtr->fb = NULL;
+    }
+
+    if (pixmapPtr->bitmapData) {
+        ckfree(pixmapPtr->bitmapData);
+        pixmapPtr->bitmapData = NULL;
+    }
+
     ckfree(pixmapPtr);
 }
 

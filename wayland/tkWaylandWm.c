@@ -109,8 +109,14 @@ const char *const WmAttributeNames[] = {
  *
  */
 
-inline bool TkWaylandDrawableIsPixmap(Drawable drawable) {
-    return ((drawable & 1UL) == 1);
+inline bool TkWaylandDrawableIsPixmap(Drawable drawable) 
+{
+    /* A valid pixmap has the low bit set and is not None. */
+    if (drawable == None || drawable == 0) {
+        return 0;
+    }
+    /* Low bit set indicates pixmap (window drawables use even values). */
+    return (drawable & 1) != 0;
 }
 
 inline Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
