@@ -3805,6 +3805,41 @@ test btree-14.114 {undo of a delete with a mark moved away from the collapse poi
     destroy .t
 } -result {abcdefgh 0}
 
+test btree-14.115 {delete -marks with a normal mark on the last line keeps the final newline} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # A normal mark on the last line disarmed the protection of the final
+    # newline (DeleteOnLastLine) without arming DELETE_LASTLINE: the tree
+    # dropped below its two minimal lines (TkBTreeCheck panic). The final
+    # newline is now always excluded and the marks die separately.
+    .t debug 1
+    .t insert end "abc"
+    .t mark set mm end
+    .t delete -marks 1.0 2.0
+    .t debug 0
+    list [.t index end] [.t get 1.0 end-1c] [.t mark exists mm]
+} -cleanup {
+    destroy .t
+} -result {2.0 {} 0}
+test btree-14.118 {delete -marks up to end deletes the marks of the whole range} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # The exclusion of the final newline also shrank the scope of -marks:
+    # a mark strictly inside the requested range survived while a boundary
+    # mark died. The marks of the excluded zone die separately now.
+    .t debug 1
+    .t insert end "g"
+    .t mark set mk5 1.1
+    .t mark set mk6 1.0 right
+    .t delete -marks -inclusive 1.0 2.0
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists mk5] [.t mark exists mk6]
+} -cleanup {
+    destroy .t
+} -result {{} 0 0}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
