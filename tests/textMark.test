@@ -104,7 +104,9 @@ test textMark-2.3 {TkTextMarkCmd - "names" option} -setup {
     .t mark set "b c" 2.3
     lsort [.t mark names]
 } -result {a {b c} current insert}
-test textMark-2.4 {TkTextMarkCmd - "names" option} -body {
+test textMark-2.4 {TkTextMarkCmd - "names" option} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark names -discardspecial
 } -result {}
 test textMark-2.5 {TkTextMarkCmd - "names" option} -body {
@@ -113,6 +115,12 @@ test textMark-2.5 {TkTextMarkCmd - "names" option} -body {
 test textMark-2.6 {TkTextMarkCmd - "names" option} -body {
     .t mark names -discardspecial ins*
 } -result {}
+test textMark-2.7 {TkTextMarkCmd - "names" option - -discardspecial without pattern} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set a 1.1
+    .t mark names -discardspecial
+} -result {a}
 
 test textMark-3.1 {TkTextMarkCmd - "set" option} -returnCodes error -body {
     .t mark set a

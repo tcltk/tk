@@ -714,7 +714,7 @@ TkTextMarkCmd(
 	const char *pattern;
 	Tcl_Obj *resultObj;
 
-	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
+	if (objc > 3 && *Tcl_GetString(objv[3]) == '-') {
 	    if (strcmp(Tcl_GetString(objv[3]), "-discardspecial") == 0) {
 		discardSpecial = 1;
 		numArgs = 4;
