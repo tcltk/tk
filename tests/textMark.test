@@ -548,6 +548,33 @@ test textMark-11.5 {steadymarks - undo index anchored on a moved then unset mark
 } -cleanup {
     destroy .tt
 } -result {abcdef}
+
+test textMark-12.1 {steadymarks - redo of a mark set whose name is alive again} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The redo of a deletion does not delete the marks again, hence the redo
+    # of the re-creation of the name found it alive (hash collision in
+    # ReactivateMark, stolen entry in release builds). It is replayed as a
+    # move of the living mark now - setting an existing mark is a move.
+    .tt debug 1
+    .tt insert end "abc"
+    .tt mark set mk1 1.1
+    .tt edit reset
+    .tt delete -marks 1.0 1.3
+    .tt mark set mk1 1.0
+    .tt edit undo
+    set r [list [.tt get 1.0 end-1c] [.tt index mk1]]
+    .tt edit redo
+    lappend r [.tt get 1.0 end-1c] [.tt index mk1] [.tt mark names -discardspecial *]
+    .tt edit undo
+    lappend r [.tt get 1.0 end-1c] [.tt index mk1]
+    .tt insert 1.0 X
+    .tt debug 0
+    set r
+} -cleanup {
+    destroy .tt
+} -result {abc 1.1 {} 1.0 mk1 abc 1.1}
 
 #
 # TESTFILE CLEANUP

@@ -447,6 +447,40 @@ RedoSetMarkPerform(
     assert(TkTextIsNormalMark(markPtr));
 
     if (IS_PRESERVED(markPtr)) {
+	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&sharedTextPtr->markTable, GET_NAME(markPtr));
+
+	if (hPtr) {
+	    /*
+	     * The name is alive again, undo/redo interleavings can revive an
+	     * homonym (the redo of a deletion does not delete the marks
+	     * again). Replay the [mark set] as a move of the living mark -
+	     * setting an existing mark is a move. Nothing dies: undo indexes
+	     * anchored on the living mark follow it, and the preserved
+	     * duplicate simply stays inside the stack until its references
+	     * drain.
+	     */
+
+	    TkTextSegment *livingPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
+
+	    assert(livingPtr != markPtr);
+	    assert(TkTextIsNormalMark(livingPtr));
+	    TkBTreeUnlinkSegment(sharedTextPtr, livingPtr);
+	    TkBTreeReInsertSegment(sharedTextPtr, &token->index, livingPtr);
+
+	    if (redoInfo) {
+		UndoTokenSetMark *redoToken;
+
+		redoToken = (UndoTokenSetMark *)Tcl_Alloc(sizeof(UndoTokenSetMark));
+		redoToken->markPtr = livingPtr;
+		MARK_POINTER(redoToken->markPtr);
+		redoToken->undoType = &undoTokenSetMarkType;
+		redoInfo->token = (TkTextUndoToken *) redoToken;
+		DEBUG_ALLOC(tkTextCountNewUndoToken++);
+		livingPtr->refCount += 1;
+	    }
+	    return;
+	}
+
 	ReactivateMark(sharedTextPtr, markPtr);
 	sharedTextPtr->numMarks += 1;
     }
@@ -2446,7 +2480,15 @@ MarkRestoreProc(
 	}
 
 	hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, GET_NAME(segPtr), &isNew);
-	assert(isNew);
+	if (!isNew) {
+	    /*
+	     * A mark of this name is alive again (undo/redo interleavings
+	     * can revive an homonym): the living one wins, discard the
+	     * preserved duplicate like the branch above does.
+	     */
+	    MarkDeleteProc(sharedTextPtr, segPtr, DELETE_CLEANUP);
+	    return 0;
+	}
 	Tcl_SetHashValue(hPtr, segPtr);
 	sharedTextPtr->numMarks += 1;
 	Tcl_Free(GET_NAME(segPtr));
