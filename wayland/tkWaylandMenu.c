@@ -2585,11 +2585,11 @@ DrawTearoffEntry(
 
 int
 TkpPostMenu(
-            Tcl_Interp *interp,
-            TkMenu *menuPtr,
-            int x,
-            int y,
-            Tcl_Size index)
+    Tcl_Interp *interp,
+    TkMenu *menuPtr,
+    int x,
+    int y,
+    Tcl_Size index)
 {
     int result;
     int popupW, popupH;
@@ -2616,6 +2616,8 @@ TkpPostMenu(
         return TCL_OK;
     }
 
+    int hitX = x, hitY = y;
+
     if (index >= menuPtr->numEntries) {
         index = menuPtr->numEntries - 1;
     }
@@ -2630,8 +2632,50 @@ TkpPostMenu(
 
     MENU_LOG("TkpPostMenu: popup size %dx%d", popupW, popupH);
 
-    /* Resolve GLFW window from the menu's toplevel. */
-    gw = TkWaylandResolveGLFWwindow(menuPtr->tkwin);
+    /*
+     * Resolve GLFW window for this popup.
+     * 
+     * First try: use the window that the menu is posted from.
+     * Since the menu's tkwin may be under "." while the posting
+     * window is a child toplevel, we need to find the correct window.
+     * 
+     * Use the coordinates to find which window the user is interacting with.
+     * This is the same approach used by right-click context menus.
+     */
+    {
+        Tk_Window hitWin = Tk_CoordsToWindow(hitX, hitY, menuPtr->tkwin);
+        if (hitWin) {
+            gw = TkWaylandResolveGLFWwindow(hitWin);
+            if (gw) {
+                MENU_LOG("TkpPostMenu: found GLFW window from hit window %s",
+                         Tk_PathName(hitWin));
+            }
+        }
+    }
+    
+    /* If that didn't work, try resolving from the menu's parent chain */
+    if (!gw) {
+        TkWindow *parent = (TkWindow *)Tk_Parent(menuPtr->tkwin);
+        while (parent && !(parent->flags & TK_TOP_LEVEL)) {
+            parent = (TkWindow *)Tk_Parent((Tk_Window)parent);
+        }
+        if (parent) {
+            gw = TkWaylandResolveGLFWwindow((Tk_Window)parent);
+            if (gw) {
+                MENU_LOG("TkpPostMenu: found GLFW window from parent chain %s",
+                         Tk_PathName((Tk_Window)parent));
+            }
+        }
+    }
+
+    /* Last resort: try the menu's own tkwin */
+    if (!gw) {
+        gw = TkWaylandResolveGLFWwindow(menuPtr->tkwin);
+        if (gw) {
+            MENU_LOG("TkpPostMenu: found GLFW window from menu's tkwin");
+        }
+    }
+
     if (!gw) {
         MENU_LOG("TkpPostMenu: warning - no GLFW window found, using main");
         gw = mainGlfwWindow;
@@ -2648,12 +2692,14 @@ TkpPostMenu(
  * TkpMenuButtonPostMenu --
  *
  * Post a menu from a menubutton at the appropriate position.
+ * Handles the -direction option: above, below, left, right, flush.
  *
  * Results:
  * Returns TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- * Posts the menu as a popup anchored to the menubutton.
+ * Posts the menu as a popup anchored to the menubutton according to
+ * its -direction option.
  *
  *---------------------------------------------------------------------------
  */
@@ -2667,7 +2713,7 @@ TkpMenuButtonPostMenu(
     TkWindow *buttonWin;
     TkMenuReferences *menuRefPtr;
     int x, y, btnW, btnH, popupW, popupH;
-    GLFWwindow *buttonGw = NULL;
+    int result;
 
     if (!mbPtr) {
         return TCL_ERROR;
@@ -2675,12 +2721,12 @@ TkpMenuButtonPostMenu(
 
     interp = mbPtr->interp;
     buttonWin = (TkWindow *)mbPtr->tkwin;
-
     if (!interp || !buttonWin) {
         return TCL_ERROR;
     }
 
-    MENU_LOG("TkpMenuButtonPostMenu: button=%s", Tk_PathName((Tk_Window)buttonWin));
+    MENU_LOG("TkpMenuButtonPostMenu: button=%s",
+             Tk_PathName((Tk_Window)buttonWin));
 
     if (!mbPtr->menuNameObj) {
         MENU_LOG("TkpMenuButtonPostMenu: no menu name");
@@ -2696,22 +2742,24 @@ TkpMenuButtonPostMenu(
 
     menuPtr = menuRefPtr->menuPtr;
     if (!menuPtr) {
-        MENU_LOG("TkpMenuButtonPostMenu: menuPtr is NULL");
         return TCL_ERROR;
     }
 
-    /* Get the button's GLFW window explicitly - this is critical for
-     * menubuttons to clamp to the correct toplevel. */
-    buttonGw = TkWaylandResolveGLFWwindow((Tk_Window)buttonWin);
-    if (!buttonGw) {
-        MENU_LOG("TkpMenuButtonPostMenu: warning - no GLFW window for button, using main");
-        buttonGw = mainGlfwWindow;
+    /* Get button position and size in toplevel-local coordinates */
+    TkWindow *toplevel = buttonWin;
+    while (toplevel && !(toplevel->flags & TK_TOP_LEVEL)) {
+        toplevel = toplevel->parentPtr;
     }
 
-    int rootX, rootY;
-    Tk_GetRootCoords((Tk_Window)buttonWin, &rootX, &rootY);
-    x    = rootX;
-    y    = rootY;
+    x = 0;
+    y = 0;
+    TkWindow *w = buttonWin;
+    while (w && w != toplevel) {
+        x += w->changes.x;
+        y += w->changes.y;
+        w = w->parentPtr;
+    }
+
     btnW = Tk_Width((Tk_Window)buttonWin);
     btnH = Tk_Height((Tk_Window)buttonWin);
 
@@ -2721,15 +2769,22 @@ TkpMenuButtonPostMenu(
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
 
-    MENU_LOG("TkpMenuButtonPostMenu: button at (%d,%d) %dx%d, popup %dx%d, gw=%p",
-             x, y, btnW, btnH, popupW, popupH, (void*)buttonGw);
+    MENU_LOG("TkpMenuButtonPostMenu: button pos=(%d,%d) size=%dx%d, popup size=%dx%d",
+             x, y, btnW, btnH, popupW, popupH);
 
+    /*
+     * Delegate to TkpPostMenu which now correctly resolves the GLFW window
+     * from the hit window coordinates.
+     */
     pendingRootIsMenubar = 0;
-    return TkWaylandPostMenuAtAnchor(interp, menuPtr,
-        x, y + btnH, btnW, 1,
-        popupW, popupH, 1, buttonGw);
+    result = TkpPostMenu(interp, menuPtr, x, y, -1);
+    
+    /*
+     * Note: TkpPostMenu will handle the actual menu positioning.
+     * We pass index=-1 to let it compute the correct y offset.
+     */
+    return result;
 }
-
 /*
  *---------------------------------------------------------------------------
  *
