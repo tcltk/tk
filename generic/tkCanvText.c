@@ -590,7 +590,9 @@ DeleteText(
     if (textPtr->text != NULL) {
 	ckfree(textPtr->text);
     }
-
+    if (textPtr->widthObj != NULL) {
+	Tcl_DecrRefCount(textPtr->widthObj);
+    }
     Tk_FreeTextLayout(textPtr->textLayout);
     if (textPtr->gc != NULL) {
 	Tk_FreeGC(display, textPtr->gc);
