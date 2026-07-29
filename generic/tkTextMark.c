@@ -1421,66 +1421,40 @@ UnsetMark(
     if (redoInfo) {
 	RedoTokenSetMark *token;
 	TkTextMarkChange *changePtr;
-	bool annihilate = false;
 
 	memset(redoInfo, 0, sizeof(*redoInfo));
 
 	if ((changePtr = markPtr->body.mark.changePtr)) {
 	    /*
-	     * The mark was created within the currently pending change:
-	     * creation and unset annihilate, the mark dies without an undo
-	     * trace. A pending gravity toggle is discarded as well, its undo
-	     * would act on a dead mark.
+	     * Push the pending tokens, never drop them: other undo tokens may
+	     * be anchored on this mark, its history must stay replayable (the
+	     * undo of the unset revives the mark before the anchored tokens
+	     * replay). The creation is pushed first, its undo removes the
+	     * mark again at the very end.
 	     */
-	    annihilate = (changePtr->setMark != NULL);
-
+	    if (changePtr->setMark) {
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->setMark, 0);
+		changePtr->setMark = NULL;
+	    }
 	    if (changePtr->toggleGravity) {
-		if (annihilate) {
-		    Tcl_Free(changePtr->toggleGravity);
-		    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
-		    assert(markPtr->refCount > 1);
-		    markPtr->refCount -= 1;
-		} else {
-		    TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
-		}
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
 		changePtr->toggleGravity = NULL;
 	    }
 	    if (changePtr->moveMark) {
-		if (annihilate) {
-		    Tcl_Free(changePtr->moveMark);
-		    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
-		    assert(markPtr->refCount > 1);
-		    markPtr->refCount -= 1;
-		} else {
-		    /*
-		     * Push it, an undo index of a deletion may be anchored on
-		     * this mark: undoing the move first brings the anchor back
-		     * to the position the deletion has been recorded with.
-		     */
-		    TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->moveMark, 0);
-		}
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->moveMark, 0);
 		changePtr->moveMark = NULL;
-	    }
-	    if (changePtr->setMark) {
-		Tcl_Free(changePtr->setMark);
-		changePtr->setMark = NULL;
-		DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
-		assert(markPtr->refCount > 1);
-		markPtr->refCount -= 1;
 	    }
 	}
 
-	if (!annihilate) {
-	    token = (RedoTokenSetMark *)Tcl_Alloc(sizeof(RedoTokenSetMark));
-	    token->undoType = &redoTokenSetMarkType;
-	    markPtr->refCount += 1;
-	    token->markPtr = markPtr;
-	    MARK_POINTER(token->markPtr);
-	    TkBTreeMakeUndoIndex(sharedTextPtr, markPtr, &token->index);
-	    DEBUG_ALLOC(tkTextCountNewUndoToken++);
-	    redoInfo->token = (TkTextUndoToken *) token;
-	    redoInfo->byteSize = 0;
-	}
+	token = (RedoTokenSetMark *)Tcl_Alloc(sizeof(RedoTokenSetMark));
+	token->undoType = &redoTokenSetMarkType;
+	markPtr->refCount += 1;
+	token->markPtr = markPtr;
+	MARK_POINTER(token->markPtr);
+	TkBTreeMakeUndoIndex(sharedTextPtr, markPtr, &token->index);
+	DEBUG_ALLOC(tkTextCountNewUndoToken++);
+	redoInfo->token = (TkTextUndoToken *) token;
+	redoInfo->byteSize = 0;
     }
 
     sharedTextPtr->undoStackEvent = true;
@@ -2321,9 +2295,14 @@ MarkDeleteProc(
 	     * The dying mark stays restorable through the undo chain of the
 	     * deletion, and an undo index may be anchored on it: push the
 	     * pending tokens instead of dropping them (the flush which would
-	     * have pushed them comes after the tree operation). The undo
-	     * then brings the revived mark back to the recorded state.
+	     * have pushed them comes after the tree operation). The creation
+	     * is pushed first, its undo removes the revived mark at the very
+	     * end.
 	     */
+	    if (changePtr->setMark) {
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->setMark, 0);
+		changePtr->setMark = NULL;
+	    }
 	    if (changePtr->toggleGravity) {
 		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
 		changePtr->toggleGravity = NULL;
@@ -2331,10 +2310,6 @@ MarkDeleteProc(
 	    if (changePtr->moveMark) {
 		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->moveMark, 0);
 		changePtr->moveMark = NULL;
-	    }
-	    if (changePtr->setMark) {
-		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->setMark, 0);
-		changePtr->setMark = NULL;
 	    }
 	}
 
