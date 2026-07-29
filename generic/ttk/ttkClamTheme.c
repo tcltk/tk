@@ -723,16 +723,11 @@ static void ThumbElementSize(
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 4;
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
-    TtkArrowSize(size, CHEVRON_UP, widthPtr, heightPtr);	/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, CHEVRON_UP, tkwin, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);
@@ -903,16 +898,11 @@ static void ArrowElementSize(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, direction, tkwin, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);
@@ -987,16 +977,11 @@ static void BoxArrowElementSize(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 4;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
 
-    /* Get unscaled size */
+    /* Get scaled width and height */
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
-    TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
+    TtkGetScaledArrowSize(size, direction, tkwin, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, sb->arrowPaddingObj, &padding);

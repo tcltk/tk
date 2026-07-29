@@ -148,7 +148,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TSpinbox -insertwidth 0.75p \
 	    -arrowpadding 2.25p -arrowsize 3 -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
+	    -fieldbackground $colors(-window) -padding {1.5p 0.75p 7.5p 0.75p} \
 	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \

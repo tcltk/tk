@@ -929,19 +929,19 @@ static void TreeSortElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
-    TCL_UNUSED(Ttk_State), /* state */
+    Ttk_State state,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
-    double scalingLevel = TkScalingLevel2(tkwin);
-
-    /* Get unscaled indicator size */
-    TtkArrowSize(TREE_SORT_CHEVRON_SIZE, CHEVRON_DOWN, widthPtr, heightPtr);
-
-    /* Scale and then round up */
-    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);           /* scaled */
-    *heightPtr = (int)ceil(*heightPtr * scalingLevel);          /* scaled */
+    if (state & TTK_STATE_USER1) {
+	/* Get scaled indicator width and height */
+	TtkGetScaledArrowSize(TREE_SORT_CHEVRON_SIZE, CHEVRON_DOWN, tkwin,
+	    widthPtr, heightPtr);
+    } else {
+	*widthPtr = 0;
+	*heightPtr = 0;
+    }
 }
 
 static void TreeSortElementDraw(
@@ -952,7 +952,7 @@ static void TreeSortElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    if ((state & TTK_STATE_USER1)) {
+    if (state & TTK_STATE_USER1) {
 	/* GenericElementDraw(clientData, elementRecord, tkwin, d, b, state); */
 
 	/*
