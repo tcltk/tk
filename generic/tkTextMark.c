@@ -38,6 +38,7 @@
 
 static void		InsertUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static int		MarkDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
+static void		MarkReleaseRef(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static Tcl_Obj *	MarkInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static int		MarkRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		MarkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
@@ -317,11 +318,11 @@ UndoToggleGravityDestroy(
     TkTextUndoToken *item,
     int reused)
 {
-    assert(!((UndoTokenToggleGravity *) item)->markPtr->body.mark.changePtr);
+    /* The mark may be alive again, possibly with a pending change item. */
 
     if (!reused) {
 	UndoTokenToggleGravity *token = (UndoTokenToggleGravity *) item;
-	MarkDeleteProc(sharedTextPtr, token->markPtr, DELETE_MARKS);
+	MarkReleaseRef(sharedTextPtr, token->markPtr);
     }
 }
 
@@ -338,8 +339,14 @@ UndoMoveMarkPerform(
     assert(!token->markPtr->body.mark.changePtr);
 
     if (redoInfo) {
-	TkBTreeMakeUndoIndex(sharedTextPtr, token->markPtr, &index);
-	token->index = index;
+	TkTextUndoIndex redoIndex;
+
+	/*
+	 * Don't clobber 'index': the mark must be re-inserted at the saved
+	 * position, whereas the redo token receives the current one.
+	 */
+	TkBTreeMakeUndoIndex(sharedTextPtr, token->markPtr, &redoIndex);
+	token->index = redoIndex;
 	redoInfo->token = undoInfo->token;
 	redoInfo->token->undoType = isRedo ? &undoTokenMoveMarkType : &redoTokenMoveMarkType;
     }
@@ -354,11 +361,11 @@ UndoMoveMarkDestroy(
     TkTextUndoToken *item,
     int reused)
 {
-    assert(!((UndoTokenMoveMark *) item)->markPtr->body.mark.changePtr);
+    /* The mark may be alive again, possibly with a pending change item. */
 
     if (!reused) {
 	UndoTokenMoveMark *token = (UndoTokenMoveMark *) item;
-	MarkDeleteProc(sharedTextPtr, token->markPtr, DELETE_MARKS);
+	MarkReleaseRef(sharedTextPtr, token->markPtr);
     }
 }
 
@@ -421,9 +428,9 @@ UndoSetMarkDestroy(
     UndoTokenSetMark *token = (UndoTokenSetMark *) item;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
-    assert(!markPtr->body.mark.changePtr);
+    /* The mark may be alive again, possibly with a pending change item. */
 
-    MarkDeleteProc(sharedTextPtr, markPtr, DELETE_CLEANUP);
+    MarkReleaseRef(sharedTextPtr, markPtr);
 }
 
 static void
@@ -468,8 +475,8 @@ RedoSetMarkDestroy(
     RedoTokenSetMark *token = (RedoTokenSetMark *) item;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
-    assert(!markPtr->body.mark.changePtr);
-    MarkDeleteProc(sharedTextPtr, markPtr, DELETE_MARKS);
+    /* The mark may be alive again, possibly with a pending change item. */
+    MarkReleaseRef(sharedTextPtr, markPtr);
 }
 
 static void
@@ -576,19 +583,19 @@ TkTextMarkCmd(
 	TkTextSegment *markPtr1, *markPtr2;
 	int relation, value;
 
-	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "markName1 op markName2");
+	if (objc != 6) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "markName1 op markName2");
 	    return TCL_ERROR;
 	}
-	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[2])))) {
+	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[3])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
-		    "must be an existing mark", Tcl_GetString(objv[2])));
+		    "must be an existing mark", Tcl_GetString(objv[3])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[4])))) {
+	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[5])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
-		    "must be an existing mark", Tcl_GetString(objv[4])));
+		    "must be an existing mark", Tcl_GetString(objv[5])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -614,7 +621,7 @@ TkTextMarkCmd(
 	    }
 	}
 
-	value = TkTextTestRelation(interp, relation, Tcl_GetString(objv[3]));
+	value = TkTextTestRelation(interp, relation, Tcl_GetString(objv[4]));
 	if (value == -1) {
 	    return TCL_ERROR;
 	}
@@ -714,7 +721,7 @@ TkTextMarkCmd(
 	const char *pattern;
 	Tcl_Obj *resultObj;
 
-	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
+	if (objc > 3 && *Tcl_GetString(objv[3]) == '-') {
 	    if (strcmp(Tcl_GetString(objv[3]), "-discardspecial") == 0) {
 		discardSpecial = 1;
 		numArgs = 4;
@@ -1355,24 +1362,23 @@ ChangeGravity(
     isNormalMark = TkTextIsNormalMark(markPtr);
 
     if (!sharedTextPtr->steadyMarks) {
-	if (!textPtr || markPtr != textPtr->insertMarkPtr) {
-	    /*
-	     * We must re-insert the mark, the old rules of gravity may force
-	     * a shuffle of the existing marks.
-	     */
+	/*
+	 * We must re-insert the mark, the old rules of gravity may force
+	 * a shuffle of the existing marks. This also applies to the special
+	 * "insert" mark, otherwise the chain violates the gravity order.
+	 */
 
-	    TkTextIndex index;
+	TkTextIndex index;
 
-	    if (textPtr) {
-		TkTextIndexClear(&index, textPtr);
-	    } else {
-		TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
-	    }
-	    TkTextIndexSetSegment(&index, markPtr);
-	    TkTextIndexToByteIndex(&index);
-	    TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
-	    TkBTreeLinkSegment(sharedTextPtr, markPtr, &index);
+	if (textPtr) {
+	    TkTextIndexClear(&index, textPtr);
+	} else {
+	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
 	}
+	TkTextIndexSetSegment(&index, markPtr);
+	TkTextIndexToByteIndex(&index);
+	TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
+	TkBTreeLinkSegment(sharedTextPtr, markPtr, &index);
 
 	if (isNormalMark) {
 	    TkTextUpdateAlteredFlag(sharedTextPtr);
@@ -1415,28 +1421,30 @@ UnsetMark(
 	RedoTokenSetMark *token;
 	TkTextMarkChange *changePtr;
 
+	memset(redoInfo, 0, sizeof(*redoInfo));
+
 	if ((changePtr = markPtr->body.mark.changePtr)) {
+	    /*
+	     * Push the pending tokens, never drop them: other undo tokens may
+	     * be anchored on this mark, its history must stay replayable (the
+	     * undo of the unset revives the mark before the anchored tokens
+	     * replay). The creation is pushed first, its undo removes the
+	     * mark again at the very end.
+	     */
+	    if (changePtr->setMark) {
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->setMark, 0);
+		changePtr->setMark = NULL;
+	    }
 	    if (changePtr->toggleGravity) {
 		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
 		changePtr->toggleGravity = NULL;
 	    }
 	    if (changePtr->moveMark) {
-		Tcl_Free(changePtr->moveMark);
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->moveMark, 0);
 		changePtr->moveMark = NULL;
-		DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
-		assert(markPtr->refCount > 1);
-		markPtr->refCount -= 1;
-	    }
-	    if (changePtr->setMark) {
-		Tcl_Free(changePtr->setMark);
-		changePtr->setMark = NULL;
-		DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
-		assert(markPtr->refCount > 1);
-		markPtr->refCount -= 1;
 	    }
 	}
 
-	memset(redoInfo, 0, sizeof(*redoInfo));
 	token = (RedoTokenSetMark *)Tcl_Alloc(sizeof(RedoTokenSetMark));
 	token->undoType = &redoTokenSetMarkType;
 	markPtr->refCount += 1;
@@ -2276,9 +2284,34 @@ MarkDeleteProc(
     assert(segPtr->body.mark.ptr);
 
     if (segPtr->body.mark.changePtr) {
+	TkTextMarkChange *changePtr = segPtr->body.mark.changePtr;
 	unsigned index, i;
 
 	assert(sharedTextPtr->steadyMarks);
+
+	if (sharedTextPtr->undoStack && !(flags & TREE_GONE)) {
+	    /*
+	     * The dying mark stays restorable through the undo chain of the
+	     * deletion, and an undo index may be anchored on it: push the
+	     * pending tokens instead of dropping them (the flush which would
+	     * have pushed them comes after the tree operation). The creation
+	     * is pushed first, its undo removes the revived mark at the very
+	     * end.
+	     */
+	    if (changePtr->setMark) {
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->setMark, 0);
+		changePtr->setMark = NULL;
+	    }
+	    if (changePtr->toggleGravity) {
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->toggleGravity, 0);
+		changePtr->toggleGravity = NULL;
+	    }
+	    if (changePtr->moveMark) {
+		TkTextUndoPushItem(sharedTextPtr->undoStack, changePtr->moveMark, 0);
+		changePtr->moveMark = NULL;
+	    }
+	}
+
 	index = segPtr->body.mark.changePtr - sharedTextPtr->undoMarkList;
 	TkTextReleaseUndoMarkTokens(sharedTextPtr, segPtr->body.mark.changePtr);
 	memmove(sharedTextPtr->undoMarkList + index, sharedTextPtr->undoMarkList + index + 1,
@@ -2331,6 +2364,48 @@ MarkDeleteProc(
     }
 
     return 1;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * MarkReleaseRef --
+ *
+ *	Release one reference to a normal mark on behalf of a destroyed
+ *	undo token. Unlike MarkDeleteProc this function never preserves
+ *	the mark: the segment may still be alive and linked in the
+ *	B-tree, only the token's reference goes away. Preserving a
+ *	living mark would remove its hash entry and leave a preserved
+ *	segment inside the tree.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The mark is freed when the last reference goes away.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+MarkReleaseRef(
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TkTextSegment *segPtr)	/* Release one reference of this mark. */
+{
+    assert(segPtr->refCount > 0);
+    assert(TkTextIsNormalMark(segPtr));
+
+    if (--segPtr->refCount == 0) {
+	if (IS_PRESERVED(segPtr)) {
+	    Tcl_Free(GET_NAME(segPtr));
+	} else {
+	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
+	    sharedTextPtr->numMarks -= 1;
+	}
+	DEBUG(segPtr->body.mark.changePtr = (void *) 0xdeadbeef);
+	FREE_SEGMENT(segPtr);
+	DEBUG_ALLOC(tkTextCountDestroySegment++);
+    }
 }
 
 /*

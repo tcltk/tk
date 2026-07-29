@@ -5913,39 +5913,41 @@ TkTextGetUndeletableNewline(
  *----------------------------------------------------------------------
  */
 
-static int
-DeleteOnLastLine(
-    TCL_UNUSED(TkSharedText *),
-    const TkTextLine *lastLinePtr,
-    int flags) /* deletion flags */
+static void
+DeleteMarksOnLastLine(
+    TkText *textPtr,		/* Overall information about text widget. */
+    const TkTextIndex *fromPtr,	/* Delete the normal marks from here up to the end of text. */
+    TkTextSegment **boundSegPtr1,
+    TkTextSegment **boundSegPtr2)
+				/* Captured boundary anchors, reset when deleted here. */
 {
-    assert(lastLinePtr);
-    assert(!lastLinePtr->nextPtr);
+    TkTextLine *linePtr = TkTextIndexGetLine(fromPtr);
+    unsigned byteIndex = TkTextIndexGetByteIndex(fromPtr);
 
-    if (flags & DELETE_MARKS) {
-	const TkTextSegment *segPtr = lastLinePtr->segPtr;
+    /*
+     * The final newline is excluded from the range given to the B-tree (see
+     * DeleteIndexRange below), but the user asked for the deletion of the
+     * marks of the whole range: delete them separately, with undo recording.
+     */
 
-	while (segPtr->size == 0) {
-	    if ((flags & DELETE_MARKS) && TkTextIsNormalMark(segPtr)) {
-		return 1;
+    while (linePtr) {
+	TkTextSegment *segPtr = linePtr->segPtr;
+	unsigned offs = 0;
+
+	while (segPtr) {
+	    TkTextSegment *nextPtr = segPtr->nextPtr;
+
+	    if (offs >= byteIndex && TkTextIsNormalMark(segPtr)) {
+		if (*boundSegPtr1 == segPtr) { *boundSegPtr1 = NULL; }
+		if (*boundSegPtr2 == segPtr) { *boundSegPtr2 = NULL; }
+		TkTextUnsetMark(textPtr, segPtr);
 	    }
-	    segPtr = segPtr->nextPtr;
+	    offs += segPtr->size;
+	    segPtr = nextPtr;
 	}
+	linePtr = linePtr->nextPtr;
+	byteIndex = 0;
     }
-
-    return 0;
-}
-
-static int
-DeleteEndMarker(
-    const TkTextIndex *indexPtr,
-    int flags)
-{
-    const TkTextSegment *segPtr;
-
-    return (flags & DELETE_MARKS)
-	    && (segPtr = TkTextIndexGetSegment(indexPtr))
-	    && TkTextIsNormalMark(segPtr);
 }
 
 static bool
@@ -5973,6 +5975,7 @@ DeleteIndexRange(
     TkTextUndoInfo *undoInfoPtr;
     TkTextLine *lastLinePtr;
     TkTextSegment *boundSegPtr1, *boundSegPtr2;
+    int deleteLastLineMarks = 0;
 
     if (!sharedTextPtr) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -6025,18 +6028,22 @@ DeleteIndexRange(
     index3 = index2;
 
     if (!TkTextIndexGetLine(&index2)->nextPtr
-	    && !DeleteEndMarker(&index2, flags)
-	    && TkTextGetUndeletableNewline(lastLinePtr = TkTextIndexGetLine(&index2))
-	    && !DeleteOnLastLine(sharedTextPtr, lastLinePtr, flags)) {
+	    && TkTextGetUndeletableNewline(lastLinePtr = TkTextIndexGetLine(&index2))) {
 	/*
-	 * This is a very special case. If the last newline is undeletable, we do not
-	 * have a deletable marker at end of range, and there is no deletable mark on
-	 * last line, then decrement the end of range.
+	 * This is a very special case: the last newline is undeletable, hence
+	 * decrement the end of range - a range which swallows the final
+	 * newline corrupts the B-tree. Under DELETE_MARKS the marks of the
+	 * excluded zone are deleted separately (see DeleteMarksOnLastLine),
+	 * the user asked for the deletion of the marks of the whole range.
 	 */
 
 	TkrTextIndexBackBytes(textPtr, &index2, 1, &index2);
+	deleteLastLineMarks = (flags & DELETE_MARKS) != 0;
 
 	if (TkTextIndexIsEqual(&index1, &index2)) {
+	    if (deleteLastLineMarks) {
+		DeleteMarksOnLastLine(textPtr, &index2, &boundSegPtr1, &boundSegPtr2);
+	    }
 	    if (lastLinePtr->prevPtr) {
 		if (lastLinePtr->prevPtr->lastPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
 		    /* we have to delete tags on previous newline, that's all */
@@ -6054,7 +6061,9 @@ DeleteIndexRange(
 		    lastLinePtr->prevPtr->lastPtr->tagInfoPtr)) {
 		/*
 		 * Last newline is tagged with any non-selection tag, so we have to
-		 * re-include this character.
+		 * re-include this character. The marks below end are covered by
+		 * the range again, only the ones of the artificial last line
+		 * still need the separate deletion.
 		 */
 		flags |= DELETE_LASTLINE;
 		index2 = index3;
@@ -6087,6 +6096,10 @@ DeleteIndexRange(
 	    /* This can only happen if the receiver of the trigger command did any modification. */
 	    return true;
 	}
+    }
+
+    if (deleteLastLineMarks) {
+	DeleteMarksOnLastLine(textPtr, &index2, &boundSegPtr1, &boundSegPtr2);
     }
 
     TkTextClearSelection(sharedTextPtr, &index1, &index3);

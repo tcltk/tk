@@ -104,7 +104,9 @@ test textMark-2.3 {TkTextMarkCmd - "names" option} -setup {
     .t mark set "b c" 2.3
     lsort [.t mark names]
 } -result {a {b c} current insert}
-test textMark-2.4 {TkTextMarkCmd - "names" option} -body {
+test textMark-2.4 {TkTextMarkCmd - "names" option} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark names -discardspecial
 } -result {}
 test textMark-2.5 {TkTextMarkCmd - "names" option} -body {
@@ -113,6 +115,12 @@ test textMark-2.5 {TkTextMarkCmd - "names" option} -body {
 test textMark-2.6 {TkTextMarkCmd - "names" option} -body {
     .t mark names -discardspecial ins*
 } -result {}
+test textMark-2.7 {TkTextMarkCmd - "names" option - -discardspecial without pattern} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set a 1.1
+    .t mark names -discardspecial
+} -result {a}
 
 test textMark-3.1 {TkTextMarkCmd - "set" option} -returnCodes error -body {
     .t mark set a
@@ -377,6 +385,169 @@ test textMark-8.12 {MarkFindPrev - match pattern - discard special marks} -setup
     .t mark set current 2.0
     .t mark prev -discardspecial end ins*
 } -result {}
+
+test textMark-9.1 {ChangeGravity - the insert mark must be re-linked too} -setup {
+    destroy .tt
+    text .tt
+    .tt debug on
+} -body {
+    # Changing the gravity flips the segment type in place; without a re-link
+    # the chain violates the gravity order (left-gravity marks first), which
+    # panics the segment checker at the next edit.
+    .tt insert end "abc"
+    .tt mark set mk 1.3 right
+    .tt mark gravity insert left
+    .tt insert 1.0 x
+    list [.tt mark gravity insert] [.tt index insert]
+} -cleanup {
+    destroy .tt
+} -result {left 1.4}
+test textMark-9.2 {ChangeGravity - left gravity insert mark honored on empty widget} -setup {
+    destroy .tt
+    text .tt
+    .tt debug on
+} -body {
+    # The special mark "current" alone suffices to break the gravity order.
+    .tt mark gravity insert left
+    .tt insert 1.0 x
+    list [.tt mark gravity insert] [.tt index insert]
+} -cleanup {
+    destroy .tt
+} -result {left 1.0}
+
+test textMark-10.1 {TkTextMarkCmd - "compare" option - argument parsing} -returnCodes error -body {
+    .t mark compare a <
+} -result {wrong # args: should be ".t mark compare markName1 op markName2"}
+test textMark-10.2 {TkTextMarkCmd - "compare" option - unknown mark} -setup {
+    .t mark unset {*}[.t mark names]
+} -returnCodes error -body {
+    .t mark compare gorp == insert
+} -result {bad comparison operand "gorp": must be an existing mark}
+test textMark-10.3 {TkTextMarkCmd - "compare" option} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set m1 1.1
+    .t mark set m2 2.0
+    list [.t mark compare m1 < m2] [.t mark compare m2 < m1] [.t mark compare m1 == m1]
+} -result {1 0 1}
+test textMark-10.4 {TkTextMarkCmd - "compare" option - same position uses chain order} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set m1 1.1
+    .t mark set m2 1.1
+    # Both marks are at the same position: the chain order decides, the
+    # comparison must stay antisymmetric.
+    list [.t mark compare m1 == m2] [expr {[.t mark compare m1 < m2] != [.t mark compare m2 < m1]}]
+} -result {0 1}
+
+test textMark-11.1 {steadymarks - create+unset in the same pending change annihilate} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    # The creation token is still retained when the mark is unset: the pair
+    # annihilates, the mark dies without an undo trace, and the undo reaches
+    # the previous atom.
+    .tt insert end "abcdef"
+    .tt edit separator
+    .tt mark set m 1.2
+    .tt mark unset m
+    set r [list [.tt mark exists m] [.tt edit canundo]]
+    .tt edit undo
+    lappend r [.tt mark exists m] [.tt get 1.0 end-1c]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {0 1 0 {}}
+test textMark-11.2 {steadymarks - undo of mark unset revives the mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    # The creation token is flushed to the undo stack by the delete; the
+    # unset then records its own token. Undoing it must revive the mark and
+    # not preserve it again: the revived mark was re-preserved when the
+    # consumed token was destroyed - hash entry gone, preserved segment left
+    # inside the tree (MarkCheckProc panic at the next run of the checkers).
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt delete 1.4 1.5
+    .tt edit separator
+    .tt mark unset m
+    .tt edit undo
+    set r [list [.tt mark exists m] [.tt mark names -discardspecial *]]
+    .tt mark set m 1.2
+    lappend r [llength [lsearch -exact -all [.tt dump -mark 1.0 end] m]]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {1 m 1}
+test textMark-11.3 {steadymarks - undo/redo drain around a revived mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt delete 1.4 1.5
+    .tt edit separator
+    .tt mark unset m
+    .tt edit undo
+    .tt edit redo
+    .tt edit undo
+    set r [.tt mark exists m]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {1}
+test textMark-11.4 {steadymarks - undo of a mark move restores the position} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    # The re-insertion of the mark used the index just computed for the redo
+    # token (the current position) instead of the saved one: undoing a move
+    # was a positional no-op.
+    .tt insert end "abcdef"
+    .tt mark set m 1.2
+    .tt delete 1.5 1.6
+    .tt edit separator
+    .tt mark set m 1.4
+    .tt edit undo
+    set r [.tt index m]
+    .tt edit redo
+    lappend r [.tt index m]
+    .tt insert 1.0 X
+    set r
+} -cleanup {
+    destroy .tt
+} -result {1.2 1.4}
+test textMark-11.5 {steadymarks - undo index anchored on a moved then unset mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The undo index of the deletion is anchored on mark m; moving m and
+    # then unsetting it dropped the pending move token, hence the undo
+    # resolved the anchor at its post-move position and restored the text
+    # at the wrong place.
+    .tt debug 1
+    .tt insert end "abcdef"
+    .tt mark set m 1.0 left
+    .tt edit reset
+    .tt delete 1.0 1.3
+    .tt edit separator
+    .tt mark set m 1.2
+    .tt mark unset m
+    .tt edit separator
+    while {[.tt edit canundo]} { .tt edit undo }
+    .tt debug 0
+    .tt get 1.0 end-1c
+} -cleanup {
+    destroy .tt
+} -result {abcdef}
 
 #
 # TESTFILE CLEANUP
