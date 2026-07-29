@@ -96,15 +96,21 @@ MODULE_SCOPE TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
  * the toplevel's current size.  popupW/H are the menu's natural size.
  *
  * Returns TCL_OK / TCL_ERROR.
+ *
+ * explicitGw: if non-NULL, use this GLFW window; otherwise resolve from
+ * the menu's toplevel. Cascades MUST pass the parent's GLFW window.
+ * Menubuttons MUST pass the button's toplevel GLFW window.
  */
 
 static int  TkWaylandPostMenuAtAnchor(Tcl_Interp *interp, TkMenu *menuPtr,
     int anchorX, int anchorY, int anchorW, int anchorH, int popupW, int popupH,
-    int isRoot);
+    int isRoot, GLFWwindow *explicitGw);
 
 /* Dismiss the entire menu stack (all cascades + the root menu). */
 MODULE_SCOPE void TkWaylandMenuDismissAll(void);
 
+/* Helper to resolve GLFW window from a Tk window. */
+static GLFWwindow* TkWaylandResolveGLFWwindow(Tk_Window tkwin);
 
 /*
  * Menu popup stack.
@@ -122,6 +128,9 @@ typedef struct {
                          * right-click context menu. Only meaningful via
                          * menuStack[0]; nested cascades share their
                          * root's value. */
+    GLFWwindow    *glfwWindow; /* The GLFW window this menu belongs to.
+                                 * Used to ensure cascades use the same
+                                 * toplevel coordinate space as their parent. */
 } MenuStackEntry;
 
 static MenuStackEntry menuStack[TK_WAYLAND_MENU_STACK_MAX];
@@ -184,10 +193,9 @@ static void MenuStackPop(int toDepth);
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
 static void MenuMouseLeave(TkMenu *menuPtr);
-static void TkWaylandGetToplevelContentSize(int *widthPtr, int *heightPtr);
-static void TkWaylandClampPopupGeometry(int *xPtr, int *yPtr, int *wPtr, int *hPtr);
-static void TkWaylandComputeCascadeAnchor(int level, TkMenuEntry *mePtr,
-    int cascadeW, int cascadeH, int *outX, int *outY);
+static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
+static void TkWaylandClampPopupGeometry(GLFWwindow *glfwWindow, int *xPtr, int *yPtr, int *wPtr, int *hPtr);
+static GLFWwindow* TkWaylandGetCascadeParentWindow(int level);
 static void TkpDisplayMenu(void *clientData);
 static int  MenubarPostCascadeAtEntry(WmInfo *wmPtr, TkMenu *menuPtr,
     TkMenuEntry *mePtr);
@@ -1292,18 +1300,32 @@ MenuBarDeferredSetup(
     void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
-    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+    WmInfo *wmPtr;
+    static int retries = 0;          /* shared – only one menubar setup at a time */
 
+    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
+        retries = 0;
+        return;
+    }
+
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr || !wmPtr->menubarMenuPtr) {
+        retries = 0;
         return;
     }
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
+        if (++retries > 50) {        /* give up after ~50 idle cycles */
+            MENU_LOG("MenuBarDeferredSetup: giving up, still not mapped");
+            retries = 0;
+            return;
+        }
         MENU_LOG("MenuBarDeferredSetup: still not mapped, rescheduling");
         Tcl_DoWhenIdle(MenuBarDeferredSetup, clientData);
         return;
     }
 
+    retries = 0;                     /* success – reset for next time */
     TkWaylandMenubarCreateOrResize(winPtr);
 }
 
@@ -1400,6 +1422,41 @@ MenuStackFindLevel(
         if (menuStack[i].menuPtr == menuPtr) return i;
     }
     return -1;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandResolveGLFWwindow --
+ *
+ * Helper to resolve the GLFW window from a Tk window's toplevel.
+ *
+ * Results:
+ * GLFWwindow of the toplevel, or NULL if not found.
+ *
+ * Side effects:
+ * None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static GLFWwindow*
+TkWaylandResolveGLFWwindow(Tk_Window tkwin)
+{
+    TkWindow *tw;
+
+    if (!tkwin) {
+        return NULL;
+    }
+
+    tw = (TkWindow *)tkwin;
+    while (tw && !(tw->flags & TK_TOP_LEVEL)) {
+        tw = tw->parentPtr;
+    }
+    if (tw) {
+        return TkWaylandGetGLFWwindow(tw);
+    }
+    return NULL;
 }
 
 /*
@@ -2536,6 +2593,7 @@ TkpPostMenu(
 {
     int result;
     int popupW, popupH;
+    GLFWwindow *gw = NULL;
 
     if (!interp || !menuPtr) {
         return TCL_ERROR;
@@ -2572,15 +2630,16 @@ TkpPostMenu(
 
     MENU_LOG("TkpPostMenu: popup size %dx%d", popupW, popupH);
 
-    if (!mainGlfwWindow) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(
-            "Cannot post menu: no main GLFW window", -1));
-        return TCL_ERROR;
+    /* Resolve GLFW window from the menu's toplevel. */
+    gw = TkWaylandResolveGLFWwindow(menuPtr->tkwin);
+    if (!gw) {
+        MENU_LOG("TkpPostMenu: warning - no GLFW window found, using main");
+        gw = mainGlfwWindow;
     }
 
     pendingRootIsMenubar = 0;
     return TkWaylandPostMenuAtAnchor(interp, menuPtr,
-        x, y, 1, 1, popupW, popupH, 1);
+        x, y, 1, 1, popupW, popupH, 1, gw);
 }
 
 /*
@@ -2608,6 +2667,7 @@ TkpMenuButtonPostMenu(
     TkWindow *buttonWin;
     TkMenuReferences *menuRefPtr;
     int x, y, btnW, btnH, popupW, popupH;
+    GLFWwindow *buttonGw = NULL;
 
     if (!mbPtr) {
         return TCL_ERROR;
@@ -2640,6 +2700,14 @@ TkpMenuButtonPostMenu(
         return TCL_ERROR;
     }
 
+    /* Get the button's GLFW window explicitly - this is critical for
+     * menubuttons to clamp to the correct toplevel. */
+    buttonGw = TkWaylandResolveGLFWwindow((Tk_Window)buttonWin);
+    if (!buttonGw) {
+        MENU_LOG("TkpMenuButtonPostMenu: warning - no GLFW window for button, using main");
+        buttonGw = mainGlfwWindow;
+    }
+
     int rootX, rootY;
     Tk_GetRootCoords((Tk_Window)buttonWin, &rootX, &rootY);
     x    = rootX;
@@ -2653,13 +2721,13 @@ TkpMenuButtonPostMenu(
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
 
-    MENU_LOG("TkpMenuButtonPostMenu: button at (%d,%d) %dx%d, popup %dx%d",
-             x, y, btnW, btnH, popupW, popupH);
+    MENU_LOG("TkpMenuButtonPostMenu: button at (%d,%d) %dx%d, popup %dx%d, gw=%p",
+             x, y, btnW, btnH, popupW, popupH, (void*)buttonGw);
 
     pendingRootIsMenubar = 0;
     return TkWaylandPostMenuAtAnchor(interp, menuPtr,
         x, y + btnH, btnW, 1,
-        popupW, popupH, 1);
+        popupW, popupH, 1, buttonGw);
 }
 
 /*
@@ -2800,16 +2868,12 @@ TkWaylandMenubarDestroy(
  *
  * TkWaylandGetToplevelContentSize --
  *
- * Return the content-area size of the main toplevel GLFW window, in
- * the same surface-local coordinate space that menu/cascade anchors
- * are expressed in. All menu popups are wl_subsurfaces parented by
- * this toplevel, so this size is the hard bound within which every
- * popup, submenu, and cascade must be drawn.
+ * Return the content-area size of the given GLFW window's surface.
+ * If glfwWindow is NULL, falls back to mainGlfwWindow.
  *
  * Results:
  * None. *widthPtr/*heightPtr are set to 0 if the size cannot be
- * determined (e.g. no main window yet), which callers treat as
- * "don't clamp".
+ * determined, which callers treat as "don't clamp".
  *
  * Side effects:
  * None.
@@ -2819,17 +2883,21 @@ TkWaylandMenubarDestroy(
 
 static void
 TkWaylandGetToplevelContentSize(
+    GLFWwindow *glfwWindow,
     int *widthPtr,
     int *heightPtr)
 {
     *widthPtr  = 0;
     *heightPtr = 0;
 
-    if (!mainGlfwWindow) {
+    if (!glfwWindow) {
+        glfwWindow = mainGlfwWindow;
+    }
+    if (!glfwWindow) {
         return;
     }
 
-    glfwGetWindowSize(mainGlfwWindow, widthPtr, heightPtr);
+    glfwGetWindowSize(glfwWindow, widthPtr, heightPtr);
 
     if (*widthPtr < 0)  *widthPtr  = 0;
     if (*heightPtr < 0) *heightPtr = 0;
@@ -2863,6 +2931,7 @@ TkWaylandGetToplevelContentSize(
 
 static void
 TkWaylandClampPopupGeometry(
+    GLFWwindow *glfwWindow,
     int *xPtr,
     int *yPtr,
     int *wPtr,
@@ -2870,7 +2939,7 @@ TkWaylandClampPopupGeometry(
 {
     int toplevelW, toplevelH;
 
-    TkWaylandGetToplevelContentSize(&toplevelW, &toplevelH);
+    TkWaylandGetToplevelContentSize(glfwWindow, &toplevelW, &toplevelH);
 
     if (toplevelW <= 0 || toplevelH <= 0) {
         /* Toplevel size not yet known; nothing sane to clamp against. */
@@ -2892,6 +2961,33 @@ TkWaylandClampPopupGeometry(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkWaylandGetCascadeParentWindow --
+ *
+ * Get the GLFW window from the parent menu at the given stack level.
+ * Used by cascade posting to ensure submenus use the same toplevel
+ * as their parent.
+ *
+ * Results:
+ * GLFWwindow of the parent menu's toplevel, or NULL if level is invalid.
+ *
+ * Side effects:
+ * None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static GLFWwindow*
+TkWaylandGetCascadeParentWindow(int level)
+{
+    if (level < 0 || level >= menuStackDepth) {
+        return NULL;
+    }
+    return menuStack[level].glfwWindow;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkWaylandComputeCascadeAnchor --
  *
  * Compute the position at which a cascade (submenu) should be posted
@@ -2904,6 +3000,10 @@ TkWaylandClampPopupGeometry(
  * standard desktop menu behavior. Vertical placement is left to the
  * generic TkWaylandClampPopupGeometry() backstop applied afterward in
  * TkWaylandPostMenuAtAnchor.
+ *
+ * The GLFW window is obtained from menuStack[level].glfwWindow, which
+ * was stored when the parent menu was posted. This ensures cascades
+ * use the same toplevel coordinate space as their parent.
  *
  * Results:
  * *outX/*outY are set to the chosen toplevel-surface-local anchor.
@@ -2926,8 +3026,15 @@ TkWaylandComputeCascadeAnchor(
     int toplevelW, toplevelH;
     int parentX, parentW, parentY;
     int rightX, leftX;
+    GLFWwindow *gw;
 
-    TkWaylandGetToplevelContentSize(&toplevelW, &toplevelH);
+    /* Get the GLFW window from the parent's stack entry. */
+    gw = TkWaylandGetCascadeParentWindow(level);
+    if (!gw) {
+        gw = mainGlfwWindow;
+    }
+
+    TkWaylandGetToplevelContentSize(gw, &toplevelW, &toplevelH);
     (void)cascadeH;
 
     parentX = menuStack[level].x;
@@ -2961,18 +3068,25 @@ TkWaylandComputeCascadeAnchor(
  * Creates a subsurface popup, renders the menu into it, and pushes a
  * new entry onto menuStack.
  *
+ * explicitGw: if non-NULL, use this GLFW window; otherwise resolve from
+ * the menu's toplevel. Cascades MUST pass the parent's GLFW window to
+ * ensure they use the same coordinate space. Menubuttons MUST pass the
+ * button's toplevel GLFW window.
+ *
  *---------------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+static int
 TkWaylandPostMenuAtAnchor(
     Tcl_Interp *interp,
     TkMenu     *menuPtr,
     int anchorX, int anchorY, int anchorW, int anchorH,
     int popupW, int popupH,
-    int isRoot)
+    int isRoot,
+    GLFWwindow *explicitGw)
 {
     int postX, postY;
+    GLFWwindow *gw = explicitGw;
 
     if (!interp || !menuPtr || !menuPtr->tkwin) {
         if (interp) {
@@ -2984,6 +3098,27 @@ TkWaylandPostMenuAtAnchor(
 
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
+
+    /*
+     * If explicitGw was not provided, resolve the GLFW window from
+     * the menu's owning toplevel.
+     */
+    if (!gw) {
+        gw = TkWaylandResolveGLFWwindow(menuPtr->tkwin);
+    }
+
+    if (!gw) {
+        /* Fall back to main window with a warning. */
+        MENU_LOG("TkWaylandPostMenuAtAnchor: warning - no GLFW window found, "
+                 "falling back to mainGlfwWindow");
+        gw = mainGlfwWindow;
+    }
+
+    if (!gw) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+            "TkWaylandPostMenuAtAnchor: no GLFW window", -1));
+        return TCL_ERROR;
+    }
 
     postX = anchorX;
     postY = anchorY + anchorH;
@@ -2997,11 +3132,11 @@ TkWaylandPostMenuAtAnchor(
      * TkWaylandComputeCascadeAnchor(), and this call still guarantees the
      * final rectangle fits.
      */
-    TkWaylandClampPopupGeometry(&postX, &postY, &popupW, &popupH);
+    TkWaylandClampPopupGeometry(gw, &postX, &postY, &popupW, &popupH);
 
-    MENU_LOG("TkWaylandPostMenuAtAnchor: menu=%p, anchor=(%d,%d,%d,%d), size=%dx%d, "
+    MENU_LOG("TkWaylandPostMenuAtAnchor: menu=%p, gw=%p, anchor=(%d,%d,%d,%d), size=%dx%d, "
         "post=(%d,%d), isRoot=%d",
-        (void*)menuPtr, anchorX, anchorY, anchorW, anchorH, popupW, popupH,
+        (void*)menuPtr, (void*)gw, anchorX, anchorY, anchorW, anchorH, popupW, popupH,
         postX, postY, isRoot);
 
     if (isRoot) {
@@ -3015,7 +3150,7 @@ TkWaylandPostMenuAtAnchor(
     }
 
     TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
-        mainGlfwWindow, postX, postY, popupW, popupH);
+        gw, postX, postY, popupW, popupH);
 
     if (!popup) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3043,6 +3178,7 @@ TkWaylandPostMenuAtAnchor(
     entry->y = postY;
     entry->w = popupW;
     entry->h = popupH;
+    entry->glfwWindow = gw;  /* Store the GLFW window for cascade children. */
     if (isRoot) {
         entry->rootIsMenubar = pendingRootIsMenubar;
     } else {
@@ -3720,6 +3856,7 @@ MenuMouseClick(
                     int cascadeAnchorX, cascadeAnchorY;
                     int cascadeW, cascadeH;
                     int level = MenuStackFindLevel(menuPtr);
+                    GLFWwindow *parentGw = NULL;
 
                     menuRefPtr = TkFindMenuReferencesObj(
                                                          menuPtr->interp, mePtr->namePtr);
@@ -3735,16 +3872,24 @@ MenuMouseClick(
                         if (cascadeW <= 0) cascadeW = 1;
                         if (cascadeH <= 0) cascadeH = 1;
 
+                        /* Recompute level after popping. */
+                        level = MenuStackFindLevel(menuPtr);
+                        if (level < 0) {
+                            return;
+                        }
+
                         TkWaylandComputeCascadeAnchor(level, mePtr,
                             cascadeW, cascadeH,
                             &cascadeAnchorX, &cascadeAnchorY);
+
+                        parentGw = TkWaylandGetCascadeParentWindow(level);
 
                         menuPtr->postedCascade = mePtr;
                         TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
 
                         TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                             cascadeAnchorX, cascadeAnchorY, 0, 0,
-                            cascadeW, cascadeH, 0);
+                            cascadeW, cascadeH, 0, parentGw);
 
                         TkEventuallyRedrawMenu(menuPtr, NULL);
                     }
@@ -3860,6 +4005,7 @@ MenuMouseMotion(
                     int cascadeAnchorX, cascadeAnchorY;
                     int cascadeW, cascadeH;
                     int level = MenuStackFindLevel(menuPtr);
+                    GLFWwindow *parentGw = NULL;
 
                     MENU_LOG("MenuMouseMotion: CASCADE entry '%s' (name='%s'), level=%d",
                              Tcl_GetString(mePtr->labelPtr),
@@ -3869,6 +4015,8 @@ MenuMouseMotion(
                         MENU_LOG("MenuMouseMotion: level < 0, menu not found in stack!");
                         return;
                     }
+
+                    parentGw = TkWaylandGetCascadeParentWindow(level);
 
                     menuRefPtr = TkFindMenuReferencesObj(
                              menuPtr->interp, mePtr->namePtr);
@@ -3899,6 +4047,9 @@ MenuMouseMotion(
                     }
                     level = newLevel;
 
+                    /* Re-get parent window after pop. */
+                    parentGw = TkWaylandGetCascadeParentWindow(level);
+
                     /* Compute cascade position: to the right of the parent
                      * unless that would overflow the toplevel, in which
                      * case flip to the left, aligned with the entry. */
@@ -3920,7 +4071,7 @@ MenuMouseMotion(
 
                     int result = TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                         cascadeAnchorX, cascadeAnchorY, 0, 0,
-                        cascadeW, cascadeH, 0);
+                        cascadeW, cascadeH, 0, parentGw);
 
                     MENU_LOG("MenuMouseMotion: TkWaylandPostMenuAtAnchor returned %d", result);
 
@@ -4099,6 +4250,7 @@ TkWaylandMenubarHandleClick(
     WmInfo *wmPtr;
     TkMenu *menuPtr;
     int i;
+    GLFWwindow *gw;
 
     if (!winPtr) return 0;
     wmPtr = (WmInfo *)winPtr->wmInfoPtr;
@@ -4113,6 +4265,7 @@ TkWaylandMenubarHandleClick(
     }
 
     menuPtr = wmPtr->menubarMenuPtr;
+    gw = TkWaylandResolveGLFWwindow((Tk_Window)winPtr);
 
     MENU_LOG("TkWaylandMenubarHandleClick: x=%d y=%d menuHeight=%d", x, y, wmPtr->menuHeight);
 
@@ -4150,7 +4303,7 @@ TkWaylandMenubarHandleClick(
                 pendingRootIsMenubar = 1;
                 TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                     mePtr->x, wmPtr->menuHeight, 0, 0,
-                    cascadeW, cascadeH, /*isRoot=*/1);
+                    cascadeW, cascadeH, /*isRoot=*/1, gw);
 
                 /* Force redraw so the highlight stays visible. */
                 Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
@@ -4399,6 +4552,7 @@ TkWaylandMenuOpenCascade(
     int cascadeAnchorX, cascadeAnchorY;
     int cascadeW, cascadeH;
     int level;
+    GLFWwindow *parentGw = NULL;
 
     if (!menuPtr || !mePtr || mePtr->type != CASCADE_ENTRY) {
         return;
@@ -4426,6 +4580,8 @@ TkWaylandMenuOpenCascade(
     }
     level = newLevel;
 
+    parentGw = TkWaylandGetCascadeParentWindow(level);
+
     /* Compute cascade position. */
     TkRecomputeMenu(cascadePtr);
     cascadeW = cascadePtr->totalWidth;
@@ -4442,7 +4598,7 @@ TkWaylandMenuOpenCascade(
 
     TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
         cascadeAnchorX, cascadeAnchorY, 0, 0,
-        cascadeW, cascadeH, 0);
+        cascadeW, cascadeH, 0, parentGw);
 
     /* Redraw the parent menu to show the cascade highlight. */
     TkEventuallyRedrawMenu(menuPtr, NULL);
@@ -4808,6 +4964,7 @@ MenubarPostCascadeAtEntry(
     TkMenuReferences *menuRefPtr;
     TkMenu *cascadePtr;
     int cascadeW, cascadeH;
+    GLFWwindow *gw;
 
     if (!mePtr || mePtr->type != CASCADE_ENTRY || mePtr->namePtr == NULL) {
         return 0;
@@ -4828,13 +4985,15 @@ MenubarPostCascadeAtEntry(
 
     menuPtr->postedCascade = mePtr;
 
+    gw = TkWaylandResolveGLFWwindow((Tk_Window)wmPtr->winPtr);
+
     MENU_LOG("MenubarPostCascadeAtEntry: posting cascade '%s' at x=%d",
              Tcl_GetString(mePtr->namePtr), mePtr->x);
 
     pendingRootIsMenubar = 1;
     TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
         mePtr->x, wmPtr->menuHeight, 0, 0,
-        cascadeW, cascadeH, /*isRoot=*/1);
+        cascadeW, cascadeH, /*isRoot=*/1, gw);
 
     return 1;
 }
