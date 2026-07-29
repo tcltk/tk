@@ -463,6 +463,29 @@ test textMark-11.4 {steadymarks - undo of a mark move restores the position} -se
 } -cleanup {
     destroy .tt
 } -result {1.2 1.4}
+test textMark-11.5 {steadymarks - undo index anchored on a moved then unset mark} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The undo index of the deletion is anchored on mark m; moving m and
+    # then unsetting it dropped the pending move token, hence the undo
+    # resolved the anchor at its post-move position and restored the text
+    # at the wrong place.
+    .tt debug 1
+    .tt insert end "abcdef"
+    .tt mark set m 1.0 left
+    .tt edit reset
+    .tt delete 1.0 1.3
+    .tt edit separator
+    .tt mark set m 1.2
+    .tt mark unset m
+    .tt edit separator
+    while {[.tt edit canundo]} { .tt edit undo }
+    .tt debug 0
+    .tt get 1.0 end-1c
+} -cleanup {
+    destroy .tt
+} -result {abcdef}
 
 #
 # TESTFILE CLEANUP
