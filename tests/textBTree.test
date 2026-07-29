@@ -3822,6 +3822,37 @@ test btree-14.115 {delete -marks with a normal mark on the last line keeps the f
 } -cleanup {
     destroy .t
 } -result {2.0 {} 0}
+test btree-14.116 {delete -marks -inclusive with a mark boundary on one side only} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # One boundary is a stable mark and the other one becomes a protection
+    # mark: the pairing was asymmetric (PROTECT/MARK) and hit the boundary
+    # assertion of DeleteRange. Both sides are wrapped now, the mark becomes
+    # an inner segment and dies through DELETE_MARKS.
+    .t debug 1
+    .t insert end "ab\ncd"
+    .t mark set m end left
+    .t delete -marks -inclusive 2.1 3.0
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists m] [.t index end]
+} -cleanup {
+    destroy .t
+} -result [list "ab\nc" 0 3.0]
+test btree-14.117 {delete -marks -inclusive, mark as left bound, char index as right bound} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # Mirror of the previous case: the mark is the left boundary.
+    .t debug 1
+    .t insert end "abcdef"
+    .t mark set m 1.1 left
+    .t delete -marks -inclusive m 1.4
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists m]
+} -cleanup {
+    destroy .t
+} -result {aef 0}
 test btree-14.118 {delete -marks up to end deletes the marks of the whole range} -setup {
     destroy .t
     text .t -undo 1
@@ -3839,6 +3870,21 @@ test btree-14.118 {delete -marks up to end deletes the marks of the whole range}
 } -cleanup {
     destroy .t
 } -result {{} 0 0}
+test btree-14.119 {delete -inclusive without -marks with a single mark bound leaves it alone} -setup {
+    destroy .t
+    text .t -undo 1
+} -body {
+    # Companion of btree-14.111: the wrapped mark bound becomes an inner
+    # segment of the range, without -marks it survives the deletion.
+    .t debug 1
+    .t insert end "abcdef"
+    .t mark set m 1.4
+    .t delete -inclusive 1.1 m
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists m] [.t index m]
+} -cleanup {
+    destroy .t
+} -result {aef 1 1.1}
 
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
