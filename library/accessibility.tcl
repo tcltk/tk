@@ -1212,11 +1212,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Entry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind TEntry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
-	bind TEntry {+::tk::accessible::_updateselection %W}
-	bind Entry <Left> {+::tk::accessible::_updateselection %W}
-	bind TEntry <Left> {+::tk::accessible::_updateselection %W}
-	bind Entry <Right> {+::tk::accessible::_updateselection %W}
-	bind TEntry <Right> {+::tk::accessible::_updateselection %W}
+	bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
 	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}
 	bind TEntry <<Selection>> {+::tk::accessible::_updateselection %W}
 
