@@ -620,6 +620,77 @@ test textMark-12.3 {steadymarks - the undo of a deletion survives the death of i
 } -cleanup {
     destroy .tt
 } -result {abcdef}
+
+test textMark-12.4 {steadymarks - the redo of a mark set restores position and gravity} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The redo of the re-creation of a name found an homonym alive (the redo
+    # of a deletion does not delete the marks again) and moved it instead of
+    # restoring the recorded mark: the gravity of the geture was lost.
+    .tt debug 1
+    .tt insert end "abcd"
+    .tt mark set m 1.3 left
+    .tt edit reset
+    .tt delete -marks -inclusive 1.0 1.4
+    .tt mark set m 1.1 right
+    set r [.tt mark gravity m]
+    .tt edit undo
+    lappend r [.tt mark gravity m]
+    .tt edit redo
+    lappend r [.tt mark gravity m] [.tt index m]
+    .tt debug 0
+    set r
+} -cleanup {
+    destroy .tt
+} -result {right left right 1.0}
+test textMark-12.5 {steadymarks - replay of a mark unset whose mark was unlinked} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The replay of the unset acted on the mark of the token without checking
+    # that it is still linked - the drains leave it unlinked when an homonym
+    # took the name over.
+    .tt debug 1
+    .tt insert end "ab\ncd"
+    .tt mark set mk4 2.1 right
+    .tt edit reset
+    .tt delete -marks -inclusive 1.0 end
+    .tt mark set mk4 1.0 left
+    .tt mark unset mk4
+    while {[.tt edit canredo]} { .tt edit redo }
+    while {[.tt edit canundo]} { .tt edit undo }
+    while {[.tt edit canredo]} { .tt edit redo }
+    .tt insert 1.0 X
+    .tt debug 0
+    .tt mark exists mk4
+} -cleanup {
+    destroy .tt
+} -result {0}
+test textMark-12.6 {a destroyed token must not preserve a mark living in the tree} -setup {
+    destroy .tt
+    text .tt -undo 1 -autoseparators 0 -steadymarks 1
+} -body {
+    # The chain of a deletion token references marks which were relocated and
+    # are still linked; destroying the token (a mark operation clears the redo
+    # stack) deleted them, leaving a preserved mark inside the tree.
+    .tt debug 1
+    .tt insert end "abcdefgh"
+    .tt mark set m2 1.4 right
+    .tt mark set m9 1.6 left
+    .tt edit reset
+    .tt delete 1.2 1.3
+    .tt edit separator
+    .tt replace 1.1 1.3 "ss"
+    .tt mark set m2 1.0 left
+    .tt edit undo
+    .tt mark set m1 1.5
+    .tt delete 1.0 1.2
+    .tt debug 0
+    lsort [.tt mark names -discardspecial *]
+} -cleanup {
+    destroy .tt
+} -result {m1 m2 m9}
 
 #
 # TESTFILE CLEANUP

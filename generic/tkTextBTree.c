@@ -1768,7 +1768,14 @@ UndoDeleteDestroy(
 		    assert(segPtr->typePtr->deleteProc);
 
 		    nextPtr = (segPtr->nextPtr && !segPtr->sectionPtr) ? segPtr->nextPtr : NULL;
-		    segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, DELETE_BRANCHES | DELETE_MARKS);
+		    /*
+		     * The chain may hold references to segments still living
+		     * inside the tree (relocated marks): DELETE_RELEASE makes
+		     * the delete procs release the reference instead of
+		     * deleting the segment behind the back of the tree.
+		     */
+		    segPtr->typePtr->deleteProc(sharedTextPtr, segPtr,
+			    DELETE_BRANCHES | DELETE_MARKS | DELETE_RELEASE);
 		    segPtr = nextPtr;
 		}
 	    }

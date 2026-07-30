@@ -1694,6 +1694,7 @@ typedef enum {
 #define DELETE_INCLUSIVE	(1 << 3)
 #define DELETE_CLEANUP		(1 << 4)
 #define DELETE_LASTLINE		(1 << 5)
+#define DELETE_RELEASE		(1 << 6)
 
 /*
  * Flags for sorting.
