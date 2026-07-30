@@ -1919,6 +1919,24 @@ SetMark(
 	}
 
 	if ((segPtr = TkTextIndexGetSegment(indexPtr)) == markPtr) {
+	    if (typePtr && typePtr != markPtr->typePtr) {
+		/*
+		 * The index resolves to the mark itself (e.g. [mark set m
+		 * end right] with the mark heading the last line, or [mark
+		 * set m m right]), but an explicit direction still has to
+		 * be applied - it used to be skipped on this path.
+		 */
+
+		TkTextUndoInfo undoInfo;
+		TkTextUndoInfo *undoInfoPtr = NULL;
+
+		if (sharedTextPtr->steadyMarks
+			&& TkTextIsNormalMark(markPtr)
+			&& !TkTextUndoUndoStackIsFull(sharedTextPtr->undoStack)) {
+		    undoInfoPtr = &undoInfo;
+		}
+		ChangeGravity(sharedTextPtr, textPtr, markPtr, typePtr, undoInfoPtr);
+	    }
 	    return markPtr;
 	}
 

@@ -691,6 +691,43 @@ test textMark-12.6 {a destroyed token must not preserve a mark living in the tre
 } -cleanup {
     destroy .tt
 } -result {m1 m2 m9}
+
+test textMark-12.7 {mark set applies an explicit direction when the index is the mark itself} -setup {
+    destroy .tt
+    text .tt
+    .tt debug on
+} -body {
+    # The early return of SetMark (index resolving to the mark's own
+    # segment, via end or via the mark's name) skipped the application of
+    # the direction: [mark set m end right] left the gravity alone.
+    .tt insert end "abc\ndef"
+    .tt mark set m end left
+    .tt mark set m end right
+    set r [.tt mark gravity m]
+    .tt mark set m 1.1 left
+    .tt mark set m m right
+    .tt insert 1.1 "XY"
+    lappend r [.tt mark gravity m] [.tt index m]
+} -cleanup {
+    destroy .tt
+} -result {right right 1.3}
+test textMark-12.8 {mark set with self-resolving index, steadymarks and undo} -setup {
+    destroy .tt
+    text .tt -undo 1 -steadymarks 1
+    .tt debug on
+} -body {
+    .tt insert end "abc"
+    .tt mark set m 1.1 left
+    .tt delete 1.2 1.3
+    .tt edit separator
+    .tt mark set m m right
+    .tt edit undo
+    set r [.tt mark gravity m]
+    .tt edit redo
+    lappend r [.tt mark gravity m]
+} -cleanup {
+    destroy .tt
+} -result {left right}
 
 #
 # TESTFILE CLEANUP
