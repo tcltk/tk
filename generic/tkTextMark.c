@@ -466,6 +466,10 @@ UndoSetMarkPerform(
     const UndoTokenSetMark *token = (const UndoTokenSetMark *) undoInfo->token;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
+    if (!(markPtr = ReplayTarget(sharedTextPtr, markPtr))) {
+	return; /* the name is gone, nothing to unset */
+    }
+
     assert(!markPtr->body.mark.changePtr);
     UnsetMark(sharedTextPtr, markPtr, redoInfo);
     if (redoInfo && !isRedo) {
@@ -507,32 +511,18 @@ RedoSetMarkPerform(
 	    /*
 	     * The name is alive again, undo/redo interleavings can revive an
 	     * homonym (the redo of a deletion does not delete the marks
-	     * again). Replay the [mark set] as a move of the living mark -
-	     * setting an existing mark is a move. Nothing dies: undo indexes
-	     * anchored on the living mark follow it, and the preserved
-	     * duplicate simply stays inside the stack until its references
-	     * drain.
+	     * again). The mark of the token owns the name back, with its
+	     * recorded gravity and position: unset the homonym, without
+	     * recording - the further undoes revive it through the chain of
+	     * the deletion which preserved it, and its restoration then
+	     * finds the name taken (MarkRestoreProc drops the duplicate).
 	     */
 
 	    TkTextSegment *livingPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
 	    assert(livingPtr != markPtr);
 	    assert(TkTextIsNormalMark(livingPtr));
-	    TkBTreeUnlinkSegment(sharedTextPtr, livingPtr);
-	    TkBTreeReInsertSegment(sharedTextPtr, &token->index, livingPtr);
-
-	    if (redoInfo) {
-		UndoTokenSetMark *redoToken;
-
-		redoToken = (UndoTokenSetMark *)Tcl_Alloc(sizeof(UndoTokenSetMark));
-		redoToken->markPtr = livingPtr;
-		MARK_POINTER(redoToken->markPtr);
-		redoToken->undoType = &undoTokenSetMarkType;
-		redoInfo->token = (TkTextUndoToken *) redoToken;
-		DEBUG_ALLOC(tkTextCountNewUndoToken++);
-		livingPtr->refCount += 1;
-	    }
-	    return;
+	    UnsetMark(sharedTextPtr, livingPtr, NULL);
 	}
 
 	ReactivateMark(sharedTextPtr, markPtr);
@@ -2374,6 +2364,18 @@ MarkDeleteProc(
 
     if (!(flags & (DELETE_CLEANUP|DELETE_MARKS|TREE_GONE))) {
 	return 0;
+    }
+
+    if ((flags & DELETE_RELEASE) && segPtr->sectionPtr) {
+	/*
+	 * The caller destroys a token whose chain referenced this mark, but
+	 * the mark is still alive inside the tree: release the reference,
+	 * the mark is not ours to delete - preserving it here would remove
+	 * its hash entry and leave a preserved segment inside the tree.
+	 */
+	assert(segPtr->refCount > 1);
+	segPtr->refCount -= 1;
+	return 1;
     }
 
     assert(segPtr->body.mark.ptr);
