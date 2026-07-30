@@ -289,6 +289,50 @@ UndoToggleGravityInspect(
     return AppendName(UndoToggleGravityGetCommand(sharedTextPtr, item), sharedTextPtr, token->markPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReplayTarget --
+ *
+ *	Find the mark a token has to act on. The referenced mark may have
+ *	been unlinked meanwhile (deleted by [delete -marks], unset, or
+ *	superseded by a living homonym): in this case the living mark of
+ *	the same name is the target, replaying the operation on it - this
+ *	is the same adoption the redo of a [mark set] performs.
+ *
+ * Results:
+ *	The mark to act on, or NULL if the name is not alive anymore; in
+ *	the latter case the token has to be a no-op.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkTextSegment *
+ReplayTarget(
+    const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
+    TkTextSegment *markPtr)		/* The mark referenced by the token. */
+{
+    Tcl_HashEntry *hPtr;
+
+    assert(markPtr);
+    assert(TkTextIsNormalMark(markPtr));
+
+    if (markPtr->sectionPtr) {
+	return markPtr;
+    }
+    if (!IS_PRESERVED(markPtr)) {
+	return NULL;
+    }
+    if (!(hPtr = Tcl_FindHashEntry(&((TkSharedText *) sharedTextPtr)->markTable,
+	    GET_NAME(markPtr)))) {
+	return NULL;
+    }
+    return (TkTextSegment *)Tcl_GetHashValue(hPtr);
+}
+
 static void
 UndoToggleGravityPerform(
     TkSharedText *sharedTextPtr,
@@ -299,12 +343,17 @@ UndoToggleGravityPerform(
     UndoTokenToggleGravity *token = (UndoTokenToggleGravity *) undoInfo->token;
     const Tk_SegType *newTypePtr;
     const Tk_SegType *oldTypePtr;
+    TkTextSegment *markPtr;
 
     assert(!token->markPtr->body.mark.changePtr);
 
-    oldTypePtr = token->markPtr->typePtr;
+    if (!(markPtr = ReplayTarget(sharedTextPtr, token->markPtr))) {
+	return; /* the mark is gone, nothing to toggle */
+    }
+
+    oldTypePtr = markPtr->typePtr;
     newTypePtr = (oldTypePtr == &tkTextRightMarkType) ? &tkTextLeftMarkType : &tkTextRightMarkType;
-    ChangeGravity(sharedTextPtr, NULL, token->markPtr, newTypePtr, NULL);
+    ChangeGravity(sharedTextPtr, NULL, markPtr, newTypePtr, NULL);
 
     if (redoInfo) {
 	redoInfo->token = undoInfo->token;
@@ -335,8 +384,13 @@ UndoMoveMarkPerform(
 {
     UndoTokenMoveMark *token = (UndoTokenMoveMark *) undoInfo->token;
     TkTextUndoIndex index = token->index;
+    TkTextSegment *markPtr;
 
     assert(!token->markPtr->body.mark.changePtr);
+
+    if (!(markPtr = ReplayTarget(sharedTextPtr, token->markPtr))) {
+	return; /* the mark is gone, nothing to move */
+    }
 
     if (redoInfo) {
 	TkTextUndoIndex redoIndex;
@@ -345,14 +399,14 @@ UndoMoveMarkPerform(
 	 * Don't clobber 'index': the mark must be re-inserted at the saved
 	 * position, whereas the redo token receives the current one.
 	 */
-	TkBTreeMakeUndoIndex(sharedTextPtr, token->markPtr, &redoIndex);
+	TkBTreeMakeUndoIndex(sharedTextPtr, markPtr, &redoIndex);
 	token->index = redoIndex;
 	redoInfo->token = undoInfo->token;
 	redoInfo->token->undoType = isRedo ? &undoTokenMoveMarkType : &redoTokenMoveMarkType;
     }
 
-    TkBTreeUnlinkSegment(sharedTextPtr, token->markPtr);
-    TkBTreeReInsertSegment(sharedTextPtr, &index, token->markPtr);
+    TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
+    TkBTreeReInsertSegment(sharedTextPtr, &index, markPtr);
 }
 
 static void
@@ -412,6 +466,10 @@ UndoSetMarkPerform(
     const UndoTokenSetMark *token = (const UndoTokenSetMark *) undoInfo->token;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
+    if (!(markPtr = ReplayTarget(sharedTextPtr, markPtr))) {
+	return; /* the name is gone, nothing to unset */
+    }
+
     assert(!markPtr->body.mark.changePtr);
     UnsetMark(sharedTextPtr, markPtr, redoInfo);
     if (redoInfo && !isRedo) {
@@ -447,8 +505,35 @@ RedoSetMarkPerform(
     assert(TkTextIsNormalMark(markPtr));
 
     if (IS_PRESERVED(markPtr)) {
+	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&sharedTextPtr->markTable, GET_NAME(markPtr));
+
+	if (hPtr) {
+	    /*
+	     * The name is alive again, undo/redo interleavings can revive an
+	     * homonym (the redo of a deletion does not delete the marks
+	     * again). The mark of the token owns the name back, with its
+	     * recorded gravity and position: unset the homonym, without
+	     * recording - the further undoes revive it through the chain of
+	     * the deletion which preserved it, and its restoration then
+	     * finds the name taken (MarkRestoreProc drops the duplicate).
+	     */
+
+	    TkTextSegment *livingPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
+
+	    assert(livingPtr != markPtr);
+	    assert(TkTextIsNormalMark(livingPtr));
+	    UnsetMark(sharedTextPtr, livingPtr, NULL);
+	}
+
 	ReactivateMark(sharedTextPtr, markPtr);
 	sharedTextPtr->numMarks += 1;
+    } else if (markPtr->sectionPtr) {
+	/*
+	 * The mark is alive and linked again (an undone deletion has
+	 * restored it): setting an existing mark is a move, so unlink it
+	 * before it is re-inserted at the recorded position.
+	 */
+	TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
     }
 
     TkBTreeReInsertSegment(sharedTextPtr, &token->index, markPtr);
@@ -1834,6 +1919,24 @@ SetMark(
 	}
 
 	if ((segPtr = TkTextIndexGetSegment(indexPtr)) == markPtr) {
+	    if (typePtr && typePtr != markPtr->typePtr) {
+		/*
+		 * The index resolves to the mark itself (e.g. [mark set m
+		 * end right] with the mark heading the last line, or [mark
+		 * set m m right]), but an explicit direction still has to
+		 * be applied - it used to be skipped on this path.
+		 */
+
+		TkTextUndoInfo undoInfo;
+		TkTextUndoInfo *undoInfoPtr = NULL;
+
+		if (sharedTextPtr->steadyMarks
+			&& TkTextIsNormalMark(markPtr)
+			&& !TkTextUndoUndoStackIsFull(sharedTextPtr->undoStack)) {
+		    undoInfoPtr = &undoInfo;
+		}
+		ChangeGravity(sharedTextPtr, textPtr, markPtr, typePtr, undoInfoPtr);
+	    }
 	    return markPtr;
 	}
 
@@ -2281,6 +2384,18 @@ MarkDeleteProc(
 	return 0;
     }
 
+    if ((flags & DELETE_RELEASE) && segPtr->sectionPtr) {
+	/*
+	 * The caller destroys a token whose chain referenced this mark, but
+	 * the mark is still alive inside the tree: release the reference,
+	 * the mark is not ours to delete - preserving it here would remove
+	 * its hash entry and leave a preserved segment inside the tree.
+	 */
+	assert(segPtr->refCount > 1);
+	segPtr->refCount -= 1;
+	return 1;
+    }
+
     assert(segPtr->body.mark.ptr);
 
     if (segPtr->body.mark.changePtr) {
@@ -2446,7 +2561,15 @@ MarkRestoreProc(
 	}
 
 	hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, GET_NAME(segPtr), &isNew);
-	assert(isNew);
+	if (!isNew) {
+	    /*
+	     * A mark of this name is alive again (undo/redo interleavings
+	     * can revive an homonym): the living one wins, discard the
+	     * preserved duplicate like the branch above does.
+	     */
+	    MarkDeleteProc(sharedTextPtr, segPtr, DELETE_CLEANUP);
+	    return 0;
+	}
 	Tcl_SetHashValue(hPtr, segPtr);
 	sharedTextPtr->numMarks += 1;
 	Tcl_Free(GET_NAME(segPtr));

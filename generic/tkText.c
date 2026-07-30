@@ -5594,7 +5594,10 @@ TextUndoRedoCallback(
 		 */
 		((TkTextUndoSubAtom *) subAtom)->item = NULL;
 	    }
-	    TkTextPushUndoToken(sharedTextPtr, redoInfo.token, redoInfo.byteSize);
+	    if (redoInfo.token) {
+		/* A replay may be a no-op (the mark it acts on is gone). */
+		TkTextPushUndoToken(sharedTextPtr, redoInfo.token, redoInfo.byteSize);
+	    }
 	}
 	if (!isDelete && sharedTextPtr->triggerWatchCmd) {
 	    TriggerWatchUndoRedo(sharedTextPtr, token, subAtom->redo, i == 0, peers, countPeers);
