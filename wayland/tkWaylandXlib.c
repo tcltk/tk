@@ -1252,61 +1252,6 @@ XCreateColormap(
 /*
  *----------------------------------------------------------------------
  *
- * XSetClipMask --
- *
- *	Set clip mask in GC. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetClipMask(
-    TCL_UNUSED(Display *),
-    GC gc,
-    Pixmap pixmap)
-{
-    if (gc == NULL) {
-	return 0;
-    }
-    TkWaylandGC *waylandGC = (TkWaylandGC *) gc;
-    if (pixmap == None) {
-	/* None clears any clip previously set on this GC. */
-	waylandGC->hasClip = 0;
-	waylandGC->numClipRects = 0;
-	return 0;
-    }
-    /*
-     * A real 1-bit bitmap clip mask can't be represented by NanoVG's
-     * rectangular scissor clip.  Rather than silently drawing unclipped
-     * (which is what happened before and is a common source of the
-     * canvas artifacts this work is meant to fix), fall back to clipping
-     * to the mask pixmap's bounding box: still rectangular, but at least
-     * bounds the damage to the mask's extent instead of ignoring it.
-     */
-    TkWaylandPixmap *maskPtr = TkWaylandPixmapFromPixmap(pixmap);
-    waylandGC->numClipRects = 0;
-    if (maskPtr != NULL) {
-	waylandGC->clipRects[0].x = (short) waylandGC->clipXOrigin;
-	waylandGC->clipRects[0].y = (short) waylandGC->clipYOrigin;
-	waylandGC->clipRects[0].width = (unsigned short) maskPtr->width;
-	waylandGC->clipRects[0].height = (unsigned short) maskPtr->height;
-	waylandGC->numClipRects = 1;
-	waylandGC->hasClip = 1;
-    } else {
-	waylandGC->hasClip = 0;
-    }
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWaylandGCClipBounds --
  *
  *	Reduces the clip rectangles stored on a GC (by XSetClipRectangles or
@@ -1689,50 +1634,6 @@ XCreateGlyphCursor(
     /* No-op - cursor creation handled by GLFW. */
     (void)fc;  /* Suppress unused parameter warning */
     (void)bc;  /* Suppress unused parameter warning */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetClipOrigin --
- *
- *	Set the clip origin in a GC.  The origin offsets whatever rectangles
- *	were (or will be) installed by XSetClipRectangles, matching X11
- *	semantics where the rectangles are specified relative to the clip
- *	origin rather than in absolute drawable coordinates.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	Updates clip_x_origin/clip_y_origin in the GC and shifts any
- *	previously-set clip rectangles to match the new origin.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetClipOrigin(
-    TCL_UNUSED(Display *),
-    GC gc,
-    int clip_x_origin,
-    int clip_y_origin)
-{
-    if (gc == NULL) {
-	return 0;
-    }
-    TkWaylandGC *waylandGC = (TkWaylandGC *) gc;
-    int dx = clip_x_origin - waylandGC->clipXOrigin;
-    int dy = clip_y_origin - waylandGC->clipYOrigin;
-    if (dx != 0 || dy != 0) {
-	for (int i = 0; i < waylandGC->numClipRects; i++) {
-	    waylandGC->clipRects[i].x += dx;
-	    waylandGC->clipRects[i].y += dy;
-	}
-    }
-    waylandGC->clipXOrigin = clip_x_origin;
-    waylandGC->clipYOrigin = clip_y_origin;
     return 0;
 }
 
@@ -3096,57 +2997,6 @@ XVaCreateNestedList(
 {
     /* No-op - nested lists not used in Wayland port. */
     return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetClipRectangles --
- *
- *	Set clip rectangles in GC. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetClipRectangles(
-    TCL_UNUSED(Display *),
-    GC gc,
-    int clip_x_origin,
-    int clip_y_origin,
-    XRectangle *rectangles,
-    int n,
-    TCL_UNUSED(int)) /* ordering: irrelevant, we don't depend on order. */
-{
-    if (gc == NULL) {
-	return 0;
-    }
-    TkWaylandGC *waylandGC = (TkWaylandGC *) gc;
-    waylandGC->clipXOrigin = clip_x_origin;
-    waylandGC->clipYOrigin = clip_y_origin;
-    waylandGC->numClipRects = 0;
-    if (n <= 0 || rectangles == NULL) {
-	waylandGC->hasClip = 0;
-	return 0;
-    }
-    if (n > TKWL_MAX_CLIP_RECTS) {
-	n = TKWL_MAX_CLIP_RECTS;
-    }
-    for (int i = 0; i < n; i++) {
-	waylandGC->clipRects[i].x = rectangles[i].x + (short) clip_x_origin;
-	waylandGC->clipRects[i].y = rectangles[i].y + (short) clip_y_origin;
-	waylandGC->clipRects[i].width = rectangles[i].width;
-	waylandGC->clipRects[i].height = rectangles[i].height;
-    }
-    waylandGC->numClipRects = n;
-    waylandGC->hasClip = 1;
-    return 0;
 }
 
 /*
