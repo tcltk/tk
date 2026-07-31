@@ -179,14 +179,14 @@ static const struct wl_registry_listener popup_registry_listener = {
  *----------------------------------------------------------------------
  * TkWaylandPopupCreateRenderer --
  *
- * Create a software renderer with NanoVG context for drawing.
- * Loads fonts directly into the context - fonts are context-local.
+ *     Create a software renderer with NanoVG context for drawing.
+ *     Loads fonts directly into the context - fonts are context-local.
  *
  * Results:
- * Pointer to SoftRenderer or NULL on failure.
+ *     Pointer to SoftRenderer or NULL on failure.
  *
  * Side effects:
- * Allocates memory for pixel buffer and creates NanoVG context.
+ *     Allocates memory for pixel buffer and creates NanoVG context.
  *----------------------------------------------------------------------
  */
 
@@ -311,13 +311,13 @@ TkWaylandPopupCreateRenderer(
  *----------------------------------------------------------------------
  * TkWaylandPopupDestroyRenderer --
  *
- * Destroy a software renderer and free its resources.
+ *     Destroy a software renderer and free its resources.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Frees pixel buffer and NanoVG context.
+ *     Frees pixel buffer and NanoVG context.
  *----------------------------------------------------------------------
  */
 
@@ -366,13 +366,13 @@ TkWaylandPopupDestroyRenderer(
  *----------------------------------------------------------------------
  * TkWaylandPopupRendererClear --
  *
- * Clear the renderer's pixel buffer to a solid color.
+ *     Clear the renderer's pixel buffer to a solid color.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Fills the entire pixel buffer with the specified color.
+ *     Fills the entire pixel buffer with the specified color.
  *----------------------------------------------------------------------
  */
 
@@ -402,13 +402,13 @@ TkWaylandPopupRendererClear(
  *----------------------------------------------------------------------
  * TkWaylandPopupCopyPixelsToBuffer --
  *
- * Copy the renderer's pixel data to a SHM buffer.
+ *     Copy the renderer's pixel data to a SHM buffer.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Copies pixel data to the buffer.
+ *     Copies pixel data to the buffer.
  *----------------------------------------------------------------------
  */
 
@@ -453,13 +453,13 @@ TkWaylandPopupCopyPixelsToBuffer(
  *----------------------------------------------------------------------
  * TkWaylandPopupReleaseBuffer --
  *
- * Callback when the compositor releases a buffer.
+ *     Callback when the compositor releases a buffer.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Marks the buffer as available for reuse.
+ *     Marks the buffer as available for reuse.
  *----------------------------------------------------------------------
  */
 
@@ -480,13 +480,13 @@ TkWaylandPopupReleaseBuffer(
  *----------------------------------------------------------------------
  * TkWaylandPopupCreateShmBuffer --
  *
- * Create a wl_shm buffer for the given dimensions.
+ *     Create a wl_shm buffer for the given dimensions.
  *
  * Results:
- * Pointer to WlShmBuffer or NULL on failure.
+ *     Pointer to WlShmBuffer or NULL on failure.
  *
  * Side effects:
- * Allocates shared memory and creates a wl_buffer.
+ *     Allocates shared memory and creates a wl_buffer.
  *----------------------------------------------------------------------
  */
 
@@ -586,13 +586,13 @@ TkWaylandPopupCreateShmBuffer(
  *----------------------------------------------------------------------
  * TkWaylandPopupDestroyShmBuffer --
  *
- * Destroy a wl_shm buffer and free its resources.
+ *     Destroy a wl_shm buffer and free its resources.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Frees shared memory and destroys wl_buffer.
+ *     Frees shared memory and destroys wl_buffer.
  *----------------------------------------------------------------------
  */
 
@@ -644,13 +644,13 @@ TkWaylandPopupDestroyShmBuffer(
  *----------------------------------------------------------------------
  * TkWaylandPopupAttachBuffer --
  *
- * Attach a wl_shm buffer to the popup surface and commit it.
+ *     Attach a wl_shm buffer to the popup surface and commit it.
  *
  * Results:
- * 1 on success, 0 on failure.
+ *     1 on success, 0 on failure.
  *
  * Side effects:
- * Attaches buffer to surface and marks it as in use.
+ *     Attaches buffer to surface and marks it as in use.
  *----------------------------------------------------------------------
  */
 
@@ -682,13 +682,13 @@ TkWaylandPopupAttachBuffer(
  *----------------------------------------------------------------------
  * popup_registry_global --
  *
- * Callback for wl_registry global events.
+ *     Callback for wl_registry global events.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Binds Wayland globals including wl_shm.
+ *     Binds Wayland globals including wl_shm.
  *----------------------------------------------------------------------
  */
 
@@ -724,13 +724,13 @@ popup_registry_global(
  *----------------------------------------------------------------------
  * popup_registry_global_remove --
  *
- * Callback for wl_registry global remove events.
+ *     Callback for wl_registry global remove events.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -747,13 +747,13 @@ popup_registry_global_remove(
  *----------------------------------------------------------------------
  * TkWaylandPopupGetWLSurface --
  *
- * Get the wl_surface associated with a GLFW window.
+ *     Get the wl_surface associated with a GLFW window.
  *
  * Results:
- * struct wl_surface* or NULL.
+ *     struct wl_surface* or NULL.
  *
  * Side effects:
- * None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -773,14 +773,14 @@ TkWaylandPopupGetWLSurface(
  *----------------------------------------------------------------------
  * TkWaylandPopupBindGlobals --
  *
- * Bind the global Wayland objects from the main module or from
- * the Wayland registry.
+ *     Bind the global Wayland objects from the main module or from
+ *     the Wayland registry.
  *
  * Results:
- * 1 on success, 0 on failure.
+ *     1 on success, 0 on failure.
  *
  * Side effects:
- * Sets up popupGlobals with the shared objects.
+ *     Sets up popupGlobals with the shared objects.
  *----------------------------------------------------------------------
  */
 
@@ -844,13 +844,13 @@ TkWaylandPopupBindGlobals(void)
  *----------------------------------------------------------------------
  * TkWaylandPopupInit --
  *
- * Initialize the popup module with global Wayland objects.
+ *     Initialize the popup module with global Wayland objects.
  *
  * Results:
- * 1 on success, 0 on failure.
+ *     1 on success, 0 on failure.
  *
  * Side effects:
- * Stores Wayland global objects.
+ *     Stores Wayland global objects.
  *----------------------------------------------------------------------
  */
 
@@ -873,13 +873,13 @@ MODULE_SCOPE int TkWaylandPopupInit(void) {
  *----------------------------------------------------------------------
  * TkWaylandPopupSetMainWindow --
  *
- * Set the main GLFW window for context sharing.
+ *     Set the main GLFW window for context sharing.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Stores the main window.
+ *     Stores the main window.
  *----------------------------------------------------------------------
  */
 
@@ -900,13 +900,13 @@ TkWaylandPopupSetMainWindow(
  *----------------------------------------------------------------------
  * TkWaylandSubsurfaceCreate --
  *
- * Create a wl_subsurface using wl_shm buffers.
+ *     Create a wl_subsurface using wl_shm buffers.
  *
  * Results:
- * Pointer to TkWaylandPopup, or NULL on failure.
+ *     Pointer to TkWaylandPopup, or NULL on failure.
  *
  * Side effects:
- * Creates Wayland objects and wl_shm buffers for the subsurface.
+ *     Creates Wayland objects and wl_shm buffers for the subsurface.
  *----------------------------------------------------------------------
  */
 
@@ -1063,13 +1063,13 @@ TkWaylandSubsurfaceCreate(
  *----------------------------------------------------------------------
  * TkWaylandPopupDestroy --
  *
- * Destroy a subsurface popup and free all resources.
+ *     Destroy a subsurface popup and free all resources.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Releases all Wayland objects and frees memory.
+ *     Releases all Wayland objects and frees memory.
  *----------------------------------------------------------------------
  */
 
@@ -1138,13 +1138,13 @@ TkWaylandPopupDestroy(
  *
  * TkWaylandPopupBeginDraw --
  *
- * Prepare the popup for drawing using the NanoVG context.
+ *     Prepare the popup for drawing using the NanoVG context.
  *
  * Results:
- * TCL_OK on success, TCL_ERROR on failure.
+ *     TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- * Sets up the NanoVG frame for drawing.
+ *     Sets up the NanoVG frame for drawing.
  *---------------------------------------------------------------------------
  */
 
@@ -1205,15 +1205,15 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
  *
  * TkWaylandPopupDrawBorderWithShadow --
  *
- * Draw a consistent thin hairline border around the popup with
- * a subtle shadow effect. Borders are inset by 1 pixel so they
- * show up on all sides.
+ *     Draw a consistent thin hairline border around the popup with
+ *     a subtle shadow effect. Borders are inset by 1 pixel so they
+ *     show up on all sides.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Draws a 1px border around all edges with subtle shadow.
+ *     Draws a 1px border around all edges with subtle shadow.
  *---------------------------------------------------------------------------
  */
 
@@ -1291,13 +1291,13 @@ TkWaylandPopupDrawBorderWithShadow(
  *
  * TkWaylandPopupSetBorder --
  *
- * Configure the popup border appearance.
+ *     Configure the popup border appearance.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Sets border color and enabled state.
+ *     Sets border color and enabled state.
  *---------------------------------------------------------------------------
  */
 
@@ -1329,13 +1329,13 @@ TkWaylandPopupSetBorder(
  *
  * TkWaylandPopupEndDraw --
  *
- * Finish drawing and update the popup surface with the SHM buffer.
+ *     Finish drawing and update the popup surface with the SHM buffer.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Ends the NanoVG frame and attaches the buffer to the surface.
+ *     Ends the NanoVG frame and attaches the buffer to the surface.
  *---------------------------------------------------------------------------
  */
 
@@ -1426,13 +1426,13 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
  *
  * TkWaylandPopupGetNVGContext --
  *
- * Return the popup's NanoVG context.
+ *     Return the popup's NanoVG context.
  *
  * Results:
- * The NVGcontext pointer, or NULL.
+ *     The NVGcontext pointer, or NULL.
  *
  * Side effects:
- * None.
+ *     None.
  *---------------------------------------------------------------------------
  */
 
@@ -1450,13 +1450,13 @@ TkWaylandPopupGetNVGContext(TkWaylandPopup *popup)
  *
  * TkWaylandPopupGetSize --
  *
- * Get the size of a popup.
+ *     Get the size of a popup.
  *
  * Results:
- * Sets widthOut and heightOut to the popup's dimensions.
+ *     Sets widthOut and heightOut to the popup's dimensions.
  *
  * Side effects:
- * None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -1480,13 +1480,13 @@ TkWaylandPopupGetSize(
  *
  * TkWaylandPopupGetPosition --
  *
- * Get the position of a popup.
+ *     Get the position of a popup.
  *
  * Results:
- * Sets xOut and yOut to the popup's position.
+ *     Sets xOut and yOut to the popup's position.
  *
  * Side effects:
- * None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -1510,13 +1510,13 @@ TkWaylandPopupGetPosition(
  *
  * TkWaylandSubsurfacePlaceAbove --
  *
- * Place a subsurface above another in the stacking order.
+ *     Place a subsurface above another in the stacking order.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Changes stacking order.
+ *     Changes stacking order.
  *----------------------------------------------------------------------
  */
 
@@ -1543,13 +1543,13 @@ TkWaylandSubsurfacePlaceAbove(
  *
  * TkWaylandSubsurfaceReconfigure --
  *
- * Reconfigure a subsurface (move/resize).
+ *     Reconfigure a subsurface (move/resize).
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Updates position and size of the subsurface.
+ *     Updates position and size of the subsurface.
  *----------------------------------------------------------------------
  */
 
@@ -1611,13 +1611,13 @@ TkWaylandSubsurfaceReconfigure(
  *
  * TkWaylandPopupDestroyAll --
  *
- * Destroy all popups (cleanup on shutdown).
+ *     Destroy all popups (cleanup on shutdown).
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -1632,13 +1632,13 @@ TkWaylandPopupDestroyAll(void)
  *
  * TkWaylandPopupResize --
  *
- * Attempt to resize an existing subsurface popup.
+ *     Attempt to resize an existing subsurface popup.
  *
  * Results:
- * TCL_OK on success, TCL_ERROR on failure.
+ *     TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- * Recreates renderer and buffers with new size.
+ *     Recreates renderer and buffers with new size.
  *---------------------------------------------------------------------------
  */
 

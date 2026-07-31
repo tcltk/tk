@@ -145,6 +145,105 @@ static int menuDismissedByClick = 0;
  */
 static int pendingRootIsMenubar = 0;
 
+/* ---- Static function prototypes ---- */
+
+/* Menu stack management. */
+static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
+static void MenuStackPop(int toDepth);
+static int MenuStackFindLevel(TkMenu *menuPtr);
+
+/* Menu helpers. */
+static void SetHelpMenu(TkMenu *menuPtr);
+
+/* Geometry helpers. */
+static void GetMenuIndicatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
+static void GetMenuAccelGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
+static void GetMenuSeparatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
+static void GetTearoffEntryGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
+static void GetMenuLabelGeometry(TkMenuEntry *mePtr, Tk_Font tkfont,
+    const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
+
+/* Drawing helpers. */
+static void DrawMenuEntryBackground(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
+    int x, int y, int width, int height);
+static void DrawMenuEntryAccelerator(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
+    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
+    int x, int y, int width, int height, bool drawArrow,
+    NVGcolor textColor);
+static void DrawMenuEntryIndicator(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_3DBorder border, XColor *indicatorColor,
+    XColor *disableColor, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
+    int x, int y, int width, int height, NVGcolor textColor);
+static void DrawMenuSeparator(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
+    int x, int y, int width, int height);
+static void DrawMenuEntryLabel(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
+    int x, int y, int width, int height, NVGcolor textColor);
+static void DrawMenuUnderline(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
+    int x, int y, int width, int height, NVGcolor textColor);
+static void DrawTearoffEntry(TkMenu *menuPtr, TkMenuEntry *mePtr,
+    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
+    int x, int y, int width, int height);
+
+/* Menu rendering entry points. */
+static void MenuDrawIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
+static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
+static void TkpDisplayMenu(void *clientData);
+
+/* Menu input handling. */
+static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
+static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
+static void MenuMouseLeave(TkMenu *menuPtr);
+
+/* Helpers for positioning / clamping. */
+static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
+static void TkWaylandClampPopupGeometry(GLFWwindow *glfwWindow, int *xPtr, int *yPtr, int *wPtr, int *hPtr);
+static GLFWwindow* TkWaylandGetCascadeParentWindow(int level);
+static void TkWaylandComputeCascadeAnchor(int level, TkMenuEntry *mePtr,
+    int cascadeW, int cascadeH, int *outX, int *outY);
+
+/* Menubar helpers. */
+static int MenubarPostCascadeAtEntry(WmInfo *wmPtr, TkMenu *menuPtr, TkMenuEntry *mePtr);
+static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
+static void MenuBarDeferredSetup(void *clientData);
+static void MenubarResizeIdleProc(void *clientData);
+static void TkWaylandWmUpdateGeometryInfo(void *clientData);
+static void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+
+/* Pending image management (used during drawing). */
+static void MenuPendingImageAdd(NVGcontext *vg, int imgId);
+static void MenuPendingImagesFlush(void);
+
+/* ----- end static prototypes ----- */
+
+/* ---- MODULE_SCOPE prototypes for functions defined later ---- */
+MODULE_SCOPE int TkWaylandMenuGetDepth(void);
+MODULE_SCOPE int TkWaylandMenuStackRootIsMenubar(void);
+MODULE_SCOPE void TkWaylandMenuPopToDepth(int depth);
+MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
+MODULE_SCOPE int TkWaylandMenuActive(void);
+MODULE_SCOPE Tk_Window TkWaylandMenuGetTopmostWindow(void);
+MODULE_SCOPE void TkWaylandMenuHandlePointerMotion(int x, int y);
+MODULE_SCOPE void TkWaylandMenuHandlePointerButton(int x, int y, int button, int state);
+MODULE_SCOPE void TkWaylandMenuHandleEscape(void);
+MODULE_SCOPE void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
+MODULE_SCOPE int TkWaylandMenuConsumeDismissClick(void);
+MODULE_SCOPE int TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y, int button);
+MODULE_SCOPE int TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
+MODULE_SCOPE Tk_Window TkWaylandMenuGetParentWindow(void);
+MODULE_SCOPE void TkWaylandMenubarResize(TkWindow *winPtr);
+MODULE_SCOPE int TkWaylandMenuPopupActive(void);
+MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
+/* -------------------------------------------------------------- */
+
 /*
  * NanoVG image IDs created while drawing a menu frame.  nvgFill() only
  * queues the textured path; the real GL draw happens inside nvgEndFrame()
@@ -184,88 +283,18 @@ MenuPendingImagesFlush(void)
     menuPendingNvgImagesVg = NULL;
 }
 
-/* Forward declarations for static functions. */
-static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
-static void SetHelpMenu(TkMenu *menuPtr);
-static void MenuDrawIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
-static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
-static void MenuStackPop(int toDepth);
-static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
-static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
-static void MenuMouseLeave(TkMenu *menuPtr);
-static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
-static void TkWaylandClampPopupGeometry(GLFWwindow *glfwWindow, int *xPtr, int *yPtr, int *wPtr, int *hPtr);
-static GLFWwindow* TkWaylandGetCascadeParentWindow(int level);
-static void TkpDisplayMenu(void *clientData);
-static int  MenubarPostCascadeAtEntry(WmInfo *wmPtr, TkMenu *menuPtr,
-    TkMenuEntry *mePtr);
-static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
-static void MenuBarDeferredSetup(void *clientData);
-static void MenubarResizeIdleProc(void *clientData);
-static void TkWaylandWmUpdateGeometryInfo(void *clientData);
-static void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
-
-/* Forward declarations for MODULE_SCOPE functions implemented at end of file. */
-MODULE_SCOPE void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
-MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
-MODULE_SCOPE int TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
-    int button);
-MODULE_SCOPE int TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
-MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
-MODULE_SCOPE int  TkWaylandMenuGetDepth(void);
-MODULE_SCOPE int  TkWaylandMenuStackRootIsMenubar(void);
-MODULE_SCOPE void TkWaylandMenuPopToDepth(int depth);
-
-/* Geometry helper functions. */
-static void GetMenuIndicatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
-static void GetMenuAccelGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
-static void GetMenuSeparatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
-static void GetTearoffEntryGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    Tk_Font tkfont, const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
-static void GetMenuLabelGeometry(TkMenuEntry *mePtr, Tk_Font tkfont,
-    const Tk_FontMetrics *fmPtr, int *widthPtr, int *heightPtr);
-
-/* Drawing helper functions. */
-static void DrawMenuEntryBackground(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
-    int x, int y, int width, int height);
-static void DrawMenuEntryAccelerator(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
-    int x, int y, int width, int height, bool drawArrow,
-    NVGcolor textColor);
-static void DrawMenuEntryIndicator(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_3DBorder border, XColor *indicatorColor,
-    XColor *disableColor, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-    int x, int y, int width, int height, NVGcolor textColor);
-static void DrawMenuSeparator(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-    int x, int y, int width, int height);
-static void DrawMenuEntryLabel(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-    int x, int y, int width, int height, NVGcolor textColor);
-static void DrawMenuUnderline(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-    int x, int y, int width, int height, NVGcolor textColor);
-static void DrawTearoffEntry(TkMenu *menuPtr, TkMenuEntry *mePtr,
-    NVGcontext *vg, Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-    int x, int y, int width, int height);
-
 /*
  *---------------------------------------------------------------------------
  *
  * TkpNewMenu --
  *
- * Initialize a new menu for Wayland/GLFW platform.
+ *     Initialize a new menu for Wayland/GLFW platform.
  *
  * Results:
- * TCL_OK always.
+ *     TCL_OK always.
  *
  * Side effects:
- * Sets up help menu if applicable.
+ *     Sets up help menu if applicable.
  *
  *---------------------------------------------------------------------------
  */
@@ -283,15 +312,15 @@ TkpNewMenu(TkMenu *menuPtr)
  *
  * TkpDestroyMenu --
  *
- * Clean up platform-specific menu resources.
- * Only destroys when the menu is actually being destroyed.
- * Prevents cascading destruction of the main window.
+ *     Clean up platform-specific menu resources.
+ *     Only destroys when the menu is actually being destroyed.
+ *     Prevents cascading destruction of the main window.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Cleans up menu resources and removes from stack.
+ *     Cleans up menu resources and removes from stack.
  *
  *---------------------------------------------------------------------------
  */
@@ -389,13 +418,13 @@ TkpDestroyMenu(TkMenu *menuPtr)
  *
  * TkpDestroyMenuEntry --
  *
- * Clean up platform-specific menu entry resources.
+ *     Clean up platform-specific menu entry resources.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Nothing to do on Wayland.
+ *     Nothing to do on Wayland.
  *
  *---------------------------------------------------------------------------
  */
@@ -411,13 +440,13 @@ TkpDestroyMenuEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
  *
  * TkpConfigureMenuEntry --
  *
- * Configure a menu entry with platform-specific settings.
+ *     Configure a menu entry with platform-specific settings.
  *
  * Results:
- * TCL_OK always.
+ *     TCL_OK always.
  *
  * Side effects:
- * May set up help menu for cascade entries.
+ *     May set up help menu for cascade entries.
  *
  *---------------------------------------------------------------------------
  */
@@ -441,13 +470,13 @@ TkpConfigureMenuEntry(TkMenuEntry *mePtr)
  *
  * TkpMenuNewEntry --
  *
- * Create a new platform-specific menu entry.
+ *     Create a new platform-specific menu entry.
  *
  * Results:
- * TCL_OK always.
+ *     TCL_OK always.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -463,16 +492,17 @@ TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
  *
  * MenuStackWindowEventProc --
  *
- * Force-pop a menu entry. 
+ *     Force-pop a menu entry.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Pops the entry back onto the stack. 
+ *     Pops the entry back onto the stack.
  *
  *---------------------------------------------------------------------------
  */
+
 static void
 MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr)
 {
@@ -498,20 +528,19 @@ MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr)
  *
  * SetHelpMenu --
  *
- * Marks the Help cascade in a menubar when "useMotifHelp" is enabled.
+ *     Marks the Help cascade in a menubar when "useMotifHelp" is enabled.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Sets or clears the ENTRY_HELP_MENU flag.
+ *     Sets or clears the ENTRY_HELP_MENU flag.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
-SetHelpMenu(
-            TkMenu *menuPtr)
+SetHelpMenu(TkMenu *menuPtr)
 {
     TkMenuEntry *cascadeEntryPtr;
     int useMotifHelp = 0;
@@ -552,21 +581,21 @@ SetHelpMenu(
  *
  * TkpComputeMenubarGeometry --
  *
- * Computes the size and layout of a menubar.
- * Menubar entries are distributed across the full width.
- * Height is minimized to just fit the font.
+ *     Computes the size and layout of a menubar.
+ *     Menubar entries are distributed across the full width.
+ *     Height is minimized to just fit the font.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Updates geometry fields of menu entries.
+ *     Updates geometry fields of menu entries.
  *
  *---------------------------------------------------------------------------
  */
+
 void
-TkpComputeMenubarGeometry(
-                          TkMenu *menuPtr)
+TkpComputeMenubarGeometry(TkMenu *menuPtr)
 {
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;
@@ -705,20 +734,19 @@ TkpComputeMenubarGeometry(
  *
  * TkpComputeStandardMenuGeometry --
  *
- * Computes the size and layout of a standard (popup) menu.
+ *     Computes the size and layout of a standard (popup) menu.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Updates geometry fields of menu entries.
+ *     Updates geometry fields of menu entries.
  *
  *---------------------------------------------------------------------------
  */
 
 void
-TkpComputeStandardMenuGeometry(
-                               TkMenu *menuPtr)
+TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
 {
     Tk_Font tkfont;
     Tk_Font menuFont;
@@ -821,25 +849,25 @@ TkpComputeStandardMenuGeometry(
  *
  * GetMenuIndicatorGeometry --
  *
- * Calculate geometry for menu entry indicators (check/radio buttons).
+ *     Calculate geometry for menu entry indicators (check/radio buttons).
  *
  * Results:
- * Sets widthPtr and heightPtr to calculated dimensions.
+ *     Sets widthPtr and heightPtr to calculated dimensions.
  *
  * Side effects:
- * Stores indicator size in platformEntryData.
+ *     Stores indicator size in platformEntryData.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 GetMenuIndicatorGeometry(
-                         TkMenu *menuPtr,
-                         TkMenuEntry *mePtr,
-                         TCL_UNUSED(Tk_Font),  /* tkfont */
-                         TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                         int *widthPtr,
-                         int *heightPtr)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    TCL_UNUSED(Tk_Font),  /* tkfont */
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int *widthPtr,
+    int *heightPtr)
 {
     int borderWidth;
 
@@ -884,25 +912,25 @@ GetMenuIndicatorGeometry(
  *
  * GetMenuAccelGeometry --
  *
- * Calculate geometry for menu entry accelerator (keyboard shortcut).
+ *     Calculate geometry for menu entry accelerator (keyboard shortcut).
  *
  * Results:
- * Sets widthPtr and heightPtr to calculated dimensions.
+ *     Sets widthPtr and heightPtr to calculated dimensions.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 GetMenuAccelGeometry(
-                     TkMenu *menuPtr,
-                     TkMenuEntry *mePtr,
-                     Tk_Font tkfont,
-                     TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                     int *widthPtr,
-                     int *heightPtr)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    Tk_Font tkfont,
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int *widthPtr,
+    int *heightPtr)
 {
     Tk_FontMetrics fm;
 
@@ -924,25 +952,25 @@ GetMenuAccelGeometry(
  *
  * GetMenuSeparatorGeometry --
  *
- * Calculate geometry for menu separator.
+ *     Calculate geometry for menu separator.
  *
  * Results:
- * Sets widthPtr and heightPtr to calculated dimensions.
+ *     Sets widthPtr and heightPtr to calculated dimensions.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 GetMenuSeparatorGeometry(
-                         TCL_UNUSED(TkMenu *), /* menuPtr */
-                         TCL_UNUSED(TkMenuEntry *), /* mePtr */
-                         Tk_Font tkfont,
-                         TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                         int *widthPtr,
-                         int *heightPtr)
+    TCL_UNUSED(TkMenu *), /* menuPtr */
+    TCL_UNUSED(TkMenuEntry *), /* mePtr */
+    Tk_Font tkfont,
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int *widthPtr,
+    int *heightPtr)
 {
     Tk_FontMetrics fm;
 
@@ -956,25 +984,25 @@ GetMenuSeparatorGeometry(
  *
  * GetTearoffEntryGeometry --
  *
- * Calculate geometry for tearoff entry.
+ *     Calculate geometry for tearoff entry.
  *
  * Results:
- * Sets widthPtr and heightPtr to calculated dimensions.
+ *     Sets widthPtr and heightPtr to calculated dimensions.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 GetTearoffEntryGeometry(
-                        TkMenu *menuPtr,
-                        TCL_UNUSED(TkMenuEntry *), /* mePtr */
-                        Tk_Font tkfont,
-                        TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                        int *widthPtr,
-                        int *heightPtr)
+    TkMenu *menuPtr,
+    TCL_UNUSED(TkMenuEntry *), /* mePtr */
+    Tk_Font tkfont,
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int *widthPtr,
+    int *heightPtr)
 {
     Tk_FontMetrics fm;
 
@@ -993,24 +1021,24 @@ GetTearoffEntryGeometry(
  *
  * GetMenuLabelGeometry --
  *
- * Calculate geometry for menu entry label (text and/or image).
+ *     Calculate geometry for menu entry label (text and/or image).
  *
  * Results:
- * Sets widthPtr and heightPtr to calculated dimensions.
+ *     Sets widthPtr and heightPtr to calculated dimensions.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 GetMenuLabelGeometry(
-                     TkMenuEntry *mePtr,
-                     Tk_Font tkfont,
-                     TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                     int *widthPtr,
-                     int *heightPtr)
+    TkMenuEntry *mePtr,
+    Tk_Font tkfont,
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int *widthPtr,
+    int *heightPtr)
 {
     Tk_FontMetrics fm;
     int haveImage = 0;
@@ -1083,14 +1111,14 @@ GetMenuLabelGeometry(
  *
  * TkpSetWindowMenuBar --
  *
- * Attach or detach a menubar for a toplevel.
- * Preserves the menubar popup if it already exists.
+ *     Attach or detach a menubar for a toplevel.
+ *     Preserves the menubar popup if it already exists.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Creates or updates wmPtr->menubarPopup.
+ *     Creates or updates wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -1166,14 +1194,14 @@ TkpSetWindowMenuBar(
  *
  * TkWaylandMenubarCreateOrResize --
  *
- * Create or resize the menubar subsurface.
- * Preserves the existing popup if size hasn't changed.
+ *     Create or resize the menubar subsurface.
+ *     Preserves the existing popup if size hasn't changed.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May resize or recreate wmPtr->menubarPopup.
+ *     May resize or recreate wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -1284,13 +1312,13 @@ TkWaylandMenubarCreateOrResize(
  *
  * MenuBarDeferredSetup --
  *
- * Tcl_DoWhenIdle callback for deferred menubar setup.
+ *     Tcl_DoWhenIdle callback for deferred menubar setup.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May create or update wmPtr->menubarPopup.
+ *     May create or update wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -1334,13 +1362,13 @@ MenuBarDeferredSetup(
  *
  * MenubarResizeIdleProc --
  *
- * Tcl_DoWhenIdle callback for menubar resize.
+ *     Tcl_DoWhenIdle callback for menubar resize.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May resize or recreate wmPtr->menubarPopup.
+ *     May resize or recreate wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -1368,13 +1396,13 @@ MenubarResizeIdleProc(
  *
  * TkWaylandMenubarResize --
  *
- * Called when a toplevel's size has changed.
+ *     Called when a toplevel's size has changed.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Schedules an idle call to resize the menubar.
+ *     Schedules an idle call to resize the menubar.
  *
  *---------------------------------------------------------------------------
  */
@@ -1401,14 +1429,14 @@ TkWaylandMenubarResize(
  *
  * MenuStackFindLevel --
  *
- * Return the stack index of menuPtr, or -1 if it is not currently
- * posted.
+ *     Return the stack index of menuPtr, or -1 if it is not currently
+ *     posted.
  *
  * Results:
- * Stack index or -1.
+ *     Stack index or -1.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -1429,13 +1457,13 @@ MenuStackFindLevel(
  *
  * TkWaylandResolveGLFWwindow --
  *
- * Helper to resolve the GLFW window from a Tk window's toplevel.
+ *     Helper to resolve the GLFW window from a Tk window's toplevel.
  *
  * Results:
- * GLFWwindow of the toplevel, or NULL if not found.
+ *     GLFWwindow of the toplevel, or NULL if not found.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -1464,28 +1492,28 @@ TkWaylandResolveGLFWwindow(Tk_Window tkwin)
  *
  * TkpDrawMenuEntry --
  *
- * Renders a complete menu entry using the shared NanoVG context.
+ *     Renders a complete menu entry using the shared NanoVG context.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Calls sub-drawing routines to render into the shared NanoVG context.
+ *     Calls sub-drawing routines to render into the shared NanoVG context.
  *
  *---------------------------------------------------------------------------
  */
 
 void
 TkpDrawMenuEntry(
-                 TkMenuEntry *mePtr,
-                 Drawable d,
-                 Tk_Font tkfont,
-                 const Tk_FontMetrics *fmPtr,
-                 int x,
-                 int y,
-                 int width,
-                 int height,
-                 DrawMenuFlags drawingParameters) /* Flags. */
+    TkMenuEntry *mePtr,
+    Drawable d,
+    Tk_Font tkfont,
+    const Tk_FontMetrics *fmPtr,
+    int x,
+    int y,
+    int width,
+    int height,
+    DrawMenuFlags drawingParameters) /* Flags. */
 {
     Tk_3DBorder bgBorder = NULL;
     Tk_3DBorder activeBorder = NULL;
@@ -1688,33 +1716,34 @@ TkpDrawMenuEntry(
         }
     }
 }
+
 /*
  *---------------------------------------------------------------------------
  *
  * DrawMenuEntryBackground --
  *
- * Draw the background for a menu entry.
+ *     Draw the background for a menu entry.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders the background rectangle with appropriate border and relief.
+ *     Renders the background rectangle with appropriate border and relief.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 DrawMenuEntryBackground(
-                        TkMenu *menuPtr,
-                        TkMenuEntry *mePtr,
-                        NVGcontext *vg,
-                        Tk_3DBorder activeBorder,
-                        Tk_3DBorder bgBorder,
-                        int x,
-                        int y,
-                        int width,
-                        int height)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    NVGcontext *vg,
+    Tk_3DBorder activeBorder,
+    Tk_3DBorder bgBorder,
+    int x,
+    int y,
+    int width,
+    int height)
 {
     Tk_3DBorder border = bgBorder;
     NVGcolor fillColor;
@@ -1765,32 +1794,32 @@ DrawMenuEntryBackground(
  *
  * DrawMenuEntryAccelerator --
  *
- * Draw the accelerator (keyboard shortcut) or cascade arrow for a menu entry.
+ *     Draw the accelerator (keyboard shortcut) or cascade arrow for a menu entry.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders the accelerator text or cascade arrow.
+ *     Renders the accelerator text or cascade arrow.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 DrawMenuEntryAccelerator(
-                         TkMenu *menuPtr,
-                         TkMenuEntry *mePtr,
-                         NVGcontext *vg,
-                         Tk_Font tkfont,
-                         const Tk_FontMetrics *fmPtr,
-                         Tk_3DBorder activeBorder,
-                         Tk_3DBorder bgBorder,
-                         int x,
-                         int y,
-                         int width,
-                         int height,
-                         bool drawArrow,
-                         NVGcolor textColor)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    NVGcontext *vg,
+    Tk_Font tkfont,
+    const Tk_FontMetrics *fmPtr,
+    Tk_3DBorder activeBorder,
+    Tk_3DBorder bgBorder,
+    int x,
+    int y,
+    int width,
+    int height,
+    bool drawArrow,
+    NVGcolor textColor)
 {
     int borderWidth;
     int activeBorderWidth;
@@ -1875,32 +1904,15 @@ DrawMenuEntryAccelerator(
  *
  * DrawMenuEntryIndicator --
  *
- * Draw check button or radio button indicator for a menu entry.
- * Uses improved styling from button widget with proper sizing and positioning.
+ *     Draw check button or radio button indicator for a menu entry.
+ *     Matches the clean styling from button widgets - white background, no outline,
+ *     with proper padding.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders the check/radio indicator and selection mark.
- *
- *---------------------------------------------------------------------------
- */
-
-/*
- *---------------------------------------------------------------------------
- *
- * DrawMenuEntryIndicator --
- *
- * Draw check button or radio button indicator for a menu entry.
- * Matches the clean styling from button widgets - white background, no outline,
- * with proper padding.
- *
- * Results:
- * None.
- *
- * Side effects:
- * Renders the check/radio indicator and selection mark.
+ *     Renders the check/radio indicator and selection mark.
  *
  *---------------------------------------------------------------------------
  */
@@ -2032,28 +2044,28 @@ DrawMenuEntryIndicator(
  *
  * DrawMenuSeparator --
  *
- * Draw a separator line in a menu.
+ *     Draw a separator line in a menu.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders a horizontal line.
+ *     Renders a horizontal line.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 DrawMenuSeparator(
-                  TkMenu *menuPtr,
-                  TCL_UNUSED(TkMenuEntry *), /* mePtr */
-                  NVGcontext *vg,
-                  TCL_UNUSED(Tk_Font), /* tkfont */
-                  TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                  int x,
-                  int y,
-                  int width,
-                  int height)
+    TkMenu *menuPtr,
+    TCL_UNUSED(TkMenuEntry *), /* mePtr */
+    NVGcontext *vg,
+    TCL_UNUSED(Tk_Font), /* tkfont */
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int x,
+    int y,
+    int width,
+    int height)
 {
     if (menuPtr->menuType == MENUBAR) {
         return;
@@ -2072,16 +2084,16 @@ DrawMenuSeparator(
  *
  * DrawMenuEntryLabel --
  *
- * Draw the label (text and/or image/bitmap) for a menu entry.
- * Always uses NanoVG directly for popup rendering.
+ *     Draw the label (text and/or image/bitmap) for a menu entry.
+ *     Always uses NanoVG directly for popup rendering.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders the label and handles compound positioning, disabled stippling.
- * Any NanoVG images created here are registered with MenuPendingImageAdd
- * and must be flushed with MenuPendingImagesFlush after EndDraw.
+ *     Renders the label and handles compound positioning, disabled stippling.
+ *     Any NanoVG images created here are registered with MenuPendingImageAdd
+ *     and must be flushed with MenuPendingImagesFlush after EndDraw.
  *
  *---------------------------------------------------------------------------
  */
@@ -2441,29 +2453,29 @@ DrawMenuEntryLabel(
  *
  * DrawMenuUnderline --
  *
- * Draw the underline for a menu entry's mnemonic character.
+ *     Draw the underline for a menu entry's mnemonic character.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders a line under the specified character using NanoVG.
+ *     Renders a line under the specified character using NanoVG.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 DrawMenuUnderline(
-                  TkMenu *menuPtr,
-                  TkMenuEntry *mePtr,
-                  NVGcontext *vg,
-                  Tk_Font tkfont,
-                  const Tk_FontMetrics *fmPtr,
-                  int x,
-                  int y,
-                  TCL_UNUSED(int), /* width */
-                  int height,
-                  NVGcolor textColor)
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    NVGcontext *vg,
+    Tk_Font tkfont,
+    const Tk_FontMetrics *fmPtr,
+    int x,
+    int y,
+    TCL_UNUSED(int), /* width */
+    int height,
+    NVGcolor textColor)
 {
     if (mePtr->labelPtr != NULL) {
         int len;
@@ -2514,28 +2526,28 @@ DrawMenuUnderline(
  *
  * DrawTearoffEntry --
  *
- * Draw the tearoff entry (dashed line) at the top of a menu.
+ *     Draw the tearoff entry (dashed line) at the top of a menu.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders a dashed line for tearoff functionality.
+ *     Renders a dashed line for tearoff functionality.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 DrawTearoffEntry(
-                 TkMenu *menuPtr,
-                 TCL_UNUSED(TkMenuEntry *), /* mePtr */
-                 NVGcontext *vg,
-                 TCL_UNUSED(Tk_Font ),
-                 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
-                 int x,
-                 int y,
-                 int width,
-                 int height)
+    TkMenu *menuPtr,
+    TCL_UNUSED(TkMenuEntry *), /* mePtr */
+    NVGcontext *vg,
+    TCL_UNUSED(Tk_Font ),
+    TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
+    int x,
+    int y,
+    int width,
+    int height)
 {
     int segmentWidth = 6;
     int px;
@@ -2570,15 +2582,15 @@ DrawTearoffEntry(
  *
  * TkpPostMenu --
  *
- * Post a popup menu (right-click context menu) at the specified
- * location as the root of a new menu stack.
+ *     Post a popup menu (right-click context menu) at the specified
+ *     location as the root of a new menu stack.
  *
  * Results:
- * A standard Tcl result code.
+ *     A standard Tcl result code.
  *
  * Side effects:
- * Dismisses any previously posted menu stack, then posts menuPtr as
- * the new root.
+ *     Dismisses any previously posted menu stack, then posts menuPtr as
+ *     the new root.
  *
  *---------------------------------------------------------------------------
  */
@@ -2691,15 +2703,15 @@ TkpPostMenu(
  *
  * TkpMenuButtonPostMenu --
  *
- * Post a menu from a menubutton at the appropriate position.
- * Handles the -direction option: above, below, left, right, flush.
+ *     Post a menu from a menubutton at the appropriate position.
+ *     Handles the -direction option: above, below, left, right, flush.
  *
  * Results:
- * Returns TCL_OK on success, TCL_ERROR on failure.
+ *     Returns TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- * Posts the menu as a popup anchored to the menubutton according to
- * its -direction option.
+ *     Posts the menu as a popup anchored to the menubutton according to
+ *     its -direction option.
  *
  *---------------------------------------------------------------------------
  */
@@ -2791,18 +2803,18 @@ TkpMenuButtonPostMenu(
  *
  * MenuStackPop --
  *
- * Destroy and remove all menu stack entries from index toDepth onward.
+ *     Destroy and remove all menu stack entries from index toDepth onward.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Destroys popups and cleans up menu state.
+ *     Destroys popups and cleans up menu state.
  *
  *---------------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
+static void
 MenuStackPop(
     int toDepth)
 {
@@ -2848,14 +2860,14 @@ MenuStackPop(
  *
  * TkWaylandMenuDismissAll --
  *
- * Tear down the entire menu stack.
- * Does NOT destroy the menubar popup.
+ *     Tear down the entire menu stack.
+ *     Does NOT destroy the menubar popup.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Destroys all popup menus.
+ *     Destroys all popup menus.
  *
  *---------------------------------------------------------------------------
  */
@@ -2877,15 +2889,15 @@ TkWaylandMenuDismissAll(void)
  *
  * TkWaylandMenubarDestroy --
  *
- * Explicitly destroy the menubar popup.
- * This should only be called when the toplevel is actually being destroyed.
- * Preserves the main window.
+ *     Explicitly destroy the menubar popup.
+ *     This should only be called when the toplevel is actually being destroyed.
+ *     Preserves the main window.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Destroys wmPtr->menubarPopup.
+ *     Destroys wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -2924,15 +2936,15 @@ TkWaylandMenubarDestroy(
  *
  * TkWaylandGetToplevelContentSize --
  *
- * Return the content-area size of the given GLFW window's surface.
- * If glfwWindow is NULL, falls back to mainGlfwWindow.
+ *     Return the content-area size of the given GLFW window's surface.
+ *     If glfwWindow is NULL, falls back to mainGlfwWindow.
  *
  * Results:
- * None. *widthPtr/*heightPtr are set to 0 if the size cannot be
- * determined, which callers treat as "don't clamp".
+ *     None. *widthPtr/*heightPtr are set to 0 if the size cannot be
+ *     determined, which callers treat as "don't clamp".
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -2964,23 +2976,23 @@ TkWaylandGetToplevelContentSize(
  *
  * TkWaylandClampPopupGeometry --
  *
- * Constrain a popup rectangle, expressed in toplevel-surface-local
- * coordinates, so that it lies entirely within the toplevel's content
- * area. Used as the single choke point for every menu popup (root
- * context menus, menubutton menus, cascades, and menubar-posted
- * top-level menus) so that none of them can ever be positioned or
- * sized outside the toplevel that owns them.
+ *     Constrain a popup rectangle, expressed in toplevel-surface-local
+ *     coordinates, so that it lies entirely within the toplevel's content
+ *     area. Used as the single choke point for every menu popup (root
+ *     context menus, menubutton menus, cascades, and menubar-posted
+ *     top-level menus) so that none of them can ever be positioned or
+ *     sized outside the toplevel that owns them.
  *
- * If the popup is larger than the toplevel in either dimension, it is
- * shrunk to fit rather than left to overflow; this is a defensive
- * fallback and callers with a preferred flip position (e.g. cascades)
- * should compute a better *xPtr/*yPtr themselves before calling this.
+ *     If the popup is larger than the toplevel in either dimension, it is
+ *     shrunk to fit rather than left to overflow; this is a defensive
+ *     fallback and callers with a preferred flip position (e.g. cascades)
+ *     should compute a better *xPtr/*yPtr themselves before calling this.
  *
  * Results:
- * None. *xPtr, *yPtr, *wPtr, *hPtr are adjusted in place.
+ *     None. *xPtr, *yPtr, *wPtr, *hPtr are adjusted in place.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -3019,15 +3031,15 @@ TkWaylandClampPopupGeometry(
  *
  * TkWaylandGetCascadeParentWindow --
  *
- * Get the GLFW window from the parent menu at the given stack level.
- * Used by cascade posting to ensure submenus use the same toplevel
- * as their parent.
+ *     Get the GLFW window from the parent menu at the given stack level.
+ *     Used by cascade posting to ensure submenus use the same toplevel
+ *     as their parent.
  *
  * Results:
- * GLFWwindow of the parent menu's toplevel, or NULL if level is invalid.
+ *     GLFWwindow of the parent menu's toplevel, or NULL if level is invalid.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -3046,26 +3058,26 @@ TkWaylandGetCascadeParentWindow(int level)
  *
  * TkWaylandComputeCascadeAnchor --
  *
- * Compute the position at which a cascade (submenu) should be posted
- * relative to its parent menu, which is menuStack[level].
+ *     Compute the position at which a cascade (submenu) should be posted
+ *     relative to its parent menu, which is menuStack[level].
  *
- * The preferred position is immediately to the right of the parent,
- * aligned with the cascade entry. If that would run past the right
- * edge of the toplevel but the mirrored position to the left of the
- * parent fits instead, the cascade is flipped to the left, matching
- * standard desktop menu behavior. Vertical placement is left to the
- * generic TkWaylandClampPopupGeometry() backstop applied afterward in
- * TkWaylandPostMenuAtAnchor.
+ *     The preferred position is immediately to the right of the parent,
+ *     aligned with the cascade entry. If that would run past the right
+ *     edge of the toplevel but the mirrored position to the left of the
+ *     parent fits instead, the cascade is flipped to the left, matching
+ *     standard desktop menu behavior. Vertical placement is left to the
+ *     generic TkWaylandClampPopupGeometry() backstop applied afterward in
+ *     TkWaylandPostMenuAtAnchor.
  *
- * The GLFW window is obtained from menuStack[level].glfwWindow, which
- * was stored when the parent menu was posted. This ensures cascades
- * use the same toplevel coordinate space as their parent.
+ *     The GLFW window is obtained from menuStack[level].glfwWindow, which
+ *     was stored when the parent menu was posted. This ensures cascades
+ *     use the same toplevel coordinate space as their parent.
  *
  * Results:
- * *outX/*outY are set to the chosen toplevel-surface-local anchor.
+ *     *outX/*outY are set to the chosen toplevel-surface-local anchor.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -3115,14 +3127,14 @@ TkWaylandComputeCascadeAnchor(
  *
  * TkWaylandPostMenuAtAnchor --
  *
- * Core menu posting routine.
+ *     Core menu posting routine.
  *
  * Results:
- * A standard Tcl result code.
+ *     A standard Tcl result code.
  *
  * Side effects:
- * Creates a subsurface popup, renders the menu into it, and pushes a
- * new entry onto menuStack.
+ *     Creates a subsurface popup, renders the menu into it, and pushes a
+ *     new entry onto menuStack.
  *
  * explicitGw: if non-NULL, use this GLFW window; otherwise resolve from
  * the menu's toplevel. Cascades MUST pass the parent's GLFW window to
@@ -3256,13 +3268,13 @@ TkWaylandPostMenuAtAnchor(
  *
  * MenuDrawIntoPopup --
  *
- * Render all entries of menuPtr into the given TkWaylandPopup.
+ *     Render all entries of menuPtr into the given TkWaylandPopup.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Issues NanoVG drawing commands and swaps the popup's buffer.
+ *     Issues NanoVG drawing commands and swaps the popup's buffer.
  *
  *----------------------------------------------------------------------
  */
@@ -3433,13 +3445,13 @@ MenuDrawIntoPopup(
  *
  * MenuDrawMenubarIntoPopup --
  *
- * Render a menubar into its strip popup with proper active state handling.
+ *     Render a menubar into its strip popup with proper active state handling.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders the menubar into the popup surface.
+ *     Renders the menubar into the popup surface.
  *
  *----------------------------------------------------------------------
  */
@@ -3530,18 +3542,19 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     TkWaylandPopupEndDraw(popup);
     MenuPendingImagesFlush();
 }
+
 /*
  *----------------------------------------------------------------------
  *
  * TkpDisplayMenu --
  *
- * Called by Tk's display system to redraw a posted menu.
+ *     Called by Tk's display system to redraw a posted menu.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Renders menu using NanoVG into the menu's xdg_popup surface.
+ *     Renders menu using NanoVG into the menu's xdg_popup surface.
  *----------------------------------------------------------------------
  */
 
@@ -3604,16 +3617,17 @@ TkpDisplayMenu(
 
 /*
  *----------------------------------------------------------------------
+ *
  * TkWaylandMenuRedrawActive --
  *
- * Force a redraw of the currently active menu popup.
- * Called after mouse motion to update hover highlights.
+ *     Force a redraw of the currently active menu popup.
+ *     Called after mouse motion to update hover highlights.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Redraws the active menu.
+ *     Redraws the active menu.
  *----------------------------------------------------------------------
  */
 
@@ -3646,13 +3660,13 @@ TkWaylandMenuRedrawActive(void)
  *
  * TkWaylandMenuInit --
  *
- * Initialize menu display handling.
+ *     Initialize menu display handling.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May perform Wayland registry round-trips on first call.
+ *     May perform Wayland registry round-trips on first call.
  *
  *----------------------------------------------------------------------
  */
@@ -3669,21 +3683,21 @@ TkWaylandMenuInit(void)
  *
  * TkpInitializeMenuBindings --
  *
- * Initializes platform-specific menu bindings.
+ *     Initializes platform-specific menu bindings.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * No-op on Wayland.
+ *     No-op on Wayland.
  *
  *---------------------------------------------------------------------------
  */
 
 void
 TkpInitializeMenuBindings(
-                          TCL_UNUSED(Tcl_Interp *), /* interp */
-                          TCL_UNUSED(Tk_BindingTable)) /* bindingTable */
+    TCL_UNUSED(Tcl_Interp *), /* interp */
+    TCL_UNUSED(Tk_BindingTable)) /* bindingTable */
 {
     /* Nothing to do on Wayland. */
 }
@@ -3693,21 +3707,21 @@ TkpInitializeMenuBindings(
  *
  * TkpMenuNotifyToplevelCreate --
  *
- * Handles toplevel-creation notifications that affect menus.
+ *     Handles toplevel-creation notifications that affect menus.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * No-op on Wayland.
+ *     No-op on Wayland.
  *
  *---------------------------------------------------------------------------
  */
 
 void
 TkpMenuNotifyToplevelCreate(
-                            TCL_UNUSED(Tcl_Interp *), /* interp */
-                            TCL_UNUSED(const char *)) /* name */
+    TCL_UNUSED(Tcl_Interp *), /* interp */
+    TCL_UNUSED(const char *)) /* name */
 {
     /* Nothing to do on Wayland. */
 }
@@ -3717,13 +3731,13 @@ TkpMenuNotifyToplevelCreate(
  *
  * TkpMenuInit --
  *
- * Performs platform-specific menu initialization.
+ *     Performs platform-specific menu initialization.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Assumes NanoVG context and fonts are initialized elsewhere.
+ *     Assumes NanoVG context and fonts are initialized elsewhere.
  *
  *---------------------------------------------------------------------------
  */
@@ -3739,13 +3753,13 @@ TkpMenuInit(void)
  *
  * TkpMenuThreadInit --
  *
- * Initializes thread-specific menu state.
+ *     Initializes thread-specific menu state.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * No-op on Wayland.
+ *     No-op on Wayland.
  *
  *---------------------------------------------------------------------------
  */
@@ -3761,24 +3775,24 @@ TkpMenuThreadInit(void)
  *
  * TkpPostTearoffMenu --
  *
- * Posts a tearoff menu on the screen at the specified coordinates.
+ *     Posts a tearoff menu on the screen at the specified coordinates.
  *
  * Results:
- * Returns a standard Tcl result code.
+ *     Returns a standard Tcl result code.
  *
  * Side effects:
- * The menu window is mapped at the computed screen position.
+ *     The menu window is mapped at the computed screen position.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkpPostTearoffMenu(
-                   TCL_UNUSED(Tcl_Interp *), /* interp */
-                   TkMenu *menuPtr,
-                   int x,
-                   int y,
-                   Tcl_Size index)
+    TCL_UNUSED(Tcl_Interp *), /* interp */
+    TkMenu *menuPtr,
+    int x,
+    int y,
+    Tcl_Size index)
 {
     int result;
     int reqW, reqH;
@@ -3861,23 +3875,23 @@ TkpPostTearoffMenu(
  *
  * MenuMouseClick --
  *
- * Handle mouse click events in a menu.
+ *     Handle mouse click events in a menu.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May invoke menu entry, post cascade, or toggle check/radio.
+ *     May invoke menu entry, post cascade, or toggle check/radio.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 MenuMouseClick(
-               TkMenu *menuPtr,
-               int x,
-               int y,
-               int button)
+    TkMenu *menuPtr,
+    int x,
+    int y,
+    int button)
 {
     int i;
 
@@ -3993,22 +4007,22 @@ MenuMouseClick(
  *
  * MenuMouseMotion --
  *
- * Handle mouse motion in a menu.
+ *     Handle mouse motion in a menu.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May activate/deactivate entries, post/unpost cascades.
+ *     May activate/deactivate entries, post/unpost cascades.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 MenuMouseMotion(
-                TkMenu *menuPtr,
-                int x,
-                int y)
+    TkMenu *menuPtr,
+    int x,
+    int y)
 {
     int i;
     int foundEntry = 0;
@@ -4179,20 +4193,20 @@ MenuMouseMotion(
  *
  * MenuMouseLeave --
  *
- * Handle mouse leaving a menu window.
+ *     Handle mouse leaving a menu window.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Deactivates current entry, may unpost cascade.
+ *     Deactivates current entry, may unpost cascade.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
 MenuMouseLeave(
-               TkMenu *menuPtr)
+    TkMenu *menuPtr)
 {
     if (!menuPtr) return;
 
@@ -4209,20 +4223,20 @@ MenuMouseLeave(
  *
  * TkWaylandSetupMenuCallbacks --
  *
- * Setup menu input callbacks (no-op on Wayland).
+ *     Setup menu input callbacks (no-op on Wayland).
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
 
 void
 TkWaylandSetupMenuCallbacks(
-                            TCL_UNUSED(Tk_Window)) /* tkwin */
+    TCL_UNUSED(Tk_Window)) /* tkwin */
 {
     /* No-op. */
 }
@@ -4232,10 +4246,10 @@ TkWaylandSetupMenuCallbacks(
  *
  * TkWaylandMenuPopupActive --
  *
- * Query whether one or more menu popups are currently posted.
+ *     Query whether one or more menu popups are currently posted.
  *
  * Results:
- * Non-zero if the menu stack is non-empty.
+ *     Non-zero if the menu stack is non-empty.
  *
  *---------------------------------------------------------------------------
  */
@@ -4251,11 +4265,11 @@ TkWaylandMenuPopupActive(void)
  *
  * TkWaylandMenuConsumeDismissClick --
  *
- * Returns non-zero exactly once if the most recent button press
- * dismissed the menu stack.
+ *     Returns non-zero exactly once if the most recent button press
+ *     dismissed the menu stack.
  *
  * Results:
- * 1 if a dismiss click was consumed, 0 otherwise.
+ *     1 if a dismiss click was consumed, 0 otherwise.
  *
  *---------------------------------------------------------------------------
  */
@@ -4273,26 +4287,26 @@ TkWaylandMenuConsumeDismissClick(void)
  *
  * TkWaylandMenubarHandleClick --
  *
- * Hit-test a button press against the menubar of winPtr and, if it
- * lands on a cascade entry, post the corresponding top-level menu.
+ *     Hit-test a button press against the menubar of winPtr and, if it
+ *     lands on a cascade entry, post the corresponding top-level menu.
  *
- * This is intentionally independent of menuStack[]/MenuStackFindLevel:
- * the menubar itself is never pushed onto the popup stack (it is not
- * a popup, it's always-visible chrome owned by the toplevel), so the
- * stack-relative cascade-posting logic used by MenuMouseClick /
- * MenuMouseMotion for submenu-of-submenu clicks does not apply here.
- * Posting with isRoot=1 makes the clicked top-level menu become
- * menuStack[0], so everything below it (submenus of submenus) is
- * handled normally by the existing stack-based logic afterward.
+ *     This is intentionally independent of menuStack[]/MenuStackFindLevel:
+ *     the menubar itself is never pushed onto the popup stack (it is not
+ *     a popup, it's always-visible chrome owned by the toplevel), so the
+ *     stack-relative cascade-posting logic used by MenuMouseClick /
+ *     MenuMouseMotion for submenu-of-submenu clicks does not apply here.
+ *     Posting with isRoot=1 makes the clicked top-level menu become
+ *     menuStack[0], so everything below it (submenus of submenus) is
+ *     handled normally by the existing stack-based logic afterward.
  *
  * Results:
- * 1 if the click landed on the menubar (whether or not it hit a
- * postable cascade entry), 0 if the click was outside the menubar
- * and should be handled as an ordinary Tk event.
+ *     1 if the click landed on the menubar (whether or not it hit a
+ *     postable cascade entry), 0 if the click was outside the menubar
+ *     and should be handled as an ordinary Tk event.
  *
  * Side effects:
- * May post a new root menu (TkWaylandPostMenuAtAnchor), which
- * dismisses any previously posted menu stack.
+ *     May post a new root menu (TkWaylandPostMenuAtAnchor), which
+ *     dismisses any previously posted menu stack.
  *
  *---------------------------------------------------------------------------
  */
@@ -4380,30 +4394,30 @@ TkWaylandMenubarHandleClick(
  *
  * TkWaylandMenubarHandleMotion --
  *
- *      Hit-test pointer motion against the menubar of winPtr and update
- *      the hover highlight accordingly. There is no window/subsurface of
- *      its own for the menubar strip to receive motion events on (like
- *      TkWaylandMenubarHandleClick, this works off raw toplevel-local
- *      coordinates), so this must be called explicitly from the GLFW
- *      cursor-position/enter callbacks rather than relying on any
- *      per-window event delivery.
+ *     Hit-test pointer motion against the menubar of winPtr and update
+ *     the hover highlight accordingly. There is no window/subsurface of
+ *     its own for the menubar strip to receive motion events on (like
+ *     TkWaylandMenubarHandleClick, this works off raw toplevel-local
+ *     coordinates), so this must be called explicitly from the GLFW
+ *     cursor-position/enter callbacks rather than relying on any
+ *     per-window event delivery.
  *
- *      If a dropdown is already posted and rooted at this menubar (see
- *      TkWaylandMenuStackRootIsMenubar), hovering a different top-level
- *      entry closes the current dropdown and opens the hovered one,
- *      mirroring keyboard Left/Right navigation. If no dropdown is
- *      posted (or the posted one belongs to an unrelated menubutton),
- *      motion here only updates the highlight.
+ *     If a dropdown is already posted and rooted at this menubar (see
+ *     TkWaylandMenuStackRootIsMenubar), hovering a different top-level
+ *     entry closes the current dropdown and opens the hovered one,
+ *     mirroring keyboard Left/Right navigation. If no dropdown is
+ *     posted (or the posted one belongs to an unrelated menubutton),
+ *     motion here only updates the highlight.
  *
  * Results:
- *      1 if the pointer is within the menubar strip's vertical band
- *      (whether or not it landed on a specific entry), 0 if it's
- *      outside that band and the caller should treat this as an
- *      ordinary Tk pointer event instead.
+ *     1 if the pointer is within the menubar strip's vertical band
+ *     (whether or not it landed on a specific entry), 0 if it's
+ *     outside that band and the caller should treat this as an
+ *     ordinary Tk pointer event instead.
  *
  * Side effects:
- *      May activate/deactivate a menubar entry and redraw the strip;
- *      may pop and re-post a dropdown.
+ *     May activate/deactivate a menubar entry and redraw the strip;
+ *     may pop and re-post a dropdown.
  *
  *---------------------------------------------------------------------------
  */
@@ -4474,13 +4488,13 @@ TkWaylandMenubarHandleMotion(
  *
  * TkWaylandMenuHandlePointerMotion --
  *
- * Called from the raw wl_pointer listener on motion events.
+ *     Called from the raw wl_pointer listener on motion events.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Activates/deactivates menu entries and manages cascade popups.
+ *     Activates/deactivates menu entries and manages cascade popups.
  *
  *---------------------------------------------------------------------------
  */
@@ -4521,13 +4535,13 @@ TkWaylandMenuHandlePointerMotion(
  *
  * TkWaylandMenuHandlePointerButton --
  *
- * Called from the raw wl_pointer listener on button events.
+ *     Called from the raw wl_pointer listener on button events.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * May invoke menu commands or dismiss menu stack.
+ *     May invoke menu commands or dismiss menu stack.
  *
  *---------------------------------------------------------------------------
  */
@@ -4565,13 +4579,13 @@ TkWaylandMenuHandlePointerButton(
  *
  * TkWaylandMenuHandleEscape --
  *
- * Called from the raw wl_keyboard listener when Escape is pressed.
+ *     Called from the raw wl_keyboard listener when Escape is pressed.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Dismisses all posted menus.
+ *     Dismisses all posted menus.
  *
  *---------------------------------------------------------------------------
  */
@@ -4587,14 +4601,14 @@ TkWaylandMenuHandleEscape(void)
  *
  * TkWaylandMenuOpenCascade --
  *
- *      Open a cascade (submenu) from a menu entry.
- *      Called from keyboard navigation (Right arrow).
+ *     Open a cascade (submenu) from a menu entry.
+ *     Called from keyboard navigation (Right arrow).
  *
  * Results:
- *      None.
+ *     None.
  *
  * Side effects:
- *      Posts the cascade submenu.
+ *     Posts the cascade submenu.
  *
  *---------------------------------------------------------------------------
  */
@@ -4668,13 +4682,13 @@ TkWaylandMenuOpenCascade(
  *
  * TkWaylandMenuGetDepth --
  *
- *      Returns the current menu stack depth.
+ *     Returns the current menu stack depth.
  *
  * Results:
- *      Current depth of the menu stack.
+ *     Current depth of the menu stack.
  *
  * Side effects:
- *      None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -4690,20 +4704,20 @@ TkWaylandMenuGetDepth(void)
  *
  * TkWaylandMenuStackRootIsMenubar --
  *
- *      Returns true if the currently posted menu chain (if any) is
- *      rooted at a real menubar cascade (posted via
- *      TkWaylandMenubarMove/TkWaylandMenubarActivateFirst), as opposed
- *      to being rooted at a menubutton's -menu or a right-click context
- *      menu. Used by keyboard navigation to decide whether Left/Right at
- *      the top of the chain should hand off to the menubar or stay
- *      self-contained within the current popup.
+ *     Returns true if the currently posted menu chain (if any) is
+ *     rooted at a real menubar cascade (posted via
+ *     TkWaylandMenubarMove/TkWaylandMenubarActivateFirst), as opposed
+ *     to being rooted at a menubutton's -menu or a right-click context
+ *     menu. Used by keyboard navigation to decide whether Left/Right at
+ *     the top of the chain should hand off to the menubar or stay
+ *     self-contained within the current popup.
  *
  * Results:
- *      1 if rooted at the menubar, 0 otherwise (including when nothing
- *      is posted).
+ *     1 if rooted at the menubar, 0 otherwise (including when nothing
+ *     is posted).
  *
  * Side effects:
- *      None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -4722,13 +4736,13 @@ TkWaylandMenuStackRootIsMenubar(void)
  *
  * TkWaylandMenuPopToDepth --
  *
- *      Pop the menu stack down to the specified depth.
+ *     Pop the menu stack down to the specified depth.
  *
  * Results:
- *      None.
+ *     None.
  *
  * Side effects:
- *      Destroys all menus above the specified depth.
+ *     Destroys all menus above the specified depth.
  *
  *---------------------------------------------------------------------------
  */
@@ -4744,13 +4758,13 @@ TkWaylandMenuPopToDepth(int depth)
  *
  * TkWaylandMenuGetParentWindow --
  *
- *      Returns the Tk_Window of the parent menu (depth-1).
+ *     Returns the Tk_Window of the parent menu (depth-1).
  *
  * Results:
- *      Tk_Window of parent menu, or NULL if none.
+ *     Tk_Window of parent menu, or NULL if none.
  *
  * Side effects:
- *      None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
@@ -4771,19 +4785,19 @@ TkWaylandMenuGetParentWindow(void)
  *
  * TkWaylandWmUpdateGeom --
  *
- * Notify the WM layer that geometry has changed and schedule an
- * UpdateGeometryInfo idle pass.
+ *     Notify the WM layer that geometry has changed and schedule an
+ *     UpdateGeometryInfo idle pass.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Sets WM_UPDATE_SIZE_HINTS and schedules geometry update.
+ *     Sets WM_UPDATE_SIZE_HINTS and schedules geometry update.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
+static void
 TkWaylandWmUpdateGeom(
     WmInfo *wmPtr,
     TkWindow *winPtr)
@@ -4824,13 +4838,13 @@ TkWaylandWmUpdateGeom(
  *
  * TkWaylandWmUpdateGeometryInfo --
  *
- * Idle callback to update window geometry.
+ *     Idle callback to update window geometry.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Updates the window geometry.
+ *     Updates the window geometry.
  *
  *----------------------------------------------------------------------
  */
@@ -4862,13 +4876,13 @@ TkWaylandWmUpdateGeometryInfo(
  *
  * TkWaylandPostVirtualEvent --
  *
- * Post a virtual event (like <<MenuDone>>) on the given window.
+ *     Post a virtual event (like <<MenuDone>>) on the given window.
  *
  * Results:
- * None.
+ *     None.
  *
  * Side effects:
- * Posts the virtual event to Tk's event system.
+ *     Posts the virtual event to Tk's event system.
  *
  *----------------------------------------------------------------------
  */
@@ -4929,13 +4943,13 @@ TkWaylandPostVirtualEvent(
  *
  * TkWaylandMenuActive --
  *
- *      Returns non-zero if any menu popup is currently posted.
+ *     Returns non-zero if any menu popup is currently posted.
  *
  * Results:
- *      1 if menu stack is non-empty, 0 otherwise.
+ *     1 if menu stack is non-empty, 0 otherwise.
  *
  * Side effects:
- *      None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -4950,13 +4964,13 @@ TkWaylandMenuActive(void)
  *
  * TkWaylandMenuGetTopmostWindow --
  *
- *      Returns the Tk_Window of the topmost posted menu, or NULL if none.
+ *     Returns the Tk_Window of the topmost posted menu, or NULL if none.
  *
  * Results:
- *      Tk_Window of the topmost menu, or NULL.
+ *     Tk_Window of the topmost menu, or NULL.
  *
  * Side effects:
- *      None.
+ *     None.
  *----------------------------------------------------------------------
  */
 
@@ -4974,16 +4988,16 @@ TkWaylandMenuGetTopmostWindow(void)
  *
  * TkWaylandMenubarActivateFirst --
  *
- *      Activate the first usable entry in the menubar (typically for
- *      keyboard menu activation, e.g. Alt or F10) and post its cascade
- *      menu if it is a CASCADE_ENTRY.
+ *     Activate the first usable entry in the menubar (typically for
+ *     keyboard menu activation, e.g. Alt or F10) and post its cascade
+ *     menu if it is a CASCADE_ENTRY.
  *
  * Results:
- *      Returns 1 if a menubar entry was activated (and possibly posted),
- *      0 if there is no menubar or no usable entries.
+ *     Returns 1 if a menubar entry was activated (and possibly posted),
+ *     0 if there is no menubar or no usable entries.
  *
  * Side effects:
- *      Activates an entry in the menubar and may post a top-level menu.
+ *     Activates an entry in the menubar and may post a top-level menu.
  *
  *---------------------------------------------------------------------------
  */
@@ -4993,20 +5007,20 @@ TkWaylandMenuGetTopmostWindow(void)
  *
  * MenubarPostCascadeAtEntry --
  *
- *      Shared helper that posts the top-level cascade menu associated
- *      with a menubar entry (if it is a CASCADE_ENTRY). Used both when
- *      first activating the menubar (F10/Alt) and when moving between
- *      menubar entries with the Left/Right arrow keys, so that the
- *      newly-highlighted entry's dropdown replaces the one that was
- *      just closed.
+ *     Shared helper that posts the top-level cascade menu associated
+ *     with a menubar entry (if it is a CASCADE_ENTRY). Used both when
+ *     first activating the menubar (F10/Alt) and when moving between
+ *     menubar entries with the Left/Right arrow keys, so that the
+ *     newly-highlighted entry's dropdown replaces the one that was
+ *     just closed.
  *
  * Results:
- *      Returns 1 if a cascade was posted, 0 otherwise (e.g. the entry
- *      is not a cascade, or its menu reference could not be resolved).
+ *     Returns 1 if a cascade was posted, 0 otherwise (e.g. the entry
+ *     is not a cascade, or its menu reference could not be resolved).
  *
  * Side effects:
- *      Posts cascadePtr as a root-level menu popup anchored below the
- *      menubar entry.
+ *     Posts cascadePtr as a root-level menu popup anchored below the
+ *     menubar entry.
  *
  *---------------------------------------------------------------------------
  */
@@ -5106,10 +5120,10 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
  *     Move left/right on the menubar. If any submenu is open, close it first.
  *
  * Results:
- *      Next or previous menubar entry activated. 
+ *     Next or previous menubar entry activated.
  *
  * Side effects:
- *      None.
+ *     None.
  *
  *---------------------------------------------------------------------------
  */
