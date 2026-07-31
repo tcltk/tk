@@ -361,25 +361,55 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-
-#if 1
-    printf("Tk_ClipDrawableToRect: %dx%d+%d+%d\n", width, height, x, y);
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    if (glfwWindow == NULL) {
+	return;
+    }
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
-    //// Should check for NULL
+    if (glfwInfoPtr == NULL) {
+	return;
+    }
+
+    glfwMakeContextCurrent(glfwWindow);
+
     if (width == -1 || height == -1) {
-	fprintf(stderr, "Finished double buffer section\n");
+	/*
+	 * End of the double-buffered section.  Clear the pending clip and
+	 * let TkWaylandBeginDraw stop intersecting it in, blit the
+	 * backing-store framebuffer to the screen, and let the normal
+	 * display/swap cycle resume.
+	 */
+	glfwInfoPtr->hasPendingClip = 0;
 	renderFBO(glfwWindow);
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
     } else {
-	fprintf(stderr, "Starting double buffer section ====> \n");
+	/*
+	 * Start of the double-buffered section.  In addition to
+	 * suppressing swaps until the matching call with width = height =
+	 * -1, restrict all rendering -- both whatever the caller draws
+	 * directly and any NanoVG drawing done via the generic code in
+	 * between -- to the caller's rectangle.  Without this, drawing
+	 * done between the two calls can bleed outside of the rectangle
+	 * that the generic code believes is the only thing being
+	 * repainted, producing stray artifacts elsewhere in the widget --
+	 * this is the primary clip path canvas item drawing relies on.
+	 *
+	 * This is recorded here and applied later by TkWaylandBeginDraw
+	 * via nvgIntersectScissor, in the same local (unscaled) coordinate
+	 * units as the rest of this port's NanoVG calls -- not as a raw GL
+	 * scissor, which NanoVG's GL renderer can reset internally during
+	 * nvgEndFrame without our involvement.
+	 */
+	glfwInfoPtr->pendingClipX = (float) x;
+	glfwInfoPtr->pendingClipY = (float) y;
+	glfwInfoPtr->pendingClipW = (float) width;
+	glfwInfoPtr->pendingClipH = (float) height;
+	glfwInfoPtr->hasPendingClip = 1;
+
 	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
 	glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
     }
-#else
-    (void) drawable;
-#endif
 }
 
 /*
@@ -953,10 +983,31 @@ TkWaylandBeginDraw(
     /*
      * Import our graphics context and translate to the origin
      * of the window we are drawing into.
+     *
+     * The translate must happen first: TkWaylandApplyGC may install an
+     * nvgScissor clip from the GC, and nvgScissor bakes in whatever
+     * transform is active at the moment it's called.  The GC's clip
+     * rectangle (set via XSetClipRectangles) is expressed in the same
+     * local coordinates as the drawing calls that follow, so the
+     * translation to those local coordinates has to be in effect first.
      */
-
-    TkWaylandApplyGC(dcPtr->vg, gc);
     nvgTranslate(dcPtr->vg, x, y);
+    TkWaylandApplyGC(dcPtr->vg, gc);
+
+    /*
+     * If a canvas-style clip section is open (Tk_ClipDrawableToRect was
+     * called with a real rectangle and hasn't yet been closed with
+     * width = height = -1), intersect it into whatever scissor
+     * TkWaylandApplyGC just set up.  Using nvgIntersectScissor rather
+     * than nvgScissor means a GC clip and a Tk_ClipDrawableToRect clip
+     * active at the same time combine correctly instead of one
+     * silently overriding the other.
+     */
+    if (infoPtr->hasPendingClip) {
+        nvgIntersectScissor(dcPtr->vg,
+            infoPtr->pendingClipX, infoPtr->pendingClipY,
+            infoPtr->pendingClipW, infoPtr->pendingClipH);
+    }
 
     return TCL_OK;
 }
@@ -1230,6 +1281,7 @@ TkWaylandApplyGC(NVGcontext *vg, GC gc)
 {
     XGCValues v;
     NVGcolor  c;
+    XRectangle clip;
 
     if (!vg || !gc || shutdownInProgress) return;
 
@@ -1248,6 +1300,25 @@ TkWaylandApplyGC(NVGcontext *vg, GC gc)
         case JoinRound: nvgLineJoin(vg, NVG_ROUND); break;
         case JoinBevel: nvgLineJoin(vg, NVG_BEVEL); break;
         default:        nvgLineJoin(vg, NVG_MITER); break;
+    }
+
+    /*
+     * Apply any clip set on this GC by XSetClipRectangles/XSetClipOrigin
+     * or XSetClipMask.  NanoVG's scissor clip is a single rectangle, so
+     * TkWaylandGCClipBounds (tkWaylandXlib.c) reduces multiple clip
+     * rectangles to their bounding box -- exact for the single-rectangle
+     * case, which covers ordinary Tk drawing, including the highlight/
+     * selection background fills the text and entry widgets set via
+     * XSetClipRectangles.  This relies on the caller's translation to
+     * the widget's local origin already being in effect (see
+     * TkWaylandBeginDraw), since nvgScissor bakes in whatever transform
+     * is current when it's called.
+     */
+    if (TkWaylandGCClipBounds(gc, &clip)) {
+        nvgScissor(vg, (float) clip.x, (float) clip.y,
+                   (float) clip.width, (float) clip.height);
+    } else {
+        nvgResetScissor(vg);
     }
 }
 

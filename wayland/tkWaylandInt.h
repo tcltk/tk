@@ -324,6 +324,20 @@ typedef struct glfwTkInfo {
     TkWindow *winPtr;
     NVGcontext *vg;
     unsigned int flags;
+    /*
+     * Set by Tk_ClipDrawableToRect while a clip section is open (between
+     * the call with a real rectangle and the matching call with
+     * width = height = -1).  Consulted by TkWaylandBeginDraw, which
+     * intersects it into the NanoVG scissor via nvgIntersectScissor.
+     * This has to be applied through NanoVG's own scissor mechanism
+     * rather than raw GL_SCISSOR_TEST: NanoVG's GL renderer manages GL
+     * state itself during nvgEndFrame and isn't obliged to preserve a
+     * scissor test enabled out from under it, so a bare glEnable/
+     * glScissor pair set before the frame is not guaranteed to survive
+     * to the actual draw calls.
+     */
+    int hasPendingClip;
+    float pendingClipX, pendingClipY, pendingClipW, pendingClipH;
     struct glfwTkInfo *nextPtr;
 } glfwTkInfo;
 
@@ -362,6 +376,14 @@ typedef struct {
  *----------------------------------------------------------------------
  */
 
+/*
+ * Maximum number of rectangles retained per GC by XSetClipRectangles.
+ * Tk's own callers (mainly the text and entry widgets, drawing
+ * selection/highlight backgrounds) pass only a handful of rectangles at a
+ * time, so a small fixed array avoids an allocation on every clip change.
+ */
+#define TKWL_MAX_CLIP_RECTS 32
+
 typedef struct TkWaylandGC {
     unsigned long foreground; /* Foreground color (pixel value) */
     unsigned long background; /* Background color (pixel value) */
@@ -372,6 +394,20 @@ typedef struct TkWaylandGC {
     int           fill_rule;  /* EvenOddRule or WindingRule */
     int           arc_mode;   /* ArcChord or ArcPieSlice */
     void         *font;       /* Font handle (reserved) */
+
+    /*
+     * Clip state, set by XSetClipOrigin/XSetClipRectangles/XSetClipMask
+     * and consulted by TkWaylandApplyGC before drawing.  Since NanoVG's
+     * scissor clip is a single rectangle, multiple rectangles are
+     * combined into their bounding box; this is exact for the common
+     * case of a single clip rectangle and a safe (if slightly loose)
+     * over-approximation otherwise.
+     */
+    int           hasClip;              /* Non-zero if a clip is set. */
+    int           clipXOrigin;          /* From XSetClipOrigin. */
+    int           clipYOrigin;
+    XRectangle    clipRects[TKWL_MAX_CLIP_RECTS];
+    int           numClipRects;
 } TkWaylandGC;
 
 /*
@@ -853,6 +889,13 @@ MODULE_SCOPE int XRestackWindows(Display *display, Window *windows, int nwindows
 
 MODULE_SCOPE void XSetWMName(Display *display, Window window, XTextProperty *text_prop);
 MODULE_SCOPE void XSetWMIconName(Display *display, Window window, XTextProperty *text_prop);
+
+/*
+ * Reduces a GC's clip rectangles (set via XSetClipRectangles/XSetClipMask)
+ * to the single bounding box NanoVG's scissor clip can express. Used by
+ * TkWaylandApplyGC before drawing with the GC.
+ */
+MODULE_SCOPE bool TkWaylandGCClipBounds(GC gc, XRectangle *rectOut);
 
 /*
  *----------------------------------------------------------------------

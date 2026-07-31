@@ -239,6 +239,10 @@ TkWaylandCreateGC(
     gc->fill_rule  = WindingRule;
     gc->arc_mode   = ArcPieSlice;
     gc->font       = NULL;
+    gc->hasClip       = 0;
+    gc->clipXOrigin   = 0;
+    gc->clipYOrigin   = 0;
+    gc->numClipRects  = 0;
 
     /* Override with caller-supplied values. */
     if (values != NULL) {
@@ -386,6 +390,19 @@ TkWaylandCopyGC(
     /* Read from src, write to dst via the canonical helpers. */
     TkWaylandGetGCValues(src, valuemask, &tmp);
     TkWaylandChangeGC(dst, valuemask, &tmp);
+
+    /*
+     * Clip state isn't part of XGCValues/valuemask in this port (it's set
+     * separately via XSetClipRectangles/XSetClipMask), but a copied GC
+     * should still behave like the one it was copied from.
+     */
+    TkWaylandGC *srcPtr = (TkWaylandGC *) src;
+    TkWaylandGC *dstPtr = (TkWaylandGC *) dst;
+    dstPtr->hasClip = srcPtr->hasClip;
+    dstPtr->clipXOrigin = srcPtr->clipXOrigin;
+    dstPtr->clipYOrigin = srcPtr->clipYOrigin;
+    dstPtr->numClipRects = srcPtr->numClipRects;
+    memcpy(dstPtr->clipRects, srcPtr->clipRects, sizeof(srcPtr->clipRects));
 
     return true;
 }

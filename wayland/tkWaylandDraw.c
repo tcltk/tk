@@ -973,32 +973,160 @@ TkpDrawFrameEx(
  *
  * TkScrollWindow --
  *
- *	Scroll a rectangular area of a window.
- *	Returns 1 (True) — the exposed region is handled by a subsequent
- *	expose event that Tk will generate.
+ *	Scrolls a rectangle of a window's content by (dx, dy) so already-
+ *	rendered pixels can be reused instead of redrawn.  This is what
+ *	makes scrolling in the text and entry widgets smooth instead of
+ *	requiring a full repaint on every line of scroll.
+ *
+ *	This port keeps each toplevel's content in a single NanoVG-managed
+ *	framebuffer (see tkWaylandSubwindows.c/tkWaylandInit.c), and its
+ *	Region machinery is entirely unimplemented (XCreateRegion always
+ *	returns NULL; XUnionRectWithRegion is a no-op) -- there is no X
+ *	server generating real Expose events for us either.  The previous
+ *	version of this function relied on that ("the exposed region is
+ *	handled by a subsequent expose event that Tk will generate"), but
+ *	nothing here ever generates one, and no pixels were ever actually
+ *	moved: the result is stale content sitting in the scrolled-away
+ *	position until an unrelated full redraw happens to paint over it,
+ *	which is exactly the artifact this work is meant to fix.
+ *
+ *	Instead, this function performs the pixel copy itself and directly
+ *	queues expose events (TkWaylandQueueExposeEvent) for the strip(s)
+ *	vacated by the move, which is how this backend already tells the
+ *	generic display code "this needs to be redrawn" elsewhere (see
+ *	Tk_ClipDrawableToRect).  damageRgn is still updated defensively so
+ *	that a future real Region implementation continues to work without
+ *	changes here.
  *
  * Results:
- *	Always returns 1 (True).
+ *	Returns true if any pixels were left needing a redraw (dx or dy
+ *	nonzero and the window has a backing framebuffer), false otherwise.
  *
  * Side effects:
- *	None.
+ *	Copies pixels within the window's backing-store framebuffer and
+ *	queues expose events for the newly uncovered rectangle(s).
  *
  *----------------------------------------------------------------------
  */
 
 bool
 TkScrollWindow(
-    TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(TkRegion))
+    Tk_Window tkwin,
+    TCL_UNUSED(GC),          /* Not needed -- this is a raw pixel copy, not
+                              * a GC-styled drawing operation. */
+    int x, int y, int width, int height,
+    int dx, int dy,
+    TkRegion damageRgn)
 {
-    return 1;
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    Drawable drawable = TkWaylandDrawableForTkWindow(winPtr);
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+
+    if (glfwWindow == NULL || (dx == 0 && dy == 0)) {
+        return false;
+    }
+
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (infoPtr == NULL || infoPtr->winPtr == NULL) {
+        return false;
+    }
+    NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
+    if (fb == NULL) {
+        return false;
+    }
+
+    float scale;
+    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
+    NVGcontext *vg = infoPtr->vg;
+
+    int srcX = (int) (x * scale);
+    int srcY = (int) (y * scale);
+    int w    = (int) (width * scale);
+    int h    = (int) (height * scale);
+    int dstX = srcX + (int) (dx * scale);
+    int dstY = srcY + (int) (dy * scale);
+
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    /* Framebuffer y is bottom-left-origin; Tk's x/y are top-left-origin. */
+    int glSrcY = fbHeight - srcY - h;
+    int glDstY = fbHeight - dstY - h;
+
+    /*
+     * glBlitFramebuffer's behavior is undefined when the source and
+     * destination are the same framebuffer with overlapping rectangles
+     * -- which scrolling by less than the viewport size guarantees here
+     * -- so stage the copy through a temporary FBO rather than blitting
+     * fb->fbo onto itself directly.
+     */
+    glfwMakeContextCurrent(glfwWindow);
+    NVGLUframebuffer *staging = nvgluCreateFramebuffer(vg, w, h, 0);
+    if (staging == NULL) {
+        return false;
+    }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, staging->fbo);
+    glBlitFramebuffer(srcX, glSrcY, srcX + w, glSrcY + h,
+                       0, 0, w, h,
+                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, staging->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb->fbo);
+    glBlitFramebuffer(0, 0, w, h,
+                       dstX, glDstY, dstX + w, glDstY + h,
+                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    nvgluDeleteFramebuffer(staging);
+
+    /*
+     * Queue expose events for the strip(s) uncovered by the move.
+     *
+     * The blit above works in scaled framebuffer pixels while these
+     * rectangles are in logical (unscaled) coordinates; at a fractional
+     * content scale (125%, 150%, ...) independently rounding each edge
+     * of the blit's source/dest rectangles can leave the seam between
+     * "already correctly blitted" and "freshly exposed" off by a
+     * fractional logical pixel. Pad each exposed strip by 1 logical
+     * pixel back into the blitted region so that seam is always
+     * repainted with the new content rather than left as a stale line.
+     */
+    if (dx > 0) {
+        TkWaylandQueueExposeEvent(winPtr, x, y, dx + 1, height);
+    } else if (dx < 0) {
+        int ex = x + width + dx - 1;
+        TkWaylandQueueExposeEvent(winPtr, ex, y, -dx + 1, height);
+    }
+    if (dy > 0) {
+        TkWaylandQueueExposeEvent(winPtr, x, y, width, dy + 1);
+    } else if (dy < 0) {
+        int ey = y + height + dy - 1;
+        TkWaylandQueueExposeEvent(winPtr, x, ey, width, -dy + 1);
+    }
+
+    /* Best-effort region bookkeeping for forward compatibility. */
+    if (damageRgn != NULL) {
+        XRectangle rect;
+        if (dx != 0) {
+            rect.x = (dx > 0) ? x : x + width + dx;
+            rect.y = y;
+            rect.width = (dx > 0) ? dx : -dx;
+            rect.height = height;
+            XUnionRectWithRegion(&rect, (Region) damageRgn, (Region) damageRgn);
+        }
+        if (dy != 0) {
+            rect.x = x;
+            rect.y = (dy > 0) ? y : y + height + dy;
+            rect.width = width;
+            rect.height = (dy > 0) ? dy : -dy;
+            XUnionRectWithRegion(&rect, (Region) damageRgn, (Region) damageRgn);
+        }
+    }
+
+    infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+    return true;
 }
 
 /*
