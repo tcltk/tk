@@ -618,9 +618,11 @@ LookUpColor(
     if (fontPtr->ncolors < MAX_CACHED_COLORS) {
 	last2 = -1;
 	last  = fontPtr->ncolors++;
-    } else {
-	return NULL;
     }
+    /* 
+     * If cache is full -- 'last' is already the LRU tail slot,
+     * 'last2' its predecessor, from the search loop above; reuse it. 
+     */
 
     xcolor.pixel = pixel;
     XQueryColor(display, fontPtr->colormap, &xcolor);
