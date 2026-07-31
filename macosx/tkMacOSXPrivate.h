@@ -440,6 +440,9 @@ VISIBILITY_HIDDEN
 @property Tk_Window tk_win;
 @end
 
+MODULE_SCOPE TkAccessibilityElement *TkAccessibility_GetElementForWindow(
+			    Tk_Window tkwin);
+
 
 @interface NSWindow(TKWm)
 - (NSPoint) tkConvertPointToScreen:(NSPoint)point;

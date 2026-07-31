@@ -1408,6 +1408,41 @@ NSMutableArray *_tkAccessibleElements;
     NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
 }
 
+/*
+ * Report which accessibility element holds the keyboard focus.
+ *
+ * Without this, AXFocusedUIElement resolves to the window, so an assistive
+ * client is never told that a particular widget has focus and never asks that
+ * widget anything -- the text protocol on an entry goes unqueried no matter
+ * how correctly it answers.
+ *
+ * Tk owns the focus, so ask Tk. Evaluating a Tcl command from an accessibility
+ * callback is what forceFocus and accessibilityValue already do.
+ */
+- (id)accessibilityFocusedUIElement {
+    TkMainInfo *info = TkGetMainInfoList();
+
+    if (!info || !info->interp) {
+	return nil;
+    }
+    if (Tcl_EvalEx(info->interp, "focus", -1, TCL_EVAL_GLOBAL) != TCL_OK) {
+	return nil;
+    }
+
+    const char *path = Tcl_GetStringResult(info->interp);
+    if (!path || *path == '\0') {
+	return nil;
+    }
+
+    Tk_Window focusWin = Tk_NameToWindow(info->interp, path,
+					 Tk_MainWindow(info->interp));
+    if (!focusWin) {
+	return nil;
+    }
+
+    return TkAccessibility_GetElementForWindow(focusWin);
+}
+
 - (BOOL)accessibilityIsIgnored {
     return YES;
 }

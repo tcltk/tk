@@ -1211,6 +1211,16 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	# Capture text selection in entry widgets.
 	bind Entry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind TEntry <KeyPress> {+::tk::accessible::_updateselection %W}
+	# Arrow keys never reach <KeyPress>. Two separate reasons: entry.tcl and
+	# ttk/entry.tcl rebind <Key> without a leading plus after this file is
+	# sourced, which discards the appended script; and even when it survives,
+	# the virtual events <<PrevChar>>/<<NextChar>> outrank the generic <Key>
+	# on the same bind tag, so only they run. <KeyRelease> escapes both -- the
+	# widget libraries never bind it, and the virtual events hang off KeyPress
+	# -- and it fires after the caret has already moved, which is when the
+	# position is worth reading. This mirrors the Windows IA2 branch.
+	bind Entry <KeyRelease> {+::tk::accessible::_updateselection %W}
+	bind TEntry <KeyRelease> {+::tk::accessible::_updateselection %W}
 	bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
 	bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
 	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}

@@ -683,6 +683,195 @@ void PostAccessibilityAnnouncement(NSString *message)
 }
 
 
+/*
+ * Text protocol.
+ *
+ * VoiceOver decides granularity -- character, word, line -- by querying these
+ * methods. The application does not choose what is spoken; it only answers
+ * questions about its text. See NSAccessibilityNavigableStaticText.
+ *
+ * PROTOTYPE: entries only (kAXTextFieldRole). The Text widget uses line.char
+ * indices and needs its own mapping, which is not attempted here.
+ */
+
+/* Is this element a single-line entry we can answer text queries for? */
+- (BOOL) tkIsEntryRole
+{
+    CFStringRef role = (__bridge CFStringRef) self.accessibilityRole;
+    return (role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo);
+}
+
+/* Current contents. Nil when this element is not an entry. */
+- (NSString *) tkEntryString
+{
+    if (![self tkIsEntryRole]) {
+	return nil;
+    }
+    id value = self.accessibilityValue;
+    return [value isKindOfClass:[NSString class]] ? (NSString *)value : nil;
+}
+
+/*
+ * Evaluate "<path> index <index>" and return the result, or -1. Follows the
+ * pattern already used by accessibilityValue and accessibilityRowCount.
+ */
+- (NSInteger) tkEntryIndex: (const char *) index
+{
+    Tk_Window win = self.tk_win;
+    if (!win) {
+	return -1;
+    }
+    Tcl_Interp *interp = Tk_Interp(win);
+    if (!interp) {
+	return -1;
+    }
+
+    /* sel.first raises an error when nothing is selected, hence the catch. */
+    Tcl_Obj *cmd = Tcl_ObjPrintf("catch {%s index %s} tk_ax_i",
+				 Tk_PathName(win), index);
+    Tcl_IncrRefCount(cmd);
+    int code = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(cmd);
+    if (code != TCL_OK || strcmp(Tcl_GetStringResult(interp), "0") != 0) {
+	return -1;
+    }
+
+    const char *val = Tcl_GetVar(interp, "tk_ax_i", TCL_GLOBAL_ONLY);
+    if (!val) {
+	return -1;
+    }
+    return (NSInteger) strtol(val, NULL, 10);
+}
+
+/* Caret, or the selection when one exists. */
+- (NSRange) tkSelectedRange
+{
+    NSString *s = [self tkEntryString];
+    if (!s) {
+	return NSMakeRange(NSNotFound, 0);
+    }
+
+    NSInteger first = [self tkEntryIndex: "sel.first"];
+    NSInteger last  = [self tkEntryIndex: "sel.last"];
+    if (first >= 0 && last >= first) {
+	if ((NSUInteger) last > s.length) {
+	    last = (NSInteger) s.length;
+	}
+	return NSMakeRange((NSUInteger) first, (NSUInteger)(last - first));
+    }
+
+    NSInteger insert = [self tkEntryIndex: "insert"];
+    if (insert < 0) {
+	return NSMakeRange(NSNotFound, 0);
+    }
+    if ((NSUInteger) insert > s.length) {
+	insert = (NSInteger) s.length;
+    }
+    return NSMakeRange((NSUInteger) insert, 0);
+}
+
+- (NSInteger) accessibilityNumberOfCharacters
+{
+    NSString *s = [self tkEntryString];
+    return s ? (NSInteger) s.length : 0;
+}
+
+- (NSString *) accessibilitySelectedText
+{
+    NSString *s = [self tkEntryString];
+    NSRange r = [self tkSelectedRange];
+    if (!s || r.location == NSNotFound || NSMaxRange(r) > s.length) {
+	return nil;
+    }
+    return [s substringWithRange: r];
+}
+
+- (NSRange) accessibilitySelectedTextRange
+{
+    NSRange r = [self tkSelectedRange];
+    return (r.location == NSNotFound) ? NSMakeRange(0, 0) : r;
+}
+
+/* VoiceOver moving the caret: VO+Shift+arrow, text review, braille routing. */
+- (void) setAccessibilitySelectedTextRange: (NSRange) range
+{
+    Tk_Window win = self.tk_win;
+    NSString *s = [self tkEntryString];
+    if (!win || !s || NSMaxRange(range) > s.length) {
+	return;
+    }
+    Tcl_Interp *interp = Tk_Interp(win);
+    if (!interp) {
+	return;
+    }
+
+    const char *path = Tk_PathName(win);
+    Tcl_Obj *cmd;
+    if (range.length == 0) {
+	cmd = Tcl_ObjPrintf("%s selection clear; %s icursor %ld",
+			    path, path, (long) range.location);
+    } else {
+	cmd = Tcl_ObjPrintf("%s selection range %ld %ld; %s icursor %ld",
+			    path, (long) range.location,
+			    (long) NSMaxRange(range), path,
+			    (long) NSMaxRange(range));
+    }
+    Tcl_IncrRefCount(cmd);
+    Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(cmd);
+}
+
+- (NSRange) accessibilityVisibleCharacterRange
+{
+    NSString *s = [self tkEntryString];
+    return s ? NSMakeRange(0, s.length) : NSMakeRange(0, 0);
+}
+
+- (NSString *) accessibilityStringForRange: (NSRange) range
+{
+    NSString *s = [self tkEntryString];
+    if (!s || NSMaxRange(range) > s.length) {
+	return nil;
+    }
+    return [s substringWithRange: range];
+}
+
+- (NSAttributedString *) accessibilityAttributedStringForRange: (NSRange) range
+{
+    NSString *sub = [self accessibilityStringForRange: range];
+    return sub ? [[NSAttributedString alloc] initWithString: sub] : nil;
+}
+
+/* An entry is a single line, so every index is on line 0. */
+- (NSInteger) accessibilityLineForIndex: (NSInteger) index
+{
+    (void) index;
+    return [self tkEntryString] ? 0 : -1;
+}
+
+- (NSRange) accessibilityRangeForLine: (NSInteger) line
+{
+    NSString *s = [self tkEntryString];
+    if (!s || line != 0) {
+	return NSMakeRange(NSNotFound, 0);
+    }
+    return NSMakeRange(0, s.length);
+}
+
+- (NSRange) accessibilityRangeForIndex: (NSInteger) index
+{
+    NSString *s = [self tkEntryString];
+    if (!s || index < 0 || (NSUInteger) index >= s.length) {
+	return NSMakeRange(NSNotFound, 0);
+    }
+    return NSMakeRange((NSUInteger) index, 1);
+}
+
+- (NSInteger) accessibilityInsertionPointLineNumber
+{
+    return [self tkEntryString] ? 0 : -1;
+}
+
 - (void) forceFocus
 {
 
@@ -948,13 +1137,23 @@ static int EmitSelectionChanged(
     if ((role && CFStringCompare(role, kAXTextFieldRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
 
-	NSString *announcement = widget.accessibilityValue;
-	if (announcement && [announcement length] > 0) {
-	    /* Delay slightly to ensure the value is fully updated. */
-	    dispatch_async(dispatch_get_main_queue(), ^{
-		    PostAccessibilityAnnouncement(announcement);
-		});
-	}
+	/*
+	 * PROTOTYPE: post a real notification instead of forcing speech.
+	 *
+	 * This used to hand VoiceOver the entire value through
+	 * NSAccessibilityAnnouncementRequestedNotification, which speaks a
+	 * string and nothing more: it fires whether or not the caret moved,
+	 * it cannot express character/word/line granularity, and it reaches
+	 * neither braille displays nor the VoiceOver cursor.
+	 *
+	 * SelectedTextChanged says only that the selection moved. VoiceOver
+	 * then asks the text protocol methods above what changed and decides
+	 * for itself what to speak.
+	 */
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSAccessibilityPostNotification(
+		    widget, NSAccessibilitySelectedTextChangedNotification);
+	    });
     } else {
 	/* Existing behavior for other widgets */
 	NSAccessibilityPostNotification(widget, NSAccessibilityValueChangedNotification);
