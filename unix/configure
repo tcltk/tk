@@ -682,19 +682,20 @@ ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
 CUPS_CFLAGS
+XRENDER_LIBS
+XRENDER_CFLAGS
 FONTSYSTEM
-UNIX_FONT_OBJS
-BIDI_CFLAGS
 HB_LIBS
 HB_CFLAGS
+UNIX_FONT_OBJS
+BIDI_CFLAGS
 XFT_LIBS
 XFT_CFLAGS
 XMKMF
 WAYLAND_LDFLAGS
 HAVE_WAYLAND
-TEXT_INPUT_XML
-WAYLAND_SCANNER
-NANOVG_LIBS
+WL_PASTE
+WL_COPY
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
 SDBUSD_LIBS
@@ -707,8 +708,10 @@ GLFW_LIBS
 GLFW_CFLAGS
 XKBCOMMON_LIBS
 XKBCOMMON_CFLAGS
-WAYLAND_LIBS
-WAYLAND_CFLAGS
+WAYLAND_CLIENT_LIBS
+WAYLAND_CLIENT_CFLAGS
+WAYLAND_EGL_LIBS
+WAYLAND_EGL_CFLAGS
 CPP
 LDFLAGS_DEFAULT
 CFLAGS_DEFAULT
@@ -820,8 +823,9 @@ enable_symbols
 enable_aqua
 enable_wayland
 with_x
-enable_xft
 enable_bidi
+enable_xft
+enable_xrender
 enable_libcups
 enable_xss
 enable_framework
@@ -1477,10 +1481,14 @@ Optional Features:
   --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
   --enable-wayland        use Wayland (with GLFW) instead of X11 (default:
                           off)
+  --enable-bidi           enable bidirectional/RTL text support using
+                          SheenBidi + HarfBuzz (default: yes)
   --enable-xft            use freetype/fontconfig/xft for antialiased fonts
                           (default: yes)
   --enable-bidi           enable bidirectional/RTL text support using
                           SheenBidi + HarfBuzz (forces --enable-xft=yes)
+  --enable-xrender        use Xrender to composite photo images with alpha
+                          (default: yes)
   --enable-libcups        use libcups (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
@@ -7383,6 +7391,11 @@ fi
 #--------------------------------------------------------------------
 #	Include sys/select.h if it exists and if it supplies things
 #	that appear to be useful and aren't already in sys/types.h.
+#	This appears to be true only on the RS/6000 under AIX.  Some
+#	systems like OSF/1 have a sys/select.h that's of no use, and
+#	other systems like SCO UNIX have a sys/select.h that's
+#	pernicious.  If "fd_set" isn't defined anywhere then set a
+#	special flag.
 #--------------------------------------------------------------------
 
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for fd_set in sys/types" >&5
@@ -7983,16 +7996,85 @@ printf '%s\n' "$enable_wayland" >&6; }
         XLIBSW=""
         XINCLUDES=""
 
-        # Wayland-related dependencies
+        #--------------------------------------------------------------------
+        # Check for wayland-egl (HARD dependency)
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-egl >= 1.18" >&5
+printf %s "checking for wayland-egl >= 1.18... " >&6; }
+        if pkg-config --exists "wayland-egl >= 1.18"; then
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+            WAYLAND_EGL_CFLAGS="$(pkg-config --cflags wayland-egl)"
+            WAYLAND_EGL_LIBS="$(pkg-config --libs wayland-egl)"
+            found_wayland_egl=yes
 
+printf '%s\n' "#define HAVE_WAYLAND_EGL 1" >>confdefs.h
+
+        else
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "wayland-egl >= 1.18 is required when building the Wayland backend.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland" "$LINENO" 5
+        fi
+
+
+
+        #--------------------------------------------------------------------
+        # Check for wayland-egl headers (must be present)
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-egl.h header" >&5
+printf %s "checking for wayland-egl.h header... " >&6; }
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+            #include <wayland-egl.h>
+
+int
+main (void)
+{
+
+            struct wl_egl_window *win = NULL;
+            (void)win;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+printf '%s\n' "#define HAVE_WAYLAND_EGL_H 1" >>confdefs.h
+
+
+else case e in #(
+  e)
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "<wayland-egl.h> header not found.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland" "$LINENO" 5
+         ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+
+        # Wayland-related dependencies (client, cursor, protocols)
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-client and wayland-cursor >= 1.18" >&5
 printf %s "checking for wayland-client and wayland-cursor >= 1.18... " >&6; }
         if pkg-config --exists "wayland-client >= 1.18" \
            && pkg-config --exists "wayland-cursor >= 1.18"; then
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
+            WAYLAND_CLIENT_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+            WAYLAND_CLIENT_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
             found_wayland=yes
 
 printf '%s\n' "#define HAVE_WAYLAND 1" >>confdefs.h
@@ -8000,11 +8082,11 @@ printf '%s\n' "#define HAVE_WAYLAND 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            WAYLAND_CFLAGS=""
-            WAYLAND_LIBS=""
-            found_wayland=no
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland client libraries >= 1.18 not found" >&5
-printf '%s\n' "$as_me: Wayland client libraries >= 1.18 not found" >&6;}
+            as_fn_error $? "wayland-client >= 1.18 and wayland-cursor >= 1.18 are required when building the Wayland backend.
+Please install libwayland development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland" "$LINENO" 5
         fi
 
 
@@ -8023,11 +8105,11 @@ printf '%s\n' "#define HAVE_XKBCOMMON 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            XKBCOMMON_CFLAGS=""
-            XKBCOMMON_LIBS=""
-            found_xkbcommon=no
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: xkbcommon >= 0.5.0 not found" >&5
-printf '%s\n' "$as_me: xkbcommon >= 0.5.0 not found" >&6;}
+            as_fn_error $? "xkbcommon >= 0.5.0 is required when building the Wayland backend.
+Please install libxkbcommon development package:
+  - Debian/Ubuntu:   sudo apt install libxkbcommon-dev
+  - Fedora/RHEL:     sudo dnf install libxkbcommon-devel
+  - Arch:            sudo pacman -S libxkbcommon" "$LINENO" 5
         fi
 
 
@@ -8039,7 +8121,8 @@ printf %s "checking for glfw3 >= 3.3 with Wayland support... " >&6; }
 printf '%s\n' "glfw3 found" >&6; }
             GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
             GLFW_LIBS="$(pkg-config --libs glfw3)"
-            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND"
+            GLFW_LIBS="$GLFW_LIBS -lEGL"
+            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND -DGLFW_EXPOSE_NATIVE_EGL"
             if pkg-config --exists wayland-client; then
                 found_glfw=yes
 
@@ -8047,8 +8130,8 @@ printf '%s\n' "#define HAVE_GLFW 1" >>confdefs.h
 
             else
                 found_glfw=no
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: GLFW found but Wayland support not detected (missing wayland-client)" >&5
-printf '%s\n' "$as_me: GLFW found but Wayland support not detected (missing wayland-client)" >&6;}
+                as_fn_error $? "GLFW found but Wayland support not detected (missing wayland-client)
+Please rebuild GLFW with Wayland support enabled." "$LINENO" 5
                 GLFW_CFLAGS=""
                 GLFW_LIBS=""
             fi
@@ -8056,10 +8139,11 @@ printf '%s\n' "$as_me: GLFW found but Wayland support not detected (missing wayl
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: glfw3 not found" >&5
 printf '%s\n' "glfw3 not found" >&6; }
             found_glfw=no
-            GLFW_CFLAGS=""
-            GLFW_LIBS=""
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: glfw3 >= 3.3 not found — backend will be disabled" >&5
-printf '%s\n' "$as_me: glfw3 >= 3.3 not found — backend will be disabled" >&6;}
+            as_fn_error $? "glfw3 >= 3.3 with Wayland support is required when building the Wayland backend.
+Please install GLFW development package with Wayland support:
+  - Debian/Ubuntu:   sudo apt install libglfw3-dev
+  - Fedora/RHEL:     sudo dnf install glfw-devel
+  - Arch:            sudo pacman -S glfw-wayland" "$LINENO" 5
         fi
 
 
@@ -8178,8 +8262,11 @@ printf '%s\n' "no" >&6; }
                 GLES_CFLAGS=""
                 GLES_LIBS=""
                 found_gles=no
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: OpenGL ES not found — NanoVG rendering will not work" >&5
-printf '%s\n' "$as_me: OpenGL ES not found — NanoVG rendering will not work" >&6;}
+                as_fn_error $? "OpenGL ES (glesv2) is required when building the Wayland backend.
+Please install OpenGL ES development package:
+  - Debian/Ubuntu:   sudo apt install libgles2-mesa-dev
+  - Fedora/RHEL:     sudo dnf install mesa-libGLES-devel
+  - Arch:            sudo pacman -S mesa" "$LINENO" 5
             fi
         fi
 
@@ -8203,8 +8290,11 @@ printf '%s\n' "#define HAVE_SD_BUS 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: sd-bus not found — system tray icon support will be unavailable on Wayland" >&5
-printf '%s\n' "$as_me: sd-bus not found — system tray icon support will be unavailable on Wayland" >&6;}
+            as_fn_error $? "sd-bus (libsystemd) is required when building the Wayland backend.
+Please install libsystemd development package:
+  - Debian/Ubuntu:   sudo apt install libsystemd-dev
+  - Fedora/RHEL:     sudo dnf install systemd-devel
+  - Arch:            sudo pacman -S systemd-libs" "$LINENO" 5
         fi
 
 
@@ -8224,101 +8314,37 @@ printf '%s\n' "#define HAVE_FONTCONFIG 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            FONTCONFIG_CFLAGS=""
-            FONTCONFIG_LIBS=""
-            found_fontconfig=no
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&5
-printf '%s\n' "$as_me: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&6;}
+            as_fn_error $? "fontconfig >= 2.12 is required when building the Wayland backend.
+Please install fontconfig development package:
+  - Debian/Ubuntu:   sudo apt install libfontconfig-dev
+  - Fedora/RHEL:     sudo dnf install fontconfig-devel
+  - Arch:            sudo pacman -S fontconfig" "$LINENO" 5
         fi
 
 
 
-        # NanoVG support (required for rendering)
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for NanoVG library" >&5
-printf %s "checking for NanoVG library... " >&6; }
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for nvgCreateGL3 in -lnanovg" >&5
-printf %s "checking for nvgCreateGL3 in -lnanovg... " >&6; }
-if test ${ac_cv_lib_nanovg_nvgCreateGL3+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lnanovg  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
+        #--------------------------------------------------------------------
+        # NanoVG is bundled in the wayland source tree, so no external check needed.
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: NanoVG will be built from bundled sources in wayland/nanovg.c" >&5
+printf '%s\n' "$as_me: NanoVG will be built from bundled sources in wayland/nanovg.c" >&6;}
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char nvgCreateGL3 (void);
-int
-main (void)
-{
-return nvgCreateGL3 ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_nanovg_nvgCreateGL3=yes
-else case e in #(
-  e) ac_cv_lib_nanovg_nvgCreateGL3=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nanovg_nvgCreateGL3" >&5
-printf '%s\n' "$ac_cv_lib_nanovg_nvgCreateGL3" >&6; }
-if test "x$ac_cv_lib_nanovg_nvgCreateGL3" = xyes
-then :
-
-            have_nanovg_lib=yes
-            NANOVG_LIBS="-lnanovg"
-
-else case e in #(
-  e) have_nanovg_lib=no ;;
-esac
-fi
-
-
-        if test "$have_nanovg_lib" = yes; then
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-            found_nanovg=yes
-        else
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: NanoVG library not found — assuming it will be statically linked or built separately" >&5
-printf '%s\n' "$as_me: NanoVG library not found — assuming it will be statically linked or built separately" >&6;}
-            NANOVG_LIBS=""
-            found_nanovg=no
-        fi
-
-
-        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-scanner" >&5
-printf %s "checking for wayland-scanner... " >&6; }
-        # Extract the first word of "wayland-scanner", so it can be a program name with args.
-set dummy wayland-scanner; ac_word=$2
+        #--------------------------------------------------------------------
+        # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wl-copy and wl-paste" >&5
+printf %s "checking for wl-copy and wl-paste... " >&6; }
+        # Extract the first word of "wl-copy", so it can be a program name with args.
+set dummy wl-copy; ac_word=$2
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_WAYLAND_SCANNER+y}
+if test ${ac_cv_path_WL_COPY+y}
 then :
   printf %s "(cached) " >&6
 else case e in #(
-  e) case $WAYLAND_SCANNER in
+  e) case $WL_COPY in
   [\\/]* | ?:[\\/]*)
-  ac_cv_path_WAYLAND_SCANNER="$WAYLAND_SCANNER" # Let the user override the test with a path.
+  ac_cv_path_WL_COPY="$WL_COPY" # Let the user override the test with a path.
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
@@ -8332,7 +8358,7 @@ do
   esac
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_WAYLAND_SCANNER="$as_dir$ac_word$ac_exec_ext"
+    ac_cv_path_WL_COPY="$as_dir$ac_word$ac_exec_ext"
     printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -8344,79 +8370,107 @@ IFS=$as_save_IFS
 esac ;;
 esac
 fi
-WAYLAND_SCANNER=$ac_cv_path_WAYLAND_SCANNER
-if test -n "$WAYLAND_SCANNER"; then
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WAYLAND_SCANNER" >&5
-printf '%s\n' "$WAYLAND_SCANNER" >&6; }
+WL_COPY=$ac_cv_path_WL_COPY
+if test -n "$WL_COPY"; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WL_COPY" >&5
+printf '%s\n' "$WL_COPY" >&6; }
 else
   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
 fi
 
 
-        if test "x$WAYLAND_SCANNER" = x; then
-            as_fn_error $? "wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)" "$LINENO" 5
+        # Extract the first word of "wl-paste", so it can be a program name with args.
+set dummy wl-paste; ac_word=$2
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_WL_PASTE+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $WL_PASTE in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_WL_PASTE="$WL_PASTE" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_WL_PASTE="$as_dir$ac_word$ac_exec_ext"
+    printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+WL_PASTE=$ac_cv_path_WL_PASTE
+if test -n "$WL_PASTE"; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WL_PASTE" >&5
+printf '%s\n' "$WL_PASTE" >&6; }
+else
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+fi
+
+
+        if test "x$WL_COPY" = x || test "x$WL_PASTE" = x; then
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "wl-copy and wl-paste (from wl-clipboard package) are required for Wayland backend clipboard support.
+
+Please install wl-clipboard:
+  - Debian/Ubuntu:   sudo apt install wl-clipboard
+  - Fedora:          sudo dnf install wl-clipboard
+  - Arch:            sudo pacman -S wl-clipboard" "$LINENO" 5
         fi
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
 
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for text-input-unstable-v3 protocol XML" >&5
-printf %s "checking for text-input-unstable-v3 protocol XML... " >&6; }
-        TEXT_INPUT_XML=""
-        if pkg-config --exists wayland-protocols; then
-            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-            TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-
-printf '%s\n' "#define HAVE_TEXT_INPUT_V3 1" >>confdefs.h
-
-            else
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-                as_fn_error $? "text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-Wayland backend now requires proper IME support via text-input-unstable-v3.
-Install/update wayland-protocols package." "$LINENO" 5
-            fi
-        else
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-            as_fn_error $? "pkg-config package 'wayland-protocols' not found.
-Wayland backend now requires text-input-unstable-v3 for IME support." "$LINENO" 5
-        fi
 
 
-
-
-        # Final check — everything must be present (IME + libdecor are mandatory)
+        # Final check — everything must be present
         if test "$found_wayland" = yes \
+           && test "$found_wayland_egl" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
            && test "$found_libdecor" = yes \
            && test "$found_gles" = yes \
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
-           && test -n "$TEXT_INPUT_XML"; then
+           && test -n "$WL_COPY" \
+           && test -n "$WL_PASTE"; then
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
 
 printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&5
-printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&6;}
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard" >&5
+printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard" >&6;}
         else
             as_fn_error $? "Wayland backend requested but one or more required components missing.
 
 Required (all mandatory when --enable-wayland is used):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
+  - wayland-egl >= 1.18
   - xkbcommon >= 0.5.0
   - glfw3 >= 3.3 with Wayland support
   - libdecor-0 >= 0.1.0
@@ -8424,14 +8478,18 @@ Required (all mandatory when --enable-wayland is used):
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
+  - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev
+    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
+    libwayland-egl1
 " "$LINENO" 5
         fi
     fi
+
+
 
 
 
@@ -8879,7 +8937,19 @@ fi
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries. The order here
 #	is important, so that then end up in the right order in the
-#	command line generated by make.
+#	command line generated by make.  The -lsocket and -lnsl libraries
+#	require a couple of special tricks:
+#	1. Use "connect" and "accept" to check for -lsocket, and
+#	   "gethostbyname" to check for -lnsl.
+#	2. Use each function name only once:  can't redo a check because
+#	   autoconf caches the results of the last check and won't redo it.
+#	3. Use -lnsl and -lsocket only if they supply procedures that
+#	   aren't already present in the normal libraries.  This is because
+#	   IRIX 5.2 has libraries, but they aren't needed and they're
+#	   bogus:  they goof up name resolution if used.
+#	4. On some SVR4 systems, can't use -lsocket without -lnsl too.
+#	   To get around this problem, check for both libraries together
+#	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
@@ -8925,9 +8995,14 @@ fi
 fi
 
 #--------------------------------------------------------------------
-#       One more check related to the X libraries. The standard releases
-#       of Ultrix don't support the "xauth" mechanism, so send won't work
-#       unless TK_NO_SECURITY is defined.
+# One more check related to the X libraries. The standard releases
+# of Ultrix don't support the "xauth" mechanism, so send won't work
+# unless TK_NO_SECURITY is defined.  However, there are usually copies
+# of the MIT X server available as well, which do support xauth.
+# Check for the MIT stuff and use it if it exists.
+#
+# Note: can't use ac_check_lib macro (at least, not in Autoconf 2.1)
+# because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
 if test -d /usr/include/mit -a $tk_aqua = no; then
@@ -8975,7 +9050,162 @@ fi
 #	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
-if test "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
+    #--------------------------------------------------------------------
+    # Wayland bidi path: Xft is irrelevant; SheenBidi + HarfBuzz only.
+    # fontconfig is already checked as part of the Wayland dependency
+    # block above, so we only need to handle --enable-bidi here.
+    #--------------------------------------------------------------------
+    # Xft is an X11 library; it has no role in a Wayland build.
+    # Set both to empty and substitute so tkConfig.sh.in / tk.pc.in expand
+    # to empty strings rather than the raw @XFT_CFLAGS@ token.
+    XFT_CFLAGS=""
+    XFT_LIBS=""
+
+
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable bidirectional (Bidi) text support (Wayland)" >&5
+printf %s "checking whether to enable bidirectional (Bidi) text support (Wayland)... " >&6; }
+    # Check whether --enable-bidi was given.
+if test ${enable_bidi+y}
+then :
+  enableval=$enable_bidi; enable_bidi=$enableval
+else case e in #(
+  e) enable_bidi="yes" ;;
+esac
+fi
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_bidi" >&5
+printf '%s\n' "$enable_bidi" >&6; }
+
+    if test "$enable_bidi" = "yes"; then
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+
+printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
+
+	# Wayland font backend: tkWaylandFont.c handles all text; SheenBidi is
+	# unity-included by it directly.  tkUnixBidiFont.c is X11/Xft-dependent
+	# and must never appear in a Wayland build.
+	UNIX_FONT_OBJS="tkWaylandFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz — hard dependency when --enable-bidi=yes
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for HarfBuzz (required for --enable-bidi on Wayland)" >&5
+printf %s "checking for HarfBuzz (required for --enable-bidi on Wayland)... " >&6; }
+        if pkg-config --exists harfbuzz; then
+            HB_CFLAGS=`pkg-config --cflags harfbuzz`
+            HB_LIBS=`pkg-config --libs harfbuzz`
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+            tk_oldCFlags=$CFLAGS
+            tk_oldLibs=$LIBS
+            CFLAGS="$CFLAGS $HB_CFLAGS"
+            LIBS="$tk_oldLibs $HB_LIBS"
+
+            ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "$ac_includes_default"
+if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
+then :
+
+else case e in #(
+  e)
+                as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
+             ;;
+esac
+fi
+
+
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for hb_buffer_create in -lharfbuzz" >&5
+printf %s "checking for hb_buffer_create in -lharfbuzz... " >&6; }
+if test ${ac_cv_lib_harfbuzz_hb_buffer_create+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lharfbuzz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char hb_buffer_create (void);
+int
+main (void)
+{
+return hb_buffer_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_harfbuzz_hb_buffer_create=yes
+else case e in #(
+  e) ac_cv_lib_harfbuzz_hb_buffer_create=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_harfbuzz_hb_buffer_create" >&5
+printf '%s\n' "$ac_cv_lib_harfbuzz_hb_buffer_create" >&6; }
+if test "x$ac_cv_lib_harfbuzz_hb_buffer_create" = xyes
+then :
+  printf '%s\n' "#define HAVE_LIBHARFBUZZ 1" >>confdefs.h
+
+  LIBS="-lharfbuzz $LIBS"
+
+else case e in #(
+  e)
+                as_fn_error $? "HarfBuzz library (libharfbuzz) not found or unusable" "$LINENO" 5
+             ;;
+esac
+fi
+
+
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+
+            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $HB_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $HB_LIBS"
+        else
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz" "$LINENO" 5
+        fi
+    else
+        BIDI_CFLAGS=""
+        HB_CFLAGS=""
+        HB_LIBS=""
+        UNIX_FONT_OBJS="tkWaylandFont.o"
+    fi
+
+
+
+
+
+    FONTSYSTEM="wayland"
+
+
+elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
   if test $tk_aqua = no; then
 
     #--------------------------------------------------------------------
@@ -9171,7 +9401,7 @@ if test ${enable_bidi+y}
 then :
   enableval=$enable_bidi; enable_bidi=$enableval
 else case e in #(
-  e) enable_bidi="no" ;;
+  e) enable_bidi="yes" ;;
 esac
 fi
 
@@ -9287,7 +9517,12 @@ fi
 
 
         else
-            as_fn_error $? "--enable-bidi requires HarfBuzz development files." "$LINENO" 5
+            as_fn_error $? "--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
         fi
 
     else
@@ -9320,18 +9555,149 @@ printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
 	FONTSYSTEM="core"
     fi
 
-fi
+  fi
 else
     # Aqua (macOS) path
     enable_xft=no
     enable_bidi=no
+    XFT_CFLAGS=""
+    XFT_LIBS=""
     UNIX_FONT_OBJS="tkUnixFont.o"
     BIDI_CFLAGS=""
     HB_CFLAGS=""
     HB_LIBS=""
     FONTSYSTEM="core"
 
+
+
+
+
+
+
 fi
+
+#--------------------------------------------------------------------
+#	Check for the X RENDER extension client library (Xrender), used
+#	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#--------------------------------------------------------------------
+
+XRENDER_CFLAGS=""
+XRENDER_LIBS=""
+if test $tk_aqua = no; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xrender" >&5
+printf %s "checking whether to use xrender... " >&6; }
+    # Check whether --enable-xrender was given.
+if test ${enable_xrender+y}
+then :
+  enableval=$enable_xrender; enable_xrender=$enableval
+else case e in #(
+  e) enable_xrender="yes" ;;
+esac
+fi
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xrender" >&5
+printf '%s\n' "$enable_xrender" >&6; }
+
+    if test "$enable_xrender" = "yes" ; then
+	found_xrender="yes"
+	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
+	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
+	if test "$found_xrender" = "no" ; then
+	    found_xrender="yes"
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS="-lXrender"
+	fi
+
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$CFLAGS $XINCLUDES $XRENDER_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $XRENDER_LIBS $XLIBSW"
+
+	ac_fn_c_check_header_compile "$LINENO" "X11/extensions/Xrender.h" "ac_cv_header_X11_extensions_Xrender_h" "#include <X11/Xlib.h>
+"
+if test "x$ac_cv_header_X11_extensions_Xrender_h" = xyes
+then :
+
+else case e in #(
+  e) found_xrender=no ;;
+esac
+fi
+
+	if test "$found_xrender" = "yes" ; then
+	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for XRenderQueryExtension in -lXrender" >&5
+printf %s "checking for XRenderQueryExtension in -lXrender... " >&6; }
+if test ${ac_cv_lib_Xrender_XRenderQueryExtension+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lXrender  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XRenderQueryExtension (void);
+int
+main (void)
+{
+return XRenderQueryExtension ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_Xrender_XRenderQueryExtension=yes
+else case e in #(
+  e) ac_cv_lib_Xrender_XRenderQueryExtension=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_Xrender_XRenderQueryExtension" >&5
+printf '%s\n' "$ac_cv_lib_Xrender_XRenderQueryExtension" >&6; }
+if test "x$ac_cv_lib_Xrender_XRenderQueryExtension" = xyes
+then :
+  printf '%s\n' "#define HAVE_LIBXRENDER 1" >>confdefs.h
+
+  LIBS="-lXrender $LIBS"
+
+else case e in #(
+  e) found_xrender=no ;;
+esac
+fi
+
+	fi
+
+	CFLAGS=$tk_oldCFlags
+	LIBS=$tk_oldLibs
+
+	if test "$found_xrender" = "yes" ; then
+
+printf '%s\n' "#define HAVE_XRENDER 1" >>confdefs.h
+
+	else
+	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Can't find xrender configuration -- photo images will composite in software" >&5
+printf '%s\n' "$as_me: WARNING: Can't find xrender configuration -- photo images will composite in software" >&2;}
+	    enable_xrender=no
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS=""
+	fi
+    fi
+fi
+
+
 
 #--------------------------------------------------------------------
 #	Check for libcups support — allowed on both X11 and Wayland
@@ -9656,10 +10022,18 @@ fi
 
 eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
+# tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
+# since on some platforms TK_LIB_FILE contains shell escapes.
+
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 fi
+
+# Note:  in the following variable, it's important to use the absolute
+# path name of the Tcl directory rather than "..":  this is because
+# AIX remembers this path and will attempt to use it at run-time to look
+# up the Tcl library.
 
 test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
 PRIVATE_INCLUDE_DIR='$(includedir)'
@@ -9741,7 +10115,7 @@ printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="${libdir}/Resources/Scripts"
+    TK_PKG_DIR="Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"
@@ -9763,6 +10137,10 @@ printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
+    # Don't use AC_DEFINE for the following as the framework version define
+    # needs to go into the Makefile even when using autoheader, so that we
+    # can pick up a potential make override of VERSION. Also, don't put this
+    # into CFLAGS as it should not go into tkConfig.sh
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then

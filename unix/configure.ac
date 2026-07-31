@@ -146,6 +146,11 @@ fi
 #--------------------------------------------------------------------
 #	Include sys/select.h if it exists and if it supplies things
 #	that appear to be useful and aren't already in sys/types.h.
+#	This appears to be true only on the RS/6000 under AIX.  Some
+#	systems like OSF/1 have a sys/select.h that's of no use, and
+#	other systems like SCO UNIX have a sys/select.h that's
+#	pernicious.  If "fd_set" isn't defined anywhere then set a
+#	special flag.
 #--------------------------------------------------------------------
 
 AC_CACHE_CHECK([for fd_set in sys/types], tcl_cv_type_fd_set, [
@@ -260,25 +265,67 @@ if test $tk_aqua = no; then
         XLIBSW=""
         XINCLUDES=""
 
-        # Wayland-related dependencies
+        #--------------------------------------------------------------------
+        # Check for wayland-egl (HARD dependency)
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for wayland-egl >= 1.18])
+        if pkg-config --exists "wayland-egl >= 1.18"; then
+            AC_MSG_RESULT([yes])
+            WAYLAND_EGL_CFLAGS="$(pkg-config --cflags wayland-egl)"
+            WAYLAND_EGL_LIBS="$(pkg-config --libs wayland-egl)"
+            found_wayland_egl=yes
+            AC_DEFINE([HAVE_WAYLAND_EGL], [1], [Define if wayland-egl is available])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([wayland-egl >= 1.18 is required when building the Wayland backend.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland])
+        fi
+        AC_SUBST([WAYLAND_EGL_CFLAGS])
+        AC_SUBST([WAYLAND_EGL_LIBS])
 
+        #--------------------------------------------------------------------
+        # Check for wayland-egl headers (must be present)
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for wayland-egl.h header])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <wayland-egl.h>
+        ]], [[
+            struct wl_egl_window *win = NULL;
+            (void)win;
+        ]])], [
+            AC_MSG_RESULT([yes])
+            AC_DEFINE([HAVE_WAYLAND_EGL_H], [1], [Define if <wayland-egl.h> is available])
+        ], [
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([<wayland-egl.h> header not found.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland])
+        ])
+
+        # Wayland-related dependencies (client, cursor, protocols)
         AC_MSG_CHECKING([for wayland-client and wayland-cursor >= 1.18])
         if pkg-config --exists "wayland-client >= 1.18" \
            && pkg-config --exists "wayland-cursor >= 1.18"; then
             AC_MSG_RESULT([yes])
-            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
+            WAYLAND_CLIENT_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+            WAYLAND_CLIENT_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
             found_wayland=yes
             AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
         else
             AC_MSG_RESULT([no])
-            WAYLAND_CFLAGS=""
-            WAYLAND_LIBS=""
-            found_wayland=no
-            AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
+            AC_MSG_ERROR([wayland-client >= 1.18 and wayland-cursor >= 1.18 are required when building the Wayland backend.
+Please install libwayland development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland])
         fi
-        AC_SUBST([WAYLAND_CFLAGS])
-        AC_SUBST([WAYLAND_LIBS])
+        AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+        AC_SUBST([WAYLAND_CLIENT_LIBS])
 
         AC_MSG_CHECKING([for xkbcommon >= 0.5.0])
         if pkg-config --exists "xkbcommon >= 0.5.0"; then
@@ -289,10 +336,11 @@ if test $tk_aqua = no; then
             AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
         else
             AC_MSG_RESULT([no])
-            XKBCOMMON_CFLAGS=""
-            XKBCOMMON_LIBS=""
-            found_xkbcommon=no
-            AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
+            AC_MSG_ERROR([xkbcommon >= 0.5.0 is required when building the Wayland backend.
+Please install libxkbcommon development package:
+  - Debian/Ubuntu:   sudo apt install libxkbcommon-dev
+  - Fedora/RHEL:     sudo dnf install libxkbcommon-devel
+  - Arch:            sudo pacman -S libxkbcommon])
         fi
         AC_SUBST([XKBCOMMON_CFLAGS])
         AC_SUBST([XKBCOMMON_LIBS])
@@ -309,16 +357,19 @@ if test $tk_aqua = no; then
                 AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
             else
                 found_glfw=no
-                AC_MSG_NOTICE([GLFW found but Wayland support not detected (missing wayland-client)])
+                AC_MSG_ERROR([GLFW found but Wayland support not detected (missing wayland-client)
+Please rebuild GLFW with Wayland support enabled.])
                 GLFW_CFLAGS=""
                 GLFW_LIBS=""
             fi
         else
             AC_MSG_RESULT([glfw3 not found])
             found_glfw=no
-            GLFW_CFLAGS=""
-            GLFW_LIBS=""
-            AC_MSG_NOTICE([glfw3 >= 3.3 not found — backend will be disabled])
+            AC_MSG_ERROR([glfw3 >= 3.3 with Wayland support is required when building the Wayland backend.
+Please install GLFW development package with Wayland support:
+  - Debian/Ubuntu:   sudo apt install libglfw3-dev
+  - Fedora/RHEL:     sudo dnf install glfw-devel
+  - Arch:            sudo pacman -S glfw-wayland])
         fi
         AC_SUBST([GLFW_CFLAGS])
         AC_SUBST([GLFW_LIBS])
@@ -365,7 +416,11 @@ Without client-side decorations most Wayland compositors will show broken or mis
                 GLES_CFLAGS=""
                 GLES_LIBS=""
                 found_gles=no
-                AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
+                AC_MSG_ERROR([OpenGL ES (glesv2) is required when building the Wayland backend.
+Please install OpenGL ES development package:
+  - Debian/Ubuntu:   sudo apt install libgles2-mesa-dev
+  - Fedora/RHEL:     sudo dnf install mesa-libGLES-devel
+  - Arch:            sudo pacman -S mesa])
             fi
         fi
         AC_SUBST([GLES_CFLAGS])
@@ -385,7 +440,11 @@ Without client-side decorations most Wayland compositors will show broken or mis
                 [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
         else
             AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
+            AC_MSG_ERROR([sd-bus (libsystemd) is required when building the Wayland backend.
+Please install libsystemd development package:
+  - Debian/Ubuntu:   sudo apt install libsystemd-dev
+  - Fedora/RHEL:     sudo dnf install systemd-devel
+  - Arch:            sudo pacman -S systemd-libs])
         fi
         AC_SUBST([SDBUSD_CFLAGS])
         AC_SUBST([SDBUSD_LIBS])
@@ -400,89 +459,66 @@ Without client-side decorations most Wayland compositors will show broken or mis
             AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
         else
             AC_MSG_RESULT([no])
-            FONTCONFIG_CFLAGS=""
-            FONTCONFIG_LIBS=""
-            found_fontconfig=no
-            AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
+            AC_MSG_ERROR([fontconfig >= 2.12 is required when building the Wayland backend.
+Please install fontconfig development package:
+  - Debian/Ubuntu:   sudo apt install libfontconfig-dev
+  - Fedora/RHEL:     sudo dnf install fontconfig-devel
+  - Arch:            sudo pacman -S fontconfig])
         fi
         AC_SUBST([FONTCONFIG_CFLAGS])
         AC_SUBST([FONTCONFIG_LIBS])
 
-        # NanoVG support (required for rendering)
-        AC_MSG_CHECKING([for NanoVG library])
-        AC_CHECK_LIB([nanovg], [nvgCreateGL3], [
-            have_nanovg_lib=yes
-            NANOVG_LIBS="-lnanovg"
-        ], [have_nanovg_lib=no])
-        
-        if test "$have_nanovg_lib" = yes; then
-            AC_MSG_RESULT([yes])
-            found_nanovg=yes
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([NanoVG library not found — assuming it will be statically linked or built separately])
-            NANOVG_LIBS=""
-            found_nanovg=no
-        fi
-        AC_SUBST([NANOVG_LIBS])
+        #--------------------------------------------------------------------
+        # NanoVG is bundled in the wayland source tree, so no external check needed.
+        #--------------------------------------------------------------------
+        AC_MSG_NOTICE([NanoVG will be built from bundled sources in wayland/nanovg.c])
 
-        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-        AC_MSG_CHECKING([for wayland-scanner])
-        AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
-        if test "x$WAYLAND_SCANNER" = x; then
-            AC_MSG_ERROR([wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)])
+        #--------------------------------------------------------------------
+        # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for wl-copy and wl-paste])
+        AC_PATH_PROG([WL_COPY], [wl-copy])
+        AC_PATH_PROG([WL_PASTE], [wl-paste])
+        if test "x$WL_COPY" = x || test "x$WL_PASTE" = x; then
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([wl-copy and wl-paste (from wl-clipboard package) are required for Wayland backend clipboard support.
+
+Please install wl-clipboard:
+  - Debian/Ubuntu:   sudo apt install wl-clipboard
+  - Fedora:          sudo dnf install wl-clipboard
+  - Arch:            sudo pacman -S wl-clipboard])
         fi
         AC_MSG_RESULT([yes])
+        AC_SUBST([WL_COPY])
+        AC_SUBST([WL_PASTE])
 
-        AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
-        TEXT_INPUT_XML=""
-        if pkg-config --exists wayland-protocols; then
-            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-            TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-                AC_MSG_RESULT([yes])
-                AC_DEFINE([HAVE_TEXT_INPUT_V3], [1],
-                    [Define if text-input-unstable-v3 protocol is available (required for IME on Wayland)])
-            else
-                AC_MSG_RESULT([no])
-                AC_MSG_ERROR([text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-Wayland backend now requires proper IME support via text-input-unstable-v3.
-Install/update wayland-protocols package.])
-            fi
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([pkg-config package 'wayland-protocols' not found.
-Wayland backend now requires text-input-unstable-v3 for IME support.])
-        fi
-
-        AC_SUBST([WAYLAND_SCANNER])
-        AC_SUBST([TEXT_INPUT_XML])
-
-        # Final check — everything must be present (IME + libdecor are mandatory)
+        # Final check — everything must be present
         if test "$found_wayland" = yes \
+           && test "$found_wayland_egl" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
            && test "$found_libdecor" = yes \
            && test "$found_gles" = yes \
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
-           && test -n "$TEXT_INPUT_XML"; then
+           && test -n "$WL_COPY" \
+           && test -n "$WL_PASTE"; then
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
 Required (all mandatory when --enable-wayland is used):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
+  - wayland-egl >= 1.18
   - xkbcommon >= 0.5.0
   - glfw3 >= 3.3 with Wayland support
   - libdecor-0 >= 0.1.0
@@ -490,17 +526,21 @@ Required (all mandatory when --enable-wayland is used):
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
+  - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev
+    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
+    libwayland-egl1
 ])
         fi
     fi
 
-    AC_SUBST([WAYLAND_CFLAGS])
-    AC_SUBST([WAYLAND_LIBS])
+    AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+    AC_SUBST([WAYLAND_CLIENT_LIBS])
+    AC_SUBST([WAYLAND_EGL_CFLAGS])
+    AC_SUBST([WAYLAND_EGL_LIBS])
     AC_SUBST([HAVE_WAYLAND])
 
     # Force-disable X11 linkage variables when Wayland is active
@@ -570,7 +610,19 @@ fi
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries. The order here
 #	is important, so that then end up in the right order in the
-#	command line generated by make.
+#	command line generated by make.  The -lsocket and -lnsl libraries
+#	require a couple of special tricks:
+#	1. Use "connect" and "accept" to check for -lsocket, and
+#	   "gethostbyname" to check for -lnsl.
+#	2. Use each function name only once:  can't redo a check because
+#	   autoconf caches the results of the last check and won't redo it.
+#	3. Use -lnsl and -lsocket only if they supply procedures that
+#	   aren't already present in the normal libraries.  This is because
+#	   IRIX 5.2 has libraries, but they aren't needed and they're
+#	   bogus:  they goof up name resolution if used.
+#	4. On some SVR4 systems, can't use -lsocket without -lnsl too.
+#	   To get around this problem, check for both libraries together
+#	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
@@ -578,9 +630,14 @@ if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
 fi
 
 #--------------------------------------------------------------------
-#       One more check related to the X libraries. The standard releases
-#       of Ultrix don't support the "xauth" mechanism, so send won't work
-#       unless TK_NO_SECURITY is defined.
+# One more check related to the X libraries. The standard releases
+# of Ultrix don't support the "xauth" mechanism, so send won't work
+# unless TK_NO_SECURITY is defined.  However, there are usually copies
+# of the MIT X server available as well, which do support xauth.
+# Check for the MIT stuff and use it if it exists.
+#
+# Note: can't use ac_check_lib macro (at least, not in Autoconf 2.1)
+# because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
 if test -d /usr/include/mit -a $tk_aqua = no; then
@@ -606,7 +663,89 @@ fi
 #	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
-if test "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
+    #--------------------------------------------------------------------
+    # Wayland bidi path: Xft is irrelevant; SheenBidi + HarfBuzz only.
+    # fontconfig is already checked as part of the Wayland dependency
+    # block above, so we only need to handle --enable-bidi here.
+    #--------------------------------------------------------------------
+    # Xft is an X11 library; it has no role in a Wayland build.
+    # Set both to empty and substitute so tkConfig.sh.in / tk.pc.in expand
+    # to empty strings rather than the raw @XFT_CFLAGS@ token.
+    XFT_CFLAGS=""
+    XFT_LIBS=""
+    AC_SUBST(XFT_CFLAGS)
+    AC_SUBST(XFT_LIBS)
+
+    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support (Wayland)])
+    AC_ARG_ENABLE(bidi,
+	AS_HELP_STRING([--enable-bidi],
+	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes)]),
+	[enable_bidi=$enableval], [enable_bidi="yes"])
+    AC_MSG_RESULT([$enable_bidi])
+
+    if test "$enable_bidi" = "yes"; then
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
+	# Wayland font backend: tkWaylandFont.c handles all text; SheenBidi is
+	# unity-included by it directly.  tkUnixBidiFont.c is X11/Xft-dependent
+	# and must never appear in a Wayland build.
+	UNIX_FONT_OBJS="tkWaylandFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz — hard dependency when --enable-bidi=yes
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi on Wayland)])
+        if pkg-config --exists harfbuzz; then
+            HB_CFLAGS=`pkg-config --cflags harfbuzz`
+            HB_LIBS=`pkg-config --libs harfbuzz`
+            AC_MSG_RESULT([yes])
+
+            tk_oldCFlags=$CFLAGS
+            tk_oldLibs=$LIBS
+            CFLAGS="$CFLAGS $HB_CFLAGS"
+            LIBS="$tk_oldLibs $HB_LIBS"
+
+            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
+                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+            ])
+
+            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
+                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
+            ])
+
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+
+            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $HB_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $HB_LIBS"
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz])
+        fi
+    else
+        BIDI_CFLAGS=""
+        HB_CFLAGS=""
+        HB_LIBS=""
+        UNIX_FONT_OBJS="tkWaylandFont.o"
+    fi
+
+    AC_SUBST(BIDI_CFLAGS)
+    AC_SUBST(UNIX_FONT_OBJS)
+    AC_SUBST(HB_CFLAGS)
+    AC_SUBST(HB_LIBS)
+    FONTSYSTEM="wayland"
+    AC_SUBST(FONTSYSTEM)
+
+elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
   if test $tk_aqua = no; then
 
     #--------------------------------------------------------------------
@@ -681,7 +820,7 @@ if test "$TK_WINDOWINGSYSTEM" = "X11"; then
     AC_ARG_ENABLE(bidi,
 	AS_HELP_STRING([--enable-bidi],
 	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (forces --enable-xft=yes)]),
-	[enable_bidi=$enableval], [enable_bidi="no"])
+	[enable_bidi=$enableval], [enable_bidi="yes"])
 
     if test "$enable_bidi" = "yes"; then
 	AC_MSG_RESULT([yes (forces Xft on)])
@@ -726,7 +865,12 @@ if test "$TK_WINDOWINGSYSTEM" = "X11"; then
             AC_SUBST(HB_CFLAGS)
             AC_SUBST(HB_LIBS)
         else
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.])
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz])
         fi
 
     else
@@ -756,18 +900,78 @@ if test "$TK_WINDOWINGSYSTEM" = "X11"; then
 	FONTSYSTEM="core"
     fi
     AC_SUBST(FONTSYSTEM)
-fi
+  fi
 else
     # Aqua (macOS) path
     enable_xft=no
     enable_bidi=no
+    XFT_CFLAGS=""
+    XFT_LIBS=""
     UNIX_FONT_OBJS="tkUnixFont.o"
     BIDI_CFLAGS=""
     HB_CFLAGS=""
     HB_LIBS=""
     FONTSYSTEM="core"
+    AC_SUBST(XFT_CFLAGS)
+    AC_SUBST(XFT_LIBS)
+    AC_SUBST(BIDI_CFLAGS)
+    AC_SUBST(UNIX_FONT_OBJS)
+    AC_SUBST(HB_CFLAGS)
+    AC_SUBST(HB_LIBS)
     AC_SUBST(FONTSYSTEM)
 fi
+
+#--------------------------------------------------------------------
+#	Check for the X RENDER extension client library (Xrender), used
+#	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#--------------------------------------------------------------------
+
+XRENDER_CFLAGS=""
+XRENDER_LIBS=""
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether to use xrender])
+    AC_ARG_ENABLE(xrender,
+	AS_HELP_STRING([--enable-xrender],
+	    [use Xrender to composite photo images with alpha (default: yes)]),
+	[enable_xrender=$enableval], [enable_xrender="yes"])
+    AC_MSG_RESULT([$enable_xrender])
+
+    if test "$enable_xrender" = "yes" ; then
+	found_xrender="yes"
+	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
+	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
+	if test "$found_xrender" = "no" ; then
+	    found_xrender="yes"
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS="-lXrender"
+	fi
+
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$CFLAGS $XINCLUDES $XRENDER_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $XRENDER_LIBS $XLIBSW"
+
+	AC_CHECK_HEADER(X11/extensions/Xrender.h, [], [found_xrender=no],
+	    [#include <X11/Xlib.h>])
+	if test "$found_xrender" = "yes" ; then
+	    AC_CHECK_LIB(Xrender, XRenderQueryExtension, [], [found_xrender=no])
+	fi
+
+	CFLAGS=$tk_oldCFlags
+	LIBS=$tk_oldLibs
+
+	if test "$found_xrender" = "yes" ; then
+	    AC_DEFINE(HAVE_XRENDER, 1, [Have we turned on XRender (photo image compositing)?])
+	else
+	    AC_MSG_WARN([Can't find xrender configuration -- photo images will composite in software])
+	    enable_xrender=no
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS=""
+	fi
+    fi
+fi
+AC_SUBST(XRENDER_CFLAGS)
+AC_SUBST(XRENDER_LIBS)
 
 #--------------------------------------------------------------------
 #	Check for libcups support — allowed on both X11 and Wayland
@@ -912,10 +1116,18 @@ fi
 
 eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
+# tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
+# since on some platforms TK_LIB_FILE contains shell escapes.
+
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 fi
+
+# Note:  in the following variable, it's important to use the absolute
+# path name of the Tcl directory rather than "..":  this is because
+# AIX remembers this path and will attempt to use it at run-time to look
+# up the Tcl library.
 
 test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
 PRIVATE_INCLUDE_DIR='$(includedir)'
@@ -960,7 +1172,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="${libdir}/Resources/Scripts"
+    TK_PKG_DIR="Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"
@@ -982,6 +1194,10 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
+    # Don't use AC_DEFINE for the following as the framework version define
+    # needs to go into the Makefile even when using autoheader, so that we
+    # can pick up a potential make override of VERSION. Also, don't put this
+    # into CFLAGS as it should not go into tkConfig.sh
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then
