@@ -24,8 +24,8 @@
 extern void TkpDrawCheckIndicator(Tk_Window tkwin,
     Display *display, Drawable d, int x, int y,
     Tk_3DBorder bgBorder, XColor *indicatorColor,
-    XColor *selectColor, XColor *disColor, int on,
-    int disabled, int mode);
+    XColor *selectColor, XColor *disColor, int indicatorSize,
+    int on, int disabled, int mode);
 
 void ImageChanged(			/* to be passed to Tk_GetImage() */
     void *clientData,
@@ -128,8 +128,13 @@ TkpCreateButton(
 */
 
 static void
-ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
-              int width, int height)
+ShiftByOffset(
+    TkButton *butPtr,
+    int relief,
+    int *x,
+    int *y,
+    int width,
+    int height)
 {
     printf("ShiftByOffset: %s\n", Tk_PathName(butPtr->tkwin)); 
     if (relief != TK_RELIEF_RAISED && butPtr->type == TYPE_BUTTON &&
@@ -162,13 +167,14 @@ ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
 */
 
 static void
-DrawButtonBitmap(TkButton *butPtr,
-                 int x,
-                 int y,
-                 int width,
-                 int height)
+DrawButtonBitmap(
+    TkButton *butPtr,
+    int x,
+    int y,
+    int width,
+    int height)
 {
-  Drawable d = TkWaylandDrawableForTkWindow((TkWindow*) butPtr->tkwin);
+    Drawable d = TkWaylandDrawableForTkWindow((TkWindow*) butPtr->tkwin);
     GC currentGC;
     if (!butPtr->bitmap) {
         printf("DrawButtonBitmap: no bitmap for %s\n", Tk_PathName(butPtr));
@@ -458,15 +464,16 @@ TkpDisplayButton(void *clientData)
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "black", &checkFG); 
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "gray90", &checkDisBG); 
         TkpDrawCheckIndicator(tkwin, butPtr->display,
-                              drawable,
-                              ind_x, ind_y, butPtr->normalBorder,
-                              &checkBG,
-                              &checkFG,
-			      &checkDisBG,
-                              (butPtr->flags & SELECTED) ? 1 :
-                              (butPtr->flags & TRISTATED) ? 2 : 0,
-                              butPtr->state == STATE_DISABLED,
-                              indType);
+	    drawable,
+	    ind_x, ind_y, butPtr->normalBorder,
+	    &checkBG,
+	    &checkFG,
+	    &checkDisBG,
+	    butPtr->indicatorDiameter,
+	    (butPtr->flags & SELECTED) ? 1 :
+	    (butPtr->flags & TRISTATED) ? 2 : 0,
+	    butPtr->state == STATE_DISABLED,
+	    indType);
     }
 
     /* Draw border with 3D effects. */
@@ -562,6 +569,10 @@ TkpComputeButtonGeometry(
     if (butPtr->defaultState != DEFAULT_DISABLED) {
         butPtr->inset += 5;
     }
+    /*
+     * Set the initialwidth and height to the image dimensions,
+     * if there is an image.
+     */
     butPtr->indicatorSpace = 0;
     if (butPtr->image != NULL) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
@@ -571,6 +582,7 @@ TkpComputeButtonGeometry(
 			&width, &height);
         haveImage = 1;
     }
+    // Compute the text layout for buttons with text.
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
         Tk_FreeTextLayout(butPtr->textLayout);
 
@@ -584,13 +596,22 @@ TkpComputeButtonGeometry(
         Tk_GetFontMetrics(butPtr->tkfont, &fm);
         haveText = (txtWidth != 0 && txtHeight != 0);
     }
-    /*
-     * If the button is compound (i.e., it shows both an image and text), the
-     * new geometry is a combination of the image and text geometry. We only
-     * honor the compound bit if the button has both text and an image,
-     * because otherwise it is not really a compound button.
-     */
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+    /*
+     * Buttons with both image and text.
+     *
+     * If a button has both an image and text the arrangement of
+     * those components is controlled by the value of the compound
+     * option which must not be COMPOUND_NONE.
+     *
+     * If a compound option is specified for a button which
+     * does not have both image and text we ignore it.
+     *
+     * Currently width and height are set to the image size. Now we
+     * adjust the dimensions by adding text dimensions according to
+     * the value of the compound option.
+     * 
+     */
         switch ((enum compound) butPtr->compound) {
         case COMPOUND_TOP:
         case COMPOUND_BOTTOM:
@@ -618,29 +639,38 @@ TkpComputeButtonGeometry(
         case COMPOUND_NONE:
             break;
         }
+	/*
+	 * For compound buttons, the user-specified width or height
+	 * is given in pixels.
+	 */
         if (butPtrWidth > 0) {
             width = butPtrWidth;
         }
         if (butPtrHeight > 0) {
             height = butPtrHeight;
         }
+	/*
+	 * For check buttons or radio buttons which have an indicator
+	 * compute the additional space needed by the indicator and
+	 * record the indicator diameter in the button struct.
+	 */
         if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	  printf("compound with image and text: height is %d\n", height);
-	  //// Where do these numbers come from
+	    // Currently both of our indicators have diameter 12. 
             if (butPtr->type == TYPE_CHECK_BUTTON) {
-	      butPtr->indicatorDiameter = (75 * height) / 100;
-	      //butPtr->indicatorDiameter = (65 * height) / 100;
+	      butPtr->indicatorDiameter = 12;
             } else {
-	      butPtr->indicatorDiameter = (75 * height) / 100;
+	      butPtr->indicatorDiameter = 12;
             }
-	    printf("(1) Set diameter to %d\n", butPtr->indicatorDiameter);
-	    butPtr->indicatorSpace = butPtr->indicatorDiameter + 6;
+	    butPtr->indicatorSpace = butPtr->indicatorDiameter;
         }
         width += 2 * padX;
         height += 2 * padY;
     } else {
-      // image only
         if (haveImage) {
+	    /*
+	     * For image-only buttons the width and height options are
+	     * given in pixels.
+	     */
             if (butPtrWidth > 0) {
                 width = butPtrWidth;
             }
@@ -649,18 +679,19 @@ TkpComputeButtonGeometry(
             }
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
                 if (butPtr->type == TYPE_CHECK_BUTTON) {
-		    butPtr->indicatorDiameter = (65 * height)/100;
-		    printf("(2) Set diameter to %d from 0.5* height of %d\n",
-			   butPtr->indicatorDiameter, height);
+		    butPtr->indicatorDiameter = 12;
                 } else {
-                    butPtr->indicatorDiameter = (75 * height)/100;
-		    printf("(2) Set diameter to %d from 0.65* height of %d\n",
-			   butPtr->indicatorDiameter, height);
-                }
-		butPtr->indicatorSpace = butPtr->indicatorDiameter;
+		    butPtr->indicatorDiameter = 12;
+		}
+		butPtr->indicatorSpace = 2*butPtr->indicatorDiameter;
             }
         } else {
-	  // image only ???
+	   /* For text-only buttons the user-specified width or height
+	    * the distance unit is the average width of a character in
+	    * the current font, and we want the indicator of a check
+	    * or radio button to be the same as the linespace value for
+	    * the current font.
+	    */
             width = txtWidth;
             height = txtHeight;
             if (butPtrWidth > 0) {
@@ -672,7 +703,6 @@ TkpComputeButtonGeometry(
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
                 butPtr->indicatorDiameter = fm.linespace;
                 butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
-		printf("(3) Set diameter to %d from fm.linespace\n", butPtr->indicatorDiameter);
             }
         }
     }
@@ -796,9 +826,10 @@ TkpButtonWorldChanged(void *instanceData)
  * -------------------------------------------------------------------------
  * TkpDrawCheckIndicator --
  *
- *      Draw check/radio button indicator using NanoVG.
- *      This function is shared with menu widget and needs to be
- *      implemented for Wayland.
+ *      Called by DisplayButton to draw the indicator for a check
+ *      button or radio button.  In spite of the name, this is not
+ *      a stub function and it is not called from generic code.  It
+ *      is also used by the menu code.
  *
  * Results:
  *      None.
@@ -816,31 +847,21 @@ TkpDrawCheckIndicator(
     int x,
     int y,
     TCL_UNUSED(Tk_3DBorder),  /* bgBorder */
-    XColor *indicatorColor,
-    XColor *selectColor,
-    XColor *disColor,
+    XColor *indicatorColor,   /* Color of background square or circle. */
+    XColor *selectColor,      /* Color of center dot or checkmark. */
+    XColor *disColor,         /* Color of background for a disabled widget. */
+    int indicatorSize,        /* Diameter of circle, side of square. */
     int on,
     int disabled,
-    int mode)
-{    
+    int mode)                 /* Check or radio */
+{
     TkWaylandDrawingContext dc = {0};
 
     if (TkWaylandBeginDraw(d, NULL, &dc) != TCL_OK) {
         return;
     }
     
-    int size = 0;
-    int indicatorSize;
-
-    switch (mode) {
-        case CHECK_BUTTON: indicatorSize = CHECK_BUTTON_DIM; break;
-        case CHECK_MENU:   indicatorSize = CHECK_MENU_DIM;   break;
-        case RADIO_BUTTON: indicatorSize = RADIO_BUTTON_DIM; break;
-        case RADIO_MENU:   indicatorSize = RADIO_MENU_DIM;   break;
-        default:           indicatorSize = 12;
-    }
-
-    size = indicatorSize;
+    int size = indicatorSize;
 
     /* Background square/circle. */
     nvgBeginPath(dc.vg);
@@ -856,6 +877,9 @@ TkpDrawCheckIndicator(
         nvgFillColor(dc.vg, TkWaylandXColorToNVG(indicatorColor));
     }
     nvgFill(dc.vg);
+    nvgStrokeColor(dc.vg, TkWaylandXColorToNVG(selectColor));
+    nvgStrokeWidth(dc.vg, 1.0f);
+    nvgStroke(dc.vg);
 
     /* Draw check / radio dot / tristate. */
     if (on == 1) {
