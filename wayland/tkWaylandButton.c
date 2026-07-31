@@ -84,6 +84,7 @@ ImageChanged(TCL_UNUSED(void *),
              TCL_UNUSED(int)) /*imageHeight */
 {
 
+  printf("ImageChanged\n");
   /* No-op. */
 
 }
@@ -130,6 +131,7 @@ static void
 ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
               int width, int height)
 {
+    printf("ShiftByOffset: %s\n", Tk_PathName(butPtr->tkwin)); 
     if (relief != TK_RELIEF_RAISED && butPtr->type == TYPE_BUTTON &&
         !Tk_StrictMotif(butPtr->tkwin)) {
         int shiftX = (relief == TK_RELIEF_SUNKEN) ? 2 : 1;
@@ -166,166 +168,31 @@ DrawButtonBitmap(TkButton *butPtr,
                  int width,
                  int height)
 {
-    Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
-    NVGcontext *vg = TkWaylandGetNVGContext(d);
-    Pixmap bitmap = butPtr->bitmap;
+  Drawable d = TkWaylandDrawableForTkWindow((TkWindow*) butPtr->tkwin);
     GC currentGC;
-#if 0
-    unsigned char *bits = NULL;
-    unsigned char *rgba = NULL;
-    unsigned int border_width, depth;
-    int x_hot, y_hot;
-    XGCValues gcValues;
-    XColor *fgColor;
-    XColor fgColorValue;
-    int imageId;
-    int i, j;
-    XImage *image = NULL;
-#endif
-    if (!bitmap) {
+    if (!butPtr->bitmap) {
+        printf("DrawButtonBitmap: no bitmap for %s\n", Tk_PathName(butPtr));
         goto fallback_rect;
     }
     /* Get the appropriate graphics context for the button state. */
     if (butPtr->state == STATE_DISABLED && butPtr->disabledFg) {
         currentGC = butPtr->disabledGC;
-    } else if (butPtr->state == STATE_ACTIVE &&
-	       !Tk_StrictMotif(butPtr->tkwin)) {
+    } else if (butPtr->state == STATE_ACTIVE && !Tk_StrictMotif(butPtr->tkwin)) {
         currentGC = butPtr->activeTextGC;
     } else {
       currentGC = butPtr->normalTextGC;
     }
     if (currentGC) {
-        XCopyPlane(butPtr->display,
-		   TkWaylandDrawableForPixmap(butPtr->bitmap),
-		   TkWaylandDrawableForTkWindow((TkWindow *)butPtr->tkwin),
-		   currentGC, 0, 0, width, height, x, y, 1);
+        XCopyPlane(butPtr->display, butPtr->bitmap, d, currentGC, 0, 0,
+		   width, height, x, y, 1);
 	return;
-    } else {
+    } else { 
         printf("No graphics context for drawing bitmap\n");
 	goto fallback_rect;
     }
-#if 0 //// disable non-working code for displaying bitmaps
-    
-    dpy = Tk_Display(butPtr->tkwin);
-
-    //// This will never work.  XGetGeometry is a no-op and always returns 0.
-    if (!XGetGeometry(dpy, bitmap, None, &x_hot, &y_hot,
-                      &bm_width, &bm_height, &border_width, &depth)) {
-        /* Geometry failed — fallback. */
-        goto fallback_rect;
-    }
-
-    /* Validate size (early exit if mismatch). */
-    if (bm_width != (unsigned int)width || bm_height != (unsigned int)height) {
-        goto fallback_rect;
-    }
-
-    /* Get foreground color from the current GC. */
-    GC currentGC = butPtr->normalTextGC;
-    if (butPtr->state == STATE_DISABLED && butPtr->disabledFg) {
-        currentGC = butPtr->disabledGC;
-    } else if (butPtr->state == STATE_ACTIVE && !Tk_StrictMotif(butPtr->tkwin)) {
-        currentGC = butPtr->activeTextGC;
-    }
-
-    if (currentGC) {
-        XGetGCValues(butPtr->display, currentGC, GCForeground, &gcValues);
-        fgColorValue.pixel = gcValues.foreground;
-        fgColor = Tk_GetColorByValue(butPtr->tkwin, &fgColorValue);
-    } else {
-        fgColor = butPtr->normalFg;
-    }
-
-    /*
-     * Read bitmap pixels via XGetImage → XGetPixel
-     */
-    int bm_width, bm_height;
-    image = XGetImage(dpy, bitmap,
-                      0, 0, bm_width, bm_height,
-                      1,          /* Only plane 0 for 1-bit bitmap */
-                      XYPixmap);  /* Bitmap format */
-
-    if (image == NULL) {
-        goto fallback_rect;
-    }
-
-    /* Allocate buffer for packed bitmap data (1 bit per pixel, MSB-first). */
-    int packedSize = ((int)bm_width * (int)bm_height + 7) / 8;
-    bits = Tcl_Alloc(packedSize);
-    if (!bits) {
-        goto cleanup;
-    }
-
-    /* Pack the bits from XImage. */
-    int byte_idx = 0;
-    for (unsigned int yp = 0; yp < bm_height; yp++) {
-        unsigned char byte = 0;
-        int bit_count = 0;
-        for (unsigned int xp = 0; xp < bm_width; xp++) {
-            unsigned long pixel = XGetPixel(image, (int)xp, (int)yp);
-            if (pixel != 0) {
-                byte |= (1U << (7 - bit_count));   /* MSB first */
-            }
-            bit_count++;
-            if (bit_count == 8 || xp == bm_width - 1) {
-                bits[byte_idx++] = byte;
-                byte = 0;
-                bit_count = 0;
-            }
-        }
-    }
-
-    /* Allocate RGBA buffer (premultiplied or straight alpha — NanoVG handles both). */
-    rgba = Tcl_Alloc(bm_width * bm_height * 4);
-    if (!rgba) {
-        goto cleanup;
-    }
-
-    /* Convert packed bits → RGBA (0 = transparent black, 1 = fg color opaque). */
-    for (j = 0; j < (int)bm_height; j++) {
-        for (i = 0; i < (int)bm_width; i++) {
-            int byte_index = j * ((bm_width + 7) / 8) + (i / 8);
-            int bit_index = 7 - (i % 8);
-            int bit = (bits[byte_index] >> bit_index) & 1;
-
-            unsigned char *pixel = &rgba[(j * bm_width + i) * 4];
-            if (bit) {
-                pixel[0] = fgColor->red   >> 8;
-                pixel[1] = fgColor->green >> 8;
-                pixel[2] = fgColor->blue  >> 8;
-                pixel[3] = 255;
-            } else {
-                pixel[0] = pixel[1] = pixel[2] = pixel[3] = 0;
-            }
-        }
-    }
-
-    /* Draw via NanoVG using the RGBA image. */
-    imageId = nvgCreateImageRGBA(vg, (int)bm_width, (int)bm_height, 0, rgba);
-    if (imageId > 0) {
-        NVGpaint paint = nvgImagePattern(vg, x, y, bm_width, bm_height, 0,
-					 imageId, 1);
-        nvgBeginPath(vg);
-        nvgRect(vg, x, y, bm_width, bm_height);
-        nvgFillPaint(vg, paint);
-        nvgFill(vg);
-        nvgDeleteImage(vg, imageId);
-    }
-    
-cleanup:
-    if (image != NULL) {
-        XDestroyImage(image);
-    }
-    if (rgba != NULL) {
-        ckfree(rgba);
-    }
-    if (bits != NULL) {
-        ckfree(bits);
-    }
-    return;
-#endif //// non-working code disabled.
-
+  
 fallback_rect:
+    NVGcontext *vg = TkWaylandGetNVGContext(d);
     nvgBeginPath(vg);
     nvgRect(vg, x, y, width, height);
     nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
@@ -534,8 +401,7 @@ TkpDisplayButton(void *clientData)
                         butPtr->indicatorSpace + fullWidth,
                         fullHeight, &x, &y);
 
-        x += butPtr->indicatorSpace;
-
+        x -= butPtr->indicatorSpace;
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
         /* Draw image with offset. */
@@ -576,13 +442,17 @@ TkpDisplayButton(void *clientData)
         butPtr->type == TYPE_RADIO_BUTTON) &&
         butPtr->indicatorOn &&
         butPtr->indicatorDiameter > 2 * bd) {
-
+      
         TkBorder *selBd = (TkBorder *)butPtr->selectBorder;
         int indType = (butPtr->type == TYPE_CHECK_BUTTON)
           ? CHECK_BUTTON : RADIO_BUTTON;
 
-        int ind_x = -butPtr->indicatorSpace / 2;
-        int ind_y = winHeight / 2;
+	int ind_x = padX;
+	int ind_y = winHeight / 2 - butPtr->indicatorDiameter / 2;
+	printf("height: %d, fullHeight = %d, winHeight = %d, diam = %d, padY = %d, ind_y = %d\n",
+	       height, fullHeight, winHeight, butPtr->indicatorDiameter, padY, ind_y);
+
+	
 	XColor checkBG, checkFG, checkDisBG;
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "white", &checkBG); 
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "black", &checkFG); 
@@ -686,7 +556,6 @@ TkpComputeButtonGeometry(
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
 
     butPtr->inset = highlightWidth + borderWidth;
-
     /*
      * Leave room for the default ring if needed.
      */
@@ -715,7 +584,6 @@ TkpComputeButtonGeometry(
         Tk_GetFontMetrics(butPtr->tkfont, &fm);
         haveText = (txtWidth != 0 && txtHeight != 0);
     }
-
     /*
      * If the button is compound (i.e., it shows both an image and text), the
      * new geometry is a combination of the image and text geometry. We only
@@ -757,16 +625,21 @@ TkpComputeButtonGeometry(
             height = butPtrHeight;
         }
         if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	  butPtr->indicatorSpace = height;
+	  printf("compound with image and text: height is %d\n", height);
+	  //// Where do these numbers come from
             if (butPtr->type == TYPE_CHECK_BUTTON) {
-                butPtr->indicatorDiameter = (65 * height) / 100;
+	      butPtr->indicatorDiameter = (75 * height) / 100;
+	      //butPtr->indicatorDiameter = (65 * height) / 100;
             } else {
-                butPtr->indicatorDiameter = (75 * height) / 100;
+	      butPtr->indicatorDiameter = (75 * height) / 100;
             }
+	    printf("(1) Set diameter to %d\n", butPtr->indicatorDiameter);
+	    butPtr->indicatorSpace = butPtr->indicatorDiameter + 6;
         }
         width += 2 * padX;
         height += 2 * padY;
     } else {
+      // image only
         if (haveImage) {
             if (butPtrWidth > 0) {
                 width = butPtrWidth;
@@ -775,17 +648,21 @@ TkpComputeButtonGeometry(
                 height = butPtrHeight;
             }
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-                butPtr->indicatorSpace = height;
                 if (butPtr->type == TYPE_CHECK_BUTTON) {
-                    butPtr->indicatorDiameter = (65 * height)/100;
+		    butPtr->indicatorDiameter = (65 * height)/100;
+		    printf("(2) Set diameter to %d from 0.5* height of %d\n",
+			   butPtr->indicatorDiameter, height);
                 } else {
                     butPtr->indicatorDiameter = (75 * height)/100;
+		    printf("(2) Set diameter to %d from 0.65* height of %d\n",
+			   butPtr->indicatorDiameter, height);
                 }
+		butPtr->indicatorSpace = butPtr->indicatorDiameter;
             }
         } else {
+	  // image only ???
             width = txtWidth;
             height = txtHeight;
-
             if (butPtrWidth > 0) {
                 width = butPtrWidth * avgWidth;
             }
@@ -795,6 +672,7 @@ TkpComputeButtonGeometry(
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
                 butPtr->indicatorDiameter = fm.linespace;
                 butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
+		printf("(3) Set diameter to %d from fm.linespace\n", butPtr->indicatorDiameter);
             }
         }
     }
@@ -963,8 +841,6 @@ TkpDrawCheckIndicator(
     }
 
     size = indicatorSize;
-    x = x + size/2;
-    y = y - size/2;
 
     /* Background square/circle. */
     nvgBeginPath(dc.vg);

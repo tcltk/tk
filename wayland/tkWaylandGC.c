@@ -165,7 +165,6 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     return dispPtr;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -501,6 +500,11 @@ Tk_FreePixmap(
     if (pixmapPtr->fb) {
 	glfwMakeContextCurrent(pixmapPtr->glfwWindow);
 	nvgluDeleteFramebuffer(pixmapPtr->fb);
+	pixmapPtr->fb = NULL;
+    }
+    if (pixmapPtr->rgba) {
+	Tcl_Free(pixmapPtr->rgba);
+	pixmapPtr->rgba = NULL;
     }
     ckfree(pixmapPtr);
 }
@@ -776,6 +780,53 @@ XFreePixmap(
     return Success;
 }
 
+int
+XCopyPlane(
+   Display *display,
+   Pixmap src,
+   Drawable dst,
+   GC gc,
+   int src_x,
+   int src_y,
+   unsigned int width,
+   unsigned int height,
+   int dst_x,
+   int dst_y,
+   TCL_UNUSED(unsigned long)) /* plane */
+{
+    TkWaylandPixmap *bitmap = TkWaylandPixmapFromPixmap(src);
+    if (bitmap->depth != 1) {
+	printf("XCopyPlane: source drawable must have depth 1!\n");
+	return BadDrawable; // Not actually checked - FIX ME
+    }
+    if (TkWaylandDrawableIsPixmap(dst)) {
+	printf("XCopyPlane: destination drawable must be a window!\n");
+	return BadDrawable; // Not actually checked - FIX ME
+    }
+    if (bitmap->width != (int)width || bitmap->height != (int)height) {
+	printf("XCopyPlane: Invalid dimensions for bitmap!\n");
+	return BadDrawable; // Not actually checked - FIX ME
+    }
+    NVGcontext *vg = TkWaylandGetNVGContext(dst);
+    int nvg_image_id = nvgCreateImageRGBA(vg, width, height, 0,
+			   (const unsigned char*) bitmap->rgba);
+    if (!nvg_image_id) {
+	Tcl_Panic("Failed to create image\n");
+    }
+    XGCValues v;
+    TkWaylandGetGCValues(gc, GCForeground, &v);
+    NVGcolor fg = TkWaylandPixelToNVG(v.foreground);
+    NVGpaint img_paint = nvgImagePattern(
+	vg, dst_x, dst_y, width, height, 0.0f, //angle
+	nvg_image_id, 1.0f); //alpha multiplier
+    img_paint.innerColor = fg;
+    img_paint.outerColor = fg;
+    nvgBeginPath(vg);
+    nvgRect(vg, dst_x, dst_y, width, height);
+    nvgFillPaint(vg, img_paint);
+    nvgFill(vg);
+    return Success;
+}
 /*
  * Local Variables:
  * mode: c

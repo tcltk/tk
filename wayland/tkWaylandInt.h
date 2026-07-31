@@ -213,9 +213,10 @@ typedef struct TkWaylandGC {
  */
 
 typedef struct TkWaylandPixmap {
-    NVGLUframebuffer *fb;          /* NULL for depth 1 pixmaps */
-    GLFWwindow *glfwWindow;        /* The window whose GL context has the fb.*/
-    unsigned const char *xbm_bits; /* NULL for depth > 1 pixmaps */
+    NVGLUframebuffer *fb;       /* NULL for depth 1 pixmaps */
+    GLFWwindow *glfwWindow;     /* The window whose GL context has the fb.*/
+    unsigned const char *rgba;  /* Possibly NULL RGBA data for this pixmap.
+				 * Not NULL for depth 1 pixmaps. */
     int depth;
     int width;
     int height;

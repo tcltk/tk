@@ -528,9 +528,11 @@ XCopyArea(
  *
  * XCreateBitmapFromData --
  *
- *	Constructs a 1‑bit deep Pixmap from raw inline bitmap data.
- *	This is a compatibility wrapper that allocates a new pixmap
- *	of the requested size and depth 1.
+ *	Constructs a 1‑bit deep Pixmap from raw inline bitmap data.  Allocates
+ *	a new TkWaylandPixmap of the requested size and depth 1.  The XBM data
+ *	passed to this function is converted to an RGBA image that nanoVG can
+ *	use to create paint; the RGBA image is stored in the rgba field of the
+ *	pixmap.
  *
  * Results:
  *	Returns a new Pixmap handle on success, or None on failure.
@@ -540,6 +542,49 @@ XCopyArea(
  *
  *----------------------------------------------------------------------
  */
+
+/*
+ * Static helper which converts XBM data to an RGBA image usable by nanoVG.
+ * When nanoVG paints, it *multiplies* by the (float) RGBA values.  So we set
+ * the RGB value to 1.0 for each pixel, and the alpha value to either 0 or
+ * 1.0. The RGBA value is encoded as an int, with the format 0xAABBGGRR or
+ * 0xRRGGBBAA depending on endianness.
+ */
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    #define TRANSPARENT_PIXEL 0x00ffffff
+#else
+    #define TRANSPARENT_PIXEL 0xffffff00
+#endif
+#define OPAQUE_PIXEL 0xffffffff
+
+static void xbm2rgba(
+    unsigned char *xbmData,
+    unsigned int width,
+    unsigned int height,
+    unsigned int *rgba)
+{
+    unsigned int row, row0, col, bytes_per_row = (width + 7) / 8;
+    int pixelIndex = 0;
+    for (row = 0, row0 = 0; row < height; row++, row0 += bytes_per_row) {
+	int mask = 0x1;
+	for (col = 0; col < width; col++) {
+	    int byteIndex = row0 + (col >> 3); 
+	    if (xbmData[byteIndex] & mask) { 
+		rgba[pixelIndex] = OPAQUE_PIXEL;
+	    } else {
+		rgba[pixelIndex] = TRANSPARENT_PIXEL;
+	    }
+	    pixelIndex++;
+	    mask <<= 1;
+	    if (mask == 0x100) {
+		mask = 0x1;
+	    }
+	}
+    }
+}
+#undef TRANSPARENT_PIXEL
+#undef OPAQUE_PIXEL
 
 Pixmap
 XCreateBitmapFromData(
@@ -551,17 +596,18 @@ XCreateBitmapFromData(
 {
     Pixmap result = Tk_GetPixmap(display, d, (int)width, (int)height, 1);
     TkWaylandPixmap *pm = (TkWaylandPixmap*)result;
+
     /*
-     * We save the XBM data in the TkWaylandPixmap struct for
-     * use when displaying the pixmap.  We have to make a copy because
-     * the data is not static when the bitmap comes from a file.
+     * Convert the XBM data in the bitmap to an RGBA image and store it in the
+     * pixmap.
      */
-    size_t dataSize = ((width + 7)/8) * height;
-    pm->xbm_bits = Tcl_Alloc(dataSize);
-    memcpy(pm->xbm_bits, data, dataSize);
+
+    pm->rgba = Tcl_Alloc(width * height * sizeof(unsigned int));
+    xbm2rgba(data, width, height, pm->rgba);
     return result;
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -584,11 +630,10 @@ XCreateBitmapFromData(
  *
  *----------------------------------------------------------------------
  */
-
 int
 XCopyPlane(
    Display *display,
-   Drawable src,
+   Pixmap src,
    Drawable dst,
    GC gc,
    int src_x,
@@ -599,11 +644,7 @@ XCopyPlane(
    int dst_y,
    TCL_UNUSED(unsigned long)) /* plane */
 {
-    if (!TkWaylandDrawableIsPixmap(src)) {
-	printf("XCopyPlane: source drawable must be a pixmap!\n");
-	return BadDrawable;  // Not actually checked - FIX ME
-    }
-    TkWaylandPixmap *bitmap = TkWaylandPixmapFromDrawable(src);
+    TkWaylandPixmap *bitmap = TkWaylandPixmapFromPixmap(src);
     if (bitmap->depth != 1) {
 	printf("XCopyPlane: source drawable must have depth 1!\n");
 	return BadDrawable; // Not actually checked - FIX ME
@@ -616,43 +657,15 @@ XCopyPlane(
 	printf("XCopyPlane: Invalid dimensions for bitmap!\n");
 	return BadDrawable; // Not actually checked - FIX ME
     }
-    /*
-     * Convert the xbm data in the bitmap to an RGBA image
-     * with RGB white and A either 0 or 255.  (When nanoVG
-     * paints, it *multiplies* by the RGBA values.)
-     */
-    unsigned char rgba[4 * width * height];
-    memset(rgba, 255, 4 * width * height);
-    unsigned int xbm_bytes_per_row = (width + 7) / 8;
-    const unsigned char *data = bitmap->xbm_bits;
-    int ind = 3;
-    for (unsigned row = 0, i = 0; row < height; i += width, row++) {
-        for (unsigned col = 0; col < width; col++, ind += 4) {
-	    div_t qr = div(col, 8);
-	    int xbm_byte = row * xbm_bytes_per_row + qr.quot;
-	    int xbm_bit = qr.rem;
-	    int bit_value = (data[xbm_byte] >> xbm_bit) & 1;
-	    if (bit_value == 0) {
-		rgba[ind] = 0;
-	    }
-        }
-    }
-    for (int r = 0; r < height; r++) {
-        for (int c = 0; c < width; c++) {
-            printf("%s", rgba[4 * (r * width + c) + 3] ? "X" : " ");
-        }
-	printf("\n");
-    }
-    printf("\n");
     NVGcontext *vg = TkWaylandGetNVGContext(dst);
-    int nvg_image_id = nvgCreateImageRGBA(vg, width, height, 0, rgba);
+    int nvg_image_id = nvgCreateImageRGBA(vg, width, height, 0,
+			   (const unsigned char*) bitmap->rgba);
     if (!nvg_image_id) {
 	Tcl_Panic("Failed to create image\n");
     }
     XGCValues v;
     TkWaylandGetGCValues(gc, GCForeground, &v);
     NVGcolor fg = TkWaylandPixelToNVG(v.foreground);
-    //NVGcolor red = nvgRGBA(255, 0, 0, 255);
     NVGpaint img_paint = nvgImagePattern(
 	vg, dst_x, dst_y, width, height, 0.0f, //angle
 	nvg_image_id, 1.0f); //alpha multiplier
@@ -670,6 +683,7 @@ XCopyPlane(
 #endif
     return Success;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
