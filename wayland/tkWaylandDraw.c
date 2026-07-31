@@ -1136,10 +1136,7 @@ TkScrollWindow(
  *
  * XSetClipMask --
  *
- *	Set clip mask in GC. In the Wayland port, since NanoVG only supports
- *	rectangular clipping, a true 1-bit bitmap clip mask cannot be
- *	represented. Instead, this function clips to the mask pixmap's
- *	bounding box rectangle. If pixmap is None, any existing clip is
+ *	Set clip mask in GC.  If pixmap is None, any existing clip is
  *	cleared.
  *
  * Results:
