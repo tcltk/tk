@@ -419,34 +419,34 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
-		if {[winfo class $w] eq "TProgressbar"}  {
-		    set data [::tk::accessible::_getpbvalue $w]
-		    ::tk::accessible::set_acc_value $w $data
-		    ::tk::accessible::emit_selection_change $w
-		    if {[tk windowingsystem] eq "x11"} {
-			::tk::accessible::speak $data
-		    }
-		}
-
-		# Some widgets need special handling on X11
-		# because ATK does not align well with their
-		# configuration.
-
+	    }
+	    if {[winfo class $w] eq "TProgressbar"}  {
+		set data [::tk::accessible::_getpbvalue $w]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
 		if {[tk windowingsystem] eq "x11"} {
-		    if {[winfo class $w] eq "Menu"} {
-			set data [$w entrycget active -label]
-			::tk::accessible::set_acc_value $w $data
-			::tk::accessible::speak $data
-		    }
-		    if {[winfo class $w] eq "Spinbox" || \
-			    [winfo class $w] eq "TSpinbox" \
-			    || [winfo class $w] eq "Scale" || \
-			    [winfo class $w] eq "TScale" ||\
-			    [winfo class $w] eq "TCombobox"} {
-			set data [$w get]
-			::tk::accessible::set_acc_value $w $data
-			::tk::accessible::speak $data
-		    }
+		    ::tk::accessible::speak $data
+		}
+	    }
+
+	    # Some widgets need special handling on X11
+	    # because ATK does not align well with their
+	    # configuration.
+
+	    if {[tk windowingsystem] eq "x11"} {
+		if {[winfo class $w] eq "Menu"} {
+		    set data [$w entrycget active -label]
+		    ::tk::accessible::set_acc_value $w $data
+		    ::tk::accessible::speak $data
+		}
+		if {[winfo class $w] eq "Spinbox" || \
+			[winfo class $w] eq "TSpinbox" \
+			|| [winfo class $w] eq "Scale" || \
+			[winfo class $w] eq "TScale" ||\
+			[winfo class $w] eq "TCombobox"} {
+		    set data [$w get]
+		    ::tk::accessible::set_acc_value $w $data
+		    ::tk::accessible::speak $data
 		}
 	    }
 	}
@@ -1212,13 +1212,9 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Entry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind TEntry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
-	bind TEntry {+::tk::accessible::_updateselection %W}
-	bind Entry <Left> {+::tk::accessible::_updateselection %W}
-	bind TEntry <Left> {+::tk::accessible::_updateselection %W}
-	bind Entry <Right> {+::tk::accessible::_updateselection %W}
-	bind TEntry <Right> {+::tk::accessible::_updateselection %W}
-	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}
-	bind TEntry <<Selection>> {+::tk::accessible::_updateselection %W}
+	bind TEntry <FocusIn>  {+::tk::accessible::_updateselection %W}
+	bind Entry <<SelectAll>> {+::tk::accessible::_updateselection %W}
+	bind TEntry <<SelectAll>> {+::tk::accessible::_updateselection %W}
 
 	# Progressbar updates.
 	bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}
