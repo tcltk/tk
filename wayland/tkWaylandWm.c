@@ -913,7 +913,20 @@ Tk_MakeWindow(
 	winPtr->privatePtr->clipRectBuffer = ckalloc(
 	    CLIPRECTBUFSIZE * sizeof(clipRect));
 	winPtr->privatePtr->clipRectCount = 0;
-#undef CLIPRECTBUFSIZE    
+#undef CLIPRECTBUFSIZE
+	/*
+	 * clipShader doubles as the "not yet created" sentinel that
+	 * tkWaylandDrawClipMask checks before lazily calling
+	 * createClipShaders -- ckalloc doesn't zero memory, so without
+	 * this it's garbage, not 0, most of the time, which would make
+	 * that check silently skip real initialization and hand
+	 * glUseProgram/glBindVertexArray a bogus handle.
+	 */
+	winPtr->privatePtr->clipShader = 0;
+	winPtr->privatePtr->clipVAO = 0;
+	winPtr->privatePtr->clipVBO = 0;
+	winPtr->privatePtr->fbSizeUniform = 0;
+	winPtr->privatePtr->containerRect = (clipRect){0, 0, 0, 0};
     }
     if (Tk_IsTopLevel(winPtr)) {
 		
@@ -945,6 +958,17 @@ Tk_MakeWindow(
                 Tcl_DStringInit(&winPtr->privatePtr->pendingText);
                 winPtr->privatePtr->glfwWindow = NULL;
                 winPtr->privatePtr->fb = NULL;
+#define CLIPRECTBUFSIZE 8
+                winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
+                winPtr->privatePtr->clipRectBuffer = ckalloc(
+                    CLIPRECTBUFSIZE * sizeof(clipRect));
+                winPtr->privatePtr->clipRectCount = 0;
+#undef CLIPRECTBUFSIZE
+                winPtr->privatePtr->clipShader = 0;
+                winPtr->privatePtr->clipVAO = 0;
+                winPtr->privatePtr->clipVBO = 0;
+                winPtr->privatePtr->fbSizeUniform = 0;
+                winPtr->privatePtr->containerRect = (clipRect){0, 0, 0, 0};
             }
             
             /* No GLFW window for menu - will use subsurface via menu system */

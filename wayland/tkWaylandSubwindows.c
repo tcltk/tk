@@ -420,6 +420,16 @@ void tkWaylandDrawClipMask(
     TkWindow* winPtr,
     GLFWwindow* glfwWindow)
 {
+    /*
+     * createClipShaders was designed to be "called once per Tk window"
+     * but had no call site anywhere; do that here, on first use, now that
+     * the allocation in tkWaylandWm.c guarantees clipShader starts at a
+     * real 0 rather than whatever garbage ckalloc happened to leave
+     * behind (which would have made this check unreliable).
+     */
+    if (winPtr->privatePtr->clipShader == 0) {
+	createClipShaders(winPtr);
+    }
     if (1) { //// should be if the clipRects are invalid
 	updateClipRects(winPtr, glfwWindow);
     }
@@ -435,6 +445,7 @@ void tkWaylandDrawClipMask(
     glClearDepthf(0.5f);
     glClear(GL_DEPTH_BUFFER_BIT);
     if (winPtr->privatePtr->clipRectCount == 0) {
+		glDepthMask(GL_FALSE);       
 	return;
     }
     /* Get the framebuffer size to save in the fbSize uniform. */

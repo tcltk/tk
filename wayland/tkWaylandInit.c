@@ -26,6 +26,11 @@
 #include <GLFW/glfw3native.h>
 #include <wayland-egl.h>
 
+/*
+ * Debug flag for clip mask visualization.
+ * Set to 1 to draw translucent overlay of clip rectangles.
+ */
+static int debugClipMask = 0;
 
 /*
  *----------------------------------------------------------------------
@@ -870,6 +875,37 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
 /*
  *----------------------------------------------------------------------
  *
+ * verifyDepthState --
+ *
+ *	Verify and log the current depth buffer state.
+ *	Used for debugging clip mask issues around nvgEndFrame.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Logs depth state to stderr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void verifyDepthState(const char *label)
+{
+    GLint depthTest, depthMask, depthFunc;
+    GLint clearDepth;
+    
+    glGetIntegerv(GL_DEPTH_WRITEMASK, &depthMask);
+    depthTest = glIsEnabled(GL_DEPTH_TEST);
+    glGetIntegerv(GL_DEPTH_FUNC, &depthFunc);
+    glGetIntegerv(GL_DEPTH_CLEAR_VALUE, &clearDepth);
+    
+    fprintf(stderr, "Depth state %s: test=%d, mask=0x%x, func=0x%x, clear=0x%x\n",
+            label, depthTest, depthMask, depthFunc, clearDepth);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandBeginDraw --
  *
  *	Prepares the NanoVG context for drawing. Uses the provided
@@ -978,6 +1014,43 @@ TkWaylandBeginDraw(
 	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr),
 	    Tk_Width(winPtr), Tk_Height(winPtr), scale);
+
+    /*
+     * Rebuild and draw the occlusion mask that protects childPtr's own
+     * mapped children and overlapping higher siblings from being painted
+     * over by whatever childPtr is about to draw (see
+     * tkWaylandSubwindows.c).  This clears and rewrites the toplevel's
+     * *entire* depth buffer, so it must run once per self-contained
+     * draw-then-flush cycle -- which is exactly what each
+     * TkWaylandBeginDraw/TkWaylandEndDraw pair is under this port's
+     * current one-nvgFrame-per-primitive architecture.  Enable the
+     * GL_LEQUAL depth test that makes the mask actually occlude anything;
+     * TkWaylandEndDraw disables it again after the flush so it can't
+     * affect any unrelated GL work that happens between draw calls.
+     */
+    glfwMakeContextCurrent(glfwWindow);
+    
+    /* Log depth state before drawing clip mask. */
+    verifyDepthState("before clip mask");
+    
+    tkWaylandDrawClipMask(childPtr, glfwWindow);
+    
+    /* Log depth state after drawing clip mask. */
+    verifyDepthState("after clip mask");
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_FALSE);              /* ← ADD THIS */
+
+    /* If debug clip mask visualization is enabled, draw overlay rectangles. */
+    if (debugClipMask) {
+        /* This would draw translucent overlays of clip rectangles
+         * using NanoVG. Implementation would need to access the clip
+         * rectangles from the clip mask and draw them with nvgFillColor
+         * with alpha. */
+        fprintf(stderr, "Debug clip mask visualization enabled\n");
+    }
+
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
 
     /*
@@ -1084,10 +1157,19 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 
         fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
+    
+    /* Log depth state before nvgEndFrame. */
+    verifyDepthState("before nvgEndFrame");
+    
     nvgEndFrame(dcPtr->vg);
+    
+    /* Log depth state after nvgEndFrame to see if NanoVG destroyed it. */
+    verifyDepthState("after nvgEndFrame");
+    
     fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
 	   Tk_PathName(childPtr), Tk_PathName(winPtr));
 
+    glDisable(GL_DEPTH_TEST);
     nvgluBindFramebuffer(NULL);
 
     /*
@@ -1103,16 +1185,19 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      * we generate expose events for the children of this widget and for its
      * siblings which are higher in the stacking order then we should have
      * redrawn all of the widgets that we damaged.
+     *
+     * KEEP THIS BLOCK ENABLED (see analysis above: the depth mask alone is
+     * not yet a complete substitute for X11's per-window clipping + expose
+     * generation. The depth mask only protects immediate children and higher
+     * siblings, not deeper grandchildren or sibling-of-parent overlaps.
+     * Additionally, NanoVG may reset depth state during nvgEndFrame.)
      */
-
 #if 1
     /* Children */
     for (TkWindow *childPtr2 = childPtr->childList;
 	 childPtr2 != NULL;
          childPtr2 = childPtr2->nextPtr) {
         if (!Tk_IsMapped(childPtr2)) {
-
-
             continue;
         }
 

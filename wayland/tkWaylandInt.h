@@ -721,6 +721,16 @@ MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
 MODULE_SCOPE void     TkWaylandApplyGC(NVGcontext *vg, GC gc);
 
 /*
+ * Draws the subwindow-occlusion clip mask for winPtr's mapped children and
+ * overlapping higher siblings into the toplevel's depth buffer (see
+ * tkWaylandSubwindows.c).  Must be called, and GL_DEPTH_TEST/GL_LEQUAL must
+ * be active, before the nvgEndFrame that rasterizes winPtr's own content --
+ * otherwise widgets can paint directly over their children with nothing to
+ * stop them.
+ */
+MODULE_SCOPE void     tkWaylandDrawClipMask(TkWindow *winPtr, GLFWwindow *glfwWindow);
+
+/*
  *----------------------------------------------------------------------
  *
  * Keyboard Handling
