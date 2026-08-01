@@ -179,6 +179,9 @@ static void destroyGlfwTkInfo(
 	    }
 	    glfwMakeContextCurrent(glfwWindow);
 	    glfwSetWindowUserPointer(glfwWindow, NULL);
+	    // Remove all references to this NVGcontext from the font
+	    // registry.  Without this, windows will be rendered without text!
+	    TkWaylandFontContextDestroyed(infoPtr->vg);
 	    nvgDeleteGLES3(infoPtr->vg);
 	    Tcl_Free(infoPtr);
 	    return;
