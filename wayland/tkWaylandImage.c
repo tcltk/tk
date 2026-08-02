@@ -352,7 +352,6 @@ TkpPutRGBAImage(
 
     /* Ensure that we can initiate nanoVG drawing. */
     TkWaylandDrawingContext dc;
-    printf("Checking drawable %lx\n", drawable);
     if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
     }
