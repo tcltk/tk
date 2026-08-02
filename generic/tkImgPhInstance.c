@@ -1760,7 +1760,7 @@ TkImgDitherInstance(
 #ifdef TK_CAN_RENDER_RGBA
     /* Images with 8-bit color do not need dithering. */
     return;
-#lse
+#else
 
     PhotoModel *modelPtr = instancePtr->modelPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
