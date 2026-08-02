@@ -276,7 +276,7 @@ addClipRect(
      * Allocate a larger buffer if necessary.
      */
     if (data->clipRectCount >= data->clipRectBufferSize - 1) {
-	TKWL_TRACE("Reallocating clipRects for %s\n", Tk_PathName(winPtr));
+	printf("Reallocating clipRects for %s\n", Tk_PathName(winPtr));
         data->clipRectBufferSize *= 2;
         data->clipRectBuffer = ckrealloc(data->clipRectBuffer,
 	    data->clipRectBufferSize * sizeof(clipRect));
@@ -288,7 +288,7 @@ addClipRect(
      */
     int n = data->clipRectCount;
     data->clipRectBuffer[data->clipRectCount++] = getBounds(subwinPtr, scale);
-    TKWL_TRACE("Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
+    printf("Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
 	   Tk_PathName(subwinPtr), Tk_PathName(winPtr),
 	   data->clipRectBuffer[n].w, data->clipRectBuffer[n].h,
 	   data->clipRectBuffer[n].x, data->clipRectBuffer[n].y);
@@ -322,7 +322,7 @@ void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
      GLFWwindow* glfwWindow) /* The glfwWindow for its toplevel. */
 {
-    TKWL_TRACE("updateClipRects: %s\n", Tk_PathName(winPtr));
+    printf("updateClipRects: %s\n", Tk_PathName(winPtr));
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     int fbWidth, fbHeight;
@@ -430,75 +430,28 @@ void tkWaylandDrawClipMask(
     if (winPtr->privatePtr->clipShader == 0) {
 	createClipShaders(winPtr);
     }
-
-    /*
-     * Only recompute winPtr's clip-rect list (which children/siblings
-     * overlap it, and where) when something that list depends on has
-     * actually changed -- a child/sibling was mapped, unmapped, moved,
-     * resized, or restacked.  TKWP_CLIPRECTS_VALID is cleared by whatever
-     * code handles those geometry events (see the comment on the flag's
-     * definition in tkWaylandInt.h).  Previously this ran unconditionally
-     * on every call, i.e. once per Xlib drawing primitive rather than once
-     * per actual geometry change -- the CPU-side rebuild plus the VBO
-     * upload in updateClipRects was pure overhead the vast majority of the
-     * time, and was a meaningful contributor to visible redraw/scrolling
-     * jank since it ran interleaved with drawing rather than only when
-     * needed.
-     */
-    if (!(winPtr->privatePtr->flags & TKWP_CLIPRECTS_VALID)) {
+    if (1) { //// should be if the clipRects are invalid
 	updateClipRects(winPtr, glfwWindow);
-	winPtr->privatePtr->flags |= TKWP_CLIPRECTS_VALID;
     }
-
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    /* Bind the toplevel's shared backing-store framebuffer. */
+    /* Bind the framebuffer. */
     nvgluBindFramebuffer(infoPtr->winPtr->privatePtr->fb);
-
-    float scale;
-    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
-    int fbWidth, fbHeight;
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-
-    /*
-     * Reset winPtr's OWN rectangle in the depth buffer back to 0.5
-     * (unoccluded) before anything else, scoped to that rectangle via
-     * glScissor.  This has to happen every time, even when winPtr has no
-     * clip rects of its own (clipRectCount == 0):
-     *
-     * A parent's clip mask stamps depth 0.25 over the *rectangle of each
-     * of its children*, to keep the parent's own subsequent draws from
-     * overwriting that child.  But the child's own content is drawn at
-     * the same depth (0.5) the parent's content would have used.  So
-     * once winPtr starts its own draw, that leftover 0.25 stamped by its
-     * parent is still sitting over winPtr's entire rectangle and fails
-     * GL_LEQUAL against winPtr's own fragments too -- not just the
-     * parent's. Previously this function returned immediately when
-     * clipRectCount was 0, leaving that stamp untouched, which is what
-     * produced holes/missing glyphs in leaf widgets (e.g. a text
-     * widget redrawing a single clicked line) whenever their parent
-     * had drawn -- and therefore stamped protection over them -- since
-     * the widget last rebuilt its own clip mask.
-     *
-     * Scoping the clear to winPtr's own rect (rather than the whole
-     * framebuffer, as a full unscoped glClear would) also means this no
-     * longer disturbs occlusion protection that unrelated widgets
-     * elsewhere in the same toplevel are currently relying on.
-     */
-    clipRect selfBounds = getBounds(winPtr, scale);
-    glEnable(GL_SCISSOR_TEST);
-    glScissor((GLint) selfBounds.x,
-	      fbHeight - (GLint) (selfBounds.y + selfBounds.h),
-	      (GLsizei) selfBounds.w, (GLsizei) selfBounds.h);
+    /* Enable drawing to the depth buffer. */
     glDepthMask(GL_TRUE);
+    /*
+     * Clear all depths to 0.5, which is where nanoVG draws.
+     * We need to do this even if there are no clipRects.
+     */
     glClearDepthf(0.5f);
     glClear(GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_SCISSOR_TEST);
-
     if (winPtr->privatePtr->clipRectCount == 0) {
-	glDepthMask(GL_FALSE);
+		glDepthMask(GL_FALSE);       
 	return;
     }
-
+    /* Get the framebuffer size to save in the fbSize uniform. */
+    int fbWidth;
+    int fbHeight;
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
     /* Don't change any colors. */
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     /* Clipping rectangles are drawn at z = -0.5, i.e. depth 0.25 */
