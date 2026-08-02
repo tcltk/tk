@@ -704,9 +704,11 @@ MODULE_SCOPE void WaylandShaper_Init(WaylandShaper *s);
 
 /* Destroy a shaper structure and free resources. */
 MODULE_SCOPE void WaylandShaper_Destroy(WaylandShaper *s);
+MODULE_SCOPE void TkWaylandFontContextDestroyed(NVGcontext *vg);
 
 /* Get the pixel size of a WaylandFont. */
 MODULE_SCOPE int TkpGetFontPixelSize(Tk_Font tkfont);
+
 
 /*
  *----------------------------------------------------------------------
