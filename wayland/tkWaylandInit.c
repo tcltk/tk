@@ -1193,9 +1193,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      *
      * KEEP THIS BLOCK ENABLED (see analysis above: the depth mask alone is
      * not yet a complete substitute for X11's per-window clipping + expose
-     * generation. The depth mask only protects immediate children and higher
-     * siblings, not deeper grandchildren or sibling-of-parent overlaps.
-     * Additionally, NanoVG may reset depth state during nvgEndFrame.)
+     * generation.
      */
 #if 1
     /* Children */

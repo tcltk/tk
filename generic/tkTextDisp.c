@@ -21,6 +21,8 @@
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
+#elif defined(HAVE_WAYLAND)
+#include "tkWaylandInt.h" 
 #else
 #include "tkUnixInt.h"
 #endif
