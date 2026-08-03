@@ -968,36 +968,170 @@ TkpDrawFrameEx(
                        borderWidth, relief);
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
  * TkScrollWindow --
  *
- *	Scroll a rectangular area of a window.
- *	Returns 1 (True) — the exposed region is handled by a subsequent
- *	expose event that Tk will generate.
+ *	Scroll a rectangular area of a window by copying the pixel
+ *	content within the drawable's toplevel backing FBO, then
+ *	reporting the newly-revealed strip as the damage region so Tk's
+ *	generic display code redraws only that area.
  *
  * Results:
- *	Always returns 1 (True).
+ *	Returns 1 (True) if the scroll was performed by copying pixels
+ *	(so the caller should only redraw the region added to
+ *	damageRgn); returns 0 (False) if the copy could not be done, so
+ *	the caller must redraw the entire scrolled rectangle itself.
  *
  * Side effects:
- *	None.
+ *	Copies pixel content within the drawable's backing store and
+ *	fills in damageRgn with the region that still needs a fresh
+ *	redraw.
  *
  *----------------------------------------------------------------------
  */
 
 bool
 TkScrollWindow(
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(TkRegion))
+    int       x, int y,
+    int       width, int height,
+    int       dx, int dy,
+    TkRegion  damageRgn)
 {
+    TkWindow  *childPtr = (TkWindow *)tkwin;
+    TkWindow  *winPtr   = childPtr;
+    float      offX = 0, offY = 0;
+    XRectangle srcRect, dstRect;
+    TkRegion   coveredRgn;
+    GLFWwindow *glfwWindow;
+    NVGLUframebuffer *fb;
+    GLuint scratchFbo = 0, scratchTex = 0;
+    int fbX0, fbY0, fbX1, fbY1, fbW, fbH, fbDx, fbDy;
+    int winFbWidth, winFbHeight;
+    int srcGLY0, srcGLY1, dstGLY0, dstGLY1;
+    float scale;
+
+    if (width <= 0 || height <= 0 || (dx == 0 && dy == 0)) {
+        return 0;
+    }
+
+    /* Same walk TkWaylandBeginDraw does, to find the toplevel and this
+     * widget's offset within it. */
+    while (!Tk_IsTopLevel(winPtr)) {
+        offX += winPtr->changes.x;
+        offY += winPtr->changes.y;
+        winPtr = winPtr->parentPtr;
+    }
+
+    if (!winPtr->privatePtr || !winPtr->privatePtr->fb) {
+        return 0;               /* no backing store yet -- let caller redraw */
+    }
+
+    glfwWindow = winPtr->privatePtr->glfwWindow;
+    fb         = winPtr->privatePtr->fb;
+
+    glfwMakeContextCurrent(glfwWindow);
+    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
+    glfwGetFramebufferSize(glfwWindow, &winFbWidth, &winFbHeight);
+
+    /* Convert widget-local logical coords to backing-store pixels,
+     * computing each edge independently so rounding can't open a
+     * seam between the blit rect and its own width/height. */
+    fbX0 = (int)lroundf((offX + x) * scale);
+    fbY0 = (int)lroundf((offY + y) * scale);
+    fbX1 = (int)lroundf((offX + x + width)  * scale);
+    fbY1 = (int)lroundf((offY + y + height) * scale);
+    fbW  = fbX1 - fbX0;
+    fbH  = fbY1 - fbY0;
+    fbDx = (int)lroundf((offX + x + dx) * scale) - fbX0;
+    fbDy = (int)lroundf((offY + y + dy) * scale) - fbY0;
+
+    /*
+     * Move the pixels within the toplevel's backing FBO. A direct
+     * FBO->FBO blit with overlapping src/dst rects is undefined by the
+     * GL spec (and for a scroll they normally do overlap), so
+     * round-trip through a same-size scratch texture -- same
+     * read-FBO/draw-FBO blit renderFBO() already uses, just targeting
+     * an offscreen FBO instead of the default framebuffer.
+     */
+    glGenTextures(1, &scratchTex);
+    glBindTexture(GL_TEXTURE_2D, scratchTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fbW, fbH, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glGenFramebuffers(1, &scratchFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, scratchFbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, scratchTex, 0);
+
+    /*
+     * NanoVG's own draw calls flip Tk's top-down (y=0 at top)
+     * coordinates into GL's native bottom-up framebuffer space
+     * internally, via the projection matrix set up in nvgBeginFrame --
+     * see the same flip called out for the clip-rect vertex shader in
+     * tkWaylandSubwindows.c's addClipRect(). glBlitFramebuffer is raw
+     * GL and gets none of that, so do it by hand for the two touches
+     * to the real backing store (the scratch texture has no such
+     * convention to preserve, so it's left alone).
+     */
+    srcGLY0 = winFbHeight - fbY1;
+    srcGLY1 = winFbHeight - fbY0;
+    dstGLY0 = winFbHeight - (fbY1 + fbDy);
+    dstGLY1 = winFbHeight - (fbY0 + fbDy);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, scratchFbo);
+    glBlitFramebuffer(fbX0, srcGLY0, fbX1, srcGLY1,
+                       0, 0, fbW, fbH,
+                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, scratchFbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb->fbo);
+    glBlitFramebuffer(0, 0, fbW, fbH,
+                       fbX0 + fbDx, dstGLY0, fbX1 + fbDx, dstGLY1,
+                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &scratchFbo);
+    glDeleteTextures(1, &scratchTex);
+
+    /*
+     * This changes the backing store outside the normal
+     * BeginDraw/EndDraw display-proc path, so nothing will otherwise
+     * mark the toplevel dirty -- do that ourselves or the scrolled
+     * content won't reach the screen until something else happens to
+     * trigger a present.
+     */
+    {
+        glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+        if (infoPtr) {
+            infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+        }
+    }
+
+    /*
+     * Report the newly-revealed strip -- source rect minus what the
+     * shifted copy now covers -- in the same widget-local, unscaled
+     * coordinates the caller passed in.
+     */
+    srcRect.x = (short)x;
+    srcRect.y = (short)y;
+    srcRect.width  = (unsigned short)width;
+    srcRect.height = (unsigned short)height;
+
+    dstRect = srcRect;
+    dstRect.x = (short)(x + dx);
+    dstRect.y = (short)(y + dy);
+
+    coveredRgn = TkCreateRegion();
+    TkUnionRectWithRegion(&dstRect, coveredRgn, coveredRgn);
+    TkUnionRectWithRegion(&srcRect, damageRgn, damageRgn);
+    TkSubtractRegion(damageRgn, coveredRgn, damageRgn);
+    TkDestroyRegion(coveredRgn);
+
     return 1;
 }
 
