@@ -992,7 +992,7 @@ TkWaylandBeginDraw(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 {
@@ -1160,7 +1160,6 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     infoPtr->flags |= TKWL_NEEDS_DISPLAY;
     ////}
 }
-
 
 /*
  *----------------------------------------------------------------------
