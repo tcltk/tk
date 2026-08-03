@@ -429,8 +429,13 @@ void tkWaylandDrawClipMask(
     /* Enable drawing to the depth buffer. */
     glDepthMask(GL_TRUE);
     /*
-     * Clear all depths to 0.5, which is where nanoVG draws.
-     * We need to do this even if there are no clipRects.
+     * Clear all depths to 0.5, which is where nanoVG draws.  We need to do
+     * this even if there are no clipRects because there may be detritis left
+     * in the buffer from a previous draw.  Note that clearing the entire
+     * buffer is faster than just clearing the bounding rectangle of this
+     * widget.  Note also that clearing the entire buffer cannot affect
+     * drawing any other widget, because every draw reconstructs the entire
+     * depth buffer.
      */
     glClearDepthf(0.5f);
     glClear(GL_DEPTH_BUFFER_BIT);

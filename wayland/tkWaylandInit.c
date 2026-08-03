@@ -913,7 +913,7 @@ TkWaylandBeginDraw(
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
     /* Set up the nanoVG drawing context for this nvgFrame */
-    dcPtr->vg = infoPtr->vg; 
+    dcPtr->vg = infoPtr->vg;
     dcPtr->drawable = drawable;
 
     nvgResetTransform(dcPtr->vg);
@@ -960,7 +960,18 @@ TkWaylandBeginDraw(
      */
 
     TkWaylandApplyGC(dcPtr->vg, gc);
+
+    /*
+     * Translate to the widget origin.
+     */
+
     nvgTranslate(dcPtr->vg, x, y);
+    /*
+     * Clip the drawing to the bounds of this widget - needed for a
+     * Canvas widget which can draw to its pixmap outside of its bounds.
+     */
+
+    nvgScissor(dcPtr->vg, 0, 0, Tk_Width(childPtr), Tk_Height(childPtr));
 
     return TCL_OK;
 }
@@ -1037,7 +1048,35 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 
         fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
+    
+    /*
+     * Draw the clip mask into the depth buffer.  This must use childPtr
+     * (the widget actually being drawn), not winPtr (the enclosing
+     * toplevel) -- each TkWindow owns its own clip mask built from its
+     * own overlapping children/siblings.  Passing the toplevel here
+     * caused every direct child of the toplevel to be masked out of its
+     * own draw, since the toplevel's clip mask includes all of its
+     * mapped children.
+     */
+
+    tkWaylandDrawClipMask(childPtr, glfwWindow);
+
+    /*
+     * Enable clipping using the depth buffer with depth test GL_LEQUAL.  The
+     * call to drawClipMask just set the depth of each fragment inside a
+     * clipping rectangle to 0.25.  A fragment provided to the nanoVG fragment
+     * shader has depth 0.5. Since 0.5 > 0.25 the nvg fragment shader discards
+     * fragments inside of any clip rectangle.  Since 0.5 == 0.5 the nvg
+     * pixels are drawn outside of all of the clip rectangles.
+     */
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    /* Run all queued nanoVG drawing commands. */
+
     nvgEndFrame(dcPtr->vg);
+
     fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
 	   Tk_PathName(childPtr), Tk_PathName(winPtr));
 
@@ -1050,6 +1089,32 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      */
 
     nvgRestore(dcPtr->vg);
+
+#if 0
+    // These extra expose events help, but do not completely fix some
+    // artifacts, like labelframes not updating the text.  This is
+    // probably the wrong approach.
+    /* Children */
+    for (TkWindow *childPtr = winPtr->childList;
+         childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
+                                  Tk_Height(childPtr));
+    }
+    /* Higher siblings. */
+    for (TkWindow *childPtr = childPtr->nextPtr;
+         childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
+                                  Tk_Height(childPtr));
+    }
+#endif
 
     /*
      * Drawing this widget covered up all of the widgets that it contains.  If
@@ -1151,8 +1216,10 @@ TkWaylandGetNVGContext(
 MODULE_SCOPE NVGcontext *
 TkWaylandGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || shutdownInProgress)
+    if (!GlfwIsInitialized || shutdownInProgress) {
         return NULL;
+	}
+	
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
     glfwMakeContextCurrent(mainGlfwWindow);
     Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);

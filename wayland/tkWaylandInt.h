@@ -870,6 +870,17 @@ MODULE_SCOPE int Cups_Init(Tcl_Interp *interp);
 MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
 void TkWaylandMenuInit(void);
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Support for clipping subwindows.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void tkWaylandDrawClipMask(TkWindow* winPtr,
+					GLFWwindow* glfwWindow);
+
 #endif /* _TkWaylandINT_H */
 
 /*
