@@ -693,7 +693,7 @@ XFT_LIBS
 XFT_CFLAGS
 XMKMF
 WAYLAND_LDFLAGS
-HAVE_WAYLAND
+TK_USE_WAYLAND
 WL_PASTE
 WL_COPY
 FONTCONFIG_LIBS
@@ -7985,7 +7985,7 @@ printf '%s\n' "$enable_wayland" >&6; }
 
     WAYLAND_CFLAGS=""
     WAYLAND_LIBS=""
-    HAVE_WAYLAND=0
+    TK_USE_WAYLAND=0
 
     if test "$enable_wayland" = "yes"; then
         # When Wayland is enabled -> disable Xft explicitly
@@ -8077,7 +8077,7 @@ printf '%s\n' "yes" >&6; }
             WAYLAND_CLIENT_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
             found_wayland=yes
 
-printf '%s\n' "#define HAVE_WAYLAND 1" >>confdefs.h
+printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -8453,7 +8453,7 @@ printf '%s\n' "yes" >&6; }
            && test -n "$WL_COPY" \
            && test -n "$WL_PASTE"; then
 
-            HAVE_WAYLAND=1
+            TK_USE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
             WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
