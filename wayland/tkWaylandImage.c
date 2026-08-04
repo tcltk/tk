@@ -22,6 +22,7 @@
 #include "tkWaylandInt.h"
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+#include <limits.h>
 
 #define NANOVG_GLES3
 #include "nanovg_gl_utils.h"
@@ -711,6 +712,25 @@ XCopyPlane(
 
     if (gcPtr == NULL) {
         return BadGC;
+    }
+
+    /*
+     * Reject bogus width/height before doing any arithmetic with them.
+     * width/height are unsigned, so a negative int passed by a caller
+     * (e.g. from an upstream clipping bug) is converted to a huge
+     * unsigned value before this function even runs -- there is no
+     * "negative" value to catch here, only a suspiciously enormous one.
+     * Treat anything above INT_MAX as invalid, since no real bitmap
+     * region is anywhere close to that size; this is what a wrapped
+     * -1/-2/etc. looks like once reinterpreted as unsigned. This also
+     * guards the numPixels multiplication below against overflow driving
+     * an oversized ckalloc request that would panic instead of failing
+     * cleanly.
+     */
+    if (width == 0 || height == 0 ||
+        width  > (unsigned int)INT_MAX ||
+        height > (unsigned int)INT_MAX) {
+        return BadValue;
     }
 
     /* Get foreground and background colors from GC. */
