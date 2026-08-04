@@ -318,6 +318,7 @@ extern const char *const WmAttributeNames[];
 #define TKWL_NEEDS_DISPLAY  1
 #define TKWL_DONT_SWAP      2
 #define TKWL_NEVER_FOCUSED  4
+#define TKWL_IS_DRAWING     8
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
@@ -880,6 +881,32 @@ void TkWaylandMenuInit(void);
 
 MODULE_SCOPE void tkWaylandDrawClipMask(TkWindow* winPtr,
 					GLFWwindow* glfwWindow);
+/*
+ *----------------------------------------------------------------------
+ *
+ * Stub functions which are not declared elsewhere. 
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void TkpSetCursor(Cursor cursor);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Upper bound for the size of the feathering halo around an anti-aliased
+ * shape.  NanoVG adds a 0.5 pixel halo around the floating point shape and
+ * then adjusts the color of all pixels whose center is contained in the
+ * expanded region.  But that can include pixels which are surprisingly
+ * far from the floating point shape, especially when there is a very
+ * sharp mitered join in a stroked path.  NanoVG does replace the miter
+ * by a bevel if it is too sharp, but nonethless the bound is larger
+ * than one would expect. 
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define AA_PAD 6
 
 #endif /* _TkWaylandINT_H */
 

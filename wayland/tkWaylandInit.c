@@ -952,6 +952,13 @@ TkWaylandBeginDraw(
 	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr),
 	    Tk_Width(winPtr), Tk_Height(winPtr), scale);
+
+    /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
+    if (infoPtr->flags & TKWL_IS_DRAWING) {
+	Tcl_Panic("Nested call to nvgBeginFrame");
+    }
+    infoPtr->flags |= TKWL_IS_DRAWING;
+
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
 
     /*
@@ -1019,6 +1026,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     }
     /* winPtr is the toplevel containing our drawable. */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
@@ -1073,8 +1081,12 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
+    /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
+    if (infoPtr->flags & TKWL_IS_DRAWING == 0) {
+	Tcl_Panic("EndFrame without BeginFrame\n");
+    }
+    infoPtr->flags &= ~TKWL_IS_DRAWING;
     /* Run all queued nanoVG drawing commands. */
-
     nvgEndFrame(dcPtr->vg);
 
     fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
@@ -1155,7 +1167,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
      */
 
-    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+  //  glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     ////if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
     infoPtr->flags |= TKWL_NEEDS_DISPLAY;
     ////}

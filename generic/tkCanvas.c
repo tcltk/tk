@@ -23,6 +23,13 @@
 #ifdef _WIN32
 #include "tkWinInt.h"
 #endif
+#ifdef TK_USE_WAYLAND
+#include "tkWaylandInt.h"
+#endif
+
+#ifndef AA_PAD
+#define AA_PAD 0
+#endif
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
@@ -3147,13 +3154,17 @@ DisplayCanvas(
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
 	/*
-	 * Clear the area to be redrawn.
+	 * Clear the area to be redrawn.  If items are anti-aliased
+	 * we need to also clear the nearby pixels which were modified
+	 * by the anti-aliasing.  Otherwise, dragging an object in the
+	 * canvas will leave a vapor trail of boundary-colored pixels.
 	 */
 
 	XFillRectangle(Tk_Display(tkwin), pixmap, canvasPtr->pixmapGC,
-		screenX1 - canvasPtr->drawableXOrigin,
-		screenY1 - canvasPtr->drawableYOrigin, (unsigned int) width,
-		(unsigned int) height);
+		screenX1 - canvasPtr->drawableXOrigin - AA_PAD,
+		screenY1 - canvasPtr->drawableYOrigin - AA_PAD,
+	        (unsigned int) width + 2*AA_PAD,
+		(unsigned int) height + 2*AA_PAD);
 
 	/*
 	 * Scan through the item list, redrawing those items that need it. An
@@ -3161,19 +3172,24 @@ DisplayCanvas(
 	 * on-screen area or (b) it intersects the full canvas area and its
 	 * type requests that it be redrawn always (e.g. so subwindows can be
 	 * unmapped when they move off-screen).
+	 *
+	 * If the items are anti-aliased we use a larger bounding box,
+	 * expanded by AA_PAD, which is an upper bound for the thickness of
+	 * the feathering halo.
+	 * 
 	 */
-
+	
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
-	    if ((itemPtr->x1 >= screenX2)
-		    || (itemPtr->y1 >= screenY2)
-		    || (itemPtr->x2 < screenX1)
-		    || (itemPtr->y2 < screenY1)) {
+	    if ((itemPtr->x1 - AA_PAD >= screenX2)
+		    || (itemPtr->y1 - AA_PAD >= screenY2)
+		    || (itemPtr->x2 + AA_PAD < screenX1)
+		    || (itemPtr->y2 + AA_PAD < screenY1)) {
 		if (!AlwaysRedraw(itemPtr)
-			|| (itemPtr->x1 >= canvasPtr->redrawX2)
-			|| (itemPtr->y1 >= canvasPtr->redrawY2)
-			|| (itemPtr->x2 < canvasPtr->redrawX1)
-			|| (itemPtr->y2 < canvasPtr->redrawY1)) {
+			|| (itemPtr->x1 - AA_PAD >= canvasPtr->redrawX2)
+			|| (itemPtr->y1 - AA_PAD >= canvasPtr->redrawY2)
+			|| (itemPtr->x2 + AA_PAD < canvasPtr->redrawX1)
+			|| (itemPtr->y2 + AA_PAD < canvasPtr->redrawY1)) {
 		    continue;
 		}
 	    }
