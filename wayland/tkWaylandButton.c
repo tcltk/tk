@@ -5,7 +5,6 @@
  *
  *  Copyright © 1996-1997 Sun Microsystems, Inc.
  *  Copyright © 2026 Kevin Walzer
- *  Copyright © 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,8 +24,8 @@
 extern void TkpDrawCheckIndicator(Tk_Window tkwin,
     Display *display, Drawable d, int x, int y,
     Tk_3DBorder bgBorder, XColor *indicatorColor,
-    XColor *selectColor, XColor *disColor, int on,
-    int disabled, int mode);
+    XColor *selectColor, XColor *disColor, int indicatorSize,
+    int on, int disabled, int mode);
 
 void ImageChanged(			/* to be passed to Tk_GetImage() */
     void *clientData,
@@ -85,6 +84,7 @@ ImageChanged(TCL_UNUSED(void *),
              TCL_UNUSED(int)) /*imageHeight */
 {
 
+  printf("ImageChanged\n");
   /* No-op. */
 
 }
@@ -128,9 +128,15 @@ TkpCreateButton(
 */
 
 static void
-ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
-              int width, int height)
+ShiftByOffset(
+    TkButton *butPtr,
+    int relief,
+    int *x,
+    int *y,
+    int width,
+    int height)
 {
+    printf("ShiftByOffset: %s\n", Tk_PathName(butPtr->tkwin)); 
     if (relief != TK_RELIEF_RAISED && butPtr->type == TYPE_BUTTON &&
         !Tk_StrictMotif(butPtr->tkwin)) {
         int shiftX = (relief == TK_RELIEF_SUNKEN) ? 2 : 1;
@@ -161,128 +167,38 @@ ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
 */
 
 static void
-DrawButtonBitmap(TkButton *butPtr,
-                 int x,
-                 int y,
-                 int width,
-                 int height,
-                 int *pendingImageIdOut)
+DrawButtonBitmap(
+    TkButton *butPtr,
+    int x,
+    int y,
+    int width,
+    int height)
 {
-    Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
-    NVGcontext *vg = TkWaylandGetNVGContext(d);
-    Pixmap bitmap = butPtr->bitmap;
-    unsigned int bm_width, bm_height, border_width, depth;
-    int x_hot, y_hot;
-    XGCValues gcValues;
-    unsigned char fg_r, fg_g, fg_b;
-    int imageId;
-    Display *dpy;
-    XImage *image = NULL;
-
-    if (!bitmap) {
-        /* No bitmap: draw fallback rectangle. */
-        nvgBeginPath(vg);
-        nvgRect(vg, x, y, width, height);
-        nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
-        nvgFill(vg);
-        return;
-    }
-
-    /* Get bitmap dimensions using XGetGeometry. */
-    dpy = Tk_Display(butPtr->tkwin);
-    if (XGetGeometry(dpy, bitmap, None, &x_hot, &y_hot,
-                     &bm_width, &bm_height, &border_width, &depth) != Success) {
-        /* Geometry failed — fallback. */
+    Drawable d = TkWaylandDrawableForTkWindow((TkWindow*) butPtr->tkwin);
+    GC currentGC;
+    if (!butPtr->bitmap) {
+        printf("DrawButtonBitmap: no bitmap for %s\n", Tk_PathName(butPtr));
         goto fallback_rect;
     }
-
-    /* Validate size. */
-    if (bm_width != (unsigned int)width || bm_height != (unsigned int)height) {
-        goto fallback_rect;
-    }
-
-    /* Get foreground color from the current GC. */
-    GC currentGC = butPtr->normalTextGC;
+    /* Get the appropriate graphics context for the button state. */
     if (butPtr->state == STATE_DISABLED && butPtr->disabledFg) {
         currentGC = butPtr->disabledGC;
     } else if (butPtr->state == STATE_ACTIVE && !Tk_StrictMotif(butPtr->tkwin)) {
         currentGC = butPtr->activeTextGC;
-    }
-
-    if (currentGC) {
-        XGetGCValues(butPtr->display, currentGC, GCForeground, &gcValues);
-        fg_r = (unsigned char)((gcValues.foreground >> 16) & 0xFF);
-        fg_g = (unsigned char)((gcValues.foreground >> 8)  & 0xFF);
-        fg_b = (unsigned char)(gcValues.foreground & 0xFF);
     } else {
-        fg_r = (unsigned char)(butPtr->normalFg->red   >> 8);
-        fg_g = (unsigned char)(butPtr->normalFg->green >> 8);
-        fg_b = (unsigned char)(butPtr->normalFg->blue  >> 8);
+      currentGC = butPtr->normalTextGC;
     }
-
-    /*
-     * Read bitmap pixels via XGetImage.
-     */
-    image = XGetImage(dpy, bitmap,
-                      0, 0, bm_width, bm_height,
-                      1, XYPixmap);
-
-    if (image == NULL) {
-        goto fallback_rect;
+    if (currentGC) {
+        XCopyPlane(butPtr->display, butPtr->bitmap, d, currentGC, 0, 0,
+		   width, height, x, y, 1);
+	return;
+    } else { 
+        printf("No graphics context for drawing bitmap\n");
+	goto fallback_rect;
     }
-
-    /*
-     * Allocate RGBA buffer using malloc/free to avoid Tcl allocator issues.
-     * NanoVG uses standard malloc/free internally, so using the system
-     * allocator is safer here.
-     */
-    unsigned char *rgba = (unsigned char *)malloc(bm_width * bm_height * 4);
-    if (!rgba) {
-        XDestroyImage(image);
-        goto fallback_rect;
-    }
-
-    /* Convert XImage pixels directly to RGBA. */
-    for (unsigned int j = 0; j < bm_height; j++) {
-        for (unsigned int i = 0; i < bm_width; i++) {
-            unsigned long pixel = XGetPixel(image, (int)i, (int)j);
-            unsigned char *p = &rgba[(j * bm_width + i) * 4];
-            if (pixel != 0) {
-                p[0] = fg_r;
-                p[1] = fg_g;
-                p[2] = fg_b;
-                p[3] = 255;
-            } else {
-                p[0] = p[1] = p[2] = p[3] = 0;
-            }
-        }
-    }
-
-    /* Draw via NanoVG using the RGBA image. */
-    imageId = nvgCreateImageRGBA(vg, (int)bm_width, (int)bm_height, 0, rgba);
-    
-    /* Free our RGBA buffer immediately - NanoVG copies the data. */
-    free(rgba);
-    XDestroyImage(image);
-
-    if (imageId > 0) {
-        NVGpaint paint = nvgImagePattern(vg, x, y, bm_width, bm_height, 0,
-                                         imageId, 1);
-        nvgBeginPath(vg);
-        nvgRect(vg, x, y, bm_width, bm_height);
-        nvgFillPaint(vg, paint);
-        nvgFill(vg);
-
-        if (pendingImageIdOut) {
-            *pendingImageIdOut = imageId;
-        }
-    }
-    return;
-
+  
 fallback_rect:
-    if (image != NULL) {
-        XDestroyImage(image);
-    }
+    NVGcontext *vg = TkWaylandGetNVGContext(d);
     nvgBeginPath(vg);
     nvgRect(vg, x, y, width, height);
     nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
@@ -311,8 +227,7 @@ DrawButtonImage(
     int y,
     int width,
     int height,
-    int selected,
-    int *pendingImageIdOut)
+    int selected)
 {
     if (butPtr->image) {
         Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
@@ -328,7 +243,7 @@ DrawButtonImage(
         }
     } else if (butPtr->bitmap != None) {
         /* Bitmap drawing – convert to RGBA and draw with NanoVG. */
-        DrawButtonBitmap(butPtr, x, y, width, height, pendingImageIdOut);
+        DrawButtonBitmap(butPtr, x, y, width, height);
     }
 }
 
@@ -407,13 +322,7 @@ TkpDisplayButton(void *clientData)
     int imageXOffset = 0, imageYOffset = 0;
     int padX, padY, bd, hl;
     int winWidth, winHeight;
-    int pendingBitmapImageId = -1;
     Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
-    int rc = TkWaylandBeginDraw(drawable, currentGC, &dc);
-    if (rc != TCL_OK) {
-        printf("Bad Drawable in TkpButton\n");
-        return;
-    }
     winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
     relief = butPtr->relief;
@@ -440,17 +349,10 @@ TkpDisplayButton(void *clientData)
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {
-        unsigned int bm_width, bm_height, border_width, depth;
-        int x_hot, y_hot;
-        Display *dpy = Tk_Display(butPtr->tkwin);
-
-        XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
-                     &bm_width, &bm_height, &border_width, &depth);
-        width = (int)bm_width;
-        height = (int)bm_height;
-        haveImage = 1;
+        Tk_SizeOfBitmap(Tk_Display(butPtr->tkwin), butPtr->bitmap,
+			&width, &height);
+	haveImage = 1;
     }
-
     haveText = (butPtr->textWidth > 0 && butPtr->textHeight > 0);
 
     /* Handle compound button (image + text). */
@@ -500,14 +402,12 @@ TkpDisplayButton(void *clientData)
                         butPtr->indicatorSpace + fullWidth,
                         fullHeight, &x, &y);
 
-        x += butPtr->indicatorSpace;
-
+        x -= butPtr->indicatorSpace;
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
         /* Draw image with offset. */
         DrawButtonImage(butPtr, x + imageXOffset, y + imageYOffset,
-                        width, height, (butPtr->flags & SELECTED),
-                        &pendingBitmapImageId);
+                        width, height, (butPtr->flags & SELECTED));
 
         /* Draw text with offset. */
         DrawButtonText(butPtr, x + textXOffset, y + textYOffset);
@@ -524,8 +424,7 @@ TkpDisplayButton(void *clientData)
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
         DrawButtonImage(butPtr, x, y, width, height,
-                        (butPtr->flags & SELECTED),
-                        &pendingBitmapImageId);
+                        (butPtr->flags & SELECTED));
     }
 
     /* Text only. */
@@ -544,29 +443,32 @@ TkpDisplayButton(void *clientData)
         butPtr->type == TYPE_RADIO_BUTTON) &&
         butPtr->indicatorOn &&
         butPtr->indicatorDiameter > 2 * bd) {
-
+      
         TkBorder *selBd = (TkBorder *)butPtr->selectBorder;
-        XColor *selColor = selBd ? selBd->bgColorPtr : NULL;
-
         int indType = (butPtr->type == TYPE_CHECK_BUTTON)
           ? CHECK_BUTTON : RADIO_BUTTON;
 
-        int ind_x = -butPtr->indicatorSpace / 2;
-        int ind_y = winHeight / 2;
+	int ind_x = padX;
+	int ind_y = winHeight / 2 - butPtr->indicatorDiameter / 2;
+	printf("height: %d, fullHeight = %d, winHeight = %d, diam = %d, padY = %d, ind_y = %d\n",
+	       height, fullHeight, winHeight, butPtr->indicatorDiameter, padY, ind_y);
+
+	
 	XColor checkBG, checkFG, checkDisBG;
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "white", &checkBG); 
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "black", &checkFG); 
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "gray90", &checkDisBG); 
         TkpDrawCheckIndicator(tkwin, butPtr->display,
-                              drawable,
-                              ind_x, ind_y, butPtr->normalBorder,
-                              &checkBG,
-                              &checkFG,
-			      &checkDisBG,
-                              (butPtr->flags & SELECTED) ? 1 :
-                              (butPtr->flags & TRISTATED) ? 2 : 0,
-                              butPtr->state == STATE_DISABLED,
-                              indType);
+	    drawable,
+	    ind_x, ind_y, butPtr->normalBorder,
+	    &checkBG,
+	    &checkFG,
+	    &checkDisBG,
+	    butPtr->indicatorDiameter,
+	    (butPtr->flags & SELECTED) ? 1 :
+	    (butPtr->flags & TRISTATED) ? 2 : 0,
+	    butPtr->state == STATE_DISABLED,
+	    indType);
     }
 
     /* Draw border with 3D effects. */
@@ -617,17 +519,6 @@ TkpDisplayButton(void *clientData)
 	    Tk_DrawFocusHighlight(tkwin, butPtr->normalTextGC, hl, drawable);
         }
     }
-    /* End drawing session. */
-    TkWaylandEndDraw(&dc);
-
-    /*
-     * Only safe to delete the -bitmap texture now that nvgEndFrame()
-     * (inside TkWaylandEndDraw above) has actually flushed the queued
-     * draw call that samples it.
-     */
-    if (pendingBitmapImageId > 0) {
-        nvgDeleteImage(dc.vg, pendingBitmapImageId);
-    }
 }
 
 /*
@@ -648,51 +539,43 @@ void
 TkpComputeButtonGeometry(
     TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth, txtWidth, txtHeight;
+    int width = 0, height = 0, avgWidth = 0, txtWidth = 0, txtHeight = 0;
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
     int padX, padY, borderWidth, highlightWidth, wrapLength;
     int butPtrWidth, butPtrHeight;
-
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj,
+			&highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj,
+			&borderWidth);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj,
+			&wrapLength);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->heightObj, &butPtrHeight);
 
     butPtr->inset = highlightWidth + borderWidth;
-
     /*
      * Leave room for the default ring if needed.
      */
     if (butPtr->defaultState != DEFAULT_DISABLED) {
         butPtr->inset += 5;
     }
+    /*
+     * Set the initialwidth and height to the image dimensions,
+     * if there is an image.
+     */
     butPtr->indicatorSpace = 0;
-
-    width = 0;
-    height = 0;
-    txtWidth = 0;
-    txtHeight = 0;
-    avgWidth = 0;
-
     if (butPtr->image != NULL) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
     } else if (butPtr->bitmap != None) {
-        unsigned int bm_width, bm_height, border_width, depth;
-        int x_hot, y_hot;
-        Display *dpy = Tk_Display(butPtr->tkwin);
-
-        XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
-                     &bm_width, &bm_height, &border_width, &depth);
-        width = (int)bm_width;
-        height = (int)bm_height;
+        Tk_SizeOfBitmap(Tk_Display(butPtr->tkwin), butPtr->bitmap,
+			&width, &height);
         haveImage = 1;
     }
-
+    // Compute the text layout for buttons with text.
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
         Tk_FreeTextLayout(butPtr->textLayout);
 
@@ -706,15 +589,22 @@ TkpComputeButtonGeometry(
         Tk_GetFontMetrics(butPtr->tkfont, &fm);
         haveText = (txtWidth != 0 && txtHeight != 0);
     }
-
-    /*
-     * If the button is compound (i.e., it shows both an image and text), the
-     * new geometry is a combination of the image and text geometry. We only
-     * honor the compound bit if the button has both text and an image,
-     * because otherwise it is not really a compound button.
-     */
-
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+    /*
+     * Buttons with both image and text.
+     *
+     * If a button has both an image and text the arrangement of
+     * those components is controlled by the value of the compound
+     * option which must not be COMPOUND_NONE.
+     *
+     * If a compound option is specified for a button which
+     * does not have both image and text we ignore it.
+     *
+     * Currently width and height are set to the image size. Now we
+     * adjust the dimensions by adding text dimensions according to
+     * the value of the compound option.
+     * 
+     */
         switch ((enum compound) butPtr->compound) {
         case COMPOUND_TOP:
         case COMPOUND_BOTTOM:
@@ -742,45 +632,61 @@ TkpComputeButtonGeometry(
         case COMPOUND_NONE:
             break;
         }
+	/*
+	 * For compound buttons, the user-specified width or height
+	 * is given in pixels.
+	 */
         if (butPtrWidth > 0) {
             width = butPtrWidth;
         }
         if (butPtrHeight > 0) {
             height = butPtrHeight;
         }
-
+	/*
+	 * For check buttons or radio buttons which have an indicator
+	 * compute the additional space needed by the indicator and
+	 * record the indicator diameter in the button struct.
+	 */
         if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-            butPtr->indicatorSpace = height;
+	    // Currently both of our indicators have diameter 12. 
             if (butPtr->type == TYPE_CHECK_BUTTON) {
-                butPtr->indicatorDiameter = (65*height)/100;
+	      butPtr->indicatorDiameter = 12;
             } else {
-                butPtr->indicatorDiameter = (75*height)/100;
+	      butPtr->indicatorDiameter = 12;
             }
+	    butPtr->indicatorSpace = butPtr->indicatorDiameter;
         }
-
         width += 2 * padX;
         height += 2 * padY;
     } else {
         if (haveImage) {
+	    /*
+	     * For image-only buttons the width and height options are
+	     * given in pixels.
+	     */
             if (butPtrWidth > 0) {
                 width = butPtrWidth;
             }
             if (butPtrHeight > 0) {
                 height = butPtrHeight;
             }
-
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-                butPtr->indicatorSpace = height;
                 if (butPtr->type == TYPE_CHECK_BUTTON) {
-                    butPtr->indicatorDiameter = (65*height)/100;
+		    butPtr->indicatorDiameter = 12;
                 } else {
-                    butPtr->indicatorDiameter = (75*height)/100;
-                }
+		    butPtr->indicatorDiameter = 12;
+		}
+		butPtr->indicatorSpace = 2*butPtr->indicatorDiameter;
             }
         } else {
+	   /* For text-only buttons the user-specified width or height
+	    * the distance unit is the average width of a character in
+	    * the current font, and we want the indicator of a check
+	    * or radio button to be the same as the linespace value for
+	    * the current font.
+	    */
             width = txtWidth;
             height = txtHeight;
-
             if (butPtrWidth > 0) {
                 width = butPtrWidth * avgWidth;
             }
@@ -874,7 +780,7 @@ TkpButtonWorldChanged(void *instanceData)
         gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
         newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     } else {
-        /* No disabledFg: use normal colors. */
+        /* No disabledFg: use normal colors */
         gcValues.foreground = butPtr->normalFg->pixel;
         gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
         newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
@@ -887,21 +793,21 @@ TkpButtonWorldChanged(void *instanceData)
     butPtr->disabledGC = newGC;
 
     /*
-     * Do NOT create gray50 stipple bitmap.
+     * CRITICAL: Do NOT create gray50 stipple bitmap.
      * Set butPtr->gray to None to indicate no stipple available.
      * The stipple effect for disabled buttons will be handled
      * by the Wayland compositor or through NanoVG effects.
      */
     if (butPtr->gray != None) {
-        /* If there was a previous stipple bitmap, free it. */
+        /* If there was a previous stipple bitmap, free it */
         Tk_FreeBitmap(butPtr->display, butPtr->gray);
         butPtr->gray = None;
     }
 
-    /* Recompute geometry with new settings. */
+    /* Recompute geometry with new settings */
     TkpComputeButtonGeometry(butPtr);
 
-    /* Schedule redraw if needed. */
+    /* Schedule redraw if needed */
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
             && !(butPtr->flags & REDRAW_PENDING)) {
         Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
@@ -913,9 +819,10 @@ TkpButtonWorldChanged(void *instanceData)
  * -------------------------------------------------------------------------
  * TkpDrawCheckIndicator --
  *
- *      Draw check/radio button indicator using NanoVG.
- *      This function is shared with menu widget and needs to be
- *      implemented for Wayland.
+ *      Called by DisplayButton to draw the indicator for a check
+ *      button or radio button.  In spite of the name, this is not
+ *      a stub function and it is not called from generic code.  It
+ *      is also used by the menu code.
  *
  * Results:
  *      None.
@@ -933,33 +840,21 @@ TkpDrawCheckIndicator(
     int x,
     int y,
     TCL_UNUSED(Tk_3DBorder),  /* bgBorder */
-    XColor *indicatorColor,
-    XColor *selectColor,
-    XColor *disColor,
+    XColor *indicatorColor,   /* Color of background square or circle. */
+    XColor *selectColor,      /* Color of center dot or checkmark. */
+    XColor *disColor,         /* Color of background for a disabled widget. */
+    int indicatorSize,        /* Diameter of circle, side of square. */
     int on,
     int disabled,
-    int mode)
-{    
+    int mode)                 /* Check or radio */
+{
     TkWaylandDrawingContext dc = {0};
 
     if (TkWaylandBeginDraw(d, NULL, &dc) != TCL_OK) {
         return;
     }
     
-    int size = 0;
-    int indicatorSize;
-
-    switch (mode) {
-        case CHECK_BUTTON: indicatorSize = CHECK_BUTTON_DIM; break;
-        case CHECK_MENU:   indicatorSize = CHECK_MENU_DIM;   break;
-        case RADIO_BUTTON: indicatorSize = RADIO_BUTTON_DIM; break;
-        case RADIO_MENU:   indicatorSize = RADIO_MENU_DIM;   break;
-        default:           indicatorSize = 12;
-    }
-
-    size = indicatorSize;
-    x = x + size/2;
-    y = y - size/2;
+    int size = indicatorSize;
 
     /* Background square/circle. */
     nvgBeginPath(dc.vg);
@@ -975,6 +870,9 @@ TkpDrawCheckIndicator(
         nvgFillColor(dc.vg, TkWaylandXColorToNVG(indicatorColor));
     }
     nvgFill(dc.vg);
+    nvgStrokeColor(dc.vg, TkWaylandXColorToNVG(selectColor));
+    nvgStrokeWidth(dc.vg, 1.0f);
+    nvgStroke(dc.vg);
 
     /* Draw check / radio dot / tristate. */
     if (on == 1) {
