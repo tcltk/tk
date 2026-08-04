@@ -318,6 +318,7 @@ extern const char *const WmAttributeNames[];
 #define TKWL_NEEDS_DISPLAY  1
 #define TKWL_DONT_SWAP      2
 #define TKWL_NEVER_FOCUSED  4
+#define TKWL_IS_DRAWING     8
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;

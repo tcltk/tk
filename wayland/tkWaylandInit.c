@@ -373,9 +373,9 @@ Tk_ClipDrawableToRect(
     //// Should check for NULL
     if (width == -1 || height == -1) {
 	fprintf(stderr, "Finished double buffer section\n");
-	renderFBO(glfwWindow);
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
+	renderFBO(glfwWindow);
     } else {
 	fprintf(stderr, "Starting double buffer section ====> \n");
 	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
@@ -911,11 +911,19 @@ TkWaylandBeginDraw(
      */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+	/*
+	 * It is too early to be drawing in this window.  It may not
+	 * have a GL context yet.  Try again later.
+	 */
+	TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	    Tk_Width(winPtr), Tk_Height(winPtr));
+	return TCL_ERROR;
+    }
 
-    /* Set up the nanoVG drawing context for this nvgFrame */
+    /* Initialize the drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->vg;
     dcPtr->drawable = drawable;
-
     nvgResetTransform(dcPtr->vg);
 
     /*
@@ -952,11 +960,15 @@ TkWaylandBeginDraw(
 	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr),
 	    Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    if (infoPtr->flags & TKWL_IS_DRAWING) {
+	Tcl_Panic("Nested call to nvgBeginFrame");
+    }
+    infoPtr->flags |= TKWL_IS_DRAWING;
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
-
+    
     /*
-     * Import our graphics context and translate to the origin
-     * of the window we are drawing into.
+     * Initialize the NVGcontext with  data from our gc.  (This must be
+     * done *after* calling nvgBeginFrame.)
      */
 
     TkWaylandApplyGC(dcPtr->vg, gc);
@@ -966,13 +978,17 @@ TkWaylandBeginDraw(
      */
 
     nvgTranslate(dcPtr->vg, x, y);
+
     /*
-     * Clip the drawing to the bounds of this widget - needed for a
-     * Canvas widget which can draw to its pixmap outside of its bounds.
+     * Clip drawing to the bounds of this widget.  This is needed for a
+     * Canvas widget, which can draw outside of its bounds.
+     * TODO: this might be better handled by using the depth buffer.
+     * That would probably handle embedded windows in a canvas, which
+     * currently do not get clipped.
      */
-
+    
     nvgScissor(dcPtr->vg, 0, 0, Tk_Width(childPtr), Tk_Height(childPtr));
-
+    
     return TCL_OK;
 }
 
@@ -1019,6 +1035,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     }
     /* winPtr is the toplevel containing our drawable. */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
@@ -1075,6 +1092,10 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 
     /* Run all queued nanoVG drawing commands. */
 
+    if (infoPtr->flags & TKWL_IS_DRAWING == 0) {
+	printf("========================> EndFrame without BeginFrame\n");
+    }
+    infoPtr->flags &= ~TKWL_IS_DRAWING;
     nvgEndFrame(dcPtr->vg);
 
     fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
@@ -1155,7 +1176,6 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
      */
 
-    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     ////if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
     infoPtr->flags |= TKWL_NEEDS_DISPLAY;
     ////}

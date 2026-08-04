@@ -409,11 +409,6 @@ TkpDisplayButton(void *clientData)
     int winWidth, winHeight;
     int pendingBitmapImageId = -1;
     Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
-    int rc = TkWaylandBeginDraw(drawable, currentGC, &dc);
-    if (rc != TCL_OK) {
-        printf("Bad Drawable in TkpButton\n");
-        return;
-    }
     winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
     relief = butPtr->relief;
@@ -617,8 +612,6 @@ TkpDisplayButton(void *clientData)
 	    Tk_DrawFocusHighlight(tkwin, butPtr->normalTextGC, hl, drawable);
         }
     }
-    /* End drawing session. */
-    TkWaylandEndDraw(&dc);
 
     /*
      * Only safe to delete the -bitmap texture now that nvgEndFrame()
