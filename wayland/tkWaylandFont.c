@@ -3256,26 +3256,16 @@ TkpDrawAngledCharsInContext(
     double     y,
     double     angle)
 {
-    TkWaylandDrawingContext dc;
-    int rc = TkWaylandBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK) {
-        printf("Bad Drawable in TkpDrawAngledCharsInContext\n");
-        return;
-    }
-    
     WaylandFont *fontPtr = (WaylandFont *)tkfont;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
-        rangeStart + rangeLength > numBytes) {
-	goto done;
-    }
+        rangeStart + rangeLength > numBytes) return;
 
-    NVGcontext *vg = dc.vg;
+    NVGcontext *vg = TkWaylandGetNVGContext(drawable);
+    if (!vg) return;
 
     int primaryId = EnsureNvgFont(fontPtr, vg);
-    if (primaryId < 0) {
-	goto done;
-    }
+    if (primaryId < 0) return;
 
     nvgFontSize(vg, (float)fontPtr->pixelSize);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
@@ -3343,9 +3333,7 @@ TkpDrawAngledCharsInContext(
         i += clen;
     }
 
-    /* For text with combining characters, use the simple path with composed
-     * text.
-     */
+    /* For text with combining characters, use the simple path with composed text. */
     if (IsSimpleOnly(renderPtr, renderEnd - renderPtr) && !hasEmoji) {
         nvgFontFaceId(vg, primaryId);
         nvgText(vg, 0.0f, 0.0f, renderPtr, renderEnd);
@@ -3362,14 +3350,13 @@ TkpDrawAngledCharsInContext(
     {
         ShapedGlyphBuffer sbuf;
         const char *shapeSource = composedSource ? composedSource : source;
-        int shapeLen = composedSource ?
-	    (int)strlen(composedSource) : (int)numBytes;
+        int shapeLen = composedSource ? (int)strlen(composedSource) : (int)numBytes;
         
         if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
                                        shapeSource, shapeLen, &sbuf)) {
             nvgRestore(vg);
             if (composedSource) free(composedSource);
-            goto done;
+            return;
         }
 
         int lastFaceId = -1;
@@ -3396,8 +3383,7 @@ TkpDrawAngledCharsInContext(
 
             int found = -1;
             for (int j = 0; j < cluster_count; j++) {
-                if (clusters[j].start_byte == bo &&
-		    clusters[j].end_byte == boe) {
+                if (clusters[j].start_byte == bo && clusters[j].end_byte == boe) {
                     found = j;
                     break;
                 }
@@ -3462,9 +3448,9 @@ TkpDrawAngledCharsInContext(
             float gy = (float)clusters[i].pen_y;
 
             /* 
-             * If the cluster contains a combining mark and couldn't be
-             * composed, use HarfBuzz's x_offset to position the mark
-             * correctly.  The offset is already in the glyph's x position.
+             * If the cluster contains a combining mark and couldn't be composed,
+             * use HarfBuzz's x_offset to position the mark correctly.
+             * The offset is already in the glyph's x position.
              */
             bool hasMark = false;
             for (int j = 0; j < (int)strlen(clusters[i].text); ) {
@@ -3480,11 +3466,10 @@ TkpDrawAngledCharsInContext(
 
             if (hasMark && didCompose) {
                 /* 
-                 * The mark is in a cluster that WAS composed by
-                 * ComposeUTF8String, but the font doesn't have the precomposed
-                 * glyph. HarfBuzz will have positioned it with a negative
-                 * x_offset. The pen_x already includes that offset from the
-                 * shaping pass.
+                 * The mark is in a cluster that WAS composed by ComposeUTF8String,
+                 * but the font doesn't have the precomposed glyph. HarfBuzz 
+                 * will have positioned it with a negative x_offset. The pen_x
+                 * already includes that offset from the shaping pass.
                  */
                 nvgText(vg, gx, gy, clusters[i].text, 
                         clusters[i].text + strlen(clusters[i].text));
@@ -3496,9 +3481,7 @@ TkpDrawAngledCharsInContext(
     }
 
     nvgRestore(vg);
-    if (composedSource) {
-	free(composedSource);
-    }
+    if (composedSource) free(composedSource);
 
 decorations:
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
@@ -3529,8 +3512,6 @@ decorations:
             nvgStroke(vg);
         }
     }
-done:
-    TkWaylandEndDraw(&dc);
 }
 
 /*
