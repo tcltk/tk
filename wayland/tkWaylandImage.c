@@ -343,10 +343,25 @@ TkpPutRGBAImage(
         return 0;
     }
 
-    /* Validate source coordinates against image bounds to prevent buffer overreads. */
+    /*
+     * Validate source coordinates and size against image bounds to prevent
+     * buffer overreads.
+     *
+     * IMPORTANT: width/height are unsigned. If a caller ever passes a
+     * negative int (e.g. from an upstream clipping bug), it gets converted
+     * to a huge unsigned value *before* this function runs. Do NOT cast
+     * width/height back to (int) here -- a huge unsigned value can wrap
+     * back around to a small or negative int and silently defeat this
+     * check. Compare everything as unsigned instead, and only convert the
+     * already-known-nonnegative image->width/height.
+     */
     if (src_x < 0 || src_y < 0 ||
-        src_x + (int)width > image->width ||
-        src_y + (int)height > image->height) {
+        image->width < 0 || image->height < 0 ||
+        width == 0 || height == 0 ||
+        width  > (unsigned int)image->width  ||
+        height > (unsigned int)image->height ||
+        (unsigned int)src_x > (unsigned int)image->width  - width  ||
+        (unsigned int)src_y > (unsigned int)image->height - height) {
         return TCL_ERROR;
     }
 
