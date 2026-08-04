@@ -550,6 +550,7 @@ On Debian/Ubuntu:
         XINCLUDES=""
         enable_xft=no
         enable_xss=no
+        enable_xrender=no
         AC_DEFINE([X11_BACKEND_DISABLED_FOR_WAYLAND], [1],
             [X11 support deliberately disabled because Wayland backend is active])
     fi
@@ -924,11 +925,12 @@ fi
 #--------------------------------------------------------------------
 #	Check for the X RENDER extension client library (Xrender), used
 #	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#	Xrender is X11-only; skip entirely for Wayland and Aqua.
 #--------------------------------------------------------------------
 
 XRENDER_CFLAGS=""
 XRENDER_LIBS=""
-if test $tk_aqua = no; then
+if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
     AC_MSG_CHECKING([whether to use xrender])
     AC_ARG_ENABLE(xrender,
 	AS_HELP_STRING([--enable-xrender],
@@ -969,6 +971,9 @@ if test $tk_aqua = no; then
 	    XRENDER_LIBS=""
 	fi
     fi
+else
+    # Wayland / Aqua: Xrender is irrelevant
+    enable_xrender=no
 fi
 AC_SUBST(XRENDER_CFLAGS)
 AC_SUBST(XRENDER_LIBS)

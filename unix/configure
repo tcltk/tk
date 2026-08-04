@@ -8503,6 +8503,7 @@ printf '%s\n' "$as_me: Wayland selected → clearing X11 linkage variables (XLIB
         XINCLUDES=""
         enable_xft=no
         enable_xss=no
+        enable_xrender=no
 
 printf '%s\n' "#define X11_BACKEND_DISABLED_FOR_WAYLAND 1" >>confdefs.h
 
@@ -9579,11 +9580,12 @@ fi
 #--------------------------------------------------------------------
 #	Check for the X RENDER extension client library (Xrender), used
 #	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#	Xrender is X11-only; skip entirely for Wayland and Aqua.
 #--------------------------------------------------------------------
 
 XRENDER_CFLAGS=""
 XRENDER_LIBS=""
-if test $tk_aqua = no; then
+if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xrender" >&5
 printf %s "checking whether to use xrender... " >&6; }
     # Check whether --enable-xrender was given.
@@ -9695,6 +9697,9 @@ printf '%s\n' "$as_me: WARNING: Can't find xrender configuration -- photo images
 	    XRENDER_LIBS=""
 	fi
     fi
+else
+    # Wayland / Aqua: Xrender is irrelevant
+    enable_xrender=no
 fi
 
 
