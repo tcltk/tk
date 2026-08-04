@@ -725,6 +725,7 @@ TkWaylandBeginDraw(
 	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr),
 	    Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
     if (infoPtr->flags & TKWL_IS_DRAWING) {
 	Tcl_Panic("Nested call to nvgBeginFrame");
     }
@@ -836,11 +837,13 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    /* Run all queued nanoVG drawing commands. */
+    /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
     if (infoPtr->flags & TKWL_IS_DRAWING == 0) {
-	printf("========================> EndFrame without BeginFrame\n");
+	TclPanic("EndFrame without BeginFrame\n");
     }
     infoPtr->flags &= ~TKWL_IS_DRAWING;
+
+    /* Run all queued nanoVG drawing commands. */
     nvgEndFrame(dcPtr->vg);
 
     nvgluBindFramebuffer(NULL);
