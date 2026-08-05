@@ -65,9 +65,6 @@ clearCallbackCount() {
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
-/* Track last window for enter/leave events */
-static TkWindow *lastWinPtr = NULL;
-
 /*
  *----------------------------------------------------------------------
  *
@@ -825,18 +822,16 @@ TkWaylandWindowMaximizeCallback(
  *      being entered and resets it on leave.
  *
  *      This is distinct from the widget-level crossing logic in
- *      TkWaylandCursorPosCallback, which tracks transitions between child
- *      widgets while the pointer is already inside the GLFW window.
- *      This callback handles the coarser, compositor-level event that
- *      GLFW delivers when the pointer crosses the window border.
+ *      Tk_UpdatePointer (called by TkWaylandCursorPosCallback), which tracks
+ *      transitions between child widgets while the pointer is already inside
+ *      the GLFW window.  This callback handles the coarser, compositor-level
+ *      event that GLFW delivers when the pointer crosses the window border.
  *
  * Results:
  *      None.
  *
  * Side effects:
  *      Queues an EnterNotify or LeaveNotify XEvent.
- *      Resets lastWinPtr to NULL on leave so that TkWaylandCursorPosCallback
- *      re-fires an EnterNotify for the correct child widget on re-entry.
  *
  *----------------------------------------------------------------------
  */
@@ -844,7 +839,7 @@ TkWaylandWindowMaximizeCallback(
 static void
 TkWaylandCursorEnterCallback(
     GLFWwindow *window,
-    int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
+    int entered)        /* GLFW_TRUE if entered, GLFW_FALSE if left */
 {
     recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
@@ -857,7 +852,6 @@ TkWaylandCursorEnterCallback(
     }
 
     glfwGetCursorPos(window, &xpos, &ypos);
-    ///    glfwGetWindowPos(window, &winX, &winY);
 
     memset(&event, 0, sizeof(XEvent));
     event.type = entered ? EnterNotify : LeaveNotify;
@@ -879,16 +873,6 @@ TkWaylandCursorEnterCallback(
     event.xcrossing.state       = glfwButtonState | glfwModifierState;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    /*
-     * On leave, clear lastWinPtr so TkWaylandCursorPosCallback generates a
-     * fresh EnterNotify for the correct child widget when the pointer
-     * re-enters, rather than suppressing it because lastWinPtr still
-     * matches the stale target from before the pointer left.
-     */
-    if (!entered) {
-        lastWinPtr = NULL;
-    }
 }
 
 /*
@@ -921,87 +905,13 @@ TkWaylandCursorPosCallback(
     TkWindow *target = (TkWindow *) Tk_CoordsToWindow((int) xpos, (int) ypos,
 			    (Tk_Window) winPtr);
 
-    /* Check if mouse entered or left the target widget. */
-    if (lastWinPtr != target) {
-        if (lastWinPtr) {
-	    memset(&event, 0, sizeof(XEvent));
-	    event.type = LeaveNotify;
-	    event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display)++;
-	    event.xcrossing.send_event = False;
-	    event.xcrossing.display = lastWinPtr->display;
-	    event.xcrossing.window = Tk_WindowId((Tk_Window) lastWinPtr);
-	    event.xcrossing.root = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
-	    event.xcrossing.subwindow = None;
-	    event.xcrossing.time = CurrentTime;
-	    event.xcrossing.x = (int) xpos - Tk_X(lastWinPtr);
-	    event.xcrossing.y = (int) ypos - Tk_Y(lastWinPtr);
-	    event.xcrossing.x_root = (int) xpos;
-	    event.xcrossing.y_root = (int) ypos;
-	    event.xcrossing.mode = NotifyNormal;
-	    event.xcrossing.detail = NotifyAncestor;
-	    event.xcrossing.same_screen = True;
-	    event.xcrossing.focus = False;
-	    event.xcrossing.state = glfwButtonState | glfwModifierState;
-	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-        }
-
-        /* Send EnterNotify for the newly entered widget. */
-        memset(&event, 0, sizeof(XEvent));
-        event.type = EnterNotify;
-        event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display)++;
-        event.xcrossing.send_event = False;
-        event.xcrossing.display = winPtr->display;
-        event.xcrossing.window = Tk_WindowId((Tk_Window) target);
-        event.xcrossing.root = RootWindow(target->display, target->screenNum);
-        event.xcrossing.subwindow = None;
-        event.xcrossing.time = CurrentTime;
-        event.xcrossing.x = (int) xpos - Tk_X(target);
-        event.xcrossing.y = (int) ypos - Tk_Y(target);
-        event.xcrossing.x_root = (int) xpos;
-        event.xcrossing.y_root = (int) ypos;
-        event.xcrossing.mode = NotifyNormal;
-        event.xcrossing.detail = NotifyAncestor;
-        event.xcrossing.same_screen = True;
-        event.xcrossing.focus = False;
-        event.xcrossing.state = glfwButtonState | glfwModifierState;
-        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-        lastWinPtr = target;
-
-        /*
-         * Update the pointer with root-relative coordinates so that
-         * cursorWinPtr in tkPointer.c is set correctly. This single call,
-         * after lastWinPtr is updated, uses root coords so that
-         * XDefineCursor's guard condition (cursorWinPtr == winPtr) passes
-         * when a cursor change is pending.
-         */
-        Tk_UpdatePointer((Tk_Window) target,
-            (int) xpos, (int) ypos,
-            glfwButtonState | glfwModifierState);
-    }
-
-    /* Generate MotionNotify event targeted at the widget under the cursor. */
-    memset(&event, 0, sizeof(XEvent));
-    event.type = MotionNotify;
-    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display)++;
-    event.xmotion.send_event = False;
-    event.xmotion.display = winPtr->display;
-    event.xmotion.window = Tk_WindowId(target);
-    event.xmotion.root = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xmotion.subwindow = None;
-    event.xmotion.time = CurrentTime;
-    event.xmotion.x = (int) xpos - Tk_X(target);
-    event.xmotion.y = (int) ypos - Tk_Y(target);
     /*
-     * The toplevel coordinates are the same as the root coordinates since
-     * every toplevel is treated as having position (0, 0).
+     * Call Tk_UpdatePointer to update the pointer position and cursor image
+     * and to generate Motion, Enter and Leave events as needed.
      */
-    event.xmotion.x_root = (int) xpos;
-    event.xmotion.y_root = (int) ypos;
-    event.xmotion.state = glfwButtonState | glfwModifierState;
-    event.xmotion.is_hint = NotifyNormal;
-    event.xmotion.same_screen = True;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+    Tk_UpdatePointer((Tk_Window) target, (int) xpos, (int) ypos,
+	glfwButtonState | glfwModifierState);
 }
 
 /*
