@@ -128,12 +128,14 @@ XQueryPointer(
     TkWindow *winPtr = (TkWindow *)w;
 
     if (!winPtr) {
+	printf("XQueryPointer: no Tk window\n");
         return False;
     }
 
     /* Get the GLFW window. */
     glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (!glfwWindow) {
+	printf("XQueryPointer: no GLFW window\n");
         return False;
     }
 
@@ -141,16 +143,17 @@ XQueryPointer(
         glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
 
         if (getGlobal) {
-            /* Get window position for global coordinates. */
-            int winX = 0, winY = 0;
-            ////glfwGetWindowPos(glfwWindow, &winX, &winY);
-            *root_x_return = winX + (int)cursorX;
-            *root_y_return = winY + (int)cursorY;
+	    /* Wayland toplevels all appear to be at the screen origin.
+	     * So cursor position is both relative to the screen origin
+	     * and relative to the toplevel origin.
+	     */
+            *root_x_return = (int)cursorX;
+            *root_y_return = (int)cursorY;
         }
 
         if (getLocal) {
-            *win_x_return = (int)cursorX;
-            *win_y_return = (int)cursorY;
+            *win_x_return = (int)cursorX - Tk_X(winPtr);
+            *win_y_return = (int)cursorY - Tk_Y(winPtr);
         }
     }
 

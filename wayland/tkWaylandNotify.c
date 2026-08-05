@@ -123,10 +123,6 @@ unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
 /*
- * Utility functions for keyboard/input method support. 
- */
-
-/*
  *----------------------------------------------------------------------
  *
  * TkWaylandUpdateKeyboardModifiers --
@@ -1067,49 +1063,22 @@ TkWaylandWindowMaximizeCallback(
  *      (tkPointer.c), which generates the proper Enter/Leave event chains
  *      and, on leave.
  *
- *      This is distinct from the widget-level crossing logic in
- *      TkWaylandCursorPosCallback, which tracks transitions between child
- *      widgets while the pointer is already inside the GLFW window.
- *      This callback handles the coarser, compositor-level event that
- *      GLFW delivers when the pointer crosses the window border.
+ * 		This is distinct from the widget-level crossing logic in
+ *      Tk_UpdatePointer (called by TkWaylandCursorPosCallback), which tracks
+ *      transitions between child widgets while the pointer is already inside
+ *      the GLFW window.  This callback handles the coarser, compositor-level
+ *      event that GLFW delivers when the pointer crosses the window border.
+ *
  *
  * Results:
  *      None.
  *
  * Side effects:
  *      Queues an EnterNotify or LeaveNotify XEvent.
- *      Resets lastWinPtr to NULL on leave so that TkWaylandCursorPosCallback
- *      re-fires an EnterNotify for the displayed cursor.
  *
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandCursorEnterCallback --
- *
- *      Called by GLFW when the cursor enters or leaves the GLFW window
- *      client area.  Feeds the transition to the generic pointer module
- *      (tkPointer.c), which generates the proper Enter/Leave event chains
- *      and, on leave.
- *
- *      This is distinct from the widget-level crossing logic in
- *      TkWaylandCursorPosCallback, which tracks transitions between child
- *      widgets while the pointer is already inside the GLFW window.
- *      This callback handles the coarser, compositor-level event that
- *      GLFW delivers when the pointer crosses the window border.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Queues an EnterNotify or LeaveNotify XEvent.
- *      Resets lastWinPtr to NULL on leave so that TkWaylandCursorPosCallback
- *      re-fires an EnterNotify for the displayed cursor.
- *
- *----------------------------------------------------------------------
- */
 
 static void
 TkWaylandCursorEnterCallback(
@@ -1157,8 +1126,6 @@ TkWaylandCursorEnterCallback(
     if (entered) {
         target = Tk_CoordsToWindow((int) xpos, (int) ypos, (Tk_Window) winPtr);
     }
-
-  //  glfwGetWindowPos(window, &winX, &winY);
 
     memset(&event, 0, sizeof(XEvent));
     event.type = entered ? EnterNotify : LeaveNotify;

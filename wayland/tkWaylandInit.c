@@ -684,7 +684,6 @@ TkWaylandCreateWindow(
             glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
             glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
             glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-
             mainGlfwWindow = glfwCreateWindow(width, height,
                                               title ? title : "",
                                               NULL, NULL);
