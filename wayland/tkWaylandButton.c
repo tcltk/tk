@@ -902,6 +902,55 @@ TkpDrawCheckIndicator(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpButtonSetDefaults --
+ *
+ *	This procedure is invoked before option tables are created for buttons.
+ *	It modifies some of the default values to match the current values
+ *	defined for this platform.
+ *
+ * Results:
+ *	Some of the default values in *specPtr are modified.
+ *
+ * Side effects:
+ *	No-op on Wayland.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpButtonSetDefaults()
+{
+    /*No-op.*/
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDestroyButton --
+ *
+ *	Free data structures associated with the button control.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Restores the default control state.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpDestroyButton(
+    TkButton *butPtr)
+{
+ /* no-op */
+}
+
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

@@ -1,3 +1,11 @@
+#include <X11/Xutil.h>
+#include <limits.h>
+#include <errno.h>
+#include <math.h>
+#include <pwd.h>
+#include <unistd.h>
+#include <assert.h>
+
 /* We can draw directly into our backing store. */
 #define TK_NO_DOUBLE_BUFFERING
 
@@ -27,6 +35,8 @@ MODULE_SCOPE int TkpPutRGBAImage(
 		     Display* display, Drawable drawable, GC gc, XImage* image,
 		     int src_x, int src_y, int dest_x, int dest_y,
 		     unsigned int width, unsigned int height);
+
+#define TkSetPixmapColormap(p,c) {}
 
 /* This avoids having to implement XKeysymToString and XStringToKeysym */
 #define REDO_KEYSYM_LOOKUP

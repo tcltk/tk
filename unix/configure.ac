@@ -254,7 +254,7 @@ if test $tk_aqua = no; then
 
     WAYLAND_CFLAGS=""
     WAYLAND_LIBS=""
-    HAVE_WAYLAND=0
+    TK_USE_WAYLAND=0
 
     if test "$enable_wayland" = "yes"; then
         # When Wayland is enabled -> disable Xft explicitly
@@ -315,7 +315,7 @@ Please install libwayland-egl development package:
             WAYLAND_CLIENT_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
             WAYLAND_CLIENT_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
             found_wayland=yes
-            AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
+            AC_DEFINE([TK_USE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
         else
             AC_MSG_RESULT([no])
             AC_MSG_ERROR([wayland-client >= 1.18 and wayland-cursor >= 1.18 are required when building the Wayland backend.
@@ -504,7 +504,7 @@ Please install wl-clipboard:
            && test -n "$WL_COPY" \
            && test -n "$WL_PASTE"; then
 
-            HAVE_WAYLAND=1
+            TK_USE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
             WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
@@ -541,7 +541,7 @@ On Debian/Ubuntu:
     AC_SUBST([WAYLAND_CLIENT_LIBS])
     AC_SUBST([WAYLAND_EGL_CFLAGS])
     AC_SUBST([WAYLAND_EGL_LIBS])
-    AC_SUBST([HAVE_WAYLAND])
+    AC_SUBST([TK_USE_WAYLAND])
 
     # Force-disable X11 linkage variables when Wayland is active
     if test "$enable_wayland" = "yes"; then
