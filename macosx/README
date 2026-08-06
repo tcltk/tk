@@ -557,7 +557,8 @@ NSAutoreleasePools whenever they call methods of Appkit objects
 5.3 Clipping regions and "ghost windows"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Another unusual aspect of the macOS port is its use of clipping
+Another aspect of the macOS port which does not appear in the X11
+port of Tk is its implementation of clipping
 regions.  It was part of Daniel Steffen's original design that the
 TkWindowPrivate struct maintains three HIShapeRef regions, named
 visRgn, aboveVisRgn and drawRgn.  These regions are used as clipping
@@ -574,22 +575,15 @@ rebuilding these clipping regions whenever something changes in the
 layout of the windows.  This turns out to be a tricky thing to do and
 it is extremely prone to errors which can be difficult to trace.
 
-It is not entirely clear what the original reason for using these
-clipping regions was.  But one benefit is that if they are correctly
-maintained then it allows windows to be drawn in any order.  You do
-not have to draw them in the order of the window hierarchy.  Each
-window can draw its entire rectangle through its own mask and never
-have to worry about drawing in the wrong place.  It is likely that
-the need for using clipping regions arose because, as Apple explicitly
-states in the documentation for [NSView subviews],
-
-    "The order of the subviews may be considered as being
-    back-to-front, but this does not imply invalidation and drawing
-    behavior."
-
-In the early versions of the macOS port, buttons were implemented as
-subviews of class TkButton.  This probably exacerbated the likelihood
-that Tk windows would need to be drawn in arbitrary order.
+The primary benefit of the clipping regions is that if they are
+correctly maintained then it allows windows to be drawn in any order.
+They do not have to draw them in the order of the window hierarchy.
+Each window can draw its entire rectangle through its own mask and
+never have to worry about drawing in the wrong place.  An X11 server
+automatically provides analogous clipping for its clients, and
+consequently the design of Tk implicitly assumes that Tk windows can
+be drawn in any order, ignoring the stacking order.  The file
+tkMacOSXSubwindows.c exists to replicate this feature of X11.
 
 The most obvious side effect caused by not maintaining the clipping
 regions is the appearance of so-called "ghost windows".  A common
