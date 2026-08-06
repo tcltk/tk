@@ -21,6 +21,8 @@
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
+#elif defined(TK_USE_WAYLAND)
+#include "tkWaylandInt.h"
 #else
 #include "tkUnixInt.h"
 #endif
@@ -4565,8 +4567,9 @@ DisplayText(
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x,
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
-#ifndef MACOSX_TK
-	    /* No point in doing this on macOS. The DLines get redrawn anyway.*/
+#if !defined(MACOSX_TK) && !defined(TK_USE_WAYLAND)
+	    /* No point in doing this on macOS or Wayland.
+	     * The DLines get redrawn anyway. */
 	    TextInvalidateRegion(textPtr, damageRgn);
 #endif
 	}
@@ -4726,7 +4729,7 @@ DisplayText(
 	    } else if (dlPtr->chunkPtr != NULL) {
 		/*
 		 * On macOS we need to redisplay all embedded windows which
-		 * were moved by the call to TkScrollWindows above.  This is
+		 * were moved by the call to TkScrollWindow above.  This is
 		 * not necessary on Unix or Windows because XScrollWindow will
 		 * have included the bounding rectangles of all of these
 		 * windows in the damage region.  The macosx implementation of
@@ -4745,11 +4748,20 @@ DisplayText(
 		 * here as it would have been if they had been redisplayed by
 		 * the call to TextInvalidateRegion above.
 		 */
+#elif defined(TK_USE_WAYLAND)
+	    } else if (dlPtr->chunkPtr != NULL) {
+		/*
+		 * Wayland also needs to redisplay all embedded windows that
+		 * were moved by TkScrollWindow.  The Wayland backend only
+		 * reports src−dst damage and has no knowledge about embedded
+		 * windows, so we must force a full redraw of the DLines that
+		 * contain them.
+		 */
 #else
 	    } else if (dlPtr->chunkPtr != NULL && ((dlPtr->y < 0)
 		    || (dlPtr->y + dlPtr->height > dInfoPtr->maxY))) {
 		/*
-		 * On platforms other than macOS ...
+		 * On platforms other than macOS and Wayland ...
 		 *
 		 * It's the first or last DLine which are also overlapping the
 		 * top or bottom of the window, but we decided above it wasn't
@@ -4794,13 +4806,13 @@ DisplayText(
 			TkTextPrintIndex(textPtr, &dlPtr->index, string);
 			LOG("tk_textEmbWinDisplay", string);
 		    }
-#ifdef MAC_OSX_TK
-		    /* We need to redisplay the entire DLine so that the
-		     * background of the line will not contain artifacts left
-		     * by the scrolling.
+#if defined(MAC_OSX_TK) || defined(TK_USE_WAYLAND)
+		    /*
+		     * Redisplay the entire DLine so that the background is
+		     * clean and the embedded window is properly repositioned.
 		     */
-
 		    DisplayDLine(textPtr, dlPtr, NULL, pixmap);
+		    break;	/* one call enough for the whole line */
 #else
 		    TkTextEmbWinDisplayProc(textPtr, chunkPtr, x,
 			    0,

@@ -4625,24 +4625,35 @@ XUnmapSubwindows(
  *
  * XResizeWindow --
  *
- *	Change the size of a window.  This is a no-op for Wayland.
+ *	Change the size of a window.  Position and size themselves are
+ *	tracked purely in Tk's own bookkeeping (winPtr->changes) and read
+ *	from there at composite time, so there's no separate native
+ *	window to resize here -- but since this window's on-screen extent
+ *	just changed, queue an expose so the toplevel's backing FBO
+ *	actually gets repainted to reflect it (see the analogous case in
+ *	XMapWindow, and the fuller explanation on XMoveResizeWindow below).
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	None
+ *	Queues an expose event for the window.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XResizeWindow(
-    TCL_UNUSED(Display *),    /* display */
-    TCL_UNUSED(Window),       /* window */
-    TCL_UNUSED(unsigned int), /* width */
-    TCL_UNUSED(unsigned int)) /* height */
+    Display *display,        /* display */
+    Window window,           /* window */
+    unsigned int width,      /* new width */
+    unsigned int height)     /* new height */
 {
+    TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
+
+    if (winPtr) {
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, (int)width, (int)height);
+    }
     return Success;
 }
 
@@ -4651,24 +4662,38 @@ XResizeWindow(
  *
  * XMoveWindow --
  *
- *	Change the position of a window.  This is a no-op for Wayland.
+ *	Change the position of a window.  As with XResizeWindow, there is
+ *	no separate native window to move on this backend -- child
+ *	windows are composited directly into their toplevel's backing FBO
+ *	at whatever offset Tk's own winPtr->changes.x/y record, and that's
+ *	already been updated by the generic Tk_MoveResizeWindow caller by
+ *	the time this runs.  What's missing without this call is any
+ *	signal to actually repaint: nothing else marks the toplevel dirty
+ *	just because a child's logical position changed, so queue an
+ *	expose here.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	None
+ *	Queues an expose event for the window.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XMoveWindow(
-    TCL_UNUSED(Display*), /* display */
-    TCL_UNUSED(Window),   /* window */
-    TCL_UNUSED(int),      /* x */
-    TCL_UNUSED(int))      /* y */
+    Display *display, /* display */
+    Window window,    /* window */
+    TCL_UNUSED(int),  /* x */
+    TCL_UNUSED(int))  /* y */
 {
+    TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
+
+    if (winPtr) {
+        TkWaylandQueueExposeEvent(winPtr, 0, 0,
+                Tk_Width(winPtr), Tk_Height(winPtr));
+    }
     return Success;
 }
 
@@ -4677,26 +4702,41 @@ XMoveWindow(
  *
  * XMoveResizeWindow --
  *
- *	Change position and size atomically.  This is a no-op for Wayland.
+ *	Change position and size atomically.
+ *
+ *	This is the call that matters for embedded windows in the text
+ *	widget: TkTextEmbWinDisplayProc calls Tk_MoveResizeWindow to
+ *	reposition an embedded window after a scroll that TkScrollWindow
+ *	handled as a pixel blit (see the MAC_OSX_TK/TK_USE_WAYLAND branch
+ *	in tkTextDisp.c's DisplayText).  Without queuing an expose here,
+ *	that reposition would only update winPtr->changes -- correct for
+ *	future hit-testing and layout math, but with nothing to force the
+ *	toplevel's backing FBO to actually be repainted at the new
+ *	location in the meantime.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	None.
+ *	Queues an expose event for the window.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XMoveResizeWindow(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),       /* window */
-    TCL_UNUSED(int),          /* x */
-    TCL_UNUSED(int),          /* y */
-    TCL_UNUSED(unsigned int), /* width */
-    TCL_UNUSED(unsigned int)) /* height */
+    Display *display,        /* display */
+    Window window,           /* window */
+    TCL_UNUSED(int),         /* x */
+    TCL_UNUSED(int),         /* y */
+    unsigned int width,      /* new width */
+    unsigned int height)     /* new height */
 {
+    TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
+
+    if (winPtr) {
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, (int)width, (int)height);
+    }
     return Success;
 }
 
