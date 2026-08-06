@@ -389,9 +389,8 @@ XDrawLines(
 {
     MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
-    int i, lw = gc->line_width;
 
-    if (npoints < 2) {
+    if (npoints < 2 || (mode != CoordModeOrigin && mode != CoordModePrevious)) {
 	return BadValue;
     }
 
@@ -399,24 +398,56 @@ XDrawLines(
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
-	double prevx, prevy;
-	double o = (lw % 2) ? .5 : 0;
+	double o = (gc->line_width % 2) ? .5 : 0;
+	short x0 = points[0].x, y0 = points[0].y;
+	short x1 = (mode == CoordModeOrigin) ? points[1].x : x0 + points[1].x;
+	short y1 = (mode == CoordModeOrigin) ? points[1].y : y0 + points[1].y;
+	double prevx = macWin->xOff + x0 + o, prevy = macWin->yOff + y0 + o;
+	int i;
 
 	CGContextBeginPath(dc.context);
-	prevx = macWin->xOff + points[0].x + o;
-	prevy = macWin->yOff + points[0].y + o;
-	CGContextMoveToPoint(dc.context, prevx, prevy);
-	for (i = 1; i < npoints; i++) {
-	    if (mode == CoordModeOrigin) {
-		CGContextAddLineToPoint(dc.context,
-			macWin->xOff + points[i].x + o,
-			macWin->yOff + points[i].y + o);
+	if (y1 == y0) {					/* horiz. line */
+	    if (x0 <= x1) {
+		prevx = macWin->xOff + x0;
 	    } else {
-		prevx += points[i].x;
-		prevy += points[i].y;
-		CGContextAddLineToPoint(dc.context, prevx, prevy);
+		prevx = macWin->xOff + x0 + 1;
 	    }
+	} else if (x1 == x0) {				/* vert. line */
+	    if (y0 <= y1) {
+		prevy = macWin->yOff + y0;
+	    } else {
+		prevy = macWin->yOff + y0 + 1;
+	    }
+	}
+	CGContextMoveToPoint(dc.context, prevx, prevy);
+
+	for (i = 1; i < npoints; i++) {
+	    double nextx, nexty;
+
+	    x1 = (mode == CoordModeOrigin) ? points[i].x : x0 + points[i].x;
+	    y1 = (mode == CoordModeOrigin) ? points[i].y : y0 + points[i].y;
+	    nextx = macWin->xOff + x1 + o;
+	    nexty = macWin->yOff + y1 + o;
+
+	    if (i == npoints-1) {
+		if (y1 == y0) {				/* horiz. line */
+		    if (x0 <= x1) {
+			nextx = macWin->xOff + x1 + 1;
+		    } else {
+			nextx = macWin->xOff + x1;
+		    }
+		} else if (x1 == x0) {			/* vert. line */
+		    if (y0 <= y1) {
+			nexty = macWin->yOff + y1 + 1;
+		    } else {
+			nexty = macWin->yOff + y1;
+		    }
+		}
+	    }
+	    CGContextAddLineToPoint(dc.context, nextx, nexty);
+	    x0 = x1; y0 = y1;
 	}
 
 	/*
@@ -425,8 +456,7 @@ XDrawLines(
 	 * this needs telling CoreGraphics that the path is closed.
 	 */
 
-	if ((points[0].x == points[npoints-1].x) &&
-		(points[0].y == points[npoints-1].y)) {
+	if (points[0].x == x1 && points[0].y == y1) {
 	    CGContextClosePath(dc.context);
 	}
 	CGContextStrokePath(dc.context);
@@ -461,23 +491,43 @@ XDrawSegments(
 {
     MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
-    int i, lw = gc->line_width;
 
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
-	double o = (lw % 2) ? .5 : 0;
+	int i;
+	double o = (gc->line_width % 2) ? .5 : 0;
 
 	for (i = 0; i < nsegments; i++) {
+	    double prevx = macWin->xOff + segments[i].x1 + o;
+	    double prevy = macWin->yOff + segments[i].y1 + o;
+	    double nextx = macWin->xOff + segments[i].x2 + o;
+	    double nexty = macWin->yOff + segments[i].y2 + o;
+
+	    if (segments[i].y2 == segments[i].y1) {	      /* horiz. line */
+		if (segments[i].x1 <= segments[i].x2) {
+		    prevx = macWin->xOff + segments[i].x1;
+		    nextx = macWin->xOff + segments[i].x2 + 1;
+		} else {
+		    prevx = macWin->xOff + segments[i].x1 + 1;
+		    nextx = macWin->xOff + segments[i].x2;
+		}
+	    } else if (segments[i].x2 == segments[i].x1) {    /* vert. line */
+		if (segments[i].y1 <= segments[i].y2) {
+		    prevy = macWin->yOff + segments[i].y1;
+		    nexty = macWin->yOff + segments[i].y2 + 1;
+		} else {
+		    prevy = macWin->yOff + segments[i].y1 + 1;
+		    nexty = macWin->yOff + segments[i].y2;
+		}
+	    }
+
 	    CGContextBeginPath(dc.context);
-	    CGContextMoveToPoint(dc.context,
-		    macWin->xOff + segments[i].x1 + o,
-		    macWin->yOff + segments[i].y1 + o);
-	    CGContextAddLineToPoint(dc.context,
-		    macWin->xOff + segments[i].x2 + o,
-		    macWin->yOff + segments[i].y2 + o);
+	    CGContextMoveToPoint(dc.context, prevx, prevy);
+	    CGContextAddLineToPoint(dc.context, nextx, nexty);
 	    CGContextStrokePath(dc.context);
 	}
     }
@@ -513,31 +563,67 @@ XFillPolygon(
 {
     MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
-    int i;
+
+    if (npoints < 2 || (mode != CoordModeOrigin && mode != CoordModePrevious)) {
+	return BadValue;
+    }
 
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
-	double prevx, prevy;
 	double o = (gc->line_width % 2) ? .5 : 0;
+	short x0 = points[0].x, y0 = points[0].y;
+	short x1 = (mode == CoordModeOrigin) ? points[1].x : x0 + points[1].x;
+	short y1 = (mode == CoordModeOrigin) ? points[1].y : y0 + points[1].y;
+	double prevx = macWin->xOff + x0 + o, prevy = macWin->yOff + y0 + o;
+	int i;
 
 	CGContextBeginPath(dc.context);
-	prevx = macWin->xOff + points[0].x + o;
-	prevy = macWin->yOff + points[0].y + o;
-	CGContextMoveToPoint(dc.context, prevx, prevy);
-	for (i = 1; i < npoints; i++) {
-	    if (mode == CoordModeOrigin) {
-		CGContextAddLineToPoint(dc.context,
-			macWin->xOff + points[i].x + o,
-			macWin->yOff + points[i].y + o);
+	if (y1 == y0) {					/* horiz. line */
+	    if (x0 <= x1) {
+		prevx = macWin->xOff + x0;
 	    } else {
-		prevx += points[i].x;
-		prevy += points[i].y;
-		CGContextAddLineToPoint(dc.context, prevx, prevy);
+		prevx = macWin->xOff + x0 + 1;
+	    }
+	} else if (x1 == x0) {				/* vert. line */
+	    if (y0 <= y1) {
+		prevy = macWin->yOff + y0;
+	    } else {
+		prevy = macWin->yOff + y0 + 1;
 	    }
 	}
+	CGContextMoveToPoint(dc.context, prevx, prevy);
+
+	for (i = 1; i < npoints; i++) {
+	    double nextx, nexty;
+
+	    x1 = (mode == CoordModeOrigin) ? points[i].x : x0 + points[i].x;
+	    y1 = (mode == CoordModeOrigin) ? points[i].y : y0 + points[i].y;
+	    nextx = macWin->xOff + x1 + o;
+	    nexty = macWin->yOff + y1 + o;
+
+	    if (i == npoints-1) {
+		if (y1 == y0) {				/* horiz. line */
+		    if (x0 <= x1) {
+			nextx = macWin->xOff + x1 + 1;
+		    } else {
+			nextx = macWin->xOff + x1;
+		    }
+		} else if (x1 == x0) {			/* vert. line */
+		    if (y0 <= y1) {
+			nexty = macWin->yOff + y1 + 1;
+		    } else {
+			nexty = macWin->yOff + y1;
+		    }
+		}
+	    }
+	    CGContextAddLineToPoint(dc.context, nextx, nexty);
+	    x0 = x1; y0 = y1;
+	}
+
 	(gc->fill_rule == EvenOddRule)
 		? CGContextEOFillPath(dc.context)
 		: CGContextFillPath(dc.context);
