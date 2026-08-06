@@ -250,6 +250,36 @@ static bool disjoint(
 /*
  *----------------------------------------------------------------------
  *
+ * intersectRectWithRect --
+ *
+ *	Replaces the first clipRect by its intersection with the second.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Modifies the clipRect referenced by the first argument.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void intersectRectWithRect(
+    clipRect *rectPtr,
+    clipRect rect)
+{
+    return;
+    float xmaxFirst = rectPtr->x + rectPtr->w;
+    float ymaxFirst = rectPtr->y + rectPtr->h;
+    float xmaxSecond = rect.x + rect.w;
+    float ymaxSecond = rect.y + rect.h;
+    rectPtr->x = fmaxf(rectPtr->x, rect.x);
+    rectPtr->y = fmaxf(rectPtr->y, rect.y);
+    rectPtr->w = fminf(xmaxFirst, xmaxSecond) - rectPtr->x;
+    rectPtr->h = fminf(ymaxFirst, ymaxSecond) - rectPtr->y;
+}
+
+/*----------------------------------------------------------------------
+ *
  * addClipRect --
  *
  *	Adds a clipping rectangle for a subwindow to the buffer of the
@@ -318,6 +348,46 @@ addClipRect(
  *----------------------------------------------------------------------
  */
 
+/*
+ * Static helper function. 
+ * Subdivides a rectangle into two clockwise oriented triangles
+ * and adds the 6 vertices of those triangles to a buffer of  
+ * vertices at the specified index. Returns the index of the
+ * vertex following the last one which was added.
+ *   0       1
+ *    o-----o
+ *    |    /|
+ *    | 1 / |
+ *    |  /  |
+ *    | / 2 |
+ *    |/    |
+ *    o-----o
+ *   2       3
+ *
+ */
+
+typedef struct {float x; float y} vertex;
+static inline int
+appendRect(
+    clipRect rect,
+    vertex *vertices,
+    int n)
+{
+    float xmin = rect.x;
+    float xmax = rect.x + rect.w;
+    float ymin = rect.y;
+    float ymax = rect.y + rect.h;
+    // Triangle 1
+    vertices[n++] = (vertex) {xmin, ymin};  // 0
+    vertices[n++] = (vertex) {xmax, ymin};  // 1
+    vertices[n++] = (vertex) {xmin, ymax};  // 2
+    // Triangle 2
+    vertices[n++] = (vertex) {xmin, ymax};  // 2
+    vertices[n++] = (vertex) {xmax, ymin};  // 1
+    vertices[n++] = (vertex) {xmax, ymax};  // 3
+    return n;
+}
+
 void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
      GLFWwindow* glfwWindow) /* The glfwWindow for its toplevel. */
@@ -330,7 +400,15 @@ void updateClipRects(
     /* Reset the buffer */
     winPtr->privatePtr->clipRectCount = 0;
     clipRect bounds = getBounds(winPtr, scale);
-    /* Clip children that overlap the window. */
+    clipRect extraRect = winPtr->privatePtr->boundsRect;
+    if (extraRect.w > 0 && extraRect.h > 0) {
+	extraRect.x *= scale;
+	extraRect.y *= scale;
+	extraRect.w *= scale;
+	extraRect.h *= scale;
+	intersectRectWithRect(&bounds, extraRect);
+    }
+    /* Add clipRects for children that overlap the window. */
     for (TkWindow *childPtr = winPtr->childList;
 	 childPtr != NULL;
 	 childPtr = childPtr->nextPtr) {
@@ -339,7 +417,7 @@ void updateClipRects(
 	    addClipRect(childPtr, winPtr, scale);
         }
     }
-    /* Clip non-toplevel siblings higher in the stacking order
+    /* Add clipRects for non-toplevel siblings higher in the stacking order
      * that overlap the window . */
     if (!Tk_IsTopLevel(winPtr)) {
         for (TkWindow *sibPtr = winPtr->nextPtr;
@@ -352,47 +430,63 @@ void updateClipRects(
 	    }
 	}
     }
-    if (winPtr->privatePtr->clipRectCount == 0) {
-	return;
-    }
 
     /*
-     * Load the clipRect vertices into the window's VBO. Each clipRect needs 2
-     * triangles, so 6 vertices, so 12 floats.
-     *    o-----o
-     *    |\    |
-     *    | \ 2 |
-     *    |  \  |
-     *    | 1 \ |
-     *    |    \|
-     *    o-----o
+     * Create an array of vertices to be uploaded to the window's VBO.  We are
+     * not using an EBO, which allows specifying just the vertex indices to
+     * draw the triangles.  If we used an int EBO we would store 6 ints and 4
+     * vertices (56 bytes) per rect, instead of 6 vertices (48 bytes).  So the
+     * EBO is actually less efficient.  We could use short indices, but why
+     * bother?
+     *
+     * We include 4 clipRects for clipping all drawing to the window bounds.
      */
 
-    int floatCount = 12 * winPtr->privatePtr->clipRectCount;
-    float vertices[floatCount];
+    vertex vertices[6 * (winPtr->privatePtr->clipRectCount + 4)];
     int n = 0;
 
+    /*
+     * Add the vertices of all of the clipRects in the clipRect buffer
+     * to the vertex array.
+     */
+    clipRect *clipRects = winPtr->privatePtr->clipRectBuffer; 
     for (int i = 0; i < winPtr->privatePtr->clipRectCount; i++) {
-	clipRect rect = winPtr->privatePtr->clipRectBuffer[i];
-	float xmin = rect.x;
-	float xmax = rect.x + rect.w;
-	float ymin = rect.y;
-	float ymax = rect.y + rect.h;
-	// Triangle 1
-	vertices[n++] = xmin; vertices[n++] = ymin;
-	vertices[n++] = xmax; vertices[n++] = ymin;
-	vertices[n++] = xmin; vertices[n++] = ymax;
-	// Triangle 2
-	vertices[n++] = xmax; vertices[n++] = ymin;
-	vertices[n++] = xmax; vertices[n++] = ymax;
-	vertices[n++] = xmin; vertices[n++] = ymax;
+	n = appendRect(clipRects[i], vertices, n);
     }
+    /* Generate 4 additional clipRects to clip all drawing to the bounds
+     * rectangle, which has been intersected with the extra rectangle added by
+     * TkClipDrawableToRect, if there was one.
+     *
+     *   (0,0) o ------------------------o
+     *         |           top           |
+     *         o--------o--------o-------o
+     *         | left   | bounds | right |
+     *         o--------o--------o-------o
+     *         |          bottom         |
+     *         o-------------------------o (fbWidth, fbHeight)
+     *
+     */
+    clipRect top = (clipRect) {
+	.x = 0, .y = 0, .w = fbWidth, .h = bounds.y};
+    clipRect left = (clipRect) {
+	.x = 0, .y = bounds.y, .w = bounds.x, .h = bounds.h};
+    clipRect right = (clipRect) {
+	.x = bounds.x + bounds.w, .y = bounds.y,
+	.w = fbWidth - bounds.x - bounds.w, .h = bounds.h};
+    clipRect bottom = (clipRect) {
+	.x = 0, .y = bounds.y + bounds.h,
+	.w = fbWidth, .h = fbHeight - bounds.y - bounds.h};
+    /* Add the vertices of these 4 clipRects to the vertex array. */
+    n = appendRect(top, vertices, n);
+    n = appendRect(left, vertices, n);
+    n = appendRect(right, vertices, n);
+    n = appendRect(bottom, vertices, n);
 
-    /* Load the vertices of the triangles into the VBO. */
+    /* Upload the vertex array to the VBO. */
     glfwMakeContextCurrent(glfwWindow);
     glBindBuffer(GL_ARRAY_BUFFER, winPtr->privatePtr->clipVBO);
-    glBufferData(GL_ARRAY_BUFFER, floatCount * sizeof(float),
-		 vertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, n * sizeof(vertex), (float*)vertices,
+	GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -420,6 +514,7 @@ void tkWaylandDrawClipMask(
     TkWindow* winPtr,
     GLFWwindow* glfwWindow)
 {
+    printf("Drawing ClipMask for %s\n", Tk_PathName(winPtr));
     if (1) { //// should be if the clipRects are invalid
 	updateClipRects(winPtr, glfwWindow);
     }
@@ -439,9 +534,6 @@ void tkWaylandDrawClipMask(
      */
     glClearDepthf(0.5f);
     glClear(GL_DEPTH_BUFFER_BIT);
-    if (winPtr->privatePtr->clipRectCount == 0) {
-	return;
-    }
     /* Get the framebuffer size to save in the fbSize uniform. */
     int fbWidth;
     int fbHeight;
@@ -453,7 +545,7 @@ void tkWaylandDrawClipMask(
     glUniform2f(winPtr->privatePtr->fbSizeUniform,
 		(float)fbWidth, (float)fbHeight);
     glBindVertexArray(winPtr->privatePtr->clipVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 12 * winPtr->privatePtr->clipRectCount);
+    glDrawArrays(GL_TRIANGLES, 0, 12 * (winPtr->privatePtr->clipRectCount + 4));
     // Restore defaults
     glBindVertexArray(0);
     glUseProgram(0);

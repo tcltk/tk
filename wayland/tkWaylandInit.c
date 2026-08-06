@@ -289,24 +289,29 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-#if 1
-    printf("Tk_ClipDrawableToRect: %dx%d+%d+%d\n", width, height, x, y);
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+	/* No-op for pixmaps. */
+	return;
+    }
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    printf("Tk_ClipDrawableToRect: %s %dx%d+%d+%d\n",
+	Tk_PathName(winPtr), width, height, x, y);
+
     //// Should check for NULL
     if (width == -1 || height == -1) {
-	fprintf(stderr, "Finished double buffer section\n");
+	printf("Clearing clipRect for %s\n", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
 	renderFBO(glfwWindow);
     } else {
-	fprintf(stderr, "Starting double buffer section ====> \n");
+	printf("Adding clipRect for %s\n", Tk_PathName(winPtr));
 	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
 	glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
     }
-#else
-    (void) drawable;
-#endif
+    winPtr->privatePtr->boundsRect = (clipRect) {
+	.x = x, .y = y, .w = width, .h = height};
 }
 
 /*
@@ -717,8 +722,11 @@ TkWaylandBeginDraw(
 	     * there were an alternative to this crude workaround.
 	     */
 	    TkWindow *parentPtr = (TkWindow*) Tk_Parent(childPtr);
-	    TkWaylandQueueExposeEvent(parentPtr, 0, 0,
-		Tk_Width(parentPtr), Tk_Height(parentPtr));
+	    printf("ClipRect mismatch in %s\n", Tk_PathName(parentPtr));
+	    //// This is not sufficient to fix ghost windows inthe demo
+	    //// showing a text widget with embedded windows.  Those windows
+	    //// need to update their position after scrolling.
+	    updateClipRects(parentPtr, glfwWindow);
 	}
     }
     fprintf(stderr,
@@ -733,7 +741,7 @@ TkWaylandBeginDraw(
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
     
     /*
-     * Initialize the NVGcontext with  data from our gc.  (This must be
+     * Initialize the NVGcontext with data from our gc.  (This must be
      * done *after* calling nvgBeginFrame.)
      */
 
@@ -744,16 +752,6 @@ TkWaylandBeginDraw(
      */
 
     nvgTranslate(dcPtr->vg, x, y);
-
-    /*
-     * Clip drawing to the bounds of this widget.  This is needed for a
-     * Canvas widget, which can draw outside of its bounds.
-     * TODO: this might be better handled by using the depth buffer.
-     * That would probably handle embedded windows in a canvas, which
-     * currently do not get clipped.
-     */
-    
-    nvgScissor(dcPtr->vg, 0, 0, Tk_Width(childPtr), Tk_Height(childPtr));
     
     return TCL_OK;
 }
