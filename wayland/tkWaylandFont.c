@@ -2330,6 +2330,90 @@ InitFont(
         face->faceIndex = fcIdx;
     }
 
+    /*
+     * Guarantee CJK coverage.
+     *
+     * FcFontSort() above ranks candidates by closeness to the requested
+     * (Latin) pattern, not by script coverage, and the result is then
+     * hard-truncated to MAX_FACES. On systems with many fonts installed,
+     * a CJK-capable face (e.g. "Noto Sans CJK") routinely sorts past that
+     * cutoff and is silently dropped from fontPtr->faces[], even though
+     * Fontconfig has one available. When that happens, GetRunFaceIndex()
+     * and FindFaceCoveringRange() find no face covering CJK ideographs
+     * and fall back to face 0 (a Latin sans/serif/mono face), which has
+     * no CJK glyphs -- so CJK text silently fails to render on Wayland
+     * even though Tk's X11/Xft backend (which has no such truncation)
+     * finds and uses the same installed font correctly.
+     *
+     * This mirrors how GetEmojiFaceIndex() guarantees emoji coverage:
+     * don't trust the truncated list, explicitly test for coverage and
+     * look one up if it's missing. The matched pattern is added to
+     * fontPtr->fontset (not just fontPtr->faces[]) via FcFontSetAdd so
+     * that DeleteFont()'s existing FcFontSetDestroy(fontPtr->fontset)
+     * frees it; DeleteFont never frees face->source pointers individually.
+     */
+    {
+        static const FcChar32 cjkProbe = 0x4E2D; /* 中 - CJK Unified Ideograph */
+        bool haveCjk = false;
+        for (int fi = 0; fi < nfaces && !haveCjk; fi++) {
+            if (fontPtr->faces[fi].charset &&
+                FcCharSetHasChar(fontPtr->faces[fi].charset, cjkProbe)) {
+                haveCjk = true;
+            }
+        }
+        if (!haveCjk) {
+            FcPattern *cjkPat = FcPatternCreate();
+            if (cjkPat) {
+                FcCharSet *want = FcCharSetCreate();
+                FcCharSetAddChar(want, cjkProbe);
+                FcPatternAddCharSet(cjkPat, FC_CHARSET, want);
+                FcPatternAddDouble(cjkPat, FC_PIXEL_SIZE,
+                                   (double)fontPtr->pixelSize);
+                FcPatternAddBool(cjkPat, FC_COLOR, FcFalse);
+                FcConfigSubstitute(NULL, cjkPat, FcMatchPattern);
+                FcDefaultSubstitute(cjkPat);
+
+                FcResult cjkResult;
+                FcPattern *cjkMatch = FcFontMatch(NULL, cjkPat, &cjkResult);
+                if (cjkMatch && FcFontSetAdd(fontPtr->fontset, cjkMatch)) {
+                    WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(
+                        fontPtr->faces, (nfaces + 1) * sizeof(WaylandFtFace));
+                    if (grown) {
+                        fontPtr->faces = grown;
+                        memset(&fontPtr->faces[nfaces], 0, sizeof(WaylandFtFace));
+                        fontPtr->faces[nfaces].source    = cjkMatch;
+                        fontPtr->faces[nfaces].nvgFontId = -1;
+
+                        FcCharSet *cs = NULL;
+                        if (FcPatternGetCharSet(cjkMatch, FC_CHARSET, 0, &cs)
+                                == FcResultMatch) {
+                            fontPtr->faces[nfaces].charset = FcCharSetCopy(cs);
+                        }
+                        FcChar8 *fcPath = NULL;
+                        if (FcPatternGetString(cjkMatch, FC_FILE, 0, &fcPath)
+                                == FcResultMatch && fcPath) {
+                            fontPtr->faces[nfaces].filePath = strdup((char *)fcPath);
+                        }
+                        int fcIdx = 0;
+                        FcPatternGetInteger(cjkMatch, FC_INDEX, 0, &fcIdx);
+                        fontPtr->faces[nfaces].faceIndex = fcIdx;
+
+                        nfaces++;
+                        fontPtr->nfaces = nfaces;
+                    }
+                    /* On Tcl_Realloc failure, cjkMatch stays owned by
+                     * fontPtr->fontset and will be freed with it. */
+                } else if (cjkMatch) {
+                    /* FcFontSetAdd failed (e.g. duplicate) -- we still own
+                     * this reference and must free it ourselves. */
+                    FcPatternDestroy(cjkMatch);
+                }
+                FcCharSetDestroy(want);
+                FcPatternDestroy(cjkPat);
+            }
+        }
+    }
+
     /* Record the actual family that ended up as primary. */
     if (nfaces > 0 && fontPtr->faces[0].source) {
         FcChar8 *resolvedFamily = NULL;
@@ -3284,24 +3368,12 @@ TkpDrawAngledCharsInContext(
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
-    /* Starting X for partial range — more robust. */
-    double drawX = x;
-    if (rangeStart > 0) {
-        float bounds[4];
-        nvgFontFaceId(vg, primaryId);
-        nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
-        drawX += (double)bounds[2];
-    }
-
-    nvgSave(vg);
-    nvgTranslate(vg, (float)drawX, (float)y);
-    if (angle != 0.0) {
-        nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
-    }
-
     /*
-     * Check if the range being drawn contains combining characters.
-     * If so, compose them to NFC form for proper rendering.
+     * Check if the range being drawn contains combining characters, and
+     * whether it contains emoji. Both of these must be known BEFORE we
+     * compute the draw origin below, because they determine which text
+     * gets shaped later (the isolated range vs. the full source string)
+     * and the origin math has to match whichever one it is.
      */
     bool hasCombining = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
@@ -3316,6 +3388,57 @@ TkpDrawAngledCharsInContext(
         i += clen;
     }
 
+    bool hasEmoji = false;
+    for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
+                                (int)(rangeStart + rangeLength) - i);
+        if (clen <= 0) { i++; continue; }
+        if (IsEmoji(uc)) {
+            hasEmoji = true;
+            break;
+        }
+        i += clen;
+    }
+
+    /*
+     * Starting X for a partial range.
+     *
+     * The fast simple-text path (below) and the composed-combining-mark
+     * path both shape/render an ISOLATED copy of just [rangeStart,
+     * rangeStart+rangeLength), starting at pen position 0 -- so they need
+     * the width of everything before rangeStart added to the draw origin.
+     *
+     * The ordinary complex/HarfBuzz path (no combining marks) instead
+     * shapes the WHOLE source string starting at byte 0 (see shapeSource
+     * below), so its cluster pen_x values are already absolute offsets
+     * from the start of the string. Adding the prefix width again in that
+     * case double-counts it -- once correctly via HarfBuzz's real shaped
+     * advances, and once via this cruder nvgTextBounds measurement, which
+     * isn't even bidi-aware. That double-count was the cause of glyphs
+     * jumping/shifting as the cursor moved or the selection changed:
+     * small and roughly constant for plain LTR text (where the two
+     * measurements are close), large and erratic for RTL/mixed text
+     * (where a flat nvgTextBounds prefix width has no relationship to the
+     * true bidi-reordered visual prefix width).
+     */
+    bool needsPrefixOffset = hasCombining ||
+        (IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
+
+    double drawX = x;
+    if (rangeStart > 0 && needsPrefixOffset) {
+        float bounds[4];
+        nvgFontFaceId(vg, primaryId);
+        nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
+        drawX += (double)bounds[2];
+    }
+
+    nvgSave(vg);
+    nvgTranslate(vg, (float)drawX, (float)y);
+    if (angle != 0.0) {
+        nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
+    }
+
     char *composedSource = NULL;
     const char *renderPtr = rangePtr;
     const char *renderEnd = rangeEnd;
@@ -3328,19 +3451,6 @@ TkpDrawAngledCharsInContext(
             renderEnd = composedSource + strlen(composedSource);
             didCompose = true;
         }
-    }
-
-    bool hasEmoji = false;
-    for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
-        FcChar32 uc;
-        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
-                                (int)(rangeStart + rangeLength) - i);
-        if (clen <= 0) { i++; continue; }
-        if (IsEmoji(uc)) {
-            hasEmoji = true;
-            break;
-        }
-        i += clen;
     }
 
     /* For text with combining characters, use the simple path with composed
