@@ -666,6 +666,59 @@ IsEmoji(FcChar32 uc)
 
 /*
  *----------------------------------------------------------------------
+ * IsColorFcPattern --
+ *
+ *   Determine whether a Fontconfig pattern refers to a colour-glyph
+ *   font (CBDT/CBLC, COLR/CPAL, sbix, etc.), which stb_truetype/NanoVG
+ *   cannot rasterize.
+ *
+ *   Uses the authoritative FC_COLOR boolean property rather than
+ *   guessing from the family or file name. Name-substring checks like
+ *   "does the family contain 'color'" miss plenty of real color emoji
+ *   fonts that don't spell it that way - Twemoji (Mozilla), Segoe UI
+ *   Emoji, JoyPixels, OpenMoji, etc. - which is what let an unusable
+ *   color font slip through the family-name check further down and
+ *   get selected, producing tofu boxes for every emoji.
+ *
+ *   Falls back to conservative name-substring matching only if this
+ *   Fontconfig build predates FC_COLOR (pre-2.13).
+ *
+ * Results:
+ *   true if the pattern is (or looks like) a color font.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsColorFcPattern(FcPattern *pat)
+{
+    if (!pat) return false;
+
+#ifdef FC_COLOR
+    FcBool isColor = FcFalse;
+    if (FcPatternGetBool(pat, FC_COLOR, 0, &isColor) == FcResultMatch) {
+        return isColor == FcTrue;
+    }
+#endif
+
+    /* Fallback for Fontconfig builds without FC_COLOR support. */
+    FcChar8 *family = NULL;
+    if (FcPatternGetString(pat, FC_FAMILY, 0, &family) == FcResultMatch &&
+        family && strcasestr((const char *)family, "color")) {
+        return true;
+    }
+    FcChar8 *file = NULL;
+    if (FcPatternGetString(pat, FC_FILE, 0, &file) == FcResultMatch &&
+        file &&
+        (strcasestr((const char *)file, "ColorEmoji") ||
+         strcasestr((const char *)file, "color-emoji") ||
+         strcasestr((const char *)file, "NotoColor"))) {
+        return true;
+    }
+    return false;
+}
+
+/*
+ *----------------------------------------------------------------------
  * GetEmojiFaceIndex --
  *
  *   Find the best face for rendering emoji characters by scanning
@@ -739,7 +792,7 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
             strcasestr(fam, "emojione") ||
             strcasestr(fam, "symbola");
         if (!looksLikeEmoji) continue;
-        if (strcasestr(fam, "color")) continue;
+        if (IsColorFcPattern(pat)) continue;
 
         /* Verify it actually has emoji coverage. */
         FcCharSet *cs = fontPtr->faces[fi].charset;
@@ -778,6 +831,12 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
              strcasestr((const char *)family, "symbol") ||
              strcasestr((const char *)family, "dingbat"));
         if (!nameHint) continue;
+        /* Pass 1 already rejects color fonts, but this pass had no such
+         * check at all - if the only "emoji"-named face on the system is
+         * a color font that pass 1's stricter list missed or that wasn't
+         * demoted at load time, this would happily select it anyway,
+         * producing unusable tofu-box glyphs. */
+        if (IsColorFcPattern(pat)) continue;
 
         int score = 0;
         for (int i = 0; i < numTestPoints; i++) {
@@ -2177,11 +2236,7 @@ InitFont(
     if (set && set->nfont > 1) {
         int n = set->nfont;
         for (int i = 0; i < n; ) {
-            FcChar8 *file = NULL;
-            FcPatternGetString(set->fonts[i], FC_FILE, 0, &file);
-            if (file && (strcasestr((const char *)file, "ColorEmoji") ||
-                         strcasestr((const char *)file, "color-emoji") ||
-                         strcasestr((const char *)file, "NotoColor"))) {
+            if (IsColorFcPattern(set->fonts[i])) {
                 FcPattern *bad = set->fonts[i];
                 memmove(&set->fonts[i], &set->fonts[i + 1],
                         (n - i - 1) * sizeof(FcPattern *));
