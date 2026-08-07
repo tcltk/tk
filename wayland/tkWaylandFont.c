@@ -2331,29 +2331,16 @@ InitFont(
     }
 
     /*
-     * Guarantee CJK coverage.
-     *
-     * FcFontSort() above ranks candidates by closeness to the requested
-     * (Latin) pattern, not by script coverage, and the result is then
-     * hard-truncated to MAX_FACES. On systems with many fonts installed,
-     * a CJK-capable face (e.g. "Noto Sans CJK") routinely sorts past that
-     * cutoff and is silently dropped from fontPtr->faces[], even though
-     * Fontconfig has one available. When that happens, GetRunFaceIndex()
-     * and FindFaceCoveringRange() find no face covering CJK ideographs
-     * and fall back to face 0 (a Latin sans/serif/mono face), which has
-     * no CJK glyphs -- so CJK text silently fails to render on Wayland
-     * even though Tk's X11/Xft backend (which has no such truncation)
-     * finds and uses the same installed font correctly.
-     *
-     * This mirrors how GetEmojiFaceIndex() guarantees emoji coverage:
-     * don't trust the truncated list, explicitly test for coverage and
-     * look one up if it's missing. The matched pattern is added to
-     * fontPtr->fontset (not just fontPtr->faces[]) via FcFontSetAdd so
-     * that DeleteFont()'s existing FcFontSetDestroy(fontPtr->fontset)
-     * frees it; DeleteFont never frees face->source pointers individually.
+     * Guarantee CJK coverage the same way GetEmojiFaceIndex() guarantees
+     * emoji coverage: FcFontSort ranks candidates by closeness to a Latin
+     * pattern, not by script coverage, so a CJK-capable face (e.g. Noto
+     * Sans CJK) can easily sort past MAX_FACES and be silently dropped
+     * even though Fontconfig has one installed. Tk's X11/Xft backend has
+     * no equivalent truncation, which is why the same system fonts are
+     * found there but not here.
      */
     {
-        static const FcChar32 cjkProbe = 0x4E2D; /* 中 - CJK Unified Ideograph */
+        static const FcChar32 cjkProbe = 0x4E2D; /* CJK Unified Ideograph */
         bool haveCjk = false;
         for (int fi = 0; fi < nfaces && !haveCjk; fi++) {
             if (fontPtr->faces[fi].charset &&
@@ -2369,13 +2356,14 @@ InitFont(
                 FcPatternAddCharSet(cjkPat, FC_CHARSET, want);
                 FcPatternAddDouble(cjkPat, FC_PIXEL_SIZE,
                                    (double)fontPtr->pixelSize);
-                FcPatternAddBool(cjkPat, FC_COLOR, FcFalse);
                 FcConfigSubstitute(NULL, cjkPat, FcMatchPattern);
                 FcDefaultSubstitute(cjkPat);
-
                 FcResult cjkResult;
                 FcPattern *cjkMatch = FcFontMatch(NULL, cjkPat, &cjkResult);
                 if (cjkMatch && FcFontSetAdd(fontPtr->fontset, cjkMatch)) {
+                    /* Ownership of cjkMatch now belongs to fontPtr->fontset,
+                     * so it is freed by the existing FcFontSetDestroy() in
+                     * DeleteFont() - no separate cleanup needed. */
                     WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(
                         fontPtr->faces, (nfaces + 1) * sizeof(WaylandFtFace));
                     if (grown) {
@@ -2383,7 +2371,6 @@ InitFont(
                         memset(&fontPtr->faces[nfaces], 0, sizeof(WaylandFtFace));
                         fontPtr->faces[nfaces].source    = cjkMatch;
                         fontPtr->faces[nfaces].nvgFontId = -1;
-
                         FcCharSet *cs = NULL;
                         if (FcPatternGetCharSet(cjkMatch, FC_CHARSET, 0, &cs)
                                 == FcResultMatch) {
@@ -2397,16 +2384,11 @@ InitFont(
                         int fcIdx = 0;
                         FcPatternGetInteger(cjkMatch, FC_INDEX, 0, &fcIdx);
                         fontPtr->faces[nfaces].faceIndex = fcIdx;
-
                         nfaces++;
                         fontPtr->nfaces = nfaces;
                     }
-                    /* On Tcl_Realloc failure, cjkMatch stays owned by
-                     * fontPtr->fontset and will be freed with it. */
                 } else if (cjkMatch) {
-                    /* FcFontSetAdd failed (e.g. duplicate) -- we still own
-                     * this reference and must free it ourselves. */
-                    FcPatternDestroy(cjkMatch);
+                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed */
                 }
                 FcCharSetDestroy(want);
                 FcPatternDestroy(cjkPat);
@@ -3069,9 +3051,9 @@ Tk_MeasureCharsInContext(
 
         int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
                                            positions, nchars);
-        float bounds[4];
-        nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
-        float totalWidth = bounds[2];
+        /* Advance width, not ink bounds[2] - see TkpDrawAngledCharsInContext
+         * for why that distinction matters. */
+        float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
 
         int         pixelWidth     = 0;
         const char *lastBreak      = rangePtr;
@@ -3369,11 +3351,24 @@ TkpDrawAngledCharsInContext(
     const char *rangeEnd = rangePtr + rangeLength;
 
     /*
-     * Check if the range being drawn contains combining characters, and
-     * whether it contains emoji. Both of these must be known BEFORE we
-     * compute the draw origin below, because they determine which text
-     * gets shaped later (the isolated range vs. the full source string)
-     * and the origin math has to match whichever one it is.
+     * Check if the range being drawn contains combining characters or
+     * emoji. This has to happen BEFORE the prefix-offset decision below,
+     * because it determines which of two different pen-position schemes
+     * the render path further down will use:
+     *
+     *   - hasCombining: renders a freshly-composed copy of just this
+     *     range, with pen_x relative to 0.
+     *   - simple fast path (no combining, no emoji, IsSimpleOnly): also
+     *     renders an isolated copy of just this range, pen_x relative to 0.
+     *   - otherwise (complex/HarfBuzz path, no combining marks): shapes
+     *     the WHOLE source string starting at byte 0, so its pen_x values
+     *     are already absolute offsets from the start of the string.
+     *
+     * Only the first two need the prefix width added to the draw origin;
+     * adding it in the third case double-counts the prefix (it's already
+     * baked into pen_x from shaping the full string) and is what caused
+     * glyphs to jump on cursor/selection changes, especially badly in
+     * bidi/mixed text.
      */
     bool hasCombining = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
@@ -3401,36 +3396,23 @@ TkpDrawAngledCharsInContext(
         i += clen;
     }
 
-    /*
-     * Starting X for a partial range.
-     *
-     * The fast simple-text path (below) and the composed-combining-mark
-     * path both shape/render an ISOLATED copy of just [rangeStart,
-     * rangeStart+rangeLength), starting at pen position 0 -- so they need
-     * the width of everything before rangeStart added to the draw origin.
-     *
-     * The ordinary complex/HarfBuzz path (no combining marks) instead
-     * shapes the WHOLE source string starting at byte 0 (see shapeSource
-     * below), so its cluster pen_x values are already absolute offsets
-     * from the start of the string. Adding the prefix width again in that
-     * case double-counts it -- once correctly via HarfBuzz's real shaped
-     * advances, and once via this cruder nvgTextBounds measurement, which
-     * isn't even bidi-aware. That double-count was the cause of glyphs
-     * jumping/shifting as the cursor moved or the selection changed:
-     * small and roughly constant for plain LTR text (where the two
-     * measurements are close), large and erratic for RTL/mixed text
-     * (where a flat nvgTextBounds prefix width has no relationship to the
-     * true bidi-reordered visual prefix width).
-     */
     bool needsPrefixOffset = hasCombining ||
         (IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
 
+    /*
+     * Starting X for partial range. Use nvgTextBounds()'s RETURN VALUE
+     * (the horizontal advance) here, not the bounds[] array it fills.
+     * bounds[2] is the ink bounding box's right edge, which undercounts
+     * the true advance whenever the prefix ends in a character whose ink
+     * doesn't reach its full advance width - trailing spaces being the
+     * most common case. That mismatch is what caused the residual small
+     * shift on plain LTR text even after the double-count fix above.
+     */
     double drawX = x;
     if (rangeStart > 0 && needsPrefixOffset) {
-        float bounds[4];
         nvgFontFaceId(vg, primaryId);
-        nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
-        drawX += (double)bounds[2];
+        float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+        drawX += (double)advance;
     }
 
     nvgSave(vg);
@@ -3612,13 +3594,12 @@ TkpDrawAngledCharsInContext(
 
 decorations:
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
-        float bounds[4];
         float runWidth;
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-        nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, bounds);
-        runWidth = bounds[2];
+        /* Advance width, not ink bounds[2] - see note above on why. */
+        runWidth = nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, NULL);
 
         nvgStrokeColor(vg, ColorFromGC(gc));
         nvgStrokeWidth(vg, (float)fontPtr->barHeight);
