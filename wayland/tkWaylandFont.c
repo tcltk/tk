@@ -71,6 +71,30 @@ static bool       IsSansSerifFace(FcPattern *pat);
 static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
 static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
+static void       DrawMultiLineText(NVGcontext *vg, float x, float y,
+				    const char *text, const char *end,
+				    int pixelSize, int ascent, int descent);
+static bool       StringHasNewline(const char *p, const char *end);
+
+/*
+ *----------------------------------------------------------------------
+ * StringHasNewline --
+ *
+ *   Check if a string contains newline or carriage return.
+ *
+ * Results:
+ *   true if newline found, false otherwise.
+ *----------------------------------------------------------------------
+ */
+static bool
+StringHasNewline(const char *p, const char *end)
+{
+    while (p < end) {
+        if (*p == '\n' || *p == '\r') return true;
+        p++;
+    }
+    return false;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -556,7 +580,16 @@ IsSimpleOnly(const char *str, int len)
     int i = 0;
     while (i < len) {
         unsigned char c = (unsigned char)str[i];
-        if (c < 0x80) { i++; continue; }
+        if (c < 0x80) { 
+            /* Skip control characters except tab. Newline and CR are
+             * layout markers, not drawable glyphs. */
+            if (c == '\n' || c == '\r') {
+                i++;
+                continue;
+            }
+            i++; 
+            continue; 
+        }
 
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
@@ -602,8 +635,11 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* Safe for fast path: Latin extended. */
-        int isSafe = (uc <= 0x024F);
+        /* Safe for fast path: ASCII only. Extended Latin, symbols like ©
+         * must go through HarfBuzz so we can pick a fallback face that
+         * actually contains the glyph. Otherwise NanoVG fallback chain may
+         * be missing in the measure VG context and we get .notdef black boxes. */
+        int isSafe = (uc < 0x80);
         if (!isSafe) return false;
 
         i += clen;
@@ -1275,7 +1311,7 @@ WaylandShaper_Destroy(WaylandShaper *s)
  *
  *   Fast path (IsSimpleOnly): skips SheenBidi and HarfBuzz; builds the
  *   glyph buffer by walking UTF-8 codepoints and recording cluster metadata.
- *   Advances are left at 0 and filled in by NanoVG during measurement/draw.
+ *   Advances are computed using NanoVG for accurate measurements.
  *
  * Results:
  *   True on success, false on failure.
@@ -1302,24 +1338,192 @@ WaylandShaper_ShapeString(
 
     /* Fast path: simple LTR text (Latin, Kana, basic punctuation). */
     if (IsSimpleOnly(source, numBytes)) {
+        /* First pass: count visible characters (skip newline/CR). */
+        int visibleCount = 0;
         int i = 0;
-        while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
+        while (i < numBytes && visibleCount < MAX_GLYPHS) {
+            unsigned char c = (unsigned char)source[i];
+            if (c == '\n' || c == '\r') {
+                i++;
+                continue;
+            }
             FcChar32 uc;
             int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
                                     numBytes - i);
             if (clen <= 0) { i++; continue; }
+            visibleCount++;
+            i += clen;
+        }
+
+        if (visibleCount == 0) {
+            buffer->clusterBreaks[0] = 0;
+            buffer->clusterBreakCount = 1;
+            return true;
+        }
+
+        /* We need advances from NanoVG for accurate measurements. */
+        NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
+        if (!vg) {
+            /* Fallback: rough per-character estimate. */
+            int i = 0;
+            while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
+                unsigned char c = (unsigned char)source[i];
+                if (c == '\n' || c == '\r') {
+                    /* Newline contributes zero advance and no glyph. */
+                    i++;
+                    continue;
+                }
+                FcChar32 uc;
+                int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
+                                        numBytes - i);
+                if (clen <= 0) { i++; continue; }
+
+                int cacheIdx = uc & 63;
+                int fi = 0;
+                if (shaper->charCache[cacheIdx].uc == uc) {
+                    fi = shaper->charCache[cacheIdx].faceIdx;
+                } else {
+                    if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
+                        FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
+                        fi = 0;
+                    } else {
+                        for (fi = 1; fi < fontPtr->nfaces; fi++) {
+                            if (fontPtr->faces[fi].charset &&
+                                FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+                                break;
+                            }
+                        }
+                        if (fi >= fontPtr->nfaces) fi = 0;
+                    }
+                    shaper->charCache[cacheIdx].uc = uc;
+                    shaper->charCache[cacheIdx].faceIdx = fi;
+                }
+
+                int g = buffer->glyphCount++;
+                buffer->glyphs[g].faceIndex  = fi;
+                buffer->glyphs[g].glyphId    = uc;
+                buffer->glyphs[g].x          = 0;
+                buffer->glyphs[g].y          = 0;
+                buffer->glyphs[g].advanceX   = fontPtr->pixelSize / 2;
+                buffer->glyphs[g].byteOffset = i;
+                buffer->glyphs[g].clusterLen = clen;
+                buffer->glyphs[g].isRTL      = 0;
+
+                int cpLen = clen < 15 ? clen : 15;
+                memcpy(buffer->glyphs[g].clusterUtf8, source + i, cpLen);
+                buffer->glyphs[g].clusterUtf8[cpLen] = '\0';
+                buffer->glyphs[g].clusterUtf8Len = cpLen;
+
+                i += clen;
+            }
+
+            /* Build visualIndex. */
+            buffer->indexCount = 0;
+            for (int j = 0; j < buffer->glyphCount; j++) {
+                int v = buffer->indexCount++;
+                buffer->visualIndex[v].x = 0;
+                buffer->visualIndex[v].advanceX = buffer->glyphs[j].advanceX;
+                buffer->visualIndex[v].byteStart = buffer->glyphs[j].byteOffset;
+                buffer->visualIndex[v].byteEnd =
+                    buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
+                buffer->visualIndex[v].isRTL = 0;
+            }
+
+            /* Cluster break list. */
+            buffer->clusterBreaks[0] = 0;
+            buffer->clusterBreakCount = 1;
+            for (int j = 0; j < buffer->glyphCount &&
+                 buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; j++) {
+                buffer->clusterBreaks[buffer->clusterBreakCount++] =
+                    buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
+            }
+
+            buffer->totalAdvance = 0;
+            for (int j = 0; j < buffer->glyphCount; j++) {
+                buffer->totalAdvance += buffer->glyphs[j].advanceX;
+            }
+            return true;
+        }
+
+        /* Use NanoVG for accurate advances. */
+        int primaryId = EnsureNvgFont(fontPtr, vg);
+        if (primaryId < 0) {
+            return false;
+        }
+
+        nvgSave(vg);
+        nvgFontFaceId(vg, primaryId);
+        nvgFontSize(vg, (float)fontPtr->pixelSize);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+
+        /* Build a string without newlines for measurement. */
+        char *cleanText = (char *)malloc(numBytes + 1);
+        if (!cleanText) {
+            nvgRestore(vg);
+            return false;
+        }
+        int cleanLen = 0;
+        for (int i = 0; i < numBytes; i++) {
+            if (source[i] != '\n' && source[i] != '\r') {
+                cleanText[cleanLen++] = source[i];
+            }
+        }
+        cleanText[cleanLen] = '\0';
+
+        if (cleanLen == 0) {
+            free(cleanText);
+            nvgRestore(vg);
+            buffer->clusterBreaks[0] = 0;
+            buffer->clusterBreakCount = 1;
+            return true;
+        }
+
+        /* Get glyph positions from NanoVG. */
+        int nchars = 0;
+        for (const char *p = cleanText; *p; ) {
+            int ch; p += Tcl_UtfToUniChar(p, &ch); nchars++;
+        }
+
+        NVGglyphPosition *positions = (NVGglyphPosition *)malloc(
+            (nchars + 1) * sizeof(NVGglyphPosition));
+        if (!positions) {
+            free(cleanText);
+            nvgRestore(vg);
+            return false;
+        }
+
+        int npos = nvgTextGlyphPositions(vg, 0, 0, cleanText, cleanText + cleanLen,
+                                         positions, nchars);
+        /* Get total width for final advance calculation. */
+        float totalWidth = nvgTextBounds(vg, 0, 0, cleanText, cleanText + cleanLen, NULL);
+
+        /* Now map back to original source positions and build glyphs. */
+        int origPos = 0;
+        int cleanPos = 0;
+        int posIdx = 0;
+        int lastX = 0;
+
+        while (origPos < numBytes && buffer->glyphCount < MAX_GLYPHS) {
+            unsigned char c = (unsigned char)source[origPos];
+            if (c == '\n' || c == '\r') {
+                origPos++;
+                continue;
+            }
+
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)(source + origPos), &uc,
+                                    numBytes - origPos);
+            if (clen <= 0) { origPos++; continue; }
 
             int cacheIdx = uc & 63;
             int fi = 0;
             if (shaper->charCache[cacheIdx].uc == uc) {
                 fi = shaper->charCache[cacheIdx].faceIdx;
             } else {
-                /* Check primary face first. */
                 if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
                     FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
                     fi = 0;
                 } else {
-                    /* Find first face that covers this character. */
                     for (fi = 1; fi < fontPtr->nfaces; fi++) {
                         if (fontPtr->faces[fi].charset &&
                             FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
@@ -1328,47 +1532,121 @@ WaylandShaper_ShapeString(
                     }
                     if (fi >= fontPtr->nfaces) fi = 0;
                 }
-                shaper->charCache[cacheIdx].uc      = uc;
+                shaper->charCache[cacheIdx].uc = uc;
                 shaper->charCache[cacheIdx].faceIdx = fi;
             }
 
             int g = buffer->glyphCount++;
-            buffer->glyphs[g].faceIndex  = fi;
-            buffer->glyphs[g].glyphId    = uc;
-            buffer->glyphs[g].x          = 0;   /* NVG computes position. */
-            buffer->glyphs[g].y          = 0;
-            buffer->glyphs[g].advanceX   = 0;
-            buffer->glyphs[g].byteOffset = i;
+            buffer->glyphs[g].faceIndex = fi;
+            buffer->glyphs[g].glyphId = uc;
+            buffer->glyphs[g].x = 0;
+            buffer->glyphs[g].y = 0;
+
+            /* Calculate advance from NanoVG positions. */
+            if (posIdx < npos) {
+                if (posIdx + 1 < npos) {
+                    /* Advance = next glyph position - current glyph position */
+                    buffer->glyphs[g].advanceX = (int)(positions[posIdx + 1].x - positions[posIdx].x + 0.5);
+                } else {
+                    /* Last glyph: use total width minus current position */
+                    buffer->glyphs[g].advanceX = (int)(totalWidth - positions[posIdx].x + 0.5);
+                }
+                if (buffer->glyphs[g].advanceX < 1) {
+                    buffer->glyphs[g].advanceX = fontPtr->pixelSize / 2;
+                }
+                posIdx++;
+            } else {
+                buffer->glyphs[g].advanceX = fontPtr->pixelSize / 2;
+            }
+
+            buffer->glyphs[g].byteOffset = origPos;
             buffer->glyphs[g].clusterLen = clen;
-            buffer->glyphs[g].isRTL      = 0;
+            buffer->glyphs[g].isRTL = 0;
 
             int cpLen = clen < 15 ? clen : 15;
-            memcpy(buffer->glyphs[g].clusterUtf8, source + i, cpLen);
+            memcpy(buffer->glyphs[g].clusterUtf8, source + origPos, cpLen);
             buffer->glyphs[g].clusterUtf8[cpLen] = '\0';
-            buffer->glyphs[g].clusterUtf8Len      = cpLen;
+            buffer->glyphs[g].clusterUtf8Len = cpLen;
 
-            i += clen;
+            origPos += clen;
+            cleanPos += clen;
         }
 
-        /* Trivial visualIndex. */
+        free(positions);
+        free(cleanText);
+        nvgRestore(vg);
+
+        /* Build visualIndex. */
+        buffer->indexCount = 0;
         for (int j = 0; j < buffer->glyphCount; j++) {
             int v = buffer->indexCount++;
-            buffer->visualIndex[v].x         = 0;
-            buffer->visualIndex[v].advanceX  = 0;
+            buffer->visualIndex[v].x = 0;
+            buffer->visualIndex[v].advanceX = buffer->glyphs[j].advanceX;
             buffer->visualIndex[v].byteStart = buffer->glyphs[j].byteOffset;
-            buffer->visualIndex[v].byteEnd   =
+            buffer->visualIndex[v].byteEnd =
                 buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
-            buffer->visualIndex[v].isRTL     = 0;
+            buffer->visualIndex[v].isRTL = 0;
         }
 
-        /* Cluster break list. */
-        buffer->clusterBreaks[0]  = 0;
+        /* Cluster break list including newline positions. */
+        buffer->clusterBreaks[0] = 0;
         buffer->clusterBreakCount = 1;
         for (int j = 0; j < buffer->glyphCount &&
-		 buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; j++) {
+             buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; j++) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] =
                 buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
         }
+
+        /* Also add newline positions as breaks. */
+        for (int i = 0; i < numBytes && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; i++) {
+            if (source[i] == '\n' || source[i] == '\r') {
+                int pos = i + 1;
+                bool already = false;
+                for (int j = 0; j < buffer->clusterBreakCount; j++) {
+                    if (buffer->clusterBreaks[j] == pos) {
+                        already = true;
+                        break;
+                    }
+                }
+                if (!already) {
+                    buffer->clusterBreaks[buffer->clusterBreakCount++] = pos;
+                }
+            }
+        }
+
+        /* Sort and deduplicate. */
+        int n = buffer->clusterBreakCount;
+        for (int i = 1; i < n; i++) {
+            int key = buffer->clusterBreaks[i], j = i - 1;
+            while (j >= 0 && buffer->clusterBreaks[j] > key) {
+                buffer->clusterBreaks[j + 1] = buffer->clusterBreaks[j];
+                j--;
+            }
+            buffer->clusterBreaks[j + 1] = key;
+        }
+        int w = 1;
+        for (int i = 1; i < n; i++) {
+            if (buffer->clusterBreaks[i] != buffer->clusterBreaks[w - 1]) {
+                buffer->clusterBreaks[w++] = buffer->clusterBreaks[i];
+            }
+        }
+        buffer->clusterBreakCount = w;
+
+        buffer->totalAdvance = 0;
+        for (int j = 0; j < buffer->glyphCount; j++) {
+            buffer->totalAdvance += buffer->glyphs[j].advanceX;
+        }
+
+        /* Cache result. */
+        if (numBytes <= MAX_STRING_CACHE) {
+            int slot = shaper->cacheNext;
+            memcpy(shaper->cache[slot].text, source, numBytes);
+            shaper->cache[slot].len = numBytes;
+            shaper->cache[slot].buffer = *buffer;
+            shaper->cache[slot].valid = 1;
+            shaper->cacheNext = (slot + 1) % CACHE_SLOTS;
+        }
+
         return true;
     }
 
@@ -1383,7 +1661,7 @@ WaylandShaper_ShapeString(
         }
     }
 
-    /* Decode UTF-8 → UCS-4. */
+    /* Decode UTF-8 → UCS-4, skipping newline and CR. */
     int       stackCharBounds[256];
     FcChar32  stackUcs4[256];
     int      *charBounds = stackCharBounds;
@@ -1404,13 +1682,22 @@ WaylandShaper_ShapeString(
     int bytePos   = 0;
     int charCount = 0;
     while (bytePos < numBytes && charCount < MAX_GLYPHS) {
+        unsigned char c = (unsigned char)source[bytePos];
+        
+        /* Skip newline and CR - they are layout markers, not glyphs. */
+        if (c == '\n' || c == '\r') {
+            bytePos++;
+            charBounds[charCount] = bytePos;
+            continue;
+        }
+
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + bytePos), &uc,
 				numBytes - bytePos);
         if (clen <= 0) { bytePos++; continue; }
 
-        /* Skip C0/C1 control characters except whitespace. */
-        if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
+        /* Skip C0/C1 control characters except tab and whitespace. */
+        if ((uc < 0x0020 && uc != 0x0009 && uc != 0x0020) ||
 	    (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
             bytePos += clen;
             continue;
@@ -1451,9 +1738,7 @@ WaylandShaper_ShapeString(
         int hasVisible = 0;
         for (int ci = runStart; ci < runStart + runLen; ci++) {
             if (ucs4Chars[ci] >= 0x0020 ||
-		ucs4Chars[ci] == 0x0009 ||
-		ucs4Chars[ci] == 0x000A ||
-		ucs4Chars[ci] == 0x000D) {
+		ucs4Chars[ci] == 0x0009) {
                 hasVisible = 1; break;
             }
         }
@@ -1837,8 +2122,10 @@ EnsureNvgFaceFont(
         return id;
     }
 
-    if (face->filePath) {
+    if (face->filePath && access(face->filePath, R_OK) == 0) {
         id = nvgCreateFont(vg, face->nvgName, face->filePath);
+    } else if (face->filePath) {
+        id = -1;
     }
 
     face->nvgFontId = id;
@@ -3001,6 +3288,83 @@ TkpGetFontAttrsForChar(
 
 /*
  *----------------------------------------------------------------------
+ * DrawMultiLineText --
+ *
+ *   Helper function to draw multi-line text by splitting on newlines
+ *   and drawing each line separately with nvgText, advancing Y by the
+ *   line height (ascent + descent).
+ *
+ *   This is called from the drawing path when a string containing
+ *   newlines is passed to nvgText directly.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Renders multi-line text.
+ *----------------------------------------------------------------------
+ */
+
+static void
+DrawMultiLineText(
+    NVGcontext *vg,
+    float x,
+    float y,
+    const char *text,
+    const char *end,
+    int pixelSize,
+    int ascent,
+    int descent)
+{
+    if (!vg || !text || text >= end) return;
+
+    int lineHeight = ascent + descent;
+    if (lineHeight <= 0) {
+        lineHeight = (int)(pixelSize * 1.2 + 0.5);
+    }
+
+    const char *lineStart = text;
+    float currentY = y;
+
+    while (lineStart < end) {
+        /* Find end of line. */
+        const char *lineEnd = lineStart;
+        while (lineEnd < end && *lineEnd != '\n' && *lineEnd != '\r') {
+            lineEnd++;
+        }
+
+        /* Skip CR if followed by LF. */
+        if (lineEnd < end && *lineEnd == '\r' && lineEnd + 1 < end &&
+            *(lineEnd + 1) == '\n') {
+            /* Draw the line, then skip both. */
+            if (lineEnd > lineStart) {
+                nvgText(vg, x, currentY, lineStart, lineEnd);
+            }
+            lineStart = lineEnd + 2;
+            currentY += lineHeight;
+            continue;
+        }
+
+        /* Draw the line. */
+        if (lineEnd > lineStart) {
+            nvgText(vg, x, currentY, lineStart, lineEnd);
+        }
+
+        /* Move past the newline(s). */
+        if (lineEnd < end && *lineEnd == '\n') {
+            lineStart = lineEnd + 1;
+        } else if (lineEnd < end && *lineEnd == '\r') {
+            lineStart = lineEnd + 1;
+        } else {
+            lineStart = lineEnd;
+        }
+
+        currentY += lineHeight;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * Tk_MeasureChars --
  *
  *   Measure the width of a substring, with optional line‑breaking.
@@ -3035,6 +3399,8 @@ Tk_MeasureChars(
  *   Simple LTR text: delegates to nvgTextGlyphPositions (cheap, exact).
  *   Complex/RTL text: uses ShapedGlyphBuffer cluster table from
  *   WaylandShaper_ShapeString with HarfBuzz advances for accurate layout.
+ *
+ *   Newlines contribute zero width.
  *
  * Results:
  *   Number of bytes consumed, and *lengthPtr = pixel width.
@@ -3075,6 +3441,11 @@ Tk_MeasureCharsInContext(
     bool hasCombining = false;
     bool hasEmoji = false;
     for (int i = start; i < end; ) {
+        unsigned char c = (unsigned char)source[i];
+        if (c == '\n' || c == '\r') {
+            i++;
+            continue;
+        }
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, end - i);
         if (clen <= 0) { i++; continue; }
@@ -3091,6 +3462,7 @@ Tk_MeasureCharsInContext(
     /* 
      * Simple LTR path: only for strings WITHOUT combining characters or emoji.
      * Combining characters must go through HarfBuzz for proper positioning.
+     * Newlines contribute zero width.
      */
     if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
@@ -3102,6 +3474,11 @@ Tk_MeasureCharsInContext(
             const char *lastBreak      = p;
             int         lastBreakWidth = 0;
             while (p < endPtr) {
+                unsigned char c = (unsigned char)*p;
+                if (c == '\n' || c == '\r') {
+                    p++;
+                    continue;
+                }
                 int ch;
                 const char *next = p + Tcl_UtfToUniChar(p, &ch);
                 int adv = fontPtr->pixelSize / 2;
@@ -3120,8 +3497,12 @@ Tk_MeasureCharsInContext(
                 p = next;
             }
             if ((flags & TK_AT_LEAST_ONE) && p == source + rangeStart) {
-                int ch; p += Tcl_UtfToUniChar(p, &ch);
-                width += fontPtr->pixelSize / 2;
+                int ch; 
+                const char *next = p + Tcl_UtfToUniChar(p, &ch);
+                if (*p != '\n' && *p != '\r') {
+                    width += fontPtr->pixelSize / 2;
+                    p = next;
+                }
             }
             *lengthPtr = width;
             return (int)(p - source - rangeStart);
@@ -3135,13 +3516,41 @@ Tk_MeasureCharsInContext(
         const char *rangePtr = source + rangeStart;
         const char *rangeEnd = rangePtr + rangeLength;
 
+        /* Count visible chars (skip newlines). */
         int nchars = 0;
         for (const char *p = rangePtr; p < rangeEnd; ) {
+            unsigned char c = (unsigned char)*p;
+            if (c == '\n' || c == '\r') {
+                p++;
+                continue;
+            }
             int ch; p += Tcl_UtfToUniChar(p, &ch); nchars++;
         }
         if (nchars == 0) {
             *lengthPtr = 0;
             nvgRestore(vg);
+            return 0;
+        }
+
+        /* Build a clean string without newlines for NanoVG. */
+        char *cleanText = (char *)malloc(rangeEnd - rangePtr + 1);
+        if (!cleanText) {
+            nvgRestore(vg);
+            *lengthPtr = 0;
+            return 0;
+        }
+        int cleanLen = 0;
+        for (const char *p = rangePtr; p < rangeEnd; p++) {
+            if (*p != '\n' && *p != '\r') {
+                cleanText[cleanLen++] = *p;
+            }
+        }
+        cleanText[cleanLen] = '\0';
+
+        if (cleanLen == 0) {
+            free(cleanText);
+            nvgRestore(vg);
+            *lengthPtr = 0;
             return 0;
         }
 
@@ -3151,19 +3560,23 @@ Tk_MeasureCharsInContext(
             positions = (NVGglyphPosition *)
 		Tcl_Alloc(nchars * sizeof(NVGglyphPosition));
 
-        int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
+        int   npos = nvgTextGlyphPositions(vg, 0, 0, cleanText, cleanText + cleanLen,
                                            positions, nchars);
-        /* Advance width, not ink bounds[2] - see TkpDrawAngledCharsInContext
-         * for why that distinction matters. */
-        float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
+        float totalWidth = nvgTextBounds(vg, 0, 0, cleanText, cleanText + cleanLen, NULL);
 
         int         pixelWidth     = 0;
         const char *lastBreak      = rangePtr;
         int         lastBreakWidth = 0;
         const char *p              = rangePtr;
         int         pos            = 0;
+        int         cleanPos       = 0;
 
         while (p < rangeEnd && pos < npos) {
+            unsigned char c = (unsigned char)*p;
+            if (c == '\n' || c == '\r') {
+                p++;
+                continue;
+            }
             int ch;
             const char *next = p + Tcl_UtfToUniChar(p, &ch);
             float glyphRight = positions[pos].maxx;
@@ -3183,13 +3596,17 @@ Tk_MeasureCharsInContext(
         }
 
         if ((flags & TK_AT_LEAST_ONE) && p == rangePtr && rangePtr < rangeEnd) {
-            int ch;
-            const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
-            float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
-            pixelWidth = (int)ceil(glyphRight);
-            p = next;
+            unsigned char c = (unsigned char)*rangePtr;
+            if (c != '\n' && c != '\r') {
+                int ch;
+                const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
+                float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
+                pixelWidth = (int)ceil(glyphRight);
+                p = next;
+            }
         }
 
+        free(cleanText);
         if (positions != stackPos) Tcl_Free(positions);
         nvgRestore(vg);
         *lengthPtr = pixelWidth;
@@ -3199,6 +3616,7 @@ Tk_MeasureCharsInContext(
     /* 
      * Complex / RTL / Combining path: ShapedGlyphBuffer cluster table.
      * This path uses HarfBuzz which correctly positions combining marks.
+     * Newlines are skipped in the shaping path.
      */
     ShapedGlyphBuffer sbuf;
     if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
@@ -3402,6 +3820,9 @@ Tk_DrawCharsInContext(
  *   so their coverage instead comes from GetRunFaceIndex() over the same
  *   Fontconfig-discovered face list in the complex/RTL path below.)
  *
+ *   Multi-line text (containing \n) is split into separate lines and
+ *   drawn with an appropriate Y offset for each line.
+ *
  * Results:
  *   None.
  *
@@ -3453,6 +3874,14 @@ TkpDrawAngledCharsInContext(
     const char *rangeEnd = rangePtr + rangeLength;
 
     /*
+     * IMPORTANT: Check for newlines in the ORIGINAL text BEFORE any
+     * composition or shaping. This is the key fix - we need to know
+     * if the user's text contains \n so we can handle multi-line
+     * rendering properly.
+     */
+    bool hasNewline = StringHasNewline(rangePtr, rangeEnd);
+
+    /*
      * Check if the range being drawn contains combining characters or
      * emoji. This has to happen BEFORE the prefix-offset decision below,
      * because it determines which of two different pen-position schemes
@@ -3474,6 +3903,11 @@ TkpDrawAngledCharsInContext(
      */
     bool hasCombining = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
+        unsigned char c = (unsigned char)source[i];
+        if (c == '\n' || c == '\r') {
+            i++;
+            continue;
+        }
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
                                 (int)(rangeStart + rangeLength) - i);
@@ -3487,6 +3921,11 @@ TkpDrawAngledCharsInContext(
 
     bool hasEmoji = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
+        unsigned char c = (unsigned char)source[i];
+        if (c == '\n' || c == '\r') {
+            i++;
+            continue;
+        }
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
                                 (int)(rangeStart + rangeLength) - i);
@@ -3511,10 +3950,27 @@ TkpDrawAngledCharsInContext(
      * shift on plain LTR text even after the double-count fix above.
      */
     double drawX = x;
-    if (rangeStart > 0 && needsPrefixOffset) {
-        nvgFontFaceId(vg, primaryId);
-        float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
-        drawX += (double)advance;
+    /* FIX: Always account for prefix when drawing a sub-range.
+     * Previously this was gated on needsPrefixOffset which was false for
+     * complex text, causing the complex path to draw at wrong X (overlapping
+     * canvas items and truncated text). Use HarfBuzz totalAdvance for
+     * complex prefix if possible, else fall back to nvgTextBounds. */
+    if (rangeStart > 0) {
+        if (needsPrefixOffset) {
+            nvgFontFaceId(vg, primaryId);
+            float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+            drawX += (double)advance;
+        } else {
+            /* Complex path: shape prefix to get accurate advance */
+            ShapedGlyphBuffer prefixBuf;
+            if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)rangeStart, &prefixBuf)) {
+                drawX += (double)prefixBuf.totalAdvance;
+            } else {
+                nvgFontFaceId(vg, primaryId);
+                float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+                drawX += (double)advance;
+            }
+        }
     }
 
     nvgSave(vg);
@@ -3528,6 +3984,31 @@ TkpDrawAngledCharsInContext(
     const char *renderEnd = rangeEnd;
     bool didCompose = false;
 
+    /*
+     * Multi-line text must be split and advanced in Y before any
+     * composition or HarfBuzz shaping.  Newlines are layout markers,
+     * not drawable glyphs; leaving them in the shaped buffer (or
+     * letting a composed copy drop them) causes every line to be
+     * painted at the same baseline — the "lumped together" failure
+     * seen in the About dialog and any other widget that embeds \n.
+     *
+     * Always use the ORIGINAL range so the \n/\r characters remain
+     * intact for DrawMultiLineText.
+     */
+    if (hasNewline) {
+        nvgFontFaceId(vg, primaryId);
+        int ascent  = fontPtr->font.fm.ascent;
+        int descent = fontPtr->font.fm.descent;
+        if (ascent == 0 && descent == 0) {
+            ascent  = (int)(fontPtr->pixelSize * 0.75 + 0.5);
+            descent = (int)(fontPtr->pixelSize * 0.25 + 0.5);
+        }
+        DrawMultiLineText(vg, 0.0f, 0.0f, rangePtr, rangeEnd,
+                          fontPtr->pixelSize, ascent, descent);
+        nvgRestore(vg);
+        goto decorations;
+    }
+
     if (hasCombining) {
         composedSource = ComposeUTF8String(source + rangeStart, (int)rangeLength);
         if (composedSource) {
@@ -3537,9 +4018,7 @@ TkpDrawAngledCharsInContext(
         }
     }
 
-    /* For text with combining characters, use the simple path with composed
-     * text.
-     */
+    /* For text with combining characters, use the simple path with composed text. */
     if (IsSimpleOnly(renderPtr, renderEnd - renderPtr) && !hasEmoji) {
         nvgFontFaceId(vg, primaryId);
         nvgText(vg, 0.0f, 0.0f, renderPtr, renderEnd);
@@ -3550,14 +4029,24 @@ TkpDrawAngledCharsInContext(
 
     /* 
      * Complex path with per-cluster rendering.
-     * For clusters that couldn't be composed, use HarfBuzz positioning
-     * to place combining marks correctly.
+     * Newlines are handled by the early exit above; the complex
+     * path only ever sees single-line ranges.
      */
     {
         ShapedGlyphBuffer sbuf;
-        const char *shapeSource = composedSource ? composedSource : source;
-        int shapeLen = composedSource ?
-	    (int)strlen(composedSource) : (int)numBytes;
+        /* FIX: shape only the visible range, not the whole source.
+         * Shaping the whole source and then using absolute pen_x caused
+         * the prefix width to be double-counted (once in pen_x, once in drawX)
+         * leading to shifted/truncated text and overlapping canvas items. */
+        const char *shapeSource;
+        int shapeLen;
+        if (composedSource) {
+            shapeSource = composedSource;
+            shapeLen = (int)strlen(composedSource);
+        } else {
+            shapeSource = rangePtr;
+            shapeLen = (int)rangeLength;
+        }
         
         if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
                                        shapeSource, shapeLen, &sbuf)) {
@@ -3585,8 +4074,14 @@ TkpDrawAngledCharsInContext(
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
-            if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
-                continue;
+            /* When shaping only the range, bo is 0..rangeLength, keep all.
+             * Keep original check for composedSource path where bo is also 0-based. */
+            if (!composedSource) {
+                /* bo already in range 0..rangeLength, keep */
+            } else {
+                if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
+                    continue;
+            }
 
             int found = -1;
             for (int j = 0; j < cluster_count; j++) {
@@ -3700,26 +4195,83 @@ decorations:
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-        /* Advance width, not ink bounds[2] - see note above on why. */
-        runWidth = nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, NULL);
+        
+        /* Check for newlines. */
+        bool hasNewlineDecor = StringHasNewline(renderPtr, renderEnd);
+        
+        if (hasNewlineDecor) {
+            /* Multi-line decorations - draw per line. */
+            const char *lineStart = renderPtr;
+            float currentY = 0;
+            int lineHeight = fontPtr->font.fm.ascent + fontPtr->font.fm.descent;
+            if (lineHeight <= 0) {
+                lineHeight = (int)(fontPtr->pixelSize * 1.2 + 0.5);
+            }
+            
+            while (lineStart < renderEnd) {
+                const char *lineEnd = lineStart;
+                while (lineEnd < renderEnd && *lineEnd != '\n' && *lineEnd != '\r') {
+                    lineEnd++;
+                }
+                
+                if (lineEnd > lineStart) {
+                    /* Advance width, not ink bounds. */
+                    runWidth = nvgTextBounds(vg, 0, 0, lineStart, lineEnd, NULL);
+                    
+                    nvgStrokeColor(vg, ColorFromGC(gc));
+                    nvgStrokeWidth(vg, (float)fontPtr->barHeight);
 
-        nvgStrokeColor(vg, ColorFromGC(gc));
-        nvgStrokeWidth(vg, (float)fontPtr->barHeight);
+                    if (fontPtr->font.fa.underline) {
+                        float uy = (float)(currentY + fontPtr->underlinePos);
+                        nvgBeginPath(vg);
+                        nvgMoveTo(vg, 0.0f, uy);
+                        nvgLineTo(vg, runWidth, uy);
+                        nvgStroke(vg);
+                    }
 
-        if (fontPtr->font.fa.underline) {
-            float uy = (float)(y + fontPtr->underlinePos);
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, (float)x, uy);
-            nvgLineTo(vg, (float)(x + runWidth), uy);
-            nvgStroke(vg);
-        }
+                    if (fontPtr->font.fa.overstrike) {
+                        float oy = (float)(currentY - fontPtr->font.fm.ascent / 2);
+                        nvgBeginPath(vg);
+                        nvgMoveTo(vg, 0.0f, oy);
+                        nvgLineTo(vg, runWidth, oy);
+                        nvgStroke(vg);
+                    }
+                }
+                
+                if (lineEnd < renderEnd && *lineEnd == '\n') {
+                    lineStart = lineEnd + 1;
+                } else if (lineEnd < renderEnd && *lineEnd == '\r') {
+                    lineStart = lineEnd + 1;
+                    if (lineStart < renderEnd && *lineStart == '\n') {
+                        lineStart++;
+                    }
+                } else {
+                    lineStart = lineEnd;
+                }
+                currentY += lineHeight;
+            }
+        } else {
+            /* Single line. */
+            runWidth = nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, NULL);
 
-        if (fontPtr->font.fa.overstrike) {
-            float oy = (float)(y - fontPtr->font.fm.ascent / 2);
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, (float)x, oy);
-            nvgLineTo(vg, (float)(x + runWidth), oy);
-            nvgStroke(vg);
+            nvgStrokeColor(vg, ColorFromGC(gc));
+            nvgStrokeWidth(vg, (float)fontPtr->barHeight);
+
+            if (fontPtr->font.fa.underline) {
+                float uy = (float)(fontPtr->underlinePos);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, 0.0f, uy);
+                nvgLineTo(vg, runWidth, uy);
+                nvgStroke(vg);
+            }
+
+            if (fontPtr->font.fa.overstrike) {
+                float oy = (float)(-fontPtr->font.fm.ascent / 2);
+                nvgBeginPath(vg);
+                nvgMoveTo(vg, 0.0f, oy);
+                nvgLineTo(vg, runWidth, oy);
+                nvgStroke(vg);
+            }
         }
     }
 done:
