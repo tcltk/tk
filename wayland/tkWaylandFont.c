@@ -635,10 +635,7 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* Safe for fast path: ASCII only. Extended Latin, symbols like ©
-         * must go through HarfBuzz so we can pick a fallback face that
-         * actually contains the glyph. Otherwise NanoVG fallback chain may
-         * be missing in the measure VG context and we get .notdef black boxes. */
+        /* Safe for fast path: ASCII only. Symbols like © must go through HarfBuzz. */
         int isSafe = (uc < 0x80);
         if (!isSafe) return false;
 
@@ -2124,9 +2121,7 @@ EnsureNvgFaceFont(
 
     if (face->filePath && access(face->filePath, R_OK) == 0) {
         id = nvgCreateFont(vg, face->nvgName, face->filePath);
-    } else if (face->filePath) {
-        id = -1;
-    }
+    } else if (face->filePath) { id = -1; }
 
     face->nvgFontId = id;
     return id;
@@ -3579,7 +3574,7 @@ Tk_MeasureCharsInContext(
             }
             int ch;
             const char *next = p + Tcl_UtfToUniChar(p, &ch);
-            float glyphRight = positions[pos].maxx;
+            float glyphRight = (pos + 1 < npos) ? positions[pos + 1].x : totalWidth;
             if (maxLength >= 0 && glyphRight > maxLength) {
                 if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
                     p = lastBreak; pixelWidth = lastBreakWidth;
@@ -3950,18 +3945,12 @@ TkpDrawAngledCharsInContext(
      * shift on plain LTR text even after the double-count fix above.
      */
     double drawX = x;
-    /* FIX: Always account for prefix when drawing a sub-range.
-     * Previously this was gated on needsPrefixOffset which was false for
-     * complex text, causing the complex path to draw at wrong X (overlapping
-     * canvas items and truncated text). Use HarfBuzz totalAdvance for
-     * complex prefix if possible, else fall back to nvgTextBounds. */
     if (rangeStart > 0) {
         if (needsPrefixOffset) {
             nvgFontFaceId(vg, primaryId);
             float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
             drawX += (double)advance;
         } else {
-            /* Complex path: shape prefix to get accurate advance */
             ShapedGlyphBuffer prefixBuf;
             if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)rangeStart, &prefixBuf)) {
                 drawX += (double)prefixBuf.totalAdvance;
@@ -4034,10 +4023,6 @@ TkpDrawAngledCharsInContext(
      */
     {
         ShapedGlyphBuffer sbuf;
-        /* FIX: shape only the visible range, not the whole source.
-         * Shaping the whole source and then using absolute pen_x caused
-         * the prefix width to be double-counted (once in pen_x, once in drawX)
-         * leading to shifted/truncated text and overlapping canvas items. */
         const char *shapeSource;
         int shapeLen;
         if (composedSource) {
@@ -4074,10 +4059,7 @@ TkpDrawAngledCharsInContext(
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
-            /* When shaping only the range, bo is 0..rangeLength, keep all.
-             * Keep original check for composedSource path where bo is also 0-based. */
             if (!composedSource) {
-                /* bo already in range 0..rangeLength, keep */
             } else {
                 if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
                     continue;
