@@ -37,6 +37,15 @@
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
 #define TK_DRAW_IN_CONTEXT		1
 
+/*
+ * TK_WAYLAND_FONT_SIZE_BOOST: applied on top of the DPI-correct pixel
+ * size computed in InitFont(). This is a deliberate, purely cosmetic
+ * bump on top of the otherwise-correct size - not a DPI/scale fix (that
+ * one's above, in InitFont's dpi computation). Bump this up or down, or
+ * back to 1.0, to taste.
+ */
+#define TK_WAYLAND_FONT_SIZE_BOOST	1.20
+
 /* Module-level state. */
 static int  fcInitialized = 0;
 
@@ -2092,27 +2101,65 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-    /* Pixel size calculation - direct conversion from points to pixels.
+    /* Pixel size calculation.
      * Tk uses -size for pixel sizes and +size for point sizes.
-     * For point sizes, use the standard 96 DPI conversion (1 pt = 1.333 px).
+     *
+     * For point sizes, this used to hardcode a 96 DPI conversion
+     * regardless of the actual display. That's fine on a plain 1x
+     * 96 DPI output, but on a HiDPI or fractionally-scaled Wayland
+     * output the real DPI is higher, so every point-sized font (which
+     * is most of them - it's the default Tk uses) came out smaller
+     * than it should relative to the rest of the scaled UI. Query the
+     * window's actual screen resolution instead, the same way the
+     * generic Tk font code does on other platforms.
      */
     double ptSize = faPtr->size;
     int basePixels;
+
+    double dpi = 96.0;
+    if (tkwin) {
+        Screen *screen = Tk_Screen(tkwin);
+        if (screen && WidthMMOfScreen(screen) > 0) {
+            double screenDpi = (double)WidthOfScreen(screen) * 25.4
+                / (double)WidthMMOfScreen(screen);
+            /* Only ever scale UP from 96 DPI, never down. The point of
+             * this lookup is to catch real HiDPI/scaled Wayland outputs
+             * that were getting under-sized by the old flat-96 code;
+             * it's not meant to shrink fonts on screens that happen to
+             * report (correctly or not - Wayland's MM reporting is
+             * notoriously unreliable) a sub-96 DPI. That inverted case
+             * is what made fonts get smaller instead of bigger. Also
+             * clamp the top end against a screen mis-reporting its
+             * physical size into producing an absurd font size. */
+            if (screenDpi >= 96.0 && screenDpi <= 480.0) {
+                dpi = screenDpi;
+            }
+        }
+    }
 
     if (ptSize < 0.0) {
         /* Negative size means pixels already. */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        /* Positive size means points - convert to pixels at 96 DPI.
-         * 1 point = 1/72 inch, 96 DPI = 96 pixels/inch,
-         * so 1 point = 96/72 = 1.333 pixels.
+        /* Positive size means points - convert to pixels at the
+         * screen's actual DPI (1 pt = 1/72 inch).
          */
-        basePixels = (int)(ptSize * 96.0 / 72.0 + 0.5);
+        basePixels = (int)(ptSize * dpi / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
     } else {
-        basePixels = 12;
+        basePixels = (int)(12.0 * dpi / 96.0 + 0.5);
+        if (basePixels < 1) {
+            basePixels = 1;
+        }
+    }
+
+    /* Cosmetic bump on top of the DPI-correct size above - see the
+     * TK_WAYLAND_FONT_SIZE_BOOST comment near the top of the file. */
+    basePixels = (int)((double)basePixels * TK_WAYLAND_FONT_SIZE_BOOST + 0.5);
+    if (basePixels < 1) {
+        basePixels = 1;
     }
 
     fontPtr->pixelSize = basePixels;
