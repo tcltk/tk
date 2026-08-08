@@ -131,7 +131,7 @@ start of the line).
 .IP [5]
 Pressing either Control+A or the home key causes the cursor to go to
 the start of the line (but after the prompt, if a prompt is present on
-the line)..
+the line).
 .IP [6]
 Pressing either Control+E or the end key causes the cursor to go to
 the end of the line.
