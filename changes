@@ -8363,3 +8363,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-07-24 (bug) [2f8570] ttk::entry has a wrong background in clam theme and readonly state (emiliano)
 
 2026-08-06 (bug) [971a26] Xlib emulation for macOS causes many visual artifacts (nemethi)
+
+2026-08-08 (bug) [d62ee2] tk console manual errors and undocumented bindings (anonymous)
