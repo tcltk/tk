@@ -602,7 +602,12 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* Safe for fast path: Latin extended. */
+        /* Safe for fast path: Latin extended, but force symbols like ©®™
+         * through HarfBuzz so fallback face selection works (fixes black boxes
+         * in About dialog) while preserving bidi/complex handling. */
+        if (uc == 0x00A9 || uc == 0x00AE || uc == 0x2122 || uc == 0x00B0) {
+            return false;
+        }
         int isSafe = (uc <= 0x024F);
         if (!isSafe) return false;
 
@@ -1837,9 +1842,9 @@ EnsureNvgFaceFont(
         return id;
     }
 
-    if (face->filePath) {
+    if (face->filePath && access(face->filePath, R_OK) == 0) {
         id = nvgCreateFont(vg, face->nvgName, face->filePath);
-    }
+    } else if (face->filePath) { id = -1; }
 
     face->nvgFontId = id;
     return id;
