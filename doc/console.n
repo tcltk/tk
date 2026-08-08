@@ -93,19 +93,29 @@ stderr channels is handled by invoking the \fBtk::ConsoleOutput\fR
 command in the console interpreter with two arguments.  The first
 argument is the name of the channel being written to, and the second
 argument is the string being written to the channel (after encoding
-and end-of-line translation processing has been performed.)
+and end-of-line translation processing has been performed).
 .PP
 When the \fB.\fR window of the main interpreter is destroyed, the
 \fBtk::ConsoleExit\fR command in the console interpreter is called
-(assuming the console interpreter has not already been deleted itself,
-that is.)
+(assuming the console interpreter has not already been deleted itself).
 .SH "DEFAULT BINDINGS"
 .PP
 The default script creates a console window (implemented using a text
 widget) that has the following behaviour:
 .IP [1]
-Pressing the tab key inserts a TAB character (as defined by the Tcl
-\et escape.)
+Pressing tab or escape attempts to complete the text immediately before
+the cursor. The console tries, in order, a file name in the current
+directory, then a command name, then a variable name, stopping at the
+first type that produces a match.
+.RS
+.PP
+Only that type is then used - if more than one match is found within
+it, the longest common match is filled in; the full list is not shown
+until completion is attempted again with nothing left to extend.
+.PP
+Specific completion bindings for files, commands, and variables are
+listed below (see items 12 - 14).
+.RE
 .IP [2]
 Pressing the return key causes the current line (if complete by the
 rules of \fBinfo complete\fR) to be passed to the main interpreter for
@@ -113,15 +123,15 @@ evaluation.
 .IP [3]
 Pressing the delete key deletes the selected text (if any text is
 selected) or the character to the right of the cursor (if not at the
-end of the line.)
+end of the line).
 .IP [4]
 Pressing the backspace key deletes the selected text (if any text is
-selected) or the character to the left of the cursor (of not at the
-start of the line.)
+selected) or the character to the left of the cursor (if not at the
+start of the line).
 .IP [5]
 Pressing either Control+A or the home key causes the cursor to go to
 the start of the line (but after the prompt, if a prompt is present on
-the line.)
+the line)..
 .IP [6]
 Pressing either Control+E or the end key causes the cursor to go to
 the end of the line.
@@ -141,6 +151,17 @@ one character forward.
 Pressing F9 rebuilds the console window by destroying all its children
 and reloading the Tcl script that defined the console's behaviour.
 .IP [12]
+Pressing Control+Shift+F completes only against file names in the current
+directory, regardless of what tab/escape would otherwise try first.
+.IP [13]
+Pressing Control+Shift+P completes only against command names (referred to
+internally as "proc" completion, though it matches any command, not only
+user-defined procs).
+.IP [14]
+Pressing Control+Shift+V completes only against variable names. If the text
+being completed looks like an array element (array(name)), it completes
+against that array's element names instead of variable names generally.
+.IP [15]
 Scrolling the mouse wheel while holding Cmd (macOS) or Ctrl (other platforms)
 increases (scroll up) or decreases (scroll down) the console font size.
 .PP
