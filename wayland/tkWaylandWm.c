@@ -3901,15 +3901,10 @@ ApplyPendingGeometry(
 	 * not be drawn.  There seems to be no way for us to detect the size
 	 * increase (yet, anyway).  So as a last resort / shameless hack we
 	 * just make sure that the window is always at least 180 logical
-	 * pixels wide -- and, for the same reason, at least as tall, since
-	 * a too-small height is subject to the identical back-buffer/
-	 * FramebufferSizeCallback mismatch.
+	 * pixels wide.
 	 */
 	if (tw < 180) {
 	    tw = 180;
-	}
-	if (th < 180) {
-	    th = 180;
 	}
  	/* When GFLW initially creates a window it assumes that the window
  	 * will open on a screen with pixel scale factor 1.0, even if there is
