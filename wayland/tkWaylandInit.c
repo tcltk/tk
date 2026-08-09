@@ -8,9 +8,9 @@
  *   are deployed.
  *
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2026  Kevin Walzer
- * Copyright (c) 2026  Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2026  Kevin Walzer
+ * Copyright © 2026  Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -428,6 +428,10 @@ TkWaylandDisplayAllWindows()
             }
             
             GLFWwindow *glfwWindow = infoPtr->glfwWindow;
+            if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE) ||
+				glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
+				continue;   /* leave TKWL_NEEDS_DISPLAY set for when it becomes visible */
+			}
             fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
             renderFBO(glfwWindow);
             infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
@@ -906,10 +910,6 @@ TkWaylandBeginDraw(
     fprintf(stderr, "BeginDraw: %s in toplevel %s with offset (%d, %d)\n",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
 
-    if (childPtr->privatePtr) {
-        childPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
-    }
-
     /*
      * Now winPtr is the containing toplevel and the offsets of
      * the child are given by x and y.
@@ -917,7 +917,7 @@ TkWaylandBeginDraw(
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
-    /* Set up the nanoVG drawing context for this nvgFrame */
+    /* Set up the nanoVG drawing context for this nvgFrame. */
     dcPtr->vg = infoPtr->vg;
     dcPtr->drawable = drawable;
 
@@ -935,26 +935,8 @@ TkWaylandBeginDraw(
     if (! Tk_IsTopLevel(childPtr)) {
 	clipRect clip = childPtr->privatePtr->containerRect;
 	if (x * scale != clip.x || y * scale != clip.y) {
-	    /*
-	     * The child was moved after its container was drawn,
-	     * so the clipping rectangles are in the wrong place.
-	     */
-	    TkWindow *parentPtr = (TkWindow*) Tk_Parent(childPtr);
-	    printf("ClipRect mismatch in %s\n", Tk_PathName(parentPtr));
-	    //// This is not sufficient to fix ghost windows inthe demo
-	    //// showing a text widget with embedded windows.  Those windows
-	    //// need to update their position after scrolling.
-	    updateClipRects(parentPtr, glfwWindow);
-
-	    /*
-	     * Record the new position so this check doesn't keep firing
-	     * on every subsequent draw of this child -- without this the
-	     * mismatch is permanently "true" and re-exposes the parent
-	     * forever.
-	     */
-	    childPtr->privatePtr->containerRect.x = x * scale;
-	    childPtr->privatePtr->containerRect.y = y * scale;
-	}
+		fprintf(stderr, "Bad ClipRects for %s", Tk_PathName(winPtr));
+	}  
     }
     fprintf(stderr,
 	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
@@ -1026,6 +1008,8 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     while (!Tk_IsTopLevel(winPtr)) {
 	winPtr = winPtr->parentPtr;
     }
+    /* Allow expose events for this widget again. */
+    winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
     /* winPtr is the toplevel containing our drawable. */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
@@ -1084,7 +1068,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glDepthFunc(GL_LEQUAL);
 
     /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
-    if (infoPtr->flags & TKWL_IS_DRAWING == 0) {
+    if ((infoPtr->flags & TKWL_IS_DRAWING) == 0) {
 	Tcl_Panic("EndFrame without BeginFrame\n");
     }
     infoPtr->flags &= ~TKWL_IS_DRAWING;
@@ -1169,10 +1153,9 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
      */
 
-  //  glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    ////if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
-    infoPtr->flags |= TKWL_NEEDS_DISPLAY;
-    ////}
+    if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
+        infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+    }
 }
 
 /*

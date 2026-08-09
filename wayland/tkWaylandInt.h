@@ -449,9 +449,11 @@ typedef struct TkWindowPrivate {
     GLuint clipShader;
     GLint fbSizeUniform;
     int flags;
+    TkWindow *container;
     clipRect containerRect;
     clipRect boundsRect;
 } glfwData;
+
 /*
  *----------------------------------------------------------------------
  *

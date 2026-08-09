@@ -91,6 +91,8 @@ extern Tk_Window TkWaylandMenuGetParentWindow(void);
 extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
 extern void TkWaylandMenuHandleEscape(void);
 extern void TkWaylandMenuDismissAll(void);
+static void HandleExposeEvent(TkWindow *winPtr);
+static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -549,32 +551,22 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 
 void
 TkWaylandQueueExposeEvent(
-			  TkWindow *winPtr,
-			  int       x, int y,
-			  int       width, int height)
+    TkWindow *winPtr,
+    int x,
+    int y,
+    int width,
+    int height)
 {
     XEvent event;
     TkWindow *childPtr;
-
-    if (!winPtr) return;
-
-    /*
-     * If this window already has an expose pending, don't queue another.
-     * Without this, widgets whose EndDraw handling cascades exposes to
-     * each other (e.g. two siblings that are each other's "higher
-     * sibling" in the stacking order) can re-trigger one another
-     * indefinitely, starving every other widget's redraw.
-     */
-    if (winPtr->privatePtr && (winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING)) {
-        return;
-    }
-    if (winPtr->privatePtr) {
-        winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
-    }
     fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
-
-    /* Create expose event. */
-    memset(&event, 0, sizeof(XEvent));
+    
+    if (!winPtr) return;
+    if (winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING) {
+	printf("TKWP_EXPOSE_PENDING flag is set!\n");
+	return;
+    }
+    /* Create expose event. */    memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
     event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xexpose.send_event = False;
@@ -587,23 +579,55 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
-    printf("Queuing Expose(%lu) for %s in %dx%d\n",
-	   event.xexpose.serial, Tk_PathName(winPtr), width, height);
+    printf("Setting TKWP_EXPOSE_PENDING for %s\n", Tk_PathName(winPtr));
+    winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
+    fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
+	event.xexpose.serial,
+	Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-#if 0
     /* Recurse through the children of this window. */
-#if 1
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-				  Tk_Height(childPtr));
+	    Tk_Height(childPtr));
     }
-#endif
-#endif
+}
+
+/* Helper function for processing expose events. */
+static void
+HandleExposeEvent(
+    TkWindow *winPtr)
+{
+    XEvent event;
+    TkWindow *childPtr;
+
+    /* Create expose event. */
+    memset(&event, 0, sizeof(XEvent));
+    event.type = Expose;
+    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
+    event.xexpose.send_event = False;
+    event.xexpose.display = winPtr->display;
+    event.xexpose.window = Tk_WindowId(winPtr);
+    event.xexpose.x = Tk_X(winPtr);
+    event.xexpose.y = Tk_Y(winPtr);
+    event.xexpose.width = Tk_Width(winPtr);
+    event.xexpose.height = Tk_Height(winPtr);
+    event.xexpose.count = 0;    /* This forces ttk to handle the event. */
+    
+    Tk_HandleEvent(&event);
+
+    /* Recurse through the children of this window. */
+    for (childPtr = winPtr->childList; childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+            continue;
+        }
+        HandleExposeEvent(childPtr);
+    }
 }
 
 /* 
@@ -850,7 +874,30 @@ TkWaylandFramebufferSizeCallback(
     /* Reconfigure the Tk window. */    
     glfwGetWindowSize(window, &(winPtr->changes.width),
 		      &(winPtr->changes.height));
-    TkDoConfigureNotify(winPtr);
+    GenerateConfigureNotify(winPtr, 1);
+    printf("Attempting to force a redraw of %s\n", Tk_PathName(winPtr));
+    HandleExposeEvent(winPtr);
+}
+
+/* Helper function to process configure events. */
+static void
+GenerateConfigureNotify(
+    TkWindow *winPtr,
+    int includeWin)
+{
+    TkWindow *childPtr;
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+            childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+            continue;
+        }
+        GenerateConfigureNotify(childPtr, 1);
+    }
+    if (includeWin) {
+	printf("ConfigureNotify for %s\n", Tk_PathName(winPtr));
+        TkDoConfigureNotify(winPtr);
+    }
 }
 
 #if 0
