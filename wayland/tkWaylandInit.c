@@ -680,7 +680,7 @@ TkWaylandBeginDraw(
     	winPtr = winPtr->parentPtr;
     }
     fprintf(stderr, "BeginDraw: %s in toplevel %s with offset (%d, %d)\n",
-	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
+	Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
 
     /*
      * Now winPtr is the containing toplevel and the offsets of
@@ -693,11 +693,11 @@ TkWaylandBeginDraw(
 	 * It is too early to be drawing in this window.  It may not
 	 * have a GL context yet.  Try again later.
 	 */
-	TkWaylandQueueExposeEvent(winPtr, 0, 0,
-	    Tk_Width(winPtr), Tk_Height(winPtr));
+	winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
+	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
+	    Tk_Height(winPtr));
 	return TCL_ERROR;
     }
-
     /* Initialize the drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->vg;
     dcPtr->drawable = drawable;
@@ -717,16 +717,22 @@ TkWaylandBeginDraw(
 	if (x * scale != clip.x || y * scale != clip.y) {
 	    /*
 	     * The child was moved after its container was drawn,
-	     * so the clipping rectangles are in the wrong place.
+	     * so its clipping rectangle is now in the wrong place.
 	     * It is not clear to me why this happens, and I wish
 	     * there were an alternative to this crude workaround.
 	     */
-	    TkWindow *parentPtr = (TkWindow*) Tk_Parent(childPtr);
-	    printf("ClipRect mismatch in %s\n", Tk_PathName(parentPtr));
-	    //// This is not sufficient to fix ghost windows inthe demo
-	    //// showing a text widget with embedded windows.  Those windows
-	    //// need to update their position after scrolling.
-	    updateClipRects(parentPtr, glfwWindow);
+	    if (childPtr->privatePtr->container) {
+		printf("==============> Bad ClipRects for child %s contained in %s: ",
+		    Tk_PathName(childPtr),
+		    Tk_PathName(childPtr->privatePtr->container));
+		printf("clip xy = %.0f, %0.f: win xy = %.0f, %.0f\n",
+		    clip.x, clip.y, scale * x, scale * y);
+#if 0
+		TkWindow *container = childPtr->privatePtr->container;
+		TkWaylandQueueExposeEvent(container, 0, 0, Tk_Width(container),
+		    Tk_Height(container));
+#endif
+	    }
 	}
     }
     fprintf(stderr,
@@ -784,6 +790,8 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
     fprintf(stderr, "EndDraw for drawable %lx (%s)\n", dcPtr->drawable,
 	    Tk_PathName(winPtr));
+    /* Allow expose events for this widget again. */
+    winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
     TkWindow *toplevelPtr = winPtr;
     while (!Tk_IsTopLevel(toplevelPtr)) {
 	toplevelPtr = toplevelPtr->parentPtr;

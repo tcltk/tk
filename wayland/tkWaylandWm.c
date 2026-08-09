@@ -785,10 +785,17 @@ Tk_MakeWindow(
         height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
 
         /*
-         * Create the GLFW window and get a drawable ID.
-         * drawable is ignored; we use winPtr->window instead.
+         * Create the GLFW window and get a drawable ID.  The drawable
+         * parameter is ignored; we use winPtr->window instead.
          */
 
+	if (winPtr->classUid == Tk_GetUid("Menu") ||
+            winPtr->classUid == Tk_GetUid("Menubar")) {
+            fprintf(stderr, "Tk_MakeWindow: %s is a menu (class=%s), "
+		"skipping GLFW window creation\n", 
+		Tk_PathName(tkwin), Tk_GetUid(winPtr->classUid));            
+            return result;
+        }
 	fprintf(stderr, "Creating glfwWindow %s at size %dx%d\n",
 	       Tk_PathName(tkwin), width, height);
 	glfwWindow = TkWaylandCreateWindow(winPtr, width, height,
@@ -816,7 +823,7 @@ Tk_MakeWindow(
          *
          */
 #if 0
-      fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
+	fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
 	     winPtr->changes.width, winPtr->changes.height);
 
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
@@ -4278,8 +4285,9 @@ XDestroySubwindows(
  *
  * XMapWindow --
  *
- *	Called by Tk_MapWindow.  Just generates an Expose event, to try
- *      to make sure the newly mapped window gets drawn.
+ *	Called by Tk_MapWindow the first time that a window is mapped.  Just
+ *      generates an Expose event, to try to make sure the newly mapped window
+ *      gets drawn.
  *
  * Results:
  *	Success.
@@ -4296,8 +4304,10 @@ XMapWindow(
     Window window) 
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
-    printf("XMapWindow: %s\n", Tk_PathName(winPtr));
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+    printf("XMapWindow: %s (%s)\n", Tk_PathName(winPtr),
+	Tk_IsMapped(winPtr) ? "mapped" : "not mapped");
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
+	Tk_Height(winPtr));
     return Success;
 }
 
@@ -4426,11 +4436,15 @@ XUnmapSubwindows(
 
 int
 XResizeWindow(
-    TCL_UNUSED(Display *),    /* display */
-    TCL_UNUSED(Window),       /* window */
+    Display *display,
+    Window window,
     TCL_UNUSED(unsigned int), /* width */
     TCL_UNUSED(unsigned int)) /* height */
 {
+    TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
+    printf("XResizeWindow: %s\n", Tk_PathName(winPtr));
+    //TkWaylandQueueExposeEvent(winPtr, 0, 0,
+    //	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
 

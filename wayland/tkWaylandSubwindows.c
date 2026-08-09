@@ -306,7 +306,7 @@ addClipRect(
      * Allocate a larger buffer if necessary.
      */
     if (data->clipRectCount >= data->clipRectBufferSize - 1) {
-	printf("Reallocating clipRects for %s\n", Tk_PathName(winPtr));
+	printf("    Reallocating clipRects for %s\n", Tk_PathName(winPtr));
         data->clipRectBufferSize *= 2;
         data->clipRectBuffer = ckrealloc(data->clipRectBuffer,
 	    data->clipRectBufferSize * sizeof(clipRect));
@@ -318,14 +318,17 @@ addClipRect(
      */
     int n = data->clipRectCount;
     data->clipRectBuffer[data->clipRectCount++] = getBounds(subwinPtr, scale);
-    printf("Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
+    printf("    Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
 	   Tk_PathName(subwinPtr), Tk_PathName(winPtr),
 	   data->clipRectBuffer[n].w, data->clipRectBuffer[n].h,
 	   data->clipRectBuffer[n].x, data->clipRectBuffer[n].y);
     /*
-     * Record the clipRect that will be used for the subwindow in its
-     * private data.
+     * Record the container and the clipRect that will be used for the
+     * subwindow when drawing the container in the private data of the
+     * subwindow.
      */
+
+    subwinPtr->privatePtr->container = winPtr;
     subwinPtr->privatePtr->containerRect = data->clipRectBuffer[n];
 }
 
@@ -353,7 +356,7 @@ addClipRect(
  * Subdivides a rectangle into two clockwise oriented triangles
  * and adds the 6 vertices of those triangles to a buffer of  
  * vertices at the specified index. Returns the index of the
- * vertex following the last one which was added.
+ * vertex following the last one, which was just added.
  *   0       1
  *    o-----o
  *    |    /|
@@ -368,7 +371,7 @@ addClipRect(
 
 typedef struct {float x; float y} vertex;
 static inline int
-appendRect(
+appendVerticesForRect(
     clipRect rect,
     vertex *vertices,
     int n)
@@ -392,7 +395,7 @@ void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
      GLFWwindow* glfwWindow) /* The glfwWindow for its toplevel. */
 {
-    printf("updateClipRects: %s\n", Tk_PathName(winPtr));
+    printf("    updateClipRects: %s\n", Tk_PathName(winPtr));
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     int fbWidth, fbHeight;
@@ -415,7 +418,7 @@ void updateClipRects(
 	if (Tk_IsMapped(childPtr) &&
 	    !disjoint(bounds, getBounds(childPtr, scale))) {
 	    addClipRect(childPtr, winPtr, scale);
-        }
+	}
     }
     /* Add clipRects for non-toplevel siblings higher in the stacking order
      * that overlap the window . */
@@ -423,8 +426,8 @@ void updateClipRects(
         for (TkWindow *sibPtr = winPtr->nextPtr;
 	     sibPtr != NULL;
 	     sibPtr = sibPtr->nextPtr) {
-	    if (Tk_IsMapped(sibPtr) &&
-		!Tk_IsTopLevel(sibPtr) &&
+	    if (!Tk_IsTopLevel(sibPtr) &&
+		Tk_IsMapped(sibPtr) &&
 		!disjoint(bounds, getBounds(sibPtr, scale))) {
 	        addClipRect(sibPtr, winPtr, scale);
 	    }
@@ -451,7 +454,7 @@ void updateClipRects(
      */
     clipRect *clipRects = winPtr->privatePtr->clipRectBuffer; 
     for (int i = 0; i < winPtr->privatePtr->clipRectCount; i++) {
-	n = appendRect(clipRects[i], vertices, n);
+	n = appendVerticesForRect(clipRects[i], vertices, n);
     }
     /* Generate 4 additional clipRects to clip all drawing to the bounds
      * rectangle, which has been intersected with the extra rectangle added by
@@ -477,10 +480,10 @@ void updateClipRects(
 	.x = 0, .y = bounds.y + bounds.h,
 	.w = fbWidth, .h = fbHeight - bounds.y - bounds.h};
     /* Add the vertices of these 4 clipRects to the vertex array. */
-    n = appendRect(top, vertices, n);
-    n = appendRect(left, vertices, n);
-    n = appendRect(right, vertices, n);
-    n = appendRect(bottom, vertices, n);
+    n = appendVerticesForRect(top, vertices, n);
+    n = appendVerticesForRect(left, vertices, n);
+    n = appendVerticesForRect(right, vertices, n);
+    n = appendVerticesForRect(bottom, vertices, n);
 
     /* Upload the vertex array to the VBO. */
     glfwMakeContextCurrent(glfwWindow);

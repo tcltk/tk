@@ -312,79 +312,13 @@ TkWaylandHandleMouseButton(
      * Pass to normal Tk event handling.
      * Convert GLFW button to Tk button.
      */
-    unsigned int state = TkWaylandButtonKeyState(); Window window = Tk_WindowId((Tk_Window)winPtr);
+    unsigned int state = TkWaylandButtonKeyState();
+    Window window = Tk_WindowId((Tk_Window)winPtr);
 
     TkGenerateButtonEvent((int)x, (int)y, window, state);
 
 }
 
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandHandleMouseButton --
- *
- *   GLFW cursor position callback.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	Interactions with window elements.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandHandleMouseMove(
-    GLFWwindow *glfwWindow,
-    double x,
-    double y)
-{
-    TkWindow *winPtr;
-    XEvent event;
-
-    winPtr = TkWaylandGetTkWindow(glfwWindow);
-    if (!winPtr) {
-        return;
-    }
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = MotionNotify;
-    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xmotion.send_event = False;
-    event.xmotion.display = winPtr->display;
-    event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xmotion.root = XRootWindow(winPtr->display, 0);
-	event.xmotion.time = (Time)(glfwGetTime() * 1000.0);
-    event.xmotion.x = (int)x;
-    event.xmotion.y = (int)y;
-
-    /* Compute root-relative coordinates. */
-
-    int winX = 0, winY = 0;
-    ////glfwGetWindowPos(glfwWindow, &winX, &winY);
-    {
-        int winX = 0, winY = 0;
-        ////glfwGetWindowPos(glfwWindow, &winX, &winY);
-        event.xmotion.x_root = winX + (int)x;
-        event.xmotion.y_root = winY + (int)y;
-    }
-
-    event.xmotion.state = TkWaylandButtonKeyState();
-    event.xmotion.is_hint = NotifyNormal;
-    event.xmotion.same_screen = True;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    /* Update pointer so cursorWinPtr is current for XDefineCursor's guard. */
-    Tk_UpdatePointer((Tk_Window)winPtr, (int)event.xmotion.x_root,
-        (int)event.xmotion.y_root, TkWaylandButtonKeyState());
-
-        fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
-    (void*)winPtr, (int)x, (int)y);
-fflush(stderr);
-}
 /*
  *----------------------------------------------------------------------
  *

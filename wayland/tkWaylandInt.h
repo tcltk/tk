@@ -422,9 +422,19 @@ typedef struct TkWindowPrivate {
     GLuint clipVBO;
     GLuint clipShader;
     GLint fbSizeUniform;
-    clipRect containerRect;
-    clipRect boundsRect;
+    int flags;
+    TkWindow *container;    /* Window which contains this one. */
+    clipRect containerRect; /* ClipRect for this window in the container.*/ 
+    clipRect boundsRect;    /* Extra clipRect added by TkClipDrawableToRect */
 } glfwData;
+
+/*
+ * Values for TkWindowPrivate flags. These apply to all windows,
+ * not just toplevels
+ */
+
+#define TKWP_EXPOSE_PENDING   1  /* Don't generate another Expose event */
+
 
 /*
  *----------------------------------------------------------------------
@@ -576,8 +586,8 @@ MODULE_SCOPE void TkWaylandProcessEvents(void);
 MODULE_SCOPE void TkWaylandSetupCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void TkWaylandClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
-MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
-					    int width, int height);
+MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x,
+    int y, int width, int height);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);

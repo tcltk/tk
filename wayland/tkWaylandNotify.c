@@ -408,17 +408,21 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 void
 TkWaylandQueueExposeEvent(
     TkWindow *winPtr,
-    int       x, int y,
-    int       width, int height)
+    int x,
+    int y,
+    int width,
+    int height)
 {
     XEvent event;
     TkWindow *childPtr;
     fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
     
     if (!winPtr) return;
-    
-    /* Create expose event. */
-    memset(&event, 0, sizeof(XEvent));
+    if (winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING) {
+	printf("TKWP_EXPOSE_PENDING flag is set!\n");
+	return;
+    }
+    /* Create expose event. */    memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
     event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xexpose.send_event = False;
@@ -431,11 +435,13 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
+    printf("Setting TKWP_EXPOSE_PENDING for %s\n", Tk_PathName(winPtr));
+    winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
     fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
-	   event.xexpose.serial,
-	   Tk_PathName(winPtr), width, height);
+	event.xexpose.serial,
+	Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
+
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
@@ -443,7 +449,39 @@ TkWaylandQueueExposeEvent(
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-				  Tk_Height(childPtr));
+	    Tk_Height(childPtr));
+    }
+}
+
+static void
+HandleExposeEvent(
+    TkWindow *winPtr)
+{
+    XEvent event;
+    TkWindow *childPtr;
+
+    /* Create expose event. */
+    memset(&event, 0, sizeof(XEvent));
+    event.type = Expose;
+    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
+    event.xexpose.send_event = False;
+    event.xexpose.display = winPtr->display;
+    event.xexpose.window = Tk_WindowId(winPtr);
+    event.xexpose.x = Tk_X(winPtr);
+    event.xexpose.y = Tk_Y(winPtr);
+    event.xexpose.width = Tk_Width(winPtr);
+    event.xexpose.height = Tk_Height(winPtr);
+    event.xexpose.count = 0;    /* This forces ttk to handle the event. */
+    
+    Tk_HandleEvent(&event);
+
+    /* Recurse through the children of this window. */
+    for (childPtr = winPtr->childList; childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+            continue;
+        }
+        HandleExposeEvent(childPtr);
     }
 }
 
@@ -578,6 +616,26 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  */
 
 static void
+GenerateConfigureNotify(
+    TkWindow *winPtr,
+    int includeWin)
+{
+    TkWindow *childPtr;
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+            childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+            continue;
+        }
+        GenerateConfigureNotify(childPtr, 1);
+    }
+    if (includeWin) {
+	printf("ConfigureNotify for %s\n", Tk_PathName(winPtr));
+        TkDoConfigureNotify(winPtr);
+    }
+}
+
+static void
 TkWaylandFramebufferSizeCallback(
     GLFWwindow *window,
     int width,
@@ -625,7 +683,10 @@ TkWaylandFramebufferSizeCallback(
      */
 
     /* Reconfigure the Tk window. */
-    TkDoConfigureNotify(winPtr);
+    GenerateConfigureNotify(winPtr, 1);
+    /* Force a complete redraw. */
+    printf("Attempting to force a redraw of %s\n", Tk_PathName(winPtr));
+    HandleExposeEvent(winPtr);
 }
 
 #if 0
@@ -1006,24 +1067,8 @@ TkWaylandMouseButtonCallback(
         glfwButtonState &= ~buttonMask;
         event.type = ButtonRelease;
     }
-
-    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
-    event.xbutton.send_event = False;
-    event.xbutton.display = winPtr->display;
-    event.xbutton.window = Tk_WindowId(target);
-    event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xbutton.subwindow = None;
-    event.xbutton.time = CurrentTime;
-    event.xbutton.x = (int)xpos - Tk_X(target);
-    event.xbutton.y = (int)ypos - Tk_Y(target);
-    event.xbutton.x_root = (int)xpos;
-    event.xbutton.y_root = (int)ypos;
-    event.xbutton.state = glfwButtonState | glfwModifierState;
-    event.xbutton.button = xbutton;
-    event.xbutton.same_screen = True;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
+    Tk_UpdatePointer(target, (int) xpos, (int) ypos,
+                     glfwButtonState | glfwModifierState);
 }
 
 /*
