@@ -25,6 +25,7 @@
 
 #include "stb_truetype.h"
 
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -3214,13 +3215,27 @@ Tk_MeasureCharsInContext(
     }
 
     if (maxLength < 0) {
-        int width = 0;
+        /*
+         * "Just give me the width" query - what a caller uses to place
+         * the caret at a given byte offset. Used to sum advanceX across
+         * every glyph overlapping [start,end), a local/relative sum
+         * that's only correct if those glyphs sit contiguously on
+         * screen in the order summed - breaks across an RTL/LTR sub-run
+         * boundary. Use the real shaped x / x+advanceX instead, same as
+         * the draw-path fixes.
+         */
+        int minX = INT_MAX, maxX = INT_MIN;
         for (int i = 0; i < sbuf.glyphCount; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
-            if (boe > start && bo < end) width += sbuf.glyphs[i].advanceX;
+            if (boe > start && bo < end) {
+                int gx0 = sbuf.glyphs[i].x;
+                int gx1 = gx0 + sbuf.glyphs[i].advanceX;
+                if (gx0 < minX) minX = gx0;
+                if (gx1 > maxX) maxX = gx1;
+            }
         }
-        *lengthPtr = width;
+        *lengthPtr = (minX <= maxX) ? (maxX - minX) : 0;
         return (int)rangeLength;
     }
 
@@ -3514,12 +3529,50 @@ TkpDrawAngledCharsInContext(
      * doesn't reach its full advance width - trailing spaces being the
      * most common case. That mismatch is what caused the residual small
      * shift on plain LTR text even after the double-count fix above.
+     *
+     * That's only valid when the prefix itself is simple, though.
+     * nvgTextBounds() does plain NanoVG glyph layout: no HarfBuzz, no
+     * bidi reordering, no contextual letterforms. needsPrefixOffset
+     * above only checks whether THIS range is simple - it says nothing
+     * about the prefix before rangeStart. If that prefix contains
+     * complex/RTL script (e.g. a digit run like "456" sitting right
+     * after an Arabic/Hebrew run), nvgTextBounds measures the prefix
+     * using naive isolated-form glyph widths, which is a different
+     * width than HarfBuzz actually produced when that same prefix was
+     * rendered for real via the complex path. The offset used to
+     * position this range then no longer matches where the preceding
+     * run actually ends on screen - the same double-counted/mismatched
+     * prefix problem the comment above already describes, one level up.
+     *
+     * Fix: only use the cheap nvgTextBounds measurement when the prefix
+     * is itself simple. Otherwise shape it for real and use the actual
+     * shaped position, the same way the complex path below already
+     * trusts sbuf.glyphs[i].x instead of re-deriving a position.
      */
     double drawX = x;
     if (rangeStart > 0 && needsPrefixOffset) {
-        nvgFontFaceId(vg, primaryId);
-        float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
-        drawX += (double)advance;
+        if (IsSimpleOnly(source, (int)rangeStart)) {
+            nvgFontFaceId(vg, primaryId);
+            float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+            drawX += (double)advance;
+        } else {
+            ShapedGlyphBuffer psbuf;
+            if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                          (int)numBytes, &psbuf)
+                && psbuf.glyphCount > 0) {
+                int minX = INT_MAX, maxX = INT_MIN;
+                for (int i = 0; i < psbuf.glyphCount; i++) {
+                    int bo = psbuf.glyphs[i].byteOffset;
+                    if (bo < (int)rangeStart) {
+                        int gx0 = psbuf.glyphs[i].x;
+                        int gx1 = gx0 + psbuf.glyphs[i].advanceX;
+                        if (gx0 < minX) minX = gx0;
+                        if (gx1 > maxX) maxX = gx1;
+                    }
+                }
+                if (minX <= maxX) drawX += (double)(maxX - minX);
+            }
+        }
     }
 
     nvgSave(vg);
