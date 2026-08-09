@@ -491,10 +491,6 @@ Tk_GetPixmap(
         fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
     }
 
-    /* Clear pixmap to white. */
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
     /* Restore whatever framebuffer was bound before this call. */
     glBindFramebuffer(GL_FRAMEBUFFER, (GLuint)prevFbo);
 
