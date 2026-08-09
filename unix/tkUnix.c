@@ -85,38 +85,7 @@ TkGetDefaultScreenName(
     return screenName;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * Tk_UpdatePointer --
- *
- *	Unused function in UNIX
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
 
-void
-Tk_UpdatePointer(
-    Tk_Window tkwin,		/* Window to which pointer event is reported.
-				 * May be NULL. */
-    int x, int y,		/* Pointer location in root coords. */
-    int state)			/* Modifier state mask. */
-{
-  (void)tkwin;
-  (void)x;
-  (void)y;
-  (void)state;
-
-  /*
-   * This function intentionally left blank
-   */
-}
 
 /*
  *----------------------------------------------------------------------
@@ -293,6 +262,59 @@ Tk_ResetUserInactiveTime(
     XResetScreenSaver(dpy);
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetMS --
+ *
+ *	Return a relative time in milliseconds. It doesn't matter when the
+ *	epoch was. Used by the generic pointer module (tkPointer.c) to
+ *	timestamp synthesized events.
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkGetMS(void)
+{
+    Tcl_Time now;
+
+    Tcl_GetTime(&now);
+    return (unsigned long) now.sec * 1000 + now.usec / 1000;
+}
+
+/* Typical X11 stubs. */
+
+void
+TkpSetCapture(TkWindow *winPtr)
+{
+    /* X11 does not need an explicit capture call here;
+       the grab is handled by XGrabPointer / the existing
+       grab machinery in tkPointer.c / tkUnixEvent.c. */
+    (void)winPtr;
+}
+
+Tk_Window
+TkpGetCapture(void)
+{
+    return NULL;          /* or the real grab window if you track it */
+}
+
+void
+TkpSetCursor(TkpCursor cursor)
+{
+    /* The real cursor change is done by XDefineCursor
+       elsewhere; this is just the platform hook. */
+    (void)cursor;
+}
+
 /*
  * Local Variables:
  * mode: c

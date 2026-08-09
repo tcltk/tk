@@ -164,4 +164,15 @@ MODULE_SCOPE int TkpPutRGBAImage(
 	unsigned int width, unsigned int height);
 #endif
 
+
+/* 
+ * Ensure these are visible when building with the 
+ * Wayland branch present. 
+*/
+struct TkWindow;
+MODULE_SCOPE void	TkpSetCursor(Cursor cursor);
+MODULE_SCOPE void	TkpSetCapture(struct TkWindow *winPtr);
+MODULE_SCOPE Tk_Window	TkpGetCapture(void);
+MODULE_SCOPE void	TkPointerDeadWindow(struct TkWindow *winPtr);
+
 #endif /* _UNIXPORT */
