@@ -1009,9 +1009,6 @@ Tk_DeleteOutline(
     if (outline->gc != NULL) {
 	Tk_FreeGC(display, outline->gc);
     }
-    if (outline->offsetObj != NULL) {
-	Tcl_DecrRefCount(outline->offsetObj);
-    }
     if ((unsigned) ABS(outline->dash.number) > sizeof(char *)) {
 	ckfree(outline->dash.pattern.pt);
     }
