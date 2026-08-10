@@ -469,6 +469,28 @@ Please install fontconfig development package:
         AC_SUBST([FONTCONFIG_LIBS])
 
         #--------------------------------------------------------------------
+        # HarfBuzz — REQUIRED for Wayland (text shaping), minimum 2.8.2
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for HarfBuzz >= 2.8.2 (required for Wayland text shaping)])
+        if pkg-config --exists "harfbuzz >= 2.8.2"; then
+            HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+            AC_MSG_RESULT([found version $HB_VERSION])
+            HB_CFLAGS=`pkg-config --cflags harfbuzz`
+            HB_LIBS=`pkg-config --libs harfbuzz`
+            found_harfbuzz=yes
+            AC_DEFINE([HAVE_HARFBUZZ], [1], [Define if HarfBuzz is available for text shaping])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([HarfBuzz >= 2.8.2 is required when building the Wayland backend.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz])
+        fi
+        AC_SUBST([HB_CFLAGS])
+        AC_SUBST([HB_LIBS])
+
+        #--------------------------------------------------------------------
         # NanoVG is bundled in the wayland source tree, so no external check needed.
         #--------------------------------------------------------------------
         AC_MSG_NOTICE([NanoVG will be built from bundled sources in wayland/nanovg.c])
@@ -501,17 +523,18 @@ Please install wl-clipboard:
            && test "$found_gles" = yes \
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
+           && test "$found_harfbuzz" = yes \
            && test -n "$WL_COPY" \
            && test -n "$WL_PASTE"; then
 
             TK_USE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + wl-clipboard])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
@@ -525,14 +548,15 @@ Required (all mandatory when --enable-wayland is used):
   - glesv2 (OpenGL ES 3.0)
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
+  - HarfBuzz >= 2.8.2
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
   - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
-    libwayland-egl1
+    libdecor-0-dev libfontconfig-dev libsystemd-dev \
+    libharfbuzz-dev wl-clipboard libwayland-egl1
 ])
         fi
     fi
@@ -667,8 +691,8 @@ fi
 if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
     #--------------------------------------------------------------------
     # Wayland bidi path: Xft is irrelevant; SheenBidi + HarfBuzz only.
-    # fontconfig is already checked as part of the Wayland dependency
-    # block above, so we only need to handle --enable-bidi here.
+    # fontconfig and HarfBuzz are already checked as part of the Wayland
+    # dependency block above.
     #--------------------------------------------------------------------
     # Xft is an X11 library; it has no role in a Wayland build.
     # Set both to empty and substitute so tkConfig.sh.in / tk.pc.in expand
@@ -678,71 +702,36 @@ if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
 
+    # HarfBuzz is already required and checked above for Wayland,
+    # but we need to ensure HB_CFLAGS/HB_LIBS are substituted.
+    # They are already set from the earlier check.
+    AC_SUBST(HB_CFLAGS)
+    AC_SUBST(HB_LIBS)
+
     AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support (Wayland)])
     AC_ARG_ENABLE(bidi,
 	AS_HELP_STRING([--enable-bidi],
-	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes)]),
+	    [enable bidirectional/RTL text support using SheenBidi (default: yes)]),
 	[enable_bidi=$enableval], [enable_bidi="yes"])
     AC_MSG_RESULT([$enable_bidi])
 
     if test "$enable_bidi" = "yes"; then
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
-                     -I${TK_SRC_DIR}/unix/bidi/Source \
-                     -I${TK_SRC_DIR}/unix/bidi \
-                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+		     -I${TK_SRC_DIR}/unix/bidi/Source \
+		     -I${TK_SRC_DIR}/unix/bidi \
+		     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
 	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
 	# Wayland font backend: tkWaylandFont.c handles all text; SheenBidi is
 	# unity-included by it directly.  tkUnixBidiFont.c is X11/Xft-dependent
 	# and must never appear in a Wayland build.
 	UNIX_FONT_OBJS="tkWaylandFont.o SheenBidi.o"
-
-        #--------------------------------------------------------------------
-        # HarfBuzz — hard dependency when --enable-bidi=yes
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi on Wayland)])
-        if pkg-config --exists harfbuzz; then
-            HB_CFLAGS=`pkg-config --cflags harfbuzz`
-            HB_LIBS=`pkg-config --libs harfbuzz`
-            AC_MSG_RESULT([yes])
-
-            tk_oldCFlags=$CFLAGS
-            tk_oldLibs=$LIBS
-            CFLAGS="$CFLAGS $HB_CFLAGS"
-            LIBS="$tk_oldLibs $HB_LIBS"
-
-            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
-                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
-            ])
-
-            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
-                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
-            ])
-
-            CFLAGS=$tk_oldCFlags
-            LIBS=$tk_oldLibs
-
-            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $HB_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $HB_LIBS"
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
-Please install the HarfBuzz development package:
-  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
-  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
-  - Arch:            sudo pacman -S harfbuzz])
-        fi
     else
-        BIDI_CFLAGS=""
-        HB_CFLAGS=""
-        HB_LIBS=""
-        UNIX_FONT_OBJS="tkWaylandFont.o"
+	BIDI_CFLAGS=""
+	UNIX_FONT_OBJS="tkWaylandFont.o"
     fi
 
     AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
-    AC_SUBST(HB_CFLAGS)
-    AC_SUBST(HB_LIBS)
     FONTSYSTEM="wayland"
     AC_SUBST(FONTSYSTEM)
 
@@ -838,10 +827,10 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
 	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
 
         #--------------------------------------------------------------------
-        # HarfBuzz - HARD DEPENDENCY only when --enable-bidi=yes
+        # HarfBuzz - HARD DEPENDENCY only when --enable-bidi=yes (minimum 2.8.2)
         #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
-        if pkg-config --exists harfbuzz; then
+        AC_MSG_CHECKING([for HarfBuzz >= 2.8.2 (required for --enable-bidi)])
+        if pkg-config --exists "harfbuzz >= 2.8.2"; then
             HB_CFLAGS=`pkg-config --cflags harfbuzz`
             HB_LIBS=`pkg-config --libs harfbuzz`
             AC_MSG_RESULT([yes])
@@ -866,7 +855,7 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
             AC_SUBST(HB_CFLAGS)
             AC_SUBST(HB_LIBS)
         else
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz >= 2.8.2 development files.
 Please install the HarfBuzz development package:
   - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
   - Fedora/RHEL:     sudo dnf install harfbuzz-devel

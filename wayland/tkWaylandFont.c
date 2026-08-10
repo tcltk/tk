@@ -3109,7 +3109,8 @@ Tk_MeasureCharsInContext(
      */
     if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
-        if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
+        int measureFontId = vg ? EnsureNvgFont(fontPtr, vg) : -1;
+        if (!vg || measureFontId < 0) {
             /* No NVG context: rough per-character estimate. */
             int         width          = 0;
             const char *p              = source + rangeStart;
@@ -3143,7 +3144,7 @@ Tk_MeasureCharsInContext(
         }
 
         nvgSave(vg);
-        nvgFontFaceId(vg, fontPtr->nvgFontId);
+        nvgFontFaceId(vg, measureFontId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
