@@ -1,7 +1,7 @@
 /*
  * tkMacOSXDraw.c --
  *
- *	This file contains functions that draw to windows. Many of thees
+ *	This file contains functions that draw to windows. Many of these
  *	functions emulate Xlib functions.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
@@ -77,10 +77,10 @@ TkMacOSXInitCGDrawing(
     TCL_UNUSED(int),
     int limit)
 {
-    static Boolean initialized = FALSE;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = TRUE;
+	initialized = true;
 
 	if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
 	    Tcl_ResetResult(interp);
