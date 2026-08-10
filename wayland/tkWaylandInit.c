@@ -395,7 +395,7 @@ Tk_ClipDrawableToRect(
  *
  * TkWaylandDisplayAllWindows --
  *
- *	Called by TkWaylandSetupProc to display any "dirty" windows whose
+ *		Called by TkWaylandSetupProc to display any "dirty" windows whose
  *      backing store framebuffer has been changed by a display proc run by
  *      Tcl_DoOneEvent since the last call to the SetupProc.  The framebuffer
  *      is blitted to the GL back buffer and then gflwSwapBuffers is called.
@@ -915,12 +915,40 @@ TkWaylandBeginDraw(
      */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+
+    /*
+     * Drawing requires a backing-store FBO to bind and blit to; it does
+     * NOT require the window to have received compositor focus.  This
+     * used to check TKWL_NEVER_FOCUSED, but that's the wrong signal:
+     * focus is an async, compositor-driven event that can arrive long
+     * after the FBO already exists (built synchronously in
+     * TkWaylandFramebufferSizeCallback as soon as GLFW reports the
+     * window's initial size), or may never arrive at all for a window
+     * that's shown but never actually focused (background windows,
+     * dialogs that don't grab focus, etc).  Gating on focus meant every
+     * widget drawn before the compositor's focus round-trip landed --
+     * which, for a toplevel being populated with many widgets at once,
+     * is essentially guaranteed to include some of them -- would bail
+     * out here and never draw.  Check the actual resource we need
+     * instead.
+     */
+    if (!winPtr->privatePtr->fb) {
 	/*
-	 * It is too early to be drawing in this window.  It may not
-	 * have a GL context yet.  Try again later.
+	 * It is too early to be drawing in this window: the FBO isn't
+	 * built yet.  Try again once TkWaylandFramebufferSizeCallback
+	 * has run.
+	 *
+	 * TKWP_EXPOSE_PENDING is normally only cleared in
+	 * TkWaylandEndDraw, which we're bailing out before reaching --
+	 * so without force-clearing the whole subtree here, any window
+	 * whose Expose already got consumed off the Tcl event queue
+	 * (triggering this failed draw attempt) would have its flag
+	 * stuck set forever, and TkWaylandQueueExposeEvent would refuse
+	 * to ever queue a fresh Expose for it again.  Clear the subtree
+	 * first so the requeue below can regenerate real Expose events
+	 * for everything that just got orphaned by this failure.
 	 */
-	winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
+	TkWaylandClearExposePendingRecursive(winPtr);
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
 	return TCL_ERROR;

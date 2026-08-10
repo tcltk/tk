@@ -592,6 +592,7 @@ MODULE_SCOPE void TkWaylandClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
+MODULE_SCOPE void TkWaylandClearExposePendingRecursive(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);
