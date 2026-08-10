@@ -265,24 +265,6 @@ typedef struct TkWaylandContext {
 /*
  *----------------------------------------------------------------------
  *
- * ProtocolHandler – per-protocol Tcl command binding.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct ProtocolHandler {
-    int                    protocol;  /* Protocol identifier. */
-    struct ProtocolHandler *nextPtr;
-    Tcl_Interp            *interp;
-    char                   command[TKFLEXARRAY];
-} ProtocolHandler;
-
-#define HANDLER_SIZE(cmdLength) \
-    (offsetof(ProtocolHandler, command) + 1 + (cmdLength))
-
-/*
- *----------------------------------------------------------------------
- *
  * WmAttributes – per-window wm attribute state.
  *
  *----------------------------------------------------------------------

@@ -869,13 +869,11 @@ Tk_MakeWindow(
     if (winPtr->privatePtr == NULL) {
 	winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
 	Tcl_DStringInit(&winPtr->privatePtr->pendingText);
-	winPtr->privatePtr->glfwWindow = NULL;
-	winPtr->privatePtr->fb = NULL;
+	memset(winPtr->privatePtr, 0, sizeof(glfwData));
 #define CLIPRECTBUFSIZE 8
 	winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
 	winPtr->privatePtr->clipRectBuffer = ckalloc(
 	    CLIPRECTBUFSIZE * sizeof(clipRect));
-	winPtr->privatePtr->clipRectCount = 0;
 #undef CLIPRECTBUFSIZE    
     }
     if (Tk_IsTopLevel(winPtr)) {

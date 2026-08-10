@@ -404,21 +404,21 @@ void updateClipRects(
     clipRect bounds = getBounds(winPtr, scale);
     clipRect extraRect = winPtr->privatePtr->boundsRect;
     if (extraRect.w > 0 && extraRect.h > 0) {
-	/*
-	 * The rectangle saved by Tk_ClipDrawableToRect is given
-	 * in local window coordinates.  We need to shift it to
-	 * the window origin.  XXXX this could be made more efficient.
-	 */
-	TkWindow *winPtr2 = winPtr;
-	while (!Tk_IsTopLevel(winPtr2)) {
-	    extraRect.x += winPtr2->changes.x;
-	    extraRect.y += winPtr2->changes.y;
-	    winPtr2 = winPtr2->parentPtr;
-	}
-	/*
-	 * The rectangle is also given in window coordinates, rather than
-	 * framebuffer coordinares.
-	 */
+        /*
+         * The rectangle saved by Tk_ClipDrawableToRect is given
+         * in local window coordinates.  We need to shift it to
+         * the window origin.  XXXX this could be made more efficient.
+         */
+        TkWindow *winPtr2 = winPtr;
+        while (!Tk_IsTopLevel(winPtr2)) {
+            extraRect.x += winPtr2->changes.x;
+            extraRect.y += winPtr2->changes.y;
+            winPtr2 = winPtr2->parentPtr;
+        }
+        /*
+         * The rectangle is also given in window coordinates, rather than
+         * framebuffer coordinares.
+         */
 	extraRect.x *= scale;
 	extraRect.y *= scale;
 	extraRect.w *= scale;
@@ -470,6 +470,7 @@ void updateClipRects(
     for (int i = 0; i < winPtr->privatePtr->clipRectCount; i++) {
 	n = appendVerticesForRect(clipRects[i], vertices, n);
     }
+
     /* Generate 4 additional clipRects to clip all drawing to the bounds
      * rectangle, which has been intersected with the extra rectangle added by
      * TkClipDrawableToRect, if there was one.
