@@ -50,6 +50,15 @@
 /* Module-level state. */
 static int  fcInitialized = 0;
 
+/*
+ * Clip state set by TkUnixSetXftClipRegion() and consumed by
+ * TkpDrawAngledCharsInContext() via nvgScissor(). ttk's TextDraw()
+ * (ttkLabel.c) only ever builds a single-rect region -- a bounding
+ * box is sufficient here, no need for real multi-rect region support.
+ */
+static bool       wsClipActive = false;
+static XRectangle wsClipBox = {0, 0, 0, 0};
+
 /* Forward declarations of static helper functions. */
 static int        GetBidiRuns(FcChar32 *ucs4, int charCount,
 			      BidiRun *runs, int maxRuns);
@@ -3576,6 +3585,10 @@ TkpDrawAngledCharsInContext(
     }
 
     nvgSave(vg);
+    if (wsClipActive) {
+        nvgScissor(vg, (float)wsClipBox.x, (float)wsClipBox.y,
+                (float)wsClipBox.width, (float)wsClipBox.height);
+    }
     nvgTranslate(vg, (float)drawX, (float)y);
     if (angle != 0.0) {
         nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
@@ -3756,6 +3769,20 @@ decorations:
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float runWidth;
 
+        /*
+         * This block runs after the nvgSave()/nvgRestore() pair above
+         * has already been popped, so it draws in absolute (untranslated)
+         * coordinates using the original x/y arguments -- same space as
+         * wsClipBox. Give it its own save/scissor/restore rather than
+         * widening the scope above, so it doesn't inherit the
+         * translate/rotate transform meant for the glyph-drawing path.
+         */
+        nvgSave(vg);
+        if (wsClipActive) {
+            nvgScissor(vg, (float)wsClipBox.x, (float)wsClipBox.y,
+                    (float)wsClipBox.width, (float)wsClipBox.height);
+        }
+
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
         /* Advance width, not ink bounds[2] - see note above on why. */
@@ -3779,6 +3806,8 @@ decorations:
             nvgLineTo(vg, (float)(x + runWidth), oy);
             nvgStroke(vg);
         }
+
+        nvgRestore(vg);
     }
 done:
     TkWaylandEndDraw(&dc);
@@ -3879,12 +3908,36 @@ TkpMeasureCharsInContext(
 				    maxLength, flags, lengthPtr);
 }
 
-/* Stub function for compatibility. */
+/*
+ *----------------------------------------------------------------------
+ * TkUnixSetXftClipRegion --
+ *
+ *   Called by ttk's TextDraw() (ttkLabel.c) and other Xft-path callers
+ *   to constrain subsequent text drawing to a clip region. On X11 this
+ *   feeds Xft directly; here it captures the region's bounding box so
+ *   TkpDrawAngledCharsInContext() can apply it as an nvgScissor() around
+ *   the NanoVG glyph and decoration draws. ttk only ever unions a single
+ *   rectangle into the region it passes in, so a bounding box loses
+ *   nothing versus true multi-rect clipping.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Sets or clears the module-level wsClipActive/wsClipBox state.
+ *----------------------------------------------------------------------
+ */
+
 void
 TkUnixSetXftClipRegion(
-    TCL_UNUSED(Region)) /* clipRegion */
+    Region clipRegion)
 {
- /* no-op */
+    if (clipRegion == NULL) {
+        wsClipActive = false;
+        return;
+    }
+    XClipBox(clipRegion, &wsClipBox);
+    wsClipActive = true;
 }
 
 /*

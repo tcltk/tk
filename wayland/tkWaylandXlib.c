@@ -29,7 +29,27 @@
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
 
-
+/*
+ * Minimal region representation for this Wayland port.
+ *
+ * `Region` is `struct _XRegion *`, but the public/dev X11 headers
+ * included above only ever forward-declare that struct -- the real
+ * body is private to libX11 and isn't installed anywhere this file can
+ * see it. Since nothing outside this port's own region functions below
+ * ever dereferences a Region, it's safe for this file to be the one
+ * place that gives struct _XRegion a real body.
+ *
+ * ttk's only consumer of this (ttkLabel.c's TextDraw, for clipping
+ * treeview/label cell text that overflows its cell) does XCreateRegion(),
+ * exactly one XUnionRectWithRegion() with a single rect, then reads the
+ * result back out via TkUnixSetXftClipRegion()/XClipBox(). A single
+ * bounding-box rectangle is therefore all this needs to track -- no
+ * general multi-rect region support required.
+ */
+struct _XRegion {
+    XRectangle extents;
+    int        valid;   /* 0 = empty region, 1 = extents holds a rect */
+};
 
 /*
  *======================================================================
@@ -791,10 +811,15 @@ XForceScreenSaver(
  *
  * XClipBox --
  *
- *	Get bounding box of region. No-op in Wayland port.
+ *	Get bounding box of region.
  *
  * Results:
- *	Always returns 0, with rect_return zeroed if non-NULL.
+ *	1, with rect_return set to the region's bounding box (zeroed if
+ *	the region is NULL or empty). Real Xlib returns a rect-vs-region
+ *	shape flag here (Rectangle/Complex); since this port never tracks
+ *	more than a bounding box to begin with, that distinction doesn't
+ *	apply -- callers here (TkUnixSetXftClipRegion) only care about the
+ *	rect.
  *
  * Side effects:
  *	None.
@@ -804,14 +829,19 @@ XForceScreenSaver(
 
 int
 XClipBox(
-    TCL_UNUSED(Region),
+    Region region,
     XRectangle *rect_return)
 {
-    /* No-op - regions not used in Wayland port. */
-    if (rect_return) {
-        rect_return->x = rect_return->y = rect_return->width = rect_return->height = 0;
+    if (rect_return == NULL) {
+        return 0;
     }
-    return 0;
+    if (region != NULL && region->valid) {
+        *rect_return = region->extents;
+    } else {
+        rect_return->x = rect_return->y = 0;
+        rect_return->width = rect_return->height = 0;
+    }
+    return 1;
 }
 
 /*
@@ -1177,22 +1207,24 @@ XKeysymToKeycode(
  *
  * XDestroyRegion --
  *
- *	Destroy a region. No-op in Wayland port.
+ *	Destroy a region allocated by XCreateRegion().
  *
  * Results:
  *	Always returns 0 (Success).
  *
  * Side effects:
- *	None.
+ *	Frees region.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XDestroyRegion(
-    TCL_UNUSED(Region))
+    Region region)
 {
-    /* No-op - regions not used in Wayland port. */
+    if (region != NULL) {
+        Tcl_Free((char *)region);
+    }
     return 0;
 }
 
@@ -1848,13 +1880,15 @@ XGrabServer(
  *
  * XCreateRegion --
  *
- *	Create a region. No-op in Wayland port.
+ *	Create an empty region. See the struct _XRegion comment near the
+ *	top of this file for why this port can define the struct body
+ *	and allocate a real one here instead of returning NULL.
  *
  * Results:
- *	Always returns NULL.
+ *	A newly allocated, empty Region. Caller must XDestroyRegion() it.
  *
  * Side effects:
- *	None.
+ *	Allocates memory.
  *
  *----------------------------------------------------------------------
  */
@@ -1863,8 +1897,12 @@ Region
 XCreateRegion(
     void)
 {
-    /* No-op - regions not used in Wayland port. */
-    return NULL;
+    Region region = (Region)Tcl_Alloc(sizeof(struct _XRegion));
+
+    region->extents.x = region->extents.y = 0;
+    region->extents.width = region->extents.height = 0;
+    region->valid = 0;
+    return region;
 }
 
 /*
@@ -2507,7 +2545,14 @@ XSetStipple(
  *
  * XSetRegion --
  *
- *	Set clip region in GC. No-op in Wayland port.
+ *	Set clip region in GC. Intentional no-op: the NanoVG draw path
+ *	(tkWaylandFont.c) never consults a GC's clip mask, so storing a
+ *	region here wouldn't be read by anything. The text-clipping use
+ *	case this exists for (ttk cell text overflow) is instead carried
+ *	end-to-end via TkUnixSetXftClipRegion(), which tkWaylandFont.c's
+ *	glyph draw does consult (via nvgScissor()). See XCreateRegion()/
+ *	XUnionRectWithRegion()/XClipBox() in this file for the region
+ *	half of that path.
  *
  * Results:
  *	Always returns 0 (Success).
@@ -2524,7 +2569,7 @@ XSetRegion(
     TCL_UNUSED(GC),
     TCL_UNUSED(Region))
 {
-    /* No-op - clipping handled by NanoVG. */
+    /* No-op - see note above. */
     return 0;
 }
 
@@ -3105,25 +3150,66 @@ XGetWindowAttributes(
  *
  * XUnionRectWithRegion --
  *
- *	Union rectangle with region. No-op in Wayland port.
+ *	Union a rectangle with a region, tracking only the resulting
+ *	bounding box (see struct _XRegion comment near the top of this
+ *	file). Handles srcRegion == dstRegion, which is how ttk's
+ *	TextDraw() (ttkLabel.c) calls this -- union a single rect into a
+ *	freshly created, still-empty region.
  *
  * Results:
- *	Always returns 0 (Success).
+ *	Always returns 1 (Success).
  *
  * Side effects:
- *	None.
+ *	Updates dstRegion's extents/valid fields.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XUnionRectWithRegion(
-    TCL_UNUSED(XRectangle *),
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region))
+    XRectangle *rect,
+    Region srcRegion,
+    Region dstRegion)
 {
-    /* No-op - regions not used in Wayland port. */
-    return 0;
+    XRectangle r;
+    int x0, y0, x1, y1;
+
+    if (rect == NULL || dstRegion == NULL) {
+        return 0;
+    }
+    r = *rect;
+
+    if (srcRegion != NULL && srcRegion != dstRegion && srcRegion->valid) {
+        x0 = (r.x < srcRegion->extents.x) ? r.x : srcRegion->extents.x;
+        y0 = (r.y < srcRegion->extents.y) ? r.y : srcRegion->extents.y;
+        x1 = (r.x + r.width > srcRegion->extents.x + srcRegion->extents.width)
+                ? r.x + r.width
+                : srcRegion->extents.x + srcRegion->extents.width;
+        y1 = (r.y + r.height > srcRegion->extents.y + srcRegion->extents.height)
+                ? r.y + r.height
+                : srcRegion->extents.y + srcRegion->extents.height;
+        r.x = x0; r.y = y0;
+        r.width = x1 - x0; r.height = y1 - y0;
+    }
+
+    if (!dstRegion->valid) {
+        dstRegion->extents = r;
+    } else {
+        x0 = (r.x < dstRegion->extents.x) ? r.x : dstRegion->extents.x;
+        y0 = (r.y < dstRegion->extents.y) ? r.y : dstRegion->extents.y;
+        x1 = (r.x + r.width > dstRegion->extents.x + dstRegion->extents.width)
+                ? r.x + r.width
+                : dstRegion->extents.x + dstRegion->extents.width;
+        y1 = (r.y + r.height > dstRegion->extents.y + dstRegion->extents.height)
+                ? r.y + r.height
+                : dstRegion->extents.y + dstRegion->extents.height;
+        dstRegion->extents.x = x0;
+        dstRegion->extents.y = y0;
+        dstRegion->extents.width = x1 - x0;
+        dstRegion->extents.height = y1 - y0;
+    }
+    dstRegion->valid = 1;
+    return 1;
 }
 
 /*
