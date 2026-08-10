@@ -840,43 +840,6 @@ TkWmCleanup(
  *
  *      Platform-specific window creation called by Tk's generic layer.
  *      For toplevels, it creates a GLFW window.
- *
- * Results:
- *      Returns a Window identifier which is assigned to the window
- *      field of the TkWindow structure.
- *
- * Side effects:
- *      Creates a new GLFW window for toplevels.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MakeWindow --
- *
- *      Platform-specific window creation called by Tk's generic layer.
- *      For toplevels, it creates a GLFW window.
- *      For menu windows, it uses the subsurface path instead.
- *
- * Results:
- *      Returns a Window identifier which is assigned to the window
- *      field of the TkWindow structure.
- *
- * Side effects:
- *      Creates a new GLFW window for toplevels, or subsurface for menus.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MakeWindow --
- *
- *      Platform-specific window creation called by Tk's generic layer.
- *      For toplevels, it creates a GLFW window.
  *      For menu windows, it uses the subsurface path instead.
  *
  * Results:
