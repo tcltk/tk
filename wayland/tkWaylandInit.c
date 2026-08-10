@@ -365,12 +365,10 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	/* No-op for pixmaps. */
 	return;
     }
-    
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
@@ -380,9 +378,9 @@ Tk_ClipDrawableToRect(
     //// Should check for NULL
     if (width == -1 || height == -1) {
 	printf("Clearing clipRect for %s\n", Tk_PathName(winPtr));
-	renderFBO(glfwWindow);
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
+	renderFBO(glfwWindow);
     } else {
 	printf("Adding clipRect for %s\n", Tk_PathName(winPtr));
 	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
@@ -869,9 +867,9 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
 
 MODULE_SCOPE int
 TkWaylandBeginDraw(
-    Drawable drawable,
-    GC gc,
-    TkWaylandDrawingContext *dcPtr)
+		   Drawable drawable,
+		   GC gc,
+		   TkWaylandDrawingContext *dcPtr)
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
@@ -899,6 +897,7 @@ TkWaylandBeginDraw(
 	TkWaylandApplyGC(dcPtr->vg, gc);
 	return TCL_OK;
     }
+    
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
@@ -916,6 +915,16 @@ TkWaylandBeginDraw(
      */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+	/*
+	 * It is too early to be drawing in this window.  It may not
+	 * have a GL context yet.  Try again later.
+	 */
+	winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
+	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
+				  Tk_Height(winPtr));
+	return TCL_ERROR;
+    }
 
     /* Set up the nanoVG drawing context for this nvgFrame. */
     dcPtr->vg = infoPtr->vg;
@@ -935,8 +944,25 @@ TkWaylandBeginDraw(
     if (! Tk_IsTopLevel(childPtr)) {
 	clipRect clip = childPtr->privatePtr->containerRect;
 	if (x * scale != clip.x || y * scale != clip.y) {
-		fprintf(stderr, "Bad ClipRects for %s", Tk_PathName(winPtr));
-	}  
+	    /*
+	     * The child was moved after its container was drawn,
+	     * so its clipping rectangle is now in the wrong place.
+	     * It is not clear to me why this happens, and I wish
+	     * there were an alternative to this crude workaround.
+	     */
+	    if (childPtr->privatePtr->container) {
+		printf("==============> Bad ClipRects for child %s contained in %s: ",
+		       Tk_PathName(childPtr),
+		       Tk_PathName(childPtr->privatePtr->container));
+		printf("clip xy = %.0f, %0.f: win xy = %.0f, %.0f\n",
+		       clip.x, clip.y, scale * x, scale * y);
+#if 0
+		TkWindow *container = childPtr->privatePtr->container;
+		TkWaylandQueueExposeEvent(container, 0, 0, Tk_Width(container),
+					  Tk_Height(container));
+#endif
+	    }
+	}
     }
     fprintf(stderr,
 	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
@@ -1002,18 +1028,18 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 	return;
     }
     //// This is the case where the drawable is a window.
-    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
-    fprintf(stderr, "EndDraw for %s\n", Tk_PathName(childPtr));
-    TkWindow *winPtr = childPtr;
-    while (!Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
-    }
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
+    fprintf(stderr, "EndDraw for drawable %lx (%s)\n", dcPtr->drawable,
+	    Tk_PathName(winPtr));
     /* Allow expose events for this widget again. */
     winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
-    /* winPtr is the toplevel containing our drawable. */
-    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    TkWindow *toplevelPtr = winPtr;
+    while (!Tk_IsTopLevel(toplevelPtr)) {
+	toplevelPtr = toplevelPtr->parentPtr;
+    }
+    GLFWwindow *glfwWindow = toplevelPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-
+    
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
      * nvgEndFrame.  The drawing commands have just been queued.  Now they
@@ -1053,7 +1079,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      * mapped children.
      */
 
-    tkWaylandDrawClipMask(childPtr, glfwWindow);
+    tkWaylandDrawClipMask(winPtr, glfwWindow);
 
     /*
      * Enable clipping using the depth buffer with depth test GL_LEQUAL.  The
@@ -1075,10 +1101,10 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     /* Run all queued nanoVG drawing commands. */
     nvgEndFrame(dcPtr->vg);
 
-    fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
-	   Tk_PathName(childPtr), Tk_PathName(winPtr));
-
     nvgluBindFramebuffer(NULL);
+    fprintf(stderr, "Drew %s in toplevel %s\n",
+	    Tk_PathName(winPtr), Tk_PathName(toplevelPtr));
+
 
     /*
      * nvgBeginFrame calls nvgSave, but nvgEndFrame does not
@@ -1115,46 +1141,14 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 #endif
 
     /*
-     * Drawing this widget covered up all of the widgets that it contains.  If
-     * we generate expose events for the children of this widget and for its
-     * siblings which are higher in the stacking order then we should have
-     * redrawn all of the widgets that we damaged.
-     */
-
-#if 1
-    /* Children */
-    for (TkWindow *childPtr2 = childPtr->childList;
-	 childPtr2 != NULL;
-         childPtr2 = childPtr2->nextPtr) {
-        if (!Tk_IsMapped(childPtr2)) {
-
-
-            continue;
-        }
-
-        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
-                                  Tk_Height(childPtr2));
-    }
-    /* Higher siblings. */
-    for (TkWindow *childPtr2 = childPtr->nextPtr;
-	 childPtr2 != NULL;
-         childPtr2 = childPtr2->nextPtr) {
-        if (!Tk_IsMapped(childPtr2)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
-                                  Tk_Height(childPtr2));
-    }
-#endif
-
-    /*
-
-     * Mark the toplevel as needing display (unless we are in the middle of a
-     * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
+     * Mark the toplevel as needing display unless the dontSwap flag was set
+     * by Tk_ClipDrawableToRect.  This triggers a call to glfwSwapBuffers.
      */
 
     if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
         infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+    } else {
+	printf("dontSwap was set - waiting\n");
     }
 }
 

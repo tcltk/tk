@@ -267,7 +267,6 @@ void intersectRectWithRect(
     clipRect *rectPtr,
     clipRect rect)
 {
-    return;
     float xmaxFirst = rectPtr->x + rectPtr->w;
     float ymaxFirst = rectPtr->y + rectPtr->h;
     float xmaxSecond = rect.x + rect.w;
