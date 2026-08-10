@@ -980,7 +980,7 @@ typedef struct TkTextTag {
     bool affectsDisplay;	/* True means that this tag affects the way information is
 				 * displayed on the screen (so need to redisplay if tag changes). */
     bool affectsDisplayGeometry;	/* True means that this tag affects the
-                 * size with which information is displayed on
+				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration
