@@ -180,7 +180,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	XUnionRectWithRegion(&rect, clipRegion, clipRegion);
 	XSetRegion(Tk_Display(tkwin), gc1, clipRegion);
 	XSetRegion(Tk_Display(tkwin), gc2, clipRegion);
-#if defined(HAVE_XFT) || defined(HAVE_BIDI)
+#if defined(HAVE_XFT) || defined(HAVE_BIDI) || defined(TK_USE_WAYLAND)
 	TkUnixSetXftClipRegion(clipRegion);
 #endif
     }
@@ -236,7 +236,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     }
 
     if (clipRegion != NULL) {
-#if defined(HAVE_XFT) || defined(HAVE_BIDI)
+#if defined(HAVE_XFT) || defined(HAVE_BIDI) || defined(TK_USE_WAYLAND)
 	TkUnixSetXftClipRegion(NULL);
 #endif
 	XSetClipMask(Tk_Display(tkwin), gc1, None);
