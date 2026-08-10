@@ -267,7 +267,6 @@ void intersectRectWithRect(
     clipRect *rectPtr,
     clipRect rect)
 {
-    return;
     float xmaxFirst = rectPtr->x + rectPtr->w;
     float ymaxFirst = rectPtr->y + rectPtr->h;
     float xmaxSecond = rect.x + rect.w;
@@ -405,6 +404,21 @@ void updateClipRects(
     clipRect bounds = getBounds(winPtr, scale);
     clipRect extraRect = winPtr->privatePtr->boundsRect;
     if (extraRect.w > 0 && extraRect.h > 0) {
+	/*
+	 * The rectangle saved by Tk_ClipDrawableToRect is given
+	 * in local window coordinates.  We need to shift it to
+	 * the window origin.  XXXX this could be made more efficient.
+	 */
+	TkWindow *winPtr2 = winPtr;
+	while (!Tk_IsTopLevel(winPtr2)) {
+	    extraRect.x += winPtr2->changes.x;
+	    extraRect.y += winPtr2->changes.y;
+	    winPtr2 = winPtr2->parentPtr;
+	}
+	/*
+	 * The rectangle is also given in window coordinates, rather than
+	 * framebuffer coordinares.
+	 */
 	extraRect.x *= scale;
 	extraRect.y *= scale;
 	extraRect.w *= scale;
