@@ -374,86 +374,86 @@ if test $tk_aqua = no; then
 	fi
 
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
-                     -I${TK_SRC_DIR}/unix/bidi/Source \
-                     -I${TK_SRC_DIR}/unix/bidi \
-                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+		     -I${TK_SRC_DIR}/unix/bidi/Source \
+		     -I${TK_SRC_DIR}/unix/bidi \
+		     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
 	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
 	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
 
-        #--------------------------------------------------------------------
-        # HarfBuzz - version check (minimum 2.8.2)
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
-        if pkg-config --exists harfbuzz; then
-            HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
-            AC_MSG_RESULT([found version $HB_VERSION])
+	#--------------------------------------------------------------------
+	# HarfBuzz - version check (minimum 2.8.2)
+	#--------------------------------------------------------------------
+	AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
+	if pkg-config --exists harfbuzz; then
+	    HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+	    AC_MSG_RESULT([found version $HB_VERSION])
 
-            # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
-            if test -n "$HB_VERSION"; then
-                # Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
-                HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
-                HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
-                HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
+	    # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
+	    if test -n "$HB_VERSION"; then
+		# Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
+		HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
+		HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
+		HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
 
-                REQ_MAJOR=2
-                REQ_MINOR=8
-                REQ_PATCH=2
+		REQ_MAJOR=2
+		REQ_MINOR=8
+		REQ_PATCH=2
 
-                too_old=no
-                if test $HB_MAJOR -lt $REQ_MAJOR; then
-                    too_old=yes
-                elif test $HB_MAJOR -eq $REQ_MAJOR; then
-                    if test $HB_MINOR -lt $REQ_MINOR; then
-                        too_old=yes
-                    elif test $HB_MINOR -eq $REQ_MINOR; then
-                        if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
-                            too_old=yes
-                        fi
-                    fi
-                fi
+		too_old=no
+		if test $HB_MAJOR -lt $REQ_MAJOR; then
+		    too_old=yes
+		elif test $HB_MAJOR -eq $REQ_MAJOR; then
+		    if test $HB_MINOR -lt $REQ_MINOR; then
+			too_old=yes
+		    elif test $HB_MINOR -eq $REQ_MINOR; then
+			if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
+			    too_old=yes
+			fi
+		    fi
+		fi
 
-                if test "$too_old" = "yes"; then
-                    AC_MSG_WARN([HarfBuzz version $HB_VERSION is too old (need >= 2.8.2).])
-                    AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
-                    enable_bidi=no
-                else
-                    AC_MSG_RESULT([HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2).])
-                fi
-            fi
+		if test "$too_old" = "yes"; then
+		    AC_MSG_WARN([HarfBuzz version $HB_VERSION is too old (need >= 2.8.2).])
+		    AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
+		    enable_bidi=no
+		else
+		    AC_MSG_RESULT([HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2).])
+		fi
+	    fi
 
-            if test "$enable_bidi" = "yes"; then
-                HB_CFLAGS=`pkg-config --cflags harfbuzz`
-                HB_LIBS=`pkg-config --libs harfbuzz`
+	    if test "$enable_bidi" = "yes"; then
+		HB_CFLAGS=`pkg-config --cflags harfbuzz`
+		HB_LIBS=`pkg-config --libs harfbuzz`
 
-                tk_oldCFlags=$CFLAGS
-                tk_oldLibs=$LIBS
-                CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
-                LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+		tk_oldCFlags=$CFLAGS
+		tk_oldLibs=$LIBS
+		CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+		LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
 
-                AC_CHECK_HEADER(harfbuzz/hb.h, [], [
-                    AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
-                ], [#include <X11/Xlib.h>])
+		AC_CHECK_HEADER(harfbuzz/hb.h, [], [
+		    AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+		], [#include <X11/Xlib.h>])
 
-                AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
-                    AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
-                ])
+		AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
+		    AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
+		])
 
-                CFLAGS=$tk_oldCFlags
-                LIBS=$tk_oldLibs
+		CFLAGS=$tk_oldCFlags
+		LIBS=$tk_oldLibs
 
-                BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
-                AC_SUBST(HB_CFLAGS)
-                AC_SUBST(HB_LIBS)
-            fi
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+		BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+		AC_SUBST(HB_CFLAGS)
+		AC_SUBST(HB_LIBS)
+	    fi
+	else
+	    AC_MSG_RESULT([no])
+	    AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
 Please install the HarfBuzz development package:
   - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
   - Fedora/RHEL:     sudo dnf install harfbuzz-devel
   - Arch:            sudo pacman -S harfbuzz
   - macOS (Homebrew): brew install harfbuzz])
-        fi
+	fi
     fi
 
     if test "$enable_bidi" = "no"; then
@@ -462,10 +462,10 @@ Please install the HarfBuzz development package:
 	HB_CFLAGS=""
 	HB_LIBS=""
 	if test "$enable_xft" = "yes" ; then
-	   UNIX_FONT_OBJS="tkUnixRFont.o"
-	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+	    UNIX_FONT_OBJS="tkUnixRFont.o"
+	    AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
 	else
-	   UNIX_FONT_OBJS="tkUnixFont.o"
+	    UNIX_FONT_OBJS="tkUnixFont.o"
 	fi
     fi
 
