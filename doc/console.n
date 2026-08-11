@@ -164,10 +164,41 @@ against that array's element names instead of variable names generally.
 .IP [15]
 Scrolling the mouse wheel while holding Cmd (macOS) or Ctrl (other platforms)
 increases (scroll up) or decreases (scroll down) the console font size.
+.IP [16]
+On Unix, clicking the middle mouse button pastes the current text
+selection into the console; the exact behaviour depends on where that
+selection came from.
+.RS
+.PP
+If the selected text was itself selected from within the console
+window, it is inserted at the end of the current command line,
+regardless of where the mouse pointer is when the middle button is
+pressed.
+.PP
+If the selected text came from another window, it is inserted at the
+current cursor position on the input line, so the cursor can be
+repositioned with a regular click first, then the middle button used
+to paste there.
+.PP
+If the cursor is not currently on the input line at all, the text is
+inserted at the end of the line instead.
+.RE
 .PP
 Most other behaviour is the same as a conventional text widget except
 for the way that the \fI<<Cut>>\fR event is handled identically to the
 \fI<<Copy>>\fR event.
+.SH "DIFFERENCES ON UNIX AND LINUX"
+.PP
+On Unix and Linux, the console does not open automatically under any
+circumstances - not even when \fBwish\fR is run interactively with no
+script, which currently opens a console automatically on Windows. The
+console only ever appears as a result of an explicit
+.QW "\fBconsole show\fR"
+command, whether typed interactively or issued by a script.
+.PP
+Item [16] above (pasting with the middle mouse button) is likewise
+specific to Unix and Linux; it relies on the X11 selection mechanism
+and has no equivalent on Windows.
 .SH EXAMPLE
 .PP
 Not all platforms have the \fBconsole\fR command, so debugging code
@@ -175,6 +206,19 @@ often has the following code fragment in it so output produced by
 \fBputs\fR can be seen while during development:
 .CS
 catch {\fBconsole show\fR}
+.CE
+.PP
+On Unix and Linux, where \fBconsole\fR did not previously exist as a
+command at all, this idiom used to be a safe no-op there, relying
+simply on the command not being found. Since \fBconsole\fR is now
+available on Unix and Linux as well, this fragment will open a console
+window there too. Code that specifically wants a console only on
+platforms where it has traditionally been available, and never on
+Unix or Linux, should check the platform explicitly instead:
+.CS
+if {$tcl_platform(platform) ne "unix"} {
+    catch {\fBconsole show\fR}
+}
 .CE
 .SH "SEE ALSO"
 destroy(n), fconfigure(n), history(n), interp(n), puts(n), text(n), wm(n)
