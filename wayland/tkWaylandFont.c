@@ -599,7 +599,7 @@ IsSimpleOnly(const char *str, int len)
 
         /* 
          * All Latin characters (including extended Latin) can use the
-         * fast path. This is what the canvas text demo uses.
+         * fast path.
          */
         if (uc <= 0x024F) {
             i += clen;
