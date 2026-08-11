@@ -562,11 +562,9 @@ TkWaylandQueueExposeEvent(
     fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
     
     if (!winPtr) return;
-    if (winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING) {
-	printf("TKWP_EXPOSE_PENDING flag is set!\n");
-	return;
-    }
-    /* Create expose event. */    memset(&event, 0, sizeof(XEvent));
+
+    /* Create expose event. */
+    memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
     event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xexpose.send_event = False;
@@ -579,8 +577,6 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
-    printf("Setting TKWP_EXPOSE_PENDING for %s\n", Tk_PathName(winPtr));
-    winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
     fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
 	event.xexpose.serial,
 	Tk_PathName(winPtr), width, height);

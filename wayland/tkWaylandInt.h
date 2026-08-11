@@ -416,7 +416,8 @@ typedef struct {
  * from the TKWL_* flags above, which belong to glfwTkInfo (per-toplevel
  * state), not TkWindowPrivate (per-window state).
  */
-#define TKWP_EXPOSE_PENDING   1
+
+// No flags are defined yet.
 
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;

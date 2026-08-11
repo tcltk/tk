@@ -920,7 +920,6 @@ TkWaylandBeginDraw(
 	 * It is too early to be drawing in this window.  It may not
 	 * have a GL context yet.  Try again later.
 	 */
-	winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
 	return TCL_ERROR;
@@ -1031,8 +1030,6 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
     fprintf(stderr, "EndDraw for drawable %lx (%s)\n", dcPtr->drawable,
 	    Tk_PathName(winPtr));
-    /* Allow expose events for this widget again. */
-    winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
     TkWindow *toplevelPtr = winPtr;
     while (!Tk_IsTopLevel(toplevelPtr)) {
 	toplevelPtr = toplevelPtr->parentPtr;
