@@ -96,8 +96,8 @@ proc console {{sub ""} args} {
             if {$::tkConsoleOut::pushed} {
                 catch {chan pop stdout}
                 catch {chan pop stderr}
-                catch {fconfigure stdout -encoding utf-8}
-                catch {fconfigure stderr -encoding utf-8}
+                catch {fconfigure stdout -encoding $::tkConsoleOut::stdoutEncoding}
+                catch {fconfigure stderr -encoding $::tkConsoleOut::stderrEncoding}
                 set ::tkConsoleOut::pushed 0
             }
             return "" ;# avoid output of 0
@@ -110,6 +110,12 @@ proc console {{sub ""} args} {
             # chan pop on close would then leave one layer behind,
             # silently redirecting output into the now-hidden console.
             if {!$::tkConsoleOut::pushed} {
+                # Save the real original encodings before pushing, so we
+                # can restore what was actually there - not assume utf-8,
+                # which is wrong on platforms/terminals using a different
+                # encoding (e.g. Windows console's default codepage).
+                set ::tkConsoleOut::stdoutEncoding [fconfigure stdout -encoding]
+                set ::tkConsoleOut::stderrEncoding [fconfigure stderr -encoding]
                 chan push stdout {::tkConsoleOut stdout}
                 chan push stderr {::tkConsoleOut stderr}
                 set ::tkConsoleOut::pushed 1
@@ -146,6 +152,8 @@ proc console {{sub ""} args} {
 namespace eval tkConsoleOut {
         variable consoleInterp {}
         variable pushed 0
+        variable stdoutEncoding {}
+        variable stderrEncoding {}
         proc initialize {what x mode}    {
             fconfigure $what -buffering none
             return {initialize finalize write flush}
