@@ -38,15 +38,6 @@
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
 #define TK_DRAW_IN_CONTEXT		1
 
-/*
- * TK_WAYLAND_FONT_SIZE_BOOST: applied on top of the DPI-correct pixel
- * size computed in InitFont(). This is a deliberate, purely cosmetic
- * bump on top of the otherwise-correct size - not a DPI/scale fix (that
- * one's above, in InitFont's dpi computation). Bump this up or down, or
- * back to 1.0, to taste.
- */
-#define TK_WAYLAND_FONT_SIZE_BOOST	1.20
-
 /* Module-level state. */
 static int  fcInitialized = 0;
 
@@ -539,17 +530,8 @@ ComposeUTF8String(const char *source, int len)
  * IsSimpleOnly --
  *
  *   Fast-path classifier for text that does NOT require HarfBuzz shaping
- *   or SheenBidi analysis. This function now reflects the modern Wayland
- *   shaping pipeline: only pure ASCII, Latin-1/Latin Extended, and
- *   Hiragana/Katakana are considered "simple". Everything else—including
- *   CJK ideographs, Hangul, Jamo, all RTL scripts, Indic/Thai/Lao, emoji,
- *   and any supplementary-plane characters—forces the full HarfBuzz +
- *   SheenBidi shaping path.
- *
- *   The fast path is intentionally narrow. It exists only to avoid the
- *   overhead of HarfBuzz for trivially shaped, strictly LTR text where
- *   glyph IDs map 1:1 to Unicode codepoints and no OpenType features,
- *   fallback segmentation, or cluster-level logic are required.
+ *   or SheenBidi analysis. For canvas text, we keep the fast path for
+ *   all Latin text to ensure proper rendering with pixel positioning.
  *
  * Results:
  *   true if the string is simple (eligible for the fast path),
@@ -581,7 +563,10 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* Force complex shaper for scripts that require it. */
+        /* 
+         * Force complex shaper for scripts that require it.
+         * This includes RTL scripts, CJK, Indic, and emoji.
+         */
         if (
             /* Hebrew / Arabic / Arabic supplements / presentation forms. */
             (uc >= 0x0590 && uc <= 0x05FF) ||
@@ -612,16 +597,23 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* Safe for fast path: Latin extended, but force symbols like ©®™
-         * through HarfBuzz so fallback face selection works (fixes black boxes
-         * in About dialog) while preserving bidi/complex handling. */
-        if (uc == 0x00A9 || uc == 0x00AE || uc == 0x2122 || uc == 0x00B0) {
-            return false;
+        /* 
+         * All Latin characters (including extended Latin) can use the
+         * fast path. This is what the canvas text demo uses.
+         */
+        if (uc <= 0x024F) {
+            i += clen;
+            continue;
         }
-        int isSafe = (uc <= 0x024F);
-        if (!isSafe) return false;
 
-        i += clen;
+        /* Symbols that can use the fast path */
+        if (uc == 0x00A9 || uc == 0x00AE || uc == 0x2122 || uc == 0x00B0) {
+            i += clen;
+            continue;
+        }
+
+        /* Everything else goes through HarfBuzz */
+        return false;
     }
     return true;
 }
@@ -855,11 +847,6 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
              strcasestr((const char *)family, "symbol") ||
              strcasestr((const char *)family, "dingbat"));
         if (!nameHint) continue;
-        /* Pass 1 already rejects color fonts, but this pass had no such
-         * check at all - if the only "emoji"-named face on the system is
-         * a color font that pass 1's stricter list missed or that wasn't
-         * demoted at load time, this would happily select it anyway,
-         * producing unusable tofu-box glyphs. */
         if (IsColorFcPattern(pat)) continue;
 
         int score = 0;
@@ -2027,9 +2014,7 @@ EnsureNvgFont(
      * from Fontconfig (see InitFont/FcFontSort). A NanoVG-level fallback
      * font registered here would only ever be reachable by NanoVG's own
      * internal nvgText() fallback, which the shaped path never calls, so
-     * it would sit dead. This now matches the X11 backend
-     * (tkUnixBidiFont.c), which relies solely on Fontconfig-discovered
-     * faces for emoji and has no bundled emoji font at all.
+     * it would sit dead.
      */
     if (primaryId >= 0) {
         for (int i = 1; i < fontPtr->nfaces; i++) {
@@ -2116,18 +2101,7 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-    /* Pixel size calculation.
-     * Tk uses -size for pixel sizes and +size for point sizes.
-     *
-     * For point sizes, this used to hardcode a 96 DPI conversion
-     * regardless of the actual display. That's fine on a plain 1x
-     * 96 DPI output, but on a HiDPI or fractionally-scaled Wayland
-     * output the real DPI is higher, so every point-sized font (which
-     * is most of them - it's the default Tk uses) came out smaller
-     * than it should relative to the rest of the scaled UI. Query the
-     * window's actual screen resolution instead, the same way the
-     * generic Tk font code does on other platforms.
-     */
+    /* Pixel size calculation with proper DPI handling. */
     double ptSize = faPtr->size;
     int basePixels;
 
@@ -2137,16 +2111,8 @@ InitFont(
         if (screen && WidthMMOfScreen(screen) > 0) {
             double screenDpi = (double)WidthOfScreen(screen) * 25.4
                 / (double)WidthMMOfScreen(screen);
-            /* Only ever scale UP from 96 DPI, never down. The point of
-             * this lookup is to catch real HiDPI/scaled Wayland outputs
-             * that were getting under-sized by the old flat-96 code;
-             * it's not meant to shrink fonts on screens that happen to
-             * report (correctly or not - Wayland's MM reporting is
-             * notoriously unreliable) a sub-96 DPI. That inverted case
-             * is what made fonts get smaller instead of bigger. Also
-             * clamp the top end against a screen mis-reporting its
-             * physical size into producing an absurd font size. */
-            if (screenDpi >= 96.0 && screenDpi <= 480.0) {
+            /* Use actual screen DPI for all fonts. */
+            if (screenDpi >= 72.0 && screenDpi <= 480.0) {
                 dpi = screenDpi;
             }
         }
@@ -2156,23 +2122,31 @@ InitFont(
         /* Negative size means pixels already. */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        /* Positive size means points - convert to pixels at the
-         * screen's actual DPI (1 pt = 1/72 inch).
-         */
+        /* Positive size means points - convert to pixels at screen DPI. */
         basePixels = (int)(ptSize * dpi / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
     } else {
-        basePixels = (int)(12.0 * dpi / 96.0 + 0.5);
+        /* Default size: 12 points at screen DPI. */
+        basePixels = (int)(12.0 * dpi / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
     }
 
-    /* Cosmetic bump on top of the DPI-correct size above - see the
-     * TK_WAYLAND_FONT_SIZE_BOOST comment near the top of the file. */
-    basePixels = (int)((double)basePixels * TK_WAYLAND_FONT_SIZE_BOOST + 0.5);
+    /* 
+     * Apply a modest boost for UI fonts, but NOT for canvas text.
+     * We need to detect if this is a canvas text font vs a UI font.
+     * Canvas text uses exact pixel sizes (negative values), UI fonts
+     * use point sizes (positive values).
+     */
+    if (ptSize > 0.0 || ptSize == 0.0) {
+        /* Point-based font (UI) - apply modest boost for readability. */
+        basePixels = (int)((double)basePixels * 1.15 + 0.5);
+    }
+    /* Canvas text uses negative ptSize - no boost applied. */
+    
     if (basePixels < 1) {
         basePixels = 1;
     }
@@ -2268,7 +2242,7 @@ InitFont(
     }
 
     /*
-     * Monochrome emoji only – colour emoji fonts are unusable
+     * Monochrome emoji only – color emoji fonts are unusable
      * by stb_truetype / NanoVG.
      */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
@@ -2283,7 +2257,7 @@ InitFont(
     FcPatternAddBool(pat, FC_HINTING,   FcTrue);
     FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
-    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* reject colour fonts */
+    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* Reject color fonts. */
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
@@ -2505,7 +2479,7 @@ InitFont(
                         fontPtr->nfaces = nfaces;
                     }
                 } else if (cjkMatch) {
-                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed */
+                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed. */
                 }
                 FcCharSetDestroy(want);
                 FcPatternDestroy(cjkPat);
@@ -2531,7 +2505,7 @@ InitFont(
         }
     }
 
-    /* Metrics from the (now guaranteed usable) primary face. */
+    /* Metrics from the primary face using proper scaling. */
     if (nfaces > 0 && fontPtr->faces[0].filePath) {
         FILE *fd = fopen(fontPtr->faces[0].filePath, "rb");
         if (fd) {
@@ -2544,19 +2518,33 @@ InitFont(
                 if (stbtt_InitFont(&info, buf,
                                    stbtt_GetFontOffsetForIndex(
                                        buf, fontPtr->faces[0].faceIndex))) {
+                    /* Use proper pixel height scaling. */
                     float scale = stbtt_ScaleForPixelHeight(
                         &info, (float)fontPtr->pixelSize);
                     int asc, desc, linegap;
                     stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                    fm->ascent  = (int)(asc  * scale + 0.5f);
+                    fm->ascent  = (int)(asc * scale + 0.5f);
                     fm->descent = (int)(-desc * scale + 0.5f);
 
-                    int adv_W, adv_dot, lsb;
+                    /* Get proper character widths. */
+                    int adv_W, adv_space, lsb;
                     stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
+                    stbtt_GetCodepointHMetrics(&info, ' ', &adv_space, &lsb);
+                    
+                    /* Use the widest character for maxWidth. */
+                    int adv_M;
+                    stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
+                    fm->maxWidth = (int)((adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
+                    
+                    /* Check if truly monospaced. */
+                    int adv_dot, adv_x;
                     stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
-                    fm->maxWidth = (int)(adv_W * scale + 0.5f);
-                    fm->fixed    = (adv_W == adv_dot);
-                    fa->size     = (double)(-fontPtr->pixelSize);
+                    stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
+                    fm->fixed = (adv_W == adv_space && 
+                                adv_W == adv_dot && 
+                                adv_W == adv_x);
+                    
+                    fa->size = (double)(-fontPtr->pixelSize);
                 }
             }
             if (buf) {
@@ -2566,10 +2554,11 @@ InitFont(
         }
     }
 
+    /* Reasonable fallback metrics. */
     if (fm->ascent == 0 && fm->descent == 0) {
-        fm->ascent   = (int)(fontPtr->pixelSize * 0.75 + 0.5);
-        fm->descent  = (int)(fontPtr->pixelSize * 0.25 + 0.5);
-        fm->maxWidth = fontPtr->pixelSize;
+        fm->ascent   = (int)(fontPtr->pixelSize * 0.8 + 0.5);
+        fm->descent  = (int)(fontPtr->pixelSize * 0.2 + 0.5);
+        fm->maxWidth = (int)(fontPtr->pixelSize * 0.6 + 0.5);
         fm->fixed    = 0;
     }
 
@@ -2650,7 +2639,7 @@ DeleteFont(WaylandFont *fontPtr)
  *----------------------------------------------------------------------
  * ColorFromGC --
  *
- *   Convert an X GC foreground colour to an NVGcolor.
+ *   Convert an X GC foreground color to an NVGcolor.
  *
  * Results:
  *   NVGcolor value.
@@ -2753,14 +2742,14 @@ CreateStandardNamedFonts(ClientData clientData)
  *----------------------------------------------------------------------
  * TkpFontPkgInit --
  *
- *   Initialise the font subsystem and schedule creation of standard Tk
+ *   Initialize the font subsystem and schedule creation of standard Tk
  *   named fonts.
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   Initialises Fontconfig; schedules an idle callback that defines the
+ *   Initializes Fontconfig; schedules an idle callback that defines the
  *   global Tk named fonts.
  *----------------------------------------------------------------------
  */
@@ -2773,33 +2762,6 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         fcInitialized = 1;
     }
 
-    /*
-     * Standard named-font registration used to happen right here, either
-     * via Tcl_EvalObjEx("font create ...") or via a direct
-     * TkCreateNamedFont() call. Both are unsafe at this exact point:
-     *
-     *   - TkpFontPkgInit() is called from TkFontPkgInit() during
-     *     TkCreateMainWindow(), before the "font" Tcl command has been
-     *     registered in this interpreter. Confirmed by testing: every
-     *     Tcl_EvalObjEx("font create ...") call here failed with
-     *     "invalid command name \"font\"", so none of TkDefaultFont/
-     *     TkTextFont/etc. were ever actually being created - later lookups
-     *     fell back to attributes that were never populated with a real
-     *     family, which is consistent with faPtr->family arriving
-     *     empty/NULL regardless of what was actually requested.
-     *
-     *   - Calling TkCreateNamedFont() directly here instead is *also*
-     *     unsafe: it dereferences ((TkWindow *) tkwin)->mainPtr->fontInfoPtr,
-     *     and at this point in TkCreateMainWindow() the main window is not
-     *     yet fully linked back to mainPtr, which segfaults immediately
-     *     (verified via gdb).
-     *
-     * Deferring the actual registration to a Tcl_DoWhenIdle() callback
-     * sidesteps both hazards at once: by the time the event loop goes
-     * idle, Tk_Init() has completed, so the window <-> mainPtr back-link
-     * is established and it's safe to call TkCreateNamedFont() directly
-     * (which also avoids re-parsing/evaluating a Tcl command string).
-     */
     Tcl_DoWhenIdle(CreateStandardNamedFonts, (ClientData) mainPtr);
 }
 
@@ -2813,7 +2775,7 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
  *   Pointer to a TkFont structure.
  *
  * Side effects:
- *   Allocates and initialises a new font.
+ *   Allocates and initializes a new font.
  *----------------------------------------------------------------------
  */
 
@@ -2838,7 +2800,7 @@ TkpGetNativeFont(Tk_Window tkwin, const char *name)
  *   Pointer to a TkFont structure.
  *
  * Side effects:
- *   Allocates new font or reinitialises an existing one.
+ *   Allocates new font or reinitializes an existing one.
  *----------------------------------------------------------------------
  */
 
@@ -3083,10 +3045,7 @@ Tk_MeasureCharsInContext(
     int start = (int)rangeStart;
     int end   = (int)(rangeStart + rangeLength);
 
-    /* 
-     * Check if the range contains combining characters.
-     * If so, we need to use the complex HarfBuzz path.
-     */
+    /* Check if the range contains combining characters. */
     bool hasCombining = false;
     bool hasEmoji = false;
     for (int i = start; i < end; ) {
@@ -3103,14 +3062,10 @@ Tk_MeasureCharsInContext(
         i += clen;
     }
 
-    /* 
-     * Simple LTR path: only for strings WITHOUT combining characters or emoji.
-     * Combining characters must go through HarfBuzz for proper positioning.
-     */
+    /* Simple LTR path: for strings WITHOUT combining characters or emoji. */
     if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
-        int measureFontId = vg ? EnsureNvgFont(fontPtr, vg) : -1;
-        if (!vg || measureFontId < 0) {
+        if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
             int         width          = 0;
             const char *p              = source + rangeStart;
@@ -3144,7 +3099,7 @@ Tk_MeasureCharsInContext(
         }
 
         nvgSave(vg);
-        nvgFontFaceId(vg, measureFontId);
+        nvgFontFaceId(vg, fontPtr->nvgFontId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
@@ -3169,8 +3124,6 @@ Tk_MeasureCharsInContext(
 
         int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
                                            positions, nchars);
-        /* Advance width, not ink bounds[2] - see TkpDrawAngledCharsInContext
-         * for why that distinction matters. */
         float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
 
         int         pixelWidth     = 0;
@@ -3212,10 +3165,7 @@ Tk_MeasureCharsInContext(
         return (int)(p - rangePtr);
     }
 
-    /* 
-     * Complex / RTL / Combining path: ShapedGlyphBuffer cluster table.
-     * This path uses HarfBuzz which correctly positions combining marks.
-     */
+    /* Complex / RTL / Combining path. */
     ShapedGlyphBuffer sbuf;
     if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                    (int)numBytes, &sbuf)
@@ -3225,15 +3175,6 @@ Tk_MeasureCharsInContext(
     }
 
     if (maxLength < 0) {
-        /*
-         * "Just give me the width" query - what a caller uses to place
-         * the caret at a given byte offset. Used to sum advanceX across
-         * every glyph overlapping [start,end), a local/relative sum
-         * that's only correct if those glyphs sit contiguously on
-         * screen in the order summed - breaks across an RTL/LTR sub-run
-         * boundary. Use the real shaped x / x+advanceX instead, same as
-         * the draw-path fixes.
-         */
         int minX = INT_MAX, maxX = INT_MIN;
         for (int i = 0; i < sbuf.glyphCount; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
@@ -3531,34 +3472,6 @@ TkpDrawAngledCharsInContext(
     bool needsPrefixOffset = hasCombining ||
         (IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
 
-    /*
-     * Starting X for partial range. Use nvgTextBounds()'s RETURN VALUE
-     * (the horizontal advance) here, not the bounds[] array it fills.
-     * bounds[2] is the ink bounding box's right edge, which undercounts
-     * the true advance whenever the prefix ends in a character whose ink
-     * doesn't reach its full advance width - trailing spaces being the
-     * most common case. That mismatch is what caused the residual small
-     * shift on plain LTR text even after the double-count fix above.
-     *
-     * That's only valid when the prefix itself is simple, though.
-     * nvgTextBounds() does plain NanoVG glyph layout: no HarfBuzz, no
-     * bidi reordering, no contextual letterforms. needsPrefixOffset
-     * above only checks whether THIS range is simple - it says nothing
-     * about the prefix before rangeStart. If that prefix contains
-     * complex/RTL script (e.g. a digit run like "456" sitting right
-     * after an Arabic/Hebrew run), nvgTextBounds measures the prefix
-     * using naive isolated-form glyph widths, which is a different
-     * width than HarfBuzz actually produced when that same prefix was
-     * rendered for real via the complex path. The offset used to
-     * position this range then no longer matches where the preceding
-     * run actually ends on screen - the same double-counted/mismatched
-     * prefix problem the comment above already describes, one level up.
-     *
-     * Fix: only use the cheap nvgTextBounds measurement when the prefix
-     * is itself simple. Otherwise shape it for real and use the actual
-     * shaped position, the same way the complex path below already
-     * trusts sbuf.glyphs[i].x instead of re-deriving a position.
-     */
     double drawX = x;
     if (rangeStart > 0 && needsPrefixOffset) {
         if (IsSimpleOnly(source, (int)rangeStart)) {
@@ -3609,9 +3522,7 @@ TkpDrawAngledCharsInContext(
         }
     }
 
-    /* For text with combining characters, use the simple path with composed
-     * text.
-     */
+    /* For text with combining characters, use the simple path with composed text. */
     if (IsSimpleOnly(renderPtr, renderEnd - renderPtr) && !hasEmoji) {
         nvgFontFaceId(vg, primaryId);
         nvgText(vg, 0.0f, 0.0f, renderPtr, renderEnd);
@@ -3620,11 +3531,7 @@ TkpDrawAngledCharsInContext(
         goto decorations;
     }
 
-    /* 
-     * Complex path with per-cluster rendering.
-     * For clusters that couldn't be composed, use HarfBuzz positioning
-     * to place combining marks correctly.
-     */
+    /* Complex path with per-cluster rendering. */
     {
         ShapedGlyphBuffer sbuf;
         const char *shapeSource = composedSource ? composedSource : source;
@@ -3727,11 +3634,8 @@ TkpDrawAngledCharsInContext(
             float gx = (float)clusters[i].pen_x;
             float gy = (float)clusters[i].pen_y;
 
-            /* 
-             * If the cluster contains a combining mark and couldn't be
-             * composed, use HarfBuzz's x_offset to position the mark
-             * correctly.  The offset is already in the glyph's x position.
-             */
+            /* If the cluster contains a combining mark and couldn't be composed,
+             * use HarfBuzz's x_offset to position the mark correctly. */
             bool hasMark = false;
             for (int j = 0; j < (int)strlen(clusters[i].text); ) {
                 FcChar32 uc2;
@@ -3745,13 +3649,6 @@ TkpDrawAngledCharsInContext(
             }
 
             if (hasMark && didCompose) {
-                /* 
-                 * The mark is in a cluster that WAS composed by
-                 * ComposeUTF8String, but the font doesn't have the precomposed
-                 * glyph. HarfBuzz will have positioned it with a negative
-                 * x_offset. The pen_x already includes that offset from the
-                 * shaping pass.
-                 */
                 nvgText(vg, gx, gy, clusters[i].text, 
                         clusters[i].text + strlen(clusters[i].text));
             } else {
@@ -3770,14 +3667,6 @@ decorations:
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float runWidth;
 
-        /*
-         * This block runs after the nvgSave()/nvgRestore() pair above
-         * has already been popped, so it draws in absolute (untranslated)
-         * coordinates using the original x/y arguments -- same space as
-         * wsClipBox. Give it its own save/scissor/restore rather than
-         * widening the scope above, so it doesn't inherit the
-         * translate/rotate transform meant for the glyph-drawing path.
-         */
         nvgSave(vg);
         if (wsClipActive) {
             nvgScissor(vg, (float)wsClipBox.x, (float)wsClipBox.y,
@@ -3786,7 +3675,6 @@ decorations:
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-        /* Advance width, not ink bounds[2] - see note above on why. */
         runWidth = nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, NULL);
 
         nvgStrokeColor(vg, ColorFromGC(gc));

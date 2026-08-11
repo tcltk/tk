@@ -75,17 +75,20 @@ TkpGetString(
     TCL_UNUSED(XEvent*), /* eventPtr*/
     Tcl_DString *dsPtr)
 {
-    const char* result;
+    const char* storedText;
     TkWindow *toplevel = winPtr;
 
     while (!Tk_IsTopLevel(toplevel)) {
         toplevel = (TkWindow *) Tk_Parent(toplevel);
     }
     Tcl_DStringInit(dsPtr);
-    result = Tcl_DStringAppend(dsPtr, TkWaylandGetStoredText(toplevel),
-                               TCL_INDEX_NONE);
+    storedText = TkWaylandGetStoredText(toplevel);
+    if (storedText == NULL) {
+        storedText = "";
+    }
+    Tcl_DStringAppend(dsPtr, storedText, TCL_INDEX_NONE);
     TkWaylandClearStoredText(toplevel);
-    return result;
+    return Tcl_DStringValue(dsPtr);
 }
 
 /*
