@@ -560,56 +560,33 @@ TkWaylandQueueExposeEvent(
     XEvent event;
     TkWindow *childPtr;
     fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
-
+    
     if (!winPtr) return;
-
-    /*
-     * The TKWP_EXPOSE_PENDING guard exists to avoid queuing a second,
-     * redundant Expose for a window that already has one in flight --
-     * it must NOT also prevent us from recursing into this window's
-     * children.  A window with a pending Expose can still have
-     * descendants that have never had one queued at all (e.g. a
-     * container widget mapped earlier than a grandchild added to it
-     * later), and if we bail out of the whole call here, those
-     * descendants are silently skipped for this pass.  Previously this
-     * check `return`ed before the recursion below, which meant that
-     * whenever a toplevel-level Map (or any other ancestor-level
-     * requeue) walked into a subtree with a still-pending ancestor, the
-     * entire subtree below it was skipped -- producing exactly the
-     * intermittent "some widgets never get their first draw on initial
-     * mapping" behaviour we were chasing.  So: skip queuing *this*
-     * window's own event if one's already pending, but always continue
-     * on to the children.
-     */
-    if (!(winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING)) {
-	/* Create expose event. */
-	memset(&event, 0, sizeof(XEvent));
-	event.type = Expose;
-	event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
-	event.xexpose.send_event = False;
-	event.xexpose.display = winPtr->display;
-	event.xexpose.window = Tk_WindowId(winPtr);
-	event.xexpose.x = x;
-	event.xexpose.y = y;
-	event.xexpose.width = width;
-	event.xexpose.height = height;
-	event.xexpose.count = 0;    /* This forces ttk to handle the event. */
-
-	/* Queue it. */
-	printf("Setting TKWP_EXPOSE_PENDING for %s\n", Tk_PathName(winPtr));
-	winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
-	fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
-	    event.xexpose.serial,
-	    Tk_PathName(winPtr), width, height);
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    } else {
-	printf("TKWP_EXPOSE_PENDING flag is set for %s; not requeuing "
-	       "its own event, but still recursing into children\n",
-	       Tk_PathName(winPtr));
+    if (winPtr->privatePtr->flags & TKWP_EXPOSE_PENDING) {
+	printf("TKWP_EXPOSE_PENDING flag is set!\n");
+	return;
     }
+    /* Create expose event. */    memset(&event, 0, sizeof(XEvent));
+    event.type = Expose;
+    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
+    event.xexpose.send_event = False;
+    event.xexpose.display = winPtr->display;
+    event.xexpose.window = Tk_WindowId(winPtr);
+    event.xexpose.x = x;
+    event.xexpose.y = y;
+    event.xexpose.width = width;
+    event.xexpose.height = height;
+    event.xexpose.count = 0;    /* This forces ttk to handle the event. */
+    
+    /* Queue it. */
+    printf("Setting TKWP_EXPOSE_PENDING for %s\n", Tk_PathName(winPtr));
+    winPtr->privatePtr->flags |= TKWP_EXPOSE_PENDING;
+    fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
+	event.xexpose.serial,
+	Tk_PathName(winPtr), width, height);
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Recurse through the children of this window regardless of
-     * whether we queued a fresh event for winPtr itself above. */
+    /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
@@ -617,52 +594,6 @@ TkWaylandQueueExposeEvent(
         }
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
 	    Tk_Height(childPtr));
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandClearExposePendingRecursive --
- *
- *      Force-clears TKWP_EXPOSE_PENDING for winPtr and every mapped,
- *      non-toplevel descendant.  Used by TkWaylandBeginDraw's retry
- *      path (see tkWaylandInit.c) when a draw attempt has to bail out
- *      before ever reaching TkWaylandEndDraw -- normally
- *      TKWP_EXPOSE_PENDING is only cleared in TkWaylandEndDraw, so a
- *      draw that fails before getting there would otherwise leave that
- *      window's flag stuck set forever, silently blocking it from ever
- *      getting a fresh Expose queued again (TkWaylandQueueExposeEvent
- *      would see the stale flag and assume an event is already in
- *      flight for it).  Clearing the whole subtree before the retry's
- *      requeue lets the requeue's own recursion regenerate a fresh
- *      Expose for every widget that was orphaned this way, not just
- *      ones whose flag happened to already be clear.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Clears TKWP_EXPOSE_PENDING on winPtr and its mapped descendants.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandClearExposePendingRecursive(
-    TkWindow *winPtr)
-{
-    TkWindow *childPtr;
-    if (!winPtr) return;
-
-    winPtr->privatePtr->flags &= ~TKWP_EXPOSE_PENDING;
-
-    for (childPtr = winPtr->childList; childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
-            continue;
-        }
-        TkWaylandClearExposePendingRecursive(childPtr);
     }
 }
 
