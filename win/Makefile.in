@@ -322,6 +322,8 @@ TK_OBJS = \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \
 	stubs.$(OBJEXT) \
+	mojibake.$(OBJEXT) \
+	shell.$(OBJEXT) \
 	tk3d.$(OBJEXT) \
 	tkAccessibility.$(OBJEXT) \
 	tkArgv.$(OBJEXT) \

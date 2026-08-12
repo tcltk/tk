@@ -185,6 +185,8 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinWm.obj \
 	$(TMP_DIR)\tkWinX.obj \
 	$(TMP_DIR)\stubs.obj \
+	$(TMP_DIR)\mojibake.obj \
+	$(TMP_DIR)\shell.obj \
 	$(TMP_DIR)\tk3d.obj \
 	$(TMP_DIR)\tkAccessibility.obj \
 	$(TMP_DIR)\tkArgv.obj \
