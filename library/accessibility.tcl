@@ -200,11 +200,27 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	}
 
 	# Core binding tag (shared by text, entry, ttk::entry).
-	bind KeyCaptureTag <KeyPress> {+::tk::accessible::_handle_keypress %W %K}
+	bind KeyCaptureTag <KeyPress> {+::tk::accessible::_handle_keypress %W %K %s}
 	bind KeyCaptureTag <KeyRelease-space> {+ after 10 [list ::tk::accessible::_get_prev_word %W]}
 
+	# Bitmask of modifier flags (from the %s state field) that indicate
+	# a keyboard shortcut/chord rather than literal text entry. %K does
+	# not encode modifiers, so a Control-a or Command-a (Select All)
+	# keypress still reports the keysym "a" - without this check it
+	# would be treated as if the user had typed the letter "a",
+	# clobbering the accessible value and racing with the real
+	# <<SelectAll>> handling that runs later on the class bindtag.
+	#   0x4  = Control
+	#   0x8  = Mod1/Alt (X11); Option on aqua
+	#   0x10 = Mod2 (varies)
+	#   0x40 = Mod4 (often Super/Windows key)
+	#   0x8  = Command on aqua is reported via Mod1 in Tk's state field
+	variable modifierMask [expr {0x4 | 0x8 | 0x10 | 0x40}]
+
 	# Handle each keypress event.
-	proc _handle_keypress {w key} {
+	proc _handle_keypress {w key state} {
+	    variable modifierMask
+
 	    # Ignore modifier keys and non-printables
 	    if {$key eq "" || [string length $key] > 1} {
 		return
@@ -212,6 +228,13 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    # If user pressed space, do nothing here — handled on KeyRelease.
 	    if {$key eq "space"} {
+		return
+	    }
+
+	    # Ignore keystrokes that are part of a modifier chord (e.g.
+	    # Control-a / Command-a for Select All) - these are shortcuts,
+	    # not typed text, and must not overwrite the accessible value.
+	    if {$state & $modifierMask} {
 		return
 	    }
 
@@ -416,37 +439,38 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {[winfo class $w] eq "Text"}  {
 		set data [::tk::accessible::_gettext $w]
 		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
 		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
-		if {[winfo class $w] eq "TProgressbar"}  {
-		    set data [::tk::accessible::_getpbvalue $w]
-		    ::tk::accessible::set_acc_value $w $data
-		    ::tk::accessible::emit_selection_change $w
-		    if {[tk windowingsystem] eq "x11"} {
-			::tk::accessible::speak $data
-		    }
-		}
-
-		# Some widgets need special handling on X11
-		# because ATK does not align well with their
-		# configuration.
-
+	    }
+	    if {[winfo class $w] eq "TProgressbar"}  {
+		set data [::tk::accessible::_getpbvalue $w]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
 		if {[tk windowingsystem] eq "x11"} {
-		    if {[winfo class $w] eq "Menu"} {
-			set data [$w entrycget active -label]
-			::tk::accessible::set_acc_value $w $data
-			::tk::accessible::speak $data
-		    }
-		    if {[winfo class $w] eq "Spinbox" || \
-			    [winfo class $w] eq "TSpinbox" \
-			    || [winfo class $w] eq "Scale" || \
-			    [winfo class $w] eq "TScale" ||\
-			    [winfo class $w] eq "TCombobox"} {
-			set data [$w get]
-			::tk::accessible::set_acc_value $w $data
-			::tk::accessible::speak $data
-		    }
+		    ::tk::accessible::speak $data
+		}
+	    }
+
+	    # Some widgets need special handling on X11
+	    # because ATK does not align well with their
+	    # configuration.
+
+	    if {[tk windowingsystem] eq "x11"} {
+		if {[winfo class $w] eq "Menu"} {
+		    set data [$w entrycget active -label]
+		    ::tk::accessible::set_acc_value $w $data
+		    ::tk::accessible::speak $data
+		}
+		if {[winfo class $w] eq "Spinbox" || \
+			[winfo class $w] eq "TSpinbox" \
+			|| [winfo class $w] eq "Scale" || \
+			[winfo class $w] eq "TScale" ||\
+			[winfo class $w] eq "TCombobox"} {
+		    set data [$w get]
+		    ::tk::accessible::set_acc_value $w $data
+		    ::tk::accessible::speak $data
 		}
 	    }
 	}
@@ -618,7 +642,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    # Check to make sure window is not destroyed.
 	    if {[winfo exists $w]} {
 		if {[tk windowingsystem] eq "aqua"} {
-		    if {[winfo class $w] in {Scale TScale Spinbox TSpinbox Listbox Treeview TProgressbar}} {
+		    if {[winfo class $w] in {Entry TEntry TCombobox Scale TScale Spinbox TSpinbox Listbox Treeview TProgressbar}} {
 			if {[focus] ne $w} {
 			    focus -force $w
 			}
@@ -1140,10 +1164,6 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind TCheckbutton <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
 	    bind Toggleswitch <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
 
-	    # Entry widgets - announce content on focus
-	    bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
-	    bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
-
 	    # Other X11 focus bindings
 	    bind Listbox <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Treeview <FocusIn> {+::tk::accessible::_updateselection %W}
@@ -1209,16 +1229,10 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_updateselection %W}
 
 	# Capture text selection in entry widgets.
-	bind Entry <KeyPress> {+::tk::accessible::_updateselection %W}
-	bind TEntry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
-	bind TEntry {+::tk::accessible::_updateselection %W}
-	bind Entry <Left> {+::tk::accessible::_updateselection %W}
-	bind TEntry <Left> {+::tk::accessible::_updateselection %W}
-	bind Entry <Right> {+::tk::accessible::_updateselection %W}
-	bind TEntry <Right> {+::tk::accessible::_updateselection %W}
-	bind Entry <<Selection>> {+::tk::accessible::_updateselection %W}
-	bind TEntry <<Selection>> {+::tk::accessible::_updateselection %W}
+	bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
+	bind Entry <<SelectAll>> {+::tk::accessible::_updateselection %W}
+	bind TEntry <<SelectAll>> {+::tk::accessible::_updateselection %W}
 
 	# Progressbar updates.
 	bind TProgressbar <FocusIn> {+::tk::accessible::_updateselection %W}

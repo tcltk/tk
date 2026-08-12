@@ -618,9 +618,11 @@ LookUpColor(
     if (fontPtr->ncolors < MAX_CACHED_COLORS) {
 	last2 = -1;
 	last  = fontPtr->ncolors++;
-    } else {
-	return NULL;
     }
+    /*
+     * If cache is full -- 'last' is already the LRU tail slot,
+     * 'last2' its predecessor, from the search loop above; reuse it.
+     */
 
     xcolor.pixel = pixel;
     XQueryColor(display, fontPtr->colormap, &xcolor);
@@ -866,7 +868,7 @@ InitFont(
     if (!fontPtr) {
     fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
     if (!fontPtr) {
-        return NULL;
+	return NULL;
     }
     memset(fontPtr, 0, sizeof(UnixFtFont));
     }
@@ -898,7 +900,7 @@ InitFont(
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
     if (!fontPtr->font.fid) {
-        Tcl_Free(fontPtr);
+	Tcl_Free(fontPtr);
     }
     FcPatternDestroy(pattern);
     return NULL;
@@ -932,9 +934,9 @@ InitFont(
     fontPtr->faces[i].descender  = 0.0;
 
     if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
-        fontPtr->faces[i].charset = FcCharSetCopy(charset);
+	fontPtr->faces[i].charset = FcCharSetCopy(charset);
     } else {
-        fontPtr->faces[i].charset = NULL;
+	fontPtr->faces[i].charset = NULL;
     }
     }
 
@@ -962,14 +964,14 @@ InitFont(
      */
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-            -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 
     ftFont = GetFont(fontPtr, 0, 0.0);
     if ((ftFont == NULL) || errorFlag) {
     Tk_DeleteErrorHandler(handler);
     FinishedWithFont(fontPtr);
     if (!fontPtr->font.fid) {
-        Tcl_Free(fontPtr);
+	Tcl_Free(fontPtr);
     }
     return NULL;
     }
@@ -983,7 +985,7 @@ InitFont(
     if (errorFlag) {
     FinishedWithFont(fontPtr);
     if (!fontPtr->font.fid) {
-        Tcl_Free(fontPtr);
+	Tcl_Free(fontPtr);
     }
     return NULL;
     }
@@ -998,29 +1000,29 @@ InitFont(
 
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-            -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 
     Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
 
     Tk_DeleteErrorHandler(handler);
     if (errorFlag) {
-        FinishedWithFont(fontPtr);
-        if (!fontPtr->font.fid) {
-        Tcl_Free(fontPtr);
-        }
-        return NULL;
+	FinishedWithFont(fontPtr);
+	if (!fontPtr->font.fid) {
+	Tcl_Free(fontPtr);
+	}
+	return NULL;
     }
 
     fPtr->underlineHeight = iWidth / 3;
     if (fPtr->underlineHeight == 0) {
-        fPtr->underlineHeight = 1;
+	fPtr->underlineHeight = 1;
     }
     if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
-        fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
-        if (fPtr->underlineHeight == 0) {
-        fPtr->underlinePos--;
-        fPtr->underlineHeight = 1;
-        }
+	fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
+	if (fPtr->underlineHeight == 0) {
+	fPtr->underlinePos--;
+	fPtr->underlineHeight = 1;
+	}
     }
     }
 
