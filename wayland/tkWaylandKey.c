@@ -522,8 +522,7 @@ TkWaylandKeyCleanup() {
  *
  * We use the direct D-Bus connection rather than the Wayland text-input
  * protocols because those would require managing a separate Wayland surface
- * with GLFW, which is complex and fragile.  GLFW does not expose any way to
- * hook directly into its Wayland surface.
+ * with GLFW, which is complex and fragile.  
  *
  * IBus D-Bus signal signatures (real wire format):
  *
@@ -632,16 +631,16 @@ FindContext(Tk_Window tkwin)
  *
  * IbusReadTextFromVariant --
  *
- * Helper to safely unpack an IBusText object wrapped inside a
- * D-Bus variant container. Dynamically inspects the signature to
- * handle protocol variations safely across different IBus versions.
+ * 		Helper to safely unpack an IBusText object wrapped inside a
+ * 		D-Bus variant container. Dynamically inspects the signature to
+ * 		handle protocol variations safely across different IBus versions.”
  *
  * Results:
- * 0 on success, negative error code on failure.
+ * 		0 on success, negative error code on failure.
  *
  * Side effects:
- * Moves message container cursor; sets text_out to point inside
- * the message buffer.
+ * 		Moves message container cursor; sets text_out to point inside
+ * 		the message buffer.
  *
  *----------------------------------------------------------------------
  */
@@ -1700,7 +1699,6 @@ static int CreateIbusContext(
 			     Tcl_Interp *interp,
 			     Tk_Window tkwin)
 {
-    /* Operations moved to TkWaylandIbusCreateContext. */
     return TkWaylandIbusCreateContext(interp, tkwin);
 }
 
@@ -1808,159 +1806,6 @@ TkWaylandIbusProcessKey(
     IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
     if (!ctx) return false;
     return IbusProcessKeyEvent(ctx, keyval, keycode, state) != 0;
-}
-
-/*
- * ----------------------------------------------------------------------------
- * CmdCreateContext --
- *
- *         Creates an IBus input context for the given toplevel window.
- *
- * Results:
- *         Returns TCL_OK on success, TCL_ERROR on failure.
- *
- * Side effects:
- *         Creates a new IBus context and stores it in the global list.
- * ----------------------------------------------------------------------------
- */
-
-int CmdCreateContext(
-		     ClientData clientData,
-		     Tcl_Interp *interp,
-		     int objc,
-		     Tcl_Obj *const objv[])
-{
-    if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
-    }
-    const char *winName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, winName, Tk_MainWindow(interp));
-    if (!tkwin) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("Invalid window name", -1));
-        return TCL_ERROR;
-    }
-    if (!Tk_IsTopLevel(tkwin)) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("Not a toplevel window", -1));
-        return TCL_ERROR;
-    }
-    return CreateIbusContext(interp, tkwin);
-}
-
-/*
- * ----------------------------------------------------------------------------
- * CmdFocusIn --
- *
- *         Informs IBus that a toplevel window  (or a widget inside it)
- *		   has gained focus, and enables the IME.
- *
- *
- * Results:
- *         Returns TCL_OK on success, TCL_ERROR on failure.
- *
- * Side effects:
- *         Sends FocusIn and Enable D-Bus calls to the IBus context.
- * ----------------------------------------------------------------------------
- */
-
-static int CmdFocusIn(
-		      ClientData clientData,
-		      Tcl_Interp *interp,
-                      int objc,
-		      Tcl_Obj *const objv[])
-{
-    if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
-    }
-    const char *winName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, winName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_ERROR;
-    IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
-    if (!ctx) {
-        Tcl_SetResult(interp, "No IBus context for this toplevel", TCL_STATIC);
-        return TCL_ERROR;
-    }
-    IbusFocusIn(ctx);
-    IbusEnable(ctx);
-    return TCL_OK;
-}
-
-/*
- * ----------------------------------------------------------------------------
- * CmdFocusOut --
- *
- *         Informs IBus that a toplevel window has lost focus and disables the IME.
- *
- *
- * Results:
- *         Returns TCL_OK on success, TCL_ERROR on failure.
- *
- * Side effects:
- *         Sends FocusOut and Disable D-Bus calls to the IBus context.
- * ----------------------------------------------------------------------------
- */
-
-static int CmdFocusOut(
-		       ClientData clientData,
-		       Tcl_Interp *interp,
-                       int objc,
-		       Tcl_Obj *const objv[])
-{
-    if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
-    }
-    const char *winName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, winName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_ERROR;
-    IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
-    if (!ctx) return TCL_OK;
-    IbusFocusOut(ctx);
-    IbusDisable(ctx);
-    return TCL_OK;
-}
-
-/*
- * ----------------------------------------------------------------------------
- * CmdProcessKey --
- *
- *         Sends a key event to IBus and returns whether the IME handled it.
- *
- * Results:
- *         Returns 1 if IBus handled the key event, 0 otherwise.
- *
- * Side effects:
- *         May start or update IME composition.
- * ----------------------------------------------------------------------------
- */
-
-static int CmdProcessKey(ClientData clientData,
-			 Tcl_Interp *interp,
-                         int objc,
-			 Tcl_Obj *const objv[])
-{
-    if (objc != 5) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window keyval keycode state");
-        return TCL_ERROR;
-    }
-    const char *winName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, winName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_ERROR;
-
-    uint32_t keyval, keycode, state;
-    if (Tcl_GetIntFromObj(interp, objv[2], (int*)&keyval) != TCL_OK) return TCL_ERROR;
-    if (Tcl_GetIntFromObj(interp, objv[3], (int*)&keycode) != TCL_OK) return TCL_ERROR;
-    if (Tcl_GetIntFromObj(interp, objv[4], (int*)&state) != TCL_OK) return TCL_ERROR;
-
-    IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
-    if (!ctx) {
-        Tcl_SetObjResult(interp, Tcl_NewIntObj(0));
-        return TCL_OK;
-    }
-    int handled = IbusProcessKeyEvent(ctx, keyval, keycode, state);
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(handled));
-    return TCL_OK;
 }
 
 

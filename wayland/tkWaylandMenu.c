@@ -145,8 +145,6 @@ static int menuDismissedByClick = 0;
  */
 static int pendingRootIsMenubar = 0;
 
-/* ---- Static function prototypes ---- */
-
 /* Menu stack management. */
 static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
 static void MenuStackPop(int toDepth);
@@ -222,9 +220,7 @@ static void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static void MenuPendingImageAdd(NVGcontext *vg, int imgId);
 static void MenuPendingImagesFlush(void);
 
-/* ----- end static prototypes ----- */
-
-/* ---- MODULE_SCOPE prototypes for functions defined later ---- */
+/* Additional functions. */
 MODULE_SCOPE int TkWaylandMenuGetDepth(void);
 MODULE_SCOPE int TkWaylandMenuStackRootIsMenubar(void);
 MODULE_SCOPE void TkWaylandMenuPopToDepth(int depth);
@@ -242,7 +238,6 @@ MODULE_SCOPE Tk_Window TkWaylandMenuGetParentWindow(void);
 MODULE_SCOPE void TkWaylandMenubarResize(TkWindow *winPtr);
 MODULE_SCOPE int TkWaylandMenuPopupActive(void);
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
-/* -------------------------------------------------------------- */
 
 /*
  * NanoVG image IDs created while drawing a menu frame.  nvgFill() only
@@ -2212,7 +2207,7 @@ DrawMenuEntryLabel(
         }
     }
 
-    /* ---- Draw image or bitmap ---- */
+    /* Draw image or bitmap. */
     if (haveImage) {
         int imageX = leftEdge + imageXOffset;
         int imageY = y + (height - imageHeight) / 2 + imageYOffset;
@@ -2382,7 +2377,7 @@ DrawMenuEntryLabel(
         }
     }
 
-    /* ---- Draw text label ---- */
+    /* Draw text label. */
     if (menuPtr->menuType == MENUBAR
             || (mePtr->compound != COMPOUND_NONE)
             || !haveImage) {
@@ -3479,10 +3474,12 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     Tk_FontMetrics fm;
     Tk_GetFontMetrics(tkfont, &fm);
 
-    /* Standard Tk color setup (menu-wide -background fallback only;
+    /* 
+     * Standard Tk color setup (menu-wide -background fallback only;
      * per-entry and -activebackground/-activeforeground/-foreground
      * resolution now happens inside TkpDrawMenuEntry, mirroring the
-     * dropdown/popup entry drawing path). */
+     * dropdown/popup entry drawing path). 
+     */
     NVGcolor bgColor = nvgRGB(230, 230, 230);
 
     /* Normal background */
@@ -3502,10 +3499,12 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
 
-    /* Draw each entry via the shared entry-drawing path so menubar
+    /* 
+     * Draw each entry via the shared entry-drawing path so menubar
      * cascades get the same per-entry -background/-activebackground/
      * -foreground/-activeforeground/-font resolution (with fallback to
-     * menu-wide options) as popup/dropdown entries. */
+     * menu-wide options) as popup/dropdown entries. 
+     */
     for (int i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
@@ -4120,9 +4119,11 @@ MenuMouseMotion(
                     /* Re-get parent window after pop. */
                     parentGw = TkWaylandGetCascadeParentWindow(level);
 
-                    /* Compute cascade position: to the right of the parent
+                    /* 
+                     * Compute cascade position: to the right of the parent
                      * unless that would overflow the toplevel, in which
-                     * case flip to the left, aligned with the entry. */
+                     * case flip to the left, aligned with the entry. 
+                     */
                     TkRecomputeMenu(cascadePtr);
                     cascadeW = cascadePtr->totalWidth;
                     cascadeH = cascadePtr->totalHeight;
@@ -4442,7 +4443,7 @@ TkWaylandMenubarHandleMotion(
     menuPtr = wmPtr->menubarMenuPtr;
 
     if (x < 0 || y < 0 || y >= wmPtr->menuHeight) {
-        /* Pointer left the menubar stripk */
+        /* Pointer left the menubar strip. */
         if (menuPtr->active != -1 &&
             !(TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar())) {
             TkActivateMenuEntry(menuPtr, -1);
@@ -4986,25 +4987,6 @@ TkWaylandMenuGetTopmostWindow(void)
 /*
  *---------------------------------------------------------------------------
  *
- * TkWaylandMenubarActivateFirst --
- *
- *     Activate the first usable entry in the menubar (typically for
- *     keyboard menu activation, e.g. Alt or F10) and post its cascade
- *     menu if it is a CASCADE_ENTRY.
- *
- * Results:
- *     Returns 1 if a menubar entry was activated (and possibly posted),
- *     0 if there is no menubar or no usable entries.
- *
- * Side effects:
- *     Activates an entry in the menubar and may post a top-level menu.
- *
- *---------------------------------------------------------------------------
- */
-
-/*
- *---------------------------------------------------------------------------
- *
  * MenubarPostCascadeAtEntry --
  *
  *     Shared helper that posts the top-level cascade menu associated
@@ -5067,6 +5049,26 @@ MenubarPostCascadeAtEntry(
 
     return 1;
 }
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarActivateFirst --
+ *
+ *     Activate the first usable entry in the menubar (typically for
+ *     keyboard menu activation, e.g. Alt or F10) and post its cascade
+ *     menu if it is a CASCADE_ENTRY.
+ *
+ * Results:
+ *     Returns 1 if a menubar entry was activated (and possibly posted),
+ *     0 if there is no menubar or no usable entries.
+ *
+ * Side effects:
+ *     Activates an entry in the menubar and may post a top-level menu.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 
 MODULE_SCOPE int
 TkWaylandMenubarActivateFirst(TkWindow *winPtr)

@@ -58,43 +58,10 @@ EGLConfig  eglConfig  = NULL;
 
 
 /*
- * Font data for popup rendering - shared with tkWaylandPopup.c
+ * Font data and functions for popup rendering - shared with tkWaylandPopup.c
  */
 size_t sans_size = 0, bold_size = 0, mono_size = 0;
 unsigned char *sans_data = NULL, *bold_data = NULL, *mono_data = NULL;
-
-/*
- * The glfwWindow for the root window.
- */
-
-GLFWwindow *mainGlfwWindow;
-
-#if 0
-static void GLtest(GLFWwindow *window) {
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetWindowSize(window, &fbWidth, &fbHeight);
-    glfwMakeContextCurrent(window);
-    glViewport(0, 0, fbWidth, fbHeight); // Your expected new size
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // Disable any potential state traps
-    glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
-
-    // Draw a solid color screen-filling triangle
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.0f, 0.0f, 0.0f); // Bright Red
-    glVertex2f(-1.0f, -1.0f);    // Bottom-Left
-    glVertex2f( 3.0f, -1.0f);    // Far Bottom-Right (extends past screen)
-    glVertex2f(-1.0f,  3.0f);    // Far Top-Left (extends past screen)
-    glEnd();
-}
-#endif
-
 
 static unsigned char* readFont(
     const char* fontPath,
@@ -142,8 +109,41 @@ static void freeFonts()
 }
 
 /*
+ * The glfwWindow for the root window.
+ */
+
+GLFWwindow *mainGlfwWindow;
+
+/* Quick GL text .*/
+#if 0
+static void GLtest(GLFWwindow *window) {
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetWindowSize(window, &fbWidth, &fbHeight);
+    glfwMakeContextCurrent(window);
+    glViewport(0, 0, fbWidth, fbHeight); // Your expected new size
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Disable any potential state traps
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
+
+    // Draw a solid color screen-filling triangle
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0f, 0.0f, 0.0f); // Bright Red
+    glVertex2f(-1.0f, -1.0f);    // Bottom-Left
+    glVertex2f( 3.0f, -1.0f);    // Far Bottom-Right (extends past screen)
+    glVertex2f(-1.0f,  3.0f);    // Far Top-Left (extends past screen)
+    glEnd();
+}
+#endif
+
+/*
  *----------------------------------------------------------------------
- * Tk info per GLFWwindow
+ * Tk info per GLFWwindow - data and functions
  *----------------------------------------------------------------------
  */
 
@@ -224,7 +224,7 @@ getGlfwTkInfo(
 }
 
 /*
- *----------------------------------------------------------------------
+ * ----------------------------------------------------------------------
  *
  * renderFBO --
  *
@@ -241,6 +241,7 @@ getGlfwTkInfo(
  * Side effects:
  *      The current state of the window's backing store framebuffer
  *      is rendered on the screen.
+ * ----------------------------------------------------------------------
  */
 
 
@@ -287,8 +288,10 @@ static void renderFBO(
         fprintf(stderr, "renderFBO: created framebuffer %p (%dx%d)\n", 
                 fb, fbWidth, fbHeight);
 
-        /* See the comment in TkWaylandCreateWindow: a freshly created FBO's
-         * color attachment is uninitialized GPU memory until cleared. */
+        /* 
+         * See the comment in TkWaylandCreateWindow: a freshly created FBO's
+         * color attachment is uninitialized GPU memory until cleared. 
+         */
         glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
         glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -328,12 +331,12 @@ static void renderFBO(
  *
  * Tk_ClipDrawableToRect --
  *
- *      There are a number of places in the generic code where a complex
+ *      There are a number of places in the generic Tk code where a complex
  *      drawing operation is "double-buffered" copying a rectangle in
  *      a window to a pixmap, drawing into the pixmap, and then copying
  *      the pixmap back onto the original screen rectangle.  Platforms
  *      such macOS and Wayland, for which drawing to a window is already
- *      double-buffered can opt out of this behavior by defining
+ *      double-buffered, can opt out of this behavior by defining
  *      NO_DOUBLE_BUFFERING.  The alternative code first calls this
  *      function with arguments describing the rectangle, then draws
  *      directly to the screen (i.e. to the backing store for the window)
@@ -375,7 +378,7 @@ Tk_ClipDrawableToRect(
     printf("Tk_ClipDrawableToRect: %s %dx%d+%d+%d\n",
 	Tk_PathName(winPtr), width, height, x, y);
 
-    //// Should check for NULL
+    /* Should check for NULL here. */
     if (width == -1 || height == -1) {
 	printf("Clearing clipRect for %s\n", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
@@ -428,7 +431,7 @@ TkWaylandDisplayAllWindows()
             GLFWwindow *glfwWindow = infoPtr->glfwWindow;
             if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE) ||
 				glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
-				continue;   /* leave TKWL_NEEDS_DISPLAY set for when it becomes visible */
+				continue;   /* Leave TKWL_NEEDS_DISPLAY set for when it becomes visible. */
 			}
             fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
             renderFBO(glfwWindow);
@@ -468,7 +471,7 @@ TkWaylandErrorCallback(int error, const char *desc)
  *
  * TkWaylandInitialize --
  *
- *	Initializes the GLFW library, and the Wayland protocols.
+ *  Initializes the GLFW library, and the Wayland protocols.
  *  Creates a GFLWWindow to be used for the root window and its
  *  NanoVG context.
  *
@@ -610,8 +613,10 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         return;
     }
 
-    /* Remove the IBus file handler first so the event loop stops
-     * delivering stale signals after windows begin to be destroyed. */
+    /*
+     * Remove the IBus file handler first so the event loop stops
+     * delivering stale signals after windows begin to be destroyed.
+     */
     extern sd_bus *ibus_bus;
     TkWaylandIbusFdClose();
     if (ibus_bus) {
@@ -702,9 +707,11 @@ TkWaylandCreateWindow(
 
         glfwWindow = mainGlfwWindow;
 
-        /* Make sure the root window's context is current and configured.
+        /*
+	 * Make sure the root window's context is current and configured.
          * Keep the window hidden; TkWmMapWindow is responsible for the
-         * first show so the user never sees an unpainted frame. */
+         * first show so the user never sees an unpainted frame.
+	 */
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
         glfwSetWindowSize(glfwWindow, width, height);
@@ -887,8 +894,10 @@ TkWaylandBeginDraw(
 	dcPtr->pixmapFbo = pixmap->fb ? pixmap->fb->fbo : 0;
 	dcPtr->winPtr = NULL;
 
-	/* Bind the pixmap's FBO so reads (XGetImage) and the flush in
-	 * TkWaylandEndDraw both target the off-screen surface. */
+	/*
+	 * Bind the pixmap's FBO so reads (XGetImage) and the flush in
+	 * TkWaylandEndDraw both target the off-screen surface.
+	 */
 	glfwMakeContextCurrent(pixmap->glfwWindow);
 	nvgluBindFramebuffer(pixmap->fb);
 	glViewport(0, 0, pixmap->width, pixmap->height);
@@ -1016,6 +1025,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 	fprintf(stderr, "No drawing context!\n");
 	return;
     }
+    /* Drawable is pixmap. */
     if (TkWaylandDrawableIsPixmap(dcPtr->drawable)) {
 	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(dcPtr->drawable);
 	glfwMakeContextCurrent(pixmap->glfwWindow);
@@ -1026,7 +1036,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 	nvgRestore(dcPtr->vg);
 	return;
     }
-    //// This is the case where the drawable is a window.
+    /* Drawable is window. */
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
     fprintf(stderr, "EndDraw for drawable %lx (%s)\n", dcPtr->drawable,
 	    Tk_PathName(winPtr));

@@ -251,7 +251,7 @@ typedef struct TkWaylandContext {
                                    * and shared by all windows */
     int initialized;              /* GLFW initialized flag - 1 if glfwInit()
                                    * has been called successfully */
-    //// The rest of these fields are probably not needed.
+    /* The rest of these fields are probably not needed, but leave just in case. */
     int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
                                    * currently active */
     GLFWwindow *activeWindow;     /* Window that has the current active
@@ -416,8 +416,6 @@ typedef struct {
  * from the TKWL_* flags above, which belong to glfwTkInfo (per-toplevel
  * state), not TkWindowPrivate (per-window state).
  */
-
-// No flags are defined yet.
 
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
