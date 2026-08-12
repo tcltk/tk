@@ -3815,6 +3815,16 @@ TextInvalidateLineMetrics(
  *	these calls will map and unmap embedded windows respectively, which I
  *	would hope isn't exactly necessary!
  *
+ *	mojibake audit note: this function walks display-line and byte
+ *	boundaries only (TkTextIndexBackBytes/TkTextIndexForwBytes and the
+ *	dlPtr->byteCount produced by LayoutDLine) -- it contains no
+ *	codepoint- or cluster-level iteration of its own, so there is
+ *	nothing here for mojibake to replace. Display-line boundaries are
+ *	themselves always chunk boundaries, and chunk boundaries are now
+ *	guaranteed cluster-safe by the mojibake_grapheme_prev() clamp in
+ *	TkTextCharLayoutProc, so this function inherits that guarantee for
+ *	free rather than needing its own mojibake call.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -8253,10 +8263,57 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
+    /*
+     * mojibake integration: CharChunkMeasureChars() and the shaping
+     * backend it drives (HarfBuzz/SheenBidi/CoreText/Uniscribe) measure
+     * and break in codepoint / shaping-run units, which are not
+     * guaranteed to land on Unicode extended grapheme cluster (UAX #29)
+     * boundaries -- e.g. a Thai tone mark, a Devanagari/Bengali virama
+     * holding two consonants together, a Khmer subscript stack, or an
+     * emoji ZWJ sequence can all be split mid-cluster by a purely
+     * pixel-driven cutoff. Snap bytesThatFit back to the nearest cluster
+     * boundary at or before the measured cutoff so a cluster is never
+     * divided between this chunk and the next; mojibake is the only
+     * authority consulted for where that boundary is.
+     */
+    if (bytesThatFit > 0 && bytesThatFit < maxBytes) {
+	size_t clusterStart;
+
+	if (mojibake_grapheme_prev(p, (size_t) maxBytes,
+		(size_t) bytesThatFit + 1, &clusterStart)
+		&& clusterStart < (size_t) bytesThatFit) {
+	    bytesThatFit = (Tcl_Size) clusterStart;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
+		    lineOffset + bytesThatFit, lineOffset, -1, chunkPtr->x,
+		    -1, 0, &nextX);
+#else /* !TK_LAYOUT_WITH_BASE_CHUNKS */
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, p, bytesThatFit,
+		    0, -1, chunkPtr->x, -1, 0, &nextX);
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	}
+    }
+
     if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && (noCharsYet & 1)) {
-	    int ch;
-	    Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+	    /*
+	     * Nothing fits, but this display line has no characters on it
+	     * yet, so we must place at least one atomic unit or the line
+	     * would never advance. That unit is a full grapheme cluster --
+	     * e.g. a base consonant plus its dependent vowel/tone mark, or
+	     * a multi-codepoint emoji ZWJ sequence -- not a single
+	     * codepoint, so we ask mojibake for the cluster length rather
+	     * than calling Tcl_UtfToUniChar() for one codepoint.
+	     */
+	    Tcl_Size chLen;
+	    size_t clusterEnd;
+
+	    if (mojibake_grapheme_next(p, (size_t) maxBytes, 0, &clusterEnd)) {
+		chLen = (Tcl_Size) clusterEnd;
+	    } else {
+		int ch;
+		chLen = Tcl_UtfToUniChar(p, &ch);
+	    }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -8432,13 +8489,40 @@ TkTextCharLayoutProc(
 	    const char *prevPtr = Tcl_UtfPrev(scanPtr, chunkStart);
 	    Tcl_UtfToUniChar(prevPtr, &ch3);
 	    switch (ch3) {
-	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
+	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ': {
+		/*
+		 * ASCII whitespace codepoints are always their own
+		 * grapheme cluster (a space is never a GB9/GB9a Extend or
+		 * SpacingMark, nor a ZWJ target), so a codepoint boundary
+		 * found here is guaranteed to already be a cluster boundary
+		 * too. We still confirm it through mojibake rather than
+		 * assume it, so this scan can never emit a breakIndex that
+		 * splits a cluster even if that invariant ever changes
+		 * upstream in Unicode.
+		 */
+		size_t candidate = (size_t)(prevPtr - chunkStart) + 1;
+		size_t confirmed;
+
+		if (!mojibake_grapheme_prev(chunkStart,
+			(size_t) bytesThatFit, candidate, &confirmed)
+			|| confirmed + 1 != candidate) {
+		    /*
+		     * Landed mid-cluster (shouldn't happen for ASCII
+		     * whitespace, but never trust a byte-offset guess over
+		     * mojibake): keep scanning backwards instead of
+		     * breaking here.
+		     */
+		    scanPtr = prevPtr;
+		    continue;
+		}
+
 		/* breakIndex is the byte offset *after* the space character */
-		chunkPtr->breakIndex = (Tcl_Size)(prevPtr - chunkStart) + 1;
+		chunkPtr->breakIndex = (Tcl_Size) candidate;
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 		foundBreak = true;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		goto checkForNextChunk;
+	    }
 	    }
 	    scanPtr = prevPtr;
 	}

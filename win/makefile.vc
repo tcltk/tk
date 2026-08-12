@@ -257,6 +257,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkText.obj \
 	$(TMP_DIR)\tkTextBTree.obj \
 	$(TMP_DIR)\tkTextDisp.obj \
+	$(TMP_DIR)\tkTextGrapheme.obj 
 	$(TMP_DIR)\tkTextImage.obj \
 	$(TMP_DIR)\tkTextIndex.obj \
 	$(TMP_DIR)\tkTextMark.obj \

@@ -1311,6 +1311,44 @@ ForwBack(
 	} else {
 	    TkTextIndexBackChars(textPtr, indexPtr, count, indexPtr, type);
 	}
+    } else if ((*units == 'c') && (length >= 2)
+	    && (strncmp(units, "clusters", length) == 0)) {
+	/*
+	 * "clusters" (or "graphemes") steps by whole Unicode extended
+	 * grapheme clusters (UAX #29), as segmented by mojibake, instead
+	 * of by Tcl_UniChar. This is what a Thai/Lao/Khmer/Indic-aware
+	 * caller (or the default <<NextChar>>/<<PrevChar>> bindings, once
+	 * rebound) should use for "one character" cursor motion so a
+	 * combining tone mark, virama-joined conjunct, or ZWJ emoji
+	 * sequence moves as one unit. The length >= 2 guard keeps a bare
+	 * "c" resolving to "chars" as it always has; "cl" is the shortest
+	 * unambiguous abbreviation for "clusters".
+	 *
+	 * Modifiers mirror "chars": no modifier or 'any' both mean "count
+	 * every cluster, elided or not" (COUNT_CHARS); 'display' means
+	 * "skip elided clusters" (COUNT_DISPLAY_CHARS). Unlike "chars",
+	 * there is no bare-modifier-less COUNT_INDICES form for clusters,
+	 * since a cluster is inherently a character-like unit, not a raw
+	 * index position.
+	 */
+	TkTextCountType type = (modifier == TKINDEX_DISPLAY)
+		? COUNT_DISPLAY_CHARS : COUNT_CHARS;
+
+	if (*string == '+') {
+	    TkTextIndexForwGraphemes(textPtr, indexPtr, count, indexPtr, type);
+	} else {
+	    TkTextIndexBackGraphemes(textPtr, indexPtr, count, indexPtr, type);
+	}
+    } else if ((*units == 'g') && (length >= 1)
+	    && (strncmp(units, "graphemes", length) == 0)) {
+	TkTextCountType type = (modifier == TKINDEX_DISPLAY)
+		? COUNT_DISPLAY_CHARS : COUNT_CHARS;
+
+	if (*string == '+') {
+	    TkTextIndexForwGraphemes(textPtr, indexPtr, count, indexPtr, type);
+	} else {
+	    TkTextIndexBackGraphemes(textPtr, indexPtr, count, indexPtr, type);
+	}
     } else if ((*units == 'i') && (strncmp(units, "indices", length) == 0)) {
 	TkTextCountType type;
 
@@ -1697,6 +1735,193 @@ TkTextIndexForwChars(
     }
 
   forwardCharDone:
+    if (infoPtr != NULL) {
+	TkTextFreeElideInfo(infoPtr);
+	Tcl_Free(infoPtr);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextIndexForwGraphemes --
+ *
+ *	Exactly TkTextIndexForwChars, except that it counts whole Unicode
+ *	extended grapheme clusters (UAX #29) rather than Tcl_UniChars. This
+ *	is the segment-walking, elision-tracking loop above with only the
+ *	innermost per-codepoint step (Tcl_UtfToUniChar) replaced by a call
+ *	to mojibake_grapheme_next(); every other decision -- which segments
+ *	are visible, how tag-toggle segments update the elide state, how
+ *	non-char segments (marks, embedded windows/images) are counted per
+ *	"type" -- is unchanged from TkTextIndexForwChars, so cursor movement
+ *	and selection keep exactly the semantics they already have for
+ *	elided text, embedded objects, and the COUNT_CHARS/COUNT_INDICES/
+ *	COUNT_DISPLAY family of "type" flags. mojibake is consulted for one
+ *	thing only: where the next cluster boundary inside a tkTextCharType
+ *	segment falls.
+ *
+ *	Known limitation: like TkTextIndexForwChars, this does not stitch a
+ *	cluster across a segment boundary. If a Tk tag boundary (or an
+ *	embedded mark) has been inserted in the middle of what mojibake
+ *	would otherwise treat as a single grapheme cluster -- e.g. between
+ *	a base consonant and a combining tone mark -- the two pieces are
+ *	necessarily counted, and can be selected/deleted, separately,
+ *	because Tk's segment model itself provides no way to attach two
+ *	different tag sets to one indivisible display unit. This is a
+ *	pre-existing property of Tk's segment model, not something
+ *	introduced by the mojibake integration.
+ *
+ * Results:
+ *	*dstPtr is modified to refer to the cluster "count" items after
+ *	srcPtr, or to the last position in the TkText if there aren't
+ *	sufficient clusters left in the widget.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkTextIndexForwGraphemes(
+    const TkText *textPtr,	/* Overall information about text widget. */
+    const TkTextIndex *srcPtr,	/* Source index. */
+    Tcl_Size charCount,		/* How many clusters forward to move. May
+				 * be negative. */
+    TkTextIndex *dstPtr,	/* Destination index: gets modified. */
+    TkTextCountType type)	/* The type of item to count */
+{
+    TkTextLine *linePtr;
+    TkTextSegment *segPtr;
+    TkTextElideInfo *infoPtr = NULL;
+    Tcl_Size byteOffset;
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
+
+    if (charCount < 0) {
+	TkTextIndexBackGraphemes(textPtr, srcPtr, -charCount, dstPtr, type);
+	return;
+    }
+    if (checkElided) {
+	infoPtr = (TkTextElideInfo *)Tcl_Alloc(sizeof(TkTextElideInfo));
+	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
+    }
+
+    *dstPtr = *srcPtr;
+
+    /*
+     * Find seg that contains src byteIndex. Move forward specified number of
+     * clusters.
+     */
+
+    if (checkElided) {
+	segPtr = infoPtr->segPtr;
+	byteOffset = dstPtr->byteIndex - infoPtr->segOffset;
+    } else {
+	segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
+    }
+
+    while (true) {
+	/*
+	 * Go through each segment in line looking for specified cluster
+	 * index.
+	 */
+
+	for ( ; segPtr != NULL; segPtr = segPtr->nextPtr) {
+	    /*
+	     * If we do need to pay attention to the visibility of
+	     * characters/indices, check that first. If the current segment
+	     * isn't visible, then we simply continue the loop.
+	     */
+
+	    if (checkElided && ((segPtr->typePtr == &tkTextToggleOffType)
+		    || (segPtr->typePtr == &tkTextToggleOnType))) {
+		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+
+		/*
+		 * The elide state only changes if this tag is either the
+		 * current highest priority tag (and is therefore being
+		 * toggled off), or it's a new tag with higher priority.
+		 */
+
+		if (tagPtr->elide >= 0) {
+		    infoPtr->tagCnts[tagPtr->priority]++;
+		    if (infoPtr->tagCnts[tagPtr->priority] & 1) {
+			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
+		    }
+
+		    if (tagPtr->priority >= infoPtr->elidePriority) {
+			if (segPtr->typePtr == &tkTextToggleOffType) {
+			    if (tagPtr->priority != infoPtr->elidePriority) {
+				Tcl_Panic("Bad tag priority being toggled off");
+			    }
+
+			    elide = false;
+			    while (--infoPtr->elidePriority > 0) {
+				if (infoPtr->tagCnts[infoPtr->elidePriority]
+					& 1) {
+				    elide = infoPtr->tagPtrs
+					    [infoPtr->elidePriority]->elide > 0;
+				    break;
+				}
+			    }
+			} else {
+			    elide = tagPtr->elide > 0;
+			    infoPtr->elidePriority = tagPtr->priority;
+			}
+		    }
+		}
+	    }
+
+	    if (!elide) {
+		if (segPtr->typePtr == &tkTextCharType) {
+		    size_t bufLen = (size_t) segPtr->size;
+		    size_t offset = (size_t) byteOffset;
+
+		    while (offset < bufLen) {
+			size_t clusterEnd;
+
+			if (!mojibake_grapheme_next(segPtr->body.chars,
+				bufLen, offset, &clusterEnd)) {
+			    break;
+			}
+			if (charCount == 0) {
+			    dstPtr->byteIndex +=
+				    (Tcl_Size)(offset - (size_t) byteOffset);
+			    goto forwardGraphemeDone;
+			}
+			charCount--;
+			offset = clusterEnd;
+		    }
+		} else if (type & COUNT_INDICES) {
+		    if (charCount + byteOffset < segPtr->size) {
+			dstPtr->byteIndex += charCount;
+			goto forwardGraphemeDone;
+		    }
+		    charCount -= segPtr->size - byteOffset;
+		}
+	    }
+
+	    dstPtr->byteIndex += segPtr->size - byteOffset;
+	    byteOffset = 0;
+	}
+
+	/*
+	 * Go to the next line. If we are at the end of the text item, back up
+	 * one byte (for the terminal '\n' character) and return that index.
+	 */
+
+	linePtr = TkBTreeNextLine(textPtr, dstPtr->linePtr);
+	if (linePtr == NULL) {
+	    dstPtr->byteIndex -= sizeof(char);
+	    goto forwardGraphemeDone;
+	}
+	dstPtr->linePtr = linePtr;
+	dstPtr->byteIndex = 0;
+	segPtr = dstPtr->linePtr->segPtr;
+    }
+
+  forwardGraphemeDone:
     if (infoPtr != NULL) {
 	TkTextFreeElideInfo(infoPtr);
 	Tcl_Free(infoPtr);
@@ -2268,6 +2493,214 @@ TkTextIndexBackChars(
     }
 
   backwardCharDone:
+    if (infoPtr != NULL) {
+	TkTextFreeElideInfo(infoPtr);
+	Tcl_Free(infoPtr);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextIndexBackGraphemes --
+ *
+ *	Exactly TkTextIndexBackChars, except that it counts whole Unicode
+ *	extended grapheme clusters (UAX #29) rather than Tcl_UniChars. As in
+ *	TkTextIndexForwGraphemes, only the innermost per-codepoint step
+ *	(here: Tcl_UtfPrev plus the UTF-16-surrogate-pair adjustment used
+ *	for characters above U+FFFF) is replaced, with a call to
+ *	mojibake_grapheme_prev(); the surrogate-pair special case disappears
+ *	entirely because mojibake_grapheme_prev already operates on raw
+ *	UTF-8 byte offsets and needs no help identifying supplementary-plane
+ *	codepoints. Every other decision (segment walking, elision
+ *	tracking, non-char segment counting) is unchanged from
+ *	TkTextIndexBackChars. See TkTextIndexForwGraphemes for the same
+ *	note on clusters that straddle a segment/tag boundary.
+ *
+ * Results:
+ *	*dstPtr is modified to refer to the cluster "count" items before
+ *	srcPtr, or to the first position in the window if there aren't
+ *	sufficient clusters earlier than srcPtr.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkTextIndexBackGraphemes(
+    const TkText *textPtr,	/* Overall information about text widget. */
+    const TkTextIndex *srcPtr,	/* Source index. */
+    Tcl_Size charCount,		/* How many clusters backward to move. May
+				 * be negative. */
+    TkTextIndex *dstPtr,	/* Destination index: gets modified. */
+    TkTextCountType type)	/* The type of item to count */
+{
+    TkTextSegment *segPtr, *oldPtr;
+    TkTextElideInfo *infoPtr = NULL;
+    Tcl_Size lineIndex;
+    Tcl_Size segSize;
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
+
+    if (charCount < 0) {
+	TkTextIndexForwGraphemes(textPtr, srcPtr, -charCount, dstPtr, type);
+	return;
+    }
+    if (checkElided) {
+	infoPtr = (TkTextElideInfo *)Tcl_Alloc(sizeof(TkTextElideInfo));
+	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
+    }
+
+    *dstPtr = *srcPtr;
+
+    /*
+     * Find offset within seg that contains byteIndex. Move backward specified
+     * number of clusters.
+     */
+
+    lineIndex = -1;
+
+    segSize = dstPtr->byteIndex;
+
+    if (checkElided) {
+	segPtr = infoPtr->segPtr;
+	segSize -= infoPtr->segOffset;
+    } else {
+	TkTextLine *linePtr = dstPtr->linePtr;
+	for (segPtr = linePtr->segPtr; ; segPtr = segPtr->nextPtr) {
+	    if (segPtr == NULL) {
+		/*
+		 * Two logical lines merged into one display line through
+		 * eliding of a newline.
+		 */
+
+		linePtr = TkBTreeNextLine(NULL, linePtr);
+		segPtr = linePtr->segPtr;
+	    }
+	    if (segSize <= segPtr->size) {
+		break;
+	    }
+	    segSize -= segPtr->size;
+	}
+    }
+
+    /*
+     * Now segPtr points to the segment containing the starting index.
+     */
+
+    while (true) {
+	if (checkElided && ((segPtr->typePtr == &tkTextToggleOffType)
+		|| (segPtr->typePtr == &tkTextToggleOnType))) {
+	    TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+
+	    if (tagPtr->elide >= 0) {
+		infoPtr->tagCnts[tagPtr->priority]++;
+		if (infoPtr->tagCnts[tagPtr->priority] & 1) {
+		    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
+		}
+		if (tagPtr->priority >= infoPtr->elidePriority) {
+		    if (segPtr->typePtr == &tkTextToggleOnType) {
+			if (tagPtr->priority != infoPtr->elidePriority) {
+			    Tcl_Panic("Bad tag priority being toggled on");
+			}
+
+			elide = false;
+			while (--infoPtr->elidePriority > 0) {
+			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
+				elide = infoPtr->tagPtrs[
+					infoPtr->elidePriority]->elide > 0;
+				break;
+			    }
+			}
+		    } else {
+			elide = tagPtr->elide > 0;
+			infoPtr->elidePriority = tagPtr->priority;
+		    }
+		}
+	    }
+	}
+
+	if (!elide) {
+	    if (segPtr->typePtr == &tkTextCharType) {
+		size_t bufLen = (size_t) segPtr->size;
+		size_t pos = (size_t) segSize;
+
+		while (true) {
+		    if (charCount == 0) {
+			dstPtr->byteIndex -=
+				(Tcl_Size)((size_t) segSize - pos);
+			goto backwardGraphemeDone;
+		    }
+		    if (pos == 0) {
+			break;
+		    }
+		    {
+			size_t prevPos;
+
+			if (!mojibake_grapheme_prev(segPtr->body.chars,
+				bufLen, pos, &prevPos)) {
+			    break;
+			}
+			pos = prevPos;
+		    }
+		    charCount--;
+		}
+	    } else {
+		if (type & COUNT_INDICES) {
+		    if (charCount <= segSize) {
+			dstPtr->byteIndex -= charCount;
+			goto backwardGraphemeDone;
+		    }
+		    charCount -= segSize;
+		}
+	    }
+	}
+	dstPtr->byteIndex -= segSize;
+
+	/*
+	 * Move back into previous segment.
+	 */
+
+	oldPtr = segPtr;
+	segPtr = dstPtr->linePtr->segPtr;
+	if (segPtr != oldPtr) {
+	    for ( ; segPtr->nextPtr != oldPtr; segPtr = segPtr->nextPtr) {
+		/* Empty body. */
+	    }
+	    segSize = segPtr->size;
+	    continue;
+	}
+
+	/*
+	 * Move back to previous line.
+	 */
+
+	if (lineIndex < 0) {
+	    lineIndex = TkBTreeLinesTo(textPtr, dstPtr->linePtr);
+	}
+	if (lineIndex == 0) {
+	    dstPtr->byteIndex = 0;
+	    goto backwardGraphemeDone;
+	}
+	lineIndex--;
+	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, textPtr, lineIndex);
+
+	/*
+	 * Compute the length of the line and add that to dstPtr->byteIndex.
+	 */
+
+	oldPtr = dstPtr->linePtr->segPtr;
+	for (segPtr = oldPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
+	    dstPtr->byteIndex += segPtr->size;
+	    oldPtr = segPtr;
+	}
+	segPtr = oldPtr;
+	segSize = segPtr->size;
+    }
+
+  backwardGraphemeDone:
     if (infoPtr != NULL) {
 	TkTextFreeElideInfo(infoPtr);
 	Tcl_Free(infoPtr);

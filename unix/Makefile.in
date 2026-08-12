@@ -482,7 +482,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
 	$(GENERIC_DIR)/tkImgListFormat.c $(GENERIC_DIR)/tkText.c \
 	$(GENERIC_DIR)/tkTextBTree.c $(GENERIC_DIR)/tkTextDisp.c \
-	$(GENERIC_DIR)/tkTextImage.c \
+	$(GENERIC_DIR)/tkTextGrapheme.c $(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextMark.c \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
 	$(GENERIC_DIR)/tkOldConfig.c \
@@ -1282,6 +1282,9 @@ tkTextBTree.o: $(GENERIC_DIR)/tkTextBTree.c
 
 tkTextDisp.o: $(GENERIC_DIR)/tkTextDisp.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextDisp.c
+
+tkTextGrapheme.o: $(GENERIC_DIR)/tkTextGrapheme.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextGrapheme.c
 
 tkTextImage.o: $(GENERIC_DIR)/tkTextImage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextImage.c

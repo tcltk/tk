@@ -394,6 +394,7 @@ TK_OBJS = \
 	tkText.$(OBJEXT) \
 	tkTextBTree.$(OBJEXT) \
 	tkTextDisp.$(OBJEXT) \
+	tkTextGrapheme.$(OBJEXT) \
 	tkTextImage.$(OBJEXT) \
 	tkTextIndex.$(OBJEXT) \
 	tkTextMark.$(OBJEXT) \
