@@ -52,9 +52,9 @@ static bool  ParseHexColor(const char *name, NVGcolor *color);
  */
 
 void
-TkpFreeColor(TkColor *tkColPtr)
+TkpFreeColor(TCL_UNUSED(TkColor *)) /* tkColPtr */
 {
-    (void)tkColPtr;  /* Unused parameter */
+    /* no-op */
 }
 
 /*

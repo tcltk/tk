@@ -575,7 +575,7 @@ TkpComputeButtonGeometry(
 			&width, &height);
         haveImage = 1;
     }
-    // Compute the text layout for buttons with text.
+    /* Compute the text layout for buttons with text. */
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
         Tk_FreeTextLayout(butPtr->textLayout);
 
@@ -648,7 +648,7 @@ TkpComputeButtonGeometry(
 	 * record the indicator diameter in the button struct.
 	 */
         if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	    // Currently both of our indicators have diameter 12. 
+	    /* Currently both of our indicators have diameter 12. */
             if (butPtr->type == TYPE_CHECK_BUTTON) {
 	      butPtr->indicatorDiameter = 12;
             } else {
@@ -788,12 +788,12 @@ TkpButtonWorldChanged(void *instanceData)
 
     if (butPtr->disabledGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->disabledGC);
-	butPtr->disabledGC = NULL;
+		butPtr->disabledGC = NULL;
     }
     butPtr->disabledGC = newGC;
 
     /*
-     * CRITICAL: Do NOT create gray50 stipple bitmap.
+     * Do NOT create gray50 stipple bitmap.
      * Set butPtr->gray to None to indicate no stipple available.
      * The stipple effect for disabled buttons will be handled
      * by the Wayland compositor or through NanoVG effects.
@@ -804,10 +804,10 @@ TkpButtonWorldChanged(void *instanceData)
         butPtr->gray = None;
     }
 
-    /* Recompute geometry with new settings */
+    /* Recompute geometry with new settings. */
     TkpComputeButtonGeometry(butPtr);
 
-    /* Schedule redraw if needed */
+    /* Schedule redraw if needed. */
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
             && !(butPtr->flags & REDRAW_PENDING)) {
         Tcl_DoWhenIdle(TkpDisplayButton, butPtr);

@@ -7,7 +7,7 @@
  *	script level by redefined [clipboard] commands that exec wl-copy
  *	and wl-paste directly.  This file retains only the stub symbols
  *	required by Tk's generic selection machinery. This setup is required
- *      because GFLW's clipboard supports is essentially broken on Wayland.
+ *  because GFLW's clipboard supports is essentially broken on Wayland.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -77,7 +77,6 @@ XSetSelectionOwner(
     return Success;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -136,9 +135,9 @@ TkSelPropProc(
  *	This function is called to force the clipboard to be updated after new
  *	data is added or the clipboard has been cleared.
  *
- *      The nil Object is declared to be the owner.  This is done in a way
- *      which triggers an incremeent of the pasteboard's changeCount property,
- *      notifying clipboard managers that the value has changed.
+ *  The nil Object is declared to be the owner.  This is done in a way
+ *  which triggers an incremeent of the pasteboard's changeCount property,
+ *  notifying clipboard managers that the value has changed.
  *
  * Results:
  *	None.

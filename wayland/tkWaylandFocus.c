@@ -11,7 +11,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkWaylandInt.h"  /* Changed from tkUnixInt.h */
+#include "tkWaylandInt.h" 
 #include <GLFW/glfw3.h>
 
 /*
@@ -80,20 +80,14 @@ TkpChangeFocus(
     }
 
     /*
-     * Request focus for the target window.
+     * Request focus for the target window. This has no effect with Wayland.
      */
-    //// This has no effect with Wayland.
     glfwFocusWindow(glfwWindow);
 
     /*
      * Generate a serial number to indicate focus changed.
      */
     serial = ++serial_counter;
-
-    /*
-     * Process pending events to ensure focus request is handled.
-     */
-    //    TkWaylandProcessEvents();  /* Use the header's event processing function */
 
     return serial;
 }

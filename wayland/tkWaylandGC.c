@@ -43,15 +43,13 @@ static unsigned long nextPixmapId = 1;
 static Tcl_HashTable pixmapTable;
 static int pixmapTableInitialized = 0;
 
-/* -----------------------------------------------------------------------
+/* 
  * Display / screen initialization.
- *
  *
  * TkpOpenDisplay is the Tk platform entry point that allocates a full
  * TkDisplay, aScreen, and a Visual.  GLFW is initialized here so that the primary
  * monitor dimensions can be queried immediately.
- *
- * ----------------------------------------------------------------------- */
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -70,6 +68,7 @@ static int pixmapTableInitialized = 0;
  *
  *----------------------------------------------------------------------
  */
+ 
 TkDisplay *
 TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 {

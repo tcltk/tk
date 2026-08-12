@@ -1470,7 +1470,7 @@ WaylandShaper_ShapeString(
          * changes, face/fallback-font changes, etc). Shaping and
          * placement are deferred to pass 2 below.
          *
-         * FIX: For characters with HB_SCRIPT_INHERITED or HB_SCRIPT_COMMON
+         * For characters with HB_SCRIPT_INHERITED or HB_SCRIPT_COMMON
          * we do NOT break on face mismatch; they are kept with the base
          * character to ensure combining marks are shaped together.
          */
@@ -2728,7 +2728,7 @@ CreateStandardNamedFonts(ClientData clientData)
             const char *msg = Tcl_GetStringResult(interp);
             if (!msg || !strstr(msg, "already exists")) {
                 fprintf(stderr,
-                        "tkWaylandFont: failed to create named font "
+                        "TkWaylandFont: failed to create named font "
                         "\"%s\": %s\n",
                         wlNamedFonts[i].tkName,
                         (msg && *msg) ? msg : "(unknown error)");

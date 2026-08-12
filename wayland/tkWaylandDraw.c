@@ -134,7 +134,7 @@ XDrawString(
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
-    /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC */
+    /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC. */
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -148,7 +148,7 @@ XDrawString(
  * XDrawImageString --
  *
  *	Like XDrawString but fills the glyph background with the GC
- *	background colour first ("opaque" text).  Used for selected
+ *	background color first ("opaque" text).  Used for selected
  *	listbox rows and other highlighted text.
  *
  * Results:
@@ -194,7 +194,7 @@ XDrawImageString(
     /* Measure text extent so we can fill the background. */
     nvgTextBounds(dc.vg, (float)x, (float)y, buf, NULL, bounds);
 
-    /* Fill background with GC background colour. */
+    /* Fill background with GC background color. */
     {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
@@ -580,7 +580,6 @@ XFillRectangles(
         color = nvgRGB(255, 255, 255);
     }
     if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
-	// X11 would return 0 and generate a BadDrawable error.
         return BadDrawable;
     }
     for (i = 0; i < nrectangles; i++) {
@@ -1019,8 +1018,10 @@ TkScrollWindow(
         return 0;
     }
 
-    /* Same walk TkWaylandBeginDraw does, to find the toplevel and this
-     * widget's offset within it. */
+    /* 
+     * Same walk TkWaylandBeginDraw does, to find the toplevel and this
+     * widget's offset within it. 
+     */
     while (!Tk_IsTopLevel(winPtr)) {
         offX += winPtr->changes.x;
         offY += winPtr->changes.y;
@@ -1038,9 +1039,11 @@ TkScrollWindow(
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     glfwGetFramebufferSize(glfwWindow, &winFbWidth, &winFbHeight);
 
-    /* Convert widget-local logical coords to backing-store pixels,
+    /* 
+     * Convert widget-local logical coords to backing-store pixels,
      * computing each edge independently so rounding can't open a
-     * seam between the blit rect and its own width/height. */
+     * seam between the blit rect and its own width/height. 
+     */
     fbX0 = (int)lroundf((offX + x) * scale);
     fbY0 = (int)lroundf((offY + y) * scale);
     fbX1 = (int)lroundf((offX + x + width)  * scale);
