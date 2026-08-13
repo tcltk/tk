@@ -143,7 +143,8 @@ XQueryPointer(
         glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
 
         if (getGlobal) {
-	    /* Wayland toplevels all appear to be at the screen origin.
+	    /* 
+	     * Wayland toplevels all appear to be at the screen origin.
 	     * So cursor position is both relative to the screen origin
 	     * and relative to the toplevel origin.
 	     */
@@ -173,7 +174,7 @@ XQueryPointer(
  *	state as reported by XQueryPointer().
  *
  * Results:
- *	True if event(s) are generated - false otherwise.
+ *	Events generated.
  *
  * Side effects:
  *	Additional events may be placed on the Tk event queue. Grab state may
@@ -363,10 +364,8 @@ TkWaylandHandleMouseMove(
     /* Compute root-relative coordinates. */
 
     int winX = 0, winY = 0;
-    ////glfwGetWindowPos(glfwWindow, &winX, &winY);
     {
         int winX = 0, winY = 0;
-        ////glfwGetWindowPos(glfwWindow, &winX, &winY);
         event.xmotion.x_root = winX + (int)x;
         event.xmotion.y_root = winY + (int)y;
     }
@@ -381,9 +380,9 @@ TkWaylandHandleMouseMove(
     Tk_UpdatePointer((Tk_Window)winPtr, (int)event.xmotion.x_root,
         (int)event.xmotion.y_root, TkWaylandButtonKeyState());
 
-        fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
-    (void*)winPtr, (int)x, (int)y);
-fflush(stderr);
+    fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
+    		(void*)winPtr, (int)x, (int)y);
+	fflush(stderr);
 }
 /*
  *----------------------------------------------------------------------
@@ -414,10 +413,9 @@ TkpWarpPointer(
     if (dispPtr->warpWindow) {
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 
-	/* Warp cursor to new position using unified architecture. */
+	/* Warp cursor to new position. */
 	glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)dispPtr->warpWindow);
 	if (glfwWindow) {
-	    ////glfwGetWindowPos(glfwWindow, &winX, &winY);
 	    targetX = x + dispPtr->warpX - winX;
 	    targetY = y + dispPtr->warpY - winY;
 	    glfwSetCursorPos(glfwWindow, targetX, targetY);

@@ -178,7 +178,7 @@ void createClipShaders(TkWindow *winPtr) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
-    /* Restore GL defaults */
+    /* Restore GL defaults. */
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -375,18 +375,23 @@ appendVerticesForRect(
     vertex *vertices,
     int n)
 {
+    /* Calculate the four bounds of the rectangle. */
     float xmin = rect.x;
     float xmax = rect.x + rect.w;
     float ymin = rect.y;
     float ymax = rect.y + rect.h;
-    // Triangle 1
-    vertices[n++] = (vertex) {xmin, ymin};  // 0
-    vertices[n++] = (vertex) {xmax, ymin};  // 1
-    vertices[n++] = (vertex) {xmin, ymax};  // 2
-    // Triangle 2
-    vertices[n++] = (vertex) {xmin, ymax};  // 2
-    vertices[n++] = (vertex) {xmax, ymin};  // 1
-    vertices[n++] = (vertex) {xmax, ymax};  // 3
+
+    /* First triangle: bottom-left, bottom-right, top-left. */
+    vertices[n++] = (vertex) {xmin, ymin};  /* 0 */
+    vertices[n++] = (vertex) {xmax, ymin};  /* 1 */
+    vertices[n++] = (vertex) {xmin, ymax};  /* 2 */
+
+    /* Second triangle: top-left, bottom-right, top-right. */
+    vertices[n++] = (vertex) {xmin, ymax};  /* 2 */
+    vertices[n++] = (vertex) {xmax, ymin};  /* 1 */
+    vertices[n++] = (vertex) {xmax, ymax};  /* 3 */
+
+    /* Return the updated vertex count */
     return n;
 }
 
@@ -399,7 +404,7 @@ void updateClipRects(
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    /* Reset the buffer */
+    /* Reset the buffer. */
     winPtr->privatePtr->clipRectCount = 0;
     clipRect bounds = getBounds(winPtr, scale);
     clipRect extraRect = winPtr->privatePtr->boundsRect;
@@ -564,7 +569,7 @@ void tkWaylandDrawClipMask(
 		(float)fbWidth, (float)fbHeight);
     glBindVertexArray(winPtr->privatePtr->clipVAO);
     glDrawArrays(GL_TRIANGLES, 0, 12 * (winPtr->privatePtr->clipRectCount + 4));
-    // Restore defaults
+    /* Restore defaults. */
     glBindVertexArray(0);
     glUseProgram(0);
     glDepthMask(GL_FALSE); 

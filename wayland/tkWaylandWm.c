@@ -153,11 +153,7 @@ inline TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
     return (TkWaylandPixmap *) (drawable & ~3UL);
 }
 
-/*
- *----------------------------------------------------------------------
- * Declarations of static functions defined in this module.
- *----------------------------------------------------------------------
- */
+/* Declarations of static functions defined in this module. */
 
 static void TopLevelEventProc(void *clientData, XEvent *eventPtr);
 static void TopLevelReqProc(void *clientData, Tk_Window tkwin);
@@ -396,10 +392,6 @@ InitializeGlfwWindow(TkWindow *winPtr)
                           wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
 
-    ////    if (wmPtr->x != 0 || wmPtr->y != 0) {
-    ////        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
-    ////    }
-
     /* Register wm event handler */
     Tk_CreateEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
@@ -430,7 +422,7 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
     
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     
-    // Clear the clip rect buffer
+    /* Clear the clip rect buffer. */
     winPtr->privatePtr->clipRectBufferSize = 0;
     winPtr->privatePtr->clipRectCount = 0;
     if (winPtr->privatePtr->clipRectBuffer) {
@@ -440,8 +432,10 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
     }
     
     if (glfwWindow) {
-        // IMPORTANT: Detach the user pointer to prevent double-free
-        // when the GLFW window is destroyed.
+        /* 
+         * IMPORTANT: Detach the user pointer to prevent double-free
+         * when the GLFW window is destroyed.
+         */
         glfwSetWindowUserPointer(glfwWindow, NULL);
         TkWaylandClearCallbacks(glfwWindow);
         TkWaylandDestroyWindow(glfwWindow);
@@ -494,7 +488,7 @@ TkWmMapWindow(TkWindow *winPtr)
          * back buffer *before* making the surface visible.  Combined with
          * the hidden-create / pre-clear path in TkWaylandCreateWindow this
          * prevents the empty-root flicker: the first frame the compositor
-         * presents is already the intended blank Tk background colour.
+         * presents is already the intended blank Tk background color.
          */
         if (winPtr->privatePtr && winPtr->privatePtr->fb) {
             glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
@@ -632,7 +626,7 @@ TkWmDeadWindow(
             /* Clear callbacks before destroying. */
             TkWaylandClearCallbacks(glfwWindow);
             
-            /* Destroy the GLFW window */
+            /* Destroy the GLFW window. */
             TkWaylandDestroyWindow(glfwWindow);
             
             /* Clear the pointer to prevent use-after-free. */
@@ -827,7 +821,6 @@ TkWmCleanup(
             }
             ckfree((char *)wmPtr->glfwIcon);
         }
-        //DestroyGlfwWindow(winPtr);
         ckfree((char *)wmPtr);
     }
     firstWmPtr = NULL;
@@ -900,7 +893,7 @@ Tk_MakeWindow(
             fprintf(stderr, "Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation\n", 
                     Tk_PathName(tkwin), Tk_GetUid(winPtr->classUid));
             
-            /* Ensure private data exists */
+            /* Ensure private data exists. */
             if (winPtr->privatePtr == NULL) {
                 winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
                 Tcl_DStringInit(&winPtr->privatePtr->pendingText);
@@ -908,7 +901,7 @@ Tk_MakeWindow(
                 winPtr->privatePtr->fb = NULL;
             }
             
-            /* No GLFW window for menu - will use subsurface via menu system */
+            /* No GLFW window for menu - will use subsurface via menu system. */
             return result;
         }
 
@@ -1788,7 +1781,7 @@ WmAttributesCmd(
         return TCL_OK;
     }
 
-    /* Query single attribute */
+    /* Query single attribute. */
     if (objc == 1) {
         int attribute;
         if (Tcl_GetIndexFromObjStruct(interp, objv[0], WmAttributeNames,
@@ -1818,7 +1811,7 @@ WmAttributesCmd(
         return TCL_OK;
     }
 
-    /* Must be attribute/value pairs */
+    /* Must be attribute/value pairs. */
     if (objc % 2 != 0) {
         Tcl_WrongNumArgs(interp, 0, objv, "?-attribute value ...?");
         return TCL_ERROR;
@@ -1826,7 +1819,7 @@ WmAttributesCmd(
 
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
-    /* Set attributes */
+    /* Set attributes. */
     for (i = 0; i < objc; i += 2) {
         int attribute;
         if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
@@ -1892,7 +1885,7 @@ WmAttributesCmd(
             }
 
             case WMATT_TYPE:
-                /* Placeholder / ignored */
+                /* Placeholder / ignored. */
                 break;
 
             default:
@@ -2235,16 +2228,13 @@ WmGeometryCmd(
         return TCL_ERROR;
     }
 
-    //// Why immediate?  X11 does this as at idle.
     /* Immediately set GLFW window size and position. */
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-        /* Set size only if positive values were provided */
+        /* Set size only if positive values were provided. */
         if (wmPtr->width > 0 && wmPtr->height > 0) {
 	    fprintf(stderr, "GeometryCmd setting window size\n");
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
-	// This doesn't actually do anything.
-        ////glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
 
         /* Cancel any pending idle callback */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
@@ -2255,15 +2245,14 @@ WmGeometryCmd(
         /* Update internal Tk/GLFW state. */
         UpdateGeometryInfo((void *)winPtr);
 
-        /* Process events to ensure callback fires before command returns */
-        ////TkWaylandProcessEvents();
-
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
         glfwGetWindowSize(glfwWindow, &newWidth, &newHeight);
 
-        /* If the size didn't change (e.g., constrained by min/max),
-	 * update wmPtr. */
+        /* 
+         * If the size didn't change (e.g., constrained by min/max),
+	     * update wmPtr. 
+	     */
         if (wmPtr->width > 0 && wmPtr->width != newWidth) {
             wmPtr->width = newWidth;
         }
@@ -2562,7 +2551,7 @@ WmIconnameCmd(
  *
  * WmIconphotoCmd --
  *
- *	Implements the "wm iconphoto" subcommand.
+ *	Implements the "wm iconphoto" subcommand. 
  *
  * Results:
  *	Standard Tcl result.
@@ -2581,6 +2570,8 @@ WmIconphotoCmd(
 	       int         objc,
 	       Tcl_Obj *const objv[])
 {
+
+/* This function appears to be no-op on Wayland, needs further testing. */
     WmInfo          *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     Tk_PhotoHandle   photo;
     int              i;
@@ -3235,8 +3226,10 @@ WmStateCmd(
             if (glfwWindow != NULL) {
                 glfwMaximizeWindow(glfwWindow);
             }
-            /* Note: many WMs ignore attempts to force zoom via hints,
-               so we rely on the GLFW/Wayland calls above. */
+            /* 
+             * Note: many WMs ignore attempts to force zoom via hints,
+             * so we rely on the GLFW/Wayland calls above. 
+             */
             break;
     }
 
@@ -3495,7 +3488,6 @@ ApplyFullscreenState(TkWindow *winPtr)
 
     if (desiredFullscreen && currentMonitor == NULL) {
         /* Transitioning from windowed to fullscreen: save current geometry. */
-        //// glfwGetWindowPos(glfwWindow, &wmPtr->x, &wmPtr->y);
         glfwGetWindowSize(glfwWindow, &wmPtr->width, &wmPtr->height);
 
         /* Switch to fullscreen on the primary monitor. */
@@ -3789,22 +3781,6 @@ TopLevelReqProc(
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * UpdateGeometryInfo --
- *
- *	Idle task to apply pending geometry changes for a toplevel.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates window size and position via GLFW. (Although GLFW
- *      is not allowed to actually change the position.)
- *
- *----------------------------------------------------------------------
- */
 
 /*
  *----------------------------------------------------------------------
@@ -3884,13 +3860,30 @@ ApplyPendingGeometry(
         glfwSetWindowSize(glfwWindow, tw, th);
 
 		/* Update the window. */
-	//// We don't really know that this is the actual size. 
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * UpdateGeometryInfo --
+ *
+ *	Idle task to apply pending geometry changes for a toplevel.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates window size and position via GLFW. (Although GLFW
+ *      is not allowed to actually change the position.)
+ *
+ *----------------------------------------------------------------------
+ */
+
 
 static void
 UpdateGeometryInfo(
@@ -4325,7 +4318,7 @@ WindowToGLFW(
  *	window (toplevel) or shares a parent's GLFW window (child).
  *
  * Results:
- *	The new Window handle, or None on failure.
+ *	No-op on Wayland.
  *
  * Side effects:
  *	Creates a GLFW window when parent is the root window.
@@ -4494,7 +4487,7 @@ XMapRaised(
 
     if (gw != NULL) {
         glfwShowWindow(gw);
-	//// This does nothing in Wayland, except generate an error message.
+	/* This does nothing in Wayland, except generate an error message. */
         glfwFocusWindow(gw);
     }
 
@@ -4724,9 +4717,7 @@ XConfigureWindow(
     XWindowChanges *values)
 {
     GLFWwindow *gw = WindowToGLFW(window);
-    ////    int         x  = 0, y  = 0;
     int         w  = -1, h  = -1;
-    ////    int         moveNeeded   = 0;
     int         resizeNeeded = 0;
 
     if (gw == NULL || values == NULL) {
@@ -4734,11 +4725,7 @@ XConfigureWindow(
     }
 
     /* Collect the current GLFW state to fill in un-specified fields. */
-    //// glfwGetWindowPos(gw,  &x, &y);
     glfwGetWindowSize(gw, &w, &h);
-
-    ////    if (value_mask & CWX) { x = values->x; moveNeeded   = 1; }
-    ////    if (value_mask & CWY) { y = values->y; moveNeeded   = 1; }
 
     if (value_mask & CWWidth)  { w = values->width;  resizeNeeded = 1; }
     if (value_mask & CWHeight) { h = values->height; resizeNeeded = 1; }
@@ -4746,9 +4733,6 @@ XConfigureWindow(
     /* CWBorderWidth: recorded for Tk bookkeeping; no GLFW equivalent. */
     /* CWSibling / CWStackMode: compositor-controlled; ignore. */
 
-    ////    if (moveNeeded) {
-    ////        glfwSetWindowPos(gw, x, y);
-    ////    }
     if (resizeNeeded) {
 	fprintf(stderr, "XConfigureWindow: calling glfwSetWindowSize -> %dx%d\n", w, h);
         glfwSetWindowSize(gw, w, h);
@@ -4986,9 +4970,11 @@ XChangeWindowAttributes(
             attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
 
-    /* CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
-       CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
-       All are maintained by Tk's own attribute tables; no GLFW action. */
+    /* 
+     * CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
+     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
+     * All are maintained by Tk's own attribute tables; no GLFW action. 
+     */
 
     return Success;
 }
@@ -5206,6 +5192,79 @@ XSetWMIconName(
     TCL_UNUSED(XTextProperty *))
 {
     /* Icon names are not exposed via Wayland protocols; no-op. */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XGetWindowAttributes --
+ *
+ *	Fills an XWindowAttributes structure with visual, depth, and
+ *	screen settings matching the default display configuration.
+ *
+ *	This function is critical for core Tk operations (such as
+ *	TkImgPhotoGet) which retrieve the geometry, visual properties,
+ *	and depths of a window before drawing images. Returning an
+ *	uninitialized or empty structure causes a crash in photo layout.
+ *
+ * Results:
+ *	Returns 1 (True) on success, 0 (False) if attributes_return is NULL.
+ *
+ * Side effects:
+ *	Populates the attributes_return structure with pointer references
+ *	to the display's root visual structure and dimensions.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XGetWindowAttributes(
+    Display *display,
+    TCL_UNUSED(Window), /* window */
+    XWindowAttributes *attributes_return)
+{
+    if (attributes_return == NULL) {
+        return 0;
+    }
+
+    /* Clear structure memory to avoid garbage pointer data. */
+    memset(attributes_return, 0, sizeof(XWindowAttributes));
+
+    /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
+    if (display != NULL && display->screens != NULL) {
+        Screen *screen = &display->screens[display->default_screen];
+
+        attributes_return->visual     = screen->root_visual;
+        attributes_return->depth      = screen->root_depth;
+        attributes_return->screen     = screen;
+        attributes_return->width      = screen->width;
+        attributes_return->height     = screen->height;
+        attributes_return->root       = screen->root;
+    } else {
+        /* Safe fallback constants mirroring tkWaylandGC.c defaults. */
+        static Visual fallbackVisual = {
+            .visualid     = 1,
+            .class        = TrueColor,
+            .bits_per_rgb = 8,
+            .map_entries  = 256,
+            .red_mask     = 0xFF0000,
+            .green_mask   = 0x00FF00,
+            .blue_mask    = 0x0000FF
+        };
+        attributes_return->visual = &fallbackVisual;
+        attributes_return->depth  = 24;
+    }
+
+    /*
+     * Mock common default settings standard widgets look for
+     * to prevent initialization failures.
+     */
+    attributes_return->map_state        = IsViewable;
+    attributes_return->backing_store    = NotUseful;
+    attributes_return->all_event_masks  = 0;
+    attributes_return->your_event_mask = 0;
+
+    return 1; /* Success */
 }
 
 /*

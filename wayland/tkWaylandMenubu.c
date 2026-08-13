@@ -429,9 +429,6 @@ TkpDisplayMenuButton(
  *	Register the GLFW cursor-position and mouse-button callbacks that
  *	route input events to TkpMenuButtonPostMenu.
  *
- *	This must be called once after the parent GLFWwindow is created,
- *	typically from TkWaylandSetupCallbacks in TkWaylandInit.c.
- *
  *	NOTE: On Wayland, mouse events on child widgets arrive via the
  *	parent GLFW window's callbacks.  We do NOT set per-menubutton
  *	callbacks; instead the main mouse-button callback in TkWaylandInit.c

@@ -198,6 +198,30 @@ TkpCloseDisplay(TCL_UNUSED(TkDisplay*)) /* dispPtr */
 	/* no-op */
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XOpenDisplay --
+ *
+ *	Connect to X server and build internal Display.  Emulated in Wayland port.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Display *
+XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
+{
+    static Display d = {0};  /* Zero-init ensures d.screens == NULL */
+    d.display_name = (char *)"wayland-0";
+    return &d;
+}
+
 /* Graphics context functions. */
 
 /*
@@ -795,6 +819,108 @@ XCopyGC(
     GC            dst)
 {
     return TkWaylandCopyGC(src, valuemask, dst) ? Success : BadGC;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XGetVisualInfo --
+ *
+ *	Returns information about available visuals matching a template mask.
+ *	Dynamically maps structure definitions to survive strict mask filtering
+ *	from core Tk image layout pipelines.
+ *
+ * Results:
+ *	An allocated array of XVisualInfo structures, or NULL on failure.
+ *
+ * Side effects:
+ *	Allocates memory that must be freed using XFree().
+ *
+ *----------------------------------------------------------------------
+ */
+
+XVisualInfo *
+XGetVisualInfo(
+    Display *display,
+    long vinfo_mask,
+    XVisualInfo *vinfo_template,
+    int *nitems_return)
+{
+    static Visual *cachedVisual = NULL;
+    XVisualInfo *heapInfo;
+
+    if (nitems_return == NULL) {
+        return NULL;
+    }
+
+    /* Allocate the shared underlying Visual instance once. */
+    if (cachedVisual == NULL) {
+        cachedVisual = (Visual *)Tcl_Alloc(sizeof(Visual));
+        if (cachedVisual != NULL) {
+            memset(cachedVisual, 0, sizeof(Visual));
+            cachedVisual->visualid     = 1;
+            cachedVisual->class        = TrueColor;
+            cachedVisual->bits_per_rgb = 8;
+            cachedVisual->map_entries  = 256;
+            cachedVisual->red_mask     = 0x00FF0000;
+            cachedVisual->green_mask   = 0x0000FF00;
+            cachedVisual->blue_mask    = 0x000000FF;
+        }
+    }
+
+    /* Dynamically allocate the XVisualInfo wrapper container. */
+    heapInfo = (XVisualInfo *)Tcl_Alloc(sizeof(XVisualInfo));
+    if (heapInfo == NULL) {
+        *nitems_return = 0;
+        return NULL;
+    }
+
+    /* Populate defaults matching baseline initialization values. */
+    memset(heapInfo, 0, sizeof(XVisualInfo));
+    heapInfo->visual        = cachedVisual;
+    heapInfo->visualid      = (vinfo_template && (vinfo_mask & VisualIDMask)) ? vinfo_template->visualid : 1;
+    heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
+    heapInfo->depth         = (vinfo_template && (vinfo_mask & VisualDepthMask)) ? vinfo_template->depth : 24;
+    heapInfo->class         = TrueColor;
+    heapInfo->red_mask      = 0x00FF0000;
+    heapInfo->green_mask    = 0x0000FF00;
+    heapInfo->blue_mask     = 0x000000FF;
+    heapInfo->colormap_size = 256;
+    heapInfo->bits_per_rgb  = 8;
+
+    /* Handle criteria filters safely by mirroring incoming requirements. */
+    if (vinfo_mask != 0 && vinfo_template != NULL) {
+        if ((vinfo_mask & VisualClassMask) &&
+            vinfo_template->class != heapInfo->class) {
+            goto match_failed;
+        }
+
+        /* If Tk requests a specific visual ID, dynamically mirror it into
+         * our response structure to pass the filtering check smoothly.
+         */
+        if (vinfo_mask & VisualIDMask) {
+            heapInfo->visualid = vinfo_template->visualid;
+            if (heapInfo->visual) {
+                heapInfo->visual->visualid = vinfo_template->visualid;
+            }
+        }
+
+        /* Accept standard 24-bit RGB or composited 32-bit RGBA depths. */
+        if (vinfo_mask & VisualDepthMask) {
+            if (vinfo_template->depth != 24 && vinfo_template->depth != 32) {
+                goto match_failed;
+            }
+            heapInfo->depth = vinfo_template->depth;
+        }
+    }
+
+    *nitems_return = 1;
+    return heapInfo;
+
+match_failed:
+    Tcl_Free(heapInfo);
+    *nitems_return = 0;
+    return NULL;
 }
 
 /*

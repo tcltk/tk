@@ -58,7 +58,7 @@ typedef struct TkWmInfo {
     int          menuHeight;
     
 
-    /* Subsurface popup for OR / menu windows. */
+    /* Subsurface popup for menu windows. */
     TkWaylandPopup *popup;          /* Active subsurface popup for OR
                                       * / menu windows; NULL otherwise. */
     TkWaylandPopup *menubarPopup;   /* Subsurface popup for the menubar

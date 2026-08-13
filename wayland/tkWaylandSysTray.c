@@ -803,7 +803,7 @@ WatcherOwnerChanged(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) 
     if (new_owner && new_owner[0] != '\0') {
         fprintf(stderr, "[tkSNI] Watcher restarted, re-registering\n");
         RegisterWithWatcher(icon);
-        /* Refresh properties after watcher restart */
+        /* Refresh properties after watcher restart. */
         if (!icon->refreshTimer) {
             icon->refreshTimer = Tcl_CreateTimerHandler(300, (Tcl_TimerProc *)RefreshProperties, icon);
         }
@@ -880,8 +880,10 @@ RegisterStatusNotifierItem(DockIcon *icon) {
                          WatcherOwnerChanged, icon);
     if (r < 0) {
         fprintf(stderr, "[tkSNI] Failed to add watcher-restart match: %s\n", strerror(-r));
-        /* Not fatal -- we still work, just won't self-heal if the
-         * watcher restarts. */
+        /* 
+         * Not fatal -- we still work, just won't self-heal if the
+         * watcher restarts. 
+         */
     }
 
     /* Initial registration with the watcher. */
@@ -893,7 +895,8 @@ RegisterStatusNotifierItem(DockIcon *icon) {
     /* Start the event processing timer. */
     icon->busTimer = Tcl_CreateTimerHandler(50, ProcessDBusEvents, icon);
 
-    /* Schedule property refreshes at staggered intervals to ensure the
+    /* 
+     * Schedule property refreshes at staggered intervals to ensure the
      * GNOME extension picks up all properties after proxy init.
      */
     icon->refreshTimer = Tcl_CreateTimerHandler(300, (Tcl_TimerProc *)RefreshProperties, icon);

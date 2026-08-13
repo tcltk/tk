@@ -2,7 +2,7 @@
  * tkWaylandXlib.c --
  *
  *	Xlib emulation layer for the Wayland/GLFW/NanoVG Tk port.
- *  These functions are mainly no-op for compatibility. Some Xlib
+ *  Many of these functions are no-op for compatibility. Some Xlib
  *  emulation functions are contained in other files where they are
  *  more relevant or contain acutal functionality (tkWaylandWm.c,
  *  tkWaylandGC.c.
@@ -28,28 +28,6 @@
 #include <X11/Xlocale.h>
 #include <X11/keysym.h>
 #include <X11/XKBlib.h>
-
-/*
- * Minimal region representation for this Wayland port.
- *
- * `Region` is `struct _XRegion *`, but the public/dev X11 headers
- * included above only ever forward-declare that struct -- the real
- * body is private to libX11 and isn't installed anywhere this file can
- * see it. Since nothing outside this port's own region functions below
- * ever dereferences a Region, it's safe for this file to be the one
- * place that gives struct _XRegion a real body.
- *
- * ttk's only consumer of this (ttkLabel.c's TextDraw, for clipping
- * treeview/label cell text that overflows its cell) does XCreateRegion(),
- * exactly one XUnionRectWithRegion() with a single rect, then reads the
- * result back out via TkUnixSetXftClipRegion()/XClipBox(). A single
- * bounding-box rectangle is therefore all this needs to track -- no
- * general multi-rect region support required.
- */
-struct _XRegion {
-    XRectangle extents;
-    int        valid;   /* 0 = empty region, 1 = extents holds a rect */
-};
 
 /*
  *======================================================================
@@ -372,30 +350,6 @@ TkpSync(
     TCL_UNUSED(Display *))	/* Display to sync. */
 {
     /* No-op */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XOpenDisplay --
- *
- *	Connect to X server and build internal Display.  Emulated in Wayland port.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Display *
-XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
-{
-    static Display d = {0};  /* Zero-init ensures d.screens == NULL */
-    d.display_name = (char *)"wayland-0";
-    return &d;
 }
 
 /*
@@ -806,43 +760,6 @@ XForceScreenSaver(
     return 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XClipBox --
- *
- *	Get bounding box of region.
- *
- * Results:
- *	1, with rect_return set to the region's bounding box (zeroed if
- *	the region is NULL or empty). Real Xlib returns a rect-vs-region
- *	shape flag here (Rectangle/Complex); since this port never tracks
- *	more than a bounding box to begin with, that distinction doesn't
- *	apply -- callers here (TkUnixSetXftClipRegion) only care about the
- *	rect.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XClipBox(
-    Region region,
-    XRectangle *rect_return)
-{
-    if (rect_return == NULL) {
-        return 0;
-    }
-    if (region != NULL && region->valid) {
-        *rect_return = region->extents;
-    } else {
-        rect_return->x = rect_return->y = 0;
-        rect_return->width = rect_return->height = 0;
-    }
-    return 1;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1111,7 +1028,7 @@ XRegisterIMInstantiateCallback(
     TCL_UNUSED(XIDProc),
     TCL_UNUSED(XPointer))
 {
-    /* No-op - input methods not used in Wayland port. */
+    /* No-op - XIM not used in Wayland port. */
     return False;
 }
 
@@ -1134,14 +1051,13 @@ XRegisterIMInstantiateCallback(
 int
 XmbLookupString(
     TCL_UNUSED(XIC),
-    XKeyPressedEvent *event,  /* Note: XKeyPressedEvent*, not char* */
+    TCL_UNUSED(XKeyPressedEvent *) /* event */
     TCL_UNUSED(char *),
     TCL_UNUSED(int),
     TCL_UNUSED(KeySym *),
     int *status)
 {
     /* No-op - input method composition not used in Wayland port. */
-    (void)event;  /* Suppress unused parameter warning */
     if (status) {
         *status = XLookupNone;
     }
@@ -1168,12 +1084,11 @@ Status
 XLookupColor(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Colormap),
-    const char *spec,  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *), /* spec */ 
     TCL_UNUSED(XColor *),
     TCL_UNUSED(XColor *))
 {
     /* No-op - color lookup handled by NanoVG. */
-    (void)spec;  /* Suppress unused parameter warning */
     return 0;
 }
 
@@ -1198,35 +1113,11 @@ XKeysymToKeycode(
     TCL_UNUSED(Display *),
     TCL_UNUSED(KeySym))
 {
-    /* No-op - we define REDO_KEYSYM_LOOKUP */
+    /* No-op - we define REDO_KEYSYM_LOOKUP. */
     return 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XDestroyRegion --
- *
- *	Destroy a region allocated by XCreateRegion().
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	Frees region.
- *
- *----------------------------------------------------------------------
- */
 
-int
-XDestroyRegion(
-    Region region)
-{
-    if (region != NULL) {
-        Tcl_Free((char *)region);
-    }
-    return 0;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1357,7 +1248,7 @@ XUnregisterIMInstantiateCallback(
     TCL_UNUSED(XIDProc),
     TCL_UNUSED(XPointer))
 {
-    /* No-op - input methods not used in Wayland port. */
+    /* No-op - XIM not used in Wayland port. */
     return False;
 }
 
@@ -1449,107 +1340,7 @@ XWithdrawWindow(
     return 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XGetVisualInfo --
- *
- *	Returns information about available visuals matching a template mask.
- *	Dynamically maps structure definitions to survive strict mask filtering
- *	from core Tk image layout pipelines.
- *
- * Results:
- *	An allocated array of XVisualInfo structures, or NULL on failure.
- *
- * Side effects:
- *	Allocates memory that must be freed using XFree().
- *
- *----------------------------------------------------------------------
- */
 
-XVisualInfo *
-XGetVisualInfo(
-    Display *display,
-    long vinfo_mask,
-    XVisualInfo *vinfo_template,
-    int *nitems_return)
-{
-    static Visual *cachedVisual = NULL;
-    XVisualInfo *heapInfo;
-
-    if (nitems_return == NULL) {
-        return NULL;
-    }
-
-    /* Allocate the shared underlying Visual instance once. */
-    if (cachedVisual == NULL) {
-        cachedVisual = (Visual *)Tcl_Alloc(sizeof(Visual));
-        if (cachedVisual != NULL) {
-            memset(cachedVisual, 0, sizeof(Visual));
-            cachedVisual->visualid     = 1;
-            cachedVisual->class        = TrueColor;
-            cachedVisual->bits_per_rgb = 8;
-            cachedVisual->map_entries  = 256;
-            cachedVisual->red_mask     = 0x00FF0000;
-            cachedVisual->green_mask   = 0x0000FF00;
-            cachedVisual->blue_mask    = 0x000000FF;
-        }
-    }
-
-    /* Dynamically allocate the XVisualInfo wrapper container. */
-    heapInfo = (XVisualInfo *)Tcl_Alloc(sizeof(XVisualInfo));
-    if (heapInfo == NULL) {
-        *nitems_return = 0;
-        return NULL;
-    }
-
-    /* Populate defaults matching baseline initialization values. */
-    memset(heapInfo, 0, sizeof(XVisualInfo));
-    heapInfo->visual        = cachedVisual;
-    heapInfo->visualid      = (vinfo_template && (vinfo_mask & VisualIDMask)) ? vinfo_template->visualid : 1;
-    heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
-    heapInfo->depth         = (vinfo_template && (vinfo_mask & VisualDepthMask)) ? vinfo_template->depth : 24;
-    heapInfo->class         = TrueColor;
-    heapInfo->red_mask      = 0x00FF0000;
-    heapInfo->green_mask    = 0x0000FF00;
-    heapInfo->blue_mask     = 0x000000FF;
-    heapInfo->colormap_size = 256;
-    heapInfo->bits_per_rgb  = 8;
-
-    /* Handle criteria filters safely by mirroring incoming requirements. */
-    if (vinfo_mask != 0 && vinfo_template != NULL) {
-        if ((vinfo_mask & VisualClassMask) &&
-            vinfo_template->class != heapInfo->class) {
-            goto match_failed;
-        }
-
-        /* If Tk requests a specific visual ID, dynamically mirror it into
-         * our response structure to pass the filtering check smoothly.
-         */
-        if (vinfo_mask & VisualIDMask) {
-            heapInfo->visualid = vinfo_template->visualid;
-            if (heapInfo->visual) {
-                heapInfo->visual->visualid = vinfo_template->visualid;
-            }
-        }
-
-        /* Accept standard 24-bit RGB or composited 32-bit RGBA depths. */
-        if (vinfo_mask & VisualDepthMask) {
-            if (vinfo_template->depth != 24 && vinfo_template->depth != 32) {
-                goto match_failed;
-            }
-            heapInfo->depth = vinfo_template->depth;
-        }
-    }
-
-    *nitems_return = 1;
-    return heapInfo;
-
-match_failed:
-    Tcl_Free(heapInfo);
-    *nitems_return = 0;
-    return NULL;
-}
 /*
  *----------------------------------------------------------------------
  *
@@ -1631,12 +1422,10 @@ XCreateGlyphCursor(
     TCL_UNUSED(Font),
     TCL_UNUSED(unsigned int),
     TCL_UNUSED(unsigned int),
-    const XColor *fc,  /* Note: const XColor*, not XColor* */
-    const XColor *bc)  /* Note: const XColor*, not XColor* */
+    TCL_UNUSED(const XColor *), /* fc */
+    TCL_UNUSED(const XColor *)) /* bc */
 {
     /* No-op - cursor creation handled by GLFW. */
-    (void)fc;  /* Suppress unused parameter warning */
-    (void)bc;  /* Suppress unused parameter warning */
     return 0;
 }
 
@@ -1687,10 +1476,9 @@ int
 XSetIconName(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window),
-    const char *name)  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *)) /* name */ 
 {
     /* No-op - icon names not exposed in Wayland. */
-    (void)name;  /* Suppress unused parameter warning */
     return 0;
 }
 
@@ -1875,35 +1663,7 @@ XGrabServer(
     return 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XCreateRegion --
- *
- *	Create an empty region. See the struct _XRegion comment near the
- *	top of this file for why this port can define the struct body
- *	and allocate a real one here instead of returning NULL.
- *
- * Results:
- *	A newly allocated, empty Region. Caller must XDestroyRegion() it.
- *
- * Side effects:
- *	Allocates memory.
- *
- *----------------------------------------------------------------------
- */
 
-Region
-XCreateRegion(
-    void)
-{
-    Region region = (Region)Tcl_Alloc(sizeof(struct _XRegion));
-
-    region->extents.x = region->extents.y = 0;
-    region->extents.width = region->extents.height = 0;
-    region->valid = 0;
-    return region;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1951,7 +1711,7 @@ int
 XCloseIM(
     TCL_UNUSED(XIM))
 {
-    /* No-op - input methods not used in Wayland port. */
+    /* No-op - XIM not used in Wayland port. */
     return 0;
 }
 
@@ -2202,13 +1962,12 @@ XPolygonRegion(
 XFontSet
 XCreateFontSet(
     TCL_UNUSED(Display *),
-    const char *base,  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *) /* base */
     char ***missing_list,
     int *missing_count,
     TCL_UNUSED(char **))
 {
     /* No-op - font sets not used in Wayland port. */
-    (void)base;  /* Suppress unused parameter warning */
     if (missing_list) {
         *missing_list = NULL;
     }
@@ -2397,10 +2156,9 @@ XListHosts(
 
 char*
 XSetLocaleModifiers(
-    const char *modifiers)  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *)) /* modifiers */
 {
     /* No-op - locale handling via standard C locale. */
-    (void)modifiers;  /* Suppress unused parameter warning */
     return NULL;
 }
 
@@ -2449,11 +2207,10 @@ XSetDashes(
     TCL_UNUSED(Display *),
     TCL_UNUSED(GC),
     TCL_UNUSED(int),
-    const char *dash_list,  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *) /* dash_list */
     TCL_UNUSED(int))
 {
     /* No-op - line dashing handled by NanoVG. */
-    (void)dash_list;  /* Suppress unused parameter warning */
     return 0;
 }
 
@@ -2961,7 +2718,7 @@ XOpenIM(
     TCL_UNUSED(char *),
     TCL_UNUSED(char *))
 {
-    /* No-op - input methods not used in Wayland port. */
+    /* No-op - XIM not used in Wayland port. */
     return NULL;
 }
 
@@ -3070,146 +2827,6 @@ XSetClipRectangles(
 {
     /* No-op - clipping handled by NanoVG. */
     return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XGetWindowAttributes --
- *
- *	Fills an XWindowAttributes structure with visual, depth, and
- *	screen settings matching the default display configuration.
- *
- *	This function is critical for core Tk operations (such as
- *	TkImgPhotoGet) which retrieve the geometry, visual properties,
- *	and depths of a window before drawing images. Returning an
- *	uninitialized or empty structure causes a crash in photo layout.
- *
- * Results:
- *	Returns 1 (True) on success, 0 (False) if attributes_return is NULL.
- *
- * Side effects:
- *	Populates the attributes_return structure with pointer references
- *	to the display's root visual structure and dimensions.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XGetWindowAttributes(
-    Display *display,
-    TCL_UNUSED(Window), /* window */
-    XWindowAttributes *attributes_return)
-{
-    if (attributes_return == NULL) {
-        return 0;
-    }
-
-    /* Clear structure memory to avoid garbage pointer data. */
-    memset(attributes_return, 0, sizeof(XWindowAttributes));
-
-    /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
-    if (display != NULL && display->screens != NULL) {
-        Screen *screen = &display->screens[display->default_screen];
-
-        attributes_return->visual     = screen->root_visual;
-        attributes_return->depth      = screen->root_depth;
-        attributes_return->screen     = screen;
-        attributes_return->width      = screen->width;
-        attributes_return->height     = screen->height;
-        attributes_return->root       = screen->root;
-    } else {
-        /* Safe fallback constants mirroring tkWaylandGC.c defaults. */
-        static Visual fallbackVisual = {
-            .visualid     = 1,
-            .class        = TrueColor,
-            .bits_per_rgb = 8,
-            .map_entries  = 256,
-            .red_mask     = 0xFF0000,
-            .green_mask   = 0x00FF00,
-            .blue_mask    = 0x0000FF
-        };
-        attributes_return->visual = &fallbackVisual;
-        attributes_return->depth  = 24;
-    }
-
-    /*
-     * Mock common default settings standard widgets look for
-     * to prevent initialization failures.
-     */
-    attributes_return->map_state        = IsViewable;
-    attributes_return->backing_store    = NotUseful;
-    attributes_return->all_event_masks  = 0;
-    attributes_return->your_event_mask = 0;
-
-    return 1; /* Success */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XUnionRectWithRegion --
- *
- *	Union a rectangle with a region, tracking only the resulting
- *	bounding box (see struct _XRegion comment near the top of this
- *	file). Handles srcRegion == dstRegion, which is how ttk's
- *	TextDraw() (ttkLabel.c) calls this -- union a single rect into a
- *	freshly created, still-empty region.
- *
- * Results:
- *	Always returns 1 (Success).
- *
- * Side effects:
- *	Updates dstRegion's extents/valid fields.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XUnionRectWithRegion(
-    XRectangle *rect,
-    Region srcRegion,
-    Region dstRegion)
-{
-    XRectangle r;
-    int x0, y0, x1, y1;
-
-    if (rect == NULL || dstRegion == NULL) {
-        return 0;
-    }
-    r = *rect;
-
-    if (srcRegion != NULL && srcRegion != dstRegion && srcRegion->valid) {
-        x0 = (r.x < srcRegion->extents.x) ? r.x : srcRegion->extents.x;
-        y0 = (r.y < srcRegion->extents.y) ? r.y : srcRegion->extents.y;
-        x1 = (r.x + r.width > srcRegion->extents.x + srcRegion->extents.width)
-                ? r.x + r.width
-                : srcRegion->extents.x + srcRegion->extents.width;
-        y1 = (r.y + r.height > srcRegion->extents.y + srcRegion->extents.height)
-                ? r.y + r.height
-                : srcRegion->extents.y + srcRegion->extents.height;
-        r.x = x0; r.y = y0;
-        r.width = x1 - x0; r.height = y1 - y0;
-    }
-
-    if (!dstRegion->valid) {
-        dstRegion->extents = r;
-    } else {
-        x0 = (r.x < dstRegion->extents.x) ? r.x : dstRegion->extents.x;
-        y0 = (r.y < dstRegion->extents.y) ? r.y : dstRegion->extents.y;
-        x1 = (r.x + r.width > dstRegion->extents.x + dstRegion->extents.width)
-                ? r.x + r.width
-                : dstRegion->extents.x + dstRegion->extents.width;
-        y1 = (r.y + r.height > dstRegion->extents.y + dstRegion->extents.height)
-                ? r.y + r.height
-                : dstRegion->extents.y + dstRegion->extents.height;
-        dstRegion->extents.x = x0;
-        dstRegion->extents.y = y0;
-        dstRegion->extents.width = x1 - x0;
-        dstRegion->extents.height = y1 - y0;
-    }
-    dstRegion->valid = 1;
-    return 1;
 }
 
 /*
