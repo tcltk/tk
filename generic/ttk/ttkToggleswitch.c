@@ -235,6 +235,7 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	    size_t length = strlen(styleName);
 	    char *styleName2 = (char *)Tcl_Alloc(length + 3);
 	    const char *text = 0;
+	    int width = 0;
 	    const char *lasthAddr = strrchr(styleName, 'h');
 	    int idx = lasthAddr - styleName + 1;
 	    const char *sizeStr = Tcl_GetString(tglswPtr->tglsw.sizeObj);
@@ -247,7 +248,12 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	    if (!text) {
 		text = "";
 	    }
-	    if (strlen(text) != 0) {
+
+	    if (tglswPtr->tglsw.widthObj) {
+		Tcl_GetIntFromObj(NULL, tglswPtr->tglsw.widthObj, &width);
+	    }
+
+	    if (strlen(text) != 0 || width > 0) {
 		memcpy(styleName2 + idx, "Ex", 2);
 		idx += 2;
 	    }

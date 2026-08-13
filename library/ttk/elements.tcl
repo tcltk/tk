@@ -434,7 +434,7 @@ proc ttk::toggleswitch::CreateElements_vista {} {
 		    Tglswitch$n.trough -side right -sticky {} -children \
 			[list Tglswitch$n.slider -side left -sticky {}] \
 		    Tglswitch.gap -side right -sticky {} \
-		    Tglswitch.ctext -side left -sticky we \
+		    Tglswitch.text -side left -sticky we \
 		]
 	    ]
 	]
@@ -804,7 +804,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 		Tglswitch$n.trough -side right -sticky {} -children \
 		    [list Tglswitch$n.slider -side left -sticky {}] \
 		Tglswitch.gap -side right -sticky {} \
-		Tglswitch.ctext -side left -sticky we \
+		Tglswitch.text -side left -sticky we \
 	    ]
 	]
     }
@@ -1193,7 +1193,7 @@ proc ttk::toggleswitch::CreateElements {} {
 		    Tglswitch$n.trough -side right -sticky {} -children \
 			[list Tglswitch$n.slider -side left -sticky {}] \
 		    Tglswitch.gap -side right -sticky {} \
-		    Tglswitch.ctext -side left -sticky we \
+		    Tglswitch.text -side left -sticky we \
 		]
 	    ]
 
@@ -1227,7 +1227,7 @@ proc ttk::toggleswitch::CreateElements {} {
 			Tglswitch$n.trough -side right -sticky {} -children \
 			    [list Tglswitch$n.slider -side left -sticky {}] \
 			Tglswitch.gap -side right -sticky {} \
-			Tglswitch.ctext -side left -sticky we \
+			Tglswitch.text -side left -sticky we \
 		    ]
 		]
 	    ]
