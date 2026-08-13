@@ -2784,7 +2784,7 @@ TkpDrawMenuEntry(
 	DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
 		activeBorder, adjustedX, adjustedY, width, adjustedHeight,
 		(drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0);
-	if (!mePtr->hideMargin) {
+	if (!mePtr->indicatorOn) {
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
 		    fmPtr, adjustedX, adjustedY, width, adjustedHeight);
 	}
