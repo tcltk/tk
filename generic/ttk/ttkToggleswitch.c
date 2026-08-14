@@ -253,7 +253,7 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 		Tcl_GetIntFromObj(NULL, tglswPtr->tglsw.widthObj, &width);
 	    }
 
-	    if (strlen(text) != 0 || width > 0) {
+	    if (strlen(text) != 0 || width != 0) {
 		memcpy(styleName2 + idx, "Ex", 2);
 		idx += 2;
 	    }
