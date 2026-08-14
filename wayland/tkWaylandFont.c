@@ -2545,12 +2545,15 @@ InitFont(
             fseek(fd, 0, SEEK_END);
             long sz = ftell(fd);
             fseek(fd, 0, SEEK_SET);
-            unsigned char *buf = (unsigned char *)Tcl_Alloc((int)sz);
+            unsigned char buf[sz];
             if (buf && (long)fread(buf, 1, sz, fd) == sz) {
                 stbtt_fontinfo info;
-                if (stbtt_InitFont(&info, buf,
-                                   stbtt_GetFontOffsetForIndex(
-                                       buf, fontPtr->faces[0].faceIndex))) {
+		int offset = stbtt_GetFontOffsetForIndex(
+		    buf, fontPtr->faces[0].faceIndex);
+		if (offset < 0) {
+		    offset = 0;
+		}
+                if (stbtt_InitFont(&info, buf, offset)) {
                     float scale = stbtt_ScaleForPixelHeight(
                         &info, (float)fontPtr->pixelSize);
                     int asc, desc, linegap;
@@ -2565,9 +2568,6 @@ InitFont(
                     fm->fixed    = (adv_W == adv_dot);
                     fa->size     = (double)(-fontPtr->pixelSize);
                 }
-            }
-            if (buf) {
-                Tcl_Free(buf);
             }
             fclose(fd);
         }
