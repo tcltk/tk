@@ -40,13 +40,12 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
-/* Debug macro. */
-#define POPUP_DEBUG 1
-#if POPUP_DEBUG
-#define POPUP_LOG(fmt, ...) fprintf(stderr, "POPUP_SHM: " fmt "\n", ##__VA_ARGS__)
-#else
-#define POPUP_LOG(fmt, ...) ((void)0)
-#endif
+/* Debugging */
+/*
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL popup
+*/
+#include "tkWaylandDebug.h"
 
 /*
  * Global Wayland objects from tkWaylandInit.c.
@@ -199,17 +198,17 @@ TkWaylandPopupCreateRenderer(
     int stride = width * 4;  /* RGBA. */
     int size = stride * height;
 
-    POPUP_LOG("TkWaylandPopupCreateRenderer: creating renderer %dx%d", width, height);
+    DEBUG_LOG("TkWaylandPopupCreateRenderer: creating renderer %dx%d", width, height);
 
     renderer = (SoftRenderer *)calloc(1, sizeof(SoftRenderer));
     if (!renderer) {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: malloc failed");
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: malloc failed");
         return NULL;
     }
 
     renderer->pixels = (unsigned char *)malloc(size);
     if (!renderer->pixels) {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: pixel buffer malloc failed");
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: pixel buffer malloc failed");
         free(renderer);
         return NULL;
     }
@@ -232,7 +231,7 @@ TkWaylandPopupCreateRenderer(
     if (popupGlobals.mainWindow) {
         glfwMakeContextCurrent(popupGlobals.mainWindow);
     } else {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: WARNING - no main window, "
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: WARNING - no main window, "
                   "GL context may not be current");
     }
 
@@ -256,7 +255,7 @@ TkWaylandPopupCreateRenderer(
 
     GLenum fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (fboStatus != GL_FRAMEBUFFER_COMPLETE) {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: FBO incomplete, status=0x%x",
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: FBO incomplete, status=0x%x",
                    (unsigned int)fboStatus);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &renderer->fbo);
@@ -271,12 +270,12 @@ TkWaylandPopupCreateRenderer(
     /* Create a NanoVG context using the GLES3 backend. */
     renderer->vg = nvgCreateGLES3(NVG_STENCIL_STROKES | NVG_DEBUG);
     if (!renderer->vg) {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: nvgCreateGLES3 failed, trying fallback");
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: nvgCreateGLES3 failed, trying fallback");
         renderer->vg = nvgCreateGLES3(0);
     }
 
     if (renderer->vg) {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: NanoVG context %p created", (void*)renderer->vg);
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: NanoVG context %p created", (void*)renderer->vg);
 
         /*
          * Load fonts using the Tk font system.
@@ -286,7 +285,7 @@ TkWaylandPopupCreateRenderer(
         TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkDefaultFont");
         TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkMenuFont");
 
-        POPUP_LOG("TkWaylandPopupCreateRenderer: fonts registered using Tk font system");
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: fonts registered using Tk font system");
 
         /* Initialize the FBO's contents to actual transparent. */
         glViewport(0, 0, width, height);
@@ -295,13 +294,13 @@ TkWaylandPopupCreateRenderer(
         nvgBeginFrame(renderer->vg, width, height, 1.0f);
         nvgEndFrame(renderer->vg);
     } else {
-        POPUP_LOG("TkWaylandPopupCreateRenderer: WARNING - no NanoVG context created");
+        DEBUG_LOG("TkWaylandPopupCreateRenderer: WARNING - no NanoVG context created");
     }
 
     /* Don't leave our FBO bound. */
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    POPUP_LOG("TkWaylandPopupCreateRenderer: renderer %p created (fbo=%u texture=%u)",
+    DEBUG_LOG("TkWaylandPopupCreateRenderer: renderer %p created (fbo=%u texture=%u)",
               (void*)renderer, (unsigned int)renderer->fbo, (unsigned int)renderer->texture);
 
     return renderer;
@@ -327,7 +326,7 @@ TkWaylandPopupDestroyRenderer(
 {
     if (!renderer) return;
 
-    POPUP_LOG("TkWaylandPopupDestroyRenderer: destroying renderer %p", (void*)renderer);
+    DEBUG_LOG("TkWaylandPopupDestroyRenderer: destroying renderer %p", (void*)renderer);
 
     if (renderer->vg) {
         /*
@@ -446,7 +445,7 @@ TkWaylandPopupCopyPixelsToBuffer(
         dst += 4;
     }
 
-    POPUP_LOG("TkWaylandPopupCopyPixelsToBuffer: copied %d bytes (R/B swapped for ARGB8888)", copy_size);
+    DEBUG_LOG("TkWaylandPopupCopyPixelsToBuffer: copied %d bytes (R/B swapped for ARGB8888)", copy_size);
 }
 
 /*
@@ -471,7 +470,7 @@ TkWaylandPopupReleaseBuffer(
     WlShmBuffer *buf = (WlShmBuffer *)data;
     if (buf) {
         buf->in_use = 0;
-        POPUP_LOG("TkWaylandPopupReleaseBuffer: released buffer %p", (void*)buf);
+        DEBUG_LOG("TkWaylandPopupReleaseBuffer: released buffer %p", (void*)buf);
     }
     (void)buffer;
 }
@@ -504,7 +503,7 @@ TkWaylandPopupCreateShmBuffer(
     struct wl_shm_pool *pool;
 
     if (!shm || width <= 0 || height <= 0) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: invalid parameters");
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: invalid parameters");
         return NULL;
     }
 
@@ -512,7 +511,7 @@ TkWaylandPopupCreateShmBuffer(
     char filename[] = "/tmp/wl-popup-shm-XXXXXX";
     fd = mkstemp(filename);
     if (fd < 0) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: mkstemp failed: %s", strerror(errno));
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: mkstemp failed: %s", strerror(errno));
         return NULL;
     }
 
@@ -521,7 +520,7 @@ TkWaylandPopupCreateShmBuffer(
 
     /* Set the size of the file. */
     if (ftruncate(fd, size) < 0) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: ftruncate failed: %s", strerror(errno));
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: ftruncate failed: %s", strerror(errno));
         close(fd);
         return NULL;
     }
@@ -529,7 +528,7 @@ TkWaylandPopupCreateShmBuffer(
     /* Map the file into memory. */
     data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: mmap failed: %s", strerror(errno));
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: mmap failed: %s", strerror(errno));
         close(fd);
         return NULL;
     }
@@ -537,7 +536,7 @@ TkWaylandPopupCreateShmBuffer(
     /* Create a wl_shm_pool. */
     pool = wl_shm_create_pool(shm, fd, size);
     if (!pool) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: wl_shm_create_pool failed");
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: wl_shm_create_pool failed");
         munmap(data, size);
         close(fd);
         return NULL;
@@ -551,7 +550,7 @@ TkWaylandPopupCreateShmBuffer(
     close(fd);
 
     if (!wl_buf) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: wl_shm_pool_create_buffer failed");
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: wl_shm_pool_create_buffer failed");
         munmap(data, size);
         return NULL;
     }
@@ -559,7 +558,7 @@ TkWaylandPopupCreateShmBuffer(
     /* Allocate and initialize the buffer structure. */
     buffer = (WlShmBuffer *)calloc(1, sizeof(WlShmBuffer));
     if (!buffer) {
-        POPUP_LOG("TkWaylandPopupCreateShmBuffer: malloc failed");
+        DEBUG_LOG("TkWaylandPopupCreateShmBuffer: malloc failed");
         wl_buffer_destroy(wl_buf);
         munmap(data, size);
         return NULL;
@@ -576,7 +575,7 @@ TkWaylandPopupCreateShmBuffer(
     /* Add buffer listener. */
     wl_buffer_add_listener(wl_buf, &buffer_listener, buffer);
 
-    POPUP_LOG("TkWaylandPopupCreateShmBuffer: created buffer %p size %dx%d",
+    DEBUG_LOG("TkWaylandPopupCreateShmBuffer: created buffer %p size %dx%d",
               (void*)buffer, width, height);
 
     return buffer;
@@ -608,7 +607,7 @@ TkWaylandPopupDestroyShmBuffer(
         return;
     }
 
-    POPUP_LOG("TkWaylandPopupDestroyShmBuffer: destroying buffer %p",
+    DEBUG_LOG("TkWaylandPopupDestroyShmBuffer: destroying buffer %p",
               (void *)buffer);
 
     /*
@@ -660,7 +659,7 @@ TkWaylandPopupAttachBuffer(
     WlShmBuffer *buffer)
 {
     if (!popup || !popup->surface || !buffer || !buffer->buffer) {
-        POPUP_LOG("TkWaylandPopupAttachBuffer: invalid parameters");
+        DEBUG_LOG("TkWaylandPopupAttachBuffer: invalid parameters");
         return 0;
     }
 
@@ -672,7 +671,7 @@ TkWaylandPopupAttachBuffer(
     buffer->in_use = 1;
     popup->current_buffer = buffer;
 
-    POPUP_LOG("TkWaylandPopupAttachBuffer: attached buffer %p to surface %p",
+    DEBUG_LOG("TkWaylandPopupAttachBuffer: attached buffer %p to surface %p",
               (void*)buffer, (void*)popup->surface);
 
     return 1;
@@ -700,23 +699,23 @@ popup_registry_global(
     const char *interface,
     uint32_t version)
 {
-    POPUP_LOG("Registry global: %s", interface);
+    DEBUG_LOG("Registry global: %s", interface);
 
     if (strcmp(interface, "wl_compositor") == 0) {
         popupGlobals.compositor = (struct wl_compositor *)
             wl_registry_bind(registry, name, &wl_compositor_interface,
                 version > 4 ? 4 : version);
-        POPUP_LOG("Bound wl_compositor");
+        DEBUG_LOG("Bound wl_compositor");
     } else if (strcmp(interface, "wl_subcompositor") == 0) {
         popupGlobals.subcompositor = (struct wl_subcompositor *)
             wl_registry_bind(registry, name, &wl_subcompositor_interface,
                 version > 1 ? 1 : version);
-        POPUP_LOG("Bound wl_subcompositor");
+        DEBUG_LOG("Bound wl_subcompositor");
     } else if (strcmp(interface, "wl_shm") == 0) {
         popupGlobals.shm = (struct wl_shm *)
             wl_registry_bind(registry, name, &wl_shm_interface,
                 version > 1 ? 1 : version);
-        POPUP_LOG("Bound wl_shm");
+        DEBUG_LOG("Bound wl_shm");
     }
 }
 
@@ -790,38 +789,38 @@ TkWaylandPopupBindGlobals(void)
     struct wl_display *display;
     struct wl_registry *registry;
 
-    POPUP_LOG("TkWaylandPopupBindGlobals: binding globals");
+    DEBUG_LOG("TkWaylandPopupBindGlobals: binding globals");
 
     /* First try to get globals from the main module. */
     if (waylandDisplay) {
         popupGlobals.wlDisplay = waylandDisplay;
-        POPUP_LOG("Got waylandDisplay from main module");
+        DEBUG_LOG("Got waylandDisplay from main module");
     }
 
     if (waylandCompositor) {
         popupGlobals.compositor = waylandCompositor;
-        POPUP_LOG("Got waylandCompositor from main module");
+        DEBUG_LOG("Got waylandCompositor from main module");
     }
     if (waylandSubcompositor) {
         popupGlobals.subcompositor = waylandSubcompositor;
-        POPUP_LOG("Got waylandSubcompositor from main module");
+        DEBUG_LOG("Got waylandSubcompositor from main module");
     }
 
     /* If we have all needed objects, we're done. */
     if (popupGlobals.wlDisplay && popupGlobals.compositor &&
         popupGlobals.subcompositor && popupGlobals.shm) {
-        POPUP_LOG("All globals bound successfully");
+        DEBUG_LOG("All globals bound successfully");
         return 1;
     }
 
     /* If we have a display but missing globals, bind from registry. */
     if (popupGlobals.wlDisplay) {
         display = popupGlobals.wlDisplay;
-        POPUP_LOG("Binding globals from registry");
+        DEBUG_LOG("Binding globals from registry");
 
         registry = wl_display_get_registry(display);
         if (!registry) {
-            POPUP_LOG("TkWaylandPopupBindGlobals: failed to get registry");
+            DEBUG_LOG("TkWaylandPopupBindGlobals: failed to get registry");
             return 0;
         }
 
@@ -831,12 +830,12 @@ TkWaylandPopupBindGlobals(void)
 
         if (popupGlobals.compositor && popupGlobals.subcompositor &&
             popupGlobals.shm) {
-            POPUP_LOG("Globals bound from registry");
+            DEBUG_LOG("Globals bound from registry");
             return 1;
         }
     }
 
-    POPUP_LOG("TkWaylandPopupBindGlobals: failed to bind all globals");
+    DEBUG_LOG("TkWaylandPopupBindGlobals: failed to bind all globals");
     return 0;
 }
 
@@ -859,7 +858,7 @@ MODULE_SCOPE int TkWaylandPopupInit(void) {
         return 1;
     }
 
-    POPUP_LOG("Initializing Wayland SHM popup module");
+    DEBUG_LOG("Initializing Wayland SHM popup module");
 
     if (TkWaylandPopupBindGlobals()) {
         popupGlobals.initialized = 1;
@@ -888,12 +887,12 @@ TkWaylandPopupSetMainWindow(
     GLFWwindow *window)
 {
     if (!window) {
-        POPUP_LOG("TkWaylandPopupSetMainWindow: NULL window");
+        DEBUG_LOG("TkWaylandPopupSetMainWindow: NULL window");
         return;
     }
 
     popupGlobals.mainWindow = window;
-    POPUP_LOG("TkWaylandPopupSetMainWindow: main window set");
+    DEBUG_LOG("TkWaylandPopupSetMainWindow: main window set");
 }
 
 /*
@@ -922,7 +921,7 @@ TkWaylandSubsurfaceCreate(
     struct wl_surface *parentSurface;
     struct wl_display *display;
 
-    POPUP_LOG("TkWaylandSubsurfaceCreate: creating subsurface at (%d,%d) size %dx%d",
+    DEBUG_LOG("TkWaylandSubsurfaceCreate: creating subsurface at (%d,%d) size %dx%d",
               x, y, width, height);
 
     if (!popupGlobals.initialized || !popupGlobals.compositor ||
@@ -930,31 +929,31 @@ TkWaylandSubsurfaceCreate(
         if (TkWaylandPopupBindGlobals()) {
             popupGlobals.initialized = 1;
         } else {
-            POPUP_LOG("TkWaylandSubsurfaceCreate: popup module not initialized");
+            DEBUG_LOG("TkWaylandSubsurfaceCreate: popup module not initialized");
             return NULL;
         }
     }
 
     if (!parentGlfw) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: no parent window");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: no parent window");
         return NULL;
     }
 
     parentSurface = TkWaylandPopupGetWLSurface(parentGlfw);
     if (!parentSurface) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: no parent surface");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: no parent surface");
         return NULL;
     }
 
     display = popupGlobals.wlDisplay;
     if (!display) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: no Wayland display");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: no Wayland display");
         return NULL;
     }
 
     popup = (TkWaylandPopup *)calloc(1, sizeof(TkWaylandPopup));
     if (!popup) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: malloc failed");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: malloc failed");
         return NULL;
     }
 
@@ -984,7 +983,7 @@ TkWaylandSubsurfaceCreate(
     /* Create the software renderer. */
     popup->renderer = TkWaylandPopupCreateRenderer(width, height);
     if (!popup->renderer) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: failed to create renderer");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: failed to create renderer");
         free(popup);
         return NULL;
     }
@@ -995,7 +994,7 @@ TkWaylandSubsurfaceCreate(
     /* Create wl_surface. */
     popup->surface = wl_compositor_create_surface(popupGlobals.compositor);
     if (!popup->surface) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: failed to create wl_surface");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: failed to create wl_surface");
         TkWaylandPopupDestroyRenderer(popup->renderer);
         free(popup);
         return NULL;
@@ -1005,7 +1004,7 @@ TkWaylandSubsurfaceCreate(
     popup->subsurface = wl_subcompositor_get_subsurface(
         popupGlobals.subcompositor, popup->surface, parentSurface);
     if (!popup->subsurface) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: failed to create subsurface");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: failed to create subsurface");
         wl_surface_destroy(popup->surface);
         TkWaylandPopupDestroyRenderer(popup->renderer);
         free(popup);
@@ -1025,7 +1024,7 @@ TkWaylandSubsurfaceCreate(
     WlShmBuffer *buffer = TkWaylandPopupCreateShmBuffer(
         popupGlobals.shm, width, height);
     if (!buffer) {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: failed to create SHM buffer");
+        DEBUG_LOG("TkWaylandSubsurfaceCreate: failed to create SHM buffer");
         wl_subsurface_destroy(popup->subsurface);
         wl_surface_destroy(popup->surface);
         TkWaylandPopupDestroyRenderer(popup->renderer);
@@ -1054,7 +1053,7 @@ TkWaylandSubsurfaceCreate(
     /* Commit parent surface. */
     wl_surface_commit(parentSurface);
 
-    POPUP_LOG("TkWaylandSubsurfaceCreate: subsurface created successfully");
+    DEBUG_LOG("TkWaylandSubsurfaceCreate: subsurface created successfully");
 
     return popup;
 }
@@ -1081,7 +1080,7 @@ TkWaylandPopupDestroy(
         return;
     }
 
-    POPUP_LOG("TkWaylandPopupDestroy: destroying popup %p", (void *)popup);
+    DEBUG_LOG("TkWaylandPopupDestroy: destroying popup %p", (void *)popup);
 
     if (popup->drawing) {
         TkWaylandPopupEndDraw(popup);
@@ -1152,17 +1151,17 @@ MODULE_SCOPE int
 TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
 {
     if (!popup) {
-        POPUP_LOG("TkWaylandPopupBeginDraw: NULL popup");
+        DEBUG_LOG("TkWaylandPopupBeginDraw: NULL popup");
         return TCL_ERROR;
     }
 
     if (!popup->renderer) {
-        POPUP_LOG("TkWaylandPopupBeginDraw: no renderer");
+        DEBUG_LOG("TkWaylandPopupBeginDraw: no renderer");
         return TCL_ERROR;
     }
 
     if (!popup->renderer->vg) {
-        POPUP_LOG("TkWaylandPopupBeginDraw: no NanoVG context");
+        DEBUG_LOG("TkWaylandPopupBeginDraw: no NanoVG context");
         return TCL_ERROR;
     }
 
@@ -1170,7 +1169,7 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
     if (popupGlobals.mainWindow) {
         glfwMakeContextCurrent(popupGlobals.mainWindow);
     } else {
-        POPUP_LOG("TkWaylandPopupBeginDraw: no main window for context");
+        DEBUG_LOG("TkWaylandPopupBeginDraw: no main window for context");
         return TCL_ERROR;
     }
 
@@ -1179,7 +1178,7 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
      * match exactly.
      */
     if (!popup->renderer->fbo) {
-        POPUP_LOG("TkWaylandPopupBeginDraw: no FBO on renderer");
+        DEBUG_LOG("TkWaylandPopupBeginDraw: no FBO on renderer");
         return TCL_ERROR;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, popup->renderer->fbo);
@@ -1282,7 +1281,7 @@ TkWaylandPopupDrawBorderWithShadow(
 
     nvgRestore(vg);
 
-    POPUP_LOG("TkWaylandPopupDrawBorderWithShadow: drew consistent border at (0,0) %dx%d",
+    DEBUG_LOG("TkWaylandPopupDrawBorderWithShadow: drew consistent border at (0,0) %dx%d",
               popup->width, popup->height);
 }
 
@@ -1320,7 +1319,7 @@ TkWaylandPopupSetBorder(
     popup->borderA = a;
     popup->drawShadow = shadow;
 
-    POPUP_LOG("TkWaylandPopupSetBorder: border %s, color=(%d,%d,%d,%d), shadow=%d",
+    DEBUG_LOG("TkWaylandPopupSetBorder: border %s, color=(%d,%d,%d,%d), shadow=%d",
               enabled ? "enabled" : "disabled", r, g, b, a, shadow);
 }
 
@@ -1405,20 +1404,20 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
             wl_surface_commit(popup->surface);
             buffer->in_use = 1;
             popup->current_buffer = buffer;
-            POPUP_LOG("TkWaylandPopupEndDraw: committed surface with buffer %p", (void*)buffer);
+            DEBUG_LOG("TkWaylandPopupEndDraw: committed surface with buffer %p", (void*)buffer);
         }
 
         /* Force parent commit for subsurface. */
         if (popup->parentSurface) {
             wl_surface_damage(popup->parentSurface, popup->x, popup->y, popup->width, popup->height);
             wl_surface_commit(popup->parentSurface);
-            POPUP_LOG("TkWaylandPopupEndDraw: committed parent surface");
+            DEBUG_LOG("TkWaylandPopupEndDraw: committed parent surface");
         }
     } else {
-        POPUP_LOG("TkWaylandPopupEndDraw: no buffer available");
+        DEBUG_LOG("TkWaylandPopupEndDraw: no buffer available");
     }
 
-    POPUP_LOG("TkWaylandPopupEndDraw: ended drawing");
+    DEBUG_LOG("TkWaylandPopupEndDraw: ended drawing");
 }
 
 /*
@@ -1563,7 +1562,7 @@ TkWaylandSubsurfaceReconfigure(
 {
     if (!popup) return;
 
-    POPUP_LOG("TkWaylandSubsurfaceReconfigure: new pos=(%d,%d) size=%dx%d",
+    DEBUG_LOG("TkWaylandSubsurfaceReconfigure: new pos=(%d,%d) size=%dx%d",
               x, y, width, height);
 
     popup->x = x;
@@ -1624,7 +1623,7 @@ TkWaylandSubsurfaceReconfigure(
 MODULE_SCOPE void
 TkWaylandPopupDestroyAll(void)
 {
-    POPUP_LOG("TkWaylandPopupDestroyAll called");
+    DEBUG_LOG("TkWaylandPopupDestroyAll called");
 }
 
 /*
@@ -1652,7 +1651,7 @@ TkWaylandPopupResize(
         return TCL_ERROR;
     }
 
-    POPUP_LOG("TkWaylandPopupResize: resizing to %dx%d", width, height);
+    DEBUG_LOG("TkWaylandPopupResize: resizing to %dx%d", width, height);
 
     popup->width = width;
     popup->height = height;

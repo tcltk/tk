@@ -53,13 +53,13 @@ extern GLFWwindow *mainGlfwWindow;
 #define WM_UPDATE_SIZE_HINTS (1<<1)
 #endif
 
-/* Debug macro. */
-#define MENU_DEBUG 1
-#if MENU_DEBUG
-#define MENU_LOG(fmt, ...) fprintf(stderr, "MENU: " fmt "\n", ##__VA_ARGS__)
-#else
-#define MENU_LOG(fmt, ...) ((void)0)
-#endif
+/* Debugging. */
+
+/*
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL menu
+*/
+#include "tkWaylandDebug.h"
 
 /*
  * Forward declarations from other Wayland modules.
@@ -302,7 +302,7 @@ MenuPendingImagesFlush(void)
 int
 TkpNewMenu(TkMenu *menuPtr)
 {
-    MENU_LOG("TkpNewMenu called for menu %p", (void*)menuPtr);
+    DEBUG_LOG("TkpNewMenu called for menu %p", (void*)menuPtr);
     SetHelpMenu(menuPtr);
     return TCL_OK;
 }
@@ -337,7 +337,7 @@ TkpDestroyMenu(TkMenu *menuPtr)
         return;
     }
 
-    MENU_LOG("TkpDestroyMenu called for menu %p", (void *)menuPtr);
+    DEBUG_LOG("TkpDestroyMenu called for menu %p", (void *)menuPtr);
 
     winPtr = (TkWindow *)menuPtr->tkwin;
     if (!winPtr) {
@@ -353,7 +353,7 @@ TkpDestroyMenu(TkMenu *menuPtr)
      * Menubar cleanup.
      */
     if (wmPtr->menubarMenuPtr == menuPtr) {
-        MENU_LOG("TkpDestroyMenu: destroying menubar menu");
+        DEBUG_LOG("TkpDestroyMenu: destroying menubar menu");
 
         popup = wmPtr->menubarPopup;
 
@@ -515,7 +515,7 @@ MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr)
 
     for (i = 0; i < menuStackDepth; i++) {
         if (menuStack[i].menuPtr == menuPtr) {
-            MENU_LOG("MenuStackWindowEventProc: menu %p unmapped/destroyed "
+            DEBUG_LOG("MenuStackWindowEventProc: menu %p unmapped/destroyed "
                      "out from under us at depth %d, forcing pop", (void*)menuPtr, i);
             MenuStackPop(i);   /* pops i, i+1, ... back down to i */
             break;
@@ -669,7 +669,7 @@ TkpComputeMenubarGeometry(TkMenu *menuPtr)
         windowWidth = 800;
     }
 
-    MENU_LOG("TkpComputeMenubarGeometry: windowWidth=%d, totalEntryWidths=%d, numVisibleEntries=%d, maxHeight=%d",
+    DEBUG_LOG("TkpComputeMenubarGeometry: windowWidth=%d, totalEntryWidths=%d, numVisibleEntries=%d, maxHeight=%d",
              windowWidth, totalEntryWidths, numVisibleEntries, maxHeight);
 
     /* Distribute extra space evenly among visible entries. */
@@ -681,7 +681,7 @@ TkpComputeMenubarGeometry(TkMenu *menuPtr)
         extraSpace = windowWidth - totalEntryWidths;
         extraPerEntry = extraSpace / numVisibleEntries;
         remainder = extraSpace % numVisibleEntries;
-        MENU_LOG("TkpComputeMenubarGeometry: extraSpace=%d, extraPerEntry=%d, remainder=%d",
+        DEBUG_LOG("TkpComputeMenubarGeometry: extraSpace=%d, extraPerEntry=%d, remainder=%d",
                  extraSpace, extraPerEntry, remainder);
     }
 
@@ -715,14 +715,14 @@ TkpComputeMenubarGeometry(TkMenu *menuPtr)
     menuPtr->totalWidth = windowWidth;
     menuPtr->totalHeight = maxHeight + 2;
 
-    MENU_LOG("TkpComputeMenubarGeometry: totalWidth=%d, totalHeight=%d, numEntries=%d",
+    DEBUG_LOG("TkpComputeMenubarGeometry: totalWidth=%d, totalHeight=%d, numEntries=%d",
              menuPtr->totalWidth, menuPtr->totalHeight, menuPtr->numEntries);
 
     /* Log each entry's geometry. */
     for (i = 0; i < menuPtr->numEntries; i++) {
         mePtr = menuPtr->entries[i];
         if (mePtr && mePtr->labelPtr) {
-            MENU_LOG("  Entry %d: label='%s', x=%d, y=%d, w=%d, h=%d",
+            DEBUG_LOG("  Entry %d: label='%s', x=%d, y=%d, w=%d, h=%d",
                      i, Tcl_GetString(mePtr->labelPtr),
                      mePtr->x, mePtr->y, mePtr->width, mePtr->height);
         }
@@ -1131,7 +1131,7 @@ TkpSetWindowMenuBar(
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    MENU_LOG("TkpSetWindowMenuBar called for %s", Tk_PathName(tkwin));
+    DEBUG_LOG("TkpSetWindowMenuBar called for %s", Tk_PathName(tkwin));
 
     if (!wmPtr) return;
 
@@ -1154,7 +1154,7 @@ TkpSetWindowMenuBar(
 
     /* If we already have a menubar, just update it without destroying. */
     if (wmPtr->menubarMenuPtr == menuPtr && wmPtr->menubarPopup) {
-        MENU_LOG("TkpSetWindowMenuBar: updating existing menubar");
+        DEBUG_LOG("TkpSetWindowMenuBar: updating existing menubar");
         TkRecomputeMenu(menuPtr);
         wmPtr->menuHeight = menuPtr->totalHeight;
         if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
@@ -1180,7 +1180,7 @@ TkpSetWindowMenuBar(
     TkWaylandWmUpdateGeom(wmPtr, winPtr);
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
-        MENU_LOG("TkpSetWindowMenuBar: deferring menubar setup "
+        DEBUG_LOG("TkpSetWindowMenuBar: deferring menubar setup "
             "(toplevel not yet mapped)");
         Tcl_DoWhenIdle(MenuBarDeferredSetup, (void *)winPtr);
         return;
@@ -1223,7 +1223,7 @@ TkWaylandMenubarCreateOrResize(
 
     glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (!glfwWindow) {
-        MENU_LOG("TkWaylandMenubarCreateOrResize: no GLFW window");
+        DEBUG_LOG("TkWaylandMenubarCreateOrResize: no GLFW window");
         return;
     }
 
@@ -1252,7 +1252,7 @@ TkWaylandMenubarCreateOrResize(
         TkWaylandWmUpdateGeom(wmPtr, winPtr);
     }
 
-    MENU_LOG("TkWaylandMenubarCreateOrResize: creating menubar popup %dx%d", mbW, mbH);
+    DEBUG_LOG("TkWaylandMenubarCreateOrResize: creating menubar popup %dx%d", mbW, mbH);
 
     /* If popup already exists, try redraw or resize. */
     if (wmPtr->menubarPopup) {
@@ -1261,7 +1261,7 @@ TkWaylandMenubarCreateOrResize(
 
         /* Size matches → redraw. */
         if (curW == mbW && curH == mbH) {
-            MENU_LOG("TkWaylandMenubarCreateOrResize: redrawing existing popup");
+            DEBUG_LOG("TkWaylandMenubarCreateOrResize: redrawing existing popup");
 
             MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 
@@ -1270,7 +1270,7 @@ TkWaylandMenubarCreateOrResize(
         }
 
         /* Try resize. */
-        MENU_LOG("TkWaylandMenubarCreateOrResize: resizing popup from %dx%d to %dx%d",
+        DEBUG_LOG("TkWaylandMenubarCreateOrResize: resizing popup from %dx%d to %dx%d",
                  curW, curH, mbW, mbH);
 
         if (TkWaylandPopupResize(wmPtr->menubarPopup, mbW, mbH) == TCL_OK) {
@@ -1282,7 +1282,7 @@ TkWaylandMenubarCreateOrResize(
         }
 
         /* Resize failed → destroy and recreate. */
-        MENU_LOG("TkWaylandMenubarCreateOrResize: resize failed, recreating popup");
+        DEBUG_LOG("TkWaylandMenubarCreateOrResize: resize failed, recreating popup");
 
         if (wmPtr->popup == wmPtr->menubarPopup) {
             wmPtr->popup = NULL;
@@ -1344,11 +1344,11 @@ MenuBarDeferredSetup(
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
         if (++retries > 50) {        /* give up after ~50 idle cycles */
-            MENU_LOG("MenuBarDeferredSetup: giving up, still not mapped");
+            DEBUG_LOG("MenuBarDeferredSetup: giving up, still not mapped");
             retries = 0;
             return;
         }
-        MENU_LOG("MenuBarDeferredSetup: still not mapped, rescheduling");
+        DEBUG_LOG("MenuBarDeferredSetup: still not mapped, rescheduling");
         Tcl_DoWhenIdle(MenuBarDeferredSetup, clientData);
         return;
     }
@@ -1523,7 +1523,7 @@ TkpDrawMenuEntry(
     /* Safety check. */
     if (!mePtr || !mePtr->menuPtr || !mePtr->menuPtr->tkwin) return;
 
-    MENU_LOG("TkpDrawMenuEntry: entry label='%s', menuType=%d, pos=(%d,%d) size=%dx%d, type=%d",
+    DEBUG_LOG("TkpDrawMenuEntry: entry label='%s', menuType=%d, pos=(%d,%d) size=%dx%d, type=%d",
              mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
              mePtr->menuPtr->menuType, x, y, width, height, mePtr->type);
 
@@ -1583,13 +1583,13 @@ TkpDrawMenuEntry(
     }
 
     if (!popup) {
-        MENU_LOG("TkpDrawMenuEntry: no popup found for menu %p!", (void*)mePtr->menuPtr);
+        DEBUG_LOG("TkpDrawMenuEntry: no popup found for menu %p!", (void*)mePtr->menuPtr);
         return;
     }
 
     vg = TkWaylandPopupGetNVGContext(popup);
     if (!vg) {
-        MENU_LOG("TkpDrawMenuEntry: no NVG context available");
+        DEBUG_LOG("TkpDrawMenuEntry: no NVG context available");
         return;
     }
 
@@ -1671,7 +1671,7 @@ TkpDrawMenuEntry(
 
     /* For menubar entries, force label drawing. */
     if (isMenubar) {
-        MENU_LOG("TkpDrawMenuEntry: MENUBAR - forcing label draw for '%s'",
+        DEBUG_LOG("TkpDrawMenuEntry: MENUBAR - forcing label draw for '%s'",
                  mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)");
 
         /* Draw the label. */
@@ -1700,7 +1700,7 @@ TkpDrawMenuEntry(
         DrawTearoffEntry(mePtr->menuPtr, mePtr, vg,
                          entryFont, entryFmPtr, x, y, width, height);
     } else {
-        MENU_LOG("TkpDrawMenuEntry: drawing label for menuType=%d, type=%d",
+        DEBUG_LOG("TkpDrawMenuEntry: drawing label for menuType=%d, type=%d",
                  mePtr->menuPtr->menuType, mePtr->type);
 
         DrawMenuEntryLabel(mePtr->menuPtr, mePtr, vg, entryFont, entryFmPtr,
@@ -2125,7 +2125,7 @@ DrawMenuEntryLabel(
     int textXOffset = 0;
     int textYOffset = 0;
 
-    MENU_LOG("DrawMenuEntryLabel: ENTRY - menuType=%d, labelPtr=%p, labelLength=%d, label='%s'",
+    DEBUG_LOG("DrawMenuEntryLabel: ENTRY - menuType=%d, labelPtr=%p, labelLength=%d, label='%s'",
              menuPtr->menuType, (void *)mePtr->labelPtr, mePtr->labelLength,
              mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)");
 
@@ -2611,7 +2611,7 @@ TkpPostMenu(
         return TCL_ERROR;
     }
 
-    MENU_LOG("TkpPostMenu: menu=%p, x=%d, y=%d", (void*)menuPtr, x, y);
+    DEBUG_LOG("TkpPostMenu: menu=%p, x=%d, y=%d", (void*)menuPtr, x, y);
 
     if (menuPtr->menuType == TEAROFF_MENU) {
         return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
@@ -2642,7 +2642,7 @@ TkpPostMenu(
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
 
-    MENU_LOG("TkpPostMenu: popup size %dx%d", popupW, popupH);
+    DEBUG_LOG("TkpPostMenu: popup size %dx%d", popupW, popupH);
 
     /*
      * Resolve GLFW window for this popup.
@@ -2659,7 +2659,7 @@ TkpPostMenu(
         if (hitWin) {
             gw = TkWaylandResolveGLFWwindow(hitWin);
             if (gw) {
-                MENU_LOG("TkpPostMenu: found GLFW window from hit window %s",
+                DEBUG_LOG("TkpPostMenu: found GLFW window from hit window %s",
                          Tk_PathName(hitWin));
             }
         }
@@ -2674,7 +2674,7 @@ TkpPostMenu(
         if (parent) {
             gw = TkWaylandResolveGLFWwindow((Tk_Window)parent);
             if (gw) {
-                MENU_LOG("TkpPostMenu: found GLFW window from parent chain %s",
+                DEBUG_LOG("TkpPostMenu: found GLFW window from parent chain %s",
                          Tk_PathName((Tk_Window)parent));
             }
         }
@@ -2684,12 +2684,12 @@ TkpPostMenu(
     if (!gw) {
         gw = TkWaylandResolveGLFWwindow(menuPtr->tkwin);
         if (gw) {
-            MENU_LOG("TkpPostMenu: found GLFW window from menu's tkwin");
+            DEBUG_LOG("TkpPostMenu: found GLFW window from menu's tkwin");
         }
     }
 
     if (!gw) {
-        MENU_LOG("TkpPostMenu: warning - no GLFW window found, using main");
+        DEBUG_LOG("TkpPostMenu: warning - no GLFW window found, using main");
         gw = mainGlfwWindow;
     }
 
@@ -2737,17 +2737,17 @@ TkpMenuButtonPostMenu(
         return TCL_ERROR;
     }
 
-    MENU_LOG("TkpMenuButtonPostMenu: button=%s",
+    DEBUG_LOG("TkpMenuButtonPostMenu: button=%s",
              Tk_PathName((Tk_Window)buttonWin));
 
     if (!mbPtr->menuNameObj) {
-        MENU_LOG("TkpMenuButtonPostMenu: no menu name");
+        DEBUG_LOG("TkpMenuButtonPostMenu: no menu name");
         return TCL_ERROR;
     }
 
     menuRefPtr = TkFindMenuReferencesObj(interp, mbPtr->menuNameObj);
     if (!menuRefPtr || !menuRefPtr->menuPtr) {
-        MENU_LOG("TkpMenuButtonPostMenu: menu '%s' not found",
+        DEBUG_LOG("TkpMenuButtonPostMenu: menu '%s' not found",
                  Tcl_GetString(mbPtr->menuNameObj));
         return TCL_ERROR;
     }
@@ -2781,7 +2781,7 @@ TkpMenuButtonPostMenu(
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
 
-    MENU_LOG("TkpMenuButtonPostMenu: button pos=(%d,%d) size=%dx%d, popup size=%dx%d",
+    DEBUG_LOG("TkpMenuButtonPostMenu: button pos=(%d,%d) size=%dx%d, popup size=%dx%d",
              x, y, btnW, btnH, popupW, popupH);
 
     /*
@@ -2875,7 +2875,7 @@ MenuStackPop(
 MODULE_SCOPE void
 TkWaylandMenuDismissAll(void)
 {
-    MENU_LOG("TkWaylandMenuDismissAll called");
+    DEBUG_LOG("TkWaylandMenuDismissAll called");
 
     if (menuStackDepth == 0) {
         return;
@@ -2912,7 +2912,7 @@ TkWaylandMenubarDestroy(
     wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) return;
 
-    MENU_LOG("TkWaylandMenubarDestroy: destroying menubar popup for %s",
+    DEBUG_LOG("TkWaylandMenubarDestroy: destroying menubar popup for %s",
              Tk_PathName((Tk_Window)winPtr));
 
     if (wmPtr->menubarPopup) {
@@ -3177,7 +3177,7 @@ TkWaylandPostMenuAtAnchor(
 
     if (!gw) {
         /* Fall back to main window with a warning. */
-        MENU_LOG("TkWaylandPostMenuAtAnchor: warning - no GLFW window found, "
+        DEBUG_LOG("TkWaylandPostMenuAtAnchor: warning - no GLFW window found, "
                  "falling back to mainGlfwWindow");
         gw = mainGlfwWindow;
     }
@@ -3202,7 +3202,7 @@ TkWaylandPostMenuAtAnchor(
      */
     TkWaylandClampPopupGeometry(gw, &postX, &postY, &popupW, &popupH);
 
-    MENU_LOG("TkWaylandPostMenuAtAnchor: menu=%p, gw=%p, anchor=(%d,%d,%d,%d), size=%dx%d, "
+    DEBUG_LOG("TkWaylandPostMenuAtAnchor: menu=%p, gw=%p, anchor=(%d,%d,%d,%d), size=%dx%d, "
         "post=(%d,%d), isRoot=%d",
         (void*)menuPtr, (void*)gw, anchorX, anchorY, anchorW, anchorH, popupW, popupH,
         postX, postY, isRoot);
@@ -3258,7 +3258,7 @@ TkWaylandPostMenuAtAnchor(
 
     MenuDrawIntoPopup(menuPtr, popup);
 
-    MENU_LOG("TkWaylandPostMenuAtAnchor: success, depth=%d", menuStackDepth);
+    DEBUG_LOG("TkWaylandPostMenuAtAnchor: success, depth=%d", menuStackDepth);
 
     return TCL_OK;
 }
@@ -3294,27 +3294,27 @@ MenuDrawIntoPopup(
     int isMenubar = (menuPtr->menuType == MENUBAR);
 
     if (!popup || !menuPtr || !menuPtr->tkwin) {
-        MENU_LOG("MenuDrawIntoPopup: invalid parameters");
+        DEBUG_LOG("MenuDrawIntoPopup: invalid parameters");
         return;
     }
 
     TkWaylandPopupGetSize(popup, &menuW, &menuH);
-    MENU_LOG("MenuDrawIntoPopup: menu %p, popup %p, size %dx%d, isMenubar=%d, numEntries=%d",
+    DEBUG_LOG("MenuDrawIntoPopup: menu %p, popup %p, size %dx%d, isMenubar=%d, numEntries=%d",
         (void*)menuPtr, (void*)popup, menuW, menuH, isMenubar, menuPtr->numEntries);
 
     if (menuW <= 0 || menuH <= 0) {
-        MENU_LOG("MenuDrawIntoPopup: invalid size");
+        DEBUG_LOG("MenuDrawIntoPopup: invalid size");
         return;
     }
 
     if (TkWaylandPopupBeginDraw(popup) != TCL_OK) {
-        MENU_LOG("MenuDrawIntoPopup: BeginDraw failed");
+        DEBUG_LOG("MenuDrawIntoPopup: BeginDraw failed");
         return;
     }
 
     NVGcontext *vg = TkWaylandPopupGetNVGContext(popup);
     if (!vg) {
-        MENU_LOG("MenuDrawIntoPopup: no NVG context");
+        DEBUG_LOG("MenuDrawIntoPopup: no NVG context");
         TkWaylandPopupEndDraw(popup);
         return;
     }
@@ -3464,7 +3464,7 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     }
 
     if (TkWaylandPopupBeginDraw(popup) != TCL_OK) {
-        MENU_LOG("MenuDrawMenubarIntoPopup: BeginDraw failed");
+        DEBUG_LOG("MenuDrawMenubarIntoPopup: BeginDraw failed");
         return;
     }
 
@@ -3520,7 +3520,7 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
             }
         }
 
-        MENU_LOG("Menubar entry %d '%s' active=%d state=%d",
+        DEBUG_LOG("Menubar entry %d '%s' active=%d state=%d",
                  i,
                  mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
                  menuPtr->active,
@@ -3566,10 +3566,10 @@ TkpDisplayMenu(
     TkWaylandPopup *popup = NULL;
     int isMenubar = 0;
 
-    MENU_LOG("TkpDisplayMenu called");
+    DEBUG_LOG("TkpDisplayMenu called");
 
     if (!menuPtr || !menuPtr->tkwin) {
-        MENU_LOG("TkpDisplayMenu: invalid menu");
+        DEBUG_LOG("TkpDisplayMenu: invalid menu");
         return;
     }
 
@@ -3603,7 +3603,7 @@ TkpDisplayMenu(
     }
 
     if (!popup) {
-        MENU_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
+        DEBUG_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
         return;
     }
 
@@ -3674,7 +3674,7 @@ TkWaylandMenuRedrawActive(void)
 void
 TkWaylandMenuInit(void)
 {
-    MENU_LOG("TkWaylandMenuInit called");
+    DEBUG_LOG("TkWaylandMenuInit called");
     TkWaylandPopupInit();
 }
 
@@ -3801,7 +3801,7 @@ TkpPostTearoffMenu(
     int screenW = 1920;
     int screenH = 1080;
 
-    MENU_LOG("TkpPostTearoffMenu called");
+    DEBUG_LOG("TkpPostTearoffMenu called");
 
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
@@ -4029,7 +4029,7 @@ MenuMouseMotion(
 
     if (!menuPtr) return;
 
-    MENU_LOG("MenuMouseMotion: menu=%p, x=%d, y=%d, numEntries=%d, stackDepth=%d",
+    DEBUG_LOG("MenuMouseMotion: menu=%p, x=%d, y=%d, numEntries=%d, stackDepth=%d",
              (void*)menuPtr, x, y, menuPtr->numEntries, menuStackDepth);
 
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -4041,14 +4041,14 @@ MenuMouseMotion(
 
             foundEntry = 1;
 
-            MENU_LOG("MenuMouseMotion: hit entry %d, label='%s', type=%d, state=%d",
+            DEBUG_LOG("MenuMouseMotion: hit entry %d, label='%s', type=%d, state=%d",
                      i, mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
                      mePtr->type, mePtr->state);
 
             if (mePtr->state == ENTRY_DISABLED ||
                 mePtr->type == SEPARATOR_ENTRY ||
                 mePtr->type == TEAROFF_ENTRY) {
-                MENU_LOG("MenuMouseMotion: entry %d is disabled/separator/tearoff, skipping", i);
+                DEBUG_LOG("MenuMouseMotion: entry %d is disabled/separator/tearoff, skipping", i);
                 continue;
             }
 
@@ -4057,7 +4057,7 @@ MenuMouseMotion(
                 /* If there's a different cascade posted, unpost it. */
                 if (menuPtr->postedCascade != NULL &&
                     menuPtr->postedCascade != mePtr) {
-                    MENU_LOG("MenuMouseMotion: unposting previous cascade");
+                    DEBUG_LOG("MenuMouseMotion: unposting previous cascade");
                     TkPostSubmenu(menuPtr->interp, menuPtr, NULL);
                     menuPtr->postedCascade = NULL;
 
@@ -4077,12 +4077,12 @@ MenuMouseMotion(
                     int level = MenuStackFindLevel(menuPtr);
                     GLFWwindow *parentGw = NULL;
 
-                    MENU_LOG("MenuMouseMotion: CASCADE entry '%s' (name='%s'), level=%d",
+                    DEBUG_LOG("MenuMouseMotion: CASCADE entry '%s' (name='%s'), level=%d",
                              Tcl_GetString(mePtr->labelPtr),
                              Tcl_GetString(mePtr->namePtr), level);
 
                     if (level < 0) {
-                        MENU_LOG("MenuMouseMotion: level < 0, menu not found in stack!");
+                        DEBUG_LOG("MenuMouseMotion: level < 0, menu not found in stack!");
                         return;
                     }
 
@@ -4092,18 +4092,18 @@ MenuMouseMotion(
                              menuPtr->interp, mePtr->namePtr);
 
                     if (!menuRefPtr || !menuRefPtr->menuPtr) {
-                        MENU_LOG("MenuMouseMotion: menuRefPtr or menuPtr is NULL");
+                        DEBUG_LOG("MenuMouseMotion: menuRefPtr or menuPtr is NULL");
                         return;
                     }
 
                     TkMenu *cascadePtr = menuRefPtr->menuPtr;
 
                     if (!cascadePtr->tkwin) {
-                        MENU_LOG("MenuMouseMotion: cascadePtr->tkwin is NULL!");
+                        DEBUG_LOG("MenuMouseMotion: cascadePtr->tkwin is NULL!");
                         return;
                     }
 
-                    MENU_LOG("MenuMouseMotion: cascadePtr=%p, tkwin=%s",
+                    DEBUG_LOG("MenuMouseMotion: cascadePtr=%p, tkwin=%s",
                              (void*)cascadePtr, Tk_PathName(cascadePtr->tkwin));
 
                     /* Pop any existing submenus below this level. */
@@ -4112,7 +4112,7 @@ MenuMouseMotion(
                     /* Recompute level after popping. */
                     int newLevel = MenuStackFindLevel(menuPtr);
                     if (newLevel < 0) {
-                        MENU_LOG("MenuMouseMotion: parent menu no longer in stack after pop!");
+                        DEBUG_LOG("MenuMouseMotion: parent menu no longer in stack after pop!");
                         return;
                     }
                     level = newLevel;
@@ -4133,7 +4133,7 @@ MenuMouseMotion(
                         cascadeW, cascadeH,
                         &cascadeAnchorX, &cascadeAnchorY);
 
-                    MENU_LOG("MenuMouseMotion: posting cascade at (%d,%d) size %dx%d",
+                    DEBUG_LOG("MenuMouseMotion: posting cascade at (%d,%d) size %dx%d",
                              cascadeAnchorX, cascadeAnchorY, cascadeW, cascadeH);
 
                     menuPtr->postedCascade = mePtr;
@@ -4143,7 +4143,7 @@ MenuMouseMotion(
                         cascadeAnchorX, cascadeAnchorY, 0, 0,
                         cascadeW, cascadeH, 0, parentGw);
 
-                    MENU_LOG("MenuMouseMotion: TkWaylandPostMenuAtAnchor returned %d", result);
+                    DEBUG_LOG("MenuMouseMotion: TkWaylandPostMenuAtAnchor returned %d", result);
 
                     if (result == TCL_OK) {
                         /*
@@ -4181,7 +4181,7 @@ MenuMouseMotion(
         /* Only deactivate if this menu is the topmost in the stack. */
         int level = MenuStackFindLevel(menuPtr);
         if (level >= 0 && level == menuStackDepth - 1) {
-            MENU_LOG("MenuMouseMotion: no entry found, deactivating");
+            DEBUG_LOG("MenuMouseMotion: no entry found, deactivating");
             TkActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
@@ -4337,7 +4337,7 @@ TkWaylandMenubarHandleClick(
     menuPtr = wmPtr->menubarMenuPtr;
     gw = TkWaylandResolveGLFWwindow((Tk_Window)winPtr);
 
-    MENU_LOG("TkWaylandMenubarHandleClick: x=%d y=%d menuHeight=%d", x, y, wmPtr->menuHeight);
+    DEBUG_LOG("TkWaylandMenubarHandleClick: x=%d y=%d menuHeight=%d", x, y, wmPtr->menuHeight);
 
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
@@ -4367,7 +4367,7 @@ TkWaylandMenubarHandleClick(
 
                 menuPtr->postedCascade = mePtr;
 
-                MENU_LOG("TkWaylandMenubarHandleClick: posting cascade '%s'",
+                DEBUG_LOG("TkWaylandMenubarHandleClick: posting cascade '%s'",
                          Tcl_GetString(mePtr->namePtr));
 
                 pendingRootIsMenubar = 1;
@@ -4506,20 +4506,20 @@ TkWaylandMenuHandlePointerMotion(
 {
     int i;
 
-    MENU_LOG("TkWaylandMenuHandlePointerMotion: x=%d, y=%d, stackDepth=%d", x, y, menuStackDepth);
+    DEBUG_LOG("TkWaylandMenuHandlePointerMotion: x=%d, y=%d, stackDepth=%d", x, y, menuStackDepth);
 
     for (i = menuStackDepth - 1; i >= 0; i--) {
         MenuStackEntry *entry = &menuStack[i];
         if (x >= entry->x && x < entry->x + entry->w &&
             y >= entry->y && y < entry->y + entry->h) {
-            MENU_LOG("TkWaylandMenuHandlePointerMotion: hit stack entry %d at (%d,%d) size %dx%d",
+            DEBUG_LOG("TkWaylandMenuHandlePointerMotion: hit stack entry %d at (%d,%d) size %dx%d",
                      i, entry->x, entry->y, entry->w, entry->h);
             MenuMouseMotion(entry->menuPtr, x - entry->x, y - entry->y);
             return;
         }
     }
 
-    MENU_LOG("TkWaylandMenuHandlePointerMotion: no menu hit at (%d,%d)", x, y);
+    DEBUG_LOG("TkWaylandMenuHandlePointerMotion: no menu hit at (%d,%d)", x, y);
 
     if (menuStackDepth > 0) {
         TkMenu *topMenu = menuStack[menuStackDepth - 1].menuPtr;
@@ -4804,7 +4804,7 @@ TkWaylandWmUpdateGeom(
 {
     if (!wmPtr || !winPtr) return;
 
-    MENU_LOG("TkWaylandWmUpdateGeom called for %s", Tk_PathName((Tk_Window)winPtr));
+    DEBUG_LOG("TkWaylandWmUpdateGeom called for %s", Tk_PathName((Tk_Window)winPtr));
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
@@ -4900,13 +4900,13 @@ TkWaylandPostVirtualEvent(
     int result;
 
     if (!winPtr || !eventName) {
-        MENU_LOG("TkWaylandPostVirtualEvent: invalid parameters");
+        DEBUG_LOG("TkWaylandPostVirtualEvent: invalid parameters");
         return;
     }
 
     info = TkGetMainInfoList();
     if (!info || !info->interp) {
-        MENU_LOG("TkWaylandPostVirtualEvent: no interpreter found");
+        DEBUG_LOG("TkWaylandPostVirtualEvent: no interpreter found");
         return;
     }
     interp = info->interp;
@@ -4919,19 +4919,19 @@ TkWaylandPostVirtualEvent(
 
     eventScript = (char *)ckalloc(len + 64);
     if (!eventScript) {
-        MENU_LOG("TkWaylandPostVirtualEvent: memory allocation failed");
+        DEBUG_LOG("TkWaylandPostVirtualEvent: memory allocation failed");
         return;
     }
 
     sprintf(eventScript, "event generate %s <%*s>",
             Tk_PathName((Tk_Window)winPtr), (int)len, eventNameWithoutBrackets);
 
-    MENU_LOG("TkWaylandPostVirtualEvent: posting %s via '%s'",
+    DEBUG_LOG("TkWaylandPostVirtualEvent: posting %s via '%s'",
              eventName, eventScript);
 
     result = Tcl_EvalEx(interp, eventScript, -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
-        MENU_LOG("TkWaylandPostVirtualEvent: Tcl_Eval failed: %s",
+        DEBUG_LOG("TkWaylandPostVirtualEvent: Tcl_Eval failed: %s",
                  Tcl_GetStringResult(interp));
     }
 
@@ -5057,7 +5057,7 @@ MenubarPostCascadeAtEntry(
 
     gw = TkWaylandResolveGLFWwindow((Tk_Window)wmPtr->winPtr);
 
-    MENU_LOG("MenubarPostCascadeAtEntry: posting cascade '%s' at x=%d",
+    DEBUG_LOG("MenubarPostCascadeAtEntry: posting cascade '%s' at x=%d",
              Tcl_GetString(mePtr->namePtr), mePtr->x);
 
     pendingRootIsMenubar = 1;
@@ -5081,13 +5081,13 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
 
     wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr || !wmPtr->menubarMenuPtr || !wmPtr->menubarPopup) {
-        MENU_LOG("TkWaylandMenubarActivateFirst: no menubar for window");
+        DEBUG_LOG("TkWaylandMenubarActivateFirst: no menubar for window");
         return 0;
     }
 
     menuPtr = wmPtr->menubarMenuPtr;
 
-    MENU_LOG("TkWaylandMenubarActivateFirst: activating first entry in menubar");
+    DEBUG_LOG("TkWaylandMenubarActivateFirst: activating first entry in menubar");
 
     /* Find the first non-disabled entry (preferring CASCADE entries). */
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -5108,7 +5108,7 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
         return 1;
     }
 
-    MENU_LOG("TkWaylandMenubarActivateFirst: no usable entries found");
+    DEBUG_LOG("TkWaylandMenubarActivateFirst: no usable entries found");
     return 0;
 }
 
@@ -5183,7 +5183,7 @@ TkWaylandMenubarMove(TkWindow *winPtr, int direction)
         Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
         TkpDisplayMenu((void *)menuPtr);
 
-        MENU_LOG("Menubar highlight moved %s: %d -> %d",
+        DEBUG_LOG("Menubar highlight moved %s: %d -> %d",
                  direction > 0 ? "right" : "left", current, newIdx);
 
         if (wasPosted) {

@@ -15,13 +15,12 @@
 #include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 
-/* Debug macro */
-#define MENU_DEBUG 1
-#if MENU_DEBUG
-#define MENU_LOG(fmt, ...) fprintf(stderr, "MENU: " fmt "\n", ##__VA_ARGS__)
-#else
-#define MENU_LOG(fmt, ...) ((void)0)
-#endif
+/* Debugging */
+/*
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL menubutton
+*/
+#include "tkWaylandDebug.h"
 
 MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);

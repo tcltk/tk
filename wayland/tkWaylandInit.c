@@ -26,6 +26,11 @@
 #include <GLFW/glfw3native.h>
 #include <wayland-egl.h>
 
+/* Debugging */
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "init"
+#include "tkWaylandDebug.h"
+
 /*
  *----------------------------------------------------------------------
  *
@@ -103,7 +108,7 @@ static unsigned char* readFont(
     size_t fileSize;
     FILE* file = fopen(fontPath, "rb");
     if (!file) {
-        fprintf(stderr, "Could not open font file %s\n", fontPath);
+        DEBUG_LOG("Could not open font file %s", fontPath);
         return NULL;
     }
     fseek(file, 0, SEEK_END);
@@ -112,7 +117,7 @@ static unsigned char* readFont(
     unsigned char* buffer = malloc(fileSize);
     if (!buffer) {
         fclose(file);
-        Tcl_Panic("Could not allocate memory for font data.\n");
+        Tcl_Panic("Could not allocate memory for font data.");
     }
     if (fileSize != fread(buffer, 1, fileSize, file)) {
 	Tcl_Panic("Read failed on font file");
@@ -165,7 +170,7 @@ static glfwTkInfo* createGlfwTkInfo(
 				  | NVG_STENCIL_STROKES
 				  | NVG_DEBUG);
     if (!infoPtr->vg) {
-        fprintf(stderr, "createGlfwTkInfo: nvgCreateGLES3() failed\n");
+        DEBUG_LOG("createGlfwTkInfo: nvgCreateGLES3() failed");
         glfwDestroyWindow(glfwWindow);
         glfwTerminate();
         return NULL;
@@ -182,7 +187,7 @@ static glfwTkInfo* createGlfwTkInfo(
 static void destroyGlfwTkInfo(
     GLFWwindow* glfwWindow)
 {
-    fprintf(stderr, "destroyGlfwTkInfo\n");
+    DEBUG_LOG("destroyGlfwTkInfo");
     glfwTkInfo* prev = NULL;
     glfwTkInfo *infoPtr = glfwTkInfoList;
     while(infoPtr) {
@@ -249,71 +254,24 @@ static void renderFBO(
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr) {
-        fprintf(stderr, "renderFBO: No UserPointer\n");
+        DEBUG_LOG("renderFBO: No UserPointer");
         return;
     }
     
-    /* Check if winPtr or privatePtr is NULL. */
     if (!infoPtr->winPtr) {
-        fprintf(stderr, "renderFBO: winPtr is NULL\n");
+        DEBUG_LOG("renderFBO: winPtr is NULL");
         return;
     }
     
     if (!infoPtr->winPtr->privatePtr) {
-        fprintf(stderr, "renderFBO: privatePtr is NULL\n");
+        DEBUG_LOG("renderFBO: privatePtr is NULL");
         return;
     }
     
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
-    
-    /* Check if framebuffer exists. */
-    if (!fb) {
-        fprintf(stderr, "renderFBO: framebuffer is NULL - creating one\n");
-        
-        /* Try to create a framebuffer. */
-        int fbWidth, fbHeight;
-        glfwMakeContextCurrent(glfwWindow);
-        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-        
-        if (fbWidth <= 0) fbWidth = 200;
-        if (fbHeight <= 0) fbHeight = 200;
-        
-        fb = nvgluCreateFramebuffer(infoPtr->vg, fbWidth, fbHeight, 0);
-        if (!fb) {
-            fprintf(stderr, "renderFBO: failed to create framebuffer\n");
-            return;
-        }
-        infoPtr->winPtr->privatePtr->fb = fb;
-        fprintf(stderr, "renderFBO: created framebuffer %p (%dx%d)\n", 
-                fb, fbWidth, fbHeight);
-
-        /* See the comment in TkWaylandCreateWindow: a freshly created FBO's
-         * color attachment is uninitialized GPU memory until cleared. */
-        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
-        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-    
     int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    
-    /* Ensure framebuffer is valid by checking its fbo ID. */
-    if (fb->fbo == 0) {
-        fprintf(stderr, "renderFBO: framebuffer has invalid fbo ID - recreating\n");
-        nvgluDeleteFramebuffer(fb);
-        fb = nvgluCreateFramebuffer(infoPtr->vg, fbWidth, fbHeight, 0);
-        if (!fb) {
-            fprintf(stderr, "renderFBO: failed to recreate framebuffer\n");
-            return;
-        }
-        infoPtr->winPtr->privatePtr->fb = fb;
-
-        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
-        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-    
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, fbWidth, fbHeight,
@@ -372,17 +330,16 @@ Tk_ClipDrawableToRect(
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
-    printf("Tk_ClipDrawableToRect: %s %dx%d+%d+%d\n",
+    DEBUG_LOG("Tk_ClipDrawableToRect: %s %dx%d+%d+%d",
 	Tk_PathName(winPtr), width, height, x, y);
 
-    //// Should check for NULL
     if (width == -1 || height == -1) {
-	printf("Clearing clipRect for %s\n", Tk_PathName(winPtr));
+	DEBUG_LOG("Clearing clipRect for %s", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
 	renderFBO(glfwWindow);
     } else {
-	printf("Adding clipRect for %s\n", Tk_PathName(winPtr));
+	DEBUG_LOG("Adding clipRect for %s", Tk_PathName(winPtr));
 	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
 	glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
     }
@@ -420,7 +377,7 @@ TkWaylandDisplayAllWindows()
                 !infoPtr->winPtr->privatePtr->fb) {
                 /* Clear the flag to avoid repeated attempts. */
                 infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
-                fprintf(stderr, "TkWaylandDisplayAllWindows: skipping %s (no FBO)\n",
+                DEBUG_LOG("TkWaylandDisplayAllWindows: skipping %s (no FBO)",
                         infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
                 continue;
             }
@@ -430,7 +387,7 @@ TkWaylandDisplayAllWindows()
 				glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
 				continue;   /* leave TKWL_NEEDS_DISPLAY set for when it becomes visible */
 			}
-            fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
+            DEBUG_LOG("Displaying %s", Tk_PathName(infoPtr->winPtr));
             renderFBO(glfwWindow);
             infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
         }
@@ -459,7 +416,7 @@ TkWaylandErrorCallback(int error, const char *desc)
     /* Don't print errors during shutdown. */
     if (shutdownInProgress) return;
 
-    fprintf(stderr, "GLFW Error %d: %s\n", error, desc);
+    DEBUG_LOG("GLFW Error %d: %s", error, desc);
 }
 
 
@@ -491,7 +448,7 @@ TkWaylandInitialize(void)
     glfwSetErrorCallback(TkWaylandErrorCallback);
 
     if (!glfwInit()) {
-        fprintf(stderr, "TkWaylandInitialize: glfwInit() failed\n");
+        DEBUG_LOG("TkWaylandInitialize: glfwInit() failed");
         return TCL_ERROR;
     }
 
@@ -519,7 +476,7 @@ TkWaylandInitialize(void)
 
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
-        fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
+        DEBUG_LOG("TkWaylandInitialize: failed to create root window");
         glfwTerminate();
         return TCL_ERROR;
     }
@@ -533,9 +490,9 @@ TkWaylandInitialize(void)
     /*
      * Now GL is guaranteed valid.
      */
-    fprintf(stderr, "GL_VENDOR   = %s\n", glGetString(GL_VENDOR));
-    fprintf(stderr, "GL_RENDERER = %s\n", glGetString(GL_RENDERER));
-    fprintf(stderr, "GL_VERSION  = %s\n", glGetString(GL_VERSION));
+    DEBUG_LOG("GL_VENDOR   = %s", glGetString(GL_VENDOR));
+    DEBUG_LOG("GL_RENDERER = %s", glGetString(GL_RENDERER));
+    DEBUG_LOG("GL_VERSION  = %s", glGetString(GL_VERSION));
 
     /*
      * Clear the default framebuffer so the first swap (when the window
@@ -551,7 +508,7 @@ TkWaylandInitialize(void)
      */
     waylandDisplay = glfwGetWaylandDisplay();
     if (!waylandDisplay) {
-        fprintf(stderr, "TkWaylandInitialize: glfwGetWaylandDisplay() failed\n");
+        DEBUG_LOG("TkWaylandInitialize: glfwGetWaylandDisplay() failed");
         glfwTerminate();
         return TCL_ERROR;
     }
@@ -658,9 +615,9 @@ TkWaylandCreateWindow(
     const char *title,
     Drawable   *drawableOut)
 {
-    fprintf(stderr, "TkWaylandCreateWindow\n");
+    DEBUG_LOG("TkWaylandCreateWindow");
     if (winPtr == NULL) {
-        Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
+        Tcl_Panic("TkWaylandCreateWindow called with null winPtr");
     }
 
     /* Don't create windows during shutdown. */
@@ -737,7 +694,7 @@ TkWaylandCreateWindow(
     }
 
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
-    fprintf(stderr, "nvgContext for %s is at %p\n",
+    DEBUG_LOG("nvgContext for %s is at %p",
             Tk_PathName(winPtr), infoPtr);
 
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
@@ -751,7 +708,7 @@ TkWaylandCreateWindow(
     int fbWidth, fbHeight;
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
-    fprintf(stderr, "Initial pixel ratio for %s is %f\n",
+    DEBUG_LOG("Initial pixel ratio for %s is %f",
             Tk_PathName(winPtr), scale);
 
     /* Create a framebuffer for the backing store of the window. */
@@ -760,10 +717,10 @@ TkWaylandCreateWindow(
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->vg,
                                                      fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fb == NULL) {
-        fprintf(stderr, "Could not create NanoVG framebuffer\n");
+        DEBUG_LOG("Could not create NanoVG framebuffer");
     }
 
-    fprintf(stderr, "Window %s has glfwWindow %p and framebuffer %p\n",
+    DEBUG_LOG("Window %s has glfwWindow %p and framebuffer %p",
             Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
 
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
@@ -771,9 +728,9 @@ TkWaylandCreateWindow(
     /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO is incomplete (status=0x%x)\n", status);
+        DEBUG_LOG("FBO is incomplete (status=0x%x)", status);
     } else {
-        fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
+        DEBUG_LOG("Window %s has a complete framebuffer @ %p",
                 Tk_PathName(winPtr), winPtr->privatePtr->fb);
 
         /*
@@ -829,7 +786,7 @@ TkWaylandCreateWindow(
 MODULE_SCOPE void
 TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
 {
-    fprintf(stderr, "TkWaylandDestroyWindow\n");
+    DEBUG_LOG("TkWaylandDestroyWindow");
     if (!glfwWindow) {
 	return;
     }
@@ -874,7 +831,7 @@ TkWaylandBeginDraw(
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
 	glfwTkInfo *infoPtr = getGlfwTkInfo(pixmap->glfwWindow);
-	fprintf(stderr, "BeginDraw: received pixmap %p\n", pixmap);
+	DEBUG_LOG("BeginDraw: received pixmap %p", pixmap);
 
 	dcPtr->vg = infoPtr->vg;
 	dcPtr->drawable = drawable;
@@ -906,7 +863,7 @@ TkWaylandBeginDraw(
 	y += winPtr->changes.y;
     	winPtr = winPtr->parentPtr;
     }
-    fprintf(stderr, "BeginDraw: %s in toplevel %s with offset (%d, %d)\n",
+    DEBUG_LOG("BeginDraw: %s in toplevel %s with offset (%d, %d)",
 	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
 
     /*
@@ -917,12 +874,11 @@ TkWaylandBeginDraw(
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
 	/*
-	 * It is too early to be drawing in this window.  It may not
-	 * have a GL context yet.  Try again later.
+	 * It may be too early to be drawing in this window.  It may not have
+	 * a GL context yet.  Schedule a redraw.
 	 */
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
-	return TCL_ERROR;
     }
 
     /* Set up the nanoVG drawing context for this nvgFrame. */
@@ -950,10 +906,10 @@ TkWaylandBeginDraw(
 	     * there were an alternative to this crude workaround.
 	     */
 	    if (childPtr->privatePtr->container) {
-		printf("==============> Bad ClipRects for child %s contained in %s: ",
+		DEBUG_LOG("==============> Bad ClipRects for child %s contained in %s: ",
 		       Tk_PathName(childPtr),
 		       Tk_PathName(childPtr->privatePtr->container));
-		printf("clip xy = %.0f, %0.f: win xy = %.0f, %.0f\n",
+		DEBUG_LOG("clip xy = %.0f, %0.f: win xy = %.0f, %.0f",
 		       clip.x, clip.y, scale * x, scale * y);
 #if 0
 		TkWindow *container = childPtr->privatePtr->container;
@@ -963,10 +919,9 @@ TkWaylandBeginDraw(
 	    }
 	}
     }
-    fprintf(stderr,
-	    "BeginFrame for %s in toplevel %s of size %dx%d and scale %f\n",
-	    Tk_PathName(childPtr), Tk_PathName(winPtr),
-	    Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    DEBUG_LOG("BeginFrame for %s in toplevel %s of size %dx%d and scale %f",
+	Tk_PathName(childPtr), Tk_PathName(winPtr),
+	Tk_Width(winPtr), Tk_Height(winPtr), scale);
 
     /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
     if (infoPtr->flags & TKWL_IS_DRAWING) {
@@ -1013,7 +968,7 @@ MODULE_SCOPE void
 TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) {
-	fprintf(stderr, "No drawing context!\n");
+	DEBUG_LOG("No drawing context!");
 	return;
     }
     if (TkWaylandDrawableIsPixmap(dcPtr->drawable)) {
@@ -1028,7 +983,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     }
     //// This is the case where the drawable is a window.
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
-    fprintf(stderr, "EndDraw for drawable %lx (%s)\n", dcPtr->drawable,
+    DEBUG_LOG("EndDraw for drawable %lx (%s)", dcPtr->drawable,
 	    Tk_PathName(winPtr));
     TkWindow *toplevelPtr = winPtr;
     while (!Tk_IsTopLevel(toplevelPtr)) {
@@ -1051,11 +1006,11 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glfwMakeContextCurrent(glfwWindow);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    fprintf(stderr, "Framebuffer size is now %d x %d\n", fbWidth, fbHeight);
+    DEBUG_LOG("Framebuffer size is now %d x %d", fbWidth, fbHeight);
     /* Bind our backing store framebuffer. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
 
-    fprintf(stderr, "EndDraw: setting viewport to %dx%d\n", fbWidth, fbHeight);
+    DEBUG_LOG("EndDraw: setting viewport to %dx%d", fbWidth, fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
     /* Check FBO completeness (for now). */
@@ -1063,7 +1018,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
 
-        fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
+        DEBUG_LOG("FBO is incomplete! (status=0x%x)", status);
     }
     
     /*
@@ -1092,14 +1047,14 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 
     /* We must not nest nvgBeginFrame/nvgEndFrame blocks! */
     if ((infoPtr->flags & TKWL_IS_DRAWING) == 0) {
-	Tcl_Panic("EndFrame without BeginFrame\n");
+	Tcl_Panic("EndFrame without BeginFrame");
     }
     infoPtr->flags &= ~TKWL_IS_DRAWING;
     /* Run all queued nanoVG drawing commands. */
     nvgEndFrame(dcPtr->vg);
 
     nvgluBindFramebuffer(NULL);
-    fprintf(stderr, "Drew %s in toplevel %s\n",
+    DEBUG_LOG("Drew %s in toplevel %s",
 	    Tk_PathName(winPtr), Tk_PathName(toplevelPtr));
 
 
@@ -1145,7 +1100,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     if (!(infoPtr->flags & TKWL_DONT_SWAP)) {
         infoPtr->flags |= TKWL_NEEDS_DISPLAY;
     } else {
-	printf("dontSwap was set - waiting\n");
+	DEBUG_LOG("dontSwap was set - waiting");
     }
 }
 
@@ -1171,13 +1126,13 @@ TkWaylandGetNVGContext(
     Drawable drawable)
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
-	fprintf(stderr, "Contexts not available for pixmaps yet.\n");
+	DEBUG_LOG("Contexts not available for pixmaps yet.");
 	return NULL;
     }
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr || shutdownInProgress) {
-	fprintf(stderr, "TkWaylandGetNVContext: No UserPointer\n");
+	DEBUG_LOG("TkWaylandGetNVContext: No UserPointer");
 	return NULL;
     }
     return infoPtr->vg;
@@ -1479,11 +1434,11 @@ TkWaylandGetTkWindow(GLFWwindow *glfwWindow)
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr) {
-	fprintf(stderr, "TkWaylandGetTkWindow: No UserPointer.\n");
+	DEBUG_LOG("TkWaylandGetTkWindow: No UserPointer.");
 	return NULL;
     }
     if (!infoPtr->winPtr) {
-	fprintf(stderr, "TkWaylandGetTkWindow: No winPtr in User data.\n");
+	DEBUG_LOG("TkWaylandGetTkWindow: No winPtr in User data.");
 	return NULL;
     }
 

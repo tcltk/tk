@@ -1757,6 +1757,11 @@ TkImgDitherInstance(
 				 * block to be dithered. */
     int width, int height)	/* Dimensions of the block to be dithered. */
 {
+#ifdef TK_CAN_RENDER_RGBA
+    /* Images with 8-bit color do not need dithering. */
+    return;
+#else
+
     PhotoModel *modelPtr = instancePtr->modelPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
@@ -2076,6 +2081,7 @@ TkImgDitherInstance(
 
     Tcl_Free(imagePtr->data);
     imagePtr->data = NULL;
+#endif  /*TK_CAN_RENDER_RGBA*/
 }
 
 /*

@@ -36,6 +36,11 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
+/* Debugging */
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "GC"
+#include "tkWaylandDebug.h"
+
 extern GLFWwindow *mainGlfwWindow;
 
 /* Hash table for pixmap ID to pointer mapping */
@@ -482,6 +487,7 @@ Tk_GetPixmap(
 
     /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
+    DEBUG_LOG("Tk_GetPixmap: Creating a framebuffer.");
     pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->vg,
 					 width, height, 0);
 
