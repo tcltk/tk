@@ -61,6 +61,7 @@ static XRectangle wsClipBox = {0, 0, 0, 0};
 static int        GetBidiRuns(FcChar32 *ucs4, int charCount,
 			      BidiRun *runs, int maxRuns);
 static bool       IsSimpleOnly(const char *str, int len);
+static bool       ContainsCombiningMark(const char *str, int len);
 static bool       IsEmoji(FcChar32 uc);
 static int        GetEmojiFaceIndex(WaylandFont *fontPtr);
 static int        GetRunFaceIndex(WaylandFont *fontPtr, FcChar32 *ucs4Chars,
@@ -79,6 +80,7 @@ static bool       IsSansSerifFace(FcPattern *pat);
 static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
 static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
+static int         EncodeUtf8Char(FcChar32 uc, char out[4]);
 
 /*
  *----------------------------------------------------------------------
@@ -366,6 +368,45 @@ UnicodeCompose(FcChar32 base, FcChar32 mark)
 
 /*
  *----------------------------------------------------------------------
+ * EncodeUtf8Char --
+ *
+ *   Encode a single Unicode codepoint as UTF-8 into a caller-supplied
+ *   4-byte buffer (not NUL-terminated).
+ *
+ * Results:
+ *   Number of bytes written (1-4).
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+EncodeUtf8Char(FcChar32 uc, char out[4])
+{
+    if (uc <= 0x7F) {
+        out[0] = (char)uc;
+        return 1;
+    } else if (uc <= 0x7FF) {
+        out[0] = (char)(0xC0 | ((uc >> 6) & 0x1F));
+        out[1] = (char)(0x80 | (uc & 0x3F));
+        return 2;
+    } else if (uc <= 0xFFFF) {
+        out[0] = (char)(0xE0 | ((uc >> 12) & 0x0F));
+        out[1] = (char)(0x80 | ((uc >> 6) & 0x3F));
+        out[2] = (char)(0x80 | (uc & 0x3F));
+        return 3;
+    } else {
+        out[0] = (char)(0xF0 | ((uc >> 18) & 0x07));
+        out[1] = (char)(0x80 | ((uc >> 12) & 0x3F));
+        out[2] = (char)(0x80 | ((uc >> 6) & 0x3F));
+        out[3] = (char)(0x80 | (uc & 0x3F));
+        return 4;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * ComposeUTF8String --
  *
  *   Compose combining diacritical marks in a UTF-8 string.
@@ -486,28 +527,9 @@ ComposeUTF8String(const char *source, int len)
         
         if (hadCombining && combined != base) {
             /* Encode composed character as UTF-8. */
-            char utf8[8];
-            int utf8Len = 0;
-            if (combined <= 0x7F) {
-                utf8[0] = (char)combined;
-                utf8Len = 1;
-            } else if (combined <= 0x7FF) {
-                utf8[0] = (char)(0xC0 | ((combined >> 6) & 0x1F));
-                utf8[1] = (char)(0x80 | (combined & 0x3F));
-                utf8Len = 2;
-            } else if (combined <= 0xFFFF) {
-                utf8[0] = (char)(0xE0 | ((combined >> 12) & 0x0F));
-                utf8[1] = (char)(0x80 | ((combined >> 6) & 0x3F));
-                utf8[2] = (char)(0x80 | (combined & 0x3F));
-                utf8Len = 3;
-            } else {
-                utf8[0] = (char)(0xF0 | ((combined >> 18) & 0x07));
-                utf8[1] = (char)(0x80 | ((combined >> 12) & 0x3F));
-                utf8[2] = (char)(0x80 | ((combined >> 6) & 0x3F));
-                utf8[3] = (char)(0x80 | (combined & 0x3F));
-                utf8Len = 4;
-            }
-            
+            char utf8[4];
+            int utf8Len = EncodeUtf8Char(combined, utf8);
+
             char *newResult = (char *)realloc(result, resultLen + utf8Len + 1);
             if (newResult) {
                 result = newResult;
@@ -530,6 +552,38 @@ ComposeUTF8String(const char *source, int len)
     }
     
     return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ContainsCombiningMark --
+ *
+ *   Quick scan for any combining diacritical mark (U+0300-U+036F) in a
+ *   UTF-8 string, independent of whether those marks could be composed
+ *   onto a preceding base character.
+ *
+ * Results:
+ *   True if at least one combining mark codepoint is present.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+ContainsCombiningMark(const char *str, int len)
+{
+    int i = 0;
+    while (i < len) {
+        unsigned char c = (unsigned char)str[i];
+        if (c < 0x80) { i++; continue; }
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
+        if (clen <= 0) { i++; continue; }
+        if (uc >= 0x0300 && uc <= 0x036F) return true;
+        i += clen;
+    }
+    return false;
 }
 
 /*
@@ -570,12 +624,18 @@ IsSimpleOnly(const char *str, int len)
         if (clen <= 0) return 0;
 
         /* 
-         * Combining diacritical marks MUST go through HarfBuzz shaping.
-         * Without HarfBuzz, NanoVG will render them as separate glyphs
-         * with full advances, breaking mark positioning. HarfBuzz will
-         * position them as zero-width marks attached to the base character.
-         * 
-         * Try brute‑force precomposition first to see if we can avoid HarfBuzz.
+         * Combining diacritical marks MUST go through HarfBuzz shaping,
+         * unless every mark in the string can be precomposed onto its
+         * base character. Try brute-force precomposition to see whether
+         * the fast path is viable.
+         *
+         * IMPORTANT: this is a read-only classifier. It must NOT write
+         * back into the caller's buffer -- `str` is frequently the live
+         * source text (widget content, display-line text, etc.) shared
+         * with measurement, bidi analysis, and cursor/selection byte-
+         * offset mapping, none of which expect it to change out from
+         * under them. Actual precomposition for rendering happens later,
+         * in a scratch buffer, at the point where glyphs are built.
          */
         if (uc >= 0x0300 && uc <= 0x036F) {  /* Combining diacritics */
             char *composed = ComposeUTF8String(str, len);
@@ -638,8 +698,10 @@ IsSimpleOnly(const char *str, int len)
                 }
 
                 if (simple) {
-                    /* Overwrite caller's buffer in-place: brute-force restored. */
-                    memcpy((char *)str, composed, newLen);
+                    /* Composable and simple after composition -- fast path
+                     * is viable. Do not touch the caller's buffer; the
+                     * actual glyphs used for rendering are composed
+                     * separately, on the fly, from this same source. */
                     free(composed);
                     return true;
                 }
@@ -1403,8 +1465,20 @@ WaylandShaper_ShapeString(
     buffer->totalAdvance      = 0;
     buffer->clusterBreakCount = 0;
 
-    /* Fast path: simple LTR text (Latin, Kana, basic punctuation). */
-    if (IsSimpleOnly(source, numBytes)) {
+    /*
+     * Fast path: simple LTR text (Latin, Kana, basic punctuation) with NO
+     * combining marks. This path assigns x/y/advanceX = 0 for every glyph
+     * -- real positions are computed by the caller via NanoVG (e.g. a
+     * single nvgText()/nvgTextGlyphPositions() call over the whole run).
+     * That means it must never be used for text containing combining
+     * marks, composable or not: this function has no NVGcontext of its
+     * own, so it cannot compute the real per-glyph pen positions that a
+     * multi-cluster draw (base + attached mark) needs. Combining-mark
+     * text always goes through genuine HarfBuzz shaping below, which
+     * supplies correct positions regardless of whether the caller then
+     * chooses to draw the marks composed or decomposed.
+     */
+    if (IsSimpleOnly(source, numBytes) && !ContainsCombiningMark(source, numBytes)) {
         int i = 0;
         while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
             FcChar32 uc;
@@ -3666,8 +3740,22 @@ TkpDrawAngledCharsInContext(
         /* Simple path: directly measure the width of the prefix text. */
         if (IsSimpleOnly(source, (int)rangeStart)) {
             nvgFontFaceId(vg, primaryId);
-            float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
-            drawX += (double)advance;
+            /* Measure a precomposed copy: NanoVG has no mark-attachment
+             * support, so measuring raw base+mark sequences directly
+             * would overcount the width by the marks' own advances. This
+             * is purely a local scratch buffer for pixel measurement --
+             * it never replaces `source`, so byte-offset-based indexing
+             * elsewhere is unaffected. */
+            char *composedPrefix = ComposeUTF8String(source, (int)rangeStart);
+            if (composedPrefix) {
+                float advance = nvgTextBounds(vg, 0, 0, composedPrefix,
+                                              composedPrefix + strlen(composedPrefix), NULL);
+                drawX += (double)advance;
+                free(composedPrefix);
+            } else {
+                float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+                drawX += (double)advance;
+            }
         } else {
             /* Complex path: use HarfBuzz shaping to find the exact bounding box of prefix. */
             ShapedGlyphBuffer psbuf;
@@ -3702,11 +3790,37 @@ TkpDrawAngledCharsInContext(
         nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
     }
 
-    /* Fast path: Simple text rendering without complex script handling. */
-    if (fullIsSimple &&
-        IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji && !hasCombining) {
+    /*
+     * Fast path: simple text, optionally containing combining marks that
+     * are ALL composable onto their base character, rendered directly by
+     * NanoVG in a single call. NanoVG has no GPOS mark-attachment support
+     * of its own, so decomposed base+mark sequences drawn glyph-by-glyph
+     * don't overlay correctly -- if this range has combining marks we
+     * draw a precomposed copy instead of the raw decomposed bytes.
+     * IsSimpleOnly() only returns true here when every mark in the range
+     * composes cleanly, so this never silently drops an uncomposable
+     * mark; text with an uncomposable mark falls through to the HarfBuzz
+     * path below. The precomposed copy is a local scratch buffer used
+     * only for this single nvgText() call -- `source`/rangePtr and every
+     * byte-offset-based cursor/selection/bidi computation elsewhere in
+     * this function still operate on the untouched original text, and a
+     * single nvgText() call advances its own pen internally, so no
+     * manual per-glyph position bookkeeping is needed.
+     */
+    if (fullIsSimple && IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji) {
         nvgFontFaceId(vg, primaryId);
-        nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
+        if (hasCombining) {
+            char *composedRange = ComposeUTF8String(rangePtr, (int)rangeLength);
+            if (composedRange) {
+                nvgText(vg, 0.0f, 0.0f, composedRange,
+                        composedRange + strlen(composedRange));
+                free(composedRange);
+            } else {
+                nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
+            }
+        } else {
+            nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
+        }
         nvgRestore(vg);
         goto decorations;
     }
