@@ -1051,7 +1051,7 @@ XRegisterIMInstantiateCallback(
 int
 XmbLookupString(
     TCL_UNUSED(XIC),
-    TCL_UNUSED(XKeyPressedEvent *) /* event */
+    TCL_UNUSED(XKeyPressedEvent *), /* event */
     TCL_UNUSED(char *),
     TCL_UNUSED(int),
     TCL_UNUSED(KeySym *),
@@ -1962,7 +1962,7 @@ XPolygonRegion(
 XFontSet
 XCreateFontSet(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(const char *) /* base */
+    TCL_UNUSED(const char *), /* base */
     char ***missing_list,
     int *missing_count,
     TCL_UNUSED(char **))
@@ -2207,7 +2207,7 @@ XSetDashes(
     TCL_UNUSED(Display *),
     TCL_UNUSED(GC),
     TCL_UNUSED(int),
-    TCL_UNUSED(const char *) /* dash_list */
+    TCL_UNUSED(const char *), /* dash_list */
     TCL_UNUSED(int))
 {
     /* No-op - line dashing handled by NanoVG. */

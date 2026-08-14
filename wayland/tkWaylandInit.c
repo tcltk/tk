@@ -321,7 +321,6 @@ static void renderFBO(
         glClear(GL_COLOR_BUFFER_BIT);
     }
     
-    int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
