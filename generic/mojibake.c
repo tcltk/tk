@@ -78,6 +78,14 @@
 #define MJB_USED __attribute__((used))
 #endif
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4100)
+#elif defined(__clang__)
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 #define MJB_UTF_ACCEPT 0
 #define MJB_UTF_PENDING_SURROGATE 0xD
 #define MJB_UTF_TERMINATED 0xE

@@ -949,13 +949,15 @@ mojibake_word_breaks_with_dict(const char *buf,
  */
 int
 mojibake_line_breaks_with_dict(const char *buf,
-			       size_t byteLen,
+			       			   size_t byteLen,
                                unsigned char *lBreaks,
                                unsigned char *gBreaks_tmp,
                                unsigned char *wBreaks_tmp)
 {
     if (!buf || !lBreaks) return 0;
     EnsureDictsInitialized();
+
+fprintf(stderr, "DICT PATH HIT byteLen=%zu buf=\"%.*s\"\n", byteLen, (int)(byteLen < 60 ? byteLen : 60), buf);
 
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;

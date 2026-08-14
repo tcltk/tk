@@ -8518,6 +8518,7 @@ TkTextCharLayoutProc(
 		size_t b = (size_t)best;
 		while (b < bFit && chunkStart[b] == ' ') b++;
 		chunkPtr->breakIndex = (Tcl_Size)b;
+		fprintf(stderr, "BREAK SEARCH bFit=%zu bTotal=%zu -> breakIndex=%ld\n", bFit, bTotal, (long)best);
 	    } else {
 		chunkPtr->breakIndex = chunkPtr->numBytes;
 	    }
