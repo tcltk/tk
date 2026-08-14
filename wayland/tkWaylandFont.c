@@ -2674,9 +2674,16 @@ InitFont(
                 
                 if (buf && (long)fread(buf, 1, sz, fd) == sz) {
                     stbtt_fontinfo info;
-                    if (stbtt_InitFont(&info, buf,
-                                       stbtt_GetFontOffsetForIndex(
-                                           buf, fontPtr->faces[0].faceIndex))) {
+		    int offset = stbtt_GetFontOffsetForIndex(
+			buf, fontPtr->faces[0].faceIndex);
+		    if (offset < 0) {
+			DEBUG_LOG("Failed to get offset for face %d in %s",
+				  fontPtr->faces[0].faceIndex,
+				  fontPtr->faces[0].filePath);
+			/* Fall back to offset 0 to avoid crashing. */
+			offset = 0;
+		    }
+                    if (stbtt_InitFont(&info, buf, offset)) {
                         /* Use proper pixel height scaling. */
                         float scale = stbtt_ScaleForPixelHeight(
                             &info, (float)fontPtr->pixelSize);
