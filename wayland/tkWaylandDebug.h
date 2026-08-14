@@ -10,12 +10,11 @@
  * Usage:
  * #define DEBUG_CHANNEL stderr
  * #define DEBUG_LABEL "mylabel"
- * #include "tkWaylandDebug.h"
  * ...
  *     DEBUG_LOG("The value of mystring is %s", mystring);
  *
- * This file must be included after defining DEBUG_CHANNEL and
- * DEBUG_LABEL.
+ * This file is included in tkWaylandInt.h.  The #define commands
+ * above must come before the #include tkWaylandInt.h.
  *
  * The terminating semicolon is required.  This avoids confusing your
  * auto-indenter.

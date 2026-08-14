@@ -49,6 +49,11 @@
  *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
 
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "notify"
+*/
+
 #include "tkInt.h"
 #include "tkMenu.h"
 #include "tkWaylandInt.h"
@@ -60,11 +65,6 @@
 #include "GLFW/glfw3native.h"
 #include <poll.h>
 	
-/* Debugging */
-#define DEBUG_CHANNEL stdout
-#define DEBUG_LABEL "notify"
-#include "tkWaylandDebug.h"
-
 /*
  * Forward declarations for IBus integration (implemented in tkWaylandKey.c).
  * These wrappers accept Tk_Window so this file never needs to see IbusContext*.
@@ -817,7 +817,7 @@ TkWaylandFramebufferSizeCallback(
     DEBUG_LOG("TkWaylandFramebufferSizeCallback: redrawing %s",
 	      Tk_PathName(winPtr));
     GenerateConfigureNotify(winPtr, 1);
-    printf("Attempting to force a redraw of %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("Attempting to force a redraw of %s", Tk_PathName(winPtr));
     HandleExposeEvent(winPtr);
 }
 
@@ -837,7 +837,7 @@ GenerateConfigureNotify(
         GenerateConfigureNotify(childPtr, 1);
     }
     if (includeWin) {
-	printf("ConfigureNotify for %s\n", Tk_PathName(winPtr));
+	DEBUG_LOG("GenerateConfigureNotify:  %s", Tk_PathName(winPtr));
         TkDoConfigureNotify(winPtr);
     }
 }
@@ -905,7 +905,7 @@ TkWaylandWindowFocusCallback(
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     TkGenerateActivateEvents(winPtr, focused);
     if (infoPtr->flags & TKWL_NEVER_FOCUSED == 1) {
-	printf("FocusCallback generating Expose for %s\n",
+	DEBUG_LOG("FocusCallback: generating Expose for %s",
 	       Tk_PathName(winPtr));
 	TkWaylandQueueExposeEvent(winPtr,
 	    0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
@@ -1465,9 +1465,9 @@ TkWaylandKeyCallback(GLFWwindow *window,
                                  GLFW_MOD_SUPER)) != 0;
 
     if (isAccelChord && action != GLFW_RELEASE) {
-        fprintf(stderr,
-                "AccelChord: scancode=%d action=%d mods=0x%x keysym=0x%lx time=%f\n",
-                scancode, action, mods, (unsigned long)keysym, glfwGetTime());
+        DEBUG_LOG("TkWaylandKeyCallback: "
+	  "AccelChord: scancode=%d action=%d mods=0x%x keysym=0x%lx time=%f",
+	  scancode, action, mods, (unsigned long)keysym, glfwGetTime());
     }
 
     bool imeHandled = false;

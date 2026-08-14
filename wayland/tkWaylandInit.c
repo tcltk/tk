@@ -15,6 +15,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "init"
+*/
 
 #define GL_GLEXT_PROTOTYPES
 #define NANOVG_GLES3_IMPLEMENTATION
@@ -25,11 +29,6 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 #include <wayland-egl.h>
-
-/* Debugging */
-#define DEBUG_CHANNEL stdout
-#define DEBUG_LABEL "init"
-#include "tkWaylandDebug.h"
 
 /*
  *----------------------------------------------------------------------

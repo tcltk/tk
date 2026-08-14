@@ -22,6 +22,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "GC"
+*/
+
 
 #include "tkWaylandInt.h"
 #include <stdlib.h>
@@ -35,11 +40,6 @@
 #define NANOVG_GLES3 1
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
-
-/* Debugging */
-#define DEBUG_CHANNEL stdout
-#define DEBUG_LABEL "GC"
-#include "tkWaylandDebug.h"
 
 extern GLFWwindow *mainGlfwWindow;
 

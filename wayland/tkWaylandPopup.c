@@ -13,6 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a FOR DISCLAIMER OF ALL WARRANTIES.
  */
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL popup
+*/
 
 #include <tcl.h>
 #include "tkInt.h"
@@ -39,13 +43,6 @@
 #include "nanovg.h"
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
-
-/* Debugging */
-/*
-#define DEBUG_CHANNEL stderr
-#define DEBUG_LABEL popup
-*/
-#include "tkWaylandDebug.h"
 
 /*
  * Global Wayland objects from tkWaylandInit.c.

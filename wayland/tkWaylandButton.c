@@ -10,6 +10,11 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "button"
+*/
+
 #include "tkInt.h"
 #include "tkButton.h"
 #include "tk3d.h"
@@ -84,7 +89,7 @@ ImageChanged(TCL_UNUSED(void *),
              TCL_UNUSED(int)) /*imageHeight */
 {
 
-  printf("ImageChanged\n");
+  DEBUG_LOG("ImageChanged");
   /* No-op. */
 
 }
@@ -136,7 +141,7 @@ ShiftByOffset(
     int width,
     int height)
 {
-    printf("ShiftByOffset: %s\n", Tk_PathName(butPtr->tkwin)); 
+    DEBUG_LOG("ShiftByOffset: %s", Tk_PathName(butPtr->tkwin)); 
     if (relief != TK_RELIEF_RAISED && butPtr->type == TYPE_BUTTON &&
         !Tk_StrictMotif(butPtr->tkwin)) {
         int shiftX = (relief == TK_RELIEF_SUNKEN) ? 2 : 1;
@@ -177,7 +182,7 @@ DrawButtonBitmap(
     Drawable d = TkWaylandDrawableForTkWindow((TkWindow*) butPtr->tkwin);
     GC currentGC;
     if (!butPtr->bitmap) {
-        printf("DrawButtonBitmap: no bitmap for %s\n", Tk_PathName(butPtr));
+        DEBUG_LOG("DrawButtonBitmap: no bitmap for %s", Tk_PathName(butPtr));
         goto fallback_rect;
     }
     /* Get the appropriate graphics context for the button state. */
@@ -193,7 +198,7 @@ DrawButtonBitmap(
 		   width, height, x, y, 1);
 	return;
     } else { 
-        printf("No graphics context for drawing bitmap\n");
+        DEBUG_LOG("No graphics context for drawing bitmap");
 	goto fallback_rect;
     }
   
@@ -450,9 +455,10 @@ TkpDisplayButton(void *clientData)
 
 	int ind_x = padX;
 	int ind_y = winHeight / 2 - butPtr->indicatorDiameter / 2;
-	printf("height: %d, fullHeight = %d, winHeight = %d, diam = %d, padY = %d, ind_y = %d\n",
-	       height, fullHeight, winHeight, butPtr->indicatorDiameter, padY, ind_y);
-
+	DEBUG_LOG("height: %d, fullHeight = %d, winHeight = %d, "
+		  "diam = %d, padY = %d, ind_y = %d",
+		  height, fullHeight, winHeight, butPtr->indicatorDiameter,
+		  padY, ind_y);
 	
 	XColor checkBG, checkFG, checkDisBG;
 	TkParseColor(Tk_Display(butPtr->tkwin), None, "white", &checkBG); 

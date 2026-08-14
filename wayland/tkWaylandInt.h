@@ -23,6 +23,7 @@
 #include <xkbcommon/xkbcommon.h>
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
+#include "tkWaylandDebug.h"
 
 #include <fontconfig/fontconfig.h>
 #include <hb.h>

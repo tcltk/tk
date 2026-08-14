@@ -13,6 +13,11 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "wm"
+*/
+
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tkWaylandWm.h"
@@ -129,16 +134,16 @@ inline Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
 
 inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
     if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
-	fprintf(stderr, "Attempt to convert a pixmap drawable %lx to a window.",
+	DEBUG_LOG("Attempt to convert a pixmap drawable %lx to a window.",
 	       drawable);
     }
     return (TkWindow *) drawable;
 }
 
 inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmapPtr) {
-    fprintf(stderr, "~~~~~~~~~~~~~~~~~~~~~~~~ Generating drawable for %p\n", pixmapPtr);
+    DEBUG_LOG("~~~~~~~~~~~~~~~~~~~~~~~~ Generating drawable for %p", pixmapPtr);
     if (pixmapPtr != NULL) {
-	fprintf(stderr, "~~~~~~~~~~~~ returning drawable %lx for pixmapPtr %p\n",
+	DEBUG_LOG("~~~~~~~~~~~~ returning drawable %lx for pixmapPtr %p",
 	       3 + (Drawable) pixmapPtr, pixmapPtr);
 	return 3 + (Drawable) pixmapPtr;
     } else {
@@ -426,7 +431,7 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
     winPtr->privatePtr->clipRectBufferSize = 0;
     winPtr->privatePtr->clipRectCount = 0;
     if (winPtr->privatePtr->clipRectBuffer) {
-        printf("Freeing clipRects for %s\n", Tk_PathName(winPtr));
+        DEBUG_LOG("Freeing clipRects for %s", Tk_PathName(winPtr));
         ckfree(winPtr->privatePtr->clipRectBuffer);
         winPtr->privatePtr->clipRectBuffer = NULL;
     }
@@ -464,7 +469,7 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
-    fprintf(stderr, "TkWmMapWindow: %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("TkWmMapWindow: %s", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
@@ -555,7 +560,7 @@ TkWmMapWindow(TkWindow *winPtr)
 void
 TkWmUnmapWindow(TkWindow *winPtr)
 {
-    fprintf(stderr, "TkWmUnmapWindow: %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("TkWmUnmapWindow: %s", Tk_PathName(winPtr));
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     winPtr->flags &= ~TK_MAPPED;
     if (glfwWindow) {
@@ -593,7 +598,7 @@ TkWmDeadWindow(
         return;
     }
 
-    fprintf(stderr, "TkWmDeadWindow: %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("TkWmDeadWindow: %s", Tk_PathName(winPtr));
 
     /*
      * Clean up the private data. We need to be very careful here
@@ -606,7 +611,7 @@ TkWmDeadWindow(
         winPtr->privatePtr->clipRectBufferSize = 0;
         winPtr->privatePtr->clipRectCount = 0;
         if (winPtr->privatePtr->clipRectBuffer) {
-            fprintf(stderr, "Freeing clipRects for %s\n", Tk_PathName(winPtr));
+            DEBUG_LOG("Freeing clipRects for %s", Tk_PathName(winPtr));
             ckfree(winPtr->privatePtr->clipRectBuffer);
             winPtr->privatePtr->clipRectBuffer = NULL;
         }
@@ -621,7 +626,7 @@ TkWmDeadWindow(
              * if the window is already destroyed. Use a try/catch style
              * approach by checking if glfwWindow is valid.
              */
-            fprintf(stderr, "Destroying GLFW window for %s\n", Tk_PathName(winPtr));
+            DEBUG_LOG("Destroying GLFW window for %s", Tk_PathName(winPtr));
             
             /* Clear callbacks before destroying. */
             TkWaylandClearCallbacks(glfwWindow);
@@ -643,7 +648,7 @@ TkWmDeadWindow(
 
     wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (wmPtr == NULL) {
-        fprintf(stderr, "TkWmDeadWindow: No WmInfo for %s\n", Tk_PathName(winPtr));
+        DEBUG_LOG("TkWmDeadWindow: No WmInfo for %s", Tk_PathName(winPtr));
         return;
     }
 
@@ -741,7 +746,7 @@ TkWmDeadWindow(
     winPtr->wmInfoPtr = NULL;
     ckfree((char *)wmPtr);
     
-    fprintf(stderr, "TkWmDeadWindow: Done cleaning up %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("TkWmDeadWindow: Done cleaning up %s", Tk_PathName(winPtr));
 }
 
 /*
@@ -856,7 +861,7 @@ Tk_MakeWindow(
     Drawable    drawable;
     Window      result;
 
-    fprintf(stderr, "Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
+    DEBUG_LOG("Tk_MakeWindow: %s", Tk_PathName(tkwin));
     result = TkWaylandDrawableForTkWindow(winPtr);
 
     if (winPtr->privatePtr == NULL) {
@@ -890,7 +895,7 @@ Tk_MakeWindow(
         if (winPtr->classUid == Tk_GetUid("Menu") ||
             winPtr->classUid == Tk_GetUid("Menubar")) {
             
-            fprintf(stderr, "Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation\n", 
+            DEBUG_LOG("Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation", 
                     Tk_PathName(tkwin), Tk_GetUid(winPtr->classUid));
             
             /* Ensure private data exists. */
@@ -927,7 +932,7 @@ Tk_MakeWindow(
          * drawable is ignored; we use winPtr->window instead.
          */
 
-	fprintf(stderr, "Creating glfwWindow %s at size %dx%d\n",
+	DEBUG_LOG("Creating glfwWindow %s at size %dx%d",
 	       Tk_PathName(tkwin), width, height);
 	glfwWindow = TkWaylandCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
@@ -951,7 +956,7 @@ Tk_MakeWindow(
          * Child window. 
          */
 #if 0
-      fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
+      DEBUG_LOG("Exposing Child %s to %dx%d", Tk_PathName(winPtr),
 	     winPtr->changes.width, winPtr->changes.height);
 
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
@@ -2232,7 +2237,7 @@ WmGeometryCmd(
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided. */
         if (wmPtr->width > 0 && wmPtr->height > 0) {
-	    fprintf(stderr, "GeometryCmd setting window size\n");
+	    DEBUG_LOG("GeometryCmd setting window size");
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 
@@ -3760,7 +3765,7 @@ TopLevelReqProc(
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    fprintf(stderr, "TopLevelReqProc %s to %dx%d; pending = %d\n", Tk_PathName(tkwin),
+    DEBUG_LOG("TopLevelReqProc %s to %dx%d; pending = %d", Tk_PathName(tkwin),
 	   winPtr->reqWidth, winPtr->reqHeight,
 	   wmPtr->flags & WM_UPDATE_PENDING);
 
@@ -3776,7 +3781,7 @@ TopLevelReqProc(
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
         wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
-	fprintf(stderr, "TopLevelReqProc: rescheduling\n");
+	DEBUG_LOG("TopLevelReqProc: rescheduling");
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     }
 }
@@ -3854,9 +3859,8 @@ ApplyPendingGeometry(
  	 * likely to happen after the window has been fully rendered, which
  	 * leads to pretty bad UX.
  	 */
-	fprintf(stderr,
-		"ApplyPendingGeometry: calling glfwSetWindowSize %s -> %dx%d\n",
-		Tk_PathName(winPtr), tw, th);
+	DEBUG_LOG("ApplyPendingGeometry:  %s -> %dx%d", Tk_PathName(winPtr),
+		  tw, th);
         glfwSetWindowSize(glfwWindow, tw, th);
 
 		/* Update the window. */
@@ -3907,10 +3911,10 @@ UpdateGeometryInfo(
     }
 
     if (wmPtr == NULL) {
-	fprintf(stderr, "Cannot update geometry for a window with no WmInfo\n");
+	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
 	return;
     }
-    fprintf(stderr, "UpdateGeometryInfo: %s to %dx%d\n", Tk_PathName(winPtr),
+    DEBUG_LOG("UpdateGeometryInfo: %s to %dx%d", Tk_PathName(winPtr),
 	   wmPtr->width, wmPtr->height);
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -3923,7 +3927,7 @@ UpdateGeometryInfo(
 
     /* Don't proceed if window isn't ready. */
     if (glfwWindow == NULL || wmPtr->withdrawn) {
-	fprintf(stderr, "UpdateGeometryInfo: No glfw window\n");
+	DEBUG_LOG("UpdateGeometryInfo: No glfw window");
         return;
     }
 
@@ -4457,7 +4461,7 @@ XMapWindow(
     Window window) 
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
-    printf("XMapWindow: %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("XMapWindow: %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
@@ -4742,7 +4746,7 @@ XConfigureWindow(
     /* CWSibling / CWStackMode: compositor-controlled; ignore. */
 
     if (resizeNeeded) {
-	fprintf(stderr, "XConfigureWindow: calling glfwSetWindowSize -> %dx%d\n", w, h);
+	DEBUG_LOG("XConfigureWindow: calling glfwSetWindowSize -> %dx%d", w, h);
         glfwSetWindowSize(gw, w, h);
     }
 
@@ -4960,7 +4964,7 @@ XChangeWindowAttributes(
     XSetWindowAttributes *attributes)
 {
 
-    fprintf(stderr, "XChangeWindowAttributes called: valuemask=0x%lx\n", valuemask);
+    DEBUG_LOG("XChangeWindowAttributes: valuemask=0x%lx", valuemask);
     fflush(stderr);
     GLFWwindow *gw;
 

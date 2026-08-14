@@ -11,6 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+/* Debugging.
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL menu
+*/
 
 #include <tcl.h>
 #include "tkInt.h"
@@ -52,14 +56,6 @@ extern GLFWwindow *mainGlfwWindow;
 #ifndef WM_UPDATE_SIZE_HINTS
 #define WM_UPDATE_SIZE_HINTS (1<<1)
 #endif
-
-/* Debugging. */
-
-/*
-#define DEBUG_CHANNEL stderr
-#define DEBUG_LABEL menu
-*/
-#include "tkWaylandDebug.h"
 
 /*
  * Forward declarations from other Wayland modules.

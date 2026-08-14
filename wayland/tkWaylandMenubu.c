@@ -9,18 +9,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL menubutton
+*/
 
 #include "tkInt.h"
 #include "tkMenubutton.h"
 #include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
-
-/* Debugging */
-/*
-#define DEBUG_CHANNEL stderr
-#define DEBUG_LABEL menubutton
-*/
-#include "tkWaylandDebug.h"
 
 MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);

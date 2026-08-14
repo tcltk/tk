@@ -11,15 +11,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkInt.h"
-#include "tkWaylandInt.h"
-
-/* Debugging */
-/*
-#define DEBUG_CHANNEL stderr
+/* Debugging
+#define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "subwindows"
 */
-#include "tkWaylandDebug.h"
+
+#include "tkInt.h"
+#include "tkWaylandInt.h"
 
 /*
  * The design of Tk takes advantage of a number of features provided by X11,

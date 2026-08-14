@@ -14,6 +14,11 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "font"
+*/
+
 #include "tkInt.h"
 #include "tkWaylandInt.h"
 
@@ -30,13 +35,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/* Debugging */
-
-#define DEBUG_CHANNEL stderr
-#define DEBUG_LABEL "font"
-
-#include "tkWaylandDebug.h"
 
 /*
  * Defines for tkTextDisp.c and tkFont.c

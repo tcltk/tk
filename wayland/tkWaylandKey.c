@@ -31,6 +31,11 @@
 #include <xkbcommon/xkbcommon-compose.h>
 #include <X11/keysymdef.h>
 
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL "key"
+*/
+
 int TkWaylandIbus_Init(Tcl_Interp *interp);
 void RemoveIbusContext(Tk_Window tkwin);
 
@@ -481,7 +486,7 @@ bool
 TkWaylandKeyInit(void)
 {
     if (!InitializeXKB()) {
-        fprintf(stderr, "TkWaylandKeyInit: failed to initialize xkb.\n");
+        DEBUG_LOG("TkWaylandKeyInit: failed to initialize xkb.");
         return false;
     }
     TkMainInfo *info = TkGetMainInfoList();
@@ -659,8 +664,7 @@ IbusReadTextFromVariant(
 
     /* Expect a variant. */
     r = sd_bus_message_peek_type(m, &type, &contents);
-    fprintf(stderr,
-            "peek: r=%d type='%c' contents='%s'\n",
+    DEBUG_LOG("IbusReadTextFromVariant(peek): r=%d type='%c' contents='%s'",
             r,
             type,
             contents ? contents : "(null)");
@@ -670,9 +674,8 @@ IbusReadTextFromVariant(
     }
 
     if (type != SD_BUS_TYPE_VARIANT) {
-        fprintf(stderr,
-                "Expected VARIANT, got '%c'\n",
-                type);
+        DEBUG_LOG("IbusReadTextFromVariant(peek): Expected VARIANT, got '%c'",
+		  type);
         return -EINVAL;
     }
 
@@ -681,9 +684,7 @@ IbusReadTextFromVariant(
             m,
             SD_BUS_TYPE_VARIANT,
             contents);
-    fprintf(stderr,
-            "enter variant -> r=%d\n",
-            r);
+    DEBUG_LOG("IbusReadTextFromVariant(enter variant): r=%d", r);
 
     if (r < 0) {
         return r;
@@ -691,19 +692,19 @@ IbusReadTextFromVariant(
 
     /* See what's actually inside. */
     r = sd_bus_message_peek_type(m, &type, &contents);
-    fprintf(stderr,
-            "inside variant: r=%d type='%c' contents='%s'\n",
-            r,
-            type,
-            contents ? contents : "(null)");
+    DEBUG_LOG("IbusReadTextFromVariant(inside variant): "
+	      "r=%d type='%c' contents='%s'",
+	      r,
+	      type,
+	      contents ? contents : "(null)");
 
     if (r < 0) {
         goto cleanup_variant;
     }
 
     if (type != SD_BUS_TYPE_STRUCT) {
-        fprintf(stderr,
-                "Expected STRUCT inside variant, got '%c'\n",
+        DEBUG_LOG("IbusReadTextFromVariant(inside variant): "
+                "Expected STRUCT inside variant, got '%c'",
                 type);
         r = -EINVAL;
         goto cleanup_variant;
@@ -714,8 +715,7 @@ IbusReadTextFromVariant(
             m,
             SD_BUS_TYPE_STRUCT,
             NULL);
-    fprintf(stderr,
-            "enter struct -> r=%d\n",
+    DEBUG_LOG("IbusReadTextFromVariant(enter struct): r=%d",
             r);
 
     if (r < 0) {
@@ -724,10 +724,10 @@ IbusReadTextFromVariant(
 
     /* First field should be "IBusText". */
     r = sd_bus_message_read(m, "s", &objtype);
-    fprintf(stderr,
-            "read object type -> r=%d value='%s'\n",
-            r,
-            objtype ? objtype : "(null)");
+    DEBUG_LOG("IbusReadTextFromVariant(read object type): "
+	      "r=%d value='%s'",
+	      r,
+	      objtype ? objtype : "(null)");
 
     if (r < 0) {
         goto cleanup_struct;
@@ -735,8 +735,8 @@ IbusReadTextFromVariant(
 
     /* What comes next? */
     r = sd_bus_message_peek_type(m, &type, &contents);
-    fprintf(stderr,
-            "after object type: r=%d type='%c' contents='%s'\n",
+    DEBUG_LOG("IbusReadTextFromVariant(after object type): "
+            "r=%d type='%c' contents='%s'",
             r,
             type,
             contents ? contents : "(null)");
@@ -750,14 +750,12 @@ IbusReadTextFromVariant(
      * attributes dictionary here.
      */
     if (type == SD_BUS_TYPE_ARRAY) {
-        fprintf(stderr,
-                "skipping array '%s'\n",
-                contents ? contents : "(null)");
+	DEBUG_LOG("IbusReadTextFromVariant: "
+		  "skipping array '%s'",
+		  contents ? contents : "(null)");
 
         r = sd_bus_message_skip(m, "a{sv}");
-        fprintf(stderr,
-                "skip array -> r=%d\n",
-                r);
+	DEBUG_LOG("IbusReadTextFromVariant(skip array): r=%d", r);
 
         if (r < 0) {
             goto cleanup_struct;
@@ -766,8 +764,8 @@ IbusReadTextFromVariant(
 
     /* See what field follows. */
     r = sd_bus_message_peek_type(m, &type, &contents);
-    fprintf(stderr,
-            "before text read: r=%d type='%c' contents='%s'\n",
+    	DEBUG_LOG("IbusReadTextFromVariant(before text read): "
+            "r=%d type='%c' contents='%s'",
             r,
             type,
             contents ? contents : "(null)");
@@ -778,10 +776,8 @@ IbusReadTextFromVariant(
 
     /* Try to read UTF-8 text. */
     r = sd_bus_message_read(m, "s", text_out);
-    fprintf(stderr,
-            "read text -> r=%d text='%s'\n",
-            r,
-            (r >= 0 && *text_out) ? *text_out : "(null)");
+    DEBUG_LOG("IbusReadTextFromVariant(read text): r=%d text='%s'",
+	      r, (r >= 0 && *text_out) ? *text_out : "(null)");
 
 cleanup_struct:
     sd_bus_message_exit_container(m);
@@ -904,7 +900,7 @@ OnCommitText(
     const char *text = NULL;
     int r;
 
-    fprintf(stderr, ">>> OnCommitText\n");
+    DEBUG_LOG("OnCommitText:");
 
     /*
      * Guard against signals that arrive after the Tk window has been
@@ -984,7 +980,7 @@ OnUpdatePreedit(
     int32_t visible = 0;
     int r;
 
-    fprintf(stderr, ">>> OnUpdatePreedit\n");
+    DEBUG_LOG("OnUpdatePreedit:");
 
     /* Guard against post-destruction callbacks (see OnCommitText). */
     if (!ctx || ctx->destroyed) {
@@ -1060,7 +1056,7 @@ OnHidePreeditText(
 {
     IbusContext *ctx = (IbusContext *)userdata;
 
-    fprintf(stderr, ">>> OnHidePreeditText\n");
+    DEBUG_LOG("OnHidePreeditText:");
 
     if (!ctx || ctx->destroyed) {
         return 0;
@@ -1106,7 +1102,7 @@ OnShowPreeditText(
 {
     IbusContext *ctx = (IbusContext *)userdata;
 
-    fprintf(stderr, ">>> OnShowPreeditText\n");
+    DEBUG_LOG("OnShowPreeditText:");
 
     if (!ctx || ctx->destroyed) {
         return 0;
@@ -1360,7 +1356,7 @@ static int IbusProcessKeyEvent(
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return 0;
 
-    fprintf(stderr, "IbusProcessKeyEvent (Async): sending keyval=0x%04x keycode=%u state=0x%x\n",
+    DEBUG_LOG("IbusProcessKeyEvent (Async): sending keyval=0x%04x keycode=%u state=0x%x",
             keyval, keycode, state);
 
     int r;
@@ -1379,7 +1375,7 @@ static int IbusProcessKeyEvent(
                            "uuu",
                            keyval, keycode, state);
     if (r < 0) {
-        fprintf(stderr, "    ProcessKeyEvent failed: %s\n",
+        DEBUG_LOG("    ProcessKeyEvent failed: %s",
                 error.message ? error.message : strerror(-r));
         sd_bus_error_free(&error);
         return 0;
@@ -1389,7 +1385,7 @@ static int IbusProcessKeyEvent(
     sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
 
-    fprintf(stderr, "    IBus returned handled = %d\n", handled);
+    DEBUG_LOG("    IBus returned handled = %d", handled);
 
     /*
      * Drain any CommitText/UpdatePreedit signals IBus queued in response.
@@ -1544,7 +1540,7 @@ TkWaylandIbusCreateContext(
 
     /* If context already exists, early exit. */
     if (FindContext(tkwin)) {
-        fprintf(stderr, "CreateIbusContext: Context already exists for window %p\n", tkwin);
+        DEBUG_LOG("CreateIbusContext: Context already exists for window %p", tkwin);
         return TCL_OK;
     }
 
@@ -1559,7 +1555,7 @@ TkWaylandIbusCreateContext(
                            "s",
                            "TkWaylandApp");
     if (r < 0) {
-        fprintf(stderr, "IBus: CreateInputContext failed: %s\n",
+        DEBUG_LOG("IBus: CreateInputContext failed: %s",
                 error.message ? error.message : strerror(-r));
         sd_bus_error_free(&error);
         return TCL_ERROR;
@@ -1568,13 +1564,13 @@ TkWaylandIbusCreateContext(
     const char *path_tmp = NULL;
     r = sd_bus_message_read(reply, "o", &path_tmp);
     if (r < 0 || !path_tmp) {
-        fprintf(stderr, "IBus: Failed to read object path: %s\n", strerror(-r));
+        DEBUG_LOG("IBus: Failed to read object path: %s", strerror(-r));
         sd_bus_message_unref(reply);
         sd_bus_error_free(&error);
         return TCL_ERROR;
     }
 
-    fprintf(stderr, "IBus: Created remote input context -> %s\n", path_tmp);
+    DEBUG_LOG("IBus: Created remote input context -> %s", path_tmp);
 
     /* Allocate and initialize context. */
     IbusContext *ctx = (IbusContext *)Tcl_Alloc(sizeof(IbusContext));
@@ -1620,7 +1616,7 @@ TkWaylandIbusCreateContext(
                  ctx->obj_path, IBUS_IC_INTERFACE);
         r = sd_bus_add_match(ibus_bus, &ctx->signal_slot, rule, OnCommitText, ctx);
         if (r < 0) {
-            fprintf(stderr, "Warning: CommitText subscription failed: %s\n", strerror(-r));
+            DEBUG_LOG("Warning: CommitText subscription failed: %s", strerror(-r));
         }
 
         snprintf(rule, sizeof(rule),
@@ -1628,7 +1624,7 @@ TkWaylandIbusCreateContext(
                  ctx->obj_path, IBUS_IC_INTERFACE);
         r = sd_bus_add_match(ibus_bus, &ctx->preedit_slot, rule, OnUpdatePreedit, ctx);
         if (r < 0) {
-            fprintf(stderr, "Warning: UpdatePreeditText subscription failed: %s\n", strerror(-r));
+            DEBUG_LOG("Warning: UpdatePreeditText subscription failed: %s", strerror(-r));
         }
 
         snprintf(rule, sizeof(rule),
@@ -1636,7 +1632,7 @@ TkWaylandIbusCreateContext(
                  ctx->obj_path, IBUS_IC_INTERFACE);
         r = sd_bus_add_match(ibus_bus, &ctx->hide_slot, rule, OnHidePreeditText, ctx);
         if (r < 0) {
-            fprintf(stderr, "Warning: HidePreeditText subscription failed: %s\n", strerror(-r));
+            DEBUG_LOG("Warning: HidePreeditText subscription failed: %s", strerror(-r));
         }
 
         snprintf(rule, sizeof(rule),
@@ -1644,7 +1640,7 @@ TkWaylandIbusCreateContext(
                  ctx->obj_path, IBUS_IC_INTERFACE);
         r = sd_bus_add_match(ibus_bus, &ctx->show_slot, rule, OnShowPreeditText, ctx);
         if (r < 0) {
-            fprintf(stderr, "Warning: ShowPreeditText subscription failed: %s\n", strerror(-r));
+            DEBUG_LOG("Warning: ShowPreeditText subscription failed: %s", strerror(-r));
         }
     }
 
@@ -1657,7 +1653,7 @@ TkWaylandIbusCreateContext(
                            "SetCapabilities",
                            NULL, NULL, "u", caps);
     if (r < 0) {
-        fprintf(stderr, "IBus: SetCapabilities failed (non-fatal): %s\n", strerror(-r));
+        DEBUG_LOG("IBus: SetCapabilities failed (non-fatal): %s", strerror(-r));
     }
 
     /* Insert into global linked list.  */
@@ -1674,7 +1670,7 @@ TkWaylandIbusCreateContext(
     sd_bus_call_method(ibus_bus, IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
                    "Reset", &error, NULL, "");
 
-    fprintf(stderr, "CreateIbusContext: Successfully added context for window %p\n", tkwin);
+    DEBUG_LOG("CreateIbusContext: Successfully added context for window %p", tkwin);
 
     return TCL_OK;
 }
@@ -1888,7 +1884,7 @@ IbusBusHandler(
         return;
     }
 
-    fprintf(stderr, ">>> IbusBusHandler: processing IBus signals\n");
+    DEBUG_LOG("IbusBusHandler: processing IBus signals");
 
     int count = 0;
     int r;
@@ -1896,13 +1892,13 @@ IbusBusHandler(
         count++;
     }
     if (count > 0) {
-        fprintf(stderr, "    Processed %d IBus message(s)\n", count);
+        DEBUG_LOG("    Processed %d IBus message(s)", count);
     }
     /* Deliberately not "else if": an error can follow successfully
      * processed messages in the same drain loop, so this runs even
      * when count > 0. */
     if (r < 0) {
-        fprintf(stderr, "    sd_bus_process error: %s\n", strerror(-r));
+        DEBUG_LOG("    sd_bus_process error: %s", strerror(-r));
 
         /*
          * The connection is dead and libsystemd has already closed its
@@ -1956,14 +1952,14 @@ IbusEventSetup(
          */
         int dupfd = fcntl(fd, F_DUPFD_CLOEXEC, 0);
         if (dupfd < 0) {
-            fprintf(stderr, "IbusEventSetup: dup of fd=%d failed: %s\n",
+            DEBUG_LOG("IbusEventSetup: dup of fd=%d failed: %s",
                     fd, strerror(errno));
             return;
         }
         Tcl_CreateFileHandler(dupfd, TCL_READABLE, IbusBusHandler, ibus_bus);
         ibus_fd = dupfd;
         ibus_src_fd = fd;
-        fprintf(stderr, "IbusEventSetup: Registered handler for fd=%d (dup of %d)\n",
+        DEBUG_LOG("IbusEventSetup: Registered handler for fd=%d (dup of %d)",
                 dupfd, fd);
     }
 }
@@ -2135,7 +2131,7 @@ GetIbusAddress(void)
         }
         fclose(f);
         if (addr[0]) {
-            fprintf(stderr, "IBus: Found address file: %s\n", path);
+            DEBUG_LOG("IBus: Found address file: %s", path);
             return addr;
         }
     }
@@ -2176,25 +2172,25 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
 
     const char *ibus_addr = GetIbusAddress();
     if (!ibus_addr) {
-        fprintf(stderr, "IBus: Cannot find IBus daemon address "
-                "(IBUS_ADDRESS not set and address file not found).\n");
-        fprintf(stderr, "IME will be unavailable. To enable it, run:\n"
-                "    ibus-daemon --daemonize --replace\n");
+        DEBUG_LOG("IBus: Cannot find IBus daemon address\n"
+                "    (IBUS_ADDRESS not set and address file not found).\n"
+                "    IME will be unavailable. To enable it, run:\n"
+                "    ibus-daemon --daemonize --replace");
         return TCL_ERROR;
     }
 
-    fprintf(stderr, "IBus: Connecting to %s\n", ibus_addr);
+    DEBUG_LOG("IBus: Connecting to %s", ibus_addr);
 
     r = sd_bus_new(&ibus_bus);
     if (r < 0) {
-        fprintf(stderr, "IBus: sd_bus_new failed: %s\n", strerror(-r));
+        DEBUG_LOG("IBus: sd_bus_new failed: %s", strerror(-r));
         ibus_bus = NULL;
         return TCL_ERROR;
     }
 
     r = sd_bus_set_address(ibus_bus, ibus_addr);
     if (r < 0) {
-        fprintf(stderr, "IBus: sd_bus_set_address failed: %s\n", strerror(-r));
+        DEBUG_LOG("IBus: sd_bus_set_address failed: %s", strerror(-r));
         sd_bus_unref(ibus_bus);
         ibus_bus = NULL;
         return TCL_ERROR;
@@ -2202,7 +2198,7 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
 
     r = sd_bus_start(ibus_bus);
     if (r < 0) {
-        fprintf(stderr, "IBus: sd_bus_start failed: %s\n", strerror(-r));
+        DEBUG_LOG("IBus: sd_bus_start failed: %s", strerror(-r));
         sd_bus_unref(ibus_bus);
         ibus_bus = NULL;
         return TCL_ERROR;
@@ -2223,10 +2219,10 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
                            "GetGlobalEngine",
                            &error, &reply, "");
     if (r < 0) {
-        fprintf(stderr, "IBus: GetGlobalEngine: %s (continuing anyway)\n",
+        DEBUG_LOG("IBus: GetGlobalEngine: %s (continuing anyway)",
                 error.message ? error.message : strerror(-r));
     } else {
-        fprintf(stderr, "IBus: Connected and verified.\n");
+        DEBUG_LOG("IBus: Connected and verified.");
     }
     if (reply) sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
