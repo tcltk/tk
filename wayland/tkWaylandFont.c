@@ -31,6 +31,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Debugging */
+
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL "font"
+
+#include "tkWaylandDebug.h"
+
 /*
  * Defines for tkTextDisp.c and tkFont.c
  */
@@ -2727,8 +2734,7 @@ CreateStandardNamedFonts(ClientData clientData)
                 != TCL_OK) {
             const char *msg = Tcl_GetStringResult(interp);
             if (!msg || !strstr(msg, "already exists")) {
-                fprintf(stderr,
-                        "TkWaylandFont: failed to create named font "
+                DEBUG_LOG("tkWaylandFont: failed to create named font "
                         "\"%s\": %s\n",
                         wlNamedFonts[i].tkName,
                         (msg && *msg) ? msg : "(unknown error)");
@@ -3399,7 +3405,8 @@ TkpDrawAngledCharsInContext(
     TkWaylandDrawingContext dc;
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
-        printf("Bad Drawable in TkpDrawAngledCharsInContext\n");
+        DEBUG_LOG("Bad Drawable %lx in TkpDrawAngledCharsInContext\n",
+	       drawable);
         return;
     }
 

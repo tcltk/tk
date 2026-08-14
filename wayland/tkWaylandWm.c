@@ -4599,10 +4599,13 @@ XResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-
-    if (winPtr) {
-        TkWaylandQueueExposeEvent(winPtr, 0, 0, (int)width, (int)height);
+    TkWindow *container = winPtr->privatePtr->container;
+    if (container) {
+        TkWaylandQueueExposeEvent(container, 0, 0,
+	  Tk_Width(container), Tk_Height(container));
     }
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
 
@@ -4638,11 +4641,13 @@ XMoveWindow(
     TCL_UNUSED(int))  /* y */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-
-    if (winPtr) {
-        TkWaylandQueueExposeEvent(winPtr, 0, 0,
-                Tk_Width(winPtr), Tk_Height(winPtr));
+    TkWindow *container = winPtr->privatePtr->container;
+    if (container) {
+        TkWaylandQueueExposeEvent(container, 0, 0,
+	  Tk_Width(container), Tk_Height(container));
     }
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
 
@@ -4682,10 +4687,13 @@ XMoveResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-
-    if (winPtr) {
-        TkWaylandQueueExposeEvent(winPtr, 0, 0, (int)width, (int)height);
+    TkWindow *container = winPtr->privatePtr->container;
+    if (container) {
+        TkWaylandQueueExposeEvent(container, 0, 0,
+	  Tk_Width(container), Tk_Height(container));
     }
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
 

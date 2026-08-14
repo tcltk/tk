@@ -14,6 +14,13 @@
 #include "tkInt.h"
 #include "tkWaylandInt.h"
 
+/* Debugging */
+/*
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL "subwindows"
+*/
+#include "tkWaylandDebug.h"
+
 /*
  * The design of Tk takes advantage of a number of features provided by X11,
  * and expects these features to be replicated by any port to a different
@@ -305,7 +312,7 @@ addClipRect(
      * Allocate a larger buffer if necessary.
      */
     if (data->clipRectCount >= data->clipRectBufferSize - 1) {
-	printf("    Reallocating clipRects for %s\n", Tk_PathName(winPtr));
+	DEBUG_LOG("    Reallocating clipRects for %s\n", Tk_PathName(winPtr));
         data->clipRectBufferSize *= 2;
         data->clipRectBuffer = ckrealloc(data->clipRectBuffer,
 	    data->clipRectBufferSize * sizeof(clipRect));
@@ -317,7 +324,7 @@ addClipRect(
      */
     int n = data->clipRectCount;
     data->clipRectBuffer[data->clipRectCount++] = getBounds(subwinPtr, scale);
-    printf("    Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
+    DEBUG_LOG("    Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
 	   Tk_PathName(subwinPtr), Tk_PathName(winPtr),
 	   data->clipRectBuffer[n].w, data->clipRectBuffer[n].h,
 	   data->clipRectBuffer[n].x, data->clipRectBuffer[n].y);
@@ -399,7 +406,7 @@ void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
      GLFWwindow* glfwWindow) /* The glfwWindow for its toplevel. */
 {
-    printf("    updateClipRects: %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("    updateClipRects: %s\n", Tk_PathName(winPtr));
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     int fbWidth, fbHeight;
@@ -537,12 +544,13 @@ void tkWaylandDrawClipMask(
     TkWindow* winPtr,
     GLFWwindow* glfwWindow)
 {
-    printf("Drawing ClipMask for %s\n", Tk_PathName(winPtr));
     if (1) { //// should be if the clipRects are invalid
 	updateClipRects(winPtr, glfwWindow);
     }
+    DEBUG_LOG("Drawing ClipMask for %s with %d clipRects\n",
+	   Tk_PathName(winPtr), winPtr->privatePtr->clipRectCount + 4);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    /* Bind the framebuffer. */
+    /* Bind the backing store framebuffer for this glfwWindow. */
     nvgluBindFramebuffer(infoPtr->winPtr->privatePtr->fb);
     /* Enable drawing to the depth buffer. */
     glDepthMask(GL_TRUE);
