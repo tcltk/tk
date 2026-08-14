@@ -271,36 +271,6 @@ static void renderFBO(
     
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
     
-    /* Check if framebuffer exists. */
-    if (!fb) {
-        fprintf(stderr, "renderFBO: framebuffer is NULL - creating one\n");
-        
-        /* Try to create a framebuffer. */
-        int fbWidth, fbHeight;
-        glfwMakeContextCurrent(glfwWindow);
-        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-        
-        if (fbWidth <= 0) fbWidth = 200;
-        if (fbHeight <= 0) fbHeight = 200;
-        
-        fb = nvgluCreateFramebuffer(infoPtr->vg, fbWidth, fbHeight, 0);
-        if (!fb) {
-            fprintf(stderr, "renderFBO: failed to create framebuffer\n");
-            return;
-        }
-        infoPtr->winPtr->privatePtr->fb = fb;
-        fprintf(stderr, "renderFBO: created framebuffer %p (%dx%d)\n", 
-                fb, fbWidth, fbHeight);
-
-        /* 
-         * See the comment in TkWaylandCreateWindow: a freshly created FBO's
-         * color attachment is uninitialized GPU memory until cleared. 
-         */
-        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
-        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-    
     int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);

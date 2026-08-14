@@ -633,24 +633,6 @@ static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
  *----------------------------------------------------------------------
  */
 
-static void TkWaylandWindowCloseCallback(GLFWwindow *window);
-static void TkWaylandFramebufferSizeCallback(GLFWwindow *window,
-					  int width, int height);
-static void TkWaylandWindowFocusCallback(GLFWwindow *window, int focused);
-static void TkWaylandWindowIconifyCallback(GLFWwindow *window, int iconified);
-static void TkWaylandWindowMaximizeCallback(GLFWwindow *window, int maximized);
-static void TkWaylandCursorPosCallback(GLFWwindow *window,
-				    double xpos, double ypos);
-static void TkWaylandMouseButtonCallback(GLFWwindow *window,
-				      int button, int action, int mods);
-static void TkWaylandScrollCallback(GLFWwindow *window,
-				 double xoffset, double yoffset);
-static void TkWaylandKeyCallback(GLFWwindow *window, int key,
-			      int scancode, int action, int mods);
-static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
-static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
-static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
-
 MODULE_SCOPE void
 TkWaylandSetupCallbacks(
 			GLFWwindow *glfwWindow)

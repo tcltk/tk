@@ -382,18 +382,16 @@ appendVerticesForRect(
     vertex *vertices,
     int n)
 {
-    /* Calculate the four bounds of the rectangle. */
+    /* Calculate the four bounds of the rectangles. */
     float xmin = rect.x;
     float xmax = rect.x + rect.w;
     float ymin = rect.y;
     float ymax = rect.y + rect.h;
 
-    /* First triangle: bottom-left, bottom-right, top-left. */
     vertices[n++] = (vertex) {xmin, ymin};  /* 0 */
     vertices[n++] = (vertex) {xmax, ymin};  /* 1 */
     vertices[n++] = (vertex) {xmin, ymax};  /* 2 */
 
-    /* Second triangle: top-left, bottom-right, top-right. */
     vertices[n++] = (vertex) {xmin, ymax};  /* 2 */
     vertices[n++] = (vertex) {xmax, ymin};  /* 1 */
     vertices[n++] = (vertex) {xmax, ymax};  /* 3 */
