@@ -668,7 +668,7 @@ XCreateBitmapFromData(
  *
  *
  * Results:
- *	Returns Success on success, or BadDrawable/ BadGC on failure.
+ *	Returns Success on success, or BadDrawable/BadGC on failure.
  *
  * Side effects:
  *	Draws the bitmap using NanoVG with foreground/background colors.

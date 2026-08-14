@@ -45,15 +45,6 @@
 #define TK_LAYOUT_WITH_BASE_CHUNKS	1
 #define TK_DRAW_IN_CONTEXT		1
 
-/*
- * TK_WAYLAND_FONT_SIZE_BOOST: applied on top of the DPI-correct pixel
- * size computed in InitFont(). This is a deliberate, purely cosmetic
- * bump on top of the otherwise-correct size - not a DPI/scale fix (that
- * one's above, in InitFont's dpi computation). Bump this up or down, or
- * back to 1.0, to taste.
- */
-#define TK_WAYLAND_FONT_SIZE_BOOST	1.20
-
 /* Module-level state. */
 static int  fcInitialized = 0;
 
@@ -546,17 +537,8 @@ ComposeUTF8String(const char *source, int len)
  * IsSimpleOnly --
  *
  *   Fast-path classifier for text that does NOT require HarfBuzz shaping
- *   or SheenBidi analysis. This function now reflects the modern Wayland
- *   shaping pipeline: only pure ASCII, Latin-1/Latin Extended, and
- *   Hiragana/Katakana are considered "simple". Everything else—including
- *   CJK ideographs, Hangul, Jamo, all RTL scripts, Indic/Thai/Lao, emoji,
- *   and any supplementary-plane characters—forces the full HarfBuzz +
- *   SheenBidi shaping path.
- *
- *   The fast path is intentionally narrow. It exists only to avoid the
- *   overhead of HarfBuzz for trivially shaped, strictly LTR text where
- *   glyph IDs map 1:1 to Unicode codepoints and no OpenType features,
- *   fallback segmentation, or cluster-level logic are required.
+ *   or SheenBidi analysis. For canvas text, we keep the fast path for
+ *   all Latin text to ensure proper rendering with pixel positioning.
  *
  * Results:
  *   true if the string is simple (eligible for the fast path),
@@ -573,7 +555,15 @@ IsSimpleOnly(const char *str, int len)
     int i = 0;
     while (i < len) {
         unsigned char c = (unsigned char)str[i];
-        if (c < 0x80) { i++; continue; }
+        if (c < 0x80) {
+            /* Handle newline and other control characters as simple. */
+            if (c == '\n' || c == '\r' || c == '\t') {
+                i++;
+                continue;
+            }
+            i++; 
+            continue; 
+        }
 
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
@@ -582,53 +572,149 @@ IsSimpleOnly(const char *str, int len)
         /* 
          * Combining diacritical marks MUST go through HarfBuzz shaping.
          * Without HarfBuzz, NanoVG will render them as separate glyphs
-         * with full advances, breaking mark positioning.
+         * with full advances, breaking mark positioning. HarfBuzz will
+         * position them as zero-width marks attached to the base character.
+         * 
+         * Try brute‑force precomposition first to see if we can avoid HarfBuzz.
          */
         if (uc >= 0x0300 && uc <= 0x036F) {  /* Combining diacritics */
+            char *composed = ComposeUTF8String(str, len);
+            if (composed) {
+                int newLen = (int)strlen(composed);
+
+                /* Re-scan the composed string. */
+                int j = 0;
+                bool simple = true;
+                while (j < newLen) {
+                    FcChar32 uc2;
+                    int clen2 = FcUtf8ToUcs4((const FcChar8 *)(composed + j), &uc2, newLen - j);
+                    if (clen2 <= 0) { j++; continue; }
+
+                    /* If any combining marks remain, still complex. */
+                    if (uc2 >= 0x0300 && uc2 <= 0x036F) {  /* Combining diacritics */
+                        simple = false;
+                        break;
+                    }
+
+                    /* Preserve copyright/registered forcing HB. */
+                    if (uc2 == 0x00A9 || uc2 == 0x00AE) {  /* Copyright sign, Registered sign */
+                        simple = false;
+                        break;
+                    }
+
+                    /* Preserve complex-script forcing HB. */
+                    if (
+                        /* Hebrew / Arabic / Arabic supplements / presentation forms. */
+                        (uc2 >= 0x0590 && uc2 <= 0x05FF) ||  /* Hebrew */
+                        (uc2 >= 0x0600 && uc2 <= 0x06FF) ||  /* Arabic */
+                        (uc2 >= 0x0750 && uc2 <= 0x077F) ||  /* Arabic Supplement */
+                        (uc2 >= 0xFB50 && uc2 <= 0xFDFF) ||  /* Arabic Presentation Forms-A */
+                        (uc2 >= 0xFE70 && uc2 <= 0xFEFF) ||  /* Arabic Presentation Forms-B */
+                        /* Other RTL scripts. */
+                        (uc2 >= 0x0700 && uc2 <= 0x074F) ||  /* Syriac */
+                        (uc2 >= 0x0780 && uc2 <= 0x07BF) ||  /* Thaana */
+                        (uc2 >= 0x07C0 && uc2 <= 0x07FF) ||  /* N'Ko */
+                        (uc2 >= 0x0800 && uc2 <= 0x083F) ||  /* Samaritan */
+                        (uc2 >= 0x0840 && uc2 <= 0x085F) ||  /* Mandaic */
+                        /* CJK ideographs, Hangul, Jamo. */
+                        (uc2 >= 0x4E00 && uc2 <= 0x9FFF) ||  /* CJK Unified Ideographs */
+                        (uc2 >= 0xAC00 && uc2 <= 0xD7AF) ||  /* Hangul Syllables */
+                        (uc2 >= 0x1100 && uc2 <= 0x11FF) ||  /* Hangul Jamo */
+                        /* Indic / Thai / Lao. */
+                        (uc2 >= 0x0900 && uc2 <= 0x0DFF) ||  /* Devanagari through Malayalam */
+                        (uc2 >= 0x0E00 && uc2 <= 0x0E7F) ||  /* Thai */
+                        (uc2 >= 0x0E80 && uc2 <= 0x0EFF) ||  /* Lao */
+                        /* Emoji and supplementary plane. */
+                        (uc2 >= 0x2600 && uc2 <= 0x27BF) ||  /* Miscellaneous Symbols */
+                        (uc2 >= 0x1F000 && uc2 <= 0x1FAFF) ||  /* Mahjong Tiles through Chess Symbols */
+                        (uc2 >= 0x1F300 && uc2 <= 0x1F9FF) ||  /* Miscellaneous Symbols and Pictographs */
+                        uc2 > 0xFFFF
+                    ) {
+                        simple = false;
+                        break;
+                    }
+
+                    j += clen2;
+                }
+
+                if (simple) {
+                    /* Overwrite caller's buffer in-place: brute-force restored. */
+                    memcpy((char *)str, composed, newLen);
+                    free(composed);
+                    return true;
+                }
+
+                free(composed);
+            }
+
+            /* Composition failed or still complex → HarfBuzz. */
             return false;
         }
 
-        /* Force complex shaper for scripts that require it. */
+        /* 
+         * Copyright symbol (U+00A9) and registered sign (U+00AE) 
+         * need HarfBuzz for proper rendering in some fonts.
+         * This ensures they render correctly as proper symbols.
+         */
+        if (uc == 0x00A9 || uc == 0x00AE) {  /* Copyright sign, Registered sign */
+            return false;
+        }
+
+        /* 
+         * Force complex shaper for scripts that require it.
+         * This includes RTL scripts, CJK, Indic, and emoji.
+         */
         if (
             /* Hebrew / Arabic / Arabic supplements / presentation forms. */
-            (uc >= 0x0590 && uc <= 0x05FF) ||
-            (uc >= 0x0600 && uc <= 0x06FF) ||
-            (uc >= 0x0750 && uc <= 0x077F) ||
-            (uc >= 0xFB50 && uc <= 0xFDFF) ||
-            (uc >= 0xFE70 && uc <= 0xFEFF) ||
+            (uc >= 0x0590 && uc <= 0x05FF) ||  /* Hebrew */
+            (uc >= 0x0600 && uc <= 0x06FF) ||  /* Arabic */
+            (uc >= 0x0750 && uc <= 0x077F) ||  /* Arabic Supplement */
+            (uc >= 0xFB50 && uc <= 0xFDFF) ||  /* Arabic Presentation Forms-A */
+            (uc >= 0xFE70 && uc <= 0xFEFF) ||  /* Arabic Presentation Forms-B */
             /* Other RTL scripts. */
-            (uc >= 0x0700 && uc <= 0x074F) ||  /* Syriac        */
-            (uc >= 0x0780 && uc <= 0x07BF) ||  /* Thaana        */
-            (uc >= 0x07C0 && uc <= 0x07FF) ||  /* N'Ko          */
-            (uc >= 0x0800 && uc <= 0x083F) ||  /* Samaritan     */
-            (uc >= 0x0840 && uc <= 0x085F) ||  /* Mandaic       */
+            (uc >= 0x0700 && uc <= 0x074F) ||  /* Syriac */
+            (uc >= 0x0780 && uc <= 0x07BF) ||  /* Thaana */
+            (uc >= 0x07C0 && uc <= 0x07FF) ||  /* N'Ko */
+            (uc >= 0x0800 && uc <= 0x083F) ||  /* Samaritan */
+            (uc >= 0x0840 && uc <= 0x085F) ||  /* Mandaic */
             /* CJK ideographs, Hangul, Jamo. */
-            (uc >= 0x4E00 && uc <= 0x9FFF) ||
-            (uc >= 0xAC00 && uc <= 0xD7AF) ||
-            (uc >= 0x1100 && uc <= 0x11FF) ||
+            (uc >= 0x4E00 && uc <= 0x9FFF) ||  /* CJK Unified Ideographs */
+            (uc >= 0xAC00 && uc <= 0xD7AF) ||  /* Hangul Syllables */
+            (uc >= 0x1100 && uc <= 0x11FF) ||  /* Hangul Jamo */
             /* Indic / Thai / Lao. */
-            (uc >= 0x0900 && uc <= 0x0DFF) ||
-            (uc >= 0x0E00 && uc <= 0x0E7F) ||
-            (uc >= 0x0E80 && uc <= 0x0EFF) ||
+            (uc >= 0x0900 && uc <= 0x0DFF) ||  /* Devanagari through Malayalam */
+            (uc >= 0x0E00 && uc <= 0x0E7F) ||  /* Thai */
+            (uc >= 0x0E80 && uc <= 0x0EFF) ||  /* Lao */
             /* Emoji and supplementary plane. */
-            (uc >= 0x2600 && uc <= 0x27BF) ||
-            (uc >= 0x1F000 && uc <= 0x1FAFF) ||
-            (uc >= 0x1F300 && uc <= 0x1F9FF) ||
+            (uc >= 0x2600 && uc <= 0x27BF) ||  /* Miscellaneous Symbols */
+            (uc >= 0x1F000 && uc <= 0x1FAFF) ||  /* Mahjong Tiles through Chess Symbols */
+            (uc >= 0x1F300 && uc <= 0x1F9FF) ||  /* Miscellaneous Symbols and Pictographs */
             uc > 0xFFFF
-	    ) {
+            ) {
             return false;
         }
 
-        /* Safe for fast path: Latin extended, but force symbols like ©®™
-         * through HarfBuzz so fallback face selection works (fixes black boxes
-         * in About dialog) while preserving bidi/complex handling. */
-        if (uc == 0x00A9 || uc == 0x00AE || uc == 0x2122 || uc == 0x00B0) {
-            return false;
+        /* 
+         * All Latin characters (including extended Latin) can use the
+         * fast path, EXCEPT for copyright and registered symbols which
+         * are handled above.
+         */
+        if (uc <= 0x024F) {  /* Basic Latin through Latin Extended-B */
+            i += clen;
+            continue;
         }
-        int isSafe = (uc <= 0x024F);
-        if (!isSafe) return false;
 
-        i += clen;
+        /* 
+         * Some symbols can use the fast path, but note that
+         * copyright and registered are already excluded above.
+         */
+        if (uc == 0x2122 || uc == 0x00B0) {  /* Trade mark sign, Degree sign */
+            i += clen;
+            continue;
+        }
+
+        /* Everything else goes through HarfBuzz. */
+        return false;
     }
     return true;
 }
@@ -862,11 +948,6 @@ GetEmojiFaceIndex(WaylandFont *fontPtr)
              strcasestr((const char *)family, "symbol") ||
              strcasestr((const char *)family, "dingbat"));
         if (!nameHint) continue;
-        /* Pass 1 already rejects color fonts, but this pass had no such
-         * check at all - if the only "emoji"-named face on the system is
-         * a color font that pass 1's stricter list missed or that wasn't
-         * demoted at load time, this would happily select it anyway,
-         * producing unusable tofu-box glyphs. */
         if (IsColorFcPattern(pat)) continue;
 
         int score = 0;
@@ -1490,7 +1571,7 @@ WaylandShaper_ShapeString(
          * changes, face/fallback-font changes, etc). Shaping and
          * placement are deferred to pass 2 below.
          *
-         * FIX: For characters with HB_SCRIPT_INHERITED or HB_SCRIPT_COMMON
+         * For characters with HB_SCRIPT_INHERITED or HB_SCRIPT_COMMON
          * we do NOT break on face mismatch; they are kept with the base
          * character to ensure combining marks are shaped together.
          */
@@ -2034,9 +2115,7 @@ EnsureNvgFont(
      * from Fontconfig (see InitFont/FcFontSort). A NanoVG-level fallback
      * font registered here would only ever be reachable by NanoVG's own
      * internal nvgText() fallback, which the shaped path never calls, so
-     * it would sit dead. This now matches the X11 backend
-     * (tkUnixBidiFont.c), which relies solely on Fontconfig-discovered
-     * faces for emoji and has no bundled emoji font at all.
+     * it would sit dead.
      */
     if (primaryId >= 0) {
         for (int i = 1; i < fontPtr->nfaces; i++) {
@@ -2090,29 +2169,6 @@ EnsureNvgFont(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
-TkpGetFontPixelSize(Tk_Font tkfont)
-{
-    WaylandFont *fontPtr = (WaylandFont *)tkfont;
-    return fontPtr ? fontPtr->pixelSize : 12;
-}
-
-/*
- *----------------------------------------------------------------------
- * InitFont --
- *
- *   Populate a WaylandFont from TkFontAttributes using FcFontSort for
- *   multi-face fallback, then extract metrics from the primary face via
- *   stb_truetype.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Allocates font structures, queries Fontconfig, initializes shaper.
- *----------------------------------------------------------------------
- */
-
 static void
 InitFont(
     Tk_Window tkwin,
@@ -2123,18 +2179,7 @@ InitFont(
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
 
-    /* Pixel size calculation.
-     * Tk uses -size for pixel sizes and +size for point sizes.
-     *
-     * For point sizes, this used to hardcode a 96 DPI conversion
-     * regardless of the actual display. That's fine on a plain 1x
-     * 96 DPI output, but on a HiDPI or fractionally-scaled Wayland
-     * output the real DPI is higher, so every point-sized font (which
-     * is most of them - it's the default Tk uses) came out smaller
-     * than it should relative to the rest of the scaled UI. Query the
-     * window's actual screen resolution instead, the same way the
-     * generic Tk font code does on other platforms.
-     */
+    /* Pixel size calculation with proper DPI handling. */
     double ptSize = faPtr->size;
     int basePixels;
 
@@ -2144,16 +2189,8 @@ InitFont(
         if (screen && WidthMMOfScreen(screen) > 0) {
             double screenDpi = (double)WidthOfScreen(screen) * 25.4
                 / (double)WidthMMOfScreen(screen);
-            /* Only ever scale UP from 96 DPI, never down. The point of
-             * this lookup is to catch real HiDPI/scaled Wayland outputs
-             * that were getting under-sized by the old flat-96 code;
-             * it's not meant to shrink fonts on screens that happen to
-             * report (correctly or not - Wayland's MM reporting is
-             * notoriously unreliable) a sub-96 DPI. That inverted case
-             * is what made fonts get smaller instead of bigger. Also
-             * clamp the top end against a screen mis-reporting its
-             * physical size into producing an absurd font size. */
-            if (screenDpi >= 96.0 && screenDpi <= 480.0) {
+            /* Use actual screen DPI for all fonts. */
+            if (screenDpi >= 72.0 && screenDpi <= 480.0) {
                 dpi = screenDpi;
             }
         }
@@ -2163,23 +2200,31 @@ InitFont(
         /* Negative size means pixels already. */
         basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        /* Positive size means points - convert to pixels at the
-         * screen's actual DPI (1 pt = 1/72 inch).
-         */
+        /* Positive size means points - convert to pixels at screen DPI. */
         basePixels = (int)(ptSize * dpi / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
     } else {
-        basePixels = (int)(12.0 * dpi / 96.0 + 0.5);
+        /* Default size: 12 points at screen DPI. */
+        basePixels = (int)(12.0 * dpi / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
     }
 
-    /* Cosmetic bump on top of the DPI-correct size above - see the
-     * TK_WAYLAND_FONT_SIZE_BOOST comment near the top of the file. */
-    basePixels = (int)((double)basePixels * TK_WAYLAND_FONT_SIZE_BOOST + 0.5);
+    /* 
+     * Apply a modest boost for UI fonts, but NOT for canvas text.
+     * We need to detect if this is a canvas text font vs a UI font.
+     * Canvas text uses exact pixel sizes (negative values), UI fonts
+     * use point sizes (positive values).
+     */
+    if (ptSize > 0.0 || ptSize == 0.0) {
+        /* Point-based font (UI) - apply modest boost for readability. */
+        basePixels = (int)((double)basePixels * 1.15 + 0.5);
+    }
+    /* Canvas text uses negative ptSize - no boost applied. */
+    
     if (basePixels < 1) {
         basePixels = 1;
     }
@@ -2275,7 +2320,7 @@ InitFont(
     }
 
     /*
-     * Monochrome emoji only – colour emoji fonts are unusable
+     * Monochrome emoji only – color emoji fonts are unusable
      * by stb_truetype / NanoVG.
      */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
@@ -2290,7 +2335,7 @@ InitFont(
     FcPatternAddBool(pat, FC_HINTING,   FcTrue);
     FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
-    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* reject colour fonts */
+    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* Reject color fonts. */
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
@@ -2512,7 +2557,7 @@ InitFont(
                         fontPtr->nfaces = nfaces;
                     }
                 } else if (cjkMatch) {
-                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed */
+                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed. */
                 }
                 FcCharSetDestroy(want);
                 FcPatternDestroy(cjkPat);
@@ -2538,45 +2583,110 @@ InitFont(
         }
     }
 
-    /* Metrics from the (now guaranteed usable) primary face. */
+     /* Metrics from the primary face using proper scaling. */
     if (nfaces > 0 && fontPtr->faces[0].filePath) {
         FILE *fd = fopen(fontPtr->faces[0].filePath, "rb");
         if (fd) {
             fseek(fd, 0, SEEK_END);
             long sz = ftell(fd);
             fseek(fd, 0, SEEK_SET);
-            unsigned char *buf = (unsigned char *)Tcl_Alloc((int)sz);
-            if (buf && (long)fread(buf, 1, sz, fd) == sz) {
-                stbtt_fontinfo info;
-                if (stbtt_InitFont(&info, buf,
-                                   stbtt_GetFontOffsetForIndex(
-                                       buf, fontPtr->faces[0].faceIndex))) {
-                    float scale = stbtt_ScaleForPixelHeight(
-                        &info, (float)fontPtr->pixelSize);
-                    int asc, desc, linegap;
-                    stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                    fm->ascent  = (int)(asc  * scale + 0.5f);
-                    fm->descent = (int)(-desc * scale + 0.5f);
+            
+            /* Use stack allocation for font buffer when possible. */
+            unsigned char *buf = NULL;
+            bool heapAllocated = false;
+            
+            /* Only stack allocate if size is reasonable (<= 1MB). */
+            if (sz <= 1024 * 1024 && sz > 0) {
+                unsigned char stackBuf[sz];
+                buf = stackBuf;
+                
+                if (buf && (long)fread(buf, 1, sz, fd) == sz) {
+                    stbtt_fontinfo info;
+                    if (stbtt_InitFont(&info, buf,
+                                       stbtt_GetFontOffsetForIndex(
+                                           buf, fontPtr->faces[0].faceIndex))) {
+                        /* Use proper pixel height scaling. */
+                        float scale = stbtt_ScaleForPixelHeight(
+                            &info, (float)fontPtr->pixelSize);
+                        int asc, desc, linegap;
+                        stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
+                        fm->ascent  = (int)(asc * scale + 0.5f);
+                        fm->descent = (int)(-desc * scale + 0.5f);
 
-                    int adv_W, adv_dot, lsb;
-                    stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
-                    stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
-                    fm->maxWidth = (int)(adv_W * scale + 0.5f);
-                    fm->fixed    = (adv_W == adv_dot);
-                    fa->size     = (double)(-fontPtr->pixelSize);
+                        /* Get proper character widths. */
+                        int adv_W, adv_space, lsb;
+                        stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
+                        stbtt_GetCodepointHMetrics(&info, ' ', &adv_space, &lsb);
+                        
+                        /* Use the widest character for maxWidth. */
+                        int adv_M;
+                        stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
+                        fm->maxWidth = (int)((adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
+                        
+                        /* Check if truly monospaced. */
+                        int adv_dot, adv_x;
+                        stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
+                        stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
+                        fm->fixed = (adv_W == adv_space && 
+                                    adv_W == adv_dot && 
+                                    adv_W == adv_x);
+                        
+                        fa->size = (double)(-fontPtr->pixelSize);
+                    }
                 }
-            }
-            if (buf) {
-                Tcl_Free(buf);
+                /* StackBuf automatically freed when scope ends. */
+            } else {
+                /* Heap allocation for large files. */
+                buf = (unsigned char *)Tcl_Alloc((int)sz);
+                heapAllocated = true;
+                
+                if (buf && (long)fread(buf, 1, sz, fd) == sz) {
+                    stbtt_fontinfo info;
+                    if (stbtt_InitFont(&info, buf,
+                                       stbtt_GetFontOffsetForIndex(
+                                           buf, fontPtr->faces[0].faceIndex))) {
+                        /* Use proper pixel height scaling. */
+                        float scale = stbtt_ScaleForPixelHeight(
+                            &info, (float)fontPtr->pixelSize);
+                        int asc, desc, linegap;
+                        stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
+                        fm->ascent  = (int)(asc * scale + 0.5f);
+                        fm->descent = (int)(-desc * scale + 0.5f);
+
+                        /* Get proper character widths. */
+                        int adv_W, adv_space, lsb;
+                        stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
+                        stbtt_GetCodepointHMetrics(&info, ' ', &adv_space, &lsb);
+                        
+                        /* Use the widest character for maxWidth. */
+                        int adv_M;
+                        stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
+                        fm->maxWidth = (int)((adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
+                        
+                        /* Check if truly monospaced. */
+                        int adv_dot, adv_x;
+                        stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
+                        stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
+                        fm->fixed = (adv_W == adv_space && 
+                                    adv_W == adv_dot && 
+                                    adv_W == adv_x);
+                        
+                        fa->size = (double)(-fontPtr->pixelSize);
+                    }
+                }
+                if (heapAllocated && buf) {
+                    Tcl_Free(buf);  /* Free heap-allocated buffer. */
+                }
             }
             fclose(fd);
         }
     }
-
+    
+    /* Reasonable fallback metrics. */
     if (fm->ascent == 0 && fm->descent == 0) {
-        fm->ascent   = (int)(fontPtr->pixelSize * 0.75 + 0.5);
-        fm->descent  = (int)(fontPtr->pixelSize * 0.25 + 0.5);
-        fm->maxWidth = fontPtr->pixelSize;
+        fm->ascent   = (int)(fontPtr->pixelSize * 0.8 + 0.5);
+        fm->descent  = (int)(fontPtr->pixelSize * 0.2 + 0.5);
+        fm->maxWidth = (int)(fontPtr->pixelSize * 0.6 + 0.5);
         fm->fixed    = 0;
     }
 
@@ -2657,7 +2767,7 @@ DeleteFont(WaylandFont *fontPtr)
  *----------------------------------------------------------------------
  * ColorFromGC --
  *
- *   Convert an X GC foreground colour to an NVGcolor.
+ *   Convert an X GC foreground color to an NVGcolor.
  *
  * Results:
  *   NVGcolor value.
@@ -2759,14 +2869,14 @@ CreateStandardNamedFonts(ClientData clientData)
  *----------------------------------------------------------------------
  * TkpFontPkgInit --
  *
- *   Initialise the font subsystem and schedule creation of standard Tk
+ *   Initialize the font subsystem and schedule creation of standard Tk
  *   named fonts.
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   Initialises Fontconfig; schedules an idle callback that defines the
+ *   Initializes Fontconfig; schedules an idle callback that defines the
  *   global Tk named fonts.
  *----------------------------------------------------------------------
  */
@@ -2779,33 +2889,6 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         fcInitialized = 1;
     }
 
-    /*
-     * Standard named-font registration used to happen right here, either
-     * via Tcl_EvalObjEx("font create ...") or via a direct
-     * TkCreateNamedFont() call. Both are unsafe at this exact point:
-     *
-     *   - TkpFontPkgInit() is called from TkFontPkgInit() during
-     *     TkCreateMainWindow(), before the "font" Tcl command has been
-     *     registered in this interpreter. Confirmed by testing: every
-     *     Tcl_EvalObjEx("font create ...") call here failed with
-     *     "invalid command name \"font\"", so none of TkDefaultFont/
-     *     TkTextFont/etc. were ever actually being created - later lookups
-     *     fell back to attributes that were never populated with a real
-     *     family, which is consistent with faPtr->family arriving
-     *     empty/NULL regardless of what was actually requested.
-     *
-     *   - Calling TkCreateNamedFont() directly here instead is *also*
-     *     unsafe: it dereferences ((TkWindow *) tkwin)->mainPtr->fontInfoPtr,
-     *     and at this point in TkCreateMainWindow() the main window is not
-     *     yet fully linked back to mainPtr, which segfaults immediately
-     *     (verified via gdb).
-     *
-     * Deferring the actual registration to a Tcl_DoWhenIdle() callback
-     * sidesteps both hazards at once: by the time the event loop goes
-     * idle, Tk_Init() has completed, so the window <-> mainPtr back-link
-     * is established and it's safe to call TkCreateNamedFont() directly
-     * (which also avoids re-parsing/evaluating a Tcl command string).
-     */
     Tcl_DoWhenIdle(CreateStandardNamedFonts, (ClientData) mainPtr);
 }
 
@@ -2819,7 +2902,7 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
  *   Pointer to a TkFont structure.
  *
  * Side effects:
- *   Allocates and initialises a new font.
+ *   Allocates and initializes a new font.
  *----------------------------------------------------------------------
  */
 
@@ -2844,7 +2927,7 @@ TkpGetNativeFont(Tk_Window tkwin, const char *name)
  *   Pointer to a TkFont structure.
  *
  * Side effects:
- *   Allocates new font or reinitialises an existing one.
+ *   Allocates new font or reinitializes an existing one.
  *----------------------------------------------------------------------
  */
 
@@ -3089,10 +3172,7 @@ Tk_MeasureCharsInContext(
     int start = (int)rangeStart;
     int end   = (int)(rangeStart + rangeLength);
 
-    /* 
-     * Check if the range contains combining characters.
-     * If so, we need to use the complex HarfBuzz path.
-     */
+    /* Check if the range contains combining characters. */
     bool hasCombining = false;
     bool hasEmoji = false;
     for (int i = start; i < end; ) {
@@ -3109,14 +3189,10 @@ Tk_MeasureCharsInContext(
         i += clen;
     }
 
-    /* 
-     * Simple LTR path: only for strings WITHOUT combining characters or emoji.
-     * Combining characters must go through HarfBuzz for proper positioning.
-     */
+    /* Simple LTR path: for strings WITHOUT combining characters or emoji. */
     if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
-        int measureFontId = vg ? EnsureNvgFont(fontPtr, vg) : -1;
-        if (!vg || measureFontId < 0) {
+        if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
             int         width          = 0;
             const char *p              = source + rangeStart;
@@ -3150,7 +3226,7 @@ Tk_MeasureCharsInContext(
         }
 
         nvgSave(vg);
-        nvgFontFaceId(vg, measureFontId);
+        nvgFontFaceId(vg, fontPtr->nvgFontId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
@@ -3175,8 +3251,6 @@ Tk_MeasureCharsInContext(
 
         int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
                                            positions, nchars);
-        /* Advance width, not ink bounds[2] - see TkpDrawAngledCharsInContext
-         * for why that distinction matters. */
         float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
 
         int         pixelWidth     = 0;
@@ -3218,10 +3292,7 @@ Tk_MeasureCharsInContext(
         return (int)(p - rangePtr);
     }
 
-    /* 
-     * Complex / RTL / Combining path: ShapedGlyphBuffer cluster table.
-     * This path uses HarfBuzz which correctly positions combining marks.
-     */
+    /* Complex / RTL / Combining path. */
     ShapedGlyphBuffer sbuf;
     if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                    (int)numBytes, &sbuf)
@@ -3231,15 +3302,6 @@ Tk_MeasureCharsInContext(
     }
 
     if (maxLength < 0) {
-        /*
-         * "Just give me the width" query - what a caller uses to place
-         * the caret at a given byte offset. Used to sum advanceX across
-         * every glyph overlapping [start,end), a local/relative sum
-         * that's only correct if those glyphs sit contiguously on
-         * screen in the order summed - breaks across an RTL/LTR sub-run
-         * boundary. Use the real shaped x / x+advanceX instead, same as
-         * the draw-path fixes.
-         */
         int minX = INT_MAX, maxX = INT_MIN;
         for (int i = 0; i < sbuf.glyphCount; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
@@ -3438,6 +3500,13 @@ Tk_DrawCharsInContext(
  *   so their coverage instead comes from GetRunFaceIndex() over the same
  *   Fontconfig-discovered face list in the complex/RTL path below.)
  *
+ *   IMPORTANT: For strings with combining marks, we DO NOT attempt to
+ *   pre-compose them. Instead, we let HarfBuzz shape the string with
+ *   its default (NFC) normalization. HarfBuzz will properly position
+ *   combining marks with zero advance, attaching them to their base
+ *   characters. The composition table is only used as a fallback for
+ *   fonts that don't support combining marks directly.
+ *
  * Results:
  *   None.
  *
@@ -3460,6 +3529,7 @@ TkpDrawAngledCharsInContext(
     double     y,
     double     angle)
 {
+
     TkWaylandDrawingContext dc;
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
@@ -3467,9 +3537,10 @@ TkpDrawAngledCharsInContext(
 	       drawable);
         return;
     }
-    
+
     WaylandFont *fontPtr = (WaylandFont *)tkfont;
 
+    /* Verify the requested substring range is within the source string bounds. */
     if (rangeStart < 0 || rangeLength <= 0 ||
         rangeStart + rangeLength > numBytes) {
 	goto done;
@@ -3477,6 +3548,7 @@ TkpDrawAngledCharsInContext(
 
     NVGcontext *vg = dc.vg;
 
+    /* Ensure the primary font face is loaded in NanoVG and get its ID. */
     int primaryId = EnsureNvgFont(fontPtr, vg);
     if (primaryId < 0) {
 	goto done;
@@ -3486,29 +3558,66 @@ TkpDrawAngledCharsInContext(
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
     nvgFillColor(vg, ColorFromGC(gc));
 
+    /* Pointers to the start and end of the substring we're rendering. */
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
-    /*
-     * Check if the range being drawn contains combining characters or
-     * emoji. This has to happen BEFORE the prefix-offset decision below,
-     * because it determines which of two different pen-position schemes
-     * the render path further down will use:
-     *
-     *   - hasCombining: renders a freshly-composed copy of just this
-     *     range, with pen_x relative to 0.
-     *   - simple fast path (no combining, no emoji, IsSimpleOnly): also
-     *     renders an isolated copy of just this range, pen_x relative to 0.
-     *   - otherwise (complex/HarfBuzz path, no combining marks): shapes
-     *     the WHOLE source string starting at byte 0, so its pen_x values
-     *     are already absolute offsets from the start of the string.
-     *
-     * Only the first two need the prefix width added to the draw origin;
-     * adding it in the third case double-counts the prefix (it's already
-     * baked into pen_x from shaping the full string) and is what caused
-     * glyphs to jump on cursor/selection changes, especially badly in
-     * bidi/mixed text.
+    /* 
+     * Check if the substring contains newline characters.
+     * If it does, we need to split the rendering at each newline.
      */
+    bool hasNewline = false;
+    for (const char *p = rangePtr; p < rangeEnd; p++) {
+        if (*p == '\n' || *p == '\r') {
+            hasNewline = true;
+            break;
+        }
+    }
+
+    /* If there are newlines, render each line separately. */
+    if (hasNewline) {
+        const char *lineStart = rangePtr;
+        const char *p = rangePtr;
+        double lineY = y;
+        double lineX = x;
+        
+        while (p < rangeEnd) {
+            if (*p == '\n' || *p == '\r') {
+                /* Render the line up to the newline. */
+                if (p > lineStart) {
+                    TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
+                                               source, numBytes,
+                                               lineStart - source,
+                                               p - lineStart,
+                                               lineX, lineY, angle);
+                }
+                /* Move to next line. */
+                lineY += fontPtr->pixelSize * 1.2;
+                lineX = x;
+                /* Skip the newline character(s). */
+                p++;
+                if (p < rangeEnd && *p == '\n' && *(p-1) == '\r') {
+                    p++;
+                }
+                lineStart = p;
+            } else {
+                p++;
+            }
+        }
+        /* Render the last line if it has content. */
+        if (p > lineStart) {
+            TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
+                                       source, numBytes,
+                                       lineStart - source,
+                                       p - lineStart,
+                                       lineX, lineY, angle);
+        }
+        goto done;
+    }
+
+    bool fullIsSimple = IsSimpleOnly(source, (int)numBytes);
+
+    /* Scan the substring for combining diacritical marks (U+0300-U+036F). */
     bool hasCombining = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
         FcChar32 uc;
@@ -3522,6 +3631,7 @@ TkpDrawAngledCharsInContext(
         i += clen;
     }
 
+    /* Scan the substring for emoji characters. */
     bool hasEmoji = false;
     for (int i = (int)rangeStart; i < (int)(rangeStart + rangeLength); ) {
         FcChar32 uc;
@@ -3535,48 +3645,36 @@ TkpDrawAngledCharsInContext(
         i += clen;
     }
 
-    bool needsPrefixOffset = hasCombining ||
-        (IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
-
     /*
-     * Starting X for partial range. Use nvgTextBounds()'s RETURN VALUE
-     * (the horizontal advance) here, not the bounds[] array it fills.
-     * bounds[2] is the ink bounding box's right edge, which undercounts
-     * the true advance whenever the prefix ends in a character whose ink
-     * doesn't reach its full advance width - trailing spaces being the
-     * most common case. That mismatch is what caused the residual small
-     * shift on plain LTR text even after the double-count fix above.
-     *
-     * That's only valid when the prefix itself is simple, though.
-     * nvgTextBounds() does plain NanoVG glyph layout: no HarfBuzz, no
-     * bidi reordering, no contextual letterforms. needsPrefixOffset
-     * above only checks whether THIS range is simple - it says nothing
-     * about the prefix before rangeStart. If that prefix contains
-     * complex/RTL script (e.g. a digit run like "456" sitting right
-     * after an Arabic/Hebrew run), nvgTextBounds measures the prefix
-     * using naive isolated-form glyph widths, which is a different
-     * width than HarfBuzz actually produced when that same prefix was
-     * rendered for real via the complex path. The offset used to
-     * position this range then no longer matches where the preceding
-     * run actually ends on screen - the same double-counted/mismatched
-     * prefix problem the comment above already describes, one level up.
-     *
-     * Fix: only use the cheap nvgTextBounds measurement when the prefix
-     * is itself simple. Otherwise shape it for real and use the actual
-     * shaped position, the same way the complex path below already
-     * trusts sbuf.glyphs[i].x instead of re-deriving a position.
+     * Determine whether we need to add the width of preceding text to the
+     * X coordinate. When the substring is part of a larger string and we're
+     * rendering it in isolation, we need to know where it starts horizontally.
+     * 
+     * This is needed when:
+     * - The substring has combining characters (which need precise positioning).
+     * - OR both the full string and substring are simple AND there's no emoji.
+     * 
+     * When the full string is complex (e.g., contains bidirectional text),
+     * shaping already provides absolute glyph positions from byte 0, so adding
+     * the prefix width would incorrectly shift the rendering.
      */
+    bool needsPrefixOffset = hasCombining ||
+        (fullIsSimple && IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
+
     double drawX = x;
     if (rangeStart > 0 && needsPrefixOffset) {
+        /* Simple path: directly measure the width of the prefix text. */
         if (IsSimpleOnly(source, (int)rangeStart)) {
             nvgFontFaceId(vg, primaryId);
             float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
             drawX += (double)advance;
         } else {
+            /* Complex path: use HarfBuzz shaping to find the exact bounding box of prefix. */
             ShapedGlyphBuffer psbuf;
             if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                           (int)numBytes, &psbuf)
                 && psbuf.glyphCount > 0) {
+                /* Find the horizontal extent of all glyphs before rangeStart. */
                 int minX = INT_MAX, maxX = INT_MIN;
                 for (int i = 0; i < psbuf.glyphCount; i++) {
                     int bo = psbuf.glyphs[i].byteOffset;
@@ -3592,6 +3690,7 @@ TkpDrawAngledCharsInContext(
         }
     }
 
+    /* Save the current transformation state and apply rotation/clipping. */
     nvgSave(vg);
     if (wsClipActive) {
         nvgScissor(vg, (float)wsClipBox.x, (float)wsClipBox.y,
@@ -3599,83 +3698,74 @@ TkpDrawAngledCharsInContext(
     }
     nvgTranslate(vg, (float)drawX, (float)y);
     if (angle != 0.0) {
+        /* NanoVG uses radians, so convert from degrees (clockwise). */
         nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
     }
 
-    char *composedSource = NULL;
-    const char *renderPtr = rangePtr;
-    const char *renderEnd = rangeEnd;
-    bool didCompose = false;
-
-    if (hasCombining) {
-        composedSource = ComposeUTF8String(source + rangeStart, (int)rangeLength);
-        if (composedSource) {
-            renderPtr = composedSource;
-            renderEnd = composedSource + strlen(composedSource);
-            didCompose = true;
-        }
-    }
-
-    /* For text with combining characters, use the simple path with composed
-     * text.
-     */
-    if (IsSimpleOnly(renderPtr, renderEnd - renderPtr) && !hasEmoji) {
+    /* Fast path: Simple text rendering without complex script handling. */
+    if (fullIsSimple &&
+        IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji && !hasCombining) {
         nvgFontFaceId(vg, primaryId);
-        nvgText(vg, 0.0f, 0.0f, renderPtr, renderEnd);
+        nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
         nvgRestore(vg);
-        if (composedSource) free(composedSource);
         goto decorations;
     }
 
-    /* 
-     * Complex path with per-cluster rendering.
-     * For clusters that couldn't be composed, use HarfBuzz positioning
-     * to place combining marks correctly.
+    /* Complex path: Use HarfBuzz shaping for proper glyph positioning.
+     * This path handles combining marks, RTL text, emoji, and complex scripts.
+     * We DO NOT pre-compose the string - we let HarfBuzz handle it natively.
+     * This ensures proper positioning of combining marks with zero advance.
      */
     {
         ShapedGlyphBuffer sbuf;
-        const char *shapeSource = composedSource ? composedSource : source;
-        int shapeLen = composedSource ?
-	    (int)strlen(composedSource) : (int)numBytes;
         
+        /* Shape the entire text run using HarfBuzz. */
         if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
-                                       shapeSource, shapeLen, &sbuf)) {
+                                       source, (int)numBytes, &sbuf)) {
             nvgRestore(vg);
-            if (composedSource) free(composedSource);
             goto done;
         }
 
         int lastFaceId = -1;
 
+        /* 
+         * ClusterRenderInfo groups glyphs into character clusters.
+         * A cluster represents a sequence of characters that should be
+         * rendered as a unit (e.g., a base character with its combining marks).
+         */
         typedef struct {
-            int  start_byte;
-            int  end_byte;
-            int  face_idx;
-            int  pen_x;
-            int  pen_y;
-            int  advance_x;
-            char text[32];
+            int  start_byte;    /* Byte offset where this cluster begins. */
+            int  end_byte;      /* Byte offset where this cluster ends. */
+            int  face_idx;      /* Font face index for this cluster. */
+            int  pen_x;         /* X position for drawing this cluster. */
+            int  pen_y;         /* Y position for drawing this cluster. */
+            int  advance_x;     /* Horizontal advance after this cluster. */
+            char text[32];      /* UTF-8 text for this cluster. */
         } ClusterRenderInfo;
 
         ClusterRenderInfo clusters[MAX_GLYPHS];
         int cluster_count = 0;
 
+        /* Merge glyphs into clusters based on their byte offsets. */
         for (int i = 0; i < sbuf.glyphCount && cluster_count < MAX_GLYPHS; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
+            /* Skip glyphs that fall outside our rendering range. */
             if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
                 continue;
 
+            /* Check if this cluster already exists. */
             int found = -1;
             for (int j = 0; j < cluster_count; j++) {
                 if (clusters[j].start_byte == bo &&
-		    clusters[j].end_byte == boe) {
+                    clusters[j].end_byte == boe) {
                     found = j;
                     break;
                 }
             }
 
+            /* If not found, create a new cluster entry. */
             if (found < 0) {
                 found = cluster_count++;
                 clusters[found].start_byte = bo;
@@ -3685,18 +3775,24 @@ TkpDrawAngledCharsInContext(
                 clusters[found].pen_y = sbuf.glyphs[i].y;
                 clusters[found].advance_x = sbuf.glyphs[i].advanceX;
 
+                /* Store the cluster's text, capped at 31 bytes. */
                 int len = boe - bo;
                 if (len > 31) len = 31;
-                memcpy(clusters[found].text, shapeSource + bo, len);
+                memcpy(clusters[found].text, source + bo, len);
                 clusters[found].text[len] = '\0';
             }
         }
 
+        /* Render each cluster individually with appropriate font face. */
         for (int i = 0; i < cluster_count; i++) {
             int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
-            /* For emoji, use emoji face. */
+            /* 
+             * For emoji clusters, try to use the dedicated emoji font face.
+             * For non-emoji clusters, prefer the primary face if it covers
+             * the character, otherwise find the first face that does.
+             */
             FcChar32 uc;
             if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
                              strlen(clusters[i].text)) > 0) {
@@ -3706,12 +3802,12 @@ TkpDrawAngledCharsInContext(
                         faceIdx = emojiFace;
                     }
                 } else {
-                    /* Check primary face first. */
+                    /* Prefer primary face if it covers this character. */
                     if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
                         FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
                         faceIdx = 0;
                     } else {
-                        /* Find first face that covers this character. */
+                        /* Fallback to the first face that has this character. */
                         for (int fi = 1; fi < fontPtr->nfaces; fi++) {
                             if (fontPtr->faces[fi].charset &&
                                 FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
@@ -3723,68 +3819,35 @@ TkpDrawAngledCharsInContext(
                 }
             }
 
+            /* Get the NanoVG font ID for this face, falling back to primary. */
             int faceId = fontPtr->faces[faceIdx].nvgFontId;
             if (faceId < 0) faceId = primaryId;
-
             if (faceId != lastFaceId) {
                 nvgFontFaceId(vg, faceId);
                 lastFaceId = faceId;
             }
 
+            /* Position the cluster using HarfBuzz's calculated coordinates.
+             * For combining marks, HarfBuzz positions them with x_offset
+             * relative to the base character, and the advance is 0.
+             */
             float gx = (float)clusters[i].pen_x;
             float gy = (float)clusters[i].pen_y;
 
-            /* 
-             * If the cluster contains a combining mark and couldn't be
-             * composed, use HarfBuzz's x_offset to position the mark
-             * correctly.  The offset is already in the glyph's x position.
-             */
-            bool hasMark = false;
-            for (int j = 0; j < (int)strlen(clusters[i].text); ) {
-                FcChar32 uc2;
-                int clen = FcUtf8ToUcs4((const FcChar8 *)(clusters[i].text + j), 
-                                        &uc2, strlen(clusters[i].text) - j);
-                if (clen > 0 && uc2 >= 0x0300 && uc2 <= 0x036F) {
-                    hasMark = true;
-                    break;
-                }
-                j += clen;
-            }
-
-            if (hasMark && didCompose) {
-                /* 
-                 * The mark is in a cluster that WAS composed by
-                 * ComposeUTF8String, but the font doesn't have the precomposed
-                 * glyph. HarfBuzz will have positioned it with a negative
-                 * x_offset. The pen_x already includes that offset from the
-                 * shaping pass.
-                 */
-                nvgText(vg, gx, gy, clusters[i].text, 
-                        clusters[i].text + strlen(clusters[i].text));
-            } else {
-                nvgText(vg, gx, gy, clusters[i].text, 
-                        clusters[i].text + strlen(clusters[i].text));
-            }
+            /* Render the cluster text at its position. */
+            nvgText(vg, gx, gy, clusters[i].text, 
+                    clusters[i].text + strlen(clusters[i].text));
         }
     }
 
+    /* Restore the transformation state. */
     nvgRestore(vg);
-    if (composedSource) {
-	free(composedSource);
-    }
 
 decorations:
+    /* Render underline and overstrike decorations if requested by the font. */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float runWidth;
 
-        /*
-         * This block runs after the nvgSave()/nvgRestore() pair above
-         * has already been popped, so it draws in absolute (untranslated)
-         * coordinates using the original x/y arguments -- same space as
-         * wsClipBox. Give it its own save/scissor/restore rather than
-         * widening the scope above, so it doesn't inherit the
-         * translate/rotate transform meant for the glyph-drawing path.
-         */
         nvgSave(vg);
         if (wsClipActive) {
             nvgScissor(vg, (float)wsClipBox.x, (float)wsClipBox.y,
@@ -3793,8 +3856,15 @@ decorations:
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-        /* Advance width, not ink bounds[2] - see note above on why. */
-        runWidth = nvgTextBounds(vg, 0, 0, renderPtr, renderEnd, NULL);
+        
+        /* Skip newlines when measuring for decorations. */
+        const char *decoStart = rangePtr;
+        const char *decoEnd = rangeEnd;
+        /* Skip any leading/trailing newlines for decoration measurement. */
+        while (decoStart < decoEnd && (*decoStart == '\n' || *decoStart == '\r')) decoStart++;
+        while (decoEnd > decoStart && (*(decoEnd-1) == '\n' || *(decoEnd-1) == '\r')) decoEnd--;
+        
+        runWidth = nvgTextBounds(vg, 0, 0, decoStart, decoEnd, NULL);
 
         nvgStrokeColor(vg, ColorFromGC(gc));
         nvgStrokeWidth(vg, (float)fontPtr->barHeight);
@@ -3818,6 +3888,7 @@ decorations:
         nvgRestore(vg);
     }
 done:
+    /* Release the Wayland drawing context. */
     TkWaylandEndDraw(&dc);
 }
 

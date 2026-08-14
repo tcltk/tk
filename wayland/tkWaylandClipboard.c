@@ -77,7 +77,6 @@ XSetSelectionOwner(
     return Success;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -136,9 +135,9 @@ TkSelPropProc(
  *	This function is called to force the clipboard to be updated after new
  *	data is added or the clipboard has been cleared.
  *
- *      The nil Object is declared to be the owner.  This is done in a way
- *      which triggers an incremeent of the pasteboard's changeCount property,
- *      notifying clipboard managers that the value has changed.
+ *  The nil Object is declared to be the owner.  This is done in a way
+ *  which triggers an incremeent of the pasteboard's changeCount property,
+ *  notifying clipboard managers that the value has changed.
  *
  * Results:
  *	None.

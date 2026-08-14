@@ -117,7 +117,7 @@ Tk_3DVerticalBevel(
     TkWaylandDrawingContext dc;
     NVGcolor                leftColor, rightColor;
 
-    /* Guard against invalid dimensions */
+    /* Guard against invalid dimensions. */
     if (width <= 0 || height <= 0) return;
 
     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT)) {
@@ -235,7 +235,7 @@ Tk_3DHorizontalBevel(
     NVGcolor                topColor, bottomColor;
     int                     bottom, halfway, x1, x2, x1Delta, x2Delta;
 
-    /* Guard against invalid dimensions */
+    /* Guard against invalid dimensions. */
     if (width <= 0 || height <= 0) return;
 
     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT) &&

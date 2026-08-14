@@ -25,6 +25,28 @@
 #define radians(d) ((d) * (M_PI / 180.0))
 
 /*
+ * Minimal region representation for this Wayland port.
+ *
+ * `Region` is `struct _XRegion *`, but the public/dev X11 headers
+ * included above only ever forward-declare that struct -- the real
+ * body is private to libX11 and isn't installed anywhere this file can
+ * see it. Since nothing outside this port's own region functions below
+ * ever dereferences a Region, it's safe for this file to be the one
+ * place that gives struct _XRegion a real body.
+ *
+ * ttk's only consumer of this (ttkLabel.c's TextDraw, for clipping
+ * treeview/label cell text that overflows its cell) does XCreateRegion(),
+ * exactly one XUnionRectWithRegion() with a single rect, then reads the
+ * result back out via TkUnixSetXftClipRegion()/XClipBox(). A single
+ * bounding-box rectangle is therefore all this needs to track -- no
+ * general multi-rect region support required.
+ */
+struct _XRegion {
+    XRectangle extents;
+    int        valid;   /* 0 = empty region, 1 = extents holds a rect */
+};
+
+/*
  *----------------------------------------------------------------------
  *
  * Internal helpers
@@ -134,7 +156,7 @@ XDrawString(
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
-    /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC */
+    /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC. */
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -148,7 +170,7 @@ XDrawString(
  * XDrawImageString --
  *
  *	Like XDrawString but fills the glyph background with the GC
- *	background colour first ("opaque" text).  Used for selected
+ *	background color first ("opaque" text).  Used for selected
  *	listbox rows and other highlighted text.
  *
  * Results:
@@ -194,7 +216,7 @@ XDrawImageString(
     /* Measure text extent so we can fill the background. */
     nvgTextBounds(dc.vg, (float)x, (float)y, buf, NULL, bounds);
 
-    /* Fill background with GC background colour. */
+    /* Fill background with GC background color. */
     {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
@@ -580,7 +602,6 @@ XFillRectangles(
         color = nvgRGB(255, 255, 255);
     }
     if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
-	// X11 would return 0 and generate a BadDrawable error.
         return BadDrawable;
     }
     for (i = 0; i < nrectangles; i++) {
@@ -634,6 +655,168 @@ XFillRectangle(
     
     return XFillRectangles(display, d, gc, &rect, 1);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XClipBox --
+ *
+ *	Get bounding box of region.
+ *
+ * Results:
+ *	1, with rect_return set to the region's bounding box (zeroed if
+ *	the region is NULL or empty). Real Xlib returns a rect-vs-region
+ *	shape flag here (Rectangle/Complex); since this port never tracks
+ *	more than a bounding box to begin with, that distinction doesn't
+ *	apply -- callers here (TkUnixSetXftClipRegion) only care about the
+ *	rect.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XClipBox(
+    Region region,
+    XRectangle *rect_return)
+{
+    if (rect_return == NULL) {
+        return 0;
+    }
+    if (region != NULL && region->valid) {
+        *rect_return = region->extents;
+    } else {
+        rect_return->x = rect_return->y = 0;
+        rect_return->width = rect_return->height = 0;
+    }
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XDestroyRegion --
+ *
+ *	Destroy a region allocated by XCreateRegion().
+ *
+ * Results:
+ *	Always returns 0 (Success).
+ *
+ * Side effects:
+ *	Frees region.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XDestroyRegion(
+    Region region)
+{
+    if (region != NULL) {
+        Tcl_Free((char *)region);
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCreateRegion --
+ *
+ *	Create an empty region. See the struct _XRegion comment near the
+ *	top of this file for why this port can define the struct body
+ *	and allocate a real one here instead of returning NULL.
+ *
+ * Results:
+ *	A newly allocated, empty Region. Caller must XDestroyRegion() it.
+ *
+ * Side effects:
+ *	Allocates memory.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Region
+XCreateRegion(
+    void)
+{
+    Region region = (Region)Tcl_Alloc(sizeof(struct _XRegion));
+
+    region->extents.x = region->extents.y = 0;
+    region->extents.width = region->extents.height = 0;
+    region->valid = 0;
+    return region;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XUnionRectWithRegion --
+ *
+ *	Union a rectangle with a region, tracking only the resulting
+ *	bounding box (see struct _XRegion comment near the top of this
+ *	file). Handles srcRegion == dstRegion, which is how ttk's
+ *	TextDraw() (ttkLabel.c) calls this -- union a single rect into a
+ *	freshly created, still-empty region.
+ *
+ * Results:
+ *	Always returns 1 (Success).
+ *
+ * Side effects:
+ *	Updates dstRegion's extents/valid fields.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XUnionRectWithRegion(
+    XRectangle *rect,
+    Region srcRegion,
+    Region dstRegion)
+{
+    XRectangle r;
+    int x0, y0, x1, y1;
+
+    if (rect == NULL || dstRegion == NULL) {
+        return 0;
+    }
+    r = *rect;
+
+    if (srcRegion != NULL && srcRegion != dstRegion && srcRegion->valid) {
+        x0 = (r.x < srcRegion->extents.x) ? r.x : srcRegion->extents.x;
+        y0 = (r.y < srcRegion->extents.y) ? r.y : srcRegion->extents.y;
+        x1 = (r.x + r.width > srcRegion->extents.x + srcRegion->extents.width)
+                ? r.x + r.width
+                : srcRegion->extents.x + srcRegion->extents.width;
+        y1 = (r.y + r.height > srcRegion->extents.y + srcRegion->extents.height)
+                ? r.y + r.height
+                : srcRegion->extents.y + srcRegion->extents.height;
+        r.x = x0; r.y = y0;
+        r.width = x1 - x0; r.height = y1 - y0;
+    }
+
+    if (!dstRegion->valid) {
+        dstRegion->extents = r;
+    } else {
+        x0 = (r.x < dstRegion->extents.x) ? r.x : dstRegion->extents.x;
+        y0 = (r.y < dstRegion->extents.y) ? r.y : dstRegion->extents.y;
+        x1 = (r.x + r.width > dstRegion->extents.x + dstRegion->extents.width)
+                ? r.x + r.width
+                : dstRegion->extents.x + dstRegion->extents.width;
+        y1 = (r.y + r.height > dstRegion->extents.y + dstRegion->extents.height)
+                ? r.y + r.height
+                : dstRegion->extents.y + dstRegion->extents.height;
+        dstRegion->extents.x = x0;
+        dstRegion->extents.y = y0;
+        dstRegion->extents.width = x1 - x0;
+        dstRegion->extents.height = y1 - y0;
+    }
+    dstRegion->valid = 1;
+    return 1;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -1019,8 +1202,10 @@ TkScrollWindow(
         return 0;
     }
 
-    /* Same walk TkWaylandBeginDraw does, to find the toplevel and this
-     * widget's offset within it. */
+    /* 
+     * Same walk TkWaylandBeginDraw does, to find the toplevel and this
+     * widget's offset within it. 
+     */
     while (!Tk_IsTopLevel(winPtr)) {
         offX += winPtr->changes.x;
         offY += winPtr->changes.y;
@@ -1038,9 +1223,11 @@ TkScrollWindow(
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     glfwGetFramebufferSize(glfwWindow, &winFbWidth, &winFbHeight);
 
-    /* Convert widget-local logical coords to backing-store pixels,
+    /* 
+     * Convert widget-local logical coords to backing-store pixels,
      * computing each edge independently so rounding can't open a
-     * seam between the blit rect and its own width/height. */
+     * seam between the blit rect and its own width/height. 
+     */
     fbX0 = (int)lroundf((offX + x) * scale);
     fbY0 = (int)lroundf((offY + y) * scale);
     fbX1 = (int)lroundf((offX + x + width)  * scale);

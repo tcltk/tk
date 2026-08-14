@@ -1,11 +1,11 @@
 /*
  * tkWaylandPopup.c --
  *
- * Native Wayland subsurface primitive for Tk using wl_shm.
+ * 	Native Wayland subsurface primitive for Tk using wl_shm.
  *
- * This module implements a lightweight wrapper around wl_subsurface using
- * wl_shm for buffer management. It uses a software renderer that renders
- * to the SHM buffer using NanoVG's GLES3 backend.
+ * 	This module implements a lightweight wrapper around wl_subsurface using
+ * 	wl_shm for buffer management. It uses a software renderer that renders
+ * 	to the SHM buffer using NanoVG's GLES3 backend.
  *
  * Copyright © 2026 Kevin Walzer
  * Copyright © 2026 Marc Culler

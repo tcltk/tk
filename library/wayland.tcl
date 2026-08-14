@@ -71,7 +71,19 @@ if {[tk windowingsystem] eq "wayland"} {
 	    unset -nocomplain ::wayland_paste_buf($chan)
 	    unset -nocomplain ::wayland_paste_done($chan)
 	    catch {close $chan}
-	    return $result
+	    
+	    # Try to interpret as UTF-8, fallback to system encoding
+	    set converted_result ""
+	    if {[catch {
+		set converted_result [encoding convertfrom utf-8 $result]
+	    }]} {
+		if {[catch {
+		    set converted_result [encoding convertfrom [encoding system] $result]
+		}]} {
+		    set converted_result [encoding convertfrom iso8859-1 $result]
+		}
+	    }
+	    return $converted_result
 	}
 
 	# wayland_clipboard_put --
@@ -82,9 +94,7 @@ if {[tk windowingsystem] eq "wayland"} {
 	#	own to persist as the selection owner, but backgrounding here
 	#	means Tcl never waits on it regardless.
 	proc wayland_clipboard_put {data} {
-	    if {[catch {exec wl-copy << $data &} err]} {
 		catch {exec wl-copy -- $data &}
-	    }
 	}
 
 	proc clipboard {cmd args} {
@@ -133,6 +143,9 @@ if {[tk windowingsystem] eq "wayland"} {
 		}
 	    }
 	}
+	
+	# Set the system encoding to UTF-8 for proper text handling
+	encoding system utf-8
     }
     # end of Wayland commands
 }

@@ -523,7 +523,7 @@ LoadImageFile(
         }
     }
 
-    /* Try as XBM file by default */
+    /* Try as XBM file by default. */
     return LoadXBMFile(filename, pixels, width, height);
 }
 
@@ -856,7 +856,7 @@ TkGetCursorByName(
     }
 
     /*
-     * Check GLFW standard cursor table NEXT — these take priority over
+     * Check GLFW standard cursor table next — these take priority over
      * the X11 bitmap fallbacks in builtinCursors[].
      */
     if ((argv[0][0] != '@') && (tkCursorPtr == NULL)) {

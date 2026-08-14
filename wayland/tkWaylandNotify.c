@@ -263,7 +263,6 @@ TkWaylandClearStoredText(TkWindow *winPtr)
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandSetupProc(void *clientData, int flags);
 static void TkWaylandCheckProc(void *clientData, int flags);
-static void TkWaylandCheckForWindowClosure(void);
 
 /* Idle loop presentation architecture. */
 
@@ -323,38 +322,6 @@ Tk_WaylandSetupTkNotifier(void)
     TkWaylandWakeupGLFW();
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandCheckForWindowClosure --
- *
- *      Check if all Tk main windows have been destroyed and initiate
- *      graceful shutdown if needed.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      May trigger cleanup of GLFW resources if no windows remain.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-TkWaylandCheckForWindowClosure(void)
-{
-    TSD_INIT();
-    
-    if (tsdPtr->shutdownInProgress) return;
-    
-    /* If there are no Tk main windows left, start shutdown. */
-    if (Tk_GetNumMainWindows() == 0) {
-        tsdPtr->shutdownInProgress = 1;
-        
-        /* Schedule cleanup as idle callback. */
-        Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
-    }
-}
 
 /*
  *----------------------------------------------------------------------
@@ -474,8 +441,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
  *
  *      Clean up at exit. Removes the event source, deletes the
  *      heartbeat timer and file handler, and marks the notifier as
- *      uninitialized. Called both on normal exit and when last window
- *      is closed.
+ *      uninitialized. 
  *
  * Results:
  *      None.
@@ -506,8 +472,10 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 
     tsdPtr->initialized = false;
     
-    /* Note: We don't call TkWaylandShutdown here. */
-    //// Why not?
+    /* 
+     * Note: We don't call TkWaylandShutdown here because that is the LAST exit handler,
+     * running after this function. 
+     */
 }
 
 /* XEvents. */
@@ -671,7 +639,6 @@ TkWaylandSetupCallbacks(
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkWaylandWindowCloseCallback);
     glfwSetFramebufferSizeCallback (glfwWindow, TkWaylandFramebufferSizeCallback);
-    ////    glfwSetWindowPosCallback       (glfwWindow, TkWaylandWindowPosCallback);
     glfwSetWindowFocusCallback     (glfwWindow, TkWaylandWindowFocusCallback);
     glfwSetWindowIconifyCallback   (glfwWindow, TkWaylandWindowIconifyCallback);
     glfwSetWindowMaximizeCallback  (glfwWindow, TkWaylandWindowMaximizeCallback);
@@ -690,7 +657,6 @@ TkWaylandClearCallbacks(
 {
     glfwSetWindowCloseCallback        (glfwWindow, NULL);
     glfwSetFramebufferSizeCallback    (glfwWindow, NULL);
-    ////    glfwSetWindowPosCallback          (glfwWindow, NULL);
     glfwSetWindowFocusCallback        (glfwWindow, NULL);
     glfwSetWindowIconifyCallback      (glfwWindow, NULL);
     glfwSetWindowMaximizeCallback     (glfwWindow, NULL);
@@ -875,48 +841,6 @@ GenerateConfigureNotify(
         TkDoConfigureNotify(winPtr);
     }
 }
-
-#if 0
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWindowPosCallback --
- *
- *      This is never called on Wayland, according to GLFW.
- *      Wayland hides the position of an app on the screen.
- *      The only way to move (or focus) a window is to do
- *      it with the mouse.  This will be a major limitation
- *      when it comes time to run the Tk tests.
- *      See https://www.glfw.org/docs/3.4/group__window.html#ga08bdfbba88934f9c4f92fd757979ac74
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Updates window geometry, generates ConfigureNotify event.
- *
- *----------------------------------------------------------------------
- */
- 
-static void
-TkWaylandWindowPosCallback(
-			   GLFWwindow *window,
-			   int xpos,
-			   int ypos)
-{
-    TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-	DEBUG_LOG("TkWaylandWindowPosCallback: no Tk window");
-        return;
-    }
-    DEBUG_LOG("TkWaylandWindowPosCallback: %s -> to %d+%d",
-	    Tk_PathName(winPtr), xpos, ypos);
-
-    winPtr->changes.x = xpos;
-    winPtr->changes.y = ypos;
-    TkDoConfigureNotify(winPtr);
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1234,7 +1158,7 @@ TkWaylandCursorPosCallback(
      */
     if (TkWaylandMenuPopupActive()) {
         TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
-        /* Force immediate redraw of the menu to show highlight changes */
+        /* Force immediate redraw of the menu to show highlight changes. */
         TkWaylandMenuRedrawActive();
         return;
     }
