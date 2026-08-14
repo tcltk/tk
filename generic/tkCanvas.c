@@ -3127,8 +3127,9 @@ DisplayCanvas(
 	canvasPtr->drawableYOrigin = canvasPtr->yOrigin;
 	pixmap = Tk_WindowId(tkwin);
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap,
-		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
-		width, height);
+		screenX1 - canvasPtr->xOrigin - AA_PAD,
+		screenY1 - canvasPtr->yOrigin - AA_PAD,
+		width + 2*AA_PAD, height + 2*AA_PAD);
 	/*
 	 * Call ItemDisplay for all window items.  This does not redraw the
 	 * windows, but sets their position within the canvas, which ensures
