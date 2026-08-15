@@ -918,6 +918,22 @@ mojibake_word_breaks_with_dict(const char *buf,
             j += lj;
         }
         if (runEnd>runStart+1) {
+            /*
+             * The baseline mojibake_word_breaks() call above has no
+             * knowledge of Thai/Lao/Khmer/Myanmar word boundaries, so
+             * per UAX #29's documented fallback for scripts without
+             * spaces, it marks a word break after every single grapheme
+             * cluster in this run. Left in place, those per-character
+             * breaks would sit alongside the real boundaries found by
+             * the dictionary matcher below, and every downstream
+             * consumer (line-break promotion, the line-wrap search)
+             * would see "break allowed" almost everywhere -- effectively
+             * degrading word-wrap to character-wrap for this run. Clear
+             * them so only genuine dictionary-derived boundaries (plus
+             * ForwardMaxMatchRun's own fallback breaks for real
+             * dictionary misses) remain.
+             */
+            memset(wBreaks + runStart + 1, 0, runEnd - runStart - 1);
             DictCache *dc = CacheForScript(curSc);
             if (dc) {
                 ForwardMaxMatchRun(buf, runStart, runEnd, gBreaks, wBreaks, NULL, dc);
@@ -949,15 +965,13 @@ mojibake_word_breaks_with_dict(const char *buf,
  */
 int
 mojibake_line_breaks_with_dict(const char *buf,
-			       			   size_t byteLen,
+			       size_t byteLen,
                                unsigned char *lBreaks,
                                unsigned char *gBreaks_tmp,
                                unsigned char *wBreaks_tmp)
 {
     if (!buf || !lBreaks) return 0;
     EnsureDictsInitialized();
-
-fprintf(stderr, "DICT PATH HIT byteLen=%zu buf=\"%.*s\"\n", byteLen, (int)(byteLen < 60 ? byteLen : 60), buf);
 
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
