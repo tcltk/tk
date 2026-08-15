@@ -2284,18 +2284,6 @@ InitFont(
             basePixels = 1;
         }
     }
-
-    /* 
-     * Apply a modest boost for UI fonts, but NOT for canvas text.
-     * We need to detect if this is a canvas text font vs a UI font.
-     * Canvas text uses exact pixel sizes (negative values), UI fonts
-     * use point sizes (positive values).
-     */
-    if (ptSize > 0.0 || ptSize == 0.0) {
-        /* Point-based font (UI) - apply modest boost for readability. */
-        basePixels = (int)((double)basePixels * 1.15 + 0.5);
-    }
-    /* Canvas text uses negative ptSize - no boost applied. */
     
     if (basePixels < 1) {
         basePixels = 1;

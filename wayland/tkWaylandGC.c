@@ -130,14 +130,17 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 	glfwGetMonitorContentScale(monitor, &scale, NULL);
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         if (mode) {
-	    sw = (int) ((float) mode->width / scale);
-	    sh = (int) ((float) mode->height / scale);
+	    sw = (int) (float) mode->width / scale;
+	    sh = (int) (float) mode->height / scale;
 	}
     }
     screen->width  = sw;
     screen->height = sh;
-    screen->mwidth  = (sw * 254.0) / 720.0;
-    screen->mheight = (sh * 254.0) / 720.0;
+    //// We need to explain where 960.0 comes from!!!!
+    //// It used to be 720.0 and that made Canvas widgets underestimate
+    //// their size.  Also, text was too small.
+    screen->mwidth  = (sw * 254.0) / 960.0;
+    screen->mheight = (sh * 254.0) / 960.0;
 
     /* Display. */
     display->screens        = screen;
