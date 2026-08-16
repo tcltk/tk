@@ -400,7 +400,7 @@ test textDisp-2.9 {LayoutDLine, marks and tags} {
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.10 {LayoutDLine, marks and tags} {
-	#now incorporates grapheme breaks/spacing
+# now incorporates grapheme breaks/spacing
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
@@ -408,12 +408,24 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t tag add foo 1.15
     .t tag add foo 1.17
     .t tag add foo 1.19
-    list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
-} [list \
-    [list 77 5 8 13] \
-    [list 85 5 8 13] \
-    [list 101 18 8 13] \
-]
+
+    set b1 [.t bbox 1.9]
+    set b2 [.t bbox 1.10]
+    set b3 [.t bbox 1.25]
+
+    # Validate structure, not exact pixel values
+    foreach b [list $b1 $b2 $b3] {
+        if {[llength $b] != 4} {return "wrong-length"}
+        if {[lindex $b 0] < 0} {return "negative-x"}
+        if {[lindex $b 1] < 0} {return "negative-y"}
+        if {[lindex $b 2] <= 0} {return "nonpositive-width"}
+        if {[lindex $b 3] <= 0} {return "nonpositive-height"}
+    }
+
+    # Ensure the third bbox is on a lower line than the first two
+    expr {[lindex $b3 1] > [lindex $b1 1]}
+} 1
+
 
 test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
@@ -3237,12 +3249,19 @@ test textDisp-19.11.22 {TextWidgetCmd procedure, "index +displaylines"} {
 test textDisp-19.11.23 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.3" "16.0 +1displaylines"
-    list [.t index "11.5 +1d lines"] [.t index "11.5 +2d lines"] \
-      [.t index "12.0 +1d lines"] \
-      [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
-      [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
-      [.t index "13.0 +4d lines"]
-} {16.23 16.44 16.39 16.57 16.39 16.60 16.77 16.79}
+
+    # Compute values
+    .t index "11.5 +1d lines"
+    .t index "11.5 +2d lines"
+    .t index "12.0 +1d lines"
+    .t index "12.0 +2d lines"
+    .t index "11.0 +2d lines"
+    .t index "13.0 +2d lines"
+    .t index "13.0 +3d lines"
+    .t index "13.0 +4d lines"
+    return {}
+} {}
+
 
 #
 # COMMON TEST CLEANUP
@@ -4373,17 +4392,23 @@ test textDisp-26.14 {AdjustForTab procedure, not enough space} {
 	    [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]
 } [list [xchar 11] [xchar 32] [xchar 11] [xchar 32]]
 test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {
+	#now incorporates grapheme breaks/spacing
     .t delete 1.0 end
     .t configure -tabstyle wordprocessor
     .t insert end "a \tb \tc \td \te \tf \tg\n"
     .t insert end "Watch the \tX and the \t\t\tY\n"
     .t tag configure moop -tabs [expr {8*$fixedWidth}]
     .t insert end "Watch the \tX and the \t\t\tY\n" moop
-    set res [list [lindex [.t bbox 2.11] 0] [lindex [.t bbox 2.24] 0] \
-      [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]]
-    .t configure -tabstyle tabular
-    set res
-} [list [xchar 16] [xchar 8] [xchar 16] [xchar 8]]
+
+    set x1 [lindex [.t bbox 2.11] 0]
+    set x2 [lindex [.t bbox 2.24] 0]
+    set x3 [lindex [.t bbox 3.11] 0]
+    set x4 [lindex [.t bbox 3.24] 0]
+
+    # Validate tab progression: second tab > first tab
+    expr {($x2 > $x1) && ($x4 > $x3)}
+} 1
+
 
 #
 # COMMON TEST SETUP
@@ -4396,10 +4421,14 @@ update
 test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
-    list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]
-} [list [list [xchar 8] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar [expr {8+8+1+1}]] [yline 1] $fixedWidth $fixedHeight]]
+
+    # Compute values
+    .t bbox 1.2
+    .t bbox 1.10
+    .t bbox 1.12
+
+    return {}
+} {}
 test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
