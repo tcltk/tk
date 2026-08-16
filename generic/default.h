@@ -19,6 +19,8 @@
 #else
 #   if defined(MAC_OSX_TK)
 #	include "tkMacOSXDefault.h"
+#   elif defined(TK_USE_WAYLAND)
+#       include "tkWaylandDefault.h"
 #   else
 #	include "tkUnixDefault.h"
 #   endif
