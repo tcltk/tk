@@ -8541,16 +8541,26 @@ TkTextCharLayoutProc(
 
 	    if (best > 0) {
 		size_t b = (size_t)best;
-		while (b < bFit && chunkStart[b] == ' ') b++;
+		while (b < bFit && chunkStart[b] == ' ') {
+		    b++;
+		}
 		chunkPtr->breakIndex = (Tcl_Size)b;
 	    } else {
+		/*
+		 * No acceptable UAX14+grapheme+dictionary break inside the fit.
+		 * Mark this chunk as having no internal break. LayoutDLine will
+		 * fall back to the last fitted grapheme boundary.
+		 */
 		chunkPtr->breakIndex = -1;
 	    }
 	} else {
-	    /* Couldn't allocate the break-property arrays -- we have no way
-	     * to determine a real break opportunity, so don't claim one. */
+	    /*
+	     * Could not allocate break-property arrays. We cannot determine
+	     * any real break opportunity, so mark this chunk as having none.
+	     */
 	    chunkPtr->breakIndex = -1;
 	}
+
 	if (gAll) Tcl_Free(gAll);
 	if (lAll) Tcl_Free(lAll);
 	if (wAll) Tcl_Free(wAll);
