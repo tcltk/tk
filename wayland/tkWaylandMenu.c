@@ -1095,7 +1095,9 @@ GetMenuLabelGeometry(
     }
     *heightPtr += 2;
 }
+
 /*
+ *---------------------------------------------------------------------------
  * TkWaylandSyncMenubarGeometry --
  *
  *     Forces immediate completion of pending geometry updates for a toplevel
@@ -1116,6 +1118,7 @@ GetMenuLabelGeometry(
  *
  * Side effects:
  *     Runs pending Tcl idle handlers to completion.
+ *---------------------------------------------------------------------------
  */
 
 static void
