@@ -209,8 +209,7 @@ static int MenubarPostCascadeAtEntry(WmInfo *wmPtr, TkMenu *menuPtr, TkMenuEntry
 static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
 static void MenuBarDeferredSetup(void *clientData);
 static void MenubarResizeIdleProc(void *clientData);
-static void TkWaylandWmUpdateGeometryInfo(void *clientData);
-static void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+static void TkWaylandSyncMenubarGeometry(TkWindow *winPtr);
 
 /* Pending image management (used during drawing). */
 static void MenuPendingImageAdd(NVGcontext *vg, int imgId);
@@ -1100,6 +1099,60 @@ GetMenuLabelGeometry(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkWaylandSyncMenubarGeometry --
+ *
+ *     Called immediately after Tk_SetInternalBorderEx() changes a
+ *     toplevel's internal border to make room for (or release) a
+ *     menubar. Tk_SetInternalBorderEx() only *notifies* the geometry
+ *     manager (pack/grid) that the interior changed -- the actual
+ *     re-layout of children and recomputation of winPtr->reqWidth/
+ *     reqHeight happens on Tk's idle queue, same as any other pack/grid
+ *     pass. TkWaylandUpdateGeometryInfo() then idle-schedules wm.c's
+ *     UpdateGeometryInfo pass, which is what actually calls
+ *     glfwSetWindowSize() on the toplevel.
+ *
+ *     Both of those need to have actually *run*, not just be queued,
+ *     before this function returns -- callers like
+ *     TkWaylandMenubarCreateOrResize() read the toplevel's current
+ *     GLFW size immediately afterward (to size the menubar subsurface
+ *     itself), and if the wm resize is still sitting on the idle queue
+ *     at that point, they capture the pre-resize width. That's what
+ *     clipped the rightmost menu label -- the menubar popup gets
+ *     created one size behind the toplevel it's attached to.
+ *
+ *     So: schedule the wm resize, then drain the idle queue until
+ *     nothing is left. Draining after scheduling (rather than before)
+ *     means the same loop picks up both the pack/grid re-layout and
+ *     the wm resize it triggers, in order, so by the time we return
+ *     the GLFW window has actually been resized to its final size.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Runs pending Tcl idle handlers to completion, including the wm
+ *     geometry pass that resizes the GLFW window.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+TkWaylandSyncMenubarGeometry(
+    TkWindow *winPtr)
+{
+    if (!winPtr) return;
+
+    TkWaylandUpdateGeometryInfo(winPtr);
+
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS | TCL_DONT_WAIT)) {
+        /* Drain until pack/grid re-layout and the resulting wm resize
+         * (glfwSetWindowSize) have both run to completion. */
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkpSetWindowMenuBar --
  *
  *     Attach or detach a menubar for a toplevel.
@@ -1138,8 +1191,9 @@ TkpSetWindowMenuBar(
         wmPtr->menubar        = NULL;
         wmPtr->menubarMenuPtr = NULL;
         wmPtr->menuHeight     = 0;
-        winPtr->internalBorderTop = 0;
-        TkWaylandWmUpdateGeom(wmPtr, winPtr);
+        Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
+                winPtr->internalBorderRight, 0, winPtr->internalBorderBottom);
+        TkWaylandSyncMenubarGeometry(winPtr);
         return;
     }
 
@@ -1149,8 +1203,10 @@ TkpSetWindowMenuBar(
         TkRecomputeMenu(menuPtr);
         wmPtr->menuHeight = menuPtr->totalHeight;
         if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
-        winPtr->internalBorderTop = wmPtr->menuHeight;
-        TkWaylandWmUpdateGeom(wmPtr, winPtr);
+        Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
+                winPtr->internalBorderRight, wmPtr->menuHeight,
+                winPtr->internalBorderBottom);
+        TkWaylandSyncMenubarGeometry(winPtr);
 
         /* Just resize/redraw the existing popup. */
         if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -1167,8 +1223,10 @@ TkpSetWindowMenuBar(
     wmPtr->menuHeight = menuPtr->totalHeight;
     if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
 
-    winPtr->internalBorderTop = wmPtr->menuHeight;
-    TkWaylandWmUpdateGeom(wmPtr, winPtr);
+    Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
+            winPtr->internalBorderRight, wmPtr->menuHeight,
+            winPtr->internalBorderBottom);
+    TkWaylandSyncMenubarGeometry(winPtr);
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
         DEBUG_LOG("TkpSetWindowMenuBar: deferring menubar setup "
@@ -1218,10 +1276,19 @@ TkWaylandMenubarCreateOrResize(
         return;
     }
 
-    int gw = 0, gh = 0;
-    glfwGetWindowSize(glfwWindow, &gw, &gh);
+    /*
+     * Use Tk's own recorded width for this window (winPtr->changes.width,
+     * via Tk_Width()) rather than a live glfwGetWindowSize() readback.
+     * Under Wayland, glfwSetWindowSize() only *requests* a resize -- the
+     * actual on-screen size can lag behind a client-side request. Tk_Width()
+     * is the same field every other widget's reflow-on-resize already
+     * depends on being current (for both our own requested resizes and
+     * live/user-driven ones), so it's the one source guaranteed to be
+     * synchronized regardless of what triggered the resize.
+     */
+    int gw = Tk_Width((Tk_Window)winPtr);
     if (gw <= 0) {
-        gw = Tk_Width((Tk_Window)winPtr);
+        gw = wmPtr->configWidth;
     }
     if (gw <= 0) {
         gw = Tk_ReqWidth((Tk_Window)winPtr);
@@ -1231,6 +1298,12 @@ TkWaylandMenubarCreateOrResize(
     }
     width = gw;
 
+    DEBUG_LOG("TkWaylandMenubarCreateOrResize: %s Tk_Width=%d "
+              "Tk_ReqWidth=%d configWidth=%d changes.width=%d -> width=%d",
+              Tk_PathName((Tk_Window)winPtr),
+              Tk_Width((Tk_Window)winPtr), Tk_ReqWidth((Tk_Window)winPtr),
+              wmPtr->configWidth, winPtr->changes.width, width);
+
     /* Recompute menu geometry with the actual window width. */
     TkRecomputeMenu(menuPtr);
     mbH = menuPtr->totalHeight;
@@ -1239,8 +1312,9 @@ TkWaylandMenubarCreateOrResize(
     mbW = width;
 
     if (winPtr->internalBorderTop != mbH) {
-        winPtr->internalBorderTop = mbH;
-        TkWaylandWmUpdateGeom(wmPtr, winPtr);
+        Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
+                winPtr->internalBorderRight, mbH, winPtr->internalBorderBottom);
+        TkWaylandSyncMenubarGeometry(winPtr);
     }
 
     DEBUG_LOG("TkWaylandMenubarCreateOrResize: creating menubar popup %dx%d", mbW, mbH);
@@ -1345,6 +1419,9 @@ MenuBarDeferredSetup(
     }
 
     retries = 0;                     /* success – reset for next time */
+    DEBUG_LOG("MenuBarDeferredSetup: WM_NEVER_MAPPED clear, calling "
+              "TkWaylandMenubarCreateOrResize for %s",
+              Tk_PathName((Tk_Window)winPtr));
     TkWaylandMenubarCreateOrResize(winPtr);
 }
 
@@ -4776,97 +4853,6 @@ TkWaylandMenuGetParentWindow(void)
 }
 
 /* Helper functions for menus. */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWmUpdateGeom --
- *
- *     Notify the WM layer that geometry has changed and schedule an
- *     UpdateGeometryInfo idle pass.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     Sets WM_UPDATE_SIZE_HINTS and schedules geometry update.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-TkWaylandWmUpdateGeom(
-    WmInfo *wmPtr,
-    TkWindow *winPtr)
-{
-    if (!wmPtr || !winPtr) return;
-
-    DEBUG_LOG("TkWaylandWmUpdateGeom called for %s", Tk_PathName((Tk_Window)winPtr));
-
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-
-    int width = wmPtr->configWidth;
-    int height = wmPtr->configHeight;
-
-    if (width <= 0 || height <= 0 || width > 10000 || height > 10000) {
-        width = Tk_ReqWidth((Tk_Window)winPtr);
-        height = Tk_ReqHeight((Tk_Window)winPtr);
-        if (width <= 0 || height <= 0 || width > 10000 || height > 10000) {
-            width = 200;
-            height = 200;
-        }
-        wmPtr->configWidth = width;
-        wmPtr->configHeight = height;
-    }
-
-    if (width > 0 && height > 0 && width <= 10000 && height <= 10000) {
-        GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-        if (glfwWindow) {
-            glfwSetWindowSize(glfwWindow, width, height);
-        }
-    }
-
-    Tcl_CancelIdleCall((Tcl_IdleProc *)TkWaylandWmUpdateGeometryInfo, (void *)wmPtr);
-    Tcl_DoWhenIdle((Tcl_IdleProc *)TkWaylandWmUpdateGeometryInfo, (void *)wmPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWmUpdateGeometryInfo --
- *
- *     Idle callback to update window geometry.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     Updates the window geometry.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-TkWaylandWmUpdateGeometryInfo(
-    void *clientData)
-{
-    WmInfo *wmPtr = (WmInfo *)clientData;
-    TkWindow *winPtr;
-
-    if (!wmPtr) return;
-
-    winPtr = (TkWindow *)wmPtr->winPtr;
-    if (!winPtr) return;
-
-    wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
-
-    if (wmPtr->configWidth > 0 && wmPtr->configHeight > 0) {
-        GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-        if (glfwWindow) {
-            glfwSetWindowSize(glfwWindow, wmPtr->configWidth, wmPtr->configHeight);
-        }
-    }
-}
 
 /*
  *----------------------------------------------------------------------

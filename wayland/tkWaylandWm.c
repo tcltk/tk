@@ -449,6 +449,13 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
 }
 
 /*
+ * Declared MODULE_SCOPE and defined in tkWaylandMenu.c. Not in a shared
+ * header (tkWaylandNotify.c declares it the same way locally), so we
+ * follow the same convention here.
+ */
+extern void TkWaylandMenubarResize(TkWindow *winPtr);
+
+/*
  *----------------------------------------------------------------------
  *
  * TkWmMapWindow --
@@ -532,6 +539,26 @@ TkWmMapWindow(TkWindow *winPtr)
             }
             ApplyPendingGeometry(winPtr, wmPtr, glfwWindow);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
+
+            DEBUG_LOG("TkWmMapWindow: %s post-ApplyPendingGeometry "
+                      "reqWidth=%d changes.width=%d configWidth=%d",
+                      Tk_PathName(winPtr), winPtr->reqWidth,
+                      winPtr->changes.width, wmPtr->configWidth);
+
+            /*
+             * ApplyPendingGeometry() just applied the authoritative,
+             * final-for-first-map width/height -- the same one
+             * MenuBarDeferredSetup() (tkWaylandMenu.c) is separately,
+             * independently polling for via WM_NEVER_MAPPED. That
+             * polling loop has no way to know whether it woke up
+             * before or after *this* point, so a menubar can easily
+             * get created against a pre-final width. Piggyback the
+             * menubar resync on this same authoritative moment, via
+             * the same idle-deferred path already used for live and
+             * programmatic resizes, so first map is no longer a
+             * separate, weaker-guaranteed case.
+             */
+            TkWaylandMenubarResize(winPtr);
         }
 
         glfwShowWindow(glfwWindow);
@@ -3942,6 +3969,57 @@ UpdateGeometryInfo(
     }
 #endif
 
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandUpdateGeometryInfo --
+ *
+ *	MODULE_SCOPE entry point for other Wayland source files (notably
+ *	tkWaylandMenu.c) to request that a toplevel's geometry be
+ *	recomputed and applied. UpdateGeometryInfo() above is static to
+ *	this file, so this is the one and only door into it from outside
+ *	-- callers must not reimplement their own glfwSetWindowSize path,
+ *	or their idea of the target size will race with this one (see the
+ *	menubar height fix in tkWaylandMenu.c for the bug this caused).
+ *
+ *	Mirrors the scheduling half of TopLevelReqProc: callers are
+ *	expected to have already updated whatever winPtr->reqWidth/
+ *	reqHeight or internal-border state drives the size (e.g. via
+ *	Tk_SetInternalBorderEx, which itself triggers a geometry request
+ *	for packed/gridded children), and this just makes sure a single
+ *	UpdateGeometryInfo idle pass picks it up.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May set WM_UPDATE_PENDING/WM_UPDATE_SIZE_HINTS and schedule
+ *	UpdateGeometryInfo on the Tcl idle queue.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandUpdateGeometryInfo(
+    void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    WmInfo   *wmPtr;
+
+    if (!winPtr) {
+	return;
+    }
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr) {
+	return;
+    }
+
+    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
+        wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
+    }
 }
 
 /*
