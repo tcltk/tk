@@ -14,27 +14,26 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging */
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "font"
-*/
 
 #include "tkInt.h"
 #include "tkWaylandInt.h"
-
 #include <fontconfig/fontconfig.h>
 #include <nanovg.h>
 #include <hb.h>
 #include <hb-ot.h>
 #include <SheenBidi/SheenBidi.h>
-
 #include "stb_truetype.h"
-
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* The root GLFWwindow, defined in TkWaylandInit.c. */
+extern GLFWwindow *mainGlfwWindow;
 
 /*
  * Defines for tkTextDisp.c and tkFont.c
@@ -1777,7 +1776,7 @@ WaylandShaper_ShapeString(
 
             int shapeByteStart = charBounds[subrunStart];
             int shapeByteEnd   = charBounds[
-						subrunEnd < runStart + runLen ? subrunEnd : runStart + runLen];
+		subrunEnd < runStart + runLen ? subrunEnd : runStart + runLen];
             int shapeByteLen   = shapeByteEnd - shapeByteStart;
 
             if (shapeByteLen <= 0) { continue; }
@@ -1830,7 +1829,7 @@ WaylandShaper_ShapeString(
                  
                 if (byteOff != lastClusterByteOff) {
                     if (lastClusterWasEmoji) {
-						runPenX += (int)(fontPtr->pixelSize * 0.5 + 0.5);
+			runPenX += (int)(fontPtr->pixelSize * 0.5 + 0.5);
                     }
                     FcChar32 startUc;
                     lastClusterWasEmoji =
@@ -2250,50 +2249,56 @@ InitFont(
     TkFontAttributes *fa = &fontPtr->font.fa;
     TkFontMetrics *fm = &fontPtr->font.fm;
     *fa = *faPtr;
-
     /* Pixel size calculation with proper DPI handling. */
     double ptSize = faPtr->size;
     int basePixels;
 
-    double dpi = 96.0;
-    if (tkwin) {
-        Screen *screen = Tk_Screen(tkwin);
-        if (screen && WidthMMOfScreen(screen) > 0) {
-            double screenDpi = (double)WidthOfScreen(screen) * 25.4
-                / (double)WidthMMOfScreen(screen);
-            /* Use actual screen DPI for all fonts. */
-            if (screenDpi >= 72.0 && screenDpi <= 480.0) {
-                dpi = screenDpi;
-            }
-        }
+    if (!tkwin) {
+	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);
     }
 
+    /* Default dpi in case the screen info does not exist. */
+    double dpi = 96.0;
+    DEBUG_LOG("InitFont: font %s for window %s at size %lf",
+	faPtr->family, Tk_PathName(tkwin), fa->size);
+    DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
+    Screen *screen = Tk_Screen(tkwin);
+    if (screen && WidthMMOfScreen(screen) > 0) {
+	double screenDpi = (double)WidthOfScreen(screen) * 25.4
+	    / (double)WidthMMOfScreen(screen);
+	/* Use actual screen DPI for all fonts. */
+	if (screenDpi >= 72.0 && screenDpi <= 480.0) {
+	    dpi = screenDpi;
+	}
+    }
+    DEBUG_LOG("InitFont: Using dpi = %f", dpi);
     if (ptSize < 0.0) {
         /* Negative size means pixels already. */
         basePixels = (int)(-ptSize + 0.5);
+	DEBUG_LOG("InitFont: specified %f pixels -> %d pixels",
+	    -ptSize, basePixels);
     } else if (ptSize > 0.0) {
         /* Positive size means points - convert to pixels at screen DPI. */
         basePixels = (int)(ptSize * dpi / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
+	DEBUG_LOG("InitFont: specified %f points -> %d pixels",
+	    ptSize, basePixels);
     } else {
-        /* Default size: 12 points at screen DPI. */
-        basePixels = (int)(12.0 * dpi / 72.0 + 0.5);
+        /* Default size: 10 points at screen DPI. */
+        basePixels = (int)(dpi * 10.0 / 72.0 + 0.5);
         if (basePixels < 1) {
             basePixels = 1;
         }
+	DEBUG_LOG("InitFont: using default size of %d pixels", basePixels);
     }
-    
     if (basePixels < 1) {
         basePixels = 1;
     }
-
     fontPtr->pixelSize = basePixels;
-
     int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant  == TK_FS_ITALIC);
-
     const char *family = faPtr->family;
 
     /*
@@ -2666,8 +2671,8 @@ InitFont(
 			buf, fontPtr->faces[0].faceIndex);
 		    if (offset < 0) {
 			DEBUG_LOG("Failed to get offset for face %d in %s",
-				  fontPtr->faces[0].faceIndex,
-				  fontPtr->faces[0].filePath);
+			    fontPtr->faces[0].faceIndex,
+			    fontPtr->faces[0].filePath);
 			/* Fall back to offset 0 to avoid crashing. */
 			offset = 0;
 		    }
@@ -2679,17 +2684,15 @@ InitFont(
                         stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
                         fm->ascent  = (int)(asc * scale + 0.5f);
                         fm->descent = (int)(-desc * scale + 0.5f);
-
                         /* Get proper character widths. */
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
                         stbtt_GetCodepointHMetrics(&info, ' ', &adv_space, &lsb);
-                        
                         /* Use the widest character for maxWidth. */
                         int adv_M;
                         stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
-                        fm->maxWidth = (int)((adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
-                        
+                        fm->maxWidth = (int)(
+			    (adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
                         /* Check if truly monospaced. */
                         int adv_dot, adv_x;
                         stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
@@ -2706,7 +2709,6 @@ InitFont(
                 /* Heap allocation for large files. */
                 buf = (unsigned char *)Tcl_Alloc((int)sz);
                 heapAllocated = true;
-                
                 if (buf && (long)fread(buf, 1, sz, fd) == sz) {
                     stbtt_fontinfo info;
                     if (stbtt_InitFont(&info, buf,
@@ -2719,7 +2721,6 @@ InitFont(
                         stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
                         fm->ascent  = (int)(asc * scale + 0.5f);
                         fm->descent = (int)(-desc * scale + 0.5f);
-
                         /* Get proper character widths. */
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
@@ -2874,7 +2875,7 @@ static const struct {
     { "TkSmallCaptionFont", "sans-serif",  8, 0, 0 },
     { "TkIconFont",         "sans-serif", 10, 0, 0 },
     { "TkMenuFont",         "sans-serif", 10, 0, 0 },
-    { "TkTooltipFont",      "sans-serif",  9, 0, 0 },
+    { "TkTooltipFont",      "sans-serif",  8, 0, 0 },
     { NULL, NULL, 0, 0, 0 }
 };
 
@@ -2923,7 +2924,7 @@ CreateStandardNamedFonts(ClientData clientData)
             const char *msg = Tcl_GetStringResult(interp);
             if (!msg || !strstr(msg, "already exists")) {
                 DEBUG_LOG("tkWaylandFont: failed to create named font "
-                        "\"%s\": %s\n",
+                        "\"%s\": %s",
                         wlNamedFonts[i].tkName,
                         (msg && *msg) ? msg : "(unknown error)");
             }
@@ -3000,9 +3001,9 @@ TkpGetNativeFont(Tk_Window tkwin, const char *name)
 
 TkFont *
 TkpGetFontFromAttributes(
-			 TkFont *tkFontPtr,
-			 Tk_Window tkwin,
-			 const TkFontAttributes *faPtr)
+    TkFont *tkFontPtr,
+    Tk_Window tkwin,
+    const TkFontAttributes *faPtr)
 {
     WaylandFont *fontPtr;
     
@@ -3014,6 +3015,7 @@ TkpGetFontFromAttributes(
         DeleteFont(fontPtr);
     }
 
+    
     InitFont(tkwin, faPtr, fontPtr);
     
     /* Guarantee the public attribute is never null after construction. */
@@ -3600,7 +3602,7 @@ TkpDrawAngledCharsInContext(
     TkWaylandDrawingContext dc;
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
-        DEBUG_LOG("Bad Drawable %lx in TkpDrawAngledCharsInContext\n",
+        DEBUG_LOG("Bad Drawable %lx in TkpDrawAngledCharsInContext",
 	       drawable);
         return;
     }

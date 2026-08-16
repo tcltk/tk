@@ -651,7 +651,7 @@ WAYLAND_SRCS = \
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h \
-    $(WAYLAND_DIR)/tkWaylandDefaults.h \
+    $(WAYLAND_DIR)/tkWaylandDefault.h \
     $(WAYLAND_DIR)/tkWaylandInt.h \
     $(WAYLAND_DIR)/tkWaylandPort.h \
     $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)

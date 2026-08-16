@@ -123,24 +123,25 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     }
 
     /* Fill screen dimensions. */
-    int sw = 1920, sh = 1080;
+    /* Plausible defaults for screen size in logical pixels and mm. */
+    int width_px = 1920, height_px = 1080;
+    int width_mm = 25.4 * width_px / 96.0;
+    int height_mm = 25.4 * height_px / 96.0;
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     if (monitor) {
 	float scale;
 	glfwGetMonitorContentScale(monitor, &scale, NULL);
+	glfwGetMonitorPhysicalSize(monitor, &width_mm, &height_mm);
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         if (mode) {
-	    sw = (int) (float) mode->width / scale;
-	    sh = (int) (float) mode->height / scale;
+	    width_px = (int) (float) mode->width / scale;
+	    height_px = (int) (float) mode->height / scale;
 	}
     }
-    screen->width  = sw;
-    screen->height = sh;
-    //// We need to explain where 960.0 comes from!!!!
-    //// It used to be 720.0 and that made Canvas widgets underestimate
-    //// their size.  Also, text was too small.
-    screen->mwidth  = (sw * 254.0) / 960.0;
-    screen->mheight = (sh * 254.0) / 960.0;
+    screen->width  = width_px;
+    screen->height = height_px;
+    screen->mwidth  = width_mm;
+    screen->mheight = height_mm;
 
     /* Display. */
     display->screens        = screen;

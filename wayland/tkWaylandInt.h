@@ -22,7 +22,7 @@
 #include <GLES3/gl3.h>
 #include <xkbcommon/xkbcommon.h>
 #include "tkIntPlatDecls.h"
-#include "tkWaylandDefaults.h"
+#include "tkWaylandDefault.h"
 #include "tkWaylandDebug.h"
 
 #include <fontconfig/fontconfig.h>
