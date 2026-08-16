@@ -8471,11 +8471,25 @@ TkTextCharLayoutProc(
 		size_t prev;
 		mojibake_grapheme_prev(chunkStart, bTotal, off, &prev);
 		if (prev >= off) break;
-		if (lAll[prev] && gAll[prev]) {
+		/*
+		 * A candidate must be BOTH a raw UAX#14 line-break-class
+		 * opportunity (lAll) AND a genuine word boundary per the
+		 * dictionary segmenter (wAll) before we accept it. lAll
+		 * alone is not enough for Thai/Lao/Khmer/Myanmar: their
+		 * default line-break class is "complex context", which is
+		 * breakable pretty much anywhere absent dictionary input,
+		 * so relying on lAll alone lets us cut inside a dictionary
+		 * word (e.g. between the syllables of Thai "ถูกต้อง" or Lao
+		 * "ຄວາມສະເໜີພາບ", both of which are a single lexical item).
+		 * wAll is where mojibake_line_breaks_with_dict records the
+		 * dictionary-aware word boundary for exactly this purpose --
+		 * skipping it means we never actually applied the dictionary.
+		 */
+		if (lAll[prev] && gAll[prev] && wAll[prev]) {
 		    best = (Tcl_Size)prev;
 		    break;
 		}
-		if (lAll[off] && gAll[off]) {
+		if (lAll[off] && gAll[off] && wAll[off]) {
 		    best = (Tcl_Size)off;
 		    break;
 		}
@@ -8506,12 +8520,23 @@ TkTextCharLayoutProc(
 		    }
 		}
 #endif
-		/* No UAX14/dict break inside fit: force grapheme boundary */
-		if (best == -1) {
-		    size_t forced;
-		    mojibake_grapheme_prev(chunkStart, bTotal, bFit, &forced);
-		    best = (forced>0)? (Tcl_Size)forced : chunkPtr->numBytes;
-		}
+		/*
+		 * No genuine UAX#14/dict break opportunity inside the fitting
+		 * range. Do NOT invent one here. This chunk may be just one
+		 * fragment of a single unbroken word that got split into
+		 * several TkTextDispChunks purely because of tag boundaries
+		 * (e.g. a single-character tag applied in the middle of a
+		 * long word) -- such a fragment must not be reported to
+		 * LayoutDLine as a valid word-wrap point, or the line will
+		 * wrap in the middle of the word at whatever tag/segment
+		 * boundary happens to fall there instead of at the real word
+		 * boundary. Leaving best == -1 (and therefore breakIndex ==
+		 * -1 below) is correct: LayoutDLine already falls back to
+		 * cutting at the last fitted character chunk (breakChunkPtr
+		 * == NULL case) when no chunk anywhere on the line ever
+		 * records a real break, and that fallback point is already
+		 * grapheme-safe thanks to the bytesThatFit snapping above.
+		 */
 	    }
 
 	    if (best > 0) {
@@ -8519,10 +8544,12 @@ TkTextCharLayoutProc(
 		while (b < bFit && chunkStart[b] == ' ') b++;
 		chunkPtr->breakIndex = (Tcl_Size)b;
 	    } else {
-		chunkPtr->breakIndex = chunkPtr->numBytes;
+		chunkPtr->breakIndex = -1;
 	    }
 	} else {
-	    chunkPtr->breakIndex = chunkPtr->numBytes;
+	    /* Couldn't allocate the break-property arrays -- we have no way
+	     * to determine a real break opportunity, so don't claim one. */
+	    chunkPtr->breakIndex = -1;
 	}
 	if (gAll) Tcl_Free(gAll);
 	if (lAll) Tcl_Free(lAll);
@@ -8530,13 +8557,31 @@ TkTextCharLayoutProc(
 
 	if (chunkPtr->breakIndex == -1) {
 	    if ((bytesThatFit + byteOffset) == segPtr->size) {
+		/*
+		 * We've exhausted this chunk's own segment with no internal
+		 * break opportunity found. Look at what (if anything) comes
+		 * next: if it's another char segment, the "word" continues
+		 * there and this chunk correctly stays a non-break (-1). But
+		 * if the next non-empty segment is a non-text one (mark,
+		 * image, window, ...) OR there is no next segment at all --
+		 * i.e. this is the tail of the entire line/buffer -- then
+		 * nothing can extend this run any further, so the end of
+		 * this chunk IS a legitimate break point. Failing to treat
+		 * "no next segment" as such caused the final chunk of a line
+		 * to be silently discarded by LayoutDLine's "throw away
+		 * everything after the last break" trim, corrupting line
+		 * heights/counts for the whole buffer.
+		 */
+		bool nextIsText = false;
+
 		for (nextPtr = segPtr->nextPtr; nextPtr != NULL; nextPtr = nextPtr->nextPtr) {
 		    if (nextPtr->size != 0) {
-			if (nextPtr->typePtr != &tkTextCharType) {
-			    chunkPtr->breakIndex = chunkPtr->numBytes;
-			}
+			nextIsText = (nextPtr->typePtr == &tkTextCharType);
 			break;
 		    }
+		}
+		if (!nextIsText) {
+		    chunkPtr->breakIndex = chunkPtr->numBytes;
 		}
 	    }
 	}

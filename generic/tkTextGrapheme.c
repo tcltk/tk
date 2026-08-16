@@ -3,7 +3,7 @@
  *
  *      Implements line breaks (UAX #14) and word/sentence breaks (UAX #29)
  *      for Unicode extended grapheme clusters utilizing the mojibake Unicode
- *      library.  Also, for scripts without spaces (Thai, Lao, Khmer, Burmese),
+ *      library.  Also, for scripts without spaces (Thai, Lao, Khmer),
  *      implements a forward maximum-matching word segmenter using
  *      ICU-derived dictionaries.
  *	
@@ -683,7 +683,6 @@ EnsureDictsInitialized(void)
     InitDictCache(&cache_thai, thai_words, thai_word_count);
     InitDictCache(&cache_lao, lao_words, lao_word_count);
     InitDictCache(&cache_khmer, khmer_words, khmer_word_count);
-    InitDictCache(&cache_myanmar, burmese_words, burmese_word_count);
 }
 
 /*

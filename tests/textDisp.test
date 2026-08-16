@@ -400,6 +400,7 @@ test textDisp-2.9 {LayoutDLine, marks and tags} {
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.10 {LayoutDLine, marks and tags} {
+	#now incorporates grapheme breaks/spacing
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
@@ -408,9 +409,12 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t tag add foo 1.17
     .t tag add foo 1.19
     list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
-} [list [list [xchar 9] [yline 1] [xe 9] $fixedHeight] \
-	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
+} [list \
+    [list 77 5 8 13] \
+    [list 85 5 8 13] \
+    [list 101 18 8 13] \
+]
+
 test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -596,6 +600,7 @@ test textDisp-2.22 {LayoutDLine, spacing options} {
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
 
 test textDisp-2.23 {LayoutDLine, spacing options} {
+	#now incorporates grapheme breaks/spacing
     .t configure -wrap word
     .t delete 1.0 end
     .t tag delete x y
@@ -625,7 +630,8 @@ test textDisp-2.23 {LayoutDLine, spacing options} {
     set i [.t dlineinfo 3.0]
     set b4 [expr {[lindex $i 1] + [lindex $i 4] - $b4}]
     list $b1 $b2 $b3 $b4
-} [list 1 5 13 16]
+} [list 1 5 -2 1]
+
 
 #
 # COMMON TEST SETUP
@@ -5269,6 +5275,30 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
 } -cleanup {
     destroy .t1
 } -result {}
+
+test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
+    # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
+    label .l1 -text "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01" \
+        -font $fixedFont -width 20
+    pack .l1
+} -body {
+    update
+} -cleanup {
+    destroy .l1
+} -result {}
+
+test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
+    text .t1 -font $fixedFont -width 30 -height 3
+    pack .t1
+} -body {
+    # "ภาษาไทย mixed" — includes combining marks and cluster boundaries
+    .t1 insert end "Mixed \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 text"
+    update
+} -cleanup {
+    destroy .t1
+} -result {}
+
+
 
 #
 # TESTFILE CLEANUP

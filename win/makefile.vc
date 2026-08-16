@@ -85,6 +85,9 @@ DEFAULT_BUILD_TARGET = release
 # We have a custom resource file
 RCFILE = tk.rc
 
+# Require C11 so Mojibake's __STDC_VERSION__ check succeeds under MSVC - see TIP 715
+COMPILERFLAGS = /std:c11
+
 # The rules.vc file does much of the hard work in terms of defining
 # the build configuration, macros, output directories etc.
 !include "rules-ext.vc"
@@ -186,7 +189,10 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinX.obj \
 	$(TMP_DIR)\stubs.obj \
 	$(TMP_DIR)\mojibake.obj \
-	$(TMP_DIR)\shell.obj \
+	$(TMP_DIR)\dictionaries.obj \
+	$(TMP_DIR)\thai.obj \
+	$(TMP_DIR)\lao.obj \
+	$(TMP_DIR)\khmer.obj \
 	$(TMP_DIR)\tk3d.obj \
 	$(TMP_DIR)\tkAccessibility.obj \
 	$(TMP_DIR)\tkArgv.obj \
@@ -257,7 +263,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkText.obj \
 	$(TMP_DIR)\tkTextBTree.obj \
 	$(TMP_DIR)\tkTextDisp.obj \
-	$(TMP_DIR)\tkTextGrapheme.obj 
+	$(TMP_DIR)\tkTextGrapheme.obj \
 	$(TMP_DIR)\tkTextImage.obj \
 	$(TMP_DIR)\tkTextIndex.obj \
 	$(TMP_DIR)\tkTextMark.obj \
