@@ -1095,45 +1095,27 @@ GetMenuLabelGeometry(
     }
     *heightPtr += 2;
 }
-
 /*
- *---------------------------------------------------------------------------
- *
  * TkWaylandSyncMenubarGeometry --
  *
- *     Called immediately after Tk_SetInternalBorderEx() changes a
- *     toplevel's internal border to make room for (or release) a
- *     menubar. Tk_SetInternalBorderEx() only *notifies* the geometry
- *     manager (pack/grid) that the interior changed -- the actual
- *     re-layout of children and recomputation of winPtr->reqWidth/
- *     reqHeight happens on Tk's idle queue, same as any other pack/grid
- *     pass. TkWaylandUpdateGeometryInfo() then idle-schedules wm.c's
- *     UpdateGeometryInfo pass, which is what actually calls
- *     glfwSetWindowSize() on the toplevel.
+ *     Forces immediate completion of pending geometry updates for a toplevel
+ *     window after its internal border changes for a menubar.
  *
- *     Both of those need to have actually *run*, not just be queued,
- *     before this function returns -- callers like
- *     TkWaylandMenubarCreateOrResize() read the toplevel's current
- *     GLFW size immediately afterward (to size the menubar subsurface
- *     itself), and if the wm resize is still sitting on the idle queue
- *     at that point, they capture the pre-resize width. That's what
- *     clipped the rightmost menu label -- the menubar popup gets
- *     created one size behind the toplevel it's attached to.
+ *     Tk_SetInternalBorderEx() queues pack/grid re-layout, which in turn
+ *     queues a wm resize via TkWaylandUpdateGeometryInfo(). Callers like
+ *     TkWaylandMenubarCreateOrResize() read the GLFW size immediately after,
+ *     so if the resize hasn't run yet, they use stale dimensions and clip
+ *     the menubar.
  *
- *     So: schedule the wm resize, then drain the idle queue until
- *     nothing is left. Draining after scheduling (rather than before)
- *     means the same loop picks up both the pack/grid re-layout and
- *     the wm resize it triggers, in order, so by the time we return
- *     the GLFW window has actually been resized to its final size.
+ *     This function schedules the wm resize, then drains the idle queue
+ *     until both the re-layout and resize have completed, ensuring the
+ *     GLFW window is at its final size upon return.
  *
  * Results:
  *     None.
  *
  * Side effects:
- *     Runs pending Tcl idle handlers to completion, including the wm
- *     geometry pass that resizes the GLFW window.
- *
- *---------------------------------------------------------------------------
+ *     Runs pending Tcl idle handlers to completion.
  */
 
 static void
@@ -1145,8 +1127,10 @@ TkWaylandSyncMenubarGeometry(
     TkWaylandUpdateGeometryInfo(winPtr);
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS | TCL_DONT_WAIT)) {
-        /* Drain until pack/grid re-layout and the resulting wm resize
-         * (glfwSetWindowSize) have both run to completion. */
+        /* 
+         * Drain until pack/grid re-layout and the resulting wm resize
+         * (glfwSetWindowSize) have both run to completion. 
+         * */
     }
 }
 
