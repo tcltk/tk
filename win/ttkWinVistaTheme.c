@@ -298,6 +298,15 @@ static const Ttk_StateTable pbar_statemap[] =
     { PBFS_NORMAL,	0, 0 }
 };
 
+static Ttk_StateTable range_statemap[] =
+{
+    { TUS_DISABLED, 	TTK_STATE_DISABLED, 0 },
+    { TUS_PRESSED, 	TTK_STATE_PRESSED, 0 },
+    { TUS_FOCUSED, 	TTK_STATE_FOCUS, 0 },
+    { TUS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { TUS_NORMAL, 	0, 0 }
+};
+
 static const Ttk_StateTable tabitem_statemap[] =
 {
     { TIS_DISABLED,     TTK_STATE_DISABLED, 0 },
@@ -1176,6 +1185,20 @@ TTK_LAYOUT("Heading",
 	    TTK_NODE("Treeheading.text", TTK_FILL_X))
 	TTK_NODE("Treeheading.indicator", TTK_PACK_TOP)))
 
+TTK_LAYOUT("Horizontal.TRange",
+    TTK_GROUP("Range.focus", TTK_EXPAND|TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Range.trough", TTK_EXPAND|TTK_FILL_BOTH,
+	    TTK_NODE("Horizontal.Range.track", TTK_FILL_X)
+	    TTK_NODE("Horizontal.Range.minslider", TTK_PACK_LEFT)
+	    TTK_NODE("Horizontal.Range.maxslider", TTK_PACK_RIGHT) )))
+
+TTK_LAYOUT("Vertical.TRange",
+    TTK_GROUP("Range.focus", TTK_EXPAND|TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Range.trough", TTK_EXPAND|TTK_FILL_BOTH,
+	    TTK_NODE("Vertical.Range.track", TTK_FILL_Y)
+	    TTK_NODE("Vertical.Range.minslider", TTK_PACK_TOP)
+	    TTK_NODE("Vertical.Range.maxslider", TTK_PACK_BOTTOM) )))
+
 TTK_END_LAYOUT_TABLE
 
 /*----------------------------------------------------------------------
@@ -1236,6 +1259,14 @@ static const ElementInfo ElementInfoTable[] = {
 	TKP_TRACK, track_statemap, NOPAD, 0 },
     { "Vertical.Scale.track", &GenericElementSpec, L"TRACKBAR",
 	TKP_TRACKVERT, track_statemap, NOPAD, 0 },
+    { "Horizontal.Range.slider", &GenericElementSpec, L"TRACKBAR",
+    	TKP_THUMB, range_statemap, NOPAD, 0 },
+    { "Vertical.Range.slider", &GenericElementSpec, L"TRACKBAR",
+    	TKP_THUMBVERT, range_statemap, NOPAD, 0 },
+    { "Horizontal.Range.track", &GenericElementSpec, L"TRACKBAR",
+    	TKP_TRACK, range_statemap, NOPAD, 0 },
+    { "Vertical.Range.track", &GenericElementSpec, L"TRACKBAR",
+    	TKP_TRACKVERT, range_statemap, NOPAD, 0 },
     /* ttk::progressbar elements */
     { "Horizontal.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
 	PP_FILL, pbar_statemap, NOPAD, 0 },
@@ -1548,6 +1579,7 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
     }
 
     Ttk_RegisterElement(NULL, themePtr, "Scale.trough", &ttkNullElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Range.trough", &ttkNullElementSpec, 0);
 
     /*
      * Layouts:

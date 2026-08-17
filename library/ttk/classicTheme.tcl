@@ -99,6 +99,10 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TScale -sliderrelief raised \
 	    -sliderlength 22.5p -sliderthickness 11.25p
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
+	
+	ttk::style configure TRange -sliderrelief raised \
+	    -sliderlength 22.5p -sliderthickness 11.25p
+	ttk::style map TRange -sliderrelief {{pressed !disabled} sunken}
 
 	ttk::style configure TProgressbar -background SteelBlue \
 	    -barsize 22.5p -thickness 11.25p

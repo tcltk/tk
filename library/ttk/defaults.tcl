@@ -170,6 +170,13 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -groovewidth 3p
 	ttk::style map TScale \
 	    -outercolor [list active $colors(-activebg)]
+	ttk::style configure TRange \
+	    -innercolor $colors(-selectbg) \
+	    -outercolor $colors(-window) \
+	    -bordercolor $colors(-darker) \
+	    -groovewidth 3p
+	ttk::style map TRange \
+	    -outercolor [list active $colors(-activebg)]
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) \

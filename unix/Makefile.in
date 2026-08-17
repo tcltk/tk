@@ -402,8 +402,8 @@ TTK_OBJS = \
 	ttkDefaultTheme.o ttkElements.o ttkEntry.o ttkFrame.o ttkImage.o \
 	ttkInit.o ttkLabel.o ttkLayout.o ttkManager.o ttkNodeCache.o \
 	ttkNotebook.o \
-	ttkPanedwindow.o ttkProgress.o ttkScale.o ttkScrollbar.o ttkScroll.o \
-	ttkSeparator.o ttkSquare.o ttkState.o \
+	ttkPanedwindow.o ttkProgress.o ttkRange.o ttkScale.o ttkScrollbar.o \
+	ttkScroll.o ttkSeparator.o ttkSquare.o ttkState.o \
 	ttkTagSet.o ttkTheme.o ttkToggleswitch.o ttkTrace.o ttkTrack.o \
 	ttkTreeview.o ttkWidget.o ttkStubInit.o
 
@@ -508,6 +508,7 @@ TTK_SRCS = \
 	$(TTK_DIR)/ttkNotebook.c \
 	$(TTK_DIR)/ttkPanedwindow.c \
 	$(TTK_DIR)/ttkProgress.c \
+	$(TTK_DIR)/ttkRange.c \
 	$(TTK_DIR)/ttkScale.c \
 	$(TTK_DIR)/ttkScrollbar.c \
 	$(TTK_DIR)/ttkScroll.c \
@@ -1564,6 +1565,9 @@ ttkPanedwindow.o: $(TTK_DIR)/ttkPanedwindow.c
 
 ttkProgress.o: $(TTK_DIR)/ttkProgress.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkProgress.c
+
+ttkRange.o: $(TTK_DIR)/ttkRange.c
+	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkRange.c
 
 ttkScale.o: $(TTK_DIR)/ttkScale.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkScale.c

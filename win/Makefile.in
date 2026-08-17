@@ -427,6 +427,7 @@ TTK_OBJS = \
 	ttkNotebook.$(OBJEXT) \
 	ttkPanedwindow.$(OBJEXT) \
 	ttkProgress.$(OBJEXT) \
+	ttkRange.$(OBJEXT) \
 	ttkScale.$(OBJEXT) \
 	ttkScrollbar.$(OBJEXT) \
 	ttkScroll.$(OBJEXT) \

@@ -198,6 +198,7 @@ MODULE_SCOPE void TtkFrame_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkNotebook_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkPanedwindow_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkProgressbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkRange_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkScale_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkScrollbar_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkSeparator_Init(Tcl_Interp *);
@@ -216,6 +217,7 @@ static void RegisterWidgets(Tcl_Interp *interp)
     TtkNotebook_Init(interp);
     TtkPanedwindow_Init(interp);
     TtkProgressbar_Init(interp);
+    TtkRange_Init(interp);
     TtkScale_Init(interp);
     TtkScrollbar_Init(interp);
     TtkSeparator_Init(interp);
