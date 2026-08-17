@@ -1263,16 +1263,6 @@ TkWaylandMenubarCreateOrResize(
         return;
     }
 
-    /*
-     * Use Tk's own recorded width for this window (winPtr->changes.width,
-     * via Tk_Width()) rather than a live glfwGetWindowSize() readback.
-     * Under Wayland, glfwSetWindowSize() only *requests* a resize -- the
-     * actual on-screen size can lag behind a client-side request. Tk_Width()
-     * is the same field every other widget's reflow-on-resize already
-     * depends on being current (for both our own requested resizes and
-     * live/user-driven ones), so it's the one source guaranteed to be
-     * synchronized regardless of what triggered the resize.
-     */
     int gw = Tk_Width((Tk_Window)winPtr);
     if (gw <= 0) {
         gw = wmPtr->configWidth;

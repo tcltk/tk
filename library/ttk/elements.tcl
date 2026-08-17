@@ -427,6 +427,17 @@ proc ttk::toggleswitch::CreateElements_vista {} {
 		]
 	    ]
 	]
+
+	ttk::style layout ToggleswitchEx$n [list \
+	    Tglswitch.focus -sticky nswe -children [list \
+		Tglswitch.padding -sticky nswe -children [list \
+		    Tglswitch$n.trough -side right -sticky {} -children \
+			[list Tglswitch$n.slider -side left -sticky {}] \
+		    Tglswitch.gap -side right -sticky {} \
+		    Tglswitch.text -side left -sticky we \
+		]
+	    ]
+	]
     }
 
     set elemInfoArr(vista) 1
@@ -783,8 +794,17 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 	ttk::style layout Toggleswitch$n [list \
 	    Tglswitch.padding -sticky nswe -children [list \
 		Tglswitch$n.trough -sticky {} -children [list \
-		    Tglswitch$n.slider -side left -sticky {} \
+		    Tglswitch$n.slider -side left -sticky {}
 		]
+	    ]
+	]
+
+	ttk::style layout ToggleswitchEx$n [list \
+	    Tglswitch.padding -sticky nswe -children [list \
+		Tglswitch$n.trough -side right -sticky {} -children \
+		    [list Tglswitch$n.slider -side left -sticky {}] \
+		Tglswitch.gap -side right -sticky {} \
+		Tglswitch.text -side left -sticky we \
 	    ]
 	]
     }
@@ -1159,13 +1179,26 @@ proc ttk::toggleswitch::CreateElements {} {
 	    ttk::style layout Toggleswitch$n [list \
 		Tglswitch.padding -sticky nswe -children [list \
 		    Tglswitch$n.trough -sticky {} -children [list \
-			Tglswitch$n.slider -side left -sticky {} \
+			Tglswitch$n.slider -side left -sticky {}
 		    ]
 		]
 	    ]
 
 	    if {[ttk::style lookup Toggleswitch$n -padding] eq ""} {
 		ttk::style configure Toggleswitch$n -padding 1.5p
+	    }
+
+	    ttk::style layout ToggleswitchEx$n [list \
+		Tglswitch.padding -sticky nswe -children [list \
+		    Tglswitch$n.trough -side right -sticky {} -children \
+			[list Tglswitch$n.slider -side left -sticky {}] \
+		    Tglswitch.gap -side right -sticky {} \
+		    Tglswitch.text -side left -sticky we \
+		]
+	    ]
+
+	    if {[ttk::style lookup ToggleswitchEx$n -padding] eq ""} {
+		ttk::style configure ToggleswitchEx$n -padding 1.5p
 	    }
 	}
     } else {
@@ -1186,6 +1219,25 @@ proc ttk::toggleswitch::CreateElements {} {
 	    if {$theme eq "classic" &&
 		    [ttk::style lookup Toggleswitch$n -focussolid] eq ""} {
 		ttk::style configure Toggleswitch$n -focussolid 1
+	    }
+
+	    ttk::style layout ToggleswitchEx$n [list \
+		Tglswitch.focus -sticky nswe -children [list \
+		    Tglswitch.padding -sticky nswe -children [list \
+			Tglswitch$n.trough -side right -sticky {} -children \
+			    [list Tglswitch$n.slider -side left -sticky {}] \
+			Tglswitch.gap -side right -sticky {} \
+			Tglswitch.text -side left -sticky we \
+		    ]
+		]
+	    ]
+
+	    if {[ttk::style lookup ToggleswitchEx$n -padding] eq ""} {
+		ttk::style configure ToggleswitchEx$n -padding 0.75p
+	    }
+	    if {$theme eq "classic" &&
+		    [ttk::style lookup ToggleswitchEx$n -focussolid] eq ""} {
+		ttk::style configure ToggleswitchEx$n -focussolid 1
 	    }
 	}
     }
@@ -1209,6 +1261,9 @@ proc ttk::toggleswitch::CondMakeElements {} {
 
 	interp alias {} ::ttk::toggleswitch::CreateImg \
 		     {} image create photo -format $::tk::svgFmt
+
+	CreateElem Tglswitch.gap image [CreateImg -data {
+<svg width="8" height="8" version="1.1" xmlns="http://www.w3.org/2000/svg"/>}]
 
 	CreateElements
 	set madeElements 1

@@ -5,7 +5,7 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 /*
@@ -18,14 +18,20 @@ typedef struct
     Tcl_Obj *offValueObj;
     Tcl_Obj *onValueObj;
     Tcl_Obj *sizeObj;
+    Tcl_Obj *textObj;
+    Tcl_Obj *textVariableObj;
+    Tcl_Obj *underlineObj;
     Tcl_Obj *variableObj;
+    Tcl_Obj *widthObj;
 
     /* internal state */
     Tcl_Obj *minValObj;		/* minimum value */
     Tcl_Obj *maxValObj;		/* maximum value */
     Tcl_Obj *curValObj;		/* current value */
-    Ttk_TraceHandle *varTrace;
     double minVal, maxVal;
+
+    Ttk_TraceHandle *textVarTrace;
+    Ttk_TraceHandle *varTrace;
 } TglswitchPart;
 
 typedef struct
@@ -50,13 +56,48 @@ static const Tk_OptionSpec TglswitchOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-size", "size", "Size", "2",
 	offsetof(Tglswitch, tglsw.sizeObj), TCL_INDEX_NONE,
 	0, sizeStrings, GEOMETRY_CHANGED},
+    {TK_OPTION_STRING, "-text", "text", "Text", "",
+	offsetof(Tglswitch, tglsw.textObj), TCL_INDEX_NONE,
+	0, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable", "",
+	offsetof(Tglswitch, tglsw.textVariableObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TTK_OPTION_UNDERLINE_DEF(Tglswitch, tglsw.underlineObj), 0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable", NULL,
 	offsetof(Tglswitch, tglsw.variableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-width", "width", "Width", NULL,
+	offsetof(Tglswitch, tglsw.widthObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
+
+/*
+ * TglswitchTextVariableChanged --
+ *	Variable trace procedure for the ttk::toggleswitch -textvariable option.
+ *	Updates the ttk::toggleswitch widget's text.
+ */
+static void TglswitchTextVariableChanged(void *clientData, const char *value)
+{
+    Tcl_Obj *newText;
+
+    Tglswitch *tglswPtr = (Tglswitch *)clientData;
+
+    if (WidgetDestroyed(&tglswPtr->core)) {
+	return;
+    }
+
+    newText = value ? Tcl_NewStringObj(value, -1) : Tcl_NewStringObj("", 0);
+
+    Tcl_DecrRefCount(tglswPtr->tglsw.textObj);
+    tglswPtr->tglsw.textObj = newText;
+    Tcl_IncrRefCount(tglswPtr->tglsw.textObj);
+
+    TtkResizeWidget(&tglswPtr->core);
+}
 
 /*
  * TglswitchVariableChanged --
@@ -130,6 +171,9 @@ static void TglswitchInitialize(Tcl_Interp *interp, void *recordPtr)
 	    Tcl_NewStringObj(Tk_PathName(tglswPtr->core.tkwin), -1);
     Tcl_IncrRefCount(tglswPtr->tglsw.variableObj);
 
+    tglswPtr->tglsw.textVarTrace = 0;
+    tglswPtr->tglsw.varTrace = 0;
+
     TtkTrackElementState(&tglswPtr->core);
 }
 
@@ -140,6 +184,11 @@ static void TglswitchInitialize(Tcl_Interp *interp, void *recordPtr)
 static void TglswitchCleanup(void *recordPtr)
 {
     Tglswitch *tglswPtr = (Tglswitch *)recordPtr;
+
+    if (tglswPtr->tglsw.textVarTrace) {
+	Ttk_UntraceVariable(tglswPtr->tglsw.textVarTrace);
+	tglswPtr->tglsw.textVarTrace = 0;
+    }
 
     if (tglswPtr->tglsw.varTrace) {
 	Ttk_UntraceVariable(tglswPtr->tglsw.varTrace);
@@ -154,16 +203,19 @@ static void TglswitchCleanup(void *recordPtr)
 static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
     Tglswitch *tglswPtr = (Tglswitch *)recordPtr;
+    Tcl_Obj *textVariableObj = tglswPtr->tglsw.textVariableObj;
     Tcl_Obj *variableObj = tglswPtr->tglsw.variableObj;
+    Ttk_TraceHandle *textVarTrace = NULL;
     Ttk_TraceHandle *varTrace = NULL;
 
     if (mask & GEOMETRY_CHANGED) {
 	/*
-	 * Processing the "-size" option:  Set the "-style" option to
-	 * "(*.)Toggleswitch{1|2|3}" if its value is of the same form.
+	 * Processing the "-size", "-text", "-textvariable", or "-width"
+	 * option:  Set the "-style" option to "(*.)Toggleswitch(Ex){1|2|3}"
+	 * if its current value is of one of these forms.
 	 */
 
-	const char *styleName = 0, *lastDot = 0, *nameTail = 0;
+	const char *styleName = 0, *lastDotAddr = 0, *nameTail = 0;
 
 	if (tglswPtr->core.styleObj) {
 	    styleName = Tcl_GetString(tglswPtr->core.styleObj);
@@ -171,18 +223,43 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	if (!styleName || *styleName == '\0') {
 	    styleName = "Toggleswitch2";
 	}
-	lastDot = strrchr(styleName, '.');
-	nameTail = lastDot ? lastDot + 1 : styleName;
+	lastDotAddr = strrchr(styleName, '.');
+	nameTail = lastDotAddr ? lastDotAddr + 1 : styleName;
 
-	if (!strcmp(nameTail, "Toggleswitch1")
+	if (	   !strcmp(nameTail, "Toggleswitch1")
 		|| !strcmp(nameTail, "Toggleswitch2")
-		|| !strcmp(nameTail, "Toggleswitch3")) {
+		|| !strcmp(nameTail, "Toggleswitch3")
+		|| !strcmp(nameTail, "ToggleswitchEx1")
+		|| !strcmp(nameTail, "ToggleswitchEx2")
+		|| !strcmp(nameTail, "ToggleswitchEx3")) {
 	    size_t length = strlen(styleName);
-	    char *styleName2 = (char *)Tcl_Alloc(length + 1);
+	    char *styleName2 = (char *)Tcl_Alloc(length + 3);
+	    const char *text = 0;
+	    int width = 0;
+	    const char *lasthAddr = strrchr(styleName, 'h');
+	    int idx = lasthAddr - styleName + 1;
 	    const char *sizeStr = Tcl_GetString(tglswPtr->tglsw.sizeObj);
 
-	    memcpy(styleName2, styleName, length + 1);
-	    styleName2[length-1] = *sizeStr;
+	    memcpy(styleName2, styleName, length);
+
+	    if (tglswPtr->tglsw.textObj) {
+		text = Tcl_GetString(tglswPtr->tglsw.textObj);
+	    }
+	    if (!text) {
+		text = "";
+	    }
+
+	    if (tglswPtr->tglsw.widthObj) {
+		Tcl_GetIntFromObj(NULL, tglswPtr->tglsw.widthObj, &width);
+	    }
+
+	    if (strlen(text) != 0 || width != 0) {
+		memcpy(styleName2 + idx, "Ex", 2);
+		idx += 2;
+	    }
+
+	    styleName2[idx] = *sizeStr;
+	    styleName2[idx+1] = 0;
 
 	    Tcl_DecrRefCount(tglswPtr->core.styleObj);
 	    tglswPtr->core.styleObj = Tcl_NewStringObj(styleName2, -1);
@@ -198,19 +275,22 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     } else if (mask & STYLE_CHANGED) {		/* intentionally "else if" */
 	/*
 	 * Processing the "-style" option:  Set the "-size" option
-	 * to "1|2|3" if the style is "(*.)Toggleswitch{1|2|3}"
+	 * to "1|2|3" if the style is "(*.)Toggleswitch(Ex){1|2|3}"
 	 */
 
 	const char *sizeStr = 0;
 	const char *styleName = Tcl_GetString(tglswPtr->core.styleObj);
-	const char *lastDot = strrchr(styleName, '.');
-	const char *nameTail = lastDot ? lastDot + 1 : styleName;
+	const char *lastDotAddr = strrchr(styleName, '.');
+	const char *nameTail = lastDotAddr ? lastDotAddr + 1 : styleName;
 
-	if (!strcmp(nameTail, "Toggleswitch1")) {
+	if (	   !strcmp(nameTail, "Toggleswitch1")
+		|| !strcmp(nameTail, "ToggleswitchEx1")) {
 	    sizeStr = "1";
-	} else if (!strcmp(nameTail, "Toggleswitch2")) {
+	} else if (!strcmp(nameTail, "Toggleswitch2")
+		|| !strcmp(nameTail, "ToggleswitchEx2")) {
 	    sizeStr = "2";
-	} else if (!strcmp(nameTail, "Toggleswitch3")) {
+	} else if (!strcmp(nameTail, "Toggleswitch3")
+		|| !strcmp(nameTail, "ToggleswitchEx3")) {
 	    sizeStr = "3";
 	}
 
@@ -221,18 +301,33 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	}
     }
 
+    if (!TkObjIsEmpty(textVariableObj)) {
+	textVarTrace = Ttk_TraceVariable(interp, textVariableObj,
+		TglswitchTextVariableChanged, recordPtr);
+	if (!textVarTrace) {
+	    return TCL_ERROR;
+	}
+    }
+
     if (!TkObjIsEmpty(variableObj)) {
 	varTrace = Ttk_TraceVariable(interp, variableObj,
 		TglswitchVariableChanged, recordPtr);
 	if (!varTrace) {
+	    if (textVarTrace) Ttk_UntraceVariable(textVarTrace);
 	    return TCL_ERROR;
 	}
     }
 
     if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
-	Ttk_UntraceVariable(varTrace);
+	if (textVarTrace) Ttk_UntraceVariable(textVarTrace);
+	if (varTrace) Ttk_UntraceVariable(varTrace);
 	return TCL_ERROR;
     }
+
+    if (tglswPtr->tglsw.textVarTrace) {
+	Ttk_UntraceVariable(tglswPtr->tglsw.textVarTrace);
+    }
+    tglswPtr->tglsw.textVarTrace = textVarTrace;
 
     if (tglswPtr->tglsw.varTrace) {
 	Ttk_UntraceVariable(tglswPtr->tglsw.varTrace);
@@ -253,6 +348,13 @@ static int TglswitchPostConfigure(
 {
     Tglswitch *tglswPtr = (Tglswitch *)recordPtr;
     int status = TCL_OK;
+
+    if (tglswPtr->tglsw.textVarTrace) {
+	status = Ttk_FireTrace(tglswPtr->tglsw.textVarTrace);
+	if (WidgetDestroyed(&tglswPtr->core)) {
+	    return TCL_ERROR;
+	}
+    }
 
     if (tglswPtr->tglsw.varTrace) {
 	status = Ttk_FireTrace(tglswPtr->tglsw.varTrace);
