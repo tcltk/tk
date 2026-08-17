@@ -270,7 +270,7 @@ The default is 1.  The value may have any of the forms acceptable to
 .br
 \fB\-font\fP \fIfont\fP
 .RS
-For \fBToggleswitchEx?\fP only.  The default is \fB\TkDefaultFont\fP.
+For \fBToggleswitchEx?\fP only.  The default is \fBTkDefaultFont\fP.
 .RE
 .br
 \fB\-foreground\fP \fIcolor\fP
