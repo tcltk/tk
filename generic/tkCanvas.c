@@ -3123,13 +3123,28 @@ DisplayCanvas(
 	    (screenY2 + 30 - canvasPtr->drawableYOrigin),
 	    Tk_Depth(tkwin));
 #else
+	/* Set up a clipping rectangle for the redraw area. */
 	canvasPtr->drawableXOrigin = canvasPtr->xOrigin;
 	canvasPtr->drawableYOrigin = canvasPtr->yOrigin;
-	pixmap = Tk_WindowId(tkwin);
+	pixmap = Tk_WindowId(tkwin); /* Really it's a window, not a pixmap. */
+	/* Expand the clipping rectangle if we are anti-aliasing. */
+	int clipX = screenX1 - canvasPtr->xOrigin - AA_PAD;
+	int clipY = screenY1 - canvasPtr->yOrigin - AA_PAD; 
+	int clipW = width + 2*AA_PAD;
+	int clipH = height + 2*AA_PAD;
+	if (AA_PAD) {
+	    /* But make sure the clip stays inside the inset rectangle. */
+	    if (clipX < canvasPtr->inset) clipX = canvasPtr->inset;
+	    if (clipY < canvasPtr->inset) clipY = canvasPtr->inset;
+	    if (clipX + clipW > Tk_Width(tkwin) - 2 * canvasPtr->inset) {
+		clipW = Tk_Width(tkwin) - 2 * canvasPtr->inset - clipX;
+	    }
+	    if (clipY + clipH > Tk_Height(tkwin) - 2 * canvasPtr->inset) {
+		clipH = Tk_Height(tkwin) - 2 * canvasPtr->inset - clipY;
+	    }
+	}
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap,
-		screenX1 - canvasPtr->xOrigin - AA_PAD,
-		screenY1 - canvasPtr->yOrigin - AA_PAD,
-		width + 2*AA_PAD, height + 2*AA_PAD);
+	    clipX, clipY, clipW, clipH);
 	/*
 	 * Call ItemDisplay for all window items.  This does not redraw the
 	 * windows, but sets their position within the canvas, which ensures
@@ -3160,7 +3175,7 @@ DisplayCanvas(
 	 * by the anti-aliasing.  Otherwise, dragging an object in the
 	 * canvas will leave a vapor trail of boundary-colored pixels.
 	 */
-
+	
 	XFillRectangle(Tk_Display(tkwin), pixmap, canvasPtr->pixmapGC,
 		screenX1 - canvasPtr->drawableXOrigin - AA_PAD,
 		screenY1 - canvasPtr->drawableYOrigin - AA_PAD,
