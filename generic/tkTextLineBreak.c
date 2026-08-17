@@ -169,19 +169,24 @@ TkTextComputeBreakLocations(
     Tcl_Interp *interp,
     const char *text,	/* must be nul-terminated */
     unsigned len,	/* without trailing nul byte */
-    const char *lang,	/* can be NULL */
+    const char *locale,	/* can be NULL */
     char *brks)
 {
     ComputeBreakLocationsFunc func;
     int lastBreakablePos = -1;
+    char lang[3] = { 0, 0, 0 };
     unsigned i;
 
+    if ((locale[3] != '_') && (strcmp(locale, "C") != 0) && (strcmp(locale, "POSIX") != 0) && (strcmp(locale, "tcl8") != 0)) {
+	lang[0] = locale[0];
+	lang[1] = locale[1];
+    }
     assert(text);
     assert(brks);
     assert(text[len] == '\0');
-    assert(!lang || (isalpha(lang[0]) && isalpha(lang[1]) && !lang[2]));
+    assert(!lang[0] || (isalpha(lang[0]) && isalpha(lang[1])));
 
-    func = GetLineBreakFunc(interp, lang);
+    func = GetLineBreakFunc(interp, lang[0] ? lang : NULL);
 
     /*
      * The algorithm don't give us a break value for the last character if we do
@@ -189,7 +194,7 @@ TkTextComputeBreakLocations(
      */
 
     len += 1;
-    (*func)((const unsigned char *) text, len, lang, brks);
+    (*func)((const unsigned char *) text, len, lang[0] ? lang : NULL, brks);
     len -= 1;
 
     for (i = 0; i < len; ++i) {

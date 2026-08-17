@@ -221,7 +221,6 @@ typedef struct StyleValues {
     Tk_3DBorder rMarginColor;	/* Color of right margin. */
     XColor *overstrikeColor;	/* Foreground color for overstrike through text. */
     XColor *underlineColor;	/* Foreground color for underline underneath text. */
-    char const *lang;		/* Language support (may be NULL). */
     int32_t hyphenRules;	/* Hyphenation rules for spelling changes. */
     int32_t borderWidth;	/* Width of 3-D border for background. */
     int32_t lMargin1;		/* Left margin, in pixels, for first display line of each text line. */
@@ -1962,7 +1961,6 @@ FillStyle(
     if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
     if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
     if (tagPtr->elide >= 0)             { stylePtr->elide = tagPtr->elide; }
-    if (tagPtr->langObj)                { stylePtr->lang = tagPtr->lang; }
     if (tagPtr->hyphenRulesObj)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
     if (tagPtr->locale[0])              { memcpy(stylePtr->locale, tagPtr->locale, sizeof(stylePtr->locale)); }
 
@@ -2041,7 +2039,6 @@ MakeStyle(
     styleValues.tabArrayPtr = textPtr->tabArrayPtr;
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
-    styleValues.lang = textPtr->lang;
     styleValues.hyphenRules = textPtr->hyphenRules;
     if (textPtr->locale[0]) {
 	memcpy(styleValues.locale, textPtr->locale, sizeof(styleValues.locale));
@@ -2604,16 +2601,16 @@ LayoutComputeBreakLocations(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextSegment *segPtr = data->logicalLinePtr->segPtr;
     bool useUniBreak = data->textPtr->useUniBreak;
-    char const *lang = useUniBreak ? textPtr->lang : NULL;
-    char const *nextLang = NULL;
+    char const *locale = useUniBreak ? textPtr->locale : NULL;
+    char const *nextLocale = NULL;
     unsigned capacity = dInfoPtr->strBufferSize;
     char *str = dInfoPtr->strBuffer;
     char *brks = textPtr->brksBuffer;
 
     /*
      * The codepoint line break computation requires the whole logical line (due to a
-     * poor design of libunibreak), but separated by languages, because this line break
-     * algorithm is in general language dependent.
+     * poor design of libunibreak), but separated by locale, because this line break
+     * algorithm is in general locale dependent.
      */
 
     while (segPtr) {
@@ -2626,10 +2623,10 @@ LayoutComputeBreakLocations(
 		unsigned newSize;
 
 		if (useUniBreak) {
-		    const char *myLang = TkBTreeGetLang(textPtr, segPtr);
+		    const char *myLocale = TkBTreeGetLocale(textPtr, segPtr);
 
-		    if (myLang[0] != lang[0] || myLang[1] != lang[1]) {
-			nextLang = myLang;
+		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
+			nextLocale = myLocale;
 			break;
 		    }
 		}
@@ -2643,10 +2640,10 @@ LayoutComputeBreakLocations(
 	    }
 	    case SEG_GROUP_HYPHEN:
 		if (useUniBreak) {
-		    const char *myLang = TkBTreeGetLang(textPtr, segPtr);
+		    const char *myLocale = TkBTreeGetLocale(textPtr, segPtr);
 
-		    if (myLang[0] != lang[0] || myLang[1] != lang[1]) {
-			nextLang = myLang;
+		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
+			nextLocale = myLocale;
 			break;
 		    }
 		}
@@ -2692,10 +2689,10 @@ LayoutComputeBreakLocations(
 
 	    str[size] = '\0'; /* TkTextComputeBreakLocations expects traling nul */
 	    TkTextComputeBreakLocations(data->textPtr->interp, str, size,
-		    lang ? (*lang ? lang : "en") : NULL, brks + totalSize);
+		    locale ? (*locale ? locale : "en") : NULL, brks + totalSize);
 	    totalSize = newTotalSize;
 	}
-	lang = nextLang;
+	locale = nextLocale;
     }
 
     dInfoPtr->strBuffer = str;

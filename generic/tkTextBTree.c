@@ -14248,12 +14248,12 @@ TkBTreeGetSegmentTags(
 /*
  *----------------------------------------------------------------------
  *
- * TkBTreeGetLang --
+ * TkBTreeGetLocale --
  *
  *	Return the language information of given segment.
  *
  * Results:
- *      The return value is the language string belonging to given segment.
+ *      The return value is the language string / locale belonging to given segment.
  *
  * Side effects:
  *	None.
@@ -14262,13 +14262,13 @@ TkBTreeGetSegmentTags(
  */
 
 const char *
-TkBTreeGetLang(
+TkBTreeGetLocale(
     const TkText *textPtr,		/* Relative to this client of the B-tree. */
     const TkTextSegment *segPtr)	/* Get tags from this segment. */
 {
     const TkTextTagSet *tagInfoPtr;
     const TkSharedText *sharedTextPtr;
-    const char *lang;
+    const char *locale;
 
     assert(textPtr);
     assert(segPtr->tagInfoPtr);
@@ -14276,7 +14276,7 @@ TkBTreeGetLang(
 
     sharedTextPtr = textPtr->sharedTextPtr;
     tagInfoPtr = segPtr->tagInfoPtr;
-    lang = textPtr->lang;
+    locale = textPtr->locale;
 
     if (tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
 	unsigned i = TkTextTagSetFindFirst(tagInfoPtr);
@@ -14288,15 +14288,16 @@ TkBTreeGetLang(
 	    assert(tagPtr);
 	    assert(!tagPtr->isDisabled);
 
-	    if (tagPtr->lang[0] && (int) tagPtr->priority > highestPriority) {
-		lang = tagPtr->lang;
+	    if (tagPtr->locale[0] && (int) tagPtr->priority > highestPriority) {
+		locale = tagPtr->locale;
 		highestPriority = tagPtr->priority;
 	    }
 	}
     }
 
-    return lang;
+    return locale;
 }
+
 
 /*
  *----------------------------------------------------------------------
