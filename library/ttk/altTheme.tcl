@@ -140,10 +140,10 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure TScale \
 	    -groovewidth 3p -troughrelief sunken \
-	    -sliderwidth raised -borderwidth 2
+	    -sliderthickness 11.25p -borderwidth 2
 	ttk::style configure TRange \
 	    -groovewidth 3p -troughrelief sunken \
-	    -sliderwidth raised -borderwidth 2
+	    -sliderthickness 11.25p -borderwidth 2
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) -borderwidth 0 \
 	    -barsize 22.5p -thickness 11.25p

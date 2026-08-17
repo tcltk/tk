@@ -298,7 +298,7 @@ static const Ttk_StateTable pbar_statemap[] =
     { PBFS_NORMAL,	0, 0 }
 };
 
-static Ttk_StateTable range_statemap[] =
+static const Ttk_StateTable range_statemap[] =
 {
     { TUS_DISABLED, 	TTK_STATE_DISABLED, 0 },
     { TUS_PRESSED, 	TTK_STATE_PRESSED, 0 },
