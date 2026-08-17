@@ -2754,8 +2754,11 @@ WmMaxsizeCmd(
         r[0]=Tcl_NewIntObj(wmPtr->maxWidth); r[1]=Tcl_NewIntObj(wmPtr->maxHeight);
         Tcl_SetObjResult(interp,Tcl_NewListObj(2,r)); return TCL_OK;
     }
-    if (Tcl_GetIntFromObj(interp,objv[0],&w)!=TCL_OK
-	|| Tcl_GetIntFromObj(interp,objv[1],&h)!=TCL_OK) return TCL_ERROR;
+    Tk_Window tkwin = (Tk_Window)winPtr;
+    if ((Tk_GetPixelsFromObj(interp, tkwin, objv[0], &w) != TCL_OK)
+	|| (Tk_GetPixelsFromObj(interp, tkwin, objv[1], &h) != TCL_OK)) {
+	return TCL_ERROR;
+    }
     wmPtr->maxWidth=w; wmPtr->maxHeight=h;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(wmPtr,winPtr);
@@ -2798,8 +2801,11 @@ WmMinsizeCmd(
         r[0]=Tcl_NewIntObj(wmPtr->minWidth); r[1]=Tcl_NewIntObj(wmPtr->minHeight);
         Tcl_SetObjResult(interp,Tcl_NewListObj(2,r)); return TCL_OK;
     }
-    if (Tcl_GetIntFromObj(interp,objv[0],&w)!=TCL_OK
-	|| Tcl_GetIntFromObj(interp,objv[1],&h)!=TCL_OK) return TCL_ERROR;
+    Tk_Window tkwin = (Tk_Window)winPtr;
+    if ((Tk_GetPixelsFromObj(interp, tkwin, objv[0], &w) != TCL_OK)
+	|| (Tk_GetPixelsFromObj(interp, tkwin, objv[1], &h) != TCL_OK)) {
+	return TCL_ERROR;
+    }
     wmPtr->minWidth=w; wmPtr->minHeight=h;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(wmPtr,winPtr);

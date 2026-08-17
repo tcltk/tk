@@ -14,9 +14,10 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging */
+/* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "font"
+*/
 
 #include "tkInt.h"
 #include "tkWaylandInt.h"
