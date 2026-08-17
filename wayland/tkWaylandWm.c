@@ -3921,9 +3921,41 @@ UpdateGeometryInfo(
     void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
-    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    WmInfo   *wmPtr;
+    GLFWwindow *glfwWindow;
+    glfwTkInfo *infoPtr;
+
+    /*
+     * This idle call can fire re-entrantly: TkWaylandSyncMenubarGeometry()
+     * pumps the idle queue with a nested Tcl_DoOneEvent() loop while a
+     * menu is being torn down (see TkpSetWindowMenuBar()).  If that
+     * happens while this same toplevel is itself mid-destruction, bail
+     * out immediately rather than touching any of its state.
+     */
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+	DEBUG_LOG("UpdateGeometryInfo: window already dead, skipping");
+	return;
+    }
+
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
+	return;
+    }
+
+    /*
+     * Likewise, the toplevel's GLFW window (and glfwTkInfo) may already
+     * have been torn down by the time we get here via the reentrant path
+     * described above, even if TK_ALREADY_DEAD hasn't been observed yet.
+     * Guard against a NULL infoPtr before dereferencing it.
+     */
+    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    infoPtr = glfwWindow ? glfwGetWindowUserPointer(glfwWindow) : NULL;
+    if (infoPtr == NULL) {
+	DEBUG_LOG("UpdateGeometryInfo: no glfwTkInfo (window torn down), skipping");
+	return;
+    }
+
     if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
 	/* Newly created windows are created hidden and set to be focused
 	 * when they are first shown.
@@ -3937,10 +3969,6 @@ UpdateGeometryInfo(
 	return;
     }
 
-    if (wmPtr == NULL) {
-	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
-	return;
-    }
     DEBUG_LOG("UpdateGeometryInfo: %s to %dx%d", Tk_PathName(winPtr),
 	   wmPtr->width, wmPtr->height);
 
