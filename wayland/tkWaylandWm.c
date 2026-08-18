@@ -13,10 +13,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging */
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "wm"
-*/
 
 #include "tkInt.h"
 #include "tkPort.h"
@@ -3801,14 +3800,13 @@ TopLevelReqProc(
     wmPtr->height = -1;
     
 
-    /*
-     * A window which has never been mapped has no WmInfo, so its
-     * geometry cannot be updated yet.
-     */
-
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
+    if (winPtr->flags & WM_NEVER_MAPPED) {
 	DEBUG_LOG("TopLevelReqProc: rescheduling");
+	if (wmPtr->flags & WM_UPDATE_PENDING) {
+	    Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+	} else {
+	    wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
+	}
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     }
 }
