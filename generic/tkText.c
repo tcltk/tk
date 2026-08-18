@@ -1625,7 +1625,7 @@ TextWidgetObjCmd(
     case TEXT_BRKS: {
 	Tcl_Obj *arrPtr;
 	unsigned length, i;
-	char const *locale = NULL;
+	char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	char buf[1];
 
 	if (objc != 3 && objc != 4) {
@@ -1634,7 +1634,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (objc == 4) {
-	    if (!TkTextTestLocale(interp, objv[3])) {
+	    if (!TkTextParseLocale(interp, objv[3], locale)) {
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1643,7 +1643,6 @@ TextWidgetObjCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    locale = Tcl_GetString(objv[3]);
 	}
 	if ((length = GetByteLength(objv[2])) < textPtr->brksBufferSize) {
 	    textPtr->brksBufferSize = MAX(length, textPtr->brksBufferSize + 512);
@@ -3930,9 +3929,9 @@ TkTextReleaseIfDestroyed(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextTestLocale --
+ * TkTextParseLocale --
  *
- *	Test the given locale, whether it satsifies ISO 539-1,
+ *	Parse the given locale, whether it satisfies ISO 639-1,
  *	and set an error message if the code is invalid.
  *
  * Results:
@@ -3946,26 +3945,20 @@ TkTextReleaseIfDestroyed(
  */
 
 bool
-TkTextTestLocale(
+TkTextParseLocale(
     Tcl_Interp *interp,
-    Tcl_Obj *localePtr)
+    Tcl_Obj *localePtr,
+    char *locale)
 {
-    char const *lang = Tcl_GetString(localePtr);
-    // TODO: check full locale, not only lang part.
+    Tcl_Obj *localeObj = localePtr;
+    char oldLocale[8];
+    int result;
 
-    if (UCHAR(lang[0]) >= 0x80
-	    || UCHAR(lang[1]) >= 0x80
-	    || !isalpha(UCHAR(lang[0]))
-	    || !isalpha(UCHAR(lang[1]))
-	    || !islower(UCHAR(lang[0]))
-	    || !islower(UCHAR(lang[1]))
-	    || lang[2] != '\0') {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad lang \"%s\": "
-		"must have the form of an ISO 639-1 language code, or empty", lang));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "LANG", (char *)NULL);
-	return false;
-    }
-    return true;
+    Tcl_IncrRefCount(localeObj);
+    result = TkLocaleOption.setProc(NULL, interp, NULL, &localeObj, locale, 0, oldLocale, 0);
+    Tcl_DecrRefCount(localeObj);
+
+    return result == TCL_OK;
 }
 
 /*

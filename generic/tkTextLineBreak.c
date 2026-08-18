@@ -177,7 +177,7 @@ TkTextComputeBreakLocations(
     char lang[3] = { 0, 0, 0 };
     unsigned i;
 
-    if ((locale[3] != '_') && (strcmp(locale, "C") != 0) && (strcmp(locale, "POSIX") != 0) && (strcmp(locale, "tcl8") != 0)) {
+    if (locale && locale[0] && locale[1] && ((locale[2] == '_') || (locale[2] == '\0'))) {
 	lang[0] = locale[0];
 	lang[1] = locale[1];
     }

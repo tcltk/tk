@@ -2059,7 +2059,7 @@ MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
 			    const char *lang, char *brks);
-MODULE_SCOPE bool	TkTextTestLocale(Tcl_Interp *interp, Tcl_Obj *localePtr);
+MODULE_SCOPE bool	TkTextParseLocale(Tcl_Interp *interp, Tcl_Obj *localePtr, char *locale);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE void	TkTextPushUndoToken(TkSharedText *sharedTextPtr, void *token,
