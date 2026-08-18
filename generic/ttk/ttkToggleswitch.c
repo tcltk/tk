@@ -75,6 +75,8 @@ static const Tk_OptionSpec TglswitchOptionSpecs[] =
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
+static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask);
+
 /*
  * TglswitchTextVariableChanged --
  *	Variable trace procedure for the ttk::toggleswitch -textvariable option.
@@ -85,6 +87,7 @@ static void TglswitchTextVariableChanged(void *clientData, const char *value)
     Tcl_Obj *newText;
 
     Tglswitch *tglswPtr = (Tglswitch *)clientData;
+    Tk_Window tkwin = tglswPtr->core.tkwin;
 
     if (WidgetDestroyed(&tglswPtr->core)) {
 	return;
@@ -96,6 +99,10 @@ static void TglswitchTextVariableChanged(void *clientData, const char *value)
     tglswPtr->tglsw.textObj = newText;
     Tcl_IncrRefCount(tglswPtr->tglsw.textObj);
 
+    /*
+     * Update the layout and redisplay the widget
+     */
+    TglswitchConfigure(Tk_Interp(tkwin), clientData, GEOMETRY_CHANGED);
     TtkResizeWidget(&tglswPtr->core);
 }
 

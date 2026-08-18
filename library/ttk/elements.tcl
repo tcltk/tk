@@ -421,7 +421,7 @@ proc ttk::toggleswitch::CreateElements_vista {} {
 	ttk::style layout Toggleswitch$n [list \
 	    Tglswitch.focus -sticky nswe -children [list \
 		Tglswitch.padding -sticky nswe -children [list \
-		    Tglswitch$n.trough -sticky {} -children [list \
+		    Tglswitch$n.trough -sticky e -children [list \
 			Tglswitch$n.slider -side left -sticky {}
 		    ]
 		]
@@ -793,7 +793,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
     foreach n {1 2 3} {
 	ttk::style layout Toggleswitch$n [list \
 	    Tglswitch.padding -sticky nswe -children [list \
-		Tglswitch$n.trough -sticky {} -children [list \
+		Tglswitch$n.trough -sticky e -children [list \
 		    Tglswitch$n.slider -side left -sticky {}
 		]
 	    ]
@@ -1178,7 +1178,7 @@ proc ttk::toggleswitch::CreateElements {} {
 	foreach n {1 2 3} {
 	    ttk::style layout Toggleswitch$n [list \
 		Tglswitch.padding -sticky nswe -children [list \
-		    Tglswitch$n.trough -sticky {} -children [list \
+		    Tglswitch$n.trough -sticky e -children [list \
 			Tglswitch$n.slider -side left -sticky {}
 		    ]
 		]
@@ -1206,7 +1206,7 @@ proc ttk::toggleswitch::CreateElements {} {
 	    ttk::style layout Toggleswitch$n [list \
 		Tglswitch.focus -sticky nswe -children [list \
 		    Tglswitch.padding -sticky nswe -children [list \
-			Tglswitch$n.trough -sticky {} -children [list \
+			Tglswitch$n.trough -sticky e -children [list \
 			    Tglswitch$n.slider -side left -sticky {}
 			]
 		    ]
