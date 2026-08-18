@@ -397,6 +397,18 @@ InitializeGlfwWindow(TkWindow *winPtr)
                           wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
 
+    /*
+     * If override-redirect was set on this window before its GLFW
+     * counterpart existed (e.g. via [wm overrideredirect] on a window
+     * that hadn't been mapped yet), XChangeWindowAttributes had no
+     * GLFWwindow to act on at the time and silently dropped the
+     * request. Tk core still recorded the flag in winPtr->atts
+     * regardless, so re-apply it here now that the GLFW window exists.
+     */
+    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
+        glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED, GLFW_FALSE);
+    }
+
     /* Register wm event handler */
     Tk_CreateEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
@@ -2830,15 +2842,30 @@ WmMinsizeCmd(
 
 static int
 WmOverrideredirectCmd(
-		      Tk_Window   tkwin,
-		      TkWindow   *winPtr,
-		      Tcl_Interp *interp,
-		      int         objc,
-		      Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),
+    TkWindow   *winPtr,
+    Tcl_Interp *interp,
+    int         objc,
+    Tcl_Obj *const objv[])
 {
-	/* no-op on Wayland */
-	return TCL_OK;
-   
+    int boolean;
+    XSetWindowAttributes atts;
+
+    if (objc > 1) {
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName overrideredirect ?boolean?");
+        return TCL_ERROR;
+    }
+    if (objc == 0) {
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+            Tk_Attributes((Tk_Window) winPtr)->override_redirect));
+        return TCL_OK;
+    }
+    if (Tcl_GetBooleanFromObj(interp, objv[0], &boolean) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    atts.override_redirect = boolean ? True : False;
+    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    return TCL_OK;
 }
 
 /*
@@ -3921,9 +3948,41 @@ UpdateGeometryInfo(
     void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
-    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    WmInfo   *wmPtr;
+    GLFWwindow *glfwWindow;
+    glfwTkInfo *infoPtr;
+
+    /*
+     * This idle call can fire re-entrantly: TkWaylandSyncMenubarGeometry()
+     * pumps the idle queue with a nested Tcl_DoOneEvent() loop while a
+     * menu is being torn down (see TkpSetWindowMenuBar()).  If that
+     * happens while this same toplevel is itself mid-destruction, bail
+     * out immediately rather than touching any of its state.
+     */
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+	DEBUG_LOG("UpdateGeometryInfo: window already dead, skipping");
+	return;
+    }
+
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
+	return;
+    }
+
+    /*
+     * Likewise, the toplevel's GLFW window (and glfwTkInfo) may already
+     * have been torn down by the time we get here via the reentrant path
+     * described above, even if TK_ALREADY_DEAD hasn't been observed yet.
+     * Guard against a NULL infoPtr before dereferencing it.
+     */
+    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    infoPtr = glfwWindow ? glfwGetWindowUserPointer(glfwWindow) : NULL;
+    if (infoPtr == NULL) {
+	DEBUG_LOG("UpdateGeometryInfo: no glfwTkInfo (window torn down), skipping");
+	return;
+    }
+
     if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
 	/* Newly created windows are created hidden and set to be focused
 	 * when they are first shown.
@@ -3937,10 +3996,6 @@ UpdateGeometryInfo(
 	return;
     }
 
-    if (wmPtr == NULL) {
-	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
-	return;
-    }
     DEBUG_LOG("UpdateGeometryInfo: %s to %dx%d", Tk_PathName(winPtr),
 	   wmPtr->width, wmPtr->height);
 
