@@ -2014,6 +2014,7 @@ EnsureNvgFaceFont(
 
     if (face->filePath && access(face->filePath, R_OK) == 0) {
         id = nvgCreateFont(vg, face->nvgName, face->filePath);
+	GL_DEBUG_LOG("nvgCreatFont %s\n", face->filePath);
     } else if (face->filePath) { id = -1; }
 
     face->nvgFontId = id;
@@ -2163,6 +2164,7 @@ EnsureNvgFont(
                 char name[64];
                 snprintf(name, sizeof(name), "__fallback_%p", (void*)vg);
                 primaryId = nvgCreateFont(vg, name, fallback_paths[i]);
+		GL_DEBUG_LOG("nvgCreatFont %s\n", fallback_paths[i]);
                 if (primaryId >= 0) {
                     break;
                 }
@@ -2173,6 +2175,7 @@ EnsureNvgFont(
             if (primaryId < 0) {
                 primaryId = nvgCreateFont(vg, "sans",
                     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+		GL_DEBUG_LOG("nvgCreatFont DejaVuSans\n");
             }
         }
     }

@@ -15,6 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+
 /* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "init"
@@ -199,11 +200,15 @@ static void destroyGlfwTkInfo(
 	    glfwMakeContextCurrent(glfwWindow);
 	    glfwSetWindowUserPointer(glfwWindow, NULL);
 	    /* 
-		 * Remove all references to this NVGcontext from the font
+	     * Remove all references to this NVGcontext from the font
 	     * registry.  Without this, windows will be rendered without text!
 	     */
 	    TkWaylandFontContextDestroyed(infoPtr->vg);
+	    GL_DEBUG_LOG("destroyGlfwTkInfo: before destroying vg for %s\n",
+		Tk_PathName(infoPtr->winPtr));
 	    nvgDeleteGLES3(infoPtr->vg);
+	    GL_DEBUG_LOG("destroyGlfwTkInfo: after destroying vg for %s\n",
+		Tk_PathName(infoPtr->winPtr));
 	    Tcl_Free(infoPtr);
 	    return;
 	}
