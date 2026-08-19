@@ -22,6 +22,7 @@ to the userbase.
  - [ttk::entry has a wrong background in clam theme and readonly state](https://core.tcl-lang.org/tk/tktview/2f8570)
  - [Xlib emulation for macOS causes many visual artifacts](https://core.tcl-lang.org/tk/tktview/971a26)
  - [tk console manual errors and undocumented bindings](https://core.tcl-lang.org/tk/tktview/d62ee2)
+ - [Usage of private symbol NSWindowDidOrderOnScreenNotification](https://core.tcl-lang.org/tk/tktview/a9969f)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

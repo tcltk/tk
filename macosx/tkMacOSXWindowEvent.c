@@ -37,8 +37,10 @@ static int		GenerateActivateEvents(TkWindow *winPtr,
 
 #pragma mark TKApplication(TKWindowEvent)
 
+#if 0
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
+#endif
 extern NSString *NSWindowWillCloseNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -292,6 +294,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     return (winPtr ? NO : YES);
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
     if ([NSApp tkWillExit]) {
@@ -300,17 +303,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
-	TKContentView *view = [window contentView];
 	// fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	if (@available(macOS 10.14, *)) {
-	    [view viewDidChangeEffectiveAppearance];
-	}
-#endif
     }
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
     if ([NSApp tkWillExit]) {
@@ -366,8 +363,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
+#if 0
+    // These can be useful for debugging.
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+#endif
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
