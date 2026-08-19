@@ -474,6 +474,11 @@ static void showRootWindow(void *clientData) {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (wmPtr->hints.initial_state == NormalState) {
 	[root makeKeyAndOrderFront:NSApp];
+	/*
+	 * Now the root is fully mapped, so we can set the
+	 * flag.
+	 */
+	winPtr->flags |= TK_MAPPED;
     }
     [NSApp activateIgnoringOtherApps: YES];
 }
@@ -657,12 +662,15 @@ TkpInit(
 
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
-	    if (winPtr && Tk_IsMapped(winPtr)) {
+	    if (winPtr && strlen(Tk_PathName(winPtr)) == 1) {
 
-		/*
+		/* This is the root window.  We will order it front.
 		 * Ordering the root window front in an idle task allows
 		 * checking whether it was immediately withdrawn, and
 		 * therefore does not need to be placed on the screen.
+		 * We do not set the TK_MAPPED flag because the root window
+		 * has not been fully mapped yet.  The flag will be set
+		 * in showRootWindow.
 		 */
 
 		Tcl_DoWhenIdle(showRootWindow, window);

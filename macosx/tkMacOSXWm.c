@@ -818,8 +818,9 @@ FrontMostToplevelAtPoint(
     NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     for (NSWindow *w in [NSApp orderedWindows]) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr && Tk_IsMapped(winPtr)) {
+	//TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+	TKContentView *view = (TKContentView *) [w contentView];
+	if ([w isMemberOfClass:[TKWindow class]] && w.isVisible) {
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -829,9 +830,9 @@ FrontMostToplevelAtPoint(
 	     * window.
 	     */
 
-	    contentFrame.size.height = [[w contentView] frame].size.height;
+	    contentFrame.size.height = [view frame].size.height;
 	    if (NSMouseInRect(p, contentFrame, NO)) {
-		return winPtr;
+		return TkMacOSXGetTkWindow(w);
 	    } else if (NSMouseInRect(p, windowFrame, NO)) {
 		/*
 		 * The pointer is in the title bar of the highest NSWindow
@@ -858,8 +859,6 @@ void TkMacOSXAssignNewKeyWindow(
 
     [NSApp setTkEventTarget: NULL];
     for (NSWindow *w in [NSApp orderedWindows]) {
-	WmInfo *wmPtr;
-	BOOL isOnScreen;
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
 	    || !winPtr->wmInfoPtr
@@ -869,10 +868,7 @@ void TkMacOSXAssignNewKeyWindow(
 	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
 	    continue;
 	}
-	wmPtr = winPtr->wmInfoPtr;
-	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
-		      wmPtr->hints.initial_state != WithdrawnState);
-	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
+	if (w != ignore && Tk_IsMapped(winPtr) && [w canBecomeKeyWindow]) {
 	    TKMenu *menu;
 	    [w makeKeyAndOrderFront:NSApp];
 	    /* Set the menubar for the new front window. */
@@ -1123,9 +1119,9 @@ TkWmUnmapWindow(
     if (!Tk_IsMapped(winPtr)) {
 	return;
     }
+    winPtr->flags &= ~TK_MAPPED;
     if ((winPtr->window != None)
 	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
-	winPtr->flags &= ~TK_MAPPED;
 	XEvent event;
 	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
 	event.xany.send_event = False;
@@ -2611,10 +2607,10 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
-    TkWindow *winPtr,			/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
-    TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel or Frame to work with */
+    TCL_UNUSED(Tcl_Interp *),	/* Current interpreter. */
+    TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
@@ -2627,21 +2623,20 @@ WmForgetCmd(
 	MacDrawable *macWin;
 
 	Tk_MakeWindowExist(frameWin);
-	if (winPtr->parentPtr) {
-	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-	}
+	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+
 	macWin = (MacDrawable *)winPtr->window;
 
 	TkFocusJoin(winPtr);
 	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel->referenceCount--;
+	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
-	if (winPtr->parentPtr) {
-	    macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-	    macWin->toplevel->referenceCount++;
-	    RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
-	}
+
+	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
+
 	/*
 	 * Make sure wm no longer manages this window
 	 */
@@ -3499,7 +3494,6 @@ WmIconwindowCmd(
 		}
 	    }
 	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen: NO];
 	    [win setExcludedFromWindowsMenu:YES];
 	}
 	Tk_MakeWindowExist(tkwin2);
