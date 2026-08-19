@@ -29,6 +29,10 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 #include <wayland-egl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 
 /*
  *----------------------------------------------------------------------
@@ -45,6 +49,14 @@
 
 static int GlfwIsInitialized = 0;
 int shutdownInProgress = 0;
+
+/*
+ * Wayland app_id to apply to newly created toplevels - see
+ * TkWaylandSetAppId / TkWaylandSyncAppId further down.
+ */
+static char *waylandAppId = NULL;
+MODULE_SCOPE void TkWaylandSetAppId(const char *appId);
+static void TkWaylandSyncAppId(Tcl_Interp *interp);
 
 
 /*
@@ -450,6 +462,12 @@ TkWaylandErrorCallback(int error, const char *desc)
  *  Creates a GFLWWindow to be used for the root window and its
  *  NanoVG context.
  *
+ *  Takes the interpreter so it can derive a default Wayland app_id
+ *  from argv0 (see TkWaylandSetAppId) before that root window is
+ *  created - the only point at which the root window's app_id can be
+ *  set, since stock GLFW cannot change a toplevel's app_id after
+ *  creation. interp may be NULL (falls back to app_id "tk").
+ *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
  *
@@ -462,7 +480,7 @@ TkWaylandErrorCallback(int error, const char *desc)
 
 
 MODULE_SCOPE int
-TkWaylandInitialize(void)
+TkWaylandInitialize(Tcl_Interp *interp)
 {
     if (GlfwIsInitialized) return TCL_OK;
 
@@ -484,6 +502,30 @@ TkWaylandInitialize(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     /*
+     * Set a default Wayland app_id from argv0 (mirrors TkpGetAppName's
+     * own argv0 fallback) *before* the bootstrap window below is
+     * created. That bootstrap window becomes the "." root window (see
+     * TkWaylandCreateWindow: it reuses mainGlfwWindow instead of
+     * creating a second one) - and since stock GLFW has no way to
+     * change a toplevel's app_id after creation, this is the only
+     * point where the root window's app_id can be set at all. A
+     * later explicit [tk appname newName] will be picked up by
+     * TkWaylandSyncAppId and affect any *subsequently* created
+     * toplevels, but cannot retroactively fix the root window's.
+     */
+    if (interp != NULL && waylandAppId == NULL) {
+        const char *argv0 = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
+        const char *name = "tk";
+        const char *slash;
+
+        if (argv0 && *argv0) {
+            slash = strrchr(argv0, '/');
+            name = slash ? slash + 1 : argv0;
+        }
+        TkWaylandSetAppId(name);
+    }
+
+    /*
      * Create the bootstrap window invisible.  Showing it here (even
      * briefly) produces a visible flash of an empty / garbage frame on
      * many Wayland compositors before Tk has drawn anything.  A hidden
@@ -494,6 +536,9 @@ TkWaylandInitialize(void)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
+    if (waylandAppId) {
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+    }
 
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
@@ -648,7 +693,7 @@ TkWaylandCreateWindow(
         return NULL;
     }
     if (!GlfwIsInitialized) {
-        if (TkWaylandInitialize() != TCL_OK) {
+        if (TkWaylandInitialize(winPtr->mainPtr->interp) != TCL_OK) {
             return NULL;
         }
     }
@@ -672,6 +717,10 @@ TkWaylandCreateWindow(
             glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
             glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
             glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+            TkWaylandSyncAppId(winPtr->mainPtr->interp);
+            if (waylandAppId) {
+                glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+            }
             mainGlfwWindow = glfwCreateWindow(width, height,
                                               title ? title : "",
                                               NULL, NULL);
@@ -706,6 +755,10 @@ TkWaylandCreateWindow(
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+        TkWaylandSyncAppId(winPtr->mainPtr->interp);
+        if (waylandAppId) {
+            glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+        }
 
         glfwWindow = glfwCreateWindow(width, height,
                                       title ? title : "",
@@ -1321,7 +1374,7 @@ TkWaylandApplyGC(NVGcontext *vg, GC gc)
 int
 TkpInit(Tcl_Interp *interp)
 {
-    if (TkWaylandInitialize() != TCL_OK) return TCL_ERROR;
+    if (TkWaylandInitialize(interp) != TCL_OK) return TCL_ERROR;
     Tk_WaylandSetupTkNotifier();
     Tktray_Init(interp);
     SysNotify_Init(interp);
@@ -1356,6 +1409,391 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
     if (!name || !*name) name = "tk";
     else { p = strrchr(name, '/'); if (p) name = p+1; }
     Tcl_DStringAppend(namePtr, name, TCL_INDEX_NONE);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland app_id support
+ *
+ *	The wl app_id is the portable, compositor-native way toplevel
+ *	icons (and taskbar/dock grouping) work on Wayland: the compositor
+ *	matches app_id against an installed .desktop file's Icon= key and
+ *	draws that icon itself. This sidesteps the xdg-toplevel-icon-v1
+ *	limitation documented in tkWaylandWm.c (stock GLFW doesn't expose
+ *	struct xdg_toplevel*, so that protocol can't be driven directly).
+ *
+ *	Rather than adding a separate Tcl command - or a new platform
+ *	hook that generic Tk code would need to call into - this pulls
+ *	from the existing "tk appname" state instead: TkWaylandSyncAppId,
+ *	below, reads winPtr->mainPtr->name (the same field Tk_SetAppName
+ *	maintains) directly and applies it as the app_id. It's called
+ *	from TkWaylandCreateWindow right before each toplevel other than
+ *	the root is created, so app_id always reflects whatever [tk
+ *	appname] currently reports at that moment - no changes to
+ *	generic/tkWindow.c or any other file needed.
+ *
+ *	The root window is the one exception: it's created very early, in
+ *	TkWaylandInitialize, before winPtr->mainPtr exists at all (there's
+ *	no Tk main window yet to read a name from). That path instead
+ *	falls back to deriving a default from argv0 - see
+ *	TkWaylandInitialize.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetAppId --
+ *
+ *	Records the desired Wayland app_id and arranges for it to be
+ *	applied to toplevels.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the GLFW_WAYLAND_APP_ID window hint, which GLFW applies to
+ *	windows it creates from this point on (see also the explicit
+ *	re-application in TkWaylandCreateWindow, for clarity/robustness
+ *	against other code resetting hints in between). Stock GLFW has no
+ *	call to change the app_id of an already-created toplevel, so
+ *	windows mapped before this is called keep whatever app_id they
+ *	were created with.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandSetAppId(const char *appId)
+{
+    if (appId == NULL || *appId == '\0') {
+        return;
+    }
+    if (waylandAppId && strcmp(waylandAppId, appId) == 0) {
+        return;
+    }
+    if (waylandAppId) {
+        ckfree(waylandAppId);
+    }
+    waylandAppId = (char *)ckalloc(strlen(appId) + 1);
+    strcpy(waylandAppId, appId);
+
+    glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+
+    if (mainGlfwWindow != NULL) {
+        DEBUG_LOG("TkWaylandSetAppId: root window already exists; "
+                "app_id '%s' will apply to new toplevels only",
+                waylandAppId);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetAppId --
+ *
+ *	Returns the current Wayland app_id, or NULL if none has been set.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE const char *
+TkWaylandGetAppId(void)
+{
+    return waylandAppId;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSyncAppId --
+ *
+ *	Pulls the current Tk application name from the interpreter using
+ *	the same logic as TkpGetAppName and applies it as the Wayland
+ *	app_id via TkWaylandSetAppId.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	See TkWaylandSetAppId.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandSyncAppId(Tcl_Interp *interp)
+{
+    Tcl_DString appNameStr;
+    const char *appName;
+    
+    if (interp == NULL) {
+        return;
+    }
+    
+    Tcl_DStringInit(&appNameStr);
+    
+    /* Use TkpGetAppName to get the application name */
+    TkpGetAppName(interp, &appNameStr);
+    appName = Tcl_DStringValue(&appNameStr);
+    
+    if (appName != NULL && *appName != '\0') {
+        TkWaylandSetAppId(appName);
+    }
+    
+    Tcl_DStringFree(&appNameStr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Desktop-file icon lookup
+ *
+ *	Given an app_id, locates the matching .desktop file and resolves
+ *	its Icon= key to an actual image file. This is a simplified
+ *	implementation of the Icon Theme Specification lookup - it checks
+ *	the "hicolor" fallback theme plus a flat pixmaps directory, which
+ *	covers the overwhelming majority of installed .desktop files,
+ *	rather than implementing full theme inheritance / index.theme
+ *	parsing.
+ *
+ *	This is separate from letting the compositor draw the icon via
+ *	app_id (the normal path): it's for cases where the WM needs the
+ *	icon's actual pixel data itself, e.g. to paint it into
+ *	client-side decorations it draws with NanoVG.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define WAYLAND_ICON_PATH_MAX 1024
+
+static int
+FileExists(const char *path)
+{
+    struct stat st;
+    return (path && *path && stat(path, &st) == 0 && S_ISREG(st.st_mode));
+}
+
+static int
+FindDesktopFile(
+    const char *appId,
+    char       *pathOut,
+    size_t      outSize)
+{
+    const char *dataHome = getenv("XDG_DATA_HOME");
+    const char *dataDirs = getenv("XDG_DATA_DIRS");
+    const char *home     = getenv("HOME");
+    char        candidate[WAYLAND_ICON_PATH_MAX];
+    char        dirsCopy[WAYLAND_ICON_PATH_MAX];
+    char       *dir, *save = NULL;
+
+    candidate[0] = '\0';
+    if (dataHome && *dataHome) {
+        snprintf(candidate, sizeof(candidate),
+                "%s/applications/%s.desktop", dataHome, appId);
+    } else if (home && *home) {
+        snprintf(candidate, sizeof(candidate),
+                "%s/.local/share/applications/%s.desktop", home, appId);
+    }
+    if (candidate[0] && FileExists(candidate)) {
+        strncpy(pathOut, candidate, outSize - 1);
+        pathOut[outSize - 1] = '\0';
+        return 1;
+    }
+
+    if (!dataDirs || !*dataDirs) {
+        dataDirs = "/usr/local/share:/usr/share";
+    }
+    strncpy(dirsCopy, dataDirs, sizeof(dirsCopy) - 1);
+    dirsCopy[sizeof(dirsCopy) - 1] = '\0';
+
+    for (dir = strtok_r(dirsCopy, ":", &save); dir != NULL;
+            dir = strtok_r(NULL, ":", &save)) {
+        snprintf(candidate, sizeof(candidate),
+                "%s/applications/%s.desktop", dir, appId);
+        if (FileExists(candidate)) {
+            strncpy(pathOut, candidate, outSize - 1);
+            pathOut[outSize - 1] = '\0';
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int
+ReadDesktopIconKey(
+    const char *desktopPath,
+    char       *iconOut,
+    size_t      outSize)
+{
+    FILE *f = fopen(desktopPath, "r");
+    char  line[512];
+    int   inEntry = 0;
+    int   found = 0;
+
+    if (!f) {
+        return 0;
+    }
+
+    while (fgets(line, sizeof(line), f)) {
+        size_t len = strlen(line);
+        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
+            line[--len] = '\0';
+        }
+        if (line[0] == '[') {
+            inEntry = (strcmp(line, "[Desktop Entry]") == 0);
+            continue;
+        }
+        if (!inEntry) {
+            continue;
+        }
+        if (strncmp(line, "Icon=", 5) == 0) {
+            strncpy(iconOut, line + 5, outSize - 1);
+            iconOut[outSize - 1] = '\0';
+            found = 1;
+            break;
+        }
+    }
+
+    fclose(f);
+    return found;
+}
+
+static int
+ResolveThemedIcon(
+    const char *iconName,
+    char       *pathOut,
+    size_t      outSize)
+{
+    static const int sizes[] = {256, 128, 96, 64, 48, 32};
+    const char       *dataHome = getenv("XDG_DATA_HOME");
+    const char       *dataDirs = getenv("XDG_DATA_DIRS");
+    const char       *home     = getenv("HOME");
+    char              iconRoots[4][WAYLAND_ICON_PATH_MAX];
+    int               numRoots = 0;
+    char              candidate[WAYLAND_ICON_PATH_MAX];
+    int               i, s;
+
+    if (dataHome && *dataHome) {
+        snprintf(iconRoots[numRoots++], WAYLAND_ICON_PATH_MAX,
+                "%s/icons", dataHome);
+    } else if (home && *home) {
+        snprintf(iconRoots[numRoots++], WAYLAND_ICON_PATH_MAX,
+                "%s/.local/share/icons", home);
+    }
+
+    if (!dataDirs || !*dataDirs) {
+        dataDirs = "/usr/local/share:/usr/share";
+    }
+    {
+        char  dirsCopy[WAYLAND_ICON_PATH_MAX];
+        char *dir, *save = NULL;
+
+        strncpy(dirsCopy, dataDirs, sizeof(dirsCopy) - 1);
+        dirsCopy[sizeof(dirsCopy) - 1] = '\0';
+        for (dir = strtok_r(dirsCopy, ":", &save);
+                dir != NULL && numRoots < 4;
+                dir = strtok_r(NULL, ":", &save)) {
+            snprintf(iconRoots[numRoots++], WAYLAND_ICON_PATH_MAX,
+                    "%s/icons", dir);
+        }
+    }
+
+    for (i = 0; i < numRoots; i++) {
+        for (s = 0; s < (int)(sizeof(sizes) / sizeof(sizes[0])); s++) {
+            snprintf(candidate, sizeof(candidate),
+                    "%s/hicolor/%dx%d/apps/%s.png",
+                    iconRoots[i], sizes[s], sizes[s], iconName);
+            if (FileExists(candidate)) {
+                strncpy(pathOut, candidate, outSize - 1);
+                pathOut[outSize - 1] = '\0';
+                return 1;
+            }
+        }
+        snprintf(candidate, sizeof(candidate),
+                "%s/hicolor/scalable/apps/%s.svg", iconRoots[i], iconName);
+        if (FileExists(candidate)) {
+            strncpy(pathOut, candidate, outSize - 1);
+            pathOut[outSize - 1] = '\0';
+            return 1;
+        }
+    }
+
+    /* Flat pixmaps fallback (older/simple packages). */
+    snprintf(candidate, sizeof(candidate), "/usr/share/pixmaps/%s.png", iconName);
+    if (FileExists(candidate)) {
+        strncpy(pathOut, candidate, outSize - 1);
+        pathOut[outSize - 1] = '\0';
+        return 1;
+    }
+    snprintf(candidate, sizeof(candidate), "/usr/share/pixmaps/%s.xpm", iconName);
+    if (FileExists(candidate)) {
+        strncpy(pathOut, candidate, outSize - 1);
+        pathOut[outSize - 1] = '\0';
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandFindDesktopIcon --
+ *
+ *	Locates the icon file associated with a desktop application ID.
+ *
+ * Results:
+ *	Returns 1 and fills iconPathOut with a NUL-terminated absolute
+ *	path on success, 0 if no icon could be located.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandFindDesktopIcon(
+    const char *appId,
+    char       *iconPathOut,
+    size_t      outSize)
+{
+    char desktopPath[WAYLAND_ICON_PATH_MAX];
+    char iconName[256];
+
+    if (appId == NULL || *appId == '\0' || iconPathOut == NULL || outSize == 0) {
+        return 0;
+    }
+
+    if (!FindDesktopFile(appId, desktopPath, sizeof(desktopPath))) {
+        DEBUG_LOG("TkWaylandFindDesktopIcon: no .desktop file for app_id '%s'", appId);
+        return 0;
+    }
+
+    if (!ReadDesktopIconKey(desktopPath, iconName, sizeof(iconName))) {
+        DEBUG_LOG("TkWaylandFindDesktopIcon: no Icon= key in %s", desktopPath);
+        return 0;
+    }
+
+    if (iconName[0] == '/') {
+        if (FileExists(iconName)) {
+            strncpy(iconPathOut, iconName, outSize - 1);
+            iconPathOut[outSize - 1] = '\0';
+            return 1;
+        }
+        return 0;
+    }
+
+    if (!ResolveThemedIcon(iconName, iconPathOut, outSize)) {
+        DEBUG_LOG("TkWaylandFindDesktopIcon: could not resolve icon '%s' for app_id '%s'",
+                iconName, appId);
+        return 0;
+    }
+    return 1;
 }
 
 /*

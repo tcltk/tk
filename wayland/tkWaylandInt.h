@@ -517,8 +517,26 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int  TkWaylandInitialize(void);
+MODULE_SCOPE int  TkWaylandInitialize(Tcl_Interp *interp);
 MODULE_SCOPE void TkWaylandShutdown(ClientData clientData);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland app_id / desktop-file icon support
+ *
+ *	app_id tracks [tk appname] by pulling from Tk's own state
+ *	(winPtr->mainPtr->name) at toplevel-creation time - see
+ *	TkWaylandSyncAppId (static, tkWaylandInit.c only). No generic Tk
+ *	code needs to change for this to work.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void        TkWaylandSetAppId(const char *appId);
+MODULE_SCOPE const char *TkWaylandGetAppId(void);
+MODULE_SCOPE int         TkWaylandFindDesktopIcon(const char *appId,
+			      char *iconPathOut, size_t outSize);
 
 /*
  *----------------------------------------------------------------------

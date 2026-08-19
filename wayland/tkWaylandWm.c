@@ -213,7 +213,7 @@ static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
@@ -280,7 +280,6 @@ static void             WmWaitMapProc(void *clientData, XEvent *eventPtr);
 /* GLFW integration helpers. */
 static void InitializeGlfwWindow(TkWindow *winPtr);
 static void DestroyGlfwWindow(TkWindow *winPtr);
-static void ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo);
 static void ApplyFullscreenState(TkWindow *winPtr);
 
 /*
@@ -390,11 +389,6 @@ InitializeGlfwWindow(TkWindow *winPtr)
     if (wmPtr->attributes.alpha != 1.0) {
         glfwSetWindowOpacity(glfwWindow,
                              (float)wmPtr->attributes.alpha);
-    }
-
-    if (wmPtr->glfwIcon != NULL) {
-        glfwSetWindowIcon(glfwWindow,
-                          wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
 
     /*
@@ -625,7 +619,6 @@ TkWmDeadWindow(
 {
     WmInfo *wmPtr;
     WmInfo *wmPtr2;
-    int     i;
 
     if (winPtr == NULL) {
         return;
@@ -733,18 +726,6 @@ TkWmDeadWindow(
         wmPtr->iconDataPtr = NULL;
     }
 
-    /* Free GLFW icon resources. */
-    if (wmPtr->glfwIcon != NULL) {
-        for (i = 0; i < wmPtr->glfwIconCount; i++) {
-            if (wmPtr->glfwIcon[i].pixels != NULL) {
-                ckfree((char *)wmPtr->glfwIcon[i].pixels);
-            }
-        }
-        ckfree((char *)wmPtr->glfwIcon);
-        wmPtr->glfwIcon = NULL;
-        wmPtr->glfwIconCount = 0;
-    }
-
     /* Free protocol handlers. */
     while (wmPtr->protPtr != NULL) {
         ProtocolHandler *protPtr = wmPtr->protPtr;
@@ -826,7 +807,6 @@ TkWmCleanup(
     TCL_UNUSED(TkDisplay *))
 {
     WmInfo *wmPtr, *nextPtr;
-    int     i;
 
     for (wmPtr = firstWmPtr; wmPtr != NULL; wmPtr = nextPtr) {
         nextPtr = wmPtr->nextPtr;
@@ -850,14 +830,6 @@ TkWmCleanup(
                 Tcl_DecrRefCount(wmPtr->cmdArgv[j]);
             }
             ckfree((char *)wmPtr->cmdArgv);
-        }
-        if (wmPtr->glfwIcon != NULL) {
-            for (i = 0; i < wmPtr->glfwIconCount; i++) {
-                if (wmPtr->glfwIcon[i].pixels != NULL) {
-                    ckfree((char *)wmPtr->glfwIcon[i].pixels);
-                }
-            }
-            ckfree((char *)wmPtr->glfwIcon);
         }
         ckfree((char *)wmPtr);
     }
@@ -1942,7 +1914,7 @@ WmAttributesCmd(
  *	Implements the "wm client" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *  No-op on Wayland.
  *
  * Side effects:
  *	Stores the client machine name.
@@ -1950,31 +1922,19 @@ WmAttributesCmd(
  *----------------------------------------------------------------------
  */
 
+
 static int
 WmClientCmd(
-	    TCL_UNUSED(Tk_Window),
-	    TkWindow   *winPtr,
-	    Tcl_Interp *interp,
-	    int         objc,
-	    Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    const char *name;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName client ?name?"); return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if (wmPtr->clientMachine)
-            Tcl_SetObjResult(interp,Tcl_NewStringObj(wmPtr->clientMachine,-1));
-        return TCL_OK;
-    }
-    name = Tcl_GetString(objv[0]);
-    if (wmPtr->clientMachine) ckfree(wmPtr->clientMachine);
-    wmPtr->clientMachine = ckalloc(strlen(name)+1);
-    strcpy(wmPtr->clientMachine, name);
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1984,7 +1944,7 @@ WmClientCmd(
  *	Implements the "wm colormapwindows" subcommand (no-op on Wayland).
  *
  * Results:
- *	Standard Tcl result (empty list).
+ *	 No-op on Wayland. 
  *
  * Side effects:
  *	None.
@@ -1994,15 +1954,16 @@ WmClientCmd(
 
 static int
 WmColormapwindowsCmd(
-		     TCL_UNUSED(Tk_Window),
-		     TCL_UNUSED(TkWindow *),
-		     Tcl_Interp *interp,
-		     TCL_UNUSED(int),
-		     TCL_UNUSED(Tcl_Obj *const *))
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
     Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2012,7 +1973,7 @@ WmColormapwindowsCmd(
  *	Implements the "wm command" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	No-op on Wayland. 
  *
  * Side effects:
  *	Stores the command to restart the application.
@@ -2022,53 +1983,16 @@ WmColormapwindowsCmd(
 
 static int
 WmCommandCmd(
-	     TCL_UNUSED(Tk_Window),
-	     TkWindow   *winPtr,
-	     Tcl_Interp *interp,
-	     int         objc,
-	     Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo   *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    Tcl_Obj **elems;
-    Tcl_Size  count, j;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName command ?value?"); return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if (wmPtr->cmdArgc > 0) {
-            Tcl_Obj *list = Tcl_NewObj();
-            for (j = 0; j < wmPtr->cmdArgc; j++) {
-                Tcl_ListObjAppendElement(NULL,list,wmPtr->cmdArgv[j]);
-            }
-            Tcl_SetObjResult(interp, list);
-        }
-        return TCL_OK;
-    }
-
-    /* Release old command. */
-    if (wmPtr->cmdArgv != NULL) {
-        for (j = 0; j < wmPtr->cmdArgc; j++) {
-            Tcl_DecrRefCount(wmPtr->cmdArgv[j]);
-        }
-        ckfree((char *)wmPtr->cmdArgv);
-        wmPtr->cmdArgv = NULL;
-        wmPtr->cmdArgc = 0;
-    }
-
-    /* Parse new command list. */
-    if (Tcl_ListObjGetElements(interp, objv[0], &count, &elems) != TCL_OK) {
-        return TCL_ERROR;
-    }
-
-    wmPtr->cmdArgc  = count;
-    wmPtr->cmdArgv  = (Tcl_Obj **)ckalloc(count * sizeof(Tcl_Obj *));
-    for (j = 0; j < count; j++) {
-        wmPtr->cmdArgv[j] = elems[j];
-        Tcl_IncrRefCount(elems[j]);
-    }
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2116,7 +2040,7 @@ WmDeiconifyCmd(
  *	Implements the "wm focusmodel" subcommand.
  *
  * Results:
- *	Standard Tcl result (always "passive" on Wayland).
+ *	 No-op on Wayland. 
  *
  * Side effects:
  *	None.
@@ -2126,17 +2050,16 @@ WmDeiconifyCmd(
 
 static int
 WmFocusmodelCmd(
-		TCL_UNUSED(Tk_Window),
-		TCL_UNUSED(TkWindow *),
-		Tcl_Interp *interp,
-		int         objc,
-		TCL_UNUSED(Tcl_Obj *const *))
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (objc == 0) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("passive",-1));
-    }
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2156,17 +2079,16 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-	    TCL_UNUSED(Tk_Window),
-	    TCL_UNUSED(TkWindow *),
-	    Tcl_Interp *interp,
-	    int         objc,
-	    Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (objc != 0) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName forget"); return TCL_ERROR;
-    }
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2176,7 +2098,7 @@ WmForgetCmd(
  *	Implements the "wm frame" subcommand (returns dummy window ID).
  *
  * Results:
- *	Standard Tcl result (returns "0x0").
+ *  No-op on Wayland. 
  *
  * Side effects:
  *	None.
@@ -2186,18 +2108,16 @@ WmForgetCmd(
 
 static int
 WmFrameCmd(
-	   TCL_UNUSED(Tk_Window),
-	   TCL_UNUSED(TkWindow *),
-	   Tcl_Interp *interp,
-	   int         objc,
-	   Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    if (objc != 0) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName frame"); return TCL_ERROR;
-    }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj("0x0",-1));
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2274,7 +2194,7 @@ WmGeometryCmd(
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 
-        /* Cancel any pending idle callback */
+        /* Cancel any pending idle callback. */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
             Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -2383,7 +2303,7 @@ WmGridCmd(
  *	Implements the "wm group" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	 No-op on Wayland. 
  *
  * Side effects:
  *	Stores the group leader window name.
@@ -2393,36 +2313,23 @@ WmGridCmd(
 
 static int
 WmGroupCmd(
-	   TCL_UNUSED(Tk_Window),
-	   TkWindow   *winPtr,
-	   Tcl_Interp *interp,
-	   int         objc,
-	   Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    const char *path;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName group ?pathName?"); return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if (wmPtr->leaderName)
-            Tcl_SetObjResult(interp,Tcl_NewStringObj(wmPtr->leaderName,-1));
-        return TCL_OK;
-    }
-    path = Tcl_GetString(objv[0]);
-    if (wmPtr->leaderName) ckfree(wmPtr->leaderName);
-    wmPtr->leaderName = ckalloc(strlen(path)+1);
-    strcpy(wmPtr->leaderName, path);
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
  *
  * WmIconbadgeCmd --
  *
- *	Implements the "wm iconbadge" subcommand (no-op on Wayland).
+ *	Implements the "wm iconbadge" subcommand.
  *
  * Results:
  *	Standard Tcl result.
@@ -2435,16 +2342,28 @@ WmGroupCmd(
 
 static int
 WmIconbadgeCmd(
-	       TCL_UNUSED(Tk_Window),
-	       TCL_UNUSED(TkWindow *),
-	       Tcl_Interp *interp,
-	       int   objc,
-	       Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),
+    TkWindow *winPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
 {
-    if (objc < 4) {
-        Tcl_WrongNumArgs(interp,2,objv,"window badge"); return TCL_ERROR;
+    char cmd[4096];
+
+    if (objc != 1) {
+        Tcl_WrongNumArgs(interp, 0, objv, "badge");
+        return TCL_ERROR;
     }
-    return TCL_OK; /* No-op on Wayland. */
+
+    snprintf(cmd, sizeof(cmd), "::tk::icons::IconBadge {%s} {%s}",
+        Tk_PathName((Tk_Window)winPtr),
+        Tcl_GetString(objv[0]));
+
+    if (Tcl_EvalEx(interp, cmd, TCL_INDEX_NONE, TCL_EVAL_DIRECT) != TCL_OK) {
+        return TCL_ERROR;
+    }
+
+    return TCL_OK;
 }
 
 /*
@@ -2465,14 +2384,16 @@ WmIconbadgeCmd(
 
 static int
 WmIconbitmapCmd(
-		TCL_UNUSED(Tk_Window),
-		TCL_UNUSED(TkWindow *),
-		TCL_UNUSED(Tcl_Interp *),
-		TCL_UNUSED(int),
-		TCL_UNUSED(Tcl_Obj *const *))
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2534,55 +2455,44 @@ WmIconifyCmd(
 
 static int
 WmIconmaskCmd(
-	      TCL_UNUSED(Tk_Window),
-	      TCL_UNUSED(TkWindow *),
-	      TCL_UNUSED(Tcl_Interp *),
-	      TCL_UNUSED(int),
-	      TCL_UNUSED(Tcl_Obj *const *))
-{ return TCL_OK; }
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
+{
+    Tcl_SetObjResult(interp, Tcl_NewObj());
+    return TCL_OK;
+}
 
 /*
  *----------------------------------------------------------------------
  *
  * WmIconnameCmd --
  *
- *	Implements the "wm iconname" subcommand.
+ *	Implements the "wm iconname" subcommand (no-op on Wayland).
  *
  * Results:
- *	Standard Tcl result.
+ *	Standard Tcl result (always TCL_OK).
  *
  * Side effects:
- *	Stores the icon name (not currently used on Wayland).
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 WmIconnameCmd(
-	      TCL_UNUSED(Tk_Window),
-	      TkWindow   *winPtr,
-	      Tcl_Interp *interp,
-	      int         objc,
-	      Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    const char *name;
-    Tcl_Size    len;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName iconname ?newName?"); return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if (wmPtr->iconName)
-            Tcl_SetObjResult(interp,Tcl_NewStringObj(wmPtr->iconName,-1));
-        return TCL_OK;
-    }
-    name = Tcl_GetStringFromObj(objv[0],&len);
-    if (wmPtr->iconName) ckfree(wmPtr->iconName);
-    wmPtr->iconName = ckalloc(len+1);
-    strcpy(wmPtr->iconName, name);
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2600,55 +2510,103 @@ WmIconnameCmd(
  *----------------------------------------------------------------------
  */
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland toplevel-icon definitions. 
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconphotoCmd --
+ *
+ *	Implements the "wm iconphoto" subcommand.
+ *
+ *	xdg-toplevel-icon-v1 (the natural Wayland analog of this command)
+ *	needs the window's struct xdg_toplevel*, which stock GLFW's Wayland
+ *	backend keeps private (window->wl.xdg.toplevel in wl_window.c) with
+ *	no public accessor - there is no way to drive that protocol from
+ *	here, and no patched-GLFW route is available, so it is not used at
+ *	all.
+ *
+ *	Rather than silently doing nothing, this validates its arguments
+ *	and records the requested icon name (in wmPtr->iconDataPtr, a
+ *	generic void* scratch field - NOT wmPtr->icon, which is the
+ *	Tk_Window used by "wm iconwindow") for the query form, but does
+ *	not attempt to set a compositor-visible icon.
+ *
+ *	Toplevel icons on Wayland are instead set via the wl app_id, which
+ *	the compositor resolves against a matching .desktop file's Icon=
+ *	key - see TkWaylandSetAppId() / TkpSetAppName() in tkWaylandInit.c.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Validates image arguments; records the icon name.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 WmIconphotoCmd(
-	       TCL_UNUSED(Tk_Window),
-	       TkWindow   *winPtr,
-	       Tcl_Interp *interp,
-	       int         objc,
-	       Tcl_Obj *const objv[])
+               TCL_UNUSED(Tk_Window),
+               TkWindow   *winPtr,
+               Tcl_Interp *interp,
+               int         objc,
+               Tcl_Obj *const objv[])
 {
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    int i;
 
-/* This function appears to be no-op on Wayland, needs further testing. */
-    WmInfo          *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    Tk_PhotoHandle   photo;
-    int              i;
-
-    if (objc < 1) {
-        Tcl_WrongNumArgs(interp,0,objv,
-			 "pathName iconphoto ?-default? image ?image ...?");
+    if (objc < 0) {
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName iconphoto ?-default? image ?image ...?");
         return TCL_ERROR;
     }
-    if (strcmp(Tcl_GetString(objv[0]),"-default") == 0) { objv++; objc--; }
-    if (objc < 1) {
-        Tcl_WrongNumArgs(interp,0,objv,
-			 "pathName iconphoto ?-default? image ?image ...?");
-        return TCL_ERROR;
+    /* Parse optional -default. */
+    if (objc > 0 && strcmp(Tcl_GetString(objv[0]), "-default") == 0) {
+        objv++; objc--;
     }
 
-    /* Clear old icons. */
-    if (wmPtr->glfwIcon != NULL) {
-        for (i = 0; i < wmPtr->glfwIconCount; i++) {
-            if (wmPtr->glfwIcon[i].pixels)
-                ckfree((char *)wmPtr->glfwIcon[i].pixels);
+    /* Query form: objc==0 -> return the current icon name, if any. */
+    if (objc == 0) {
+        if (wmPtr->iconDataPtr != NULL) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj((char *)wmPtr->iconDataPtr, -1));
+        } else {
+            Tcl_SetObjResult(interp, Tcl_NewObj());
         }
-        ckfree((char *)wmPtr->glfwIcon);
-        wmPtr->glfwIcon = NULL; wmPtr->glfwIconCount = 0;
+        return TCL_OK;
     }
 
+    /* Validate every image argument; keeps error behavior compatible. */
     for (i = 0; i < objc; i++) {
-        photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
-        if (photo == NULL) {
+        const char *name = Tcl_GetString(objv[i]);
+        if (Tk_FindPhoto(interp, name) == NULL) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-						   "can't use \"%s\" as iconphoto: not a photo image",
-						   Tcl_GetString(objv[i])));
-            Tcl_SetErrorCode(interp,"TK","WM","ICONPHOTO","PHOTO",NULL);
+                    "can't use \"%s\" as iconphoto: not a photo image", name));
+            Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
             return TCL_ERROR;
         }
-        ConvertPhotoToGlfwIcon(winPtr, photo);
     }
+
+    if (wmPtr->iconDataPtr) {
+        ckfree((char *)wmPtr->iconDataPtr);
+    }
+    {
+        const char *last = Tcl_GetString(objv[objc - 1]);
+        char *stored = (char *)ckalloc(strlen(last) + 1);
+        strcpy(stored, last);
+        wmPtr->iconDataPtr = stored;
+    }
+
     return TCL_OK;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -2668,12 +2626,16 @@ WmIconphotoCmd(
 
 static int
 WmIconpositionCmd(
-		  TCL_UNUSED(Tk_Window),
-		  TCL_UNUSED(TkWindow *),
-		  TCL_UNUSED(Tcl_Interp *),
-		  TCL_UNUSED(int),
-		  TCL_UNUSED(Tcl_Obj *const *))
-{ return TCL_OK; }
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
+{
+    Tcl_SetObjResult(interp, Tcl_NewObj());
+    return TCL_OK;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -2693,12 +2655,12 @@ WmIconpositionCmd(
 
 static int
 WmIconwindowCmd(
-		TCL_UNUSED(Tk_Window),
-		TCL_UNUSED(TkWindow *),
-		TCL_UNUSED(Tcl_Interp *),
-		TCL_UNUSED(int),
-		TCL_UNUSED(Tcl_Obj *const *))
-{ return TCL_OK; }
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
+{ Tcl_SetObjResult(interp, Tcl_NewObj()); return TCL_OK; }
 
 /*
  *----------------------------------------------------------------------
@@ -2718,17 +2680,20 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-	    TCL_UNUSED(Tk_Window),
-	    TCL_UNUSED(TkWindow *),
-	    Tcl_Interp *interp,
-	    int objc,
-	    Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            int objc,
+            Tcl_Obj *const objv[])
 {
     if (objc != 0) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName manage"); return TCL_ERROR;
     }
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -2876,7 +2841,7 @@ WmOverrideredirectCmd(
  *	Implements the "wm positionfrom" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	None - no-op on Wayland.
  *
  * Side effects:
  *	Updates position source hint.
@@ -2886,37 +2851,13 @@ WmOverrideredirectCmd(
 
 static int
 WmPositionfromCmd(
-		  TCL_UNUSED(Tk_Window),
-		  TkWindow   *winPtr,
-		  Tcl_Interp *interp,
-		  int         objc,
-		  Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    static const char *const src[] = { "program","user",NULL };
-    int idx;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName positionfrom ?user|program?");
-        return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if      (wmPtr->sizeHintsFlags & WM_USPosition)
-            Tcl_SetObjResult(interp,Tcl_NewStringObj("user",-1));
-        else if (wmPtr->sizeHintsFlags & WM_PPosition)
-            Tcl_SetObjResult(interp,Tcl_NewStringObj("program",-1));
-        return TCL_OK;
-    }
-    if (*Tcl_GetString(objv[0]) == '\0') {
-        wmPtr->sizeHintsFlags &= ~(WM_USPosition|WM_PPosition);
-    } else {
-        if (Tcl_GetIndexFromObjStruct(interp,objv[0],src,sizeof(char *),"argument",0,&idx)!=TCL_OK)
-            return TCL_ERROR;
-        if (idx==0) { wmPtr->sizeHintsFlags&=~WM_USPosition; wmPtr->sizeHintsFlags|=WM_PPosition; }
-        else        { wmPtr->sizeHintsFlags&=~WM_PPosition;  wmPtr->sizeHintsFlags|=WM_USPosition; }
-    }
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr,winPtr);
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
 
@@ -3076,7 +3017,7 @@ WmResizableCmd(
  *	Implements the "wm sizefrom" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	None - no-op on Wayland. 
  *
  * Side effects:
  *	Updates size source hint.
@@ -3086,35 +3027,13 @@ WmResizableCmd(
 
 static int
 WmSizefromCmd(
-	      TCL_UNUSED(Tk_Window),
-	      TkWindow   *winPtr,
-	      Tcl_Interp *interp,
-	      int         objc,
-	      Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    static const char *const src[] = { "program","user",NULL };
-    int idx;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName sizefrom ?user|program?");
-        return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if      (wmPtr->sizeHintsFlags&WM_USSize) Tcl_SetObjResult(interp,Tcl_NewStringObj("user",-1));
-        else if (wmPtr->sizeHintsFlags&WM_PSize)  Tcl_SetObjResult(interp,Tcl_NewStringObj("program",-1));
-        return TCL_OK;
-    }
-    if (*Tcl_GetString(objv[0]) == '\0') {
-        wmPtr->sizeHintsFlags &= ~(WM_USSize|WM_PSize);
-    } else {
-        if (Tcl_GetIndexFromObjStruct(interp,objv[0],src,sizeof(char *),"argument",0,&idx)!=TCL_OK)
-            return TCL_ERROR;
-        if (idx==0) { wmPtr->sizeHintsFlags&=~WM_USSize; wmPtr->sizeHintsFlags|=WM_PSize; }
-        else        { wmPtr->sizeHintsFlags&=~WM_PSize;  wmPtr->sizeHintsFlags|=WM_USSize; }
-    }
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr,winPtr);
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
 
@@ -3126,7 +3045,7 @@ WmSizefromCmd(
  *	Implements the "wm stackorder" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	None - no-op on Wayland. 
  *
  * Side effects:
  *	None (returns placeholder result for isabove/isbelow).
@@ -3136,34 +3055,16 @@ WmSizefromCmd(
 
 static int
 WmStackorderCmd(
-		TCL_UNUSED(Tk_Window),
-		TkWindow   *winPtr,
-		Tcl_Interp *interp,
-		int         objc,
-		Tcl_Obj *const objv[])
+            TCL_UNUSED(Tk_Window),
+            TCL_UNUSED(TkWindow *),
+            Tcl_Interp *interp,
+            TCL_UNUSED(int),
+            TCL_UNUSED(Tcl_Obj *const *))
 {
-    TkWindow **windows, **wp;
-
-    if (objc != 0 && objc != 2) {
-        Tcl_WrongNumArgs(interp,0,objv,
-			 "pathName stackorder ?isabove|isbelow window?");
-        return TCL_ERROR;
-    }
-    if (objc == 0) {
-        windows = TkWmStackorderToplevel(winPtr);
-        if (windows != NULL) {
-            Tcl_Obj *result = Tcl_NewObj();
-            for (wp=windows; *wp; wp++)
-                Tcl_ListObjAppendElement(NULL,result,
-					 Tcl_NewStringObj((*wp)->pathName,-1));
-            ckfree((char *)windows);
-            Tcl_SetObjResult(interp,result);
-        }
-        return TCL_OK;
-    }
-    Tcl_SetObjResult(interp,Tcl_NewBooleanObj(0));
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -3348,7 +3249,7 @@ WmTitleCmd(
  *	Implements the "wm transient" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	None - no-ope on Wayland. 
  *
  * Side effects:
  *	Sets or clears transient-for relationship.
@@ -3358,45 +3259,12 @@ WmTitleCmd(
 
 static int
 WmTransientCmd(
-	       Tk_Window   tkwin,
-	       TkWindow   *winPtr,
-	       Tcl_Interp *interp,
-	       int         objc,
-	       Tcl_Obj *const objv[])
+	       TCL_UNUSED(Tk_Window),   
+	       TCL_UNUSED(TkWindow *),
+	       TCL_UNUSED(Tcl_Interp *),
+	       TCL_UNUSED(int),
+           TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo    *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    Tk_Window  container;
-    WmInfo    *wmPtr2;
-
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName transient ?window?"); return TCL_ERROR;
-    }
-    if (objc == 0) {
-        if (wmPtr->containerPtr)
-            Tcl_SetObjResult(interp,Tcl_NewStringObj(
-						     Tk_PathName(wmPtr->containerPtr),-1));
-        return TCL_OK;
-    }
-    if (Tcl_GetString(objv[0])[0] == '\0') {
-        if (wmPtr->containerPtr) {
-            wmPtr2 = (WmInfo *)wmPtr->containerPtr->wmInfoPtr;
-            if (wmPtr2) wmPtr2->numTransients--;
-            Tk_DeleteEventHandler((Tk_Window)wmPtr->containerPtr,
-				  StructureNotifyMask, WmWaitMapProc, (void *)winPtr);
-        }
-        wmPtr->containerPtr = NULL;
-    } else {
-        container = Tk_NameToWindow(interp,Tcl_GetString(objv[0]),tkwin);
-        if (container == NULL) return TCL_ERROR;
-        while (!Tk_IsTopLevel(container)) container = Tk_Parent(container);
-        wmPtr2 = (WmInfo *)((TkWindow *)container)->wmInfoPtr;
-        if (wmPtr->containerPtr) {
-            WmInfo *old = (WmInfo *)wmPtr->containerPtr->wmInfoPtr;
-            if (old) old->numTransients--;
-        }
-        wmPtr->containerPtr = (TkWindow *)container;
-        if (wmPtr2) wmPtr2->numTransients++;
-    }
     return TCL_OK;
 }
 
@@ -3435,88 +3303,6 @@ WmWithdrawCmd(
 
     TkWmUnmapWindow(winPtr);
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GLFW helper implementations
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * ConvertPhotoToGlfwIcon --
- *
- *	Convert a Tk photo image to a GLFW icon and add it to the icon list.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Allocates a new GLFWimage and adds it to wmPtr->glfwIcon array.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-ConvertPhotoToGlfwIcon(
-    TkWindow        *winPtr,
-    Tk_PhotoHandle   photo)
-{
-    WmInfo              *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    Tk_PhotoImageBlock   block;
-    int                  width, height, pixelCount, i;
-    GLFWimage           *newIcons;
-    GLFWimage           *icon;
-    unsigned char       *pixels, *src, *dst;
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-
-    Tk_PhotoGetSize(photo, &width, &height);
-    Tk_PhotoGetImage(photo, &block);
-
-    /* Grow icon array. */
-    newIcons = (GLFWimage *)ckalloc(
-		    (wmPtr->glfwIconCount+1) * sizeof(GLFWimage));
-    if (wmPtr->glfwIcon != NULL && wmPtr->glfwIconCount > 0) {
-        memcpy(newIcons, wmPtr->glfwIcon,
-               wmPtr->glfwIconCount * sizeof(GLFWimage));
-        ckfree((char *)wmPtr->glfwIcon);
-    }
-    wmPtr->glfwIcon = newIcons;
-
-    icon         = &wmPtr->glfwIcon[wmPtr->glfwIconCount];
-    icon->width  = width;
-    icon->height = height;
-
-    pixelCount = width * height;
-    pixels = (unsigned char *)ckalloc(pixelCount * 4);
-
-    src = (unsigned char *)block.pixelPtr;
-    dst = pixels;
-
-    if (block.pixelSize == 4) {
-        memcpy(pixels, src, pixelCount * 4);
-    } else if (block.pixelSize == 3) {
-        for (i = 0; i < pixelCount; i++) {
-            dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=255;
-            src+=3; dst+=4;
-        }
-    } else { /* greyscale */
-        for (i = 0; i < pixelCount; i++) {
-            dst[0]=dst[1]=dst[2]=src[0]; dst[3]=255;
-            src+=1; dst+=4;
-        }
-    }
-
-    icon->pixels = pixels;
-    wmPtr->glfwIconCount++;
-
-    if (glfwWindow) {
-        glfwSetWindowIcon(glfwWindow, wmPtr->glfwIconCount, wmPtr->glfwIcon);
-    }
 }
 
 /*
@@ -4176,7 +3962,12 @@ UpdateTitle(TkWindow *winPtr)
 static void
 UpdatePhotoIcon(TCL_UNUSED(TkWindow *))
 {
-    /* Real work done in WmIconphotoCmd → ConvertPhotoToGlfwIcon. */
+    /*
+     * wm iconphoto only records the icon name (see WmIconphotoCmd); it
+     * doesn't set a compositor-visible icon, so there's nothing to
+     * apply here. Toplevel icons are set via app_id - see
+     * TkWaylandSetAppId() in tkWaylandInit.c.
+     */
 }
 
 /*
@@ -5431,6 +5222,7 @@ TkpWindowIsDark(
     *isdark = false;
     return TCL_OK;
 }
+
 
 /*
  * Local Variables:

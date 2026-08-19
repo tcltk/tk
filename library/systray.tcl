@@ -189,6 +189,7 @@ namespace eval ::tk::systray {
 	toplevel $w
 	wm title $w "Tray Menu"
 	wm resizable $w 0 0
+	wm overrideredirect $w 1
 	wm protocol $w WM_DELETE_WINDOW ::tk::systray::_dismiss_traymenu
 
 	set end [$menu index end]
