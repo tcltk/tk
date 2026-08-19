@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 
 /*
  *----------------------------------------------------------------------
@@ -1426,18 +1425,17 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
  *	Rather than adding a separate Tcl command - or a new platform
  *	hook that generic Tk code would need to call into - this pulls
  *	from the existing "tk appname" state instead: TkWaylandSyncAppId,
- *	below, reads winPtr->mainPtr->name (the same field Tk_SetAppName
- *	maintains) directly and applies it as the app_id. It's called
+ *	below, invokes the [tk appname] query form via Tcl_EvalEx and
+ *	reads its result, then applies that as the app_id. It's called
  *	from TkWaylandCreateWindow right before each toplevel other than
  *	the root is created, so app_id always reflects whatever [tk
  *	appname] currently reports at that moment - no changes to
  *	generic/tkWindow.c or any other file needed.
  *
  *	The root window is the one exception: it's created very early, in
- *	TkWaylandInitialize, before winPtr->mainPtr exists at all (there's
- *	no Tk main window yet to read a name from). That path instead
- *	falls back to deriving a default from argv0 - see
- *	TkWaylandInitialize.
+ *	TkWaylandInitialize, before there's a Tk main window to query at
+ *	all. That path instead falls back to deriving a default from
+ *	argv0 - see TkWaylandInitialize.
  *
  *----------------------------------------------------------------------
  */
@@ -1510,15 +1508,21 @@ TkWaylandGetAppId(void)
  *
  * TkWaylandSyncAppId --
  *
- *	Pulls the current Tk application name from the interpreter using
- *	the same logic as TkpGetAppName and applies it as the Wayland
- *	app_id via TkWaylandSetAppId.
+ *	Pulls the current Tk application name by invoking the existing
+ *	generic [tk appname] query form and reading its result, and
+ *	applies it as the Wayland app_id via TkWaylandSetAppId. Going
+ *	through the real command instead of poking at TkWindow/TkMainInfo
+ *	internals means this doesn't depend on struct layout that can
+ *	(and did) differ from what we assumed. A no-op if there's no main
+ *	window yet, or the query fails.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	See TkWaylandSetAppId.
+ *	See TkWaylandSetAppId. Saves/restores the interpreter's result
+ *	and error state, so this doesn't disturb whatever the caller had
+ *	pending.
  *
  *----------------------------------------------------------------------
  */
@@ -1526,274 +1530,21 @@ TkWaylandGetAppId(void)
 static void
 TkWaylandSyncAppId(Tcl_Interp *interp)
 {
-    Tcl_DString appNameStr;
-    const char *appName;
-    
-    if (interp == NULL) {
+    Tcl_InterpState state;
+    const char *name;
+
+    if (interp == NULL || Tk_MainWindow(interp) == NULL) {
         return;
     }
-    
-    Tcl_DStringInit(&appNameStr);
-    
-    /* Use TkpGetAppName to get the application name */
-    TkpGetAppName(interp, &appNameStr);
-    appName = Tcl_DStringValue(&appNameStr);
-    
-    if (appName != NULL && *appName != '\0') {
-        TkWaylandSetAppId(appName);
-    }
-    
-    Tcl_DStringFree(&appNameStr);
-}
 
-/*
- *----------------------------------------------------------------------
- *
- * Desktop-file icon lookup
- *
- *	Given an app_id, locates the matching .desktop file and resolves
- *	its Icon= key to an actual image file. This is a simplified
- *	implementation of the Icon Theme Specification lookup - it checks
- *	the "hicolor" fallback theme plus a flat pixmaps directory, which
- *	covers the overwhelming majority of installed .desktop files,
- *	rather than implementing full theme inheritance / index.theme
- *	parsing.
- *
- *	This is separate from letting the compositor draw the icon via
- *	app_id (the normal path): it's for cases where the WM needs the
- *	icon's actual pixel data itself, e.g. to paint it into
- *	client-side decorations it draws with NanoVG.
- *
- *----------------------------------------------------------------------
- */
-
-#define WAYLAND_ICON_PATH_MAX 1024
-
-static int
-FileExists(const char *path)
-{
-    struct stat st;
-    return (path && *path && stat(path, &st) == 0 && S_ISREG(st.st_mode));
-}
-
-static int
-FindDesktopFile(
-    const char *appId,
-    char       *pathOut,
-    size_t      outSize)
-{
-    const char *dataHome = getenv("XDG_DATA_HOME");
-    const char *dataDirs = getenv("XDG_DATA_DIRS");
-    const char *home     = getenv("HOME");
-    char        candidate[WAYLAND_ICON_PATH_MAX];
-    char        dirsCopy[WAYLAND_ICON_PATH_MAX];
-    char       *dir, *save = NULL;
-
-    candidate[0] = '\0';
-    if (dataHome && *dataHome) {
-        snprintf(candidate, sizeof(candidate),
-                "%s/applications/%s.desktop", dataHome, appId);
-    } else if (home && *home) {
-        snprintf(candidate, sizeof(candidate),
-                "%s/.local/share/applications/%s.desktop", home, appId);
-    }
-    if (candidate[0] && FileExists(candidate)) {
-        strncpy(pathOut, candidate, outSize - 1);
-        pathOut[outSize - 1] = '\0';
-        return 1;
-    }
-
-    if (!dataDirs || !*dataDirs) {
-        dataDirs = "/usr/local/share:/usr/share";
-    }
-    strncpy(dirsCopy, dataDirs, sizeof(dirsCopy) - 1);
-    dirsCopy[sizeof(dirsCopy) - 1] = '\0';
-
-    for (dir = strtok_r(dirsCopy, ":", &save); dir != NULL;
-            dir = strtok_r(NULL, ":", &save)) {
-        snprintf(candidate, sizeof(candidate),
-                "%s/applications/%s.desktop", dir, appId);
-        if (FileExists(candidate)) {
-            strncpy(pathOut, candidate, outSize - 1);
-            pathOut[outSize - 1] = '\0';
-            return 1;
+    state = Tcl_SaveInterpState(interp, TCL_OK);
+    if (Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+        name = Tcl_GetStringResult(interp);
+        if (name != NULL && *name != '\0') {
+            TkWaylandSetAppId(name);
         }
     }
-
-    return 0;
-}
-
-static int
-ReadDesktopIconKey(
-    const char *desktopPath,
-    char       *iconOut,
-    size_t      outSize)
-{
-    FILE *f = fopen(desktopPath, "r");
-    char  line[512];
-    int   inEntry = 0;
-    int   found = 0;
-
-    if (!f) {
-        return 0;
-    }
-
-    while (fgets(line, sizeof(line), f)) {
-        size_t len = strlen(line);
-        while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
-            line[--len] = '\0';
-        }
-        if (line[0] == '[') {
-            inEntry = (strcmp(line, "[Desktop Entry]") == 0);
-            continue;
-        }
-        if (!inEntry) {
-            continue;
-        }
-        if (strncmp(line, "Icon=", 5) == 0) {
-            strncpy(iconOut, line + 5, outSize - 1);
-            iconOut[outSize - 1] = '\0';
-            found = 1;
-            break;
-        }
-    }
-
-    fclose(f);
-    return found;
-}
-
-static int
-ResolveThemedIcon(
-    const char *iconName,
-    char       *pathOut,
-    size_t      outSize)
-{
-    static const int sizes[] = {256, 128, 96, 64, 48, 32};
-    const char       *dataHome = getenv("XDG_DATA_HOME");
-    const char       *dataDirs = getenv("XDG_DATA_DIRS");
-    const char       *home     = getenv("HOME");
-    char              iconRoots[4][WAYLAND_ICON_PATH_MAX];
-    int               numRoots = 0;
-    char              candidate[WAYLAND_ICON_PATH_MAX];
-    int               i, s;
-
-    if (dataHome && *dataHome) {
-        snprintf(iconRoots[numRoots++], WAYLAND_ICON_PATH_MAX,
-                "%s/icons", dataHome);
-    } else if (home && *home) {
-        snprintf(iconRoots[numRoots++], WAYLAND_ICON_PATH_MAX,
-                "%s/.local/share/icons", home);
-    }
-
-    if (!dataDirs || !*dataDirs) {
-        dataDirs = "/usr/local/share:/usr/share";
-    }
-    {
-        char  dirsCopy[WAYLAND_ICON_PATH_MAX];
-        char *dir, *save = NULL;
-
-        strncpy(dirsCopy, dataDirs, sizeof(dirsCopy) - 1);
-        dirsCopy[sizeof(dirsCopy) - 1] = '\0';
-        for (dir = strtok_r(dirsCopy, ":", &save);
-                dir != NULL && numRoots < 4;
-                dir = strtok_r(NULL, ":", &save)) {
-            snprintf(iconRoots[numRoots++], WAYLAND_ICON_PATH_MAX,
-                    "%s/icons", dir);
-        }
-    }
-
-    for (i = 0; i < numRoots; i++) {
-        for (s = 0; s < (int)(sizeof(sizes) / sizeof(sizes[0])); s++) {
-            snprintf(candidate, sizeof(candidate),
-                    "%s/hicolor/%dx%d/apps/%s.png",
-                    iconRoots[i], sizes[s], sizes[s], iconName);
-            if (FileExists(candidate)) {
-                strncpy(pathOut, candidate, outSize - 1);
-                pathOut[outSize - 1] = '\0';
-                return 1;
-            }
-        }
-        snprintf(candidate, sizeof(candidate),
-                "%s/hicolor/scalable/apps/%s.svg", iconRoots[i], iconName);
-        if (FileExists(candidate)) {
-            strncpy(pathOut, candidate, outSize - 1);
-            pathOut[outSize - 1] = '\0';
-            return 1;
-        }
-    }
-
-    /* Flat pixmaps fallback (older/simple packages). */
-    snprintf(candidate, sizeof(candidate), "/usr/share/pixmaps/%s.png", iconName);
-    if (FileExists(candidate)) {
-        strncpy(pathOut, candidate, outSize - 1);
-        pathOut[outSize - 1] = '\0';
-        return 1;
-    }
-    snprintf(candidate, sizeof(candidate), "/usr/share/pixmaps/%s.xpm", iconName);
-    if (FileExists(candidate)) {
-        strncpy(pathOut, candidate, outSize - 1);
-        pathOut[outSize - 1] = '\0';
-        return 1;
-    }
-
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandFindDesktopIcon --
- *
- *	Locates the icon file associated with a desktop application ID.
- *
- * Results:
- *	Returns 1 and fills iconPathOut with a NUL-terminated absolute
- *	path on success, 0 if no icon could be located.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE int
-TkWaylandFindDesktopIcon(
-    const char *appId,
-    char       *iconPathOut,
-    size_t      outSize)
-{
-    char desktopPath[WAYLAND_ICON_PATH_MAX];
-    char iconName[256];
-
-    if (appId == NULL || *appId == '\0' || iconPathOut == NULL || outSize == 0) {
-        return 0;
-    }
-
-    if (!FindDesktopFile(appId, desktopPath, sizeof(desktopPath))) {
-        DEBUG_LOG("TkWaylandFindDesktopIcon: no .desktop file for app_id '%s'", appId);
-        return 0;
-    }
-
-    if (!ReadDesktopIconKey(desktopPath, iconName, sizeof(iconName))) {
-        DEBUG_LOG("TkWaylandFindDesktopIcon: no Icon= key in %s", desktopPath);
-        return 0;
-    }
-
-    if (iconName[0] == '/') {
-        if (FileExists(iconName)) {
-            strncpy(iconPathOut, iconName, outSize - 1);
-            iconPathOut[outSize - 1] = '\0';
-            return 1;
-        }
-        return 0;
-    }
-
-    if (!ResolveThemedIcon(iconName, iconPathOut, outSize)) {
-        DEBUG_LOG("TkWaylandFindDesktopIcon: could not resolve icon '%s' for app_id '%s'",
-                iconName, appId);
-        return 0;
-    }
-    return 1;
+    Tcl_RestoreInterpState(interp, state);
 }
 
 /*

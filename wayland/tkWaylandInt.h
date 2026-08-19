@@ -523,20 +523,20 @@ MODULE_SCOPE void TkWaylandShutdown(ClientData clientData);
 /*
  *----------------------------------------------------------------------
  *
- * Wayland app_id / desktop-file icon support
+ * Wayland app_id support
  *
- *	app_id tracks [tk appname] by pulling from Tk's own state
- *	(winPtr->mainPtr->name) at toplevel-creation time - see
- *	TkWaylandSyncAppId (static, tkWaylandInit.c only). No generic Tk
- *	code needs to change for this to work.
+ *	app_id tracks [tk appname] by pulling from Tk's own state at
+ *	toplevel-creation time - see TkWaylandSyncAppId (static,
+ *	tkWaylandInit.c only). No generic Tk code needs to change for
+ *	this to work. The compositor resolves the icon itself from
+ *	app_id against the matching installed .desktop file - Tk does
+ *	not need to look up or load that icon itself.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void        TkWaylandSetAppId(const char *appId);
 MODULE_SCOPE const char *TkWaylandGetAppId(void);
-MODULE_SCOPE int         TkWaylandFindDesktopIcon(const char *appId,
-			      char *iconPathOut, size_t outSize);
 
 /*
  *----------------------------------------------------------------------

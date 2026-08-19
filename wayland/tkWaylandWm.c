@@ -213,7 +213,7 @@ static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
@@ -2332,7 +2332,8 @@ WmGroupCmd(
  *	Implements the "wm iconbadge" subcommand.
  *
  * Results:
- *	Standard Tcl result.
+ *	Standard Tcl result. No-op on Wayland - GLFW does not support
+ *  setting window icons on Wayland.
  *
  * Side effects:
  *	None.
@@ -2341,30 +2342,17 @@ WmGroupCmd(
  */
 
 static int
-WmIconbadgeCmd(
-    TCL_UNUSED(Tk_Window),
-    TkWindow *winPtr,
-    Tcl_Interp *interp,
-    Tcl_Size objc,
-    Tcl_Obj *const objv[])
+WmIconbadgeCmd(	
+            TCL_UNUSED(Tk_Window),
+			TCL_UNUSED(TkWindow *),
+			Tcl_Interp *interp,
+			TCL_UNUSED(int),
+			TCL_UNUSED(Tcl_Obj *const *))
 {
-    char cmd[4096];
-
-    if (objc != 1) {
-        Tcl_WrongNumArgs(interp, 0, objv, "badge");
-        return TCL_ERROR;
-    }
-
-    snprintf(cmd, sizeof(cmd), "::tk::icons::IconBadge {%s} {%s}",
-        Tk_PathName((Tk_Window)winPtr),
-        Tcl_GetString(objv[0]));
-
-    if (Tcl_EvalEx(interp, cmd, TCL_INDEX_NONE, TCL_EVAL_DIRECT) != TCL_OK) {
-        return TCL_ERROR;
-    }
-
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
+ 
 
 /*
  *----------------------------------------------------------------------
@@ -2505,107 +2493,24 @@ WmIconnameCmd(
  *	Standard Tcl result.
  *
  * Side effects:
- *	Converts photo images to GLFW icons and sets the window icon.
- *
- *----------------------------------------------------------------------
- */
-
-
-/*
- *----------------------------------------------------------------------
- *
- * Wayland toplevel-icon definitions. 
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * WmIconphotoCmd --
- *
- *	Implements the "wm iconphoto" subcommand.
- *
- *	xdg-toplevel-icon-v1 (the natural Wayland analog of this command)
- *	needs the window's struct xdg_toplevel*, which stock GLFW's Wayland
- *	backend keeps private (window->wl.xdg.toplevel in wl_window.c) with
- *	no public accessor - there is no way to drive that protocol from
- *	here, and no patched-GLFW route is available, so it is not used at
- *	all.
- *
- *	Rather than silently doing nothing, this validates its arguments
- *	and records the requested icon name (in wmPtr->iconDataPtr, a
- *	generic void* scratch field - NOT wmPtr->icon, which is the
- *	Tk_Window used by "wm iconwindow") for the query form, but does
- *	not attempt to set a compositor-visible icon.
- *
- *	Toplevel icons on Wayland are instead set via the wl app_id, which
- *	the compositor resolves against a matching .desktop file's Icon=
- *	key - see TkWaylandSetAppId() / TkpSetAppName() in tkWaylandInit.c.
- *
- * Results:
- *	Standard Tcl result.
- *
- * Side effects:
- *	Validates image arguments; records the icon name.
+ *	No-op on Wayland. Toplevel icons on Wayland are instead set via the 
+ *  wl app_id, which the compositor resolves against a matching .desktop 
+ *  file's Icon=key - see TkWaylandSetAppId() / TkpSetAppName() in tkWaylandInit.c.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-WmIconphotoCmd(
-               TCL_UNUSED(Tk_Window),
-               TkWindow   *winPtr,
-               Tcl_Interp *interp,
-               int         objc,
-               Tcl_Obj *const objv[])
+WmIconphotoCmd(	
+            TCL_UNUSED(Tk_Window),
+			TCL_UNUSED(TkWindow *),
+			Tcl_Interp *interp,
+			TCL_UNUSED(int),
+			TCL_UNUSED(Tcl_Obj *const *))
 {
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    int i;
-
-    if (objc < 0) {
-        Tcl_WrongNumArgs(interp, 0, objv, "pathName iconphoto ?-default? image ?image ...?");
-        return TCL_ERROR;
-    }
-    /* Parse optional -default. */
-    if (objc > 0 && strcmp(Tcl_GetString(objv[0]), "-default") == 0) {
-        objv++; objc--;
-    }
-
-    /* Query form: objc==0 -> return the current icon name, if any. */
-    if (objc == 0) {
-        if (wmPtr->iconDataPtr != NULL) {
-            Tcl_SetObjResult(interp, Tcl_NewStringObj((char *)wmPtr->iconDataPtr, -1));
-        } else {
-            Tcl_SetObjResult(interp, Tcl_NewObj());
-        }
-        return TCL_OK;
-    }
-
-    /* Validate every image argument; keeps error behavior compatible. */
-    for (i = 0; i < objc; i++) {
-        const char *name = Tcl_GetString(objv[i]);
-        if (Tk_FindPhoto(interp, name) == NULL) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "can't use \"%s\" as iconphoto: not a photo image", name));
-            Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
-            return TCL_ERROR;
-        }
-    }
-
-    if (wmPtr->iconDataPtr) {
-        ckfree((char *)wmPtr->iconDataPtr);
-    }
-    {
-        const char *last = Tcl_GetString(objv[objc - 1]);
-        char *stored = (char *)ckalloc(strlen(last) + 1);
-        strcpy(stored, last);
-        wmPtr->iconDataPtr = stored;
-    }
-
+    Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
 }
-
 
 
 /*
