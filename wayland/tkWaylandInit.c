@@ -1493,6 +1493,12 @@ TkWaylandSetAppId(const char *appId)
  * TkWaylandGetAppId --
  *
  *	Returns the current Wayland app_id, or NULL if none has been set.
+ * 
+ * Results:
+ *  Returnas app_id.
+ * 
+ * Side effects:
+ *  None.
  *
  *----------------------------------------------------------------------
  */
