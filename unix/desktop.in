@@ -1,0 +1,23 @@
+#
+# This file is a template used by "configure" to produce "tk.desktop",
+# a freedesktop.org Desktop Entry file.
+# Constructs like "@foo@" are substituted by configure.
+#
+# tk.desktop is installed to $(datarootdir)/applications/tk.desktop
+# (X11 and Wayland only).
+#
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Tk
+GenericName=Tcl/Tk Widget Toolkit
+Comment=Simple windowing shell for the Tcl/Tk toolkit
+Exec=wish@TK_VERSION@ -name tk
+TryExec=wish@TK_VERSION@
+Icon=Tk
+Terminal=false
+NoDisplay=false
+StartupNotify=true
+StartupWMClass=tk
+Categories=Development;IDE;
+Keywords=Tcl;Tk;Wish;Scripting;GUI;

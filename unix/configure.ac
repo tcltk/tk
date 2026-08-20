@@ -607,6 +607,25 @@ else
 fi
 
 #--------------------------------------------------------------------
+#	Freedesktop.org desktop entry (.desktop file) and icon.
+#	This is only meaningful for the X11 and Wayland windowing
+#	systems; on Aqua, application launching is instead handled
+#	via the Info.plist/Wish.app bundle machinery above, so the
+#	desktop entry is neither generated nor installed there.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    AC_CONFIG_FILES([tk.desktop:../unix/desktop.in])
+    INSTALL_DESKTOP_ENTRY=install-desktop-entry
+    UNINSTALL_DESKTOP_ENTRY=uninstall-desktop-entry
+else
+    INSTALL_DESKTOP_ENTRY=
+    UNINSTALL_DESKTOP_ENTRY=
+fi
+AC_SUBST(INSTALL_DESKTOP_ENTRY)
+AC_SUBST(UNINSTALL_DESKTOP_ENTRY)
+
+#--------------------------------------------------------------------
 #	Various manipulations on the search path used at runtime to
 #	find shared libraries:
 #	1. If the X library binaries are in a non-standard directory,
@@ -1339,6 +1358,7 @@ AC_CONFIG_FILES([
     tkConfig.sh:../unix/tkConfig.sh.in
     tk.pc:../unix/tk.pc.in
 ])
+dnl tk.desktop:../unix/desktop.in is conditionally added above (X11/Wayland only)
 AC_OUTPUT
 
 dnl Local Variables:

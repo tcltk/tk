@@ -501,28 +501,17 @@ TkWaylandInitialize(Tcl_Interp *interp)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     /*
-     * Set a default Wayland app_id from argv0 (mirrors TkpGetAppName's
-     * own argv0 fallback) *before* the bootstrap window below is
-     * created. That bootstrap window becomes the "." root window (see
-     * TkWaylandCreateWindow: it reuses mainGlfwWindow instead of
-     * creating a second one) - and since stock GLFW has no way to
-     * change a toplevel's app_id after creation, this is the only
-     * point where the root window's app_id can be set at all. A
-     * later explicit [tk appname newName] will be picked up by
-     * TkWaylandSyncAppId and affect any *subsequently* created
-     * toplevels, but cannot retroactively fix the root window's.
+     * Force the root window's Wayland app_id to "tk" so it matches the
+     * installed tk.desktop basename.  This guarantees the compositor
+     * associates the window with the desktop entry (and therefore with
+     * Icon=) even when the binary is invoked as a versioned name such
+     * as "wish9.1".  A later explicit [tk appname newName] is still
+     * honoured for subsequently created toplevels via TkWaylandSyncAppId.
+     *
+     * Stock GLFW cannot change a toplevel's app_id after creation, so
+     * this is the only point at which the root window's app_id can be set.
      */
-    if (interp != NULL && waylandAppId == NULL) {
-        const char *argv0 = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
-        const char *name = "tk";
-        const char *slash;
-
-        if (argv0 && *argv0) {
-            slash = strrchr(argv0, '/');
-            name = slash ? slash + 1 : argv0;
-        }
-        TkWaylandSetAppId(name);
-    }
+    TkWaylandSetAppId("tk");
 
     /*
      * Create the bootstrap window invisible.  Showing it here (even
@@ -1417,25 +1406,18 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
  *
  *	The wl app_id is the portable, compositor-native way toplevel
  *	icons (and taskbar/dock grouping) work on Wayland: the compositor
- *	matches app_id against an installed .desktop file's Icon= key and
- *	draws that icon itself. This sidesteps the xdg-toplevel-icon-v1
- *	limitation documented in tkWaylandWm.c (stock GLFW doesn't expose
- *	struct xdg_toplevel*, so that protocol can't be driven directly).
+ *	matches app_id against an installed .desktop file's basename
+ *	(and secondarily StartupWMClass) and draws that icon itself.
+ *	This sidesteps the xdg-toplevel-icon-v1 limitation documented
+ *	in tkWaylandWm.c (stock GLFW doesn't expose struct xdg_toplevel*,
+ *	so that protocol can't be driven directly).
  *
- *	Rather than adding a separate Tcl command - or a new platform
- *	hook that generic Tk code would need to call into - this pulls
- *	from the existing "tk appname" state instead: TkWaylandSyncAppId,
- *	below, invokes the [tk appname] query form via Tcl_EvalEx and
- *	reads its result, then applies that as the app_id. It's called
- *	from TkWaylandCreateWindow right before each toplevel other than
- *	the root is created, so app_id always reflects whatever [tk
- *	appname] currently reports at that moment - no changes to
- *	generic/tkWindow.c or any other file needed.
- *
- *	The root window is the one exception: it's created very early, in
- *	TkWaylandInitialize, before there's a Tk main window to query at
- *	all. That path instead falls back to deriving a default from
- *	argv0 - see TkWaylandInitialize.
+ *	We force the root window's app_id to "tk" (the installed
+ *	tk.desktop basename) so the custom Icon= is used even when
+ *	argv0 is a versioned binary such as "wish9.1".  Later toplevels
+ *	still pick up the current [tk appname] value via
+ *	TkWaylandSyncAppId so an explicit rename continues to work for
+ *	windows created after the rename.
  *
  *----------------------------------------------------------------------
  */
@@ -1446,19 +1428,17 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
  * TkWaylandSetAppId --
  *
  *	Records the desired Wayland app_id and arranges for it to be
- *	applied to toplevels.
+ *	applied to toplevels created from this point on.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *	Sets the GLFW_WAYLAND_APP_ID window hint, which GLFW applies to
- *	windows it creates from this point on (see also the explicit
- *	re-application in TkWaylandCreateWindow, for clarity/robustness
- *	against other code resetting hints in between). Stock GLFW has no
- *	call to change the app_id of an already-created toplevel, so
- *	windows mapped before this is called keep whatever app_id they
- *	were created with.
+ *	windows it creates from this point on.  Stock GLFW has no call
+ *	to change the app_id of an already-created toplevel, so windows
+ *	mapped before this is called keep whatever app_id they were
+ *	created with.
  *
  *----------------------------------------------------------------------
  */
@@ -1493,12 +1473,12 @@ TkWaylandSetAppId(const char *appId)
  * TkWaylandGetAppId --
  *
  *	Returns the current Wayland app_id, or NULL if none has been set.
- * 
+ *
  * Results:
- *  Returnas app_id.
- * 
+ *	The app_id string, or NULL.
+ *
  * Side effects:
- *  None.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -1515,20 +1495,16 @@ TkWaylandGetAppId(void)
  * TkWaylandSyncAppId --
  *
  *	Pulls the current Tk application name by invoking the existing
- *	generic [tk appname] query form and reading its result, and
- *	applies it as the Wayland app_id via TkWaylandSetAppId. Going
- *	through the real command instead of poking at TkWindow/TkMainInfo
- *	internals means this doesn't depend on struct layout that can
- *	(and did) differ from what we assumed. A no-op if there's no main
- *	window yet, or the query fails.
+ *	generic [tk appname] query form and reading its result, then
+ *	applies it as the Wayland app_id via TkWaylandSetAppId.  A
+ *	no-op if there's no main window yet or the query fails.
+ *	Saves/restores the interpreter's result and error state.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	See TkWaylandSetAppId. Saves/restores the interpreter's result
- *	and error state, so this doesn't disturb whatever the caller had
- *	pending.
+ *	See TkWaylandSetAppId.
  *
  *----------------------------------------------------------------------
  */
