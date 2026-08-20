@@ -7925,10 +7925,10 @@ SetLocale(
 	    /* If there is no region, we cannot distingish between a script and a
 	     * 4-character variation. Assume the latter. Only for Euro and Ploc */
 	    if (locale[5] == (char)-7) {
-			locale[5] = 5; /* Euro */
-		} else if (locale[5] == (char)-12) {
-			locale[5] = 10; /* Ploc */
-		}
+		locale[5] = 5; /* Euro */
+	    } else if (locale[5] == (char)-12) {
+		locale[5] = 10; /* Ploc */
+	    }
 	}
     localeComplete:
 	*value = GetLocale(NULL, NULL, locale, 0);
