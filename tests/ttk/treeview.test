@@ -37,7 +37,6 @@ resetWindows
 #
 
 ttk::style theme use default
-#ttk::setTheme default
 set dfont [font configure TkDefaultFont]
 set hfont [font configure TkHeadingFont]
 set size [expr {[tk windowingsystem] ne "aqua" ? 9 : 10}]
@@ -8766,11 +8765,18 @@ test Identify-89.42 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
-font configure TkDefaultFont {*}$dfont
-font configure TkHeadingFont {*}$hfont
-
 #
 # TESTFILE CLEANUP
 #
+
+font configure TkDefaultFont {*}$dfont
+font configure TkHeadingFont {*}$hfont
+
+unset -nocomplain colors columns dfont hfont p size
+foreach p {ButtonPress checkorder columns_no_stretch columns_stretch create \
+	fixed_table insert KeyPress lcompare MouseMove} {
+    rename $p {}
+}
+
 
 tcltest::cleanupTests
