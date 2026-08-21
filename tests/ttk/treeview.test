@@ -8740,11 +8740,11 @@ test Identify-89.42 {Cleanup} -body {
 font configure TkDefaultFont {*}$dfont
 font configure TkHeadingFont {*}$hfont
 
-unset -nocomplain colors columns dfont hfont p size
 foreach p {ButtonPress checkorder columns_no_stretch columns_stretch create \
 	fixed_table insert KeyPress lcompare MouseMove} {
     rename $p {}
 }
+unset -nocomplain colors columns dfont hfont p size
 
 
 tcltest::cleanupTests
