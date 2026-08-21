@@ -163,6 +163,7 @@ proc create_and_pack_frames {{w {}}} {
 #    The so-called "pointer window" is the $w window that will now contain the mouse pointer.
 #
 proc setup_win_mousepointer {w} {
+    deleteWindows
     wm geometry . +700+400; # root window out of our way - must not cover windows from event-9.1*
     toplevel $w
     pack propagate $w 0
@@ -1001,7 +1002,7 @@ test event-9.11 {pointer window container = parent} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one.f1|}
 
 test event-9.12 {pointer window container != parent} -setup {
@@ -1025,7 +1026,7 @@ test event-9.12 {pointer window container != parent} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
@@ -1048,7 +1049,7 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
@@ -1072,7 +1073,7 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.15 {pointer window is a toplevel, destination is screen root.
@@ -1098,7 +1099,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root.
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|}
 
 test event-9.16 {Successive destructions (pointer window + parent), single generation of crossing events} -setup {
@@ -1122,7 +1123,7 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one|}
 
 test event-9.17 {Successive destructions (pointer window + parent), separate crossing events} -setup {
@@ -1148,7 +1149,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one.f1|<Enter> NotifyInferior .one|}
 
 test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
@@ -1170,7 +1171,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
@@ -1204,7 +1205,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     bind all <Enter> {}
     destroy .one
     destroy .two
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
@@ -1228,7 +1229,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
-    unset result
+    unset -nocomplain result
 } -result {|}
 
 test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
@@ -1264,7 +1265,7 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     # result variable in this case is: "|||"
     set result
 } -cleanup {
-    unset result
+    unset -nocomplain result
     bind all <Leave> {}
     bind all <Enter> {}
 } -result "|<Leave> .|<Enter> .|"
@@ -1286,7 +1287,7 @@ test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer win
     bind all <Leave> {}
     bind all <Enter> {}
     wm deiconify .
-    unset result
+    unset -nocomplain result
 } -result "|"
 
 test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer window after toplevel destroy (inside). See ticket #8a88a19654} -setup {
@@ -1306,7 +1307,7 @@ test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer win
     bind all <Leave> {}
     bind all <Enter> {}
     wm deiconify .
-    unset result
+    unset -nocomplain result
 } -result "|"
 
 test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ticket #c3f5c85322} -setup {
