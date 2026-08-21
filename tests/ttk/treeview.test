@@ -83,7 +83,6 @@ proc create {w} {
     tkwait visibility .tv
     wm geometry . 800x250
     update
-    update idletasks
     focus .tv
     return .tv
 }
@@ -102,7 +101,6 @@ proc columns_no_stretch {w} {
 	$w column $column -width 200 -stretch 0
     }
     update
-    update idletasks
 }
 
 proc columns_stretch {w} {
@@ -112,7 +110,6 @@ proc columns_stretch {w} {
 	$w column $column -width 200 -stretch 1
     }
     update
-    update idletasks
 }
 
 proc lcompare {list1 list2} {
@@ -154,7 +151,6 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
     pause 25
     event generate $w <ButtonRelease-1> -x $x -y $y
     update
-    update idletasks
 }
 
 proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
@@ -166,7 +162,6 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
 	$w cellfocus [list $item $column]
     }
     update
-    update idletasks
 
     if {$mac_mod ne "" && [tk windowingsystem] eq "aqua"} {
 	set modifier $mac_mod
@@ -182,7 +177,6 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     pause 25
     event generate $w [format "<%sKeyRelease-%s>" $mod $keysym]
     update
-    update idletasks
 }
 
 proc MouseMove {w item column} {
@@ -677,7 +671,6 @@ test Focus_Ring-6.7 {Cell padding} -body {
     ttk::style configure Cell -padding {2 3 2 3}
     $w cellfocus {red #1}
     update
-    update idletasks
     expr {[lindex [.tv bbox red] 3] > $h}
 } -cleanup {
     ttk::style configure Cell -padding {}
@@ -705,7 +698,6 @@ test Heading_Height-7.2 {Set font changes height} -body {
     set h [$w cget -headingheight]
     ttk::style configure Heading -font "Courier 20"
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {1}
 
@@ -715,7 +707,6 @@ test Heading_Height-7.3 {Change font changes height} -setup {
     set h [$w cget -headingheight]
     ttk::style configure Heading -font TestFont
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {1}
 
@@ -723,7 +714,6 @@ test Heading_Height-7.4 {Update font size changes height} -body {
     set h [$w cget -headingheight]
     font configure TestFont -size 32
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {1}
 
@@ -731,7 +721,6 @@ test Heading_Height-7.5 {Reset to default font} -body {
     set h [$w cget -headingheight]
     ttk::style configure Heading -font TkHeadingFont
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {0}
 
@@ -739,7 +728,6 @@ test Heading_Height-7.6 {Set Item padding changes height} -body {
     set h [$w cget -headingheight]
     ttk::style configure Heading -padding "2 5 2 7"
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {1}
 
@@ -747,7 +735,6 @@ test Heading_Height-7.7 {Change Item padding changes height} -body {
     set h [$w cget -headingheight]
     ttk::style configure Heading -padding "2 8 2 6"
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -cleanup {
     ttk::style configure Heading -padding {}
@@ -757,7 +744,6 @@ test Heading_Height-7.8 {Manual set heading height} -body {
     set h [$w cget -headingheight]
     $w configure -headingheight 35
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {0}
 
@@ -765,7 +751,6 @@ test Heading_Height-7.9 {Restore auto set heading height and heading height 0} -
     set h [$w cget -headingheight]
     $w configure -headingheight 0
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {0}
 
@@ -773,7 +758,6 @@ test Heading_Height-7.10 {Override heading height set} -body {
     set h [$w cget -headingheight]
     ttk::style configure Treeview -headingheight 73
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {1}
 
@@ -781,7 +765,6 @@ test Heading_Height-7.11 {Override heading height reset} -body {
     set h [$w cget -headingheight]
     ttk::style configure Treeview -headingheight 25
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {0}
 
@@ -789,7 +772,6 @@ test Heading_Height-7.12 {Override heading height clear} -body {
     set h [$w cget -headingheight]
     ttk::style configure Treeview -headingheight 0
     update
-    update idletasks
     expr {[$w cget -headingheight] > $h}
 } -result {0}
 
@@ -818,7 +800,6 @@ test Row-8.2 {Set font changes height} -body {
     set h [$w cget -rowheight]
     ttk::style configure Treeview -font "Courier 20"
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {1}
 
@@ -828,7 +809,6 @@ test Row-8.3 {Change font changes height} -setup {
     set h [$w cget -rowheight]
     ttk::style configure Treeview -font TestFont
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {1}
 
@@ -836,7 +816,6 @@ test Row-8.4 {Update font size changes height} -body {
     set h [$w cget -rowheight]
     font configure TestFont -size 32
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {1}
 
@@ -844,7 +823,6 @@ test Row-8.5 {Reset to default font} -body {
     set h [$w cget -rowheight]
     ttk::style configure Treeview -font TkDefaultFont
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {0}
 
@@ -852,7 +830,6 @@ test Row-8.6 {Set Item padding changes height} -body {
     set h [$w cget -rowheight]
     ttk::style configure Item -padding "2 2 2 2"
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {1}
 
@@ -860,7 +837,6 @@ test Row-8.7 {Change Item padding changes height} -body {
     set h [$w cget -rowheight]
     ttk::style configure Item -padding "2 3 2 5"
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -cleanup {
     ttk::style configure Item -padding {}
@@ -870,7 +846,6 @@ test Row-8.8 {Set Cell padding changes height} -body {
     set h [$w cget -rowheight]
     ttk::style configure Cell -padding "2 7 2 5"
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {1}
 
@@ -878,7 +853,6 @@ test Row-8.9 {Change Cell padding changes height} -body {
     set h [$w cget -rowheight]
     ttk::style configure Cell -padding "2 9 2 9"
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -cleanup {
     ttk::style configure Cell -padding {}
@@ -888,7 +862,6 @@ test Row-8.10 {Manual set row height} -body {
     set h [$w cget -rowheight]
     $w configure -rowheight 30
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {0}
 
@@ -896,7 +869,6 @@ test Row-8.11 {Set row height to 0 Bug #6ee162c3d9} -body {
     set h [$w cget -rowheight]
     $w configure -rowheight 0
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {0}
 
@@ -904,7 +876,6 @@ test Row-8.12 {Override row height set} -body {
     set h [$w cget -rowheight]
     ttk::style configure Treeview -rowheight 73
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {1}
 
@@ -912,7 +883,6 @@ test Row-8.13 {Override row height reset} -body {
     set h [$w cget -rowheight]
     ttk::style configure Treeview -rowheight 25
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {0}
 
@@ -920,7 +890,6 @@ test Row-8.14 {Override row height clear} -body {
     set h [$w cget -rowheight]
     ttk::style configure Treeview -rowheight 0
     update
-    update idletasks
     expr {[lindex [.tv bbox red #1] 3] > $h}
 } -result {0}
 
