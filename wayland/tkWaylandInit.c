@@ -1407,10 +1407,7 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
  *	The wl app_id is the portable, compositor-native way toplevel
  *	icons (and taskbar/dock grouping) work on Wayland: the compositor
  *	matches app_id against an installed .desktop file's basename
- *	(and secondarily StartupWMClass) and draws that icon itself.
- *	This sidesteps the xdg-toplevel-icon-v1 limitation documented
- *	in tkWaylandWm.c (stock GLFW doesn't expose struct xdg_toplevel*,
- *	so that protocol can't be driven directly).
+ *	(and secondarily StartupWMClass) and draws that icon itself..
  *
  *	We force the root window's app_id to "tk" (the installed
  *	tk.desktop basename) so the custom Icon= is used even when

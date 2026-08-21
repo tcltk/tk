@@ -689,7 +689,6 @@ UNIX_FONT_OBJS
 BIDI_CFLAGS
 XFT_LIBS
 XFT_CFLAGS
-UNINSTALL_DESKTOP_ENTRY
 INSTALL_DESKTOP_ENTRY
 XMKMF
 WAYLAND_LDFLAGS
@@ -8952,12 +8951,9 @@ if test $tk_aqua = no; then
     ac_config_files="$ac_config_files tk.desktop:../unix/desktop.in"
 
     INSTALL_DESKTOP_ENTRY=install-desktop-entry
-    UNINSTALL_DESKTOP_ENTRY=uninstall-desktop-entry
 else
     INSTALL_DESKTOP_ENTRY=
-    UNINSTALL_DESKTOP_ENTRY=
 fi
-
 
 
 #--------------------------------------------------------------------

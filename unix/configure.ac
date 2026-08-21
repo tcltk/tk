@@ -617,13 +617,10 @@ fi
 if test $tk_aqua = no; then
     AC_CONFIG_FILES([tk.desktop:../unix/desktop.in])
     INSTALL_DESKTOP_ENTRY=install-desktop-entry
-    UNINSTALL_DESKTOP_ENTRY=uninstall-desktop-entry
 else
     INSTALL_DESKTOP_ENTRY=
-    UNINSTALL_DESKTOP_ENTRY=
 fi
 AC_SUBST(INSTALL_DESKTOP_ENTRY)
-AC_SUBST(UNINSTALL_DESKTOP_ENTRY)
 
 #--------------------------------------------------------------------
 #	Various manipulations on the search path used at runtime to

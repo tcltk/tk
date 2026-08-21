@@ -109,7 +109,6 @@ ICON_INSTALL_DIR	= $(INSTALL_ROOT)$(datarootdir)/icons/hicolor/48x48/apps
 # Set (by configure) to "install-desktop-entry"/"uninstall-desktop-entry"
 # for X11 and Wayland builds, empty for Aqua:
 INSTALL_DESKTOP_ENTRY	= @INSTALL_DESKTOP_ENTRY@
-UNINSTALL_DESKTOP_ENTRY	= @UNINSTALL_DESKTOP_ENTRY@
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
@@ -901,11 +900,7 @@ INSTALL_TARGETS = $(INSTALL_BASE_TARGETS) $(INSTALL_DEV_TARGETS) \
 		$(INSTALL_DEMO_TARGETS) $(INSTALL_DOC_TARGETS) $(INSTALL_EXTRA_TARGETS) \
 		$(INSTALL_DESKTOP_TARGETS)
 
-UNINSTALL_TARGETS = $(UNINSTALL_DESKTOP_ENTRY)
-
 install: $(INSTALL_TARGETS)
-
-uninstall: $(UNINSTALL_TARGETS)
 
 install-strip:
 	$(MAKE) $(INSTALL_TARGETS) \
@@ -983,19 +978,6 @@ install-desktop-entry:
 	    gtk-update-icon-cache -qtf "$(INSTALL_ROOT)$(datarootdir)/icons/hicolor" >/dev/null 2>&1 || true; \
 	    fi
 
-# Reverse of install-desktop-entry, above.
-uninstall-desktop-entry:
-	@echo "Removing $(DESKTOP_INSTALL_DIR)/tk.desktop"
-	@rm -f "$(DESKTOP_INSTALL_DIR)/tk.desktop"
-	@echo "Removing $(ICON_INSTALL_DIR)/Tk.png"
-	@rm -f "$(ICON_INSTALL_DIR)/Tk.png"
-	@if command -v update-desktop-database >/dev/null 2>&1 ; then \
-	    update-desktop-database -q "$(DESKTOP_INSTALL_DIR)" >/dev/null 2>&1 || true; \
-	    fi
-	@if command -v gtk-update-icon-cache >/dev/null 2>&1 ; then \
-	    gtk-update-icon-cache -qtf "$(INSTALL_ROOT)$(datarootdir)/icons/hicolor" >/dev/null 2>&1 || true; \
-	    fi
-
 # Convenience targets: install/remove the desktop entry and icon under
 # the invoking user's own per-user data directory, per the XDG Base
 # Directory spec ($XDG_DATA_HOME/applications, defaulting to
@@ -1020,22 +1002,6 @@ install-user-desktop-entry:
 	$(INSTALL_DATA) tk.desktop "$$desktopdir/tk.desktop"; \
 	echo "Installing Tk.png to $$icondir/"; \
 	$(INSTALL_DATA) $(UNIX_DIR)/Tk.png "$$icondir/Tk.png"; \
-	if command -v update-desktop-database >/dev/null 2>&1 ; then \
-	    update-desktop-database -q "$$desktopdir" >/dev/null 2>&1 || true; \
-	fi; \
-	if command -v gtk-update-icon-cache >/dev/null 2>&1 ; then \
-	    gtk-update-icon-cache -qtf "$$datahome/icons/hicolor" >/dev/null 2>&1 || true; \
-	fi
-
-# Reverse of install-user-desktop-entry, above.
-uninstall-user-desktop-entry:
-	@datahome="$${XDG_DATA_HOME:-$$HOME/.local/share}"; \
-	desktopdir="$$datahome/applications"; \
-	icondir="$$datahome/icons/hicolor/48x48/apps"; \
-	echo "Removing $$desktopdir/tk.desktop"; \
-	rm -f "$$desktopdir/tk.desktop"; \
-	echo "Removing $$icondir/Tk.png"; \
-	rm -f "$$icondir/Tk.png"; \
 	if command -v update-desktop-database >/dev/null 2>&1 ; then \
 	    update-desktop-database -q "$$desktopdir" >/dev/null 2>&1 || true; \
 	fi; \
@@ -2155,8 +2121,7 @@ BUILD_HTML = \
 .PHONY: all binaries libraries objs doc html html-tcl html-tk test runtest
 .PHONY: install install-strip install-binaries install-libraries
 .PHONY: install-headers install-private-headers install-doc
-.PHONY: install-desktop-entry uninstall-desktop-entry uninstall
-.PHONY: install-user-desktop-entry uninstall-user-desktop-entry
+.PHONY: install-desktop-entry install-user-desktop-entry
 .PHONY: clean distclean depend genstubs checkstubs checkexports checkuchar
 .PHONY: shell gdb valgrind valgrindshell dist alldist rpm
 .PHONY: tkLibObjs tktest-real test-classic test-ttk testlang
