@@ -146,7 +146,6 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
 	incr x -10
     }
     incr y 5
-    focus -force $w
     event generate $w <Button-1> -x $x -y $y
     pause 25
     event generate $w <ButtonRelease-1> -x $x -y $y
