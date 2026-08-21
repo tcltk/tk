@@ -137,15 +137,10 @@ proc checkorder {item} {
     return 1
 }
 
-proc wait {time} {
-    set ::_temp 0
-    after $time [list set ::_temp 1];vwait ::_temp
-}
-
 proc ButtonPress {w item {column {#0}} {offset 0}} {
     focus -force $w
     $w see $item $column
-    wait 25
+    pause 25
     lassign [$w bbox $item $column] x y wd h
 
     if {$offset > 0} {
@@ -157,7 +152,7 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
     incr y 5
     focus -force $w
     event generate $w <Button-1> -x $x -y $y
-    wait 25
+    pause 25
     event generate $w <ButtonRelease-1> -x $x -y $y
     update
     update idletasks
@@ -185,7 +180,7 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     }
     set mod [expr {$modifier ne "" ? [format "%s-" $modifier] : ""}]
     event generate $w [format "<%sKeyPress-%s>" $mod $keysym]
-    wait 25
+    pause 25
     event generate $w [format "<%sKeyRelease-%s>" $mod $keysym]
     update
     update idletasks
