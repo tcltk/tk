@@ -19,5 +19,5 @@ Icon=Tk
 NoDisplay=false
 StartupNotify=true
 StartupWMClass=tk
-Categories=Development;IDE;
+Categories=Development;IDE;Utility
 Keywords=Tcl;Tk;Wish;Scripting;GUI;
