@@ -231,6 +231,16 @@ typedef struct WaylandFont {
     /* Fonts are stored per context. */
     NvgFontContext *nvgContexts;
     int             nvgContextCount;
+
+    /*
+     * Bumped every time InitFont() (re)initializes this WaylandFont in
+     * place (e.g. on "font configure" of a named font). Folded into
+     * each face's nvgName so a reconfigured font can never collide
+     * with the NanoVG font entry registered under its old content --
+     * nvgFindFont()/fontstash has no font-removal API, so an unchanged
+     * name would keep resolving to the stale glyph data forever.
+     */
+    unsigned int    generation;
 } WaylandFont;
 
 /*

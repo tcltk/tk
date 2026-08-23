@@ -904,7 +904,7 @@ TkWaylandWindowFocusCallback(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     TkGenerateActivateEvents(winPtr, focused);
-    if (infoPtr->flags & TKWL_NEVER_FOCUSED == 1) {
+    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
 	DEBUG_LOG("FocusCallback: generating Expose for %s",
 	       Tk_PathName(winPtr));
 	TkWaylandQueueExposeEvent(winPtr,
