@@ -11,6 +11,7 @@ Description: Tk is a cross-platform graphical user interface toolkit, the standa
 URL: https://www.tcl-lang.org/
 Version: @TK_VERSION@@TK_PATCH_LEVEL@
 Requires: tcl >= 9.0
+Requires.private: x11 xft
 Libs: -L${libdir} @TK_LIB_FLAG@ @TK_STUB_LIB_FLAG@
 Libs.private: @XFT_LIBS@ @XLIBSW@
 Cflags: -I${includedir}
