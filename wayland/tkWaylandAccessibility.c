@@ -3,7 +3,6 @@
  *
  * This file implements accessibility/screen-reader support
  * for Tk on Wayland systems using direct at-spi access via sd-bus.
- * It replaces the ATK-based implementation used on X11.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  * Copyright (c) 2006, Marcus von Appen
@@ -1839,6 +1838,27 @@ static void TkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
         SendChildrenChanged(acc->parent, idx, acc, 0);
     }
 
+    /*
+     * Remove all event handlers registered on this window *before* the
+     * accessible is unregistered/freed below. Without this, a FocusOut
+     * (or ConfigureNotify) generated for the same window during teardown
+     * can still be dispatched to TkAccessible_FocusHandler/
+     * TkAccessible_ConfigureHandler with a stale `acc` pointer that
+     * UnregisterAccessible() -> FreeAccessible() has already released,
+     * causing a use-after-free/segfault. This was previously worked
+     * around by disabling the body of TkAccessible_FocusHandler; that
+     * workaround is no longer needed now that the dangling handlers are
+     * torn down here.
+     */
+    Tk_DeleteEventHandler(acc->tkwin, StructureNotifyMask,
+                          TkAccessible_DestroyHandler, acc);
+    Tk_DeleteEventHandler(acc->tkwin, FocusChangeMask,
+                          TkAccessible_FocusHandler, acc);
+    Tk_DeleteEventHandler(acc->tkwin, SubstructureNotifyMask,
+                          TkAccessible_CreateHandler, acc);
+    Tk_DeleteEventHandler(acc->tkwin, ConfigureNotify,
+                          TkAccessible_ConfigureHandler, acc);
+
     UnregisterAccessible(acc->tkwin);
 }
 
@@ -1849,8 +1869,7 @@ static void TkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 
     int focused = (eventPtr->type == FocusIn);
     acc->is_focused = focused;
-////XXXXX disabling this code for now because it segfaults!!!!
-#if 0
+
     uint64_t old_states = acc->states;
     acc->states = ComputeStateForWidget(acc);
 
@@ -1858,7 +1877,6 @@ static void TkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
         SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
         SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
     }
-#endif
     /* Handle window activation */
     if (acc->role == ATSPI_ROLE_WINDOW) {
         if (focused) {
@@ -2048,12 +2066,40 @@ static int EmitFocusChangedCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    if (objc < 2) {
+    if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "window");
 	return TCL_ERROR;
     }
 
-    /* No-op on X11. All work is done in FocusHandler. */
+    const char *windowName = Tcl_GetString(objv[1]);
+    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
+    if (!tkwin) return TCL_OK;
+
+    TkAccessible *acc = GetAccessible(tkwin);
+    if (!acc) {
+        acc = CreateAccessible(interp, tkwin, windowName);
+        if (!acc) return TCL_OK;
+        RegisterAccessible(tkwin, acc);
+        TkAccessible_RegisterEventHandlers(tkwin, acc);
+    }
+
+    /*
+     * Real widget focus (e.g. Entry, Button) is already reported by
+     * TkAccessible_FocusHandler off real X FocusIn/FocusOut events. This
+     * command exists for the cases the Tcl layer drives "focus" itself
+     * without a corresponding X event - most notably active menu entries,
+     * which change via <<MenuSelect>>/arrow-key navigation rather than
+     * real window focus. Report the focused state and, for a container
+     * like a menu, notify the parent of the new active descendant.
+     */
+    acc->is_focused = 1;
+    acc->states |= ATSPI_STATE_FOCUSED;
+    SendStateChanged(acc, ATSPI_STATE_FOCUSED, 1);
+    SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
+
+    if (acc->parent) {
+        SendActiveDescendantChanged(acc->parent, acc);
+    }
 
     return TCL_OK;
 }
