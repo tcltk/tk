@@ -389,6 +389,21 @@ static const sd_bus_vtable selection_vtable[] = {
 
 /* org.a11y.atspi.Application interface - queried by the registry/Orca once
  * an application has been embedded via Socket.Embed. */
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_prop_get_toolkit_name --
+ *
+ *   D-Bus property getter for the ToolkitName property of the Application
+ *   interface. Returns "Tk" as the toolkit name.
+ *
+ * Results:
+ *   Returns 0 on success, negative error code on failure.
+ *
+ * Side effects:
+ *   Appends the toolkit name string to the D-Bus reply message.
+ *----------------------------------------------------------------------
+ */
 static int dbus_prop_get_toolkit_name(
     TCL_UNUSED(sd_bus *),
     TCL_UNUSED(const char *),
@@ -401,6 +416,20 @@ static int dbus_prop_get_toolkit_name(
     return sd_bus_message_append(reply, "s", "Tk");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_prop_get_version --
+ *
+ *   D-Bus property getter for the Version property of the Application
+ *   interface. Returns the Tk version string.
+ *
+ * Results:
+ *   Returns 0 on success, negative error code on failure.
+ *
+ * Side effects:
+ *   Appends the Tk version string to the D-Bus reply message.
+ *----------------------------------------------------------------------
+ */
 static int dbus_prop_get_version(
     TCL_UNUSED(sd_bus *),
     TCL_UNUSED(const char *),
@@ -413,6 +442,20 @@ static int dbus_prop_get_version(
     return sd_bus_message_append(reply, "s", TK_VERSION);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_prop_get_atspi_version --
+ *
+ *   D-Bus property getter for the AtspiVersion property of the Application
+ *   interface. Returns the AT-SPI version string.
+ *
+ * Results:
+ *   Returns 0 on success, negative error code on failure.
+ *
+ * Side effects:
+ *   Appends the AT-SPI version string to the D-Bus reply message.
+ *----------------------------------------------------------------------
+ */
 static int dbus_prop_get_atspi_version(
     TCL_UNUSED(sd_bus *),
     TCL_UNUSED(const char *),
@@ -425,6 +468,20 @@ static int dbus_prop_get_atspi_version(
     return sd_bus_message_append(reply, "s", "2.1");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_prop_get_id --
+ *
+ *   D-Bus property getter for the Id property of the Application
+ *   interface. Returns the virtual index of the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, negative error code on failure.
+ *
+ * Side effects:
+ *   Appends the virtual index integer to the D-Bus reply message.
+ *----------------------------------------------------------------------
+ */
 static int dbus_prop_get_id(
     TCL_UNUSED(sd_bus *),
     TCL_UNUSED(const char *),
@@ -438,6 +495,20 @@ static int dbus_prop_get_id(
     return sd_bus_message_append(reply, "i", acc ? acc->virtual_index : 0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_prop_set_id --
+ *
+ *   D-Bus property setter for the Id property of the Application
+ *   interface. Sets the virtual index of the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, negative error code on failure.
+ *
+ * Side effects:
+ *   Updates the virtual_index field of the accessible object.
+ *----------------------------------------------------------------------
+ */
 static int dbus_prop_set_id(
     TCL_UNUSED(sd_bus *),
     TCL_UNUSED(const char *),
@@ -463,7 +534,20 @@ static const sd_bus_vtable application_vtable[] = {
     SD_BUS_VTABLE_END
 };
 
-/* Convenience function. */
+/*
+ *----------------------------------------------------------------------
+ * Tcl_Strdup --
+ *
+ *   Duplicate a string using Tcl's memory allocator.
+ *
+ * Results:
+ *   Returns a pointer to the newly allocated copy of the string, or NULL
+ *   if the input string is NULL.
+ *
+ * Side effects:
+ *   Memory is allocated via Tcl_Alloc.
+ *----------------------------------------------------------------------
+ */
 static char *
 Tcl_Strdup(const char *s)
 {
@@ -472,12 +556,19 @@ Tcl_Strdup(const char *s)
 }
 
 /*
- * Accessible references on the AT-SPI D-Bus API are the struct (so): the
- * FIRST field is the unique bus name of the connection that owns the
- * object, the SECOND field is the object's path. Object paths must start
- * with '/' and match the D-Bus path grammar; bus names may be any valid
- * D-Bus name. Every accessible we hand out lives on our own connection, so
- * the bus-name half is always our own unique name.
+ *----------------------------------------------------------------------
+ * SelfBusName --
+ *
+ *   Get the unique D-Bus name of our own connection. Used as the bus-name
+ *   half of accessible references ((so) tuples) handed out to AT-SPI.
+ *
+ * Results:
+ *   Returns a pointer to the static bus name string, or an empty string
+ *   if not connected.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
 static const char *SelfBusName(void)
 {
@@ -490,9 +581,20 @@ static const char *SelfBusName(void)
 }
 
 /*
- * Append a (so) accessible reference. Pass NULL/"" for path to append the
- * canonical AT-SPI null reference instead of a real object - a bare "" is
- * NOT a legal object path and will fail marshalling.
+ *----------------------------------------------------------------------
+ * AppendAccessibleRef --
+ *
+ *   Append an AT-SPI accessible reference ((so) tuple) to a D-Bus message.
+ *   The reference consists of the bus name and the object path of the
+ *   accessible. If the path is NULL or empty, the canonical null reference
+ *   is appended instead.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code from sd_bus_message_append.
+ *
+ * Side effects:
+ *   Appends data to the D-Bus message.
+ *----------------------------------------------------------------------
  */
 static int AppendAccessibleRef(sd_bus_message *reply, const char *path)
 {
@@ -512,11 +614,19 @@ static int AppendAccessibleRef(sd_bus_message *reply, const char *path)
  */
 
 /*
- * Accessible children, attributes and state. Here we create create accessible
- * objects from native Tk widgets (buttons, entries, etc.), map them them to
- * the appropriate role, and track them.
+ *----------------------------------------------------------------------
+ * dbus_method_get_children --
+ *
+ *   D-Bus method handler for GetChildren on the Accessible interface.
+ *   Returns the list of child accessibles for the given object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an array of (so) references.
+ *----------------------------------------------------------------------
  */
-
 static int dbus_method_get_children(
 	sd_bus_message *m,
 	void *userdata,
@@ -566,6 +676,20 @@ static int dbus_method_get_children(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_child_at_index --
+ *
+ *   D-Bus method handler for GetChildAtIndex on the Accessible interface.
+ *   Returns the child accessible at the specified index.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an (so) reference.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_child_at_index(
 	sd_bus_message *m,
 	void *userdata,
@@ -632,6 +756,20 @@ static int dbus_method_get_child_at_index(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_attributes --
+ *
+ *   D-Bus method handler for GetAttributes on the Accessible interface.
+ *   Returns the attributes of the accessible object as a dictionary.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an array of key-value pairs.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_attributes(
 sd_bus_message *m,
 	TCL_UNUSED(void *), /* userdata */
@@ -649,6 +787,20 @@ sd_bus_message *m,
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_states --
+ *
+ *   D-Bus method handler for GetStates on the Accessible interface.
+ *   Returns the bitmask of states for the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a 64-bit unsigned integer.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_states(
 	sd_bus_message *m,
 	void *userdata,
@@ -666,6 +818,20 @@ static int dbus_method_get_states(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_role --
+ *
+ *   D-Bus method handler for GetRole on the Accessible interface.
+ *   Returns the AT-SPI role code for the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an integer role code.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_role(
 	sd_bus_message *m,
 	void *userdata,
@@ -682,6 +848,20 @@ static int dbus_method_get_role(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_name --
+ *
+ *   D-Bus method handler for GetName on the Accessible interface.
+ *   Returns the name of the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a string.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_name(
 	sd_bus_message *m,
 	void *userdata,
@@ -709,6 +889,20 @@ static int dbus_method_get_name(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_description --
+ *
+ *   D-Bus method handler for GetDescription on the Accessible interface.
+ *   Returns the description of the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a string.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_description(
 	sd_bus_message *m,
 	void *userdata,
@@ -734,6 +928,20 @@ static int dbus_method_get_description(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_parent --
+ *
+ *   D-Bus method handler for GetParent on the Accessible interface.
+ *   Returns the parent accessible reference.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an (so) reference.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_parent(
 	sd_bus_message *m,
 	void *userdata,
@@ -762,6 +970,20 @@ static int dbus_method_get_parent(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_grab_focus --
+ *
+ *   D-Bus method handler for GrabFocus on the Accessible interface.
+ *   Attempts to set focus to the accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Changes focus to the specified widget and sends a focus event.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_grab_focus(
 	sd_bus_message *m,
 	void *userdata,
@@ -794,6 +1016,20 @@ static int dbus_method_grab_focus(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_index_in_parent --
+ *
+ *   D-Bus method handler for GetIndexInParent on the Accessible interface.
+ *   Returns the index of this accessible in its parent's child list.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an integer index.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_index_in_parent(
 	sd_bus_message *m,
 	void *userdata,
@@ -830,6 +1066,20 @@ static int dbus_method_get_index_in_parent(
     return sd_bus_reply_method_return(m, "i", index);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_interfaces --
+ *
+ *   D-Bus method handler for GetInterfaces on the Accessible interface.
+ *   Returns the list of D-Bus interfaces supported by this object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an array of interface names.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_get_interfaces(
 	sd_bus_message *m,
 	void *userdata,
@@ -867,9 +1117,19 @@ static int dbus_method_get_interfaces(
 }
 
 /*
- * at-spi component interface. This tracks widget location/geometry.
+ *----------------------------------------------------------------------
+ * dbus_method_component_get_extents --
+ *
+ *   D-Bus method handler for GetExtents on the Component interface.
+ *   Returns the x, y, width, and height of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a tuple of four integers.
+ *----------------------------------------------------------------------
  */
-
 static int dbus_method_component_get_extents(
 	sd_bus_message *m,
 	void *userdata,
@@ -907,6 +1167,20 @@ static int dbus_method_component_get_extents(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_component_get_position --
+ *
+ *   D-Bus method handler for GetPosition on the Component interface.
+ *   Returns the x and y position of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a tuple of two integers.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_component_get_position(
 	sd_bus_message *m,
 	void *userdata,
@@ -942,6 +1216,20 @@ static int dbus_method_component_get_position(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_component_get_size --
+ *
+ *   D-Bus method handler for GetSize on the Component interface.
+ *   Returns the width and height of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a tuple of two integers.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_component_get_size(
 	sd_bus_message *m,
 	void *userdata,
@@ -958,6 +1246,20 @@ static int dbus_method_component_get_size(
     return sd_bus_reply_method_return(m, "(ii)", w, h);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_component_contains --
+ *
+ *   D-Bus method handler for Contains on the Component interface.
+ *   Determines whether the given point is within the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a boolean value.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_component_contains(
 	sd_bus_message *m,
 	void *userdata,
@@ -992,15 +1294,39 @@ static int dbus_method_component_contains(
     return sd_bus_reply_method_return(m, "b", contains);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_component_grab_focus --
+ *
+ *   D-Bus method handler for GrabFocus on the Component interface.
+ *   Delegates to the Accessible.GrabFocus method.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Same as dbus_method_grab_focus.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_component_grab_focus(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 {
     return dbus_method_grab_focus(m, userdata, ret_error); /* same as Accessible.GrabFocus */
 }
 
 /*
- * ati-spi / D-Bus method implementations: Action interface for button presses, menu invocation, etc.
-*/
-
+ *----------------------------------------------------------------------
+ * dbus_method_action_get_n_actions --
+ *
+ *   D-Bus method handler for GetNActions on the Action interface.
+ *   Returns the number of actions supported by this object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an integer.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_action_get_n_actions(
 	sd_bus_message *m,
 	void *userdata,
@@ -1024,6 +1350,21 @@ static int dbus_method_action_get_n_actions(
     return sd_bus_reply_method_return(m, "i", n_actions);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_action_do_action --
+ *
+ *   D-Bus method handler for DoAction on the Action interface.
+ *   Performs the specified action on the object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Invokes the widget's action and sends state change events if
+ *   applicable.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_action_do_action(
 	sd_bus_message *m,
 	void *userdata,
@@ -1067,6 +1408,20 @@ static int dbus_method_action_do_action(
     return sd_bus_reply_method_return(m, "b", 1);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_action_get_name --
+ *
+ *   D-Bus method handler for GetName on the Action interface.
+ *   Returns the name of the specified action.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a string.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_action_get_name(
 	sd_bus_message *m,
 	void *userdata,
@@ -1097,6 +1452,20 @@ static int dbus_method_action_get_name(
     return sd_bus_reply_method_return(m, "s", action_name ? action_name : "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_action_get_description --
+ *
+ *   D-Bus method handler for GetDescription on the Action interface.
+ *   Returns the description of the specified action.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty string.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_action_get_description(
 	sd_bus_message *m,
 	TCL_UNUSED(void *), /* userdata */
@@ -1105,6 +1474,20 @@ static int dbus_method_action_get_description(
     return sd_bus_reply_method_return(m, "s", "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_action_get_key_binding --
+ *
+ *   D-Bus method handler for GetKeyBinding on the Action interface.
+ *   Returns the key binding for the specified action.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty string.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_action_get_key_binding(
 	sd_bus_message *m,
 	TCL_UNUSED(void *), /* userdata */
@@ -1114,9 +1497,19 @@ static int dbus_method_action_get_key_binding(
 }
 
 /*
- * at-spi/D-Bus method implementations: Value interface. Returns float.
-*/
-
+ *----------------------------------------------------------------------
+ * dbus_method_value_get_current --
+ *
+ *   D-Bus method handler for GetCurrentValue on the Value interface.
+ *   Returns the current value of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a double.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_value_get_current(
     sd_bus_message *m,
     void *userdata,
@@ -1134,6 +1527,20 @@ static int dbus_method_value_get_current(
     return sd_bus_reply_method_return(m, "d", value);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_value_get_minimum --
+ *
+ *   D-Bus method handler for GetMinimumValue on the Value interface.
+ *   Returns the minimum value of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a double.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_value_get_minimum(
     sd_bus_message *m,
     void *userdata,
@@ -1153,6 +1560,20 @@ static int dbus_method_value_get_minimum(
     return sd_bus_reply_method_return(m, "d", min_val);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_value_get_maximum --
+ *
+ *   D-Bus method handler for GetMaximumValue on the Value interface.
+ *   Returns the maximum value of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a double.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_value_get_maximum(
     sd_bus_message *m,
     void *userdata,
@@ -1172,6 +1593,20 @@ static int dbus_method_value_get_maximum(
     return sd_bus_reply_method_return(m, "d", max_val);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_value_set_current --
+ *
+ *   D-Bus method handler for SetCurrentValue on the Value interface.
+ *   Sets the current value of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sets the widget's value and sends a value-changed event.
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_value_set_current(
     sd_bus_message *m,
     void *userdata,
@@ -1197,10 +1632,19 @@ static int dbus_method_value_set_current(
 }
 
 /*
- * at-spi/D-Bus method implementations: Text interface (stubs). Text processing is handled at the
- * Tcl script level.
+ *----------------------------------------------------------------------
+ * dbus_method_text_get_text --
+ *
+ *   D-Bus method handler for GetText on the Text interface.
+ *   Returns the text content of the component.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty string.
+ *----------------------------------------------------------------------
  */
-
 static int dbus_method_text_get_text(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1209,6 +1653,20 @@ static int dbus_method_text_get_text(
     return sd_bus_reply_method_return(m, "s", "");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_text_get_caret_offset --
+ *
+ *   D-Bus method handler for GetCaretOffset on the Text interface.
+ *   Returns the current caret offset in the text.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with -1 (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_text_get_caret_offset(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1217,6 +1675,20 @@ static int dbus_method_text_get_caret_offset(
     return sd_bus_reply_method_return(m, "i", -1);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_text_get_character_count --
+ *
+ *   D-Bus method handler for GetCharacterCount on the Text interface.
+ *   Returns the number of characters in the text.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with 0 (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_text_get_character_count(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1226,9 +1698,19 @@ static int dbus_method_text_get_character_count(
 }
 
 /*
- * at-spi D-Bus method implementations: Selection interface.
+ *----------------------------------------------------------------------
+ * dbus_method_selection_get_n_selections --
+ *
+ *   D-Bus method handler for GetNSelections on the Selection interface.
+ *   Returns the number of selected items.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with 0 (not implemented).
+ *----------------------------------------------------------------------
  */
-
 static int dbus_method_selection_get_n_selections(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1237,6 +1719,20 @@ static int dbus_method_selection_get_n_selections(
     return sd_bus_reply_method_return(m, "i", 0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_selection_get_selection --
+ *
+ *   D-Bus method handler for GetSelection on the Selection interface.
+ *   Returns the selected item at the given index.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a null reference (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_selection_get_selection(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1245,6 +1741,20 @@ static int dbus_method_selection_get_selection(
     return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_selection_is_selected --
+ *
+ *   D-Bus method handler for IsChildSelected on the Selection interface.
+ *   Determines whether the item at the given index is selected.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with false (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_selection_is_selected(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1253,6 +1763,20 @@ static int dbus_method_selection_is_selected(
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_selection_select_all --
+ *
+ *   D-Bus method handler for SelectAll on the Selection interface.
+ *   Selects all items.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with false (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_selection_select_all(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1261,6 +1785,20 @@ static int dbus_method_selection_select_all(
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_selection_clear_selection --
+ *
+ *   D-Bus method handler for ClearSelection on the Selection interface.
+ *   Clears all selections.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with false (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_selection_clear_selection(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1269,6 +1807,20 @@ static int dbus_method_selection_clear_selection(
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_selection_add_selection --
+ *
+ *   D-Bus method handler for AddSelection on the Selection interface.
+ *   Adds the item at the given index to the selection.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with false (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_selection_add_selection(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1277,6 +1829,20 @@ static int dbus_method_selection_add_selection(
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_selection_remove_selection --
+ *
+ *   D-Bus method handler for RemoveSelection on the Selection interface.
+ *   Removes the item at the given index from the selection.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with false (not implemented).
+ *----------------------------------------------------------------------
+ */
 static int dbus_method_selection_remove_selection(
     sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
@@ -1286,17 +1852,19 @@ static int dbus_method_selection_remove_selection(
 }
 
 /*
- * D-Bus object registration. This makes Tk's accessibility visible to the system.
+ *----------------------------------------------------------------------
+ * dbus_method_cache_get_items --
+ *
+ *   D-Bus method handler for GetItems on the Cache interface.
+ *   Returns cached accessible items for the application.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an array of accessible references.
+ *----------------------------------------------------------------------
  */
-
-
-static int dbus_method_cache_get_items(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static const sd_bus_vtable cache_vtable[] = {
-    SD_BUS_VTABLE_START(0),
-    SD_BUS_METHOD("GetItems", "", "a((so)a{sv})", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_VTABLE_END
-};
-
 static int dbus_method_cache_get_items(
     sd_bus_message *m,
     void *userdata,
@@ -1330,7 +1898,26 @@ static int dbus_method_cache_get_items(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+static const sd_bus_vtable cache_vtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_METHOD("GetItems", "", "a((so)a{sv})", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_VTABLE_END
+};
 
+/*
+ *----------------------------------------------------------------------
+ * RegisterDbusObject --
+ *
+ *   Register a TkAccessible object on the D-Bus with all appropriate
+ *   interfaces based on its role.
+ *
+ * Results:
+ *   Returns true on success, false on failure.
+ *
+ * Side effects:
+ *   Creates D-Bus object paths and vtables for the accessible object.
+ *----------------------------------------------------------------------
+ */
 static bool RegisterDbusObject(TkAccessible *acc)
 {
     if (!atspi_conn || !atspi_conn->bus || !acc) {
@@ -1419,9 +2006,18 @@ static bool RegisterDbusObject(TkAccessible *acc)
 }
 
 /*
- * Event emission. Send notifications of state changes, actions, and more.
+ *----------------------------------------------------------------------
+ * EmitObjectEventFull --
+ *
+ *   Emit a full AT-SPI object event signal on the D-Bus.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Sends a D-Bus signal with the event details.
+ *----------------------------------------------------------------------
  */
-
 static void
 EmitObjectEventFull(TkAccessible *acc, const char *member, const char *type, int32_t detail1, int32_t detail2, TkAccessible *related)
 {
@@ -1460,6 +2056,19 @@ EmitObjectEventFull(TkAccessible *acc, const char *member, const char *type, int
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * EmitWindowEvent --
+ *
+ *   Emit an AT-SPI window event signal on the D-Bus.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Sends a D-Bus signal with the window event details.
+ *----------------------------------------------------------------------
+ */
 static void
 EmitWindowEvent(TkAccessible *acc, const char *member, const char *type)
 {
@@ -1478,6 +2087,19 @@ EmitWindowEvent(TkAccessible *acc, const char *member, const char *type)
     (void)r;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * SendAtspiEvent --
+ *
+ *   Send an AT-SPI event for an accessible object.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Emits the appropriate D-Bus signal for the event type.
+ *----------------------------------------------------------------------
+ */
 static void SendAtspiEvent(TkAccessible *acc, const char *event_type, const char *detail)
 {
     if (!atspi_conn || !atspi_conn->bus || !acc || !acc->dbus_path) {
@@ -1524,7 +2146,19 @@ static void SendAtspiEvent(TkAccessible *acc, const char *event_type, const char
     }
 }
 
-
+/*
+ *----------------------------------------------------------------------
+ * SendChildrenChanged --
+ *
+ *   Send a children-changed event for an accessible object.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Emits a D-Bus signal indicating that a child was added or removed.
+ *----------------------------------------------------------------------
+ */
 static void SendChildrenChanged(TkAccessible *parent, int index, TkAccessible *child, int added)
 {
     if (!parent || !child) return;
@@ -1536,7 +2170,20 @@ static void SendChildrenChanged(TkAccessible *parent, int index, TkAccessible *c
     EmitObjectEventFull(parent, "ChildrenChanged", type, (int32_t)index, 0, child);
 }
 
-
+/*
+ *----------------------------------------------------------------------
+ * StateBitToName --
+ *
+ *   Convert a state bit flag to its corresponding AT-SPI state name.
+ *
+ * Results:
+ *   Returns a pointer to the state name string, or NULL if the bit
+ *   is not recognized.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
 static const char *StateBitToName(uint64_t bit)
 {
     /* Map single-bit state to at-spi name. bit is like ATSPI_STATE_FOCUSED etc.
@@ -1558,6 +2205,19 @@ static const char *StateBitToName(uint64_t bit)
     return NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * SendStateChanged --
+ *
+ *   Send a state-changed event for an accessible object.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Emits a D-Bus signal indicating that a state has changed.
+ *----------------------------------------------------------------------
+ */
 static void SendStateChanged(TkAccessible *acc, uint64_t state, int value)
 {
     if (!acc) return;
@@ -1583,7 +2243,19 @@ static void SendStateChanged(TkAccessible *acc, uint64_t state, int value)
     EmitObjectEventFull(acc, "StateChanged", type, (int32_t)(value ? 1 : 0), 0, NULL);
 }
 
-
+/*
+ *----------------------------------------------------------------------
+ * SendActiveDescendantChanged --
+ *
+ *   Send an active-descendant-changed event for an accessible object.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Emits a D-Bus signal indicating that the active descendant has changed.
+ *----------------------------------------------------------------------
+ */
 static void SendActiveDescendantChanged(TkAccessible *container, TkAccessible *descendant)
 {
     if (!container || !descendant) return;
@@ -1595,11 +2267,20 @@ static void SendActiveDescendantChanged(TkAccessible *container, TkAccessible *d
                         0, 0, descendant);
 }
 
-
 /*
- * Tcl event loop integration. D-Bus will be come a custom event source for Tcl.
+ *----------------------------------------------------------------------
+ * BusFileHandlerProc --
+ *
+ *   Tcl file handler callback for the D-Bus socket. Processes pending
+ *   D-Bus messages when the file descriptor is readable.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Processes D-Bus messages via sd_bus_process.
+ *----------------------------------------------------------------------
  */
-
 static void BusFileHandlerProc(void *clientData, int mask)
 {
     AtspiConnection *conn = (AtspiConnection *)clientData;
@@ -1608,6 +2289,20 @@ static void BusFileHandlerProc(void *clientData, int mask)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * TclEventSetupProc --
+ *
+ *   Tcl event source setup callback. Creates a file handler for the
+ *   D-Bus socket when window events are requested.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Creates a Tcl file handler for the D-Bus connection.
+ *----------------------------------------------------------------------
+ */
 static void TclEventSetupProc(void *clientData, int flags)
 {
     AtspiConnection *conn = (AtspiConnection *)clientData;
@@ -1626,6 +2321,20 @@ static void TclEventSetupProc(void *clientData, int flags)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * TclEventCheckProc --
+ *
+ *   Tcl event source check callback. Services pending D-Bus events when
+ *   window events are requested.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May trigger Tcl event processing if D-Bus events are pending.
+ *----------------------------------------------------------------------
+ */
 static void TclEventCheckProc(void *clientData, int flags)
 {
     AtspiConnection *conn = (AtspiConnection *)clientData;
@@ -1640,10 +2349,19 @@ static void TclEventCheckProc(void *clientData, int flags)
 }
 
 /*
- * Tk Accessible object lifecycle: create, register, track, and free accessible objects
- * in toplevel windows and child widgets.
+ *----------------------------------------------------------------------
+ * CreateAccessible --
+ *
+ *   Create a new TkAccessible object for a Tk window.
+ *
+ * Results:
+ *   Returns a pointer to the newly created TkAccessible, or NULL on
+ *   failure.
+ *
+ * Side effects:
+ *   Allocates memory and registers the object on D-Bus.
+ *----------------------------------------------------------------------
  */
-
 static TkAccessible *CreateAccessible(Tcl_Interp *interp, Tk_Window tkwin, const char *path)
 {
     if (!interp || !tkwin) return NULL;
@@ -1669,6 +2387,19 @@ static TkAccessible *CreateAccessible(Tcl_Interp *interp, Tk_Window tkwin, const
     return acc;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * FreeAccessible --
+ *
+ *   Free a TkAccessible object and release its resources.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Deallocates memory and unregisters D-Bus objects.
+ *----------------------------------------------------------------------
+ */
 static void FreeAccessible(TkAccessible *acc)
 {
     if (!acc) return;
@@ -1697,6 +2428,19 @@ static void FreeAccessible(TkAccessible *acc)
     Tcl_Free(acc);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * RegisterAccessible --
+ *
+ *   Register a TkAccessible in the global accessible map.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Adds the accessible to the hash table and toplevel list if applicable.
+ *----------------------------------------------------------------------
+ */
 static void RegisterAccessible(Tk_Window tkwin, TkAccessible *acc)
 {
     if (!tkwin || !acc || !atspi_conn) return;
@@ -1709,6 +2453,19 @@ static void RegisterAccessible(Tk_Window tkwin, TkAccessible *acc)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * GetAccessible --
+ *
+ *   Retrieve the TkAccessible for a Tk window from the global map.
+ *
+ * Results:
+ *   Returns a pointer to the TkAccessible, or NULL if not found.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
 static TkAccessible *
 GetAccessible(Tk_Window tkwin)
 {
@@ -1725,7 +2482,19 @@ GetAccessible(Tk_Window tkwin)
     return (TkAccessible *)Tcl_GetHashValue(entry);
 }
 
-
+/*
+ *----------------------------------------------------------------------
+ * UnregisterAccessible --
+ *
+ *   Remove a TkAccessible from the global accessible map.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Removes the accessible from the hash table and frees it.
+ *----------------------------------------------------------------------
+ */
 static void UnregisterAccessible(Tk_Window tkwin)
 {
     if (!atspi_conn || !tkwin) return;
@@ -1742,6 +2511,19 @@ static void UnregisterAccessible(Tk_Window tkwin)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * RegisterToplevel --
+ *
+ *   Register a toplevel accessible in the toplevel list.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Adds the toplevel to the list and sends a window-create event.
+ *----------------------------------------------------------------------
+ */
 static void RegisterToplevel(TkAccessible *acc)
 {
     if (!acc) return;
@@ -1758,6 +2540,19 @@ static void RegisterToplevel(TkAccessible *acc)
     SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_CREATE, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * UnregisterToplevel --
+ *
+ *   Remove a toplevel accessible from the toplevel list.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Removes the toplevel from the list.
+ *----------------------------------------------------------------------
+ */
 static void UnregisterToplevel(TkAccessible *acc)
 {
     if (!acc || !atspi_conn) return;
@@ -1775,6 +2570,19 @@ static void UnregisterToplevel(TkAccessible *acc)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * RegisterWidgetRecursive --
+ *
+ *   Recursively register all accessible children of a window.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Creates TkAccessible objects for all widgets in the hierarchy.
+ *----------------------------------------------------------------------
+ */
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 {
     if (!tkwin) return;
@@ -1810,6 +2618,19 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * EnsureAccessibleInHierarchy --
+ *
+ *   Ensure that a window and all its ancestors have accessible objects.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Creates TkAccessible objects for missing windows in the hierarchy.
+ *----------------------------------------------------------------------
+ */
 static void EnsureAccessibleInHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
 {
     if (!tkwin) return;
@@ -1846,6 +2667,19 @@ static void EnsureAccessibleInHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * UpdateFocusChain --
+ *
+ *   Update the focus state for a window and its ancestors.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Sends focus and activation events.
+ *----------------------------------------------------------------------
+ */
 static void UpdateFocusChain(Tk_Window focused)
 {
     if (!focused) return;
@@ -1883,6 +2717,19 @@ static void UpdateFocusChain(Tk_Window focused)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * GetToplevelOfWidget --
+ *
+ *   Get the toplevel window containing a widget.
+ *
+ * Results:
+ *   Returns a pointer to the toplevel Tk_Window, or NULL if not found.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
@@ -1897,9 +2744,18 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 }
 
 /*
- * Track accessibility roles and determine/update state.
-*/
-
+ *----------------------------------------------------------------------
+ * GetRoleForWidget --
+ *
+ *   Determine the AT-SPI role for a Tk widget.
+ *
+ * Results:
+ *   Returns the AT-SPI role code for the widget.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
 static int GetRoleForWidget(Tk_Window tkwin)
 {
     if (!tkwin) return ATSPI_ROLE_INVALID;
@@ -1939,6 +2795,19 @@ static int GetRoleForWidget(Tk_Window tkwin)
     return ATSPI_ROLE_INVALID;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * ComputeStateForWidget --
+ *
+ *   Compute the AT-SPI state bitmask for a widget.
+ *
+ * Results:
+ *   Returns a 64-bit unsigned integer with the state bits set.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
 static uint64_t ComputeStateForWidget(TkAccessible *acc)
 {
     uint64_t states = 0;
@@ -2015,9 +2884,19 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc)
 }
 
 /*
- * Attribute getters from Tk - pull data from the central AccessibleObject hash table.
+ *----------------------------------------------------------------------
+ * GetNameForWidget --
+ *
+ *   Get the accessible name for a widget.
+ *
+ * Results:
+ *   Returns a newly allocated string with the widget's name, or NULL
+ *   if no name is set.
+ *
+ * Side effects:
+ *   Memory is allocated via Tcl_Strdup.
+ *----------------------------------------------------------------------
  */
-
 static char *GetNameForWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
@@ -2040,6 +2919,20 @@ static char *GetNameForWidget(Tk_Window tkwin)
     return name ? Tcl_Strdup(name) : NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * GetDescriptionForWidget --
+ *
+ *   Get the accessible description for a widget.
+ *
+ * Results:
+ *   Returns a newly allocated string with the widget's description, or
+ *   NULL if no description is set.
+ *
+ * Side effects:
+ *   Memory is allocated via Tcl_Strdup.
+ *----------------------------------------------------------------------
+ */
 static char *GetDescriptionForWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
@@ -2057,6 +2950,20 @@ static char *GetDescriptionForWidget(Tk_Window tkwin)
     return desc ? Tcl_Strdup(desc) : NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * GetValueForWidget --
+ *
+ *   Get the accessible value for a widget.
+ *
+ * Results:
+ *   Returns a newly allocated string with the widget's value, or NULL
+ *   if no value is set.
+ *
+ * Side effects:
+ *   Memory is allocated via Tcl_Strdup.
+ *----------------------------------------------------------------------
+ */
 static char *GetValueForWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
@@ -2075,9 +2982,18 @@ static char *GetValueForWidget(Tk_Window tkwin)
 }
 
 /*
- * X Event Handlers.
+ *----------------------------------------------------------------------
+ * TkAccessible_RegisterEventHandlers --
+ *
+ *   Register X event handlers for a Tk window.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Creates X event handlers for the window.
+ *----------------------------------------------------------------------
  */
-
 static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *acc)
 {
     if (!tkwin || !acc) return;
@@ -2092,6 +3008,19 @@ static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *ac
                           TkAccessible_ConfigureHandler, acc);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * TkAccessible_DestroyHandler --
+ *
+ *   X event handler for window destruction.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Unregisters the accessible object and sends removal events.
+ *----------------------------------------------------------------------
+ */
 static void TkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
 {
     if (eventPtr->type != DestroyNotify) return;
@@ -2153,6 +3082,19 @@ static void TkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
     UnregisterAccessible(acc->tkwin);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * TkAccessible_FocusHandler --
+ *
+ *   X event handler for focus changes.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Updates focus state and sends focus events.
+ *----------------------------------------------------------------------
+ */
 static void TkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 {
     TkAccessible *acc = (TkAccessible *)clientData;
@@ -2183,6 +3125,19 @@ static void TkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * TkAccessible_CreateHandler --
+ *
+ *   X event handler for window creation.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Registers accessible objects for newly created windows.
+ *----------------------------------------------------------------------
+ */
 static void TkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
 {
     if (!eventPtr || eventPtr->type != CreateNotify) return;
@@ -2240,6 +3195,19 @@ static void TkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
     SendChildrenChanged(parent_acc, idx, child_acc, 1);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * TkAccessible_ConfigureHandler --
+ *
+ *   X event handler for window configuration changes.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Updates geometry and visibility states.
+ *----------------------------------------------------------------------
+ */
 static void TkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 {
     if (!eventPtr || eventPtr->type != ConfigureNotify) return;
@@ -2268,51 +3236,21 @@ static void TkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 }
 
 /*
- * Screen reader detection.
+ *----------------------------------------------------------------------
+ * IsScreenReaderActive --
+ *
+ *   Check if a screen reader (Orca) is currently running.
+ *
+ * Results:
+ *   Returns 1 if a screen reader is running, 0 otherwise.
+ *
+ * Side effects:
+ *   Executes pgrep to check for Orca processes.
+ *----------------------------------------------------------------------
  */
-
 static int IsScreenReaderActive(void)
 {
-    /* First try the proper AT-SPI status: org.a11y.Status.IsEnabled and
-     * ScreenReaderEnabled on the a11y bus, or session bus fallback.
-     * pgrep is last resort and fails inside flatpak/snap.
-     */
-    sd_bus *bus = NULL;
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    int r;
-    int enabled = 0;
 
-    /* Try session bus first for org.a11y.Status */
-    r = sd_bus_default_user(&bus);
-    if (r >= 0) {
-        int is_enabled = 0;
-        int screen_reader_enabled = 0;
-        /* IsEnabled property */
-        r = sd_bus_get_property_trivial(bus,
-            "org.a11y.Bus",
-            "/org/a11y/bus",
-            "org.a11y.Status",
-            "IsEnabled",
-            &error,
-            'b', &is_enabled);
-        if (r >= 0 && is_enabled) enabled = 1;
-        sd_bus_error_free(&error);
-
-        r = sd_bus_get_property_trivial(bus,
-            "org.a11y.Bus",
-            "/org/a11y/bus",
-            "org.a11y.Status",
-            "ScreenReaderEnabled",
-            &error,
-            'b', &screen_reader_enabled);
-        if (r >= 0 && screen_reader_enabled) enabled = 1;
-        sd_bus_error_free(&error);
-
-        sd_bus_unref(bus);
-        if (enabled) return 1;
-    }
-
-    /* Fallback: pgrep */
     FILE *fp = popen("pgrep -x orca 2>/dev/null; pgrep -f /orca 2>/dev/null | head -1", "r");
     if (!fp) return 0;
     char buffer[64];
@@ -2321,8 +3259,18 @@ static int IsScreenReaderActive(void)
     return running;
 }
 
-/* Get the AT-SPI bus address. Spec says session bus object org.a11y.Bus
- * at /org/a11y/bus has method GetAddress() or property, or env AT_SPI_BUS.
+/*
+ *----------------------------------------------------------------------
+ * ConnectToAtspiBus --
+ *
+ *   Connect to the AT-SPI D-Bus.
+ *
+ * Results:
+ *   Returns a pointer to the D-Bus connection, or NULL on failure.
+ *
+ * Side effects:
+ *   Establishes a D-Bus connection.
+ *----------------------------------------------------------------------
  */
 static sd_bus *ConnectToAtspiBus(void)
 {
@@ -2390,138 +3338,19 @@ static sd_bus *ConnectToAtspiBus(void)
     return NULL;
 }
 
-
 /*
- * Tcl command implementations.
-*/
-
-static int AddAccessibleCmd(
-	TCL_UNUSED(void *),
-	Tcl_Interp *interp,
-	int objc,
-	Tcl_Obj*const objv[])
-{
-    if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
-    }
-
-    const char *windowName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
-    if (!tkwin) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("Invalid window name.", -1));
-        return TCL_ERROR;
-    }
-
-    RegisterWidgetRecursive(interp, tkwin);
-    EnsureAccessibleInHierarchy(interp, tkwin);
-
-    TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
-    if (focusPtr == (TkWindow*)tkwin) {
-        UpdateFocusChain(tkwin);
-    }
-
-    return TCL_OK;
-}
-
-static int EmitSelectionChangedCmd(
-	TCL_UNUSED(void *),
-	Tcl_Interp *interp,
-	int objc,
-    Tcl_Obj*const objv[])
-{
-    if (objc != 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "window");
-        return TCL_ERROR;
-    }
-
-    const char *windowName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_OK;
-
-    TkAccessible *acc = GetAccessible(tkwin);
-    if (!acc) {
-        acc = CreateAccessible(interp, tkwin, windowName);
-        if (!acc) return TCL_OK;
-        RegisterAccessible(tkwin, acc);
-        TkAccessible_RegisterEventHandlers(tkwin, acc);
-    }
-
-    int role = GetRoleForWidget(tkwin);
-    if (role == ATSPI_ROLE_CHECK_BOX || role == ATSPI_ROLE_RADIO_BUTTON) {
-        SendStateChanged(acc, ATSPI_STATE_CHECKED, 1); /* will recompute */
-    } else if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
-        SendAtspiEvent(acc, ATSPI_EVENT_TEXT_CHANGED, "insert");
-    } else if (role == ATSPI_ROLE_SPIN_BUTTON || role == ATSPI_ROLE_SLIDER) {
-        SendAtspiEvent(acc, ATSPI_EVENT_VALUE_CHANGED, NULL);
-    } else {
-        SendAtspiEvent(acc, ATSPI_EVENT_SELECTION_CHANGED, NULL);
-    }
-
-    return TCL_OK;
-}
-
-static int EmitFocusChangedCmd(
-    TCL_UNUSED(void *), /* void **/
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
-{
-    if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "window");
-	return TCL_ERROR;
-    }
-
-    const char *windowName = Tcl_GetString(objv[1]);
-    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
-    if (!tkwin) return TCL_OK;
-
-    TkAccessible *acc = GetAccessible(tkwin);
-    if (!acc) {
-        acc = CreateAccessible(interp, tkwin, windowName);
-        if (!acc) return TCL_OK;
-        RegisterAccessible(tkwin, acc);
-        TkAccessible_RegisterEventHandlers(tkwin, acc);
-    }
-
-    /*
-     * Real widget focus (e.g. Entry, Button) is already reported by
-     * TkAccessible_FocusHandler off real X FocusIn/FocusOut events. This
-     * command exists for the cases the Tcl layer drives "focus" itself
-     * without a corresponding X event - most notably active menu entries,
-     * which change via <<MenuSelect>>/arrow-key navigation rather than
-     * real window focus. Report the focused state and, for a container
-     * like a menu, notify the parent of the new active descendant.
-     */
-    acc->is_focused = 1;
-    acc->states |= ATSPI_STATE_FOCUSED;
-    SendStateChanged(acc, ATSPI_STATE_FOCUSED, 1);
-    SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
-
-    if (acc->parent) {
-        SendActiveDescendantChanged(acc->parent, acc);
-    }
-
-    return TCL_OK;
-}
-
-static int IsScreenReaderRunningCmd(
-    TCL_UNUSED(void *), /* void **/
-    Tcl_Interp *interp,
-    TCL_UNUSED(int), /* objc */
-    TCL_UNUSED(Tcl_Obj *const *)) /* objv */
-{
-    bool result = IsScreenReaderActive();
-
-    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
-    return TCL_OK;
-}
-
-
-/*
- * Module initialization.
-*/
-
+ *----------------------------------------------------------------------
+ * InitializeAtspiConnection --
+ *
+ *   Initialize the global AT-SPI connection.
+ *
+ * Results:
+ *   Returns true on success, false on failure.
+ *
+ * Side effects:
+ *   Allocates global structures and connects to D-Bus.
+ *----------------------------------------------------------------------
+ */
 static bool
 InitializeAtspiConnection(void)
 {
@@ -2637,15 +3466,18 @@ InitializeAtspiConnection(void)
 }
 
 /*
- * Embed our application into the registry's accessible tree.
+ *----------------------------------------------------------------------
+ * EmbedWithRegistry --
  *
- * "org.a11y.atspi.Registry.RegisterApplication" (previously called here)
- * does not exist in the AT-SPI D-Bus API and always failed silently. Real
- * application registration is org.a11y.atspi.Socket.Embed, called against
- * the registry's socket object, passing our own root as the "plug" and
- * receiving the desktop's reference as the "socket" in return. Without
- * this handshake the registry (and therefore Orca) never learns our
- * application exists, so it has nothing to attribute incoming events to.
+ *   Embed our application into the registry's accessible tree using
+ *   the Socket.Embed method.
+ *
+ * Results:
+ *   Returns true on success, false on failure.
+ *
+ * Side effects:
+ *   Stores the desktop reference in the global connection state.
+ *----------------------------------------------------------------------
  */
 static bool EmbedWithRegistry(void)
 {
@@ -2689,6 +3521,198 @@ static bool EmbedWithRegistry(void)
     return true;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * AddAccessibleCmd --
+ *
+ *   Tcl command implementation for ::tk::accessible::add_acc_object.
+ *   Registers a window and its children as accessible objects.
+ *
+ * Results:
+ *   Returns TCL_OK or TCL_ERROR.
+ *
+ * Side effects:
+ *   Creates accessible objects for the window hierarchy.
+ *----------------------------------------------------------------------
+ */
+static int AddAccessibleCmd(
+	TCL_UNUSED(void *),
+	Tcl_Interp *interp,
+	int objc,
+	Tcl_Obj*const objv[])
+{
+    if (objc != 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "window");
+        return TCL_ERROR;
+    }
+
+    const char *windowName = Tcl_GetString(objv[1]);
+    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
+    if (!tkwin) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("Invalid window name.", -1));
+        return TCL_ERROR;
+    }
+
+    RegisterWidgetRecursive(interp, tkwin);
+    EnsureAccessibleInHierarchy(interp, tkwin);
+
+    TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
+    if (focusPtr == (TkWindow*)tkwin) {
+        UpdateFocusChain(tkwin);
+    }
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * EmitSelectionChangedCmd --
+ *
+ *   Tcl command implementation for ::tk::accessible::emit_selection_change.
+ *   Emits a selection changed event for a widget.
+ *
+ * Results:
+ *   Returns TCL_OK or TCL_ERROR.
+ *
+ * Side effects:
+ *   Sends a D-Bus event signal.
+ *----------------------------------------------------------------------
+ */
+static int EmitSelectionChangedCmd(
+	TCL_UNUSED(void *),
+	Tcl_Interp *interp,
+	int objc,
+    Tcl_Obj*const objv[])
+{
+    if (objc != 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "window");
+        return TCL_ERROR;
+    }
+
+    const char *windowName = Tcl_GetString(objv[1]);
+    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
+    if (!tkwin) return TCL_OK;
+
+    TkAccessible *acc = GetAccessible(tkwin);
+    if (!acc) {
+        acc = CreateAccessible(interp, tkwin, windowName);
+        if (!acc) return TCL_OK;
+        RegisterAccessible(tkwin, acc);
+        TkAccessible_RegisterEventHandlers(tkwin, acc);
+    }
+
+    int role = GetRoleForWidget(tkwin);
+    if (role == ATSPI_ROLE_CHECK_BOX || role == ATSPI_ROLE_RADIO_BUTTON) {
+        SendStateChanged(acc, ATSPI_STATE_CHECKED, 1); /* will recompute */
+    } else if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
+        SendAtspiEvent(acc, ATSPI_EVENT_TEXT_CHANGED, "insert");
+    } else if (role == ATSPI_ROLE_SPIN_BUTTON || role == ATSPI_ROLE_SLIDER) {
+        SendAtspiEvent(acc, ATSPI_EVENT_VALUE_CHANGED, NULL);
+    } else {
+        SendAtspiEvent(acc, ATSPI_EVENT_SELECTION_CHANGED, NULL);
+    }
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * EmitFocusChangedCmd --
+ *
+ *   Tcl command implementation for ::tk::accessible::emit_focus_change.
+ *   Emits a focus changed event for a widget.
+ *
+ * Results:
+ *   Returns TCL_OK or TCL_ERROR.
+ *
+ * Side effects:
+ *   Sends a D-Bus event signal.
+ *----------------------------------------------------------------------
+ */
+static int EmitFocusChangedCmd(
+    TCL_UNUSED(void *), /* void **/
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window");
+	return TCL_ERROR;
+    }
+
+    const char *windowName = Tcl_GetString(objv[1]);
+    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
+    if (!tkwin) return TCL_OK;
+
+    TkAccessible *acc = GetAccessible(tkwin);
+    if (!acc) {
+        acc = CreateAccessible(interp, tkwin, windowName);
+        if (!acc) return TCL_OK;
+        RegisterAccessible(tkwin, acc);
+        TkAccessible_RegisterEventHandlers(tkwin, acc);
+    }
+
+    /*
+     * Real widget focus (e.g. Entry, Button) is already reported by
+     * TkAccessible_FocusHandler off real X FocusIn/FocusOut events. This
+     * command exists for the cases the Tcl layer drives "focus" itself
+     * without a corresponding X event - most notably active menu entries,
+     * which change via <<MenuSelect>>/arrow-key navigation rather than
+     * real window focus. Report the focused state and, for a container
+     * like a menu, notify the parent of the new active descendant.
+     */
+    acc->is_focused = 1;
+    acc->states |= ATSPI_STATE_FOCUSED;
+    SendStateChanged(acc, ATSPI_STATE_FOCUSED, 1);
+    SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
+
+    if (acc->parent) {
+        SendActiveDescendantChanged(acc->parent, acc);
+    }
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * IsScreenReaderRunningCmd --
+ *
+ *   Tcl command implementation for ::tk::accessible::check_screenreader.
+ *   Checks if a screen reader is currently running.
+ *
+ * Results:
+ *   Returns TCL_OK with a boolean result.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+static int IsScreenReaderRunningCmd(
+    TCL_UNUSED(void *), /* void **/
+    Tcl_Interp *interp,
+    TCL_UNUSED(int), /* objc */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv */
+{
+    bool result = IsScreenReaderActive();
+
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandAccessibility_Init --
+ *
+ *   Initialize the Wayland accessibility module.
+ *
+ * Results:
+ *   Returns TCL_OK on success, TCL_ERROR on failure.
+ *
+ * Side effects:
+ *   Initializes D-Bus connection, registers accessible objects, and
+ *   creates Tcl commands.
+ *----------------------------------------------------------------------
+ */
 int TkWaylandAccessibility_Init(Tcl_Interp *interp)
 {
     /* Initialize D-Bus connection to at-spi. */
@@ -2727,7 +3751,6 @@ int TkWaylandAccessibility_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
-
 
 /*
  * Local Variables:
