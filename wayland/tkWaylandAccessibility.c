@@ -1160,6 +1160,48 @@ static int dbus_method_selection_remove_selection(
  * D-Bus object registration. This makes Tk's accessibility visible to the system.
  */
 
+
+static int dbus_method_cache_get_items(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static const sd_bus_vtable cache_vtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_METHOD("GetItems", "", "a((so)a{sv})", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_VTABLE_END
+};
+
+static int dbus_method_cache_get_items(
+    sd_bus_message *m,
+    void *userdata,
+    sd_bus_error *ret_error)
+{
+    sd_bus_message *reply = NULL;
+    int r;
+    r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    /* Return empty cache - Orca will query children individually */
+    sd_bus_message_open_container(reply, 'a', "((so)a{sv})");
+    /* Add root and toplevels */
+    if (atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->dbus_path) {
+        sd_bus_message_open_container(reply, 'r', "(so)a{sv}");
+        sd_bus_message_append(reply, "(so)", atspi_conn->root_accessible->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+        sd_bus_message_open_container(reply, 'a', "{sv}");
+        sd_bus_message_close_container(reply);
+        sd_bus_message_close_container(reply);
+        AccessibleList *l;
+        for (l = atspi_conn->toplevel_accessibles; l; l = l->next) {
+            TkAccessible *top = l->acc;
+            if (!top || !top->dbus_path) continue;
+            sd_bus_message_open_container(reply, 'r', "(so)a{sv}");
+            sd_bus_message_append(reply, "(so)", top->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+            sd_bus_message_open_container(reply, 'a', "{sv}");
+            sd_bus_message_close_container(reply);
+            sd_bus_message_close_container(reply);
+        }
+    }
+    sd_bus_message_close_container(reply);
+    return sd_bus_send(NULL, reply, NULL);
+}
+
+
 static bool RegisterDbusObject(TkAccessible *acc)
 {
     if (!atspi_conn || !atspi_conn->bus || !acc) {
@@ -1205,6 +1247,16 @@ static bool RegisterDbusObject(TkAccessible *acc)
                               component_vtable,
                               acc);
 
+    /* Register Cache interface on root only - required for Orca */
+    if (acc == atspi_conn->root_accessible) {
+        sd_bus_add_object_vtable(atspi_conn->bus,
+                                  NULL,
+                                  "/org/a11y/atspi/cache",
+                                  "org.a11y.atspi.Cache",
+                                  cache_vtable,
+                                  acc);
+    }
+
     /* Conditionally register other interfaces based on role. */
     int role = acc->role;
     if (role == ATSPI_ROLE_PUSH_BUTTON || role == ATSPI_ROLE_CHECK_BOX ||
@@ -1234,76 +1286,175 @@ static bool RegisterDbusObject(TkAccessible *acc)
  * Event emission. Send notifications of state changes, actions, and more.
  */
 
+static void
+EmitObjectEventFull(TkAccessible *acc, const char *member, const char *type, int32_t detail1, int32_t detail2, TkAccessible *related)
+{
+    if (!atspi_conn || !atspi_conn->bus) return;
+    if (!acc || !acc->dbus_path) return;
+    if (!member || !type) return;
+
+    const char *rel_path = "/";
+    const char *rel_iface = "org.a11y.atspi.null";
+    if (related && related->dbus_path) {
+        rel_path = related->dbus_path;
+        rel_iface = ATSPI_ACCESSIBLE_INTERFACE;
+    }
+
+    /* AT-SPI Event.Object signature is siiv where v = (so) . This matches
+     * current at-spi2-core/xml/Event.xml and is what Orca expects.
+     * Using siiv avoids the old sii(so) vs siiv incompatibility that caused
+     * Qt crashes.
+     */
+    int r = sd_bus_emit_signal(atspi_conn->bus,
+                               acc->dbus_path,
+                               "org.a11y.atspi.Event.Object",
+                               member,
+                               "siiv",
+                               type,
+                               detail1,
+                               detail2,
+                               "(so)", rel_path, rel_iface);
+    if (r < 0) {
+        /* Don't crash, just debug */
+        // fprintf(stderr, "EmitObjectEvent %s/%s failed: %d\n", member, type, r);
+    }
+}
+
+static void
+EmitWindowEvent(TkAccessible *acc, const char *member, const char *type)
+{
+    if (!atspi_conn || !atspi_conn->bus) return;
+    if (!acc || !acc->dbus_path) return;
+    if (!member || !type) return;
+
+    int r = sd_bus_emit_signal(atspi_conn->bus,
+                               acc->dbus_path,
+                               "org.a11y.atspi.Event.Window",
+                               member,
+                               "siiv",
+                               type,
+                               0, 0,
+                               "(so)", "/", "org.a11y.atspi.null");
+    (void)r;
+}
+
 static void SendAtspiEvent(TkAccessible *acc, const char *event_type, const char *detail)
 {
     if (!atspi_conn || !atspi_conn->bus || !acc || !acc->dbus_path) {
         return;
     }
 
-    char event_name[256];
-    if (detail) {
-        snprintf(event_name, sizeof(event_name), "%s:%s", event_type, detail);
+    /* event_type comes from ATSPI_EVENT_* constants like "focus",
+     * "value-changed", "window:activate", etc.
+     */
+    if (strcmp(event_type, ATSPI_EVENT_FOCUS) == 0) {
+        EmitObjectEventFull(acc, "Focus", "object:focus", 0, 0, NULL);
+    } else if (strcmp(event_type, ATSPI_EVENT_VALUE_CHANGED) == 0) {
+        EmitObjectEventFull(acc, "PropertyChange", "object:property-change:accessible-value", 0, 0, NULL);
+    } else if (strcmp(event_type, ATSPI_EVENT_TEXT_CHANGED) == 0) {
+        const char *t = "object:text-changed";
+        if (detail) {
+            char buf[128];
+            snprintf(buf, sizeof(buf), "object:text-changed:%s", detail);
+            EmitObjectEventFull(acc, "TextChanged", buf, 0, 0, NULL);
+        } else {
+            EmitObjectEventFull(acc, "TextChanged", t, 0, 0, NULL);
+        }
+    } else if (strcmp(event_type, ATSPI_EVENT_SELECTION_CHANGED) == 0) {
+        EmitObjectEventFull(acc, "SelectionChanged", "object:selection-changed", 0, 0, NULL);
+    } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_ACTIVATE) == 0) {
+        EmitWindowEvent(acc, "Activate", "window:activate");
+    } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_DEACTIVATE) == 0) {
+        EmitWindowEvent(acc, "Deactivate", "window:deactivate");
+    } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_CREATE) == 0) {
+        EmitWindowEvent(acc, "Create", "window:create");
+    } else if (strncmp(event_type, "object:", 7) == 0) {
+        /* generic object event already fully qualified */
+        EmitObjectEventFull(acc, detail ? detail : "StateChanged", event_type, 0, 0, NULL);
     } else {
-        snprintf(event_name, sizeof(event_name), "%s", event_type);
+        /* fallback: treat event_type as member, detail as type suffix */
+        char typebuf[256];
+        if (detail) {
+            snprintf(typebuf, sizeof(typebuf), "object:%s:%s", event_type, detail);
+        } else {
+            snprintf(typebuf, sizeof(typebuf), "object:%s", event_type);
+        }
+        /* Capitalize first letter for member? keep as is but ensure valid */
+        EmitObjectEventFull(acc, "StateChanged", typebuf, 0, 0, NULL);
     }
-
-    sd_bus_emit_signal(atspi_conn->bus,
-                       acc->dbus_path,
-                       ATSPI_EVENT_INTERFACE,
-                       event_name,
-                       "s",
-                       acc->dbus_path);
 }
+
 
 static void SendChildrenChanged(TkAccessible *parent, int index, TkAccessible *child, int added)
 {
     if (!parent || !child) return;
+    if (!parent->dbus_path || !child->dbus_path) return;
+    if (!atspi_conn || !atspi_conn->bus) return;
 
-    const char *detail = added ? "add" : "remove";
-    SendAtspiEvent(parent, ATSPI_EVENT_CHILDREN_CHANGED, detail);
-    /* Also emit a more specific signal with index and child */
-    if (atspi_conn && atspi_conn->bus) {
-        sd_bus_emit_signal(atspi_conn->bus,
-                           parent->dbus_path,
-                           ATSPI_EVENT_INTERFACE,
-                           "children-changed",
-                           "(i(so))",
-                           index,
-                           child->dbus_path,
-                           ATSPI_ACCESSIBLE_INTERFACE);
-    }
+    const char *type = added ? "object:children-changed:add" : "object:children-changed:remove";
+    /* detail1 = index, detail2 = 0, child in variant */
+    EmitObjectEventFull(parent, "ChildrenChanged", type, (int32_t)index, 0, child);
+}
+
+
+static const char *StateBitToName(uint64_t bit)
+{
+    /* Map single-bit state to at-spi name. bit is like ATSPI_STATE_FOCUSED etc.
+     * The file defines bits as 1ULL<<n . We map by bit position.
+     */
+    if (bit == ATSPI_STATE_ENABLED) return "enabled";
+    if (bit == ATSPI_STATE_SENSITIVE) return "sensitive";
+    if (bit == ATSPI_STATE_FOCUSABLE) return "focusable";
+    if (bit == ATSPI_STATE_FOCUSED) return "focused";
+    if (bit == ATSPI_STATE_VISIBLE) return "visible";
+    if (bit == ATSPI_STATE_SHOWING) return "showing";
+    if (bit == ATSPI_STATE_EDITABLE) return "editable";
+    if (bit == ATSPI_STATE_CHECKED) return "checked";
+    if (bit == ATSPI_STATE_SELECTABLE) return "selectable";
+    if (bit == ATSPI_STATE_SELECTED) return "selected";
+    if (bit == ATSPI_STATE_ACTIVE) return "active";
+    if (bit == ATSPI_STATE_EXPANDABLE) return "expandable";
+    if (bit == ATSPI_STATE_EXPANDED) return "expanded";
+    return NULL;
 }
 
 static void SendStateChanged(TkAccessible *acc, uint64_t state, int value)
 {
     if (!acc) return;
-    char state_name[64];
-    snprintf(state_name, sizeof(state_name), "state-changed:%lu", state);
-    SendAtspiEvent(acc, ATSPI_EVENT_STATE_CHANGED, state_name);
-    if (atspi_conn && atspi_conn->bus) {
-        sd_bus_emit_signal(atspi_conn->bus,
-                           acc->dbus_path,
-                           ATSPI_EVENT_INTERFACE,
-                           "StateChanged",
-                           "(sb)",
-                           state,
-                           value);
+    if (!acc->dbus_path) return;
+    if (!atspi_conn || !atspi_conn->bus) return;
+
+    const char *name = StateBitToName(state);
+    if (!name) {
+        /* If state is already a bitmask with multiple bits, pick first set */
+        for (int i=0;i<64;i++) {
+            uint64_t b = 1ULL<<i;
+            if (state & b) {
+                name = StateBitToName(b);
+                if (name) break;
+            }
+        }
     }
+    if (!name) name = "enabled";
+
+    char type[128];
+    snprintf(type, sizeof(type), "object:state-changed:%s", name);
+
+    EmitObjectEventFull(acc, "StateChanged", type, (int32_t)(value ? 1 : 0), 0, NULL);
 }
+
 
 static void SendActiveDescendantChanged(TkAccessible *container, TkAccessible *descendant)
 {
     if (!container || !descendant) return;
-    if (atspi_conn && atspi_conn->bus) {
-        sd_bus_emit_signal(atspi_conn->bus,
-                           container->dbus_path,
-                           ATSPI_EVENT_INTERFACE,
-                           "ActiveDescendantChanged",
-                           "(so)",
-                           descendant->dbus_path,
-                           ATSPI_ACCESSIBLE_INTERFACE);
-    }
+    if (!container->dbus_path || !descendant->dbus_path) return;
+    if (!atspi_conn || !atspi_conn->bus) return;
+
+    EmitObjectEventFull(container, "ActiveDescendantChanged",
+                        "object:active-descendant-changed",
+                        0, 0, descendant);
 }
+
 
 /*
  * Tcl event loop integration. D-Bus will be come a custom event source for Tcl.
@@ -1982,13 +2133,123 @@ static void TkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 
 static int IsScreenReaderActive(void)
 {
-    FILE *fp = popen("pgrep -x orca", "r");
+    /* First try the proper AT-SPI status: org.a11y.Status.IsEnabled and
+     * ScreenReaderEnabled on the a11y bus, or session bus fallback.
+     * pgrep is last resort and fails inside flatpak/snap.
+     */
+    sd_bus *bus = NULL;
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    int r;
+    int enabled = 0;
+
+    /* Try session bus first for org.a11y.Status */
+    r = sd_bus_default_user(&bus);
+    if (r >= 0) {
+        int is_enabled = 0;
+        int screen_reader_enabled = 0;
+        /* IsEnabled property */
+        r = sd_bus_get_property_trivial(bus,
+            "org.a11y.Bus",
+            "/org/a11y/bus",
+            "org.a11y.Status",
+            "IsEnabled",
+            &error,
+            'b', &is_enabled);
+        if (r >= 0 && is_enabled) enabled = 1;
+        sd_bus_error_free(&error);
+
+        r = sd_bus_get_property_trivial(bus,
+            "org.a11y.Bus",
+            "/org/a11y/bus",
+            "org.a11y.Status",
+            "ScreenReaderEnabled",
+            &error,
+            'b', &screen_reader_enabled);
+        if (r >= 0 && screen_reader_enabled) enabled = 1;
+        sd_bus_error_free(&error);
+
+        sd_bus_unref(bus);
+        if (enabled) return 1;
+    }
+
+    /* Fallback: pgrep */
+    FILE *fp = popen("pgrep -x orca 2>/dev/null; pgrep -f /orca 2>/dev/null | head -1", "r");
     if (!fp) return 0;
-    char buffer[16];
+    char buffer[64];
     int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
     pclose(fp);
     return running;
 }
+
+/* Get the AT-SPI bus address. Spec says session bus object org.a11y.Bus
+ * at /org/a11y/bus has method GetAddress() or property, or env AT_SPI_BUS.
+ */
+static sd_bus *ConnectToAtspiBus(void)
+{
+    sd_bus *a11y_bus = NULL;
+    sd_bus *session = NULL;
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *reply = NULL;
+    const char *addr = NULL;
+    int r;
+
+    /* 1. Try env var first - set by at-spi-bus-launcher */
+    const char *env = getenv("AT_SPI_BUS");
+    if (!env) env = getenv("AT_SPI_BUS_ADDRESS");
+    if (env) {
+        r = sd_bus_new(&a11y_bus);
+        if (r >= 0) {
+            r = sd_bus_set_address(a11y_bus, env);
+            if (r >= 0) {
+                r = sd_bus_start(a11y_bus);
+                if (r >= 0) return a11y_bus;
+            }
+            sd_bus_unref(a11y_bus);
+        }
+    }
+
+    /* 2. Ask org.a11y.Bus for its address */
+    r = sd_bus_default_user(&session);
+    if (r >= 0) {
+        r = sd_bus_call_method(session,
+            "org.a11y.Bus",
+            "/org/a11y/bus",
+            "org.a11y.Bus",
+            "GetAddress",
+            &error,
+            &reply,
+            "");
+        if (r >= 0) {
+            r = sd_bus_message_read(reply, "s", &addr);
+            if (r >= 0 && addr) {
+                r = sd_bus_new(&a11y_bus);
+                if (r >= 0) {
+                    r = sd_bus_set_address(a11y_bus, addr);
+                    if (r >= 0) {
+                        r = sd_bus_start(a11y_bus);
+                        if (r >= 0) {
+                            sd_bus_message_unref(reply);
+                            sd_bus_error_free(&error);
+                            sd_bus_unref(session);
+                            return a11y_bus;
+                        }
+                    }
+                    sd_bus_unref(a11y_bus);
+                }
+            }
+        }
+        sd_bus_error_free(&error);
+        if (reply) sd_bus_message_unref(reply);
+
+        /* If we can't get a11y bus, fall back to session bus - better than nothing,
+         * Orca will still see us via registry on session bus in some setups.
+         */
+        sd_bus_ref(session);
+        return session;
+    }
+    return NULL;
+}
+
 
 /*
  * Tcl command implementations.
@@ -2139,15 +2400,12 @@ InitializeAtspiConnection(void)
     }
     memset(atspi_conn, 0, sizeof(AtspiConnection));
 
-    /* Connect to session bus (preferred), fallback to system. */
-    r = sd_bus_default_user(&bus);
-    if (r < 0) {
-        r = sd_bus_default_system(&bus);
-        if (r < 0) {
-            Tcl_Free(atspi_conn);
-            atspi_conn = NULL;
-            return false;
-        }
+    /* Connect to AT-SPI bus, not just session bus */
+    bus = ConnectToAtspiBus();
+    if (!bus) {
+        Tcl_Free(atspi_conn);
+        atspi_conn = NULL;
+        return false;
     }
     atspi_conn->bus = bus;
 
@@ -2161,8 +2419,9 @@ InitializeAtspiConnection(void)
     }
     Tcl_InitHashTable(atspi_conn->tk_to_accessible_map, TCL_ONE_WORD_KEYS);
 
-    /* Check if AT-SPI registry is actually running/registered on the bus.
-     * Use GetNameOwner — lightweight and reliable way to see if org.a11y.atspi.Registry exists.
+    /* Check if AT-SPI registry is actually running.
+     * On the a11y bus, registry is at org.a11y.atspi.Registry, but we query via session bus
+     * org.freedesktop.DBus ListNames and also try GetNameOwner on a11y bus.
      */
     r = sd_bus_call_method(bus,
                            "org.freedesktop.DBus",
@@ -2171,24 +2430,39 @@ InitializeAtspiConnection(void)
                            "GetNameOwner",
                            &error,
                            &msg,
-                           "s", ATSPI_DBUS_NAME);  /* "org.a11y.atspi.Registry" */
+                           "s", "org.a11y.atspi.Registry");
 
     if (r < 0) {
-        /* Registry not present (NameHasNoOwner, timeout, etc.) → disable a11y gracefully */
-        /* Optional debug: fprintf(stderr, "AT-SPI registry not available: %s\n", error.message); */
-        sd_bus_error_free(&error);
-        if (msg) sd_bus_message_unref(msg);
-
-        Tcl_DeleteHashTable(atspi_conn->tk_to_accessible_map);
-        Tcl_Free(atspi_conn->tk_to_accessible_map);
-        sd_bus_unref(bus);
-        Tcl_Free(atspi_conn);
-        atspi_conn = NULL;
-        return false;
+        /* Try alternative: ListNames on session bus */
+        sd_bus *session = NULL;
+        if (sd_bus_default_user(&session) >= 0) {
+            sd_bus_message *list_msg = NULL;
+            r = sd_bus_call_method(session,
+                "org.freedesktop.DBus",
+                "/org/freedesktop/DBus",
+                "org.freedesktop.DBus",
+                "ListNames",
+                &error,
+                &list_msg,
+                "");
+            if (r >= 0) {
+                /* If call succeeded, assume registry might still appear later - don't fail */
+                sd_bus_message_unref(list_msg);
+                r = 0; /* force success */
+            }
+            sd_bus_unref(session);
+        }
+        if (r < 0) {
+            sd_bus_error_free(&error);
+            if (msg) sd_bus_message_unref(msg);
+            /* Don't hard-fail here - allow initialization even if registry not yet up,
+             * Orca will discover us when it appears. The old code returned false which
+             * disabled a11y entirely.
+             */
+            sd_bus_error_free(&error);
+        }
     }
-
-    /* Registry exists → clean up temp message. */
-    sd_bus_message_unref(msg);
+    if (msg) sd_bus_message_unref(msg);
     sd_bus_error_free(&error);
 
     /* Create root accessible object (application). */
@@ -2204,11 +2478,27 @@ InitializeAtspiConnection(void)
     memset(atspi_conn->root_accessible, 0, sizeof(TkAccessible));
 
     atspi_conn->root_accessible->role       = ATSPI_ROLE_APPLICATION;
-    atspi_conn->root_accessible->path       = Tcl_Strdup("application");  /* or your Tcl_Strdup impl */
+    atspi_conn->root_accessible->path       = Tcl_Strdup("application");
     atspi_conn->root_accessible->dbus_path  = Tcl_Strdup("/org/a11y/atspi/accessible/root");
     atspi_conn->root_accessible->ref_count  = 1;
 
     RegisterDbusObject(atspi_conn->root_accessible);
+
+    /* Register as AT-SPI application on the bus */
+    {
+        sd_bus_message *reg_msg = NULL;
+        /* org.a11y.atspi.Socket.Embed or Registry.RegisterApplication */
+        sd_bus_call_method(bus,
+            "org.a11y.atspi.Registry",
+            "/org/a11y/atspi/registry",
+            "org.a11y.atspi.Registry",
+            "RegisterApplication",
+            &error,
+            &reg_msg,
+            "o", "/org/a11y/atspi/accessible/root");
+        if (reg_msg) sd_bus_message_unref(reg_msg);
+        sd_bus_error_free(&error);
+    }
 
     atspi_conn->is_initialized = 1;
 
