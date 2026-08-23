@@ -1,6 +1,6 @@
 # accessibility.tcl --
 # This file defines the 'tk accessible' command for screen reader support
-# on X11, Wayalnd, Windows, and macOS.
+# on X11, Wayland, Windows, and macOS.
 
 # Copyright © 2009 Allen B. Taylor
 # Copyright © 2024-2026 Kevin Walzer
