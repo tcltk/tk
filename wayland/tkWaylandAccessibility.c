@@ -153,6 +153,11 @@ typedef struct {
     /* For Tcl event loop integration. */
     int bus_fd;
     int file_handler;    /* dummy, just to know it's set */
+
+    /* Desktop reference returned by Socket.Embed - root_accessible's
+     * effective parent once we've been embedded in the registry's tree. */
+    char *desktop_bus_name;
+    char *desktop_path;
 } AtspiConnection;
 
 /*
@@ -188,6 +193,15 @@ static const sd_bus_vtable action_vtable[];
 static const sd_bus_vtable value_vtable[];
 static const sd_bus_vtable text_vtable[];
 static const sd_bus_vtable selection_vtable[];
+static const sd_bus_vtable application_vtable[];
+
+/*
+ * Accessible-reference ((so) = bus-name, object-path) helpers. Centralized
+ * so every method reply / signal uses the correct field order and content.
+ */
+static const char *SelfBusName(void);
+static int AppendAccessibleRef(sd_bus_message *reply, const char *path);
+static bool EmbedWithRegistry(void);
 
 /* D-Bus methods for getting at-spi child, attribute and state management. */
 static int dbus_method_get_children(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
@@ -373,12 +387,119 @@ static const sd_bus_vtable selection_vtable[] = {
 };
 
 
+/* org.a11y.atspi.Application interface - queried by the registry/Orca once
+ * an application has been embedded via Socket.Embed. */
+static int dbus_prop_get_toolkit_name(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    return sd_bus_message_append(reply, "s", "Tk");
+}
+
+static int dbus_prop_get_version(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    return sd_bus_message_append(reply, "s", TK_VERSION);
+}
+
+static int dbus_prop_get_atspi_version(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    return sd_bus_message_append(reply, "s", "2.1");
+}
+
+static int dbus_prop_get_id(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
+{
+    TkAccessible *acc = (TkAccessible *)userdata;
+    return sd_bus_message_append(reply, "i", acc ? acc->virtual_index : 0);
+}
+
+static int dbus_prop_set_id(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *value,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
+{
+    TkAccessible *acc = (TkAccessible *)userdata;
+    int32_t id = 0;
+    int r = sd_bus_message_read(value, "i", &id);
+    if (r >= 0 && acc) acc->virtual_index = id;
+    return r;
+}
+
+static const sd_bus_vtable application_vtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_PROPERTY("ToolkitName", "s", dbus_prop_get_toolkit_name, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+    SD_BUS_PROPERTY("Version", "s", dbus_prop_get_version, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+    SD_BUS_PROPERTY("AtspiVersion", "s", dbus_prop_get_atspi_version, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+    SD_BUS_WRITABLE_PROPERTY("Id", "i", dbus_prop_get_id, dbus_prop_set_id, 0, 0),
+    SD_BUS_VTABLE_END
+};
+
 /* Convenience function. */
 static char *
 Tcl_Strdup(const char *s)
 {
     if (s == NULL) return NULL;
     return strcpy((char *) Tcl_Alloc(strlen(s) + 1), s);
+}
+
+/*
+ * Accessible references on the AT-SPI D-Bus API are the struct (so): the
+ * FIRST field is the unique bus name of the connection that owns the
+ * object, the SECOND field is the object's path. Object paths must start
+ * with '/' and match the D-Bus path grammar; bus names may be any valid
+ * D-Bus name. Every accessible we hand out lives on our own connection, so
+ * the bus-name half is always our own unique name.
+ */
+static const char *SelfBusName(void)
+{
+    static const char *name;
+    if (!atspi_conn || !atspi_conn->bus) return "";
+    if (sd_bus_get_unique_name(atspi_conn->bus, &name) < 0 || !name) {
+        return "";
+    }
+    return name;
+}
+
+/*
+ * Append a (so) accessible reference. Pass NULL/"" for path to append the
+ * canonical AT-SPI null reference instead of a real object - a bare "" is
+ * NOT a legal object path and will fail marshalling.
+ */
+static int AppendAccessibleRef(sd_bus_message *reply, const char *path)
+{
+    if (path && *path) {
+        return sd_bus_message_append(reply, "(so)", SelfBusName(), path);
+    }
+    return sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
 }
 
 /*
@@ -416,7 +537,7 @@ static int dbus_method_get_children(
         for (l = atspi_conn->toplevel_accessibles; l != NULL; l = l->next) {
             TkAccessible *top = l->acc;
             if (top && top->dbus_path) {
-                sd_bus_message_append(reply, "(so)", top->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+                AppendAccessibleRef(reply, top->dbus_path);
             }
         }
     } else if (acc->tkwin && !acc->is_virtual) {
@@ -427,7 +548,7 @@ static int dbus_method_get_children(
              childPtr = childPtr->nextPtr) {
             TkAccessible *child_acc = GetAccessible((Tk_Window)childPtr);
             if (child_acc && child_acc->dbus_path) {
-                sd_bus_message_append(reply, "(so)", child_acc->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+                AppendAccessibleRef(reply, child_acc->dbus_path);
             }
         }
     } else {
@@ -436,7 +557,7 @@ static int dbus_method_get_children(
         for (l = acc->children; l != NULL; l = l->next) {
             TkAccessible *child = l->acc;
             if (child && child->dbus_path) {
-                sd_bus_message_append(reply, "(so)", child->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+                AppendAccessibleRef(reply, child->dbus_path);
             }
         }
     }
@@ -470,9 +591,9 @@ static int dbus_method_get_child_at_index(
         }
         if (l) {
             TkAccessible *top = l->acc;
-            sd_bus_message_append(reply, "(so)", top->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+            AppendAccessibleRef(reply, top->dbus_path);
         } else {
-            sd_bus_message_append(reply, "(so)", "", "");
+            AppendAccessibleRef(reply, NULL);
         }
     } else if (acc->tkwin && !acc->is_virtual) {
         TkWindow *childPtr;
@@ -483,15 +604,15 @@ static int dbus_method_get_child_at_index(
             if (i == index) {
                 TkAccessible *child_acc = GetAccessible((Tk_Window)childPtr);
                 if (child_acc && child_acc->dbus_path) {
-                    sd_bus_message_append(reply, "(so)", child_acc->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+                    AppendAccessibleRef(reply, child_acc->dbus_path);
                 } else {
-                    sd_bus_message_append(reply, "(so)", "", "");
+                    AppendAccessibleRef(reply, NULL);
                 }
                 break;
             }
         }
         if (!childPtr) {
-            sd_bus_message_append(reply, "(so)", "", "");
+            AppendAccessibleRef(reply, NULL);
         }
     } else {
         AccessibleList *l = acc->children;
@@ -502,9 +623,9 @@ static int dbus_method_get_child_at_index(
         }
         if (l) {
             TkAccessible *child = l->acc;
-            sd_bus_message_append(reply, "(so)", child->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+            AppendAccessibleRef(reply, child->dbus_path);
         } else {
-            sd_bus_message_append(reply, "(so)", "", "");
+            AppendAccessibleRef(reply, NULL);
         }
     }
 
@@ -625,10 +746,18 @@ static int dbus_method_get_parent(
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
-    if (acc->parent && acc->parent->dbus_path) {
-        sd_bus_message_append(reply, "(so)", acc->parent->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+    if (acc == atspi_conn->root_accessible &&
+        atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
+        /* Root's parent is the desktop, as returned by Socket.Embed - not
+         * one of our own objects, so build the tuple directly rather than
+         * via AppendAccessibleRef (which always uses our own bus name). */
+        sd_bus_message_append(reply, "(so)",
+                               atspi_conn->desktop_bus_name,
+                               atspi_conn->desktop_path);
+    } else if (acc->parent && acc->parent->dbus_path) {
+        AppendAccessibleRef(reply, acc->parent->dbus_path);
     } else {
-        sd_bus_message_append(reply, "(so)", "", "");
+        AppendAccessibleRef(reply, NULL);
     }
     return sd_bus_send(NULL, reply, NULL);
 }
@@ -1113,7 +1242,7 @@ static int dbus_method_selection_get_selection(
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    return sd_bus_reply_method_return(m, "(so)", "", "");
+    return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
 }
 
 static int dbus_method_selection_is_selected(
@@ -1182,7 +1311,7 @@ static int dbus_method_cache_get_items(
     /* Add root and toplevels */
     if (atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->dbus_path) {
         sd_bus_message_open_container(reply, 'r', "(so)a{sv}");
-        sd_bus_message_append(reply, "(so)", atspi_conn->root_accessible->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+        AppendAccessibleRef(reply, atspi_conn->root_accessible->dbus_path);
         sd_bus_message_open_container(reply, 'a', "{sv}");
         sd_bus_message_close_container(reply);
         sd_bus_message_close_container(reply);
@@ -1191,7 +1320,7 @@ static int dbus_method_cache_get_items(
             TkAccessible *top = l->acc;
             if (!top || !top->dbus_path) continue;
             sd_bus_message_open_container(reply, 'r', "(so)a{sv}");
-            sd_bus_message_append(reply, "(so)", top->dbus_path, ATSPI_ACCESSIBLE_INTERFACE);
+            AppendAccessibleRef(reply, top->dbus_path);
             sd_bus_message_open_container(reply, 'a', "{sv}");
             sd_bus_message_close_container(reply);
             sd_bus_message_close_container(reply);
@@ -1247,13 +1376,20 @@ static bool RegisterDbusObject(TkAccessible *acc)
                               component_vtable,
                               acc);
 
-    /* Register Cache interface on root only - required for Orca */
+    /* Register Cache and Application interfaces on root only - both are
+     * required for the registry/Orca to catalog us as an application. */
     if (acc == atspi_conn->root_accessible) {
         sd_bus_add_object_vtable(atspi_conn->bus,
                                   NULL,
                                   "/org/a11y/atspi/cache",
                                   "org.a11y.atspi.Cache",
                                   cache_vtable,
+                                  acc);
+        sd_bus_add_object_vtable(atspi_conn->bus,
+                                  NULL,
+                                  acc->dbus_path,
+                                  "org.a11y.atspi.Application",
+                                  application_vtable,
                                   acc);
     }
 
@@ -1293,11 +1429,15 @@ EmitObjectEventFull(TkAccessible *acc, const char *member, const char *type, int
     if (!acc || !acc->dbus_path) return;
     if (!member || !type) return;
 
-    const char *rel_path = "/";
-    const char *rel_iface = "org.a11y.atspi.null";
+    /* (so) = (bus-name, object-path). The related object, if any, is one
+     * of ours, so its bus-name half is always our own unique name; the
+     * canonical "no related object" reference uses an empty name and the
+     * well-known null path (a bare "" is not a legal object path). */
+    const char *rel_name = "";
+    const char *rel_path = "/org/a11y/atspi/null";
     if (related && related->dbus_path) {
+        rel_name = SelfBusName();
         rel_path = related->dbus_path;
-        rel_iface = ATSPI_ACCESSIBLE_INTERFACE;
     }
 
     /* AT-SPI Event.Object signature is siiv where v = (so) . This matches
@@ -1313,7 +1453,7 @@ EmitObjectEventFull(TkAccessible *acc, const char *member, const char *type, int
                                type,
                                detail1,
                                detail2,
-                               "(so)", rel_path, rel_iface);
+                               "(so)", rel_name, rel_path);
     if (r < 0) {
         /* Don't crash, just debug */
         // fprintf(stderr, "EmitObjectEvent %s/%s failed: %d\n", member, type, r);
@@ -1334,7 +1474,7 @@ EmitWindowEvent(TkAccessible *acc, const char *member, const char *type)
                                "siiv",
                                type,
                                0, 0,
-                               "(so)", "/", "org.a11y.atspi.null");
+                               "(so)", "", "/org/a11y/atspi/null");
     (void)r;
 }
 
@@ -2484,27 +2624,68 @@ InitializeAtspiConnection(void)
 
     RegisterDbusObject(atspi_conn->root_accessible);
 
-    /* Register as AT-SPI application on the bus */
-    {
-        sd_bus_message *reg_msg = NULL;
-        /* org.a11y.atspi.Socket.Embed or Registry.RegisterApplication */
-        sd_bus_call_method(bus,
-            "org.a11y.atspi.Registry",
-            "/org/a11y/atspi/registry",
-            "org.a11y.atspi.Registry",
-            "RegisterApplication",
-            &error,
-            &reg_msg,
-            "o", "/org/a11y/atspi/accessible/root");
-        if (reg_msg) sd_bus_message_unref(reg_msg);
-        sd_bus_error_free(&error);
-    }
-
+    /* Register as an AT-SPI application via the real Socket.Embed
+     * handshake. Not fatal if the registry isn't up yet - it can still
+     * discover us later. */
     atspi_conn->is_initialized = 1;
+    EmbedWithRegistry();
 
     /* Integrate with Tcl event loop for DBus handling. */
     Tcl_CreateEventSource(TclEventSetupProc, TclEventCheckProc, atspi_conn);
 
+    return true;
+}
+
+/*
+ * Embed our application into the registry's accessible tree.
+ *
+ * "org.a11y.atspi.Registry.RegisterApplication" (previously called here)
+ * does not exist in the AT-SPI D-Bus API and always failed silently. Real
+ * application registration is org.a11y.atspi.Socket.Embed, called against
+ * the registry's socket object, passing our own root as the "plug" and
+ * receiving the desktop's reference as the "socket" in return. Without
+ * this handshake the registry (and therefore Orca) never learns our
+ * application exists, so it has nothing to attribute incoming events to.
+ */
+static bool EmbedWithRegistry(void)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *reply = NULL;
+    const char *desktop_name = NULL;
+    const char *desktop_path = NULL;
+    int r;
+
+    if (!atspi_conn || !atspi_conn->bus || !atspi_conn->root_accessible) {
+        return false;
+    }
+
+    r = sd_bus_call_method(atspi_conn->bus,
+        "org.a11y.atspi.Registry",
+        "/org/a11y/atspi/accessible/root",
+        "org.a11y.atspi.Socket",
+        "Embed",
+        &error,
+        &reply,
+        "(so)", SelfBusName(), atspi_conn->root_accessible->dbus_path);
+
+    if (r < 0) {
+        /* Registry may not be up yet; not fatal - Orca can still discover
+         * us later via broadcast events once it does start. */
+        sd_bus_error_free(&error);
+        if (reply) sd_bus_message_unref(reply);
+        return false;
+    }
+
+    r = sd_bus_message_read(reply, "(so)", &desktop_name, &desktop_path);
+    if (r >= 0 && desktop_name && desktop_path) {
+        if (atspi_conn->desktop_bus_name) Tcl_Free(atspi_conn->desktop_bus_name);
+        if (atspi_conn->desktop_path) Tcl_Free(atspi_conn->desktop_path);
+        atspi_conn->desktop_bus_name = Tcl_Strdup(desktop_name);
+        atspi_conn->desktop_path = Tcl_Strdup(desktop_path);
+    }
+
+    sd_bus_message_unref(reply);
+    sd_bus_error_free(&error);
     return true;
 }
 
