@@ -1,71 +1,89 @@
 # accessibility.tcl --
+
 # This file defines the 'tk accessible' command for screen reader support
-# on X11, Wayland, Windows, and macOS.
+# on X11, Wayland, Windows, and macOS. It implements an abstraction layer that
+# presents a consistent API across the three platforms.
 
 # Copyright © 2009 Allen B. Taylor
-# Copyright © 2024-2026 Kevin Walzer
+# Copyright © 2024-2025 Kevin Walzer
+#
+# See the file "license.terms" for information on usage and redistribution
+# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
 
-# C extension must be loaded first
-if {[info commands ::tk::accessible::check_screenreader] eq ""} {
-    proc ::tk::accessible args { return 0 }
-    return
-}
-
-if {[::tk::accessible::check_screenreader] == 0} {
-    # Screen reader not active - provide stub but keep check command
-    proc ::tk::accessible args { return 0 }
-    # Keep the real check command available as ::tk::accessible::check_screenreader
-    return
-}
-
-# Screen reader active - continue to load full support
-if {([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland")} {
-
-    namespace eval ::tk::accessible {
-        variable origConfig
-        array set origConfig {}
-
-        proc ClassicFocusIn {w} {
-            variable origConfig
-            if {![info exists origConfig($w)]} {
-                set origConfig($w) [list [$w cget -relief] [$w cget -borderwidth]]
-            }
-            $w configure -relief groove -borderwidth 2
-        }
-        proc ClassicFocusOut {w} {
-            variable origConfig
-            if {[info exists origConfig($w)]} {
-                lassign $origConfig($w) relief border
-                $w configure -relief $relief -borderwidth $border
-            }
-        }
-        proc AddClassic {w} {
-            if {[lsearch -exact [bindtags $w] FocusBorder] == -1} {
-                bindtags $w [linsert [bindtags $w] 0 FocusBorder]
-            }
-        }
-        proc InitTtk {} {
-            foreach class {TButton TEntry TCombobox TCheckbutton TRadiobutton Treeview TScrollbar TScale TSpinbox TLabel} {
-                ttk::style map $class -relief {focus groove !focus flat} -borderwidth {focus 2 !focus 1}
-            }
-        }
-        bind FocusBorder <FocusIn>  {+::tk::accessible::ClassicFocusIn %W}
-        bind FocusBorder <FocusOut> {+::tk::accessible::ClassicFocusOut %W}
-        ::tk::accessible::InitTtk
-
-        foreach wtype {button entry text listbox scale spinbox scrollbar label radiobutton checkbutton} {
-            if {[llength [info commands ::tk::accessible::orig_$wtype]] == 0} {
-                rename ::$wtype ::tk::accessible::orig_$wtype
-                proc ::$wtype {args} [string map [list %TYPE% $wtype] {
-                    set w [::tk::accessible::orig_%TYPE% {*}$args]
-                    ::tk::accessible::AddClassic $w
-                    return $w
-                }]
-            }
-        }
+if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessible::check_screenreader] eq 0 || [::tk::accessible::check_screenreader] eq ""} {
+    # Do not load if screen reader is not running or command is unavailable
+    proc ::tk::accessible args {
+	return 0
     }
+} else {
+    if {([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland")
+            && [::tk::accessible::check_screenreader] eq 1} {
+				
+	# Add border to all X11 widgets with accessible focus. A highlight rectangle
+	# is drawn over focused widgets by the screen reader app on
+	# macOS and Windows (VoiceOver, NVDA), but not on X11. Configuring
+	# "-relief groove" and binding to FocusIn/Out events is the cleanest
+	# way to accomplish this.
 
+	namespace eval ::tk::accessible {
+	    variable origConfig
+	    array set origConfig {}
 
+	    # Apply to classic Tk widgets
+	    proc ClassicFocusIn {w} {
+		variable origConfig
+		if {![info exists origConfig($w)]} {
+		    set origConfig($w) [list [$w cget -relief] [$w cget -borderwidth]]
+		}
+		$w configure -relief groove -borderwidth 2
+	    }
+
+	    proc ClassicFocusOut {w} {
+		variable origConfig
+		if {[info exists origConfig($w)]} {
+		    lassign $origConfig($w) relief border
+		    $w configure -relief $relief -borderwidth $border
+		}
+	    }
+
+	    # Apply focus bindings to a widget
+	    proc AddClassic {w} {
+		bindtags $w [linsert [bindtags $w] 0 FocusBorder]
+	    }
+
+	    # Setup global ttk styles
+	    proc InitTtk {} {
+		foreach class {TButton TEntry TCombobox TCheckbutton TRadiobutton \
+				   Treeview TScrollbar TScale TSpinbox TLabel} {
+		    ttk::style map $class \
+			-relief {focus groove !focus flat} \
+			-borderwidth {focus 2 !focus 1}
+		}
+	    }
+
+	    # Install focusborder bindtag for classic widgets
+	    bind FocusBorder <FocusIn>  {+::tk::accessible::ClassicFocusIn %W}
+	    bind FocusBorder <FocusOut> {+::tk::accessible::ClassicFocusOut %W}
+
+	    # Install ttk mappings
+	    ::tk::accessible::InitTtk
+
+	    # Save the original widget commands and replace with wrappers
+	    foreach wtype {button entry text listbox scale spinbox scrollbar label radiobutton checkbutton} {
+		if {[llength [info commands ::tk::accessible::orig_$wtype]] == 0} {
+		    rename ::$wtype ::tk::accessible::orig_$wtype
+		    proc ::$wtype {args} [string map [list %TYPE% $wtype] {
+			# Create the widget with the original command
+			set w [::tk::accessible::orig_%TYPE% {*}$args]
+			# Add focus bindings
+			::tk::accessible::AddClassic $w
+			return $w
+		    }]
+		}
+	    }
+	}
+    }
 
     namespace eval ::tk::accessible {
 
@@ -1265,7 +1283,7 @@ if {([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland")} {
 	namespace export set_acc_role set_acc_name set_acc_description set_acc_value set_acc_state set_acc_action set_acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
 	namespace ensemble create
     }
-
+}
 
 # Add these commands to the tk command ensemble: tk accessible.
 namespace ensemble configure tk -map \
