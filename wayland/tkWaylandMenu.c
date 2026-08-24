@@ -11,7 +11,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-/* Debugging.
+
+/* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL menu
 */
@@ -60,7 +61,7 @@ extern GLFWwindow *mainGlfwWindow;
 /*
  * Forward declarations from other Wayland modules.
  */
-MODULE_SCOPE void TkWaylandUpdateGeometryInfo(void *clientData);
+
 MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
 MODULE_SCOPE NVGcontext* TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
@@ -209,7 +210,6 @@ static int MenubarPostCascadeAtEntry(WmInfo *wmPtr, TkMenu *menuPtr, TkMenuEntry
 static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
 static void MenuBarDeferredSetup(void *clientData);
 static void MenubarResizeIdleProc(void *clientData);
-static void TkWaylandSyncMenubarGeometry(TkWindow *winPtr);
 
 /* Pending image management (used during drawing). */
 static void MenuPendingImageAdd(NVGcontext *vg, int imgId);
@@ -1098,47 +1098,6 @@ GetMenuLabelGeometry(
 
 /*
  *---------------------------------------------------------------------------
- * TkWaylandSyncMenubarGeometry --
- *
- *     Forces immediate completion of pending geometry updates for a toplevel
- *     window after its internal border changes for a menubar.
- *
- *     Tk_SetInternalBorderEx() queues pack/grid re-layout, which in turn
- *     queues a wm resize via TkWaylandUpdateGeometryInfo(). Callers like
- *     TkWaylandMenubarCreateOrResize() read the GLFW size immediately after,
- *     so if the resize hasn't run yet, they use stale dimensions and clip
- *     the menubar.
- *
- *     This function schedules the wm resize, then drains the idle queue
- *     until both the re-layout and resize have completed, ensuring the
- *     GLFW window is at its final size upon return.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     Runs pending Tcl idle handlers to completion.
- *---------------------------------------------------------------------------
- */
-
-static void
-TkWaylandSyncMenubarGeometry(
-    TkWindow *winPtr)
-{
-    if (!winPtr) return;
-
-    TkWaylandUpdateGeometryInfo(winPtr);
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS | TCL_DONT_WAIT)) {
-        /* 
-         * Drain until pack/grid re-layout and the resulting wm resize
-         * (glfwSetWindowSize) have both run to completion. 
-         * */
-    }
-}
-
-/*
- *---------------------------------------------------------------------------
  *
  * TkpSetWindowMenuBar --
  *
@@ -1160,11 +1119,12 @@ TkpSetWindowMenuBar(
     TkMenu   *menuPtr)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
-    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+    if (!winPtr || (winPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
+    WmInfo *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
     DEBUG_LOG("TkpSetWindowMenuBar called for %s", Tk_PathName(tkwin));
-
-    if (!wmPtr) return;
 
     /* Only destroy menubar popup if we're actually removing the menubar. */
     if (!menuPtr) {
@@ -1178,9 +1138,8 @@ TkpSetWindowMenuBar(
         wmPtr->menubar        = NULL;
         wmPtr->menubarMenuPtr = NULL;
         wmPtr->menuHeight     = 0;
-        Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
-                winPtr->internalBorderRight, 0, winPtr->internalBorderBottom);
-        TkWaylandSyncMenubarGeometry(winPtr);
+	Tk_SetInternalBorderEx(tkwin, winPtr->internalBorderLeft,
+	    winPtr->internalBorderRight, 0, winPtr->internalBorderBottom);
         return;
     }
 
@@ -1193,7 +1152,6 @@ TkpSetWindowMenuBar(
         Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
                 winPtr->internalBorderRight, wmPtr->menuHeight,
                 winPtr->internalBorderBottom);
-        TkWaylandSyncMenubarGeometry(winPtr);
 
         /* Just resize/redraw the existing popup. */
         if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -1213,7 +1171,6 @@ TkpSetWindowMenuBar(
     Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
             winPtr->internalBorderRight, wmPtr->menuHeight,
             winPtr->internalBorderBottom);
-    TkWaylandSyncMenubarGeometry(winPtr);
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
         DEBUG_LOG("TkpSetWindowMenuBar: deferring menubar setup "
@@ -1246,16 +1203,18 @@ static void
 TkWaylandMenubarCreateOrResize(
     TkWindow *winPtr)
 {
+    if (!winPtr || (winPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
     WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    TkMenu     *menuPtr;
-    GLFWwindow *glfwWindow;
-    int         width = 0;
-    int         mbW, mbH;
-
     if (!wmPtr || !wmPtr->menubar || !wmPtr->menubarMenuPtr) {
         return;
     }
-    menuPtr = wmPtr->menubarMenuPtr;
+
+    TkMenu     *menuPtr = wmPtr->menubarMenuPtr;
+    GLFWwindow *glfwWindow;
+    int         width = 0;
+    int         mbW, mbH;
 
     glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (!glfwWindow) {
@@ -1291,7 +1250,6 @@ TkWaylandMenubarCreateOrResize(
     if (winPtr->internalBorderTop != mbH) {
         Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
                 winPtr->internalBorderRight, mbH, winPtr->internalBorderBottom);
-        TkWaylandSyncMenubarGeometry(winPtr);
     }
 
     DEBUG_LOG("TkWaylandMenubarCreateOrResize: creating menubar popup %dx%d", mbW, mbH);

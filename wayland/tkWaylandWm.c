@@ -162,8 +162,7 @@ inline TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
 
 static void TopLevelEventProc(void *clientData, XEvent *eventPtr);
 static void TopLevelReqProc(void *clientData, Tk_Window tkwin);
-static void ApplyPendingGeometry(TkWindow *winPtr, WmInfo *wmPtr,
-			  GLFWwindow *glfwWindow);
+static void ApplyPendingGeometry(TkWindow *winPtr);
 static void UpdateGeometryInfo(void *clientData);
 static void UpdateHints(TkWindow *winPtr);
 static void UpdateSizeHints(TkWindow *winPtr);
@@ -173,7 +172,7 @@ static void UpdateVRootGeometry(WmInfo *wmPtr);
 static void WaitForMapNotify(TkWindow *winPtr, int mapped);
 static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
-static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+static void WmUpdateGeom(TkWindow *winPtr);
 
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -181,7 +180,7 @@ static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Obj *const objv[]);
 static int		WmAttributesCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+	 		    Tcl_Obj *const objv[]);
 static int		WmClientCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -283,9 +282,10 @@ static void DestroyGlfwWindow(TkWindow *winPtr);
 static void ApplyFullscreenState(TkWindow *winPtr);
 
 /*
- * This defines the geometry manager for the window manager itself, as the
- * container of a toplevel.  The TopLevelReqProc is called when the geometry
- * manager being used by a toplevel requests a size change for the toplevel.
+ * This defines the geometry manager used by the window manager, as the
+ * container of all toplevel windows.  The reqProc of this geometry manager,
+ * TopLevelReqProc, is called whenever the geometry manager of a toplevel
+ * window requests a size change for the toplevel.
  */
 
 static Tk_GeomMgr wmMgrType = {
@@ -329,14 +329,10 @@ TkWmNewWindow(
     wmPtr->maxAspect.x = wmPtr->maxAspect.y = 1;
     wmPtr->reqGridWidth = wmPtr->reqGridHeight = -1;
     wmPtr->gravity     = NorthWestGravity;
-    wmPtr->width       = wmPtr->height = -1;
+    wmPtr->width = wmPtr->height = -1;
     wmPtr->x           = winPtr->changes.x;
     wmPtr->y           = winPtr->changes.y;
-    wmPtr->parentWidth = winPtr->changes.width
-	+ 2 * winPtr->changes.border_width;
-    wmPtr->parentHeight= winPtr->changes.height
-	+ 2 * winPtr->changes.border_width;
-    wmPtr->configWidth = wmPtr->configHeight = -1;
+    //wmPtr->configWidth = wmPtr->configHeight = -1;
     wmPtr->vRootWidth  = 800;
     wmPtr->vRootHeight = 600;
     wmPtr->attributes.alpha = 1.0;
@@ -377,6 +373,7 @@ InitializeGlfwWindow(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    DEBUG_LOG("InitializeGlfwWindow: %s", Tk_PathName(winPtr));
     if (!glfwWindow) {
 	Tcl_Panic("InitializeGlfwWindow: Tk window has no platform window");
     }
@@ -466,15 +463,16 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
  *
  * TkWmMapWindow --
  *
- *	Maps the window (makes it visible). Fixed to ensure window
- *	is properly shown during initial startup.
+ *	Called by Tk_MapWindow when mapping a toplevel.  Tk_MapWindow
+ *      immediately handles a MapNotify event when this returns.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The window becomes visible, and a MapNotify event is sent to
- *	Tk's event system.
+ *      Calls InitializeGlfwWindow and UpdatePendingGeometry to set up the new
+ *      toplevel, then calls glfwShowWindow to make the toplevel visible on
+ *      the screen
  *
  *----------------------------------------------------------------------
  */
@@ -497,73 +495,11 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdateTitle(winPtr);
         UpdatePhotoIcon(winPtr);
     }
-
-    UpdateGeometryInfo((void *)winPtr);
-
     if (glfwWindow) {
-        /*
-         * Blit the (already-cleared) backing-store FBO to the window's
-         * back buffer *before* making the surface visible.  Combined with
-         * the hidden-create / pre-clear path in TkWaylandCreateWindow this
-         * prevents the empty-root flicker: the first frame the compositor
-         * presents is already the intended blank Tk background color.
-         */
-        if (winPtr->privatePtr && winPtr->privatePtr->fb) {
-            glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-            int fbWidth, fbHeight;
-            NVGLUframebuffer *fb = winPtr->privatePtr->fb;
-
-            glfwMakeContextCurrent(glfwWindow);
-            glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-            if (fb && fb->fbo != 0 && fbWidth > 0 && fbHeight > 0) {
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-                glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-                                  0, 0, fbWidth, fbHeight,
-                                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-                glfwSwapBuffers(glfwWindow);
-            }
-            if (infoPtr) {
-                infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
-            }
-        }
-
-        /*
-         * The call to UpdateGeometryInfo() above may have deferred itself
-         * (it no-ops and reschedules via a timer while TKWL_NEVER_FOCUSED
-         * is set on a window that hasn't been focused yet). If we then
-         * showed the window as-is, the user would see it at its stale
-         * creation size until the deferred resize eventually lands --
-         * which is exactly the "not always correctly sized when mapped"
-         * bug. Apply the pending geometry here unconditionally, bypassing
-         * that gate, so what's shown always matches Tk's requested size.
-         */
-        if (!wmPtr->withdrawn) {
-            if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
-                UpdateSizeHints(winPtr);
-                wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
-            }
-            ApplyPendingGeometry(winPtr, wmPtr, glfwWindow);
-            wmPtr->flags &= ~WM_UPDATE_PENDING;
-
-            DEBUG_LOG("TkWmMapWindow: %s post-ApplyPendingGeometry "
-                      "reqWidth=%d changes.width=%d configWidth=%d",
-                      Tk_PathName(winPtr), winPtr->reqWidth,
-                      winPtr->changes.width, wmPtr->configWidth);
-
-			/*
-			 * ApplyPendingGeometry() now has the final first-map dimensions.
-			 * MenuBarDeferredSetup() polls for these via WM_NEVER_MAPPED but can't
-			 * synchronize with this moment, risking stale sizes. Reuse the existing
-			 * idle-deferred resync path here to make first-map behavior consistent
-			 * with live resizes.
-			 */
-            TkWaylandMenubarResize(winPtr);
-        }
-
-        glfwShowWindow(glfwWindow);
-
         winPtr->flags |= TK_MAPPED;
+	UpdateGeometryInfo(winPtr);
+	DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
+        glfwShowWindow(glfwWindow);
     }
 }
 
@@ -683,9 +619,10 @@ TkWmDeadWindow(
                           StructureNotifyMask | PropertyChangeMask,
                           TopLevelEventProc, (void *)winPtr);
 
-    /* Cancel any pending idle callbacks */
+    /* Cancel any pending UpdateGeometryInfo idle tasks  */
     if (wmPtr->flags & WM_UPDATE_PENDING) {
         Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+	wmPtr->flags &= ~WM_UPDATE_PENDING;
     }
 
     /* Destroy wrapper window if present. */
@@ -956,18 +893,6 @@ Tk_MakeWindow(
         if (wmPtr) {
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
-    } else {
-        /*
-         * Child window. 
-         */
-#if 0
-      DEBUG_LOG("Exposing Child %s to %dx%d", Tk_PathName(winPtr),
-	     winPtr->changes.width, winPtr->changes.height);
-
-      TkWaylandQueueExposeEvent(winPtr, 0, 0,
-				winPtr->changes.width,
-				winPtr->changes.height);
-#endif
     }
     createClipShaders(winPtr);
     return result;
@@ -1034,8 +959,9 @@ Tk_SetGrid(
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
+	DEBUG_LOG("Tk_SetGrid: scheduling UpdateGeometryInfo");
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     }
 }
 
@@ -1084,8 +1010,9 @@ Tk_UnsetGrid(
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
+	DEBUG_LOG("Tk_UnsetGrid: scheduling UpdateGeometryInfo");
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     }
 }
 
@@ -1290,6 +1217,7 @@ Tk_MoveToplevelWindow(
         if (wmPtr->flags & WM_UPDATE_PENDING) {
             Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
         }
+	DEBUG_LOG("Tk_MoveToplevelWindow: scheduling UpdateGeometryInfo");
         UpdateGeometryInfo((void *)winPtr);
     }
 }
@@ -1741,7 +1669,7 @@ WmAspectCmd(
         wmPtr->sizeHintsFlags |= WM_PAspect;
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr, winPtr);
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -2173,11 +2101,8 @@ WmGeometryCmd(
             Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
-
-        if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-            UpdateGeometryInfo((void *)winPtr);
-        }
-
+	DEBUG_LOG("WmGeometryCmd: calling UpdateGeometryInfo");
+        UpdateGeometryInfo((void *)winPtr);
         return TCL_OK;
     }
 
@@ -2190,7 +2115,8 @@ WmGeometryCmd(
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided. */
         if (wmPtr->width > 0 && wmPtr->height > 0) {
-	    DEBUG_LOG("GeometryCmd setting window size");
+	    DEBUG_LOG("GeometryCmd setting window size %s -> %dx%d",
+		Tk_PathName(winPtr), wmPtr->width, wmPtr->height);
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 
@@ -2201,6 +2127,7 @@ WmGeometryCmd(
         }
 
         /* Update internal Tk/GLFW state. */
+	DEBUG_LOG("WmGeometryCmd: calling UpdateGeometryInfo");
         UpdateGeometryInfo((void *)winPtr);
 
         /* Verify the change actually took effect. */
@@ -2291,7 +2218,7 @@ WmGridCmd(
         wmPtr->widthInc=wi;    wmPtr->heightInc=hi;
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr,winPtr);
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -2417,7 +2344,7 @@ WmIconifyCmd(
     TkpWmSetState(winPtr, IconicState);
 
     /* If the window is mapped and has a GLFW window, actually iconify it. */
-    if ((winPtr->flags & TK_MAPPED) && glfwWindow != NULL) {
+    if (Tk_IsMapped(winPtr) && glfwWindow != NULL) {
         glfwIconifyWindow(glfwWindow);
         winPtr->flags &= ~TK_MAPPED;
     }
@@ -2643,7 +2570,7 @@ WmMaxsizeCmd(
     }
     wmPtr->maxWidth=w; wmPtr->maxHeight=h;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr,winPtr);
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -2690,7 +2617,7 @@ WmMinsizeCmd(
     }
     wmPtr->minWidth=w; wmPtr->minHeight=h;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr,winPtr);
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -2756,13 +2683,44 @@ WmOverrideredirectCmd(
 
 static int
 WmPositionfromCmd(
-            TCL_UNUSED(Tk_Window),
-            TCL_UNUSED(TkWindow *),
-            Tcl_Interp *interp,
-            TCL_UNUSED(int),
-            TCL_UNUSED(Tcl_Obj *const *))
+    TCL_UNUSED(Tk_Window),
+    TkWindow   *winPtr,
+    Tcl_Interp *interp,
+    int         objc,
+    Tcl_Obj *const objv[])
 {
-    Tcl_SetObjResult(interp, Tcl_NewObj());
+    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    static const char *const src[] = { "program","user",NULL };
+    int idx;
+
+    if (objc > 1) {
+        Tcl_WrongNumArgs(interp,0,objv,"pathName positionfrom ?user|program?");
+        return TCL_ERROR;
+    }
+    if (objc == 0) {
+        if      (wmPtr->sizeHintsFlags & WM_USPosition)
+            Tcl_SetObjResult(interp,Tcl_NewStringObj("user",-1));
+        else if (wmPtr->sizeHintsFlags & WM_PPosition)
+            Tcl_SetObjResult(interp,Tcl_NewStringObj("program",-1));
+        return TCL_OK;
+    }
+    if (*Tcl_GetString(objv[0]) == '\0') {
+        wmPtr->sizeHintsFlags &= ~(WM_USPosition|WM_PPosition);
+    } else {
+        if (Tcl_GetIndexFromObjStruct(interp,objv[0],src,sizeof(char *),
+		"argument",0,&idx)!=TCL_OK) {
+            return TCL_ERROR;
+	}
+        if (idx==0) {
+	    wmPtr->sizeHintsFlags&=~WM_USPosition;
+	    wmPtr->sizeHintsFlags|=WM_PPosition;
+	} else {
+	    wmPtr->sizeHintsFlags&=~WM_PPosition;
+	    wmPtr->sizeHintsFlags|=WM_USPosition;
+	}
+    }
+    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -2910,7 +2868,7 @@ WmResizableCmd(
     if (glfwWindow)
         glfwSetWindowAttrib(glfwWindow, GLFW_RESIZABLE,
                             (w || h) ? GLFW_TRUE : GLFW_FALSE);
-    WmUpdateGeom(wmPtr, winPtr);
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -2932,13 +2890,45 @@ WmResizableCmd(
 
 static int
 WmSizefromCmd(
-            TCL_UNUSED(Tk_Window),
-            TCL_UNUSED(TkWindow *),
-            Tcl_Interp *interp,
-            TCL_UNUSED(int),
-            TCL_UNUSED(Tcl_Obj *const *))
+    TCL_UNUSED(Tk_Window),
+    TkWindow   *winPtr,
+    Tcl_Interp *interp,
+    int         objc,
+    Tcl_Obj *const objv[])
 {
-    Tcl_SetObjResult(interp, Tcl_NewObj());
+    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    static const char *const src[] = { "program","user",NULL };
+    int idx;
+
+    if (objc > 1) {
+        Tcl_WrongNumArgs(interp,0,objv,"pathName sizefrom ?user|program?");
+        return TCL_ERROR;
+    }
+    if (objc == 0) {
+        if (wmPtr->sizeHintsFlags&WM_USSize) {
+	    Tcl_SetObjResult(interp,Tcl_NewStringObj("user",-1));
+	} else if (wmPtr->sizeHintsFlags&WM_PSize) {
+	    Tcl_SetObjResult(interp,Tcl_NewStringObj("program",-1));
+	}
+        return TCL_OK;
+    }
+    if (*Tcl_GetString(objv[0]) == '\0') {
+        wmPtr->sizeHintsFlags &= ~(WM_USSize|WM_PSize);
+    } else {
+        if (Tcl_GetIndexFromObjStruct(interp,objv[0], src,
+		sizeof(char *),"argument",0,&idx) != TCL_OK) {
+            return TCL_ERROR;
+	}
+        if (idx==0) {
+	    wmPtr->sizeHintsFlags&=~WM_USSize;
+	    wmPtr->sizeHintsFlags|=WM_PSize;
+	} else {
+	    wmPtr->sizeHintsFlags&=~WM_PSize;
+	    wmPtr->sizeHintsFlags|=WM_USSize;
+	}
+    }
+    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    WmUpdateGeom(winPtr);
     return TCL_OK;
 }
 
@@ -3293,7 +3283,7 @@ TkpSetMainMenubar(
     if (wmPtr->menuHeight <= 0) wmPtr->menuHeight = 1;
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr, winPtr);
+    WmUpdateGeom(winPtr);
 }
 
 /*
@@ -3468,17 +3458,15 @@ TopLevelEventProc(
     switch (eventPtr->type) {
     case ConfigureNotify:
         /* Update our internal state from Tk's changes. */
-        if (wmPtr != NULL && glfwWindow != NULL) {
-            wmPtr->x = winPtr->changes.x;
-            wmPtr->y = winPtr->changes.y;
-            wmPtr->width = winPtr->changes.width;
-            wmPtr->height = winPtr->changes.height;
-        }
+	DEBUG_LOG("ConfigureNotify received for %s", Tk_PathName(winPtr));
+	wmPtr->width = wmPtr->height = -1;
         break;
     case MapNotify:
+	DEBUG_LOG("MapNotify received for %s", Tk_PathName(winPtr));
         winPtr->flags |= TK_MAPPED;
         break;
     case UnmapNotify:
+	DEBUG_LOG("UnmapNotify received for %s", Tk_PathName(winPtr));;
         winPtr->flags &= ~TK_MAPPED;
         break;
     }
@@ -3509,41 +3497,38 @@ TopLevelReqProc(
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+    DEBUG_LOG("TopLevelReqProc %s requesting size %dx%d",
+	Tk_PathName(tkwin), winPtr->reqWidth, winPtr->reqHeight);
 
-    DEBUG_LOG("TopLevelReqProc %s to %dx%d; pending = %d", Tk_PathName(tkwin),
-	   winPtr->reqWidth, winPtr->reqHeight,
-	   wmPtr->flags & WM_UPDATE_PENDING);
+    if (wmPtr->flags & WM_UPDATE_PENDING) {
+	DEBUG_LOG("TopLevelReqProc: Cancelling pending UpdateGeometryInfo");
+	Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+	//return;
+    }
 
-    /* Signal to UpdateGeometryInfo to use the requested size. */
-    wmPtr->width = -1;
-    wmPtr->height = -1;
-    
-
-    /*
-     * A window which has never been mapped has no WmInfo, so its
-     * geometry cannot be updated yet.
-     */
-
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
-	DEBUG_LOG("TopLevelReqProc: rescheduling");
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
+    if (Tk_IsMapped(winPtr)) {
+	wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
+	DEBUG_LOG("TopLevelReqProc: scheduling UpdateGeometryInfo %s to -1x-1",
+	    Tk_PathName(winPtr));
+	/* Signals to UpdateGeometryInfo to use reqWidth and reqHeight. */
+	winPtr->flags |= TKWL_USE_REQUESTED;
+	/* Schedule a size update. */
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
+    } else {
+	DEBUG_LOG("TopLevelReqProc: %s is not mapped", Tk_PathName(winPtr));
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
  *
  * ApplyPendingGeometry --
  *
- *	Computes the target size for winPtr from wmPtr/reqWidth/reqHeight
- *	and, if it differs from the window's last-configured size, applies
- *	it via glfwSetWindowSize.  Factored out of UpdateGeometryInfo so
- *	that TkWmMapWindow can also call it synchronously on first map,
- *	instead of relying solely on UpdateGeometryInfo's deferred/idle
- *	path (which can leave glfwShowWindow revealing the window at its
- *	stale creation size -- see TkWmMapWindow).
+ *	Sets the size of the toplevel by calling glfwSetWindowSize.  This is
+ *      called directly by that TkWmMapWindow when a toplevel is first mapped,
+ *      and used as idle task by UpdateGeometryInfo.  The size is set to
+ *      wmPtr->width x wmPtr->height if those values are both positive, or
+ *      to winPtr->reqWidth x winPtr->reqHeight if not.
  *
  *	Caller is responsible for checking that glfwWindow is non-NULL and
  *	that the window isn't withdrawn before calling this.
@@ -3560,23 +3545,31 @@ TopLevelReqProc(
 
 static void
 ApplyPendingGeometry(
-    TkWindow *winPtr,
-    WmInfo *wmPtr,
-    GLFWwindow *glfwWindow)
+    TkWindow *winPtr)
 {
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
     int tw, th;
 
-    /* Calculate target size. The reqProc sets negative wmPtr sizes. */
-    tw = wmPtr->width  < 0 ? winPtr->reqWidth  : wmPtr->width;
-    th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
+    /*
+     * Look up the target size for this window in the wmPtr.  If the
+     * TKWL_USE_REQUESTED flag is set or if the wmPtr value is negative
+     * we use the reqWidth or reqHeight stored in the TkWindow struct.
+     */
 
-    /* Ensure minimum size. */
+    int useReq = winPtr->flags & TKWL_USE_REQUESTED;
+    tw = useReq || wmPtr->width < 0 ? winPtr->reqWidth  : wmPtr->width;
+    th = useReq || wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
+    winPtr->flags &= ~TKWL_USE_REQUESTED;
+
+    /* Ensure at least minimum size. */
     if (tw < wmPtr->minWidth)  tw = wmPtr->minWidth;
     if (th < wmPtr->minHeight) th = wmPtr->minHeight;
 
-    /* Apply size change if needed. */
-    if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
-
+    /* Apply size change if the target size is different from the
+       configured. */
+    //if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
+    {
 	/*
 	 * Wayland won't allow a window to be so narrow that the title bar
 	 * can't display all of the standard controls.  If a size change is
@@ -3584,35 +3577,25 @@ ApplyPendingGeometry(
 	 * but GLFW will not know about the increase, so it won't allocate a
 	 * correctly sized back buffer or pass the correct size to the
 	 * FramebufferSizeCallback.  This causes our backing store framebuffer
-	 * to bee too small for the window, which causes part of the window to
+	 * to be too small for the window, which causes part of the window to
 	 * not be drawn.  There seems to be no way for us to detect the size
-	 * increase (yet, anyway).  So as a last resort / shameless hack we
-	 * just make sure that the window is always at least 180 logical
-	 * pixels wide.
+	 * increase.  So as a last resort / shameless hack we just make sure
+	 * that the window is always at least 180 logical pixels wide.
 	 */
+
 	if (tw < 180) {
 	    tw = 180;
 	}
- 	/* When GFLW initially creates a window it assumes that the window
- 	 * will open on a screen with pixel scale factor 1.0, even if there is
- 	 * no such screen on the system.  If this resize happens before GLFW
- 	 * has called the WindowContentScaleFactorCallback then GLFW will
- 	 * allocate a back buffer that has the same size as the window.  If
- 	 * the window has odd width or height, and if the scale factor is
- 	 * actually 2, then Wayland will generate an error and remove the
- 	 * window from the screen.  The actual removal is asynchronous and
- 	 * likely to happen after the window has been fully rendered, which
- 	 * leads to pretty bad UX.
- 	 */
-	DEBUG_LOG("ApplyPendingGeometry:  %s -> %dx%d", Tk_PathName(winPtr),
-		  tw, th);
-        glfwSetWindowSize(glfwWindow, tw, th);
 
-		/* Update the window. */
+	DEBUG_LOG("ApplyPendingGeometry: calling glfwSetWindowSize %s -> %dx%d",
+	    Tk_PathName(winPtr), tw, th);
+        glfwSetWindowSize(glfwWindow, tw, th);
+	
+	/* Update the window data. */
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
-        wmPtr->configWidth  = tw;
-        wmPtr->configHeight = th;
+	//        wmPtr->configWidth  = tw;
+	//        wmPtr->configHeight = th;
     }
 }
 
@@ -3621,7 +3604,8 @@ ApplyPendingGeometry(
  *
  * UpdateGeometryInfo --
  *
- *	Idle task to apply pending geometry changes for a toplevel.
+ *	Run as an idle task to set the size of a toplevel's glfwWindow
+ *      to match the size expected by Tk.  Calls ApplyPendingGeometry. 
  *
  * Results:
  *	None.
@@ -3632,7 +3616,6 @@ ApplyPendingGeometry(
  *
  *----------------------------------------------------------------------
  */
-
 
 static void
 UpdateGeometryInfo(
@@ -3675,21 +3658,25 @@ UpdateGeometryInfo(
     }
 
     if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
-	/* Newly created windows are created hidden and set to be focused
-	 * when they are first shown.
-	 * If a window is resized before it is has been shown, the missing
-	 * window decorations trigger a wayland error which resets the
-	 * size back to the last successful size, which will be its initial
-	 * size, 200x200.  So we need to wait for the first call to the
+	/* Newly created windows are hidden and set to be focused when they
+	 * are first shown.  If a window is resized before it is has been
+	 * shown, the missing window decorations trigger a wayland error which
+	 * resets the size back to the last successful size, which will be its
+	 * initial size, 200x200.  So we wait for the first call to the
 	 * WindowFocusCallback before resizing it.
 	 */
+	wmPtr->flags |= WM_UPDATE_PENDING;
+	DEBUG_LOG("UpdateGeometryInfo: waiting for focus.");
 	Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
 	return;
     }
-
+    if (wmPtr == NULL) {
+	DEBUG_LOG("UpdateGeometryInfo: "
+	    "Cannot update geometry for a window with no WmInfo");
+	return;
+    }
     DEBUG_LOG("UpdateGeometryInfo: %s to %dx%d", Tk_PathName(winPtr),
 	   wmPtr->width, wmPtr->height);
-
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
     /* Apply any pending size hint updates. */
@@ -3704,64 +3691,11 @@ UpdateGeometryInfo(
         return;
     }
 
-    ApplyPendingGeometry(winPtr, wmPtr, glfwWindow);
-#if 0
-    /* Apply position change if needed, although this does nothing. */
-    if ((wmPtr->flags & WM_MOVE_PENDING) ||
-        wmPtr->x != winPtr->changes.x ||
-        wmPtr->y != winPtr->changes.y) {
-        //// glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
-        wmPtr->flags &= ~WM_MOVE_PENDING;
-    }
-#endif
-
+    DEBUG_LOG("UpdateGeometryInfo: calling ApplyPendingGeometry with flag %d",
+	winPtr->flags & TKWL_USE_REQUESTED);
+    ApplyPendingGeometry(winPtr);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandUpdateGeometryInfo --
- *
- *     External entry point (exported to tkWaylandMenu.c and others) to
- *     request a toplevel geometry recomputation and application.
- *
- *     Callers must use this instead of calling glfwSetWindowSize()
- *     directly, to avoid racing with the canonical geometry pass (see
- *     menubar height bug in tkWaylandMenu.c). They are expected to have
- *     already updated the size-determining state (winPtr->reqWidth/Height
- *     or internal border) via Tk_SetInternalBorderEx or similar; this
- *     simply schedules the single UpdateGeometryInfo idle pass to apply it.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     May set WM_UPDATE_PENDING/WM_UPDATE_SIZE_HINTS and schedule
- *     UpdateGeometryInfo on the Tcl idle queue.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandUpdateGeometryInfo(
-    void *clientData)
-{
-    TkWindow *winPtr = (TkWindow *)clientData;
-    WmInfo   *wmPtr;
-
-    if (!winPtr) {
-	return;
-    }
-    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    if (!wmPtr) {
-	return;
-    }
-
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
-    }
-}
 
 /*
  *----------------------------------------------------------------------
@@ -4059,12 +3993,14 @@ ParseGeometry(
  */
 
 static void
-WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr)
+WmUpdateGeom(TkWindow *winPtr)
 {
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
-        wmPtr->flags |= WM_UPDATE_PENDING;
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (wmPtr->flags & WM_UPDATE_PENDING) {
+	return;
     }
+    wmPtr->flags |= WM_UPDATE_PENDING;
+    Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
 }
 
 /*
@@ -4286,7 +4222,8 @@ XMapWindow(
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
     DEBUG_LOG("XMapWindow: %s", Tk_PathName(winPtr));
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
 }
 
@@ -4325,32 +4262,6 @@ XMapRaised(
 /*
  *----------------------------------------------------------------------
  *
- * XMapSubwindows --
- *
- *	Map all unmapped subwindows.
- *	Child windows share the parent's GLFW window and are always
- *	"visible" in the compositing sense; this is therefore a no-op.
- *
- * Results:
- *	Success.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XMapSubwindows(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window))
-{
-    return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XUnmapWindow --
  *
  *	Called by Tk_UnmapWindow.  But there is nothing we need to do.
@@ -4366,9 +4277,11 @@ XMapSubwindows(
 
 int
 XUnmapWindow(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window))
+    Display *display,
+    Window window)
 {
+    TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
+    DEBUG_LOG("XUnmapWindow: %s", Tk_PathName(winPtr));
     return Success;
 }
 
@@ -4427,11 +4340,18 @@ XResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *container = winPtr->privatePtr->container;
-    if (container) {
-        TkWaylandQueueExposeEvent(container, 0, 0,
-	  Tk_Width(container), Tk_Height(container));
-    }
+    TkWindow *contPtr = winPtr->privatePtr->container;
+    if (contPtr) {
+	DEBUG_LOG("XResizeWindow: Exposing container %s", Tk_PathName(contPtr));
+        TkWaylandQueueExposeEvent(contPtr, 0, 0,
+	  Tk_Width(contPtr), Tk_Height(contPtr));
+    } else if (winPtr->parentPtr) {
+	DEBUG_LOG("XResizeWindow: Exposing parent %s",
+	    Tk_PathName(winPtr->parentPtr));
+        TkWaylandQueueExposeEvent(winPtr->parentPtr, 0, 0,
+	  Tk_Width(winPtr->parentPtr), Tk_Height(winPtr->parentPtr));
+    }	
+    DEBUG_LOG("XResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
@@ -4469,11 +4389,18 @@ XMoveWindow(
     TCL_UNUSED(int))  /* y */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *container = winPtr->privatePtr->container;
-    if (container) {
-        TkWaylandQueueExposeEvent(container, 0, 0,
-	  Tk_Width(container), Tk_Height(container));
+    TkWindow *contPtr = winPtr->privatePtr->container;
+    if (contPtr) {
+	DEBUG_LOG("XMoveWindow: Exposing container %s", Tk_PathName(contPtr));
+        TkWaylandQueueExposeEvent(contPtr, 0, 0,
+	  Tk_Width(contPtr), Tk_Height(contPtr));
+    } else if (winPtr->parentPtr) {
+	DEBUG_LOG("XResizeWindow: Exposing parent %s",
+	    Tk_PathName(winPtr->parentPtr));
+        TkWaylandQueueExposeEvent(winPtr->parentPtr, 0, 0,
+	  Tk_Width(winPtr->parentPtr), Tk_Height(winPtr->parentPtr));
     }
+    DEBUG_LOG("XMoveWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;
@@ -4515,11 +4442,19 @@ XMoveResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *container = winPtr->privatePtr->container;
-    if (container) {
-        TkWaylandQueueExposeEvent(container, 0, 0,
-	  Tk_Width(container), Tk_Height(container));
+    TkWindow *contPtr = winPtr->privatePtr->container;
+    if (contPtr) {
+	DEBUG_LOG("XMoveResizeWindow: Exposing container %s",
+	    Tk_PathName(contPtr));
+        TkWaylandQueueExposeEvent(contPtr, 0, 0,
+	  Tk_Width(contPtr), Tk_Height(contPtr));
+    } else if (winPtr->parentPtr) {
+	DEBUG_LOG("XResizeWindow: Exposing parent %s",
+	    Tk_PathName(winPtr->parentPtr));
+        TkWaylandQueueExposeEvent(winPtr->parentPtr, 0, 0,
+	  Tk_Width(winPtr->parentPtr), Tk_Height(winPtr->parentPtr));
     }
+    DEBUG_LOG("XMoveResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
     return Success;

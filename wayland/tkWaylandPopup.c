@@ -13,6 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a FOR DISCLAIMER OF ALL WARRANTIES.
  */
+
 /* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL popup
@@ -334,7 +335,9 @@ TkWaylandPopupDestroyRenderer(
          * mistaken for entries belonging to the new context.
          */
         TkWaylandFontContextDestroyed(renderer->vg);
+	GL_DEBUG_LOG("TkWaylandPopupDestroyRenderer: before\n");
         nvgDeleteGLES3(renderer->vg);
+	GL_DEBUG_LOG("TkWaylandPopupDestroyRenderer: after\n");
         renderer->vg = NULL;
     }
 
