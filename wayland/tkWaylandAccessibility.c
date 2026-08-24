@@ -142,8 +142,20 @@ struct TkAccessible {
     char *virtual_name;
     struct TkAccessible *virtual_parent;
 
-    /* D-Bus slot for this object (for cleanup). */
-    sd_bus_slot *vtable_slot;
+    /*
+     * D-Bus slots for this object (for cleanup). An accessible can have
+     * several interfaces registered on the same dbus_path (Accessible,
+     * Component, and one of Action/Value/Text/Selection depending on
+     * role, plus Cache/Application for the root). Every
+     * sd_bus_add_object_vtable() call must have its slot captured here so
+     * FreeAccessible() can unref all of them -- a slot that is never
+     * captured (NULL passed as the ret_slot argument) is "floating" and
+     * stays registered, pointing at this object's memory, for the
+     * lifetime of the bus even after the object is freed.
+     */
+#define TK_ACCESSIBLE_MAX_SLOTS 8
+    sd_bus_slot *vtable_slots[TK_ACCESSIBLE_MAX_SLOTS];
+    int n_vtable_slots;
 };
 
 /* Global connection state. */
@@ -209,11 +221,17 @@ static bool EmbedWithRegistry(void);
 static int dbus_method_get_children(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_child_at_index(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_attributes(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_get_states(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_state(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_role(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_get_name(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_get_description(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_get_parent(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_get_name(sd_bus *bus, const char *path, const char *interface,
+                               const char *property, sd_bus_message *reply,
+                               void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_get_description(sd_bus *bus, const char *path, const char *interface,
+                                      const char *property, sd_bus_message *reply,
+                                      void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_get_parent(sd_bus *bus, const char *path, const char *interface,
+                                 const char *property, sd_bus_message *reply,
+                                 void *userdata, sd_bus_error *ret_error);
 static int dbus_method_grab_focus(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_index_in_parent(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_interfaces(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
@@ -337,17 +355,30 @@ static int atspi_draining = 0;
  * D-Bus vtables - these map functions to the ati-spi API.
  */
 
-/* org.a11y.atspi.Accessible interface. */
+/*
+ * org.a11y.atspi.Accessible interface.
+ *
+ * Name, Description, and Parent are PROPERTIES per at-spi2-core's
+ * Accessible.xml, not methods -- Orca/pyatspi read them via
+ * org.freedesktop.DBus.Properties.Get/GetAll, and never had a "GetName",
+ * "GetDescription", or "GetParent" method to call. State is read via a
+ * method called GetState (singular) returning "au" (two packed uint32s),
+ * not "GetStates" returning a single "t". With the old names/signatures
+ * every one of those lookups failed on the client side, so Orca could
+ * never learn a widget's actual name, description, or state -- only
+ * whatever it could scrape from window-level info, hence generic
+ * speech-dispatcher output instead of real per-widget announcements.
+ */
 static const sd_bus_vtable accessible_vtable[] = {
     SD_BUS_VTABLE_START(0),
+    SD_BUS_PROPERTY("Name", "s", dbus_prop_get_name, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+    SD_BUS_PROPERTY("Description", "s", dbus_prop_get_description, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+    SD_BUS_PROPERTY("Parent", "(so)", dbus_prop_get_parent, 0, SD_BUS_VTABLE_PROPERTY_CONST),
     SD_BUS_METHOD("GetChildren", "", "a(so)", dbus_method_get_children, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetChildAtIndex", "i", "(so)", dbus_method_get_child_at_index, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetAttributes", "", "a{ss}", dbus_method_get_attributes, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetStates", "", "t", dbus_method_get_states, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetState", "", "au", dbus_method_get_state, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetRole", "", "u", dbus_method_get_role, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetName", "", "s", dbus_method_get_name, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetDescription", "", "s", dbus_method_get_description, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetParent", "", "(so)", dbus_method_get_parent, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GrabFocus", "", "b", dbus_method_grab_focus, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetIndexInParent", "", "i", dbus_method_get_index_in_parent, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetInterfaces", "", "as", dbus_method_get_interfaces, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -824,20 +855,26 @@ sd_bus_message *m,
 
 /*
  *----------------------------------------------------------------------
- * dbus_method_get_states --
+ * dbus_method_get_state --
  *
- *   D-Bus method handler for GetStates on the Accessible interface.
+ *   D-Bus method handler for GetState on the Accessible interface.
  *   Returns the bitmask of states for the accessible object.
+ *
+ *   AT-SPI's Accessible.GetState is declared "" -> "au" in
+ *   at-spi2-core/xml/Accessible.xml: an array of two packed uint32s
+ *   (low 32 bits, then high 32 bits of the 64-bit state bitfield), not
+ *   a single "t". A client asking for "GetState" and finding only a
+ *   "GetStates" method with a "t" return never gets a state at all.
  *
  * Results:
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Sends a D-Bus reply message with a 64-bit unsigned integer.
+ *   Sends a D-Bus reply message with an array of two uint32s.
  *----------------------------------------------------------------------
  */
 
-static int dbus_method_get_states(
+static int dbus_method_get_state(
 	sd_bus_message *m,
 	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
@@ -850,7 +887,14 @@ static int dbus_method_get_states(
     if (r < 0) return r;
 
     uint64_t states = ComputeStateForWidget(acc);
-    sd_bus_message_append(reply, "t", states);
+    uint32_t lo = (uint32_t)(states & 0xffffffffu);
+    uint32_t hi = (uint32_t)((states >> 32) & 0xffffffffu);
+
+    sd_bus_message_open_container(reply, 'a', "u");
+    sd_bus_message_append(reply, "u", lo);
+    sd_bus_message_append(reply, "u", hi);
+    sd_bus_message_close_container(reply);
+
     return sd_bus_send(NULL, reply, NULL);
 }
 
@@ -896,111 +940,112 @@ static int dbus_method_get_role(
 
 /*
  *----------------------------------------------------------------------
- * dbus_method_get_name --
+ * dbus_prop_get_name --
  *
- *   D-Bus method handler for GetName on the Accessible interface.
- *   Returns the name of the accessible object.
+ *   D-Bus property getter for Name on the Accessible interface. Name is
+ *   a property per the AT-SPI2 spec, not a method -- Orca reads it via
+ *   Properties.Get/GetAll, not by calling "GetName".
  *
  * Results:
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Sends a D-Bus reply message with a string.
+ *   Appends the widget's accessible name to the D-Bus reply message.
  *----------------------------------------------------------------------
  */
-static int dbus_method_get_name(
-	sd_bus_message *m,
-	void *userdata,
-	TCL_UNUSED(sd_bus_error *))/* ret_error */
+static int dbus_prop_get_name(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
 {
     TkAccessible *acc = (TkAccessible *)userdata;
-    sd_bus_message *reply = NULL;
-    int r;
     char *name = NULL;
+    int r;
 
-    if (acc->is_virtual && acc->virtual_name) {
-        name = Tcl_Strdup(acc->virtual_name);
-    } else if (acc->tkwin) {
-        name = GetNameForWidget(acc->tkwin);
+    if (acc) {
+        if (acc->is_virtual && acc->virtual_name) {
+            name = Tcl_Strdup(acc->virtual_name);
+        } else if (acc->tkwin) {
+            name = GetNameForWidget(acc->tkwin);
+        }
     }
 
-    r = sd_bus_message_new_method_return(m, &reply);
-    if (r < 0) {
-        if (name) Tcl_Free(name);
-        return r;
-    }
-
-    sd_bus_message_append(reply, "s", name ? name : "");
+    r = sd_bus_message_append(reply, "s", name ? name : "");
     if (name) Tcl_Free(name);
-    return sd_bus_send(NULL, reply, NULL);
+    return r;
 }
 
 /*
  *----------------------------------------------------------------------
- * dbus_method_get_description --
+ * dbus_prop_get_description --
  *
- *   D-Bus method handler for GetDescription on the Accessible interface.
- *   Returns the description of the accessible object.
+ *   D-Bus property getter for Description on the Accessible interface.
+ *   Description is a property per the AT-SPI2 spec, not a method.
  *
  * Results:
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Sends a D-Bus reply message with a string.
+ *   Appends the widget's accessible description to the D-Bus reply
+ *   message.
  *----------------------------------------------------------------------
  */
 
-static int dbus_method_get_description(
-	sd_bus_message *m,
-	void *userdata,
-	TCL_UNUSED(sd_bus_error *))/* ret_error */
+static int dbus_prop_get_description(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
 {
     TkAccessible *acc = (TkAccessible *)userdata;
-    sd_bus_message *reply = NULL;
-    int r;
     char *desc = NULL;
+    int r;
 
-    if (acc->tkwin) {
+    if (acc && acc->tkwin) {
         desc = GetDescriptionForWidget(acc->tkwin);
     }
 
-    r = sd_bus_message_new_method_return(m, &reply);
-    if (r < 0) {
-        if (desc) Tcl_Free(desc);
-        return r;
-    }
-
-    sd_bus_message_append(reply, "s", desc ? desc : "");
+    r = sd_bus_message_append(reply, "s", desc ? desc : "");
     if (desc) Tcl_Free(desc);
-    return sd_bus_send(NULL, reply, NULL);
+    return r;
 }
 
 /*
  *----------------------------------------------------------------------
- * dbus_method_get_parent --
+ * dbus_prop_get_parent --
  *
- *   D-Bus method handler for GetParent on the Accessible interface.
- *   Returns the parent accessible reference.
+ *   D-Bus property getter for Parent on the Accessible interface.
+ *   Parent is a property per the AT-SPI2 spec, not a method.
  *
  * Results:
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Sends a D-Bus reply message with an (so) reference.
+ *   Appends an (so) accessible reference to the D-Bus reply message.
  *----------------------------------------------------------------------
  */
 
-static int dbus_method_get_parent(
-	sd_bus_message *m,
-	void *userdata,
-	TCL_UNUSED(sd_bus_error *))/* ret_error */
+static int dbus_prop_get_parent(
+    TCL_UNUSED(sd_bus *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(const char *),
+    sd_bus_message *reply,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
 {
     TkAccessible *acc = (TkAccessible *)userdata;
-    sd_bus_message *reply = NULL;
-    int r;
 
-    r = sd_bus_message_new_method_return(m, &reply);
-    if (r < 0) return r;
+    if (!acc) {
+        return AppendAccessibleRef(reply, NULL);
+    }
 
     if (acc == atspi_conn->root_accessible &&
         atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
@@ -1009,15 +1054,13 @@ static int dbus_method_get_parent(
          * one of our own objects, so build the tuple directly rather than
          * via AppendAccessibleRef (which always uses our own bus name).
 	 */
-        sd_bus_message_append(reply, "(so)",
-                               atspi_conn->desktop_bus_name,
-                               atspi_conn->desktop_path);
+        return sd_bus_message_append(reply, "(so)",
+                                      atspi_conn->desktop_bus_name,
+                                      atspi_conn->desktop_path);
     } else if (acc->parent && acc->parent->dbus_path) {
-        AppendAccessibleRef(reply, acc->parent->dbus_path);
-    } else {
-        AppendAccessibleRef(reply, NULL);
+        return AppendAccessibleRef(reply, acc->parent->dbus_path);
     }
-    return sd_bus_send(NULL, reply, NULL);
+    return AppendAccessibleRef(reply, NULL);
 }
 
 /*
@@ -2062,6 +2105,24 @@ static bool RegisterDbusObject(TkAccessible *acc)
         acc->dbus_path = Tcl_Strdup(path);
     }
 
+    /*
+     * Register a single vtable and capture its slot in acc->vtable_slots
+     * so it can be torn down later. Every sd_bus_add_object_vtable() call
+     * below MUST go through this helper -- passing NULL for the slot
+     * leaks a floating registration that outlives the object.
+     */
+#define ADD_VTABLE(bus_, path_, iface_, vtable_) \
+    do { \
+        if (acc->n_vtable_slots < TK_ACCESSIBLE_MAX_SLOTS) { \
+            sd_bus_slot *_slot = NULL; \
+            int _r = sd_bus_add_object_vtable((bus_), &_slot, (path_), \
+                                               (iface_), (vtable_), acc); \
+            if (_r >= 0 && _slot) { \
+                acc->vtable_slots[acc->n_vtable_slots++] = _slot; \
+            } \
+        } \
+    } while (0)
+
     /* Register main Accessible interface. */
     sd_bus_slot *slot = NULL;
     int r = sd_bus_add_object_vtable(atspi_conn->bus,
@@ -2074,57 +2135,46 @@ static bool RegisterDbusObject(TkAccessible *acc)
         /* g_warning not available; we ignore for now. */
         return false;
     }
-    acc->vtable_slot = slot;
+    acc->vtable_slots[acc->n_vtable_slots++] = slot;
 
     /* Register Component interface (all objects support it). */
-    sd_bus_add_object_vtable(atspi_conn->bus,
-                              NULL,
-                              acc->dbus_path,
-                              ATSPI_COMPONENT_INTERFACE,
-                              component_vtable,
-                              acc);
+    ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
+               ATSPI_COMPONENT_INTERFACE, component_vtable);
 
     /*
      * Register Cache and Application interfaces on root only - both are
      * required for the registry/Orca to catalog us as an application.
      */
     if (acc == atspi_conn->root_accessible) {
-        sd_bus_add_object_vtable(atspi_conn->bus,
-                                  NULL,
-                                  "/org/a11y/atspi/cache",
-                                  "org.a11y.atspi.Cache",
-                                  cache_vtable,
-                                  acc);
-        sd_bus_add_object_vtable(atspi_conn->bus,
-                                  NULL,
-                                  acc->dbus_path,
-                                  "org.a11y.atspi.Application",
-                                  application_vtable,
-                                  acc);
+        ADD_VTABLE(atspi_conn->bus, "/org/a11y/atspi/cache",
+                   "org.a11y.atspi.Cache", cache_vtable);
+        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
+                   "org.a11y.atspi.Application", application_vtable);
     }
 
     /* Conditionally register other interfaces based on role. */
     int role = acc->role;
     if (role == ATSPI_ROLE_PUSH_BUTTON || role == ATSPI_ROLE_CHECK_BOX ||
         role == ATSPI_ROLE_RADIO_BUTTON || role == ATSPI_ROLE_TOGGLE_BUTTON) {
-        sd_bus_add_object_vtable(atspi_conn->bus, NULL, acc->dbus_path,
-                                  ATSPI_ACTION_INTERFACE, action_vtable, acc);
+        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
+                   ATSPI_ACTION_INTERFACE, action_vtable);
     }
     if (role == ATSPI_ROLE_SPIN_BUTTON || role == ATSPI_ROLE_SLIDER ||
         role == ATSPI_ROLE_PROGRESS_BAR || role == ATSPI_ROLE_SCROLL_BAR) {
-        sd_bus_add_object_vtable(atspi_conn->bus, NULL, acc->dbus_path,
-                                  ATSPI_VALUE_INTERFACE, value_vtable, acc);
+        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
+                   ATSPI_VALUE_INTERFACE, value_vtable);
     }
     if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
-        sd_bus_add_object_vtable(atspi_conn->bus, NULL, acc->dbus_path,
-                                  ATSPI_TEXT_INTERFACE, text_vtable, acc);
+        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
+                   ATSPI_TEXT_INTERFACE, text_vtable);
     }
     if (role == ATSPI_ROLE_LIST_BOX || role == ATSPI_ROLE_TREE ||
         role == ATSPI_ROLE_TREE_TABLE) {
-        sd_bus_add_object_vtable(atspi_conn->bus, NULL, acc->dbus_path,
-                                  ATSPI_SELECTION_INTERFACE, selection_vtable, acc);
+        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
+                   ATSPI_SELECTION_INTERFACE, selection_vtable);
     }
 
+#undef ADD_VTABLE
     return true;
 }
 
@@ -2568,9 +2618,12 @@ static void FreeAccessible(TkAccessible *acc)
     }
 
     /* Unregister D-Bus object (slot cleanup). */
-    if (acc->vtable_slot) {
-        sd_bus_slot_unref(acc->vtable_slot);
+    for (int i = 0; i < acc->n_vtable_slots; i++) {
+        if (acc->vtable_slots[i]) {
+            sd_bus_slot_unref(acc->vtable_slots[i]);
+        }
     }
+    acc->n_vtable_slots = 0;
 
     if (acc->path) Tcl_Free(acc->path);
     if (acc->dbus_path) Tcl_Free(acc->dbus_path);
