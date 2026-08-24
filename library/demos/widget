@@ -19,10 +19,22 @@ set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 namespace import ::msgcat::mc
 
 # Divert to the accessible widget demo if screen reader is on.
-if {[info commands ::tk::accessible::check_screenreader] ne ""}  {
-	if {[::tk::accessible::check_screenreader] eq "1"} {
-	    source [file join $tk_demoDirectory accessiblewidget]
-	}
+#
+# Only the construction of THIS file's own browser window (menu bar,
+# status bar, and the hyperlinked text widget below) is skipped when
+# diverting. Everything else in this file -- font setup, the
+# view/refresh/print/delete icons, and the utility procs defined near
+# the bottom (positionWindow, addSeeDismiss, showVars, showCode,
+# printCode, etc.) -- still runs unconditionally, because the
+# individual demo scripts that accessiblewidget's buttons source
+# directly (button.tcl, check.tcl, ...) depend on those same shared
+# resources. An unconditional `return` here previously skipped all of
+# that too, breaking every demo launched from the accessible front end.
+set widgetDemoAccessible 0
+if {[info commands ::tk::accessible::check_screenreader] ne ""
+        && [::tk::accessible::check_screenreader] eq "1"} {
+    set widgetDemoAccessible 1
+    source [file join $tk_demoDirectory accessiblewidget]
 }
 
 
@@ -136,8 +148,11 @@ image create photo ::img::delete -format $::tk::svgFmt -data {
 #----------------------------------------------------------------
 # The code below creates the main window, consisting of a menu bar and a text
 # widget that explains how to use the program, plus lists all of the demos as
-# hypertext items.
+# hypertext items. Skipped entirely when diverting to the accessible demo --
+# see the widgetDemoAccessible check above.
 #----------------------------------------------------------------
+
+if {!$widgetDemoAccessible} {
 
 menu .menuBar -tearoff 0
 
@@ -460,6 +475,9 @@ addFormattedText {
 
 .t configure -state disabled
 focus .s
+
+}
+;# end of "if {!$widgetDemoAccessible}" -- shared procs below always run
 
 # addSeeDismiss --
 # Add "See Code" and "Dismiss" button frame, with optional "See Vars"
