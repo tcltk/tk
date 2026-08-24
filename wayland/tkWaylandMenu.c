@@ -61,7 +61,7 @@ extern GLFWwindow *mainGlfwWindow;
 /*
  * Forward declarations from other Wayland modules.
  */
-MODULE_SCOPE void TkWaylandUpdateGeometryInfo(void *clientData);
+
 MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
 MODULE_SCOPE NVGcontext* TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
@@ -1140,7 +1140,6 @@ TkpSetWindowMenuBar(
         wmPtr->menuHeight     = 0;
 	Tk_SetInternalBorderEx(tkwin, winPtr->internalBorderLeft,
 	    winPtr->internalBorderRight, 0, winPtr->internalBorderBottom);
-	TkWaylandUpdateGeometryInfo(winPtr);
         return;
     }
 
@@ -1153,7 +1152,6 @@ TkpSetWindowMenuBar(
         Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
                 winPtr->internalBorderRight, wmPtr->menuHeight,
                 winPtr->internalBorderBottom);
-	TkWaylandUpdateGeometryInfo(winPtr);
 
         /* Just resize/redraw the existing popup. */
         if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -1173,7 +1171,6 @@ TkpSetWindowMenuBar(
     Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
             winPtr->internalBorderRight, wmPtr->menuHeight,
             winPtr->internalBorderBottom);
-    TkWaylandUpdateGeometryInfo(winPtr);
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
         DEBUG_LOG("TkpSetWindowMenuBar: deferring menubar setup "
@@ -1253,7 +1250,6 @@ TkWaylandMenubarCreateOrResize(
     if (winPtr->internalBorderTop != mbH) {
         Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
                 winPtr->internalBorderRight, mbH, winPtr->internalBorderBottom);
-	TkWaylandUpdateGeometryInfo(winPtr);
     }
 
     DEBUG_LOG("TkWaylandMenubarCreateOrResize: creating menubar popup %dx%d", mbW, mbH);

@@ -694,7 +694,7 @@ TkWaylandCreateWindow(
 	 */
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
-        glfwSetWindowSize(glfwWindow, width, height);
+        //glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
         glfwHideWindow(glfwWindow);
     } else {

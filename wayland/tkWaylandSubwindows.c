@@ -69,7 +69,7 @@
  */
 
 static const char* clipVertexShader = 
-    "#version 320 es\n"
+    "#version 300 es\n"
     "layout (location = 0) in vec2 aPos;\n"
     "uniform vec2 fbSize;\n"
     "void main() {\n"
@@ -78,10 +78,12 @@ static const char* clipVertexShader =
     "}\n";
 
 static const char* clipFragmentShader = 
-    "#version 320 es\n"
+    "#version 300 es\n"
     "precision highp float;\n"
     "out vec4 fragColor;\n"
-    "void main() {}\n";
+    "void main() {\n"
+        "fragColor = vec4((0.0, 0.0, 0.0, 0.0));\n"
+    "}\n";
 
 /*
  *----------------------------------------------------------------------
@@ -310,7 +312,7 @@ addClipRect(
      * Allocate a larger buffer if necessary.
      */
     if (data->clipRectCount >= data->clipRectBufferSize - 1) {
-	DEBUG_LOG("    Reallocating clipRects for %s\n", Tk_PathName(winPtr));
+	DEBUG_LOG("    Reallocating clipRects for %s", Tk_PathName(winPtr));
         data->clipRectBufferSize *= 2;
         data->clipRectBuffer = ckrealloc(data->clipRectBuffer,
 	    data->clipRectBufferSize * sizeof(clipRect));
@@ -322,7 +324,7 @@ addClipRect(
      */
     int n = data->clipRectCount;
     data->clipRectBuffer[data->clipRectCount++] = getBounds(subwinPtr, scale);
-    DEBUG_LOG("    Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f\n",
+    DEBUG_LOG("    Adding clipRect for %s in %s: %.0fx%.0f+%.0f+%.0f",
 	   Tk_PathName(subwinPtr), Tk_PathName(winPtr),
 	   data->clipRectBuffer[n].w, data->clipRectBuffer[n].h,
 	   data->clipRectBuffer[n].x, data->clipRectBuffer[n].y);
@@ -402,7 +404,7 @@ void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
      GLFWwindow* glfwWindow) /* The glfwWindow for its toplevel. */
 {
-    DEBUG_LOG("    updateClipRects: %s\n", Tk_PathName(winPtr));
+    DEBUG_LOG("    updateClipRects: %s", Tk_PathName(winPtr));
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     int fbWidth, fbHeight;
@@ -437,9 +439,16 @@ void updateClipRects(
     for (TkWindow *childPtr = winPtr->childList;
 	 childPtr != NULL;
 	 childPtr = childPtr->nextPtr) {
-	if (Tk_IsMapped(childPtr) &&
-	    !disjoint(bounds, getBounds(childPtr, scale))) {
+	if (!Tk_IsMapped(childPtr)) {
+	     DEBUG_LOG("    UpdateClipRects: Not clipping unmapped child %s",
+		 Tk_PathName(childPtr));
+	     continue;
+	    }
+	if (!disjoint(bounds, getBounds(childPtr, scale))) {
 	    addClipRect(childPtr, winPtr, scale);
+	} else {
+	     DEBUG_LOG("    UpdateClipRects: Not clipping disjoint child %s",
+		 Tk_PathName(childPtr));
 	}
     }
     /* Add clipRects for non-toplevel siblings higher in the stacking order
@@ -543,7 +552,7 @@ void tkWaylandDrawClipMask(
     if (1) { //// should be if the clipRects are invalid
 	updateClipRects(winPtr, glfwWindow);
     }
-    DEBUG_LOG("Drawing ClipMask for %s with %d clipRects\n",
+    DEBUG_LOG("Drawing ClipMask for %s with %d clipRects",
 	   Tk_PathName(winPtr), winPtr->privatePtr->clipRectCount + 4);
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     /* Bind the backing store framebuffer for this glfwWindow. */
