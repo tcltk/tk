@@ -113,6 +113,15 @@ static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
 #include <systemd/sd-bus.h>
 extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
 
+/*
+ * AT-SPI accessibility bus is drained through a dedicated helper rather
+ * than a raw extern sd_bus*, since the drain needs the re-entrancy guard
+ * that lives in tkWaylandAccessibility.c (a dispatched AT-SPI method call,
+ * e.g. Orca's GrabFocus, can call back into Tk and trigger further AT-SPI
+ * traffic before the outer sd_bus_process loop returns).
+ */
+extern void TkWaylandAtspiProcessEvents(void);  /* defined in tkWaylandAccessibility.c */
+
 
 /* Thread-specific data for the event loop. */
 
@@ -422,6 +431,15 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
+
+    /*
+     * Drain AT-SPI accessibility messages without blocking. Accessibility
+     * is more latency-sensitive to get right than most IPC here (a missed
+     * or delayed pump means Orca silently fails to announce focus), so
+     * this runs on the same guaranteed every-pass cadence as IBus above
+     * rather than a slower timer.
+     */
+    TkWaylandAtspiProcessEvents();
 
     /* Process events for GLFW windows. */
     glfwPollEvents();

@@ -150,10 +150,6 @@ typedef struct {
     AccessibleList *toplevel_accessibles;
     TkAccessible *root_accessible;
 
-    /* For Tcl event loop integration. */
-    int bus_fd;
-    int file_handler;    /* Dummy, just to know it's set. */
-
     /*
      * Desktop reference returned by Socket.Embed - root_accessible's
      * effective parent once we've been embedded in the registry's tree.
@@ -266,9 +262,12 @@ static void TkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr);
 static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *acc);
 
 /* Tcl event loop integration. */
-static void BusFileHandlerProc(void *clientData, int mask);
-static void TclEventSetupProc(void *clientData, int flags);
-static void TclEventCheckProc(void *clientData, int flags);
+/*
+ * TkWaylandAtspiProcessEvents is exported (not static) -- see its
+ * definition below -- so tkWaylandNotify.c's check proc can drain
+ * atspi_bus on the same cadence it already uses for ibus_bus.
+ */
+void TkWaylandAtspiProcessEvents(void);
 
 /* Tcl command implementations. */
 static int AddAccessibleCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -314,6 +313,23 @@ static AtspiConnection *atspi_conn = NULL;
 extern Tcl_HashTable *TkAccessibilityObject;  /* from tkAccessibility.c */
 
 /*
+ * Non-static handle to the AT-SPI bus, mirroring ibus_bus in tkWaylandKey.c.
+ * The Wayland notifier (tkWaylandNotify.c) drains this via
+ * TkWaylandAtspiProcessEvents() on its own check-proc cadence instead of
+ * this file maintaining a separate Tcl_CreateEventSource/file handler.
+ */
+sd_bus *atspi_bus = NULL;
+
+/*
+ * Re-entrancy guard for sd_bus_process on atspi_bus, mirroring
+ * ibus_draining in tkWaylandKey.c.  A dispatched AT-SPI method call (e.g.
+ * Orca invoking GrabFocus, which runs from inside sd_bus_process and can
+ * itself call back into Tk via Tcl_Eval) must not trigger a nested
+ * sd_bus_process on the same bus.
+ */
+static int atspi_draining = 0;
+
+/*
  * D-Bus vtables - these map functions to the ati-spi API.
  */
 
@@ -324,7 +340,7 @@ static const sd_bus_vtable accessible_vtable[] = {
     SD_BUS_METHOD("GetChildAtIndex", "i", "(so)", dbus_method_get_child_at_index, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetAttributes", "", "a{ss}", dbus_method_get_attributes, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetStates", "", "t", dbus_method_get_states, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetRole", "", "i", dbus_method_get_role, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetRole", "", "u", dbus_method_get_role, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetName", "", "s", dbus_method_get_name, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetDescription", "", "s", dbus_method_get_description, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetParent", "", "(so)", dbus_method_get_parent, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -845,7 +861,7 @@ static int dbus_method_get_states(
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Sends a D-Bus reply message with an integer role code.
+ *   Sends a D-Bus reply message with a uint32 role code.
  *----------------------------------------------------------------------
  */
 
@@ -861,7 +877,16 @@ static int dbus_method_get_role(
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
-    sd_bus_message_append(reply, "i", acc->role);
+    /*
+     * AT-SPI's Accessible.GetRole is declared "u" (uint32) in
+     * at-spi2-core/xml/Accessible.xml, not "i". Sending a signed "i"
+     * here made Orca's dbind log a signature mismatch on every call
+     * (dbind-WARNING: Call to "GetRole" returned signature i; expected
+     * u) -- harmless on its own, but combined with the missing
+     * trailing a{sv} on Event signals it contributed to dbind getting
+     * confused about message body layout.
+     */
+    sd_bus_message_append(reply, "u", (uint32_t)acc->role);
     return sd_bus_send(NULL, reply, NULL);
 }
 
@@ -1919,33 +1944,89 @@ static int dbus_method_cache_get_items(
     int r;
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
-    /* Return empty cache - Orca will query children individually. */
-    sd_bus_message_open_container(reply, 'a', "((so)a{sv})");
-    /* Add root and toplevels. */
+
+    // New spec: a((so)(so)(so)iiassusau)  -- see org.a11y.atspi.Cache docs
+    sd_bus_message_open_container(reply, 'a', "((so)(so)(so)iiassusau)");
+
+    // Helper to append one cache item
+    // We emit root + toplevels + immediate children to give Orca something useful
+    // without walking entire Tk tree (Orca will query GetChildren anyway).
     if (atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->dbus_path) {
-        sd_bus_message_open_container(reply, 'r', "(so)a{sv}");
-        AppendAccessibleRef(reply, atspi_conn->root_accessible->dbus_path);
-        sd_bus_message_open_container(reply, 'a', "{sv}");
+        TkAccessible *root = atspi_conn->root_accessible;
+        const char *app_bus = SelfBusName();
+        const char *app_path = root->dbus_path;
+
+        // ---- root ----
+        sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
+        AppendAccessibleRef(reply, root->dbus_path); // object
+        AppendAccessibleRef(reply, app_path);        // app = self
+        // parent = desktop if we have it, else null
+        if (atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
+            sd_bus_message_append(reply, "(so)", atspi_conn->desktop_bus_name, atspi_conn->desktop_path);
+        } else {
+            sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
+        }
+        sd_bus_message_append(reply, "i", -1); // index in parent
+        sd_bus_message_append(reply, "i", 0);  // child count - compute below
+        // count toplevels
+        int topcount=0; for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) topcount++;
+        // as interfaces
+        sd_bus_message_open_container(reply, 'a', "s");
+        sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
         sd_bus_message_close_container(reply);
+        sd_bus_message_append(reply, "s", ""); // name
+        sd_bus_message_append(reply, "u", (uint32_t)ATSPI_ROLE_APPLICATION);
+        sd_bus_message_append(reply, "s", ""); // description
+        sd_bus_message_open_container(reply, 'a', "u");
         sd_bus_message_close_container(reply);
-        AccessibleList *l;
-        for (l = atspi_conn->toplevel_accessibles; l; l = l->next) {
+        sd_bus_message_close_container(reply); // r
+
+        // ---- toplevels ----
+        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l; l = l->next) {
             TkAccessible *top = l->acc;
             if (!top || !top->dbus_path) continue;
-            sd_bus_message_open_container(reply, 'r', "(so)a{sv}");
+            sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
             AppendAccessibleRef(reply, top->dbus_path);
-            sd_bus_message_open_container(reply, 'a', "{sv}");
+            AppendAccessibleRef(reply, app_path);
+            AppendAccessibleRef(reply, root->dbus_path); // parent = root
+            sd_bus_message_append(reply, "i", 0); // index
+            // child count = number of Tk children
+            int childcnt=0;
+            if (top->tkwin) {
+                for (TkWindow *c=((TkWindow*)top->tkwin)->childList; c; c=c->nextPtr) childcnt++;
+            }
+            sd_bus_message_append(reply, "i", childcnt);
+            sd_bus_message_open_container(reply, 'a', "s");
+            sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
+            sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
+            sd_bus_message_close_container(reply);
+            char *nm = top->tkwin ? GetNameForWidget(top->tkwin) : NULL;
+            char *ds = top->tkwin ? GetDescriptionForWidget(top->tkwin) : NULL;
+            sd_bus_message_append(reply, "s", nm ? nm : "");
+            sd_bus_message_append(reply, "u", (uint32_t)(top->role ? top->role : ATSPI_ROLE_WINDOW));
+            sd_bus_message_append(reply, "s", ds ? ds : "");
+            if (nm) Tcl_Free(nm);
+            if (ds) Tcl_Free(ds);
+            sd_bus_message_open_container(reply, 'a', "u");
+            uint64_t states = ComputeStateForWidget(top);
+            // au expects array of state ints? spec says au of states, but we send as per atspi: list of state ids where bit set
+            // For simplicity send as single uints for each set bit
+            for (int i=0;i<32;i++) if (states & (1ULL<<i)) {
+                uint32_t st=i;
+                sd_bus_message_append(reply, "u", st);
+            }
             sd_bus_message_close_container(reply);
             sd_bus_message_close_container(reply);
         }
     }
-    sd_bus_message_close_container(reply);
+
+    sd_bus_message_close_container(reply); // close outer a
     return sd_bus_send(NULL, reply, NULL);
 }
 
 static const sd_bus_vtable cache_vtable[] = {
     SD_BUS_VTABLE_START(0),
-    SD_BUS_METHOD("GetItems", "", "a((so)a{sv})", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetItems", "", "a((so)(so)(so)iiassusau)", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
 };
 
@@ -2091,22 +2172,50 @@ EmitObjectEventFull(TkAccessible *acc,
     }
 
     /*
-     * AT-SPI Event.Object signature is siiv where v = (so) . This matches
-     * current at-spi2-core/xml/Event.xml and is what Orca expects.
+     * AT-SPI Event.Object signature is siiva{sv}, where v = (so) and the
+     * trailing a{sv} is a (normally empty) properties dict. This matches
+     * current at-spi2-core/xml/Event.xml. Earlier this used just "siiv"
+     * via the sd_bus_emit_signal() vararg convenience, which sends a
+     * 4-field body; Orca's dbind introspection expects 5 fields and,
+     * finding none, walks off the end of the message body and aborts
+     * ("You can't recurse into an empty array or off the end of a
+     * message body"). Build the message by hand so we can append the
+     * (empty) trailing a{sv}.
      */
-    int r = sd_bus_emit_signal(atspi_conn->bus,
-                               acc->dbus_path,
-                               "org.a11y.atspi.Event.Object",
-                               member,
-                               "siiv",
-                               type,
-                               detail1,
-                               detail2,
-                               "(so)", rel_name, rel_path);
+    sd_bus_message *m = NULL;
+    int r = sd_bus_message_new_signal(atspi_conn->bus, &m,
+                                      acc->dbus_path,
+                                      "org.a11y.atspi.Event.Object",
+                                      member);
+    if (r < 0) {
+        fprintf(stderr, "EmitObjectEvent %s/%s new_signal failed: %d\n", member, type, r);
+        return;
+    }
+
+    r = sd_bus_message_append(m, "sii", type, detail1, detail2);
+    if (r >= 0) {
+        r = sd_bus_message_open_container(m, 'v', "(so)");
+    }
+    if (r >= 0) {
+        r = sd_bus_message_append(m, "(so)", rel_name, rel_path);
+    }
+    if (r >= 0) {
+        r = sd_bus_message_close_container(m); /* variant */
+    }
+    if (r >= 0) {
+        r = sd_bus_message_open_container(m, 'a', "{sv}");
+    }
+    if (r >= 0) {
+        r = sd_bus_message_close_container(m); /* empty a{sv} */
+    }
+    if (r >= 0) {
+        r = sd_bus_send(atspi_conn->bus, m, NULL);
+    }
     if (r < 0) {
         /* Don't crash, just debug. */
         fprintf(stderr, "EmitObjectEvent %s/%s failed: %d\n", member, type, r);
     }
+    sd_bus_message_unref(m);
 }
 
 /*
@@ -2129,15 +2238,34 @@ EmitWindowEvent(TkAccessible *acc, const char *member, const char *type)
     if (!acc || !acc->dbus_path) return;
     if (!member || !type) return;
 
-    int r = sd_bus_emit_signal(atspi_conn->bus,
-                               acc->dbus_path,
-                               "org.a11y.atspi.Event.Window",
-                               member,
-                               "siiv",
-                               type,
-                               0, 0,
-                               "(so)", "", "/org/a11y/atspi/null");
-    (void)r;
+    /* Same siiva{sv} shape as EmitObjectEventFull -- see comment there. */
+    sd_bus_message *m = NULL;
+    int r = sd_bus_message_new_signal(atspi_conn->bus, &m,
+                                      acc->dbus_path,
+                                      "org.a11y.atspi.Event.Window",
+                                      member);
+    if (r < 0) return;
+
+    r = sd_bus_message_append(m, "sii", type, 0, 0);
+    if (r >= 0) {
+        r = sd_bus_message_open_container(m, 'v', "(so)");
+    }
+    if (r >= 0) {
+        r = sd_bus_message_append(m, "(so)", "", "/org/a11y/atspi/null");
+    }
+    if (r >= 0) {
+        r = sd_bus_message_close_container(m); /* variant */
+    }
+    if (r >= 0) {
+        r = sd_bus_message_open_container(m, 'a', "{sv}");
+    }
+    if (r >= 0) {
+        r = sd_bus_message_close_container(m); /* empty a{sv} */
+    }
+    if (r >= 0) {
+        r = sd_bus_send(atspi_conn->bus, m, NULL);
+    }
+    sd_bus_message_unref(m);
 }
 
 /*
@@ -2337,87 +2465,45 @@ static void SendActiveDescendantChanged(TkAccessible *container,
 
 /*
  *----------------------------------------------------------------------
- * BusFileHandlerProc --
+ * TkWaylandAtspiProcessEvents --
  *
- *   Tcl file handler callback for the D-Bus socket. Processes pending
- *   D-Bus messages when the file descriptor is readable.
+ *   Drain pending AT-SPI D-Bus messages on atspi_bus. Called from the
+ *   Wayland notifier's shared check proc (TkWaylandCheckProc in
+ *   tkWaylandNotify.c) on every event-loop pass, exactly the way
+ *   ibus_bus is drained in tkWaylandKey.c -- this file no longer
+ *   maintains its own Tcl_CreateEventSource/file handler for pumping
+ *   the bus, since that mechanism was not reliably getting installed
+ *   (the root cause of AT-SPI signal emission failing with ENOTCONN).
  *
- * Results:
- *   None.
- *
- * Side effects:
- *   Processes D-Bus messages via sd_bus_process.
- *----------------------------------------------------------------------
- */
-static void BusFileHandlerProc(void *clientData, int mask)
-{
-    AtspiConnection *conn = (AtspiConnection *)clientData;
-    if (mask & TCL_READABLE) {
-        sd_bus_process(conn->bus, NULL);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- * TclEventSetupProc --
- *
- *   Tcl event source setup callback. Creates a file handler for the
- *   D-Bus socket when window events are requested.
+ *   Guarded against re-entrancy: a dispatched AT-SPI method call (e.g.
+ *   Orca invoking GrabFocus on one of our accessible objects) runs from
+ *   inside sd_bus_process, and dbus_method_grab_focus calls back into Tk
+ *   via Tcl_Eval("focus -force ..."), which can synchronously trigger
+ *   ::tk::accessible::emit_focus_change and further AT-SPI traffic.
+ *   Calling sd_bus_process again on the same bus while already inside a
+ *   drain is not safe, so a nested call here is a no-op; the next
+ *   scheduled check-proc pass will pick up anything left pending.
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   Creates a Tcl file handler for the D-Bus connection.
+ *   Processes pending D-Bus messages; may invoke AT-SPI method handlers
+ *   (GrabFocus, GetChildren, etc.) dispatched by Orca or the registry.
  *----------------------------------------------------------------------
  */
-
-static void TclEventSetupProc(void *clientData,
-			      int flags)
+void
+TkWaylandAtspiProcessEvents(void)
 {
-    AtspiConnection *conn = (AtspiConnection *)clientData;
-    if (!(flags & TCL_WINDOW_EVENTS)) {
+    if (!atspi_bus || atspi_draining) {
         return;
     }
 
-    /* Ensure the bus file descriptor is watched. */
-    if (!conn->file_handler) {
-        int fd = sd_bus_get_fd(conn->bus);
-        if (fd >= 0) {
-            conn->bus_fd = fd;
-            Tcl_CreateFileHandler(fd, TCL_READABLE, BusFileHandlerProc, conn);
-            conn->file_handler = 1; /* dummy */
-        }
+    atspi_draining = 1;
+    while (sd_bus_process(atspi_bus, NULL) > 0) {
+        /* drain all pending messages */
     }
-}
-
-/*
- *----------------------------------------------------------------------
- * TclEventCheckProc --
- *
- *   Tcl event source check callback. Services pending D-Bus events when
- *   window events are requested.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   May trigger Tcl event processing if D-Bus events are pending.
- *----------------------------------------------------------------------
- */
-
-static void TclEventCheckProc(void *clientData,
-			      int flags)
-{
-    AtspiConnection *conn = (AtspiConnection *)clientData;
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return;
-    }
-
-    /* Check if any D-Bus messages are pending */
-    if (sd_bus_get_events(conn->bus) > 0) {
-        Tcl_ServiceEvent(TCL_WINDOW_EVENTS);
-    }
+    atspi_draining = 0;
 }
 
 /*
@@ -3391,6 +3477,17 @@ static sd_bus *ConnectToAtspiBus(void)
         if (r >= 0) {
             r = sd_bus_set_address(a11y_bus, env);
             if (r >= 0) {
+                /*
+                 * Mark this as a real bus-client connection so sd-bus sends
+                 * the initial Hello() and obtains a unique name. Without
+                 * this, sd-bus treats the socket as a bare peer-to-peer
+                 * connection: Hello() never happens, and every later
+                 * sd_bus_emit_signal()/sd_bus_call_method() on this
+                 * connection fails with -ENOTCONN (-107).
+                 */
+                r = sd_bus_set_bus_client(a11y_bus, 1);
+            }
+            if (r >= 0) {
                 r = sd_bus_start(a11y_bus);
                 if (r >= 0) return a11y_bus;
             }
@@ -3415,6 +3512,10 @@ static sd_bus *ConnectToAtspiBus(void)
                 r = sd_bus_new(&a11y_bus);
                 if (r >= 0) {
                     r = sd_bus_set_address(a11y_bus, addr);
+                    if (r >= 0) {
+                        /* See comment above: required for Hello()/unique name. */
+                        r = sd_bus_set_bus_client(a11y_bus, 1);
+                    }
                     if (r >= 0) {
                         r = sd_bus_start(a11y_bus);
                         if (r >= 0) {
@@ -3481,6 +3582,7 @@ InitializeAtspiConnection(void)
         return false;
     }
     atspi_conn->bus = bus;
+    atspi_bus = bus;   /* expose for TkWaylandAtspiProcessEvents() / the notifier */
 
     /* Initialize the hash table early. */
     atspi_conn->tk_to_accessible_map = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
@@ -3566,8 +3668,11 @@ InitializeAtspiConnection(void)
     atspi_conn->is_initialized = 1;
     EmbedWithRegistry();
 
-    /* Integrate with Tcl event loop for DBus handling. */
-    Tcl_CreateEventSource(TclEventSetupProc, TclEventCheckProc, atspi_conn);
+    /*
+     * No Tcl_CreateEventSource here: atspi_bus (set above) is drained by
+     * TkWaylandAtspiProcessEvents(), called from the Wayland notifier's
+     * shared check proc in tkWaylandNotify.c, alongside ibus_bus.
+     */
 
     return true;
 }
