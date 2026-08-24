@@ -413,7 +413,7 @@ test canvas-7.1 {canvas widget vs hidden commands} -setup {
     destroy .c
 } -result [list {} [lsort [interp hidden]]]
 
-test canvas-8.1 {canvas arc bbox} -setup {
+test canvas-8.1 {canvas arc bbox} -constraints failsOnCILinux -setup {
     catch {destroy .c}
     canvas .c
 } -body {

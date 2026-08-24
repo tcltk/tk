@@ -11,7 +11,7 @@ permissions:
 jobs:
   linux:
     name: Linux
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     defaults:
       run:
         shell: bash
@@ -32,7 +32,7 @@ jobs:
       - name: Prepare
         run: |
           sudo apt-get update
-          sudo apt-get install libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libharfbuzz-dev
+          sudo apt-get install libtommath-dev libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libharfbuzz-dev
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
