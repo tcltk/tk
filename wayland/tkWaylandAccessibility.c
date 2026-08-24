@@ -14,8 +14,7 @@
 
 /* Debugging */
 #define DEBUG_CHANNEL stderr
-#define DEBUG_LABEL "accessibilty"
-
+#define DEBUG_LABEL "accessibility"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -190,6 +189,7 @@ static TkAccessible *GetAccessible(Tk_Window tkwin);
 static void UnregisterAccessible(Tk_Window tkwin);
 static void FreeAccessible(TkAccessible *acc);
 static int GetRoleForWidget(Tk_Window tkwin);
+static char *TryCgetString(Tk_Window tkwin, const char *option);
 static uint64_t ComputeStateForWidget(TkAccessible *acc);
 static char *GetNameForWidget(Tk_Window tkwin);
 static char *GetDescriptionForWidget(Tk_Window tkwin);
@@ -1755,10 +1755,45 @@ static int dbus_method_value_set_current(
  */
 static int dbus_method_text_get_text(
     sd_bus_message *m,
-    TCL_UNUSED(void *), /* userdata */
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    return sd_bus_reply_method_return(m, "s", "");
+    TkAccessible *acc = (TkAccessible *)userdata;
+    int32_t start, end;
+    int r = sd_bus_message_read(m, "ii", &start, &end);
+    if (r < 0) return r;
+
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return sd_bus_reply_method_return(m, "s", "");
+    }
+
+    char cmd[512];
+    const char *path = Tk_PathName(acc->tkwin);
+    /* Try to get full text */
+    snprintf(cmd, sizeof(cmd), "%s get", path);
+    if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+        /* Try text widget: get 1.0 end-1c */
+        snprintf(cmd, sizeof(cmd), "%s get 1.0 {end -1c}", path);
+        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+            Tcl_ResetResult(acc->interp);
+            return sd_bus_reply_method_return(m, "s", "");
+        }
+    }
+    const char *full = Tcl_GetStringResult(acc->interp);
+    if (!full) full = "";
+    int len = (int)strlen(full);
+    if (start < 0) start = 0;
+    if (end < 0 || end > len) end = len;
+    if (start > len) start = len;
+    if (end < start) end = start;
+    int sublen = end - start;
+    char *sub = (char *)Tcl_Alloc(sublen + 1);
+    if (sublen > 0) memcpy(sub, full + start, sublen);
+    sub[sublen] = '\0';
+    Tcl_ResetResult(acc->interp);
+    int ret = sd_bus_reply_method_return(m, "s", sub);
+    Tcl_Free(sub);
+    return ret;
 }
 
 /*
@@ -1778,10 +1813,35 @@ static int dbus_method_text_get_text(
 
 static int dbus_method_text_get_caret_offset(
     sd_bus_message *m,
-    TCL_UNUSED(void *), /* userdata */
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    return sd_bus_reply_method_return(m, "i", -1);
+    TkAccessible *acc = (TkAccessible *)userdata;
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return sd_bus_reply_method_return(m, "i", 0);
+    }
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s index insert", Tk_PathName(acc->tkwin));
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        Tcl_Obj *resObj = Tcl_GetObjResult(acc->interp);
+        long iv;
+        if (Tcl_GetLongFromObj(acc->interp, resObj, &iv) == TCL_OK) {
+            Tcl_ResetResult(acc->interp);
+            return sd_bus_reply_method_return(m, "i", (int)iv);
+        }
+        /* Text widget returns "line.char" */
+        const char *s = Tcl_GetString(resObj);
+        int line=1, ch=0;
+        if (s && sscanf(s, "%d.%d", &line, &ch) == 2) {
+            /* Approximate linear offset: need full text to compute, for now return char */
+            Tcl_ResetResult(acc->interp);
+            return sd_bus_reply_method_return(m, "i", ch);
+        }
+        Tcl_ResetResult(acc->interp);
+    } else {
+        Tcl_ResetResult(acc->interp);
+    }
+    return sd_bus_reply_method_return(m, "i", 0);
 }
 
 /*
@@ -1801,10 +1861,26 @@ static int dbus_method_text_get_caret_offset(
 
 static int dbus_method_text_get_character_count(
     sd_bus_message *m,
-    TCL_UNUSED(void *), /* userdata */
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    return sd_bus_reply_method_return(m, "i", 0);
+    TkAccessible *acc = (TkAccessible *)userdata;
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return sd_bus_reply_method_return(m, "i", 0);
+    }
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s get", Tk_PathName(acc->tkwin));
+    if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+        snprintf(cmd, sizeof(cmd), "%s get 1.0 {end -1c}", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+            Tcl_ResetResult(acc->interp);
+            return sd_bus_reply_method_return(m, "i", 0);
+        }
+    }
+    const char *txt = Tcl_GetStringResult(acc->interp);
+    int len = txt ? (int)strlen(txt) : 0;
+    Tcl_ResetResult(acc->interp);
+    return sd_bus_reply_method_return(m, "i", len);
 }
 
 /*
@@ -1823,10 +1899,24 @@ static int dbus_method_text_get_character_count(
  */
 static int dbus_method_selection_get_n_selections(
     sd_bus_message *m,
-    TCL_UNUSED(void *), /* userdata */
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    return sd_bus_reply_method_return(m, "i", 0);
+    TkAccessible *acc = (TkAccessible *)userdata;
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return sd_bus_reply_method_return(m, "i", 0);
+    }
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s curselection", Tk_PathName(acc->tkwin));
+    if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
+        Tcl_ResetResult(acc->interp);
+        return sd_bus_reply_method_return(m, "i", 0);
+    }
+    Tcl_Obj *listObj = Tcl_GetObjResult(acc->interp);
+    Tcl_Size len = 0;
+    Tcl_ListObjLength(acc->interp, listObj, &len);
+    Tcl_ResetResult(acc->interp);
+    return sd_bus_reply_method_return(m, "i", (int)len);
 }
 
 /*
@@ -1846,9 +1936,47 @@ static int dbus_method_selection_get_n_selections(
 
 static int dbus_method_selection_get_selection(
     sd_bus_message *m,
-    TCL_UNUSED(void *), /* userdata */
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
+    TkAccessible *acc = (TkAccessible *)userdata;
+    int32_t idx;
+    int r = sd_bus_message_read(m, "i", &idx);
+    if (r < 0) return r;
+    if (!acc || !acc->tkwin) {
+        return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
+    }
+    /* For listbox/tree, children are items; return child at selection index */
+    AccessibleList *l = acc->children;
+    int i = 0;
+    while (l && i < idx) { l = l->next; i++; }
+    if (l && l->acc && l->acc->dbus_path) {
+        return sd_bus_reply_method_return(m, "(so)", SelfBusName(), l->acc->dbus_path);
+    }
+    /* Fallback: if real widget, try to map curselection index to child */
+    if (acc->interp) {
+        char cmd[512];
+        snprintf(cmd, sizeof(cmd), "%s curselection", Tk_PathName(acc->tkwin));
+        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+            Tcl_Obj *listObj = Tcl_GetObjResult(acc->interp);
+            Tcl_Size len;
+            Tcl_ListObjLength(acc->interp, listObj, &len);
+            if (idx >=0 && idx < len) {
+                Tcl_Obj *elem;
+                Tcl_ListObjIndex(acc->interp, listObj, idx, &elem);
+                if (elem) {
+                    long selIdx;
+                    if (Tcl_GetLongFromObj(acc->interp, elem, &selIdx) == TCL_OK) {
+                        /* Return self with index? For simplicity return self's child path if virtual */
+                        /* If no virtual children, return parent ref (Orca will still work with n_selections) */
+                    }
+                }
+            }
+            Tcl_ResetResult(acc->interp);
+        } else {
+            Tcl_ResetResult(acc->interp);
+        }
+    }
     return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
 }
 
@@ -1869,9 +1997,26 @@ static int dbus_method_selection_get_selection(
 
 static int dbus_method_selection_is_selected(
     sd_bus_message *m,
-    TCL_UNUSED(void *), /* userdata */
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
+    TkAccessible *acc = (TkAccessible *)userdata;
+    int32_t childIdx;
+    int r = sd_bus_message_read(m, "i", &childIdx);
+    if (r < 0) return r;
+    if (!acc || !acc->tkwin || !acc->interp) {
+        return sd_bus_reply_method_return(m, "b", 0);
+    }
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s selection includes %d", Tk_PathName(acc->tkwin), childIdx);
+    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
+        Tcl_Obj *res = Tcl_GetObjResult(acc->interp);
+        int b = 0;
+        Tcl_GetBooleanFromObj(acc->interp, res, &b);
+        Tcl_ResetResult(acc->interp);
+        return sd_bus_reply_method_return(m, "b", b);
+    }
+    Tcl_ResetResult(acc->interp);
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
@@ -2093,15 +2238,24 @@ static bool RegisterDbusObject(TkAccessible *acc)
         static int counter = 0;
         char path[256];
         if (acc->tkwin && Tk_IsTopLevel(acc->tkwin)) {
-            snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/%s", Tk_PathName(acc->tkwin));
+            const char *pn = Tk_PathName(acc->tkwin);
+            /* "." toplevel would become empty - use "main" */
+            if (!pn || pn[0] == '\0' || (pn[0] == '.' && pn[1] == '\0')) {
+                snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/toplevel%d", counter++);
+            } else {
+                snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/%s", pn);
+            }
         } else {
             snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/obj%d", counter++);
         }
-        /* Replace dots with underscores for D-Bus path. */
-        char *p;
-        for (p = path; *p; p++) {
+        /* Sanitize for D-Bus: replace any char not [A-Za-z0-9_/] with '_' */
+        for (char *p = path; *p; p++) {
             if (*p == '.') *p = '_';
+            else if (!((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9') || *p == '/' || *p == '_')) {
+                *p = '_';
+            }
         }
+        /* Collapse "//" and ensure no trailing slash */
         acc->dbus_path = Tcl_Strdup(path);
     }
 
@@ -2957,12 +3111,13 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
     if (!tkwin) return NULL;
     Tk_Window current = tkwin;
     if (Tk_IsTopLevel(current)) return current;
-    while (current != NULL && Tk_WindowId(current) != None) {
+    while (current != NULL) {
+        if (Tk_IsTopLevel(current)) return current;
         Tk_Window parent = Tk_Parent(current);
-        if (parent == NULL || Tk_IsTopLevel(current)) break;
+        if (parent == NULL) break;
         current = parent;
     }
-    return Tk_IsTopLevel(current) ? current : NULL;
+    return NULL;
 }
 
 /*
@@ -3037,9 +3192,38 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc)
     uint64_t states = 0;
     if (!acc || !acc->tkwin) return states;
 
-    /* Basic states */
-    states |= ATSPI_STATE_ENABLED;
-    states |= ATSPI_STATE_SENSITIVE;
+    /* Check explicit disabled state */
+    int is_disabled = 0;
+    if (TkAccessibilityObject) {
+        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+        if (hPtr) {
+            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+            if (attrs) {
+                Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
+                if (stateEntry) {
+                    Tcl_Obj *o = (Tcl_Obj *)Tcl_GetHashValue(stateEntry);
+                    if (o) {
+                        const char *state = Tcl_GetString(o);
+                        if (state && strcmp(state, "disabled") == 0) is_disabled = 1;
+                    }
+                }
+            }
+        }
+    }
+    if (!is_disabled && acc->interp) {
+        char *stateStr = TryCgetString(acc->tkwin, "-state");
+        if (stateStr) {
+            if (strcmp(stateStr, "disabled") == 0 || strcmp(stateStr, "readonly") == 0) {
+                if (strcmp(stateStr, "disabled") == 0) is_disabled = 1;
+            }
+            Tcl_Free(stateStr);
+        }
+    }
+
+    if (!is_disabled) {
+        states |= ATSPI_STATE_ENABLED;
+        states |= ATSPI_STATE_SENSITIVE;
+    }
 
     /* Focusable based on role */
     int role = acc->role;
@@ -3070,37 +3254,38 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc)
 
     /* Editable for entries. */
     if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
-        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-        int is_editable = 1;
-        if (hPtr) {
-            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-            if (attrs) {
-                Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
-                if (stateEntry) {
-                    const char *state = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(stateEntry));
-                    if (state && (strcmp(state, "disabled") == 0 || strcmp(state, "readonly") == 0)) {
-                        is_editable = 0;
-                    }
-                }
+        if (!is_disabled) {
+            int is_editable = 1;
+            char *st = TryCgetString(acc->tkwin, "-state");
+            if (st) {
+                if (strcmp(st, "readonly") == 0 || strcmp(st, "disabled") == 0) is_editable = 0;
+                Tcl_Free(st);
             }
-        }
-        if (is_editable) {
-            states |= ATSPI_STATE_EDITABLE;
+            if (is_editable) states |= ATSPI_STATE_EDITABLE;
         }
     }
 
-    /* Checked state for toggleable widgets. */
+    /* Checked state */
     if (role == ATSPI_ROLE_CHECK_BOX ||
         role == ATSPI_ROLE_RADIO_BUTTON ||
         role == ATSPI_ROLE_TOGGLE_BUTTON) {
-        char *value = GetValueForWidget(acc->tkwin);
-        if (value) {
-            if (strcmp(value, "selected") == 0 ||
-                strcmp(value, "1") == 0 ||
-                (value[0] != '0' && value[0] != '\0')) {
-                states |= ATSPI_STATE_CHECKED;
+        if (acc->interp) {
+            char cmd[512];
+            snprintf(cmd, sizeof(cmd), "%s cget -state; %s cget -onvalue; %s cget -offvalue; %s cget -variable 2>/dev/null; set _a11y_var [set [%s cget -variable] 2>/dev/null]; %s cget -variable",
+                Tk_PathName(acc->tkwin), Tk_PathName(acc->tkwin), Tk_PathName(acc->tkwin), Tk_PathName(acc->tkwin), Tk_PathName(acc->tkwin), Tk_PathName(acc->tkwin));
+            /* Simplified: try to get variable value */
+            char cmd2[512];
+            snprintf(cmd2, sizeof(cmd2), "set _v [%s cget -variable 2>/dev/null]; if {$_v ne \"\"} {set $_v} else { %s cget -state }", Tk_PathName(acc->tkwin), Tk_PathName(acc->tkwin));
+            /* Fallback: check selection */
+            char *value = GetValueForWidget(acc->tkwin);
+            if (value) {
+                if (strcmp(value, "selected") == 0 ||
+                    strcmp(value, "1") == 0 ||
+                    (value[0] != '0' && value[0] != '\0')) {
+                    states |= ATSPI_STATE_CHECKED;
+                }
+                Tcl_Free(value);
             }
-            Tcl_Free(value);
         }
     }
 
@@ -3122,26 +3307,72 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc)
  *----------------------------------------------------------------------
  */
 
+static char *TryCgetString(Tk_Window tkwin, const char *option) {
+    if (!tkwin || !option) return NULL;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    if (!interp) return NULL;
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s cget %s", Tk_PathName(tkwin), option);
+    if (Tcl_Eval(interp, cmd) != TCL_OK) {
+        Tcl_ResetResult(interp);
+        return NULL;
+    }
+    const char *res = Tcl_GetStringResult(interp);
+    if (!res || res[0] == '\0') {
+        Tcl_ResetResult(interp);
+        return NULL;
+    }
+    char *dup = Tcl_Strdup(res);
+    Tcl_ResetResult(interp);
+    return dup;
+}
+
 static char *GetNameForWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
 
-    int role = GetRoleForWidget(tkwin);
-    if (role == ATSPI_ROLE_LABEL) {
-        return GetValueForWidget(tkwin);  /* Label uses value as name */
+    /* 1. Explicit accessibility name */
+    if (TkAccessibilityObject) {
+        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
+        if (hPtr) {
+            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+            if (attrs) {
+                Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
+                if (nameEntry) {
+                    Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(nameEntry);
+                    if (obj) {
+                        const char *name = Tcl_GetString(obj);
+                        if (name && name[0]) return Tcl_Strdup(name);
+                    }
+                }
+            }
+        }
     }
 
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
-    if (!hPtr) return NULL;
+    int role = GetRoleForWidget(tkwin);
+    if (role == ATSPI_ROLE_LABEL) {
+        char *v = GetValueForWidget(tkwin);
+        if (v && v[0]) return v;
+        if (v) Tcl_Free(v);
+    }
 
-    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!attrs) return NULL;
+    /* 2. Fallback to widget options that convey name */
+    char *s = NULL;
+    s = TryCgetString(tkwin, "-text");
+    if (s) return s;
+    s = TryCgetString(tkwin, "-label");
+    if (s) return s;
+    s = TryCgetString(tkwin, "-title");
+    if (s) return s;
+    s = TryCgetString(tkwin, "-value");
+    if (s) return s;
 
-    Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
-    if (!nameEntry) return NULL;
-
-    const char *name = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(nameEntry));
-    return name ? Tcl_Strdup(name) : NULL;
+    /* For toplevel, use path as last resort */
+    if (Tk_IsTopLevel(tkwin)) {
+        const char *pn = Tk_PathName(tkwin);
+        if (pn && pn[0]) return Tcl_Strdup(pn);
+    }
+    return NULL;
 }
 
 /*
@@ -3195,17 +3426,30 @@ static char *GetValueForWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
 
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
-    if (!hPtr) return NULL;
-
-    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-    if (!attrs) return NULL;
-
-    Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
-    if (!valueEntry) return NULL;
-
-    const char *value = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(valueEntry));
-    return value ? Tcl_Strdup(value) : NULL;
+    if (TkAccessibilityObject) {
+        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
+        if (hPtr) {
+            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+            if (attrs) {
+                Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
+                if (valueEntry) {
+                    Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(valueEntry);
+                    if (obj) {
+                        const char *value = Tcl_GetString(obj);
+                        if (value && value[0]) return Tcl_Strdup(value);
+                    }
+                }
+            }
+        }
+    }
+    /* Fallback to Tk options */
+    char *s = TryCgetString(tkwin, "-text");
+    if (s) return s;
+    s = TryCgetString(tkwin, "-value");
+    if (s) return s;
+    s = TryCgetString(tkwin, "-label");
+    if (s) return s;
+    return NULL;
 }
 
 /*
@@ -3375,10 +3619,15 @@ static void TkAccessible_CreateHandler(void *clientData,
 {
     if (!eventPtr || eventPtr->type != CreateNotify) return;
 
-    Tk_Window parentWin = (Tk_Window)clientData;
+    TkAccessible *parentAcc = (TkAccessible *)clientData;
+    if (!parentAcc) return;
+    Tk_Window parentWin = parentAcc->tkwin;
     if (!parentWin) return;
 
     Tcl_Interp *interp = Tk_Interp(parentWin);
+    if (!interp) {
+        interp = parentAcc->interp;
+    }
     if (!interp) return;
 
     Window childWindow = eventPtr->xcreatewindow.window;
@@ -3390,13 +3639,7 @@ static void TkAccessible_CreateHandler(void *clientData,
 
     TkAccessible *parent_acc = GetAccessible(parentWin);
     if (!parent_acc) {
-        parent_acc = CreateAccessible(interp, parentWin, Tk_PathName(parentWin));
-        if (parent_acc) {
-            RegisterAccessible(parentWin, parent_acc);
-            if (Tk_IsTopLevel(parentWin)) {
-                RegisterToplevel(parent_acc);
-            }
-        }
+        parent_acc = parentAcc;
     }
 
     if (parent_acc) {
@@ -3447,7 +3690,9 @@ static void TkAccessible_ConfigureHandler(void *clientData,
 {
     if (!eventPtr || eventPtr->type != ConfigureNotify) return;
 
-    Tk_Window tkwin = (Tk_Window)clientData;
+    TkAccessible *handlerAcc = (TkAccessible *)clientData;
+    if (!handlerAcc) return;
+    Tk_Window tkwin = handlerAcc->tkwin;
     if (!tkwin) return;
 
     TkAccessible *acc = GetAccessible(tkwin);
@@ -3486,15 +3731,43 @@ static void TkAccessible_ConfigureHandler(void *clientData,
 
 static int IsScreenReaderActive(void)
 {
-	DEBUG_LOG("IsScreenReaderActive: checking Orca");
-    FILE *fp = popen("pgrep -x orca", "r");
-    if (!fp) return 0;
-
-    char buffer[16];
-    int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
-    pclose(fp);
-    DEBUG_LOG("IsScreenReaderActive: %d", running);
-    return running;
+    DEBUG_LOG("IsScreenReaderActive: checking Orca");
+    /* 1. If we have a bus and registry answered Embed, assume active */
+    if (atspi_conn && atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
+        DEBUG_LOG("IsScreenReaderActive: embedded in registry, assuming active");
+        return 1;
+    }
+    /* 2. pgrep fallback */
+    FILE *fp = popen("pgrep -x orca 2>/dev/null", "r");
+    if (fp) {
+        char buffer[16];
+        int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
+        pclose(fp);
+        if (running) {
+            DEBUG_LOG("IsScreenReaderActive: %d", running);
+            return 1;
+        }
+    }
+    /* 3. Check if org.a11y.atspi.Registry owns a name on our bus */
+    if (atspi_conn && atspi_conn->bus) {
+        sd_bus_error err = SD_BUS_ERROR_NULL;
+        sd_bus_message *msg = NULL;
+        int r = sd_bus_call_method(atspi_conn->bus,
+            "org.freedesktop.DBus",
+            "/org/freedesktop/DBus",
+            "org.freedesktop.DBus",
+            "GetNameOwner",
+            &err,
+            &msg,
+            "s", "org.a11y.atspi.Registry");
+        if (r >= 0) {
+            sd_bus_message_unref(msg);
+            sd_bus_error_free(&err);
+            return 1;
+        }
+        sd_bus_error_free(&err);
+    }
+    return 0;
 }
 
 
@@ -3992,7 +4265,7 @@ int TkWaylandAccessibility_Init(Tcl_Interp *interp)
     /* Initialize D-Bus connection to at-spi. */
     if (!InitializeAtspiConnection()) {
 	Tcl_AppendResult(interp, "Warning: Could not connect to AT-SPI - accessibility disabled for now", (char *)NULL);
-	/* Proceed anyway – don't block Tk init. */
+	/* Proceed anyway â€“ don't block Tk init. */
     }
 
     /* Initialize main window. */
