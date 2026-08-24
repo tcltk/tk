@@ -198,12 +198,18 @@ package require tk
 	$canvas xview moveto 0
     }
 
-    #	Adds an icon into the IconList with the designated image and text
+    #	Adds icons into the IconList.  Each entry in $items is treated as a
+    #	file path; a platform-native icon is obtained with
+    #	[tk fileicon $path 24] and the basename is used as the display text.
+    #	The $image argument is ignored (kept for API compatibility).
     #
     method add {image items} {
-	foreach text $items {
+	foreach path $items {
+	    set text [file tail $path]
+	    set icon [tk fileicon [file normalize $path] 24]
+
 	    set iID item$numItems
-	    set iTag [$canvas create image 0 0 -image $image -anchor nw \
+	    set iTag [$canvas create image 0 0 -image $icon -anchor nw \
 			  -tags [list icon $numItems $iID]]
 	    set tTag [$canvas create text  0 0 -text  $text  -anchor nw \
 			  -font $options(-font) -fill $fill \

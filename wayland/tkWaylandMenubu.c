@@ -256,10 +256,6 @@ TkpDisplayMenuButton(
     Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
 
     TkWaylandDrawingContext dc;
-    if (TkWaylandBeginDraw(Tk_WindowId(tkwin), gc, &dc) != TCL_OK) {
-        return;
-    }
-
     Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, 0, 0,
                        Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
@@ -413,8 +409,6 @@ TkpDisplayMenuButton(
         }
         Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, Tk_WindowId(tkwin));
     }
-
-    TkWaylandEndDraw(&dc);
 }
 
 /*

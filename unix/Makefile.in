@@ -98,6 +98,18 @@ CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
 # Directory in which to install the demo files:
 DEMO_INSTALL_DIR	= $(INSTALL_ROOT)@DEMO_DIR@
 
+# Directory in which to install the freedesktop.org .desktop entry
+# (X11/Wayland only -- empty/unused on Aqua, see @INSTALL_DESKTOP_ENTRY@):
+DESKTOP_INSTALL_DIR	= $(INSTALL_ROOT)$(datarootdir)/applications
+
+# Directory in which to install the Tk application icon referenced by
+# the .desktop entry's "Icon=Tk" key:
+ICON_INSTALL_DIR	= $(INSTALL_ROOT)$(datarootdir)/icons/hicolor/48x48/apps
+
+# Set (by configure) to "install-desktop-entry"/"uninstall-desktop-entry"
+# for X11 and Wayland builds, empty for Aqua:
+INSTALL_DESKTOP_ENTRY	= @INSTALL_DESKTOP_ENTRY@
+
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
@@ -883,8 +895,10 @@ INSTALL_DOC_TARGETS = install-doc
 INSTALL_DEV_TARGETS = install-headers
 INSTALL_DEMO_TARGETS = install-demos
 INSTALL_EXTRA_TARGETS = @EXTRA_INSTALL@
+INSTALL_DESKTOP_TARGETS = $(INSTALL_DESKTOP_ENTRY)
 INSTALL_TARGETS = $(INSTALL_BASE_TARGETS) $(INSTALL_DEV_TARGETS) \
-		$(INSTALL_DEMO_TARGETS) $(INSTALL_DOC_TARGETS) $(INSTALL_EXTRA_TARGETS)
+		$(INSTALL_DEMO_TARGETS) $(INSTALL_DOC_TARGETS) $(INSTALL_EXTRA_TARGETS) \
+		$(INSTALL_DESKTOP_TARGETS)
 
 install: $(INSTALL_TARGETS)
 
@@ -939,6 +953,61 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@echo "Installing pkg-config file to $(LIB_INSTALL_DIR)/pkgconfig/"
 	@$(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/pkgconfig"
 	@$(INSTALL_DATA) tk.pc "$(LIB_INSTALL_DIR)/pkgconfig/tk.pc"
+
+# Install the freedesktop.org .desktop entry and the Tk.png icon it
+# references (Icon=Tk). Only wired up for X11/Wayland builds: configure
+# sets INSTALL_DESKTOP_ENTRY (and this target's name) to empty on Aqua,
+# where Wish is instead packaged as a .app bundle with its own icns.
+install-desktop-entry:
+	@for i in "$(DESKTOP_INSTALL_DIR)" "$(ICON_INSTALL_DIR)" ; \
+	    do \
+	    if [ ! -d "$$i" ] ; then \
+		echo "Making directory $$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
+		else true; \
+		fi; \
+	    done;
+	@echo "Installing tk.desktop to $(DESKTOP_INSTALL_DIR)/"
+	@$(INSTALL_DATA) tk.desktop "$(DESKTOP_INSTALL_DIR)/tk.desktop"
+	@echo "Installing Tk.png to $(ICON_INSTALL_DIR)/"
+	@$(INSTALL_DATA) $(UNIX_DIR)/Tk.png "$(ICON_INSTALL_DIR)/Tk.png"
+	@if command -v update-desktop-database >/dev/null 2>&1 ; then \
+	    update-desktop-database -q "$(DESKTOP_INSTALL_DIR)" >/dev/null 2>&1 || true; \
+	    fi
+	@if command -v gtk-update-icon-cache >/dev/null 2>&1 ; then \
+	    gtk-update-icon-cache -qtf "$(INSTALL_ROOT)$(datarootdir)/icons/hicolor" >/dev/null 2>&1 || true; \
+	    fi
+
+# Convenience targets: install/remove the desktop entry and icon under
+# the invoking user's own per-user data directory, per the XDG Base
+# Directory spec ($XDG_DATA_HOME/applications, defaulting to
+# ~/.local/share/applications) -- rather than the shared, prefix-relative
+# DESKTOP_INSTALL_DIR/ICON_INSTALL_DIR used by install-desktop-entry above.
+# $HOME and $XDG_DATA_HOME are only meaningful at "make" time (not
+# configure time, since Tk is often configured/built by one user, e.g. a
+# packager, on behalf of others), so they're resolved here in the shell
+# rather than substituted by configure. Not part of "make install" --
+# invoke explicitly: "make install-user-desktop-entry".
+install-user-desktop-entry:
+	@datahome="$${XDG_DATA_HOME:-$$HOME/.local/share}"; \
+	desktopdir="$$datahome/applications"; \
+	icondir="$$datahome/icons/hicolor/48x48/apps"; \
+	for i in "$$desktopdir" "$$icondir" ; do \
+	    if [ ! -d "$$i" ] ; then \
+		echo "Making directory $$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
+	    fi; \
+	done; \
+	echo "Installing tk.desktop to $$desktopdir/"; \
+	$(INSTALL_DATA) tk.desktop "$$desktopdir/tk.desktop"; \
+	echo "Installing Tk.png to $$icondir/"; \
+	$(INSTALL_DATA) $(UNIX_DIR)/Tk.png "$$icondir/Tk.png"; \
+	if command -v update-desktop-database >/dev/null 2>&1 ; then \
+	    update-desktop-database -q "$$desktopdir" >/dev/null 2>&1 || true; \
+	fi; \
+	if command -v gtk-update-icon-cache >/dev/null 2>&1 ; then \
+	    gtk-update-icon-cache -qtf "$$datahome/icons/hicolor" >/dev/null 2>&1 || true; \
+	fi
 
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
@@ -1907,7 +1976,8 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(UNIX_DIR)/README \
-		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(DISTDIR)/unix
+		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
+		$(UNIX_DIR)/desktop.in $(UNIX_DIR)/Tk.png $(DISTDIR)/unix
 	$(DIST_INSTALL_SCRIPT) $(UNIX_DIR)/configure $(UNIX_DIR)/install-sh \
 		$(UNIX_DIR)/installManPage $(DISTDIR)/unix
 	$(INSTALL_DATA_DIR) $(DISTDIR)/wayland
@@ -2051,6 +2121,7 @@ BUILD_HTML = \
 .PHONY: all binaries libraries objs doc html html-tcl html-tk test runtest
 .PHONY: install install-strip install-binaries install-libraries
 .PHONY: install-headers install-private-headers install-doc
+.PHONY: install-desktop-entry install-user-desktop-entry
 .PHONY: clean distclean depend genstubs checkstubs checkexports checkuchar
 .PHONY: shell gdb valgrind valgrindshell dist alldist rpm
 .PHONY: tkLibObjs tktest-real test-classic test-ttk testlang

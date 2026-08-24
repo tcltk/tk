@@ -65,6 +65,9 @@ if {[info exists ::auto_path] && ($::tk_library ne "")
 
 set ::tk_strictMotif 0
 
+# Set a basic tk appname
+tk appname tk
+
 # Turn on useinputmethods (X Input Methods) by default.
 # We catch this because safe interpreters may not allow the call.
 
