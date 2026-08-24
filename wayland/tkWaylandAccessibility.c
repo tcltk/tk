@@ -12,6 +12,10 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/* Debugging */
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL "accessibilty"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1940,57 +1944,49 @@ static int dbus_method_cache_get_items(
     void *userdata,
     sd_bus_error *ret_error)
 {
+    DEBUG_LOG("dbus_method_cache_get_items: enter");
     sd_bus_message *reply = NULL;
     int r;
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
-    // New spec: a((so)(so)(so)iiassusau)  -- see org.a11y.atspi.Cache docs
     sd_bus_message_open_container(reply, 'a', "((so)(so)(so)iiassusau)");
 
-    // Helper to append one cache item
-    // We emit root + toplevels + immediate children to give Orca something useful
-    // without walking entire Tk tree (Orca will query GetChildren anyway).
     if (atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->dbus_path) {
         TkAccessible *root = atspi_conn->root_accessible;
-        const char *app_bus = SelfBusName();
         const char *app_path = root->dbus_path;
 
-        // ---- root ----
+        DEBUG_LOG("dbus_method_cache_get_items: root=%s", app_path);
+
         sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
-        AppendAccessibleRef(reply, root->dbus_path); // object
-        AppendAccessibleRef(reply, app_path);        // app = self
-        // parent = desktop if we have it, else null
+        AppendAccessibleRef(reply, root->dbus_path);
+        AppendAccessibleRef(reply, app_path);
         if (atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
             sd_bus_message_append(reply, "(so)", atspi_conn->desktop_bus_name, atspi_conn->desktop_path);
         } else {
             sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
         }
-        sd_bus_message_append(reply, "i", -1); // index in parent
-        sd_bus_message_append(reply, "i", 0);  // child count - compute below
-        // count toplevels
+        sd_bus_message_append(reply, "i", -1);
         int topcount=0; for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) topcount++;
-        // as interfaces
+        sd_bus_message_append(reply, "i", topcount);
         sd_bus_message_open_container(reply, 'a', "s");
         sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
         sd_bus_message_close_container(reply);
-        sd_bus_message_append(reply, "s", ""); // name
+        sd_bus_message_append(reply, "s", "");
         sd_bus_message_append(reply, "u", (uint32_t)ATSPI_ROLE_APPLICATION);
-        sd_bus_message_append(reply, "s", ""); // description
+        sd_bus_message_append(reply, "s", "");
         sd_bus_message_open_container(reply, 'a', "u");
         sd_bus_message_close_container(reply);
-        sd_bus_message_close_container(reply); // r
+        sd_bus_message_close_container(reply);
 
-        // ---- toplevels ----
         for (AccessibleList *l = atspi_conn->toplevel_accessibles; l; l = l->next) {
             TkAccessible *top = l->acc;
             if (!top || !top->dbus_path) continue;
             sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
             AppendAccessibleRef(reply, top->dbus_path);
             AppendAccessibleRef(reply, app_path);
-            AppendAccessibleRef(reply, root->dbus_path); // parent = root
-            sd_bus_message_append(reply, "i", 0); // index
-            // child count = number of Tk children
+            AppendAccessibleRef(reply, root->dbus_path);
+            sd_bus_message_append(reply, "i", 0);
             int childcnt=0;
             if (top->tkwin) {
                 for (TkWindow *c=((TkWindow*)top->tkwin)->childList; c; c=c->nextPtr) childcnt++;
@@ -2009,8 +2005,6 @@ static int dbus_method_cache_get_items(
             if (ds) Tcl_Free(ds);
             sd_bus_message_open_container(reply, 'a', "u");
             uint64_t states = ComputeStateForWidget(top);
-            // au expects array of state ints? spec says au of states, but we send as per atspi: list of state ids where bit set
-            // For simplicity send as single uints for each set bit
             for (int i=0;i<32;i++) if (states & (1ULL<<i)) {
                 uint32_t st=i;
                 sd_bus_message_append(reply, "u", st);
@@ -2020,7 +2014,7 @@ static int dbus_method_cache_get_items(
         }
     }
 
-    sd_bus_message_close_container(reply); // close outer a
+    sd_bus_message_close_container(reply);
     return sd_bus_send(NULL, reply, NULL);
 }
 
@@ -2154,6 +2148,7 @@ EmitObjectEventFull(TkAccessible *acc,
 		    const char *type, int32_t detail1,
 		    int32_t detail2, TkAccessible *related)
 {
+    DEBUG_LOG("EmitObjectEventFull: enter");
     if (!atspi_conn || !atspi_conn->bus) return;
     if (!acc || !acc->dbus_path) return;
     if (!member || !type) return;
@@ -2234,6 +2229,7 @@ EmitObjectEventFull(TkAccessible *acc,
 static void
 EmitWindowEvent(TkAccessible *acc, const char *member, const char *type)
 {
+    DEBUG_LOG("EmitWindowEvent: enter");
     if (!atspi_conn || !atspi_conn->bus) return;
     if (!acc || !acc->dbus_path) return;
     if (!member || !type) return;
@@ -3437,14 +3433,17 @@ static void TkAccessible_ConfigureHandler(void *clientData,
 
 static int IsScreenReaderActive(void)
 {
-
-    FILE *fp = popen("pgrep -x orca 2>/dev/null; pgrep -f /orca 2>/dev/null | head -1", "r");
+	DEBUG_LOG("IsScreenReaderActive: checking Orca");
+    FILE *fp = popen("pgrep -x orca", "r");
     if (!fp) return 0;
-    char buffer[64];
+
+    char buffer[16];
     int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
     pclose(fp);
+    DEBUG_LOG("IsScreenReaderActive: %d", running);
     return running;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -3693,6 +3692,7 @@ InitializeAtspiConnection(void)
  */
 static bool EmbedWithRegistry(void)
 {
+    DEBUG_LOG("EmbedWithRegistry: enter");
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *reply = NULL;
     const char *desktop_name = NULL;
@@ -3912,6 +3912,8 @@ static int IsScreenReaderRunningCmd(
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
     bool result = IsScreenReaderActive();
+    
+    DEBUG_LOG("Screen reader active: %d\n", (int)result);
 
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
     return TCL_OK;
@@ -3933,6 +3935,7 @@ static int IsScreenReaderRunningCmd(
  */
 int TkWaylandAccessibility_Init(Tcl_Interp *interp)
 {
+    DEBUG_LOG("TkWaylandAccessibility_Init: enter");
     /* Initialize D-Bus connection to at-spi. */
     if (!InitializeAtspiConnection()) {
 	Tcl_AppendResult(interp, "Warning: Could not connect to AT-SPI - accessibility disabled for now", (char *)NULL);
