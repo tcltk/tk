@@ -14,11 +14,15 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
-#ifdef _WIN32
+
+#if defined(_WIN32)
 #include "tkWinInt.h"
+#elif defined(TK_USE_WAYLAND)
+#include "tkWaylandInt.h"
 #elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
 #endif
+
 #include "tkUuid.h"
 
 /*
@@ -1581,7 +1585,7 @@ Tk_DestroyWindow(
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
-#if defined(MAC_OSX_TK) || defined(_WIN32)
+#if defined(MAC_OSX_TK) || defined(_WIN32) || defined(TK_USE_WAYLAND)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
 	if ((winPtr->flags & TK_TOP_HIERARCHY)

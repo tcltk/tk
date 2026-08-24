@@ -463,7 +463,6 @@ TkpComputeScrollbarGeometry(
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
-    printf("fractions: %f %f\n", scrollPtr->firstFraction, scrollPtr->lastFraction);
     scrollPtr->sliderFirst = fieldLength*scrollPtr->firstFraction;
     scrollPtr->sliderLast = fieldLength*scrollPtr->lastFraction;
 

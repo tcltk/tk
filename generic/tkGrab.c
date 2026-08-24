@@ -1073,7 +1073,7 @@ TkInOutEvents(
 	 * SourcePtr is an inferior of destPtr.
 	 */
 
-	if (leaveType != 0) {
+	if (leaveType != 0 && (sourcePtr != NULL)) {
 	    QUEUE(sourcePtr, leaveType, NotifyAncestor);
 	    for (winPtr = sourcePtr->parentPtr, i = upLevels-1; i > 0;
 		    winPtr = winPtr->parentPtr, i--) {

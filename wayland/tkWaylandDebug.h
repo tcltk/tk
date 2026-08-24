@@ -27,6 +27,17 @@
 	    ("[" DEBUG_LABEL "] " fmt "\n"), ##__VA_ARGS__); \
 	    fflush(DEBUG_CHANNEL);  \
 	} while (0)
+
+    #define GL_DEBUG_LOG(fmt, ...)  \
+        do {GLenum error = glGetError();                         \
+	    if (error != GL_NO_ERROR) {                          \
+	        fprintf(DEBUG_CHANNEL,			         \
+	        ("[" DEBUG_LABEL "] " fmt " GLError: 0x%04x\n"), \
+		    ##__VA_ARGS__, error);			 \
+	        fflush(DEBUG_CHANNEL);                           \
+	    }                                                    \
+         } while (0)
 #else
+    #define GL_DEBUG_LOG(fmt, ...) do {} while (0)
     #define DEBUG_LOG(fmt, ...) do {} while (0)
 #endif

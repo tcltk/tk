@@ -231,6 +231,16 @@ typedef struct WaylandFont {
     /* Fonts are stored per context. */
     NvgFontContext *nvgContexts;
     int             nvgContextCount;
+
+    /*
+     * Bumped every time InitFont() (re)initializes this WaylandFont in
+     * place (e.g. on "font configure" of a named font). Folded into
+     * each face's nvgName so a reconfigured font can never collide
+     * with the NanoVG font entry registered under its old content --
+     * nvgFindFont()/fontstash has no font-removal API, so an unchanged
+     * name would keep resolving to the stale glyph data forever.
+     */
+    unsigned int    generation;
 } WaylandFont;
 
 /*
@@ -302,6 +312,7 @@ extern const char *const WmAttributeNames[];
 #define TKWL_DONT_SWAP      2
 #define TKWL_NEVER_FOCUSED  4
 #define TKWL_IS_DRAWING     8
+#define TKWL_USE_REQUESTED  16
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
@@ -517,8 +528,26 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int  TkWaylandInitialize(void);
+MODULE_SCOPE int  TkWaylandInitialize(Tcl_Interp *interp);
 MODULE_SCOPE void TkWaylandShutdown(ClientData clientData);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland app_id support
+ *
+ *	app_id tracks [tk appname] by pulling from Tk's own state at
+ *	toplevel-creation time - see TkWaylandSyncAppId (static,
+ *	tkWaylandInit.c only). No generic Tk code needs to change for
+ *	this to work. The compositor resolves the icon itself from
+ *	app_id against the matching installed .desktop file - Tk does
+ *	not need to look up or load that icon itself.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void        TkWaylandSetAppId(const char *appId);
+MODULE_SCOPE const char *TkWaylandGetAppId(void);
 
 /*
  *----------------------------------------------------------------------

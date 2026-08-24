@@ -1998,13 +1998,21 @@ EnsureNvgFaceFont(
     if (faceIndex < 0 || faceIndex >= fontPtr->nfaces || !vg) return -1;
     WaylandFtFace *face = &fontPtr->faces[faceIndex];
 
-    /* Make the name unique to this WaylandFont + faceIndex.
-       Including the font pointer prevents collisions between
-       different logical fonts that happen to use the same faceIndex. */
-    if (face->nvgName[0] == '\0') {
-        snprintf(face->nvgName, sizeof(face->nvgName),
-                 "__wlfont_%p_%d", (void*)fontPtr, faceIndex);
-    }
+    /*
+     * Make the name unique to this WaylandFont + faceIndex + generation.
+     * The font pointer and face index alone are NOT enough: fontPtr is
+     * reused in place across "font configure" (DeleteFont() frees and
+     * this file reallocates fontPtr->faces with the same fontPtr/index),
+     * so a name built only from those would go stale -- nvgFindFont()
+     * would keep resolving to whatever glyph data was registered under
+     * it before the reconfigure, since NanoVG/fontstash has no API to
+     * remove or replace a font entry. Regenerating unconditionally
+     * (rather than only when empty) also means we don't depend on a
+     * freshly (re)allocated WaylandFtFace having a zeroed nvgName.
+     */
+    snprintf(face->nvgName, sizeof(face->nvgName),
+             "__wlfont_%p_%d_%u", (void*)fontPtr, faceIndex,
+             fontPtr->generation);
 
     int id = nvgFindFont(vg, face->nvgName);
     if (id >= 0) {
@@ -2014,6 +2022,7 @@ EnsureNvgFaceFont(
 
     if (face->filePath && access(face->filePath, R_OK) == 0) {
         id = nvgCreateFont(vg, face->nvgName, face->filePath);
+	GL_DEBUG_LOG("nvgCreatFont %s\n", face->filePath);
     } else if (face->filePath) { id = -1; }
 
     face->nvgFontId = id;
@@ -2163,6 +2172,7 @@ EnsureNvgFont(
                 char name[64];
                 snprintf(name, sizeof(name), "__fallback_%p", (void*)vg);
                 primaryId = nvgCreateFont(vg, name, fallback_paths[i]);
+		GL_DEBUG_LOG("nvgCreatFont %s\n", fallback_paths[i]);
                 if (primaryId >= 0) {
                     break;
                 }
@@ -2173,6 +2183,7 @@ EnsureNvgFont(
             if (primaryId < 0) {
                 primaryId = nvgCreateFont(vg, "sans",
                     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+		GL_DEBUG_LOG("nvgCreatFont DejaVuSans\n");
             }
         }
     }
@@ -2253,6 +2264,21 @@ InitFont(
     /* Pixel size calculation with proper DPI handling. */
     double ptSize = faPtr->size;
     int basePixels;
+
+    /*
+     * A named font's WaylandFont* is reused in place across "font
+     * configure" (see TkpGetFontFromAttributes), and DeleteFont() frees
+     * and reallocates fontPtr->faces on every reconfigure -- but
+     * EnsureNvgFaceFont() names each face "__wlfont_%p_%d" from fontPtr's
+     * (unchanging) address and the face index alone. Without this,
+     * reconfiguring a font to a new family regenerates the identical
+     * name, nvgFindFont() finds the OLD glyph data still registered
+     * under it in this vg's fontstash table, and the new file is never
+     * loaded -- the font never visibly updates. Bumping the generation
+     * here and folding it into the name guarantees each reconfigure gets
+     * a name NanoVG has never seen.
+     */
+    fontPtr->generation++;
 
     if (!tkwin) {
 	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);

@@ -15,6 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+
 /* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "init"
@@ -29,6 +30,9 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 #include <wayland-egl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /*
  *----------------------------------------------------------------------
@@ -45,6 +49,14 @@
 
 static int GlfwIsInitialized = 0;
 int shutdownInProgress = 0;
+
+/*
+ * Wayland app_id to apply to newly created toplevels - see
+ * TkWaylandSetAppId / TkWaylandSyncAppId further down.
+ */
+static char *waylandAppId = NULL;
+MODULE_SCOPE void TkWaylandSetAppId(const char *appId);
+static void TkWaylandSyncAppId(Tcl_Interp *interp);
 
 
 /*
@@ -199,11 +211,15 @@ static void destroyGlfwTkInfo(
 	    glfwMakeContextCurrent(glfwWindow);
 	    glfwSetWindowUserPointer(glfwWindow, NULL);
 	    /* 
-		 * Remove all references to this NVGcontext from the font
+	     * Remove all references to this NVGcontext from the font
 	     * registry.  Without this, windows will be rendered without text!
 	     */
 	    TkWaylandFontContextDestroyed(infoPtr->vg);
+	    GL_DEBUG_LOG("destroyGlfwTkInfo: before destroying vg for %s\n",
+		Tk_PathName(infoPtr->winPtr));
 	    nvgDeleteGLES3(infoPtr->vg);
+	    GL_DEBUG_LOG("destroyGlfwTkInfo: after destroying vg for %s\n",
+		Tk_PathName(infoPtr->winPtr));
 	    Tcl_Free(infoPtr);
 	    return;
 	}
@@ -450,6 +466,12 @@ TkWaylandErrorCallback(int error, const char *desc)
  *  Creates a GFLWWindow to be used for the root window and its
  *  NanoVG context.
  *
+ *  Takes the interpreter so it can derive a default Wayland app_id
+ *  from argv0 (see TkWaylandSetAppId) before that root window is
+ *  created - the only point at which the root window's app_id can be
+ *  set, since stock GLFW cannot change a toplevel's app_id after
+ *  creation. interp may be NULL (falls back to app_id "tk").
+ *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
  *
@@ -462,7 +484,7 @@ TkWaylandErrorCallback(int error, const char *desc)
 
 
 MODULE_SCOPE int
-TkWaylandInitialize(void)
+TkWaylandInitialize(Tcl_Interp *interp)
 {
     if (GlfwIsInitialized) return TCL_OK;
 
@@ -484,6 +506,19 @@ TkWaylandInitialize(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     /*
+     * Force the root window's Wayland app_id to "tk" so it matches the
+     * installed tk.desktop basename.  This guarantees the compositor
+     * associates the window with the desktop entry (and therefore with
+     * Icon=) even when the binary is invoked as a versioned name such
+     * as "wish9.1".  A later explicit [tk appname newName] is still
+     * honoured for subsequently created toplevels via TkWaylandSyncAppId.
+     *
+     * Stock GLFW cannot change a toplevel's app_id after creation, so
+     * this is the only point at which the root window's app_id can be set.
+     */
+    TkWaylandSetAppId("tk");
+
+    /*
      * Create the bootstrap window invisible.  Showing it here (even
      * briefly) produces a visible flash of an empty / garbage frame on
      * many Wayland compositors before Tk has drawn anything.  A hidden
@@ -494,6 +529,9 @@ TkWaylandInitialize(void)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, GLFW_TRUE);
+    if (waylandAppId) {
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+    }
 
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
@@ -648,7 +686,7 @@ TkWaylandCreateWindow(
         return NULL;
     }
     if (!GlfwIsInitialized) {
-        if (TkWaylandInitialize() != TCL_OK) {
+        if (TkWaylandInitialize(winPtr->mainPtr->interp) != TCL_OK) {
             return NULL;
         }
     }
@@ -672,6 +710,10 @@ TkWaylandCreateWindow(
             glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
             glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
             glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+            TkWaylandSyncAppId(winPtr->mainPtr->interp);
+            if (waylandAppId) {
+                glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+            }
             mainGlfwWindow = glfwCreateWindow(width, height,
                                               title ? title : "",
                                               NULL, NULL);
@@ -689,7 +731,7 @@ TkWaylandCreateWindow(
 	 */
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
-        glfwSetWindowSize(glfwWindow, width, height);
+        //glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
         glfwHideWindow(glfwWindow);
     } else {
@@ -706,6 +748,10 @@ TkWaylandCreateWindow(
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+        TkWaylandSyncAppId(winPtr->mainPtr->interp);
+        if (waylandAppId) {
+            glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+        }
 
         glfwWindow = glfwCreateWindow(width, height,
                                       title ? title : "",
@@ -1321,7 +1367,7 @@ TkWaylandApplyGC(NVGcontext *vg, GC gc)
 int
 TkpInit(Tcl_Interp *interp)
 {
-    if (TkWaylandInitialize() != TCL_OK) return TCL_ERROR;
+    if (TkWaylandInitialize(interp) != TCL_OK) return TCL_ERROR;
     Tk_WaylandSetupTkNotifier();
     Tktray_Init(interp);
     SysNotify_Init(interp);
@@ -1356,6 +1402,133 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
     if (!name || !*name) name = "tk";
     else { p = strrchr(name, '/'); if (p) name = p+1; }
     Tcl_DStringAppend(namePtr, name, TCL_INDEX_NONE);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland app_id support
+ *
+ *	The wl app_id is the portable, compositor-native way toplevel
+ *	icons (and taskbar/dock grouping) work on Wayland: the compositor
+ *	matches app_id against an installed .desktop file's basename
+ *	(and secondarily StartupWMClass) and draws that icon itself..
+ *
+ *	We force the root window's app_id to "tk" (the installed
+ *	tk.desktop basename) so the custom Icon= is used even when
+ *	argv0 is a versioned binary such as "wish9.1".  Later toplevels
+ *	still pick up the current [tk appname] value via
+ *	TkWaylandSyncAppId so an explicit rename continues to work for
+ *	windows created after the rename.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetAppId --
+ *
+ *	Records the desired Wayland app_id and arranges for it to be
+ *	applied to toplevels created from this point on.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the GLFW_WAYLAND_APP_ID window hint, which GLFW applies to
+ *	windows it creates from this point on.  Stock GLFW has no call
+ *	to change the app_id of an already-created toplevel, so windows
+ *	mapped before this is called keep whatever app_id they were
+ *	created with.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandSetAppId(const char *appId)
+{
+    if (appId == NULL || *appId == '\0') {
+        return;
+    }
+    if (waylandAppId && strcmp(waylandAppId, appId) == 0) {
+        return;
+    }
+    if (waylandAppId) {
+        ckfree(waylandAppId);
+    }
+    waylandAppId = (char *)ckalloc(strlen(appId) + 1);
+    strcpy(waylandAppId, appId);
+
+    glfwWindowHintString(GLFW_WAYLAND_APP_ID, waylandAppId);
+
+    if (mainGlfwWindow != NULL) {
+        DEBUG_LOG("TkWaylandSetAppId: root window already exists; "
+                "app_id '%s' will apply to new toplevels only",
+                waylandAppId);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetAppId --
+ *
+ *	Returns the current Wayland app_id, or NULL if none has been set.
+ *
+ * Results:
+ *	The app_id string, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE const char *
+TkWaylandGetAppId(void)
+{
+    return waylandAppId;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSyncAppId --
+ *
+ *	Pulls the current Tk application name by invoking the existing
+ *	generic [tk appname] query form and reading its result, then
+ *	applies it as the Wayland app_id via TkWaylandSetAppId.  A
+ *	no-op if there's no main window yet or the query fails.
+ *	Saves/restores the interpreter's result and error state.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	See TkWaylandSetAppId.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandSyncAppId(Tcl_Interp *interp)
+{
+    Tcl_InterpState state;
+    const char *name;
+
+    if (interp == NULL || Tk_MainWindow(interp) == NULL) {
+        return;
+    }
+
+    state = Tcl_SaveInterpState(interp, TCL_OK);
+    if (Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+        name = Tcl_GetStringResult(interp);
+        if (name != NULL && *name != '\0') {
+            TkWaylandSetAppId(name);
+        }
+    }
+    Tcl_RestoreInterpState(interp, state);
 }
 
 /*
