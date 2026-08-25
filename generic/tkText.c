@@ -11896,6 +11896,36 @@ RestoreLineStartEnd(
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
 /*
+ * The following structure and event proc back the "testtext queuewindowscript"
+ * subcommand below.
+ */
+
+typedef struct {
+    Tcl_Event header;		/* Standard Tcl event header. */
+    Tcl_Interp *interp;		/* Interp in which to evaluate the script. */
+    Tcl_Obj *scriptObj;		/* Script to evaluate. */
+} TestScriptWindowEvent;
+
+static int
+TestScriptWindowEventProc(
+    Tcl_Event *evPtr,
+    int flags)
+{
+    TestScriptWindowEvent *sevPtr = (TestScriptWindowEvent *) evPtr;
+
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+	return 0;		/* stays on the queue */
+    }
+    if (Tcl_EvalObjEx(sevPtr->interp, sevPtr->scriptObj,
+	    TCL_EVAL_GLOBAL) != TCL_OK) {
+	Tcl_BackgroundException(sevPtr->interp, TCL_ERROR);
+    }
+    Tcl_Release(sevPtr->interp);
+    Tcl_DecrRefCount(sevPtr->scriptObj);
+    return 1;
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * TkrTesttextCmd --
@@ -11930,6 +11960,34 @@ TkrTesttextCmd(
 
     if (objc + 1 < 4) {
 	return TCL_ERROR;
+    }
+
+    len = strlen(Tcl_GetString(objv[1]));
+    if (strncmp(Tcl_GetString(objv[1]), "queuewindowscript", len) == 0) {
+	/*
+	 * This subcommand queues a Tcl event at window priority whose handler
+	 * evaluates the given script, mimicking an application event source
+	 * flagged for TCL_WINDOW_EVENTS. It allows tests to run a script from
+	 * inside restricted event loops which are servicing window events only
+	 * (e.g. the exposure pumping of UpdateDisplayInfo in tkTextDisp.c).
+	 * No text widget is involved, hence it is handled before the lookup
+	 * of the path name below.
+	 */
+
+	TestScriptWindowEvent *sevPtr;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "script");
+	    return TCL_ERROR;
+	}
+	sevPtr = (TestScriptWindowEvent *) Tcl_Alloc(sizeof(TestScriptWindowEvent));
+	sevPtr->header.proc = TestScriptWindowEventProc;
+	sevPtr->interp = interp;
+	sevPtr->scriptObj = objv[2];
+	Tcl_IncrRefCount(sevPtr->scriptObj);
+	Tcl_Preserve(interp);
+	Tcl_QueueEvent(&sevPtr->header, TCL_QUEUE_TAIL);
+	return TCL_OK;
     }
 
     if (Tcl_GetCommandInfo(interp, Tcl_GetString(objv[1]), &info) == 0) {

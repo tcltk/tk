@@ -89,7 +89,7 @@ proc xe {n {w .t}} {
 #
 # Set up the fixture shared by the textDisp-39.* tests. A text widget is
 # filled so that its display information is out of date, then two events are
-# queued: a window-priority script (via [testqueuewindowscript]) that destroys
+# queued: a window-priority script (via [testtext queuewindowscript]) that destroys
 # the toplevel, followed by an <Expose>. When a widget command later pumps the
 # event queue (UpdateDisplayInfo), the script destroys the widget and the
 # Expose is serviced by the update restrict proc on the destroyed widget.
@@ -100,7 +100,7 @@ proc setupPumpDestroyTest {} {
     pack [text .top.t -width 30 -height 10]
     update
     .top.t insert end [string repeat "line of text\n" 200]
-    testqueuewindowscript {destroy .top}
+    testtext queuewindowscript {destroy .top}
     event generate .top.t <Expose> -when tail
 }
 
@@ -5408,14 +5408,14 @@ test textDisp-38.3 {burst of deletes across elided regions keeps the range list 
 
 # The tests textDisp-39.* exercise the destruction of the widget while
 # UpdateDisplayInfo is pumping the event queue: an application event source
-# flagged for TCL_WINDOW_EVENTS (mimicked by [testqueuewindowscript]) destroys
+# flagged for TCL_WINDOW_EVENTS (mimicked by [testtext queuewindowscript]) destroys
 # the toplevel during the pumping, then a queued window event makes the event
 # loop call the update restrict proc on the destroyed widget. Neither the
 # restrict proc nor the code following the pumping may touch the freed
 # display info. See setupPumpDestroyTest in the utility procs above.
 
 test textDisp-39.1 {destroy the widget while [see] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5427,7 +5427,7 @@ test textDisp-39.1 {destroy the widget while [see] pumps the event queue} -const
 } -result {0 0 alive}
 
 test textDisp-39.2 {destroy the widget while [index @x,y] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5439,7 +5439,7 @@ test textDisp-39.2 {destroy the widget while [index @x,y] pumps the event queue}
 } -result {1 0 alive}
 
 test textDisp-39.3 {destroy the widget while [bbox] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5451,7 +5451,7 @@ test textDisp-39.3 {destroy the widget while [bbox] pumps the event queue} -cons
 } -result {0 0 alive}
 
 test textDisp-39.4 {destroy the widget while [dlineinfo] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5463,7 +5463,7 @@ test textDisp-39.4 {destroy the widget while [dlineinfo] pumps the event queue} 
 } -result {0 0 alive}
 
 test textDisp-39.5 {destroy the widget while [yview] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5475,7 +5475,7 @@ test textDisp-39.5 {destroy the widget while [yview] pumps the event queue} -con
 } -result {0 0 alive}
 
 test textDisp-39.6 {destroy the widget while [xview] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5487,7 +5487,7 @@ test textDisp-39.6 {destroy the widget while [xview] pumps the event queue} -con
 } -result {0 0 alive}
 
 test textDisp-39.7 {destroy the widget while [count -update] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5499,7 +5499,7 @@ test textDisp-39.7 {destroy the widget while [count -update] pumps the event que
 } -result {0 0 alive}
 
 test textDisp-39.8 {destroy the widget while the redisplay pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
@@ -5515,7 +5515,7 @@ test textDisp-39.8 {destroy the widget while the redisplay pumps the event queue
 } -result {0 alive}
 
 test textDisp-39.9 {destroy the widget while [clear] pumps the event queue} -constraints {
-    testqueuewindowscript
+    testtext
 } -setup {
     setupPumpDestroyTest
 } -body {
