@@ -15,6 +15,8 @@
 /* Debugging */
 #define DEBUG_CHANNEL stderr
 #define DEBUG_LABEL "accessibility"
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -2163,8 +2165,15 @@ static int dbus_method_cache_get_items(
         sd_bus_message_append(reply, "s", "");
         sd_bus_message_append(reply, "u", (uint32_t)ATSPI_ROLE_APPLICATION);
         sd_bus_message_append(reply, "s", "");
-        sd_bus_message_open_container(reply, 'a', "u");
-        sd_bus_message_close_container(reply);
+        {
+            uint64_t root_states = ComputeStateForWidget(root);
+            uint32_t rlo = (uint32_t)(root_states & 0xffffffffu);
+            uint32_t rhi = (uint32_t)((root_states >> 32) & 0xffffffffu);
+            sd_bus_message_open_container(reply, 'a', "u");
+            sd_bus_message_append(reply, "u", rlo);
+            sd_bus_message_append(reply, "u", rhi);
+            sd_bus_message_close_container(reply);
+        }
         sd_bus_message_close_container(reply);
 
         for (AccessibleList *l = atspi_conn->toplevel_accessibles; l; l = l->next) {
@@ -2193,10 +2202,10 @@ static int dbus_method_cache_get_items(
             if (ds) Tcl_Free(ds);
             sd_bus_message_open_container(reply, 'a', "u");
             uint64_t states = ComputeStateForWidget(top);
-            for (int i=0;i<32;i++) if (states & (1ULL<<i)) {
-                uint32_t st=i;
-                sd_bus_message_append(reply, "u", st);
-            }
+            uint32_t slo = (uint32_t)(states & 0xffffffffu);
+            uint32_t shi = (uint32_t)((states >> 32) & 0xffffffffu);
+            sd_bus_message_append(reply, "u", slo);
+            sd_bus_message_append(reply, "u", shi);
             sd_bus_message_close_container(reply);
             sd_bus_message_close_container(reply);
         }
@@ -2230,6 +2239,10 @@ static const sd_bus_vtable cache_vtable[] = {
 static bool RegisterDbusObject(TkAccessible *acc)
 {
     if (!atspi_conn || !atspi_conn->bus || !acc) {
+        DEBUG_LOG("RegisterDbusObject: bailing early (atspi_conn=%p, bus=%p, acc=%p)",
+                  (void *)atspi_conn,
+                  (void *)(atspi_conn ? atspi_conn->bus : NULL),
+                  (void *)acc);
         return false;
     }
 
@@ -2257,6 +2270,8 @@ static bool RegisterDbusObject(TkAccessible *acc)
         }
         /* Collapse "//" and ensure no trailing slash */
         acc->dbus_path = Tcl_Strdup(path);
+        DEBUG_LOG("RegisterDbusObject: generated dbus_path=%s for widget path=%s",
+                  acc->dbus_path, acc->path ? acc->path : "?");
     }
 
     /*
@@ -2286,7 +2301,8 @@ static bool RegisterDbusObject(TkAccessible *acc)
                                       accessible_vtable,
                                       acc);
     if (r < 0) {
-        /* g_warning not available; we ignore for now. */
+        DEBUG_LOG("RegisterDbusObject: sd_bus_add_object_vtable failed for %s, r=%d (%s)",
+                  acc->dbus_path, r, strerror(-r));
         return false;
     }
     acc->vtable_slots[acc->n_vtable_slots++] = slot;
@@ -2495,39 +2511,33 @@ static void SendAtspiEvent(TkAccessible *acc,
      * "value-changed", "window:activate", etc.
      */
     if (strcmp(event_type, ATSPI_EVENT_FOCUS) == 0) {
-        EmitObjectEventFull(acc, "Focus", "object:focus", 0, 0, NULL);
+        EmitObjectEventFull(acc, "Focus", "", 0, 0, NULL);
     } else if (strcmp(event_type, ATSPI_EVENT_VALUE_CHANGED) == 0) {
-        EmitObjectEventFull(acc, "PropertyChange", "object:property-change:accessible-value", 0, 0, NULL);
+        EmitObjectEventFull(acc, "PropertyChange", "accessible-value", 0, 0, NULL);
     } else if (strcmp(event_type, ATSPI_EVENT_TEXT_CHANGED) == 0) {
-        const char *t = "object:text-changed";
-        if (detail) {
-            char buf[128];
-            snprintf(buf, sizeof(buf), "object:text-changed:%s", detail);
-            EmitObjectEventFull(acc, "TextChanged", buf, 0, 0, NULL);
-        } else {
-            EmitObjectEventFull(acc, "TextChanged", t, 0, 0, NULL);
-        }
+        EmitObjectEventFull(acc, "TextChanged", detail ? detail : "", 0, 0, NULL);
     } else if (strcmp(event_type, ATSPI_EVENT_SELECTION_CHANGED) == 0) {
-        EmitObjectEventFull(acc, "SelectionChanged", "object:selection-changed", 0, 0, NULL);
+        EmitObjectEventFull(acc, "SelectionChanged", "", 0, 0, NULL);
     } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_ACTIVATE) == 0) {
-        EmitWindowEvent(acc, "Activate", "window:activate");
+        EmitWindowEvent(acc, "Activate", "");
     } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_DEACTIVATE) == 0) {
-        EmitWindowEvent(acc, "Deactivate", "window:deactivate");
+        EmitWindowEvent(acc, "Deactivate", "");
     } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_CREATE) == 0) {
-        EmitWindowEvent(acc, "Create", "window:create");
+        EmitWindowEvent(acc, "Create", "");
     } else if (strncmp(event_type, "object:", 7) == 0) {
-        /* Generic object event already fully qualified. */
-        EmitObjectEventFull(acc, detail ? detail : "StateChanged", event_type, 0, 0, NULL);
+        /*
+         * event_type is a fully-qualified libatspi listener string like
+         * "object:state-changed:focused" -- that convention is for
+         * *registering* listeners, not for the wire. Strip it down to
+         * the bare trailing detail (text after the last ':'), which is
+         * what the "s" field of siiv(a{sv}) actually expects.
+         */
+        const char *last_colon = strrchr(event_type, ':');
+        const char *bare = last_colon ? last_colon + 1 : "";
+        EmitObjectEventFull(acc, detail ? detail : "StateChanged", bare, 0, 0, NULL);
     } else {
-        /* Fallback: treat event_type as member, detail as type suffix. */
-        char typebuf[256];
-        if (detail) {
-            snprintf(typebuf, sizeof(typebuf), "object:%s:%s", event_type, detail);
-        } else {
-            snprintf(typebuf, sizeof(typebuf), "object:%s", event_type);
-        }
-        /* Capitalize first letter for member? keep as is but ensure valid */
-        EmitObjectEventFull(acc, "StateChanged", typebuf, 0, 0, NULL);
+        /* Fallback: treat event_type as member, detail (if any) as the bare type. */
+        EmitObjectEventFull(acc, "StateChanged", detail ? detail : "", 0, 0, NULL);
     }
 }
 
@@ -2554,7 +2564,7 @@ static void SendChildrenChanged(TkAccessible *parent,
     if (!parent->dbus_path || !child->dbus_path) return;
     if (!atspi_conn || !atspi_conn->bus) return;
 
-    const char *type = added ? "object:children-changed:add" : "object:children-changed:remove";
+    const char *type = added ? "add" : "remove";
     /* detail1 = index, detail2 = 0, child in variant */
     EmitObjectEventFull(parent, "ChildrenChanged", type, (int32_t)index, 0, child);
 }
@@ -2631,10 +2641,7 @@ static void SendStateChanged(TkAccessible *acc,
     }
     if (!name) name = "enabled";
 
-    char type[128];
-    snprintf(type, sizeof(type), "object:state-changed:%s", name);
-
-    EmitObjectEventFull(acc, "StateChanged", type, (int32_t)(value ? 1 : 0), 0, NULL);
+    EmitObjectEventFull(acc, "StateChanged", name, (int32_t)(value ? 1 : 0), 0, NULL);
 }
 
 /*
@@ -2725,7 +2732,12 @@ static TkAccessible *CreateAccessible(Tcl_Interp *interp,
 				      Tk_Window tkwin,
 				      const char *path)
 {
-    if (!interp || !tkwin) return NULL;
+    DEBUG_LOG("CreateAccessible: enter path=%s", path ? path : (tkwin ? Tk_PathName(tkwin) : "?"));
+
+    if (!interp || !tkwin) {
+        DEBUG_LOG("CreateAccessible: bailing, interp=%p tkwin=%p", (void *)interp, (void *)tkwin);
+        return NULL;
+    }
 
     TkAccessible *acc = (TkAccessible *)Tcl_Alloc(sizeof(TkAccessible));
     if (!acc) return NULL;
@@ -2738,8 +2750,12 @@ static TkAccessible *CreateAccessible(Tcl_Interp *interp,
     acc->ref_count = 1;
     acc->states = ComputeStateForWidget(acc);
 
+    DEBUG_LOG("CreateAccessible: path=%s role=%d states=0x%x",
+              acc->path, acc->role, acc->states);
+
     /* Register D-Bus object. */
     if (!RegisterDbusObject(acc)) {
+        DEBUG_LOG("CreateAccessible: RegisterDbusObject failed for %s, aborting creation", acc->path);
         Tcl_Free(acc->path);
         Tcl_Free(acc);
         return NULL;
@@ -2962,7 +2978,10 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
     TkAccessible *acc = GetAccessible(tkwin);
     if (!acc) {
         acc = CreateAccessible(interp, tkwin, Tk_PathName(tkwin));
-        if (!acc) return;
+        if (!acc) {
+            DEBUG_LOG("RegisterWidgetRecursive: CreateAccessible failed for %s", Tk_PathName(tkwin));
+            return;
+        }
 
         /* Set parent relationship. */
         if (!Tk_IsTopLevel(tkwin)) {
@@ -3036,6 +3055,8 @@ static void EnsureAccessibleInHierarchy(Tcl_Interp *interp,
                 }
                 RegisterAccessible(win, acc);
                 TkAccessible_RegisterEventHandlers(win, acc);
+            } else {
+                DEBUG_LOG("EnsureAccessibleInHierarchy: CreateAccessible failed for %s", Tk_PathName(win));
             }
         }
     }
@@ -3731,45 +3752,15 @@ static void TkAccessible_ConfigureHandler(void *clientData,
 
 static int IsScreenReaderActive(void)
 {
-    DEBUG_LOG("IsScreenReaderActive: checking Orca");
-    /* 1. If we have a bus and registry answered Embed, assume active */
-    if (atspi_conn && atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
-        DEBUG_LOG("IsScreenReaderActive: embedded in registry, assuming active");
-        return 1;
-    }
-    /* 2. pgrep fallback */
-    FILE *fp = popen("pgrep -x orca 2>/dev/null", "r");
-    if (fp) {
-        char buffer[16];
-        int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
-        pclose(fp);
-        if (running) {
-            DEBUG_LOG("IsScreenReaderActive: %d", running);
-            return 1;
-        }
-    }
-    /* 3. Check if org.a11y.atspi.Registry owns a name on our bus */
-    if (atspi_conn && atspi_conn->bus) {
-        sd_bus_error err = SD_BUS_ERROR_NULL;
-        sd_bus_message *msg = NULL;
-        int r = sd_bus_call_method(atspi_conn->bus,
-            "org.freedesktop.DBus",
-            "/org/freedesktop/DBus",
-            "org.freedesktop.DBus",
-            "GetNameOwner",
-            &err,
-            &msg,
-            "s", "org.a11y.atspi.Registry");
-        if (r >= 0) {
-            sd_bus_message_unref(msg);
-            sd_bus_error_free(&err);
-            return 1;
-        }
-        sd_bus_error_free(&err);
-    }
-    return 0;
+	DEBUG_LOG("IsScreenReaderActive: checking Orca");
+    FILE *fp = popen("pgrep -x orca", "r");
+    if (!fp) return 0;
+    char buffer[16];
+    int running = (fgets(buffer, sizeof(buffer), fp) != NULL);
+    pclose(fp);
+    DEBUG_LOG("IsScreenReaderActive: %d", running);
+    return running;
 }
-
 
 /*
  *----------------------------------------------------------------------
