@@ -430,7 +430,7 @@ void updateClipRects(
         intersectRectWithRect(&effectiveBounds, extraRect);
     }
 
-    /* Ancestor clipping - crucial for canvas window items */
+    /* Ancestor clipping - useful for embedded windows. */
     for (TkWindow *ancPtr = winPtr->parentPtr; ancPtr != NULL; ancPtr = ancPtr->parentPtr) {
         if (Tk_IsTopLevel(ancPtr)) break;
         clipRect ancBounds = getBounds(ancPtr, scale);

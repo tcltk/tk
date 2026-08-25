@@ -265,7 +265,7 @@ getGlfwTkInfo(
  */
 
 
-static void renderFBO(
+void renderFBO(
     GLFWwindow *glfwWindow)
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);

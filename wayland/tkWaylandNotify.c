@@ -558,39 +558,6 @@ TkWaylandQueueExposeEvent(
     }
 }
 
-/* Helper function for processing expose events. */
-static void
-HandleExposeEvent(
-    TkWindow *winPtr)
-{
-    XEvent event;
-    TkWindow *childPtr;
-
-    /* Create expose event. */
-    memset(&event, 0, sizeof(XEvent));
-    event.type = Expose;
-    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
-    event.xexpose.send_event = False;
-    event.xexpose.display = winPtr->display;
-    event.xexpose.window = Tk_WindowId(winPtr);
-    event.xexpose.x = Tk_X(winPtr);
-    event.xexpose.y = Tk_Y(winPtr);
-    event.xexpose.width = Tk_Width(winPtr);
-    event.xexpose.height = Tk_Height(winPtr);
-    event.xexpose.count = 0;    /* This forces ttk to handle the event. */
-    
-    Tk_HandleEvent(&event);
-
-    /* Recurse through the children of this window. */
-    for (childPtr = winPtr->childList; childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
-            continue;
-        }
-        HandleExposeEvent(childPtr);
-    }
-}
-
 /* 
  * GLFW callbacks. These functions integrate the native GFLW events
  * with Tk's event loop.
@@ -810,15 +777,21 @@ TkWaylandFramebufferSizeCallback(
      */
 
     TkWaylandMenubarResize(winPtr);
-    /* Reconfigure the Tk window. */    
+    
+    /*
+     * Update Tk's geometry from the GLFW window size and generate the
+     * configure notification.  This is the correct point to inform Tk
+     * of the size change; the actual repaint will happen through the
+     * normal Tk event/display cycle, not by forcing a synchronous
+     * expose from inside this callback.
+     */
     glfwGetWindowSize(window, &(winPtr->changes.width),
 		      &(winPtr->changes.height));
-    /* Redraw the entire window. */
-    DEBUG_LOG("TkWaylandFramebufferSizeCallback: redrawing %s",
+    
+    DEBUG_LOG("TkWaylandFramebufferSizeCallback: configuring %s",
 	      Tk_PathName(winPtr));
     GenerateConfigureNotify(winPtr, 1);
-    DEBUG_LOG("Attempting to force a redraw of %s", Tk_PathName(winPtr));
-    HandleExposeEvent(winPtr);
+    
 }
 
 /* Helper function to process configure events. */
@@ -1747,18 +1720,16 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 static void
 TkWaylandWindowRefreshCallback(GLFWwindow *window)
 {
-
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
     }
-#if 0
-    DEBUG_LOG("TkGlWindowRefreshCallback Exposing %s",
+
+    DEBUG_LOG("TkWaylandWindowRefreshCallback: Exposing %s",
 	    Tk_PathName(winPtr));
 	    	
     TkWaylandQueueExposeEvent(winPtr,
 			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
-#endif
 }
 
 /*
