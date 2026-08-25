@@ -677,8 +677,8 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *      when a window changes size, whether by interactive resizing with the
  *      mouse or programatic resizing with wm geometry. This generates a
  *      ConfigureNotify event for the window.  The subsequent
- *      WindowRefreshCallback generates ExposeNotify events for the window and
- *      all of its children.
+ *      TkWaylandWindowRefreshCallback generates ExposeNotify events for the window 
+ * 		and all of its children.
  *
  * Results:
  *      None.
@@ -780,10 +780,8 @@ TkWaylandFramebufferSizeCallback(
     
     /*
      * Update Tk's geometry from the GLFW window size and generate the
-     * configure notification.  This is the correct point to inform Tk
-     * of the size change; the actual repaint will happen through the
-     * normal Tk event/display cycle, not by forcing a synchronous
-     * expose from inside this callback.
+     * configure notification.  The actual repaint will happen through the
+     * normal Tk event/display cycle.
      */
     glfwGetWindowSize(window, &(winPtr->changes.width),
 		      &(winPtr->changes.height));
