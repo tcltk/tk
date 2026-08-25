@@ -412,29 +412,45 @@ void updateClipRects(
     /* Reset the buffer. */
     winPtr->privatePtr->clipRectCount = 0;
     clipRect bounds = getBounds(winPtr, scale);
+    clipRect effectiveBounds = bounds;
+
+    /* Own extraRect (Tk_ClipDrawableToRect) */
     clipRect extraRect = winPtr->privatePtr->boundsRect;
     if (extraRect.w > 0 && extraRect.h > 0) {
-        /*
-         * The rectangle saved by Tk_ClipDrawableToRect is given
-         * in local window coordinates.  We need to shift it to
-         * the window origin.  XXXX this could be made more efficient.
-         */
         TkWindow *winPtr2 = winPtr;
         while (!Tk_IsTopLevel(winPtr2)) {
             extraRect.x += winPtr2->changes.x;
             extraRect.y += winPtr2->changes.y;
             winPtr2 = winPtr2->parentPtr;
         }
-        /*
-         * The rectangle is also given in window coordinates, rather than
-         * framebuffer coordinares.
-         */
-	extraRect.x *= scale;
-	extraRect.y *= scale;
-	extraRect.w *= scale;
-	extraRect.h *= scale;
-	intersectRectWithRect(&bounds, extraRect);
+        extraRect.x *= scale;
+        extraRect.y *= scale;
+        extraRect.w *= scale;
+        extraRect.h *= scale;
+        intersectRectWithRect(&effectiveBounds, extraRect);
     }
+
+    /* Ancestor clipping - crucial for canvas window items */
+    for (TkWindow *ancPtr = winPtr->parentPtr; ancPtr != NULL; ancPtr = ancPtr->parentPtr) {
+        if (Tk_IsTopLevel(ancPtr)) break;
+        clipRect ancBounds = getBounds(ancPtr, scale);
+        intersectRectWithRect(&effectiveBounds, ancBounds);
+        clipRect ancExtra = ancPtr->privatePtr->boundsRect;
+        if (ancExtra.w > 0 && ancExtra.h > 0) {
+            TkWindow *tmpPtr = ancPtr;
+            while (!Tk_IsTopLevel(tmpPtr)) {
+                ancExtra.x += tmpPtr->changes.x;
+                ancExtra.y += tmpPtr->changes.y;
+                tmpPtr = tmpPtr->parentPtr;
+            }
+            ancExtra.x *= scale;
+            ancExtra.y *= scale;
+            ancExtra.w *= scale;
+            ancExtra.h *= scale;
+            intersectRectWithRect(&effectiveBounds, ancExtra);
+        }
+    }
+    bounds = effectiveBounds;
     /* Add clipRects for children that overlap the window. */
     for (TkWindow *childPtr = winPtr->childList;
 	 childPtr != NULL;
