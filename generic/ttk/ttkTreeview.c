@@ -12,6 +12,8 @@
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXPrivate.h"
+#elif defined(TK_USE_WAYLAND)
+#include "tkWaylandInt.h"
 #endif
 
 #define DEF_TREE_ROWS		"10"
