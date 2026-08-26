@@ -350,6 +350,7 @@ if test $tk_aqua = no; then
 	[enable_xft=$enableval], [enable_xft="default"])
     XFT_CFLAGS=""
     XFT_LIBS=""
+    XFT_DEPS=""
     if test "$enable_xft" = "no" ; then
 	AC_MSG_RESULT([$enable_xft])
     else
@@ -375,6 +376,7 @@ if test $tk_aqua = no; then
 	    ],[#include <X11/Xlib.h>])
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
+	    XFT_DEPS="xft fontconfig"
 	fi
 	dnl make sure that linking against Xft libraries finds freetype
 	if test "$found_xft" = "yes" ; then
@@ -408,6 +410,7 @@ if test $tk_aqua = no; then
 	    enable_xft=no
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
+	    XFT_DEPS=""
 	else
 	    enable_xft=yes
 	fi
@@ -420,6 +423,7 @@ if test $tk_aqua = no; then
     fi
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
+    AC_SUBST(XFT_DEPS)
     AC_SUBST(UNIX_FONT_OBJS)
 fi
 
