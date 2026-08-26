@@ -45,7 +45,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * Protocol identifiers â€“ replace X11 Atoms for WM_DELETE_WINDOW etc.
+ * Protocol identifiers - replace X11 Atoms for WM_DELETE_WINDOW etc.
  *
  *----------------------------------------------------------------------
  */
@@ -819,7 +819,7 @@ Tk_MakeWindow(
     if (Tk_IsTopLevel(winPtr)) {
 		
         /*
-         * Guard against internal Tk toplevels that have no mainPtr â€”
+         * Guard against internal Tk toplevels that have no mainPtr -
          * e.g. the clipboard owner window created by TkClipInit.
          * These need a valid window ID but no real GLFW surface.
          * Return the pre-allocated result token directly; the window
@@ -1699,7 +1699,7 @@ WmAttributesCmd(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     int i;
 
-    /* No arguments â†’ return all attributes */
+    /* No arguments - return all attributes. */
     if (objc == 0) {
         Tcl_Obj *result = Tcl_NewListObj(0, NULL);
 
@@ -3918,7 +3918,7 @@ ParseGeometry(
         hasSize = 1;
     }
 
-    /* Optional Â±XÂ±Y part. */
+    /* Optional ±X±Y part. */
     if (*p == '+' || *p == '-') {
         xNeg = (*p == '-');
         p++;
@@ -4108,8 +4108,6 @@ XCreateWindow(
     return None;
 }
 
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -4194,7 +4192,7 @@ XDestroySubwindows(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window))
 {
-    /* Child windows share the parent GLFW context â€“ nothing to destroy. */
+    /* Child windows share the parent GLFW context - nothing to destroy. */
     return Success;
 }
 
@@ -4743,8 +4741,8 @@ XChangeWindowAttributes(
 
     /* 
      * CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
-     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, â€¦
-     * All are maintained by Tk's own attribute tables; no GLFW action. 
+     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap - 
+     * all are maintained by Tk's own attribute tables; no GLFW action. 
      */
 
     return Success;

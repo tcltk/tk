@@ -340,6 +340,7 @@ static const AtspiRoleMap roleMap[] = {
     {NULL,            ATSPI_ROLE_INVALID}
 };
 
+/* Helper getter for role string. */
 static const char *
 RoleToString(int role)
 {
