@@ -412,28 +412,60 @@ void updateClipRects(
     /* Reset the buffer. */
     winPtr->privatePtr->clipRectCount = 0;
     clipRect bounds = getBounds(winPtr, scale);
+    clipRect effectiveBounds = bounds;
+
+    /* Own extraRect (Tk_ClipDrawableToRect) */
     clipRect extraRect = winPtr->privatePtr->boundsRect;
     if (extraRect.w > 0 && extraRect.h > 0) {
-        /*
-         * The rectangle saved by Tk_ClipDrawableToRect is given
-         * in local window coordinates.  We need to shift it to
-         * the window origin.  XXXX this could be made more efficient.
-         */
         TkWindow *winPtr2 = winPtr;
         while (!Tk_IsTopLevel(winPtr2)) {
             extraRect.x += winPtr2->changes.x;
             extraRect.y += winPtr2->changes.y;
             winPtr2 = winPtr2->parentPtr;
         }
-        /*
-         * The rectangle is also given in window coordinates, rather than
-         * framebuffer coordinares.
-         */
-	extraRect.x *= scale;
-	extraRect.y *= scale;
-	extraRect.w *= scale;
-	extraRect.h *= scale;
-	intersectRectWithRect(&bounds, extraRect);
+        extraRect.x *= scale;
+        extraRect.y *= scale;
+        extraRect.w *= scale;
+        extraRect.h *= scale;
+        intersectRectWithRect(&effectiveBounds, extraRect);
+    }
+
+    /*
+     * If the window is a non-toplevel child, clip to the bounds of its
+     * logical Tk parent.
+     */
+    if (!Tk_IsTopLevel(winPtr) && winPtr->parentPtr != NULL) {
+        clipRect parentBounds = getBounds(winPtr->parentPtr, scale);
+        intersectRectWithRect(&effectiveBounds, parentBounds);
+    }
+
+    /*
+     * If the window is embedded (-container/-use), its visual container is
+     * not its logical Tk parent -- an embedded window is itself a toplevel,
+     * so the check above does not apply to it at all.  Tk_GetOtherWindow()
+     * looks up the other half of a container/embedded pair when both
+     * windows belong to this application, so use it to find the container
+     * and clip to its bounds too.  (If the container lives in a different
+     * application, Tk_GetOtherWindow() returns NULL and we have no way to
+     * find its geometry, so no clipping against it is possible here.)
+     */
+    if (winPtr->flags & TK_EMBEDDED) {
+        Tk_Window containerTkwin = Tk_GetOtherWindow((Tk_Window) winPtr);
+        if (containerTkwin != NULL) {
+            TkWindow *containerPtr = (TkWindow *) containerTkwin;
+            clipRect containerBounds = getBounds(containerPtr, scale);
+            DEBUG_LOG("    updateClipRects: %s is embedded, clipping to container %s",
+                Tk_PathName(winPtr), Tk_PathName(containerPtr));
+            intersectRectWithRect(&effectiveBounds, containerBounds);
+        }
+    }
+    bounds = effectiveBounds;
+    DEBUG_LOG("effectiveBounds for %s: %.0fx%.0f+%.0f+%.0f (fb %dx%d)",
+        Tk_PathName(winPtr), bounds.w, bounds.h, bounds.x, bounds.y, fbWidth, fbHeight);
+    if (bounds.w <= 0 || bounds.h <= 0) {
+        DEBUG_LOG("COLLAPSED effectiveBounds for %s: %.0fx%.0f+%.0f+%.0f - using full bounds fallback",
+            Tk_PathName(winPtr), effectiveBounds.w, effectiveBounds.h, effectiveBounds.x, effectiveBounds.y);
+        bounds = getBounds(winPtr, scale);
     }
     /* Add clipRects for children that overlap the window. */
     for (TkWindow *childPtr = winPtr->childList;
