@@ -5,9 +5,9 @@
  *	Implements the "wm" Tcl command and all platform window-management
  *	entry points required by Tk's generic layer.
  *
- * Copyright © 1991-1994 The Regents of the University of California.
- * Copyright © 1994-1997 Sun Microsystems, Inc.
- * Copyright © 2026      Kevin Walzer
+ * Copyright Â© 1991-1994 The Regents of the University of California.
+ * Copyright Â© 1994-1997 Sun Microsystems, Inc.
+ * Copyright Â© 2026      Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -45,7 +45,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * Protocol identifiers – replace X11 Atoms for WM_DELETE_WINDOW etc.
+ * Protocol identifiers â€“ replace X11 Atoms for WM_DELETE_WINDOW etc.
  *
  *----------------------------------------------------------------------
  */
@@ -819,7 +819,7 @@ Tk_MakeWindow(
     if (Tk_IsTopLevel(winPtr)) {
 		
         /*
-         * Guard against internal Tk toplevels that have no mainPtr —
+         * Guard against internal Tk toplevels that have no mainPtr â€”
          * e.g. the clipboard owner window created by TkClipInit.
          * These need a valid window ID but no real GLFW surface.
          * Return the pre-allocated result token directly; the window
@@ -1465,7 +1465,7 @@ TkpGetSystemDefault(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_WmObjCmd –
+ * Tk_WmObjCmd â€“
  *
  *	Implementation of the "wm" Tcl command.
  *
@@ -1699,7 +1699,7 @@ WmAttributesCmd(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     int i;
 
-    /* No arguments → return all attributes */
+    /* No arguments â†’ return all attributes */
     if (objc == 0) {
         Tcl_Obj *result = Tcl_NewListObj(0, NULL);
 
@@ -3918,7 +3918,7 @@ ParseGeometry(
         hasSize = 1;
     }
 
-    /* Optional ±X±Y part. */
+    /* Optional Â±XÂ±Y part. */
     if (*p == '+' || *p == '-') {
         xNeg = (*p == '-');
         p++;
@@ -4194,7 +4194,7 @@ XDestroySubwindows(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window))
 {
-    /* Child windows share the parent GLFW context – nothing to destroy. */
+    /* Child windows share the parent GLFW context â€“ nothing to destroy. */
     return Success;
 }
 
@@ -4743,7 +4743,7 @@ XChangeWindowAttributes(
 
     /* 
      * CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
-     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
+     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, â€¦
      * All are maintained by Tk's own attribute tables; no GLFW action. 
      */
 
