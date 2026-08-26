@@ -2638,6 +2638,10 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
 	DrawTreeArea(tv, d);
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
+#elif defined(TK_USE_WAYLAND)
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
+	DrawTreeArea(tv, d);
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
 #endif
     }
 }

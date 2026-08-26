@@ -431,14 +431,33 @@ void updateClipRects(
     }
 
     /*
-     * If the window is embedded (canvas/text window item or -container/-use),
-     * its visual container may differ from its logical parent. In that case
-     * we clip to both the logical parent and the embedding container if we
-     * can find it.
+     * If the window is a non-toplevel child, clip to the bounds of its
+     * logical Tk parent.
      */
     if (!Tk_IsTopLevel(winPtr) && winPtr->parentPtr != NULL) {
         clipRect parentBounds = getBounds(winPtr->parentPtr, scale);
         intersectRectWithRect(&effectiveBounds, parentBounds);
+    }
+
+    /*
+     * If the window is embedded (-container/-use), its visual container is
+     * not its logical Tk parent -- an embedded window is itself a toplevel,
+     * so the check above does not apply to it at all.  Tk_GetOtherWindow()
+     * looks up the other half of a container/embedded pair when both
+     * windows belong to this application, so use it to find the container
+     * and clip to its bounds too.  (If the container lives in a different
+     * application, Tk_GetOtherWindow() returns NULL and we have no way to
+     * find its geometry, so no clipping against it is possible here.)
+     */
+    if (winPtr->flags & TK_EMBEDDED) {
+        Tk_Window containerTkwin = Tk_GetOtherWindow((Tk_Window) winPtr);
+        if (containerTkwin != NULL) {
+            TkWindow *containerPtr = (TkWindow *) containerTkwin;
+            clipRect containerBounds = getBounds(containerPtr, scale);
+            DEBUG_LOG("    updateClipRects: %s is embedded, clipping to container %s",
+                Tk_PathName(winPtr), Tk_PathName(containerPtr));
+            intersectRectWithRect(&effectiveBounds, containerBounds);
+        }
     }
     bounds = effectiveBounds;
     DEBUG_LOG("effectiveBounds for %s: %.0fx%.0f+%.0f+%.0f (fb %dx%d)",
