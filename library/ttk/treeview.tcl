@@ -947,6 +947,9 @@ proc ::ttk::treeview::InvokeItem {w {item {}} {column {}}} {
 	    $w focus $item
 	}
     } else {
+	if {!$cellmode} {
+	    set cell ""
+	}
 	SelectOp $w $item $cell choose
     }
 }
