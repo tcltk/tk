@@ -124,6 +124,8 @@ struct TkAccessible {
     Tk_Window tkwin;
     Tcl_Interp *interp;
     char *path;
+    char *cached_name;
+    char *cached_description;
     int role;
     uint64_t states;
     int x, y, width, height;
@@ -199,6 +201,8 @@ static char *GetValueForWidget(Tk_Window tkwin);
 static void RegisterToplevel(TkAccessible *acc);
 static void UnregisterToplevel(TkAccessible *acc);
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
+static void EnsureChildrenRegistered(Tk_Window tkwin);
+static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *parent_acc);
 static void UpdateFocusChain(Tk_Window focused);
 static char *Tcl_Strdup(const char *s);
 
@@ -2129,6 +2133,91 @@ static int dbus_method_selection_remove_selection(
  *----------------------------------------------------------------------
  */
 
+static void AppendCacheItem(sd_bus_message *reply, TkAccessible *acc, TkAccessible *parent_acc, const char *app_path, int index_in_parent)
+{
+    if (!acc || !acc->dbus_path) return;
+
+    int childcnt = 0;
+    if (acc->tkwin && !acc->is_virtual) {
+        for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
+            if (GetAccessible((Tk_Window)c)) childcnt++;
+        }
+    } else if (acc->children) {
+        for (AccessibleList *l = acc->children; l; l = l->next) if (l->acc) childcnt++;
+    }
+
+    sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
+    AppendAccessibleRef(reply, acc->dbus_path);
+    if (parent_acc && parent_acc->dbus_path) {
+        AppendAccessibleRef(reply, parent_acc->dbus_path);
+    } else {
+        AppendAccessibleRef(reply, app_path);
+    }
+    AppendAccessibleRef(reply, app_path);
+
+    sd_bus_message_append(reply, "i", index_in_parent);
+    sd_bus_message_append(reply, "i", childcnt);
+
+    sd_bus_message_open_container(reply, 'a', "s");
+    sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
+    sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
+    if (acc->role == ATSPI_ROLE_PUSH_BUTTON || acc->role == ATSPI_ROLE_CHECK_BOX ||
+        acc->role == ATSPI_ROLE_RADIO_BUTTON || acc->role == ATSPI_ROLE_TOGGLE_BUTTON) {
+        sd_bus_message_append(reply, "s", ATSPI_ACTION_INTERFACE);
+    } else if (acc->role == ATSPI_ROLE_ENTRY || acc->role == ATSPI_ROLE_TEXT) {
+        sd_bus_message_append(reply, "s", ATSPI_TEXT_INTERFACE);
+    }
+    sd_bus_message_close_container(reply);
+
+    const char *nm = acc->cached_name ? acc->cached_name : (acc->path ? acc->path : "");
+    const char *ds = acc->cached_description ? acc->cached_description : "";
+
+    {
+        const char *role_str = "unknown";
+        for (int ri=0; roleMap[ri].tkrole != NULL; ri++) {
+            if (roleMap[ri].atspi_role == acc->role) { role_str = roleMap[ri].tkrole; break; }
+        }
+        if (acc->role == ATSPI_ROLE_APPLICATION) role_str = "Application";
+        else if (acc->role == ATSPI_ROLE_WINDOW) role_str = "Window";
+        else if (acc->role == ATSPI_ROLE_PANEL) role_str = "Panel";
+        else if (acc->role == ATSPI_ROLE_PUSH_BUTTON) role_str = "PushButton";
+        DEBUG_LOG("AppendCacheItem: path=%s dbus_path=%s role=%d (%s) childcnt=%d name='%s' desc='%s' parent=%s tkwin=%p",
+                  acc->path ? acc->path : "(null)", acc->dbus_path ? acc->dbus_path : "(null)",
+                  acc->role, role_str, childcnt, nm, ds,
+                  acc->parent && acc->parent->path ? acc->parent->path : "(no parent)",
+                  (void*)acc->tkwin);
+    }
+
+    sd_bus_message_append(reply, "s", nm);
+    sd_bus_message_append(reply, "u", (uint32_t)(acc->role ? acc->role : ATSPI_ROLE_INVALID));
+    sd_bus_message_append(reply, "s", ds);
+
+    sd_bus_message_open_container(reply, 'a', "u");
+    uint64_t states = acc->states;
+    uint32_t slo = (uint32_t)(states & 0xffffffffu);
+    uint32_t shi = (uint32_t)((states >> 32) & 0xffffffffu);
+    sd_bus_message_append(reply, "u", slo);
+    sd_bus_message_append(reply, "u", shi);
+    sd_bus_message_close_container(reply);
+    sd_bus_message_close_container(reply);
+
+    if (acc->tkwin && !acc->is_virtual) {
+        int emit_idx = 0;
+        for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
+            TkAccessible *child_acc = GetAccessible((Tk_Window)c);
+            if (child_acc) {
+                AppendCacheItem(reply, child_acc, acc, app_path, emit_idx);
+                emit_idx++;
+            }
+        }
+    } else if (acc->children) {
+        int idx = 0;
+        for (AccessibleList *l = acc->children; l; l = l->next, idx++) {
+            if (l->acc) AppendCacheItem(reply, l->acc, acc, app_path, idx);
+        }
+    }
+}
+
 static int dbus_method_cache_get_items(
     sd_bus_message *m,
     void *userdata,
@@ -2146,7 +2235,15 @@ static int dbus_method_cache_get_items(
         TkAccessible *root = atspi_conn->root_accessible;
         const char *app_path = root->dbus_path;
 
-        DEBUG_LOG("dbus_method_cache_get_items: root=%s", app_path);
+        for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
+            TkAccessible *top=l->acc;
+            if (top && top->tkwin) {
+                EnsureChildrenRegistered(top->tkwin);
+            }
+        }
+
+        int topcount=0; for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) topcount++;
+        DEBUG_LOG("dbus_method_cache_get_items: root=%s toplevels=%d - after EnsureChildrenRegistered", app_path, topcount);
 
         sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
         AppendAccessibleRef(reply, root->dbus_path);
@@ -2157,7 +2254,6 @@ static int dbus_method_cache_get_items(
             sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
         }
         sd_bus_message_append(reply, "i", -1);
-        int topcount=0; for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) topcount++;
         sd_bus_message_append(reply, "i", topcount);
         sd_bus_message_open_container(reply, 'a', "s");
         sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
@@ -2166,9 +2262,9 @@ static int dbus_method_cache_get_items(
         sd_bus_message_append(reply, "u", (uint32_t)ATSPI_ROLE_APPLICATION);
         sd_bus_message_append(reply, "s", "");
         {
-            uint64_t root_states = ComputeStateForWidget(root);
-            uint32_t rlo = (uint32_t)(root_states & 0xffffffffu);
-            uint32_t rhi = (uint32_t)((root_states >> 32) & 0xffffffffu);
+            uint64_t root_states=root->states;
+            uint32_t rlo=(uint32_t)(root_states&0xffffffffu);
+            uint32_t rhi=(uint32_t)((root_states>>32)&0xffffffffu);
             sd_bus_message_open_container(reply, 'a', "u");
             sd_bus_message_append(reply, "u", rlo);
             sd_bus_message_append(reply, "u", rhi);
@@ -2176,44 +2272,18 @@ static int dbus_method_cache_get_items(
         }
         sd_bus_message_close_container(reply);
 
-        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l; l = l->next) {
-            TkAccessible *top = l->acc;
-            if (!top || !top->dbus_path) continue;
-            sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
-            AppendAccessibleRef(reply, top->dbus_path);
-            AppendAccessibleRef(reply, app_path);
-            AppendAccessibleRef(reply, root->dbus_path);
-            sd_bus_message_append(reply, "i", 0);
-            int childcnt=0;
-            if (top->tkwin) {
-                for (TkWindow *c=((TkWindow*)top->tkwin)->childList; c; c=c->nextPtr) childcnt++;
-            }
-            sd_bus_message_append(reply, "i", childcnt);
-            sd_bus_message_open_container(reply, 'a', "s");
-            sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
-            sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
-            sd_bus_message_close_container(reply);
-            char *nm = top->tkwin ? GetNameForWidget(top->tkwin) : NULL;
-            char *ds = top->tkwin ? GetDescriptionForWidget(top->tkwin) : NULL;
-            sd_bus_message_append(reply, "s", nm ? nm : "");
-            sd_bus_message_append(reply, "u", (uint32_t)(top->role ? top->role : ATSPI_ROLE_WINDOW));
-            sd_bus_message_append(reply, "s", ds ? ds : "");
-            if (nm) Tcl_Free(nm);
-            if (ds) Tcl_Free(ds);
-            sd_bus_message_open_container(reply, 'a', "u");
-            uint64_t states = ComputeStateForWidget(top);
-            uint32_t slo = (uint32_t)(states & 0xffffffffu);
-            uint32_t shi = (uint32_t)((states >> 32) & 0xffffffffu);
-            sd_bus_message_append(reply, "u", slo);
-            sd_bus_message_append(reply, "u", shi);
-            sd_bus_message_close_container(reply);
-            sd_bus_message_close_container(reply);
+        for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
+            TkAccessible *top=l->acc;
+            if (!top||!top->dbus_path) continue;
+            AppendCacheItem(reply, top, root, app_path, 0);
         }
     }
 
     sd_bus_message_close_container(reply);
     return sd_bus_send(NULL, reply, NULL);
 }
+
+
 
 static const sd_bus_vtable cache_vtable[] = {
     SD_BUS_VTABLE_START(0),
@@ -2368,8 +2438,19 @@ EmitObjectEventFull(TkAccessible *acc,
 		    const char *type, int32_t detail1,
 		    int32_t detail2, TkAccessible *related)
 {
-    DEBUG_LOG("EmitObjectEventFull: enter");
-    if (!atspi_conn || !atspi_conn->bus) return;
+    const char *bus_unique = NULL;
+    if (atspi_conn && atspi_conn->bus) {
+        sd_bus_get_unique_name(atspi_conn->bus, &bus_unique);
+    }
+    DEBUG_LOG("EmitObjectEventFull: path=%s member=%s type=%s detail1=%d bus=%s dbus_path=%s",
+              acc && acc->path ? acc->path : "?", member ? member : "?",
+              type ? type : "?", detail1,
+              bus_unique ? bus_unique : "(no bus)",
+              acc && acc->dbus_path ? acc->dbus_path : "?");
+    if (!atspi_conn || !atspi_conn->bus) {
+        DEBUG_LOG("EmitObjectEventFull: no bus - dropped");
+        return;
+    }
     if (!acc || !acc->dbus_path) return;
     if (!member || !type) return;
 
@@ -2665,9 +2746,15 @@ static void SendActiveDescendantChanged(TkAccessible *container,
     if (!container->dbus_path || !descendant->dbus_path) return;
     if (!atspi_conn || !atspi_conn->bus) return;
 
+    DEBUG_LOG("SendActiveDescendantChanged: container=%s descendant=%s",
+              container->path ? container->path : "?", descendant->path ? descendant->path : "?");
+    /*
+     * Wire format: member=ActiveDescendantChanged, type="" (bare, not
+     * "object:active-descendant-changed" listener string). The child reference
+     * is carried in the (so) variant. This matches how Focus is emitted.
+     */
     EmitObjectEventFull(container, "ActiveDescendantChanged",
-                        "object:active-descendant-changed",
-                        0, 0, descendant);
+                        "", 0, 0, descendant);
 }
 
 /*
@@ -2729,8 +2816,8 @@ TkWaylandAtspiProcessEvents(void)
  */
 
 static TkAccessible *CreateAccessible(Tcl_Interp *interp,
-				      Tk_Window tkwin,
-				      const char *path)
+                                      Tk_Window tkwin,
+                                      const char *path)
 {
     DEBUG_LOG("CreateAccessible: enter path=%s", path ? path : (tkwin ? Tk_PathName(tkwin) : "?"));
 
@@ -2749,20 +2836,35 @@ static TkAccessible *CreateAccessible(Tcl_Interp *interp,
     acc->role = GetRoleForWidget(tkwin);
     acc->ref_count = 1;
     acc->states = ComputeStateForWidget(acc);
+    acc->cached_name = GetNameForWidget(tkwin);
+    acc->cached_description = GetDescriptionForWidget(tkwin);
+    {
+        const char *role_str = "unknown";
+        for (int ri=0; roleMap[ri].tkrole != NULL; ri++) {
+            if (roleMap[ri].atspi_role == acc->role) { role_str = roleMap[ri].tkrole; break; }
+        }
+        if (acc->role == ATSPI_ROLE_APPLICATION) role_str = "Application";
+        else if (acc->role == ATSPI_ROLE_WINDOW) role_str = "Window";
+        else if (acc->role == ATSPI_ROLE_PANEL) role_str = "Panel";
+        else if (acc->role == ATSPI_ROLE_PUSH_BUTTON) role_str = "PushButton";
+        DEBUG_LOG("CreateAccessible: path=%s tkwin=%p role=%d (%s) cached_name='%s' states=0x%lx",
+                  acc->path?acc->path:"?", (void*)tkwin, acc->role, role_str,
+                  acc->cached_name?acc->cached_name:"(null)", (unsigned long)acc->states);
+    }
 
-    DEBUG_LOG("CreateAccessible: path=%s role=%d states=0x%x",
-              acc->path, acc->role, acc->states);
-
-    /* Register D-Bus object. */
     if (!RegisterDbusObject(acc)) {
         DEBUG_LOG("CreateAccessible: RegisterDbusObject failed for %s, aborting creation", acc->path);
-        Tcl_Free(acc->path);
+        if (acc->path) Tcl_Free(acc->path);
+        if (acc->cached_name) Tcl_Free(acc->cached_name);
+        if (acc->cached_description) Tcl_Free(acc->cached_description);
         Tcl_Free(acc);
         return NULL;
     }
 
     return acc;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -2796,6 +2898,8 @@ static void FreeAccessible(TkAccessible *acc)
     acc->n_vtable_slots = 0;
 
     if (acc->path) Tcl_Free(acc->path);
+    if (acc->cached_name) Tcl_Free(acc->cached_name);
+    if (acc->cached_description) Tcl_Free(acc->cached_description);
     if (acc->dbus_path) Tcl_Free(acc->dbus_path);
     if (acc->virtual_name) Tcl_Free(acc->virtual_name);
     /* Free children list. */
@@ -3094,18 +3198,10 @@ static void UpdateFocusChain(Tk_Window focused)
     SendStateChanged(focused_acc, ATSPI_STATE_FOCUSED, 1);
     SendAtspiEvent(focused_acc, ATSPI_EVENT_FOCUS, NULL);
 
-    /* Notify parent about active descendant. */
-    Tk_Window current = focused;
-    while (current && !Tk_IsTopLevel(current)) {
-        Tk_Window parent = Tk_Parent(current);
-        if (parent) {
-            TkAccessible *parent_acc = GetAccessible(parent);
-            if (parent_acc) {
-                SendActiveDescendantChanged(parent_acc, focused_acc);
-            }
-        }
-        current = parent;
-    }
+    /* NOTE: Do NOT emit ActiveDescendantChanged for normal focus chain.
+     * See comment in TkAccessible_FocusHandler - that event is only for
+     * composite containers managing an active descendant internally.
+     */
 
     /* If this is a toplevel, emit window activation. */
     if (Tk_IsTopLevel(focused)) {
@@ -3475,6 +3571,67 @@ static char *GetValueForWidget(Tk_Window tkwin)
 
 /*
  *----------------------------------------------------------------------
+ * EnsureChildrenRegistered -- hash-table walk like tkWinAccessibility.c
+ *
+ *   Windows has no X windows either. It maintains toplevelChildTables
+ *   hash and AssignChildIdsRecursive walks childList. We do same:
+ *   atspi_conn->tk_to_accessible_map is our global hash (Tk_Window -> TkAccessible).
+ *   This scans childList recursively and creates accessibles for missing windows.
+ *----------------------------------------------------------------------
+ */
+static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *parent_acc)
+{
+    if (!tkwin) return;
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    if (!winPtr) return;
+    int idx = 0;
+    for (TkWindow *childPtr = winPtr->childList; childPtr; childPtr = childPtr->nextPtr, idx++) {
+        Tk_Window childWin = (Tk_Window)childPtr;
+        TkAccessible *child_acc = GetAccessible(childWin);
+        if (!child_acc) {
+            Tcl_Interp *interp = Tk_Interp(tkwin);
+            if (!interp && parent_acc) interp = parent_acc->interp;
+            if (!interp) continue;
+            DEBUG_LOG("EnsureChildrenRegistered: found unregistered child %s under %s idx=%d - creating accessible",
+                      Tk_PathName(childWin), Tk_PathName(tkwin), idx);
+            child_acc = CreateAccessible(interp, childWin, Tk_PathName(childWin));
+            if (!child_acc) continue;
+            if (parent_acc) child_acc->parent = parent_acc;
+            RegisterAccessible(childWin, child_acc);
+            TkAccessible_RegisterEventHandlers(childWin, child_acc);
+            if (parent_acc) {
+                DEBUG_LOG("EnsureChildrenRegistered: emitting ChildrenChanged add for %s child %s idx %d",
+                          parent_acc->path ? parent_acc->path : "?", child_acc->path ? child_acc->path : "?", idx);
+                SendChildrenChanged(parent_acc, idx, child_acc, 1);
+                EmitObjectEventFull(child_acc, "PropertyChange", "accessible-name", 0, 0, NULL);
+            }
+        }
+        EnsureChildrenRegisteredRecursive(childWin, child_acc);
+    }
+}
+
+static void EnsureChildrenRegistered(Tk_Window tkwin)
+{
+    if (!tkwin) return;
+    TkAccessible *acc = GetAccessible(tkwin);
+    if (!acc) {
+        Tk_Window parent = Tk_Parent(tkwin);
+        if (parent) acc = GetAccessible(parent);
+    }
+    if (!acc) {
+        Tk_Window top = tkwin;
+        while (top && !Tk_IsTopLevel(top)) top = Tk_Parent(top);
+        if (top) acc = GetAccessible(top);
+    }
+    if (!acc) return;
+    Tk_Window scanWin = acc->tkwin ? acc->tkwin : tkwin;
+    DEBUG_LOG("EnsureChildrenRegistered: scanning %s (acc path=%s) for new children",
+              Tk_PathName(scanWin), acc->path ? acc->path : "?");
+    EnsureChildrenRegisteredRecursive(scanWin, acc);
+}
+
+/*
+ *----------------------------------------------------------------------
  * TkAccessible_RegisterEventHandlers --
  *
  *   Register X event handlers for a Tk window.
@@ -3496,8 +3653,8 @@ static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *ac
                           TkAccessible_FocusHandler, acc);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
                           TkAccessible_CreateHandler, acc);
-    Tk_CreateEventHandler(tkwin, ConfigureNotify,
-                          TkAccessible_ConfigureHandler, acc);
+	Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+						  TkAccessible_ConfigureHandler, acc);
 }
 
 /*
@@ -3597,10 +3754,17 @@ static void TkAccessible_FocusHandler(void *clientData,
     if (!acc || !acc->tkwin) return;
 
     int focused = (eventPtr->type == FocusIn);
+    DEBUG_LOG("TkAccessible_FocusHandler: path=%s eventPtr->type=%d focused=%d",
+              acc->path ? acc->path : "?", eventPtr->type, focused);
     acc->is_focused = focused;
 
     uint64_t old_states = acc->states;
     acc->states = ComputeStateForWidget(acc);
+
+    DEBUG_LOG("TkAccessible_FocusHandler: path=%s old_states=0x%llx new_states=0x%llx FOCUSED bit changed=%d",
+              acc->path ? acc->path : "?",
+              (unsigned long long)old_states, (unsigned long long)acc->states,
+              (old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED));
 
     if ((old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED)) {
         SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
@@ -3615,10 +3779,14 @@ static void TkAccessible_FocusHandler(void *clientData,
         }
     }
 
-    /* Notify parent about active descendant. */
-    if (focused && acc->parent) {
-        SendActiveDescendantChanged(acc->parent, acc);
-    }
+    /*
+     * NOTE: Do NOT emit ActiveDescendantChanged here for normal focus moves.
+     * Real X FocusIn/FocusOut between sibling widgets (e.g. toplevel -> .b)
+     * is already reported via Focus + StateChanged(focused). ActiveDescendantChanged
+     * is only valid for composite widgets where focus stays on the container
+     * but the active child changes (menus, listboxes via EmitFocusChangedCmd).
+     * Emitting it here was the spurious event seen in logs.
+     */
 }
 
 /*
@@ -3707,7 +3875,7 @@ static void TkAccessible_CreateHandler(void *clientData,
  */
 
 static void TkAccessible_ConfigureHandler(void *clientData,
-					  XEvent *eventPtr)
+                                          XEvent *eventPtr)
 {
     if (!eventPtr || eventPtr->type != ConfigureNotify) return;
 
@@ -3719,12 +3887,10 @@ static void TkAccessible_ConfigureHandler(void *clientData,
     TkAccessible *acc = GetAccessible(tkwin);
     if (!acc) return;
 
-    /* Update geometry. */
     acc->width = Tk_Width(tkwin);
     acc->height = Tk_Height(tkwin);
     Tk_GetRootCoords(tkwin, &acc->x, &acc->y);
 
-    /* Update visibility states. */
     uint64_t old_states = acc->states;
     acc->states = ComputeStateForWidget(acc);
 
@@ -3734,7 +3900,15 @@ static void TkAccessible_ConfigureHandler(void *clientData,
     if ((old_states & ATSPI_STATE_SHOWING) != (acc->states & ATSPI_STATE_SHOWING)) {
         SendStateChanged(acc, ATSPI_STATE_SHOWING, (acc->states & ATSPI_STATE_SHOWING) != 0);
     }
+    DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d - scanning for new children (hash table walk)",
+              acc->path?acc->path:"?", acc->width, acc->height);
+    EnsureChildrenRegistered(tkwin);
+
+    EmitObjectEventFull(acc, "PropertyChange", "accessible-name", 0, 0, NULL);
+    EmitObjectEventFull(acc, "PropertyChange", "accessible-description", 0, 0, NULL);
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -3785,78 +3959,129 @@ static sd_bus *ConnectToAtspiBus(void)
     const char *addr = NULL;
     int r;
 
+    DEBUG_LOG("ConnectToAtspiBus: enter - attempting to locate AT-SPI bus (NOT session bus)");
+
     /* Try env var first - set by at-spi-bus-launcher. */
     const char *env = getenv("AT_SPI_BUS");
     if (!env) env = getenv("AT_SPI_BUS_ADDRESS");
     if (env) {
+        DEBUG_LOG("ConnectToAtspiBus: trying env AT_SPI_BUS_ADDRESS=%s", env);
         r = sd_bus_new(&a11y_bus);
-        if (r >= 0) {
+        if (r < 0) {
+            DEBUG_LOG("ConnectToAtspiBus: sd_bus_new for env failed r=%d (%s)", r, strerror(-r));
+            a11y_bus = NULL;
+        } else {
             r = sd_bus_set_address(a11y_bus, env);
-            if (r >= 0) {
-                /*
-                 * Mark this as a real bus-client connection so sd-bus sends
-                 * the initial Hello() and obtains a unique name. Without
-                 * this, sd-bus treats the socket as a bare peer-to-peer
-                 * connection: Hello() never happens, and every later
-                 * sd_bus_emit_signal()/sd_bus_call_method() on this
-                 * connection fails with -ENOTCONN (-107).
-                 */
+            if (r < 0) {
+                DEBUG_LOG("ConnectToAtspiBus: sd_bus_set_address env failed r=%d (%s)", r, strerror(-r));
+            } else {
                 r = sd_bus_set_bus_client(a11y_bus, 1);
-            }
-            if (r >= 0) {
-                r = sd_bus_start(a11y_bus);
-                if (r >= 0) return a11y_bus;
+                if (r < 0) {
+                    DEBUG_LOG("ConnectToAtspiBus: sd_bus_set_bus_client env failed r=%d (%s)", r, strerror(-r));
+                } else {
+                    r = sd_bus_start(a11y_bus);
+                    if (r < 0) {
+                        DEBUG_LOG("ConnectToAtspiBus: sd_bus_start env failed r=%d (%s)", r, strerror(-r));
+                    } else {
+                        const char *unique = NULL;
+                        sd_bus_get_unique_name(a11y_bus, &unique);
+                        DEBUG_LOG("ConnectToAtspiBus: SUCCESS via env var, unique=%s", unique ? unique : "?");
+                        return a11y_bus;
+                    }
+                }
             }
             sd_bus_unref(a11y_bus);
+            a11y_bus = NULL;
         }
+    } else {
+        DEBUG_LOG("ConnectToAtspiBus: no AT_SPI_BUS env var set");
     }
 
     /* Ask org.a11y.Bus for its address. */
+    DEBUG_LOG("ConnectToAtspiBus: querying org.a11y.Bus.GetAddress on session bus");
     r = sd_bus_default_user(&session);
-    if (r >= 0) {
-        r = sd_bus_call_method(session,
-            "org.a11y.Bus",
-            "/org/a11y/bus",
-            "org.a11y.Bus",
-            "GetAddress",
-            &error,
-            &reply,
-            "");
-        if (r >= 0) {
-            r = sd_bus_message_read(reply, "s", &addr);
-            if (r >= 0 && addr) {
-                r = sd_bus_new(&a11y_bus);
-                if (r >= 0) {
-                    r = sd_bus_set_address(a11y_bus, addr);
-                    if (r >= 0) {
-                        /* See comment above: required for Hello()/unique name. */
-                        r = sd_bus_set_bus_client(a11y_bus, 1);
-                    }
-                    if (r >= 0) {
-                        r = sd_bus_start(a11y_bus);
-                        if (r >= 0) {
-                            sd_bus_message_unref(reply);
-                            sd_bus_error_free(&error);
-                            sd_bus_unref(session);
-                            return a11y_bus;
-                        }
-                    }
-                    sd_bus_unref(a11y_bus);
-                }
-            }
-        }
+    if (r < 0) {
+        DEBUG_LOG("ConnectToAtspiBus: sd_bus_default_user failed r=%d (%s)", r, strerror(-r));
+        return NULL;
+    }
+
+    r = sd_bus_call_method(session,
+        "org.a11y.Bus",
+        "/org/a11y/bus",
+        "org.a11y.Bus",
+        "GetAddress",
+        &error,
+        &reply,
+        "");
+    if (r < 0) {
+        DEBUG_LOG("ConnectToAtspiBus: GetAddress call failed r=%d (%s) err_name=%s err_msg=%s -- a11y bus not available (headless/VirtualBox without full session?)",
+                  r, strerror(-r),
+                  error.name ? error.name : "(none)",
+                  error.message ? error.message : "(none)");
         sd_bus_error_free(&error);
         if (reply) sd_bus_message_unref(reply);
-
-        /*
-	 * If we can't get a11y bus, fall back to session bus.
-         * Orca will still see us via registry on session bus in some setups.
-         */
-        sd_bus_ref(session);
-        return session;
+        sd_bus_unref(session);
+        DEBUG_LOG("ConnectToAtspiBus: FAIL - not falling back to plain session bus (Orca listens on a11y bus, not session bus). Accessibility will be disabled until a11y bus appears.");
+        return NULL;
     }
-    return NULL;
+
+    r = sd_bus_message_read(reply, "s", &addr);
+    if (r < 0 || !addr || addr[0] == '\0') {
+        DEBUG_LOG("ConnectToAtspiBus: GetAddress read addr failed r=%d addr=%s", r, addr ? addr : "(null)");
+        sd_bus_error_free(&error);
+        sd_bus_message_unref(reply);
+        sd_bus_unref(session);
+        return NULL;
+    }
+
+    DEBUG_LOG("ConnectToAtspiBus: GetAddress returned addr=%s", addr);
+    r = sd_bus_new(&a11y_bus);
+    if (r < 0) {
+        DEBUG_LOG("ConnectToAtspiBus: sd_bus_new for a11y addr failed r=%d", r);
+        sd_bus_error_free(&error);
+        sd_bus_message_unref(reply);
+        sd_bus_unref(session);
+        return NULL;
+    }
+    r = sd_bus_set_address(a11y_bus, addr);
+    if (r < 0) {
+        DEBUG_LOG("ConnectToAtspiBus: sd_bus_set_address a11y failed r=%d (%s)", r, strerror(-r));
+        sd_bus_unref(a11y_bus);
+        sd_bus_error_free(&error);
+        sd_bus_message_unref(reply);
+        sd_bus_unref(session);
+        return NULL;
+    }
+    r = sd_bus_set_bus_client(a11y_bus, 1);
+    if (r < 0) {
+        DEBUG_LOG("ConnectToAtspiBus: sd_bus_set_bus_client a11y failed r=%d", r);
+        sd_bus_unref(a11y_bus);
+        sd_bus_error_free(&error);
+        sd_bus_message_unref(reply);
+        sd_bus_unref(session);
+        return NULL;
+    }
+    r = sd_bus_start(a11y_bus);
+    if (r < 0) {
+        DEBUG_LOG("ConnectToAtspiBus: sd_bus_start a11y failed r=%d (%s)", r, strerror(-r));
+        sd_bus_unref(a11y_bus);
+        sd_bus_error_free(&error);
+        sd_bus_message_unref(reply);
+        sd_bus_unref(session);
+        return NULL;
+    }
+
+    {
+        const char *unique = NULL;
+        sd_bus_get_unique_name(a11y_bus, &unique);
+        DEBUG_LOG("ConnectToAtspiBus: SUCCESS via GetAddress, unique=%s addr=%s", unique ? unique : "?", addr);
+    }
+    sd_bus_message_unref(reply);
+    sd_bus_error_free(&error);
+    sd_bus_unref(session);
+    return a11y_bus;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -3899,6 +4124,11 @@ InitializeAtspiConnection(void)
     }
     atspi_conn->bus = bus;
     atspi_bus = bus;   /* expose for TkWaylandAtspiProcessEvents() / the notifier */
+    {
+        const char *unique = NULL;
+        sd_bus_get_unique_name(bus, &unique);
+        DEBUG_LOG("InitializeAtspiConnection: connected to AT-SPI bus unique=%s", unique ? unique : "?");
+    }
 
     /* Initialize the hash table early. */
     atspi_conn->tk_to_accessible_map = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
@@ -4193,7 +4423,8 @@ static int EmitFocusChangedCmd(
      * without a corresponding X event - most notably active menu entries,
      * which change via <<MenuSelect>>/arrow-key navigation rather than
      * real window focus. Report the focused state and, for a container
-     * like a menu, notify the parent of the new active descendant.
+     * like a menu, notify the parent of the new active descendant ONLY if
+     * parent is a composite container (menu, listbox, tree, etc.).
      */
     acc->is_focused = 1;
     acc->states |= ATSPI_STATE_FOCUSED;
@@ -4201,7 +4432,13 @@ static int EmitFocusChangedCmd(
     SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
 
     if (acc->parent) {
-        SendActiveDescendantChanged(acc->parent, acc);
+        int prow = acc->parent->role;
+        if (prow == ATSPI_ROLE_MENU || prow == ATSPI_ROLE_MENU_BAR ||
+            prow == ATSPI_ROLE_LIST_BOX || prow == ATSPI_ROLE_TREE ||
+            prow == ATSPI_ROLE_TREE_TABLE || prow == ATSPI_ROLE_COMBO_BOX ||
+            prow == ATSPI_ROLE_PANEL) {
+            SendActiveDescendantChanged(acc->parent, acc);
+        }
     }
 
     return TCL_OK;
