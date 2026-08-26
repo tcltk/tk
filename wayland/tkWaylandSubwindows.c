@@ -430,27 +430,24 @@ void updateClipRects(
         intersectRectWithRect(&effectiveBounds, extraRect);
     }
 
-    /* Ancestor clipping - useful for embedded windows. */
-    for (TkWindow *ancPtr = winPtr->parentPtr; ancPtr != NULL; ancPtr = ancPtr->parentPtr) {
-        if (Tk_IsTopLevel(ancPtr)) break;
-        clipRect ancBounds = getBounds(ancPtr, scale);
-        intersectRectWithRect(&effectiveBounds, ancBounds);
-        clipRect ancExtra = ancPtr->privatePtr->boundsRect;
-        if (ancExtra.w > 0 && ancExtra.h > 0) {
-            TkWindow *tmpPtr = ancPtr;
-            while (!Tk_IsTopLevel(tmpPtr)) {
-                ancExtra.x += tmpPtr->changes.x;
-                ancExtra.y += tmpPtr->changes.y;
-                tmpPtr = tmpPtr->parentPtr;
-            }
-            ancExtra.x *= scale;
-            ancExtra.y *= scale;
-            ancExtra.w *= scale;
-            ancExtra.h *= scale;
-            intersectRectWithRect(&effectiveBounds, ancExtra);
-        }
+    /*
+     * If the window is embedded (canvas/text window item or -container/-use),
+     * its visual container may differ from its logical parent. In that case
+     * we clip to both the logical parent and the embedding container if we
+     * can find it.
+     */
+    if (!Tk_IsTopLevel(winPtr) && winPtr->parentPtr != NULL) {
+        clipRect parentBounds = getBounds(winPtr->parentPtr, scale);
+        intersectRectWithRect(&effectiveBounds, parentBounds);
     }
     bounds = effectiveBounds;
+    DEBUG_LOG("effectiveBounds for %s: %.0fx%.0f+%.0f+%.0f (fb %dx%d)",
+        Tk_PathName(winPtr), bounds.w, bounds.h, bounds.x, bounds.y, fbWidth, fbHeight);
+    if (bounds.w <= 0 || bounds.h <= 0) {
+        DEBUG_LOG("COLLAPSED effectiveBounds for %s: %.0fx%.0f+%.0f+%.0f - using full bounds fallback",
+            Tk_PathName(winPtr), effectiveBounds.w, effectiveBounds.h, effectiveBounds.x, effectiveBounds.y);
+        bounds = getBounds(winPtr, scale);
+    }
     /* Add clipRects for children that overlap the window. */
     for (TkWindow *childPtr = winPtr->childList;
 	 childPtr != NULL;
