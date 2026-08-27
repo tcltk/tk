@@ -53,30 +53,129 @@
 #define ATSPI_DBUS_PATH_REGISTRY  "/org/a11y/atspi/registry"
 #define ATSPI_DBUS_PATH_ROOT      "/org/a11y/atspi/accessible/root"
 
-/* at-spi role constants. */
+/*
+ * at-spi role constants.
+ *
+ * IMPORTANT: these MUST match the real AtspiRole wire values from
+ * at-spi2-core's atspi-constants.h, since Role is sent over D-Bus as a
+ * plain uint32 and decoded by libatspi/Orca/Accerciser against that
+ * spec-frozen enum -- NOT against any local numbering scheme. Previously
+ * this block used a compact, hand-numbered 0..22 sequence that was
+ * internally self-consistent (matched GetRoleName()/roleMap()/every
+ * role == ATSPI_ROLE_X check in this file) but did not match the real
+ * enum at all, so every accessible was reported to AT-SPI as the wrong
+ * kind of object (toplevels as ALERT, buttons as ANIMATION, etc.),
+ * which is why Orca never announced anything and Accerciser's tree
+ * stopped short of the real widgets. Verify these against
+ * /usr/include/at-spi-2.0/atspi/atspi-constants.h or `pyatspi.ROLE_*`
+ * on the target system if you add any additional roles beyond this set.
+ */
+
+ 
 #define ATSPI_ROLE_INVALID           0
-#define ATSPI_ROLE_APPLICATION       1
-#define ATSPI_ROLE_WINDOW            2
-#define ATSPI_ROLE_PUSH_BUTTON       3
-#define ATSPI_ROLE_CHECK_BOX         4
-#define ATSPI_ROLE_RADIO_BUTTON      5
-#define ATSPI_ROLE_ENTRY             6
-#define ATSPI_ROLE_LABEL             7
-#define ATSPI_ROLE_LIST_BOX          8
-#define ATSPI_ROLE_COMBO_BOX         9
-#define ATSPI_ROLE_MENU              10
-#define ATSPI_ROLE_MENU_BAR          11
-#define ATSPI_ROLE_TREE              12
-#define ATSPI_ROLE_PAGE_TAB          13
-#define ATSPI_ROLE_PROGRESS_BAR      14
-#define ATSPI_ROLE_SLIDER            15
-#define ATSPI_ROLE_SPIN_BUTTON       16
-#define ATSPI_ROLE_TREE_TABLE        17
-#define ATSPI_ROLE_TEXT              18
-#define ATSPI_ROLE_PANEL             19
-#define ATSPI_ROLE_CANVAS            20
-#define ATSPI_ROLE_SCROLL_BAR        21
-#define ATSPI_ROLE_TOGGLE_BUTTON     22
+#define ATSPI_ROLE_ACCELERATOR_LABEL 1
+#define ATSPI_ROLE_ALERT             2
+#define ATSPI_ROLE_ANIMATION         3
+#define ATSPI_ROLE_ARROW             4
+#define ATSPI_ROLE_CALENDAR          5
+#define ATSPI_ROLE_CANVAS            6
+#define ATSPI_ROLE_CHECK_BOX         7
+#define ATSPI_ROLE_CHECK_MENU_ITEM   8
+#define ATSPI_ROLE_COLOR_CHOOSER     9
+#define ATSPI_ROLE_COLUMN_HEADER     10
+#define ATSPI_ROLE_COMBO_BOX         11
+#define ATSPI_ROLE_DATE_EDITOR       12
+#define ATSPI_ROLE_DESKTOP_ICON      13
+#define ATSPI_ROLE_DESKTOP_FRAME     14
+#define ATSPI_ROLE_DIAL              15
+#define ATSPI_ROLE_DIALOG            16
+#define ATSPI_ROLE_DIRECTORY_PANE    17
+#define ATSPI_ROLE_DRAWING_AREA      18
+#define ATSPI_ROLE_FILE_CHOOSER      19
+#define ATSPI_ROLE_FILLER            20
+#define ATSPI_ROLE_FONT_CHOOSER      21
+#define ATSPI_ROLE_FRAME             22
+#define ATSPI_ROLE_GLASS_PANE        23
+#define ATSPI_ROLE_HTML_CONTAINER    24
+#define ATSPI_ROLE_ICON              25
+#define ATSPI_ROLE_IMAGE             26
+#define ATSPI_ROLE_INTERNAL_FRAME    27
+#define ATSPI_ROLE_LABEL             28
+#define ATSPI_ROLE_LAYERED_PANE      29
+#define ATSPI_ROLE_LIST              30
+#define ATSPI_ROLE_LIST_ITEM         31
+#define ATSPI_ROLE_MENU              32
+#define ATSPI_ROLE_MENU_BAR          33
+#define ATSPI_ROLE_MENU_ITEM         34
+#define ATSPI_ROLE_OPTION_PANE       35
+#define ATSPI_ROLE_PAGE_TAB          36
+#define ATSPI_ROLE_PAGE_TAB_LIST     37
+#define ATSPI_ROLE_PANEL             38
+#define ATSPI_ROLE_PASSWORD_TEXT     39
+#define ATSPI_ROLE_POPUP_MENU        40
+#define ATSPI_ROLE_PROGRESS_BAR      41
+#define ATSPI_ROLE_PUSH_BUTTON       42
+#define ATSPI_ROLE_RADIO_BUTTON      43
+#define ATSPI_ROLE_RADIO_MENU_ITEM   44
+#define ATSPI_ROLE_ROOT_PANE         45
+#define ATSPI_ROLE_ROW_HEADER        46
+#define ATSPI_ROLE_SCROLL_BAR        47
+#define ATSPI_ROLE_SCROLL_PANE       48
+#define ATSPI_ROLE_SEPARATOR         49
+#define ATSPI_ROLE_SLIDER            50
+#define ATSPI_ROLE_SPLIT_PANE        51
+#define ATSPI_ROLE_SPIN_BUTTON       52
+#define ATSPI_ROLE_STATUS_BAR        53
+#define ATSPI_ROLE_TABLE             54
+#define ATSPI_ROLE_TABLE_CELL        55
+#define ATSPI_ROLE_TABLE_COLUMN_HEADER 56
+#define ATSPI_ROLE_TABLE_ROW_HEADER  57
+#define ATSPI_ROLE_TEAROFF_MENU_ITEM 58
+#define ATSPI_ROLE_TERMINAL          59
+#define ATSPI_ROLE_TEXT              60
+#define ATSPI_ROLE_TOGGLE_BUTTON     61
+#define ATSPI_ROLE_TOOL_BAR          62
+#define ATSPI_ROLE_TOOL_TIP          63
+#define ATSPI_ROLE_TREE              64
+#define ATSPI_ROLE_TREE_TABLE        65
+#define ATSPI_ROLE_UNKNOWN           66
+#define ATSPI_ROLE_VIEWPORT          67
+#define ATSPI_ROLE_WINDOW            68
+#define ATSPI_ROLE_HEADER            69
+#define ATSPI_ROLE_FOOTER            70
+#define ATSPI_ROLE_PARAGRAPH         71
+#define ATSPI_ROLE_RULER             72
+#define ATSPI_ROLE_APPLICATION       73
+#define ATSPI_ROLE_AUTOCOMPLETE      74
+#define ATSPI_ROLE_EDITBAR           75
+#define ATSPI_ROLE_EMBEDDED          76
+#define ATSPI_ROLE_ENTRY             77
+#define ATSPI_ROLE_CHART             78
+#define ATSPI_ROLE_CAPTION           79
+#define ATSPI_ROLE_DOCUMENT_FRAME    80
+#define ATSPI_ROLE_HEADING           81
+#define ATSPI_ROLE_PAGE              82
+#define ATSPI_ROLE_SECTION           83
+#define ATSPI_ROLE_REDUNDANT_OBJECT  84
+#define ATSPI_ROLE_FORM              85
+#define ATSPI_ROLE_LINK              86
+#define ATSPI_ROLE_INPUT_METHOD_WINDOW 87
+#define ATSPI_ROLE_TABLE_ROW         88
+#define ATSPI_ROLE_TREE_ITEM         89
+#define ATSPI_ROLE_DOCUMENT_SPREADSHEET 90
+#define ATSPI_ROLE_DOCUMENT_PRESENTATION 91
+#define ATSPI_ROLE_DOCUMENT_TEXT     92
+#define ATSPI_ROLE_DOCUMENT_WEB      93
+#define ATSPI_ROLE_DOCUMENT_EMAIL    94
+#define ATSPI_ROLE_COMMENT           95
+#define ATSPI_ROLE_LIST_BOX          96
+#define ATSPI_ROLE_GROUPING          97
+#define ATSPI_ROLE_IMAGE_MAP         98
+#define ATSPI_ROLE_NOTIFICATION      99
+#define ATSPI_ROLE_INFO_BAR          100
+/* Compatibility aliases for older code */
+#define ATSPI_ROLE_BUTTON            ATSPI_ROLE_PUSH_BUTTON
+#define ATSPI_ROLE_LIST_BOX_ALIAS    ATSPI_ROLE_LIST_BOX
 
 /* at-spi state constants (bit flags). */
 #define ATSPI_STATE_ENABLED          (1ULL << 0)
@@ -211,6 +310,7 @@ static void EnsureChildrenRegistered(Tk_Window tkwin);
 static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *parent_acc);
 static void UpdateFocusChain(Tk_Window focused);
 static char *Tcl_Strdup(const char *s);
+static void SetAccessibleFocus(TkAccessible *acc, int focused);
 
 /* D-Bus vtables and method handlers. */
 static const sd_bus_vtable accessible_vtable[];
@@ -338,7 +438,7 @@ static const AtspiRoleMap roleMap[] = {
     {"Spinbox",       ATSPI_ROLE_SPIN_BUTTON},
     {"Table",         ATSPI_ROLE_TREE_TABLE},
     {"Text",          ATSPI_ROLE_TEXT},
-    {"Toplevel",      ATSPI_ROLE_WINDOW},
+    {"Toplevel",      ATSPI_ROLE_FRAME},
     {"Frame",         ATSPI_ROLE_PANEL},
     {"Canvas",        ATSPI_ROLE_CANVAS},
     {"Scrollbar",     ATSPI_ROLE_SCROLL_BAR},
@@ -353,7 +453,9 @@ RoleToString(int role)
     switch (role) {
         case ATSPI_ROLE_INVALID: return "invalid";
         case ATSPI_ROLE_APPLICATION: return "application";
+        case ATSPI_ROLE_FRAME: return "frame";
         case ATSPI_ROLE_WINDOW: return "window";
+        case ATSPI_ROLE_DIALOG: return "dialog";
         case ATSPI_ROLE_PUSH_BUTTON: return "push_button";
         case ATSPI_ROLE_CHECK_BOX: return "check_box";
         case ATSPI_ROLE_RADIO_BUTTON: return "radio_button";
@@ -363,17 +465,24 @@ RoleToString(int role)
         case ATSPI_ROLE_COMBO_BOX: return "combo_box";
         case ATSPI_ROLE_MENU: return "menu";
         case ATSPI_ROLE_MENU_BAR: return "menu_bar";
+        case ATSPI_ROLE_MENU_ITEM: return "menu_item";
         case ATSPI_ROLE_TREE: return "tree";
+        case ATSPI_ROLE_TREE_ITEM: return "tree_item";
         case ATSPI_ROLE_PAGE_TAB: return "page_tab";
+        case ATSPI_ROLE_PAGE_TAB_LIST: return "page_tab_list";
         case ATSPI_ROLE_PROGRESS_BAR: return "progress_bar";
         case ATSPI_ROLE_SLIDER: return "slider";
         case ATSPI_ROLE_SPIN_BUTTON: return "spin_button";
         case ATSPI_ROLE_TREE_TABLE: return "tree_table";
+        case ATSPI_ROLE_TABLE: return "table";
+        case ATSPI_ROLE_TABLE_CELL: return "table_cell";
         case ATSPI_ROLE_TEXT: return "text";
         case ATSPI_ROLE_PANEL: return "panel";
         case ATSPI_ROLE_CANVAS: return "canvas";
         case ATSPI_ROLE_SCROLL_BAR: return "scroll_bar";
+        case ATSPI_ROLE_SCROLL_PANE: return "scroll_pane";
         case ATSPI_ROLE_TOGGLE_BUTTON: return "toggle_button";
+        case ATSPI_ROLE_SEPARATOR: return "separator";
         default: return "unknown";
     }
 }
@@ -1179,11 +1288,17 @@ dbus_prop_get_child_count(
  *   D-Bus method handler for GrabFocus on the Accessible interface.
  *   Attempts to set focus to the accessible object.
  *
+ *   Important: This method should NOT emit a focus event directly.
+ *   The Tk focus change (focus -force) will generate a FocusIn event
+ *   that triggers TkAccessible_FocusHandler, which is the authoritative
+ *   source of focus notifications.
+ *
  * Results:
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Changes focus to the specified widget and sends a focus event.
+ *   Changes focus to the specified widget. The focus event is emitted
+ *   by the resulting FocusIn handler.
  *----------------------------------------------------------------------
  */
 
@@ -1194,8 +1309,6 @@ dbus_method_grab_focus(
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
-    sd_bus_message *reply = NULL;
-    int r;
 
     if (!acc || !acc->tkwin || !acc->interp) {
         return sd_bus_reply_method_return(m, "b", 0);
@@ -1206,18 +1319,13 @@ dbus_method_grab_focus(
     snprintf(cmd, sizeof(cmd), "focus -force %s", Tk_PathName(acc->tkwin));
     Tcl_Eval(acc->interp, cmd);
 
-    /* Update internal state. */
-    acc->is_focused = 1;
-    acc->states |= ATSPI_STATE_FOCUSED;
+    /*
+     * Do NOT update is_focused or emit Focus here.
+     * The resulting Tk FocusIn event is the authoritative source of
+     * the accessibility focus notification.
+     */
 
-    /* Send focus event. */
-    SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
-
-    r = sd_bus_message_new_method_return(m, &reply);
-    if (r < 0) return r;
-
-    sd_bus_message_append(reply, "b", 1);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_reply_method_return(m, "b", 1);
 }
 
 /*
@@ -1260,16 +1368,22 @@ dbus_method_get_index_in_parent(
             i++;
         }
     } else if (acc->tkwin && acc->parent && acc->parent->tkwin) {
-        /* Real Tk child: compute index from parent's child list. */
+        /* Real Tk child: compute accessible-filtered index from parent's child list.
+         * Must match ChildCount/GetChildren which count only GetAccessible() children,
+         * otherwise Atspi clients (Orca/Accerciser) see index out of range and hang.
+         */
         TkWindow *childPtr;
-        int i = 0;
+        int acc_idx = 0;
         for (childPtr = ((TkWindow*)acc->parent->tkwin)->childList;
              childPtr != NULL;
-             childPtr = childPtr->nextPtr, i++) {
+             childPtr = childPtr->nextPtr) {
+            TkAccessible *sib = GetAccessible((Tk_Window)childPtr);
+            if (!sib) continue;
             if ((Tk_Window)childPtr == acc->tkwin) {
-                index = i;
+                index = acc_idx;
                 break;
             }
+            acc_idx++;
         }
     }
 
@@ -2459,10 +2573,14 @@ dbus_method_cache_get_items(
         }
         sd_bus_message_close_container(reply);
 
-        for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
-            TkAccessible *top=l->acc;
-            if (!top||!top->dbus_path) continue;
-            AppendCacheItem(reply, top, root, app_path, 0);
+        {
+            int toplevel_idx = 0;
+            for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
+                TkAccessible *top=l->acc;
+                if (!top||!top->dbus_path) continue;
+                AppendCacheItem(reply, top, root, app_path, toplevel_idx);
+                toplevel_idx++;
+            }
         }
     }
 
@@ -2955,6 +3073,38 @@ SendActiveDescendantChanged(
 
 /*
  *----------------------------------------------------------------------
+ * SetAccessibleFocus --
+ *
+ *   Set the focus state for an accessible object and emit the appropriate
+ *   events. This is the authoritative source for focus state changes.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Updates the object's focus state and emits D-Bus focus events.
+ *----------------------------------------------------------------------
+ */
+
+static void
+SetAccessibleFocus(
+    TkAccessible *acc,      /* Accessible object. */
+    int focused)            /* New focus state (0 or 1). */
+{
+    if (!acc) return;
+
+    uint64_t old_states = acc->states;
+    acc->is_focused = focused;
+    acc->states = ComputeStateForWidget(acc);
+
+    if ((old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED)) {
+        SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
+        SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * TkWaylandAtspiProcessEvents --
  *
  *   Drain pending AT-SPI D-Bus messages on atspi_bus. Called from the
@@ -3214,7 +3364,8 @@ UnregisterAccessible(
  *   None.
  *
  * Side effects:
- *   Adds the toplevel to the list and sends a window-create event.
+ *   Adds the toplevel to the list, emits ChildrenChanged event to the
+ *   application root, and sends a window-create event.
  *----------------------------------------------------------------------
  */
 
@@ -3224,15 +3375,32 @@ RegisterToplevel(
 {
     if (!acc) return;
 
+    /* Check if already registered. */
     AccessibleList *l = atspi_conn->toplevel_accessibles;
     while (l) {
         if (l->acc == acc) return;
         l = l->next;
     }
+
+    /* Add to list. */
     AccessibleList *node = (AccessibleList *)Tcl_Alloc(sizeof(AccessibleList));
     node->acc = acc;
     node->next = atspi_conn->toplevel_accessibles;
     atspi_conn->toplevel_accessibles = node;
+
+    /* Compute index in parent (application root). */
+    int idx = 0;
+    for (l = atspi_conn->toplevel_accessibles; l && l->acc != acc; l = l->next) {
+        idx++;
+    }
+
+    /* Set parent to root application. */
+    if (atspi_conn->root_accessible) {
+        acc->parent = atspi_conn->root_accessible;
+        /* Announce to the application root. */
+        SendChildrenChanged(atspi_conn->root_accessible, idx, acc, 1);
+    }
+
     SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_CREATE, NULL);
 }
 
@@ -3246,7 +3414,7 @@ RegisterToplevel(
  *   None.
  *
  * Side effects:
- *   Removes the toplevel from the list.
+ *   Removes the toplevel from the list and emits ChildrenChanged event.
  *----------------------------------------------------------------------
  */
 
@@ -3255,8 +3423,27 @@ UnregisterToplevel(
     TkAccessible *acc)      /* Toplevel accessible to unregister. */
 {
     if (!acc || !atspi_conn) return;
-    AccessibleList *prev = NULL;
+
+    /* Compute index before removal. */
+    int idx = 0;
     AccessibleList *l = atspi_conn->toplevel_accessibles;
+    while (l && l->acc != acc) {
+        l = l->next;
+        idx++;
+    }
+
+    if (l) {
+        /* Announce removal to parent. */
+        if (acc->parent) {
+            SendChildrenChanged(acc->parent, idx, acc, 0);
+        } else if (atspi_conn->root_accessible) {
+            SendChildrenChanged(atspi_conn->root_accessible, idx, acc, 0);
+        }
+    }
+
+    /* Remove from list. */
+    AccessibleList *prev = NULL;
+    l = atspi_conn->toplevel_accessibles;
     while (l) {
         if (l->acc == acc) {
             if (prev) prev->next = l->next;
@@ -3279,7 +3466,8 @@ UnregisterToplevel(
  *   None.
  *
  * Side effects:
- *   Creates TkAccessible objects for all widgets in the hierarchy.
+ *   Creates TkAccessible objects for all widgets in the hierarchy and
+ *   emits ChildrenChanged events.
  *----------------------------------------------------------------------
  */
 
@@ -3313,6 +3501,28 @@ RegisterWidgetRecursive(
 
         RegisterAccessible(tkwin, acc);
         TkAccessible_RegisterEventHandlers(tkwin, acc);
+
+        /* Emit ChildrenChanged to parent. */
+        if (acc->parent) {
+            /* Compute accessible-filtered index in parent. */
+            int idx = 0;
+            if (acc->parent->tkwin) {
+                TkWindow *childPtr;
+                int acc_idx = 0;
+                for (childPtr = ((TkWindow*)acc->parent->tkwin)->childList;
+                     childPtr != NULL;
+                     childPtr = childPtr->nextPtr) {
+                    TkAccessible *sib = GetAccessible((Tk_Window)childPtr);
+                    if (!sib) continue;
+                    if ((Tk_Window)childPtr == tkwin) {
+                        idx = acc_idx;
+                        break;
+                    }
+                    acc_idx++;
+                }
+            }
+            SendChildrenChanged(acc->parent, idx, acc, 1);
+        }
     }
 
     /* Recursively register children. */
@@ -3371,6 +3581,27 @@ EnsureAccessibleInHierarchy(
                 }
                 RegisterAccessible(win, acc);
                 TkAccessible_RegisterEventHandlers(win, acc);
+                
+                /* Emit ChildrenChanged to parent. */
+                if (acc->parent) {
+                    int idx = 0;
+                    if (acc->parent->tkwin) {
+                        TkWindow *childPtr;
+                        int acc_idx = 0;
+                        for (childPtr = ((TkWindow*)acc->parent->tkwin)->childList;
+                             childPtr != NULL;
+                             childPtr = childPtr->nextPtr) {
+                            TkAccessible *sib = GetAccessible((Tk_Window)childPtr);
+                            if (!sib) continue;
+                            if ((Tk_Window)childPtr == win) {
+                                idx = acc_idx;
+                                break;
+                            }
+                            acc_idx++;
+                        }
+                    }
+                    SendChildrenChanged(acc->parent, idx, acc, 1);
+                }
             } else {
                 DEBUG_LOG("EnsureAccessibleInHierarchy: CreateAccessible failed for %s", Tk_PathName(win));
             }
@@ -3388,7 +3619,7 @@ EnsureAccessibleInHierarchy(
  *   None.
  *
  * Side effects:
- *   Sends focus and activation events.
+ *   Sends focus events.
  *----------------------------------------------------------------------
  */
 
@@ -3406,16 +3637,7 @@ UpdateFocusChain(
     TkAccessible *focused_acc = GetAccessible(focused);
     if (!focused_acc) return;
 
-    /* Update focus state. */
-    focused_acc->is_focused = 1;
-    focused_acc->states |= ATSPI_STATE_FOCUSED;
-    SendStateChanged(focused_acc, ATSPI_STATE_FOCUSED, 1);
-    SendAtspiEvent(focused_acc, ATSPI_EVENT_FOCUS, NULL);
-
-    /* If this is a toplevel, emit window activation. */
-    if (Tk_IsTopLevel(focused)) {
-        SendAtspiEvent(focused_acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
-    }
+    SetAccessibleFocus(focused_acc, 1);
 }
 
 /*
@@ -3500,8 +3722,8 @@ GetRoleForWidget(
     }
 
     if (Tk_IsTopLevel(tkwin)) {
-        DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> window", Tk_PathName(tkwin));
-        return ATSPI_ROLE_WINDOW;
+        DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> frame", Tk_PathName(tkwin));
+        return ATSPI_ROLE_FRAME;
     }
 
     DEBUG_LOG("GetRoleForWidget: path=%s -> INVALID", Tk_PathName(tkwin));
@@ -3578,17 +3800,14 @@ ComputeStateForWidget(
         states |= ATSPI_STATE_FOCUSABLE;
     }
 
-    /* Focused.*/
+    /* Focused. */
     if (acc->is_focused) {
         states |= ATSPI_STATE_FOCUSED;
     }
 
     /*
      * Active applies to the toplevel window itself, not individual
-     * widgets -- it mirrors is_focused for a WINDOW-role accessible,
-     * which TkAccessible_FocusHandler already maintains from real X
-     * FocusIn/FocusOut on the toplevel (the same events that drive the
-     * window:activate/window:deactivate signals below).
+     * widgets -- it mirrors is_focused for a WINDOW-role accessible.
      */
     if (role == ATSPI_ROLE_WINDOW && acc->is_focused) {
         states |= ATSPI_STATE_ACTIVE;
@@ -4049,8 +4268,9 @@ TkAccessible_DestroyHandler(
     TkAccessible *acc = (TkAccessible *)clientData;
     if (!acc || !acc->tkwin) return;
 
-    /* Notify that this object is going away. */
-    if (acc->parent) {
+    /* Notify that this object is going away. Toplevels are handled
+     * by UnregisterToplevel to avoid duplicate root removes. */
+    if (acc->parent && !Tk_IsTopLevel(acc->tkwin)) {
         int idx = -1;
         if (acc->parent->children) {
             AccessibleList *l = acc->parent->children;
@@ -4064,19 +4284,32 @@ TkAccessible_DestroyHandler(
                 i++;
             }
         } else if (acc->parent->tkwin) {
-            /* Compute index from parent's child list. */
             TkWindow *childPtr;
-            int i = 0;
+            int acc_idx = 0;
             for (childPtr = ((TkWindow*)acc->parent->tkwin)->childList;
                  childPtr != NULL;
-                 childPtr = childPtr->nextPtr, i++) {
+                 childPtr = childPtr->nextPtr) {
+                TkAccessible *sib = GetAccessible((Tk_Window)childPtr);
+                if (!sib) continue;
                 if ((Tk_Window)childPtr == acc->tkwin) {
-                    idx = i;
+                    idx = acc_idx;
                     break;
                 }
+                acc_idx++;
+            }
+        } else if (atspi_conn && acc->parent == atspi_conn->root_accessible) {
+            AccessibleList *l = atspi_conn->toplevel_accessibles;
+            int i = 0;
+            while (l) {
+                if (l->acc == acc) { idx = i; break; }
+                l = l->next; i++;
             }
         }
-        SendChildrenChanged(acc->parent, idx, acc, 0);
+        if (idx >= 0) {
+            SendChildrenChanged(acc->parent, idx, acc, 0);
+        } else {
+            DEBUG_LOG("DestroyHandler: idx not found for %s, skipping", acc->path?acc->path:"?");
+        }
     }
 
     /*
@@ -4109,6 +4342,10 @@ TkAccessible_DestroyHandler(
  *
  *   X event handler for focus changes.
  *
+ *   This is the authoritative source for focus state changes from real
+ *   X focus events. It uses SetAccessibleFocus() to update state and
+ *   emit events.
+ *
  * Results:
  *   None.
  *
@@ -4128,40 +4365,55 @@ TkAccessible_FocusHandler(
     int focused = (eventPtr->type == FocusIn);
     DEBUG_LOG("TkAccessible_FocusHandler: path=%s eventPtr->type=%d focused=%d",
               acc->path ? acc->path : "?", eventPtr->type, focused);
-    acc->is_focused = focused;
 
-    uint64_t old_states = acc->states;
-    acc->states = ComputeStateForWidget(acc);
+    /* Use the authoritative focus setter. */
+    SetAccessibleFocus(acc, focused);
 
-    DEBUG_LOG("TkAccessible_FocusHandler: path=%s old_states=0x%llx new_states=0x%llx FOCUSED bit changed=%d",
-              acc->path ? acc->path : "?",
-              (unsigned long long)old_states, (unsigned long long)acc->states,
-              (old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED));
-
-    /* If we never successfully embedded with registry (desktop unknown), retry now - Orca may have started after us. */
-    if (!atspi_conn->is_embedded) {
-        DEBUG_LOG("TkAccessible_FocusHandler: not embedded, retrying EmbedWithRegistry");
-        EmbedWithRegistry();
-    }
-    if ((old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED)) {
-        SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
-        SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
-        if (focused && acc->parent) {
+    /* 
+     * ActiveDescendantChanged is ONLY for composite controls (menus, lists,
+     * trees, combo boxes). Ordinary widgets (buttons, entries) should NOT
+     * emit ActiveDescendantChanged to their window parent.
+     */
+    if (focused && acc->parent) {
+        int prow = acc->parent->role;
+        if (prow == ATSPI_ROLE_MENU ||
+            prow == ATSPI_ROLE_MENU_BAR ||
+            prow == ATSPI_ROLE_LIST_BOX ||
+            prow == ATSPI_ROLE_TREE ||
+            prow == ATSPI_ROLE_TREE_TABLE ||
+            prow == ATSPI_ROLE_COMBO_BOX) {
             DEBUG_LOG("TkAccessible_FocusHandler: ActiveDescendantChanged parent=%s child=%s",
                       acc->parent->path ? acc->parent->path : "?",
                       acc->path ? acc->path : "?");
             SendActiveDescendantChanged(acc->parent, acc);
         }
     }
-    /* Handle window activation. */
-    if (acc->role == ATSPI_ROLE_WINDOW) {
-        if ((old_states & ATSPI_STATE_ACTIVE) != (acc->states & ATSPI_STATE_ACTIVE)) {
-            SendStateChanged(acc, ATSPI_STATE_ACTIVE, (acc->states & ATSPI_STATE_ACTIVE) != 0);
+
+    /* If we never successfully embedded with registry, retry now. */
+    if (!atspi_conn->is_embedded) {
+        DEBUG_LOG("TkAccessible_FocusHandler: not embedded, retrying EmbedWithRegistry");
+        EmbedWithRegistry();
+    }
+
+    if (!atspi_conn->is_embedded) {
+        EmbedWithRegistry();
+    }
+
+    /* Orca requires window:activate for the toplevel. On X11 the WM gives
+     * you active, on Wayland it doesn't - we must emit it ourselves when
+     * a child gets focus. */
+    if (acc->tkwin) {
+        Tk_Window top = GetToplevelOfWidget(acc->tkwin);
+        if (top) {
+            TkAccessible *top_acc = GetAccessible(top);
+            if (top_acc && focused) {
+                top_acc->states |= ATSPI_STATE_ACTIVE;
+                SendAtspiEvent(top_acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
+            }
         }
-        if (focused) {
+        if (Tk_IsTopLevel(acc->tkwin) && focused) {
+            acc->states |= ATSPI_STATE_ACTIVE;
             SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
-        } else {
-            SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_DEACTIVATE, NULL);
         }
     }
 }
@@ -4176,7 +4428,8 @@ TkAccessible_FocusHandler(
  *   None.
  *
  * Side effects:
- *   Registers accessible objects for newly created windows.
+ *   Registers accessible objects for newly created windows and emits
+ *   ChildrenChanged events.
  *----------------------------------------------------------------------
  */
 
@@ -4225,13 +4478,32 @@ TkAccessible_CreateHandler(
             AccessibleList *l = parent_acc->children;
             while (l) { idx++; l = l->next; }
         } else if (parent_acc->tkwin) {
-            /* Compute index. */
+            /* Compute accessible-filtered index. */
             TkWindow *ptr;
-            int i = 0;
-            for (ptr = ((TkWindow*)parent_acc->tkwin)->childList; ptr; ptr = ptr->nextPtr, i++) {
+            int acc_idx = 0;
+            for (ptr = ((TkWindow*)parent_acc->tkwin)->childList; ptr; ptr = ptr->nextPtr) {
+                TkAccessible *sib = GetAccessible((Tk_Window)ptr);
+                if (!sib) {
+                    /* The new child itself isn't yet counted as accessible in the map
+                     * for this loop? It is, but we also count it if it is the target. */
+                    if ((Tk_Window)ptr == childWin) {
+                        idx = acc_idx;
+                        break;
+                    }
+                    continue;
+                }
                 if ((Tk_Window)ptr == childWin) {
-                    idx = i;
+                    idx = acc_idx;
                     break;
+                }
+                acc_idx++;
+            }
+            /* If not found via filtered count (new child not yet in map), fall back to raw filtered position */
+            if (idx == -1) {
+                int cnt = 0;
+                for (ptr = ((TkWindow*)parent_acc->tkwin)->childList; ptr; ptr = ptr->nextPtr) {
+                    if ((Tk_Window)ptr == childWin) { idx = cnt; break; }
+                    if (GetAccessible((Tk_Window)ptr) || (Tk_Window)ptr == childWin) cnt++;
                 }
             }
         }
@@ -4286,11 +4558,9 @@ TkAccessible_ConfigureHandler(
     }
 
     uint64_t old_states = acc->states;
+    int old_w = acc->width;
+    int old_h = acc->height;
     acc->states = ComputeStateForWidget(acc);
-
-    DEBUG_LOG("ConfigureHandler: path=%s xevent=%d old_states=0x%llx new_states=0x%llx",
-              acc->path?acc->path:"?", eventPtr->type,
-              (unsigned long long)old_states, (unsigned long long)acc->states);
 
     if ((old_states & ATSPI_STATE_VISIBLE) != (acc->states & ATSPI_STATE_VISIBLE)) {
         SendStateChanged(acc, ATSPI_STATE_VISIBLE, (acc->states & ATSPI_STATE_VISIBLE) != 0);
@@ -4300,12 +4570,12 @@ TkAccessible_ConfigureHandler(
     }
 
     if (eventPtr->type != ConfigureNotify) {
-        /* MapNotify/UnmapNotify: state change above is all there is to do. */
         return;
     }
 
-    /* Refresh cached name/description. */
-    {
+    /* Only rescan for new children if size actually changed - Wayland sends
+     * ConfigureNotify on focus changes with same size, spamming the log. */
+    if (acc->width != old_w || acc->height != old_h) {
         char *newName = GetNameForWidget(tkwin);
         if (newName) {
             if (acc->cached_name) Tcl_Free(acc->cached_name);
@@ -4316,11 +4586,11 @@ TkAccessible_ConfigureHandler(
             if (acc->cached_description) Tcl_Free(acc->cached_description);
             acc->cached_description = newDesc;
         }
+        DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning",
+                  acc->path?acc->path:"?", acc->width, acc->height,
+                  acc->cached_name?acc->cached_name:"(null)");
+        EnsureChildrenRegistered(tkwin);
     }
-    DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning for new children (hash table walk)",
-              acc->path?acc->path:"?", acc->width, acc->height,
-              acc->cached_name?acc->cached_name:"(null)");
-    EnsureChildrenRegistered(tkwin);
 }
 
 /*
@@ -4618,7 +4888,8 @@ InitializeAtspiConnection(void)
  *
  * Side effects:
  *   Stores the desktop reference in the global connection state.
- *   On success, sets atspi_conn->is_embedded to true.
+ *   On success, sets atspi_conn->is_embedded to true and re-emits
+ *   toplevel events.
  *----------------------------------------------------------------------
  */
 
@@ -4673,10 +4944,14 @@ EmbedWithRegistry(void)
     sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
 
-    /* If embed succeeded, re-emit toplevel creation events so the registry sees them. */
+    /* If embed succeeded, re-emit toplevel creation events with ChildrenChanged. */
     if (atspi_conn->is_embedded) {
-        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l != NULL; l = l->next) {
+        int idx = 0;
+        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l != NULL; l = l->next, idx++) {
             if (l->acc) {
+                /* Set parent to root. */
+                l->acc->parent = atspi_conn->root_accessible;
+                SendChildrenChanged(atspi_conn->root_accessible, idx, l->acc, 1);
                 SendAtspiEvent(l->acc, ATSPI_EVENT_WINDOW_CREATE, NULL);
                 EmitObjectEventFull(l->acc, "PropertyChange", "accessible-name", 0, 0, NULL);
             }
@@ -4791,6 +5066,10 @@ EmitSelectionChangedCmd(
  *   Tcl command implementation for ::tk::accessible::emit_focus_change.
  *   Emits a focus changed event for a widget.
  *
+ *   This command is used for logical Tk focus changes (e.g., menu
+ *   selection via arrow keys) that do not generate real X FocusIn events.
+ *   It uses SetAccessibleFocus() for consistent state management.
+ *
  * Results:
  *   Returns TCL_OK or TCL_ERROR.
  *
@@ -4826,24 +5105,24 @@ EmitFocusChangedCmd(
     /*
      * Real widget focus (e.g. Entry, Button) is already reported by
      * TkAccessible_FocusHandler off real X FocusIn/FocusOut events. This
-     * command exists for the cases the Tcl layer drives "focus" itself
+     * command exists for cases where the Tcl layer drives "focus" itself
      * without a corresponding X event - most notably active menu entries,
      * which change via <<MenuSelect>>/arrow-key navigation rather than
-     * real window focus. Report the focused state and, for a container
-     * like a menu, notify the parent of the new active descendant ONLY if
-     * parent is a composite container (menu, listbox, tree, etc.).
+     * real window focus.
+     *
+     * Use SetAccessibleFocus() for consistent state management.
      */
-    acc->is_focused = 1;
-    acc->states |= ATSPI_STATE_FOCUSED;
-    SendStateChanged(acc, ATSPI_STATE_FOCUSED, 1);
-    SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
+    SetAccessibleFocus(acc, 1);
 
+    /*
+     * For composite containers (menu, listbox, tree, etc.), notify the
+     * parent of the new active descendant.
+     */
     if (acc->parent) {
         int prow = acc->parent->role;
         if (prow == ATSPI_ROLE_MENU || prow == ATSPI_ROLE_MENU_BAR ||
             prow == ATSPI_ROLE_LIST_BOX || prow == ATSPI_ROLE_TREE ||
-            prow == ATSPI_ROLE_TREE_TABLE || prow == ATSPI_ROLE_COMBO_BOX ||
-            prow == ATSPI_ROLE_PANEL) {
+            prow == ATSPI_ROLE_TREE_TABLE || prow == ATSPI_ROLE_COMBO_BOX) {
             SendActiveDescendantChanged(acc->parent, acc);
         }
     }
@@ -4915,7 +5194,7 @@ TkWaylandAccessibility_Init(
 
         TkAccessible *main_acc = CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
         if (main_acc) {
-            main_acc->role = ATSPI_ROLE_WINDOW;
+            main_acc->role = ATSPI_ROLE_FRAME;
             RegisterAccessible(mainWin, main_acc);
             RegisterToplevel(main_acc);
             TkAccessible_RegisterEventHandlers(mainWin, main_acc);
