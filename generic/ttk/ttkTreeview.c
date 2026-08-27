@@ -12,6 +12,8 @@
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXPrivate.h"
+#elif defined(TK_USE_WAYLAND)
+#include "tkWaylandInt.h"
 #endif
 
 #define DEF_TREE_ROWS		"10"
@@ -2633,6 +2635,10 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 	    height += 4;
 	}
 
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
+	DrawTreeArea(tv, d);
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
+#elif defined(TK_USE_WAYLAND)
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
 	DrawTreeArea(tv, d);
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);

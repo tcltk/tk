@@ -49,6 +49,10 @@
 #define ATSPI_EVENT_INTERFACE     "org.a11y.atspi.Event"
 #define ATSPI_CACHE_INTERFACE     "org.a11y.atspi.Cache"
 
+/* at-spi D-Bus paths. */
+#define ATSPI_DBUS_PATH_REGISTRY  "/org/a11y/atspi/registry"
+#define ATSPI_DBUS_PATH_ROOT      "/org/a11y/atspi/accessible/root"
+
 /* at-spi role constants. */
 #define ATSPI_ROLE_INVALID           0
 #define ATSPI_ROLE_APPLICATION       1
@@ -149,7 +153,8 @@ struct TkAccessible {
      * D-Bus slots for this object (for cleanup). An accessible can have
      * several interfaces registered on the same dbus_path (Accessible,
      * Component, and one of Action/Value/Text/Selection depending on
-     * role, plus Cache/Application for the root). Every
+     * role, plus Application for the root). Cache lives at its own fixed
+     * path /org/a11y/atspi/cache, not on any accessible's path. Every
      * sd_bus_add_object_vtable() call must have its slot captured here so
      * FreeAccessible() can unref all of them -- a slot that is never
      * captured (NULL passed as the ret_slot argument) is "floating" and
@@ -175,6 +180,7 @@ typedef struct {
      */
     char *desktop_bus_name;
     char *desktop_path;
+    int is_embedded;                     /* true if Embed succeeded */
 } AtspiConnection;
 
 /*
@@ -754,6 +760,10 @@ dbus_method_get_children(
     sd_bus_message *reply = NULL;
     int r;
 
+    if (!acc || !atspi_conn) {
+        return sd_bus_reply_method_return(m, "a(so)", 0);
+    }
+
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
@@ -779,7 +789,7 @@ dbus_method_get_children(
                 AppendAccessibleRef(reply, child_acc->dbus_path);
             }
         }
-    } else {
+    } else if (acc->children) {
         /* Virtual children. */
         AccessibleList *l;
         for (l = acc->children; l != NULL; l = l->next) {
@@ -820,6 +830,10 @@ dbus_method_get_child_at_index(
     sd_bus_message *reply = NULL;
     int r;
 
+    if (!acc || !atspi_conn) {
+        return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
+    }
+
     r = sd_bus_message_read(m, "i", &index);
     if (r < 0) return r;
 
@@ -857,7 +871,7 @@ dbus_method_get_child_at_index(
         if (!childPtr) {
             AppendAccessibleRef(reply, NULL);
         }
-    } else {
+    } else if (acc->children) {
         AccessibleList *l = acc->children;
         int i = 0;
         while (l && i < index) {
@@ -870,6 +884,8 @@ dbus_method_get_child_at_index(
         } else {
             AppendAccessibleRef(reply, NULL);
         }
+    } else {
+        AppendAccessibleRef(reply, NULL);
     }
 
     return sd_bus_send(NULL, reply, NULL);
@@ -992,7 +1008,7 @@ dbus_method_get_role(
      * trailing a{sv} on Event signals it contributed to dbind getting
      * confused about message body layout.
      */
-    sd_bus_message_append(reply, "u", (uint32_t)acc->role);
+    sd_bus_message_append(reply, "u", (uint32_t)(acc ? acc->role : ATSPI_ROLE_INVALID));
     return sd_bus_send(NULL, reply, NULL);
 }
 
@@ -1103,7 +1119,7 @@ dbus_prop_get_parent(
 {
     TkAccessible *acc = (TkAccessible *)userdata;
 
-    if (!acc) {
+    if (!acc || !atspi_conn) {
         return AppendAccessibleRef(reply, NULL);
     }
 
@@ -1120,7 +1136,9 @@ dbus_prop_get_parent(
         return AppendAccessibleRef(reply, acc->parent->dbus_path);
     }
     /* For toplevel windows, parent is root application if not set */
-    if (Tk_IsTopLevel(acc->tkwin) && atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->dbus_path) {
+    if (acc->tkwin && Tk_IsTopLevel(acc->tkwin) &&
+        atspi_conn && atspi_conn->root_accessible &&
+        atspi_conn->root_accessible->dbus_path) {
         if (acc != atspi_conn->root_accessible) {
             return AppendAccessibleRef(reply, atspi_conn->root_accessible->dbus_path);
         }
@@ -1141,7 +1159,7 @@ dbus_prop_get_child_count(
 {
     TkAccessible *acc = (TkAccessible *)userdata;
     int cnt = 0;
-    if (!acc) {
+    if (!acc || !atspi_conn) {
         return sd_bus_message_append(reply, "i", 0);
     }
     if (acc == atspi_conn->root_accessible) {
@@ -1230,6 +1248,10 @@ dbus_method_get_index_in_parent(
     TkAccessible *acc = (TkAccessible *)userdata;
     int index = -1;
 
+    if (!acc || !atspi_conn) {
+        return sd_bus_reply_method_return(m, "i", -1);
+    }
+
     if (acc->parent && acc->parent->children) {
         AccessibleList *l = acc->parent->children;
         int i = 0;
@@ -1283,12 +1305,19 @@ dbus_method_get_interfaces(
     sd_bus_message *reply = NULL;
     int r;
 
+    if (!acc || !atspi_conn) {
+        return sd_bus_reply_method_return(m, "as", 0);
+    }
+
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
     sd_bus_message_open_container(reply, 'a', "s");
     sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
     sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
+    if (acc == atspi_conn->root_accessible) {
+        sd_bus_message_append(reply, "s", "org.a11y.atspi.Application");
+    }
 
     int role = acc->role;
     if (role == ATSPI_ROLE_PUSH_BUTTON || role == ATSPI_ROLE_CHECK_BOX ||
@@ -1339,7 +1368,7 @@ dbus_method_component_get_extents(
     r = sd_bus_message_read(m, "i", &coord_type);
     if (r < 0) return r;
 
-    if (!acc->tkwin) {
+    if (!acc || !acc->tkwin) {
         return sd_bus_reply_method_return(m, "(iiii)", 0, 0, 0, 0);
     }
 
@@ -1392,7 +1421,7 @@ dbus_method_component_get_position(
     r = sd_bus_message_read(m, "i", &coord_type);
     if (r < 0) return r;
 
-    if (!acc->tkwin) {
+    if (!acc || !acc->tkwin) {
         return sd_bus_reply_method_return(m, "(ii)", 0, 0);
     }
 
@@ -1437,7 +1466,7 @@ dbus_method_component_get_size(
 {
     TkAccessible *acc = (TkAccessible *)userdata;
 
-    if (!acc->tkwin) {
+    if (!acc || !acc->tkwin) {
         return sd_bus_reply_method_return(m, "(ii)", 0, 0);
     }
 
@@ -1474,7 +1503,7 @@ dbus_method_component_contains(
     r = sd_bus_message_read(m, "iii", &x, &y, &coord_type);
     if (r < 0) return r;
 
-    if (!acc->tkwin) {
+    if (!acc || !acc->tkwin) {
         return sd_bus_reply_method_return(m, "b", 0);
     }
 
@@ -1544,7 +1573,7 @@ dbus_method_action_get_n_actions(
     TkAccessible *acc = (TkAccessible *)userdata;
     int n_actions = 0;
 
-    if (acc->tkwin) {
+    if (acc && acc->tkwin) {
         int role = GetRoleForWidget(acc->tkwin);
         switch (role) {
             case ATSPI_ROLE_PUSH_BUTTON:
@@ -1588,7 +1617,7 @@ dbus_method_action_do_action(
     r = sd_bus_message_read(m, "i", &index);
     if (r < 0) return r;
 
-    if (!acc->tkwin || !acc->interp || index != 0) {
+    if (!acc || !acc->tkwin || !acc->interp || index != 0) {
         return sd_bus_reply_method_return(m, "b", 0);
     }
 
@@ -1648,7 +1677,7 @@ dbus_method_action_get_name(
     r = sd_bus_message_read(m, "i", &index);
     if (r < 0) return r;
 
-    if (index == 0 && acc->tkwin) {
+    if (acc && index == 0 && acc->tkwin) {
         int role = GetRoleForWidget(acc->tkwin);
         switch (role) {
             case ATSPI_ROLE_PUSH_BUTTON:
@@ -1736,7 +1765,7 @@ dbus_method_value_get_current(
 {
     TkAccessible *acc = (TkAccessible *)userdata;
 
-    if (!acc->tkwin) {
+    if (!acc || !acc->tkwin) {
         return sd_bus_reply_method_return(m, "d", 0.0);
     }
 
@@ -1771,7 +1800,7 @@ dbus_method_value_get_minimum(
     double min_val = 0.0;
     char cmd[256];
 
-    if (acc->tkwin && acc->interp) {
+    if (acc && acc->tkwin && acc->interp) {
         snprintf(cmd, sizeof(cmd), "%s cget -from", Tk_PathName(acc->tkwin));
         if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
             Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &min_val);
@@ -1806,7 +1835,7 @@ dbus_method_value_get_maximum(
     double max_val = 100.0;
     char cmd[256];
 
-    if (acc->tkwin && acc->interp) {
+    if (acc && acc->tkwin && acc->interp) {
         snprintf(cmd, sizeof(cmd), "%s cget -to", Tk_PathName(acc->tkwin));
         if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
             Tcl_GetDoubleFromObj(acc->interp, Tcl_GetObjResult(acc->interp), &max_val);
@@ -1844,7 +1873,7 @@ dbus_method_value_set_current(
     r = sd_bus_message_read(m, "d", &value);
     if (r < 0) return r;
 
-    if (!acc->tkwin || !acc->interp) {
+    if (!acc || !acc->tkwin || !acc->interp) {
         return sd_bus_reply_method_return(m, "b", 0);
     }
 
@@ -2288,12 +2317,23 @@ AppendCacheItem(
 
     sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
     AppendAccessibleRef(reply, acc->dbus_path);
+    /*
+     * Field order per the AT-SPI2 Cache spec is
+     * (accessible)(application)(parent)... -- application is app_path for
+     * every object in the tree; parent is this object's real immediate
+     * ancestor, falling back to app_path only when there isn't one (a
+     * control/window with no parent reports the parent application, per
+     * spec). Getting these two swapped doesn't just misreport metadata --
+     * for the root/toplevel item it puts the application in its own
+     * PARENT slot, i.e. a self-referential parent that libatspi refuses
+     * to build a tree through.
+     */
+    AppendAccessibleRef(reply, app_path);
     if (parent_acc && parent_acc->dbus_path) {
         AppendAccessibleRef(reply, parent_acc->dbus_path);
     } else {
         AppendAccessibleRef(reply, app_path);
     }
-    AppendAccessibleRef(reply, app_path);
 
     sd_bus_message_append(reply, "i", index_in_parent);
     sd_bus_message_append(reply, "i", childcnt);
@@ -2306,6 +2346,12 @@ AppendCacheItem(
         sd_bus_message_append(reply, "s", ATSPI_ACTION_INTERFACE);
     } else if (acc->role == ATSPI_ROLE_ENTRY || acc->role == ATSPI_ROLE_TEXT) {
         sd_bus_message_append(reply, "s", ATSPI_TEXT_INTERFACE);
+    } else if (acc->role == ATSPI_ROLE_SPIN_BUTTON || acc->role == ATSPI_ROLE_SLIDER ||
+               acc->role == ATSPI_ROLE_PROGRESS_BAR || acc->role == ATSPI_ROLE_SCROLL_BAR) {
+        sd_bus_message_append(reply, "s", ATSPI_VALUE_INTERFACE);
+    } else if (acc->role == ATSPI_ROLE_LIST_BOX || acc->role == ATSPI_ROLE_TREE ||
+               acc->role == ATSPI_ROLE_TREE_TABLE) {
+        sd_bus_message_append(reply, "s", ATSPI_SELECTION_INTERFACE);
     }
     sd_bus_message_close_container(reply);
 
@@ -2371,17 +2417,35 @@ dbus_method_cache_get_items(
 
         sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
         AppendAccessibleRef(reply, root->dbus_path);
-        /* parent = desktop, application = root (self) - was swapped before */
-        if (atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
-            sd_bus_message_append(reply, "(so)", atspi_conn->desktop_bus_name, atspi_conn->desktop_path);
-        } else {
-            sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
-        }
+        /*
+         * Field order per the AT-SPI2 Cache spec is
+         * (accessible)(application)(parent)... -- NOT (accessible)(parent)
+         * (application). This item describes the application object
+         * itself, so "application" is a self-reference (root is its own
+         * owner), and per spec an object with the APPLICATION role that
+         * has no real parent reports a null parent reference -- not the
+         * desktop. The previous ordering put desktop in the application
+         * slot and root itself in the parent slot, i.e. by position a
+         * client parses this as the application being its own parent,
+         * which is exactly the kind of cycle libatspi's tree-building
+         * refuses to walk into.
+         */
         AppendAccessibleRef(reply, root->dbus_path);
+        sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
         sd_bus_message_append(reply, "i", -1);
         sd_bus_message_append(reply, "i", topcount);
         sd_bus_message_open_container(reply, 'a', "s");
+        /*
+         * Must match exactly what RegisterDbusObject() registers on the
+         * root accessible: Accessible and Component unconditionally, plus
+         * Application since acc == atspi_conn->root_accessible. Cache is
+         * NOT a per-object interface - it lives at its own fixed path
+         * /org/a11y/atspi/cache and must not appear here, otherwise
+         * dbind (pyatspi/Orca) warns about unknown interface.
+         */
         sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
+        sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
+        sd_bus_message_append(reply, "s", "org.a11y.atspi.Application");
         sd_bus_message_close_container(reply);
         sd_bus_message_append(reply, "s", "");
         sd_bus_message_append(reply, "u", (uint32_t)ATSPI_ROLE_APPLICATION);
@@ -2507,8 +2571,10 @@ RegisterDbusObject(
                ATSPI_COMPONENT_INTERFACE, component_vtable);
 
     /*
-     * Register Cache and Application interfaces on root only - both are
-     * required for the registry/Orca to catalog us as an application.
+     * Register Application on the root and Cache at its own fixed path.
+     * Cache is NOT a per-object interface on the root's path - it lives at
+     * /org/a11y/atspi/cache. Application is required for Orca to catalog
+     * us as an application.
      */
     if (acc == atspi_conn->root_accessible) {
         ADD_VTABLE(atspi_conn->bus, "/org/a11y/atspi/cache",
@@ -3027,13 +3093,22 @@ FreeAccessible(
         return;
     }
 
-    /* Unregister D-Bus object (slot cleanup). */
+    /* Unregister D-Bus object - remove all vtables from the bus. */
     for (int i = 0; i < acc->n_vtable_slots; i++) {
         if (acc->vtable_slots[i]) {
             sd_bus_slot_unref(acc->vtable_slots[i]);
+            acc->vtable_slots[i] = NULL;
         }
     }
     acc->n_vtable_slots = 0;
+
+    /* Remove from the accessible map before freeing. */
+    if (acc->tkwin && atspi_conn && atspi_conn->tk_to_accessible_map) {
+        Tcl_HashEntry *entry = Tcl_FindHashEntry(atspi_conn->tk_to_accessible_map, (char *)acc->tkwin);
+        if (entry && (TkAccessible *)Tcl_GetHashValue(entry) == acc) {
+            Tcl_DeleteHashEntry(entry);
+        }
+    }
 
     if (acc->path) Tcl_Free(acc->path);
     if (acc->cached_name) Tcl_Free(acc->cached_name);
@@ -3522,6 +3597,17 @@ ComputeStateForWidget(
         states |= ATSPI_STATE_FOCUSED;
     }
 
+    /*
+     * Active applies to the toplevel window itself, not individual
+     * widgets -- it mirrors is_focused for a WINDOW-role accessible,
+     * which TkAccessible_FocusHandler already maintains from real X
+     * FocusIn/FocusOut on the toplevel (the same events that drive the
+     * window:activate/window:deactivate signals below).
+     */
+    if (role == ATSPI_ROLE_WINDOW && acc->is_focused) {
+        states |= ATSPI_STATE_ACTIVE;
+    }
+
     /* Visible/Showing. */
     if (Tk_IsMapped(acc->tkwin)) {
         states |= ATSPI_STATE_VISIBLE;
@@ -3705,9 +3791,44 @@ GetNameForWidget(
 
     DEBUG_LOG("GetNameForWidget: path=%s no name found (class=%s)", pathName, widgetClass ? widgetClass : "?");
 
-    /* For toplevel, use path as last resort */
+    /* For toplevel, try WM title, then Tk class, then path as last resort */
     if (Tk_IsTopLevel(tkwin)) {
+        /* Try wm title via Tcl eval - most reliable for toplevels.
+         * Get interp from the window itself; Tk_Interp returns the interp that created it.
+         */
+        Tcl_Interp *interp = NULL;
+        if (tkwin) {
+            interp = Tk_Interp((Tk_Window)tkwin);
+            if (!interp && atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->interp) {
+                interp = atspi_conn->root_accessible->interp;
+            }
+        }
+        if (interp) {
+            Tcl_Obj *cmd = Tcl_ObjPrintf("wm title %s", pathName);
+            Tcl_IncrRefCount(cmd);
+            if (Tcl_EvalObjEx(interp, cmd, 0) == TCL_OK) {
+                const char *t = Tcl_GetStringResult(interp);
+                if (t && t[0] && strcmp(t, ".") != 0) {
+                    char *ret = Tcl_Strdup(t);
+                    Tcl_DecrRefCount(cmd);
+                    Tcl_ResetResult(interp);
+                    DEBUG_LOG("GetNameForWidget: path=%s wm title='%s'", pathName, ret);
+                    return ret;
+                }
+                Tcl_ResetResult(interp);
+            }
+            Tcl_DecrRefCount(cmd);
+        }
+        /* Fallback to Tk class name */
+        if (widgetClass && widgetClass[0]) {
+            return Tcl_Strdup(widgetClass);
+        }
         const char *pn = Tk_PathName(tkwin);
+        if (pn && pn[0] && strcmp(pn, ".") != 0) return Tcl_Strdup(pn);
+        /* Last resort for "." root - use "Tk" */
+        if (pn && strcmp(pn, ".") == 0) {
+            return Tcl_Strdup("Tk Application");
+        }
         if (pn && pn[0]) return Tcl_Strdup(pn);
     }
     return NULL;
@@ -4032,8 +4153,8 @@ TkAccessible_FocusHandler(
               (old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED));
 
     /* If we never successfully embedded with registry (desktop unknown), retry now - Orca may have started after us */
-    if (!atspi_conn->desktop_bus_name || !atspi_conn->desktop_path) {
-        DEBUG_LOG("TkAccessible_FocusHandler: desktop unknown, retrying EmbedWithRegistry");
+    if (!atspi_conn->is_embedded) {
+        DEBUG_LOG("TkAccessible_FocusHandler: not embedded, retrying EmbedWithRegistry");
         EmbedWithRegistry();
     }
     if ((old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED)) {
@@ -4048,6 +4169,9 @@ TkAccessible_FocusHandler(
     }
     /* Handle window activation */
     if (acc->role == ATSPI_ROLE_WINDOW) {
+        if ((old_states & ATSPI_STATE_ACTIVE) != (acc->states & ATSPI_STATE_ACTIVE)) {
+            SendStateChanged(acc, ATSPI_STATE_ACTIVE, (acc->states & ATSPI_STATE_ACTIVE) != 0);
+        }
         if (focused) {
             SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
         } else {
@@ -4148,7 +4272,24 @@ TkAccessible_ConfigureHandler(
     void *clientData,       /* TkAccessible object pointer. */
     XEvent *eventPtr)       /* X event structure. */
 {
-    if (!eventPtr || eventPtr->type != ConfigureNotify) return;
+    /*
+     * This handler is registered under StructureNotifyMask, which
+     * delivers MapNotify and UnmapNotify in addition to ConfigureNotify.
+     * VISIBLE/SHOWING are derived purely from Tk_IsMapped(), so MapNotify/
+     * UnmapNotify MUST be handled here too -- otherwise a widget that is
+     * mapped without ever being reconfigured afterward (the common case)
+     * never has its VISIBLE/SHOWING bits recomputed, no StateChanged is
+     * ever sent for them, and Orca treats the widget/window as though it
+     * never became showing at all. Only ConfigureNotify carries new
+     * geometry, so the geometry/name-cache/child-scan work below stays
+     * gated to that event type specifically.
+     */
+    if (!eventPtr ||
+        (eventPtr->type != ConfigureNotify &&
+         eventPtr->type != MapNotify &&
+         eventPtr->type != UnmapNotify)) {
+        return;
+    }
 
     TkAccessible *handlerAcc = (TkAccessible *)clientData;
     if (!handlerAcc) return;
@@ -4158,12 +4299,18 @@ TkAccessible_ConfigureHandler(
     TkAccessible *acc = GetAccessible(tkwin);
     if (!acc) return;
 
-    acc->width = Tk_Width(tkwin);
-    acc->height = Tk_Height(tkwin);
-    Tk_GetRootCoords(tkwin, &acc->x, &acc->y);
+    if (eventPtr->type == ConfigureNotify) {
+        acc->width = Tk_Width(tkwin);
+        acc->height = Tk_Height(tkwin);
+        Tk_GetRootCoords(tkwin, &acc->x, &acc->y);
+    }
 
     uint64_t old_states = acc->states;
     acc->states = ComputeStateForWidget(acc);
+
+    DEBUG_LOG("ConfigureHandler: path=%s xevent=%d old_states=0x%llx new_states=0x%llx",
+              acc->path?acc->path:"?", eventPtr->type,
+              (unsigned long long)old_states, (unsigned long long)acc->states);
 
     if ((old_states & ATSPI_STATE_VISIBLE) != (acc->states & ATSPI_STATE_VISIBLE)) {
         SendStateChanged(acc, ATSPI_STATE_VISIBLE, (acc->states & ATSPI_STATE_VISIBLE) != 0);
@@ -4171,6 +4318,12 @@ TkAccessible_ConfigureHandler(
     if ((old_states & ATSPI_STATE_SHOWING) != (acc->states & ATSPI_STATE_SHOWING)) {
         SendStateChanged(acc, ATSPI_STATE_SHOWING, (acc->states & ATSPI_STATE_SHOWING) != 0);
     }
+
+    if (eventPtr->type != ConfigureNotify) {
+        /* MapNotify/UnmapNotify: state change above is all there is to do. */
+        return;
+    }
+
     /* Refresh cached name/description - old cache held generic 'Button' */
     {
         char *newName = GetNameForWidget(tkwin);
@@ -4484,6 +4637,9 @@ InitializeAtspiConnection(void)
     atspi_conn->root_accessible->path       = Tcl_Strdup("application");
     atspi_conn->root_accessible->dbus_path  = Tcl_Strdup("/org/a11y/atspi/accessible/root");
     atspi_conn->root_accessible->ref_count  = 1;
+    /* Give application a meaningful name for Orca - otherwise it appears nameless and may be filtered */
+    atspi_conn->root_accessible->cached_name = Tcl_Strdup("Tk");
+    atspi_conn->root_accessible->cached_description = Tcl_Strdup("Tk Application");
 
     RegisterDbusObject(atspi_conn->root_accessible);
 
@@ -4505,11 +4661,20 @@ InitializeAtspiConnection(void)
  *   Embed our application into the registry's accessible tree using
  *   the Socket.Embed method.
  *
+ *   The Socket.Embed method must be called on the AT-SPI Registry daemon,
+ *   specifically on its root object path. The destination service must be
+ *   "org.a11y.atspi.Registry" and the object path must be
+ *   "/org/a11y/atspi/accessible/root" (where the Socket interface is
+ *   actually implemented). Using the wrong destination or path causes
+ *   UnknownMethod errors and the application never becomes visible to
+ *   Orca or Accerciser.
+ *
  * Results:
  *   Returns true on success, false on failure.
  *
  * Side effects:
  *   Stores the desktop reference in the global connection state.
+ *   On success, sets atspi_conn->is_embedded to true.
  *----------------------------------------------------------------------
  */
 
@@ -4524,25 +4689,27 @@ EmbedWithRegistry(void)
     int r;
 
     if (!atspi_conn || !atspi_conn->bus || !atspi_conn->root_accessible) {
+        DEBUG_LOG("EmbedWithRegistry: no connection or root accessible");
         return false;
     }
 
     r = sd_bus_call_method(atspi_conn->bus,
-        "org.a11y.atspi.Registry",
-        "/org/a11y/atspi/accessible/root",
-        "org.a11y.atspi.Socket",
-        "Embed",
+        "org.a11y.atspi.Registry",          /* Correct destination */
+        ATSPI_DBUS_PATH_ROOT,               /* "/org/a11y/atspi/accessible/root" */
+        "org.a11y.atspi.Socket",            /* Interface */
+        "Embed",                            /* Method */
         &error,
         &reply,
         "(so)", SelfBusName(), atspi_conn->root_accessible->dbus_path);
 
     if (r < 0) {
-        /*
-         * Registry may not be up yet; not fatal - Orca can still discover
-         * us later via broadcast events once it does start.
-         */
+        DEBUG_LOG("EmbedWithRegistry: Embed failed r=%d (%s) err_name=%s err_msg=%s",
+                  r, strerror(-r),
+                  error.name ? error.name : "(none)",
+                  error.message ? error.message : "(none)");
         sd_bus_error_free(&error);
         if (reply) sd_bus_message_unref(reply);
+        atspi_conn->is_embedded = 0;
         return false;
     }
 
@@ -4552,14 +4719,27 @@ EmbedWithRegistry(void)
         if (atspi_conn->desktop_path) Tcl_Free(atspi_conn->desktop_path);
         atspi_conn->desktop_bus_name = Tcl_Strdup(desktop_name);
         atspi_conn->desktop_path = Tcl_Strdup(desktop_path);
+        atspi_conn->is_embedded = 1;
         DEBUG_LOG("EmbedWithRegistry: SUCCESS desktop=%s %s", desktop_name, desktop_path);
     } else {
         DEBUG_LOG("EmbedWithRegistry: read reply failed r=%d", r);
+        atspi_conn->is_embedded = 0;
     }
 
     sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
-    return true;
+
+    /* If embed succeeded, re-emit toplevel creation events so the registry sees them. */
+    if (atspi_conn->is_embedded) {
+        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l != NULL; l = l->next) {
+            if (l->acc) {
+                SendAtspiEvent(l->acc, ATSPI_EVENT_WINDOW_CREATE, NULL);
+                EmitObjectEventFull(l->acc, "PropertyChange", "accessible-name", 0, 0, NULL);
+            }
+        }
+    }
+
+    return atspi_conn->is_embedded;
 }
 
 /*

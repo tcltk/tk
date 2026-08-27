@@ -1082,13 +1082,12 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
     DEBUG_LOG("Framebuffer size is now %d x %d", fbWidth, fbHeight);
     /* Bind our backing store framebuffer. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+    nvgluBindFramebuffer(toplevelPtr->privatePtr->fb);
 
     DEBUG_LOG("EndDraw: setting viewport to %dx%d", fbWidth, fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
     /* Check FBO completeness (for now). */
-
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
 
