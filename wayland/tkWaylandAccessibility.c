@@ -301,7 +301,7 @@ static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *ac
 /* Tcl event loop integration. */
 /*
  * TkWaylandAtspiProcessEvents is exported (not static) -- see its
- * definition below -- so tkWaylandNotify.c's check proc can drain
+ * definition below -- so tkWaylandNotify.c's CheckProc can drain
  * atspi_bus on the same cadence it already uses for ibus_bus.
  */
 void TkWaylandAtspiProcessEvents(void);
@@ -385,8 +385,7 @@ extern Tcl_HashTable *TkAccessibilityObject;  /* from tkAccessibility.c */
 /*
  * Non-static handle to the AT-SPI bus, mirroring ibus_bus in tkWaylandKey.c.
  * The Wayland notifier (tkWaylandNotify.c) drains this via
- * TkWaylandAtspiProcessEvents() on its own check-proc cadence instead of
- * this file maintaining a separate Tcl_CreateEventSource/file handler.
+ * TkWaylandAtspiProcessEvents() on its own check-proc cadence.
  */
 sd_bus *atspi_bus = NULL;
 
@@ -407,15 +406,8 @@ static int atspi_draining = 0;
  * org.a11y.atspi.Accessible interface.
  *
  * Name, Description, and Parent are PROPERTIES per at-spi2-core's
- * Accessible.xml, not methods -- Orca/pyatspi read them via
- * org.freedesktop.DBus.Properties.Get/GetAll, and never had a "GetName",
- * "GetDescription", or "GetParent" method to call. State is read via a
- * method called GetState (singular) returning "au" (two packed uint32s),
- * not "GetStates" returning a single "t". With the old names/signatures
- * every one of those lookups failed on the client side, so Orca could
- * never learn a widget's actual name, description, or state -- only
- * whatever it could scrape from window-level info, hence generic
- * speech-dispatcher output instead of real per-widget announcements.
+ * Accessible.xml.  State is read via a method called GetState (singular)
+ * returning "au" (two packed uint32s).
  */
 static const sd_bus_vtable accessible_vtable[] = {
     SD_BUS_VTABLE_START(0),
@@ -854,7 +846,10 @@ dbus_method_get_child_at_index(
             AppendAccessibleRef(reply, NULL);
         }
     } else if (acc->tkwin && !acc->is_virtual) {
-        /* Count only accessible children, skipping internal Tk windows */
+        /*
+	 * Count only accessible children, skipping non-Tk windows like
+	 *  listbox rows.
+	 */
         TkWindow *childPtr;
         int acc_idx = 0;
         for (childPtr = ((TkWindow*)acc->tkwin)->childList;
@@ -958,7 +953,7 @@ dbus_method_get_state(
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
-    /* Use cached states to avoid Tcl_Eval re-entrancy from D-Bus thread */
+    /* Use cached states to avoid Tcl_Eval re-entrancy from D-Bus thread. */
     uint64_t states = acc ? acc->states : 0;
     uint32_t lo = (uint32_t)(states & 0xffffffffu);
     uint32_t hi = (uint32_t)((states >> 32) & 0xffffffffu);
@@ -998,16 +993,6 @@ dbus_method_get_role(
 
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
-
-    /*
-     * AT-SPI's Accessible.GetRole is declared "u" (uint32) in
-     * at-spi2-core/xml/Accessible.xml, not "i". Sending a signed "i"
-     * here made Orca's dbind log a signature mismatch on every call
-     * (dbind-WARNING: Call to "GetRole" returned signature i; expected
-     * u) -- harmless on its own, but combined with the missing
-     * trailing a{sv} on Event signals it contributed to dbind getting
-     * confused about message body layout.
-     */
     sd_bus_message_append(reply, "u", (uint32_t)(acc ? acc->role : ATSPI_ROLE_INVALID));
     return sd_bus_send(NULL, reply, NULL);
 }
@@ -1089,8 +1074,6 @@ dbus_prop_get_description(
     return sd_bus_message_append(reply, "s", desc);
 }
 
-
-
 /*
  *----------------------------------------------------------------------
  * dbus_prop_get_parent --
@@ -1135,7 +1118,7 @@ dbus_prop_get_parent(
         }
         return AppendAccessibleRef(reply, acc->parent->dbus_path);
     }
-    /* For toplevel windows, parent is root application if not set */
+    /* For toplevel windows, parent is root application if not set. */
     if (acc->tkwin && Tk_IsTopLevel(acc->tkwin) &&
         atspi_conn && atspi_conn->root_accessible &&
         atspi_conn->root_accessible->dbus_path) {
@@ -1146,6 +1129,21 @@ dbus_prop_get_parent(
     return AppendAccessibleRef(reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_prop_get_child_count --
+ *
+ *   D-Bus property getter for ChildCount on the Accessible interface.
+ *   ChildCount is a property per the AT-SPI2 spec, not a method.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Appends an integer count of child accessible objects to the D-Bus
+ *   reply message.
+ *----------------------------------------------------------------------
+ */
 
 static int
 dbus_prop_get_child_count(
@@ -1173,8 +1171,6 @@ dbus_prop_get_child_count(
     }
     return sd_bus_message_append(reply, "i", cnt);
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -1917,7 +1913,7 @@ dbus_method_text_get_text(
 
     char cmd[512];
     const char *path = Tk_PathName(acc->tkwin);
-    /* Try to get full text */
+    /* Try to get full text. */
     snprintf(cmd, sizeof(cmd), "%s get", path);
     if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
         /* Try text widget: get 1.0 end-1c */
@@ -2099,14 +2095,14 @@ dbus_method_selection_get_selection(
     if (!acc || !acc->tkwin) {
         return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
     }
-    /* For listbox/tree, children are items; return child at selection index */
+    /* For listbox/tree, children are items; return child at selection index. */
     AccessibleList *l = acc->children;
     int i = 0;
     while (l && i < idx) { l = l->next; i++; }
     if (l && l->acc && l->acc->dbus_path) {
         return sd_bus_reply_method_return(m, "(so)", SelfBusName(), l->acc->dbus_path);
     }
-    /* Fallback: if real widget, try to map curselection index to child */
+    /* Fallback: if real widget, try to map curselection index to child. */
     if (acc->interp) {
         char cmd[512];
         snprintf(cmd, sizeof(cmd), "%s curselection", Tk_PathName(acc->tkwin));
@@ -2295,7 +2291,6 @@ AppendCacheItem(
 {
     if (!acc || !acc->dbus_path) return;
 
-    /* dbind self-parent guard - this is the warning you saw */
     if (parent_acc && parent_acc == acc) {
         DEBUG_LOG("AppendCacheItem: SELF-PARENT DETECTED for %s, fixing to app_path", acc->dbus_path);
         parent_acc = NULL;
@@ -2318,15 +2313,10 @@ AppendCacheItem(
     sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
     AppendAccessibleRef(reply, acc->dbus_path);
     /*
-     * Field order per the AT-SPI2 Cache spec is
-     * (accessible)(application)(parent)... -- application is app_path for
+     * Field order per the AT-SPI2 Cache spec is (accessible)(application)
+     * (parent)... -- application is app_path for
      * every object in the tree; parent is this object's real immediate
-     * ancestor, falling back to app_path only when there isn't one (a
-     * control/window with no parent reports the parent application, per
-     * spec). Getting these two swapped doesn't just misreport metadata --
-     * for the root/toplevel item it puts the application in its own
-     * PARENT slot, i.e. a self-referential parent that libatspi refuses
-     * to build a tree through.
+     * ancestor, falling back to app_path only when there isn't one.
      */
     AppendAccessibleRef(reply, app_path);
     if (parent_acc && parent_acc->dbus_path) {
@@ -2388,6 +2378,24 @@ AppendCacheItem(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_cache_get_items --
+ *
+ *   D-Bus method handler for GetItems on the Cache interface.
+ *   Returns a list of all accessible objects in the cache tree
+ *   including the root application and all toplevel windows.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Appends an array of cache items (each containing accessible reference,
+ *   application, parent, child count, index, interfaces, name, role, states)
+ *   to the D-Bus reply message.
+ *----------------------------------------------------------------------
+ */
+
 static int
 dbus_method_cache_get_items(
     sd_bus_message *m,      /* D-Bus method call message. */
@@ -2419,17 +2427,8 @@ dbus_method_cache_get_items(
         AppendAccessibleRef(reply, root->dbus_path);
         /*
          * Field order per the AT-SPI2 Cache spec is
-         * (accessible)(application)(parent)... -- NOT (accessible)(parent)
-         * (application). This item describes the application object
-         * itself, so "application" is a self-reference (root is its own
-         * owner), and per spec an object with the APPLICATION role that
-         * has no real parent reports a null parent reference -- not the
-         * desktop. The previous ordering put desktop in the application
-         * slot and root itself in the parent slot, i.e. by position a
-         * client parses this as the application being its own parent,
-         * which is exactly the kind of cycle libatspi's tree-building
-         * refuses to walk into.
-         */
+         * (accessible)(application)(parent).
+	 */
         AppendAccessibleRef(reply, root->dbus_path);
         sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
         sd_bus_message_append(reply, "i", -1);
@@ -2440,8 +2439,7 @@ dbus_method_cache_get_items(
          * root accessible: Accessible and Component unconditionally, plus
          * Application since acc == atspi_conn->root_accessible. Cache is
          * NOT a per-object interface - it lives at its own fixed path
-         * /org/a11y/atspi/cache and must not appear here, otherwise
-         * dbind (pyatspi/Orca) warns about unknown interface.
+         * /org/a11y/atspi/cache and must not appear here.
          */
         sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
         sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
@@ -2511,7 +2509,7 @@ RegisterDbusObject(
         char path[256];
         if (acc->tkwin && Tk_IsTopLevel(acc->tkwin)) {
             const char *pn = Tk_PathName(acc->tkwin);
-            /* "." toplevel would become empty - use "main" */
+            /* "." toplevel would become empty - use "main". */
             if (!pn || pn[0] == '\0' || (pn[0] == '.' && pn[1] == '\0')) {
                 snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/toplevel%d", counter++);
             } else {
@@ -2520,14 +2518,14 @@ RegisterDbusObject(
         } else {
             snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/obj%d", counter++);
         }
-        /* Sanitize for D-Bus: replace any char not [A-Za-z0-9_/] with '_' */
+        /* Sanitize for D-Bus: replace any char not [A-Za-z0-9_/] with '_'. */
         for (char *p = path; *p; p++) {
             if (*p == '.') *p = '_';
             else if (!((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9') || *p == '/' || *p == '_')) {
                 *p = '_';
             }
         }
-        /* Collapse "//" and ensure no trailing slash */
+        /* Collapse "//" and ensure no trailing slash. */
         acc->dbus_path = Tcl_Strdup(path);
         DEBUG_LOG("RegisterDbusObject: generated dbus_path=%s for widget path=%s",
                   acc->dbus_path, acc->path ? acc->path : "?");
@@ -2649,10 +2647,7 @@ EmitObjectEventFull(
     if (!member || !type) return;
 
     /*
-     * (so) = (bus-name, object-path). The related object, if any, is one
-     * of ours, so its bus-name half is always our own unique name; the
-     * canonical "no related object" reference uses an empty name and the
-     * well-known null path (a bare "" is not a legal object path).
+     * (so) = (bus-name, object-path).
      */
     const char *rel_name = "";
     const char *rel_path = "/org/a11y/atspi/null";
@@ -2664,13 +2659,7 @@ EmitObjectEventFull(
     /*
      * AT-SPI Event.Object signature is siiva{sv}, where v = (so) and the
      * trailing a{sv} is a (normally empty) properties dict. This matches
-     * current at-spi2-core/xml/Event.xml. Earlier this used just "siiv"
-     * via the sd_bus_emit_signal() vararg convenience, which sends a
-     * 4-field body; Orca's dbind introspection expects 5 fields and,
-     * finding none, walks off the end of the message body and aborts
-     * ("You can't recurse into an empty array or off the end of a
-     * message body"). Build the message by hand so we can append the
-     * (empty) trailing a{sv}.
+     * current at-spi2-core/xml/Event.xml.
      */
     sd_bus_message *m = NULL;
     int r = sd_bus_message_new_signal(atspi_conn->bus, &m,
@@ -2733,7 +2722,7 @@ EmitWindowEvent(
     if (!acc || !acc->dbus_path) return;
     if (!member || !type) return;
 
-    /* Same siiva{sv} shape as EmitObjectEventFull -- see comment there. */
+    /* Same siiva{sv} shape as EmitObjectEventFull.  */
     sd_bus_message *m = NULL;
     int r = sd_bus_message_new_signal(atspi_conn->bus, &m,
                                       acc->dbus_path,
@@ -2971,10 +2960,7 @@ SendActiveDescendantChanged(
  *   Drain pending AT-SPI D-Bus messages on atspi_bus. Called from the
  *   Wayland notifier's shared check proc (TkWaylandCheckProc in
  *   tkWaylandNotify.c) on every event-loop pass, exactly the way
- *   ibus_bus is drained in tkWaylandKey.c -- this file no longer
- *   maintains its own Tcl_CreateEventSource/file handler for pumping
- *   the bus, since that mechanism was not reliably getting installed
- *   (the root cause of AT-SPI signal emission failing with ENOTCONN).
+ *   ibus_bus is drained in tkWaylandKey.c.
  *
  *   Guarded against re-entrancy: a dispatched AT-SPI method call (e.g.
  *   Orca invoking GrabFocus on one of our accessible objects) runs from
@@ -3543,7 +3529,7 @@ ComputeStateForWidget(
     uint64_t states = 0;
     if (!acc || !acc->tkwin) return states;
 
-    /* Check explicit disabled state */
+    /* Check explicit disabled state. */
     int is_disabled = 0;
     if (TkAccessibilityObject) {
         Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
@@ -3576,7 +3562,7 @@ ComputeStateForWidget(
         states |= ATSPI_STATE_SENSITIVE;
     }
 
-    /* Focusable based on role */
+    /* Focusable based on role. */
     int role = acc->role;
     if (role == ATSPI_ROLE_PUSH_BUTTON ||
         role == ATSPI_ROLE_CHECK_BOX ||
@@ -3627,7 +3613,7 @@ ComputeStateForWidget(
         }
     }
 
-    /* Checked state */
+    /* Checked state. */
     if (role == ATSPI_ROLE_CHECK_BOX ||
         role == ATSPI_ROLE_RADIO_BUTTON ||
         role == ATSPI_ROLE_TOGGLE_BUTTON) {
@@ -3722,7 +3708,7 @@ GetNameForWidget(
         return 0;
     }
 
-    /* 1. Try widget's -text / -label first - this is what Orca actually needs for buttons */
+    /* Try widget's -text / -label first - this is what Orca actually needs for buttons. */
     char *s = NULL;
     s = TryCgetString(tkwin, "-text");
     if (s && s[0]) {
@@ -3730,7 +3716,7 @@ GetNameForWidget(
             DEBUG_LOG("GetNameForWidget: path=%s -text='%s' (primary)", pathName, s);
             return s;
         }
-        /* generic text like 'Button' - drop and continue */
+        /* Generic text like 'Button' - drop and continue. */
         DEBUG_LOG("GetNameForWidget: path=%s -text='%s' ignored as generic", pathName, s);
         Tcl_Free(s);
     } else if (s) { Tcl_Free(s); }
@@ -3739,7 +3725,7 @@ GetNameForWidget(
     if (s && s[0] && !IsGenericName(s)) { DEBUG_LOG("GetNameForWidget: path=%s -label='%s'", pathName, s); return s; }
     if (s) Tcl_Free(s);
 
-    /* 2. Explicit accessibility name, but ignore if generic */
+    /* Explicit accessibility name, but ignore if generic. */
     if (TkAccessibilityObject) {
         Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
         if (hPtr) {
@@ -3758,7 +3744,7 @@ GetNameForWidget(
                         }
                     }
                 }
-                /* 3. Fallback: if description holds the real label (bug in Tcl a11y layer), use it */
+                /* Fallback: if description holds the real label,  use it. */
                 Tcl_HashEntry *descEntry = Tcl_FindHashEntry(attrs, "description");
                 if (descEntry) {
                     Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(descEntry);
@@ -3781,7 +3767,7 @@ GetNameForWidget(
         if (v) Tcl_Free(v);
     }
 
-    /* 4. Other fallbacks */
+    /* Other fallbacks. */
     s = TryCgetString(tkwin, "-title");
     if (s && s[0]) { DEBUG_LOG("GetNameForWidget: path=%s -title='%s'", pathName, s); return s; }
     if (s) Tcl_Free(s);
@@ -3791,7 +3777,7 @@ GetNameForWidget(
 
     DEBUG_LOG("GetNameForWidget: path=%s no name found (class=%s)", pathName, widgetClass ? widgetClass : "?");
 
-    /* For toplevel, try WM title, then Tk class, then path as last resort */
+    /* For toplevel, try WM title, then Tk class, then path as last resort. */
     if (Tk_IsTopLevel(tkwin)) {
         /* Try wm title via Tcl eval - most reliable for toplevels.
          * Get interp from the window itself; Tk_Interp returns the interp that created it.
@@ -3819,7 +3805,7 @@ GetNameForWidget(
             }
             Tcl_DecrRefCount(cmd);
         }
-        /* Fallback to Tk class name */
+        /* Fallback to Tk class name. */
         if (widgetClass && widgetClass[0]) {
             return Tcl_Strdup(widgetClass);
         }
@@ -3906,7 +3892,7 @@ GetValueForWidget(
             }
         }
     }
-    /* Fallback to Tk options */
+    /* Fallback to Tk options. */
     char *s = TryCgetString(tkwin, "-text");
     if (s) return s;
     s = TryCgetString(tkwin, "-value");
@@ -4098,7 +4084,7 @@ TkAccessible_DestroyHandler(
      * accessible is unregistered/freed below. Without this, a FocusOut
      * (or ConfigureNotify) generated for the same window during teardown
      * can still be dispatched to TkAccessible_FocusHandler/
-     * TkAccessible_ConfigureHandler with a stale `acc` pointer that
+     * TkAccessible_ConfigureHandler with a stale 'acc' pointer that
      * UnregisterAccessible() -> FreeAccessible() has already released,
      * causing a use-after-free/segfault. This was previously worked
      * around by disabling the body of TkAccessible_FocusHandler; that
@@ -4152,7 +4138,7 @@ TkAccessible_FocusHandler(
               (unsigned long long)old_states, (unsigned long long)acc->states,
               (old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED));
 
-    /* If we never successfully embedded with registry (desktop unknown), retry now - Orca may have started after us */
+    /* If we never successfully embedded with registry (desktop unknown), retry now - Orca may have started after us. */
     if (!atspi_conn->is_embedded) {
         DEBUG_LOG("TkAccessible_FocusHandler: not embedded, retrying EmbedWithRegistry");
         EmbedWithRegistry();
@@ -4167,7 +4153,7 @@ TkAccessible_FocusHandler(
             SendActiveDescendantChanged(acc->parent, acc);
         }
     }
-    /* Handle window activation */
+    /* Handle window activation. */
     if (acc->role == ATSPI_ROLE_WINDOW) {
         if ((old_states & ATSPI_STATE_ACTIVE) != (acc->states & ATSPI_STATE_ACTIVE)) {
             SendStateChanged(acc, ATSPI_STATE_ACTIVE, (acc->states & ATSPI_STATE_ACTIVE) != 0);
@@ -4235,7 +4221,7 @@ TkAccessible_CreateHandler(
     int idx = -1;
     if (parent_acc) {
         if (parent_acc->children) {
-            idx = 0; /* just count. */
+            idx = 0; /* Just count. */
             AccessibleList *l = parent_acc->children;
             while (l) { idx++; l = l->next; }
         } else if (parent_acc->tkwin) {
@@ -4276,13 +4262,7 @@ TkAccessible_ConfigureHandler(
      * This handler is registered under StructureNotifyMask, which
      * delivers MapNotify and UnmapNotify in addition to ConfigureNotify.
      * VISIBLE/SHOWING are derived purely from Tk_IsMapped(), so MapNotify/
-     * UnmapNotify MUST be handled here too -- otherwise a widget that is
-     * mapped without ever being reconfigured afterward (the common case)
-     * never has its VISIBLE/SHOWING bits recomputed, no StateChanged is
-     * ever sent for them, and Orca treats the widget/window as though it
-     * never became showing at all. Only ConfigureNotify carries new
-     * geometry, so the geometry/name-cache/child-scan work below stays
-     * gated to that event type specifically.
+     * UnmapNotify must  be handled here too.
      */
     if (!eventPtr ||
         (eventPtr->type != ConfigureNotify &&
@@ -4324,7 +4304,7 @@ TkAccessible_ConfigureHandler(
         return;
     }
 
-    /* Refresh cached name/description - old cache held generic 'Button' */
+    /* Refresh cached name/description. */
     {
         char *newName = GetNameForWidget(tkwin);
         if (newName) {
@@ -4395,42 +4375,6 @@ ConnectToAtspiBus(void)
     int r;
 
     DEBUG_LOG("ConnectToAtspiBus: enter - attempting to locate AT-SPI bus (NOT session bus)");
-
-    /* Try env var first - set by at-spi-bus-launcher. */
-    const char *env = getenv("AT_SPI_BUS");
-    if (!env) env = getenv("AT_SPI_BUS_ADDRESS");
-    if (env) {
-        DEBUG_LOG("ConnectToAtspiBus: trying env AT_SPI_BUS_ADDRESS=%s", env);
-        r = sd_bus_new(&a11y_bus);
-        if (r < 0) {
-            DEBUG_LOG("ConnectToAtspiBus: sd_bus_new for env failed r=%d (%s)", r, strerror(-r));
-            a11y_bus = NULL;
-        } else {
-            r = sd_bus_set_address(a11y_bus, env);
-            if (r < 0) {
-                DEBUG_LOG("ConnectToAtspiBus: sd_bus_set_address env failed r=%d (%s)", r, strerror(-r));
-            } else {
-                r = sd_bus_set_bus_client(a11y_bus, 1);
-                if (r < 0) {
-                    DEBUG_LOG("ConnectToAtspiBus: sd_bus_set_bus_client env failed r=%d (%s)", r, strerror(-r));
-                } else {
-                    r = sd_bus_start(a11y_bus);
-                    if (r < 0) {
-                        DEBUG_LOG("ConnectToAtspiBus: sd_bus_start env failed r=%d (%s)", r, strerror(-r));
-                    } else {
-                        const char *unique = NULL;
-                        sd_bus_get_unique_name(a11y_bus, &unique);
-                        DEBUG_LOG("ConnectToAtspiBus: SUCCESS via env var, unique=%s", unique ? unique : "?");
-                        return a11y_bus;
-                    }
-                }
-            }
-            sd_bus_unref(a11y_bus);
-            a11y_bus = NULL;
-        }
-    } else {
-        DEBUG_LOG("ConnectToAtspiBus: no AT_SPI_BUS env var set");
-    }
 
     /* Ask org.a11y.Bus for its address. */
     DEBUG_LOG("ConnectToAtspiBus: querying org.a11y.Bus.GetAddress on session bus");
@@ -4557,7 +4501,7 @@ InitializeAtspiConnection(void)
         return false;
     }
     atspi_conn->bus = bus;
-    atspi_bus = bus;   /* expose for TkWaylandAtspiProcessEvents() / the notifier */
+    atspi_bus = bus;   /* Expose for TkWaylandAtspiProcessEvents() / the notifier. */
     {
         const char *unique = NULL;
         sd_bus_get_unique_name(bus, &unique);
@@ -4637,7 +4581,7 @@ InitializeAtspiConnection(void)
     atspi_conn->root_accessible->path       = Tcl_Strdup("application");
     atspi_conn->root_accessible->dbus_path  = Tcl_Strdup("/org/a11y/atspi/accessible/root");
     atspi_conn->root_accessible->ref_count  = 1;
-    /* Give application a meaningful name for Orca - otherwise it appears nameless and may be filtered */
+    /* Give application a meaningful name for Orca - otherwise it appears nameless and may be filtered. */
     atspi_conn->root_accessible->cached_name = Tcl_Strdup("Tk");
     atspi_conn->root_accessible->cached_description = Tcl_Strdup("Tk Application");
 
