@@ -3348,6 +3348,17 @@ WmAttributesCmd(
 	}
 
 	/*
+	 * On Windows 10 (unlike on 11) the title bar doesn't redraw
+	 * automatically after changing the `DWMWA_USE_IMMERSIVE_DARK_MODE`
+	 * attribute. To trigger a redraw, we'll have to toggle the nonclient
+	 * area's focus state.
+	 */
+	bool isWindowFocused = GetForegroundWindow() == wmPtr->wrapper;
+
+	SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, !isWindowFocused, 0);
+	SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, isWindowFocused, 0);
+
+	/*
 	 * On success, set the mode value
 	 */
 	switch (appearanceAttrValue) {
@@ -8093,6 +8104,18 @@ static int SynchronizeAppearance(
 	    Tcl_ObjPrintf("SetWindowAttribute failed with %lx", status));
 	return TCL_ERROR;
     }
+
+	/*
+	 * On Windows 10 (unlike on 11) the title bar doesn't redraw
+	 * automatically after changing the `DWMWA_USE_IMMERSIVE_DARK_MODE`
+	 * attribute. To trigger a redraw, we'll have to toggle the nonclient
+	 * area's focus state.
+	 */
+	bool isWindowFocused = GetForegroundWindow() == wmPtr->wrapper;
+
+	SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, !isWindowFocused, 0);
+	SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, isWindowFocused, 0);
+
     const char *newAppearance = appsShouldBeDark ? "dark" : "light";
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 			Tcl_ObjPrintf("appearance %s ", newAppearance));
