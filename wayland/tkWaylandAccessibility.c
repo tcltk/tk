@@ -93,104 +93,112 @@
 #define ATSPI_ROLE_DRAWING_AREA      18
 #define ATSPI_ROLE_FILE_CHOOSER      19
 #define ATSPI_ROLE_FILLER            20
-#define ATSPI_ROLE_FONT_CHOOSER      21
-#define ATSPI_ROLE_FRAME             22
-#define ATSPI_ROLE_GLASS_PANE        23
-#define ATSPI_ROLE_HTML_CONTAINER    24
-#define ATSPI_ROLE_ICON              25
-#define ATSPI_ROLE_IMAGE             26
-#define ATSPI_ROLE_INTERNAL_FRAME    27
-#define ATSPI_ROLE_LABEL             28
-#define ATSPI_ROLE_LAYERED_PANE      29
-#define ATSPI_ROLE_LIST              30
-#define ATSPI_ROLE_LIST_ITEM         31
-#define ATSPI_ROLE_MENU              32
-#define ATSPI_ROLE_MENU_BAR          33
-#define ATSPI_ROLE_MENU_ITEM         34
-#define ATSPI_ROLE_OPTION_PANE       35
-#define ATSPI_ROLE_PAGE_TAB          36
-#define ATSPI_ROLE_PAGE_TAB_LIST     37
-#define ATSPI_ROLE_PANEL             38
-#define ATSPI_ROLE_PASSWORD_TEXT     39
-#define ATSPI_ROLE_POPUP_MENU        40
-#define ATSPI_ROLE_PROGRESS_BAR      41
-#define ATSPI_ROLE_PUSH_BUTTON       42
-#define ATSPI_ROLE_RADIO_BUTTON      43
-#define ATSPI_ROLE_RADIO_MENU_ITEM   44
-#define ATSPI_ROLE_ROOT_PANE         45
-#define ATSPI_ROLE_ROW_HEADER        46
-#define ATSPI_ROLE_SCROLL_BAR        47
-#define ATSPI_ROLE_SCROLL_PANE       48
-#define ATSPI_ROLE_SEPARATOR         49
-#define ATSPI_ROLE_SLIDER            50
-#define ATSPI_ROLE_SPLIT_PANE        51
+/* 21 = ATSPI_ROLE_FOCUS_TRAVERSABLE (reserved by spec, slot intentionally skipped) */
+#define ATSPI_ROLE_FONT_CHOOSER      22
+#define ATSPI_ROLE_FRAME             23
+#define ATSPI_ROLE_GLASS_PANE        24
+#define ATSPI_ROLE_HTML_CONTAINER    25
+#define ATSPI_ROLE_ICON              26
+#define ATSPI_ROLE_IMAGE             27
+#define ATSPI_ROLE_INTERNAL_FRAME    28
+#define ATSPI_ROLE_LABEL             29
+#define ATSPI_ROLE_LAYERED_PANE      30
+#define ATSPI_ROLE_LIST              31
+#define ATSPI_ROLE_LIST_ITEM         32
+#define ATSPI_ROLE_MENU              33
+#define ATSPI_ROLE_MENU_BAR          34
+#define ATSPI_ROLE_MENU_ITEM         35
+#define ATSPI_ROLE_OPTION_PANE       36
+#define ATSPI_ROLE_PAGE_TAB          37
+#define ATSPI_ROLE_PAGE_TAB_LIST     38
+#define ATSPI_ROLE_PANEL             39
+#define ATSPI_ROLE_PASSWORD_TEXT     40
+#define ATSPI_ROLE_POPUP_MENU        41
+#define ATSPI_ROLE_PROGRESS_BAR      42
+#define ATSPI_ROLE_PUSH_BUTTON       43
+#define ATSPI_ROLE_RADIO_BUTTON      44
+#define ATSPI_ROLE_RADIO_MENU_ITEM   45
+#define ATSPI_ROLE_ROOT_PANE         46
+#define ATSPI_ROLE_ROW_HEADER        47
+#define ATSPI_ROLE_SCROLL_BAR        48
+#define ATSPI_ROLE_SCROLL_PANE       49
+#define ATSPI_ROLE_SEPARATOR         50
+#define ATSPI_ROLE_SLIDER            51
 #define ATSPI_ROLE_SPIN_BUTTON       52
-#define ATSPI_ROLE_STATUS_BAR        53
-#define ATSPI_ROLE_TABLE             54
-#define ATSPI_ROLE_TABLE_CELL        55
-#define ATSPI_ROLE_TABLE_COLUMN_HEADER 56
-#define ATSPI_ROLE_TABLE_ROW_HEADER  57
-#define ATSPI_ROLE_TEAROFF_MENU_ITEM 58
-#define ATSPI_ROLE_TERMINAL          59
-#define ATSPI_ROLE_TEXT              60
-#define ATSPI_ROLE_TOGGLE_BUTTON     61
-#define ATSPI_ROLE_TOOL_BAR          62
-#define ATSPI_ROLE_TOOL_TIP          63
-#define ATSPI_ROLE_TREE              64
-#define ATSPI_ROLE_TREE_TABLE        65
-#define ATSPI_ROLE_UNKNOWN           66
-#define ATSPI_ROLE_VIEWPORT          67
-#define ATSPI_ROLE_WINDOW            68
-#define ATSPI_ROLE_HEADER            69
-#define ATSPI_ROLE_FOOTER            70
-#define ATSPI_ROLE_PARAGRAPH         71
-#define ATSPI_ROLE_RULER             72
-#define ATSPI_ROLE_APPLICATION       73
-#define ATSPI_ROLE_AUTOCOMPLETE      74
-#define ATSPI_ROLE_EDITBAR           75
-#define ATSPI_ROLE_EMBEDDED          76
-#define ATSPI_ROLE_ENTRY             77
-#define ATSPI_ROLE_CHART             78
-#define ATSPI_ROLE_CAPTION           79
-#define ATSPI_ROLE_DOCUMENT_FRAME    80
-#define ATSPI_ROLE_HEADING           81
-#define ATSPI_ROLE_PAGE              82
-#define ATSPI_ROLE_SECTION           83
-#define ATSPI_ROLE_REDUNDANT_OBJECT  84
-#define ATSPI_ROLE_FORM              85
-#define ATSPI_ROLE_LINK              86
-#define ATSPI_ROLE_INPUT_METHOD_WINDOW 87
-#define ATSPI_ROLE_TABLE_ROW         88
-#define ATSPI_ROLE_TREE_ITEM         89
-#define ATSPI_ROLE_DOCUMENT_SPREADSHEET 90
-#define ATSPI_ROLE_DOCUMENT_PRESENTATION 91
-#define ATSPI_ROLE_DOCUMENT_TEXT     92
-#define ATSPI_ROLE_DOCUMENT_WEB      93
-#define ATSPI_ROLE_DOCUMENT_EMAIL    94
-#define ATSPI_ROLE_COMMENT           95
-#define ATSPI_ROLE_LIST_BOX          96
-#define ATSPI_ROLE_GROUPING          97
-#define ATSPI_ROLE_IMAGE_MAP         98
-#define ATSPI_ROLE_NOTIFICATION      99
-#define ATSPI_ROLE_INFO_BAR          100
+#define ATSPI_ROLE_SPLIT_PANE        53
+#define ATSPI_ROLE_STATUS_BAR        54
+#define ATSPI_ROLE_TABLE             55
+#define ATSPI_ROLE_TABLE_CELL        56
+#define ATSPI_ROLE_TABLE_COLUMN_HEADER 57
+#define ATSPI_ROLE_TABLE_ROW_HEADER  58
+#define ATSPI_ROLE_TEAROFF_MENU_ITEM 59
+#define ATSPI_ROLE_TERMINAL          60
+#define ATSPI_ROLE_TEXT              61
+#define ATSPI_ROLE_TOGGLE_BUTTON     62
+#define ATSPI_ROLE_TOOL_BAR          63
+#define ATSPI_ROLE_TOOL_TIP          64
+#define ATSPI_ROLE_TREE              65
+#define ATSPI_ROLE_TREE_TABLE        66
+#define ATSPI_ROLE_UNKNOWN           67
+#define ATSPI_ROLE_VIEWPORT          68
+#define ATSPI_ROLE_WINDOW            69
+/* 70 = ATSPI_ROLE_EXTENDED (deprecated/reserved, slot intentionally skipped) */
+#define ATSPI_ROLE_HEADER            71
+#define ATSPI_ROLE_FOOTER            72
+#define ATSPI_ROLE_PARAGRAPH         73
+#define ATSPI_ROLE_RULER             74
+#define ATSPI_ROLE_APPLICATION       75
+#define ATSPI_ROLE_AUTOCOMPLETE      76
+#define ATSPI_ROLE_EDITBAR           77
+#define ATSPI_ROLE_EMBEDDED          78
+#define ATSPI_ROLE_ENTRY             79
+#define ATSPI_ROLE_CHART             80
+#define ATSPI_ROLE_CAPTION           81
+#define ATSPI_ROLE_DOCUMENT_FRAME    82
+#define ATSPI_ROLE_HEADING           83
+#define ATSPI_ROLE_PAGE              84
+#define ATSPI_ROLE_SECTION           85
+#define ATSPI_ROLE_REDUNDANT_OBJECT  86
+#define ATSPI_ROLE_FORM              87
+#define ATSPI_ROLE_LINK              88
+#define ATSPI_ROLE_INPUT_METHOD_WINDOW 89
+#define ATSPI_ROLE_TABLE_ROW         90
+#define ATSPI_ROLE_TREE_ITEM         91
+#define ATSPI_ROLE_DOCUMENT_SPREADSHEET 92
+#define ATSPI_ROLE_DOCUMENT_PRESENTATION 93
+#define ATSPI_ROLE_DOCUMENT_TEXT     94
+#define ATSPI_ROLE_DOCUMENT_WEB      95
+#define ATSPI_ROLE_DOCUMENT_EMAIL    96
+#define ATSPI_ROLE_COMMENT           97
+#define ATSPI_ROLE_LIST_BOX          98
+#define ATSPI_ROLE_GROUPING          99
+#define ATSPI_ROLE_IMAGE_MAP         100
+#define ATSPI_ROLE_NOTIFICATION      101
+#define ATSPI_ROLE_INFO_BAR          102
 /* Compatibility aliases for older code */
 #define ATSPI_ROLE_BUTTON            ATSPI_ROLE_PUSH_BUTTON
 #define ATSPI_ROLE_LIST_BOX_ALIAS    ATSPI_ROLE_LIST_BOX
 
-/* at-spi state constants (bit flags). */
-#define ATSPI_STATE_ENABLED          (1ULL << 0)
-#define ATSPI_STATE_SENSITIVE        (1ULL << 1)
-#define ATSPI_STATE_FOCUSABLE        (1ULL << 2)
-#define ATSPI_STATE_FOCUSED          (1ULL << 3)
-#define ATSPI_STATE_VISIBLE          (1ULL << 4)
-#define ATSPI_STATE_SHOWING          (1ULL << 5)
-#define ATSPI_STATE_EDITABLE         (1ULL << 6)
-#define ATSPI_STATE_CHECKED          (1ULL << 7)
-#define ATSPI_STATE_SELECTABLE       (1ULL << 8)
-#define ATSPI_STATE_SELECTED         (1ULL << 9)
-#define ATSPI_STATE_ACTIVE           (1ULL << 10)
-#define ATSPI_STATE_EXPANDABLE       (1ULL << 11)
-#define ATSPI_STATE_EXPANDED         (1ULL << 12)
+/* at-spi state constants (bit flags).
+ * Bit POSITIONS must match the real AtspiStateType enum index from
+ * atspi-constants.h -- verified against the published AT-SPI2 D-Bus
+ * spec (org.a11y.atspi.Accessible.GetState). VISIBLE (30) and SHOWING
+ * (25) are the two bits every AT-SPI client checks before treating an
+ * object as onscreen at all; per spec "the absence of VISIBLE and
+ * SHOWING is semantically equivalent to saying an object is hidden." */
+#define ATSPI_STATE_ACTIVE           (1ULL << 1)
+#define ATSPI_STATE_CHECKED          (1ULL << 4)
+#define ATSPI_STATE_EDITABLE         (1ULL << 7)
+#define ATSPI_STATE_ENABLED          (1ULL << 8)
+#define ATSPI_STATE_EXPANDABLE       (1ULL << 9)
+#define ATSPI_STATE_EXPANDED         (1ULL << 10)
+#define ATSPI_STATE_FOCUSABLE        (1ULL << 11)
+#define ATSPI_STATE_FOCUSED          (1ULL << 12)
+#define ATSPI_STATE_SELECTABLE       (1ULL << 22)
+#define ATSPI_STATE_SELECTED         (1ULL << 23)
+#define ATSPI_STATE_SENSITIVE        (1ULL << 24)
+#define ATSPI_STATE_SHOWING          (1ULL << 25)
+#define ATSPI_STATE_VISIBLE          (1ULL << 30)
 
 /* at-spi event types. */
 #define ATSPI_EVENT_FOCUS             "focus"
@@ -307,7 +315,9 @@ static void RegisterToplevel(TkAccessible *acc);
 static void UnregisterToplevel(TkAccessible *acc);
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
 static void EnsureChildrenRegistered(Tk_Window tkwin);
+static void EnsureChildrenRegisteredEx(Tk_Window tkwin, int emitEvents);
 static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *parent_acc);
+static void EnsureChildrenRegisteredRecursiveEx(Tk_Window tkwin, TkAccessible *parent_acc, int emitEvents);
 static void UpdateFocusChain(Tk_Window focused);
 static char *Tcl_Strdup(const char *s);
 static void SetAccessibleFocus(TkAccessible *acc, int focused);
@@ -350,12 +360,14 @@ static int dbus_prop_get_child_count(sd_bus *bus, const char *path, const char *
 static int dbus_method_grab_focus(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_index_in_parent(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_get_interfaces(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_application(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 
 /* at-spi component interface. */
 static int dbus_method_component_get_extents(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_component_get_position(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_component_get_size(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_component_contains(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_component_get_accessible_at_point(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_component_grab_focus(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 
 /* at-spi action interface. */
@@ -532,6 +544,7 @@ static const sd_bus_vtable accessible_vtable[] = {
     SD_BUS_METHOD("GrabFocus", "", "b", dbus_method_grab_focus, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetIndexInParent", "", "i", dbus_method_get_index_in_parent, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetInterfaces", "", "as", dbus_method_get_interfaces, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetApplication", "", "(so)", dbus_method_get_application, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
 };
 
@@ -542,6 +555,7 @@ static const sd_bus_vtable component_vtable[] = {
     SD_BUS_METHOD("GetPosition", "i", "(ii)", dbus_method_component_get_position, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetSize", "", "(ii)", dbus_method_component_get_size, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("Contains", "iii", "b", dbus_method_component_contains, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetAccessibleAtPoint", "iii", "(so)", dbus_method_component_get_accessible_at_point, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GrabFocus", "", "b", dbus_method_component_grab_focus, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
 };
@@ -1449,6 +1463,24 @@ dbus_method_get_interfaces(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+static int
+dbus_method_get_application(
+    sd_bus_message *m,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
+{
+    int r;
+    sd_bus_message *reply = NULL;
+    r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    if (atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->dbus_path) {
+        AppendAccessibleRef(reply, atspi_conn->root_accessible->dbus_path);
+    } else {
+        AppendAccessibleRef(reply, NULL);
+    }
+    return sd_bus_send(NULL, reply, NULL);
+}
+
 /*
  *----------------------------------------------------------------------
  * dbus_method_component_get_extents --
@@ -1634,6 +1666,50 @@ dbus_method_component_contains(
                     y >= comp_y && y < comp_y + comp_h);
     return sd_bus_reply_method_return(m, "b", contains);
 }
+
+static int
+dbus_method_component_get_accessible_at_point(
+    sd_bus_message *m,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
+{
+    TkAccessible *acc = (TkAccessible *)userdata;
+    int32_t x, y, coord_type;
+    sd_bus_message *reply = NULL;
+    int r;
+    r = sd_bus_message_read(m, "iii", &x, &y, &coord_type);
+    if (r < 0) return r;
+    TkAccessible *hit = NULL;
+    if (atspi_conn && acc == atspi_conn->root_accessible) {
+        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l; l = l->next) {
+            TkAccessible *top = l->acc;
+            if (!top || !top->tkwin) continue;
+            int cx, cy;
+            Tk_GetRootCoords(top->tkwin, &cx, &cy);
+            int cw = Tk_Width(top->tkwin);
+            int ch = Tk_Height(top->tkwin);
+            if (x >= cx && x < cx + cw && y >= cy && y < cy + ch) { hit = top; break; }
+        }
+    } else if (acc && acc->tkwin && !acc->is_virtual) {
+        TkWindow *childPtr;
+        for (childPtr = ((TkWindow*)acc->tkwin)->childList; childPtr; childPtr = childPtr->nextPtr) {
+            TkAccessible *child_acc = GetAccessible((Tk_Window)childPtr);
+            if (!child_acc || !child_acc->tkwin) continue;
+            int cx, cy;
+            Tk_GetRootCoords((Tk_Window)childPtr, &cx, &cy);
+            int cw = Tk_Width((Tk_Window)childPtr);
+            int ch = Tk_Height((Tk_Window)childPtr);
+            if (x >= cx && x < cx + cw && y >= cy && y < cy + ch) { hit = child_acc; break; }
+        }
+    }
+    r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    if (hit && hit->dbus_path) AppendAccessibleRef(reply, hit->dbus_path);
+    else if (acc && acc->dbus_path) AppendAccessibleRef(reply, acc->dbus_path);
+    else AppendAccessibleRef(reply, NULL);
+    return sd_bus_send(NULL, reply, NULL);
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -2404,44 +2480,34 @@ AppendCacheItem(
     int index_in_parent)
 {
     if (!acc || !acc->dbus_path) return;
-
-    if (parent_acc && parent_acc == acc) {
-        DEBUG_LOG("AppendCacheItem: SELF-PARENT DETECTED for %s, fixing to app_path", acc->dbus_path);
-        parent_acc = NULL;
-    }
-    if (parent_acc && parent_acc->dbus_path && strcmp(parent_acc->dbus_path, acc->dbus_path)==0) {
-        DEBUG_LOG("AppendCacheItem: SELF-PARENT PATH DETECTED for %s path=%s parent_path=%s, fixing", 
-                  acc->path?acc->path:"?", acc->dbus_path, parent_acc->dbus_path);
-        parent_acc = NULL;
-    }
-
+    if (parent_acc && parent_acc == acc) parent_acc = NULL;
+    if (parent_acc && parent_acc->dbus_path && strcmp(parent_acc->dbus_path, acc->dbus_path)==0) parent_acc = NULL;
     int childcnt = 0;
     if (acc->tkwin && !acc->is_virtual) {
+        int _cntIter = 0;
+        TkWindow *_slow = ((TkWindow*)acc->tkwin)->childList;
+        TkWindow *_fast = _slow ? _slow->nextPtr : NULL;
         for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
+            if (_fast && _slow && _fast == _slow) break;
+            if (_cntIter > 10000) break;
             if (GetAccessible((Tk_Window)c)) childcnt++;
+            _cntIter++;
+            if (_cntIter % 2 == 0) {
+                _slow = _slow ? _slow->nextPtr : NULL;
+                _fast = _fast ? _fast->nextPtr : NULL;
+                if (_fast) _fast = _fast->nextPtr;
+            }
         }
     } else if (acc->children) {
         for (AccessibleList *l = acc->children; l; l = l->next) if (l->acc) childcnt++;
     }
-
     sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
     AppendAccessibleRef(reply, acc->dbus_path);
-    /*
-     * Field order per the AT-SPI2 Cache spec is (accessible)(application)
-     * (parent)... -- application is app_path for
-     * every object in the tree; parent is this object's real immediate
-     * ancestor, falling back to app_path only when there isn't one.
-     */
     AppendAccessibleRef(reply, app_path);
-    if (parent_acc && parent_acc->dbus_path) {
-        AppendAccessibleRef(reply, parent_acc->dbus_path);
-    } else {
-        AppendAccessibleRef(reply, app_path);
-    }
-
+    if (parent_acc && parent_acc->dbus_path) AppendAccessibleRef(reply, parent_acc->dbus_path);
+    else AppendAccessibleRef(reply, app_path);
     sd_bus_message_append(reply, "i", index_in_parent);
     sd_bus_message_append(reply, "i", childcnt);
-
     sd_bus_message_open_container(reply, 'a', "s");
     sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
     sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
@@ -2458,14 +2524,11 @@ AppendCacheItem(
         sd_bus_message_append(reply, "s", ATSPI_SELECTION_INTERFACE);
     }
     sd_bus_message_close_container(reply);
-
     const char *nm = acc->cached_name ? acc->cached_name : (acc->path ? acc->path : "");
     const char *ds = acc->cached_description ? acc->cached_description : "";
-
     sd_bus_message_append(reply, "s", nm);
     sd_bus_message_append(reply, "u", (uint32_t)(acc->role ? acc->role : ATSPI_ROLE_INVALID));
     sd_bus_message_append(reply, "s", ds);
-
     sd_bus_message_open_container(reply, 'a', "u");
     uint64_t states = acc->states;
     uint32_t slo = (uint32_t)(states & 0xffffffffu);
@@ -2474,14 +2537,24 @@ AppendCacheItem(
     sd_bus_message_append(reply, "u", shi);
     sd_bus_message_close_container(reply);
     sd_bus_message_close_container(reply);
-
     if (acc->tkwin && !acc->is_virtual) {
         int emit_idx = 0;
+        int _emitIter = 0;
+        TkWindow *_slow2 = ((TkWindow*)acc->tkwin)->childList;
+        TkWindow *_fast2 = _slow2 ? _slow2->nextPtr : NULL;
         for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
+            if (_fast2 && _slow2 && _fast2 == _slow2) break;
+            if (_emitIter > 10000) break;
             TkAccessible *child_acc = GetAccessible((Tk_Window)c);
             if (child_acc) {
                 AppendCacheItem(reply, child_acc, acc, app_path, emit_idx);
                 emit_idx++;
+            }
+            _emitIter++;
+            if (_emitIter % 2 == 0) {
+                _slow2 = _slow2 ? _slow2->nextPtr : NULL;
+                _fast2 = _fast2 ? _fast2->nextPtr : NULL;
+                if (_fast2) _fast2 = _fast2->nextPtr;
             }
         }
     } else if (acc->children) {
@@ -2491,6 +2564,7 @@ AppendCacheItem(
         }
     }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -2531,7 +2605,7 @@ dbus_method_cache_get_items(
         for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
             TkAccessible *top=l->acc;
             if (top && top->tkwin) {
-                EnsureChildrenRegistered(top->tkwin);
+                EnsureChildrenRegisteredEx(top->tkwin, 0);
             }
         }
 
@@ -3722,8 +3796,8 @@ GetRoleForWidget(
     }
 
     if (Tk_IsTopLevel(tkwin)) {
-        DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> frame", Tk_PathName(tkwin));
-        return ATSPI_ROLE_FRAME;
+        DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> window", Tk_PathName(tkwin));
+        return ATSPI_ROLE_WINDOW;
     }
 
     DEBUG_LOG("GetRoleForWidget: path=%s -> INVALID", Tk_PathName(tkwin));
@@ -3807,9 +3881,9 @@ ComputeStateForWidget(
 
     /*
      * Active applies to the toplevel window itself, not individual
-     * widgets -- it mirrors is_focused for a WINDOW-role accessible.
+     * widgets -- it mirrors is_focused for a WINDOW/FRAME-role accessible.
      */
-    if (role == ATSPI_ROLE_WINDOW && acc->is_focused) {
+    if ((role == ATSPI_ROLE_WINDOW || role == ATSPI_ROLE_FRAME) && acc->is_focused) {
         states |= ATSPI_STATE_ACTIVE;
     }
 
@@ -4138,44 +4212,60 @@ GetValueForWidget(
  */
 
 static void
-EnsureChildrenRegisteredRecursive(
-    Tk_Window tkwin,            /* Parent window. */
-    TkAccessible *parent_acc)   /* Parent accessible object. */
+EnsureChildrenRegisteredRecursiveEx(
+    Tk_Window tkwin,
+    TkAccessible *parent_acc,
+    int emitEvents)
 {
     if (!tkwin) return;
     TkWindow *winPtr = (TkWindow *)tkwin;
     if (!winPtr) return;
     int idx = 0;
+    int _iter = 0;
+    TkWindow *_slow = winPtr->childList;
+    TkWindow *_fast = _slow ? _slow->nextPtr : NULL;
     for (TkWindow *childPtr = winPtr->childList; childPtr; childPtr = childPtr->nextPtr, idx++) {
+        if (_fast && _slow && _fast == _slow) {
+            DEBUG_LOG("EnsureChildrenRegistered: CYCLE DETECTED at iter=%d -- BREAKING", _iter);
+            break;
+        }
+        if (_iter > 10000) {
+            DEBUG_LOG("EnsureChildrenRegistered: CAP EXCEEDED -- BREAKING");
+            break;
+        }
+        _iter++;
+        if (_iter % 2 == 0) {
+            _slow = _slow ? _slow->nextPtr : NULL;
+            _fast = _fast ? _fast->nextPtr : NULL;
+            if (_fast) _fast = _fast->nextPtr;
+        }
         Tk_Window childWin = (Tk_Window)childPtr;
         TkAccessible *child_acc = GetAccessible(childWin);
         if (!child_acc) {
             Tcl_Interp *interp = Tk_Interp(tkwin);
             if (!interp && parent_acc) interp = parent_acc->interp;
             if (!interp) continue;
-            DEBUG_LOG("EnsureChildrenRegistered: found unregistered child %s (class=%s) under %s idx=%d - creating accessible",
-                      Tk_PathName(childWin), Tk_Class(childWin) ? Tk_Class(childWin) : "?", Tk_PathName(tkwin), idx);
             child_acc = CreateAccessible(interp, childWin, Tk_PathName(childWin));
-            if (child_acc) {
-                DEBUG_LOG("EnsureChildrenRegistered: created child %s role=%d (%s) name='%s' dbus_path=%s",
-                          Tk_PathName(childWin), child_acc->role, RoleToString(child_acc->role),
-                          child_acc->cached_name ? child_acc->cached_name : "(null)",
-                          child_acc->dbus_path ? child_acc->dbus_path : "?");
-            }
             if (!child_acc) continue;
             if (parent_acc) child_acc->parent = parent_acc;
             RegisterAccessible(childWin, child_acc);
             TkAccessible_RegisterEventHandlers(childWin, child_acc);
-            if (parent_acc) {
-                DEBUG_LOG("EnsureChildrenRegistered: emitting ChildrenChanged add for %s child %s idx %d",
-                          parent_acc->path ? parent_acc->path : "?", child_acc->path ? child_acc->path : "?", idx);
+            if (parent_acc && emitEvents) {
                 SendChildrenChanged(parent_acc, idx, child_acc, 1);
-                EmitObjectEventFull(child_acc, "PropertyChange", "accessible-name", 0, 0, NULL);
             }
         }
-        EnsureChildrenRegisteredRecursive(childWin, child_acc);
+        EnsureChildrenRegisteredRecursiveEx(childWin, child_acc, emitEvents);
     }
 }
+
+static void
+EnsureChildrenRegisteredRecursive(
+    Tk_Window tkwin,
+    TkAccessible *parent_acc)
+{
+    EnsureChildrenRegisteredRecursiveEx(tkwin, parent_acc, 1);
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -4192,8 +4282,9 @@ EnsureChildrenRegisteredRecursive(
  */
 
 static void
-EnsureChildrenRegistered(
-    Tk_Window tkwin)        /* Window to ensure children for. */
+EnsureChildrenRegisteredEx(
+    Tk_Window tkwin,
+    int emitEvents)
 {
     if (!tkwin) return;
     TkAccessible *acc = GetAccessible(tkwin);
@@ -4208,10 +4299,16 @@ EnsureChildrenRegistered(
     }
     if (!acc) return;
     Tk_Window scanWin = acc->tkwin ? acc->tkwin : tkwin;
-    DEBUG_LOG("EnsureChildrenRegistered: scanning %s (acc path=%s) for new children",
-              Tk_PathName(scanWin), acc->path ? acc->path : "?");
-    EnsureChildrenRegisteredRecursive(scanWin, acc);
+    EnsureChildrenRegisteredRecursiveEx(scanWin, acc, emitEvents);
 }
+
+static void
+EnsureChildrenRegistered(
+    Tk_Window tkwin)
+{
+    EnsureChildrenRegisteredEx(tkwin, 1);
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -4268,9 +4365,8 @@ TkAccessible_DestroyHandler(
     TkAccessible *acc = (TkAccessible *)clientData;
     if (!acc || !acc->tkwin) return;
 
-    /* Notify that this object is going away. Toplevels are handled
-     * by UnregisterToplevel to avoid duplicate root removes. */
-    if (acc->parent && !Tk_IsTopLevel(acc->tkwin)) {
+    /* Notify that this object is going away. */
+    if (acc->parent) {
         int idx = -1;
         if (acc->parent->children) {
             AccessibleList *l = acc->parent->children;
@@ -4284,6 +4380,7 @@ TkAccessible_DestroyHandler(
                 i++;
             }
         } else if (acc->parent->tkwin) {
+            /* Compute accessible-filtered index from parent's child list. */
             TkWindow *childPtr;
             int acc_idx = 0;
             for (childPtr = ((TkWindow*)acc->parent->tkwin)->childList;
@@ -4297,19 +4394,8 @@ TkAccessible_DestroyHandler(
                 }
                 acc_idx++;
             }
-        } else if (atspi_conn && acc->parent == atspi_conn->root_accessible) {
-            AccessibleList *l = atspi_conn->toplevel_accessibles;
-            int i = 0;
-            while (l) {
-                if (l->acc == acc) { idx = i; break; }
-                l = l->next; i++;
-            }
         }
-        if (idx >= 0) {
-            SendChildrenChanged(acc->parent, idx, acc, 0);
-        } else {
-            DEBUG_LOG("DestroyHandler: idx not found for %s, skipping", acc->path?acc->path:"?");
-        }
+        SendChildrenChanged(acc->parent, idx, acc, 0);
     }
 
     /*
@@ -4389,32 +4475,21 @@ TkAccessible_FocusHandler(
         }
     }
 
+    /* Emit window:activate/deactivate for toplevel so Orca knows active window */
+    if (Tk_IsTopLevel(acc->tkwin)) {
+        if (focused) {
+            SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
+            SendStateChanged(acc, ATSPI_STATE_ACTIVE, 1);
+        } else {
+            SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_DEACTIVATE, NULL);
+            SendStateChanged(acc, ATSPI_STATE_ACTIVE, 0);
+        }
+    }
+
     /* If we never successfully embedded with registry, retry now. */
     if (!atspi_conn->is_embedded) {
         DEBUG_LOG("TkAccessible_FocusHandler: not embedded, retrying EmbedWithRegistry");
         EmbedWithRegistry();
-    }
-
-    if (!atspi_conn->is_embedded) {
-        EmbedWithRegistry();
-    }
-
-    /* Orca requires window:activate for the toplevel. On X11 the WM gives
-     * you active, on Wayland it doesn't - we must emit it ourselves when
-     * a child gets focus. */
-    if (acc->tkwin) {
-        Tk_Window top = GetToplevelOfWidget(acc->tkwin);
-        if (top) {
-            TkAccessible *top_acc = GetAccessible(top);
-            if (top_acc && focused) {
-                top_acc->states |= ATSPI_STATE_ACTIVE;
-                SendAtspiEvent(top_acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
-            }
-        }
-        if (Tk_IsTopLevel(acc->tkwin) && focused) {
-            acc->states |= ATSPI_STATE_ACTIVE;
-            SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
-        }
     }
 }
 
@@ -4558,9 +4633,11 @@ TkAccessible_ConfigureHandler(
     }
 
     uint64_t old_states = acc->states;
-    int old_w = acc->width;
-    int old_h = acc->height;
     acc->states = ComputeStateForWidget(acc);
+
+    DEBUG_LOG("ConfigureHandler: path=%s xevent=%d old_states=0x%llx new_states=0x%llx",
+              acc->path?acc->path:"?", eventPtr->type,
+              (unsigned long long)old_states, (unsigned long long)acc->states);
 
     if ((old_states & ATSPI_STATE_VISIBLE) != (acc->states & ATSPI_STATE_VISIBLE)) {
         SendStateChanged(acc, ATSPI_STATE_VISIBLE, (acc->states & ATSPI_STATE_VISIBLE) != 0);
@@ -4570,12 +4647,12 @@ TkAccessible_ConfigureHandler(
     }
 
     if (eventPtr->type != ConfigureNotify) {
+        /* MapNotify/UnmapNotify: state change above is all there is to do. */
         return;
     }
 
-    /* Only rescan for new children if size actually changed - Wayland sends
-     * ConfigureNotify on focus changes with same size, spamming the log. */
-    if (acc->width != old_w || acc->height != old_h) {
+    /* Refresh cached name/description. */
+    {
         char *newName = GetNameForWidget(tkwin);
         if (newName) {
             if (acc->cached_name) Tcl_Free(acc->cached_name);
@@ -4586,11 +4663,11 @@ TkAccessible_ConfigureHandler(
             if (acc->cached_description) Tcl_Free(acc->cached_description);
             acc->cached_description = newDesc;
         }
-        DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning",
-                  acc->path?acc->path:"?", acc->width, acc->height,
-                  acc->cached_name?acc->cached_name:"(null)");
-        EnsureChildrenRegistered(tkwin);
     }
+    DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning for new children (hash table walk)",
+              acc->path?acc->path:"?", acc->width, acc->height,
+              acc->cached_name?acc->cached_name:"(null)");
+    EnsureChildrenRegistered(tkwin);
 }
 
 /*
@@ -5180,6 +5257,13 @@ TkWaylandAccessibility_Init(
     Tcl_Interp *interp)     /* Tcl interpreter. */
 {
     DEBUG_LOG("TkWaylandAccessibility_Init: enter");
+    DEBUG_LOG("BUILD-CHECK: ROLE_WINDOW=%d ROLE_PUSH_BUTTON=%d ROLE_APPLICATION=%d "
+              "STATE_VISIBLE_BIT=%d STATE_SHOWING_BIT=%d STATE_ENABLED_BIT=%d "
+              "(expect 69 43 75 30 25 8 -- if you see anything else, this binary "
+              "does NOT contain the role/state fix)",
+              ATSPI_ROLE_WINDOW, ATSPI_ROLE_PUSH_BUTTON, ATSPI_ROLE_APPLICATION,
+              __builtin_ctzll(ATSPI_STATE_VISIBLE), __builtin_ctzll(ATSPI_STATE_SHOWING),
+              __builtin_ctzll(ATSPI_STATE_ENABLED));
     /* Initialize D-Bus connection to at-spi. */
     if (!InitializeAtspiConnection()) {
         Tcl_AppendResult(interp, "Warning: Could not connect to AT-SPI - accessibility disabled for now", (char *)NULL);
@@ -5194,7 +5278,7 @@ TkWaylandAccessibility_Init(
 
         TkAccessible *main_acc = CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
         if (main_acc) {
-            main_acc->role = ATSPI_ROLE_FRAME;
+            main_acc->role = ATSPI_ROLE_WINDOW;
             RegisterAccessible(mainWin, main_acc);
             RegisterToplevel(main_acc);
             TkAccessible_RegisterEventHandlers(mainWin, main_acc);
