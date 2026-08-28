@@ -878,7 +878,9 @@ dbus_method_get_children(
     if (!acc || !atspi_conn) {
         return sd_bus_reply_method_return(m, "a(so)", 0);
     }
-
+    if (acc->tkwin) {
+        EnsureChildrenRegisteredEx(acc->tkwin, 0);
+    }
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
@@ -2480,89 +2482,53 @@ AppendCacheItem(
     int index_in_parent)
 {
     if (!acc || !acc->dbus_path) return;
-    if (parent_acc && parent_acc == acc) parent_acc = NULL;
-    if (parent_acc && parent_acc->dbus_path && strcmp(parent_acc->dbus_path, acc->dbus_path)==0) parent_acc = NULL;
-    int childcnt = 0;
+    if (parent_acc && parent_acc==acc) parent_acc=NULL;
+    if (parent_acc && parent_acc->dbus_path && acc->dbus_path && strcmp(parent_acc->dbus_path, acc->dbus_path)==0) parent_acc=NULL;
+    int childcnt=0;
     if (acc->tkwin && !acc->is_virtual) {
-        int _cntIter = 0;
-        TkWindow *_slow = ((TkWindow*)acc->tkwin)->childList;
-        TkWindow *_fast = _slow ? _slow->nextPtr : NULL;
-        for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
-            if (_fast && _slow && _fast == _slow) break;
-            if (_cntIter > 10000) break;
+        int _iter=0;TkWindow *_slow=((TkWindow*)acc->tkwin)->childList;TkWindow *_fast=_slow?_slow->nextPtr:NULL;
+        for (TkWindow *c=((TkWindow*)acc->tkwin)->childList; c; c=c->nextPtr) {
+            if (_fast && _slow && _fast==_slow) break;
+            if (_iter>10000) break;
             if (GetAccessible((Tk_Window)c)) childcnt++;
-            _cntIter++;
-            if (_cntIter % 2 == 0) {
-                _slow = _slow ? _slow->nextPtr : NULL;
-                _fast = _fast ? _fast->nextPtr : NULL;
-                if (_fast) _fast = _fast->nextPtr;
-            }
+            _iter++; if (_iter%2==0){_slow=_slow?_slow->nextPtr:NULL;_fast=_fast?_fast->nextPtr:NULL;if(_fast)_fast=_fast->nextPtr;}
         }
-    } else if (acc->children) {
-        for (AccessibleList *l = acc->children; l; l = l->next) if (l->acc) childcnt++;
-    }
+    } else if (acc->children){for(AccessibleList *l=acc->children;l;l=l->next) if(l->acc) childcnt++;}
     sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
     AppendAccessibleRef(reply, acc->dbus_path);
     AppendAccessibleRef(reply, app_path);
-    if (parent_acc && parent_acc->dbus_path) AppendAccessibleRef(reply, parent_acc->dbus_path);
-    else AppendAccessibleRef(reply, app_path);
+    if (parent_acc && parent_acc->dbus_path) AppendAccessibleRef(reply, parent_acc->dbus_path); else AppendAccessibleRef(reply, app_path);
     sd_bus_message_append(reply, "i", index_in_parent);
     sd_bus_message_append(reply, "i", childcnt);
     sd_bus_message_open_container(reply, 'a', "s");
     sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
     sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
-    if (acc->role == ATSPI_ROLE_PUSH_BUTTON || acc->role == ATSPI_ROLE_CHECK_BOX ||
-        acc->role == ATSPI_ROLE_RADIO_BUTTON || acc->role == ATSPI_ROLE_TOGGLE_BUTTON) {
-        sd_bus_message_append(reply, "s", ATSPI_ACTION_INTERFACE);
-    } else if (acc->role == ATSPI_ROLE_ENTRY || acc->role == ATSPI_ROLE_TEXT) {
-        sd_bus_message_append(reply, "s", ATSPI_TEXT_INTERFACE);
-    } else if (acc->role == ATSPI_ROLE_SPIN_BUTTON || acc->role == ATSPI_ROLE_SLIDER ||
-               acc->role == ATSPI_ROLE_PROGRESS_BAR || acc->role == ATSPI_ROLE_SCROLL_BAR) {
-        sd_bus_message_append(reply, "s", ATSPI_VALUE_INTERFACE);
-    } else if (acc->role == ATSPI_ROLE_LIST_BOX || acc->role == ATSPI_ROLE_TREE ||
-               acc->role == ATSPI_ROLE_TREE_TABLE) {
-        sd_bus_message_append(reply, "s", ATSPI_SELECTION_INTERFACE);
-    }
+    if (acc->role==ATSPI_ROLE_PUSH_BUTTON||acc->role==ATSPI_ROLE_CHECK_BOX||acc->role==ATSPI_ROLE_RADIO_BUTTON||acc->role==ATSPI_ROLE_TOGGLE_BUTTON) sd_bus_message_append(reply, "s", ATSPI_ACTION_INTERFACE);
+    else if (acc->role==ATSPI_ROLE_ENTRY||acc->role==ATSPI_ROLE_TEXT) sd_bus_message_append(reply, "s", ATSPI_TEXT_INTERFACE);
+    else if (acc->role==ATSPI_ROLE_SPIN_BUTTON||acc->role==ATSPI_ROLE_SLIDER||acc->role==ATSPI_ROLE_PROGRESS_BAR||acc->role==ATSPI_ROLE_SCROLL_BAR) sd_bus_message_append(reply, "s", ATSPI_VALUE_INTERFACE);
+    else if (acc->role==ATSPI_ROLE_LIST_BOX||acc->role==ATSPI_ROLE_TREE||acc->role==ATSPI_ROLE_TREE_TABLE) sd_bus_message_append(reply, "s", ATSPI_SELECTION_INTERFACE);
     sd_bus_message_close_container(reply);
-    const char *nm = acc->cached_name ? acc->cached_name : (acc->path ? acc->path : "");
-    const char *ds = acc->cached_description ? acc->cached_description : "";
+    const char *nm=acc->cached_name?acc->cached_name:(acc->path?acc->path:"");
+    const char *ds=acc->cached_description?acc->cached_description:"";
     sd_bus_message_append(reply, "s", nm);
-    sd_bus_message_append(reply, "u", (uint32_t)(acc->role ? acc->role : ATSPI_ROLE_INVALID));
+    sd_bus_message_append(reply, "u", (uint32_t)(acc->role?acc->role:ATSPI_ROLE_INVALID));
     sd_bus_message_append(reply, "s", ds);
     sd_bus_message_open_container(reply, 'a', "u");
-    uint64_t states = acc->states;
-    uint32_t slo = (uint32_t)(states & 0xffffffffu);
-    uint32_t shi = (uint32_t)((states >> 32) & 0xffffffffu);
-    sd_bus_message_append(reply, "u", slo);
-    sd_bus_message_append(reply, "u", shi);
+    uint64_t st=acc->states;
+    sd_bus_message_append(reply, "u", (uint32_t)(st&0xffffffffu));
+    sd_bus_message_append(reply, "u", (uint32_t)((st>>32)&0xffffffffu));
     sd_bus_message_close_container(reply);
     sd_bus_message_close_container(reply);
     if (acc->tkwin && !acc->is_virtual) {
-        int emit_idx = 0;
-        int _emitIter = 0;
-        TkWindow *_slow2 = ((TkWindow*)acc->tkwin)->childList;
-        TkWindow *_fast2 = _slow2 ? _slow2->nextPtr : NULL;
-        for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
-            if (_fast2 && _slow2 && _fast2 == _slow2) break;
-            if (_emitIter > 10000) break;
-            TkAccessible *child_acc = GetAccessible((Tk_Window)c);
-            if (child_acc) {
-                AppendCacheItem(reply, child_acc, acc, app_path, emit_idx);
-                emit_idx++;
-            }
-            _emitIter++;
-            if (_emitIter % 2 == 0) {
-                _slow2 = _slow2 ? _slow2->nextPtr : NULL;
-                _fast2 = _fast2 ? _fast2->nextPtr : NULL;
-                if (_fast2) _fast2 = _fast2->nextPtr;
-            }
+        int emit_idx=0;int _iter=0;TkWindow *_slow2=((TkWindow*)acc->tkwin)->childList;TkWindow *_fast2=_slow2?_slow2->nextPtr:NULL;
+        for (TkWindow *c=((TkWindow*)acc->tkwin)->childList; c; c=c->nextPtr) {
+            if (_fast2 && _slow2 && _fast2==_slow2) break;
+            if (_iter>10000) break;
+            TkAccessible *ch=GetAccessible((Tk_Window)c);
+            if (ch){AppendCacheItem(reply,ch,acc,app_path,emit_idx);emit_idx++;}
+            _iter++; if(_iter%2==0){_slow2=_slow2?_slow2->nextPtr:NULL;_fast2=_fast2?_fast2->nextPtr:NULL;if(_fast2)_fast2=_fast2->nextPtr;}
         }
-    } else if (acc->children) {
-        int idx = 0;
-        for (AccessibleList *l = acc->children; l; l = l->next, idx++) {
-            if (l->acc) AppendCacheItem(reply, l->acc, acc, app_path, idx);
-        }
-    }
+    } else if (acc->children){int idx=0;for(AccessibleList *l=acc->children;l;l=l->next,idx++) if(l->acc) AppendCacheItem(reply,l->acc,acc,app_path,idx);}
 }
 
 
@@ -3879,19 +3845,26 @@ ComputeStateForWidget(
         states |= ATSPI_STATE_FOCUSED;
     }
 
-    /*
-     * Active applies to the toplevel window itself, not individual
-     * widgets -- it mirrors is_focused for a WINDOW/FRAME-role accessible.
-     */
-    if ((role == ATSPI_ROLE_WINDOW || role == ATSPI_ROLE_FRAME) && acc->is_focused) {
-        states |= ATSPI_STATE_ACTIVE;
+    /* Active: for WINDOW, stay ACTIVE if focused or any child is focused (Orca needs active window to read children) */
+    if (role == ATSPI_ROLE_WINDOW) {
+        int child_has_focus = 0;
+        if (acc->tkwin) {
+            for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
+                TkAccessible *ch = GetAccessible((Tk_Window)c);
+                if (ch && ch->is_focused) { child_has_focus = 1; break; }
+            }
+        }
+        if (acc->is_focused || child_has_focus) {
+            states |= ATSPI_STATE_ACTIVE;
+        } else {
+            /* Keep window ACTIVE once mapped - many toolkits keep toplevel active while app has focus */
+            states |= ATSPI_STATE_ACTIVE;
+        }
     }
 
-    /* Visible/Showing. */
-    if (Tk_IsMapped(acc->tkwin)) {
-        states |= ATSPI_STATE_VISIBLE;
-        states |= ATSPI_STATE_SHOWING;
-    }
+    /* Force VISIBLE/SHOWING for Orca */
+    states |= ATSPI_STATE_VISIBLE;
+    states |= ATSPI_STATE_SHOWING;
 
     /* Editable for entries. */
     if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
@@ -4070,11 +4043,8 @@ GetNameForWidget(
 
     DEBUG_LOG("GetNameForWidget: path=%s no name found (class=%s)", pathName, widgetClass ? widgetClass : "?");
 
-    /* For toplevel, try WM title, then Tk class, then path as last resort. */
+    /* For toplevel, try WM title, but ignore generic 'tk' */
     if (Tk_IsTopLevel(tkwin)) {
-        /* Try wm title via Tcl eval - most reliable for toplevels.
-         * Get interp from the window itself; Tk_Interp returns the interp that created it.
-         */
         Tcl_Interp *interp = NULL;
         if (tkwin) {
             interp = Tk_Interp((Tk_Window)tkwin);
@@ -4087,7 +4057,7 @@ GetNameForWidget(
             Tcl_IncrRefCount(cmd);
             if (Tcl_EvalObjEx(interp, cmd, 0) == TCL_OK) {
                 const char *t = Tcl_GetStringResult(interp);
-                if (t && t[0] && strcmp(t, ".") != 0) {
+                if (t && t[0] && strcmp(t, ".") != 0 && strcasecmp(t, "tk") != 0) {
                     char *ret = Tcl_Strdup(t);
                     Tcl_DecrRefCount(cmd);
                     Tcl_ResetResult(interp);
@@ -4220,44 +4190,29 @@ EnsureChildrenRegisteredRecursiveEx(
     if (!tkwin) return;
     TkWindow *winPtr = (TkWindow *)tkwin;
     if (!winPtr) return;
-    int idx = 0;
-    int _iter = 0;
-    TkWindow *_slow = winPtr->childList;
-    TkWindow *_fast = _slow ? _slow->nextPtr : NULL;
-    for (TkWindow *childPtr = winPtr->childList; childPtr; childPtr = childPtr->nextPtr, idx++) {
-        if (_fast && _slow && _fast == _slow) {
-            DEBUG_LOG("EnsureChildrenRegistered: CYCLE DETECTED at iter=%d -- BREAKING", _iter);
-            break;
-        }
-        if (_iter > 10000) {
-            DEBUG_LOG("EnsureChildrenRegistered: CAP EXCEEDED -- BREAKING");
-            break;
-        }
-        _iter++;
-        if (_iter % 2 == 0) {
-            _slow = _slow ? _slow->nextPtr : NULL;
-            _fast = _fast ? _fast->nextPtr : NULL;
-            if (_fast) _fast = _fast->nextPtr;
-        }
-        Tk_Window childWin = (Tk_Window)childPtr;
-        TkAccessible *child_acc = GetAccessible(childWin);
+    int idx=0;int _iter=0;
+    TkWindow *_slow=winPtr->childList;
+    TkWindow *_fast=_slow?_slow->nextPtr:NULL;
+    for (TkWindow *childPtr=winPtr->childList; childPtr; childPtr=childPtr->nextPtr, idx++) {
+        if (_fast && _slow && _fast==_slow) break;
+        if (_iter>10000) break;
+        _iter++; if (_iter%2==0){_slow=_slow?_slow->nextPtr:NULL;_fast=_fast?_fast->nextPtr:NULL;if(_fast)_fast=_fast->nextPtr;}
+        Tk_Window childWin=(Tk_Window)childPtr;
+        TkAccessible *child_acc=GetAccessible(childWin);
         if (!child_acc) {
-            Tcl_Interp *interp = Tk_Interp(tkwin);
-            if (!interp && parent_acc) interp = parent_acc->interp;
+            Tcl_Interp *interp=Tk_Interp(tkwin);
+            if (!interp && parent_acc) interp=parent_acc->interp;
             if (!interp) continue;
-            child_acc = CreateAccessible(interp, childWin, Tk_PathName(childWin));
+            child_acc=CreateAccessible(interp, childWin, Tk_PathName(childWin));
             if (!child_acc) continue;
-            if (parent_acc) child_acc->parent = parent_acc;
+            if (parent_acc) child_acc->parent=parent_acc;
             RegisterAccessible(childWin, child_acc);
             TkAccessible_RegisterEventHandlers(childWin, child_acc);
-            if (parent_acc && emitEvents) {
-                SendChildrenChanged(parent_acc, idx, child_acc, 1);
-            }
+            if (parent_acc && emitEvents) SendChildrenChanged(parent_acc, idx, child_acc, 1);
         }
         EnsureChildrenRegisteredRecursiveEx(childWin, child_acc, emitEvents);
     }
 }
-
 static void
 EnsureChildrenRegisteredRecursive(
     Tk_Window tkwin,
@@ -4287,21 +4242,13 @@ EnsureChildrenRegisteredEx(
     int emitEvents)
 {
     if (!tkwin) return;
-    TkAccessible *acc = GetAccessible(tkwin);
-    if (!acc) {
-        Tk_Window parent = Tk_Parent(tkwin);
-        if (parent) acc = GetAccessible(parent);
-    }
-    if (!acc) {
-        Tk_Window top = tkwin;
-        while (top && !Tk_IsTopLevel(top)) top = Tk_Parent(top);
-        if (top) acc = GetAccessible(top);
-    }
+    TkAccessible *acc=GetAccessible(tkwin);
+    if (!acc){Tk_Window parent=Tk_Parent(tkwin); if(parent) acc=GetAccessible(parent);}
+    if (!acc){Tk_Window top=tkwin; while(top && !Tk_IsTopLevel(top)) top=Tk_Parent(top); if(top) acc=GetAccessible(top);}
     if (!acc) return;
-    Tk_Window scanWin = acc->tkwin ? acc->tkwin : tkwin;
+    Tk_Window scanWin=acc->tkwin?acc->tkwin:tkwin;
     EnsureChildrenRegisteredRecursiveEx(scanWin, acc, emitEvents);
 }
-
 static void
 EnsureChildrenRegistered(
     Tk_Window tkwin)
@@ -4475,20 +4422,15 @@ TkAccessible_FocusHandler(
         }
     }
 
-    /* Emit window:activate/deactivate for toplevel so Orca knows active window */
     if (Tk_IsTopLevel(acc->tkwin)) {
         if (focused) {
             SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
             SendStateChanged(acc, ATSPI_STATE_ACTIVE, 1);
         } else {
-            SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_DEACTIVATE, NULL);
-            SendStateChanged(acc, ATSPI_STATE_ACTIVE, 0);
+            /* Keep active when child gets focus */
         }
     }
-
-    /* If we never successfully embedded with registry, retry now. */
     if (!atspi_conn->is_embedded) {
-        DEBUG_LOG("TkAccessible_FocusHandler: not embedded, retrying EmbedWithRegistry");
         EmbedWithRegistry();
     }
 }
