@@ -150,7 +150,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak "$description $state"
 		}
 	    } elseif {$class eq "Checkbutton" || $class eq "TCheckbutton" || $class eq "Toggleswitch"} {
@@ -160,7 +160,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak "$description $state"
 		}
 	    }
@@ -241,10 +241,10 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    # Otherwise emit single-character updates.
 	    ::tk::accessible::set_acc_value $w $key
-	    if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+	    if {[tk windowingsystem] eq "x11"} {
 		::tk::accessible::speak $key
 		# Windows speaks the individual keypress by default
-	    } elseif {[tk windowingsystem] eq "aqua"}  {
+	    } elseif {[tk windowingsystem] eq "aqua" | [tk windowingsystem] eq "wayland"}  {
 		::tk::accessible::emit_selection_change $w
 	    }
 	}
@@ -277,7 +277,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    # Extract last word before the space.
 	    if {[regexp -nocase -- {\S+$} $before match]} {
 		::tk::accessible::set_acc_value $w $match
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $match
 		} else {
 		    ::tk::accessible::emit_selection_change $w
@@ -370,7 +370,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    # Announce: description, role, state
 		    ::tk::accessible::speak "$description radiobutton $state"
 		}
@@ -382,7 +382,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    # Announce: description, role, state
 		    if {[winfo class $w] eq "Toggleswitch"} {
 			::tk::accessible::speak "$description toggleswitch $state"
@@ -395,7 +395,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [$w get [$w curselection]]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -403,7 +403,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [::tk::accessible::_gettreeviewdata $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -412,7 +412,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    # Only speak if there's content
 		    if {$data ne ""} {
 			::tk::accessible::speak $data
@@ -425,7 +425,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [$w get]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -433,7 +433,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data  [$w tab current -text]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -441,7 +441,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [::tk::accessible::_gettext $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -449,7 +449,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [::tk::accessible::_getpbvalue $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -464,6 +464,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::speak $data
 		}
+		}
+		if {[tk windowingsystem] eq "x11"} {
 		if {[winfo class $w] eq "Spinbox" || \
 			[winfo class $w] eq "TSpinbox" \
 			|| [winfo class $w] eq "Scale" || \
@@ -485,7 +487,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -494,7 +496,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -507,7 +509,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -516,7 +518,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -530,7 +532,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -539,7 +541,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -552,7 +554,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -561,7 +563,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -584,7 +586,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -597,7 +599,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -606,7 +608,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -877,8 +879,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			       {%W set} \
 			   }
 
-	# Menu accessibility bindings for X11 only. Menus are native
-	# on macOS/Windows, so we don’t expose them here.
+	# Menu accessibility bindings for X11 and Wayland only. Menus are native
+	# on macOS/Windows, so we don’t expose them here. 
 
 	if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
 	    variable prevActiveIndex

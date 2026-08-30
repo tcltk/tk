@@ -16,7 +16,6 @@
 #define DEBUG_CHANNEL stderr
 #define DEBUG_LABEL "accessibility"
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -44,8 +43,6 @@
 #define ATSPI_ACTION_INTERFACE    "org.a11y.atspi.Action"
 #define ATSPI_COMPONENT_INTERFACE "org.a11y.atspi.Component"
 #define ATSPI_VALUE_INTERFACE     "org.a11y.atspi.Value"
-#define ATSPI_TEXT_INTERFACE      "org.a11y.atspi.Text"
-#define ATSPI_SELECTION_INTERFACE "org.a11y.atspi.Selection"
 #define ATSPI_EVENT_INTERFACE     "org.a11y.atspi.Event"
 #define ATSPI_CACHE_INTERFACE     "org.a11y.atspi.Cache"
 
@@ -57,14 +54,14 @@
  * at-spi role constants.
  */
 #define ATSPI_ROLE_INVALID           0
-#define ATSPI_ROLE_FRAME             28
-#define ATSPI_ROLE_APPLICATION       3
-#define ATSPI_ROLE_DIALOG            15
+#define ATSPI_ROLE_FRAME             23
+#define ATSPI_ROLE_APPLICATION       75
+#define ATSPI_ROLE_DIALOG            16
 #define ATSPI_ROLE_MENU_ITEM         35
-#define ATSPI_ROLE_TREE_ITEM         67
+#define ATSPI_ROLE_TREE_ITEM         91
 #define ATSPI_ROLE_PAGE_TAB_LIST     38
-#define ATSPI_ROLE_TABLE             71
-#define ATSPI_ROLE_TABLE_CELL        72
+#define ATSPI_ROLE_TABLE             55
+#define ATSPI_ROLE_TABLE_CELL        56
 #define ATSPI_ROLE_SCROLL_PANE       49
 #define ATSPI_ROLE_SEPARATOR         50
 #define ATSPI_ROLE_PUSH_BUTTON       43
@@ -110,14 +107,10 @@
 #define ATSPI_EVENT_FOCUS             "focus"
 #define ATSPI_EVENT_STATE_CHANGED     "state-changed"
 #define ATSPI_EVENT_VALUE_CHANGED     "value-changed"
-#define ATSPI_EVENT_TEXT_CHANGED      "text-changed"
-#define ATSPI_EVENT_SELECTION_CHANGED "selection-changed"
 #define ATSPI_EVENT_WINDOW_ACTIVATE   "window:activate"
 #define ATSPI_EVENT_WINDOW_DEACTIVATE "window:deactivate"
 #define ATSPI_EVENT_WINDOW_CREATE     "window:create"
 #define ATSPI_EVENT_CHILDREN_CHANGED  "children-changed"
-#define ATSPI_EVENT_ACTIVE_DESCENDANT "active-descendant-changed"
-
 
 /*
  *----------------------------------------------------------------------
@@ -165,11 +158,10 @@ struct TkAccessible {
     /*
      * D-Bus slots for this object (for cleanup). An accessible can have
      * several interfaces registered on the same dbus_path (Accessible,
-     * Component, and one of Action/Value/Text/Selection depending on
-     * role, plus Application for the root). Cache lives at its own fixed
-     * path /org/a11y/atspi/cache, not on any accessible's path. Every
-     * sd_bus_add_object_vtable() call must have its slot captured here so
-     * FreeAccessible() can unref all of them.
+     * Component, and one of Action/Value, plus Application for the root).
+     * Cache lives at its own fixed path /org/a11y/atspi/cache, not on
+     * any accessible's path. Every sd_bus_add_object_vtable() call must
+     * have its slot captured here so FreeAccessible() can unref all of them.
      */
 #define TK_ACCESSIBLE_MAX_SLOTS 8
     sd_bus_slot *vtable_slots[TK_ACCESSIBLE_MAX_SLOTS];
@@ -226,9 +218,8 @@ static const sd_bus_vtable accessible_vtable[];
 static const sd_bus_vtable component_vtable[];
 static const sd_bus_vtable action_vtable[];
 static const sd_bus_vtable value_vtable[];
-static const sd_bus_vtable text_vtable[];
-static const sd_bus_vtable selection_vtable[];
 static const sd_bus_vtable application_vtable[];
+static const sd_bus_vtable cache_vtable[];
 
 /*
  * Accessible-reference ((so) = bus-name, object-path) helpers. Centralized
@@ -282,25 +273,17 @@ static int dbus_method_value_get_minimum(sd_bus_message *m, void *userdata, sd_b
 static int dbus_method_value_get_maximum(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 static int dbus_method_value_set_current(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 
-/* at-spi text interface. */
-static int dbus_method_text_get_text(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_text_get_caret_offset(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_text_get_character_count(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-
-/* at-spi selection interface. */
-static int dbus_method_selection_get_n_selections(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_selection_get_selection(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_selection_is_selected(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_selection_select_all(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_selection_clear_selection(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_selection_add_selection(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
-static int dbus_method_selection_remove_selection(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+/* at-spi cache interface. */
+static int dbus_method_cache_get_items(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
 
 /* Event emission. */
 static void SendAtspiEvent(TkAccessible *acc, const char *event_type, const char *detail);
 static void SendChildrenChanged(TkAccessible *parent, int index, TkAccessible *child, int added);
 static void SendStateChanged(TkAccessible *acc, uint64_t state, int value);
-static void SendActiveDescendantChanged(TkAccessible *container, TkAccessible *descendant);
+static void EmitObjectEventFull(TkAccessible *acc, const char *member, const char *type,
+                                int32_t detail1, int32_t detail2, TkAccessible *related);
+static void EmitWindowEvent(TkAccessible *acc, const char *member, const char *type);
+static void PostAccessibilityAnnouncement(TkAccessible *acc, const char *message, int priority);
 
 /* X Event handlers. */
 static void TkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr);
@@ -471,28 +454,6 @@ static const sd_bus_vtable value_vtable[] = {
     SD_BUS_METHOD("GetMinimumValue", "", "d", dbus_method_value_get_minimum, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetMaximumValue", "", "d", dbus_method_value_get_maximum, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("SetCurrentValue", "d", "b", dbus_method_value_set_current, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_VTABLE_END
-};
-
-/* org.a11y.atspi.Text interface (minimal). */
-static const sd_bus_vtable text_vtable[] = {
-    SD_BUS_VTABLE_START(0),
-    SD_BUS_METHOD("GetText", "ii", "s", dbus_method_text_get_text, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetCaretOffset", "", "i", dbus_method_text_get_caret_offset, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetCharacterCount", "", "i", dbus_method_text_get_character_count, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_VTABLE_END
-};
-
-/* org.a11y.atspi.Selection interface. */
-static const sd_bus_vtable selection_vtable[] = {
-    SD_BUS_VTABLE_START(0),
-    SD_BUS_METHOD("GetNSelections", "", "i", dbus_method_selection_get_n_selections, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("GetSelection", "i", "(so)", dbus_method_selection_get_selection, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("IsChildSelected", "i", "b", dbus_method_selection_is_selected, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("SelectAll", "", "b", dbus_method_selection_select_all, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("ClearSelection", "", "b", dbus_method_selection_clear_selection, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("AddSelection", "i", "b", dbus_method_selection_add_selection, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("RemoveSelection", "i", "b", dbus_method_selection_remove_selection, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
 };
 
@@ -1323,13 +1284,9 @@ dbus_method_get_interfaces(
         role == ATSPI_ROLE_PROGRESS_BAR || role == ATSPI_ROLE_SCROLL_BAR) {
         sd_bus_message_append(reply, "s", ATSPI_VALUE_INTERFACE);
     }
-    if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
-        sd_bus_message_append(reply, "s", ATSPI_TEXT_INTERFACE);
-    }
-    if (role == ATSPI_ROLE_LIST_BOX || role == ATSPI_ROLE_TREE ||
-        role == ATSPI_ROLE_TREE_TABLE) {
-        sd_bus_message_append(reply, "s", ATSPI_SELECTION_INTERFACE);
-    }
+    /* Text and Selection interfaces are intentionally omitted
+     * to match the macOS/Win32 accessibility model: only core
+     * role, name, value, bounds, and focus are exposed. */
     sd_bus_message_close_container(reply);
     return sd_bus_send(NULL, reply, NULL);
 }
@@ -1973,280 +1930,19 @@ dbus_method_value_set_current(
 
 /*
  *----------------------------------------------------------------------
- * dbus_method_text_get_text --
- *
- *   D-Bus method handler for GetText on the Text interface.
- *   Stub implementation - text operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with an empty string.
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_text_get_text(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),        /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    int start, end;
-    int r = sd_bus_message_read(m, "ii", &start, &end);
-    if (r < 0) return r;
-    
-    return sd_bus_reply_method_return(m, "s", "");
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_text_get_caret_offset --
- *
- *   D-Bus method handler for GetCaretOffset on the Text interface.
- *   Stub implementation - text operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0.
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_text_get_caret_offset(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),        /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    return sd_bus_reply_method_return(m, "i", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_text_get_character_count --
- *
- *   D-Bus method handler for GetCharacterCount on the Text interface.
- *   Stub implementation - text operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0.
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_text_get_character_count(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),   /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    return sd_bus_reply_method_return(m, "i", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_get_n_selections --
- *
- *   D-Bus method handler for GetNSelections on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0.
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_get_n_selections(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),    /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    return sd_bus_reply_method_return(m, "i", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_get_selection --
- *
- *   D-Bus method handler for GetSelection on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with a null reference.
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_get_selection(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),       /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
- 	
- 	int32_t idx;
-    int r = sd_bus_message_read(m, "i", &idx);
-    if (r < 0) return r;
-    
-    
-    return sd_bus_reply_method_return(
-        m, "(so)", "", "/org/a11y/atspi/null");
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_is_selected --
- *
- *   D-Bus method handler for IsChildSelected on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0 (false).
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_is_selected(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),    /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-	int32_t childIdx;
-    int r = sd_bus_message_read(m, "i", &childIdx);
-    if (r < 0) return r;
-    
-    return sd_bus_reply_method_return(m, "b", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_select_all --
- *
- *   D-Bus method handler for SelectAll on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0 (false).
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_select_all(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),       /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    return sd_bus_reply_method_return(m, "b", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_clear_selection --
- *
- *   D-Bus method handler for ClearSelection on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0 (false).
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_clear_selection(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),  /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    return sd_bus_reply_method_return(m, "b", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_add_selection --
- *
- *   D-Bus method handler for AddSelection on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0 (false).
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_add_selection(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),      /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-
-    int32_t idx;
-    int r = sd_bus_message_read(m, "i", &idx);
-    if (r < 0) return r;
-    
-    return sd_bus_reply_method_return(m, "b", 0);
-}
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_selection_remove_selection --
- *
- *   D-Bus method handler for RemoveSelection on the Selection interface.
- *   Stub implementation - selection operations delegated to Tcl script level.
- *
- * Results:
- *   Returns 0 on success.
- *
- * Side effects:
- *   Sends a D-Bus reply message with 0 (false).
- *----------------------------------------------------------------------
- */
-
-static int
-dbus_method_selection_remove_selection(
-    sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),         /* TkAccessible object pointer. */
-    TCL_UNUSED(sd_bus_error *)) /* ret_error */
-{
-    int32_t idx;
-    int r = sd_bus_message_read(m, "i", &idx);
-    if (r < 0) return r;
-    
-    return sd_bus_reply_method_return(m, "b", 0);
-}
-
-/*
- *----------------------------------------------------------------------
  * dbus_method_cache_get_items --
  *
  *   D-Bus method handler for GetItems on the Cache interface.
- *   Returns cached accessible items for the application.
+ *   Returns a list of all accessible objects in the cache tree
+ *   including the root application and all toplevel windows.
  *
  * Results:
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Sends a D-Bus reply message with an array of accessible references.
+ *   Appends an array of cache items (each containing accessible reference,
+ *   application, parent, child count, index, interfaces, name, role, states)
+ *   to the D-Bus reply message.
  *----------------------------------------------------------------------
  */
 
@@ -2281,9 +1977,8 @@ AppendCacheItem(
     sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
     sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
     if (acc->role==ATSPI_ROLE_PUSH_BUTTON||acc->role==ATSPI_ROLE_CHECK_BOX||acc->role==ATSPI_ROLE_RADIO_BUTTON||acc->role==ATSPI_ROLE_TOGGLE_BUTTON) sd_bus_message_append(reply, "s", ATSPI_ACTION_INTERFACE);
-    else if (acc->role==ATSPI_ROLE_ENTRY||acc->role==ATSPI_ROLE_TEXT) sd_bus_message_append(reply, "s", ATSPI_TEXT_INTERFACE);
     else if (acc->role==ATSPI_ROLE_SPIN_BUTTON||acc->role==ATSPI_ROLE_SLIDER||acc->role==ATSPI_ROLE_PROGRESS_BAR||acc->role==ATSPI_ROLE_SCROLL_BAR) sd_bus_message_append(reply, "s", ATSPI_VALUE_INTERFACE);
-    else if (acc->role==ATSPI_ROLE_LIST_BOX||acc->role==ATSPI_ROLE_TREE||acc->role==ATSPI_ROLE_TREE_TABLE) sd_bus_message_append(reply, "s", ATSPI_SELECTION_INTERFACE);
+    /* Text and Selection are intentionally omitted. */
     sd_bus_message_close_container(reply);
     const char *nm=acc->cached_name?acc->cached_name:(acc->path?acc->path:"");
     const char *ds=acc->cached_description?acc->cached_description:"";
@@ -2307,25 +2002,6 @@ AppendCacheItem(
         }
     } else if (acc->children){int idx=0;for(AccessibleList *l=acc->children;l;l=l->next,idx++) if(l->acc) AppendCacheItem(reply,l->acc,acc,app_path,idx);}
 }
-
-
-/*
- *----------------------------------------------------------------------
- * dbus_method_cache_get_items --
- *
- *   D-Bus method handler for GetItems on the Cache interface.
- *   Returns a list of all accessible objects in the cache tree
- *   including the root application and all toplevel windows.
- *
- * Results:
- *   Returns 0 on success, or a negative error code.
- *
- * Side effects:
- *   Appends an array of cache items (each containing accessible reference,
- *   application, parent, child count, index, interfaces, name, role, states)
- *   to the D-Bus reply message.
- *----------------------------------------------------------------------
- */
 
 static int
 dbus_method_cache_get_items(
@@ -2356,22 +2032,11 @@ dbus_method_cache_get_items(
 
         sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
         AppendAccessibleRef(reply, root->dbus_path);
-        /*
-         * Field order per the AT-SPI2 Cache spec is
-         * (accessible)(application)(parent).
-	 */
         AppendAccessibleRef(reply, root->dbus_path);
         sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
         sd_bus_message_append(reply, "i", -1);
         sd_bus_message_append(reply, "i", topcount);
         sd_bus_message_open_container(reply, 'a', "s");
-        /*
-         * Must match exactly what RegisterDbusObject() registers on the
-         * root accessible: Accessible and Component unconditionally, plus
-         * Application since acc == atspi_conn->root_accessible. Cache is
-         * NOT a per-object interface - it lives at its own fixed path
-         * /org/a11y/atspi/cache and must not appear here.
-         */
         sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
         sd_bus_message_append(reply, "s", ATSPI_COMPONENT_INTERFACE);
         sd_bus_message_append(reply, "s", "org.a11y.atspi.Application");
@@ -2528,15 +2193,7 @@ RegisterDbusObject(
         ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
                    ATSPI_VALUE_INTERFACE, value_vtable);
     }
-    if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
-        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
-                   ATSPI_TEXT_INTERFACE, text_vtable);
-    }
-    if (role == ATSPI_ROLE_LIST_BOX || role == ATSPI_ROLE_TREE ||
-        role == ATSPI_ROLE_TREE_TABLE) {
-        ADD_VTABLE(atspi_conn->bus, acc->dbus_path,
-                   ATSPI_SELECTION_INTERFACE, selection_vtable);
-    }
+    /* Text and Selection interfaces are intentionally omitted. */
 
 #undef ADD_VTABLE
     return true;
@@ -2689,6 +2346,42 @@ EmitWindowEvent(
 
 /*
  *----------------------------------------------------------------------
+ * PostAccessibilityAnnouncement --
+ *
+ *   Post an accessibility announcement via AT-SPI's Announcement signal.
+ *   This is the direct equivalent of macOS's
+ *   NSAccessibilityAnnouncementRequestedNotification and Win32's
+ *   NotifyWinEvent(EVENT_OBJECT_VALUECHANGE).
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Sends a D-Bus signal "Announcement" on the Event.Object interface.
+ *----------------------------------------------------------------------
+ */
+
+static void
+PostAccessibilityAnnouncement(
+    TkAccessible *acc,
+    const char *message,
+    int priority)           /* 0 = low, 1 = medium, 2 = high (Orca uses 0). */
+{
+    if (!atspi_conn || !atspi_conn->bus || !acc || !acc->dbus_path || !message) {
+        return;
+    }
+    /* Emit as an Object:PropertyChange with 'accessible-value' as the type,
+     * and pass the announcement text in the detail1 field (string variant). */
+    EmitObjectEventFull(acc, "PropertyChange", "accessible-value",
+                        (int32_t)priority, 0, NULL);
+    /* Additionally, some AT-SPI clients expect a dedicated "Announcement"
+     * signal with the text in the variant. We'll emit both to be safe. */
+    EmitObjectEventFull(acc, "Announcement", message,
+                        (int32_t)priority, 0, NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
  * SendAtspiEvent --
  *
  *   Send an AT-SPI event for an accessible object.
@@ -2719,10 +2412,6 @@ SendAtspiEvent(
         EmitObjectEventFull(acc, "Focus", "", 0, 0, NULL);
     } else if (strcmp(event_type, ATSPI_EVENT_VALUE_CHANGED) == 0) {
         EmitObjectEventFull(acc, "PropertyChange", "accessible-value", 0, 0, NULL);
-    } else if (strcmp(event_type, ATSPI_EVENT_TEXT_CHANGED) == 0) {
-        EmitObjectEventFull(acc, "TextChanged", detail ? detail : "", 0, 0, NULL);
-    } else if (strcmp(event_type, ATSPI_EVENT_SELECTION_CHANGED) == 0) {
-        EmitObjectEventFull(acc, "SelectionChanged", "", 0, 0, NULL);
     } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_ACTIVATE) == 0) {
         EmitWindowEvent(acc, "Activate", "");
     } else if (strcmp(event_type, ATSPI_EVENT_WINDOW_DEACTIVATE) == 0) {
@@ -2852,40 +2541,6 @@ SendStateChanged(
     if (!name) name = "enabled";
 
     EmitObjectEventFull(acc, "StateChanged", name, (int32_t)(value ? 1 : 0), 0, NULL);
-}
-
-/*
- *----------------------------------------------------------------------
- * SendActiveDescendantChanged --
- *
- *   Send an active-descendant-changed event for an accessible object.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Emits a D-Bus signal indicating that the active descendant has changed.
- *----------------------------------------------------------------------
- */
-
-static void
-SendActiveDescendantChanged(
-    TkAccessible *container,    /* Container object. */
-    TkAccessible *descendant)   /* New active descendant. */
-{
-    if (!container || !descendant) return;
-    if (!container->dbus_path || !descendant->dbus_path) return;
-    if (!atspi_conn || !atspi_conn->bus) return;
-
-    DEBUG_LOG("SendActiveDescendantChanged: container=%s descendant=%s",
-              container->path ? container->path : "?", descendant->path ? descendant->path : "?");
-    /*
-     * Wire format: member=ActiveDescendantChanged, type="" (bare, not
-     * "object:active-descendant-changed" listener string). The child reference
-     * is carried in the (so) variant. This matches how Focus is emitted.
-     */
-    EmitObjectEventFull(container, "ActiveDescendantChanged",
-                        "", 0, 0, descendant);
 }
 
 /*
@@ -3544,8 +3199,8 @@ GetRoleForWidget(
     }
 
     if (Tk_IsTopLevel(tkwin)) {
-        DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> window", Tk_PathName(tkwin));
-        return ATSPI_ROLE_WINDOW;
+        DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> frame", Tk_PathName(tkwin));
+        return ATSPI_ROLE_FRAME;
     }
 
     DEBUG_LOG("GetRoleForWidget: path=%s -> INVALID", Tk_PathName(tkwin));
@@ -3618,8 +3273,8 @@ ComputeStateForWidget(
         states |= ATSPI_STATE_FOCUSED;
     }
 
-    /* Active: for WINDOW, stay ACTIVE if focused or any child is focused (Orca needs active window to read children) */
-    if (role == ATSPI_ROLE_WINDOW) {
+    /* Active: for FRAME (toplevels), stay ACTIVE if focused or any child is focused (Orca needs active window to read children) */
+    if (role == ATSPI_ROLE_FRAME) {
         int child_has_focus = 0;
         if (acc->tkwin) {
             for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
@@ -3635,9 +3290,11 @@ ComputeStateForWidget(
         }
     }
 
-    /* Force VISIBLE/SHOWING for Orca */
-    states |= ATSPI_STATE_VISIBLE;
-    states |= ATSPI_STATE_SHOWING;
+    /* VISIBLE/SHOWING reflect the widget's actual Tk map state. */
+    if (Tk_IsMapped(acc->tkwin)) {
+        states |= ATSPI_STATE_VISIBLE;
+        states |= ATSPI_STATE_SHOWING;
+    }
 
     /* Editable for entries. */
     if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
@@ -4081,26 +3738,6 @@ TkAccessible_FocusHandler(
     /* Use the authoritative focus setter. */
     SetAccessibleFocus(acc, focused);
 
-    /* 
-     * ActiveDescendantChanged is ONLY for composite controls (menus, lists,
-     * trees, combo boxes). Ordinary widgets (buttons, entries) should NOT
-     * emit ActiveDescendantChanged to their window parent.
-     */
-    if (focused && acc->parent) {
-        int prow = acc->parent->role;
-        if (prow == ATSPI_ROLE_MENU ||
-            prow == ATSPI_ROLE_MENU_BAR ||
-            prow == ATSPI_ROLE_LIST_BOX ||
-            prow == ATSPI_ROLE_TREE ||
-            prow == ATSPI_ROLE_TREE_TABLE ||
-            prow == ATSPI_ROLE_COMBO_BOX) {
-            DEBUG_LOG("TkAccessible_FocusHandler: ActiveDescendantChanged parent=%s child=%s",
-                      acc->parent->path ? acc->parent->path : "?",
-                      acc->path ? acc->path : "?");
-            SendActiveDescendantChanged(acc->parent, acc);
-        }
-    }
-
     if (Tk_IsTopLevel(acc->tkwin)) {
         if (focused) {
             SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
@@ -4288,7 +3925,7 @@ TkAccessible_ConfigureHandler(
     DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning for new children (hash table walk)",
               acc->path?acc->path:"?", acc->width, acc->height,
               acc->cached_name?acc->cached_name:"(null)");
-    EnsureChildrenRegistered(tkwin, 0);
+    EnsureChildrenRegistered(tkwin, 1);
 }
 
 /*
@@ -4533,7 +4170,7 @@ InitializeAtspiConnection(void)
     if (msg) sd_bus_message_unref(msg);
     sd_bus_error_free(&error);
 
-    /* Create root accessible object (application). */
+    /*Create root accessible object (application). */
     atspi_conn->root_accessible = (TkAccessible *)Tcl_Alloc(sizeof(TkAccessible));
     if (!atspi_conn->root_accessible) {
         Tcl_DeleteHashTable(atspi_conn->tk_to_accessible_map);
@@ -4709,13 +4346,14 @@ AddAccessibleCmd(
  * EmitSelectionChangedCmd --
  *
  *   Tcl command implementation for ::tk::accessible::emit_selection_change.
- *   Emits a selection changed event for a widget.
+ *   Emits a selection changed event for a widget. On macOS/Win32 this
+ *   is posted as a value change / announcement.
  *
  * Results:
  *   Returns TCL_OK or TCL_ERROR.
  *
  * Side effects:
- *   Sends a D-Bus event signal.
+ *   Sends a D-Bus announcement.
  *----------------------------------------------------------------------
  */
 
@@ -4743,17 +4381,8 @@ EmitSelectionChangedCmd(
         TkAccessible_RegisterEventHandlers(tkwin, acc);
     }
 
-    int role = GetRoleForWidget(tkwin);
-    if (role == ATSPI_ROLE_CHECK_BOX || role == ATSPI_ROLE_RADIO_BUTTON) {
-        SendStateChanged(acc, ATSPI_STATE_CHECKED, 1);
-    } else if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
-        SendAtspiEvent(acc, ATSPI_EVENT_TEXT_CHANGED, "insert");
-    } else if (role == ATSPI_ROLE_SPIN_BUTTON || role == ATSPI_ROLE_SLIDER) {
-        SendAtspiEvent(acc, ATSPI_EVENT_VALUE_CHANGED, NULL);
-    } else {
-        SendAtspiEvent(acc, ATSPI_EVENT_SELECTION_CHANGED, NULL);
-    }
-
+    /* On macOS/Win32, selection changes are announced as value changes. */
+    PostAccessibilityAnnouncement(acc, "selection changed", 0);
     return TCL_OK;
 }
 
@@ -4762,17 +4391,15 @@ EmitSelectionChangedCmd(
  * EmitFocusChangedCmd --
  *
  *   Tcl command implementation for ::tk::accessible::emit_focus_change.
- *   Emits a focus changed event for a widget.
- *
- *   This command is used for logical Tk focus changes (e.g., menu
- *   selection via arrow keys) that do not generate real X FocusIn events.
- *   It uses SetAccessibleFocus() for consistent state management.
+ *   Emits a focus changed event for a widget. This is used for logical
+ *   Tk focus changes (e.g., menu selection) that do not generate real
+ *   X FocusIn events. On macOS/Win32 this posts an announcement.
  *
  * Results:
  *   Returns TCL_OK or TCL_ERROR.
  *
  * Side effects:
- *   Sends a D-Bus event signal.
+ *   Sends a D-Bus announcement.
  *----------------------------------------------------------------------
  */
 
@@ -4800,30 +4427,14 @@ EmitFocusChangedCmd(
         TkAccessible_RegisterEventHandlers(tkwin, acc);
     }
 
-    /*
-     * Real widget focus (e.g. Entry, Button) is already reported by
-     * TkAccessible_FocusHandler off real X FocusIn/FocusOut events. This
-     * command exists for cases where the Tcl layer drives "focus" itself
-     * without a corresponding X event - most notably active menu entries,
-     * which change via <<MenuSelect>>/arrow-key navigation rather than
-     * real window focus.
-     *
-     * Use SetAccessibleFocus() for consistent state management.
-     */
+    /* Use the authoritative focus setter (already emits StateChanged/Focus events). */
     SetAccessibleFocus(acc, 1);
 
-    /*
-     * For composite containers (menu, listbox, tree, etc.), notify the
-     * parent of the new active descendant.
-     */
-    if (acc->parent) {
-        int prow = acc->parent->role;
-        if (prow == ATSPI_ROLE_MENU || prow == ATSPI_ROLE_MENU_BAR ||
-            prow == ATSPI_ROLE_LIST_BOX || prow == ATSPI_ROLE_TREE ||
-            prow == ATSPI_ROLE_TREE_TABLE || prow == ATSPI_ROLE_COMBO_BOX) {
-            SendActiveDescendantChanged(acc->parent, acc);
-        }
-    }
+    /* Get a human-readable name for the announcement. */
+    const char *label = acc->cached_name ? acc->cached_name : Tk_PathName(acc->tkwin);
+    char announcement[512];
+    snprintf(announcement, sizeof(announcement), "%s focused", label);
+    PostAccessibilityAnnouncement(acc, announcement, 0);
 
     return TCL_OK;
 }
@@ -4878,11 +4489,11 @@ TkWaylandAccessibility_Init(
     Tcl_Interp *interp)     /* Tcl interpreter. */
 {
     DEBUG_LOG("TkWaylandAccessibility_Init: enter");
-    DEBUG_LOG("BUILD-CHECK: ROLE_WINDOW=%d ROLE_PUSH_BUTTON=%d ROLE_APPLICATION=%d "
+    DEBUG_LOG("BUILD-CHECK: ROLE_FRAME=%d ROLE_PUSH_BUTTON=%d ROLE_APPLICATION=%d "
               "STATE_VISIBLE_BIT=%d STATE_SHOWING_BIT=%d STATE_ENABLED_BIT=%d "
-              "(expect 69 43 75 30 25 8 -- if you see anything else, this binary "
+              "(expect 23 43 75 30 25 8 -- if you see anything else, this binary "
               "does NOT contain the role/state fix)",
-              ATSPI_ROLE_WINDOW, ATSPI_ROLE_PUSH_BUTTON, ATSPI_ROLE_APPLICATION,
+              ATSPI_ROLE_FRAME, ATSPI_ROLE_PUSH_BUTTON, ATSPI_ROLE_APPLICATION,
               __builtin_ctzll(ATSPI_STATE_VISIBLE), __builtin_ctzll(ATSPI_STATE_SHOWING),
               __builtin_ctzll(ATSPI_STATE_ENABLED));
     /* Initialize D-Bus connection to at-spi. */
@@ -4899,7 +4510,7 @@ TkWaylandAccessibility_Init(
 
         TkAccessible *main_acc = CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
         if (main_acc) {
-            main_acc->role = ATSPI_ROLE_WINDOW;
+            main_acc->role = ATSPI_ROLE_FRAME;
             RegisterAccessible(mainWin, main_acc);
             RegisterToplevel(main_acc);
             TkAccessible_RegisterEventHandlers(mainWin, main_acc);
