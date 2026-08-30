@@ -55,137 +55,43 @@
 
 /*
  * at-spi role constants.
- *
- * IMPORTANT: these MUST match the real AtspiRole wire values from
- * at-spi2-core's atspi-constants.h, since Role is sent over D-Bus as a
- * plain uint32 and decoded by libatspi/Orca/Accerciser against that
- * spec-frozen enum -- NOT against any local numbering scheme. Previously
- * this block used a compact, hand-numbered 0..22 sequence that was
- * internally self-consistent (matched GetRoleName()/roleMap()/every
- * role == ATSPI_ROLE_X check in this file) but did not match the real
- * enum at all, so every accessible was reported to AT-SPI as the wrong
- * kind of object (toplevels as ALERT, buttons as ANIMATION, etc.),
- * which is why Orca never announced anything and Accerciser's tree
- * stopped short of the real widgets. Verify these against
- * /usr/include/at-spi-2.0/atspi/atspi-constants.h or `pyatspi.ROLE_*`
- * on the target system if you add any additional roles beyond this set.
  */
-
- 
 #define ATSPI_ROLE_INVALID           0
-#define ATSPI_ROLE_ACCELERATOR_LABEL 1
-#define ATSPI_ROLE_ALERT             2
-#define ATSPI_ROLE_ANIMATION         3
-#define ATSPI_ROLE_ARROW             4
-#define ATSPI_ROLE_CALENDAR          5
-#define ATSPI_ROLE_CANVAS            6
-#define ATSPI_ROLE_CHECK_BOX         7
-#define ATSPI_ROLE_CHECK_MENU_ITEM   8
-#define ATSPI_ROLE_COLOR_CHOOSER     9
-#define ATSPI_ROLE_COLUMN_HEADER     10
-#define ATSPI_ROLE_COMBO_BOX         11
-#define ATSPI_ROLE_DATE_EDITOR       12
-#define ATSPI_ROLE_DESKTOP_ICON      13
-#define ATSPI_ROLE_DESKTOP_FRAME     14
-#define ATSPI_ROLE_DIAL              15
-#define ATSPI_ROLE_DIALOG            16
-#define ATSPI_ROLE_DIRECTORY_PANE    17
-#define ATSPI_ROLE_DRAWING_AREA      18
-#define ATSPI_ROLE_FILE_CHOOSER      19
-#define ATSPI_ROLE_FILLER            20
-/* 21 = ATSPI_ROLE_FOCUS_TRAVERSABLE (reserved by spec, slot intentionally skipped) */
-#define ATSPI_ROLE_FONT_CHOOSER      22
-#define ATSPI_ROLE_FRAME             23
-#define ATSPI_ROLE_GLASS_PANE        24
-#define ATSPI_ROLE_HTML_CONTAINER    25
-#define ATSPI_ROLE_ICON              26
-#define ATSPI_ROLE_IMAGE             27
-#define ATSPI_ROLE_INTERNAL_FRAME    28
-#define ATSPI_ROLE_LABEL             29
-#define ATSPI_ROLE_LAYERED_PANE      30
-#define ATSPI_ROLE_LIST              31
-#define ATSPI_ROLE_LIST_ITEM         32
-#define ATSPI_ROLE_MENU              33
-#define ATSPI_ROLE_MENU_BAR          34
+#define ATSPI_ROLE_FRAME             28
+#define ATSPI_ROLE_APPLICATION       3
+#define ATSPI_ROLE_DIALOG            15
 #define ATSPI_ROLE_MENU_ITEM         35
-#define ATSPI_ROLE_OPTION_PANE       36
-#define ATSPI_ROLE_PAGE_TAB          37
+#define ATSPI_ROLE_TREE_ITEM         67
 #define ATSPI_ROLE_PAGE_TAB_LIST     38
-#define ATSPI_ROLE_PANEL             39
-#define ATSPI_ROLE_PASSWORD_TEXT     40
-#define ATSPI_ROLE_POPUP_MENU        41
-#define ATSPI_ROLE_PROGRESS_BAR      42
-#define ATSPI_ROLE_PUSH_BUTTON       43
-#define ATSPI_ROLE_RADIO_BUTTON      44
-#define ATSPI_ROLE_RADIO_MENU_ITEM   45
-#define ATSPI_ROLE_ROOT_PANE         46
-#define ATSPI_ROLE_ROW_HEADER        47
-#define ATSPI_ROLE_SCROLL_BAR        48
+#define ATSPI_ROLE_TABLE             71
+#define ATSPI_ROLE_TABLE_CELL        72
 #define ATSPI_ROLE_SCROLL_PANE       49
 #define ATSPI_ROLE_SEPARATOR         50
+#define ATSPI_ROLE_PUSH_BUTTON       43
+#define ATSPI_ROLE_CHECK_BOX         7
+#define ATSPI_ROLE_COMBO_BOX         11
+#define ATSPI_ROLE_ENTRY             79
+#define ATSPI_ROLE_LABEL             29
+#define ATSPI_ROLE_LIST_BOX          98
+#define ATSPI_ROLE_MENU              33
+#define ATSPI_ROLE_MENU_BAR          34
+#define ATSPI_ROLE_TREE              65
+#define ATSPI_ROLE_PAGE_TAB          37
+#define ATSPI_ROLE_PROGRESS_BAR      42
+#define ATSPI_ROLE_RADIO_BUTTON      44
 #define ATSPI_ROLE_SLIDER            51
 #define ATSPI_ROLE_SPIN_BUTTON       52
-#define ATSPI_ROLE_SPLIT_PANE        53
-#define ATSPI_ROLE_STATUS_BAR        54
-#define ATSPI_ROLE_TABLE             55
-#define ATSPI_ROLE_TABLE_CELL        56
-#define ATSPI_ROLE_TABLE_COLUMN_HEADER 57
-#define ATSPI_ROLE_TABLE_ROW_HEADER  58
-#define ATSPI_ROLE_TEAROFF_MENU_ITEM 59
-#define ATSPI_ROLE_TERMINAL          60
-#define ATSPI_ROLE_TEXT              61
-#define ATSPI_ROLE_TOGGLE_BUTTON     62
-#define ATSPI_ROLE_TOOL_BAR          63
-#define ATSPI_ROLE_TOOL_TIP          64
-#define ATSPI_ROLE_TREE              65
 #define ATSPI_ROLE_TREE_TABLE        66
-#define ATSPI_ROLE_UNKNOWN           67
-#define ATSPI_ROLE_VIEWPORT          68
+#define ATSPI_ROLE_TEXT              61
 #define ATSPI_ROLE_WINDOW            69
-/* 70 = ATSPI_ROLE_EXTENDED (deprecated/reserved, slot intentionally skipped) */
-#define ATSPI_ROLE_HEADER            71
-#define ATSPI_ROLE_FOOTER            72
-#define ATSPI_ROLE_PARAGRAPH         73
-#define ATSPI_ROLE_RULER             74
-#define ATSPI_ROLE_APPLICATION       75
-#define ATSPI_ROLE_AUTOCOMPLETE      76
-#define ATSPI_ROLE_EDITBAR           77
-#define ATSPI_ROLE_EMBEDDED          78
-#define ATSPI_ROLE_ENTRY             79
-#define ATSPI_ROLE_CHART             80
-#define ATSPI_ROLE_CAPTION           81
-#define ATSPI_ROLE_DOCUMENT_FRAME    82
-#define ATSPI_ROLE_HEADING           83
-#define ATSPI_ROLE_PAGE              84
-#define ATSPI_ROLE_SECTION           85
-#define ATSPI_ROLE_REDUNDANT_OBJECT  86
-#define ATSPI_ROLE_FORM              87
-#define ATSPI_ROLE_LINK              88
-#define ATSPI_ROLE_INPUT_METHOD_WINDOW 89
-#define ATSPI_ROLE_TABLE_ROW         90
-#define ATSPI_ROLE_TREE_ITEM         91
-#define ATSPI_ROLE_DOCUMENT_SPREADSHEET 92
-#define ATSPI_ROLE_DOCUMENT_PRESENTATION 93
-#define ATSPI_ROLE_DOCUMENT_TEXT     94
-#define ATSPI_ROLE_DOCUMENT_WEB      95
-#define ATSPI_ROLE_DOCUMENT_EMAIL    96
-#define ATSPI_ROLE_COMMENT           97
-#define ATSPI_ROLE_LIST_BOX          98
-#define ATSPI_ROLE_GROUPING          99
-#define ATSPI_ROLE_IMAGE_MAP         100
-#define ATSPI_ROLE_NOTIFICATION      101
-#define ATSPI_ROLE_INFO_BAR          102
-/* Compatibility aliases for older code */
-#define ATSPI_ROLE_BUTTON            ATSPI_ROLE_PUSH_BUTTON
-#define ATSPI_ROLE_LIST_BOX_ALIAS    ATSPI_ROLE_LIST_BOX
+#define ATSPI_ROLE_PANEL             39
+#define ATSPI_ROLE_CANVAS            6
+#define ATSPI_ROLE_SCROLL_BAR        48
+#define ATSPI_ROLE_TOGGLE_BUTTON     62
 
-/* at-spi state constants (bit flags).
- * Bit POSITIONS must match the real AtspiStateType enum index from
- * atspi-constants.h -- verified against the published AT-SPI2 D-Bus
- * spec (org.a11y.atspi.Accessible.GetState). VISIBLE (30) and SHOWING
- * (25) are the two bits every AT-SPI client checks before treating an
- * object as onscreen at all; per spec "the absence of VISIBLE and
- * SHOWING is semantically equivalent to saying an object is hidden." */
+/* 
+ * at-spi state constants (bit flags).
+ */
 #define ATSPI_STATE_ACTIVE           (1ULL << 1)
 #define ATSPI_STATE_CHECKED          (1ULL << 4)
 #define ATSPI_STATE_EDITABLE         (1ULL << 7)
@@ -263,10 +169,7 @@ struct TkAccessible {
      * role, plus Application for the root). Cache lives at its own fixed
      * path /org/a11y/atspi/cache, not on any accessible's path. Every
      * sd_bus_add_object_vtable() call must have its slot captured here so
-     * FreeAccessible() can unref all of them -- a slot that is never
-     * captured (NULL passed as the ret_slot argument) is "floating" and
-     * stays registered, pointing at this object's memory, for the
-     * lifetime of the bus even after the object is freed.
+     * FreeAccessible() can unref all of them.
      */
 #define TK_ACCESSIBLE_MAX_SLOTS 8
     sd_bus_slot *vtable_slots[TK_ACCESSIBLE_MAX_SLOTS];
@@ -306,7 +209,6 @@ static TkAccessible *GetAccessible(Tk_Window tkwin);
 static void UnregisterAccessible(Tk_Window tkwin);
 static void FreeAccessible(TkAccessible *acc);
 static int GetRoleForWidget(Tk_Window tkwin);
-static char *TryCgetString(Tk_Window tkwin, const char *option);
 static uint64_t ComputeStateForWidget(TkAccessible *acc);
 static char *GetNameForWidget(Tk_Window tkwin);
 static char *GetDescriptionForWidget(Tk_Window tkwin);
@@ -314,12 +216,9 @@ static char *GetValueForWidget(Tk_Window tkwin);
 static void RegisterToplevel(TkAccessible *acc);
 static void UnregisterToplevel(TkAccessible *acc);
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
-static void EnsureChildrenRegistered(Tk_Window tkwin);
-static void EnsureChildrenRegisteredEx(Tk_Window tkwin, int emitEvents);
-static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *parent_acc);
-static void EnsureChildrenRegisteredRecursiveEx(Tk_Window tkwin, TkAccessible *parent_acc, int emitEvents);
+static void EnsureChildrenRegistered(Tk_Window tkwin,int emitEvents);
+static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *parent_acc, int emitEvents);
 static void UpdateFocusChain(Tk_Window focused);
-static char *Tcl_Strdup(const char *s);
 static void SetAccessibleFocus(TkAccessible *acc, int focused);
 
 /* D-Bus vtables and method handlers. */
@@ -411,11 +310,6 @@ static void TkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr);
 static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *acc);
 
 /* Tcl event loop integration. */
-/*
- * TkWaylandAtspiProcessEvents is exported (not static) -- see its
- * definition below -- so tkWaylandNotify.c's CheckProc can drain
- * atspi_bus on the same cadence it already uses for ibus_bus.
- */
 void TkWaylandAtspiProcessEvents(void);
 
 /* Tcl command implementations. */
@@ -498,7 +392,6 @@ RoleToString(int role)
         default: return "unknown";
     }
 }
-
 
 static AtspiConnection *atspi_conn = NULL;
 extern Tcl_HashTable *TkAccessibilityObject;  /* from tkAccessibility.c */
@@ -602,7 +495,6 @@ static const sd_bus_vtable selection_vtable[] = {
     SD_BUS_METHOD("RemoveSelection", "i", "b", dbus_method_selection_remove_selection, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
 };
-
 
 /*
  * org.a11y.atspi.Application interface - queried by the registry/Orca once
@@ -765,29 +657,6 @@ static const sd_bus_vtable application_vtable[] = {
 
 /*
  *----------------------------------------------------------------------
- * Tcl_Strdup --
- *
- *   Duplicate a string using Tcl's memory allocator.
- *
- * Results:
- *   Returns a pointer to the newly allocated copy of the string, or NULL
- *   if the input string is NULL.
- *
- * Side effects:
- *   Memory is allocated via Tcl_Alloc.
- *----------------------------------------------------------------------
- */
-
-static char *
-Tcl_Strdup(
-    const char *s)          /* String to duplicate. */
-{
-    if (s == NULL) return NULL;
-    return strcpy((char *) Tcl_Alloc(strlen(s) + 1), s);
-}
-
-/*
- *----------------------------------------------------------------------
  * SelfBusName --
  *
  *   Get the unique D-Bus name of our own connection. Used as the bus-name
@@ -879,7 +748,7 @@ dbus_method_get_children(
         return sd_bus_reply_method_return(m, "a(so)", 0);
     }
     if (acc->tkwin) {
-        EnsureChildrenRegisteredEx(acc->tkwin, 0);
+        EnsureChildrenRegistered(acc->tkwin, 0);
     }
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
@@ -971,9 +840,9 @@ dbus_method_get_child_at_index(
             AppendAccessibleRef(reply, NULL);
         }
     } else if (acc->tkwin && !acc->is_virtual) {
-        /*
+    /*
 	 * Count only accessible children, skipping non-Tk windows like
-	 *  listbox rows.
+	 * listbox rows.
 	 */
         TkWindow *childPtr;
         int acc_idx = 0;
@@ -1465,6 +1334,20 @@ dbus_method_get_interfaces(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_application--
+ *
+ *   D-Bus method handler for an application reference.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an application reference.
+ *----------------------------------------------------------------------
+ */
+
 static int
 dbus_method_get_application(
     sd_bus_message *m,
@@ -1668,6 +1551,21 @@ dbus_method_component_contains(
                     y >= comp_y && y < comp_y + comp_h);
     return sd_bus_reply_method_return(m, "b", contains);
 }
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_component_get_accessible_at_point --
+ *
+ *   D-Bus method handler for GetAccessibleAtPoint on the Component interface.
+ *   Finds which UI component (widget) is located at a specific screen position.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a boolean value.
+ *----------------------------------------------------------------------
+ */
 
 static int
 dbus_method_component_get_accessible_at_point(
@@ -1959,7 +1857,7 @@ dbus_method_value_get_current(
 
     char *val_str = GetValueForWidget(acc->tkwin);
     double value = val_str ? atof(val_str) : 0.0;
-    if (val_str) Tcl_Free(val_str);
+    if (val_str) free(val_str); val_str=NULL;
     return sd_bus_reply_method_return(m, "d", value);
 }
 
@@ -2078,10 +1976,10 @@ dbus_method_value_set_current(
  * dbus_method_text_get_text --
  *
  *   D-Bus method handler for GetText on the Text interface.
- *   Returns the text content of the component.
+ *   Stub implementation - text operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
  *   Sends a D-Bus reply message with an empty string.
@@ -2091,45 +1989,14 @@ dbus_method_value_set_current(
 static int
 dbus_method_text_get_text(
     sd_bus_message *m,      /* D-Bus method call message. */
-    void *userdata,         /* TkAccessible object pointer. */
+    TCL_UNUSED(void *),        /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
-    int32_t start, end;
+    int start, end;
     int r = sd_bus_message_read(m, "ii", &start, &end);
     if (r < 0) return r;
-
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return sd_bus_reply_method_return(m, "s", "");
-    }
-
-    char cmd[512];
-    const char *path = Tk_PathName(acc->tkwin);
-    /* Try to get full text. */
-    snprintf(cmd, sizeof(cmd), "%s get", path);
-    if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-        /* Try text widget: get 1.0 end-1c */
-        snprintf(cmd, sizeof(cmd), "%s get 1.0 {end -1c}", path);
-        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-            Tcl_ResetResult(acc->interp);
-            return sd_bus_reply_method_return(m, "s", "");
-        }
-    }
-    const char *full = Tcl_GetStringResult(acc->interp);
-    if (!full) full = "";
-    int len = (int)strlen(full);
-    if (start < 0) start = 0;
-    if (end < 0 || end > len) end = len;
-    if (start > len) start = len;
-    if (end < start) end = start;
-    int sublen = end - start;
-    char *sub = (char *)Tcl_Alloc(sublen + 1);
-    if (sublen > 0) memcpy(sub, full + start, sublen);
-    sub[sublen] = '\0';
-    Tcl_ResetResult(acc->interp);
-    int ret = sd_bus_reply_method_return(m, "s", sub);
-    Tcl_Free(sub);
-    return ret;
+    
+    return sd_bus_reply_method_return(m, "s", "");
 }
 
 /*
@@ -2137,47 +2004,22 @@ dbus_method_text_get_text(
  * dbus_method_text_get_caret_offset --
  *
  *   D-Bus method handler for GetCaretOffset on the Text interface.
- *   Returns the current caret offset in the text.
+ *   Stub implementation - text operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with -1 (not implemented).
+ *   Sends a D-Bus reply message with 0.
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_text_get_caret_offset(
     sd_bus_message *m,      /* D-Bus method call message. */
-    void *userdata,         /* TkAccessible object pointer. */
+    TCL_UNUSED(void *),        /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return sd_bus_reply_method_return(m, "i", 0);
-    }
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s index insert", Tk_PathName(acc->tkwin));
-    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-        Tcl_Obj *resObj = Tcl_GetObjResult(acc->interp);
-        long iv;
-        if (Tcl_GetLongFromObj(acc->interp, resObj, &iv) == TCL_OK) {
-            Tcl_ResetResult(acc->interp);
-            return sd_bus_reply_method_return(m, "i", (int)iv);
-        }
-        /* Text widget returns "line.char" */
-        const char *s = Tcl_GetString(resObj);
-        int line=1, ch=0;
-        if (s && sscanf(s, "%d.%d", &line, &ch) == 2) {
-            /* Approximate linear offset: need full text to compute, for now return char */
-            Tcl_ResetResult(acc->interp);
-            return sd_bus_reply_method_return(m, "i", ch);
-        }
-        Tcl_ResetResult(acc->interp);
-    } else {
-        Tcl_ResetResult(acc->interp);
-    }
     return sd_bus_reply_method_return(m, "i", 0);
 }
 
@@ -2186,39 +2028,23 @@ dbus_method_text_get_caret_offset(
  * dbus_method_text_get_character_count --
  *
  *   D-Bus method handler for GetCharacterCount on the Text interface.
- *   Returns the number of characters in the text.
+ *   Stub implementation - text operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with 0 (not implemented).
+ *   Sends a D-Bus reply message with 0.
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_text_get_character_count(
     sd_bus_message *m,      /* D-Bus method call message. */
-    void *userdata,         /* TkAccessible object pointer. */
+    TCL_UNUSED(void *),   /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return sd_bus_reply_method_return(m, "i", 0);
-    }
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s get", Tk_PathName(acc->tkwin));
-    if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-        snprintf(cmd, sizeof(cmd), "%s get 1.0 {end -1c}", Tk_PathName(acc->tkwin));
-        if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-            Tcl_ResetResult(acc->interp);
-            return sd_bus_reply_method_return(m, "i", 0);
-        }
-    }
-    const char *txt = Tcl_GetStringResult(acc->interp);
-    int len = txt ? (int)strlen(txt) : 0;
-    Tcl_ResetResult(acc->interp);
-    return sd_bus_reply_method_return(m, "i", len);
+    return sd_bus_reply_method_return(m, "i", 0);
 }
 
 /*
@@ -2226,37 +2052,23 @@ dbus_method_text_get_character_count(
  * dbus_method_selection_get_n_selections --
  *
  *   D-Bus method handler for GetNSelections on the Selection interface.
- *   Returns the number of selected items.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with 0 (not implemented).
+ *   Sends a D-Bus reply message with 0.
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_get_n_selections(
     sd_bus_message *m,      /* D-Bus method call message. */
-    void *userdata,         /* TkAccessible object pointer. */
+    TCL_UNUSED(void *),    /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return sd_bus_reply_method_return(m, "i", 0);
-    }
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s curselection", Tk_PathName(acc->tkwin));
-    if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-        Tcl_ResetResult(acc->interp);
-        return sd_bus_reply_method_return(m, "i", 0);
-    }
-    Tcl_Obj *listObj = Tcl_GetObjResult(acc->interp);
-    Tcl_Size len = 0;
-    Tcl_ListObjLength(acc->interp, listObj, &len);
-    Tcl_ResetResult(acc->interp);
-    return sd_bus_reply_method_return(m, "i", (int)len);
+    return sd_bus_reply_method_return(m, "i", 0);
 }
 
 /*
@@ -2264,61 +2076,30 @@ dbus_method_selection_get_n_selections(
  * dbus_method_selection_get_selection --
  *
  *   D-Bus method handler for GetSelection on the Selection interface.
- *   Returns the selected item at the given index.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with a null reference (not implemented).
+ *   Sends a D-Bus reply message with a null reference.
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_get_selection(
     sd_bus_message *m,      /* D-Bus method call message. */
-    void *userdata,         /* TkAccessible object pointer. */
+    TCL_UNUSED(void *),       /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
-    int32_t idx;
+ 	
+ 	int32_t idx;
     int r = sd_bus_message_read(m, "i", &idx);
     if (r < 0) return r;
-    if (!acc || !acc->tkwin) {
-        return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
-    }
-    /* For listbox/tree, children are items; return child at selection index. */
-    AccessibleList *l = acc->children;
-    int i = 0;
-    while (l && i < idx) { l = l->next; i++; }
-    if (l && l->acc && l->acc->dbus_path) {
-        return sd_bus_reply_method_return(m, "(so)", SelfBusName(), l->acc->dbus_path);
-    }
-    /* Fallback: if real widget, try to map curselection index to child. */
-    if (acc->interp) {
-        char cmd[512];
-        snprintf(cmd, sizeof(cmd), "%s curselection", Tk_PathName(acc->tkwin));
-        if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-            Tcl_Obj *listObj = Tcl_GetObjResult(acc->interp);
-            Tcl_Size len;
-            Tcl_ListObjLength(acc->interp, listObj, &len);
-            if (idx >=0 && idx < len) {
-                Tcl_Obj *elem;
-                Tcl_ListObjIndex(acc->interp, listObj, idx, &elem);
-                if (elem) {
-                    long selIdx;
-                    if (Tcl_GetLongFromObj(acc->interp, elem, &selIdx) == TCL_OK) {
-                        /* Return self with index? For simplicity return self's child path if virtual */
-                        /* If no virtual children, return parent ref (Orca will still work with n_selections) */
-                    }
-                }
-            }
-            Tcl_ResetResult(acc->interp);
-        } else {
-            Tcl_ResetResult(acc->interp);
-        }
-    }
-    return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
+    
+    
+    return sd_bus_reply_method_return(
+        m, "(so)", "", "/org/a11y/atspi/null");
 }
 
 /*
@@ -2326,39 +2107,26 @@ dbus_method_selection_get_selection(
  * dbus_method_selection_is_selected --
  *
  *   D-Bus method handler for IsChildSelected on the Selection interface.
- *   Determines whether the item at the given index is selected.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with false (not implemented).
+ *   Sends a D-Bus reply message with 0 (false).
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_is_selected(
     sd_bus_message *m,      /* D-Bus method call message. */
-    void *userdata,         /* TkAccessible object pointer. */
+    TCL_UNUSED(void *),    /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
-    int32_t childIdx;
+	int32_t childIdx;
     int r = sd_bus_message_read(m, "i", &childIdx);
     if (r < 0) return r;
-    if (!acc || !acc->tkwin || !acc->interp) {
-        return sd_bus_reply_method_return(m, "b", 0);
-    }
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s selection includes %d", Tk_PathName(acc->tkwin), childIdx);
-    if (Tcl_Eval(acc->interp, cmd) == TCL_OK) {
-        Tcl_Obj *res = Tcl_GetObjResult(acc->interp);
-        int b = 0;
-        Tcl_GetBooleanFromObj(acc->interp, res, &b);
-        Tcl_ResetResult(acc->interp);
-        return sd_bus_reply_method_return(m, "b", b);
-    }
-    Tcl_ResetResult(acc->interp);
+    
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
@@ -2367,20 +2135,20 @@ dbus_method_selection_is_selected(
  * dbus_method_selection_select_all --
  *
  *   D-Bus method handler for SelectAll on the Selection interface.
- *   Selects all items.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with false (not implemented).
+ *   Sends a D-Bus reply message with 0 (false).
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_select_all(
     sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),     /* userdata */
+    TCL_UNUSED(void *),       /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     return sd_bus_reply_method_return(m, "b", 0);
@@ -2391,20 +2159,20 @@ dbus_method_selection_select_all(
  * dbus_method_selection_clear_selection --
  *
  *   D-Bus method handler for ClearSelection on the Selection interface.
- *   Clears all selections.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with false (not implemented).
+ *   Sends a D-Bus reply message with 0 (false).
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_clear_selection(
     sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),     /* userdata */
+    TCL_UNUSED(void *),  /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     return sd_bus_reply_method_return(m, "b", 0);
@@ -2415,22 +2183,27 @@ dbus_method_selection_clear_selection(
  * dbus_method_selection_add_selection --
  *
  *   D-Bus method handler for AddSelection on the Selection interface.
- *   Adds the item at the given index to the selection.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with false (not implemented).
+ *   Sends a D-Bus reply message with 0 (false).
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_add_selection(
     sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),     /* userdata */
+    TCL_UNUSED(void *),      /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
+
+    int32_t idx;
+    int r = sd_bus_message_read(m, "i", &idx);
+    if (r < 0) return r;
+    
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
@@ -2439,22 +2212,26 @@ dbus_method_selection_add_selection(
  * dbus_method_selection_remove_selection --
  *
  *   D-Bus method handler for RemoveSelection on the Selection interface.
- *   Removes the item at the given index from the selection.
+ *   Stub implementation - selection operations delegated to Tcl script level.
  *
  * Results:
- *   Returns 0 on success, or a negative error code.
+ *   Returns 0 on success.
  *
  * Side effects:
- *   Sends a D-Bus reply message with false (not implemented).
+ *   Sends a D-Bus reply message with 0 (false).
  *----------------------------------------------------------------------
  */
 
 static int
 dbus_method_selection_remove_selection(
     sd_bus_message *m,      /* D-Bus method call message. */
-    TCL_UNUSED(void *),     /* userdata */
+    TCL_UNUSED(void *),         /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
+    int32_t idx;
+    int r = sd_bus_message_read(m, "i", &idx);
+    if (r < 0) return r;
+    
     return sd_bus_reply_method_return(m, "b", 0);
 }
 
@@ -2571,7 +2348,7 @@ dbus_method_cache_get_items(
         for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
             TkAccessible *top=l->acc;
             if (top && top->tkwin) {
-                EnsureChildrenRegisteredEx(top->tkwin, 0);
+                EnsureChildrenRegistered(top->tkwin, 0);
             }
         }
 
@@ -2684,7 +2461,7 @@ RegisterDbusObject(
             }
         }
         /* Collapse "//" and ensure no trailing slash. */
-        acc->dbus_path = Tcl_Strdup(path);
+        acc->dbus_path = strdup(path);
         DEBUG_LOG("RegisterDbusObject: generated dbus_path=%s for widget path=%s",
                   acc->dbus_path, acc->path ? acc->path : "?");
     }
@@ -3218,7 +2995,7 @@ CreateAccessible(
 
     acc->interp = interp;
     acc->tkwin = tkwin;
-    acc->path = Tcl_Strdup(path ? path : Tk_PathName(tkwin));
+    acc->path = strdup(path ? path : Tk_PathName(tkwin));
     acc->role = GetRoleForWidget(tkwin);
     acc->ref_count = 1;
     acc->states = ComputeStateForWidget(acc);
@@ -3234,9 +3011,15 @@ CreateAccessible(
 
     if (!RegisterDbusObject(acc)) {
         DEBUG_LOG("CreateAccessible: RegisterDbusObject failed for %s, aborting creation", acc->path);
-        if (acc->path) Tcl_Free(acc->path);
-        if (acc->cached_name) Tcl_Free(acc->cached_name);
-        if (acc->cached_description) Tcl_Free(acc->cached_description);
+        if (acc->path)
+        	free(acc->path); 
+        	acc->path=NULL;
+        if (acc->cached_name) 
+        	free(acc->cached_name); 
+        	acc->cached_name=NULL;
+        if (acc->cached_description) 
+        	free(acc->cached_description); 
+        	acc->cached_description=NULL;
         Tcl_Free(acc);
         return NULL;
     }
@@ -3286,11 +3069,22 @@ FreeAccessible(
         }
     }
 
-    if (acc->path) Tcl_Free(acc->path);
-    if (acc->cached_name) Tcl_Free(acc->cached_name);
-    if (acc->cached_description) Tcl_Free(acc->cached_description);
-    if (acc->dbus_path) Tcl_Free(acc->dbus_path);
-    if (acc->virtual_name) Tcl_Free(acc->virtual_name);
+    if (acc->path) 
+    	free(acc->path);
+    	acc->path=NULL;
+    if (acc->cached_name) 
+    	free(acc->cached_name);
+    	acc->cached_name=NULL;
+    if (acc->cached_description) 
+    	free(acc->cached_description);
+    	acc->cached_description=NULL;
+    if (acc->dbus_path) 
+    	free(acc->dbus_path);
+    	acc->dbus_path=NULL;
+    if (acc->virtual_name) 
+    	free(acc->virtual_name);
+    	acc->virtual_name=NULL;
+    	
     /* Free children list. */
     AccessibleList *l = acc->children;
     while (l) {
@@ -3749,18 +3543,6 @@ GetRoleForWidget(
         }
     }
 
-    /* Fallback to widget class. */
-    const char *widgetClass = Tk_Class(tkwin);
-    if (widgetClass) {
-        for (int i = 0; roleMap[i].tkrole != NULL; i++) {
-            if (strcasecmp(roleMap[i].tkrole, widgetClass) == 0) {
-                DEBUG_LOG("GetRoleForWidget: path=%s class='%s' -> %d (%s)", Tk_PathName(tkwin), widgetClass, roleMap[i].atspi_role, RoleToString(roleMap[i].atspi_role));
-                return roleMap[i].atspi_role;
-            }
-        }
-        DEBUG_LOG("GetRoleForWidget: path=%s class='%s' no match in roleMap", Tk_PathName(tkwin), widgetClass);
-    }
-
     if (Tk_IsTopLevel(tkwin)) {
         DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> window", Tk_PathName(tkwin));
         return ATSPI_ROLE_WINDOW;
@@ -3807,15 +3589,6 @@ ComputeStateForWidget(
                     }
                 }
             }
-        }
-    }
-    if (!is_disabled && acc->interp) {
-        char *stateStr = TryCgetString(acc->tkwin, "-state");
-        if (stateStr) {
-            if (strcmp(stateStr, "disabled") == 0 || strcmp(stateStr, "readonly") == 0) {
-                if (strcmp(stateStr, "disabled") == 0) is_disabled = 1;
-            }
-            Tcl_Free(stateStr);
         }
     }
 
@@ -3870,12 +3643,7 @@ ComputeStateForWidget(
     if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
         if (!is_disabled) {
             int is_editable = 1;
-            char *st = TryCgetString(acc->tkwin, "-state");
-            if (st) {
-                if (strcmp(st, "readonly") == 0 || strcmp(st, "disabled") == 0) is_editable = 0;
-                Tcl_Free(st);
-            }
-            if (is_editable) states |= ATSPI_STATE_EDITABLE;
+        	states |= ATSPI_STATE_EDITABLE;
         }
     }
 
@@ -3891,7 +3659,7 @@ ComputeStateForWidget(
                     (value[0] != '0' && value[0] != '\0')) {
                     states |= ATSPI_STATE_CHECKED;
                 }
-                Tcl_Free(value);
+                free(value);
             }
         }
     }
@@ -3899,44 +3667,6 @@ ComputeStateForWidget(
     return states;
 }
 
-/*
- *----------------------------------------------------------------------
- * TryCgetString --
- *
- *   Try to get a widget option as a string.
- *
- * Results:
- *   Returns a newly allocated string with the option value, or NULL
- *   if the option is not set.
- *
- * Side effects:
- *   Memory is allocated via Tcl_Strdup.
- *----------------------------------------------------------------------
- */
-
-static char *
-TryCgetString(
-    Tk_Window tkwin,        /* Tk widget. */
-    const char *option)     /* Option name. */
-{
-    if (!tkwin || !option) return NULL;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    if (!interp) return NULL;
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s cget %s", Tk_PathName(tkwin), option);
-    if (Tcl_Eval(interp, cmd) != TCL_OK) {
-        Tcl_ResetResult(interp);
-        return NULL;
-    }
-    const char *res = Tcl_GetStringResult(interp);
-    if (!res || res[0] == '\0') {
-        Tcl_ResetResult(interp);
-        return NULL;
-    }
-    char *dup = Tcl_Strdup(res);
-    Tcl_ResetResult(interp);
-    return dup;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -3949,7 +3679,7 @@ TryCgetString(
  *   if no name is set.
  *
  * Side effects:
- *   Memory is allocated via Tcl_Strdup.
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -3959,130 +3689,31 @@ GetNameForWidget(
 {
     if (!tkwin) return NULL;
 
-    const char *widgetClass = Tk_Class(tkwin);
-    const char *pathName = Tk_PathName(tkwin);
-
-    /* Helper: is a name generic (equals class or role name like Button, TButton)? */
-    auto int IsGenericName(const char *nm) {
-        if (!nm || !nm[0]) return 1;
-        if (widgetClass && strcasecmp(nm, widgetClass) == 0) return 1;
-        /* role names list */
-        const char *generics[] = {"Button","TButton","Checkbutton","Radiobutton","Label","Entry","TLabel","Frame","TFrame","Toplevel",NULL};
-        for (int i=0; generics[i]; i++) {
-            if (strcasecmp(nm, generics[i])==0) return 1;
-        }
-        return 0;
-    }
-
-    /* Try widget's -text / -label first - this is what Orca actually needs for buttons. */
-    char *s = NULL;
-    s = TryCgetString(tkwin, "-text");
-    if (s && s[0]) {
-        if (!IsGenericName(s)) {
-            DEBUG_LOG("GetNameForWidget: path=%s -text='%s' (primary)", pathName, s);
-            return s;
-        }
-        /* Generic text like 'Button' - drop and continue. */
-        DEBUG_LOG("GetNameForWidget: path=%s -text='%s' ignored as generic", pathName, s);
-        Tcl_Free(s);
-    } else if (s) { Tcl_Free(s); }
-
-    s = TryCgetString(tkwin, "-label");
-    if (s && s[0] && !IsGenericName(s)) { DEBUG_LOG("GetNameForWidget: path=%s -label='%s'", pathName, s); return s; }
-    if (s) Tcl_Free(s);
-
-    /* Explicit accessibility name, but ignore if generic. */
-    if (TkAccessibilityObject) {
-        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
-        if (hPtr) {
-            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-            if (attrs) {
-                Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
-                if (nameEntry) {
-                    Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(nameEntry);
-                    if (obj) {
-                        const char *name = Tcl_GetString(obj);
-                        if (name && name[0] && !IsGenericName(name)) {
-                            DEBUG_LOG("GetNameForWidget: path=%s explicit a11y name='%s'", pathName, name);
-                            return Tcl_Strdup(name);
-                        } else if (name && name[0]) {
-                            DEBUG_LOG("GetNameForWidget: path=%s explicit a11y name='%s' ignored as generic", pathName, name);
-                        }
-                    }
-                }
-                /* Fallback: if description holds the real label,  use it. */
-                Tcl_HashEntry *descEntry = Tcl_FindHashEntry(attrs, "description");
-                if (descEntry) {
-                    Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(descEntry);
-                    if (obj) {
-                        const char *desc = Tcl_GetString(obj);
-                        if (desc && desc[0] && !IsGenericName(desc)) {
-                            DEBUG_LOG("GetNameForWidget: path=%s using description as name fallback='%s'", pathName, desc);
-                            return Tcl_Strdup(desc);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     int role = GetRoleForWidget(tkwin);
+
+    /* If label, return the value instead of the name so Orca does not
+     * say "label" twice. */
     if (role == ATSPI_ROLE_LABEL) {
-        char *v = GetValueForWidget(tkwin);
-        if (v && v[0]) return v;
-        if (v) Tcl_Free(v);
+        return GetValueForWidget(tkwin);
     }
 
-    /* Other fallbacks. */
-    s = TryCgetString(tkwin, "-title");
-    if (s && s[0]) { DEBUG_LOG("GetNameForWidget: path=%s -title='%s'", pathName, s); return s; }
-    if (s) Tcl_Free(s);
-    s = TryCgetString(tkwin, "-value");
-    if (s && s[0]) { DEBUG_LOG("GetNameForWidget: path=%s -value='%s'", pathName, s); return s; }
-    if (s) Tcl_Free(s);
+    Tcl_HashEntry *hPtr =
+        Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
+    if (!hPtr) return NULL;
 
-    DEBUG_LOG("GetNameForWidget: path=%s no name found (class=%s)", pathName, widgetClass ? widgetClass : "?");
+    Tcl_HashTable *attrs =
+        (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+    if (!attrs) return NULL;
 
-    /* For toplevel, try WM title, but ignore generic 'tk' */
-    if (Tk_IsTopLevel(tkwin)) {
-        Tcl_Interp *interp = NULL;
-        if (tkwin) {
-            interp = Tk_Interp((Tk_Window)tkwin);
-            if (!interp && atspi_conn && atspi_conn->root_accessible && atspi_conn->root_accessible->interp) {
-                interp = atspi_conn->root_accessible->interp;
-            }
-        }
-        if (interp) {
-            Tcl_Obj *cmd = Tcl_ObjPrintf("wm title %s", pathName);
-            Tcl_IncrRefCount(cmd);
-            if (Tcl_EvalObjEx(interp, cmd, 0) == TCL_OK) {
-                const char *t = Tcl_GetStringResult(interp);
-                if (t && t[0] && strcmp(t, ".") != 0 && strcasecmp(t, "tk") != 0) {
-                    char *ret = Tcl_Strdup(t);
-                    Tcl_DecrRefCount(cmd);
-                    Tcl_ResetResult(interp);
-                    DEBUG_LOG("GetNameForWidget: path=%s wm title='%s'", pathName, ret);
-                    return ret;
-                }
-                Tcl_ResetResult(interp);
-            }
-            Tcl_DecrRefCount(cmd);
-        }
-        /* Fallback to Tk class name. */
-        if (widgetClass && widgetClass[0]) {
-            return Tcl_Strdup(widgetClass);
-        }
-        const char *pn = Tk_PathName(tkwin);
-        if (pn && pn[0] && strcmp(pn, ".") != 0) return Tcl_Strdup(pn);
-        /* Last resort for "." root - use "Tk" */
-        if (pn && strcmp(pn, ".") == 0) {
-            return Tcl_Strdup("Tk Application");
-        }
-        if (pn && pn[0]) return Tcl_Strdup(pn);
-    }
-    return NULL;
+    Tcl_HashEntry *nameEntry =
+        Tcl_FindHashEntry(attrs, "name");
+    if (!nameEntry) return NULL;
+
+    const char *name =
+        Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(nameEntry));
+
+    return name ? strdup(name) : NULL;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -4095,7 +3726,7 @@ GetNameForWidget(
  *   NULL if no description is set.
  *
  * Side effects:
- *   Memory is allocated via Tcl_Strdup.
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -4115,7 +3746,7 @@ GetDescriptionForWidget(
     if (!descEntry) return NULL;
 
     const char *desc = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(descEntry));
-    return desc ? Tcl_Strdup(desc) : NULL;
+    return desc ? strdup(desc) : NULL;
 }
 
 /*
@@ -4129,7 +3760,7 @@ GetDescriptionForWidget(
  *   if no value is set.
  *
  * Side effects:
- *   Memory is allocated via Tcl_Strdup.
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -4149,76 +3780,85 @@ GetValueForWidget(
                     Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(valueEntry);
                     if (obj) {
                         const char *value = Tcl_GetString(obj);
-                        if (value && value[0]) return Tcl_Strdup(value);
+                        if (value && value[0]) return strdup(value);
                     }
                 }
             }
         }
     }
-    /* Fallback to Tk options. */
-    char *s = TryCgetString(tkwin, "-text");
-    if (s) return s;
-    s = TryCgetString(tkwin, "-value");
-    if (s) return s;
-    s = TryCgetString(tkwin, "-label");
-    if (s) return s;
-    return NULL;
 }
 
 /*
  *----------------------------------------------------------------------
  * EnsureChildrenRegisteredRecursive --
  *
- *   Recursively ensure that all children of a window have accessible
- *   objects registered.
+ *	Recursively ensure that all children of a window have accessible
+ *	objects registered.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Creates TkAccessible objects for missing child windows and emits
- *   children-changed events.
+ *	Creates TkAccessible objects for missing child windows and,
+ *	when requested, emits children-changed events.
  *----------------------------------------------------------------------
  */
 
 static void
-EnsureChildrenRegisteredRecursiveEx(
+EnsureChildrenRegisteredRecursive(
     Tk_Window tkwin,
     TkAccessible *parent_acc,
     int emitEvents)
 {
-    if (!tkwin) return;
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    if (!winPtr) return;
-    int idx=0;int _iter=0;
-    TkWindow *_slow=winPtr->childList;
-    TkWindow *_fast=_slow?_slow->nextPtr:NULL;
-    for (TkWindow *childPtr=winPtr->childList; childPtr; childPtr=childPtr->nextPtr, idx++) {
-        if (_fast && _slow && _fast==_slow) break;
-        if (_iter>10000) break;
-        _iter++; if (_iter%2==0){_slow=_slow?_slow->nextPtr:NULL;_fast=_fast?_fast->nextPtr:NULL;if(_fast)_fast=_fast->nextPtr;}
-        Tk_Window childWin=(Tk_Window)childPtr;
-        TkAccessible *child_acc=GetAccessible(childWin);
-        if (!child_acc) {
-            Tcl_Interp *interp=Tk_Interp(tkwin);
-            if (!interp && parent_acc) interp=parent_acc->interp;
-            if (!interp) continue;
-            child_acc=CreateAccessible(interp, childWin, Tk_PathName(childWin));
-            if (!child_acc) continue;
-            if (parent_acc) child_acc->parent=parent_acc;
-            RegisterAccessible(childWin, child_acc);
-            TkAccessible_RegisterEventHandlers(childWin, child_acc);
-            if (parent_acc && emitEvents) SendChildrenChanged(parent_acc, idx, child_acc, 1);
-        }
-        EnsureChildrenRegisteredRecursiveEx(childWin, child_acc, emitEvents);
+    TkWindow *winPtr;
+    TkWindow *childPtr;
+    int index = 0;
+
+    if (!tkwin) {
+	return;
     }
-}
-static void
-EnsureChildrenRegisteredRecursive(
-    Tk_Window tkwin,
-    TkAccessible *parent_acc)
-{
-    EnsureChildrenRegisteredRecursiveEx(tkwin, parent_acc, 1);
+
+    winPtr = (TkWindow *)tkwin;
+
+    for (childPtr = winPtr->childList;
+	 childPtr != NULL;
+	 childPtr = childPtr->nextPtr, index++) {
+
+	Tk_Window childWin = (Tk_Window)childPtr;
+	TkAccessible *child_acc = GetAccessible(childWin);
+
+	if (!child_acc) {
+	    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+	    if (!interp && parent_acc) {
+		interp = parent_acc->interp;
+	    }
+
+	    if (!interp) {
+		continue;
+	    }
+
+	    child_acc = CreateAccessible(
+		    interp, childWin, Tk_PathName(childWin));
+	    if (!child_acc) {
+		continue;
+	    }
+
+	    if (parent_acc) {
+		child_acc->parent = parent_acc;
+	    }
+
+	    RegisterAccessible(childWin, child_acc);
+	    TkAccessible_RegisterEventHandlers(childWin, child_acc);
+
+	    if (parent_acc && emitEvents) {
+		SendChildrenChanged(parent_acc, index, child_acc, 1);
+	    }
+	}
+
+	EnsureChildrenRegisteredRecursive(
+		childWin, child_acc, emitEvents);
+    }
 }
 
 
@@ -4226,36 +3866,75 @@ EnsureChildrenRegisteredRecursive(
  *----------------------------------------------------------------------
  * EnsureChildrenRegistered --
  *
- *   Ensure that all children of a window have accessible objects registered.
+ *	Ensure that all children of a window have accessible objects
+ *	registered.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Creates TkAccessible objects for missing child windows.
+ *	Creates TkAccessible objects for missing child windows and emits
+ *	children-changed events.
  *----------------------------------------------------------------------
  */
 
 static void
-EnsureChildrenRegisteredEx(
+EnsureChildrenRegistered(
     Tk_Window tkwin,
     int emitEvents)
 {
-    if (!tkwin) return;
-    TkAccessible *acc=GetAccessible(tkwin);
-    if (!acc){Tk_Window parent=Tk_Parent(tkwin); if(parent) acc=GetAccessible(parent);}
-    if (!acc){Tk_Window top=tkwin; while(top && !Tk_IsTopLevel(top)) top=Tk_Parent(top); if(top) acc=GetAccessible(top);}
-    if (!acc) return;
-    Tk_Window scanWin=acc->tkwin?acc->tkwin:tkwin;
-    EnsureChildrenRegisteredRecursiveEx(scanWin, acc, emitEvents);
-}
-static void
-EnsureChildrenRegistered(
-    Tk_Window tkwin)
-{
-    EnsureChildrenRegisteredEx(tkwin, 1);
-}
+    TkAccessible *acc;
+    Tk_Window parent;
+    Tk_Window top;
 
+    if (!tkwin) {
+	return;
+    }
+
+    /*
+     * Normally the accessible object belongs directly to tkwin.
+     */
+    acc = GetAccessible(tkwin);
+
+    /*
+     * If tkwin itself doesn't have one, try its parent.
+     */
+    if (!acc) {
+	parent = Tk_Parent(tkwin);
+	if (parent) {
+	    acc = GetAccessible(parent);
+	}
+    }
+
+    /*
+     * Finally, walk up to the toplevel.
+     */
+    if (!acc) {
+	top = tkwin;
+
+	while (top && !Tk_IsTopLevel(top)) {
+	    top = Tk_Parent(top);
+	}
+
+	if (top) {
+	    acc = GetAccessible(top);
+	}
+    }
+
+    if (!acc) {
+	return;
+    }
+
+    /*
+     * If the accessible object points at a different window, use that
+     * as the root of the scan.
+     */
+    if (acc->tkwin) {
+	tkwin = acc->tkwin;
+    }
+
+    EnsureChildrenRegisteredRecursive(tkwin, acc, emitEvents);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -4597,19 +4276,19 @@ TkAccessible_ConfigureHandler(
     {
         char *newName = GetNameForWidget(tkwin);
         if (newName) {
-            if (acc->cached_name) Tcl_Free(acc->cached_name);
+            if (acc->cached_name) free(acc->cached_name);
             acc->cached_name = newName;
         }
         char *newDesc = GetDescriptionForWidget(tkwin);
         if (newDesc) {
-            if (acc->cached_description) Tcl_Free(acc->cached_description);
+            if (acc->cached_description) free(acc->cached_description);
             acc->cached_description = newDesc;
         }
     }
     DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning for new children (hash table walk)",
               acc->path?acc->path:"?", acc->width, acc->height,
               acc->cached_name?acc->cached_name:"(null)");
-    EnsureChildrenRegistered(tkwin);
+    EnsureChildrenRegistered(tkwin, 0);
 }
 
 /*
@@ -4867,12 +4546,12 @@ InitializeAtspiConnection(void)
     memset(atspi_conn->root_accessible, 0, sizeof(TkAccessible));
 
     atspi_conn->root_accessible->role       = ATSPI_ROLE_APPLICATION;
-    atspi_conn->root_accessible->path       = Tcl_Strdup("application");
-    atspi_conn->root_accessible->dbus_path  = Tcl_Strdup("/org/a11y/atspi/accessible/root");
+    atspi_conn->root_accessible->path       = strdup("application");
+    atspi_conn->root_accessible->dbus_path  = strdup("/org/a11y/atspi/accessible/root");
     atspi_conn->root_accessible->ref_count  = 1;
     /* Give application a meaningful name for Orca - otherwise it appears nameless and may be filtered. */
-    atspi_conn->root_accessible->cached_name = Tcl_Strdup("Tk");
-    atspi_conn->root_accessible->cached_description = Tcl_Strdup("Tk Application");
+    atspi_conn->root_accessible->cached_name = strdup("Tk");
+    atspi_conn->root_accessible->cached_description = strdup("Tk Application");
 
     RegisterDbusObject(atspi_conn->root_accessible);
 
@@ -4951,8 +4630,8 @@ EmbedWithRegistry(void)
     if (r >= 0 && desktop_name && desktop_path) {
         if (atspi_conn->desktop_bus_name) Tcl_Free(atspi_conn->desktop_bus_name);
         if (atspi_conn->desktop_path) Tcl_Free(atspi_conn->desktop_path);
-        atspi_conn->desktop_bus_name = Tcl_Strdup(desktop_name);
-        atspi_conn->desktop_path = Tcl_Strdup(desktop_path);
+        atspi_conn->desktop_bus_name = strdup(desktop_name);
+        atspi_conn->desktop_path = strdup(desktop_path);
         atspi_conn->is_embedded = 1;
         DEBUG_LOG("EmbedWithRegistry: SUCCESS desktop=%s %s", desktop_name, desktop_path);
     } else {
