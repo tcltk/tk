@@ -2310,6 +2310,11 @@ EmitObjectEventFull(
     if (r < 0) {
         /* Don't crash, just debug. */
         fprintf(stderr, "EmitObjectEvent %s/%s failed: %d\n", member, type, r);
+    } else {
+        fprintf(stderr, "[TRACE] EmitObjectEventFull: SENT path=%s member=%s type=%s "
+                "detail1=%d bus_unique=%s sd_bus_send_r=%d\n",
+                acc->dbus_path ? acc->dbus_path : "?", member, type, detail1,
+                bus_unique ? bus_unique : "(no bus)", r);
     }
     sd_bus_message_unref(m);
 }
@@ -2372,9 +2377,6 @@ EmitFocusEvent(
         fprintf(stderr, "EmitFocusEvent failed: %d\n", r);
     }
     sd_bus_message_unref(m);
-
-    /* Also emit StateChanged:focused for compatibility with clients listening on Event.Object */
-    EmitObjectEventFull(acc, "StateChanged", "focused", 1, 0, NULL);
 }
 
 
@@ -2809,6 +2811,7 @@ CreateAccessible(
     }
 
     if (!RegisterDbusObject(acc)) {
+        fprintf(stderr, "[TRACE] CreateAccessible: RegisterDbusObject FAILED for %s\n", acc->path);
         DEBUG_LOG("CreateAccessible: RegisterDbusObject failed for %s, aborting creation", acc->path);
         if (acc->path)
         	free(acc->path); 
@@ -2816,6 +2819,9 @@ CreateAccessible(
         Tcl_Free(acc);
         return NULL;
     }
+
+    fprintf(stderr, "[TRACE] CreateAccessible: RegisterDbusObject OK for %s, dbus_path=%s\n",
+            acc->path ? acc->path : "?", acc->dbus_path ? acc->dbus_path : "(null)");
 
     return acc;
 }
@@ -3100,9 +3106,13 @@ RegisterWidgetRecursive(
     if (!tkwin) return;
 
     TkAccessible *acc = GetAccessible(tkwin);
+    fprintf(stderr, "[TRACE] RegisterWidgetRecursive: path=%s already_registered=%d\n",
+            Tk_PathName(tkwin), acc != NULL);
     if (!acc) {
         acc = CreateAccessible(interp, tkwin, Tk_PathName(tkwin));
         if (!acc) {
+            fprintf(stderr, "[TRACE] RegisterWidgetRecursive: CreateAccessible FAILED for %s\n",
+                    Tk_PathName(tkwin));
             DEBUG_LOG("RegisterWidgetRecursive: CreateAccessible failed for %s", Tk_PathName(tkwin));
             return;
         }
@@ -4043,14 +4053,30 @@ TkAccessible_FocusHandler(
     if (!acc || !acc->tkwin) return;
 
     int focused = (eventPtr->type == FocusIn);
+    static unsigned long call_counter = 0;
+    call_counter++;
+    fprintf(stderr, "[TRACE] TkAccessible_FocusHandler: call#%lu path=%s eventPtr->type=%d "
+            "(FocusIn=%d FocusOut=%d) serial=%lu focused=%d\n",
+            call_counter, acc->path ? acc->path : "?", eventPtr->type,
+            FocusIn, FocusOut, eventPtr->xfocus.serial, focused);
     DEBUG_LOG("TkAccessible_FocusHandler: path=%s eventPtr->type=%d focused=%d (BRUTE-FORCE RECONCILE)",
               acc->path ? acc->path : "?", eventPtr->type, focused);
 
     if (focused) {
+        /*
+         * Unlike dbus_method_get_children/dbus_prop_get_child_count/
+         * AppendCacheItemLive, this is not a synchronous reply to a
+         * client's own query -- it is triggered by an async focus
+         * event. Newly discovered children must be announced via
+         * ChildrenChanged (emitEvents=1), the same way
+         * TkAccessible_ConfigureHandler's rescan does, or they are
+         * created and registered on the bus with no client ever told
+         * they exist.
+         */
         if (Tk_IsTopLevel(acc->tkwin)) {
-            EnsureChildrenRegistered(acc->tkwin, 0);
+            EnsureChildrenRegistered(acc->tkwin, 1);
         } else if (acc->parent && acc->parent->tkwin) {
-            EnsureChildrenRegistered(acc->parent->tkwin, 0);
+            EnsureChildrenRegistered(acc->parent->tkwin, 1);
         }
         TkAccessible_Reconcile(acc);
         EnsureRoleVtables(acc, 1);
@@ -4073,16 +4099,28 @@ TkAccessible_FocusHandler(
 
     if (Tk_IsTopLevel(acc->tkwin)) {
         if (focused) {
-            SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
-            EmitWindowEvent(acc, "activate", "");
-            SendStateChanged(acc, ATSPI_STATE_ACTIVE, 1);
+            if (!(acc->states & ATSPI_STATE_ACTIVE)) {
+                acc->states |= ATSPI_STATE_ACTIVE;
+                SendAtspiEvent(acc, ATSPI_EVENT_WINDOW_ACTIVATE, NULL);
+                EmitWindowEvent(acc, "activate", "");
+                SendStateChanged(acc, ATSPI_STATE_ACTIVE, 1);
+            }
+        } else {
+            if (acc->states & ATSPI_STATE_ACTIVE) {
+                acc->states &= ~ATSPI_STATE_ACTIVE;
+                SendStateChanged(acc, ATSPI_STATE_ACTIVE, 0);
+            }
         }
     } else {
         Tk_Window topWin = acc->tkwin;
         while (topWin && !Tk_IsTopLevel(topWin)) topWin = Tk_Parent(topWin);
         if (topWin) {
             TkAccessible *topAcc = GetAccessible(topWin);
-            if (topAcc) {
+            if (topAcc && !(topAcc->states & ATSPI_STATE_ACTIVE)) {
+                /* Only announce ACTIVE when it actually changes -- this
+                 * used to fire unconditionally on every child focus
+                 * event, flooding Orca with redundant "window is
+                 * active" StateChanged signals it never asked for. */
                 topAcc->states |= ATSPI_STATE_ACTIVE;
                 SendStateChanged(topAcc, ATSPI_STATE_ACTIVE, 1);
             }
@@ -4673,8 +4711,10 @@ AddAccessibleCmd(
     }
 
     const char *windowName = Tcl_GetString(objv[1]);
+    fprintf(stderr, "[TRACE] AddAccessibleCmd: called with window='%s'\n", windowName);
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) {
+        fprintf(stderr, "[TRACE] AddAccessibleCmd: Tk_NameToWindow FAILED for '%s'\n", windowName);
         Tcl_SetObjResult(interp, Tcl_NewStringObj("Invalid window name.", -1));
         return TCL_ERROR;
     }
