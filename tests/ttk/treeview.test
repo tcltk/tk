@@ -36,6 +36,7 @@ resetWindows
 # COMMON TEST SETUP
 #
 
+set dtheme [ttk::style theme use]
 ttk::style theme use default
 set dfont [font configure TkDefaultFont]
 set hfont [font configure TkHeadingFont]
@@ -59,12 +60,12 @@ proc insert {w parent color} {
 }
 
 proc create {w} {
-    ::ttk::style configure Treeview -rowheight 20 -headingheight 20
-    ::ttk::treeview .tv -columns [lrange $::columns 1 end] -show {tree headings} \
+    ttk::style configure Treeview -rowheight 20 -headingheight 20
+    ttk::treeview .tv -columns [lrange $::columns 1 end] -show {tree headings} \
 	-height 10 -rowheight 20 -headingheight 20 \
 	-xscrollcommand [list .sx set] -yscrollcommand [list .sy set]
-    ::ttk::scrollbar .sx -orient horizontal -command [list .tv xview]
-    ::ttk::scrollbar .sy -orient vertical -command [list .tv yview]
+    ttk::scrollbar .sx -orient horizontal -command [list .tv xview]
+    ttk::scrollbar .sy -orient vertical -command [list .tv yview]
     grid .tv .sy -sticky nsew
     grid .sx -sticky nsew
     grid columnconfigure . 0 -weight 1
@@ -650,6 +651,7 @@ test Focus_Ring-6.4 {Row padding} -body {
     $w focus red
     expr {$h == [lindex [.tv bbox red] 3]}
 } -cleanup {
+    ttk::style configure Row -padding 0
     $w focus {}
 } -result {1}
 
@@ -676,7 +678,7 @@ test Focus_Ring-6.7 {Cell padding} -body {
     update
     expr {[lindex [.tv bbox red] 3] > $h}
 } -cleanup {
-    ttk::style configure Cell -padding {}
+    ttk::style configure Cell -padding 0
 } -result {1}
 
 test Focus_Ring-6.8 {Cleanup} -body {
@@ -903,7 +905,9 @@ test Row-8.15 {Cleanup} -body {
     ttk::style configure Treeview -rowheight 0
 }
 
-proc scrollcallback {args} {set ::scrolldata $args}
+proc scrollcallback {args} {
+    set ::scrolldata $args
+}
 
 # Xview
 
@@ -1490,7 +1494,14 @@ test Drag_and_Drop-14.23 {Cleanup} -body {
 # Item functions
 
 # Bbox
-proc cell_bbox {w item} {set res [list];foreach col [concat #0 [$w cget -columns]] {lappend res [.tv bbox $item $col]};return $res}
+
+proc cell_bbox {w item} {
+    set res [list]
+    foreach col [concat #0 [$w cget -columns]] {
+	lappend res [.tv bbox $item $col]
+    }
+    return $res
+}
 
 
 test Bbox-15.1 {Create} -body {
@@ -3033,7 +3044,6 @@ test Index_Id-32.18 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 
-# Item functions
 # Insert
 
 
@@ -4034,12 +4044,12 @@ test Visible-40.14 {Cleanup} -body {
 }
 
 proc get_all {w fn item args} {
-set list [list]
-while {$item ne ""} {
-    lappend list $item
-    set item [$w $fn {*}$args $item]
-}
-return $list
+    set list [list]
+    while {$item ne ""} {
+	lappend list $item
+	set item [$w $fn {*}$args $item]
+    }
+    return $list
 }
 
 # Binding functions
@@ -4564,16 +4574,16 @@ test Previous-45.16 {Cleanup} -body {
 
 # See
 proc xdelta {w item column} {
-set x [lindex [$w xview] 0]
-$w see $item $column
-set delta [expr {[lindex [$w xview] 0] - $x}]
-expr {$delta > 0 ? 1 : ($delta < 0 ? -1 : 0)}
+    set x [lindex [$w xview] 0]
+    $w see $item $column
+    set delta [expr {[lindex [$w xview] 0] - $x}]
+    expr {$delta > 0 ? 1 : ($delta < 0 ? -1 : 0)}
 }
 proc ydelta {w item} {
-set y [lindex [$w yview] 0]
-$w see $item
-set delta [expr {[lindex [$w yview] 0] - $y}]
-expr {$delta > 0 ? 1 : ($delta < 0 ? -1 : 0)}
+    set y [lindex [$w yview] 0]
+    $w see $item
+    set delta [expr {[lindex [$w yview] 0] - $y}]
+    expr {$delta > 0 ? 1 : ($delta < 0 ? -1 : 0)}
 }
 
 
@@ -7390,7 +7400,9 @@ test Search-75.97 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 
-proc sortBySize {first second} {return [expr {[string length $first] - [string length $second]}]}
+proc sortBySize {first second} {
+    return [expr {[string length $first] - [string length $second]}]
+}
 
 # Sort
 
@@ -7700,7 +7712,7 @@ test Sort-76.47 {Empty tree} -setup {
 test Sort-76.48 {Cleanup} -body {
     destroy .tv .sx .sy
 }
-# Can't sort by column #0 name
+# For tree column, can't sort by column name only id #0.
 
 # Tag Functions
 
@@ -7795,7 +7807,12 @@ test Tag_Add-78.11 {Cleanup} -body {
 }
 
 # Tag bind
-proc cellEvent {w item col} {lassign [$w bbox $item $col] aX aY aW aH;set aX [expr {$aX + $aW / 2}];set aY [expr {$aY + $aH / 2}];event generate $w <Button-1> -x $aX -y $aY}
+proc cellEvent {w item col} {
+    lassign [$w bbox $item $col] aX aY aW aH
+    set aX [expr {$aX + $aW / 2}]
+    set aY [expr {$aY + $aH / 2}]
+    event generate $w <Button-1> -x $aX -y $aY
+}
 set ::test ""
 
 
@@ -8537,8 +8554,12 @@ test Tag_Remove-88.11 {Cleanup} -body {
 
 
 # Identify
-proc get_col_id {w x y} {return [$w column [$w identify column $x $y] -id]}
-proc mm {pixels} {return [format "%dm" [expr {int(round(double([winfo screenmmwidth .])/double([winfo screenwidth .]) * double($pixels)))}]]}
+proc get_col_id {w x y} {
+    return [$w column [$w identify column $x $y] -id]
+}
+proc mm {pixels} {
+    return [format "%dm" [expr {int(round(double([winfo screenmmwidth .])/double([winfo screenwidth .]) * double($pixels)))}]]
+}
 
 
 test Identify-89.1 {Create} -body {
@@ -8741,6 +8762,7 @@ test Identify-89.42 {Cleanup} -body {
 # TESTFILE CLEANUP
 #
 
+ttk::style theme use $dtheme
 font configure TkDefaultFont {*}$dfont
 font configure TkHeadingFont {*}$hfont
 
@@ -8748,7 +8770,7 @@ foreach p {ButtonPress checkorder columns_no_stretch columns_stretch create \
 	fixed_table insert KeyPress lcompare MouseMove} {
     rename $p {}
 }
-unset -nocomplain colors columns dfont hfont p size
+unset -nocomplain changed_item colors columns dtheme dfont focus hfont p size scrolldata
 
 
 tcltest::cleanupTests

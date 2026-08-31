@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk 9.0-
+package require Tk 9.1-
 
 
 ####################
@@ -337,7 +337,7 @@ proc selection_toolbar {w tv} {
     set modes [list none browse single multiple extended]
     set ::sel_mode [$tv cget -selectmode]
     set cb [ttk::combobox $f.modes -values $modes -textvariable ::sel_mode \
-	-width 10 -state readonl -exportselection 0]
+	-width 10 -state readonly -exportselection 0]
     trace add variable ::sel_mode write [list var_callback $tv -selectmode]
     grid $cb -row 0 -column 1
 
@@ -734,7 +734,6 @@ proc selection_callback {w e} {
 # Add data to widget
 #
 proc populate {w} {
-    set num 0
     set data [list \
 	"Africa" [list \
 	    [list Algeria Algiers DZD Arabic 47022473 2381740 29.1 {}] \
@@ -838,7 +837,6 @@ proc SortDirection {w columnId order} {
 # Sort widget by column, order, and type.
 #
 proc SortByColumn {w column type} {
-    ### set columns [$w cget -columns]
     if {$column eq ""} return
     set column [$w column $column -id]
 
@@ -885,6 +883,7 @@ proc ::ttk::treeview::ActivateItem  {w item column} {
 	bind $e $binding [list ::ttk::treeview::EditDone $e $w $item $column $fn]
     }
 
+    # Indent column #0 based on depth
     if {$column eq "#0"} {
 	set i [ttk::style configure Item -indicatorsize]
 	if {$i eq "" || $i == 0} {set i 12}
@@ -911,7 +910,7 @@ proc ::ttk::treeview::ActivateItem  {w item column} {
     place $e -in $w -x $x -y $y -height $ht -width $wd
     focus $e
 
-    # Set insertion cursor location
+    # Set insertion cursor position
     set ix [expr {[winfo pointerx $w] - [winfo rootx $e] - $x + 3}]
     after 10 [list $e icursor @$ix]
 }
