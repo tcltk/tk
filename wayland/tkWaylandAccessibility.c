@@ -143,6 +143,10 @@ struct TkAccessible {
     int x, y, width, height;
     int is_focused;
     int ref_count;
+    char *cached_name;      /* Last name seen by Reconcile, so we only
+                              * emit accessible-name PropertyChange when
+                              * it actually changes (e.g. a label's
+                              * -text is updated after creation). */
 
     /* D-Bus object path for this accessible. */
     char *dbus_path;
@@ -2044,7 +2048,7 @@ AppendCacheItemLive(
     char *live_name = NULL;
     char *live_desc = NULL;
     if (acc->is_virtual && acc->virtual_name) {
-        live_name = NULL; // use virtual_name directly
+        live_name = NULL; /* Use virtual_name directly. */
     } else if (acc->tkwin) {
         live_name = GetNameForWidget(acc->tkwin);
         live_desc = GetDescriptionForWidget(acc->tkwin);
@@ -2310,12 +2314,7 @@ EmitObjectEventFull(
     if (r < 0) {
         /* Don't crash, just debug. */
         fprintf(stderr, "EmitObjectEvent %s/%s failed: %d\n", member, type, r);
-    } else {
-        fprintf(stderr, "[TRACE] EmitObjectEventFull: SENT path=%s member=%s type=%s "
-                "detail1=%d bus_unique=%s sd_bus_send_r=%d\n",
-                acc->dbus_path ? acc->dbus_path : "?", member, type, detail1,
-                bus_unique ? bus_unique : "(no bus)", r);
-    }
+    } 
     sd_bus_message_unref(m);
 }
 
@@ -2650,6 +2649,39 @@ SendStateChanged(
  */
 
 static void
+SetAccessibleFocus(
+
+    TkAccessible *acc,      /* Accessible object. */
+    int focused)            /* New focus state (0 or 1). */
+{
+    if (!acc) return;
+
+    uint64_t old_states = acc->states;
+    acc->is_focused = focused;
+    acc->states = ComputeStateForWidget(acc);
+
+    if ((old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED)) {
+        SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
+        SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkAccessible_Reconcile --
+ *
+ *   Synchronizes and updates the accessibility state of a Tk widget 
+ * 	 with its current actual state.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Updates the object's state.
+ *----------------------------------------------------------------------
+ */
+
+static void
 TkAccessible_Reconcile(
     TkAccessible *acc)
 {
@@ -2662,8 +2694,17 @@ TkAccessible_Reconcile(
 
     {
         char *newName = GetNameForWidget(acc->tkwin);
-        if (newName) {
-            DEBUG_LOG("Reconcile: path=%s live name='%s'", acc->path ? acc->path : "?", newName);
+        int changed = (newName == NULL) != (acc->cached_name == NULL) ||
+                      (newName && acc->cached_name && strcmp(newName, acc->cached_name) != 0);
+        if (changed) {
+            DEBUG_LOG("Reconcile: path=%s name changed '%s' -> '%s'",
+                      acc->path ? acc->path : "?",
+                      acc->cached_name ? acc->cached_name : "(null)",
+                      newName ? newName : "(null)");
+            if (acc->cached_name) free(acc->cached_name);
+            acc->cached_name = newName;
+            EmitObjectEventFull(acc, "PropertyChange", "accessible-name", 0, 0, NULL);
+        } else if (newName) {
             free(newName);
         }
     }
@@ -2696,24 +2737,6 @@ TkAccessible_Reconcile(
     }
 }
 
-static void
-SetAccessibleFocus(
-
-    TkAccessible *acc,      /* Accessible object. */
-    int focused)            /* New focus state (0 or 1). */
-{
-    if (!acc) return;
-
-    uint64_t old_states = acc->states;
-    acc->is_focused = focused;
-    acc->states = ComputeStateForWidget(acc);
-
-    if ((old_states & ATSPI_STATE_FOCUSED) != (acc->states & ATSPI_STATE_FOCUSED)) {
-        SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
-        SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
-    }
-}
-
 /*
  *----------------------------------------------------------------------
  * TkWaylandAtspiProcessEvents --
@@ -2723,11 +2746,7 @@ SetAccessibleFocus(
  *   tkWaylandNotify.c) on every event-loop pass, exactly the way
  *   ibus_bus is drained in tkWaylandKey.c.
  *
- *   Guarded against re-entrancy: a dispatched AT-SPI method call (e.g.
- *   Orca invoking GrabFocus on one of our accessible objects) runs from
- *   inside sd_bus_process, and dbus_method_grab_focus calls back into Tk
- *   via Tcl_Eval("focus -force ..."), which can synchronously trigger
- *   ::tk::accessible::emit_focus_change and further AT-SPI traffic.
+ *   Guarded against re-entrancy.
  *   Calling sd_bus_process again on the same bus while already inside a
  *   drain is not safe, so a nested call here is a no-op; the next
  *   scheduled check-proc pass will pick up anything left pending.
@@ -2750,7 +2769,7 @@ TkWaylandAtspiProcessEvents(void)
 
     atspi_draining = 1;
     while (sd_bus_process(atspi_bus, NULL) > 0) {
-        /* drain all pending messages */
+        /* Drain all pending messages */
     }
     atspi_draining = 0;
 }
@@ -2790,10 +2809,6 @@ CreateAccessible(
     acc->interp = interp;
     acc->tkwin = tkwin;
     acc->path = strdup(path ? path : Tk_PathName(tkwin));
-    /* acc->role is deliberately left unset here (stays 0/INVALID from the
-     * memset above) -- widgets always get their role via GetLiveRole(),
-     * computed fresh from GetRoleForWidget() on every read, since a
-     * script-level -role attribute may not be set yet at creation time. */
     acc->ref_count = 1;
     acc->states = ComputeStateForWidget(acc);
 
@@ -2806,12 +2821,11 @@ CreateAccessible(
                   tkwin ? Tk_Class(tkwin) : "?",
                   ln ? ln : "(null)",
                   ld ? ld : "(null)");
-        if (ln) free(ln);
+        acc->cached_name = ln;  /* Seed the cache; ownership transfers here. */
         if (ld) free(ld);
     }
 
     if (!RegisterDbusObject(acc)) {
-        fprintf(stderr, "[TRACE] CreateAccessible: RegisterDbusObject FAILED for %s\n", acc->path);
         DEBUG_LOG("CreateAccessible: RegisterDbusObject failed for %s, aborting creation", acc->path);
         if (acc->path)
         	free(acc->path); 
@@ -2819,9 +2833,6 @@ CreateAccessible(
         Tcl_Free(acc);
         return NULL;
     }
-
-    fprintf(stderr, "[TRACE] CreateAccessible: RegisterDbusObject OK for %s, dbus_path=%s\n",
-            acc->path ? acc->path : "?", acc->dbus_path ? acc->dbus_path : "(null)");
 
     return acc;
 }
@@ -2877,6 +2888,9 @@ FreeAccessible(
     if (acc->virtual_name) 
     	free(acc->virtual_name);
     	acc->virtual_name=NULL;
+    if (acc->cached_name)
+    	free(acc->cached_name);
+    	acc->cached_name=NULL;
     	
     /* Free children list. */
     AccessibleList *l = acc->children;
@@ -3106,13 +3120,9 @@ RegisterWidgetRecursive(
     if (!tkwin) return;
 
     TkAccessible *acc = GetAccessible(tkwin);
-    fprintf(stderr, "[TRACE] RegisterWidgetRecursive: path=%s already_registered=%d\n",
-            Tk_PathName(tkwin), acc != NULL);
     if (!acc) {
         acc = CreateAccessible(interp, tkwin, Tk_PathName(tkwin));
         if (!acc) {
-            fprintf(stderr, "[TRACE] RegisterWidgetRecursive: CreateAccessible FAILED for %s\n",
-                    Tk_PathName(tkwin));
             DEBUG_LOG("RegisterWidgetRecursive: CreateAccessible failed for %s", Tk_PathName(tkwin));
             return;
         }
@@ -3347,46 +3357,9 @@ GetRoleForWidget(
         return ATSPI_ROLE_FRAME;
     }
 
-    /* BRUTE-FORCE FALLBACK: map Tk class */
-    int fallback = RoleFromTkClass(tkwin);
-    if (fallback != ATSPI_ROLE_INVALID) {
-        DEBUG_LOG("GetRoleForWidget: path=%s class=%s fallback -> %d (%s)", Tk_PathName(tkwin), Tk_Class(tkwin) ? Tk_Class(tkwin) : "?", fallback, RoleToString(fallback));
-        return fallback;
-    }
-
     DEBUG_LOG("GetRoleForWidget: path=%s class=%s -> INVALID", Tk_PathName(tkwin), Tk_Class(tkwin) ? Tk_Class(tkwin) : "?", RoleToString(ATSPI_ROLE_INVALID));
     return ATSPI_ROLE_INVALID;
 }
-
-int
-RoleFromTkClass(
-    Tk_Window tkwin)
-{
-    if (!tkwin) return ATSPI_ROLE_INVALID;
-    const char *cls = Tk_Class(tkwin);
-    if (!cls) return ATSPI_ROLE_INVALID;
-    if (strcmp(cls, "Button") == 0) return ATSPI_ROLE_PUSH_BUTTON;
-    if (strcmp(cls, "TButton") == 0) return ATSPI_ROLE_PUSH_BUTTON;
-    if (strcmp(cls, "Checkbutton") == 0 || strcmp(cls, "TCheckbutton") == 0) return ATSPI_ROLE_CHECK_BOX;
-    if (strcmp(cls, "Radiobutton") == 0 || strcmp(cls, "TRadiobutton") == 0) return ATSPI_ROLE_RADIO_BUTTON;
-    if (strcmp(cls, "Label") == 0 || strcmp(cls, "TLabel") == 0) return ATSPI_ROLE_LABEL;
-    if (strcmp(cls, "Entry") == 0 || strcmp(cls, "TEntry") == 0) return ATSPI_ROLE_ENTRY;
-    if (strcmp(cls, "Text") == 0) return ATSPI_ROLE_TEXT;
-    if (strcmp(cls, "Listbox") == 0) return ATSPI_ROLE_LIST_BOX;
-    if (strcmp(cls, "TCombobox") == 0) return ATSPI_ROLE_COMBO_BOX;
-    if (strcmp(cls, "Scale") == 0 || strcmp(cls, "TScale") == 0) return ATSPI_ROLE_SLIDER;
-    if (strcmp(cls, "Scrollbar") == 0 || strcmp(cls, "TScrollbar") == 0) return ATSPI_ROLE_SCROLL_BAR;
-    if (strcmp(cls, "Frame") == 0 || strcmp(cls, "TFrame") == 0) return ATSPI_ROLE_PANEL;
-    if (strcmp(cls, "Labelframe") == 0 || strcmp(cls, "TLabelframe") == 0) return ATSPI_ROLE_PANEL;
-    if (strcmp(cls, "Canvas") == 0) return ATSPI_ROLE_CANVAS;
-    if (strcmp(cls, "Menu") == 0) return ATSPI_ROLE_MENU;
-    if (strcmp(cls, "Menubutton") == 0 || strcmp(cls, "TMenubutton") == 0) return ATSPI_ROLE_PUSH_BUTTON;
-    if (strcmp(cls, "Progressbar") == 0 || strcmp(cls, "TProgressbar") == 0) return ATSPI_ROLE_PROGRESS_BAR;
-    if (strcmp(cls, "Spinbox") == 0 || strcmp(cls, "TSpinbox") == 0) return ATSPI_ROLE_SPIN_BUTTON;
-    if (strncmp(cls, "T", 1) == 0 && strstr(cls, "Button")) return ATSPI_ROLE_PUSH_BUTTON;
-    return ATSPI_ROLE_INVALID;
-}
-
 
 
 /*
@@ -3428,19 +3401,6 @@ GetLiveRole(
  *
  *   Add the Action and/or Value D-Bus interfaces for an accessible if
  *   its (live) role now calls for them and they haven't been added yet.
- *
- *   sd-bus vtables are fixed at the moment a path is registered on the
- *   bus -- there is no "add an interface later" primitive apart from
- *   calling sd_bus_add_object_vtable() again for the new interface, so
- *   this must be called any time the role might have newly become
- *   resolvable (at creation, and again e.g. on focus), not just once.
- *
- *   AT-SPI has no property-change signal for "this object's interface
- *   set changed" -- clients like Orca learn an accessible's interfaces
- *   once, and don't re-poll them unless notified. So
- *   if this call newly adds an interface and notifyIfChanged is set,
- *   it also forces a ChildrenChanged remove+add on the parent, so the
- *   object is dropped and re-fetched with its corrected interface set.
  *
  * Results:
  *   None.
@@ -3584,7 +3544,7 @@ ComputeStateForWidget(
         if (acc->is_focused || child_has_focus) {
             states |= ATSPI_STATE_ACTIVE;
         } else {
-            /* Keep window ACTIVE once mapped - many toolkits keep toplevel active while app has focus */
+            /* Keep window ACTIVE once mapped. */
             states |= ATSPI_STATE_ACTIVE;
         }
     }
@@ -3664,6 +3624,29 @@ GetNameForWidget(
         char *v = GetValueForWidget(tkwin);
         if (v && v[0]) return v;
         if (v) free(v);
+
+        /*
+         * Labels are never focusable, so the script-layer hooks that
+         * populate the "name"/"value" hash entries on focus/selection
+         * events (see emit_focus_change/emit_selection_change) never
+         * fire for them, and the hash lookup above is always empty.
+         * Fall back to querying the widget's live -text option
+         * directly, same pattern as the scale -from/-to live queries.
+         */
+        Tcl_Interp *interp = Tk_Interp(tkwin);
+        if (interp) {
+            char cmd[256];
+            snprintf(cmd, sizeof(cmd), "%s cget -text", Tk_PathName(tkwin));
+            if (Tcl_Eval(interp, cmd) == TCL_OK) {
+                const char *text = Tcl_GetStringResult(interp);
+                if (text && text[0]) {
+                    char *result = strdup(text);
+                    Tcl_ResetResult(interp);
+                    return result;
+                }
+            }
+            Tcl_ResetResult(interp);
+        }
     }
 
     {
@@ -3764,6 +3747,7 @@ GetValueForWidget(
             }
         }
     }
+    return NULL;
 }
 
 /*
@@ -4004,15 +3988,7 @@ TkAccessible_DestroyHandler(
 
     /*
      * Remove all event handlers registered on this window *before* the
-     * accessible is unregistered/freed below. Without this, a FocusOut
-     * (or ConfigureNotify) generated for the same window during teardown
-     * can still be dispatched to TkAccessible_FocusHandler/
-     * TkAccessible_ConfigureHandler with a stale 'acc' pointer that
-     * UnregisterAccessible() -> FreeAccessible() has already released,
-     * causing a use-after-free/segfault. This was previously worked
-     * around by disabling the body of TkAccessible_FocusHandler; that
-     * workaround is no longer needed now that the dangling handlers are
-     * torn down here.
+     * accessible is unregistered/freed below.
      */
     Tk_DeleteEventHandler(acc->tkwin, StructureNotifyMask,
                           TkAccessible_DestroyHandler, acc);
@@ -4055,24 +4031,10 @@ TkAccessible_FocusHandler(
     int focused = (eventPtr->type == FocusIn);
     static unsigned long call_counter = 0;
     call_counter++;
-    fprintf(stderr, "[TRACE] TkAccessible_FocusHandler: call#%lu path=%s eventPtr->type=%d "
-            "(FocusIn=%d FocusOut=%d) serial=%lu focused=%d\n",
-            call_counter, acc->path ? acc->path : "?", eventPtr->type,
-            FocusIn, FocusOut, eventPtr->xfocus.serial, focused);
     DEBUG_LOG("TkAccessible_FocusHandler: path=%s eventPtr->type=%d focused=%d (BRUTE-FORCE RECONCILE)",
               acc->path ? acc->path : "?", eventPtr->type, focused);
 
     if (focused) {
-        /*
-         * Unlike dbus_method_get_children/dbus_prop_get_child_count/
-         * AppendCacheItemLive, this is not a synchronous reply to a
-         * client's own query -- it is triggered by an async focus
-         * event. Newly discovered children must be announced via
-         * ChildrenChanged (emitEvents=1), the same way
-         * TkAccessible_ConfigureHandler's rescan does, or they are
-         * created and registered on the bus with no client ever told
-         * they exist.
-         */
         if (Tk_IsTopLevel(acc->tkwin)) {
             EnsureChildrenRegistered(acc->tkwin, 1);
         } else if (acc->parent && acc->parent->tkwin) {
@@ -4117,10 +4079,7 @@ TkAccessible_FocusHandler(
         if (topWin) {
             TkAccessible *topAcc = GetAccessible(topWin);
             if (topAcc && !(topAcc->states & ATSPI_STATE_ACTIVE)) {
-                /* Only announce ACTIVE when it actually changes -- this
-                 * used to fire unconditionally on every child focus
-                 * event, flooding Orca with redundant "window is
-                 * active" StateChanged signals it never asked for. */
+                /* Only announce ACTIVE when it actually changes. */
                 topAcc->states |= ATSPI_STATE_ACTIVE;
                 SendStateChanged(topAcc, ATSPI_STATE_ACTIVE, 1);
             }
@@ -4290,14 +4249,14 @@ TkAccessible_ConfigureHandler(
         return;
     }
 
-    
-    {
-        char *ln = GetNameForWidget(tkwin);
-        DEBUG_LOG("ConfigureHandler: path=%s new size %dx%d name='%s' - scanning for new children (hash table walk)",
-                  acc->path?acc->path:"?", acc->width, acc->height,
-                  ln?ln:"(null)");
-        if (ln) free(ln);
-    }
+    /*
+     * Reconcile picks up and pushes any name change (e.g. a label's
+     * -text was updated, which normally also resizes it and lands us
+     * here) -- this is the only recurring touchpoint non-focusable
+     * widgets like labels get after initial creation, since they never
+     * fire TkAccessible_FocusHandler.
+     */
+    TkAccessible_Reconcile(acc);
     EnsureChildrenRegistered(tkwin, 1);
 }
 
@@ -4711,10 +4670,8 @@ AddAccessibleCmd(
     }
 
     const char *windowName = Tcl_GetString(objv[1]);
-    fprintf(stderr, "[TRACE] AddAccessibleCmd: called with window='%s'\n", windowName);
-    Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
+        Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) {
-        fprintf(stderr, "[TRACE] AddAccessibleCmd: Tk_NameToWindow FAILED for '%s'\n", windowName);
         Tcl_SetObjResult(interp, Tcl_NewStringObj("Invalid window name.", -1));
         return TCL_ERROR;
     }
@@ -4769,8 +4726,7 @@ EmitSelectionChangedCmd(
         RegisterAccessible(tkwin, acc);
         TkAccessible_RegisterEventHandlers(tkwin, acc);
     }
-
-    /* On macOS/Win32, selection changes are announced as value changes. */
+    
     PostAccessibilityAnnouncement(acc, "selection changed", 0);
     return TCL_OK;
 }
@@ -4880,16 +4836,12 @@ TkWaylandAccessibility_Init(
     Tcl_Interp *interp)     /* Tcl interpreter. */
 {
     DEBUG_LOG("TkWaylandAccessibility_Init: enter");
-    DEBUG_LOG("BUILD-CHECK: ROLE_FRAME=%d ROLE_PUSH_BUTTON=%d ROLE_APPLICATION=%d "
-              "STATE_VISIBLE_BIT=%d STATE_SHOWING_BIT=%d STATE_ENABLED_BIT=%d "
-              "(expect 23 43 75 30 25 8 -- if you see anything else, this binary "
-              "does NOT contain the role/state fix)",
-              ATSPI_ROLE_FRAME, ATSPI_ROLE_PUSH_BUTTON, ATSPI_ROLE_APPLICATION,
-              __builtin_ctzll(ATSPI_STATE_VISIBLE), __builtin_ctzll(ATSPI_STATE_SHOWING),
-              __builtin_ctzll(ATSPI_STATE_ENABLED));
+
     /* Initialize D-Bus connection to at-spi. */
     if (!InitializeAtspiConnection()) {
-        Tcl_AppendResult(interp, "Warning: Could not connect to AT-SPI - accessibility disabled for now", (char *)NULL);
+        Tcl_AppendResult(interp,
+            "Warning: Could not connect to AT-SPI - accessibility disabled for now",
+            (char *)NULL);
         /* Proceed anyway – don't block Tk init. */
     }
 
@@ -4899,16 +4851,12 @@ TkWaylandAccessibility_Init(
         Tk_MakeWindowExist(mainWin);
         Tk_MapWindow(mainWin);
 
-        TkAccessible *main_acc = CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
-        if (main_acc) {
-            /* No need to force main_acc->role here: mainWin has a real
-             * tkwin, so GetLiveRole() will resolve it via
-             * GetRoleForWidget()'s toplevel check, which already
-             * returns ATSPI_ROLE_FRAME. */
-            RegisterAccessible(mainWin, main_acc);
-            RegisterToplevel(main_acc);
-            TkAccessible_RegisterEventHandlers(mainWin, main_acc);
-        }
+        TkAccessible *main_acc =
+            CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
+
+        RegisterAccessible(mainWin, main_acc);
+        RegisterToplevel(main_acc);
+        TkAccessible_RegisterEventHandlers(mainWin, main_acc);
 
         /* Register all existing widgets. */
         RegisterWidgetRecursive(interp, mainWin);
