@@ -13,8 +13,8 @@
  */
 
 /* Debugging */
-//#define DEBUG_CHANNEL stderr
-//#define DEBUG_LABEL "accessibility"
+#define DEBUG_CHANNEL stderr
+#define DEBUG_LABEL "accessibility"
 
 #include <stdio.h>
 #include <string.h>
@@ -2030,7 +2030,12 @@ AppendCacheItemLive(
     if (parent_acc && parent_acc->dbus_path && acc->dbus_path && strcmp(parent_acc->dbus_path, acc->dbus_path)==0) parent_acc=NULL;
     
     int childcnt=0;
-    if (acc->tkwin && !acc->is_virtual) {
+    if (atspi_conn && acc == atspi_conn->root_accessible) {
+        /* Root's children are the registered toplevels, not acc->children. */
+        for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) {
+            if (l->acc) childcnt++;
+        }
+    } else if (acc->tkwin && !acc->is_virtual) {
         EnsureChildrenRegistered(acc->tkwin, 0);
         for (TkWindow *c=((TkWindow*)acc->tkwin)->childList; c; c=c->nextPtr) {
             if (GetAccessible((Tk_Window)c)) childcnt++;
@@ -2102,7 +2107,13 @@ AppendCacheItemLive(
     if (live_name) free(live_name);
     if (live_desc) free(live_desc);
 
-    if (acc->tkwin && !acc->is_virtual) {
+    if (atspi_conn && acc == atspi_conn->root_accessible) {
+        /* Recurse into the registered toplevels, mirroring GetChildren. */
+        int emit_idx=0;
+        for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next, emit_idx++) {
+            if (l->acc) AppendCacheItemLive(reply, l->acc, acc, app_path, emit_idx);
+        }
+    } else if (acc->tkwin && !acc->is_virtual) {
         int emit_idx=0;
         for (TkWindow *c=((TkWindow*)acc->tkwin)->childList; c; c=c->nextPtr) {
             TkAccessible *ch=GetAccessible((Tk_Window)c);
