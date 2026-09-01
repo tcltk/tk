@@ -12,9 +12,10 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging */
+/* Debugging
 #define DEBUG_CHANNEL stderr
 #define DEBUG_LABEL "accessibility"
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -134,7 +135,7 @@ struct TkAccessible {
     Tk_Window tkwin;
     Tcl_Interp *interp;
     char *path;
-    int role;               /* Only authoritative for accessibles with no
+    int role;                /* Only authoritative for accessibles with no
                               * tkwin (e.g. the root "application" object).
                               * For real widgets, always call GetLiveRole()
                               * instead of reading this directly -- it is
@@ -143,7 +144,7 @@ struct TkAccessible {
     int x, y, width, height;
     int is_focused;
     int ref_count;
-    char *cached_name;      /* Last name seen by Reconcile, so we only
+    char *cached_name;       /* Last name seen by Reconcile, so we only
                               * emit accessible-name PropertyChange when
                               * it actually changes (e.g. a label's
                               * -text is updated after creation). */
@@ -171,7 +172,7 @@ struct TkAccessible {
 #define TK_ACCESSIBLE_MAX_SLOTS 8
     sd_bus_slot *vtable_slots[TK_ACCESSIBLE_MAX_SLOTS];
     int n_vtable_slots;
-    int action_vtable_added;  /* 1 once the Action interface has been
+    int action_vtable_added;   /* 1 once the Action interface has been
                                 * added on the bus for this object -- role
                                 * can become known after creation, so this
                                 * guards against adding it twice. */
@@ -818,10 +819,10 @@ dbus_method_get_child_at_index(
             AppendAccessibleRef(reply, NULL);
         }
     } else if (acc->tkwin && !acc->is_virtual) {
-    /*
-	 * Count only accessible children, skipping non-Tk windows like
-	 * listbox rows.
-	 */
+	/*
+         * Count only accessible children, skipping non-Tk windows like
+         * listbox rows.
+         */
         TkWindow *childPtr;
         int acc_idx = 0;
         for (childPtr = ((TkWindow*)acc->tkwin)->childList;
@@ -897,12 +898,6 @@ dbus_method_get_attributes(
  *
  *   D-Bus method handler for GetState on the Accessible interface.
  *   Returns the bitmask of states for the accessible object.
- *
- *   AT-SPI's Accessible.GetState is declared "" -> "au" in
- *   at-spi2-core/xml/Accessible.xml: an array of two packed uint32s
- *   (low 32 bits, then high 32 bits of the 64-bit state bitfield), not
- *   a single "t". A client asking for "GetState" and finding only a
- *   "GetStates" method with a "t" return never gets a state at all.
  *
  * Results:
  *   Returns 0 on success, or a negative error code.
@@ -986,7 +981,6 @@ dbus_method_get_role(
  *----------------------------------------------------------------------
  */
 
-
 static int
 dbus_prop_get_name(
     TCL_UNUSED(sd_bus *),
@@ -1016,7 +1010,7 @@ dbus_prop_get_name(
                 }
             }
         } else {
-            /* No tkwin (e.g. root application object) - use path or fallback */
+            /* No tkwin (e.g. root application object) - use path or fallback. */
             if (acc->path && acc->path[0]=='.' && acc->path[1]=='\0') {
                 name = "Tk Application";
             } else if (acc->path && strcmp(acc->path, "application")==0) {
@@ -1030,7 +1024,6 @@ dbus_prop_get_name(
     if (live_name) free(live_name);
     return ret;
 }
-
 
 
 /*
@@ -1165,7 +1158,7 @@ dbus_prop_get_child_count(
     } else if (acc->tkwin && !acc->is_virtual) {
         EnsureChildrenRegistered(acc->tkwin, 0);
 
-        /* BUGFIX: Orca queries ChildCount before GetChildren - ensure children are registered first */
+        /* Orca queries ChildCount before GetChildren - ensure children are registered first. */
         EnsureChildrenRegistered(acc->tkwin, 0);
         for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
             if (GetAccessible((Tk_Window)c)) cnt++;
@@ -1243,6 +1236,7 @@ dbus_method_grab_focus(
 
     return sd_bus_reply_method_return(m, "b", 1);
 }
+
 /*
  *----------------------------------------------------------------------
  * dbus_method_get_index_in_parent --
@@ -1353,9 +1347,10 @@ dbus_method_get_interfaces(
         role == ATSPI_ROLE_PROGRESS_BAR || role == ATSPI_ROLE_SCROLL_BAR) {
         sd_bus_message_append(reply, "s", ATSPI_VALUE_INTERFACE);
     }
-    /* Text and Selection interfaces are intentionally omitted
-     * to match the macOS/Win32 accessibility model: only core
-     * role, name, value, bounds, and focus are exposed. */
+    /*
+     * Text and Selection interfaces are intentionally omitted
+     * as they are addressed at the script level.
+     */
     sd_bus_message_close_container(reply);
     return sd_bus_send(NULL, reply, NULL);
 }
@@ -1999,21 +1994,20 @@ dbus_method_value_set_current(
 
 /*
  *----------------------------------------------------------------------
-
-
-
-
-
-/*
- *----------------------------------------------------------------------
-
-/*
- *----------------------------------------------------------------------
- * AppendCacheItem -- LIVE VERSION
+ * AppendCacheItemLive --
  *
- *   Appends one cache item with LIVE reads (no cached_name/description).
- *   This satisfies Cache.GetItems callers like accerciser while still
- *   doing live reads per your requirement.
+ *   Recursively appends cache item data for an accessible object and its
+ *   children to a D-Bus reply message. This function retrieves live
+ *   information about the accessible object including its name, description,
+ *   role, states, and child count. It handles special cases for the root
+ *   accessible, virtual objects, and Tk windows.
+ *
+ * Results:
+ *   None. Modifies the reply message in place.
+ *
+ * Side effects:
+ *   Allocates and frees memory for live name and description strings.
+ *   Recursively calls itself to process child accessible objects.
  *----------------------------------------------------------------------
  */
 
@@ -2047,7 +2041,7 @@ AppendCacheItemLive(
     sd_bus_message_open_container(reply, 'r', "(so)(so)(so)iiassusau");
     AppendAccessibleRef(reply, acc->dbus_path);
     AppendAccessibleRef(reply, app_path);
-    /* BUGFIX: accerciser warns if accessible has itself as parent.
+    /* Accerciser warns if accessible has itself as parent.
      * Root's parent must be null, not itself (app_path == root path).
      * For any other object, if parent_acc is NULL or self, fall back to app_path (root). */
     int is_root = (atspi_conn && acc == atspi_conn->root_accessible) ||
@@ -2125,6 +2119,23 @@ AppendCacheItemLive(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_cache_get_items --
+ *
+ *   D-Bus method handler for GetItems on the Cache interface.
+ *   Returns a complete cache of all accessible objects in the application
+ *   hierarchy, starting from the root accessible object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Creates and sends a D-Bus reply message containing an array of
+ *   accessible object cache entries.
+ *----------------------------------------------------------------------
+ */
+
 static int
 dbus_method_cache_get_items(
     sd_bus_message *m,
@@ -2144,6 +2155,8 @@ dbus_method_cache_get_items(
     return sd_bus_send(NULL, reply, NULL);
 }
 
+
+/* D-Bus vtable definition for the Cache interface.Exposes the GetItems method to D-Bus clients. */
 static const sd_bus_vtable cache_vtable[] = {
     SD_BUS_VTABLE_START(0),
     SD_BUS_METHOD("GetItems", "", "a((so)(so)(so)iiassusau)", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -2377,7 +2390,7 @@ EmitFocusEvent(
 
     DEBUG_LOG("EmitFocusEvent: path=%s dbus_path=%s", acc->path ? acc->path : "?", acc->dbus_path);
 
-    /* AT-SPI Focus event signature is same as Object: siiva{sv} */
+    /* AT-SPI Focus event signature is same as Object: siiva{sv}. */
     sd_bus_message *m = NULL;
     int r = sd_bus_message_new_signal(atspi_conn->bus, &m,
                                       acc->dbus_path,
@@ -2473,10 +2486,7 @@ EmitWindowEvent(
  *----------------------------------------------------------------------
  * PostAccessibilityAnnouncement --
  *
- *   Post an accessibility announcement via AT-SPI's Announcement signal.
- *   This is the direct equivalent of macOS's
- *   NSAccessibilityAnnouncementRequestedNotification and Win32's
- *   NotifyWinEvent(EVENT_OBJECT_VALUECHANGE).
+ *   Post an accessibility announcement via AT-SPI's Announcement signal..
  *
  * Results:
  *   None.
@@ -2702,41 +2712,39 @@ SetAccessibleFocus(
 
     focused = focused ? 1 : 0;
 
-    /*
-     * Nothing to do if the requested state is already in effect.
-     */
-    if (acc->is_focused == focused) {
-        return;
-    }
-
-    DEBUG_LOG("SetAccessibleFocus: path=%s focused=%d",
-              acc->path ? acc->path : "?",
-              focused);
-
     uint64_t old_states = acc->states;
+    int was_focused = acc->is_focused;
+
+    DEBUG_LOG("SetAccessibleFocus: path=%s focused=%d was=%d",
+              acc->path ? acc->path : "?",
+              focused, was_focused);
 
     /*
      * is_focused is our authoritative logical focus state.
      * ComputeStateForWidget() derives ATSPI_STATE_FOCUSED from it.
      */
-    acc->is_focused = focused;
-    acc->states = ComputeStateForWidget(acc);
+    if (was_focused != focused) {
+        acc->is_focused = focused;
+        acc->states = ComputeStateForWidget(acc);
+    }
 
     /*
-     * The focused bit should have changed because is_focused changed,
-     * but retain the explicit comparison so this remains safe if the
-     * state computation changes later.
+     * Orca needs both state-changed and focus every time focus is
+     * (re-)asserted.
      */
-    if ((old_states & ATSPI_STATE_FOCUSED) !=
-        (acc->states & ATSPI_STATE_FOCUSED)) {
-
-        SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
-
-        /*
-         * AT-SPI Focus is the event Orca uses to move its current
-         * accessibility locus.
-         */
+    if (focused) {
+        if ((old_states & ATSPI_STATE_FOCUSED) == 0 ||
+            (acc->states & ATSPI_STATE_FOCUSED)) {
+            if ((old_states & ATSPI_STATE_FOCUSED) == 0) {
+                SendStateChanged(acc, ATSPI_STATE_FOCUSED, 1);
+            }
+        }
+        /* Always re-emit Focus for Orca to re-announce */
         SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
+    } else {
+        if (old_states & ATSPI_STATE_FOCUSED) {
+            SendStateChanged(acc, ATSPI_STATE_FOCUSED, 0);
+        }
     }
 }
 
@@ -2745,7 +2753,7 @@ SetAccessibleFocus(
  * TkAccessible_Reconcile --
  *
  *   Synchronizes and updates the accessibility state of a Tk widget 
- * 	 with its current actual state.
+ *   with its current actual state.
  *
  * Results:
  *   None.
@@ -2759,7 +2767,13 @@ static void
 TkAccessible_Reconcile(
     TkAccessible *acc)
 {
-    if (!acc || !acc->tkwin) return;
+    if (!acc) return;
+    if (!acc->tkwin) {
+        if (atspi_conn && acc == atspi_conn->root_accessible) {
+            acc->states = ATSPI_STATE_ENABLED | ATSPI_STATE_SENSITIVE | ATSPI_STATE_SHOWING | ATSPI_STATE_VISIBLE;
+        }
+        return;
+    }
 
     int live_role = GetLiveRole(acc);
     if (live_role != ATSPI_ROLE_INVALID) {
@@ -2902,8 +2916,8 @@ CreateAccessible(
     if (!RegisterDbusObject(acc)) {
         DEBUG_LOG("CreateAccessible: RegisterDbusObject failed for %s, aborting creation", acc->path);
         if (acc->path)
-        	free(acc->path); 
-        	acc->path=NULL;
+                free(acc->path); 
+                acc->path=NULL;
         Tcl_Free(acc);
         return NULL;
     }
@@ -2954,18 +2968,18 @@ FreeAccessible(
     }
 
     if (acc->path) 
-    	free(acc->path);
-    	acc->path=NULL;
+        free(acc->path);
+        acc->path=NULL;
     if (acc->dbus_path) 
-    	free(acc->dbus_path);
-    	acc->dbus_path=NULL;
+        free(acc->dbus_path);
+        acc->dbus_path=NULL;
     if (acc->virtual_name) 
-    	free(acc->virtual_name);
-    	acc->virtual_name=NULL;
+        free(acc->virtual_name);
+        acc->virtual_name=NULL;
     if (acc->cached_name)
-    	free(acc->cached_name);
-    	acc->cached_name=NULL;
-    	
+        free(acc->cached_name);
+        acc->cached_name=NULL;
+        
     /* Free children list. */
     AccessibleList *l = acc->children;
     while (l) {
@@ -3517,7 +3531,7 @@ GetRoleForWidget(
         }
     }
 
-    /* Fallback to widget class — mirrors tkUnixAccessibility.c GetAtkRoleForWidget (lines 448-456) */
+    /* Fallback to widget class. */
     const char *widgetClass = Tk_Class(tkwin);
     if (widgetClass) {
         for (int i = 0; roleMap[i].tkrole != NULL; i++) {
@@ -3545,7 +3559,7 @@ GetRoleForWidget(
  *   Resolve an accessible's current AT-SPI role. Always recomputes
  *   from the live Tk widget state rather than trusting any previously
  *   live value, so a role that only becomes known after creation
- *   (e.g. a script-level -role attribute set on first focus) is never
+ *   (e.g. a script-level role attribute set on first focus) is never
  *   stuck at whatever it was when the accessible was first registered.
  *
  *   Accessibles with no backing Tk window (the synthetic root
@@ -3708,7 +3722,7 @@ ComputeStateForWidget(
         states |= ATSPI_STATE_FOCUSED;
     }
 
-    /* Active: for FRAME (toplevels), stay ACTIVE if focused or any child is focused (Orca needs active window to read children) */
+    /* Active: for FRAME (toplevels), stay ACTIVE if focused or any child is focused (Orca needs active window to read children.) */
     if (role == ATSPI_ROLE_FRAME) {
         int child_has_focus = 0;
         if (acc->tkwin) {
@@ -3743,7 +3757,7 @@ ComputeStateForWidget(
     if (role == ATSPI_ROLE_ENTRY || role == ATSPI_ROLE_TEXT) {
         if (!is_disabled) {
             int is_editable = 1;
-        	states |= ATSPI_STATE_EDITABLE;
+                states |= ATSPI_STATE_EDITABLE;
         }
     }
 
@@ -3803,8 +3817,7 @@ GetNameForWidget(
         }
     }
 
-    /* Live cget -text for ALL widgets that support it - buttons, labels, checkbuttons etc.
-     * This is what makes [button .b -text foo] audible. Previously only LABEL did this. */
+    /* Live cget -text for ALL widgets that support it - buttons, labels, checkbuttons etc. */
     extern int atspi_draining;
     Tcl_Interp *interp = Tk_Interp(tkwin);
     if (!atspi_draining && interp) {
@@ -3817,9 +3830,8 @@ GetNameForWidget(
                 if (text && text[0]) {
                     char *result = strdup(text);
                     Tcl_ResetResult(interp);
-                    /* Don't return empty or pure whitespace */
+                    /* Don't return empty or pure whitespace. */
                     if (result[0] != '\0') {
-                        // Trim? keep as-is for screen reader
                         return result;
                     }
                     free(result);
@@ -3829,7 +3841,7 @@ GetNameForWidget(
         }
     }
 
-    /* Fallback to explicit value hash (script-level ::tk::accessible::add_acc_object) */
+    /* Fallback to explicit value hash (script-level ::tk::accessible::add_acc_object). */
     {
         char *val = GetValueForWidget(tkwin);
         if (val && val[0] != '\0') {
@@ -3846,7 +3858,7 @@ GetNameForWidget(
         return strdup("Tk Application");
     }
 
-    /* Last resort: use widget path tail as name so it's never silent */
+    /* Last resort: use widget path tail as name so it's never silent. */
     {
         const char *pn = Tk_PathName(tkwin);
         if (pn) {
@@ -3858,9 +3870,6 @@ GetNameForWidget(
 
     return NULL;
 }
-
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -3962,15 +3971,15 @@ GetValueForWidget(
  *----------------------------------------------------------------------
  * EnsureChildrenRegisteredRecursive --
  *
- *	Recursively ensure that all children of a window have accessible
- *	objects registered.
+ *      Recursively ensure that all children of a window have accessible
+ *      objects registered.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Creates TkAccessible objects for missing child windows and,
- *	when requested, emits children-changed events.
+ *      Creates TkAccessible objects for missing child windows and,
+ *      when requested, emits children-changed events.
  *----------------------------------------------------------------------
  */
 
@@ -3985,49 +3994,49 @@ EnsureChildrenRegisteredRecursive(
     int index = 0;
 
     if (!tkwin) {
-	return;
+        return;
     }
 
     winPtr = (TkWindow *)tkwin;
 
     for (childPtr = winPtr->childList;
-	 childPtr != NULL;
-	 childPtr = childPtr->nextPtr, index++) {
+         childPtr != NULL;
+         childPtr = childPtr->nextPtr, index++) {
 
-	Tk_Window childWin = (Tk_Window)childPtr;
-	TkAccessible *child_acc = GetAccessible(childWin);
+        Tk_Window childWin = (Tk_Window)childPtr;
+        TkAccessible *child_acc = GetAccessible(childWin);
 
-	if (!child_acc) {
-	    Tcl_Interp *interp = Tk_Interp(tkwin);
+        if (!child_acc) {
+            Tcl_Interp *interp = Tk_Interp(tkwin);
 
-	    if (!interp && parent_acc) {
-		interp = parent_acc->interp;
-	    }
+            if (!interp && parent_acc) {
+                interp = parent_acc->interp;
+            }
 
-	    if (!interp) {
-		continue;
-	    }
+            if (!interp) {
+                continue;
+            }
 
-	    child_acc = CreateAccessible(
-		    interp, childWin, Tk_PathName(childWin));
-	    if (!child_acc) {
-		continue;
-	    }
+            child_acc = CreateAccessible(
+                    interp, childWin, Tk_PathName(childWin));
+            if (!child_acc) {
+                continue;
+            }
 
-	    if (parent_acc) {
-		child_acc->parent = parent_acc;
-	    }
+            if (parent_acc) {
+                child_acc->parent = parent_acc;
+            }
 
-	    RegisterAccessible(childWin, child_acc);
-	    TkAccessible_RegisterEventHandlers(childWin, child_acc);
+            RegisterAccessible(childWin, child_acc);
+            TkAccessible_RegisterEventHandlers(childWin, child_acc);
 
-	    if (parent_acc && emitEvents) {
-		SendChildrenChanged(parent_acc, index, child_acc, 1);
-	    }
-	}
+            if (parent_acc && emitEvents) {
+                SendChildrenChanged(parent_acc, index, child_acc, 1);
+            }
+        }
 
-	EnsureChildrenRegisteredRecursive(
-		childWin, child_acc, emitEvents);
+        EnsureChildrenRegisteredRecursive(
+                childWin, child_acc, emitEvents);
     }
 }
 
@@ -4036,15 +4045,15 @@ EnsureChildrenRegisteredRecursive(
  *----------------------------------------------------------------------
  * EnsureChildrenRegistered --
  *
- *	Ensure that all children of a window have accessible objects
- *	registered.
+ *      Ensure that all children of a window have accessible objects
+ *      registered.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Creates TkAccessible objects for missing child windows and emits
- *	children-changed events.
+ *      Creates TkAccessible objects for missing child windows and emits
+ *      children-changed events.
  *----------------------------------------------------------------------
  */
 
@@ -4058,7 +4067,7 @@ EnsureChildrenRegistered(
     Tk_Window top;
 
     if (!tkwin) {
-	return;
+        return;
     }
 
     /*
@@ -4070,29 +4079,29 @@ EnsureChildrenRegistered(
      * If tkwin itself doesn't have one, try its parent.
      */
     if (!acc) {
-	parent = Tk_Parent(tkwin);
-	if (parent) {
-	    acc = GetAccessible(parent);
-	}
+        parent = Tk_Parent(tkwin);
+        if (parent) {
+            acc = GetAccessible(parent);
+        }
     }
 
     /*
      * Finally, walk up to the toplevel.
      */
     if (!acc) {
-	top = tkwin;
+        top = tkwin;
 
-	while (top && !Tk_IsTopLevel(top)) {
-	    top = Tk_Parent(top);
-	}
+        while (top && !Tk_IsTopLevel(top)) {
+            top = Tk_Parent(top);
+        }
 
-	if (top) {
-	    acc = GetAccessible(top);
-	}
+        if (top) {
+            acc = GetAccessible(top);
+        }
     }
 
     if (!acc) {
-	return;
+        return;
     }
 
     /*
@@ -4100,7 +4109,7 @@ EnsureChildrenRegistered(
      * as the root of the scan.
      */
     if (acc->tkwin) {
-	tkwin = acc->tkwin;
+        tkwin = acc->tkwin;
     }
 
     EnsureChildrenRegisteredRecursive(tkwin, acc, emitEvents);
@@ -4263,11 +4272,8 @@ TkAccessible_FocusHandler(
     } else {
         /*
          * Do not blindly clear focus here if Tk has already moved focus
-         * to another widget.  FocusOut is frequently followed by
-         * FocusIn, and UpdateFocusChain() will clear the old object as
-         * part of the transition.
-         *
-         * Determine Tk's current focus before clearing this object.
+         * to another widget.  Determine Tk's current focus before
+	 * clearing this object.
          */
         TkWindow *focusPtr =
             TkGetFocusWin((TkWindow *)acc->tkwin);
@@ -4407,7 +4413,7 @@ TkAccessible_CreateHandler(
                 }
                 acc_idx++;
             }
-            /* If not found via filtered count (new child not yet in map), fall back to raw filtered position */
+            /* If not found via filtered count (new child not yet in map), fall back to raw filtered position. */
             if (idx == -1) {
                 int cnt = 0;
                 for (ptr = ((TkWindow*)parent_acc->tkwin)->childList; ptr; ptr = ptr->nextPtr) {
@@ -4488,9 +4494,7 @@ TkAccessible_ConfigureHandler(
     /*
      * Reconcile picks up and pushes any name change (e.g. a label's
      * -text was updated, which normally also resizes it and lands us
-     * here) -- this is the only recurring touchpoint non-focusable
-     * widgets like labels get after initial creation, since they never
-     * fire TkAccessible_FocusHandler.
+     * here).
      */
     TkAccessible_Reconcile(acc);
     EnsureChildrenRegistered(tkwin, 1);
@@ -4754,6 +4758,7 @@ InitializeAtspiConnection(void)
     atspi_conn->root_accessible->path       = strdup("application");
     atspi_conn->root_accessible->dbus_path  = strdup("/org/a11y/atspi/accessible/root");
     atspi_conn->root_accessible->ref_count  = 1;
+    atspi_conn->root_accessible->states     = ATSPI_STATE_ENABLED | ATSPI_STATE_SENSITIVE | ATSPI_STATE_SHOWING | ATSPI_STATE_VISIBLE;
     
 
     RegisterDbusObject(atspi_conn->root_accessible);

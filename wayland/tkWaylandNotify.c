@@ -49,9 +49,10 @@
  *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
 
-/* Debugging */
+/* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "notify"
+*/
 
 #include "tkInt.h"
 #include "tkMenu.h"
