@@ -225,7 +225,6 @@ static void EnsureChildrenRegisteredRecursive(Tk_Window tkwin, TkAccessible *par
 static void UpdateFocusChain(Tk_Window focused);
 static void SetAccessibleFocus(TkAccessible *acc, int focused);
 static void TkAccessible_Reconcile(TkAccessible *acc);
-static int RoleFromTkClass(Tk_Window tkwin);
 
 /* D-Bus vtables and method handlers. */
 static const sd_bus_vtable accessible_vtable[];
@@ -408,7 +407,7 @@ sd_bus *atspi_bus = NULL;
  * itself call back into Tk via Tcl_Eval) must not trigger a nested
  * sd_bus_process on the same bus.
  */
-static int atspi_draining = 0;
+int atspi_draining = 0;
 
 /*
  * D-Bus vtables - these map functions to the ati-spi API.
@@ -787,10 +786,13 @@ dbus_method_get_child_at_index(
     void *userdata,         /* TkAccessible object pointer. */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
+
     TkAccessible *acc = (TkAccessible *)userdata;
     int32_t index;
     sd_bus_message *reply = NULL;
     int r;
+    
+    if (acc && acc->tkwin) EnsureChildrenRegistered(acc->tkwin, 0);
 
     if (!acc || !atspi_conn) {
         return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
@@ -1161,6 +1163,8 @@ dbus_prop_get_child_count(
     if (acc == atspi_conn->root_accessible) {
         for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) cnt++;
     } else if (acc->tkwin && !acc->is_virtual) {
+        EnsureChildrenRegistered(acc->tkwin, 0);
+
         /* BUGFIX: Orca queries ChildCount before GetChildren - ensure children are registered first */
         EnsureChildrenRegistered(acc->tkwin, 0);
         for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
@@ -3502,20 +3506,24 @@ GetRoleForWidget(
         }
     }
 
+    /* Fallback to widget class — mirrors tkUnixAccessibility.c GetAtkRoleForWidget (lines 448-456) */
+    const char *widgetClass = Tk_Class(tkwin);
+    if (widgetClass) {
+        for (int i = 0; roleMap[i].tkrole != NULL; i++) {
+            if (strcasecmp(roleMap[i].tkrole, widgetClass) == 0) {
+                DEBUG_LOG("GetRoleForWidget: path=%s class=%s -> %d (%s) [class fallback]", Tk_PathName(tkwin), widgetClass, roleMap[i].atspi_role, RoleToString(roleMap[i].atspi_role));
+                return roleMap[i].atspi_role;
+            }
+        }
+    }
+
     if (Tk_IsTopLevel(tkwin)) {
         DEBUG_LOG("GetRoleForWidget: path=%s is toplevel -> frame", Tk_PathName(tkwin));
         return ATSPI_ROLE_FRAME;
     }
 
-    DEBUG_LOG("GetRoleForWidget: path=%s class=%s -> PANEL fallback", Tk_PathName(tkwin), cls);
+    DEBUG_LOG("GetRoleForWidget: path=%s class=%s -> PANEL fallback", Tk_PathName(tkwin), widgetClass ? widgetClass : "?", Tk_PathName(tkwin));
     return ATSPI_ROLE_PANEL;
-}
-
-static int
-RoleFromTkClass(
-    Tk_Window tkwin)
-{
-    return GetRoleForWidget(tkwin);
 }
 
 
@@ -3706,10 +3714,18 @@ ComputeStateForWidget(
         }
     }
 
-    /* VISIBLE/SHOWING reflect the widget's actual Tk map state. */
+    /* VISIBLE/SHOWING - Wayland: if toplevel is mapped, children are visible even before child IsMapped.
+     * Prevents Accerciser caching 0 state and filtering widgets as hidden. */
     if (Tk_IsMapped(acc->tkwin)) {
         states |= ATSPI_STATE_VISIBLE;
         states |= ATSPI_STATE_SHOWING;
+    } else if (acc->tkwin && !Tk_IsTopLevel(acc->tkwin)) {
+        Tk_Window top = acc->tkwin;
+        while (top && !Tk_IsTopLevel(top)) top = Tk_Parent(top);
+        if (top && Tk_IsMapped(top)) {
+            states |= ATSPI_STATE_VISIBLE;
+            states |= ATSPI_STATE_SHOWING;
+        }
     }
 
     /* Editable for entries. */
@@ -3778,8 +3794,9 @@ GetNameForWidget(
 
     /* Live cget -text for ALL widgets that support it - buttons, labels, checkbuttons etc.
      * This is what makes [button .b -text foo] audible. Previously only LABEL did this. */
+    extern int atspi_draining;
     Tcl_Interp *interp = Tk_Interp(tkwin);
-    if (interp) {
+    if (!atspi_draining && interp) {
         const char *opts[] = {"-text", "-label", "-title", NULL};
         for (int oi = 0; opts[oi]; oi++) {
             char cmd[512];
@@ -3910,8 +3927,9 @@ GetValueForWidget(
      * For buttons this is the label, for entries this could be the content.
      * We deliberately duplicate the cget logic here so Reconcile can detect changes
      * even if GetNameForWidget is cached. */
+    extern int atspi_draining;
     Tcl_Interp *interp = Tk_Interp(tkwin);
-    if (interp) {
+    if (!atspi_draining && interp) {
         char cmd[512];
         snprintf(cmd, sizeof(cmd), "%s cget -text", Tk_PathName(tkwin));
         if (Tcl_Eval(interp, cmd) == TCL_OK) {
