@@ -182,6 +182,9 @@ typedef struct {
     char *desktop_bus_name;
     char *desktop_path;
     int is_embedded;                     /* true if Embed succeeded */
+    
+    /* Timer for scanning new widgets */
+    Tcl_TimerToken scan_timer;
 } AtspiConnection;
 
 /*
@@ -292,6 +295,7 @@ static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *ac
 
 /* Tcl event loop integration. */
 void TkWaylandAtspiProcessEvents(void);
+static void ScanWidgetsTimer(ClientData clientData);
 
 /* Tcl command implementations. */
 static int AddAccessibleCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
@@ -375,6 +379,7 @@ RoleToString(int role)
 }
 
 static AtspiConnection *atspi_conn = NULL;
+static AccessibleList *pending_dbus_regs = NULL; /* vtables deferred during dispatch */
 extern Tcl_HashTable *TkAccessibilityObject;  /* from tkAccessibility.c */
 
 /*
@@ -455,6 +460,22 @@ static const sd_bus_vtable value_vtable[] = {
  * org.a11y.atspi.Application interface - queried by the registry/Orca once
  * an application has been embedded via Socket.Embed.
  */
+
+static int dbus_prop_get_toolkit_name(sd_bus *bus, const char *path, const char *interface,
+                                       const char *property, sd_bus_message *reply,
+                                       void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_get_version(sd_bus *bus, const char *path, const char *interface,
+                                  const char *property, sd_bus_message *reply,
+                                  void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_get_atspi_version(sd_bus *bus, const char *path, const char *interface,
+                                        const char *property, sd_bus_message *reply,
+                                        void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_get_id(sd_bus *bus, const char *path, const char *interface,
+                             const char *property, sd_bus_message *reply,
+                             void *userdata, sd_bus_error *ret_error);
+static int dbus_prop_set_id(sd_bus *bus, const char *path, const char *interface,
+                             const char *property, sd_bus_message *value,
+                             void *userdata, sd_bus_error *ret_error);
 
 /*
  *----------------------------------------------------------------------
@@ -702,9 +723,9 @@ dbus_method_get_children(
     if (!acc || !atspi_conn) {
         return sd_bus_reply_method_return(m, "a(so)", 0);
     }
-    if (acc->tkwin) {
-        EnsureChildrenRegistered(acc->tkwin, 0);
-    }
+    /* Do NOT create new accessibles inside a D-Bus method handler - that calls
+     * sd_bus_add_object_vtable while we are inside sd_bus_process and can deadlock
+     * accerciser. The scan timer creates accessibles out-of-band. */
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
@@ -742,7 +763,10 @@ dbus_method_get_children(
     }
 
     sd_bus_message_close_container(reply);
-    return sd_bus_send(NULL, reply, NULL);
+    /* Use atspi_conn->bus if available, reply carries bus otherwise */
+    int _send_r = sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
+    (void)_send_r;
+    return _send_r >=0 ? _send_r : 0;
 }
 
 /*
@@ -772,8 +796,7 @@ dbus_method_get_child_at_index(
     sd_bus_message *reply = NULL;
     int r;
     
-    if (acc && acc->tkwin) EnsureChildrenRegistered(acc->tkwin, 0);
-
+    /* No EnsureChildrenRegistered here - avoid creating vtables inside dispatch */
     if (!acc || !atspi_conn) {
         return sd_bus_reply_method_return(m, "(so)", "", "/org/a11y/atspi/null");
     }
@@ -835,7 +858,7 @@ dbus_method_get_child_at_index(
         AppendAccessibleRef(reply, NULL);
     }
 
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -867,7 +890,7 @@ dbus_method_get_attributes(
 
     sd_bus_message_open_container(reply, 'a', "{ss}");
     sd_bus_message_close_container(reply);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -908,7 +931,7 @@ dbus_method_get_state(
     sd_bus_message_append(reply, "u", hi);
     sd_bus_message_close_container(reply);
 
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -940,7 +963,7 @@ dbus_method_get_role(
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
     sd_bus_message_append(reply, "u", (uint32_t)GetLiveRole(acc));
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -980,15 +1003,18 @@ dbus_prop_get_name(
             live_name = GetNameForWidget(acc->tkwin);
             if (live_name && live_name[0]) {
                 name = live_name;
+            } else if (acc->cached_name && acc->cached_name[0]) {
+                name = acc->cached_name;
             } else if (acc->path) {
                 if (acc->path[0]=='.' && acc->path[1]=='\0') {
                     name = "Tk Application";
-                } else {
+                } else if (!Tk_IsTopLevel(acc->tkwin)) {
                     name = acc->path;
+                } else {
+                    name = "";
                 }
             }
         } else {
-            /* No tkwin (e.g. root application object) - use path or fallback. */
             if (acc->path && acc->path[0]=='.' && acc->path[1]=='\0') {
                 name = "Tk Application";
             } else if (acc->path && strcmp(acc->path, "application")==0) {
@@ -1002,7 +1028,6 @@ dbus_prop_get_name(
     if (live_name) free(live_name);
     return ret;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1019,7 +1044,6 @@ dbus_prop_get_name(
  *   message.
  *----------------------------------------------------------------------
  */
-
 
 static int
 dbus_prop_get_description(
@@ -1044,7 +1068,6 @@ dbus_prop_get_description(
     return ret;
 }
 
-
 /*
  *----------------------------------------------------------------------
  * dbus_prop_get_parent --
@@ -1059,7 +1082,6 @@ dbus_prop_get_description(
  *   Appends an (so) accessible reference to the D-Bus reply message.
  *----------------------------------------------------------------------
  */
-
 
 static int
 dbus_prop_get_parent(
@@ -1134,10 +1156,8 @@ dbus_prop_get_child_count(
     if (acc == atspi_conn->root_accessible) {
         for (AccessibleList *l=atspi_conn->toplevel_accessibles; l; l=l->next) cnt++;
     } else if (acc->tkwin && !acc->is_virtual) {
-        EnsureChildrenRegistered(acc->tkwin, 0);
-
-        /* Orca queries ChildCount before GetChildren - ensure children are registered first. */
-        EnsureChildrenRegistered(acc->tkwin, 0);
+        /* Do NOT create accessibles here - see note in GetChildren. Return only
+         * what is already registered to avoid re-entrancy hang in accerciser. */
         for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c = c->nextPtr) {
             if (GetAccessible((Tk_Window)c)) cnt++;
         }
@@ -1327,7 +1347,7 @@ dbus_method_get_interfaces(
      * as they are addressed at the script level.
      */
     sd_bus_message_close_container(reply);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -1359,7 +1379,7 @@ dbus_method_get_application(
     } else {
         AppendAccessibleRef(reply, NULL);
     }
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -1412,7 +1432,7 @@ dbus_method_component_get_extents(
     if (r < 0) return r;
 
     sd_bus_message_append(reply, "(iiii)", x, y, w, h);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -1463,7 +1483,7 @@ dbus_method_component_get_position(
     if (r < 0) return r;
 
     sd_bus_message_append(reply, "(ii)", x, y);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
 
 /*
@@ -1603,9 +1623,8 @@ dbus_method_component_get_accessible_at_point(
     if (hit && hit->dbus_path) AppendAccessibleRef(reply, hit->dbus_path);
     else if (acc && acc->dbus_path) AppendAccessibleRef(reply, acc->dbus_path);
     else AppendAccessibleRef(reply, NULL);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1994,7 +2013,10 @@ AppendCacheItemLive(
     const char *app_path,
     int index_in_parent)
 {
+    static __thread int _depth = 0;
     if (!acc || !acc->dbus_path) return;
+    if (_depth > 128) { DEBUG_LOG("AppendCacheItemLive: depth guard hit at %s depth=%d", acc->dbus_path ? acc->dbus_path : "?", _depth); return; }
+    _depth++;
     if (parent_acc && parent_acc==acc) parent_acc=NULL;
     if (parent_acc && parent_acc->dbus_path && acc->dbus_path && strcmp(parent_acc->dbus_path, acc->dbus_path)==0) parent_acc=NULL;
     
@@ -2005,7 +2027,8 @@ AppendCacheItemLive(
             if (l->acc) childcnt++;
         }
     } else if (acc->tkwin && !acc->is_virtual) {
-        EnsureChildrenRegistered(acc->tkwin, 0);
+        /* Cache must not create new objects while building reply - accerciser calls
+         * GetItems in a tight loop and creating vtables inside sd_bus_process hangs. */
         for (TkWindow *c=((TkWindow*)acc->tkwin)->childList; c; c=c->nextPtr) {
             if (GetAccessible((Tk_Window)c)) childcnt++;
         }
@@ -2055,9 +2078,11 @@ AppendCacheItemLive(
     const char *nm_raw;
     if (acc->is_virtual && acc->virtual_name) nm_raw = acc->virtual_name;
     else if (live_name && live_name[0]) nm_raw = live_name;
+    else if (acc->cached_name && acc->cached_name[0]) nm_raw = acc->cached_name;
     else if (acc->path) {
         if (acc->path[0]=='.' && acc->path[1]=='\0') nm_raw = "Tk Application";
         else if (strcmp(acc->path, "application")==0) nm_raw = "Tk";
+        else if (acc->tkwin && Tk_IsTopLevel(acc->tkwin)) nm_raw = "";
         else nm_raw = acc->path;
     } else nm_raw = "";
     
@@ -2092,6 +2117,7 @@ AppendCacheItemLive(
         int idx=0;
         for(AccessibleList *l=acc->children;l;l=l->next,idx++) if(l->acc) AppendCacheItemLive(reply,l->acc,acc,app_path,idx);
     }
+    _depth--;
 }
 
 /*
@@ -2127,9 +2153,8 @@ dbus_method_cache_get_items(
         AppendCacheItemLive(reply, atspi_conn->root_accessible, NULL, app_path, 0);
     }
     sd_bus_message_close_container(reply);
-    return sd_bus_send(NULL, reply, NULL);
+    return sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : NULL, reply, NULL);
 }
-
 
 /* D-Bus vtable definition for the Cache interface. */
 static const sd_bus_vtable cache_vtable[] = {
@@ -2163,6 +2188,43 @@ RegisterDbusObject(
                   (void *)(atspi_conn ? atspi_conn->bus : NULL),
                   (void *)acc);
         return false;
+    }
+
+    if (atspi_draining && !acc->dbus_path) {
+        static int defer_counter = 100000;
+        char path[256];
+        if (acc->tkwin && Tk_IsTopLevel(acc->tkwin)) {
+            const char *pn = Tk_PathName(acc->tkwin);
+            if (!pn || pn[0] == '\0' || (pn[0] == '.' && pn[1] == '\0')) {
+                snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/toplevel%d", defer_counter++);
+            } else {
+                snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/%s", pn);
+            }
+        } else {
+            snprintf(path, sizeof(path), "/org/a11y/atspi/accessible/obj%d", defer_counter++);
+        }
+        for (char *p = path; *p; p++) {
+            if (*p == '.') *p = '_';
+            else if (!((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9') || *p == '/' || *p == '_')) *p = '_';
+        }
+        acc->dbus_path = strdup(path);
+        AccessibleList *node = (AccessibleList *)Tcl_Alloc(sizeof(AccessibleList));
+        node->acc = acc;
+        node->next = pending_dbus_regs;
+        pending_dbus_regs = node;
+        DEBUG_LOG("RegisterDbusObject: deferred %s (draining)", acc->dbus_path);
+        return true;
+    }
+    if (atspi_draining && acc->dbus_path) {
+        int already = 0;
+        for (AccessibleList *l = pending_dbus_regs; l; l=l->next) if (l->acc == acc) { already=1; break; }
+        if (!already) {
+            AccessibleList *node = (AccessibleList *)Tcl_Alloc(sizeof(AccessibleList));
+            node->acc = acc;
+            node->next = pending_dbus_regs;
+            pending_dbus_regs = node;
+        }
+        return true;
     }
 
     /* Generate a unique object path if not already set. */
@@ -2398,7 +2460,6 @@ EmitFocusEvent(
     }
     sd_bus_message_unref(m);
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -2748,7 +2809,10 @@ TkAccessible_Reconcile(
 
     int live_role = GetLiveRole(acc);
     if (live_role != ATSPI_ROLE_INVALID) {
-        EnsureRoleVtables(acc, 0);
+        /* Don't add vtables while inside sd_bus_process - defers to idle */
+        if (!atspi_draining) {
+            EnsureRoleVtables(acc, 0);
+        }
     }
 
     {
@@ -2762,7 +2826,9 @@ TkAccessible_Reconcile(
                       newName ? newName : "(null)");
             if (acc->cached_name) free(acc->cached_name);
             acc->cached_name = newName;
-            EmitObjectEventFull(acc, "PropertyChange", "accessible-name", 0, 0, NULL);
+            if (!atspi_draining) {
+                EmitObjectEventFull(acc, "PropertyChange", "accessible-name", 0, 0, NULL);
+            }
         } else if (newName) {
             free(newName);
         }
@@ -2784,12 +2850,12 @@ TkAccessible_Reconcile(
     uint64_t old_states = acc->states;
     uint64_t new_states = ComputeStateForWidget(acc);
     acc->states = new_states;
-    if (old_states != new_states) {
+    if (old_states != new_states && !atspi_draining) {
         uint64_t changed = old_states ^ new_states;
         for (int bit = 0; bit < 64; bit++) {
             if (changed & (1ULL << bit)) {
                 int now = (new_states & (1ULL << bit)) ? 1 : 0;
-                if (bit == 12) continue;
+                if (bit == 12) continue; /* FOCUSED handled via Focus event */
                 SendStateChanged(acc, (1ULL << bit), now);
             }
         }
@@ -2828,9 +2894,116 @@ TkWaylandAtspiProcessEvents(void)
 
     atspi_draining = 1;
     while (sd_bus_process(atspi_bus, NULL) > 0) {
-        /* Drain all pending message.s */
+        /* Drain all pending messages */
     }
     atspi_draining = 0;
+
+    if (pending_dbus_regs) {
+        AccessibleList *list = pending_dbus_regs;
+        pending_dbus_regs = NULL;
+        for (AccessibleList *l = list; l; ) {
+            AccessibleList *next = l->next;
+            TkAccessible *acc = l->acc;
+            if (acc && atspi_conn && atspi_conn->bus && acc->n_vtable_slots == 0 && acc->dbus_path) {
+                int saved = atspi_draining;
+                atspi_draining = 0;
+                sd_bus_slot *slot = NULL;
+                if (sd_bus_add_object_vtable(atspi_conn->bus, &slot, acc->dbus_path, ATSPI_ACCESSIBLE_INTERFACE, accessible_vtable, acc) >=0 && slot) {
+                    if (acc->n_vtable_slots < TK_ACCESSIBLE_MAX_SLOTS) acc->vtable_slots[acc->n_vtable_slots++] = slot;
+                }
+                sd_bus_slot *s2 = NULL;
+                if (sd_bus_add_object_vtable(atspi_conn->bus, &s2, acc->dbus_path, ATSPI_COMPONENT_INTERFACE, component_vtable, acc) >=0 && s2) {
+                    if (acc->n_vtable_slots < TK_ACCESSIBLE_MAX_SLOTS) acc->vtable_slots[acc->n_vtable_slots++] = s2;
+                }
+                if (acc == atspi_conn->root_accessible) {
+                    sd_bus_slot *s3 = NULL;
+                    if (sd_bus_add_object_vtable(atspi_conn->bus, &s3, acc->dbus_path, "org.a11y.atspi.Application", application_vtable, acc)>=0 && s3) {
+                        if (acc->n_vtable_slots < TK_ACCESSIBLE_MAX_SLOTS) acc->vtable_slots[acc->n_vtable_slots++] = s3;
+                    }
+                    sd_bus_slot *cs = NULL;
+                    if (sd_bus_add_object_vtable(atspi_conn->bus, &cs, "/org/a11y/atspi/cache", "org.a11y.atspi.Cache", cache_vtable, NULL)>=0 && cs) {
+                        if (acc->n_vtable_slots < TK_ACCESSIBLE_MAX_SLOTS) acc->vtable_slots[acc->n_vtable_slots++] = cs;
+                    }
+                }
+                EnsureRoleVtables(acc, 0);
+                atspi_draining = saved;
+            }
+            Tcl_Free(l);
+            l = next;
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ScanWidgetsTimer --
+ *
+ *   Timer callback that scans for new widgets that haven't been registered.
+ *   This compensates for the lack of CreateNotify events in Wayland.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Registers newly created widgets.
+ *----------------------------------------------------------------------
+ */
+
+static void
+ScanWidgetsTimer(ClientData clientData)
+{
+    Tcl_Interp *interp = (Tcl_Interp *)clientData;
+    Tk_Window mainWin = Tk_MainWindow(interp);
+    
+    if (!atspi_conn || !atspi_conn->is_initialized || !mainWin) {
+        return;
+    }
+    
+    DEBUG_LOG("ScanWidgetsTimer: scanning for new widgets");
+    
+    RegisterWidgetRecursive(interp, mainWin);
+
+    if (atspi_conn->toplevel_accessibles) {
+        for (AccessibleList *l = atspi_conn->toplevel_accessibles; l; l = l->next) {
+            if (l->acc && l->acc->tkwin) {
+                RegisterWidgetRecursive(interp, l->acc->tkwin);
+            }
+        }
+    }
+
+    if (Tcl_Eval(interp, "wm stackorder .") == TCL_OK) {
+        const char *result = Tcl_GetStringResult(interp);
+        if (result && result[0]) {
+            Tcl_Obj *listObj = Tcl_NewStringObj(result, -1);
+            Tcl_IncrRefCount(listObj);
+            Tcl_Size listLen = 0;
+            if (Tcl_ListObjLength(interp, listObj, &listLen) == TCL_OK) {
+                for (Tcl_Size i=0;i<listLen;i++) {
+                    Tcl_Obj *elem;
+                    if (Tcl_ListObjIndex(interp, listObj, i, &elem)!=TCL_OK) continue;
+                    const char *path = Tcl_GetString(elem);
+                    if (!path || !path[0]) continue;
+                    Tk_Window w = Tk_NameToWindow(interp, path, mainWin);
+                    if (!w) continue;
+                    RegisterWidgetRecursive(interp, w);
+                }
+            }
+            Tcl_DecrRefCount(listObj);
+        }
+        Tcl_ResetResult(interp);
+    }
+    
+    TkWindow *focusPtr = TkGetFocusWin((TkWindow *)mainWin);
+    if (focusPtr) {
+        TkAccessible *focus_acc = GetAccessible((Tk_Window)focusPtr);
+        if (focus_acc && focus_acc->is_focused) {
+            UpdateFocusChain((Tk_Window)focusPtr);
+        }
+    }
+    
+    if (atspi_conn) {
+        atspi_conn->scan_timer = Tcl_CreateTimerHandler(500, ScanWidgetsTimer, interp);
+    }
 }
 
 /*
@@ -3075,6 +3248,8 @@ RegisterToplevel(
 {
     if (!acc) return;
 
+    DEBUG_LOG("RegisterToplevel: registering toplevel %s", acc->path ? acc->path : "?");
+
     /* Check if already registered. */
     AccessibleList *l = atspi_conn->toplevel_accessibles;
     while (l) {
@@ -3196,6 +3371,15 @@ RegisterWidgetRecursive(
                     parent_acc = GetAccessible(parent);
                 }
                 acc->parent = parent_acc;
+                DEBUG_LOG("RegisterWidgetRecursive: %s parent is %s", 
+                          Tk_PathName(tkwin), 
+                          parent_acc ? parent_acc->path : "none");
+            }
+        } else {
+            /* Toplevel: parent is root */
+            if (atspi_conn && atspi_conn->root_accessible) {
+                acc->parent = atspi_conn->root_accessible;
+                DEBUG_LOG("RegisterWidgetRecursive: toplevel %s parent is root", Tk_PathName(tkwin));
             }
         }
 
@@ -3278,6 +3462,11 @@ EnsureAccessibleInHierarchy(
                     if (parent_acc) {
                         acc->parent = parent_acc;
                     }
+                } else {
+                    /* Toplevel: parent is root */
+                    if (atspi_conn && atspi_conn->root_accessible) {
+                        acc->parent = atspi_conn->root_accessible;
+                    }
                 }
                 RegisterAccessible(win, acc);
                 TkAccessible_RegisterEventHandlers(win, acc);
@@ -3345,6 +3534,8 @@ UpdateFocusChain(
     if (!interp) {
         return;
     }
+
+    DEBUG_LOG("UpdateFocusChain: focusing %s", Tk_PathName(focused));
 
     /*
      * Make absolutely sure the target exists in the accessibility tree.
@@ -3425,6 +3616,7 @@ UpdateFocusChain(
         }
     }
 }
+
 /*
  *----------------------------------------------------------------------
  * GetToplevelOfWidget --
@@ -3515,7 +3707,6 @@ GetRoleForWidget(
     DEBUG_LOG("GetRoleForWidget: path=%s class=%s -> PANEL fallback", Tk_PathName(tkwin), widgetClass ? widgetClass : "?", Tk_PathName(tkwin));
     return ATSPI_ROLE_PANEL;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -3704,17 +3895,49 @@ ComputeStateForWidget(
         }
     }
 
-    /* VISIBLE/SHOWING - Wayland: if toplevel is mapped, children are visible even before child IsMapped.
-     * Prevents Accerciser caching 0 state and filtering widgets as hidden. */
-    if (Tk_IsMapped(acc->tkwin)) {
-        states |= ATSPI_STATE_VISIBLE;
-        states |= ATSPI_STATE_SHOWING;
-    } else if (acc->tkwin && !Tk_IsTopLevel(acc->tkwin)) {
+    /* VISIBLE/SHOWING - Wayland:
+     * On X11 Tk_IsMapped is reliable, on Wayland toplevels may report not-mapped
+     * during early cache population and children may never get individual MapNotify.
+     * AT-SPI clients (accerciser, Orca) treat !VISIBLE as hidden and prune the subtree.
+     *
+     * Rules:
+     *  - root (no tkwin) already handled earlier, but keep safe.
+     *  - toplevel FRAME/DIALOG: VISIBLE+SHOWING as soon as the Tk window exists.
+     *    The only exception would be a withdrawn toplevel (we have no cheap withdraw
+     *    flag here, so we treat existence as visible - Tk will unmap/destroy soon after
+     *    and we will emit state change then).
+     *  - child widgets: VISIBLE+SHOWING if:
+     *      (a) Tk_IsMapped itself, OR
+     *      (b) its toplevel ancestor exists/is mapped. This makes children appear
+     *          immediately when the toplevel window is created, matching GTK and
+     *          preventing Accerciser from caching 0 state.
+     */
+    if (!acc->tkwin) {
+        /* Synthetic root already set elsewhere, but ensure visible. */
+        states |= ATSPI_STATE_VISIBLE | ATSPI_STATE_SHOWING;
+    } else if (Tk_IsTopLevel(acc->tkwin)) {
+        /* Toplevels are visible as soon as they exist for a11y. */
+        states |= ATSPI_STATE_VISIBLE | ATSPI_STATE_SHOWING;
+        if (Tk_IsMapped(acc->tkwin)) {
+            /* keep ACTIVE logic elsewhere, but visible is already set */
+        }
+    } else if (Tk_IsMapped(acc->tkwin)) {
+        states |= ATSPI_STATE_VISIBLE | ATSPI_STATE_SHOWING;
+    } else {
         Tk_Window top = acc->tkwin;
-        while (top && !Tk_IsTopLevel(top)) top = Tk_Parent(top);
-        if (top && Tk_IsMapped(top)) {
-            states |= ATSPI_STATE_VISIBLE;
-            states |= ATSPI_STATE_SHOWING;
+        while (top && !Tk_IsTopLevel(top)) {
+            top = Tk_Parent(top);
+        }
+        if (top) {
+            /* If we have a toplevel ancestor, consider child visible even before
+             * its own MapNotify - Wayland fix. */
+            TkAccessible *topAcc = GetAccessible(top);
+            if (topAcc || Tk_IsMapped(top) || top) {
+                states |= ATSPI_STATE_VISIBLE | ATSPI_STATE_SHOWING;
+            }
+        } else {
+            /* Fallback: no toplevel found, but window exists - be visible. */
+            states |= ATSPI_STATE_VISIBLE | ATSPI_STATE_SHOWING;
         }
     }
 
@@ -3746,7 +3969,6 @@ ComputeStateForWidget(
     return states;
 }
 
-
 /*
  *----------------------------------------------------------------------
  * GetNameForWidget --
@@ -3768,6 +3990,10 @@ GetNameForWidget(
 {
     if (!tkwin) return NULL;
 
+    /* Primary source: accessibility hash table's "name" property.
+     * For toplevels this is populated from "wm title $w" by tkAccessibility.tcl,
+     * so we MUST honor it and not override with live widget text or path.
+     */
     if (TkAccessibilityObject) {
         Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
         if (hPtr) {
@@ -3775,14 +4001,49 @@ GetNameForWidget(
             if (attrs) {
                 Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
                 if (nameEntry) {
-                    const char *name = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(nameEntry));
-                    if (name && name[0] != '\0') return strdup(name);
+                    Tcl_Obj *obj = (Tcl_Obj *)Tcl_GetHashValue(nameEntry);
+                    if (obj) {
+                        const char *name = Tcl_GetString(obj);
+                        if (name && name[0] != '\0') return strdup(name);
+                    }
                 }
             }
         }
     }
 
-    /* Fallback to explicit value hash. */
+    /* For toplevels, if hash missed (race during early GetItems), try wm title.
+     * Never Tcl_Eval while inside sd_bus_process (atspi_draining) - deadlock.
+     */
+    if (Tk_IsTopLevel(tkwin)) {
+        if (!atspi_draining) {
+            Tcl_Interp *interp = Tk_Interp(tkwin);
+            if (interp) {
+                const char *path = Tk_PathName(tkwin);
+                if (path) {
+                    Tcl_Obj *cmd = Tcl_NewStringObj("wm title ", -1);
+                    Tcl_AppendObjToObj(cmd, Tcl_NewStringObj(path, -1));
+                    Tcl_IncrRefCount(cmd);
+                    if (Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL) == TCL_OK) {
+                        const char *title = Tcl_GetStringResult(interp);
+                        if (title && title[0] != '\0') {
+                            char *dup = strdup(title);
+                            Tcl_DecrRefCount(cmd);
+                            Tcl_ResetResult(interp);
+                            return dup;
+                        }
+                    }
+                    Tcl_DecrRefCount(cmd);
+                    Tcl_ResetResult(interp);
+                }
+            }
+        }
+        const char *pn = Tk_PathName(tkwin);
+        if (pn && pn[0]=='.' && pn[1]=='\0') {
+            return strdup("Tk Application");
+        }
+        return NULL;
+    }
+
     {
         char *val = GetValueForWidget(tkwin);
         if (val && val[0] != '\0') {
@@ -3791,21 +4052,12 @@ GetNameForWidget(
         if (val) free(val);
     }
 
-    if (Tk_IsTopLevel(tkwin)) {
-        const char *pn = Tk_PathName(tkwin);
-        if (pn && !(pn[0]=='.' && pn[1]=='\0')) {
-            return strdup(pn);
-        }
-        return strdup("Tk Application");
-    }
-
-    /* Last resort: use widget path tail as name so it's never silent. */
     {
         const char *pn = Tk_PathName(tkwin);
         if (pn) {
             const char *tail = strrchr(pn, '.');
             if (tail && tail[1]) return strdup(tail+1);
-            if (pn[0]) return strdup(pn);
+            if (pn[0] && !Tk_IsTopLevel(tkwin)) return strdup(pn);
         }
     }
 
@@ -3887,7 +4139,6 @@ GetValueForWidget(
     return NULL;
 }
 
-
 /*
  *----------------------------------------------------------------------
  * EnsureChildrenRegisteredRecursive --
@@ -3920,12 +4171,14 @@ EnsureChildrenRegisteredRecursive(
 
     winPtr = (TkWindow *)tkwin;
 
+    int acc_index = 0;
     for (childPtr = winPtr->childList;
          childPtr != NULL;
-         childPtr = childPtr->nextPtr, index++) {
+         childPtr = childPtr->nextPtr) {
 
         Tk_Window childWin = (Tk_Window)childPtr;
         TkAccessible *child_acc = GetAccessible(childWin);
+        int this_acc_index = acc_index;
 
         if (!child_acc) {
             Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -3952,15 +4205,18 @@ EnsureChildrenRegisteredRecursive(
             TkAccessible_RegisterEventHandlers(childWin, child_acc);
 
             if (parent_acc && emitEvents) {
-                SendChildrenChanged(parent_acc, index, child_acc, 1);
+                SendChildrenChanged(parent_acc, this_acc_index, child_acc, 1);
             }
+            acc_index++;
+        } else {
+            /* already existed - still count it */
+            acc_index++;
         }
 	
         EnsureChildrenRegisteredRecursive(
                 childWin, child_acc, emitEvents);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -4139,26 +4395,25 @@ TkAccessible_DestroyHandler(
 
     UnregisterAccessible(acc->tkwin);
 }
+
 /*
  *----------------------------------------------------------------------
- *
  * TkAccessible_FocusHandler --
  *
- *     Handle Tk/X focus events.
+ *   Handle Tk/X focus events.
  *
- *     X FocusIn/FocusOut remains supported for environments where the
- *     Wayland/X compatibility layer generates those events.  However,
- *     logical Tk focus changes should normally call UpdateFocusChain()
- *     directly rather than depending on this handler.
+ *   X FocusIn/FocusOut remains supported for environments where the
+ *   Wayland/X compatibility layer generates those events.  However,
+ *   logical Tk focus changes should normally call UpdateFocusChain()
+ *   directly rather than depending on this handler.
+ *
+ *   In Wayland, we also monitor focus via Tk's internal focus tracking.
  *
  * Results:
- *
- *     None.
+ *   None.
  *
  * Side effects:
- *
- *     Updates the accessibility focus state and emits AT-SPI events.
- *
+ *   Updates the accessibility focus state and emits AT-SPI events.
  *----------------------------------------------------------------------
  */
 
@@ -4413,6 +4668,22 @@ TkAccessible_ConfigureHandler(
 
     if ((old_states & ATSPI_STATE_VISIBLE) != (acc->states & ATSPI_STATE_VISIBLE)) {
         SendStateChanged(acc, ATSPI_STATE_VISIBLE, (acc->states & ATSPI_STATE_VISIBLE) != 0);
+        /* Propagate visibility to already-registered children on Wayland */
+        if ((acc->states & ATSPI_STATE_VISIBLE) && acc->tkwin) {
+            for (TkWindow *c = ((TkWindow*)acc->tkwin)->childList; c; c=c->nextPtr) {
+                TkAccessible *ch = GetAccessible((Tk_Window)c);
+                if (ch) {
+                    uint64_t old = ch->states;
+                    ch->states = ComputeStateForWidget(ch);
+                    if ((old & ATSPI_STATE_VISIBLE) != (ch->states & ATSPI_STATE_VISIBLE)) {
+                        SendStateChanged(ch, ATSPI_STATE_VISIBLE, (ch->states & ATSPI_STATE_VISIBLE)!=0);
+                    }
+                    if ((old & ATSPI_STATE_SHOWING) != (ch->states & ATSPI_STATE_SHOWING)) {
+                        SendStateChanged(ch, ATSPI_STATE_SHOWING, (ch->states & ATSPI_STATE_SHOWING)!=0);
+                    }
+                }
+            }
+        }
     }
     if ((old_states & ATSPI_STATE_SHOWING) != (acc->states & ATSPI_STATE_SHOWING)) {
         SendStateChanged(acc, ATSPI_STATE_SHOWING, (acc->states & ATSPI_STATE_SHOWING) != 0);
@@ -4902,6 +5173,7 @@ EmitSelectionChangedCmd(
     PostAccessibilityAnnouncement(acc, "selection changed", 0);
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4963,6 +5235,7 @@ EmitFocusChangedCmd(
 
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  * IsScreenReaderRunningCmd --
@@ -4987,7 +5260,7 @@ IsScreenReaderRunningCmd(
 {
     bool result = IsScreenReaderActive();
 
-    DEBUG_LOG("Screen reader active: %d\n", (int)result);
+    DEBUG_LOG("Screen reader active: %d", (int)result);
 
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
     return TCL_OK;
@@ -5025,20 +5298,19 @@ TkWaylandAccessibility_Init(
     /* Initialize main window. */
     Tk_Window mainWin = Tk_MainWindow(interp);
 
-if (mainWin) {
-    
-    Tk_MakeWindowExist(mainWin);
-    TkAccessible *main_acc =
-        CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
+    if (mainWin) {
+        Tk_MakeWindowExist(mainWin);
+        TkAccessible *main_acc =
+            CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
 
-    if (main_acc) {
-        RegisterAccessible(mainWin, main_acc);
-        TkAccessible_RegisterEventHandlers(mainWin, main_acc);
+        if (main_acc) {
+            RegisterAccessible(mainWin, main_acc);
+            TkAccessible_RegisterEventHandlers(mainWin, main_acc);
 
-        /* Register all existing widgets. */
-        RegisterWidgetRecursive(interp, mainWin);
+            /* Register all existing widgets. */
+            RegisterWidgetRecursive(interp, mainWin);
+        }
     }
-}
 
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
@@ -5049,6 +5321,12 @@ if (mainWin) {
                           EmitFocusChangedCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
                           IsScreenReaderRunningCmd, NULL, NULL);
+
+    /* Start the scan timer to catch new widgets in Wayland */
+    if (atspi_conn && atspi_conn->is_initialized) {
+        atspi_conn->scan_timer = Tcl_CreateTimerHandler(100, ScanWidgetsTimer, interp);
+        DEBUG_LOG("TkWaylandAccessibility_Init: started scan timer");
+    }
 
     return TCL_OK;
 }

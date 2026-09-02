@@ -424,30 +424,13 @@ static void
 TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
     /*
-     * Drain IME/IBus and AT-SPI accessibility messages unconditionally,
-     * on every pass through this check proc, regardless of which event
-     * classes the caller's Tcl_DoOneEvent asked for. These are unrelated
-     * to "window events" specifically -- gating them on TCL_WINDOW_EVENTS
-     * means any stretch of the app driven by narrower event-loop calls
-     * (e.g. "update idletasks", which requests only TCL_IDLE_EVENTS)
-     * starves both buses indefinitely: no D-Bus dispatch means incoming
-     * calls from Orca/Accerciser never get replies, which looks like a
-     * hang on their end, and our own outgoing accessibility events never
-     * get a chance to be paired with processed incoming state. Accessibility
-     * is more latency-sensitive to get right than most IPC here (a missed
-     * or delayed pump means Orca silently fails to announce focus), so
-     * this must run on a truly guaranteed every-pass cadence, not one
-     * conditioned on the window-events flag.
+     * Drain IME/IBus and AT-SPI accessibility messages unconditionally.
      */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
 
     TkWaylandAtspiProcessEvents();
-
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return;
-    }
 
     /* Process events for GLFW windows. */
     glfwPollEvents();
