@@ -112,6 +112,7 @@ static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
  */
 #include <systemd/sd-bus.h>
 extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
+extern sd_bus *atspi_bus;     /* defined in tkWaylandAccessibility.c */
 
 /*
  * AT-SPI accessibility bus is drained through a dedicated helper rather
@@ -129,6 +130,22 @@ typedef struct ThreadSpecificData {
     bool           initialized;
     bool           waylandInitialized;
     int            shutdownInProgress; /* flag to prevent recursive shutdown */
+
+    /*
+     * Set by TkWaylandSetupProc from a single poll() call that also
+     * checks the Wayland fd, and consumed by TkWaylandCheckProc to
+     * decide whether it's worth calling sd_bus_process() on each bus
+     * this pass. Without this, CheckProc drained both buses on every
+     * single pass regardless of whether either had anything pending --
+     * harmless when passes are ~60Hz, but during any burst of Wayland
+     * traffic (drag, resize, continuous redraw) SetupProc requests a
+     * no-block, so passes -- and therefore full sd_bus_process() drains
+     * of both buses -- can happen hundreds of times per second even
+     * though neither bus has new messages, competing with real UI work
+     * for CPU.
+     */
+    bool           ibusFdReady;
+    bool           atspiFdReady;
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -376,18 +393,46 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
         /* No Wayland display: poll GLFW but do NOT block Tcl */
         glfwPollEvents();
         Tcl_SetMaxBlockTime(&noBlock);
+        tsdPtr->ibusFdReady = false;
+        tsdPtr->atspiFdReady = false;
         return;
     }
 
-    /* Check if the wayland socket has data. */
-    struct pollfd pfd = {
-        .fd      = fd,
-        .events  = POLLIN,
-        .revents = 0
-    };
-    int r = poll(&pfd, 1, 0);
-    if (r > 0 && (pfd.revents & POLLIN)) {
-        /* Wayland has events — do not block. */
+    /*
+     * Check the Wayland socket together with the ibus/atspi D-Bus fds in
+     * a single poll() call, so CheckProc knows -- cheaply -- which buses
+     * actually have something pending this pass, instead of having to
+     * call sd_bus_process() on both unconditionally every time.
+     */
+    struct pollfd pfds[3];
+    int nfds = 0;
+    int waylandIdx = -1, ibusIdx = -1, atspiIdx = -1;
+
+    waylandIdx = nfds;
+    pfds[nfds++] = (struct pollfd){ .fd = fd, .events = POLLIN, .revents = 0 };
+
+    if (ibus_bus) {
+        int ibusFd = sd_bus_get_fd(ibus_bus);
+        if (ibusFd >= 0) {
+            ibusIdx = nfds;
+            pfds[nfds++] = (struct pollfd){ .fd = ibusFd, .events = POLLIN, .revents = 0 };
+        }
+    }
+    if (atspi_bus) {
+        int atspiFd = sd_bus_get_fd(atspi_bus);
+        if (atspiFd >= 0) {
+            atspiIdx = nfds;
+            pfds[nfds++] = (struct pollfd){ .fd = atspiFd, .events = POLLIN, .revents = 0 };
+        }
+    }
+
+    int r = poll(pfds, nfds, 0);
+    bool waylandReady = (r > 0 && (pfds[waylandIdx].revents & POLLIN));
+    tsdPtr->ibusFdReady = (r > 0 && ibusIdx >= 0 && (pfds[ibusIdx].revents & POLLIN));
+    tsdPtr->atspiFdReady = (r > 0 && atspiIdx >= 0 && (pfds[atspiIdx].revents & POLLIN));
+
+    if (waylandReady || tsdPtr->ibusFdReady || tsdPtr->atspiFdReady) {
+        /* Something is waiting on at least one of the three — do not block. */
         Tcl_SetMaxBlockTime(&noBlock);
     }
     else {
@@ -423,27 +468,40 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
 static void
 TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
+    TSD_INIT();
+
     /*
-     * Drain IME/IBus and AT-SPI accessibility messages unconditionally,
-     * on every pass through this check proc, regardless of which event
-     * classes the caller's Tcl_DoOneEvent asked for. These are unrelated
-     * to "window events" specifically -- gating them on TCL_WINDOW_EVENTS
+     * Check IME/IBus and AT-SPI accessibility messages on every pass
+     * through this check proc, regardless of which event classes the
+     * caller's Tcl_DoOneEvent asked for -- these are unrelated to
+     * "window events" specifically, and gating them on TCL_WINDOW_EVENTS
      * means any stretch of the app driven by narrower event-loop calls
      * (e.g. "update idletasks", which requests only TCL_IDLE_EVENTS)
      * starves both buses indefinitely: no D-Bus dispatch means incoming
      * calls from Orca/Accerciser never get replies, which looks like a
      * hang on their end, and our own outgoing accessibility events never
-     * get a chance to be paired with processed incoming state. Accessibility
-     * is more latency-sensitive to get right than most IPC here (a missed
-     * or delayed pump means Orca silently fails to announce focus), so
-     * this must run on a truly guaranteed every-pass cadence, not one
-     * conditioned on the window-events flag.
+     * get a chance to be paired with processed incoming state.
+     *
+     * But "check every pass" doesn't require "call sd_bus_process() every
+     * pass": TkWaylandSetupProc already polled both bus fds in the same
+     * poll() call it uses for the Wayland fd, so we know here, cheaply,
+     * whether either actually has something pending. During any burst of
+     * Wayland traffic (drag, resize, continuous redraw) SetupProc requests
+     * a no-block, so this check proc can run hundreds of times a second;
+     * calling the real sd_bus_process() drain that often when neither bus
+     * has new messages was competing with real UI work for CPU and is
+     * what made the whole app feel laggy. Skipping the drain when the fd
+     * wasn't ready keeps the guaranteed every-pass *check*, and Orca/IBus
+     * still never wait longer than one pass once their fd actually has
+     * data, while removing the needless work when they don't.
      */
-    if (ibus_bus) {
+    if (ibus_bus && tsdPtr->ibusFdReady) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
 
-    TkWaylandAtspiProcessEvents();
+    if (tsdPtr->atspiFdReady) {
+        TkWaylandAtspiProcessEvents();
+    }
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
         return;

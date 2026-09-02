@@ -4344,7 +4344,18 @@ TkAccessible_CreateHandler(
             }
         }
     }
-    SendChildrenChanged(parent_acc, idx, child_acc, 1);
+    /*
+     * If the new window turned out to be a toplevel, RegisterAccessible()
+     * above already routed it through RegisterToplevel(), which reparents
+     * it to atspi_conn->root_accessible and sends the correct
+     * ChildrenChanged there. Sending a second ChildrenChanged here against
+     * the raw Tk parent would tell clients the toplevel is a child of
+     * that widget instead, giving Orca/Accerciser conflicting parentage
+     * for the same object.
+     */
+    if (child_acc->parent == parent_acc) {
+        SendChildrenChanged(parent_acc, idx, child_acc, 1);
+    }
 }
 
 /*
