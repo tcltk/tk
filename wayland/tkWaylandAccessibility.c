@@ -5092,20 +5092,31 @@ TkWaylandAccessibility_Init(
 
     /* Initialize main window. */
     Tk_Window mainWin = Tk_MainWindow(interp);
-    if (mainWin) {
-        Tk_MakeWindowExist(mainWin);
-        Tk_MapWindow(mainWin);
 
-        TkAccessible *main_acc =
-            CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
+if (mainWin) {
+    /*
+     * The accessibility layer needs a real Tk/native window, but must
+     * never force the toplevel to become visible.  In particular,
+     * "wm withdraw ." must remain under the control of Tk's WM layer.
+     */
+    Tk_MakeWindowExist(mainWin);
 
+    TkAccessible *main_acc =
+        CreateAccessible(interp, mainWin, Tk_PathName(mainWin));
+
+    if (main_acc) {
+        /*
+         * RegisterAccessible() automatically registers toplevels in
+         * the toplevel list, so do not call RegisterToplevel() again.
+         */
         RegisterAccessible(mainWin, main_acc);
-        RegisterToplevel(main_acc);
+
         TkAccessible_RegisterEventHandlers(mainWin, main_acc);
 
         /* Register all existing widgets. */
         RegisterWidgetRecursive(interp, mainWin);
     }
+}
 
     /* Register Tcl commands. */
     Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",

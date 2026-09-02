@@ -480,12 +480,17 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
-    DEBUG_LOG("TkWmMapWindow: %s", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
-    wmPtr->withdrawn   = 0;
+    /* Respect "wm withdraw ." — do not force visibility. */
+    if (wmPtr->withdrawn || wmPtr->initialState == WithdrawnState) {
+        DEBUG_LOG("TkWmMapWindow: %s is withdrawn, not showing",
+                  Tk_PathName(winPtr));
+        return;
+    }
+
     wmPtr->initialState = NormalState;
     wmPtr->flags &= ~WM_NEVER_MAPPED;
 
@@ -497,8 +502,8 @@ TkWmMapWindow(TkWindow *winPtr)
     }
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
-	UpdateGeometryInfo(winPtr);
-	DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
+        UpdateGeometryInfo(winPtr);
+        DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
     }
 }
