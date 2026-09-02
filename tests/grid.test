@@ -456,6 +456,20 @@ test grid-7.7 {propagate} -body {
 } -cleanup {
     grid_reset 7.7
 } -result [list 1 0 0]
+test grid-7.8 {grid forget keeps the window's own propagate setting} -setup {
+    frame .p
+    frame .p.m
+    frame .p.m.a
+} -body {
+    grid propagate .p.m 0
+    grid .p.m.a
+    grid .p.m -in .p
+    grid forget .p.m
+    grid .p.m -in .p
+    grid propagate .p.m
+} -cleanup {
+    destroy .p
+} -result 0
 
 test grid-8.1 {size} -body {
     grid size . foo
