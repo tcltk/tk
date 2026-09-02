@@ -173,7 +173,6 @@ static const Ttk_StateTable editbackground_statemap[] =
     { EBS_HOT,		TTK_STATE_ACTIVE, 0 },
     { EBS_HOT,		TTK_STATE_HOVER, 0 },
     { EBS_NORMAL,	0, 0 }
-/* NOT USED: EBS_ASSIST */
 };
 
 /*
@@ -196,7 +195,6 @@ static const Ttk_StateTable combodown_statemap[] =
     { CBXSR_DISABLED,	TTK_STATE_DISABLED, 0 },
     { CBXSR_PRESSED,	TTK_STATE_PRESSED, 0 },
     { CBXSR_HOT,	TTK_STATE_ACTIVE, 0 },
-    { CBXSR_HOT,	TTK_STATE_HOVER, 0 },
     { CBXSR_NORMAL,	0, 0 }
 };
 
@@ -209,7 +207,6 @@ static const Ttk_StateTable combolist_statemap[] =
     { LBPSV_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { LBPSV_HOT,	TTK_STATE_FOCUS, 0 },
     { LBPSV_HOT,	TTK_STATE_ACTIVE, 0 },
-    { LBPSV_HOT,	TTK_STATE_HOVER, 0 },
     { LBPSV_NORMAL,	0, 0 }
 };
 
@@ -221,7 +218,6 @@ static const Ttk_StateTable spinup_statemap[] =
     { UPS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { UPS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { UPS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { UPS_HOT,		TTK_STATE_HOVER, 0 },
     { UPS_NORMAL,	0, 0 }
 };
 
@@ -230,7 +226,6 @@ static const Ttk_StateTable spindown_statemap[] =
     { DNS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { DNS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { DNS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { DNS_HOT,		TTK_STATE_HOVER, 0 },
     { DNS_NORMAL,	0, 0 }
 };
 
@@ -322,7 +317,6 @@ static const Ttk_StateTable scalehoriz_statemap[] =
     { TUBS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { TUBS_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { TUBS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { TUBS_HOT,		TTK_STATE_HOVER, 0 },
     { TUBS_NORMAL,	0, 0 }
 };
 
@@ -332,7 +326,6 @@ static const Ttk_StateTable scalevert_statemap[] =
     { TUVS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { TUVS_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { TUVS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { TUVS_HOT,		TTK_STATE_HOVER, 0 },
     { TUVS_NORMAL,	0, 0 }
 };
 
@@ -530,7 +523,6 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hDC = TkWinGetDrawableDC(Tk_Display(tkwin), d,
 		&elementData->dcState);
     }
-
     return true;
 }
 
@@ -562,15 +554,15 @@ static void GenericElementSize(
 {
     ElementData *elementData = (ElementData *)clientData;
     double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
-    HRESULT result;
-    SIZE size;
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
     }
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-	result = GetThemePartSize(
+	SIZE size;
+
+	HRESULT result = GetThemePartSize(
 	    elementData->hTheme,	/* Theme data handle */
 	    NULL,			/* HDC to select font into & measure against */
 	    elementData->info->partId,	/* Part number to retrieve size for */
@@ -602,6 +594,8 @@ static void GenericElementSize(
 	*widthPtr += Ttk_PaddingWidth(elementData->info->padding);
 	*heightPtr += Ttk_PaddingHeight(elementData->info->padding);
     }
+
+    FreeElementData(elementData);
 }
 
 static void GenericElementDraw(
@@ -698,22 +692,11 @@ GenericSizedElementSize(
     if (elementData->info->flags & HALF_WIDTH) {
 	*widthPtr /= 2;
     }
+
+    FreeElementData(elementData);
 }
 
-static const Ttk_ElementSpec GenericSizedElementSpec = {
-    TK_STYLE_VERSION_2,
-    sizeof(NullElement),
-    TtkNullElementOptions,
-    GenericSizedElementSize,
-    GenericElementDraw
-};
-
-/*----------------------------------------------------------------------
- * +++ Scrollbar thumb element.
- *     Same as a GenericElement, but don't draw in the disabled state.
- */
-
-static void ThumbElementDraw(
+static void GenericSizedElementDraw(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
@@ -722,33 +705,17 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
-    int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
-    RECT rc = BoxToRect(b);
 
-    /*
-     * Don't draw the thumb if we are disabled.
-     */
-    if (state & TTK_STATE_DISABLED) {
-	return;
-    }
-
-    if (!InitElementData(elementData, tkwin, d)) {
-	return;
-    }
-
-    DrawThemeBackground(elementData->hTheme, elementData->hDC,
-	elementData->info->partId, stateId, &rc, NULL);
-
-    FreeElementData(elementData);
+    SetWindowTheme(elementData->hwnd, L"Explorer", NULL);
+    GenericElementDraw(clientData, NULL, tkwin, d, b, state);
 }
 
-static const Ttk_ElementSpec ThumbElementSpec =
-{
+static const Ttk_ElementSpec GenericSizedElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    GenericElementSize,
-    ThumbElementDraw
+    GenericSizedElementSize,
+    GenericSizedElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -1296,7 +1263,7 @@ static const ElementInfo ElementInfoTable[] = {
     { "Combobox.field", &GenericElementSpec, L"COMBOBOX",
 	CP_BORDER, combo_statemap, PAD(1,1,1,1), 0 },
     { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
-	CP_DROPDOWNBUTTONRIGHT, combodown_statemap, PAD(1,1,1,1),
+	CP_DROPDOWNBUTTONRIGHT, combodown_statemap, NOPAD,
 	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { "Combobox.background", &GenericElementSpec, L"EDIT",
 	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
@@ -1335,9 +1302,9 @@ static const ElementInfo ElementInfoTable[] = {
     { "Vertical.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
 	PP_FILLVERT, pbarvert_statemap, PAD(3,3,3,3), 0 },
     { "Horizontal.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BAR, null_statemap, PAD(3,3,3,3), IGNORE_THEMESIZE },
+	PP_BAR, null_statemap, NOPAD, 0 },
     { "Vertical.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BARVERT, null_statemap, PAD(3,3,3,3), IGNORE_THEMESIZE },
+	PP_BARVERT, null_statemap, NOPAD, 0 },
 
     /* Scale */
 /*    { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
@@ -1354,14 +1321,16 @@ static const ElementInfo ElementInfoTable[] = {
     /* Scrollbar elements */
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
-    { "Vertical.Scrollbar.thumb", &ThumbElementSpec, L"SCROLLBAR",
-	SBP_THUMBBTNVERT, scrollbar_statemap, NOPAD, 0 },
+    { "Vertical.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_THUMBBTNVERT, scrollbar_statemap, NOPAD,
+	(SM_CYVTHUMB << 8) | SM_CXVSCROLL },
     { "Vertical.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
 	SBP_GRIPPERVERT, scrollbar_statemap, NOPAD, 0 },
      { "Horizontal.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Horizontal.Scrollbar.thumb", &ThumbElementSpec, L"SCROLLBAR",
-	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD, 0 },
+    { "Horizontal.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD,
+	(SM_CXHTHUMB << 8) | SM_CYHSCROLL },
     { "Horizontal.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
 	SBP_GRIPPERHORZ, scrollbar_statemap, NOPAD, 0 },
     { "Vertical.Scrollbar.uparrow", &GenericSizedElementSpec, L"SCROLLBAR",
@@ -1383,11 +1352,11 @@ static const ElementInfo ElementInfoTable[] = {
 
     /* Treeview */
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
-	TVP_TREEITEM, treeview_statemap, PAD(1,1,1,1), IGNORE_THEMESIZE },
+	TVP_TREEITEM, treeview_statemap, PAD(1,1,1,1), 0 },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
 	HP_HEADERITEM, header_statemap, PAD(4,0,4,0), 0 },
     { "Treeheading.indicator", &TreeheadingIndicatorElementSpec, L"HEADER",
-	HP_HEADERSORTARROW, treesort_statemap, PAD(1,1,1,1), 0 },
+	HP_HEADERSORTARROW, treesort_statemap, PAD(1,1,1,1), PAD_MARGINS },
     { "Treeitem.indicator", &TreeitemIndicatorElementSpec, L"TREEVIEW",
 	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeitem.row", &RowElementSpec, L"LISTVIEW",
