@@ -349,6 +349,21 @@ dbus_method_get_children(
     return r;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_role_name --
+ *
+ *   D-Bus method handler for GetRoleName on the Accessible interface.
+ *   Returns the localized role name string for the application role.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a string role name.
+ *----------------------------------------------------------------------
+ */
+
 static int
 dbus_method_get_role_name(
     sd_bus_message *m,
@@ -358,6 +373,21 @@ dbus_method_get_role_name(
     return sd_bus_reply_method_return(m, "s", "application");
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_localized_role_name --
+ *
+ *   D-Bus method handler for GetLocalizedRoleName on the Accessible interface.
+ *   Returns the localized role name string for the application role.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a localized string role name.
+ *----------------------------------------------------------------------
+ */
+
 static int
 dbus_method_get_localized_role_name(
     sd_bus_message *m,
@@ -366,6 +396,22 @@ dbus_method_get_localized_role_name(
 {
     return sd_bus_reply_method_return(m, "s", "application");
 }
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_attributes --
+ *
+ *   D-Bus method handler for GetAttributes on the Accessible interface.
+ *   Returns an empty attribute dictionary because the application root
+ *   has no accessible attributes.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty dictionary a{ss}.
+ *----------------------------------------------------------------------
+ */
 
 static int
 dbus_method_get_attributes(
@@ -385,6 +431,22 @@ dbus_method_get_attributes(
     return r;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_relation_set --
+ *
+ *   D-Bus method handler for GetRelationSet on the Accessible interface.
+ *   Returns an empty relation set because the application root has no
+ *   relations to other accessibles.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty array of relations.
+ *----------------------------------------------------------------------
+ */
+
 static int
 dbus_method_get_relation_set(
     sd_bus_message *m,
@@ -402,6 +464,24 @@ dbus_method_get_relation_set(
     sd_bus_message_unref(reply);
     return r;
 }
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_cache_get_items --
+ *
+ *   D-Bus method handler for GetItems on the Cache interface.
+ *   Returns an empty array of cache items. Accerciser calls this during
+ *   initialization to batch-fetch the accessible tree; returning an
+ *   empty array prevents the inspector's tree-building worker thread
+ *   from hanging or blocking the main loop.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty array of cache items.
+ *----------------------------------------------------------------------
+ */
 
 static int
 dbus_method_cache_get_items(
@@ -1017,8 +1097,7 @@ static Tcl_TimerToken speech_timer = NULL;
  *----------------------------------------------------------------------
  */
 
-static void DelayedSpeechProc(ClientData cd) {
-    (void)cd;
+static void DelayedSpeechProc(TCL_UNUSED(ClientData)) {
     speech_timer = NULL;
     if (!pending_speech_msg) return;
     char *msg = pending_speech_msg;
