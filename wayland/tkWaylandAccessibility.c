@@ -5,7 +5,7 @@
  * Registers one AT‑SPI application/root object via sd‑bus so Orca and
  * Accerciser can detect Tk. No accessible tree, no children, no cache.
  * Widget name/description/value announcements are spoken directly via
- * libspeechd, bypassing AT‑SPI events. This “single static object”
+ * libspeechd, bypassing AT‑SPI events. This "single static object"
  * design avoids the D‑Bus traffic and tree‑management overhead that a
  * full AT‑SPI hierarchy would require and that Tk cannot sustain.
  
@@ -39,11 +39,14 @@
 #define ATSPI_DBUS_PATH           "/org/a11y/bus"
 #define ATSPI_REGISTRY_INTERFACE  "org.a11y.atspi.Registry"
 #define ATSPI_ACCESSIBLE_INTERFACE "org.a11y.atspi.Accessible"
+#define ATSPI_APPLICATION_INTERFACE "org.a11y.atspi.Application"
 #define ATSPI_EVENT_INTERFACE     "org.a11y.atspi.Event"
+#define ATSPI_SOCKET_INTERFACE    "org.a11y.atspi.Socket"
 
 /* at-spi D-Bus paths. */
 #define ATSPI_DBUS_PATH_REGISTRY  "/org/a11y/atspi/registry"
 #define ATSPI_DBUS_PATH_ROOT      "/org/a11y/atspi/accessible/root"
+#define ATSPI_DBUS_PATH_NULL      "/org/a11y/atspi/null"
 
 /*
  * at-spi role constants.
@@ -134,6 +137,16 @@ static int IsScreenReaderRunningCmd(void *clientData, Tcl_Interp *interp, int ob
 
 /* D-Bus method handlers. */
 static int dbus_method_get_role(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_state(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_children(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_child_at_index(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_interfaces(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_role_name(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_localized_role_name(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_attributes(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_get_relation_set(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbus_method_cache_get_items(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+
 static int dbus_prop_get_name(sd_bus *bus, const char *path, const char *interface,
                                const char *property, sd_bus_message *reply,
                                void *userdata, sd_bus_error *ret_error);
@@ -192,11 +205,10 @@ extern Tcl_HashTable *TkAccessibilityObject;
  */
 
 /*
- * org.a11y.atspi.Accessible interface -- deliberately minimal. No
- * hierarchy methods (GetChildren/GetChildAtIndex) are exposed: this
- * object never has children, so there is nothing to navigate to, and
- * every property is SD_BUS_VTABLE_PROPERTY_CONST since none of them
- * ever change after registration.
+ * org.a11y.atspi.Accessible interface -- minimal implementation.
+ * Exposes only what Accerciser needs to recognize the application
+ * without hanging. Hierarchy methods return empty/null responses.
+ * GetInterfaces explicitly advertises what this object supports.
  */
 static const sd_bus_vtable accessible_vtable[] = {
     SD_BUS_VTABLE_START(0),
@@ -205,11 +217,26 @@ static const sd_bus_vtable accessible_vtable[] = {
     SD_BUS_PROPERTY("Parent", "(so)", dbus_prop_get_parent, 0, SD_BUS_VTABLE_PROPERTY_CONST),
     SD_BUS_PROPERTY("ChildCount", "i", dbus_prop_get_child_count, 0, SD_BUS_VTABLE_PROPERTY_CONST),
     SD_BUS_METHOD("GetRole", "", "u", dbus_method_get_role, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetState", "", "t", dbus_method_get_state, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetChildren", "", "a(so)", dbus_method_get_children, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetChildAtIndex", "i", "(so)", dbus_method_get_child_at_index, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetInterfaces", "", "as", dbus_method_get_interfaces, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetRoleName", "", "s", dbus_method_get_role_name, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetLocalizedRoleName", "", "s", dbus_method_get_localized_role_name, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetAttributes", "", "a{ss}", dbus_method_get_attributes, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetRelationSet", "", "a(ua(so))", dbus_method_get_relation_set, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_VTABLE_END
 };
 
+static const sd_bus_vtable cache_vtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_METHOD("GetItems", "", "a((so)(so)a(so)assusau)", dbus_method_cache_get_items, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_VTABLE_END
+};
+
+
 /*
- * org.a11y.atspi.Application interface - full version with Id property.
+ * org.a11y.atspi.Application interface - minimal version with Id property.
  */
 static const sd_bus_vtable application_vtable[] = {
     SD_BUS_VTABLE_START(0),
@@ -225,11 +252,11 @@ static const sd_bus_vtable application_vtable[] = {
 };
 
 /*
- * There is no org.a11y.atspi.Cache implementation. Cache.GetItems is how
- * Orca/Accerciser bootstrap a whole accessible tree in one call; since
- * this object has no tree, we don't register the interface at all, and
- * a client that queries it gets a normal D-Bus "unknown interface"
- * error instead of an empty-but-valid tree to (mis)walk.
+ * No Cache interface is registered. The Cache interface exists to make
+ * accessible trees more efficient when there are many accessibles.
+ * Since Tk has only one accessible (the application root), registering
+ * Cache would only add unnecessary complexity and D-Bus traffic.
+ * Accerciser will simply not find the interface and continue normally.
  */
 
 /*
@@ -282,7 +309,242 @@ AppendAccessibleRef(
         return sd_bus_message_append(reply, "(so)", SelfBusName(), path);
     }
     DEBUG_LOG("AppendAccessibleRef: appending null reference");
-    return sd_bus_message_append(reply, "(so)", "", "/org/a11y/atspi/null");
+    return sd_bus_message_append(reply, "(so)", "", ATSPI_DBUS_PATH_NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_children --
+ *
+ *   D-Bus method handler for GetChildren on the Accessible interface.
+ *   Returns an empty array of accessible references because this object
+ *   has no children. Accerciser expects this response immediately so its
+ *   UI thread doesn't block waiting for a reply.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an empty array a(so).
+ *----------------------------------------------------------------------
+ */
+
+static int
+dbus_method_get_children(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    sd_bus_message *reply = NULL;
+    int r;
+    DEBUG_LOG("dbus_method_get_children: returning empty children array");
+    r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    r = sd_bus_message_open_container(reply, 'a', "(so)");
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : atspi_bus, reply, NULL);
+    sd_bus_message_unref(reply);
+    return r;
+}
+
+static int
+dbus_method_get_role_name(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    return sd_bus_reply_method_return(m, "s", "application");
+}
+
+static int
+dbus_method_get_localized_role_name(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    return sd_bus_reply_method_return(m, "s", "application");
+}
+
+static int
+dbus_method_get_attributes(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    sd_bus_message *reply = NULL;
+    int r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    r = sd_bus_message_open_container(reply, 'a', "{ss}");
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : atspi_bus, reply, NULL);
+    sd_bus_message_unref(reply);
+    return r;
+}
+
+static int
+dbus_method_get_relation_set(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    sd_bus_message *reply = NULL;
+    int r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    r = sd_bus_message_open_container(reply, 'a', "(ua(so))");
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : atspi_bus, reply, NULL);
+    sd_bus_message_unref(reply);
+    return r;
+}
+
+static int
+dbus_method_cache_get_items(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(sd_bus_error *))
+{
+    sd_bus_message *reply = NULL;
+    int r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    r = sd_bus_message_open_container(reply, 'a', "((so)(so)a(so)assusau)");
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) { sd_bus_message_unref(reply); return r; }
+    r = sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : atspi_bus, reply, NULL);
+    sd_bus_message_unref(reply);
+    return r;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_child_at_index --
+ *
+ *   D-Bus method handler for GetChildAtIndex on the Accessible interface.
+ *   Returns a null accessible reference because this object has no children.
+ *   Accerciser queries this method when ChildCount returns 0; returning a
+ *   null reference immediately prevents the inspector from hanging.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a null (so) tuple.
+ *----------------------------------------------------------------------
+ */
+
+static int
+dbus_method_get_child_at_index(
+    sd_bus_message *m,
+    TCL_UNUSED(void *),
+    sd_bus_error *ret_error)
+{
+    return sd_bus_error_setf(ret_error,
+        "org.a11y.atspi.Accessible.IndexOutOfBounds",
+        "No child at index");
+}
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_interfaces --
+ *
+ *   D-Bus method handler for GetInterfaces on the Accessible interface.
+ *   Explicitly reports the interfaces supported by this accessible
+ *   object. This lets libatspi know exactly what this object supports
+ *   without needing to probe for each interface.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with an array of interface names.
+ *----------------------------------------------------------------------
+ */
+
+static int
+dbus_method_get_interfaces(
+    sd_bus_message *m,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
+{
+    sd_bus_message *reply = NULL;
+    int r;
+
+    DEBUG_LOG("dbus_method_get_interfaces: returning supported interfaces");
+
+    r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) {
+        DEBUG_LOG("dbus_method_get_interfaces: new_method_return failed: %d", r);
+        return r;
+    }
+
+    r = sd_bus_message_open_container(reply, 'a', "s");
+    if (r < 0) {
+        DEBUG_LOG("dbus_method_get_interfaces: open_container failed: %d", r);
+        sd_bus_message_unref(reply);
+        return r;
+    }
+
+    r = sd_bus_message_append(reply, "s", ATSPI_ACCESSIBLE_INTERFACE);
+    if (r < 0) {
+        DEBUG_LOG("dbus_method_get_interfaces: append Accessible failed: %d", r);
+        sd_bus_message_unref(reply);
+        return r;
+    }
+
+    r = sd_bus_message_append(reply, "s", ATSPI_APPLICATION_INTERFACE);
+    if (r < 0) {
+        DEBUG_LOG("dbus_method_get_interfaces: append Application failed: %d", r);
+        sd_bus_message_unref(reply);
+        return r;
+    }
+
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) {
+        DEBUG_LOG("dbus_method_get_interfaces: close_container failed: %d", r);
+        sd_bus_message_unref(reply);
+        return r;
+    }
+
+    r = sd_bus_send(atspi_conn && atspi_conn->bus ? atspi_conn->bus : atspi_bus, reply, NULL);
+    if (r < 0) {
+        DEBUG_LOG("dbus_method_get_interfaces: sd_bus_send failed: %d", r);
+    }
+
+    sd_bus_message_unref(reply);
+    return r;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * dbus_method_get_state --
+ *
+ *   D-Bus method handler for GetState on the Accessible interface.
+ *   Returns the state bitmask for the application root object.
+ *
+ * Results:
+ *   Returns 0 on success, or a negative error code.
+ *
+ * Side effects:
+ *   Sends a D-Bus reply message with a uint64 state mask.
+ *----------------------------------------------------------------------
+ */
+
+static int
+dbus_method_get_state(
+    sd_bus_message *m,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *))
+{
+    TkAccessible *acc = (TkAccessible *)userdata;
+    uint64_t states = acc ? ComputeStateForWidget(acc) : 0;
+    DEBUG_LOG("dbus_method_get_state: returning states 0x%lx", states);
+    return sd_bus_reply_method_return(m, "t", states);
 }
 
 /*
@@ -378,12 +640,11 @@ dbus_prop_get_parent(
     TCL_UNUSED(void *),
     TCL_UNUSED(sd_bus_error *))
 {
-    /*
-     * The application/root object is the only accessible we ever
-     * register, and its parent is the desktop -- which AT-SPI expects
-     * us to report as null, not as an object we own.
-     */
-    DEBUG_LOG("dbus_prop_get_parent: root has null parent");
+    if (atspi_conn && atspi_conn->is_embedded &&
+        atspi_conn->desktop_bus_name && atspi_conn->desktop_path) {
+        return sd_bus_message_append(reply, "(so)",
+            atspi_conn->desktop_bus_name, atspi_conn->desktop_path);
+    }
     return AppendAccessibleRef(reply, NULL);
 }
 
@@ -737,6 +998,8 @@ dbus_method_get_application_bus_address(
  * PostAccessibilityAnnouncement) so StopSpeech() can reach it too.
  */
 static SPDConnection *spd_conn = NULL;
+static char *pending_speech_msg = NULL;
+static Tcl_TimerToken speech_timer = NULL;
 
 /*
  *----------------------------------------------------------------------
@@ -754,31 +1017,32 @@ static SPDConnection *spd_conn = NULL;
  *----------------------------------------------------------------------
  */
 
-static void
-PostAccessibilityAnnouncement(TCL_UNUSED(TkAccessible *),
-			      const char *message)
-{
-    if (!message || !*message) {
-        return;
-    }
-
-    /* Lazy initialization. */
+static void DelayedSpeechProc(ClientData cd) {
+    (void)cd;
+    speech_timer = NULL;
+    if (!pending_speech_msg) return;
+    char *msg = pending_speech_msg;
+    pending_speech_msg = NULL;
     if (!spd_conn) {
         spd_conn = spd_open("tk", "announce", NULL, SPD_MODE_THREADED);
         if (!spd_conn) {
-            fprintf(stderr, "Speech Dispatcher: failed to connect\n");
+            free(msg);
             return;
         }
     }
-    
-     DEBUG_LOG("PostAccessibilityAnnouncement: posting '%s'", message);
- 
+    spd_say(spd_conn, SPD_MESSAGE, msg);
+    free(msg);
+}
 
-    /* Speak immediately. */
-    int r = spd_say(spd_conn, SPD_MESSAGE, message);
-    if (r < 0) {
-        fprintf(stderr, "Speech Dispatcher: spd_say failed\n");
-    }
+static void
+PostAccessibilityAnnouncement(TCL_UNUSED(TkAccessible *),
+                              const char *message)
+{
+    if (!message || !*message) return;
+    if (pending_speech_msg) free(pending_speech_msg);
+    pending_speech_msg = strdup(message);
+    if (speech_timer) Tcl_DeleteTimerHandler(speech_timer);
+    speech_timer = Tcl_CreateTimerHandler(1, DelayedSpeechProc, NULL);
 }
 
 /*
@@ -803,13 +1067,17 @@ PostAccessibilityAnnouncement(TCL_UNUSED(TkAccessible *),
 static void
 StopSpeech(void)
 {
+    if (pending_speech_msg) {
+        free(pending_speech_msg);
+        pending_speech_msg = NULL;
+    }
+    if (speech_timer) {
+        Tcl_DeleteTimerHandler(speech_timer);
+        speech_timer = NULL;
+    }
     if (!spd_conn) {
         return;
     }
-
-    DEBUG_LOG("StopSpeech: cancelling speech and closing speechd connection");
-
-    /* Stop whatever is currently being spoken and drop anything queued. */
     spd_cancel(spd_conn);
     spd_close(spd_conn);
     spd_conn = NULL;
@@ -1179,6 +1447,7 @@ ConnectToAtspiBus(void)
         return NULL;
     }
     
+    sd_bus_set_method_call_timeout(session, 2 * 1000000ULL);
     r = sd_bus_call_method(session,
         "org.a11y.Bus",
         "/org/a11y/bus",
@@ -1249,7 +1518,9 @@ ConnectToAtspiBus(void)
  * EmbedWithRegistry --
  *
  *   Embed our application into the registry's accessible tree using
- *   the Socket.Embed method on the registry object.
+ *   the Socket.Embed method on the registry's Socket object.
+ *   The registry object implements Socket.Embed, and the root accessible
+ *   is passed as the argument (plug) to Embed.
  *
  * Results:
  *   Returns true on success, false on failure.
@@ -1278,14 +1549,18 @@ EmbedWithRegistry(void)
               SelfBusName(), atspi_conn->root_accessible->dbus_path);
 
     /*
-     * Socket.Embed is exported by the AT-SPI registry at the
-     * application/root accessible path.
+     * Socket.Embed is exported by the AT-SPI registry's Socket object.
+     * The registry object is at ATSPI_DBUS_PATH_REGISTRY, and the
+     * Socket interface is ATSPI_SOCKET_INTERFACE.
+     * The Embed method takes a (so) tuple: the application's bus name
+     * and the root accessible object path.
      */
+    sd_bus_set_method_call_timeout(atspi_conn->bus, 2 * 1000000ULL);
     r = sd_bus_call_method(
         atspi_conn->bus,
         "org.a11y.atspi.Registry",
-        ATSPI_DBUS_PATH_ROOT,
-        "org.a11y.atspi.Socket",
+        ATSPI_DBUS_PATH_REGISTRY,
+        ATSPI_SOCKET_INTERFACE,
         "Embed",
         &error,
         &reply,
@@ -1488,7 +1763,7 @@ InitializeAtspiConnection(void)
     memset(atspi_conn->root_accessible, 0, sizeof(TkAccessible));
     
     atspi_conn->root_accessible->role = ATSPI_ROLE_APPLICATION;
-    atspi_conn->root_accessible->dbus_path = strdup("/org/a11y/atspi/accessible/root");
+    atspi_conn->root_accessible->dbus_path = strdup(ATSPI_DBUS_PATH_ROOT);
     atspi_conn->root_accessible->states = ComputeStateForWidget(atspi_conn->root_accessible);
     DEBUG_LOG("InitializeAtspiConnection: root accessible created at %s", atspi_conn->root_accessible->dbus_path);
     
@@ -1516,7 +1791,7 @@ InitializeAtspiConnection(void)
     slot = NULL;
     r = sd_bus_add_object_vtable(atspi_conn->bus, &slot,
                                   atspi_conn->root_accessible->dbus_path,
-                                  "org.a11y.atspi.Application",
+                                  ATSPI_APPLICATION_INTERFACE,
                                   application_vtable,
                                   atspi_conn->root_accessible);
     if (r < 0 || !slot) {
@@ -1531,15 +1806,21 @@ InitializeAtspiConnection(void)
     atspi_conn->root_accessible->vtable_slots[
         atspi_conn->root_accessible->n_vtable_slots++] = slot;
     DEBUG_LOG("InitializeAtspiConnection: root Application vtable registered");
-    
-    /*
-     * No Cache interface is registered: there is no tree to bootstrap,
-     * so a client calling Cache.GetItems should get a normal D-Bus
-     * "unknown interface" error rather than an implementation to walk.
-     */
+    slot = NULL;
+    r = sd_bus_add_object_vtable(atspi_conn->bus, &slot,
+                                  atspi_conn->root_accessible->dbus_path,
+                                  "org.a11y.atspi.Cache",
+                                  cache_vtable,
+                                  atspi_conn->root_accessible);
+    if (r >= 0 && slot) {
+        atspi_conn->root_accessible->vtable_slots[
+            atspi_conn->root_accessible->n_vtable_slots++] = slot;
+    }
     
     /* 
      * Registration must succeed for initialization to succeed.
+     * Socket.Embed is called on the registry's Socket object, passing
+     * our root accessible as the plug argument.
      */
     if (!EmbedWithRegistry()) {
         DEBUG_LOG("InitializeAtspiConnection: EmbedWithRegistry failed - initialization aborted");
@@ -1580,17 +1861,22 @@ TkWaylandAtspiProcessEvents(void)
         if (!atspi_bus) DEBUG_LOG("TkWaylandAtspiProcessEvents: no bus");
         return;
     }
-    
     atspi_draining = 1;
     int count = 0;
-    
-    /* Process pending incoming AT-SPI messages. */
-    while (sd_bus_process(atspi_bus, NULL) > 0) {
+    int r;
+    while ((r = sd_bus_process(atspi_bus, NULL)) > 0) {
         count++;
+        if (count > 100) break;
     }
-    
-    /* Flush outgoing buffer (announcements and method replies). */
-    sd_bus_flush(atspi_bus);
+    if (r < 0) {
+        atspi_draining = 0;
+        if (!sd_bus_is_open(atspi_bus)) {
+            StopSpeech();
+            if (atspi_conn) atspi_conn->is_initialized = 0;
+        }
+        return;
+    }
+
     
     if (count > 0) {
         DEBUG_LOG("TkWaylandAtspiProcessEvents: processed %d messages", count);
@@ -1769,10 +2055,14 @@ IsScreenReaderRunningCmd(
 static void
 AtspiFileHandlerProc(
     TCL_UNUSED(void *),
-    TCL_UNUSED(int))
+    int mask)
 {
-    DEBUG_LOG("AtspiFileHandlerProc: socket readable");
-    TkWaylandAtspiProcessEvents();
+    if (mask & TCL_READABLE) {
+        TkWaylandAtspiProcessEvents();
+    }
+    if (mask & TCL_WRITABLE) {
+        if (atspi_bus) sd_bus_flush(atspi_bus);
+    }
 }
 
 /*
@@ -1908,7 +2198,7 @@ TkWaylandAccessibility_Init(
         int fd = sd_bus_get_fd(atspi_bus);
         if (fd >= 0) {
             DEBUG_LOG("TkWaylandAccessibility_Init: creating file handler for fd %d", fd);
-            Tcl_CreateFileHandler(fd, TCL_READABLE, AtspiFileHandlerProc, NULL);
+            Tcl_CreateFileHandler(fd, TCL_READABLE | TCL_WRITABLE | TCL_EXCEPTION, AtspiFileHandlerProc, NULL);
         } else {
             DEBUG_LOG("TkWaylandAccessibility_Init: failed to get bus fd");
         }
@@ -1964,7 +2254,6 @@ GetToplevelOfWidget(
     }
     return NULL;
 }
-
 
 /*
  * Local Variables:
