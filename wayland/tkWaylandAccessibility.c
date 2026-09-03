@@ -1044,7 +1044,6 @@ EmitObjectEventFull(
  *   Sends a D-Bus signal with the announcement message.
  *----------------------------------------------------------------------
  */
-
 static void
 PostAccessibilityAnnouncement(
     TkAccessible *acc,
@@ -1054,31 +1053,23 @@ PostAccessibilityAnnouncement(
         DEBUG_LOG("PostAccessibilityAnnouncement: no bus, skipping");
         return;
     }
-    if (!acc || !acc->dbus_path) {
-        DEBUG_LOG("PostAccessibilityAnnouncement: no acc/path, skipping");
-        return;
-    }
     if (!message) {
         DEBUG_LOG("PostAccessibilityAnnouncement: no message, skipping");
         return;
     }
 
-    DEBUG_LOG("PostAccessibilityAnnouncement: posting '%s' on path %s", message, acc->dbus_path);
+    /* Always send announcements from the root accessible */
+    TkAccessible *target = atspi_conn->root_accessible;
+    if (!target || !target->dbus_path) {
+        DEBUG_LOG("PostAccessibilityAnnouncement: no root accessible");
+        return;
+    }
 
-    /*
-     * The AT-SPI "Announcement" signal carries its text in the any_data
-     * variant as a plain string, with detail1 conventionally used for
-     * politeness (0 = polite, 1 = assertive). It does NOT use the (so)
-     * accessible-reference shape that EmitObjectEventFull() builds for
-     * events like ChildrenChanged/StateChanged, so it can't be routed
-     * through that helper -- doing so silently drops the message text
-     * into the unused "type" argument and sends an empty (so) tuple as
-     * the payload, which is well-formed D-Bus but has nothing for a
-     * screen reader to read.
-     */
+    DEBUG_LOG("PostAccessibilityAnnouncement: posting '%s' on path %s", message, target->dbus_path);
+
     sd_bus_message *m = NULL;
     int r = sd_bus_message_new_signal(atspi_conn->bus, &m,
-                                      acc->dbus_path,
+                                      target->dbus_path,
                                       "org.a11y.atspi.Event.Object",
                                       "Announcement");
     if (r < 0) {
@@ -1086,7 +1077,17 @@ PostAccessibilityAnnouncement(
         return;
     }
 
-    r = sd_bus_message_append(m, "sii", "", 0, 0);
+    /* 
+     * Announcement signal format:
+     * - type: "object:announcement" 
+     * - detail1: politeness (2 = assertive)
+     * - detail2: 0
+     * - any_data: variant containing "(so)" reference and announcement text
+     */
+    r = sd_bus_message_append(m, "sii", "object:announcement", 2, 0);
+    if (r >= 0) r = sd_bus_message_open_container(m, 'v', "(so)");
+    if (r >= 0) r = sd_bus_message_append(m, "(so)", SelfBusName(), acc ? acc->dbus_path : "/org/a11y/atspi/null");
+    if (r >= 0) r = sd_bus_message_close_container(m);
     if (r >= 0) r = sd_bus_message_open_container(m, 'v', "s");
     if (r >= 0) r = sd_bus_message_append(m, "s", message);
     if (r >= 0) r = sd_bus_message_close_container(m);
@@ -1196,6 +1197,12 @@ GetDescriptionForWidget(
 {
     if (!tkwin) {
         DEBUG_LOG("GetDescriptionForWidget: null tkwin");
+        return NULL;
+    }
+    
+    /* Guard against NULL TkAccessibilityObject to prevent crash */
+    if (!TkAccessibilityObject) {
+        DEBUG_LOG("GetDescriptionForWidget: TkAccessibilityObject is NULL");
         return NULL;
     }
     
@@ -1699,10 +1706,25 @@ UpdateFocusChain(
             char msg[1024] = "";
             int has_content = 0;
             
+            /* Use name if available, otherwise fall back to widget class or path */
             if (name && name[0]) {
                 strcat(msg, name);
                 has_content = 1;
+            } else {
+                /* Fallback: use widget class or path */
+                const char *class_name = Tk_Class(focused);
+                if (class_name && class_name[0]) {
+                    strcat(msg, class_name);
+                    has_content = 1;
+                } else {
+                    const char *path = Tk_PathName(focused);
+                    if (path && path[0]) {
+                        strcat(msg, path);
+                        has_content = 1;
+                    }
+                }
             }
+            
             if (desc && desc[0]) {
                 if (has_content) strcat(msg, ", ");
                 strcat(msg, desc);
@@ -1718,7 +1740,10 @@ UpdateFocusChain(
                 DEBUG_LOG("UpdateFocusChain: posting focus announcement '%s'", msg);
                 PostAccessibilityAnnouncement(topAcc, msg);
             } else {
-                DEBUG_LOG("UpdateFocusChain: no content for announcement");
+                /* Always post at least a minimal announcement */
+                const char *fallback = "Widget focused";
+                DEBUG_LOG("UpdateFocusChain: no content, posting fallback announcement '%s'", fallback);
+                PostAccessibilityAnnouncement(topAcc, fallback);
             }
             
             if (name) free(name);

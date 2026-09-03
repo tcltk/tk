@@ -20,7 +20,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
     if {([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland")
             && [::tk::accessible::check_screenreader] eq 1} {
 				
-	# Add border to all X11 widgets with accessible focus. A highlight rectangle
+	# Add border to all X11/Wayland widgets with accessible focus. A highlight rectangle
 	# is drawn over focused widgets by the screen reader app on
 	# macOS and Windows (VoiceOver, NVDA), but not on X11. Configuring
 	# "-relief groove" and binding to FocusIn/Out events is the cleanest
@@ -1280,6 +1280,10 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	if {[tk windowingsystem] eq "win32"} {
 	    bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
 	}
+	
+	if {[tk windowingsystem] eq "wayland"} {
+	bind all <FocusIn> {+::tk::accessible::emit_focus_change %W}
+    }
 
 	# Finally, export the main commands.
 	namespace export set_acc_role set_acc_name set_acc_description set_acc_value set_acc_state set_acc_action set_acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
