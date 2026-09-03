@@ -580,14 +580,7 @@ TkWaylandInitialize(Tcl_Interp *interp)
 
     /*
      * Attach a real glfwTkInfo (and therefore a working NVG context) to
-     * the bootstrap window right away. Previously this only happened
-     * later, in TkWaylandCreateWindow() once Tk created the root window
-     * -- leaving a window during early startup where mainGlfwWindow
-     * existed but glfwGetWindowUserPointer() returned NULL. Anything
-     * needing to measure text or create a pixmap in that window (e.g.
-     * a button's default bitmap, or `image create photo` at script
-     * load time, both of which can run before the root window is
-     * fully wired up) would fail or crash. winPtr is filled in once
+     * the bootstrap window right away. winPtr is filled in once
      * the real Tk root window exists; TkWaylandCreateWindow() updates
      * it in place rather than creating a second NVG context.
      */
@@ -815,9 +808,7 @@ TkWaylandCreateWindow(
          * glfwWindow is the bootstrap mainGlfwWindow, which already has
          * a glfwTkInfo (and NVG context) attached from
          * TkWaylandInitialize(). Just fill in winPtr now that the real
-         * root TkWindow exists, instead of calling createGlfwTkInfo()
-         * again -- that would create a second, unnecessary NVG context
-         * and leave the bootstrap one attached to nothing.
+         * root TkWindow exists.
          */
         infoPtr->winPtr = winPtr;
     } else {
@@ -1296,12 +1287,7 @@ TkWaylandGetNVGContextForMeasure(void)
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
     if (!glfwInfoPtr || !glfwInfoPtr->winPtr) {
         /*
-         * The bootstrap mainGlfwWindow created in TkWaylandInitialize()
-         * does not get its glfwTkInfo attached until TkWaylandCreateWindow()
-         * runs for the root Tk window (see createGlfwTkInfo() /
-         * glfwSetWindowUserPointer() there). Between those two points
-         * GlfwIsInitialized is already true and mainGlfwWindow is
-         * non-NULL, but its user pointer is still NULL. Font measurement
+         * Guard against null window and glfwInfo pointers. Font measurement
          * triggered in that window (e.g. by early widget creation) must
          * fall back to the caller's non-NVG estimate rather than
          * dereferencing a NULL glfwInfoPtr here.

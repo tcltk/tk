@@ -495,16 +495,6 @@ Tk_GetPixmap(
 
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr) {
-        /*
-         * glfwWindow exists (it may be the bootstrap mainGlfwWindow from
-         * TkWaylandInitialize) but its glfwTkInfo hasn't been attached
-         * yet -- that only happens once TkWaylandCreateWindow() runs for
-         * the corresponding Tk window. Tk_GetPixmap() can be reached
-         * this early (e.g. a button's default bitmap during
-         * ButtonCreate/ConfigureButton), so bail out the same way the
-         * missing-glfwWindow case above does rather than dereferencing
-         * infoPtr->vg on a NULL pointer.
-         */
         printf("No GLFW window info (not yet initialized)!\n");
         return None;
     }
