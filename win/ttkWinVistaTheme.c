@@ -25,6 +25,18 @@
 #   pragma comment (lib, "uxtheme.lib")
 #endif
 
+/* Prototype definitions */
+typedef HTHEME	(STDAPICALLTYPE OpenThemeDataForDpiProc)(HWND hwnd, LPCWSTR pszClassList, UINT dpi);
+typedef UINT	(STDAPICALLTYPE GetDpiForWindowProc)(HWND hwnd);
+
+typedef struct {
+    OpenThemeDataForDpiProc	*OpenThemeDataForDpi;
+    GetDpiForWindowProc		*GetDpiForWindow;
+
+    HWND			hwnd;
+} VistaThemeData;
+
+
 /*
  * VistaThemeDeleteProc --
  *
@@ -33,8 +45,10 @@
 
 static void
 VistaThemeDeleteProc(
-    TCL_UNUSED(void *))
+    void *clientData)
 {
+    VistaThemeData *themeData = (VistaThemeData *)clientData;
+    ckfree(themeData);
 }
 
 static int
@@ -42,10 +56,7 @@ VistaThemeEnabled(
     TCL_UNUSED(Ttk_Theme),
     TCL_UNUSED(void *))
 {
-    int active = IsThemeActive();
-    int themed = IsAppThemed();
-
-    return (active && themed);
+    return (IsThemeActive() && IsAppThemed());
 }
 
 /*
@@ -454,19 +465,25 @@ typedef struct
     /* For TkWinDrawableReleaseDC: */
     Drawable	drawable;
     TkWinDCState dcState;
+
+    /* Compatibility */
+    OpenThemeDataForDpiProc	*OpenThemeDataForDpi;
+    GetDpiForWindowProc		*GetDpiForWindow;
 } ElementData;
 
 /*
  * Create theme element
  */
 static ElementData *
-NewElementData(HWND hwnd, const ElementInfo *info)
+NewElementData(VistaThemeData *themeData, const ElementInfo *info)
 {
     ElementData *elementData = (ElementData *)Tcl_Alloc(sizeof(ElementData));
 
-    elementData->parentHwnd = hwnd;
+    elementData->parentHwnd = themeData->hwnd;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
+    elementData->OpenThemeDataForDpi = themeData->OpenThemeDataForDpi;
+    elementData->GetDpiForWindow = themeData->GetDpiForWindow;
 
     return elementData;
 }
@@ -504,6 +521,8 @@ static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
+    UINT dpi = USER_DEFAULT_SCREEN_DPI;
 
     if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
@@ -511,8 +530,24 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd = elementData->parentHwnd;
     }
 
-    elementData->hTheme = OpenThemeData(elementData->hwnd,
+    /* Needs Windows 10, version 1607 */
+    if (elementData->GetDpiForWindow) {
+ 	dpi = elementData->GetDpiForWindow(elementData->hwnd);
+    }
+    
+    dpi = (UINT) trunc(((double) dpi * scalingFactor + 12.0) / 24.0) * 24;
+    if (dpi < USER_DEFAULT_SCREEN_DPI) {
+	dpi = USER_DEFAULT_SCREEN_DPI;
+    }
+
+    /* Windows 10, version 1703 */
+    if (elementData->OpenThemeDataForDpi) {
+	elementData->hTheme = elementData->OpenThemeDataForDpi(elementData->hwnd,
+	    elementData->info->className, dpi);
+    } else {
+	elementData->hTheme = OpenThemeData(elementData->hwnd,
 	    elementData->info->className);
+    }
 
     if (!elementData->hTheme) {
 	return false;
@@ -674,18 +709,18 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin, state,
 	widthPtr, heightPtr, paddingPtr);
 
-    /*
-     * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
-     * returns values for the monitor DPI under PerMonitorV2 awareness.  Scale
-     * by TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using this
-     * scaling factor, the element box will be stretched to the *expected*
-     * size, and not stretched at all in the most common case that Tk's
-     * scaling factor was not changed via "tk scaling".
-     */
+	/*
+	 * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
+	 * returns values for the monitor DPI under PerMonitorV2 awareness.  Scale
+	 * by TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using this
+	 * scaling factor, the element box will be stretched to the *expected*
+	 * size, and not stretched at all in the most common case that Tk's
+	 * scaling factor was not changed via "tk scaling".
+	 */
     *widthPtr = (int)round(GetThemeSysSize(NULL,
-	(elementData->info->flags >> 8) & 0xff) * scalingFactor);
+	    (elementData->info->flags >> 8) & 0xff) * scalingFactor);
     *heightPtr = (int)round(GetThemeSysSize(NULL,
-	elementData->info->flags & 0xff) * scalingFactor);
+	    elementData->info->flags & 0xff) * scalingFactor);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
     }
@@ -1326,7 +1361,7 @@ static const ElementInfo ElementInfoTable[] = {
 	(SM_CYVTHUMB << 8) | SM_CXVSCROLL },
     { "Vertical.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
 	SBP_GRIPPERVERT, scrollbar_statemap, NOPAD, 0 },
-     { "Horizontal.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
+    { "Horizontal.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKHORZ, scrollbar_statemap, NOPAD, 0 },
     { "Horizontal.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
 	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD,
@@ -1424,7 +1459,7 @@ Ttk_CreateVsapiElement(
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    HWND hwnd = (HWND)clientData;
+    VistaThemeData *themeData = (VistaThemeData *)clientData;
     ElementInfo *elementPtr = NULL;
     void *elementData;
     LPCWSTR className;
@@ -1574,7 +1609,7 @@ Ttk_CreateVsapiElement(
     wcscpy(wname, className);
     elementPtr->className = wname;
 
-    elementData = NewElementData(hwnd, elementPtr);
+    elementData = NewElementData(themeData, elementPtr);
     Ttk_RegisterElement(NULL, theme, elementName, elementPtr->elementSpec,
 	elementData);
 
@@ -1597,6 +1632,8 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
+    VistaThemeData *themeData;
+    HMODULE module;
 
     /*
      * Create the new style engine.
@@ -1611,15 +1648,38 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
     /*
      * Set theme data and cleanup proc
      */
-    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, hwnd);
-    Ttk_RegisterCleanup(interp, hwnd, VistaThemeDeleteProc);
-    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, hwnd);
+    themeData = (VistaThemeData *)ckalloc(sizeof(VistaThemeData));
+    themeData->OpenThemeDataForDpi = NULL;
+    themeData->GetDpiForWindow = NULL;
+    themeData->hwnd = hwnd;
+
+    /*
+     * Compatibility functions
+     *
+     * OpenThemeDataForDpi needs Windows 10, version 1703.
+     * GetDpiForWindow needs Windows 10 version 1607.
+     */
+    module = GetModuleHandleW(L"uxtheme.dll");
+    if (module != NULL) {
+	themeData->OpenThemeDataForDpi = (OpenThemeDataForDpiProc *) GetProcAddress(module,"OpenThemeDataForDpi");
+    }
+    module = GetModuleHandleW(L"User32.dll");
+    if (module != NULL) {
+	themeData->GetDpiForWindow = (GetDpiForWindowProc *) GetProcAddress(module,"GetDpiForWindow");
+    }
+
+    /*
+     * Set theme data and cleanup proc
+     */
+    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, themeData);
+    Ttk_RegisterCleanup(interp, themeData, VistaThemeDeleteProc);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
 
     /*
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	void *clientData = NewElementData(hwnd, infoPtr);
+	void *clientData = NewElementData(themeData, infoPtr);
 	Ttk_RegisterElement(NULL, themePtr, infoPtr->elementName,
 	    infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
