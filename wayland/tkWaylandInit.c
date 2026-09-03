@@ -1231,11 +1231,26 @@ TkWaylandGetNVGContext(
 MODULE_SCOPE NVGcontext *
 TkWaylandGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || shutdownInProgress) {
+    if (!GlfwIsInitialized || shutdownInProgress || !mainGlfwWindow) {
         return NULL;
 	}
-	
+
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
+    if (!glfwInfoPtr || !glfwInfoPtr->winPtr) {
+        /*
+         * The bootstrap mainGlfwWindow created in TkWaylandInitialize()
+         * does not get its glfwTkInfo attached until TkWaylandCreateWindow()
+         * runs for the root Tk window (see createGlfwTkInfo() /
+         * glfwSetWindowUserPointer() there). Between those two points
+         * GlfwIsInitialized is already true and mainGlfwWindow is
+         * non-NULL, but its user pointer is still NULL. Font measurement
+         * triggered in that window (e.g. by early widget creation) must
+         * fall back to the caller's non-NVG estimate rather than
+         * dereferencing a NULL glfwInfoPtr here.
+         */
+        return NULL;
+    }
+
     glfwMakeContextCurrent(mainGlfwWindow);
     Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);
     return TkWaylandGetNVGContext(drawable);
