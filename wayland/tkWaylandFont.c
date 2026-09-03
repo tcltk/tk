@@ -2284,19 +2284,26 @@ InitFont(
 	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);
     }
 
-    /* Default dpi in case the screen info does not exist. */
+    /* Default dpi in case the screen info does not exist or tkwin is NULL
+     * (early startup: bootstrap window exists but winPtr not yet wired). */
     double dpi = 96.0;
-    DEBUG_LOG("InitFont: font %s for window %s at size %lf",
-	faPtr->family, Tk_PathName(tkwin), fa->size);
-    DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
-    Screen *screen = Tk_Screen(tkwin);
-    if (screen && WidthMMOfScreen(screen) > 0) {
+    if (!tkwin) {
+        DEBUG_LOG("InitFont: font %s with no tkwin yet (family=%s size=%lf) - using %.0f dpi fallback",
+                  faPtr->family ? faPtr->family : "(null)", faPtr->family ? faPtr->family : "(null)", fa->size, dpi);
+    } else {
+        DEBUG_LOG("InitFont: font %s for window %s at size %lf",
+                  faPtr->family, Tk_PathName(tkwin), fa->size);
+        DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
+        Screen *screen = Tk_Screen(tkwin);
+        if (screen && WidthMMOfScreen(screen) > 0) {
+
 	double screenDpi = (double)WidthOfScreen(screen) * 25.4
 	    / (double)WidthMMOfScreen(screen);
 	/* Use actual screen DPI for all fonts. */
 	if (screenDpi >= 72.0 && screenDpi <= 480.0) {
 	    dpi = screenDpi;
 	}
+    }
     }
     DEBUG_LOG("InitFont: Using dpi = %f", dpi);
     if (ptSize < 0.0) {
