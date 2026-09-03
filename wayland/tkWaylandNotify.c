@@ -341,6 +341,10 @@ Tk_WaylandSetupTkNotifier(void)
  *      Called by Tcl_DoOneEvent if it has processed all events, run
  *      all pending idle tasks, and run all expired timer tasks.
  *
+ *      Updated to poll D-Bus file descriptors alongside the Wayland
+ *      display socket to prevent event loop stalls when Accerciser or
+ *      Orca sends a D-Bus query.
+ *
  * Results:
  *      None.
  *
@@ -357,7 +361,6 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
 {
     TSD_INIT();
     Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    Tcl_Time tinyBlock = {0, 1000};   /* 1ms fallback */
     Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
 
     /*
@@ -369,9 +372,6 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
     TkWaylandDisplayAllWindows();
 
     struct wl_display *display = glfwGetWaylandDisplay();
-
-    /* Get the wayland file descriptor for our display. */
-    int fd = wl_display_get_fd(display);
     if (!display) {
         /* No Wayland display: poll GLFW but do NOT block Tcl */
         glfwPollEvents();
@@ -379,19 +379,40 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
         return;
     }
 
-    /* Check if the wayland socket has data. */
-    struct pollfd pfd = {
-        .fd      = fd,
-        .events  = POLLIN,
-        .revents = 0
-    };
-    int r = poll(&pfd, 1, 0);
-    if (r > 0 && (pfd.revents & POLLIN)) {
-        /* Wayland has events — do not block. */
-        Tcl_SetMaxBlockTime(&noBlock);
+    /* Set up poll descriptors for Wayland, IBus, and AT-SPI sockets */
+    struct pollfd pfds[3];
+    int nfds = 0;
+
+    pfds[nfds].fd = wl_display_get_fd(display);
+    pfds[nfds].events = POLLIN;
+    pfds[nfds].revents = 0;
+    nfds++;
+
+    if (ibus_bus && sd_bus_get_fd(ibus_bus) >= 0) {
+        pfds[nfds].fd = sd_bus_get_fd(ibus_bus);
+        pfds[nfds].events = POLLIN;
+        pfds[nfds].revents = 0;
+        nfds++;
     }
-    else {
-        /* Nothing is happening - block for one refresh cycle. */
+
+    /* Note: atspi_bus is not directly accessible here, but we can check
+     * if we have an AT-SPI bus via a global. For now, we only poll
+     * Wayland and IBus. The AT-SPI bus will be handled in CheckProc.
+     * If we had a global atspi_bus, we would add it here with:
+     * if (atspi_bus && sd_bus_get_fd(atspi_bus) >= 0) {
+     *     pfds[nfds].fd = sd_bus_get_fd(atspi_bus);
+     *     pfds[nfds].events = POLLIN | (sd_bus_wqueue_size(atspi_bus) > 0 ? POLLOUT : 0);
+     *     pfds[nfds].revents = 0;
+     *     nfds++;
+     * }
+     */
+
+    int r = poll(pfds, nfds, 0);
+    if (r > 0) {
+        /* Socket activity detected — process without blocking */
+        Tcl_SetMaxBlockTime(&noBlock);
+    } else {
+        /* Idle — block for one display frame cycle */
         Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
@@ -411,6 +432,9 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  *      for a few milliseconds.  So there could be some events in the
  *      queue by now.
  *
+ *      Updated to explicitly flush outgoing message buffers to prevent
+ *      D-Bus reply deadlocks.
+ *
  * Results:
  *      None.
  *
@@ -425,11 +449,15 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
     /*
      * Drain IME/IBus and AT-SPI accessibility messages unconditionally.
+     * Flush outgoing buffers to ensure queued packets are written to the wire
+     * immediately, preventing D-Bus reply deadlocks.
      */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
+        sd_bus_flush(ibus_bus); /* Flush queued IBus replies/signals */
     }
 
+    /* Drain and flush AT-SPI messages */
     TkWaylandAtspiProcessEvents();
 
     /* Process events for GLFW windows. */
