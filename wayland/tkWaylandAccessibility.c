@@ -33,6 +33,7 @@
 #include <libspeechd.h>
 #include "tkInt.h"
 #include "tkWaylandInt.h"
+#include "tkWaylandWm.h"
 
 /* at-spi D-Bus constants. */
 #define ATSPI_DBUS_NAME           "org.a11y.Bus"
@@ -105,6 +106,7 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc);
 static const char *GetNameForWidget(Tk_Window tkwin);
 static char *GetDescriptionForWidget(Tk_Window tkwin);
 static char *GetValueForWidget(Tk_Window tkwin);
+static const char *GetWmTitleForToplevel(Tk_Window tkwin);
 
 /* D-Bus vtables. */
 static const sd_bus_vtable accessible_vtable[];
@@ -1164,6 +1166,52 @@ StopSpeech(void)
 
 /*
  *----------------------------------------------------------------------
+ * GetWmTitleForToplevel --
+ *
+ *   Get the window-manager title for a toplevel, read directly from
+ *   the toplevel's internal WmInfo record via the TkWindow structure.
+ *   Deliberately does not go through the "wm title" Tcl command or any
+ *   other interp-based path, since callers here (accessible name/
+ *   description/value lookups) run without -- and shouldn't need -- an
+ *   active Tcl_Interp.
+ *
+ * Results:
+ *   Returns a pointer to the title string owned by the toplevel's
+ *   WmInfo (or, if no title was explicitly set, the toplevel's own Tk
+ *   path name, mirroring what "wm title" itself falls back to). Returns
+ *   NULL if tkwin is not a toplevel or has no WmInfo yet. The returned
+ *   pointer is borrowed -- callers must not free it.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static const char *
+GetWmTitleForToplevel(
+    Tk_Window tkwin)
+{
+    if (!tkwin || !Tk_IsTopLevel(tkwin)) {
+        return NULL;
+    }
+
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    if (!winPtr->wmInfoPtr) {
+        DEBUG_LOG("GetWmTitleForToplevel: toplevel has no wmInfoPtr yet");
+        return NULL;
+    }
+
+    if (winPtr->wmInfoPtr->title && winPtr->wmInfoPtr->title[0] != '\0') {
+        return winPtr->wmInfoPtr->title;
+    }
+
+    /* No explicit title set -- fall back to the toplevel's own path
+     * name, same as "wm title" does internally. */
+    return Tk_PathName(tkwin);
+}
+
+/*
+ *----------------------------------------------------------------------
  * GetNameForWidget --
  *
  *   Get the accessible name for a widget.
@@ -1182,6 +1230,16 @@ GetNameForWidget(Tk_Window tkwin)
 {
     if (!tkwin) {
         return "";
+    }
+
+    /* Toplevels report their wm title as the accessible name, ahead of
+     * any explicitly-assigned accessibility name. */
+    if (Tk_IsTopLevel(tkwin)) {
+        const char *wmTitle = GetWmTitleForToplevel(tkwin);
+        if (wmTitle) {
+            DEBUG_LOG("GetNameForWidget: toplevel, using wm title '%s'", wmTitle);
+            return wmTitle;
+        }
     }
 
     /* First check TkAccessibilityObject hash for explicitly assigned name. */
@@ -1238,7 +1296,18 @@ GetDescriptionForWidget(
         DEBUG_LOG("GetDescriptionForWidget: null tkwin");
         return NULL;
     }
-    
+
+    /* Toplevels report their wm title as the accessible description.
+     * strdup here, not a borrowed pointer -- UpdateFocusChain always
+     * free()s whatever this function returns. */
+    if (Tk_IsTopLevel(tkwin)) {
+        const char *wmTitle = GetWmTitleForToplevel(tkwin);
+        if (wmTitle) {
+            DEBUG_LOG("GetDescriptionForWidget: toplevel, using wm title '%s'", wmTitle);
+            return strdup(wmTitle);
+        }
+    }
+
     /* Guard against NULL TkAccessibilityObject to prevent crash */
     if (!TkAccessibilityObject) {
         DEBUG_LOG("GetDescriptionForWidget: TkAccessibilityObject is NULL");
@@ -1295,7 +1364,18 @@ GetValueForWidget(
         DEBUG_LOG("GetValueForWidget: null tkwin");
         return NULL;
     }
-    
+
+    /* Toplevels report their wm title as the accessible value. strdup
+     * here, not a borrowed pointer -- UpdateFocusChain always free()s
+     * whatever this function returns. */
+    if (Tk_IsTopLevel(tkwin)) {
+        const char *wmTitle = GetWmTitleForToplevel(tkwin);
+        if (wmTitle) {
+            DEBUG_LOG("GetValueForWidget: toplevel, using wm title '%s'", wmTitle);
+            return strdup(wmTitle);
+        }
+    }
+
     if (TkAccessibilityObject) {
         Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
         if (hPtr) {
@@ -1443,8 +1523,21 @@ UpdateFocusChain(
     
     /* Build announcement string from name, description, and value. */
     const char *name = GetNameForWidget(focused);
-    char *desc = GetDescriptionForWidget(focused);
-    char *value = GetValueForWidget(focused);
+
+    /*
+     * For a toplevel, GetNameForWidget/GetDescriptionForWidget/
+     * GetValueForWidget all report the wm title -- that's correct
+     * when each is queried independently, but concatenating all three
+     * here would just repeat the same title three times in a single
+     * spoken announcement. Skip desc/value for toplevels and announce
+     * the title once.
+     */
+    char *desc = NULL;
+    char *value = NULL;
+    if (!Tk_IsTopLevel(focused)) {
+        desc = GetDescriptionForWidget(focused);
+        value = GetValueForWidget(focused);
+    }
     
     char msg[1024] = "";
     int has_content = 0;

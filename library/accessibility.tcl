@@ -2,7 +2,7 @@
 
 # This file defines the 'tk accessible' command for screen reader support
 # on X11, Wayland, Windows, and macOS. It implements an abstraction layer that
-# presents a consistent API across the three platforms.
+# presents a consistent API across the four platforms.
 
 # Copyright © 2009 Allen B. Taylor
 # Copyright © 2024-2025 Kevin Walzer
@@ -363,6 +363,29 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	# Update data selection for various widgets.
 	proc _updateselection {w} {
+
+	    variable title_announce_time
+
+	    if {[winfo class $w] eq "Toplevel"} {
+		set now [clock milliseconds]
+
+		# Suppress repeated FocusIn events for 750 ms.
+		if {[info exists title_announce_time($w)] &&
+		    ($now - $title_announce_time($w)) < 750} {
+		    return
+		}
+		set title_announce_time($w) $now
+
+		catch {
+		    set data [wm title $w]
+		    ::tk::accessible::set_acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		    if {[tk windowingsystem] eq "x11"} {
+			::tk::accessible::speak "$data"
+		    }
+		}
+	    }	
+			
 	    if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
 		set description [::tk::accessible::get_acc_description $w]
@@ -476,6 +499,30 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		    ::tk::accessible::speak $data
 		}
 	    }
+	}
+
+	# Throttle wrapper for emit_focus_change on Wayland. emit_focus_change
+	# is a C command with no throttling of its own, and "bind all
+	# <FocusIn>" fires it on every focus change for every widget --
+	# including repeated/rapid FocusIn on the same toplevel. This uses
+	# its own timestamp array (independent of _updateselection's
+	# title_announce_time) so the AT-SPI focus-changed signal keeps
+	# firing on its own schedule rather than being silenced whenever
+	# _updateselection also happens to run.
+	variable focus_change_time
+	array set focus_change_time {}
+
+	proc _throttledFocusChange {w} {
+	    variable focus_change_time
+	    set now [clock milliseconds]
+
+	    if {[info exists focus_change_time($w)] &&
+		($now - $focus_change_time($w)) < 750} {
+		return
+	    }
+	    set focus_change_time($w) $now
+
+	    ::tk::accessible::emit_focus_change $w
 	}
 
 	# Increment values in various widgets in response to keypress events.
@@ -686,11 +733,11 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				 %W \
 				 Toplevel \
 				 [wm title %W] \
-				 {}  \
+				 [wm title %W]  \
+				 [wm title %W] \
 				 {} \
 				 {} \
-				 {} \
-			     }
+		     }
 
 	# Button/TButton bindings.
 	bind Button <Map> {+::tk::accessible::_init \
@@ -1282,8 +1329,10 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	}
 	
 	if {[tk windowingsystem] eq "wayland"} {
-	bind all <FocusIn> {+::tk::accessible::emit_focus_change %W}
+	bind all <FocusIn> {+::tk::accessible::_throttledFocusChange %W}
     }
+    
+    bind Toplevel <FocusIn> {+::tk::accessible::_updateselection %W}
 
 	# Finally, export the main commands.
 	namespace export set_acc_role set_acc_name set_acc_description set_acc_value set_acc_state set_acc_action set_acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
