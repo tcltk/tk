@@ -209,7 +209,6 @@ static void MenuMouseLeave(TkMenu *menuPtr);
  * instead. 
  */
 static void TkWaylandGenerateMenuSelect(TkMenu *menuPtr);
-static void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 
 /* Helpers for positioning / clamping. */
 static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
