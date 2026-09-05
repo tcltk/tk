@@ -1219,6 +1219,15 @@ TTK_LAYOUT("TSpinbox",
 	    TTK_GROUP("Spinbox.padding", TTK_PACK_LEFT|TTK_FILL_BOTH,
 		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
 
+TTK_LAYOUT("Wide.TSpinbox",
+    TTK_GROUP("Spinbox.field", TTK_FILL_BOTH,
+	TTK_GROUP("Spinbox.background", TTK_FILL_BOTH,
+	    TTK_NODE("WideSpinbox.downarrow", TTK_PACK_RIGHT|TTK_STICK_E)
+	    TTK_NODE("WideSpinbox.uparrow", TTK_PACK_RIGHT|TTK_STICK_E)
+	    TTK_GROUP("Spinbox.padding", TTK_PACK_LEFT|TTK_FILL_BOTH,
+		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
+
+
 TTK_LAYOUT("Horizontal.TProgressbar",
     TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
 	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
@@ -1318,6 +1327,12 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
 	SPNP_DOWN, spindown_statemap, NOPAD,
 	HALF_HEIGHT | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "WideSpinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
+	SPNP_UP, spinup_statemap, PAD(3,0,3,0),
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "WideSpinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
+	SPNP_DOWN, spindown_statemap, PAD(3,0,3,0),
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
 
     /* Frame */
     { "Labelframe.border", &GenericElementSpec, L"BUTTON",

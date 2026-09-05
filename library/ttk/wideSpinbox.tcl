@@ -50,6 +50,7 @@ proc ttk::wideSpinbox::NormalizeColor color {
 #------------------------------------------------------------------------------
 proc ttk::wideSpinbox::CreateElements theme {
     # Create the WideSpinbox.uparrow element
+    if {$theme eq "vista"} return
 
     variable uparrowImgsArr
     set img  [CreateImg]
@@ -115,6 +116,8 @@ proc ttk::wideSpinbox::CreateElements theme {
 # Wide.TSpinbox layout for a given theme.
 #------------------------------------------------------------------------------
 proc ttk::wideSpinbox::UpdateElements theme {
+    if {$theme eq "vista"} return
+
     set bg  [NormalizeColor [ttk::style lookup . -background {} #d9d9d9]]
     variable onAndroid
     set aBg [expr {$onAndroid ? $bg :
@@ -218,6 +221,7 @@ proc ttk::wideSpinbox::UpdateElements theme {
 #------------------------------------------------------------------------------
 proc ttk::wideSpinbox::CondMakeElements {} {
     variable madeElements
+    
     if {!$madeElements} {
 	# If Tk's scaling factor was changed via "tk scaling"
 	# then $::tk::svgFmt now has the updated value.
@@ -248,6 +252,7 @@ proc ttk::wideSpinbox::CondMakeElements {} {
 #------------------------------------------------------------------------------
 proc ttk::wideSpinbox::MakeOrUpdateElements {} {
     variable madeElements
+
     if {!$madeElements} {
 	return ""
     }
