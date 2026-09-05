@@ -1308,7 +1308,7 @@ GetDescriptionForWidget(
         }
     }
 
-    /* Guard against NULL TkAccessibilityObject to prevent crash */
+    /* Guard against NULL TkAccessibilityObject to prevent crash. */
     if (!TkAccessibilityObject) {
         DEBUG_LOG("GetDescriptionForWidget: TkAccessibilityObject is NULL");
         return NULL;
@@ -1539,10 +1539,10 @@ UpdateFocusChain(
         value = GetValueForWidget(focused);
     }
     
-    char msg[1024] = "";
+    char msg[5120] = "";
     int has_content = 0;
     
-    /* Use name if available, otherwise fall back to widget class or path */
+    /* Use name if available, otherwise fall back to widget class or path. */
     if (name && name[0]) {
         strcat(msg, name);
         has_content = 1;
@@ -1561,6 +1561,13 @@ UpdateFocusChain(
         }
     }
     
+    /* 
+     * This works best with static values like label text.
+     * Dynamic data such as entry and text widget buffers
+     * do not work well here, so we will process that data
+     * at the script level by execing out to the command line
+     * interface. 
+     */
     if (desc && desc[0]) {
         if (has_content) strcat(msg, ", ");
         strcat(msg, desc);
@@ -1575,12 +1582,7 @@ UpdateFocusChain(
     if (has_content) {
         DEBUG_LOG("UpdateFocusChain: posting focus announcement '%s'", msg);
         PostAccessibilityAnnouncement(NULL, msg);
-    } else {
-        /* Always post at least a minimal announcement. */
-        const char *fallback = "Widget focused";
-        DEBUG_LOG("UpdateFocusChain: no content, posting fallback announcement '%s'", fallback);
-        PostAccessibilityAnnouncement(NULL, fallback);
-    }
+    } 
     
     if (desc) free(desc);
     if (value) free(value);
@@ -2111,7 +2113,7 @@ AddAccessibleCmd(
  * EmitSelectionChangedCmd --
  *
  *   Tcl command implementation for ::tk::accessible::emit_selection_change.
- *   Speaks a selection-changed announcement via speechd.
+ *   Speaks a selection-changed announcement via speechd. 
  *
  * Results:
  *   Returns TCL_OK or TCL_ERROR.
@@ -2123,7 +2125,7 @@ AddAccessibleCmd(
 
 static int
 EmitSelectionChangedCmd(
-    TCL_UNUSED(void *),
+    void* clientData,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -2133,11 +2135,16 @@ EmitSelectionChangedCmd(
         return TCL_ERROR;
     }
     
-    DEBUG_LOG("EmitSelectionChangedCmd: posting selection changed announcement");
-    PostAccessibilityAnnouncement(NULL, "selection changed");
+    Tk_Window tkwin = (Tk_Window)clientData;
+    char *announcement = GetValueForWidget(tkwin);
+    
+    DEBUG_LOG("EmitSelectionChangedCmd: delegating to external tool like X11");
+    PostAccessibilityAnnouncement(NULL, announcement);
+    ckfree(announcement);
     
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------

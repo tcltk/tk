@@ -198,6 +198,19 @@ static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
 static void MenuMouseLeave(TkMenu *menuPtr);
 
+/*
+ * <<MenuSelect>> generation. Stock Tk fires this virtual event purely at
+ * script level (tk::GenerateMenuSelect, called from the Menu class's
+ * <Motion> binding et al.) after a menu's active entry is changed via
+ * [$menu activate]. Because this backend drives entry activation directly
+ * from raw wl_pointer/wl_keyboard listeners in C -- never synthesizing a
+ * <Motion> event that would run through the Menu bindtag -- that script
+ * layer is never reached, so <<MenuSelect>> must be generated here
+ * instead. 
+ */
+static void TkWaylandGenerateMenuSelect(TkMenu *menuPtr);
+static void WaylandActivateMenuEntry(TkMenu *menuPtr, int index);
+
 /* Helpers for positioning / clamping. */
 static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
 static void TkWaylandClampPopupGeometry(GLFWwindow *glfwWindow, int *xPtr, int *yPtr, int *wPtr, int *hPtr);
@@ -1099,6 +1112,86 @@ GetMenuLabelGeometry(
 /*
  *---------------------------------------------------------------------------
  *
+ * MenubarReqProc --
+ *
+ *     Tk_GeomRequestProc for wmMenubarMgrType (see below). Called
+ *     whenever the menu attached as a toplevel's menubar asks for a new
+ *     size -- e.g. TkRecomputeMenu() calling Tk_GeometryRequest() after
+ *     entries are added/removed or the font changes -- so the menubar
+ *     strip stays in sync without requiring TkpSetWindowMenuBar() to be
+ *     re-invoked explicitly. clientData is the *toplevel* TkWindow that
+ *     owns this menubar (passed to Tk_ManageGeometry below); tkwin is
+ *     the menu window itself and is only used to double check it still
+ *     matches wmPtr->menubar.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     May resize/redraw the menubar popup.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenubarReqProc(
+    void      *clientData,
+    Tk_Window  tkwin)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    WmInfo   *wmPtr;
+
+    if (!winPtr || (winPtr->flags & TK_ALREADY_DEAD)) {
+        return;
+    }
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr || !wmPtr->menubarMenuPtr || wmPtr->menubar != tkwin) {
+        return;
+    }
+
+    DEBUG_LOG("MenubarReqProc: resyncing menubar for %s", Tk_PathName((Tk_Window)winPtr));
+
+    TkRecomputeMenu(wmPtr->menubarMenuPtr);
+    wmPtr->menuHeight = wmPtr->menubarMenuPtr->totalHeight;
+    if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
+
+    Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
+            winPtr->internalBorderRight, wmPtr->menuHeight,
+            winPtr->internalBorderBottom);
+
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+        TkWaylandMenubarCreateOrResize(winPtr);
+    }
+}
+
+/*
+ * Geometry manager registered on a menu's Tk_Window while it is attached
+ * to a toplevel as that toplevel's menubar. Mirrors the "menubar"
+ * Tk_GeomMgr the X11 backend registers in tkUnixWm.c. Two things depend
+ * on this being registered under that exact name, not just on
+ * wmPtr->menubar/menubarMenuPtr being set internally:
+ *
+ *   - [winfo manager $menu] must report "menubar" for script-level code
+ *     to be able to tell a menubar strip apart from an ordinary
+ *     dropdown/submenu menu (e.g. this project's accessibility.tcl uses
+ *     exactly this check in ::tk::accessible::_update_active_entry to
+ *     decide whether to announce immediately or with the submenu's
+ *     gentle pause). Without a registered manager this always reads as
+ *     "", so a menubar selection was silently being treated as a
+ *     submenu selection.
+ *   - Once registered, a later Tk_GeometryRequest() from the menu (see
+ *     MenubarReqProc above) automatically triggers a resync instead of
+ *     only happening when TkpSetWindowMenuBar() itself is re-invoked.
+ */
+static const Tk_GeomMgr wmMenubarMgrType = {
+    "menubar",
+    MenubarReqProc,
+    NULL,
+};
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkpSetWindowMenuBar --
  *
  *     Attach or detach a menubar for a toplevel.
@@ -1108,7 +1201,8 @@ GetMenuLabelGeometry(
  *     None.
  *
  * Side effects:
- *     Creates or updates wmPtr->menubarPopup.
+ *     Creates or updates wmPtr->menubarPopup. Registers/unregisters
+ *     wmMenubarMgrType on the menu's window as it is attached/detached.
  *
  *---------------------------------------------------------------------------
  */
@@ -1135,6 +1229,9 @@ TkpSetWindowMenuBar(
             TkWaylandPopupDestroy(wmPtr->menubarPopup);
             wmPtr->menubarPopup = NULL;
         }
+        if (wmPtr->menubar) {
+            Tk_ManageGeometry(wmPtr->menubar, NULL, NULL);
+        }
         wmPtr->menubar        = NULL;
         wmPtr->menubarMenuPtr = NULL;
         wmPtr->menuHeight     = 0;
@@ -1160,9 +1257,16 @@ TkpSetWindowMenuBar(
         return;
     }
 
-    /* New menubar - create it. */
+    /* New menubar - create it. Release any previous menubar's manager
+     * registration first (this is a *different* menuPtr than the one
+     * currently attached, if any -- the "update existing" case above
+     * already returned). */
+    if (wmPtr->menubar) {
+        Tk_ManageGeometry(wmPtr->menubar, NULL, NULL);
+    }
     wmPtr->menubar        = (Tk_Window)menuPtr->tkwin;
     wmPtr->menubarMenuPtr = menuPtr;
+    Tk_ManageGeometry(wmPtr->menubar, &wmMenubarMgrType, (void *)winPtr);
 
     TkRecomputeMenu(menuPtr);
     wmPtr->menuHeight = menuPtr->totalHeight;
@@ -2620,7 +2724,7 @@ TkpPostMenu(
         return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
     }
 
-    TkActivateMenuEntry(menuPtr, -1);
+    WaylandActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
 
     result = TkPostCommand(menuPtr);
@@ -3810,7 +3914,7 @@ TkpPostTearoffMenu(
 
     DEBUG_LOG("TkpPostTearoffMenu called");
 
-    TkActivateMenuEntry(menuPtr, -1);
+    WaylandActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
 
     result = TkPostCommand(menuPtr);
@@ -4074,7 +4178,7 @@ MenuMouseMotion(
                     }
                 }
 
-                TkActivateMenuEntry(menuPtr, i);
+                WaylandActivateMenuEntry(menuPtr, i);
 
                 /* Handle cascade entries. */
                 if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
@@ -4191,7 +4295,7 @@ MenuMouseMotion(
         int level = MenuStackFindLevel(menuPtr);
         if (level >= 0 && level == menuStackDepth - 1) {
             DEBUG_LOG("MenuMouseMotion: no entry found, deactivating");
-            TkActivateMenuEntry(menuPtr, -1);
+            WaylandActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
@@ -4221,7 +4325,7 @@ MenuMouseLeave(
 
     if (menuPtr->postedCascade == NULL) {
         if (menuPtr->active != -1) {
-            TkActivateMenuEntry(menuPtr, -1);
+            WaylandActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
@@ -4358,7 +4462,7 @@ TkWaylandMenubarHandleClick(
             return 1;
         }
 
-        TkActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
+        WaylandActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
 
         if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
             TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
@@ -4454,7 +4558,7 @@ TkWaylandMenubarHandleMotion(
         /* Pointer left the menubar strip. */
         if (menuPtr->active != -1 &&
             !(TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar())) {
-            TkActivateMenuEntry(menuPtr, -1);
+            WaylandActivateMenuEntry(menuPtr, -1);
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
             TkpDisplayMenu((void *)menuPtr);   /* Force redraw. */
         }
@@ -4471,7 +4575,7 @@ TkWaylandMenubarHandleMotion(
 
         /* Found the entry under the cursor. */
         if (mePtr->state != ENTRY_DISABLED && menuPtr->active != i) {
-            TkActivateMenuEntry(menuPtr, i);
+            WaylandActivateMenuEntry(menuPtr, i);
 
             /* Force immediate redraw of the menubar. */
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
@@ -4533,7 +4637,7 @@ TkWaylandMenuHandlePointerMotion(
     if (menuStackDepth > 0) {
         TkMenu *topMenu = menuStack[menuStackDepth - 1].menuPtr;
         if (topMenu && topMenu->active != -1) {
-            TkActivateMenuEntry(topMenu, -1);
+            WaylandActivateMenuEntry(topMenu, -1);
             TkEventuallyRedrawMenu(topMenu, NULL);
         }
     }
@@ -4811,49 +4915,161 @@ TkWaylandPostVirtualEvent(
     const char *eventName)
 {
     Tcl_Interp *interp;
-    TkMainInfo *info;
-    char *eventScript;
-    const char *eventNameWithoutBrackets;
-    size_t len;
-    int result;
+    size_t nameLen;
+    char *strippedName;
+    XVirtualEvent event;
 
     if (!winPtr || !eventName) {
         DEBUG_LOG("TkWaylandPostVirtualEvent: invalid parameters");
         return;
     }
 
-    info = TkGetMainInfoList();
-    if (!info || !info->interp) {
-        DEBUG_LOG("TkWaylandPostVirtualEvent: no interpreter found");
-        return;
-    }
-    interp = info->interp;
-
-    eventNameWithoutBrackets = eventName + 2;
-    len = strlen(eventNameWithoutBrackets);
-    if (len > 0 && eventNameWithoutBrackets[len-1] == '>') {
-        len--;
-    }
-
-    eventScript = (char *)ckalloc(len + 64);
-    if (!eventScript) {
-        DEBUG_LOG("TkWaylandPostVirtualEvent: memory allocation failed");
+    nameLen = strlen(eventName);
+    if (nameLen < 4 ||
+            eventName[0] != '<' || eventName[1] != '<' ||
+            eventName[nameLen - 1] != '>' || eventName[nameLen - 2] != '>') {
+        DEBUG_LOG("TkWaylandPostVirtualEvent: '%s' is not of the form <<Name>>",
+                 eventName);
         return;
     }
 
-    sprintf(eventScript, "event generate %s <%*s>",
-            Tk_PathName((Tk_Window)winPtr), (int)len, eventNameWithoutBrackets);
+    /*
+     * Stock Tk fires <<MenuSelect>> by constructing an XVirtualEvent
+     * directly, not via "event generate".  Doing it directly avoids
+     * any Tcl parsing issues, avoids needing an interpreter lookup
+     * via TkGetMainInfoList(), and works even when the menu window is
+     * a popup subsurface.  This mirrors MenuSelectEvent() in
+     * macosx/tkMacOSXMenu.c.
+     */
 
-    DEBUG_LOG("TkWaylandPostVirtualEvent: posting %s via '%s'",
-             eventName, eventScript);
+    strippedName = (char *)ckalloc(nameLen - 3); /* Name + NUL */
+    if (!strippedName) {
+        return;
+    }
+    memcpy(strippedName, eventName + 2, nameLen - 4);
+    strippedName[nameLen - 4] = '\0';
 
-    result = Tcl_EvalEx(interp, eventScript, -1, TCL_EVAL_GLOBAL);
-    if (result != TCL_OK) {
-        DEBUG_LOG("TkWaylandPostVirtualEvent: Tcl_Eval failed: %s",
-                 Tcl_GetStringResult(interp));
+    memset(&event, 0, sizeof(event));
+    event.type = VirtualEvent;
+    event.serial = LastKnownRequestProcessed(winPtr->display);
+    event.send_event = False;
+    event.display = winPtr->display;
+    if (winPtr->window != None) {
+        event.event = winPtr->window;
+    } else {
+        /* Fallback: ensure window exists like stock Tk does */
+        Tk_MakeWindowExist((Tk_Window)winPtr);
+        event.event = winPtr->window;
+    }
+    event.root = XRootWindow(winPtr->display, 0);
+    event.subwindow = None;
+    event.time = Tcl_GetMonotonicTime();
+    event.x_root = 0;
+    event.y_root = 0;
+    event.same_screen = True;
+    event.name = Tk_GetUid(strippedName);
+
+    ckfree(strippedName);
+
+    DEBUG_LOG("TkWaylandPostVirtualEvent: posting <<%s>> on %s",
+             Tk_GetUid(event.name), Tk_PathName((Tk_Window)winPtr));
+
+    /*
+     * If we're inside Tcl's event loop (normal case), dispatch
+     * immediately - equivalent to "-when now".  Otherwise queue.
+     */
+    if (Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
+        Tk_HandleEvent((XEvent *)&event);
+    } else {
+        Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
+    }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGenerateMenuSelect --
+ *
+ *     C-level equivalent of the script proc tk::GenerateMenuSelect.
+ *     Stock Tk only fires <<MenuSelect>> from Tcl (tk::MenuMotion and a
+ *     few other bindings/procs call tk::GenerateMenuSelect after
+ *     [$menu activate ...]), deduplicated against
+ *     tk::Priv(activeMenu)/tk::Priv(activeItem) so the event only fires
+ *     when the (menu, active-entry) pair actually changes. Since this
+ *     backend's menu tracking is driven directly from raw wl_pointer /
+ *     wl_keyboard listeners in C and never round-trips through a
+ *     synthetic <Motion> event on the Menu bindtag, that script-level
+ *     path is never reached and <<MenuSelect>> silently never fires.
+ *     This reproduces the same dedup logic and posts the event via
+ *     TkWaylandPostVirtualEvent.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     May post <<MenuSelect>> on menuPtr's window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandGenerateMenuSelect(
+    TkMenu *menuPtr)
+{
+    /*
+     * Mirrors tk::Priv(activeMenu)/tk::Priv(activeItem): remember the
+     * last (menu, active index) pair we fired for, across all menus,
+     * and only post again when it actually changes.
+     */
+    static TkMenu *lastSelectMenuPtr = NULL;
+    static int     lastSelectActiveIndex = -2;   /* -2: never fired yet. */
+
+    if (!menuPtr || !menuPtr->tkwin) {
+        return;
     }
 
-    ckfree(eventScript);
+    if (menuPtr == lastSelectMenuPtr &&
+            menuPtr->active == lastSelectActiveIndex) {
+        return;
+    }
+
+    lastSelectMenuPtr = menuPtr;
+    lastSelectActiveIndex = menuPtr->active;
+
+    DEBUG_LOG("TkWaylandGenerateMenuSelect: menu=%p active=%d",
+             (void *)menuPtr, menuPtr->active);
+
+    TkWaylandPostVirtualEvent((TkWindow *)menuPtr->tkwin, "<<MenuSelect>>");
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WaylandActivateMenuEntry --
+ *
+ *     Drop-in wrapper around the generic TkActivateMenuEntry() used
+ *     everywhere in this file that changes which entry of a menu is
+ *     active. In addition to the generic activation bookkeeping, this
+ *     also generates <<MenuSelect>> (see TkWaylandGenerateMenuSelect),
+ *     which TkActivateMenuEntry() itself does not do.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Same as TkActivateMenuEntry(), plus may post <<MenuSelect>>.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WaylandActivateMenuEntry(
+    TkMenu *menuPtr,
+    int index)
+{
+    TkActivateMenuEntry(menuPtr, index);
+    TkWaylandGenerateMenuSelect(menuPtr);
 }
 
 /*
@@ -5018,7 +5234,7 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
         }
 
         /* Activate it. */
-        TkActivateMenuEntry(menuPtr, i);
+        WaylandActivateMenuEntry(menuPtr, i);
         Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
         TkpDisplayMenu((void *)menuPtr);
 
@@ -5086,7 +5302,7 @@ TkWaylandMenubarMove(TkWindow *winPtr, int direction)
     }
 
     if (newIdx != current) {
-        TkActivateMenuEntry(menuPtr, newIdx);
+        WaylandActivateMenuEntry(menuPtr, newIdx);
 
         /*
          * TkWaylandMenuRedrawActive() only redraws menuStack[depth-1] --
