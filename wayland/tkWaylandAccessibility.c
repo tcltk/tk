@@ -71,7 +71,7 @@
  * Main accessible object structure: atspi_conn->root_accessible, 
  * the application object.
  */
-typedef struct TkAccessible {
+typedef struct TkWaylandAccessible {
     char *dbus_path;
     int role;
     uint64_t states;
@@ -82,13 +82,13 @@ typedef struct TkAccessible {
 #define TK_ACCESSIBLE_MAX_SLOTS 8
     sd_bus_slot *vtable_slots[TK_ACCESSIBLE_MAX_SLOTS];
     int n_vtable_slots;
-} TkAccessible;
+} TkWaylandAccessible;
 
 /* Global connection state. */
 typedef struct {
     sd_bus *bus;
     int is_initialized;
-    TkAccessible *root_accessible;
+    TkWaylandAccessible *root_accessible;
 
     /* Desktop reference from Socket.Embed. */
     char *desktop_bus_name;
@@ -100,9 +100,9 @@ typedef struct {
  * Forward declarations.
  */
 
-static void FreeAccessible(TkAccessible *acc);
-static int GetLiveRole(TkAccessible *acc);
-static uint64_t ComputeStateForWidget(TkAccessible *acc);
+static void FreeAccessible(TkWaylandAccessible *acc);
+static int GetLiveRole(TkWaylandAccessible *acc);
+static uint64_t ComputeStateForWidget(TkWaylandAccessible *acc);
 static const char *GetNameForWidget(Tk_Window tkwin);
 static char *GetDescriptionForWidget(Tk_Window tkwin);
 static char *GetValueForWidget(Tk_Window tkwin);
@@ -118,7 +118,7 @@ static int AppendAccessibleRef(sd_bus_message *reply, const char *path);
 static bool EmbedWithRegistry(void);
 
 /* Speech (libspeechd) helpers. */
-static void PostAccessibilityAnnouncement(TkAccessible *acc, const char *message);
+static void PostAccessibilityAnnouncement(TkWaylandAccessible *acc, const char *message);
 static void StopSpeech(void);
 
 /* Focus handling -- speech-only, not routed through AT-SPI. */
@@ -623,7 +623,7 @@ dbus_method_get_state(
     void *userdata,
     TCL_UNUSED(sd_bus_error *))
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
+    TkWaylandAccessible *acc = (TkWaylandAccessible *)userdata;
     uint64_t states = acc ? ComputeStateForWidget(acc) : 0;
     DEBUG_LOG("dbus_method_get_state: returning states 0x%lx", states);
     return sd_bus_reply_method_return(m, "t", states);
@@ -653,7 +653,7 @@ dbus_prop_get_name(
     void *userdata,
     TCL_UNUSED(sd_bus_error *))
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
+    TkWaylandAccessible *acc = (TkWaylandAccessible *)userdata;
     const char *name = "Tk Application";
 
     if (!acc) {
@@ -780,7 +780,7 @@ dbus_method_get_role(
     void *userdata,
     TCL_UNUSED(sd_bus_error *))
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
+    TkWaylandAccessible *acc = (TkWaylandAccessible *)userdata;
     int role = acc ? GetLiveRole(acc) : ATSPI_ROLE_INVALID;
     DEBUG_LOG("dbus_method_get_role: returning role %d for path %s", role, acc ? acc->dbus_path : "null");
     return sd_bus_reply_method_return(m, "u", (uint32_t)role);
@@ -950,7 +950,7 @@ dbus_prop_get_id(
     void *userdata,
     TCL_UNUSED(sd_bus_error *))
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
+    TkWaylandAccessible *acc = (TkWaylandAccessible *)userdata;
 
     if (!acc) {
         DEBUG_LOG("dbus_prop_get_id: no acc, returning 0");
@@ -972,7 +972,7 @@ dbus_prop_get_id(
  *   Returns 0 on success, or a negative error code.
  *
  * Side effects:
- *   Stores the application ID in the TkAccessible.
+ *   Stores the application ID in the TkWaylandAccessible.
  *----------------------------------------------------------------------
  */
 
@@ -986,7 +986,7 @@ dbus_prop_set_id(
     void *userdata,
     TCL_UNUSED(sd_bus_error *))
 {
-    TkAccessible *acc = (TkAccessible *)userdata;
+    TkWaylandAccessible *acc = (TkWaylandAccessible *)userdata;
     int32_t id;
 
     if (!acc) {
@@ -1090,6 +1090,10 @@ static Tcl_TimerToken speech_timer = NULL;
  *   Speak an announcement via speechd. This is the only channel Tk
  *   uses to tell a screen reader about widget names/focus/selection --
  *   it does not go through AT-SPI at all.
+ *  
+ *   Announcements of widget roles and static data go through this channel.
+ *   Announcements of dynamic data, such as text strings in text and entry widgets, 
+ *   are managed at the script level and are routed through the CLI for libspeechd.
  *
  * Results:
  *   None.
@@ -1116,7 +1120,7 @@ static void DelayedSpeechProc(TCL_UNUSED(ClientData)) {
 }
 
 static void
-PostAccessibilityAnnouncement(TCL_UNUSED(TkAccessible *),
+PostAccessibilityAnnouncement(TCL_UNUSED(TkWaylandAccessible *),
                               const char *message)
 {
     if (!message || !*message) return;
@@ -1416,7 +1420,7 @@ GetValueForWidget(
 
 static int
 GetLiveRole(
-    TkAccessible *acc)
+    TkWaylandAccessible *acc)
 {
     /* Only the root/application accessible exists, so this is trivial. */
     if (!acc) {
@@ -1443,7 +1447,7 @@ GetLiveRole(
 
 static uint64_t
 ComputeStateForWidget(
-    TCL_UNUSED(TkAccessible *))
+    TCL_UNUSED(TkWaylandAccessible *))
 {
     /* Static states for the one accessible we ever register. */
     uint64_t states = ATSPI_STATE_ENABLED | ATSPI_STATE_SHOWING |
@@ -1456,7 +1460,7 @@ ComputeStateForWidget(
  *----------------------------------------------------------------------
  * FreeAccessible --
  *
- *   Free the root TkAccessible object and release its resources.
+ *   Free the root TkWaylandAccessible object and release its resources.
  *
  * Results:
  *   None.
@@ -1468,7 +1472,7 @@ ComputeStateForWidget(
 
 static void
 FreeAccessible(
-    TkAccessible *acc)
+    TkWaylandAccessible *acc)
 {
     if (!acc) {
         DEBUG_LOG("FreeAccessible: null acc");
@@ -1926,7 +1930,7 @@ InitializeAtspiConnection(void)
     sd_bus_error_free(&error);
     
     /* Create root accessible object. */
-    atspi_conn->root_accessible = (TkAccessible *)Tcl_Alloc(sizeof(TkAccessible));
+    atspi_conn->root_accessible = (TkWaylandAccessible *)Tcl_Alloc(sizeof(TkWaylandAccessible));
     if (!atspi_conn->root_accessible) {
         DEBUG_LOG("InitializeAtspiConnection: root allocation failed");
         sd_bus_unref(bus);
@@ -1934,7 +1938,7 @@ InitializeAtspiConnection(void)
         atspi_conn = NULL;
         return false;
     }
-    memset(atspi_conn->root_accessible, 0, sizeof(TkAccessible));
+    memset(atspi_conn->root_accessible, 0, sizeof(TkWaylandAccessible));
     
     atspi_conn->root_accessible->role = ATSPI_ROLE_APPLICATION;
     atspi_conn->root_accessible->dbus_path = strdup(ATSPI_DBUS_PATH_ROOT);

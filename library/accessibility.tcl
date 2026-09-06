@@ -88,16 +88,13 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
     namespace eval ::tk::accessible {
 
 	if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
-	    # The Linux accessibility API does not align well with Tk text, entry, 
-	    # and menu widgets, and non-window elements such as listbox and tree/table
-	    # rows. There is too much of a mismatch between how Tk is
-	    # structured and what ATK/at-spi expects, especially with dynamic 
-	    # data such as is found in the text widget. Managing this data at the
-	    # C level is fragile and complex.  In these cases, we do not
-	    # address those widgets in C but instead use Tk's script-level
-	    # bindings to manage the interaction by shelling out to
-	    # Speech Dispatcher (the same engine powering Orca's voice) to
-	    # vocalize text data and communicate state/data changes.
+	    # The Linux accessibility API's - Atk and at-spi - do not
+	    # align well with dynamic textual data, such as the contents
+	    # of a text widget or entry, listbox/table rows, and menus.
+	    # Static widget data such as widget roles and labels are
+	    # routed through Orca/libspeechd in C, but many other
+	    # elements are  handled at the script level through the CLI
+	    # for libspeechd, such as spd-say. 
 	    proc speak {text} {
 		if {[::tk::accessible::check_screenreader] eq "1"} {
 		    # Escape quotes in the text.
