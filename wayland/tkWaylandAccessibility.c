@@ -2,6 +2,7 @@
  * tkWaylandAccessibility.c --
  *
  * Minimal Tk accessibility on Wayland.
+ * 
  * Registers one AT‑SPI application/root object via sd‑bus so Orca and
  * Accerciser can detect Tk. No accessible tree, no children, no cache.
  * Widget name/description/value announcements are spoken directly via
