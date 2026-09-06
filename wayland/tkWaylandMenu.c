@@ -42,6 +42,17 @@ extern GLFWwindow *mainGlfwWindow;
 /* Menu constants. */
 #define MENU_MARGIN_WIDTH       2
 #define MENU_DIVIDER_HEIGHT     2
+
+/*
+ * Floor on a popup/cascade menu's natural content width. Without this,
+ * a menu whose entries are all short labels (e.g. a single-word cascade)
+ * computes a totalWidth barely wider than that label, which reads as
+ * clipped/cramped once padding, indicators, or accelerators are added
+ * later or on a different platform's metrics. This is a minimum on the
+ * *content* width (indicatorSpace + labelWidth + accelWidth), applied
+ * per column, before border widths are added on top.
+ */
+#define MENU_MIN_CONTENT_WIDTH  90
 #define ENTRY_HELP_MENU         ENTRY_PLATFORM_FLAG1
 
 /* Cascade arrow size. */
@@ -793,6 +804,11 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         }
         if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) {
             if (i != 0) {
+                if (indicatorSpace + labelWidth + accelWidth
+                        < MENU_MIN_CONTENT_WIDTH) {
+                    labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace
+                        - accelWidth;
+                }
                 for (j = lastColumnBreak; j < i; j++) {
                     menuPtr->entries[j]->indicatorSpace = indicatorSpace;
                     menuPtr->entries[j]->labelWidth = labelWidth;
@@ -833,6 +849,9 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         mePtr->x = x;
         mePtr->y = y;
         y += mePtr->height;
+    }
+    if (indicatorSpace + labelWidth + accelWidth < MENU_MIN_CONTENT_WIDTH) {
+        labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace - accelWidth;
     }
     for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
         menuPtr->entries[j]->indicatorSpace = indicatorSpace;
