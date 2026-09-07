@@ -195,6 +195,25 @@ void createClipShaders(TkWindow *winPtr) {
     winPtr->privatePtr->scrollScratchH = 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * tkWaylandInvalidateClipRects --
+ *
+ *	Marks the clipping rectangles for a window and its ancestors and
+ *	siblings as dirty, forcing them to be recomputed before the next
+ *	draw.  This should be called whenever the window's geometry or
+ *	stacking order changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the clipDirty flag on winPtr, its ancestors, and its siblings.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE void
 tkWaylandInvalidateClipRects(TkWindow *winPtr)
 {
@@ -218,6 +237,24 @@ tkWaylandInvalidateClipRects(TkWindow *winPtr)
         }
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * tkWaylandInvalidateClipRectsForTree --
+ *
+ *	Marks the clipping rectangles for an entire subtree of windows as
+ *	dirty, forcing them to be recomputed before the next draw.  This
+ *	should be called when a major geometry change affects many windows.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the clipDirty flag on winPtr and all of its descendants.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE void
 tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr)
@@ -323,7 +360,8 @@ void intersectRectWithRect(
     rectPtr->h = fminf(ymaxFirst, ymaxSecond) - rectPtr->y;
 }
 
-/*----------------------------------------------------------------------
+/*
+ *----------------------------------------------------------------------
  *
  * addClipRect --
  *
@@ -438,6 +476,25 @@ appendVerticesForRect(
     /* Return the updated vertex count */
     return n;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * updateClipRects --
+ *
+ *	Rebuilds the list of clipping rectangles for a window based on the
+ *	current geometry of its mapped children and higher siblings.  The
+ *	rectangles are stored in the window's private data and uploaded to
+ *	the VBO.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates clipRectCount, clipRectBuffer, and the VBO contents.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
