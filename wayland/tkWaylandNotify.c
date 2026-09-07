@@ -1789,12 +1789,7 @@ MODULE_SCOPE void
 TkWaylandWakeupGLFW(void)
 {
     TSD_INIT();
-    ////uint64_t u = 1;
-    
-    if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
-	//// This should post an empty event to GLFW!!!
-        ////write(tsdPtr->wakeupFd, &u, sizeof(u));
-    }
+
 }
 
 /*
