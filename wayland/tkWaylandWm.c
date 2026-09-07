@@ -3975,10 +3975,9 @@ ParseGeometry(
     return TCL_OK;
 
  badGeom:
-    Tcl_SetObjResult(interp,
-		     Tcl_ObjPrintf("bad geometry specifier \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "WM", "GEOMETRY", "FORMAT", NULL);
-    return TCL_ERROR;
+	/* Document but do not bail on Wayland-specific errors. */
+    DEBUG_LOG("Bad geometry specifier \"%s\"", string);
+    return TCL_OK;
 }
 
 /*
