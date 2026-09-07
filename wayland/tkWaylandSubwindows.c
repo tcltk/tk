@@ -710,7 +710,12 @@ void tkWaylandDrawClipMask(
     glUniform2f(winPtr->privatePtr->fbSizeUniform,
 		(float)fbWidth, (float)fbHeight);
     glBindVertexArray(winPtr->privatePtr->clipVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 12 * (winPtr->privatePtr->clipRectCount + 4));
+    /*
+     * 6 vertices per rect (two triangles, no EBO) -- matches exactly what
+     * updateClipRects allocates and uploads (vertices[6 * (clipRectCount +
+     * 4)]).
+     */
+    glDrawArrays(GL_TRIANGLES, 0, 6 * (winPtr->privatePtr->clipRectCount + 4));
     /* Restore defaults. */
     glBindVertexArray(0);
     glUseProgram(0);
