@@ -442,9 +442,14 @@ typedef struct TkWindowPrivate {
     GLuint clipShader;
     GLint fbSizeUniform;
     int flags;
+    int clipDirty;
     TkWindow *container;
     clipRect containerRect;
     clipRect boundsRect;
+    GLuint scrollScratchFBO;
+    GLuint scrollScratchTex;
+    int scrollScratchW;
+    int scrollScratchH;
 } glfwData;
 
 /*
@@ -895,6 +900,8 @@ void TkWaylandMenuInit(void);
 
 MODULE_SCOPE void tkWaylandDrawClipMask(TkWindow* winPtr,
 					GLFWwindow* glfwWindow);
+MODULE_SCOPE void tkWaylandInvalidateClipRects(TkWindow *winPtr);
+MODULE_SCOPE void tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr);
 void updateClipRects(TkWindow* winPtr, GLFWwindow* glfwWindow);
 /*
  *----------------------------------------------------------------------

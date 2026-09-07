@@ -608,6 +608,13 @@ TkWmDeadWindow(
         /* Free the pendingText DString. */
         Tcl_DStringFree(&winPtr->privatePtr->pendingText);
         
+        /* Free scroll scratch if any */
+        if (winPtr->privatePtr->scrollScratchFBO) {
+            glDeleteFramebuffers(1, &winPtr->privatePtr->scrollScratchFBO);
+        }
+        if (winPtr->privatePtr->scrollScratchTex) {
+            glDeleteTextures(1, &winPtr->privatePtr->scrollScratchTex);
+        }
         /* Free the privatePtr itself. */
         ckfree(winPtr->privatePtr);
         winPtr->privatePtr = NULL;
@@ -819,6 +826,9 @@ Tk_MakeWindow(
 	winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
 	winPtr->privatePtr->clipRectBuffer = ckalloc(
 	    CLIPRECTBUFSIZE * sizeof(clipRect));
+	winPtr->privatePtr->clipDirty = 1;
+	winPtr->privatePtr->scrollScratchFBO = 0;
+	winPtr->privatePtr->scrollScratchTex = 0;
 #undef CLIPRECTBUFSIZE    
     }
     if (Tk_IsTopLevel(winPtr)) {
@@ -4284,6 +4294,7 @@ XUnmapWindow(
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
     DEBUG_LOG("XUnmapWindow: %s", Tk_PathName(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4356,6 +4367,7 @@ XResizeWindow(
     DEBUG_LOG("XResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4405,6 +4417,7 @@ XMoveWindow(
     DEBUG_LOG("XMoveWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4459,6 +4472,7 @@ XMoveResizeWindow(
     DEBUG_LOG("XMoveResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 

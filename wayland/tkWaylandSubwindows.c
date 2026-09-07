@@ -188,6 +188,45 @@ void createClipShaders(TkWindow *winPtr) {
     /* Restore GL defaults. */
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    winPtr->privatePtr->clipDirty = 1;
+    winPtr->privatePtr->scrollScratchFBO = 0;
+    winPtr->privatePtr->scrollScratchTex = 0;
+    winPtr->privatePtr->scrollScratchW = 0;
+    winPtr->privatePtr->scrollScratchH = 0;
+}
+
+MODULE_SCOPE void
+tkWaylandInvalidateClipRects(TkWindow *winPtr)
+{
+    if (!winPtr) return;
+    if (winPtr->privatePtr) {
+        winPtr->privatePtr->clipDirty = 1;
+    }
+    TkWindow *parent = winPtr->parentPtr;
+    while (parent) {
+        if (parent->privatePtr) {
+            parent->privatePtr->clipDirty = 1;
+        }
+        if (Tk_IsTopLevel(parent)) break;
+        parent = parent->parentPtr;
+    }
+    if (winPtr->parentPtr) {
+        for (TkWindow *sib = winPtr->parentPtr->childList; sib; sib = sib->nextPtr) {
+            if (sib != winPtr && sib->privatePtr) {
+                sib->privatePtr->clipDirty = 1;
+            }
+        }
+    }
+}
+
+MODULE_SCOPE void
+tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr)
+{
+    if (!winPtr) return;
+    if (winPtr->privatePtr) winPtr->privatePtr->clipDirty = 1;
+    for (TkWindow *child = winPtr->childList; child; child = child->nextPtr) {
+        tkWaylandInvalidateClipRectsForTree(child);
+    }
 }
 
 /*
@@ -581,8 +620,9 @@ void tkWaylandDrawClipMask(
     TkWindow* winPtr,
     GLFWwindow* glfwWindow)
 {
-    if (1) { //// should be if the clipRects are invalid
-	updateClipRects(winPtr, glfwWindow);
+    if (winPtr->privatePtr && winPtr->privatePtr->clipDirty) {
+        updateClipRects(winPtr, glfwWindow);
+        winPtr->privatePtr->clipDirty = 0;
     }
     DEBUG_LOG("Drawing ClipMask for %s with %d clipRects",
 	   Tk_PathName(winPtr), winPtr->privatePtr->clipRectCount + 4);
