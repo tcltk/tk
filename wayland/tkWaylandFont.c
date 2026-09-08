@@ -1981,10 +1981,8 @@ WaylandShaper_ShapeString(
  * ExpandRangeToClusterBoundaries --
  *
  *   Expand a byte range to the nearest grapheme cluster boundaries
- *   based on the ShapedGlyphBuffer's cluster break table.
- *
- *   This is the core fix for the cursor/substring boundary problem:
- *   it ensures that rendering and measurement ranges never split a
+ *   based on the ShapedGlyphBuffer's cluster break table.  Ensures that 
+ *   rendering and measurement ranges never split a
  *   grapheme cluster (e.g., a base character and its combining mark),
  *   which would cause the combining mark to be rendered separately.
  *
