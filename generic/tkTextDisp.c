@@ -8793,6 +8793,46 @@ CharDisplayProc(
 	int len = ciPtr->numBytes - offsetBytes;
 	int xDisplacement = x - chunkPtr->x;
 
+#if defined(TK_USE_WAYLAND)
+	/*
+	 * Under TK_LAYOUT_WITH_BASE_CHUNKS, a run of characters sharing one
+	 * shaping context can be split into several sibling CharInfo chunks
+	 * -- most commonly because a zero-width chunk (the insertion cursor)
+	 * sits between two of them. Each sibling is drawn with its own
+	 * Tk_DrawCharsInContext() call over [start, start+len) but all
+	 * siblings share the same underlying base-run `string`/`numBytes`.
+	 *
+	 * On the Wayland/NanoVG backend, if the byte offset where two
+	 * siblings meet falls inside a grapheme cluster (e.g. the insertion
+	 * cursor sitting between a base character and its combining mark),
+	 * each side's draw call independently re-shapes and expands outward
+	 * to avoid rendering a partial grapheme -- and both sides end up
+	 * claiming the same straddling cluster, which then gets drawn
+	 * twice. On an alpha-blended surface that shows up as the diacritic
+	 * (or base glyph) rendering visibly darker exactly where the cursor
+	 * lands.
+	 *
+	 * Snap both ends of this chunk's range to the nearest cluster
+	 * boundary at or before them via TkWaylandClusterBoundaryAtOrBefore().
+	 * That function is a pure lookup against the shared base-run's
+	 * shaping, so the sibling on the other side of the split computes
+	 * the identical boundary independently without either side needing
+	 * to know about the other -- the straddling cluster is deterministically
+	 * assigned to whichever side's *start* lands on it, and is drawn
+	 * exactly once.
+	 */
+	{
+	    int end = start + len;
+	    int snappedStart = TkWaylandClusterBoundaryAtOrBefore(
+		    sValuePtr->tkfont, string, numBytes, start);
+	    int snappedEnd = TkWaylandClusterBoundaryAtOrBefore(
+		    sValuePtr->tkfont, string, numBytes, end);
+
+	    start = snappedStart;
+	    len = snappedEnd - snappedStart;
+	}
+#endif /* TK_USE_WAYLAND */
+
 	if ((len > 0) && (string[start + len - 1] == '\t')) {
 	    len--;
 	}

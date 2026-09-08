@@ -82,6 +82,10 @@ static int         EncodeUtf8Char(FcChar32 uc, char out[4]);
 static void       ExpandRangeToClusterBoundaries(const ShapedGlyphBuffer *sbuf,
 						 int *start, int *end,
 						 int numBytes);
+MODULE_SCOPE int  TkWaylandClusterBoundaryAtOrBefore(Tk_Font tkfont,
+						 const char *source,
+						 Tcl_Size numBytes,
+						 int bytePos);
 
 /*
  *----------------------------------------------------------------------
@@ -2026,6 +2030,107 @@ ExpandRangeToClusterBoundaries(
 
     *start = newStart;
     *end = newEnd;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandClusterBoundaryAtOrBefore --
+ *
+ *   Return the grapheme-cluster boundary at or before an arbitrary byte
+ *   offset into `source`.
+ *
+ *   This is the canonical "safe split point" that callers outside this
+ *   file MUST use whenever a single logical string has to be divided
+ *   into two adjacent sub-ranges that will each be handed to a
+ *   separate Tk_DrawCharsInContext() / Tk_MeasureCharsInContext() call
+ *   -- most notably the text display code splitting a line's rendering
+ *   at the insertion cursor into a "before caret" and "after caret"
+ *   piece.
+ *
+ *   ExpandRangeToClusterBoundaries() (above) is safe to use only when a
+ *   single, isolated range is being drawn or measured on its own: it
+ *   independently rounds a partial leading cluster backward and a
+ *   partial trailing cluster forward, which is correct when there is
+ *   no sibling range on the other side of the cut. But when a caller
+ *   splits a string into two adjacent ranges at a raw byte offset that
+ *   happens to fall inside a cluster (e.g. an insertion cursor sitting
+ *   between a base character and its combining mark), and each side
+ *   independently calls ExpandRangeToClusterBoundaries on its own
+ *   unaligned end/start, BOTH sides round *toward* the shared cluster
+ *   and end up claiming it -- so it gets drawn twice, once by each
+ *   call. On an alpha-blended NanoVG surface that shows up as the
+ *   diacritic (or base glyph) rendering visibly darker/bolder exactly
+ *   where the caret lands.
+ *
+ *   The fix is to never let the two sides compute their shared
+ *   boundary independently. Instead, the caller must compute ONE
+ *   canonical boundary via this function up front, then use that exact
+ *   value as both the end of the left-hand range and the start of the
+ *   right-hand range:
+ *
+ *       int cut = TkWaylandClusterBoundaryAtOrBefore(tkfont, source,
+ *                                                     numBytes, caretByteOffset);
+ *       // left range:  [0, cut)
+ *       // right range: [cut, numBytes)
+ *
+ *   Because "at or before" is applied once and shared, the cluster
+ *   straddling the raw caret offset is assigned wholly to the
+ *   right-hand range (its start snaps back to the cluster's first
+ *   byte) and wholly excluded from the left-hand range (its end snaps
+ *   back to the same point) -- so it is drawn exactly once. Passing
+ *   already-aligned boundaries like this through
+ *   TkpDrawAngledCharsInContext() is safe: ExpandRangeToClusterBoundaries()
+ *   becomes a no-op on a range whose start/end already sit exactly on
+ *   cluster breaks.
+ *
+ * Results:
+ *   A byte offset in [0, numBytes] that is guaranteed to fall on a
+ *   cluster boundary. Returns bytePos unchanged (clamped to
+ *   [0, numBytes]) if shaping fails or the string has no cluster
+ *   structure to worry about.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandClusterBoundaryAtOrBefore(
+    Tk_Font     tkfont,
+    const char *source,
+    Tcl_Size    numBytes,
+    int         bytePos)
+{
+    if (!tkfont || !source || numBytes <= 0) {
+        return bytePos;
+    }
+    if (bytePos <= 0) {
+        return 0;
+    }
+    if (bytePos >= (int)numBytes) {
+        return (int)numBytes;
+    }
+
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+    ShapedGlyphBuffer sbuf;
+
+    if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                   (int)numBytes, &sbuf)
+        || sbuf.clusterBreakCount <= 0) {
+        /* No shaping/cluster info available -- nothing to snap to. */
+        return bytePos;
+    }
+
+    int best = 0;
+    for (int i = 0; i < sbuf.clusterBreakCount; i++) {
+        int pos = sbuf.clusterBreaks[i];
+        if (pos <= bytePos) {
+            best = pos;
+        } else {
+            break;
+        }
+    }
+    return best;
 }
 
 /*

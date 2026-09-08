@@ -243,6 +243,9 @@ typedef struct WaylandFont {
     unsigned int    generation;
 } WaylandFont;
 
+MODULE_SCOPE int TkWaylandClusterBoundaryAtOrBefore(Tk_Font tkfont,
+	   const char *source, Tcl_Size numBytes, int bytePos);
+
 /*
  *----------------------------------------------------------------------
  *
