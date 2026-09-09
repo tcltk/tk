@@ -7542,6 +7542,30 @@ TkpWindowIsDark(
     *isdark = false;
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowPixelDensity --
+ *
+ *	Returns the number of physical pixels per screen coordinate unit of
+ *	the screen displaying the given window.
+ *
+ * Results:
+ *	Always 1.0 on X11, where screen coordinates address physical pixels.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkpWindowPixelDensity(
+    TCL_UNUSED(Tk_Window))
+{
+    return 1.0;
+}
 
 /*
  * Local Variables:

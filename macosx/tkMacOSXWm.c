@@ -7903,6 +7903,45 @@ int TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     *isdark = TkMacOSXInDarkMode(tkwin);
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowPixelDensity --
+ *
+ *	Returns the backing scale factor of the screen displaying the given
+ *	window: the number of physical pixels per screen coordinate unit,
+ *	2.0 on Retina displays.
+ *
+ * Results:
+ *	The scale factor, or that of the main screen if the window is not on
+ *	screen yet.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkpWindowPixelDensity(
+    Tk_Window tkwin)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    NSWindow *win = nil;
+    NSScreen *screen = nil;
+
+    if (winPtr && winPtr->privatePtr) {
+	win = TkMacOSXGetNSWindowForDrawable((Drawable) winPtr->privatePtr);
+    }
+    if (win) {
+	screen = [win screen];
+    }
+    if (!screen) {
+	screen = [NSScreen mainScreen];
+    }
+    return screen ? [screen backingScaleFactor] : 1.0;
+}
 
 /*
  * Local Variables:

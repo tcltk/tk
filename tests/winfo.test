@@ -513,6 +513,17 @@ test winfo-14.4 {"winfo ismapped" command, new toplevel is mapped at idle time} 
     destroy .t
 } -result 1
 
+test winfo-15.1 {"winfo pixeldensity" command} -body {
+    set density [winfo pixeldensity .]
+    expr {[string is double -strict $density] && $density >= 1.0}
+} -result 1
+test winfo-15.2 {"winfo pixeldensity" command, bad window} -body {
+    winfo pixeldensity .nonexistent
+} -returnCodes error -result {bad window path name ".nonexistent"}
+test winfo-15.3 {"winfo pixeldensity" command, wrong # args} -body {
+    winfo pixeldensity
+} -returnCodes error -result {wrong # args: should be "winfo pixeldensity window"}
+
 #
 # TESTFILE CLEANUP
 #

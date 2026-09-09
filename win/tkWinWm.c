@@ -9049,6 +9049,31 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     return (result == S_OK ? TCL_OK : TCL_ERROR);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowPixelDensity --
+ *
+ *	Returns the number of physical pixels per screen coordinate unit of
+ *	the screen displaying the given window.
+ *
+ * Results:
+ *	Always 1.0 on Windows, where screen coordinates address physical
+ *	pixels.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkpWindowPixelDensity(
+    TCL_UNUSED(Tk_Window))
+{
+    return 1.0;
+}
+
 
 
 /*

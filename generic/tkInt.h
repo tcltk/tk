@@ -1198,6 +1198,7 @@ MODULE_SCOPE void	TkPremultiplyRGBA(XImage *image, int src_x, int src_y,
 			    int w, int h, unsigned char *dst, int dstStride);
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
+MODULE_SCOPE double	TkpWindowPixelDensity(Tk_Window tkwin);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,

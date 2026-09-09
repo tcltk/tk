@@ -1048,6 +1048,8 @@ ExposeRestrictProc(
 
 - (void) viewDidChangeBackingProperties
 {
+    CGFloat oldScale = self.layer.contentsScale;
+    CGFloat newScale = self.window.screen.backingScaleFactor;
 
     /*
      * Make sure that the layer uses a contentScale that matches the
@@ -1056,10 +1058,24 @@ ExposeRestrictProc(
      * the view is on a normal display.
      */
 
-    self.layer.contentsScale = self.window.screen.backingScaleFactor;
+    self.layer.contentsScale = newScale;
     [self resetTkLayerBitmapContext];
     // need to redraw
     [self generateExposeEvents: self.bounds];
+
+    /*
+     * Tell scripts when the window moved to a screen with a different
+     * pixel density, so that they can re-rasterize their images.
+     */
+
+    if (newScale > 0 && newScale != oldScale) {
+	Tk_Window tkwin = (Tk_Window)TkMacOSXGetTkWindow([self window]);
+
+	if (tkwin) {
+	    Tk_SendVirtualEvent(tkwin, "PixelDensityChanged",
+		    Tcl_NewDoubleObj(newScale));
+	}
+    }
 }
 
 -(void) setFrameSize: (NSSize)newsize

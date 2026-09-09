@@ -73,6 +73,24 @@ format of the string must be one of those for which there is an image
 file format handler that will accept string data.  If both the
 \fB\-data\fR and \fB\-file\fR options are specified, the \fB\-file\fR
 option takes precedence.
+.\" OPTION: -density
+.TP
+\fB\-density \fInumber\fR
+.
+.VS "9.1"
+Specifies the number of image pixels per screen pixel.  The default is 1:
+each image pixel is displayed as one screen pixel.  With a density of 2,
+an image of 64x64 pixels is displayed as 32x32 screen pixels; on displays
+whose physical resolution is finer than the screen coordinate grid, such
+as Retina displays, the extra image pixels are used to draw the image
+sharply, and on other displays the image is scaled down.  \fBimage
+width\fR and \fBimage height\fR report the displayed size; every other
+operation of the image, including the \fB\-width\fR and \fB\-height\fR
+options and the \fB\-format\fR options, works in image pixels.  The
+density is not copied by the \fBcopy\fR subcommand.  The value must be
+greater than zero.  See \fBwinfo pixeldensity\fR for the pixel density of
+the screen a window is displayed on.
+.VE "9.1"
 .\" OPTION: -format
 .TP
 \fB\-format\fR {\fIformat-name\fR ?\fIoption value ...\fR?}

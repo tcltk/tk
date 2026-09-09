@@ -460,7 +460,7 @@ XCreateImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkPutImage, XPutImage, TkpPutRGBAImage --
+ * TkPutImage, XPutImage, TkpPutRGBAImage, TkpPutRGBAImageScaled --
  *
  *	These functions, which all have the same signature, copy a rectangular
  *      subimage of an XImage into a drawable.  TkPutImage is an alias for
@@ -477,6 +477,12 @@ XCreateImage(
  *      The TkpPutRGBAImage function is used by TkImgPhotoDisplay to render photo
  *      images if the compile-time variable TK_CAN_RENDER_RGBA is defined in
  *      a platform's tkXXXXPort.h header, as is the case for the macOS Aqua port.
+ *      TkpPutRGBAImageScaled takes one more argument, the density of the
+ *      image (image pixels per screen pixel): the source rectangle and the
+ *      destination are then given in screen pixels, and the image pixels
+ *      covering the source rectangle are scaled by 1/density when drawn.
+ *      When the density equals the backing scale factor of the window this
+ *      is a pixel for pixel copy.
  *
  * Results:
  *	These functions return either BadDrawable or Success.
@@ -497,7 +503,8 @@ TkMacOSXPutImage(
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
     XImage* image,		/* Image to place. */
-    int src_x,			/* Source X & Y. */
+    double density,		/* Image pixels per screen pixel. */
+    int src_x,			/* Source X & Y, in screen pixels. */
     int src_y,
     int dest_x,			/* Destination X & Y. */
     int dest_y,
@@ -507,16 +514,47 @@ TkMacOSXPutImage(
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
+    CGRect srcRect, dstRect;
 
     if (width <= 0 || height <= 0) {
 	return Success; /* Is OK. Nothing to see here, literally. */
+    }
+    if (density == 1.0) {
+	srcRect = CGRectMake(src_x, src_y, width, height);
+	dstRect = CGRectMake(dest_x, dest_y, width, height);
+    } else {
+	/*
+	 * Take the whole image pixels covering the requested area and place
+	 * them so that image pixel (x, y) lands on screen point
+	 * (dest_x + x/density - src_x, dest_y + y/density - src_y).  When
+	 * density is the backing scale factor, every image pixel then lands
+	 * on exactly one backing store pixel.  The drawing is clipped to the
+	 * requested area below.
+	 */
+
+	double x0 = floor(src_x * density), y0 = floor(src_y * density);
+	double x1 = ceil((src_x + width) * density);
+	double y1 = ceil((src_y + height) * density);
+
+	if (x1 > image->width) {
+	    x1 = image->width;
+	}
+	if (y1 > image->height) {
+	    y1 = image->height;
+	}
+	if (x1 <= x0 || y1 <= y0) {
+	    return Success;
+	}
+	srcRect = CGRectMake(x0, y0, x1 - x0, y1 - y0);
+	dstRect = CGRectMake(dest_x + (x0 / density - src_x),
+		dest_y + (y0 / density - src_y),
+		(x1 - x0) / density, (y1 - y0) / density);
     }
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
-	CGRect dstRect, srcRect = CGRectMake(src_x, src_y, width, height);
 	/*
 	 * Whole image is copied before cropping. For performance,
 	 * consider revising TkMacOSXCreateCGImageWithXImage() to accept
@@ -535,9 +573,36 @@ TkMacOSXPutImage(
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
-	    dstRect = CGRectMake(dest_x, dest_y, width, height);
+	    if (density != 1.0) {
+		/*
+		 * Clip to the requested area, and ask for a good filter when
+		 * the image pixels do not map one to one onto the backing
+		 * store (e.g. a 2x image on a 1x screen).
+		 */
+
+		CGFloat scaleFactor = 1.0;
+
+		if (!(macDraw->flags & TK_IS_PIXMAP)) {
+		    NSView *view = TkMacOSXGetNSViewForDrawable(macDraw);
+
+		    if (view) {
+			scaleFactor = view.layer.contentsScale;
+		    }
+		}
+		CGContextSaveGState(dc.context);
+		CGContextClipToRect(dc.context, CGRectMake(
+			dest_x + macDraw->xOff, dest_y + macDraw->yOff,
+			width, height));
+		if (fabs(density - scaleFactor) > 1e-6) {
+		    CGContextSetInterpolationQuality(dc.context,
+			    kCGInterpolationHigh);
+		}
+	    }
 	    TkMacOSXDrawCGImage(drawable, gc, dc.context, img,
 				gc->foreground, gc->background, dstRect);
+	    if (density != 1.0) {
+		CGContextRestoreGState(dc.context);
+	    }
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
@@ -563,7 +628,7 @@ int XPutImage(
     unsigned int width,
     unsigned int height) {
     return TkMacOSXPutImage(IGNORE_ALPHA, display, drawable, gc, image,
-			    src_x, src_y, dest_x, dest_y, width, height);
+			    1.0, src_x, src_y, dest_x, dest_y, width, height);
 }
 
 int TkpPutRGBAImage(
@@ -578,7 +643,23 @@ int TkpPutRGBAImage(
     unsigned int width,
     unsigned int height) {
     return TkMacOSXPutImage(USE_ALPHA, display, drawable, gc, image,
-		     src_x, src_y, dest_x, dest_y, width, height);
+		     1.0, src_x, src_y, dest_x, dest_y, width, height);
+}
+
+int TkpPutRGBAImageScaled(
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    double density,
+    int src_x,
+    int src_y,
+    int dest_x,
+    int dest_y,
+    unsigned int width,
+    unsigned int height) {
+    return TkMacOSXPutImage(USE_ALPHA, display, drawable, gc, image,
+		     density, src_x, src_y, dest_x, dest_y, width, height);
 }
 
 

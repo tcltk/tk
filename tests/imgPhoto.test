@@ -51,6 +51,7 @@
 # ImgPostscriptPhoto                    no tests
 # Tk_PhotoGetMetadata:                  imgPhoto-21.*
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
+# ImgPhotoChanged (-density):           imgPhoto-26.*
 #--------------------------------------------------------------------------
 #
 #
@@ -336,7 +337,7 @@ test imgPhoto-4.6 {ImgPhotoCmd procedure: configure option} -setup {
     llength [photo1 configure]
 } -cleanup {
     image delete photo1
-} -result 8
+} -result 9
 test imgPhoto-4.7 {ImgPhotoCmd procedure: configure option} -setup {
     image create photo photo1
 } -body {
@@ -2734,6 +2735,100 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
 } -cleanup {
     catch {image delete png1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
+
+test imgPhoto-26.1 {-density: default value} -setup {
+    image create photo photo1 -width 64 -height 48
+} -body {
+    list [photo1 cget -density] [image width photo1] [image height photo1]
+} -cleanup {
+    image delete photo1
+} -result {1.0 64 48}
+test imgPhoto-26.2 {-density: image width and height are in screen pixels} -setup {
+    image create photo photo1 -width 64 -height 48 -density 2
+} -body {
+    list [image width photo1] [image height photo1] \
+	[photo1 cget -width] [photo1 cget -height] [llength [photo1 data]]
+} -cleanup {
+    image delete photo1
+} -result {32 24 64 48 48}
+test imgPhoto-26.3 {-density: sizes round up} -setup {
+    image create photo photo1 -width 53 -height 1 -density 2
+    image create photo photo2 -width 64 -height 64 -density 1.5
+} -body {
+    list [image width photo1] [image height photo1] [image width photo2]
+} -cleanup {
+    image delete photo1 photo2
+} -result {27 1 43}
+test imgPhoto-26.4 {-density: must be positive} -body {
+    image create photo photo1 -density 0
+} -cleanup {
+    catch {image delete photo1}
+} -returnCodes error -result {-density value must be positive}
+test imgPhoto-26.5 {-density: must be positive, configure} -setup {
+    image create photo photo1 -width 8 -height 8 -density 2
+} -body {
+    list [catch {photo1 configure -density -1} msg] $msg \
+	[photo1 cget -density] [image width photo1]
+} -cleanup {
+    image delete photo1
+} -result {1 {-density value must be positive} 2.0 4}
+test imgPhoto-26.6 {-density: must be a number} -body {
+    image create photo photo1 -density foo
+} -cleanup {
+    catch {image delete photo1}
+} -returnCodes error -result {expected floating-point number but got "foo"}
+test imgPhoto-26.7 {-density: configure resizes the widgets} -setup {
+    destroy .l
+    image create photo photo1 -width 64 -height 64
+    label .l -image photo1
+} -body {
+    set w1 [winfo reqwidth .l]
+    photo1 configure -density 2
+    expr {$w1 - [winfo reqwidth .l]}
+} -cleanup {
+    destroy .l
+    image delete photo1
+} -result 32
+test imgPhoto-26.8 {-density: canvas image item bbox} -setup {
+    destroy .c
+    canvas .c
+    image create photo photo1 -width 64 -height 64 -density 2
+} -body {
+    .c create image 10 20 -image photo1 -anchor nw
+    .c bbox all
+} -cleanup {
+    destroy .c
+    image delete photo1
+} -result {10 20 42 52}
+test imgPhoto-26.9 {-density: pixel operations and copy are unaffected} -setup {
+    image create photo photo1 -width 8 -height 8 -density 2
+    image create photo photo2
+} -body {
+    photo1 put red -to 0 0 8 8
+    photo2 copy photo1
+    list [image width photo1] [image width photo2] [photo2 cget -density] \
+	[photo1 get 7 7] [photo2 get 7 7]
+} -cleanup {
+    image delete photo1 photo2
+} -result {4 8 1.0 {255 0 0} {255 0 0}}
+test imgPhoto-26.10 {-density: display} -setup {
+    destroy .l
+    image create photo photo1 -width 16 -height 16 -density 2
+    label .l -image photo1
+    pack .l
+    update
+} -body {
+    photo1 put blue -to 0 0 16 16
+    update
+    photo1 configure -density 1.5
+    update
+    photo1 put {{#ff000080}} -to 3 3 9 9
+    update
+    image width photo1
+} -cleanup {
+    destroy .l
+    image delete photo1
+} -result 11
 
 #
 # TESTFILE CLEANUP

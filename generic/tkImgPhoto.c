@@ -151,6 +151,7 @@ static Tcl_ThreadDataKey dataKey;
  * Default configuration
  */
 
+#define DEF_PHOTO_DENSITY	"1"
 #define DEF_PHOTO_GAMMA		"1"
 #define DEF_PHOTO_HEIGHT	"0"
 #define DEF_PHOTO_PALETTE	""
@@ -163,6 +164,8 @@ static Tcl_ThreadDataKey dataKey;
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-data", NULL, NULL,
 	 NULL, TCL_INDEX_NONE, TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_DOUBLE, "-density", NULL, NULL,
+	 DEF_PHOTO_DENSITY, offsetof(PhotoModel, density), 0, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	 NULL, offsetof(PhotoModel, fileObj), TK_CONFIG_OBJS|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-format", NULL, NULL,
@@ -706,8 +709,7 @@ ImgPhotoCmd(
 	    }
 	}
 	if (block.pixelPtr || (options.options & OPT_SHRINK)) {
-	    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
-		    modelPtr->width, modelPtr->height);
+	    TkImgPhotoChanged(modelPtr, 0, 0, 0, 0);
 	}
 	return result;
 
@@ -1133,9 +1135,7 @@ readCleanup:
 	     * Tell the core image code that part of the image has changed.
 	     */
 
-	    Tk_ImageChanged(modelPtr->tkModel, x, y,
-		    (modelPtr->width - x), (modelPtr->height - y),
-		    modelPtr->width, modelPtr->height);
+	    TkImgPhotoChanged(modelPtr, x, y, (modelPtr->width - x), (modelPtr->height - y));
 	}
 	return TCL_OK;
 
@@ -1315,8 +1315,7 @@ readCleanup:
 	     * has (potentially) changed.
 	     */
 
-	    Tk_ImageChanged(modelPtr->tkModel, x, y, 1, 1,
-		    modelPtr->width, modelPtr->height);
+	    TkImgPhotoChanged(modelPtr, x, y, 1, 1);
 	    modelPtr->flags &= ~IMAGE_CHANGED;
 	    return TCL_OK;
 	}
@@ -1869,7 +1868,7 @@ ImgPhotoConfigureModel(
     Tcl_Obj *tempdata, *tempformat;
     Tcl_Size i, length;
     int result, imageWidth, imageHeight;
-    double oldGamma;
+    double oldGamma, oldDensity;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
@@ -1936,6 +1935,7 @@ ImgPhotoConfigureModel(
     }
     oldPaletteString = modelPtr->palette;
     oldGamma = modelPtr->gamma;
+    oldDensity = modelPtr->density;
 
     /*
      * Process the configuration options specified.
@@ -1943,6 +1943,14 @@ ImgPhotoConfigureModel(
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
 	    objc, objv, modelPtr, flags) != TCL_OK) {
+	goto errorExit;
+    }
+    if (modelPtr->density <= 0.0) {
+	modelPtr->density = oldDensity;
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"-density value must be positive", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_DENSITY",
+		(char *)NULL);
 	goto errorExit;
     }
 
@@ -2213,8 +2221,7 @@ ImgPhotoConfigureModel(
      * Inform the generic image code that the image has (potentially) changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkModel, 0, 0, modelPtr->width,
-	    modelPtr->height, modelPtr->width, modelPtr->height);
+    TkImgPhotoChanged(modelPtr, 0, 0, modelPtr->width, modelPtr->height);
     modelPtr->flags &= ~IMAGE_CHANGED;
 
     if (oldData != NULL) {
@@ -2376,6 +2383,58 @@ ImgPhotoCmdDeletedProc(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkImgPhotoChanged --
+ *
+ *	Notify the generic image code that (part of) the photo has changed.
+ *	The region and the image size are given in image pixels; they are
+ *	converted to screen pixels according to the -density option, the unit
+ *	that widgets and Tk_SizeOfImage work in.  This is the only place a
+ *	photo image may call Tk_ImageChanged from.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Widgets displaying the image are told to redisplay the region.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkImgPhotoChanged(
+    PhotoModel *modelPtr,	/* Photo image that changed. */
+    int x, int y,		/* Top-left corner of the changed region, in
+				 * image pixels. */
+    int width, int height)	/* Size of the changed region; zero if only
+				 * the image size changed. */
+{
+    double density = modelPtr->density;
+    int imageWidth = modelPtr->width, imageHeight = modelPtr->height;
+
+    if (density != 1.0) {
+	imageWidth = (int) ceil(imageWidth / density);
+	imageHeight = (int) ceil(imageHeight / density);
+	if ((width > 0) && (height > 0)) {
+	    /*
+	     * Report every screen pixel that overlaps a changed image pixel.
+	     */
+
+	    int x2 = (int) ceil((x + width) / density);
+	    int y2 = (int) ceil((y + height) / density);
+
+	    x = (int) floor(x / density);
+	    y = (int) floor(y / density);
+	    width = x2 - x;
+	    height = y2 - y;
+	}
+    }
+    Tk_ImageChanged(modelPtr->tkModel, x, y, width, height,
+	    imageWidth, imageHeight);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3404,8 +3463,7 @@ Tk_PhotoPutBlock(
      * Tell the core image code that this image has changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkModel, x, y, width, height,
-	    modelPtr->width, modelPtr->height);
+    TkImgPhotoChanged(modelPtr, x, y, width, height);
 
     if (memToFree) Tcl_Free(memToFree);
 
@@ -3760,8 +3818,7 @@ Tk_PhotoPutZoomedBlock(
      * Tell the core image code that this image has changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkModel, x, y, width, height, modelPtr->width,
-	    modelPtr->height);
+    TkImgPhotoChanged(modelPtr, x, y, width, height);
 
     if (memToFree) Tcl_Free(memToFree);
 
@@ -3906,8 +3963,7 @@ Tk_PhotoBlank(
      * Tell the core image code that this image has changed.
      */
 
-    Tk_ImageChanged(modelPtr->tkModel, 0, 0, modelPtr->width,
-	    modelPtr->height, modelPtr->width, modelPtr->height);
+    TkImgPhotoChanged(modelPtr, 0, 0, modelPtr->width, modelPtr->height);
 }
 
 /*
@@ -3955,8 +4011,7 @@ Tk_PhotoExpand(
 	    }
 	    return TCL_ERROR;
 	}
-	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0, modelPtr->width,
-		modelPtr->height);
+	TkImgPhotoChanged(modelPtr, 0, 0, 0, 0);
     }
     return TCL_OK;
 }
@@ -4030,8 +4085,7 @@ Tk_PhotoSetSize(
 	}
 	return TCL_ERROR;
     }
-    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
-	    modelPtr->width, modelPtr->height);
+    TkImgPhotoChanged(modelPtr, 0, 0, 0, 0);
     return TCL_OK;
 }
 
@@ -4325,13 +4379,50 @@ ImgPhotoPostscript(
     Tcl_Interp *interp,		/* Interpreter. */
     TCL_UNUSED(Tk_Window),		/* (unused) */
     Tk_PostscriptInfo psInfo,	/* Postscript info. */
-    int x, int y,		/* First pixel to output. */
-    int width, int height,	/* Width and height of area. */
-    TCL_UNUSED(int))		/* (unused) */
+    int x, int y,		/* First pixel to output, in screen pixels. */
+    int width, int height,	/* Width and height of area, in screen
+				 * pixels. */
+    int prepass)		/* 1 means this is a prepass to collect
+				 * font information. */
 {
+    PhotoModel *modelPtr = (PhotoModel *) clientData;
+    double density = modelPtr->density;
     Tk_PhotoImageBlock block;
 
     Tk_PhotoGetImage(clientData, &block);
+    if (density != 1.0) {
+	/*
+	 * The area is given in screen pixels: output the image pixels
+	 * covering it, scaled down so that they occupy the same area.
+	 */
+
+	int x2 = (int) ceil((x + width) * density);
+	int y2 = (int) ceil((y + height) * density);
+
+	x = (int) floor(x * density);
+	y = (int) floor(y * density);
+	if (x2 > block.width) {
+	    x2 = block.width;
+	}
+	if (y2 > block.height) {
+	    y2 = block.height;
+	}
+	width = x2 - x;
+	height = y2 - y;
+	if (width <= 0 || height <= 0) {
+	    return TCL_OK;
+	}
+	if (!prepass) {
+	    Tcl_Obj *psObj = Tcl_GetObjResult(interp);
+
+	    if (Tcl_IsShared(psObj)) {
+		psObj = Tcl_DuplicateObj(psObj);
+		Tcl_SetObjResult(interp, psObj);
+	    }
+	    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g scale\n",
+		    1.0 / density, 1.0 / density);
+	}
+    }
     block.pixelPtr += y * block.pitch + x * block.pixelSize;
 
     return Tk_PostscriptPhoto(interp, &block, psInfo, width, height);

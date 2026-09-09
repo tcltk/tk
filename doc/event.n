@@ -402,6 +402,16 @@ changes. It is intended for use with context-sensitive help systems.
 This is sent to a text widget when the contents of the widget are
 changed.
 .TP
+\fB<<PixelDensityChanged>>\fR
+.
+.VS "9.1"
+This is sent to a toplevel window on Aqua when it is moved to a screen
+with a different pixel density (see \fBwinfo pixeldensity\fR), for
+instance from a Retina display to an external display.  The user_data
+field (%d) holds the new density.  Scripts that rasterize images at the
+density of the screen can re-create them when this event fires.
+.VE "9.1"
+.TP
 \fB<<Selection>>\fR
 .
 This is sent to a text widget when the selection in the widget is

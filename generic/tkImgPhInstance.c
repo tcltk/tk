@@ -44,7 +44,14 @@ extern int		_XInitImageFuncPtrs(XImage *image);
 
 #ifndef TK_CAN_RENDER_RGBA
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
+			    const unsigned char *srcPtr, int srcWidth,
 			    int xOffset, int yOffset, int width, int height);
+#endif
+#ifndef TK_CAN_RENDER_RGBA_SCALED
+static void		ResampleRGBA(const unsigned char *src, int srcPitch,
+			    int srcWidth, int srcHeight, double density,
+			    int x, int y, int width, int height,
+			    unsigned char *dst, int dstPitch);
 #endif
 static int		IsValidPalette(PhotoInstance *instancePtr,
 			    const char *palette);
@@ -409,8 +416,7 @@ TkImgPhotoGet(
      */
 
     if (instancePtr->nextPtr == NULL) {
-	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
-		modelPtr->width, modelPtr->height);
+	TkImgPhotoChanged(modelPtr, 0, 0, 0, 0);
     }
 
     return instancePtr;
@@ -464,14 +470,16 @@ static void
 BlendComplexAlpha(
     XImage *bgImg,		/* Background image to draw on. */
     PhotoInstance *iPtr,	/* Image instance to draw. */
-    int xOffset, int yOffset,	/* X & Y offset into image instance to
-				 * draw. */
+    const unsigned char *srcPtr,/* RGBA pixels to draw, not premultiplied. */
+    int srcWidth,		/* Width of a row of srcPtr, in pixels. */
+    int xOffset, int yOffset,	/* X & Y offset into srcPtr to draw. */
     int width, int height)	/* Width & height of image to draw. */
 {
     int x, y, line;
     unsigned long pixel;
-    unsigned char r, g, b, alpha, unalpha, *modelPtr;
-    unsigned char *alphaAr = iPtr->modelPtr->pix32;
+    unsigned char r, g, b, alpha, unalpha;
+    const unsigned char *modelPtr;
+    const unsigned char *alphaAr = srcPtr;
 
     /*
      * This blending is an integer version of the Source-Over compositing rule
@@ -528,7 +536,7 @@ BlendComplexAlpha(
 	green_mlen = 8 - CountBits(green_mask >> green_shift);
 	blue_mlen = 8 - CountBits(blue_mask >> blue_shift);
 	for (y = 0; y < height; y++) {
-	    line = (y + yOffset) * iPtr->modelPtr->width;
+	    line = (y + yOffset) * srcWidth;
 	    for (x = 0; x < width; x++) {
 		modelPtr = alphaAr + ((line + x + xOffset) * 4);
 		alpha = modelPtr[3];
@@ -571,7 +579,7 @@ BlendComplexAlpha(
 #endif /* !_WIN32 */
 
     for (y = 0; y < height; y++) {
-	line = (y + yOffset) * iPtr->modelPtr->width;
+	line = (y + yOffset) * srcWidth;
 	for (x = 0; x < width; x++) {
 	    modelPtr = alphaAr + ((line + x + xOffset) * 4);
 	    alpha = modelPtr[3];
@@ -685,13 +693,19 @@ TkImgPhotoDisplay(
     Display *display,		/* Display on which to draw image. */
     Drawable drawable,		/* Pixmap or window in which to draw image. */
     int imageX, int imageY,	/* Upper-left corner of region within image to
-				 * draw. */
+				 * draw, in screen pixels. */
     int width, int height,	/* Dimensions of region within image to
-				 * draw. */
+				 * draw, in screen pixels. */
     int drawableX,int drawableY)/* Coordinates within drawable that correspond
 				 * to imageX and imageY. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;
+    PhotoModel *modelPtr = instancePtr->modelPtr;
+    double density = modelPtr->density;
+    unsigned char *pixels = modelPtr->pix32;
+    unsigned char *scaledPixels = NULL;
+    int pixWidth = modelPtr->width, pixHeight = modelPtr->height;
+    int srcX = imageX, srcY = imageY;
 #ifndef TK_CAN_RENDER_RGBA
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
@@ -705,6 +719,45 @@ TkImgPhotoDisplay(
 	return;
     }
 
+    if (density != 1.0) {
+#ifdef TK_CAN_RENDER_RGBA_SCALED
+	/*
+	 * The platform maps image pixels onto screen pixels itself, so that
+	 * an image whose density matches the backing store of the window is
+	 * drawn pixel for pixel.
+	 */
+
+	XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0,
+		(char *) pixels, (unsigned int) pixWidth,
+		(unsigned int) pixHeight, 0, (unsigned int) (4 * pixWidth));
+
+	TkpPutRGBAImageScaled(display, drawable, instancePtr->gc, photo,
+		density, imageX, imageY, drawableX, drawableY,
+		(unsigned int) width, (unsigned int) height);
+	photo->data = NULL;
+	XDestroyImage(photo);
+	return;
+#else
+	/*
+	 * Screen pixels are the physical pixels here: resample the requested
+	 * region down to screen resolution and draw the result through the
+	 * usual path, as an image of density 1.
+	 */
+
+	scaledPixels = (unsigned char *) Tcl_AttemptAlloc(
+		(size_t) width * (size_t) height * 4);
+	if (scaledPixels == NULL) {
+	    return;
+	}
+	ResampleRGBA(pixels, 4 * pixWidth, pixWidth, pixHeight, density,
+		imageX, imageY, width, height, scaledPixels, 4 * width);
+	pixels = scaledPixels;
+	pixWidth = width;
+	pixHeight = height;
+	srcX = srcY = 0;
+#endif
+    }
+
 #ifdef TK_CAN_RENDER_RGBA
 
     /*
@@ -712,24 +765,26 @@ TkImgPhotoDisplay(
      * no need to call XGetImage or to do the Porter-Duff compositing by hand.
      */
 
-    unsigned char *rgbaPixels = instancePtr->modelPtr->pix32;
-    XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0, (char*)rgbaPixels,
-				 (unsigned int)instancePtr->width,
-				 (unsigned int)instancePtr->height,
-				 0, (unsigned int)(4 * instancePtr->width));
-    TkpPutRGBAImage(display, drawable, instancePtr->gc,
-	       photo, imageX, imageY, drawableX, drawableY,
-	       (unsigned int) width, (unsigned int) height);
-    photo->data = NULL;
-    XDestroyImage(photo);
+    {
+	XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0,
+		(char *) pixels, (unsigned int) pixWidth,
+		(unsigned int) pixHeight, 0, (unsigned int) (4 * pixWidth));
+
+	TkpPutRGBAImage(display, drawable, instancePtr->gc,
+		photo, srcX, srcY, drawableX, drawableY,
+		(unsigned int) width, (unsigned int) height);
+	photo->data = NULL;
+	XDestroyImage(photo);
+    }
 
 #else
 
-    if ((instancePtr->modelPtr->flags & COMPLEX_ALPHA)
+    if (((modelPtr->flags & COMPLEX_ALPHA) || (scaledPixels != NULL))
 	    && visInfo.depth >= 15
 	    && (visInfo.c_class == DirectColor || visInfo.c_class == TrueColor)) {
 	Tk_ErrorHandler handler;
 	XImage *bgImg = NULL;
+	int drawn = 0;
 
 #ifdef HAVE_XRENDER
 	/*
@@ -745,64 +800,71 @@ TkImgPhotoDisplay(
 	 * passes 0, but only its Xlib emulation accepts that).
 	 */
 
-	unsigned char *rgbaPixels = instancePtr->modelPtr->pix32;
 	XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0,
-		(char *) rgbaPixels, (unsigned int) instancePtr->width,
-		(unsigned int) instancePtr->height, 32,
-		(unsigned int) (4 * instancePtr->width));
+		(char *) pixels, (unsigned int) pixWidth,
+		(unsigned int) pixHeight, 32,
+		(unsigned int) (4 * pixWidth));
 
 	if (photo != NULL) {
 	    int result = TkpPutRGBAImage(display, drawable, instancePtr->gc,
-		    photo, imageX, imageY, drawableX, drawableY,
+		    photo, srcX, srcY, drawableX, drawableY,
 		    (unsigned int) width, (unsigned int) height);
 
 	    photo->data = NULL;
 	    XDestroyImage(photo);
 	    if (result == Success) {
-		(void) XFlush(display);
-		return;
+		drawn = 1;
 	    }
 	}
 #endif /* HAVE_XRENDER */
 
-	/*
-	 * Create an error handler to suppress the case where the input was
-	 * not properly constrained, which can cause an X error. [Bug 979239]
-	 */
-
-	handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
-
-	/*
-	 * Pull the current background from the display to blend with
-	 */
-
-	bgImg = XGetImage(display, drawable, drawableX, drawableY,
-		(unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
-	if (bgImg == NULL) {
-	    Tk_DeleteErrorHandler(handler);
-	    /* We failed to get the image, so draw without blending alpha.
-	     * It's the best we can do.
+	if (!drawn) {
+	    /*
+	     * Create an error handler to suppress the case where the input
+	     * was not properly constrained, which can cause an X error. [Bug
+	     * 979239]
 	     */
-	    goto fallBack;
+
+	    handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+
+	    /*
+	     * Pull the current background from the display to blend with
+	     */
+
+	    bgImg = XGetImage(display, drawable, drawableX, drawableY,
+		    (unsigned int)width, (unsigned int)height, AllPlanes,
+		    ZPixmap);
+	    if (bgImg == NULL) {
+		Tk_DeleteErrorHandler(handler);
+		/* We failed to get the image, so draw without blending alpha.
+		 * It's the best we can do.
+		 */
+		goto fallBack;
+	    }
+
+	    BlendComplexAlpha(bgImg, instancePtr, pixels, pixWidth,
+		    srcX, srcY, width, height);
+
+	    /*
+	     * Color info is unimportant as we only do this operation for
+	     * depth >= 15.
+	     */
+
+	    TkPutImage(NULL, 0, display, drawable, instancePtr->gc,
+		    bgImg, 0, 0, drawableX, drawableY,
+		    (unsigned int) width, (unsigned int) height);
+	    XDestroyImage(bgImg);
+	    Tk_DeleteErrorHandler(handler);
 	}
-
-	BlendComplexAlpha(bgImg, instancePtr, imageX, imageY, width, height);
-
-	/*
-	 * Color info is unimportant as we only do this operation for depth >=
-	 * 15.
-	 */
-
-	TkPutImage(NULL, 0, display, drawable, instancePtr->gc,
-		bgImg, 0, 0, drawableX, drawableY,
-		(unsigned int) width, (unsigned int) height);
-	XDestroyImage(bgImg);
-	Tk_DeleteErrorHandler(handler);
     } else {
 	/*
 	 * modelPtr->validRegion describes which parts of the image contain valid
 	 * data. We set this region as the clip mask for the gc, setting its
 	 * origin appropriately, and use it when drawing the image.
+	 *
+	 * The instance pixmap holds the image at its pixel size, so on these
+	 * legacy visuals a -density other than 1 cannot be honored: the
+	 * image is drawn unscaled.
 	 */
 
     fallBack:
@@ -818,8 +880,102 @@ TkImgPhotoDisplay(
     }
     (void)XFlush(display);
 #endif
+    if (scaledPixels != NULL) {
+	Tcl_Free(scaledPixels);
+    }
 }
-
+
+#ifndef TK_CAN_RENDER_RGBA_SCALED
+/*
+ *----------------------------------------------------------------------
+ *
+ * ResampleRGBA --
+ *
+ *	Scale a region of an RGBA image (4 bytes per pixel, not
+ *	premultiplied) down to screen resolution: screen pixel (x, y) covers
+ *	image pixels [x*density, (x+1)*density) by [y*density, (y+1)*density).
+ *	Each screen pixel gets the area-weighted average of the image pixels
+ *	it covers, computed on premultiplied colors so that transparent
+ *	pixels do not darken their neighbors; the average is taken over the
+ *	whole area of the screen pixel, so that image pixels outside the
+ *	image count as transparent.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Fills width x height pixels at dst.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ResampleRGBA(
+    const unsigned char *src,	/* Image pixels. */
+    int srcPitch,		/* Bytes per row of src. */
+    int srcWidth, int srcHeight,/* Size of src, in pixels. */
+    double density,		/* Image pixels per screen pixel. */
+    int x, int y,		/* Top-left corner of the region to produce,
+				 * in screen pixels. */
+    int width, int height,	/* Size of the region to produce. */
+    unsigned char *dst,		/* Where to store the region. */
+    int dstPitch)		/* Bytes per row of dst. */
+{
+    double area = density * density;
+    int dx, dy, sx, sy;
+
+    for (dy = 0; dy < height; dy++) {
+	double y0 = (y + dy) * density, y1 = y0 + density;
+	int sy0 = (int) floor(y0), sy1 = (int) ceil(y1);
+
+	for (dx = 0; dx < width; dx++) {
+	    double x0 = (x + dx) * density, x1 = x0 + density;
+	    int sx0 = (int) floor(x0), sx1 = (int) ceil(x1);
+	    double sumR = 0.0, sumG = 0.0, sumB = 0.0, sumA = 0.0;
+	    unsigned char *q = dst + dy * dstPitch + dx * 4;
+
+	    for (sy = sy0; sy < sy1; sy++) {
+		double wy;
+
+		if (sy < 0 || sy >= srcHeight) {
+		    continue;
+		}
+		wy = fmin(y1, sy + 1.0) - fmax(y0, (double) sy);
+		if (wy <= 0.0) {
+		    continue;
+		}
+		for (sx = sx0; sx < sx1; sx++) {
+		    const unsigned char *p;
+		    double wx, wa;
+
+		    if (sx < 0 || sx >= srcWidth) {
+			continue;
+		    }
+		    wx = fmin(x1, sx + 1.0) - fmax(x0, (double) sx);
+		    if (wx <= 0.0) {
+			continue;
+		    }
+		    p = src + sy * srcPitch + sx * 4;
+		    wa = wx * wy * p[3];
+		    sumR += wa * p[0];
+		    sumG += wa * p[1];
+		    sumB += wa * p[2];
+		    sumA += wa;
+		}
+	    }
+	    if (sumA > 0.0) {
+		q[0] = (unsigned char) (sumR / sumA + 0.5);
+		q[1] = (unsigned char) (sumG / sumA + 0.5);
+		q[2] = (unsigned char) (sumB / sumA + 0.5);
+		q[3] = (unsigned char) (sumA / area + 0.5);
+	    } else {
+		q[0] = q[1] = q[2] = q[3] = 0;
+	    }
+	}
+    }
+}
+#endif /* !TK_CAN_RENDER_RGBA_SCALED */
+
 /*
  *----------------------------------------------------------------------
  *

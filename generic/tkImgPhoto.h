@@ -148,6 +148,9 @@ struct PhotoModel {
     Tk_Uid palette;		/* User-specified default palette for
 				 * instances of this image. */
     double gamma;		/* Display gamma value to correct for. */
+    double density;		/* Image pixels per screen pixel: the image is
+				 * displayed at width/density by height/density
+				 * screen pixels. */
     Tcl_Obj *fileObj;		/* Name of file to read into image. */
     Tcl_Obj *dataObj;		/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
@@ -238,6 +241,8 @@ MODULE_SCOPE void	TkImgPhotoConfigureInstance(
 			    PhotoInstance *instancePtr);
 MODULE_SCOPE void	TkImgDisposeInstance(void *clientData);
 MODULE_SCOPE void	TkImgPhotoInstanceSetSize(PhotoInstance *instancePtr);
+MODULE_SCOPE void	TkImgPhotoChanged(PhotoModel *modelPtr, int x, int y,
+			    int width, int height);
 MODULE_SCOPE void *TkImgPhotoGet(Tk_Window tkwin, void *clientData);
 MODULE_SCOPE void	TkImgDitherInstance(PhotoInstance *instancePtr, int x,
 			    int y, int width, int height);

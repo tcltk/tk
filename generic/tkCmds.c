@@ -1752,6 +1752,7 @@ Tk_WinfoObjCmd(
 	"toplevel",	"viewable",	"visual",	"visualid",
 	"vrootheight",	"vrootwidth",	"vrootx",	"vrooty",
 	"width",	"x",		"y",		"isdark",
+	"pixeldensity",
 
 	"atom",		"atomname",	"containing",	"interps",
 	"pathname",
@@ -1772,6 +1773,7 @@ Tk_WinfoObjCmd(
 	WIN_TOPLEVEL,	WIN_VIEWABLE,	WIN_VISUAL,	WIN_VISUALID,
 	WIN_VROOTHEIGHT,WIN_VROOTWIDTH,	WIN_VROOTX,	WIN_VROOTY,
 	WIN_WIDTH,	WIN_X,		WIN_Y,		WIN_ISDARK,
+	WIN_PIXELDENSITY,
 
 	WIN_ATOM,	WIN_ATOMNAME,	WIN_CONTAINING,	WIN_INTERPS,
 	WIN_PATHNAME,
@@ -2267,6 +2269,10 @@ Tk_WinfoObjCmd(
 	XFree(visInfoPtr);
 	break;
     }
+    case WIN_PIXELDENSITY:
+	Tcl_SetObjResult(interp,
+		Tcl_NewDoubleObj(TkpWindowPixelDensity(tkwin)));
+	break;
     case WIN_ISDARK: {
 	bool isdark;
 	int result = TkpWindowIsDark(tkwin, &isdark);

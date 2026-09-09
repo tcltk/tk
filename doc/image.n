@@ -60,6 +60,10 @@ the existing instances will use the new image.
 .
 Returns a decimal string giving the height of image \fIname\fR
 in pixels.
+.VS "9.1"
+For a photo image whose \fB\-density\fR is not 1, this is the displayed
+height in screen pixels, not the number of pixel rows of the image.
+.VE "9.1"
 .\" METHOD: inuse
 .TP
 \fBimage inuse \fIname\fR
@@ -90,6 +94,10 @@ argument to \fBimage create\fR).
 .
 Returns a decimal string giving the width of image \fIname\fR
 in pixels.
+.VS "9.1"
+For a photo image whose \fB\-density\fR is not 1, this is the displayed
+width in screen pixels, not the number of pixel columns of the image.
+.VE "9.1"
 .PP
 Additional operations (e.g. writing the image to a file) may be
 available as subcommands of the image instance command. See the manual

@@ -199,6 +199,20 @@ correspond to a window in the invoking application.
 If the \fB\-displayof\fR option is given then the identifier is looked
 up on the display of \fIwindow\fR;  otherwise it is looked up on
 the display of the application's main window.
+.\" METHOD: pixeldensity
+.TP
+\fBwinfo pixeldensity \fIwindow\fR
+.
+.VS "9.1"
+Returns the number of physical pixels per screen pixel of the screen on
+which \fIwindow\fR is displayed, as a floating-point number: 2.0 on a
+Retina display, 1.0 on displays whose screen coordinates address
+physical pixels directly.  Always returns 1.0 on X11 and Windows.
+A photo image created with this value as its \fB\-density\fR is drawn
+at the full resolution of the display.  On Aqua, the
+\fB<<PixelDensityChanged>>\fR virtual event is sent to a toplevel
+window when it is moved to a screen with a different pixel density.
+.VE "9.1"
 .\" METHOD: pixels
 .TP
 \fBwinfo pixels \fIwindow number\fR
