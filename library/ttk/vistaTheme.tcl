@@ -42,13 +42,11 @@ namespace eval ttk::theme::vista {
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    -foreground	[list disabled SystemGrayText readonly SystemGrayText]
 
-	# Vista.Combobox droplist frame
-	ttk::style configure ComboboxPopdownFrame.background -border 1
+	# Vista.Combobox droplist frame ComboboxPopdownFrame
 
 	# Entry
 	ttk::style configure TEntry -padding 1 \
 	    -foreground SystemWindowText
-	ttk::style configure TEntry.textarea -padding {0 0 10 0}
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -58,12 +56,10 @@ namespace eval ttk::theme::vista {
 	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
 	# Notebook
-	ttk::style configure TNotebook -tabmargins {6 2 6 2}
+	ttk::style configure TNotebook -tabmargins {2 2 2 0}
 	ttk::style map TNotebook.Tab -expand {selected {2 2 2 2}}
 
 	# Progressbar
-	ttk::style configure Horizontal.Progressbar.pbar -padding 8
-	ttk::style configure Vertical.Progressbar.pbar -padding 8
 
 	# Scale
 

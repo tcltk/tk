@@ -1206,7 +1206,7 @@ TTK_LAYOUT("TCombobox",
 		    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))))
 
 TTK_LAYOUT("ComboboxPopdownFrame",
-    TTK_GROUP("ComboboxPopdownFrame.border", TTK_FILL_BOTH,
+    TTK_GROUP("ComboboxPopdownFrame.border", TTK_FILL_BOTH|TTK_BORDER,
 	TTK_GROUP("ComboboxPopdownFrame.background", TTK_FILL_BOTH,
 	    TTK_NODE("ComboboxPopdownFrame.padding", TTK_FILL_BOTH))))
 
@@ -1348,17 +1348,15 @@ static const ElementInfo ElementInfoTable[] = {
 
     /* Progressbar elements */
     { "Horizontal.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
-	PP_FILL, pbarhoriz_statemap, PAD(3,3,3,3), 0 },
+	PP_FILL, pbarhoriz_statemap, NOPAD, 0 },
     { "Vertical.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
-	PP_FILLVERT, pbarvert_statemap, PAD(3,3,3,3), 0 },
+	PP_FILLVERT, pbarvert_statemap, NOPAD, 0 },
     { "Horizontal.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BAR, null_statemap, NOPAD, 0 },
+	PP_BAR, null_statemap, PAD(3,3,3,3), 0 },
     { "Vertical.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BARVERT, null_statemap, NOPAD, 0 },
+	PP_BARVERT, null_statemap, PAD(3,3,3,3), 0 },
 
     /* Scale */
-/*    { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMBBOTTOM, scale_statemap, NOPAD, 0 },*/
     { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
 	TKP_THUMB, scalehoriz_statemap, PAD(5,12,5,12), 0 },
     { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
