@@ -148,6 +148,14 @@ static int            menuStackDepth = 0;
 static int menuDismissedByClick = 0;
 
 /*
+ * Toplevel that held real Tk focus before F10/Alt handed it to the
+ * menubar for keyboard navigation; restored by TkWaylandMenuDismissAll
+ * when the menu session ends. NULL when no keyboard-nav session is in
+ * progress (e.g. an ordinary tk_popup context menu).
+ */
+static TkWindow *menuKeyboardNavOwnerWinPtr = NULL;
+
+/*
  * Set immediately before a *root* (isRoot=1) call to
  * TkWaylandPostMenuAtAnchor to record whether that root came from the
  * real menubar. Read once, at push time, into the new root entry's
@@ -3271,11 +3279,25 @@ TkWaylandMenuDismissAll(void)
 {
     DEBUG_LOG("TkWaylandMenuDismissAll called");
 
-    if (menuStackDepth == 0) {
-        return;
+    if (menuStackDepth > 0) {
+        MenuStackPop(0);
     }
 
-    MenuStackPop(0);
+    /*
+     * Hand real Tk focus back to whatever toplevel owned it before
+     * TkWaylandMenubarActivateFirst hijacked it for keyboard navigation.
+     * Deliberately not gated on menuStackDepth above: if the first
+     * menubar entry activated was a plain command with no submenu,
+     * MenubarPostCascadeAtEntry() posts nothing and menuStackDepth never
+     * left 0, but a keyboard-nav session still legitimately started and
+     * still needs its focus restored here. A stale/no-op call for an
+     * ordinary tk_popup session (which never sets this) is a no-op since
+     * menuKeyboardNavOwnerWinPtr is NULL in that case.
+     */
+    if (menuKeyboardNavOwnerWinPtr) {
+        TkSetFocusWin(menuKeyboardNavOwnerWinPtr, 0);
+        menuKeyboardNavOwnerWinPtr = NULL;
+    }
 }
 
 /*
@@ -5717,6 +5739,18 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
     }
 
     menuPtr = wmPtr->menubarMenuPtr;
+
+    /*
+     * Give the menubar real Tk focus, mirroring the click-to-focus
+     * pattern in tkWaylandNotify.c (TkSetFocusWin on ButtonPress), so
+     * that bind Menu <FocusIn> actually fires. Stash the previously
+     * focused toplevel so TkWaylandMenuDismissAll can hand focus back
+     * when this keyboard-nav session ends.
+     */
+    menuKeyboardNavOwnerWinPtr = winPtr;
+    if (menuPtr->tkwin) {
+        TkSetFocusWin((TkWindow *)menuPtr->tkwin, 0);
+    }
 
     DEBUG_LOG("TkWaylandMenubarActivateFirst: activating first entry in menubar");
 
