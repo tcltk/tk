@@ -278,8 +278,8 @@ if test $tk_aqua = no; then
         else
             AC_MSG_RESULT([no])
             AC_MSG_ERROR([wayland-egl >= 1.18 is required when building the Wayland backend.
-Please install libwayland-egl development package:
-  - Debian/Ubuntu:   sudo apt install libwayland-egl1
+Please install libwayland development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-dev
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland])
         fi
