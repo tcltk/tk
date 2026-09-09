@@ -8795,32 +8795,16 @@ CharDisplayProc(
 
 #if defined(TK_USE_WAYLAND)
 	/*
-	 * Under TK_LAYOUT_WITH_BASE_CHUNKS, a run of characters sharing one
-	 * shaping context can be split into several sibling CharInfo chunks
-	 * -- most commonly because a zero-width chunk (the insertion cursor)
-	 * sits between two of them. Each sibling is drawn with its own
-	 * Tk_DrawCharsInContext() call over [start, start+len) but all
-	 * siblings share the same underlying base-run `string`/`numBytes`.
-	 *
-	 * On the Wayland/NanoVG backend, if the byte offset where two
-	 * siblings meet falls inside a grapheme cluster (e.g. the insertion
-	 * cursor sitting between a base character and its combining mark),
-	 * each side's draw call independently re-shapes and expands outward
-	 * to avoid rendering a partial grapheme -- and both sides end up
-	 * claiming the same straddling cluster, which then gets drawn
-	 * twice. On an alpha-blended surface that shows up as the diacritic
-	 * (or base glyph) rendering visibly darker exactly where the cursor
-	 * lands.
-	 *
-	 * Snap both ends of this chunk's range to the nearest cluster
-	 * boundary at or before them via TkWaylandClusterBoundaryAtOrBefore().
-	 * That function is a pure lookup against the shared base-run's
-	 * shaping, so the sibling on the other side of the split computes
-	 * the identical boundary independently without either side needing
-	 * to know about the other -- the straddling cluster is deterministically
-	 * assigned to whichever side's *start* lands on it, and is drawn
-	 * exactly once.
-	 */
+	* On Wayland/NanoVG, when a base-run is split across sibling CharInfo
+	* chunks (e.g., by a cursor), a boundary falling inside a grapheme cluster
+	* causes both siblings to reshape and expand to include the full cluster,
+	* resulting in double-drawn glyphs and visible darkening.
+	*
+	* Fix: Snap each chunk's range to cluster boundaries using
+	* TkWaylandClusterBoundaryAtOrBefore(), a deterministic lookup against
+	* the shared base-run shaping. The straddling cluster is assigned to
+	* whichever sibling's start falls on it, ensuring it is drawn exactly once.
+	*/
 	{
 	    int end = start + len;
 	    int snappedStart = TkWaylandClusterBoundaryAtOrBefore(

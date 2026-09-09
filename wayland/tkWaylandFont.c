@@ -631,7 +631,7 @@ IsSimpleOnly(const char *str, int len)
         /* 
          * Combining diacritical marks MUST go through HarfBuzz shaping,
          * unless every mark in the string can be precomposed onto its
-         * base character. Try brute-force precomposition to see whether
+         * base character. Try precomposition to see whether
          * the fast path is viable.
          *
          * IMPORTANT: this is a read-only classifier. It must NOT write
@@ -852,7 +852,7 @@ IsEmoji(FcChar32 uc)
  *----------------------------------------------------------------------
  * IsColorFcPattern --
  *
- *   Determine whether a Fontconfig pattern refers to a colour-glyph
+ *   Determine whether a Fontconfig pattern refers to a color-glyph
  *   font (CBDT/CBLC, COLR/CPAL, sbix, etc.), which stb_truetype/NanoVG
  *   cannot rasterize.
  *
@@ -1251,12 +1251,15 @@ FindFaceCoveringRange(
 
     /* If the range has both emoji and non-emoji, try primary first. */
     if (hasEmoji && hasNonEmoji) {
-        /* Check primary face first. */
+        /*
+         * Check primary face first. Coverage must be verified for
+         * EVERY character in the range, emoji included. 
+         */
         if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset) {
             int ok = 1;
             FcCharSet *cs = fontPtr->faces[0].charset;
             for (int i = start; i < start + len; i++) {
-                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                if (!FcCharSetHasChar(cs, ucs4[i])) {
                     ok = 0;
                     break;
                 }
@@ -1264,21 +1267,27 @@ FindFaceCoveringRange(
             if (ok) return 0;
         }
         
-        /* Then try other faces. */
+        /* Then try other faces -- same full-coverage requirement. */
         for (int fi = 1; fi < fontPtr->nfaces; fi++) {
             FcCharSet *cs = fontPtr->faces[fi].charset;
             if (!cs) continue;
             
             int ok = 1;
             for (int i = start; i < start + len; i++) {
-                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                if (!FcCharSetHasChar(cs, ucs4[i])) {
                     ok = 0;
                     break;
                 }
             }
             if (ok) return fi;
         }
-        /* Fall through to emoji-only handling. */
+        /*
+         * No single face covers both the plain text and the emoji in this
+         * range (the overwhelmingly common case) -- fall through to
+         * emoji-only handling below so at least glyphs and metrics come
+         * from one consistent, actually-emoji-capable face rather than
+         * silently defaulting to a face with no emoji coverage.
+         */
     }
 
     /* If any character in the range is an emoji, use the emoji face for emoji-only runs. */
@@ -1698,9 +1707,29 @@ WaylandShaper_ShapeString(
                  * Only break when we encounter a different script.
                  */
                 int subrunEnd = subrunStart + 1;
+                bool subrunIsEmoji = IsEmoji(ucs4Chars[subrunStart]);
                 while (subrunEnd < runStart + runLen) {
                     hb_script_t s = hb_unicode_script(
 						      hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+
+                    /*
+                     * Never let a subrun mix emoji and non-emoji codepoints,
+                     * even though emoji are HB_SCRIPT_COMMON (the same
+                     * script as plain punctuation/spaces) and would
+                     * otherwise be allowed to extend below. Mixing them
+                     * forces FindFaceCoveringRange() into its "mixed"
+                     * branch, which -- because it only validates coverage
+                     * of the *non*-emoji characters in the range -- ends up
+                     * silently choosing the plain-text face for the whole
+                     * subrun even when that face has zero emoji glyphs.
+                     * Every emoji then falls back to .notdef, and since
+                     * text-widget cursor placement (CharBboxProc /
+                     * CharMeasureProc) derives its geometry from these same
+                     * shaped advances, the caret stops tracking forward as
+                     * soon as it reaches a run of collapsed/zero-advance
+                     * substitute glyphs.
+                     */
+                    if (IsEmoji(ucs4Chars[subrunEnd]) != subrunIsEmoji) break;
 
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                         /* Keep extending; do not break on face mismatch. */
@@ -2047,41 +2076,6 @@ ExpandRangeToClusterBoundaries(
  *   at the insertion cursor into a "before caret" and "after caret"
  *   piece.
  *
- *   ExpandRangeToClusterBoundaries() (above) is safe to use only when a
- *   single, isolated range is being drawn or measured on its own: it
- *   independently rounds a partial leading cluster backward and a
- *   partial trailing cluster forward, which is correct when there is
- *   no sibling range on the other side of the cut. But when a caller
- *   splits a string into two adjacent ranges at a raw byte offset that
- *   happens to fall inside a cluster (e.g. an insertion cursor sitting
- *   between a base character and its combining mark), and each side
- *   independently calls ExpandRangeToClusterBoundaries on its own
- *   unaligned end/start, BOTH sides round *toward* the shared cluster
- *   and end up claiming it -- so it gets drawn twice, once by each
- *   call. On an alpha-blended NanoVG surface that shows up as the
- *   diacritic (or base glyph) rendering visibly darker/bolder exactly
- *   where the caret lands.
- *
- *   The fix is to never let the two sides compute their shared
- *   boundary independently. Instead, the caller must compute ONE
- *   canonical boundary via this function up front, then use that exact
- *   value as both the end of the left-hand range and the start of the
- *   right-hand range:
- *
- *       int cut = TkWaylandClusterBoundaryAtOrBefore(tkfont, source,
- *                                                     numBytes, caretByteOffset);
- *       // left range:  [0, cut)
- *       // right range: [cut, numBytes)
- *
- *   Because "at or before" is applied once and shared, the cluster
- *   straddling the raw caret offset is assigned wholly to the
- *   right-hand range (its start snaps back to the cluster's first
- *   byte) and wholly excluded from the left-hand range (its end snaps
- *   back to the same point) -- so it is drawn exactly once. Passing
- *   already-aligned boundaries like this through
- *   TkpDrawAngledCharsInContext() is safe: ExpandRangeToClusterBoundaries()
- *   becomes a no-op on a range whose start/end already sit exactly on
- *   cluster breaks.
  *
  * Results:
  *   A byte offset in [0, numBytes] that is guaranteed to fall on a
