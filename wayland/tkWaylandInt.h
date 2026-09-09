@@ -813,12 +813,30 @@ MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
 MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
 
 /*
- * Pointer/button management. 
+ * Pointer/button management.
+ * Scrolling support added: axis (wheel) handler and scroll state queries
+ * for clipped menus.
  */
 MODULE_SCOPE void TkWaylandMenuHandlePointerMotion(int x, int y);
 MODULE_SCOPE void TkWaylandMenuHandlePointerButton(int x, int y,
-				   int button, int state);
+                                   int button, int state);
+MODULE_SCOPE void TkWaylandMenuHandlePointerAxis(int x, int y,
+                                   double axisX, double axisY);
 MODULE_SCOPE void TkWaylandMenuHandleEscape(void);
+
+/* Scroll state - for menus clipped by window size */
+MODULE_SCOPE int  TkWaylandMenuHandleScroll(int level, int delta);
+MODULE_SCOPE int  TkWaylandMenuGetScrollInfo(int level,
+                                   int *offsetPtr,
+                                   int *contentHPtr,
+                                   int *viewportHPtr);
+MODULE_SCOPE int  TkWaylandMenuGetDepth(void);
+MODULE_SCOPE void TkWaylandMenuPopToDepth(int depth);
+
+#define TK_WAYLAND_MENU_SCROLL_ARROW_H     16
+#define TK_WAYLAND_MENU_SCROLL_STEP        32
+#define TK_WAYLAND_MENU_SCROLLBAR_WIDTH     6
+#define TK_WAYLAND_MENU_SCROLL_EDGE_ZONE   22
 
 /*
  * Returns and clears a one-shot flag set when the most recent button
