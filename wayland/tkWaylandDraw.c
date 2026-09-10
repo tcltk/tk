@@ -1245,11 +1245,33 @@ TkScrollWindow(
      * read-FBO/draw-FBO blit renderFBO() already uses, just targeting
      * an offscreen FBO instead of the default framebuffer.
      */
-    glGenTextures(1, &scratchTex);
-    glBindTexture(GL_TEXTURE_2D, scratchTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fbW, fbH, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glGenFramebuffers(1, &scratchFbo);
+    {
+        TkWindow *topPtr = winPtr;
+        while (!Tk_IsTopLevel(topPtr)) topPtr = topPtr->parentPtr;
+        if (topPtr->privatePtr->scrollScratchFBO == 0 ||
+            topPtr->privatePtr->scrollScratchW < fbW ||
+            topPtr->privatePtr->scrollScratchH < fbH) {
+            if (topPtr->privatePtr->scrollScratchFBO) {
+                glDeleteFramebuffers(1, &topPtr->privatePtr->scrollScratchFBO);
+                glDeleteTextures(1, &topPtr->privatePtr->scrollScratchTex);
+            }
+            glGenTextures(1, &topPtr->privatePtr->scrollScratchTex);
+            glBindTexture(GL_TEXTURE_2D, topPtr->privatePtr->scrollScratchTex);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fbW, fbH, 0,
+                         GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glGenFramebuffers(1, &topPtr->privatePtr->scrollScratchFBO);
+            topPtr->privatePtr->scrollScratchW = fbW;
+            topPtr->privatePtr->scrollScratchH = fbH;
+        } else {
+            glBindTexture(GL_TEXTURE_2D, topPtr->privatePtr->scrollScratchTex);
+        }
+        scratchTex = topPtr->privatePtr->scrollScratchTex;
+        scratchFbo = topPtr->privatePtr->scrollScratchFBO;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, scratchFbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, scratchTex, 0);
@@ -1282,8 +1304,7 @@ TkScrollWindow(
                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteFramebuffers(1, &scratchFbo);
-    glDeleteTextures(1, &scratchTex);
+    /* Keep scratch FBO cached on toplevel - do not delete */
 
     /*
      * This changes the backing store outside the normal

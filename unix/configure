@@ -8015,8 +8015,8 @@ printf '%s\n' "#define HAVE_WAYLAND_EGL 1" >>confdefs.h
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
             as_fn_error $? "wayland-egl >= 1.18 is required when building the Wayland backend.
-Please install libwayland-egl development package:
-  - Debian/Ubuntu:   sudo apt install libwayland-egl1
+Please install libwayland development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-dev
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland" "$LINENO" 5
         fi

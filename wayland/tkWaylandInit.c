@@ -392,6 +392,7 @@ Tk_ClipDrawableToRect(
     }
     winPtr->privatePtr->boundsRect = (clipRect) {
 	.x = x, .y = y, .w = width, .h = height};
+    winPtr->privatePtr->clipDirty = 1;
 }
 
 /*

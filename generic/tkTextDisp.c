@@ -8793,6 +8793,30 @@ CharDisplayProc(
 	int len = ciPtr->numBytes - offsetBytes;
 	int xDisplacement = x - chunkPtr->x;
 
+#if defined(TK_USE_WAYLAND)
+	/*
+	* On Wayland/NanoVG, when a base-run is split across sibling CharInfo
+	* chunks (e.g., by a cursor), a boundary falling inside a grapheme cluster
+	* causes both siblings to reshape and expand to include the full cluster,
+	* resulting in double-drawn glyphs and visible darkening.
+	*
+	* Fix: Snap each chunk's range to cluster boundaries using
+	* TkWaylandClusterBoundaryAtOrBefore(), a deterministic lookup against
+	* the shared base-run shaping. The straddling cluster is assigned to
+	* whichever sibling's start falls on it, ensuring it is drawn exactly once.
+	*/
+	{
+	    int end = start + len;
+	    int snappedStart = TkWaylandClusterBoundaryAtOrBefore(
+		    sValuePtr->tkfont, string, numBytes, start);
+	    int snappedEnd = TkWaylandClusterBoundaryAtOrBefore(
+		    sValuePtr->tkfont, string, numBytes, end);
+
+	    start = snappedStart;
+	    len = snappedEnd - snappedStart;
+	}
+#endif /* TK_USE_WAYLAND */
+
 	if ((len > 0) && (string[start + len - 1] == '\t')) {
 	    len--;
 	}

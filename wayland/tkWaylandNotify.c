@@ -102,6 +102,7 @@ extern Tk_Window TkWaylandMenuGetParentWindow(void);
 extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
 extern void TkWaylandMenuHandleEscape(void);
 extern void TkWaylandMenuDismissAll(void);
+extern void WaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
 
 /*
@@ -1332,78 +1333,179 @@ TkWaylandMouseButtonCallback(
 		     glfwButtonState | glfwModifierState);
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandScrollCallback --
  *
- *      Called when scroll wheel is used.
+ *      Called when scroll wheel is used. Generates MouseWheelEvent
+ *      for <MouseWheel> bindings and ButtonPress 4/5 for compat.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Generates ButtonPress/ButtonRelease events for scroll.
+ *      Queues MouseWheel events.
  *
  *----------------------------------------------------------------------
  */
 
+#define MouseWheelEvent 38
+
 static void
 TkWaylandScrollCallback(
-			GLFWwindow *window,
-			double xoffset,
-			double yoffset)
+            GLFWwindow *window,
+            double xoffset,
+            double yoffset)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
-    XEvent event;
-    double xpos, ypos;
-    int button;
-    
     if (!winPtr) {
         return;
     }
 
-    /* Get cursor position. */
+    double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Map scroll direction to button. */
-    if (yoffset > 0) {
-        button = Button4;  /* Scroll up */
-    } else if (yoffset < 0) {
-        button = Button5;  /* Scroll down */
-    } else if (xoffset > 0) {
-        button = 6;  /* Scroll right */
-    } else {
-        button = 7;  /* Scroll left */
+    if (TkWaylandMenuPopupActive()) {
+        /* Let menu handle scroll if active - could dismiss or scroll */
+        return;
     }
 
-    /* Generate button press. */
-    memset(&event, 0, sizeof(XEvent));
-    event.type = ButtonPress;
-    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
-    event.xbutton.send_event = False;
-    event.xbutton.display = winPtr->display;
-    event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xbutton.subwindow = None;
-    event.xbutton.time = CurrentTime;
-    event.xbutton.x = (int)xpos;
-    event.xbutton.y = (int)ypos;
-    event.xbutton.x_root = winPtr->changes.x + (int)xpos;
-    event.xbutton.y_root = winPtr->changes.y + (int)ypos;
-    event.xbutton.state = 0;
-    event.xbutton.button = button;
-    event.xbutton.same_screen = True;
+    /* Coords to child window */
+    Tk_Window target = Tk_CoordsToWindow((int)xpos, (int)ypos, (Tk_Window)winPtr);
+    if (!target) {
+        target = (Tk_Window)winPtr;
+    }
+    TkWindow *targetPtr = (TkWindow *)target;
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    /* GLFW gives fractional offsets for high-res touchpads.
+     * Accumulate remainder so small deltas aren't lost.
+     * Use thread-local static for simplicity - one pointer per thread.
+     */
+    static double yRemainder = 0.0;
+    static double xRemainder = 0.0;
 
-    /* Generate button release. */
-    event.type = ButtonRelease;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    yRemainder += yoffset;
+    xRemainder += xoffset;
+
+    /* Process vertical scroll */
+    while (fabs(yRemainder) >= 0.01) {
+        /* Clamp to one notch per event to match Tk expectations */
+        double use = yRemainder;
+        if (use > 1.0) use = 1.0;
+        if (use < -1.0) use = -1.0;
+
+        long delta = (long)(use * 120.0); /* Tk: 120 per detent */
+
+        /* MouseWheelEvent for <MouseWheel> */
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = MouseWheelEvent;
+        event.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        event.xbutton.send_event = False;
+        event.xbutton.display = targetPtr->display;
+        event.xbutton.window = Tk_WindowId(targetPtr);
+        event.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        event.xbutton.subwindow = None;
+        event.xbutton.time = (Time)(glfwGetTime() * 1000.0);
+        event.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        event.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        event.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        event.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        event.xbutton.state = glfwButtonState | glfwModifierState;
+        event.xbutton.button = delta;
+        event.xbutton.same_screen = True;
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+        /* Compat Button-4/5 for <Button-4>/<Button-5> bindings */
+        XEvent bevent;
+        memset(&bevent, 0, sizeof(XEvent));
+        bevent.type = ButtonPress;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        bevent.xbutton.send_event = False;
+        bevent.xbutton.display = targetPtr->display;
+        bevent.xbutton.window = Tk_WindowId(targetPtr);
+        bevent.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        bevent.xbutton.subwindow = None;
+        bevent.xbutton.time = (Time)(glfwGetTime() * 1000.0);
+        bevent.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        bevent.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        bevent.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        bevent.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        bevent.xbutton.state = glfwButtonState | glfwModifierState;
+        bevent.xbutton.button = (delta > 0 ? 4 : 5);
+        bevent.xbutton.same_screen = True;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+
+        bevent.type = ButtonRelease;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+
+        yRemainder -= use;
+        /* Only one notch per callback to avoid flooding; remainder will be processed on next axis event */
+        break;
+    }
+
+    /* Process horizontal scroll - generates Shift+MouseWheel style */
+    while (fabs(xRemainder) >= 0.01) {
+        double use = xRemainder;
+        if (use > 1.0) use = 1.0;
+        if (use < -1.0) use = -1.0;
+
+        long delta = (long)(use * 120.0);
+
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = MouseWheelEvent;
+        event.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        event.xbutton.send_event = False;
+        event.xbutton.display = targetPtr->display;
+        event.xbutton.window = Tk_WindowId(targetPtr);
+        event.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        event.xbutton.subwindow = None;
+        event.xbutton.time = (Time)(glfwGetTime() * 1000.0);
+        event.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        event.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        event.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        event.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        /* Mark horizontal: Tk convention is to add Shift or use separate handling.
+         * We set state with ShiftMask already if user holds Shift, but for
+         * pure horizontal we queue with Button 6/7 compat and MouseWheel with
+         * horizontal flag in state. Use bit 1 for horizontal (matching X11).
+         */
+        event.xbutton.state = glfwButtonState | glfwModifierState;
+        event.xbutton.button = delta;
+        event.xbutton.same_screen = True;
+        /* For horizontal, Tk's generic handling checks xoffset separately;
+         * We queue as MouseWheel and also as Button 6/7
+         */
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+        XEvent bevent;
+        memset(&bevent, 0, sizeof(XEvent));
+        bevent.type = ButtonPress;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        bevent.xbutton.display = targetPtr->display;
+        bevent.xbutton.window = Tk_WindowId(targetPtr);
+        bevent.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        bevent.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        bevent.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        bevent.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        bevent.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        bevent.xbutton.state = glfwButtonState | glfwModifierState;
+        bevent.xbutton.button = (delta > 0 ? 6 : 7);
+        bevent.xbutton.same_screen = True;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+        bevent.type = ButtonRelease;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+
+        xRemainder -= use;
+        break;
+    }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1559,7 +1661,16 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 }
 
                 if (newIdx != current) {
-                    TkActivateMenuEntry(menuPtr, newIdx);
+                    /*
+                     * Use the wrapper, not TkActivateMenuEntry() directly --
+                     * mouse hover (MenuMouseMotion) and Left/Right menubar
+                     * moves (TkWaylandMenubarMove) already go through
+                     * WaylandActivateMenuEntry() to fire <<MenuSelect>>;
+                     * calling TkActivateMenuEntry() here bypassed that,
+                     * so keyboard Up/Down silently never posted the event
+                     * accessibility.tcl's speech announcements depend on.
+                     */
+                    WaylandActivateMenuEntry(menuPtr, newIdx);
                     TkWaylandMenuRedrawActive();
                 }
                 break;

@@ -1104,6 +1104,26 @@ static Tcl_TimerToken speech_timer = NULL;
  *----------------------------------------------------------------------
  */
 
+static void
+CancelCurrentSpeech(void)
+{
+    /* Kill any pending delayed announcement */
+    if (pending_speech_msg) {
+        free(pending_speech_msg);
+        pending_speech_msg = NULL;
+    }
+    if (speech_timer) {
+        Tcl_DeleteTimerHandler(speech_timer);
+        speech_timer = NULL;
+    }
+    /* Cut off anything already being spoken via speechd.
+     * This is what makes focus changes interruptive. */
+    if (spd_conn) {
+        spd_cancel_all(spd_conn);
+        spd_stop_all(spd_conn);
+    }
+}
+
 static void DelayedSpeechProc(TCL_UNUSED(ClientData)) {
     speech_timer = NULL;
     if (!pending_speech_msg) return;
@@ -1116,7 +1136,10 @@ static void DelayedSpeechProc(TCL_UNUSED(ClientData)) {
             return;
         }
     }
-    spd_say(spd_conn, SPD_MESSAGE, msg);
+    /* SPD_IMPORTANT allows this message to preempt lower priority ones,
+     * but we already called CancelCurrentSpeech on focus change, so this
+     * is now the only thing speaking. */
+    spd_say(spd_conn, SPD_IMPORTANT, msg);
     free(msg);
 }
 
@@ -1125,9 +1148,17 @@ PostAccessibilityAnnouncement(TCL_UNUSED(TkWaylandAccessible *),
                               const char *message)
 {
     if (!message || !*message) return;
-    if (pending_speech_msg) free(pending_speech_msg);
+
+    /* If we are posting a new focus announcement, interrupt old speech
+     * immediately. For focus changes, caller already did CancelCurrentSpeech,
+     * but calling again here makes selection changes interruptive too and
+     * makes this function safe to call from anywhere. */
+    CancelCurrentSpeech();
+
     pending_speech_msg = strdup(message);
-    if (speech_timer) Tcl_DeleteTimerHandler(speech_timer);
+    /* 1ms coalesce timer: lets rapid focus events collapse to last one,
+     * but thanks to CancelCurrentSpeech above, the old spoken block is
+     * already stopped. */
     speech_timer = Tcl_CreateTimerHandler(1, DelayedSpeechProc, NULL);
 }
 
@@ -1153,18 +1184,11 @@ PostAccessibilityAnnouncement(TCL_UNUSED(TkWaylandAccessible *),
 static void
 StopSpeech(void)
 {
-    if (pending_speech_msg) {
-        free(pending_speech_msg);
-        pending_speech_msg = NULL;
-    }
-    if (speech_timer) {
-        Tcl_DeleteTimerHandler(speech_timer);
-        speech_timer = NULL;
-    }
+    /* Reuse interrupt logic */
+    CancelCurrentSpeech();
     if (!spd_conn) {
         return;
     }
-    spd_cancel(spd_conn);
     spd_close(spd_conn);
     spd_conn = NULL;
 }
