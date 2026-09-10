@@ -102,6 +102,7 @@ extern Tk_Window TkWaylandMenuGetParentWindow(void);
 extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
 extern void TkWaylandMenuHandleEscape(void);
 extern void TkWaylandMenuDismissAll(void);
+extern void WaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
 
 /*
@@ -1660,7 +1661,16 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 }
 
                 if (newIdx != current) {
-                    TkActivateMenuEntry(menuPtr, newIdx);
+                    /*
+                     * Use the wrapper, not TkActivateMenuEntry() directly --
+                     * mouse hover (MenuMouseMotion) and Left/Right menubar
+                     * moves (TkWaylandMenubarMove) already go through
+                     * WaylandActivateMenuEntry() to fire <<MenuSelect>>;
+                     * calling TkActivateMenuEntry() here bypassed that,
+                     * so keyboard Up/Down silently never posted the event
+                     * accessibility.tcl's speech announcements depend on.
+                     */
+                    WaylandActivateMenuEntry(menuPtr, newIdx);
                     TkWaylandMenuRedrawActive();
                 }
                 break;

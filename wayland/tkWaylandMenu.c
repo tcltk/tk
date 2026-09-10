@@ -237,7 +237,7 @@ static void MenuMouseLeave(TkMenu *menuPtr);
  * instead. 
  */
 static void TkWaylandGenerateMenuSelect(TkMenu *menuPtr);
-static void WaylandActivateMenuEntry(TkMenu *menuPtr, int index);
+MODULE_SCOPE void WaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 
 /* Helpers for positioning / clamping. */
 static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
@@ -5566,9 +5566,14 @@ TkWaylandGenerateMenuSelect(
  * WaylandActivateMenuEntry --
  *
  *     Drop-in wrapper around the generic TkActivateMenuEntry() used
- *     everywhere in this file that changes which entry of a menu is
- *     active. In addition to the generic activation bookkeeping, this
- *     also generates <<MenuSelect>> (see TkWaylandGenerateMenuSelect),
+ *     everywhere that changes which entry of a menu is active --
+ *     both call sites in this file and the keyboard Up/Down handler
+ *     in tkWaylandNotify.c (exposed MODULE_SCOPE for that reason; it
+ *     used to call TkActivateMenuEntry() directly, which silently
+ *     skipped <<MenuSelect>> generation for keyboard-driven vertical
+ *     navigation even though mouse-hover and Left/Right menubar moves
+ *     went through this wrapper). In addition to the generic activation
+ *     bookkeeping, this also generates <<MenuSelect>> (see TkWaylandGenerateMenuSelect),
  *     which TkActivateMenuEntry() itself does not do.
  *
  * Results:
@@ -5580,7 +5585,7 @@ TkWaylandGenerateMenuSelect(
  *----------------------------------------------------------------------
  */
 
-static void
+MODULE_SCOPE void
 WaylandActivateMenuEntry(
     TkMenu *menuPtr,
     int index)
