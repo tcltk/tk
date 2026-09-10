@@ -1086,28 +1086,33 @@ static Tcl_TimerToken speech_timer = NULL;
 
 /*
  *----------------------------------------------------------------------
- * PostAccessibilityAnnouncement --
  *
- *   Speak an announcement via speechd. This is the only channel Tk
- *   uses to tell a screen reader about widget names/focus/selection --
- *   it does not go through AT-SPI at all.
- *  
- *   Announcements of widget roles and static data go through this channel.
- *   Announcements of dynamic data, such as text strings in text and entry widgets, 
- *   are managed at the script level and are routed through the CLI for libspeechd.
+ * CancelCurrentSpeech --
+ *
+ *	Cancel any pending or in-progress accessibility speech.
+ *	This kills any delayed announcement timer, frees the pending
+ *	message if one exists, and tells speechd to stop all current
+ *	and queued speech.  This is what makes focus changes
+ *	interruptive: a new focus event can cut off whatever the
+ *	screen reader is currently saying.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Opens the speechd connection on first use; speaks the message.
+ *	Frees pending_speech_msg and clears it; deletes speech_timer
+ *	and clears it; issues spd_cancel_all and spd_stop_all on the
+ *	speechd connection if one is open.  After this call, no
+ *	announcement from a previous PostAccessibilityAnnouncement
+ *	will be spoken.
+ *
  *----------------------------------------------------------------------
  */
 
 static void
 CancelCurrentSpeech(void)
 {
-    /* Kill any pending delayed announcement */
+    /* Kill any pending delayed announcement. */
     if (pending_speech_msg) {
         free(pending_speech_msg);
         pending_speech_msg = NULL;
@@ -1116,13 +1121,43 @@ CancelCurrentSpeech(void)
         Tcl_DeleteTimerHandler(speech_timer);
         speech_timer = NULL;
     }
-    /* Cut off anything already being spoken via speechd.
-     * This is what makes focus changes interruptive. */
+    /* 
+     * Cut off anything already being spoken via speechd.
+     * This is what makes focus changes interruptive. 
+     */
     if (spd_conn) {
         spd_cancel_all(spd_conn);
         spd_stop_all(spd_conn);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DelayedSpeechProc --
+ *
+ *	Timer callback invoked after the 1ms coalesce delay set up by
+ *	PostAccessibilityAnnouncement.  Clears the timer handle, takes
+ *	ownership of the pending message, opens the speechd connection
+ *	if it is not already open, and speaks the message with
+ *	SPD_IMPORTANT priority.  The message is freed after being
+ *	handed to speechd.
+ *
+ *	Because PostAccessibilityAnnouncement calls CancelCurrentSpeech
+ *	before scheduling, any prior speech has already been stopped by
+ *	the time this runs; SPD_IMPORTANT therefore just ensures this
+ *	message is not queued behind anything else.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May open the speechd connection (spd_conn) on first use.
+ *	Speaks the pending message via speechd.  Frees the pending
+ *	message.  Clears speech_timer.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void DelayedSpeechProc(TCL_UNUSED(ClientData)) {
     speech_timer = NULL;
@@ -1136,12 +1171,46 @@ static void DelayedSpeechProc(TCL_UNUSED(ClientData)) {
             return;
         }
     }
-    /* SPD_IMPORTANT allows this message to preempt lower priority ones,
+    /* 
+     * SPD_IMPORTANT allows this message to preempt lower priority ones,
      * but we already called CancelCurrentSpeech on focus change, so this
-     * is now the only thing speaking. */
+     * is now the only thing speaking. 
+     */
     spd_say(spd_conn, SPD_IMPORTANT, msg);
     free(msg);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * PostAccessibilityAnnouncement --
+ *
+ *	Speak an announcement via speechd.  This is the only channel Tk
+ *	uses to tell a screen reader about widget names/focus/selection --
+ *	it does not go through AT-SPI at all.
+ *
+ *	Announcements of widget roles and static data go through this
+ *	channel.  Announcements of dynamic data, such as text strings in
+ *	text and entry widgets, are managed at the script level and are
+ *	routed through the CLI for libspeechd.
+ *
+ *	Any in-progress or pending speech is cancelled first, so that a
+ *	new announcement (e.g. a focus change) interrupts whatever was
+ *	being spoken.  The message is then queued behind a 1ms coalesce
+ *	timer so that rapid successive announcements collapse to the
+ *	last one.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Cancels any current speech.  Stores a copy of message in
+ *	pending_speech_msg and schedules DelayedSpeechProc to speak it.
+ *	Opens the speechd connection on first use (via the timer
+ *	callback).
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 PostAccessibilityAnnouncement(TCL_UNUSED(TkWaylandAccessible *),
@@ -1149,16 +1218,20 @@ PostAccessibilityAnnouncement(TCL_UNUSED(TkWaylandAccessible *),
 {
     if (!message || !*message) return;
 
-    /* If we are posting a new focus announcement, interrupt old speech
+    /* 
+     * If we are posting a new focus announcement, interrupt old speech
      * immediately. For focus changes, caller already did CancelCurrentSpeech,
      * but calling again here makes selection changes interruptive too and
-     * makes this function safe to call from anywhere. */
+     * makes this function safe to call from anywhere. 
+     */
     CancelCurrentSpeech();
 
     pending_speech_msg = strdup(message);
-    /* 1ms coalesce timer: lets rapid focus events collapse to last one,
+    /* 
+     * 1ms coalesce timer: lets rapid focus events collapse to last one,
      * but thanks to CancelCurrentSpeech above, the old spoken block is
-     * already stopped. */
+     * already stopped. 
+     */
     speech_timer = Tcl_CreateTimerHandler(1, DelayedSpeechProc, NULL);
 }
 

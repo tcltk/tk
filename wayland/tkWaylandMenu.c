@@ -237,7 +237,7 @@ static void MenuMouseLeave(TkMenu *menuPtr);
  * instead. 
  */
 static void TkWaylandGenerateMenuSelect(TkMenu *menuPtr);
-MODULE_SCOPE void WaylandActivateMenuEntry(TkMenu *menuPtr, int index);
+MODULE_SCOPE void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 
 /* Helpers for positioning / clamping. */
 static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
@@ -2760,7 +2760,7 @@ TkpPostMenu(
         return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
     }
 
-    WaylandActivateMenuEntry(menuPtr, -1);
+    TkWaylandActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
 
     result = TkPostCommand(menuPtr);
@@ -3063,7 +3063,7 @@ MenuScrollBy(
  *     If menuPtr is currently posted and scrollable, and its active
  *     entry lies partly or wholly outside the visible viewport, scroll
  *     just far enough to bring that entire entry into view. Called from
- *     WaylandActivateMenuEntry() -- the single choke point used for both
+ *     TkWaylandActivateMenuEntry() -- the single choke point used for both
  *     pointer-hover and keyboard-driven activation -- so that navigating
  *     through a menu longer than the window naturally scrolls it, the
  *     way native menus do.
@@ -4261,7 +4261,7 @@ TkpPostTearoffMenu(
 
     DEBUG_LOG("TkpPostTearoffMenu called");
 
-    WaylandActivateMenuEntry(menuPtr, -1);
+    TkWaylandActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
 
     result = TkPostCommand(menuPtr);
@@ -4525,7 +4525,7 @@ MenuMouseMotion(
                     }
                 }
 
-                WaylandActivateMenuEntry(menuPtr, i);
+                TkWaylandActivateMenuEntry(menuPtr, i);
 
                 /* Handle cascade entries. */
                 if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
@@ -4642,7 +4642,7 @@ MenuMouseMotion(
         int level = MenuStackFindLevel(menuPtr);
         if (level >= 0 && level == menuStackDepth - 1) {
             DEBUG_LOG("MenuMouseMotion: no entry found, deactivating");
-            WaylandActivateMenuEntry(menuPtr, -1);
+            TkWaylandActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
@@ -4672,7 +4672,7 @@ MenuMouseLeave(
 
     if (menuPtr->postedCascade == NULL) {
         if (menuPtr->active != -1) {
-            WaylandActivateMenuEntry(menuPtr, -1);
+            TkWaylandActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
@@ -4809,7 +4809,7 @@ TkWaylandMenubarHandleClick(
             return 1;
         }
 
-        WaylandActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
+        TkWaylandActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
 
         if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
             TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
@@ -4905,7 +4905,7 @@ TkWaylandMenubarHandleMotion(
         /* Pointer left the menubar strip. */
         if (menuPtr->active != -1 &&
             !(TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar())) {
-            WaylandActivateMenuEntry(menuPtr, -1);
+            TkWaylandActivateMenuEntry(menuPtr, -1);
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
             TkpDisplayMenu((void *)menuPtr);   /* Force redraw. */
         }
@@ -4922,7 +4922,7 @@ TkWaylandMenubarHandleMotion(
 
         /* Found the entry under the cursor. */
         if (mePtr->state != ENTRY_DISABLED && menuPtr->active != i) {
-            WaylandActivateMenuEntry(menuPtr, i);
+            TkWaylandActivateMenuEntry(menuPtr, i);
 
             /* Force immediate redraw of the menubar. */
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
@@ -5007,7 +5007,7 @@ TkWaylandMenuHandlePointerMotion(
     if (menuStackDepth > 0) {
         TkMenu *topMenu = menuStack[menuStackDepth - 1].menuPtr;
         if (topMenu && topMenu->active != -1) {
-            WaylandActivateMenuEntry(topMenu, -1);
+            TkWaylandActivateMenuEntry(topMenu, -1);
             TkEventuallyRedrawMenu(topMenu, NULL);
         }
     }
@@ -5563,17 +5563,13 @@ TkWaylandGenerateMenuSelect(
 /*
  *----------------------------------------------------------------------
  *
- * WaylandActivateMenuEntry --
+ * TkWaylandActivateMenuEntry --
  *
  *     Drop-in wrapper around the generic TkActivateMenuEntry() used
  *     everywhere that changes which entry of a menu is active --
  *     both call sites in this file and the keyboard Up/Down handler
- *     in tkWaylandNotify.c (exposed MODULE_SCOPE for that reason; it
- *     used to call TkActivateMenuEntry() directly, which silently
- *     skipped <<MenuSelect>> generation for keyboard-driven vertical
- *     navigation even though mouse-hover and Left/Right menubar moves
- *     went through this wrapper). In addition to the generic activation
- *     bookkeeping, this also generates <<MenuSelect>> (see TkWaylandGenerateMenuSelect),
+ *     in tkWaylandNotify.c In addition to the generic activation
+ *     bookkeeping, this also generates <<MenuSelect>>,
  *     which TkActivateMenuEntry() itself does not do.
  *
  * Results:
@@ -5586,7 +5582,7 @@ TkWaylandGenerateMenuSelect(
  */
 
 MODULE_SCOPE void
-WaylandActivateMenuEntry(
+TkWaylandActivateMenuEntry(
     TkMenu *menuPtr,
     int index)
 {
@@ -5769,7 +5765,7 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
         }
 
         /* Activate it. */
-        WaylandActivateMenuEntry(menuPtr, i);
+        TkWaylandActivateMenuEntry(menuPtr, i);
         Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
         TkpDisplayMenu((void *)menuPtr);
 
@@ -5837,7 +5833,7 @@ TkWaylandMenubarMove(TkWindow *winPtr, int direction)
     }
 
     if (newIdx != current) {
-        WaylandActivateMenuEntry(menuPtr, newIdx);
+        TkWaylandActivateMenuEntry(menuPtr, newIdx);
 
         /*
          * TkWaylandMenuRedrawActive() only redraws menuStack[depth-1] --
