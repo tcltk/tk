@@ -51,6 +51,7 @@
 # ImgPostscriptPhoto                    no tests
 # Tk_PhotoGetMetadata:                  imgPhoto-21.*
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
+# TkImgPhotoSetDensity:                  imgPhoto-26.*
 #--------------------------------------------------------------------------
 #
 #
@@ -2734,6 +2735,194 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
 } -cleanup {
     catch {image delete png1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
+
+# For tests imgPhoto-26.*: a photo rasterized from vector data is laid out
+# in screen pixels whatever the density the platform rasterizes it at.
+set svgData {<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="16" height="16" fill="#ff0000"/></svg>}
+
+test imgPhoto-26.1 {vector density: image width and height are in screen pixels} -setup {
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+} -body {
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    image delete photo1
+} -result {20 20}
+test imgPhoto-26.2 {vector density: the pixel data is a whole multiple of the displayed size} -setup {
+    image create photo photo1 -format {svg -scale 2} -data $svgData
+} -body {
+    set rows [llength [photo1 data]]
+    set cols [llength [lindex [photo1 data] 0]]
+    list [image width photo1] [image height photo1] \
+	[expr {$rows % [image height photo1]}] \
+	[expr {$cols % [image width photo1]}] \
+	[expr {$rows / [image height photo1] >= 1}]
+} -cleanup {
+    image delete photo1
+} -result {32 32 0 0 1}
+test imgPhoto-26.3 {vector density: canvas image item bbox is in screen pixels} -setup {
+    destroy .c
+    canvas .c
+    image create photo photo1 -format {svg -scaletowidth 32} -data $svgData
+} -body {
+    .c create image 10 20 -image photo1 -anchor nw
+    .c bbox all
+} -cleanup {
+    destroy .c
+    image delete photo1
+} -result {10 20 42 52}
+test imgPhoto-26.4 {vector density: a label requests the displayed size} -setup {
+    destroy .l
+    image create photo photo1 -format {svg -scaletowidth 40} -data $svgData
+    label .l -image photo1 -bd 0 -padx 0 -pady 0 -highlightthickness 0
+} -body {
+    list [winfo reqwidth .l] [winfo reqheight .l]
+} -cleanup {
+    destroy .l
+    image delete photo1
+} -result {40 40}
+test imgPhoto-26.5 {vector density: -width and -height are in screen pixels} -setup {
+    image create photo photo1 -width 12 -height 10 -format {svg -scale 2} \
+	-data $svgData
+} -body {
+    list [image width photo1] [image height photo1] \
+	[expr {[llength [photo1 data]] % 10}] \
+	[expr {[llength [lindex [photo1 data] 0]] % 12}]
+} -cleanup {
+    image delete photo1
+} -result {12 10 0 0}
+test imgPhoto-26.6 {vector density: configure -width after the read} -setup {
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+} -body {
+    photo1 configure -width 30 -height 30
+    list [image width photo1] [image height photo1] \
+	[expr {[llength [photo1 data]] % 30}]
+} -cleanup {
+    image delete photo1
+} -result {30 30 0}
+test imgPhoto-26.7 {vector density: reading raster data brings the image back to 1:1} -setup {
+    set pngFile [makeFile {} vector.png]
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+    image create photo photo2 -width 7 -height 5
+    photo2 put green -to 0 0 7 5
+    photo2 write $pngFile -format png
+} -body {
+    photo1 read $pngFile -shrink
+    list [image width photo1] [image height photo1] [llength [photo1 data]]
+} -cleanup {
+    image delete photo1 photo2
+    removeFile $pngFile
+} -result {7 5 5}
+test imgPhoto-26.8 {vector density: -data of another format brings the image back to 1:1} -setup {
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+    image create photo photo2 -width 7 -height 5
+    photo2 put green -to 0 0 7 5
+} -body {
+    photo1 configure -format png -data [photo2 data -format png]
+    list [image width photo1] [image height photo1] [llength [photo1 data]]
+} -cleanup {
+    image delete photo1 photo2
+} -result {7 5 5}
+test imgPhoto-26.9 {vector density: copy transfers pixels, the destination displays them 1:1} -setup {
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+    image create photo photo2
+} -body {
+    photo2 copy photo1
+    expr {[image width photo2] == [llength [lindex [photo1 data] 0]]}
+} -cleanup {
+    image delete photo1 photo2
+} -result 1
+test imgPhoto-26.10 {vector density: put keeps the density} -setup {
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+} -body {
+    set w [image width photo1]
+    photo1 put blue -to 0 0 4 4
+    expr {[image width photo1] == $w}
+} -cleanup {
+    image delete photo1
+} -result 1
+test imgPhoto-26.11 {vector density: display} -setup {
+    destroy .l
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+    label .l -image photo1 -bd 0 -padx 0 -pady 0 -highlightthickness 0
+    pack .l
+    update
+} -body {
+    photo1 configure -format {svg -scaletoheight 30} -data $svgData
+    update
+    list [winfo reqwidth .l] [winfo reqheight .l]
+} -cleanup {
+    destroy .l
+    image delete photo1
+} -result {30 30}
+test imgPhoto-26.12 {vector density: a failed read or configure leaves the image as it was} -setup {
+    set badFile [makeFile "not an image" notanimage.dat]
+    image create photo photo1 -format {svg -scaletoheight 20} -data $svgData
+    set w [image width photo1]
+    set rows [llength [photo1 data]]
+} -body {
+    catch {photo1 configure -file /nonexistent/vector.svg}
+    catch {photo1 read $badFile}
+    catch {photo1 configure -format png -data "not an image"}
+    list [expr {[image width photo1] == $w}] \
+	[expr {[llength [photo1 data]] == $rows}]
+} -cleanup {
+    image delete photo1
+    removeFile $badFile
+} -result {1 1}
+testConstraint testphotodensity [llength [info commands testphotodensity]]
+test imgPhoto-26.13 {density: layout of a dense image, forced by the test hook} -constraints {
+    testphotodensity
+} -setup {
+    destroy .c
+    canvas .c
+    image create photo photo1
+    photo1 put red -to 0 0 40 40
+} -body {
+    testphotodensity photo1 2
+    .c create image 10 20 -image photo1 -anchor nw
+    list [image width photo1] [image height photo1] [.c bbox all]
+} -cleanup {
+    destroy .c
+    image delete photo1
+} -result {20 20 {10 20 30 40}}
+test imgPhoto-26.14 {density: -width and -height follow the density} -constraints {
+    testphotodensity
+} -setup {
+    image create photo photo1
+    photo1 put red -to 0 0 40 40
+} -body {
+    testphotodensity photo1 2
+    photo1 configure -width 12 -height 10
+    list [image width photo1] [image height photo1] \
+	[llength [lindex [photo1 data] 0]] [llength [photo1 data]] \
+	[photo1 cget -width] [photo1 cget -height]
+} -cleanup {
+    image delete photo1
+} -result {12 10 24 20 12 10}
+test imgPhoto-26.15 {density: densities are whole numbers} -constraints {
+    testphotodensity
+} -setup {
+    image create photo photo1
+    photo1 put red -to 0 0 40 40
+} -body {
+    testphotodensity photo1 1.5
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    image delete photo1
+} -result {20 20}
+test imgPhoto-26.16 {density: back to 1 leaves the pixels and doubles the layout} -constraints {
+    testphotodensity
+} -setup {
+    image create photo photo1
+    photo1 put red -to 0 0 40 40
+    testphotodensity photo1 2
+} -body {
+    testphotodensity photo1 1
+    list [image width photo1] [llength [photo1 data]]
+} -cleanup {
+    image delete photo1
+} -result {40 40}
+unset svgData
 
 #
 # TESTFILE CLEANUP

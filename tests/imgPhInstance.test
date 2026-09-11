@@ -233,6 +233,107 @@ test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
 } -result {1 1}
 
 #
+# Density: a photo whose pixels are denser than screen pixels (see
+# TkImgPhotoSetDensity) is drawn at its screen size, through
+# TkpPutRGBAImageScaled where TK_CAN_RENDER_RGBA_SCALED is defined and
+# through the ResampleRGBA software path elsewhere.  tktest's
+# "testphotodensity" forces the density, so the tests run on any display.
+#
+
+testConstraint testphotodensity [expr {
+    [llength [info commands testphotodensity]] > 0
+}]
+
+# 40x40 pixels in four 20x20 quadrants: at density 2 the photo covers 20x20
+# screen pixels, 10x10 per quadrant.
+image create photo photo.dense
+photo.dense put #ff8000 -to 0 0 20 20
+photo.dense put #00c000 -to 20 0 40 20
+photo.dense put #ffffff -to 0 20 20 40
+photo.dense put #000000 -to 20 20 40 40
+
+# Same, with only the top-left quadrant opaque.
+image create photo photo.denseclear -width 40 -height 40
+photo.denseclear put #ff8000 -to 0 0 20 20
+photo.denseclear configure -width 0 -height 0
+
+test imgPhInstance-5.1 "dense photo is drawn at its screen size" \
+	-constraints {pixelProbe testphotodensity} -body {
+    testphotodensity photo.dense 2
+    .c create image 10 10 -anchor nw -image photo.dense
+    update
+    list [pixelNear .c 12 12 #ff8000] [pixelNear .c 27 12 #00c000] \
+	[pixelNear .c 12 27 #ffffff] [pixelNear .c 27 27 #000000] \
+	[pixelNear .c 35 12 $bg] [pixelNear .c 12 35 $bg]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1 1 1 1 1}
+
+test imgPhInstance-5.2 "dense photo: a partial redraw maps the region correctly" \
+	-constraints {pixelProbe testphotodensity} -body {
+    testphotodensity photo.dense 2
+    .c create image 10 10 -anchor nw -image photo.dense
+    update
+    set r [.c create rectangle 20 20 40 40 -fill $bg -outline ""]
+    update
+    .c delete $r
+    update
+    list [pixelNear .c 27 27 #000000] [pixelNear .c 22 22 #000000] \
+	[pixelNear .c 12 12 #ff8000] [pixelNear .c 27 12 #00c000]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1 1 1}
+
+test imgPhInstance-5.3 "dense photo with transparency: clear pixels show the destination" \
+	-constraints {pixelProbe testphotodensity} -body {
+    testphotodensity photo.denseclear 2
+    .c create image 10 10 -anchor nw -image photo.denseclear
+    update
+    list [pixelNear .c 12 12 #ff8000] [pixelNear .c 27 12 $bg] \
+	[pixelNear .c 27 27 $bg]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1 1}
+
+# 60x60 pixels in four 30x30 quadrants: at density 3 the photo covers 20x20
+# screen pixels too, but its pixels never map one to one onto a backing
+# store, so the platform resamples.
+image create photo photo.dense3
+photo.dense3 put #ff8000 -to 0 0 30 30
+photo.dense3 put #00c000 -to 30 0 60 30
+photo.dense3 put #ffffff -to 0 30 30 60
+photo.dense3 put #000000 -to 30 30 60 60
+
+test imgPhInstance-5.4 "dense photo whose density is not the backing scale is resampled" \
+	-constraints {pixelProbe testphotodensity} -body {
+    testphotodensity photo.dense3 3
+    .c create image 10 10 -anchor nw -image photo.dense3
+    update
+    list [image width photo.dense3] \
+	[pixelNear .c 12 12 #ff8000] [pixelNear .c 27 12 #00c000] \
+	[pixelNear .c 12 27 #ffffff] [pixelNear .c 27 27 #000000] \
+	[pixelNear .c 35 12 $bg] [pixelNear .c 12 35 $bg]
+} -cleanup {
+    .c delete all
+    update
+} -result {20 1 1 1 1 1 1}
+
+test imgPhInstance-5.5 "photo at density 1 is unaffected" \
+	-constraints {pixelProbe testphotodensity} -body {
+    testphotodensity photo.dense 1
+    .c create image 10 10 -anchor nw -image photo.dense
+    update
+    list [pixelNear .c 15 15 #ff8000] [pixelNear .c 45 15 #00c000] \
+	[pixelNear .c 45 45 #000000] [pixelNear .c 55 15 $bg]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1 1 1}
+
+#
 # TESTFILE CLEANUP
 #
 

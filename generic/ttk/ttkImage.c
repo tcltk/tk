@@ -352,6 +352,10 @@ static int RegionTiles(Ttk_Box src, Ttk_Box dst)
  *	one TkpPutRGBAImage call, instead of one Tk_RedrawImage per tile.
  *	Returns true on success, false to fall back to the per-tile loop.
  *
+ *	A photo whose pixels are denser than screen pixels (see
+ *	TkImgPhotoSetDensity) is assembled in image pixels and composited
+ *	with TkpPutRGBAImageScaled, where the platform provides it.
+ *
  *	Note: composites the photo's raw pix32, like the partial-alpha
  *	display path does; a non-default -gamma/-palette is not applied.
  */
@@ -370,7 +374,7 @@ static bool TileBatchElement(
     unsigned char *buf;
     GC gc;
     XGCValues gcv;
-    int i, tiles, result;
+    int i, tiles, result, density = 1, bufW, bufH;
 
     if (dst.width <= 0 || dst.height <= 0
 	    || dst.width * dst.height < TILE_BATCH_MIN_AREA) {
@@ -378,9 +382,39 @@ static bool TileBatchElement(
     }
 
     Tk_PhotoGetImage(photo, &blk);
-    if (!BlockIsPackedRGBA(&blk) || !SrcWithinBlock(src, &blk)) {
+    if (!BlockIsPackedRGBA(&blk)) {
 	return false;
     }
+
+    /*
+     * Tk_SizeOfImage sizes a photo whose pixels are denser than screen
+     * pixels in screen pixels, so src is smaller than the block: assemble
+     * the tiles in image pixels, as dense as the photo, and let the
+     * platform map the buffer onto the screen, pixel for pixel on a Retina
+     * display.  Where the platform cannot scale, or the sizes are not an
+     * exact multiple, the per-tile loop takes over.
+     */
+
+    if ((src.width > 0) && (blk.width != src.width)) {
+#ifdef TK_CAN_RENDER_RGBA_SCALED
+	density = blk.width / src.width;
+	if ((density < 2) || (blk.width != src.width * density)
+		|| (blk.height != src.height * density)) {
+	    return false;
+	}
+	src = Ttk_MakeBox(src.x * density, src.y * density,
+		src.width * density, src.height * density);
+	p = Ttk_MakePadding(p.left * density, p.top * density,
+		p.right * density, p.bottom * density);
+#else
+	return false;
+#endif
+    }
+    if (!SrcWithinBlock(src, &blk)) {
+	return false;
+    }
+    bufW = dst.width * density;
+    bufH = dst.height * density;
 
     /*
      * Decompose source and destination into the same nine regions
@@ -389,7 +423,7 @@ static bool TileBatchElement(
      */
 
     NineSlice(src, p, src9);
-    NineSlice(Ttk_MakeBox(0, 0, dst.width, dst.height), p, dst9);
+    NineSlice(Ttk_MakeBox(0, 0, bufW, bufH), p, dst9);
 
     tiles = 0;
     for (i = 0; i < 9; i++) {
@@ -405,18 +439,18 @@ static bool TileBatchElement(
      */
 
     buf = (unsigned char *)
-	    Tcl_AttemptAlloc((size_t) dst.width * dst.height * 4);
+	    Tcl_AttemptAlloc((size_t) bufW * (size_t) bufH * 4);
     if (buf == NULL) {
 	return false;
     }
-    memset(buf, 0, (size_t) dst.width * dst.height * 4);
+    memset(buf, 0, (size_t) bufW * (size_t) bufH * 4);
 
     for (i = 0; i < 9; i++) {
-	AssembleFill(&blk, buf, dst.width, dst.height, src9[i], dst9[i]);
+	AssembleFill(&blk, buf, bufW, bufH, src9[i], dst9[i]);
     }
 
     ximg = XCreateImage(display, NULL, 32, ZPixmap, 0, (char *) buf,
-	    (unsigned) dst.width, (unsigned) dst.height, 32, 4 * dst.width);
+	    (unsigned) bufW, (unsigned) bufH, 32, 4 * bufW);
     if (ximg == NULL) {
 	Tcl_Free(buf);
 	return false;
@@ -424,8 +458,17 @@ static bool TileBatchElement(
 
     gcv.graphics_exposures = False;
     gc = Tk_GetGC(tkwin, GCGraphicsExposures, &gcv);
-    result = TkpPutRGBAImage(display, d, gc, ximg, 0, 0, dst.x, dst.y,
-	    (unsigned) dst.width, (unsigned) dst.height);
+#ifdef TK_CAN_RENDER_RGBA_SCALED
+    if (density != 1) {
+	result = TkpPutRGBAImageScaled(display, d, gc, ximg,
+		(double) density, 0, 0, dst.x, dst.y,
+		(unsigned) dst.width, (unsigned) dst.height);
+    } else
+#endif
+    {
+	result = TkpPutRGBAImage(display, d, gc, ximg, 0, 0, dst.x, dst.y,
+		(unsigned) dst.width, (unsigned) dst.height);
+    }
     Tk_FreeGC(display, gc);
     ximg->data = NULL;
     XDestroyImage(ximg);

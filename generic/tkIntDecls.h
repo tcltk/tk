@@ -542,6 +542,9 @@ EXTERN void		TkDrawAngledChars(Display *display,
 EXTERN bool		TkDebugPhotoStringMatchDef(Tcl_Interp *inter,
 				Tcl_Obj *data, Tcl_Obj *formatString,
 				int *widthPtr, int *heightPtr);
+/* 188 */
+EXTERN void		TkImgPhotoSetDensity(Tk_PhotoHandle handle,
+				double density);
 
 typedef struct TkIntStubs {
     int magic;
@@ -735,6 +738,7 @@ typedef struct TkIntStubs {
     void (*reserved185)(void);
     void (*reserved186)(void);
     bool (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */
+    void (*tkImgPhotoSetDensity) (Tk_PhotoHandle handle, double density); /* 188 */
 } TkIntStubs;
 
 extern const TkIntStubs *tkIntStubsPtr;
@@ -1098,6 +1102,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 /* Slot 186 is reserved */
 #define TkDebugPhotoStringMatchDef \
 	(tkIntStubsPtr->tkDebugPhotoStringMatchDef) /* 187 */
+#define TkImgPhotoSetDensity \
+	(tkIntStubsPtr->tkImgPhotoSetDensity) /* 188 */
 
 #endif /* defined(USE_TK_STUBS) */
 

@@ -399,6 +399,7 @@ static const TkIntStubs tkIntStubs = {
     0, /* 185 */
     0, /* 186 */
     TkDebugPhotoStringMatchDef, /* 187 */
+    TkImgPhotoSetDensity, /* 188 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {

@@ -75,7 +75,8 @@ static int		RasterizeSVG(Tcl_Interp *interp,
 			    int destX, int destY, int width, int height,
 			    int srcX, int srcY, RastOpts *ropts);
 static double		GetScaleFromParameters(NSVGimage *nsvgImage,
-			    RastOpts *ropts, int *widthPtr, int *heightPtr);
+			    RastOpts *ropts, double density, int *widthPtr,
+			    int *heightPtr);
 static NSVGcache *	GetCachePtr(Tcl_Interp *interp);
 static bool		CacheSVG(Tcl_Interp *interp, void *dataOrChan,
 			    Tcl_Obj *formatObj, NSVGimage *nsvgImage,
@@ -194,7 +195,8 @@ FileMatchSVG(
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
-	GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+	GetScaleFromParameters(nsvgImage, &ropts, TkpVectorDensity(),
+		widthPtr, heightPtr);
 	if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
 	    return 0;
@@ -304,7 +306,8 @@ StringMatchSVG(
     }
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     if (nsvgImage != NULL) {
-	GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+	GetScaleFromParameters(nsvgImage, &ropts, TkpVectorDensity(),
+		widthPtr, heightPtr);
 	if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
 	    return 0;
@@ -577,10 +580,10 @@ RasterizeSVG(
     NSVGrasterizer *rast;
     unsigned char *imgData;
     Tk_PhotoImageBlock svgblock;
-    double scale;
+    double scale, density = TkpVectorDensity();
     Tcl_WideUInt wh;
 
-    scale = GetScaleFromParameters(nsvgImage, ropts, &w, &h);
+    scale = GetScaleFromParameters(nsvgImage, ropts, density, &w, &h);
 
     rast = nsvgCreateRasterizer();
     if (rast == NULL) {
@@ -615,6 +618,7 @@ RasterizeSVG(
     for (c = 0; c <= 3; c++) {
 	svgblock.offset[c] = c;
     }
+    TkImgPhotoSetDensity(imageHandle, density);
     if (Tk_PhotoExpand(interp, imageHandle,
 		destX + width, destY + height) != TCL_OK) {
 	goto cleanRAST;
@@ -662,6 +666,9 @@ static double
 GetScaleFromParameters(
     NSVGimage *nsvgImage,
     RastOpts *ropts,
+    double density,		/* Image pixels per screen pixel, a whole
+				 * number; the scale options are in screen
+				 * pixels. */
     int *widthPtr,
     int *heightPtr)
 {
@@ -692,6 +699,21 @@ GetScaleFromParameters(
 	scale = ropts->scale;
 	width = (int) ceil(nsvgImage->width * scale);
 	height = (int) ceil(nsvgImage->height * scale);
+    }
+    if (density != 1.0) {
+	/*
+	 * The sizes above are in screen pixels; rasterize density times
+	 * finer.  The pixel sizes derive from the integer screen sizes, not
+	 * from the floating point scale, so that ceil(pixels / density)
+	 * gives the screen size back.  A size that does not fit in an int
+	 * is rejected by the caller.
+	 */
+
+	double pw = ceil(width * density), ph = ceil(height * density);
+
+	scale *= density;
+	width = (pw > INT_MAX) ? INT_MAX : (int) pw;
+	height = (ph > INT_MAX) ? INT_MAX : (int) ph;
     }
 
     *heightPtr = height;

@@ -145,6 +145,25 @@ MODULE_SCOPE int TkpPutRGBAImage(
 		     unsigned int width, unsigned int height);
 
 /*
+ * The backing store of a window may have more pixels than its screen
+ * coordinate system (Retina displays).  TkpVectorDensity tells the image
+ * formats that rasterize vector data how many pixels per screen pixel to
+ * produce (see tkInt.h), and TkpPutRGBAImageScaled lets tkImgPhInstance.c
+ * draw a photo image whose density is not 1 without resampling it first:
+ * image pixels are mapped onto the backing store by Core Graphics.
+ */
+
+#define TK_CAN_RENDER_RGBA_SCALED
+
+MODULE_SCOPE double TkMacOSXVectorDensity(void);
+#define TkpVectorDensity() TkMacOSXVectorDensity()
+
+MODULE_SCOPE int TkpPutRGBAImageScaled(
+		     Display* display, Drawable drawable, GC gc,XImage* image,
+		     double density, int src_x, int src_y, int dest_x,
+		     int dest_y, unsigned int width, unsigned int height);
+
+/*
  * Inform tkCanvas.c that our XGetImage returns a 32pp pixmap packed as 0xAABBGGRR
  */
 

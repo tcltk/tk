@@ -607,6 +607,9 @@ declare 187 {
     bool TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
 	    Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
+declare 188 {
+    void TkImgPhotoSetDensity(Tk_PhotoHandle handle, double density)
+}
 
 
 ##############################################################################

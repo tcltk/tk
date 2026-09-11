@@ -240,6 +240,15 @@ error message is placed in the interpreter's result.
 .PP
 \fBTk_PhotoGetSize\fR returns the dimensions of the image in
 *\fIwidthPtr\fR and *\fIheightPtr\fR.
+.PP
+.VS 9.1
+Both functions work in image pixels.  For an image whose pixels are denser
+than screen pixels (a photo rasterized from vector data on a
+high-resolution display, see the \fBphoto\fR manual page),
+\fBTk_SizeOfImage\fR gives the size in screen pixels, and
+\fBTk_PhotoSetSize\fR rounds the requested size up to a whole number of
+screen pixels.
+.VE 9.1
 .SH PORTABILITY
 .PP
 In Tk 8.3 and earlier, \fBTk_PhotoPutBlock\fR and

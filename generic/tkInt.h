@@ -21,6 +21,17 @@
 #include <X11/Xatom.h>
 
 /*
+ * TkpVectorDensity() is the number of image pixels per screen pixel that
+ * the image formats rasterizing vector data produce, a whole number (see
+ * TkImgPhotoSetDensity).  A platform whose window backing store may be
+ * denser than its screen coordinates defines it in its tkXXXPort.h.
+ */
+
+#ifndef TkpVectorDensity
+#define TkpVectorDensity() 1.0
+#endif
+
+/*
  * Ensure WORDS_BIGENDIAN is defined correctly:
  * Needs to happen here in addition to configure to work with fat compiles on
  * Darwin (where configure runs only once for multiple architectures).

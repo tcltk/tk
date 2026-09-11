@@ -181,6 +181,7 @@ static Tcl_ObjCmdProc2 TrivialConfigObjCmd;
 static void		TrivialEventProc(void *clientData,
 			    XEvent *eventPtr);
 static Tcl_ObjCmdProc2 TestPhotoStringMatchCmd;
+static Tcl_ObjCmdProc2 TestPhotoDensityCmd;
 
 /*
  *----------------------------------------------------------------------
@@ -249,6 +250,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testphotostringmatch",
 	    TestPhotoStringMatchCmd, Tk_MainWindow(interp),
 	    NULL);
+    Tcl_CreateObjCommand2(interp, "testphotodensity",
+	    TestPhotoDensityCmd, Tk_MainWindow(interp), NULL);
 
 #if defined(_WIN32)
     Tcl_CreateObjCommand2(interp, "testmetrics", TestmetricsObjCmd,
@@ -2140,6 +2143,54 @@ TestPhotoStringMatchCmd(
     } else {
 	return TCL_ERROR;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestPhotoDensityCmd --
+ *
+ *	This function implements the "testphotodensity" command, which sets
+ *	the density of a photo image (the number of image pixels per screen
+ *	pixel, normally recorded by the image format that rasterized vector
+ *	data), so that the tests can exercise the layout and display of such
+ *	images on any display.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The image is laid out and displayed at its new size.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestPhotoDensityCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_PhotoHandle handle;
+    double density;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "imageName density");
+	return TCL_ERROR;
+    }
+    handle = Tk_FindPhoto(interp, Tcl_GetString(objv[1]));
+    if (handle == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"image \"%s\" does not exist or is not a photo image",
+		Tcl_GetString(objv[1])));
+	return TCL_ERROR;
+    }
+    if (Tcl_GetDoubleFromObj(interp, objv[2], &density) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    TkImgPhotoSetDensity(handle, density);
+    return TCL_OK;
 }
 
 #ifndef MAC_OSX_TK
