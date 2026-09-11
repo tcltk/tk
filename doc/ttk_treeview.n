@@ -491,7 +491,7 @@ Modify or inquire about heading state. If \fIstateSpec\fR is present, sets the
 widget state: for each flag in stateSpec, sets the corresponding flag or clears
 it if prefixed by an exclamation point. To use the default sort direction
 indicator, set the heading to \fBuser1\fR state plus either
-\fBselected\fR for ascending sorts or \fBalternate\fR for descending sorts.
+\fBselected\fR for descending sorts or \fBalternate\fR for ascending sorts.
 Remember to clear the states when a new heading is to be used as the sort column.
 Themes may set and use other states as needed for visual effects.
 .RE
