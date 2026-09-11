@@ -1219,15 +1219,6 @@ TTK_LAYOUT("TSpinbox",
 	    TTK_GROUP("Spinbox.padding", TTK_PACK_LEFT|TTK_FILL_BOTH,
 		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
 
-TTK_LAYOUT("Wide.TSpinbox",
-    TTK_GROUP("Spinbox.field", TTK_FILL_BOTH,
-	TTK_GROUP("Spinbox.background", TTK_FILL_BOTH,
-	    TTK_NODE("WideSpinbox.downarrow", TTK_PACK_RIGHT|TTK_STICK_E)
-	    TTK_NODE("WideSpinbox.uparrow", TTK_PACK_RIGHT|TTK_STICK_E)
-	    TTK_GROUP("Spinbox.padding", TTK_PACK_LEFT|TTK_FILL_BOTH,
-		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
-
-
 TTK_LAYOUT("Horizontal.TProgressbar",
     TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
 	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
@@ -1300,7 +1291,7 @@ static const ElementInfo ElementInfoTable[] = {
 
     /* Entry, Combobox, Spinbox */
     { "Entry.field", &GenericElementSpec, L"EDIT",
-	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,1), 0 },
+	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,2), 0 },
     { "Entry.background", &GenericElementSpec, L"EDIT",
 	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
 
@@ -1318,7 +1309,7 @@ static const ElementInfo ElementInfoTable[] = {
 	LVP_GROUPHEADER, treeitem_statemap, NOPAD, 0 },
 
     { "Spinbox.field", &GenericElementSpec, L"EDIT",
-	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,1), 0 },
+	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,2), 0 },
     { "Spinbox.background", &GenericElementSpec, L"EDIT",
 	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
     { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
@@ -1327,12 +1318,6 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
 	SPNP_DOWN, spindown_statemap, NOPAD,
 	HALF_HEIGHT | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "WideSpinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_UP, spinup_statemap, PAD(3,0,3,0),
-	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "WideSpinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_DOWN, spindown_statemap, PAD(3,0,3,0),
-	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
 
     /* Frame */
     { "Labelframe.border", &GenericElementSpec, L"BUTTON",
@@ -1352,15 +1337,15 @@ static const ElementInfo ElementInfoTable[] = {
     { "Vertical.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
 	PP_FILLVERT, pbarvert_statemap, NOPAD, 0 },
     { "Horizontal.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BAR, null_statemap, PAD(3,3,3,3), 0 },
+	PP_BAR, null_statemap, PAD(1,1,1,1), 0 },
     { "Vertical.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BARVERT, null_statemap, PAD(3,3,3,3), 0 },
+	PP_BARVERT, null_statemap, PAD(1,1,1,1), 0 },
 
     /* Scale */
     { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMB, scalehoriz_statemap, PAD(5,12,5,12), 0 },
+	TKP_THUMB, scalehoriz_statemap, PAD(5,12,5,12), IGNORE_THEMESIZE },
     { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMBVERT, scalevert_statemap, PAD(12,3,12,3), 0 },
+	TKP_THUMBVERT, scalevert_statemap, PAD(12,5,12,5), IGNORE_THEMESIZE },
     { "Horizontal.Scale.track", &GenericElementSpec, L"TRACKBAR",
 	TKP_TRACK, trackhoriz_statemap, NOPAD, 0 },
     { "Vertical.Scale.track", &GenericElementSpec, L"TRACKBAR",
