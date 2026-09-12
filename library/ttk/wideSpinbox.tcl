@@ -79,8 +79,8 @@ proc ttk::wideSpinbox::CreateElements theme {
     # Create the Wide.TSpinbox layout
 
     switch $theme {
-	vista - winnative {
-	    # Element order: uparrow, gap, downarrow
+	vista - winnative - sun-valley-light - sun-valley-dark {
+	    # Element order: uparrow, gap, downarrow.
 	    # Like a NumberBox with SpinButtonPlacementMode set to Inline.
 	    ttk::style layout Wide.TSpinbox {
 		Entry.field -sticky nswe -children {
@@ -94,8 +94,8 @@ proc ttk::wideSpinbox::CreateElements theme {
 	    }
 	}
 	classic {
-	    # Element order: downarrow, gap, uparrow
-	    # Like a GtkSpinButton but uses chevrons rather than "-" and "+".
+	    # Element order: downarrow, gap, uparrow.
+	    # Like a GtkSpinButton, but uses chevrons rather than "-" and "+".
 	    ttk::style layout Wide.TSpinbox {
 		Entry.highlight -sticky nswe -children {
 		    Entry.field -sticky nswe -children {
@@ -110,8 +110,8 @@ proc ttk::wideSpinbox::CreateElements theme {
 	    }
 	}
 	default {
-	    # Element order: downarrow, gap, uparrow
-	    # Like a GtkSpinButton but uses chevrons rather than "-" and "+".
+	    # Element order: downarrow, gap, uparrow.
+	    # Like a GtkSpinButton, but uses chevrons rather than "-" and "+".
 	    ttk::style layout Wide.TSpinbox {
 		Entry.field -sticky nswe -children {
 		    WideSpinbox.uparrow -side right -sticky e
