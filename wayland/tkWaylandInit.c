@@ -285,6 +285,11 @@ static void renderFBO(
     }
     
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
+    if (!fb) {
+        DEBUG_LOG("renderFBO: fb is NULL for %s - skipping",
+            infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
+        return;
+    }
     
     int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
@@ -364,12 +369,36 @@ Tk_ClipDrawableToRect(
 	return;
     }
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    if (!glfwWindow) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no glfwWindow for drawable");
+        return;
+    }
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!glfwInfoPtr) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no infoPtr");
+        return;
+    }
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    if (!winPtr) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no winPtr");
+        return;
+    }
+    if (!winPtr->privatePtr) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no privatePtr for %s", Tk_PathName(winPtr));
+        return;
+    }
+    if (!winPtr->privatePtr->fb) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no fb for %s - skipping", Tk_PathName(winPtr));
+        /* Still clear/set flags to avoid stale DONT_SWAP state */
+        if (width == -1 || height == -1) {
+            glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
+            glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+        }
+        return;
+    }
     DEBUG_LOG("Tk_ClipDrawableToRect: %s %dx%d+%d+%d",
 	Tk_PathName(winPtr), width, height, x, y);
 
-    /* Should check for NULL here. */
     if (width == -1 || height == -1) {
 	DEBUG_LOG("Clearing clipRect for %s", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
@@ -789,6 +818,15 @@ TkWaylandCreateWindow(
                                                      fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fb == NULL) {
         DEBUG_LOG("Could not create NanoVG framebuffer");
+        /* Clean up and fail - don't leave window with NULL fb to crash later */
+        TkWaylandClearCallbacks(glfwWindow);
+        glfwSetWindowUserPointer(glfwWindow, NULL);
+        /* destroyGlfwTkInfo will free vg */
+        destroyGlfwTkInfo(glfwWindow);
+        if (glfwWindow != mainGlfwWindow) {
+            glfwDestroyWindow(glfwWindow);
+        }
+        return NULL;
     }
 
     DEBUG_LOG("Window %s has glfwWindow %p and framebuffer %p",
