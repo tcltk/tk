@@ -76,6 +76,7 @@ Specifies how the information in the widget is positioned
 relative to the inner margins.  Legal values are
 \fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
 \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, and \fBcenter\fR.
+If unspecified, the theme default is used.
 See also \fB\-justify\fR (for widgets supporting this option).
 .OP \-compound compound Compound
 Specifies how to display the image relative to the text,
@@ -116,6 +117,7 @@ All images in the list should have the same size.
 If there are multiple lines of text, specifies how
 the lines are laid out relative to one another.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
+If unspecified, the theme default is used.
 See also \fB\-anchor\fR (for widgets supporting this option).
 .OP \-padding padding Padding
 Specifies the internal padding for the widget.
