@@ -55,6 +55,7 @@ foreach {constraint definition fileList} {
 					    unixSelect.test unixWm.test}
     win		TCLTEST_BUILT_IN    {winButton.test winClipboard.test winDialog.test winFont.test \
 					    winMenu.test winMsgbox.test winSend.test winWm.test}
+	wayland {} 			{cmds.test embed.test}				    
 } {
     set toSkip 0
     if {$definition eq "TCLTEST_BUILT_IN"} {

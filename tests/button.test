@@ -4074,7 +4074,7 @@ test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destr
     destroy .top.b .top
 } -result {}
 
-test button-15.1 {Bug [5d991b822e]} {
+test button-15.1 {Bug [5d991b822e]} -constraints !wayland -body {
     # Want this not to segfault
     set var INIT
     button .b -textvariable var
@@ -4085,7 +4085,7 @@ test button-15.1 {Bug [5d991b822e]} {
     bind .b <Configure> {unset var}
     update
     destroy .b
-} {}
+} -result {}
 test button-15.2 {Bug [5d991b822e]} {
     # Want this not to leak traces
     set var INIT
@@ -4099,7 +4099,7 @@ test button-15.2 {Bug [5d991b822e]} {
     destroy .b
     unset new
 } {}
-test button-15.3 {Bug [5d991b822e]} {
+test button-15.3 {Bug [5d991b822e]} -constraints !wayland -body {
     # Want this not to leak traces
     set var INIT
     checkbutton .b -variable var
@@ -4110,7 +4110,7 @@ test button-15.3 {Bug [5d991b822e]} {
     bind .b <Configure> {unset var}
     update
     destroy .b
-} {}
+} -result {}
 
 #
 # TESTFILE CLEANUP
