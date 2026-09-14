@@ -24,12 +24,19 @@ typedef struct {
     Window window;
     int globalX, globalY;	/* Global screen coordinates */
     int localX, localY;		/* Local window coordinates */
+    int button;			/* 1,2,3 */
+    int isPress;
 } MouseEventData;
 
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
 static void GenerateButtonEvent(MouseEventData *medPtr);
+static void QueueButtonEvent(MouseEventData *medPtr);
+
+/* Global state maintained by notify.c */
+extern unsigned int glfwButtonState;
+extern unsigned int glfwModifierState;
 
 /*
  *----------------------------------------------------------------------
@@ -51,43 +58,11 @@ static void GenerateButtonEvent(MouseEventData *medPtr);
 unsigned int
 TkWaylandButtonKeyState(void)
 {
-    unsigned int state = 0;
-
-    /* Get current focused GLFW window. */
-    GLFWwindow* window = glfwGetCurrentContext();
-    if (!window) {
-        return 0;
-    }
-
-    /* Check mouse buttons. */
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        state |= Tk_GetButtonMask(Button1);
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        state |= Tk_GetButtonMask(Button3);
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
-        state |= Tk_GetButtonMask(Button2);
-    }
-
-    /* Check keyboard modifiers. */
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
-        state |= ShiftMask;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
-        state |= ControlMask;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) {
-        state |= Mod1Mask;
-    }
-    if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
-        state |= LockMask;
-    }
-
-    return state;
+    /* Use global state updated in callbacks, not glfwGetCurrentContext()
+     * which is NULL during XQueryPointer and during event generate.
+     * This is why B1-Motion had state=0 and event-3.1 hung in tkTextSelectTo.
+     */
+    return glfwButtonState | glfwModifierState;
 }
 
 /*
@@ -273,6 +248,41 @@ GenerateButtonEvent(
 	tkwin = Tk_CoordsToWindow(medPtr->localX, medPtr->localY, tkwin);
     }
     Tk_UpdatePointer(tkwin, medPtr->globalX, medPtr->globalY, medPtr->state);
+
+    /* If this came from a real button press, also queue ButtonPress/Release */
+    if (medPtr->button != 0) {
+	QueueButtonEvent(medPtr);
+    }
+}
+
+static void
+QueueButtonEvent(MouseEventData *medPtr)
+{
+    TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(TkGetDisplayList()->display, medPtr->window);
+    if (!winPtr) return;
+
+    XEvent event;
+    memset(&event, 0, sizeof(XEvent));
+    event.type = medPtr->isPress ? ButtonPress : ButtonRelease;
+    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
+    event.xbutton.send_event = False;
+    event.xbutton.display = winPtr->display;
+    event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xbutton.root = XRootWindow(winPtr->display, 0);
+    event.xbutton.time = CurrentTime;
+    event.xbutton.x = medPtr->localX;
+    event.xbutton.y = medPtr->localY;
+    event.xbutton.x_root = medPtr->globalX;
+    event.xbutton.y_root = medPtr->globalY;
+    event.xbutton.state = medPtr->state;
+    event.xbutton.button = medPtr->button;
+    event.xbutton.same_screen = True;
+
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+    if (medPtr->button == 1) {
+	TkpSetCapture(medPtr->isPress ? winPtr : NULL);
+    }
 }
 
 /*
@@ -294,36 +304,59 @@ GenerateButtonEvent(
 void
 TkWaylandHandleMouseButton(
 			   GLFWwindow *glfwWindow,
-			   TCL_UNUSED(int), /* button */
-			   TCL_UNUSED(int), /* action */
-			   TCL_UNUSED(int)) /* mods */
+			   int button, /* GLFW button */
+			   int action, /* GLFW_PRESS/RELEASE */
+			   int mods)
 {
     TkWindow *winPtr;
     double x, y;
 
     winPtr = TkWaylandGetTkWindow(glfwWindow);
-    if (!winPtr) {
-	return;
-    }
+    if (!winPtr) return;
 
-    /* Get cursor position. */
     glfwGetCursorPos(glfwWindow, &x, &y);
 
-    /*
-     * Pass to normal Tk event handling.
-     * Convert GLFW button to Tk button.
-     */
-    unsigned int state = TkWaylandButtonKeyState(); Window window = Tk_WindowId((Tk_Window)winPtr);
+    MouseEventData med;
+    memset(&med, 0, sizeof(MouseEventData));
+    med.globalX = (int)x;
+    med.globalY = (int)y;
+    med.localX = (int)x - Tk_X(winPtr);
+    med.localY = (int)y - Tk_Y(winPtr);
+    med.window = Tk_WindowId((Tk_Window)winPtr);
 
-    TkGenerateButtonEvent((int)x, (int)y, window, state);
+    if (button == GLFW_MOUSE_BUTTON_LEFT) med.button = 1;
+    else if (button == GLFW_MOUSE_BUTTON_MIDDLE) med.button = 2;
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT) med.button = 3;
+    else med.button = button + 1;
 
+    med.isPress = (action == GLFW_PRESS);
+
+    /* Update global button state BEFORE queuing so B1-Motion sees Button1Mask */
+    if (med.isPress) {
+	if (med.button == 1) glfwButtonState |= Button1Mask;
+	if (med.button == 2) glfwButtonState |= Button2Mask;
+	if (med.button == 3) glfwButtonState |= Button3Mask;
+    } else {
+	if (med.button == 1) glfwButtonState &= ~Button1Mask;
+	if (med.button == 2) glfwButtonState &= ~Button2Mask;
+	if (med.button == 3) glfwButtonState &= ~Button3Mask;
+    }
+    med.state = TkWaylandButtonKeyState();
+
+    QueueButtonEvent(&med);
+
+    /* Keep Enter/Leave correct */
+    TkDisplay *dispPtr = TkGetDisplayList();
+    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, med.window);
+    if (tkwin) tkwin = Tk_CoordsToWindow(med.localX, med.localY, tkwin);
+    Tk_UpdatePointer(tkwin, med.globalX, med.globalY, med.state);
 }
 
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandHandleMouseButton --
+ * TkWaylandHandleMouseMove --
  *
  *   GLFW cursor position callback.
  *
@@ -342,48 +375,38 @@ TkWaylandHandleMouseMove(
     double x,
     double y)
 {
-    TkWindow *winPtr;
+    TkWindow *winPtr = TkWaylandGetTkWindow(glfwWindow);
+    if (!winPtr) return;
+
     XEvent event;
-
-    winPtr = TkWaylandGetTkWindow(glfwWindow);
-    if (!winPtr) {
-        return;
-    }
-
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
-    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xmotion.send_event = False;
     event.xmotion.display = winPtr->display;
     event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
     event.xmotion.root = XRootWindow(winPtr->display, 0);
-	event.xmotion.time = (Time)(glfwGetTime() * 1000.0);
-    event.xmotion.x = (int)x;
-    event.xmotion.y = (int)y;
-
-    /* Compute root-relative coordinates. */
-
-    int winX = 0, winY = 0;
-    {
-        int winX = 0, winY = 0;
-        event.xmotion.x_root = winX + (int)x;
-        event.xmotion.y_root = winY + (int)y;
-    }
-
+    event.xmotion.time = (Time)(glfwGetTime() * 1000.0);
+    event.xmotion.x = (int)x - Tk_X(winPtr);
+    event.xmotion.y = (int)y - Tk_Y(winPtr);
+    event.xmotion.x_root = (int)x;
+    event.xmotion.y_root = (int)y;
     event.xmotion.state = TkWaylandButtonKeyState();
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;
 
+    if (captureWinPtr) {
+	TkWindow *cap = (TkWindow *)captureWinPtr;
+	event.xmotion.window = Tk_WindowId(captureWinPtr);
+	event.xmotion.x = (int)x - Tk_X(cap);
+	event.xmotion.y = (int)y - Tk_Y(cap);
+    }
+
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    /* Update pointer so cursorWinPtr is current for XDefineCursor's guard. */
-    Tk_UpdatePointer((Tk_Window)winPtr, (int)event.xmotion.x_root,
-        (int)event.xmotion.y_root, TkWaylandButtonKeyState());
-
-    fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
-    		(void*)winPtr, (int)x, (int)y);
-	fflush(stderr);
+    Tk_UpdatePointer(captureWinPtr ? captureWinPtr : (Tk_Window)winPtr,
+	(int)event.xmotion.x_root, (int)event.xmotion.y_root, event.xmotion.state);
 }
+
 /*
  *----------------------------------------------------------------------
  *

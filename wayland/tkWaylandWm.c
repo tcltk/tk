@@ -464,7 +464,7 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
  * TkWmMapWindow --
  *
  *	Called by Tk_MapWindow when mapping a toplevel.  Tk_MapWindow
- *      immediately handles a MapNotify event when this returns.
+ *  immediately handles a MapNotify event when this returns.
  *
  * Results:
  *	None.
@@ -477,13 +477,40 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
  *----------------------------------------------------------------------
  */
 
+
+/*
+ * QueueVisibilityNotify --
+ *   Helper to synthesize VisibilityNotify for a window and all mapped
+ *   descendants. Wayland never sends VisibilityNotify; without this
+ *   [tkwait visibility] on child widgets (event.test uses .t.e) hangs.
+ */
+static void QueueVisibilityNotify(TkWindow *winPtr) {
+    if (winPtr == NULL) return;
+    if (!(winPtr->flags & TK_MAPPED)) return;
+    XEvent event;
+    memset(&event, 0, sizeof(XEvent));
+    event.type = VisibilityNotify;
+    event.xvisibility.serial = LastKnownRequestProcessed(winPtr->display)++;
+    event.xvisibility.send_event = False;
+    event.xvisibility.display = winPtr->display;
+    event.xvisibility.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xvisibility.state = VisibilityUnobscured;
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    /* Recurse to mapped children */
+    TkWindow *child;
+    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (child->flags & TK_MAPPED) {
+            QueueVisibilityNotify(child);
+        }
+    }
+}
+
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
     DEBUG_LOG("TkWmMapWindow: %s", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     wmPtr->withdrawn   = 0;
     wmPtr->initialState = NormalState;
@@ -495,11 +522,37 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdateTitle(winPtr);
         UpdatePhotoIcon(winPtr);
     }
+    /* Re-fetch AFTER Initialize - first map has NULL before init (bug causing visibility hang) */
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
-	UpdateGeometryInfo(winPtr);
-	DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
+        UpdateGeometryInfo(winPtr);
+        DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
+    }
+    /*
+     * Wayland has no VisibilityNotify equivalent — the compositor never
+     * reports obscured/unobscured state to clients, and GLFW has no
+     * callback for it either. Since we already treat GLFW visibility as
+     * synchronous (see WaitForMapNotify), synthesize the event here so
+     * that [tkwait visibility] and any <Visibility> bindings behave as
+     * they would on X11.
+     *
+     * This MUST happen even on first map, and even for overrideredirect
+     * windows (event.test uses overrideredirect). Previous code skipped
+     * it when glfwWindow was NULL before InitializeGlfwWindow, causing
+     * tkwait visibility to hang forever in event.test.
+     */
+    {
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = VisibilityNotify;
+        event.xvisibility.serial     = LastKnownRequestProcessed(winPtr->display)++;
+        event.xvisibility.send_event = False;
+        event.xvisibility.display    = winPtr->display;
+        event.xvisibility.window     = Tk_WindowId((Tk_Window)winPtr);
+        event.xvisibility.state      = VisibilityUnobscured;
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
 }
 
@@ -3464,6 +3517,18 @@ TopLevelEventProc(
     case MapNotify:
 	DEBUG_LOG("MapNotify received for %s", Tk_PathName(winPtr));
         winPtr->flags |= TK_MAPPED;
+        /* Ensure VisibilityNotify follows MapNotify on Wayland - safety net for event.test */
+        {
+            XEvent vev;
+            memset(&vev, 0, sizeof(XEvent));
+            vev.type = VisibilityNotify;
+            vev.xvisibility.serial = LastKnownRequestProcessed(winPtr->display)++;
+            vev.xvisibility.send_event = False;
+            vev.xvisibility.display = winPtr->display;
+            vev.xvisibility.window = Tk_WindowId((Tk_Window)winPtr);
+            vev.xvisibility.state = VisibilityUnobscured;
+            Tk_QueueWindowEvent(&vev, TCL_QUEUE_TAIL);
+        }
         break;
     case UnmapNotify:
 	DEBUG_LOG("UnmapNotify received for %s", Tk_PathName(winPtr));;
@@ -3525,10 +3590,10 @@ TopLevelReqProc(
  * ApplyPendingGeometry --
  *
  *	Sets the size of the toplevel by calling glfwSetWindowSize.  This is
- *      called directly by that TkWmMapWindow when a toplevel is first mapped,
- *      and used as idle task by UpdateGeometryInfo.  The size is set to
- *      wmPtr->width x wmPtr->height if those values are both positive, or
- *      to winPtr->reqWidth x winPtr->reqHeight if not.
+ * 	called directly by that TkWmMapWindow when a toplevel is first mapped,
+ * 	and used as idle task by UpdateGeometryInfo.  The size is set to
+ *  wmPtr->width x wmPtr->height if those values are both positive, or
+ *  to winPtr->reqWidth x winPtr->reqHeight if not.
  *
  *	Caller is responsible for checking that glfwWindow is non-NULL and
  *	that the window isn't withdrawn before calling this.
@@ -4224,6 +4289,21 @@ XMapWindow(
     DEBUG_LOG("XMapWindow: %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    /*
+     * Wayland: child windows mapped after toplevel is visible need
+     * VisibilityNotify too, otherwise [tkwait visibility $child] hangs.
+     */
+    if (winPtr && (winPtr->flags & TK_TOP_LEVEL) == 0) {
+        TkWindow *top = winPtr;
+        while (top && !(top->flags & TK_TOP_LEVEL)) {
+            top = top->parentPtr;
+        }
+        if (top && (top->flags & TK_MAPPED)) {
+            QueueVisibilityNotify(winPtr);
+        }
+    } else if (winPtr) {
+        QueueVisibilityNotify(winPtr);
+    }
     return Success;
 }
 
@@ -4880,7 +4960,7 @@ XSetWindowBorderPixmap(
 
 int
 XSetInputFocus(
-    TCL_UNUSED(Display *),
+    Display *display,
     Window focus,
     TCL_UNUSED(int),    /* revert_to */
     TCL_UNUSED(Time))   /* time      */
@@ -4894,6 +4974,21 @@ XSetInputFocus(
     gw = WindowToGLFW(focus);
     if (gw != NULL) {
         glfwFocusWindow(gw);
+    }
+    
+    /* Wayland focus is async - synthesize so focus -force doesn't hang . */
+    Tk_Window focusPtr = Tk_IdToWindow(display, focus);
+    TkWindow *winPtr = (TkWindow*)focusPtr;
+    if (winPtr) {
+        XEvent fev;
+        memset(&fev,0,sizeof(fev));
+        fev.type = FocusIn;
+        fev.xfocus.display = display;
+        fev.xfocus.window = focus;
+        fev.xfocus.mode = NotifyNormal;
+        fev.xfocus.detail = NotifyNonlinear;
+        Tk_QueueWindowEvent(&fev, TCL_QUEUE_TAIL);
+        TkSetFocusWin(winPtr, 1);
     }
 
     return Success;
