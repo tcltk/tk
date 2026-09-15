@@ -5002,19 +5002,17 @@ XSetInputFocus(
     if (gw != NULL) {
         glfwFocusWindow(gw);
     }
-    
-    /* Wayland focus is async - synthesize so focus -force doesn't hang . */
+
+    /* Wayland focus is async - synthesize so focus -force doesn't hang.
+     * TkSetFocusWin already updates dispPtr->focusWinPtr and fires the
+     * <FocusIn>/<FocusOut> binding sequence, so we must NOT also queue a
+     * raw FocusIn XEvent here - doing so would cause a second, stale focus
+     * transition to be delivered later by TkFocusFilterEvent. Real
+     * compositor-driven activation is handled separately in
+     * TkWaylandWindowFocusCallback. */
     Tk_Window focusPtr = Tk_IdToWindow(display, focus);
     TkWindow *winPtr = (TkWindow*)focusPtr;
     if (winPtr) {
-        XEvent fev;
-        memset(&fev,0,sizeof(fev));
-        fev.type = FocusIn;
-        fev.xfocus.display = display;
-        fev.xfocus.window = focus;
-        fev.xfocus.mode = NotifyNormal;
-        fev.xfocus.detail = NotifyNonlinear;
-        Tk_QueueWindowEvent(&fev, TCL_QUEUE_TAIL);
         TkSetFocusWin(winPtr, 1);
     }
 
