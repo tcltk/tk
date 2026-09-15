@@ -411,7 +411,8 @@ static void IndicatorElementDraw(
     int width = spec->width * scalingLevel;
     int height = spec->height * scalingLevel;
 
-    char upperBdColorStr[7], lowerBdColorStr[7], bgColorStr[7], fgColorStr[7];
+    char upperBdColorStr[7], lowerBdColorStr[7], bgColorStr[7];
+    char fgColorStr[7] = "000000";
     unsigned int selected = (state & TTK_STATE_SELECTED);
     Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[60];
@@ -450,13 +451,15 @@ static void IndicatorElementDraw(
      * bgColorStr, and fgColorStr
      */
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->upperColorObj),
-	       upperBdColorStr);
+	    upperBdColorStr);
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->lowerColorObj),
-	       lowerBdColorStr);
+	    lowerBdColorStr);
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->backgroundObj),
-	       bgColorStr);
-    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
-	       fgColorStr);
+	    bgColorStr);
+    if (indicator->foregroundObj) {
+	ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
+		fgColorStr);
+    }
 
     /*
      * Check whether there is an SVG image of this size for the indicator's

@@ -495,11 +495,11 @@ test ttk-9.8 "-textvariable overrides -text" -body {
 test ttk-9.9 "default for -justify" -body {
     ttk::label .tl
     .tl cget -justify
-} -cleanup { destroy .tl } -result "left"
+} -cleanup { destroy .tl } -result ""
 test ttk-9.10 "default for -anchor" -body {
     ttk::label .tl
     .tl cget -anchor
-} -cleanup { destroy .tl } -result "w"
+} -cleanup { destroy .tl } -result ""
 
 #
 # Frame widget tests:

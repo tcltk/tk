@@ -26,6 +26,7 @@ to the userbase.
  - [tk.pc omits private pkg-config dependency for static linking](https://core.tcl-lang.org/tk/tktview/3e5d09)
  - [Modal window is not restored after "show desktop"](https://core.tcl-lang.org/tk/tktview/ed6c3a)
  - [tk_getOpenFile -multiple (tkfbox): confirmed files are appended -initialfile](https://core.tcl-lang.org/tk/tktview/56eec5)
+ - [ttk::style configure has no effect on options with a non-empty widget default](https://core.tcl-lang.org/tk/tktview/aba849)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

@@ -58,11 +58,11 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-width", TK_OPTION_INT,
 	offsetof(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
-	offsetof(TextElement,anchorObj), "w"},
+	offsetof(TextElement,anchorObj), NULL },
     { "-justify", TK_OPTION_JUSTIFY,
-	offsetof(TextElement,justifyObj), "left" },
+	offsetof(TextElement,justifyObj), NULL },
     { "-wraplength", TK_OPTION_PIXELS,
-	offsetof(TextElement,wrapLengthObj), "0" },
+	offsetof(TextElement,wrapLengthObj), NULL },
     { "-embossed", TK_OPTION_INT,
 	offsetof(TextElement,embossedObj), "0"},
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -75,8 +75,12 @@ static int TextSetup(TextElement *text, Tk_Window tkwin)
     int wrapLength = 0;
 
     text->tkfont = Tk_GetFontFromObj(tkwin, text->fontObj);
-    Tk_GetJustifyFromObj(NULL, text->justifyObj, &justify);
-    Tk_GetPixelsFromObj(NULL, tkwin, text->wrapLengthObj, &wrapLength);
+    if (text->justifyObj) {
+	Tk_GetJustifyFromObj(NULL, text->justifyObj, &justify);
+    }
+    if (text->wrapLengthObj) {
+	Tk_GetPixelsFromObj(NULL, tkwin, text->wrapLengthObj, &wrapLength);
+    }
     Tcl_GetBooleanFromObj(NULL, text->embossedObj, &text->embossed);
 
     text->textLayout = Tk_ComputeTextLayout(
@@ -126,15 +130,15 @@ static void TextCleanup(TextElement *text)
  */
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
-    XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
+    XColor *color = text->foregroundObj ? Tk_GetColorFromObj(tkwin, text->foregroundObj) : NULL;
     Tcl_Size underline = INT_MIN;
     XGCValues gcValues;
     GC gc1, gc2;
-    Tk_Anchor anchor = TK_ANCHOR_CENTER;
+    Tk_Anchor anchor = TK_ANCHOR_W;
     TkRegion clipRegion = NULL;
 
     gcValues.font = Tk_FontId(text->tkfont);
-    gcValues.foreground = color->pixel;
+    gcValues.foreground = color ? color->pixel : 0;
     gc1 = Tk_GetGC(tkwin, GCFont | GCForeground, &gcValues);
     gcValues.foreground = WhitePixelOfScreen(Tk_Screen(tkwin));
     gc2 = Tk_GetGC(tkwin, GCFont | GCForeground, &gcValues);
@@ -142,7 +146,9 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     /*
      * Place text according to -anchor:
      */
-    Tk_GetAnchorFromObj(NULL, text->anchorObj, &anchor);
+    if (text->anchorObj) {
+	Tk_GetAnchorFromObj(NULL, text->anchorObj, &anchor);
+    }
     b = Ttk_AnchorBox(b, text->width, text->height, anchor);
 
     /*
@@ -366,13 +372,13 @@ static void StippleOver(
     ImageElement *image, Tk_Window tkwin, Drawable d, int x, int y)
 {
     Pixmap stipple = Tk_AllocBitmapFromObj(NULL, tkwin, image->stippleObj);
-    XColor *color = Tk_GetColorFromObj(tkwin, image->backgroundObj);
+    XColor *color = image->backgroundObj ? Tk_GetColorFromObj(tkwin, image->backgroundObj) : NULL;
 
     if (stipple != None) {
 	unsigned long mask = GCFillStyle | GCStipple | GCForeground;
 	XGCValues gcvalues;
 	GC gc;
-	gcvalues.foreground = color->pixel;
+	gcvalues.foreground = color ? color->pixel : 0;
 	gcvalues.fill_style = FillStippled;
 	gcvalues.stipple = stipple;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
@@ -532,11 +538,11 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-width", TK_OPTION_INT,
 	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,
-	offsetof(LabelElement,text.anchorObj), "w"},
+	offsetof(LabelElement,text.anchorObj), NULL},
     { "-justify", TK_OPTION_JUSTIFY,
-	offsetof(LabelElement,text.justifyObj), "left" },
+	offsetof(LabelElement,text.justifyObj), NULL },
     { "-wraplength", TK_OPTION_PIXELS,
-	offsetof(LabelElement,text.wrapLengthObj), "0" },
+	offsetof(LabelElement,text.wrapLengthObj), NULL },
     { "-embossed", TK_OPTION_INT,
 	offsetof(LabelElement,text.embossedObj), "0"},
 
@@ -706,14 +712,16 @@ static void LabelElementDraw(
     Ttk_State state)
 {
     LabelElement *l = (LabelElement *)elementRecord;
-    Tk_Anchor anchor = TK_ANCHOR_CENTER;
+    Tk_Anchor anchor = TK_ANCHOR_W;
 
     LabelSetup(l, tkwin, state);
 
     /*
      * Adjust overall parcel based on -anchor:
      */
-    Tk_GetAnchorFromObj(NULL, l->text.anchorObj, &anchor);
+    if (l->text.anchorObj) {
+	Tk_GetAnchorFromObj(NULL, l->text.anchorObj, &anchor);
+    }
     b = Ttk_AnchorBox(b, l->totalWidth, l->totalHeight, anchor);
 
     /*

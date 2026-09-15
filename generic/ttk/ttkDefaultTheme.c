@@ -590,8 +590,9 @@ static void IndicatorElementDraw(
     int width = spec->width * scalingLevel;
     int height = spec->height * scalingLevel;
 
-    char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
+    char bgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
+    char fgColorStr[7] = "000000";
     unsigned int selected = (state & TTK_STATE_SELECTED);
     Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[70];
@@ -632,8 +633,10 @@ static void IndicatorElementDraw(
      */
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->backgroundObj),
 	       bgColorStr);
-    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
-	       fgColorStr);
+    if (indicator->foregroundObj) {
+	ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
+		   fgColorStr);
+    }
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->colorObj),
 	       indicatorColorStr);
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->shadeColorObj),
