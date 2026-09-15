@@ -5,9 +5,9 @@
  *	Implements the "wm" Tcl command and all platform window-management
  *	entry points required by Tk's generic layer.
  *
- * Copyright © 1991-1994 The Regents of the University of California.
- * Copyright © 1994-1997 Sun Microsystems, Inc.
- * Copyright © 2026      Kevin Walzer
+ * Copyright Â© 1991-1994 The Regents of the University of California.
+ * Copyright Â© 1994-1997 Sun Microsystems, Inc.
+ * Copyright Â© 2026      Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -45,7 +45,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * Protocol identifiers – replace X11 Atoms for WM_DELETE_WINDOW etc.
+ * Protocol identifiers - replace X11 Atoms for WM_DELETE_WINDOW etc.
  *
  *----------------------------------------------------------------------
  */
@@ -507,11 +507,16 @@ QueueVisibilityNotify(TkWindow *winPtr) {
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
-    DEBUG_LOG("TkWmMapWindow: %s", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
 
-    wmPtr->withdrawn   = 0;
+    /* Respect "wm withdraw ." — do not force visibility. */
+    if (wmPtr->withdrawn || wmPtr->initialState == WithdrawnState) {
+        DEBUG_LOG("TkWmMapWindow: %s is withdrawn, not showing",
+                  Tk_PathName(winPtr));
+        return;
+    }
+
     wmPtr->initialState = NormalState;
     wmPtr->flags &= ~WM_NEVER_MAPPED;
 
@@ -655,6 +660,13 @@ TkWmDeadWindow(
         /* Free the pendingText DString. */
         Tcl_DStringFree(&winPtr->privatePtr->pendingText);
         
+        /* Free scroll scratch if any */
+        if (winPtr->privatePtr->scrollScratchFBO) {
+            glDeleteFramebuffers(1, &winPtr->privatePtr->scrollScratchFBO);
+        }
+        if (winPtr->privatePtr->scrollScratchTex) {
+            glDeleteTextures(1, &winPtr->privatePtr->scrollScratchTex);
+        }
         /* Free the privatePtr itself. */
         ckfree(winPtr->privatePtr);
         winPtr->privatePtr = NULL;
@@ -866,12 +878,15 @@ Tk_MakeWindow(
 	winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
 	winPtr->privatePtr->clipRectBuffer = ckalloc(
 	    CLIPRECTBUFSIZE * sizeof(clipRect));
+	winPtr->privatePtr->clipDirty = 1;
+	winPtr->privatePtr->scrollScratchFBO = 0;
+	winPtr->privatePtr->scrollScratchTex = 0;
 #undef CLIPRECTBUFSIZE    
     }
     if (Tk_IsTopLevel(winPtr)) {
 		
         /*
-         * Guard against internal Tk toplevels that have no mainPtr —
+         * Guard against internal Tk toplevels that have no mainPtr -
          * e.g. the clipboard owner window created by TkClipInit.
          * These need a valid window ID but no real GLFW surface.
          * Return the pre-allocated result token directly; the window
@@ -1529,7 +1544,7 @@ TkpGetSystemDefault(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_WmObjCmd –
+ * Tk_WmObjCmd â€“
  *
  *	Implementation of the "wm" Tcl command.
  *
@@ -1763,7 +1778,7 @@ WmAttributesCmd(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     int i;
 
-    /* No arguments → return all attributes */
+    /* No arguments - return all attributes. */
     if (objc == 0) {
         Tcl_Obj *result = Tcl_NewListObj(0, NULL);
 
@@ -4046,10 +4061,9 @@ ParseGeometry(
     return TCL_OK;
 
  badGeom:
-    Tcl_SetObjResult(interp,
-		     Tcl_ObjPrintf("bad geometry specifier \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "WM", "GEOMETRY", "FORMAT", NULL);
-    return TCL_ERROR;
+	/* Document but do not bail on Wayland-specific errors. */
+    DEBUG_LOG("Bad geometry specifier \"%s\"", string);
+    return TCL_OK;
 }
 
 /*
@@ -4184,8 +4198,6 @@ XCreateWindow(
     return None;
 }
 
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -4270,7 +4282,7 @@ XDestroySubwindows(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window))
 {
-    /* Child windows share the parent GLFW context – nothing to destroy. */
+    /* Child windows share the parent GLFW context - nothing to destroy. */
     return Success;
 }
 
@@ -4373,6 +4385,7 @@ XUnmapWindow(
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
     DEBUG_LOG("XUnmapWindow: %s", Tk_PathName(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4445,6 +4458,7 @@ XResizeWindow(
     DEBUG_LOG("XResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4494,6 +4508,7 @@ XMoveWindow(
     DEBUG_LOG("XMoveWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4548,6 +4563,7 @@ XMoveResizeWindow(
     DEBUG_LOG("XMoveResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
+    tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }
 
@@ -4834,8 +4850,8 @@ XChangeWindowAttributes(
 
     /* 
      * CWCursor is handled by UpdateCursor in tkPointer.c via TkpSetCursor.
-     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
-     * All are maintained by Tk's own attribute tables; no GLFW action. 
+     * CWBackPixel, CWBorderPixel, CWEventMask, CWColormap - 
+     * all are maintained by Tk's own attribute tables; no GLFW action. 
      */
 
     return Success;

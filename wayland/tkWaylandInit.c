@@ -186,12 +186,22 @@ static glfwTkInfo* createGlfwTkInfo(
         glfwTerminate();
         return NULL;
     }
-    nvgCreateFontMem(infoPtr->vg, "sans", sans_data,
-		     (int)sans_size, 0);
-    nvgCreateFontMem(infoPtr->vg, "sans-bold", bold_data,
-		     (int)bold_size, 0);
-    nvgCreateFontMem(infoPtr->vg, "mono", mono_data,
-		     (int)mono_size, 0);
+    /* Guard: readFont() can return NULL; nvgCreateFontMem derefs immediately */
+    if (sans_data && sans_size > 0) {
+        nvgCreateFontMem(infoPtr->vg, "sans", sans_data, (int)sans_size, 0);
+    } else {
+        DEBUG_LOG("createGlfwTkInfo: sans_data missing, skipping");
+    }
+    if (bold_data && bold_size > 0) {
+        nvgCreateFontMem(infoPtr->vg, "sans-bold", bold_data, (int)bold_size, 0);
+    } else {
+        DEBUG_LOG("createGlfwTkInfo: bold_data missing, skipping");
+    }
+    if (mono_data && mono_size > 0) {
+        nvgCreateFontMem(infoPtr->vg, "mono", mono_data, (int)mono_size, 0);
+    } else {
+        DEBUG_LOG("createGlfwTkInfo: mono_data missing, skipping");
+    }
     return infoPtr;
 }
 
@@ -216,10 +226,10 @@ static void destroyGlfwTkInfo(
 	     */
 	    TkWaylandFontContextDestroyed(infoPtr->vg);
 	    GL_DEBUG_LOG("destroyGlfwTkInfo: before destroying vg for %s\n",
-		Tk_PathName(infoPtr->winPtr));
+		infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "<bootstrap>");
 	    nvgDeleteGLES3(infoPtr->vg);
 	    GL_DEBUG_LOG("destroyGlfwTkInfo: after destroying vg for %s\n",
-		Tk_PathName(infoPtr->winPtr));
+		infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "<bootstrap>");
 	    Tcl_Free(infoPtr);
 	    return;
 	}
@@ -461,6 +471,7 @@ Tk_ClipDrawableToRect(
     }
     winPtr->privatePtr->boundsRect = (clipRect) {
 	.x = x, .y = y, .w = width, .h = height};
+    winPtr->privatePtr->clipDirty = 1;
 }
 
 /*
@@ -626,6 +637,44 @@ TkWaylandInitialize(Tcl_Interp *interp)
     glfwPollEvents();
 
     /*
+     * Load fonts BEFORE bootstrap - createGlfwTkInfo dereferences sans_data
+     */
+    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                         &sans_size);
+    if (!sans_data) {
+        sans_data = readFont("/usr/share/fonts/TTF/DejaVuSans.ttf", &sans_size);
+    }
+    if (!sans_data) {
+        sans_data = readFont("/usr/share/fonts/dejavu/DejaVuSans.ttf", &sans_size);
+    }
+    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                         &bold_size);
+    if (!bold_data) {
+        bold_data = readFont("/usr/share/fonts/TTF/DejaVuSans-Bold.ttf", &bold_size);
+    }
+    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+                         &mono_size);
+    if (!mono_data) {
+        mono_data = readFont("/usr/share/fonts/TTF/DejaVuSansMono.ttf", &mono_size);
+    }
+
+    /*
+     * Attach a real glfwTkInfo (and therefore a working NVG context) to
+     * the bootstrap window right away. winPtr is filled in once
+     * the real Tk root window exists; TkWaylandCreateWindow() updates
+     * it in place rather than creating a second NVG context.
+     */
+    {
+        glfwTkInfo *bootstrapInfo = createGlfwTkInfo(mainGlfwWindow, NULL);
+        if (!bootstrapInfo) {
+            DEBUG_LOG("TkWaylandInitialize: createGlfwTkInfo() failed for bootstrap window");
+            glfwTerminate();
+            return TCL_ERROR;
+        }
+        glfwSetWindowUserPointer(mainGlfwWindow, bootstrapInfo);
+    }
+
+    /*
      * Now GL is guaranteed valid.
      */
     DEBUG_LOG("GL_VENDOR   = %s", glGetString(GL_VENDOR));
@@ -657,16 +706,6 @@ TkWaylandInitialize(Tcl_Interp *interp)
      * - current GL context (implicit via GLFW)
      */
     TkWaylandPopupSetMainWindow(mainGlfwWindow);
-
-    /*
-     * Load fonts for window decorations.
-     */
-    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                         &sans_size);
-    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                         &bold_size);
-    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-                         &mono_size);
 
     glfwSwapInterval(0);
 
@@ -843,11 +882,22 @@ TkWaylandCreateWindow(
         glfwSwapInterval(0);
     }
 
-    glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (infoPtr) {
+        /*
+         * glfwWindow is the bootstrap mainGlfwWindow, which already has
+         * a glfwTkInfo (and NVG context) attached from
+         * TkWaylandInitialize(). Just fill in winPtr now that the real
+         * root TkWindow exists.
+         */
+        infoPtr->winPtr = winPtr;
+    } else {
+        infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
+        glfwSetWindowUserPointer(glfwWindow, infoPtr);
+    }
     DEBUG_LOG("nvgContext for %s is at %p",
             Tk_PathName(winPtr), infoPtr);
 
-    glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkWaylandSetupCallbacks(glfwWindow);
 
     winPtr->privatePtr->glfwWindow = glfwWindow;
@@ -1319,11 +1369,21 @@ TkWaylandGetNVGContext(
 MODULE_SCOPE NVGcontext *
 TkWaylandGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || shutdownInProgress) {
+    if (!GlfwIsInitialized || shutdownInProgress || !mainGlfwWindow) {
         return NULL;
 	}
-	
+
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
+    if (!glfwInfoPtr || !glfwInfoPtr->winPtr) {
+        /*
+         * Guard against null window and glfwInfo pointers. Font measurement
+         * triggered in that window (e.g. by early widget creation) must
+         * fall back to the caller's non-NVG estimate rather than
+         * dereferencing a NULL glfwInfoPtr here.
+         */
+        return NULL;
+    }
+
     glfwMakeContextCurrent(mainGlfwWindow);
     Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);
     return TkWaylandGetNVGContext(drawable);

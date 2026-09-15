@@ -494,6 +494,10 @@ Tk_GetPixmap(
     }
 
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!infoPtr) {
+        printf("No GLFW window info (not yet initialized)!\n");
+        return None;
+    }
     pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
     memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
     pixmapPtr->glfwWindow = glfwWindow;

@@ -42,7 +42,24 @@ extern GLFWwindow *mainGlfwWindow;
 /* Menu constants. */
 #define MENU_MARGIN_WIDTH       2
 #define MENU_DIVIDER_HEIGHT     2
+
+/*
+ * Minimum width for menus to prevent unreasonable clipping.
+ */
+#define MENU_MIN_CONTENT_WIDTH  90
 #define ENTRY_HELP_MENU         ENTRY_PLATFORM_FLAG1
+
+/*
+ * Scrolling support for clipped menus. The canonical values live in
+ * tkWaylandInt.h (TK_WAYLAND_MENU_SCROLL_*) since they're part of the
+ * public MODULE_SCOPE surface (TkWaylandMenuHandlePointerAxis,
+ * TkWaylandMenuHandleScroll, TkWaylandMenuGetScrollInfo); short local
+ * aliases are kept here only to avoid the longer name at every call site.
+ */
+#define MENU_SCROLL_ARROW_H       TK_WAYLAND_MENU_SCROLL_ARROW_H
+#define MENU_SCROLL_STEP          TK_WAYLAND_MENU_SCROLL_STEP
+#define MENU_SCROLLBAR_WIDTH      TK_WAYLAND_MENU_SCROLLBAR_WIDTH
+#define MENU_SCROLL_EDGE_ZONE     TK_WAYLAND_MENU_SCROLL_EDGE_ZONE
 
 /* Cascade arrow size. */
 #define CASCADE_ARROW_WIDTH 10
@@ -118,21 +135,25 @@ typedef struct {
     TkMenu         *menuPtr;
     TkWaylandPopup *popup;
     int x, y, w, h;   /* Toplevel-surface-local rect. */
-    int rootIsMenubar; /* True if the root (index 0) of this chain was
-                         * posted by TkWaylandMenubarMove/ActivateFirst
-                         * (a real menubar cascade). False for chains
-                         * rooted at a menubutton (-menu) post or a
-                         * right-click context menu. Only meaningful via
-                         * menuStack[0]; nested cascades share their
-                         * root's value. */
-    GLFWwindow    *glfwWindow; /* The GLFW window this menu belongs to.
-                                 * Used to ensure cascades use the same
-                                 * toplevel coordinate space as their parent. */
+    int rootIsMenubar;
+    GLFWwindow    *glfwWindow;
+    /* Scrolling state for clipped menus */
+    int contentH;    /* Full menu totalHeight before clamping */
+    int viewportH;   /* Visible height after clamping */
+    int scrollOffset;/* Pixel offset into content */
 } MenuStackEntry;
 
 static MenuStackEntry menuStack[TK_WAYLAND_MENU_STACK_MAX];
 static int            menuStackDepth = 0;
 static int menuDismissedByClick = 0;
+
+/*
+ * Toplevel that held real Tk focus before F10/Alt handed it to the
+ * menubar for keyboard navigation; restored by TkWaylandMenuDismissAll
+ * when the menu session ends. NULL when no keyboard-nav session is in
+ * progress (e.g. an ordinary tk_popup context menu).
+ */
+static TkWindow *menuKeyboardNavOwnerWinPtr = NULL;
 
 /*
  * Set immediately before a *root* (isRoot=1) call to
@@ -146,6 +167,13 @@ static int pendingRootIsMenubar = 0;
 static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
 static void MenuStackPop(int toDepth);
 static int MenuStackFindLevel(TkMenu *menuPtr);
+
+/* Scrolling support */
+static int MenuScrollBy(int level, int delta);
+static void MenuEnsureActiveVisible(TkMenu *menuPtr);
+static int MenuTranslateYForHitTest(MenuStackEntry *entry, int y);
+static void MenuDrawScrollIndicators(NVGcontext *vg, MenuStackEntry *entry,
+    NVGcolor bgColor);
 
 /* Menu helpers. */
 static void SetHelpMenu(TkMenu *menuPtr);
@@ -197,6 +225,19 @@ static void TkpDisplayMenu(void *clientData);
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
 static void MenuMouseLeave(TkMenu *menuPtr);
+
+/*
+ * <<MenuSelect>> generation. Stock Tk fires this virtual event purely at
+ * script level (tk::GenerateMenuSelect, called from the Menu class's
+ * <Motion> binding et al.) after a menu's active entry is changed via
+ * [$menu activate]. Because this backend drives entry activation directly
+ * from raw wl_pointer/wl_keyboard listeners in C -- never synthesizing a
+ * <Motion> event that would run through the Menu bindtag -- that script
+ * layer is never reached, so <<MenuSelect>> must be generated here
+ * instead. 
+ */
+static void TkWaylandGenerateMenuSelect(TkMenu *menuPtr);
+MODULE_SCOPE void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 
 /* Helpers for positioning / clamping. */
 static void TkWaylandGetToplevelContentSize(GLFWwindow *glfwWindow, int *widthPtr, int *heightPtr);
@@ -780,6 +821,11 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         }
         if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) {
             if (i != 0) {
+                if (indicatorSpace + labelWidth + accelWidth
+                        < MENU_MIN_CONTENT_WIDTH) {
+                    labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace
+                        - accelWidth;
+                }
                 for (j = lastColumnBreak; j < i; j++) {
                     menuPtr->entries[j]->indicatorSpace = indicatorSpace;
                     menuPtr->entries[j]->labelWidth = labelWidth;
@@ -820,6 +866,9 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         mePtr->x = x;
         mePtr->y = y;
         y += mePtr->height;
+    }
+    if (indicatorSpace + labelWidth + accelWidth < MENU_MIN_CONTENT_WIDTH) {
+        labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace - accelWidth;
     }
     for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
         menuPtr->entries[j]->indicatorSpace = indicatorSpace;
@@ -1099,6 +1148,86 @@ GetMenuLabelGeometry(
 /*
  *---------------------------------------------------------------------------
  *
+ * MenubarReqProc --
+ *
+ *     Tk_GeomRequestProc for wmMenubarMgrType (see below). Called
+ *     whenever the menu attached as a toplevel's menubar asks for a new
+ *     size -- e.g. TkRecomputeMenu() calling Tk_GeometryRequest() after
+ *     entries are added/removed or the font changes -- so the menubar
+ *     strip stays in sync without requiring TkpSetWindowMenuBar() to be
+ *     re-invoked explicitly. clientData is the *toplevel* TkWindow that
+ *     owns this menubar (passed to Tk_ManageGeometry below); tkwin is
+ *     the menu window itself and is only used to double check it still
+ *     matches wmPtr->menubar.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     May resize/redraw the menubar popup.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenubarReqProc(
+    void      *clientData,
+    Tk_Window  tkwin)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    WmInfo   *wmPtr;
+
+    if (!winPtr || (winPtr->flags & TK_ALREADY_DEAD)) {
+        return;
+    }
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr || !wmPtr->menubarMenuPtr || wmPtr->menubar != tkwin) {
+        return;
+    }
+
+    DEBUG_LOG("MenubarReqProc: resyncing menubar for %s", Tk_PathName((Tk_Window)winPtr));
+
+    TkRecomputeMenu(wmPtr->menubarMenuPtr);
+    wmPtr->menuHeight = wmPtr->menubarMenuPtr->totalHeight;
+    if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
+
+    Tk_SetInternalBorderEx((Tk_Window)winPtr, winPtr->internalBorderLeft,
+            winPtr->internalBorderRight, wmPtr->menuHeight,
+            winPtr->internalBorderBottom);
+
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+        TkWaylandMenubarCreateOrResize(winPtr);
+    }
+}
+
+/*
+ * Geometry manager registered on a menu's Tk_Window while it is attached
+ * to a toplevel as that toplevel's menubar. Mirrors the "menubar"
+ * Tk_GeomMgr the X11 backend registers in tkUnixWm.c. Two things depend
+ * on this being registered under that exact name, not just on
+ * wmPtr->menubar/menubarMenuPtr being set internally:
+ *
+ *   - [winfo manager $menu] must report "menubar" for script-level code
+ *     to be able to tell a menubar strip apart from an ordinary
+ *     dropdown/submenu menu (e.g. this project's accessibility.tcl uses
+ *     exactly this check in ::tk::accessible::_update_active_entry to
+ *     decide whether to announce immediately or with the submenu's
+ *     gentle pause). Without a registered manager this always reads as
+ *     "", so a menubar selection was silently being treated as a
+ *     submenu selection.
+ *   - Once registered, a later Tk_GeometryRequest() from the menu (see
+ *     MenubarReqProc above) automatically triggers a resync instead of
+ *     only happening when TkpSetWindowMenuBar() itself is re-invoked.
+ */
+static const Tk_GeomMgr wmMenubarMgrType = {
+    "menubar",
+    MenubarReqProc,
+    NULL,
+};
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkpSetWindowMenuBar --
  *
  *     Attach or detach a menubar for a toplevel.
@@ -1108,7 +1237,8 @@ GetMenuLabelGeometry(
  *     None.
  *
  * Side effects:
- *     Creates or updates wmPtr->menubarPopup.
+ *     Creates or updates wmPtr->menubarPopup. Registers/unregisters
+ *     wmMenubarMgrType on the menu's window as it is attached/detached.
  *
  *---------------------------------------------------------------------------
  */
@@ -1135,6 +1265,9 @@ TkpSetWindowMenuBar(
             TkWaylandPopupDestroy(wmPtr->menubarPopup);
             wmPtr->menubarPopup = NULL;
         }
+        if (wmPtr->menubar) {
+            Tk_ManageGeometry(wmPtr->menubar, NULL, NULL);
+        }
         wmPtr->menubar        = NULL;
         wmPtr->menubarMenuPtr = NULL;
         wmPtr->menuHeight     = 0;
@@ -1160,9 +1293,16 @@ TkpSetWindowMenuBar(
         return;
     }
 
-    /* New menubar - create it. */
+    /* New menubar - create it. Release any previous menubar's manager
+     * registration first (this is a *different* menuPtr than the one
+     * currently attached, if any -- the "update existing" case above
+     * already returned). */
+    if (wmPtr->menubar) {
+        Tk_ManageGeometry(wmPtr->menubar, NULL, NULL);
+    }
     wmPtr->menubar        = (Tk_Window)menuPtr->tkwin;
     wmPtr->menubarMenuPtr = menuPtr;
+    Tk_ManageGeometry(wmPtr->menubar, &wmMenubarMgrType, (void *)winPtr);
 
     TkRecomputeMenu(menuPtr);
     wmPtr->menuHeight = menuPtr->totalHeight;
@@ -2620,7 +2760,7 @@ TkpPostMenu(
         return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
     }
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkWaylandActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
 
     result = TkPostCommand(menuPtr);
@@ -2861,6 +3001,265 @@ MenuStackPop(
 /*
  *---------------------------------------------------------------------------
  *
+ * MenuScrollBy --
+ *
+ *     Adjust the vertical scroll offset of the popup at the given
+ *     menuStack level by delta content pixels (positive scrolls down,
+ *     revealing later entries), clamped to [0, contentH - viewportH],
+ *     and repaints the popup if the offset actually changed.
+ *
+ * Results:
+ *     1 if the offset changed, 0 if level is invalid, the menu isn't
+ *     scrollable, or delta was clamped away to nothing (already at an
+ *     end).
+ *
+ * Side effects:
+ *     May update menuStack[level].scrollOffset and redraw its popup.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+MenuScrollBy(
+    int level,
+    int delta)
+{
+    MenuStackEntry *entry;
+    int maxOffset, newOffset;
+
+    if (level < 0 || level >= menuStackDepth) {
+        return 0;
+    }
+
+    entry = &menuStack[level];
+    maxOffset = entry->contentH - entry->viewportH;
+    if (maxOffset <= 0) {
+        /* Not clipped -- nothing to scroll. */
+        return 0;
+    }
+
+    newOffset = entry->scrollOffset + delta;
+    if (newOffset < 0) newOffset = 0;
+    if (newOffset > maxOffset) newOffset = maxOffset;
+
+    if (newOffset == entry->scrollOffset) {
+        return 0;
+    }
+
+    entry->scrollOffset = newOffset;
+
+    if (entry->menuPtr && entry->popup) {
+        MenuDrawIntoPopup(entry->menuPtr, entry->popup);
+    }
+
+    return 1;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuEnsureActiveVisible --
+ *
+ *     If menuPtr is currently posted and scrollable, and its active
+ *     entry lies partly or wholly outside the visible viewport, scroll
+ *     just far enough to bring that entire entry into view. Called from
+ *     TkWaylandActivateMenuEntry() -- the single choke point used for both
+ *     pointer-hover and keyboard-driven activation -- so that navigating
+ *     through a menu longer than the window naturally scrolls it, the
+ *     way native menus do.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     May scroll and redraw the menu's popup.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenuEnsureActiveVisible(
+    TkMenu *menuPtr)
+{
+    int level;
+    MenuStackEntry *entry;
+    TkMenuEntry *mePtr;
+
+    if (!menuPtr || menuPtr->active < 0 ||
+            menuPtr->active >= menuPtr->numEntries) {
+        return;
+    }
+
+    level = MenuStackFindLevel(menuPtr);
+    if (level < 0) {
+        return;
+    }
+
+    entry = &menuStack[level];
+    if (entry->contentH <= entry->viewportH) {
+        return;
+    }
+
+    mePtr = menuPtr->entries[menuPtr->active];
+    if (!mePtr) {
+        return;
+    }
+
+    if (mePtr->y < entry->scrollOffset) {
+        MenuScrollBy(level, mePtr->y - entry->scrollOffset);
+    } else if (mePtr->y + mePtr->height > entry->scrollOffset + entry->viewportH) {
+        MenuScrollBy(level,
+            (mePtr->y + mePtr->height) - (entry->scrollOffset + entry->viewportH));
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuTranslateYForHitTest --
+ *
+ *     Menu entry geometry (TkMenuEntry->y/height) is always computed in
+ *     unclamped content space, but pointer events arrive in viewport
+ *     (popup-surface-local) space. Once a menu is scrolled these two
+ *     spaces diverge, so every hit test against entry geometry must
+ *     first add back the current scroll offset. With no scrolling
+ *     (scrollOffset == 0) this is a no-op, so it's always safe to call.
+ *
+ * Results:
+ *     The equivalent y coordinate in content space.
+ *
+ * Side effects:
+ *     None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+MenuTranslateYForHitTest(
+    MenuStackEntry *entry,
+    int y)
+{
+    if (!entry) {
+        return y;
+    }
+    return y + entry->scrollOffset;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuDrawScrollIndicators --
+ *
+ *     Draw a faded strip + chevron at the top and/or bottom edge of a
+ *     scrollable popup to show that more entries lie above or below the
+ *     visible viewport, plus a thin proportional scrollbar thumb on the
+ *     right edge. A no-op when the menu isn't scrollable. Must be called
+ *     in viewport-local coordinates (i.e. after any content-space
+ *     nvgTranslate() has been popped via nvgRestore()), since the
+ *     indicators live at fixed positions within the popup surface, not
+ *     the scrolled content.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Issues NanoVG drawing commands.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenuDrawScrollIndicators(
+    NVGcontext *vg,
+    MenuStackEntry *entry,
+    NVGcolor bgColor)
+{
+    int w, h;
+    int canScrollUp, canScrollDown;
+    NVGpaint fade;
+    NVGcolor bgTransparent;
+    float cx, cy;
+
+    if (!vg || !entry || entry->contentH <= entry->viewportH) {
+        return;
+    }
+
+    w = entry->w;
+    h = entry->viewportH;
+    canScrollUp   = entry->scrollOffset > 0;
+    canScrollDown = entry->scrollOffset < (entry->contentH - entry->viewportH);
+
+    bgTransparent = bgColor;
+    bgTransparent.a = 0.0f;
+
+    if (canScrollUp) {
+        fade = nvgLinearGradient(vg, 0, 0, 0, (float)MENU_SCROLL_ARROW_H,
+            bgColor, bgTransparent);
+        nvgBeginPath(vg);
+        nvgRect(vg, 0, 0, (float)w, (float)MENU_SCROLL_ARROW_H);
+        nvgFillPaint(vg, fade);
+        nvgFill(vg);
+
+        cx = w / 2.0f;
+        cy = MENU_SCROLL_ARROW_H / 2.0f;
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, cx - 4.0f, cy + 2.0f);
+        nvgLineTo(vg, cx,       cy - 3.0f);
+        nvgLineTo(vg, cx + 4.0f, cy + 2.0f);
+        nvgStrokeColor(vg, nvgRGBA(90, 90, 90, 255));
+        nvgStrokeWidth(vg, 1.5f);
+        nvgStroke(vg);
+    }
+
+    if (canScrollDown) {
+        float top = (float)(h - MENU_SCROLL_ARROW_H);
+
+        fade = nvgLinearGradient(vg, 0, top, 0, (float)h,
+            bgTransparent, bgColor);
+        nvgBeginPath(vg);
+        nvgRect(vg, 0, top, (float)w, (float)MENU_SCROLL_ARROW_H);
+        nvgFillPaint(vg, fade);
+        nvgFill(vg);
+
+        cx = w / 2.0f;
+        cy = top + MENU_SCROLL_ARROW_H / 2.0f;
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, cx - 4.0f, cy - 2.0f);
+        nvgLineTo(vg, cx,       cy + 3.0f);
+        nvgLineTo(vg, cx + 4.0f, cy - 2.0f);
+        nvgStrokeColor(vg, nvgRGBA(90, 90, 90, 255));
+        nvgStrokeWidth(vg, 1.5f);
+        nvgStroke(vg);
+    }
+
+    /* Thin proportional scrollbar thumb, right edge. */
+    {
+        float trackX = (float)(w - MENU_SCROLLBAR_WIDTH - 2);
+        float trackY = (float)MENU_SCROLL_ARROW_H;
+        float trackH = (float)(h - 2 * MENU_SCROLL_ARROW_H);
+        float thumbH, thumbY;
+
+        if (trackH > 4.0f) {
+            thumbH = trackH * ((float)entry->viewportH / (float)entry->contentH);
+            if (thumbH < 12.0f) thumbH = 12.0f;
+            if (thumbH > trackH) thumbH = trackH;
+
+            thumbY = trackY + (trackH - thumbH) *
+                ((float)entry->scrollOffset /
+                 (float)(entry->contentH - entry->viewportH));
+
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, trackX, thumbY,
+                (float)MENU_SCROLLBAR_WIDTH, thumbH, 3.0f);
+            nvgFillColor(vg, nvgRGBA(120, 120, 120, 150));
+            nvgFill(vg);
+        }
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkWaylandMenuDismissAll --
  *
  *     Tear down the entire menu stack.
@@ -2880,11 +3279,25 @@ TkWaylandMenuDismissAll(void)
 {
     DEBUG_LOG("TkWaylandMenuDismissAll called");
 
-    if (menuStackDepth == 0) {
-        return;
+    if (menuStackDepth > 0) {
+        MenuStackPop(0);
     }
 
-    MenuStackPop(0);
+    /*
+     * Hand real Tk focus back to whatever toplevel owned it before
+     * TkWaylandMenubarActivateFirst hijacked it for keyboard navigation.
+     * Deliberately not gated on menuStackDepth above: if the first
+     * menubar entry activated was a plain command with no submenu,
+     * MenubarPostCascadeAtEntry() posts nothing and menuStackDepth never
+     * left 0, but a keyboard-nav session still legitimately started and
+     * still needs its focus restored here. A stale/no-op call for an
+     * ordinary tk_popup session (which never sets this) is a no-op since
+     * menuKeyboardNavOwnerWinPtr is NULL in that case.
+     */
+    if (menuKeyboardNavOwnerWinPtr) {
+        TkSetFocusWin(menuKeyboardNavOwnerWinPtr, 0);
+        menuKeyboardNavOwnerWinPtr = NULL;
+    }
 }
 
 /*
@@ -3195,13 +3608,23 @@ TkWaylandPostMenuAtAnchor(
     postY = anchorY + anchorH;
 
     /*
+     * Remember the menu's natural (unclamped) height before the popup is
+     * shrunk to fit the toplevel below. This is the full scrollable
+     * content height; TkWaylandClampPopupGeometry() below turns popupH
+     * into the visible viewport height, and the two are compared to
+     * decide whether the menu needs to scroll at all.
+     */
+    int contentH = popupH;
+
+    /*
      * Constrain the popup so that it is never positioned or sized outside
      * the toplevel that owns it. This applies uniformly to root context
      * menus, menubutton menus, menubar-posted menus, and cascades; callers
      * that want smarter-than-clamp behavior (e.g. cascades flipping to the
      * opposite side of their parent) compute a better postX beforehand via
      * TkWaylandComputeCascadeAnchor(), and this call still guarantees the
-     * final rectangle fits.
+     * final rectangle fits. Note this clamps to a *viewport* height, not
+     * necessarily the menu's full content height -- see contentH above.
      */
     TkWaylandClampPopupGeometry(gw, &postX, &postY, &popupW, &popupH);
 
@@ -3249,6 +3672,9 @@ TkWaylandPostMenuAtAnchor(
     entry->y = postY;
     entry->w = popupW;
     entry->h = popupH;
+    entry->contentH = contentH;   /* Full menu height before clamping. */
+    entry->viewportH = popupH;    /* Visible height after clamping. */
+    entry->scrollOffset = 0;      /* Always post scrolled to the top. */
     entry->glfwWindow = gw;  /* Store the GLFW window for cascade children. */
     if (isRoot) {
         entry->rootIsMenubar = pendingRootIsMenubar;
@@ -3383,6 +3809,24 @@ MenuDrawIntoPopup(
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
 
+    /*
+     * Look up this menu's scroll state (if any) on the menu stack. Entries
+     * are laid out in unclamped content space (mePtr->y can run past
+     * menuH when the menu is taller than its posted popup), so a
+     * scrolled menu is rendered by scissoring to the popup surface and
+     * translating the content upward by scrollOffset; an unscrolled menu
+     * (scrollOffset == 0, the common case) renders identically to before.
+     */
+    int menuLevel = MenuStackFindLevel(menuPtr);
+    MenuStackEntry *stackEntry = (menuLevel >= 0) ? &menuStack[menuLevel] : NULL;
+    int scrollOffset = stackEntry ? stackEntry->scrollOffset : 0;
+
+    nvgSave(vg);
+    nvgScissor(vg, 0, 0, (float)menuW, (float)menuH);
+    if (scrollOffset != 0) {
+        nvgTranslate(vg, 0, (float)-scrollOffset);
+    }
+
     Drawable d = None;
 
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -3414,6 +3858,13 @@ MenuDrawIntoPopup(
             mePtr->x, mePtr->y,
             mePtr->width, mePtr->height,
             DRAW_MENU_ENTRY_ARROW);
+    }
+
+    /* Pop the scissor/translate before drawing viewport-fixed overlays. */
+    nvgRestore(vg);
+
+    if (stackEntry) {
+        MenuDrawScrollIndicators(vg, stackEntry, bgColor);
     }
 
     /*
@@ -3810,7 +4261,7 @@ TkpPostTearoffMenu(
 
     DEBUG_LOG("TkpPostTearoffMenu called");
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkWaylandActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
 
     result = TkPostCommand(menuPtr);
@@ -4074,7 +4525,7 @@ MenuMouseMotion(
                     }
                 }
 
-                TkActivateMenuEntry(menuPtr, i);
+                TkWaylandActivateMenuEntry(menuPtr, i);
 
                 /* Handle cascade entries. */
                 if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
@@ -4191,7 +4642,7 @@ MenuMouseMotion(
         int level = MenuStackFindLevel(menuPtr);
         if (level >= 0 && level == menuStackDepth - 1) {
             DEBUG_LOG("MenuMouseMotion: no entry found, deactivating");
-            TkActivateMenuEntry(menuPtr, -1);
+            TkWaylandActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
@@ -4221,7 +4672,7 @@ MenuMouseLeave(
 
     if (menuPtr->postedCascade == NULL) {
         if (menuPtr->active != -1) {
-            TkActivateMenuEntry(menuPtr, -1);
+            TkWaylandActivateMenuEntry(menuPtr, -1);
             TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
@@ -4358,7 +4809,7 @@ TkWaylandMenubarHandleClick(
             return 1;
         }
 
-        TkActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
+        TkWaylandActivateMenuEntry(menuPtr, i);   /* Ensure it's activated. */
 
         if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
             TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
@@ -4454,7 +4905,7 @@ TkWaylandMenubarHandleMotion(
         /* Pointer left the menubar strip. */
         if (menuPtr->active != -1 &&
             !(TkWaylandMenuGetDepth() > 0 && TkWaylandMenuStackRootIsMenubar())) {
-            TkActivateMenuEntry(menuPtr, -1);
+            TkWaylandActivateMenuEntry(menuPtr, -1);
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
             TkpDisplayMenu((void *)menuPtr);   /* Force redraw. */
         }
@@ -4471,7 +4922,7 @@ TkWaylandMenubarHandleMotion(
 
         /* Found the entry under the cursor. */
         if (mePtr->state != ENTRY_DISABLED && menuPtr->active != i) {
-            TkActivateMenuEntry(menuPtr, i);
+            TkWaylandActivateMenuEntry(menuPtr, i);
 
             /* Force immediate redraw of the menubar. */
             Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
@@ -4521,9 +4972,32 @@ TkWaylandMenuHandlePointerMotion(
         MenuStackEntry *entry = &menuStack[i];
         if (x >= entry->x && x < entry->x + entry->w &&
             y >= entry->y && y < entry->y + entry->h) {
+            int localX = x - entry->x;
+            int localY = y - entry->y;
+
             DEBUG_LOG("TkWaylandMenuHandlePointerMotion: hit stack entry %d at (%d,%d) size %dx%d",
                      i, entry->x, entry->y, entry->w, entry->h);
-            MenuMouseMotion(entry->menuPtr, x - entry->x, y - entry->y);
+
+            /*
+             * Edge-hover auto-scroll: while the pointer sits in the top
+             * or bottom scroll-indicator band of a clipped menu, nudge
+             * the scroll offset a step per motion event. (There's no
+             * timer/idle-repeat wired here, so this scrolls as the
+             * pointer moves/wiggles near the edge rather than smoothly
+             * while it sits still -- wheel scrolling via
+             * TkWaylandMenuHandlePointerAxis is the precise alternative.)
+             */
+            if (entry->contentH > entry->viewportH) {
+                if (localY >= 0 && localY < MENU_SCROLL_EDGE_ZONE) {
+                    MenuScrollBy(i, -MENU_SCROLL_STEP);
+                } else if (localY < entry->viewportH &&
+                        localY >= entry->viewportH - MENU_SCROLL_EDGE_ZONE) {
+                    MenuScrollBy(i, MENU_SCROLL_STEP);
+                }
+            }
+
+            MenuMouseMotion(entry->menuPtr, localX,
+                MenuTranslateYForHitTest(entry, localY));
             return;
         }
     }
@@ -4533,7 +5007,7 @@ TkWaylandMenuHandlePointerMotion(
     if (menuStackDepth > 0) {
         TkMenu *topMenu = menuStack[menuStackDepth - 1].menuPtr;
         if (topMenu && topMenu->active != -1) {
-            TkActivateMenuEntry(topMenu, -1);
+            TkWaylandActivateMenuEntry(topMenu, -1);
             TkEventuallyRedrawMenu(topMenu, NULL);
         }
     }
@@ -4572,15 +5046,162 @@ TkWaylandMenuHandlePointerButton(
         MenuStackEntry *entry = &menuStack[i];
         if (x >= entry->x && x < entry->x + entry->w &&
             y >= entry->y && y < entry->y + entry->h) {
+            int localX = x - entry->x;
+            int localY = y - entry->y;
             int tkButton = (button == BTN_LEFT) ? 1 : 3;
-            MenuMouseClick(entry->menuPtr, x - entry->x, y - entry->y,
-                           tkButton);
+
+            /*
+             * A left click landing in the top/bottom scroll-indicator
+             * band of a clipped menu scrolls by one step instead of
+             * hit-testing whatever entry happens to be scrolled behind
+             * it -- the indicator doubles as a click target, same as a
+             * native scrollable menu's arrow buttons.
+             */
+            if (tkButton == 1 && entry->contentH > entry->viewportH) {
+                if (localY >= 0 && localY < MENU_SCROLL_ARROW_H &&
+                        entry->scrollOffset > 0) {
+                    MenuScrollBy(i, -MENU_SCROLL_STEP);
+                    return;
+                }
+                if (localY < entry->viewportH &&
+                        localY >= entry->viewportH - MENU_SCROLL_ARROW_H &&
+                        entry->scrollOffset < entry->contentH - entry->viewportH) {
+                    MenuScrollBy(i, MENU_SCROLL_STEP);
+                    return;
+                }
+            }
+
+            MenuMouseClick(entry->menuPtr, localX,
+                MenuTranslateYForHitTest(entry, localY), tkButton);
             return;
         }
     }
 
     menuDismissedByClick = 1;
     TkWaylandMenuDismissAll();
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuHandlePointerAxis --
+ *
+ *     Called from the raw wl_pointer listener on axis (scroll wheel /
+ *     touchpad) events. Declared in tkWaylandInt.h but previously never
+ *     defined here -- if something already calls it from the pointer
+ *     listener, this was an undefined-reference link error until now.
+ *
+ *     axisY follows the wl_pointer.axis convention for the vertical
+ *     scroll axis: positive is "away from the user" (scroll content
+ *     down, revealing later entries), negative is "toward the user"
+ *     (scroll up). Only the sign is used here, not the magnitude, so
+ *     this works whether the caller passes a raw fixed-point axis value
+ *     or an accumulated/discrete step. Menus never scroll horizontally,
+ *     so axisX is ignored.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     May scroll and redraw the hit menu popup.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuHandlePointerAxis(
+    int x,
+    int y,
+    double axisX,
+    double axisY)
+{
+    int i;
+
+    (void)axisX;
+
+    if (axisY == 0.0) {
+        return;
+    }
+
+    for (i = menuStackDepth - 1; i >= 0; i--) {
+        MenuStackEntry *entry = &menuStack[i];
+        if (x >= entry->x && x < entry->x + entry->w &&
+            y >= entry->y && y < entry->y + entry->h) {
+            int delta = (axisY > 0) ? MENU_SCROLL_STEP : -MENU_SCROLL_STEP;
+            MenuScrollBy(i, delta);
+            return;
+        }
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuHandleScroll --
+ *
+ *     Public wrapper around MenuScrollBy() for callers outside this file
+ *     (e.g. a Tcl-level binding on a scrollbar-like widget, or tests)
+ *     that want to scroll a posted menu by stack level rather than by
+ *     hit-testing a pointer position. Declared in tkWaylandInt.h.
+ *
+ * Results:
+ *     1 if the offset changed, 0 otherwise. See MenuScrollBy().
+ *
+ * Side effects:
+ *     Same as MenuScrollBy().
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenuHandleScroll(
+    int level,
+    int delta)
+{
+    return MenuScrollBy(level, delta);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuGetScrollInfo --
+ *
+ *     Report the current scroll state of the popup at the given
+ *     menuStack level. Declared in tkWaylandInt.h for callers that want
+ *     to query scroll position/extent without reaching into this file's
+ *     static menuStack directly (e.g. to draw an external scrollbar
+ *     widget, or for tests).
+ *
+ * Results:
+ *     1 and fills in *offsetPtr/*contentHPtr/*viewportHPtr if level is a
+ *     valid, currently-posted stack index; 0 (outputs untouched)
+ *     otherwise. Any of the three output pointers may be NULL.
+ *
+ * Side effects:
+ *     None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenuGetScrollInfo(
+    int level,
+    int *offsetPtr,
+    int *contentHPtr,
+    int *viewportHPtr)
+{
+    MenuStackEntry *entry;
+
+    if (level < 0 || level >= menuStackDepth) {
+        return 0;
+    }
+
+    entry = &menuStack[level];
+    if (offsetPtr)    *offsetPtr    = entry->scrollOffset;
+    if (contentHPtr)  *contentHPtr  = entry->contentH;
+    if (viewportHPtr) *viewportHPtr = entry->viewportH;
+
+    return 1;
 }
 
 /*
@@ -4811,49 +5432,163 @@ TkWaylandPostVirtualEvent(
     const char *eventName)
 {
     Tcl_Interp *interp;
-    TkMainInfo *info;
-    char *eventScript;
-    const char *eventNameWithoutBrackets;
-    size_t len;
-    int result;
+    size_t nameLen;
+    char *strippedName;
+    XVirtualEvent event;
 
     if (!winPtr || !eventName) {
         DEBUG_LOG("TkWaylandPostVirtualEvent: invalid parameters");
         return;
     }
 
-    info = TkGetMainInfoList();
-    if (!info || !info->interp) {
-        DEBUG_LOG("TkWaylandPostVirtualEvent: no interpreter found");
-        return;
-    }
-    interp = info->interp;
-
-    eventNameWithoutBrackets = eventName + 2;
-    len = strlen(eventNameWithoutBrackets);
-    if (len > 0 && eventNameWithoutBrackets[len-1] == '>') {
-        len--;
-    }
-
-    eventScript = (char *)ckalloc(len + 64);
-    if (!eventScript) {
-        DEBUG_LOG("TkWaylandPostVirtualEvent: memory allocation failed");
+    nameLen = strlen(eventName);
+    if (nameLen < 4 ||
+            eventName[0] != '<' || eventName[1] != '<' ||
+            eventName[nameLen - 1] != '>' || eventName[nameLen - 2] != '>') {
+        DEBUG_LOG("TkWaylandPostVirtualEvent: '%s' is not of the form <<Name>>",
+                 eventName);
         return;
     }
 
-    sprintf(eventScript, "event generate %s <%*s>",
-            Tk_PathName((Tk_Window)winPtr), (int)len, eventNameWithoutBrackets);
+    /*
+     * Stock Tk fires <<MenuSelect>> by constructing an XVirtualEvent
+     * directly, not via "event generate".  Doing it directly avoids
+     * any Tcl parsing issues, avoids needing an interpreter lookup
+     * via TkGetMainInfoList(), and works even when the menu window is
+     * a popup subsurface.  This mirrors MenuSelectEvent() in
+     * macosx/tkMacOSXMenu.c.
+     */
 
-    DEBUG_LOG("TkWaylandPostVirtualEvent: posting %s via '%s'",
-             eventName, eventScript);
+    strippedName = (char *)ckalloc(nameLen - 3); /* Name + NUL */
+    if (!strippedName) {
+        return;
+    }
+    memcpy(strippedName, eventName + 2, nameLen - 4);
+    strippedName[nameLen - 4] = '\0';
 
-    result = Tcl_EvalEx(interp, eventScript, -1, TCL_EVAL_GLOBAL);
-    if (result != TCL_OK) {
-        DEBUG_LOG("TkWaylandPostVirtualEvent: Tcl_Eval failed: %s",
-                 Tcl_GetStringResult(interp));
+    memset(&event, 0, sizeof(event));
+    event.type = VirtualEvent;
+    event.serial = LastKnownRequestProcessed(winPtr->display);
+    event.send_event = False;
+    event.display = winPtr->display;
+    if (winPtr->window != None) {
+        event.event = winPtr->window;
+    } else {
+        /* Fallback: ensure window exists like stock Tk does */
+        Tk_MakeWindowExist((Tk_Window)winPtr);
+        event.event = winPtr->window;
+    }
+    event.root = XRootWindow(winPtr->display, 0);
+    event.subwindow = None;
+    event.time = Tcl_GetMonotonicTime();
+    event.x_root = 0;
+    event.y_root = 0;
+    event.same_screen = True;
+    event.name = Tk_GetUid(strippedName);
+
+    ckfree(strippedName);
+
+    DEBUG_LOG("TkWaylandPostVirtualEvent: posting <<%s>> on %s",
+             Tk_GetUid(event.name), Tk_PathName((Tk_Window)winPtr));
+
+    /*
+     * If we're inside Tcl's event loop (normal case), dispatch
+     * immediately - equivalent to "-when now".  Otherwise queue.
+     */
+    if (Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
+        Tk_HandleEvent((XEvent *)&event);
+    } else {
+        Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
+    }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGenerateMenuSelect --
+ *
+ *     C-level equivalent of the script proc tk::GenerateMenuSelect.
+ *     Stock Tk only fires <<MenuSelect>> from Tcl (tk::MenuMotion and a
+ *     few other bindings/procs call tk::GenerateMenuSelect after
+ *     [$menu activate ...]), deduplicated against
+ *     tk::Priv(activeMenu)/tk::Priv(activeItem) so the event only fires
+ *     when the (menu, active-entry) pair actually changes. Since this
+ *     backend's menu tracking is driven directly from raw wl_pointer /
+ *     wl_keyboard listeners in C and never round-trips through a
+ *     synthetic <Motion> event on the Menu bindtag, that script-level
+ *     path is never reached and <<MenuSelect>> silently never fires.
+ *     This reproduces the same dedup logic and posts the event via
+ *     TkWaylandPostVirtualEvent.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     May post <<MenuSelect>> on menuPtr's window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandGenerateMenuSelect(
+    TkMenu *menuPtr)
+{
+    /*
+     * Mirrors tk::Priv(activeMenu)/tk::Priv(activeItem): remember the
+     * last (menu, active index) pair we fired for, across all menus,
+     * and only post again when it actually changes.
+     */
+    static TkMenu *lastSelectMenuPtr = NULL;
+    static int     lastSelectActiveIndex = -2;   /* -2: never fired yet. */
+
+    if (!menuPtr || !menuPtr->tkwin) {
+        return;
     }
 
-    ckfree(eventScript);
+    if (menuPtr == lastSelectMenuPtr &&
+            menuPtr->active == lastSelectActiveIndex) {
+        return;
+    }
+
+    lastSelectMenuPtr = menuPtr;
+    lastSelectActiveIndex = menuPtr->active;
+
+    DEBUG_LOG("TkWaylandGenerateMenuSelect: menu=%p active=%d",
+             (void *)menuPtr, menuPtr->active);
+
+    TkWaylandPostVirtualEvent((TkWindow *)menuPtr->tkwin, "<<MenuSelect>>");
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandActivateMenuEntry --
+ *
+ *     Drop-in wrapper around the generic TkActivateMenuEntry() used
+ *     everywhere that changes which entry of a menu is active --
+ *     both call sites in this file and the keyboard Up/Down handler
+ *     in tkWaylandNotify.c In addition to the generic activation
+ *     bookkeeping, this also generates <<MenuSelect>>,
+ *     which TkActivateMenuEntry() itself does not do.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Same as TkActivateMenuEntry(), plus may post <<MenuSelect>>.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandActivateMenuEntry(
+    TkMenu *menuPtr,
+    int index)
+{
+    TkActivateMenuEntry(menuPtr, index);
+    MenuEnsureActiveVisible(menuPtr);
+    TkWaylandGenerateMenuSelect(menuPtr);
 }
 
 /*
@@ -5006,6 +5741,18 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
 
     menuPtr = wmPtr->menubarMenuPtr;
 
+    /*
+     * Give the menubar real Tk focus, mirroring the click-to-focus
+     * pattern in tkWaylandNotify.c (TkSetFocusWin on ButtonPress), so
+     * that bind Menu <FocusIn> actually fires. Stash the previously
+     * focused toplevel so TkWaylandMenuDismissAll can hand focus back
+     * when this keyboard-nav session ends.
+     */
+    menuKeyboardNavOwnerWinPtr = winPtr;
+    if (menuPtr->tkwin) {
+        TkSetFocusWin((TkWindow *)menuPtr->tkwin, 0);
+    }
+
     DEBUG_LOG("TkWaylandMenubarActivateFirst: activating first entry in menubar");
 
     /* Find the first non-disabled entry (preferring CASCADE entries). */
@@ -5018,7 +5765,7 @@ TkWaylandMenubarActivateFirst(TkWindow *winPtr)
         }
 
         /* Activate it. */
-        TkActivateMenuEntry(menuPtr, i);
+        TkWaylandActivateMenuEntry(menuPtr, i);
         Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, (void *)menuPtr);
         TkpDisplayMenu((void *)menuPtr);
 
@@ -5086,7 +5833,7 @@ TkWaylandMenubarMove(TkWindow *winPtr, int direction)
     }
 
     if (newIdx != current) {
-        TkActivateMenuEntry(menuPtr, newIdx);
+        TkWaylandActivateMenuEntry(menuPtr, newIdx);
 
         /*
          * TkWaylandMenuRedrawActive() only redraws menuStack[depth-1] --

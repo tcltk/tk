@@ -2,15 +2,19 @@
  * tkWaylandSysTray.c --
  *
  *    Wayland system tray/notification icon support using the
- *    StatusNotifierItem protocol via sd-bus. Implements a Tcl command
- *    "::tk::systray::_systray" with subcommands "create", "configure", and
- *    "destroy" – modelled after the macOS implementation.
- *
+ *    StatusNotifierItem protocol via sd-bus. 
+ * 
  * Copyright © 2020-2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+
+
+/* Debugging
+#define DEBUG_CHANNEL stdout
+#define DEBUG_LABEL systray
+*/
 
 #include "tkInt.h"
 #include "tkWaylandInt.h"
@@ -25,6 +29,11 @@
 /* SD-Bus includes. */
 #include <systemd/sd-bus.h>
 #include <systemd/sd-bus-protocol.h>
+
+/* Debug logging macro. */
+#ifndef DEBUG_LOG
+#define DEBUG_LOG(...) fprintf(stderr, "[tkSNI] " __VA_ARGS__)
+#endif
 
 /* Status values. */
 typedef enum {
@@ -199,7 +208,7 @@ static int method_activate(sd_bus_message *m, void *userdata,
     DockIcon *icon = (DockIcon *)userdata;
     int x = 0, y = 0;
     sd_bus_message_read(m, "ii", &x, &y);
-    fprintf(stderr, "[tkSNI] Activate (left-click) at %d,%d\n", x, y);
+    DEBUG_LOG("Activate (left-click) at %d,%d\n", x, y);
     InvokeButtonCommand(icon, 1, x, y);
     return sd_bus_reply_method_return(m, "");
 }
@@ -225,7 +234,7 @@ static int method_secondary_activate(sd_bus_message *m, void *userdata,
     DockIcon *icon = (DockIcon *)userdata;
     int x = 0, y = 0;
     sd_bus_message_read(m, "ii", &x, &y);
-    fprintf(stderr, "[tkSNI] SecondaryActivate (right/middle) at %d,%d\n", x, y);
+    DEBUG_LOG("SecondaryActivate (right/middle) at %d,%d\n", x, y);
     InvokeButtonCommand(icon, 3, x, y);
     return sd_bus_reply_method_return(m, "");
 }
@@ -249,7 +258,7 @@ static int method_secondary_activate(sd_bus_message *m, void *userdata,
 
 static int method_context_menu(sd_bus_message *m, void *userdata,
                                sd_bus_error *ret_error) {
-    fprintf(stderr, "[tkSNI] ContextMenu called\n");
+    DEBUG_LOG("ContextMenu called\n");
     return method_secondary_activate(m, userdata, ret_error);
 }
 
@@ -297,7 +306,7 @@ static int method_provide_xdg_activation(sd_bus_message *m, void *userdata,
                                          sd_bus_error *ret_error) {
     const char *token = NULL;
     sd_bus_message_read(m, "s", &token);
-    fprintf(stderr, "[tkSNI] ProvideXdgActivationToken (no-op) token: %s\n", token ? token : "(null)");
+    DEBUG_LOG("ProvideXdgActivationToken (no-op) token: %s\n", token ? token : "(null)");
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -561,7 +570,7 @@ RefreshProperties(void *clientData) {
         UpdateIndicatorIcon(icon);
         UpdateIndicatorStatus(icon);
         UpdateTooltip(icon);
-        fprintf(stderr, "[tkSNI] Refreshed properties after registration delay\n");
+        DEBUG_LOG("Refreshed properties after registration delay\n");
     }
 }
 
@@ -764,7 +773,7 @@ RegisterWithWatcher(DockIcon *icon) {
                                "RegisterStatusNotifierItem",
                                &error, &m, "s", icon->bus_name);
     if (r < 0) {
-        fprintf(stderr, "[tkSNI] Failed to register with watcher: %s\n", error.message);
+        DEBUG_LOG("Failed to register with watcher: %s\n", error.message);
         sd_bus_error_free(&error);
         return r;
     }
@@ -801,7 +810,7 @@ WatcherOwnerChanged(sd_bus_message *m, void *userdata, sd_bus_error *ret_error) 
     if (r < 0) return r;
 
     if (new_owner && new_owner[0] != '\0') {
-        fprintf(stderr, "[tkSNI] Watcher restarted, re-registering\n");
+        DEBUG_LOG("Watcher restarted, re-registering\n");
         RegisterWithWatcher(icon);
         /* Refresh properties after watcher restart. */
         if (!icon->refreshTimer) {
@@ -834,7 +843,7 @@ RegisterStatusNotifierItem(DockIcon *icon) {
     if (!icon->bus) {
         r = sd_bus_open_user(&icon->bus);
         if (r < 0) {
-            fprintf(stderr, "[tkSNI] Failed to connect to session bus: %s\n", strerror(-r));
+            DEBUG_LOG("Failed to connect to session bus: %s\n", strerror(-r));
             return r;
         }
     }
@@ -852,7 +861,7 @@ RegisterStatusNotifierItem(DockIcon *icon) {
     r = sd_bus_request_name(icon->bus, icon->bus_name,
                             SD_BUS_NAME_REPLACE_EXISTING);
     if (r < 0) {
-        fprintf(stderr, "[tkSNI] Failed to request bus name %s: %s\n",
+        DEBUG_LOG("Failed to request bus name %s: %s\n",
                 icon->bus_name, strerror(-r));
         return r;
     }
@@ -862,7 +871,7 @@ RegisterStatusNotifierItem(DockIcon *icon) {
                                  "org.kde.StatusNotifierItem",
                                  status_notifier_item_vtable, icon);
     if (r < 0) {
-        fprintf(stderr, "[tkSNI] Failed to add SNI vtable: %s\n", strerror(-r));
+        DEBUG_LOG("Failed to add SNI vtable: %s\n", strerror(-r));
         return r;
     }
 
@@ -879,7 +888,7 @@ RegisterStatusNotifierItem(DockIcon *icon) {
                          "arg0='org.kde.StatusNotifierWatcher'",
                          WatcherOwnerChanged, icon);
     if (r < 0) {
-        fprintf(stderr, "[tkSNI] Failed to add watcher-restart match: %s\n", strerror(-r));
+        DEBUG_LOG("Failed to add watcher-restart match: %s\n", strerror(-r));
         /* 
          * Not fatal -- we still work, just won't self-heal if the
          * watcher restarts. 

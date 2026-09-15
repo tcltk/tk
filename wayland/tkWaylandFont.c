@@ -79,6 +79,13 @@ static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
 static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
 static int         EncodeUtf8Char(FcChar32 uc, char out[4]);
+static void       ExpandRangeToClusterBoundaries(const ShapedGlyphBuffer *sbuf,
+						 int *start, int *end,
+						 int numBytes);
+MODULE_SCOPE int  TkWaylandClusterBoundaryAtOrBefore(Tk_Font tkfont,
+						 const char *source,
+						 Tcl_Size numBytes,
+						 int bytePos);
 
 /*
  *----------------------------------------------------------------------
@@ -624,7 +631,7 @@ IsSimpleOnly(const char *str, int len)
         /* 
          * Combining diacritical marks MUST go through HarfBuzz shaping,
          * unless every mark in the string can be precomposed onto its
-         * base character. Try brute-force precomposition to see whether
+         * base character. Try precomposition to see whether
          * the fast path is viable.
          *
          * IMPORTANT: this is a read-only classifier. It must NOT write
@@ -845,7 +852,7 @@ IsEmoji(FcChar32 uc)
  *----------------------------------------------------------------------
  * IsColorFcPattern --
  *
- *   Determine whether a Fontconfig pattern refers to a colour-glyph
+ *   Determine whether a Fontconfig pattern refers to a color-glyph
  *   font (CBDT/CBLC, COLR/CPAL, sbix, etc.), which stb_truetype/NanoVG
  *   cannot rasterize.
  *
@@ -1244,12 +1251,15 @@ FindFaceCoveringRange(
 
     /* If the range has both emoji and non-emoji, try primary first. */
     if (hasEmoji && hasNonEmoji) {
-        /* Check primary face first. */
+        /*
+         * Check primary face first. Coverage must be verified for
+         * EVERY character in the range, emoji included. 
+         */
         if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset) {
             int ok = 1;
             FcCharSet *cs = fontPtr->faces[0].charset;
             for (int i = start; i < start + len; i++) {
-                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                if (!FcCharSetHasChar(cs, ucs4[i])) {
                     ok = 0;
                     break;
                 }
@@ -1257,21 +1267,27 @@ FindFaceCoveringRange(
             if (ok) return 0;
         }
         
-        /* Then try other faces. */
+        /* Then try other faces -- same full-coverage requirement. */
         for (int fi = 1; fi < fontPtr->nfaces; fi++) {
             FcCharSet *cs = fontPtr->faces[fi].charset;
             if (!cs) continue;
             
             int ok = 1;
             for (int i = start; i < start + len; i++) {
-                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                if (!FcCharSetHasChar(cs, ucs4[i])) {
                     ok = 0;
                     break;
                 }
             }
             if (ok) return fi;
         }
-        /* Fall through to emoji-only handling. */
+        /*
+         * No single face covers both the plain text and the emoji in this
+         * range (the overwhelmingly common case) -- fall through to
+         * emoji-only handling below so at least glyphs and metrics come
+         * from one consistent, actually-emoji-capable face rather than
+         * silently defaulting to a face with no emoji coverage.
+         */
     }
 
     /* If any character in the range is an emoji, use the emoji face for emoji-only runs. */
@@ -1691,9 +1707,29 @@ WaylandShaper_ShapeString(
                  * Only break when we encounter a different script.
                  */
                 int subrunEnd = subrunStart + 1;
+                bool subrunIsEmoji = IsEmoji(ucs4Chars[subrunStart]);
                 while (subrunEnd < runStart + runLen) {
                     hb_script_t s = hb_unicode_script(
 						      hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+
+                    /*
+                     * Never let a subrun mix emoji and non-emoji codepoints,
+                     * even though emoji are HB_SCRIPT_COMMON (the same
+                     * script as plain punctuation/spaces) and would
+                     * otherwise be allowed to extend below. Mixing them
+                     * forces FindFaceCoveringRange() into its "mixed"
+                     * branch, which -- because it only validates coverage
+                     * of the *non*-emoji characters in the range -- ends up
+                     * silently choosing the plain-text face for the whole
+                     * subrun even when that face has zero emoji glyphs.
+                     * Every emoji then falls back to .notdef, and since
+                     * text-widget cursor placement (CharBboxProc /
+                     * CharMeasureProc) derives its geometry from these same
+                     * shaped advances, the caret stops tracking forward as
+                     * soon as it reaches a run of collapsed/zero-advance
+                     * substitute glyphs.
+                     */
+                    if (IsEmoji(ucs4Chars[subrunEnd]) != subrunIsEmoji) break;
 
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                         /* Keep extending; do not break on face mismatch. */
@@ -1971,6 +2007,124 @@ WaylandShaper_ShapeString(
 
     if (needFree) { free(charBounds); free(ucs4Chars); }
     return true;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ExpandRangeToClusterBoundaries --
+ *
+ *   Expand a byte range to the nearest grapheme cluster boundaries
+ *   based on the ShapedGlyphBuffer's cluster break table.  Ensures that 
+ *   rendering and measurement ranges never split a
+ *   grapheme cluster (e.g., a base character and its combining mark),
+ *   which would cause the combining mark to be rendered separately.
+ *
+ * Results:
+ *   Updates start and end to cluster-aligned positions.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static void
+ExpandRangeToClusterBoundaries(
+    const ShapedGlyphBuffer *sbuf,
+    int *start,
+    int *end,
+    int numBytes)
+{
+    if (!sbuf || sbuf->clusterBreakCount <= 0) return;
+
+    /* Find the cluster boundary at or before 'start'. */
+    int newStart = 0;
+    for (int i = 0; i < sbuf->clusterBreakCount; i++) {
+        int pos = sbuf->clusterBreaks[i];
+        if (pos <= *start) {
+            newStart = pos;
+        } else {
+            break;
+        }
+    }
+
+    /* Find the cluster boundary at or after 'end'. */
+    int newEnd = numBytes;
+    for (int i = 0; i < sbuf->clusterBreakCount; i++) {
+        int pos = sbuf->clusterBreaks[i];
+        if (pos >= *end) {
+            newEnd = pos;
+            break;
+        }
+    }
+
+    *start = newStart;
+    *end = newEnd;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandClusterBoundaryAtOrBefore --
+ *
+ *   Return the grapheme-cluster boundary at or before an arbitrary byte
+ *   offset into `source`.
+ *
+ *   This is the canonical "safe split point" that callers outside this
+ *   file MUST use whenever a single logical string has to be divided
+ *   into two adjacent sub-ranges that will each be handed to a
+ *   separate Tk_DrawCharsInContext() / Tk_MeasureCharsInContext() call
+ *   -- most notably the text display code splitting a line's rendering
+ *   at the insertion cursor into a "before caret" and "after caret"
+ *   piece.
+ *
+ *
+ * Results:
+ *   A byte offset in [0, numBytes] that is guaranteed to fall on a
+ *   cluster boundary. Returns bytePos unchanged (clamped to
+ *   [0, numBytes]) if shaping fails or the string has no cluster
+ *   structure to worry about.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandClusterBoundaryAtOrBefore(
+    Tk_Font     tkfont,
+    const char *source,
+    Tcl_Size    numBytes,
+    int         bytePos)
+{
+    if (!tkfont || !source || numBytes <= 0) {
+        return bytePos;
+    }
+    if (bytePos <= 0) {
+        return 0;
+    }
+    if (bytePos >= (int)numBytes) {
+        return (int)numBytes;
+    }
+
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+    ShapedGlyphBuffer sbuf;
+
+    if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                   (int)numBytes, &sbuf)
+        || sbuf.clusterBreakCount <= 0) {
+        /* No shaping/cluster info available -- nothing to snap to. */
+        return bytePos;
+    }
+
+    int best = 0;
+    for (int i = 0; i < sbuf.clusterBreakCount; i++) {
+        int pos = sbuf.clusterBreaks[i];
+        if (pos <= bytePos) {
+            best = pos;
+        } else {
+            break;
+        }
+    }
+    return best;
 }
 
 /*
@@ -2284,19 +2438,26 @@ InitFont(
 	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);
     }
 
-    /* Default dpi in case the screen info does not exist. */
+    /* Default dpi in case the screen info does not exist or tkwin is NULL
+     * (early startup: bootstrap window exists but winPtr not yet wired). */
     double dpi = 96.0;
-    DEBUG_LOG("InitFont: font %s for window %s at size %lf",
-	faPtr->family, Tk_PathName(tkwin), fa->size);
-    DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
-    Screen *screen = Tk_Screen(tkwin);
-    if (screen && WidthMMOfScreen(screen) > 0) {
+    if (!tkwin) {
+        DEBUG_LOG("InitFont: font %s with no tkwin yet (family=%s size=%lf) - using %.0f dpi fallback",
+                  faPtr->family ? faPtr->family : "(null)", faPtr->family ? faPtr->family : "(null)", fa->size, dpi);
+    } else {
+        DEBUG_LOG("InitFont: font %s for window %s at size %lf",
+                  faPtr->family, Tk_PathName(tkwin), fa->size);
+        DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
+        Screen *screen = Tk_Screen(tkwin);
+        if (screen && WidthMMOfScreen(screen) > 0) {
+
 	double screenDpi = (double)WidthOfScreen(screen) * 25.4
 	    / (double)WidthMMOfScreen(screen);
 	/* Use actual screen DPI for all fonts. */
 	if (screenDpi >= 72.0 && screenDpi <= 480.0) {
 	    dpi = screenDpi;
 	}
+    }
     }
     DEBUG_LOG("InitFont: Using dpi = %f", dpi);
     if (ptSize < 0.0) {
@@ -3285,14 +3446,33 @@ Tk_MeasureCharsInContext(
         i += clen;
     }
 
+    /*
+     * For strings with combining marks, emoji, or complex
+     * scripts, shape the entire string first, then expand the range to
+     * cluster boundaries before measuring.
+     */
+    if (!IsSimpleOnly(source + rangeStart, (int)rangeLength) || hasCombining || hasEmoji) {
+        ShapedGlyphBuffer sbuf;
+        if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                      (int)numBytes, &sbuf)
+            && sbuf.glyphCount > 0) {
+            /* Expand range to cluster boundaries. */
+            ExpandRangeToClusterBoundaries(&sbuf, &start, &end, (int)numBytes);
+            if (start >= end) {
+                *lengthPtr = 0;
+                return 0;
+            }
+        }
+    }
+
     /* Simple LTR path: for strings WITHOUT combining characters or emoji. */
-    if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
+    if (IsSimpleOnly(source + start, end - start) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
         if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
             int         width          = 0;
-            const char *p              = source + rangeStart;
-            const char *endPtr         = source + rangeStart + rangeLength;
+            const char *p              = source + start;
+            const char *endPtr         = source + end;
             const char *lastBreak      = p;
             int         lastBreakWidth = 0;
             while (p < endPtr) {
@@ -3302,7 +3482,7 @@ Tk_MeasureCharsInContext(
                 if (maxLength >= 0 && width + adv > maxLength) {
                     if ((flags & TK_WHOLE_WORDS) && lastBreak > p) {
                         *lengthPtr = lastBreakWidth;
-                        return (int)(lastBreak - source - rangeStart);
+                        return (int)(lastBreak - source - start);
                     }
                     if (!(flags & TK_PARTIAL_OK)) break;
                 }
@@ -3313,12 +3493,12 @@ Tk_MeasureCharsInContext(
                 width += adv;
                 p = next;
             }
-            if ((flags & TK_AT_LEAST_ONE) && p == source + rangeStart) {
+            if ((flags & TK_AT_LEAST_ONE) && p == source + start) {
                 int ch; p += Tcl_UtfToUniChar(p, &ch);
                 width += fontPtr->pixelSize / 2;
             }
             *lengthPtr = width;
-            return (int)(p - source - rangeStart);
+            return (int)(p - source - start);
         }
 
         nvgSave(vg);
@@ -3326,8 +3506,8 @@ Tk_MeasureCharsInContext(
         nvgFontSize(vg, (float)fontPtr->pixelSize);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
-        const char *rangePtr = source + rangeStart;
-        const char *rangeEnd = rangePtr + rangeLength;
+        const char *rangePtr = source + start;
+        const char *rangeEnd = source + end;
 
         int nchars = 0;
         for (const char *p = rangePtr; p < rangeEnd; ) {
@@ -3397,6 +3577,13 @@ Tk_MeasureCharsInContext(
         return 0;
     }
 
+    /* Expand range to cluster boundaries. */
+    int expandedStart = start;
+    int expandedEnd = end;
+    ExpandRangeToClusterBoundaries(&sbuf, &expandedStart, &expandedEnd, (int)numBytes);
+    start = expandedStart;
+    end = expandedEnd;
+
     if (maxLength < 0) {
         int minX = INT_MAX, maxX = INT_MIN;
         for (int i = 0; i < sbuf.glyphCount; i++) {
@@ -3410,7 +3597,7 @@ Tk_MeasureCharsInContext(
             }
         }
         *lengthPtr = (minX <= maxX) ? (maxX - minX) : 0;
-        return (int)rangeLength;
+        return (int)(end - start);
     }
 
     typedef struct { int start; int end; int advance; } ClusterInfo;
@@ -3460,7 +3647,7 @@ Tk_MeasureCharsInContext(
     }
 
     if ((flags & TK_WHOLE_WORDS) && bestBytes > 0
-	&& bestBytes < (int)rangeLength) {
+	&& bestBytes < (int)(end - start)) {
         int rollback = -1;
         for (int i = bestBytes - 1; i >= 0; i--) {
             unsigned char c = (unsigned char)source[start + i];
@@ -3590,18 +3777,11 @@ Tk_DrawCharsInContext(
  *   ShapedGlyphBuffer so that HarfBuzz advances and RTL reordering are
  *   reflected in the final pixel positions.
  *
- *   The NanoVG fallback chain (primary → fallback faces) is wired by
- *   EnsureNvgFont and handles any codepoint the primary face lacks in
- *   the simple LTR path. (Emoji never take this path - see IsSimpleOnly -
- *   so their coverage instead comes from GetRunFaceIndex() over the same
- *   Fontconfig-discovered face list in the complex/RTL path below.)
- *
- *   IMPORTANT: For strings with combining marks, we DO NOT attempt to
- *   pre-compose them. Instead, we let HarfBuzz shape the string with
- *   its default (NFC) normalization. HarfBuzz will properly position
- *   combining marks with zero advance, attaching them to their base
- *   characters. The composition table is only used as a fallback for
- *   fonts that don't support combining marks directly.
+ *   Before rendering, expand the range to grapheme cluster
+ *   boundaries so that we never render a partial grapheme. This fixes
+ *   the cursor/selection issue where a range that ends between a base
+ *   character and its combining mark would render the combining mark
+ *   separately.
  *
  * Results:
  *   None.
@@ -3742,6 +3922,31 @@ TkpDrawAngledCharsInContext(
     }
 
     /*
+     * For strings with combining marks, emoji, or complex
+     * scripts, shape the entire string first, then expand the rendering
+     * range to cluster boundaries before drawing. This ensures we never
+     * render a partial grapheme (e.g., a combining mark without its base).
+     */
+    int drawStart = (int)rangeStart;
+    int drawEnd = (int)(rangeStart + rangeLength);
+
+    if (!fullIsSimple || hasCombining || hasEmoji) {
+        ShapedGlyphBuffer sbuf;
+        if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
+                                      source, (int)numBytes, &sbuf)
+            && sbuf.glyphCount > 0) {
+            /* Expand range to cluster boundaries. */
+            ExpandRangeToClusterBoundaries(&sbuf, &drawStart, &drawEnd, (int)numBytes);
+        }
+    }
+
+    /* If the range was expanded, update the pointers. */
+    if (drawStart != (int)rangeStart || drawEnd != (int)(rangeStart + rangeLength)) {
+        rangePtr = source + drawStart;
+        rangeEnd = source + drawEnd;
+    }
+
+    /*
      * Determine whether we need to add the width of preceding text to the
      * X coordinate. When the substring is part of a larger string and we're
      * rendering it in isolation, we need to know where it starts horizontally.
@@ -3755,12 +3960,12 @@ TkpDrawAngledCharsInContext(
      * the prefix width would incorrectly shift the rendering.
      */
     bool needsPrefixOffset = hasCombining ||
-        (fullIsSimple && IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
+        (fullIsSimple && IsSimpleOnly(rangePtr, (int)(rangeEnd - rangePtr)) && !hasEmoji);
 
     double drawX = x;
-    if (rangeStart > 0 && needsPrefixOffset) {
+    if (drawStart > 0 && needsPrefixOffset) {
         /* Simple path: directly measure the width of the prefix text. */
-        if (IsSimpleOnly(source, (int)rangeStart)) {
+        if (IsSimpleOnly(source, drawStart)) {
             nvgFontFaceId(vg, primaryId);
             /* Measure a precomposed copy: NanoVG has no mark-attachment
              * support, so measuring raw base+mark sequences directly
@@ -3768,14 +3973,14 @@ TkpDrawAngledCharsInContext(
              * is purely a local scratch buffer for pixel measurement --
              * it never replaces `source`, so byte-offset-based indexing
              * elsewhere is unaffected. */
-            char *composedPrefix = ComposeUTF8String(source, (int)rangeStart);
+            char *composedPrefix = ComposeUTF8String(source, drawStart);
             if (composedPrefix) {
                 float advance = nvgTextBounds(vg, 0, 0, composedPrefix,
                                               composedPrefix + strlen(composedPrefix), NULL);
                 drawX += (double)advance;
                 free(composedPrefix);
             } else {
-                float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+                float advance = nvgTextBounds(vg, 0, 0, source, source + drawStart, NULL);
                 drawX += (double)advance;
             }
         } else {
@@ -3784,11 +3989,11 @@ TkpDrawAngledCharsInContext(
             if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                           (int)numBytes, &psbuf)
                 && psbuf.glyphCount > 0) {
-                /* Find the horizontal extent of all glyphs before rangeStart. */
+                /* Find the horizontal extent of all glyphs before drawStart. */
                 int minX = INT_MAX, maxX = INT_MIN;
                 for (int i = 0; i < psbuf.glyphCount; i++) {
                     int bo = psbuf.glyphs[i].byteOffset;
-                    if (bo < (int)rangeStart) {
+                    if (bo < drawStart) {
                         int gx0 = psbuf.glyphs[i].x;
                         int gx1 = gx0 + psbuf.glyphs[i].advanceX;
                         if (gx0 < minX) minX = gx0;
@@ -3829,10 +4034,10 @@ TkpDrawAngledCharsInContext(
      * single nvgText() call advances its own pen internally, so no
      * manual per-glyph position bookkeeping is needed.
      */
-    if (fullIsSimple && IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji) {
+    if (fullIsSimple && IsSimpleOnly(rangePtr, (int)(rangeEnd - rangePtr)) && !hasEmoji) {
         nvgFontFaceId(vg, primaryId);
         if (hasCombining) {
-            char *composedRange = ComposeUTF8String(rangePtr, (int)rangeLength);
+            char *composedRange = ComposeUTF8String(rangePtr, (int)(rangeEnd - rangePtr));
             if (composedRange) {
                 nvgText(vg, 0.0f, 0.0f, composedRange,
                         composedRange + strlen(composedRange));
@@ -3888,7 +4093,7 @@ TkpDrawAngledCharsInContext(
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
             /* Skip glyphs that fall outside our rendering range. */
-            if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
+            if (boe <= drawStart || bo >= drawEnd)
                 continue;
 
             /* Check if this cluster already exists. */

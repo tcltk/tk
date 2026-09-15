@@ -148,8 +148,11 @@ image create photo ::img::delete -format $::tk::svgFmt -data {
 #----------------------------------------------------------------
 # The code below creates the main window, consisting of a menu bar and a text
 # widget that explains how to use the program, plus lists all of the demos as
-# hypertext items.
+# hypertext items. Skipped entirely when diverting to the accessible demo --
+# see the widgetDemoAccessible check above.
 #----------------------------------------------------------------
+
+if {!$widgetDemoAccessible} {
 
 menu .menuBar -tearoff 0
 
@@ -472,6 +475,9 @@ addFormattedText {
 
 .t configure -state disabled
 focus .s
+
+}
+;# end of "if {!$widgetDemoAccessible}" -- shared procs below always run
 
 # addSeeDismiss --
 # Add "See Code" and "Dismiss" button frame, with optional "See Vars"
