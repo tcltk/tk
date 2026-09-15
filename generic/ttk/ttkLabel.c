@@ -155,7 +155,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     Tcl_Size underline = INT_MIN;
     XGCValues gcValues;
     GC gc1, gc2;
-    Tk_Anchor anchor = TK_ANCHOR_CENTER;
+    Tk_Anchor anchor = TK_ANCHOR_W;
     Region clipRegion = NULL;
 
     gcValues.font = Tk_FontId(text->tkfont);
@@ -765,7 +765,7 @@ static void LabelElementDraw(
     Ttk_State state)
 {
     LabelElement *l = (LabelElement *)elementRecord;
-    Tk_Anchor anchor = TK_ANCHOR_CENTER;
+    Tk_Anchor anchor = TK_ANCHOR_W;
 
     LabelSetup(l, tkwin, state);
 
