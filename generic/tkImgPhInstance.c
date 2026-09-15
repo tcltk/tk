@@ -939,64 +939,67 @@ TkImgPhotoInstanceSetSize(
 	    || (instancePtr->height != modelPtr->height)
 	    || (instancePtr->error == NULL)) {
 	if (modelPtr->height > 0 && modelPtr->width > 0) {
-	    /*
-	     * TODO: use Tcl_AttemptAlloc() here once there is a strategy that
-	     * will allow us to recover from failure. Right now, there's no
-	     * such possibility.
-	     */
+	    size_t newErrSize;
+	    if (modelPtr->width > SIZE_MAX / 3 / modelPtr->height) {
+		Tcl_Panic("image too large");
+	    }
+	    newErrSize = (size_t)modelPtr->height * modelPtr->width * 3 * sizeof(schar);
+	    newError = (schar *)Tcl_Alloc(newErrSize);
 
-	    newError = (schar *)Tcl_Alloc(modelPtr->height * modelPtr->width
-		    * 3 * sizeof(schar));
-
-	    /*
-	     * Zero the new array so that we don't get bogus error values
-	     * propagating into areas we dither later.
-	     */
+	    /* Hardened: clip validBox to both old and new */
+	    if (validBox.x < 0) { validBox.width += validBox.x; validBox.x = 0; }
+	    if (validBox.y < 0) { validBox.height += validBox.y; validBox.y = 0; }
+	    if (validBox.x + validBox.width > modelPtr->width) {
+		validBox.width = modelPtr->width - validBox.x;
+	    }
+	    if (validBox.y + validBox.height > modelPtr->height) {
+		validBox.height = modelPtr->height - validBox.y;
+	    }
+	    if (validBox.x + validBox.width > instancePtr->width) {
+		validBox.width = instancePtr->width - validBox.x;
+	    }
+	    if (validBox.y + validBox.height > instancePtr->height) {
+		validBox.height = instancePtr->height - validBox.y;
+	    }
+	    if (validBox.width < 0) validBox.width = 0;
+	    if (validBox.height < 0) validBox.height = 0;
 
 	    if ((instancePtr->error != NULL)
 		    && ((instancePtr->width == modelPtr->width)
 		    || (validBox.width == modelPtr->width))) {
 		if (validBox.y > 0) {
-		    memset(newError, 0, (size_t)
-			    validBox.y * modelPtr->width * 3 * sizeof(schar));
+		    memset(newError, 0, (size_t)validBox.y * modelPtr->width * 3 * sizeof(schar));
 		}
 		h = validBox.y + validBox.height;
 		if (h < modelPtr->height) {
-		    memset(newError + h*modelPtr->width*3, 0,
-			    (size_t) (modelPtr->height - h)
-			    * modelPtr->width * 3 * sizeof(schar));
+		    memset(newError + (size_t)h*modelPtr->width*3, 0,
+			    (size_t)(modelPtr->height - h) * modelPtr->width * 3 * sizeof(schar));
 		}
 	    } else {
-		memset(newError, 0, (size_t)
-			modelPtr->height * modelPtr->width *3*sizeof(schar));
+		memset(newError, 0, newErrSize);
 	    }
 	} else {
 	    newError = NULL;
 	}
 
 	if (instancePtr->error != NULL) {
-	    /*
-	     * Copy the common area over to the new array and free the old
-	     * array.
-	     */
-
-	    if (modelPtr->width == instancePtr->width) {
-		offset = validBox.y * modelPtr->width * 3;
-		memcpy(newError + offset, instancePtr->error + offset,
-			(size_t) validBox.height
-			* modelPtr->width * 3 * sizeof(schar));
-
-	    } else if (validBox.width > 0 && validBox.height > 0) {
-		errDestPtr = newError +
-			(validBox.y * modelPtr->width + validBox.x) * 3;
-		errSrcPtr = instancePtr->error +
-			(validBox.y * instancePtr->width + validBox.x) * 3;
-
-		for (h = validBox.height; h > 0; --h) {
-		    memcpy(errDestPtr, errSrcPtr,
-			    validBox.width * 3 * sizeof(schar));
-		    errDestPtr += modelPtr->width * 3;
-		    errSrcPtr += instancePtr->width * 3;
+	    if (validBox.width > 0 && validBox.height > 0) {
+		if (modelPtr->width == instancePtr->width) {
+		    size_t off = (size_t)validBox.y * modelPtr->width * 3;
+		    size_t sz = (size_t)validBox.height * modelPtr->width * 3 * sizeof(schar);
+		    size_t newSize = (size_t)modelPtr->height * modelPtr->width * 3 * sizeof(schar);
+		    size_t oldSize = (size_t)instancePtr->height * instancePtr->width * 3 * sizeof(schar);
+		    if (off + sz > newSize) sz = newSize > off ? newSize - off : 0;
+		    if (off + sz > oldSize) sz = oldSize > off ? oldSize - off : 0;
+		    if (sz) memcpy(newError + off, instancePtr->error + off, sz);
+		} else {
+		    errDestPtr = newError + (size_t)(validBox.y * modelPtr->width + validBox.x) * 3;
+		    errSrcPtr = instancePtr->error + (size_t)(validBox.y * instancePtr->width + validBox.x) * 3;
+		    for (h = validBox.height; h > 0; --h) {
+			memcpy(errDestPtr, errSrcPtr, (size_t)validBox.width * 3 * sizeof(schar));
+			errDestPtr += modelPtr->width * 3;
+			errSrcPtr += instancePtr->width * 3;
+		    }
 		}
 	    }
 	    Tcl_Free(instancePtr->error);

@@ -1,9 +1,14 @@
 /*
  * tkWaylandImage.c -- 
  *
- *	Image handling for Wayland backend using NanoVG.
- *	Provides conversion between Tk images and NanoVG images,
- *	and implements Xlib-compatible image functions for Wayland.
+ *      Image handling for Wayland backend using NanoVG.
+ *      Provides conversion between Tk images and NanoVG images,
+ *      and implements Xlib-compatible image functions for Wayland.
+ *
+ *      This is the Wayland platform-specific implementation, analogous
+ *      to tkMacOSXImage.c / tkWinImage.c / tkXImage.c.  While Mac and
+ *      Windows also implement TkpPutRGBAImage, this file is the Wayland
+ *      counterpart for NanoVG.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
@@ -23,6 +28,8 @@
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 #include <limits.h>
+#include <stdint.h>
+#include <string.h>
 
 #define NANOVG_GLES3
 #include "nanovg_gl_utils.h"
@@ -31,25 +38,25 @@
 #undef XDestroyImage
 #endif
 
-
 /* Forward declarations for XImage function pointers. */
-static int		DestroyImage(XImage *imagePtr);
-static unsigned long	ImageGetPixel(XImage *image, int x, int y);
-static int		PutPixel(XImage *image, int x, int y, unsigned long pixel);
+static int              DestroyImage(XImage *imagePtr);
+static unsigned long    ImageGetPixel(XImage *image, int x, int y);
+static int              PutPixel(XImage *image, int x, int y, unsigned long pixel);
+
 
 /*
  *----------------------------------------------------------------------
  *
  * DestroyImage --
  *
- *	Releases the memory associated with an XImage structure and its
- *	associated pixel data. Both the structure and the data are freed.
+ *      Releases the memory associated with an XImage structure and its
+ *      associated pixel data. Both the structure and the data are freed.
  *
  * Results:
- *	Always returns 0 (success).
+ *      Always returns 0 (success).
  *
  * Side effects:
- *	Deallocates the image structure and data.
+ *      Deallocates the image structure and data.
  *
  *----------------------------------------------------------------------
  */
@@ -60,9 +67,9 @@ DestroyImage(
 {
     if (imagePtr) {
         if (imagePtr->data) {
-            Tcl_Free(imagePtr->data);
+            ckfree(imagePtr->data);
         }
-        Tcl_Free((char *)imagePtr);
+        ckfree((char *)imagePtr);
     }
     return 0;
 }
@@ -72,13 +79,13 @@ DestroyImage(
  *
  * XDestroyImage --
  *
- *	Exported wrapper for DestroyImage to maintain Xlib compatibility layer.
+ *      Exported wrapper for DestroyImage to maintain Xlib compatibility layer.
  *
  * Results:
- *	Always returns 0 (success).
+ *      Always returns 0 (success).
  *
  * Side effects:
- *	Frees heap memory via DestroyImage.
+ *      Frees heap memory via DestroyImage.
  *
  *----------------------------------------------------------------------
  */
@@ -95,14 +102,14 @@ XDestroyImage(
  *
  * ImageGetPixel --
  *
- *	Extracts a single pixel from the XImage buffer. Maps from the internal
- *	32-bit layout into a standard color pixel layout.
+ *      Extracts a single pixel from the XImage buffer. Maps from the internal
+ *      32-bit layout into a standard color pixel layout.
  *
  * Results:
- *	Returns the 32-bit pixel value.
+ *      Returns the 32-bit pixel value.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -112,36 +119,36 @@ ImageGetPixel(
     XImage *image,
     int x, int y)
 {
-    unsigned long pixel = 0;
-    
-    if (!image || !image->data || x < 0 || y < 0 || x >= image->width || y >= image->height) {
+    unsigned char *srcPtr;
+    size_t rowOff, colOff;
+
+    if (!image || !image->data || x < 0 || y < 0
+            || x >= image->width || y >= image->height) {
         return 0;
     }
-
-    unsigned char *srcPtr = (unsigned char *) &(image->data[(y * image->bytes_per_line)
-	    + ((x * image->bits_per_pixel) / 8)]);
+    /* Overflow-safe offset calc */
+    rowOff = (size_t)y * (size_t)image->bytes_per_line;
+    colOff = (size_t)x * (size_t)image->bits_per_pixel / 8;
+    if (rowOff + colOff >= (size_t)image->bytes_per_line * (size_t)image->height) {
+        return 0;
+    }
+    srcPtr = (unsigned char *)image->data + rowOff + colOff;
 
     switch (image->bits_per_pixel) {
     case 32:
     case 24:
-        /* Map standard byte streams - R, G, B order. */
-        pixel = ((unsigned long)srcPtr[0] << 16) |  /* R */
-                ((unsigned long)srcPtr[1] << 8)  |  /* G */
-                (unsigned long)srcPtr[2];           /* B */
-        break;
+        /* Tk photo is RGBA in memory; return 0xRRGGBB for XImage API */
+        return ((unsigned long)srcPtr[0] << 16)
+             | ((unsigned long)srcPtr[1] << 8)
+             |  (unsigned long)srcPtr[2];
     case 16:
-        pixel = ((((unsigned short*)srcPtr)[0] & 0xF800) >> 8) |
-                ((((unsigned short*)srcPtr)[0] & 0x07E0) << 5) |
-                ((((unsigned short*)srcPtr)[0] & 0x001F) << 19);
-        break;
+        return (unsigned long)(*(unsigned short *)srcPtr);
     case 8:
-        pixel = srcPtr[0];
-        break;
+        return srcPtr[0];
     case 1:
-        pixel = ((*srcPtr) & (1 << (x % 8))) ? 1 : 0; /* LSB first */
-        break;
+        return (srcPtr[0] & (1u << (x & 7))) ? 1 : 0;
     }
-    return pixel;
+    return 0;
 }
 
 /*
@@ -149,13 +156,13 @@ ImageGetPixel(
  *
  * PutPixel --
  *
- *	Writes a single pixel color value directly into the XImage memory buffer.
+ *      Writes a single pixel color value directly into the XImage memory buffer.
  *
  * Results:
- *	Always returns 0.
+ *      Always returns 0.
  *
  * Side effects:
- *	Modifies the raw data buffer of the target XImage.
+ *      Modifies the raw data buffer of the target XImage.
  *
  *----------------------------------------------------------------------
  */
@@ -166,34 +173,41 @@ PutPixel(
     int x, int y,
     unsigned long pixel)
 {
-    if (!image || !image->data || x < 0 || y < 0 || x >= image->width || y >= image->height) {
+    unsigned char *destPtr;
+    size_t rowOff, colOff, need;
+
+    if (!image || !image->data || x < 0 || y < 0
+            || x >= image->width || y >= image->height) {
         return 0;
     }
-
-    unsigned char *destPtr = (unsigned char *) &(image->data[(y * image->bytes_per_line)
-	    + ((x * image->bits_per_pixel) / 8)]);
+    rowOff = (size_t)y * (size_t)image->bytes_per_line;
+    colOff = (size_t)x * (size_t)image->bits_per_pixel / 8;
+    need = (image->bits_per_pixel + 7) / 8;
+    if (rowOff + colOff + need > (size_t)image->bytes_per_line * (size_t)image->height) {
+        return 0;
+    }
+    destPtr = (unsigned char *)image->data + rowOff + colOff;
 
     switch (image->bits_per_pixel) {
     case 32:
-    case 24:
         destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF); /* R */
         destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF); /* G */
         destPtr[2] = (unsigned char)(pixel & 0xFF);         /* B */
-        if (image->bits_per_pixel == 32) {
-            destPtr[3] = 0xFF;  /* Opaque if no alpha in pixel value. */
-        }
+        destPtr[3] = 0xFF;
+        break;
+    case 24:
+        destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF);
+        destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF);
+        destPtr[2] = (unsigned char)(pixel & 0xFF);
         break;
     case 16:
-        (*(unsigned short*)destPtr) = (unsigned short)(
-            ((pixel & 0xFF) >> 3) |
-            (((pixel >> 8) & 0xFF) << 2) |
-            (((pixel >> 16) & 0xFF) << 7));
+        (*(unsigned short*)destPtr) = (unsigned short)pixel;
         break;
     case 8:
         *destPtr = (unsigned char) pixel;
         break;
     case 1: {
-        unsigned char mask = (1 << (x % 8)); /* LSB first */
+        unsigned char mask = (1u << (x & 7));
         if (pixel) {
             *destPtr |= mask;
         } else {
@@ -210,32 +224,38 @@ PutPixel(
  *
  * XCreateImage --
  *
- *	Allocates storage for a new XImage mirroring the Windows API 
- *	implementation context.
+ *      Allocates storage for a new XImage mirroring the Windows API 
+ *      implementation context.
  *
  * Results:
- *	Returns a newly allocated XImage.
+ *      Returns a newly allocated XImage.
  *
  * Side effects:
- *	Allocates memory for the XImage structure.
+ *      Allocates memory for the XImage structure.
  *
  *----------------------------------------------------------------------
  */
 
 XImage *
 XCreateImage(
-	     TCL_UNUSED(Display *), /* display */
-	     TCL_UNUSED(Visual *), /* visual */
-	     unsigned int depth,
-	     int format,
-	     int offset,
-	     char *data,
-	     unsigned int width,
-	     unsigned int height,
-	     int bitmap_pad,
-	     int bytes_per_line)
+         TCL_UNUSED(Display *), /* display */
+         TCL_UNUSED(Visual *), /* visual */
+         unsigned int depth,
+         int format,
+         int offset,
+         char *data,
+         unsigned int width,
+         unsigned int height,
+         int bitmap_pad,
+         int bytes_per_line)
 {
-    XImage* imagePtr = (XImage*)Tcl_Alloc(sizeof(XImage));
+    XImage* imagePtr;
+
+    if (bitmap_pad <= 0) {
+        bitmap_pad = 32;
+    }
+    imagePtr = (XImage*)ckalloc(sizeof(XImage));
+    memset(imagePtr, 0, sizeof(XImage));
 
     imagePtr->width = width;
     imagePtr->height = height;
@@ -246,16 +266,19 @@ XCreateImage(
     imagePtr->bitmap_unit = 8;
     imagePtr->bitmap_bit_order = LSBFirst;
     imagePtr->bitmap_pad = bitmap_pad;
-    imagePtr->bits_per_pixel = depth;
+    imagePtr->bits_per_pixel = depth ? depth : 1;
     imagePtr->depth = depth;
-
-    /* Align bitmap_pad bounds to a 32-bit boundary context. */
-    bitmap_pad = (bitmap_pad + 31) / 32 * 32;
 
     if (bytes_per_line) {
         imagePtr->bytes_per_line = bytes_per_line;
     } else {
-        imagePtr->bytes_per_line = (((depth * width) + (bitmap_pad - 1)) >> 3) & ~((bitmap_pad >> 3) - 1);
+        int unit = bitmap_pad / 8;
+        if (unit <= 0) unit = 4;
+        /* Standard Xlib formula: ((w*depth + pad-1)/pad) * unit */
+        size_t bpl = ((size_t)depth * width + (size_t)bitmap_pad - 1)
+                   / (size_t)bitmap_pad * (size_t)unit;
+        if (bpl > (size_t)INT_MAX) bpl = INT_MAX;
+        imagePtr->bytes_per_line = (int)bpl;
     }
 
     imagePtr->red_mask = 0xFF0000;
@@ -278,14 +301,14 @@ XCreateImage(
  *
  * _XInitImageFuncPtrs --
  *
- *	Initializes the function pointers inside an XImage structure
- *	so the generic Tk framework knows how to manipulate it.
+ *      Initializes the function pointers inside an XImage structure
+ *      so the generic Tk framework knows how to manipulate it.
  *
  * Results:
- *	Returns 0 (standard Xlib convention for successful init).
+ *      Returns 0 (standard Xlib convention for successful init).
  *
  * Side effects:
- *	Binds the image function hooks to our custom backend logic.
+ *      Binds the image function hooks to our custom backend logic.
  *
  *----------------------------------------------------------------------
  */
@@ -295,14 +318,11 @@ _XInitImageFuncPtrs(
     XImage *image)
 {
     if (image == NULL) {
-	return -1;
+        return -1;
     }
-
     image->f.destroy_image = DestroyImage;
     image->f.get_pixel     = ImageGetPixel;
     image->f.put_pixel     = PutPixel;
-    
-
     return 0;
 }
 
@@ -311,34 +331,42 @@ _XInitImageFuncPtrs(
  *
  * TkpPutRGBAImage --
  *
- *	Accepts a raw image container from Tk, extracts the requested 
- *	sub-region, converts pixel formats from Tk's XImage layout to 
- *	native NanoVG RGBA, and draws it using NanoVG.
+ *      Accepts a raw image container from Tk, extracts the requested 
+ *      sub-region, converts pixel formats from Tk's XImage layout to 
+ *      native NanoVG RGBA, and draws it using NanoVG.
+ *
+ *      Wayland platform-specific implementation (cf. tkMacOSXImage.c).
+ *      Unlike X11, this backend does NOT support arbitrary depths here;
+ *      photo code is always 32-bit RGBA. Other depths are rejected and
+ *      handled via XCopyPlane.
  *
  * Results:
- *	Returns 0 on success, TCL_ERROR on failure.
+ *      Returns 0 on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Draws the target image block onto the drawable surface.
+ *      Draws the target image block onto the drawable surface.
  *
  *----------------------------------------------------------------------
  */
 
 int 
 TkpPutRGBAImage(
-		TCL_UNUSED(Display *), /* display */
-		Drawable drawable,
-		GC gc,
-		XImage* image,
-		int src_x,
-		int src_y,
-		int dst_x,
-		int dst_y,
-		unsigned int width,
-		unsigned int height)
+                TCL_UNUSED(Display *), /* display */
+                Drawable drawable,
+                GC gc,
+                XImage* image,
+                int src_x,
+                int src_y,
+                int dst_x,
+                int dst_y,
+                unsigned int width,
+                unsigned int height)
 {
+    TkWaylandDrawingContext dc;
     int imageId;
     NVGpaint imgPaint;
+    size_t numPixels;
+    unsigned char *rgbaData = NULL;
 
     if (!image || !image->data) {
         return 0;
@@ -346,69 +374,61 @@ TkpPutRGBAImage(
 
     /*
      * Validate source coordinates and size against image bounds to prevent
-     * buffer overreads.
-     *
-     * IMPORTANT: width/height are unsigned. If a caller ever passes a
-     * negative int (e.g. from an upstream clipping bug), it gets converted
-     * to a huge unsigned value *before* this function runs. Do NOT cast
-     * width/height back to (int) here -- a huge unsigned value can wrap
-     * back around to a small or negative int and silently defeat this
-     * check. Compare everything as unsigned instead, and only convert the
-     * already-known-nonnegative image->width/height.
+     * buffer overreads. All checks unsigned to avoid -1 -> huge unsigned wrap.
      */
-    if (src_x < 0 || src_y < 0 ||
-        image->width < 0 || image->height < 0 ||
-        width == 0 || height == 0 ||
-        width  > (unsigned int)image->width  ||
-        height > (unsigned int)image->height ||
-        (unsigned int)src_x > (unsigned int)image->width  - width  ||
-        (unsigned int)src_y > (unsigned int)image->height - height) {
+    if (src_x < 0 || src_y < 0
+            || image->width <= 0 || image->height <= 0
+            || width == 0 || height == 0
+            || width  > (unsigned int)image->width
+            || height > (unsigned int)image->height
+            || (unsigned int)src_x > (unsigned int)image->width  - width
+            || (unsigned int)src_y > (unsigned int)image->height - height) {
+        return TCL_ERROR;
+    }
+    if (width > (unsigned int)INT_MAX || height > (unsigned int)INT_MAX) {
+        return TCL_ERROR;
+    }
+    if (image->bits_per_pixel != 32 && image->bits_per_pixel != 24) {
+        return TCL_ERROR;
+    }
+    if ((size_t)image->bytes_per_line < (size_t)image->width * image->bits_per_pixel / 8) {
         return TCL_ERROR;
     }
 
-    /* Secure and bind the target OpenGL / NanoVG drawing surface context. */
-    TkWaylandDrawingContext dc;
     if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
     }
-
     if (gc) {
         TkWaylandApplyGC(dc.vg, gc);
     }
 
-    /* Allocate workspace memory for the extracted sub-region. */
-    size_t numPixels = (size_t)width * (size_t)height;
-    unsigned char *rgbaData = (unsigned char *)ckalloc(numPixels * 4);
+    numPixels = (size_t)width * (size_t)height;
+    if (numPixels > SIZE_MAX / 4) {
+        TkWaylandEndDraw(&dc);
+        return TCL_ERROR;
+    }
+    rgbaData = ckalloc(numPixels * 4);
     if (!rgbaData) {
         TkWaylandEndDraw(&dc);
         return TCL_ERROR;
     }
 
     /* Extract sub-region and map Tk XImage (RGBA) to NanoVG RGBA. */
-    if (image->bits_per_pixel == 32) {
-        for (unsigned int j = 0; j < height; j++) {
-            /* Map source row accounting for vertical offset and explicit line pitch. */
-            unsigned char *src_ptr = (unsigned char*)image->data +
-                                     ((src_y + j) * image->bytes_per_line) +
-                                     (src_x * 4);
-            unsigned char *dst_ptr = rgbaData + (j * width * 4);
+    for (unsigned int j = 0; j < height; j++) {
+        unsigned char *src_ptr = (unsigned char*)image->data
+                               + (size_t)(src_y + j) * image->bytes_per_line
+                               + (size_t)src_x * (image->bits_per_pixel / 8);
+        unsigned char *dst_ptr = rgbaData + (size_t)j * width * 4;
 
+        if (image->bits_per_pixel == 32) {
+            memcpy(dst_ptr, src_ptr, (size_t)width * 4);
+        } else { /* 24 -> 32 opaque */
             for (unsigned int i = 0; i < width; i++) {
-                /* Direct copy - no R/B swap (Tk XImage is RGBA). */
-                dst_ptr[i * 4 + 0] = src_ptr[i * 4 + 0]; /* R */
-                dst_ptr[i * 4 + 1] = src_ptr[i * 4 + 1]; /* G */
-                dst_ptr[i * 4 + 2] = src_ptr[i * 4 + 2]; /* B */
-                dst_ptr[i * 4 + 3] = src_ptr[i * 4 + 3]; /* A */
+                dst_ptr[i*4+0] = src_ptr[i*3+0];
+                dst_ptr[i*4+1] = src_ptr[i*3+1];
+                dst_ptr[i*4+2] = src_ptr[i*3+2];
+                dst_ptr[i*4+3] = 0xFF;
             }
-        }
-    } else {
-        /* Fallback linear block memory copy if bit depth is unmanaged. */
-        for (unsigned int j = 0; j < height; j++) {
-            memcpy(rgbaData + (j * width * 4),
-                   (unsigned char*)image->data + 
-                   ((src_y + j) * image->bytes_per_line) + 
-                   (src_x * (image->bits_per_pixel / 8)),
-                   width * 4);
         }
     }
 
@@ -432,12 +452,10 @@ TkpPutRGBAImage(
     nvgFill(dc.vg);
 
     /*
-     * As in XCopyPlane: nvgFill() above only queues the draw, it doesn't
+     * As in XCopyPlane: nvgFill() only queues the draw, it doesn't
      * touch the GPU. The texture must stay alive until TkWaylandEndDraw()
      * flushes the frame (nvgEndFrame()) and NanoVG actually issues the
-     * textured draw call. Only delete the image after that point --
-     * deleting earlier (or never, as this used to do) either corrupts
-     * the render or leaks a GL texture on every call.
+     * textured draw call. Only delete the image after that point.
      */
     TkWaylandEndDraw(&dc);
     nvgDeleteImage(dc.vg, imageId);
@@ -450,14 +468,14 @@ TkpPutRGBAImage(
  *
  * XGetImage --
  *
- *	Copies layout surface pixels back from the GPU to CPU memory storage
- *	via glReadPixels. Emulates standard Xlib fallback behaviors.
+ *      Copies layout surface pixels back from the GPU to CPU memory storage
+ *      via glReadPixels. Emulates standard Xlib fallback behaviors.
  *
  * Results:
- *	Returns a newly allocated XImage container, or NULL on absolute failure.
+ *      Returns a newly allocated XImage container, or NULL on absolute failure.
  *
  * Side effects:
- *	Allocates memory for a new XImage structure and its pixel buffer data.
+ *      Allocates memory for a new XImage structure and its pixel buffer data.
  *
  *----------------------------------------------------------------------
  */
@@ -474,7 +492,13 @@ XGetImage(
 {
     TkWaylandDrawingContext dc;
     XImage *imagePtr;
-    size_t size;
+    size_t bpl, size;
+
+    if (width == 0 || height == 0
+            || width > (unsigned int)INT_MAX
+            || height > (unsigned int)INT_MAX) {
+        return NULL;
+    }
 
     /* Check if this is a depth-1 pixmap with bitmapData. */
     if (TkWaylandDrawableIsPixmap(drawable)) {
@@ -487,12 +511,9 @@ XGetImage(
                 return NULL;
             }
 
-            size = imagePtr->bytes_per_line * imagePtr->height;
-            imagePtr->data = (char *)Tcl_Alloc(size);
-            if (!imagePtr->data) {
-                Tcl_Free((char *)imagePtr);
-                return NULL;
-            }
+            bpl = imagePtr->bytes_per_line;
+            size = bpl * height;
+            imagePtr->data = (char *)ckalloc(size);
             memset(imagePtr->data, 0, size);
 
             /* Copy the requested region from bitmapData. */
@@ -505,8 +526,8 @@ XGetImage(
                     continue; /* Row stays zeroed. */
                 }
 
-                unsigned char *srcRowPtr = srcData + (srcRow * srcBytesPerLine);
-                unsigned char *dstRow = (unsigned char *)imagePtr->data + (j * imagePtr->bytes_per_line);
+                unsigned char *srcRowPtr = srcData + (size_t)srcRow * srcBytesPerLine;
+                unsigned char *dstRow = (unsigned char *)imagePtr->data + j * bpl;
 
                 for (unsigned int i = 0; i < width; i++) {
                     int srcCol = x + i;
@@ -537,36 +558,31 @@ XGetImage(
         return NULL;
     }
 
-    size = imagePtr->bytes_per_line * imagePtr->height;
-    imagePtr->data = (char *)Tcl_Alloc(size);
-    if (!imagePtr->data) {
-        Tcl_Free((char *)imagePtr);
-        return NULL;
-    }
+    bpl = imagePtr->bytes_per_line;
+    size = bpl * height;
+    imagePtr->data = (char *)ckalloc(size);
     memset(imagePtr->data, 0, size);
 
     /* Bind context to securely read current screen surface framebuffers. */
     if (TkWaylandBeginDraw(drawable, NULL, &dc) == TCL_OK) {
-        unsigned char *glBuffer = (unsigned char *)ckalloc(width * height * 4);
-        if (glBuffer) {
-            glReadPixels(x, y, (GLsizei)width, (GLsizei)height, GL_RGBA, GL_UNSIGNED_BYTE, glBuffer);
+        size_t numPixels = (size_t)width * (size_t)height;
+        if (numPixels <= SIZE_MAX / 4) {
+            unsigned char *glBuffer = ckalloc(numPixels * 4);
+            if (glBuffer) {
+                glReadPixels(x, y, (GLsizei)width, (GLsizei)height, GL_RGBA, GL_UNSIGNED_BYTE, glBuffer);
 
-            for (unsigned int yy = 0; yy < height; yy++) {
-                unsigned char *srcRow = glBuffer + ((height - 1 - yy) * width * 4);
-                unsigned char *dstRow = (unsigned char *)imagePtr->data + (yy * imagePtr->bytes_per_line);
-
-                for (unsigned int xx = 0; xx < width; xx++) {
-                    dstRow[xx * 4 + 0] = srcRow[xx * 4 + 0]; /* R */
-                    dstRow[xx * 4 + 1] = srcRow[xx * 4 + 1]; /* G */
-                    dstRow[xx * 4 + 2] = srcRow[xx * 4 + 2]; /* B */
-                    dstRow[xx * 4 + 3] = srcRow[xx * 4 + 3]; /* A */
+                for (unsigned int yy = 0; yy < height; yy++) {
+                    unsigned char *srcRow = glBuffer + (size_t)(height - 1 - yy) * width * 4;
+                    unsigned char *dstRow = (unsigned char *)imagePtr->data + (size_t)yy * bpl;
+                    memcpy(dstRow, srcRow, (size_t)width * 4);
                 }
+                ckfree(glBuffer);
             }
-            ckfree(glBuffer);
         }
         TkWaylandEndDraw(&dc);
     }
 
+    _XInitImageFuncPtrs(imagePtr);
     return imagePtr;
 }
 
@@ -575,32 +591,32 @@ XGetImage(
  *
  * XCopyArea --
  *
- *	Intercepts Tk's internal double‑buffering presentation sentinels
- *	and handles them without introducing raw OpenGL state mutations.
- *	All other calls are no‑ops; actual drawing is performed through
- *	the NanoVG‑based rendering pipeline.
+ *      Intercepts Tk's internal double‑buffering presentation sentinels
+ *      and handles them without introducing raw OpenGL state mutations.
+ *      All other calls are no‑ops; actual drawing is performed through
+ *      the NanoVG‑based rendering pipeline.
  *
  * Results:
- *	Always returns Success.
+ *      Always returns Success.
  *
  * Side effects:
- *	None (the function is a synchronization pass‑through).
+ *      None (the function is a synchronization pass‑through).
  *
  *----------------------------------------------------------------------
  */
 
 int
 XCopyArea(
-	  TCL_UNUSED(Display *), /* display */
-	  TCL_UNUSED(Drawable), /* src */
-	  TCL_UNUSED(Drawable), /* dst */
-	  TCL_UNUSED(GC), /* gc */
-	  TCL_UNUSED(int), /* src_x */
-	  TCL_UNUSED(int), /* src_y */
-	  unsigned int width,
-	  unsigned int height,
-	  TCL_UNUSED(int), /* dest_x */
-	  TCL_UNUSED(int)) /* dest_y */
+          TCL_UNUSED(Display *), /* display */
+          TCL_UNUSED(Drawable), /* src */
+          TCL_UNUSED(Drawable), /* dst */
+          TCL_UNUSED(GC), /* gc */
+          TCL_UNUSED(int), /* src_x */
+          TCL_UNUSED(int), /* src_y */
+          unsigned int width,
+          unsigned int height,
+          TCL_UNUSED(int), /* dest_x */
+          TCL_UNUSED(int)) /* dest_y */
 {
     /*
      * Safely intercept and isolate Tk's internal presentation sentinels.
@@ -618,15 +634,15 @@ XCopyArea(
  *
  * XCreateBitmapFromData --
  *
- *	Constructs a 1‑bit deep Pixmap from raw inline bitmap data.
- *	This is a compatibility wrapper that allocates a new pixmap
- *	of the requested size and depth 1, and stores the bitmap data.
+ *      Constructs a 1‑bit deep Pixmap from raw inline bitmap data.
+ *      This is a compatibility wrapper that allocates a new pixmap
+ *      of the requested size and depth 1, and stores the bitmap data.
  *
  * Results:
- *	Returns a new Pixmap handle on success, or None on failure.
+ *      Returns a new Pixmap handle on success, or None on failure.
  *
  * Side effects:
- *	Allocates a new pixmap resource and stores the bitmap data.
+ *      Allocates a new pixmap resource and stores the bitmap data.
  *
  *----------------------------------------------------------------------
  */
@@ -662,16 +678,16 @@ XCreateBitmapFromData(
  *
  * XCopyPlane --
  *
- *	Copy a single bit plane from a source pixmap to a destination
- *	drawable, using the GC's foreground and background colors.
- *	This is the critical function for drawing 1-bit bitmaps.
+ *      Copy a single bit plane from a source pixmap to a destination
+ *      drawable, using the GC's foreground and background colors.
+ *      This is the critical function for drawing 1-bit bitmaps.
  *
  *
  * Results:
- *	Returns Success on success, or BadDrawable/BadGC on failure.
+ *      Returns Success on success, or BadDrawable/BadGC on failure.
  *
  * Side effects:
- *	Draws the bitmap using NanoVG with foreground/background colors.
+ *      Draws the bitmap using NanoVG with foreground/background colors.
  *
  *----------------------------------------------------------------------
  */
@@ -695,10 +711,8 @@ XCopyPlane(
     unsigned char *expandedData = NULL;
     int imageId = -1;
     NVGpaint imgPaint;
-    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
-    unsigned long fg, bg;
     unsigned char fg_r, fg_g, fg_b;
-    unsigned char bg_r, bg_g, bg_b;
+    size_t numPixels;
 
     /* Check if src is a valid pixmap with bitmap data. */
     if (!TkWaylandDrawableIsPixmap(src)) {
@@ -710,41 +724,24 @@ XCopyPlane(
         return BadDrawable;
     }
 
-    if (gcPtr == NULL) {
+    if (gc == NULL) {
         return BadGC;
     }
 
-    /*
-     * Reject bogus width/height before doing any arithmetic with them.
-     * width/height are unsigned, so a negative int passed by a caller
-     * (e.g. from an upstream clipping bug) is converted to a huge
-     * unsigned value before this function even runs -- there is no
-     * "negative" value to catch here, only a suspiciously enormous one.
-     * Treat anything above INT_MAX as invalid, since no real bitmap
-     * region is anywhere close to that size; this is what a wrapped
-     * -1/-2/etc. looks like once reinterpreted as unsigned. This also
-     * guards the numPixels multiplication below against overflow driving
-     * an oversized ckalloc request that would panic instead of failing
-     * cleanly.
-     */
-    if (width == 0 || height == 0 ||
-        width  > (unsigned int)INT_MAX ||
-        height > (unsigned int)INT_MAX) {
+    if (width == 0 || height == 0
+            || width  > (unsigned int)INT_MAX
+            || height > (unsigned int)INT_MAX) {
         return BadValue;
     }
 
-    /* Get foreground and background colors from GC. */
-    fg = gcPtr->foreground;
-    bg = gcPtr->background;
-    
-    /* Extract RGB components. */
-    fg_r = (unsigned char)((fg >> 16) & 0xFF);
-    fg_g = (unsigned char)((fg >> 8) & 0xFF);
-    fg_b = (unsigned char)(fg & 0xFF);
-    
-    bg_r = (unsigned char)((bg >> 16) & 0xFF);
-    bg_g = (unsigned char)((bg >> 8) & 0xFF);
-    bg_b = (unsigned char)(bg & 0xFF);
+    /* Get foreground color from GC. */
+    {
+        TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+        unsigned long fg = gcPtr->foreground;
+        fg_r = (fg >> 16) & 0xFF;
+        fg_g = (fg >> 8) & 0xFF;
+        fg_b = fg & 0xFF;
+    }
 
     /* Begin drawing context. */
     if (TkWaylandBeginDraw(dst, gc, &dc) != TCL_OK) {
@@ -752,8 +749,12 @@ XCopyPlane(
     }
 
     /* Expand 1-bit bitmap to RGBA data. */
-    size_t numPixels = (size_t)width * (size_t)height;
-    expandedData = (unsigned char *)ckalloc(numPixels * 4);
+    numPixels = (size_t)width * (size_t)height;
+    if (numPixels > SIZE_MAX / 4) {
+        TkWaylandEndDraw(&dc);
+        return BadAlloc;
+    }
+    expandedData = ckalloc(numPixels * 4);
     if (!expandedData) {
         TkWaylandEndDraw(&dc);
         return BadAlloc;
@@ -767,51 +768,39 @@ XCopyPlane(
         int srcRow = src_y + j;
         if (srcRow < 0 || srcRow >= srcPixmap->height) {
             /* Out of bounds - fill with transparent background. */
-            unsigned char *dstRow = expandedData + (j * width * 4);
-            for (unsigned int i = 0; i < width; i++) {
-                dstRow[i * 4 + 0] = 0;
-                dstRow[i * 4 + 1] = 0;
-                dstRow[i * 4 + 2] = 0;
-                dstRow[i * 4 + 3] = 0;  /* Transparent */
-            }
+            unsigned char *dstRow = expandedData + (size_t)j * width * 4;
+            memset(dstRow, 0, (size_t)width * 4);
             continue;
         }
 
-        unsigned char *srcRowPtr = srcData + (srcRow * srcBytesPerLine);
-        unsigned char *dstRow = expandedData + (j * width * 4);
+        unsigned char *srcRowPtr = srcData + (size_t)srcRow * srcBytesPerLine;
+        unsigned char *dstRow = expandedData + (size_t)j * width * 4;
 
         for (unsigned int i = 0; i < width; i++) {
             int srcCol = src_x + i;
             if (srcCol < 0 || srcCol >= srcPixmap->width) {
-                /* Out of bounds - fill with transparent background. */
-                dstRow[i * 4 + 0] = 0;
-                dstRow[i * 4 + 1] = 0;
-                dstRow[i * 4 + 2] = 0;
-                dstRow[i * 4 + 3] = 0;  /* Transparent */
+                /* Out of bounds - transparent */
+                dstRow[i*4+0] = 0;
+                dstRow[i*4+1] = 0;
+                dstRow[i*4+2] = 0;
+                dstRow[i*4+3] = 0;
                 continue;
             }
 
-            /* Test the bit. Bitmap data is packed LSB-first (bit 0 is the
-             * leftmost pixel in the byte) -- this is the standard X bitmap
-             * convention that Tk's bitmap-data parser produces, and it
-             * matches the LSBFirst bitmap_bit_order this backend declares
-             * in XCreateImage. */
             int byteIndex = srcCol / 8;
             int bitIndex = srcCol % 8; /* LSB first */
             int bit = (srcRowPtr[byteIndex] & (1 << bitIndex)) ? 1 : 0;
 
             if (bit) {
-                /* On-bit: foreground color, opaque */
-                dstRow[i * 4 + 0] = fg_r;
-                dstRow[i * 4 + 1] = fg_g;
-                dstRow[i * 4 + 2] = fg_b;
-                dstRow[i * 4 + 3] = 0xFF;
+                dstRow[i*4+0] = fg_r;
+                dstRow[i*4+1] = fg_g;
+                dstRow[i*4+2] = fg_b;
+                dstRow[i*4+3] = 0xFF;
             } else {
-                /* Off-bit: transparent, not background color */
-                dstRow[i * 4 + 0] = 0;
-                dstRow[i * 4 + 1] = 0;
-                dstRow[i * 4 + 2] = 0;
-                dstRow[i * 4 + 3] = 0;  /* Transparent */
+                dstRow[i*4+0] = 0;
+                dstRow[i*4+1] = 0;
+                dstRow[i*4+2] = 0;
+                dstRow[i*4+3] = 0;  /* Transparent */
             }
         }
     }
@@ -839,10 +828,7 @@ XCopyPlane(
      * internal draw-call list -- it does not touch the GPU. The actual
      * texture bind and draw happen later, inside nvgEndFrame(), which
      * TkWaylandEndDraw() calls below. Deleting the image before that
-     * point (as this used to do) destroys the GL texture before NanoVG
-     * ever issues the textured draw call that references it, so the
-     * bitmap pattern never actually reaches the screen. Flush the frame
-     * first, then it's safe to delete the image.
+     * point destroys the GL texture before NanoVG ever issues the draw.
      */
     TkWaylandEndDraw(&dc);
     nvgDeleteImage(dc.vg, imageId);
@@ -855,14 +841,14 @@ XCopyPlane(
  *
  * XPutImage --
  *
- *	Standard Xlib entry point for image drawing. This function
- *	dispatches directly to TkpPutRGBAImage.
+ *      Standard Xlib entry point for image drawing. This function
+ *      dispatches directly to TkpPutRGBAImage.
  *
  * Results:
- *	Returns Success on success, or BadAlloc on allocation failure.
+ *      Returns Success on success, or BadAlloc on allocation failure.
  *
  * Side effects:
- *	Draws the image onto the specified drawable.
+ *      Draws the image onto the specified drawable.
  *
  *----------------------------------------------------------------------
  */

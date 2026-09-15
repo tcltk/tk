@@ -2395,6 +2395,12 @@ ImgPhotoCmdDeletedProc(
  *----------------------------------------------------------------------
  */
 
+/*
+ * tkImgPhoto.c -- patched ImgPhotoSetSize
+ * This is a drop-in replacement for the function only.
+ * Apply to your tk/generic/tkImgPhoto.c
+ */
+
 static int
 ImgPhotoSetSize(
     PhotoModel *modelPtr,
@@ -2408,159 +2414,151 @@ ImgPhotoSetSize(
     PhotoInstance *instancePtr;
 
     if (modelPtr->userWidth > 0) {
-	width = modelPtr->userWidth;
+        width = modelPtr->userWidth;
     }
     if (modelPtr->userHeight > 0) {
-	height = modelPtr->userHeight;
+        height = modelPtr->userHeight;
     }
 
     if (width > INT_MAX / 4) {
-	/* Pitch overflows int */
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     pitch = width * 4;
 
-    /*
-     * Test if we're going to (re)allocate the main buffer now, so that any
-     * failures will leave the photo unchanged.
-     */
-
     if ((width != modelPtr->width) || (height != modelPtr->height)
-	    || (modelPtr->pix32 == NULL)) {
-	unsigned newPixSize;
+            || (modelPtr->pix32 == NULL)) {
+        unsigned newPixSize;
 
-	if (pitch && height > (int)(UINT_MAX / pitch)) {
-	    return TCL_ERROR;
-	}
-	newPixSize = height * pitch;
+        if (pitch && height > (int)(UINT_MAX / pitch)) {
+            return TCL_ERROR;
+        }
+        newPixSize = height * pitch;
 
-	/*
-	 * Some mallocs() really hate allocating zero bytes. [Bug 619544]
-	 */
-
-	if (newPixSize == 0) {
-	    newPix32 = NULL;
-	} else {
-	    newPix32 = (unsigned char *)Tcl_AttemptAlloc(newPixSize);
-	    if (newPix32 == NULL) {
-		return TCL_ERROR;
-	    }
-	}
+        if (newPixSize == 0) {
+            newPix32 = NULL;
+        } else {
+            newPix32 = (unsigned char *)Tcl_AttemptAlloc(newPixSize);
+            if (newPix32 == NULL) {
+                return TCL_ERROR;
+            }
+        }
     }
-
-    /*
-     * We have to trim the valid region if it is currently larger than the new
-     * image size.
-     */
 
     XClipBox(modelPtr->validRegion, &validBox);
     if ((validBox.x + validBox.width > width)
-	    || (validBox.y + validBox.height > height)) {
-	clipBox.x = 0;
-	clipBox.y = 0;
-	clipBox.width = width;
-	clipBox.height = height;
-	clipRegion = XCreateRegion();
-	XUnionRectWithRegion(&clipBox, clipRegion, clipRegion);
-	XIntersectRegion(modelPtr->validRegion, clipRegion,
-		modelPtr->validRegion);
-	XDestroyRegion(clipRegion);
-	XClipBox(modelPtr->validRegion, &validBox);
+            || (validBox.y + validBox.height > height)) {
+        clipBox.x = 0;
+        clipBox.y = 0;
+        clipBox.width = width;
+        clipBox.height = height;
+        clipRegion = XCreateRegion();
+        XUnionRectWithRegion(&clipBox, clipRegion, clipRegion);
+        XIntersectRegion(modelPtr->validRegion, clipRegion,
+                modelPtr->validRegion);
+        XDestroyRegion(clipRegion);
+        XClipBox(modelPtr->validRegion, &validBox);
     }
 
-    /*
-     * Use the reallocated storage (allocation above) for the 32-bit image and
-     * copy over valid regions. Note that this test is true precisely when the
-     * allocation has already been done.
-     */
-
     if (newPix32 != NULL) {
-	/*
-	 * Zero the new array. The dithering code shouldn't read the areas
-	 * outside validBox, but they might be copied to another photo image
-	 * or written to a file.
-	 */
+        /* Zero new array */
+        if ((modelPtr->pix32 != NULL)
+                && ((width == modelPtr->width) || (width == validBox.width))) {
+            if (validBox.y > 0) {
+                memset(newPix32, 0, ((size_t) validBox.y * pitch));
+            }
+            h = validBox.y + validBox.height;
+            if (h < height) {
+                memset(newPix32 + h*pitch, 0, ((size_t) (height - h) * pitch));
+            }
+        } else {
+            memset(newPix32, 0, ((size_t)height * pitch));
+        }
 
-	if ((modelPtr->pix32 != NULL)
-	    && ((width == modelPtr->width) || (width == validBox.width))) {
-	    if (validBox.y > 0) {
-		memset(newPix32, 0, ((size_t) validBox.y * pitch));
-	    }
-	    h = validBox.y + validBox.height;
-	    if (h < height) {
-		memset(newPix32 + h*pitch, 0, ((size_t) (height - h) * pitch));
-	    }
-	} else {
-	    memset(newPix32, 0, ((size_t)height * pitch));
-	}
+        if (modelPtr->pix32 != NULL) {
+            /* --- HARDENED COPY --- */
+            /* Clip validBox to OLD size as well (defense in depth) */
+            if (validBox.x < 0) {
+                validBox.width += validBox.x;
+                validBox.x = 0;
+            }
+            if (validBox.y < 0) {
+                validBox.height += validBox.y;
+                validBox.y = 0;
+            }
+            if (validBox.x + validBox.width > modelPtr->width) {
+                validBox.width = modelPtr->width - validBox.x;
+            }
+            if (validBox.y + validBox.height > modelPtr->height) {
+                validBox.height = modelPtr->height - validBox.y;
+            }
+            /* Also ensure not past NEW size (paranoid) */
+            if (validBox.x + validBox.width > width) {
+                validBox.width = width - validBox.x;
+            }
+            if (validBox.y + validBox.height > height) {
+                validBox.height = height - validBox.y;
+            }
 
-	if (modelPtr->pix32 != NULL) {
-	    /*
-	     * Copy the common area over to the new array array and free the
-	     * old array.
-	     */
+            if (validBox.width > 0 && validBox.height > 0) {
+                if (width == modelPtr->width) {
+                    /* Contiguous - use size_t for offset */
+                    size_t off = (size_t)validBox.y * (size_t)pitch;
+                    size_t sz = (size_t)validBox.height * (size_t)pitch;
+                    /* Final guard: off+sz must fit in both old and new */
+                    size_t newSize = (size_t)height * (size_t)pitch;
+                    size_t oldSize = (size_t)modelPtr->height * (size_t)modelPtr->width * 4;
+                    if (off + sz > newSize) {
+                        sz = newSize > off ? newSize - off : 0;
+                    }
+                    if (off + sz > oldSize) {
+                        sz = oldSize > off ? oldSize - off : 0;
+                    }
+                    if (sz > 0) {
+                        memcpy(newPix32 + off, modelPtr->pix32 + off, sz);
+                    }
+                } else {
+                    /* Non-contiguous line by line - size_t math */
+                    size_t newW = (size_t)width;
+                    size_t oldW = (size_t)modelPtr->width;
+                    size_t vx = (size_t)validBox.x;
+                    size_t vy = (size_t)validBox.y;
+                    size_t vw = (size_t)validBox.width;
+                    destPtr = newPix32 + (vy * newW + vx) * 4;
+                    srcPtr = modelPtr->pix32 + (vy * oldW + vx) * 4;
+                    for (h = validBox.height; h > 0; h--) {
+                        memcpy(destPtr, srcPtr, vw * 4);
+                        destPtr += newW * 4;
+                        srcPtr += oldW * 4;
+                    }
+                }
+            }
+            Tcl_Free(modelPtr->pix32);
+        }
 
-	    if (width == modelPtr->width) {
+        modelPtr->pix32 = newPix32;
+        modelPtr->width = width;
+        modelPtr->height = height;
 
-		/*
-		 * The region to be copied is contiguous.
-		 */
-
-		offset = validBox.y * pitch;
-		memcpy(newPix32 + offset, modelPtr->pix32 + offset,
-			((size_t)validBox.height * pitch));
-
-	    } else if ((validBox.width > 0) && (validBox.height > 0)) {
-		/*
-		 * Area to be copied is not contiguous - copy line by line.
-		 */
-
-		destPtr = newPix32 + (validBox.y * width + validBox.x) * 4;
-		srcPtr = modelPtr->pix32 + (validBox.y * modelPtr->width
-			+ validBox.x) * 4;
-		for (h = validBox.height; h > 0; h--) {
-		    memcpy(destPtr, srcPtr, ((size_t)validBox.width * 4));
-		    destPtr += width * 4;
-		    srcPtr += modelPtr->width * 4;
-		}
-	    }
-
-	    Tcl_Free(modelPtr->pix32);
-	}
-
-	modelPtr->pix32 = newPix32;
-	modelPtr->width = width;
-	modelPtr->height = height;
-
-	/*
-	 * Dithering will be correct up to the end of the last pre-existing
-	 * complete scanline.
-	 */
-
-	if ((validBox.x > 0) || (validBox.y > 0)) {
-	    modelPtr->ditherX = 0;
-	    modelPtr->ditherY = 0;
-	} else if (validBox.width == width) {
-	    if ((int) validBox.height < modelPtr->ditherY) {
-		modelPtr->ditherX = 0;
-		modelPtr->ditherY = validBox.height;
-	    }
-	} else if ((modelPtr->ditherY > 0)
-		|| ((int) validBox.width < modelPtr->ditherX)) {
-	    modelPtr->ditherX = validBox.width;
-	    modelPtr->ditherY = 0;
-	}
+        if ((validBox.x > 0) || (validBox.y > 0)) {
+            modelPtr->ditherX = 0;
+            modelPtr->ditherY = 0;
+        } else if (validBox.width == width) {
+            if ((int) validBox.height < modelPtr->ditherY) {
+                modelPtr->ditherX = 0;
+                modelPtr->ditherY = validBox.height;
+            }
+        } else if ((modelPtr->ditherY > 0)
+                || ((int) validBox.width < modelPtr->ditherX)) {
+            modelPtr->ditherX = validBox.width;
+            modelPtr->ditherY = 0;
+        }
     }
 
     ToggleComplexAlphaIfNeeded(modelPtr);
 
-    /*
-     * Now adjust the sizes of the pixmaps for all of the instances.
-     */
-
     for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
-	    instancePtr = instancePtr->nextPtr) {
-	TkImgPhotoInstanceSetSize(instancePtr);
+            instancePtr = instancePtr->nextPtr) {
+        TkImgPhotoInstanceSetSize(instancePtr);
     }
 
     return TCL_OK;
