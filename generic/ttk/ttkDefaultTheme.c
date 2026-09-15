@@ -519,7 +519,7 @@ static void IndicatorElementDraw(
 
     char bgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
-    char fgColorStr[7] = "black";
+    char fgColorStr[7] = "000000";
     unsigned int selected = (state & TTK_STATE_SELECTED);
     Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[70];

@@ -900,7 +900,7 @@ static void IndicatorElementDraw(
     int height = (int)round(spec->height * scalingLevel);
 
     char bgColorStr[7], borderColorStr[7];
-    char fgColorStr[7] = "black";
+    char fgColorStr[7] = "ffffff";
     unsigned int selected = (state & TTK_STATE_SELECTED);
     unsigned int tristate = (state & TTK_STATE_ALTERNATE);
     Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -942,7 +942,7 @@ static void IndicatorElementDraw(
 	       bgColorStr);
     if (indicator->foregroundObj) {
 	ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
-		fgColorStr);
+		   fgColorStr);
     }
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->borderColorObj),
 	       borderColorStr);
