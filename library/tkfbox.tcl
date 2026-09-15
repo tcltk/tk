@@ -640,7 +640,7 @@ proc ::tk::dialog::file::Update {w} {
 
 # ::tk::dialog::file::SetPathSilently --
 #
-# 	Sets data(selectPath) without invoking the trace procedure
+#	Sets data(selectPath) without invoking the trace procedure
 #
 proc ::tk::dialog::file::SetPathSilently {w path} {
     upvar ::tk::dialog::file::[winfo name $w] data
@@ -855,6 +855,7 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 
     set text [$data(ent) get]
     if {$data(-multiple)} {
+	set data(selectFile) {}
 	foreach t $text {
 	    VerifyFileName $w $t
 	}

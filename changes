@@ -8365,3 +8365,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-08-06 (bug) [971a26] Xlib emulation for macOS causes many visual artifacts (nemethi)
 
 2026-08-08 (bug) [d62ee2] tk console manual errors and undocumented bindings (anonymous)
+
+2026-09-15 (bug) [ed6c3a] Modal window is not restored after "show desktop" (storchaka)
+
+2026-09-15 (bug) [56eec5] tk_getOpenFile -multiple (tkfbox): confirmed files are appended to the
+	-initialfile selection
