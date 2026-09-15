@@ -3806,6 +3806,68 @@ TkpDrawAngledCharsInContext(
     double     angle)
 {
 
+    /* Trim trailing \r and \n that Tk includes for Entry/Text layout
+     * before we even open a NanoVG frame. This fixes the "hello\r" crash
+     * without needing recursion. */
+    if (rangeLength > 0) {
+        while (rangeLength > 0) {
+            char c = source[rangeStart + rangeLength - 1];
+            if (c == '\r' || c == '\n') {
+                rangeLength--;
+            } else {
+                break;
+            }
+        }
+        if (rangeLength <= 0) {
+            return;
+        }
+    }
+
+    /* If the substring contains interior newlines, handle it BEFORE opening
+     * a frame to avoid nested nvgBeginFrame. Each line will open its own
+     * frame sequentially. */
+    {
+        const char *rp = source + rangeStart;
+        const char *re = rp + rangeLength;
+        bool innerHasNewline = false;
+        for (const char *p = rp; p < re; p++) {
+            if (*p == '\n' || *p == '\r') { innerHasNewline = true; break; }
+        }
+        if (innerHasNewline) {
+            const char *lineStart = rp;
+            const char *p = rp;
+            double lineY = y;
+            double lineX = x;
+            while (p < re) {
+                if (*p == '\n' || *p == '\r') {
+                    if (p > lineStart) {
+                        TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
+                                                   source, numBytes,
+                                                   lineStart - source,
+                                                   p - lineStart,
+                                                   lineX, lineY, angle);
+                    }
+                    lineY += 12 * 1.2; /* fallback if fontPtr not yet loaded */
+                    /* Try to get pixelSize if possible, but we are before font load */
+                    lineX = x;
+                    p++;
+                    if (p < re && *p == '\n' && *(p-1) == '\r') p++;
+                    lineStart = p;
+                } else {
+                    p++;
+                }
+            }
+            if (p > lineStart) {
+                TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
+                                           source, numBytes,
+                                           lineStart - source,
+                                           p - lineStart,
+                                           lineX, lineY, angle);
+            }
+            return;
+        }
+    }
+
     TkWaylandDrawingContext dc;
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
@@ -3840,7 +3902,26 @@ TkpDrawAngledCharsInContext(
 
     /* 
      * Check if the substring contains newline characters.
-     * If it does, we need to split the rendering at each newline.
+     * NOTE: This must be handled BEFORE TkWaylandBeginDraw to avoid
+     * nested nvgBeginFrame (panic). The outer call has already opened
+     * a frame; recursing via TkpDrawAngledCharsInContext would try to
+     * open another. Instead we handle newlines by splitting here and
+     * drawing each line with the SAME vg context, without recursion
+     * through the public entry point.
+     *
+     * Simplest safe fix: if we detect newlines, we render each non-empty
+     * line segment iteratively using an internal helper that does NOT call
+     * BeginDraw/EndDraw. For now we just skip empty newline segments and
+     * continue to render the rest in this same frame by adjusting range.
+     *
+     * The full multi-line case (\n in middle) is rare for Entry (which only
+     * has trailing \r). We handle it by early return that re-invokes
+     * drawing line-by-line WITHOUT having opened a frame in this call.
+     * To avoid nesting, we close current frame if opened, then recurse.
+     *
+     * FIXED LOGIC: Detect newline BEFORE using vg, and if found, close
+     * the frame and delegate to line-by-line public calls that each open
+     * their own frame sequentially, not nested.
      */
     bool hasNewline = false;
     for (const char *p = rangePtr; p < rangeEnd; p++) {
@@ -3850,8 +3931,11 @@ TkpDrawAngledCharsInContext(
         }
     }
 
-    /* If there are newlines, render each line separately. */
     if (hasNewline) {
+        /* End the frame we just opened, then render lines sequentially
+         * via recursive public calls (each will open/close its own frame).
+         * This avoids nesting because we are not inside a frame now. */
+        TkWaylandEndDraw(&dc);
         const char *lineStart = rangePtr;
         const char *p = rangePtr;
         double lineY = y;
@@ -3859,7 +3943,6 @@ TkpDrawAngledCharsInContext(
         
         while (p < rangeEnd) {
             if (*p == '\n' || *p == '\r') {
-                /* Render the line up to the newline. */
                 if (p > lineStart) {
                     TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
                                                source, numBytes,
@@ -3867,10 +3950,8 @@ TkpDrawAngledCharsInContext(
                                                p - lineStart,
                                                lineX, lineY, angle);
                 }
-                /* Move to next line. */
                 lineY += fontPtr->pixelSize * 1.2;
                 lineX = x;
-                /* Skip the newline character(s). */
                 p++;
                 if (p < rangeEnd && *p == '\n' && *(p-1) == '\r') {
                     p++;
@@ -3880,7 +3961,6 @@ TkpDrawAngledCharsInContext(
                 p++;
             }
         }
-        /* Render the last line if it has content. */
         if (p > lineStart) {
             TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
                                        source, numBytes,
@@ -3888,7 +3968,7 @@ TkpDrawAngledCharsInContext(
                                        p - lineStart,
                                        lineX, lineY, angle);
         }
-        goto done;
+        return;
     }
 
     bool fullIsSimple = IsSimpleOnly(source, (int)numBytes);
