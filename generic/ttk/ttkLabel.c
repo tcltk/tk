@@ -58,7 +58,7 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-font", TK_OPTION_FONT,
 	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
-	offsetof(TextElement,foregroundObj), "black"},
+	offsetof(TextElement,foregroundObj), "black" },
     { "-underline", TK_OPTION_INDEX,
 	offsetof(TextElement,underlineObj), NULL},
     { "-width", TK_OPTION_INT,
