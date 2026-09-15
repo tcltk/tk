@@ -687,6 +687,7 @@ XRENDER_CFLAGS
 FONTSYSTEM
 UNIX_FONT_OBJS
 BIDI_CFLAGS
+XFT_DEPS
 XFT_LIBS
 XFT_CFLAGS
 HB_LIBS
@@ -8497,6 +8498,7 @@ printf '%s\n' "$enable_xft" >&6; }
 
     XFT_CFLAGS=""
     XFT_LIBS=""
+    XFT_DEPS=""
 
     #--------------------------------------------------------------------
     # --enable-bidi (default: yes on X11) — forces Xft when enabled
@@ -8778,6 +8780,7 @@ fi
 
 	    if test "$found_xft" = "yes" ; then
 		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		XFT_DEPS="xft"
 		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for FcFontSort in -lfontconfig" >&5
 printf %s "checking for FcFontSort in -lfontconfig... " >&6; }
 if test ${ac_cv_lib_fontconfig_FcFontSort+y}
@@ -8825,6 +8828,7 @@ if test "x$ac_cv_lib_fontconfig_FcFontSort" = xyes
 then :
 
 		    XFT_LIBS="$XFT_LIBS -lfontconfig"
+		    XFT_DEPS="$XFT_DEPS fontconfig"
 
 fi
 
@@ -8842,10 +8846,12 @@ printf '%s\n' "$as_me: WARNING: Can't find xft configuration or xft is unusable 
 	    enable_xft=no
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
+	    XFT_DEPS=""
 	else
 	    enable_xft=yes
 	fi
     fi
+
 
 
 
