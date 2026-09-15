@@ -29,9 +29,6 @@ typedef struct {
 } MouseEventData;
 
 static Tk_Window captureWinPtr = NULL;
-
-/* === SINGLE DEFINITION for pointer cache - used by tkWaylandWm.c and tkWaylandNotify.c === */
-/* DO NOT make static, must be visible to linker */
 int tkWaylandLastRootX = 200;
 int tkWaylandLastRootY = 200;
 int tkWaylandLastWinX = 0;
