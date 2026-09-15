@@ -74,6 +74,10 @@ TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
  * ----------------------------------------------------------------------------
  */
 
+
+#define SYNTHETIC_KEYCODE_BASE 0xFF000000
+#define SYNTHETIC_KEYCODE(ch)  (SYNTHETIC_KEYCODE_BASE | (ch))
+
 const char*
 TkpGetString(
     TkWindow *winPtr,
@@ -82,7 +86,6 @@ TkpGetString(
 {
     const char* storedText;
     TkWindow *toplevel = winPtr;
-
     while (!Tk_IsTopLevel(toplevel)) {
         toplevel = (TkWindow *) Tk_Parent(toplevel);
     }
@@ -91,18 +94,129 @@ TkpGetString(
 
     if (storedText != NULL && *storedText != '\0') {
         Tcl_DStringAppend(dsPtr, storedText, TCL_INDEX_NONE);
-    } else if (eventPtr->type == KeyPress && xkbState.state) {
-        char buf[32];
-        int n = xkb_state_key_get_utf8(xkbState.state,
-                    (xkb_keycode_t)eventPtr->xkey.keycode, buf, sizeof(buf));
-        if (n > 0) {
-            Tcl_DStringAppend(dsPtr, buf, n);
-        }
+        TkWaylandClearStoredText(toplevel);
+        return Tcl_DStringValue(dsPtr);
     }
 
+    if (eventPtr->type == KeyPress) {
+        int kc = eventPtr->xkey.keycode;
+        /* Synthetic from [event generate] or IME */
+        if (kc >= (int)SYNTHETIC_KEYCODE_BASE) {
+            KeySym ks = (KeySym)(kc - SYNTHETIC_KEYCODE_BASE);
+            if (ks == XK_Return || ks == XK_KP_Enter) {
+                Tcl_DStringAppend(dsPtr, "\r", 1);
+            } else if (ks == XK_Tab || ks == XK_KP_Tab) {
+                Tcl_DStringAppend(dsPtr, "\t", 1);
+            } else if (ks == XK_BackSpace || ks == XK_Delete || ks == XK_Escape) {
+                /* %A empty */
+            } else {
+                char buf[64];
+                int n = xkb_keysym_to_utf8(ks, buf, sizeof(buf));
+                if (n > 0) {
+                    if (buf[n-1] == '\0') n--;
+                    if (n > 0) Tcl_DStringAppend(dsPtr, buf, n);
+                }
+            }
+            TkWaylandClearStoredText(toplevel);
+            return Tcl_DStringValue(dsPtr);
+        }
+        /* Also handle synthetic where keycode is small keysym (legacy) */
+        if (eventPtr->xkey.send_event) {
+            KeySym ks = TkpGetKeySym(NULL, eventPtr);
+            if (ks == XK_Return || ks == XK_KP_Enter) {
+                Tcl_DStringAppend(dsPtr, "\r", 1);
+            } else if (ks == XK_Tab || ks == XK_KP_Tab) {
+                Tcl_DStringAppend(dsPtr, "\t", 1);
+            } else if (ks == XK_BackSpace || ks == XK_Delete || ks == XK_Escape) {
+            } else {
+                char buf[64];
+                int n = xkb_keysym_to_utf8(ks, buf, sizeof(buf));
+                if (n > 0) {
+                    if (buf[n-1] == '\0') n--;
+                    if (n > 0) Tcl_DStringAppend(dsPtr, buf, n);
+                } else if (ks >= 32 && ks < 127) {
+                    char c = (char)ks;
+                    Tcl_DStringAppend(dsPtr, &c, 1);
+                }
+            }
+            TkWaylandClearStoredText(toplevel);
+            return Tcl_DStringValue(dsPtr);
+        }
+        if (xkbState.state) {
+            char buf[64];
+            int n = xkb_state_key_get_utf8(xkbState.state,
+                        (xkb_keycode_t)(eventPtr->xkey.keycode + 8), buf, sizeof(buf));
+            if (n > 0) {
+                Tcl_DStringAppend(dsPtr, buf, n);
+            }
+        }
+    }
     TkWaylandClearStoredText(toplevel);
     return Tcl_DStringValue(dsPtr);
 }
+
+KeySym
+TkpGetKeySym(
+    TCL_UNUSED(TkDisplay*),
+    XEvent *eventPtr)
+{
+    int sc = eventPtr->xkey.keycode;
+    if (sc >= (int)SYNTHETIC_KEYCODE_BASE) {
+        return (KeySym)(sc - SYNTHETIC_KEYCODE_BASE);
+    }
+    /* Synthetic stored as small keysym with send_event */
+    if (eventPtr->xkey.send_event) {
+        if (sc >= 32 && sc < 0x1000000) {
+            return (KeySym)sc;
+        }
+        /* For truncated Return etc, low byte 13 is CR, map to Return */
+        if (sc == 13) return XK_Return;
+        if (sc == 9) return XK_Tab;
+        if (sc == 8) return XK_BackSpace;
+        if (sc == 127) return XK_Delete;
+    }
+    return TkWaylandGetKeysymFromScancode(sc);
+}
+
+void
+TkpSetKeycodeAndState(
+    TCL_UNUSED(Tk_Window),
+    KeySym keysym,
+    XEvent *eventPtr)
+{
+    /* Preserve state from pattern like <Alt-z> */
+    /* For synthetic [event generate], store keysym using SYNTHETIC base
+     * so it roundtrips exactly, preserving case and large keysyms like Return.
+     * This is what IME path already does.
+     */
+    eventPtr->xkey.keycode = SYNTHETIC_KEYCODE(keysym);
+
+    /* Try to also set Shift/Mod5 for completeness when XKB map exists,
+     * so bindings that check state still work, but keep synthetic base.
+     */
+    if (xkbState.keymap) {
+        xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
+        xkb_keycode_t max_kc = xkb_keymap_max_keycode(xkbState.keymap);
+        for (xkb_keycode_t kc = min_kc; kc <= max_kc; kc++) {
+            xkb_layout_index_t num_layouts = xkb_keymap_num_layouts_for_key(xkbState.keymap, kc);
+            for (xkb_layout_index_t layout = 0; layout < num_layouts; layout++) {
+                xkb_level_index_t num_levels = xkb_keymap_num_levels_for_key(xkbState.keymap, kc, layout);
+                for (xkb_level_index_t level = 0; level < num_levels; level++) {
+                    const xkb_keysym_t *syms;
+                    int n = xkb_keymap_key_get_syms_by_level(xkbState.keymap, kc, layout, level, &syms);
+                    for (int i=0;i<n;i++) {
+                        if (syms[i] == (xkb_keysym_t)keysym) {
+                            if (level == 1) eventPtr->xkey.state |= ShiftMask;
+                            else if (level >= 2) eventPtr->xkey.state |= Mod5Mask;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 /*
  * ----------------------------------------------------------------------------
@@ -119,28 +233,7 @@ TkpGetString(
  * ----------------------------------------------------------------------------
  */
 
-KeySym
-TkpGetKeySym(
-    TCL_UNUSED(TkDisplay*), /*dispPtr */
-    XEvent *eventPtr)           /* Description of X event. */
-{
-    KeySym sym = TkWaylandGetKeysymFromScancode(eventPtr->xkey.keycode);
-    if (sym == NoSymbol) {
-        /* Synthetic event fallback: TkpSetKeycodeAndState may have encoded
-         * a printable keysym directly in low byte when no XKB mapping exists.
-         * This makes event generate <Alt-z> work. */
-        int kc = eventPtr->xkey.keycode;
-        if (kc > 0 && kc < 256) {
-            /* Printable ASCII - return as keysym */
-            return (KeySym)kc;
-        }
-        /* For larger keysyms stored as synthetic IME code */
-        if (kc >= (int)(SYNTHETIC_KEYCODE_BASE & 0xFFFFFF)) {
-            return (KeySym)(kc - (SYNTHETIC_KEYCODE_BASE & 0xFFFFFF));
-        }
-    }
-    return sym;
-}
+
 
 /*
  * ----------------------------------------------------------------------------
@@ -237,113 +330,6 @@ TkWaylandGetKeysymFromScancode(
  * ----------------------------------------------------------------------------
  */
 
-void
-TkpSetKeycodeAndState(
-    TCL_UNUSED(Tk_Window),
-    KeySym keysym,
-    XEvent *eventPtr)
-{
-    /* Preserve the state set by tkEvent.c from the pattern <Alt-z>, <Control-...>
-     * The caller has already set Mod1Mask etc. We only OR additional shift level bits.
-     * Never overwrite with glfwModifierState (0 for synthetic events). */
-
-    if (xkbState.keymap) {
-        xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
-        xkb_keycode_t max_kc = xkb_keymap_max_keycode(xkbState.keymap);
-        xkb_keycode_t kc;
-
-        for (kc = min_kc; kc <= max_kc; kc++) {
-            xkb_layout_index_t num_layouts =
-                xkb_keymap_num_layouts_for_key(xkbState.keymap, kc);
-            xkb_layout_index_t layout;
-
-            for (layout = 0; layout < num_layouts; layout++) {
-                xkb_level_index_t num_levels =
-                    xkb_keymap_num_levels_for_key(xkbState.keymap, kc, layout);
-                xkb_level_index_t level;
-
-                for (level = 0; level < num_levels; level++) {
-                    const xkb_keysym_t *syms;
-                    int n, i;
-
-                    n = xkb_keymap_key_get_syms_by_level(
-                            xkbState.keymap, kc, layout, level, &syms);
-
-                    for (i = 0; i < n; i++) {
-                        if (syms[i] == (xkb_keysym_t)keysym) {
-                            /*
-                             * kc is an XKB/X11 keycode (evdev + 8).
-                             * eventPtr->xkey.keycode must be EVDEV (X11 - 8)
-                             * because TkWaylandGetKeysymFromScancode does +8.
-                             */
-                            eventPtr->xkey.keycode = kc - 8;
-                            if (level == 1) {
-                                eventPtr->xkey.state |= ShiftMask;
-                            } else if (level >= 2) {
-                                eventPtr->xkey.state |= Mod5Mask;
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-        /* Case-insensitive fallback for letters */
-        for (kc = min_kc; kc <= max_kc; kc++) {
-            xkb_layout_index_t num_layouts =
-                xkb_keymap_num_layouts_for_key(xkbState.keymap, kc);
-            xkb_layout_index_t layout;
-            for (layout = 0; layout < num_layouts; layout++) {
-                xkb_level_index_t num_levels =
-                    xkb_keymap_num_levels_for_key(xkbState.keymap, kc, layout);
-                xkb_level_index_t level;
-                for (level = 0; level < num_levels; level++) {
-                    const xkb_keysym_t *syms;
-                    int n = xkb_keymap_key_get_syms_by_level(
-                            xkbState.keymap, kc, layout, level, &syms);
-                    for (int i=0;i<n;i++) {
-                        if (tolower((int)syms[i]) == tolower((int)keysym) && syms[i] != 0) {
-                            eventPtr->xkey.keycode = kc - 8;
-                            if (level == 1) {
-                                eventPtr->xkey.state |= ShiftMask;
-                            } else if (level >= 2) {
-                                eventPtr->xkey.state |= Mod5Mask;
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /*
-     * Fallback for common keys when the XKB keymap is not yet loaded.
-     */
-    switch (keysym) {
-    case XK_Return:    eventPtr->xkey.keycode = 36 - 8;  break;
-    case XK_Escape:    eventPtr->xkey.keycode = 9 - 8;   break;
-    case XK_BackSpace: eventPtr->xkey.keycode = 22 - 8;  break;
-    case XK_Tab:       eventPtr->xkey.keycode = 23 - 8;  break;
-    case XK_space:     eventPtr->xkey.keycode = 65 - 8;  break;
-    case XK_Left:      eventPtr->xkey.keycode = 113 - 8; break;
-    case XK_Right:     eventPtr->xkey.keycode = 114 - 8; break;
-    case XK_Up:        eventPtr->xkey.keycode = 111 - 8; break;
-    case XK_Down:      eventPtr->xkey.keycode = 116 - 8; break;
-    case XK_Home:      eventPtr->xkey.keycode = 110 - 8; break;
-    case XK_End:       eventPtr->xkey.keycode = 115 - 8; break;
-    case XK_Delete:    eventPtr->xkey.keycode = 119 - 8; break;
-    case XK_Insert:    eventPtr->xkey.keycode = 118 - 8; break;
-    default:
-        /* Last resort: encode printable ASCII directly so TkpGetKeySym can recover */
-        if (keysym > 0 && keysym < 256) {
-            eventPtr->xkey.keycode = keysym;
-        } else {
-            eventPtr->xkey.keycode = keysym & 0xFFu;
-        }
-        break;
-    }
-}
 
 
 /*

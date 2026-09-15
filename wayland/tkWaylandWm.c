@@ -5108,6 +5108,68 @@ XSetWMIconName(
  *----------------------------------------------------------------------
  */
 
+
+/*
+ * TkpWarpPointer --
+ *      Warp pointer to x,y in window. Implements event generate <Motion> -warp
+ *      and is required for event-9.11 etc tests. On Wayland we cannot
+ *      truly warp the compositor pointer without permission, but we can
+ *      synthesize crossing events via Tk_UpdatePointer and move GLFW cursor
+ *      within the toplevel.
+ */
+void
+TkpWarpPointer(
+    TkWindow *dstWinPtr,
+    int x,
+    int y)
+{
+    if (!dstWinPtr) return;
+    /* Find toplevel */
+    TkWindow *topPtr = dstWinPtr;
+    while (topPtr && !(topPtr->flags & TK_TOP_HIERARCHY)) {
+        topPtr = topPtr->parentPtr;
+    }
+    if (!topPtr) topPtr = dstWinPtr;
+
+    /* Compute toplevel-relative coords */
+    int tx = x;
+    int ty = y;
+    TkWindow *iter = dstWinPtr;
+    while (iter && iter != topPtr) {
+        tx += iter->changes.x;
+        ty += iter->changes.y;
+        iter = iter->parentPtr;
+    }
+
+    GLFWwindow *gw = NULL;
+    if (topPtr->privatePtr) {
+        gw = topPtr->privatePtr->glfwWindow;
+    }
+    if (!gw) {
+        /* Try main window */
+        extern GLFWwindow *mainGlfwWindow;
+        gw = mainGlfwWindow;
+    }
+    if (gw) {
+        /* Clamp */
+        int w,h;
+        glfwGetWindowSize(gw, &w, &h);
+        if (tx < 0) tx = 0;
+        if (ty < 0) ty = 0;
+        if (tx >= w) tx = w-1;
+        if (ty >= h) ty = h-1;
+        glfwSetCursorPos(gw, (double)tx, (double)ty);
+    }
+    /* Find actual Tk window under that point and update pointer */
+    Tk_Window target = Tk_CoordsToWindow(tx, ty, (Tk_Window)topPtr);
+    if (!target) target = (Tk_Window)topPtr;
+    /* Use current button/mod state */
+    extern int glfwButtonState;
+    extern int glfwModifierState;
+    Tk_UpdatePointer((TkWindow *)target, tx, ty, glfwButtonState | glfwModifierState);
+}
+
+
 int
 XGetWindowAttributes(
     Display *display,
