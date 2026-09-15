@@ -135,6 +135,20 @@ unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
 /*
+ * Set by TkWaylandKeyCallback whenever the most recent key-down was
+ * consumed by IBus (imeHandled == true).  GLFW's char callback fires
+ * independently of that decision -- it has no idea we intercepted the
+ * key -- so TkWaylandCharCallback consults this flag to avoid storing
+ * a character that will never be drained: with no KeyPress queued for
+ * an IME-consumed key, nothing calls TkpGetString to clear pendingText,
+ * and the character would just sit there until some later, unrelated
+ * key (e.g. Return) falls through to Tk and dumps the whole backlog
+ * at once. Reset to false on every path that does not hand the key to
+ * IBus, so ordinary typing is never suppressed.
+ */
+static bool lastKeyWasImeHandled = false;
+
+/*
  *----------------------------------------------------------------------
  *
  * TkWaylandUpdateKeyboardModifiers --
@@ -1467,9 +1481,19 @@ TkWaylandKeyCallback(GLFWwindow *window,
                                                  keyval, xkb_keycode, state);
         }
 
+        lastKeyWasImeHandled = imeHandled;
+
         if (imeHandled) {
             return;
         }
+    } else if (action == GLFW_RELEASE) {
+        /*
+         * A release can't be IME-consumed under this gating (only
+         * GLFW_PRESS is forwarded to IBus above), and clearing the
+         * flag here ensures a stray release never leaves a stale
+         * "suppress the next char" state hanging around.
+         */
+        lastKeyWasImeHandled = false;
     }
 
     /* F10 toggles menubar. */
@@ -1689,10 +1713,22 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
         return;
     }
 
-    /* Skip if IBus is likely handling composition. */
-    if (xkbState.state) {
-        /* Optional: check if any compose state is active, or just always let IBus win. */
-        DEBUG_LOG("CharCallback: codepoint U+%04X (may be ignored if IBus active)", codepoint);
+    /*
+     * If the key-down that produced this codepoint was consumed by
+     * IBus, do NOT also store it here. Composed/committed text arrives
+     * exclusively through OnCommitText -> TkWaylandSendUnicodeString,
+     * which stores the string and queues its own synthetic KeyPress
+     * together, atomically. Storing the codepoint again in this path
+     * -- with no KeyPress ever queued to consume it via TkpGetString --
+     * would leave it stuck in pendingText until an unrelated later key
+     * (e.g. Return) falls through to Tk and drains the whole backlog
+     * at once, which is exactly the "text doesn't appear until Return"
+     * bug this guard exists to prevent.
+     */
+    if (lastKeyWasImeHandled) {
+        DEBUG_LOG("CharCallback: codepoint U+%04X suppressed (IME consumed the key)",
+                  codepoint);
+        return;
     }
 
     TkWaylandStoreText(winPtr, codepoint);

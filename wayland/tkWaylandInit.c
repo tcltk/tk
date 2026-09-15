@@ -387,8 +387,31 @@ Tk_ClipDrawableToRect(
         DEBUG_LOG("Tk_ClipDrawableToRect: no privatePtr for %s", Tk_PathName(winPtr));
         return;
     }
-    if (!winPtr->privatePtr->fb) {
-        DEBUG_LOG("Tk_ClipDrawableToRect: no fb for %s - skipping", Tk_PathName(winPtr));
+    /*
+     * The backing-store framebuffer lives on the TOPLEVEL's privatePtr,
+     * not on each individual child widget's -- only InitializeGlfwWindow
+     * (called for toplevels) ever populates ->fb.  A non-toplevel widget
+     * such as a Text widget always has privatePtr->fb == NULL, so
+     * checking winPtr->privatePtr->fb directly made every clip Begin/End
+     * call for a child widget fall into the "not ready" branch below.
+     * On the End call (width == -1) that branch cleared
+     * TKWL_NEEDS_DISPLAY and skipped renderFBO() -- silently discarding
+     * the dirty flag that EndDraw() had just set for a perfectly good
+     * draw, so the character was rendered into the backing store but
+     * never blitted to the screen. It would only become visible once
+     * some later operation touched the toplevel's own drawable directly
+     * (e.g. a scroll/resize refresh), which finally exercised the
+     * un-broken renderFBO() path and flushed everything that had piled
+     * up in the backing store at once. Walk up to the toplevel here so
+     * the readiness check matches where ->fb actually lives.
+     */
+    TkWindow *toplevelPtr = winPtr;
+    while (!Tk_IsTopLevel(toplevelPtr)) {
+        toplevelPtr = toplevelPtr->parentPtr;
+    }
+    if (!toplevelPtr->privatePtr || !toplevelPtr->privatePtr->fb) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no fb for toplevel of %s - skipping",
+                Tk_PathName(winPtr));
         /* Still clear/set flags to avoid stale DONT_SWAP state */
         if (width == -1 || height == -1) {
             glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;

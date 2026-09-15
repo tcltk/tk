@@ -458,6 +458,31 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
  */
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 
+
+/*  Helper to synthesize VisibilityNotify for a window and all mapped descendants.*/
+static void
+QueueVisibilityNotify(TkWindow *winPtr) {
+    if (winPtr == NULL) return;
+    if (!(winPtr->flags & TK_MAPPED)) return;
+    XEvent event;
+    memset(&event, 0, sizeof(XEvent));
+    event.type = VisibilityNotify;
+    event.xvisibility.serial = LastKnownRequestProcessed(winPtr->display)++;
+    event.xvisibility.send_event = False;
+    event.xvisibility.display = winPtr->display;
+    event.xvisibility.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xvisibility.state = VisibilityUnobscured;
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    /* Recurse to mapped children. */
+    TkWindow *child;
+    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (child->flags & TK_MAPPED) {
+            QueueVisibilityNotify(child);
+        }
+    }
+}
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -478,32 +503,6 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
  */
 
 
-/*
- * QueueVisibilityNotify --
- *   Helper to synthesize VisibilityNotify for a window and all mapped
- *   descendants. Wayland never sends VisibilityNotify; without this
- *   [tkwait visibility] on child widgets (event.test uses .t.e) hangs.
- */
-static void QueueVisibilityNotify(TkWindow *winPtr) {
-    if (winPtr == NULL) return;
-    if (!(winPtr->flags & TK_MAPPED)) return;
-    XEvent event;
-    memset(&event, 0, sizeof(XEvent));
-    event.type = VisibilityNotify;
-    event.xvisibility.serial = LastKnownRequestProcessed(winPtr->display)++;
-    event.xvisibility.send_event = False;
-    event.xvisibility.display = winPtr->display;
-    event.xvisibility.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xvisibility.state = VisibilityUnobscured;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    /* Recurse to mapped children */
-    TkWindow *child;
-    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-        if (child->flags & TK_MAPPED) {
-            QueueVisibilityNotify(child);
-        }
-    }
-}
 
 void
 TkWmMapWindow(TkWindow *winPtr)
