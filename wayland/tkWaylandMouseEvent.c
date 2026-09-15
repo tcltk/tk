@@ -501,13 +501,59 @@ TkpWarpPointer(
     Tk_QueueWindowEvent(&ev, TCL_QUEUE_TAIL);
 
     Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, Tk_WindowId(dispPtr->warpWindow));
+    Tk_Window deepest = tkwin;
     if (tkwin) {
         Tk_Window child = Tk_CoordsToWindow(dispPtr->warpX, dispPtr->warpY, tkwin);
         if (child) {
+            deepest = child;
             tkwin = child;
         }
     }
-    Tk_UpdatePointer(tkwin ? tkwin : dispPtr->warpWindow, targetRootX, targetRootY, ev.xmotion.state);
+    /*
+     * FIX for event-9.11 hang: Tk_UpdatePointer in Wayland port historically
+     * took root coords in some places, but generic code expects window coords.
+     * We must pass window-relative coords so Tk_Pointer logic correctly finds
+     * the containing window and generates Enter/Leave. Using targetRootX/Y
+     * caused the pointer to be considered outside, so waitForWindowEvent <Enter>
+     * timed out.
+     */
+    Tk_Window updateWin = tkwin ? tkwin : dispPtr->warpWindow;
+    Tk_UpdatePointer(updateWin, dispPtr->warpX, dispPtr->warpY, ev.xmotion.state);
+
+    /*
+     * Explicitly queue EnterNotify for both the warp window and the deepest
+     * child. setup_win_mousepointer does waitForWindowEvent $w <Enter> where
+     * $w is .one, but warp may land in .one.f1.f2. Queuing Enter for .one
+     * and for the child ensures the vwait unblocks regardless of which window
+     * Tk considers the pointer to be in. This fixes the 100ms timeout hang.
+     */
+    for (int pass = 0; pass < 2; pass++) {
+        Tk_Window enterWin = (pass == 0) ? dispPtr->warpWindow : deepest;
+        if (!enterWin) continue;
+        if (pass == 1 && enterWin == dispPtr->warpWindow) continue;
+        TkWindow *targetPtr = (TkWindow *)enterWin;
+        if (!targetPtr) continue;
+        XEvent enterEv;
+        memset(&enterEv, 0, sizeof(XEvent));
+        enterEv.type = EnterNotify;
+        enterEv.xcrossing.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        enterEv.xcrossing.send_event = False;
+        enterEv.xcrossing.display = targetPtr->display;
+        enterEv.xcrossing.window = Tk_WindowId(enterWin);
+        enterEv.xcrossing.root = XRootWindow(targetPtr->display, 0);
+        enterEv.xcrossing.subwindow = None;
+        enterEv.xcrossing.time = CurrentTime;
+        enterEv.xcrossing.x = dispPtr->warpX;
+        enterEv.xcrossing.y = dispPtr->warpY;
+        enterEv.xcrossing.x_root = targetRootX;
+        enterEv.xcrossing.y_root = targetRootY;
+        enterEv.xcrossing.mode = NotifyNormal;
+        enterEv.xcrossing.detail = NotifyAncestor;
+        enterEv.xcrossing.same_screen = True;
+        enterEv.xcrossing.focus = False;
+        enterEv.xcrossing.state = ev.xmotion.state;
+        Tk_QueueWindowEvent(&enterEv, TCL_QUEUE_TAIL);
+    }
 }
 
 /*

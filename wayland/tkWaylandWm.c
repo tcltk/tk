@@ -375,7 +375,11 @@ InitializeGlfwWindow(TkWindow *winPtr)
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     DEBUG_LOG("InitializeGlfwWindow: %s", Tk_PathName(winPtr));
     if (!glfwWindow) {
-	Tcl_Panic("InitializeGlfwWindow: Tk window has no platform window");
+        /* Do not panic - menu/clipboard toplevels intentionally have no GLFW window,
+         * and during destroy sequences (event-9.1) the window may already be dead.
+         * Just return gracefully. */
+        DEBUG_LOG("InitializeGlfwWindow: no platform window for %s, skipping", Tk_PathName(winPtr));
+        return;
     }
 
     /* Apply wm properties that are valid AFTER creation. */
@@ -508,7 +512,10 @@ void
 TkWmMapWindow(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
+    if (!wmPtr) {
+        DEBUG_LOG("TkWmMapWindow: No WmInfo for %s, skipping", Tk_PathName(winPtr));
+        return;
+    }
 
     /* Respect "wm withdraw ." — do not force visibility. */
     if (wmPtr->withdrawn || wmPtr->initialState == WithdrawnState) {
@@ -521,10 +528,16 @@ TkWmMapWindow(TkWindow *winPtr)
     wmPtr->flags &= ~WM_NEVER_MAPPED;
 
     if (!Tk_IsEmbedded(winPtr)) {
-        InitializeGlfwWindow(winPtr);
-        UpdateHints(winPtr);
-        UpdateTitle(winPtr);
-        UpdatePhotoIcon(winPtr);
+        /* Menu/clipboard toplevels have no GLFW window - don't init */
+        if (winPtr->classUid == Tk_GetUid("Menu") ||
+            winPtr->classUid == Tk_GetUid("Menubar")) {
+            DEBUG_LOG("TkWmMapWindow: %s is menu/menubar, skipping GLFW init", Tk_PathName(winPtr));
+        } else {
+            InitializeGlfwWindow(winPtr);
+            UpdateHints(winPtr);
+            UpdateTitle(winPtr);
+            UpdatePhotoIcon(winPtr);
+        }
     }
     /* Re-fetch AFTER Initialize - first map has NULL before init (bug causing visibility hang) */
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
@@ -546,18 +559,12 @@ TkWmMapWindow(TkWindow *winPtr)
      * windows (event.test uses overrideredirect). Previous code skipped
      * it when glfwWindow was NULL before InitializeGlfwWindow, causing
      * tkwait visibility to hang forever in event.test.
+     *
+     * For non-toplevel children, Tk core expects VisibilityNotify for
+     * mapped descendants as well (event-9.11 tkwait visibility .one.f1.f2).
+     * Queue for whole subtree.
      */
-    {
-        XEvent event;
-        memset(&event, 0, sizeof(XEvent));
-        event.type = VisibilityNotify;
-        event.xvisibility.serial     = LastKnownRequestProcessed(winPtr->display)++;
-        event.xvisibility.send_event = False;
-        event.xvisibility.display    = winPtr->display;
-        event.xvisibility.window     = Tk_WindowId((Tk_Window)winPtr);
-        event.xvisibility.state      = VisibilityUnobscured;
-        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    }
+    QueueVisibilityNotify(winPtr);
 }
 
 /*
@@ -761,7 +768,71 @@ TkWmDeadWindow(
     winPtr->wmInfoPtr = NULL;
     ckfree((char *)wmPtr);
     
-    DEBUG_LOG("TkWmDeadWindow: Done cleaning up %s", Tk_PathName(winPtr));
+        DEBUG_LOG("TkWmDeadWindow: Done cleaning up %s", Tk_PathName(winPtr));
+
+    /* Wayland: synthesize Enter for window now under pointer after toplevel destroy.
+     * Uses last known root coords from TkpWarpPointer in tkWaylandMouseEvent.c
+     */
+    {
+        if ((winPtr->flags & TK_TOP_HIERARCHY) && winPtr->dispPtr) {
+            TkWindow *candidate = NULL;
+            int targetRootX = 0, targetRootY = 0;
+            /* These globals are defined in tkWaylandMouseEvent.c */
+            extern int tkWaylandLastRootX;
+            extern int tkWaylandLastRootY;
+            extern void *tkWaylandLastPointerWinPtr;
+            if ((void*)winPtr == tkWaylandLastPointerWinPtr) {
+                targetRootX = tkWaylandLastRootX;
+                targetRootY = tkWaylandLastRootY;
+                for (WmInfo *iter = firstWmPtr; iter; iter = iter->nextPtr) {
+                    if (!iter->winPtr) continue;
+                    if (!(iter->winPtr->flags & TK_MAPPED)) continue;
+                    if (!(iter->winPtr->flags & TK_TOP_HIERARCHY)) continue;
+                    int x = iter->winPtr->changes.x;
+                    int y = iter->winPtr->changes.y;
+                    int w = iter->winPtr->changes.width;
+                    int h = iter->winPtr->changes.height;
+                    if (targetRootX >= x && targetRootX < x+w && targetRootY >= y && targetRootY < y+h) {
+                        candidate = iter->winPtr;
+                        break;
+                    }
+                }
+            }
+            if (!candidate) {
+                for (WmInfo *iter = firstWmPtr; iter; iter = iter->nextPtr) {
+                    if (!iter->winPtr) continue;
+                    if (!(iter->winPtr->flags & TK_MAPPED)) continue;
+                    if (iter->winPtr->flags & TK_TOP_HIERARCHY) {
+                        candidate = iter->winPtr;
+                        break;
+                    }
+                }
+            }
+            if (candidate) {
+                XEvent ev;
+                memset(&ev, 0, sizeof(XEvent));
+                ev.type = EnterNotify;
+                ev.xcrossing.serial = LastKnownRequestProcessed(candidate->display)++;
+                ev.xcrossing.send_event = False;
+                ev.xcrossing.display = candidate->display;
+                ev.xcrossing.window = Tk_WindowId((Tk_Window)candidate);
+                ev.xcrossing.root = RootWindow(candidate->display, candidate->screenNum);
+                ev.xcrossing.subwindow = None;
+                ev.xcrossing.time = CurrentTime;
+                ev.xcrossing.x = 50;
+                ev.xcrossing.y = 50;
+                ev.xcrossing.x_root = targetRootX ? targetRootX : candidate->changes.x + 50;
+                ev.xcrossing.y_root = targetRootY ? targetRootY : candidate->changes.y + 50;
+                ev.xcrossing.mode = NotifyNormal;
+                ev.xcrossing.detail = NotifyAncestor;
+                ev.xcrossing.same_screen = True;
+                ev.xcrossing.focus = False;
+                ev.xcrossing.state = 0;
+                Tk_QueueWindowEvent(&ev, TCL_QUEUE_TAIL);
+                /* Note: no dispPtr->pointerWinPtr in Tk 9.1, so we don't set it */
+            }
+        }
+    }
 }
 
 /*
@@ -5107,68 +5178,6 @@ XSetWMIconName(
  *
  *----------------------------------------------------------------------
  */
-
-
-/*
- * TkpWarpPointer --
- *      Warp pointer to x,y in window. Implements event generate <Motion> -warp
- *      and is required for event-9.11 etc tests. On Wayland we cannot
- *      truly warp the compositor pointer without permission, but we can
- *      synthesize crossing events via Tk_UpdatePointer and move GLFW cursor
- *      within the toplevel.
- */
-void
-TkpWarpPointer(
-    TkWindow *dstWinPtr,
-    int x,
-    int y)
-{
-    if (!dstWinPtr) return;
-    /* Find toplevel */
-    TkWindow *topPtr = dstWinPtr;
-    while (topPtr && !(topPtr->flags & TK_TOP_HIERARCHY)) {
-        topPtr = topPtr->parentPtr;
-    }
-    if (!topPtr) topPtr = dstWinPtr;
-
-    /* Compute toplevel-relative coords */
-    int tx = x;
-    int ty = y;
-    TkWindow *iter = dstWinPtr;
-    while (iter && iter != topPtr) {
-        tx += iter->changes.x;
-        ty += iter->changes.y;
-        iter = iter->parentPtr;
-    }
-
-    GLFWwindow *gw = NULL;
-    if (topPtr->privatePtr) {
-        gw = topPtr->privatePtr->glfwWindow;
-    }
-    if (!gw) {
-        /* Try main window */
-        extern GLFWwindow *mainGlfwWindow;
-        gw = mainGlfwWindow;
-    }
-    if (gw) {
-        /* Clamp */
-        int w,h;
-        glfwGetWindowSize(gw, &w, &h);
-        if (tx < 0) tx = 0;
-        if (ty < 0) ty = 0;
-        if (tx >= w) tx = w-1;
-        if (ty >= h) ty = h-1;
-        glfwSetCursorPos(gw, (double)tx, (double)ty);
-    }
-    /* Find actual Tk window under that point and update pointer */
-    Tk_Window target = Tk_CoordsToWindow(tx, ty, (Tk_Window)topPtr);
-    if (!target) target = (Tk_Window)topPtr;
-    /* Use current button/mod state */
-    extern int glfwButtonState;
-    extern int glfwModifierState;
-    Tk_UpdatePointer((TkWindow *)target, tx, ty, glfwButtonState | glfwModifierState);
-}
-
 
 int
 XGetWindowAttributes(
