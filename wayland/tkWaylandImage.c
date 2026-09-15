@@ -5,10 +5,6 @@
  *      Provides conversion between Tk images and NanoVG images,
  *      and implements Xlib-compatible image functions for Wayland.
  *
- *      This is the Wayland platform-specific implementation, analogous
- *      to tkMacOSXImage.c / tkWinImage.c / tkXImage.c.  While Mac and
- *      Windows also implement TkpPutRGBAImage, this file is the Wayland
- *      counterpart for NanoVG.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
@@ -334,11 +330,6 @@ _XInitImageFuncPtrs(
  *      Accepts a raw image container from Tk, extracts the requested 
  *      sub-region, converts pixel formats from Tk's XImage layout to 
  *      native NanoVG RGBA, and draws it using NanoVG.
- *
- *      Wayland platform-specific implementation (cf. tkMacOSXImage.c).
- *      Unlike X11, this backend does NOT support arbitrary depths here;
- *      photo code is always 32-bit RGBA. Other depths are rejected and
- *      handled via XCopyPlane.
  *
  * Results:
  *      Returns 0 on success, TCL_ERROR on failure.

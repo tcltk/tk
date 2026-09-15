@@ -2395,12 +2395,6 @@ ImgPhotoCmdDeletedProc(
  *----------------------------------------------------------------------
  */
 
-/*
- * tkImgPhoto.c -- patched ImgPhotoSetSize
- * This is a drop-in replacement for the function only.
- * Apply to your tk/generic/tkImgPhoto.c
- */
-
 static int
 ImgPhotoSetSize(
     PhotoModel *modelPtr,
