@@ -422,15 +422,42 @@ Tk_ClipDrawableToRect(
     DEBUG_LOG("Tk_ClipDrawableToRect: %s %dx%d+%d+%d",
 	Tk_PathName(winPtr), width, height, x, y);
 
+    /*
+     * Only the toplevel's own drawable gets the full "emulate double
+     * buffering" treatment (DONT_SWAP during the clipped region, then an
+     * immediate synchronous renderFBO()/glfwSwapBuffers() on clear) --
+     * that pairing was already exercised and working for direct
+     * toplevel-level draws before this fix, and event.test relies on
+     * its timing.
+     *
+     * For a non-toplevel child widget (e.g. a Text widget redrawing a
+     * single line), calling glfwSwapBuffers() synchronously here, once
+     * per widget per redraw, is both unnecessary and dangerous: on
+     * Wayland, glfwSwapBuffers can block waiting for the compositor's
+     * frame-done callback, and that callback is normally serviced from
+     * TkWaylandCheckProc/glfwPollEvents back in the main event loop --
+     * not from arbitrary points deep inside a widget's DisplayProc. Doing
+     * it here, once per child widget per frame instead of once per
+     * toplevel per frame, is what turned into the event.test hangs.
+     * Marking the toplevel dirty and letting the regular
+     * TkWaylandDisplayAllWindows() poll (driven by TkWaylandSetupProc,
+     * roughly once per event-loop iteration) perform the actual swap
+     * keeps presentation on its normal cadence and is still fast enough
+     * that typed characters show up well within a frame.
+     */
     if (width == -1 || height == -1) {
 	DEBUG_LOG("Clearing clipRect for %s", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
-	renderFBO(glfwWindow);
+	if (winPtr == toplevelPtr) {
+	    renderFBO(glfwWindow);
+	}
     } else {
 	DEBUG_LOG("Adding clipRect for %s", Tk_PathName(winPtr));
-	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
-	glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+	if (winPtr == toplevelPtr) {
+	    glfwInfoPtr->flags |= TKWL_DONT_SWAP;
+	    glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+	}
     }
     winPtr->privatePtr->boundsRect = (clipRect) {
 	.x = x, .y = y, .w = width, .h = height};

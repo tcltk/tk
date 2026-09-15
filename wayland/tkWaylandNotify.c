@@ -60,6 +60,11 @@
 #include "tkWaylandWm.h"
 #include <xkbcommon/xkbcommon.h>
 #include <GLFW/glfw3.h>
+
+/* Pointer cache - defined in tkWaylandMouseEvent.c */
+extern int tkWaylandLastRootX;
+extern int tkWaylandLastRootY;
+
 #include <unistd.h>
 #include <errno.h>
 #include "GLFW/glfw3native.h"
@@ -356,50 +361,34 @@ Tk_WaylandSetupTkNotifier(void)
  *----------------------------------------------------------------------
  */
 
+
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
-		   TCL_UNUSED(int))    /* flags */
+TkWaylandSetupProc(TCL_UNUSED(void *), 
+	TCL_UNUSED(int))
 {
     TSD_INIT();
-    Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    Tcl_Time tinyBlock = {0, 1000};   /* 1ms fallback */
-    Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
-
-    /*
-     * The Tcl event loop will have run all pending display procs
-     * before calling this function.  Now we can swap the GL buffers
-     * for any window on which some drawing has been done.
-     */
+    Tcl_Time noBlock = {0, 0};
+    Tcl_Time tinyBlock = {0, 1000};
 
     TkWaylandDisplayAllWindows();
 
     struct wl_display *display = glfwGetWaylandDisplay();
-
-    /* Get the wayland file descriptor for our display. */
-    int fd = wl_display_get_fd(display);
     if (!display) {
-        /* No Wayland display: poll GLFW but do NOT block Tcl */
         glfwPollEvents();
         Tcl_SetMaxBlockTime(&noBlock);
         return;
     }
-
-    /* Check if the wayland socket has data. */
-    struct pollfd pfd = {
-        .fd      = fd,
-        .events  = POLLIN,
-        .revents = 0
-    };
+    int fd = wl_display_get_fd(display);
+    struct pollfd pfd = { .fd = fd, .events = POLLIN, .revents = 0 };
     int r = poll(&pfd, 1, 0);
     if (r > 0 && (pfd.revents & POLLIN)) {
-        /* Wayland has events — do not block. */
         Tcl_SetMaxBlockTime(&noBlock);
-    }
-    else {
-        /* Nothing is happening - block for one refresh cycle. */
-        Tcl_SetMaxBlockTime(&oneRefresh);
+    } else {
+        /* Don't starve after timers (pause in event-3.1). Use 1ms not 16ms */
+        Tcl_SetMaxBlockTime(&tinyBlock);
     }
 }
+
 
 
 /*

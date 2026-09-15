@@ -878,6 +878,17 @@ Tk_MakeWindow(
          * will never be mapped or rendered.
          */
         if (!winPtr->mainPtr || !winPtr->mainPtr->interp) {
+            /* Clipboard/selection internal toplevel - keep Drawable but no GLFW surface */
+            if (winPtr->privatePtr == NULL) {
+                winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+                memset(winPtr->privatePtr, 0, sizeof(glfwData));
+                Tcl_DStringInit(&winPtr->privatePtr->pendingText);
+#define CLIPRECTBUFSIZE 8
+                winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
+                winPtr->privatePtr->clipRectBuffer = ckalloc(CLIPRECTBUFSIZE * sizeof(clipRect));
+#undef CLIPRECTBUFSIZE
+            }
+            DEBUG_LOG("Tk_MakeWindow: clipboard owner %s - no GLFW surface", Tk_PathName(winPtr));
             return result;
         }
         
@@ -1399,18 +1410,19 @@ TkWmFocusToplevel(
  *----------------------------------------------------------------------
  */
 
+
 void
 TkGetPointerCoords(
     Tk_Window tkwin,
     int *xPtr,
     int *yPtr)
 {
-    /* Window XIDs are TkWindow pointers in this port. */
-    if (tkwin == NULL || !XQueryPointer(NULL, (Window)(TkWindow *)tkwin,
-	    NULL, NULL, xPtr, yPtr, NULL, NULL, NULL)) {
-	*xPtr = *yPtr = -1;
-    }
+    extern int tkWaylandLastRootX;
+    extern int tkWaylandLastRootY;
+    if (xPtr) *xPtr = tkWaylandLastRootX;
+    if (yPtr) *yPtr = tkWaylandLastRootY;
 }
+
 
 /*
  *----------------------------------------------------------------------

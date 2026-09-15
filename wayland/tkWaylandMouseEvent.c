@@ -28,7 +28,25 @@ typedef struct {
     int isPress;
 } MouseEventData;
 
-static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
+static Tk_Window captureWinPtr = NULL;
+
+/* === SINGLE DEFINITION for pointer cache - used by tkWaylandWm.c and tkWaylandNotify.c === */
+/* DO NOT make static, must be visible to linker */
+int tkWaylandLastRootX = 200;
+int tkWaylandLastRootY = 200;
+int tkWaylandLastWinX = 0;
+int tkWaylandLastWinY = 0;
+TkWindow* tkWaylandLastPointerWinPtr = NULL;
+
+void TkWaylandUpdatePointerState(int rootX, int rootY, int winX, int winY,
+                                 unsigned int buttonState, TkWindow *winPtr) {
+    tkWaylandLastRootX = rootX;
+    tkWaylandLastRootY = rootY;
+    tkWaylandLastWinX = winX;
+    tkWaylandLastWinY = winY;
+    if (winPtr) tkWaylandLastPointerWinPtr = winPtr;
+}
+	/* Current capture window; may be
 					 * NULL. */
 
 static void GenerateButtonEvent(MouseEventData *medPtr);
@@ -96,40 +114,49 @@ XQueryPointer(
     int *win_y_return,
     unsigned int *mask_return)
 {
-    GLFWwindow* glfwWindow;
-    double cursorX, cursorY;
-    int getGlobal = (root_x_return && root_y_return);
-    int getLocal = (win_x_return && win_y_return && w != None);
     TkWindow *winPtr = (TkWindow *)w;
+    GLFWwindow* glfwWindow = NULL;
+    double cursorX = 0, cursorY = 0;
+    int haveGLFW = 0;
 
-    if (!winPtr) {
-	printf("XQueryPointer: no Tk window\n");
-        return False;
-    }
-
-    /* Get the GLFW window. */
-    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    if (!glfwWindow) {
-	printf("XQueryPointer: no GLFW window\n");
-        return False;
-    }
-
-    if (getGlobal || getLocal) {
-        glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
-
-        if (getGlobal) {
-	    /* 
-	     * Wayland toplevels all appear to be at the screen origin.
-	     * So cursor position is both relative to the screen origin
-	     * and relative to the toplevel origin.
-	     */
-            *root_x_return = (int)cursorX;
-            *root_y_return = (int)cursorY;
+    if (winPtr) {
+        glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+        if (glfwWindow) {
+            glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
+            haveGLFW = 1;
         }
+    }
 
-        if (getLocal) {
-            *win_x_return = (int)cursorX - Tk_X(winPtr);
-            *win_y_return = (int)cursorY - Tk_Y(winPtr);
+    int rootX, rootY;
+    if (haveGLFW) {
+        rootX = (int)cursorX;
+        rootY = (int)cursorY;
+        tkWaylandLastRootX = rootX;
+        tkWaylandLastRootY = rootY;
+    } else {
+        rootX = tkWaylandLastRootX;
+        rootY = tkWaylandLastRootY;
+    }
+
+    if (root_x_return) *root_x_return = rootX;
+    if (root_y_return) *root_y_return = rootY;
+
+    if (win_x_return) {
+        if (winPtr) {
+            int winRootX, winRootY;
+            Tk_GetRootCoords((Tk_Window)winPtr, &winRootX, &winRootY);
+            *win_x_return = rootX - winRootX;
+        } else {
+            *win_x_return = tkWaylandLastWinX;
+        }
+    }
+    if (win_y_return) {
+        if (winPtr) {
+            int winRootX, winRootY;
+            Tk_GetRootCoords((Tk_Window)winPtr, &winRootX, &winRootY);
+            *win_y_return = rootY - winRootY;
+        } else {
+            *win_y_return = tkWaylandLastWinY;
         }
     }
 
@@ -261,6 +288,16 @@ QueueButtonEvent(MouseEventData *medPtr)
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(TkGetDisplayList()->display, medPtr->window);
     if (!winPtr) return;
 
+    TkDisplay *dispPtr = TkGetDisplayList();
+    Tk_Window target = Tk_IdToWindow(dispPtr->display, medPtr->window);
+    if (target) {
+        Tk_Window child = Tk_CoordsToWindow(medPtr->localX, medPtr->localY, target);
+        if (child) {
+            target = child;
+        }
+        winPtr = (TkWindow *)target;
+    }
+
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
     event.type = medPtr->isPress ? ButtonPress : ButtonRelease;
@@ -270,8 +307,10 @@ QueueButtonEvent(MouseEventData *medPtr)
     event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
     event.xbutton.root = XRootWindow(winPtr->display, 0);
     event.xbutton.time = CurrentTime;
-    event.xbutton.x = medPtr->localX;
-    event.xbutton.y = medPtr->localY;
+    int rootX, rootY;
+    Tk_GetRootCoords((Tk_Window)winPtr, &rootX, &rootY);
+    event.xbutton.x = medPtr->globalX - rootX;
+    event.xbutton.y = medPtr->globalY - rootY;
     event.xbutton.x_root = medPtr->globalX;
     event.xbutton.y_root = medPtr->globalY;
     event.xbutton.state = medPtr->state;
@@ -281,7 +320,7 @@ QueueButtonEvent(MouseEventData *medPtr)
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
     if (medPtr->button == 1) {
-	TkpSetCapture(medPtr->isPress ? winPtr : NULL);
+        TkpSetCapture(medPtr->isPress ? winPtr : NULL);
     }
 }
 
@@ -428,30 +467,50 @@ void
 TkpWarpPointer(
     TkDisplay *dispPtr)
 {
-    GLFWwindow* glfwWindow;
-    int x, y;
-    int winX = 0, winY = 0;
-    double targetX, targetY;
-
-    if (dispPtr->warpWindow) {
-	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
-
-	/* Warp cursor to new position. */
-	glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)dispPtr->warpWindow);
-	if (glfwWindow) {
-	    targetX = x + dispPtr->warpX - winX;
-	    targetY = y + dispPtr->warpY - winY;
-	    glfwSetCursorPos(glfwWindow, targetX, targetY);
-	}
-    } else {
-	/* Global warp - not directly supported by GLFW. */
+    if (!dispPtr || !dispPtr->warpWindow) {
+        return;
     }
 
-    if (dispPtr->warpWindow) {
-	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
-    } else {
-	TkGenerateButtonEventForXPointer(None);
+    TkWindow *warpWinPtr = (TkWindow *)dispPtr->warpWindow;
+
+    int rootX, rootY;
+    Tk_GetRootCoords(dispPtr->warpWindow, &rootX, &rootY);
+    int targetRootX = rootX + dispPtr->warpX;
+    int targetRootY = rootY + dispPtr->warpY;
+
+    tkWaylandLastRootX = targetRootX;
+    tkWaylandLastRootY = targetRootY;
+    tkWaylandLastWinX = dispPtr->warpX;
+    tkWaylandLastWinY = dispPtr->warpY;
+    tkWaylandLastPointerWinPtr = warpWinPtr;
+
+    XEvent ev;
+    memset(&ev, 0, sizeof(XEvent));
+    ev.type = MotionNotify;
+    ev.xmotion.serial = LastKnownRequestProcessed(warpWinPtr->display)++;
+    ev.xmotion.send_event = False;
+    ev.xmotion.display = warpWinPtr->display;
+    ev.xmotion.window = Tk_WindowId(dispPtr->warpWindow);
+    ev.xmotion.root = XRootWindow(warpWinPtr->display, 0);
+    ev.xmotion.time = CurrentTime;
+    ev.xmotion.x = dispPtr->warpX;
+    ev.xmotion.y = dispPtr->warpY;
+    ev.xmotion.x_root = targetRootX;
+    ev.xmotion.y_root = targetRootY;
+    ev.xmotion.state = TkWaylandButtonKeyState();
+    ev.xmotion.is_hint = NotifyNormal;
+    ev.xmotion.same_screen = True;
+
+    Tk_QueueWindowEvent(&ev, TCL_QUEUE_TAIL);
+
+    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, Tk_WindowId(dispPtr->warpWindow));
+    if (tkwin) {
+        Tk_Window child = Tk_CoordsToWindow(dispPtr->warpX, dispPtr->warpY, tkwin);
+        if (child) {
+            tkwin = child;
+        }
     }
+    Tk_UpdatePointer(tkwin ? tkwin : dispPtr->warpWindow, targetRootX, targetRootY, ev.xmotion.state);
 }
 
 /*
