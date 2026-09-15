@@ -216,14 +216,14 @@ proc state_handler {w var} {
 #
 # Theme change handler
 #
-proc theme_handler {w {name {}}} {
-    if {$name eq ""} {
+proc theme_handler {w {theme {}}} {
+    if {$theme eq ""} {
 	set theme [ttk::style theme use]
 	set ::treeview(theme) $theme
     } else {
-	ttk::style theme use $name
+	ttk::style theme use $theme
     }
-    log_msg "Switched to $name theme"
+    log_msg "Switched to $theme theme"
 }
 
 #
@@ -250,7 +250,7 @@ proc zoom_handler {w percent} {
     tk scaling -displayof $w $scale
     log_msg [format "Zoom %d%%" $percent]
 
-    # Scale font
+    # Scale fonts
     if {[tk windowingsystem] eq "aqua"} {
 	# Adapt the font sizes to the new scaling factor
 	foreach font [array names ::fontSize] {
@@ -266,7 +266,7 @@ proc zoom_handler {w percent} {
 
     # Refresh the contents of the ttk::entry and ttk::combobox widgets
     # in this toplevel, using the level-order traversal algorithm
-    set lst1 [winfo children .treeview]
+    set lst1 [winfo children .]
     while {[llength $lst1] != 0} {
 	set lst2 {}
 	foreach w $lst1 {
