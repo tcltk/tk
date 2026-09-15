@@ -23,7 +23,8 @@ to the userbase.
  - [Xlib emulation for macOS causes many visual artifacts](https://core.tcl-lang.org/tk/tktview/971a26)
  - [tk console manual errors and undocumented bindings](https://core.tcl-lang.org/tk/tktview/d62ee2)
  - [Usage of private symbol NSWindowDidOrderOnScreenNotification](https://core.tcl-lang.org/tk/tktview/a9969f)
- - [tk.pc omits private pkg-config dependency for static linking](https://core.tcl-lang.org/tk/tktview/3e5d09f0e4)
+ - [tk.pc omits private pkg-config dependency for static linking](https://core.tcl-lang.org/tk/tktview/3e5d09)
+ - [Modal window is not restored after "show desktop"](https://core.tcl-lang.org/tk/tktview/ed6c3a)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
