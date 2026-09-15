@@ -2344,7 +2344,7 @@ static void DrawCells(
 	Ttk_Box parcel = Ttk_MakeBox(parcelX, y, parcelWidth, rowHeight);
 	DisplayItem *displayItemUsed = &displayItemCell;
 	Ttk_State cellState = state;
-	Tk_Anchor textAnchor, imageAnchor;
+	Tk_Anchor textAnchor = TK_ANCHOR_W, imageAnchor;
 	xPad = column->separator ? tv->tree.colSeparatorWidth/2 : 0;
 
 	x += column->width;
@@ -2378,7 +2378,9 @@ static void DrawCells(
 
 	displayItemUsed->textObj = column->data;
 	displayItemUsed->anchorObj = column->anchorObj;/* <<NOTE-ANCHOR>> */
-	Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
+	if (column->anchorObj) {
+	    Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
+	}
 
 	imageAnchor = DEFAULT_IMAGEANCHOR;
 	if (displayItemUsed->imageAnchorObj) {
@@ -2461,7 +2463,7 @@ static void DrawItem(
 	Ttk_Box parcel = Ttk_MakeBox(xTree, y, colwidth, rowHeight);
 	DisplayItem *displayItemUsed = &displayItem;
 	Ttk_State cellState = state;
-	Tk_Anchor textAnchor, imageAnchor = DEFAULT_IMAGEANCHOR;
+	Tk_Anchor textAnchor = TK_ANCHOR_W, imageAnchor = DEFAULT_IMAGEANCHOR;
 	Ttk_Padding cellPadding = {(short)indent, 0, 0, 0};
 
 	if (tv->tree.isCell && item == tv->tree.current &&
@@ -2489,7 +2491,9 @@ static void DrawItem(
 	}
 
 	displayItem.anchorObj = tv->tree.column0.anchorObj;
-	Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
+	if (column->anchorObj) {
+	    Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
+	}
 	displayItemUsed->textObj = item->textObj;
 	/* Item's image can be null, and may come from the tag */
 	if (item->imageObj) {
