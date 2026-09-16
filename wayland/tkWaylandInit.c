@@ -724,10 +724,42 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         ibus_bus = NULL;
     }
 
-    glfwMakeContextCurrent(NULL);
-    TkWaylandClearCallbacks(mainGlfwWindow);
-    glfwSetErrorCallback(NULL);
-    mainGlfwWindow = NULL;
+    /* 
+     * Destroy all NanoVG contexts BEFORE freeing font data.
+     * nvgCreateFontMem does not copy the buffer, it keeps the pointer,
+     * so freeing sans_data/bold_data/mono_data while vg is alive is
+     * use-after-free.
+     */
+    {
+        glfwTkInfo *infoPtr = glfwTkInfoList;
+        while (infoPtr) {
+            glfwTkInfo *next = infoPtr->nextPtr;
+            if (infoPtr->glfwWindow) {
+                glfwMakeContextCurrent(infoPtr->glfwWindow);
+                glfwSetWindowUserPointer(infoPtr->glfwWindow, NULL);
+                TkWaylandClearCallbacks(infoPtr->glfwWindow);
+                if (infoPtr->vg) {
+                    TkWaylandFontContextDestroyed(infoPtr->vg);
+                    nvgDeleteGLES3(infoPtr->vg);
+                }
+            }
+            Tcl_Free(infoPtr);
+            infoPtr = next;
+        }
+        glfwTkInfoList = NULL;
+    }
+
+    if (mainGlfwWindow) {
+        glfwMakeContextCurrent(NULL);
+        glfwSetErrorCallback(NULL);
+        // mainGlfwWindow already destroyed via list walk if it was in list,
+        // but ensure pointer cleared
+        mainGlfwWindow = NULL;
+    } else {
+        glfwMakeContextCurrent(NULL);
+        glfwSetErrorCallback(NULL);
+    }
+
     if (GlfwIsInitialized) {
         glfwTerminate();
         GlfwIsInitialized = 0;
@@ -783,10 +815,19 @@ TkWaylandCreateWindow(
 
     GLFWwindow *glfwWindow = NULL;
 
-    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
+    glfwTkInfo *mainInfoTmp = NULL;
+    if (mainGlfwWindow) {
+        mainInfoTmp = glfwGetWindowUserPointer(mainGlfwWindow);
+    }
+    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)
+        && mainGlfwWindow != NULL
+        && mainInfoTmp && mainInfoTmp->winPtr
+        && mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr) {
         /*
          * Root window: ensure we have a GL ES context and that it is current.
          * If this is the first time, create mainGlfwWindow here.
+         * Only reuse mainGlfwWindow when it belongs to the same TkMainInfo
+         * (same interp). Child interps that load Tk get their own GLFWwindow.
          */
         if (mainGlfwWindow == NULL) {
             glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
