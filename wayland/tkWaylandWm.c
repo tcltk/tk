@@ -517,18 +517,6 @@ QueueVisibilityNotify(TkWindow *winPtr) {
     }
 }
 
-/* Idle callback helper. */
-static void
-QueueVisibilityNotifyProc(ClientData clientData)
-{
-    TkWindow *winPtr = (TkWindow *)clientData;
-
-    /* Guard against window destruction while queued in the idle loop */
-    if (winPtr != NULL && !(winPtr->flags & TK_ALREADY_DEAD)) {
-        QueueVisibilityNotify(winPtr);
-    }
-}
-
 /*
  *----------------------------------------------------------------------
  *
