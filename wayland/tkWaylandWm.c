@@ -574,6 +574,24 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdateGeometryInfo(winPtr);
         DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
+
+        /*
+         * Dispatch a MapNotify event synchronously so any
+         * resulting cascade (e.g. pack mapping child frames, which in turn
+         * generates their own MapNotify synchronously too) completes
+         * before TkWmMapWindow returns -- matching generic Tk_MapWindow's
+         * own synchronous behavior for non-toplevels.
+         */
+        XEvent mapEvent;
+        memset(&mapEvent, 0, sizeof(XEvent));
+        mapEvent.type = MapNotify;
+        mapEvent.xmap.serial = LastKnownRequestProcessed(winPtr->display)++;
+        mapEvent.xmap.send_event = False;
+        mapEvent.xmap.display = winPtr->display;
+        mapEvent.xmap.event = Tk_WindowId((Tk_Window)winPtr);
+        mapEvent.xmap.window = Tk_WindowId((Tk_Window)winPtr);
+        mapEvent.xmap.override_redirect = winPtr->atts.override_redirect;
+        Tk_HandleEvent(&mapEvent);
     }
     /*
      * Wayland has no VisibilityNotify equivalent — the compositor never
