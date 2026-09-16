@@ -752,8 +752,6 @@ TkWaylandShutdown(TCL_UNUSED(void *))
     if (mainGlfwWindow) {
         glfwMakeContextCurrent(NULL);
         glfwSetErrorCallback(NULL);
-        // mainGlfwWindow already destroyed via list walk if it was in list,
-        // but ensure pointer cleared
         mainGlfwWindow = NULL;
     } else {
         glfwMakeContextCurrent(NULL);
