@@ -463,11 +463,40 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 
 
-/*  Helper to synthesize VisibilityNotify for a window and all mapped descendants.*/
+/*
+ *----------------------------------------------------------------------
+ *
+ * QueueVisibilityNotify --
+ *
+ *	Synthesize a VisibilityNotify event for a window and, recursively,
+ *	for each of its mapped descendants.  Wayland has no equivalent of
+ *	the X11 VisibilityNotify event: the compositor never reports
+ *	obscured/unobscured state to clients, and GLFW exposes no callback
+ *	for it.  Tk's generic [tkwait visibility] command and any
+ *	<Visibility> bindings therefore have nothing to latch onto unless
+ *	we manufacture the event here.
+
+ *	The synthesized event uses VisibilityUnobscured, which is what
+ *	[tkwait visibility] accepts as "visible".  The event is queued
+ *	with TCL_QUEUE_TAIL so that it lands after any events already
+ *	pending at the time of the call.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues one VisibilityNotify XEvent per window in the
+ *	subtree rooted at winPtr. Advances the display's request serial 
+ *  once per event.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
 static void
 QueueVisibilityNotify(TkWindow *winPtr) {
     if (winPtr == NULL) return;
-    if (!(winPtr->flags & TK_MAPPED)) return;
+	if (!winPtr->flags & TK_MAPPED) return;
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
     event.type = VisibilityNotify;
@@ -476,16 +505,29 @@ QueueVisibilityNotify(TkWindow *winPtr) {
     event.xvisibility.display = winPtr->display;
     event.xvisibility.window = Tk_WindowId((Tk_Window)winPtr);
     event.xvisibility.state = VisibilityUnobscured;
+
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    /* Recurse to mapped children. */
+
+    /* Recurse to mapped children safely. */
     TkWindow *child;
     for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-        if (child->flags & TK_MAPPED) {
+        if (Tk_IsMapped((Tk_Window)child) || (child->flags & TK_MAPPED)) {
             QueueVisibilityNotify(child);
         }
     }
 }
 
+/* Idle callback helper. */
+static void
+QueueVisibilityNotifyProc(ClientData clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+
+    /* Guard against window destruction while queued in the idle loop */
+    if (winPtr != NULL && !(winPtr->flags & TK_ALREADY_DEAD)) {
+        QueueVisibilityNotify(winPtr);
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -505,8 +547,6 @@ QueueVisibilityNotify(TkWindow *winPtr) {
  *
  *----------------------------------------------------------------------
  */
-
-
 
 void
 TkWmMapWindow(TkWindow *winPtr)
@@ -528,7 +568,7 @@ TkWmMapWindow(TkWindow *winPtr)
     wmPtr->flags &= ~WM_NEVER_MAPPED;
 
     if (!Tk_IsEmbedded(winPtr)) {
-        /* Menu/clipboard toplevels have no GLFW window - don't init */
+        /* Menu/clipboard toplevels have no GLFW window - don't init. */
         if (winPtr->classUid == Tk_GetUid("Menu") ||
             winPtr->classUid == Tk_GetUid("Menubar")) {
             DEBUG_LOG("TkWmMapWindow: %s is menu/menubar, skipping GLFW init", Tk_PathName(winPtr));
@@ -539,7 +579,7 @@ TkWmMapWindow(TkWindow *winPtr)
             UpdatePhotoIcon(winPtr);
         }
     }
-    /* Re-fetch AFTER Initialize - first map has NULL before init (bug causing visibility hang) */
+    /* Re-fetch AFTER Initialize - first map has NULL before init (bug causing visibility hang). */
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
@@ -554,15 +594,6 @@ TkWmMapWindow(TkWindow *winPtr)
      * synchronous (see WaitForMapNotify), synthesize the event here so
      * that [tkwait visibility] and any <Visibility> bindings behave as
      * they would on X11.
-     *
-     * This MUST happen even on first map, and even for overrideredirect
-     * windows (event.test uses overrideredirect). Previous code skipped
-     * it when glfwWindow was NULL before InitializeGlfwWindow, causing
-     * tkwait visibility to hang forever in event.test.
-     *
-     * For non-toplevel children, Tk core expects VisibilityNotify for
-     * mapped descendants as well (event-9.11 tkwait visibility .one.f1.f2).
-     * Queue for whole subtree.
      */
     QueueVisibilityNotify(winPtr);
 }
@@ -3614,7 +3645,7 @@ TopLevelEventProc(
     case MapNotify:
 	DEBUG_LOG("MapNotify received for %s", Tk_PathName(winPtr));
         winPtr->flags |= TK_MAPPED;
-        /* Ensure VisibilityNotify follows MapNotify on Wayland - safety net for event.test */
+        /* Ensure VisibilityNotify follows MapNotify on Wayland.*/
         {
             XEvent vev;
             memset(&vev, 0, sizeof(XEvent));
@@ -4373,7 +4404,7 @@ XDestroySubwindows(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 int
 XMapWindow(
     Display *display,
@@ -4381,23 +4412,37 @@ XMapWindow(
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
     DEBUG_LOG("XMapWindow: %s", Tk_PathName(winPtr));
+
+    if (winPtr == NULL) {
+        return Success;
+    }
+
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
-	Tk_Width(winPtr), Tk_Height(winPtr));
+                              Tk_Width(winPtr), Tk_Height(winPtr));
+
     /*
-     * Wayland: child windows mapped after toplevel is visible need
-     * VisibilityNotify too, otherwise [tkwait visibility $child] hangs.
+     * Wayland: Only queue VisibilityNotify if the entire parent 
+     * hierarchy up to the toplevel is currently mapped.
      */
-    if (winPtr && (winPtr->flags & TK_TOP_LEVEL) == 0) {
-        TkWindow *top = winPtr;
-        while (top && !(top->flags & TK_TOP_LEVEL)) {
-            top = top->parentPtr;
+    int parentChainMapped = 1;
+    TkWindow *curr = winPtr->parentPtr;
+
+    while (curr != NULL) {
+        if (!(curr->flags & TK_MAPPED)) {
+            parentChainMapped = 0;
+            break;
         }
-        if (top && (top->flags & TK_MAPPED)) {
-            QueueVisibilityNotify(winPtr);
+        if (curr->flags & TK_TOP_LEVEL) {
+            break;
         }
-    } else if (winPtr) {
+        curr = curr->parentPtr;
+    }
+
+    /* Queue notification only when all ancestors are mapped. */
+    if (parentChainMapped) {
         QueueVisibilityNotify(winPtr);
     }
+
     return Success;
 }
 

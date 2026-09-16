@@ -461,7 +461,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
@@ -472,10 +472,10 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
      */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
-        sd_bus_flush(ibus_bus); /* Flush queued IBus replies/signals */
+        sd_bus_flush(ibus_bus); /* Flush queued IBus replies/signals. */
     }
 
-    /* Drain and flush AT-SPI messages */
+    /* Drain and flush AT-SPI messages. */
     TkWaylandAtspiProcessEvents();
 
     /* Process events for GLFW windows. */
@@ -487,7 +487,6 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
         wl_display_dispatch_pending(display);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
