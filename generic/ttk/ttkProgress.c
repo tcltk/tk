@@ -24,7 +24,7 @@ typedef struct {
     Tcl_Obj	*anchorObj;
     Tcl_Obj	*fontObj;
     Tcl_Obj	*foregroundObj;
-    Tcl_Obj	*justifyObj;
+    Tk_Justify justify;
     Tcl_Obj	*lengthObj;
     Tcl_Obj	*maximumObj;
     Tcl_Obj	*modeObj;
@@ -60,7 +60,7 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 	NULL, offsetof(Progressbar,progress.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	NULL, offsetof(Progressbar,progress.justifyObj), TCL_INDEX_NONE,
+	NULL, TCL_INDEX_NONE, offsetof(Progressbar,progress.justify),
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_PROGRESSBAR_LENGTH, offsetof(Progressbar,progress.lengthObj), TCL_INDEX_NONE,
@@ -215,6 +215,7 @@ static void ProgressbarInitialize(
 
     pb->progress.variableTrace = 0;
     pb->progress.timer = 0;
+    pb->progress.justify = TK_JUSTIFY_NULL;
 }
 
 static void ProgressbarCleanup(void *recordPtr)
