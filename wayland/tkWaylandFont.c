@@ -3589,16 +3589,6 @@ Tk_MeasureCharsInContext(
             int ch;
             const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
             float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
-
-
-
-
-
-
-
-
-
-
             pixelWidth = (int)ceil(glyphRight);
             p = next;
         }
@@ -4247,7 +4237,11 @@ decorations:
         /* Skip any leading/trailing newlines for decoration measurement. */
         while (decoStart < decoEnd && (*decoStart == '\n' || *decoStart == '\r')) decoStart++;
         while (decoEnd > decoStart && (*(decoEnd-1) == '\n' || *(decoEnd-1) == '\r')) decoEnd--;
-        
+
+		DEBUG_LOG("DRAW    weight=%d '%.*s' -> width=%.2f at x=%.2f",
+          fontPtr->font.fa.weight, (int)(rangeEnd - rangePtr), rangePtr,
+          nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL), drawX);   
+               
         runWidth = nvgTextBounds(vg, 0, 0, decoStart, decoEnd, NULL);
 
         nvgStrokeColor(vg, ColorFromGC(gc));
@@ -4256,16 +4250,16 @@ decorations:
         if (fontPtr->font.fa.underline) {
             float uy = (float)(y + fontPtr->underlinePos);
             nvgBeginPath(vg);
-            nvgMoveTo(vg, (float)x, uy);
-            nvgLineTo(vg, (float)(x + runWidth), uy);
+            nvgMoveTo(vg, (float)drawX, uy);
+            nvgLineTo(vg, (float)(drawX + runWidth), uy);
             nvgStroke(vg);
         }
 
         if (fontPtr->font.fa.overstrike) {
             float oy = (float)(y - fontPtr->font.fm.ascent / 2);
             nvgBeginPath(vg);
-            nvgMoveTo(vg, (float)x, oy);
-            nvgLineTo(vg, (float)(x + runWidth), oy);
+            nvgMoveTo(vg, (float)drawX, oy);
+            nvgLineTo(vg, (float)(drawX + runWidth), oy);
             nvgStroke(vg);
         }
 

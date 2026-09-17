@@ -1069,7 +1069,21 @@ TkWaylandBeginDraw(
 	nvgluBindFramebuffer(pixmap->fb);
 	glViewport(0, 0, pixmap->width, pixmap->height);
 	nvgResetTransform(dcPtr->vg);
-	nvgBeginFrame(dcPtr->vg, pixmap->width, pixmap->height, 1.0f);
+
+	/*
+	 * Use the real window content scale here, not a hardcoded 1.0.
+	 * devicePxRatio determines the resolution at which a (font, size)
+	 * pair gets baked into the shared glyph atlas the first time it's
+	 * used, and fontstash does not re-bake at a different resolution
+	 * later. If text is first drawn via a pixmap with scale 1.0 while
+	 * real window draws use the display's actual content scale (e.g.
+	 * 1.25/1.5/2.0 on HiDPI), that font's advances permanently disagree
+	 * between the two, producing visible spacing drift wherever it's
+	 * drawn to a window afterward.
+	 */
+	float pixmapScale;
+	glfwGetWindowContentScale(pixmap->glfwWindow, &pixmapScale, NULL);
+	nvgBeginFrame(dcPtr->vg, pixmap->width, pixmap->height, pixmapScale);
 	TkWaylandApplyGC(dcPtr->vg, gc);
 	return TCL_OK;
     }
@@ -1382,19 +1396,64 @@ TkWaylandGetNVGContextForMeasure(void)
 	}
 
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
-    if (!glfwInfoPtr || !glfwInfoPtr->winPtr) {
-        /*
-         * Guard against null window and glfwInfo pointers. Font measurement
-         * triggered in that window (e.g. by early widget creation) must
-         * fall back to the caller's non-NVG estimate rather than
-         * dereferencing a NULL glfwInfoPtr here.
-         */
+    if (!glfwInfoPtr) {
+        return NULL;
+    }
+
+    /*
+     * Read the NVGcontext straight off glfwTkInfo instead of round-tripping
+     * through winPtr -> Drawable -> TkWaylandGetNVGContext(), which just
+     * re-derives this same field. That round-trip required
+     * glfwInfoPtr->winPtr to be non-NULL, but mainGlfwWindow is a shared
+     * root/helper window that may never have a TkWindow attached to it --
+     * in practice that made this function return NULL unconditionally,
+     * for the lifetime of the process, silently forcing every text
+     * measurement in the app onto the crude per-character pixel estimate
+     * while real drawing (which never went through here) used accurate
+     * glyph metrics. Confirmed via instrumentation: vg was nil on every
+     * single measurement call all session long, not just early on.
+     */
+    NVGcontext *vg = glfwInfoPtr->vg;
+    if (!vg) {
         return NULL;
     }
 
     glfwMakeContextCurrent(mainGlfwWindow);
-    Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);
-    return TkWaylandGetNVGContext(drawable);
+
+    /*
+     * Text metrics (nvgTextBounds / nvgTextGlyphPositions) depend on the
+     * devicePxRatio a (font, size) pair was FIRST baked into the shared
+     * atlas at -- fontstash does not re-bake at a different resolution
+     * later. TkWaylandBeginDraw() always starts its real frame with the
+     * target window's actual content scale; without this, a font measured
+     * here before it's ever been drawn for real gets baked with no scale
+     * set (effectively 1.0) and its advances permanently disagree with
+     * what later gets drawn on a HiDPI display. Bracket measurement in a
+     * matching-scale frame so whichever path -- measuring or drawing --
+     * touches a given (font, size) first bakes it identically. Use
+     * mainGlfwWindow's own size/scale directly (glfwGetWindowSize /
+     * glfwGetWindowContentScale) rather than Tk_Width/Tk_Height, since
+     * this window may have no attached TkWindow to ask.
+     *
+     * Skip this if a real frame is already active on this window (e.g.
+     * measurement invoked reentrantly from inside a draw callback):
+     * nvgBeginFrame must never nest (see TKWL_IS_DRAWING elsewhere), and
+     * the active frame's scale already applies in that case.
+     */
+    if (!(glfwInfoPtr->flags & TKWL_IS_DRAWING)) {
+        float scale;
+        int   winW, winH;
+        glfwGetWindowContentScale(mainGlfwWindow, &scale, NULL);
+        glfwGetWindowSize(mainGlfwWindow, &winW, &winH);
+        nvgResetTransform(vg);
+        nvgBeginFrame(vg, winW, winH, scale);
+        nvgEndFrame(vg);
+        /* nvgEndFrame doesn't pop nvgBeginFrame's internal nvgSave --
+         * see the matching nvgRestore() in TkWaylandEndDraw(). */
+        nvgRestore(vg);
+    }
+
+    return vg;
 }
 
 /*
