@@ -2881,20 +2881,13 @@ InitFont(
                         stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
                         fm->maxWidth = (int)(
 			    (adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
-                        /* Check if truly monospaced.
-                         * For TkFixedFont / generic mono families, force fixed=1
-                         * even if space metrics differ slightly (font-10.9).
-                         * Otherwise use strict advance equality. */
+                        /* Check if truly monospaced. */
                         int adv_dot, adv_x;
                         stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                         stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
-                        if (isGenericMono) {
-                            fm->fixed = 1;
-                        } else {
-                            fm->fixed = (adv_W == adv_space && 
-                                        adv_W == adv_dot && 
-                                        adv_W == adv_x);
-                        }
+                        fm->fixed = (adv_W == adv_space && 
+                                    adv_W == adv_dot && 
+                                    adv_W == adv_x);
                         
                         fa->size = (double)(-fontPtr->pixelSize);
                     }
@@ -2926,20 +2919,13 @@ InitFont(
                         stbtt_GetCodepointHMetrics(&info, 'M', &adv_M, &lsb);
                         fm->maxWidth = (int)((adv_W > adv_M ? adv_W : adv_M) * scale + 0.5f);
                         
-                        /* Check if truly monospaced.
-                         * For TkFixedFont / generic mono families, force fixed=1
-                         * even if space metrics differ slightly (font-10.9).
-                         * Otherwise use strict advance equality. */
+                        /* Check if truly monospaced. */
                         int adv_dot, adv_x;
                         stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                         stbtt_GetCodepointHMetrics(&info, 'x', &adv_x, &lsb);
-                        if (isGenericMono) {
-                            fm->fixed = 1;
-                        } else {
-                            fm->fixed = (adv_W == adv_space && 
-                                        adv_W == adv_dot && 
-                                        adv_W == adv_x);
-                        }
+                        fm->fixed = (adv_W == adv_space && 
+                                    adv_W == adv_dot && 
+                                    adv_W == adv_x);
                         
                         fa->size = (double)(-fontPtr->pixelSize);
                     }
@@ -2957,7 +2943,7 @@ InitFont(
         fm->ascent   = (int)(fontPtr->pixelSize * 0.8 + 0.5);
         fm->descent  = (int)(fontPtr->pixelSize * 0.2 + 0.5);
         fm->maxWidth = (int)(fontPtr->pixelSize * 0.6 + 0.5);
-        fm->fixed    = isGenericMono ? 1 : 0;
+        fm->fixed    = 0;
     }
 
     fontPtr->underlinePos = fm->descent / 2;
@@ -3110,11 +3096,10 @@ static void
 CreateStandardNamedFonts(ClientData clientData)
 {
     TkMainInfo *mainPtr = (TkMainInfo *) clientData;
-   
     if (mainPtr == NULL || mainPtr->winPtr == NULL) {
         return;
     }
-    /* TkMainInfo.winPtr is set to NULL during TkDeleteMainInfo; check flags too, */
+
     TkWindow *winPtr = (TkWindow *) mainPtr->winPtr;
     if (winPtr->flags & TK_ALREADY_DEAD) {
         return;
@@ -3172,14 +3157,20 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
 }
 
 /*
+ *----------------------------------------------------------------------
  * TkWaylandCancelNamedFontIdle --
+ * 
  *   Cancel a pending CreateStandardNamedFonts idle for mainPtr.
  *   Must be called from the TkMainInfo teardown path before mainPtr is
  *   freed, to prevent the idle firing against a deleted named-font hash
  *   table.
  *
- *   This is called from tkWaylandInit.c when the last window for a
- *   mainPtr is destroyed / display is closed.
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Cancels font idle task.
+ *----------------------------------------------------------------------
  */
 void
 TkWaylandCancelNamedFontIdle(TkMainInfo *mainPtr)
@@ -3515,23 +3506,10 @@ Tk_MeasureCharsInContext(
             const char *endPtr         = source + end;
             const char *lastBreak      = p;
             int         lastBreakWidth = 0;
-            int avgCharWidth = fontPtr->font.fm.maxWidth;
-            if (avgCharWidth <= 0) avgCharWidth = fontPtr->pixelSize / 2;
-            if (avgCharWidth <= 0) avgCharWidth = 8;
             while (p < endPtr) {
                 int ch;
                 const char *next = p + Tcl_UtfToUniChar(p, &ch);
-                int adv;
-                if (ch == '\t') {
-                    int tabWidth = 8 * avgCharWidth;
-                    adv = tabWidth - (width % tabWidth);
-                    if (adv <= 0) adv = tabWidth;
-                } else {
-                    adv = avgCharWidth;
-                    if (ch == ' ') {
-                        /* Use average width for space too in fallback */
-                    }
-                }
+                int adv = fontPtr->pixelSize / 2;
                 if (maxLength >= 0 && width + adv > maxLength) {
                     if ((flags & TK_WHOLE_WORDS) && lastBreak > p) {
                         *lengthPtr = lastBreakWidth;
@@ -3547,11 +3525,8 @@ Tk_MeasureCharsInContext(
                 p = next;
             }
             if ((flags & TK_AT_LEAST_ONE) && p == source + start) {
-                width += avgCharWidth;
-                p = source + start;
                 int ch; p += Tcl_UtfToUniChar(p, &ch);
-                p = source + start + (p - (source+start));
-                /* advance already counted */
+                width += fontPtr->pixelSize / 2;
             }
             *lengthPtr = width;
             return (int)(p - source - start);
@@ -3584,18 +3559,6 @@ Tk_MeasureCharsInContext(
         int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
                                            positions, nchars);
         float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
-        /* FBO incomplete or font not loaded can cause npos==0 / totalWidth==0
-         * even though vg is non-NULL. Fall back to average-width estimate
-         * so [font measure] never returns 0 for non-empty strings (font-9.x). */
-        if (npos <= 0 && nchars > 0) {
-            int avgW = fontPtr->font.fm.maxWidth;
-            if (avgW <= 0) avgW = fontPtr->pixelSize / 2;
-            if (avgW <= 0) avgW = 8;
-            nvgRestore(vg);
-            if (positions != stackPos) Tcl_Free(positions);
-            *lengthPtr = avgW * nchars;
-            return (int)(rangeEnd - rangePtr);
-        }
 
         int         pixelWidth     = 0;
         const char *lastBreak      = rangePtr;
@@ -3626,6 +3589,16 @@ Tk_MeasureCharsInContext(
             int ch;
             const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
             float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
+
+
+
+
+
+
+
+
+
+
             pixelWidth = (int)ceil(glyphRight);
             p = next;
         }
@@ -3873,33 +3846,6 @@ TkpDrawAngledCharsInContext(
     double     y,
     double     angle)
 {
-
-    if (rangeLength > 0) {
-        while (rangeLength > 0) {
-            char c = source[rangeStart + rangeLength - 1];
-            if (c == '\r' || c == '\n') rangeLength--;
-            else break;
-        }
-        if (rangeLength <= 0) return;
-    }
-    {
-        const char *rp = source + rangeStart;
-        const char *re = rp + rangeLength;
-        bool innerNL = false;
-        for (const char *p=rp;p<re;p++) if (*p=='\n'||*p=='\r'){innerNL=true;break;}
-        if (innerNL) {
-            const char *ls=rp; const char *p=rp; double ly=y, lx=x;
-            while (p<re) {
-                if (*p=='\n'||*p=='\r') {
-                    if (p>ls) TkpDrawAngledCharsInContext(NULL,drawable,gc,tkfont,source,numBytes,ls-source,p-ls,lx,ly,angle);
-                    ly+=12*1.2; lx=x; p++; if (p<re&&*p=='\n'&&*(p-1)=='\r') p++; ls=p;
-                } else p++;
-            }
-            if (p>ls) TkpDrawAngledCharsInContext(NULL,drawable,gc,tkfont,source,numBytes,ls-source,p-ls,lx,ly,angle);
-            return;
-        }
-    }
-
     TkWaylandDrawingContext dc;
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
@@ -3907,11 +3853,15 @@ TkpDrawAngledCharsInContext(
 	       drawable);
         return;
     }
+
     WaylandFont *fontPtr = (WaylandFont *)tkfont;
+
+    /* Verify the requested substring range is within the source string bounds. */
     if (rangeStart < 0 || rangeLength <= 0 ||
         rangeStart + rangeLength > numBytes) {
 	goto done;
     }
+
     NVGcontext *vg = dc.vg;
 
     /* Ensure the primary font face is loaded in NanoVG and get its ID. */
@@ -3928,18 +3878,29 @@ TkpDrawAngledCharsInContext(
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
+    /* 
+     * Check if the substring contains newline characters.
+     * If it does, we need to split the rendering at each newline.
+     */
     bool hasNewline = false;
     for (const char *p = rangePtr; p < rangeEnd; p++) {
-        if (*p == '\n' || *p == '\r') { hasNewline = true; break; }
+        if (*p == '\n' || *p == '\r') {
+            hasNewline = true;
+            break;
+        }
     }
+
+    /* If there are newlines, render each line separately. */
     if (hasNewline) {
-        TkWaylandEndDraw(&dc);
+
         const char *lineStart = rangePtr;
         const char *p = rangePtr;
         double lineY = y;
         double lineX = x;
+        
         while (p < rangeEnd) {
             if (*p == '\n' || *p == '\r') {
+                /* Render the line up to the newline. */
                 if (p > lineStart) {
                     TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
                                                source, numBytes,
@@ -3947,13 +3908,20 @@ TkpDrawAngledCharsInContext(
                                                p - lineStart,
                                                lineX, lineY, angle);
                 }
+                /* Move to next line. */
                 lineY += fontPtr->pixelSize * 1.2;
                 lineX = x;
+                /* Skip the newline character(s). */
                 p++;
-                if (p < rangeEnd && *p == '\n' && *(p-1) == '\r') p++;
+                if (p < rangeEnd && *p == '\n' && *(p-1) == '\r') {
+                    p++;
+                }
                 lineStart = p;
-            } else { p++; }
+            } else {
+                p++;
+            }
         }
+        /* Render the last line if it has content. */
         if (p > lineStart) {
             TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
                                        source, numBytes,
@@ -3961,7 +3929,7 @@ TkpDrawAngledCharsInContext(
                                        p - lineStart,
                                        lineX, lineY, angle);
         }
-        return;
+        goto done;
     }
 
     bool fullIsSimple = IsSimpleOnly(source, (int)numBytes);
@@ -4038,6 +4006,8 @@ TkpDrawAngledCharsInContext(
     double drawX = x;
     if (drawStart > 0 && needsPrefixOffset) {
         /* Simple path: directly measure the width of the prefix text. */
+
+
         if (IsSimpleOnly(source, drawStart)) {
             nvgFontFaceId(vg, primaryId);
             /* Measure a precomposed copy: NanoVG has no mark-attachment
