@@ -71,7 +71,7 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
 static int TextSetup(TextElement *text, Tk_Window tkwin)
 {
     const char *string = Tcl_GetString(text->textObj);
-    Tk_Justify justify = TK_JUSTIFY_LEFT;
+    Tk_Justify justify = TK_JUSTIFY_NULL;
     int wrapLength = 0;
 
     text->tkfont = Tk_GetFontFromObj(tkwin, text->fontObj);

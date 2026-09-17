@@ -1493,7 +1493,7 @@ LayoutDLine(
 	     * characters up to (and including) the tab.
 	     */
 
-	    if (!elide && justify == TK_JUSTIFY_LEFT) {
+	    if (!elide && !(justify == TK_JUSTIFY_RIGHT || justify == TK_JUSTIFY_CENTER)) {
 		char *p;
 
 		for (p = segPtr->body.chars + byteOffset; *p != 0; p++) {
@@ -1738,12 +1738,12 @@ LayoutDLine(
 	maxX = textPtr->dInfoPtr->maxX - textPtr->dInfoPtr->x - rMargin;
     }
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
-    if (justify == TK_JUSTIFY_LEFT) {
-	jIndent = 0;
+    if (justify == TK_JUSTIFY_CENTER) {
+	jIndent = (maxX - dlPtr->length)/2;
     } else if (justify == TK_JUSTIFY_RIGHT) {
 	jIndent = maxX - dlPtr->length;
     } else {
-	jIndent = (maxX - dlPtr->length)/2;
+	jIndent = 0;
     }
     ascent = descent = 0;
     for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;

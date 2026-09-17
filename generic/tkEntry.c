@@ -2060,14 +2060,14 @@ EntryComputeGeometry(
 		(Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
 	if (overflow <= 0) {
 	    entryPtr->placeholderLeftIndex = 0;
-	    if (entryPtr->justify == TK_JUSTIFY_LEFT) {
-		entryPtr->placeholderX = entryPtr->inset;
+	    if (entryPtr->justify == TK_JUSTIFY_CENTER) {
+		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
+			- entryPtr->xWidth - totalLength)/2;
 	    } else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
 		entryPtr->placeholderX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
 			- entryPtr->xWidth - totalLength;
 	    } else {
-		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
-			- entryPtr->xWidth - totalLength)/2;
+		entryPtr->placeholderX = entryPtr->inset;
 	    }
 	} else {
 
@@ -2115,14 +2115,14 @@ EntryComputeGeometry(
 	    (Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
     if (overflow <= 0) {
 	entryPtr->leftIndex = 0;
-	if (entryPtr->justify == TK_JUSTIFY_LEFT) {
-	    entryPtr->leftX = entryPtr->inset;
+	if (entryPtr->justify == TK_JUSTIFY_CENTER) {
+	    entryPtr->leftX = (Tk_Width(entryPtr->tkwin)
+		    - entryPtr->xWidth - totalLength)/2;
 	} else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
 	    entryPtr->leftX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
 		    - entryPtr->xWidth - totalLength;
 	} else {
-	    entryPtr->leftX = (Tk_Width(entryPtr->tkwin)
-		    - entryPtr->xWidth - totalLength)/2;
+	    entryPtr->leftX = entryPtr->inset;
 	}
 	entryPtr->layoutX = entryPtr->leftX;
     } else {
