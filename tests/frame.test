@@ -74,7 +74,8 @@ test frame-1.2 {frame configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -class option after widget is created}
-test frame-1.3 {frame configuration options} -setup {
+# Colormap is unsupported on Wayland.
+test frame-1.3 {frame configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     frame .f -colormap new
@@ -82,7 +83,8 @@ test frame-1.3 {frame configuration options} -setup {
 } -cleanup {
     deleteWindows
 } -result {-colormap colormap Colormap {} new}
-test frame-1.4 {frame configuration options} -setup {
+# Colormap is unsupported on Wayland.
+test frame-1.4 {frame configuration options} -constraints !wayland  -setup {
     deleteWindows
 } -body {
     frame .f -colormap new
@@ -313,7 +315,8 @@ test frame-2.2 {toplevel configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -class option after widget is created}
-test frame-2.3 {toplevel configuration options} -setup {
+# Colormap is unsupported on Wayland.
+test frame-2.3 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -colormap new
@@ -322,7 +325,8 @@ test frame-2.3 {toplevel configuration options} -setup {
 } -cleanup {
     deleteWindows
 } -result {-colormap colormap Colormap {} new}
-test frame-2.4 {toplevel configuration options} -setup {
+# Colormap is unsupported on Wayland.
+test frame-2.4 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -colormap new
@@ -350,7 +354,8 @@ test frame-2.6 {toplevel configuration options} -setup {
 } -cleanup {
     deleteWindows
 } -result {-container container Container 0 0}
-test frame-2.7 {toplevel configuration options} -setup {
+# Colormap is unsupported on Wayland.
+test frame-2.7 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -colormap bogus
@@ -404,7 +409,8 @@ test frame-2.12 {toplevel configuration options} -setup {
 } -cleanup {
     deleteWindows
 } -result {-visual visual Visual {} default}
-test frame-2.13 {toplevel configuration options} -setup {
+# cget -visual not supported on Wayland. 
+test frame-2.13 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -visual default
@@ -413,14 +419,16 @@ test frame-2.13 {toplevel configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -visual option after widget is created}
-test frame-2.14 {toplevel configuration options} -setup {
+# cget -visual not supported on Wayland. 
+test frame-2.14 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -visual who_knows?
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {unknown or ambiguous visual name "who_knows?": class must be best, directcolor, grayscale, greyscale, pseudocolor, staticcolor, staticgray, staticgrey, truecolor, or default}
-test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup {
+# cget -screen not supported on Wayland. 
+test frame-2.15 {toplevel configuration options} -constraints {haveDISPLAY !wayland} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -429,7 +437,8 @@ test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup
 } -cleanup {
     deleteWindows
 } -result [expr {[tcltest::testConstraint haveDISPLAY]?[list -screen screen Screen {} $env(DISPLAY)]:""}]
-test frame-2.16 {toplevel configuration options} -constraints haveDISPLAY -setup {
+# cget -screen not supported on Wayland. 
+test frame-2.16 {toplevel configuration options} -constraints {haveDISPLAY !wayland} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -438,14 +447,16 @@ test frame-2.16 {toplevel configuration options} -constraints haveDISPLAY -setup
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -screen option after widget is created}
-test frame-2.17 {toplevel configuration options} -setup {
+# cget -screen not supported on Wayland. 
+test frame-2.17 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen bogus
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {couldn't connect to display "bogus"}
-test frame-2.18 {toplevel configuration options} -setup {
+# Embedding/container not supported on Wayland. 
+test frame-2.18 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -container 1 -width 300 -height 120
@@ -635,8 +646,9 @@ test frame-3.8 {TkCreateFrame procedure} -setup {
     deleteWindows
     option clear
 } -result {Silly #122334}
+# Embedding/container not supported on Wayland. 
 test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
-    unix
+    !wayland unix 
 } -setup {
     deleteWindows
 } -body {
@@ -650,8 +662,9 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
 } -cleanup {
     deleteWindows
 } -result {0 0 140 300}
+# Embedding/container not supported on Wayland. 
 test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
-    unix
+    !wayland unix
 } -setup {
     deleteWindows
 } -body {
@@ -693,8 +706,9 @@ test frame-3.11 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 0
+# Colormap is unsupported on Wayland.
 test frame-3.12 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable
+    defaultPseudocolor8 nonPortable !wayland
 } -setup {
     destroy .t
 } -body {
@@ -706,7 +720,7 @@ test frame-3.12 {TkCreateFrame procedure} -constraints {
     destroy .t
 } -result 1
 test frame-3.13 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable
+    defaultPseudocolor8 nonPortable !wayland
 } -setup {
     destroy .t
 } -body {
@@ -721,7 +735,7 @@ test frame-3.13 {TkCreateFrame procedure} -constraints {
     destroy .t
 } -result 1
 test frame-3.14 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable
+    defaultPseudocolor8 nonPortable !wayland
 } -setup {
     destroy .t
 } -body {
@@ -736,7 +750,7 @@ test frame-3.14 {TkCreateFrame procedure} -constraints {
     destroy .t
 } -result 1
 test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -constraints {
-    defaultPseudocolor8 unix nonPortable
+    defaultPseudocolor8 unix nonPortable !wayland
 } -setup {
     destroy .t
 } -body {
@@ -761,7 +775,7 @@ test frame-3.16 {TkCreateFrame procedure} -constraints {
     destroy .t
 } -result 0
 test frame-3.17 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable
+    defaultPseudocolor8 nonPortable !wayland
 } -setup {
     destroy .t
 } -body {
@@ -854,7 +868,8 @@ test frame-3.23 {TkCreateFrame procedure} -setup {
 } -body {
     frame .f -gorp glob
 } -returnCodes error -result {unknown option "-gorp"}
-test frame-3.24 {TkCreateFrame procedure} -setup {
+# Colormap is unsupported on Wayland.
+test frame-3.24 {TkCreateFrame procedure} -constraints !wayland -setup {
     deleteWindows
 } -body {
     toplevel .t -width 300 -height 200 -colormap new -bogus option
@@ -906,7 +921,8 @@ test frame-5.7 {FrameWidgetCommand procedure, cget option} -setup {
 } -cleanup {
     destroy .t
 } -returnCodes ok -match glob -result *
-test frame-5.8 {FrameWidgetCommand procedure, configure option} -body {
+# Colormap is unsupported on Wayland.
+test frame-5.8 {FrameWidgetCommand procedure, configure option} -constraints !wayland -body {
     optnames [.f configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -padx -pady -relief -takefocus -tile -visual -width}
 test frame-5.9 {FrameWidgetCommand procedure, configure option} -body {
@@ -921,7 +937,8 @@ test frame-5.11 {FrameWidgetCommand procedure, configure option} -body {
 test frame-5.12 {FrameWidgetCommand procedure} -body {
     .f swizzle
 } -returnCodes error -result {bad option "swizzle": must be cget or configure}
-test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
+# Colormap is unsupported on Wayland.
+test frame-5.13 {FrameWidgetCommand procedure, configure option} -constraints !wayland -body {
     optnames [. configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -tile -use -visual -width}
 
@@ -1175,7 +1192,8 @@ test frame-13.2 {labelframe configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -class option after widget is created}
-test frame-13.3 {labelframe configuration options} -setup {
+# Colormap not supported on Wayland. 
+test frame-13.3 {labelframe configuration options} -constraints !wayland -setup {
     deleteWindows
 } -body {
     labelframe .f -colormap new
