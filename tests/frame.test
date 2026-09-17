@@ -1774,7 +1774,8 @@ test frame-15.12 {TIP 262: toplevel background images} -setup {
     catch {image delete gorp}
     deleteWindows
 } -result {gorp 1 gorp}
-test frame-15.13 {TIP 262: toplevel background images} -setup {
+# wm overrideredirect not well-supported on Wayland 
+test frame-15.13 {TIP 262: toplevel background images} -constraints !wayland -setup {
     deleteWindows
     set result {}
 } -constraints testImageType -body {
