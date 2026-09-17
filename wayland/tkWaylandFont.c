@@ -47,6 +47,19 @@ extern GLFWwindow *mainGlfwWindow;
 static int  fcInitialized = 0;
 
 /*
+ * Cache for TkpGetFontFamilies().
+ *
+ * FcFontList(NULL, pat, os) with a NULL config forces Fontconfig to load
+ * its config and scan all font directories. Doing that on every call is
+ * expensive (seconds on a cold or large font cache), and "font families"
+ * is queried during widget/interp setup. Cache the resulting family list
+ * and invalidate only if the process's current FcConfig changes (which
+ * only happens if something calls FcConfigSetCurrent()).
+ */
+static Tcl_Obj  *cachedFamilies       = NULL;
+static FcConfig *cachedFamiliesConfig = NULL;
+
+/*
  * Clip state set by TkUnixSetXftClipRegion() and consumed by
  * TkpDrawAngledCharsInContext() via nvgScissor(). ttk's TextDraw()
  * (ttkLabel.c) only ever builds a single-rect region -- a bounding
@@ -3271,11 +3284,21 @@ TkpDeleteFont(TkFont *tkFontPtr)
  *
  *   Return a list of available font family names.
  *
+ *   The family list is built with FcFontList() against the process's
+ *   current FcConfig. With a NULL config argument Fontconfig is forced
+ *   to load its config and scan every font directory, which is
+ *   expensive (seconds on a cold or large cache) and happens on every
+ *   call - "font families" is queried during widget/interp setup, so
+ *   that cost lands directly in interp bootstrap. Cache the resulting
+ *   Tcl list and invalidate it only if the process's current FcConfig
+ *   pointer changes (i.e. something called FcConfigSetCurrent()), so
+ *   repeated calls in the same process are O(1).
+ *
  * Results:
  *   None (sets interpreter result).
  *
  * Side effects:
- *   Queries Fontconfig.
+ *   Queries Fontconfig on cache miss; otherwise returns the cached list.
  *----------------------------------------------------------------------
  */
 
@@ -3284,10 +3307,17 @@ TkpGetFontFamilies(
 		   Tcl_Interp *interp,
 		   TCL_UNUSED(Tk_Window))
 {
+    FcConfig *cfg = FcConfigGetCurrent();
+
+    if (cachedFamilies && cfg == cachedFamiliesConfig) {
+	Tcl_SetObjResult(interp, Tcl_DuplicateObj(cachedFamilies));
+	return;
+    }
+
     Tcl_Obj    *resultPtr = Tcl_NewListObj(0, NULL);
     FcPattern  *pat       = FcPatternCreate();
     FcObjectSet*os        = FcObjectSetBuild(FC_FAMILY, NULL);
-    FcFontSet  *fs        = FcFontList(NULL, pat, os);
+    FcFontSet  *fs        = FcFontList(cfg, pat, os);
 
     if (fs) {
         Tcl_Obj *seen = Tcl_NewDictObj();
@@ -3312,6 +3342,15 @@ TkpGetFontFamilies(
 
     FcObjectSetDestroy(os);
     FcPatternDestroy(pat);
+
+    /* Refresh the cache. */
+    if (cachedFamilies) {
+	Tcl_DecrRefCount(cachedFamilies);
+    }
+    cachedFamilies       = Tcl_DuplicateObj(resultPtr);
+    Tcl_IncrRefCount(cachedFamilies);
+    cachedFamiliesConfig = cfg;
+
     Tcl_SetObjResult(interp, resultPtr);
 }
 
@@ -4237,10 +4276,6 @@ decorations:
         /* Skip any leading/trailing newlines for decoration measurement. */
         while (decoStart < decoEnd && (*decoStart == '\n' || *decoStart == '\r')) decoStart++;
         while (decoEnd > decoStart && (*(decoEnd-1) == '\n' || *(decoEnd-1) == '\r')) decoEnd--;
-
-		DEBUG_LOG("DRAW    weight=%d '%.*s' -> width=%.2f at x=%.2f",
-          fontPtr->font.fa.weight, (int)(rangeEnd - rangePtr), rangePtr,
-          nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL), drawX);   
                
         runWidth = nvgTextBounds(vg, 0, 0, decoStart, decoEnd, NULL);
 
