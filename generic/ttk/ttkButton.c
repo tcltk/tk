@@ -22,7 +22,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
-    Tcl_Obj *justifyObj;
+    Tk_Justify justify;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -57,7 +57,7 @@ typedef struct
 static const Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	NULL, offsetof(Base,base.justifyObj), TCL_INDEX_NONE,
+	NULL, TCL_INDEX_NONE, offsetof(Base,base.justify),
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Base,base.textObj), TCL_INDEX_NONE,
@@ -129,6 +129,7 @@ BaseInitialize(
 
     basePtr->base.textVariableTrace = 0;
     basePtr->base.imageSpec = NULL;
+    basePtr->base.justify = TK_JUSTIFY_NULL;
 }
 
 static void
