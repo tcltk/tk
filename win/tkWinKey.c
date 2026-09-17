@@ -12,6 +12,7 @@
 
 #include "tkWinInt.h"
 #include "X11/XF86keysym.h"
+#include "tkUnicodeKeysyms.h"
 
 /*
  * The keymap table holds mappings of Windows keycodes to X keysyms. If
@@ -71,6 +72,129 @@ static const KeySym keymap[] = {
 
 static KeySym		KeycodeToKeysym(unsigned int keycode,
 			    int state, int noascii);
+static KeySym		UnicharToKeysym(int ch);
+static int		KeysymToUnichar(KeySym keysym);
+
+/*
+ * Hash tables for translating between keysyms and Unicode characters, built
+ * from keysymTable on first use.
+ */
+
+static Tcl_HashTable keysym2unichar;
+static Tcl_HashTable unichar2keysym;
+static int keysymTablesInitialized = 0;
+TCL_DECLARE_MUTEX(keysymMutex)
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitKeysymTables --
+ *
+ *	Fill the keysym2unichar and unichar2keysym hash tables.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Initializes the hash tables.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+InitKeysymTables(void)
+{
+    const KeysymInfo *ksPtr;
+    Tcl_HashEntry *hPtr;
+    int isNew;
+
+    Tcl_MutexLock(&keysymMutex);
+    if (!keysymTablesInitialized) {
+	Tcl_InitHashTable(&keysym2unichar, TCL_ONE_WORD_KEYS);
+	Tcl_InitHashTable(&unichar2keysym, TCL_ONE_WORD_KEYS);
+	for (ksPtr = keysymTable; ksPtr->keysym != 0; ksPtr++) {
+	    hPtr = Tcl_CreateHashEntry(&keysym2unichar,
+		    INT2PTR(ksPtr->keysym), &isNew);
+	    Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->unichar));
+	    hPtr = Tcl_CreateHashEntry(&unichar2keysym,
+		    INT2PTR(ksPtr->unichar), &isNew);
+	    Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->keysym));
+	}
+	keysymTablesInitialized = 1;
+    }
+    Tcl_MutexUnlock(&keysymMutex);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * UnicharToKeysym --
+ *
+ *	Find the keysym of a Unicode character: the keysym of the same name
+ *	if there is one, otherwise the Unicode keysym 0x1000000 + code point,
+ *	as on X11.
+ *
+ * Results:
+ *	The keysym.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static KeySym
+UnicharToKeysym(
+    int ch)
+{
+    Tcl_HashEntry *hPtr;
+
+    if (ch < 0x100) {
+	return (KeySym) ch;
+    }
+    InitKeysymTables();
+    hPtr = Tcl_FindHashEntry(&unichar2keysym, INT2PTR(ch));
+    if (hPtr != NULL) {
+	return (KeySym) PTR2INT(Tcl_GetHashValue(hPtr));
+    }
+    return (KeySym) ch + 0x1000000;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * KeysymToUnichar --
+ *
+ *	Find the Unicode character of a keysym.
+ *
+ * Results:
+ *	The code point, or -1 if the keysym is not a character.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+KeysymToUnichar(
+    KeySym keysym)
+{
+    Tcl_HashEntry *hPtr;
+
+    if (keysym < 0x100) {
+	return (int) keysym;
+    }
+    if ((keysym >= 0x1000000) && (keysym <= 0x110FFFF)) {
+	return (int) (keysym - 0x1000000);
+    }
+    InitKeysymTables();
+    hPtr = Tcl_FindHashEntry(&keysym2unichar, INT2PTR(keysym));
+    if (hPtr != NULL) {
+	return PTR2INT(Tcl_GetHashValue(hPtr));
+    }
+    return -1;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -122,10 +246,15 @@ TkpGetString(
 	 */
 
 	KeySym keysym = KeycodeToKeysym(keyEv->keycode, keyEv->state, 0);
+	int ch;
 
-	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
-		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = Tcl_UniCharToUtf(keysym & 255, buf);
+	if ((keysym == XK_Return) || (keysym == XK_Tab)) {
+	    ch = keysym & 255;
+	} else {
+	    ch = KeysymToUnichar(keysym);
+	}
+	if (ch > 0) {
+	    len = Tcl_UniCharToUtf(ch, buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
     }
@@ -289,8 +418,7 @@ KeycodeToKeysym(
     }
 
     /*
-     * Keycode mapped to a valid Unicode character. Since the keysyms for
-     * alphanumeric characters map onto Unicode, we just return it.
+     * Keycode mapped to a valid Unicode character: return its keysym.
      *
      * We treat 0x7F as a special case mostly for backwards compatibility. In
      * versions of Tk<=8.2, Control-Backspace returned "XK_BackSpace" as the X
@@ -314,7 +442,7 @@ KeycodeToKeysym(
      */
 
     if (result == 1 && buf[0] >= 0x20 && buf[0] != 0x7F) {
-	return (KeySym) buf[0];
+	return UnicharToKeysym(buf[0]);
     }
 
     /*
@@ -555,7 +683,7 @@ TkpSetKeycodeAndState(
     KeySym keySym,
     XEvent *eventPtr)
 {
-    int i;
+    int i, ch;
     SHORT result;
     int shift;
 
@@ -576,8 +704,9 @@ TkpSetKeycodeAndState(
 	    return;
 	}
     }
-    if (keySym >= 0x20) {
-	result = VkKeyScanW((WCHAR) keySym);
+    ch = KeysymToUnichar(keySym);
+    if ((ch >= 0x20) && (ch <= 0xFFFF)) {
+	result = VkKeyScanW((WCHAR) ch);
 	if (result != -1) {
 	    shift = result >> 8;
 	    if (shift & 1)
