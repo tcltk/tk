@@ -1403,15 +1403,7 @@ TkWaylandGetNVGContextForMeasure(void)
     /*
      * Read the NVGcontext straight off glfwTkInfo instead of round-tripping
      * through winPtr -> Drawable -> TkWaylandGetNVGContext(), which just
-     * re-derives this same field. That round-trip required
-     * glfwInfoPtr->winPtr to be non-NULL, but mainGlfwWindow is a shared
-     * root/helper window that may never have a TkWindow attached to it --
-     * in practice that made this function return NULL unconditionally,
-     * for the lifetime of the process, silently forcing every text
-     * measurement in the app onto the crude per-character pixel estimate
-     * while real drawing (which never went through here) used accurate
-     * glyph metrics. Confirmed via instrumentation: vg was nil on every
-     * single measurement call all session long, not just early on.
+     * re-derives this same field. 
      */
     NVGcontext *vg = glfwInfoPtr->vg;
     if (!vg) {
@@ -1430,11 +1422,8 @@ TkWaylandGetNVGContextForMeasure(void)
      * set (effectively 1.0) and its advances permanently disagree with
      * what later gets drawn on a HiDPI display. Bracket measurement in a
      * matching-scale frame so whichever path -- measuring or drawing --
-     * touches a given (font, size) first bakes it identically. Use
-     * mainGlfwWindow's own size/scale directly (glfwGetWindowSize /
-     * glfwGetWindowContentScale) rather than Tk_Width/Tk_Height, since
-     * this window may have no attached TkWindow to ask.
-     *
+     * touches a given (font, size) first bakes it identically. 
+     * 
      * Skip this if a real frame is already active on this window (e.g.
      * measurement invoked reentrantly from inside a draw callback):
      * nvgBeginFrame must never nest (see TKWL_IS_DRAWING elsewhere), and
