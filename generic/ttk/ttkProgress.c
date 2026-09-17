@@ -61,7 +61,7 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	NULL, TCL_INDEX_NONE, offsetof(Progressbar,progress.justify),
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_PROGRESSBAR_LENGTH, offsetof(Progressbar,progress.lengthObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED },

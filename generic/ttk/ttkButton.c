@@ -58,7 +58,7 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	NULL, TCL_INDEX_NONE, offsetof(Base,base.justify),
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Base,base.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
