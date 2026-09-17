@@ -1126,14 +1126,14 @@ ListboxBboxSubCmd(
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->selBorderWidthObj, &selBorderWidth);
-	if (listPtr->justify == TK_JUSTIFY_LEFT) {
-	    x = (listPtr->inset + selBorderWidth) - listPtr->xOffset;
+	if (listPtr->justify == TK_JUSTIFY_CENTER) {
+	    x = (Tk_Width(tkwin) - pixelWidth) / 2
+		    - listPtr->xOffset + GetMaxOffset(listPtr) / 2;
 	} else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
 	    x = Tk_Width(tkwin) - (listPtr->inset + selBorderWidth)
 		    - pixelWidth - listPtr->xOffset + GetMaxOffset(listPtr);
 	} else {
-	    x = (Tk_Width(tkwin) - pixelWidth) / 2
-		    - listPtr->xOffset + GetMaxOffset(listPtr) / 2;
+	    x = (listPtr->inset + selBorderWidth) - listPtr->xOffset;
 	}
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + selBorderWidth;
@@ -2099,14 +2099,14 @@ DisplayListbox(
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	y += fm.ascent + selBorderWidth;
 
-	if (listPtr->justify == TK_JUSTIFY_LEFT) {
-	    x = (listPtr->inset + selBorderWidth) - listPtr->xOffset;
+	if (listPtr->justify == TK_JUSTIFY_CENTER) {
+	    x = (Tk_Width(tkwin) - textWidth)/2
+		    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
 	} else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
 	    x = Tk_Width(tkwin) - (listPtr->inset + selBorderWidth)
 		    - textWidth - listPtr->xOffset + GetMaxOffset(listPtr);
 	} else {
-	    x = (Tk_Width(tkwin) - textWidth)/2
-		    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
+	    x = (listPtr->inset + selBorderWidth) - listPtr->xOffset;
 	}
 
 	Tk_DrawChars(disp, pixmap, gc, listPtr->tkfont,

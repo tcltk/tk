@@ -22,7 +22,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
-    Tcl_Obj *justifyObj;
+    Tk_Justify justify;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -57,8 +57,8 @@ typedef struct
 static const Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", offsetof(Base,base.justifyObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	NULL, TCL_INDEX_NONE, offsetof(Base,base.justify),
+	TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Base,base.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
@@ -129,6 +129,7 @@ BaseInitialize(
 
     basePtr->base.textVariableTrace = 0;
     basePtr->base.imageSpec = NULL;
+    basePtr->base.justify = TK_JUSTIFY_NULL;
 }
 
 static void
@@ -263,8 +264,8 @@ static const Tk_OptionSpec LabelOptionSpecs[] =
 	NULL, offsetof(Label,label.reliefObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	"w", offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
-	0, 0, GEOMETRY_CHANGED},
+	NULL, offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	NULL, offsetof(Label, label.wrapLengthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED /*SB: SIZE_CHANGED*/ },

@@ -173,8 +173,8 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	NULL, offsetof(Entry, entry.invalidCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", TCL_INDEX_NONE, offsetof(Entry, entry.justify),
-	TK_OPTION_ENUM_VAR, 0, GEOMETRY_CHANGED},
+	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.justify),
+	TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
     {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
 	"C", offsetof(Entry, entry.localeObj), TCL_INDEX_NONE, 0, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
@@ -980,6 +980,7 @@ EntryInitialize(
     entryPtr->entry.displayString	= entryPtr->entry.string;
     entryPtr->entry.textVariableTrace	= 0;
     entryPtr->entry.numBytes = entryPtr->entry.numChars = 0;
+    entryPtr->entry.justify		= TK_JUSTIFY_NULL;
 
     EntryInitStyleDefaults(&entryPtr->entry.styleDefaults);
 
