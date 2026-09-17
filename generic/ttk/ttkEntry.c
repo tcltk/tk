@@ -980,6 +980,7 @@ EntryInitialize(
     entryPtr->entry.displayString	= entryPtr->entry.string;
     entryPtr->entry.textVariableTrace	= 0;
     entryPtr->entry.numBytes = entryPtr->entry.numChars = 0;
+    entryPtr->entry.justify		= TK_JUSTIFY_NULL;
 
     EntryInitStyleDefaults(&entryPtr->entry.styleDefaults);
 
