@@ -918,6 +918,32 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.2 {keysym of Control and Alt keys with a non-Latin keyboard
+	      layout on X11 - bug 701d8f8953} -constraints x11 -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    update
+    bind $e <Key> {set keycode %k}
+    event generate $e <Key> -keysym q
+    bind $e <Key> {lappend res %K}
+    # State bit 0x2000 selects the second XKB group, a non-Latin layout
+    # with e.g. "setxkbmap us,ua" (with a single layout it is the same as
+    # the first group).  The keysym must be the Latin letter of the key with
+    # Control (4), Control+Shift (5) and Alt (8) whatever the layout is.
+    event generate $e <Key> -keycode $keycode -state 0x2004
+    event generate $e <Key> -keycode $keycode -state 0x2005
+    event generate $e <Key> -keycode $keycode -state 0x2008
+    set res
+} -cleanup {
+    deleteWindows
+} -result {q Q q}
+
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
 } -body {
