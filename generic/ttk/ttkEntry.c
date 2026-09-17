@@ -1244,6 +1244,17 @@ static void EntryDisplay(void *clientData, Drawable d)
 	&& selFirst >= 0
 	&& selLast > leftIndex
 	&& selFirst <= rightIndex;
+#ifdef _WIN32
+    /*
+     * Like a native edit control and tk::entry, do not show the selection
+     * when the widget does not have the focus.  [Bug 300bad1beb]
+     */
+
+    if (!(entryPtr->core.state & TTK_STATE_FOCUS)
+	    && !Tk_AlwaysShowSelection(tkwin)) {
+	showSelection = 0;
+    }
+#endif
 
     /* Adjust selection range to keep in display bounds.
      */
