@@ -61,8 +61,8 @@ namespace eval ttk::theme::vista {
 	    }
 	}
 	ttk::style map TCombobox \
-	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
+	    -selectbackground [list !focus {}] \
+	    -selectforeground [list !focus {}] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
 		{readonly focus}	SystemHighlightText \
@@ -85,8 +85,8 @@ namespace eval ttk::theme::vista {
 	    }
 	}
 	ttk::style map TEntry \
-	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText]
+	    -selectbackground [list !focus {}] \
+	    -selectforeground [list !focus {}]
 
 	# Spinbox
 	ttk::style configure TSpinbox -padding 0
@@ -119,8 +119,8 @@ namespace eval ttk::theme::vista {
 	    }
 	}
 	ttk::style map TSpinbox \
-	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText]
+	    -selectbackground [list !focus {}] \
+	    -selectforeground [list !focus {}]
 
 	# Scrollbar elements (Vista includes a state for 'hover')
 	ttk::style element create Vertical.Scrollbar.uparrow vsapi \
