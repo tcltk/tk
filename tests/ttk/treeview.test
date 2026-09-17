@@ -1120,7 +1120,7 @@ test Column-11.4 {Out of range column} -body {
 
 test Column-11.5 {Get anchor} -body {
     .tv column 0 -anchor
-} -result {w}
+} -result {}
 
 test Column-11.6 {Set anchor} -body {
     .tv column 0 -anchor e
@@ -1129,7 +1129,7 @@ test Column-11.6 {Set anchor} -body {
 
 test Column-11.7 {Set anchor invalid} -body {
     .tv column 0 -anchor bogus
-} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center} -returnCodes {1}
+} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, center, or ""} -returnCodes {1}
 
 test Column-11.8 {Get id} -body {
     .tv column 0 -id
@@ -1265,7 +1265,7 @@ test Heading-13.4 {Invalid option} -body {
 
 test Heading-13.5 {Get anchor} -body {
     .tv heading 0 -anchor
-} -result {center}
+} -result {}
 
 test Heading-13.6 {Set anchor} -body {
     .tv heading 0 -anchor e
@@ -1274,7 +1274,7 @@ test Heading-13.6 {Set anchor} -body {
 
 test Heading-13.7 {Set anchor invalid} -body {
     .tv heading 0 -anchor bogus
-} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, or center} -returnCodes {1}
+} -result {bad anchor "bogus": must be n, ne, e, se, s, sw, w, nw, center, or ""} -returnCodes {1}
 
 test Heading-13.8 {Get command} -body {
     .tv heading 0 -command
