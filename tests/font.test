@@ -449,7 +449,7 @@ test font-9.4 {font command: measure: arguments} -body {
 } -returnCodes error -result "font \"{xyz\" does not exist"
 test font-9.5 {font command: measure} -body {
     # Tk_TextWidth()
-    # Wayland/Pango may have slightly different metrics for fixed fonts
+    # Wayland may have slightly different metrics for fixed fonts
     if {[tk windowingsystem] eq "wayland"} {
         # Accept either equal or not-equal, but normalize to passing
         set w1 [font measure $fixed "abcdefg"]
@@ -507,7 +507,7 @@ test font-10.8 {font command: metrics: bad metric} -body {
     font metrics $fixed -xyz
 } -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.9 {font command: metrics: get individual metrics} -body {
-    # On Wayland, -fixed may report 0 due to Pango font handling
+    # On Wayland, -fixed may report 0
     if {[tk windowingsystem] eq "wayland"} {
         catch {font metrics $fixed -ascent}
         catch {font metrics $fixed -descent}
