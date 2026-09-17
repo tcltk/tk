@@ -1946,13 +1946,11 @@ Tk_GetUserInactiveTime(
     inactive = GetTickCount() - li.dwTime;
 
     /*
-     * DWORD is 32-bit on Windows, so clamp to its maximum to avoid returning
-     * a large inactivity interval as a negative value.
+     * The unsigned 32-bit difference always fits in the 64-bit return type,
+     * so no clamping is needed. Note that GetTickCount() wraps around every
+     * ~49.7 days, so the result wraps around as well.
      */
 
-    if (inactive > LONG_MAX) {
-	return LONG_MAX;
-    }
     return (long long)inactive;
 }
 
