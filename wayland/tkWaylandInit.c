@@ -275,62 +275,44 @@ getGlfwTkInfo(
  */
 
 
+static int isGlfwWindowValid(GLFWwindow *win) { if (!win) return 0; for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) if (p->glfwWindow==win) return 1; return 0; }
+
 static void renderFBO(
     GLFWwindow *glfwWindow)
 {
+    if (shutdownInProgress) return;
+    if (!glfwWindow) return;
+    if (!isGlfwWindowValid(glfwWindow)) return;
+    if (glfwWindowShouldClose(glfwWindow)) return;
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return;
+    if (glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) return;
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!infoPtr) {
-        DEBUG_LOG("renderFBO: No UserPointer");
-        return;
-    }
-    
-    if (!infoPtr->winPtr) {
-        DEBUG_LOG("renderFBO: winPtr is NULL");
-        return;
-    }
-    
-    if (!infoPtr->winPtr->privatePtr) {
-        DEBUG_LOG("renderFBO: privatePtr is NULL");
-        return;
-    }
-    
+    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) return;
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
-    if (!fb) {
-        DEBUG_LOG("renderFBO: fb is NULL for %s - skipping",
-            infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
-        return;
-    }
-    
-    int fbWidth, fbHeight;
-    glfwMakeContextCurrent(glfwWindow);
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    
-    /* Ensure framebuffer is valid by checking its fbo ID. */
-    if (fb->fbo == 0) {
-        fprintf(stderr, "renderFBO: framebuffer has invalid fbo ID - recreating\n");
-        nvgluDeleteFramebuffer(fb);
-        fb = nvgluCreateFramebuffer(infoPtr->vg, fbWidth, fbHeight, 0);
-        if (!fb) {
-            fprintf(stderr, "renderFBO: failed to recreate framebuffer\n");
-            return;
+    if (!fb || fb->fbo==0) return;
+    if (infoPtr->winPtr->childList==NULL) {
+        TkWindow *top=infoPtr->winPtr;
+        while (top && !Tk_IsTopLevel(top)) top=top->parentPtr;
+        if (top && top->mainPtr && top->mainPtr->interp) {
+            if (top==(TkWindow*)Tk_MainWindow(top->mainPtr->interp)) return;
         }
-        infoPtr->winPtr->privatePtr->fb = fb;
-
-        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
-        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
     }
-    
-    glfwMakeContextCurrent(glfwWindow);
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    int fbW,fbH; glfwMakeContextCurrent(glfwWindow); glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
+    if (fbW<=0||fbH<=0) return;
+    glFlush();
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-                      0, 0, fbWidth, fbHeight,
-                      GL_COLOR_BUFFER_BIT,
-                      GL_NEAREST);
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER,0); return; }
+    glBlitFramebuffer(0,0,fbW,fbH,0,0,fbW,fbH,GL_COLOR_BUFFER_BIT,GL_NEAREST);
+    glFlush();
+    if (!isGlfwWindowValid(glfwWindow)) return;
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return;
+    static double lastSwap=0; double now=glfwGetTime();
+    if (now-lastSwap<0.008) return;
     glfwSwapBuffers(glfwWindow);
+    lastSwap=glfwGetTime();
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -428,9 +410,7 @@ Tk_ClipDrawableToRect(
 	DEBUG_LOG("Clearing clipRect for %s", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
-	if (winPtr == toplevelPtr) {
-	    renderFBO(glfwWindow);
-	}
+	/* deferred to DisplayAllWindows */
     } else {
 	DEBUG_LOG("Adding clipRect for %s", Tk_PathName(winPtr));
 	if (winPtr == toplevelPtr) {
@@ -464,31 +444,55 @@ Tk_ClipDrawableToRect(
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
-    for (glfwTkInfo* infoPtr = glfwTkInfoList;
-         infoPtr != NULL;
-         infoPtr = infoPtr->nextPtr) {
-        if (infoPtr->flags & TKWL_NEEDS_DISPLAY) {
-            /* Skip if window or framebuffer is not ready. */
-            if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr || 
-                !infoPtr->winPtr->privatePtr->fb) {
-                /* Clear the flag to avoid repeated attempts. */
-                infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
-                DEBUG_LOG("TkWaylandDisplayAllWindows: skipping %s (no FBO)",
-                        infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
-                continue;
+    static double lastDisplay=0;
+    double nowDisp=glfwGetTime();
+    if (nowDisp-lastDisplay<0.005) return;
+    lastDisplay=nowDisp;
+    if (shutdownInProgress) return;
+    if (glfwTkInfoList==NULL) return;
+    int anyMappable=0;
+    for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
+        if (!p->glfwWindow) continue;
+        if (glfwWindowShouldClose(p->glfwWindow)) continue;
+        if (!p->winPtr || !p->winPtr->privatePtr || !p->winPtr->privatePtr->fb) continue;
+        if (!glfwGetWindowAttrib(p->glfwWindow, GLFW_VISIBLE)) continue;
+        if (glfwGetWindowAttrib(p->glfwWindow, GLFW_ICONIFIED)) continue;
+        int w=0,h=0; glfwGetFramebufferSize(p->glfwWindow,&w,&h);
+        if (w<=0||h<=0) continue;
+        anyMappable=1; break;
+    }
+    if (!anyMappable) {
+        for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
+            if (!p->glfwWindow) continue;
+            if (!glfwGetWindowAttrib(p->glfwWindow, GLFW_VISIBLE) || glfwGetWindowAttrib(p->glfwWindow, GLFW_ICONIFIED)) {
+                p->flags &= ~TKWL_NEEDS_DISPLAY;
             }
-            
-            GLFWwindow *glfwWindow = infoPtr->glfwWindow;
-            if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE) ||
-				glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
-				continue;   /* Leave TKWL_NEEDS_DISPLAY set for when it becomes visible. */
-			}
-            DEBUG_LOG("Displaying %s", Tk_PathName(infoPtr->winPtr));
-            renderFBO(glfwWindow);
-            infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
         }
+        return;
+    }
+    for (glfwTkInfo *infoPtr=glfwTkInfoList; infoPtr; infoPtr=infoPtr->nextPtr) {
+        if (!(infoPtr->flags & TKWL_NEEDS_DISPLAY)) continue;
+        if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr || !infoPtr->winPtr->privatePtr->fb) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+        GLFWwindow *glfwWindow=infoPtr->glfwWindow;
+        if (!glfwWindow || glfwWindowShouldClose(glfwWindow)) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+        if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE) || glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
+            if (glfwWindow==mainGlfwWindow) infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+            continue;
+        }
+        int fbW=0,fbH=0; glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
+        if (fbW<=0||fbH<=0) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+        if (infoPtr->winPtr && infoPtr->winPtr->childList==NULL) {
+            TkWindow *top=infoPtr->winPtr;
+            while (top && !Tk_IsTopLevel(top)) top=top->parentPtr;
+            if (top && top->mainPtr && top->mainPtr->interp) {
+                if (top==(TkWindow*)Tk_MainWindow(top->mainPtr->interp)) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+            }
+        }
+        renderFBO(glfwWindow);
+        infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -657,7 +661,7 @@ TkWaylandInitialize(Tcl_Interp *interp)
      */
     glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glfwSwapBuffers(mainGlfwWindow);
+    glFlush();
 
     /*
      * Wayland display (for wl_subsurfaces/popups).
@@ -1047,7 +1051,10 @@ TkWaylandBeginDraw(
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
+	if (!pixmap || !pixmap->glfwWindow || !pixmap->fb || pixmap->fb->fbo==0) return TCL_ERROR;
+	if (!isGlfwWindowValid(pixmap->glfwWindow)) return TCL_ERROR;
 	glfwTkInfo *infoPtr = getGlfwTkInfo(pixmap->glfwWindow);
+	if (!infoPtr) return TCL_ERROR;
 	DEBUG_LOG("BeginDraw: received pixmap %p", pixmap);
 
 	dcPtr->vg = infoPtr->vg;
@@ -1103,8 +1110,21 @@ TkWaylandBeginDraw(
      * Now winPtr is the containing toplevel and the offsets of
      * the child are given by x and y.
      */
+    if (!winPtr->privatePtr || !winPtr->privatePtr->glfwWindow) return TCL_ERROR;
+    if (winPtr->flags & TK_ALREADY_DEAD) return TCL_ERROR;
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    if (!isGlfwWindowValid(glfwWindow)) return TCL_ERROR;
+    int _bw,_bh; glfwGetFramebufferSize(glfwWindow,&_bw,&_bh);
+    if (_bw<=0||_bh<=0) return TCL_ERROR;
+    if (winPtr->childList==NULL) {
+        TkWindow *_top=winPtr;
+        while (_top && !Tk_IsTopLevel(_top)) _top=_top->parentPtr;
+        if (_top && _top->mainPtr && _top->mainPtr->interp) {
+            if (_top==(TkWindow*)Tk_MainWindow(_top->mainPtr->interp)) return TCL_ERROR;
+        }
+    }
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    if (!infoPtr) return TCL_ERROR;
     if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
 	/*
 	 * It may be too early to be drawing in this window.  It may not have
@@ -1223,8 +1243,22 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     while (!Tk_IsTopLevel(toplevelPtr)) {
 	toplevelPtr = toplevelPtr->parentPtr;
     }
+    if (!toplevelPtr->privatePtr || !toplevelPtr->privatePtr->glfwWindow) return;
+    if (toplevelPtr->flags & TK_ALREADY_DEAD) return;
     GLFWwindow *glfwWindow = toplevelPtr->privatePtr->glfwWindow;
+    if (!isGlfwWindowValid(glfwWindow)) return;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    if (!infoPtr) return;
+    if (!(infoPtr->flags & TKWL_IS_DRAWING)) return;
+    if (toplevelPtr->childList==NULL) {
+        TkWindow *mainWin = toplevelPtr->mainPtr ? (TkWindow*)Tk_MainWindow(toplevelPtr->mainPtr->interp) : NULL;
+        if (toplevelPtr==mainWin) {
+            nvgCancelFrame(infoPtr->vg);
+            infoPtr->flags &= ~TKWL_IS_DRAWING;
+            return;
+        }
+    }
+
     
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call

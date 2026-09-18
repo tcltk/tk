@@ -93,6 +93,8 @@ namespace eval ::tk::test::generic {
 	    after $duration ;# see b. above
 	}
     }
+    
+    if 0 {
 
     proc deleteWindows {} {
 	destroy {*}[winfo children .]
@@ -103,6 +105,15 @@ namespace eval ::tk::test::generic {
 	# is not understood, but it appears that this update prevents the test failures.
 	update
     }
+}
+proc deleteWindows {} {
+    catch {destroy {*}[winfo children .]}
+    # Only service idle handlers (DisplayText etc), not events
+    # that reference dead bindings
+    catch {update idletasks}
+    # Drain any remaining idle
+    while {[catch {update idletasks}]} {}
+}
 
     proc fixfocus {} {
 	catch {destroy .focus}
