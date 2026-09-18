@@ -11,6 +11,7 @@
  */
 #define WIDGET_DESTROYED	0x0001
 #define REDISPLAY_PENDING	0x0002	/* scheduled call to RedisplayWidget */
+#define WIDGET_MAPPED		0x0004	/* has been mapped at least once */
 #define CURSOR_ON		0x0020	/* See TtkBlinkCursor() */
 #define WIDGET_USER_FLAG        0x0100  /* 0x0100 - 0x8000 for user flags */
 
