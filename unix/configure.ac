@@ -717,6 +717,43 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
+# Check whether the header and library for the XRandR extension are
+# available, and set HAVE_XRANDR if so.  XRandR is used to track
+# changes of the screen size.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    tk_oldCFlags=$CFLAGS
+    CFLAGS="$CFLAGS $XINCLUDES"
+    tk_oldLibs=$LIBS
+    LIBS="$tk_oldLibs $XLIBSW"
+    xrandr_header_found=no
+    xrandr_lib_found=no
+    AC_MSG_CHECKING([whether to try to use XRandR])
+    AC_ARG_ENABLE(xrandr,
+	AS_HELP_STRING([--enable-xrandr],
+	    [use XRandR to track screen size changes (default: on)]),
+	[enable_xrandr=$enableval], [enable_xrandr=yes])
+    if test "$enable_xrandr" = "no" ; then
+	AC_MSG_RESULT([$enable_xrandr])
+    else
+	AC_MSG_RESULT([$enable_xrandr])
+	AC_CHECK_HEADER(X11/extensions/Xrandr.h, [
+	    xrandr_header_found=yes
+	],,[#include <X11/Xlib.h>])
+	AC_CHECK_LIB(Xrandr, XRRUpdateConfiguration, [
+	    XLIBSW="$XLIBSW -lXrandr"
+	    xrandr_lib_found=yes
+	])
+    fi
+    if test $enable_xrandr = yes -a $xrandr_lib_found = yes -a $xrandr_header_found = yes; then
+	AC_DEFINE(HAVE_XRANDR, 1, [Is XRandR available?])
+    fi
+    CFLAGS=$tk_oldCFlags
+    LIBS=$tk_oldLibs
+fi
+
+#--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
 #	#define for __CHAR_UNSIGNED__.
 #--------------------------------------------------------------------

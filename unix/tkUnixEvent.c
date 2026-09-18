@@ -11,6 +11,9 @@
  */
 
 #include "tkUnixInt.h"
+#ifdef HAVE_XRANDR
+#include <X11/extensions/Xrandr.h>
+#endif
 #include <signal.h>
 #undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
 #define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
@@ -36,6 +39,9 @@ static void		DisplayExitHandler(void *clientData);
 static void		DisplayFileProc(void *clientData, int flags);
 static void		DisplaySetupProc(void *clientData, int flags);
 static void		TransferXEventsToTcl(Display *display);
+#ifdef HAVE_XRANDR
+static int		ScreenChanged(Display *display, XEvent *eventPtr);
+#endif
 #ifdef TK_USE_INPUT_METHODS
 static void		InstantiateIMCallback(Display *, XPointer client_data, XPointer call_data);
 static void		DestroyIMCallback(XIM im, XPointer client_data, XPointer call_data);
@@ -174,6 +180,21 @@ TkpOpenDisplay(
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 	    DisplayFileProc, dispPtr);
+
+#ifdef HAVE_XRANDR
+    /*
+     * Track changes of the screen size. [Bug 3141377]
+     */
+
+    {
+	int rrEventBase, rrErrorBase;
+
+	if (XRRQueryExtension(display, &rrEventBase, &rrErrorBase)) {
+	    XRRSelectInput(display, DefaultRootWindow(display),
+		    RRScreenChangeNotifyMask);
+	}
+    }
+#endif
 
     /*
      * Observed weird WidthMMOfScreen() in X on Wayland on a
@@ -325,6 +346,54 @@ DisplaySetupProc(
     }
 }
 
+#ifdef HAVE_XRANDR
+/*
+ *----------------------------------------------------------------------
+ *
+ * ScreenChanged --
+ *
+ *	Handle a notification of a change of the screen size.
+ *
+ * Results:
+ *	1 if the event was such a notification, 0 otherwise.
+ *
+ * Side effects:
+ *	The size of the screen recorded by Xlib is updated.  The size in
+ *	millimeters is scaled with it, so that [tk scaling] does not change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ScreenChanged(
+    Display *display,
+    XEvent *eventPtr)
+{
+    Screen *screenPtr = DefaultScreenOfDisplay(display);
+    int width = WidthOfScreen(screenPtr);
+    int height = HeightOfScreen(screenPtr);
+    int widthMM = WidthMMOfScreen(screenPtr);
+    int heightMM = HeightMMOfScreen(screenPtr);
+
+    if (!XRRUpdateConfiguration(eventPtr)) {
+	return 0;
+    }
+    if ((width > 0) && (WidthOfScreen(screenPtr) != width)) {
+	WidthMMOfScreen(screenPtr) = (int)
+		((double) widthMM * WidthOfScreen(screenPtr) / width + 0.5);
+    } else {
+	WidthMMOfScreen(screenPtr) = widthMM;
+    }
+    if ((height > 0) && (HeightOfScreen(screenPtr) != height)) {
+	HeightMMOfScreen(screenPtr) = (int)
+		((double) heightMM * HeightOfScreen(screenPtr) / height + 0.5);
+    } else {
+	HeightMMOfScreen(screenPtr) = heightMM;
+    }
+    return 1;
+}
+#endif /* HAVE_XRANDR */
+
 /*
  *----------------------------------------------------------------------
  *
@@ -366,6 +435,11 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
+#ifdef HAVE_XRANDR
+	if (ScreenChanged(display, &event.x)) {
+	    continue;
+	}
+#endif
 	if ((event.type >= VirtualEvent) && (event.type <= MouseWheelEvent)) {
 	    /* See [fe87e9af39]. Those are internal Tk event types, if they come
 	     * from an external source they most likely would be totally mis-interpreted */
