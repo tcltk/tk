@@ -1003,8 +1003,12 @@ AdjustMenuCoords(
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-	*xPtr += Tk_Width(menuPtr->tkwin) - borderWidth	- activeBorderWidth
-		- scaled2;
+	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+	    *xPtr += Tk_Width(menuPtr->tkwin) - borderWidth;
+	} else {
+	    *xPtr += mePtr->x + mePtr->width;
+	}
+	*xPtr -= activeBorderWidth + scaled2;
 	*yPtr += mePtr->y + activeBorderWidth + scaled2;
     }
 }
