@@ -203,6 +203,9 @@ typedef struct TkWmInfo {
 
     WmAttributes attributes;	/* Current state of [wm attributes] */
     WmAttributes reqState;	/* Requested state of [wm attributes] */
+    int hidden;			/* Non-zero means the window manager has set
+				 * _NET_WM_STATE_HIDDEN: the window is
+				 * minimized although it is still mapped. */
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for this
 				 * window (NULL means none). */
     Tcl_Size cmdArgc;		/* Number of elements in cmdArgv below. */
@@ -366,6 +369,7 @@ static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
 static void		SetNetWmState(TkWindow*, const char *atomName, int on);
+static void		ActivateWindow(TkWindow *winPtr);
 static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void		UpdateNetWmState(WmInfo *);
 static void		WaitForConfigureNotify(TkWindow *winPtr,
@@ -594,6 +598,7 @@ TkWmNewWindow(
     wmPtr->attributes.zoomed = 0;
     wmPtr->attributes.fullscreen = 0;
     wmPtr->reqState = wmPtr->attributes;
+    wmPtr->hidden = 0;
 
     /*
      * Default the maximum dimensions to the size of the display, minus a
@@ -3488,6 +3493,8 @@ WmStateCmd(
 	    state = "icon";
 	} else if (wmPtr->withdrawn) {
 	    state = "withdrawn";
+	} else if (wmPtr->hidden) {
+	    state = "iconic";
 	} else if (Tk_IsMapped((Tk_Window) winPtr)
 		|| ((wmPtr->flags & WM_NEVER_MAPPED)
 			&& (wmPtr->hints.initial_state == NormalState))) {
@@ -5092,6 +5099,42 @@ SetNetWmState(
 /*
  *----------------------------------------------------------------------
  *
+ * ActivateWindow --
+ *
+ *	Sends a _NET_ACTIVE_WINDOW client message to the window manager, which
+ *	is the way to unminimize a window which the window manager keeps
+ *	mapped while it is minimized. [Bug 3131699cb4]
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ActivateWindow(
+    TkWindow *winPtr)
+{
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    XEvent e;
+
+    if (!winPtr->wmInfoPtr->wrapperPtr) {
+	return;
+    }
+
+    e.xany.type = ClientMessage;
+    e.xany.window = winPtr->wmInfoPtr->wrapperPtr->window;
+    e.xclient.message_type = Tk_InternAtom(tkwin, "_NET_ACTIVE_WINDOW");
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = 1;	/* Source indication: application. */
+    e.xclient.data.l[1] = TkCurrentTime(winPtr->dispPtr);
+    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+
+    XSendEvent(winPtr->display,
+	RootWindow(winPtr->display, winPtr->screenNum), 0,
+	SubstructureNotifyMask|SubstructureRedirectMask, &e);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * CheckNetWmState --
  *
  *	Updates the window attributes whenever the _NET_WM_STATE property
@@ -5122,11 +5165,14 @@ CheckNetWmState(
 	_NET_WM_STATE_MAXIMIZED_HORZ
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_HORZ"),
 	_NET_WM_STATE_FULLSCREEN
-	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN"),
+	_NET_WM_STATE_HIDDEN
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_HIDDEN");
 
     wmPtr->attributes.topmost = 0;
     wmPtr->attributes.zoomed = 0;
     wmPtr->attributes.fullscreen = 0;
+    wmPtr->hidden = 0;
     for (i = 0; i < numAtoms; ++i) {
 	if (atoms[i] == _NET_WM_STATE_ABOVE) {
 	    wmPtr->attributes.topmost = 1;
@@ -5136,6 +5182,8 @@ CheckNetWmState(
 	    wmPtr->attributes.zoomed |= 2;
 	} else if (atoms[i] == _NET_WM_STATE_FULLSCREEN) {
 	    wmPtr->attributes.fullscreen = 1;
+	} else if (atoms[i] == _NET_WM_STATE_HIDDEN) {
+	    wmPtr->hidden = 1;
 	}
     }
 
@@ -7456,6 +7504,14 @@ TkpWmSetState(
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
+	if (wmPtr->hidden) {
+	    /*
+	     * The window is still mapped, so the window manager will not get
+	     * a map request. Ask it to activate the window instead.
+	     */
+
+	    ActivateWindow(winPtr);
+	}
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
