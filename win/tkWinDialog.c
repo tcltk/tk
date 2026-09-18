@@ -243,6 +243,33 @@ TkWinDialogDebug(
 /*
  *-------------------------------------------------------------------------
  *
+ * EnableParent --
+ *
+ *	Re-enables the parent window after a modal dialog and restores the
+ *	keyboard focus to it.
+ *
+ *	The dialog disables its owner, the window of the parent toplevel.
+ *	If the toplevel is mapped while the dialog is open, the window is
+ *	reparented into the new wrapper. Then the dialog re-enables and
+ *	activates the wrapper instead, and the focus stays on the wrapper,
+ *	because the disabled window cannot receive it. [Bug adb71ed70b]
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static void
+EnableParent(
+    HWND hWnd)
+{
+    EnableWindow(hWnd, 1);
+    if (GetFocus() == GetParent(hWnd)) {
+	SetFocus(hWnd);
+    }
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
  * Tk_ChooseColorObjCmd --
  *
  *	This function implements the color dialog box for the Windows
@@ -361,13 +388,7 @@ Tk_ChooseColorObjCmd(
     winCode = ChooseColorW(&chooseColor);
     (void) Tcl_SetServiceMode(oldMode);
 
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    EnableWindow(hWnd, 1);
+    EnableParent(hWnd);
 
     /*
      * Clear the interp result since anything may have happened during the
@@ -868,14 +889,9 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     Tcl_SetServiceMode(oldMode);
     EatSpuriousMessageBugFix();
 
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    if (hWnd)
-	EnableWindow(hWnd, 1);
+    if (hWnd) {
+	EnableParent(hWnd);
+    }
 
     /*
      * Clear interp result since it might have been set during the modal loop.
@@ -1450,13 +1466,7 @@ Tk_MessageBoxObjCmd(
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
     (void) Tcl_SetServiceMode(oldMode);
 
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    EnableWindow(hWnd, 1);
+    EnableParent(hWnd);
 
     Tcl_DecrRefCount(tmpObj);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2024,7 +2034,7 @@ FontchooserShowCmd(
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);
-	EnableWindow(cf.hwndOwner, 1);
+	EnableParent(cf.hwndOwner);
     }
 
     ReleaseDC(cf.hwndOwner, hdc);
