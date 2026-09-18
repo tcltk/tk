@@ -35,6 +35,17 @@
 #include <string.h>
 
 /*
+ * TKWL_EARLY_EXPOSE_QUEUED is set the first time TkWaylandBeginDraw queues
+ * an early Expose for a window that has never been focused, so that the
+ * request is made only once.  It belongs next to the other TKWL_* flags in
+ * tkWaylandInt.h; this fallback definition uses a high bit so it cannot
+ * collide with them.  Move it into the header and drop this block.
+ */
+#ifndef TKWL_EARLY_EXPOSE_QUEUED
+#define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
+#endif
+
+/*
  *----------------------------------------------------------------------
  *
  * Module-level state
@@ -1125,11 +1136,21 @@ TkWaylandBeginDraw(
     }
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     if (!infoPtr) return TCL_ERROR;
-    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+    if ((infoPtr->flags & TKWL_NEVER_FOCUSED)
+	    && !(infoPtr->flags & TKWL_EARLY_EXPOSE_QUEUED)) {
 	/*
 	 * It may be too early to be drawing in this window.  It may not have
 	 * a GL context yet.  Schedule a redraw.
+	 *
+	 * This must happen at most once per window.  Queueing an Expose from
+	 * inside BeginDraw is a feedback loop (draw -> Expose -> redisplay ->
+	 * draw), and TKWL_NEVER_FOCUSED is only cleared by the GLFW focus
+	 * callback.  A compositor that never gives the window focus (e.g.
+	 * headless mutter with no keyboard seat) would otherwise keep this
+	 * loop running forever and Tcl's "update" would never return.  The
+	 * focus callback generates its own Expose when focus does arrive.
 	 */
+	infoPtr->flags |= TKWL_EARLY_EXPOSE_QUEUED;
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
     }
