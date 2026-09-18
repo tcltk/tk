@@ -227,6 +227,16 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
     removeFile bar.ps
 } -result 1
 
+test canvPs-3.3 {test ps generation with an unmapped embedded window - bug f7d4e4102e} -body {
+    pack [canvas .c -width 200 -height 200]
+    label .c.l -text hidden
+    .c create window 5000 100 -window .c.l
+    update
+    string length [.c postscript -x 0 -y 0 -width 6000 -height 300]
+} -cleanup {
+    destroy .c
+} -match glob -result {[1-9]*}
+
 test canvPs-4.1 {test ps generation with single-point uncolored poly, bug 734498} -body {
     pack [canvas .c]
     .c create poly 10 20 10 20

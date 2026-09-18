@@ -880,6 +880,15 @@ CanvasPsWindow(
     }
 
     /*
+     * An unmapped window has no contents to copy. [Bug f7d4e4102e]
+     */
+
+    if (!Tk_IsMapped(tkwin)) {
+	result = TCL_OK;
+	goto done;
+    }
+
+    /*
      * If the window is off the screen it will generate a BadMatch/XError. We
      * catch any BadMatch errors here
      */
