@@ -983,9 +983,27 @@ proc ::tk::TraverseToMenu {w char} {
 	    grab -global $w
 	    TraverseWithinMenu $w $char
 	} else {
-	    MbPost $w
-	    MenuFirstEntry [$w cget -menu]
+	    MbPostTraverse $w
 	}
+    }
+}
+
+# ::tk::MbPostTraverse --
+# Posts the menu of a menubutton during keyboard traversal.  On Windows
+# a native menu is dismissed before MbPost returns, so the menubutton is
+# unposted then. [Bug 2225507]
+#
+# Arguments:
+# w -				The menubutton.
+
+proc ::tk::MbPostTraverse w {
+    variable ::tk::Priv
+    MbPost $w
+    if {[tk windowingsystem] eq "win32" && $Priv(postedMb) eq $w
+	    && [[$w cget -menu] cget -type] ne "tearoff"} {
+	MenuUnpost {}
+    } else {
+	MenuFirstEntry [$w cget -menu]
     }
 }
 
@@ -1008,8 +1026,7 @@ proc ::tk::FirstMenu w {
 	    grab -global $w
 	    MenuFirstEntry $w
 	} else {
-	    MbPost $w
-	    MenuFirstEntry [$w cget -menu]
+	    MbPostTraverse $w
 	}
     }
 }
