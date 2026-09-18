@@ -74,10 +74,11 @@ SysNotifyDeleteCmd (
 	if (notify_uninit) {
 	    notify_uninit();
 	}
-	if (ln_fns.lib != NULL) {
-	    Tcl_FSUnloadFile(NULL, ln_fns.lib);
-	}
-	memset(&ln_fns, 0, sizeof(ln_fns));
+	/*
+	 * Do not unload libnotify. It registers GObject types, which cannot
+	 * be unregistered, so loading it again would fail and the next
+	 * notification would crash.
+	 */
     }
     Tcl_MutexUnlock(&ln_mutex);
 }
@@ -179,7 +180,7 @@ SysNotify_Init(
     Tcl_Interp *interp)
 {
     Tcl_MutexLock(&ln_mutex);
-    if (ln_fns.nopen == 0) {
+    if (ln_fns.lib == NULL) {
 	int i = 0;
 	Tcl_Obj *nameobj;
 	static const char *lnlibs[] = {
