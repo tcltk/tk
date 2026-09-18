@@ -2546,11 +2546,13 @@ static void CheckForPointer(TkWindow *winPtr)
     if (windows != NULL) {
 	for (w = windows; *w ; w++) {
 	    RECT windowRect;
-	    HWND hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) *w));
-	    if (GetWindowRect(hwnd, &windowRect) == 0) {
+	    Window window = Tk_WindowId((Tk_Window) *w);
+
+	    if ((winPtr == *w) || (window == None)
+		    || (GetWindowRect(Tk_GetHWND(window), &windowRect) == 0)) {
 		continue;
 	    }
-	    if (winPtr != *w && PtInRect(&windowRect, mouse)) {
+	    if (PtInRect(&windowRect, mouse)) {
 		Tk_Window target = Tk_CoordsToWindow(x, y, (Tk_Window) *w);
 		Tk_UpdatePointer((Tk_Window) target, x, y, state);
 		break;
@@ -6988,6 +6990,18 @@ TkWmStackorderToplevel(
 	    (LPARAM) &pair) == 0) {
 	Tcl_Free(windows);
 	windows = NULL;
+    } else {
+	/*
+	 * Not all toplevels may have been found (e.g. one being destroyed).
+	 * Move the found ones to the beginning of the array. [Bug 7f05a19378]
+	 */
+
+	Tcl_Size found = (windows + table.numEntries) - (pair.windowPtr + 1);
+
+	if (found < table.numEntries) {
+	    memmove(windows, pair.windowPtr + 1,
+		    (found + 1) * sizeof(TkWindow *));
+	}
     }
 
   done:
