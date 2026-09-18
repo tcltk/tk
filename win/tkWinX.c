@@ -879,12 +879,17 @@ TkTranslateWinEvent(
 
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
 	if (wParam == VK_PACKET) {
 	    /*
-	     * This will trigger WM_CHAR event(s) with unicode data.
+	     * A character entered via an input method or the touch keyboard.
+	     * TranslateMessage() has converted it to a WM_CHAR message, which
+	     * generates the key events. Do not generate events for the key
+	     * itself, since its keycode is not a virtual key code.
+	     * [Bug f492c3de04]
 	     */
-	    *resultPtr =
-		PostMessageW(hwnd, message, HIWORD(lParam), LOWORD(lParam));
+
 	    return 1;
 	}
 	/* else fall through */
@@ -894,8 +899,6 @@ TkTranslateWinEvent(
     case WM_DESTROYCLIPBOARD:
     case WM_UNICHAR:
     case WM_CHAR:
-    case WM_SYSKEYUP:
-    case WM_KEYUP:
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL:
 	GenerateXEvent(hwnd, message, wParam, lParam);
