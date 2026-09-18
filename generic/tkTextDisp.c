@@ -1178,6 +1178,115 @@ FreeStyle(
 /*
  *----------------------------------------------------------------------
  *
+ * IsEntirelyElidedLine --
+ *
+ *	Determine whether the logical line containing the given index, which
+ *	must be at the start of the line, is elided from its beginning to its
+ *	end, so that it is laid out as a single zero-height display line.
+ *
+ * Results:
+ *	Returns true if the line is entirely elided, in which case the number
+ *	of bytes in the line is stored at *bytesPtr.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsEntirelyElidedLine(
+    TkText *textPtr,		/* Widget record for text widget. */
+    const TkTextIndex *indexPtr,/* Index at the start of a logical line. */
+    Tcl_Size *bytesPtr)		/* Where to store the number of bytes in the
+				 * line. */
+{
+    TkTextElideInfo info;
+    TkTextSegment *segPtr;
+    Tcl_Size maxBytes = 0;
+    bool elide;
+
+    if (indexPtr->byteIndex != 0) {
+	return false;
+    }
+    elide = TkTextIsElided(textPtr, indexPtr, &info);
+    if (elide) {
+	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
+	    if (segPtr->size > 0) {
+		if (elide == 0) {
+		    /*
+		     * We toggled a tag and the elide state changed to
+		     * visible, and we have something of non-zero size.
+		     * Therefore we must bail out.
+		     */
+
+		    break;
+		}
+		maxBytes += segPtr->size;
+
+		/*
+		 * Reset tag elide priority, since we're on a new character.
+		 */
+
+	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
+		    || (segPtr->typePtr == &tkTextToggleOnType)) {
+		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+
+		/*
+		 * The elide state only changes if this tag is either the
+		 * current highest priority tag (and is therefore being
+		 * toggled off), or it's a new tag with higher priority.
+		 */
+
+		if (tagPtr->elide >= 0) {
+		    info.tagCnts[tagPtr->priority]++;
+		    if (info.tagCnts[tagPtr->priority] & 1) {
+			info.tagPtrs[tagPtr->priority] = tagPtr;
+		    }
+		    if (tagPtr->priority >= info.elidePriority) {
+			if (segPtr->typePtr == &tkTextToggleOffType) {
+			    /*
+			     * If it is being toggled off, and it has an elide
+			     * string, it must actually be the current highest
+			     * priority tag, so this check is redundant:
+			     */
+
+			    if (tagPtr->priority != info.elidePriority) {
+				Tcl_Panic("Bad tag priority being toggled off");
+			    }
+
+			    /*
+			     * Find previous elide tag, if any (if not then
+			     * elide will be zero, of course).
+			     */
+
+			    elide = 0;
+			    while (--info.elidePriority > 0) {
+				if (info.tagCnts[info.elidePriority] & 1) {
+				    elide = info.tagPtrs[info.elidePriority]
+					    ->elide > 0;
+				    break;
+				}
+			    }
+			} else {
+			    elide = tagPtr->elide > 0;
+			    info.elidePriority = tagPtr->priority;
+			}
+		    }
+		}
+	    }
+	}
+    }
+    TkTextFreeElideInfo(&info);
+    if (elide) {
+	*bytesPtr = maxBytes;
+    }
+    return elide;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * LayoutDLine --
  *
  *	This function generates a single DLine structure for a display line
@@ -1268,7 +1377,6 @@ LayoutDLine(
 	Tcl_Size elidesize;
     bool elide;
     StyleValues *sValuePtr;
-    TkTextElideInfo info;	/* Keep track of elide state. */
 
     /*
      * Create and initialize a new DLine structure.
@@ -1302,98 +1410,24 @@ LayoutDLine(
      * Special case entirely elide line as there may be 1000s or more.
      */
 
-    elide = TkTextIsElided(textPtr, indexPtr, &info);
-    if (elide && indexPtr->byteIndex == 0) {
-	maxBytes = 0;
-	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
-	    if (segPtr->size > 0) {
-		if (elide == 0) {
-		    /*
-		     * We toggled a tag and the elide state changed to
-		     * visible, and we have something of non-zero size.
-		     * Therefore we must bail out.
-		     */
+    if (IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
+	dlPtr->byteCount = maxBytes;
+	dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
 
-		    break;
-		}
-		maxBytes += segPtr->size;
+	/*
+	 * Elided state goes from beginning to end of an entire logical
+	 * line. This means we can update the line's pixel height, and
+	 * bring its pixel calculation up to date.
+	 */
 
-		/*
-		 * Reset tag elide priority, since we're on a new character.
-		 */
+	TkBTreeLinePixelEpoch(textPtr, dlPtr->index.linePtr)
+		= textPtr->dInfoPtr->lineMetricUpdateEpoch;
 
-	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
-		    || (segPtr->typePtr == &tkTextToggleOnType)) {
-		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-
-		/*
-		 * The elide state only changes if this tag is either the
-		 * current highest priority tag (and is therefore being
-		 * toggled off), or it's a new tag with higher priority.
-		 */
-
-		if (tagPtr->elide >= 0) {
-		    info.tagCnts[tagPtr->priority]++;
-		    if (info.tagCnts[tagPtr->priority] & 1) {
-			info.tagPtrs[tagPtr->priority] = tagPtr;
-		    }
-		    if (tagPtr->priority >= info.elidePriority) {
-			if (segPtr->typePtr == &tkTextToggleOffType) {
-			    /*
-			     * If it is being toggled off, and it has an elide
-			     * string, it must actually be the current highest
-			     * priority tag, so this check is redundant:
-			     */
-
-			    if (tagPtr->priority != info.elidePriority) {
-				Tcl_Panic("Bad tag priority being toggled off");
-			    }
-
-			    /*
-			     * Find previous elide tag, if any (if not then
-			     * elide will be zero, of course).
-			     */
-
-			    elide = 0;
-			    while (--info.elidePriority > 0) {
-				if (info.tagCnts[info.elidePriority] & 1) {
-				    elide = info.tagPtrs[info.elidePriority]
-					    ->elide > 0;
-				    break;
-				}
-			    }
-			} else {
-			    elide = tagPtr->elide > 0;
-			    info.elidePriority = tagPtr->priority;
-			}
-		    }
-		}
-	    }
+	if (TkBTreeLinePixelCount(textPtr,dlPtr->index.linePtr) != 0) {
+	    TkBTreeAdjustPixelHeight(textPtr, dlPtr->index.linePtr, 0, 0);
 	}
-
-	if (elide) {
-	    dlPtr->byteCount = maxBytes;
-	    dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
-	    if (dlPtr->index.byteIndex == 0) {
-		/*
-		 * Elided state goes from beginning to end of an entire
-		 * logical line. This means we can update the line's pixel
-		 * height, and bring its pixel calculation up to date.
-		 */
-
-		TkBTreeLinePixelEpoch(textPtr, dlPtr->index.linePtr)
-			= textPtr->dInfoPtr->lineMetricUpdateEpoch;
-
-		if (TkBTreeLinePixelCount(textPtr,dlPtr->index.linePtr) != 0) {
-		    TkBTreeAdjustPixelHeight(textPtr,
-			    dlPtr->index.linePtr, 0, 0);
-		}
-	    }
-	    TkTextFreeElideInfo(&info);
-	    return dlPtr;
-	}
+	return dlPtr;
     }
-    TkTextFreeElideInfo(&info);
 
     /*
      * Each iteration of the loop below creates one TkTextDispChunk for the
@@ -4179,6 +4213,7 @@ TkTextUpdateOneLine(
     TkTextIndex index;
     int displayLines;
     int mergedLines;
+    Tcl_Size bytes;
 
     if (indexPtr == NULL) {
 	index.tree = textPtr->sharedTextPtr->tree;
@@ -4200,8 +4235,16 @@ TkTextUpdateOneLine(
      * TkBTreeAdjustPixelHeight.
      */
 
-    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
-    linePtr = indexPtr->linePtr;
+    /*
+     * An entirely elided line is its own display line, and finding the
+     * display line start would be very expensive if there are many of them
+     * in a row. [Bug 4c595d4d78]
+     */
+
+    if (!IsEntirelyElidedLine(textPtr, indexPtr, &bytes)) {
+	TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+	linePtr = indexPtr->linePtr;
+    }
 
     /*
      * Iterate through all display-lines corresponding to the single logical
@@ -5843,6 +5886,7 @@ MeasureUp(
     Tcl_Size lineNum;		/* Number of current line. */
     Tcl_Size bytesToCount;		/* Maximum number of bytes to measure in
 				 * current line. */
+    Tcl_Size bytes;
     TkTextIndex index;
     DLine *dlPtr, *lowestPtr;
 
@@ -5861,6 +5905,17 @@ MeasureUp(
 
 	index.linePtr = TkBTreeFindLine(srcPtr->tree, textPtr, lineNum);
 	index.byteIndex = 0;
+
+	/*
+	 * An entirely elided line has zero height, and finding its display
+	 * line start would be very expensive if there are many of them in a
+	 * row. [Bug 80213d1b1c]
+	 */
+
+	if (IsEntirelyElidedLine(textPtr, &index, &bytes)) {
+	    bytesToCount = INT_MAX;
+	    continue;
+	}
 	TkTextFindDisplayLineEnd(textPtr, &index, 0, NULL);
 	lineNum = TkBTreeLinesTo(textPtr, index.linePtr);
 	lowestPtr = NULL;
