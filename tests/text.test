@@ -7842,6 +7842,23 @@ test text-38.1 {Extending selection with mouse going outside the widget - Bug a9
 } -cleanup {
     destroy .t
 } -result {1.0}
+test text-38.2 {Click to the right of the end of a line - Bug 13aabdb3c1} -setup {
+    pack [text .t -width 40 -height 10]
+    .t insert end "short\nsecond line\n"
+    update
+} -body {
+    set x [expr {[winfo width .t] - 10}]
+    set y [expr {[lindex [.t bbox 1.0] 1] + 5}]
+    event generate .t <Button-1> -x $x -y $y
+    event generate .t <ButtonRelease-1> -x $x -y $y
+    set res [.t index insert]
+    event generate .t <Button-1> -x 2 -y $y
+    event generate .t <B1-Motion> -x $x -y $y
+    event generate .t <ButtonRelease-1> -x $x -y $y
+    lappend res {*}[.t tag ranges sel]
+} -cleanup {
+    destroy .t
+} -result {1.5 1.0 1.5}
 
 #
 # TESTFILE CLEANUP
