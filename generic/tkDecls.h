@@ -671,7 +671,8 @@ EXTERN void		Tk_InitConsoleChannels(Tcl_Interp *interp);
 EXTERN void		Tk_CreateSmoothMethod(Tcl_Interp *interp,
 				const Tk_SmoothMethod *method);
 /* 218 */
-EXTERN long long	TkGetUserInactiveTime(Display *dpy);
+TK_DEPRECATED("MODULE_SCOPE, only for internal use")
+long long		TkGetUserInactiveTime(Display *dpy);
 /* Slot 219 is reserved */
 /* 220 */
 EXTERN int		Tk_GetDash(Tcl_Interp *interp, const char *value,
@@ -1133,7 +1134,7 @@ typedef struct TkStubs {
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     void (*reserved216)(void);
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
-    long long (*tkGetUserInactiveTime) (Display *dpy); /* 218 */
+    TCL_DEPRECATED_API("MODULE_SCOPE, only for internal use") long long (*tkGetUserInactiveTime) (Display *dpy); /* 218 */
     void (*reserved219)(void);
     int (*tk_GetDash) (Tcl_Interp *interp, const char *value, Tk_Dash *dash); /* 220 */
     void (*tk_CreateOutline) (Tk_Outline *outline); /* 221 */
@@ -1806,7 +1807,7 @@ extern const TkStubs *tkStubsPtr;
 
 #define Tk_GetImageMasterData Tk_GetImageModelData
 
-#undef TkPointToChar_
+#undef TkPointToChar
 #ifndef MAC_OSX_TK
 #   undef Tk_ClipDrawableToRect
 #endif

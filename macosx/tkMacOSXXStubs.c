@@ -1163,8 +1163,8 @@ TkGetDefaultScreenName(
  *----------------------------------------------------------------------
  */
 
-long
-Tk_GetUserInactiveTime(
+long long
+TkGetUserInactiveTime(
     TCL_UNUSED(Display *))
 {
     io_registry_entry_t regEntry;
@@ -1178,7 +1178,7 @@ Tk_GetUserInactiveTime(
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {
-	return -1l;
+	return -1;
     }
 
     result = IORegistryEntryCreateCFProperties(regEntry, &props,
@@ -1186,7 +1186,7 @@ Tk_GetUserInactiveTime(
     IOObjectRelease(regEntry);
 
     if (result != KERN_SUCCESS || props == NULL) {
-	return -1l;
+	return -1;
     }
 
     timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
@@ -1209,7 +1209,7 @@ Tk_GetUserInactiveTime(
 	ret = elapsed;
     }
 
-    return ret;
+    return (long long)(ret);
 }
 
 /*

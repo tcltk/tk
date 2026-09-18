@@ -62,11 +62,16 @@ doNothing(void)
 #   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char *, int *, int *))(void *)doNothing)
 #endif
 
-#define TkGetUserInactiveTime GetUserInactiveTime
-MODULE_SCOPE long long
-TkGetUserInactiveTime(Display *dpy)
+long
+Tk_GetUserInactiveTime(Display *dpy)
 {
-    return Tk_GetUserInactiveTime(dpy);
+    long long inactive = TkGetUserInactiveTime(dpy);
+    if (inactive > LONG_MAX) {
+	inactive = LONG_MAX;
+    } else if (inactive < 0) {
+	inactive = -1;
+    }
+    return (long)inactive;
 }
 
 #ifdef _WIN32

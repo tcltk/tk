@@ -1972,8 +1972,8 @@ Tk_SetCaretPos(
  *----------------------------------------------------------------------
  */
 
-long
-Tk_GetUserInactiveTime(
+long long
+TkGetUserInactiveTime(
      TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
@@ -1990,15 +1990,7 @@ Tk_GetUserInactiveTime(
 
     inactive = GetTickCount() - li.dwTime;
 
-    /*
-     * "long" is 32-bit on Windows, so clamp to its maximum to avoid returning
-     * a large inactivity interval as a negative value.
-     */
-
-    if (inactive > LONG_MAX) {
-	return LONG_MAX;
-    }
-    return (long)inactive;
+    return (long long)inactive;
 }
 
 /*

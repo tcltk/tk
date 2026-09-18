@@ -798,7 +798,7 @@ declare 215 {
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
-declare 218 {
+declare 218 {deprecated {MODULE_SCOPE, only for internal use}} {
     long long TkGetUserInactiveTime(Display *dpy)
 }
 #declare 219 {
