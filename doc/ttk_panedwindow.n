@@ -22,6 +22,12 @@ A \fBttk::panedwindow\fR widget displays a number of subwindows,
 stacked either vertically or horizontally.
 The user may adjust the relative sizes of the subwindows
 by dragging the sash between panes.
+.PP
+If a pane is not a child of the panedwindow, it must be higher in the
+stacking order than the panedwindow, otherwise the panedwindow will obscure
+it.  The easiest way to ensure this is to create the panedwindow first:
+the most recently created window is highest in the stacking order.
+Or, you can use the \fBraise\fR and \fBlower\fR commands.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
 \-style
