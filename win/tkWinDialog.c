@@ -36,6 +36,7 @@ typedef struct {
     HHOOK hMsgBoxHook;		/* Hook proc for tk_messageBox and the */
     HICON hSmallIcon;		/* icons used by a parent to be used in */
     HICON hBigIcon;		/* the message box */
+    bool comInitialized;	/* Whether CoInitialize() has been called. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -713,6 +714,17 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     LPWSTR wstr;
     Tcl_Obj *resultObj = NULL;
     int oldMode;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /*
+     * COM must be initialized before the dialog can be created.
+     */
+
+    if (!tsdPtr->comInitialized) {
+	(void) CoInitialize(NULL);
+	tsdPtr->comInitialized = true;
+    }
 
     /*
      * At this point new interfaces are supposed to be available.
