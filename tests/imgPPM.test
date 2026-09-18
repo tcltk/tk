@@ -80,6 +80,10 @@ test imgPPM-1.9 {FileReadPPM procedure} -body {
     put test.ppm "P6\n5 4\n150\n012345678901234567890123456789012345678901234567890123456789"
     list [image create photo p1 -file test.ppm] [image width p1] [image height p1]
 } -returnCodes ok -result {p1 5 4}
+test imgPPM-1.10 {FileReadPPM procedure, unknown format option} -body {
+    put test.ppm "P6\n5 4\n255\n012345678901234567890123456789012345678901234567890123456789"
+    image create photo p1 -file test.ppm -format {ppm -foobar}
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
 
 
 test imgPPM-2.1 {FileWritePPM procedure} -setup {
@@ -110,6 +114,15 @@ test imgPPM-2.2 {FileWritePPM procedure} -setup {
 5 4
 255
 012345678901234567890123456789012345678901234567890123456789}
+
+test imgPPM-2.3 {FileWritePPM procedure, unknown format option} -setup {
+    catch {image delete p1}
+} -body {
+    image create photo p1 -width 5 -height 4
+    p1 write -format {ppm -foobar} test.ppm
+} -cleanup {
+    image delete p1
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
 
 
 test imgPPM-3.1 {ReadPPMFileHeader procedure} -body {
@@ -247,6 +260,21 @@ test imgPPM-5.9 {StringReadPPM procedure} -setup {
 } -cleanup {
     image delete ppm
 } -result {5 4}
+test imgPPM-5.10 {StringReadPPM procedure, unknown format option} -setup {
+    image create photo ppm
+} -body {
+    ppm put "P6\n5 4\n255\n012345678901234567890123456789012345678901234567890123456789" \
+	    -format {ppm -foobar}
+} -cleanup {
+    image delete ppm
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
+test imgPPM-5.11 {StringWritePPM procedure, unknown format option} -setup {
+    image create photo ppm -width 5 -height 4
+} -body {
+    ppm data -format {ppm -foobar}
+} -cleanup {
+    image delete ppm
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
 
 #
 # TESTFILE CLEANUP
