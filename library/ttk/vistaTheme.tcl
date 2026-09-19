@@ -40,7 +40,10 @@ namespace eval ttk::theme::vista {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
-	    -foreground	[list disabled SystemGrayText readonly SystemGrayText]
+	    -foreground	[list \
+		disabled		SystemGrayText \
+		{readonly focus}	SystemHighlightText \
+		readonly		SystemGrayText]
 
 	# Vista.Combobox droplist frame ComboboxPopdownFrame
 
