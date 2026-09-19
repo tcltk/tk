@@ -47,6 +47,7 @@ namespace eval ttk {
 bind TMenubutton <Enter>	{ %W instate !disabled {%W state active } }
 bind TMenubutton <Leave>	{ %W state !active }
 bind TMenubutton <space>	{ ttk::menubutton::Popdown %W }
+bind TMenubutton <Alt-space>	{# nothing; opens the window menu on Windows }
 bind TMenubutton <<Invoke>>	{ ttk::menubutton::Popdown %W }
 
 if {[tk windowingsystem] eq "x11"} {
