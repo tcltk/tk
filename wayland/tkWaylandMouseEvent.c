@@ -376,6 +376,15 @@ TkWaylandHandleMouseButton(
 
     glfwGetCursorPos(glfwWindow, &x, &y);
 
+    /*
+     * Keep the shared pointer state current so that TkGetPointerCoords
+     * (winfo pointerxy/pointerx/pointery) reports the real pointer
+     * position rather than the stale initial value.
+     */
+    TkWaylandUpdatePointerState((int)x, (int)y,
+            (int)x - Tk_X(winPtr), (int)y - Tk_Y(winPtr),
+            TkWaylandButtonKeyState(), winPtr);
+
     MouseEventData med;
     memset(&med, 0, sizeof(MouseEventData));
     med.globalX = (int)x;
@@ -440,6 +449,16 @@ TkWaylandHandleMouseMove(
 
     /* Real pointer motion supersedes any emulated warp position. */
     tkWaylandPointerEmulated = 0;
+
+    /*
+     * Record the pointer position and the toplevel it is in.  Without this,
+     * TkGetPointerCoords (which just returns tkWaylandLastRootX/Y) reports
+     * the initial 200,200 forever, so [winfo pointerxy] and anything built
+     * on it (e.g. the tooltip's [winfo containing] guard) is wrong.
+     */
+    TkWaylandUpdatePointerState((int)x, (int)y,
+            (int)x - Tk_X(winPtr), (int)y - Tk_Y(winPtr),
+            TkWaylandButtonKeyState(), winPtr);
 
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
