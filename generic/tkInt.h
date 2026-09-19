@@ -361,6 +361,11 @@ typedef struct TkDisplay {
 				 * information isn't used on Windows, but it's
 				 * needed on the Mac, and also on X11 when XIM
 				 * processing is being done. */
+    struct TkWindow *focusInGrabPtr;
+				/* Toplevel window which received the focus
+				 * while it was excluded by a grab, or NULL.
+				 * Its FocusIn event is processed when the
+				 * grab is released. */
 
     /*
      * Information used by tkGC.c only:
@@ -1215,6 +1220,7 @@ MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr);
 MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
+MODULE_SCOPE void	TkFocusGrabReleased(TkDisplay *dispPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
