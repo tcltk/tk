@@ -545,7 +545,7 @@ TkWmMapWindow(TkWindow *winPtr)
         return;
     }
 
-    /* FIX: respect explicit withdraw only. First map must succeed or root stays invisible */
+    /* Respect explicit withdraw only. First map must succeed or root stays invisible. */
     if (wmPtr->withdrawn) {
         DEBUG_LOG("TkWmMapWindow: %s is withdrawn, not showing",
                   Tk_PathName(winPtr));
@@ -576,7 +576,7 @@ TkWmMapWindow(TkWindow *winPtr)
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
-        /* FIX: clear NEVER_FOCUSED so geometry and drawing don't wait forever for focus */
+        /* Clear NEVER_FOCUSED so geometry and drawing don't wait forever for focus. */
         {
             glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
             if (infoPtr) infoPtr->flags &= ~TKWL_NEVER_FOCUSED;
@@ -584,8 +584,10 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdateGeometryInfo(winPtr);
         DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
-        /* FIX: force immediate buffer commit - hidden swaps are discarded on Wayland,
-         * empty root never got a swap because childList==NULL checks cleared NEEDS_DISPLAY */
+        /* 
+         * Force immediate buffer commit - hidden swaps are discarded on Wayland,
+         * empty root never got a swap because childList==NULL checks cleared NEEDS_DISPLAY. 
+         */
         {
             int fbW=0,fbH=0;
             glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
