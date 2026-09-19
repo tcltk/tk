@@ -6565,6 +6565,7 @@ TkWmRestackToplevel(
     XWindowChanges changes;
     unsigned mask;
     TkWindow *wrapperPtr;
+    XEvent event;
 
     memset(&changes, 0, sizeof(XWindowChanges));
     changes.stack_mode = aboveBelow;
@@ -6601,6 +6602,27 @@ TkWmRestackToplevel(
 
     XReconfigureWMWindow(winPtr->display, wrapperPtr->window,
 	    Tk_ScreenNumber((Tk_Window) winPtr), mask, &changes);
+
+    /*
+     * Window managers with focus stealing prevention (Mutter, KWin) ignore
+     * this request for a window which is not active, but honor the EWMH
+     * _NET_RESTACK_WINDOW request when the user has not interacted with
+     * another window more recently. [Bug 22172f3732]
+     */
+
+    memset(&event, 0, sizeof(event));
+    event.xclient.type = ClientMessage;
+    event.xclient.display = winPtr->display;
+    event.xclient.window = wrapperPtr->window;
+    event.xclient.message_type = Tk_InternAtom((Tk_Window) winPtr,
+	    "_NET_RESTACK_WINDOW");
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = 2;	/* Source indication: pager, as required
+					 * by the specification for this request. */
+    event.xclient.data.l[1] = (otherPtr != NULL) ? (long) changes.sibling : 0;
+    event.xclient.data.l[2] = aboveBelow;
+    XSendEvent(winPtr->display, RootWindow(winPtr->display, winPtr->screenNum),
+	    False, SubstructureRedirectMask|SubstructureNotifyMask, &event);
 }
 
 
