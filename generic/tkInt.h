@@ -543,6 +543,8 @@ typedef struct TkDisplay {
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
+    Tcl_HashTable inputXfsTable;/* Maps pixel sizes to XFontSets for
+				 * over-the-spot XIM. */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
     Tcl_Size refCount;		/* Reference count of how many Tk applications
