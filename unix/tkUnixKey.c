@@ -392,6 +392,27 @@ TkpGetKeySym(
 	sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		0, index & ~1);
     }
+
+    /*
+     * Num Lock selects the shifted keysym of a keypad key, and Shift
+     * reverts it, as in XLookupString(). [Bug 481308]
+     */
+
+    if (eventPtr->xkey.state
+	    & XkbKeysymToModifiers(dispPtr->display, XK_Num_Lock)) {
+	KeySym sym2 = XkbKeycodeToKeysym(dispPtr->display,
+		eventPtr->xkey.keycode, 0, index | 1);
+
+	if (IsKeypadKey(sym2) || IsPrivateKeypadKey(sym2)) {
+	    if ((eventPtr->xkey.state & ShiftMask)
+		    || ((dispPtr->lockUsage == LU_SHIFT)
+		    && (eventPtr->xkey.state & LockMask))) {
+		sym2 = XkbKeycodeToKeysym(dispPtr->display,
+			eventPtr->xkey.keycode, 0, index & ~1);
+	    }
+	    sym = sym2;
+	}
+    }
     return sym;
 }
 
