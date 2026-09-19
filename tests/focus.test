@@ -662,6 +662,7 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constr
     update
     set result [focus]
     send [childTkProcess eval {tk appname}] {focus -force .; update}
+    update
     lappend result [focus]
     focus .t.b2
     update

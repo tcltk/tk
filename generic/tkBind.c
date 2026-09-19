@@ -3973,7 +3973,13 @@ HandleEventGenerate(
 	event.general.xkey.y_root = -1;
     }
 
-    if (event.general.xany.type == FocusIn || event.general.xany.type == FocusOut) {
+    /*
+     * Generated focus events do not change the focus, unless generated for
+     * a wrapper window (only accessible in tests) to simulate the X server.
+     */
+
+    if ((event.general.xany.type == FocusIn || event.general.xany.type == FocusOut)
+	    && !(((TkWindow *) tkwin)->flags & TK_WRAPPER)) {
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
