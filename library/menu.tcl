@@ -176,20 +176,31 @@ bind Menu <Key> {
 # The following bindings apply to all windows, and are used to
 # implement keyboard menu traversal.
 
-if {[tk windowingsystem] ne "aqua"} {
+if {[tk windowingsystem] eq "x11"} {
     bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
+    }
+
+    bind all <F10> {
+	tk::FirstMenu %W
+    }
+} elseif {[tk windowingsystem] eq "win32"} {
+    # tk::WinMenuKey passes the key to Windows, for the native menubar
+    # and for system keys like Alt-F4. [Bug 2128087]
+    bind all <Alt-Key> {
+	if {![tk::TraverseToMenu %W %A]} {
+	    tk::WinMenuKey %W %N
+	}
+    }
+
+    bind Menubutton <F10> {
+	tk::FirstMenu %W
     }
 } else {
     bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
-}
-if {[tk windowingsystem] eq "x11"} {
-    bind all <F10> {
-	tk::FirstMenu %W
-    }
-} else {
+
     bind Menubutton <F10> {
 	tk::FirstMenu %W
     }
@@ -953,7 +964,8 @@ proc ::tk::MenuFind {w char} {
 # ::tk::TraverseToMenu --
 # This procedure implements keyboard traversal of menus.  Given an
 # ASCII character "char", it looks for a menubutton with that character
-# underlined.  If one is found, it posts the menubutton's menu
+# underlined.  If one is found, it posts the menubutton's menu and
+# returns 1, otherwise it returns 0.
 #
 # Arguments:
 # w -				Window in which the key was typed (selects
@@ -965,33 +977,35 @@ proc ::tk::MenuFind {w char} {
 proc ::tk::TraverseToMenu {w char} {
     variable ::tk::Priv
     if {![winfo exists $w] || $char eq ""} {
-	return
+	return 0
     }
     while {[winfo class $w] eq "Menu"} {
 	if {[$w cget -type] eq "menubar"} {
 	    break
 	} elseif {$Priv(postedMb) eq ""} {
-	    return
+	    return 0
 	}
 	set w [winfo parent $w]
     }
     set w [MenuFind [winfo toplevel $w] $char]
-    if {$w ne ""} {
-	if {[winfo class $w] eq "Menu"} {
-	    if {[tk windowingsystem] ne "x11"} {
-		# A native menubar handles the key itself. [Bug 2128087]
-		return
-	    }
-	    tk_menuSetFocus $w
-	    set Priv(window) $w
-	    SaveGrabInfo $w
-	    grab -global $w
-	    TraverseWithinMenu $w $char
-	} else {
-	    MbPost $w
-	    MenuFirstEntry [$w cget -menu]
-	}
+    if {$w eq ""} {
+	return 0
     }
+    if {[winfo class $w] eq "Menu"} {
+	if {[tk windowingsystem] ne "x11"} {
+	    # A native menubar handles the key itself.
+	    return 0
+	}
+	tk_menuSetFocus $w
+	set Priv(window) $w
+	SaveGrabInfo $w
+	grab -global $w
+	TraverseWithinMenu $w $char
+    } else {
+	MbPost $w
+	MenuFirstEntry [$w cget -menu]
+    }
+    return 1
 }
 
 # ::tk::FirstMenu --
