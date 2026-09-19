@@ -189,8 +189,68 @@ TkpGetKeySym(
     return TkWaylandGetKeysymFromScancode(sc);
 }
 
-/* Global modifier/button state - defined in tkWaylandNotify.c. */
-extern unsigned int glfwModifierState;
+/*
+ * Upper bound on the number of entries kept in dispPtr->modKeyCodes.
+ */
+#define MAX_MOD_KEYCODES 64
+
+/*
+ * ----------------------------------------------------------------------------
+ * IsModifierKeysym --
+ *
+ *         Report whether a keysym belongs to a modifier key (Shift, Control,
+ *         Alt, Meta, Super, Hyper, the lock keys, Mode_switch and
+ *         ISO_Level3_Shift).
+ *
+ * Results:
+ *         1 if the keysym is a modifier keysym, 0 otherwise.
+ *
+ * Side effects:
+ *         None.
+ * ----------------------------------------------------------------------------
+ */
+
+static int
+IsModifierKeysym(
+    KeySym ks)
+{
+    return (ks >= XK_Shift_L && ks <= XK_Hyper_R)	/* 0xFFE1 - 0xFFEE */
+	    || ks == XK_Mode_switch
+	    || ks == XK_Num_Lock
+	    || ks == 0xFE03;				/* ISO_Level3_Shift */
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * AddModKeyCode --
+ *
+ *         Append a keycode to dispPtr->modKeyCodes unless it is already
+ *         present or the array is full.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         May modify dispPtr->modKeyCodes and dispPtr->numModKeyCodes.
+ * ----------------------------------------------------------------------------
+ */
+
+static void
+AddModKeyCode(
+    TkDisplay *dispPtr,
+    KeyCode kc)
+{
+    Tcl_Size i;
+
+    for (i = 0; i < dispPtr->numModKeyCodes; i++) {
+	if (dispPtr->modKeyCodes[i] == kc) {
+	    return;
+	}
+    }
+    if (dispPtr->numModKeyCodes < MAX_MOD_KEYCODES) {
+	dispPtr->modKeyCodes[dispPtr->numModKeyCodes++] = kc;
+    }
+}
 
 /*
  * ----------------------------------------------------------------------------
@@ -199,28 +259,28 @@ extern unsigned int glfwModifierState;
  *         Given a keysym and an XEvent, set the keycode and modifier state
  *         fields of the event.  This is used by the [event generate] command.
  *
- *         The function scans the live XKB keymap to find a keycode that
- *         generates the given keysym.  If the keymap is not yet loaded, it
- *         falls back to a hard-coded table of common non-printable keys.
+ *         The keycode is a synthetic one that encodes the keysym directly, so
+ *         it round-trips exactly through TkpGetKeySym.  The modifier state
+ *         already parsed from the pattern (<Control-c>, <Alt-z>, ...) is
+ *         preserved.  When an XKB keymap is loaded, the keymap is scanned to
+ *         add ShiftMask or Mod5Mask for keysyms that live on a higher level:
  *
- *         Level-to-modifier mapping:
- *           level 0  → no modifier
- *           level 1  → ShiftMask
- *           level ≥ 2 → Mod5Mask (AltGr)
+ *           level 0  -> no modifier
+ *           level 1  -> ShiftMask
+ *           level >= 2 -> Mod5Mask (AltGr)
  *
- *         For modifier keys themselves (Control_L, Shift_L, etc.) the global
- *         Wayland modifier state is latched so that subsequent synthetic
- *         events and XQueryPointer observe it.  On X11 the X server latches
- *         this; on Wayland we must do it ourselves.  The synthetic keycode
- *         is still stored so that pattern-sequence matching in Tk_BindEvent
- *         can resolve the event back to its keysym.
+ *         Modifier keysyms themselves (Control_L, Shift_L, ...) do NOT alter
+ *         any global modifier state.  As on X11, [event generate] only injects
+ *         an event into Tk; it never changes the state of the input device.
+ *         Tk's binding code recognizes such events as modifier-key events
+ *         through dispPtr->modKeyCodes (see TkpInitKeymapInfo), which contains
+ *         the synthetic keycodes used here.
  *
  * Results:
  *         None.
  *
  * Side effects:
  *         Modifies eventPtr->xkey.keycode and eventPtr->xkey.state.
- *         May update the global glfwModifierState.
  * ----------------------------------------------------------------------------
  */
 
@@ -241,40 +301,9 @@ TkpSetKeycodeAndState(
     eventPtr->xkey.keycode = SYNTHETIC_KEYCODE(keysym);
     eventPtr->xkey.state = existingState;
 
-    /* For modifier keys themselves (Control_L etc), latch global Wayland
-     * modifier state so subsequent synthetic events and XQueryPointer see it.
-     * This fixes bind-33.16 where <Escape><Control-c> is simulated by
-     * generating Control_L presses.  On X11 the X server latches this; on
-     * Wayland we must do it ourselves. */
-    if (keysym == XK_Control_L || keysym == XK_Control_R) {
-        if (eventPtr->type == KeyPress) {
-            glfwModifierState |= ControlMask;
-        } else if (eventPtr->type == KeyRelease) {
-            glfwModifierState &= ~ControlMask;
-        }
-        /* Control_L itself should not have ControlMask in its own state. */
-        return;
-    } else if (keysym == XK_Shift_L || keysym == XK_Shift_R) {
-        if (eventPtr->type == KeyPress) {
-            glfwModifierState |= ShiftMask;
-        } else {
-            glfwModifierState &= ~ShiftMask;
-        }
-        return;
-    } else if (keysym == XK_Alt_L || keysym == XK_Alt_R) {
-        if (eventPtr->type == KeyPress) {
-            glfwModifierState |= Mod1Mask;
-        } else {
-            glfwModifierState &= ~Mod1Mask;
-        }
-        return;
-    } else if (keysym == XK_Super_L || keysym == XK_Super_R) {
-        if (eventPtr->type == KeyPress) {
-            glfwModifierState |= Mod4Mask;
-        } else {
-            glfwModifierState &= ~Mod4Mask;
-        }
-        return;
+    /* A modifier key event carries just the state parsed from the pattern. */
+    if (IsModifierKeysym(keysym)) {
+	return;
     }
 
     /* Try to also set Shift/Mod5 for completeness when an XKB map exists,
@@ -338,6 +367,60 @@ TkpInitKeymapInfo(TkDisplay *dispPtr)
      * Lock modifiers are platform-independent.
      */
     dispPtr->lockUsage = LU_CAPS;
+
+    /*
+     * Build the array of keycodes of all modifier keys.  tkBind.c uses it to
+     * ignore modifier-key events that are interlaced between the parts of a
+     * pattern sequence (bug [16ef161925]) and to avoid resetting the
+     * button repeat counters when a modifier key is pressed between clicks.
+     */
+    if (dispPtr->modKeyCodes != NULL) {
+	Tcl_Free(dispPtr->modKeyCodes);
+    }
+    dispPtr->modKeyCodes = (KeyCode *)
+	    Tcl_Alloc(MAX_MOD_KEYCODES * sizeof(KeyCode));
+    dispPtr->numModKeyCodes = 0;
+
+    /* Synthetic keycodes generated by [event generate]. */
+    for (KeySym ks = XK_Shift_L; ks <= XK_Hyper_R; ks++) {
+	AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(ks));
+    }
+    AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(XK_Mode_switch));
+    AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(XK_Num_Lock));
+    AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(0xFE03));
+
+    /*
+     * Physical keys.  Real key events carry the evdev scancode as keycode
+     * (see TkWaylandGetKeysymFromScancode, which adds 8 for xkbcommon).
+     */
+    if (xkbState.keymap) {
+	xkb_keycode_t lo = xkb_keymap_min_keycode(xkbState.keymap);
+	xkb_keycode_t hi = xkb_keymap_max_keycode(xkbState.keymap);
+
+	for (xkb_keycode_t kc = lo; kc <= hi; kc++) {
+	    const xkb_keysym_t *syms;
+
+	    if (xkb_keymap_num_layouts_for_key(xkbState.keymap, kc) > 0
+		    && xkb_keymap_key_get_syms_by_level(xkbState.keymap, kc,
+			    0, 0, &syms) > 0
+		    && IsModifierKeysym(syms[0])) {
+		AddModKeyCode(dispPtr, (KeyCode)(kc - 8));
+	    }
+	}
+    } else {
+	/* Keymap not loaded yet: standard evdev modifier scancodes. */
+	static const unsigned char evdevMods[] = {
+	    29, 97,	/* Control L/R */
+	    42, 54,	/* Shift L/R */
+	    56, 100,	/* Alt L, AltGr */
+	    125, 126,	/* Super L/R */
+	    58, 69	/* Caps Lock, Num Lock */
+	};
+
+	for (size_t i = 0; i < sizeof(evdevMods); i++) {
+	    AddModKeyCode(dispPtr, evdevMods[i]);
+	}
+    }
 }
 
 /*

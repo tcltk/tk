@@ -35,6 +35,14 @@ int tkWaylandLastWinX = 0;
 int tkWaylandLastWinY = 0;
 TkWindow* tkWaylandLastPointerWinPtr = NULL;
 
+/*
+ * Set when the pointer position was set by an emulated warp (Wayland cannot
+ * warp the real pointer).  While set, XQueryPointer reports the emulated
+ * position instead of the GLFW cursor position.  Cleared by the next real
+ * cursor motion.
+ */
+static int tkWaylandPointerEmulated = 0;
+
 void TkWaylandUpdatePointerState(int rootX, int rootY, int winX, int winY,
                                  unsigned int buttonState, TkWindow *winPtr) {
     tkWaylandLastRootX = rootX;
@@ -116,7 +124,7 @@ XQueryPointer(
     double cursorX = 0, cursorY = 0;
     int haveGLFW = 0;
 
-    if (winPtr) {
+    if (winPtr && !tkWaylandPointerEmulated) {
         glfwWindow = TkWaylandGetGLFWwindow(winPtr);
         if (glfwWindow) {
             glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
@@ -430,6 +438,9 @@ TkWaylandHandleMouseMove(
     TkWindow *winPtr = TkWaylandGetTkWindow(glfwWindow);
     if (!winPtr) return;
 
+    /* Real pointer motion supersedes any emulated warp position. */
+    tkWaylandPointerEmulated = 0;
+
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
@@ -488,6 +499,7 @@ tkWaylandDoWarpEmulation(TkWindow *warpWinPtr, Tk_Window warpTkWin,
     tkWaylandLastWinX = warpX;
     tkWaylandLastWinY = warpY;
     tkWaylandLastPointerWinPtr = warpWinPtr;
+    tkWaylandPointerEmulated = 1;
 
     /* MotionNotify on the warp window. */
     XEvent ev;
@@ -710,7 +722,8 @@ XWarpPointer(
  * TkpWarpPointer --
  *
  *      Move the mouse cursor to the screen location specified by the
- *      warpX and warpY fields of a TkDisplay. Wayland emulated version.
+ *      warpX and warpY fields of a TkDisplay. Wayland emulated version;
+ *      handles both window-relative and screen-relative warps.
  *
  * Results:
  *      None
@@ -724,7 +737,35 @@ void
 TkpWarpPointer(
     TkDisplay *dispPtr)
 {
-    if (!dispPtr || !dispPtr->warpWindow) {
+    if (!dispPtr) {
+        return;
+    }
+
+    if (!dispPtr->warpWindow) {
+        /*
+         * Warp relative to the whole screen: warpX/warpY are root
+         * coordinates.  tkBind.c calls us directly in this case (see
+         * HandleEventGenerate), so this must not be ignored.
+         */
+        int rx = dispPtr->warpX, ry = dispPtr->warpY;
+        Tk_Window target = dispPtr->warpMainwin
+                ? Tk_CoordsToWindow(rx, ry, dispPtr->warpMainwin) : NULL;
+
+        if (target && Tk_WindowId(target) != None) {
+            int wx, wy;
+
+            Tk_GetRootCoords(target, &wx, &wy);
+            tkWaylandDoWarpEmulation((TkWindow *)target, target,
+                                     rx - wx, ry - wy, rx, ry,
+                                     TkWaylandButtonKeyState());
+        } else {
+            /* Point is outside every window of this application. */
+            tkWaylandLastRootX = tkWaylandLastWinX = rx;
+            tkWaylandLastRootY = tkWaylandLastWinY = ry;
+            tkWaylandLastPointerWinPtr = NULL;
+            tkWaylandPointerEmulated = 1;
+            Tk_UpdatePointer(NULL, rx, ry, TkWaylandButtonKeyState());
+        }
         return;
     }
     TkWindow *warpWinPtr = (TkWindow *)dispPtr->warpWindow;
