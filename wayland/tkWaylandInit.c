@@ -16,7 +16,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging.
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "init"
 */
@@ -265,6 +265,69 @@ getGlfwTkInfo(
 }
 
 /*
+ *----------------------------------------------------------------------
+ * isGlfwWindowValid --
+ *
+ *   True if win is a non-NULL GLFW window that is still registered in
+ *   the glfwTkInfoList of live windows.  Callers use this to guard
+ *   against acting on a GLFWwindow pointer that has already been
+ *   destroyed or that never belonged to this interpreter; a stale
+ *   pointer would otherwise be dereferenced or passed back into GLFW.
+ *
+ * Results:
+ *   1 if win is non-NULL and present in glfwTkInfoList, 0 otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+isGlfwWindowValid(GLFWwindow *win)
+{
+    if (!win) return 0;
+    for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr)
+	if (p->glfwWindow==win) return 1;
+    return 0;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ * IsUnmappedEmptyRoot --
+ *
+ *   True if the toplevel containing winPtr is the interpreter's main
+ *   window, has no children, and has not been mapped yet.  Such a window
+ *   is not drawn or presented (this avoids painting a root that is about
+ *   to be withdrawn).  Once TkWmMapWindow has set TK_MAPPED, an empty
+ *   root must be drawn and presented like any other toplevel; otherwise
+ *   no buffer is ever committed after glfwShowWindow and the compositor
+ *   never displays it.
+ *
+ * Results:
+ *   1 if window meets the specified condition, 0 otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+IsUnmappedEmptyRoot(TkWindow *winPtr)
+{
+    TkWindow *top = winPtr;
+
+    while (top && !Tk_IsTopLevel(top)) {
+        top = top->parentPtr;
+    }
+    if (top == NULL || top->childList != NULL || (top->flags & TK_MAPPED)) {
+        return 0;
+    }
+    return top->mainPtr && top->mainPtr->interp
+            && top == (TkWindow *) Tk_MainWindow(top->mainPtr->interp);
+}
+
+/*
  * ----------------------------------------------------------------------
  *
  * renderFBO --
@@ -284,36 +347,6 @@ getGlfwTkInfo(
  *      is rendered on the screen.
  * ----------------------------------------------------------------------
  */
-
-
-static int isGlfwWindowValid(GLFWwindow *win) { if (!win) return 0; for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) if (p->glfwWindow==win) return 1; return 0; }
-
-/*
- * IsUnmappedEmptyRoot --
- *
- *	True if the toplevel containing winPtr is the interpreter's main
- *	window, has no children, and has not been mapped yet.  Such a window
- *	is not drawn or presented (this avoids painting a root that is about
- *	to be withdrawn).  Once TkWmMapWindow has set TK_MAPPED, an empty
- *	root must be drawn and presented like any other toplevel; otherwise
- *	no buffer is ever committed after glfwShowWindow and the compositor
- *	never displays it.
- */
-
-static int
-IsUnmappedEmptyRoot(TkWindow *winPtr)
-{
-    TkWindow *top = winPtr;
-
-    while (top && !Tk_IsTopLevel(top)) {
-        top = top->parentPtr;
-    }
-    if (top == NULL || top->childList != NULL || (top->flags & TK_MAPPED)) {
-        return 0;
-    }
-    return top->mainPtr && top->mainPtr->interp
-            && top == (TkWindow *) Tk_MainWindow(top->mainPtr->interp);
-}
 
 static int renderFBO(
     GLFWwindow *glfwWindow)
