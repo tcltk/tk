@@ -120,28 +120,16 @@ XQueryPointer(
     unsigned int *mask_return)
 {
     TkWindow *winPtr = (TkWindow *)w;
-    GLFWwindow* glfwWindow = NULL;
-    double cursorX = 0, cursorY = 0;
-    int haveGLFW = 0;
-
-    if (winPtr && !tkWaylandPointerEmulated) {
-        glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-        if (glfwWindow) {
-            glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
-            haveGLFW = 1;
-        }
-    }
-
     int rootX, rootY;
-    if (haveGLFW) {
-        rootX = (int)cursorX;
-        rootY = (int)cursorY;
-        tkWaylandLastRootX = rootX;
-        tkWaylandLastRootY = rootY;
-    } else {
-        rootX = tkWaylandLastRootX;
-        rootY = tkWaylandLastRootY;
-    }
+
+    /*
+     * FIX: Wayland has no global pointer query. Previously this function
+     * queried glfwGetCursorPos and treated window-relative coords as root,
+     * overwriting LastRoot and breaking winfo pointerxy / winfo containing
+     * which the tooltip uses as a guard. Return the cached LastRoot instead.
+     */
+    rootX = tkWaylandLastRootX;
+    rootY = tkWaylandLastRootY;
 
     if (root_x_return) *root_x_return = rootX;
     if (root_y_return) *root_y_return = rootY;
@@ -380,17 +368,27 @@ TkWaylandHandleMouseButton(
      * Keep the shared pointer state current so that TkGetPointerCoords
      * (winfo pointerxy/pointerx/pointery) reports the real pointer
      * position rather than the stale initial value.
+     * FIX: glfwGetCursorPos is window-relative, so add toplevel root
+     * to get emulated root for winfo pointerxy / containing.
      */
-    TkWaylandUpdatePointerState((int)x, (int)y,
-            (int)x - Tk_X(winPtr), (int)y - Tk_Y(winPtr),
-            TkWaylandButtonKeyState(), winPtr);
+    {
+        int _trX, _trY;
+        Tk_GetRootCoords((Tk_Window)winPtr, &_trX, &_trY);
+        TkWaylandUpdatePointerState(_trX + (int)x, _trY + (int)y,
+                (int)x, (int)y,
+                TkWaylandButtonKeyState(), winPtr);
+    }
 
     MouseEventData med;
     memset(&med, 0, sizeof(MouseEventData));
-    med.globalX = (int)x;
-    med.globalY = (int)y;
-    med.localX = (int)x - Tk_X(winPtr);
-    med.localY = (int)y - Tk_Y(winPtr);
+    {
+        int _trX, _trY;
+        Tk_GetRootCoords((Tk_Window)winPtr, &_trX, &_trY);
+        med.globalX = _trX + (int)x;
+        med.globalY = _trY + (int)y;
+    }
+    med.localX = (int)x;
+    med.localY = (int)y;
     med.window = Tk_WindowId((Tk_Window)winPtr);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) med.button = 1;
@@ -455,10 +453,16 @@ TkWaylandHandleMouseMove(
      * TkGetPointerCoords (which just returns tkWaylandLastRootX/Y) reports
      * the initial 200,200 forever, so [winfo pointerxy] and anything built
      * on it (e.g. the tooltip's [winfo containing] guard) is wrong.
+     * FIX: glfwGetCursorPos is window-relative, add toplevel root for
+     * emulated root coords.
      */
-    TkWaylandUpdatePointerState((int)x, (int)y,
-            (int)x - Tk_X(winPtr), (int)y - Tk_Y(winPtr),
-            TkWaylandButtonKeyState(), winPtr);
+    {
+        int _trX, _trY;
+        Tk_GetRootCoords((Tk_Window)winPtr, &_trX, &_trY);
+        TkWaylandUpdatePointerState(_trX + (int)x, _trY + (int)y,
+                (int)x, (int)y,
+                TkWaylandButtonKeyState(), winPtr);
+    }
 
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
@@ -469,10 +473,14 @@ TkWaylandHandleMouseMove(
     event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
     event.xmotion.root = XRootWindow(winPtr->display, 0);
     event.xmotion.time = (Time)(glfwGetTime() * 1000.0);
-    event.xmotion.x = (int)x - Tk_X(winPtr);
-    event.xmotion.y = (int)y - Tk_Y(winPtr);
-    event.xmotion.x_root = (int)x;
-    event.xmotion.y_root = (int)y;
+    event.xmotion.x = (int)x;
+    event.xmotion.y = (int)y;
+    {
+        int _trX, _trY;
+        Tk_GetRootCoords((Tk_Window)winPtr, &_trX, &_trY);
+        event.xmotion.x_root = _trX + (int)x;
+        event.xmotion.y_root = _trY + (int)y;
+    }
     event.xmotion.state = TkWaylandButtonKeyState();
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;

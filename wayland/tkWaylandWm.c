@@ -22,6 +22,13 @@
 #include "tkPort.h"
 #include "tkWaylandWm.h"
 #include "tkWaylandInt.h"
+
+/*
+ * Defined in tkWaylandInit.c as fallback - need here for ReExposeIdle fix
+ */
+#ifndef TKWL_EARLY_EXPOSE_QUEUED
+#define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
+#endif
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
@@ -518,6 +525,47 @@ QueueVisibilityNotify(TkWindow *winPtr) {
 }
 
 /*
+ * Queue Expose for a window and all mapped descendants.
+ * This is needed on Wayland because the first toplevel Expose is queued
+ * in TkWmMapWindow before pack/grid has mapped the children.  Without this
+ * the toplevel draws empty and never redraws children.
+ */
+static void
+QueueExposeTree(TkWindow *winPtr)
+{
+    TkWindow *child;
+    if (winPtr == NULL) return;
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+        Tk_Width(winPtr), Tk_Height(winPtr));
+    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (child->flags & TK_MAPPED) {
+            QueueExposeTree(child);
+        }
+    }
+}
+
+static void
+ReExposeIdle(void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    if (winPtr == NULL) return;
+    if (winPtr->flags & TK_ALREADY_DEAD) return;
+    if (!(winPtr->flags & TK_TOP_LEVEL)) return;
+    /* Re-queue exposes after geometry managers have run. */
+    QueueExposeTree(winPtr);
+    if (winPtr->privatePtr) {
+        glfwTkInfo *infoPtr = winPtr->privatePtr->glfwWindow ?
+            (glfwTkInfo*)glfwGetWindowUserPointer(winPtr->privatePtr->glfwWindow) : NULL;
+        if (infoPtr) {
+            infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+            /* Allow BeginDraw to queue another early expose if needed */
+            infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
+        }
+    }
+}
+
+
+/*
  *----------------------------------------------------------------------
  *
  * TkWmMapWindow --
@@ -599,9 +647,23 @@ TkWmMapWindow(TkWindow *winPtr)
          * Expose queued at creation time is consumed while the window is
          * still unmapped (DisplayFrame drops it), so queue a fresh one now.
          * This also makes an empty root produce a first frame to present.
+         *
+         * FIX: Child widgets may not yet be mapped when this first Expose
+         * runs (pack/grid runs as idle tasks after MapNotify).  Queue exposes
+         * for the whole subtree now, and schedule a second re-expose idle
+         * after the geometry managers have had a chance to map children.
          */
-        TkWaylandQueueExposeEvent(winPtr, 0, 0,
-                Tk_Width(winPtr), Tk_Height(winPtr));
+        QueueExposeTree(winPtr);
+        /* Second pass after idle handlers (pack/grid) */
+        Tcl_DoWhenIdle(ReExposeIdle, (void*)winPtr);
+        /* Ensure we will swap buffers even if BeginDraw early-exits */
+        if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
+            glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(winPtr->privatePtr->glfwWindow);
+            if (infoPtr) {
+                infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+                infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
+            }
+        }
     }
     /*
      * Wayland has no VisibilityNotify equivalent — the compositor never
@@ -4437,25 +4499,50 @@ XMapWindow(
                               Tk_Width(winPtr), Tk_Height(winPtr));
 
     /*
-     * Wayland: Only queue VisibilityNotify if the entire parent 
-     * hierarchy up to the toplevel is currently mapped.
+     * Wayland: Child mapping.  Original code suppressed VisibilityNotify
+     * if parent chain not yet mapped, which caused child to never become
+     * viewable when toplevel maps and children are mapped in same idle.
+     * Fix: always queue visibility, and also damage parent/container so
+     * clip masks are rebuilt and toplevel is marked needing display.
+     * ParentChain check is kept only to avoid queueing visibility for
+     * truly unmapped toplevels (withdrawn).
      */
     int parentChainMapped = 1;
     TkWindow *curr = winPtr->parentPtr;
+    TkWindow *toplevel = NULL;
 
     while (curr != NULL) {
-        if (!(curr->flags & TK_MAPPED)) {
-            parentChainMapped = 0;
-            break;
-        }
         if (curr->flags & TK_TOP_LEVEL) {
+            toplevel = curr;
+            if (!(curr->flags & TK_MAPPED)) {
+                /* toplevel itself not mapped -> skip */
+                parentChainMapped = 0;
+            }
             break;
         }
         curr = curr->parentPtr;
     }
 
-    /* Queue notification only when all ancestors are mapped. */
-    if (parentChainMapped) {
+    /* If toplevel not found or not mapped, still queue but don't panic */
+    if (toplevel == NULL) {
+        /* No toplevel (should not happen) - just queue */
+        QueueVisibilityNotify(winPtr);
+    } else if (parentChainMapped) {
+        QueueVisibilityNotify(winPtr);
+        /* Force parent to redraw to include new child in clip mask */
+        if (winPtr->parentPtr) {
+            TkWaylandQueueExposeEvent(winPtr->parentPtr, 0, 0,
+                Tk_Width(winPtr->parentPtr), Tk_Height(winPtr->parentPtr));
+        }
+        /* Ensure toplevel will swap */
+        if (toplevel->privatePtr && toplevel->privatePtr->glfwWindow) {
+            glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(toplevel->privatePtr->glfwWindow);
+            if (infoPtr) {
+                infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+            }
+        }
+    } else {
+        /* Toplevel not yet mapped - defer: queue visibility anyway for tkwaits */
         QueueVisibilityNotify(winPtr);
     }
 

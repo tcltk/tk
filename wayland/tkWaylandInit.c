@@ -1188,19 +1188,20 @@ TkWaylandBeginDraw(
 	    && !(infoPtr->flags & TKWL_EARLY_EXPOSE_QUEUED)) {
 	/*
 	 * It may be too early to be drawing in this window.  It may not have
-	 * a GL context yet.  Schedule a redraw.
-	 *
-	 * This must happen at most once per window.  Queueing an Expose from
-	 * inside BeginDraw is a feedback loop (draw -> Expose -> redisplay ->
-	 * draw), and TKWL_NEVER_FOCUSED is only cleared by the GLFW focus
-	 * callback.  A compositor that never gives the window focus (e.g.
-	 * headless mutter with no keyboard seat) would otherwise keep this
-	 * loop running forever and Tcl's "update" would never return.  The
-	 * focus callback generates its own Expose when focus does arrive.
+	 * a GL context yet.  Schedule a redraw.  Keep the single-shot guard
+	 * but make it clearable by TkWmMapWindow (see ReExposeIdle) so that
+	 * a toplevel that maps children after the first expose can still
+	 * request a second early expose.
 	 */
 	infoPtr->flags |= TKWL_EARLY_EXPOSE_QUEUED;
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
+        /* Also expose mapped children - fixes initial empty frame */
+        for (TkWindow *c = winPtr->childList; c != NULL; c = c->nextPtr) {
+            if (c->flags & TK_MAPPED) {
+                TkWaylandQueueExposeEvent(c, 0, 0, Tk_Width(c), Tk_Height(c));
+            }
+        }
     }
 
     /* Set up the nanoVG drawing context for this nvgFrame. */
