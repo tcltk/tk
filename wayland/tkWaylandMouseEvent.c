@@ -273,11 +273,27 @@ GenerateButtonEvent(
     }
     Tk_UpdatePointer(tkwin, medPtr->globalX, medPtr->globalY, medPtr->state);
 
-    /* If this came from a real button press, also queue ButtonPress/Release */
+    /* If this came from a real button press, also queue ButtonPress/Release. */
     if (medPtr->button != 0) {
 	QueueButtonEvent(medPtr);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * QueueButtonEvent --
+ *
+ *	Put an X button event on the Tk event queue. 
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Button event processed.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 QueueButtonEvent(MouseEventData *medPtr)
@@ -367,7 +383,7 @@ TkWaylandHandleMouseButton(
 
     med.isPress = (action == GLFW_PRESS);
 
-    /* Update global button state BEFORE queuing so B1-Motion sees Button1Mask */
+    /* Update global button state BEFORE queuing so B1-Motion sees Button1Mask. */
     if (med.isPress) {
 	if (med.button == 1) glfwButtonState |= Button1Mask;
 	if (med.button == 2) glfwButtonState |= Button2Mask;
@@ -381,7 +397,7 @@ TkWaylandHandleMouseButton(
 
     QueueButtonEvent(&med);
 
-    /* Keep Enter/Leave correct */
+    /* Keep Enter/Leave correct. */
     TkDisplay *dispPtr = TkGetDisplayList();
     Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, med.window);
     if (tkwin) tkwin = Tk_CoordsToWindow(med.localX, med.localY, tkwin);
@@ -446,20 +462,264 @@ TkWaylandHandleMouseMove(
 /*
  *----------------------------------------------------------------------
  *
- * TkpWarpPointer --
+ * tkWaylandDoWarpEmulation --
  *
- *	Move the mouse cursor to the screen location specified by the warpX and
- *	warpY fields of a TkDisplay.
+ *   Shared helper for XWarpPointer and TkpWarpPointer.
+ *   Wayland cannot warp the global pointer, so we emulate:
+ *   update tkWaylandLast* and synthesize MotionNotify + EnterNotify
+ *   so Tk's internal pointer tracking succeed.
  *
  * Results:
- *	None
+ *   None.
  *
  * Side effects:
- *	The mouse cursor is moved.
+ *   Synthetic warp events processed.
  *
  *----------------------------------------------------------------------
  */
+static void
+tkWaylandDoWarpEmulation(TkWindow *warpWinPtr, Tk_Window warpTkWin,
+                         int warpX, int warpY,
+                         int targetRootX, int targetRootY,
+                         unsigned int state)
+{
+    tkWaylandLastRootX = targetRootX;
+    tkWaylandLastRootY = targetRootY;
+    tkWaylandLastWinX = warpX;
+    tkWaylandLastWinY = warpY;
+    tkWaylandLastPointerWinPtr = warpWinPtr;
 
+    /* MotionNotify on the warp window. */
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.type = MotionNotify;
+    ev.xmotion.serial = LastKnownRequestProcessed(warpWinPtr->display)++;
+    ev.xmotion.send_event = False;
+    ev.xmotion.display = warpWinPtr->display;
+    ev.xmotion.window = Tk_WindowId(warpTkWin);
+    ev.xmotion.root = XRootWindow(warpWinPtr->display, 0);
+    ev.xmotion.time = CurrentTime;
+    ev.xmotion.x = warpX;
+    ev.xmotion.y = warpY;
+    ev.xmotion.x_root = targetRootX;
+    ev.xmotion.y_root = targetRootY;
+    ev.xmotion.state = state;
+    ev.xmotion.is_hint = NotifyNormal;
+    ev.xmotion.same_screen = True;
+    Tk_QueueWindowEvent(&ev, TCL_QUEUE_TAIL);
+
+    /* Find deepest child containing the point. */
+    Tk_Window deepest = warpTkWin;
+    Tk_Window child = Tk_CoordsToWindow(warpX, warpY, warpTkWin);
+    if (child) {
+        deepest = child;
+    }
+
+    /* Tk_UpdatePointer in this file uses root coords (see HandleMouseMove) */
+    Tk_Window updateWin = deepest ? deepest : warpTkWin;
+    Tk_UpdatePointer(updateWin, targetRootX, targetRootY, state);
+
+    /* Queue EnterNotify for both warpWindow and deepest child.
+     * Must compute window-relative coords per window. */
+    Tk_Window enterWins[2] = {warpTkWin, deepest};
+    for (int i = 0; i < 2; i++) {
+        Tk_Window enterWin = enterWins[i];
+        if (!enterWin) continue;
+        if (i == 1 && enterWin == warpTkWin) continue;
+        TkWindow *tPtr = (TkWindow *)enterWin;
+        if (!tPtr || Tk_WindowId(enterWin) == None) continue;
+
+        int erootX, erootY;
+        Tk_GetRootCoords(enterWin, &erootX, &erootY);
+
+        XEvent eev;
+        memset(&eev, 0, sizeof(eev));
+        eev.type = EnterNotify;
+        eev.xcrossing.serial = LastKnownRequestProcessed(tPtr->display)++;
+        eev.xcrossing.send_event = False;
+        eev.xcrossing.display = tPtr->display;
+        eev.xcrossing.window = Tk_WindowId(enterWin);
+        eev.xcrossing.root = XRootWindow(tPtr->display, 0);
+        eev.xcrossing.subwindow = None;
+        eev.xcrossing.time = CurrentTime;
+        eev.xcrossing.x = targetRootX - erootX;
+        eev.xcrossing.y = targetRootY - erootY;
+        eev.xcrossing.x_root = targetRootX;
+        eev.xcrossing.y_root = targetRootY;
+        eev.xcrossing.mode = NotifyNormal;
+        eev.xcrossing.detail = NotifyAncestor;
+        eev.xcrossing.same_screen = True;
+        eev.xcrossing.focus = False;
+        eev.xcrossing.state = state;
+        Tk_QueueWindowEvent(&eev, TCL_QUEUE_TAIL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XWarpPointer --
+ *
+ *      Move pointer. Wayland port: emulates warp when dest is a Tk
+ *      window, otherwise no-op but returns Success for Xlib compat.
+ *      This aligns XWarpPointer with TkpWarpPointer so both test
+ *      paths in bind.test behave identically.
+ *
+ * Results:
+ *      Always returns 0 (Success).
+ *
+ * Side effects:
+ *      May update internal pointer state and queue synthetic events.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+XWarpPointer(
+    Display *display,
+    Window src_w,
+    Window dest_w,
+    int src_x,
+    int src_y,
+    unsigned int src_width,
+    unsigned int src_height,
+    int dest_x,
+    int dest_y)
+{
+    /* src window filtering per X spec: if src_w != None, only warp if pointer is
+     * inside src rect. */
+    if (src_w != None) {
+        Tk_Window srcTkWin = NULL;
+        if (display) {
+            srcTkWin = Tk_IdToWindow(display, src_w);
+        }
+        if (srcTkWin) {
+            int srootX, srootY;
+            Tk_GetRootCoords(srcTkWin, &srootX, &srootY);
+            int px = tkWaylandLastRootX;
+            int py = tkWaylandLastRootY;
+            /* src rect is in src window coords. */
+            if (px < srootX + src_x || px >= (int)(srootX + src_x + src_width) ||
+                py < srootY + src_y || py >= (int)(srootY + src_y + src_height)) {
+                return 0; /* Pointer not in src, do not warp. */
+            }
+        }
+    }
+
+    int targetRootX, targetRootY;
+    Tk_Window destTkWin = NULL;
+    TkWindow *destWinPtr = NULL;
+
+    if (dest_w != None) {
+        if (display) {
+            destTkWin = Tk_IdToWindow(display, dest_w);
+        }
+        if (!destTkWin) {
+            /* Try global display list if display param is stale */
+            TkDisplay *d = TkGetDisplayList();
+            if (d && d->display) {
+                destTkWin = Tk_IdToWindow(d->display, dest_w);
+            }
+        }
+        if (destTkWin) {
+            int drootX, drootY;
+            Tk_GetRootCoords(destTkWin, &drootX, &drootY);
+            targetRootX = drootX + dest_x;
+            targetRootY = drootY + dest_y;
+            destWinPtr = (TkWindow *)destTkWin;
+        } else {
+            /* Non-Tk X window: we can't map it, but still emulate a relative
+             * move from current position for bind.test compatibility. */
+            targetRootX = tkWaylandLastRootX + dest_x;
+            targetRootY = tkWaylandLastRootY + dest_y;
+            /* Find Tk window under target for emulation. */
+            TkDisplay *disp = TkGetDisplayList();
+            if (disp && disp->display) {
+                destTkWin = Tk_IdToWindow(disp->display, dest_w);
+            }
+        }
+    } else {
+        /* dest_w == None => warp relative to current pointer. */
+        targetRootX = tkWaylandLastRootX + dest_x;
+        targetRootY = tkWaylandLastRootY + dest_y;
+    }
+
+    /* Resolve the Tk window to emulate warp in. */
+    Tk_Window warpTkWin = destTkWin;
+    TkWindow *warpWinPtr = destWinPtr;
+
+    if (!warpTkWin) {
+        /* No dest window given or not a Tk window: find window at target. */
+        TkDisplay *disp = TkGetDisplayList();
+        if (disp && disp->display) {
+            /* Try to find top-level containing point.
+	     * Use last pointer win as fallback.
+	     */
+            if (tkWaylandLastPointerWinPtr) {
+                warpTkWin = (Tk_Window)tkWaylandLastPointerWinPtr;
+                warpWinPtr = tkWaylandLastPointerWinPtr;
+            }
+        }
+    }
+
+    if (!warpTkWin) {
+        /* Absolute fallback: use whatever display we have. */
+        TkDisplay *disp = TkGetDisplayList();
+        if (!disp || !disp->display) {
+            return 0;
+        }
+        /* If we still have no window, we cannot emulate with Tk_UpdatePointer,
+         * but we can at least update global root state so XQueryPointer sees
+	 * it.
+	 */
+        tkWaylandLastRootX = targetRootX;
+        tkWaylandLastRootY = targetRootY;
+        return 0;
+    }
+
+    if (!warpWinPtr) {
+        warpWinPtr = (TkWindow *)warpTkWin;
+    }
+    if (Tk_WindowId(warpTkWin) == None) {
+        return 0;
+    }
+
+    /* Compute window-relative coords for the target. */
+    int wrootX, wrootY;
+    Tk_GetRootCoords(warpTkWin, &wrootX, &wrootY);
+    int warpX = targetRootX - wrootX;
+    int warpY = targetRootY - wrootY;
+
+    /* If dest_w was specified, warpX/Y must be dest_x/dest_y per spec,
+     * otherwise relative. But for our emulation we want coords relative
+     * to the actual warp window (which may be deepest child).
+     */
+    if (dest_w != None && destTkWin == warpTkWin) {
+        warpX = dest_x;
+        warpY = dest_y;
+    }
+
+    tkWaylandDoWarpEmulation(warpWinPtr, warpTkWin, warpX, warpY,
+                             targetRootX, targetRootY,
+                             TkWaylandButtonKeyState());
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWarpPointer --
+ *
+ *      Move the mouse cursor to the screen location specified by the
+ *      warpX and warpY fields of a TkDisplay. Wayland emulated version.
+ *
+ * Results:
+ *      None
+ *
+ * Side effects:
+ *      Pointer state updated, MotionNotify + EnterNotify queued.
+ *
+ *----------------------------------------------------------------------
+ */
 void
 TkpWarpPointer(
     TkDisplay *dispPtr)
@@ -467,93 +727,20 @@ TkpWarpPointer(
     if (!dispPtr || !dispPtr->warpWindow) {
         return;
     }
-
     TkWindow *warpWinPtr = (TkWindow *)dispPtr->warpWindow;
-
+    Tk_Window warpTkWin = dispPtr->warpWindow;
+    if (!warpWinPtr || Tk_WindowId(warpTkWin) == None) {
+        return;
+    }
     int rootX, rootY;
-    Tk_GetRootCoords(dispPtr->warpWindow, &rootX, &rootY);
+    Tk_GetRootCoords(warpTkWin, &rootX, &rootY);
     int targetRootX = rootX + dispPtr->warpX;
     int targetRootY = rootY + dispPtr->warpY;
 
-    tkWaylandLastRootX = targetRootX;
-    tkWaylandLastRootY = targetRootY;
-    tkWaylandLastWinX = dispPtr->warpX;
-    tkWaylandLastWinY = dispPtr->warpY;
-    tkWaylandLastPointerWinPtr = warpWinPtr;
-
-    XEvent ev;
-    memset(&ev, 0, sizeof(XEvent));
-    ev.type = MotionNotify;
-    ev.xmotion.serial = LastKnownRequestProcessed(warpWinPtr->display)++;
-    ev.xmotion.send_event = False;
-    ev.xmotion.display = warpWinPtr->display;
-    ev.xmotion.window = Tk_WindowId(dispPtr->warpWindow);
-    ev.xmotion.root = XRootWindow(warpWinPtr->display, 0);
-    ev.xmotion.time = CurrentTime;
-    ev.xmotion.x = dispPtr->warpX;
-    ev.xmotion.y = dispPtr->warpY;
-    ev.xmotion.x_root = targetRootX;
-    ev.xmotion.y_root = targetRootY;
-    ev.xmotion.state = TkWaylandButtonKeyState();
-    ev.xmotion.is_hint = NotifyNormal;
-    ev.xmotion.same_screen = True;
-
-    Tk_QueueWindowEvent(&ev, TCL_QUEUE_TAIL);
-
-    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, Tk_WindowId(dispPtr->warpWindow));
-    Tk_Window deepest = tkwin;
-    if (tkwin) {
-        Tk_Window child = Tk_CoordsToWindow(dispPtr->warpX, dispPtr->warpY, tkwin);
-        if (child) {
-            deepest = child;
-            tkwin = child;
-        }
-    }
-    /*
-     * FIX for event-9.11 hang: Tk_UpdatePointer in Wayland port historically
-     * took root coords in some places, but generic code expects window coords.
-     * We must pass window-relative coords so Tk_Pointer logic correctly finds
-     * the containing window and generates Enter/Leave. Using targetRootX/Y
-     * caused the pointer to be considered outside, so waitForWindowEvent <Enter>
-     * timed out.
-     */
-    Tk_Window updateWin = tkwin ? tkwin : dispPtr->warpWindow;
-    Tk_UpdatePointer(updateWin, dispPtr->warpX, dispPtr->warpY, ev.xmotion.state);
-
-    /*
-     * Explicitly queue EnterNotify for both the warp window and the deepest
-     * child. setup_win_mousepointer does waitForWindowEvent $w <Enter> where
-     * $w is .one, but warp may land in .one.f1.f2. Queuing Enter for .one
-     * and for the child ensures the vwait unblocks regardless of which window
-     * Tk considers the pointer to be in. This fixes the 100ms timeout hang.
-     */
-    for (int pass = 0; pass < 2; pass++) {
-        Tk_Window enterWin = (pass == 0) ? dispPtr->warpWindow : deepest;
-        if (!enterWin) continue;
-        if (pass == 1 && enterWin == dispPtr->warpWindow) continue;
-        TkWindow *targetPtr = (TkWindow *)enterWin;
-        if (!targetPtr) continue;
-        XEvent enterEv;
-        memset(&enterEv, 0, sizeof(XEvent));
-        enterEv.type = EnterNotify;
-        enterEv.xcrossing.serial = LastKnownRequestProcessed(targetPtr->display)++;
-        enterEv.xcrossing.send_event = False;
-        enterEv.xcrossing.display = targetPtr->display;
-        enterEv.xcrossing.window = Tk_WindowId(enterWin);
-        enterEv.xcrossing.root = XRootWindow(targetPtr->display, 0);
-        enterEv.xcrossing.subwindow = None;
-        enterEv.xcrossing.time = CurrentTime;
-        enterEv.xcrossing.x = dispPtr->warpX;
-        enterEv.xcrossing.y = dispPtr->warpY;
-        enterEv.xcrossing.x_root = targetRootX;
-        enterEv.xcrossing.y_root = targetRootY;
-        enterEv.xcrossing.mode = NotifyNormal;
-        enterEv.xcrossing.detail = NotifyAncestor;
-        enterEv.xcrossing.same_screen = True;
-        enterEv.xcrossing.focus = False;
-        enterEv.xcrossing.state = ev.xmotion.state;
-        Tk_QueueWindowEvent(&enterEv, TCL_QUEUE_TAIL);
-    }
+    tkWaylandDoWarpEmulation(warpWinPtr, warpTkWin,
+                             dispPtr->warpX, dispPtr->warpY,
+                             targetRootX, targetRootY,
+                             TkWaylandButtonKeyState());
 }
 
 /*

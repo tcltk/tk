@@ -2242,38 +2242,6 @@ XNextEvent(
 /*
  *----------------------------------------------------------------------
  *
- * XWarpPointer --
- *
- *	Move pointer. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XWarpPointer(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-    /* No-op - pointer warping not supported in Wayland. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XSetStipple --
  *
  *	Set stipple pattern in GC. No-op in Wayland port.

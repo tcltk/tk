@@ -178,21 +178,66 @@ TkpGetKeySym(
     return TkWaylandGetKeysymFromScancode(sc);
 }
 
+/* Global modifier/button state - defined in tkWaylandNotify.c */
+extern unsigned int glfwModifierState;
+
 void
 TkpSetKeycodeAndState(
     TCL_UNUSED(Tk_Window),
     KeySym keysym,
     XEvent *eventPtr)
 {
-    /* Preserve state from pattern like <Alt-z> */
+    /* Preserve state from pattern like <Alt-z> / <Control-c>.
+     * The caller (tkEvent.c) has already parsed the modifier from the
+     * pattern string into eventPtr->state. Don't clear it. */
+    unsigned int existingState = eventPtr->xkey.state;
+
     /* For synthetic [event generate], store keysym using SYNTHETIC base
      * so it roundtrips exactly, preserving case and large keysyms like Return.
      * This is what IME path already does.
      */
     eventPtr->xkey.keycode = SYNTHETIC_KEYCODE(keysym);
+    eventPtr->xkey.state = existingState;
+
+    /* For modifier keys themselves (Control_L etc), latch global Wayland
+     * modifier state so subsequent synthetic events and XQueryPointer see it.
+     * This fixes bind-33.16 where <Escape><Control-c> is simulated by
+     * generating Control_L presses. On X11 the X server latches this; on
+     * Wayland we must do it ourselves. */
+    if (keysym == XK_Control_L || keysym == XK_Control_R) {
+        if (eventPtr->type == KeyPress) {
+            glfwModifierState |= ControlMask;
+        } else if (eventPtr->type == KeyRelease) {
+            glfwModifierState &= ~ControlMask;
+        }
+        /* Control_L itself should not have ControlMask in its own state */
+        return;
+    } else if (keysym == XK_Shift_L || keysym == XK_Shift_R) {
+        if (eventPtr->type == KeyPress) {
+            glfwModifierState |= ShiftMask;
+        } else {
+            glfwModifierState &= ~ShiftMask;
+        }
+        return;
+    } else if (keysym == XK_Alt_L || keysym == XK_Alt_R) {
+        if (eventPtr->type == KeyPress) {
+            glfwModifierState |= Mod1Mask;
+        } else {
+            glfwModifierState &= ~Mod1Mask;
+        }
+        return;
+    } else if (keysym == XK_Super_L || keysym == XK_Super_R) {
+        if (eventPtr->type == KeyPress) {
+            glfwModifierState |= Mod4Mask;
+        } else {
+            glfwModifierState &= ~Mod4Mask;
+        }
+        return;
+    }
 
     /* Try to also set Shift/Mod5 for completeness when XKB map exists,
-     * so bindings that check state still work, but keep synthetic base.
+     * so bindings that check state still work, but keep synthetic base
+     * and preserve any Control/Alt state already parsed from <Control-c> etc.
      */
     if (xkbState.keymap) {
         xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
@@ -208,6 +253,8 @@ TkpSetKeycodeAndState(
                         if (syms[i] == (xkb_keysym_t)keysym) {
                             if (level == 1) eventPtr->xkey.state |= ShiftMask;
                             else if (level >= 2) eventPtr->xkey.state |= Mod5Mask;
+                            /* Preserve Control/Alt/etc that were parsed */
+                            eventPtr->xkey.state |= (existingState & (ControlMask|Mod1Mask|Mod4Mask));
                             return;
                         }
                     }
@@ -215,6 +262,8 @@ TkpSetKeycodeAndState(
             }
         }
     }
+    /* If not found in keymap, keep existingState (important for <Control-c>) */
+    eventPtr->xkey.state = existingState;
 }
 
 

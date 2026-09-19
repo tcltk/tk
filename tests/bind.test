@@ -1226,6 +1226,7 @@ test bind-15.7 {MatchPatterns procedure, ignoring type mismatches} -setup {
     event generate .t.f <ButtonRelease-1>
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
+    set x
     return $x
 } -cleanup {
     destroy .t.f
