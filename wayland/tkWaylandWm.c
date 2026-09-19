@@ -13,7 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging. 
+/* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "wm"
 */
@@ -496,7 +496,7 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
 static void
 QueueVisibilityNotify(TkWindow *winPtr) {
     if (winPtr == NULL) return;
-	if (!winPtr->flags & TK_MAPPED) return;
+	if (!(winPtr->flags & TK_MAPPED)) return;
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
     event.type = VisibilityNotify;
@@ -545,14 +545,9 @@ TkWmMapWindow(TkWindow *winPtr)
         return;
     }
 
-    /* Respect explicit withdraw only. First map must succeed or root stays invisible. */
-    if (wmPtr->withdrawn) {
+    /* Respect "wm withdraw ." — do not force visibility. */
+    if (wmPtr->withdrawn || wmPtr->initialState == WithdrawnState) {
         DEBUG_LOG("TkWmMapWindow: %s is withdrawn, not showing",
-                  Tk_PathName(winPtr));
-        return;
-    }
-    if ((wmPtr->flags & WM_NEVER_MAPPED) == 0 && wmPtr->initialState == WithdrawnState) {
-        DEBUG_LOG("TkWmMapWindow: %s is withdrawn via initialState, not showing",
                   Tk_PathName(winPtr));
         return;
     }
@@ -576,33 +571,9 @@ TkWmMapWindow(TkWindow *winPtr)
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
-        /* Clear NEVER_FOCUSED so geometry and drawing don't wait forever for focus. */
-        {
-            glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-            if (infoPtr) infoPtr->flags &= ~TKWL_NEVER_FOCUSED;
-        }
         UpdateGeometryInfo(winPtr);
         DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
-        /* 
-         * Force immediate buffer commit - hidden swaps are discarded on Wayland,
-         * empty root never got a swap because childList==NULL checks cleared NEEDS_DISPLAY. 
-         */
-        {
-            int fbW=0,fbH=0;
-            glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
-            if (fbW>0 && fbH>0) {
-                glfwMakeContextCurrent(glfwWindow);
-                glViewport(0,0,fbW,fbH);
-                glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-                glClear(GL_COLOR_BUFFER_BIT);
-                glfwSwapBuffers(glfwWindow);
-                /* Also mark for normal display path */
-                glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-                if (infoPtr) infoPtr->flags |= TKWL_NEEDS_DISPLAY;
-            }
-        }
-        TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 
         /*
          * Dispatch a MapNotify event synchronously so any
@@ -621,6 +592,16 @@ TkWmMapWindow(TkWindow *winPtr)
         mapEvent.xmap.window = Tk_WindowId((Tk_Window)winPtr);
         mapEvent.xmap.override_redirect = winPtr->atts.override_redirect;
         Tk_HandleEvent(&mapEvent);
+
+        /*
+         * Tk_MapWindow never calls XMapWindow for a toplevel, so nothing
+         * else asks the toplevel itself to redraw after it is shown.  The
+         * Expose queued at creation time is consumed while the window is
+         * still unmapped (DisplayFrame drops it), so queue a fresh one now.
+         * This also makes an empty root produce a first frame to present.
+         */
+        TkWaylandQueueExposeEvent(winPtr, 0, 0,
+                Tk_Width(winPtr), Tk_Height(winPtr));
     }
     /*
      * Wayland has no VisibilityNotify equivalent — the compositor never

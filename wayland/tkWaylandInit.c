@@ -16,7 +16,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging. 
+/* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "init"
 */
@@ -288,33 +288,62 @@ getGlfwTkInfo(
 
 static int isGlfwWindowValid(GLFWwindow *win) { if (!win) return 0; for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) if (p->glfwWindow==win) return 1; return 0; }
 
-static void renderFBO(
+/*
+ * IsUnmappedEmptyRoot --
+ *
+ *	True if the toplevel containing winPtr is the interpreter's main
+ *	window, has no children, and has not been mapped yet.  Such a window
+ *	is not drawn or presented (this avoids painting a root that is about
+ *	to be withdrawn).  Once TkWmMapWindow has set TK_MAPPED, an empty
+ *	root must be drawn and presented like any other toplevel; otherwise
+ *	no buffer is ever committed after glfwShowWindow and the compositor
+ *	never displays it.
+ */
+
+static int
+IsUnmappedEmptyRoot(TkWindow *winPtr)
+{
+    TkWindow *top = winPtr;
+
+    while (top && !Tk_IsTopLevel(top)) {
+        top = top->parentPtr;
+    }
+    if (top == NULL || top->childList != NULL || (top->flags & TK_MAPPED)) {
+        return 0;
+    }
+    return top->mainPtr && top->mainPtr->interp
+            && top == (TkWindow *) Tk_MainWindow(top->mainPtr->interp);
+}
+
+static int renderFBO(
     GLFWwindow *glfwWindow)
 {
-    if (shutdownInProgress) return;
-    if (!glfwWindow) return;
-    if (!isGlfwWindowValid(glfwWindow)) return;
-    if (glfwWindowShouldClose(glfwWindow)) return;
-    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return;
-    if (glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) return;
+    if (shutdownInProgress) return 1;
+    if (!glfwWindow) return 1;
+    if (!isGlfwWindowValid(glfwWindow)) return 1;
+    if (glfwWindowShouldClose(glfwWindow)) return 1;
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
+    if (glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) return 1;
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) return;
+    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) return 1;
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
-    if (!fb || fb->fbo==0) return;
+    if (!fb || fb->fbo==0) return 1;
+    if (IsUnmappedEmptyRoot(infoPtr->winPtr)) return 1;
     int fbW,fbH; glfwMakeContextCurrent(glfwWindow); glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
-    if (fbW<=0||fbH<=0) return;
+    if (fbW<=0||fbH<=0) return 1;
     glFlush();
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER,0); return; }
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER,0); return 1; }
     glBlitFramebuffer(0,0,fbW,fbH,0,0,fbW,fbH,GL_COLOR_BUFFER_BIT,GL_NEAREST);
     glFlush();
-    if (!isGlfwWindowValid(glfwWindow)) return;
-    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return;
+    if (!isGlfwWindowValid(glfwWindow)) return 1;
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
     static double lastSwap=0; double now=glfwGetTime();
-    if (now-lastSwap<0.008) return;
+    if (now-lastSwap<0.008) return 0;  /* throttled: caller keeps NEEDS_DISPLAY */
     glfwSwapBuffers(glfwWindow);
     lastSwap=glfwGetTime();
+    return 1;
 }
 
 
@@ -485,8 +514,14 @@ TkWaylandDisplayAllWindows()
         }
         int fbW=0,fbH=0; glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
         if (fbW<=0||fbH<=0) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
-        renderFBO(glfwWindow);
-        infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+        if (infoPtr->winPtr && IsUnmappedEmptyRoot(infoPtr->winPtr)) {
+            infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+            continue;
+        }
+        /* If the swap was throttled, leave NEEDS_DISPLAY set and retry. */
+        if (renderFBO(glfwWindow)) {
+            infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+        }
     }
 }
 
@@ -820,8 +855,8 @@ TkWaylandCreateWindow(
     }
     if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)
         && mainGlfwWindow != NULL
-        && mainInfoTmp
-        && (mainInfoTmp->winPtr == NULL || mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr)) {
+        && mainInfoTmp && mainInfoTmp->winPtr
+        && mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr) {
         /*
          * Root window: ensure we have a GL ES context and that it is current.
          * If this is the first time, create mainGlfwWindow here.
@@ -1113,6 +1148,7 @@ TkWaylandBeginDraw(
     if (!isGlfwWindowValid(glfwWindow)) return TCL_ERROR;
     int _bw,_bh; glfwGetFramebufferSize(glfwWindow,&_bw,&_bh);
     if (_bw<=0||_bh<=0) return TCL_ERROR;
+    if (IsUnmappedEmptyRoot(winPtr)) return TCL_ERROR;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     if (!infoPtr) return TCL_ERROR;
     if ((infoPtr->flags & TKWL_NEVER_FOCUSED)
@@ -1250,6 +1286,12 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     if (!infoPtr) return;
     if (!(infoPtr->flags & TKWL_IS_DRAWING)) return;
+    if (IsUnmappedEmptyRoot(toplevelPtr)) {
+        nvgCancelFrame(infoPtr->vg);
+        infoPtr->flags &= ~TKWL_IS_DRAWING;
+        return;
+    }
+
     
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
