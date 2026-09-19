@@ -1884,11 +1884,34 @@ TkWaylandGetGLFWwindow(
     TkWindow *winPtr)
 {
     TkWindow *toplevelPtr = winPtr;
-    while (!Tk_IsTopLevel(toplevelPtr)) {
-	toplevelPtr = toplevelPtr->parentPtr;
+    int depth = 0;
+
+    if (toplevelPtr == NULL) {
+        return NULL;
     }
-    if (toplevelPtr->privatePtr) {
-	return toplevelPtr->privatePtr->glfwWindow;
+    /*
+     * Defensive walk: winPtr may be the target of a timer that fired after
+     * the window was freed (event-c3f5c85322). Check TK_ALREADY_DEAD at each
+     * step and bound the walk to avoid chasing a dangling parentPtr chain.
+     */
+    while (toplevelPtr != NULL && depth < 100) {
+        /* If this dereference itself segfaults, the timer was not cancelled -
+         * the fix in TkWmDeadWindow / UpdateGeometryInfo should prevent reaching
+         * here, but guard anyway by checking liveness before IsTopLevel. */
+        if (toplevelPtr->flags & TK_ALREADY_DEAD) {
+            return NULL;
+        }
+        if (Tk_IsTopLevel(toplevelPtr)) {
+            break;
+        }
+        toplevelPtr = toplevelPtr->parentPtr;
+        depth++;
+    }
+    if (toplevelPtr != NULL && toplevelPtr->privatePtr) {
+        if (toplevelPtr->flags & TK_ALREADY_DEAD) {
+            return NULL;
+        }
+        return toplevelPtr->privatePtr->glfwWindow;
     }
     return NULL;
 }
@@ -1913,6 +1936,13 @@ MODULE_SCOPE GLFWwindow *
 TkWaylandGetGLFWwindowFromDrawable(Drawable drawable)
 {
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+
+    if (winPtr == NULL) {
+        return NULL;
+    }
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+        return NULL;
+    }
     return TkWaylandGetGLFWwindow(winPtr);
 }
 

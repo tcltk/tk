@@ -737,10 +737,14 @@ TkWmDeadWindow(
                           StructureNotifyMask | PropertyChangeMask,
                           TopLevelEventProc, (void *)winPtr);
 
-    /* Cancel any pending UpdateGeometryInfo idle tasks  */
+    /* Cancel any pending UpdateGeometryInfo idle/idle tasks  */
     if (wmPtr->flags & WM_UPDATE_PENDING) {
         Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
-	wmPtr->flags &= ~WM_UPDATE_PENDING;
+        wmPtr->flags &= ~WM_UPDATE_PENDING;
+    }
+    if (wmPtr->geometryUpdateTimer != NULL) {
+        Tcl_DeleteTimerHandler(wmPtr->geometryUpdateTimer);
+        wmPtr->geometryUpdateTimer = NULL;
     }
 
     /* Destroy wrapper window if present. */
@@ -3834,24 +3838,41 @@ UpdateGeometryInfo(
     WmInfo   *wmPtr;
     GLFWwindow *glfwWindow;
     glfwTkInfo *infoPtr;
+    WmInfo *iter;
 
     /*
-     * This idle call can fire re-entrantly: TkWaylandSyncMenubarGeometry()
-     * pumps the idle queue with a nested Tcl_DoOneEvent() loop while a
-     * menu is being torn down (see TkpSetWindowMenuBar()).  If that
-     * happens while this same toplevel is itself mid-destruction, bail
-     * out immediately rather than touching any of its state.
+     * This idle/timer call can fire re-entrantly or after the window has
+     * been destroyed: TkWmDeadWindow cancels idle calls but the
+     * TKWL_NEVER_FOCUSED path creates a Tcl timer. If that timer fires
+     * after the TkWindow is freed, any dereference of winPtr will segfault.
+     * Validate liveness without dereferencing winPtr first by scanning
+     * the live WmInfo list for a matching winPtr pointer value.
+     */
+    for (iter = firstWmPtr; iter != NULL; iter = iter->nextPtr) {
+        if (iter->winPtr == winPtr) {
+            break;
+        }
+    }
+    if (iter == NULL) {
+        DEBUG_LOG("UpdateGeometryInfo: window not in live list, skipping (timer fired after free)");
+        return;
+    }
+
+    /*
+     * Now it is safe to dereference winPtr.
      */
     if (winPtr->flags & TK_ALREADY_DEAD) {
-	DEBUG_LOG("UpdateGeometryInfo: window already dead, skipping");
-	return;
+        DEBUG_LOG("UpdateGeometryInfo: window already dead, skipping");
+        return;
     }
 
     wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (wmPtr == NULL) {
-	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
-	return;
+        DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
+        return;
     }
+    /* Timer has fired, clear stored token */
+    wmPtr->geometryUpdateTimer = NULL;
 
     /*
      * Likewise, the toplevel's GLFW window (and glfwTkInfo) may already
@@ -3876,7 +3897,10 @@ UpdateGeometryInfo(
 	 */
 	wmPtr->flags |= WM_UPDATE_PENDING;
 	DEBUG_LOG("UpdateGeometryInfo: waiting for focus.");
-	Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
+	if (wmPtr->geometryUpdateTimer != NULL) {
+	    Tcl_DeleteTimerHandler(wmPtr->geometryUpdateTimer);
+	}
+	wmPtr->geometryUpdateTimer = Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
 	return;
     }
     if (wmPtr == NULL) {

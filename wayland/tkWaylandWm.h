@@ -104,6 +104,7 @@ typedef struct TkWmInfo {
     int           isMapped;
     int           lastX, lastY;
     int           lastWidth, lastHeight;
+    Tcl_TimerToken geometryUpdateTimer;
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
