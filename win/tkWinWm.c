@@ -8289,10 +8289,11 @@ WmProc(
 
     case WM_MOUSEACTIVATE: {
 	winPtr = GetTopLevel((HWND) wParam);
-	if (winPtr && (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
+	if (!winPtr || (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
 	    /*
 	     * This allows us to pass the message onto the native menus [Bug:
-	     * 2272]
+	     * 2272], and to activate a non-Tk toplevel into which the Tk
+	     * window has been reparented [Bug 564897].
 	     */
 
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
