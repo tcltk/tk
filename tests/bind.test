@@ -2394,6 +2394,19 @@ test bind-17.13 {event command: info all} -body {
     event delete <<Alive>>
 } -result {<<Alive>> <<Paste>>}
 
+test bind-17.13.1 {event command: info sequence} -body {
+    event delete <<Paste>>
+    event delete <<Alive>>
+    event add <<Paste>> <Control-v> <Control-Key-V>
+    event add <<Alive>> <Control-Key-v>
+    list [lsort [event info <Control-v>]] [event info <Control-V>] [event info <Control-x>]
+} -cleanup {
+    event delete <<Paste>>
+    event delete <<Alive>>
+} -result {{<<Alive>> <<Paste>>} <<Paste>> {}}
+test bind-17.13.2 {event command: info sequence error} -body {
+    event info <Control-Bogus>
+} -returnCodes error -result {bad event type or keysym "Bogus"}
 test bind-17.14 {event command: info error} -body {
     event info <<Paste>> <Control-v>
 } -returnCodes error -result {wrong # args: should be "event info ?virtual?"}

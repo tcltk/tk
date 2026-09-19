@@ -73,15 +73,18 @@ event is processed.  Certain events, such as key events, require
 that the window has focus to receive the event properly.
 .\" METHOD: info
 .TP
-\fBevent info \fR?\fB<<\fIvirtual\fB>>\fR?
+\fBevent info \fR?\fB<<\fIvirtual\fB>>\fR | \fIsequence\fR?
 .
 Returns information about virtual events.
-If the \fB<<\fIvirtual\fB>>\fR argument is omitted, the return value
+If the argument is omitted, the return value
 is a list of all the virtual events that are currently defined.
 If \fB<<\fIvirtual\fB>>\fR is specified then the return value is
 a list whose elements are the physical event sequences currently
 defined for the given virtual event;  if the virtual event is
 not defined then an empty string is returned.
+If a physical event \fIsequence\fR is specified then the return value is
+a list of the virtual events that it is currently added to;
+if there are none then an empty string is returned.
 .RS
 .PP
 Note that virtual events that are not bound to physical event

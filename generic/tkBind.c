@@ -3729,15 +3729,17 @@ DeleteVirtualEvent(
  * GetVirtualEvent --
  *
  *	Return the list of physical events that can invoke the given virtual
- *	event.
+ *	event, or the list of virtual events that the given physical event
+ *	sequence invokes.
  *
  * Results:
  *	The return value is TCL_OK and the interp's result is filled with the
  *	string representation of the physical events associated with the
- *	virtual event; if there are no physical events for the given virtual
- *	event, the interp's result is filled with and empty string. If the
- *	virtual event string is improperly formed, then TCL_ERROR is returned
- *	and an error message is left in the interp's result.
+ *	virtual event, or of the virtual events associated with the physical
+ *	event sequence; if there are none, the interp's result is filled with
+ *	an empty string. If the event string is improperly formed, then
+ *	TCL_ERROR is returned and an error message is left in the interp's
+ *	result.
  *
  * Side effects:
  *	None.
@@ -3749,18 +3751,43 @@ static int
 GetVirtualEvent(
     Tcl_Interp *interp,		/* Interpreter for reporting. */
     VirtualEventTable *vetPtr,	/* Table in which to look for event. */
-    Tcl_Obj *virtName)		/* String describing virtual event. */
+    Tcl_Obj *virtName)		/* String describing virtual event or physical
+				 * event sequence. */
 {
     Tcl_HashEntry *vhPtr;
     unsigned iPhys;
     const PhysOwned *owned;
     Tk_Uid virtUid;
     Tcl_Obj *resultObj;
+    const char *string;
 
     assert(vetPtr);
     assert(virtName);
 
-    if (!(virtUid = GetVirtualEventUid(interp, Tcl_GetString(virtName)))) {
+    string = Tcl_GetString(virtName);
+    if (string[0] == '<' && string[1] != '<') {
+	/*
+	 * A physical event sequence: list the virtual events that own it.
+	 */
+
+	const PatSeq *psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL,
+		string, 0, 0, NULL);
+
+	if (!psPtr) {
+	    string = Tcl_GetString(Tcl_GetObjResult(interp));
+	    return string[0] ? TCL_ERROR : TCL_OK;
+	}
+	resultObj = Tcl_NewObj();
+	for (iPhys = 0; iPhys < VirtOwners_Size(psPtr->ptr.owners); ++iPhys) {
+	    vhPtr = VirtOwners_Get(psPtr->ptr.owners, iPhys);
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_ObjPrintf("<<%s>>",
+		    (char *)Tcl_GetHashKey(&vetPtr->nameTable, vhPtr)));
+	}
+	Tcl_SetObjResult(interp, resultObj);
+	return TCL_OK;
+    }
+
+    if (!(virtUid = GetVirtualEventUid(interp, string))) {
 	return TCL_ERROR;
     }
 
