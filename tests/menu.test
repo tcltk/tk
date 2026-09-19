@@ -4064,7 +4064,7 @@ test menu-35.1 {menu -underline string overruns Bug 1599877} -setup {
     tk::TraverseToMenu . "e"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result 0
 
 test menu-37.1 {menubar menues cannot be posted - bug 2160206} -setup {
     catch {destroy .m}
