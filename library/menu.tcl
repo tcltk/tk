@@ -176,19 +176,20 @@ bind Menu <Key> {
 # The following bindings apply to all windows, and are used to
 # implement keyboard menu traversal.
 
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] ne "aqua"} {
     bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
-    }
-
-    bind all <F10> {
-	tk::FirstMenu %W
     }
 } else {
     bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
-
+}
+if {[tk windowingsystem] eq "x11"} {
+    bind all <F10> {
+	tk::FirstMenu %W
+    }
+} else {
     bind Menubutton <F10> {
 	tk::FirstMenu %W
     }
@@ -977,6 +978,10 @@ proc ::tk::TraverseToMenu {w char} {
     set w [MenuFind [winfo toplevel $w] $char]
     if {$w ne ""} {
 	if {[winfo class $w] eq "Menu"} {
+	    if {[tk windowingsystem] ne "x11"} {
+		# A native menubar handles the key itself. [Bug 2128087]
+		return
+	    }
 	    tk_menuSetFocus $w
 	    set Priv(window) $w
 	    SaveGrabInfo $w
