@@ -16,7 +16,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging. 
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "init"
 */
@@ -301,13 +301,7 @@ static void renderFBO(
     if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) return;
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
     if (!fb || fb->fbo==0) return;
-    if (infoPtr->winPtr->childList==NULL) {
-        TkWindow *top=infoPtr->winPtr;
-        while (top && !Tk_IsTopLevel(top)) top=top->parentPtr;
-        if (top && top->mainPtr && top->mainPtr->interp) {
-            if (top==(TkWindow*)Tk_MainWindow(top->mainPtr->interp)) return;
-        }
-    }
+    /* FIX: allow empty root - removed last childList guard */
     int fbW,fbH; glfwMakeContextCurrent(glfwWindow); glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
     if (fbW<=0||fbH<=0) return;
     glFlush();
@@ -492,13 +486,7 @@ TkWaylandDisplayAllWindows()
         }
         int fbW=0,fbH=0; glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
         if (fbW<=0||fbH<=0) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
-        if (infoPtr->winPtr && infoPtr->winPtr->childList==NULL) {
-            TkWindow *top=infoPtr->winPtr;
-            while (top && !Tk_IsTopLevel(top)) top=top->parentPtr;
-            if (top && top->mainPtr && top->mainPtr->interp) {
-                if (top==(TkWindow*)Tk_MainWindow(top->mainPtr->interp)) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
-            }
-        }
+                /* FIX: allow empty root to render */
         renderFBO(glfwWindow);
         infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
     }
@@ -834,8 +822,8 @@ TkWaylandCreateWindow(
     }
     if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)
         && mainGlfwWindow != NULL
-        && mainInfoTmp && mainInfoTmp->winPtr
-        && mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr) {
+        && mainInfoTmp
+        && (mainInfoTmp->winPtr == NULL || mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr)) {
         /*
          * Root window: ensure we have a GL ES context and that it is current.
          * If this is the first time, create mainGlfwWindow here.
@@ -1127,13 +1115,7 @@ TkWaylandBeginDraw(
     if (!isGlfwWindowValid(glfwWindow)) return TCL_ERROR;
     int _bw,_bh; glfwGetFramebufferSize(glfwWindow,&_bw,&_bh);
     if (_bw<=0||_bh<=0) return TCL_ERROR;
-    if (winPtr->childList==NULL) {
-        TkWindow *_top=winPtr;
-        while (_top && !Tk_IsTopLevel(_top)) _top=_top->parentPtr;
-        if (_top && _top->mainPtr && _top->mainPtr->interp) {
-            if (_top==(TkWindow*)Tk_MainWindow(_top->mainPtr->interp)) return TCL_ERROR;
-        }
-    }
+        /* FIX: allow empty root to draw - was invisible on Wayland */
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     if (!infoPtr) return TCL_ERROR;
     if ((infoPtr->flags & TKWL_NEVER_FOCUSED)
@@ -1271,14 +1253,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     if (!infoPtr) return;
     if (!(infoPtr->flags & TKWL_IS_DRAWING)) return;
-    if (toplevelPtr->childList==NULL) {
-        TkWindow *mainWin = toplevelPtr->mainPtr ? (TkWindow*)Tk_MainWindow(toplevelPtr->mainPtr->interp) : NULL;
-        if (toplevelPtr==mainWin) {
-            nvgCancelFrame(infoPtr->vg);
-            infoPtr->flags &= ~TKWL_IS_DRAWING;
-            return;
-        }
-    }
+        /* FIX: don't cancel empty root frame */
 
     
     /*

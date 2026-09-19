@@ -13,7 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging. 
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "wm"
 */
@@ -545,9 +545,14 @@ TkWmMapWindow(TkWindow *winPtr)
         return;
     }
 
-    /* Respect "wm withdraw ." — do not force visibility. */
-    if (wmPtr->withdrawn || wmPtr->initialState == WithdrawnState) {
+    /* FIX: respect explicit withdraw only. First map must succeed or root stays invisible */
+    if (wmPtr->withdrawn) {
         DEBUG_LOG("TkWmMapWindow: %s is withdrawn, not showing",
+                  Tk_PathName(winPtr));
+        return;
+    }
+    if ((wmPtr->flags & WM_NEVER_MAPPED) == 0 && wmPtr->initialState == WithdrawnState) {
+        DEBUG_LOG("TkWmMapWindow: %s is withdrawn via initialState, not showing",
                   Tk_PathName(winPtr));
         return;
     }
@@ -571,9 +576,31 @@ TkWmMapWindow(TkWindow *winPtr)
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
+        /* FIX: clear NEVER_FOCUSED so geometry and drawing don't wait forever for focus */
+        {
+            glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+            if (infoPtr) infoPtr->flags &= ~TKWL_NEVER_FOCUSED;
+        }
         UpdateGeometryInfo(winPtr);
         DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
+        /* FIX: force immediate buffer commit - hidden swaps are discarded on Wayland,
+         * empty root never got a swap because childList==NULL checks cleared NEEDS_DISPLAY */
+        {
+            int fbW=0,fbH=0;
+            glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
+            if (fbW>0 && fbH>0) {
+                glfwMakeContextCurrent(glfwWindow);
+                glViewport(0,0,fbW,fbH);
+                glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT);
+                glfwSwapBuffers(glfwWindow);
+                /* Also mark for normal display path */
+                glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+                if (infoPtr) infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+            }
+        }
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 
         /*
          * Dispatch a MapNotify event synchronously so any
