@@ -50,17 +50,20 @@ TkpChangeFocus(
     int dummy;
 
     /*
-     * Don't set the X focus to a window that's marked override-redirect.
-     * This is a hack to avoid problems with menus under olvwm: if we move
-     * the focus then the focus can get lost during keyboard traversal.
-     * Fortunately, we don't really need to move the focus for menus: events
-     * will still find their way to the focus window, and menus aren't
-     * decorated anyway so the window manager doesn't need to hear about the
-     * focus change in order to redecorate the menu.
+     * Don't set the X focus to a window that's marked override-redirect,
+     * unless explicitly forced.  This is a hack to avoid problems with menus
+     * under olvwm: if we move the focus then the focus can get lost during
+     * keyboard traversal.  Fortunately, we don't really need to move the
+     * focus for menus: events will still find their way to the focus window,
+     * and menus aren't decorated anyway so the window manager doesn't need
+     * to hear about the focus change in order to redecorate the menu.  But
+     * the window manager never gives the focus to such a window, so
+     * "focus -force" is the only way for an application consisting of
+     * override-redirect windows to receive key events. [Bug a53a902ac6]
      */
 
     serial = 0;
-    if (winPtr->atts.override_redirect) {
+    if (winPtr->atts.override_redirect && !force) {
 	return serial;
     }
 
