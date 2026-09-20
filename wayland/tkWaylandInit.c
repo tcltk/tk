@@ -34,7 +34,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* TKWL_EARLY_EXPOSE_QUEUED now defined in tkWaylandInt.h */
+/*
+ * TKWL_EARLY_EXPOSE_QUEUED is set the first time TkWaylandBeginDraw queues
+ * an early Expose for a window that has never been focused, so that the
+ * request is made only once.  It belongs next to the other TKWL_* flags in
+ * tkWaylandInt.h; this fallback definition uses a high bit so it cannot
+ * collide with them.  Move it into the header and drop this block.
+ */
+#ifndef TKWL_EARLY_EXPOSE_QUEUED
+#define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1178,22 +1187,21 @@ TkWaylandBeginDraw(
     if ((infoPtr->flags & TKWL_NEVER_FOCUSED)
 	    && !(infoPtr->flags & TKWL_EARLY_EXPOSE_QUEUED)) {
 	/*
-	 * First draw before compositor focus. Schedule a full redraw.
-	 * Guard is clearable by TkWmMapWindow ReExposeIdle so second pass
-	 * can happen after pack maps children (TkDiff toolbuttons).
+	 * It may be too early to be drawing in this window.  It may not have
+	 * a GL context yet.  Schedule a redraw.  Keep the single-shot guard
+	 * but make it clearable by TkWmMapWindow (see ReExposeIdle) so that
+	 * a toplevel that maps children after the first expose can still
+	 * request a second early expose.
 	 */
 	infoPtr->flags |= TKWL_EARLY_EXPOSE_QUEUED;
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
-        /* Expose all descendants, not just mapped - catches pending maps */
+        /* Also expose mapped children - fixes initial empty frame */
         for (TkWindow *c = winPtr->childList; c != NULL; c = c->nextPtr) {
-            TkWaylandQueueExposeEvent(c, 0, 0, Tk_Width(c), Tk_Height(c));
-            for (TkWindow *gc = c->childList; gc != NULL; gc = gc->nextPtr) {
-                TkWaylandQueueExposeEvent(gc, 0, 0, Tk_Width(gc), Tk_Height(gc));
+            if (c->flags & TK_MAPPED) {
+                TkWaylandQueueExposeEvent(c, 0, 0, Tk_Width(c), Tk_Height(c));
             }
         }
-        tkWaylandInvalidateClipRectsForTree(winPtr);
-        infoPtr->flags |= TKWL_NEEDS_DISPLAY;
     }
 
     /* Set up the nanoVG drawing context for this nvgFrame. */

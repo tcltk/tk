@@ -123,7 +123,7 @@ XQueryPointer(
     int rootX, rootY;
 
     /*
-     * FIX: Wayland has no global pointer query. Previously this function
+     * Wayland has no global pointer query. Previously this function
      * queried glfwGetCursorPos and treated window-relative coords as root,
      * overwriting LastRoot and breaking winfo pointerxy / winfo containing
      * which the tooltip uses as a guard. Return the cached LastRoot instead.
@@ -368,7 +368,7 @@ TkWaylandHandleMouseButton(
      * Keep the shared pointer state current so that TkGetPointerCoords
      * (winfo pointerxy/pointerx/pointery) reports the real pointer
      * position rather than the stale initial value.
-     * FIX: glfwGetCursorPos is window-relative, so add toplevel root
+     * glfwGetCursorPos is window-relative, so add toplevel root
      * to get emulated root for winfo pointerxy / containing.
      */
     {
@@ -453,7 +453,7 @@ TkWaylandHandleMouseMove(
      * TkGetPointerCoords (which just returns tkWaylandLastRootX/Y) reports
      * the initial 200,200 forever, so [winfo pointerxy] and anything built
      * on it (e.g. the tooltip's [winfo containing] guard) is wrong.
-     * FIX: glfwGetCursorPos is window-relative, add toplevel root for
+     * glfwGetCursorPos is window-relative, add toplevel root for
      * emulated root coords.
      */
     {
