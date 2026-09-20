@@ -143,8 +143,6 @@ if {[tk windowingsystem] eq "wayland"} {
             if {[catch {open "|$cmd" r} chan]} {
                 return [list 0 ""]
             }
-            # "-translation binary" alone selects raw bytes on both Tcl 8.6
-            # and 9.x; "-encoding binary" was removed in Tcl 9.
             if {[catch {fconfigure $chan -translation binary} err]} {
                 catch {close $chan}
                 return [list 0 ""]

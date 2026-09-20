@@ -87,7 +87,7 @@ TkpGetString(
     }
     Tcl_DStringInit(dsPtr);
 
-    /* FIX for Ctrl-C tofu: never produce %A when Control is held (except AltGr) */
+    /* Never produce %A when Control is held (except AltGr) */
     if (eventPtr->type == KeyPress) {
         unsigned int st = eventPtr->xkey.state;
         int isAltGr = (st & Mod5Mask) || ((st & ControlMask) && (st & Mod1Mask));
@@ -100,7 +100,7 @@ TkpGetString(
     storedText = TkWaylandGetStoredText(toplevel);
 
     if (storedText != NULL && *storedText != '\0') {
-        /* extra defense: storedText is single control char -> drop */
+        /* Extra defense: storedText is single control char -> drop. */
         if (storedText[0] && !storedText[1] && (unsigned char)storedText[0] < 32) {
             unsigned char c = (unsigned char)storedText[0];
             if (c != '\r' && c != '\t' && c != '\n') {
@@ -999,7 +999,7 @@ TkWaylandSendUnicodeString(
     if (!utf8_str || !*utf8_str || !tkwin) {
         return;
     }
-    /* FIX: never send control chars via synthetic KeyPress */
+    /* Never send control chars via synthetic KeyPress. */
     if (utf8_str[0] && !utf8_str[1] && (unsigned char)utf8_str[0] < 32) {
         unsigned char c = (unsigned char)utf8_str[0];
         if (c != '\r' && c != '\t' && c != '\n') {
