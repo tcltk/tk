@@ -7380,6 +7380,26 @@ ConfigureTopLevel(
 
 
     /*
+     * The position and size in pos are not valid if SWP_NOMOVE or SWP_NOSIZE
+     * is set (e.g. in the last message of Aero Shake), use the actual ones.
+     * [Bug 90f5cd3f21]
+     */
+
+    if (pos->flags & (SWP_NOMOVE | SWP_NOSIZE)) {
+	RECT winRect;
+
+	GetWindowRect(wmPtr->wrapper, &winRect);
+	if (pos->flags & SWP_NOMOVE) {
+	    pos->x = winRect.left;
+	    pos->y = winRect.top;
+	}
+	if (pos->flags & SWP_NOSIZE) {
+	    pos->cx = winRect.right - winRect.left;
+	    pos->cy = winRect.bottom - winRect.top;
+	}
+    }
+
+    /*
      * Compute the current geometry of the client area, reshape the Tk window
      * and generate a ConfigureNotify event.
      */
