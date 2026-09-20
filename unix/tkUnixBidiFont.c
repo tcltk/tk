@@ -2000,9 +2000,13 @@ TkpGetFontFromAttributes(
     int slant = (faPtr->slant == TK_FS_ROMAN) ? XFT_SLANT_ROMAN : XFT_SLANT_ITALIC;
     XftPatternAddInteger(pattern, XFT_SLANT, slant);
 
-    /* Perform system substitution. */
-    XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    /*
+     * No substitution here: InitFont substitutes the pattern itself
+     * (FcConfigSubstitute, then XftDefaultSubstitute) before FcFontSort.
+     * Running FcConfigSubstitute twice on the same pattern re-applies the
+     * fontconfig alias rules and changes which family the generic names
+     * (sans-serif, serif, ...) resolve to.
+     */
 
     UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
     fontPtr = InitFont(tkwin, pattern, fontPtr);
@@ -2013,6 +2017,15 @@ TkpGetFontFromAttributes(
 	pattern = XftPatternBuild(NULL, XFT_FAMILY, XftTypeString, "sans",
 				  XFT_SIZE, XftTypeDouble, size, NULL);
 	fontPtr = InitFont(tkwin, pattern, (UnixFtFont *)tkFontPtr);
+    }
+
+    if (fontPtr) {
+	/*
+	 * Fontconfig knows nothing about underline/overstrike; carry the
+	 * requested values into the actual attributes (as tkUnixRFont.c does).
+	 */
+	fontPtr->font.fa.underline = faPtr->underline;
+	fontPtr->font.fa.overstrike = faPtr->overstrike;
     }
 
     return (TkFont *)fontPtr;
@@ -2705,6 +2718,8 @@ Tk_DrawCharsInContext(
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     int rangeEnd = (int)(rangeStart + rangeLength);
 
+    int barX0 = x, barX1 = x;	/* Horizontal extent of the glyphs drawn. */
+
     if (rangeLength <= 0) return;
 
     XftDraw *ftDraw = XftDrawCreate(display, drawable,
@@ -2769,6 +2784,7 @@ Tk_DrawCharsInContext(
 	    offsetX = tmpX;
 	}
 	penX = x + offsetX;
+	barX0 = penX;
 
 	/* Build specs for visible range. */
 	Tcl_Size i = rangeStart;
@@ -2810,6 +2826,7 @@ Tk_DrawCharsInContext(
 	    penX += ext.xOff;
 	    i += clen;
 	}
+	barX1 = penX;
 
 	if (nspec > 0) {
 	    LOCK;
@@ -2861,6 +2878,12 @@ Tk_DrawCharsInContext(
 	    specs[nspec].glyph = glyphId;
 	    specs[nspec].x     = x + buffer.glyphs[i].x;   /* Absolute visual position. */
 	    specs[nspec].y     = y + buffer.glyphs[i].y;
+	    if (nspec == 0 || specs[nspec].x < barX0) {
+		barX0 = specs[nspec].x;
+	    }
+	    if (nspec == 0 || specs[nspec].x + buffer.glyphs[i].advanceX > barX1) {
+		barX1 = specs[nspec].x + buffer.glyphs[i].advanceX;
+	    }
 	    nspec++;
 	}
 
@@ -2871,6 +2894,23 @@ Tk_DrawCharsInContext(
 	}
     }
  done:
+    /*
+     * Draw the underline / overstrike bars over the extent of the glyphs
+     * just drawn, as tkUnixRFont.c does.
+     */
+    if (barX1 > barX0) {
+	if (fontPtr->font.fa.underline != 0) {
+	    XFillRectangle(display, drawable, gc, barX0,
+		    y + fontPtr->font.underlinePos, (unsigned) (barX1 - barX0),
+		    (unsigned) fontPtr->font.underlineHeight);
+	}
+	if (fontPtr->font.fa.overstrike != 0) {
+	    XFillRectangle(display, drawable, gc, barX0,
+		    y - fontPtr->font.fm.descent - (fontPtr->font.fm.ascent) / 10,
+		    (unsigned) (barX1 - barX0),
+		    (unsigned) fontPtr->font.underlineHeight);
+	}
+    }
     XftDrawDestroy(ftDraw);
 }
 
