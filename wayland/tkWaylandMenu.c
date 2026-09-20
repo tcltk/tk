@@ -141,6 +141,14 @@ typedef struct {
     int contentH;    /* Full menu totalHeight before clamping */
     int viewportH;   /* Visible height after clamping */
     int scrollOffset;/* Pixel offset into content */
+    /*
+     * Passive popup (tooltip): visible, but not an interactive menu
+     * session.  Never captures the pointer or keyboard, never dismisses
+     * on outside clicks; widgets underneath keep receiving normal
+     * Motion/Enter/Leave/Button events.  A passive entry is only ever
+     * menuStack[0] and is never combined with an interactive menu.
+     */
+    int passive;
 } MenuStackEntry;
 
 static MenuStackEntry menuStack[TK_WAYLAND_MENU_STACK_MAX];
@@ -163,10 +171,19 @@ static TkWindow *menuKeyboardNavOwnerWinPtr = NULL;
  */
 static int pendingRootIsMenubar = 0;
 
+/*
+ * Same idea as pendingRootIsMenubar: set by TkpPostMenu immediately
+ * before a root TkWaylandPostMenuAtAnchor call, and consumed (read and
+ * cleared) at the top of that function.
+ */
+static int pendingRootIsPassive = 0;
+
 /* Menu stack management. */
 static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
 static void MenuStackPop(int toDepth);
 static int MenuStackFindLevel(TkMenu *menuPtr);
+static int MenuIsPassive(TkMenu *menuPtr);
+static int MenuInteractiveDepth(void);
 
 /* Scrolling support */
 static int MenuScrollBy(int level, int delta);
@@ -2837,6 +2854,7 @@ TkpPostMenu(
     }
 
     pendingRootIsMenubar = 0;
+    pendingRootIsPassive = MenuIsPassive(menuPtr);
     return TkWaylandPostMenuAtAnchor(interp, menuPtr,
         x, y, 1, 1, popupW, popupH, 1, gw);
 }
@@ -2996,6 +3014,57 @@ MenuStackPop(
             MenuStackWindowEventProc, (ClientData)poppedMenuPtr);
         }
     }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuIsPassive --
+ *
+ *     Decide whether a menu being posted is a passive popup (a tooltip)
+ *     rather than an interactive menu.  Currently keyed off the menu's
+ *     Tk path name (tooltip.tcl uses ".__tooltip_menu__"); this is the
+ *     single place to change if a real marker is added later (for
+ *     example a stored wm attribute or a menu option).
+ *
+ * Results:
+ *     1 if passive, 0 otherwise.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+MenuIsPassive(
+    TkMenu *menuPtr)
+{
+    const char *name;
+
+    if (!menuPtr || !menuPtr->tkwin) {
+        return 0;
+    }
+    name = Tk_PathName(menuPtr->tkwin);
+    return name && strncmp(name, ".__tooltip", 10) == 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuInteractiveDepth --
+ *
+ *     Depth of the menu stack as seen by input routing: a lone passive
+ *     popup counts as 0, so pointer and keyboard handling treat "no menu
+ *     is active" and let events reach the widgets underneath.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+MenuInteractiveDepth(void)
+{
+    if (menuStackDepth == 1 && menuStack[0].passive) {
+        return 0;
+    }
+    return menuStackDepth;
 }
 
 /*
@@ -3571,6 +3640,9 @@ TkWaylandPostMenuAtAnchor(
 {
     int postX, postY;
     GLFWwindow *gw = explicitGw;
+    int passive = (isRoot && pendingRootIsPassive);
+
+    pendingRootIsPassive = 0;
 
     if (!interp || !menuPtr || !menuPtr->tkwin) {
         if (interp) {
@@ -3633,7 +3705,20 @@ TkWaylandPostMenuAtAnchor(
         (void*)menuPtr, (void*)gw, anchorX, anchorY, anchorW, anchorH, popupW, popupH,
         postX, postY, isRoot);
 
-    if (isRoot) {
+    if (passive) {
+        /*
+         * A passive popup must never displace or compete with a real
+         * menu session (an open menu, or F10/Alt keyboard navigation):
+         * quietly skip it.  Otherwise it just replaces any previous
+         * passive popup.  Deliberately not TkWaylandMenuDismissAll():
+         * that would also end a keyboard-nav session's focus handoff.
+         */
+        if (menuKeyboardNavOwnerWinPtr ||
+                (menuStackDepth > 0 && !menuStack[0].passive)) {
+            return TCL_OK;
+        }
+        MenuStackPop(0);
+    } else if (isRoot) {
         TkWaylandMenuDismissAll();
     }
 
@@ -3676,6 +3761,7 @@ TkWaylandPostMenuAtAnchor(
     entry->viewportH = popupH;    /* Visible height after clamping. */
     entry->scrollOffset = 0;      /* Always post scrolled to the top. */
     entry->glfwWindow = gw;  /* Store the GLFW window for cascade children. */
+    entry->passive = passive;
     if (isRoot) {
         entry->rootIsMenubar = pendingRootIsMenubar;
     } else {
@@ -4717,7 +4803,7 @@ TkWaylandSetupMenuCallbacks(
 MODULE_SCOPE int
 TkWaylandMenuPopupActive(void)
 {
-    return menuStackDepth > 0;
+    return MenuInteractiveDepth() > 0;
 }
 
 /*
@@ -5326,7 +5412,7 @@ TkWaylandMenuOpenCascade(
 MODULE_SCOPE int
 TkWaylandMenuGetDepth(void)
 {
-    return menuStackDepth;
+    return MenuInteractiveDepth();
 }
 
 /*
@@ -5609,7 +5695,7 @@ TkWaylandActivateMenuEntry(
 MODULE_SCOPE int
 TkWaylandMenuActive(void)
 {
-    return menuStackDepth > 0;
+    return MenuInteractiveDepth() > 0;
 }
 
 /*
@@ -5630,7 +5716,7 @@ TkWaylandMenuActive(void)
 MODULE_SCOPE Tk_Window
 TkWaylandMenuGetTopmostWindow(void)
 {
-    if (menuStackDepth > 0) {
+    if (MenuInteractiveDepth() > 0) {
         return (Tk_Window)menuStack[menuStackDepth - 1].menuPtr->tkwin;
     }
     return NULL;
