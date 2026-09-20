@@ -33,6 +33,7 @@ if {[tk windowingsystem] eq "wayland"} {
             variable order    {}  ;# types, in the order first added
             variable haveOwner 0  ;# do we (this app) currently own CLIPBOARD
             variable released  0  ;# we owned CLIPBOARD, then released/cleared
+            variable ownTime   0  ;# [clock milliseconds] of our last write
 
             # wl-paste is only ever consulted as a *fallback* when this
             # interpreter does not own the CLIPBOARD and has not just
@@ -123,6 +124,41 @@ if {[tk windowingsystem] eq "wayland"} {
                 set pasteCacheTime [clock milliseconds]
                 set pasteInFlight  0
             }
+        }
+
+        # Read the system clipboard right now.  Returns {ok text}; ok is 0
+        # if wl-paste is missing, timed out, or the clipboard is empty.
+        #
+        # Wayland gives us no notification when another client takes the
+        # CLIPBOARD away from us, so the only reliable way to notice is to
+        # look at paste time.  This is called only from an explicit
+        # "clipboard get", never from the event-loop path, and is bounded
+        # to one second by timeout(1) so a hung clipboard owner can't
+        # freeze the application.  It does not enter the event loop.
+        proc ::tk::wayland::clip::WlPasteSync {} {
+            set cmd "wl-paste --no-newline 2>/dev/null"
+            if {[auto_execok timeout] ne ""} {
+                set cmd "timeout 1 $cmd"
+            }
+            if {[catch {open "|$cmd" r} chan]} {
+                return [list 0 ""]
+            }
+            # "-translation binary" alone selects raw bytes on both Tcl 8.6
+            # and 9.x; "-encoding binary" was removed in Tcl 9.
+            if {[catch {fconfigure $chan -translation binary} err]} {
+                catch {close $chan}
+                return [list 0 ""]
+            }
+            if {[catch {read $chan} raw]} {
+                catch {close $chan}
+                return [list 0 ""]
+            }
+            # close raises an error if the child exited non-zero.
+            set ok [expr {![catch {close $chan}]}]
+            if {[catch {encoding convertfrom utf-8 $raw} text]} {
+                set text $raw
+            }
+            return [list $ok $text]
         }
 
         # Return whatever the most recent wl-paste produced, without
@@ -319,6 +355,7 @@ if {[tk windowingsystem] eq "wayland"} {
             variable order
             variable haveOwner
             variable released
+            variable ownTime
 
             if {[info exists fmt($type)] && $fmt($type) ne $format} {
                 error "format \"$format\" does not match current format\
@@ -333,6 +370,7 @@ if {[tk windowingsystem] eq "wayland"} {
             }
             set haveOwner 1
             set released 0
+            set ownTime [clock milliseconds]
 
             if {[IsTextType $type]} {
                 WlCopyPut $data($type)
@@ -366,6 +404,7 @@ if {[tk windowingsystem] eq "wayland"} {
             variable order
             variable haveOwner
             variable released
+            variable ownTime
 
             set keepString [info exists data(STRING)]
             set savedData ""
@@ -379,6 +418,7 @@ if {[tk windowingsystem] eq "wayland"} {
             }
             set haveOwner 1
             set released 0
+            set ownTime [clock milliseconds]
 
             if {$keepString} {
                 WlCopyPut $data(STRING)
@@ -392,6 +432,7 @@ if {[tk windowingsystem] eq "wayland"} {
             variable order
             variable haveOwner
             variable released
+            variable ownTime
 
             switch -- $type {
                 TARGETS {
@@ -406,6 +447,37 @@ if {[tk windowingsystem] eq "wayland"} {
                 }
             }
 
+            set isText [IsTextType $type]
+
+            # We believe we own CLIPBOARD (we copied something), but
+            # Wayland never tells us when another application copies
+            # afterwards.  Before trusting the local buffer, check whether
+            # the system clipboard still holds what we put there; if it
+            # holds something else, another client owns it now, so drop
+            # our stale copy and hand back the system contents.  The grace
+            # period covers the moment right after our own write, while
+            # wl-copy may not have registered as the source yet.
+            if {$haveOwner && $isText
+                    && ([clock milliseconds] - $ownTime) > 300} {
+                if {[catch {WlPasteSync} res]} { set res [list 0 ""] }
+                lassign $res ok sys
+                if {$ok && $sys ne ""} {
+                    set local ""
+                    foreach t $order {
+                        if {[IsTextType $t]} {
+                            set local $data($t)
+                            break
+                        }
+                    }
+                    if {$sys ne $local} {
+                        ResetBuffer
+                        set haveOwner 0
+                        set released 0
+                        return $sys
+                    }
+                }
+            }
+
             if {$haveOwner && [info exists data($type)]} {
                 return $data($type)
             }
@@ -414,13 +486,10 @@ if {[tk windowingsystem] eq "wayland"} {
             # interpreter has never taken (and then released) ownership.
             # After an explicit clear/release, Tk semantics say the
             # selection no longer exists and "get" must error.
-            #
-            # WlPasteGet never blocks; on a cold cache it returns ""
-            # and primes the cache asynchronously, so this call reports
-            # "no selection" rather than stalling the event loop.
-            if {!$haveOwner && !$released && [IsTextType $type]} {
-                set sys [WlPasteGet]
-                if {$sys ne ""} { return $sys }
+            if {!$haveOwner && !$released && $isText} {
+                if {[catch {WlPasteSync} res]} { set res [list 0 ""] }
+                lassign $res ok sys
+                if {$ok && $sys ne ""} { return $sys }
             }
 
             error "CLIPBOARD selection doesn't exist or form \"$type\" not defined"
