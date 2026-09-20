@@ -9,6 +9,12 @@
 
 static LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
+typedef struct {
+    HWND hwnd;
+    Tcl_Interp *interp;
+    Tcl_TimerToken timer;
+} MonitorInfo;
+
 /*
  * RegisterSystemColors --
  *	Register all known Windows system colors (as per GetSysColor) as Tk
@@ -57,8 +63,7 @@ static const SystemColorEntry sysColors[] = {
 	{ NULL, 0 }
 };
 
-static void RegisterSystemColors(Tcl_Interp *interp, HWND hwnd)
-{
+static void RegisterSystemColors(Tcl_Interp *interp, HWND hwnd) {
     Ttk_ResourceCache cache = Ttk_GetResourceCache(interp);
     const SystemColorEntry *sysColor;
     HTHEME hTheme = OpenThemeData(hwnd, L"WINDOW");
@@ -75,11 +80,11 @@ static void RegisterSystemColors(Tcl_Interp *interp, HWND hwnd)
     CloseThemeData(hTheme);
 }
 
-static HWND
-CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
-{
+static MonitorInfo*
+CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp) {
     WNDCLASSEXW wc;
     HWND       hwnd = NULL;
+    MonitorInfo *info;
     WCHAR      title[32] = L"TtkMonitorWindow";
     WCHAR      name[32] = L"TtkMonitorClass";
 
@@ -95,57 +100,84 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
     wc.lpszMenuName  = name;
     wc.lpszClassName = name;
+    
+    info = (MonitorInfo *)Tcl_Alloc(sizeof(MonitorInfo));
+    if (info) {
+	info->hwnd = hwnd;
+	info->interp = interp;
+	info->timer = NULL;
+    } else {
+	return NULL;
+    }
 
     if (RegisterClassExW(&wc)) {
 	hwnd = CreateWindowW( name, title, WS_OVERLAPPEDWINDOW,
 	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 	    NULL, NULL, hinst, NULL );
-	SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR) interp);
+	SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR) info);
 	ShowWindow(hwnd, SW_HIDE);
 	UpdateWindow(hwnd);
     }
-    return hwnd;
+    return info;
 }
 
 static void
-DestroyThemeMonitorWindow(void *clientData)
-{
-    HWND hwnd = (HWND)clientData;
-    DestroyWindow(hwnd);
+DestroyThemeMonitorWindow(void *clientData) {
+    MonitorInfo *info = (MonitorInfo *)clientData;
+
+    if (info->timer) {
+	Tcl_DeleteTimerHandler(info->timer);
+    }
+    DestroyWindow(info->hwnd);
+    Tcl_Free(clientData);
 }
 
-static LRESULT WINAPI
-WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-    Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+void
+themeUpdateHandler(void *clientData) {
+    MonitorInfo *info = (MonitorInfo *)clientData;
     Ttk_Theme theme;
+    info->timer = NULL;
+
+    /* Update colors used by theme */
+    RegisterSystemColors(info->interp, info->hwnd);
+
+    /* Reload the application theme due to color changes. */
+    theme = Ttk_GetCurrentTheme(info->interp);
+    if (theme) {
+	Ttk_UseTheme(info->interp, theme);
+
+	/* @@@ What to do about errors here? */
+    }
+}
+
+static LRESULT WINAPI
+WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    MonitorInfo *info = (MonitorInfo *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
 
     switch (msg) {
     case WM_DESTROY:
 	break;
 
-    case WM_SYSCOLORCHANGE:
-	RegisterSystemColors(interp, hwnd);
-	break;
-
-    case WM_THEMECHANGED:
-	/* Update colors used by theme */
-	RegisterSystemColors(interp, hwnd);
-
-	/*
-	 * Reset the application theme.
-	 * On windows, it is possible to sign in as a second user, change
-	 * the theme to 'winnative' (by setting the ui to 'best performance'),
-	 * which is a machine-wide change, and then sign back on to the original user.
-	 * Ttk_UseTheme needs to be executed again in order to process the fallback
-	 * from vista to winnative.
-	 */
-
-	theme = Ttk_GetCurrentTheme(interp);
-	if (theme) {
-	    Ttk_UseTheme(interp, theme);
-	    /* @@@ What to do about errors here? */
+    case WM_SETTINGCHANGE:
+	/* SystemParametersInfo changed a system-wide setting or
+	   when policy settings have changed. */
+	if (wp != SPI_GETNONCLIENTMETRICS) {
+	    break;
 	}
+    case WM_SYSCOLORCHANGE:
+	/* Change has been made to a system color setting. */
+    case WM_STYLECHANGED:
+	/* Window style has changed. */
+    case WM_THEMECHANGED:
+	/* Window theme has changed. */
+    case WM_DWMCOLORIZATIONCOLORCHANGED:
+	/* DWM Colorization color has changed. */
+
+	/* Throttle updates */
+	if (info->timer == NULL) {
+	    info->timer = Tcl_CreateTimerHandler(1000, themeUpdateHandler, (void *) info);
+	}
+	return 0;
 	break;
     }
     return DefWindowProcW(hwnd, msg, wp, lp);
@@ -159,12 +191,14 @@ MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
 MODULE_SCOPE int TtkWinVistaTheme_Init(Tcl_Interp *, HWND hwnd);
 MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp);
 
-MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
-{
+MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp) {
     HWND hwnd;
+    MonitorInfo *info;
 
-    hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
-    Ttk_RegisterCleanup(interp, hwnd, DestroyThemeMonitorWindow);
+    info = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
+    if (!info) return TCL_ERROR;
+    hwnd = info->hwnd;
+    Ttk_RegisterCleanup(interp, info, DestroyThemeMonitorWindow);
 
     RegisterSystemColors(interp, hwnd);
     TtkWinTheme_Init(interp, hwnd);

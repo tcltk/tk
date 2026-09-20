@@ -8206,7 +8206,8 @@ WmProc(
     case WM_SYSCOLORCHANGE:
 	/*
 	 * XXX: Called when system color changes. We need to update any
-	 * widgets that use a system color.
+	 * system colors, widgets that use them, and common controls widgets
+	 * such as Tk button, menu, and scrollbar widgets.
 	 */
 
 	break;

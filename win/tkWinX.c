@@ -272,7 +272,7 @@ TkWinXInit(
     childClassInitialized = true;
 
     comctl.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    comctl.dwICC = ICC_WIN95_CLASSES;
+    comctl.dwICC = ICC_WIN95_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES | ICC_STANDARD_CLASSES;
     if (!InitCommonControlsEx(&comctl)) {
 	Tcl_Panic("Unable to load common controls?!");
     }
