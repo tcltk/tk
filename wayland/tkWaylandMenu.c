@@ -3029,6 +3029,9 @@ MenuStackPop(
  *
  * Results:
  *     1 if passive, 0 otherwise.
+ * 
+ * Side effects: 
+ * 	   None. 
  *
  *---------------------------------------------------------------------------
  */
@@ -3054,6 +3057,12 @@ MenuIsPassive(
  *     Depth of the menu stack as seen by input routing: a lone passive
  *     popup counts as 0, so pointer and keyboard handling treat "no menu
  *     is active" and let events reach the widgets underneath.
+ * 
+ * Results:
+ *     Returns the depth of the menu stack.
+ * 
+ * Side effects: 
+ * 	   None. 
  *
  *---------------------------------------------------------------------------
  */
