@@ -5270,6 +5270,18 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.1 {layout of the text in a window which has not been mapped uses the requested size - bug 7d8d10e4a9} -setup {
+    toplevel .top
+    wm withdraw .top
+    text .top.t -width 20 -height 5 -wrap char -font {Courier 12}
+    pack .top.t
+} -body {
+    .top.t insert end [string repeat x 100]
+    .top.t count -displaylines 1.0 end
+} -cleanup {
+    destroy .top
+} -result 5
+
 #
 # TESTFILE CLEANUP
 #
