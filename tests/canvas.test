@@ -1371,6 +1371,30 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+test canvas-26.1 {the current item is repicked with the pointer position after a <ButtonRelease> binding which processed events - bug 220902} -setup {
+    canvas .c -width 300 -height 100 -borderwidth 0 -highlightthickness 0
+    pack .c
+    update
+    .c create rectangle 10 10 100 90 -fill red -tags a
+    .c create rectangle 200 10 290 90 -fill blue -tags b
+    set res {}
+} -body {
+    .c bind a <ButtonRelease-1> {
+	# Like a modal dialog: the pointer moves to item b while the
+	# binding script processes events.
+	event generate .c <Motion> -x 250 -y 50 -time [expr {%t + 100}]
+	update
+	lappend res [.c gettags current]
+    }
+    event generate .c <Motion> -x 50 -y 50 -time 1000
+    event generate .c <Button-1> -x 50 -y 50 -time 1000
+    event generate .c <ButtonRelease-1> -x 50 -y 50 -time 1000 -state 0x100
+    lappend res [.c gettags current]
+} -cleanup {
+    destroy .c
+    unset res
+} -result {{b current} {b current}}
+
 #
 # TESTFILE CLEANUP
 #
