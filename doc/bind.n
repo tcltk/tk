@@ -400,6 +400,17 @@ If a keysym \fIdetail\fR is given, then the
 \fItype\fR field may be omitted;  it will default to \fBKeyPress\fR.
 For example, \fB<Control\-comma>\fR is equivalent to
 \fB<Control\-KeyPress\-comma>\fR.
+.PP
+On Windows, if the \fBControl\fR or \fBAlt\fR modifier is down and the
+character that the current keyboard layout assigns to a letter or digit
+key is not a Latin letter or a digit (for example, with a Cyrillic or
+Greek layout), the keysym of the event is the Latin letter or digit that
+Windows associates with the key, which is usually printed on the key
+beside the non-Latin character.  Thus bindings such as
+\fB<Control\-c>\fR or \fB<Alt\-x>\fR work regardless of the keyboard
+layout, as keyboard shortcuts do in other Windows applications.  This
+does not affect the \fB%A\fR substitution, which still gives the
+character of the current layout.
 .SH "BINDING SCRIPTS AND SUBSTITUTIONS"
 .PP
 The \fIscript\fR argument to \fBbind\fR is a Tcl script, called the
