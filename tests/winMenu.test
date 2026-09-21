@@ -1399,6 +1399,31 @@ test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
     emptyTest win
 } -body {}
 
+test winMenu-35.1 {additions to the system menu survive the recreation of the wrapper window - bug 220781} -constraints {
+    win testgetwindowinfo
+} -setup {
+    catch {destroy .m1}
+    toplevel .t
+    update
+} -body {
+    menu .t.m1
+    menu .t.m1.system
+    .t.m1 add cascade -menu .t.m1.system
+    .t.m1.system add command -label Hello
+    .t configure -menu .t.m1
+    update
+    set res [dict get [testgetwindowinfo [wm frame .t]] sysmenu]
+    # Recreate the wrapper window.
+    wm overrideredirect .t 1
+    update
+    wm overrideredirect .t 0
+    update
+    lappend res [dict get [testgetwindowinfo [wm frame .t]] sysmenu]
+    expr {[lindex $res 0] == [lindex $res 1]}
+} -cleanup {
+    destroy .t
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #

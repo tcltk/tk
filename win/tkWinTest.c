@@ -550,6 +550,9 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
 	    Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)(size_t)hwnd))));
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("sysmenu", 7),
+	    Tcl_NewWideIntObj(GetMenuItemCount(
+		    GetSystemMenu((HWND)(size_t)hwnd, FALSE))));
 
     childrenObj = Tcl_NewListObj(0, NULL);
     EnumChildWindows((HWND)(size_t)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
