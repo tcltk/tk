@@ -852,10 +852,21 @@ TkpPostMenu(
 	}
     }
 
+    /*
+     * The menu has the mouse while it is tracked, so Tk windows must not
+     * receive pointer events meanwhile, and the release of the button which
+     * posted the menu is consumed by the menu, as on X11. [Bug 869305]
+     */
+
+    TkWinSuspendPointer(1);
     TrackPopupMenu(winMenuHdl, flags, x, y, 0,
 	    tsdPtr->menuHWND, &noGoawayRect);
+    TkWinSuspendPointer(0);
     Tcl_SetServiceMode(oldServiceMode);
 
+    if (!(TkWinGetModifierState() & ALL_BUTTONS)) {
+	TkPointerClearButtons();
+    }
     GetCursorPos(&point);
     TkWinPointerEvent(NULL, point.x, point.y);
 

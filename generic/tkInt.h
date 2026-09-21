@@ -1185,6 +1185,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
+MODULE_SCOPE void	TkPointerClearButtons(void);
 MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,

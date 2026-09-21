@@ -473,6 +473,39 @@ XUngrabPointer(
 /*
  *----------------------------------------------------------------------
  *
+ * TkPointerClearButtons --
+ *
+ *	This function is called when the mouse buttons were released while
+ *	a native modal loop (e.g. a native popup menu) was active, which
+ *	consumed the release events. It forgets the buttons and the implicit
+ *	grab without generating ButtonRelease events. [Bug 869305]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The mouse capture is released.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkPointerClearButtons(void)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (!(tsdPtr->lastState & ALL_BUTTONS)) {
+	return;
+    }
+    tsdPtr->lastState &= ~ALL_BUTTONS;
+    tsdPtr->restrictWinPtr = NULL;
+    TkpSetCapture(tsdPtr->grabWinPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkPointerDeadWindow --
  *
  *	Clean up pointer module state when a window is destroyed.
