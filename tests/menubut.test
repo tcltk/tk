@@ -811,6 +811,48 @@ test menubutton-9.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+test menubutton-10.1 {pointer moved to another menubutton while a binding of the pressed one runs - bug 680884} -setup {
+    deleteWindows
+    set res {}
+    proc bgerror {msg} {lappend ::res $msg}
+} -body {
+    menubutton .one -text one -menu .one.m -indicatoron 0
+    menubutton .two -text two -menu .two.m -indicatoron 0
+    pack .one .two -side left
+    update
+    # The menu is created by the application when the button is pressed,
+    # and the pointer moves to the other menubutton meanwhile.
+    bind .one <Button-1> {
+	menu .one.m
+	event generate .one <B1-Motion> -x 0 -y 0 -rootx [winfo rootx .two] -rooty [winfo rooty .two]
+	update
+    }
+    event generate .one <Button-1> -x 0 -y 0
+    event generate .one <ButtonRelease-1> -x 0 -y 0
+    update
+    set res
+} -cleanup {
+    rename bgerror {}
+    deleteWindows
+} -result {}
+test menubutton-10.2 {click on a menubutton whose menu does not exist - bug 680884} -setup {
+    deleteWindows
+    set res {}
+    proc bgerror {msg} {lappend ::res $msg}
+} -body {
+    menubutton .mb -text mb -menu .mb.m -indicatoron 0
+    pack .mb
+    update
+    event generate .mb <Enter>
+    event generate .mb <Button-1> -x 5 -y 5
+    event generate .mb <ButtonRelease-1> -x 5 -y 5
+    update
+    list $res $tk::Priv(postedMb)
+} -cleanup {
+    rename bgerror {}
+    deleteWindows
+} -result {{} {}}
+
 #
 # TESTFILE CLEANUP
 #
