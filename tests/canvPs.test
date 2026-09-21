@@ -253,6 +253,21 @@ test canvPs-5.2 {test ps generation with image} -body {
     destroy .c
 } -returnCodes ok -match glob -result *
 
+test canvPs-6.1 {postscript without prolog applies the -x offset - bug 969636} -setup {
+    canvas .c -width 100 -height 100 -borderwidth 0 -highlightthickness 0
+    pack .c
+    .c configure -scrollregion {-50 -50 50 50}
+    .c create line 0 -50 0 50
+    update
+} -body {
+    # The line at canvas x = 0 is at x = 50 in the printed area, which
+    # starts at canvas x = -50, so the output must shift by 50.
+    set ps [.c postscript -prolog 0]
+    list [regexp -line {^50 0 translate$} $ps] [regexp -line {^0 [0-9.]+ moveto$} $ps]
+} -cleanup {
+    destroy .c
+} -result {1 1}
+
 #
 # TESTFILE CLEANUP
 #
