@@ -238,6 +238,29 @@ test sysnotify-2.2 {system notification is not linked to any systray icon on X11
     tk sysnotify {Alert} {This is an alert}
 } -result {}
 
+test sysnotify-3 {libnotify is not unloaded when the last interpreter which used it is deleted - bug 35e67b8124} -constraints {
+    unix
+} -setup {
+    set code [loadTkCommand]
+    append code {
+        # Delete the command of the main interpreter, so that the child
+        # interpreters are the only users of libnotify.
+        rename ::tk::sysnotify::_sysnotify {}
+        foreach name {i j} {
+            interp create $name
+            $name eval {package require Tk; tk sysnotify "Tk test" "test notification"}
+            interp delete $name
+        }
+        puts ok
+        exit
+    }
+    set script [makeFile $code script]
+} -body {
+    exec [interpreter] <$script
+} -cleanup {
+    removeFile script
+} -result ok
+
 #
 # TESTFILE CLEANUP
 #
