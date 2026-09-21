@@ -27,6 +27,7 @@ to the userbase.
  - [Modal window is not restored after "show desktop"](https://core.tcl-lang.org/tk/tktview/ed6c3a)
  - [tk_getOpenFile -multiple (tkfbox): confirmed files are appended -initialfile](https://core.tcl-lang.org/tk/tktview/56eec5)
  - [ttk::style configure has no effect on options with a non-empty widget default](https://core.tcl-lang.org/tk/tktview/aba849)
+ - [MS-Win: Modifier-bindings of non-latin bindings use latin (ex: <Ctrl-c>)](https://core.tcl-lang.org/tk/tktview/433261)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
