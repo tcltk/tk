@@ -833,6 +833,24 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
     crashit
 } -result {Reached}
 
+test focus-9.1 {focus -force moves the X focus to an override-redirect toplevel - bug a53a902ac6} -constraints {
+    unix testxfocus
+} -setup {
+    deleteWindows
+} -body {
+    toplevel .t
+    wm overrideredirect .t 1
+    wm geometry .t +100+100
+    entry .t.e
+    pack .t.e
+    update
+    focus -force .t.e
+    update
+    list [focus] [testxfocus]
+} -cleanup {
+    deleteWindows
+} -result {.t.e .t}
+
 #
 # TESTFILE CLEANUP
 #
