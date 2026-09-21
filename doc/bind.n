@@ -425,6 +425,15 @@ beside the non-Latin character.  Thus bindings such as
 layout, as keyboard shortcuts do in other Windows applications.  This
 does not affect the \fB%A\fR substitution, which still gives the
 character of the current layout.
+.PP
+On X11, the keysym of the event is the one that the current keyboard
+layout (XKB group) assigns to the key.  If the \fBControl\fR or
+\fBAlt\fR modifier is down and that keysym is not a Latin\-1 character
+(for example, with a Cyrillic or Greek layout), the keysym of the same key
+in a Latin layout is used instead, if the keyboard has one, so that
+bindings such as \fB<Control\-c>\fR or \fB<Alt\-x>\fR work regardless
+of the keyboard layout, as keyboard shortcuts do in other X11 toolkits.
+This does not affect the \fB%A\fR substitution.
 .SH "BINDING SCRIPTS AND SUBSTITUTIONS"
 .PP
 The \fIscript\fR argument to \fBbind\fR is a Tcl script, called the
