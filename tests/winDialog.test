@@ -638,6 +638,38 @@ test winDialog-5.20 {GetFileName: parent HWND already exists} -constraints {
 	destroy .t
     }
 } -result {}
+test winDialog-5.22 {GetFileName: focus after a dialog whose parent was mapped while it was open - bug adb71ed70b} -constraints {
+    nt testwinevent
+} -setup {
+    set code [loadTkCommand]
+    append code {
+	update
+	# The parent toplevel is mapped while the dialog is open.
+	toplevel .t
+	entry .t.e
+	pack .t.e
+	proc cancelDialog {} {
+	    if {[catch {testfindwindow "" #32770} dlg]} {
+		after 200 cancelDialog
+		return
+	    }
+	    testwinevent $dlg 2 WM_LBUTTONDOWN 1 0x000a000b
+	    testwinevent $dlg 2 WM_LBUTTONUP 0 0x000a000b
+	}
+	after 500 cancelDialog
+	after 10000 {puts timeout; exit}
+	tk_getOpenFile -parent .t -title Open
+	focus .t.e
+	update
+	puts [focus]
+	exit
+    }
+    set script [makeFile $code script]
+} -body {
+    exec [interpreter] <$script
+} -cleanup {
+    removeFile script
+} -result {.t.e}
 test winDialog-5.21 {GetFileName: call GetOpenFileName} -constraints {
     nt testwinevent english
 } -body {
