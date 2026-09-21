@@ -1371,6 +1371,30 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+test canvas-24.1 {an item with negative coordinates ending in .5 is drawn inside its bounding box - bug ad9a023e45} -constraints {
+    testpixel
+} -setup {
+    canvas .c -width 60 -height 60 -scrollregion {-30 -30 30 30} \
+	-highlightthickness 0 -borderwidth 0 -background white
+    pack .c
+    update
+} -body {
+    .c create rectangle -10.5 -10.5 -5.5 -5.5 -fill black -outline {}
+    update
+    # The canvas coordinate (x, y) is at the pixel (x + 30, y + 30) of the
+    # window.  The corner pixels of the bounding box must be drawn, and the
+    # pixels just outside it must not.
+    lassign [.c bbox 1] x1 y1 x2 y2
+    set res [list $x1 $y1 $x2 $y2]
+    foreach {x y} [list $x1 $y1 [expr {$x2 - 1}] [expr {$y2 - 1}] \
+	    [expr {$x1 - 1}] [expr {$y1 - 1}] $x2 $y2] {
+	lappend res [testpixel .c [expr {$x + 30}] [expr {$y + 30}]]
+    }
+    set res
+} -cleanup {
+    destroy .c
+} -result {-11 -11 -6 -6 #000000 #000000 #ffffff #ffffff}
+
 #
 # TESTFILE CLEANUP
 #
