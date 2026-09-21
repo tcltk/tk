@@ -8370,3 +8370,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-09-15 (bug) [56eec5] tk_getOpenFile -multiple (tkfbox): confirmed files are appended to the
 	-initialfile selection
+
+2026-09-21 (bug) [433261] MS-Win: Modifier-bindings of non-latin bindings use latin (ex: <Ctrl-c>)
+
