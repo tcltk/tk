@@ -900,6 +900,11 @@ proc ::tk::MenuFind {w char} {
 	}
 	if {[winfo class $child] eq "Menu" && \
 		[$child cget -type] eq "menubar"} {
+	    # Skip the original menu if it was created with "-type menubar";
+	    # its clone is the actual menubar of the toplevel. [Bug 223112]
+	    if {![winfo viewable $child]} {
+		continue
+	    }
 	    if {$char eq ""} {
 		return $child
 	    }

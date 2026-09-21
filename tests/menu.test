@@ -4164,6 +4164,21 @@ test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
     testpressbutton 530 510
 }
 
+test menu-40.3 {tk::MenuFind finds the menubar clone, not the original created with -type menubar - bug 223112} -setup {
+    deleteWindows
+} -body {
+    menu .m -type menubar
+    menu .m.file
+    .m.file add command -label Open -underline 0
+    .m add cascade -label File -menu .m.file -underline 0
+    . configure -menu .m
+    update
+    list [tk::MenuFind . f] [tk::MenuFind . ""]
+} -cleanup {
+    . configure -menu {}
+    deleteWindows
+} -result {.#m .#m}
+
 test menu-41.1 {identifiers - auto generated} -setup {
     destroy .m
 } -body {
