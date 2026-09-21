@@ -433,6 +433,43 @@ test entry-12.2 "style command" -body {
     destroy .w
 } -result {customStyle.TEntry customStyle.TEntry TEntry}
 
+test entry-13.1 {selected text of an unfocused entry uses the -foreground state map on Windows - bug 300bad1beb} -constraints {
+    win testpixel
+} -setup {
+    set theme [ttk::style theme use]
+    ttk::style theme use vista
+    ttk::style map TEntry -foreground {invalid red}
+    ttk::entry .e -font {Courier 24} -width 5
+    ttk::entry .f
+    pack .e .f
+    update
+    focus -force .e
+    update
+} -body {
+    .e insert 0 "MM"
+    .e state invalid
+    .e selection range 0 end
+    focus -force .f
+    update
+    # Look for a red pixel in the left half of the entry.
+    set found 0
+    set w [expr {[winfo width .e] / 2}]
+    set h [winfo height .e]
+    for {set y 0} {$y < $h && !$found} {incr y} {
+	for {set x 0} {$x < $w} {incr x} {
+	    if {[testpixel .e $x $y] eq "#ff0000"} {
+		set found 1
+		break
+	    }
+	}
+    }
+    set found
+} -cleanup {
+    destroy .e .f
+    ttk::style map TEntry -foreground {}
+    ttk::style theme use $theme
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
