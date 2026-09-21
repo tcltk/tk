@@ -412,6 +412,29 @@ TkpGetKeySym(
 	state &= ~ShiftMask;
 	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
     }
+
+    /*
+     * With a non-Latin keyboard layout the character on the key is not a
+     * valid keysym, so bindings like <Control-c> or <Alt-x> could never
+     * match.  Use the Latin letter or digit of the virtual key code
+     * instead, which is what the layout assigns to the key and what other
+     * applications use for keyboard shortcuts.  [Bug 433261290b]
+     */
+
+    state = eventPtr->xkey.state;
+    if (((sym == NoSymbol) || (sym > 0xFF))
+	    && (state & (ControlMask | ALT_MASK | Mod2Mask))) {
+	unsigned int keycode = eventPtr->xkey.keycode;
+
+	if ((keycode >= '0' && keycode <= '9')
+		|| (keycode >= 'A' && keycode <= 'Z')) {
+	    sym = keycode;
+	    if ((keycode >= 'A')
+		    && (!(state & ShiftMask) == !(state & LockMask))) {
+		sym += 'a' - 'A';
+	    }
+	}
+    }
     return sym;
 }
 

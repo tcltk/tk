@@ -458,7 +458,7 @@ TkCreateFrame(
     Colormap colormap;
     Visual *visual;
 
-    if (objc < 2) {
+    if ((objc < 2) || ((objc & 1) != 0)) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }

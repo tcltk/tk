@@ -178,6 +178,21 @@ test progressbar-3.3 {horizontal progressbar height with no -text (TIP #442) spe
     # there's no way I know to undo  '::ttk::style element create...'
 } -result {1 1}
 
+test progressbar-3.4 {text options are taken from the style - Bug [aba849a99b]} -setup {
+    ttk::style configure Test.Horizontal.TProgressbar -font {Helvetica 24}
+    ttk::progressbar .p -text "Hello"
+} -body {
+    set h0 [winfo reqheight .p]
+    .p configure -style Test.Horizontal.TProgressbar
+    set h1 [winfo reqheight .p]
+    .p configure -font {Helvetica 8}
+    set h2 [winfo reqheight .p]
+    list [expr {$h1 > $h0}] [expr {$h2 < $h1}]
+} -cleanup {
+    destroy .p
+    ttk::style configure Test.Horizontal.TProgressbar -font {}
+} -result {1 1}
+
 test progressbar-4.1 "style command" -body {
     ttk::progressbar .wh  ; # default is  -orient horizontal
     ttk::progressbar .wv -orient vertical

@@ -918,6 +918,31 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.1 {keysym of Control and Alt keys with a non-Latin keyboard
+	      layout on Windows - bug 433261290b} -constraints win -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    bind $e <Key> {lappend res %K}
+    focus -force $e
+    update
+    # Virtual key codes of the C and 1 keys with Control (4),
+    # Control+Shift (5) and Alt (0x20000).  The keysym must be the Latin
+    # letter or digit of the key whatever the keyboard layout is, so that
+    # bindings like <Control-c> work with a non-Latin layout too.
+    event generate $e <Key> -keycode 0x43 -state 4
+    event generate $e <Key> -keycode 0x43 -state 5
+    event generate $e <Key> -keycode 0x43 -state 0x20000
+    event generate $e <Key> -keycode 0x31 -state 4
+    set res
+} -cleanup {
+    deleteWindows
+} -result {c C c 1}
+
 test event-8.2 {keysym of Control and Alt keys with a non-Latin keyboard
 	      layout on X11 - bug 701d8f8953} -constraints x11 -setup {
     deleteWindows

@@ -980,6 +980,7 @@ EntryInitialize(
     entryPtr->entry.displayString	= entryPtr->entry.string;
     entryPtr->entry.textVariableTrace	= 0;
     entryPtr->entry.numBytes = entryPtr->entry.numChars = 0;
+    entryPtr->entry.justify		= TK_JUSTIFY_NULL;
 
     EntryInitStyleDefaults(&entryPtr->entry.styleDefaults);
 
@@ -1334,7 +1335,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     if ((*(entryPtr->entry.displayString) == '\0')
 		&& (entryPtr->entry.placeholderObj != NULL)) {
 	/* No text displayed, but -placeholder is given */
-	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
+	if (!TkObjIsEmpty(es.placeholderForegroundObj)) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
 	    foregroundObj = es.foregroundObj;
