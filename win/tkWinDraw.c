@@ -739,6 +739,183 @@ XFillRectangles(
 }
 
 /*
+ * A polyline with more than MAX_STROKE_POINTS points is stroked in pieces
+ * of STROKE_PIECE_POINTS points. [Bug 630171]
+ */
+
+#define MAX_STROKE_POINTS 64
+#define STROKE_PIECE_POINTS 32
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StrokeEndCap --
+ *
+ *	Draws the cap at an end of a polyline stroked in pieces with a
+ *	flat-capped pen: strokes the beginning of the polyline with the
+ *	current (capped) pen, long enough for the cap at its other end to
+ *	stay inside the body of the polyline.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StrokeEndCap(
+    HDC dc,
+    POINT *points,		/* Points of the polyline, starting from the
+				 * end to be capped. */
+    int npoints,		/* Number of points. */
+    int step,			/* 1 or -1: direction to walk the points. */
+    DWORD width)		/* The width of the pen. */
+{
+    POINT seg[STROKE_PIECE_POINTS];
+    double len = 0;
+    int n = 1;
+
+    seg[0] = points[0];
+    while ((n < npoints) && (n < STROKE_PIECE_POINTS)) {
+	POINT *pt = points + n * step;
+	double dx = pt->x - seg[n-1].x, dy = pt->y - seg[n-1].y;
+	double segLen = hypot(dx, dy);
+
+	if (len + segLen > 2 * width) {
+	    /*
+	     * Stop in the middle of this segment, so that the cap at the
+	     * end of the stroke is covered by the rest of the polyline.
+	     */
+
+	    double f = (2 * width - len) / segLen;
+
+	    seg[n].x = seg[n-1].x + (LONG) (dx * f);
+	    seg[n].y = seg[n-1].y + (LONG) (dy * f);
+	    n++;
+	    break;
+	}
+	seg[n] = *pt;
+	len += segLen;
+	n++;
+    }
+    BeginPath(dc);
+    Polyline(dc, seg, n);
+    EndPath(dc);
+    StrokePath(dc);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StrokeInPieces --
+ *
+ *	Strokes a polyline with the current pen in pieces of at most
+ *	STROKE_PIECE_POINTS points. The time GDI takes to stroke a path with
+ *	a geometric pen grows quadratically with the number of points, so a
+ *	wide polyline with thousands of points takes many seconds or hangs.
+ *	[Bug 630171]
+ *
+ *	The pieces overlap by two segments, so that every vertex is rendered
+ *	with its join in one of them, and are stroked with a flat-capped
+ *	copy of the pen, because a round or projecting cap at the end of a
+ *	piece would stick out of a miter or bevel join. For an open polyline
+ *	the caps at the ends are then added with the real pen; a closed one
+ *	is continued over its first two segments instead.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StrokeInPieces(
+    HDC dc,
+    POINT *winPoints,
+    int npoints,
+    int closed)			/* True if the last point is the same as the
+				 * first one. */
+{
+    HPEN pen = (HPEN) GetCurrentObject(dc, OBJ_PEN), flatPen = NULL;
+    EXTLOGPEN elp;
+    POINT piece[STROKE_PIECE_POINTS];
+    int i, j, size, total = closed ? npoints + 2 : npoints;
+
+    size = GetObject(pen, 0, NULL);
+    if ((size > 0) && (size <= (int) sizeof(elp))
+	    && (GetObject(pen, size, &elp) == size)
+	    && ((elp.elpPenStyle & PS_ENDCAP_MASK) != PS_ENDCAP_FLAT)) {
+	LOGBRUSH lb;
+
+	lb.lbStyle = elp.elpBrushStyle;
+	lb.lbColor = elp.elpColor;
+	lb.lbHatch = elp.elpHatch;
+	flatPen = ExtCreatePen((elp.elpPenStyle & ~PS_ENDCAP_MASK)
+		| PS_ENDCAP_FLAT, elp.elpWidth, &lb, 0, NULL);
+	if (flatPen != NULL) {
+	    SelectObject(dc, flatPen);
+	}
+    }
+    for (i = 0; i < total - 2; i += STROKE_PIECE_POINTS - 2) {
+	int n = total - i;
+
+	if (n > STROKE_PIECE_POINTS) {
+	    n = STROKE_PIECE_POINTS;
+	}
+	for (j = 0; j < n; j++) {
+	    /*
+	     * A closed polyline is continued over its first two segments;
+	     * its last point is the same as the first one.
+	     */
+
+	    piece[j] = winPoints[closed ? (i + j) % (npoints - 1) : i + j];
+	}
+	BeginPath(dc);
+	Polyline(dc, piece, n);
+	EndPath(dc);
+	StrokePath(dc);
+    }
+    if (flatPen != NULL) {
+	SelectObject(dc, pen);
+	DeleteObject(flatPen);
+	if (!closed) {
+	    StrokeEndCap(dc, winPoints, npoints, 1, elp.elpWidth);
+	    StrokeEndCap(dc, winPoints + npoints - 1, npoints, -1,
+		    elp.elpWidth);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CanStrokeInPieces --
+ *
+ *	Whether the current pen allows stroking a polyline in pieces: a
+ *	solid geometric pen. The dash pattern of a dashed pen would restart
+ *	in every piece, and a cosmetic pen (width 1) or the null pen do not
+ *	need it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CanStrokeInPieces(
+    HDC dc)
+{
+    HPEN pen = (HPEN) GetCurrentObject(dc, OBJ_PEN);
+    EXTLOGPEN elp;
+    int size = GetObject(pen, 0, NULL);
+
+    if ((size <= 0) || (size > (int) sizeof(elp))
+	    || (GetObject(pen, size, &elp) != size)) {
+	return 0;
+    }
+    return ((elp.elpPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
+	    && ((elp.elpPenStyle & PS_STYLE_MASK) == PS_SOLID);
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * MakeAndStrokePath --
@@ -763,6 +940,15 @@ MakeAndStrokePath(
     WinDrawFunc func)        /* Name of the Windows GDI drawing function:
 				this is either Polyline or Polygon. */
 {
+    int closed = (winPoints[0].x == winPoints[npoints-1].x)
+	    && (winPoints[0].y == winPoints[npoints-1].y);
+
+    if ((func == Polyline) && (npoints > MAX_STROKE_POINTS)
+	    && CanStrokeInPieces(dc)) {
+	StrokeInPieces(dc, winPoints, npoints, closed);
+	return;
+    }
+
     BeginPath(dc);
     func(dc, winPoints, (int)npoints);
     /*
@@ -772,8 +958,7 @@ MakeAndStrokePath(
      * path is closed.
      */
     if (func == Polyline) {
-	if ((winPoints[0].x == winPoints[npoints-1].x) &&
-		(winPoints[0].y == winPoints[npoints-1].y)) {
+	if (closed) {
 	    CloseFigure(dc);
 	}
 	EndPath(dc);

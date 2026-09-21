@@ -1371,6 +1371,83 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+test canvas-25.1 {a wide line with many points is drawn in reasonable time - bug 630171} -setup {
+    canvas .c -width 301 -height 301
+    pack .c
+    update
+    for {set i 0} {$i < 10000} {incr i} {
+	lappend points [expr {$i % 301}] [expr {($i % 2) * 300}]
+    }
+} -body {
+    .c create line $points -width 4
+    set t [lindex [time {update}] 0]
+    expr {$t < 2000000}
+} -cleanup {
+    destroy .c
+    unset points
+} -result 1
+test canvas-25.1.1 {a thin line with many points is drawn in reasonable time} -setup {
+    canvas .c -width 301 -height 301
+    pack .c
+    update
+    for {set i 0} {$i < 10000} {incr i} {
+	lappend points [expr {$i % 301}] [expr {($i % 2) * 300}]
+    }
+} -body {
+    .c create line $points -width 1
+    set t [lindex [time {update}] 0]
+    expr {$t < 2000000}
+} -cleanup {
+    destroy .c
+    unset points
+} -result 1
+test canvas-25.2 {a wide closed line with many points is drawn in reasonable time - bug 630171} -setup {
+    canvas .c -width 301 -height 301
+    pack .c
+    update
+    for {set i 0} {$i < 10000} {incr i} {
+	lappend points [expr {$i % 301}] [expr {($i % 2) * 300}]
+    }
+    lappend points {*}[lrange $points 0 1]
+} -body {
+    .c create line $points -width 4
+    set t [lindex [time {update}] 0]
+    expr {$t < 2000000}
+} -cleanup {
+    destroy .c
+    unset points
+} -result 1
+test canvas-25.3 {a filled polygon with a wide outline and many points is drawn in reasonable time - bug 630171} -setup {
+    canvas .c -width 301 -height 301
+    pack .c
+    update
+    for {set i 0} {$i < 10000} {incr i} {
+	lappend points [expr {$i % 301}] [expr {($i % 2) * 300}]
+    }
+} -body {
+    .c create polygon $points -width 4 -outline black -fill red
+    set t [lindex [time {update}] 0]
+    expr {$t < 5000000}
+} -cleanup {
+    destroy .c
+    unset points
+} -result 1
+test canvas-25.4 {a filled polygon without outline and many points is drawn in reasonable time - bug 630171} -setup {
+    canvas .c -width 301 -height 301
+    pack .c
+    update
+    for {set i 0} {$i < 10000} {incr i} {
+	lappend points [expr {$i % 301}] [expr {($i % 2) * 300}]
+    }
+} -body {
+    .c create polygon $points -width 4 -outline {} -fill red
+    set t [lindex [time {update}] 0]
+    expr {$t < 5000000}
+} -cleanup {
+    destroy .c
+    unset points
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
