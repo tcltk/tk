@@ -918,6 +918,37 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.3 {keysym of a keypad key with Num Lock on X11 - bug 481308} -constraints x11 -setup {
+    deleteWindows
+    set useIM [tk useinputmethods]
+    tk useinputmethods 0
+    set numlock [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    focus -force $e
+    update
+    bind $e <Key> {set keycode %k}
+    event generate $e <Key> -keysym KP_Left
+    bind $e <Key> {lappend res %K}
+    # Num Lock is usually Mod2, but its modifier is not fixed.  Exactly
+    # one of Mod1..Mod5 must select the keypad digit, and Shift with it
+    # must revert to the cursor key, as in XLookupString().
+    foreach mask {0x8 0x10 0x20 0x40 0x80} {
+        set res {}
+        event generate $e <Key> -keycode $keycode -state $mask
+        event generate $e <Key> -keycode $keycode -state [expr {$mask | 1}]
+        if {$res eq {KP_4 KP_Left}} {
+            lappend numlock $mask
+        }
+    }
+    llength $numlock
+} -cleanup {
+    deleteWindows
+    tk useinputmethods $useIM
+} -result 1
+
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
 } -body {
