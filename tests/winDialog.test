@@ -638,32 +638,6 @@ test winDialog-5.20 {GetFileName: parent HWND already exists} -constraints {
 	destroy .t
     }
 } -result {}
-test winDialog-5.21 {GetFileName: no toplevel has been mapped yet - bug 35a8df9a42} -constraints {
-    nt testwinevent
-} -setup {
-    set code [loadTkCommand]
-    append code {
-	# Do not map any toplevel before opening the dialog.
-	wm withdraw .
-	proc cancelDialog {} {
-	    if {[catch {testfindwindow "" #32770} dlg]} {
-		after 200 cancelDialog
-		return
-	    }
-	    testwinevent $dlg 2 WM_LBUTTONDOWN 1 0x000a000b
-	    testwinevent $dlg 2 WM_LBUTTONUP 0 0x000a000b
-	}
-	after 500 cancelDialog
-	after 10000 {puts timeout; exit}
-	puts [list [catch {tk_getOpenFile -title Open} msg] $msg]
-	exit
-    }
-    set script [makeFile $code script]
-} -body {
-    exec [interpreter] <$script
-} -cleanup {
-    removeFile script
-} -result {0 {}}
 test winDialog-5.21 {GetFileName: call GetOpenFileName} -constraints {
     nt testwinevent english
 } -body {
@@ -727,6 +701,32 @@ test winDialog-5.25 {GetFileName: file types: MakeFilter() succeeds} -constraint
     }
     return $x
 } -result 0
+test winDialog-5.26 {GetFileName: no toplevel has been mapped yet - bug 35a8df9a42} -constraints {
+    nt testwinevent
+} -setup {
+    set code [loadTkCommand]
+    append code {
+	# Do not map any toplevel before opening the dialog.
+	wm withdraw .
+	proc cancelDialog {} {
+	    if {[catch {testfindwindow "" #32770} dlg]} {
+		after 200 cancelDialog
+		return
+	    }
+	    testwinevent $dlg 2 WM_LBUTTONDOWN 1 0x000a000b
+	    testwinevent $dlg 2 WM_LBUTTONUP 0 0x000a000b
+	}
+	after 500 cancelDialog
+	after 10000 {puts timeout; exit}
+	puts [list [catch {tk_getOpenFile -title Open} msg] $msg]
+	exit
+    }
+    set script [makeFile $code script]
+} -body {
+    exec [interpreter] <$script
+} -cleanup {
+    removeFile script
+} -result {0 {}}
 
 
 test winDialog-6.1 {MakeFilter} -constraints {emptyTest nt} -body {}
