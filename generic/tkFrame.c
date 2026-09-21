@@ -1411,8 +1411,8 @@ DisplayFrame(
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2;
     Pixmap pixmap;
-    Bool useClipping = False;
-    Bool useBuffer;
+    bool useClipping = false;
+    bool useBuffer;
     int borderWidth, highlightWidth;
 
     framePtr->flags &= ~REDRAW_PENDING;
@@ -1461,7 +1461,7 @@ DisplayFrame(
 	Labelframe *labelframePtr = (Labelframe *) framePtr;
 
 	if (labelframePtr->textPtr != NULL || labelframePtr->labelWin != NULL) {
-	    useBuffer = True;
+	    useBuffer = true;
 	}
     }
 
@@ -1578,7 +1578,7 @@ DisplayFrame(
 	    if ((labelframePtr->labelBox.width < labelframePtr->labelReqWidth)
 		    || (labelframePtr->labelBox.height <
 			    labelframePtr->labelReqHeight)) {
-		useClipping = True;
+		useClipping = true;
 		XSetClipRectangles(framePtr->display, labelframePtr->textGC, 0, 0,
 			&labelframePtr->labelBox, 1, Unsorted);
 	    }
