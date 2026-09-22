@@ -185,11 +185,6 @@ test canvPs-3.1 {test ps generation with an embedded window} -setup {
     raise .
     focus .c.e
 
-    # Extra time for X server
-    after 150 {update}
-    after 300 {update idletasks}
-    after 450 {update}
-
     .c postscript -file $bar
     file exists $bar
 } -cleanup {
@@ -215,10 +210,6 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
     wm deiconify .
     raise .
     focus .c.e
-
-    after 150 {update}
-    after 300 {update idletasks}
-    after 450 {update}
 
     .c postscript -file $bar
     file exists $bar

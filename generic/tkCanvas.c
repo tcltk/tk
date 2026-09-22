@@ -3010,6 +3010,8 @@ DisplayCanvas(
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
     int borderWidth, highlightWidth;
+    int repickAgain = 0;	/* A new current item is needed again after
+				 * the current one was chosen. */
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3021,10 +3023,14 @@ DisplayCanvas(
 
     /*
      * Choose a new current item if that is needed (this could cause event
-     * handlers to be invoked).
+     * handlers to be invoked). This is done only once per redisplay: if the
+     * event handlers change the items so that a new current item is needed
+     * again, it is chosen at the next redisplay. Otherwise event handlers
+     * which move the current item away from the pointer and back would
+     * loop here forever without returning to the event loop. [Bug 1813595]
      */
 
-    while (canvasPtr->flags & REPICK_NEEDED) {
+    if (canvasPtr->flags & REPICK_NEEDED) {
 	Tcl_Preserve(canvasPtr);
 	canvasPtr->flags &= ~REPICK_NEEDED;
 	PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
@@ -3033,6 +3039,7 @@ DisplayCanvas(
 	if (tkwin == NULL) {
 	    return;
 	}
+	repickAgain = (canvasPtr->flags & REPICK_NEEDED) != 0;
     }
 
     /*
@@ -3243,6 +3250,10 @@ DisplayCanvas(
     canvasPtr->redrawY1 = canvasPtr->redrawY2 = 0;
     if (canvasPtr->flags & UPDATE_SCROLLBARS) {
 	CanvasUpdateScrollbars(canvasPtr);
+    }
+    if (repickAgain) {
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+	canvasPtr->flags |= REDRAW_PENDING;
     }
 }
 

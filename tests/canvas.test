@@ -1371,6 +1371,27 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+test canvas-30.1 {Enter and Leave bindings which move the current item do not hang - bug 1813595} -setup {
+    destroy .c
+    canvas .c -width 200 -height 200
+    pack .c
+    update
+} -body {
+    .c create rectangle 50 100 150 150 -fill red -tags card
+    # Moving the item away from the pointer and back makes it the current
+    # item again and again.
+    .c bind card <Enter> {.c move card 0 -30}
+    .c bind card <Leave> {.c move card 0 30}
+    event generate .c <Motion> -x 100 -y 125
+    # The timer does not fire if the event loop is blocked.
+    after 200 {set done 1}
+    vwait done
+    set done
+} -cleanup {
+    destroy .c
+    unset -nocomplain done
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
