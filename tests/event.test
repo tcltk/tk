@@ -1041,6 +1041,10 @@ test event-8.7 {keysym of a non-Latin key on Windows - bug 52e9b0f52c} -constrai
     update
     # Ukrainian layout: the Q key is Cyrillic_shorti.
     testsendinput layout 00000422
+    # Switching the keyboard layout releases the modifiers of the key which
+    # switches the layout; let these events be delivered before binding.
+    after 200 {set done 1}
+    vwait done
     bind $e <Key> {lappend res [list press %K]}
     bind $e <KeyRelease> {lappend res [list release %K]}
     bind $t <Cyrillic_shorti> {lappend res matched}
@@ -1072,6 +1076,10 @@ test event-8.8 {keysym of a key without a named keysym on Windows - bug 52e9b0f5
     # Georgian layout: the Q key is U+10E6 (Georgian_ghan on X11, which
     # has no name in Tk).
     testsendinput layout 00000437
+    # Switching the keyboard layout releases the modifiers of the key which
+    # switches the layout; let these events be delivered before binding.
+    after 200 {set done 1}
+    vwait done
     bind $e <Key> {lappend res [list press %K]}
     bind $e <KeyRelease> {lappend res [list release %K]}
     bind $t <\u10E6> {lappend res matched}
