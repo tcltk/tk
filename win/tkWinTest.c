@@ -31,6 +31,7 @@ static Tcl_ObjCmdProc TestwineventObjCmd;
 static Tcl_ObjCmdProc TestfindwindowObjCmd;
 static Tcl_ObjCmdProc TestgetwindowinfoObjCmd;
 static Tcl_ObjCmdProc TestwinlocaleObjCmd;
+static Tcl_ObjCmdProc2 TestsendinputObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -67,6 +68,8 @@ TkplatformtestInit(
     Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testsendinput", TestsendinputObjCmd,
 	    Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
@@ -571,6 +574,202 @@ TestwinlocaleObjCmd(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetThreadLocale()));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestsendinputObjCmd --
+ *
+ *	This function implements the "testsendinput" command, which injects
+ *	keyboard input with SendInput(), as the user or an input method would
+ *	do, and manages the keyboard layout:
+ *
+ *	testsendinput key vk ?down|up?	presses and releases (or only presses
+ *					or releases) the key with the given
+ *					virtual key code, in the current
+ *					keyboard layout.
+ *	testsendinput unicode string	enters the characters of the string
+ *					as an input method does (VK_PACKET).
+ *	testsendinput layout ?klid?	activates the keyboard layout with the
+ *					given identifier (e.g. 00000422 for
+ *					Ukrainian), loading it if necessary,
+ *					and returns the identifier of the
+ *					current layout.
+ *	testsendinput foreground window	makes the toplevel of the window the
+ *					foreground window, so that the input
+ *					goes to the application.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Key events are generated for the focus window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestsendinputObjCmd(
+    void *clientData,		/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    static const char *const options[] = {
+	"foreground", "key", "layout", "unicode", NULL
+    };
+    enum {FOREGROUND, KEY, LAYOUT, UNICOD};
+    int index;
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options, sizeof(char *),
+	    "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    switch (index) {
+    case KEY: {
+	INPUT input[2];
+	int vk, n = 2;
+
+	if ((objc != 3) && (objc != 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "vk ?down|up?");
+	    return TCL_ERROR;
+	}
+	if (Tcl_GetIntFromObj(interp, objv[2], &vk) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	memset(input, 0, sizeof(input));
+	input[0].type = input[1].type = INPUT_KEYBOARD;
+	input[0].ki.wVk = input[1].ki.wVk = (WORD) vk;
+	input[0].ki.wScan = input[1].ki.wScan =
+		(WORD) MapVirtualKeyW(vk, MAPVK_VK_TO_VSC);
+	input[1].ki.dwFlags = KEYEVENTF_KEYUP;
+	if (objc == 4) {
+	    const char *what = Tcl_GetString(objv[3]);
+
+	    n = 1;
+	    if (strcmp(what, "up") == 0) {
+		input[0] = input[1];
+	    } else if (strcmp(what, "down") != 0) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad key action \"%s\": must be down or up", what));
+		return TCL_ERROR;
+	    }
+	}
+	if (SendInput(n, input, sizeof(INPUT)) != (UINT) n) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("SendInput failed",
+		    TCL_INDEX_NONE));
+	    return TCL_ERROR;
+	}
+	break;
+    }
+    case UNICOD: {
+	Tcl_DString ds;
+	const WCHAR *wstr;
+	Tcl_Size len, i;
+	INPUT *input;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "string");
+	    return TCL_ERROR;
+	}
+	Tcl_DStringInit(&ds);
+	wstr = (const WCHAR *) Tcl_UtfToWCharDString(Tcl_GetString(objv[2]),
+		TCL_INDEX_NONE, &ds);
+	len = Tcl_DStringLength(&ds) / sizeof(WCHAR);
+	input = (INPUT *) Tcl_Alloc(2 * len * sizeof(INPUT));
+	memset(input, 0, 2 * len * sizeof(INPUT));
+	for (i = 0; i < len; i++) {
+	    input[2*i].type = input[2*i+1].type = INPUT_KEYBOARD;
+	    input[2*i].ki.wScan = input[2*i+1].ki.wScan = wstr[i];
+	    input[2*i].ki.dwFlags = KEYEVENTF_UNICODE;
+	    input[2*i+1].ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+	}
+	if (SendInput((UINT) (2 * len), input, sizeof(INPUT))
+		!= (UINT) (2 * len)) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("SendInput failed",
+		    TCL_INDEX_NONE));
+	    Tcl_Free(input);
+	    Tcl_DStringFree(&ds);
+	    return TCL_ERROR;
+	}
+	Tcl_Free(input);
+	Tcl_DStringFree(&ds);
+	break;
+    }
+    case LAYOUT: {
+	WCHAR name[KL_NAMELENGTH];
+
+	if ((objc != 2) && (objc != 3)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?klid?");
+	    return TCL_ERROR;
+	}
+	if (objc == 3) {
+	    Tcl_DString ds;
+	    HKL hkl;
+
+	    Tcl_DStringInit(&ds);
+	    hkl = LoadKeyboardLayoutW((const WCHAR *) Tcl_UtfToWCharDString(
+		    Tcl_GetString(objv[2]), TCL_INDEX_NONE, &ds),
+		    KLF_ACTIVATE);
+	    Tcl_DStringFree(&ds);
+	    if (hkl == NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"cannot load keyboard layout \"%s\"",
+			Tcl_GetString(objv[2])));
+		return TCL_ERROR;
+	    }
+	}
+	if (GetKeyboardLayoutNameW(name)) {
+	    Tcl_DString ds;
+
+	    Tcl_DStringInit(&ds);
+	    Tcl_WCharToUtfDString(name, TCL_INDEX_NONE, &ds);
+	    Tcl_DStringResult(interp, &ds);
+	}
+	break;
+    }
+    case FOREGROUND: {
+	Tk_Window tkwin;
+	HWND hwnd, fg;
+	DWORD fgThread, thisThread = GetCurrentThreadId();
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window");
+	    return TCL_ERROR;
+	}
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
+		(Tk_Window) clientData);
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	hwnd = GetAncestor(Tk_GetHWND(Tk_WindowId(tkwin)), GA_ROOT);
+	fg = GetForegroundWindow();
+	fgThread = (fg != NULL) ? GetWindowThreadProcessId(fg, NULL) : 0;
+
+	/*
+	 * A process which is not the foreground one may not take the
+	 * foreground; attaching to the input of the foreground thread
+	 * makes it possible.
+	 */
+
+	if (fgThread && (fgThread != thisThread)) {
+	    AttachThreadInput(thisThread, fgThread, TRUE);
+	}
+	SetForegroundWindow(hwnd);
+	SetFocus(hwnd);
+	if (fgThread && (fgThread != thisThread)) {
+	    AttachThreadInput(thisThread, fgThread, FALSE);
+	}
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(GetForegroundWindow() == hwnd));
+	break;
+    }
+    }
     return TCL_OK;
 }
 

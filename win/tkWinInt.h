@@ -180,7 +180,6 @@ MODULE_SCOPE HWND Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
  */
 
 
-MODULE_SCOPE Tcl_Encoding	TkWinGetKeyInputEncoding(void);
 MODULE_SCOPE Tcl_Encoding	TkWinGetUnicodeEncoding(void);
 MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 

@@ -30,6 +30,11 @@ to the userbase.
  - [MS-Win: Modifier-bindings of non-latin bindings use latin (ex: <Ctrl-c>)](https://core.tcl-lang.org/tk/tktview/433261)
  - [Scrolling a frame in a canvas is very slow since TIP 262](https://core.tcl-lang.org/tk/tktview/9438cc)
  - [Aqua: Tk should not replace signal handlers](https://core.tcl-lang.org/tk/tktview/989b1c)
+ - [Partial WM_INPUTLANGCHANGE support ignores keyboard layout changes](https://core.tcl-lang.org/tk/tktview/a9bd2a)
+ - [MS-Win: characters entered via an IME or the touch keyboard get the keysym of a function key (F1, F3, F5, ...)](https://core.tcl-lang.org/tk/tktview/f492c3)
+ - [Tk textbox not working with "Bengali" set as keyboard input language](https://core.tcl-lang.org/tk/tktview/62f134)
+ - [Certain characters (like ț and ș) become question marks in Entry Box on Windows](https://core.tcl-lang.org/tk/tktview/51436f)
+ - [Incorrect reproduction of the Azerbaijani letter "əƏ" in the Enter field](https://core.tcl-lang.org/tk/tktview/704842)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
