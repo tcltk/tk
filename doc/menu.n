@@ -208,8 +208,10 @@ On other platforms, the platform's native code takes care of unposting the
 menu.
 .PP
 If a \fB\-command\fR option is specified for a cascade entry then it is
-evaluated as a Tcl command whenever the entry is invoked. This is not
-supported on Windows.
+evaluated as a Tcl command by the \fBinvoke\fR widget command only.
+Selecting the entry with the mouse or the keyboard posts its submenu
+and does not evaluate the command; use the \fB\-postcommand\fR option
+of the submenu for that.
 .SS "TEAR-OFF ENTRIES"
 .PP
 A tear-off entry appears at the top of the menu if enabled with the
