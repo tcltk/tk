@@ -811,6 +811,35 @@ test menubutton-9.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+test menubutton-11.1 {keyboard traversal posts the menu again after it was dismissed - bug 2225507} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    menubutton $t.mb -text File -underline 0 -menu $t.mb.m
+    menu $t.mb.m -tearoff 0 -postcommand {lappend res posted}
+    $t.mb.m add command -label Open
+    pack $t.mb
+    update
+    testsendinput foreground $t.mb
+    focus -force $t.mb
+    update
+    # F10 posts the menu, Escape dismisses it, twice.
+    testsendinput key 0x79
+    testsendinput key 0x1B
+    testsendinput key 0x79
+    testsendinput key 0x1B
+    # Wait for the events to be processed.
+    after 1000 {set done 1}
+    vwait done
+    lappend res $::tk::Priv(postedMb)
+} -cleanup {
+    deleteWindows
+    unset -nocomplain done res
+} -result {posted posted {}}
+
 #
 # TESTFILE CLEANUP
 #
