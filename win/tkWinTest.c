@@ -30,6 +30,7 @@ static Tcl_ObjCmdProc2 TestclipboardObjCmd;
 static Tcl_ObjCmdProc2 TestwineventObjCmd;
 static Tcl_ObjCmdProc2 TestfindwindowObjCmd;
 static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
+static Tcl_ObjCmdProc2 TestwindowposchangedObjCmd;
 static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
@@ -66,6 +67,8 @@ TkplatformtestInit(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testwindowposchanged",
+	    TestwindowposchangedObjCmd, Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwinlocale", TestwinlocaleObjCmd,
 	    Tk_MainWindow(interp), NULL);
     return TCL_OK;
@@ -499,6 +502,62 @@ EnumChildrenProc(
 
     Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewWideIntObj(PTR2INT(hwnd)));
     return TRUE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestwindowposchangedObjCmd --
+ *
+ *	Sends a WM_WINDOWPOSCHANGED message with the given WINDOWPOS fields
+ *	to the toplevel window of a Tk window, as Windows does e.g. after
+ *	Aero Shake.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The window may be reconfigured.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestwindowposchangedObjCmd(
+    void *clientData,		/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    Tk_Window tkwin;
+    WINDOWPOS pos;
+    int x, y, cx, cy, flags;
+
+    if (objc != 7) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y width height flags");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window) clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[4], &cx) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[5], &cy) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[6], &flags) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    memset(&pos, 0, sizeof(pos));
+    pos.hwnd = GetAncestor(Tk_GetHWND(Tk_WindowId(tkwin)), GA_ROOT);
+    pos.x = x;
+    pos.y = y;
+    pos.cx = cx;
+    pos.cy = cy;
+    pos.flags = (UINT) flags;
+    SendMessageW(pos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &pos);
+    return TCL_OK;
 }
 
 static int

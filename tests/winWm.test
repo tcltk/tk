@@ -610,6 +610,27 @@ test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
     destroy .t
 } -result 0
 
+test winWm-11.1 "stale position in WINDOWPOS with SWP_NOMOVE - bug 90f5cd3f21" -constraints {
+    win testwindowposchanged
+} -setup {
+    destroy .t
+    set res [list ]
+} -body {
+    toplevel .t
+    wm geometry .t 200x100+300+200
+    update
+    bind .t <Configure> {lappend res [list configure %x %y %w %h]}
+    # After Aero Shake, Windows sends WM_WINDOWPOSCHANGED with SWP_NOMOVE
+    # and SWP_NOSIZE set and stale position and size (0x37 is SWP_NOSIZE |
+    # SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED).
+    testwindowposchanged .t 1111 2222 333 444 0x37
+    update
+    lappend res [winfo x .t] [winfo y .t] [wm geometry .t]
+} -cleanup {
+    destroy .t
+    unset -nocomplain res
+} -result {{configure 300 200 200 100} 300 200 200x100+300+200}
+
 #
 # TESTFILE CLEANUP
 #

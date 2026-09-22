@@ -182,6 +182,7 @@ testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
 testConstraint testtext        [llength [info commands testtext]]
 testConstraint testwinevent    [llength [info commands testwinevent]]
+testConstraint testwindowposchanged [llength [info commands testwindowposchanged]]
 testConstraint testwrapper     [llength [info commands testwrapper]]
 
 # EOF
