@@ -1088,7 +1088,7 @@ GenerateXEvent(
     case WM_KEYDOWN:
     case WM_KEYUP: {
 	unsigned int state = GetState(message, wParam, lParam);
-	Time time = TkGetMS();
+	Time time = TkpGetEventTime();
 	POINT clientPoint;
 	union {DWORD msgpos; POINTS point;} root;	/* Note: POINT and POINTS are different */
 
@@ -1646,7 +1646,7 @@ HandleIMEComposition(
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
 	event.xkey.subwindow = None;
 	event.xkey.state = TkWinGetModifierState();
-	event.xkey.time = TkGetMS();
+	event.xkey.time = TkpGetEventTime();
 	event.xkey.same_screen = True;
 
 	for (i=0; i<n; ) {
@@ -1781,6 +1781,30 @@ unsigned long
 TkGetMS(void)
 {
     return GetTickCount();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ *	The time of the message which is currently being processed, in the
+ *	same units as TkGetMS(). It is earlier than the current time if the
+ *	message waited in the queue while a script was running. [Bug 1954237]
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    return (unsigned long) GetMessageTime();
 }
 
 /*
