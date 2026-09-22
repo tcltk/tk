@@ -301,6 +301,12 @@ clone. Additionally, any cascades that are pointed to are also cloned
 so that menu traversal will work right. Clones are destroyed when
 either the tearoff or menubar goes away, or when the original menu is
 destroyed.
+.PP
+It is the clone which is posted and displayed, not the original menu, and on
+Windows and macOS the menus are drawn by the system, so no Tk window is mapped
+at all.  Therefore \fBwinfo\fR and \fBwm\fR do not return any meaningful
+geometry information for a menu which is used as a menubar or is torn off, nor
+for the menus of its cascade entries.
 .SH "WIDGET COMMAND"
 .PP
 The \fBmenu\fR command creates a new Tcl command whose
