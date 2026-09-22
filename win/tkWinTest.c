@@ -682,7 +682,7 @@ TestsendinputObjCmd(
 	wstr = (const WCHAR *) Tcl_UtfToWCharDString(Tcl_GetString(objv[2]),
 		TCL_INDEX_NONE, &ds);
 	len = Tcl_DStringLength(&ds) / sizeof(WCHAR);
-	input = (INPUT *) Tcl_Alloc(2 * len * sizeof(INPUT));
+	input = (INPUT *) ckalloc(2 * len * sizeof(INPUT));
 	memset(input, 0, 2 * len * sizeof(INPUT));
 	for (i = 0; i < len; i++) {
 	    input[2*i].type = input[2*i+1].type = INPUT_KEYBOARD;
@@ -694,11 +694,11 @@ TestsendinputObjCmd(
 		!= (UINT) (2 * len)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("SendInput failed",
 		    TCL_INDEX_NONE));
-	    Tcl_Free(input);
+	    ckfree(input);
 	    Tcl_DStringFree(&ds);
 	    return TCL_ERROR;
 	}
-	Tcl_Free(input);
+	ckfree(input);
 	Tcl_DStringFree(&ds);
 	break;
     }
