@@ -674,9 +674,29 @@ DisplayMenu(
 	}
 	mePtr->entryFlags &= ~ENTRY_NEEDS_REDISPLAY;
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+	/*
+	 * In order to avoid the entry blinking, it is drawn into off-screen
+	 * memory and copied on-screen in a single operation.  [Bug 791527]
+	 */
+
+	if ((mePtr->width > 0) && (mePtr->height > 0)) {
+	    Pixmap pixmap = Tk_GetPixmap(menuPtr->display,
+		    Tk_WindowId(tkwin), mePtr->width, mePtr->height,
+		    Tk_Depth(tkwin));
+
+	    TkpDrawMenuEntry(mePtr, pixmap, tkfont, &menuMetrics, 0, 0,
+		    mePtr->width, mePtr->height, drawingParameters);
+	    XCopyArea(menuPtr->display, pixmap, Tk_WindowId(tkwin),
+		    menuPtr->textGC, 0, 0, (unsigned) mePtr->width,
+		    (unsigned) mePtr->height, mePtr->x, mePtr->y);
+	    Tk_FreePixmap(menuPtr->display, pixmap);
+	}
+#else
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
 		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
 		mePtr->height, drawingParameters);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
 	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
 
