@@ -175,6 +175,7 @@ static Tcl_ObjCmdProc2 TestpropObjCmd;
 static Tcl_ObjCmdProc2 TestprintfObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static Tcl_ObjCmdProc2 TestwrapperObjCmd;
+static Tcl_ObjCmdProc2 TestxfocusObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(void *clientData);
 static Tcl_ObjCmdProc2 TrivialConfigObjCmd;
@@ -259,6 +260,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testsend", TkpTestsendCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwrapper", TestwrapperObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testxfocus", TestxfocusObjCmd,
 	    Tk_MainWindow(interp), NULL);
 #endif /* _WIN32 */
 
@@ -1974,6 +1977,75 @@ TestwrapperObjCmd(
 
 	TkpPrintWindowId(buf, Tk_WindowId(wrapperPtr));
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestxfocusObjCmd --
+ *
+ *	This function implements the "testxfocus" command. It returns the
+ *	Tk window which has the input focus of the X server (the toplevel if
+ *	the focus is on its wrapper window), or an empty string if it is on
+ *	a window of another application or on no window. With a window
+ *	argument it first sets the input focus to the wrapper window of the
+ *	toplevel of that window, as a window manager would do.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestxfocusObjCmd(
+    void *clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_Window tkwin = (Tk_Window)clientData, focusWin;
+    Window window;
+    int revert;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?window?");
+	return TCL_ERROR;
+    }
+    if (objc == 2) {
+	TkWindow *winPtr = (TkWindow *) Tk_NameToWindow(interp,
+		Tcl_GetString(objv[1]), tkwin);
+	TkWindow *wrapperPtr;
+
+	if (winPtr == NULL) {
+	    return TCL_ERROR;
+	}
+	while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
+	    winPtr = winPtr->parentPtr;
+	}
+	wrapperPtr = TkpGetWrapperWindow(winPtr);
+	if (wrapperPtr == NULL) {
+	    wrapperPtr = winPtr;
+	}
+	XSetInputFocus(Tk_Display(tkwin), Tk_WindowId(wrapperPtr),
+		RevertToParent, CurrentTime);
+	XSync(Tk_Display(tkwin), False);
+    }
+    XGetInputFocus(Tk_Display(tkwin), &window, &revert);
+    focusWin = Tk_IdToWindow(Tk_Display(tkwin), window);
+    if (focusWin != NULL) {
+	if (((TkWindow *) focusWin)->flags & TK_WRAPPER) {
+	    focusWin = (Tk_Window) TkWmFocusToplevel((TkWindow *) focusWin);
+	}
+	if (focusWin != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(focusWin),
+		    TCL_INDEX_NONE));
+	}
     }
     return TCL_OK;
 }

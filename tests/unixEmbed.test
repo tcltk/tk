@@ -821,6 +821,36 @@ test unixEmbed-5.3a {EmbedFocusProc procedure, FocusOut events} -constraints {
     interp delete child
     deleteWindows
 } -result {{{focus in .t1}} {{focus in .t1} {focus out .t1}}}
+test unixEmbed-5.4 {EmbedFocusProc procedure, X focus set to the container's toplevel after the embedded application claimed it - bug a4fa3ad2d6} -constraints {
+    unix notAqua testxfocus
+} -setup {
+    deleteWindows
+} -body {
+    frame .f1 -container 1 -width 200 -height 50
+    pack .f1
+    update
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
+	destroy {*}[winfo children .]
+	toplevel .t1 -use $w1
+	entry .t1.e
+	pack .t1.e
+	update
+	focus -force .t1.e
+	update
+    }
+    update
+    # A click-to-focus window manager sets the X focus to the toplevel of
+    # the container (FocusIn with NotifyInferior for it); the X focus must
+    # be passed on to the embedded application again.
+    testxfocus .
+    update
+    after 200
+    update
+    childTkProcess eval {update; testxfocus}
+} -cleanup {
+    deleteWindows
+} -result {.t1}
 
 
 test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constraints {
