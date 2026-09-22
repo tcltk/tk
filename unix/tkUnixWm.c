@@ -4912,10 +4912,15 @@ UpdateSizeHints(
 	hintsPtr->max_height = hintsPtr->base_height
 		+ (maxHeight * wmPtr->heightInc);
     } else {
+	/*
+	 * The sizes are set for the wrapper, which is higher than the
+	 * toplevel by the height of the menubar.  [Bug 726351]
+	 */
+
 	hintsPtr->min_width = wmPtr->minWidth;
-	hintsPtr->min_height = wmPtr->minHeight;
+	hintsPtr->min_height = wmPtr->minHeight + wmPtr->menuHeight;
 	hintsPtr->max_width = maxWidth;
-	hintsPtr->max_height = maxHeight;
+	hintsPtr->max_height = maxHeight + wmPtr->menuHeight;
 	hintsPtr->base_width = 0;
 	hintsPtr->base_height = 0;
     }

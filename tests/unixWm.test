@@ -2719,6 +2719,39 @@ test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
     destroy .t
 } -result {}
 
+test unixWm-63.1 {UpdateSizeHints procedure, the size hints of a toplevel
+	with a menubar include the height of the menubar - bug 726351} -constraints {
+    unix testwrapper
+} -setup {
+    destroy .t
+    toplevel .t
+    frame .t.f -width 200 -height 100
+    pack .t.f
+    update
+} -body {
+    # The size hints are set on the wrapper, which is higher than the toplevel
+    # by the height of the menubar.
+    wm minsize .t [winfo reqwidth .t] [winfo reqheight .t]
+    update
+    set before [expr {[lindex [testprop [testwrapper .t] WM_NORMAL_HINTS] 6]}]
+    set rooty [winfo rooty .t]
+    menu .t.m
+    .t.m add cascade -label Bar -menu .t.m.sub
+    menu .t.m.sub -tearoff 0
+    .t.m.sub add command -label Barian
+    .t configure -menu .t.m
+    update
+    wm minsize .t [winfo reqwidth .t] [winfo reqheight .t]
+    update
+    set after [expr {[lindex [testprop [testwrapper .t] WM_NORMAL_HINTS] 6]}]
+    # Both differences are 0; without the fix the second one is minus the
+    # height of the menubar.
+    list [expr {$before - [winfo reqheight .t]}] \
+	    [expr {$after - [winfo reqheight .t] - [winfo rooty .t] + $rooty}]
+} -cleanup {
+    destroy .t
+} -result {0 0}
+
 #
 # TESTFILE CLEANUP
 #
