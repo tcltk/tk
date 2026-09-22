@@ -433,6 +433,76 @@ test entry-12.2 "style command" -body {
     destroy .w
 } -result {customStyle.TEntry customStyle.TEntry TEntry}
 
+# Look for a pixel of the given color in the left half of the widget.
+proc findPixel {w color} {
+    set width [expr {[winfo width $w] / 2}]
+    set height [winfo height $w]
+    for {set y 0} {$y < $height} {incr y} {
+	for {set x 0} {$x < $width} {incr x} {
+	    if {[testpixel $w $x $y] eq $color} {
+		return 1
+	    }
+	}
+    }
+    return 0
+}
+
+test entry-14.1 {selected text of an unfocused entry uses the -foreground state map on Windows - bug 300bad1beb} -constraints {
+    win testpixel
+} -setup {
+    set theme [ttk::style theme use]
+    ttk::style theme use vista
+    ttk::style map TEntry -foreground {invalid red}
+    ttk::entry .e -font {Courier 24} -width 5
+    ttk::entry .f
+    pack .e .f
+    update
+    focus -force .e
+    update
+} -body {
+    .e insert 0 "MM"
+    .e state invalid
+    .e selection range 0 end
+    focus -force .f
+    update
+    findPixel .e #ff0000
+} -cleanup {
+    destroy .e .f
+    ttk::style map TEntry -foreground {}
+    ttk::style theme use $theme
+} -result 1
+
+test entry-14.2 {selection of an unfocused entry is hidden on Windows - bug 300bad1beb} -constraints {
+    win testpixel
+} -setup {
+    set theme [ttk::style theme use]
+    ttk::style theme use vista
+    set always $::tk::AlwaysShowSelection
+    ttk::entry .e -font {Courier 24} -width 5
+    ttk::entry .f
+    pack .e .f
+    update
+    focus -force .e
+    update
+} -body {
+    .e insert 0 "MM"
+    .e selection range 0 end
+    set color [eval format #%02x%02x%02x [lmap c [winfo rgb .e SystemHighlight] {expr {$c >> 8}}]]
+    update
+    set res [findPixel .e $color]
+    focus -force .f
+    update
+    lappend res [findPixel .e $color]
+    set ::tk::AlwaysShowSelection 1
+    .e selection range 0 end
+    update
+    lappend res [findPixel .e $color]
+} -cleanup {
+    destroy .e .f
+    set ::tk::AlwaysShowSelection $always
+    ttk::style theme use $theme
+} -result {1 0 1}
+
 #
 # TESTFILE CLEANUP
 #
