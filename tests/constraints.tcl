@@ -181,6 +181,7 @@ testConstraint testobjconfig   [llength [info commands testobjconfig]]
 testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
 testConstraint testtext        [llength [info commands testtext]]
+testConstraint testforeignwindow [llength [info commands testforeignwindow]]
 testConstraint testwinevent    [llength [info commands testwinevent]]
 testConstraint testwrapper     [llength [info commands testwrapper]]
 

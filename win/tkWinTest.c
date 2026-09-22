@@ -30,6 +30,7 @@ static Tcl_ObjCmdProc2 TestclipboardObjCmd;
 static Tcl_ObjCmdProc2 TestwineventObjCmd;
 static Tcl_ObjCmdProc2 TestfindwindowObjCmd;
 static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
+static Tcl_ObjCmdProc2 TestforeignwindowObjCmd;
 static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
@@ -65,6 +66,8 @@ TkplatformtestInit(
     Tcl_CreateObjCommand2(interp, "testfindwindow", TestfindwindowObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testforeignwindow", TestforeignwindowObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwinlocale", TestwinlocaleObjCmd,
 	    Tk_MainWindow(interp), NULL);
@@ -294,6 +297,7 @@ TestwineventObjCmd(
 	{WM_GETTEXT,		"WM_GETTEXT"},
 	{WM_SETTEXT,		"WM_SETTEXT"},
 	{WM_COMMAND,            "WM_COMMAND"},
+	{WM_MOUSEACTIVATE,	"WM_MOUSEACTIVATE"},
 	{-1,			NULL}
     };
 
@@ -403,6 +407,10 @@ TestwineventObjCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
+    case WM_MOUSEACTIVATE:
+	result = SendMessageW(hwnd, message, wParam, lParam);
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+	break;
     default: {
 	char buf[TCL_INTEGER_SPACE];
 
@@ -499,6 +507,49 @@ EnumChildrenProc(
 
     Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewWideIntObj(PTR2INT(hwnd)));
     return TRUE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestforeignwindowObjCmd --
+ *
+ *	Returns the handle of a hidden toplevel window which is not a Tk
+ *	window, creating it on first use.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	May create a window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestforeignwindowObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    static HWND hwnd = NULL;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    if (hwnd == NULL) {
+	hwnd = CreateWindowExW(0, L"STATIC", L"foreign", WS_OVERLAPPED,
+		0, 0, 100, 100, NULL, NULL, Tk_GetHINSTANCE(), NULL);
+	if (hwnd == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "cannot create window", TCL_INDEX_NONE));
+	    return TCL_ERROR;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
+    return TCL_OK;
 }
 
 static int

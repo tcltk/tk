@@ -610,6 +610,22 @@ test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
     destroy .t
 } -result 0
 
+test winWm-12.1 "WM_MOUSEACTIVATE with a non-Tk toplevel parent - bug 564897" -constraints {
+    win testwinevent testforeignwindow
+} -setup {
+    destroy .t
+} -body {
+    toplevel .t
+    update
+    # lParam: hit-test code HTCLIENT in the low word, WM_LBUTTONDOWN in the
+    # high word.  The result is MA_ACTIVATE (1), not MA_NOACTIVATE (3).
+    set lParam [expr {(0x201 << 16) | 1}]
+    list [testwinevent [wm frame .t] 0 WM_MOUSEACTIVATE [wm frame .t] $lParam] \
+	    [testwinevent [wm frame .t] 0 WM_MOUSEACTIVATE [testforeignwindow] $lParam]
+} -cleanup {
+    destroy .t
+} -result {1 1}
+
 #
 # TESTFILE CLEANUP
 #
