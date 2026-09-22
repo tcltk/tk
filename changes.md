@@ -37,6 +37,7 @@ to the userbase.
  - [Incorrect reproduction of the Azerbaijani letter "əƏ" in the Enter field](https://core.tcl-lang.org/tk/tktview/704842)
  - [spinbox parsing depends on the LC_NUMERIC locale](https://core.tcl-lang.org/tk/tktview/9e8932)
  - ["grid forget" silently resets the forgotten window's own "grid propagate" setting](https://core.tcl-lang.org/tk/tktview/eb0393)
+ - [ttk::style command moves ttk::panedwindow sashes](https://core.tcl-lang.org/tk/tktview/b086bb)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
