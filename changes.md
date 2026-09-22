@@ -36,6 +36,7 @@ to the userbase.
  - [Certain characters (like ț and ș) become question marks in Entry Box on Windows](https://core.tcl-lang.org/tk/tktview/51436f)
  - [Incorrect reproduction of the Azerbaijani letter "əƏ" in the Enter field](https://core.tcl-lang.org/tk/tktview/704842)
  - [spinbox parsing depends on the LC_NUMERIC locale](https://core.tcl-lang.org/tk/tktview/9e8932)
+ - ["grid forget" silently resets the forgotten window's own "grid propagate" setting](https://core.tcl-lang.org/tk/tktview/eb0393)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
