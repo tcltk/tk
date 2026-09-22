@@ -501,6 +501,12 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@echo Building Wish Tcl+Tk library zip file
 	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
+	@echo creating package index
+	@type << > $(LIBTKVFS)\tk_library\pkgIndex.tcl
+if {![package vsatisfies [package provide Tcl] 9.0]} return
+package ifneeded tk $(TK_PATCH_LEVEL) [list load {} Tk]
+package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
+<<
 	@$(TCLSH_NATIVE) <<
 cd {$(OUT_DIR)}
 file delete -force {libtk.vfs/tk_library/demos}
@@ -733,6 +739,14 @@ if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 } else {
     package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
 }
+package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
+<<
+	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"
+!else
+	@echo creating package index
+	@type << > $(OUT_DIR)\pkgIndex.tcl
+if {![package vsatisfies [package provide Tcl] 9.0]} return
+package ifneeded tk $(TK_PATCH_LEVEL) [list load {} Tk]
 package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"

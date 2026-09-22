@@ -646,6 +646,15 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	then : ; else \
 	    cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	fi
+	@if test "x$(TK_SHARED_BUILD)" != "x1"; then \
+	    echo "Creating package index ${TK_VFS_PATH}/pkgIndex.tcl"; \
+	    rm -f "${TK_VFS_PATH}/pkgIndex.tcl"; \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load {} Tk]";\
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
+	    ) > "${TK_VFS_PATH}/pkgIndex.tcl"; \
+	    fi
 	rm -rf ${TK_VFS_PATH}/demos
 	@find ${TK_VFS_ROOT} -type d -empty -delete
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
@@ -831,6 +840,14 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
 	    echo "}";\
 	    fi; \
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
+	    ) > "$(PKG_INDEX)"; \
+	    elif test "${ZIPFS_BUILD}" = "0" ; then \
+	    echo "Creating package index $(PKG_INDEX)"; \
+	    rm -f "$(PKG_INDEX)"; \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load {} Tk]";\
 	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
 	    ) > "$(PKG_INDEX)"; \
 	    fi
