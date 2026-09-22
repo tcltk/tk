@@ -918,6 +918,32 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.4 {characters entered via an input method (VK_PACKET) on Windows - bug f492c3de04} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    bind $e <Key> {lappend res [list press %A]}
+    bind $e <KeyRelease> {lappend res [list release %A]}
+    # Latin, Cyrillic and non-BMP (surrogate pair) characters.
+    testsendinput unicode "r\u0439\U0001F600"
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    deleteWindows
+    unset -nocomplain done
+} -result "{press r} {release r} {press \u0439} {release \u0439} {press \U0001F600} {release \U0001F600}"
+
 test event-8.5 {key input with a non-Latin keyboard layout on Windows - bug a9bd2ab98b} -constraints {
     win testsendinput
 } -setup {
