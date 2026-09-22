@@ -226,6 +226,54 @@ TCL_DECLARE_MUTEX(xftMutex);
 #define LOCK Tcl_MutexLock(&xftMutex)
 #define UNLOCK Tcl_MutexUnlock(&xftMutex)
 
+/*
+ * Glyphs are collected in batches of MAX_GLYPHS and drawn with
+ * XftDrawGlyphFontSpec(). Its coordinates are 16-bit values, so glyphs
+ * outside that range are skipped, they would wrap around.
+ */
+
+typedef struct {
+    XftDraw *draw;
+    XftColor *color;
+    int nspec;
+    XftGlyphFontSpec specs[MAX_GLYPHS];
+} GlyphBatch;
+
+static void
+FlushGlyphs(
+    GlyphBatch *batchPtr)
+{
+    if (batchPtr->nspec > 0) {
+	LOCK;
+	XftDrawGlyphFontSpec(batchPtr->draw, batchPtr->color,
+		batchPtr->specs, batchPtr->nspec);
+	UNLOCK;
+	batchPtr->nspec = 0;
+    }
+}
+
+static void
+AddGlyph(
+    GlyphBatch *batchPtr,
+    XftFont *font,
+    unsigned int glyph,
+    int x, int y)
+{
+    XftGlyphFontSpec *specPtr;
+
+    if (x < -0x8000 || x > 0x7FFF || y < -0x8000 || y > 0x7FFF) {
+	return;
+    }
+    specPtr = &batchPtr->specs[batchPtr->nspec];
+    specPtr->font = font;
+    specPtr->glyph = glyph;
+    specPtr->x = (short) x;
+    specPtr->y = (short) y;
+    if (++batchPtr->nspec == MAX_GLYPHS) {
+	FlushGlyphs(batchPtr);
+    }
+}
+
 /* Function prototypes. */
 static void X11Shaper_Init(X11Shaper *s, UnixFtFont *fontPtr);
 static void X11Shaper_Destroy(X11Shaper *s);
@@ -2745,8 +2793,7 @@ Tk_DrawCharsInContext(
     if (IsSimpleOnly(source, (int)numBytes)) {
 
 	/* Simple path with cached fallback fonts. */
-	XftGlyphFontSpec specs[MAX_GLYPHS];
-	int nspec = 0;
+	GlyphBatch batch = {ftDraw, xftcolor, 0, {{0}}};
 	int penX = x;
 
 	/* Compute x offset for rangeStart (if any). */
@@ -2789,7 +2836,7 @@ Tk_DrawCharsInContext(
 	/* Build specs for visible range. */
 	Tcl_Size i = rangeStart;
 	Tcl_Size end = rangeStart + rangeLength;
-	while (i < end && nspec < MAX_GLYPHS) {
+	while (i < end) {
 	    FcChar32 uc;
 	    int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
 				    (int)(end - i));
@@ -2817,22 +2864,14 @@ Tk_DrawCharsInContext(
 	    XGlyphInfo ext;
 	    XftGlyphExtents(display, ftFont, &glyphId, 1, &ext);
 
-	    specs[nspec].font  = ftFont;
-	    specs[nspec].glyph = glyphId;
-	    specs[nspec].x     = penX;
-	    specs[nspec].y     = y;
-	    nspec++;
+	    AddGlyph(&batch, ftFont, glyphId, penX, y);
 
 	    penX += ext.xOff;
 	    i += clen;
 	}
 	barX1 = penX;
 
-	if (nspec > 0) {
-	    LOCK;
-	    XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
-	    UNLOCK;
-	}
+	FlushGlyphs(&batch);
 	goto done;
     }
 
@@ -2849,15 +2888,15 @@ Tk_DrawCharsInContext(
 
 	int rangeEnd = (int)(rangeStart + rangeLength);
 
-	XftGlyphFontSpec specs[MAX_GLYPHS];
-	int nspec = 0;
+	GlyphBatch batch = {ftDraw, xftcolor, 0, {{0}}};
+	int first = 1;
 
 	/*
 	 * Correct approach for bidi:
 	 * Glyphs already have correct absolute visual X positions
 	 * from the start of the full string. Just filter and draw.
 	 */
-	for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+	for (int i = 0; i < buffer.glyphCount; i++) {
 	    int bo  = buffer.glyphs[i].byteOffset;
 	    int boe = bo + buffer.glyphs[i].clusterLen;
 
@@ -2874,24 +2913,19 @@ Tk_DrawCharsInContext(
 	    unsigned int glyphId = buffer.glyphs[i].glyphId;
 	    if (glyphId == 0) continue;
 
-	    specs[nspec].font  = ftFont;
-	    specs[nspec].glyph = glyphId;
-	    specs[nspec].x     = x + buffer.glyphs[i].x;   /* Absolute visual position. */
-	    specs[nspec].y     = y + buffer.glyphs[i].y;
-	    if (nspec == 0 || specs[nspec].x < barX0) {
-		barX0 = specs[nspec].x;
+	    int gx = x + buffer.glyphs[i].x;	/* Absolute visual position. */
+
+	    if (first || gx < barX0) {
+		barX0 = gx;
 	    }
-	    if (nspec == 0 || specs[nspec].x + buffer.glyphs[i].advanceX > barX1) {
-		barX1 = specs[nspec].x + buffer.glyphs[i].advanceX;
+	    if (first || gx + buffer.glyphs[i].advanceX > barX1) {
+		barX1 = gx + buffer.glyphs[i].advanceX;
 	    }
-	    nspec++;
+	    first = 0;
+	    AddGlyph(&batch, ftFont, glyphId, gx, y + buffer.glyphs[i].y);
 	}
 
-	if (nspec > 0) {
-	    LOCK;
-	    XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
-	    UNLOCK;
-	}
+	FlushGlyphs(&batch);
     }
  done:
     /*
@@ -2968,12 +3002,11 @@ TkDrawAngledChars(
 
     /* Simple text path (Latin text, etc. */
     if (IsSimpleOnly(source, (int)numBytes)) {
-	XftGlyphFontSpec specs[MAX_GLYPHS];
-	int nspec = 0;
+	GlyphBatch batch = {ftDraw, xftcolor, 0, {{0}}};
 	double penX = 0.0;
 
 	int i = 0;
-	while (i < numBytes && nspec < MAX_GLYPHS) {
+	while (i < numBytes) {
 	    FcChar32 uc;
 	    int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, numBytes - i);
 	    if (clen <= 0) { i++; continue; }
@@ -3017,21 +3050,13 @@ TkDrawAngledChars(
 	    double rx = gx * cosA - gy * sinA;
 	    double ry = gx * sinA + gy * cosA;
 
-	    specs[nspec].font  = ftFont;
-	    specs[nspec].glyph = glyphId;
-	    specs[nspec].x     = (int)(x + rx);
-	    specs[nspec].y     = (int)(y - ry);
-	    nspec++;
+	    AddGlyph(&batch, ftFont, glyphId, (int)(x + rx), (int)(y - ry));
 
 	    penX += ext.xOff;
 	    i += clen;
 	}
 
-	if (nspec > 0) {
-	    LOCK;
-	    XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
-	    UNLOCK;
-	}
+	FlushGlyphs(&batch);
 	goto done;
     }
 
@@ -3043,10 +3068,9 @@ TkDrawAngledChars(
 	    goto done;
 	}
 
-	XftGlyphFontSpec specs[MAX_GLYPHS];
-	int nspec = 0;
+	GlyphBatch batch = {ftDraw, xftcolor, 0, {{0}}};
 
-	for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+	for (int i = 0; i < buffer.glyphCount; i++) {
 	    int faceIdx = buffer.glyphs[i].fontIndex;
 	    if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
@@ -3062,18 +3086,10 @@ TkDrawAngledChars(
 	    double rx = gx * cosA - gy * sinA;
 	    double ry = gx * sinA + gy * cosA;
 
-	    specs[nspec].font  = ftFont;
-	    specs[nspec].glyph = glyph;
-	    specs[nspec].x     = (int)(x + rx);
-	    specs[nspec].y     = (int)(y - ry);
-	    nspec++;
+	    AddGlyph(&batch, ftFont, glyph, (int)(x + rx), (int)(y - ry));
 	}
 
-	if (nspec > 0) {
-	    LOCK;
-	    XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
-	    UNLOCK;
-	}
+	FlushGlyphs(&batch);
     }
 
  done:

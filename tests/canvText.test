@@ -1018,6 +1018,60 @@ test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712
     destroy .c
 } -result {}
 
+# Returns the number of pixels of the canvas which are not white in the
+# given rectangle.
+proc countPixels {w x1 y1 x2 y2} {
+    set n 0
+    for {set y $y1} {$y < $y2} {incr y} {
+	for {set x $x1} {$x < $x2} {incr x} {
+	    if {[testpixel $w $x $y] ne "#ffffff"} {
+		incr n
+	    }
+	}
+    }
+    return $n
+}
+
+test canvText-22.1 {text item longer than 512 characters} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
+	    -scrollregion {0 0 100000 40}
+    pack .c
+    update
+} -body {
+    .c create text 0 20 -anchor w -text [string repeat M 1000] -font {Courier 14}
+    set width [font measure {Courier 14} M]
+    # Scroll to the 999th character.
+    .c xview moveto [expr {998 * $width / 100000.0}]
+    update
+    expr {[countPixels .c 0 10 [expr {2 * $width}] 30] > 0}
+} -cleanup {
+    destroy .c
+} -result 1
+
+test canvText-22.2 {very long text item scrolled far away - bug 770578} -constraints {
+    testpixel && (withXft || !x11)
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
+	    -scrollregion {0 0 200000 40}
+    pack .c
+    update
+} -body {
+    .c create text 0 20 -anchor w -text [string repeat bug!_ 10000] -font {Courier 14}
+    set res {}
+    foreach frac {0 0.25 0.5} {
+	.c xview moveto $frac
+	update
+	lappend res [expr {[countPixels .c 0 10 200 30] > 0}]
+    }
+    set res
+} -cleanup {
+    destroy .c
+} -result {1 1 1}
+
 #
 # TESTFILE CLEANUP
 #
