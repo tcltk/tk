@@ -1371,6 +1371,56 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+# Returns the list of pixels of the canvas which are not white.
+proc drawnPixels {w} {
+    set res {}
+    set width [winfo width $w]
+    set height [winfo height $w]
+    for {set y 0} {$y < $height} {incr y} {
+	for {set x 0} {$x < $width} {incr x} {
+	    if {[testpixel $w $x $y] ne "#ffffff"} {
+		lappend res $x,$y
+	    }
+	}
+    }
+    return $res
+}
+
+test canvas-28.1 {thin lines do not depend on the order of their points - bug 220895} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 60 -height 60 -background white -highlightthickness 0
+    pack .c
+    update
+    set res {}
+} -body {
+    foreach coords {
+	{20 40 22 38 22 20}
+	{20 20 40 20} {20 20 40 40} {20 20 20 40} {40 20 20 40}
+	{10 20 50 27} {10 20 17 50}
+	{20 20 40 30 20 40}
+    } {
+	.c create line {*}$coords
+	update
+	set pixels [drawnPixels .c]
+	.c delete all
+	set reversed {}
+	foreach {y x} [lreverse $coords] {
+	    lappend reversed $x $y
+	}
+	.c create line {*}$reversed
+	update
+	if {[drawnPixels .c] ne $pixels} {
+	    lappend res $coords
+	}
+	.c delete all
+    }
+    set res
+} -cleanup {
+    destroy .c
+} -result {}
+
 #
 # TESTFILE CLEANUP
 #

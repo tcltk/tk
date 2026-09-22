@@ -121,6 +121,8 @@ static int		DrawOrFillArc(Display *display, Drawable d, GC gc,
 			    int fill);
 static void		RenderObject(HDC dc, GC gc, XPoint* points,
 			    int npoints, int mode, HPEN pen, WinDrawFunc func);
+static int		ThinLineEndPoint(GC gc, POINT *winPoints,
+			    int npoints);
 static HPEN		SetUpGraphicsPort(GC gc);
 
 /*
@@ -815,6 +817,11 @@ RenderObject(
     HPEN oldPen;
     HBRUSH oldBrush;
     POINT *winPoints = ConvertPoints(points, npoints, mode, &rect);
+    int drawEndPoint = 0;
+
+    if (func == Polyline) {
+	drawEndPoint = ThinLineEndPoint(gc, winPoints, npoints);
+    }
 
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
@@ -880,6 +887,11 @@ RenderObject(
 		: WINDING);
 	oldMemBrush = (HBRUSH)SelectObject(dcMem, CreateSolidBrush(gc->foreground));
 	MakeAndStrokePath(dcMem, winPoints, npoints, func);
+	if (drawEndPoint) {
+	    MoveToEx(dcMem, winPoints[npoints-1].x, winPoints[npoints-1].y,
+		    NULL);
+	    LineTo(dcMem, winPoints[npoints-1].x + 1, winPoints[npoints-1].y);
+	}
 	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
 
 	/*
@@ -892,6 +904,12 @@ RenderObject(
 	    DeleteObject(SelectObject(dcMem,
 		    CreateSolidBrush(gc->background)));
 	    MakeAndStrokePath(dcMem, winPoints, npoints, func);
+	    if (drawEndPoint) {
+		MoveToEx(dcMem, winPoints[npoints-1].x,
+			winPoints[npoints-1].y, NULL);
+		LineTo(dcMem, winPoints[npoints-1].x + 1,
+			winPoints[npoints-1].y);
+	    }
 	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
 		    COPYBG);
 	}
@@ -908,9 +926,78 @@ RenderObject(
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
 	MakeAndStrokePath(dc, winPoints, npoints, func);
+	if (drawEndPoint) {
+	    MoveToEx(dc, winPoints[npoints-1].x, winPoints[npoints-1].y, NULL);
+	    LineTo(dc, winPoints[npoints-1].x + 1, winPoints[npoints-1].y);
+	}
 	SelectObject(dc, oldPen);
     }
     DeleteObject(SelectObject(dc, oldBrush));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ThinLineEndPoint --
+ *
+ *	GDI does not draw the last point of a polyline drawn with a cosmetic
+ *	pen, so which end of a line of width 1 is missing depends on the
+ *	order of its points, while X11 draws an end point of such a line if
+ *	and only if it is the left (or top) end of its segment, independently
+ *	of the order. This procedure reverses the points if that makes GDI
+ *	draw the right ends, and tells whether the last point must be drawn
+ *	in addition. [Bug 220895]
+ *
+ *	Lines of width 0 are left as they are: X11 draws both of their end
+ *	points, and the code which draws them (Ttk) compensates for the
+ *	missing last point itself (WIN32_XDRAWLINE_HACK).
+ *
+ * Results:
+ *	1 if the last point must be drawn after the polyline, 0 otherwise.
+ *
+ * Side effects:
+ *	May reverse the order of the points.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define POINT_BEFORE(a, b) \
+	((a).x < (b).x || ((a).x == (b).x && (a).y < (b).y))
+
+static int
+ThinLineEndPoint(
+    GC gc,
+    POINT *winPoints,
+    int npoints)
+{
+    int firstDrawn, lastDrawn;
+
+    if (gc->line_width != 1 || npoints < 2 || gc->cap_style == CapNotLast
+	    || (winPoints[0].x == winPoints[npoints-1].x
+	    && winPoints[0].y == winPoints[npoints-1].y)) {
+	return 0;
+    }
+    firstDrawn = !POINT_BEFORE(winPoints[1], winPoints[0]);
+    lastDrawn = POINT_BEFORE(winPoints[npoints-1], winPoints[npoints-2]);
+    if (!lastDrawn) {
+	return 0;
+    }
+    if (!firstDrawn && gc->line_style == LineSolid) {
+	/*
+	 * Reversed, GDI draws the last point and omits the first one.
+	 */
+
+	int i, j;
+
+	for (i = 0, j = npoints - 1; i < j; i++, j--) {
+	    POINT tmp = winPoints[i];
+
+	    winPoints[i] = winPoints[j];
+	    winPoints[j] = tmp;
+	}
+	return 0;
+    }
+    return 1;
 }
 
 /*
