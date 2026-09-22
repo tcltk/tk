@@ -918,6 +918,62 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.5 {key input with a non-Latin keyboard layout on Windows - bug a9bd2ab98b} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Ukrainian layout: the Q key is U+0439.
+    testsendinput layout 00000422
+    bind $e <Key> {lappend res %A}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    lappend res [$e get]
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "\u0439 \u0439"
+
+test event-8.6 {key input with a keyboard layout without an ANSI code page on Windows - bug a9bd2ab98b} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Georgian layout: the Q key is U+10E6.
+    testsendinput layout 00000437
+    bind $e <Key> {lappend res %A}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    lappend res [$e get]
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "\u10E6 \u10E6"
+
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
 } -body {
