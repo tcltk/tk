@@ -285,9 +285,28 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
      */
     es->placeholderForegroundObj = Ttk_UseColor(cache, tkwin, es->placeholderForegroundObj);
     es->foregroundObj = Ttk_UseColor(cache, tkwin, es->foregroundObj);
-    es->selForegroundObj = Ttk_UseColor(cache, tkwin, es->selForegroundObj);
+    if (TkObjIsEmpty(es->selForegroundObj)) {
+	/*
+	 * An empty -selectforeground means the same color as -foreground,
+	 * so that a state map for -foreground applies to selected text too.
+	 * [Bug 300bad1beb]
+	 */
+
+	es->selForegroundObj = es->foregroundObj;
+    } else {
+	es->selForegroundObj = Ttk_UseColor(cache, tkwin, es->selForegroundObj);
+    }
     es->insertColorObj = Ttk_UseColor(cache, tkwin, es->insertColorObj);
-    es->selBorderObj = Ttk_UseBorder(cache, tkwin, es->selBorderObj);
+    if (TkObjIsEmpty(es->selBorderObj)) {
+	/*
+	 * An empty -selectbackground means no selection background, so that
+	 * the field background of the current state shows.  [Bug 300bad1beb]
+	 */
+
+	es->selBorderObj = NULL;
+    } else {
+	es->selBorderObj = Ttk_UseBorder(cache, tkwin, es->selBorderObj);
+    }
 }
 
 /*------------------------------------------------------------------------
@@ -1335,7 +1354,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     if ((*(entryPtr->entry.displayString) == '\0')
 		&& (entryPtr->entry.placeholderObj != NULL)) {
 	/* No text displayed, but -placeholder is given */
-	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
+	if (!TkObjIsEmpty(es.placeholderForegroundObj)) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
 	    foregroundObj = es.foregroundObj;

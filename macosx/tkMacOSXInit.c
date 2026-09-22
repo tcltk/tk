@@ -459,6 +459,23 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 }
 
 /*
+ * Install TkMacOSXSignalHandler for the given signal, unless the application
+ * which embeds Tk has installed its own handler (e.g. Python raises
+ * KeyboardInterrupt from its SIGINT handler).
+ */
+
+static void
+InstallSignalHandler(
+    int sig)
+{
+    struct sigaction action;
+
+    if (sigaction(sig, NULL, &action) == 0 && action.sa_handler == SIG_DFL) {
+	signal(sig, TkMacOSXSignalHandler);
+    }
+}
+
+/*
  * This static function is run as an idle task to order the root window front.
  * This is only done if the window is in the normal state.  This avoids
  * flashing the root window on the screen if it was withdrawn immediately after
@@ -684,9 +701,9 @@ TkpInit(
 	 * application is killed with one of these signals.
 	 */
 
-	signal(SIGINT, TkMacOSXSignalHandler);
-	signal(SIGHUP, TkMacOSXSignalHandler);
-	signal(SIGTERM, TkMacOSXSignalHandler);
+	InstallSignalHandler(SIGINT);
+	InstallSignalHandler(SIGHUP);
+	InstallSignalHandler(SIGTERM);
     }
     /*
      * Initialization steps that are needed for all interpreters.

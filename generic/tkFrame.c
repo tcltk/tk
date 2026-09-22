@@ -458,7 +458,7 @@ TkCreateFrame(
     Colormap colormap;
     Visual *visual;
 
-    if (objc < 2) {
+    if ((objc < 2) || ((objc & 1) != 0)) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
@@ -1411,7 +1411,8 @@ DisplayFrame(
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2;
     Pixmap pixmap;
-    Bool useClipping = False;
+    bool useClipping = false;
+    bool useBuffer;
     int borderWidth, highlightWidth;
 
     framePtr->flags &= ~REDRAW_PENDING;
@@ -1449,6 +1450,21 @@ DisplayFrame(
 	return;
     }
 
+    /*
+     * Double buffering is only needed when a background image or a label
+     * is drawn. The pixmap covers the whole frame, which may be huge if it
+     * is scrolled in a canvas. [Bug 9438cce0bd]
+     */
+
+    useBuffer = (framePtr->bgimg != NULL);
+    if (framePtr->type == TYPE_LABELFRAME) {
+	Labelframe *labelframePtr = (Labelframe *) framePtr;
+
+	if (labelframePtr->textPtr != NULL || labelframePtr->labelWin != NULL) {
+	    useBuffer = true;
+	}
+    }
+
 #ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * In order to avoid screen flashes, this function redraws the frame into
@@ -1459,10 +1475,14 @@ DisplayFrame(
      * crashes, see [610aa08858].
      */
 
-    pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
-	(Tk_Width(tkwin) > 0 ? Tk_Width(tkwin) : 1),
-	(Tk_Height(tkwin) > 0 ? Tk_Height(tkwin) : 1),
-	Tk_Depth(tkwin));
+    if (useBuffer) {
+	pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
+	    (Tk_Width(tkwin) > 0 ? Tk_Width(tkwin) : 1),
+	    (Tk_Height(tkwin) > 0 ? Tk_Height(tkwin) : 1),
+	    Tk_Depth(tkwin));
+    } else {
+	pixmap = Tk_WindowId(tkwin);
+    }
 #else
     pixmap = Tk_WindowId(tkwin);
     Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap, 0, 0,
@@ -1558,7 +1578,7 @@ DisplayFrame(
 	    if ((labelframePtr->labelBox.width < labelframePtr->labelReqWidth)
 		    || (labelframePtr->labelBox.height <
 			    labelframePtr->labelReqHeight)) {
-		useClipping = True;
+		useClipping = true;
 		XSetClipRectangles(framePtr->display, labelframePtr->textGC, 0, 0,
 			&labelframePtr->labelBox, 1, Unsorted);
 	    }
@@ -1607,12 +1627,14 @@ DisplayFrame(
      * free up the pixmap.
      */
 
-    XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
-	    framePtr->copyGC, highlightWidth, highlightWidth,
-	    (unsigned) (Tk_Width(tkwin) - 2 * highlightWidth),
-	    (unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
-	    highlightWidth, highlightWidth);
-    Tk_FreePixmap(framePtr->display, pixmap);
+    if (useBuffer) {
+	XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
+		framePtr->copyGC, highlightWidth, highlightWidth,
+		(unsigned) (Tk_Width(tkwin) - 2 * highlightWidth),
+		(unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
+		highlightWidth, highlightWidth);
+	Tk_FreePixmap(framePtr->display, pixmap);
+    }
 #else
     Tk_ClipDrawableToRect(framePtr->display, pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */

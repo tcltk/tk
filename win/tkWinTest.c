@@ -618,9 +618,9 @@ TestsendinputObjCmd(
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     static const char *const options[] = {
-	"key", "unicode", "layout", "foreground", NULL
+	"foreground", "key", "layout", "unicode", NULL
     };
-    enum {KEY, UNICODE, LAYOUT, FOREGROUND};
+    enum {FOREGROUND, KEY, LAYOUT, UNICOD};
     int index;
 
     if (objc < 2) {
@@ -668,7 +668,7 @@ TestsendinputObjCmd(
 	}
 	break;
     }
-    case UNICODE: {
+    case UNICOD: {
 	Tcl_DString ds;
 	const WCHAR *wstr;
 	Tcl_Size len, i;
