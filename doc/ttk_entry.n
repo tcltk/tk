@@ -463,10 +463,15 @@ cannot be changed.
 \fB\-relief\fP \fIrelief\fP
 .br
 \fB\-selectbackground\fP \fIcolor\fP
-.br
+.RS
+If empty, the selected text has no distinct background.
+.RE
 \fB\-selectborderwidth\fP \fIamount\fP
 .br
 \fB\-selectforeground\fP \fIcolor\fP
+.RS
+If empty, the \fB\-foreground\fP color is used.
+.RE
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.

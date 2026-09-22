@@ -123,8 +123,13 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 \fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-selectbackground\fP \fIcolor\fP
-.br
+.RS
+If empty, the selected text has no distinct background.
+.RE
 \fB\-selectforeground\fP \fIcolor\fP
+.RS
+If empty, the \fB\-foreground\fP color is used.
+.RE
 .PP
 Some options are only available for specific themes.
 .PP
