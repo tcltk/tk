@@ -503,6 +503,9 @@ posting the menu and the result of that script is returned as the
 result of the \fBpost\fR widget command.  If an error returns while
 executing the command, then the error is returned without posting the
 menu.
+On X11 this command returns as soon as the menu is posted.  On Windows and
+macOS the menu is displayed by the system, which runs its own event loop, and
+the command does not return before the menu is unposted again.
 .\" METHOD: postcascade
 .TP
 \fIpathName \fBpostcascade \fIindex\fR
