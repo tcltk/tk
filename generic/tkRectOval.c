@@ -699,22 +699,24 @@ ComputeRectOvalBbox(
      * lower ones.
      */
 
-    tmp = (int) ((rectOvalPtr->bbox[0] >= 0) ? rectOvalPtr->bbox[0] + .5
-	    : rectOvalPtr->bbox[0] - .5);
+    dtmp = TkCanvClampCoord(rectOvalPtr->bbox[0]);
+    tmp = (int) ((dtmp >= 0) ? dtmp + .5 : dtmp - .5);
     rectOvalPtr->header.x1 = tmp - bloat;
-    tmp = (int) ((rectOvalPtr->bbox[1] >= 0) ? rectOvalPtr->bbox[1] + .5
-	    : rectOvalPtr->bbox[1] - .5);
+    dtmp = TkCanvClampCoord(rectOvalPtr->bbox[1]);
+    tmp = (int) ((dtmp >= 0) ? dtmp + .5 : dtmp - .5);
     rectOvalPtr->header.y1 = tmp - bloat;
     dtmp = rectOvalPtr->bbox[2];
     if (dtmp < (rectOvalPtr->bbox[0] + 1)) {
 	dtmp = rectOvalPtr->bbox[0] + 1;
     }
+    dtmp = TkCanvClampCoord(dtmp);
     tmp = (int) ((dtmp >= 0) ? dtmp + .5 : dtmp - .5);
     rectOvalPtr->header.x2 = tmp + bloat;
     dtmp = rectOvalPtr->bbox[3];
     if (dtmp < (rectOvalPtr->bbox[1] + 1)) {
 	dtmp = rectOvalPtr->bbox[1] + 1;
     }
+    dtmp = TkCanvClampCoord(dtmp);
     tmp = (int) ((dtmp >= 0) ? dtmp + .5 : dtmp - .5);
     rectOvalPtr->header.y2 = tmp + bloat;
 }

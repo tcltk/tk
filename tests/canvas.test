@@ -1371,6 +1371,50 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+test canvas-29.1 {bounding boxes of items with huge coordinates - bug 701927} -setup {
+    destroy .c
+    canvas .c -width 100 -height 100 -background white -highlightthickness 0
+    pack .c
+    update
+} -body {
+    set huge [expr {2**31 - 3}]
+    .c create line 0 10 $huge 10 -width 2
+    .c create line 0 20 $huge 20 -width 3 -dash {4 4}
+    .c create rectangle 0 30 1e12 35
+    .c create oval -1e12 40 1e12 45
+    .c create polygon 0 50 1e12 50 1e12 55 0 55
+    .c create arc -1e12 60 1e12 65 -start 0 -extent 180
+    .c create text 1e12 70 -text X
+    .c create bitmap 1e12 80 -bitmap gray50
+    list [.c find overlapping 0 0 100 100] [lmap i [.c find all] {
+	lassign [.c bbox $i] x1 y1 x2 y2
+	expr {$x1 <= $x2 && $y1 <= $y2}
+    }]
+} -cleanup {
+    destroy .c
+} -result {{1 2 3 4 5 6} {1 1 1 1 1 1 1 1}}
+
+test canvas-29.2 {display of items with huge coordinates - bug 701927} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 100 -height 100 -background white -highlightthickness 0
+    pack .c
+    update
+} -body {
+    set huge [expr {2**31 - 3}]
+    .c create line 0 10 $huge 10 -width 2 -fill red
+    .c create line 0 20 $huge 20 -width 3 -dash {4 4} -fill red
+    .c create rectangle 0 30 1e12 35 -outline red
+    .c create oval -1e12 40 1e12 45 -fill red -outline {}
+    .c create polygon 0 50 1e12 50 1e12 55 0 55 -fill red
+    .c create arc -1e12 60 1e12 65 -start 0 -extent 180 -fill red -outline {} -style chord
+    update
+    join [lmap y {10 20 30 42 52 62} {testpixel .c 50 $y}]
+} -cleanup {
+    destroy .c
+} -result {#ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000}
+
 #
 # TESTFILE CLEANUP
 #

@@ -683,8 +683,10 @@ ComputeLineBbox(
     }
 
     coordPtr = linePtr->coordPtr;
-    linePtr->header.x1 = linePtr->header.x2 = (int) coordPtr[0];
-    linePtr->header.y1 = linePtr->header.y2 = (int) coordPtr[1];
+    linePtr->header.x1 = linePtr->header.x2 =
+	    (int) TkCanvClampCoord(coordPtr[0]);
+    linePtr->header.y1 = linePtr->header.y2 =
+	    (int) TkCanvClampCoord(coordPtr[1]);
 
     /*
      * Compute the bounding box of all the points in the line, then expand in
