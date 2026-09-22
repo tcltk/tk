@@ -686,7 +686,11 @@ static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text)
     }
 
     gchar *val = GetAtkValueForWidget(acc->tkwin);
-    double cur_val = val ? atof(val) : 0.0;
+    double cur_val;
+
+    if (!val || Tcl_GetDouble(NULL, val, &cur_val) != TCL_OK) {
+	cur_val = 0.0;
+    }
 
     if (value) *value = cur_val;
     if (text) *text = g_strdup(val ? val : "0");
