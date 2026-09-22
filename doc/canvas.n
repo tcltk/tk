@@ -156,6 +156,9 @@ individual item type documentation for details).
 If the mouse is not in the canvas widget or is not over
 an item, then no item has the \fBcurrent\fR tag.
 .PP
+While a mouse button is pressed, the current item does not change, so that
+all mouse events are directed to the item on which the button was pressed.
+.PP
 When specifying items in canvas widget commands, if the
 specifier is an integer then it is assumed to refer to
 the single item with that id.
