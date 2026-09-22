@@ -1018,6 +1018,41 @@ test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712
     destroy .c
 } -result {}
 
+# Returns the number of pixels of the canvas which are not white in the
+# given rectangle.
+proc countPixels {w x1 y1 x2 y2} {
+    set n 0
+    for {set y $y1} {$y < $y2} {incr y} {
+	for {set x $x1} {$x < $x2} {incr x} {
+	    if {[testpixel $w $x $y] ne "#ffffff"} {
+		incr n
+	    }
+	}
+    }
+    return $n
+}
+
+test canvText-21.1 {stippled text - bug 220796} -constraints {
+    testpixel && notAqua && !withXft
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 60 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create text 10 10 -anchor nw -text MMMM -font {Courier 30 bold} -fill black
+    update
+    set bbox [.c bbox 1]
+    set plain [countPixels .c {*}$bbox]
+    .c itemconfigure 1 -stipple gray50
+    update
+    set stippled [countPixels .c {*}$bbox]
+    # About half of the pixels are drawn with a gray50 stipple.
+    list [expr {[.c bbox 1] eq $bbox}] \
+	    [expr {$stippled * 10 > $plain * 3 && $stippled * 10 < $plain * 7}]
+} -cleanup {
+    destroy .c
+} -result {1 1}
+
 #
 # TESTFILE CLEANUP
 #

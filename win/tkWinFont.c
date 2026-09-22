@@ -250,6 +250,18 @@ typedef struct {
 static Tcl_ThreadDataKey dataKey;
 
 /*
+ * State of text drawn with a stipple, see BeginStippledText.
+ */
+
+typedef struct {
+    HDC dcMem;			/* Memory DC into which the text is drawn. */
+    HBITMAP oldBitmap;		/* Bitmap to restore in dcMem. */
+    HBRUSH oldBrush;		/* Brush to restore in the destination DC. */
+    RECT rect;			/* Area of the destination covered by the
+				 * memory DC. */
+} StippledText;
+
+/*
  * Procedures used only in this file.
  */
 
@@ -288,6 +300,13 @@ static int		LoadFontRanges(HDC hdc, HFONT hFont,
 			    int *symbolPtr,
 			    ULONG **startGroup, ULONG **endGroup,
 			    int *groupCount);
+static HDC		BeginStippledText(HDC dc, GC gc,
+			    const RECT *rectPtr, StippledText *statePtr);
+static void		EndStippledText(HDC dc, StippledText *statePtr);
+static void		DrawCharsInContext(HDC dc, GC gc, WinFont *fontPtr,
+			    const char *source, Tcl_Size numBytes,
+			    Tcl_Size rangeStart, Tcl_Size rangeLength,
+			    int x, int y);
 static void		MultiFontTextOut(HDC hdc, WinFont *fontPtr,
 			    const char *source, int numBytes,
 			    double x, double y, double angle);
@@ -1715,68 +1734,43 @@ TkDrawAngledChars(
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
 	    && gc->stipple != None) {
-	TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
-	HBRUSH oldBrush, stipple;
-	HBITMAP oldBitmap, bitmap;
+	StippledText stippled;
+	RECT rect;
 	HDC dcMem;
-	TEXTMETRICW tm;
-	SIZE size;
-
-	if (twdPtr->type != TWD_BITMAP) {
-	    Tcl_Panic("unexpected drawable type in stipple");
-	}
+	double sinA, cosA, xx, yy, w;
+	int width, i;
 
 	/*
-	 * Select stipple pattern into destination dc.
+	 * Compute the bounding box of the rotated text.
 	 */
 
-	dcMem = CreateCompatibleDC(dc);
+	Tk_MeasureChars((Tk_Font) fontPtr, source, numBytes, -1, 0, &width);
+	sinA = sin(angle * PI/180.0);
+	cosA = cos(angle * PI/180.0);
+	rect.left = rect.right = (LONG) x;
+	rect.top = rect.bottom = (LONG) y;
+	for (i = 0; i < 4; i++) {
+	    xx = (i & 1) ? width : 0;
+	    yy = (i & 2) ? fontPtr->font.fm.descent : -fontPtr->font.fm.ascent;
+	    w = x + xx*cosA + yy*sinA;
+	    if (w < rect.left) rect.left = (LONG) floor(w);
+	    if (w > rect.right) rect.right = (LONG) ceil(w);
+	    w = y - xx*sinA + yy*cosA;
+	    if (w < rect.top) rect.top = (LONG) floor(w);
+	    if (w > rect.bottom) rect.bottom = (LONG) ceil(w);
+	}
+	rect.left -= fontPtr->font.fm.ascent;
+	rect.top -= fontPtr->font.fm.ascent;
+	rect.right += fontPtr->font.fm.ascent;
+	rect.bottom += fontPtr->font.fm.ascent;
 
-	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
-	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = (HBRUSH)SelectObject(dc, stipple);
-
+	dcMem = BeginStippledText(dc, gc, &rect, &stippled);
 	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
 	SetTextColor(dcMem, gc->foreground);
 	SetBkMode(dcMem, TRANSPARENT);
-	SetBkColor(dcMem, RGB(0, 0, 0));
-
-	/*
-	 * Compute the bounding box and create a compatible bitmap.
-	 */
-
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
-	GetTextMetricsW(dcMem, &tm);
-	size.cx -= tm.tmOverhang;
-	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
-
-	/*
-	 * The following code is tricky because fonts are rendered in multiple
-	 * colors. First we draw onto a black background and copy the white
-	 * bits. Then we draw onto a white background and copy the black bits.
-	 * Both the foreground and background bits of the font are ANDed with
-	 * the stipple pattern as they are copied.
-	 */
-
-	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
-	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
-		0, 0, 0xEA02E9);
-	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
-	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
-		0, 0, 0x8A0E06);
-
-	/*
-	 * Destroy the temporary bitmap and restore the device context.
-	 */
-
-	SelectObject(dcMem, oldBitmap);
-	DeleteObject(bitmap);
-	DeleteDC(dcMem);
-	SelectObject(dc, oldBrush);
-	DeleteObject(stipple);
+	MultiFontTextOut(dcMem, fontPtr, source, (int)numBytes,
+		x - rect.left, y - rect.top, angle);
+	EndStippledText(dc, &stippled);
     } else if (gc->function == GXcopy) {
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
@@ -1854,11 +1848,6 @@ Tk_DrawCharsInContext(
     WinFont *fontPtr = (WinFont *) tkfont;
     HDC dc;
     TkWinDCState dcState;
-    Tcl_DString uniStr;
-    WCHAR *wstr;
-    int wlen, wRangeStart, wRangeEnd;
-    TkWinShapedRun *runs = NULL;
-    int nRuns = 0, i;
 
     if (rangeLength <= 0 || drawable == None) {
 	return;
@@ -1867,6 +1856,74 @@ Tk_DrawCharsInContext(
     LastKnownRequestProcessed(display)++;
 
     dc = TkWinGetDrawableDC(display, drawable, &dcState);
+
+    SetROP2(dc, tkpWinRopModes[gc->function]);
+    if (gc->clip_mask != None && ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
+	SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
+    }
+
+    if ((gc->fill_style == FillStippled
+	    || gc->fill_style == FillOpaqueStippled)
+	    && gc->stipple != None) {
+	StippledText stippled;
+	RECT rect;
+	HDC dcMem;
+	int width, margin = fontPtr->font.fm.ascent;
+
+	/*
+	 * The bounding box of the whole string, with a margin for glyphs
+	 * which extend beyond their advance.
+	 */
+
+	Tk_MeasureChars(tkfont, source, numBytes, -1, 0, &width);
+	rect.left = x - margin;
+	rect.top = y - fontPtr->font.fm.ascent - margin;
+	rect.right = x + width + margin;
+	rect.bottom = y + fontPtr->font.fm.descent + margin;
+
+	dcMem = BeginStippledText(dc, gc, &rect, &stippled);
+	DrawCharsInContext(dcMem, gc, fontPtr, source, numBytes, rangeStart,
+		rangeLength, x - rect.left, y - rect.top);
+	EndStippledText(dc, &stippled);
+    } else {
+	DrawCharsInContext(dc, gc, fontPtr, source, numBytes, rangeStart,
+		rangeLength, x, y);
+    }
+    TkWinReleaseDrawableDC(drawable, dc, &dcState);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DrawCharsInContext --
+ *
+ *	Draw a substring of text into a DC, see Tk_DrawCharsInContext.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Text is drawn into the DC.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+DrawCharsInContext(
+    HDC dc,		   /* DC to draw into. */
+    GC gc,
+    WinFont *fontPtr,
+    const char *source,
+    Tcl_Size numBytes,      /* Total bytes in the full base-chunk string. */
+    Tcl_Size rangeStart,    /* Byte offset of the substring to draw. */
+    Tcl_Size rangeLength,   /* Byte length of the substring to draw. */
+    int x, int y)	   /* Origin of byte 0 of the full string. */
+{
+    Tcl_DString uniStr;
+    WCHAR *wstr;
+    int wlen, wRangeStart, wRangeEnd;
+    TkWinShapedRun *runs = NULL;
+    int nRuns = 0, i;
 
     /* Convert full source string to UTF-16 (needed for shaping context). */
     Tcl_DStringInit(&uniStr);
@@ -1933,10 +1990,6 @@ Tk_DrawCharsInContext(
 	}
 
 	/* DC setup. */
-	SetROP2(dc, tkpWinRopModes[gc->function]);
-	if (gc->clip_mask != None && ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
-	    SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
-	}
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
@@ -1953,16 +2006,10 @@ Tk_DrawCharsInContext(
 	}
 
 	Tcl_DStringFree(&uniStr);
-	TkWinReleaseDrawableDC(drawable, dc, &dcState);
 	return;
     }
 
     /* DC setup. */
-    SetROP2(dc, tkpWinRopModes[gc->function]);
-    if (gc->clip_mask != None && ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
-	SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
-    }
-
     SetTextAlign(dc, TA_LEFT | TA_BASELINE);
     SetTextColor(dc, gc->foreground);
     SetBkMode(dc, TRANSPARENT);
@@ -2066,7 +2113,84 @@ Tk_DrawCharsInContext(
     SelectObject(dc, oldFont);
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
-    TkWinReleaseDrawableDC(drawable, dc, &dcState);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * BeginStippledText, EndStippledText --
+ *
+ *	Text with a stipple is drawn into a memory DC which holds a copy of
+ *	the destination area and is copied back to the destination wherever
+ *	the stipple pattern is set. BeginStippledText creates the memory DC
+ *	and EndStippledText copies it back and destroys it.
+ *
+ * Results:
+ *	BeginStippledText returns the memory DC, whose origin is at the top
+ *	left corner of rectPtr.
+ *
+ * Side effects:
+ *	EndStippledText draws into the destination DC.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static HDC
+BeginStippledText(
+    HDC dc,			/* Destination DC. */
+    GC gc,			/* Graphics context with the stipple. */
+    const RECT *rectPtr,	/* Area of the destination which the text
+				 * may cover. */
+    StippledText *statePtr)	/* Filled in with the state for
+				 * EndStippledText. */
+{
+    TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
+    LONG width = rectPtr->right - rectPtr->left;
+    LONG height = rectPtr->bottom - rectPtr->top;
+
+    if (twdPtr->type != TWD_BITMAP) {
+	Tcl_Panic("unexpected drawable type in stipple");
+    }
+    statePtr->rect = *rectPtr;
+
+    /*
+     * Select stipple pattern into destination dc.
+     */
+
+    SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
+    statePtr->oldBrush = (HBRUSH)SelectObject(dc,
+	    CreatePatternBrush(twdPtr->bitmap.handle));
+
+    /*
+     * Create temporary drawing surface containing a copy of the destination.
+     */
+
+    statePtr->dcMem = CreateCompatibleDC(dc);
+    statePtr->oldBitmap = (HBITMAP)SelectObject(statePtr->dcMem,
+	    CreateCompatibleBitmap(dc, width, height));
+    BitBlt(statePtr->dcMem, 0, 0, width, height, dc, rectPtr->left,
+	    rectPtr->top, SRCCOPY);
+    return statePtr->dcMem;
+}
+
+static void
+EndStippledText(
+    HDC dc,			/* Destination DC. */
+    StippledText *statePtr)	/* State from BeginStippledText. */
+{
+    LONG width = statePtr->rect.right - statePtr->rect.left;
+    LONG height = statePtr->rect.bottom - statePtr->rect.top;
+
+    /*
+     * Copy the text to the destination wherever the pattern is set.
+     */
+
+    BitBlt(dc, statePtr->rect.left, statePtr->rect.top, width, height,
+	    statePtr->dcMem, 0, 0, COPYFG);
+
+    DeleteObject(SelectObject(statePtr->dcMem, statePtr->oldBitmap));
+    DeleteDC(statePtr->dcMem);
+    DeleteObject(SelectObject(dc, statePtr->oldBrush));
 }
 
 
