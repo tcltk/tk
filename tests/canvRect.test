@@ -495,6 +495,61 @@ end
 %%EOF
 }
 
+# Returns the two colors of an area stippled with gray50 at (x, y), sorted,
+# or an error message if the area is not a checkerboard.
+proc stippleColors {w x y} {
+    set c1 [testpixel $w $x $y]
+    set c2 [testpixel $w [expr {$x + 1}] $y]
+    if {$c1 eq $c2
+	    || [testpixel $w [expr {$x + 1}] [expr {$y + 1}]] ne $c1
+	    || [testpixel $w $x [expr {$y + 1}]] ne $c2} {
+	return "not stippled: $c1 $c2"
+    }
+    return [join [lsort [list $c1 $c2]]]
+}
+
+test canvRect-13.1 {stippled oval fill - bug 220787} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create oval 10 10 110 110 -fill red -stipple gray50 -outline {}
+    update
+    stippleColors .c 60 60
+} -cleanup {
+    destroy .c
+} -result {#ff0000 #ffffff}
+
+test canvRect-13.2 {stippled oval outline - bug 220787} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create oval 10 10 110 110 -fill {} -outline blue -outlinestipple gray50 -width 6
+    update
+    stippleColors .c 60 10
+} -cleanup {
+    destroy .c
+} -result {#0000ff #ffffff}
+
+test canvRect-13.3 {stippled rectangle outline - bug 220059} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create rectangle 10 10 110 110 -fill {} -outline blue -outlinestipple gray50 -width 6
+    update
+    stippleColors .c 60 10
+} -cleanup {
+    destroy .c
+} -result {#0000ff #ffffff}
+
 #
 # TESTFILE CLEANUP
 #
