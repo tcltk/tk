@@ -244,7 +244,7 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testsetlocale", TestsetlocaleObjCmd, NULL,
 	    NULL);
-    Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
+    Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testphotostringmatch",
 	    TestPhotoStringMatchCmd, Tk_MainWindow(interp),
