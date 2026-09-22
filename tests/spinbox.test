@@ -39,6 +39,26 @@ proc doval3 {W d i P s S v V} {
 }
 
 set cy [font metrics {Courier -12} -linespace]
+#
+# LOCAL TEST CONSTRAINTS
+#
+
+# A locale with a decimal comma, if one is available.
+set decimalCommaLocale {}
+if {[testConstraint testsetlocale]} {
+    foreach name {de_DE.UTF-8 de_DE.utf8 de_DE de-DE German_Germany} {
+	if {![catch {testsetlocale $name}]} {
+	    set decimalCommaLocale $name
+	    break
+	}
+    }
+    testsetlocale C
+}
+testConstraint decimalCommaLocale [expr {$decimalCommaLocale ne ""}]
+
+#
+# TESTS
+#
 
 test spinbox-1.1 {configuration option: "activebackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -3887,6 +3907,25 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
 } -result {A sample }
 
+test spinbox-26.1 {the value is parsed independently of the LC_NUMERIC locale - bug 9e89324a0a} -constraints {
+    decimalCommaLocale
+} -setup {
+    spinbox .e -from 0 -to 1 -increment 0.1 -format %.1f
+    testsetlocale $decimalCommaLocale
+} -body {
+    .e delete 0 end
+    .e insert 0 0.5
+    .e invoke buttonup
+    set res [.e get]
+    .e delete 0 end
+    .e insert 0 0.7
+    .e configure -from 0.2
+    lappend res [.e get]
+} -cleanup {
+    testsetlocale C
+    destroy .e
+} -result {0.6 0.7}
+
 # Collected comments about lacks from the test
 # XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
 # and SpinboxTextVarProc.
@@ -3896,6 +3935,7 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 
 # option clear
 # cleanup
+unset decimalCommaLocale
 cleanupTests
 return
 

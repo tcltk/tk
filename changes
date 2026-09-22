@@ -8373,3 +8373,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-09-21 (bug) [433261] MS-Win: Modifier-bindings of non-latin bindings use latin (ex: <Ctrl-c>)
 
+2026-09-22 (bug) [9e8932] Spinbox parsing depends on the LC_NUMERIC locale

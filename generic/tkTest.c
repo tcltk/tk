@@ -23,6 +23,7 @@
 #endif
 #include "tkInt.h"
 #include "tkText.h"
+#include <locale.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -144,68 +145,32 @@ typedef struct TrivialCommandHeader {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		ImageObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestbitmapObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestborderObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestcolorObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestcursorObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestdeleteappsObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestfontObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		TestmakeexistObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ImageObjCmd;
+static Tcl_ObjCmdProc TestbitmapObjCmd;
+static Tcl_ObjCmdProc TestborderObjCmd;
+static Tcl_ObjCmdProc TestcolorObjCmd;
+static Tcl_ObjCmdProc TestcursorObjCmd;
+static Tcl_ObjCmdProc TestdeleteappsObjCmd;
+static Tcl_ObjCmdProc TestfontObjCmd;
+static Tcl_ObjCmdProc TestmakeexistObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestmenubarObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc TestmenubarObjCmd;
 #endif
 #if defined(_WIN32)
-static int		TestmetricsObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestmetricsObjCmd;
 #endif
-static int		TestobjconfigObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		CustomOptionSet(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr,
-			    int internalOffset, char *saveInternalPtr,
-			    int flags);
-static Tcl_Obj *	CustomOptionGet(ClientData clientData,
-			    Tk_Window tkwin, char *recordPtr,
-			    int internalOffset);
-static void		CustomOptionRestore(ClientData clientData,
-			    Tk_Window tkwin, char *internalPtr,
-			    char *saveInternalPtr);
-static void		CustomOptionFree(ClientData clientData,
-			    Tk_Window tkwin, char *internalPtr);
-static int		TestpropObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestobjconfigObjCmd;
+static Tk_CustomOptionSetProc CustomOptionSet;
+static Tk_CustomOptionGetProc CustomOptionGet;
+static Tk_CustomOptionRestoreProc CustomOptionRestore;
+static Tk_CustomOptionFreeProc CustomOptionFree;
+static Tcl_ObjCmdProc TestpropObjCmd;
+static Tcl_ObjCmdProc TestsetlocaleObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestwrapperObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestwrapperObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(ClientData clientData);
-static int		TrivialConfigObjCmd(ClientData dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TrivialConfigObjCmd;
 static void		TrivialEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 
@@ -267,7 +232,9 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testmakeexist", TestmakeexistObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testsetlocale", TestsetlocaleObjCmd, NULL,
+	    NULL);
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
@@ -331,7 +298,6 @@ TestbitmapObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "bitmap");
 	return TCL_ERROR;
@@ -365,7 +331,6 @@ TestborderObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "border");
 	return TCL_ERROR;
@@ -1907,6 +1872,49 @@ TestpropObjCmd(
     if (property != NULL) {
 	XFree(property);
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestsetlocaleObjCmd --
+ *
+ *	This function implements the "testsetlocale" command, which sets the
+ *	LC_NUMERIC locale of the C library, as an extension or the embedding
+ *	application could do.  It lets the test suite check that Tk does not
+ *	depend on it.
+ *
+ * Results:
+ *	A standard Tcl result.  The result is the name of the new locale, or
+ *	of the current one if no argument is given.
+ *
+ * Side effects:
+ *	The LC_NUMERIC locale is changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestsetlocaleObjCmd(
+    TCL_UNUSED(void *),	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    const char *locale;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?locale?");
+	return TCL_ERROR;
+    }
+    locale = setlocale(LC_NUMERIC, (objc > 1) ? Tcl_GetString(objv[1]) : NULL);
+    if (locale == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("unsupported locale \"%s\"",
+		Tcl_GetString(objv[1])));
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(locale, -1));
     return TCL_OK;
 }
 
