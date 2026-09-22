@@ -356,7 +356,7 @@ This \fItype\fR value identifies special entries in \fIspecs\fR that
 are synonyms for other entries.  If an \fIobjv\fR value matches the
 \fIargvName\fR of a \fBTK_CONFIG_SYNONYM\fR entry, the entry is not used
 directly. Instead, \fBTk_ConfigureWidget\fR searches \fIspecs\fR
-for another entry whose \fIargvName\fR is the same as the \fIdbName\fR
+for another entry whose \fIdbName\fR is the same as the \fIdbName\fR
 field in the \fBTK_CONFIG_SYNONYM\fR entry;  this new entry is used just
 as if its \fIargvName\fR had matched the \fIobjv\fR value.  The
 synonym mechanism allows multiple \fIobjv\fR values to be used for
@@ -508,7 +508,7 @@ one configuration option (i.e. one entry in \fIspecs\fR).  Each
 entry in the list will contain either two or five values.  If the
 corresponding entry in \fIspecs\fR has type \fBTK_CONFIG_SYNONYM\fR, then
 the list will contain two values:  the \fIargvName\fR for the entry
-and the \fIdbName\fR (synonym name).  Otherwise the list will contain
+and the \fIargvName\fR of the entry it is a synonym for.  Otherwise the list will contain
 five values:  \fIargvName\fR, \fIdbName\fR, \fIdbClass\fR, \fIdefValue\fR,
 and current value.  The current value is computed from the appropriate
 field of \fIwidgRec\fR by calling procedures like \fBTk_NameOfColor\fR.

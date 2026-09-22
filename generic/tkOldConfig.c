@@ -39,7 +39,9 @@ static Tk_ConfigSpec *	FindConfigSpec(Tcl_Interp *interp,
 			    Tk_ConfigSpec *specs, const char *argvName,
 			    int needFlags, int hateFlags);
 static char *		FormatConfigInfo(Tcl_Interp *interp, Tk_Window tkwin,
-			    const Tk_ConfigSpec *specPtr, void *widgRec);
+			    const Tk_ConfigSpec *specs,
+			    const Tk_ConfigSpec *specPtr, void *widgRec,
+			    int needFlags, int hateFlags);
 static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    const Tk_ConfigSpec *specPtr, void *widgRec,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
@@ -611,7 +613,8 @@ DoConfig(
  *	Each entry will itself be a list containing the option's name for use
  *	on command lines, database name, database class, default value, and
  *	current value (empty string if none). For options that are synonyms,
- *	the list will contain only two values: name and synonym name. If the
+ *	the list will contain only two values: name and the name of the
+ *	option it is a synonym for. If the
  *	"name" argument is non-NULL, then the only information returned is
  *	that for the named argument (i.e. the corresponding entry in the
  *	overall list is returned).
@@ -666,7 +669,8 @@ Tk_ConfigureInfo(
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
 	}
-	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
+	list = FormatConfigInfo(interp, tkwin, staticSpecs, specPtr, widgRec,
+		needFlags, hateFlags);
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, TCL_INDEX_NONE));
 	Tcl_Free(list);
 	return TCL_OK;
@@ -688,7 +692,8 @@ Tk_ConfigureInfo(
 	if ((specPtr->argvName == NULL) || (specPtr->offset < 0)) {
 	    continue;
 	}
-	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
+	list = FormatConfigInfo(interp, tkwin, staticSpecs, specPtr, widgRec,
+		needFlags, hateFlags);
 	Tcl_AppendResult(interp, leader, list, "}", (char *)NULL);
 	Tcl_Free(list);
 	leader = " {";
@@ -719,11 +724,16 @@ FormatConfigInfo(
     Tcl_Interp *interp,		/* Interpreter to use for things like
 				 * floating-point precision. */
     Tk_Window tkwin,		/* Window corresponding to widget. */
+    const Tk_ConfigSpec *specs,	/* Describes legal options. */
     const Tk_ConfigSpec *specPtr,
 				/* Pointer to information describing
 				 * option. */
-    void *widgRec)		/* Pointer to record holding current values of
+    void *widgRec,		/* Pointer to record holding current values of
 				 * info for widget. */
+    int needFlags,		/* Flags that must be present in the option
+				 * a synonym refers to. */
+    int hateFlags)		/* Flags that must NOT be present in the
+				 * option a synonym refers to. */
 {
     const char *argv[6];
     char *result;
@@ -735,6 +745,22 @@ FormatConfigInfo(
     argv[2] = specPtr->dbClass;
     argv[3] = specPtr->defValue;
     if (specPtr->type == TK_CONFIG_SYNONYM) {
+	/*
+	 * Report the name of the option the synonym refers to, as
+	 * Tk_GetOptionInfo does. [Bug 707778]
+	 */
+
+	const Tk_ConfigSpec *realPtr;
+
+	for (realPtr = specs; realPtr->type != TK_CONFIG_END; realPtr++) {
+	    if ((realPtr->dbName == specPtr->dbName)
+		    && (realPtr->type != TK_CONFIG_SYNONYM)
+		    && ((realPtr->specFlags & needFlags) == needFlags)
+		    && !(realPtr->specFlags & hateFlags)) {
+		argv[1] = realPtr->argvName;
+		break;
+	    }
+	}
 	return Tcl_Merge(2, argv);
     }
     argv[4] = FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer,
