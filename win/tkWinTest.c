@@ -31,7 +31,7 @@ static Tcl_ObjCmdProc TestwineventObjCmd;
 static Tcl_ObjCmdProc TestfindwindowObjCmd;
 static Tcl_ObjCmdProc TestgetwindowinfoObjCmd;
 static Tcl_ObjCmdProc TestwinlocaleObjCmd;
-static Tcl_ObjCmdProc2 TestsendinputObjCmd;
+static Tcl_ObjCmdProc TestsendinputObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -69,7 +69,7 @@ TkplatformtestInit(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand2(interp, "testsendinput", TestsendinputObjCmd,
+    Tcl_CreateObjCommand(interp, "testsendinput", TestsendinputObjCmd,
 	    Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
@@ -614,7 +614,7 @@ static int
 TestsendinputObjCmd(
     void *clientData,		/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,		/* Number of arguments. */
+    int objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     static const char *const options[] = {

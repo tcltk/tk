@@ -87,6 +87,7 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
+static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding unicodeEncoding = NULL;
 					/* The UNICODE encoding */
 

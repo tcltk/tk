@@ -35,6 +35,7 @@ to the userbase.
  - [Tk textbox not working with "Bengali" set as keyboard input language](https://core.tcl-lang.org/tk/tktview/62f134)
  - [Certain characters (like ț and ș) become question marks in Entry Box on Windows](https://core.tcl-lang.org/tk/tktview/51436f)
  - [Incorrect reproduction of the Azerbaijani letter "əƏ" in the Enter field](https://core.tcl-lang.org/tk/tktview/704842)
+ - [spinbox parsing depends on the LC_NUMERIC locale](https://core.tcl-lang.org/tk/tktview/9e8932)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

@@ -23,6 +23,7 @@
 #endif
 #include "tkInt.h"
 #include "tkText.h"
+#include <locale.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -171,6 +172,7 @@ static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
 static Tcl_ObjCmdProc TestpropObjCmd;
 static Tcl_ObjCmdProc TestprintfObjCmd;
+static Tcl_ObjCmdProc TestsetlocaleObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static Tcl_ObjCmdProc TestwrapperObjCmd;
 #endif
@@ -229,7 +231,7 @@ Tktest_Init(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testdeleteapps", TestdeleteappsObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand2(interp, "testembed", TkpTestembedCmd,
+    Tcl_CreateObjCommand(interp, "testembed", TkpTestembedCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testobjconfig", TestobjconfigObjCmd,
 	    Tk_MainWindow(interp), NULL);
@@ -240,7 +242,9 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
+    Tcl_CreateObjCommand(interp, "testsetlocale", TestsetlocaleObjCmd, NULL,
+	    NULL);
+    Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testphotostringmatch",
 	    TestPhotoStringMatchCmd, Tk_MainWindow(interp),
@@ -1921,6 +1925,49 @@ TestprintfObjCmd(
 	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
 	    longLongInt, (unsigned long long)longLongInt);
     Tcl_AppendResult(interp, buffer, NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestsetlocaleObjCmd --
+ *
+ *	This function implements the "testsetlocale" command, which sets the
+ *	LC_NUMERIC locale of the C library, as an extension or the embedding
+ *	application could do.  It lets the test suite check that Tk does not
+ *	depend on it.
+ *
+ * Results:
+ *	A standard Tcl result.  The result is the name of the new locale, or
+ *	of the current one if no argument is given.
+ *
+ * Side effects:
+ *	The LC_NUMERIC locale is changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestsetlocaleObjCmd(
+    TCL_UNUSED(void *),	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    const char *locale;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?locale?");
+	return TCL_ERROR;
+    }
+    locale = setlocale(LC_NUMERIC, (objc > 1) ? Tcl_GetString(objv[1]) : NULL);
+    if (locale == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("unsupported locale \"%s\"",
+		Tcl_GetString(objv[1])));
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(locale, TCL_INDEX_NONE));
     return TCL_OK;
 }
 
