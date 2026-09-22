@@ -252,6 +252,16 @@ test canvPs-5.2 {test ps generation with image} -body {
 } -cleanup {
     destroy .c
 } -returnCodes ok -match glob -result *
+test canvPs-7.1 {non-ASCII characters in text items - bug 1202684} -body {
+    pack [canvas .c]
+    update
+    .c create text 50 50 -text "a\u221a\u00e9\u0439\u20ac\u03b1 b"
+    set ps [.c postscript]
+    lsearch -all -inline [split $ps \n] {\[(*}
+} -cleanup {
+    destroy .c
+    unset -nocomplain ps
+} -result {{[(a)/radical/eacute/afii10075/Euro/alpha( b)]}}
 
 #
 # TESTFILE CLEANUP
