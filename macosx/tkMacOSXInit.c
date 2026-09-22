@@ -402,7 +402,7 @@ static void closePanels(
 static bool doCleanupFromExit = false;
 
 int TkpWantsExitProc(void) {
-    return doCleanupFromExit ? 1 : 0;
+    return doCleanupFromExit;
 }
 
 TCL_NORETURN void TkpExitProc(
@@ -457,6 +457,23 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 }
 
 /*
+ * Install TkMacOSXSignalHandler for the given signal, unless the application
+ * which embeds Tk has installed its own handler (e.g. Python raises
+ * KeyboardInterrupt from its SIGINT handler).
+ */
+
+static void
+InstallSignalHandler(
+    int sig)
+{
+    struct sigaction action;
+
+    if (sigaction(sig, NULL, &action) == 0 && action.sa_handler == SIG_DFL) {
+	signal(sig, TkMacOSXSignalHandler);
+    }
+}
+
+/*
  * This static function is run as an idle task to order the root window front.
  * This is only done if the window is in the normal state.  This avoids
  * flashing the root window on the screen if it was withdrawn immediately after
@@ -480,7 +497,7 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
-    static int initialized = 0;
+    static bool initialized = false;
 
     /*
      * TkpInit can be called multiple times with different interpreters. But
@@ -501,7 +518,7 @@ TkpInit(
 #   error Mac OS X 10.9 required
 #endif
 
-	initialized = 1;
+	initialized = true;
 
 #ifdef TK_FRAMEWORK
 
@@ -681,9 +698,9 @@ TkpInit(
 	 * application is killed with one of these signals.
 	 */
 
-	signal(SIGINT, TkMacOSXSignalHandler);
-	signal(SIGHUP, TkMacOSXSignalHandler);
-	signal(SIGTERM, TkMacOSXSignalHandler);
+	InstallSignalHandler(SIGINT);
+	InstallSignalHandler(SIGHUP);
+	InstallSignalHandler(SIGTERM);
     }
     /*
      * Initialization steps that are needed for all interpreters.
@@ -730,7 +747,7 @@ TkpInit(
 
 static int
 TkMacOSXGetAppPathObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -818,7 +835,7 @@ TkpGetAppName(
 
 static int
 TkMacOSVersionObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
