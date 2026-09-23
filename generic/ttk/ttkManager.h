@@ -68,6 +68,8 @@ MODULE_SCOPE void Ttk_PlaceContent(
 #define Ttk_UnmapContent Ttk_UnmapSlave
 MODULE_SCOPE void Ttk_UnmapContent(Ttk_Manager *, int index);
     /* Unmap the content window */
+MODULE_SCOPE int Ttk_ContentIsMapped(Ttk_Manager *, int index);
+    /* Whether the content window has been placed */
 
 MODULE_SCOPE void Ttk_ManagerSizeChanged(Ttk_Manager *);
 MODULE_SCOPE void Ttk_ManagerLayoutChanged(Ttk_Manager *);

@@ -390,6 +390,15 @@ void Ttk_UnmapContent(Ttk_Manager *mgr, int index)
     Tk_UnmapWindow(content->window);
 }
 
+/* ++ Ttk_ContentIsMapped --
+ *	Returns true if the specified content window has been placed
+ *	(it may be temporarily unmapped together with the container).
+ */
+int Ttk_ContentIsMapped(Ttk_Manager *mgr, int index)
+{
+    return (mgr->content[index]->flags & CONTENT_MAPPED) != 0;
+}
+
 /* LayoutChanged, SizeChanged --
  * 	Schedule a relayout, resp. resize request.
  */
