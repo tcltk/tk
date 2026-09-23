@@ -541,11 +541,20 @@ UpdateCursor(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
+     * If the pointer is not over a window managed by Tk, leave the cursor to
+     * whoever owns that window.  [Bug 546607]
+     */
+
+    tsdPtr->cursorWinPtr = winPtr;
+    if (winPtr == NULL) {
+	return;
+    }
+
+    /*
      * A window inherits its cursor from its parent if it doesn't have one of
      * its own. Top level windows inherit the default cursor.
      */
 
-    tsdPtr->cursorWinPtr = winPtr;
     while (winPtr != NULL) {
 	if (winPtr->atts.cursor != None) {
 	    cursor = winPtr->atts.cursor;
