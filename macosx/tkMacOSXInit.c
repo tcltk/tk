@@ -460,6 +460,23 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
     Tcl_Exit(1);
 }
 
+/*
+ * Install TkMacOSXSignalHandler for the given signal, unless the application
+ * which embeds Tk has installed its own handler (e.g. Python raises
+ * KeyboardInterrupt from its SIGINT handler).
+ */
+
+static void
+InstallSignalHandler(
+    int sig)
+{
+    struct sigaction action;
+
+    if (sigaction(sig, NULL, &action) == 0 && action.sa_handler == SIG_DFL) {
+	signal(sig, TkMacOSXSignalHandler);
+    }
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -657,9 +674,9 @@ TkpInit(
 	 * application is killed with one of these signals.
 	 */
 
-	signal(SIGINT, TkMacOSXSignalHandler);
-	signal(SIGHUP, TkMacOSXSignalHandler);
-	signal(SIGTERM, TkMacOSXSignalHandler);
+	InstallSignalHandler(SIGINT);
+	InstallSignalHandler(SIGHUP);
+	InstallSignalHandler(SIGTERM);
     }
     /*
      * Initialization steps that are needed for all interpreters.
