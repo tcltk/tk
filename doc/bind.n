@@ -444,7 +444,9 @@ replacement string is the decimal value of the given field from
 the current event.
 Some of the substitutions are only valid for
 certain types of events;  if they are used for other types of events
-the value substituted is undefined.
+the string
+.QW \fB??\fR
+is substituted.
 .IP \fB%%\fR 5
 Replaced with a single percent.
 .IP \fB%#\fR 5
@@ -491,7 +493,9 @@ For virtual events, the string will be whatever value is stored in the
 \fBevent generate\fR), or the empty string if the field is NULL.
 Virtual events corresponding to key sequence presses (see \fBevent
 add\fR for details) set the \fIuser_data\fR to NULL.
-For events other than these, the substituted string is undefined.
+For events other than these, the string
+.QW \fB??\fR
+is substituted.
 .RE
 .IP \fB%f\fR 5
 The \fIfocus\fR field from the event (\fB0\fR or \fB1\fR).  Valid only
