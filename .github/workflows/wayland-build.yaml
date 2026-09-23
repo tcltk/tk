@@ -127,14 +127,40 @@ jobs:
 
             export LIBGL_ALWAYS_SOFTWARE=1
 
-            # allow running from tk/unix or from repo root
-            if [ -f ./tktest ]; then
-              TK_UNIX=$(pwd)
-            else
-              TK_UNIX=$(find . -type f -name tktest | head -n1 | xargs dirname 2>/dev/null || echo "unix")
-              TK_UNIX=$(cd "$TK_UNIX" && pwd)
-              cd "$TK_UNIX"
+            # Locate the Tk build directory (the one containing tktest).
+            # Accepts running from tk/unix or from the tk root.
+            TK_UNIX=""
+            for d in . ./unix; do
+              if [ -x "$d/tktest" ]; then
+                TK_UNIX=$(cd "$d" && pwd)
+                break
+              fi
+            done
+
+            # tktest is only built by "make tktest" (or "make test"), not by a
+            # plain "make". If it is missing but the tree has been configured,
+            # build it.
+            if [ -z "$TK_UNIX" ]; then
+              for d in . ./unix; do
+                if [ -f "$d/Makefile" ]; then
+                  echo "tktest not found; running \"make tktest\" in $d" >&2
+                  (cd "$d" && make tktest)
+                  TK_UNIX=$(cd "$d" && pwd)
+                  break
+                fi
+              done
             fi
+
+            if [ -z "$TK_UNIX" ] || [ ! -x "$TK_UNIX/tktest" ]; then
+              echo "Cannot find tktest (and no configured Makefile to build it)." >&2
+              echo "Current directory: $(pwd)" >&2
+              echo "Contents:" >&2
+              ls -la . ./unix 2>&1 | sed "s/^/  /" >&2 || true
+              exit 1
+            fi
+
+            cd "$TK_UNIX"
+            echo "Using tktest in $TK_UNIX"
 
             export XDG_RUNTIME_DIR="${RUNNER_TEMP:-/tmp}/xdg-runtime-wl"
             mkdir -p "$XDG_RUNTIME_DIR"
@@ -209,8 +235,8 @@ jobs:
               /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "StatusNotifier|Notifications" || true
             echo "::endgroup::"
 
-            # vanilla Tcl/Tk - if you built from source, this finds it; if apt installed, it's no-op
-            ROOT=$(cd .. && pwd)
+            # Find a source-built Tcl, if present.
+            ROOT=$(cd "$TK_UNIX/.." && pwd)
             for d in "$ROOT/../tcl/unix" "$ROOT/../../tcl/unix"; do
               if ls "$d"/libtcl*.so >/dev/null 2>&1; then
                 export LD_LIBRARY_PATH="$TK_UNIX:$d:${LD_LIBRARY_PATH:-}"
