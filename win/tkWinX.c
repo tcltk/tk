@@ -713,11 +713,17 @@ TkWinChildProc(
 
     case WM_SETCURSOR:
 	/*
-	 * Short circuit the WM_SETCURSOR message since we set the cursor
-	 * elsewhere.
+	 * Short circuit the WM_SETCURSOR message in the client area, where we
+	 * set the cursor elsewhere.  On the frame of a toplevel let Windows
+	 * set it, otherwise the resize cursors of the border flicker back to
+	 * the arrow.  [Bug 525728]
 	 */
 
-	result = TRUE;
+	if (LOWORD(lParam) == HTCLIENT) {
+	    result = TRUE;
+	} else {
+	    result = DefWindowProcW(hwnd, message, wParam, lParam);
+	}
 	break;
 
     case WM_CREATE:
