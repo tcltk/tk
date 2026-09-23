@@ -216,8 +216,8 @@ InitHashTables(void)
     for (ksPtr = keysymTable; ksPtr->keysym != 0; ksPtr++) {
 	hPtr = Tcl_CreateHashEntry(&keysym2unichar, INT2PTR(ksPtr->keysym),
 				   &dummy);
-	Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->keycode));
-	hPtr = Tcl_CreateHashEntry(&unichar2keysym, INT2PTR(ksPtr->keycode),
+	Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->unichar));
+	hPtr = Tcl_CreateHashEntry(&unichar2keysym, INT2PTR(ksPtr->unichar),
 				   &dummy);
 	Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->keysym));
     }

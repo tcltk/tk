@@ -38,6 +38,7 @@ to the userbase.
  - [spinbox parsing depends on the LC_NUMERIC locale](https://core.tcl-lang.org/tk/tktview/9e8932)
  - ["grid forget" silently resets the forgotten window's own "grid propagate" setting](https://core.tcl-lang.org/tk/tktview/eb0393)
  - [ttk::style command moves ttk::panedwindow sashes](https://core.tcl-lang.org/tk/tktview/b086bb)
+ - [MS-Win: Add keysims for non-latin keys + MacOS: correct 338 pre-2004 keysyms](https://core.tcl-lang.org/tk/tktview/52e9b0)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
