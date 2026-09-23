@@ -209,6 +209,7 @@ extern int TkAccessibility_Init(Tcl_Interp *interp);
 static Tk_Window	CreateTopLevelWindow(Tcl_Interp *interp,
 			    Tk_Window parent, const char *name,
 			    const char *screenName, unsigned int flags);
+static void		CloseUnusedDisplay(void *clientData);
 static void		DeleteWindowsExitProc(void *clientData);
 static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
@@ -252,6 +253,7 @@ TkCloseDisplay(
     TkDisplay *dispPtr)
 {
     displayBeingClosed = true;
+    Tcl_CancelIdleCall(CloseUnusedDisplay, dispPtr);
     TkClipCleanup(dispPtr);
 
     if (dispPtr->name != NULL) {
@@ -1330,6 +1332,55 @@ Tk_CreateWindowFromPath(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * CloseUnusedDisplay --
+ *
+ *	Close the display if it has no windows and no Tk application uses it.
+ *	Called at idle time, when the destroy which emptied it is finished.
+ *	[Bug 923174]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The connection to the X server may be closed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+CloseUnusedDisplay(
+    void *clientData)		/* Display which may be unused now. */
+{
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    TkDisplay *theDispPtr, *backDispPtr;
+    Tcl_HashSearch search;
+
+    dispPtr->closeScheduled = 0;
+    if ((dispPtr->refCount > 0)
+	    || (Tcl_FirstHashEntry(&dispPtr->winTable, &search) != NULL)) {
+	return;
+    }
+    for (theDispPtr = tsdPtr->displayList, backDispPtr = NULL;
+	    (theDispPtr != dispPtr) && (theDispPtr != NULL);
+	    theDispPtr = theDispPtr->nextPtr) {
+	backDispPtr = theDispPtr;
+    }
+    if (theDispPtr == NULL) {
+	return;
+    }
+    if (backDispPtr == NULL) {
+	tsdPtr->displayList = theDispPtr->nextPtr;
+    } else {
+	backDispPtr->nextPtr = theDispPtr->nextPtr;
+    }
+    TkCloseDisplay(dispPtr);
+}
+
+/*
  *--------------------------------------------------------------
  *
  * Tk_DestroyWindow --
@@ -1759,6 +1810,20 @@ Tk_DestroyWindow(
 		TkCloseDisplay(dispPtr);
 	    }
 #endif /* !_WIN32 && NOT_YET */
+	}
+    }
+    if ((dispPtr->refCount <= 0) && !dispPtr->closeScheduled) {
+	Tcl_HashSearch search;
+
+	if (Tcl_FirstHashEntry(&dispPtr->winTable, &search) == NULL) {
+	    /*
+	     * The last window is gone.  Close the connection at idle time,
+	     * otherwise a dead socket is kept and the next XFlush() kills
+	     * the process.  [Bug 923174]
+	     */
+
+	    dispPtr->closeScheduled = 1;
+	    Tcl_DoWhenIdle(CloseUnusedDisplay, dispPtr);
 	}
     }
     Tcl_EventuallyFree(winPtr, TCL_DYNAMIC);

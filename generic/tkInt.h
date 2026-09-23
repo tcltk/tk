@@ -549,6 +549,8 @@ typedef struct TkDisplay {
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
+    int closeScheduled;		/* Closing this display is scheduled at idle
+				 * time.  [Bug 923174] */
 
     Tk_Window warpWindow;
     Tk_Window warpMainwin;	/* For finding the root window for warping
