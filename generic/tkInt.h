@@ -902,7 +902,7 @@ typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
 #ifdef _WIN32
     char trans_chars[XMaxTransChars];
-                            /* translated characters */
+                            /* translated characters (UTF-8) */
     unsigned char nbytes;
 #elif !defined(MAC_OSX_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's
