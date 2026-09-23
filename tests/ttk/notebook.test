@@ -563,4 +563,23 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
     destroy .n
 } -result {Slave index 3 out of bounds} -returnCodes error
 
+test notebook-10.1 {clicking a tab does not take the focus with -takefocus 0 [3de1b72157]} -setup {
+    destroy .nb .e
+    pack [ttk::entry .e]
+    pack [ttk::notebook .nb -takefocus 0 -width 100 -height 40]
+    .nb add [frame .nb.f1] -text One
+    .nb add [frame .nb.f2] -text Two
+    update
+    focus -force .e
+    update
+} -body {
+    # select the second tab, then reselect it
+    ttk::notebook::ActivateTab .nb 1
+    set result [list [.nb index current] [focus]]
+    ttk::notebook::ActivateTab .nb 1
+    lappend result [focus]
+} -cleanup {
+    destroy .nb .e
+} -result {1 .e .e}
+
 tcltest::cleanupTests

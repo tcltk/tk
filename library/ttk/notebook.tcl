@@ -24,15 +24,25 @@ bind TNotebook <Destroy>		{ ttk::notebook::Cleanup %W }
 #	+ keep focus if the notebook already has it;
 #	+ otherwise set focus to the first traversable widget
 #	  in the newly-selected tab;
-#	+ do not leave the focus in a deselected tab.
+#	+ do not leave the focus in a deselected tab;
+#	+ do not take the focus away from another widget if the notebook
+#	  does not take the focus (-takefocus 0) [3de1b72157].
 #
 proc ttk::notebook::ActivateTab {w tab} {
     set oldtab [$w select]
     $w select $tab
     set newtab [$w select] ;# NOTE: might not be $tab, if $tab is disabled
 
-    if {[focus] eq $w} { return }
-    if {$newtab eq $oldtab} { focus $w ; return }
+    set focus [focus]
+    if {$focus eq $w} { return }
+    set takesFocus [ttk::takesFocus $w]
+    if {$newtab eq $oldtab} {
+	if {$takesFocus} { focus $w }
+	return
+    }
+    if {!$takesFocus && $focus ne $oldtab && ![string match $oldtab.* $focus]} {
+	return
+    }
 
     update idletasks ;# needed so focus logic sees correct mapped states
     if {[set f [ttk::focusFirst $newtab]] ne ""} {
