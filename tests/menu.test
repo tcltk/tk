@@ -4316,6 +4316,27 @@ test menu-41.14 {identifiers - reserved word} -setup {
     destroy .m
 } -result {2}
 
+test menu-42.1 {configuring a cascade entry of a menubar with the menu it
+	already has must not destroy that menu - bug 1723059} -setup {
+    destroy .bar
+    . configure -menu {}
+} -body {
+    menu .bar
+    . configure -menu .bar
+    .bar add cascade
+    menu .bar.sub1
+    menu .bar.sub2
+    .bar entryconfigure 1 -menu .bar.sub1
+    # the same menu once more, and then another one
+    .bar entryconfigure 1 -menu .bar.sub1
+    .bar entryconfigure 1 -menu .bar.sub2
+    list [winfo exists .bar.sub1] [winfo exists .bar.sub2] \
+	    [.bar entrycget 1 -menu]
+} -cleanup {
+    . configure -menu {}
+    destroy .bar
+} -result {1 1 .bar.sub2}
+
 #
 # TESTFILE CLEANUP
 #

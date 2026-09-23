@@ -2170,6 +2170,8 @@ ConfigureMenuCloneEntries(
     Tcl_Obj *oldCascadePtr = NULL;
     const char *newCascadeName;
     bool cascadeEntryChanged = false;
+    Tcl_Obj **cloneObjv = (Tcl_Obj **)objv;
+    Tcl_Size cloneObjc = objc;
 
     /*
      * Cascades are kind of tricky here. This is special case #3 in the
@@ -2225,6 +2227,28 @@ ConfigureMenuCloneEntries(
 	}
     }
 
+    /*
+     * The entry of a clone points to a clone of the cascade menu.  If the
+     * cascade menu is not changed, -menu is not passed to the clones: their
+     * entries would point to the cascade menu itself, and it would be deleted
+     * as a clone when the entry is changed the next time.  [Bug 1723059]
+     */
+
+    if ((mePtr->type == CASCADE_ENTRY) && !cascadeEntryChanged && (objc > 0)) {
+	Tcl_Size i;
+
+	cloneObjv = (Tcl_Obj **)ckalloc(objc * sizeof(Tcl_Obj *));
+	cloneObjc = 0;
+	for (i = 0; i < objc; i += 2) {
+	    if (strcmp(Tcl_GetString(objv[i]), "-menu") != 0) {
+		cloneObjv[cloneObjc++] = objv[i];
+		if (i + 1 < objc) {
+		    cloneObjv[cloneObjc++] = objv[i + 1];
+		}
+	    }
+	}
+    }
+
     for (menuListPtr = menuPtr->mainMenuPtr->nextInstancePtr;
 	    menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
@@ -2241,7 +2265,10 @@ ConfigureMenuCloneEntries(
 	    }
 	}
 
-	if (ConfigureMenuEntry(mePtr, objc, objv) != TCL_OK) {
+	if (ConfigureMenuEntry(mePtr, cloneObjc, cloneObjv) != TCL_OK) {
+	    if (cloneObjv != objv) {
+		ckfree(cloneObjv);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -2273,6 +2300,9 @@ ConfigureMenuCloneEntries(
 		Tcl_DecrRefCount(menuObjPtr);
 	    }
 	}
+    }
+    if (cloneObjv != objv) {
+	ckfree(cloneObjv);
     }
     return TCL_OK;
 }
