@@ -41,6 +41,7 @@ to the userbase.
  - [MS-Win: Add keysims for non-latin keys + MacOS: correct 338 pre-2004 keysyms](https://core.tcl-lang.org/tk/tktview/52e9b0)
  - [NULL dereference as result of peculiarly formed font name](https://core.tcl-lang.org/tk/tktview/2236352)
  - [ttk::notebook takes the focus when clicked, even with the -takefocus 0 option](https://core.tcl-lang.org/tk/tktview/3de1b7)
+ - [Performance problems with "photo copy -to"](https://core.tcl-lang.org/tk/tktview/e7fc29)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
