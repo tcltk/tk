@@ -232,6 +232,27 @@ test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
     update
 } -result {1 1}
 
+# 6.* -- partial alpha set with "transparency set -alpha"
+
+test imgPhInstance-6.1 "alpha set with transparency set -alpha is blended" \
+	-constraints {pixelProbe notAqua} -setup {
+    image create photo photo.setalpha -width 20 -height 20
+    photo.setalpha put #ff8000 -to 0 0 20 20
+} -body {
+    for {set y 0} {$y < 20} {incr y} {
+	for {set x 0} {$x < 20} {incr x} {
+	    photo.setalpha transparency set $x $y 128 -alpha
+	}
+    }
+    .c create image 10 10 -anchor nw -image photo.setalpha
+    update
+    pixelNear .c 20 20 [blendOver #ff8000 $bg 128]
+} -cleanup {
+    .c delete all
+    image delete photo.setalpha
+    update
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #

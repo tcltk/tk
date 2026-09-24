@@ -1291,6 +1291,9 @@ readCleanup:
 		pixelPtr[3] = newVal ? 0 : 255;
 	    } else {
 		pixelPtr[3] = newVal;
+		if (newVal > 0 && newVal < 255) {
+		    modelPtr->flags |= COMPLEX_ALPHA;
+		}
 	    }
 
 	    /*
