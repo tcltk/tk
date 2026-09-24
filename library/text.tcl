@@ -222,6 +222,9 @@ bind Text <Return> {
 bind Text <Map> {+
     ::tk::TextAutoEnableRtl %W
 }
+bind Text <Destroy> {+
+    unset -nocomplain ::tk::Priv(rtl_auto,%W) ::tk::Priv(rtl_detect_pending,%W)
+}
 
 bind Text <Delete> {
     if {[tk::TextCursorInSelection %W]} {
@@ -665,6 +668,13 @@ proc ::tk::TextKeyExtend {w index} {
     $w tag remove sel $last end
 }
 
+# Characters with a strong right-to-left direction (Unicode Bidi_Class R or
+# AL): the RTL blocks of the BMP, RIGHT-TO-LEFT MARK, the Hebrew and Arabic
+# presentation forms, and the ranges which Unicode reserves for RTL scripts.
+# This is used in bracket expressions of regular expressions.
+
+set ::tk::RtlChars {\u0590-\u08FF\u200F\uFB1D-\uFDFF\uFE70-\uFEFF\U00010800-\U00010FFF\U0001E800-\U0001EFFF}
+
 # ::tk::TextAutoEnableRtl --
 # Internal procedure: Auto-enable RTL detection on Map event.
 # Uses a one-time flag to ensure this runs only once per widget.
@@ -678,12 +688,11 @@ proc ::tk::TextAutoEnableRtl {w} {
     }
 
     # Use a widget-specific flag for one-time execution
-    set flag "__tk_text_rtl_auto_$w"
-    upvar #0 $flag done
-    if {[info exists done]} {
+    variable ::tk::Priv
+    if {[info exists Priv(rtl_auto,$w)]} {
 	return  ;# Already auto-enabled for this widget
     }
-    set done 1
+    set Priv(rtl_auto,$w) 1
 
     # Trigger initial RTL detection
     ::tk::TextDetectAndTagRtl $w
@@ -700,13 +709,26 @@ proc ::tk::TextAutoEnableRtl {w} {
 # w -		The text window.
 
 proc ::tk::TextDetectAndTagRtl {w} {
+    unset -nocomplain ::tk::Priv(rtl_detect_pending,$w)
     if {![winfo exists $w]} {
 	return
     }
 
+    # Fast path: nothing to do if there is no RTL text and no RTL tag.
+    # A per-line scan in Tcl would be very slow for large texts.
+    set hasTag [expr {"tk_rtl_right" in [$w tag names]}]
+    if {![regexp "\[$::tk::RtlChars\]" [$w get 1.0 end]]} {
+	if {$hasTag} {
+	    $w tag remove tk_rtl_right 1.0 end
+	}
+	return
+    }
+
     # Configure tk_rtl_right tag if not already present
-    if {"tk_rtl_right" ni [$w tag names]} {
+    if {!$hasTag} {
 	$w tag configure tk_rtl_right -justify right
+    } else {
+	$w tag remove tk_rtl_right 1.0 end
     }
     # Get all lines that need checking
     set end_line [lindex [split [$w index "end-1c"] .] 0]
@@ -726,57 +748,27 @@ proc ::tk::TextDetectAndTagRtl {w} {
 	# Check if this line is pure RTL
 	set is_rtl [::tk::TextIsRtlLine $line_text]
 
-	# Remove any existing RTL tag first to avoid duplicates
-	$w tag remove tk_rtl_right $line_start $line_end
-
 	# Apply RTL tag if pure RTL detected
 	if {$is_rtl} {
 	    $w tag add tk_rtl_right $line_start $line_end
 	}
     }
-
-    # Clear the pending flag
-    unset -nocomplain ::tk::Priv(rtl_detect_pending)
 }
 
 # ::tk::TextIsRtlLine --
-# Internal helper: determines if a line contains only RTL characters (ignoring whitespace).
+# Internal helper: determines if a line contains only RTL characters.
 #
-# Returns 1 if all non-whitespace characters are in RTL ranges (U+0590-U+08FF),
-# 0 otherwise.
+# Returns 1 if the line contains RTL characters (see ::tk::RtlChars) and no
+# other characters except whitespace, control characters and the punctuation
+# characters "-_:;,.!?", 0 otherwise.
 #
 # Arguments:
 # line -	The text line to check.
 
 proc ::tk::TextIsRtlLine {line} {
-    set hasRtl 0
-    set hasLtr 0
-
-    foreach char [split $line ""] {
-	set code [scan $char %c]
-
-	# Skip whitespace and common punctuation/dashes
-	if {[string is space -strict $char] || [string match {[-_:;,.!?]} $char]} {
-	    continue
-	}
-
-	# Check for RTL: Hebrew (U+0590-U+05FF), Arabic (U+0600-U+06FF),
-	# Syriac (U+0700-U+074F), Thaana (U+0780-U+07BF), Nko (U+07C0-U+07FF),
-	# Samaritan (U+0800-U+083F), Mandaic (U+0840-U+085F),
-	# Arabic Extended-A (U+08A0-U+08FF)
-	if {$code >= 0x0590 && $code <= 0x08FF} {
-	    set hasRtl 1
-	} else {
-	    # Any non-RTL character (except whitespace/punct already skipped)
-	    # counts as LTR
-	    if {$code > 32 && !([string match {[-_:;,.!?]} $char])} {
-		set hasLtr 1
-	    }
-	}
-    }
-
-    # Pure RTL: has RTL characters AND no LTR characters
-    return [expr {$hasRtl && !$hasLtr}]
+    variable RtlChars
+    expr {[regexp "\[$RtlChars\]" $line]
+	    && ![regexp "\[^$RtlChars\\s\\x00-\\x20_:;,.!?-\]" $line]}
 }
 
 # ::tk::TextPasteSelection --
@@ -1000,8 +992,8 @@ proc ::tk::TextInsert {w s} {
     }
 
     # Trigger RTL detection on idle for dynamic tagging
-    if {![info exists ::tk::Priv(rtl_detect_pending)]} {
-	set ::tk::Priv(rtl_detect_pending) 1
+    if {![info exists ::tk::Priv(rtl_detect_pending,$w)]} {
+	set ::tk::Priv(rtl_detect_pending,$w) 1
 	after idle [list catch [list ::tk::TextDetectAndTagRtl $w]]
     }
 }
@@ -1210,8 +1202,8 @@ proc ::tk_textPaste w {
 	}
 
 	# Trigger RTL detection on idle for dynamic tagging
-	if {![info exists ::tk::Priv(rtl_detect_pending)]} {
-	    set ::tk::Priv(rtl_detect_pending) 1
+	if {![info exists ::tk::Priv(rtl_detect_pending,$w)]} {
+	    set ::tk::Priv(rtl_detect_pending,$w) 1
 	    after idle [list catch [list ::tk::TextDetectAndTagRtl $w]]
 	}
     }

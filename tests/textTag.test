@@ -1594,6 +1594,59 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     destroy .t
 } -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
 
+test textTag-19.1 {automatic tagging of pure RTL lines - bug 5d983ebf48} -setup {
+    destroy .t
+    pack [text .t]
+    update
+} -body {
+    .t insert end "hello\n\u05E9\u05DC\u05D5\u05DD\nmixed \u05E9\u05DC\n"
+    tk::TextDetectAndTagRtl .t
+    set res [list [.t tag ranges tk_rtl_right]]
+    .t delete 2.0 3.0
+    tk::TextDetectAndTagRtl .t
+    lappend res [.t tag ranges tk_rtl_right]
+} -cleanup {
+    destroy .t
+} -result {{2.0 2.4} {}}
+test textTag-19.2 {RTL detection is scheduled for each text widget - bug 5d983ebf48} -setup {
+    destroy .t .t2
+    pack [text .t] [text .t2]
+    update
+} -body {
+    foreach w {.t .t2} {
+	$w mark set insert end
+	tk::TextInsert $w \u05E9\u05DC\u05D5\u05DD
+    }
+    update
+    list [.t tag ranges tk_rtl_right] [.t2 tag ranges tk_rtl_right]
+} -cleanup {
+    destroy .t .t2
+} -result {{1.0 1.4} {1.0 1.4}}
+test textTag-19.3 {RTL detection runs again for a recreated text widget - bug 5d983ebf48} -setup {
+    destroy .t
+} -body {
+    pack [text .t]
+    update
+    destroy .t
+    pack [text .t]
+    .t insert end \u05E9\u05DC\u05D5\u05DD
+    update
+    .t tag ranges tk_rtl_right
+} -cleanup {
+    destroy .t
+} -result {1.0 1.4}
+test textTag-19.4 {RTL characters outside U+0590-U+08FF - bug 5d983ebf48} -setup {
+    destroy .t
+    pack [text .t]
+    update
+} -body {
+    .t insert end "\uFEE3\uFEE4\n\uFB2A\uFB2B\n\U0001E900\U0001E901\nabc \uFEE3\n"
+    tk::TextDetectAndTagRtl .t
+    .t tag ranges tk_rtl_right
+} -cleanup {
+    destroy .t
+} -result {1.0 1.2 2.0 2.2 3.0 3.2}
+
 #
 # TESTFILE CLEANUP
 #
