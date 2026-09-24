@@ -42,6 +42,7 @@ to the userbase.
  - [NULL dereference as result of peculiarly formed font name](https://core.tcl-lang.org/tk/tktview/2236352)
  - [ttk::notebook takes the focus when clicked, even with the -takefocus 0 option](https://core.tcl-lang.org/tk/tktview/3de1b7)
  - [Performance problems with "photo copy -to"](https://core.tcl-lang.org/tk/tktview/e7fc29)
+ - [Mapped/Unmapped and Iconic State Problems](https://core.tcl-lang.org/tk/tktview/313169)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
