@@ -260,6 +260,9 @@ typedef struct TkWmInfo {
  * WM_WITHDRAWN -		non-zero means that this window has explicitly
  *				been withdrawn. If it's a transient, it should
  *				not mirror state changes in the container.
+ * WM_HIDDEN -			non-zero means the window manager has set
+ *				_NET_WM_STATE_HIDDEN: the window is
+ *				minimized although it is still mapped.
  */
 
 #define WM_NEVER_MAPPED			1
@@ -276,6 +279,7 @@ typedef struct TkWmInfo {
 #define WM_WIDTH_NOT_RESIZABLE		0x1000
 #define WM_HEIGHT_NOT_RESIZABLE		0x2000
 #define WM_WITHDRAWN			0x4000
+#define WM_HIDDEN			0x8000
 
 /*
  * Wrapper for XGetWindowProperty and XChangeProperty to make them a *bit*
@@ -365,9 +369,10 @@ static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
-static void 		SetNetWmState(TkWindow*, const char *atomName, int on);
-static void 		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
-static void 		UpdateNetWmState(WmInfo *);
+static void		SetNetWmState(TkWindow*, const char *atomName, int on);
+static void		ActivateWindow(TkWindow *winPtr);
+static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
+static void		UpdateNetWmState(WmInfo *);
 static void		WaitForConfigureNotify(TkWindow *winPtr,
 			    unsigned long serial);
 static int		WaitForEvent(Display *display,
@@ -1239,13 +1244,13 @@ WmAspectCmd(
  *
  * WmSetAttribute --
  *
- * 	Helper routine for WmAttributesCmd. Sets the value of the specified
- * 	attribute.
+ *	Helper routine for WmAttributesCmd. Sets the value of the specified
+ *	attribute.
  *
  * Returns:
  *
- * 	TCL_OK if successful, TCL_ERROR otherwise. In case of an error, leaves
- * 	a message in the interpreter's result.
+ *	TCL_OK if successful, TCL_ERROR otherwise. In case of an error, leaves
+ *	a message in the interpreter's result.
  *
  *----------------------------------------------------------------------
  */
@@ -1325,8 +1330,8 @@ WmSetAttribute(
  *
  * WmGetAttribute --
  *
- * 	Helper routine for WmAttributesCmd. Returns the current value of the
- * 	specified attribute.
+ *	Helper routine for WmAttributesCmd. Returns the current value of the
+ *	specified attribute.
  *
  * See also: CheckNetWmState().
  *
@@ -1366,7 +1371,7 @@ WmGetAttribute(
  *
  * Syntax:
  *
- * 	wm attributes $win ?-attribute ?value attribute value...??
+ *	wm attributes $win ?-attribute ?value attribute value...??
  *
  * Notes:
  *
@@ -1828,10 +1833,10 @@ WmForgetCmd(
 		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	RemapWindows(winPtr, winPtr->parentPtr);
 
-        /*
-         * Make sure wm no longer manages this window
-         */
-        Tk_ManageGeometry(frameWin, NULL, NULL);
+	/*
+	 * Make sure wm no longer manages this window
+	 */
+	Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	/*
 	 * Flags (above) must be cleared before calling TkMapTopFrame (below).
@@ -2450,7 +2455,7 @@ WmIconphotoCmd(
 	if (photo == NULL) {
 	    ckfree((char *) iconPropertyData);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "failed to create an iconphoto with image \"%s\"",
+		"failed to create an iconphoto with image \"%s\"",
 		Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
 	    return TCL_ERROR;
@@ -3442,6 +3447,8 @@ WmStateCmd(
 	    state = "icon";
 	} else if (wmPtr->withdrawn) {
 	    state = "withdrawn";
+	} else if (wmPtr->flags & WM_HIDDEN) {
+	    state = "iconic";
 	} else if (Tk_IsMapped((Tk_Window) winPtr)
 		|| ((wmPtr->flags & WM_NEVER_MAPPED)
 			&& (wmPtr->hints.initial_state == NormalState))) {
@@ -5047,6 +5054,42 @@ SetNetWmState(
 /*
  *----------------------------------------------------------------------
  *
+ * ActivateWindow --
+ *
+ *	Sends a _NET_ACTIVE_WINDOW client message to the window manager, which
+ *	is the way to unminimize a window which the window manager keeps
+ *	mapped while it is minimized. [Bug 3131699cb4]
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ActivateWindow(
+    TkWindow *winPtr)
+{
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    XEvent e;
+
+    if (!winPtr->wmInfoPtr->wrapperPtr) {
+	return;
+    }
+
+    e.xany.type = ClientMessage;
+    e.xany.window = winPtr->wmInfoPtr->wrapperPtr->window;
+    e.xclient.message_type = Tk_InternAtom(tkwin, "_NET_ACTIVE_WINDOW");
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = 1;	/* Source indication: application. */
+    e.xclient.data.l[1] = TkCurrentTime(winPtr->dispPtr);
+    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+
+    XSendEvent(winPtr->display,
+	RootWindow(winPtr->display, winPtr->screenNum), 0,
+	SubstructureNotifyMask|SubstructureRedirectMask, &e);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * CheckNetWmState --
  *
  * 	Updates the window attributes whenever the _NET_WM_STATE property
@@ -5069,7 +5112,7 @@ CheckNetWmState(
     int numAtoms)
 {
     Tk_Window tkwin = (Tk_Window) wmPtr->wrapperPtr;
-    int i;
+    int i, zoomed = 0;
     Atom _NET_WM_STATE_ABOVE
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_ABOVE"),
 	_NET_WM_STATE_MAXIMIZED_VERT
@@ -5077,24 +5120,28 @@ CheckNetWmState(
 	_NET_WM_STATE_MAXIMIZED_HORZ
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_HORZ"),
 	_NET_WM_STATE_FULLSCREEN
-	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN"),
+	_NET_WM_STATE_HIDDEN
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_HIDDEN");
 
     wmPtr->attributes.topmost = 0;
-    wmPtr->attributes.zoomed = 0;
     wmPtr->attributes.fullscreen = 0;
+    wmPtr->flags &= ~WM_HIDDEN;
     for (i = 0; i < numAtoms; ++i) {
 	if (atoms[i] == _NET_WM_STATE_ABOVE) {
 	    wmPtr->attributes.topmost = 1;
 	} else if (atoms[i] == _NET_WM_STATE_MAXIMIZED_VERT) {
-	    wmPtr->attributes.zoomed |= 1;
+	    zoomed |= 1;
 	} else if (atoms[i] == _NET_WM_STATE_MAXIMIZED_HORZ) {
-	    wmPtr->attributes.zoomed |= 2;
+	    zoomed |= 2;
 	} else if (atoms[i] == _NET_WM_STATE_FULLSCREEN) {
 	    wmPtr->attributes.fullscreen = 1;
+	} else if (atoms[i] == _NET_WM_STATE_HIDDEN) {
+	    wmPtr->flags |= WM_HIDDEN;
 	}
     }
 
-    wmPtr->attributes.zoomed = (wmPtr->attributes.zoomed == 3);
+    wmPtr->attributes.zoomed = (zoomed == 3);
 
     return;
 }
@@ -5806,9 +5853,9 @@ static int PointInWindow(
 {
     XWindowChanges changes = wmPtr->winPtr->changes;
     return (x >= changes.x &&
-            x < changes.x + changes.width &&
-            y >= changes.y - wmPtr->menuHeight &&
-            y < changes.y + changes.height);
+	    x < changes.x + changes.width &&
+	    y >= changes.y - wmPtr->menuHeight &&
+	    y < changes.y + changes.height);
 }
 
 Tk_Window
@@ -5881,38 +5928,38 @@ Tk_CoordsToWindow(
 	}
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
-            if (wmPtr->winPtr->mainPtr == NULL) {
-                continue;
-            }
+	    if (wmPtr->winPtr->mainPtr == NULL) {
+		continue;
+	    }
 	    if (child == wmPtr->reparent) {
-                if (PointInWindow(x, y, wmPtr)) {
-                    goto gotToplevel;
-                } else {
+		if (PointInWindow(x, y, wmPtr)) {
+		    goto gotToplevel;
+		} else {
 
-                    /*
-                     * Return NULL if the point is in the title bar or border.
-                     */
+		    /*
+		     * Return NULL if the point is in the title bar or border.
+		     */
 
-                    return NULL;
-                }
+		    return NULL;
+		}
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
 		    goto gotToplevel;
 		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
-                           TkpGetOtherWindow(wmPtr->winPtr) == NULL) {
+			   TkpGetOtherWindow(wmPtr->winPtr) == NULL) {
 
-                    /*
-                     * This toplevel is embedded in a window belonging to
-                     * a different application.
-                     */
+		    /*
+		     * This toplevel is embedded in a window belonging to
+		     * a different application.
+		     */
 
-                    int rx, ry;
-                    Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
-                    childX -= rx;
-                    childY -= ry;
-                    goto gotToplevel;
-                }
+		    int rx, ry;
+		    Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
+		    childX -= rx;
+		    childY -= ry;
+		    goto gotToplevel;
+		}
 	    } else if (child == wmPtr->winPtr->window) {
 		goto gotToplevel;
 	    }
@@ -6009,11 +6056,11 @@ Tk_CoordsToWindow(
 	    childY = y;
 	    goto gotToplevel;
 	} else {
-            winPtr = nextPtr;
-        }
+	    winPtr = nextPtr;
+	}
     }
     if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
-        return NULL;
+	return NULL;
     }
     return (Tk_Window) winPtr;
 }
@@ -7329,7 +7376,8 @@ UpdateCommand(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tcl_DString cmds, ds;
-    int i, *offsets;
+    int i;
+    int *offsets;
     char **cmdArgv;
 
     /*
@@ -7410,6 +7458,14 @@ TkpWmSetState(
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
+	if (wmPtr->flags & WM_HIDDEN) {
+	    /*
+	     * The window is still mapped, so the window manager will not get
+	     * a map request. Ask it to activate the window instead.
+	     */
+
+	    ActivateWindow(winPtr);
+	}
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
