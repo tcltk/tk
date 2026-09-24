@@ -508,6 +508,19 @@ test place-13.1 {test respect for internalborder} -setup {
     destroy .pack
 } -result {196x188+2+10 177x186+5+7}
 
+test place-13.2 {place half-dead window in <Destroy> binding - bug 3020550} -setup {
+    destroy .p .x
+    frame .p
+    frame .p.f
+    frame .x
+} -body {
+    bind .p.f <Destroy> {place .p.f -x 0 -y 0; place .x -in .p.f}
+    destroy .p.f
+    update
+    list [place content .p] [winfo manager .x]
+} -cleanup {
+    destroy .p .x
+} -result {{} {}}
 
 test place-14.1 {memory leak testing} -constraints memory -setup {
     destroy .f
