@@ -5270,6 +5270,31 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.1 {many text widgets complete their line metrics update - bug 1348333} -setup {
+    toplevel .tt
+} -body {
+    for {set i 0} {$i < 30} {incr i} {
+	pack [frame .tt.f$i]
+	for {set j 0} {$j < 30} {incr j} {
+	    text .tt.f$i.t$j -height 1 -width 2
+	    .tt.f$i.t$j insert end $i$j
+	    pack .tt.f$i.t$j -side left
+	}
+    }
+    after 1000 {set ::done 1}
+    vwait ::done
+    set pending 0
+    foreach f [winfo children .tt] {
+	foreach t [winfo children $f] {
+	    incr pending [$t pendingsync]
+	}
+    }
+    set pending
+} -cleanup {
+    destroy .tt
+    unset -nocomplain ::done i j f t pending
+} -result 0
+
 #
 # TESTFILE CLEANUP
 #
