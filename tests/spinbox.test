@@ -3925,7 +3925,7 @@ test spinbox-26.1 {the value is parsed independently of the LC_NUMERIC locale - 
     testsetlocale C
     destroy .e
 } -result {0.6 0.7}
-test spinbox-26.2 {values with leading zeros are not octal - bug 2358545} -setup {
+test spinbox-26.2 {values with leading zeros are not octal - bug 9e89324a0a} -setup {
     spinbox .e -from 0 -to 59 -format %02.0f
 } -body {
     .e delete 0 end
