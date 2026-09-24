@@ -570,6 +570,9 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
  *				character before the next redisplay.
  * OUT_OF_SYNC			1 means that the last <<WidgetViewSync>> event had
  *				value 0, indicating that the widget is out of sync.
+ * LINE_UPDATE_IDLE:		Means that the asynchronous line metrics update
+ *				waits in a when-idle handler for the pending
+ *				redisplay (used instead of lineUpdateTimer).
  */
 
 #define DINFO_OUT_OF_DATE	1
@@ -577,6 +580,16 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 #define REDRAW_BORDERS		4
 #define REPICK_NEEDED		8
 #define OUT_OF_SYNC		16
+#define LINE_UPDATE_IDLE	32
+
+/*
+ * Non-zero if an asynchronous line metrics update is scheduled, either as a
+ * timer or as a when-idle handler.
+ */
+
+#define LineUpdatePending(dInfoPtr) \
+    (((dInfoPtr)->lineUpdateTimer != NULL) \
+	    || ((dInfoPtr)->flags & LINE_UPDATE_IDLE))
 /*
  * Action values for FreeDLines:
  *
@@ -696,6 +709,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(void *clientData);
+static void		AsyncUpdateLineMetricsWhenIdle(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
 static bool		IsStartOfNotMergedLine(const TkText *textPtr,
@@ -814,6 +828,11 @@ TkTextFreeDInfo(
 	Tcl_DeleteTimerHandler(dInfoPtr->lineUpdateTimer);
 	textPtr->refCount--;
 	dInfoPtr->lineUpdateTimer = NULL;
+    }
+    if (dInfoPtr->flags & LINE_UPDATE_IDLE) {
+	Tcl_CancelIdleCall(AsyncUpdateLineMetricsWhenIdle, textPtr);
+	textPtr->refCount--;
+	dInfoPtr->flags &= ~LINE_UPDATE_IDLE;
     }
     if (dInfoPtr->scrollbarTimer != NULL) {
 	Tcl_DeleteTimerHandler(dInfoPtr->scrollbarTimer);
@@ -3209,6 +3228,33 @@ DisplayLineBackground(
 /*
  *----------------------------------------------------------------------
  *
+ * AsyncUpdateLineMetricsWhenIdle --
+ *
+ *	When-idle handler which continues the asynchronous line metrics
+ *	update after the pending redisplay has been done.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	See AsyncUpdateLineMetrics.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+AsyncUpdateLineMetricsWhenIdle(
+    void *clientData)	/* Information about widget. */
+{
+    TkText *textPtr = (TkText *)clientData;
+
+    textPtr->dInfoPtr->flags &= ~LINE_UPDATE_IDLE;
+    AsyncUpdateLineMetrics(clientData);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * AsyncUpdateLineMetrics --
  *
  *	This function is invoked as a background handler to update the pixel-
@@ -3252,8 +3298,14 @@ AsyncUpdateLineMetrics(
     }
 
     if (dInfoPtr->flags & REDRAW_PENDING) {
-	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
-		AsyncUpdateLineMetrics, clientData);
+	/*
+	 * Wait for the pending redisplay. Polling for it with a short timer
+	 * would starve the idle handlers (including the redisplay itself)
+	 * when many text widgets do this at once. [Bug 1348333]
+	 */
+
+	dInfoPtr->flags |= LINE_UPDATE_IDLE;
+	Tcl_DoWhenIdle(AsyncUpdateLineMetricsWhenIdle, clientData);
 	return;
     }
 
@@ -3692,7 +3744,7 @@ TextInvalidateLineMetrics(
 	 * complex record-keeping than what we have.
 	 */
 
-	if (dInfoPtr->lineUpdateTimer == NULL) {
+	if (!LineUpdatePending(dInfoPtr)) {
 	    dInfoPtr->currentMetricUpdateLine = fromLine;
 	    if (action == TK_TEXT_INVALIDATE_DELETE) {
 		lineCount = 0;
@@ -3760,7 +3812,7 @@ TextInvalidateLineMetrics(
 	 * on all lines in the widget.
 	 */
 
-	if (dInfoPtr->lineUpdateTimer == NULL) {
+	if (!LineUpdatePending(dInfoPtr)) {
 	    dInfoPtr->currentMetricUpdateLine = -1;
 	}
 	dInfoPtr->lastMetricUpdateLine = dInfoPtr->currentMetricUpdateLine;
@@ -3770,7 +3822,7 @@ TextInvalidateLineMetrics(
      * Now re-set the current update calculations.
      */
 
-    if (dInfoPtr->lineUpdateTimer == NULL) {
+    if (!LineUpdatePending(dInfoPtr)) {
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, textPtr);
@@ -5535,7 +5587,7 @@ TkTextRelayoutWindow(
 
 	dInfoPtr->metricEpoch = -1;
 
-	if (dInfoPtr->lineUpdateTimer == NULL) {
+	if (!LineUpdatePending(dInfoPtr)) {
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, textPtr);
