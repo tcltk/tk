@@ -444,6 +444,7 @@ static int		GetSpinboxElement(Spinbox *sbPtr, int x, int y);
 static int		SpinboxInvoke(Tcl_Interp *interp, Spinbox *sbPtr,
 			    int element);
 static int		ComputeFormat(Spinbox *sbPtr);
+static int		GetSpinboxValue(const char *string, double *valuePtr);
 
 /*
  * The structure below defines widget class behavior by means of functions
@@ -1370,7 +1371,7 @@ ConfigureEntry(
 
 	    double dvalue;
 
-	    if (Tcl_GetDouble(NULL, entryPtr->string, &dvalue) != TCL_OK) {
+	    if (GetSpinboxValue(entryPtr->string, &dvalue) != TCL_OK) {
 		/* Not a number */
 		dvalue = sbPtr->fromValue;
 	    } else if (dvalue > sbPtr->toValue) {
@@ -4280,6 +4281,50 @@ GetSpinboxElement(
 /*
  *--------------------------------------------------------------
  *
+ * GetSpinboxValue --
+ *
+ *	Parses the spinbox value as a decimal floating point number,
+ *	independently of the LC_NUMERIC locale.  Unlike Tcl_GetDouble(),
+ *	leading zeros do not make it an octal number, so that values
+ *	formatted with e.g. "%02.0f" ("08", "010") are parsed correctly.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+GetSpinboxValue(
+    const char *string,		/* String to parse. */
+    double *valuePtr)		/* Place to store the parsed value. */
+{
+    Tcl_DString ds;
+    const char *p = string;
+    int code;
+
+    while (isspace(UCHAR(*p))) {
+	p++;
+    }
+    Tcl_DStringInit(&ds);
+    if (*p == '+' || *p == '-') {
+	Tcl_DStringAppend(&ds, p++, 1);
+    }
+    while (p[0] == '0' && isdigit(UCHAR(p[1]))) {
+	p++;
+    }
+    Tcl_DStringAppend(&ds, p, -1);
+    code = Tcl_GetDouble(NULL, Tcl_DStringValue(&ds), valuePtr);
+    Tcl_DStringFree(&ds);
+    return code;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * SpinboxInvoke --
  *
  *	This function is invoked when the invoke method for the widget is
@@ -4371,7 +4416,7 @@ SpinboxInvoke(
 	} else if (!DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)) {
 	    double dvalue;
 
-	    if (Tcl_GetDouble(NULL, entryPtr->string, &dvalue) != TCL_OK) {
+	    if (GetSpinboxValue(entryPtr->string, &dvalue) != TCL_OK) {
 		/*
 		 * If the string isn't a double value, just use the -from
 		 * value.

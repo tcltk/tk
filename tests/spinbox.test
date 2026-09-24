@@ -3925,6 +3925,21 @@ test spinbox-26.1 {the value is parsed independently of the LC_NUMERIC locale - 
     testsetlocale C
     destroy .e
 } -result {0.6 0.7}
+test spinbox-26.2 {values with leading zeros are not octal - bug 2358545} -setup {
+    spinbox .e -from 0 -to 59 -format %02.0f
+} -body {
+    .e delete 0 end
+    .e insert 0 07
+    set res {}
+    foreach i {1 2 3 4} {
+	.e invoke buttonup
+	lappend res [.e get]
+    }
+    .e invoke buttondown
+    lappend res [.e get]
+} -cleanup {
+    destroy .e
+} -result {08 09 10 11 10}
 
 # Collected comments about lacks from the test
 # XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
