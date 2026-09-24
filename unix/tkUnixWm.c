@@ -44,9 +44,9 @@ typedef struct ProtocolHandler {
 
 typedef struct {
     double alpha;		/* Transparency; 0.0=transparent, 1.0=opaque */
-    int topmost;		/* Flag: true=>stay-on-top */
-    int zoomed;			/* Flag: true=>maximized */
-    int fullscreen;		/* Flag: true=>fullscreen */
+    int topmost;		/* Flag: 1=>stay-on-top */
+    int zoomed;			/* Flag: 1=>maximized */
+    int fullscreen;		/* Flag: 1=>fullscreen */
 } WmAttributes;
 
 typedef enum {
@@ -88,7 +88,7 @@ typedef struct TkWmInfo {
 				 * NULL. */
     Tk_Window iconFor;		/* Window for which this window is icon, or
 				 * NULL if this isn't an icon for anyone. */
-    int withdrawn;		/* Non-zero means window has been withdrawn. */
+    int withdrawn;		/* True means window has been withdrawn. */
 
     /*
      * In order to support menubars transparently under X, each toplevel
@@ -260,6 +260,9 @@ typedef struct TkWmInfo {
  * WM_WITHDRAWN -		non-zero means that this window has explicitly
  *				been withdrawn. If it's a transient, it should
  *				not mirror state changes in the container.
+ * WM_HIDDEN -			non-zero means the window manager has set
+ *				_NET_WM_STATE_HIDDEN: the window is
+ *				minimized although it is still mapped.
  */
 
 #define WM_NEVER_MAPPED			1
@@ -276,6 +279,7 @@ typedef struct TkWmInfo {
 #define WM_WIDTH_NOT_RESIZABLE		0x1000
 #define WM_HEIGHT_NOT_RESIZABLE		0x2000
 #define WM_WITHDRAWN			0x4000
+#define WM_HIDDEN			0x8000
 
 /*
  * Wrapper for XGetWindowProperty and XChangeProperty to make them a *bit*
@@ -366,6 +370,7 @@ static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
 static void		SetNetWmState(TkWindow*, const char *atomName, int on);
+static void		ActivateWindow(TkWindow *winPtr);
 static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void		UpdateNetWmState(WmInfo *);
 static void		WaitForConfigureNotify(TkWindow *winPtr,
@@ -3488,6 +3493,8 @@ WmStateCmd(
 	    state = "icon";
 	} else if (wmPtr->withdrawn) {
 	    state = "withdrawn";
+	} else if (wmPtr->flags & WM_HIDDEN) {
+	    state = "iconic";
 	} else if (Tk_IsMapped((Tk_Window) winPtr)
 		|| ((wmPtr->flags & WM_NEVER_MAPPED)
 			&& (wmPtr->hints.initial_state == NormalState))) {
@@ -5092,6 +5099,42 @@ SetNetWmState(
 /*
  *----------------------------------------------------------------------
  *
+ * ActivateWindow --
+ *
+ *	Sends a _NET_ACTIVE_WINDOW client message to the window manager, which
+ *	is the way to unminimize a window which the window manager keeps
+ *	mapped while it is minimized. [Bug 3131699cb4]
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ActivateWindow(
+    TkWindow *winPtr)
+{
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    XEvent e;
+
+    if (!winPtr->wmInfoPtr->wrapperPtr) {
+	return;
+    }
+
+    e.xany.type = ClientMessage;
+    e.xany.window = winPtr->wmInfoPtr->wrapperPtr->window;
+    e.xclient.message_type = Tk_InternAtom(tkwin, "_NET_ACTIVE_WINDOW");
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = 1;	/* Source indication: application. */
+    e.xclient.data.l[1] = TkCurrentTime(winPtr->dispPtr);
+    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+
+    XSendEvent(winPtr->display,
+	RootWindow(winPtr->display, winPtr->screenNum), 0,
+	SubstructureNotifyMask|SubstructureRedirectMask, &e);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * CheckNetWmState --
  *
  *	Updates the window attributes whenever the _NET_WM_STATE property
@@ -5114,7 +5157,7 @@ CheckNetWmState(
     int numAtoms)
 {
     Tk_Window tkwin = (Tk_Window) wmPtr->wrapperPtr;
-    int i;
+    int i, zoomed = 0;
     Atom _NET_WM_STATE_ABOVE
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_ABOVE"),
 	_NET_WM_STATE_MAXIMIZED_VERT
@@ -5122,24 +5165,28 @@ CheckNetWmState(
 	_NET_WM_STATE_MAXIMIZED_HORZ
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_HORZ"),
 	_NET_WM_STATE_FULLSCREEN
-	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN"),
+	_NET_WM_STATE_HIDDEN
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_HIDDEN");
 
     wmPtr->attributes.topmost = 0;
-    wmPtr->attributes.zoomed = 0;
     wmPtr->attributes.fullscreen = 0;
+    wmPtr->flags &= ~WM_HIDDEN;
     for (i = 0; i < numAtoms; ++i) {
 	if (atoms[i] == _NET_WM_STATE_ABOVE) {
 	    wmPtr->attributes.topmost = 1;
 	} else if (atoms[i] == _NET_WM_STATE_MAXIMIZED_VERT) {
-	    wmPtr->attributes.zoomed |= 1;
+	    zoomed |= 1;
 	} else if (atoms[i] == _NET_WM_STATE_MAXIMIZED_HORZ) {
-	    wmPtr->attributes.zoomed |= 2;
+	    zoomed |= 2;
 	} else if (atoms[i] == _NET_WM_STATE_FULLSCREEN) {
 	    wmPtr->attributes.fullscreen = 1;
+	} else if (atoms[i] == _NET_WM_STATE_HIDDEN) {
+	    wmPtr->flags |= WM_HIDDEN;
 	}
     }
 
-    wmPtr->attributes.zoomed = (wmPtr->attributes.zoomed == 3);
+    wmPtr->attributes.zoomed = (zoomed == 3);
 
     return;
 }
@@ -7456,6 +7503,14 @@ TkpWmSetState(
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
+	if (wmPtr->flags & WM_HIDDEN) {
+	    /*
+	     * The window is still mapped, so the window manager will not get
+	     * a map request. Ask it to activate the window instead.
+	     */
+
+	    ActivateWindow(winPtr);
+	}
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
