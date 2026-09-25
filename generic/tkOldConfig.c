@@ -197,7 +197,8 @@ Tk_ConfigureWidget(
 			    TCL_OK) {
 			Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 				"\n    (%s \"%.50s\" in widget \"%.50s\")",
-				"default value for", specPtr->dbName,
+				"default value for", specPtr->dbName
+				? specPtr->dbName : specPtr->argvName,
 				Tk_PathName(tkwin)));
 			Tcl_DecrRefCount(arg);
 			return TCL_ERROR;
