@@ -8361,6 +8361,14 @@ WmProc(
 		&& !(SC_MOVE == cmd || SC_SIZE == cmd || SC_RESTORE == cmd)) {
 		goto done;
 	    }
+	    /*
+	     * The mouse capture set by a global grab stops the window
+	     * from being restored. [Bug 3138512]
+	     */
+
+	    if (SC_RESTORE == cmd && GetCapture() != NULL) {
+		ReleaseCapture();
+	    }
 	}
 	/* fall through */
 
