@@ -991,7 +991,12 @@ proc ::ttk::treeview::Press {w x y} {
 	tree {
 	    switch -glob -- [$w identify element $x $y] {
 		*Treeitem.indicator {
-		    ToggleOpenState $w [$w identify item $x $y]
+		    set item [$w identify item $x $y]
+		    if {[$w haschildren $item]} {
+			ToggleOpenState $w [$w identify item $x $y]
+		    } else {
+			Select.press $w $x $y
+		    }
 		}
 		*Checkbutton.button -
 		*Checkbutton.indicator { ToggleSelected $w $x $y }
