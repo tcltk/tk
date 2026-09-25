@@ -49,6 +49,7 @@ to the userbase.
  - [creating widgets is slow when an input method is active](https://core.tcl-lang.org/tk/tktview/5d52ad)
  - [menu entries are drawn directly on the screen](https://core.tcl-lang.org/tk/tktview/791527)
  - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
+ - [window is not focused on create](https://core.tcl-lang.org/tk/tktview/2effa4)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
