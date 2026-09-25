@@ -186,5 +186,6 @@ testConstraint testsetlocale   [llength [info commands testsetlocale]]
 testConstraint testtext        [llength [info commands testtext]]
 testConstraint testwinevent    [llength [info commands testwinevent]]
 testConstraint testwrapper     [llength [info commands testwrapper]]
+testConstraint testxfocus      [llength [info commands testxfocus]]
 
 # EOF
