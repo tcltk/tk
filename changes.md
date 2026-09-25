@@ -43,6 +43,8 @@ to the userbase.
  - [ttk::notebook takes the focus when clicked, even with the -takefocus 0 option](https://core.tcl-lang.org/tk/tktview/3de1b7)
  - [Performance problems with "photo copy -to"](https://core.tcl-lang.org/tk/tktview/e7fc29)
  - [Mapped/Unmapped and Iconic State Problems](https://core.tcl-lang.org/tk/tktview/313169)
+ - [double click is lost if processing a click takes too long](https://core.tcl-lang.org/tk/tktview/195423)
+ - [canvas scrolls when the scrollbar indicates that it cannot](https://core.tcl-lang.org/tk/tktview/214852)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

@@ -6070,7 +6070,16 @@ CanvasSetOrigin(
 	top = yOrigin + canvasPtr->inset - canvasPtr->scrollY1;
 	bottom = canvasPtr->scrollY2
 		- (yOrigin + Tk_Height(canvasPtr->tkwin) - canvasPtr->inset);
-	if ((left < 0) && (right > 0)) {
+	if (canvasPtr->scrollX2 - canvasPtr->scrollX1
+		<= Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset) {
+	    /*
+	     * The scroll region is not wider than the window, so there is
+	     * nothing to scroll: keep its left edge at the left edge of the
+	     * window. [Bug 2148529]
+	     */
+
+	    xOrigin = canvasPtr->scrollX1 - canvasPtr->inset;
+	} else if ((left < 0) && (right > 0)) {
 	    delta = (right > -left) ? -left : right;
 	    if (xScrollIncrement > 0) {
 		delta -= delta % xScrollIncrement;
@@ -6083,7 +6092,10 @@ CanvasSetOrigin(
 	    }
 	    xOrigin -= delta;
 	}
-	if ((top < 0) && (bottom > 0)) {
+	if (canvasPtr->scrollY2 - canvasPtr->scrollY1
+		<= Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset) {
+	    yOrigin = canvasPtr->scrollY1 - canvasPtr->inset;
+	} else if ((top < 0) && (bottom > 0)) {
 	    delta = (bottom > -top) ? -top : bottom;
 	    if (yScrollIncrement > 0) {
 		delta -= delta % yScrollIncrement;
