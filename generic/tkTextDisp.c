@@ -9052,6 +9052,7 @@ CharBboxProc(
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX = chunkPtr->x + chunkPtr->width;
+    Tcl_Size nextIndex;
 
     if (ciPtr == NULL || byteIndex < 0) {
 	byteIndex = 0;
@@ -9062,11 +9063,31 @@ CharBboxProc(
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
+    /*
+     * Byte offset of the next character: the character at byteIndex can
+     * be longer than one byte.
+     */
+
+    nextIndex = byteIndex;
+    if (ciPtr != NULL && byteIndex < ciPtr->numBytes) {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	const char *chars = Tcl_DStringValue(&((BaseCharInfo *)
+		ciPtr->baseChunkPtr->clientData)->baseChars) + ciPtr->baseOffset;
+#else
+	const char *chars = ciPtr->chars;
+#endif
+
+	nextIndex = Tcl_UtfNext(chars + byteIndex) - chars;
+	if (nextIndex > ciPtr->numBytes) {
+	    nextIndex = ciPtr->numBytes;
+	}
+    }
+
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     if (ciPtr->isRtl) {
 	/* RTL: mirror the measurement. */
 	int xEnd, xStart;
-	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, nextIndex,
 		chunkPtr->x, -1, 0, &xEnd);
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 		chunkPtr->x, -1, 0, &xStart);
@@ -9087,7 +9108,7 @@ CharBboxProc(
 	    *widthPtr = maxX - *xPtr;
 	} else {
 	    int x2;
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, nextIndex,
 		    *xPtr, -1, 0, &x2);
 	    *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
 	}
