@@ -8400,3 +8400,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-09-25 (bug) [195423] double click is lost if processing a click takes too long (storchaka)
 
 2026-09-25 (bug) [214852] canvas scrolls when the scrollbar indicates that it cannot (storchaka)
+
+2026-09-25 (bug) [791527] menu entries are drawn directly on the screen (storchaka)
