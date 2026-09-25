@@ -46,6 +46,7 @@ to the userbase.
  - [double click is lost if processing a click takes too long](https://core.tcl-lang.org/tk/tktview/195423)
  - [canvas scrolls when the scrollbar indicates that it cannot](https://core.tcl-lang.org/tk/tktview/214852)
  - [configure: X11 header check always fails](https://core.tcl-lang.org/tk/tktview/9087fae43f)
+ - [creating widgets is slow when an input method is active](https://core.tcl-lang.org/tk/tktview/5d52ad92fa)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
