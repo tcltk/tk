@@ -93,6 +93,7 @@ proc animateLabelImage {w imageData interval} {
     # the copy will only be effectively magnified if $tk::scalingPct >= 200.
     set image2 [image create photo]
     set zoomFactor [expr {$tk::scalingPct / 100}]
+    if {$zoomFactor == 0} { set zoomFactor 1 }
     $image2 copy $image -zoom $zoomFactor
 
     # Install the image copy into the widget

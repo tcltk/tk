@@ -41,6 +41,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, lMargin2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, locale), TK_OPTION_NULL_OK, &TkLocaleOption, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
 	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
@@ -87,13 +89,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
  */
 
 static void		ChangeTagPriority(TkText *textPtr, TkTextTag *tagPtr,
-			    int prio);
+			    Tcl_Size prio);
 static TkTextTag *	FindTag(Tcl_Interp *interp, TkText *textPtr,
 			    Tcl_Obj *tagName);
-static void		SortTags(int numTags, TkTextTag **tagArrayPtr);
+static void		SortTags(Tcl_Size numTags, TkTextTag **tagArrayPtr);
 static int		TagSortProc(const void *first, const void *second);
 static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr,
-			    int numTags, TkTextTag **tagArrayPtr);
+			    Tcl_Size numTags, TkTextTag **tagArrayPtr);
 
 /*
  *--------------------------------------------------------------
@@ -130,8 +132,7 @@ TkTextTagCmd(
 	TAG_ADD, TAG_BIND, TAG_CGET, TAG_CONFIGURE, TAG_DELETE, TAG_LOWER,
 	TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE, TAG_RAISE, TAG_RANGES,
 	TAG_REMOVE
-    };
-    int optionIndex;
+    } optionIndex;
     Tcl_Size i;
     TkTextTag *tagPtr;
     TkTextIndex index1, index2;
@@ -146,16 +147,11 @@ TkTextTagCmd(
 	return TCL_ERROR;
     }
 
-    switch ((enum tagOptions)optionIndex) {
+    switch (optionIndex) {
     case TAG_ADD:
     case TAG_REMOVE: {
-	int addTag;
+	bool addTag = optionIndex == TAG_ADD;
 
-	if (((enum tagOptions)optionIndex) == TAG_ADD) {
-	    addTag = 1;
-	} else {
-	    addTag = 0;
-	}
 	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv,
 		    "tagName index1 ?index2 index1 index2 ...?");
@@ -228,7 +224,7 @@ TkTextTagCmd(
 				TkTextLostSelection, textPtr);
 			textPtr->flags |= GOT_SELECTION;
 		    }
-		    textPtr->abortSelections = 1;
+		    textPtr->abortSelections = true;
 		}
 	    }
 	}
@@ -406,8 +402,8 @@ TkTextTagCmd(
 		}
 	    }
 
-	    tagPtr->affectsDisplay = 0;
-	    tagPtr->affectsDisplayGeometry = 0;
+	    tagPtr->affectsDisplay = false;
+	    tagPtr->affectsDisplayGeometry = false;
 	    if ((tagPtr->elide >= 0)
 		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justify != TK_JUSTIFY_NULL)
@@ -424,8 +420,8 @@ TkTextTagCmd(
 		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
 		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
 		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
-		tagPtr->affectsDisplay = 1;
-		tagPtr->affectsDisplayGeometry = 1;
+		tagPtr->affectsDisplay = true;
+		tagPtr->affectsDisplayGeometry = true;
 	    }
 	    if ((tagPtr->border != NULL)
 		    || (tagPtr->selBorder != NULL)
@@ -440,7 +436,7 @@ TkTextTagCmd(
 		    || (tagPtr->underlineColor != NULL)
 		    || (tagPtr->lMarginColor != NULL)
 		    || (tagPtr->rMarginColor != NULL)) {
-		tagPtr->affectsDisplay = 1;
+		tagPtr->affectsDisplay = true;
 	    }
 	    if (!newTag) {
 		/*
@@ -455,7 +451,7 @@ TkTextTagCmd(
 		 */
 
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
-			NULL, NULL, tagPtr, 1);
+			NULL, NULL, tagPtr, true);
 	    }
 	    return TCL_OK;
 	}
@@ -486,7 +482,7 @@ TkTextTagCmd(
 	    }
 	    if (tagPtr->affectsDisplay) {
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
-			NULL, NULL, tagPtr, 1);
+			NULL, NULL, tagPtr, true);
 	    }
 	    TkTextDeleteTag(textPtr, tagPtr);
 	    Tcl_DeleteHashEntry(hPtr);
@@ -495,7 +491,7 @@ TkTextTagCmd(
     }
     case TAG_LOWER: {
 	TkTextTag *tagPtr2;
-	int prio;
+	Tcl_Size prio;
 
 	if ((objc != 4) && (objc != 5)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?belowThis?");
@@ -525,7 +521,7 @@ TkTextTagCmd(
 	 * for all peers.
 	 */
 
-	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, 1);
+	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, true);
 	break;
     }
     case TAG_NAMES: {
@@ -618,7 +614,7 @@ TkTextTagCmd(
 	TkBTreeStartSearch(&index1, &last, tagPtr, &tSearch);
 	if (TkBTreeCharTagged(&index1, tagPtr)) {
 	    TkTextSegment *segPtr;
-	    int offset;
+	    Tcl_Size offset;
 
 	    /*
 	     * The first character is tagged. See if there is an on-toggle
@@ -777,7 +773,7 @@ TkTextTagCmd(
     }
     case TAG_RAISE: {
 	TkTextTag *tagPtr2;
-	int prio;
+	Tcl_Size prio;
 
 	if ((objc != 4) && (objc != 5)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?aboveThis?");
@@ -807,7 +803,7 @@ TkTextTagCmd(
 	 * for all peers.
 	 */
 
-	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, 1);
+	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, true);
 	break;
     }
     case TAG_RANGES: {
@@ -953,9 +949,10 @@ TkTextCreateTag(
     tagPtr->underlineColor = NULL;
     tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
-    tagPtr->affectsDisplay = 0;
-    tagPtr->affectsDisplayGeometry = 0;
+    tagPtr->affectsDisplay = false;
+    tagPtr->affectsDisplayGeometry = false;
     textPtr->sharedTextPtr->numTags++;
+    memset(tagPtr->locale, 0, sizeof(tagPtr->locale));
     if (!strcmp(tagName, "sel")) {
 	tagPtr->textPtr = textPtr;
 	textPtr->refCount++;
@@ -1012,7 +1009,7 @@ FindTag(
 		"tag \"%s\" isn't defined in text widget",
 		Tcl_GetString(tagName)));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG",
-		Tcl_GetString(tagName), NULL);
+		Tcl_GetString(tagName), (char *)NULL);
     }
     return NULL;
 }
@@ -1052,7 +1049,7 @@ TkTextDeleteTag(
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 0, 0, &first);
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 	    TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), 0, &last),
-    TkBTreeTag(&first, &last, tagPtr, 0);
+    TkBTreeTag(&first, &last, tagPtr, false);
 
     if (tagPtr == textPtr->selTagPtr) {
 	/*
@@ -1105,7 +1102,7 @@ TkTextFreeTag(
     TkText *textPtr,		/* Info about overall widget. */
     TkTextTag *tagPtr)	/* Tag being deleted. */
 {
-    int i;
+    Tcl_Size i;
 
     /*
      * Let Tk do most of the hard work for us.
@@ -1178,10 +1175,10 @@ TkTextFreeTag(
 
 static void
 SortTags(
-    int numTags,		/* Number of tag pointers at *tagArrayPtr. */
+    Tcl_Size numTags,		/* Number of tag pointers at *tagArrayPtr. */
     TkTextTag **tagArrayPtr)	/* Pointer to array of pointers. */
 {
-    int i, j, prio;
+    Tcl_Size i, j, prio;
     TkTextTag **tagPtrPtr;
     TkTextTag **maxPtrPtr, *tmp;
 
@@ -1236,7 +1233,10 @@ TagSortProc(
 
     tagPtr1 = * (TkTextTag **) first;
     tagPtr2 = * (TkTextTag **) second;
-    return tagPtr1->priority - tagPtr2->priority;
+    if (tagPtr1->priority == tagPtr2->priority) {
+	return 0;
+    }
+    return (tagPtr1->priority > tagPtr2->priority) ? 1 : -1;
 }
 
 /*
@@ -1263,9 +1263,9 @@ static void
 ChangeTagPriority(
     TkText *textPtr,		/* Information about text widget. */
     TkTextTag *tagPtr,		/* Tag whose priority is to be changed. */
-    int prio)			/* New priority for tag. */
+    Tcl_Size prio)			/* New priority for tag. */
 {
-    int low, high, delta;
+    Tcl_Size low, high, delta;
     TkTextTag *tagPtr2;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -1447,10 +1447,11 @@ TkTextPickCurrent(
     TkTextTag **copyArrayPtr = NULL;
 				/* Initialization needed to prevent compiler
 				 * warning. */
-    int numOldTags, i, nearby;
+    Tcl_Size numOldTags, i;
     Tcl_Size numNewTags, j;
     size_t size;
     XEvent event;
+    bool nearby;
 
     /*
      * If a button is down, then don't do anything at all; we'll be called
@@ -1640,13 +1641,13 @@ static void
 TagBindEvent(
     TkText *textPtr,		/* Text widget to fire bindings in. */
     XEvent *eventPtr,		/* What actually happened. */
-    int numTags,		/* Number of relevant tags. */
+    Tcl_Size numTags,		/* Number of relevant tags. */
     TkTextTag **tagArrayPtr)	/* Array of relevant tags. */
 {
 #   define NUM_BIND_TAGS 10
     const char *nameArray[NUM_BIND_TAGS];
     const char **nameArrPtr;
-    int i;
+    Tcl_Size i;
 
     /*
      * Try to avoid allocation unless there are lots of tags.

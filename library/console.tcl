@@ -220,7 +220,7 @@ proc ::tk::ConsoleSource {} {
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
     if {$filename ne ""} {
-	set cmd [list source -encoding utf-8 $filename]
+	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
 	}
@@ -462,9 +462,13 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
 	<<Console_FontSizeIncr>>	<Control-+>
+	<<Console_FontSizeIncr>>	<Control-=>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeDecr>>	<Control-_>
 	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeIncr>>	<Command-=>
 	<<Console_FontSizeDecr>>	<Command-minus>
+	<<Console_FontSizeDecr>>	<Command-_>
     } {
 	event add $ev $key
 	bind Console $key {}
@@ -592,7 +596,7 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <F9> {
 	destroy {*}[winfo children .]
-	source -encoding utf-8 [file join $tk_library console.tcl]
+	source [file join $tk_library console.tcl]
     }
     bind Console <Command-q> {
 	exit
@@ -600,6 +604,27 @@ proc ::tk::ConsoleBind {w} {
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
     bind Console <<Paste>> { ::tk::console::Paste %W }
+
+    foreach modifier {Control Command} {
+	bind Console <$modifier-MouseWheel> {
+	    if {%D > 0} {
+		event generate %W <<Console_FontSizeIncr>>
+	    } else {
+		event generate %W <<Console_FontSizeDecr>>
+	    }
+	}
+	bind Console <$modifier-TouchpadScroll> {
+	    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	    # TouchpadScroll events fire about 60 times per second.
+	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
+		if {$tk::Priv(deltaY) > 0} {
+		    event generate %W <<Console_FontSizeIncr>>
+		} else {
+		    event generate %W <<Console_FontSizeDecr>>
+		}
+	    }
+	}
+    }
 
     bind Console <<Console_FontSizeIncr>> {
 	set size [font configure TkConsoleFont -size]

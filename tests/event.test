@@ -163,6 +163,7 @@ proc create_and_pack_frames {{w {}}} {
 #    The so-called "pointer window" is the $w window that will now contain the mouse pointer.
 #
 proc setup_win_mousepointer {w} {
+    deleteWindows
     wm geometry . +700+400; # root window out of our way - must not cover windows from event-9.1*
     toplevel $w
     pack propagate $w 0
@@ -180,44 +181,59 @@ proc setup_win_mousepointer {w} {
 
 # waitForWindowEvent --
 #
-#    This proc is intended to overcome latency of windowing system
-#    notifications when toplevel windows are involved. These latencies vary
-#    considerably with the window manager in use, with the system load,
-#    with configured scheduling priorities for processes, etc ...
-#    Waiting for the corresponding window events evades the trouble that is
-#    associated with the alternative: waiting or halting the Tk process for a
-#    fixed amount of time (using "after ms"). With the latter strategy it's
-#    always a gamble how much waiting time is enough on an end user's system.
-#    It also leads to long fixed waiting times in order to be on the safe side.
+#    Wait for a specific window event to be serviced from the event queue.
 #
-proc waitForWindowEvent {w event {timeout 1000}} {
-
+# Arguments:
+#    w       : the event window
+#    event   : the event type
+#    timeout : time after which waiting stops
+#
+# Result: none
+#
+proc waitForWindowEvent {w event {timeout 100}} {
     variable _windowEvent
+
+    if {! [winfo exists $w]} {
+	return -code error "window $w doesn't exist"
+    }
 
     # Use counter as a unique ID to prevent subsequent waits
     # from interfering with each other.
     set counter [incr _windowEvent(counter)]
-    set _windowEvent($counter) 1
+    set _windowEvent($counter) -1
     set savedBinding [bind $w $event]
-    bind $w $event [list +waitForWindowEvent.signal $counter]
-    set afterID [after $timeout [list set _windowEvent($counter) -1]]
-    vwait _windowEvent($counter)
-    set late [expr {$_windowEvent($counter) == -1}]
+    bind $w $event [list +waitForWindowEvent.signal $counter $w %W]
+    set afterID [after $timeout [list set ::[namespace current]::_windowEvent($counter) 0]]
+    vwait ::[namespace current]::_windowEvent($counter)
     bind $w $event $savedBinding
+    set result $_windowEvent($counter)
     unset _windowEvent($counter)
-    if {$late} {
-	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
-    } else {
+    if {$result} {
 	after cancel $afterID
+    } else {
+	return -code error "wait for $event event on $w timed out (> $timeout ms)"
     }
 }
 
-# waitForWindowEvent.signal--
+# waitForWindowEvent.signal --
 #
-#    Helper proc that records the triggering of a window event.
+#    Sets the wait variable used by proc waitForWindowEvent, thus
+#    unblocking the vwait command in that proc.
 #
-proc waitForWindowEvent.signal {counter} {
-    incr ::_windowEvent($counter)
+proc waitForWindowEvent.signal {counter w W} {
+    if {$w ne $W} {
+	# Beware that:
+	# - "w" is the name of a window as a binding tag
+	# - all children of a toplevel window carry the name of their
+	#   toplevel window as a binding tag.
+	# Therefore, this handler may be triggered by the servicing of an event
+	# on a child "W" of toplevel "w" rather than the toplevel "w" itself.
+	# Such cases are contrary to the intention of waitForWindowEvent,
+	# so we leave the wait variable untouched.
+	return
+    }
+    variable _windowEvent
+    set _windowEvent($counter) 1
 }
 
 #
@@ -902,6 +918,210 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.1 {keysym of Control and Alt keys with a non-Latin keyboard
+	      layout on Windows - bug 433261290b} -constraints win -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    bind $e <Key> {lappend res %K}
+    focus -force $e
+    update
+    # Virtual key codes of the C and 1 keys with Control (4),
+    # Control+Shift (5) and Alt (0x20000).  The keysym must be the Latin
+    # letter or digit of the key whatever the keyboard layout is, so that
+    # bindings like <Control-c> work with a non-Latin layout too.
+    event generate $e <Key> -keycode 0x43 -state 4
+    event generate $e <Key> -keycode 0x43 -state 5
+    event generate $e <Key> -keycode 0x43 -state 0x20000
+    event generate $e <Key> -keycode 0x31 -state 4
+    set res
+} -cleanup {
+    deleteWindows
+} -result {c C c 1}
+
+test event-8.4 {characters entered via an input method (VK_PACKET) on Windows - bug f492c3de04} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    bind $e <Key> {lappend res [list press %A]}
+    bind $e <KeyRelease> {lappend res [list release %A]}
+    # Latin, Cyrillic and non-BMP (surrogate pair) characters.
+    testsendinput unicode "r\u0439\U0001F600"
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    deleteWindows
+    unset -nocomplain done
+} -result "{press r} {release r} {press \u0439} {release \u0439} {press \U0001F600} {release \U0001F600}"
+
+test event-8.5 {key input with a non-Latin keyboard layout on Windows - bug a9bd2ab98b} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Ukrainian layout: the Q key is U+0439.
+    testsendinput layout 00000422
+    bind $e <Key> {lappend res %A}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    lappend res [$e get]
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "\u0439 \u0439"
+
+test event-8.6 {key input with a keyboard layout without an ANSI code page on Windows - bug a9bd2ab98b} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Georgian layout: the Q key is U+10E6.
+    testsendinput layout 00000437
+    bind $e <Key> {lappend res %A}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    lappend res [$e get]
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "\u10E6 \u10E6"
+
+test event-8.7 {keysym of a non-Latin key on Windows - bug 52e9b0f52c} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Ukrainian layout: the Q key is Cyrillic_shorti.
+    testsendinput layout 00000422
+    # Switching the keyboard layout releases the modifiers of the key which
+    # switches the layout; let these events be delivered before binding.
+    after 200 {set done 1}
+    vwait done
+    bind $e <Key> {lappend res [list press %K]}
+    bind $e <KeyRelease> {lappend res [list release %K]}
+    bind $t <Cyrillic_shorti> {lappend res matched}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result {{press Cyrillic_shorti} matched {release Cyrillic_shorti}}
+
+test event-8.8 {keysym of a key without a named keysym on Windows - bug 52e9b0f52c} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Georgian layout: the Q key is U+10E6 (Georgian_ghan on X11, which
+    # has no name in Tk).
+    testsendinput layout 00000437
+    # Switching the keyboard layout releases the modifiers of the key which
+    # switches the layout; let these events be delivered before binding.
+    after 200 {set done 1}
+    vwait done
+    bind $e <Key> {lappend res [list press %K]}
+    bind $e <KeyRelease> {lappend res [list release %K]}
+    bind $t <\u10E6> {lappend res matched}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "{press \u10E6} matched {release \u10E6}"
+
+test event-8.9 {event generate with a non-Latin keysym on Windows - bug 52e9b0f52c} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    focus -force $e
+    update
+    bind $e <Key> {lappend res [list %K %A]}
+    # The keysym is translated to a key of the current layout.
+    testsendinput layout 00000422
+    event generate $e <Key-Cyrillic_shorti>
+    event generate $e <Key-Cyrillic_SHORTI>
+    event generate $e <Key-\u0439>
+    testsendinput layout 00000437
+    event generate $e <Key-\u10E6>
+    update
+    set res
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+} -result "{Cyrillic_shorti \u0439} {Cyrillic_SHORTI \u0419} {Cyrillic_shorti \u0439} {\u10E6 \u10E6}"
+
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
 } -body {
@@ -986,7 +1206,7 @@ test event-9.11 {pointer window container = parent} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one.f1|}
 
 test event-9.12 {pointer window container != parent} -setup {
@@ -1010,7 +1230,7 @@ test event-9.12 {pointer window container != parent} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
@@ -1033,7 +1253,7 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
@@ -1057,7 +1277,7 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.15 {pointer window is a toplevel, destination is screen root.
@@ -1083,7 +1303,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root.
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|}
 
 test event-9.16 {Successive destructions (pointer window + parent), single generation of crossing events} -setup {
@@ -1107,7 +1327,7 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one|}
 
 if {[tk windowingsystem] eq "aqua"} {
@@ -1138,7 +1358,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one.f1|<Enter> NotifyInferior .one|}
 
 test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
@@ -1160,7 +1380,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
@@ -1194,7 +1414,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     bind all <Enter> {}
     destroy .one
     destroy .two
-    unset result
+    unset -nocomplain result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
@@ -1218,8 +1438,164 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
-    unset result
+    unset -nocomplain result
 } -result {|}
+
+test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
+    deleteWindows
+    wm geometry . 200x200+100+100
+    wm deiconify .
+    after 10; update
+    # On MS Windows with bug present:
+    # Ensure that the test body starts immediately after a MOUSE_TIMER_INTERVAL
+    set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
+    if {$pointerWin eq "."} {
+	event generate . <Motion> -warp 1 -x -50 -y 50
+    }
+    event generate . <Motion> -warp 1 -x 50 -y 50
+    waitForWindowEvent . <Enter>; # ensures that a MOUSE_TIMER_INTERVAL just ended
+    bind all <Leave> {append result "<Leave> %W"}
+    bind all <Enter> {append result "<Enter> %W"}
+    set result "|"
+} -body {
+    # Let the screen pointer perform a back and forth warp in quick succession,
+    # while immediatly providing opportunity for the event loop to service any
+    # crossing events.
+    event generate . <Motion> -warp 1 -x -50 -y 50
+    update
+    append result "|"
+    event generate . <Motion> -warp 1 -x 50 -y 50
+    update
+    append result "|"
+    # On MS Windows with bug present:
+    # The TkWinPointerEvent mechanism doesn't detect the previous changes to
+    # the position of the screen pointer because the back and forth motion
+    # happens entirely within one MOUSE_TIMER_INTERVAL. The value for the
+    # result variable in this case is: "|||"
+    set result
+} -cleanup {
+    unset -nocomplain result
+    bind all <Leave> {}
+    bind all <Enter> {}
+} -result "|<Leave> .|<Enter> .|"
+
+test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #8a88a19654} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    wm deiconify .
+    unset -nocomplain result
+} -result "|"
+
+test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer window after toplevel destroy (inside). See ticket #8a88a19654} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+100+100; # the screen pointer is inside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    wm deiconify .
+    unset -nocomplain result
+} -result "|"
+
+test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ticket #c3f5c85322} -setup {
+    wm geometry . 200x200+100+100
+    pack [frame .f -width 100 -height 200 -bg blue] -side right
+    update
+    event generate {} <Motion> -warp 1 -x 50 -y 100
+    update; # opportunity to service crossing events
+
+    set windowList [list "{}" . .f]
+    array set coords {
+	"A,{}" 150
+	"B,{}" 250
+	"A,." 50
+	"B,." 150
+	"A,.f" 50
+	"B,.f" 150
+	"x,{},{}" 50
+	"x,{},." -50
+	"x,{},.f" -150
+	"x,.,{}" 150
+	"x,.,." 50
+	"x,.,.f" -50
+	"x,.f,{}" 250
+	"x,.f,." 150
+	"x,.f,.f" 50
+    }
+    set i 0
+    set yPos X
+
+    bind all <Leave> {append result "<Leave> %W|"}
+    bind all <Enter> {append result "<Enter> %W|"}
+    set result "|"
+} -body {
+    # The cases below exercise a pointer warp with source window, destination
+    # window and warp window varying over the fixed set of windows in windowList,
+    # utilizing the destination of a previous warp as the source for the next one.
+    foreach destWin $windowList {
+	foreach warpWin $windowList {
+	    set srcWin $destWin
+	    set yPos [expr {$yPos ne "A"?"A":"B"}]
+	    set caseID {}
+	    foreach w [list $srcWin $destWin $warpWin] {
+		append caseID [lsearch $windowList $w]
+	    }
+	    append result "[incr i]($caseID)|"
+	    event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
+		    -x $coords(x,$destWin,$warpWin) -y $coords($yPos,$warpWin)
+	    update; # opportunity to service crossing events
+	}
+	if {$destWin eq [lindex $windowList end]} {
+	    set nextDestWin "{}"
+	} else {
+	    set nextDestWin [lindex $windowList [expr {[lsearch $windowList $destWin]+1}]]
+	}
+	set prevDestWin $destWin
+	foreach warpWin $windowList {
+	    # don't swap yPos, but srcWin and destWin2
+	    set destWin2 [expr {$prevDestWin eq $nextDestWin?$srcWin:$nextDestWin}]
+	    set srcWin $prevDestWin
+	    set prevDestWin $destWin2
+	    set caseID {}
+	    foreach w [list $srcWin $destWin2 $warpWin] {
+		append caseID [lsearch $windowList $w]
+	    }
+	    append result "[incr i]($caseID)|"
+	    event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
+		    -x $coords(x,$destWin2,$warpWin) -y $coords($yPos,$warpWin)
+	    update; # opportunity to service crossing events
+	}
+    }
+    set result
+} -cleanup {
+    unset -nocomplain caseID coords i destWin destWin2 nextDestWin prevDestWin \
+	    result srcWin yPos warpWin windowList
+    bind all <Leave> {}
+    bind all <Enter> {}
+    destroy .f
+} -result {|1(000)|2(001)|3(002)|4(010)|<Enter> .|5(101)|<Leave> .|6(012)|<Enter> .|7(110)|8(111)|9(112)|10(120)|<Leave> .|<Enter> .f|11(211)|<Leave> .f|<Enter> .|12(122)|<Leave> .|<Enter> .f|13(220)|14(221)|15(222)|16(200)|<Leave> .f|<Leave> .|17(021)|<Enter> .|<Enter> .f|18(202)|<Leave> .f|<Leave> .|}
 
 #
 # TESTFILE CLEANUP

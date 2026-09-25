@@ -5,21 +5,16 @@
  * on Unix-like systems based on the Gnome Accessibility Toolkit.
  * the standard accessibility library for X11 systems.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
- * Copyright (c) 2006, Marcus von Appen
- * Copyright (c) 2019-2025 Kevin Walzer
+ * Copyright © 1995 Sun Microsystems, Inc.
+ * Copyright © 2006, Marcus von Appen
+ * Copyright © 2019-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <time.h>
-#include <tcl.h>
-#include <tk.h>
 #include "tkInt.h"
 
 #ifdef HAVE_ATK
@@ -200,7 +195,7 @@ static void Atk_Event_Setup(
     TCL_UNUSED(void *), /* clientData */
     int flags)
 {
-    static Tcl_Time block_time = {0, 10000};
+    Tcl_Time block_time = {0, 10000};
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -691,7 +686,11 @@ static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text)
     }
 
     gchar *val = GetAtkValueForWidget(acc->tkwin);
-    double cur_val = val ? atof(val) : 0.0;
+    double cur_val;
+
+    if (!val || Tcl_GetDouble(NULL, val, &cur_val) != TCL_OK) {
+	cur_val = 0.0;
+    }
 
     if (value) *value = cur_val;
     if (text) *text = g_strdup(val ? val : "0");
@@ -1960,9 +1959,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
 	return TCL_ERROR;
     }
-
-    Tk_MakeWindowExist(mainWin);
-    Tk_MapWindow(mainWin);
 
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {

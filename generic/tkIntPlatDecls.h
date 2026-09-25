@@ -42,8 +42,7 @@ EXTERN void		TkAboutDlg(void);
 /* 2 */
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
-/* 3 */
-EXTERN unsigned long	TkpGetMS(void);
+/* Slot 3 is reserved */
 /* 4 */
 EXTERN void		TkPointerDeadWindow(TkWindow *winPtr);
 /* 5 */
@@ -137,8 +136,7 @@ EXTERN void		TkAboutDlg(void);
 /* 2 */
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
-/* 3 */
-EXTERN unsigned long	TkpGetMS(void);
+/* Slot 3 is reserved */
 /* 4 */
 EXTERN void		TkPointerDeadWindow(TkWindow *winPtr);
 /* Slot 5 is reserved */
@@ -282,7 +280,7 @@ typedef struct TkIntPlatStubs {
     void (*tkCreateXEventSource) (void); /* 0 */
     void (*tkAboutDlg) (void); /* 1 */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
-    unsigned long (*tkpGetMS) (void); /* 3 */
+    void (*reserved3)(void);
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 4 */
     void (*tkpPrintWindowId) (char *buf, Window window); /* 5 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
@@ -332,7 +330,7 @@ typedef struct TkIntPlatStubs {
     void (*reserved0)(void);
     void (*tkAboutDlg) (void); /* 1 */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
-    unsigned long (*tkpGetMS) (void); /* 3 */
+    void (*reserved3)(void);
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 4 */
     void (*reserved5)(void);
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
@@ -449,8 +447,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkAboutDlg) /* 1 */
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 2 */
-#define TkpGetMS \
-	(tkIntPlatStubsPtr->tkpGetMS) /* 3 */
+/* Slot 3 is reserved */
 #define TkPointerDeadWindow \
 	(tkIntPlatStubsPtr->tkPointerDeadWindow) /* 4 */
 #define TkpPrintWindowId \
@@ -533,8 +530,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkAboutDlg) /* 1 */
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 2 */
-#define TkpGetMS \
-	(tkIntPlatStubsPtr->tkpGetMS) /* 3 */
+/* Slot 3 is reserved */
 #define TkPointerDeadWindow \
 	(tkIntPlatStubsPtr->tkPointerDeadWindow) /* 4 */
 /* Slot 5 is reserved */

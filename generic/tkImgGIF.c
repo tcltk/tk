@@ -553,7 +553,7 @@ FileReadGIF(
      * Search for the frame from the GIF to display.
      */
 
-    while (1) {
+    while (true) {
 	if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
 	    goto error;
 	}
@@ -845,7 +845,7 @@ FileReadGIF(
      * which suits as well). We're done.
      */
 
-    while (1) {
+    while (true) {
 	if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
 	    goto error;
 	}
@@ -868,7 +868,7 @@ FileReadGIF(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    continue;
@@ -980,7 +980,7 @@ StringMatchGIF(
      * Header is a minimum of 10 bytes.
      */
 
-    if (length < 10) {
+    if (!data || length < 10) {
 	return 0;
     }
 

@@ -1,0 +1,530 @@
+#
+# Tests for the ttk per-node element render cache in the file
+# generic/ttk/ttkNodeCache.c, and its plumbing in ttkImage.c (element
+# cache policy, content epoch, opacity classification), ttkTheme.c
+# (Ttk_ElementGetCacheInfo) and ttkLayout.c (cached draw traversal).
+#
+
+# NOTES
+#
+# * The cache is observed in two ways:
+#
+#   - tktest's "test" image type logs "<image> display ..." to a variable
+#     each time its displayProc runs.  A node served from the cache does not
+#     run the element's draw proc, so an empty log after a forced redraw
+#     proves a cache hit, and a logged display proves a rebuild.
+#
+#   - tktest's "testpixel" command reads rendered pixels back from the
+#     window, verifying *what* a rebuild composited: translucent elements
+#     must recomposite against the current content beneath them.
+#
+# * Changing an image's pixels only bumps the owning element's content
+#   epoch; it does not itself schedule a repaint.  Tests force a redraw
+#   with a synthetic <Expose> (ncExpose) after content changes.
+#
+# * Every test is gated on notAqua: the macOS draw path does not use the
+#   node-cache logic yet, so these tests have nothing to exercise there.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import image
+
+imageInit
+
+# The pixel-probe tests read rendered pixels back from the live screen;
+# keep the root window on-screen and on top so nothing overlaps it.
+wm geometry . +0+0
+raise .
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
+testConstraint testpixel [expr {[llength [info commands testpixel]] > 0}]
+testConstraint pixelProbe [expr {
+    [testConstraint testpixel] && [winfo screendepth .] >= 24
+}]
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# ncExpose --
+#	Force a full redraw of a ttk widget and process it.
+proc ncExpose {w} {
+    event generate $w <Expose>
+    update idletasks
+}
+
+# ncLogged --
+#	1 if the test image's displayProc ran since the log was cleared.
+proc ncLogged {img} {
+    return [expr {[lsearch -glob $::ncLog "$img display*"] >= 0}]
+}
+
+# ncFirst --
+#	Index of the image's first display entry in the log, or -1.
+proc ncFirst {img} {
+    return [lsearch -glob $::ncLog "$img display*"]
+}
+
+# pixelNear --
+#	1 if the window pixel at (x,y) matches color within tol per channel.
+proc pixelNear {w x y color {tol 2}} {
+    scan [testpixel $w $x $y] "#%2x%2x%2x" r g b
+    scan $color "#%2x%2x%2x" er eg eb
+    return [expr {
+	abs($r - $er) <= $tol && abs($g - $eg) <= $tol && abs($b - $eb) <= $tol
+    }]
+}
+
+#
+# COMMON TEST SETUP
+#
+
+# Test-image-based elements: one plain, one state-mapped, and a
+# parent/child pair for z-order tests.  The "test" image type is not a
+# photo, so these elements are classified translucent; translucent nodes
+# still cache and hit while nothing beneath them changes.
+if {[testConstraint testImageType]} {
+    image create test nc.base  -variable ncLog
+    image create test nc.alt   -variable ncLog
+    image create test nc.under -variable ncLog
+    image create test nc.over  -variable ncLog
+
+    # Element and layout registrations are permanent; guard them so this
+    # file survives being sourced twice in one run (the makefile.vc
+    # TESTPAT plumbing can repeat the -file pattern).
+    if {"NodeCache.base" ni [ttk::style element names]} {
+	ttk::style element create NodeCache.base  image nc.base  -sticky nswe
+	ttk::style element create NodeCache.map   image \
+		    {nc.base alternate nc.alt} -sticky nswe
+	ttk::style element create NodeCache.under image nc.under -sticky nswe
+	ttk::style element create NodeCache.over  image nc.over  -sticky nswe
+
+	ttk::style layout NodeCache.TFrame {
+	    NodeCache.base -sticky nswe
+	}
+	ttk::style layout NodeCacheMap.TFrame {
+	    NodeCache.map -sticky nswe
+	}
+	ttk::style layout NodeCacheStack.TFrame {
+	    NodeCache.under -sticky nswe -children {
+		NodeCache.over -sticky nswe
+	    }
+	}
+    }
+}
+
+# Photo-based elements for the pixel tests: an opaque color underlay whose
+# pixels the tests change, a binary-alpha checkerboard above it (8px cells:
+# cells (0,0) and (8,8) opaque, the others fully transparent), a non-filling
+# centered element, and an opaque filling element.
+image create photo nc.punder -width 16 -height 16
+nc.punder put #00c000 -to 0 0 16 16
+image create photo nc.checker -width 16 -height 16
+nc.checker put #ff8000 -to 0 0 8 8
+nc.checker put #ff8000 -to 8 8 16 16
+image create photo nc.solid -width 10 -height 10
+nc.solid put #ff8000 -to 0 0 10 10
+
+if {"NodeCache.punder" ni [ttk::style element names]} {
+    ttk::style element create NodeCache.punder  image nc.punder  -sticky nswe
+    ttk::style element create NodeCache.checker image nc.checker -sticky nswe
+    ttk::style element create NodeCache.center  image nc.solid   -sticky {}
+    ttk::style element create NodeCache.opq     image nc.solid   -sticky nswe
+
+    ttk::style layout NodeCachePx.TFrame {
+	NodeCache.punder -sticky nswe -children {
+	    NodeCache.checker -sticky nswe
+	}
+    }
+    ttk::style layout NodeCacheCtr.TFrame {
+	NodeCache.punder -sticky nswe -children {
+	    NodeCache.center -sticky nswe
+	}
+    }
+    ttk::style layout NodeCacheOpq.TFrame {
+	NodeCache.punder -sticky nswe -children {
+	    NodeCache.opq -sticky nswe
+	}
+    }
+}
+
+# Element image deletion fixture (nodecache-6.2)
+image create photo nc.del -width 12 -height 12
+nc.del put #336699 -to 0 0 12 12
+if {"NodeCache.del" ni [ttk::style element names]} {
+    ttk::style element create NodeCache.del image nc.del -sticky nswe
+    ttk::style layout NodeCacheDel.TFrame {
+	NodeCache.del -sticky nswe
+    }
+}
+
+#
+# TESTS
+#
+
+# 1.* -- cache hits
+
+test nodecache-1.1 "Redraw with nothing changed is served from the cache" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    ncExpose .nc
+    llength $ncLog
+} -cleanup {
+    destroy .nc
+} -result 0
+
+test nodecache-1.2 "Repeated redraws stay cached" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    ncExpose .nc
+    ncExpose .nc
+    ncExpose .nc
+    llength $ncLog
+} -cleanup {
+    destroy .nc
+} -result 0
+
+# 2.* -- state is part of the cache key
+
+test nodecache-2.1 "State change rebuilds with the state-selected image" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    .nc state alternate
+    update idletasks
+    list [ncLogged nc.alt] [ncLogged nc.base]
+} -cleanup {
+    destroy .nc
+} -result {1 0}
+
+test nodecache-2.2 "Returning to an earlier state rebuilds (one cached variant per node)" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    .nc state alternate
+    update
+} -body {
+    set ncLog {}
+    .nc state !alternate
+    update idletasks
+    ncLogged nc.base
+} -cleanup {
+    destroy .nc
+} -result 1
+
+test nodecache-2.3 "Redraw after a state change hits again" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    .nc state alternate
+    update
+} -body {
+    set ncLog {}
+    ncExpose .nc
+    llength $ncLog
+} -cleanup {
+    destroy .nc
+} -result 0
+
+# 3.* -- parcel geometry is part of the cache key
+
+test nodecache-3.1 "Growing the widget rebuilds" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    .nc configure -width 90 -height 70
+    update
+    ncLogged nc.base
+} -cleanup {
+    destroy .nc
+} -result 1
+
+test nodecache-3.2 "Shrinking the widget rebuilds" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 90 -height 70]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    .nc configure -width 50 -height 30
+    update
+    ncLogged nc.base
+} -cleanup {
+    destroy .nc
+} -result 1
+
+test nodecache-3.3 "Redraw after a resize hits again" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+    .nc configure -width 90 -height 70
+    update
+} -body {
+    set ncLog {}
+    ncExpose .nc
+    llength $ncLog
+} -cleanup {
+    destroy .nc
+} -result 0
+
+# 4.* -- content epoch
+
+test nodecache-4.1 "Image content change bumps the epoch but does not repaint by itself" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    nc.base changed 0 0 30 15 30 15
+    update
+    set drawnWithoutExpose [ncLogged nc.base]
+    ncExpose .nc
+    list $drawnWithoutExpose [ncLogged nc.base]
+} -cleanup {
+    destroy .nc
+} -result {0 1}
+
+# All images in a spec, state-mapped overrides included, are registered
+# with ImageSpecImageChanged (ttkImage.c), so a content change to any of
+# them bumps the element's epoch.  If an override were registered with a
+# do-nothing callback instead, the node cache would keep serving the stale
+# pixmap for widgets in that state.
+test nodecache-4.2 "Content change to a state-mapped image invalidates the cache" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    .nc state alternate
+    update
+} -body {
+    set ncLog {}
+    nc.alt changed 0 0 30 15 30 15
+    ncExpose .nc
+    ncLogged nc.alt
+} -cleanup {
+    destroy .nc
+} -result 1
+
+# 5.* -- z-order: rebuilding a node dirties its parcel, forcing overlapping
+# translucent nodes above it to recomposite
+
+test nodecache-5.1 "Content change below rebuilds the translucent node above" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheStack.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    nc.under changed 0 0 30 15 30 15
+    ncExpose .nc
+    # nc.over's own key is unchanged; it must rebuild anyway, after nc.under
+    list [ncLogged nc.under] [ncLogged nc.over] \
+	    [expr {[ncFirst nc.under] < [ncFirst nc.over]}]
+} -cleanup {
+    destroy .nc
+} -result {1 1 1}
+
+test nodecache-5.2 "Content change above leaves the node below cached" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheStack.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    set ncLog {}
+    nc.over changed 0 0 30 15 30 15
+    ncExpose .nc
+    list [ncLogged nc.under] [ncLogged nc.over]
+} -cleanup {
+    destroy .nc
+} -result {0 1}
+
+# 6.* -- lifecycle
+
+test nodecache-6.1 "Destroying a widget with populated node caches" \
+	-constraints {testImageType notAqua} -setup {
+    pack [ttk::frame .nc -style NodeCacheStack.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    ncExpose .nc
+    destroy .nc
+    update
+} -result {}
+
+test nodecache-6.2 "Deleting a displayed element image" \
+	-constraints notAqua -setup {
+    pack [ttk::frame .nc -style NodeCacheDel.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    image delete nc.del
+    ncExpose .nc
+    update
+} -cleanup {
+    destroy .nc
+} -result {}
+
+test nodecache-6.3 "Theme switch rebuilds the layout and its caches" \
+	-constraints {testImageType notAqua} -setup {
+    # The fixture styles live in the theme that was current when this file
+    # was sourced; return to that exact theme, not to a hardcoded one.
+    set origTheme [ttk::style theme use]
+    pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
+    tkwait visibility .nc
+    update
+} -body {
+    ttk::style theme use alt
+    update
+    ttk::style theme use $origTheme
+    update
+    set ncLog {}
+    nc.base changed 0 0 30 15 30 15
+    ncExpose .nc
+    ncLogged nc.base
+} -cleanup {
+    ttk::style theme use $origTheme
+    destroy .nc
+} -result 1
+
+test nodecache-6.4 "Widget create/destroy churn" \
+	-constraints {testImageType notAqua} -body {
+    for {set i 0} {$i < 10} {incr i} {
+	pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
+	update idletasks
+	destroy .nc
+    }
+} -result {}
+
+# 7.* -- rendered output (pixel probes)
+
+test nodecache-7.1 "Translucent node recomposites against changed content beneath" \
+	-constraints {pixelProbe notAqua} -setup {
+    nc.punder put #00c000 -to 0 0 16 16
+    pack [ttk::frame .nc -style NodeCachePx.TFrame -width 64 -height 64]
+    tkwait visibility .nc
+    raise .
+    update
+} -body {
+    ncExpose .nc
+    set holeBefore   [pixelNear .nc 12 4 #00c000]
+    set opaqueBefore [pixelNear .nc 4 4 #ff8000]
+    nc.punder put #c000c0 -to 0 0 16 16
+    ncExpose .nc
+    set holeAfter   [pixelNear .nc 12 4 #c000c0]
+    set opaqueAfter [pixelNear .nc 4 4 #ff8000]
+    list $holeBefore $opaqueBefore $holeAfter $opaqueAfter
+} -cleanup {
+    destroy .nc
+    nc.punder put #00c000 -to 0 0 16 16
+} -result {1 1 1 1}
+
+test nodecache-7.2 "Non-filling -sticky leaves live margins" \
+	-constraints {pixelProbe notAqua} -setup {
+    nc.punder put #00c000 -to 0 0 16 16
+    pack [ttk::frame .nc -style NodeCacheCtr.TFrame -width 64 -height 64]
+    tkwait visibility .nc
+    raise .
+    update
+} -body {
+    ncExpose .nc
+    set marginBefore [pixelNear .nc 3 3 #00c000]
+    set centerBefore [pixelNear .nc 32 32 #ff8000]
+    nc.punder put #c000c0 -to 0 0 16 16
+    ncExpose .nc
+    set marginAfter [pixelNear .nc 3 3 #c000c0]
+    set centerAfter [pixelNear .nc 32 32 #ff8000]
+    list $marginBefore $centerBefore $marginAfter $centerAfter
+} -cleanup {
+    destroy .nc
+    nc.punder put #00c000 -to 0 0 16 16
+} -result {1 1 1 1}
+
+test nodecache-7.3 "Opaque filling node renders correctly over changed content" \
+	-constraints {pixelProbe notAqua} -setup {
+    nc.punder put #00c000 -to 0 0 16 16
+    pack [ttk::frame .nc -style NodeCacheOpq.TFrame -width 64 -height 64]
+    tkwait visibility .nc
+    raise .
+    update
+} -body {
+    ncExpose .nc
+    set before [pixelNear .nc 32 32 #ff8000]
+    nc.punder put #c000c0 -to 0 0 16 16
+    ncExpose .nc
+    set after [pixelNear .nc 32 32 #ff8000]
+    list $before $after
+} -cleanup {
+    destroy .nc
+    nc.punder put #00c000 -to 0 0 16 16
+} -result {1 1}
+
+# 8.* -- layout sweep with stable parcels (deterministic stand-in for the
+# resize benchmark: the widget moves and redraws at every step, but its
+# parcels keep their widget-relative geometry, so every draw must hit)
+
+test nodecache-8.1 "Stable parcels stay cached through a layout sweep" \
+	-constraints {testImageType notAqua} -setup {
+    pack [frame .sw]
+    frame .sw.holder -width 100 -height 80
+    ttk::frame .sw.nc -style NodeCacheMap.TFrame -width 30
+    grid .sw.holder -row 0 -column 0
+    grid .sw.nc -row 0 -column 1 -sticky ns
+    tkwait visibility .sw.nc
+    update
+} -body {
+    set ncLog {}
+    set x0 [winfo x .sw.nc]
+    for {set w 120} {$w <= 220} {incr w 20} {
+	.sw.holder configure -width $w
+	update
+    }
+    set x1 [winfo x .sw.nc]
+    list [expr {$x1 > $x0}] [llength $ncLog]
+} -cleanup {
+    destroy .sw
+} -result {1 0}
+
+#
+# TESTFILE CLEANUP
+#
+
+destroy {*}[winfo children .]
+imageCleanup
+
+testutils forget image
+tcltest::cleanupTests

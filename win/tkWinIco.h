@@ -82,8 +82,7 @@ typedef struct {
 DWORD BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
 LPSTR FindDIBBits(LPSTR lpbi);
 HICON CreateIcoFromPhoto(int width, int height, Tk_PhotoImageBlock block);
-int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj * const objv[]);
-
+Tcl_ObjCmdProc2 GetFileIcon;
 
 /*
  * Local Variables:
@@ -92,6 +91,3 @@ int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj * const
  * fill-column: 78
  * End:
  */
-
-
-

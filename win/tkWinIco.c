@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tclWinPort.h"				/* for the macro S_ISDIR */
 #include "tkInt.h"
 #include "tkWinIco.h"
 
@@ -247,9 +248,8 @@ int
 GetFileIcon(
     TCL_UNUSED(void *),         /* Not used. */
     Tcl_Interp *interp,         /* Current interpreter */
-    int objc,                   /* Number of arguments */
-    Tcl_Obj *const objv[]       /* Argument strings */
-)
+    Tcl_Size objc,                   /* Number of arguments */
+    Tcl_Obj *const objv[])      /* Argument strings */
 {
     SHFILEINFOW shfi;
     ICONINFO iconInfo;
@@ -266,7 +266,7 @@ GetFileIcon(
     int shil;
     DWORD attrs = 0;
     DWORD flags = SHGFI_SYSICONINDEX;
-
+    Tcl_StatBuf buf;
     IImageList *iml = NULL;
     HICON hIcon = NULL;
 
@@ -293,9 +293,10 @@ GetFileIcon(
 
     if (iconPath == NULL) {
 	/* Virtual filesystem fallback. */
-	flags |= SHGFI_USEFILEATTRIBUTES;
-	attrs = FILE_ATTRIBUTE_DIRECTORY;
 	iconPath = L"dummy";
+	flags |= SHGFI_USEFILEATTRIBUTES;
+	attrs = Tcl_FSStat(objv[1], &buf) == 0 && S_ISDIR(buf.st_mode)
+		? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
     }
 
     if (!SHGetFileInfoW(

@@ -688,6 +688,212 @@ XGetImage(
 
     return imagePtr;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RGBA compositing support (TkpPutRGBAImage) --
+ *
+ *	TkpPutRGBAImage composites an RGBA image onto a drawable with GDI
+ *	AlphaBlend.  It is called once per 9-slice tile, so creating and
+ *	destroying a DIB section and memory DC on each call dominated the cost.
+ *	A small per-thread source DIB + memory DC is therefore cached and
+ *	reused, grown on demand up to TK_RGBA_DIB_CACHE_MAX per side; larger
+ *	one-off draws bypass the cache and allocate transiently.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define TK_RGBA_DIB_CACHE_MAX 256	/* Cache DIBs up to this size per side. */
+
+typedef struct {
+    HDC		memDC;		/* Cached memory DC, or NULL. */
+    HBITMAP	dib;		/* DIB section selected into memDC, or NULL. */
+    HBITMAP	oldBmp;		/* memDC's original bitmap, restored on free. */
+    void	*bits;		/* Pixel pointer of dib. */
+    int		w, h;		/* Size dib was allocated at. */
+} RGBACache;
+
+static Tcl_ThreadDataKey rgbaCacheKey;
+
+/* RGBACacheExitHandler -- free this thread's cached DIB and memory DC. */
+static void
+RGBACacheExitHandler(
+    TCL_UNUSED(void *))
+{
+    RGBACache *cache = (RGBACache *)
+	    Tcl_GetThreadData(&rgbaCacheKey, sizeof(RGBACache));
+
+    if (cache->memDC != NULL) {
+	if (cache->oldBmp != NULL) {
+	    SelectObject(cache->memDC, cache->oldBmp);
+	}
+	DeleteDC(cache->memDC);
+    }
+    if (cache->dib != NULL) {
+	DeleteObject(cache->dib);
+    }
+    memset(cache, 0, sizeof(*cache));
+}
+
+/* CreateRGBADib -- a top-down 32-bit BGRA DIB section; returns it and bits. */
+static HBITMAP
+CreateRGBADib(
+    HDC refDC,
+    int w, int h,
+    void **bitsPtr)
+{
+    BITMAPINFO bmi;
+
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = -h;		/* negative = top-down */
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    return CreateDIBSection(refDC, &bmi, DIB_RGB_COLORS, bitsPtr, NULL, 0);
+}
+
+/* GetRGBACache -- this thread's cached DIB + memory DC, grown to >= w x h. */
+static RGBACache *
+GetRGBACache(
+    HDC refDC,
+    int w, int h)
+{
+    RGBACache *cache = (RGBACache *)
+	    Tcl_GetThreadData(&rgbaCacheKey, sizeof(RGBACache));
+
+    if (cache->memDC == NULL) {
+	cache->memDC = CreateCompatibleDC(refDC);
+	if (cache->memDC == NULL) {
+	    return NULL;
+	}
+	Tcl_CreateThreadExitHandler(RGBACacheExitHandler, NULL);
+    }
+    if (cache->dib != NULL && (cache->w < w || cache->h < h)) {
+	SelectObject(cache->memDC, cache->oldBmp);
+	DeleteObject(cache->dib);
+	cache->dib = NULL;
+    }
+    if (cache->dib == NULL) {
+	int newW = (w > cache->w) ? w : cache->w;
+	int newH = (h > cache->h) ? h : cache->h;
+
+	cache->dib = CreateRGBADib(refDC, newW, newH, &cache->bits);
+	if (cache->dib == NULL) {
+	    return NULL;
+	}
+	cache->oldBmp = (HBITMAP) SelectObject(cache->memDC, cache->dib);
+	cache->w = newW;
+	cache->h = newH;
+    }
+    return cache;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPutRGBAImage --
+ *
+ *	Composite an RGBA image (4 bytes/pixel, NOT premultiplied) onto a
+ *	drawable using GDI AlphaBlend (Porter-Duff
+ *	source-over).  Enabled by TK_CAN_RENDER_RGBA in tkWinPort.h; called by
+ *	TkImgPhotoDisplay in place of the software BlendComplexAlpha path, which
+ *	reads the destination back with XGetImage and blends per pixel on the
+ *	CPU.  Works for both window and pixmap drawables.
+ *
+ * Results:
+ *	Success, or BadDrawable if a device context or DIB could not be
+ *	obtained.
+ *
+ * Side effects:
+ *	Draws onto the drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpPutRGBAImage(
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    XImage *image,		/* Source image; RGBA, not premultiplied. */
+    int src_x, int src_y,	/* Top-left of the sub-rect within image. */
+    int dest_x, int dest_y,	/* Top-left within drawable. */
+    unsigned int width, unsigned int height)
+{
+    TkWinDCState state;
+    HDC dstDC;
+    BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+				/* AC_SRC_ALPHA wants the premultiplied BGRA
+				 * that TkPremultiplyRGBA produces, matching
+				 * the 32-bit DIB pixel layout. */
+    int w = (int) width, h = (int) height;
+    (void) gc;
+
+    if (w <= 0 || h <= 0) {
+	return Success;
+    }
+
+    dstDC = TkWinGetDrawableDC(display, drawable, &state);
+    if (dstDC == NULL) {
+	return BadDrawable;
+    }
+
+    if (w <= TK_RGBA_DIB_CACHE_MAX && h <= TK_RGBA_DIB_CACHE_MAX) {
+	/*
+	 * Common case: composite through the per-thread cached DIB + memory
+	 * DC, so repeated small draws (e.g. 9-slice tiles) don't churn GDI
+	 * objects.  The DIB may be wider than w, so premultiply with its
+	 * stride and AlphaBlend just the (0,0,w,h) sub-rect.
+	 */
+
+	RGBACache *cache = GetRGBACache(dstDC, w, h);
+
+	if (cache != NULL) {
+	    TkPremultiplyRGBA(image, src_x, src_y, w, h,
+		    (unsigned char *) cache->bits, cache->w * 4);
+	    if (!AlphaBlend(dstDC, dest_x, dest_y, w, h,
+		    cache->memDC, 0, 0, w, h, bf)) {
+		BitBlt(dstDC, dest_x, dest_y, w, h, cache->memDC, 0, 0, SRCCOPY);
+	    }
+	    TkWinReleaseDrawableDC(drawable, dstDC, &state);
+	    return Success;
+	}
+
+	/* Cache setup failed; fall through to a one-off allocation. */
+    }
+
+    /*
+     * Oversized draw (or cache allocation failed): one-off DIB + memory DC.
+     */
+
+    {
+	HDC memDC;
+	HBITMAP dib, oldBmp;
+	void *bits = NULL;
+
+	dib = CreateRGBADib(dstDC, w, h, &bits);
+	if (dib == NULL) {
+	    TkWinReleaseDrawableDC(drawable, dstDC, &state);
+	    return BadDrawable;
+	}
+	TkPremultiplyRGBA(image, src_x, src_y, w, h, (unsigned char *) bits, w * 4);
+
+	memDC = CreateCompatibleDC(dstDC);
+	oldBmp = (HBITMAP) SelectObject(memDC, dib);
+	if (!AlphaBlend(dstDC, dest_x, dest_y, w, h, memDC, 0, 0, w, h, bf)) {
+	    BitBlt(dstDC, dest_x, dest_y, w, h, memDC, 0, 0, SRCCOPY);
+	}
+	SelectObject(memDC, oldBmp);
+	DeleteDC(memDC);
+	DeleteObject(dib);
+    }
+
+    TkWinReleaseDrawableDC(drawable, dstDC, &state);
+    return Success;
+}
 
 /*
  * Local Variables:

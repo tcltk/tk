@@ -408,7 +408,7 @@ TkSelPropProc(
 		 * needed.
 		 */
 
-		while (1) {
+		while (true) {
 		    result = Tcl_UtfToExternal(NULL, encoding, src, srcLen,
 			    encodingCvtFlags, &incrPtr->converts[i].state,
 			    dst, dstLen, &srcRead, &dstWrote, NULL);
@@ -1224,7 +1224,7 @@ SelRcvIncrProc(
 	 * Now convert the data, growing the destination buffer as needed.
 	 */
 
-	while (1) {
+	while (true) {
 	    result = Tcl_ExternalToUtf(NULL, encoding, src, srcLen,
 		    TCL_ENCODING_PROFILE_TCL8|retrPtr->encFlags,
 		    &retrPtr->encState, dst, dstLen, &srcRead, &dstWrote, NULL);

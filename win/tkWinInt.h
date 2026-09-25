@@ -139,6 +139,13 @@ MODULE_SCOPE const int tkpWinBltModes[];
 #define TK_3D_DARK2 TK_3D_DARK_GC+2
 
 /*
+ * Defines for tkTextDisp.c and tkFont.c
+ */
+
+#define TK_LAYOUT_WITH_BASE_CHUNKS	1
+#define TK_DRAW_IN_CONTEXT		1
+
+/*
  * Internal functions used by more than one source file.
  */
 
@@ -192,7 +199,6 @@ MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const c
  */
 
 
-MODULE_SCOPE Tcl_Encoding	TkWinGetKeyInputEncoding(void);
 MODULE_SCOPE Tcl_Encoding	TkWinGetUnicodeEncoding(void);
 MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 

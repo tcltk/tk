@@ -96,7 +96,9 @@ set ::tk::icons::base_icon(.) icon
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo icon2
-icon2 copy icon -zoom [expr {$tk::scalingPct / 100}]
+set zoomFactor [expr {$tk::scalingPct / 100}]
+if {$zoomFactor == 0} { set zoomFactor 1 }
+icon2 copy icon -zoom $zoomFactor
 
 pack [button $w.i -text "Set Window Icon to Globe" -image icon2 \
 	-compound top -command {wm iconphoto . icon}] -fill x -padx 3p

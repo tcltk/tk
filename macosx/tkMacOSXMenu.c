@@ -944,7 +944,7 @@ TkpPostMenu(
     TkWindow *realWinPtr;
     NSView *realWinView;
 
-    while (1) {
+    while (true) {
 	if (realWin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -1288,7 +1288,7 @@ ParseAccelerator(
     int i;
 
     *maskPtr = 0;
-    while (1) {
+    while (true) {
 	i = 0;
 	while (allModifiers[i].name) {
 	    size_t l = allModifiers[i].len;
@@ -1633,7 +1633,7 @@ MenuSelectEvent(
     event.virt.event = Tk_WindowId(menuPtr->tkwin);
     event.virt.root = XRootWindow(menuPtr->display, 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, None, NULL, NULL, &event.virt.x_root, &event.virt.y_root, NULL,
 	    NULL, &event.virt.state);
     event.virt.same_screen = true;

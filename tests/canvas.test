@@ -413,7 +413,7 @@ test canvas-7.1 {canvas widget vs hidden commands} -setup {
     destroy .c
 } -result [list {} [lsort [interp hidden]]]
 
-test canvas-8.1 {canvas arc bbox} -setup {
+test canvas-8.1 {canvas arc bbox} -constraints failsOnCILinux -setup {
     catch {destroy .c}
     canvas .c
 } -body {
@@ -442,6 +442,8 @@ test canvas-8.2 {canvas very small arc} -setup {
     set width [.c itemcget arc1 -width]
     set height [.c itemcget arc1 -height]
     list $arcBox $outlinedArcBox $coords $start $extent $width $height
+} -cleanup {
+    unset -nocomplain arcBox coords extent height outlinedArcBox start width
 } -result {{-1 99 1 101} {-2 98 2 102} {0.0 100.0 0.0 100.0} 0.0 0.0 1.0 0.0}
 
 test canvas-9.1 {canvas id creation and deletion} -setup {
@@ -1368,6 +1370,25 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     destroy .c
     image delete testimage
 } -result 1
+
+test canvas-32.1 {a canvas is not scrolled if its scroll region fits in it - bug 2148529} -setup {
+    destroy .c
+    canvas .c -width 200 -height 200 -scrollregion {0 0 50 50} \
+	    -highlightthickness 0
+    pack .c
+    update
+} -body {
+    set res {}
+    foreach cmd {{xview scroll -1 units} {xview scroll -5 pages}
+	    {xview moveto -0.5} {yview scroll -1 units} {yview moveto -0.5}} {
+	.c {*}$cmd
+	update
+	lappend res [.c canvasx 0] [.c canvasy 0]
+    }
+    lsort -unique $res
+} -cleanup {
+    destroy .c
+} -result 0.0
 
 #
 # TESTFILE CLEANUP

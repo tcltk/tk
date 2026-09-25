@@ -433,14 +433,22 @@ void
 TkpWarpPointer(
     TkDisplay *dispPtr)
 {
+    int rootx, rooty;
+    unsigned int modifierState;
+
     if (dispPtr->warpWindow) {
 	RECT r;
-
 	GetWindowRect(Tk_GetHWND(Tk_WindowId(dispPtr->warpWindow)), &r);
 	TkSetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
     } else {
 	TkSetCursorPos(dispPtr->warpX, dispPtr->warpY);
     }
+
+    XQueryPointer(dispPtr->display, None, NULL, NULL, &rootx, &rooty,
+	    NULL, NULL, &modifierState);
+    Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
+	    dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, rootx, rooty, modifierState);
 }
 
 /*

@@ -388,7 +388,7 @@ GenerateEditEvent(
     event.virt.event = Tk_WindowId(tkwin);
     event.virt.root = XRootWindow(Tk_Display(tkwin), 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, winPtr->window, NULL, NULL,
 	    &event.virt.x_root, &event.virt.y_root, &x, &y, &event.virt.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.virt.x, &event.virt.y);

@@ -172,7 +172,7 @@ TkpDrawCheckIndicator(
 {
     const char *svgDataPtr;
     int hasBorder, hasInterior, dim;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = TkScalingLevel2(tkwin);
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
     char darkColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
     Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -234,7 +234,7 @@ TkpDrawCheckIndicator(
 	dim = RADIO_MENU_DIM;
 	break;
     }
-    dim = (int)(dim * scalingLevel);
+    dim = (int)round(dim * scalingLevel);
 
     /*
      * Construct the color strings darkColorStr, lightColorStr,
@@ -651,11 +651,22 @@ TkpDisplayButton(
 	    XSetClipOrigin(butPtr->display, gc, 0, 0);
 	}
 
-	Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
-	Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		butPtr->textLayout, x + textXOffset, y + textYOffset,
-		butPtr->underline);
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkDrawAngledTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset + butPtr->xoffset,
+		    y + textYOffset + butPtr->yoffset, butPtr->angle, 0, -1);
+	    TkUnderlineAngledTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset + butPtr->xoffset,
+		    y + textYOffset + butPtr->yoffset, butPtr->angle,
+		    butPtr->underline);
+	} else {
+	    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
+	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset, y + textYOffset,
+		    butPtr->underline);
+	}
+
 	y += fullHeight/2;
     } else {
 	if (haveImage) {
@@ -716,10 +727,19 @@ TkpDisplayButton(
 
 	    x += butPtr->indicatorSpace;
 	    ShiftByOffset(butPtr, relief, &x, &y, width, height);
-	    Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
-		    x, y, 0, -1);
-	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x, y, butPtr->underline);
+	    if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+		TkDrawAngledTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x + butPtr->xoffset,
+			y + butPtr->yoffset, butPtr->angle, 0, -1);
+		TkUnderlineAngledTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x + butPtr->xoffset,
+			y + butPtr->yoffset, butPtr->angle, butPtr->underline);
+	    } else {
+		Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x, y, 0, -1);
+		Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x, y, butPtr->underline);
+	    }
 	    y += butPtr->textHeight/2;
 	}
     }
@@ -935,6 +955,10 @@ TkpComputeButtonGeometry(
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
 		Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkAdjustAngledTextLayout(butPtr->angle, &butPtr->textWidth,
+		    &butPtr->textHeight, &butPtr->xoffset, &butPtr->yoffset);
+	}
 
 	txtWidth = butPtr->textWidth;
 	txtHeight = butPtr->textHeight;
@@ -1025,6 +1049,11 @@ TkpComputeButtonGeometry(
 	    }
 	    if (butPtrHeight > 0) {
 		height = butPtrHeight * fm.linespace;
+	    }
+	    if (butPtrWidth > 0 && butPtrHeight > 0 &&
+		    butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+		TkAdjustAngledTextLayout(butPtr->angle, &width, &height,
+			NULL, NULL);
 	    }
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorDiameter = fm.linespace;

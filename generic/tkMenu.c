@@ -123,7 +123,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, bitmapPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-columnbreak", NULL, NULL,
 	DEF_MENU_ENTRY_COLUMN_BREAK,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, columnBreak), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, columnBreak), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-command", NULL, NULL,
 	DEF_MENU_ENTRY_COMMAND,
 	offsetof(TkMenuEntry, commandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -138,7 +138,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, fgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-hidemargin", NULL, NULL,
 	DEF_MENU_ENTRY_HIDE_MARGIN,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, hideMargin), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, hideMargin), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
 	DEF_MENU_ENTRY_IMAGE,
 	offsetof(TkMenuEntry, imagePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -164,7 +164,7 @@ static const Tk_OptionSpec tkSeparatorEntryConfigSpecs[] = {
 static const Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-offvalue", NULL, NULL,
 	DEF_MENU_ENTRY_OFF_VALUE,
 	offsetof(TkMenuEntry, offValuePtr), TCL_INDEX_NONE, 0, NULL, 0},
@@ -187,7 +187,7 @@ static const Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
 static const Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", NULL, NULL,
 	DEF_MENU_ENTRY_SELECT,
 	offsetof(TkMenuEntry, indicatorFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -286,7 +286,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TAKE_FOCUS,
 	offsetof(TkMenu, takeFocusPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-tearoff", "tearOff", "TearOff",
-	DEF_MENU_TEAROFF, TCL_INDEX_NONE, offsetof(TkMenu, tearoff), 0, NULL, 0},
+	DEF_MENU_TEAROFF, TCL_INDEX_NONE, offsetof(TkMenu, tearoff), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-tearoffcommand", "tearOffCommand",
 	"TearOffCommand", DEF_MENU_TEAROFF_CMD,
 	offsetof(TkMenu, tearoffCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -320,6 +320,10 @@ enum options {
  * Prototypes for static functions in this file:
  */
 
+static bool		CheckForLoops(Tcl_Interp *interp, const char *name,
+			    TkMenu *menuPtr);
+static bool		CheckForLoops0(Tcl_Interp *interp, const char *pathName,
+			    const char *name);
 static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
 static int		ConfigureMenu(Tcl_Interp *interp, TkMenu *menuPtr,
@@ -914,7 +918,7 @@ MenuWidgetObjCmd(
 	 */
 
 	if (menuPtr->menuType == MENUBAR) {
-	    Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
+	    Tcl_AppendResult(interp, "a menubar menu cannot be posted", (char *)NULL);
 	    return TCL_ERROR;
 	} else if (menuPtr->menuType != TEAROFF_MENU) {
 	    result = TkpPostMenu(interp, menuPtr, x, y, index);
@@ -1633,10 +1637,11 @@ ConfigureMenu(
 		 * Work out if we are the child of a menubar or a popup.
 		 */
 
-		while (1) {
+		while (true) {
 		    Tk_Window parent = Tk_Parent(tkwin);
 
-		    if (Tk_Class(parent) != Tk_Class(menuPtr->tkwin)) {
+		    if (parent == NULL ||
+			Tk_Class(parent) != Tk_Class(menuPtr->tkwin)) {
 			break;
 		    }
 		    tkwin = parent;
@@ -1985,7 +1990,29 @@ ConfigureMenuEntry(
 		&errorStruct, NULL) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	result = PostProcessEntry(mePtr);
+
+	/*
+	 * If we are adding a cascade, ensure that the change will not destroy
+	 * the tree structure of the menu hierarchy.  Creating a loop will
+	 * cause a crash.  See ticket [7f67bb4054].
+	 */
+
+	if ((mePtr->type == CASCADE_ENTRY) && (mePtr->namePtr != NULL)) {
+	    const char *cascadeName = Tcl_GetString(mePtr->namePtr);
+
+	    if (CheckForLoops(menuPtr->interp, cascadeName, menuPtr)) {
+		Tcl_SetObjResult(menuPtr->interp, Tcl_ObjPrintf(
+			"cannot add recursive cascade menu \"%s\"",
+			cascadeName));
+		Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "RECURSION",
+			(char *) NULL);
+		result = TCL_ERROR;
+	    }
+	}
+
+	if (result == TCL_OK) {
+	    result = PostProcessEntry(mePtr);
+	}
 	if (result != TCL_OK) {
 	    Tk_RestoreSavedOptions(&errorStruct);
 	    PostProcessEntry(mePtr);
@@ -1996,6 +2023,121 @@ ConfigureMenuEntry(
     TkEventuallyRecomputeMenu(menuPtr);
 
     return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CheckForLoops0, CheckForLoops --
+ *
+ *	Checks for loops in use of -menu option in cascades.
+ *
+ * Results:
+ *	True when loop detected.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+CheckForLoops0(
+    Tcl_Interp *interp,		/* Used for lookups. */
+    const char *pathName,	/* Current menu to look for cascade. */
+    const char *name)		/* Value of -menu option to check. */
+{
+    TkMenuReferences *menuRefPtr;
+
+    menuRefPtr = TkFindMenuReferences(interp, pathName);
+    if (menuRefPtr == NULL) {
+	return false;
+    }
+    if (menuRefPtr->menuPtr != NULL) {
+	TkMenu *menuPtr = menuRefPtr->menuPtr;
+	const char *parentName;
+
+	if (menuPtr->tkwin != NULL) {
+	    parentName = Tk_PathName(menuPtr->tkwin);
+	    if (strcmp(name, parentName) == 0) {
+		return true;
+	    }
+	    if ((menuPtr->mainMenuPtr != menuPtr) &&
+		    (menuPtr->mainMenuPtr->tkwin != NULL)) {
+		parentName = Tk_PathName(menuPtr->mainMenuPtr->tkwin);
+		if (strcmp(name, parentName) == 0) {
+		    return true;
+		}
+	    }
+	}
+    }
+    if (menuRefPtr->parentEntryPtr != NULL) {
+	TkMenuEntry *cascadePtr = menuRefPtr->parentEntryPtr;
+	const char *cascadeName;
+
+	while (cascadePtr != NULL) {
+	    cascadeName = Tcl_GetString(cascadePtr->namePtr);
+	    if ((strcmp(pathName, cascadeName) != 0) &&
+		    CheckForLoops0(interp, cascadeName, name)) {
+		return true;
+	    }
+	    if ((cascadePtr->menuPtr != NULL) &&
+		    (cascadePtr->menuPtr->tkwin != NULL)) {
+		cascadeName = Tk_PathName(cascadePtr->menuPtr->tkwin);
+		if ((strcmp(pathName, cascadeName) != 0) &&
+			CheckForLoops0(interp, cascadeName, name)) {
+		    return true;
+		}
+	    }
+	    if (cascadePtr->menuPtr != NULL) {
+		TkMenu *mainMenuPtr = cascadePtr->menuPtr->mainMenuPtr;
+
+		if ((mainMenuPtr != cascadePtr->menuPtr) &&
+			(mainMenuPtr->tkwin != NULL)) {
+		    cascadeName = Tk_PathName(mainMenuPtr->tkwin);
+		    if ((strcmp(pathName, cascadeName) != 0) &&
+			    CheckForLoops0(interp, cascadeName, name)) {
+			return true;
+		    }
+		}
+	    }
+
+	    cascadePtr = cascadePtr->nextCascadePtr;
+	}
+    }
+    return false;
+}
+
+static bool
+CheckForLoops(
+    Tcl_Interp *interp,		/* Used for lookups. */
+    const char *name,		/* Value of -menu option to check. */
+    TkMenu *menuPtr)		/* Information about menu. */
+{
+    const char *pathName = NULL;
+
+    if (menuPtr->tkwin != NULL) {
+	pathName = Tk_PathName(menuPtr->tkwin);
+	if (strcmp(name, pathName) == 0) {
+	    return true;
+	}
+    }
+    if (pathName != NULL) {
+if (CheckForLoops0(interp, pathName, name)) {
+	    return true;
+	}
+    }
+    pathName = NULL;
+    if ((menuPtr->mainMenuPtr != menuPtr) &&
+	    (menuPtr->mainMenuPtr->tkwin != NULL)) {
+	pathName = Tk_PathName(menuPtr->mainMenuPtr->tkwin);
+	if (strcmp(name, pathName) == 0) {
+	    return true;
+	}
+    }
+    if (pathName != NULL) {
+	if (CheckForLoops0(interp, pathName, name)) {
+	    return true;
+	}
+    }
+    return false;
 }
 
 /*
@@ -2024,10 +2166,10 @@ ConfigureMenuCloneEntries(
 {
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
-    int cascadeEntryChanged = 0;
     TkMenuReferences *oldCascadeMenuRefPtr, *cascadeMenuRefPtr = NULL;
     Tcl_Obj *oldCascadePtr = NULL;
     const char *newCascadeName;
+    bool cascadeEntryChanged = false;
 
     /*
      * Cascades are kind of tricky here. This is special case #3 in the
@@ -2060,11 +2202,11 @@ ConfigureMenuCloneEntries(
 	}
 
 	if ((oldCascadePtr == NULL) && (mePtr->namePtr == NULL)) {
-	    cascadeEntryChanged = 0;
+	    cascadeEntryChanged = false;
 	} else if (((oldCascadePtr == NULL) && (mePtr->namePtr != NULL))
 		|| ((oldCascadePtr != NULL)
 		&& (mePtr->namePtr == NULL))) {
-	    cascadeEntryChanged = 1;
+	    cascadeEntryChanged = true;
 	} else {
 	    oldCascadeName = Tcl_GetString(oldCascadePtr);
 	    cascadeEntryChanged = (strcmp(oldCascadeName, newCascadeName)
@@ -2345,10 +2487,10 @@ MenuNewEntry(
     mePtr->activeBorderPtr = NULL;
     mePtr->activeFgPtr = NULL;
     mePtr->fontPtr = NULL;
-    mePtr->indicatorOn = 0;
+    mePtr->indicatorOn = false;
     mePtr->indicatorFgPtr = NULL;
-    mePtr->columnBreak = 0;
-    mePtr->hideMargin = 0;
+    mePtr->columnBreak = false;
+    mePtr->hideMargin = false;
     mePtr->commandPtr = NULL;
     mePtr->namePtr = NULL;
     mePtr->childMenuRefPtr = NULL;
@@ -2457,15 +2599,13 @@ MenuAddOrInsert(
      */
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
-
+	TkMenu *errorMenuPtr;
+	int i;
 	mePtr = MenuNewEntry(menuListPtr, index, type);
 	if (mePtr == NULL) {
 	    return TCL_ERROR;
 	}
 	if (ConfigureMenuEntry(mePtr, objc - offs, objv + offs) != TCL_OK) {
-	    TkMenu *errorMenuPtr;
-	    Tcl_Size i;
-
 	    for (errorMenuPtr = menuPtr->mainMenuPtr;
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
@@ -3460,7 +3600,7 @@ TkGetMenuHashTable(
  *
  * Results:
  *	Returns a pointer to a menu reference structure. Should not be freed
- *	by calller; when a field of the reference is cleared,
+ *	by caller; when a field of the reference is cleared,
  *	TkFreeMenuReferences should be called.
  *
  * Side effects:
@@ -3570,7 +3710,7 @@ TkFindMenuReferencesObj(
  *	It cleans up the ref if it is now empty.
  *
  * Results:
- *	Returns 1 if the references structure was freed, and 0 otherwise.
+ *	Returns true if the references structure was freed, and false otherwise.
  *
  * Side effects:
  *	If this is the last field to be cleared, the menu ref is taken out of
@@ -3579,7 +3719,7 @@ TkFindMenuReferencesObj(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkFreeMenuReferences(
     TkMenuReferences *menuRefPtr)
 				/* The menu reference to free. */
@@ -3589,9 +3729,9 @@ TkFreeMenuReferences(
 	    && (menuRefPtr->topLevelListPtr == NULL)) {
 	Tcl_DeleteHashEntry(menuRefPtr->hashEntryPtr);
 	Tcl_Free(menuRefPtr);
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
 /*

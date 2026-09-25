@@ -1202,9 +1202,9 @@ Intersect(
 	q = -q;
     }
     if (p < 0) {
-	iPtr->x = - ((-p + q/2)/q);
+	iPtr->x = (short)(- ((-p + q/2)/q));
     } else {
-	iPtr->x = (p + q/2)/q;
+	iPtr->x = (short)((p + q/2)/q);
     }
     p = (a1Ptr->y*dxadyb - b1Ptr->y*dxbdya + (b1Ptr->x - a1Ptr->x)*dyadyb);
     q = dxadyb - dxbdya;
@@ -1213,9 +1213,9 @@ Intersect(
 	q = -q;
     }
     if (p < 0) {
-	iPtr->y = - ((-p + q/2)/q);
+	iPtr->y = (short)(- ((-p + q/2)/q));
     } else {
-	iPtr->y = (p + q/2)/q;
+	iPtr->y = (short)((p + q/2)/q);
     }
     return 0;
 }

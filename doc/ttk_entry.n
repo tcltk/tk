@@ -47,6 +47,9 @@ One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
 .\" MAYBE: .OP \-selectforeground selectForeground Background
+.OP \-locale locale Locale
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .OP \-show show Show
 If this option is specified, then the true contents of the entry
 are not displayed in the window.
@@ -460,10 +463,15 @@ cannot be changed.
 \fB\-relief\fP \fIrelief\fP
 .br
 \fB\-selectbackground\fP \fIcolor\fP
-.br
+.RS
+If empty, the selected text has no distinct background.
+.RE
 \fB\-selectborderwidth\fP \fIamount\fP
 .br
 \fB\-selectforeground\fP \fIcolor\fP
+.RS
+If empty, the \fB\-foreground\fP color is used.
+.RE
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.

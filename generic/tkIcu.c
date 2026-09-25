@@ -64,6 +64,25 @@ static struct {
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
+const char *const compatFunctions[] = {
+    NULL,
+    "tcl_startOfPreviousWord",
+    NULL,
+    NULL,
+    NULL,
+    "tcl_startOfNextWord",
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    "tcl_endOfWord",
+    NULL,
+    NULL,
+};
+
 static int
 startEndOfCmd(
     void *clientData,
@@ -77,7 +96,7 @@ startEndOfCmd(
     UErrorCodex errorCode = U_ZERO_ERRORZ;
     void *it;
     Tcl_Size idx;
-    int flags = PTR2INT(clientData);
+    int flags = (int)PTR2INT(clientData);
     const uint16_t *ustr;
     char locale[128];
 
@@ -87,7 +106,15 @@ startEndOfCmd(
     }
     locale[0] = '\0';
     if (objc > 3) {
-	if (!TkObjIsEmpty(objv[3]) && icu_canonicalize) {
+	if (strncasecmp(Tcl_GetString(objv[3]), "TCL8", 5) == 0) {
+	    if (compatFunctions[flags]) {
+		Tcl_Obj *args[3];
+		args[0] = Tcl_NewStringObj(compatFunctions[flags], -1);
+		args[1] = objv[1];
+		args[2] = objv[2];
+		return Tcl_EvalObjv(interp, 3, args, TCL_EVAL_GLOBAL|TCL_EVAL_DIRECT);
+	    }
+	} else if (icu_canonicalize) {
 	    icu_canonicalize(Tcl_GetString(objv[3]), locale, sizeof(locale), &errorCode);
 	} else {
 	    strncpy(locale, Tcl_GetString(objv[3]), sizeof(locale));
@@ -110,7 +137,7 @@ startEndOfCmd(
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
 	ustr = (const uint16_t *)Tcl_DStringValue(&ds);
-	icu_setText(it, ustr, len, &errorCode);
+	icu_setText(it, ustr, (int32_t)len, &errorCode);
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
 	Tcl_DStringFree(&ds);
@@ -132,7 +159,7 @@ startEndOfCmd(
 	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
 	}
-	idx = icu_following(it, idx);
+	idx = icu_following(it, (int32_t)idx);
 	if ((flags & FLAG_WORD) && idx >= len) {
 	    idx = -1;
 	}
@@ -140,7 +167,7 @@ startEndOfCmd(
 	if (!(flags & FLAG_WORD)) {
 	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
-	idx = icu_preceding(it, idx);
+	idx = icu_preceding(it, (int32_t)idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
 	    flags &= ~FLAG_WORD; /* If 0 is reached here, don't do a further search */
 	}

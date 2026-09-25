@@ -58,7 +58,7 @@ typedef struct TkDisplayFocusInfo {
     int forceFocus;		/* Associated with focusOnMapPtr: non-zero
 				 * means claim the focus even if some other
 				 * application currently has it. */
-    unsigned long focusSerial;	/* Serial number of last request this
+    size_t focusSerial;	/* Serial number of last request this
 				 * application made to change the focus on
 				 * this display. Used to identify stale focus
 				 * notifications coming from the X server. */
@@ -272,7 +272,6 @@ TkFocusFilterEvent(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkWindow *newFocusPtr;
-    int delta;
     bool retValue;
 
     /*
@@ -399,8 +398,7 @@ TkFocusFilterEvent(
      * Tk 4.2 there was always a nop marker generated.
      */
 
-    delta = eventPtr->xfocus.serial - displayFocusPtr->focusSerial;
-    if (delta < 0) {
+    if (eventPtr->xfocus.serial < displayFocusPtr->focusSerial) {
 	return retValue;
     }
 
@@ -543,7 +541,8 @@ TkSetFocusWin(
     ToplevelFocusInfo *tlFocusPtr;
     DisplayFocusInfo *displayFocusPtr;
     TkWindow *topLevelPtr;
-    int allMapped, serial;
+    size_t serial;
+    bool allMapped;
 
     /*
      * Don't set focus if window is already dead. [Bug 3574708]
@@ -576,7 +575,7 @@ TkSetFocusWin(
      * mapped.
      */
 
-    allMapped = 1;
+    allMapped = true;
     for (topLevelPtr = winPtr; ; topLevelPtr = topLevelPtr->parentPtr) {
 	if (topLevelPtr == NULL) {
 
@@ -588,7 +587,7 @@ TkSetFocusWin(
 	    return;
 	}
 	if (!(topLevelPtr->flags & TK_MAPPED)) {
-	    allMapped = 0;
+	    allMapped = false;
 	}
 	if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 	    break;

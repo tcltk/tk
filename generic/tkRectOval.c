@@ -353,7 +353,7 @@ RectOvalCoords(
 		"wrong # coordinates: expected 0 or 4, got %" TCL_SIZE_MODIFIER "d", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS",
 		(rectOvalPtr->header.typePtr == &tkRectangleType
-			? "RECTANGLE" : "OVAL"), NULL);
+			? "RECTANGLE" : "OVAL"), (char *)NULL);
 	return TCL_ERROR;
     }
 

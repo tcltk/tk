@@ -73,6 +73,12 @@ How To Compile And Install Tk:
 				Freetype/xft library. By default, this is
 				switched on whenever the configure script can
 				detect the required libraries.
+	--disable-xrender	Disable use of the X Render extension to
+				composite photo images with alpha server-side.
+				By default, this is switched on whenever the
+				configure script can detect the Xrender
+				library; otherwise photo images composite in
+				software.
 	--enable-man-symlinks	Use symlinks for linking the manpages that
 				should be reachable under several names.
 	--enable-man-compression=PROG

@@ -928,7 +928,7 @@ AddFromString(
 
     src = string;
     lineNum = 1;
-    while (1) {
+    while (true) {
 	/*
 	 * Skip leading white space and empty lines and comment lines, and
 	 * check for the end of the spec.

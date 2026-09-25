@@ -156,7 +156,7 @@ static const ButtonDesign pushbuttonDesign = {
 };
 
 static const ButtonDesign helpDesign = {
-  .radius = 11.0,
+  .radius = 32.0,
   .palettes = {
     {
       .light = {.face = 241.0, .top = 218.0, .side = 217.0, .bottom = 206.0},
@@ -259,7 +259,7 @@ static const ButtonDesign checkDesign = {
 };
 
 static const ButtonDesign radioDesign = {
-  .radius = 8.0,
+  .radius = 32.0,
   .palettes = {
     {
       .light = {.face = 242.0, .top = 189.0, .side = 198.0, .bottom = 199.0},
@@ -395,6 +395,11 @@ static const ButtonDesign entryDesign = {
   .radius = 0.0,
   .palettes = {
     {
+      .light = {.face = 242.0, .top = 192.0, .side = 199.0, .bottom = 199.0},
+      .dark =  {.face = 163.0,  .top = 90.0,  .side = 80.0,  .bottom = 49.0},
+      .onBits = TTK_STATE_DISABLED, .offBits = 0
+    },
+    {
       .light = {.face = 256.0, .top = 198.0, .side = 198.0, .bottom = 198.0},
       .dark =  {.face = 256.0,  .top = 66.0,  .side = 66.0,  .bottom = 84.0},
       .onBits = 0, .offBits = 0
@@ -406,6 +411,11 @@ static const ButtonDesign searchDesign = {
   .radius = 3.5,
   .palettes = {
     {
+      .light = {.face = 242.0, .top = 192.0, .side = 199.0, .bottom = 199.0},
+      .dark =  {.face = 163.0,  .top = 90.0,  .side = 80.0,  .bottom = 49.0},
+      .onBits = TTK_STATE_DISABLED, .offBits = 0
+    },
+    {
       .light = {.face = 256.0, .top = 198.0, .side = 198.0, .bottom = 198.0},
       .dark =  {.face = 256.0,  .top = 66.0,  .side = 66.0,  .bottom = 84.0},
       .onBits = 0, .offBits = 0
@@ -416,6 +426,11 @@ static const ButtonDesign searchDesign = {
 static const ButtonDesign comboDesign = {
   .radius = 4.0,
   .palettes = {
+    {
+      .light = {.face = 242.0, .top = 192.0, .side = 199.0, .bottom = 199.0},
+      .dark =  {.face = 163.0,  .top = 90.0,  .side = 80.0,  .bottom = 49.0},
+      .onBits = TTK_STATE_DISABLED, .offBits = 0
+    },
     {
       .light = {.face = 256.0, .top = 190.0, .side = 190.0, .bottom = 190.0},
       .dark =  {.face = 256.0,  .top = 66.0,  .side = 66.0,  .bottom = 90.0},
@@ -508,18 +523,18 @@ static ThemeButtonParams
     PushButtonParams =  {kThemePushButton, kThemeMetricPushButtonHeight,
 			 NoThemeMetric},
     CheckBoxParams =    {kThemeCheckBox, kThemeMetricCheckBoxHeight,
-			 NoThemeMetric},
+			 kThemeMetricCheckBoxWidth},
     RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight,
-			 NoThemeMetric},
+			 kThemeMetricRadioButtonWidth},
     BevelButtonParams = {kThemeRoundedBevelButton, NoThemeMetric, NoThemeMetric},
     PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight,
-			 NoThemeMetric},
+			 kThemeMetricComboBoxLargeDisclosureWidth},
     DisclosureParams =  {kThemeDisclosureButton,
 			 kThemeMetricDisclosureTriangleHeight,
 			 kThemeMetricDisclosureTriangleWidth},
     DisclosureButtonParams = {kThemeArrowButton,
-			      kThemeMetricSmallDisclosureButtonHeight,
-			      kThemeMetricSmallDisclosureButtonWidth},
+			      kThemeMetricDisclosureButtonHeight,
+			      kThemeMetricDisclosureButtonWidth},
     HelpButtonParams = {kThemeRoundButtonHelp, kThemeMetricRoundButtonSize,
 			kThemeMetricRoundButtonSize},
     ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight,
@@ -561,10 +576,12 @@ static ThemeFrameParams
  */
 
 #define CHECK_RADIUS(radius, bounds)            \
-    if (radius < 0.0                            \
-	|| 2 * radius > bounds.size.width       \
+    if (radius < 0.0) {                         \
+	radius = 0.0;                            \
+    } else if (2 * radius > bounds.size.width   \
 	|| 2 * radius > bounds.size.height) {   \
-	radius = 0.0;                           \
+	radius = (bounds.size.width < bounds.size.height \
+	? bounds.size.width : bounds.size.height)/2.0; \
     }
 
 /*

@@ -10,15 +10,13 @@ namespace eval ttk::theme::aqua {
     # TEntry, TCombobox, and TSpinbox in the "!focus" state.
 
     proc setInactiveSelectBgColor {} {
-	if {[interp issafe]} {
-	    set majorOSVersion 0
-	} else {
-	    scan $::tcl_platform(osVersion) "%d" majorOSVersion
-	}
-
-	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
+	lassign [winfo rgb . systemUnemphasizedSelectedTextBackgroundColor] \
+	    r g b
+	if {$r != 32767} {
+	    # macOS 10.14+
 	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
 	} else {
+	    # macOS 10.13
 	    set inactiveSelBg systemWindowBackgroundColor2
 	}
 
@@ -46,16 +44,12 @@ namespace eval ttk::theme::aqua {
     # ttk::treeview and listbox widgets.
 
     proc setTreeviewAndListboxSelectColors {} {
-	if {[interp issafe]} {
-	    set majorOSVersion 0
-	} else {
-	    scan $::tcl_platform(osVersion) "%d" majorOSVersion
-	}
-
-	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
+	if {[catch {winfo rgb . systemSelectedContentBackgroundColor}] == 0} {
+	    # macOS 10.14+
 	    set selectedBg	systemSelectedContentBackgroundColor
 	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor
 	} else {
+	    # macOS 10.13
 	    set selectedBg	systemHighlightAlternate
 	    set inactiveSelBg	systemWindowBackgroundColor2
 	}
@@ -73,6 +67,10 @@ namespace eval ttk::theme::aqua {
 
 	option add *Listbox.selectBackground	$selectedBg widgetDefault
 	option add *Listbox.selectForeground	$selectedFg widgetDefault
+	option add *Listbox.inactiveSelectBackground \
+	    $inactiveSelBg widgetDefault
+	option add *Listbox.inactiveSelectForeground \
+	    $inactiveSelFg widgetDefault
     }
 
     ttk::style theme settings aqua {
@@ -198,12 +196,22 @@ namespace eval ttk::theme::aqua {
 		{!background selected} systemSelectedTabTextColor
 		disabled systemDisabledControlTextColor}
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont \
-	    -foreground systemTextColor \
+	    -font TkHeadingFont -padding {2.25p 0 2.25p 7} \
+	    -foreground systemPopupArrowInactive \
 	    -background systemWindowBackgroundColor
-	ttk::style configure Treeview -rowheight 18 \
+	ttk::style map Heading \
+	    -foreground {
+		selected systemControlTextColor
+		alternate systemControlTextColor} \
+	    -background {
+		selected systemListViewSortColumnBackground
+		alternate systemListViewSortColumnBackground}
+	ttk::style configure Row -focuscolor systemSelectedTextBackgroundColor \
+	    -focussolid 1 -focusthickness 0 -padding {0 0 0 0.75p}
+	ttk::style map Row -focusthickness {focus 1} -padding {focus 0}
+	ttk::style configure Treeview \
 	    -background systemControlBackgroundColor \
 	    -stripedbackground systemControlAlternatingRowColor \
 	    -foreground systemTextColor \
@@ -225,5 +233,36 @@ namespace eval ttk::theme::aqua {
 	    -font TkSmallCaptionFont
 
 	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
+    }
+}
+
+# ttk::theme::aqua::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook style $style and the
+# style $style.Tab.  Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::aqua::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n {
+	    ttk::style configure $style -tabmargins {10 0}
+	    ttk::style configure $style.Tab -padding {12 3 12 2}
+	}
+	s {
+	    ttk::style configure $style -tabmargins {10 0}
+	    ttk::style configure $style.Tab -padding {12 2 12 3}
+	}
+	w {
+	    ttk::style configure $style -tabmargins {0 10}
+	    ttk::style configure $style.Tab -padding {3 12 2 12}
+	}
+	e {
+	    ttk::style configure $style -tabmargins {0 10}
+	    ttk::style configure $style.Tab -padding {2 12 3 12}
+	}
+	default {
+	    ttk::style configure $style -tabmargins {10 0}
+	    ttk::style configure $style.Tab -padding {12 3 12 2}
+	}
     }
 }

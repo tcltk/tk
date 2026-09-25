@@ -154,6 +154,12 @@ Returns a list whose members are the names of all Tcl interpreters
 If the \fB\-displayof\fR option is given then the return value refers
 to the display of \fIwindow\fR;  otherwise it refers to
 the display of the application's main window.
+.\" METHOD: isdark
+.TP
+\fBwinfo isdark \fIwindow\fR
+.
+On Aqua and Windows returns \fB1\fR if \fIwindow\fR is in "dark mode", and
+\fB0\fR otherwise.   Returns \fB0\fR on linux.
 .\" METHOD: ismapped
 .TP
 \fBwinfo ismapped \fIwindow\fR

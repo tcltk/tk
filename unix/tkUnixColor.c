@@ -316,7 +316,7 @@ FindClosestColor(
      * something succeeds.
      */
 
-    while (1) {
+    while (true) {
 	if (stressPtr->numColors == 0) {
 	    Tcl_Panic("FindClosestColor ran out of colors");
 	}

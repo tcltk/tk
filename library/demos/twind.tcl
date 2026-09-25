@@ -181,7 +181,9 @@ image create photo img -file [file join $tk_demoDirectory images ouster.png]
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo img2
-img2 copy img -zoom [expr {$tk::scalingPct / 100}]
+set zoomFactor [expr {$tk::scalingPct / 100}]
+if {$zoomFactor == 0} { set zoomFactor 1 }
+img2 copy img -zoom $zoomFactor
 
 $t image create end -image img2
 

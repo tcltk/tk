@@ -44,6 +44,23 @@ foreach i {1 2 3} {
 set cy [font metrics {Courier -12} -linespace]
 
 #
+# LOCAL TEST CONSTRAINTS
+#
+
+# A locale with a decimal comma, if one is available.
+set decimalCommaLocale {}
+if {[testConstraint testsetlocale]} {
+    foreach name {de_DE.UTF-8 de_DE.utf8 de_DE de-DE German_Germany} {
+	if {![catch {testsetlocale $name}]} {
+	    set decimalCommaLocale $name
+	    break
+	}
+    }
+    testsetlocale C
+}
+testConstraint decimalCommaLocale [expr {$decimalCommaLocale ne ""}]
+
+#
 # TESTS
 #
 
@@ -1171,7 +1188,7 @@ test spinbox-3.15 {SpinboxWidgetCmd procedure, "configure" widget command} -setu
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result 51
+} -result 52
 test spinbox-3.16 {SpinboxWidgetCmd procedure, "configure" widget command} -setup {
     spinbox .e
 } -body {
@@ -3915,6 +3932,40 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
 } -result {{A sample } text}
 
+test spinbox-26.1 {the value is parsed independently of the LC_NUMERIC locale - bug 9e89324a0a} -constraints {
+    decimalCommaLocale
+} -setup {
+    spinbox .e -from 0 -to 1 -increment 0.1 -format %.1f
+    testsetlocale $decimalCommaLocale
+} -body {
+    .e delete 0 end
+    .e insert 0 0.5
+    .e invoke buttonup
+    set res [.e get]
+    .e delete 0 end
+    .e insert 0 0.7
+    .e configure -from 0.2
+    lappend res [.e get]
+} -cleanup {
+    testsetlocale C
+    destroy .e
+} -result {0.6 0.7}
+test spinbox-26.2 {values with leading zeros are not octal - bug 9e89324a0a} -setup {
+    spinbox .e -from 0 -to 59 -format %02.0f
+} -body {
+    .e delete 0 end
+    .e insert 0 07
+    set res {}
+    foreach i {1 2 3 4} {
+	.e invoke buttonup
+	lappend res [.e get]
+    }
+    .e invoke buttondown
+    lappend res [.e get]
+} -cleanup {
+    destroy .e
+} -result {08 09 10 11 10}
+
 #
 # TESTFILE CLEANUP
 #
@@ -3922,6 +3973,6 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
 foreach i {1 2 3} {
     unset validateCmd$i
 }
-unset i
+unset i decimalCommaLocale
 testutils forget entry scroll
 cleanupTests

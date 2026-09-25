@@ -230,7 +230,7 @@ TkpBuildRegionFromAlphaData(
  *----------------------------------------------------------------------
  */
 
-long
+long long
 Tk_GetUserInactiveTime(
  #ifdef HAVE_XSS
    Display *dpy)		/* The display for which to query the inactive
@@ -239,7 +239,7 @@ Tk_GetUserInactiveTime(
   TCL_UNUSED(Display *))
 #endif /* HAVE_XSS */
 {
-    long inactiveTime = -1;
+    long long inactiveTime = -1;
 #ifdef HAVE_XSS
     int eventBase, errorBase, major, minor;
 
@@ -261,7 +261,7 @@ Tk_GetUserInactiveTime(
 	    Tcl_Panic("Out of memory: XScreenSaverAllocInfo failed in Tk_GetUserInactiveTime");
 	}
 	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
-	    inactiveTime = (long)info->idle;
+	    inactiveTime = (long long)info->idle;
 	}
 	XFree(info);
     }

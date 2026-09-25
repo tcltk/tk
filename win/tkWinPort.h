@@ -67,11 +67,6 @@
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xutil.h>
 
 #ifndef __GNUC__
 #    define strncasecmp _strnicmp
@@ -104,6 +99,7 @@
 #if !defined(_WIN64)
 #   pragma warning(disable:4305)
 #endif
+#   pragma warning(disable:5287) /* See [1dcda0e862] in the Tcl repository */
 #endif
 
 /*
@@ -123,5 +119,18 @@
 
 #define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
+
+/*
+ * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to composite RGBA
+ * images directly (via GDI AlphaBlend), so it uses that instead of the software
+ * BlendComplexAlpha path and its XGetImage read-back.
+ */
+
+#define TK_CAN_RENDER_RGBA
+
+MODULE_SCOPE int TkpPutRGBAImage(
+	Display *display, Drawable drawable, GC gc, XImage *image,
+	int src_x, int src_y, int dest_x, int dest_y,
+	unsigned int width, unsigned int height);
 
 #endif /* _WINPORT */

@@ -98,7 +98,7 @@ EXTERN void		TkDrawInsetFocusHighlight(Tk_Window tkwin, GC gc,
 EXTERN void		TkEventDeadWindow(TkWindow *winPtr);
 /* 20 */
 EXTERN void		TkFillPolygon(Tk_Canvas canvas, double *coordPtr,
-				int numPoints, Display *display,
+				Tcl_Size numPoints, Display *display,
 				Drawable drawable, GC gc, GC outlineGC);
 /* 21 */
 EXTERN int		TkFindStateNum(Tcl_Interp *interp,
@@ -220,10 +220,10 @@ EXTERN TkDisplay *	TkpOpenDisplay(const char *display_name);
 /* 69 */
 EXTERN bool		TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr);
 /* 70 */
-EXTERN int		TkPolygonToArea(double *polyPtr, int numPoints,
+EXTERN int		TkPolygonToArea(double *polyPtr, Tcl_Size numPoints,
 				double *rectPtr);
 /* 71 */
-EXTERN double		TkPolygonToPoint(double *polyPtr, int numPoints,
+EXTERN double		TkPolygonToPoint(double *polyPtr, Tcl_Size numPoints,
 				double *pointPtr);
 /* 72 */
 EXTERN int		TkPositionInTree(TkWindow *winPtr, TkWindow *treePtr);
@@ -261,8 +261,8 @@ EXTERN void		TkSelPropProc(XEvent *eventPtr);
 EXTERN KeySym		TkStringToKeysym(const char *name);
 /* 87 */
 EXTERN int		TkThickPolyLineToArea(double *coordPtr,
-				int numPoints, double width, int capStyle,
-				int joinStyle, double *rectPtr);
+				Tcl_Size numPoints, double width,
+				int capStyle, int joinStyle, double *rectPtr);
 /* 88 */
 EXTERN void		TkWmAddToColormapWindows(TkWindow *winPtr);
 /* 89 */
@@ -337,7 +337,8 @@ EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 /* 119 */
 EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
-/* Slot 120 is reserved */
+/* 120 */
+EXTERN int		TkpWindowIsDark(Tk_Window tkwin, bool *isdark);
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap(Display *display,
 				const void *source);
@@ -566,7 +567,7 @@ typedef struct TkIntStubs {
     void (*tkDoConfigureNotify) (TkWindow *winPtr); /* 17 */
     void (*tkDrawInsetFocusHighlight) (Tk_Window tkwin, GC gc, int width, Drawable drawable, int padding); /* 18 */
     void (*tkEventDeadWindow) (TkWindow *winPtr); /* 19 */
-    void (*tkFillPolygon) (Tk_Canvas canvas, double *coordPtr, int numPoints, Display *display, Drawable drawable, GC gc, GC outlineGC); /* 20 */
+    void (*tkFillPolygon) (Tk_Canvas canvas, double *coordPtr, Tcl_Size numPoints, Display *display, Drawable drawable, GC gc, GC outlineGC); /* 20 */
     int (*tkFindStateNum) (Tcl_Interp *interp, const char *option, const TkStateMap *mapPtr, const char *strKey); /* 21 */
     const char * (*tkFindStateString) (const TkStateMap *mapPtr, int numKey); /* 22 */
     void (*tkFocusDeadWindow) (TkWindow *winPtr); /* 23 */
@@ -616,8 +617,8 @@ typedef struct TkIntStubs {
     void (*tkpMenuNotifyToplevelCreate) (Tcl_Interp *interp, const char *menuName); /* 67 */
     TkDisplay * (*tkpOpenDisplay) (const char *display_name); /* 68 */
     bool (*tkPointerEvent) (XEvent *eventPtr, TkWindow *winPtr); /* 69 */
-    int (*tkPolygonToArea) (double *polyPtr, int numPoints, double *rectPtr); /* 70 */
-    double (*tkPolygonToPoint) (double *polyPtr, int numPoints, double *pointPtr); /* 71 */
+    int (*tkPolygonToArea) (double *polyPtr, Tcl_Size numPoints, double *rectPtr); /* 70 */
+    double (*tkPolygonToPoint) (double *polyPtr, Tcl_Size numPoints, double *pointPtr); /* 71 */
     int (*tkPositionInTree) (TkWindow *winPtr, TkWindow *treePtr); /* 72 */
     void (*tkpRedirectKeyEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 73 */
     void (*reserved74)(void);
@@ -633,7 +634,7 @@ typedef struct TkIntStubs {
     void (*reserved84)(void);
     void (*reserved85)(void);
     KeySym (*tkStringToKeysym) (const char *name); /* 86 */
-    int (*tkThickPolyLineToArea) (double *coordPtr, int numPoints, double width, int capStyle, int joinStyle, double *rectPtr); /* 87 */
+    int (*tkThickPolyLineToArea) (double *coordPtr, Tcl_Size numPoints, double width, int capStyle, int joinStyle, double *rectPtr); /* 87 */
     void (*tkWmAddToColormapWindows) (TkWindow *winPtr); /* 88 */
     void (*tkWmDeadWindow) (TkWindow *winPtr); /* 89 */
     TkWindow * (*tkWmFocusToplevel) (TkWindow *winPtr); /* 90 */
@@ -666,7 +667,7 @@ typedef struct TkIntStubs {
     int (*xRectInRegion) (Region rgn, int x, int y, unsigned int width, unsigned int height); /* 117 */
     int (*xSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
     int (*xUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
-    void (*reserved120)(void);
+    int (*tkpWindowIsDark) (Tk_Window tkwin, bool *isdark); /* 120 */
     Pixmap (*tkpCreateNativeBitmap) (Display *display, const void *source); /* 121 */
     void (*tkpDefineNativeBitmaps) (void); /* 122 */
     void (*reserved123)(void);
@@ -976,7 +977,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->xSetRegion) /* 118 */
 #define XUnionRectWithRegion \
 	(tkIntStubsPtr->xUnionRectWithRegion) /* 119 */
-/* Slot 120 is reserved */
+#define TkpWindowIsDark \
+	(tkIntStubsPtr->tkpWindowIsDark) /* 120 */
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
 #define TkpDefineNativeBitmaps \

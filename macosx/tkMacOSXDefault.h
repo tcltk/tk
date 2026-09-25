@@ -43,6 +43,7 @@
 #define SELECT_BG		"systemSelectedTextBackgroundColor"
 #define SELECT_FG		"systemSelectedTextColor"
 #define INACTIVE_SELECT_BG	"systemUnemphasizedSelectedTextBackgroundColor"
+#define INACTIVE_SELECT_FG	"systemSelectedControlTextColor"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
 #define DISABLED		"systemDisabledControlTextColor"
@@ -258,9 +259,11 @@
 #define DEF_LISTBOX_RELIEF		"solid"
 #define DEF_LISTBOX_SCROLL_COMMAND	""
 #define DEF_LISTBOX_LIST_VARIABLE	""
+#define DEF_LISTBOX_INACTIVE_SELECT_COLOR	INACTIVE_SELECT_BG
 #define DEF_LISTBOX_SELECT_COLOR	SELECT_BG
 #define DEF_LISTBOX_SELECT_MONO		BLACK
 #define DEF_LISTBOX_SELECT_BD		"0"
+#define DEF_LISTBOX_INACTIVE_SELECT_FG_COLOR	INACTIVE_SELECT_FG
 #define DEF_LISTBOX_SELECT_FG_COLOR	SELECT_FG
 #define DEF_LISTBOX_SELECT_FG_MONO	WHITE
 #define DEF_LISTBOX_SELECT_MODE		"browse"

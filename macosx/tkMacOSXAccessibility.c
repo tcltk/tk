@@ -13,7 +13,6 @@
  */
 
 
-#include <stdio.h>
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -360,6 +359,12 @@ void PostAccessibilityAnnouncement(NSString *message)
     if ((role && CFStringCompare(role, kAXStaticTextRole, 0) == kCFCompareEqualTo) ||
 	(role && CFStringCompare(role, kAXTextAreaRole, 0) == kCFCompareEqualTo)) {
 	NSString *value = self.accessibilityValue;
+	return value;
+    }
+
+    /* Return label for buttons. */
+    if (role && CFStringCompare(role, kAXButtonRole, 0) == kCFCompareEqualTo) {
+	NSString *value = self.accessibilityLabel;
 	return value;
     }
 

@@ -767,7 +767,7 @@ TkpRedirectKeyEvent(
      * First, find the top-level window corresponding to winPtr.
      */
 
-    while (1) {
+    while (true) {
 	if (winPtr == NULL) {
 	    /*
 	     * This window is being deleted. This is too confusing a case to
@@ -981,7 +981,7 @@ EmbedWindowDeleted(
 
     prevPtr = NULL;
     containerPtr = tsdPtr->firstContainerPtr;
-    while (1) {
+    while (true) {
 	if (containerPtr == NULL) return;
 	if (containerPtr->embeddedPtr == winPtr) {
 	    containerPtr->wrapper = None;

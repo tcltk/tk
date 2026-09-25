@@ -289,7 +289,7 @@ test winWm-6.1 {wm attributes} -constraints win -setup {
     wm attributes .t
 } -cleanup {
     destroy .t
-} -result {-alpha 1.0 -transparentcolor {} -disabled 0 -fullscreen 0 -toolwindow 0 -topmost 0}
+} -result {-alpha 1.0 -appearance auto -transparentcolor {} -disabled 0 -fullscreen 0 -toolwindow 0 -topmost 0}
 test winWm-6.2 {wm attributes} -constraints win -setup {
     destroy .t
 } -body {
@@ -305,7 +305,7 @@ test winWm-6.3 {wm attributes} -constraints win -setup {
     wm attributes .t -foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {bad attribute "-foo": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
+} -returnCodes error -result {bad attribute "-foo": must be -alpha, -appearance, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 
 test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
@@ -557,6 +557,58 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
 #
 # Moved test winWm-9.2 to wm-forget-1.5 in wm.test (cf. ticket #83eed90f93).
 #
+test winWm-10.1 "Set and get -appearence dark" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance d
+    wm attributes .t -appearance
+} -cleanup {
+    destroy .t
+} -result dark
+
+
+test winWm-10.2 "Set and get -appearence light" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance l
+    wm attributes .t -appearance
+} -cleanup {
+    destroy .t
+} -result light
+
+test winWm-10.3 "Set and get -appearence auto" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance a
+    wm attributes .t -appearance
+} -cleanup {
+    destroy .t
+} -result auto
+
+test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance a
+    winfo isdark .t
+} -cleanup {
+    destroy .t
+} -result 0
 
 #
 # TESTFILE CLEANUP

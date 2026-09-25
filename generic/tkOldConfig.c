@@ -342,7 +342,7 @@ DoConfig(
     int nullValue = 0;
     const char *value = Tcl_GetString(arg);
 
-    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
+    if ((*value == 0) && (specPtr->specFlags & TCL_NULL_OK)) {
 	nullValue = 1;
     }
 
@@ -520,7 +520,7 @@ DoConfig(
 	    }
 	    break;
 	case TK_CONFIG_PIXELS: {
-	    int nullOK = specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1);
+	    bool nullOK = (specPtr->specFlags & TCL_NULL_OK) != 0;
 	    if (specPtr->specFlags & TK_CONFIG_OBJS) {
 		int dummy;
 		if (nullValue) {
@@ -898,7 +898,7 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	if ((*(int *)ptr != INT_MIN) || !(specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
+	if ((*(int *)ptr != INT_MIN) || !(specPtr->specFlags & TCL_NULL_OK)) {
 	    snprintf(buffer, 200, "%d", *((int *)ptr));
 	    result = buffer;
 	}

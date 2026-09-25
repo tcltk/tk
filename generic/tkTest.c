@@ -23,6 +23,7 @@
 #endif
 #include "tkInt.h"
 #include "tkText.h"
+#include <locale.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -166,12 +167,14 @@ static Tcl_ObjCmdProc2 TestmenubarObjCmd;
 static Tcl_ObjCmdProc2 TestmetricsObjCmd;
 #endif
 static Tcl_ObjCmdProc2 TestobjconfigObjCmd;
+static Tcl_ObjCmdProc2 TestpixelObjCmd;
 static Tk_CustomOptionSetProc CustomOptionSet;
 static Tk_CustomOptionGetProc CustomOptionGet;
 static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
 static Tcl_ObjCmdProc2 TestpropObjCmd;
 static Tcl_ObjCmdProc2 TestprintfObjCmd;
+static Tcl_ObjCmdProc2 TestsetlocaleObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static Tcl_ObjCmdProc2 TestwrapperObjCmd;
 #endif
@@ -238,9 +241,13 @@ Tktest_Init(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testmakeexist", TestmakeexistObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testpixel", TestpixelObjCmd,
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testsetlocale", TestsetlocaleObjCmd, NULL,
+	    NULL);
     Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testphotostringmatch",
@@ -1925,6 +1932,49 @@ TestprintfObjCmd(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestsetlocaleObjCmd --
+ *
+ *	This function implements the "testsetlocale" command, which sets the
+ *	LC_NUMERIC locale of the C library, as an extension or the embedding
+ *	application could do.  It lets the test suite check that Tk does not
+ *	depend on it.
+ *
+ * Results:
+ *	A standard Tcl result.  The result is the name of the new locale, or
+ *	of the current one if no argument is given.
+ *
+ * Side effects:
+ *	The LC_NUMERIC locale is changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestsetlocaleObjCmd(
+    TCL_UNUSED(void *),	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    const char *locale;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?locale?");
+	return TCL_ERROR;
+    }
+    locale = setlocale(LC_NUMERIC, (objc > 1) ? Tcl_GetString(objv[1]) : NULL);
+    if (locale == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("unsupported locale \"%s\"",
+		Tcl_GetString(objv[1])));
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(locale, TCL_INDEX_NONE));
+    return TCL_OK;
+}
+
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 /*
  *----------------------------------------------------------------------
@@ -2137,6 +2187,151 @@ TestPhotoStringMatchCmd(
     } else {
 	return TCL_ERROR;
     }
+}
+
+#ifndef MAC_OSX_TK
+/*
+ *----------------------------------------------------------------------
+ *
+ * PixelChannel --  (not on macOS, where testpixel reads via TkpReadPixelSRGB)
+ *
+ *	Extract one color channel from a pixel value using the visual's
+ *	channel mask, scaled to 8 bits.
+ *
+ * Results:
+ *	The channel value in the range 0..255, or 0 for an empty mask.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+PixelChannel(
+    unsigned long pixel,
+    unsigned long mask)
+{
+    int bits = 0;
+    unsigned long value;
+
+    if (mask == 0) {
+	return 0;
+    }
+    while ((mask & 1) == 0) {
+	mask >>= 1;
+	pixel >>= 1;
+    }
+    value = pixel & mask;
+    while (mask & 1) {
+	mask >>= 1;
+	bits++;
+    }
+    if (bits >= 8) {
+	return (int) (value >> (bits - 8));
+    }
+    return (int) ((value * 255) / ((1u << bits) - 1));
+}
+#endif /* !MAC_OSX_TK */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestpixelObjCmd --
+ *
+ *	This function implements the "testpixel" command, which reads one
+ *	pixel back from a mapped window and returns it in #rrggbb form.  It
+ *	lets the test suite verify actually rendered output -- e.g. the photo
+ *	alpha-compositing path in tkImgPhotoDisplay/TkpPutRGBAImage and the
+ *	ttk per-node render cache -- for which no script-level facility
+ *	exists.  The x and y coordinates are relative to the window.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestpixelObjCmd(
+    void *clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_Window tkwin;
+    int x, y, r, g, b;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window) clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tk_WindowId(tkwin) == None || !Tk_IsMapped(tkwin)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" is not mapped", Tk_PathName(tkwin)));
+	return TCL_ERROR;
+    }
+    if (x < 0 || y < 0 || x >= Tk_Width(tkwin) || y >= Tk_Height(tkwin)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"coordinates %d,%d are outside window \"%s\"",
+		x, y, Tk_PathName(tkwin)));
+	return TCL_ERROR;
+    }
+#ifdef MAC_OSX_TK
+    /*
+     * macOS composites windows through the display's color profile, so a raw
+     * read-back differs from the sRGB values that were drawn.  Read and
+     * convert to sRGB so results match X11 and Windows.
+     */
+    {
+	unsigned char cr, cg, cb;
+
+	if (TkpReadPixelSRGB(tkwin, x, y, &cr, &cg, &cb) != TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	r = cr; g = cg; b = cb;
+    }
+#else
+    {
+	Visual *visual = Tk_Visual(tkwin);
+	XImage *image;
+	unsigned long pixel;
+
+	if (visual->red_mask == 0) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "testpixel requires a TrueColor visual", -1));
+	    return TCL_ERROR;
+	}
+	image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y, 1, 1,
+		AllPlanes, ZPixmap);
+	if (image == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	pixel = XGetPixel(image, 0, 0);
+	r = PixelChannel(pixel, visual->red_mask);
+	g = PixelChannel(pixel, visual->green_mask);
+	b = PixelChannel(pixel, visual->blue_mask);
+	XDestroyImage(image);
+    }
+#endif
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x", r, g, b));
+    return TCL_OK;
 }
 
 

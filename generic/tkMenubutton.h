@@ -141,7 +141,7 @@ typedef struct {
     int textHeight;		/* Height needed to display text as requested,
 				 * in pixels. */
     Tk_TextLayout textLayout;	/* Saved text layout information. */
-    int indicatorOn;		/* Non-zero means display indicator; 0 means
+    bool indicatorOn;		/* True means display indicator; false means
 				 * don't display. */
     int indicatorHeight;	/* Height of indicator in pixels. This same
 				 * amount of extra space is also left on each

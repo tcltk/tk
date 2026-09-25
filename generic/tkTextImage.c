@@ -211,7 +211,7 @@ TkTextImageCmd(
 	    return EmbImageConfigure(textPtr, eiPtr, objc-4, objv+4);
 	}
     case CMD_CREATE: {
-	int lineIndex;
+	Tcl_Size lineIndex;
 
 	/*
 	 * Add a new image. Find where to put the new image, and mark that
@@ -335,7 +335,8 @@ EmbImageConfigure(
     Tcl_DString newName;
     Tcl_HashEntry *hPtr;
     char *name;
-    int dummy, length;
+	size_t length;
+    int dummy;
 
     if (Tk_SetOptions(textPtr->interp, &eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
@@ -613,8 +614,8 @@ EmbImageCheckProc(
 	Tcl_Panic("EmbImageCheckProc: embedded image is last segment in line");
     }
     if (eiPtr->size != 1) {
-	Tcl_Panic("EmbImageCheckProc: embedded image has size %d",
-		(int)eiPtr->size);
+	Tcl_Panic("EmbImageCheckProc: embedded image has size %" TCL_Z_MODIFIER "d",
+		eiPtr->size);
     }
 }
 
@@ -800,7 +801,7 @@ TkTextImageIndex(
      * reachable from this text widget (it may be reachable from a peer).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

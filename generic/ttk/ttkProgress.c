@@ -24,7 +24,7 @@ typedef struct {
     Tcl_Obj	*anchorObj;
     Tcl_Obj	*fontObj;
     Tcl_Obj	*foregroundObj;
-    Tcl_Obj	*justifyObj;
+    Tk_Justify justify;
     Tcl_Obj	*lengthObj;
     Tcl_Obj	*maximumObj;
     Tcl_Obj	*modeObj;
@@ -51,17 +51,17 @@ typedef struct {
 static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	"w", offsetof(Progressbar,progress.anchorObj), TCL_INDEX_NONE,
+	NULL, offsetof(Progressbar,progress.anchorObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEFAULT_FONT, offsetof(Progressbar,progress.fontObj), TCL_INDEX_NONE,
+	NULL, offsetof(Progressbar,progress.fontObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
-	"black", offsetof(Progressbar,progress.foregroundObj), TCL_INDEX_NONE,
+	NULL, offsetof(Progressbar,progress.foregroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", offsetof(Progressbar,progress.justifyObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	NULL, TCL_INDEX_NONE, offsetof(Progressbar,progress.justify),
+	TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_PROGRESSBAR_LENGTH, offsetof(Progressbar,progress.lengthObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED },
@@ -88,7 +88,7 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 	NULL, offsetof(Progressbar,progress.variableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0 },
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	"0", offsetof(Progressbar, progress.wrapLengthObj), TCL_INDEX_NONE,
+	NULL, offsetof(Progressbar, progress.wrapLengthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -215,6 +215,7 @@ static void ProgressbarInitialize(
 
     pb->progress.variableTrace = 0;
     pb->progress.timer = 0;
+    pb->progress.justify = TK_JUSTIFY_NULL;
 }
 
 static void ProgressbarCleanup(void *recordPtr)

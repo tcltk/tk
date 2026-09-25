@@ -286,7 +286,7 @@ int
 TkThickPolyLineToArea(
     double *coordPtr,		/* Points to an array of coordinates for the
 				 * polyline: x0, y0, x1, y1, ... */
-    int numPoints,		/* Total number of points at *coordPtr. */
+    Tcl_Size numPoints,		/* Total number of points at *coordPtr. */
     double width,		/* Width of each line segment. */
     int capStyle,		/* How are end-points of polyline drawn?
 				 * CapRound, CapButt, or CapProjecting. */
@@ -295,8 +295,8 @@ TkThickPolyLineToArea(
     double *rectPtr)		/* Rectangular area to check against. */
 {
     double radius, poly[10];
-    int count;
-    int changedMiterToBevel;	/* Non-zero means that a mitered corner had to
+    Tcl_Size count;
+    bool changedMiterToBevel;	/* Non-zero means that a mitered corner had to
 				 * be treated as beveled after all because the
 				 * angle was < 11 degrees. */
     int inside;			/* Tentative guess about what to return, based
@@ -319,7 +319,7 @@ TkThickPolyLineToArea(
      * are additional tests to deal with rounded joints and caps.
      */
 
-    changedMiterToBevel = 0;
+    changedMiterToBevel = false;
     for (count = numPoints; count >= 2; count--, coordPtr += 2) {
 	/*
 	 * If rounding is done around the first point of the edge then test a
@@ -367,7 +367,7 @@ TkThickPolyLineToArea(
 		if (TkPolygonToArea(poly, 5, rectPtr) != inside) {
 		    return 0;
 		}
-		changedMiterToBevel = 0;
+		changedMiterToBevel = false;
 	    }
 	}
 	if (count == 2) {
@@ -376,7 +376,7 @@ TkThickPolyLineToArea(
 	} else if (joinStyle == JoinMiter) {
 	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
 		    (double) width, poly+4, poly+6) == 0) {
-		changedMiterToBevel = 1;
+		changedMiterToBevel = true;
 		TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4,
 			poly+6);
 	    }
@@ -430,15 +430,15 @@ TkPolygonToPoint(
     double *polyPtr,		/* Points to an array coordinates for closed
 				 * polygon: x0, y0, x1, y1, ... The polygon
 				 * may be self-intersecting. */
-    int numPoints,		/* Total number of points at *polyPtr. */
+    Tcl_Size numPoints,		/* Total number of points at *polyPtr. */
     double *pointPtr)		/* Points to coords for point. */
 {
     double bestDist;		/* Closest distance between point and any edge
 				 * in polygon. */
-    int intersections;		/* Number of edges in the polygon that
+    Tcl_Size intersections;		/* Number of edges in the polygon that
 				 * intersect a ray extending vertically
 				 * upwards from the point to infinity. */
-    int count;
+    Tcl_Size count;
     double *pPtr;
 
     /*
@@ -586,7 +586,7 @@ TkPolygonToArea(
     double *polyPtr,		/* Points to an array coordinates for closed
 				 * polygon: x0, y0, x1, y1, ... The polygon
 				 * may be self-intersecting. */
-    int numPoints,		/* Total number of points at *polyPtr. */
+    Tcl_Size numPoints,		/* Total number of points at *polyPtr. */
     double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
@@ -594,7 +594,7 @@ TkPolygonToArea(
     int state;			/* State of all edges seen so far (-1 means
 				 * outside, 1 means inside, won't ever be
 				 * 0). */
-    int count;
+    Tcl_Size count;
     double *pPtr;
 
     /*

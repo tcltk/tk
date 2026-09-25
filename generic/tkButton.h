@@ -181,9 +181,9 @@ typedef struct {
 				 * button region. */
     Tk_Justify justify;		/* Value of -justify option: specifies how to
 				 * align lines of multi-line text. */
-    int indicatorOn;		/* Value of -indicatoron option: 1 means draw
+    bool indicatorOn;		/* Value of -indicatoron option: true means draw
 				 * indicator in checkbuttons and radiobuttons,
-				 * 0 means don't draw it. */
+				 * false means don't draw it. */
     Tk_3DBorder selectBorder;	/* Value of -selectcolor option: specifies
 				 * color for drawing indicator background, or
 				 * perhaps widget background, when
@@ -193,6 +193,10 @@ typedef struct {
     int textHeight;		/* Height needed to display text as requested,
 				 * in pixels. */
     Tk_TextLayout textLayout;	/* Saved text layout information. */
+    double angle;		/* Value of -angle option. */
+    int xoffset;		/* offset for drawing text when angle != 0 */
+    int yoffset;
+
     int indicatorSpace;		/* Horizontal space (in pixels) allocated for
 				 * display of indicator. */
     int indicatorDiameter;	/* Diameter of indicator, in pixels. */

@@ -865,6 +865,7 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 
     set text [$data(ent) get]
     if {$data(-multiple)} {
+	set data(selectFile) {}
 	foreach t $text {
 	    VerifyFileName $w $t
 	}

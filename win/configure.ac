@@ -5,7 +5,7 @@
 
 AC_INIT([tk],[9.1])
 AC_CONFIG_SRCDIR([../generic/tk.h])
-AC_PREREQ([2.72])
+AC_PREREQ([2.73])
 
 # The following define is needed when building with Cygwin since newer
 # versions of autoconf incorrectly set SHELL to /bin/bash instead of
@@ -15,7 +15,7 @@ SHELL=/bin/sh
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a1"
+TK_PATCH_LEVEL="b1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -151,12 +151,6 @@ AC_CHECK_TYPE([uintptr_t], [
 #--------------------------------------------------------------------
 
 SC_ENABLE_SYMBOLS
-
-#--------------------------------------------------------------------
-# Embed the manifest if we can determine how
-#--------------------------------------------------------------------
-
-SC_EMBED_MANIFEST(wish.exe.manifest)
 
 SC_BUILD_TCLSH
 SC_PROG_TCLSH

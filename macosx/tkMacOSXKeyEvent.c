@@ -210,16 +210,26 @@ static NSUInteger textInputModifiers;
 	 * In IME the Enter key is used to terminate a composition sequence.
 	 * When there are multiple choices of input text available, and the
 	 * user's selected choice is not the default, it may be necessary to
-	 * hit the Enter key multiple times before the text is accepted and
-	 * rendered (See ticket 39de9677aa]). So when sending an Enter key
-	 * during composition, we continue sending Enter keys until the
-	 * inputText method has cleared the processingCompose flag.
+	 * hit the Enter key twice before the text is accepted and rendered
+	 * (See ticket [39de9677aa]). So when sending an Enter key during
+	 * composition, we continue sending Enter keys until the inputText
+	 * method has cleared the processingCompose flag.  However, ticket
+	 * [0fb2a9cd132] reported that it is possible for the processingCompose
+	 * flag to not get set in spite of repeatedly sending Enter keys,
+	 * leading to a hang.  To avoid this we exit the loop after 10
+	 * attempts.
 	 */
 
 	if (processingCompose && [theEvent keyCode] == 36) {
 	    [nsEvArray addObject: theEvent];
-	    while(processingCompose) {
-		[[w contentView] interpretKeyEvents: nsEvArray];
+	    int counter = 0;
+	    TKContentView *view = [w contentView];
+	    while (processingCompose) {
+		[view interpretKeyEvents: nsEvArray];
+		if (++counter > 10) {
+		    [view cancelComposingText];
+		    break;
+		}
 	    }
 	    [nsEvArray removeObject: theEvent];
 	} else {
@@ -649,7 +659,7 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
     xEvent->xany.window = Tk_WindowId(tkwin);
 
     xEvent->xkey.root = XRootWindow(display, 0);
-    xEvent->xkey.time = TkpGetMS();
+    xEvent->xkey.time = TkGetMS();
     xEvent->xkey.state = state;
     xEvent->xkey.same_screen = true;
     /* No need to initialize other fields implicitly here,
