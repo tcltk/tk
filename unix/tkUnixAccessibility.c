@@ -149,7 +149,8 @@ void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
-AtkObject *atk_get_root(void);
+static const gchar *tk_util_get_toolkit_name(void);
+static const gchar *tk_util_get_toolkit_version(void);
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
@@ -1398,13 +1399,11 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 
 /*
  * Root window setup. These are the foundation of the
- * accessibility object system in ATK. atk_get_root() is the
- * critical link to at-spi - it is called by the ATK system
- * and at-spi bridge initialization will silently fail if this
- * function is not implemented. This API is confusing because
- * atk_get_root cannot be called directly in our functions, but
- * it still must be implemented if we are using a custom setup,
- * as we are here.
+ * accessibility object system in ATK. The root object is the
+ * critical link to at-spi - atk_get_root() returns it and at-spi
+ * bridge initialization fails if it is not provided. It is
+ * provided by setting the get_root method of the AtkUtil class,
+ * see TkAtkAccessibility_Init().
  */
 
 static AtkObject *tk_util_get_root(void)
@@ -1421,9 +1420,14 @@ static AtkObject *tk_util_get_root(void)
     return tk_root_accessible;
 }
 
-/* Core function linking Tk objects to the ATK root object and at-spi. */
-AtkObject *atk_get_root(void) {
-    return tk_util_get_root();
+static const gchar *tk_util_get_toolkit_name(void)
+{
+    return "Tk";
+}
+
+static const gchar *tk_util_get_toolkit_version(void)
+{
+    return TK_PATCH_LEVEL;
 }
 
 /* ATK-Tk object creation with proper parent/child relationship. */
@@ -1929,6 +1933,19 @@ int TkAtkAccessibleObjCmd(
 #ifdef HAVE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
+    AtkUtilClass *utilClass;
+
+    /*
+     * Provide the root object and the toolkit name to ATK. The AT-SPI bridge
+     * gets the root object with atk_get_root(), which calls get_root of the
+     * AtkUtil class. [Bug b9d85fc100]
+     */
+
+    utilClass = ATK_UTIL_CLASS(g_type_class_ref(ATK_TYPE_UTIL));
+    utilClass->get_root = tk_util_get_root;
+    utilClass->get_toolkit_name = tk_util_get_toolkit_name;
+    utilClass->get_toolkit_version = tk_util_get_toolkit_version;
+
     /* Initialize AT-SPI bridge. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
 	Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
