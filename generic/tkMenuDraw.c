@@ -684,7 +684,7 @@ DisplayMenu(
 		    Tk_Depth(tkwin));
 
 	    TkpDrawMenuEntry(mePtr, pixmap, tkfont, &menuMetrics, 0, 0,
-		    mePtr->width, mePtr->height, drawingParameters);
+		    mePtr->width, mePtr->height, strictMotif, 1);
 	    XCopyArea(menuPtr->display, pixmap, Tk_WindowId(tkwin),
 		    menuPtr->textGC, 0, 0, (unsigned) mePtr->width,
 		    (unsigned) mePtr->height, mePtr->x, mePtr->y);
