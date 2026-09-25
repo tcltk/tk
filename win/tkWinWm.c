@@ -2343,8 +2343,16 @@ UpdateWrapper(
      */
 
     if (tsdPtr->firstWindow) {
-	tsdPtr->firstWindow = 0;
-	SetActiveWindow(wmPtr->wrapper);
+	/*
+	 * Do not waste the activation on an invisible window, e.g. the
+	 * withdrawn console. [Bug 2effa4b316]
+	 */
+
+	state = wmPtr->hints.initial_state;
+	if (state == NormalState || state == ZoomState) {
+	    tsdPtr->firstWindow = 0;
+	    SetActiveWindow(wmPtr->wrapper);
+	}
     } else if (focusHWND) {
 	SetFocus(focusHWND);
     }

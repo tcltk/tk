@@ -8402,3 +8402,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-09-25 (bug) [214852] canvas scrolls when the scrollbar indicates that it cannot (storchaka)
 
 2026-09-25 (bug) [791527] menu entries are drawn directly on the screen (storchaka)
+
+2026-09-25 (bug) [2effa4] window is not focused on create (storchaka)
