@@ -835,6 +835,7 @@ test font-17.5 {Tk_FreeFont procedure: named font} -setup {
     font delete xyz
     set x [font actual xyz -underline]
     destroy .t.f
+    update
     list [font actual xyz -underline] $x
 } -result {0 1}
 test font-17.6 {Tk_FreeFont procedure: named font not deleted yet} -setup {
