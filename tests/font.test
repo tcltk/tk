@@ -614,6 +614,7 @@ test font-15.2 {Tk_AllocFontFromObj - discard stale font} -constraints {
     set x [font create font-15.2_font -family Times -size 16]
     button .b1 -font $x
     destroy .b1
+    update idletasks
     lappend result [testfont counts $x]
     button .b2 -font $x
     lappend result [testfont counts $x]
@@ -765,10 +766,29 @@ test font-17.1 {Tk_FreeFontFromObj - reference counts} -constraints {
     destroy .b2
     lappend result [testfont counts $x]
     destroy .b3
+    update idletasks
     lappend result [testfont counts $x]
 } -cleanup {
     font delete font-17.1_font
 } -result {{{3 1}} {{2 1}} {{1 1}} {}}
+test font-17.2 {Tk_FreeFont - unused font is kept until idle time} -constraints {
+    testfont
+} -setup {
+    destroy .b1
+    set result {}
+} -body {
+    set x [font create font-17.2_font -family Courier -size 12]
+    button .b1 -font $x
+    destroy .b1
+    lappend result [testfont counts $x]
+    button .b1 -font $x
+    lappend result [testfont counts $x]
+    destroy .b1
+    update idletasks
+    lappend result [testfont counts $x]
+} -cleanup {
+    font delete font-17.2_font
+} -result {{{0 1}} {{1 1}} {}}
 test font-17.2 {Tk_FreeFont procedure: one ref} -setup {
     destroy .t.f
     pack [label .t.f]
@@ -852,6 +872,7 @@ test font-18.1 {FreeFontObjProc} -constraints testfont -setup {
     set z 32
     lappend result [testfont counts [list $f 50]]
     destroy .b1
+    update idletasks
     lappend result [testfont counts [list $f 50]]
     set y bogus
     return $result

@@ -8391,9 +8391,9 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-09-23 (bug) [223635] NULL dereference as result of peculiarly formed font name (storchaka)
 
-2026-09-24 (bug) [e7fc29] Performance problems with "photo copy -to" (storchaka)
-
 2026-09-23 (bug) [3de1b7] ttk::notebook takes the focus when clicked, even with the -takefocus 0 option (storchaka)
+
+2026-09-24 (bug) [e7fc29] Performance problems with "photo copy -to" (storchaka)
 
 2026-09-24 (bug) [313169] Mapped/Unmapped and Iconic State Problems (storchaka)
 
@@ -8402,5 +8402,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-09-25 (bug) [214852] canvas scrolls when the scrollbar indicates that it cannot (storchaka)
 
 2026-09-25 (bug) [791527] menu entries are drawn directly on the screen (storchaka)
+
+2026-09-25 (bug) [8da7af] slow widget creation if default font is not used (storchaka)
 
 2026-09-25 (bug) [2effa4] window is not focused on create (storchaka)
