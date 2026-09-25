@@ -73,7 +73,7 @@ TkpDisplayMenuButton(
     int width = 0, height = 0;
 				/* Image information that will be used to
 				 * restrict disabled pixmap as well */
-    int haveImage = 0, haveText = 0;
+    bool haveImage = false;
     int padX, padY;
     int mbPtrBorderWidth, highlightWidth;
 
@@ -96,15 +96,15 @@ TkpDisplayMenuButton(
 
     if (mbPtr->image != NULL) {
 	Tk_SizeOfImage(mbPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (mbPtr->bitmap != None) {
 	Tk_SizeOfBitmap(mbPtr->display, mbPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
     imageWidth	= width;
     imageHeight = height;
 
-    haveText = (mbPtr->textWidth != 0 && mbPtr->textHeight != 0);
+    bool haveText = (mbPtr->textWidth != 0 && mbPtr->textHeight != 0);
 
     /*
      * In order to avoid screen flashes, this function redraws the menu button
@@ -351,7 +351,7 @@ TkpComputeMenuButtonGeometry(
 {
     int width, height, mm, pixels;
     int	 avgWidth, txtWidth, txtHeight;
-    int haveImage = 0, haveText = 0;
+    bool haveImage = false, haveText = false;
     Tk_FontMetrics fm;
     int borderWidth, highlightWidth, wrapLength;
     int padX, padY;
@@ -371,13 +371,13 @@ TkpComputeMenuButtonGeometry(
 
     if (mbPtr->image != NULL) {
 	Tk_SizeOfImage(mbPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (mbPtr->bitmap != None) {
 	Tk_SizeOfBitmap(mbPtr->display, mbPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
 
-    if (haveImage == 0 || mbPtr->compound != COMPOUND_NONE) {
+    if (!haveImage || mbPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
 
 	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->textObj ? Tcl_GetString(mbPtr->textObj) : "",
@@ -456,7 +456,7 @@ TkpComputeMenuButtonGeometry(
 	}
     }
 
-    if (! haveImage) {
+    if (!haveImage) {
 	width += 2 * padX;
 	height += 2 * padY;
     }

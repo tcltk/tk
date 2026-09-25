@@ -4189,6 +4189,23 @@ test textDisp-25.1 "CharBboxProc procedure, check tab width" \
     } \
     -match glob \
     -result *
+test textDisp-25.2 {CharBboxProc procedure, multi-byte characters - bug 7579c335f1} -setup {
+    .t tag configure prop -font {Helvetica 14}
+} -body {
+    .t delete 1.0 end
+    .t insert 1.0 "\u0414\u043e\u0431\u0440\u043e\u0433\u043e \u0440\u0430\u043d\u043a\u0443, \u0441\u0432\u0456\u0442\u0435" prop
+    update
+    set result {}
+    for {set i 0} {$i < 20} {incr i} {
+	if {[lindex [.t bbox 1.$i] 2] !=
+		[font measure {Helvetica 14} [.t get 1.$i]]} {
+	    lappend result 1.$i
+	}
+    }
+    set result
+} -cleanup {
+    .t tag delete prop
+} -result {}
 #
 # COMMON TEST SETUP
 #

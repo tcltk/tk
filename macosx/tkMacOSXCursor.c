@@ -220,7 +220,8 @@ FindCursorByName(
     NSString *path = nil;
     NSImage *image = nil;
     NSPoint hotSpot = NSZeroPoint;
-    int haveHotSpot = 0, result = TCL_ERROR;
+    bool haveHotSpot = false;
+    int result = TCL_ERROR;
     NSCursor *macCursor = nil;
 
     if (name[0] == '@') {
@@ -255,7 +256,7 @@ FindCursorByName(
 	    case IMAGENAMED:
 		image = [[NSImage imageNamed:cursorNames[idx].id1] retain];
 		hotSpot = cursorNames[idx].hotspot;
-		haveHotSpot = 1;
+		haveHotSpot = true;
 		break;
 	    case IMAGEPATH:
 		path = [NSApp tkFrameworkImagePath:cursorNames[idx].id1];
@@ -310,7 +311,7 @@ FindCursorByName(
 		uint16_t *hotSpotData = (uint16_t*)(bitmap + 2*pix*pix/8);
 		hotSpot.y = CFSwapInt16BigToHost(*hotSpotData++);
 		hotSpot.x = CFSwapInt16BigToHost(*hotSpotData);
-		haveHotSpot = 1;
+		haveHotSpot = true;
 		break;
 	    }
 	    }
@@ -323,7 +324,7 @@ FindCursorByName(
 	macCursorPtr->type = IMAGENAMED;
 	image = [[NSImage imageNamed:[NSString stringWithUTF8String:name]]
 		retain];
-	haveHotSpot = 0;
+	haveHotSpot = false;
     }
     if (image) {
 	if (!haveHotSpot && [[path pathExtension] isEqualToString:@"cur"]) {
@@ -332,7 +333,7 @@ FindCursorByName(
 		uint16_t *hotSpotData = (uint16_t*)((char*) [data bytes] + 10);
 		hotSpot.x = CFSwapInt16LittleToHost(*hotSpotData++);
 		hotSpot.y = CFSwapInt16LittleToHost(*hotSpotData);
-		haveHotSpot = 1;
+		haveHotSpot = true;
 	    }
 	}
 	if (!haveHotSpot) {
@@ -485,8 +486,8 @@ TkMacOSXInstallCursor(
     void)
 {
     TkMacOSXCursor *macCursorPtr = gCurrentCursor;
-    static int cursorHidden = 0;
-    int cursorNone = 0;
+    static bool cursorHidden = false;
+    bool cursorNone = false;
 
     if (!macCursorPtr) {
 	[[NSCursor arrowCursor] set];
@@ -494,10 +495,10 @@ TkMacOSXInstallCursor(
 	switch (macCursorPtr->type) {
 	case NONE:
 	    if (!cursorHidden) {
-		cursorHidden = 1;
+		cursorHidden = true;
 		[NSCursor hide];
 	    }
-	    cursorNone = 1;
+	    cursorNone = true;
 	    break;
 	case SELECTOR:
 	case IMAGENAMED:
@@ -509,7 +510,7 @@ TkMacOSXInstallCursor(
 	}
     }
     if (cursorHidden && !cursorNone) {
-	cursorHidden = 0;
+	cursorHidden = false;
 	[NSCursor unhide];
     }
 }
