@@ -36,10 +36,10 @@ typedef struct TkFontInfo {
 				 * a named font description. Keys are strings,
 				 * values are NamedFont pointers. */
     TkMainInfo *mainPtr;	/* Application that owns this structure. */
-    int updatePending;		/* Non-zero when a World Changed event has
+    bool updatePending;		/* True when a World Changed event has
 				 * already been queued to handle a change to a
 				 * named font. */
-    int freePending;		/* Non-zero when FreeUnusedFonts has already
+    bool freePending;		/* True when FreeUnusedFonts has already
 				 * been scheduled. */
 } TkFontInfo;
 
@@ -394,8 +394,8 @@ TkFontPkgInit(
     Tcl_InitHashTable(&fiPtr->fontCache, TCL_STRING_KEYS);
     Tcl_InitHashTable(&fiPtr->namedTable, TCL_STRING_KEYS);
     fiPtr->mainPtr = mainPtr;
-    fiPtr->updatePending = 0;
-    fiPtr->freePending = 0;
+    fiPtr->updatePending = false;
+    fiPtr->freePending = false;
     mainPtr->fontInfoPtr = fiPtr;
 
     TkpFontPkgInit(mainPtr);
@@ -884,7 +884,7 @@ UpdateDependentFonts(
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
 		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
 		if (!fiPtr->updatePending) {
-		    fiPtr->updatePending = 1;
+		    fiPtr->updatePending = true;
 		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
 		}
 	    }
@@ -899,7 +899,7 @@ TheWorldHasChanged(
 {
     TkFontInfo *fiPtr = (TkFontInfo *)clientData;
 
-    fiPtr->updatePending = 0;
+    fiPtr->updatePending = false;
     RecomputeWidgets(fiPtr->mainPtr->winPtr);
 }
 
@@ -1491,7 +1491,7 @@ Tk_FreeFont(
 
     fiPtr = (TkFontInfo *) fontPtr->cacheHashPtr->tablePtr;
     if (!fiPtr->freePending) {
-	fiPtr->freePending = 1;
+	fiPtr->freePending = true;
 	Tcl_DoWhenIdle(FreeUnusedFonts, fiPtr);
     }
 }
@@ -1521,7 +1521,7 @@ FreeUnusedFonts(
     Tcl_HashSearch search;
     TkFont *fontPtr, *nextPtr;
 
-    fiPtr->freePending = 0;
+    fiPtr->freePending = false;
     for (hPtr = Tcl_FirstHashEntry(&fiPtr->fontCache, &search);
 	    hPtr != NULL; hPtr = nextHPtr) {
 	nextHPtr = Tcl_NextHashEntry(&search);
