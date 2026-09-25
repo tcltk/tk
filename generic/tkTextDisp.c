@@ -8351,6 +8351,7 @@ TkTextCharLayoutProc(
 	ciPtr->numBytes--;
     }
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
      * Detect the bidi direction of this chunk.  We scan the raw storage
      * bytes (p still points to the start of the segment slice) rather than
@@ -8360,7 +8361,6 @@ TkTextCharLayoutProc(
     ciPtr->isRtl = ChunkIsRtl(
 	    segPtr->body.chars + byteOffset, ciPtr->numBytes);
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
      * Final update for the current base chunk data.
      */
@@ -8596,16 +8596,17 @@ CharChunkMeasureChars(
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-    /*
-     * Defensive check: if ciPtr is NULL, we can't measure anything.
-     */
-    if (ciPtr == NULL) {
-	*nextXPtr = startX;
-	return 0;
-    }
-
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chars == NULL) {
+	/*
+	 * Defensive check: without ciPtr there is nothing to measure.  The
+	 * layout proc measures before setting ciPtr, but passes the chars.
+	 */
+
+	if (ciPtr == NULL) {
+	    *nextXPtr = startX;
+	    return 0;
+	}
 	chars = ciPtr->chars;
 	charsLen = ciPtr->numBytes;
     }
@@ -8616,6 +8617,14 @@ CharChunkMeasureChars(
     return MeasureChars(tkfont, chars, charsLen, start, end-start,
 			startX, maxX, flags, nextXPtr);
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
+    /*
+     * Defensive check: if ciPtr is NULL, we can't measure anything.
+     */
+    if (ciPtr == NULL) {
+	*nextXPtr = startX;
+	return 0;
+    }
+
     {
 	int xDisplacement;
 	int fit, bstart = start, bend = end;
@@ -8977,8 +8986,9 @@ CharMeasureProc(
     int x)			/* X-coordinate, in same coordinate system as
 				 * chunkPtr->x. */
 {
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int endX;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr->isRtl) {
 	/*
@@ -9000,6 +9010,7 @@ CharMeasureProc(
 	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 				     chunkPtr->x, mirroredX, 0, &endX); /* CHAR OFFSET */
     }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 				 chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
@@ -9051,6 +9062,7 @@ CharBboxProc(
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     if (ciPtr->isRtl) {
 	/* RTL: mirror the measurement. */
 	int xEnd, xStart;
@@ -9064,7 +9076,9 @@ CharBboxProc(
 
 	if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
 	if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
-    } else {
+    } else
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+    {
 	/* LTR */
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 		chunkPtr->x, -1, 0, xPtr);
