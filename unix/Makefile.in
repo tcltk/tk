@@ -843,6 +843,8 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
+TESTFLAGS = -singleproc 0
+
 test: test-classic test-ttk
 
 test-classic: $(TKTEST_EXE)
