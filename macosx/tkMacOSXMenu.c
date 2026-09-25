@@ -1401,7 +1401,7 @@ TkpComputeStandardMenuGeometry(
     Tcl_Size i;
     int entryWidth, maxIndicatorSpace, borderWidth, activeBorderWidth;
     TkMenuEntry *mePtr;
-    int haveAccel = 0;
+    bool haveAccel = false;
 
     /*
      * Do nothing if this menu is a clone.
@@ -1437,7 +1437,7 @@ TkpComputeStandardMenuGeometry(
     for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == CASCADE_ENTRY || mePtr->accelLength > 0) {
-	    haveAccel = 1;
+	    haveAccel = true;
 	    break;
 	}
     }
@@ -1469,18 +1469,19 @@ TkpComputeStandardMenuGeometry(
 	     */
 
 	    NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	    int haveImage = 0, width = 0, height = 0;
+	    bool haveImage = false;
+	    int width = 0, height = 0;
 
 	    if (mePtr->image) {
 		Tk_SizeOfImage(mePtr->image, &width, &height);
-		haveImage = 1;
+		haveImage = true;
 		height += 2; /* tweak */
 	    } else if (mePtr->bitmapPtr) {
 		Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin,
 			mePtr->bitmapPtr);
 
 		Tk_SizeOfBitmap(menuPtr->display, bitmap, &width, &height);
-		haveImage = 1;
+		haveImage = true;
 		height += 2; /* tweak */
 	    }
 	    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
