@@ -6577,6 +6577,29 @@ TkpGetMS(void)
     Tcl_GetTime(&now);
     return (long) now.sec * 1000 + now.usec / 1000;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ *	The time of the event which is currently being processed. On this
+ *	platform it is the current time.
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    return TkpGetMS();
+}
 
 /*
  *----------------------------------------------------------------------
