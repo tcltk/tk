@@ -248,6 +248,12 @@ TkMenuConfigureDrawOptions(
 	gcValues.stipple = menuPtr->gray;
 	newGC = Tk_GetGC(menuPtr->tkwin,
 	    GCForeground|GCFillStyle|GCStipple, &gcValues);
+    } else {
+	/* If we are unable to create the gray50 bitmap, just create a GC with
+	 * the same mask as the disabledGC.  We cannot resuse the disabledGC
+	 * because they get freed separately.
+	 */
+	newGC = Tk_GetGC(menuPtr->tkwin, mask, &gcValues);
     }
     if (menuPtr->disabledImageGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledImageGC);
