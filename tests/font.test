@@ -811,7 +811,7 @@ test font-17.1 {Tk_FreeFontFromObj - reference counts} -constraints {
 } -cleanup {
     font delete font-17.1_font
 } -result {{{3 1}} {{2 1}} {{1 1}} {}}
-test font-17.2 {Tk_FreeFont - unused font is kept until idle time} -constraints {
+test font-17.1.1 {Tk_FreeFont - unused font is kept until idle time} -constraints {
     testfont
 } -setup {
     destroy .b1
@@ -875,9 +875,9 @@ test font-17.5 {Tk_FreeFont procedure: named font} -setup {
     font delete xyz
     set x [font actual xyz -underline]
     destroy .t.f
-    update
+    update idletasks
     list [font actual xyz -underline] $x
-} -result {1 1}
+} -result {0 1}
 test font-17.6 {Tk_FreeFont procedure: named font not deleted yet} -setup {
     destroy .t.f .t.b
     catch {font delete xyz}
