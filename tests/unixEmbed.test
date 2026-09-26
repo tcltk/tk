@@ -1049,9 +1049,13 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
-    unix notAqua failsOnCILinux failsOnXQuartz
+    unix notAqua
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -width 200 -height 50
