@@ -687,7 +687,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
     }
     focus -force .f1
     update
-    childTkProcess eval {set x}
+    childTkProcess eval {update; set x}
 } -cleanup {
     deleteWindows
 } -result {{focus in .t1}}
