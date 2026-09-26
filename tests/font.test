@@ -329,6 +329,25 @@ test font-6.7 {font command: create: already exists} -setup {
     font delete xyz
 } -returnCodes error -result {named font "xyz" already exists}
 
+test font-6.8 {font command: create: unused font cached under the name} -body {
+    set x [font actual font-6.8_font -underline]
+    font create font-6.8_font -underline 1
+    list $x [font actual font-6.8_font -underline]
+} -cleanup {
+    font delete font-6.8_font
+} -result {0 1}
+test font-6.9 {font command: create: font used by a widget before it was created, bug c81e0ccee2} -setup {
+    destroy .l
+} -body {
+    label .l -font font-6.9_font -text LARGE
+    set x [font actual [.l cget -font] -underline]
+    font create font-6.9_font -underline 1
+    list $x [font actual [.l cget -font] -underline]
+} -cleanup {
+    destroy .l
+    font delete font-6.9_font
+} -result {0 1}
+
 test font-7.1 {font command: delete: arguments} -body {
     # (objc < 3)
     font delete
@@ -2673,6 +2692,35 @@ test font-47.3 {Bug 3049518 - Label} -body {
     destroy $l
     unset -nocomplain ::results
 } -result {{1 1} {1 1} {1 1} {1 1}}
+
+test font-47.4 {Bug c81e0ccee2 - define named font after use causes widget update} -setup {
+    # Be sure, fonts do not exist
+    catch {font delete F1}
+    catch {font delete F2}
+    # Get a measurement of the Widget size as normal
+    font create F1 -family Helvetica -size 100
+    label .l -font F1 -text LARGE
+    pack .l
+    update
+    set W1 [winfo width .l]
+    destroy .l
+    font delete F1
+} -body {
+    # Create with undefined font, so default is used
+    label .l -font F2 -text LARGE
+    pack .l
+    update
+    # create the used font
+    # Within label widget, the default font should be replaced by this font
+    font create F2 -family Helvetica -size 100
+    update
+    # compare size, so check, if label got rescaled
+    set W2 [winfo width .l]
+    expr {$W1 == $W2}
+} -cleanup {
+    destroy .l
+    font delete F2
+} -result 1
 
 #
 # TESTFILE CLEANUP
