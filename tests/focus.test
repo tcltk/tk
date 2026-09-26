@@ -665,7 +665,7 @@ childTkProcess exit
 
 # Test 5.1 fails (before and after update)
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix testwrapper secureserver failsOnCILinux failsOnXQuartz
+    unix testwrapper secureserver
 } -body {
     childTkProcess create
     focusSetup
