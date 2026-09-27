@@ -361,11 +361,6 @@ typedef struct TkDisplay {
 				 * information isn't used on Windows, but it's
 				 * needed on the Mac, and also on X11 when XIM
 				 * processing is being done. */
-    struct TkWindow *focusInGrabPtr;
-				/* Toplevel window which received the focus
-				 * while it was excluded by a grab, or NULL.
-				 * Its FocusIn event is processed when the
-				 * grab is released. */
 
     /*
      * Information used by tkGC.c only:
@@ -573,6 +568,11 @@ typedef struct TkDisplay {
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
     int ximGeneration;          /* Used to invalidate XIC */
+    struct TkWindow *focusInGrabPtr;
+				/* Toplevel window which received the focus
+				 * while it was excluded by a grab, or NULL.
+				 * Its FocusIn event is processed when the
+				 * grab is released. */
 } TkDisplay;
 
 /*
