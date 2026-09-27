@@ -8690,7 +8690,7 @@ printf '%s\n' "$enable_libcups" >&6; }
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_cups" >&5
