@@ -3010,7 +3010,7 @@ DisplayCanvas(
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
     int borderWidth, highlightWidth;
-    int repickAgain = 0;	/* A new current item is needed again after
+    bool repickAgain = false;	/* A new current item is needed again after
 				 * the current one was chosen. */
 
     if (canvasPtr->tkwin == NULL) {
