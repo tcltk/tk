@@ -185,11 +185,6 @@ test canvPs-3.1 {test ps generation with an embedded window} -setup {
     raise .
     focus .c.e
 
-    # Extra time for X server
-    after 150 {update}
-    after 300 {update idletasks}
-    after 450 {update}
-
     .c postscript -file $bar
     file exists $bar
 } -cleanup {
@@ -215,10 +210,6 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
     wm deiconify .
     raise .
     focus .c.e
-
-    after 150 {update}
-    after 300 {update idletasks}
-    after 450 {update}
 
     .c postscript -file $bar
     file exists $bar
@@ -252,6 +243,16 @@ test canvPs-5.2 {test ps generation with image} -body {
 } -cleanup {
     destroy .c
 } -returnCodes ok -match glob -result *
+test canvPs-7.1 {non-ASCII characters in text items - bug 1202684} -body {
+    pack [canvas .c]
+    update
+    .c create text 50 50 -text "a\u221a\u00e9\u0439\u20ac\u03b1 b"
+    set ps [.c postscript]
+    lsearch -all -inline [split $ps \n] {\[(*}
+} -cleanup {
+    destroy .c
+    unset -nocomplain ps
+} -result {{[(a)/radical/eacute/afii10075/Euro/alpha( b)]}}
 
 #
 # TESTFILE CLEANUP
