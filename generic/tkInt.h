@@ -903,7 +903,7 @@ typedef struct {
 #   ifndef XMaxTransChars
 #	define XMaxTransChars 7
 #   endif
-    char trans_chars[XMaxTransChars]; /* translated characters */
+    char trans_chars[XMaxTransChars]; /* translated characters (UTF-8) */
     unsigned char nbytes;
 #elif !defined(MAC_OSX_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's
@@ -1203,6 +1203,7 @@ MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
 MODULE_SCOPE unsigned long TkGetMS(void);
+MODULE_SCOPE unsigned long TkpGetEventTime(void);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
 MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,

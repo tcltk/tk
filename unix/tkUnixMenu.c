@@ -693,7 +693,7 @@ DrawMenuEntryLabel(
     int indicatorSpace = mePtr->indicatorSpace;
     int activeBorderWidth, leftEdge, imageHeight, imageWidth;
     int textHeight = 0, textWidth = 0;	/* stop GCC warning */
-    int haveImage = 0, haveText = 0;
+    bool haveImage = false, haveText = false;
     int imageXOffset = 0, imageYOffset = 0;
     int textXOffset = 0, textYOffset = 0;
 
@@ -711,20 +711,20 @@ DrawMenuEntryLabel(
 
     if (mePtr->image != NULL) {
 	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
-	haveImage = 1;
+	haveImage = true;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
 
 	Tk_SizeOfBitmap(menuPtr->display, bitmap, &imageWidth, &imageHeight);
-	haveImage = 1;
+	haveImage = true;
     }
-    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
+    if (!haveImage || mePtr->compound != COMPOUND_NONE) {
 	if (mePtr->labelLength > 0) {
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
 	    textHeight = fmPtr->linespace;
-	    haveText = 1;
+	    haveText = true;
 	}
     }
 
@@ -1591,16 +1591,16 @@ GetMenuLabelGeometry(
 				 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
-    int haveImage = 0;
+    bool haveImage = false;
 
     if (mePtr->image != NULL) {
 	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
-	haveImage = 1;
+	haveImage = true;
     } else if (mePtr->bitmapPtr != NULL) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
 
 	Tk_SizeOfBitmap(menuPtr->display, bitmap, widthPtr, heightPtr);
-	haveImage = 1;
+	haveImage = true;
     } else {
 	*heightPtr = 0;
 	*widthPtr = 0;
