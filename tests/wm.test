@@ -2184,6 +2184,21 @@ test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints 
 } -cleanup {
     deleteWindows
 } -result {0 0 1 1 {.t1 .t2}}
+test wm-transient-8.2 {deiconify transient withdrawn before its container
+	was mapped, Bug 562c3a3da5} -setup {
+    deleteWindows
+} -body {
+    toplevel .t1
+    toplevel .t2
+    wm transient .t2 .t1
+    wm withdraw .t2
+    update
+    wm deiconify .t2
+    update
+    list [wm state .t2] [winfo ismapped .t2]
+} -cleanup {
+    deleteWindows
+} -result {normal 1}
 
 
 ### wm state ###

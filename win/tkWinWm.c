@@ -2321,12 +2321,14 @@ TkWmMapWindow(
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	/*
-	 * Don't map a transient if the container is not mapped.
+	 * Don't map a transient if the container is not mapped, but create
+	 * its wrapper withdrawn, so that a later "wm deiconify" can map it.
+	 * [Bug 562c3a3da5]
 	 */
 
 	if (wmPtr->containerPtr != NULL && !Tk_IsMapped(wmPtr->containerPtr)) {
 	    wmPtr->hints.initial_state = WithdrawnState;
-	    return;
+	    Tk_MakeWindowExist((Tk_Window) wmPtr->containerPtr);
 	}
     } else {
 	if (wmPtr->hints.initial_state == WithdrawnState) {
