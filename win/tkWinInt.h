@@ -199,7 +199,6 @@ MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const c
  */
 
 
-MODULE_SCOPE Tcl_Encoding	TkWinGetKeyInputEncoding(void);
 MODULE_SCOPE Tcl_Encoding	TkWinGetUnicodeEncoding(void);
 MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 

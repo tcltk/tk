@@ -640,6 +640,7 @@ ParseOFNOptions(
 	case FILE_INITFILE:
 	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
 		goto error_return;
+	    Tcl_DStringFree(&optsPtr->utf16FileName);
 	    Tcl_UtfToExternalDStringEx(interp, TkWinGetUnicodeEncoding(),
 		Tcl_DStringValue(&ds), Tcl_DStringLength(&ds),
 		TCL_ENCODING_PROFILE_REPLACE, &optsPtr->utf16FileName, NULL);
