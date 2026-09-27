@@ -2050,7 +2050,7 @@ static int
 TestxfocusObjCmd(
     void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    iny objc,		/* Number of arguments. */
+    int objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, focusWin;
