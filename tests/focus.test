@@ -11,9 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 proc focusSetup {} {
     destroy .t
     toplevel .t
@@ -40,7 +37,10 @@ proc focusSetupAlt {} {
 # in this application.  It does it by arranging for another
 # application to grab the focus.  The "after" and "update" stuff
 # is needed to wait long enough for pending actions to get through
-# the X server and possibly also the window manager.
+# the X server and possibly also the window manager.  Some window
+# managers refuse to give the focus to another application or give it
+# back later; if the testxfocus command is available, the X input focus
+# is then set to None until this application no longer has it.
 
 proc focusClear {} {
     global x;
@@ -56,6 +56,13 @@ proc focusClear {} {
     }
         
     update
+    if {[llength [info commands testxfocus]]} {
+	for {set i 0} {$i < 10 && [testxfocus] ne ""} {incr i} {
+	    testxfocus none
+	    after 100
+	    update
+	}
+    }
 }
 
 
@@ -320,31 +327,30 @@ in .t.b1 NotifyNonlinear
 } .t.b1}
 
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuarz
+    unix testxfocus
 } -body {
-    focus .t.b1
-    focus .
+    focus -force .t.b1
+    testxfocus .
     update
-    event gen [testwrapper .t] <FocusIn> -detail NotifyAncestor
+    testxfocus .t
+    update
     set focusInfo {}
     set x [focus]
     event gen . <KeyPress-x>
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuarz
+    unix testxfocus
 } -body {
     set result {}
-    foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
-	    NotifyNonlinearVirtual NotifyPointer NotifyPointerRoot
-	    NotifyVirtual} {
-	    focus -force .t.b1
-	    event gen [testwrapper .t] <FocusOut> -detail $detail
-	    update
-	    lappend result [focus]
-    }
-    return $result
-} -result {{} .t.b1 {} {} .t.b1 .t.b1 {}}
+    focus -force .t.b1
+    update
+    focusClear
+    lappend result [focus]
+    testxfocus .t
+    update
+    lappend result [focus]
+} -result {{} .t.b1}
 test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     unix  testwrapper
 } -body {
@@ -353,12 +359,14 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper failsOnUbuntu failsOnXQuarz
+    unix testxfocus
 } -body {
-    focus .t.b1
-    event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
-    focus
-} -result {}
+    focus -force .b
+    update
+    set result [list [focus] [testxfocus]]
+    focusClear
+    lappend result [focus]
+} -result {.b . {}}
 test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
     unix  testwrapper
 } -body {
@@ -611,7 +619,7 @@ cleanupbg
 
 # Test 5.1 fails (before and after update)
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix testwrapper secureserver failsOnUbuntu failsOnXQuarz
+    unix testwrapper secureserver
 } -body {
     setupbg
     focusSetup
@@ -619,6 +627,7 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constr
     update
     set result [focus]
     send [dobg {tk appname}] {focus -force .; update}
+    update
     lappend result [focus]
     focus .t.b2
     update
