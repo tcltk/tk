@@ -532,7 +532,7 @@ install-binaries: binaries
 		$(COPY) $$i "$(BIN_INSTALL_DIR)"; \
 	    fi; \
 	    done
-	@if test "${EXESUFFIX}" = "s.exe"; then \
+	@if test "x${SHARED_BUILD}" != "x1"; then \
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    $(RM) $(PKG_INDEX); \
 	    (\
@@ -739,7 +739,7 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	@( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
-	@if test "${EXESUFFIX}" = "s.exe"; then \
+	@if test "x${SHARED_BUILD}" != "x1"; then \
 	    echo "Creating package index pkgIndex.tcl"; \
 	    $(RM) $(TK_VFS_PATH)/pkgIndex.tcl; \
 	    (\

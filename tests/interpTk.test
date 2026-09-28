@@ -44,7 +44,7 @@ test interpTk-1.1 {load tk in child interpreter} -constraints {useInstalledWish}
     foo eval package require tk
 } -cleanup {
     interp delete foo
-} -result 9.1b1
+} -result $::tk_patchLevel
 
 #
 # TESTFILE CLEANUP
