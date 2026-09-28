@@ -449,13 +449,55 @@ foreach mode $modes {
     # needed on the other platforms because they use native file dialogs.
 }
 
+proc IconListSetup {{multiple 1}} {
+    image create photo filebox.img -width 16 -height 16
+    set ::invoked 0
+    ::tk::IconList .il -multiple $multiple -command {incr ::invoked}
+    pack .il
+    .il add filebox.img {a.txt b.txt c.txt d.txt e.txt}
+    update
+}
+proc IconListCleanup {} {
+    destroy .il
+    image delete filebox.img
+    unset -nocomplain ::invoked
+}
+# Clicks the item with the given index count times with the modifier.
+proc IconListClick {i {modifier {}} {count 1}} {
+    variable clickTime
+    set c [tk_focusNext .il]
+    # Find the center of the item.
+    set xs 0
+    set ys 0
+    set n 0
+    for {set y 0} {$y < [winfo height $c]} {incr y 2} {
+	for {set x 0} {$x < [winfo width $c]} {incr x 2} {
+	    if {[.il index @$x,$y] eq $i} {
+		incr xs $x
+		incr ys $y
+		incr n
+	    }
+	}
+    }
+    set x [expr {$xs / $n}]
+    set y [expr {$ys / $n}]
+    set state [dict get {{} 0 Shift 0x1 Control 0x4} $modifier]
+    # Separate from the previous clicks.
+    incr clickTime 10000
+    for {set k 0} {$k < $count} {incr k} {
+	event generate $c <ButtonPress-1> -x $x -y $y -button 1 \
+		-state $state -time [incr clickTime 50]
+	event generate $c <ButtonRelease-1> -x $x -y $y -button 1 \
+		-state [expr {$state | 0x100}] -time [incr clickTime 20]
+    }
+    update
+}
+set clickTime 0
+
 test filebox-8.1 {icon list keeps the selection when losing focus, Bug 600313} -constraints {
     testxfocus
 } -setup {
-    image create photo filebox.img -width 16 -height 16
-    ::tk::IconList .il -multiple 1
-    pack .il
-    .il add filebox.img {a.txt b.txt c.txt}
+    IconListSetup
     # Give the focus to the icon list, as with the Tab key.
     focus -force [tk_focusNext .il]
     update
@@ -467,9 +509,84 @@ test filebox-8.1 {icon list keeps the selection when losing focus, Bug 600313} -
     update
     .il selection get
 } -cleanup {
-    destroy .il
-    image delete filebox.img
+    IconListCleanup
 } -result {0 1}
+test filebox-8.2 {icon list: click selects one item} -setup {
+    IconListSetup
+} -body {
+    .il selection set 0 2
+    IconListClick 1
+    list [.il selection get] [.il index anchor] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {1 1 0}
+test filebox-8.3 {icon list: Control-click toggles an item} -setup {
+    IconListSetup
+} -body {
+    IconListClick 0
+    IconListClick 2 Control
+    set res [.il selection get]
+    IconListClick 0 Control
+    list $res [.il selection get] [.il index anchor] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {{0 2} 2 2 0}
+test filebox-8.4 {icon list: Shift-click selects a range from the anchor} -setup {
+    IconListSetup
+} -body {
+    IconListClick 1
+    IconListClick 3 Shift
+    set res [list [.il selection get]]
+    IconListClick 0 Shift
+    lappend res [.il selection get]
+    IconListClick 2 Shift
+    lappend res [.il selection get] [.il index anchor] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {{1 2 3} {0 1} {1 2} 1 0}
+test filebox-8.5 {icon list: double-click invokes} -setup {
+    IconListSetup
+} -body {
+    .il selection set 0 2
+    IconListClick 1 {} 2
+    list [.il selection get] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {1 1}
+test filebox-8.6 {icon list: Shift-double-click invokes the range} -setup {
+    IconListSetup
+} -body {
+    IconListClick 0
+    IconListClick 2 Shift 2
+    list [.il selection get] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {{0 1 2} 1}
+test filebox-8.7 {icon list: Control-double-click does not invoke, Bug 600313} -setup {
+    IconListSetup
+} -body {
+    .il selection set 1 2
+    # Toggle the first item twice.
+    IconListClick 0 Control 2
+    list [.il selection get] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {{1 2} 0}
+test filebox-8.8 {icon list: Control-click and Shift-click without -multiple} -setup {
+    IconListSetup 0
+} -body {
+    IconListClick 0
+    IconListClick 1 Control
+    IconListClick 2 Shift
+    list [.il selection get] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {0 0}
+
+rename IconListSetup {}
+rename IconListCleanup {}
+rename IconListClick {}
+unset clickTime
 
 #
 # TESTFILE CLEANUP
