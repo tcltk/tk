@@ -441,6 +441,7 @@ package require tk
 
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Control-Double-ButtonRelease-1> {;}
+	bind $canvas <Shift-Double-ButtonRelease-1> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
 	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]

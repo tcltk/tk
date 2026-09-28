@@ -553,15 +553,15 @@ test filebox-8.5 {icon list: double-click invokes} -setup {
 } -cleanup {
     IconListCleanup
 } -result {1 1}
-test filebox-8.6 {icon list: Shift-double-click invokes the range} -setup {
+test filebox-8.6 {icon list: Shift-double-click does not invoke} -setup {
     IconListSetup
 } -body {
-    IconListClick 0
-    IconListClick 2 Shift 2
+    IconListClick 1
+    IconListClick 3 Shift 2
     list [.il selection get] $invoked
 } -cleanup {
     IconListCleanup
-} -result {{0 1 2} 1}
+} -result {{1 2 3} 0}
 test filebox-8.7 {icon list: Control-double-click does not invoke, Bug 600313} -setup {
     IconListSetup
 } -body {
@@ -582,6 +582,20 @@ test filebox-8.8 {icon list: Control-click and Shift-click without -multiple} -s
 } -cleanup {
     IconListCleanup
 } -result {0 0}
+test filebox-8.9 {icon list: mixed Control-click and Shift-click} -setup {
+    IconListSetup
+} -body {
+    IconListClick 0 Control
+    set res [list [.il selection get]]
+    IconListClick 2 Control
+    lappend res [.il selection get]
+    IconListClick 4 Shift
+    lappend res [.il selection get]
+    IconListClick 3 Control
+    lappend res [.il selection get] [.il index anchor] $invoked
+} -cleanup {
+    IconListCleanup
+} -result {0 {0 2} {2 3 4} {2 4} 2 0}
 
 rename IconListSetup {}
 rename IconListCleanup {}
