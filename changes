@@ -8406,3 +8406,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-09-25 (bug) [8da7af] slow widget creation if default font is not used (storchaka)
 
 2026-09-25 (bug) [2effa4] window is not focused on create (storchaka)
+
+2026-09-28 (bug) [313851] MS-Win: fix grab-global window inresponsive after key Win-D
+
