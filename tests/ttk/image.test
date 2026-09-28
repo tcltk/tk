@@ -82,6 +82,39 @@ test image-2.2 "Deletion of displayed image (radiobutton)" -setup {
     destroy .ttk_image22
 } -result {}
 
+test image-3.1 "Image element on another display, bug fde9dc2392" -constraints {
+    altDisplay
+} -setup {
+    image create photo ttk_image3 -width 16 -height 16
+    ttk_image3 put red -to 0 0 16 16
+    ttk::style element create ttk_image3.button image ttk_image3
+    ttk::style layout TtkImage3.TEntry {
+	Entry.field -sticky nswe -children {
+	    Entry.padding -sticky nswe -children {
+		ttk_image3.button -side right
+		Entry.textarea -sticky nswe
+	    }
+	}
+    }
+} -body {
+    toplevel .ttk_image3 -screen $env(TK_ALT_DISPLAY)
+    pack [ttk::entry .ttk_image3.e1 -style TtkImage3.TEntry]
+    pack [ttk::entry .ttk_image3.e2 -style TtkImage3.TEntry]
+    update
+} -result {}
+test image-3.2 "Image element on another display, its window destroyed and image recreated" -constraints {
+    altDisplay
+} -body {
+    destroy .ttk_image3.e1
+    update
+    image create photo ttk_image3 -width 20 -height 20
+    ttk_image3 put blue -to 0 0 20 20
+    pack [ttk::entry .ttk_image3.e3 -style TtkImage3.TEntry]
+    update
+} -cleanup {
+    destroy .ttk_image3
+} -result {}
+
 #
 # TESTFILE CLEANUP
 #
