@@ -229,6 +229,8 @@ MODULE_SCOPE int	TkpWmGetState(TkWindow *winPtr);
 MODULE_SCOPE int	TkTranslateWinEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam, LRESULT *result);
 MODULE_SCOPE void	TkWinPointerEvent(HWND hwnd, int x, int y);
+MODULE_SCOPE void	TkWinNonClientButtons(unsigned int buttons);
+MODULE_SCOPE unsigned int TkWinGetPointerState(void);
 
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c

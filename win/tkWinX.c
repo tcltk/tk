@@ -869,6 +869,15 @@ TkTranslateWinEvent(
     case WM_RBUTTONDBLCLK:
     case WM_XBUTTONDOWN:
     case WM_XBUTTONDBLCLK:
+	/*
+	 * A new press in the client area: all buttons pressed in the
+	 * non-client area have been released. [Bug 1391053]
+	 */
+
+	TkWinNonClientButtons(0);
+	TkWinPointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
+	return 1;
+
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
