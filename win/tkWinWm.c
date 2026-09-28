@@ -8152,6 +8152,14 @@ WmProc(
 	result = 0;
 	goto done;
 
+    case WM_UAHDRAWMENU:
+    case WM_UAHDRAWMENUITEM:
+    case WM_UAHMEASUREMENUITEM:
+	if (TkWinHandleMenubarDraw(hwnd, message, wParam, lParam, &result)) {
+	    goto done;
+	}
+	break;
+
     case WM_ENTERSIZEMOVE:
 	inMoveSize = 1;
 
@@ -8415,6 +8423,9 @@ WmProc(
 	}
     } else {
 	result = DefWindowProcW(hwnd, message, wParam, lParam);
+    }
+    if (message == WM_NCPAINT || message == WM_NCACTIVATE) {
+	TkWinDrawMenubarLine(hwnd);
     }
 
   done:
