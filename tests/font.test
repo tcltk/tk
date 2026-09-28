@@ -2675,6 +2675,26 @@ test font-47.3 {Bug 3049518 - Label} -body {
     unset -nocomplain ::results
 } -result {{1 1} {1 1} {1 1} {1 1}}
 
+test font-47.4 {named font changed while used on another display, Bug 483387} -constraints {
+    altDisplay
+} -setup {
+    catch {font delete xyz}
+} -body {
+    font create xyz
+    toplevel .t2 -screen $env(TK_ALT_DISPLAY)
+    pack [button .t2.b -font xyz -text xyz]
+    update
+    font configure xyz -size 20
+    update
+    font delete xyz
+    font create xyz
+    update
+    .t2.b cget -font
+} -cleanup {
+    destroy .t2
+    catch {font delete xyz}
+} -result xyz
+
 #
 # TESTFILE CLEANUP
 #
