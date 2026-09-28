@@ -53,6 +53,7 @@ to the userbase.
  - [send to a dead application returned "target application died"](https://core.tcl-lang.org/tk/tktview/729f9c)
  - [configure may not find cups.h](https://core.tcl-lang.org/tk/tktview/3ac12f)
  - [MS-Win: fix grab-global window inresponsive after key Win-D](https://core.tcl-lang.org/tk/tktview/3138512)
+ - [X11 <KeyRelease> broken](https://core.tcl-lang.org/tk/tktview/d3b964)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
