@@ -140,6 +140,8 @@ static void		DrawTearoffEntry(TkMenu *menuPtr, TkMenuEntry *mePtr,
 			    Drawable d, GC gc, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int x, int y,
 			    int width, int height);
+static void		DrawMenubarEntry(TkMenu *menuPtr, TkMenuEntry *mePtr,
+			    HDC hdc, const RECT *rectPtr, UINT itemState);
 static void		DrawMenuUnderline(TkMenu *menuPtr, TkMenuEntry *mePtr,
 			    Drawable d, GC gc, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int x, int y,
@@ -149,6 +151,8 @@ static void		DrawWindowsSystemBitmap(Display *display,
 			    int bitmapID, int alignFlags);
 static void		FreeID(WORD commandID);
 static char *		GetEntryText(TkMenu *menuPtr, TkMenuEntry *mePtr);
+static TkMenu *		GetCustomMenubar(HMENU hMenu);
+static TkMenu *		GetMenubarOfEntry(HWND hwnd, TkMenuEntry *mePtr);
 static void		GetMenuAccelGeometry(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int *widthPtr,
@@ -169,11 +173,18 @@ static void		GetTearoffEntryGeometry(TkMenu *menuPtr,
 			    const Tk_FontMetrics *fmPtr, int *widthPtr,
 			    int *heightPtr);
 static int		GetNewID(TkMenuEntry *mePtr, WORD *menuIDPtr);
+static int		IsCustomMenubar(TkMenu *menuPtr);
+static void		MeasureMenubarEntry(TkMenu *menuPtr,
+			    TkMenuEntry *mePtr, UINT *widthPtr,
+			    UINT *heightPtr);
+static UINT		MenuItemPosition(HMENU hMenu, TkMenuEntry *mePtr,
+			    UINT defaultPosition);
 static Tcl_ObjCmdProc2 TkWinMenuKeyObjCmd;
 static void		MenuSelectEvent(TkMenu *menuPtr);
 static void		ReconfigureWindowsMenu(void *clientData);
 static void		RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static void		SetDefaults(int firstTime);
+static void		SetMenubarBackground(TkMenu *menuPtr, int custom);
 static LRESULT CALLBACK	TkWinMenuProc(HWND hwnd, UINT message, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK	TkWinEmbeddedMenuProc(HWND hwnd, UINT message,
@@ -417,6 +428,9 @@ TkpDestroyMenu(
 		Tcl_DeleteHashEntry(hashEntryPtr);
 	    }
 	}
+	if (menuPtr->menuType == MENUBAR) {
+	    SetMenubarBackground(menuPtr, 0);
+	}
 	DestroyMenu(winMenuHdl);
     }
     menuPtr->platformData = NULL;
@@ -569,12 +583,21 @@ ReconfigureWindowsMenu(
     UINT flags;
     UINT itemID;
     Tcl_Size i, count;
-    int systemMenu = 0, base;
+    int systemMenu = 0, base, customMenubar;
     MENUITEMINFOW itemInfo;
 
     if (NULL == winMenuHdl) {
 	return;
     }
+
+    /*
+     * The items of a menu bar with the colors or fonts different from the
+     * defaults are drawn by Tk, like the items of other menus.
+     * [Bug 11bd4a03a0]
+     */
+
+    customMenubar = (menuPtr->menuType == MENUBAR)
+	    && IsCustomMenubar(menuPtr);
 
     /*
      * Reconstruct the entire menu. Takes care of nasty system menu and index
@@ -603,7 +626,7 @@ ReconfigureWindowsMenu(
 	}
 
 	itemText = GetEntryText(menuPtr, mePtr);
-	if ((menuPtr->menuType == MENUBAR)
+	if (((menuPtr->menuType == MENUBAR) && !customMenubar)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 		Tcl_UtfToWCharDString(itemText, TCL_INDEX_NONE, &translatedText);
 	    lpNewItem = (LPCWSTR) Tcl_DStringValue(&translatedText);
@@ -718,7 +741,7 @@ ReconfigureWindowsMenu(
 	 * For owner-drawn items, set the menu item string data
 	 * so screen readers can access the label text.
 	 */
-	if ((flags & MF_OWNERDRAW) && itemText != NULL) {
+	if ((flags & MF_OWNERDRAW) && itemText != NULL && !systemMenu) {
 	    Tcl_DString accessText;
 
 	    memset(&itemInfo, 0, sizeof(itemInfo));
@@ -733,7 +756,8 @@ ReconfigureWindowsMenu(
 	    itemInfo.dwItemData = (ULONG_PTR)mePtr;
 
 	    /* Set the menu item info - this makes text available to screen readers. */
-	    SetMenuItemInfoW(winMenuHdl, (UINT)i, TRUE, &itemInfo);
+	    SetMenuItemInfoW(winMenuHdl, GetMenuItemCount(winMenuHdl) - 1,
+		    TRUE, &itemInfo);
 
 	    Tcl_DStringFree(&accessText);
 	}
@@ -744,6 +768,9 @@ ReconfigureWindowsMenu(
 	}
     }
 
+    if (menuPtr->menuType == MENUBAR) {
+	SetMenubarBackground(menuPtr, customMenubar);
+    }
     if ((menuPtr->menuType == MENUBAR)
 	    && (menuPtr->parentTopLevelPtr != NULL)) {
 	HWND bar = TkWinGetWrapperWindow(menuPtr->parentTopLevelPtr);
@@ -1153,7 +1180,7 @@ TkWinEmbeddedMenuProc(
 
 int
 TkWinHandleMenuEvent(
-    TCL_UNUSED(HWND *),
+    HWND *phwnd,
     UINT *pMessage,
     WPARAM *pwParam,
     LPARAM *plParam,
@@ -1302,7 +1329,8 @@ TkWinHandleMenuEvent(
 		    wlabel = Tcl_UtfToWCharDString(src, len, &ds);
 		    if ((underline < len) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
-			*plResult = (2 << 16) | i;
+			*plResult = (2 << 16) | MenuItemPosition((HMENU) *plParam,
+				menuPtr->entries[i], (UINT) i);
 			returnResult = 1;
 			break;
 		    }
@@ -1316,6 +1344,17 @@ TkWinHandleMenuEvent(
     case WM_MEASUREITEM: {
 	LPMEASUREITEMSTRUCT itemPtr = (LPMEASUREITEMSTRUCT) *plParam;
 
+	if (itemPtr != NULL && itemPtr->CtlType == ODT_MENU) {
+	    mePtr = (TkMenuEntry *) itemPtr->itemData;
+	    menuPtr = GetMenubarOfEntry(*phwnd, mePtr);
+	    if (menuPtr != NULL) {
+		MeasureMenubarEntry(menuPtr, mePtr, &itemPtr->itemWidth,
+			&itemPtr->itemHeight);
+		*plResult = 1;
+		returnResult = 1;
+		break;
+	    }
+	}
 	if (itemPtr != NULL && tsdPtr->modalMenuPtr != NULL) {
 	    mePtr = (TkMenuEntry *) itemPtr->itemData;
 	    menuPtr = mePtr->menuPtr;
@@ -1344,6 +1383,17 @@ TkWinHandleMenuEvent(
 	Tk_FontMetrics fontMetrics;
 	DrawMenuFlags drawingParameters = DRAW_MENU_ENTRY_DEFAULT;
 
+	if (itemPtr != NULL && itemPtr->CtlType == ODT_MENU) {
+	    mePtr = (TkMenuEntry *) itemPtr->itemData;
+	    menuPtr = GetMenubarOfEntry(*phwnd, mePtr);
+	    if (menuPtr != NULL) {
+		DrawMenubarEntry(menuPtr, mePtr, itemPtr->hDC,
+			&itemPtr->rcItem, itemPtr->itemState);
+		*plResult = 1;
+		returnResult = 1;
+		break;
+	    }
+	}
 	if (itemPtr != NULL && tsdPtr->modalMenuPtr != NULL) {
 	    Tk_Font tkfont;
 
@@ -1466,6 +1516,446 @@ TkWinHandleMenuEvent(
     }
     }
     return returnResult;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsCustomMenubar --
+ *
+ *	Checks whether a Tk menu bar or its entries have the colors or the
+ *	font different from the defaults. Such menu bar is drawn by Tk rather
+ *	than by the system. [Bug 11bd4a03a0]
+ *
+ * Results:
+ *	1 if the menu bar is drawn by Tk, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+IsCustomMenubar(
+    TkMenu *menuPtr)
+{
+    Tcl_Size i;
+
+    if (strcmp(Tcl_GetString(menuPtr->borderPtr), DEF_MENU_BG_COLOR) != 0
+	    || strcmp(Tcl_GetString(menuPtr->fgPtr), DEF_MENU_FG) != 0
+	    || strcmp(Tcl_GetString(menuPtr->fontPtr), DEF_MENU_FONT) != 0) {
+	return 1;
+    }
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	TkMenuEntry *mePtr = menuPtr->entries[i];
+
+	if (mePtr->borderPtr != NULL || mePtr->fgPtr != NULL
+		|| mePtr->fontPtr != NULL) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetCustomMenubar --
+ *
+ *	Finds the Tk menu bar for a Windows menu if it is drawn by Tk.
+ *
+ * Results:
+ *	The menu, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkMenu *
+GetCustomMenubar(
+    HMENU hMenu)
+{
+    Tcl_HashEntry *hashEntryPtr;
+    TkMenu *menuPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (hMenu == NULL || tsdPtr->menuHWND == NULL) {
+	return NULL;
+    }
+    hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable, hMenu);
+    if (hashEntryPtr == NULL) {
+	return NULL;
+    }
+    menuPtr = (TkMenu *)Tcl_GetHashValue(hashEntryPtr);
+    if ((menuPtr->menuType != MENUBAR) || !IsCustomMenubar(menuPtr)) {
+	return NULL;
+    }
+    return menuPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetMenubarOfEntry --
+ *
+ *	Checks whether a menu entry is an entry of the Tk menu bar of a
+ *	window.
+ *
+ * Results:
+ *	The menu bar, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkMenu *
+GetMenubarOfEntry(
+    HWND hwnd,
+    TkMenuEntry *mePtr)
+{
+    TkMenu *menuPtr;
+    Tcl_Size i;
+    Tcl_HashEntry *hashEntryPtr;
+    HMENU hMenu = (hwnd != NULL) ? GetMenu(hwnd) : NULL;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (hMenu == NULL || mePtr == NULL || tsdPtr->menuHWND == NULL) {
+	return NULL;
+    }
+    hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable, hMenu);
+    if (hashEntryPtr == NULL) {
+	return NULL;
+    }
+    menuPtr = (TkMenu *)Tcl_GetHashValue(hashEntryPtr);
+    if (menuPtr->menuType != MENUBAR) {
+	return NULL;
+    }
+
+    /*
+     * Do not access the entry before it is found in the menu: the menu can
+     * be changed after the Windows menu was built.
+     */
+
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	if (menuPtr->entries[i] == mePtr) {
+	    return menuPtr;
+	}
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuItemPosition --
+ *
+ *	Finds the position of the item of a Windows menu for a menu entry.
+ *	It can differ from the index of the entry in a menu bar, which does
+ *	not contain the tearoff entry and the system menu.
+ *
+ * Results:
+ *	The position, or defaultPosition if it is not found.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static UINT
+MenuItemPosition(
+    HMENU hMenu,
+    TkMenuEntry *mePtr,
+    UINT defaultPosition)
+{
+    MENUITEMINFOW itemInfo;
+    int i, count = GetMenuItemCount(hMenu);
+
+    for (i = 0; i < count; i++) {
+	memset(&itemInfo, 0, sizeof(itemInfo));
+	itemInfo.cbSize = sizeof(MENUITEMINFOW);
+	itemInfo.fMask = MIIM_DATA;
+	if (GetMenuItemInfoW(hMenu, (UINT)i, TRUE, &itemInfo)
+		&& (itemInfo.dwItemData == (ULONG_PTR)mePtr)) {
+	    return (UINT)i;
+	}
+    }
+    return defaultPosition;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MeasureMenubarEntry --
+ *
+ *	Computes the size of an item of a Windows menu bar drawn by Tk.
+ *
+ * Results:
+ *	The width and height are stored in *widthPtr and *heightPtr.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MeasureMenubarEntry(
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr,
+    UINT *widthPtr,
+    UINT *heightPtr)
+{
+    Tk_Font tkfont;
+    Tk_FontMetrics fm;
+    int width = 0, height;
+
+    tkfont = Tk_GetFontFromObj(menuPtr->tkwin,
+	    (mePtr->fontPtr == NULL) ? menuPtr->fontPtr : mePtr->fontPtr);
+    Tk_GetFontMetrics(tkfont, &fm);
+    height = fm.linespace;
+    if (mePtr->image != NULL) {
+	Tk_SizeOfImage(mePtr->image, &width, &height);
+    } else if (mePtr->labelPtr != NULL) {
+	Tcl_Size len;
+	const char *label = Tcl_GetStringFromObj(mePtr->labelPtr, &len);
+
+	width = Tk_TextWidth(tkfont, label, len);
+    }
+
+    /*
+     * The system adds the spacing between the items of a menu bar, and
+     * ignores the height: the menu bar has the standard height.
+     */
+
+    *widthPtr = (UINT)width;
+    *heightPtr = (UINT)height;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawMenubarEntry --
+ *
+ *	Draws an item of a Windows menu bar with the colors and font of the Tk
+ *	menu entry.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws into the device context.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DrawMenubarEntry(
+    TkMenu *menuPtr,		/* The menu bar. */
+    TkMenuEntry *mePtr,		/* The entry to draw. */
+    HDC hdc,			/* Where to draw. */
+    const RECT *rectPtr,	/* The rectangle of the item. */
+    UINT itemState)		/* ODS_* flags of the item. */
+{
+    TkWinDrawable twd;
+    Drawable d = (Drawable) &twd;
+    Tk_3DBorder border;
+    GC gc;
+    int savedDC;
+    int x = rectPtr->left, y = rectPtr->top;
+    int width = rectPtr->right - rectPtr->left;
+    int height = rectPtr->bottom - rectPtr->top;
+    int active = (itemState & (ODS_HOTLIGHT | ODS_SELECTED)) != 0;
+    int disabled = (mePtr->state == ENTRY_DISABLED)
+	    || (itemState & (ODS_GRAYED | ODS_DISABLED));
+
+    twd.type = TWD_WINDC;
+    twd.winDC.hdc = hdc;
+
+    /*
+     * The menu bar has the standard height, so a larger font or image is
+     * cut to the item.
+     */
+
+    savedDC = SaveDC(hdc);
+    IntersectClipRect(hdc, rectPtr->left, rectPtr->top, rectPtr->right,
+	    rectPtr->bottom);
+
+    if (active) {
+	border = Tk_Get3DBorderFromObj(menuPtr->tkwin,
+		(mePtr->activeBorderPtr == NULL) ? menuPtr->activeBorderPtr
+		: mePtr->activeBorderPtr);
+    } else {
+	border = Tk_Get3DBorderFromObj(menuPtr->tkwin,
+		(mePtr->borderPtr == NULL) ? menuPtr->borderPtr
+		: mePtr->borderPtr);
+    }
+    Tk_Fill3DRectangle(menuPtr->tkwin, d, border, x, y, width, height, 0,
+	    TK_RELIEF_FLAT);
+
+    if (disabled && (menuPtr->disabledFgPtr != NULL)) {
+	gc = (mePtr->disabledGC != NULL) ? mePtr->disabledGC
+		: menuPtr->disabledGC;
+    } else if (active) {
+	gc = (mePtr->activeGC != NULL) ? mePtr->activeGC : menuPtr->activeGC;
+    } else {
+	gc = (mePtr->textGC != NULL) ? mePtr->textGC : menuPtr->textGC;
+    }
+
+    if (mePtr->image != NULL) {
+	int imageWidth, imageHeight;
+
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	Tk_RedrawImage(mePtr->image, 0, 0, imageWidth, imageHeight, d,
+		x + (width - imageWidth) / 2, y + (height - imageHeight) / 2);
+    } else if (mePtr->labelPtr != NULL) {
+	Tcl_Size len;
+	const char *label = Tcl_GetStringFromObj(mePtr->labelPtr, &len);
+	Tk_Font tkfont;
+	Tk_FontMetrics fm;
+	int textWidth, textX, baseline;
+
+	tkfont = Tk_GetFontFromObj(menuPtr->tkwin,
+		(mePtr->fontPtr == NULL) ? menuPtr->fontPtr : mePtr->fontPtr);
+	Tk_GetFontMetrics(tkfont, &fm);
+	textWidth = Tk_TextWidth(tkfont, label, len);
+	textX = x + (width - textWidth) / 2;
+	baseline = y + (height + fm.ascent - fm.descent) / 2;
+	Tk_DrawChars(menuPtr->display, d, gc, tkfont, label, len, textX,
+		baseline);
+	if ((mePtr->underline >= 0) && (mePtr->underline < len)
+		&& !((itemState & ODS_NOACCEL) && !showMenuAccelerators)) {
+	    const char *start = Tcl_UtfAtIndex(label, mePtr->underline);
+	    const char *end = Tcl_UtfNext(start);
+
+	    Tk_UnderlineChars(menuPtr->display, d, gc, tkfont, label, textX,
+		    baseline, (int)(start - label), (int)(end - label));
+	}
+    }
+    RestoreDC(hdc, savedDC);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetMenubarBackground --
+ *
+ *	Sets the background of a Windows menu bar to the background of the Tk
+ *	menu if it is drawn by Tk, or resets it to the default.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Creates a brush, or deletes the previous one.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+SetMenubarBackground(
+    TkMenu *menuPtr,
+    int custom)
+{
+    HMENU winMenuHdl = (HMENU) menuPtr->platformData;
+    MENUINFO menuInfo;
+    HBRUSH oldBrush;
+
+    memset(&menuInfo, 0, sizeof(menuInfo));
+    menuInfo.cbSize = sizeof(MENUINFO);
+    menuInfo.fMask = MIM_BACKGROUND;
+    if ((winMenuHdl == NULL) || !GetMenuInfo(winMenuHdl, &menuInfo)) {
+	return;
+    }
+    oldBrush = menuInfo.hbrBack;
+    if (oldBrush == NULL && !custom) {
+	return;
+    }
+    menuInfo.hbrBack = NULL;
+    if (custom) {
+	XColor *colorPtr = Tk_3DBorderColor(Tk_Get3DBorderFromObj(
+		menuPtr->tkwin, menuPtr->borderPtr));
+
+	menuInfo.hbrBack = CreateSolidBrush(RGB(colorPtr->red >> 8,
+		colorPtr->green >> 8, colorPtr->blue >> 8));
+    }
+    SetMenuInfo(winMenuHdl, &menuInfo);
+    if (oldBrush != NULL) {
+	DeleteObject(oldBrush);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinDrawMenubarBackground --
+ *
+ *	Draws with the background of a Tk menu bar drawn by Tk the parts of
+ *	the menu bar which the system may draw with its own colors: the line
+ *	below the menu bar, and the area after the last item (Wine does not
+ *	use the background of the menu for it).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws into the non-client area of the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinDrawMenubarBackground(
+    HWND hwnd)
+{
+    HMENU hMenu = GetMenu(hwnd);
+    TkMenu *menuPtr = GetCustomMenubar(hMenu);
+    MENUBARINFO mbi;
+    RECT clientRect, windowRect, itemRect;
+    TkWinDrawable twd;
+    Tk_3DBorder border;
+    int count;
+    HDC hdc;
+
+    if (menuPtr == NULL) {
+	return;
+    }
+    mbi.cbSize = sizeof(mbi);
+    if (!GetMenuBarInfo(hwnd, OBJID_MENU, 0, &mbi)) {
+	return;
+    }
+    GetWindowRect(hwnd, &windowRect);
+    GetClientRect(hwnd, &clientRect);
+    MapWindowPoints(hwnd, NULL, (POINT *) &clientRect, 2);
+    OffsetRect(&clientRect, -windowRect.left, -windowRect.top);
+    OffsetRect(&mbi.rcBar, -windowRect.left, -windowRect.top);
+
+    hdc = GetWindowDC(hwnd);
+    twd.type = TWD_WINDC;
+    twd.winDC.hdc = hdc;
+    border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
+    Tk_Fill3DRectangle(menuPtr->tkwin, (Drawable) &twd, border,
+	    clientRect.left, clientRect.top - 1,
+	    clientRect.right - clientRect.left, 1, 0, TK_RELIEF_FLAT);
+    count = GetMenuItemCount(hMenu);
+    if ((count > 0) && GetMenuItemRect(hwnd, hMenu, (UINT)(count - 1),
+	    &itemRect)) {
+	OffsetRect(&itemRect, -windowRect.left, -windowRect.top);
+	if (itemRect.right < mbi.rcBar.right) {
+	    Tk_Fill3DRectangle(menuPtr->tkwin, (Drawable) &twd, border,
+		    itemRect.right, itemRect.top,
+		    mbi.rcBar.right - itemRect.right,
+		    mbi.rcBar.bottom - itemRect.top, 0, TK_RELIEF_FLAT);
+	}
+    }
+    ReleaseDC(hwnd, hdc);
 }
 
 /*

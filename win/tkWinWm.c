@@ -8416,6 +8416,9 @@ WmProc(
     } else {
 	result = DefWindowProcW(hwnd, message, wParam, lParam);
     }
+    if (message == WM_NCPAINT || message == WM_NCACTIVATE) {
+	TkWinDrawMenubarBackground(hwnd);
+    }
 
   done:
     Tcl_ServiceAll();

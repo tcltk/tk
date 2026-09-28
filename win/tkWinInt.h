@@ -190,6 +190,7 @@ MODULE_SCOPE HWND TkGetMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE HWND TkGetEmbeddedMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE void TkWinCancelMouseTimer(void);
 MODULE_SCOPE int TkWinHandleMenuEvent(HWND *, UINT *, WPARAM *, LPARAM *, LRESULT *);
+MODULE_SCOPE void TkWinDrawMenubarBackground(HWND);
 MODULE_SCOPE void TkWinSetMenu(Tk_Window, HMENU);
 MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const char *);
 
