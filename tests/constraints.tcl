@@ -166,7 +166,7 @@ testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 # a test that must be run by the installed wish, not by the tktest executable
 
 testConstraint useInstalledWish [expr {
-    (![string match tktest* [file tail [info nameofexecutable]]])
+    "useInstalledWish" in [tcltest::configure -constraints]
 }]
 
 # constraints for testing facilities defined in the tktest executable
