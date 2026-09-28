@@ -782,22 +782,19 @@ PlaceInfoCommand(
     char relStr[TCL_DOUBLE_SPACE];
 
     contentPtr = FindContent(tkwin);
-    if (contentPtr == NULL) {
+    if (contentPtr == NULL || contentPtr->containerPtr == NULL) {
 	return TCL_OK;
     }
     infoObj = Tcl_NewObj();
-    if (contentPtr->containerPtr != NULL) {
-	Tcl_AppendToObj(infoObj, "-in", TCL_INDEX_NONE);
-	Tcl_ListObjAppendElement(NULL, infoObj,
-		Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
-	Tcl_AppendToObj(infoObj, " ", TCL_INDEX_NONE);
-    }
+    Tcl_AppendToObj(infoObj, "-in", TCL_INDEX_NONE);
+    Tcl_ListObjAppendElement(NULL, infoObj,
+	    Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
     /*
      * Format the relative (floating-point) values with TkFormatDouble() so
      * they use '.' as the decimal separator regardless of LC_NUMERIC and stay
      * valid Tcl numbers; see TkFormatDouble in tkUtil.c.
      */
-    Tcl_AppendPrintfToObj(infoObj, "-x %d", contentPtr->x);
+    Tcl_AppendPrintfToObj(infoObj, " -x %d", contentPtr->x);
     TkFormatDouble(relStr, sizeof(relStr), "%.4g", contentPtr->relX);
     Tcl_AppendPrintfToObj(infoObj, " -relx %s", relStr);
     Tcl_AppendPrintfToObj(infoObj, " -y %d", contentPtr->y);

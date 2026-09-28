@@ -175,7 +175,8 @@ container may choose to resize itself (or otherwise respond) to such a change.
 Returns a list whose elements are the current configuration state of
 the window given by \fIwindow\fR in the same option-value form that
 might be specified to \fBpack configure\fR.
-The first two elements of the list are
+If the window is not packed, the result is the empty string,
+otherwise the first two elements of the list are
 .QW "\fB\-in \fIcontainer\fR"
 where \fIcontainer\fR is the window's container.
 .\" METHOD: propagate

@@ -241,7 +241,8 @@ may choose to resize itself (or otherwise respond) to such a change.
 Returns a list whose elements are the current configuration state of
 the content given by \fIwindow\fR in the same option-value form that
 might be specified to \fBgrid configure\fR.
-The first two elements of the list are
+If the window is not handled by grid, the result is the empty string,
+otherwise the first two elements of the list are
 .QW "\fB\-in \fIcontainer\fR"
 where \fIcontainer\fR is the windows's container window.
 .\" METHOD: location

@@ -1588,7 +1588,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     winfo manager .pack.a
     winfo geometry .pack.a
     pack info .pack.a
-} -returnCodes error -result {window ".pack.a" isn't packed}
+} -result {}
 
 # Tests pack-18.1.* are constrained because on Windows, when the width/height
 # is configured while the window is unmapped, the changes don't take

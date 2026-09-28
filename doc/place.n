@@ -226,6 +226,11 @@ Returns a list giving the current configuration of \fIwindow\fR.
 The list consists of \fIoption\-value\fR pairs in exactly the
 same form as might be specified to the \fBplace configure\fR
 command.
+If the window is not placed, the result is the empty string,
+otherwise the first two elements of the list are
+.QW "\fB\-in \fIcontainer\fR"
+where \fIcontainer\fR is the window's container.
+If the 
 .\" METHOD: slaves
 .TP
 \fBplace slaves \fIwindow\fR

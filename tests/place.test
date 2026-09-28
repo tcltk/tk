@@ -408,6 +408,14 @@ test place-9.12 {PlaceObjCmd, content errors} -setup {
 } -cleanup {
     destroy .foo
 } -returnCodes error -result {wrong # args: should be "place content pathName"}
+test place-9.13 {PlaceObjCmd, frame not placed} -setup {
+    destroy .foo
+} -body {
+    frame .foo
+    place info .foo
+} -cleanup {
+    destroy .foo
+} -result {}
 
 
 test place-10.1 {ConfigureContent} -setup {
