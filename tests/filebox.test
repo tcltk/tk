@@ -449,6 +449,28 @@ foreach mode $modes {
     # needed on the other platforms because they use native file dialogs.
 }
 
+test filebox-8.1 {icon list keeps the selection when losing focus, Bug 600313} -constraints {
+    testxfocus
+} -setup {
+    image create photo filebox.img -width 16 -height 16
+    ::tk::IconList .il -multiple 1
+    pack .il
+    .il add filebox.img {a.txt b.txt c.txt}
+    # Give the focus to the icon list, as with the Tab key.
+    focus -force [tk_focusNext .il]
+    update
+} -body {
+    .il selection set 0 1
+    # The application loses the X input focus, e.g. the pointer leaves
+    # the window with a focus-follows-mouse window manager.
+    testxfocus none
+    update
+    .il selection get
+} -cleanup {
+    destroy .il
+    image delete filebox.img
+} -result {0 1}
+
 #
 # TESTFILE CLEANUP
 #

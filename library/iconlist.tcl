@@ -587,7 +587,6 @@ package require tk
     }
     method FocusOut {} {
 	$w state !focus
-	$w selection clear 0 end
     }
 
     #	Moves the active element up or down by one element
