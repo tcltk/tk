@@ -1441,7 +1441,7 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
 
-test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} unix {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1450,7 +1450,7 @@ test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsO
     bind .t <Map> {set x "mapped"}
     bind .t <Unmap> {set x "unmapped"}
     set x {no event}
-    wm iconify .t
+    wm withdraw .t
     update idletasks
     lappend result $x [winfo ismapped .t]
     set x {no event}
@@ -1970,7 +1970,7 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing [expr $x + 350] $y] \
 	    [winfo containing [expr $x + 450] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     destroy .t
     destroy .t2
     toplevel .t -width 200 -height 200 -bg green
