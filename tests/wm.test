@@ -2553,11 +2553,10 @@ test wm-forget-1.5 {check wm forget for unmapped parent (ref. #3205464,#2967911,
     #
     # Moved here from winWm.test, test winWm-9.2 (cf. ticket #83eed90f93).
     #
-} -constraints {
-    failsOnCILinux failsOnXQuartz
 } -setup {
     destroy .t
     toplevel .t
+    wm geometry .t +100+100
     frame .t.f -background blue -height 200 -width 200
     frame .t.f.x -background red -height 100 -width 100
     set result {}
@@ -2566,7 +2565,7 @@ test wm-forget-1.5 {check wm forget for unmapped parent (ref. #3205464,#2967911,
     pack .t.f
     lappend aid [after 5000 {set ::result timeout}] [after 500 {
 	wm manage .t.f
-	wm iconify .t
+	wm withdraw .t
 	lappend aid [after 500 {
 	    wm forget .t.f
 	    wm deiconify .t
