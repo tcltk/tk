@@ -32,6 +32,7 @@ static Tcl_ObjCmdProc2 TestfindwindowObjCmd;
 static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
 static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
 static Tcl_ObjCmdProc2 TestsendinputObjCmd;
+static Tcl_ObjCmdProc2 TestalignimagedataObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -71,6 +72,8 @@ TkplatformtestInit(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testsendinput", TestsendinputObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testalignimagedata",
+	    TestalignimagedataObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -774,6 +777,102 @@ TestsendinputObjCmd(
     }
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestalignimagedataObjCmd --
+ *
+ *	This function implements the "testalignimagedata" command, which
+ *	converts the data of a 1-bit image with TkAlignImageData:
+ *
+ *	testalignimagedata width bytesPerLine bitOrder alignment lines
+ *
+ *	lines is a list of lines of the input data, each as a hexadecimal
+ *	string of bytesPerLine bytes; bitOrder is its bit order, "lsb" or
+ *	"msb". The result is the list of lines of the MSBFirst output data
+ *	aligned to alignment bytes, as hexadecimal strings.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestalignimagedataObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    static const char *const bitOrders[] = {"lsb", "msb", NULL};
+    int width, bytesPerLine, bitOrder, alignment, dataWidth;
+    Tcl_Size nLines, i, j;
+    Tcl_Obj **lineObjs, *resultObj;
+    XImage image;
+    char *input, *output;
+    unsigned int byte;
+
+    if (objc != 6) {
+	Tcl_WrongNumArgs(interp, 1, objv,
+		"width bytesPerLine bitOrder alignment lines");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[1], &width) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[2], &bytesPerLine) != TCL_OK
+	    || Tcl_GetIndexFromObj(interp, objv[3], bitOrders, "bit order", 0,
+		    &bitOrder) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[4], &alignment) != TCL_OK
+	    || Tcl_ListObjGetElements(interp, objv[5], &nLines,
+		    &lineObjs) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    input = (char *)Tcl_Alloc(bytesPerLine * nLines + 1);
+    for (i = 0; i < nLines; i++) {
+	const char *hex = Tcl_GetString(lineObjs[i]);
+
+	for (j = 0; j < bytesPerLine; j++) {
+	    if (sscanf(hex + 2 * j, "%2x", &byte) != 1) {
+		Tcl_Free(input);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad line \"%s\"", hex));
+		return TCL_ERROR;
+	    }
+	    input[i * bytesPerLine + j] = (char) byte;
+	}
+    }
+
+    memset(&image, 0, sizeof(image));
+    image.width = width;
+    image.height = (int) nLines;
+    image.bytes_per_line = bytesPerLine;
+    image.bits_per_pixel = 1;
+    image.depth = 1;
+    image.bitmap_bit_order = bitOrder ? MSBFirst : LSBFirst;
+    image.data = input;
+
+    output = TkAlignImageData(&image, alignment, MSBFirst);
+    dataWidth = (width + 8 * alignment - 1) / (8 * alignment) * alignment;
+    resultObj = Tcl_NewListObj(0, NULL);
+    for (i = 0; i < nLines; i++) {
+	Tcl_Obj *lineObj = Tcl_NewObj();
+
+	for (j = 0; j < dataWidth; j++) {
+	    Tcl_AppendPrintfToObj(lineObj, "%02x",
+		    (unsigned char) output[i * dataWidth + j]);
+	}
+	Tcl_ListObjAppendElement(NULL, resultObj, lineObj);
+    }
+    Tcl_Free(output);
+    Tcl_Free(input);
+    Tcl_SetObjResult(interp, resultObj);
+    return TCL_OK;
+}
+
 
 /*
  * Local Variables:

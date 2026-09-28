@@ -2735,6 +2735,24 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
     catch {image delete png1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
 
+# TkAlignImageData converts the 1-bit images of photos with -palette 2 on
+# Windows; the lines of the photo data are padded to 4 bytes.
+test imgPhoto-26.1 {TkAlignImageData, lines shorter than the input, Bug 481255} -constraints {
+    testalignimagedata
+} -body {
+    testalignimagedata 10 4 lsb 2 {01020000 ff030000}
+} -result {8040 ffc0}
+test imgPhoto-26.2 {TkAlignImageData, lines as long as the input} -constraints {
+    testalignimagedata
+} -body {
+    testalignimagedata 17 4 lsb 2 {01020100 ffff0100}
+} -result {80408000 ffff8000}
+test imgPhoto-26.3 {TkAlignImageData, lines shorter than the input, Bug 481255} -constraints {
+    testalignimagedata
+} -body {
+    testalignimagedata 40 8 msb 2 {0102030405000000}
+} -result {010203040500}
+
 #
 # TESTFILE CLEANUP
 #
