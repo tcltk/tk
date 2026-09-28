@@ -76,7 +76,7 @@ proc getsize {} {
     return "[winfo reqwidth .b.l] [winfo reqheight .b.l]"
 }
 
-test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11} {
+test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11 noExceed} {
     list [catch {font measure {} xyz} msg] $msg
 } {1 {font "" doesn't exist}}
 test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 haveFixedFamilyFont} {
@@ -88,21 +88,21 @@ test unixfont-2.1 {TkpGetFontFromAttributes procedure: no family} x11 {
     set x {}
 } {}
 test unixfont-2.2 {TkpGetFontFromAttributes procedure: Times relatives} \
-	{x11 hasTimesNew} {
+	{x11 noExceed hasTimesNew} {
     set x {}
     lappend x [lindex [font actual {-family "Times New Roman"}] 1]
     lappend x [lindex [font actual {-family "New York"}] 1]
     lappend x [lindex [font actual {-family "Times"}] 1]
 } {times times times}
 test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
-	{x11 hasCourierNew} {
+	{x11 noExceed hasCourierNew} {
     set x {}
     lappend x [lindex [font actual {-family "Courier New"}] 1]
     lappend x [lindex [font actual {-family "Monaco"}] 1]
     lappend x [lindex [font actual {-family "Courier"}] 1]
 } {courier courier courier}
 test unixfont-2.4 {TkpGetFontFromAttributes procedure: Helvetica relatives} \
-	{x11 hasArial} {
+	{x11 noExceed hasArial} {
     set x {}
     lappend x [lindex [font actual {-family "Arial"}] 1]
     lappend x [lindex [font actual {-family "Geneva"}] 1]
@@ -121,7 +121,7 @@ test unixfont-2.7 {TkpGetFontFromAttributes: fixed family not available!} x11 {
 test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11 haveFixedFamilyFont} {
     lindex [font actual {-family fixed -size 31}] 1
 } {fixed}
-test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 haveCourierFamilyFont} {
+test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 noExceed haveCourierFamilyFont} {
     lindex [font actual {-family courier}] 1
 } {courier}
 test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 havePointsize37Font} {
