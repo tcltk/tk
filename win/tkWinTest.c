@@ -297,6 +297,7 @@ TestwineventObjCmd(
 	{WM_GETTEXT,		"WM_GETTEXT"},
 	{WM_SETTEXT,		"WM_SETTEXT"},
 	{WM_COMMAND,            "WM_COMMAND"},
+	{WM_SYSCOMMAND,         "WM_SYSCOMMAND"},
 	{-1,			NULL}
     };
 
@@ -396,7 +397,8 @@ TestwineventObjCmd(
 	}
 	break;
     }
-    case WM_COMMAND: {
+    case WM_COMMAND:
+    case WM_SYSCOMMAND: {
 	char buf[TCL_INTEGER_SPACE];
 	if (objc < 5) {
 	    wParam = MAKEWPARAM(id, 0);
