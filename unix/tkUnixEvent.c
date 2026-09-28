@@ -183,7 +183,7 @@ TkpOpenDisplay(
 
     XkbSetDetectableAutoRepeat(display, True, NULL);
 
-    dispPtr = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
+    dispPtr = ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;
