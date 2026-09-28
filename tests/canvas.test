@@ -1411,6 +1411,27 @@ test canvas-25.1 {a canvas is not scrolled if its scroll region fits in it - bug
     destroy .c
 } -result 0.0
 
+
+test canvas-26.1 {no scroll command before the canvas is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    canvas .top.c -width 100 -height 100 -highlightthickness 0 \
+	    -scrollregion {0 0 200 200} \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    pack .top.c
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.c
+    update
+    lappend res $log
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res
+} -result {{} {x 0.0 0.5 y 0.0 0.5}}
+
 #
 # TESTFILE CLEANUP
 #

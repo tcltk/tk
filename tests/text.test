@@ -7843,6 +7843,27 @@ test text-38.1 {Extending selection with mouse going outside the widget - Bug a9
     destroy .t
 } -result {1.0}
 
+
+test text-39.1 {no scroll command before the text is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    text .top.t -width 20 -height 10 -wrap none \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    .top.t insert end [string repeat [string repeat x 40]\n 19]
+    pack .top.t
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.t
+    update
+    lappend res $log
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res
+} -result {{} {y 0.0 0.5 x 0.0 0.5}}
+
 #
 # TESTFILE CLEANUP
 #
