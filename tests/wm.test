@@ -2273,6 +2273,22 @@ test wm-state-2.10 {state change before map} -body {
 } -cleanup {
     deleteWindows
 } -result {normal}
+test wm-state-2.10.1 {state change before map, bug [d01ec103c0]} -body {
+    toplevel .t
+    wm withdraw .t
+    wm state .t iconic
+    wm state .t
+} -cleanup {
+    deleteWindows
+} -result {iconic}
+test wm-state-2.10.2 {state change before map, bug [d01ec103c0]} -body {
+    toplevel .t
+    wm withdraw .t
+    wm iconify .t
+    wm state .t
+} -cleanup {
+    deleteWindows
+} -result {iconic}
 test wm-state-2.11 {state change before map} -body {
     toplevel .t
     wm withdraw .t
