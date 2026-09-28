@@ -1541,10 +1541,18 @@ IsCustomMenubar(
     TkMenu *menuPtr)
 {
     Tcl_Size i;
+    const char *font;
 
+    /*
+     * The default font is the system menu font, specified by its name and
+     * size (see TkWinGetMenuSystemDefault).
+     */
+
+    font = Tcl_GetString(menuPtr->fontPtr);
     if (strcmp(Tcl_GetString(menuPtr->borderPtr), DEF_MENU_BG_COLOR) != 0
 	    || strcmp(Tcl_GetString(menuPtr->fgPtr), DEF_MENU_FG) != 0
-	    || strcmp(Tcl_GetString(menuPtr->fontPtr), DEF_MENU_FONT) != 0) {
+	    || (strcmp(font, DEF_MENU_FONT) != 0
+	    && strcmp(font, Tcl_DStringValue(&menuFontDString)) != 0)) {
 	return 1;
     }
     for (i = 0; i < menuPtr->numEntries; i++) {
