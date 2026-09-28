@@ -1,7 +1,11 @@
 /*
- * tkMacOSXWm.h --
+ * tkWaylandWm.h --
  *
  *      Declarations of Wayland-specific window manager structure.
+ *
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2026      Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,14 +22,16 @@
  *----------------------------------------------------------------------
  *
  * ProtocolHandler – per-protocol Tcl command binding.
+ * protocolName field stores original name for arbitrary protocols.
  *
  *----------------------------------------------------------------------
  */
 
 typedef struct ProtocolHandler {
-    int                    protocol;  /* Protocol identifier. */
+    int                    protocol;      /* Protocol identifier. */
     struct ProtocolHandler *nextPtr;
     Tcl_Interp            *interp;
+    char                  *protocolName;  /* Original name, e.g. WM_DELETE_WINDOW or custom */
     char                   command[TKFLEXARRAY];
 } ProtocolHandler;
 

@@ -54,6 +54,33 @@
 #define WM_TAKE_FOCUS       2
 #define WM_SAVE_YOURSELF    3
 
+/* General protocol name -> id table */
+typedef struct ProtocolNameEntry {
+    char *name;
+    int   id;
+    struct ProtocolNameEntry *nextPtr;
+} ProtocolNameEntry;
+static ProtocolNameEntry *protocolNameList = NULL;
+static int nextProtocolId = 4;
+static int WaylandGetProtocolId(const char *name){
+    ProtocolNameEntry *e;
+    for (e=protocolNameList;e;e=e->nextPtr) if (strcmp(e->name,name)==0) return e->id;
+    if (strcmp(name,"WM_DELETE_WINDOW")==0) return WM_DELETE_WINDOW;
+    if (strcmp(name,"WM_TAKE_FOCUS")==0) return WM_TAKE_FOCUS;
+    if (strcmp(name,"WM_SAVE_YOURSELF")==0) return WM_SAVE_YOURSELF;
+    e=(ProtocolNameEntry*)ckalloc(sizeof(ProtocolNameEntry));
+    e->name=ckalloc(strlen(name)+1); strcpy(e->name,name); e->id=nextProtocolId++; e->nextPtr=protocolNameList; protocolNameList=e; return e->id;
+}
+static const char* WaylandGetProtocolName(int id){
+    ProtocolNameEntry *e;
+    if (id==WM_DELETE_WINDOW) return "WM_DELETE_WINDOW";
+    if (id==WM_TAKE_FOCUS) return "WM_TAKE_FOCUS";
+    if (id==WM_SAVE_YOURSELF) return "WM_SAVE_YOURSELF";
+    for (e=protocolNameList;e;e=e->nextPtr) if (e->id==id) return e->name;
+    return NULL;
+}
+
+
 /* Window-state constants (X11 compatible). */
 #define WithdrawnState  0
 #define NormalState     1
@@ -368,9 +395,57 @@ TkWmNewWindow(
  *----------------------------------------------------------------------
  */
 
+
+/*
+ * Helper to safely destroy a toplevel from an idle callback (avoids
+ * re-entrancy inside GLFW callbacks).
+ */
+static void
+WaylandDoDestroyWindow(void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    if (winPtr == NULL) {
+        return;
+    }
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+        return;
+    }
+    Tk_DestroyWindow((Tk_Window)winPtr);
+}
+
+/*
+ * Generic protocol dispatcher – finds the handler for 'protocol'
+ * in wmPtr->protPtr and evaluates its Tcl command in its interpreter.
+ * Returns 1 if a handler was found and evaluated, 0 otherwise.
+ */
+static int
+TkWaylandHandleProtocol(WmInfo *wmPtr, int protocol)
+{
+    ProtocolHandler *protPtr;
+    for (protPtr = wmPtr->protPtr; protPtr != NULL; protPtr = protPtr->nextPtr) {
+        if (protPtr->protocol == protocol) {
+            Tcl_Interp *interp = protPtr->interp;
+            if (interp == NULL) {
+                continue;
+            }
+            Tcl_Preserve((ClientData)interp);
+            Tcl_Preserve((ClientData)wmPtr->winPtr);
+            int result = Tcl_EvalEx(interp, protPtr->command, -1, TCL_EVAL_GLOBAL);
+            if (result != TCL_OK) {
+                Tcl_BackgroundError(interp);
+            }
+            Tcl_Release((ClientData)wmPtr->winPtr);
+            Tcl_Release((ClientData)interp);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static void
 InitializeGlfwWindow(TkWindow *winPtr)
 {
+
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     DEBUG_LOG("InitializeGlfwWindow: %s", Tk_PathName(winPtr));
@@ -408,6 +483,12 @@ InitializeGlfwWindow(TkWindow *winPtr)
     Tk_CreateEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
 			  TopLevelEventProc, (void *)winPtr);
+
+    /*
+     * GLFW callbacks, including the close callback that dispatches
+     * "wm protocol . WM_DELETE_WINDOW <cmd>" via TkWmProtocolEventProc,
+     * are installed in tkWaylandNotify.c.
+     */
 }
 
 /*
@@ -1513,23 +1594,70 @@ TkWmRestackToplevel(
  *
  * TkWmProtocolEventProc --
  *
- *	No-op on Wayland (protocols handled via GLFW callbacks).
+ *	Dispatches a window manager protocol (WM_DELETE_WINDOW by default,
+ *	or WM_TAKE_FOCUS / WM_SAVE_YOURSELF when identified by a synthesized
+ *	ClientMessage) to the handler registered with [wm protocol].  Called
+ *	from the GLFW close callback in tkWaylandNotify.c with a NULL event.
+ *	If no handler is registered for WM_DELETE_WINDOW, the toplevel is
+ *	destroyed, matching Tk's default behavior.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Evaluates the registered Tcl command, or schedules window destruction.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkWmProtocolEventProc(
-		      TCL_UNUSED(TkWindow *),
-		      TCL_UNUSED(XEvent *))
+		      TkWindow *winPtr,
+		      XEvent *eventPtr)
 {
-    /* Protocols handled via GLFW callbacks. */
+    WmInfo *wmPtr;
+    int protocol = -1;
+
+    if (winPtr == NULL || winPtr->wmInfoPtr == NULL) {
+        return;
+    }
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    /*
+     * On X11 this proc receives ClientMessage events with an Atom
+     * identifying the protocol. On Wayland we may receive synthesized
+     * ClientMessage events from generic Tk code or from tests.
+     * Decode eventPtr if present, otherwise attempt to dispatch
+     * DELETE_WINDOW as fallback (preserves old comment's intent).
+     */
+    if (eventPtr && eventPtr->type == ClientMessage) {
+        /* Try to map Atom/string to our internal id */
+        const char *msg = NULL;
+        /* XClientMessageEvent message_type may hold protocol name */
+        /* For safety, if data.l[0] matches our constants, use it */
+        long l0 = eventPtr->xclient.data.l[0];
+        if (l0 == WM_DELETE_WINDOW || l0 == WM_TAKE_FOCUS || l0 == WM_SAVE_YOURSELF) {
+            protocol = (int)l0;
+        } else {
+            /* Fallback: treat any ClientMessage as DELETE_WINDOW if handler exists */
+            protocol = WM_DELETE_WINDOW;
+        }
+    } else {
+        /* Direct invocation (e.g., from generic code) – treat as DELETE_WINDOW
+         * if handler exists, but allow explicit protocol via event? */
+        protocol = WM_DELETE_WINDOW;
+    }
+
+    if (protocol != -1) {
+        if (!TkWaylandHandleProtocol(wmPtr, protocol)) {
+            /* No handler: for DELETE_WINDOW emulate default destroy */
+            if (protocol == WM_DELETE_WINDOW) {
+                if (!(winPtr->flags & TK_ALREADY_DEAD)) {
+                    Tcl_DoWhenIdle(WaylandDoDestroyWindow, (void *)winPtr);
+                }
+            }
+        }
+    }
 }
 
 /*
@@ -3000,34 +3128,25 @@ WmProtocolCmd(
 	      int         objc,
 	      Tcl_Obj *const objv[])
 {
-    WmInfo          *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     ProtocolHandler *protPtr, *prevPtr;
-    const char      *cmd;
-    Tcl_Size         cmdLength;
-    int              protocol;
+    const char *cmd;
+    Tcl_Size cmdLength;
+    const char *protocolName;
+    int protocol;
 
     if (objc == 0) {
         Tcl_Obj *result = Tcl_NewObj();
         for (protPtr=wmPtr->protPtr; protPtr; protPtr=protPtr->nextPtr) {
-            const char *name = NULL;
-            if      (protPtr->protocol==WM_DELETE_WINDOW) name="WM_DELETE_WINDOW";
-            else if (protPtr->protocol==WM_TAKE_FOCUS)    name="WM_TAKE_FOCUS";
-            else if (protPtr->protocol==WM_SAVE_YOURSELF) name="WM_SAVE_YOURSELF";
+            const char *name = protPtr->protocolName ? protPtr->protocolName : WaylandGetProtocolName(protPtr->protocol);
             if (name) Tcl_ListObjAppendElement(NULL,result,Tcl_NewStringObj(name,-1));
         }
         Tcl_SetObjResult(interp,result);
         return TCL_OK;
     }
 
-    cmd = Tcl_GetString(objv[0]);
-    if      (strcmp(cmd,"WM_DELETE_WINDOW")==0) protocol=WM_DELETE_WINDOW;
-    else if (strcmp(cmd,"WM_TAKE_FOCUS")==0)    protocol=WM_TAKE_FOCUS;
-    else if (strcmp(cmd,"WM_SAVE_YOURSELF")==0) protocol=WM_SAVE_YOURSELF;
-    else {
-        Tcl_SetObjResult(interp,Tcl_ObjPrintf("unknown protocol \"%s\"",cmd));
-        Tcl_SetErrorCode(interp,"TK","WM","PROTOCOL","UNKNOWN",NULL);
-        return TCL_ERROR;
-    }
+    protocolName = Tcl_GetString(objv[0]);
+    protocol = WaylandGetProtocolId(protocolName);
 
     if (objc == 1) {
         for (protPtr=wmPtr->protPtr; protPtr; protPtr=protPtr->nextPtr) {
@@ -3036,57 +3155,46 @@ WmProtocolCmd(
                 return TCL_OK;
             }
         }
+        Tcl_SetObjResult(interp,Tcl_NewStringObj("",-1));
         return TCL_OK;
     }
 
     cmd = Tcl_GetStringFromObj(objv[1],&cmdLength);
     if (cmdLength == 0) {
-        for (protPtr=wmPtr->protPtr,prevPtr=NULL; protPtr;
-             prevPtr=protPtr, protPtr=protPtr->nextPtr) {
+        for (protPtr=wmPtr->protPtr,prevPtr=NULL; protPtr; prevPtr=protPtr, protPtr=protPtr->nextPtr) {
             if (protPtr->protocol==protocol) {
-                if (prevPtr) prevPtr->nextPtr=protPtr->nextPtr;
-                else         wmPtr->protPtr  =protPtr->nextPtr;
+                if (prevPtr) prevPtr->nextPtr=protPtr->nextPtr; else wmPtr->protPtr=protPtr->nextPtr;
+                if (protPtr->protocolName) ckfree(protPtr->protocolName);
                 Tcl_EventuallyFree((void *)protPtr,TCL_DYNAMIC);
                 break;
             }
         }
     } else {
-        for (protPtr=wmPtr->protPtr,prevPtr=NULL; protPtr;
-             prevPtr=protPtr, protPtr=protPtr->nextPtr) {
+        for (protPtr=wmPtr->protPtr,prevPtr=NULL; protPtr; prevPtr=protPtr, protPtr=protPtr->nextPtr) {
             if (protPtr->protocol==protocol) break;
         }
         if (protPtr==NULL) {
             protPtr=(ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
             protPtr->protocol=protocol;
-            protPtr->nextPtr =wmPtr->protPtr;
-            wmPtr->protPtr   =protPtr;
-            protPtr->interp  =interp;
+            protPtr->protocolName=ckalloc(strlen(protocolName)+1);
+            strcpy(protPtr->protocolName,protocolName);
+            protPtr->nextPtr=wmPtr->protPtr; wmPtr->protPtr=protPtr; protPtr->interp=interp;
         } else {
-            protPtr=(ProtocolHandler *)ckrealloc((char *)protPtr,
-						 HANDLER_SIZE(cmdLength));
-            if (prevPtr) prevPtr->nextPtr=protPtr;
-            else         wmPtr->protPtr  =protPtr;
+            char *oldName = protPtr->protocolName;
+            protPtr=(ProtocolHandler *)ckrealloc((char *)protPtr, HANDLER_SIZE(cmdLength));
+            protPtr->protocolName = oldName;
+            if (prevPtr) prevPtr->nextPtr=protPtr; else wmPtr->protPtr=protPtr;
+            protPtr->interp=interp;
+            if (protPtr->protocolName==NULL || strcmp(protPtr->protocolName,protocolName)!=0) {
+                if (protPtr->protocolName) ckfree(protPtr->protocolName);
+                protPtr->protocolName=ckalloc(strlen(protocolName)+1);
+                strcpy(protPtr->protocolName,protocolName);
+            }
         }
         strcpy(protPtr->command, cmd);
     }
     return TCL_OK;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * WmResizableCmd --
- *
- *	Implements the "wm resizable" subcommand.
- *
- * Results:
- *	Standard Tcl result.
- *
- * Side effects:
- *	Updates resizability flags.
- *
- *----------------------------------------------------------------------
- */
 
 static int
 WmResizableCmd(

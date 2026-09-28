@@ -305,7 +305,7 @@ TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
 }
 
 /*
- * Dummy function for pending redraw check – can be extended later.
+ * Dummy function for pending redraw check â€“ can be extended later.
  */
 static inline int TkWaylandHasPendingRedraw(void) {
     return 0;  /* currently we redraw synchronously in every iteration */
@@ -428,10 +428,10 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
 
     int r = poll(pfds, nfds, 0);
     if (r > 0) {
-        /* Socket activity detected — process without blocking */
+        /* Socket activity detected â€” process without blocking */
         Tcl_SetMaxBlockTime(&noBlock);
     } else {
-        /* Idle — block for one display frame cycle */
+        /* Idle â€” block for one display frame cycle */
         Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
@@ -706,19 +706,38 @@ TkWaylandClearCallbacks(
  *----------------------------------------------------------------------
  */
  
-/* Helper function to avoid type mismatch in callback. */
-static void DestroyWindowIdleProc(void *clientData)
+/*
+ * Idle-time close dispatch. Deferring keeps user handlers (which commonly
+ * call "destroy .") from running re-entrantly inside GLFW's callback.
+ */
+static void
+CloseRequestIdleProc(void *clientData)
 {
-    Tk_DestroyWindow((Tk_Window)clientData);
+    TkWindow *winPtr = (TkWindow *)clientData;
+
+    if (!(winPtr->flags & TK_ALREADY_DEAD) && winPtr->wmInfoPtr != NULL) {
+        /*
+         * NULL event => WM_DELETE_WINDOW: runs the [wm protocol] handler
+         * if one is registered, otherwise falls back to the default
+         * destroy (see TkWmProtocolEventProc in tkWaylandWm.c).
+         */
+        TkWmProtocolEventProc(winPtr, NULL);
+    }
+    Tcl_Release(winPtr);
 }
- 
+
 static void
 TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
     DEBUG_LOG("TkWaylandWindowCloseCallback");
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
+
+    /* Never let GLFW close the window itself; Tk decides. */
+    glfwSetWindowShouldClose(window, GLFW_FALSE);
+
     if (winPtr) {
-	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
+        Tcl_Preserve(winPtr);
+        Tcl_DoWhenIdle(CloseRequestIdleProc, winPtr);
     }
 }
 
@@ -1277,7 +1296,7 @@ TkWaylandMouseButtonCallback(
             /* Force redraw after button click to update state. */
             TkWaylandMenuRedrawActive();
         }
-        /* Swallow both press and release — do not deliver to Tk widgets. */
+        /* Swallow both press and release â€” do not deliver to Tk widgets. */
         return;
     }
     Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
