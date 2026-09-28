@@ -566,6 +566,28 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constr
     unset -nocomplain winwm92 aid id
 } -result ok
 
+test winWm-9.3 "restore iconified window during global grab" -constraints {
+    win testwinevent
+} -setup {
+    destroy .t
+    toplevel .t
+    wm transient .t .
+    update
+} -body {
+    grab -global .t
+    wm iconify .
+    update
+    # SC_RESTORE, as sent when the taskbar button is clicked
+    testwinevent [wm frame .] 0 WM_SYSCOMMAND 0xF120
+    update
+    wm state .
+} -cleanup {
+    grab release .t
+    destroy .t
+    wm deiconify .
+    update
+} -result normal
+
 destroy .t
 
 # cleanup
