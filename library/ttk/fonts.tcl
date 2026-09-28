@@ -44,6 +44,11 @@
 #
 #	There does not appear to be any recommendations for fixed-width fonts.
 #
+# Wayland:
+#	Uses the Fontconfig aliases "sans-serif" and "monospace" at 10pt
+#	(8pt for tooltips and small captions, 12pt bold for captions), the
+#	same table tkWaylandFont.c registers natively.
+#
 # X11:
 #	"Classic" look used Helvetica bold for everything except
 #	for entry widgets, which use Helvetica medium.
@@ -65,7 +70,14 @@ catch {font create TkSmallCaptionFont}
 
 if {!$tip145} {apply {{} {
 global tcl_platform
-switch -- [tk windowingsystem] {
+
+# The Wayland backend reports its font system through pkgconfig; treat that
+# as its own platform even if [tk windowingsystem] reports something else.
+set ws [tk windowingsystem]
+if {![catch {tk::pkgconfig get fontsystem} fs] && $fs eq "wayland"} {
+    set ws wayland
+}
+switch -- $ws {
     win32 {
 	# In safe interps there is no osVersion element.
 	if {[info exists tcl_platform(osVersion)]} {
@@ -112,6 +124,27 @@ switch -- [tk windowingsystem] {
 	font configure TkIconFont    -family $family -size $size
 	font configure TkMenuFont    -family $family -size $menusize
 	font configure TkSmallCaptionFont -family $family -size $labelsize
+    }
+    wayland {
+	# Generic Fontconfig aliases; the Wayland backend (tkWaylandFont.c)
+	# resolves "sans-serif" and "monospace" through Fontconfig. Families
+	# and sizes match its built-in wlNamedFonts[] table.
+	set family "sans-serif"
+	set fixed  "monospace"
+	set size 10
+	set ttsize 8
+	set capsize 12
+	set fixedsize 10
+
+	font configure TkDefaultFont -family $family -size $size
+	font configure TkTextFont    -family $family -size $size
+	font configure TkHeadingFont -family $family -size $size    -weight bold
+	font configure TkCaptionFont -family $family -size $capsize -weight bold
+	font configure TkTooltipFont -family $family -size $ttsize
+	font configure TkFixedFont   -family $fixed  -size $fixedsize
+	font configure TkIconFont    -family $family -size $size
+	font configure TkMenuFont    -family $family -size $size
+	font configure TkSmallCaptionFont -family $family -size $ttsize
     }
     default -
     x11 {

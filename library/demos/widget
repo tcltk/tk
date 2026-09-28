@@ -655,7 +655,7 @@ proc showCode w {
 	    -orient horizontal
 	ttk::scrollbar $t.yscroll -command [list $t.text yview] \
 	    -orient vertical
-
+	    
 	grid $t.text $t.yscroll -sticky news
 	#grid $t.xscroll
 	grid rowconfigure $t 0 -weight 1

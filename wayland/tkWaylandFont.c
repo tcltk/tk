@@ -232,6 +232,52 @@ IsMonospaceFace(FcPattern *pat)
 
 /*
  *----------------------------------------------------------------------
+ * IsLoadableOutlineFace --
+ *
+ *   True if a Fontconfig pattern refers to a scalable outline font in a
+ *   container that nvgCreateFont()/stb_truetype can load (.ttf, .otf, or
+ *   face 0 of a .ttc).  Bitmap fonts such as the PCF "fixed" family are
+ *   fixed-pitch but unusable here; if one ends up as faces[0] the load
+ *   fails and the primary face silently degrades to DejaVu Sans.
+ *
+ * Results:
+ *   True if the face can be rendered by this backend.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsLoadableOutlineFace(FcPattern *pat)
+{
+    FcBool scalable = FcTrue;
+    FcChar8 *file = NULL;
+    int idx = 0;
+
+    if (!pat) return false;
+    if (FcPatternGetBool(pat, FC_SCALABLE, 0, &scalable) == FcResultMatch
+            && !scalable) {
+        return false;
+    }
+    if (FcPatternGetString(pat, FC_FILE, 0, &file) != FcResultMatch || !file) {
+        return false;
+    }
+    size_t n = strlen((const char *)file);
+    const char *ext = (const char *)file + (n >= 4 ? n - 4 : 0);
+    if (n >= 4 && (strcasecmp(ext, ".ttf") == 0 ||
+                   strcasecmp(ext, ".otf") == 0)) {
+        return true;
+    }
+    if (n >= 4 && strcasecmp(ext, ".ttc") == 0) {
+        FcPatternGetInteger(pat, FC_INDEX, 0, &idx);
+        return (idx & 0xFFFF) == 0;
+    }
+    return false;
+}
+
+/*
+ *----------------------------------------------------------------------
  * UnicodeCompose --
  *
  *   Attempt to compose a base character and combining mark.
@@ -2318,10 +2364,18 @@ EnsureNvgFont(
 
     /* Load each face into this context. */
     int primaryId = -1;
+    int primaryFace = -1;
     for (int i = 0; i < fontPtr->nfaces; i++) {
         int id = EnsureNvgFaceFont(fontPtr, i, vg);
-        if (i == 0) {
+        /*
+         * Use the first face that actually loads as primary, so an
+         * unloadable faces[0] (bitmap/CFF/missing file) falls through to
+         * the next Fontconfig match (e.g. DejaVu Sans Mono) instead of
+         * straight to the hard-coded DejaVu Sans fallback below.
+         */
+        if (primaryId < 0 && id >= 0) {
             primaryId = id;
+            primaryFace = i;
         }
     }
 
@@ -2368,9 +2422,9 @@ EnsureNvgFont(
      * it would sit dead.
      */
     if (primaryId >= 0) {
-        for (int i = 1; i < fontPtr->nfaces; i++) {
+        for (int i = 0; i < fontPtr->nfaces; i++) {
             int fb = fontPtr->faces[i].nvgFontId;
-            if (fb >= 0) {
+            if (i != primaryFace && fb >= 0) {
                 nvgAddFallbackFontId(vg, primaryId, fb);
             }
         }
@@ -2533,6 +2587,7 @@ InitFont(
         isGenericSerif = true;
     } else if (family && (strcasestr(family, "mono") ||
                strcasestr(family, "courier") ||
+               strcasecmp(family, "TkFixedFont") == 0 ||
                strcasestr(family, "fixed"))) {
         isGenericMono = true;
     }
@@ -2602,12 +2657,24 @@ InitFont(
     FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
     FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* Reject color fonts. */
+    FcPatternAddBool(pat, FC_SCALABLE,  FcTrue);    /* No bitmap fonts. */
+    if (isGenericMono) {
+        /* Prefer fixed-pitch faces over merely mono-sounding names. */
+        FcPatternAddInteger(pat, FC_SPACING, FC_MONO);
+    }
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
 
     FcResult result;
-    FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
+    /*
+     * trim=FcTrue drops any font whose charset is already covered by an
+     * earlier one.  For monospace requests that discards the real
+     * fixed-pitch faces (Noto Sans covers everything Noto Sans Mono does),
+     * leaving nothing for the monospace promotion below to find.
+     */
+    FcFontSet *set = FcFontSort(NULL, pat, isGenericMono ? FcFalse : FcTrue,
+                                NULL, &result);
 
     /* 
      * Move any remaining color-emoji faces to the very end 
@@ -2695,6 +2762,36 @@ InitFont(
             FcPattern *tmp = set->fonts[0];
             set->fonts[0] = set->fonts[best];
             set->fonts[best] = tmp;
+        }
+    }
+
+    /*
+     * When a monospace font was requested, make sure faces[0] really is
+     * fixed-pitch.  Mirrors the sans-serif correction above: FcFontSort
+     * can rank a proportional face first when the requested family is
+     * unknown or a generic alias.  Runs after the name-match step so it
+     * has the final say.
+     */
+    if (isGenericMono && set && set->nfont > 1) {
+        int monoIdx = -1;
+        for (int i = 0; i < set->nfont && monoIdx < 0; i++) {
+            int spacing = FC_PROPORTIONAL;
+            bool isMono = false;
+            if (FcPatternGetInteger(set->fonts[i], FC_SPACING, 0, &spacing)
+                    == FcResultMatch && spacing >= FC_DUAL) {
+                isMono = true;
+            } else if (IsMonospaceFace(set->fonts[i])) {
+                isMono = true;
+            }
+            if (isMono && !IsColorFcPattern(set->fonts[i]) &&
+                    IsLoadableOutlineFace(set->fonts[i])) {
+                monoIdx = i;
+            }
+        }
+        if (monoIdx > 0) {
+            FcPattern *tmp = set->fonts[0];
+            set->fonts[0] = set->fonts[monoIdx];
+            set->fonts[monoIdx] = tmp;
         }
     }
 
@@ -3131,7 +3228,28 @@ CreateStandardNamedFonts(ClientData clientData)
         if (TkCreateNamedFont(interp, tkwin, wlNamedFonts[i].tkName, &fa)
                 != TCL_OK) {
             const char *msg = Tcl_GetStringResult(interp);
-            if (!msg || !strstr(msg, "already exists")) {
+            if (msg && strstr(msg, "already exists")) {
+                /*
+                 * Something (a script, another init path) defined this
+                 * name before us.  If it was created with no attributes
+                 * (empty family, size 0) it is useless and resolves to
+                 * the default sans face, so fill it in.  A font that
+                 * already has a family is left alone so applications
+                 * can still customise the standard fonts.
+                 */
+                Tcl_ResetResult(interp);
+                Tcl_Obj *cmd = Tcl_ObjPrintf(
+                    "if {[font configure {%s} -family] eq {}} {"
+                    "font configure {%s} -family {%s} -size %d "
+                    "-weight %s -slant %s}",
+                    wlNamedFonts[i].tkName, wlNamedFonts[i].tkName,
+                    wlNamedFonts[i].family, wlNamedFonts[i].points,
+                    wlNamedFonts[i].bold   ? "bold"   : "normal",
+                    wlNamedFonts[i].italic ? "italic" : "roman");
+                Tcl_IncrRefCount(cmd);
+                Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+                Tcl_DecrRefCount(cmd);
+            } else {
                 DEBUG_LOG("tkWaylandFont: failed to create named font "
                         "\"%s\": %s",
                         wlNamedFonts[i].tkName,
@@ -3209,11 +3327,28 @@ TkWaylandCancelNamedFontIdle(TkMainInfo *mainPtr)
 TkFont *
 TkpGetNativeFont(Tk_Window tkwin, const char *name)
 {
-    /* Wayland has no native font-name syntax (no XLFD, no HFONT, …).
-     * Returning NULL forces the generic attribute parser so that
-     * descriptions like {Helvetica 72} and {Times 16 bold} are
-     * handled by TkpGetFontFromAttributes with the real size/weight.
+    /*
+     * The standard named fonts (TkFixedFont, ...) are only registered from
+     * an idle callback, so widgets created before the event loop first goes
+     * idle would otherwise see them as unknown family names.  Resolve them
+     * here with their real family/size/weight.
      */
+    if (name != NULL) {
+        for (int i = 0; wlNamedFonts[i].tkName != NULL; i++) {
+            if (strcmp(name, wlNamedFonts[i].tkName) == 0) {
+                TkFontAttributes fa;
+                TkInitFontAttributes(&fa);
+                fa.family = Tk_GetUid(wlNamedFonts[i].family);
+                fa.size   = (double) wlNamedFonts[i].points;
+                fa.weight = wlNamedFonts[i].bold ? TK_FW_BOLD : TK_FW_NORMAL;
+                fa.slant  = wlNamedFonts[i].italic ? TK_FS_ITALIC : TK_FS_ROMAN;
+                return TkpGetFontFromAttributes(NULL, tkwin, &fa);
+            }
+        }
+    }
+
+    /* Otherwise no native syntax (no XLFD, no HFONT, …): return NULL so the
+     * generic parser handles {Helvetica 72} and {Times 16 bold}. */
     return NULL;
 }
 
