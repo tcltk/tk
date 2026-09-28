@@ -175,7 +175,15 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
-    dispPtr = ckalloc(sizeof(TkDisplay));
+
+    /*
+     * Do not generate KeyRelease events for auto-repeated keys, as on
+     * other platforms. [Bug d3b9644729]
+     */
+
+    XkbSetDetectableAutoRepeat(display, True, NULL);
+
+    dispPtr = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;

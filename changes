@@ -8409,3 +8409,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-09-28 (bug) [313851] MS-Win: fix grab-global window inresponsive after key Win-D (storchaka)
 
+2026-09-28 (bug) [d3b964] X11 <KeyRelease> broken (storchaka)
