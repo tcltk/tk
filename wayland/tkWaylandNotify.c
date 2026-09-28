@@ -305,7 +305,7 @@ TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
 }
 
 /*
- * Dummy function for pending redraw check â€“ can be extended later.
+ * Dummy function for pending redraw check - can be extended later.
  */
 static inline int TkWaylandHasPendingRedraw(void) {
     return 0;  /* currently we redraw synchronously in every iteration */
@@ -431,7 +431,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
         /* Socket activity detected â€” process without blocking */
         Tcl_SetMaxBlockTime(&noBlock);
     } else {
-        /* Idle â€” block for one display frame cycle */
+        /* Idle-block for one display frame cycle */
         Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
