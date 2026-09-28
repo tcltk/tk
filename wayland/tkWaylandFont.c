@@ -2667,14 +2667,7 @@ InitFont(
     FcDefaultSubstitute(pat);
 
     FcResult result;
-    /*
-     * trim=FcTrue drops any font whose charset is already covered by an
-     * earlier one.  For monospace requests that discards the real
-     * fixed-pitch faces (Noto Sans covers everything Noto Sans Mono does),
-     * leaving nothing for the monospace promotion below to find.
-     */
-    FcFontSet *set = FcFontSort(NULL, pat, isGenericMono ? FcFalse : FcTrue,
-                                NULL, &result);
+    FcFontSet *set = FcFontSort(NULL, pat, FcTrue, NULL, &result);
 
     /* 
      * Move any remaining color-emoji faces to the very end 
