@@ -232,6 +232,42 @@ test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
     update
 } -result {1 1}
 
+# 7.* -- -gamma and -palette options of the photo instance
+
+test imgPhInstance-7.1 "-gamma is applied" \
+	-constraints {pixelProbe notAqua} -setup {
+    image create photo photo.gamma -width 20 -height 20 -gamma 2
+    photo.gamma put #ffa500 -to 0 0 20 20
+} -body {
+    .c create image 10 10 -anchor nw -image photo.gamma
+    update
+    # 255 * (165/255) ** (1/2.0) = 205
+    pixelNear .c 20 20 #ffcd00
+} -cleanup {
+    .c delete all
+    image delete photo.gamma
+    update
+} -result 1
+test imgPhInstance-7.2 "-palette is applied" \
+	-constraints {pixelProbe notAqua} -setup {
+    image create photo photo.palette -width 20 -height 20 -palette 2
+    photo.palette put #808080 -to 0 0 20 20
+} -body {
+    .c create image 10 10 -anchor nw -image photo.palette
+    update
+    set colors {}
+    for {set y 14} {$y < 18} {incr y} {
+	for {set x 14} {$x < 18} {incr x} {
+	    lappend colors [testpixel .c $x $y]
+	}
+    }
+    join [lsort -unique $colors]
+} -cleanup {
+    .c delete all
+    image delete photo.palette
+    update
+} -result {#000000 #ffffff}
+
 #
 # TESTFILE CLEANUP
 #

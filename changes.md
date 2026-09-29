@@ -1,6 +1,7 @@
 
 # Bug fixes since 9.1.0
  - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
+ - [MS-Win: photo -gamma and -palette are ignored](https://core.tcl-lang.org/tk/tktview/32f2e1)
 
 
 The source code for Tk is managed by fossil.  Tk developers coordinate all
