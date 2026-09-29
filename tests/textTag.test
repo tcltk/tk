@@ -1646,6 +1646,53 @@ test textTag-19.4 {RTL characters outside U+0590-U+08FF - bug 5d983ebf48} -setup
 } -cleanup {
     destroy .t
 } -result {1.0 1.2 2.0 2.2 3.0 3.2}
+test textTag-19.5 {RTL characters of all ranges - bug 5d983ebf48} -body {
+    lmap {c name} {
+	\u05D0	Hebrew
+	\u0627	Arabic
+	\u0710	Syriac
+	\u0780	Thaana
+	\u07CA	N'Ko
+	\u0800	Samaritan
+	\u08A0	"Arabic Extended-A"
+	\u08FF	--
+	\u200F	"right-to-left mark"
+	\uFB1D	"Hebrew presentation form"
+	\uFB50	"Arabic Presentation Forms-A"
+	\uFDFF	--
+	\uFE70	"Arabic Presentation Forms-B"
+	\uFEFC	"last Arabic letter form"
+	\U00010800	Cypriot
+	\U00010900	Phoenician
+	\U00010D00	"Hanifi Rohingya"
+	\U00010FFF	--
+	\U0001E800	"Mende Kikakui"
+	\U0001E900	Adlam
+	\U0001EE00	"Arabic mathematical symbol"
+	\U0001EFFF	--
+    } {::tk::TextIsRtlLine $c}
+} -result {1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1}
+test textTag-19.6 {characters outside the RTL ranges - bug 5d983ebf48} -body {
+    lmap {c name} {
+	\u058F	Armenian
+	\u0900	Devanagari
+	\u200E	"left-to-right mark"
+	\u2010	hyphen
+	\uFB13	"Armenian ligature"
+	\uFE50	"small comma"
+	\uFF21	"fullwidth Latin"
+	\U00010700	"Linear A"
+	\U00011000	Brahmi
+	\U0001E7E0	Ethiopic
+	\U0001F000	Mahjong
+    } {::tk::TextIsRtlLine $c}
+} -result {0 0 0 0 0 0 0 0 0 0 0}
+test textTag-19.7 {punctuation and whitespace in RTL lines - bug 5d983ebf48} -body {
+    lmap s [list "\u05D0, \u05D1!" "\u05D0-\u05D1_\u05D2:\u05D3;" \
+	    "\u05D0\t\u05D1 " "\u05D0 1" "\u05D0 a" "\u05D0 (\u05D1)" " "] {
+	::tk::TextIsRtlLine $s
+    }
+} -result {1 1 1 0 0 0 0}
 
 #
 # TESTFILE CLEANUP
