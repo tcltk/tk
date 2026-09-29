@@ -1,16 +1,27 @@
 
+# Bug fixes since 9.1.0
+ - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
+ - [MS-Win: photo -gamma and -palette are ignored](https://core.tcl-lang.org/tk/tktview/32f2e1)
+
+
 The source code for Tk is managed by fossil.  Tk developers coordinate all
 changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
-Release Tk 9.1b1 arises from the check-in with tag `core-9-1-b1`.
+Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
-Tk 9.1b1 continues the Tk 9.x series of releases.  The Tk 9.x series
+Tk 9.1.0 continues the Tk 9.x series of releases.  The Tk 9.x series
 do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
-To make use of Tk 9.1b1, first a Tcl 9.0 or 9.1 release must be present.
-As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+To make use of Tk 9.1.0, first a Tcl 9.0 or 9.1 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9.2+, but not
+in Tk 8.
+
+# Potential incompatibilities to 9.0
+ - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
+ - [BiDi support is now the default build option on X11 and harfbuzz is a hard build dependency](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)
 
 # 9.1 Features and Interfaces
  - [MS-Win: remove Windows XP dialog variants for tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
@@ -36,8 +47,3 @@ necessarily in Tk 8.
  - [Locale support for word handling in text and entry](https://core.tcl-lang.org/tips/doc/trunk/tip/687.md)
  - [Provide access to the full contents of the Info.plist file of a Tk-based macOS app](https://core.tcl-lang.org/tips/doc/trunk/tip/725.md)
 
-# Potential incompatibilities to 9.0
- - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
- - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
- - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
- - [BiDi support is now the default build option on X11 and harfbuzz is a hard build dependency](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)

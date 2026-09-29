@@ -1466,7 +1466,7 @@ CanvasWidgetCmd(
 	if (canvasPtr->textInfo.gotFocus) {
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	}
-	if (Tcl_GetString(objv[2])[0] == 0) {
+	if (TkObjIsEmpty(objv[2])) {
 	    canvasPtr->textInfo.focusItemPtr = NULL;
 	    goto done;
 	}
@@ -1684,7 +1684,7 @@ CanvasWidgetCmd(
 	}
 
 	xBlank = 0;
-	if (Tcl_GetString(objv[3])[0] == '\0') {
+	if (TkObjIsEmpty(objv[3])) {
 	    xBlank = 1;
 	} else if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
 		objv[3], &newX) != TCL_OK) {
@@ -1693,7 +1693,7 @@ CanvasWidgetCmd(
 	}
 
 	yBlank = 0;
-	if (Tcl_GetString(objv[4])[0] == '\0') {
+	if (TkObjIsEmpty(objv[4])) {
 	    yBlank = 1;
 	} else if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
 		objv[4], &newY) != TCL_OK) {

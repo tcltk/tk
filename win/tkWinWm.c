@@ -5726,7 +5726,7 @@ WmTransientCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	if (containerPtr != NULL) {
 	    /*
 	     * If we had a container, tell them that we aren't tied to them

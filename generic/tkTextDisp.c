@@ -947,8 +947,7 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthObj != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
+	if (!TkObjIsEmpty(tagPtr->borderWidthObj)
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &styleValues.borderWidth);
 	    borderWidthPrio = tagPtr->priority;
