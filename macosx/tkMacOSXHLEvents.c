@@ -63,6 +63,15 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
 #pragma mark TKApplication(TKHLEvents)
 
+static void showPreferencesWhenIdle(void *clientData) {
+    Tcl_Interp *interp = (Tcl_Interp *) clientData;
+    int code = Tcl_EvalEx(interp, "::tk::mac::ShowPreferences",
+			  TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+}
+
 @implementation TKApplication(TKHLEvents)
 - (void) terminate: (id) sender
 {
@@ -147,11 +156,14 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
     if (_eventInterp &&
 	    Tcl_FindCommand(_eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
+	Tcl_DoWhenIdle(showPreferencesWhenIdle, (void *) _eventInterp);
+#if 0
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowPreferences",
 			      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
 	}
+#endif
     }
 }
 
