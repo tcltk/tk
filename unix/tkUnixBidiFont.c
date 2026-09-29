@@ -1843,7 +1843,17 @@ X11Shaper_ShapeString(
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
 
-    char seen[1024] = {0};
+    /*
+     * seen[] is indexed by byte offsets 0..numBytes. [Bug 4eef1fa86e]
+     */
+
+    char stackSeen[1024];
+    char *seen = stackSeen;
+
+    if (numBytes >= (int)sizeof(stackSeen)) {
+	seen = (char *)Tcl_Alloc(numBytes + 1);
+    }
+    memset(seen, 0, numBytes + 1);
     seen[0] = 1;
 
     for (int i = 0; i < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS-1; i++) {
@@ -1858,6 +1868,9 @@ X11Shaper_ShapeString(
 	    buffer->clusterBreaks[buffer->clusterBreakCount++] = end;
 	    seen[end] = 1;
 	}
+    }
+    if (seen != stackSeen) {
+	Tcl_Free(seen);
     }
 
     if (buffer->clusterBreaks[buffer->clusterBreakCount-1] != numBytes) {
