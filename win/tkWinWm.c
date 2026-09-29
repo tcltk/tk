@@ -2239,8 +2239,16 @@ UpdateWrapper(
      */
 
     if (tsdPtr->firstWindow) {
-	tsdPtr->firstWindow = 0;
-	SetActiveWindow(wmPtr->wrapper);
+	/*
+	 * Do not waste the activation on an invisible window, e.g. the
+	 * withdrawn console. [Bug 2effa4b316]
+	 */
+
+	state = wmPtr->hints.initial_state;
+	if (state == NormalState || state == ZoomState) {
+	    tsdPtr->firstWindow = 0;
+	    SetActiveWindow(wmPtr->wrapper);
+	}
     } else if (focusHWND) {
 	SetFocus(focusHWND);
     }
@@ -5718,7 +5726,7 @@ WmTransientCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	if (containerPtr != NULL) {
 	    /*
 	     * If we had a container, tell them that we aren't tied to them
@@ -8361,6 +8369,14 @@ WmProc(
 	    if (grab == TK_GRAB_EXCLUDED
 		&& !(SC_MOVE == cmd || SC_SIZE == cmd || SC_RESTORE == cmd)) {
 		goto done;
+	    }
+	    /*
+	     * The mouse capture set by a global grab stops the window
+	     * from being restored. [Bug 3138512]
+	     */
+
+	    if (SC_RESTORE == cmd && GetCapture() != NULL) {
+		ReleaseCapture();
 	    }
 	}
 	/* fall through */

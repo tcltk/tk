@@ -1169,11 +1169,13 @@ Tk_SendObjCmd(
     Tcl_GetTime(&timeout);
     timeout.sec += 2;
     while (!pending.gotResponse) {
-	if (!TkUnixDoOneXEvent(&timeout)) {
+	if (!TkUnixDoOneXEvent(&timeout) && !pending.gotResponse) {
 	    /*
 	     * An unusually long amount of time has elapsed during the
-	     * processing of a sent command. Check to make sure that the
-	     * target application still exists. If it does, reset the timeout.
+	     * processing of a sent command and no response came (it can also
+	     * come from AppendErrorProc while TkUnixDoOneXEvent waits). Check
+	     * to make sure that the target application still exists. If it
+	     * does, reset the timeout.
 	     */
 
 	    if (!ValidateName(pending.dispPtr, pending.target,
@@ -1778,6 +1780,9 @@ AppendPropCarefully(
 	    pendingPtr);
     XChangeProperty(display, window, property, XA_STRING, 8,
 	    PropModeAppend, (unsigned char *) value, length);
+    if (pendingPtr != NULL) {
+	XSync(display, False);
+    }
     Tk_DeleteErrorHandler(handler);
 }
 
@@ -2036,7 +2041,7 @@ TkpTestsendCmd(
 	    if (property != NULL) {
 		XFree(property);
 	    }
-	} else if (Tcl_GetString(objv[4])[0] == 0) {
+	} else if (TkObjIsEmpty(objv[4])) {
 	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
 		    -1, -1, -1, NULL, NULL);
 	    XDeleteProperty(winPtr->dispPtr->display, w, propName);
