@@ -3996,6 +3996,27 @@ test button-15.3 {Bug [5d991b822e]} {
     destroy .b
 } {}
 
+test button-16.1 {button keeps -overrelief after click, Bug 1100518} -setup {
+    set count 0
+    button .b -text Button -relief flat -overrelief raised \
+	    -command {incr count}
+    pack .b
+    update
+} -body {
+    set res {}
+    event generate .b <Enter> -x 5 -y 5
+    lappend res [.b cget -relief]
+    event generate .b <ButtonPress-1> -x 5 -y 5
+    lappend res [.b cget -relief]
+    event generate .b <ButtonRelease-1> -x 5 -y 5
+    lappend res [.b cget -relief]
+    event generate .b <Leave> -x 5 -y 5
+    lappend res [.b cget -relief] $count
+} -cleanup {
+    destroy .b
+    unset -nocomplain count res
+} -result {raised sunken raised flat 1}
+
 
 imageFinish
 cleanupTests
