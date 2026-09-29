@@ -378,6 +378,15 @@ test unixfont-9.2 {4 chars substituted in inserted text} {x11 nonPortable} {
     lappend x [.b.c index $t @[expr {$ax*5}],0]
 } {0 1 1 1 1 2}
 
+test unixfont-10.1 {measure a string of more than 1024 bytes, bug 4eef1fa86e} -constraints {
+    x11
+} -body {
+    set w [font measure {sans-serif 10} \u4e2d]
+    expr {[font measure {sans-serif 10} [string repeat \u4e2d 400]] == 400 * $w}
+} -cleanup {
+    unset -nocomplain w
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
