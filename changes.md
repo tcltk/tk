@@ -1,4 +1,8 @@
 
+# Bug fixes since 9.1.0
+ - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
+
+
 The source code for Tk is managed by fossil.  Tk developers coordinate all
 changes to the Tk source code at
 
