@@ -386,6 +386,14 @@ test unixfont-10.1 {measure a string of more than 1024 bytes, bug 4eef1fa86e} -c
 } -cleanup {
     unset -nocomplain w
 } -result 1
+test unixfont-10.2 {measure RTL text of more than 512 characters, bug 4eef1fa86e} -constraints {
+    x11
+} -body {
+    set w [font measure {sans-serif 10} \u05d0]
+    expr {[font measure {sans-serif 10} [string repeat \u05d0 600]] == 600 * $w}
+} -cleanup {
+    unset -nocomplain w
+} -result 1
 
 #
 # TESTFILE CLEANUP

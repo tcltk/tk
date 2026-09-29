@@ -86,7 +86,33 @@ typedef struct {
     int next;
 } UnixFtColorList;
 
-#define MAX_CLUSTER_BREAKS 512
+/*
+ * ShapedGlyph --
+ *
+ *   One glyph of a shaped string.
+ */
+typedef struct {
+    int fontIndex;	/* Which UnixFtFace produced this glyph. */
+    unsigned int glyphId;
+    int x, y;		/* Position relative to run origin (pixels). */
+    int advanceX;	/* Width of this glyph (pixels). */
+    int byteOffset;	/* Byte offset in source string. */
+    int clusterLen;	/* Length of cluster in bytes. */
+    bool isRTL;		/* Is this glyph part of RTL run? */
+} ShapedGlyph;
+
+/*
+ * VisualCluster --
+ *
+ *   One entry of the visual index used for cursor positioning.
+ */
+typedef struct {
+    int x;		/* Visual X position (pixels). */
+    int advanceX;	/* Width of this visual cluster. */
+    int byteStart;	/* Logical start byte of cluster. */
+    int byteEnd;	/* Logical end byte of cluster. */
+    bool isRTL;		/* True if cluster belongs to RTL run. */
+} VisualCluster;
 
 /*
  * ShapedGlyphBuffer --
@@ -94,33 +120,22 @@ typedef struct {
  *   Result buffer from HarfBuzz shaping. Contains glyph positions,
  *   visual index for cursor placement, and cluster break boundaries
  *   for efficient line fitting.
+ *
+ *   The arrays grow as needed, so there is no limit on the length of the
+ *   string. A buffer must be initialized with zeros before the first use
+ *   and released with FreeGlyphBuffer().
  */
 typedef struct {
     /* Shaped glyphs array. */
-    struct {
-	int fontIndex;      /* Which UnixFtFace produced this glyph. */
-	unsigned int glyphId;
-	int x, y;	   /* Position relative to run origin (pixels). */
-	int advanceX;       /* Width of this glyph (pixels). */
-	int byteOffset;     /* Byte offset in source string. */
-	int clusterLen;     /* Length of cluster in bytes. */
-	bool isRTL;	  /* Is this glyph part of RTL run? */
-    } glyphs[MAX_GLYPHS];
+    ShapedGlyph *glyphs;
     int glyphCount;
+    int glyphSpace;	/* Allocated size of glyphs and visualIndex. */
 
     /*
      * Visual index for cursor positioning.
      * Sorted by X coordinate (left-to-right screen order).
      */
-	struct {
-	    int x;	      /* Visual X position (pixels). */
-	    int advanceX;       /* Width of this visual cluster. */
-
-	    int byteStart;      /* Logical start byte of cluster. */
-	    int byteEnd;	/* Logical end byte of cluster. */
-
-	    bool isRTL;	  /* True if cluster belongs to RTL run. */
-	} visualIndex[MAX_GLYPHS];
+    VisualCluster *visualIndex;
     int indexCount;
 
     /* Total width of the shaped run. */
@@ -140,8 +155,9 @@ typedef struct {
      * Tk_MeasureCharsInContext uses clusterBreaks[] to fit text
      * incrementally without reshaping.
      */
-    int clusterBreaks[MAX_CLUSTER_BREAKS];
+    int *clusterBreaks;
     int clusterBreakCount;
+    int clusterBreakSpace;	/* Allocated size of clusterBreaks. */
 } ShapedGlyphBuffer;
 
 /*
@@ -281,6 +297,11 @@ AddGlyph(
 /* Function prototypes. */
 static void X11Shaper_Init(X11Shaper *s, UnixFtFont *fontPtr);
 static void X11Shaper_Destroy(X11Shaper *s);
+static void ReserveGlyphBuffer(ShapedGlyphBuffer *buffer, int numGlyphs,
+			    int numBreaks);
+static void CopyGlyphBuffer(ShapedGlyphBuffer *dst,
+			    const ShapedGlyphBuffer *src);
+static void FreeGlyphBuffer(ShapedGlyphBuffer *buffer);
 static bool X11Shaper_ShapeString(X11Shaper *shaper, UnixFtFont *fontPtr,
 				 const char *source, int numBytes,
 				 ShapedGlyphBuffer *buffer);
@@ -1153,6 +1174,141 @@ FinishedWithFont(
 
 /*
  * ---------------------------------------------------------------
+ * GrowSize --
+ *
+ *   Compute the new size of a growing array: at least needed, and at
+ *   least double the current size.
+ *
+ * Results:
+ *   The new size.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+static int
+GrowSize(
+    int size,
+    int needed)
+{
+    if (size < 64) {
+	size = 64;
+    }
+    while (size < needed) {
+	size = (size > INT_MAX / 2) ? needed : 2 * size;
+    }
+    return size;
+}
+
+/*
+ * ---------------------------------------------------------------
+ * ReserveGlyphBuffer --
+ *
+ *   Make room for at least numGlyphs glyphs (and visual index entries)
+ *   and numBreaks cluster breaks in a shaped glyph buffer.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May reallocate the arrays of the buffer.
+ * ---------------------------------------------------------------
+ */
+
+static void
+ReserveGlyphBuffer(
+    ShapedGlyphBuffer *buffer,
+    int numGlyphs,
+    int numBreaks)
+{
+    if (numGlyphs > buffer->glyphSpace) {
+	int size = GrowSize(buffer->glyphSpace, numGlyphs);
+
+	buffer->glyphs = (ShapedGlyph *)Tcl_Realloc(buffer->glyphs,
+		size * sizeof(ShapedGlyph));
+	buffer->visualIndex = (VisualCluster *)Tcl_Realloc(
+		buffer->visualIndex, size * sizeof(VisualCluster));
+	buffer->glyphSpace = size;
+    }
+    if (numBreaks > buffer->clusterBreakSpace) {
+	int size = GrowSize(buffer->clusterBreakSpace, numBreaks);
+
+	buffer->clusterBreaks = (int *)Tcl_Realloc(buffer->clusterBreaks,
+		size * sizeof(int));
+	buffer->clusterBreakSpace = size;
+    }
+}
+
+/*
+ * ---------------------------------------------------------------
+ * CopyGlyphBuffer --
+ *
+ *   Copy the contents of a shaped glyph buffer into another one.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May reallocate the arrays of dst.
+ * ---------------------------------------------------------------
+ */
+
+static void
+CopyGlyphBuffer(
+    ShapedGlyphBuffer *dst,
+    const ShapedGlyphBuffer *src)
+{
+    ReserveGlyphBuffer(dst, src->glyphCount, src->clusterBreakCount);
+    if (src->glyphCount > 0) {
+	memcpy(dst->glyphs, src->glyphs, src->glyphCount * sizeof(ShapedGlyph));
+    }
+    if (src->indexCount > 0) {
+	memcpy(dst->visualIndex, src->visualIndex,
+		src->indexCount * sizeof(VisualCluster));
+    }
+    if (src->clusterBreakCount > 0) {
+	memcpy(dst->clusterBreaks, src->clusterBreaks,
+		src->clusterBreakCount * sizeof(int));
+    }
+    dst->glyphCount = src->glyphCount;
+    dst->indexCount = src->indexCount;
+    dst->totalAdvance = src->totalAdvance;
+    dst->clusterBreakCount = src->clusterBreakCount;
+}
+
+/*
+ * ---------------------------------------------------------------
+ * FreeGlyphBuffer --
+ *
+ *   Release the arrays of a shaped glyph buffer.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Frees memory; the buffer is left empty and can be reused.
+ * ---------------------------------------------------------------
+ */
+
+static void
+FreeGlyphBuffer(
+    ShapedGlyphBuffer *buffer)
+{
+    if (buffer->glyphs) {
+	Tcl_Free(buffer->glyphs);
+    }
+    if (buffer->visualIndex) {
+	Tcl_Free(buffer->visualIndex);
+    }
+    if (buffer->clusterBreaks) {
+	Tcl_Free(buffer->clusterBreaks);
+    }
+    memset(buffer, 0, sizeof(*buffer));
+}
+
+/*
+ * ---------------------------------------------------------------
  * X11Shaper_Init --
  *
  *   Initialize persistent shaping context.
@@ -1222,6 +1378,10 @@ X11Shaper_Destroy(
     if (s->buffer) {
 	hb_buffer_destroy(s->buffer);
 	s->buffer = NULL;
+    }
+    for (int i = 0; i < CACHE_SLOTS; i++) {
+	FreeGlyphBuffer(&s->cache[i].buffer);
+	s->cache[i].valid = 0;
     }
 }
 
@@ -1384,7 +1544,10 @@ X11Shaper_ShapeString(
     if (IsSimpleOnly(source, numBytes)) {
 	int penX = 0;
 	int i = 0;
-	while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
+
+	/* Every glyph covers at least one byte. */
+	ReserveGlyphBuffer(buffer, numBytes, 0);
+	while (i < numBytes) {
 	    FcChar32 uc;
 	    int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, numBytes - i);
 	    if (clen <= 0) { i++; continue; }
@@ -1448,7 +1611,7 @@ X11Shaper_ShapeString(
 	 * This is critical for correct cursor movement and selection.
 	 */
 
-	for (int i = 0; i < buffer->glyphCount && buffer->indexCount < MAX_GLYPHS; i++) {
+	for (int i = 0; i < buffer->glyphCount; i++) {
 	    int bo = buffer->glyphs[i].byteOffset;
 
 	    if (bo == prevByteOffset) {
@@ -1480,7 +1643,7 @@ X11Shaper_ShapeString(
 	    shaper->cache[slot].len == numBytes &&
 	    numBytes <= MAX_STRING_CACHE &&
 	    memcmp(source, shaper->cache[slot].text, numBytes) == 0) {
-	    *buffer = shaper->cache[slot].buffer;
+	    CopyGlyphBuffer(buffer, &shaper->cache[slot].buffer);
 	    return true;
 	}
     }
@@ -1503,7 +1666,7 @@ X11Shaper_ShapeString(
 
     charBounds[0] = 0;
     int bytePos = 0, charCount = 0;
-    while (bytePos < numBytes && charCount < MAX_GLYPHS) {
+    while (bytePos < numBytes) {
 	FcChar32 uc;
 	int clen = FcUtf8ToUcs4((const FcChar8 *)(source + bytePos), &uc, numBytes - bytePos);
 	if (clen <= 0) { bytePos++; continue; }
@@ -1522,14 +1685,22 @@ X11Shaper_ShapeString(
 
     if (charCount == 0) {
 	if (needFree) { free(charBounds); free(ucs4Chars); }
+	ReserveGlyphBuffer(buffer, 0, 1);
 	buffer->clusterBreaks[0] = 0;
 	buffer->clusterBreakCount = 1;
 	return true;
     }
 
-	/* Bidi analysis. */
-    BidiRun bidiRuns[MAX_BIDI_RUNS];
-    int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
+    /* Bidi analysis. There are at most as many runs as characters. */
+    BidiRun stackBidiRuns[MAX_BIDI_RUNS];
+    BidiRun *bidiRuns = stackBidiRuns;
+    int maxRuns = MAX_BIDI_RUNS;
+
+    if (charCount > MAX_BIDI_RUNS) {
+	maxRuns = charCount;
+	bidiRuns = (BidiRun *)Tcl_Alloc(maxRuns * sizeof(BidiRun));
+    }
+    int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, maxRuns);
 
     int globalPenX = 0;
 
@@ -1572,14 +1743,19 @@ X11Shaper_ShapeString(
 	    int faceIndex;
 	} SubRunInfo;
 
-	SubRunInfo subrunList[MAX_GLYPHS];
+	/* There are at most as many subruns as characters. */
+	SubRunInfo stackSubrunList[64];
+	SubRunInfo *subrunList = stackSubrunList;
 	int subrunCount = 0;
+
+	if (runLen > 64) {
+	    subrunList = (SubRunInfo *)Tcl_Alloc(runLen * sizeof(SubRunInfo));
+	}
 
 	{
 	    int subrunStart = runStart;
 
-	    while (subrunStart < runStart + runLen &&
-		   subrunCount < MAX_GLYPHS) {
+	    while (subrunStart < runStart + runLen) {
 
 		/*
 		 * Detect the concrete script for this subrun.
@@ -1752,20 +1928,18 @@ X11Shaper_ShapeString(
 		continue;
 	    }
 
-	    struct {
-		int fontIndex; unsigned int glyphId; int x, y; int advanceX;
-		int byteOffset; int clusterLen;
-	    } tempGlyphs[MAX_GLYPHS];
+	    /* Shape directly into the buffer. */
+	    ReserveGlyphBuffer(buffer, buffer->glyphCount + (int)glyphCount, 0);
+	    ShapedGlyph *tempGlyphs = buffer->glyphs + buffer->glyphCount;
 	    int tempCount = 0;
 
 	    int runPenX = 0;
 	    XftFont *xftRunFont = GetFaceFont(fontPtr, runFaceIndex, 0.0);
 
-	    for (unsigned int i = 0;
-		 i < glyphCount && tempCount < MAX_GLYPHS;
-		 i++) {
+	    for (unsigned int i = 0; i < glyphCount; i++) {
 
 		tempGlyphs[tempCount].fontIndex  = runFaceIndex;
+		tempGlyphs[tempCount].isRTL      = runIsRTL;
 		tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
 
 		tempGlyphs[tempCount].x =
@@ -1836,25 +2010,18 @@ X11Shaper_ShapeString(
 		}
 	    }
 
-	    /* Copy to main buffer. */
-	    for (int i = 0; i < tempCount; i++) {
-		int idx = buffer->glyphCount;
-		if (idx >= MAX_GLYPHS) break;
-		buffer->glyphs[idx] = (typeof(buffer->glyphs[0])) {
-		    .fontIndex  = tempGlyphs[i].fontIndex,
-		    .glyphId    = tempGlyphs[i].glyphId,
-		    .x	  = tempGlyphs[i].x,
-		    .y	  = tempGlyphs[i].y,
-		    .advanceX   = tempGlyphs[i].advanceX,
-		    .byteOffset = tempGlyphs[i].byteOffset,
-		    .clusterLen = tempGlyphs[i].clusterLen,
-		    .isRTL      = runIsRTL
-		};
-		buffer->glyphCount++;
-	    }
+	    buffer->glyphCount += tempCount;
 
 	    globalPenX += runPenX;
 	}
+
+	if (subrunList != stackSubrunList) {
+	    Tcl_Free(subrunList);
+	}
+    }
+
+    if (bidiRuns != stackBidiRuns) {
+	Tcl_Free(bidiRuns);
     }
 
     buffer->totalAdvance = globalPenX;
@@ -1887,71 +2054,54 @@ X11Shaper_ShapeString(
 	}
     }
 
-    /* Cluster breaks. */
-    buffer->clusterBreaks[0] = 0;
-    buffer->clusterBreakCount = 1;
-
     /*
-     * seen[] is indexed by byte offsets 0..numBytes. [Bug 4eef1fa86e]
+     * Cluster breaks: the byte offsets where clusters start or end, and the
+     * start and the end of the string, in increasing order. seen[] is
+     * indexed by byte offsets 0..numBytes. [Bug 4eef1fa86e]
      */
 
     char stackSeen[1024];
     char *seen = stackSeen;
+    int numBreaks = 2;
 
     if (numBytes >= (int)sizeof(stackSeen)) {
 	seen = (char *)Tcl_Alloc(numBytes + 1);
     }
     memset(seen, 0, numBytes + 1);
     seen[0] = 1;
+    seen[numBytes] = 1;
 
-    for (int i = 0; i < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS-1; i++) {
+    for (int i = 0; i < buffer->glyphCount; i++) {
 	int pos = buffer->glyphs[i].byteOffset;
 	int end = pos + buffer->glyphs[i].clusterLen;
 
 	if (pos > 0 && pos < numBytes && !seen[pos]) {
-	    buffer->clusterBreaks[buffer->clusterBreakCount++] = pos;
 	    seen[pos] = 1;
+	    numBreaks++;
 	}
-	if (end > 0 && end <= numBytes && !seen[end]) {
-	    buffer->clusterBreaks[buffer->clusterBreakCount++] = end;
+	if (end > 0 && end < numBytes && !seen[end]) {
 	    seen[end] = 1;
+	    numBreaks++;
+	}
+    }
+
+    ReserveGlyphBuffer(buffer, 0, numBreaks);
+    buffer->clusterBreakCount = 0;
+    for (int pos = 0; pos <= numBytes; pos++) {
+	if (seen[pos]) {
+	    buffer->clusterBreaks[buffer->clusterBreakCount++] = pos;
 	}
     }
     if (seen != stackSeen) {
 	Tcl_Free(seen);
     }
 
-    if (buffer->clusterBreaks[buffer->clusterBreakCount-1] != numBytes) {
-	if (buffer->clusterBreakCount < MAX_CLUSTER_BREAKS) {
-	    buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
-	}
-    }
-
-    int n = buffer->clusterBreakCount;
-    for (int i = 1; i < n; i++) {
-	int key = buffer->clusterBreaks[i];
-	int j = i - 1;
-	while (j >= 0 && buffer->clusterBreaks[j] > key) {
-	    buffer->clusterBreaks[j+1] = buffer->clusterBreaks[j];
-	    j--;
-	}
-	buffer->clusterBreaks[j+1] = key;
-    }
-
-    int write = 1;
-    for (int i = 1; i < n; i++) {
-	if (buffer->clusterBreaks[i] != buffer->clusterBreaks[write-1]) {
-	    buffer->clusterBreaks[write++] = buffer->clusterBreaks[i];
-	}
-    }
-    buffer->clusterBreakCount = write;
-
     /* Cache result. */
     if (numBytes <= MAX_STRING_CACHE) {
 	int slot = shaper->cacheNext;
 	memcpy(shaper->cache[slot].text, source, numBytes);
 	shaper->cache[slot].len = numBytes;
-	shaper->cache[slot].buffer = *buffer;
+	CopyGlyphBuffer(&shaper->cache[slot].buffer, buffer);
 	shaper->cache[slot].valid = 1;
 	shaper->cacheNext = (slot + 1) % CACHE_SLOTS;
     }
@@ -2323,6 +2473,35 @@ GetSimpleCharWidth(
 }
 
 /*
+ * ClusterInfo --
+ *
+ *   A cluster of a shaped string, used by Tk_MeasureCharsInContext.
+ */
+
+typedef struct {
+    int start;
+    int end;
+    int advance;
+} ClusterInfo;
+
+static int
+CompareClusters(
+    const void *a,
+    const void *b)
+{
+    const ClusterInfo *ca = (const ClusterInfo *)a;
+    const ClusterInfo *cb = (const ClusterInfo *)b;
+
+    if (ca->start != cb->start) {
+	return (ca->start < cb->start) ? -1 : 1;
+    }
+    if (ca->end != cb->end) {
+	return (ca->end < cb->end) ? -1 : 1;
+    }
+    return 0;
+}
+
+/*
  * ---------------------------------------------------------------
  * Tk_MeasureCharsInContext --
  *
@@ -2540,6 +2719,7 @@ Tk_MeasureCharsInContext(
 
     ShapedGlyphBuffer buffer;
 
+    memset(&buffer, 0, sizeof(buffer));
     if (!X11Shaper_ShapeString(
 	    &fontPtr->shaper,
 	    fontPtr,
@@ -2548,6 +2728,7 @@ Tk_MeasureCharsInContext(
 	    &buffer)
 	|| buffer.glyphCount <= 0) {
 
+	FreeGlyphBuffer(&buffer);
 	*lengthPtr = 0;
 	return 0;
     }
@@ -2568,6 +2749,7 @@ Tk_MeasureCharsInContext(
 	    }
 	}
 
+	FreeGlyphBuffer(&buffer);
 	*lengthPtr = width;
 	return (int)rangeLength;
     }
@@ -2576,14 +2758,8 @@ Tk_MeasureCharsInContext(
      * Build stable cluster table.
      */
 
-    typedef struct {
-	int start;
-	int end;
-	int advance;
-    } ClusterInfo;
-
-    ClusterInfo clusters[MAX_GLYPHS];
-
+    ClusterInfo *clusters = (ClusterInfo *)Tcl_Alloc(
+	    buffer.glyphCount * sizeof(ClusterInfo));
     int clusterCount = 0;
 
     for (int i = 0; i < buffer.glyphCount; i++) {
@@ -2605,46 +2781,30 @@ Tk_MeasureCharsInContext(
 	    continue;
 	}
 
-	/*
-	 * Merge glyphs belonging to same cluster.
-	 */
-
-	int found = -1;
-	for (int j = 0; j < clusterCount; j++) {
-	    if (clusters[j].start == bo
-		&& clusters[j].end == boe) {
-		found = j;
-		break;
-	    }
-	}
-
-	if (found < 0) {
-	    if (clusterCount >= MAX_GLYPHS) {
-		break;
-	    }
-
-	    found = clusterCount++;
-
-	    clusters[found].start   = bo;
-	    clusters[found].end     = boe;
-	    clusters[found].advance = 0;
-	}
-
-	clusters[found].advance += buffer.glyphs[i].advanceX;
+	clusters[clusterCount].start   = bo;
+	clusters[clusterCount].end     = boe;
+	clusters[clusterCount].advance = buffer.glyphs[i].advanceX;
+	clusterCount++;
     }
 
     /*
-     * Sort clusters logically by byte offset.
+     * Sort clusters logically by byte offset and merge glyphs belonging
+     * to the same cluster.
      */
 
-    for (int i = 0; i < clusterCount - 1; i++) {
-	for (int j = i + 1; j < clusterCount; j++) {
-	    if (clusters[j].start < clusters[i].start) {
-		ClusterInfo tmp = clusters[i];
-		clusters[i] = clusters[j];
-		clusters[j] = tmp;
+    qsort(clusters, clusterCount, sizeof(ClusterInfo), CompareClusters);
+    if (clusterCount > 0) {
+	int n = 1;
+
+	for (int i = 1; i < clusterCount; i++) {
+	    if (clusters[i].start == clusters[n-1].start
+		    && clusters[i].end == clusters[n-1].end) {
+		clusters[n-1].advance += clusters[i].advance;
+	    } else {
+		clusters[n++] = clusters[i];
 	    }
 	}
+	clusterCount = n;
     }
 
     /*
@@ -2710,6 +2870,8 @@ Tk_MeasureCharsInContext(
 	width = clusters[0].advance;
     }
 
+    Tcl_Free(clusters);
+    FreeGlyphBuffer(&buffer);
     *lengthPtr = width;
 
     return bestBytes;
@@ -2900,8 +3062,11 @@ Tk_DrawCharsInContext(
       */
     {
 	ShapedGlyphBuffer buffer;
+
+	memset(&buffer, 0, sizeof(buffer));
 	if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
 				   (int)numBytes, &buffer)) {
+	    FreeGlyphBuffer(&buffer);
 	    goto done;
 	}
 
@@ -2945,6 +3110,7 @@ Tk_DrawCharsInContext(
 	}
 
 	FlushGlyphs(&batch);
+	FreeGlyphBuffer(&buffer);
     }
  done:
     /*
@@ -3082,8 +3248,11 @@ TkDrawAngledChars(
 	/* Complex script path (RTL text). */
     {
 	ShapedGlyphBuffer buffer;
+
+	memset(&buffer, 0, sizeof(buffer));
 	if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
 				   (int)numBytes, &buffer)) {
+	    FreeGlyphBuffer(&buffer);
 	    goto done;
 	}
 
@@ -3109,6 +3278,7 @@ TkDrawAngledChars(
 	}
 
 	FlushGlyphs(&batch);
+	FreeGlyphBuffer(&buffer);
     }
 
  done:
