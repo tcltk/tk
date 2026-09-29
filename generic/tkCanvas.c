@@ -1466,7 +1466,7 @@ CanvasWidgetCmd(
 	if (canvasPtr->textInfo.gotFocus) {
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	}
-	if (Tcl_GetString(objv[2])[0] == 0) {
+	if (TkObjIsEmpty(objv[2])) {
 	    canvasPtr->textInfo.focusItemPtr = NULL;
 	    goto done;
 	}
@@ -1684,7 +1684,7 @@ CanvasWidgetCmd(
 	}
 
 	xBlank = 0;
-	if (Tcl_GetString(objv[3])[0] == '\0') {
+	if (TkObjIsEmpty(objv[3])) {
 	    xBlank = 1;
 	} else if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
 		objv[3], &newX) != TCL_OK) {
@@ -1693,7 +1693,7 @@ CanvasWidgetCmd(
 	}
 
 	yBlank = 0;
-	if (Tcl_GetString(objv[4])[0] == '\0') {
+	if (TkObjIsEmpty(objv[4])) {
 	    yBlank = 1;
 	} else if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
 		objv[4], &newY) != TCL_OK) {
@@ -3010,6 +3010,8 @@ DisplayCanvas(
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
     int borderWidth, highlightWidth;
+    bool repickAgain = false;	/* A new current item is needed again after
+				 * the current one was chosen. */
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3021,10 +3023,14 @@ DisplayCanvas(
 
     /*
      * Choose a new current item if that is needed (this could cause event
-     * handlers to be invoked).
+     * handlers to be invoked). This is done only once per redisplay: if the
+     * event handlers change the items so that a new current item is needed
+     * again, it is chosen at the next redisplay. Otherwise event handlers
+     * which move the current item away from the pointer and back would
+     * loop here forever without returning to the event loop. [Bug 1813595]
      */
 
-    while (canvasPtr->flags & REPICK_NEEDED) {
+    if (canvasPtr->flags & REPICK_NEEDED) {
 	Tcl_Preserve(canvasPtr);
 	canvasPtr->flags &= ~REPICK_NEEDED;
 	PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
@@ -3033,6 +3039,7 @@ DisplayCanvas(
 	if (tkwin == NULL) {
 	    return;
 	}
+	repickAgain = (canvasPtr->flags & REPICK_NEEDED) != 0;
     }
 
     /*
@@ -3243,6 +3250,10 @@ DisplayCanvas(
     canvasPtr->redrawY1 = canvasPtr->redrawY2 = 0;
     if (canvasPtr->flags & UPDATE_SCROLLBARS) {
 	CanvasUpdateScrollbars(canvasPtr);
+    }
+    if (repickAgain) {
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+	canvasPtr->flags |= REDRAW_PENDING;
     }
 }
 
@@ -6016,7 +6027,16 @@ CanvasSetOrigin(
 	top = yOrigin + canvasPtr->inset - canvasPtr->scrollY1;
 	bottom = canvasPtr->scrollY2
 		- (yOrigin + Tk_Height(canvasPtr->tkwin) - canvasPtr->inset);
-	if ((left < 0) && (right > 0)) {
+	if (canvasPtr->scrollX2 - canvasPtr->scrollX1
+		<= Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset) {
+	    /*
+	     * The scroll region is not wider than the window, so there is
+	     * nothing to scroll: keep its left edge at the left edge of the
+	     * window. [Bug 2148529]
+	     */
+
+	    xOrigin = canvasPtr->scrollX1 - canvasPtr->inset;
+	} else if ((left < 0) && (right > 0)) {
 	    delta = (right > -left) ? -left : right;
 	    if (xScrollIncrement > 0) {
 		delta -= delta % xScrollIncrement;
@@ -6029,7 +6049,10 @@ CanvasSetOrigin(
 	    }
 	    xOrigin -= delta;
 	}
-	if ((top < 0) && (bottom > 0)) {
+	if (canvasPtr->scrollY2 - canvasPtr->scrollY1
+		<= Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset) {
+	    yOrigin = canvasPtr->scrollY1 - canvasPtr->inset;
+	} else if ((top < 0) && (bottom > 0)) {
 	    delta = (bottom > -top) ? -top : bottom;
 	    if (yScrollIncrement > 0) {
 		delta -= delta % yScrollIncrement;

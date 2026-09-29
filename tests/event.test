@@ -918,6 +918,210 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-8.1 {keysym of Control and Alt keys with a non-Latin keyboard
+	      layout on Windows - bug 433261290b} -constraints win -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    bind $e <Key> {lappend res %K}
+    focus -force $e
+    update
+    # Virtual key codes of the C and 1 keys with Control (4),
+    # Control+Shift (5) and Alt (0x20000).  The keysym must be the Latin
+    # letter or digit of the key whatever the keyboard layout is, so that
+    # bindings like <Control-c> work with a non-Latin layout too.
+    event generate $e <Key> -keycode 0x43 -state 4
+    event generate $e <Key> -keycode 0x43 -state 5
+    event generate $e <Key> -keycode 0x43 -state 0x20000
+    event generate $e <Key> -keycode 0x31 -state 4
+    set res
+} -cleanup {
+    deleteWindows
+} -result {c C c 1}
+
+test event-8.4 {characters entered via an input method (VK_PACKET) on Windows - bug f492c3de04} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    bind $e <Key> {lappend res [list press %A]}
+    bind $e <KeyRelease> {lappend res [list release %A]}
+    # Latin, Cyrillic and non-BMP (surrogate pair) characters.
+    testsendinput unicode "r\u0439\U0001F600"
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    deleteWindows
+    unset -nocomplain done
+} -result "{press r} {release r} {press \u0439} {release \u0439} {press \U0001F600} {release \U0001F600}"
+
+test event-8.5 {key input with a non-Latin keyboard layout on Windows - bug a9bd2ab98b} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Ukrainian layout: the Q key is U+0439.
+    testsendinput layout 00000422
+    bind $e <Key> {lappend res %A}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    lappend res [$e get]
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "\u0439 \u0439"
+
+test event-8.6 {key input with a keyboard layout without an ANSI code page on Windows - bug a9bd2ab98b} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Georgian layout: the Q key is U+10E6.
+    testsendinput layout 00000437
+    bind $e <Key> {lappend res %A}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    lappend res [$e get]
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "\u10E6 \u10E6"
+
+test event-8.7 {keysym of a non-Latin key on Windows - bug 52e9b0f52c} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Ukrainian layout: the Q key is Cyrillic_shorti.
+    testsendinput layout 00000422
+    # Switching the keyboard layout releases the modifiers of the key which
+    # switches the layout; let these events be delivered before binding.
+    after 200 {set done 1}
+    vwait done
+    bind $e <Key> {lappend res [list press %K]}
+    bind $e <KeyRelease> {lappend res [list release %K]}
+    bind $t <Cyrillic_shorti> {lappend res matched}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result {{press Cyrillic_shorti} matched {release Cyrillic_shorti}}
+
+test event-8.8 {keysym of a key without a named keysym on Windows - bug 52e9b0f52c} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    testsendinput foreground $e
+    focus -force $e
+    update
+    # Georgian layout: the Q key is U+10E6 (Georgian_ghan on X11, which
+    # has no name in Tk).
+    testsendinput layout 00000437
+    # Switching the keyboard layout releases the modifiers of the key which
+    # switches the layout; let these events be delivered before binding.
+    after 200 {set done 1}
+    vwait done
+    bind $e <Key> {lappend res [list press %K]}
+    bind $e <KeyRelease> {lappend res [list release %K]}
+    bind $t <\u10E6> {lappend res matched}
+    testsendinput key 0x51
+    # Wait for the events to arrive.
+    after 500 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+    unset -nocomplain done
+} -result "{press \u10E6} matched {release \u10E6}"
+
+test event-8.9 {event generate with a non-Latin keysym on Windows - bug 52e9b0f52c} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+    set klid [testsendinput layout]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    update
+    focus -force $e
+    update
+    bind $e <Key> {lappend res [list %K %A]}
+    # The keysym is translated to a key of the current layout.
+    testsendinput layout 00000422
+    event generate $e <Key-Cyrillic_shorti>
+    event generate $e <Key-Cyrillic_SHORTI>
+    event generate $e <Key-\u0439>
+    testsendinput layout 00000437
+    event generate $e <Key-\u10E6>
+    update
+    set res
+} -cleanup {
+    testsendinput layout $klid
+    deleteWindows
+} -result "{Cyrillic_shorti \u0439} {Cyrillic_SHORTI \u0419} {Cyrillic_shorti \u0439} {\u10E6 \u10E6}"
+
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
 } -body {

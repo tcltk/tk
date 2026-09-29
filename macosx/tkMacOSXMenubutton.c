@@ -245,7 +245,8 @@ void
 TkpComputeMenuButtonGeometry(
     TkMenuButton *butPtr)	/* Widget record for menu button. */
 {
-    int width, height, avgWidth, haveImage = 0, haveText = 0;
+    int width, height, avgWidth;
+    bool haveImage = false, haveText = false;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;
     int borderWidth, highlightWidth;
@@ -263,16 +264,16 @@ TkpComputeMenuButtonGeometry(
 
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
 
     if (butPtr->textObj && Tcl_GetString(butPtr->textObj)[0]) {
 	int wrapLength;
 
-	haveText = 1;
+	haveText = true;
 	Tk_FreeTextLayout(butPtr->textLayout);
 	Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
@@ -386,7 +387,7 @@ DrawMenuButtonImageAndText(
     MacMenuButton *mbPtr = (MacMenuButton *) butPtr;
     Tk_Window tkwin  = butPtr->tkwin;
     Pixmap pixmap;
-    int haveImage = 0, haveText = 0;
+    bool haveImage = false;
     int imageXOffset = 0, imageYOffset = 0;
     int textXOffset = 0, textYOffset = 0;
     int width = 0, height = 0;
@@ -402,13 +403,13 @@ DrawMenuButtonImageAndText(
 
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
 
-    haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
+    bool haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
