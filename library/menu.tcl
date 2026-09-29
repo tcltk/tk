@@ -41,6 +41,9 @@
 # postedMb -		Name of the menubutton whose menu is currently
 #			posted, or an empty string if nothing is posted
 #			A grab is set on this widget.
+# pressed -		The window (menubutton or menu) and the root
+#			coordinates of the last button press which could
+#			post a menu, until the button is released.
 # relief -		Used to save the original relief of the current
 #			menubutton.
 # window -		When the mouse is over a menu, this holds the
@@ -90,6 +93,7 @@ bind Menubutton <Leave> {
 }
 bind Menubutton <Button-1> {
     if {$tk::Priv(inMenubutton) ne ""} {
+	set tk::Priv(pressed) [list %W %X %Y]
 	tk::MbPost $tk::Priv(inMenubutton) %X %Y
     }
 }
@@ -142,7 +146,7 @@ bind Menu <Button> {
     tk::MenuButtonDown %W
 }
 bind Menu <ButtonRelease> {
-   tk::MenuInvoke %W 1
+    tk::MenuButtonUp %W %X %Y
 }
 bind Menu <space> {
     tk::MenuInvoke %W 0
@@ -332,6 +336,7 @@ proc ::tk::MenuUnpost menu {
     # Unpost menu(s) and restore some stuff that's dependent on
     # what was posted.
 
+    unset -nocomplain Priv(pressed)
     after cancel [array get Priv menuActivatedTimer]
     unset -nocomplain Priv(menuActivated)
     after cancel [array get Priv menuDeactivatedTimer]
@@ -448,6 +453,7 @@ proc ::tk::MbMotion {w upDown rootx rooty} {
 proc ::tk::MbButtonUp w {
     variable ::tk::Priv
 
+    unset -nocomplain Priv(pressed)
     set menu [$w cget -menu]
     set tearoff [expr {[tk windowingsystem] eq "x11" || \
 	    ($menu ne "" && [$menu cget -type] eq "tearoff")}]
@@ -526,6 +532,7 @@ proc ::tk::MenuMotion {menu x y state} {
 proc ::tk::MenuButtonDown menu {
     variable ::tk::Priv
 
+    set Priv(pressed) [list $menu {*}[winfo pointerxy $menu]]
     if {![winfo viewable $menu]} {
 	return
     }
@@ -597,6 +604,38 @@ proc ::tk::MenuLeave {menu rootx rooty state} {
     }
     $menu activate {}
     GenerateMenuSelect $menu
+}
+
+# ::tk::MenuButtonUp --
+# This procedure is invoked when a mouse button is released over a menu.
+# The release of the click which posted the menu is ignored if the menu
+# was posted under the pointer (e.g. it was moved to fit on the screen)
+# and the pointer has not moved, so that the menu stays posted instead of
+# invoking the entry which happens to be under the pointer.  Otherwise
+# the active entry is invoked.
+#
+# Arguments:
+# menu -		The menu window which got the event.  Because of the
+#			grab, it is not necessarily the window under the
+#			pointer.
+# rootx, rooty -	Root coordinates of the mouse.
+
+proc ::tk::MenuButtonUp {menu rootx rooty} {
+    variable ::tk::Priv
+
+    if {[info exists Priv(pressed)]} {
+	lassign $Priv(pressed) w x y
+	unset Priv(pressed)
+	set under [winfo containing -displayof $menu $rootx $rooty]
+	if {$under ne "" && $under ne $w && [winfo class $under] eq "Menu"
+		&& abs($rootx - $x) < 3 && abs($rooty - $y) < 3} {
+	    if {[winfo exists $w] && [winfo class $w] eq "TMenubutton"} {
+		ttk::menubutton::TransferGrab $w
+	    }
+	    return
+	}
+    }
+    MenuInvoke $menu 1
 }
 
 # ::tk::MenuInvoke --
@@ -1123,6 +1162,44 @@ proc ::tk::MenuFindName {menu s} {
     return ""
 }
 
+# ::tk::MenuPullDownPosition --
+# Returns the root coordinates at which the pull-down menu of a menubutton is
+# to be posted.  Normally this is just below the menubutton.  If the menu does
+# not fit there, it is posted above the menubutton, as on the other platforms.
+# If it fits neither below nor above, it is moved into the screen by the
+# platform code and then covers the pointer, so it is moved aside instead.
+# Otherwise the release of the click which posts the menu would select the
+# entry which happens to be under the pointer.  [Bug 470331]
+#
+# Arguments:
+# button -		The menubutton.
+# menu -		The menu of the menubutton.
+# cx, cy -		Root coordinates of the click which posts the menu, or an
+#			empty string if it is posted from the keyboard.
+
+proc ::tk::MenuPullDownPosition {button menu cx cy} {
+    set x [winfo rootx $button]
+    set mw [winfo reqwidth $menu]
+    set mh [winfo reqheight $menu]
+    set top [winfo vrooty $button]
+    set bottom [expr {$top + [winfo vrootheight $button]}]
+    set y [expr {[winfo rooty $button] + [winfo height $button]}]
+    if {($y + $mh) > $bottom} {
+	if {([winfo rooty $button] - $mh) >= $top} {
+	    set y [expr {[winfo rooty $button] - $mh}]
+	} elseif {$cx ne "" && $cy ne ""} {
+	    set left [winfo vrootx $button]
+	    set right [expr {$left + [winfo vrootwidth $button]}]
+	    if {($cx + 1 + $mw) <= $right} {
+		set x [expr {$cx + 1}]
+	    } elseif {($cx - $mw) >= $left} {
+		set x [expr {$cx - $mw}]
+	    }
+	}
+    }
+    return [list $x $y]
+}
+
 # ::tk::PostMenubuttonMenu --
 #
 # Given a menubutton and a menu, this procedure posts the menu at the
@@ -1181,19 +1258,12 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr y [expr {-[winfo reqheight $menu]}]
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $button]} {
-		    set y [expr {[winfo vrooty $button] + [winfo rooty $button]\
-			   + [winfo reqheight $button]}]
+		    set y [expr {[winfo rooty $button] + [winfo height $button]}]
 		}
 		set entry {}
 	    }
 	    below {
-		incr y [winfo height $button]
-		# if we go offscreen to the bottom, show as 'above'
-		set mh [winfo reqheight $menu]
-		if {($y + $mh) > ([winfo vrooty $button] + [winfo vrootheight $button])} {
-		    set y [expr {[winfo vrooty $button] + [winfo vrootheight $button] \
-			   + [winfo rooty $button] - $mh}]
-		}
+		lassign [MenuPullDownPosition $button $menu $cx $cy] x y
 		set entry {}
 	    }
 	    left {
@@ -1213,7 +1283,7 @@ if {[tk windowingsystem] eq "aqua"} {
 				[winfo reqwidth $menu])/ 2}]
 		    }
 		} else {
-		    incr y [winfo height $button]
+		    lassign [MenuPullDownPosition $button $menu $cx $cy] x y
 		}
 	    }
 	}

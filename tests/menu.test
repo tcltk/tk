@@ -4316,6 +4316,50 @@ test menu-41.14 {identifiers - reserved word} -setup {
     destroy .m
 } -result {2}
 
+test menu-42.1 {the release of the click on a menubar entry over its posted
+	cascade does not invoke an entry - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    toplevel .t
+    menu .t.mb -tearoff 0
+    .t.mb add cascade -label File -menu .t.mb.file
+    menu .t.mb.file -tearoff 0
+    # The cascade is taller than the screen, so it is posted over the
+    # menubar entry, under the pointer.
+    for {set i 0} {$i < [winfo screenheight .] / 10} {incr i} {
+	.t.mb.file add command -label "Item $i" -command {set res invoked}
+    }
+    .t configure -menu .t.mb
+    wm geometry .t 200x100+100+100
+    update
+    set res {}
+} -body {
+    foreach w [winfo children .t] {
+	if {[winfo class $w] eq "Menu" && [$w cget -type] eq "menubar"} {
+	    break
+	}
+    }
+    set x [expr {[$w xposition 0] + 5}]
+    event generate $w <Motion> -warp 1 -x $x -y 5
+    update
+    event generate $w <Button-1> -x $x -y 5
+    update
+    # The cascade of a menubar is a clone of .t.mb.file.
+    set m [$w entrycget 0 -menu]
+    lassign [winfo pointerxy .] x y
+    lappend res [winfo containing $x $y]
+    event generate $m <ButtonRelease-1> \
+	    -x [expr {$x - [winfo rootx $m]}] -y [expr {$y - [winfo rooty $m]}]
+    update
+    lappend res [expr {[winfo ismapped $m] ? "mapped" : "unmapped"}]
+    list [expr {[lindex $res 0] eq $m}] {*}[lrange $res 1 end]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain res x y w m i
+} -result {1 mapped}
+
 #
 # TESTFILE CLEANUP
 #
