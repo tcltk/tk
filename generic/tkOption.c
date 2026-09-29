@@ -996,9 +996,6 @@ AddFromString(
 	while ((*src == ' ') || (*src == '\t')) {
 	    src++;
 	}
-	if (*src == '\\' && (src[1] == '\t' || src[1] == ' ')) {
-	    src++;
-	}
 	if (*src == '\0') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "missing value on line %d", lineNum));
@@ -1007,8 +1004,10 @@ AddFromString(
 	}
 
 	/*
-	 * Parse off the value, squeezing out backslash-newline sequences
-	 * along the way.
+	 * Parse off the value, handling the escape sequences of the X11
+	 * resource file syntax along the way: backslash-newline is removed,
+	 * "\n" is a newline, "\ ", "\<tab>" and "\\" are a space, a tab and a
+	 * backslash, and "\ooo" is a byte given by three octal digits.
 	 */
 
 	dst = value = src;
@@ -1028,10 +1027,10 @@ AddFromString(
 		    src += 2;
 		    *dst++ = '\n';
 		    continue;
-		} else if (src[1] == '\\') {
+		} else if (src[1] == ' ' || src[1] == '\t' || src[1] == '\\') {
 		    ++src;
 		} else if (src[1] >= '0' && src[1] <= '3' && src[2] >= '0' &&
-			src[2] <= '9' && src[3] >= '0' && src[3] <= '9') {
+			src[2] <= '7' && src[3] >= '0' && src[3] <= '7') {
 		    *dst++ = ((src[1]&7)<<6) | ((src[2]&7)<<3) | (src[3]&7);
 		    src += 4;
 		    continue;

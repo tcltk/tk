@@ -181,8 +181,11 @@ testConstraint testobjconfig   [llength [info commands testobjconfig]]
 testConstraint testpixel       [llength [info commands testpixel]]
 testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
+testConstraint testsendinput   [llength [info commands testsendinput]]
+testConstraint testsetlocale   [llength [info commands testsetlocale]]
 testConstraint testtext        [llength [info commands testtext]]
 testConstraint testwinevent    [llength [info commands testwinevent]]
 testConstraint testwrapper     [llength [info commands testwrapper]]
+testConstraint testxfocus      [llength [info commands testxfocus]]
 
 # EOF
