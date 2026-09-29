@@ -360,16 +360,84 @@ if test $tk_aqua = no; then
     XFT_DEPS=""
 
     #--------------------------------------------------------------------
-    # --enable-bidi (default: yes on X11 if HarfBuzz >= 2.8.2 is found),
-    # forces Xft when enabled
+    # --enable-bidi (default: yes on X11 if Xft and HarfBuzz >= 2.8.2 are
+    # found), requires Xft
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
     AC_ARG_ENABLE(bidi,
 	AS_HELP_STRING([--enable-bidi],
-	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes if HarfBuzz >= 2.8.2 is found)]),
+	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes if Xft and HarfBuzz >= 2.8.2 are found)]),
 	[enable_bidi=$enableval; tk_bidi_explicit=yes],
 	[enable_bidi="yes"; tk_bidi_explicit=no])
     AC_MSG_RESULT([$enable_bidi])
+
+    if test "$enable_bidi" = "yes" && test "$enable_xft" = "no"; then
+	if test "$tk_bidi_explicit" = "yes"; then
+	    AC_MSG_ERROR([--enable-bidi requires Xft, it cannot be combined with --disable-xft.])
+	fi
+	AC_MSG_NOTICE([Xft is disabled: disabling bidirectional text support too.])
+	enable_bidi=no
+    fi
+
+    # Now actually enable Xft if requested
+    if test "$enable_xft" = "yes" ; then
+	found_xft="yes"
+
+	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
+	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
+	if test "$found_xft" = "no" ; then
+	    found_xft=yes
+	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
+	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
+	fi
+
+	if test "$found_xft" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
+
+	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [found_xft=no], [#include <X11/Xlib.h>])
+
+	    if test "$found_xft" = "yes" ; then
+		AC_CHECK_LIB(Xft, XftFontOpen, [], [found_xft=no])
+	    fi
+
+	    if test "$found_xft" = "yes" ; then
+		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		XFT_DEPS="xft"
+		AC_CHECK_LIB(fontconfig, FcFontSort, [
+		    XFT_LIBS="$XFT_LIBS -lfontconfig"
+		    XFT_DEPS="$XFT_DEPS fontconfig"
+		], [])
+	    fi
+
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	fi
+
+	if test "$found_xft" = "no" ; then
+	    if test "$enable_xft" = "yes" ; then
+		AC_MSG_WARN([Can't find xft configuration or xft is unusable -- falling back to classic fonts])
+	    fi
+	    enable_xft=no
+	    XFT_CFLAGS=""
+	    XFT_LIBS=""
+	    XFT_DEPS=""
+	else
+	    enable_xft=yes
+	fi
+    fi
+
+    if test "$enable_bidi" = "yes" && test "$enable_xft" = "no"; then
+	if test "$tk_bidi_explicit" = "yes"; then
+	    AC_MSG_ERROR([--enable-bidi requires Xft, but Xft is not found or unusable.
+Install the Xft development package (e.g. libxft-dev, libXft-devel or
+libxft) or configure with --disable-bidi.])
+	fi
+	AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
+	enable_bidi=no
+    fi
 
     if test "$enable_bidi" = "yes"; then
 	#--------------------------------------------------------------------
@@ -447,11 +515,6 @@ harfbuzz-devel or harfbuzz) or configure with --disable-bidi.])
     fi
 
     if test "$enable_bidi" = "yes"; then
-	AC_MSG_NOTICE([Bidi enabled: forcing Xft on as well])
-	if test "$enable_xft" = "no"; then
-	   enable_xft=yes
-	fi
-
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
 		     -I${TK_SRC_DIR}/unix/bidi/Source \
 		     -I${TK_SRC_DIR}/unix/bidi \
@@ -473,56 +536,6 @@ harfbuzz-devel or harfbuzz) or configure with --disable-bidi.])
 	    AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
 	else
 	    UNIX_FONT_OBJS="tkUnixFont.o"
-	fi
-    fi
-
-    # Now actually enable Xft if requested (or forced by bidi)
-    if test "$enable_xft" = "yes" ; then
-	found_xft="yes"
-
-	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
-	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
-	if test "$found_xft" = "no" ; then
-	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
-	fi
-
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
-
-	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [found_xft=no], [#include <X11/Xlib.h>])
-
-	    if test "$found_xft" = "yes" ; then
-		AC_CHECK_LIB(Xft, XftFontOpen, [], [found_xft=no])
-	    fi
-
-	    if test "$found_xft" = "yes" ; then
-		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
-		XFT_DEPS="xft"
-		AC_CHECK_LIB(fontconfig, FcFontSort, [
-		    XFT_LIBS="$XFT_LIBS -lfontconfig"
-		    XFT_DEPS="$XFT_DEPS fontconfig"
-		], [])
-	    fi
-
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-
-	if test "$found_xft" = "no" ; then
-	    if test "$enable_xft" = "yes" ; then
-		AC_MSG_WARN([Can't find xft configuration or xft is unusable -- falling back to classic fonts])
-	    fi
-	    enable_xft=no
-	    XFT_CFLAGS=""
-	    XFT_LIBS=""
-	    XFT_DEPS=""
-	else
-	    enable_xft=yes
 	fi
     fi
 
