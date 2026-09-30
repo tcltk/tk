@@ -43,6 +43,7 @@ to the userbase.
  - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
  - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
  - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
+ - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
