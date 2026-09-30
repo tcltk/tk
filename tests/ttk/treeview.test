@@ -4863,7 +4863,15 @@ test Button_Events-47.6 {Click on Cell} -setup {
     list $state [expr {[.tv item pink -open] ? 1 : 0}]
 } -result {0 0}
 
-test Button_Events-47.7 {Cleanup} -body {
+test Button_Events-47.7 {Click on Empty Indicator} -setup {
+    .tv see purple
+    .tv selection set {}
+} -body {
+    ButtonPress .tv purple #0 10
+    $w selection size
+} -result {1}
+
+test Button_Events-47.8 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 

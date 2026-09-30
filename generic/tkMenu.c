@@ -307,13 +307,13 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 static const char *const menuOptions[] = {
     "activate", "add", "cget", "clone", "configure", "delete", "entrycget",
     "entryconfigure", "id", "index", "insert", "invoke", "post", "postcascade",
-    "type", "unpost", "xposition", "yposition", NULL
+    "type", "unpost", "xposition", "yposition", "yview", NULL
 };
 enum options {
     MENU_ACTIVATE, MENU_ADD, MENU_CGET, MENU_CLONE, MENU_CONFIGURE,
     MENU_DELETE, MENU_ENTRYCGET, MENU_ENTRYCONFIGURE, MENU_ID, MENU_INDEX,
     MENU_INSERT, MENU_INVOKE, MENU_POST, MENU_POSTCASCADE, MENU_TYPE,
-    MENU_UNPOST, MENU_XPOSITION, MENU_YPOSITION
+    MENU_UNPOST, MENU_XPOSITION, MENU_YPOSITION, MENU_YVIEW
 };
 
 /*
@@ -341,6 +341,8 @@ static Tcl_FreeProc	DestroyMenuEntry;
 static Tcl_Size	GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
 			    Tcl_Size *indexPtr);
+static int		MenuDoYView(Tcl_Interp *interp, TkMenu *menuPtr,
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		MenuDoYPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuDoXPosition(Tcl_Interp *interp,
@@ -988,6 +990,9 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	result = MenuDoYPosition(interp, menuPtr, objv[2]);
+	break;
+    case MENU_YVIEW:
+	result = MenuDoYView(interp, menuPtr, objc, objv);
 	break;
     }
   done:
@@ -2879,6 +2884,7 @@ TkActivateMenuEntry(
 	mePtr = menuPtr->entries[index];
 	mePtr->state = ENTRY_ACTIVE;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);
+	TkMenuSeeEntry(menuPtr, mePtr);
     }
     return result;
 }
@@ -3190,6 +3196,80 @@ MenuDoYPosition(
 /*
  *----------------------------------------------------------------------
  *
+ * MenuDoYView --
+ *
+ *	This function handles the "yview" widget command, which queries or
+ *	changes the scrolling of the entries of a menu higher than the
+ *	screen.
+ *
+ * Results:
+ *	A standard Tcl result.  Without arguments, the fractions of the
+ *	entries at the top and the bottom of the visible area are returned.
+ *
+ * Side effects:
+ *	The menu may be scrolled.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+MenuDoYView(
+    Tcl_Interp *interp,
+    TkMenu *menuPtr,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
+{
+    int content, visible, count, unit, offset, borderWidth;
+    double fraction;
+
+    TkRecomputeMenu(menuPtr);
+    TkMenuGetScrollRange(menuPtr, &content, &visible);
+    if (objc == 2) {
+	Tcl_Obj *results[2];
+	double first = 0.0, last = 1.0;
+
+	if (content > 0 && visible < content) {
+	    first = menuPtr->scrollOffset / (double) content;
+	    last = (menuPtr->scrollOffset + visible) / (double) content;
+	}
+	results[0] = Tcl_NewDoubleObj(first);
+	results[1] = Tcl_NewDoubleObj(last);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
+	return TCL_OK;
+    }
+
+    /*
+     * A unit is the height of a line of the menu font, which is also the
+     * height of the areas with the scroll arrows without the border.
+     */
+
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+	    &borderWidth);
+    unit = menuPtr->scrollArrowHeight - borderWidth;
+    if (unit <= 0) {
+	unit = 1;
+    }
+    switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
+    case TK_SCROLL_MOVETO:
+	offset = (int) (fraction * content + 0.5);
+	break;
+    case TK_SCROLL_PAGES:
+	offset = menuPtr->scrollOffset + count * (visible > 2 * unit
+		? visible - unit : visible);
+	break;
+    case TK_SCROLL_UNITS:
+	offset = menuPtr->scrollOffset + count * unit;
+	break;
+    default:
+	return TCL_ERROR;
+    }
+    TkMenuSetScrollOffset(menuPtr, offset);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GetIndexFromCoords --
  *
  *	Given a string of the form "@integer", return the menu item
@@ -3242,6 +3322,22 @@ GetIndexFromCoords(
 	}
 
     *indexPtr = -1;
+
+    /*
+     * In a menu higher than the screen, there are no entries in the areas
+     * with the scroll arrows, and the entries are scrolled.
+     */
+
+    if (menuPtr->scrollArrowHeight > 0) {
+	int height = Tk_IsMapped(menuPtr->tkwin)
+		? Tk_Height(menuPtr->tkwin) : Tk_ReqHeight(menuPtr->tkwin);
+
+	if ((y < menuPtr->scrollArrowHeight)
+		|| (y >= height - menuPtr->scrollArrowHeight)) {
+	    return TCL_OK;
+	}
+	y -= TkMenuScrollDelta(menuPtr);
+    }
 
     /* set the width of the final column to the remainder of the window
      * being aware of windows that may not be mapped yet.
