@@ -70,10 +70,19 @@ if {[tk windowingsystem] eq "aqua"} {
     set Y2 [expr {$mb + 2}]
     set Y5 [expr {$mb + 5}]
 } else {
+    # Window managers may keep windows out of an area at the top of the
+    # screen which is reserved e.g. for a panel.  Use the top-most position
+    # which a window can actually get.
     set X  20
-    set Y0 0
-    set Y2 2
-    set Y5 5
+    toplevel .t -width 200 -height 150
+    wm geom .t +$X+0
+    update
+    # Give the window manager time to move the window.
+    pause 100
+    scan [wm geom .t] %*dx%*d+%*d+%d Y0
+    destroy .t
+    set Y2 [expr {$Y0 + 2}]
+    set Y5 [expr {$Y0 + 5}]
 }
 
 #

@@ -343,6 +343,11 @@ typedef struct WaitRestrictInfo {
  */
 
 static bool		ComputeReparentGeometry(WmInfo *wmPtr);
+static bool		GetFrameExtents(WmInfo *wmPtr, int *leftPtr,
+			    int *rightPtr, int *topPtr, int *bottomPtr);
+static bool		GetWorkArea(WmInfo *wmPtr, int *xPtr, int *yPtr,
+			    int *widthPtr, int *heightPtr);
+static void		CheckWorkAreaMove(WmInfo *wmPtr, int reqX, int reqY);
 static void		ConfigureEvent(WmInfo *wmPtr,
 			    XConfigureEvent *eventPtr);
 static void		CreateWrapper(WmInfo *wmPtr);
@@ -4127,12 +4132,31 @@ ConfigureEvent(
     }
 
     if ((wmPtr->reparent == None) || !ComputeReparentGeometry(wmPtr)) {
+	int left, right, top, bottom;
+
 	wmPtr->parentWidth = configEventPtr->width
 		+ 2*configEventPtr->border_width;
 	wmPtr->parentHeight = configEventPtr->height
 		+ 2*configEventPtr->border_width;
 	wrapperPtr->changes.x = wmPtr->x = configEventPtr->x;
 	wrapperPtr->changes.y = wmPtr->y = configEventPtr->y;
+
+	/*
+	 * A window manager which draws the decorations without reparenting
+	 * the window (e.g. KWin for Xwayland clients) reports them in
+	 * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
+	 * decorations, as for reparenting window managers. Only do this for
+	 * a mapped window: reparenting window managers may set the property
+	 * before they reparent the window.
+	 */
+
+	if ((winPtr->flags & TK_MAPPED)
+		&& GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
+	    wmPtr->x -= left;
+	    wmPtr->y -= top;
+	    wmPtr->parentWidth += left + right;
+	    wmPtr->parentHeight += top + bottom;
+	}
 	if (wmPtr->flags & WM_NEGATIVE_X) {
 	    wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
 	}
@@ -4299,6 +4323,194 @@ ReparentEvent(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetFrameExtents --
+ *
+ *	Gets the widths of the decorations which the window manager added
+ *	around a top-level window, from the _NET_FRAME_EXTENTS property.
+ *
+ * Results:
+ *	Returns true and stores the widths if the window manager set the
+ *	property, otherwise returns false.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+GetFrameExtents(
+    WmInfo *wmPtr,		/* Information about the toplevel window. */
+    int *leftPtr, int *rightPtr,/* Where to store the widths of the left, */
+    int *topPtr, int *bottomPtr)/* right, top and bottom decorations. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    Atom actualType;
+    int actualFormat;
+    unsigned long numItems, bytesAfter;
+    long *extents = NULL;
+    bool result = false;
+    Tk_ErrorHandler handler;
+
+    if (wrapperPtr == NULL) {
+	return false;
+    }
+    handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
+    if (GetWindowProperty(wrapperPtr,
+	    Tk_InternAtom((Tk_Window) wrapperPtr, "_NET_FRAME_EXTENTS"), 4,
+	    XA_CARDINAL, &actualType, &actualFormat, &numItems, &bytesAfter,
+	    &extents)) {
+	if (actualType == XA_CARDINAL && actualFormat == 32
+		&& numItems == 4) {
+	    *leftPtr = (int) extents[0];
+	    *rightPtr = (int) extents[1];
+	    *topPtr = (int) extents[2];
+	    *bottomPtr = (int) extents[3];
+	    result = true;
+	}
+	if (extents != NULL) {
+	    XFree(extents);
+	}
+    }
+    Tk_DeleteErrorHandler(handler);
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetWorkArea --
+ *
+ *	Gets the area of the screen which the window manager does not reserve
+ *	for panels, docks, etc., from the _NET_WORKAREA property of the root
+ *	window.
+ *
+ * Results:
+ *	Returns true and stores the area if the window manager set the
+ *	property, otherwise returns false.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+GetWorkArea(
+    WmInfo *wmPtr,		/* Information about the toplevel window. */
+    int *xPtr, int *yPtr,	/* Where to store the work area. */
+    int *widthPtr, int *heightPtr)
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    Display *display = wrapperPtr->display;
+    Window root = RootWindow(display, wrapperPtr->screenNum);
+    Atom actualType;
+    int actualFormat;
+    unsigned long numItems, bytesAfter, desktop = 0;
+    long *data = NULL;
+    bool result = false;
+    Tk_ErrorHandler handler;
+
+    handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+    if (XGetWindowProperty(display, root,
+	    Tk_InternAtom((Tk_Window) wrapperPtr, "_NET_CURRENT_DESKTOP"),
+	    0, 1, False, XA_CARDINAL, &actualType, &actualFormat, &numItems,
+	    &bytesAfter, (unsigned char **) &data) == Success) {
+	if (actualType == XA_CARDINAL && actualFormat == 32 && numItems == 1) {
+	    desktop = (unsigned long) data[0];
+	}
+	if (data != NULL) {
+	    XFree(data);
+	    data = NULL;
+	}
+    }
+    if (XGetWindowProperty(display, root,
+	    Tk_InternAtom((Tk_Window) wrapperPtr, "_NET_WORKAREA"),
+	    (long) (4 * desktop), 4, False, XA_CARDINAL, &actualType,
+	    &actualFormat, &numItems, &bytesAfter,
+	    (unsigned char **) &data) == Success) {
+	if (actualType == XA_CARDINAL && actualFormat == 32 && numItems == 4) {
+	    *xPtr = (int) data[0];
+	    *yPtr = (int) data[1];
+	    *widthPtr = (int) data[2];
+	    *heightPtr = (int) data[3];
+	    result = true;
+	}
+	if (data != NULL) {
+	    XFree(data);
+	}
+    }
+    Tk_DeleteErrorHandler(handler);
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CheckWorkAreaMove --
+ *
+ *	This function is invoked after the window manager has handled a
+ *	request to move or map a top-level window. Normally the position of
+ *	the window is left as it was requested, even if the window manager
+ *	placed the window elsewhere, because window managers interpret the
+ *	coordinates differently (see ComputeReparentGeometry). But if the
+ *	requested position was outside of the work area and the window
+ *	manager moved the decorated window to the edge of the work area, e.g.
+ *	out of the area reserved for a panel, the position is updated.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	wmPtr->x and wmPtr->y may change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+CheckWorkAreaMove(
+    WmInfo *wmPtr,		/* Information about the toplevel window. */
+    int reqX, int reqY)		/* The requested position. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    int left, right, top, bottom, x, y, waX, waY, waWidth, waHeight;
+    Window child;
+    Tk_ErrorHandler handler;
+    Bool ok;
+
+    if ((wrapperPtr == NULL)
+	    || ((wmPtr->flags & WM_NEGATIVE_X) && (wmPtr->flags & WM_NEGATIVE_Y))
+	    || !GetWorkArea(wmPtr, &waX, &waY, &waWidth, &waHeight)
+	    || ((reqX >= waX) && (reqY >= waY))
+	    || !GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
+	return;
+    }
+    handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
+    ok = XTranslateCoordinates(wrapperPtr->display, wrapperPtr->window,
+	    RootWindow(wrapperPtr->display, wrapperPtr->screenNum),
+	    0, 0, &x, &y, &child);
+    Tk_DeleteErrorHandler(handler);
+    if (!ok) {
+	return;
+    }
+    x -= left + wrapperPtr->changes.border_width;
+    y -= top + wrapperPtr->changes.border_width;
+    if (!(wmPtr->flags & WM_NEGATIVE_X) && (reqX < waX) && (x == waX)) {
+	wmPtr->x = x;
+    }
+    if (!(wmPtr->flags & WM_NEGATIVE_Y) && (reqY < waY) && (y == waY)) {
+	wmPtr->y = y;
+    }
+    if (wmPtr->winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
+	printf("CheckWorkAreaMove %s: requested %d,%d, frame at %d,%d, "
+		"work area at %d,%d\n", wmPtr->winPtr->pathName,
+		reqX, reqY, x, y, waX, waY);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5278,6 +5490,8 @@ WaitForConfigureNotify(
     XEvent event;
     int diff, code;
     int gotConfig = 0;
+    bool movePending = (wmPtr->flags & WM_MOVE_PENDING) != 0;
+    int reqX = wmPtr->x, reqY = wmPtr->y;
 
     /*
      * One more tricky detail about this function. In some cases the window
@@ -5303,6 +5517,9 @@ WaitForConfigureNotify(
 	}
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
+    if (gotConfig && movePending) {
+	CheckWorkAreaMove(wmPtr, reqX, reqY);
+    }
     if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("WaitForConfigureNotify finished with %s, serial %ld\n",
 		winPtr->pathName, serial);
@@ -5457,6 +5674,7 @@ WaitForMapNotify(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     XEvent event;
     int code;
+    int reqX = wmPtr->x, reqY = wmPtr->y;
 
     while (true) {
 	if (mapped) {
@@ -5484,6 +5702,9 @@ WaitForMapNotify(
 	}
     }
     wmPtr->flags &= ~WM_MOVE_PENDING;
+    if (mapped && (winPtr->flags & TK_MAPPED)) {
+	CheckWorkAreaMove(wmPtr, reqX, reqY);
+    }
     if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	printf("WaitForMapNotify finished with %s (winPtr %p, wmPtr %p)\n",
 		winPtr->pathName, winPtr, wmPtr);
