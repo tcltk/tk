@@ -2741,7 +2741,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="b1"
+TK_PATCH_LEVEL=".1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -9051,7 +9051,7 @@ printf '%s\n' "$enable_libcups" >&6; }
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_cups" >&5

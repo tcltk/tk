@@ -41,6 +41,11 @@
 # postedMb -		Name of the menubutton whose menu is currently
 #			posted, or an empty string if nothing is posted
 #			A grab is set on this widget.
+# menuScrollTimer -	Id of the timer which scrolls a menu while the
+#			mouse is over one of its scroll arrows.
+# pressed -		The window (menubutton or menu) and the root
+#			coordinates of the last button press which could
+#			post a menu, until the button is released.
 # relief -		Used to save the original relief of the current
 #			menubutton.
 # window -		When the mouse is over a menu, this holds the
@@ -90,6 +95,7 @@ bind Menubutton <Leave> {
 }
 bind Menubutton <Button-1> {
     if {$tk::Priv(inMenubutton) ne ""} {
+	set tk::Priv(pressed) [list %W %X %Y]
 	tk::MbPost $tk::Priv(inMenubutton) %X %Y
     }
 }
@@ -138,11 +144,14 @@ bind Menu <Leave> {
 bind Menu <Motion> {
     tk::MenuMotion %W %x %y %s
 }
+bind Menu <MouseWheel> {
+    tk::MenuMouseWheel %W %D %x %y
+}
 bind Menu <Button> {
     tk::MenuButtonDown %W
 }
 bind Menu <ButtonRelease> {
-   tk::MenuInvoke %W 1
+    tk::MenuButtonUp %W %X %Y
 }
 bind Menu <space> {
     tk::MenuInvoke %W 0
@@ -332,6 +341,8 @@ proc ::tk::MenuUnpost menu {
     # Unpost menu(s) and restore some stuff that's dependent on
     # what was posted.
 
+    unset -nocomplain Priv(pressed)
+    MenuStopAutoScroll
     after cancel [array get Priv menuActivatedTimer]
     unset -nocomplain Priv(menuActivated)
     after cancel [array get Priv menuDeactivatedTimer]
@@ -448,6 +459,7 @@ proc ::tk::MbMotion {w upDown rootx rooty} {
 proc ::tk::MbButtonUp w {
     variable ::tk::Priv
 
+    unset -nocomplain Priv(pressed)
     set menu [$w cget -menu]
     set tearoff [expr {[tk windowingsystem] eq "x11" || \
 	    ($menu ne "" && [$menu cget -type] eq "tearoff")}]
@@ -474,6 +486,13 @@ proc ::tk::MbButtonUp w {
 
 proc ::tk::MenuMotion {menu x y state} {
     variable ::tk::Priv
+    if {[MenuStillPressed $menu]} {
+	# The menu was posted under the pointer by the click which is
+	# still going on.  Do not activate the entry under the pointer
+	# or scroll the menu until the pointer moves.
+	return
+    }
+    MenuAutoScroll $menu $x $y
     if {$menu eq $Priv(window)} {
 	set activeindex [$menu index active]
 	if {[$menu cget -type] eq "menubar"} {
@@ -526,6 +545,7 @@ proc ::tk::MenuMotion {menu x y state} {
 proc ::tk::MenuButtonDown menu {
     variable ::tk::Priv
 
+    set Priv(pressed) [list $menu {*}[winfo pointerxy $menu]]
     if {![winfo viewable $menu]} {
 	return
     }
@@ -586,6 +606,7 @@ proc ::tk::MenuButtonDown menu {
 
 proc ::tk::MenuLeave {menu rootx rooty state} {
     variable ::tk::Priv
+    MenuStopAutoScroll
     set Priv(window) {}
     if {[$menu index active] < 0} {
 	return
@@ -597,6 +618,154 @@ proc ::tk::MenuLeave {menu rootx rooty state} {
     }
     $menu activate {}
     GenerateMenuSelect $menu
+}
+
+# ::tk::MenuMouseWheel --
+# This procedure is invoked for mouse wheel events over a menu.  It scrolls
+# a menu higher than the screen and activates the entry which gets under
+# the pointer.
+#
+# Arguments:
+# menu -		The menu window.
+# delta -		The delta of the mouse wheel event.
+# x, y -		The position of the mouse in the menu.
+
+proc ::tk::MenuMouseWheel {menu delta x y} {
+    MouseWheel $menu y $delta -40.0 units
+    MenuMotion $menu $x $y 0
+}
+
+# ::tk::MenuScrollDirection --
+# Returns -1 or 1 if the position is over the scroll arrow at the top or
+# the bottom of a menu higher than the screen, and the entries can be
+# scrolled in that direction, or 0 otherwise.
+#
+# Arguments:
+# menu -		The menu window.
+# x, y -		The position in the menu.
+
+proc ::tk::MenuScrollDirection {menu x y} {
+    lassign [$menu yview] first last
+    if {$first <= 0 && $last >= 1} {
+	return 0
+    }
+    # The height of the arrow areas, as computed in ComputeMenuGeometry.
+    set arrow [expr {[winfo pixels $menu [$menu cget -borderwidth]]
+	    + [font metrics [$menu cget -font] -linespace]}]
+    if {$y < $arrow} {
+	return [expr {$first > 0 ? -1 : 0}]
+    } elseif {$y >= [winfo height $menu] - $arrow} {
+	return [expr {$last < 1 ? 1 : 0}]
+    }
+    return 0
+}
+
+# ::tk::MenuAutoScroll --
+# Scrolls a menu higher than the screen while the mouse is over one of its
+# scroll arrows.
+#
+# Arguments:
+# menu -		The menu window.
+# x, y -		The position of the mouse in the menu.
+
+proc ::tk::MenuAutoScroll {menu x y} {
+    variable ::tk::Priv
+
+    set dir [MenuScrollDirection $menu $x $y]
+    if {$dir == 0} {
+	MenuStopAutoScroll
+	return
+    }
+    if {[info exists Priv(menuScrollTimer)]} {
+	# Already scrolling.
+	return
+    }
+    MenuAutoScrollStep $menu $dir
+}
+
+proc ::tk::MenuAutoScrollStep {menu dir} {
+    variable ::tk::Priv
+
+    unset -nocomplain Priv(menuScrollTimer)
+    if {![winfo exists $menu] || ![winfo ismapped $menu]} {
+	return
+    }
+    lassign [winfo pointerxy $menu] rootx rooty
+    set x [expr {$rootx - [winfo rootx $menu]}]
+    set y [expr {$rooty - [winfo rooty $menu]}]
+    if {[winfo containing -displayof $menu $rootx $rooty] ne $menu
+	    || [MenuScrollDirection $menu $x $y] != $dir} {
+	return
+    }
+    $menu yview scroll $dir units
+    set Priv(menuScrollTimer) [after 40 [list tk::MenuAutoScrollStep $menu $dir]]
+}
+
+proc ::tk::MenuStopAutoScroll {} {
+    variable ::tk::Priv
+
+    if {[info exists Priv(menuScrollTimer)]} {
+	after cancel $Priv(menuScrollTimer)
+	unset Priv(menuScrollTimer)
+    }
+}
+
+# ::tk::MenuStillPressed --
+# Returns true if the menu was posted under the pointer by the click which
+# is still going on and the pointer has not moved since the press, i.e. the
+# pointer is over a menu other than the window which got the press, less
+# than 3 pixels from the position of the press.
+#
+# Arguments:
+# menu -		A menu window, used for the display of the pointer.
+# rootx, rooty -	Root coordinates of the pointer.  If omitted, the
+#			current position of the pointer is used.
+
+proc ::tk::MenuStillPressed {menu {rootx {}} {rooty {}}} {
+    variable ::tk::Priv
+
+    if {![info exists Priv(pressed)]} {
+	return 0
+    }
+    lassign $Priv(pressed) w x y
+    if {$rootx eq "" || $rooty eq ""} {
+	lassign [winfo pointerxy $menu] rootx rooty
+    }
+    set under [winfo containing -displayof $menu $rootx $rooty]
+    return [expr {$under ne "" && $under ne $w
+	    && [winfo class $under] eq "Menu"
+	    && abs($rootx - $x) < 3 && abs($rooty - $y) < 3}]
+}
+
+# ::tk::MenuButtonUp --
+# This procedure is invoked when a mouse button is released over a menu.
+# The release of the click which posted the menu is ignored if the menu
+# was posted under the pointer (e.g. it was moved to fit on the screen)
+# and the pointer has not moved, so that the menu stays posted instead of
+# invoking the entry which happens to be under the pointer.  Otherwise
+# the active entry is invoked.
+#
+# Arguments:
+# menu -		The menu window which got the event.  Because of the
+#			grab, it is not necessarily the window under the
+#			pointer.
+# rootx, rooty -	Root coordinates of the mouse.
+
+proc ::tk::MenuButtonUp {menu rootx rooty} {
+    variable ::tk::Priv
+
+    if {[info exists Priv(pressed)]} {
+	set stillPressed [MenuStillPressed $menu $rootx $rooty]
+	set w [lindex $Priv(pressed) 0]
+	unset Priv(pressed)
+	if {$stillPressed} {
+	    if {[winfo exists $w] && [winfo class $w] eq "TMenubutton"} {
+		ttk::menubutton::TransferGrab $w
+	    }
+	    return
+	}
+    }
+    MenuInvoke $menu 1
 }
 
 # ::tk::MenuInvoke --
@@ -1123,6 +1292,44 @@ proc ::tk::MenuFindName {menu s} {
     return ""
 }
 
+# ::tk::MenuPullDownPosition --
+# Returns the root coordinates at which the pull-down menu of a menubutton is
+# to be posted.  Normally this is just below the menubutton.  If the menu does
+# not fit there, it is posted above the menubutton, as on the other platforms.
+# If it fits neither below nor above, it is moved into the screen by the
+# platform code and then covers the pointer, so it is moved aside instead.
+# Otherwise the release of the click which posts the menu would select the
+# entry which happens to be under the pointer.  [Bug 470331]
+#
+# Arguments:
+# button -		The menubutton.
+# menu -		The menu of the menubutton.
+# cx, cy -		Root coordinates of the click which posts the menu, or an
+#			empty string if it is posted from the keyboard.
+
+proc ::tk::MenuPullDownPosition {button menu cx cy} {
+    set x [winfo rootx $button]
+    set mw [winfo reqwidth $menu]
+    set mh [winfo reqheight $menu]
+    set top [winfo vrooty $button]
+    set bottom [expr {$top + [winfo vrootheight $button]}]
+    set y [expr {[winfo rooty $button] + [winfo height $button]}]
+    if {($y + $mh) > $bottom} {
+	if {([winfo rooty $button] - $mh) >= $top} {
+	    set y [expr {[winfo rooty $button] - $mh}]
+	} elseif {$cx ne "" && $cy ne ""} {
+	    set left [winfo vrootx $button]
+	    set right [expr {$left + [winfo vrootwidth $button]}]
+	    if {($cx + 1 + $mw) <= $right} {
+		set x [expr {$cx + 1}]
+	    } elseif {($cx - $mw) >= $left} {
+		set x [expr {$cx - $mw}]
+	    }
+	}
+    }
+    return [list $x $y]
+}
+
 # ::tk::PostMenubuttonMenu --
 #
 # Given a menubutton and a menu, this procedure posts the menu at the
@@ -1181,19 +1388,12 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr y [expr {-[winfo reqheight $menu]}]
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $button]} {
-		    set y [expr {[winfo vrooty $button] + [winfo rooty $button]\
-			   + [winfo reqheight $button]}]
+		    set y [expr {[winfo rooty $button] + [winfo height $button]}]
 		}
 		set entry {}
 	    }
 	    below {
-		incr y [winfo height $button]
-		# if we go offscreen to the bottom, show as 'above'
-		set mh [winfo reqheight $menu]
-		if {($y + $mh) > ([winfo vrooty $button] + [winfo vrootheight $button])} {
-		    set y [expr {[winfo vrooty $button] + [winfo vrootheight $button] \
-			   + [winfo rooty $button] - $mh}]
-		}
+		lassign [MenuPullDownPosition $button $menu $cx $cy] x y
 		set entry {}
 	    }
 	    left {
@@ -1213,7 +1413,7 @@ if {[tk windowingsystem] eq "aqua"} {
 				[winfo reqwidth $menu])/ 2}]
 		    }
 		} else {
-		    incr y [winfo height $button]
+		    lassign [MenuPullDownPosition $button $menu $cx $cy] x y
 		}
 	    }
 	}
@@ -1357,12 +1557,31 @@ proc ::tk::GenerateMenuSelect {menu} {
 #			menu.
 # entry -		Index of a menu entry to center over (x,y).
 #			If omitted or specified as {}, then menu's
-#			upper-left corner goes at (x,y).
+#			upper-left corner goes at (x,y).  If the menu
+#			does not fit to the right of or below (x,y), it
+#			is posted to the left of or above it instead, if
+#			it fits there.
 
 proc ::tk_popup {menu x y {entry {}}} {
     variable ::tk::Priv
     if {$Priv(popup) ne "" || $Priv(postedMb) ne ""} {
 	tk::MenuUnpost {}
+    }
+    if {$entry eq "" && [tk windowingsystem] eq "x11"} {
+	# Otherwise the menu would be moved over the point to fit on the
+	# screen, and the release of the click which popped it up would
+	# invoke the entry under the pointer.
+	$menu yposition last
+	set mw [winfo reqwidth $menu]
+	set mh [winfo reqheight $menu]
+	set left [winfo vrootx $menu]
+	set top [winfo vrooty $menu]
+	if {$x + $mw > $left + [winfo vrootwidth $menu] && $x - $mw >= $left} {
+	    incr x -$mw
+	}
+	if {$y + $mh > $top + [winfo vrootheight $menu] && $y - $mh >= $top} {
+	    incr y -$mh
+	}
     }
     tk::PostOverPoint $menu $x $y $entry
     if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
@@ -1372,5 +1591,8 @@ proc ::tk_popup {menu x y {entry {}}} {
 	set Priv(window) $menu
 	set Priv(menuActivated) 1
 	tk_menuSetFocus $menu
+	# Ignore the release of the click which popped up the menu if it
+	# was moved under the pointer (see tk::MenuButtonUp).
+	set Priv(pressed) [list {} {*}[winfo pointerxy $menu]]
     }
 }

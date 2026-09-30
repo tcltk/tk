@@ -3919,7 +3919,7 @@ WmProtocolCmd(
 	    break;
 	}
     }
-    if (Tcl_GetString(objv[4])[0]) {
+    if (!TkObjIsEmpty(objv[4])) {
 	protPtr = (ProtocolHandler *)Tcl_Alloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;

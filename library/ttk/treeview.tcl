@@ -826,7 +826,8 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 	set element [$w identify element $x $y]
 	if {$item eq ""} return
 
-	if {[string match "*Treeitem.indicator" $element]} {
+	if {[$w haschildren $item] &&
+		[string match "*Treeitem.indicator" $element]} {
 	    ToggleOpenState $w $item
 	} elseif {[info procs ActivateItem] ne ""} {
 	    ActivateHandler $w $item $column
@@ -858,6 +859,7 @@ proc ::ttk::treeview::AutoSizeAllColumns {w} {
 # Honors -minwidth value and works best if -stretch is 0.
 #
 proc ::ttk::treeview::AutoSizeColumn {w column} {
+    if {$column eq ""} return
     set font [::ttk::style lookup Heading -font]
     if {$font eq ""} {
 	set font TkHeadingFont
@@ -932,9 +934,12 @@ proc ::ttk::treeview::InvokeItem {w {item {}} {column {}}} {
 	    set item [$w focus]
 	    set cell ""
 	}
-    } else {
+	if {$item eq ""} return
+    } elseif {$column ne ""} {
 	set skip 1
 	set cell [list $item $column]
+    } else {
+	set cell ""
     }
 
     if {$cellmode && !$skip} {
@@ -993,7 +998,7 @@ proc ::ttk::treeview::Press {w x y} {
 		*Treeitem.indicator {
 		    set item [$w identify item $x $y]
 		    if {[$w haschildren $item]} {
-			ToggleOpenState $w [$w identify item $x $y]
+			ToggleOpenState $w $item
 		    } else {
 			Select.press $w $x $y
 		    }
