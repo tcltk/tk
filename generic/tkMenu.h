@@ -359,6 +359,9 @@ typedef struct TkMenu {
 				 * at the top and the bottom of a menu higher
 				 * than the screen, including the border, or
 				 * 0 if the menu is not scrolled. */
+    bool cascadeLeft;		/* True if this menu was posted as a cascade
+				 * to the left of its parent menu, so that its
+				 * own cascades are posted to the left too. */
     struct TkMenu *nextInstancePtr;
 				/* The next instance of this menu in the
 				 * chain. */

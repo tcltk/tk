@@ -79,6 +79,8 @@ $m add cascade -label "Check buttons" \
 	-menu $w.menu.cascade.check -underline 0
 $m add cascade -label "Radio buttons" \
 	-menu $w.menu.cascade.radio -underline 0
+$m add cascade -label "Deep cascade" \
+	-menu $w.menu.cascade.deep -underline 0
 
 set m $w.menu.cascade.check
 menu $m -tearoff 0
@@ -108,6 +110,22 @@ $m add command -label "Show current values" \
 	-command "showVars $w.menu.cascade.dialog pointSize style"
 $m invoke 1
 $m invoke 7
+
+# A chain of nested cascades. Move the window near an edge of the screen
+# to see where the cascades are posted.
+set m $w.menu.cascade.deep
+for {set i 2} {$i <= 7} {incr i} {
+    menu $m -tearoff 0
+    for {set item 1} {$item <= 10} {incr item} {
+	# The cascade to the next level is entry number [expr {$i - 1}].
+	if {$item == $i - 1 && $i < 7} {
+	    $m add cascade -label "Level $i" -menu $m.next
+	}
+	$m add command -label "Level [expr {$i - 1}], item $item" \
+		-command [list puts stdout "Level [expr {$i - 1}], item $item"]
+    }
+    set m $m.next
+}
 
 set m $w.menu.icon
 $w.menu add cascade -label "Icons" -menu $m -underline 0
