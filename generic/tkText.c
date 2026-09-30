@@ -11896,6 +11896,24 @@ RestoreLineStartEnd(
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkrTesttextCmd --
+ *
+ *	This function implements the "testtext" command. It provides a set of
+ *	functions for testing text widgets and the associated functions in
+ *	tkText*.c.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Depends on option; see below.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
  * The following structure and event proc back the "testtext queuewindowscript"
  * subcommand below.
  */
@@ -11924,24 +11942,6 @@ TestScriptWindowEventProc(
     Tcl_DecrRefCount(sevPtr->scriptObj);
     return 1;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkrTesttextCmd --
- *
- *	This function implements the "testtext" command. It provides a set of
- *	functions for testing text widgets and the associated functions in
- *	tkText*.c.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	Depends on option; see below.
- *
- *----------------------------------------------------------------------
- */
 
 int
 TkrTesttextCmd(
