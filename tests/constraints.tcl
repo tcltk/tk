@@ -272,6 +272,27 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
 }]
+# constraint for tests that need a window manager, e.g. to iconify a toplevel.
+# On X11 there may be none (e.g. on GitHub CI). A window manager sets the
+# WM_STATE property on the toplevels it manages before mapping them, so check
+# it when the main window is mapped. Without the test commands, check whether
+# the main window was reparented, as most (but not all) window managers do.
+if {[testConstraint x11]} {
+    wm deiconify .
+    if {![winfo ismapped .]} {
+	tkwait visibility .
+    }
+    if {[llength [info commands testprop]] && [llength [info commands testwrapper]]} {
+	testConstraint withWindowManager [expr {
+	    [testprop [testwrapper .] WM_STATE] ne ""
+	}]
+    } else {
+	testConstraint withWindowManager [expr {[wm frame .] ne [winfo id .]}]
+    }
+} else {
+    testConstraint withWindowManager 1
+}
+
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
