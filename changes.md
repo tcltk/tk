@@ -56,6 +56,7 @@ to the userbase.
  - [X11 <KeyRelease> should not fire on repeated key](https://core.tcl-lang.org/tk/tktview/d3b964)
  - [ttk::spinbox -font does not resize buttons](https://core.tcl-lang.org/tk/tktview/330155)
  - [Button should stay in -overrelief state after event](https://core.tcl-lang.org/tk/tktview/110051)
+ - [loop race in canvas Enter / Leave bindings](https://core.tcl-lang.org/tk/tktview/181359)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
