@@ -8418,3 +8418,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-09-30 (bug) [181359] loop race in canvas Enter / Leave bindings (storchaka)
 
 2026-09-30 (bug) [d01ec1]  After "wm withdraw .;wm state . iconic", "wm state ." always returns "withdrawn" (storchaka)
+
+2026-09-30 (bug) [f7d4e4] [$canvas postscript] crashes on X11 with never mapped windows (storchaka)
