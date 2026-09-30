@@ -38,6 +38,11 @@ to the userbase.
  - [Button should stay in -overrelief state after event](https://core.tcl-lang.org/tk/tktview/110051)
  - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
  - [MS-Win: photo -gamma and -palette are ignored](https://core.tcl-lang.org/tk/tktview/32f2e1)
+ - [Displaced menus do not stay open](https://core.tcl-lang.org/tk/tktview/470331)
+ - [Menu items accidentally selected](https://core.tcl-lang.org/tk/tktview/680660)
+ - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
+ - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
+ - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

@@ -137,16 +137,16 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr y -$mh
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $mb]} {
-		    set y [expr {[winfo vrooty $mb] + [winfo rooty $mb]\
-			   + [winfo reqheight $mb]}]
+		    set y [expr {[winfo rooty $mb] + $bh}]
 		}
 	    }
 	    below {
 		set entry ""
 		incr y $bh
-		# if we go offscreen to the bottom, show as 'above'
-		if {($y + $mh) > ([winfo vrooty $mb] + [winfo vrootheight $mb])} {
-		    set y [expr {[winfo vrooty $mb] + [winfo rooty $mb] - $mh}]
+		# if we go offscreen to the bottom, show as 'above' if it fits
+		if {($y + $mh) > ([winfo vrooty $mb] + [winfo vrootheight $mb])
+			&& ([winfo rooty $mb] - $mh) >= [winfo vrooty $mb]} {
+		    set y [expr {[winfo rooty $mb] - $mh}]
 		}
 	    }
 	    left {
@@ -196,6 +196,7 @@ proc ttk::menubutton::Pulldown {mb} {
 	$menu post $x $y
     }
     tk_menuSetFocus $menu
+    set ::tk::Priv(pressed) [list $mb {*}[winfo pointerxy $mb]]
 }
 
 # TransferGrab (X11 only) --
