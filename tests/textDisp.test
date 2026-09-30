@@ -4674,15 +4674,17 @@ test textDisp-27.9 {SizeOfTab procedure, left alignment} {
 	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
 # This test does not pass on any platform at this point with the revised
 # implementation (see [6a78781cc3]), therefore the 'knownBug' constraint.
-test textDisp-27.10 {SizeOfTab procedure, numeric alignment} knownBug {
+test textDisp-27.10 {SizeOfTab procedure, numeric alignment} {
+    # The decimal point is positioned at the tab stop, as documented; the line
+    # fits, so it is not wrapped.
     .t delete 1.0 end
     .t insert 1.0 a\t123.4
     .t tag delete x
     .t tag configure x -tabs "[expr {17.14*$fixedWidth}] numeric"
     .t tag add x 1.0 end
     list [.t bbox 1.3] [.t bbox 1.4]
-} [list [list [expr {round([bo]+17.14*$fixedWidth-$fixedWidth)}] [yline 1] [expr {[winfo width .t]-round([bo]+17.14*$fixedWidth-$fixedWidth)-[bo]}] $fixedHeight] \
-	[list [bo] [yline 2] $fixedWidth $fixedHeight]]
+} [list [list [expr {round([bo]+17.14*$fixedWidth)-2*$fixedWidth}] [yline 1] $fixedWidth $fixedHeight] \
+	[list [expr {round([bo]+17.14*$fixedWidth)-$fixedWidth}] [yline 1] $fixedWidth $fixedHeight]]
 test textDisp-27.11 {SizeOfTab procedure, making tabs at least as wide as a space} {
     .t delete 1.0 end
     .t insert 1.0 abc\tdefghijklmnopqrst
