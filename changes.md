@@ -57,6 +57,10 @@ to the userbase.
  - [ttk::spinbox -font does not resize buttons](https://core.tcl-lang.org/tk/tktview/330155)
  - [Button should stay in -overrelief state after event](https://core.tcl-lang.org/tk/tktview/110051)
  - [loop race in canvas Enter / Leave bindings](https://core.tcl-lang.org/tk/tktview/181359)
+ - [Displaced menus do not stay open](https://core.tcl-lang.org/tk/tktview/470331)
+ - [Menu items accidentally selected](https://core.tcl-lang.org/tk/tktview/680660)
+ - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
+ - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
