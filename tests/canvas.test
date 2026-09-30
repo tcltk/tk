@@ -7,15 +7,45 @@
 # Copyright (c) 2008 Donal K. Fellows
 # All rights reserved.
 
-package require tcltest 2.2
+# NOTE
+#
+# This test file is woefully incomplete. At present, only a few of the
+# features are tested.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
-# XXX - This test file is woefully incomplete. At present, only a few of the
-# features are tested.
+#
+# LOCAL UTILITY PROCS
+#
 
-# Canvas used in 1.* test cases
+proc kill_canvas {w} {
+    destroy $w
+    pack [canvas $w -height 200 -width 200] -fill both -expand yes
+    update idle
+    $w create rectangle 80 80 120 120 -fill blue -tags blue
+    # bind a button press to re-build the canvas
+    $w bind blue <ButtonRelease-1> [subst {
+	[lindex [info level 0] 0] $w
+	append ::x ok
+    }]
+}
+
+#
+# TESTS
+#
+
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-1.*
+#
 canvas .c
 pack .c
 update
@@ -187,9 +217,13 @@ test canvas-1.47 {configure throws error on bad option} -body {
     .c create rect 10 10 100 100
     .c configure -gorp foo
 } -returnCodes error -match glob -result {*}
-catch {destroy .c}
 
-# Canvas used in 2.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-2.*
+#
+destroy .c
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
 	-highlightthickness 0
 pack .c
@@ -225,9 +259,13 @@ test canvas-2.4 {CanvasWidgetCmd, xview option} -body {
     update
     lappend x [.c xview]
 } -result {{0.6 0.9} {0.66 0.96}}
-catch {destroy .c}
 
-# Canvas used in 3.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-3.*
+#
+catch {destroy .c}
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 80} \
 	-borderwidth 0 -highlightthickness 0
 pack .c
@@ -251,6 +289,10 @@ test canvas-3.2 {CanvasWidgetCmd, yview option} -body {
     update
     lappend x [.c yview]
 } -result {{0.0 0.5} {0.1 0.6}}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .c
 
 test canvas-4.1 {ButtonEventProc procedure} -setup {
@@ -273,7 +315,11 @@ test canvas-5.1 {ButtonCmdDeletedProc procedure} -body {
     destroy .c1
 } -result {{} {}}
 
-# Canvas used in 6.* test cases
+#
+# COMMON TEST SETUP
+#
+# For tests canvas-6.*
+#
 canvas .c -width 100 -height 50 -scrollregion {-200 -100 305 102} \
 	-borderwidth 2 -highlightthickness 3
 pack .c
@@ -316,6 +362,10 @@ test canvas-6.5 {CanvasSetOrigin procedure} -body {
     .c yview moveto 1.0
     .c canvasy 0
 } -result {55.0}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 
 test canvas-7.1 {canvas widget vs hidden commands} -setup {
@@ -560,18 +610,6 @@ test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
     incr val
 } -result 12
 
-# procedure used in 13.1 test case
-proc kill_canvas {w} {
-    destroy $w
-    pack [canvas $w -height 200 -width 200] -fill both -expand yes
-    update idle
-    $w create rectangle 80 80 120 120 -fill blue -tags blue
-    # bind a button press to re-build the canvas
-    $w bind blue <ButtonRelease-1> [subst {
-	[lindex [info level 0] 0] $w
-	append ::x ok
-    }]
-}
 test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
     kill_canvas .c
     set ::x {}
@@ -976,7 +1014,7 @@ test canvas-20.1 {addtag/dtag - no shuffling of tag sequence} -setup {
     .c create text 100 100 -text Hello
 } -body {
     for {set i 1} {$i < 5} {incr i} {
-        .c addtag tag$i all
+	.c addtag tag$i all
     }
     # [.c addtags] only adds tags that are not already present
     .c addtag tag1 all   ; # no effect
@@ -1013,10 +1051,39 @@ test canvas-20.3 {tag deletion - all tags match} -setup {
     destroy .c
 } -result {{tagA tagA tagA tagA tagA tagA} {}}
 
-# cleanup
+#
+# COMMON TEST CLEANUP
+#
+destroy .c
+
+
+test canvas-24.1 {Enter and Leave bindings which move the current item do not hang - bug 1813595} -setup {
+    destroy .c
+    canvas .c -width 200 -height 200
+    pack .c
+    update
+} -body {
+    .c create rectangle 50 100 150 150 -fill red -tags card
+    # Moving the item away from the pointer and back makes it the current
+    # item again and again.
+    .c bind card <Enter> {.c move card 0 -30}
+    .c bind card <Leave> {.c move card 0 30}
+    event generate .c <Motion> -x 100 -y 125
+    # The timer does not fire if the event loop is blocked.
+    after 200 {set done 1}
+    vwait done
+    set done
+} -cleanup {
+    destroy .c
+    unset -nocomplain done
+} -result 1
+
+#
+# TESTFILE CLEANUP
+#
+
 imageCleanup
 cleanupTests
-return
 
 # Local Variables:
 # mode: tcl
