@@ -3578,7 +3578,12 @@ EnumerateTags(
     countTags = 0;
 
     for (k = TkBitFindFirst(includeBits); k != TK_BIT_NPOS; k = TkBitFindNext(includeBits, k)) {
-	arrayPtr[countTags++] = sharedTextPtr->tagLookup[k];
+	TkTextTag *tagPtr = sharedTextPtr->tagLookup[k];
+
+	/* A tag owned by a peer (its "sel" tag) is only listed for that peer. */
+	if (!tagPtr->textPtr || tagPtr->textPtr == textPtr) {
+	    arrayPtr[countTags++] = tagPtr;
+	}
     }
 
     AppendTags(interp, countTags, arrayPtr);

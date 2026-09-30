@@ -890,6 +890,23 @@ test textTag-8.3 {TkTextTagCmd - "names" option} -setup {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {c {a b}}
+test textTag-8.4 {TkTextTagCmd - "names" option, the "sel" tag of each peer} -setup {
+    .t tag delete {*}[.t tag names]
+    .t tag remove sel 1.0 end
+    .t tag configure a -background black
+    .t peer create .t.p1
+    .t peer create .t.p2
+} -body {
+    # The "sel" tag of a peer is created with the peer, above "a".
+    .t.p1 tag add sel 1.0 1.3
+    set res [list [.t tag names] [.t.p1 tag names] \
+	    [.t tag names -used] [.t.p1 tag names -used]]
+    destroy .t.p2
+    lappend res [.t tag names]
+} -cleanup {
+    destroy .t.p1 .t.p2
+    .t tag delete {*}[.t tag names]
+} -result {{sel a} {a sel} {} sel {sel a}}
 
 
 test textTag-9.1 {TkTextTagCmd - "nextrange" option} -body {
