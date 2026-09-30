@@ -61,6 +61,7 @@ to the userbase.
  - [Menu items accidentally selected](https://core.tcl-lang.org/tk/tktview/680660)
  - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
  - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
+ - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
