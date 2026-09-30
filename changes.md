@@ -8,7 +8,7 @@ Release Tk 9.1.1 arises from the check-in with tag `core-9-1-1`.
 
 Tk 9.1.1 continues the Tk 9.x series of releases.  The Tk 9.x series
 do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
-To make use of Tk 9.1.0, first a Tcl 9.0 or 9.1 release must be present.
+To make use of Tk 9.1.1, first a Tcl 9.0 or 9.1 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9.2+, but not
 in Tk 8.
 
@@ -44,6 +44,7 @@ to the userbase.
  - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
  - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
  - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
+ - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
