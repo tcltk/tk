@@ -1136,7 +1136,7 @@ ExposeRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     void *oldArg;
     Tk_RestrictProc *oldProc;
-    static int reentered = 0;
+    static bool reentered = false;
 
     if (!winPtr ||
 	(winPtr->flags & (TK_ALREADY_DEAD)) ||
@@ -1155,7 +1155,7 @@ ExposeRestrictProc(
 	// fprintf(stderr, "Recursive call to generateExposeEvents\n");
 	return;
     }
-    reentered = 1;
+    reentered = true;
 
     /*
      * Generate Tk Expose events.  All of these events will share the same
@@ -1187,7 +1187,7 @@ ExposeRestrictProc(
 	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
     }
-    reentered = 0;
+    reentered = false;
 }
 
 /*

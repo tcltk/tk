@@ -34,13 +34,13 @@ namespace eval ttk::theme::winnative {
 	ttk::style map TEntry \
 	    -fieldbackground \
 		{readonly SystemButtonFace disabled SystemButtonFace} \
-	    -selectbackground {!focus SystemWindow} \
-	    -selectforeground {!focus SystemWindowText}
+	    -selectbackground {!focus {}} \
+	    -selectforeground {!focus {}}
 
 	ttk::style configure TCombobox -padding 1.5p -insertwidth 0.75p
 	ttk::style map TCombobox \
-	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
+	    -selectbackground [list !focus {}] \
+	    -selectforeground [list !focus {}] \
 	    -fieldbackground [list \
 		readonly SystemButtonFace \
 		disabled SystemButtonFace] \

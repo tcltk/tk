@@ -219,6 +219,10 @@ typedef struct {
 
 typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
+    int errorFlag;		/* Set by InitFontErrorProc. Not a local
+				 * variable, because X errors can be
+				 * reported after the error handler is
+				 * deleted. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -862,8 +866,10 @@ InitFont(
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    int i, iWidth, errorFlag;
+    int i, iWidth;
     Tk_ErrorHandler handler;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!fontPtr) {
     fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
@@ -962,12 +968,12 @@ InitFont(
     /*
      * Fill in platform-specific fields of TkFont.
      */
-    errorFlag = 0;
+    tsdPtr->errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	    -1, -1, -1, InitFontErrorProc, (void *)&tsdPtr->errorFlag);
 
     ftFont = GetFont(fontPtr, 0, 0.0);
-    if ((ftFont == NULL) || errorFlag) {
+    if ((ftFont == NULL) || tsdPtr->errorFlag) {
     Tk_DeleteErrorHandler(handler);
     FinishedWithFont(fontPtr);
     if (!fontPtr->font.fid) {
@@ -982,7 +988,7 @@ InitFont(
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
 
     Tk_DeleteErrorHandler(handler);
-    if (errorFlag) {
+    if (tsdPtr->errorFlag) {
     FinishedWithFont(fontPtr);
     if (!fontPtr->font.fid) {
 	Tcl_Free(fontPtr);
@@ -998,14 +1004,14 @@ InitFont(
 
     fPtr->underlinePos = fPtr->fm.descent / 2;
 
-    errorFlag = 0;
+    tsdPtr->errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	    -1, -1, -1, InitFontErrorProc, (void *)&tsdPtr->errorFlag);
 
     Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
 
     Tk_DeleteErrorHandler(handler);
-    if (errorFlag) {
+    if (tsdPtr->errorFlag) {
 	FinishedWithFont(fontPtr);
 	if (!fontPtr->font.fid) {
 	Tcl_Free(fontPtr);
