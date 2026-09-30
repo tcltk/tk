@@ -29,7 +29,8 @@ namespace eval ttk::theme::vista {
 	# Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
-	ttk::style configure Toolbutton -padding 3p
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding 3p
 
 	# Combobox
 	ttk::style configure TCombobox -padding 1.5p

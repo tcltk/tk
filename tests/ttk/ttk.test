@@ -761,6 +761,26 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     expr {[llength [ttk::style theme styles alt]] > 0}
 } -result 1
 
+test ttk-17.1 {Toolbutton text is centered in all built-in themes, also multi-line text, Bug 1867834} -setup {
+    set oldTheme [ttk::style theme use]
+} -body {
+    set res {}
+    foreach theme {default alt clam classic winnative xpnative vista aqua} {
+	if {$theme in [ttk::style theme names]} {
+	    ttk::style theme use $theme
+	    foreach option {-anchor -justify} {
+		if {[ttk::style lookup Toolbutton $option] ne "center"} {
+		    lappend res $theme $option
+		}
+	    }
+	}
+    }
+    set res
+} -cleanup {
+    ttk::style theme use $oldTheme
+    unset -nocomplain oldTheme res theme option
+} -result {}
+
 # test for ttk::label
 # test for "-textangle" option for ttk::labels
 test ttk::label-1.1 {configuration option: "textangle" for ttk::label} -setup {

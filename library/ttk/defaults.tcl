@@ -242,7 +242,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    }
 	}
 	ttk::style configure Toolbutton \
-	    -padding 1.5p -relief flat
+	    -anchor center -justify center -padding 1.5p -relief flat
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
