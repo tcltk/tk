@@ -4116,6 +4116,118 @@ test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
     pressbutton 530 510
 }
 
+test menu-42.1 {the release of the click on a menubar entry over its posted
+	cascade does not invoke an entry - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    toplevel .t
+    menu .t.mb -tearoff 0
+    .t.mb add cascade -label File -menu .t.mb.file
+    menu .t.mb.file -tearoff 0
+    # The cascade is taller than the screen, so it is posted over the
+    # menubar entry, under the pointer.
+    for {set i 0} {$i < [winfo screenheight .] / 10} {incr i} {
+	.t.mb.file add command -label "Item $i" -command {set res invoked}
+    }
+    .t configure -menu .t.mb
+    wm geometry .t 200x100+100+100
+    update
+    set res {}
+} -body {
+    foreach w [winfo children .t] {
+	if {[winfo class $w] eq "Menu" && [$w cget -type] eq "menubar"} {
+	    break
+	}
+    }
+    set x [expr {[$w xposition 0] + 5}]
+    event generate $w <Motion> -warp 1 -x $x -y 5
+    update
+    event generate $w <Button-1> -x $x -y 5
+    update
+    # The cascade of a menubar is a clone of .t.mb.file.
+    set m [$w entrycget 0 -menu]
+    lassign [winfo pointerxy .] x y
+    lappend res [winfo containing $x $y]
+    event generate $m <ButtonRelease-1> \
+	    -x [expr {$x - [winfo rootx $m]}] -y [expr {$y - [winfo rooty $m]}]
+    update
+    lappend res [expr {[winfo ismapped $m] ? "mapped" : "unmapped"}]
+    # The entry under the pointer is not activated until the pointer moves.
+    lappend res [$m index active]
+    list [expr {[lindex $res 0] eq $m}] {*}[lrange $res 1 end]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain res x y w m i
+} -result {1 mapped none}
+test menu-43.1 {tk_popup posts the menu to the left of and above the point
+	if it does not fit to the right and below - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    for {set i 0} {$i < 10} {incr i} {
+	.m1 add command -label "A context menu entry $i"
+    }
+} -body {
+    set x [expr {[winfo screenwidth .] - 10}]
+    set y [expr {[winfo screenheight .] - 10}]
+    tk_popup .m1 $x $y
+    update
+    list [expr {[winfo rootx .m1] + [winfo width .m1]}] \
+	    [expr {[winfo rooty .m1] + [winfo height .m1]}]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain x y
+} -result [list [expr {[winfo screenwidth .] - 10}] [expr {[winfo screenheight .] - 10}]]
+test menu-43.2 {tk_popup posts the menu to the right of and below the point
+	if it fits there} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "A context menu entry"
+} -body {
+    tk_popup .m1 100 100
+    update
+    list [winfo rootx .m1] [winfo rooty .m1]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result {100 100}
+test menu-43.3 {the release of the click which popped up the menu under the
+	pointer does not invoke an entry - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    toplevel .t
+    wm geometry .t 200x200+100+100
+    menu .t.m -tearoff 0
+    .t.m add command -label One -command {set res invoked}
+    .t.m add command -label Two -command {set res invoked}
+    update
+    set res {}
+} -body {
+    event generate .t <Motion> -warp 1 -x 50 -y 50
+    update
+    lassign [winfo pointerxy .t] x y
+    # With an entry index, the entry is posted under the pointer.  The
+    # menu is moved left, as if to fit on the screen.
+    tk_popup .t.m [expr {$x - 20}] $y 1
+    update
+    lappend res [winfo containing $x $y]
+    event generate .t.m <ButtonRelease-3> \
+	    -x [expr {$x - [winfo rootx .t.m]}] -y [expr {$y - [winfo rooty .t.m]}]
+    update
+    lappend res [winfo ismapped .t.m]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain res x y
+} -result {.t.m 1}
+
 # cleanup
 imageFinish
 deleteWindows

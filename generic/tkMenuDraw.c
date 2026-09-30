@@ -1009,8 +1009,31 @@ AdjustMenuCoords(
     int *yPtr)
 {
     if (menuPtr->menuType == MENUBAR) {
+	TkMenu *childPtr = (mePtr->childMenuRefPtr != NULL)
+		? mePtr->childMenuRefPtr->menuPtr : NULL;
+
 	*xPtr += mePtr->x;
 	*yPtr += mePtr->y + mePtr->height;
+
+	/*
+	 * If the submenu does not fit below the menubar, but fits above it,
+	 * post it above. Otherwise it would be moved up to overlap the
+	 * menubar entry, and releasing the mouse button would invoke the
+	 * menu item under the pointer.
+	 */
+
+	if ((childPtr != NULL) && (childPtr->tkwin != NULL)) {
+	    int vRootX, vRootY, vRootWidth, vRootHeight, height;
+
+	    TkRecomputeMenu(childPtr);
+	    height = Tk_ReqHeight(childPtr->tkwin);
+	    Tk_GetVRootGeometry(menuPtr->tkwin, &vRootX, &vRootY,
+		    &vRootWidth, &vRootHeight);
+	    if ((*yPtr + height > vRootY + vRootHeight)
+		    && (*yPtr - mePtr->height - height >= vRootY)) {
+		*yPtr -= mePtr->height + height;
+	    }
+	}
     } else {
 	int borderWidth, activeBorderWidth;
 
