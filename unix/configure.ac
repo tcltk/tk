@@ -171,7 +171,7 @@ if test $tk_ok = no; then
 fi
 
 #------------------------------------------------------------------------------
-#       Find out all about time handling differences.
+#	Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
 AC_CHECK_HEADERS_ONCE([sys/time.h])
@@ -879,14 +879,14 @@ fi
 AC_MSG_CHECKING([for building with zipfs])
 if test "${ZIPFS_BUILD}" = 1; then
     if test "${SHARED_BUILD}" = 0; then
-       ZIPFS_BUILD=2;
-       AC_DEFINE(ZIPFS_BUILD, 2, [Are we building with zipfs enabled?])
-       INSTALL_LIBRARIES=install-demos
-       AC_MSG_RESULT([yes])
+	ZIPFS_BUILD=2;
+	AC_DEFINE(ZIPFS_BUILD, 2, [Are we building with zipfs enabled?])
+	INSTALL_LIBRARIES=install-demos
+	AC_MSG_RESULT([yes])
      else
-       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])
-       INSTALL_LIBRARIES=install-demos
-       AC_MSG_RESULT([yes])
+	AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])
+	INSTALL_LIBRARIES=install-demos
+	AC_MSG_RESULT([yes])
     fi
 else
 AC_MSG_RESULT([no])
@@ -899,8 +899,8 @@ AC_SUBST(INSTALL_LIBRARIES)
 AC_SUBST(INSTALL_MSGS)
 
 #--------------------------------------------------------------------
-#       The statements below define various symbols relating to Tk
-#       stub support.
+#	The statements below define various symbols relating to Tk
+#	stub support.
 #--------------------------------------------------------------------
 
 TK_STUB_LIB_FILE="libtkstub.a"

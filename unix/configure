@@ -7720,7 +7720,7 @@ printf '%s\n' "#define NO_FD_SET 1" >>confdefs.h
 fi
 
 #------------------------------------------------------------------------------
-#       Find out all about time handling differences.
+#	Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
 
@@ -9649,19 +9649,19 @@ fi
 printf %s "checking for building with zipfs... " >&6; }
 if test "${ZIPFS_BUILD}" = 1; then
     if test "${SHARED_BUILD}" = 0; then
-       ZIPFS_BUILD=2;
+	ZIPFS_BUILD=2;
 
 printf '%s\n' "#define ZIPFS_BUILD 2" >>confdefs.h
 
-       INSTALL_LIBRARIES=install-demos
-       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+	INSTALL_LIBRARIES=install-demos
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
      else
 
 printf '%s\n' "#define ZIPFS_BUILD 1" >>confdefs.h
 
-       INSTALL_LIBRARIES=install-demos
-       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+	INSTALL_LIBRARIES=install-demos
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
     fi
 else
@@ -9676,8 +9676,8 @@ fi
 
 
 #--------------------------------------------------------------------
-#       The statements below define various symbols relating to Tk
-#       stub support.
+#	The statements below define various symbols relating to Tk
+#	stub support.
 #--------------------------------------------------------------------
 
 TK_STUB_LIB_FILE="libtkstub.a"
