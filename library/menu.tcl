@@ -486,13 +486,13 @@ proc ::tk::MbButtonUp w {
 
 proc ::tk::MenuMotion {menu x y state} {
     variable ::tk::Priv
-    MenuAutoScroll $menu $x $y
     if {[MenuStillPressed $menu]} {
 	# The menu was posted under the pointer by the click which is
 	# still going on.  Do not activate the entry under the pointer
-	# until the pointer moves.
+	# or scroll the menu until the pointer moves.
 	return
     }
+    MenuAutoScroll $menu $x $y
     if {$menu eq $Priv(window)} {
 	set activeindex [$menu index active]
 	if {[$menu cget -type] eq "menubar"} {
@@ -646,14 +646,18 @@ proc ::tk::MenuMouseWheel {menu delta x y} {
 
 proc ::tk::MenuScrollDirection {menu x y} {
     lassign [$menu yview] first last
-    if {($first <= 0 && $last >= 1) || [$menu index @$x,$y] ne ""} {
+    if {$first <= 0 && $last >= 1} {
 	return 0
     }
-    if {$y < [winfo height $menu] / 2} {
+    # The height of the arrow areas, as computed in ComputeMenuGeometry.
+    set arrow [expr {[winfo pixels $menu [$menu cget -borderwidth]]
+	    + [font metrics [$menu cget -font] -linespace]}]
+    if {$y < $arrow} {
 	return [expr {$first > 0 ? -1 : 0}]
-    } else {
+    } elseif {$y >= [winfo height $menu] - $arrow} {
 	return [expr {$last < 1 ? 1 : 0}]
     }
+    return 0
 }
 
 # ::tk::MenuAutoScroll --

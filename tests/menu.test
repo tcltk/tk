@@ -4551,6 +4551,24 @@ test menu-44.7 {the menu scrolls while the mouse is over the scroll arrow} -cons
     deleteWindows
     unset -nocomplain y first first2
 } -result {1 1}
+test menu-44.9 {the menu does not scroll while the mouse is over its side border} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    # tk_popup posts the menu with its left border under the pointer.
+    set y [expr {[winfo height .m1] - 2 * [font metrics [.m1 cget -font] -linespace]}]
+    event generate .m1 <Enter> -x 0 -y $y
+    event generate .m1 <Motion> -warp 1 -x 0 -y $y
+    after 300
+    update
+    .m1 yview
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain y
+} -result {0.0 *} -match glob
 test menu-44.8 {yview errors} -setup {
     deleteWindows
     menu .m1
