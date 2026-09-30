@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="b1"
+TK_PATCH_LEVEL=".1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -76,6 +76,7 @@ if test "${CFLAGS+set}" != "set" ; then
 fi
 
 AC_PROG_CC
+AC_PROG_CPP
 AC_C_INLINE
 
 #------------------------------------------------------------------------
@@ -623,7 +624,7 @@ if test $tk_aqua = no; then
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	AC_MSG_RESULT([$found_cups])

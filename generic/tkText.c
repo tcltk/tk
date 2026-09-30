@@ -818,7 +818,8 @@ TextWidgetObjCmd(
     case TEXT_COUNT: {
 	const TkTextIndex *indexFromPtr, *indexToPtr;
 	Tcl_Size i;
-	int found = 0, update = 0;
+	int found = 0;
+	bool update = false;
 	Tcl_Obj *objPtr = NULL;
 
 	if (objc < 4) {
@@ -968,7 +969,7 @@ TextWidgetObjCmd(
 			- TkBTreeLinesTo(textPtr, indexFromPtr->linePtr);
 	    } else if (c == 'u'
 		    && !strncmp("-update", option, (size_t)length)) {
-		update = 1;
+		update = true;
 		continue;
 	    } else if (c == 'x'
 		    && !strncmp("-xpixels", option, (size_t)length)) {

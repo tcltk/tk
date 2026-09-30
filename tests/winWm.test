@@ -557,6 +557,28 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
 #
 # Moved test winWm-9.2 to wm-forget-1.5 in wm.test (cf. ticket #83eed90f93).
 #
+test winWm-9.3 "restore iconified window during global grab" -constraints {
+    win testwinevent
+} -setup {
+    destroy .t
+    toplevel .t
+    wm transient .t .
+    update
+} -body {
+    grab -global .t
+    wm iconify .
+    update
+    # SC_RESTORE, as sent when the taskbar button is clicked
+    testwinevent [wm frame .] 0 WM_SYSCOMMAND 0xF120
+    update
+    wm state .
+} -cleanup {
+    grab release .t
+    destroy .t
+    wm deiconify .
+    update
+} -result normal
+
 test winWm-10.1 "Set and get -appearence dark" -constraints win -setup {
     catch {destroy .t}
     update
