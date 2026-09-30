@@ -871,12 +871,18 @@ namespace eval ::tk::test::select {
 	variable selValue {} selInfo {}
 	variable abortCount
 	variable pass
+	# A selection which only the tests use.  Tests whose handlers log,
+	# delay or abort the conversion use it instead of PRIMARY, so that
+	# other clients (e.g. clipboard managers) requesting PRIMARY do not
+	# interfere with them.
+	variable privateSelection TK_TEST
     }
 
     proc badHandler {path type offset count} {
+	variable privateSelection
 	variable selInfo
 	variable selValue
-	selection handle -type $type $path {}
+	selection handle -selection $privateSelection -type $type $path {}
 	lappend selInfo $path $type $offset $count
 	set numBytes [expr {[string length $selValue] - $offset}]
 	if {$numBytes <= 0} {
@@ -886,12 +892,13 @@ namespace eval ::tk::test::select {
     }
 
     proc badHandler2 {path type offset count} {
+	variable privateSelection
 	variable abortCount
 	variable selInfo
 	variable selValue
 	incr abortCount -1
 	if {$abortCount == 0} {
-	    selection handle -type $type $path {}
+	    selection handle -selection $privateSelection -type $type $path {}
 	}
 	lappend selInfo $path $type $offset $count
 	set numBytes [expr {[string length $selValue] - $offset}]
@@ -938,6 +945,7 @@ namespace eval ::tk::test::select {
     }
 
     proc reallyBadHandler {path type offset count} {
+	variable privateSelection
 	variable selInfo
 	variable selValue
 	variable pass
@@ -945,7 +953,7 @@ namespace eval ::tk::test::select {
 	    if {$pass == 0} {
 		set pass 1
 	    } else {
-		selection handle -type $type $path {}
+		selection handle -selection $privateSelection -type $type $path {}
 	    }
 	}
 	lappend selInfo $path $type $offset $count
@@ -956,7 +964,7 @@ namespace eval ::tk::test::select {
 	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
-    proc selectionSetup {{path .f1} {display {}}} {
+    proc selectionSetup {{path .f1} {display {}} {selection PRIMARY}} {
 	catch {destroy $path}
 	if {$display eq ""} {
 	    frame $path
@@ -964,7 +972,7 @@ namespace eval ::tk::test::select {
 	    toplevel $path -screen $display
 	    wm geom $path +0+0
 	}
-	selection own $path
+	selection own -selection $selection $path
     }
 
     testutils export
