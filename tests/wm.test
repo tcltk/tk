@@ -758,6 +758,26 @@ test wm-geometry-2.1 {setting values} -body {
 } -cleanup {
     unset result
 } -match glob -result [list 150x150+*+* 0]
+test wm-geometry-2.2 {setting only the size does not move the window - bug 2995339} -setup {
+    destroy .geom
+    toplevel .geom -width 200 -height 150
+    update
+    # Let the window manager place the window.
+    after 500
+    update
+} -body {
+    set x [winfo rootx .geom]
+    set y [winfo rooty .geom]
+    wm geometry .geom 300x200
+    update
+    after 500
+    update
+    list [expr {[winfo rootx .geom] - $x}] [expr {[winfo rooty .geom] - $y}] \
+	    [winfo width .geom] [winfo height .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain x y
+} -result {0 0 300 200}
 
 
 ### wm grid ###
