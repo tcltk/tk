@@ -4353,12 +4353,80 @@ test menu-42.1 {the release of the click on a menubar entry over its posted
 	    -x [expr {$x - [winfo rootx $m]}] -y [expr {$y - [winfo rooty $m]}]
     update
     lappend res [expr {[winfo ismapped $m] ? "mapped" : "unmapped"}]
+    # The entry under the pointer is not activated until the pointer moves.
+    lappend res [$m index active]
     list [expr {[lindex $res 0] eq $m}] {*}[lrange $res 1 end]
 } -cleanup {
     tk::MenuUnpost {}
     deleteWindows
     unset -nocomplain res x y w m i
-} -result {1 mapped}
+} -result {1 mapped {}}
+test menu-43.1 {tk_popup posts the menu to the left of and above the point
+	if it does not fit to the right and below - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    for {set i 0} {$i < 10} {incr i} {
+	.m1 add command -label "A context menu entry $i"
+    }
+} -body {
+    set x [expr {[winfo screenwidth .] - 10}]
+    set y [expr {[winfo screenheight .] - 10}]
+    tk_popup .m1 $x $y
+    update
+    list [expr {[winfo rootx .m1] + [winfo width .m1]}] \
+	    [expr {[winfo rooty .m1] + [winfo height .m1]}]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain x y
+} -result [list [expr {[winfo screenwidth .] - 10}] [expr {[winfo screenheight .] - 10}]]
+test menu-43.2 {tk_popup posts the menu to the right of and below the point
+	if it fits there} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "A context menu entry"
+} -body {
+    tk_popup .m1 100 100
+    update
+    list [winfo rootx .m1] [winfo rooty .m1]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result {100 100}
+test menu-43.3 {the release of the click which popped up the menu under the
+	pointer does not invoke an entry - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    toplevel .t
+    wm geometry .t 200x200+100+100
+    menu .t.m -tearoff 0
+    .t.m add command -label One -command {set res invoked}
+    .t.m add command -label Two -command {set res invoked}
+    update
+    set res {}
+} -body {
+    event generate .t <Motion> -warp 1 -x 50 -y 50
+    update
+    lassign [winfo pointerxy .t] x y
+    # With an entry index, the entry is posted under the pointer.  The
+    # menu is moved left, as if to fit on the screen.
+    tk_popup .t.m [expr {$x - 20}] $y 1
+    update
+    lappend res [winfo containing $x $y]
+    event generate .t.m <ButtonRelease-3> \
+	    -x [expr {$x - [winfo rootx .t.m]}] -y [expr {$y - [winfo rooty .t.m]}]
+    update
+    lappend res [winfo ismapped .t.m]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain res x y
+} -result {.t.m 1}
 
 #
 # TESTFILE CLEANUP

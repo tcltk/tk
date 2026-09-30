@@ -480,6 +480,12 @@ proc ::tk::MbButtonUp w {
 
 proc ::tk::MenuMotion {menu x y state} {
     variable ::tk::Priv
+    if {[MenuStillPressed $menu]} {
+	# The menu was posted under the pointer by the click which is
+	# still going on.  Do not activate the entry under the pointer
+	# until the pointer moves.
+	return
+    }
     if {$menu eq $Priv(window)} {
 	set activeindex [$menu index active]
 	if {[$menu cget -type] eq "menubar"} {
@@ -606,6 +612,33 @@ proc ::tk::MenuLeave {menu rootx rooty state} {
     GenerateMenuSelect $menu
 }
 
+# ::tk::MenuStillPressed --
+# Returns true if the menu was posted under the pointer by the click which
+# is still going on and the pointer has not moved since the press, i.e. the
+# pointer is over a menu other than the window which got the press, less
+# than 3 pixels from the position of the press.
+#
+# Arguments:
+# menu -		A menu window, used for the display of the pointer.
+# rootx, rooty -	Root coordinates of the pointer.  If omitted, the
+#			current position of the pointer is used.
+
+proc ::tk::MenuStillPressed {menu {rootx {}} {rooty {}}} {
+    variable ::tk::Priv
+
+    if {![info exists Priv(pressed)]} {
+	return 0
+    }
+    lassign $Priv(pressed) w x y
+    if {$rootx eq "" || $rooty eq ""} {
+	lassign [winfo pointerxy $menu] rootx rooty
+    }
+    set under [winfo containing -displayof $menu $rootx $rooty]
+    return [expr {$under ne "" && $under ne $w
+	    && [winfo class $under] eq "Menu"
+	    && abs($rootx - $x) < 3 && abs($rooty - $y) < 3}]
+}
+
 # ::tk::MenuButtonUp --
 # This procedure is invoked when a mouse button is released over a menu.
 # The release of the click which posted the menu is ignored if the menu
@@ -624,11 +657,10 @@ proc ::tk::MenuButtonUp {menu rootx rooty} {
     variable ::tk::Priv
 
     if {[info exists Priv(pressed)]} {
-	lassign $Priv(pressed) w x y
+	set stillPressed [MenuStillPressed $menu $rootx $rooty]
+	set w [lindex $Priv(pressed) 0]
 	unset Priv(pressed)
-	set under [winfo containing -displayof $menu $rootx $rooty]
-	if {$under ne "" && $under ne $w && [winfo class $under] eq "Menu"
-		&& abs($rootx - $x) < 3 && abs($rooty - $y) < 3} {
+	if {$stillPressed} {
 	    if {[winfo exists $w] && [winfo class $w] eq "TMenubutton"} {
 		ttk::menubutton::TransferGrab $w
 	    }
@@ -1427,12 +1459,31 @@ proc ::tk::GenerateMenuSelect {menu} {
 #			menu.
 # entry -		Index of a menu entry to center over (x,y).
 #			If omitted or specified as {}, then menu's
-#			upper-left corner goes at (x,y).
+#			upper-left corner goes at (x,y).  If the menu
+#			does not fit to the right of or below (x,y), it
+#			is posted to the left of or above it instead, if
+#			it fits there.
 
 proc ::tk_popup {menu x y {entry {}}} {
     variable ::tk::Priv
     if {$Priv(popup) ne "" || $Priv(postedMb) ne ""} {
 	tk::MenuUnpost {}
+    }
+    if {$entry eq "" && [tk windowingsystem] eq "x11"} {
+	# Otherwise the menu would be moved over the point to fit on the
+	# screen, and the release of the click which popped it up would
+	# invoke the entry under the pointer.
+	$menu yposition last
+	set mw [winfo reqwidth $menu]
+	set mh [winfo reqheight $menu]
+	set left [winfo vrootx $menu]
+	set top [winfo vrooty $menu]
+	if {$x + $mw > $left + [winfo vrootwidth $menu] && $x - $mw >= $left} {
+	    incr x -$mw
+	}
+	if {$y + $mh > $top + [winfo vrootheight $menu] && $y - $mh >= $top} {
+	    incr y -$mh
+	}
     }
     tk::PostOverPoint $menu $x $y $entry
     if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
@@ -1442,5 +1493,8 @@ proc ::tk_popup {menu x y {entry {}}} {
 	set Priv(window) $menu
 	set Priv(menuActivated) 1
 	tk_menuSetFocus $menu
+	# Ignore the release of the click which popped up the menu if it
+	# was moved under the pointer (see tk::MenuButtonUp).
+	set Priv(pressed) [list {} {*}[winfo pointerxy $menu]]
     }
 }

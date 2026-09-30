@@ -942,12 +942,12 @@ test menubutton-13.2 {the release of the click which posted the menu over the
     event generate .mb.m <ButtonRelease-1> \
 	    -x [expr {$x - [winfo rootx .mb.m]}] -y [expr {$y - [winfo rooty .mb.m]}]
     update
-    lappend res [winfo ismapped .mb.m]
+    lappend res [winfo ismapped .mb.m] [.mb.m index active]
 } -cleanup {
     tk::MenuUnpost {}
     destroy .mb
     unset -nocomplain res x y x0 y0
-} -result {.mb.m 1}
+} -result {.mb.m 1 {}}
 test menubutton-13.3 {press, drag and release still invokes the entry} -constraints {
     x11
 } -setup {
