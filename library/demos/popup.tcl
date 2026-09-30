@@ -56,8 +56,9 @@ proc popupDemoBuild {menu} {
 	$menu add command -label "Entry $i" \
 		-command [list set popupDemo(status) "You selected entry $i."]
 	incr i
-	$menu yposition last
-	if {[winfo reqheight $menu] >= $h} {
+	# The position of the last entry, not the requested height of the
+	# menu: a menu higher than the screen is limited to the screen.
+	if {[$menu yposition last] >= $h} {
 	    break
 	}
     }

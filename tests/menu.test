@@ -1825,7 +1825,7 @@ test menu-3.67 {MenuWidgetCmd procedure, bad option} -setup {
     .m1 foo
 } -cleanup {
     destroy .m1
-} -returnCodes error -result {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, id, index, insert, invoke, post, postcascade, type, unpost, xposition, or yposition}
+} -returnCodes error -result {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, id, index, insert, invoke, post, postcascade, type, unpost, xposition, yposition, or yview}
 test menu-3.68 {MenuWidgetCmd procedure, fix for bug#508988} -setup {
     deleteWindows
 } -body {
@@ -4427,6 +4427,139 @@ test menu-43.3 {the release of the click which popped up the menu under the
     deleteWindows
     unset -nocomplain res x y
 } -result {.t.m 1}
+proc tallMenu {} {
+    menu .m1 -tearoff 0
+    for {set i 0} {$i < [winfo screenheight .] / 5} {incr i} {
+	.m1 add command -label "Entry $i"
+    }
+    .m1 post 100 0
+    update
+}
+test menu-44.1 {menu higher than the screen is limited to the screen} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    lassign [.m1 yview] first last
+    list [expr {[winfo height .m1] <= [winfo screenheight .]}] $first \
+	    [expr {$last > 0.0 && $last < 1.0}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result {1 0.0 1}
+test menu-44.2 {no entries in the areas with the scroll arrows} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    list [.m1 index @20,1] [.m1 index @20,[expr {[winfo height .m1] - 2}]] \
+	    [string is integer -strict \
+		[.m1 index @20,[expr {[winfo height .m1] / 2}]]]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result {{} {} 1}
+test menu-44.3 {yview scroll and moveto} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    set y [expr {[winfo height .m1] / 2}]
+    set i0 [.m1 index @20,$y]
+    .m1 yview scroll 5 units
+    set i1 [.m1 index @20,$y]
+    set f1 [lindex [.m1 yview] 0]
+    .m1 yview scroll 1 pages
+    set f2 [lindex [.m1 yview] 0]
+    .m1 yview moveto 1.0
+    set f3 [lindex [.m1 yview] 1]
+    .m1 yview moveto 0.0
+    list [expr {$i1 > $i0}] [expr {$f1 > 0}] [expr {$f2 > $f1}] $f3 \
+	    [lindex [.m1 yview] 0]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain y i0 i1 f1 f2 f3
+} -result {1 1 1 1.0 0.0}
+test menu-44.4 {activating an entry scrolls it into view} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    .m1 activate last
+    set last [lindex [.m1 yview] 1]
+    .m1 activate 0
+    list $last [lindex [.m1 yview] 0]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain last
+} -result {1.0 0.0}
+test menu-44.5 {menu which fits on the screen is not scrolled} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "Entry"
+} -body {
+    .m1 yview scroll 1 units
+    .m1 yview
+} -cleanup {
+    deleteWindows
+} -result {0.0 1.0}
+test menu-44.6 {mouse wheel scrolls the menu} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    event generate .m1 <MouseWheel> -delta -120 -x 20 \
+	    -y [expr {[winfo height .m1] / 2}]
+    update
+    set down [lindex [.m1 yview] 0]
+    event generate .m1 <MouseWheel> -delta 120 -x 20 \
+	    -y [expr {[winfo height .m1] / 2}]
+    update
+    list [expr {$down > 0}] [lindex [.m1 yview] 0]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain down
+} -result {1 0.0}
+test menu-44.7 {the menu scrolls while the mouse is over the scroll arrow} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    set y [expr {[winfo height .m1] - 2}]
+    event generate .m1 <Enter> -x 20 -y $y
+    event generate .m1 <Motion> -warp 1 -x 20 -y $y
+    after 300
+    update
+    set first [lindex [.m1 yview] 0]
+    event generate .m1 <Motion> -warp 1 -x 20 -y [expr {$y / 2}]
+    update
+    set first2 [lindex [.m1 yview] 0]
+    after 200
+    update
+    list [expr {$first > 0}] [expr {[lindex [.m1 yview] 0] == $first2}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain y first first2
+} -result {1 1}
+test menu-44.8 {yview errors} -setup {
+    deleteWindows
+    menu .m1
+} -body {
+    .m1 yview scroll 1 foo
+} -cleanup {
+    deleteWindows
+} -returnCodes error -result {bad argument "foo": must be pages or units}
+rename tallMenu {}
 
 #
 # TESTFILE CLEANUP

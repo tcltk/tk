@@ -866,8 +866,8 @@ test menubutton-12.3 {a menu which fits neither below nor above its
 } -setup {
     deleteWindows
 } -body {
-    # The menu is higher than the screen, so it will cover the pointer
-    # whereever it is posted; it is moved aside instead.
+    # The menu is higher than the screen (it is scrolled), so it will cover
+    # the pointer whereever it is posted; it is moved aside instead.
     toplevel .t
     wm geometry .t 200x60+100+[expr {[winfo screenheight .] - 80}]
     menubutton .t.mb -text File -menu .t.mb.m -indicatoron 0
@@ -882,7 +882,7 @@ test menubutton-12.3 {a menu which fits neither below nor above its
     set cy [expr {[winfo rooty .t.mb] + 10}]
     tk::MbPost .t.mb $cx $cy
     update
-    list [expr {[winfo reqheight .t.mb.m] > [winfo screenheight .]}] \
+    list [expr {[lindex [.t.mb.m yview] 1] < 1.0}] \
 	    [expr {[winfo rootx .t.mb.m] > $cx}]
 } -cleanup {
     tk::MenuUnpost {}

@@ -41,6 +41,8 @@
 # postedMb -		Name of the menubutton whose menu is currently
 #			posted, or an empty string if nothing is posted
 #			A grab is set on this widget.
+# menuScrollTimer -	Id of the timer which scrolls a menu while the
+#			mouse is over one of its scroll arrows.
 # pressed -		The window (menubutton or menu) and the root
 #			coordinates of the last button press which could
 #			post a menu, until the button is released.
@@ -141,6 +143,9 @@ bind Menu <Leave> {
 }
 bind Menu <Motion> {
     tk::MenuMotion %W %x %y %s
+}
+bind Menu <MouseWheel> {
+    tk::MenuMouseWheel %W %D %x %y
 }
 bind Menu <Button> {
     tk::MenuButtonDown %W
@@ -337,6 +342,7 @@ proc ::tk::MenuUnpost menu {
     # what was posted.
 
     unset -nocomplain Priv(pressed)
+    MenuStopAutoScroll
     after cancel [array get Priv menuActivatedTimer]
     unset -nocomplain Priv(menuActivated)
     after cancel [array get Priv menuDeactivatedTimer]
@@ -480,6 +486,7 @@ proc ::tk::MbButtonUp w {
 
 proc ::tk::MenuMotion {menu x y state} {
     variable ::tk::Priv
+    MenuAutoScroll $menu $x $y
     if {[MenuStillPressed $menu]} {
 	# The menu was posted under the pointer by the click which is
 	# still going on.  Do not activate the entry under the pointer
@@ -599,6 +606,7 @@ proc ::tk::MenuButtonDown menu {
 
 proc ::tk::MenuLeave {menu rootx rooty state} {
     variable ::tk::Priv
+    MenuStopAutoScroll
     set Priv(window) {}
     if {[$menu index active] < 0} {
 	return
@@ -610,6 +618,92 @@ proc ::tk::MenuLeave {menu rootx rooty state} {
     }
     $menu activate {}
     GenerateMenuSelect $menu
+}
+
+# ::tk::MenuMouseWheel --
+# This procedure is invoked for mouse wheel events over a menu.  It scrolls
+# a menu higher than the screen and activates the entry which gets under
+# the pointer.
+#
+# Arguments:
+# menu -		The menu window.
+# delta -		The delta of the mouse wheel event.
+# x, y -		The position of the mouse in the menu.
+
+proc ::tk::MenuMouseWheel {menu delta x y} {
+    MouseWheel $menu y $delta -40.0 units
+    MenuMotion $menu $x $y 0
+}
+
+# ::tk::MenuScrollDirection --
+# Returns -1 or 1 if the position is over the scroll arrow at the top or
+# the bottom of a menu higher than the screen, and the entries can be
+# scrolled in that direction, or 0 otherwise.
+#
+# Arguments:
+# menu -		The menu window.
+# x, y -		The position in the menu.
+
+proc ::tk::MenuScrollDirection {menu x y} {
+    lassign [$menu yview] first last
+    if {($first <= 0 && $last >= 1) || [$menu index @$x,$y] ne ""} {
+	return 0
+    }
+    if {$y < [winfo height $menu] / 2} {
+	return [expr {$first > 0 ? -1 : 0}]
+    } else {
+	return [expr {$last < 1 ? 1 : 0}]
+    }
+}
+
+# ::tk::MenuAutoScroll --
+# Scrolls a menu higher than the screen while the mouse is over one of its
+# scroll arrows.
+#
+# Arguments:
+# menu -		The menu window.
+# x, y -		The position of the mouse in the menu.
+
+proc ::tk::MenuAutoScroll {menu x y} {
+    variable ::tk::Priv
+
+    set dir [MenuScrollDirection $menu $x $y]
+    if {$dir == 0} {
+	MenuStopAutoScroll
+	return
+    }
+    if {[info exists Priv(menuScrollTimer)]} {
+	# Already scrolling.
+	return
+    }
+    MenuAutoScrollStep $menu $dir
+}
+
+proc ::tk::MenuAutoScrollStep {menu dir} {
+    variable ::tk::Priv
+
+    unset -nocomplain Priv(menuScrollTimer)
+    if {![winfo exists $menu] || ![winfo ismapped $menu]} {
+	return
+    }
+    lassign [winfo pointerxy $menu] rootx rooty
+    set x [expr {$rootx - [winfo rootx $menu]}]
+    set y [expr {$rooty - [winfo rooty $menu]}]
+    if {[winfo containing -displayof $menu $rootx $rooty] ne $menu
+	    || [MenuScrollDirection $menu $x $y] != $dir} {
+	return
+    }
+    $menu yview scroll $dir units
+    set Priv(menuScrollTimer) [after 40 [list tk::MenuAutoScrollStep $menu $dir]]
+}
+
+proc ::tk::MenuStopAutoScroll {} {
+    variable ::tk::Priv
+
+    if {[info exists Priv(menuScrollTimer)]} {
+	after cancel $Priv(menuScrollTimer)
+	unset Priv(menuScrollTimer)
+    }
 }
 
 # ::tk::MenuStillPressed --
