@@ -215,6 +215,7 @@ static void ProgressbarInitialize(
 
     pb->progress.variableTrace = 0;
     pb->progress.timer = 0;
+    pb->progress.justifyObj = NULL;
 }
 
 static void ProgressbarCleanup(void *recordPtr)

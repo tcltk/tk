@@ -221,6 +221,49 @@ test ttk-1.4 "Original style preserved" -body {
     .t cget -style
 } -result ""
 
+test ttk-1.5 {-justify of ttk::label, ttk::button and ttk::progressbar - bug e6b5b79dce} -constraints {
+    userInteraction
+} -setup {
+    toplevel .top
+    set row 0
+    foreach {cmd style} {
+	label TLabel button TButton progressbar Horizontal.TProgressbar
+    } {
+	# -justify set by the widget option and by the style
+	foreach how {option style} {
+	    set col 0
+	    foreach justify {left center right} {
+		set w .top.$cmd$how$justify
+		set text "$justify\nlonger line of text"
+		if {$how eq "option"} {
+		    ttk::$cmd $w -text $text -justify $justify
+		} else {
+		    set s [string totitle $justify].$style
+		    ttk::style configure $s -justify $justify
+		    ttk::$cmd $w -text $text -style $s
+		}
+		if {$cmd eq "progressbar"} {
+		    # Leave room for the progress bar left of the text.
+		    $w configure -length [expr {
+			2 * [font measure TkDefaultFont "longer line of text"]}]
+		}
+		grid $w -row $row -column $col -padx 4 -pady 2 -sticky ew
+		incr col
+	    }
+	    incr row
+	}
+    }
+    grid columnconfigure .top {0 1 2} -weight 1
+    update
+} -body {
+    tk_messageBox -parent .top -type yesno -icon question -message \
+	"Is the first line of each widget aligned as it says\
+	(left, center or right)?"
+} -cleanup {
+    destroy .top
+    unset -nocomplain row col cmd style how justify w text s
+} -result yes
+
 test ttk-2.0 "Check state" -body {
     checkstate .t
 } -result [list 1 0 0 0 0 0]

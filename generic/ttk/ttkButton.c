@@ -129,6 +129,7 @@ BaseInitialize(
 
     basePtr->base.textVariableTrace = 0;
     basePtr->base.imageSpec = NULL;
+    basePtr->base.justifyObj = NULL;
 }
 
 static void
