@@ -3321,6 +3321,18 @@ IsNumericalEndPos(
     return segPtr == data->lastNumericalPos.segPtr && offset == data->lastNumericalPos.offset;
 }
 
+/*
+ * As in the classic text widget, tabs have no effect in a display line justified
+ * right or center: the tab characters do not get any width.
+ */
+
+static bool
+IgnoreTabs(
+    TkTextJustify justify)
+{
+    return justify == TK_TEXT_JUSTIFY_RIGHT || justify == TK_TEXT_JUSTIFY_CENTER;
+}
+
 static bool
 LayoutChars(
     LayoutData *data,
@@ -3663,7 +3675,7 @@ LayoutChars(
      * space that will be eaten up by the tab.
      */
 
-    if (gotTab) {
+    if (gotTab && !IgnoreTabs(data->justify)) {
 	data->isNumericTab = 0;
 
 	if (data->tabIndex >= 0) {

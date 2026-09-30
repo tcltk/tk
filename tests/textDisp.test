@@ -682,7 +682,7 @@ test textDisp-2.25 {LayoutDLine, tabs, breaking chunks at tabs} {
 # (the text is not rendered at all). This is a bug.
 # Moreover, this test does not pass on any platform at this point with the revised
 # implementation (see [a34b49f8c6]), therefore the 'knownBug' constraint.
-test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {knownBug} {
+test textDisp-2.26 {LayoutDLine, tabs, breaking chunks at tabs} {
     .t delete 1.0 end
     .t tag delete x
     .t tag configure x -tabs [list 30 60 90 120] -justify right
@@ -4202,7 +4202,7 @@ update
 # (the text is not rendered at all). This is a bug.
 # Moreover, this test does not pass on any platform at this point with the revised
 # implementation (see [a34b49f8c6]), therefore the 'knownBug' constraint.
-test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {knownBug} {
+test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {
     .t delete 1.0 end
     .t tag configure x -justify center
     .t insert 1.0 aa\tbb\tcc\tdd\t
@@ -4220,6 +4220,32 @@ test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
 		       [list [expr {[bo .tt]+40-$fixedWidth}] [yline 2 .tt] $fixedWidth $fixedHeight] \
 		       [list [expr {[bo .tt]+40-$fixedWidth}] [yline 3 .tt] $fixedWidth $fixedHeight]]
     lequal [list [.tt bbox 1.1] [.tt bbox 2.2] [.tt bbox 3.3]] $expected
+} -cleanup {
+    destroy .tt
+} -result {1}
+test textDisp-24.26 {TkTextCharLayoutProc, full justification keeps the tabs} -setup {
+    text .tt -tabs {40 80} -justify full -wrap char -font $fixedFont
+    pack .tt
+} -body {
+    .tt insert end a\tb\tc
+    update
+    set expected [list [expr {[bo .tt]+40}] [expr {[bo .tt]+80}]]
+    lequal [list [lindex [.tt bbox 1.2] 0] [lindex [.tt bbox 1.4] 0]] $expected
+} -cleanup {
+    destroy .tt
+} -result {1}
+test textDisp-24.27 {TkTextCharLayoutProc, tabs are ignored in lines justified right or center} -setup {
+    text .tt -tabs {40} -wrap char -font $fixedFont
+    pack .tt
+} -body {
+    .tt insert end a\tb\na\tb\na\tb
+    .tt tag configure r -justify right
+    .tt tag configure c -justify center
+    .tt tag add r 2.0
+    .tt tag add c 3.0
+    update
+    set expected [list [expr {[bo .tt]+40}] [xcharr 2 .tt] [expr {[bo .tt]+[xe 2 .tt]/2}]]
+    lequal [list [lindex [.tt bbox 1.2] 0] [lindex [.tt bbox 2.0] 0] [lindex [.tt bbox 3.0] 0]] $expected
 } -cleanup {
     destroy .tt
 } -result {1}
