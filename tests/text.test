@@ -7653,11 +7653,7 @@ test text-29.2 {tabs - must be positive and must be increasing} -body {
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {tab stop "-5" is not at a positive distance}
-test text-29.3 {tabs - must be positive and must be increasing} -constraints {
-    knownBug
-} -body {
-# This bug will be fixed in Tk 9.0, when we can allow a minor
-# incompatibility with Tk 8.x
+test text-29.3 {tabs - must be positive and must be increasing} -body {
     pack [text .t -wrap none]
     .t configure -tabs {10c 5c}
 } -cleanup {
