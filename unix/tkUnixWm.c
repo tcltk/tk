@@ -7469,6 +7469,7 @@ TkpWmSetState(
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
+	    wmPtr->withdrawn = 0;
 	    return 1;
 	}
 	if (wmPtr->withdrawn) {
