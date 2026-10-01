@@ -5594,6 +5594,33 @@ test textDisp-40.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-41.1 {codepoint wrap of logical lines of 512 bytes or more} -setup {
+    destroy .t1
+    text .t1 -wrap codepoint -font $fixedFont -width 20 -height 5
+    pack .t1
+} -body {
+    # Such a line overflowed the string buffer of the line break computation
+    # (detected by memory debugging builds).
+    .t1 insert end "[string repeat {ab } 200]\n"
+    update
+    .t1 delete 1.0 end
+    .t1 insert end [string repeat {cd } 300]
+    update
+    set starts {}
+    set i 1.0
+    while {[.t1 compare $i < "end - 1c"] && [llength $starts] < 100} {
+	lappend starts [.t1 get $i]
+	set next [.t1 index "[.t1 index "$i + 1 displaylines"] display linestart"]
+	if {[.t1 compare $next <= $i]} {
+	    break
+	}
+	set i $next
+    }
+    list [expr {[llength $starts] > 1}] [lsort -unique $starts]
+} -cleanup {
+    destroy .t1
+} -result {1 c}
+
 #
 # TESTFILE CLEANUP
 #

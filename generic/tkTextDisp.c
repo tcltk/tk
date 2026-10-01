@@ -2632,7 +2632,7 @@ LayoutComputeBreakLocations(
 		}
 		if ((newSize = size + segPtr->size) >= capacity) {
 		    capacity = MAX(2*capacity, newSize + 1);
-		    str = (char *)Tcl_Realloc(str, newSize);
+		    str = (char *)Tcl_Realloc(str, capacity);
 		}
 		memcpy(str + size, segPtr->body.chars, segPtr->size);
 		size = newSize;
