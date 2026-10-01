@@ -62,6 +62,7 @@ to the userbase.
  - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
  - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
  - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
+ - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

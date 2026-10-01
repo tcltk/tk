@@ -427,13 +427,47 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
 	incr $var $delta
     }
 
+    # Post the listbox below the combobox if it fits there, otherwise above
+    # it if it fits there.  Otherwise reduce the number of visible rows so
+    # that it fits on the side with more room.
+
     set H [winfo reqheight $popdown]
-    if {$y + $h + $H > [winfo screenheight $popdown]} {
-	set Y [expr {$y - $H}]
-    } else {
+    set top [winfo vrooty $popdown]
+    set below [expr {$top + [winfo vrootheight $popdown] - $y - $h}]
+    set above [expr {$y - $top}]
+    if {$H > $below && $H > $above} {
+	set H [FitPopdown $popdown [expr {max($below, $above)}]]
+    }
+    if {$H <= $below} {
 	set Y [expr {$y + $h}]
+    } else {
+	set Y [expr {$y - $H}]
     }
     wm geometry $popdown ${w}x${H}+${x}+${Y}
+}
+
+## FitPopdown --
+#	Reduce the number of visible rows of the popdown listbox, so that
+#	the popdown is not higher than $room, and show the scrollbar.
+#	Returns the new height of the popdown.
+#
+proc ttk::combobox::FitPopdown {popdown room} {
+    set lb $popdown.f.l
+    set rows [$lb cget -height]
+    set extra [expr {[winfo reqheight $popdown] - [winfo reqheight $lb]}]
+    set lbHeight [winfo reqheight $lb]
+    $lb configure -height 1
+    set rowHeight 1
+    if {$rows > 1} {
+	set rowHeight [expr {max(1,
+		($lbHeight - [winfo reqheight $lb]) / ($rows - 1))}]
+    }
+    set rows [expr {1 + ($room - $extra - [winfo reqheight $lb]) / $rowHeight}]
+    $lb configure -height [expr {max(1, $rows)}]
+    grid $popdown.f.sb
+    grid configure $lb -padx {1 0}
+    $lb see [$lb index active]
+    return [expr {$extra + [winfo reqheight $lb]}]
 }
 
 proc ttk::combobox::AquaPlacePopdown {cb popdown} {
