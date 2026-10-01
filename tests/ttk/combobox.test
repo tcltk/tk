@@ -104,4 +104,49 @@ test combobox-1890211 "ComboboxSelected event after listbox unposted" \
     destroy .cb
 }
 
+proc postComboboxAt {y height} {
+    toplevel .t
+    ttk::combobox .t.cb -values [lmap i [lrepeat 200 x] {incr n}] \
+	    -height $height -state readonly
+    pack .t.cb
+    wm geometry .t +100+$y
+    update
+    .t.cb current 150
+    ttk::combobox::Post .t.cb
+    update
+    set popdown [ttk::combobox::PopdownWindow .t.cb]
+    set y1 [winfo rooty $popdown]
+    set y2 [expr {$y1 + [winfo height $popdown]}]
+    set cby [winfo rooty .t.cb]
+    list [expr {$y2 <= $cby ? "above" : $y1 >= $cby ? "below" : "over"}] \
+	    [expr {$y1 >= [winfo vrooty .t] &&
+		   $y2 <= [winfo vrooty .t] + [winfo vrootheight .t]}] \
+	    [winfo ismapped $popdown.f.sb] \
+	    [expr {[$popdown.f.l bbox 150] ne ""}] \
+	    [$popdown.f.l cget -height]
+}
+test combobox-5.1 "Popdown higher than the screen is limited to the screen below" \
+	-constraints {notAqua} -body {
+    lrange [postComboboxAt 50 150] 0 3
+} -cleanup {
+    destroy .t
+} -result {below 1 1 1}
+test combobox-5.2 "Popdown higher than the screen is limited to the screen above" \
+	-constraints {notAqua} -body {
+    lrange [postComboboxAt [expr {[winfo screenheight .] - 80}] 150] 0 3
+} -cleanup {
+    destroy .t
+} -result {above 1 1 1}
+test combobox-5.3 "Popdown which fits below is posted below" \
+	-constraints {notAqua} -body {
+    postComboboxAt 50 10
+} -cleanup {
+    destroy .t
+} -result {below 1 1 1 10}
+rename postComboboxAt {}
+
+#
+# TESTFILE CLEANUP
+#
+
 tcltest::cleanupTests
