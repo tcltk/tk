@@ -5635,6 +5635,44 @@ test textDisp-41.2 {codepoint wrap of a line with mandatory breaks inside} -setu
     destroy .t1
 } -result 7
 
+test textDisp-41.3 {codepoint wrap of Thai text at word boundaries} -setup {
+    destroy .t1
+    text .t1 -wrap codepoint -font $fixedFont -width 20
+    pack .t1
+} -body {
+    # Thai words, written without spaces.
+    set words [list "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22" "\u0e21\u0e35" \
+	    "\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23" "\u0e21\u0e32\u0e01\u0e01\u0e27\u0e48\u0e32" \
+	    "\u0e2b\u0e01" "\u0e2a\u0e34\u0e1a" "\u0e25\u0e49\u0e32\u0e19" "\u0e04\u0e19"]
+    set wordStarts {}
+    set n 0
+    for {set k 0} {$k < 4} {incr k} {
+	foreach w $words {
+	    lappend wordStarts $n
+	    incr n [string length $w]
+	}
+    }
+    .t1 insert end [string repeat [join $words ""] 4]
+    update
+    set lines 0
+    set bad {}
+    set i 1.0
+    while {[.t1 compare $i < "end - 1c"] && $lines < 100} {
+	incr lines
+	if {[.t1 count -chars 1.0 $i] ni $wordStarts} {
+	    lappend bad $i
+	}
+	set next [.t1 index "[.t1 index "$i + 1 displaylines"] display linestart"]
+	if {[.t1 compare $next <= $i]} {
+	    break
+	}
+	set i $next
+    }
+    list [expr {$lines > 1}] $bad
+} -cleanup {
+    destroy .t1
+} -result {1 {}}
+
 #
 # TESTFILE CLEANUP
 #

@@ -9147,6 +9147,49 @@ test text-43.4 {brks: mandatory breaks inside the string} -setup {
     destroy .t
 } -result {{0 0 0 2 0 0 0} {0 2 0} {0 0 2 0} {0 2 2 0}}
 
+test text-43.5 {brks: ideographs} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t brks "\u4e2d\u6587\u6587\u672c\u3002\u65e5\u672c\u8a9e"
+} -cleanup {
+    destroy .t
+} -result {1 1 1 0 1 1 1 0}
+test text-43.6 {brks: Thai words, written without spaces} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t brks "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01"
+} -cleanup {
+    destroy .t
+} -result {0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 1 0 0 0}
+test text-43.7 {brks: no break inside an emoji sequence or before a combining mark} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t brks "a \U1F468\u200d\U1F469\u200d\U1F467 b e\u0301"
+} -cleanup {
+    destroy .t
+} -result {0 1 0 0 0 0 0 1 0 1 0 0}
+test text-43.8 {brks: Latin punctuation, hyphens and paths} -setup {
+    destroy .t
+    text .t
+} -body {
+    list [.t brks "Hello, world! (see p. 12-14) e-mail: a-b; 3.14 \$5"] \
+	[.t brks "go to http://www.example.com/path/to/file or /usr/local/bin now"]
+} -cleanup {
+    destroy .t
+} -result {{0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0} {0 0 1 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 1 0 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0 0 1 0 0 0 1 0 0 0}}
+test text-43.9 {brks: string with a nul character} -setup {
+    destroy .t
+    text .t
+} -body {
+    set res [.t brks "a\0b c"]
+    list [llength $res] [lindex $res 3]
+} -cleanup {
+    destroy .t
+} -result {5 1}
+
 #
 # TESTFILE CLEANUP
 #

@@ -4,18 +4,8 @@
  *	This module provides line break computation for line wrapping.
  *	It uses the library "libunibreak" (from Wu Yongwei) for the
  *	computation, but only if available (currently only UNIX), and if
- *	the language support is enabled, otherwise our own line break
- *	algorithm is used (it's a simplified version of the recommendation
- *	at http://www.unicode.org/reports/tr14/tr14-26.html).
- *
- *	The alternative is the use of ICU library (http://site.icu-project.org/),
- *	instead of libunibreak, but this would require to support a very
- *	complex interface of a dynamic load library, with other words, we
- *	would need dozens of functions pointers. This is not really a drawback,
- *	and probably the ICU library is the better choice, but I think that a
- *	change to the ICU library is reasonable only if the Tcl/Tk developer team
- *	is deciding to use this library also for complete Unicode support (character
- *	conversion, for instance).
+ *	the language support is enabled, otherwise mojibake (UAX #14, see
+ *	tkTextGrapheme.c).
  *
  * Copyright © 2015-2017 Gregor Cramer
  *
@@ -47,9 +37,9 @@ static ComputeBreakLocationsFunc libLinebreakFunc = ComputeBreakLocations;
  * GetLineBreakFunc --
  *
  *	Return the appropriate line break function. If argument 'lang'
- *	is NULL, then our own line break algorithm will be used (fast,
- *	but a bit simple). If 'lang' is not NULL, then this function
- *	tries to load the library "libunibreak" (currently only UNIX).
+ *	is NULL, then mojibake will be used. If 'lang' is not NULL, then
+ *	this function tries to load the library "libunibreak" (currently
+ *	only UNIX).
  *	If the load succeeds, then set_linebreaks_utf8 will be returned,
  *	otherwise ComputeBreakLocations will be returned.
  *
@@ -150,8 +140,8 @@ GetLineBreakFunc(
  *	'len' must be NUL). Thus it is also required that the break buffer
  *	'brks' has at least size 'len+1'. If 'lang' is not NULL, then the
  *	external library linunibreak will be used for the line break
- *	computation, but only if this library is loadable, otherwise the
- *	internal algorithm will be used.
+ *	computation, but only if this library is loadable, otherwise
+ *	mojibake will be used.
  *
  * Results:
  *	The computed break locations. This function returns 'true' if
@@ -275,421 +265,105 @@ TkTextComputeBreakLocations(
 }
 
 /*
- * The following is implementing the recommendations at
- * http://www.unicode.org/reports/tr14/tr14-26.html, but simplified -
- * no language specific support, not all the rules (especially no
- * combining marks), and mostly restricted to Latin-1 and relevant
- * letters not belonging to specific languages. For a more sophisticated
- * line break algorithm the library "libunibreak" (from Wu Yongwei)
- * should be used.
+ * Returns whether the text contains a script written without spaces between words
+ * (Thai, Lao, Khmer, Myanmar), for which mojibake needs its dictionaries. Tests
+ * only the first two bytes of the UTF-8 sequences, a superset is harmless.
  */
 
-typedef enum {
-    /* Note that CR, LF, and NL will be interpreted as BK, so only BK is used. */
-    AI, AL, B2, BA, BB, BK, CL, CP, EX, GL, HY, IN, IS, NS, NU, OP, PO, PR, QU, SP, SY, WJ, ZW
-} LBClass;
+static int
+HasComplexScript(
+    const unsigned char *text,
+    size_t len)
+{
+    size_t i;
 
-#define __ AI
+    for (i = 0; i + 1 < len; ++i) {
+	unsigned char c = text[i + 1];
+
+	switch (text[i]) {
+	case 0xe0:	/* U+0E00-U+0EFF: Thai, Lao */
+	    if (0xb8 <= c && c <= 0xbb) {
+		return 1;
+	    }
+	    break;
+	case 0xe1:	/* U+1000-U+10BF: Myanmar, U+1780-U+17FF, U+19C0-U+19FF: Khmer */
+	    if (c <= 0x82 || c == 0x9e || c == 0x9f || c == 0xa7) {
+		return 1;
+	    }
+	    break;
+	case 0xea:	/* U+A9C0-U+A9FF, U+AA40-U+AA7F: Myanmar extensions */
+	    if (c == 0xa7 || c == 0xa9) {
+		return 1;
+	    }
+	    break;
+	}
+    }
+    return 0;
+}
 
 /*
- * Changes in table below (different from Unicode recommendation):
- *
- * 0a: CB -> BK	(LINE FEED)
- * 0d: CR -> BK (CARRIAGE RETURN)
- * 0e: XX -> BK (SHIFT OUT)
- * 23: AL -> IN (NUMBER SIGN)
- * 26: AL -> BB (AMPERSAND)
- * 3d: AL -> GL (EQUALS SIGN)
- * 60: CM -> AL (GRAVE ACCENT)
+ * The dictionaries are sorted on first use; serialize this initialization.
  */
 
-static const char Table_0000[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, BA, BK, BK, BK, BK, BK, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ SP, EX, QU, IN, PR, PO, BB, QU, OP, CP, AL, PR, IS, HY, IS, SY, /* 20 - 2f */
-/* 3 */ NU, NU, NU, NU, NU, NU, NU, NU, NU, NU, IS, IS, AL, GL, AL, EX, /* 30 - 3f */
-/* 4 */ AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, /* 40 - 4f */
-/* 5 */ AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, OP, PR, CP, AL, AL, /* 50 - 5f */
-/* 6 */ AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, /* 60 - 6f */
-/* 7 */ AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, OP, BA, CL, AL, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ GL, OP, PO, PR, PR, PR, AL, AL, AL, AL, __, QU, __, __, AL, AL, /* a0 - af */
-/* b */ PO, PR, AL, AL, BB, __, AL, AL, AL, AL, __, __, AL, AL, AL, OP, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
+TCL_DECLARE_MUTEX(dictMutex)
+
+static void
+InitDictionaries(void)
+{
+    static int initialized = 0;
+
+    if (!initialized) {
+	Tcl_MutexLock(&dictMutex);
+	if (!initialized) {
+	    mojibake_dict_init();
+	    initialized = 1;
+	}
+	Tcl_MutexUnlock(&dictMutex);
+    }
+}
 
 /*
- * Changes in table below (different from Unicode recommendation):
- *
- * e2 80 89: BA -> WJ (THIN SPACE)
- * e2 80 0a: BA -> WJ (HAIR SPACE)
+ * Returns whether a mandatory break follows the character p of n bytes: after BK,
+ * NL, LF, and CR unless followed by LF (UAX #14 LB4, LB5). mojibake does not report
+ * mandatory breaks as break opportunities.
  */
 
-static const char Table_E280[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ BA, BA, BA, BA, BA, BA, BA, GL, BA, __, __, ZW, __, __, __, __, /* 80 - 8f */
-/* 9 */ BA, AL, BA, BA, B2, AL, AL, AL, QU, QU, OP, QU, QU, QU, OP, QU, /* 90 - 9f */
-/* a */ AL, AL, AL, AL, IN, IN, IN, BA, BK, BK, __, __, __, __, __, GL, /* a0 - af */
-/* b */ PO, PO, PO, PO, PO, PO, PO, PO, AL, QU, QU, AL, NS, NS, AL, AL, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
+static int
+IsMandatoryBreak(
+    const unsigned char *p,
+    size_t n,
+    const unsigned char *end)
+{
+    switch (n) {
+    case 1:
+	return *p == '\n' || *p == '\v' || *p == '\f'
+		|| (*p == '\r' && (p + 1 == end || p[1] != '\n'));
+    case 2:
+	return p[0] == 0xc2 && p[1] == 0x85;				/* NEL */
+    case 3:
+	return p[0] == 0xe2 && p[1] == 0x80 && (p[2] == 0xa8 || p[2] == 0xa9);	/* LS, PS */
+    }
+    return 0;
+}
 
-static const char Table_E281[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ AL, AL, AL, AL, IS, OP, CL, NS, NS, NS, AL, AL, AL, AL, AL, AL, /* 80 - 8f */
-/* 9 */ AL, AL, __, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, __, /* 90 - 9f */
-/* a */ WJ, AL, AL, AL, AL, __, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, __, OP, CL, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E282[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, __, __, __, __, __, CL, CL, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ PR, PR, PR, PR, PR, PR, PR, PO, PR, PR, PR, PR, PR, PR, PR, PR, /* a0 - af */
-/* b */ PR, PR, PR, PR, PR, PR, PR, PR, PR, PR, PR, PR, PR, PR, PR, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E28C[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, OP, CL, OP, CL, __, __, __, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, __, __, __, OP, CL, __, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E29D[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, __, __, OP, CL, OP, CL, OP, CL, OP, CL, /* a0 - af */
-/* b */ OP, CL, OP, CL, OP, CL, __, __, __, __, __, __, __, __, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E29F[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, OP, CL, __, __, __, __, __, __, __, __, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, OP, CL, OP, CL, OP, CL, OP, CL, OP, CL, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E2A6[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, OP, CL, OP, CL, OP, CL, OP, CL, OP, CL, OP, CL, OP, /* 80 - 8f */
-/* 9 */ CL, OP, CL, OP, CL, OP, CL, OP, CL, __, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E2A7[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, OP, CL, OP, CL, __, __, __, __, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, OP, CL, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E2B8[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ AL, AL, QU, QU, QU, QU, AL, AL, AL, QU, QU, AL, QU, QU, AL, AL, /* 80 - 8f */
-/* 9 */ AL, AL, AL, AL, AL, AL, AL, AL, OP, AL, AL, AL, QU, QU, AL, AL, /* 90 - 9f */
-/* a */ QU, QU, OP, CL, OP, CL, OP, CL, OP, CL, AL, AL, AL, AL, AL, __, /* a0 - af */
-/* b */ AL, AL, AL, AL, AL, AL, AL, AL, AL, AL, B2, B2, AL, AL, AL, AL, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_E380[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, CL, CL, AL, __, NS, __, __, OP, CL, OP, CL, OP, CL, OP, CL, /* 80 - 8f */
-/* 9 */ OP, CL, __, __, OP, CL, OP, CL, OP, CL, OP, CL, NS, OP, CL, CL, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ AL, __, __, __, __, __, __, __, __, __, __, NS, NS, AL, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_EFB8[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 80 - 8f */
-/* 9 */ IS, CL, CL, IS, IS, AL, AL, OP, CL, IN, __, __, __, __, __, __, /* 90 - 9f */
-/* a */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ AL, AL, AL, AL, AL, OP, CL, OP, CL, OP, CL, OP, CL, OP, CL, OP, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_EFB9[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ CL, OP, CL, OP, CL, AL, AL, OP, CL, AL, AL, AL, AL, AL, AL, AL, /* 80 - 8f */
-/* 9 */ CL, CL, CL, __, NS, NS, AL, AL, B2, OP, CL, OP, CL, OP, CL, AL, /* 90 - 9f */
-/* a */ AL, AL, __, B2, __, __, __, __, AL, PR, PO, AL, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_EFBC[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, AL, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, EX, AL, AL, PR, PO, AL, AL, OP, CL, AL, __, CL, B2, CL, AL, /* 80 - 8f */
-/* 9 */ NU, NU, NU, NU, NU, NU, NU, NU, NU, NU, NS, NS, __, __, __, EX, /* 90 - 9f */
-/* a */ AL, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, OP, AL, CL, __, __, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-static const char Table_EFBD[256] = {
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-/* 0 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 00 - 0f */
-/* 1 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 10 - 1f */
-/* 2 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 20 - 2f */
-/* 3 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 30 - 3f */
-/* 4 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 40 - 4f */
-/* 5 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 50 - 5f */
-/* 6 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 60 - 6f */
-/* 7 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 70 - 7f */
-/* 8 */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* 80 - 8f */
-/* 9 */ __, __, __, __, __, __, __, __, __, __, __, OP, __, CL, __, OP, /* 90 - 9f */
-/* a */ CL, CL, OP, CL, CL, AL, __, __, __, __, __, __, __, __, __, __, /* a0 - af */
-/* b */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, WJ, /* b0 - bf */
-/* c */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* c0 - cf */
-/* d */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* d0 - df */
-/* e */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* e0 - ef */
-/* f */ __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, /* f0 - ff */
-/*      00  01  02  03  04  05  06  07  08  09  0a  0b  0c  0d  0e  0f */
-};
-
-#undef __
-
-#define PROHIBITED	LINEBREAK_NOBREAK
-#define DIRECT		LINEBREAK_ALLOWBREAK
-#define INDIRECT	((char) (~LINEBREAK_NOBREAK & ~LINEBREAK_ALLOWBREAK & 0x7f))
-
-#define X PROHIBITED	/* B ^ A === B SP* × A */
-#define i INDIRECT	/* B % A === B × A and B SP+ ÷ A */
-#define _ DIRECT	/* B ÷ A */
-
-/* Note that BK, SP will no be used for lookup. */
-static const char BrkPairTable[23][23] = {
-/*        AI AL B2 BA BB BK CL CP EX GL HY IN IS NS NU OP PO PR QU SP SY WJ ZW */
-/* AI */ { X, X, _, i, _, _, X, X, X, i, i, i, X, i, i, i, _, _, i, _, X, X, X }, /* AI */
-/* AL */ { i, i, _, i, _, _, X, X, X, i, i, i, X, i, i, i, _, _, i, _, X, X, X }, /* AL */
-/* B2 */ { _, _, _, i, _, _, X, X, X, i, i, _, X, i, _, _, _, _, i, _, X, X, X }, /* B2 */
-/* BA */ { _, _, _, i, _, _, X, X, X, i, i, _, X, i, _, _, _, _, i, _, X, X, X }, /* BA */
-/* BB */ { i, i, i, i, i, _, X, X, X, _, i, i, X, i, i, i, i, i, i, _, X, X, X }, /* BB */
-/* BK */ { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, /* BK */
-/* CL */ { _, _, _, i, _, _, X, X, X, i, i, _, X, X, _, _, i, i, i, _, X, X, X }, /* CL */
-/* CP */ { i, i, _, i, _, _, X, X, X, i, i, _, X, X, i, _, i, i, i, _, X, X, X }, /* CP */
-/* EX */ { _, _, _, i, _, _, X, X, X, i, i, _, X, i, _, _, _, _, i, _, X, X, X }, /* EX */
-/* GL */ { i, i, i, i, i, _, X, X, X, i, i, i, X, i, i, i, i, i, i, _, X, X, X }, /* GL */
-/* HY */ { _, _, _, i, _, _, X, X, X, _, i, _, X, i, i, _, _, _, i, _, X, X, X }, /* HY */
-/* IN */ { _, _, _, i, _, _, X, X, X, i, i, i, X, i, _, _, _, _, i, _, X, X, X }, /* IN */
-/* IS */ { i, i, _, i, _, _, X, X, X, i, i, _, X, i, i, _, _, _, i, _, X, X, X }, /* IS */
-/* NS */ { _, _, _, i, _, _, X, X, X, i, i, _, X, i, _, _, _, _, i, _, X, X, X }, /* NS */
-/* NU */ { i, i, _, i, _, _, X, X, X, i, i, i, X, i, i, i, i, i, i, _, X, X, X }, /* NU */
-/* OP */ { X, X, X, X, X, _, X, X, X, X, X, X, X, X, X, X, X, X, X, _, X, X, X }, /* OP */
-/* PO */ { i, i, _, i, _, _, X, X, X, i, i, _, X, i, i, i, _, _, i, _, X, X, X }, /* PO */
-/* PR */ { _, i, _, i, _, _, X, X, X, i, i, _, X, i, i, i, _, _, i, _, X, X, X }, /* PR */
-/* QU */ { i, i, i, i, i, _, X, X, X, i, i, i, X, i, i, X, i, i, i, _, X, X, X }, /* QU */
-/* SP */ { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ }, /* SP */
-/* SY */ { _, _, _, i, _, _, X, X, X, i, i, _, X, i, i, _, _, _, i, _, X, X, X }, /* SY */
-/* WJ */ { i, i, i, i, i, _, X, X, X, i, i, i, X, i, i, i, i, i, i, _, X, X, X }, /* WJ */
-/* ZW */ { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, X }, /* ZW */
-/*        AI AL B2 BA BB BK CL CP EX GL HY IN IS NS NU OP PO PR QU SP SY WJ ZW */
-};
-
-#undef _
-#undef i
-#undef X
-
 /*
  *----------------------------------------------------------------------
  *
  * ComputeBreakLocations --
  *
- *	Compute break locations in UTF-8 text. This function is doing
- *	the same as set_linebreaks_utf8 (from "libunibreak"), but this
- *	function is using a simplified line break algorithm, although
- *	it is following the recommendations at
- *	http://www.unicode.org/reports/tr14/tr14-26.html.
- *
- *	Note that this functions expects that the whole line will be
- *	parsed at once. This interface corresponds to the interface
- *	of the linebreak library. Of course, such a design is a bit
- *	unluckily.
+ *	Compute break locations in UTF-8 text with mojibake: UAX #14, and
+ *	dictionary word boundaries for Thai, Lao, Khmer and Myanmar. Same
+ *	interface as set_linebreaks_utf8 from "libunibreak": 'len' includes
+ *	the trailing nul, the status of the break after a character is stored
+ *	at its last byte, its other bytes get LINEBREAK_INSIDEACHAR. Nothing
+ *	is known about a break after the last character, unless mandatory.
  *
  * Results:
  *	The computed break locations, in 'brks'. This array must be as
- *	large as the input length (specified by 'len').
+ *	large as 'len'.
  *
  * Side effects:
- *	None.
+ *	The dictionaries are sorted on first use.
  *
  *----------------------------------------------------------------------
  */
@@ -701,270 +375,48 @@ ComputeBreakLocations(
     TCL_UNUSED(const char *),
     char *brks)
 {
-    size_t i;
-    size_t nbytes;
-    size_t nletters;
-    size_t brkIndex;
-    LBClass cls;
-    LBClass prevCls;
+    const unsigned char *end;
+    unsigned char *breaks;
+    size_t i, n;
 
     if (len == 0) {
 	return;
     }
 
-    i = 0;
-    nletters = 0;
-    brkIndex = 0;
-    cls = BK;
-    prevCls = WJ;
-    brks[len - 1] = LINEBREAK_MUSTBREAK;
+    len -= 1; /* without trailing nul */
+    end = text + len;
+    breaks = (unsigned char *)Tcl_Alloc(len + 1);
 
-    while (i < len) {
-	unsigned char ch;
-	LBClass pcls;
+    if (HasComplexScript(text, len)) {
+	unsigned char *tmp = (unsigned char *)Tcl_Alloc(2*(len + 1));
 
-	ch = text[i];
-
-	if (ch < 0x80) {
-	    pcls = (LBClass)Table_0000[ch];
-	    nbytes = 1;
-	} else if ((ch & 0xe0) == 0xc0) {
-	    pcls = AI;
-	    switch (ch) {
-	    case 0xc2:
-		switch (UCHAR(text[i + 1])) {
-		case 0x85: pcls = BK; break; /* NL */
-		case 0xac: pcls = AL; break;
-		case 0xad: pcls = BA; break;
-		case 0xb1: pcls = AL; break;
-		case 0xbb: pcls = QU; break;
-		}
-		break;
-	    case 0xc3:
-	    case 0xc4:
-	    case 0xc5:
-	    case 0xc6:
-	    case 0xc7:
-	    case 0xc8:
-	    case 0xc9:
-		ch = text[i + 1];
-		if (0x80 <= ch && ch <= 0xbf) {
-		    pcls = AL;
-		}
-		break;
-	    case 0xca:
-		ch = text[i + 1];
-		if (0x80 <= ch && ch <= 0xaf) {
-		    pcls = AL;
-		}
-		break;
-	    case 0xcb:
-		switch (UCHAR(text[i + 1])) {
-		case 0x88: /* fallthru */
-		case 0x8c: /* fallthru */
-		case 0x9f: pcls = BB; break;
-		}
-		break;
-	    case 0xcd:
-		if (UCHAR(text[i + 1]) == 0x8f) {
-		    pcls = GL;
-		}
-		break;
-	    case 0xd7:
-		if (UCHAR(text[i + 1]) == 0x86) {
-		    pcls = EX;
-		}
-		break;
-	    case 0xdf:
-		if (UCHAR(text[i + 1]) == 0xb8) {
-		    pcls = IS;
-		}
-		break;
-	    }
-	    nbytes = 2;
-	    brks[i] = LINEBREAK_INSIDEACHAR;
-	} else if ((ch & 0xf0) == 0xe0) {
-	    pcls = AI;
-	    switch (ch) {
-		case 0xe2:
-		    switch (UCHAR(text[i + 1])) {
-		    case 0x80: pcls = (LBClass)Table_E280[UCHAR(text[i + 2])]; break;
-		    case 0x81: pcls = (LBClass)Table_E281[UCHAR(text[i + 2])]; break;
-		    case 0x82: pcls = (LBClass)Table_E282[UCHAR(text[i + 2])]; break;
-		    case 0x8c: pcls = (LBClass)Table_E28C[UCHAR(text[i + 2])]; break;
-		    case 0x9d: pcls = (LBClass)Table_E29D[UCHAR(text[i + 2])]; break;
-		    case 0x9f: pcls = (LBClass)Table_E29F[UCHAR(text[i + 2])]; break;
-		    case 0xa6: pcls = (LBClass)Table_E2A6[UCHAR(text[i + 2])]; break;
-		    case 0xa7: pcls = (LBClass)Table_E2A7[UCHAR(text[i + 2])]; break;
-		    case 0xb8: pcls = (LBClass)Table_E2B8[UCHAR(text[i + 2])]; break;
-		    case 0x84:
-			switch (UCHAR(text[i + 2])) {
-			    case 0x83: /* fallthru */
-			    case 0x89: pcls = PO; break;
-			    case 0x96: pcls = PR; break;
-			}
-			break;
-		    case 0x88:
-			switch (UCHAR(text[i + 2])) {
-			    case 0x92: /* fallthru */
-			    case 0x93: pcls = PR; break;
-			}
-			break;
-		    case 0xb9:
-			switch (UCHAR(text[i + 2])) {
-			    case 0x80: pcls = B2; break;
-			    case 0x81: pcls = AL; break;
-			    case 0x82: pcls = OP; break;
-			}
-			break;
-		    }
-		    break;
-		case 0xe3:
-		    if (UCHAR(text[i + 1]) == 0x80) {
-			pcls = (LBClass)Table_E380[UCHAR(text[i + 2])];
-		    }
-		    break;
-		case 0xef:
-		    switch (UCHAR(text[i + 1])) {
-		    case 0xb8: pcls = (LBClass)Table_EFB8[UCHAR(text[i + 2])]; break;
-		    case 0xb9: pcls = (LBClass)Table_EFB9[UCHAR(text[i + 2])]; break;
-		    case 0xbc: pcls = (LBClass)Table_EFBC[UCHAR(text[i + 2])]; break;
-		    case 0xbd: pcls = (LBClass)Table_EFBD[UCHAR(text[i + 2])]; break;
-		    case 0xb4:
-			switch (UCHAR(text[i + 2])) {
-			    case 0xbe: pcls = CL; break;
-			    case 0xbf: pcls = OP; break;
-			}
-			break;
-		    case 0xbb:
-			if (UCHAR(text[i + 2]) == 0xbf) {
-			    pcls = WJ; /* ZWNBSP (deprecated word joiner) */
-			}
-			break;
-		    case 0xbf:
-			switch (UCHAR(text[i + 2])) {
-			    case 0xa0: pcls = PO; break;
-			    case 0xa1: /* fallthru */
-			    case 0xa5: /* fallthru */
-			    case 0xa6: pcls = PR; break;
-			}
-			break;
-		    }
-		    break;
-	    }
-	    nbytes = 3;
-	    brks[i + 0] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 1] = LINEBREAK_INSIDEACHAR;
-	} else if ((ch & 0xf8) == 0xf0) {
-	    pcls = AI;
-	    nbytes = 4;
-	    brks[i + 0] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 1] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 2] = LINEBREAK_INSIDEACHAR;
-	} else {
-	    /*
-	     * This fallback is required, because the current character conversion
-	     * algorithm in Tcl library is producing overlong sequences (a violation
-	     * of the UTF-8 standard). This observation has been reported to the
-	     * Tcl/Tk team, but the response was ignorance.
-	     */
-
-	    unsigned k;
-	    const char *p = (const char *) text + i;
-
-	    pcls = AI;
-	    nbytes = Tcl_UtfNext(p) - p;
-	    for (k = 0; k < nbytes; ++k) {
-		brks[i + k] = LINEBREAK_INSIDEACHAR;
-	    }
-	}
-
-	if (pcls == BK) {
-	    /*
-	     * No break before a mandatory break, unless it follows another one (but
-	     * CR x LF). The next character starts a new line.
-	     */
-
-	    if (i > 0 && (cls != BK || (text[i - 1] == '\r' && text[i] == '\n'))) {
-		brks[i - 1] = LINEBREAK_NOBREAK;
-	    }
-	    brks[i + nbytes - 1] = LINEBREAK_MUSTBREAK;
-	    cls = BK;
-	    prevCls = WJ;
-	    nletters = 0;
-	    brkIndex = 0;
-	} else if (cls == BK) {
-	    if ((cls = pcls) == SP) {
-		/* treat SP at start of a line as if it followed a WJ */
-		prevCls = cls = WJ;
-	    }
-	} else {
-	    switch (pcls) {
-	    case SP:
-		/* handle spaces explicitly; do not update cls */
-		if (i > 0) {
-		    brks[i - 1] = LINEBREAK_NOBREAK;
-		    prevCls = SP;
-		} else {
-		    prevCls = WJ;
-		}
-		nletters = 0;
-		break;
-	    case HY: {
-		char brk = BrkPairTable[cls][HY];
-
-		/*
-		 * The HYPHEN-MINUS (U+002D) needs special context treatment. For simplicity we
-		 * will only check whether we have two preceding, and two succeeding letters.
-		 * TODO: Is there a better method for the decision?
-		 */
-
-		brks[i - 1] = LINEBREAK_NOBREAK;
-		cls = pcls;
-
-		if (brk == INDIRECT) {
-		    prevCls = pcls;
-		} else {
-		    prevCls = WJ;
-
-		    if (brk == LINEBREAK_ALLOWBREAK && nletters >= 2) {
-			brkIndex = i - 1;
-		    }
-		}
-		nletters = 0;
-		break;
-	    }
-	    default: {
-		char brk = BrkPairTable[cls][pcls];
-
-		if (brk == INDIRECT) {
-		    brk = (prevCls == SP) ? LINEBREAK_ALLOWBREAK : LINEBREAK_NOBREAK;
-		    prevCls = pcls;
-		} else {
-		    prevCls = WJ;
-		}
-		brks[i - 1] = brk;
-		cls = pcls;
-
-		if (pcls == AL) {
-		    nletters += 1;
-
-		    if (brkIndex && nletters >= 2) {
-			brks[brkIndex] = LINEBREAK_ALLOWBREAK;
-			brkIndex = 0;
-		    }
-		} else {
-		    nletters = 0;
-		}
-		break;
-	    }
-	    }
-	}
-
-	i += nbytes;
+	InitDictionaries();
+	mojibake_line_breaks_with_dict((const char *) text, len, breaks, tmp, tmp + len + 1);
+	Tcl_Free(tmp);
+    } else {
+	mojibake_line_breaks((const char *) text, len, breaks);
     }
+
+    for (i = 0; i < len; i += n) {
+	n = Tcl_UtfNext((const char *) text + i) - ((const char *) text + i);
+	if (n == 0 || n > len - i) {
+	    n = len - i;
+	}
+	if (n > 1) {
+	    memset(brks + i, LINEBREAK_INSIDEACHAR, n - 1);
+	}
+	if (IsMandatoryBreak(text + i, n, end)) {
+	    brks[i + n - 1] = LINEBREAK_MUSTBREAK;
+	} else if (i + n < len && breaks[i + n]) {
+	    brks[i + n - 1] = LINEBREAK_ALLOWBREAK;
+	} else {
+	    brks[i + n - 1] = LINEBREAK_NOBREAK;
+	}
+    }
+    brks[len] = LINEBREAK_MUSTBREAK;
+    Tcl_Free(breaks);
 }
-
+
 /*
  * Local Variables:
  * mode: c
