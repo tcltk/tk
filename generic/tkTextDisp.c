@@ -1808,6 +1808,9 @@ LayoutDLine(
 	    if (chunkPtr->undisplayProc != NULL) {
 		chunkPtr->undisplayProc(textPtr, chunkPtr);
 	    }
+	    if (chunkPtr == tabChunkPtr) {
+		tabChunkPtr = NULL;	/* The tab moved to the next line. */
+	    }
 	    Tcl_Free(chunkPtr);
 	}
 	if (breakByteOffset != breakChunkPtr->numBytes) {
