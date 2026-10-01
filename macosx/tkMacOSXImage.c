@@ -1129,6 +1129,7 @@ XCopyArea(
 
     if (!dc.context) {
 	TkMacOSXDbgMsg("Invalid destination drawable - no context.");
+	TkMacOSXRestoreDrawingContext(&dc);
 	return BadDrawable;
     }
 
