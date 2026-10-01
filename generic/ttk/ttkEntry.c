@@ -2080,6 +2080,39 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     return EntryConfigure(interp, recordPtr, mask);
 }
 
+/* SpinboxDoLayout --
+ *	If the layout places the arrows at the top and at the bottom of the
+ *	same column, as the vista theme does, extend them to fill the space
+ *	between them, as in the native up-down control. [Bug 3301552]
+ */
+static void
+SpinboxDoLayout(void *recordPtr)
+{
+    Entry *entryPtr = (Entry *)recordPtr;
+    Ttk_Layout layout = entryPtr->core.layout;
+    Ttk_Element up, down;
+
+    EntryDoLayout(recordPtr);
+
+    up = Ttk_FindElement(layout, "uparrow");
+    down = Ttk_FindElement(layout, "downarrow");
+    if (up && down) {
+	Ttk_Box ub = Ttk_ElementParcel(up);
+	Ttk_Box db = Ttk_ElementParcel(down);
+
+	if (ub.x == db.x && ub.width == db.width
+		&& ub.y + ub.height < db.y) {
+	    int top = ub.y, bottom = db.y + db.height;
+	    int middle = top + (bottom - top) / 2;
+
+	    Ttk_PlaceElement(layout, up,
+		    Ttk_MakeBox(ub.x, top, ub.width, middle - top));
+	    Ttk_PlaceElement(layout, down,
+		    Ttk_MakeBox(db.x, middle, db.width, bottom - middle));
+	}
+    }
+}
+
 static const Ttk_Ensemble SpinboxCommands[] = {
     { "bbox",		EntryBBoxCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
@@ -2111,7 +2144,7 @@ static const WidgetSpec SpinboxWidgetSpec = {
     EntryPostConfigure,	/* postConfigureProc */
     TtkWidgetGetLayout,	/* getLayoutProc */
     TtkWidgetSize,		/* sizeProc */
-    EntryDoLayout,		/* layoutProc */
+    SpinboxDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };
 
@@ -2186,7 +2219,7 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(SpinboxLayout)
-    TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
+    TTK_GROUP("Spinbox.field", TTK_FILL_BOTH,
 	TTK_GROUP("null", TTK_PACK_RIGHT,
 	    TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
 	    TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
