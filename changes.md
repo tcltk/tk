@@ -1,13 +1,52 @@
 
-# Bug fixes since 9.1.0
- - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
- - [MS-Win: photo -gamma and -palette are ignored](https://core.tcl-lang.org/tk/tktview/32f2e1)
-
-
 The source code for Tk is managed by fossil.  Tk developers coordinate all
 changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
+
+Release Tk 9.1.1 arises from the check-in with tag `core-9-1-1`.
+
+Tk 9.1.1 continues the Tk 9.x series of releases.  The Tk 9.x series
+do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
+To make use of Tk 9.1.1, first a Tcl 9.0 or 9.1 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9.2+, but not
+in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.
+
+# Bug fixes
+ - [to allow select when no open/close indicator](https://core.tcl-lang.org/tk/tktview/7f3bea)
+ - [MS-Win: tk_getOpenFile and tk_getSaveFile leak memory when -initialfile is given more than once](https://core.tcl-lang.org/tk/tktview/7ca431)
+ - [double click is lost if processing a click takes too long](https://core.tcl-lang.org/tk/tktview/195423)
+ - [canvas scrolls when the scrollbar indicates that it cannot](https://core.tcl-lang.org/tk/tktview/214852)
+ - [Make --disable-bidi compile/work again.](https://core.tcl-lang.org/tk/tktview/0ec933)
+ - [configure: X11 header check always fails](https://core.tcl-lang.org/tk/tktview/9087fa)
+ - [Text widget: wrong bbox widths for non-ASCII characters with bidi text rendering](https://core.tcl-lang.org/tk/tktview/7579c3)
+ - [creating widgets is slow when an input method is active](https://core.tcl-lang.org/tk/tktview/5d52ad)
+ - [menu entries are drawn directly on the screen](https://core.tcl-lang.org/tk/tktview/791527)
+ - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
+ - [window is not focused on create](https://core.tcl-lang.org/tk/tktview/2effa4)
+ - [send to a dead application returned "target application died"](https://core.tcl-lang.org/tk/tktview/729f9c)
+ - [configure may not find cups.h](https://core.tcl-lang.org/tk/tktview/3ac12f)
+ - [MS-Win: fix grab-global window inresponsive after key Win-D](https://core.tcl-lang.org/tk/tktview/3138512)
+ - [X11 <KeyRelease> should not fire on repeated key](https://core.tcl-lang.org/tk/tktview/d3b964)
+ - [loop race in canvas Enter / Leave bindings](https://core.tcl-lang.org/tk/tktview/181359)
+ - [After "wm withdraw .;wm state . iconic", "wm state ." always returns "withdrawn"](https://core.tcl-lang.org/tk/tktview/d01ec1)
+ - [ttk -justify widget option is ignored](https://core.tcl-lang.org/tk/tktview/e6b5b7)
+ - [ttk::spinbox -font does not resize buttons](https://core.tcl-lang.org/tk/tktview/330155)
+ - [Button should stay in -overrelief state after event](https://core.tcl-lang.org/tk/tktview/110051)
+ - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
+ - [MS-Win: photo -gamma and -palette are ignored](https://core.tcl-lang.org/tk/tktview/32f2e1)
+ - [Displaced menus do not stay open](https://core.tcl-lang.org/tk/tktview/470331)
+ - [Menu items accidentally selected](https://core.tcl-lang.org/tk/tktview/680660)
+ - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
+ - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
+ - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
+ - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
+ - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
+ - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
+ - [text widget: Implement line breaks (UAX #14) and word/sentence breaks (UAX #29) for Unicode extended grapheme clusters utilizing the mojibake Unicode library, and implement a forward maximum-matching word segmenter using ICU-derived dictionaries for specific scripts without space (Khmer, Lao, Thai)](https://core.tcl-lang.org/tk/info/b7ded5749c)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

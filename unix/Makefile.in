@@ -383,14 +383,15 @@ CANV_OBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
 	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o tkImgSVGnano.o
 
-TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o \
+TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextGrapheme.o \
 	tkTextIndex.o tkTextLineBreak.o tkTextMark.o tkTextTag.o \
 	tkTextTagSet.o tkTextUndo.o tkTextWind.o
 
 # either tkUnixFont.o (default) or tkUnixRFont.o (if --enable-xft) or tkUnixBidiFont.o (if --enable-bidi)
 FONT_OBJS = @UNIX_FONT_OBJS@
 
-GENERIC_OBJS = tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBitField.o \
+GENERIC_OBJS = mojibake.o dictionaries.o khmer.o lao.o thai.o \
+	tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBitField.o \
 	tkBusy.o tkClipboard.o tkCmds.o tkColor.o tkConfig.o tkConsole.o \
 	tkCursor.o tkError.o tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o \
 	tkGeometry.o tkGrab.o tkGrid.o tkIntSet.o tkMain.o tkObj.o tkOldConfig.o \
@@ -447,7 +448,8 @@ TTK_DECLS = \
 	$(TTK_DIR)/ttk.decls
 
 GENERIC_SRCS = \
-	$(GENERIC_DIR)/tk3d.c $(GENERIC_DIR)/tkAccessibility.c $(GENERIC_DIR)/tkArgv.c \
+	$(GENERIC_DIR)/mojibake.c $(GENERIC_DIR)/dictionaries.c \
+	$(GENERIC_DIR)/khmer.c $(GENERIC_DIR)/lao.c $(GENERIC_DIR)/thai.c \ $(GENERIC_DIR)/tk3d.c $(GENERIC_DIR)/tkAccessibility.c $(GENERIC_DIR)/tkArgv.c \
 	$(GENERIC_DIR)/tkAtom.c $(GENERIC_DIR)/tkBind.c	\
 	$(GENERIC_DIR)/tkBitField.c $(GENERIC_DIR)/tkBitmap.c \
 	$(GENERIC_DIR)/tkBusy.c $(GENERIC_DIR)/tkClipboard.c \
@@ -483,7 +485,8 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
 	$(GENERIC_DIR)/tkImgListFormat.c $(GENERIC_DIR)/tkRangeList.c \
 	$(GENERIC_DIR)/tkText.c $(GENERIC_DIR)/tkTextBTree.c \
-	$(GENERIC_DIR)/tkTextDisp.c $(GENERIC_DIR)/tkTextImage.c \
+	$(GENERIC_DIR)/tkTextDisp.c $(GENERIC_DIR)/tkTextGrapheme.c \
+	$(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextLineBreak.c \
 	$(GENERIC_DIR)/tkTextMark.c $(GENERIC_DIR)/tkTextTag.c \
 	$(GENERIC_DIR)/tkTextTagSet.c $(GENERIC_DIR)/tkTextUndo.c \
@@ -1040,6 +1043,21 @@ tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
 SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
 	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
+mojibake.o: $(GENERIC_DIR)/mojibake.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/mojibake.c
+
+dictionaries.o: $(GENERIC_DIR)/dictionaries.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/dictionaries.c
+	
+khmer.o: $(GENERIC_DIR)/khmer.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/khmer.c
+
+lao.o: $(GENERIC_DIR)/lao.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/lao.c
+	
+thai.o: $(GENERIC_DIR)/thai.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/thai.c
+
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
 
@@ -1288,6 +1306,9 @@ tkTextBTree.o: $(GENERIC_DIR)/tkTextBTree.c
 
 tkTextDisp.o: $(GENERIC_DIR)/tkTextDisp.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextDisp.c
+
+tkTextGrapheme.o: $(GENERIC_DIR)/tkTextGrapheme.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextGrapheme.c
 
 tkTextImage.o: $(GENERIC_DIR)/tkTextImage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextImage.c

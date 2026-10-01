@@ -352,6 +352,13 @@ typedef struct TkMenu {
     TkMenuEntry *postedCascade;	/* Points to menu entry for cascaded submenu
 				 * that is currently posted or NULL if no
 				 * submenu posted. */
+    int scrollOffset;		/* Number of pixels by which the entries of
+				 * a menu higher than the screen are scrolled
+				 * up. */
+    int scrollArrowHeight;	/* Height of the areas with the scroll arrows
+				 * at the top and the bottom of a menu higher
+				 * than the screen, including the border, or
+				 * 0 if the menu is not scrolled. */
     struct TkMenu *nextInstancePtr;
 				/* The next instance of this menu in the
 				 * chain. */
@@ -531,6 +538,11 @@ MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
  */
 
 MODULE_SCOPE void	TkpComputeMenubarGeometry(TkMenu *menuPtr);
+MODULE_SCOPE int	TkMenuScrollDelta(TkMenu *menuPtr);
+MODULE_SCOPE void	TkMenuGetScrollRange(TkMenu *menuPtr, int *contentPtr,
+			    int *visiblePtr);
+MODULE_SCOPE void	TkMenuSetScrollOffset(TkMenu *menuPtr, int offset);
+MODULE_SCOPE void	TkMenuSeeEntry(TkMenu *menuPtr, TkMenuEntry *mePtr);
 MODULE_SCOPE void	TkpComputeStandardMenuGeometry(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpConfigureMenuEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE void	TkpDestroyMenu(TkMenu *menuPtr);

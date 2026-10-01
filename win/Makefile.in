@@ -322,6 +322,11 @@ TK_OBJS = \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \
 	stubs.$(OBJEXT) \
+	dictionaries.$(OBJEXT) \
+	khmer.$(OBJEXT) \
+	lao.$(OBJEXT) \
+	thai.$(OBJEXT) \
+	mojibake.$(OBJEXT) \
 	tk3d.$(OBJEXT) \
 	tkAccessibility.$(OBJEXT) \
 	tkArgv.$(OBJEXT) \
@@ -395,6 +400,7 @@ TK_OBJS = \
 	tkText.$(OBJEXT) \
 	tkTextBTree.$(OBJEXT) \
 	tkTextDisp.$(OBJEXT) \
+	tkTextGrapheme.$(OBJEXT) \
 	tkTextImage.$(OBJEXT) \
 	tkTextIndex.$(OBJEXT) \
 	tkTextLineBreak.$(OBJEXT) \
