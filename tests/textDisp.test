@@ -5594,6 +5594,212 @@ test textDisp-40.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-41.1 {codepoint wrap of logical lines of 512 bytes or more} -setup {
+    destroy .t1
+    text .t1 -wrap codepoint -font $fixedFont -width 20 -height 5
+    pack .t1
+} -body {
+    # Such a line overflowed the string buffer of the line break computation
+    # (detected by memory debugging builds).
+    .t1 insert end "[string repeat {ab } 200]\n"
+    update
+    .t1 delete 1.0 end
+    .t1 insert end [string repeat {cd } 300]
+    update
+    set starts {}
+    set i 1.0
+    while {[.t1 compare $i < "end - 1c"] && [llength $starts] < 100} {
+	lappend starts [.t1 get $i]
+	set next [.t1 index "[.t1 index "$i + 1 displaylines"] display linestart"]
+	if {[.t1 compare $next <= $i]} {
+	    break
+	}
+	set i $next
+    }
+    list [expr {[llength $starts] > 1}] [lsort -unique $starts]
+} -cleanup {
+    destroy .t1
+} -result {1 c}
+
+test textDisp-41.2 {codepoint wrap of a line with mandatory breaks inside} -setup {
+    destroy .t1
+    text .t1 -wrap codepoint -font $fixedFont -width 80
+    pack .t1
+} -body {
+    # The break locations after the first mandatory break were left undefined.
+    # Each mandatory break is displayed on a line of its own, as with -wrap word.
+    .t1 insert end "one\vtwo\fthree\u2028four five"
+    update
+    .t1 count -displaylines 1.0 end
+} -cleanup {
+    destroy .t1
+} -result 7
+
+test textDisp-41.3 {codepoint wrap of Thai text at word boundaries} -setup {
+    destroy .t1
+    text .t1 -wrap codepoint -font $fixedFont -width 20
+    pack .t1
+} -body {
+    # Thai words, written without spaces.
+    set words [list "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22" "\u0e21\u0e35" \
+	    "\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23" "\u0e21\u0e32\u0e01\u0e01\u0e27\u0e48\u0e32" \
+	    "\u0e2b\u0e01" "\u0e2a\u0e34\u0e1a" "\u0e25\u0e49\u0e32\u0e19" "\u0e04\u0e19"]
+    set wordStarts {}
+    set n 0
+    for {set k 0} {$k < 4} {incr k} {
+	foreach w $words {
+	    lappend wordStarts $n
+	    incr n [string length $w]
+	}
+    }
+    .t1 insert end [string repeat [join $words ""] 4]
+    update
+    set lines 0
+    set bad {}
+    set i 1.0
+    while {[.t1 compare $i < "end - 1c"] && $lines < 100} {
+	incr lines
+	if {[.t1 count -chars 1.0 $i] ni $wordStarts} {
+	    lappend bad $i
+	}
+	set next [.t1 index "[.t1 index "$i + 1 displaylines"] display linestart"]
+	if {[.t1 compare $next <= $i]} {
+	    break
+	}
+	set i $next
+    }
+    list [expr {$lines > 1}] $bad
+} -cleanup {
+    destroy .t1
+} -result {1 {}}
+
+test textDisp-41.4 {wrap mode set by a tag, different from the one of the widget} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # The break locations were only computed for the wrap mode of the widget.
+    foreach {widgetMode tagMode} {word codepoint char codepoint codepoint word} {
+	destroy .t1
+	text .t1 -wrap $widgetMode -font $fixedFont -width 20
+	pack .t1
+	.t1 tag configure T -wrap $tagMode
+	.t1 insert end "aaaa bbbb cccc dddd eeee ffff gggg hhhh" T
+	update
+	lappend res [.t1 count -displaylines 1.0 end]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {2 2 2}
+
+test textDisp-41.5 {word wrap of Thai text at word boundaries} -setup {
+    destroy .t1
+    text .t1 -wrap word -font $fixedFont -width 20
+    pack .t1
+} -body {
+    # Thai words, written without spaces.
+    set words [list "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22" "\u0e21\u0e35" \
+	    "\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23" "\u0e21\u0e32\u0e01\u0e01\u0e27\u0e48\u0e32" \
+	    "\u0e2b\u0e01" "\u0e2a\u0e34\u0e1a" "\u0e25\u0e49\u0e32\u0e19" "\u0e04\u0e19"]
+    set wordStarts {}
+    set n 0
+    for {set k 0} {$k < 4} {incr k} {
+	foreach w $words {
+	    lappend wordStarts $n
+	    incr n [string length $w]
+	}
+    }
+    .t1 insert end [string repeat [join $words ""] 4]
+    update
+    set lines 0
+    set bad {}
+    set i 1.0
+    while {[.t1 compare $i < "end - 1c"] && $lines < 100} {
+	incr lines
+	if {[.t1 count -chars 1.0 $i] ni $wordStarts} {
+	    lappend bad $i
+	}
+	set next [.t1 index "[.t1 index "$i + 1 displaylines"] display linestart"]
+	if {[.t1 compare $next <= $i]} {
+	    break
+	}
+	set i $next
+    }
+    list [expr {$lines > 1}] $bad
+} -cleanup {
+    destroy .t1
+} -result {1 {}}
+
+test textDisp-41.6 {word wrap ignores the other break locations of a line with Thai} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    foreach mode {word codepoint} {
+	destroy .t1
+	text .t1 -wrap $mode -font $fixedFont -width 13
+	pack .t1
+	.t1 insert end "xxxxxxx aaa-bbb ccc \u0e44\u0e17\u0e22"
+	update
+	lappend res [.t1 index "1.0 + 1 displaylines"]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1.8 1.12}
+
+test textDisp-41.7 {codepoint wrap of a line with elided text} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # The break locations skipped the elided text, which the layout counts.
+    foreach mode {word codepoint} {
+	destroy .t1
+	text .t1 -wrap $mode -font $fixedFont -width 20 -height 10
+	pack .t1
+	.t1 insert end "This last line wraps around four times with a little bit left on the last line."
+	update
+	.t1 tag configure elide -elide 1
+	foreach range {{1.20 1.26} {1.20 1.40}} {
+	    .t1 tag remove elide 1.0 end
+	    .t1 tag add elide {*}$range
+	    update
+	    lappend res [.t1 count -displaylines 1.0 end]
+	}
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {5 4 5 4}
+test textDisp-41.8 {codepoint wrap of logical lines joined by an elided newline} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # The break locations covered only the first line; their release looked up
+    # the logical line of the display line, which the elision had changed.
+    foreach mode {word codepoint} {
+	destroy .t1
+	text .t1 -wrap $mode -font $fixedFont -width 20 -height 10
+	pack .t1
+	for {set i 1} {$i <= 6} {incr i} {
+	    .t1 insert end "Line $i is long enough to wrap around twice\n"
+	}
+	update
+	.t1 tag configure elide -elide 1
+	for {set k 0} {$k < 2} {incr k} {
+	    .t1 tag add elide "3.0 lineend" 4.0
+	    update
+	    lappend res [.t1 count -displaylines 1.0 end]
+	    .t1 insert 4.5 "xx"
+	    .t1 tag remove elide 1.0 end
+	    update
+	    lappend res [.t1 count -displaylines 1.0 end]
+	}
+    }
+    expr {[lrange $res 0 3] eq [lrange $res 4 7] ? "same" : $res}
+} -cleanup {
+    destroy .t1
+} -result same
+
 #
 # TESTFILE CLEANUP
 #

@@ -1644,9 +1644,10 @@ TextWidgetObjCmd(
 		goto done;
 	    }
 	}
-	if ((length = GetByteLength(objv[2])) < textPtr->brksBufferSize) {
+	/* As in LayoutComputeBreakLocations: one more byte for the trailing nul. */
+	if ((length = GetByteLength(objv[2])) > textPtr->brksBufferSize || !textPtr->brksBuffer) {
 	    textPtr->brksBufferSize = MAX(length, textPtr->brksBufferSize + 512);
-	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize);
+	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
 	}
 	TkTextComputeBreakLocations(interp, Tcl_GetString(objv[2]), length, locale, textPtr->brksBuffer);
 	arrPtr = Tcl_NewObj();
@@ -3848,6 +3849,9 @@ DestroyText(
     if (textPtr->tabArrayPtr) {
 	Tcl_Free(textPtr->tabArrayPtr);
     }
+    if (textPtr->brksBuffer) {
+	Tcl_Free(textPtr->brksBuffer);
+    }
     if (textPtr->insertBlinkHandler) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
     }
@@ -3954,9 +3958,12 @@ TkTextParseLocale(
     char oldLocale[8];
     int result;
 
-    Tcl_IncrRefCount(localeObj);
+    Tcl_IncrRefCount(localePtr);
     result = TkLocaleOption.setProc(NULL, interp, NULL, &localeObj, locale, 0, oldLocale, 0);
-    Tcl_DecrRefCount(localeObj);
+    if (localeObj && localeObj != localePtr) {
+	Tcl_BounceRefCount(localeObj); /* the normalized value is not used */
+    }
+    Tcl_DecrRefCount(localePtr);
 
     return result == TCL_OK;
 }

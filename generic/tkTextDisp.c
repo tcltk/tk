@@ -150,9 +150,9 @@
 
 typedef struct TkTextBreakInfo {
     uint32_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
-#ifndef NDEBUG
-    uint32_t brksSize;	/* Size of break info array, only needed for debugging. */
-#endif
+    uint32_t brksSize;	/* Size of break info array. */
+    Tcl_HashEntry *hPtr;	/* Entry in breakInfoTable, whose key may not be the logical line
+			 * of the display lines anymore, after a change of the elision. */
     char *brks;		/* Array of break info, has exactly the char length of the logical line,
 			 * each cell is one of LINEBREAK_NOBREAK, LINEBREAK_ALLOWBREAK,
 			 * LINEBREAK_MUSTBREAK, or LINEBREAK_INSIDEACHAR. */
@@ -2592,6 +2592,59 @@ LayoutUpdateLineHeightInformation(
     }
 }
 
+/*
+ * Returns the first line after the logical line of the layout.
+ */
+
+static TkTextLine *
+LayoutEndOfLogicalLine(
+    const LayoutData *data)
+{
+    TkTextLine *linePtr = data->logicalLinePtr;
+
+    if (linePtr == TkBTreeGetLastLine(data->textPtr)) {
+	return linePtr->nextPtr;
+    }
+    return TkBTreeNextLogicalLine(data->textPtr->sharedTextPtr, data->textPtr, linePtr);
+}
+
+/*
+ * Returns the segment following segPtr in the logical line ending before endLinePtr,
+ * not skipping the elided content; *linePtrPtr is the line of segPtr.
+ */
+
+static TkTextSegment *
+LayoutNextSegmentOfLine(
+    TkTextSegment *segPtr,
+    TkTextLine **linePtrPtr,
+    const TkTextLine *endLinePtr)
+{
+    if (segPtr->nextPtr) {
+	return segPtr->nextPtr;
+    }
+    *linePtrPtr = (*linePtrPtr)->nextPtr;
+    return (*linePtrPtr && *linePtrPtr != endLinePtr) ? (*linePtrPtr)->segPtr : NULL;
+}
+
+/*
+ * Returns the byte size of the logical line, elided content included, which is the
+ * size of its break locations.
+ */
+
+static unsigned
+LayoutLogicalLineSize(
+    const LayoutData *data)
+{
+    TkTextLine *linePtr = data->logicalLinePtr;
+    TkTextLine *endLinePtr = LayoutEndOfLogicalLine(data);
+    unsigned size = 0;
+
+    for ( ; linePtr && linePtr != endLinePtr; linePtr = linePtr->nextPtr) {
+	size += linePtr->size;
+    }
+    return size;
+}
+
 static unsigned
 LayoutComputeBreakLocations(
     LayoutData *data)
@@ -2600,6 +2653,8 @@ LayoutComputeBreakLocations(
     TkText *textPtr = data->textPtr;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextSegment *segPtr = data->logicalLinePtr->segPtr;
+    TkTextLine *linePtr = data->logicalLinePtr;
+    TkTextLine *endLinePtr = LayoutEndOfLogicalLine(data);
     bool useUniBreak = data->textPtr->useUniBreak;
     char const *locale = useUniBreak ? textPtr->locale : NULL;
     char const *nextLocale = NULL;
@@ -2610,14 +2665,15 @@ LayoutComputeBreakLocations(
     /*
      * The codepoint line break computation requires the whole logical line (due to a
      * poor design of libunibreak), but separated by locale, because this line break
-     * algorithm is in general locale dependent.
+     * algorithm is in general locale dependent. The elided content is included, the
+     * layout counts its bytes too (in elided chunks).
      */
 
     while (segPtr) {
 	unsigned size = 0;
 	unsigned newTotalSize;
 
-	for ( ; segPtr; segPtr = segPtr->nextPtr) {
+	for ( ; segPtr; segPtr = LayoutNextSegmentOfLine(segPtr, &linePtr, endLinePtr)) {
 	    switch ((int) segPtr->typePtr->group) {
 	    case SEG_GROUP_CHAR: {
 		unsigned newSize;
@@ -2627,12 +2683,12 @@ LayoutComputeBreakLocations(
 
 		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
 			nextLocale = myLocale;
-			break;
+			goto endOfRun; /* this segment starts the next run */
 		    }
 		}
 		if ((newSize = size + segPtr->size) >= capacity) {
 		    capacity = MAX(2*capacity, newSize + 1);
-		    str = (char *)Tcl_Realloc(str, newSize);
+		    str = (char *)Tcl_Realloc(str, capacity);
 		}
 		memcpy(str + size, segPtr->body.chars, segPtr->size);
 		size = newSize;
@@ -2644,7 +2700,7 @@ LayoutComputeBreakLocations(
 
 		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
 			nextLocale = myLocale;
-			break;
+			goto endOfRun; /* this segment starts the next run */
 		    }
 		}
 
@@ -2669,11 +2725,9 @@ LayoutComputeBreakLocations(
 		/* Substitute with a TAB, so we can break at this point. */
 		str[size++] = '\t';
 		break;
-	    case SEG_GROUP_BRANCH:
-		segPtr = segPtr->body.branch.nextPtr;
-		break;
 	    }
 	}
+    endOfRun:
 	if (size > 0) {
 	    newTotalSize = totalSize + size;
 
@@ -3183,6 +3237,11 @@ LayoutSetupChunk(
     chunkPtr->stylePtr->refCount -= 1;
     chunkPtr->stylePtr = stylePtr = GetStyle(textPtr, segPtr);
 
+    if (data->numBytesSoFar == 0) {
+	/* The first chunk sets the wrap mode of the display line. */
+	data->wrapMode = (TkWrapMode)stylePtr->sValuePtr->wrapMode;
+    }
+
     if (data->wrapMode == TEXT_WRAPMODE_CODEPOINT) {
 	if (!data->brks) {
 	    Tcl_HashEntry *hPtr;
@@ -3196,9 +3255,10 @@ LayoutSetupChunk(
 		breakInfo = (TkTextBreakInfo *)Tcl_Alloc(sizeof(TkTextBreakInfo));
 		breakInfo->refCount = 1;
 		breakInfo->brks = NULL;
+		breakInfo->brksSize = 0;
+		breakInfo->hPtr = hPtr;
 		data->logicalLinePtr->changed = 0;
 		Tcl_SetHashValue(hPtr, breakInfo);
-		DEBUG(breakInfo->brksSize = 0);
 		DEBUG_ALLOC(tkTextCountNewBreakInfo++);
 	    } else {
 		breakInfo = (TkTextBreakInfo *)Tcl_GetHashValue(hPtr);
@@ -3218,6 +3278,8 @@ LayoutSetupChunk(
 		if (data->logicalLinePtr->changed) {
 		    isNew = 1;
 		    data->logicalLinePtr->changed = 0;
+		} else if (breakInfo->brksSize != LayoutLogicalLineSize(data)) {
+		    isNew = 1; /* the elision has changed the extent of the logical line */
 		}
 	    }
 
@@ -3232,7 +3294,7 @@ LayoutSetupChunk(
 		brksSize = LayoutComputeBreakLocations(data);
 		breakInfo->brks = (char *)Tcl_Realloc(breakInfo->brks, brksSize);
 		memcpy(breakInfo->brks, textPtr->brksBuffer, brksSize);
-		DEBUG(breakInfo->brksSize = brksSize);
+		breakInfo->brksSize = brksSize;
 		DEBUG(stats.breakInfo += 1);
 	    }
 
@@ -3257,7 +3319,6 @@ LayoutSetupChunk(
 	data->tabStyle = sValuePtr->tabStyle;
 	data->justify = (TkTextJustify)sValuePtr->justify;
 	data->rMargin = sValuePtr->rMargin;
-	data->wrapMode = (TkWrapMode)sValuePtr->wrapMode;
 	data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	data->width = dInfoPtr->maxX - dInfoPtr->x - data->rMargin;
 	data->maxX = (data->wrapMode == TEXT_WRAPMODE_NONE) ? -1 : MAX(data->width, data->x);
@@ -6040,11 +6101,8 @@ ReleaseLines(
 		Tcl_Free(dlPtr->breakInfo->brks);
 		DEBUG(dlPtr->breakInfo->brks = NULL);
 		DEBUG(dlPtr->breakInfo->brksSize = 0);
+		Tcl_DeleteHashEntry(dlPtr->breakInfo->hPtr);
 		Tcl_Free(dlPtr->breakInfo);
-		Tcl_DeleteHashEntry(Tcl_FindHashEntry(
-			&textPtr->sharedTextPtr->breakInfoTable,
-			(void *) TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr,
-			    TkTextIndexGetLine(&dlPtr->index))));
 		DEBUG_ALLOC(tkTextCountDestroyBreakInfo++);
 		DEBUG(dlPtr->breakInfo = NULL);
 	    }
@@ -14299,14 +14357,58 @@ FreeCharInfo(
 }
 
 /*
+ * Word wrap of the scripts written without spaces (Thai, Lao, Khmer, Myanmar): returns
+ * the last of their word boundaries in the first numBytes bytes of the chunk, or zero.
+ * The words are segmented in a window of the segment around the chunk, which looks
+ * ahead further than the longest dictionary word (96 bytes).
+ */
+
+#define WORD_BREAK_CONTEXT 256
+
+static int
+ComplexScriptBreakIndex(
+    const TkTextSegment *segPtr,
+    int byteOffset,		/* Start of the chunk in the segment. */
+    int numBytes)		/* Bytes of the chunk to consider. */
+{
+    const char *chars = segPtr->body.chars;
+    int start = byteOffset;
+    int end = MIN(segPtr->size, byteOffset + numBytes + WORD_BREAK_CONTEXT);
+    unsigned char *breaks;
+    int i, result = 0;
+
+    if (!TkTextHasComplexScript(chars + byteOffset, numBytes)) {
+	return 0;
+    }
+
+    /* Begin at the start of the word run, unless it is too far. */
+    while (start >= 3 && byteOffset - start < WORD_BREAK_CONTEXT
+	    && TkTextIsComplexScript(chars + start - 3)) {
+	start -= 3;
+    }
+
+    breaks = (unsigned char *)Tcl_Alloc(end - start + 1);
+    TkTextComputeWordBreaks(chars + start, end - start, breaks);
+    for (i = byteOffset + numBytes; i > byteOffset; --i) {
+	if (breaks[i - start] && i >= 3 && TkTextIsComplexScript(chars + i - 3)) {
+	    result = i - byteOffset;
+	    break;
+	}
+    }
+    Tcl_Free(breaks);
+    return result;
+}
+
+
+/*
  *----------------------------------------------------------------------
  *
  * ComputeBreakIndex --
  *
  *	Compute a break location. If we're in word wrap mode, a break
- *	can occurr after any space character, or at the end of the chunk
- *	if the the next segment (ignoring those with zero size) is not a
- *	character segment.
+ *	can occurr after any space character, at a word boundary of a script
+ *	written without spaces, or at the end of the chunk if the the next
+ *	segment (ignoring those with zero size) is not a character segment.
  *
  * Results:
  *	The computed break location.
@@ -14378,7 +14480,9 @@ ComputeBreakIndex(
 	     * characters.
 	     */
 
-	    for ( ; count > 0; --count, --p) {
+	    int wordBreak = ComplexScriptBreakIndex(segPtr, byteOffset, count);
+
+	    for ( ; count > wordBreak; --count, --p) {
 		switch (*p) {
 		case ' ':
 		    if (spaceMode == TEXT_SPACEMODE_EXACT) {
@@ -14388,6 +14492,9 @@ ComputeBreakIndex(
 		case '\t': case '\n': case '\v': case '\f': case '\r':
 		    return count;
 		}
+	    }
+	    if (wordBreak > 0) {
+		return wordBreak;
 	    }
 	} else {
 	    const char *brks;
