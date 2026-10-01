@@ -141,10 +141,10 @@ proc ::tk_dialog {w title text bitmap default args} {
     bind $w <Destroy> {set ::tk::Priv(button) -1}
 
     # 6. Withdraw the window, then update all the geometry information
-    # so we know how big it wants to be, then center the window in the
-    # display (Motif style) and de-iconify it.
+    # so we know how big it wants to be, then center the window over its
+    # parent (or in the display if the parent is not mapped) and de-iconify it.
 
-    ::tk::PlaceWindow $w
+    ::tk::PlaceWindow $w widget [winfo parent $w]
     tkwait visibility $w
 
     # 7. Set a grab and claim the focus too.
