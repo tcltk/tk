@@ -690,7 +690,6 @@ CreateCGImageFromDrawableRect(
 		    CGImageGetBitsPerPixel(cg_image) * width / 8,
 		    colorspace,
 		    CGImageGetBitmapInfo(cg_image));
-	    CGColorSpaceRelease(colorspace);
 	    if (cg_context) {
 		// Extract the subimage in the specified rectangle.
 		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect);
