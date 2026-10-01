@@ -665,6 +665,55 @@ TkPremultiplyRGBA(
 /*
  *----------------------------------------------------------------------
  *
+ * DisplayInstancePixmap --
+ *
+ *	Draws a portion of the pixmap of a photo image instance, which has
+ *	the -gamma and -palette of the image applied, clipped to the valid
+ *	region of the image.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A portion of the image gets rendered in a pixmap or window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#if !defined(TK_CAN_RENDER_RGBA) || defined(_WIN32)
+static void
+DisplayInstancePixmap(
+    PhotoInstance *instancePtr,	/* Instance to be displayed. */
+    Display *display,		/* Display on which to draw image. */
+    Drawable drawable,		/* Pixmap or window in which to draw image. */
+    int imageX, int imageY,	/* Upper-left corner of region within image to
+				 * draw. */
+    int width, int height,	/* Dimensions of region within image to
+				 * draw. */
+    int drawableX,int drawableY)/* Coordinates within drawable that correspond
+				 * to imageX and imageY. */
+{
+    /*
+     * modelPtr->validRegion describes which parts of the image contain valid
+     * data. We set this region as the clip mask for the gc, setting its
+     * origin appropriately, and use it when drawing the image.
+     */
+
+    XSetRegion(display, instancePtr->gc,
+	    instancePtr->modelPtr->validRegion);
+    XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
+	    drawableY - imageY);
+    XCopyArea(display, instancePtr->pixels, drawable, instancePtr->gc,
+	    imageX, imageY, (unsigned) width, (unsigned) height,
+	    drawableX, drawableY);
+    XSetClipMask(display, instancePtr->gc, None);
+    XSetClipOrigin(display, instancePtr->gc, 0, 0);
+}
+#endif
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkImgPhotoDisplay --
  *
  *	This function is invoked to draw a photo image.
@@ -706,6 +755,24 @@ TkImgPhotoDisplay(
     }
 
 #ifdef TK_CAN_RENDER_RGBA
+
+#ifdef _WIN32
+    /*
+     * The RGBA rendering below draws the pixels of the model, so it ignores
+     * -gamma and -palette, which are only applied to the pixmap of the
+     * instance. Draw images without partial transparency from that pixmap
+     * if they have a non-default gamma or palette.
+     */
+
+    if (!(instancePtr->modelPtr->flags & COMPLEX_ALPHA)
+	    && ((instancePtr->gamma != 1.0)
+	    || (instancePtr->palette != instancePtr->defaultPalette))) {
+	DisplayInstancePixmap(instancePtr, display, drawable, imageX, imageY,
+		width, height, drawableX, drawableY);
+	(void)XFlush(display);
+	return;
+    }
+#endif /* _WIN32 */
 
     /*
      * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
@@ -799,22 +866,9 @@ TkImgPhotoDisplay(
 	XDestroyImage(bgImg);
 	Tk_DeleteErrorHandler(handler);
     } else {
-	/*
-	 * modelPtr->validRegion describes which parts of the image contain valid
-	 * data. We set this region as the clip mask for the gc, setting its
-	 * origin appropriately, and use it when drawing the image.
-	 */
-
     fallBack:
-	XSetRegion(display, instancePtr->gc,
-		instancePtr->modelPtr->validRegion);
-	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
-		drawableY - imageY);
-	XCopyArea(display, instancePtr->pixels, drawable, instancePtr->gc,
-		imageX, imageY, (unsigned) width, (unsigned) height,
-		drawableX, drawableY);
-	XSetClipMask(display, instancePtr->gc, None);
-	XSetClipOrigin(display, instancePtr->gc, 0, 0);
+	DisplayInstancePixmap(instancePtr, display, drawable, imageX, imageY,
+		width, height, drawableX, drawableY);
     }
     (void)XFlush(display);
 #endif

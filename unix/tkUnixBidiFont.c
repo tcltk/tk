@@ -1810,6 +1810,26 @@ X11Shaper_ShapeString(
 		int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
 
 		/*
+		 * The look-ahead anchor above may be a later character of a
+		 * different script (e.g. an emoji followed by a Thai word picks
+		 * the Thai anchor).  If that face cannot render the first
+		 * character of this subrun, use the character's own face and
+		 * HB_SCRIPT_COMMON.  Otherwise the character is shaped with the
+		 * wrong face, comes back as .notdef (glyph 0), and is skipped
+		 * at draw time, leaving only a blank gap.
+		 */
+		{
+		    FcCharSet *anchorCs = fontPtr->faces[runFaceIndex].charset;
+
+		    if (!anchorCs ||
+			    !FcCharSetHasChar(anchorCs, ucs4Chars[subrunStart])) {
+			runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars,
+				subrunStart, 1);
+			subrunScript = HB_SCRIPT_COMMON;
+		    }
+		}
+
+		/*
 		 * Extend the subrun while both script and face remain
 		 * consistent.
 		 *
