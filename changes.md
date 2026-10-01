@@ -46,6 +46,7 @@ to the userbase.
  - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
  - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
  - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
+ - [text widget: Implement line breaks (UAX #14) and word/sentence breaks (UAX #29) for Unicode extended grapheme clusters utilizing the mojibake Unicode library, and implement a forward maximum-matching word segmenter using ICU-derived dictionaries for specific scripts without space (Khmer, Lao, Thai)](https://core.tcl-lang.org/tk/info/b7ded5749c)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
