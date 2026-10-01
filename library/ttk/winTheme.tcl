@@ -54,6 +54,20 @@ namespace eval ttk::theme::winnative {
 
         ttk::style configure TSpinbox -padding {2 0 16 0}
 
+	# As in the native up-down control, each arrow takes half of the
+	# height of the field (see SpinboxDoLayout).
+	ttk::style layout TSpinbox {
+	    Spinbox.field -sticky nswe -children {
+		null -side right -sticky ns -children {
+		    Spinbox.uparrow -side top -sticky e
+		    Spinbox.downarrow -side bottom -sticky e
+		}
+		Spinbox.padding -sticky nswe -children {
+		    Spinbox.textarea -sticky nswe
+		}
+	    }
+	}
+
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure Toolbutton -relief flat -padding {8 4}
