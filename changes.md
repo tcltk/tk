@@ -65,6 +65,7 @@ to the userbase.
  - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
  - [possible code issue: return before END_DRAWING](https://core.tcl-lang.org/tk/tktview/1c9965)
  - [ttk::spinbox doesn't expand its height on Linux](https://core.tcl-lang.org/tk/tktview/331303)
+ - [spinbox -values overrides the value of the -textvariable](https://core.tcl-lang.org/tk/tktview/143926)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
