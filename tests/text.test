@@ -9090,6 +9090,28 @@ test text-42.3 {count -displaychars over a visible hyphen segment} -setup {
     destroy .t
 } -result {12 1}
 
+test text-43.1 {brks: line break buffer of a new widget} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t brks "a b"
+} -cleanup {
+    destroy .t
+} -result {0 1 0}
+test text-43.2 {brks: string longer than the line break buffer} -setup {
+    destroy .t
+    text .t -wrap codepoint
+    pack .t
+} -body {
+    # The layout allocates a small buffer, which [brks] has to enlarge.
+    .t insert end "a b"
+    update
+    set res [.t brks [string repeat "a " 1000]]
+    list [llength $res] [lrange $res 0 3] [lsort -unique $res]
+} -cleanup {
+    destroy .t
+} -result {2000 {0 1 0 1} {0 1}}
+
 #
 # TESTFILE CLEANUP
 #

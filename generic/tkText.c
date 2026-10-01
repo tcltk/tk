@@ -1644,9 +1644,10 @@ TextWidgetObjCmd(
 		goto done;
 	    }
 	}
-	if ((length = GetByteLength(objv[2])) < textPtr->brksBufferSize) {
+	/* As in LayoutComputeBreakLocations: one more byte for the trailing nul. */
+	if ((length = GetByteLength(objv[2])) > textPtr->brksBufferSize || !textPtr->brksBuffer) {
 	    textPtr->brksBufferSize = MAX(length, textPtr->brksBufferSize + 512);
-	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize);
+	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
 	}
 	TkTextComputeBreakLocations(interp, Tcl_GetString(objv[2]), length, locale, textPtr->brksBuffer);
 	arrPtr = Tcl_NewObj();
