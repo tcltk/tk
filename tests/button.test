@@ -4006,6 +4006,7 @@ test button-16.1 {button keeps -overrelief after click, Bug 1100518} -setup {
     set res {}
     event generate .b <Enter> -x 5 -y 5
     lappend res [.b cget -relief]
+    # On Aqua the pressed state is drawn natively and the relief is not changed.
     event generate .b <ButtonPress-1> -x 5 -y 5
     lappend res [.b cget -relief]
     event generate .b <ButtonRelease-1> -x 5 -y 5
@@ -4015,7 +4016,8 @@ test button-16.1 {button keeps -overrelief after click, Bug 1100518} -setup {
 } -cleanup {
     destroy .b
     unset -nocomplain count res
-} -result {raised sunken raised flat 1}
+} -result [list raised [expr {[tk windowingsystem] eq "aqua" ? "raised" : "sunken"}] \
+	raised flat 1]
 
 
 imageFinish
