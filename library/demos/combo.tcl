@@ -44,6 +44,10 @@ set australianCities {
 set secondValue unchangable
 set ozCity Sydney
 set longValue 500
+set longValues {}
+for {set i 1} {$i <= 1000} {incr i} {
+    lappend longValues $i
+}
 
 ttk::labelframe $w.c1 -text "Fully Editable"
 ttk::combobox $w.c1.c -textvariable firstValue
@@ -54,7 +58,7 @@ ttk::combobox $w.c3.c -textvariable ozCity -state readonly \
 	-values $australianCities
 ttk::labelframe $w.c4 -text "Long List"
 ttk::combobox $w.c4.c -textvariable longValue -state readonly \
-	-values [lseq 1 1000] -height 200
+	-values $longValues -height 200
 bind $w.c1.c <Return> {
     if {[%W get] ni [%W cget -values]} {
 	%W configure -values [concat [%W cget -values] [list [%W get]]]
