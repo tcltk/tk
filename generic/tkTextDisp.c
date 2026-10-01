@@ -14303,14 +14303,58 @@ FreeCharInfo(
 }
 
 /*
+ * Word wrap of the scripts written without spaces (Thai, Lao, Khmer, Myanmar): returns
+ * the last of their word boundaries in the first numBytes bytes of the chunk, or zero.
+ * The words are segmented in a window of the segment around the chunk, which looks
+ * ahead further than the longest dictionary word (96 bytes).
+ */
+
+#define WORD_BREAK_CONTEXT 256
+
+static int
+ComplexScriptBreakIndex(
+    const TkTextSegment *segPtr,
+    int byteOffset,		/* Start of the chunk in the segment. */
+    int numBytes)		/* Bytes of the chunk to consider. */
+{
+    const char *chars = segPtr->body.chars;
+    int start = byteOffset;
+    int end = MIN(segPtr->size, byteOffset + numBytes + WORD_BREAK_CONTEXT);
+    unsigned char *breaks;
+    int i, result = 0;
+
+    if (!TkTextHasComplexScript(chars + byteOffset, numBytes)) {
+	return 0;
+    }
+
+    /* Begin at the start of the word run, unless it is too far. */
+    while (start >= 3 && byteOffset - start < WORD_BREAK_CONTEXT
+	    && TkTextIsComplexScript(chars + start - 3)) {
+	start -= 3;
+    }
+
+    breaks = (unsigned char *)Tcl_Alloc(end - start + 1);
+    TkTextComputeWordBreaks(chars + start, end - start, breaks);
+    for (i = byteOffset + numBytes; i > byteOffset; --i) {
+	if (breaks[i - start] && i >= 3 && TkTextIsComplexScript(chars + i - 3)) {
+	    result = i - byteOffset;
+	    break;
+	}
+    }
+    Tcl_Free(breaks);
+    return result;
+}
+
+
+/*
  *----------------------------------------------------------------------
  *
  * ComputeBreakIndex --
  *
  *	Compute a break location. If we're in word wrap mode, a break
- *	can occurr after any space character, or at the end of the chunk
- *	if the the next segment (ignoring those with zero size) is not a
- *	character segment.
+ *	can occurr after any space character, at a word boundary of a script
+ *	written without spaces, or at the end of the chunk if the the next
+ *	segment (ignoring those with zero size) is not a character segment.
  *
  * Results:
  *	The computed break location.
@@ -14382,7 +14426,9 @@ ComputeBreakIndex(
 	     * characters.
 	     */
 
-	    for ( ; count > 0; --count, --p) {
+	    int wordBreak = ComplexScriptBreakIndex(segPtr, byteOffset, count);
+
+	    for ( ; count > wordBreak; --count, --p) {
 		switch (*p) {
 		case ' ':
 		    if (spaceMode == TEXT_SPACEMODE_EXACT) {
@@ -14392,6 +14438,9 @@ ComputeBreakIndex(
 		case '\t': case '\n': case '\v': case '\f': case '\r':
 		    return count;
 		}
+	    }
+	    if (wordBreak > 0) {
+		return wordBreak;
 	    }
 	} else {
 	    const char *brks;

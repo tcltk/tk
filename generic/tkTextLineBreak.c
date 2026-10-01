@@ -265,40 +265,46 @@ TkTextComputeBreakLocations(
 }
 
 /*
- * Returns whether the text contains a script written without spaces between words
- * (Thai, Lao, Khmer, Myanmar), for which mojibake needs its dictionaries. Tests
- * only the first two bytes of the UTF-8 sequences, a superset is harmless.
+ * Returns whether the character at p belongs to a script written without spaces
+ * between words (Thai, Lao, Khmer, Myanmar), for which mojibake needs its
+ * dictionaries. Tests only the first two bytes of the UTF-8 sequence, a superset
+ * is harmless; p[1] must be readable.
  */
 
-static int
-HasComplexScript(
-    const unsigned char *text,
+bool
+TkTextIsComplexScript(
+    const char *p)
+{
+    unsigned char c = UCHAR(p[1]);
+
+    switch (UCHAR(p[0])) {
+    case 0xe0:	/* U+0E00-U+0EFF: Thai, Lao */
+	return 0xb8 <= c && c <= 0xbb;
+    case 0xe1:	/* U+1000-U+10BF: Myanmar, U+1780-U+17FF, U+19C0-U+19FF: Khmer */
+	return c <= 0x82 || c == 0x9e || c == 0x9f || c == 0xa7;
+    case 0xea:	/* U+A9C0-U+A9FF, U+AA40-U+AA7F: Myanmar extensions */
+	return c == 0xa7 || c == 0xa9;
+    }
+    return false;
+}
+
+/*
+ * Returns whether the text contains such a script.
+ */
+
+bool
+TkTextHasComplexScript(
+    const char *text,
     size_t len)
 {
     size_t i;
 
     for (i = 0; i + 1 < len; ++i) {
-	unsigned char c = text[i + 1];
-
-	switch (text[i]) {
-	case 0xe0:	/* U+0E00-U+0EFF: Thai, Lao */
-	    if (0xb8 <= c && c <= 0xbb) {
-		return 1;
-	    }
-	    break;
-	case 0xe1:	/* U+1000-U+10BF: Myanmar, U+1780-U+17FF, U+19C0-U+19FF: Khmer */
-	    if (c <= 0x82 || c == 0x9e || c == 0x9f || c == 0xa7) {
-		return 1;
-	    }
-	    break;
-	case 0xea:	/* U+A9C0-U+A9FF, U+AA40-U+AA7F: Myanmar extensions */
-	    if (c == 0xa7 || c == 0xa9) {
-		return 1;
-	    }
-	    break;
+	if (TkTextIsComplexScript(text + i)) {
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 /*
@@ -320,6 +326,24 @@ InitDictionaries(void)
 	}
 	Tcl_MutexUnlock(&dictMutex);
     }
+}
+
+/*
+ * Word boundaries with mojibake (UAX #29, and the dictionaries for the scripts written
+ * without spaces): breaks[i] is non-zero for a boundary before byte i, 0 <= i <= len.
+ */
+
+void
+TkTextComputeWordBreaks(
+    const char *text,
+    size_t len,
+    unsigned char *breaks)	/* len + 1 entries */
+{
+    unsigned char *tmp = (unsigned char *)Tcl_Alloc(len + 1);
+
+    InitDictionaries();
+    mojibake_word_breaks_with_dict(text, len, breaks, tmp);
+    Tcl_Free(tmp);
 }
 
 /*
@@ -387,7 +411,7 @@ ComputeBreakLocations(
     end = text + len;
     breaks = (unsigned char *)Tcl_Alloc(len + 1);
 
-    if (HasComplexScript(text, len)) {
+    if (TkTextHasComplexScript((const char *) text, len)) {
 	unsigned char *tmp = (unsigned char *)Tcl_Alloc(2*(len + 1));
 
 	InitDictionaries();
