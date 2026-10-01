@@ -3814,6 +3814,16 @@ TextInvalidateLineMetrics(
  *	these calls will map and unmap embedded windows respectively, which I
  *	would hope isn't exactly necessary!
  *
+ *	mojibake audit note: this function walks display-line and byte
+ *	boundaries only (TkTextIndexBackBytes/TkTextIndexForwBytes and the
+ *	dlPtr->byteCount produced by LayoutDLine) -- it contains no
+ *	codepoint- or cluster-level iteration of its own, so there is
+ *	nothing here for mojibake to replace. Display-line boundaries are
+ *	themselves always chunk boundaries, and chunk boundaries are now
+ *	guaranteed cluster-safe by the mojibake_grapheme_prev() clamp in
+ *	TkTextCharLayoutProc, so this function inherits that guarantee for
+ *	free rather than needing its own mojibake call.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -8252,10 +8262,57 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
+    /*
+     * mojibake integration: CharChunkMeasureChars() and the shaping
+     * backend it drives (HarfBuzz/SheenBidi/CoreText/Uniscribe) measure
+     * and break in codepoint / shaping-run units, which are not
+     * guaranteed to land on Unicode extended grapheme cluster (UAX #29)
+     * boundaries -- e.g. a Thai tone mark, a Devanagari/Bengali virama
+     * holding two consonants together, a Khmer subscript stack, or an
+     * emoji ZWJ sequence can all be split mid-cluster by a purely
+     * pixel-driven cutoff. Snap bytesThatFit back to the nearest cluster
+     * boundary at or before the measured cutoff so a cluster is never
+     * divided between this chunk and the next; mojibake is the only
+     * authority consulted for where that boundary is.
+     */
+    if (bytesThatFit > 0 && bytesThatFit < maxBytes) {
+	size_t clusterStart;
+
+	if (mojibake_grapheme_prev(p, (size_t) maxBytes,
+		(size_t) bytesThatFit + 1, &clusterStart)
+		&& clusterStart < (size_t) bytesThatFit) {
+	    bytesThatFit = (Tcl_Size) clusterStart;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
+		    lineOffset + bytesThatFit, lineOffset, -1, chunkPtr->x,
+		    -1, 0, &nextX);
+#else /* !TK_LAYOUT_WITH_BASE_CHUNKS */
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, p, bytesThatFit,
+		    0, -1, chunkPtr->x, -1, 0, &nextX);
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	}
+    }
+
     if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && (noCharsYet & 1)) {
-	    int ch;
-	    Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+	    /*
+	     * Nothing fits, but this display line has no characters on it
+	     * yet, so we must place at least one atomic unit or the line
+	     * would never advance. That unit is a full grapheme cluster --
+	     * e.g. a base consonant plus its dependent vowel/tone mark, or
+	     * a multi-codepoint emoji ZWJ sequence -- not a single
+	     * codepoint, so we ask mojibake for the cluster length rather
+	     * than calling Tcl_UtfToUniChar() for one codepoint.
+	     */
+	    Tcl_Size chLen;
+	    size_t clusterEnd;
+
+	    if (mojibake_grapheme_next(p, (size_t) maxBytes, 0, &clusterEnd)) {
+		chLen = (Tcl_Size) clusterEnd;
+	    } else {
+		int ch;
+		chLen = Tcl_UtfToUniChar(p, &ch);
+	    }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -8379,111 +8436,161 @@ TkTextCharLayoutProc(
 
     /*
      * Compute a break location. If we're in word wrap mode, a break can occur
-     * after any space character, or at the end of the chunk if the next
-     * segment (ignoring those with zero size) is not a character segment.
+     * at UAX #14 line break opportunities (including CJK) plus
+     * dictionary word boundaries for Thai/Lao/Khmer/Myanmar.
+     * Primary: mojibake_line_breaks_with_dict over the whole logical remainder
+     * (maxBytes), then pick last opportunity that fits within bytesThatFit.
+     * This fixes Thai where forward max-match needs lookahead beyond the
+     * pixel-fitting prefix.
      */
 
     if (wrapMode != TEXT_WRAPMODE_WORD) {
 	chunkPtr->breakIndex = chunkPtr->numBytes;
     } else {
-	/*
-	 * Scan backwards through the chunk looking for a word-break
-	 * opportunity.  We must walk UTF-8 character boundaries rather than
-	 * raw bytes, otherwise we can mis-identify a continuation byte as an
-	 * ASCII space character (0x20 is a valid continuation byte in some
-	 * legacy encodings, and even in valid UTF-8 the original byte-level
-	 * reverse walk can start mid-character after CharChunkMeasureChars
-	 * splits the buffer at an arbitrary pixel boundary).
-	 *
-	 * Don't use isspace(); effects are unpredictable and can lead to odd
-	 * word-wrapping problems on some platforms.  Also don't use
-	 * Tcl_UniCharIsSpace here either, as it identifies non-breaking spaces
-	 * as places to break.  We only want the ASCII whitespace characters,
-	 * checked via Tcl_UtfPrev so every step lands on a character boundary.
-	 *
-	 * RTL note: for RTL chunks (Arabic, Hebrew, …) the platform font
-	 * back-end (Uniscribe on Windows, HarfBuzz/Xft on X11) returns
-	 * bytesThatFit as a logical-byte count from the start of the segment
-	 * slice.  In RTL visual order the logical-start bytes correspond to the
-	 * right-most (trailing) glyphs, so a word-boundary space at the visual
-	 * right edge sits at a *low* logical byte offset, not near bytesThatFit.
-	 * The standard backward scan from bytesThatFit will therefore miss it.
-	 *
-	 * To handle RTL text we perform two scans:
-	 *   (a) the standard backward scan from bytesThatFit – covers LTR and
-	 *       mixed text as before, now UTF-8 safe.
-	 *   (b) if (a) finds nothing and the chunk is RTL, a forward scan from
-	 *       byte 0 looking for the first ASCII space; that space is the
-	 *       visual trailing separator between the last word on this display
-	 *       line and the first word on the next wrapped line.  We absorb it
-	 *       into the current chunk so the next line starts cleanly.
-	 */
+	const char *chunkStart = p;
+	size_t bFit = (size_t)bytesThatFit;
+	size_t bTotal = (size_t)maxBytes;
 
-	const char *chunkStart = p;           /* logical byte 0 of this slice */
-	const char *chunkEnd   = p + bytesThatFit; /* one past last byte kept */
-	const char *scanPtr    = chunkEnd;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	bool foundBreak  = false;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	unsigned char *gAll = (unsigned char*)Tcl_Alloc(bTotal+1);
+	unsigned char *lAll = (unsigned char*)Tcl_Alloc(bTotal+1);
+	unsigned char *wAll = (unsigned char*)Tcl_Alloc(bTotal+1);
 
-	while (scanPtr > chunkStart) {
-	    int ch3;
-	    const char *prevPtr = Tcl_UtfPrev(scanPtr, chunkStart);
-	    Tcl_UtfToUniChar(prevPtr, &ch3);
-	    switch (ch3) {
-	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
-		/* breakIndex is the byte offset *after* the space character */
-		chunkPtr->breakIndex = (Tcl_Size)(prevPtr - chunkStart) + 1;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		foundBreak = true;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-		goto checkForNextChunk;
+	if (gAll && lAll && wAll) {
+	    mojibake_line_breaks_with_dict(chunkStart, bTotal, lAll, gAll, wAll);
+
+	    /* Backward search for last line break opportunity within bFit */
+	    Tcl_Size best = -1;
+	    size_t off = bFit;
+	    if (off > 0 && off < bTotal && !gAll[off]) {
+		size_t adj;
+		mojibake_grapheme_prev(chunkStart, bTotal, off, &adj);
+		off = adj;
 	    }
-	    scanPtr = prevPtr;
-	}
-
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	if (!foundBreak && ciPtr->isRtl) {
-	    /*
-	     * RTL forward scan: the word separator that visually trails this
-	     * run sits at a low logical byte offset.  Walk forward from byte 0;
-	     * the first ASCII space found is the break point.  Include the
-	     * space in this chunk (absorb it) so the next wrapped line begins
-	     * with a non-space character.
-	     *
-	     * This path is reached on all three platforms:
-	     *   - Windows and macOS: TK_LAYOUT_WITH_BASE_CHUNKS is always
-	     *     defined and bidi support is built-in.
-	     *   - X11: TK_LAYOUT_WITH_BASE_CHUNKS is defined when
-	     *     --enable-bidi is passed (which also defines HAVE_BIDI).
-	     * isRtl is a field of the TK_LAYOUT_WITH_BASE_CHUNKS CharInfo
-	     * variant, so this guard is both necessary and sufficient.
-	     */
-	    const char *fwdPtr = chunkStart;
-	    while (fwdPtr < chunkEnd) {
-		int ch4;
-		Tcl_Size chLen4 = Tcl_UtfToUniChar(fwdPtr, &ch4);
-		if (chLen4 <= 0) {
+	    while (off > 0) {
+		size_t prev;
+		mojibake_grapheme_prev(chunkStart, bTotal, off, &prev);
+		if (prev >= off) break;
+		/*
+		 * A candidate must be BOTH a raw UAX#14 line-break-class
+		 * opportunity (lAll) AND a genuine word boundary per the
+		 * dictionary segmenter (wAll) before we accept it. lAll
+		 * alone is not enough for Thai/Lao/Khmer/Myanmar: their
+		 * default line-break class is "complex context", which is
+		 * breakable pretty much anywhere absent dictionary input,
+		 * so relying on lAll alone lets us cut inside a dictionary
+		 * word (e.g. between the syllables of Thai "ถูกต้อง" or Lao
+		 * "ຄວາມສະເໜີພາບ", both of which are a single lexical item).
+		 * wAll is where mojibake_line_breaks_with_dict records the
+		 * dictionary-aware word boundary for exactly this purpose --
+		 * skipping it means we never actually applied the dictionary.
+		 */
+		if (lAll[prev] && gAll[prev] && wAll[prev]) {
+		    best = (Tcl_Size)prev;
 		    break;
 		}
-		if (ch4 == ' ' || ch4 == '\t') {
-		    chunkPtr->breakIndex = (Tcl_Size)(fwdPtr - chunkStart) + chLen4;
+		if (lAll[off] && gAll[off] && wAll[off]) {
+		    best = (Tcl_Size)off;
 		    break;
 		}
-		fwdPtr += chLen4;
+		off = prev;
 	    }
-	}
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    checkForNextChunk:
-	if ((bytesThatFit + byteOffset) == segPtr->size) {
-	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
-		    nextPtr = nextPtr->nextPtr) {
-		if (nextPtr->size != 0) {
-		    if (nextPtr->typePtr != &tkTextCharType) {
-			chunkPtr->breakIndex = chunkPtr->numBytes;
+	    /* Also handle ASCII space / tab via UAX#14 already includes them,
+	     * but keep RTL forward scan for visual trailing separator */
+	    if (best == -1) {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		if (ciPtr->isRtl) {
+		    const char *fwdPtr = chunkStart;
+		    const char *chunkEnd = chunkStart + bFit;
+		    while (fwdPtr < chunkEnd) {
+			int ch4;
+			Tcl_Size chLen4 = Tcl_UtfToUniChar(fwdPtr, &ch4);
+			if (chLen4 <= 0) break;
+			if (ch4 == ' ' || ch4 == '\t') {
+			    size_t pos = (size_t)(fwdPtr - chunkStart);
+			    size_t cand = pos + (size_t)chLen4;
+			    size_t cEnd;
+			    if (mojibake_grapheme_next(chunkStart, bTotal, pos, &cEnd) && cEnd == cand) {
+				best = (Tcl_Size)cand;
+				break;
+			    }
+			}
+			fwdPtr += chLen4;
 		    }
-		    break;
+		}
+#endif
+		/*
+		 * No genuine UAX#14/dict break opportunity inside the fitting
+		 * range. Do NOT invent one here. This chunk may be just one
+		 * fragment of a single unbroken word that got split into
+		 * several TkTextDispChunks purely because of tag boundaries
+		 * (e.g. a single-character tag applied in the middle of a
+		 * long word) -- such a fragment must not be reported to
+		 * LayoutDLine as a valid word-wrap point, or the line will
+		 * wrap in the middle of the word at whatever tag/segment
+		 * boundary happens to fall there instead of at the real word
+		 * boundary. Leaving best == -1 (and therefore breakIndex ==
+		 * -1 below) is correct: LayoutDLine already falls back to
+		 * cutting at the last fitted character chunk (breakChunkPtr
+		 * == NULL case) when no chunk anywhere on the line ever
+		 * records a real break, and that fallback point is already
+		 * grapheme-safe thanks to the bytesThatFit snapping above.
+		 */
+	    }
+
+	    if (best > 0) {
+		size_t b = (size_t)best;
+		while (b < bFit && chunkStart[b] == ' ') {
+		    b++;
+		}
+		chunkPtr->breakIndex = (Tcl_Size)b;
+	    } else {
+		/*
+		 * No acceptable UAX14+grapheme+dictionary break inside the fit.
+		 * Mark this chunk as having no internal break. LayoutDLine will
+		 * fall back to the last fitted grapheme boundary.
+		 */
+		chunkPtr->breakIndex = -1;
+	    }
+	} else {
+	    /*
+	     * Could not allocate break-property arrays. We cannot determine
+	     * any real break opportunity, so mark this chunk as having none.
+	     */
+	    chunkPtr->breakIndex = -1;
+	}
+
+	if (gAll) Tcl_Free(gAll);
+	if (lAll) Tcl_Free(lAll);
+	if (wAll) Tcl_Free(wAll);
+
+	if (chunkPtr->breakIndex == -1) {
+	    if ((bytesThatFit + byteOffset) == segPtr->size) {
+		/*
+		 * We've exhausted this chunk's own segment with no internal
+		 * break opportunity found. Look at what (if anything) comes
+		 * next: if it's another char segment, the "word" continues
+		 * there and this chunk correctly stays a non-break (-1). But
+		 * if the next non-empty segment is a non-text one (mark,
+		 * image, window, ...) OR there is no next segment at all --
+		 * i.e. this is the tail of the entire line/buffer -- then
+		 * nothing can extend this run any further, so the end of
+		 * this chunk IS a legitimate break point. Failing to treat
+		 * "no next segment" as such caused the final chunk of a line
+		 * to be silently discarded by LayoutDLine's "throw away
+		 * everything after the last break" trim, corrupting line
+		 * heights/counts for the whole buffer.
+		 */
+		bool nextIsText = false;
+
+		for (nextPtr = segPtr->nextPtr; nextPtr != NULL; nextPtr = nextPtr->nextPtr) {
+		    if (nextPtr->size != 0) {
+			nextIsText = (nextPtr->typePtr == &tkTextCharType);
+			break;
+		    }
+		}
+		if (!nextIsText) {
+		    chunkPtr->breakIndex = chunkPtr->numBytes;
 		}
 	    }
 	}
