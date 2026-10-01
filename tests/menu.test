@@ -4579,6 +4579,36 @@ test menu-44.8 {yview errors} -setup {
 } -returnCodes error -result {bad argument "foo": must be pages or units}
 rename tallMenu {}
 
+test menu-45.1 {tk_popup followed by postcascade generates Leave - bug 873655ffff} -setup {
+    destroy .top .m
+    set log {}
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top +100+100
+    button .top.b -text Button
+    pack .top.b -padx 50 -pady 50
+    menu .m -tearoff 0
+    menu .m.c -tearoff 0
+    .m add cascade -menu .m.c -label cascade
+    .m.c add command -label Hi
+    update
+    event generate .top.b <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
+    update
+    bind .top.b <Leave> {lappend log %m}
+    tk_popup .m [winfo rootx .top.b] \
+	    [expr {[winfo rooty .top.b] + [winfo height .top.b]}]
+    .m activate 0
+    .m postcascade 0
+    update
+    set log
+} -cleanup {
+    .m unpost
+    grab release .m
+    destroy .top .m
+    unset log
+} -result {NotifyGrab}
+
 #
 # TESTFILE CLEANUP
 #
