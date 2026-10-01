@@ -354,9 +354,7 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     list [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
-test textDisp-2.7 {LayoutDLine, marks and tags} -constraints {win32} -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping
-    # with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
+test textDisp-2.7 {LayoutDLine, marks and tags} -body {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
@@ -1573,11 +1571,9 @@ test textDisp-9.6 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag haveBigFontTwiceLargerThanTextFont} \
-    -constraints {!win32} \
+test textDisp-9.7 {TkTextRedrawTag} \
+    -constraints haveBigFontTwiceLargerThanTextFont \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Uniscribe (Windows); run on macOS and X11.
 	.t configure -wrap char
 	.t delete 1.0 end
 	.t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -2678,10 +2674,7 @@ test textDisp-16.40 {text count -xpixels} {
       [.t count -xpixels 1.0 end]
 } [list [expr {5*$fixedWidth}] [expr {-5*$fixedWidth}] 0 [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] 0]
 test textDisp-16.41 {text count -xpixels with indices in elided lines} \
-    -constraints {win32} \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
 	set res {}
 	.t delete 1.0 end
 	for {set i 1} {$i < 40} {incr i} {
@@ -3485,10 +3478,7 @@ test textDisp-20.5 {FindDLine} -setup {
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 test textDisp-21.1 {TkTextPixelIndex} \
-    -constraints {!win32} \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Uniscribe (Windows); run on macOS and X11.
 	.t yview 48.0
 	set off [expr {[bo]+3}]
 	list [.t index @-10,-10] [.t index @$off,$off] [.t index @[expr {[xchar 2]+2}],$off] \
