@@ -45,6 +45,7 @@ to the userbase.
  - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
  - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
  - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
+ - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
