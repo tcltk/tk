@@ -24,7 +24,7 @@
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 200
-#define MAX_GLYPHS 512
+#define MAX_GLYPHS 2048
 #define MAX_FONTS 200
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
@@ -86,7 +86,7 @@ typedef struct {
     int next;
 } UnixFtColorList;
 
-#define MAX_CLUSTER_BREAKS 512
+#define MAX_CLUSTER_BREAKS 2048
 
 /*
  * ShapedGlyphBuffer --
