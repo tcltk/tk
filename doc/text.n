@@ -499,11 +499,9 @@ If this option is enabled then wrap mode \fBcodepoint\fR (see option
 for the computation of line breaks, but only if this library is available
 (currently only UNIX). This library even supports language dependent line
 breaking. Otherwise, if this option is not enabled, or if \fIlibunibreak\fR is not
-available, a simpler algorithm (also based on the recommendations of the
-Unicode consortium, but restricted to Latin-1 and most non-language
-dependent characters, without regarding combined marks, and without language
-support) will be used for the computation of the breaks. Per default this
-option is not enabled.
+available, the built-in implementation of the Unicode line breaking algorithm
+(UAX #14) will be used, with dictionaries for the word boundaries of Thai, Lao
+and Khmer. Per default this option is not enabled.
 .RS
 .PP
 For a simple test whether the unibreak libary is available see command \fBbrks\fR.
@@ -517,18 +515,16 @@ characters that do not fit on the screen are not displayed. In the other
 modes each line of text will be broken up into several screen lines if
 necessary to keep all the characters visible. In \fBchar\fR mode a screen
 line break may occur after any character; in \fBword\fR mode a line break
-will only be made at word boundaries. The elaborated mode \fBcodepoint\fR is
-based on Unicode code points, and conforms exactly (with \fIlibunibreak\fR) or
-mostly (with internal algorithm) to the recommendations of the Unicode
-consortium. If option \fB\-useunibreak\fR is set, then the unibreak library
+will only be made at word boundaries: after white space, and between the words
+of Thai, Lao and Khmer, which are written without spaces. The elaborated mode
+\fBcodepoint\fR follows the Unicode line breaking algorithm (UAX #14). If
+option \fB\-useunibreak\fR is set, then the unibreak library
 (from Wu Yongwei) will be used for the line break computation. This library
 even supports locale dependent line breaking (see option \fB\-locale\fR).
 Otherwise, if \fB\-useunibreak\fR is not set, or if the
-unibreak library is not available, a simpler algorithm \- also based on the
-recommendations of the Unicode consortium, but restricted to Latin-1 and
-most non-language dependent characters, without regarding combined marks,
-and without language support \- will be used for the computation of the
-breaks.
+unibreak library is not available, the built-in implementation of this
+algorithm will be used, with dictionaries for the word boundaries of Thai, Lao
+and Khmer.
 .BE
 .SH DESCRIPTION
 .PP
@@ -2129,10 +2125,9 @@ optional locale is specified (see widget option \fB\-locale\fR),
 then the external library \fIlibunibreak\fR (from Wu
 Yongwei) will be used for the line break computation; an error will be
 thrown if this library is not available. If no locale is specified,
-then the internal wrap algorithm will be used: also based on the
-recommendations of the Unicode consortium, but restricted to Latin-1 and
-most non-language dependent characters, without regarding combined marks,
-and without language support.
+then the built-in implementation of the Unicode line breaking algorithm
+(UAX #14) will be used, with dictionaries for the word boundaries of Thai,
+Lao and Khmer.
 .RS
 .PP
 This command has three purposes:
