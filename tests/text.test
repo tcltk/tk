@@ -35,6 +35,8 @@ wm positionfrom . user
 wm deiconify .
 
 text .t; .t debug on; destroy .t
+
+testConstraint memory [llength [info commands memory]]
 
 #
 # TESTS
@@ -9111,6 +9113,30 @@ test text-43.2 {brks: string longer than the line break buffer} -setup {
 } -cleanup {
     destroy .t
 } -result {2000 {0 1 0 1} {0 1}}
+
+test text-43.3 {brks: line break buffer is freed with the widget} -constraints {
+    memory
+} -setup {
+    destroy .t
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+} -body {
+    # Measured against a widget without [brks], to only see its buffer.
+    expr {[growth {text .t; .t brks "a b"; destroy .t}] - [growth {text .t; destroy .t}]}
+} -cleanup {
+    rename getbytes {}
+    rename growth {}
+} -result 0
 
 #
 # TESTFILE CLEANUP

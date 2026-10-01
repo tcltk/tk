@@ -3849,6 +3849,9 @@ DestroyText(
     if (textPtr->tabArrayPtr) {
 	Tcl_Free(textPtr->tabArrayPtr);
     }
+    if (textPtr->brksBuffer) {
+	Tcl_Free(textPtr->brksBuffer);
+    }
     if (textPtr->insertBlinkHandler) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
     }
