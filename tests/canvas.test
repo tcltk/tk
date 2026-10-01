@@ -1383,6 +1383,11 @@ test canvas-24.1 {Enter and Leave bindings which move the current item do not ha
     .c bind card <Enter> {.c move card 0 -30}
     .c bind card <Leave> {.c move card 0 30}
     event generate .c <Motion> -x 100 -y 125
+    # [update idletasks] and [update] process idle handlers until there
+    # are none left, as Tk on macOS does when it draws a window. They
+    # must return too.
+    update idletasks
+    update
     # The timer does not fire if the event loop is blocked.
     after 200 {set done 1}
     vwait done
