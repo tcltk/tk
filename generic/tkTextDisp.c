@@ -150,9 +150,9 @@
 
 typedef struct TkTextBreakInfo {
     uint32_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
-#ifndef NDEBUG
-    uint32_t brksSize;	/* Size of break info array, only needed for debugging. */
-#endif
+    uint32_t brksSize;	/* Size of break info array. */
+    Tcl_HashEntry *hPtr;	/* Entry in breakInfoTable, whose key may not be the logical line
+			 * of the display lines anymore, after a change of the elision. */
     char *brks;		/* Array of break info, has exactly the char length of the logical line,
 			 * each cell is one of LINEBREAK_NOBREAK, LINEBREAK_ALLOWBREAK,
 			 * LINEBREAK_MUSTBREAK, or LINEBREAK_INSIDEACHAR. */
@@ -2592,6 +2592,59 @@ LayoutUpdateLineHeightInformation(
     }
 }
 
+/*
+ * Returns the first line after the logical line of the layout.
+ */
+
+static TkTextLine *
+LayoutEndOfLogicalLine(
+    const LayoutData *data)
+{
+    TkTextLine *linePtr = data->logicalLinePtr;
+
+    if (linePtr == TkBTreeGetLastLine(data->textPtr)) {
+	return linePtr->nextPtr;
+    }
+    return TkBTreeNextLogicalLine(data->textPtr->sharedTextPtr, data->textPtr, linePtr);
+}
+
+/*
+ * Returns the segment following segPtr in the logical line ending before endLinePtr,
+ * not skipping the elided content; *linePtrPtr is the line of segPtr.
+ */
+
+static TkTextSegment *
+LayoutNextSegmentOfLine(
+    TkTextSegment *segPtr,
+    TkTextLine **linePtrPtr,
+    const TkTextLine *endLinePtr)
+{
+    if (segPtr->nextPtr) {
+	return segPtr->nextPtr;
+    }
+    *linePtrPtr = (*linePtrPtr)->nextPtr;
+    return (*linePtrPtr && *linePtrPtr != endLinePtr) ? (*linePtrPtr)->segPtr : NULL;
+}
+
+/*
+ * Returns the byte size of the logical line, elided content included, which is the
+ * size of its break locations.
+ */
+
+static unsigned
+LayoutLogicalLineSize(
+    const LayoutData *data)
+{
+    TkTextLine *linePtr = data->logicalLinePtr;
+    TkTextLine *endLinePtr = LayoutEndOfLogicalLine(data);
+    unsigned size = 0;
+
+    for ( ; linePtr && linePtr != endLinePtr; linePtr = linePtr->nextPtr) {
+	size += linePtr->size;
+    }
+    return size;
+}
+
 static unsigned
 LayoutComputeBreakLocations(
     LayoutData *data)
@@ -2600,6 +2653,8 @@ LayoutComputeBreakLocations(
     TkText *textPtr = data->textPtr;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextSegment *segPtr = data->logicalLinePtr->segPtr;
+    TkTextLine *linePtr = data->logicalLinePtr;
+    TkTextLine *endLinePtr = LayoutEndOfLogicalLine(data);
     bool useUniBreak = data->textPtr->useUniBreak;
     char const *locale = useUniBreak ? textPtr->locale : NULL;
     char const *nextLocale = NULL;
@@ -2610,14 +2665,15 @@ LayoutComputeBreakLocations(
     /*
      * The codepoint line break computation requires the whole logical line (due to a
      * poor design of libunibreak), but separated by locale, because this line break
-     * algorithm is in general locale dependent.
+     * algorithm is in general locale dependent. The elided content is included, the
+     * layout counts its bytes too (in elided chunks).
      */
 
     while (segPtr) {
 	unsigned size = 0;
 	unsigned newTotalSize;
 
-	for ( ; segPtr; segPtr = segPtr->nextPtr) {
+	for ( ; segPtr; segPtr = LayoutNextSegmentOfLine(segPtr, &linePtr, endLinePtr)) {
 	    switch ((int) segPtr->typePtr->group) {
 	    case SEG_GROUP_CHAR: {
 		unsigned newSize;
@@ -2627,7 +2683,7 @@ LayoutComputeBreakLocations(
 
 		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
 			nextLocale = myLocale;
-			break;
+			goto endOfRun; /* this segment starts the next run */
 		    }
 		}
 		if ((newSize = size + segPtr->size) >= capacity) {
@@ -2644,7 +2700,7 @@ LayoutComputeBreakLocations(
 
 		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
 			nextLocale = myLocale;
-			break;
+			goto endOfRun; /* this segment starts the next run */
 		    }
 		}
 
@@ -2669,11 +2725,9 @@ LayoutComputeBreakLocations(
 		/* Substitute with a TAB, so we can break at this point. */
 		str[size++] = '\t';
 		break;
-	    case SEG_GROUP_BRANCH:
-		segPtr = segPtr->body.branch.nextPtr;
-		break;
 	    }
 	}
+    endOfRun:
 	if (size > 0) {
 	    newTotalSize = totalSize + size;
 
@@ -3201,9 +3255,10 @@ LayoutSetupChunk(
 		breakInfo = (TkTextBreakInfo *)Tcl_Alloc(sizeof(TkTextBreakInfo));
 		breakInfo->refCount = 1;
 		breakInfo->brks = NULL;
+		breakInfo->brksSize = 0;
+		breakInfo->hPtr = hPtr;
 		data->logicalLinePtr->changed = 0;
 		Tcl_SetHashValue(hPtr, breakInfo);
-		DEBUG(breakInfo->brksSize = 0);
 		DEBUG_ALLOC(tkTextCountNewBreakInfo++);
 	    } else {
 		breakInfo = (TkTextBreakInfo *)Tcl_GetHashValue(hPtr);
@@ -3223,6 +3278,8 @@ LayoutSetupChunk(
 		if (data->logicalLinePtr->changed) {
 		    isNew = 1;
 		    data->logicalLinePtr->changed = 0;
+		} else if (breakInfo->brksSize != LayoutLogicalLineSize(data)) {
+		    isNew = 1; /* the elision has changed the extent of the logical line */
 		}
 	    }
 
@@ -3237,7 +3294,7 @@ LayoutSetupChunk(
 		brksSize = LayoutComputeBreakLocations(data);
 		breakInfo->brks = (char *)Tcl_Realloc(breakInfo->brks, brksSize);
 		memcpy(breakInfo->brks, textPtr->brksBuffer, brksSize);
-		DEBUG(breakInfo->brksSize = brksSize);
+		breakInfo->brksSize = brksSize;
 		DEBUG(stats.breakInfo += 1);
 	    }
 
@@ -6044,11 +6101,8 @@ ReleaseLines(
 		Tcl_Free(dlPtr->breakInfo->brks);
 		DEBUG(dlPtr->breakInfo->brks = NULL);
 		DEBUG(dlPtr->breakInfo->brksSize = 0);
+		Tcl_DeleteHashEntry(dlPtr->breakInfo->hPtr);
 		Tcl_Free(dlPtr->breakInfo);
-		Tcl_DeleteHashEntry(Tcl_FindHashEntry(
-			&textPtr->sharedTextPtr->breakInfoTable,
-			(void *) TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr,
-			    TkTextIndexGetLine(&dlPtr->index))));
 		DEBUG_ALLOC(tkTextCountDestroyBreakInfo++);
 		DEBUG(dlPtr->breakInfo = NULL);
 	    }
