@@ -2239,8 +2239,16 @@ UpdateWrapper(
      */
 
     if (tsdPtr->firstWindow) {
-	tsdPtr->firstWindow = 0;
-	SetActiveWindow(wmPtr->wrapper);
+	/*
+	 * Do not waste the activation on an invisible window, e.g. the
+	 * withdrawn console. [Bug 2effa4b316]
+	 */
+
+	state = wmPtr->hints.initial_state;
+	if (state == NormalState || state == ZoomState) {
+	    tsdPtr->firstWindow = 0;
+	    SetActiveWindow(wmPtr->wrapper);
+	}
     } else if (focusHWND) {
 	SetFocus(focusHWND);
     }
@@ -3346,6 +3354,17 @@ WmAttributesCmd(
 		"APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * On Windows 10 (unlike on 11) the title bar doesn't redraw
+	 * automatically after changing the `DWMWA_USE_IMMERSIVE_DARK_MODE`
+	 * attribute. To trigger a redraw, we'll have to toggle the nonclient
+	 * area's focus state.
+	 */
+	bool isWindowFocused = GetForegroundWindow() == wmPtr->wrapper;
+
+	SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, !isWindowFocused, 0);
+	SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, isWindowFocused, 0);
 
 	/*
 	 * On success, set the mode value
@@ -5707,7 +5726,7 @@ WmTransientCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	if (containerPtr != NULL) {
 	    /*
 	     * If we had a container, tell them that we aren't tied to them
@@ -8093,6 +8112,18 @@ static int SynchronizeAppearance(
 	    Tcl_ObjPrintf("SetWindowAttribute failed with %lx", status));
 	return TCL_ERROR;
     }
+
+    /*
+     * On Windows 10 (unlike on 11) the title bar doesn't redraw
+     * automatically after changing the `DWMWA_USE_IMMERSIVE_DARK_MODE`
+     * attribute. To trigger a redraw, we'll have to toggle the nonclient
+     * area's focus state.
+     */
+    bool isWindowFocused = GetForegroundWindow() == wmPtr->wrapper;
+
+    SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, !isWindowFocused, 0);
+    SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, isWindowFocused, 0);
+
     const char *newAppearance = appsShouldBeDark ? "dark" : "light";
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 			Tcl_ObjPrintf("appearance %s ", newAppearance));
@@ -8319,7 +8350,11 @@ WmProc(
 	 * All other toplevels are deemed non-minimizable when a grab is
 	 * present.
 	 * If there is a grab in effect and this window is outside the
-	 * grab tree then ignore all system commands. [Bug 1847002]
+	 * grab tree then ignore all system commands, except moving, sizing
+	 * and restoring. [Bug 1847002]
+	 * Restoring must be allowed, otherwise the window cannot be restored
+	 * after "show desktop" (Win+D), which minimizes it without
+	 * WM_SYSCOMMAND. [ed6c3a787d]
 	 */
 
 	if (winPtr) {
@@ -8331,8 +8366,16 @@ WmProc(
 		goto done;
 	    }
 	    if (grab == TK_GRAB_EXCLUDED
-		&& !(SC_MOVE == cmd || SC_SIZE == cmd)) {
+		&& !(SC_MOVE == cmd || SC_SIZE == cmd || SC_RESTORE == cmd)) {
 		goto done;
+	    }
+	    /*
+	     * The mouse capture set by a global grab stops the window
+	     * from being restored. [Bug 3138512]
+	     */
+
+	    if (SC_RESTORE == cmd && GetCapture() != NULL) {
+		ReleaseCapture();
 	    }
 	}
 	/* fall through */

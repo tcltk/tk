@@ -947,8 +947,7 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthObj != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
+	if (!TkObjIsEmpty(tagPtr->borderWidthObj)
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &styleValues.borderWidth);
 	    borderWidthPrio = tagPtr->priority;
@@ -1584,7 +1583,7 @@ LayoutDLine(
 	     * characters up to (and including) the tab.
 	     */
 
-	    if (!elide && justify == TK_JUSTIFY_LEFT) {
+	    if (!elide && !(justify == TK_JUSTIFY_RIGHT || justify == TK_JUSTIFY_CENTER)) {
 		char *p;
 
 		for (p = segPtr->body.chars + byteOffset; *p != 0; p++) {
@@ -1851,12 +1850,12 @@ LayoutDLine(
 	maxX = textPtr->dInfoPtr->maxX - textPtr->dInfoPtr->x - rMargin;
     }
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
-    if (justify == TK_JUSTIFY_LEFT) {
-	jIndent = 0;
+    if (justify == TK_JUSTIFY_CENTER) {
+	jIndent = (maxX - dlPtr->length)/2;
     } else if (justify == TK_JUSTIFY_RIGHT) {
 	jIndent = maxX - dlPtr->length;
     } else {
-	jIndent = (maxX - dlPtr->length)/2;
+	jIndent = 0;
     }
     ascent = descent = 0;
     for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
@@ -7935,10 +7934,10 @@ SetLocale(
 	    /* If there is no region, we cannot distingish between a script and a
 	     * 4-character variation. Assume the latter. Only for Euro and Ploc */
 	    if (locale[5] == (char)-7) {
-			locale[5] = 5; /* Euro */
-		} else if (locale[5] == (char)-12) {
-			locale[5] = 10; /* Ploc */
-		}
+		locale[5] = 5; /* Euro */
+	    } else if (locale[5] == (char)-12) {
+		locale[5] = 10; /* Ploc */
+	    }
 	}
     localeComplete:
 	*value = GetLocale(NULL, NULL, locale, 0);
@@ -8408,6 +8407,7 @@ TkTextCharLayoutProc(
 	ciPtr->numBytes--;
     }
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
      * Detect the bidi direction of this chunk.  We scan the raw storage
      * bytes (p still points to the start of the segment slice) rather than
@@ -8417,7 +8417,6 @@ TkTextCharLayoutProc(
     ciPtr->isRtl = ChunkIsRtl(
 	    segPtr->body.chars + byteOffset, ciPtr->numBytes);
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
      * Final update for the current base chunk data.
      */
@@ -8703,16 +8702,17 @@ CharChunkMeasureChars(
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-    /*
-     * Defensive check: if ciPtr is NULL, we can't measure anything.
-     */
-    if (ciPtr == NULL) {
-	*nextXPtr = startX;
-	return 0;
-    }
-
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chars == NULL) {
+	/*
+	 * Defensive check: without ciPtr there is nothing to measure.  The
+	 * layout proc measures before setting ciPtr, but passes the chars.
+	 */
+
+	if (ciPtr == NULL) {
+	    *nextXPtr = startX;
+	    return 0;
+	}
 	chars = ciPtr->chars;
 	charsLen = ciPtr->numBytes;
     }
@@ -8723,6 +8723,14 @@ CharChunkMeasureChars(
     return MeasureChars(tkfont, chars, charsLen, start, end-start,
 			startX, maxX, flags, nextXPtr);
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
+    /*
+     * Defensive check: if ciPtr is NULL, we can't measure anything.
+     */
+    if (ciPtr == NULL) {
+	*nextXPtr = startX;
+	return 0;
+    }
+
     {
 	int xDisplacement;
 	int fit, bstart = start, bend = end;
@@ -9084,8 +9092,9 @@ CharMeasureProc(
     int x)			/* X-coordinate, in same coordinate system as
 				 * chunkPtr->x. */
 {
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int endX;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr->isRtl) {
 	/*
@@ -9107,6 +9116,7 @@ CharMeasureProc(
 	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 				     chunkPtr->x, mirroredX, 0, &endX); /* CHAR OFFSET */
     }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 				 chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
@@ -9148,6 +9158,7 @@ CharBboxProc(
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX = chunkPtr->x + chunkPtr->width;
+    Tcl_Size nextIndex;
 
     if (ciPtr == NULL || byteIndex < 0) {
 	byteIndex = 0;
@@ -9158,10 +9169,31 @@ CharBboxProc(
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
+    /*
+     * Byte offset of the next character: the character at byteIndex can
+     * be longer than one byte.
+     */
+
+    nextIndex = byteIndex;
+    if (ciPtr != NULL && byteIndex < ciPtr->numBytes) {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	const char *chars = Tcl_DStringValue(&((BaseCharInfo *)
+		ciPtr->baseChunkPtr->clientData)->baseChars) + ciPtr->baseOffset;
+#else
+	const char *chars = ciPtr->chars;
+#endif
+
+	nextIndex = Tcl_UtfNext(chars + byteIndex) - chars;
+	if (nextIndex > ciPtr->numBytes) {
+	    nextIndex = ciPtr->numBytes;
+	}
+    }
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     if (ciPtr->isRtl) {
 	/* RTL: mirror the measurement. */
 	int xEnd, xStart;
-	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, nextIndex,
 		chunkPtr->x, -1, 0, &xEnd);
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 		chunkPtr->x, -1, 0, &xStart);
@@ -9171,7 +9203,9 @@ CharBboxProc(
 
 	if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
 	if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
-    } else {
+    } else
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+    {
 	/* LTR */
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 		chunkPtr->x, -1, 0, xPtr);
@@ -9180,7 +9214,7 @@ CharBboxProc(
 	    *widthPtr = maxX - *xPtr;
 	} else {
 	    int x2;
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, nextIndex,
 		    *xPtr, -1, 0, &x2);
 	    *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
 	}

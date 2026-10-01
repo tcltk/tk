@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="b1"
+TK_PATCH_LEVEL=".1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -76,6 +76,7 @@ if test "${CFLAGS+set}" != "set" ; then
 fi
 
 AC_PROG_CC
+AC_PROG_CPP
 AC_C_INLINE
 
 #------------------------------------------------------------------------
@@ -356,6 +357,7 @@ if test $tk_aqua = no; then
 
     XFT_CFLAGS=""
     XFT_LIBS=""
+    XFT_DEPS=""
 
     #--------------------------------------------------------------------
     # --enable-bidi (default: yes on X11) — forces Xft when enabled
@@ -495,8 +497,10 @@ Please install the HarfBuzz development package:
 
 	    if test "$found_xft" = "yes" ; then
 		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		XFT_DEPS="xft"
 		AC_CHECK_LIB(fontconfig, FcFontSort, [
 		    XFT_LIBS="$XFT_LIBS -lfontconfig"
+		    XFT_DEPS="$XFT_DEPS fontconfig"
 		], [])
 	    fi
 
@@ -511,6 +515,7 @@ Please install the HarfBuzz development package:
 	    enable_xft=no
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
+	    XFT_DEPS=""
 	else
 	    enable_xft=yes
 	fi
@@ -518,6 +523,7 @@ Please install the HarfBuzz development package:
 
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
+    AC_SUBST(XFT_DEPS)
 
     AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
@@ -618,7 +624,7 @@ if test $tk_aqua = no; then
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	AC_MSG_RESULT([$found_cups])

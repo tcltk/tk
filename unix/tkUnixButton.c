@@ -444,7 +444,7 @@ TkpDisplayButton(
     Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, fullWidth, fullHeight;
     int textXOffset, textYOffset;
-    int haveImage = 0, haveText = 0;
+    bool haveImage = false, haveText = false;
     int imageWidth, imageHeight;
     int imageXOffset = 0, imageYOffset = 0;
 				/* image information that will be used to
@@ -526,10 +526,10 @@ TkpDisplayButton(
 
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
     imageWidth = width;
     imageHeight = height;
@@ -911,7 +911,7 @@ TkpComputeButtonGeometry(
     TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
     int width, height, avgWidth, txtWidth, txtHeight;
-    int haveImage = 0, haveText = 0;
+    bool haveImage = false, haveText = false;
     Tk_FontMetrics fm;
     int padX, padY, borderWidth, highlightWidth, wrapLength;
     int butPtrWidth, butPtrHeight;
@@ -943,13 +943,13 @@ TkpComputeButtonGeometry(
 
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
 
-    if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
+    if (!haveImage || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,

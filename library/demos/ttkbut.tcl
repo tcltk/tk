@@ -17,7 +17,7 @@ wm title $w "Simple Ttk Widgets"
 wm iconname $w "ttkbut"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Ttk is the new Tk themed widget set. This is a Ttk themed label, and below are four groups of Ttk widgets in Ttk labelframes. The first group are all buttons that set the current application theme when pressed. The second group contains two sets of checkbuttons, with a separator widget between the sets. The third group has a collection of linked radiobuttons. Finally, the toggleswitch in the fourth labelframe controls whether all the themed widgets in this toplevel, except that labelframe and its children, are in the disabled state."
+ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Ttk is the new Tk themed widget set. This is a Ttk themed label, and below are four groups of Ttk widgets in Ttk labelframes. The first group are all buttons that set the current application theme when pressed. The second group contains two sets of checkbuttons, with a separator widget between the sets. The third group has a collection of linked radiobuttons. Finally, the toggleswitch in the fourth labelframe controls whether all the themed widgets in this toplevel, except that labelframe and the toggleswitch itself, are in the disabled state."
 pack $w.msg -side top -fill x
 
 ## See Code / Dismiss
@@ -70,17 +70,16 @@ proc setState {rootWidget exceptThese value} {
     }
 }
 
-## Set up the labelframe containing a label and a toggleswitch
+## Set up the labelframe containing a toggleswitch
 ttk::labelframe $w.toggle -text Toggleswitch
-ttk::label $w.toggle.l -text "Enable/disable widgets"
-ttk::toggleswitch $w.toggle.sw -variable enabled -command {
-    setState $w [list $w.toggle $w.toggle.l $w.toggle.sw] \
+ttk::toggleswitch $w.toggle.sw -text "Enable/disable widgets" \
+	-variable enabled -command {
+    setState $w [list $w.toggle $w.toggle.sw] \
 	    [expr {$enabled ? "!disabled" : "disabled"}]
 }
 set enabled 1
 ## See ttk_widget(n) for other possible state flags
-pack $w.toggle.sw -side right -padx 3p -pady 1.5p
-pack $w.toggle.l -side left -padx 3p -pady 1.5p
+pack $w.toggle.sw -padx 3p -pady 1.5p -fill x
 
 ## Arrange things neatly
 pack [ttk::frame $w.f] -fill both -expand 1
