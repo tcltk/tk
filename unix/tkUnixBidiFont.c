@@ -24,7 +24,7 @@
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 200
-#define MAX_GLYPHS 2048
+#define MAX_GLYPHS 512
 #define MAX_FONTS 200
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
@@ -86,7 +86,7 @@ typedef struct {
     int next;
 } UnixFtColorList;
 
-#define MAX_CLUSTER_BREAKS 2048
+#define MAX_CLUSTER_BREAKS 512
 
 /*
  * ShapedGlyphBuffer --
@@ -557,42 +557,29 @@ GetFaceFont(
  * ---------------------------------------------------------------
  */
 
-/* Find face with real glyph - monochrome only: skip FC_COLOR faces */
-static int
-FindFaceForUcs4Mono(UnixFtFont *fontPtr, FcChar32 uc)
-{
-    if (uc==0) return 0;
-    for (int i=0;i<fontPtr->nfaces;i++) {
-        FcBool isCol=FcFalse;
-        FcPatternGetBool(fontPtr->faces[i].source, FC_COLOR, 0, &isCol);
-        if (isCol) continue;
-        if (fontPtr->faces[i].charset && FcCharSetHasChar(fontPtr->faces[i].charset, uc)) {
-            XftFont *ft = GetFaceFont(fontPtr,i,0.0);
-            if (ft && XftCharIndex(fontPtr->display,ft,uc)!=0) return i;
-        }
-    }
-    for (int i=0;i<fontPtr->nfaces;i++) {
-        FcBool isCol=FcFalse;
-        FcPatternGetBool(fontPtr->faces[i].source, FC_COLOR, 0, &isCol);
-        if (isCol) continue;
-        XftFont *ft = GetFaceFont(fontPtr,i,0.0);
-        if (!ft) continue;
-        if (XftCharIndex(fontPtr->display,ft,uc)!=0) return i;
-    }
-    return -1;
-}
-
 static XftFont *
 GetFont(
     UnixFtFont *fontPtr,
     FcChar32 ucs4,
     double angle)
 {
-    int i=0;
+    int i;
+
+    /* Find face containing this character. */
     if (ucs4) {
-        int f = FindFaceForUcs4Mono(fontPtr, ucs4);
-        if (f>=0) i=f;
+	for (i = 0; i < fontPtr->nfaces; i++) {
+	    FcCharSet *charset = fontPtr->faces[i].charset;
+	    if (charset && FcCharSetHasChar(charset, ucs4)) {
+		break;
+	    }
+	}
+	if (i == fontPtr->nfaces) {
+	    i = 0;  /* Fallback to first face. */
+	}
+    } else {
+	i = 0;
     }
+
     return GetFaceFont(fontPtr, i, angle);
 }
 
@@ -885,11 +872,11 @@ InitFont(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!fontPtr) {
-	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
-	if (!fontPtr) {
-	    return NULL;
-	}
-	memset(fontPtr, 0, sizeof(UnixFtFont));
+    fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
+    if (!fontPtr) {
+	return NULL;
+    }
+    memset(fontPtr, 0, sizeof(UnixFtFont));
     }
 
     /*
@@ -900,14 +887,14 @@ InitFont(
      *   - then run the normal Fontconfig/Xft substitution once.
      */
     {
-	double dpi = round(TkScalingLevel(tkwin) * 96);
+    double dpi = round(TkScalingLevel(tkwin) * 96);
 
-	/* Remove any pre-existing pixel size; Xft will recompute it. */
-	XftPatternDel(pattern, XFT_PIXEL_SIZE);
+    /* Remove any pre-existing pixel size; Xft will recompute it. */
+    XftPatternDel(pattern, XFT_PIXEL_SIZE);
 
-	/* Force DPI to match Tk's scaling. */
-	XftPatternDel(pattern, XFT_DPI);
-	XftPatternAddDouble(pattern, XFT_DPI, dpi);
+    /* Force DPI to match Tk's scaling. */
+    XftPatternDel(pattern, XFT_DPI);
+    XftPatternAddDouble(pattern, XFT_DPI, dpi);
     }
 
     FcConfigSubstitute(NULL, pattern, FcMatchPattern);
@@ -918,21 +905,21 @@ InitFont(
      */
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-	if (!fontPtr->font.fid) {
-	    Tcl_Free(fontPtr);
-	}
-	FcPatternDestroy(pattern);
-	return NULL;
+    if (!fontPtr->font.fid) {
+	Tcl_Free(fontPtr);
+    }
+    FcPatternDestroy(pattern);
+    return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
     fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
     if (!fontPtr->faces) {
-	FcFontSetDestroy(set);
-	Tcl_Free(fontPtr);
-	FcPatternDestroy(pattern);
-	return NULL;
+    FcFontSetDestroy(set);
+    Tcl_Free(fontPtr);
+    FcPatternDestroy(pattern);
+    return NULL;
     }
     fontPtr->nfaces = set->nfont;
 
@@ -940,122 +927,23 @@ InitFont(
      * Fill in information about each returned font.
      */
     for (i = 0; i < set->nfont; i++) {
-	fontPtr->faces[i].ftFont     = NULL;
-	fontPtr->faces[i].ft0Font    = NULL;
-	fontPtr->faces[i].source     = set->fonts[i];
-	fontPtr->faces[i].angle      = 0.0;
-	fontPtr->faces[i].hbFont     = NULL;
-	fontPtr->faces[i].hbBlob     = NULL;
-	fontPtr->faces[i].hbFace     = NULL;
-	fontPtr->faces[i].isLoaded   = false;
-	fontPtr->faces[i].unitsPerEm = 0.0;
-	fontPtr->faces[i].ascender   = 0.0;
-	fontPtr->faces[i].descender  = 0.0;
+    fontPtr->faces[i].ftFont     = NULL;
+    fontPtr->faces[i].ft0Font    = NULL;
+    fontPtr->faces[i].source     = set->fonts[i];
+    fontPtr->faces[i].angle      = 0.0;
+    fontPtr->faces[i].hbFont     = NULL;
+    fontPtr->faces[i].hbBlob     = NULL;
+    fontPtr->faces[i].hbFace     = NULL;
+    fontPtr->faces[i].isLoaded   = false;
+    fontPtr->faces[i].unitsPerEm = 0.0;
+    fontPtr->faces[i].ascender   = 0.0;
+    fontPtr->faces[i].descender  = 0.0;
 
-	FcBool isColor = FcFalse;
-	FcPatternGetBool(set->fonts[i], FC_COLOR, 0, &isColor);
-
-	if (!isColor &&
-	    FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
-	    fontPtr->faces[i].charset = FcCharSetCopy(charset);
-	} else {
-	    /*
-	     * Color fonts (CBDT/COLR/sbix) are excluded here even though
-	     * they may claim charset coverage of emoji codepoints -- Xft
-	     * cannot render them.  Leaving charset NULL means
-	     * FcCharSetHasChar() never matches this face in GetFont() /
-	     * GetRunFaceIndex(), so selection falls through to the forced
-	     * monochrome emoji face appended below instead of silently
-	     * picking an unrenderable color glyph (which shows as a
-	     * zero-width gap).
-	     */
-	    fontPtr->faces[i].charset = NULL;
-	}
+    if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
+	fontPtr->faces[i].charset = FcCharSetCopy(charset);
+    } else {
+	fontPtr->faces[i].charset = NULL;
     }
-
-    /*
-     * Force a monochrome outline emoji font into the faces list.
-     * Color emoji fonts are deliberately avoided – Xft/Tk cannot render them.
-     */
-    {
-	FcPattern *monoPat = FcPatternCreate();
-	if (monoPat) {
-	    /* Monochrome Noto Emoji (outline, not CBDT). */
-	    FcPatternAddString(monoPat, FC_FAMILY, (const FcChar8 *)"Noto Emoji");
-
-	    /* Keep size / DPI consistent with the main pattern. */
-	    double size = 12.0;
-	    FcPatternGetDouble(pattern, FC_SIZE, 0, &size);
-	    FcPatternAddDouble(monoPat, FC_SIZE, size);
-	    double dpi = 96.0;
-	    FcPatternGetDouble(pattern, FC_DPI, 0, &dpi);
-	    FcPatternAddDouble(monoPat, FC_DPI, dpi);
-
-	    FcConfigSubstitute(NULL, monoPat, FcMatchPattern);
-	    XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), monoPat);
-
-	    FcResult mres;
-	    FcPattern *matched = FcFontMatch(NULL, monoPat, &mres);
-	    FcPatternDestroy(monoPat);
-
-	    FcBool matchedIsColor = FcFalse;
-	    if (matched && mres == FcResultMatch) {
-		FcPatternGetBool(matched, FC_COLOR, 0, &matchedIsColor);
-	    }
-
-	    if (matched && mres == FcResultMatch && !matchedIsColor) {
-		/* Do not add the same file twice. */
-		FcChar8 *mfile = NULL;
-		int midx = 0;
-		FcPatternGetString(matched, FC_FILE, 0, &mfile);
-		FcPatternGetInteger(matched, FC_INDEX, 0, &midx);
-
-		int already = 0;
-		for (i = 0; i < fontPtr->nfaces; i++) {
-		    FcChar8 *f = NULL;
-		    int idx = 0;
-		    if (FcPatternGetString(fontPtr->faces[i].source, FC_FILE, 0, &f) == FcResultMatch &&
-			FcPatternGetInteger(fontPtr->faces[i].source, FC_INDEX, 0, &idx) == FcResultMatch &&
-			f && mfile &&
-			strcmp((const char *)f, (const char *)mfile) == 0 &&
-			idx == midx) {
-			already = 1;
-			break;
-		    }
-		}
-
-		if (!already) {
-		    UnixFtFace *newFaces = (UnixFtFace *)
-			Tcl_Realloc((char *)fontPtr->faces,
-				    (fontPtr->nfaces + 1) * sizeof(UnixFtFace));
-		    if (newFaces) {
-			fontPtr->faces = newFaces;
-			i = fontPtr->nfaces++;
-			fontPtr->faces[i].ftFont     = NULL;
-			fontPtr->faces[i].ft0Font    = NULL;
-			fontPtr->faces[i].source     = matched; /* take ownership */
-			fontPtr->faces[i].angle      = 0.0;
-			fontPtr->faces[i].hbFont     = NULL;
-			fontPtr->faces[i].hbBlob     = NULL;
-			fontPtr->faces[i].hbFace     = NULL;
-			fontPtr->faces[i].isLoaded   = false;
-			fontPtr->faces[i].unitsPerEm = 0.0;
-			fontPtr->faces[i].ascender   = 0.0;
-			fontPtr->faces[i].descender  = 0.0;
-
-			if (FcPatternGetCharSet(matched, FC_CHARSET, 0, &charset) == FcResultMatch) {
-			    fontPtr->faces[i].charset = FcCharSetCopy(charset);
-			} else {
-			    fontPtr->faces[i].charset = NULL;
-			}
-			matched = NULL; /* ownership transferred */
-		    }
-		}
-		if (matched) {
-		    FcPatternDestroy(matched);
-		}
-	    }
-	}
     }
 
     /*
@@ -1086,12 +974,12 @@ InitFont(
 
     ftFont = GetFont(fontPtr, 0, 0.0);
     if ((ftFont == NULL) || tsdPtr->errorFlag) {
-	Tk_DeleteErrorHandler(handler);
-	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
-	    Tcl_Free(fontPtr);
-	}
-	return NULL;
+    Tk_DeleteErrorHandler(handler);
+    FinishedWithFont(fontPtr);
+    if (!fontPtr->font.fid) {
+	Tcl_Free(fontPtr);
+    }
+    return NULL;
     }
 
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
@@ -1101,48 +989,17 @@ InitFont(
 
     Tk_DeleteErrorHandler(handler);
     if (tsdPtr->errorFlag) {
-	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
-	    Tcl_Free(fontPtr);
-	}
-	return NULL;
+    FinishedWithFont(fontPtr);
+    if (!fontPtr->font.fid) {
+	Tcl_Free(fontPtr);
+    }
+    return NULL;
     }
 
     /*
      * Compute underline position and thickness.
      */
     {
-
-    TkFont *fPtr = &fontPtr->font;
-
-    fPtr->underlinePos = fPtr->fm.descent / 2;
-
-    errorFlag = 0;
-    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
-
-    Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
-
-    Tk_DeleteErrorHandler(handler);
-    if (errorFlag) {
-	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
-	Tcl_Free(fontPtr);
-	}
-	return NULL;
-    }
-
-    fPtr->underlineHeight = iWidth / 3;
-    if (fPtr->underlineHeight == 0) {
-	fPtr->underlineHeight = 1;
-    }
-    if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
-	fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
-	if (fPtr->underlineHeight == 0) {
-	fPtr->underlinePos--;
-	fPtr->underlineHeight = 1;
-	}
-    }
     TkFont *fPtr = &fontPtr->font;
 
     fPtr->underlinePos = fPtr->fm.descent / 2;
@@ -1374,14 +1231,13 @@ GetHbFont(
 	return NULL;
     }
 
-    /* Set font scale based on Xft size - monochrome only, no COLOR load */
+    /* Set font scale based on Xft size. */
     XftFont *xft = GetFaceFont(fontPtr, faceIndex, 0.0);
     if (xft) {
 	int pixelSize = xft->ascent + xft->descent;
 	hb_font_set_scale(hbFont, pixelSize * 64, pixelSize * 64);
 	hb_font_set_ppem(hbFont, (unsigned)pixelSize, (unsigned)pixelSize);
     }
-    hb_ft_font_set_load_flags(hbFont, FT_LOAD_DEFAULT | FT_LOAD_NO_BITMAP);
 
     face->hbBlob = blob;
     face->hbFace = hbFace;
@@ -1404,7 +1260,7 @@ GetHbFont(
  *    Updates the character cache.
  * ---------------------------------------------------------------
  */
- 
+
 static int
 GetRunFaceIndex(
 		UnixFtFont *fontPtr,
@@ -1415,31 +1271,29 @@ GetRunFaceIndex(
     if (runLen <= 0 || runStart < 0) return 0;
     FcChar32 uc = ucs4Chars[runStart];
     X11Shaper *shaper = &fontPtr->shaper;
+
+    /* Direct-mapped hash index. */
     int cacheIdx = uc & 63;
 
+    /* Check cache first. */
     if (shaper->charCache[cacheIdx].uc == uc) {
-        int cached = shaper->charCache[cacheIdx].faceIdx;
-        if (cached>=0 && cached < fontPtr->nfaces) {
-            FcBool isCol=FcFalse;
-            FcPatternGetBool(fontPtr->faces[cached].source, FC_COLOR, 0, &isCol);
-            if (!isCol) {
-                XftFont *ft = GetFaceFont(fontPtr,cached,0.0);
-                if (ft && XftCharIndex(fontPtr->display,ft,uc)!=0) return cached;
-            }
-        }
+	return shaper->charCache[cacheIdx].faceIdx;
     }
-    /* mono-only lookup via helper */
-    int fi = FindFaceForUcs4Mono(fontPtr, uc);
-    if (fi>=0) {
-        shaper->charCache[cacheIdx].uc = uc;
-        shaper->charCache[cacheIdx].faceIdx = fi;
-        return fi;
+
+    /* Check existing loaded faces. */
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+	if (fontPtr->faces[fi].charset && FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+	    shaper->charCache[cacheIdx].uc = uc;
+	    shaper->charCache[cacheIdx].faceIdx = fi;
+	    return fi;
+	}
     }
+
+    /* Fallback to face 0. */
     shaper->charCache[cacheIdx].uc = uc;
     shaper->charCache[cacheIdx].faceIdx = 0;
     return 0;
 }
-
 /*
  * ---------------------------------------------------------------
  * X11Shaper_ShapeString --
@@ -1498,8 +1352,19 @@ X11Shaper_ShapeString(
 	    }
 
 	    if (glyphId == 0) {
-		int nfi = FindFaceForUcs4Mono(fontPtr, uc);
-		if (nfi>=0) { XftFont *ft=GetFaceFont(fontPtr,nfi,0.0); unsigned int gid = ft?XftCharIndex(fontPtr->display,ft,uc):0; if (gid!=0) { glyphId=gid; fontIndex=nfi; shaper->charCache[cacheIdx].uc=uc; shaper->charCache[cacheIdx].faceIdx=nfi; } }
+		for (int f = 0; f < fontPtr->nfaces; f++) {
+		    if (fontPtr->faces[f].charset && !FcCharSetHasChar(fontPtr->faces[f].charset, uc))
+			continue;
+		    XftFont *ft = GetFaceFont(fontPtr, f, 0.0);
+		    if (!ft) continue;
+		    glyphId = XftCharIndex(fontPtr->display, ft, uc);
+		    if (glyphId != 0) {
+			fontIndex = f;
+			shaper->charCache[cacheIdx].uc = uc;
+			shaper->charCache[cacheIdx].faceIdx = f;
+			break;
+		    }
+		}
 	    }
 
 	    if (glyphId == 0) {
@@ -1701,7 +1566,7 @@ X11Shaper_ShapeString(
 		 * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
 		 * all-COMMON case so that HarfBuzz activates the correct feature
 		 * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
-		 * by color-emoji fonts).
+		 * by colour-emoji fonts).
 		 */
 		int anchorChar = subrunStart;
 		if (subrunScript != HB_SCRIPT_INVALID) {
@@ -1719,6 +1584,26 @@ X11Shaper_ShapeString(
 		}
 
 		int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
+
+		/*
+		 * The look-ahead anchor above may be a later character of a
+		 * different script (e.g. an emoji followed by a Thai word picks
+		 * the Thai anchor).  If that face cannot render the first
+		 * character of this subrun, use the character's own face and
+		 * HB_SCRIPT_COMMON.  Otherwise the character is shaped with the
+		 * wrong face, comes back as .notdef (glyph 0), and is skipped
+		 * at draw time, leaving only a blank gap.
+		 */
+		{
+		    FcCharSet *anchorCs = fontPtr->faces[runFaceIndex].charset;
+
+		    if (!anchorCs ||
+			    !FcCharSetHasChar(anchorCs, ucs4Chars[subrunStart])) {
+			runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars,
+				subrunStart, 1);
+			subrunScript = HB_SCRIPT_COMMON;
+		    }
+		}
 
 		/*
 		 * Extend the subrun while both script and face remain
@@ -2373,17 +2258,26 @@ GetSimpleCharWidth(
     UnixFtFont *fontPtr,
     FcChar32 uc)
 {
-    int fi = FindFaceForUcs4Mono(fontPtr, uc);
-    if (fi>=0) {
-        XftFont *ft = GetFaceFont(fontPtr,fi,0.0);
-        if (ft) {
-            unsigned int gid = XftCharIndex(fontPtr->display,ft,uc);
-            if (gid!=0) {
-                XGlyphInfo ext; XftGlyphExtents(fontPtr->display,ft,&gid,1,&ext);
-                return ext.xOff;
-            }
-        }
+    for (int f = 0; f < fontPtr->nfaces; f++) {
+	if (fontPtr->faces[f].charset &&
+	    !FcCharSetHasChar(fontPtr->faces[f].charset, uc)) {
+	    continue;
+	}
+
+	XftFont *ft = GetFaceFont(fontPtr, f, 0.0);
+	if (!ft) {
+	    continue;
+	}
+
+	unsigned int glyphId = XftCharIndex(fontPtr->display, ft, uc);
+	if (glyphId != 0) {
+	    XGlyphInfo ext;
+	    XftGlyphExtents(fontPtr->display, ft, &glyphId, 1, &ext);
+	    return ext.xOff;
+	}
     }
+
+    /* No face has a real glyph for this codepoint: zero-width. */
     return 0;
 }
 
@@ -2893,7 +2787,17 @@ Tk_DrawCharsInContext(
 		if (clen <= 0) { i++; continue; }
 
 		int fontIndex = -1;
-		{ int nfi = FindFaceForUcs4Mono(fontPtr, uc); if (nfi>=0) fontIndex=nfi; }
+		for (int f = 0; f < fontPtr->nfaces; f++) {
+		    if (fontPtr->faces[f].charset &&
+			!FcCharSetHasChar(fontPtr->faces[f].charset, uc))
+			continue;
+		    XftFont *ft = GetFaceFont(fontPtr, f, 0.0);
+		    if (!ft) continue;
+		    if (XftCharIndex(display, ft, uc) != 0) {
+			fontIndex = f;
+			break;
+		    }
+		}
 		if (fontIndex >= 0) {
 		    XGlyphInfo ext;
 		    XftFont *ftFont = GetFaceFont(fontPtr, fontIndex, 0.0);
@@ -2991,12 +2895,10 @@ Tk_DrawCharsInContext(
 	    if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
 	    XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
+	    if (!ftFont) continue;
+
 	    unsigned int glyphId = buffer.glyphs[i].glyphId;
-	    if (!ftFont || glyphId==0) {
-	        FcChar32 uc; int clen = FcUtf8ToUcs4((const FcChar8*)(source+buffer.glyphs[i].byteOffset), &uc, numBytes - buffer.glyphs[i].byteOffset);
-	        if (clen>0) { int nfi = FindFaceForUcs4Mono(fontPtr, uc); if (nfi>=0) { ftFont=GetFaceFont(fontPtr,nfi,0.0); if (ftFont) { glyphId=XftCharIndex(fontPtr->display,ftFont,uc); faceIdx=nfi; } } }
-	        if (!ftFont || glyphId==0) continue;
-	    }
+	    if (glyphId == 0) continue;
 
 	    specs[nspec].font  = ftFont;
 	    specs[nspec].glyph = glyphId;
