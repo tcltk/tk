@@ -5621,6 +5621,20 @@ test textDisp-41.1 {codepoint wrap of logical lines of 512 bytes or more} -setup
     destroy .t1
 } -result {1 c}
 
+test textDisp-41.2 {codepoint wrap of a line with mandatory breaks inside} -setup {
+    destroy .t1
+    text .t1 -wrap codepoint -font $fixedFont -width 80
+    pack .t1
+} -body {
+    # The break locations after the first mandatory break were left undefined.
+    # Each mandatory break is displayed on a line of its own, as with -wrap word.
+    .t1 insert end "one\vtwo\fthree\u2028four five"
+    update
+    .t1 count -displaylines 1.0 end
+} -cleanup {
+    destroy .t1
+} -result 7
+
 #
 # TESTFILE CLEANUP
 #

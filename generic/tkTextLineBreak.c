@@ -879,18 +879,27 @@ ComputeBreakLocations(
 	    }
 	}
 
-	if (i == 0) {
+	if (pcls == BK) {
+	    /*
+	     * No break before a mandatory break, unless it follows another one (but
+	     * CR x LF). The next character starts a new line.
+	     */
+
+	    if (i > 0 && (cls != BK || (text[i - 1] == '\r' && text[i] == '\n'))) {
+		brks[i - 1] = LINEBREAK_NOBREAK;
+	    }
+	    brks[i + nbytes - 1] = LINEBREAK_MUSTBREAK;
+	    cls = BK;
+	    prevCls = WJ;
+	    nletters = 0;
+	    brkIndex = 0;
+	} else if (cls == BK) {
 	    if ((cls = pcls) == SP) {
-		/* treat SP at start of input as if it followed a WJ */
+		/* treat SP at start of a line as if it followed a WJ */
 		prevCls = cls = WJ;
 	    }
 	} else {
 	    switch (pcls) {
-	    case BK:
-		brks[i - 1] = LINEBREAK_NOBREAK;
-		brks[i] = LINEBREAK_MUSTBREAK;
-		prevCls = WJ;
-		return;
 	    case SP:
 		/* handle spaces explicitly; do not update cls */
 		if (i > 0) {

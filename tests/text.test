@@ -9138,6 +9138,15 @@ test text-43.3 {brks: line break buffer is freed with the widget} -constraints {
     rename growth {}
 } -result 0
 
+test text-43.4 {brks: mandatory breaks inside the string} -setup {
+    destroy .t
+    text .t
+} -body {
+    list [.t brks "one\vtwo"] [.t brks "a\u2028b"] [.t brks "a\r\nb"] [.t brks "a\v\vb"]
+} -cleanup {
+    destroy .t
+} -result {{0 0 0 2 0 0 0} {0 2 0} {0 0 2 0} {0 2 2 0}}
+
 #
 # TESTFILE CLEANUP
 #
