@@ -9190,6 +9190,31 @@ test text-43.9 {brks: string with a nul character} -setup {
     destroy .t
 } -result {5 1}
 
+test text-43.10 {no leak of the -locale value, nor of the locale of [brks]} -constraints {
+    memory
+} -setup {
+    destroy .t
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+    text .t
+} -body {
+    list [growth {text .w; destroy .w}] [growth {set l fr; catch {.t brks a [string cat $l _FR]}}]
+} -cleanup {
+    destroy .t
+    rename getbytes {}
+    rename growth {}
+} -result {0 0}
+
 #
 # TESTFILE CLEANUP
 #

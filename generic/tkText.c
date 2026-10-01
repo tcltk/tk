@@ -3958,9 +3958,12 @@ TkTextParseLocale(
     char oldLocale[8];
     int result;
 
-    Tcl_IncrRefCount(localeObj);
+    Tcl_IncrRefCount(localePtr);
     result = TkLocaleOption.setProc(NULL, interp, NULL, &localeObj, locale, 0, oldLocale, 0);
-    Tcl_DecrRefCount(localeObj);
+    if (localeObj && localeObj != localePtr) {
+	Tcl_BounceRefCount(localeObj); /* the normalized value is not used */
+    }
+    Tcl_DecrRefCount(localePtr);
 
     return result == TCL_OK;
 }
