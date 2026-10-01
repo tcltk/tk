@@ -3183,6 +3183,11 @@ LayoutSetupChunk(
     chunkPtr->stylePtr->refCount -= 1;
     chunkPtr->stylePtr = stylePtr = GetStyle(textPtr, segPtr);
 
+    if (data->numBytesSoFar == 0) {
+	/* The first chunk sets the wrap mode of the display line. */
+	data->wrapMode = (TkWrapMode)stylePtr->sValuePtr->wrapMode;
+    }
+
     if (data->wrapMode == TEXT_WRAPMODE_CODEPOINT) {
 	if (!data->brks) {
 	    Tcl_HashEntry *hPtr;
@@ -3257,7 +3262,6 @@ LayoutSetupChunk(
 	data->tabStyle = sValuePtr->tabStyle;
 	data->justify = (TkTextJustify)sValuePtr->justify;
 	data->rMargin = sValuePtr->rMargin;
-	data->wrapMode = (TkWrapMode)sValuePtr->wrapMode;
 	data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	data->width = dInfoPtr->maxX - dInfoPtr->x - data->rMargin;
 	data->maxX = (data->wrapMode == TEXT_WRAPMODE_NONE) ? -1 : MAX(data->width, data->x);

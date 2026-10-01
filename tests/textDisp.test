@@ -5673,6 +5673,25 @@ test textDisp-41.3 {codepoint wrap of Thai text at word boundaries} -setup {
     destroy .t1
 } -result {1 {}}
 
+test textDisp-41.4 {wrap mode set by a tag, different from the one of the widget} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # The break locations were only computed for the wrap mode of the widget.
+    foreach {widgetMode tagMode} {word codepoint char codepoint codepoint word} {
+	destroy .t1
+	text .t1 -wrap $widgetMode -font $fixedFont -width 20
+	pack .t1
+	.t1 tag configure T -wrap $tagMode
+	.t1 insert end "aaaa bbbb cccc dddd eeee ffff gggg hhhh" T
+	update
+	lappend res [.t1 count -displaylines 1.0 end]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {2 2 2}
+
 #
 # TESTFILE CLEANUP
 #
