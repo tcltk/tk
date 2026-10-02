@@ -8542,7 +8542,6 @@ TkTextCharLayoutProc(
     } else {
 	const char *chunkStart = p;
 	size_t bFit = (size_t)bytesThatFit;
-	size_t bTotal = (size_t)maxBytes;
 
 	{
 	    /*
@@ -8569,7 +8568,7 @@ TkTextCharLayoutProc(
 			    size_t pos = (size_t)(fwdPtr - chunkStart);
 			    size_t cand = pos + (size_t)chLen4;
 			    size_t cEnd;
-			    if (mojibake_grapheme_next(chunkStart, bTotal, pos, &cEnd) && cEnd == cand) {
+			    if (mojibake_grapheme_next(chunkStart, (size_t)maxBytes, pos, &cEnd) && cEnd == cand) {
 				best = (Tcl_Size)cand;
 				break;
 			    }
