@@ -143,7 +143,7 @@ namespace eval ttk::theme::default {
 	    }
 	}
 	ttk::style configure Toolbutton \
-	    -padding 2 -relief flat
+	    -padding 2 -relief flat -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
