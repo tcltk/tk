@@ -2783,10 +2783,17 @@ WmManageCmd(
 		TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
 	if (wmPtr == NULL) {
 	    TkWmNewWindow(winPtr);
-	    TkWmMapWindow(winPtr);
-	    Tk_UnmapWindow(frameWin);
 	}
 	wmPtr = winPtr->wmInfoPtr;
+	if (wmPtr->wrapperPtr == NULL) {
+	    /*
+	     * Create the wrapper but do not map it yet: the frame is mapped
+	     * at idle time by TkMapTopFrame, so that "wm withdraw",
+	     * "wm geometry", "wm overrideredirect" etc. can be applied first.
+	     */
+
+	    CreateWrapper(wmPtr);
+	}
 	winPtr->flags &= ~TK_MAPPED;
 	RemapWindows(winPtr, wmPtr->wrapperPtr);
 
