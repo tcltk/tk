@@ -17,7 +17,8 @@
  * Tk_GetPixmap --
  *
  *	Same as the XCreatePixmap function except that it manages resource
- *	identifiers better.
+ *	identifiers better and clips the dimensions to the range supported
+ *	by the X protocol.
  *
  * Results:
  *	Returns a new pixmap.
@@ -35,6 +36,18 @@ Tk_GetPixmap(
     int width, int height,	/* Dimensions of pixmap. */
     int depth)			/* Bits per pixel for pixmap. */
 {
+    /*
+     * X servers refuse pixmaps with dimensions larger than 32767 (BadAlloc),
+     * and larger values are truncated to 16 bits by the protocol. Drawing
+     * outside of the clipped area is lost, but this is better than a crash.
+     */
+
+    if (width > 32767) {
+	width = 32767;
+    }
+    if (height > 32767) {
+	height = 32767;
+    }
     return XCreatePixmap(display, d, (unsigned) width, (unsigned) height,
 	    (unsigned) depth);
 }

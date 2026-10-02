@@ -288,6 +288,22 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     deleteWindows
 } -result 1
 
+test unixbutton-3.1 {TkpDisplayButton: huge widget, bug bffa794b1b} -constraints {
+    unix
+} -setup {
+    deleteWindows
+} -body {
+    label .w -text Wide -padx 20000
+    label .h -text Tall -pady 20000
+    button .b -text Huge -padx 40000 -pady 40000
+    grid .w .h .b
+    update
+    list [expr {[winfo width .w] > 40000}] [expr {[winfo height .h] > 40000}] \
+	    [expr {[winfo width .b] > 65536}] [expr {[winfo height .b] > 65536}]
+} -cleanup {
+    deleteWindows
+} -result {1 1 1 1}
+
 #
 # TESTFILE CLEANUP
 #
