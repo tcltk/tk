@@ -1052,11 +1052,16 @@ DoObjConfig(
     }
     case TK_OPTION_CUSTOM: {
 	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	Tcl_Obj *givenPtr = valuePtr;
 
 	if (custom->setProc(custom->clientData, interp, tkwin,
 		&valuePtr, (char *)recordPtr, optionPtr->specPtr->internalOffset,
 		(char *)oldInternalPtr, optionPtr->specPtr->flags) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if (slotPtrPtr == NULL && valuePtr != NULL && valuePtr != givenPtr) {
+	    /* A new value object from setProc, which no slot keeps. */
+	    Tcl_BounceRefCount(valuePtr);
 	}
 	break;
     }
