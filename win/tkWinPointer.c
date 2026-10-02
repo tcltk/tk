@@ -381,9 +381,14 @@ void TkSetCursorPos(
 	return;
     }
 
+    /*
+     * Windows maps the normalized coordinate d to the pixel
+     * d * size / 65536 rounded down. Round up here, so that the pointer
+     * lands on the requested pixel at any screen size.
+     */
     input.type = INPUT_MOUSE;
-    input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
-    input.mi.dy = (y * 65535 + yscreen/2) / yscreen;
+    input.mi.dx = (x * 65536 + xscreen) / (xscreen + 1);
+    input.mi.dy = (y * 65536 + yscreen) / (yscreen + 1);
 
     /*
      * Horrible workaround here. There is a bug on Win 10: when warping to
