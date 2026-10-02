@@ -5907,8 +5907,19 @@ WmWaitVisibilityOrMapProc(
 	int state = containerPtr->wmInfoPtr->hints.initial_state;
 
 	if ((state == NormalState) || (state == ZoomState)) {
+	    HWND wrapper = winPtr->wmInfoPtr->wrapper;
+
+	    /*
+	     * Recreate the wrapper only if it is not yet owned by the
+	     * container's wrapper. Destroying it needlessly would also destroy
+	     * any dialog that is owned by it. [Bug 3009885]
+	     */
+
 	    state = winPtr->wmInfoPtr->hints.initial_state;
-	    if ((state == NormalState) || (state == ZoomState)) {
+	    if (((state == NormalState) || (state == ZoomState))
+		    && (wrapper == NULL || containerPtr->window == None
+		    || GetWindow(wrapper, GW_OWNER) != GetAncestor(
+			    Tk_GetHWND(containerPtr->window), GA_ROOT))) {
 		UpdateWrapper(winPtr);
 	    }
 	}
