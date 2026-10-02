@@ -141,6 +141,22 @@ namespace eval ::tk::test::generic {
 	vwait [namespace current]::_pause($num)
     }
 
+    # removeTitleBar --
+    #
+    #	Windows does not let a toplevel get narrower than its title bar, which
+    #	is wider at high scale. Without the title bar, the window can be as
+    #	small as the tests need. The minimal width is the same for all
+    #	toplevels, so it is taken from the always mapped root window.
+    #
+    proc removeTitleBar {w} {
+	if {[tk windowingsystem] eq "win32" && [lindex [wm minsize .] 0] > 160} {
+	    wm overrideredirect $w 1
+	    if {[winfo ismapped $w]} {
+		update
+	    }
+	}
+    }
+
     # resetWindows --
     #
     #	Restores a proper initial window setup for a test file, cleaning up from

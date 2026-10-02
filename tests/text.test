@@ -2681,7 +2681,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -result 3
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t -expand 1 -fill both
+    pack .t
 } -body {
     .t configure -width 20 -height 10
     update

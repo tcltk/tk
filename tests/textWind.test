@@ -56,7 +56,7 @@ Some of the upcoming tests will probably fail."
 # Moreover the widget must have the same padding in x and y (see proc bo)
 # However the tests are not sensitive to  -borderwidth  and  -highlightthickness
 text .t -font $fixedFont -width 30 -height 6 -borderwidth 2 -highlightthickness 2
-pack .t -expand 1 -fill both
+pack .t -anchor nw
 update
 .t debug on
 
@@ -989,7 +989,7 @@ test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     .t delete 1.0 end
     destroy .f
     place forget .t
-    pack .t
+    pack .t -anchor nw
     # Make sure the Text is mapped before we start
     update
 } -body {
@@ -1010,7 +1010,7 @@ test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     .t delete 1.0 end
     destroy .t.f
     place forget .t
-    pack .t
+    pack .t -anchor nw
     # Make sure the Text is mapped before we start
     update
 } -body {
@@ -1025,14 +1025,14 @@ test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
 } -cleanup {
     destroy .t.f
     place forget .t
-    pack .t
+    pack .t -anchor nw
 } -result [list 30x20+[xchar 12]+[yline 1]]
 
 test textWind-11.3 {EmbWinDisplayProc procedure, configuration optimization} -setup {
     .t delete 1.0 end
     destroy .f
     place forget .t
-    pack .t
+    pack .t -anchor nw
     # Make sure the Text is mapped before we start
     update
 } -body {
@@ -1049,7 +1049,7 @@ test textWind-11.3 {EmbWinDisplayProc procedure, configuration optimization} -se
 } -cleanup {
     destroy .f
     place forget .t
-    pack .t
+    pack .t -anchor nw
 } -result {no configures}
 
 test textWind-11.4 {EmbWinDisplayProc procedure, horizontal scrolling} -setup {
@@ -1374,7 +1374,7 @@ test textWind-16.1 {EmbWinTextStructureProc procedure} -setup {
     update
     winfo ismapped .f
 } -cleanup {
-    pack .t
+    pack .t -anchor nw
 } -result 0
 
 test textWind-16.2 {EmbWinTextStructureProc procedure} -setup {
@@ -1411,7 +1411,7 @@ test textWind-16.3 {EmbWinTextStructureProc procedure} -setup {
     pack forget .t
     update
 } -cleanup {
-    pack .t
+    pack .t -anchor nw
 } -result {}
 
 test textWind-16.4 {EmbWinTextStructureProc procedure} -setup {
@@ -1427,7 +1427,7 @@ test textWind-16.4 {EmbWinTextStructureProc procedure} -setup {
     update
     list [winfo ismapped .t.f] [.t bbox .t.f]
 } -cleanup {
-    pack .t
+    pack .t -anchor nw
 } -result [list 1 [list [expr {[xchar 6]}] [yline 1] 30 20]]
 
 test textWind-17.1 {peer widgets and embedded windows} -setup {

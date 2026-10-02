@@ -275,7 +275,8 @@ test wm-attributes-1.3.4 {change -fullscreen after map} -setup {
 } -result {0 1 1 0}
 test wm-attributes-1.3.5 {change -fullscreen after map} -setup {
     set results [list]
-    set normal_geom "301x302+101+102"
+    # The window cannot be narrower than its title bar.
+    set normal_geom "[expr {max(301, [lindex [wm minsize .] 0] + 1)}]x302+101+102"
     set fullscreen_geom "[winfo screenwidth .]x[winfo screenheight .]+0+0"
 } -constraints win -body {
     toplevel .t
@@ -679,6 +680,7 @@ test wm-deiconify-2.3 {geometry for an unmapped window\
     set results {}
 } -body {
     toplevel .t -width 200 -height 200
+    removeTitleBar .t
     lappend results [wm geometry .t]
     wm deiconify .t
     lappend results [wm geometry .t]
@@ -748,7 +750,9 @@ test wm-geometry-1.3 {usage} -returnCodes error -body {
     wm geometry . bogus
 } -result {bad geometry specifier "bogus"}
 
-test wm-geometry-2.1 {setting values} -body {
+test wm-geometry-2.1 {setting values} -setup {
+    removeTitleBar .t
+} -body {
     wm geometry .t 150x150+50+50
     update
     set result [wm geometry .t]
@@ -756,6 +760,7 @@ test wm-geometry-2.1 {setting values} -body {
     update
     return [list $result [string equal [wm geometry .t] $result]]
 } -cleanup {
+    wm overrideredirect .t 0
     unset result
 } -match glob -result [list 150x150+*+* 0]
 
@@ -1191,6 +1196,7 @@ destroy .t
 test wm-maxsize-2.1 {setting the maxsize to a value smaller\
 	than the current size will resize a toplevel} -body {
     toplevel .t -width 300 -height 300
+    removeTitleBar .t
     update
     wm maxsize .t 200 150
     # UpdateGeometryInfo invoked at idle
@@ -1202,6 +1208,7 @@ test wm-maxsize-2.1 {setting the maxsize to a value smaller\
 test wm-maxsize-2.2 {setting the maxsize to a value smaller\
 	than the current size will resize a gridded toplevel} -body {
     toplevel .t
+    removeTitleBar .t
     wm grid .t 0 0 50 50
     wm geometry .t 6x6
     update
@@ -1215,6 +1222,7 @@ test wm-maxsize-2.2 {setting the maxsize to a value smaller\
 test wm-maxsize-2.3 {attempting to resize to a value\
 	bigger than the current maxsize will set it to the max size} -body {
     toplevel .t -width 200 -height 200
+    removeTitleBar .t
     wm maxsize .t 300 250
     update
     wm geom .t 400x300
@@ -1239,6 +1247,7 @@ test wm-maxsize-2.4 {attempting to resize to a value bigger than the\
 test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
 	and the reqWidth/reqHeight are bigger than the max size} -body {
     toplevel .t
+    removeTitleBar .t
     pack [frame .t.f -width 400 -height 400]
     update idletasks
     set req [list [winfo reqwidth .t] [winfo reqheight .t]]
@@ -1279,6 +1288,7 @@ test wm-minsize-1.6 {usage} -setup {
 test wm-minsize-2.1 {setting the minsize to a value larger\
 	than the current size will resize a toplevel} -body {
     toplevel .t -width 200 -height 200
+    removeTitleBar .t
     update
     wm minsize .t 400 300
     # UpdateGeometryInfo invoked at idle
@@ -1303,6 +1313,7 @@ test wm-minsize-2.2 {setting the minsize to a value larger\
 test wm-minsize-2.3 {attempting to resize to a value\
 	smaller than the current minsize will set it to the minsize} -body {
     toplevel .t -width 400 -height 400
+    removeTitleBar .t
     wm minsize .t 300 300
     update
     wm geom .t 200x200
@@ -1329,6 +1340,7 @@ test wm-minsize-2.5 {Use min size if window size is not explicitly set\
     set result [list]
 } -body {
     toplevel .t
+    removeTitleBar .t
     pack [frame .t.f -width 250 -height 250]
     update idletasks
     lappend result [list [winfo reqwidth .t] [winfo reqheight .t]]

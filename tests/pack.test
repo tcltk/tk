@@ -32,7 +32,7 @@ destroy .pack
 toplevel .pack
 wm geom .pack 300x200+0+0
 wm minsize .pack 1 1
-update idletasks
+removeTitleBar .pack
 foreach i {a b c d} {
     frame .pack.$i
     label .pack.$i.label -text $i -relief raised
@@ -712,6 +712,7 @@ test pack-6.11 {-expand option} -setup {
 test pack-6.12 {-expand option} -setup {
     toplevel .pack2 -height 400 -width 400
     wm geometry .pack2 +0+0
+    removeTitleBar .pack2
     pack propagate .pack2 0
     foreach i {w1 w2 w3} {
 	frame .pack2.$i -width 30 -height 30 -bd 2 -relief raised
@@ -728,6 +729,7 @@ test pack-6.12 {-expand option} -setup {
 test pack-6.13 {-expand option} -setup {
     toplevel .pack2 -height 400 -width 400
     wm geometry .pack2 +0+0
+    removeTitleBar .pack2
     pack propagate .pack2 0
     foreach i {w1 w2 w3} {
 	frame .pack2.$i -width 30 -height 30 -bd 2 -relief raised
@@ -1632,6 +1634,9 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     win
 } -setup {
     destroy {*}[winfo children .pack]
+    # An override-redirect window cannot be iconified.
+    set oir [wm overrideredirect .pack]
+    wm overrideredirect .pack 0
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1649,10 +1654,15 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     update
     lappend result [winfo width .pack.a] [winfo height .pack.a]
     lappend result [winfo ismapped .pack.a]
+} -cleanup {
+    wm overrideredirect .pack $oir
 } -result {1 0 200 75 1}
 
 test pack-18.2 {unmap content when container unmapped} -setup {
     destroy {*}[winfo children .pack]
+    # A withdrawn override-redirect window is not resized on Windows.
+    set oir [wm overrideredirect .pack]
+    wm overrideredirect .pack 0
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1673,6 +1683,8 @@ test pack-18.2 {unmap content when container unmapped} -setup {
     wm deiconify .pack
     update
     lappend result [winfo ismapped .pack.b]
+} -cleanup {
+    wm overrideredirect .pack $oir
 } -result {1 0 100 30 0 1}
 
 test pack-19.1 {test respect for internalborder} -setup {
@@ -1804,6 +1816,7 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
 # TESTFILE CLEANUP
 #
 
+destroy .pack
 cleanupTests
 
 # Local Variables:
