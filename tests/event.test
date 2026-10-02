@@ -1539,6 +1539,14 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
 	"x,.f,." 150
 	"x,.f,.f" 50
     }
+    # The coordinates relative to the screen assume that "." is at +100+100.
+    # A window manager moves it by the size of its decorations.
+    foreach key {"A,{}" "B,{}"} {
+	incr coords($key) [expr {[winfo rooty .] - 100}]
+    }
+    foreach key {"x,{},{}" "x,.,{}" "x,.f,{}"} {
+	incr coords($key) [expr {[winfo rootx .] - 100}]
+    }
     set i 0
     set yPos X
 
