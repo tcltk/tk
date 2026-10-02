@@ -1027,7 +1027,7 @@ ExposeRestrictProc(
 
 	if (! [self onScreen]) {
 	    //printf("Running event loop.\n");
-	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	    TkMacOSXProcessIdleEvents();
 	    [self setOnScreen:YES];
 	}
 
@@ -1184,7 +1184,7 @@ ExposeRestrictProc(
 	 * expose events to redraw the window while it is being resized.
 	 */
 	if ([self inLiveResize]) {
-	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	    TkMacOSXProcessIdleEvents();
 	}
     }
     reentered = false;

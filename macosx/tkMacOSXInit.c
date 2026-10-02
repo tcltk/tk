@@ -670,7 +670,7 @@ TkpInit(
 	 * tasks now, so the root window is configured.
 	 */
 
-	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	TkMacOSXProcessIdleEvents();
 
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);

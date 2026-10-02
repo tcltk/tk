@@ -7021,7 +7021,7 @@ TkpWmSetState(
      */
 
     if (state != WithdrawnState) {
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	TkMacOSXProcessIdleEvents();
     }
     if (state == WithdrawnState) {
 	TkWmUnmapWindow(winPtr);
@@ -7049,7 +7049,7 @@ TkpWmSetState(
      * in order for the event-9.11-20 tests to pass.
      */
 
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+    TkMacOSXProcessIdleEvents();
 setStateEnd:
     return true;
 }

@@ -254,6 +254,7 @@ MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context, BOOL useDarkAppearance);
 MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
 MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
+MODULE_SCOPE void	TkMacOSXProcessIdleEvents(void);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))

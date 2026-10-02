@@ -27,6 +27,14 @@ static Tcl_ThreadDataKey dataKey;
 #define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
+/*
+ * The maximal number of passes over the idle handlers when they are run
+ * outside of the event loop. An idle handler can schedule a new idle handler
+ * each time, so running them until there are none left could never end.
+ */
+
+#define MAX_IDLE_PASSES 10
+
 static void TkMacOSXNotifyExitHandler(void *clientData);
 static void TkMacOSXEventsSetupProc(void *clientData, int flags);
 static void TkMacOSXEventsCheckProc(void *clientData, int flags);
@@ -188,7 +196,16 @@ void DebugPrintQueue(void)
 
 - (void) _runBackgroundLoop
 {
-    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)){
+    int i;
+
+    /*
+     * This is called again and again while a menu is tracked.
+     */
+
+    for (i = 0; i < MAX_IDLE_PASSES; i++) {
+	if (!Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {
+	    break;
+	}
     }
 }
 @end
@@ -273,6 +290,38 @@ Tk_MacOSXSetupTkNotifier(void)
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXProcessIdleEvents --
+ *
+ *	Runs the pending idle handlers, so that the windows are redrawn
+ *	before they are shown. The number of passes is limited, since an
+ *	idle handler can schedule a new idle handler each time, directly or
+ *	through the event handlers which it invokes. The remaining idle
+ *	handlers are run later from the event loop.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Idle handlers are run.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXProcessIdleEvents(void)
+{
+    int i;
+
+    for (i = 0; i < MAX_IDLE_PASSES; i++) {
+	if (!Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {
+	    break;
+	}
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
