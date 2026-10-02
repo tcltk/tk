@@ -31,9 +31,11 @@ static Tcl_ThreadDataKey dataKey;
  * The maximal number of passes over the idle handlers when they are run
  * outside of the event loop. An idle handler can schedule a new idle handler
  * each time, so running them until there are none left could never end.
+ * A complete redraw can need many passes (about two per level of nested
+ * geometry managers), so the limit is large.
  */
 
-#define MAX_IDLE_PASSES 10
+#define MAX_IDLE_PASSES 1000
 
 static void TkMacOSXNotifyExitHandler(void *clientData);
 static void TkMacOSXEventsSetupProc(void *clientData, int flags);
