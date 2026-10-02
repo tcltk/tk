@@ -501,6 +501,10 @@ test scrollbar-5.1 {ScrollbarCmdDeletedProc procedure} {
 
 catch {destroy .s}
 scrollbar .s -orient vertical -relief sunken -bd 2 -highlightthickness 2
+# The X11 tests below use coordinates for the default width at 96 DPI.
+if {[tk windowingsystem] eq "x11"} {
+    .s configure -width 11
+}
 pack .s -side left -fill y
 .s set .2 .4
 update
@@ -643,6 +647,10 @@ catch {destroy .t}
 toplevel .t -width [expr {$length + 50}] -height 150
 wm geometry .t +0+0
 scrollbar .t.s -orient horizontal -relief sunken -bd 2 -highlightthickness 2
+# The X11 tests below use coordinates for the default width at 96 DPI.
+if {[tk windowingsystem] eq "x11"} {
+    .t.s configure -width 11
+}
 place .t.s -width $length
 .t.s set .2 .4
 update
