@@ -1854,7 +1854,7 @@ test textDisp-11.13 {TkTestSetYView, partially visible last line} {
 catch {destroy .top}
 toplevel .top
 wm geometry .top +0+0
-text .top.t -width 30 -height 3
+text .top.t -font $fixedFont -width 30 -height 3
 pack .top.t
 .top.t insert end "Line 1"
 for {set i 2} {$i <= 20} {incr i} {
@@ -1909,7 +1909,8 @@ test textDisp-11.19 {TkTextSetYView, see in elided lines} {
 	.top.t insert end "Line $i\n"
     }
     # button just for having a line with a larger height
-    button .top.t.b -text "Test" -bd 2 -highlightthickness 2
+    button .top.t.b -text "Test" -font $fixedFont -padx 1 -pady 1 -bd 2 \
+	    -highlightthickness 2
     .top.t window create 21.0 -window .top.t.b
     .top.t tag add hidden 15.36 21.0
     .top.t tag configure hidden -elide true
@@ -2153,7 +2154,7 @@ test textDisp-13.11 {TkTextSeeCmd procedure} {} {
     # characters and calling see at the line end shall actually show
     # this character
     toplevel .top2
-    pack [text .top2.t2 -wrap none]
+    pack [text .top2.t2 -font $fixedFont -wrap none]
     for {set i 1} {$i < 5} {incr i} {
 	.top2.t2 insert end [string repeat "Line $i: éèàçù" 5]\n
     }
@@ -4336,7 +4337,7 @@ test textDisp-26.12 {AdjustForTab procedure, adjusting chunks} {
     .t tag add x 1.0 end
     .t tag add y 1.7
     .t tag add y 1.9
-    button .b -text "="
+    button .b -text "=" -font $fixedFont -padx 1 -pady 1
     .t window create 1.3 -window .b
     update
     lindex [.t bbox 1.5] 0
@@ -4492,8 +4493,12 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {
 	[list [xchar 5] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
-    set cm [winfo fpixels .t 1c]
-    .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
+    # 1 cm at 96 DPI: a fractional number of pixels which does not depend on
+    # the scaling.
+    set cm 37.795275590551185
+    .t configure -tabs [list $cm [expr {2*$cm}] center [expr {3*$cm}] \
+	    [expr {4*$cm}] [expr {5*$cm}] [expr {6*$cm}] [expr {7*$cm}] \
+	    [expr {8*$cm}]] -wrap none -width 40
     .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
     set width [expr {$fixedWidth * 19}]
     set tab $cm
@@ -4513,8 +4518,12 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
 test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {
     .t delete 1.0 end
     .t configure -tabstyle wordprocessor
-    set cm [winfo fpixels .t 1c]
-    .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
+    # 1 cm at 96 DPI: a fractional number of pixels which does not depend on
+    # the scaling.
+    set cm 37.795275590551185
+    .t configure -tabs [list $cm [expr {2*$cm}] center [expr {3*$cm}] \
+	    [expr {4*$cm}] [expr {5*$cm}] [expr {6*$cm}] [expr {7*$cm}] \
+	    [expr {8*$cm}]] -wrap none -width 40
     .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
     set width [expr {$fixedWidth * 19}]
     set tab $cm
@@ -4533,10 +4542,13 @@ test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potenti
 } [list 0 [yline 2] $fixedWidth $fixedHeight]
 test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem} {
     .t delete 1.0 end
-    set interpolatetab {1c 2c}
+    # 1 cm at 96 DPI: a fractional number of pixels which does not depend on
+    # the scaling.
+    set cm 37.795275590551185
+    set interpolatetab [list $cm [expr {2*$cm}]]
     set precisetab {}
     for {set i 1} {$i < 20} {incr i} {
-	lappend precisetab "${i}c"
+	lappend precisetab [expr {$i*$cm}]
     }
     .t configure -tabs $interpolatetab -wrap none -width 150
     .t insert 1.0 [string repeat "a\t" 20]
@@ -4748,7 +4760,7 @@ test textDisp-29.2.5 {miscellaneous: can show last character} -setup {
 } -body {
     toplevel .t2
     wm geometry .t2 121x141+200+200
-    text .t2.t -width 5 -height 5 -font {Arial 10} \
+    text .t2.t -width 5 -height 5 -font {Arial -13} \
       -wrap none -xscrollcommand ".t2.s set" \
       -bd 2 -highlightthickness 0 -padx 1
     .t2.t insert end "WWWWWWWWWWWWi"

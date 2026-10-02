@@ -6698,7 +6698,8 @@ test text-27.15b {<<Selection>> virtual event on <<PasteSelection>> inside widge
     bind .t <<Selection>> "set ::retval <<Selection>>_fired"
     update
     set ::retval no_<<Selection>>_event_fired
-    event generate .t <<PasteSelection>> -x 15 -y [lindex [.t dlineinfo 1.0] 1]
+    event generate .t <<PasteSelection>> -x [lindex [.t bbox 1.5] 0] \
+	    -y [lindex [.t dlineinfo 1.0] 1]
     update
     set ::retval
 } -cleanup {

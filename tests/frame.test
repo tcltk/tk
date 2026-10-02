@@ -1116,7 +1116,7 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
     deleteWindows
 } -body {
     # Test all -labelanchor positions
-    set font {helvetica 12}
+    set font {helvetica -16}
     labelframe .f -highlightthickness 1 -bd 3 -padx 1 -pady 2 -font $font \
 	    -text "Mupp"
     set fh [expr {max([font metrics $font -linespace] + 2 - 3, 0)}]
@@ -1150,14 +1150,14 @@ test frame-12.3 {FrameWorldChanged procedure} -setup {
     deleteWindows
 } -body {
     # Check reaction on font change
-    font create myfont -family courier -size 10
+    font create myfont -family courier -size -13
     labelframe .f -font myfont -text Mupp
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
     update
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
-    font configure myfont -size 20
+    font configure myfont -size -27
     update  ; # services the "TheWorldHasChanged" event, queues "TkWorldChanged" events
     update  ; # services the queued "TkWorldChanged" events
     set h2 [font metrics myfont -linespace]
@@ -1415,7 +1415,7 @@ test frame-14.1 {labelframe labelwidget option} -setup {
     deleteWindows
 } -body {
     # Test that label is moved in stacking order
-    label .l -text Mupp -font {helvetica 8}
+    label .l -text Mupp -font {helvetica -11}
     labelframe .f -labelwidget .l
     pack .f
     frame .f.f -width 50 -height 50
