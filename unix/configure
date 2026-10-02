@@ -736,6 +736,7 @@ CC
 MAN_FLAGS
 BUILD_TCLSH
 TCLSH_PROG
+TCL_INCLUDES
 TCL_STUB_LIB_SPEC
 TCL_STUB_LIB_FLAG
 TCL_STUB_LIB_FILE
@@ -2939,6 +2940,18 @@ if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
     as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
 fi
+
+#------------------------------------------------------------------------
+# Compile against the Tcl source tree if it is accessible, otherwise use
+# the installed Tcl headers.
+#------------------------------------------------------------------------
+
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+    TCL_INCLUDES='-I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR}'
+else
+    TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+fi
+
 
 
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for tclsh" >&5

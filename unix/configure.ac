@@ -42,6 +42,18 @@ if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 Found config for Tcl ${TCL_VERSION}])
 fi
 
+#------------------------------------------------------------------------
+# Compile against the Tcl source tree if it is accessible, otherwise use
+# the installed Tcl headers.
+#------------------------------------------------------------------------
+
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+    TCL_INCLUDES='-I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR}'
+else
+    TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+fi
+AC_SUBST(TCL_INCLUDES)
+
 SC_PROG_TCLSH
 SC_BUILD_TCLSH
 
