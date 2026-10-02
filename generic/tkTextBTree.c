@@ -7581,7 +7581,7 @@ DeleteRange(
     TkTextSegment *deferredChainPtr;
     TkTextSegment *savedLinkPtr;
     TkTextSegment *savedBranchPtr;
-    TkTextSegment *pulledLinkPtr;
+    DEBUG(TkTextSegment *pulledLinkPtr);
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -7617,7 +7617,7 @@ DeleteRange(
 
     assert(firstSegPtr->nextPtr);
 
-    pulledLinkPtr = NULL;
+    DEBUG(pulledLinkPtr = NULL);
 
     if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	/*
@@ -7644,7 +7644,7 @@ DeleteRange(
 		    TkTextSegment *newHeadPtr = segPtr->nextPtr;
 
 		    if (segPtr->typePtr == &tkTextLinkType) {
-			pulledLinkPtr = segPtr;
+			DEBUG(pulledLinkPtr = segPtr);
 		    }
 		    /* the switch will become the successor of firstSegPtr */
 		    MoveSegmentToRight(firstSegPtr, segPtr);
