@@ -11,9 +11,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tclWinPort.h"				/* for the macro S_ISDIR */
+#include <sys/stat.h>	/* before tcl.h, for Tcl_StatBuf with MinGW */
 #include "tkInt.h"
 #include "tkWinIco.h"
+
+#ifndef S_ISDIR
+#   define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
 
 #ifndef SHIL_JUMBO
 #   define SHIL_JUMBO 0x4
