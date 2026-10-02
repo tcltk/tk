@@ -1396,6 +1396,25 @@ test canvas-24.1 {Enter and Leave bindings which move the current item do not ha
     destroy .c
     unset -nocomplain done
 } -result 1
+test canvas-24.2 {Enter and Leave bindings which move the current item are still invoked - bug 1813595} -setup {
+    destroy .c
+    canvas .c -width 200 -height 200
+    pack .c
+    update
+} -body {
+    .c create rectangle 50 100 150 150 -fill red -tags card
+    set count 0
+    .c bind card <Enter> {incr count; .c move card 0 -30}
+    .c bind card <Leave> {.c move card 0 30}
+    event generate .c <Motion> -x 100 -y 125
+    after 200 {set done 1}
+    vwait done
+    # More than the number of attempts made in one redisplay.
+    expr {$count > 10}
+} -cleanup {
+    destroy .c
+    unset -nocomplain done count
+} -result 1
 
 test canvas-25.1 {a canvas is not scrolled if its scroll region fits in it - bug 2148529} -setup {
     destroy .c

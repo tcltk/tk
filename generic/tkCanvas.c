@@ -75,6 +75,14 @@ typedef struct TagSearch {
 #define SEARCH_TYPE_EXPR	4	/* Compound search */
 
 /*
+ * Choosing the current item again while event handlers keep changing it.
+ * [Bug 1813595]
+ */
+
+#define MAX_REPICKS	10	/* Attempts per redisplay. */
+#define REPICK_DELAY	10	/* Milliseconds before the next attempts. */
+
+/*
  * Custom option for handling "-state" and "-offset"
  */
 
@@ -249,6 +257,8 @@ static void		DefaultRotateImplementation(TkCanvas *canvasPtr,
 static Tcl_FreeProc	DestroyCanvas;
 static int		DrawCanvas(Tcl_Interp *interp, void *clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
 static void		DisplayCanvas(void *clientData);
+static void		RepickLater(void *clientData);
+static void		RepickWhenIdle(void *clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
 static void		EventuallyRedrawItem(TkCanvas *canvasPtr,
@@ -3010,7 +3020,7 @@ DisplayCanvas(
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
     int borderWidth, highlightWidth;
-    int repickCount;
+    int repickCount = 0;
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3023,12 +3033,13 @@ DisplayCanvas(
     /*
      * Choose a new current item if that is needed (this could cause event
      * handlers to be invoked). Limit the number of attempts, in case event
-     * handlers move the current item away from the pointer and back.
+     * handlers move the current item away from the pointer and back, and
+     * continue later from a timer: an idle handler would block [update].
      * [Bug 1813595]
      */
 
     for (repickCount = 0; (canvasPtr->flags & REPICK_NEEDED)
-	    && (repickCount < 10); repickCount++) {
+	    && (repickCount < MAX_REPICKS); repickCount++) {
 	Tcl_Preserve(canvasPtr);
 	canvasPtr->flags &= ~REPICK_NEEDED;
 	PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
@@ -3248,6 +3259,68 @@ DisplayCanvas(
     if (canvasPtr->flags & UPDATE_SCROLLBARS) {
 	CanvasUpdateScrollbars(canvasPtr);
     }
+    if ((repickCount >= MAX_REPICKS) && (canvasPtr->flags & REPICK_NEEDED)
+	    && !(canvasPtr->flags & REPICK_LATER_PENDING)) {
+	canvasPtr->flags |= REPICK_LATER_PENDING;
+	Tcl_Preserve(canvasPtr);
+	Tcl_DoWhenIdle(RepickWhenIdle, canvasPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RepickWhenIdle --
+ *
+ *	When-idle handler which starts the timer for RepickLater after the
+ *	pending redisplays have been done, so that it does not expire before
+ *	the event loop gets control back. [Bug 1813595]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A timer handler is created.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RepickWhenIdle(
+    void *clientData)	/* Information about widget. */
+{
+    Tcl_CreateTimerHandler(REPICK_DELAY, RepickLater, clientData);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RepickLater --
+ *
+ *	Timer handler which redisplays the canvas to choose a new current item
+ *	again, after DisplayCanvas has given up. [Bug 1813595]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The canvas is redisplayed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RepickLater(
+    void *clientData)	/* Information about widget. */
+{
+    TkCanvas *canvasPtr = (TkCanvas *)clientData;
+
+    canvasPtr->flags &= ~REPICK_LATER_PENDING;
+    if ((canvasPtr->tkwin != NULL) && !(canvasPtr->flags & REDRAW_PENDING)) {
+	canvasPtr->flags |= REDRAW_PENDING;
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+    }
+    Tcl_Release(canvasPtr);
 }
 
 /*

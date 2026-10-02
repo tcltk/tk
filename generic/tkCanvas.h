@@ -261,6 +261,8 @@ typedef struct TkCanvas {
  *				it should simply return immediately.
  * BBOX_NOT_EMPTY -		1 means that the bounding box of the area that
  *				should be redrawn is not empty.
+ * REPICK_LATER_PENDING -	1 means that a new current item will be chosen
+ *				again later, after DisplayCanvas gave up.
  */
 
 #define REDRAW_PENDING		1
@@ -272,6 +274,7 @@ typedef struct TkCanvas {
 #define LEFT_GRABBED_ITEM	0x40
 #define REPICK_IN_PROGRESS	0x100
 #define BBOX_NOT_EMPTY		0x200
+#define REPICK_LATER_PENDING	0x400
 
 /*
  * Flag bits for canvas items (redraw_flags):
