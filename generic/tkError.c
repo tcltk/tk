@@ -172,10 +172,14 @@ Tk_DeleteErrorHandler(
 	/*
 	 * Last chance to catch errors for this handler: if no event/error
 	 * processing took place to follow up the end of this error handler
-	 * we need a round trip with the X server now.
+	 * we need a round trip with the X server now. Not needed if no
+	 * requests were issued while the handler was active: it is often
+	 * used around calls (like measuring text with Xft) which rarely send
+	 * requests, and a round trip is expensive on remote displays.
 	 */
 
-	if (errorPtr->lastRequest > lastSerial) {
+	if ((errorPtr->lastRequest > lastSerial)
+		&& (errorPtr->lastRequest >= errorPtr->firstRequest)) {
 	    XSync(dispPtr->display, False);
 	}
 	dispPtr->deleteCount = 0;
