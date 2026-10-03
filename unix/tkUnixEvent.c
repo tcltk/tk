@@ -830,6 +830,29 @@ TkpWarpPointer(
     XWarpPointer(dispPtr->display, None, w, 0, 0, 0, 0,
 	    (int) dispPtr->warpX, (int) dispPtr->warpY);
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ * Returns current time. 
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    return TkGetMS();
+}
 
 /*
  * Local Variables:
