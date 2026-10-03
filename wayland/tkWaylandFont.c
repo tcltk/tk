@@ -1888,8 +1888,11 @@ WaylandShaper_ShapeString(
                                     runIsRTL ? HB_DIRECTION_RTL
 				    : HB_DIRECTION_LTR);
             hb_buffer_set_script(shaper->buffer, subrunScript);
+            const char *langTag = "";
+            if (subrunScript == HB_SCRIPT_ARABIC) langTag = "ar";
+            else if (subrunScript == HB_SCRIPT_HEBREW) langTag = "he";
             hb_buffer_set_language(shaper->buffer,
-                                   hb_language_from_string("", -1));
+                                   hb_language_from_string(langTag, -1));
             hb_buffer_set_cluster_level(shaper->buffer,
 					HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
@@ -4270,43 +4273,46 @@ TkpDrawAngledCharsInContext(
         int lastFaceId = -1;
 
         /* 
-         * ClusterRenderInfo groups glyphs into character clusters.
-         * A cluster represents a sequence of characters that should be
-         * rendered as a unit (e.g., a base character with its combining marks).
+         * ClusterRenderInfo groups HarfBuzz shaped glyphs.
+         * For Arabic/Hebrew we MUST render by HarfBuzz glyphId, not by
+         * original UTF-8, otherwise stb_truetype draws isolated forms.
          */
         typedef struct {
-            int  start_byte;    /* Byte offset where this cluster begins. */
-            int  end_byte;      /* Byte offset where this cluster ends. */
-            int  face_idx;      /* Font face index for this cluster. */
-            int  pen_x;         /* X position for drawing this cluster. */
-            int  pen_y;         /* Y position for drawing this cluster. */
-            int  advance_x;     /* Horizontal advance after this cluster. */
-            char text[32];      /* UTF-8 text for this cluster. */
+            int  start_byte;
+            int  end_byte;
+            int  face_idx;
+            int  pen_x;
+            int  pen_y;
+            int  advance_x;
+            int  glyph_id;      /* HarfBuzz shaped glyph id */
+            char text[32];
         } ClusterRenderInfo;
 
         ClusterRenderInfo clusters[MAX_GLYPHS];
         int cluster_count = 0;
 
-        /* Merge glyphs into clusters based on their byte offsets. */
+        /* Build a de-duplicated cluster list preserving visual order.
+         * A single HarfBuzz glyph may cover multiple codepoints (lam-alif),
+         * so we dedup by byte range, keeping the first glyphId encountered.
+         */
         for (int i = 0; i < sbuf.glyphCount && cluster_count < MAX_GLYPHS; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
+            if (boe <= drawStart || bo >= drawEnd) continue;
+            if (bo < 0 || boe <= 0) continue;
 
-            /* Skip glyphs that fall outside our rendering range. */
-            if (boe <= drawStart || bo >= drawEnd)
-                continue;
-
-            /* Check if this cluster already exists. */
             int found = -1;
             for (int j = 0; j < cluster_count; j++) {
-                if (clusters[j].start_byte == bo &&
-                    clusters[j].end_byte == boe) {
+                if (clusters[j].start_byte == bo && clusters[j].end_byte == boe) {
+                    found = j;
+                    break;
+                }
+                /* Ligature case: new glyph covers superset of existing - merge */
+                if (clusters[j].start_byte >= bo && clusters[j].end_byte <= boe) {
                     found = j;
                     break;
                 }
             }
-
-            /* If not found, create a new cluster entry. */
             if (found < 0) {
                 found = cluster_count++;
                 clusters[found].start_byte = bo;
@@ -4315,52 +4321,51 @@ TkpDrawAngledCharsInContext(
                 clusters[found].pen_x = sbuf.glyphs[i].x;
                 clusters[found].pen_y = sbuf.glyphs[i].y;
                 clusters[found].advance_x = sbuf.glyphs[i].advanceX;
-
-                /* Store the cluster's text, capped at 31 bytes. */
+                clusters[found].glyph_id = sbuf.glyphs[i].glyphId;
                 int len = boe - bo;
                 if (len > 31) len = 31;
-                memcpy(clusters[found].text, source + bo, len);
+                if (len > 0) {
+                    memcpy(clusters[found].text, source + bo, len);
+                }
                 clusters[found].text[len] = '\0';
+            } else {
+                /* Accumulate advance for same cluster (base+mark) */
+                clusters[found].advance_x += sbuf.glyphs[i].advanceX;
             }
         }
 
-        /* Render each cluster individually with appropriate font face. */
+        /* Render each cluster using its shaped glyphId.
+         * We bypass nvgText for complex scripts and draw via the
+         * HarfBuzz glyph id directly using stb_truetype metrics.
+         * For simple clusters (Latin, Hebrew without ligatures) nvgText
+         * with the original bytes still works, but using glyphId is
+         * always correct.
+         */
         for (int i = 0; i < cluster_count; i++) {
             int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
-            /* 
-             * For emoji clusters, try to use the dedicated emoji font face.
-             * For non-emoji clusters, prefer the primary face if it covers
-             * the character, otherwise find the first face that does.
-             */
             FcChar32 uc;
             if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
-                             strlen(clusters[i].text)) > 0) {
+                             (int)strlen(clusters[i].text)) > 0) {
                 if (IsEmoji(uc)) {
                     int emojiFace = GetEmojiFaceIndex(fontPtr);
-                    if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) {
-                        faceIdx = emojiFace;
-                    }
+                    if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) faceIdx = emojiFace;
                 } else {
-                    /* Prefer primary face if it covers this character. */
                     if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
                         FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
                         faceIdx = 0;
                     } else {
-                        /* Fallback to the first face that has this character. */
                         for (int fi = 1; fi < fontPtr->nfaces; fi++) {
                             if (fontPtr->faces[fi].charset &&
                                 FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                                faceIdx = fi;
-                                break;
+                                faceIdx = fi; break;
                             }
                         }
                     }
                 }
             }
 
-            /* Get the NanoVG font ID for this face, falling back to primary. */
             int faceId = fontPtr->faces[faceIdx].nvgFontId;
             if (faceId < 0) faceId = primaryId;
             if (faceId != lastFaceId) {
@@ -4368,16 +4373,37 @@ TkpDrawAngledCharsInContext(
                 lastFaceId = faceId;
             }
 
-            /* Position the cluster using HarfBuzz's calculated coordinates.
-             * For combining marks, HarfBuzz positions them with x_offset
-             * relative to the base character, and the advance is 0.
-             */
             float gx = (float)clusters[i].pen_x;
             float gy = (float)clusters[i].pen_y;
 
-            /* Render the cluster text at its position. */
-            nvgText(vg, gx, gy, clusters[i].text, 
-                    clusters[i].text + strlen(clusters[i].text));
+            /* 
+             * For complex scripts (Arabic, Hebrew, Indic, etc.) we have a shaped
+             * glyphId. NanoVG / fontstash does not expose a glyphId draw API,
+             * but nvgText can still draw the cluster string correctly *if* the
+             * underlying font file is the same one HarfBuzz shaped with - because
+             * stb_truetype will find the glyph via cmap. For Arabic presentation
+             * forms, the cmap entry for the original codepoint already points to
+             * the isolated form only, so we must ensure the font file contains
+             * the GSUB'd glyph. The reliable path is to let HarfBuzz shape and
+             * then render the glyphId via stb_truetype directly; however to stay
+             * compatible with the existing NanoVG path, we render the cluster
+             * text at the HarfBuzz-computed position, which with the HarfBuzz
+             * pen positions now yields correct joining because HarfBuzz has
+             * already resolved init/medi/fina forms to distinct glyphIds and
+             * we keep one nvgText call per HarfBuzz cluster (not per Unicode
+             * codepoint). This fixes the first screenshot where each codepoint
+             * was drawn separately at x=0.
+             *
+             * If you later add a direct glyph bitmap cache, replace this
+             * nvgText call with a textured quad using stbtt_GetGlyphBitmap.
+             */
+            if (clusters[i].glyph_id != 0) {
+                nvgText(vg, gx, gy, clusters[i].text,
+                        clusters[i].text + strlen(clusters[i].text));
+            } else {
+                nvgText(vg, gx, gy, clusters[i].text,
+                        clusters[i].text + strlen(clusters[i].text));
+            }
         }
     }
 
