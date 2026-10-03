@@ -1958,6 +1958,28 @@ TkWaylandWakeupGLFW(void)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ * Returns current time. 
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    return TkGetMS();
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

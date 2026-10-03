@@ -163,6 +163,14 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
+
+    /*
+     * Do not generate KeyRelease events for auto-repeated keys, as on
+     * other platforms. [Bug d3b9644729]
+     */
+
+    XkbSetDetectableAutoRepeat(display, True, NULL);
+
     dispPtr = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
@@ -821,6 +829,28 @@ TkpWarpPointer(
     }
     XWarpPointer(dispPtr->display, None, w, 0, 0, 0, 0,
 	    (int) dispPtr->warpX, (int) dispPtr->warpY);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ * Returns current time. 
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    return TkGetMS();
 }
 
 /*

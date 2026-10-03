@@ -1353,21 +1353,35 @@ ConfigureEntry(
 	ComputeFormat(sbPtr);
 
 	if (valuesChanged > 0) {
-	    Tcl_Obj *objPtr;
+	    Tcl_Obj **elemPtrs;
+	    Tcl_Size i, nElems;
 
 	    /*
 	     * No check for error return, because there shouldn't be one given
 	     * the check for valid list above.
 	     */
 
-	    Tcl_ListObjIndex(interp, sbPtr->listObj, 0, &objPtr);
+	    Tcl_ListObjGetElements(interp, sbPtr->listObj, &nElems, &elemPtrs);
 
 	    /*
-	     * No check for error return here as well, because any possible
-	     * error will be trapped below when attempting tracing.
+	     * Keep the current value if it is one of the new values, as the
+	     * -from/-to range below keeps a value which is in the range.  It
+	     * can be set from the -textvariable above.  [Bug 1439266]
 	     */
 
-	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
+	    for (i = 0; i < nElems; i++) {
+		if (strcmp(Tcl_GetString(elemPtrs[i]), entryPtr->string) == 0) {
+		    break;
+		}
+	    }
+	    if (i >= nElems && nElems > 0) {
+		/*
+		 * No check for error return here as well, because any possible
+		 * error will be trapped below when attempting tracing.
+		 */
+
+		EntryValueChanged(entryPtr, Tcl_GetString(elemPtrs[0]));
+	    }
 	} else if ((sbPtr->valueObj == NULL)
 		&& !DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)
 		&& (!DOUBLES_EQ(sbPtr->fromValue, oldFrom)
@@ -1381,8 +1395,8 @@ ConfigureEntry(
 
 	    double dvalue;
 
-	    if (sscanf(entryPtr->string, "%lf", &dvalue) <= 0) {
-		/* Scan failure */
+	    if (Tcl_GetDouble(NULL, entryPtr->string, &dvalue) != TCL_OK) {
+		/* Not a number */
 		dvalue = sbPtr->fromValue;
 	    } else if (dvalue > sbPtr->toValue) {
 		dvalue = sbPtr->toValue;
@@ -2034,14 +2048,14 @@ EntryComputeGeometry(
 		(Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
 	if (overflow <= 0) {
 	    entryPtr->placeholderLeftIndex = 0;
-	    if (entryPtr->justify == TK_JUSTIFY_LEFT) {
-		entryPtr->placeholderX = entryPtr->inset;
+	    if (entryPtr->justify == TK_JUSTIFY_CENTER) {
+		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
+			- entryPtr->xWidth - totalLength)/2;
 	    } else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
 		entryPtr->placeholderX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
 			- entryPtr->xWidth - totalLength;
 	    } else {
-		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
-			- entryPtr->xWidth - totalLength)/2;
+		entryPtr->placeholderX = entryPtr->inset;
 	    }
 	} else {
 
@@ -2089,14 +2103,14 @@ EntryComputeGeometry(
 	    (Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
     if (overflow <= 0) {
 	entryPtr->leftIndex = 0;
-	if (entryPtr->justify == TK_JUSTIFY_LEFT) {
-	    entryPtr->leftX = entryPtr->inset;
+	if (entryPtr->justify == TK_JUSTIFY_CENTER) {
+	    entryPtr->leftX = (Tk_Width(entryPtr->tkwin)
+		    - entryPtr->xWidth - totalLength)/2;
 	} else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
 	    entryPtr->leftX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
 		    - entryPtr->xWidth - totalLength;
 	} else {
-	    entryPtr->leftX = (Tk_Width(entryPtr->tkwin)
-		    - entryPtr->xWidth - totalLength)/2;
+	    entryPtr->leftX = entryPtr->inset;
 	}
 	entryPtr->layoutX = entryPtr->leftX;
     } else {
@@ -4466,10 +4480,10 @@ SpinboxInvoke(
 	} else if (!DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)) {
 	    double dvalue;
 
-	    if (sscanf(entryPtr->string, "%lf", &dvalue) <= 0) {
+	    if (Tcl_GetDouble(NULL, entryPtr->string, &dvalue) != TCL_OK) {
 		/*
-		 * If the string doesn't scan as a double value, just
-		 * use the -from value
+		 * If the string isn't a double value, just use the -from
+		 * value.
 		 */
 
 		dvalue = sbPtr->fromValue;

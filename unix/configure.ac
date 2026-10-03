@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="b1"
+TK_PATCH_LEVEL=".1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -76,6 +76,7 @@ if test "${CFLAGS+set}" != "set" ; then
 fi
 
 AC_PROG_CC
+AC_PROG_CPP
 AC_C_INLINE
 
 #------------------------------------------------------------------------
@@ -765,6 +766,7 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
 
     XFT_CFLAGS=""
     XFT_LIBS=""
+    XFT_DEPS=""
 
     if test "$enable_xft" = "no" ; then
 	AC_MSG_RESULT([no])
@@ -795,8 +797,10 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
 
 	    if test "$found_xft" = "yes" ; then
 		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		XFT_DEPS="xft"
 		AC_CHECK_LIB(fontconfig, FcFontSort, [
 		    XFT_LIBS="$XFT_LIBS -lfontconfig"
+		    XFT_DEPS="$XFT_DEPS fontconfig"
 		], [])
 	    fi
 
@@ -811,6 +815,7 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
 	    enable_xft=no
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
+	    XFT_DEPS=""
 	else
 	    enable_xft=yes
 	fi
@@ -818,67 +823,46 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
 
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
+    AC_SUBST(XFT_DEPS)
 
     #--------------------------------------------------------------------
-    # --enable-bidi  (HarfBuzz is required only when enabled)
+    # HarfBuzz for X11 bidi text shaping
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
     AC_ARG_ENABLE(bidi,
 	AS_HELP_STRING([--enable-bidi],
-	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (forces --enable-xft=yes)]),
+	    [enable bidirectional/RTL text support using SheenBidi and HarfBuzz (default: yes)]),
 	[enable_bidi=$enableval], [enable_bidi="yes"])
+    AC_MSG_RESULT([$enable_bidi])
+
+    BIDI_CFLAGS=""
+    HB_CFLAGS=""
+    HB_LIBS=""
 
     if test "$enable_bidi" = "yes"; then
-	AC_MSG_RESULT([yes (forces Xft on)])
-	if test "$enable_xft" = "no"; then
-	   AC_MSG_NOTICE([--enable-bidi requested: enabling Xft as well])
-	   enable_xft=yes
-	fi
-
-	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
-                     -I${TK_SRC_DIR}/unix/bidi/Source \
-                     -I${TK_SRC_DIR}/unix/bidi \
-                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
-	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
-	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
-
-        #--------------------------------------------------------------------
-        # HarfBuzz - HARD DEPENDENCY only when --enable-bidi=yes (minimum 2.8.2)
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for HarfBuzz >= 2.8.2 (required for --enable-bidi)])
-        if pkg-config --exists "harfbuzz >= 2.8.2"; then
-            HB_CFLAGS=`pkg-config --cflags harfbuzz`
-            HB_LIBS=`pkg-config --libs harfbuzz`
-            AC_MSG_RESULT([yes])
-
-            tk_oldCFlags=$CFLAGS
-            tk_oldLibs=$LIBS
-            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
-            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
-
-            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
-                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
-            ], [#include <X11/Xlib.h>])
-
-            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
-                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
-            ])
-
-            CFLAGS=$tk_oldCFlags
-            LIBS=$tk_oldLibs
-
-            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
-            AC_SUBST(HB_CFLAGS)
-            AC_SUBST(HB_LIBS)
-        else
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz >= 2.8.2 development files.
+	# Check for HarfBuzz (required for X11 bidi)
+	AC_MSG_CHECKING([for HarfBuzz >= 2.8.2 (required for bidi text shaping)])
+	if pkg-config --exists "harfbuzz >= 2.8.2"; then
+	    HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+	    AC_MSG_RESULT([found version $HB_VERSION])
+	    HB_CFLAGS=`pkg-config --cflags harfbuzz`
+	    HB_LIBS=`pkg-config --libs harfbuzz`
+	    BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+			 -I${TK_SRC_DIR}/unix/bidi/Source \
+			 -I${TK_SRC_DIR}/unix/bidi \
+			 -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+	    AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
+	    AC_DEFINE(HAVE_HARFBUZZ, 1, [Define if HarfBuzz is available for text shaping])
+	    UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+	else
+	    AC_MSG_RESULT([no])
+	    AC_MSG_ERROR([HarfBuzz >= 2.8.2 is required for bidi text support when building the X11 backend.
 Please install the HarfBuzz development package:
   - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
   - Fedora/RHEL:     sudo dnf install harfbuzz-devel
   - Arch:            sudo pacman -S harfbuzz
   - macOS (Homebrew): brew install harfbuzz])
-        fi
-
+	fi
     else
 	AC_MSG_RESULT([no])
 	BIDI_CFLAGS=""
@@ -1003,7 +987,7 @@ if test $tk_aqua = no; then
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	AC_MSG_RESULT([$found_cups])
