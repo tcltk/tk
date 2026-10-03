@@ -8160,6 +8160,99 @@ ElideMeasureProc(
 /*
  *--------------------------------------------------------------
  *
+ * WordBreakIndex --
+ *
+ *	Find the last word wrap opportunity in the first bytesThatFit bytes
+ *	of a chunk: after an ASCII white space character (as before UAX #14,
+ *	which has no break before a tab, for instance), or at a UAX #14 line
+ *	break which is also a word boundary (with the dictionaries for Thai,
+ *	Lao, Khmer and Myanmar). The breaks are
+ *	computed with the text which follows the chunk, in its segment and in
+ *	the next character segments, since the end of a segment (a tag
+ *	boundary, for instance) is no break by itself. WORD_BREAK_CONTEXT is
+ *	longer than the longest dictionary word.
+ *
+ * Results:
+ *	The byte offset of the break in the chunk, or -1 if there is none.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+#define WORD_BREAK_CONTEXT 128
+
+static Tcl_Size
+WordBreakIndex(
+    TkTextSegment *segPtr,	/* Segment of the chunk. */
+    Tcl_Size byteOffset,	/* Offset of the chunk in the segment. */
+    Tcl_Size bytesThatFit)	/* Number of bytes of the chunk which fit. */
+{
+    Tcl_Size want = bytesThatFit + WORD_BREAK_CONTEXT;
+    Tcl_Size len = segPtr->size - byteOffset;
+    Tcl_Size n, i, best = -1;
+    Tcl_DString text;
+    const char *chars;
+    unsigned char *breaks;
+
+    Tcl_DStringInit(&text);
+    Tcl_DStringAppend(&text, segPtr->body.chars + byteOffset, len < want ? len : want);
+    if (len < want) {
+	TkTextSegment *nextPtr;
+
+	for (nextPtr = segPtr->nextPtr; nextPtr && Tcl_DStringLength(&text) < want;
+		nextPtr = nextPtr->nextPtr) {
+	    Tcl_Size size = want - Tcl_DStringLength(&text);
+
+	    if (nextPtr->size == 0) {
+		continue;
+	    }
+	    if (nextPtr->typePtr != &tkTextCharType) {
+		break;
+	    }
+	    Tcl_DStringAppend(&text, nextPtr->body.chars, nextPtr->size < size ? nextPtr->size : size);
+	}
+    }
+    n = Tcl_DStringLength(&text);
+
+    if (n == bytesThatFit) {
+	/*
+	 * The chunk ends its segment, and no text follows (end of line, image,
+	 * window...): its end is a break.
+	 */
+
+	Tcl_DStringFree(&text);
+	return bytesThatFit;
+    }
+
+    chars = Tcl_DStringValue(&text);
+    breaks = (unsigned char *)Tcl_Alloc(3 * (n + 1));
+    mojibake_line_breaks_with_dict(chars, (size_t) n, breaks,
+	    breaks + (n + 1), breaks + 2 * (n + 1));
+    for (i = bytesThatFit; i > 0; --i) {
+	switch (chars[i - 1]) {
+	case ' ': case '\t': case '\n': case '\v': case '\f': case '\r':
+	    best = i;
+	    break;
+	default:
+	    if (breaks[i] && breaks[(n + 1) + i] && breaks[2 * (n + 1) + i]) {
+		best = i;
+	    }
+	    break;
+	}
+	if (best != -1) {
+	    break;
+	}
+    }
+    Tcl_Free(breaks);
+    Tcl_DStringFree(&text);
+    return best;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TkTextCharLayoutProc --
  *
  *	This function is the "layoutProc" for character segments.
@@ -8452,51 +8545,16 @@ TkTextCharLayoutProc(
     } else {
 	const char *chunkStart = p;
 	size_t bFit = (size_t)bytesThatFit;
-	size_t bTotal = (size_t)maxBytes;
 
-	unsigned char *gAll = (unsigned char*)Tcl_Alloc(bTotal+1);
-	unsigned char *lAll = (unsigned char*)Tcl_Alloc(bTotal+1);
-	unsigned char *wAll = (unsigned char*)Tcl_Alloc(bTotal+1);
-
-	if (gAll && lAll && wAll) {
-	    mojibake_line_breaks_with_dict(chunkStart, bTotal, lAll, gAll, wAll);
-
-	    /* Backward search for last line break opportunity within bFit */
-	    Tcl_Size best = -1;
-	    size_t off = bFit;
-	    if (off > 0 && off < bTotal && !gAll[off]) {
-		size_t adj;
-		mojibake_grapheme_prev(chunkStart, bTotal, off, &adj);
-		off = adj;
-	    }
-	    while (off > 0) {
-		size_t prev;
-		mojibake_grapheme_prev(chunkStart, bTotal, off, &prev);
-		if (prev >= off) break;
-		/*
-		 * A candidate must be BOTH a raw UAX#14 line-break-class
-		 * opportunity (lAll) AND a genuine word boundary per the
-		 * dictionary segmenter (wAll) before we accept it. lAll
-		 * alone is not enough for Thai/Lao/Khmer/Myanmar: their
-		 * default line-break class is "complex context", which is
-		 * breakable pretty much anywhere absent dictionary input,
-		 * so relying on lAll alone lets us cut inside a dictionary
-		 * word (e.g. between the syllables of Thai "ถูกต้อง" or Lao
-		 * "ຄວາມສະເໜີພາບ", both of which are a single lexical item).
-		 * wAll is where mojibake_line_breaks_with_dict records the
-		 * dictionary-aware word boundary for exactly this purpose --
-		 * skipping it means we never actually applied the dictionary.
-		 */
-		if (lAll[prev] && gAll[prev] && wAll[prev]) {
-		    best = (Tcl_Size)prev;
-		    break;
-		}
-		if (lAll[off] && gAll[off] && wAll[off]) {
-		    best = (Tcl_Size)off;
-		    break;
-		}
-		off = prev;
-	    }
+	{
+	    /*
+	     * A candidate must be BOTH a raw UAX#14 line-break-class
+	     * opportunity AND a genuine word boundary per the dictionary
+	     * segmenter (see WordBreakIndex): the default line-break class of
+	     * Thai/Lao/Khmer/Myanmar is "complex context", which is breakable
+	     * pretty much anywhere absent dictionary input.
+	     */
+	    Tcl_Size best = WordBreakIndex(segPtr, byteOffset, bytesThatFit);
 
 	    /* Also handle ASCII space / tab via UAX#14 already includes them,
 	     * but keep RTL forward scan for visual trailing separator */
@@ -8513,7 +8571,7 @@ TkTextCharLayoutProc(
 			    size_t pos = (size_t)(fwdPtr - chunkStart);
 			    size_t cand = pos + (size_t)chLen4;
 			    size_t cEnd;
-			    if (mojibake_grapheme_next(chunkStart, bTotal, pos, &cEnd) && cEnd == cand) {
+			    if (mojibake_grapheme_next(chunkStart, (size_t)maxBytes, pos, &cEnd) && cEnd == cand) {
 				best = (Tcl_Size)cand;
 				break;
 			    }
@@ -8555,17 +8613,7 @@ TkTextCharLayoutProc(
 		 */
 		chunkPtr->breakIndex = -1;
 	    }
-	} else {
-	    /*
-	     * Could not allocate break-property arrays. We cannot determine
-	     * any real break opportunity, so mark this chunk as having none.
-	     */
-	    chunkPtr->breakIndex = -1;
 	}
-
-	if (gAll) Tcl_Free(gAll);
-	if (lAll) Tcl_Free(lAll);
-	if (wAll) Tcl_Free(wAll);
 
 	if (chunkPtr->breakIndex == -1) {
 	    if ((bytesThatFit + byteOffset) == segPtr->size) {
