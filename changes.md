@@ -51,6 +51,7 @@ to the userbase.
  - [ttk::spinbox doesn't expand its height on Linux](https://core.tcl-lang.org/tk/tktview/331303)
  - [spinbox -values overrides the value of the -textvariable](https://core.tcl-lang.org/tk/tktview/143926)
  - [Improper look of ttk::checkbutton -style Toolbutton](https://core.tcl-lang.org/tk/tktview/341467)
+ - [ttk Toolbutton has wrong default anchor](https://core.tcl-lang.org/tk/tktview/186783)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
