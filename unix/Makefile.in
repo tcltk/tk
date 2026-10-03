@@ -419,7 +419,7 @@ X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
-	tkUnixPrint.o
+	tkUnixPortal.o tkUnixPrint.o
 
 AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -545,7 +545,8 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
 	$(UNIX_DIR)/tkUnixSysNotify.c $(UNIX_DIR)/tkUnixSysTray.c \
 	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c \
-	$(UNIX_DIR)/tkUnixPrint.c $(UNIX_DIR)/bidi/SheenBidi.c
+	$(UNIX_DIR)/tkUnixPortal.c $(UNIX_DIR)/tkUnixPrint.c \
+	$(UNIX_DIR)/bidi/SheenBidi.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXAccessibility.c \
@@ -1370,6 +1371,9 @@ tkUnixMenu.o: $(UNIX_DIR)/tkUnixMenu.c
 
 tkUnixMenubu.o: $(UNIX_DIR)/tkUnixMenubu.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixMenubu.c
+
+tkUnixPortal.o: $(UNIX_DIR)/tkUnixPortal.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixPortal.c
 
 tkUnixPrint.o: $(UNIX_DIR)/tkUnixPrint.c
 	$(CC) -c $(CC_SWITCHES) $(CUPS_CFLAGS) $(UNIX_DIR)/tkUnixPrint.c

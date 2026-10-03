@@ -535,6 +535,10 @@ namespace eval ::tk::test::dialog {
 	variable dialogIsNative [isNative $dialogType]
 	variable testDialog
 	variable testDialogFont
+
+	# The tests drive the dialogs implemented in Tcl; never pop up the
+	# desktop's file chooser.
+	namespace eval ::tk::portal {variable enabled 0}
     }
 
     proc Click {button} {

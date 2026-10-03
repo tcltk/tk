@@ -26,8 +26,9 @@ and
 .QW "lpr"
 Unix commands, and the \fBtk print\fR command does not supersede that
 functionality; it builds on it. The \fBtk print\fR command is a fuller
-implementation that uses native dialogs on macOS and Windows, and a Tk-based
-dialog that provides parallel functionality on X11.
+implementation that uses native dialogs on macOS and Windows, and on X11 the
+desktop's print dialog if available, otherwise a Tk-based dialog that provides
+parallel functionality.
 .SH PLATFORM NOTES
 .TP
 \fBmacOS\fR
@@ -45,7 +46,18 @@ not be identical to screen rendering.
 .TP
 \fBX11\fR
 .
-The X11 implementation uses a Tk GUI to configure print jobs for sending to a
+If the desktop provides printing through the XDG desktop portal (as KDE
+Plasma and GNOME do), the desktop's own print dialog is shown and the job is
+sent to the printer selected there.  The canvas is sent as PostScript,
+centered on the page and scaled down if it does not fit the printable area;
+the text is sent as plain text wrapped to the page width and formatted by the
+print system.  When printing to a file, the document is converted to the
+format selected in the dialog (PDF or PostScript) with the \fBcupsfilter\fR
+command of CUPS, or with \fBps2pdf\fR for a canvas; if neither is
+available, an error is raised.
+.RS
+.PP
+Otherwise the X11 implementation uses a Tk GUI to configure print jobs for sending to a
 printer via the
 .QW "lpr"
 or
@@ -56,6 +68,7 @@ parameters. As a result, only printer selection and number of copies are
 configured as arguments to the print command; many aspects of print rendering,
 such as grayscale or color for the canvas, are instead configured when
 PostScript is generated.
+.RE
 .SH "SEE ALSO"
 canvas(n), text(n), tk(n)
 .SH KEYWORDS

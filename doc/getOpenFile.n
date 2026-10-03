@@ -51,6 +51,8 @@ Configures how the Save dialog reacts when the selected file already
 exists, and saving would overwrite it.  A true value requests a
 confirmation dialog be presented to the user.  A false value requests
 that the overwrite take place without confirmation.  Default value is true.
+The desktop's file dialog on X11 (see \fBPLATFORM NOTES\fR) always asks
+for confirmation.
 .\" OPTION: -defaultextension
 .TP
 \fB\-defaultextension\fI extension\fR
@@ -91,6 +93,9 @@ relative path to an absolute path.
 \fB\-initialfile\fI filename\fR
 .
 Specifies a filename to be displayed in the dialog when it pops up.
+The Open dialog of the desktop on X11 (see \fBPLATFORM NOTES\fR) can not
+preselect a file; it shows the directory that contains \fIfilename\fR,
+which is relative to \fB\-initialdir\fR.
 .\" OPTION: -message
 .TP
 \fB\-message\fI string\fR
@@ -131,6 +136,18 @@ the list. If the dialog is canceled, the variable is not modified.
 If the user selects a file, both \fBtk_getOpenFile\fR and
 \fBtk_getSaveFile\fR return the full pathname of this file. If the
 user cancels the operation, both commands return the empty string.
+.SH "PLATFORM NOTES"
+.TP
+\fBX11\fR
+.
+If the \fBtk_strictMotif\fR variable is set, a Motif-style dialog
+implemented in Tk is shown.  Otherwise, if the desktop provides a file
+chooser through the XDG desktop portal (as KDE Plasma and GNOME do), the
+desktop's own file dialog is shown; if not, a dialog implemented in Tk.
+While the desktop's dialog is open the application keeps processing
+events, but the toplevel of the \fB\-parent\fR window does not receive
+pointer events (see \fBtk busy\fR).  Some desktops ignore
+\fB\-initialdir\fR.
 .SH "SPECIFYING FILE PATTERNS"
 .PP
 The \fIfilePatternList\fR value given by the \fB\-filetypes\fR option

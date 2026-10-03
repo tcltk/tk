@@ -374,6 +374,8 @@ if {![llength [info commands tk_getOpenFile]]} {
     proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
 	    return [::tk::MotifFDialog open {*}$args]
+	} elseif {[::tk::portal::Available FileChooser]} {
+	    return [::tk::portal::FileDialog open {*}$args]
 	} else {
 	    return [::tk::dialog::file:: open {*}$args]
 	}
@@ -383,6 +385,8 @@ if {![llength [info commands tk_getSaveFile]]} {
     proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
 	    return [::tk::MotifFDialog save {*}$args]
+	} elseif {[::tk::portal::Available FileChooser]} {
+	    return [::tk::portal::FileDialog save {*}$args]
 	} else {
 	    return [::tk::dialog::file:: save {*}$args]
 	}
@@ -395,6 +399,9 @@ if {![llength [info commands tk_messageBox]]} {
 }
 if {![llength [info command tk_chooseDirectory]]} {
     proc ::tk_chooseDirectory {args} {
+	if {[::tk::portal::Available FileChooser 3]} {
+	    return [::tk::portal::ChooseDirectory {*}$args]
+	}
 	return [::tk::dialog::file::chooseDir:: {*}$args]
     }
 }

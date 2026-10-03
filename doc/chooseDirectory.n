@@ -49,7 +49,9 @@ This is only available on macOS.
 .
 Specifies whether the user may specify non-existent directories.  If
 this parameter is true, then the user may only select directories that
-already exist.  The default value is \fIfalse\fR.
+already exist.  The default value is \fIfalse\fR.  The desktop's dialog on
+X11 (see \fBPLATFORM NOTES\fR) only lets the user select existing
+directories.
 .\" OPTION: -parent
 .TP
 \fB\-parent\fI window\fR
@@ -63,6 +65,13 @@ turns the file dialog into a sheet attached to the parent window.
 .
 Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title will be displayed.
+.SH "PLATFORM NOTES"
+.TP
+\fBX11\fR
+.
+If the desktop provides a directory chooser through the XDG desktop portal
+(as KDE Plasma and GNOME do), the desktop's own dialog is shown; otherwise
+a dialog implemented in Tk.  See \fBtk_getOpenFile\fR(n) for details.
 .SH EXAMPLE
 .PP
 .CS
