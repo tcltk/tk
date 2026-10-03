@@ -8432,3 +8432,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-02 (bug) [341467] Improper look of ttk::checkbutton -style Toolbutton (storchaka)
 
 2026-10-03 (bug) [186783] ttk Toolbutton has wrong default anchor (storchaka)
+
+2026-10-03 (bug) [bffa79] "BadAlloc (insufficient resources for operation)" in the grid command (storchaka)
