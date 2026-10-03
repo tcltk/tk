@@ -49,11 +49,12 @@ not be identical to screen rendering.
 If the desktop provides printing through the XDG desktop portal (as KDE
 Plasma and GNOME do), the desktop's own print dialog is shown and the job is
 sent to the printer selected there.  The canvas is sent as PostScript,
-centered on the page and scaled down if it does not fit the printable area;
-the text is sent as plain text wrapped to the page width and formatted by the
-print system.  When printing to a file, the document is converted to the
-format selected in the dialog (PDF or PostScript) with the \fBcupsfilter\fR
-command of CUPS, or with \fBps2pdf\fR for a canvas; if neither is
+centered on the page and scaled down if it does not fit the printable area.
+The text is wrapped to the page width and converted to PDF with the
+\fBcupsfilter\fR command of CUPS; without it, the text is sent as plain text
+in portrait orientation.  When printing to a file, the document is converted
+to the format selected in the dialog (PDF or PostScript) with
+\fBcupsfilter\fR, or with \fBps2pdf\fR for a canvas; if neither is
 available, an error is raised.
 .RS
 .PP

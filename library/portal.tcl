@@ -365,9 +365,10 @@ proc ::tk::portal::ChooseDirectory {args} {
 #
 #	Implements [tk print] for canvas and text widgets: shows the print
 #	dialog of the desktop, then sends the contents of the widget to the
-#	selected printer.  Canvases are printed as PostScript, texts as plain
-#	text, which the print system converts.  If the user prints to a file,
-#	the document is converted to the requested format (see Convert).
+#	selected printer.  Canvases are printed as PostScript, texts are
+#	converted to PDF if possible (otherwise sent as plain text).  If the
+#	user prints to a file, the document is converted to the requested
+#	format (see Convert).
 #
 # Results:
 #	1 if the document was sent, 0 if the dialog was cancelled, -1 if the
@@ -430,15 +431,6 @@ proc ::tk::portal::Print {w} {
     }
     set landscape [string match *landscape $orientation]
 
-    if {$class eq "Canvas"} {
-	set data [PrintCanvas $w $settings $page $areaWidth $areaHeight \
-		$landscape]
-	set type application/postscript
-    } else {
-	set data [PrintText $w $areaWidth $areaHeight $landscape]
-	set type text/plain
-    }
-
     # When printing to a file, the dialog writes the document as it is, so
     # it has to be in the requested format already.
     set format ""
@@ -449,17 +441,35 @@ proc ::tk::portal::Print {w} {
 		[file extension [dict get $settings output-uri]] .]]
     }
     set formatTypes {pdf application/pdf ps application/postscript}
-    if {[dict exists $formatTypes $format]
-	    && [dict get $formatTypes $format] ne $type} {
-	set media ""
-	foreach key {PPDName Name} {
-	    if {[dict exists $setup $key]} {
-		set media [dict get $setup $key]
-		break
-	    }
+    set target ""
+    if {[dict exists $formatTypes $format]} {
+	set target [dict get $formatTypes $format]
+    }
+    set media ""
+    foreach key {PPDName Name} {
+	if {[dict exists $setup $key]} {
+	    set media [dict get $setup $key]
+	    break
 	}
-	set data [Convert $data $type [dict get $formatTypes $format] \
-		$media $landscape]
+    }
+
+    if {$class eq "Canvas"} {
+	set data [PrintCanvas $w $settings $page $areaWidth $areaHeight \
+		$landscape]
+	set type application/postscript
+    } else {
+	# Not all desktops pass the orientation to the print system, so a text
+	# is converted here if possible; otherwise it is printed in portrait.
+	if {[Converter] eq ""} {
+	    set landscape 0
+	} elseif {$target eq ""} {
+	    set target application/pdf
+	}
+	set data [PrintText $w $page $landscape]
+	set type text/plain
+    }
+    if {$target ne "" && $target ne $type} {
+	set data [Convert $data $type $target $media $landscape]
     }
 
     # Pass the document as a file descriptor of an already deleted file.
@@ -633,13 +643,22 @@ proc ::tk::portal::PrintCanvas {w settings page areaWidth areaHeight landscape} 
 # ::tk::portal::PrintText --
 #
 #	Returns the contents of a text widget as UTF-8, with lines wrapped to
-#	fit the page at 10 characters per inch.
+#	fit the page at 10 characters per inch.  The text filter of the print
+#	system ignores the margins selected in the dialog and keeps at least
+#	1/4 inch at the sides and 1/2 inch at the top and bottom (the printable
+#	area of the printer), so longer lines would be broken in mid-word.
 
-proc ::tk::portal::PrintText {w areaWidth areaHeight landscape} {
-    if {$landscape} {
-	set areaWidth $areaHeight
+proc ::tk::portal::PrintText {w page landscape} {
+    dict with page {
+	if {$landscape} {
+	    set width [expr {$Height - max($MarginTop, 12.7)
+		    - max($MarginBottom, 12.7)}]
+	} else {
+	    set width [expr {$Width - max($MarginLeft, 6.35)
+		    - max($MarginRight, 6.35)}]
+	}
     }
-    set wl [expr {max(10, int(9.8 * $areaWidth / 25.4))}]
+    set wl [expr {max(10, int($width / 25.4 * 10 + 1e-6))}]
     return [encoding convertto utf-8 \
 	    [join [::tk::print::_wrapLines [$w get 1.0 end] $wl] "\n"]]
 }
