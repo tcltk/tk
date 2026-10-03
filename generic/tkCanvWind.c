@@ -446,8 +446,8 @@ ComputeWindowBbox(
     int width, height, x, y;
     Tk_State state = winItemPtr->header.state;
 
-    x = (int) (winItemPtr->x + ((winItemPtr->x >= 0) ? 0.5 : - 0.5));
-    y = (int) (winItemPtr->y + ((winItemPtr->y >= 0) ? 0.5 : - 0.5));
+    x = (int) (TkCanvClampCoord(winItemPtr->x) + ((winItemPtr->x >= 0) ? 0.5 : - 0.5));
+    y = (int) (TkCanvClampCoord(winItemPtr->y) + ((winItemPtr->y >= 0) ? 0.5 : - 0.5));
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;

@@ -67,9 +67,12 @@ namespace eval ttk::theme::clam {
 	    -background [list \
 		    disabled $colors(-frame) \
 		    pressed $colors(-darker) \
+		    selected $colors(-darker) \
 		    active $colors(-lighter)] \
-	    -lightcolor [list pressed $colors(-darker)] \
-	    -darkcolor [list pressed $colors(-darker)]
+	    -lightcolor [list \
+		    pressed $colors(-darker) selected $colors(-darker)] \
+	    -darkcolor [list \
+		    pressed $colors(-darker) selected $colors(-darker)]
 
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \
