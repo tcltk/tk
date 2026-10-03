@@ -103,7 +103,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 
 	# Toolbutton
-	ttk::style configure Toolbutton -anchor center
+	ttk::style configure Toolbutton -anchor center -justify center
 
 	# Inline Button
 	ttk::style configure InlineButton -anchor center -font TkHeadingFont \

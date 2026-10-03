@@ -78,8 +78,8 @@ namespace eval ttk::theme::alt {
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure Toolbutton -relief flat -padding 1.5p \
-	    -shiftrelief 1
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding 1.5p -relief flat -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \
