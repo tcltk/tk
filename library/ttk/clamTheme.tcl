@@ -56,7 +56,7 @@ namespace eval ttk::theme::clam {
 	    -bordercolor [list alternate "#000000"]
 
 	ttk::style configure Toolbutton \
-	    -anchor center -padding 2 -relief flat
+	    -anchor center -justify center -padding 2 -relief flat
 	ttk::style map Toolbutton \
 	    -relief [list \
 		    disabled flat \

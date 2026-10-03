@@ -8355,8 +8355,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 - Released 8.6.18, May 11, 2026 - https://core.tcl-lang.org/tk/ for details
 
-2026-06-30 (bug) [348b48] scale, spinbox and place format floating-point values using
-	the LC_NUMERIC locale (nijtmans)
+2026-06-30 (bug) [348b48] scale, spinbox and place format floating-point values using the LC_NUMERIC locale (nijtmans)
 
 2026-07-01 (bug) [3cb7c4] tk inactive returns a negative value on Windows for long inactivity (nijtmans)
 
@@ -8368,8 +8367,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-09-15 (bug) [ed6c3a] Modal window is not restored after "show desktop" (storchaka)
 
-2026-09-15 (bug) [56eec5] tk_getOpenFile -multiple (tkfbox): confirmed files are appended to the
-	-initialfile selection
+2026-09-15 (bug) [56eec5] tk_getOpenFile -multiple (tkfbox): confirmed files are appended to the -initialfile selection (anonymous)
 
 2026-09-21 (bug) [433261] MS-Win: Modifier-bindings of non-latin bindings use latin (ex: <Ctrl-c>) (storchaka)
 
@@ -8432,3 +8430,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-01 (bug) [331303] ttk::spinbox doesn't expand its height on Linux (storchaka)
 
 2026-10-02 (bug) [341467] Improper look of ttk::checkbutton -style Toolbutton (storchaka)
+
+2026-10-03 (bug) [186783] ttk Toolbutton has wrong default anchor (storchaka)

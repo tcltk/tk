@@ -70,8 +70,8 @@ namespace eval ttk::theme::winnative {
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure Toolbutton -relief flat -padding {8 4} \
-	    -shiftrelief 1
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding {8 4} -relief flat -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken  pressed sunken  active raised}
 

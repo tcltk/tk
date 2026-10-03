@@ -32,7 +32,7 @@ namespace eval ttk::theme::aqua {
 		pressed white
 	        {alternate !pressed !background} white}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
-	ttk::style configure Toolbutton -anchor center
+	ttk::style configure Toolbutton -anchor center -justify center
 
 	# For Entry, Combobox and Spinbox widgets the selected text background
 	# is the "Highlight color" selected in preferences when the widget
