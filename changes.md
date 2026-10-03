@@ -68,6 +68,7 @@ to the userbase.
  - [spinbox -values overrides the value of the -textvariable](https://core.tcl-lang.org/tk/tktview/143926)
  - [Improper look of ttk::checkbutton -style Toolbutton](https://core.tcl-lang.org/tk/tktview/341467)
  - [ttk Toolbutton has wrong default anchor](https://core.tcl-lang.org/tk/tktview/186783)
+ - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
