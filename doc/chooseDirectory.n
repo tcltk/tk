@@ -50,8 +50,8 @@ This is only available on macOS.
 Specifies whether the user may specify non-existent directories.  If
 this parameter is true, then the user may only select directories that
 already exist.  The default value is \fIfalse\fR.  The desktop's dialog on
-X11 (see \fBPLATFORM NOTES\fR) only lets the user select existing
-directories.
+X11 (see \fBPLATFORM NOTES\fR) only returns existing directories, whatever
+the value of this option.
 .\" OPTION: -parent
 .TP
 \fB\-parent\fI window\fR
