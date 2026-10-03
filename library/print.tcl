@@ -1,8 +1,8 @@
 # print.tcl --
 
 # This file defines the 'tk print' command for printing of the canvas
-# widget and text on X11, Windows, and macOS. It implements an abstraction
-# layer that presents a consistent API across the three platforms.
+# widget and text on X11, Wayland, Windows, and macOS. It implements an 
+# abstraction layer that presents a consistent API across the three platforms.
 
 # Copyright © 2009 Michael I. Schwartz
 # Copyright © 2021 Kevin Walzer
@@ -1370,7 +1370,7 @@ if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
 	destroy $p
     }
 }
-#end X11 procedures
+#end X11/wayland procedures
 
 namespace eval ::tk::print {
     #begin macOS Aqua procedures
@@ -1421,6 +1421,10 @@ proc ::tk::print {w} {
 	}
 	"Canvas,x11" -
 	"Text,x11" {
+	    tailcall ::tk::print::_print $w
+	}
+	"Canvas,wayland" -
+	"Text,wayland" {
 	    tailcall ::tk::print::_print $w
 	}
 	"Canvas,aqua" {

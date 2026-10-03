@@ -979,10 +979,24 @@ TkGetCursorByName(
         /* standardShape == -1: TkpSetCursor hides compositor cursor. */
 
     } else {
-        /* Unknown cursor name — fall back to arrow and log it. */
-        fprintf(stderr, "tkWaylandCursor: unknown cursor \"%s\", using arrow\n", string);
+        /*
+         * Unknown cursor name - raise Tcl error "bad cursor spec".
+         * This matches X11/macOS/Win32 behavior and eliminates the
+         * stderr spam: tkWaylandCursor: unknown cursor "badValue", using arrow
+         *
+         * To restore old silent-fallback behavior (no error, use arrow),
+         * compile with -DTK_WAYLAND_CURSOR_SILENT_FALLBACK and optionally
+         * set env TK_WAYLAND_DEBUG_CURSOR=1 for debug logging.
+         */
+#ifdef TK_WAYLAND_CURSOR_SILENT_FALLBACK
+        if (getenv("TK_WAYLAND_DEBUG_CURSOR") != NULL) {
+            fprintf(stderr, "tkWaylandCursor: unknown cursor \"%s\", using arrow\n", string);
+        }
         glfwCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
         standardShape = GLFW_ARROW_CURSOR;
+#else
+        goto badString;
+#endif
     }
 
     if (glfwCursor != NULL) {

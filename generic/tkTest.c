@@ -40,6 +40,10 @@
 #include "tkUnixInt.h"
 #endif
 
+#if defined(TK_USE_WAYLAND)
+#include "tkWaylandInt.h"
+#endif
+
 /*
  * TCL_STORAGE_CLASS is set unconditionally to DLLEXPORT because the
  * Tcltest_Init declaration is in the source file itself, which is only
@@ -173,7 +177,7 @@ static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
 static Tcl_ObjCmdProc2 TestpropObjCmd;
 static Tcl_ObjCmdProc2 TestprintfObjCmd;
-#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
+#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__) || defined(TK_USE_WAYLAND))
 static Tcl_ObjCmdProc2 TestwrapperObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(void *clientData);
@@ -253,7 +257,7 @@ Tktest_Init(
 #if defined(_WIN32)
     Tcl_CreateObjCommand2(interp, "testmetrics", TestmetricsObjCmd,
 	    Tk_MainWindow(interp), NULL);
-#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
+#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND)
     Tcl_CreateObjCommand2(interp, "testmenubar", TestmenubarObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testsend", TkpTestsendCmd,

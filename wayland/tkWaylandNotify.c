@@ -49,7 +49,7 @@
  *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
 
-/* Debugging
+/* Debugging.
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "notify"
 */
@@ -60,6 +60,11 @@
 #include "tkWaylandWm.h"
 #include <xkbcommon/xkbcommon.h>
 #include <GLFW/glfw3.h>
+
+/* Pointer cache - defined in tkWaylandMouseEvent.c */
+extern int tkWaylandLastRootX;
+extern int tkWaylandLastRootY;
+
 #include <unistd.h>
 #include <errno.h>
 #include "GLFW/glfw3native.h"
@@ -102,6 +107,7 @@ extern Tk_Window TkWaylandMenuGetParentWindow(void);
 extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
 extern void TkWaylandMenuHandleEscape(void);
 extern void TkWaylandMenuDismissAll(void);
+extern void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
 
 /*
@@ -112,6 +118,15 @@ static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
  */
 #include <systemd/sd-bus.h>
 extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
+
+/*
+ * AT-SPI accessibility bus is drained through a dedicated helper rather
+ * than a raw extern sd_bus*, since the drain needs the re-entrancy guard
+ * that lives in tkWaylandAccessibility.c (a dispatched AT-SPI method call,
+ * e.g. Orca's GrabFocus, can call back into Tk and trigger further AT-SPI
+ * traffic before the outer sd_bus_process loop returns).
+ */
+extern void TkWaylandAtspiProcessEvents(void);  /* defined in tkWaylandAccessibility.c */
 
 
 /* Thread-specific data for the event loop. */
@@ -133,6 +148,20 @@ static Tcl_ThreadDataKey dataKey;
  */
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
+
+/*
+ * Set by TkWaylandKeyCallback whenever the most recent key-down was
+ * consumed by IBus (imeHandled == true).  GLFW's char callback fires
+ * independently of that decision -- it has no idea we intercepted the
+ * key -- so TkWaylandCharCallback consults this flag to avoid storing
+ * a character that will never be drained: with no KeyPress queued for
+ * an IME-consumed key, nothing calls TkpGetString to clear pendingText,
+ * and the character would just sit there until some later, unrelated
+ * key (e.g. Return) falls through to Tk and dumps the whole backlog
+ * at once. Reset to false on every path that does not hand the key to
+ * IBus, so ordinary typing is never suppressed.
+ */
+static bool lastKeyWasImeHandled = false;
 
 /*
  *----------------------------------------------------------------------
@@ -276,7 +305,7 @@ TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
 }
 
 /*
- * Dummy function for pending redraw check – can be extended later.
+ * Dummy function for pending redraw check - can be extended later.
  */
 static inline int TkWaylandHasPendingRedraw(void) {
     return 0;  /* currently we redraw synchronously in every iteration */
@@ -332,6 +361,10 @@ Tk_WaylandSetupTkNotifier(void)
  *      Called by Tcl_DoOneEvent if it has processed all events, run
  *      all pending idle tasks, and run all expired timer tasks.
  *
+ *      Updated to poll D-Bus file descriptors alongside the Wayland
+ *      display socket to prevent event loop stalls when Accerciser or
+ *      Orca sends a D-Bus query.
+ *
  * Results:
  *      None.
  *
@@ -342,13 +375,13 @@ Tk_WaylandSetupTkNotifier(void)
  *----------------------------------------------------------------------
  */
 
+
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
-		   TCL_UNUSED(int))    /* flags */
+TkWaylandSetupProc(TCL_UNUSED(void *), 
+	TCL_UNUSED(int))
 {
     TSD_INIT();
     Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    Tcl_Time tinyBlock = {0, 1000};   /* 1ms fallback */
     Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
 
     /*
@@ -360,33 +393,48 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
     TkWaylandDisplayAllWindows();
 
     struct wl_display *display = glfwGetWaylandDisplay();
-
-    /* Get the wayland file descriptor for our display. */
-    int fd = wl_display_get_fd(display);
     if (!display) {
-        /* No Wayland display: poll GLFW but do NOT block Tcl */
         glfwPollEvents();
         Tcl_SetMaxBlockTime(&noBlock);
         return;
     }
+    /* Set up poll descriptors for Wayland, IBus, and AT-SPI sockets */
+    struct pollfd pfds[3];
+    int nfds = 0;
 
-    /* Check if the wayland socket has data. */
-    struct pollfd pfd = {
-        .fd      = fd,
-        .events  = POLLIN,
-        .revents = 0
-    };
-    int r = poll(&pfd, 1, 0);
-    if (r > 0 && (pfd.revents & POLLIN)) {
-        /* Wayland has events — do not block. */
-        Tcl_SetMaxBlockTime(&noBlock);
+    pfds[nfds].fd = wl_display_get_fd(display);
+    pfds[nfds].events = POLLIN;
+    pfds[nfds].revents = 0;
+    nfds++;
+
+    if (ibus_bus && sd_bus_get_fd(ibus_bus) >= 0) {
+        pfds[nfds].fd = sd_bus_get_fd(ibus_bus);
+        pfds[nfds].events = POLLIN;
+        pfds[nfds].revents = 0;
+        nfds++;
     }
-    else {
-        /* Nothing is happening - block for one refresh cycle. */
+
+    /* Note: atspi_bus is not directly accessible here, but we can check
+     * if we have an AT-SPI bus via a global. For now, we only poll
+     * Wayland and IBus. The AT-SPI bus will be handled in CheckProc.
+     * If we had a global atspi_bus, we would add it here with:
+     * if (atspi_bus && sd_bus_get_fd(atspi_bus) >= 0) {
+     *     pfds[nfds].fd = sd_bus_get_fd(atspi_bus);
+     *     pfds[nfds].events = POLLIN | (sd_bus_wqueue_size(atspi_bus) > 0 ? POLLOUT : 0);
+     *     pfds[nfds].revents = 0;
+     *     nfds++;
+     * }
+     */
+
+    int r = poll(pfds, nfds, 0);
+    if (r > 0) {
+        /* Socket activity detected â€” process without blocking */
+        Tcl_SetMaxBlockTime(&noBlock);
+    } else {
+        /* Idle-block for one display frame cycle */
         Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -402,6 +450,9 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  *      for a few milliseconds.  So there could be some events in the
  *      queue by now.
  *
+ *      Updated to explicitly flush outgoing message buffers to prevent
+ *      D-Bus reply deadlocks.
+ *
  * Results:
  *      None.
  *
@@ -410,18 +461,22 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return;
-    }
-
-    /* Drain IME/IBus messages without blocking. */
+    /*
+     * Drain IME/IBus and AT-SPI accessibility messages unconditionally.
+     * Flush outgoing buffers to ensure queued packets are written to the wire
+     * immediately, preventing D-Bus reply deadlocks.
+     */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) {}
+        sd_bus_flush(ibus_bus); /* Flush queued IBus replies/signals. */
     }
+
+    /* Drain and flush AT-SPI messages. */
+    TkWaylandAtspiProcessEvents();
 
     /* Process events for GLFW windows. */
     glfwPollEvents();
@@ -432,7 +487,6 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
         wl_display_dispatch_pending(display);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -652,19 +706,38 @@ TkWaylandClearCallbacks(
  *----------------------------------------------------------------------
  */
  
-/* Helper function to avoid type mismatch in callback. */
-static void DestroyWindowIdleProc(void *clientData)
+/*
+ * Idle-time close dispatch. Deferring keeps user handlers (which commonly
+ * call "destroy .") from running re-entrantly inside GLFW's callback.
+ */
+static void
+CloseRequestIdleProc(void *clientData)
 {
-    Tk_DestroyWindow((Tk_Window)clientData);
+    TkWindow *winPtr = (TkWindow *)clientData;
+
+    if (!(winPtr->flags & TK_ALREADY_DEAD) && winPtr->wmInfoPtr != NULL) {
+        /*
+         * NULL event => WM_DELETE_WINDOW: runs the [wm protocol] handler
+         * if one is registered, otherwise falls back to the default
+         * destroy (see TkWmProtocolEventProc in tkWaylandWm.c).
+         */
+        TkWmProtocolEventProc(winPtr, NULL);
+    }
+    Tcl_Release(winPtr);
 }
- 
+
 static void
 TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
     DEBUG_LOG("TkWaylandWindowCloseCallback");
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
+
+    /* Never let GLFW close the window itself; Tk decides. */
+    glfwSetWindowShouldClose(window, GLFW_FALSE);
+
     if (winPtr) {
-	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
+        Tcl_Preserve(winPtr);
+        Tcl_DoWhenIdle(CloseRequestIdleProc, winPtr);
     }
 }
 
@@ -1223,7 +1296,7 @@ TkWaylandMouseButtonCallback(
             /* Force redraw after button click to update state. */
             TkWaylandMenuRedrawActive();
         }
-        /* Swallow both press and release — do not deliver to Tk widgets. */
+        /* Swallow both press and release â€” do not deliver to Tk widgets. */
         return;
     }
     Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
@@ -1295,78 +1368,179 @@ TkWaylandMouseButtonCallback(
 		     glfwButtonState | glfwModifierState);
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandScrollCallback --
  *
- *      Called when scroll wheel is used.
+ *      Called when scroll wheel is used. Generates MouseWheelEvent
+ *      for <MouseWheel> bindings and ButtonPress 4/5 for compat.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Generates ButtonPress/ButtonRelease events for scroll.
+ *      Queues MouseWheel events.
  *
  *----------------------------------------------------------------------
  */
 
+#define MouseWheelEvent 38
+
 static void
 TkWaylandScrollCallback(
-			GLFWwindow *window,
-			double xoffset,
-			double yoffset)
+            GLFWwindow *window,
+            double xoffset,
+            double yoffset)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
-    XEvent event;
-    double xpos, ypos;
-    int button;
-    
     if (!winPtr) {
         return;
     }
 
-    /* Get cursor position. */
+    double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Map scroll direction to button. */
-    if (yoffset > 0) {
-        button = Button4;  /* Scroll up */
-    } else if (yoffset < 0) {
-        button = Button5;  /* Scroll down */
-    } else if (xoffset > 0) {
-        button = 6;  /* Scroll right */
-    } else {
-        button = 7;  /* Scroll left */
+    if (TkWaylandMenuPopupActive()) {
+        /* Let menu handle scroll if active - could dismiss or scroll */
+        return;
     }
 
-    /* Generate button press. */
-    memset(&event, 0, sizeof(XEvent));
-    event.type = ButtonPress;
-    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
-    event.xbutton.send_event = False;
-    event.xbutton.display = winPtr->display;
-    event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xbutton.subwindow = None;
-    event.xbutton.time = CurrentTime;
-    event.xbutton.x = (int)xpos;
-    event.xbutton.y = (int)ypos;
-    event.xbutton.x_root = winPtr->changes.x + (int)xpos;
-    event.xbutton.y_root = winPtr->changes.y + (int)ypos;
-    event.xbutton.state = 0;
-    event.xbutton.button = button;
-    event.xbutton.same_screen = True;
+    /* Coords to child window */
+    Tk_Window target = Tk_CoordsToWindow((int)xpos, (int)ypos, (Tk_Window)winPtr);
+    if (!target) {
+        target = (Tk_Window)winPtr;
+    }
+    TkWindow *targetPtr = (TkWindow *)target;
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    /* GLFW gives fractional offsets for high-res touchpads.
+     * Accumulate remainder so small deltas aren't lost.
+     * Use thread-local static for simplicity - one pointer per thread.
+     */
+    static double yRemainder = 0.0;
+    static double xRemainder = 0.0;
 
-    /* Generate button release. */
-    event.type = ButtonRelease;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    yRemainder += yoffset;
+    xRemainder += xoffset;
+
+    /* Process vertical scroll */
+    while (fabs(yRemainder) >= 0.01) {
+        /* Clamp to one notch per event to match Tk expectations */
+        double use = yRemainder;
+        if (use > 1.0) use = 1.0;
+        if (use < -1.0) use = -1.0;
+
+        long delta = (long)(use * 120.0); /* Tk: 120 per detent */
+
+        /* MouseWheelEvent for <MouseWheel> */
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = MouseWheelEvent;
+        event.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        event.xbutton.send_event = False;
+        event.xbutton.display = targetPtr->display;
+        event.xbutton.window = Tk_WindowId(targetPtr);
+        event.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        event.xbutton.subwindow = None;
+        event.xbutton.time = (Time)(glfwGetTime() * 1000.0);
+        event.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        event.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        event.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        event.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        event.xbutton.state = glfwButtonState | glfwModifierState;
+        event.xbutton.button = delta;
+        event.xbutton.same_screen = True;
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+        /* Compat Button-4/5 for <Button-4>/<Button-5> bindings */
+        XEvent bevent;
+        memset(&bevent, 0, sizeof(XEvent));
+        bevent.type = ButtonPress;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        bevent.xbutton.send_event = False;
+        bevent.xbutton.display = targetPtr->display;
+        bevent.xbutton.window = Tk_WindowId(targetPtr);
+        bevent.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        bevent.xbutton.subwindow = None;
+        bevent.xbutton.time = (Time)(glfwGetTime() * 1000.0);
+        bevent.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        bevent.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        bevent.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        bevent.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        bevent.xbutton.state = glfwButtonState | glfwModifierState;
+        bevent.xbutton.button = (delta > 0 ? 4 : 5);
+        bevent.xbutton.same_screen = True;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+
+        bevent.type = ButtonRelease;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+
+        yRemainder -= use;
+        /* Only one notch per callback to avoid flooding; remainder will be processed on next axis event */
+        break;
+    }
+
+    /* Process horizontal scroll - generates Shift+MouseWheel style */
+    while (fabs(xRemainder) >= 0.01) {
+        double use = xRemainder;
+        if (use > 1.0) use = 1.0;
+        if (use < -1.0) use = -1.0;
+
+        long delta = (long)(use * 120.0);
+
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = MouseWheelEvent;
+        event.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        event.xbutton.send_event = False;
+        event.xbutton.display = targetPtr->display;
+        event.xbutton.window = Tk_WindowId(targetPtr);
+        event.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        event.xbutton.subwindow = None;
+        event.xbutton.time = (Time)(glfwGetTime() * 1000.0);
+        event.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        event.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        event.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        event.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        /* Mark horizontal: Tk convention is to add Shift or use separate handling.
+         * We set state with ShiftMask already if user holds Shift, but for
+         * pure horizontal we queue with Button 6/7 compat and MouseWheel with
+         * horizontal flag in state. Use bit 1 for horizontal (matching X11).
+         */
+        event.xbutton.state = glfwButtonState | glfwModifierState;
+        event.xbutton.button = delta;
+        event.xbutton.same_screen = True;
+        /* For horizontal, Tk's generic handling checks xoffset separately;
+         * We queue as MouseWheel and also as Button 6/7
+         */
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+        XEvent bevent;
+        memset(&bevent, 0, sizeof(XEvent));
+        bevent.type = ButtonPress;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        bevent.xbutton.display = targetPtr->display;
+        bevent.xbutton.window = Tk_WindowId(targetPtr);
+        bevent.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
+        bevent.xbutton.x = (int)xpos - Tk_X(targetPtr);
+        bevent.xbutton.y = (int)ypos - Tk_Y(targetPtr);
+        bevent.xbutton.x_root = targetPtr->changes.x + (int)xpos;
+        bevent.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        bevent.xbutton.state = glfwButtonState | glfwModifierState;
+        bevent.xbutton.button = (delta > 0 ? 6 : 7);
+        bevent.xbutton.same_screen = True;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+        bevent.type = ButtonRelease;
+        bevent.xbutton.serial = LastKnownRequestProcessed(targetPtr->display)++;
+        Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
+
+        xRemainder -= use;
+        break;
+    }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1467,9 +1641,19 @@ TkWaylandKeyCallback(GLFWwindow *window,
                                                  keyval, xkb_keycode, state);
         }
 
+        lastKeyWasImeHandled = imeHandled;
+
         if (imeHandled) {
             return;
         }
+    } else if (action == GLFW_RELEASE) {
+        /*
+         * A release can't be IME-consumed under this gating (only
+         * GLFW_PRESS is forwarded to IBus above), and clearing the
+         * flag here ensures a stray release never leaves a stale
+         * "suppress the next char" state hanging around.
+         */
+        lastKeyWasImeHandled = false;
     }
 
     /* F10 toggles menubar. */
@@ -1522,7 +1706,13 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 }
 
                 if (newIdx != current) {
-                    TkActivateMenuEntry(menuPtr, newIdx);
+                    /*
+                     * Use the wrapper, not TkActivateMenuEntry() directly --
+                     * mouse hover (MenuMouseMotion) and Left/Right menubar
+                     * moves (TkWaylandMenubarMove) already go through
+                     * WaylandActivateMenuEntry() to fire <<MenuSelect>>.
+                     */
+                    TkWaylandActivateMenuEntry(menuPtr, newIdx);
                     TkWaylandMenuRedrawActive();
                 }
                 break;
@@ -1689,10 +1879,22 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
         return;
     }
 
-    /* Skip if IBus is likely handling composition. */
-    if (xkbState.state) {
-        /* Optional: check if any compose state is active, or just always let IBus win. */
-        DEBUG_LOG("CharCallback: codepoint U+%04X (may be ignored if IBus active)", codepoint);
+    /*
+     * If the key-down that produced this codepoint was consumed by
+     * IBus, do NOT also store it here. Composed/committed text arrives
+     * exclusively through OnCommitText -> TkWaylandSendUnicodeString,
+     * which stores the string and queues its own synthetic KeyPress
+     * together, atomically. Storing the codepoint again in this path
+     * -- with no KeyPress ever queued to consume it via TkpGetString --
+     * would leave it stuck in pendingText until an unrelated later key
+     * (e.g. Return) falls through to Tk and drains the whole backlog
+     * at once, which is exactly the "text doesn't appear until Return"
+     * bug this guard exists to prevent.
+     */
+    if (lastKeyWasImeHandled) {
+        DEBUG_LOG("CharCallback: codepoint U+%04X suppressed (IME consumed the key)",
+                  codepoint);
+        return;
     }
 
     TkWaylandStoreText(winPtr, codepoint);
@@ -1752,12 +1954,7 @@ MODULE_SCOPE void
 TkWaylandWakeupGLFW(void)
 {
     TSD_INIT();
-    ////uint64_t u = 1;
-    
-    if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
-	//// This should post an empty event to GLFW!!!
-        ////write(tsdPtr->wakeupFd, &u, sizeof(u));
-    }
+
 }
 
 /*

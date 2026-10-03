@@ -31,7 +31,7 @@
 #include <xkbcommon/xkbcommon-compose.h>
 #include <X11/keysymdef.h>
 
-/* Debugging
+/* Debugging.
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "key"
 */
@@ -77,21 +77,97 @@ TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
 const char*
 TkpGetString(
     TkWindow *winPtr,
-    TCL_UNUSED(XEvent*), /* eventPtr*/
+    XEvent *eventPtr,
     Tcl_DString *dsPtr)
 {
     const char* storedText;
     TkWindow *toplevel = winPtr;
-
     while (!Tk_IsTopLevel(toplevel)) {
         toplevel = (TkWindow *) Tk_Parent(toplevel);
     }
     Tcl_DStringInit(dsPtr);
-    storedText = TkWaylandGetStoredText(toplevel);
-    if (storedText == NULL) {
-        storedText = "";
+
+    /* Never produce %A when Control is held (except AltGr) */
+    if (eventPtr->type == KeyPress) {
+        unsigned int st = eventPtr->xkey.state;
+        int isAltGr = (st & Mod5Mask) || ((st & ControlMask) && (st & Mod1Mask));
+        if ((st & ControlMask) && !isAltGr) {
+            TkWaylandClearStoredText(toplevel);
+            return Tcl_DStringValue(dsPtr);
+        }
     }
-    Tcl_DStringAppend(dsPtr, storedText, TCL_INDEX_NONE);
+
+    storedText = TkWaylandGetStoredText(toplevel);
+
+    if (storedText != NULL && *storedText != '\0') {
+        /* Extra defense: storedText is single control char -> drop. */
+        if (storedText[0] && !storedText[1] && (unsigned char)storedText[0] < 32) {
+            unsigned char c = (unsigned char)storedText[0];
+            if (c != '\r' && c != '\t' && c != '\n') {
+                TkWaylandClearStoredText(toplevel);
+                return Tcl_DStringValue(dsPtr);
+            }
+        }
+        Tcl_DStringAppend(dsPtr, storedText, TCL_INDEX_NONE);
+        TkWaylandClearStoredText(toplevel);
+        return Tcl_DStringValue(dsPtr);
+    }
+
+    if (eventPtr->type == KeyPress) {
+        unsigned int kc = eventPtr->xkey.keycode;
+        /* Synthetic from [event generate] or IME. */
+        if (kc >= SYNTHETIC_KEYCODE_BASE) {
+            KeySym ks = (KeySym)(kc - SYNTHETIC_KEYCODE_BASE);
+            if (ks == XK_Return || ks == XK_KP_Enter) {
+                Tcl_DStringAppend(dsPtr, "\r", 1);
+            } else if (ks == XK_Tab || ks == XK_KP_Tab) {
+                Tcl_DStringAppend(dsPtr, "\t", 1);
+            } else if (ks == XK_BackSpace || ks == XK_Delete || ks == XK_Escape) {
+                /* %A empty. */
+            } else {
+                char buf[64];
+                int n = xkb_keysym_to_utf8(ks, buf, sizeof(buf));
+                if (n > 0) {
+                    if (buf[n-1] == '\0') n--;
+                    if (n > 0) Tcl_DStringAppend(dsPtr, buf, n);
+                }
+            }
+            TkWaylandClearStoredText(toplevel);
+            return Tcl_DStringValue(dsPtr);
+        }
+        /* Also handle synthetic where keycode is small keysym (legacy). */
+        if (eventPtr->xkey.send_event) {
+            KeySym ks = TkpGetKeySym(NULL, eventPtr);
+            if (ks == XK_Return || ks == XK_KP_Enter) {
+                Tcl_DStringAppend(dsPtr, "\r", 1);
+            } else if (ks == XK_Tab || ks == XK_KP_Tab) {
+                Tcl_DStringAppend(dsPtr, "\t", 1);
+            } else if (ks == XK_BackSpace || ks == XK_Delete || ks == XK_Escape) {
+            } else {
+                char buf[64];
+                int n = xkb_keysym_to_utf8(ks, buf, sizeof(buf));
+                if (n > 0) {
+                    if (buf[n-1] == '\0') n--;
+                    if (n > 0) Tcl_DStringAppend(dsPtr, buf, n);
+                } else if (ks >= 32 && ks < 127) {
+                    char c = (char)ks;
+                    Tcl_DStringAppend(dsPtr, &c, 1);
+                }
+            }
+            TkWaylandClearStoredText(toplevel);
+            return Tcl_DStringValue(dsPtr);
+        }
+        if (xkbState.state) {
+            char buf[64];
+            int n = xkb_state_key_get_utf8(xkbState.state,
+                        (xkb_keycode_t)(eventPtr->xkey.keycode + 8), buf, sizeof(buf));
+            if (n > 0) {
+                if (!(n == 1 && (unsigned char)buf[0] < 32 && buf[0] != '\r' && buf[0] != '\t' && buf[0] != '\n')) {
+                    Tcl_DStringAppend(dsPtr, buf, n);
+                }
+            }
+        }
+    }
     TkWaylandClearStoredText(toplevel);
     return Tcl_DStringValue(dsPtr);
 }
@@ -113,10 +189,172 @@ TkpGetString(
 
 KeySym
 TkpGetKeySym(
-    TCL_UNUSED(TkDisplay*), /*dispPtr */
-    XEvent *eventPtr)           /* Description of X event. */
+    TCL_UNUSED(TkDisplay*),
+    XEvent *eventPtr)
 {
-    return TkWaylandGetKeysymFromScancode(eventPtr->xkey.keycode);
+    unsigned int sc = eventPtr->xkey.keycode;
+    if (sc >= SYNTHETIC_KEYCODE_BASE) {
+        return (KeySym)(sc - SYNTHETIC_KEYCODE_BASE);
+    }
+    /* Synthetic stored as small keysym with send_event. */
+    if (eventPtr->xkey.send_event) {
+        if (sc >= 32 && sc < 0x1000000) {
+            return (KeySym)sc;
+        }
+        /* For truncated Return etc, low byte 13 is CR, map to Return. */
+        if (sc == 13) return XK_Return;
+        if (sc == 9) return XK_Tab;
+        if (sc == 8) return XK_BackSpace;
+        if (sc == 127) return XK_Delete;
+    }
+    return TkWaylandGetKeysymFromScancode(sc);
+}
+
+/*
+ * Upper bound on the number of entries kept in dispPtr->modKeyCodes.
+ */
+#define MAX_MOD_KEYCODES 64
+
+/*
+ * ----------------------------------------------------------------------------
+ * IsModifierKeysym --
+ *
+ *         Report whether a keysym belongs to a modifier key (Shift, Control,
+ *         Alt, Meta, Super, Hyper, the lock keys, Mode_switch and
+ *         ISO_Level3_Shift).
+ *
+ * Results:
+ *         1 if the keysym is a modifier keysym, 0 otherwise.
+ *
+ * Side effects:
+ *         None.
+ * ----------------------------------------------------------------------------
+ */
+
+static int
+IsModifierKeysym(
+    KeySym ks)
+{
+    return (ks >= XK_Shift_L && ks <= XK_Hyper_R)	/* 0xFFE1 - 0xFFEE */
+	    || ks == XK_Mode_switch
+	    || ks == XK_Num_Lock
+	    || ks == 0xFE03;				/* ISO_Level3_Shift */
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * AddModKeyCode --
+ *
+ *         Append a keycode to dispPtr->modKeyCodes unless it is already
+ *         present or the array is full.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         May modify dispPtr->modKeyCodes and dispPtr->numModKeyCodes.
+ * ----------------------------------------------------------------------------
+ */
+
+static void
+AddModKeyCode(
+    TkDisplay *dispPtr,
+    KeyCode kc)
+{
+    Tcl_Size i;
+
+    for (i = 0; i < dispPtr->numModKeyCodes; i++) {
+	if (dispPtr->modKeyCodes[i] == kc) {
+	    return;
+	}
+    }
+    if (dispPtr->numModKeyCodes < MAX_MOD_KEYCODES) {
+	dispPtr->modKeyCodes[dispPtr->numModKeyCodes++] = kc;
+    }
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * TkpSetKeycodeAndState --
+ *
+ *         Given a keysym and an XEvent, set the keycode and modifier state
+ *         fields of the event.  This is used by the [event generate] command.
+ *
+ *         The keycode is a synthetic one that encodes the keysym directly, so
+ *         it round-trips exactly through TkpGetKeySym.  The modifier state
+ *         already parsed from the pattern (<Control-c>, <Alt-z>, ...) is
+ *         preserved.  When an XKB keymap is loaded, the keymap is scanned to
+ *         add ShiftMask or Mod5Mask for keysyms that live on a higher level:
+ *
+ *           level 0  -> no modifier
+ *           level 1  -> ShiftMask
+ *           level >= 2 -> Mod5Mask (AltGr)
+ *
+ *         Modifier keysyms themselves (Control_L, Shift_L, ...) do NOT alter
+ *         any global modifier state.  As on X11, [event generate] only injects
+ *         an event into Tk; it never changes the state of the input device.
+ *         Tk's binding code recognizes such events as modifier-key events
+ *         through dispPtr->modKeyCodes (see TkpInitKeymapInfo), which contains
+ *         the synthetic keycodes used here.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         Modifies eventPtr->xkey.keycode and eventPtr->xkey.state.
+ * ----------------------------------------------------------------------------
+ */
+
+void
+TkpSetKeycodeAndState(
+    TCL_UNUSED(Tk_Window),
+    KeySym keysym,
+    XEvent *eventPtr)
+{
+    /* Preserve state from pattern like <Alt-z> / <Control-c>.
+     * The caller (tkEvent.c) has already parsed the modifier from the
+     * pattern string into eventPtr->state.  Don't clear it. */
+    unsigned int existingState = eventPtr->xkey.state;
+
+    /* For synthetic [event generate], store keysym using SYNTHETIC base
+     * so it roundtrips exactly, preserving case and large keysyms like Return.
+     * This is what the IME path already does. */
+    eventPtr->xkey.keycode = SYNTHETIC_KEYCODE(keysym);
+    eventPtr->xkey.state = existingState;
+
+    /* A modifier key event carries just the state parsed from the pattern. */
+    if (IsModifierKeysym(keysym)) {
+	return;
+    }
+
+    /* Try to also set Shift/Mod5 for completeness when an XKB map exists,
+     * so bindings that check state still work, but keep the synthetic base
+     * and preserve any Control/Alt state already parsed from <Control-c> etc. */
+    if (xkbState.keymap) {
+        xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
+        xkb_keycode_t max_kc = xkb_keymap_max_keycode(xkbState.keymap);
+        for (xkb_keycode_t kc = min_kc; kc <= max_kc; kc++) {
+            xkb_layout_index_t num_layouts = xkb_keymap_num_layouts_for_key(xkbState.keymap, kc);
+            for (xkb_layout_index_t layout = 0; layout < num_layouts; layout++) {
+                xkb_level_index_t num_levels = xkb_keymap_num_levels_for_key(xkbState.keymap, kc, layout);
+                for (xkb_level_index_t level = 0; level < num_levels; level++) {
+                    const xkb_keysym_t *syms;
+                    int n = xkb_keymap_key_get_syms_by_level(xkbState.keymap, kc, layout, level, &syms);
+                    for (int i=0;i<n;i++) {
+                        if (syms[i] == (xkb_keysym_t)keysym) {
+                            if (level == 1) eventPtr->xkey.state |= ShiftMask;
+                            else if (level >= 2) eventPtr->xkey.state |= Mod5Mask;
+                            /* Preserve Control/Alt/etc that were parsed. */
+                            eventPtr->xkey.state |= (existingState & (ControlMask|Mod1Mask|Mod4Mask));
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /* If not found in the keymap, keep existingState (important for <Control-c>). */
+    eventPtr->xkey.state = existingState;
 }
 
 /*
@@ -142,14 +380,68 @@ TkpInitKeymapInfo(TkDisplay *dispPtr)
      * Set up default modifier masks for Wayland/GLFW.  These correspond to the
      * standard X11 modifier assignments.
      */
-    dispPtr->modeModMask = Mod5Mask;   /* AltGr / Mode_switch */
-    dispPtr->altModMask  = Mod1Mask;   /* Alt */
-    dispPtr->metaModMask = Mod4Mask;   /* Super/Windows key */
+    dispPtr->modeModMask = Mod5Mask;   /* AltGr / Mode_switch. */
+    dispPtr->altModMask  = Mod1Mask;   /* Alt. */
+    dispPtr->metaModMask = Mod4Mask;   /* Super/Windows key. */
 
     /*
      * Lock modifiers are platform-independent.
      */
     dispPtr->lockUsage = LU_CAPS;
+
+    /*
+     * Build the array of keycodes of all modifier keys.  tkBind.c uses it to
+     * ignore modifier-key events that are interlaced between the parts of a
+     * pattern sequence (bug [16ef161925]) and to avoid resetting the
+     * button repeat counters when a modifier key is pressed between clicks.
+     */
+    if (dispPtr->modKeyCodes != NULL) {
+	Tcl_Free(dispPtr->modKeyCodes);
+    }
+    dispPtr->modKeyCodes = (KeyCode *)
+	    Tcl_Alloc(MAX_MOD_KEYCODES * sizeof(KeyCode));
+    dispPtr->numModKeyCodes = 0;
+
+    /* Synthetic keycodes generated by [event generate]. */
+    for (KeySym ks = XK_Shift_L; ks <= XK_Hyper_R; ks++) {
+	AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(ks));
+    }
+    AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(XK_Mode_switch));
+    AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(XK_Num_Lock));
+    AddModKeyCode(dispPtr, (KeyCode)SYNTHETIC_KEYCODE(0xFE03));
+
+    /*
+     * Physical keys.  Real key events carry the evdev scancode as keycode
+     * (see TkWaylandGetKeysymFromScancode, which adds 8 for xkbcommon).
+     */
+    if (xkbState.keymap) {
+	xkb_keycode_t lo = xkb_keymap_min_keycode(xkbState.keymap);
+	xkb_keycode_t hi = xkb_keymap_max_keycode(xkbState.keymap);
+
+	for (xkb_keycode_t kc = lo; kc <= hi; kc++) {
+	    const xkb_keysym_t *syms;
+
+	    if (xkb_keymap_num_layouts_for_key(xkbState.keymap, kc) > 0
+		    && xkb_keymap_key_get_syms_by_level(xkbState.keymap, kc,
+			    0, 0, &syms) > 0
+		    && IsModifierKeysym(syms[0])) {
+		AddModKeyCode(dispPtr, (KeyCode)(kc - 8));
+	    }
+	}
+    } else {
+	/* Keymap not loaded yet: standard evdev modifier scancodes. */
+	static const unsigned char evdevMods[] = {
+	    29, 97,	/* Control L/R */
+	    42, 54,	/* Shift L/R */
+	    56, 100,	/* Alt L, AltGr */
+	    125, 126,	/* Super L/R */
+	    58, 69	/* Caps Lock, Num Lock */
+	};
+
+	for (size_t i = 0; i < sizeof(evdevMods); i++) {
+	    AddModKeyCode(dispPtr, evdevMods[i]);
+	}
+    }
 }
 
 /*
@@ -174,7 +466,7 @@ TkWaylandGetKeysymFromScancode(
 {
 	
     /* Synthetic keycode generated by IME commit/preedit. */
-    if (scancode >= SYNTHETIC_KEYCODE_BASE) {
+    if ((unsigned int) scancode >= SYNTHETIC_KEYCODE_BASE) {
         return (KeySym)(scancode - SYNTHETIC_KEYCODE_BASE);
     }
 
@@ -191,109 +483,7 @@ TkWaylandGetKeysymFromScancode(
 }
 
 /*
- * -----------------------------------------------------------------------------
- * TkpSetKeycodeAndState --
- *
- *         Given a keysym and an XEvent, set the keycode and modifier state
- *         fields of the event.  This is used by the [event generate] command.
- *
- *         The function scans the live XKB keymap to find a keycode that
- *         generates the given keysym.  If the keymap is not yet loaded, it
- *         falls back to a hard-coded table of common non-printable keys.
- *
- *         Level-to-modifier mapping:
- *           level 0  → no modifier
- *           level 1  → ShiftMask
- *           level ≥ 2 → Mod5Mask (AltGr)
- *
- * Results:
- *         None.
- *
- * Side effects:
- *         Modifies eventPtr->xkey.keycode and eventPtr->xkey.state.
  * ----------------------------------------------------------------------------
- */
-
-void
-TkpSetKeycodeAndState(
-    TCL_UNUSED(Tk_Window),
-    KeySym keysym,
-    XEvent *eventPtr)
-{
-
-    if (xkbState.keymap) {
-        xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
-        xkb_keycode_t max_kc = xkb_keymap_max_keycode(xkbState.keymap);
-        xkb_keycode_t kc;
-
-        for (kc = min_kc; kc <= max_kc; kc++) {
-            xkb_layout_index_t num_layouts =
-                xkb_keymap_num_layouts_for_key(xkbState.keymap, kc);
-            xkb_layout_index_t layout;
-
-            for (layout = 0; layout < num_layouts; layout++) {
-                xkb_level_index_t num_levels =
-                    xkb_keymap_num_levels_for_key(xkbState.keymap, kc, layout);
-                xkb_level_index_t level;
-
-                for (level = 0; level < num_levels; level++) {
-                    const xkb_keysym_t *syms;
-                    int n, i;
-
-                    n = xkb_keymap_key_get_syms_by_level(
-                            xkbState.keymap, kc, layout, level, &syms);
-
-                    for (i = 0; i < n; i++) {
-                        if (syms[i] == (xkb_keysym_t)keysym) {
-                            /*
-                             * kc is an XKB/X11 keycode (evdev + 8).
-                             * Map the shift level to modifier bits:
-                             *   level 0 → no modifier
-                             *   level 1 → ShiftMask
-                             *   level ≥ 2 → Mod5Mask (AltGr)
-                             */
-                            eventPtr->xkey.keycode = kc;
-                            if (level == 1) {
-                                eventPtr->xkey.state |= ShiftMask;
-                            } else if (level >= 2) {
-                                eventPtr->xkey.state |= Mod5Mask;
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /*
-     * Fallback for common keys when the XKB keymap is not yet loaded.  These
-     * are X11 keycodes (evdev + 8) for a standard US-QWERTY layout.
-     */
-    switch (keysym) {
-    case XK_Return:    eventPtr->xkey.keycode = 36;  break;
-    case XK_Escape:    eventPtr->xkey.keycode = 9;   break;
-    case XK_BackSpace: eventPtr->xkey.keycode = 22;  break;
-    case XK_Tab:       eventPtr->xkey.keycode = 23;  break;
-    case XK_space:     eventPtr->xkey.keycode = 65;  break;
-    case XK_Left:      eventPtr->xkey.keycode = 113; break;
-    case XK_Right:     eventPtr->xkey.keycode = 114; break;
-    case XK_Up:        eventPtr->xkey.keycode = 111; break;
-    case XK_Down:      eventPtr->xkey.keycode = 116; break;
-    case XK_Home:      eventPtr->xkey.keycode = 110; break;
-    case XK_End:       eventPtr->xkey.keycode = 115; break;
-    case XK_Delete:    eventPtr->xkey.keycode = 119; break;
-    case XK_Insert:    eventPtr->xkey.keycode = 118; break;
-    default:
-        /* Last resort: encode the low byte of the keysym. */
-        eventPtr->xkey.keycode = keysym & 0xFFu;
-        break;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XStringToKeysym --
  *
  *	Converts a human-readable keysym string name (e.g., "Right", "Return")
@@ -305,8 +495,7 @@ TkpSetKeycodeAndState(
  *
  * Side effects:
  *	None.
- *
- *----------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
  */
 
 KeySym
@@ -325,7 +514,7 @@ XStringToKeysym(_Xconst char *string)
     if (sym == XKB_KEYCODE_INVALID) {
         /*
          * Fallback check: If the case-sensitive exact lookup fails, some legacy
-         * Tk scripts capitalize keysyms loosely. We can explicitly catch "Right"
+         * Tk scripts capitalize keysyms loosely.  We can explicitly catch "Right"
          * if needed, but xkb_keysym_from_name is generally fully compliant with
          * standard X11 keysym string specifications.
          */
@@ -558,7 +747,7 @@ TkWaylandKeyCleanup() {
 #define IBUS_SIGNAL_HIDE_PREEDIT     "HidePreeditText"
 #define IBUS_SIGNAL_SHOW_PREEDIT     "ShowPreeditText"
 
-/* Bitmask identifiers defined by the IBus wire specification */
+/* Bitmask identifiers defined by the IBus wire specification. */
 #define IBUS_CAP_PREEDIT_TEXT   (1u << 0)
 #define IBUS_CAP_AUXILIARY_TEXT (1u << 1)
 #define IBUS_CAP_LOOKUP_TABLE   (1u << 2)
@@ -589,7 +778,7 @@ typedef struct IbusContext {
     int destroyed;              /* Set to 1 when the Tk window has been
                                  * destroyed; guards signal handlers against
                                  * using a stale tkwin pointer. */
-    char *preeditText;          /* Current preedit/composing text (owned) */
+    char *preeditText;          /* Current preedit/composing text (owned). */
     struct IbusContext *next;   /* Linked list pointer. */
 } IbusContext;
 
@@ -631,14 +820,14 @@ FindContext(Tk_Window tkwin)
     }
     return NULL;
 }
+
 /*
- *----------------------------------------------------------------------
- *
+ * ----------------------------------------------------------------------------
  * IbusReadTextFromVariant --
  *
  * 		Helper to safely unpack an IBusText object wrapped inside a
- * 		D-Bus variant container. Dynamically inspects the signature to
- * 		handle protocol variations safely across different IBus versions.”
+ * 		D-Bus variant container.  Dynamically inspects the signature to
+ * 		handle protocol variations safely across different IBus versions.
  *
  * Results:
  * 		0 on success, negative error code on failure.
@@ -646,8 +835,7 @@ FindContext(Tk_Window tkwin)
  * Side effects:
  * 		Moves message container cursor; sets text_out to point inside
  * 		the message buffer.
- *
- *----------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
  */
 
 static int
@@ -811,6 +999,13 @@ TkWaylandSendUnicodeString(
     if (!utf8_str || !*utf8_str || !tkwin) {
         return;
     }
+    /* Never send control chars via synthetic KeyPress. */
+    if (utf8_str[0] && !utf8_str[1] && (unsigned char)utf8_str[0] < 32) {
+        unsigned char c = (unsigned char)utf8_str[0];
+        if (c != '\r' && c != '\t' && c != '\n') {
+            return;
+        }
+    }
 
     /*
      * Stored text lives on the toplevel's privatePtr->pendingText and is
@@ -876,7 +1071,7 @@ TkWaylandSendUnicodeString(
  * ----------------------------------------------------------------------------
  * OnCommitText --
  *
- *	    D-Bus signal handler for the IBus "CommitText" signal. Called when
+ *	    D-Bus signal handler for the IBus "CommitText" signal.  Called when
  *	    the IME has finished composing a text string and it should be
  *	    inserted into the focused widget.
  *
@@ -940,6 +1135,7 @@ OnCommitText(
 
     return 0;
 }
+
 /*
  * ----------------------------------------------------------------------------
  * OnUpdatePreedit --
@@ -1405,8 +1601,9 @@ static int IbusProcessKeyEvent(
 
     return handled;
 }
+
 /*
- * ---------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
  * Tk_SetCaretPos --
  *
  *         Called by text widgets to report the screen position of the
@@ -1426,11 +1623,11 @@ static int IbusProcessKeyEvent(
  *         None.
  *
  * Side effects:
- *         Updates dispPtr->caret.  Sends a SetCursorLocationRelative D-Bus call to
- *         the IBus input context for the enclosing toplevel, if one exists.
- * ----------------------------------------------------------------------
+ *         Updates dispPtr->caret.  Sends a SetCursorLocationRelative D-Bus
+ *         call to the IBus input context for the enclosing toplevel, if one
+ *         exists.
+ * ----------------------------------------------------------------------------
  */
-
 
 void
 Tk_SetCaretPos(
@@ -1504,7 +1701,7 @@ Tk_SetCaretPos(
                        "iiii",
                        (int32_t) relX,
                        (int32_t) relY,
-                       (int32_t) 0,      /* width = 0 (caret) */
+                       (int32_t) 0,      /* width = 0 (caret). */
                        (int32_t) height);
     sd_bus_error_free(&error);
 }
@@ -1698,7 +1895,6 @@ static int CreateIbusContext(
     return TkWaylandIbusCreateContext(interp, tkwin);
 }
 
-
 /*
  * ----------------------------------------------------------------------------
  * TkWaylandIbusFocusIn --
@@ -1777,15 +1973,15 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
 
 /*
  * ----------------------------------------------------------------------------
- * TkWaylandIbusProcessKey -
+ * TkWaylandIbusProcessKey --
  *
  *         Public wrapper called from TkWaylandKeyCallback.  Looks up the IBus
  *         context for the focused toplevel and forwards the key event to the
  *         IBus daemon.
  *
  * Results:
- *         Returns true if IBus consumed the key event (caller should suppress the
- *         normal Tk KeyPress event), false otherwise.
+ *         Returns true if IBus consumed the key event (caller should suppress
+ *         the normal Tk KeyPress event), false otherwise.
  *
  * Side effects:
  *         May start or advance IME composition.
@@ -1804,7 +2000,6 @@ TkWaylandIbusProcessKey(
     return IbusProcessKeyEvent(ctx, keyval, keycode, state) != 0;
 }
 
-
 /*
  * Tk-owned dup of the IBus D-Bus socket fd that the Tcl file handler is
  * registered on, plus the sd_bus fd it was duplicated from.  libsystemd
@@ -1815,8 +2010,7 @@ static int ibus_fd = -1;
 static int ibus_src_fd = -1;
 
 /*
- *----------------------------------------------------------------------
- *
+ * ----------------------------------------------------------------------------
  * TkWaylandIbusFdClose --
  *
  *   Remove the Tcl file handler for the IBus D-Bus socket and close the
@@ -1828,8 +2022,7 @@ static int ibus_src_fd = -1;
  *
  * Side effects:
  *   Deletes the Tcl file handler and closes the dup'd fd.
- *
- *----------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -1844,13 +2037,12 @@ TkWaylandIbusFdClose(void)
 }
 
 /*
- *----------------------------------------------------------------------
- *
+ * ----------------------------------------------------------------------------
  * IbusBusHandler --
  *
- *   Tcl file handler callback for IBus D-Bus socket activity. Processes
+ *   Tcl file handler callback for IBus D-Bus socket activity.  Processes
  *   pending D-Bus messages from the IBus daemon when the file descriptor
- *   becomes readable. Includes re-entrancy protection to prevent concurrent
+ *   becomes readable.  Includes re-entrancy protection to prevent concurrent
  *   processing when IBusProcessKeyEvent is already draining the bus.
  *
  * Results:
@@ -1858,16 +2050,15 @@ TkWaylandIbusFdClose(void)
  *
  * Side effects:
  *   Processes incoming IBus messages (e.g., commit text, preedit updates,
- *   key event replies). May call sd_bus_process which can invoke IBus
- *   callbacks. Outputs debug messages to stderr when processing occurs.
- *
- *----------------------------------------------------------------------
+ *   key event replies).  May call sd_bus_process which can invoke IBus
+ *   callbacks.  Outputs debug messages to stderr when processing occurs.
+ * ----------------------------------------------------------------------------
  */
 
 static void
 IbusBusHandler(
-    ClientData clientData,  /* sd_bus * for the IBus connection */
-    int mask)               /* TCL_READABLE when fd has data */
+    ClientData clientData,  /* sd_bus * for the IBus connection. */
+    int mask)               /* TCL_READABLE when fd has data. */
 {
     sd_bus *bus = (sd_bus *)clientData;
     if (!(mask & TCL_READABLE)) return;
@@ -1911,12 +2102,11 @@ IbusBusHandler(
 }
 
 /*
- *----------------------------------------------------------------------
- *
+ * ----------------------------------------------------------------------------
  * IbusEventSetup --
  *
  *   Called by Tk's event loop integration to register or update the
- *   Tcl file handler for the IBus D-Bus socket. Ensures the file handler
+ *   Tcl file handler for the IBus D-Bus socket.  Ensures the file handler
  *   points to the current D-Bus connection file descriptor, cleaning up
  *   any previous handler if the fd has changed.
  *
@@ -1925,16 +2115,15 @@ IbusBusHandler(
  *
  * Side effects:
  *   May delete an existing Tcl file handler on the old IBus fd and
- *   create a new one on the current fd. Outputs debug message to stderr
+ *   create a new one on the current fd.  Outputs debug message to stderr
  *   when a handler is registered.
- *
- *----------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
  */
 
 static void
 IbusEventSetup(
-    ClientData clientData,  /* Unused (may be NULL) */
-    int flags)              /* TCL_WINDOW_EVENTS when setting up window events */
+    ClientData clientData,  /* Unused (may be NULL). */
+    int flags)              /* TCL_WINDOW_EVENTS when setting up window events. */
 {
     if (!(flags & TCL_WINDOW_EVENTS) || !ibus_bus) return;
 
@@ -1965,12 +2154,11 @@ IbusEventSetup(
 }
 
 /*
- *----------------------------------------------------------------------
- *
+ * ----------------------------------------------------------------------------
  * IbusEventCheck --
  *
  *   Called by Tk's event loop integration to determine if the IBus
- *   D-Bus socket has pending events that require processing. If events
+ *   D-Bus socket has pending events that require processing.  If events
  *   are available, sets the maximum block time to zero to ensure the
  *   event loop returns quickly and dispatches the file handler.
  *
@@ -1981,14 +2169,13 @@ IbusEventSetup(
  *   May call Tcl_SetMaxBlockTime(&zero) when IBus events are pending,
  *   causing the Tcl event loop to avoid blocking and process the
  *   IBus file handler immediately.
- *
- *----------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
  */
 
 static void
 IbusEventCheck(
-    ClientData clientData,  /* Unused (may be NULL) */
-    int flags)              /* TCL_WINDOW_EVENTS when checking window events */
+    ClientData clientData,  /* Unused (may be NULL). */
+    int flags)              /* TCL_WINDOW_EVENTS when checking window events. */
 {
     if (!(flags & TCL_WINDOW_EVENTS) || !ibus_bus) return;
 
@@ -1997,6 +2184,7 @@ IbusEventCheck(
         Tcl_SetMaxBlockTime(&zero);
     }
 }
+
 /*
  * ----------------------------------------------------------------------------
  * GetIbusAddress --

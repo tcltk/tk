@@ -1,11 +1,11 @@
 # accessibility.tcl --
 
 # This file defines the 'tk accessible' command for screen reader support
-# on X11, Windows, and macOS. It implements an abstraction layer that
-# presents a consistent API across the three platforms.
+# on X11, Wayland, Windows, and macOS. It implements an abstraction layer that
+# presents a consistent API across the four platforms.
 
 # Copyright © 2009 Allen B. Taylor
-# Copyright © 2024-2025 Kevin Walzer
+# Copyright © 2024-2026 Kevin Walzer
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,13 +18,13 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
     }
 } else {
     if {([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland")
-            && [::tk::accessible::check_screenreader] eq 1} {
-				
-	# Add border to all X11 widgets with accessible focus. A highlight rectangle
+	&& [::tk::accessible::check_screenreader] eq 1} {
+	
+	# Add border to all X11/Wayland widgets with accessible focus. A highlight rectangle
 	# is drawn over focused widgets by the screen reader app on
-	# macOS and Windows (VoiceOver, NVDA), but not on X11. Configuring
-	# "-relief groove" and binding to FocusIn/Out events is the cleanest
-	# way to accomplish this.
+	# macOS and Windows (VoiceOver, NVDA), but not on X11 or Wayland.
+	# Configuring "-relief groove" and binding to FocusIn/Out
+	# events is the cleanest way to accomplish this.
 
 	namespace eval ::tk::accessible {
 	    variable origConfig
@@ -88,18 +88,13 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
     namespace eval ::tk::accessible {
 
 	if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
-	    # ATK/Orca's API does not align well with Tk text, entry, and menu
-	    # widgets, and non-window elements such as listbox and tree/table
-	    # rows. There is too much of a mismatch between how Tk is
-	    # structured and what ATK expects. Managing this data at the
-	    # C level is fragile and complex.  In these cases, we do not
-	    # address those widgets in C but instead use Tk's script-level
-	    # bindings to manage the interaction by shelling out to
-	    # Speech Dispatcher (the same engine powering Orca's voice) to
-	    # vocalize text data and communicate state/data changes.
-	    # Windows and macOS have functions built in to their accessibility
-	    # API's to post custom announcements, but ATK does not, so we
-	    # must use this as a fallback.
+	    # The Linux accessibility API's - Atk and at-spi - do not
+	    # align well with dynamic textual data, such as the contents
+	    # of a text widget or entry, listbox/table rows, and menus.
+	    # Static widget data such as widget roles and labels are
+	    # routed through Orca/libspeechd in C, but many other
+	    # elements are  handled at the script level through the CLI
+	    # for libspeechd, such as spd-say. 
 	    proc speak {text} {
 		if {[::tk::accessible::check_screenreader] eq "1"} {
 		    # Escape quotes in the text.
@@ -160,7 +155,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"  || [tk windowingsystem] eq "wayland"} {
 		    ::tk::accessible::speak "$description $state"
 		}
 	    }
@@ -363,6 +358,29 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	# Update data selection for various widgets.
 	proc _updateselection {w} {
+
+	    variable title_announce_time
+
+	    if {[winfo class $w] eq "Toplevel"} {
+		set now [clock milliseconds]
+
+		# Suppress repeated FocusIn events for 750 ms.
+		if {[info exists title_announce_time($w)] &&
+		    ($now - $title_announce_time($w)) < 750} {
+		    return
+		}
+		set title_announce_time($w) $now
+
+		catch {
+		    set data [wm title $w]
+		    ::tk::accessible::set_acc_value $w $data
+		    ::tk::accessible::emit_selection_change $w
+		    if {[tk windowingsystem] eq "x11"} {
+			::tk::accessible::speak "$data"
+		    }
+		}
+	    }	
+	    
 	    if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
 		set description [::tk::accessible::get_acc_description $w]
@@ -370,7 +388,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"  || [tk windowingsystem] eq "wayland"} {
 		    # Announce: description, role, state
 		    ::tk::accessible::speak "$description radiobutton $state"
 		}
@@ -382,7 +400,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"  || [tk windowingsystem] eq "wayland"} {
 		    # Announce: description, role, state
 		    if {[winfo class $w] eq "Toggleswitch"} {
 			::tk::accessible::speak "$description toggleswitch $state"
@@ -392,7 +410,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		}
 	    }
 	    if {[winfo class $w] eq "Listbox"} {
-		set data [$w get [$w curselection]]
+		set data [::tk::accessible::_getlistboxdata $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
 		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
@@ -412,7 +430,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    # Only speak if there's content
 		    if {$data ne ""} {
 			::tk::accessible::speak $data
@@ -425,7 +443,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [$w get]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -433,7 +451,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data  [$w tab current -text]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak $data
 		}
 	    }
@@ -464,6 +482,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::speak $data
 		}
+	    }
+	    if {[tk windowingsystem] eq "x11"} {
 		if {[winfo class $w] eq "Spinbox" || \
 			[winfo class $w] eq "TSpinbox" \
 			|| [winfo class $w] eq "Scale" || \
@@ -476,6 +496,30 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    }
 	}
 
+	# Throttle wrapper for emit_focus_change on Wayland. emit_focus_change
+	# is a C command with no throttling of its own, and "bind all
+	# <FocusIn>" fires it on every focus change for every widget --
+	# including repeated/rapid FocusIn on the same toplevel. This uses
+	# its own timestamp array (independent of _updateselection's
+	# title_announce_time) so the AT-SPI focus-changed signal keeps
+	# firing on its own schedule rather than being silenced whenever
+	# _updateselection also happens to run.
+	variable focus_change_time
+	array set focus_change_time {}
+
+	proc _throttledFocusChange {w} {
+	    variable focus_change_time
+	    set now [clock milliseconds]
+
+	    if {[info exists focus_change_time($w)] &&
+		($now - $focus_change_time($w)) < 750} {
+		return
+	    }
+	    set focus_change_time($w) $now
+
+	    ::tk::accessible::emit_focus_change $w
+	}
+
 	# Increment values in various widgets in response to keypress events.
 	proc _updatescale {w key} {
 	    if {[winfo class $w] eq "Scale"} {
@@ -485,7 +529,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -494,7 +538,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -507,7 +551,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -516,7 +560,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -530,7 +574,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -539,7 +583,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -552,7 +596,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -561,7 +605,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -584,7 +628,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -597,7 +641,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -606,7 +650,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
-			if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
+			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
 		    }
@@ -684,8 +728,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				 %W \
 				 Toplevel \
 				 [wm title %W] \
-				 {}  \
-				 {} \
+				 [wm title %W]  \
+				 [wm title %W] \
 				 {} \
 				 {} \
 			     }
@@ -877,8 +921,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			       {%W set} \
 			   }
 
-	# Menu accessibility bindings for X11 only. Menus are native
-	# on macOS/Windows, so we don’t expose them here.
+	# Menu accessibility bindings for X11 and Wayland only. Menus are native
+	# on macOS/Windows, so we don’t expose them here. 
 
 	if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
 	    variable prevActiveIndex
@@ -925,10 +969,12 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		}
 
 		# Update accessible object.
-		::tk::accessible::set_acc_name   $menuWidget $label
-		::tk::accessible::set_acc_action $menuWidget [list $menuWidget invoke $idx]
-		::tk::accessible::emit_selection_change $menuWidget
-		::tk::accessible::emit_focus_change     $menuWidget
+		catch {
+			    ::tk::accessible::set_acc_name   $menuWidget $label
+			    ::tk::accessible::set_acc_action $menuWidget [list $menuWidget invoke $idx]
+			    ::tk::accessible::emit_selection_change $menuWidget
+			    ::tk::accessible::emit_focus_change     $menuWidget
+			}	
 	    }
 
 
@@ -1165,7 +1211,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind TCheckbutton <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
 	    bind Toggleswitch <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
 
-	    # Other X11 focus bindings
+	    # Other focus bindings
 	    bind Listbox <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Treeview <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TNotebook <FocusIn> {+::tk::accessible::_updateselection %W}
@@ -1278,6 +1324,12 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	if {[tk windowingsystem] eq "win32"} {
 	    bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
 	}
+	
+	if {[tk windowingsystem] eq "wayland"} {
+	    bind all <FocusIn> {+::tk::accessible::_throttledFocusChange %W}
+	}
+	
+	bind Toplevel <FocusIn> {+::tk::accessible::_updateselection %W}
 
 	# Finally, export the main commands.
 	namespace export set_acc_role set_acc_name set_acc_description set_acc_value set_acc_state set_acc_action set_acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change

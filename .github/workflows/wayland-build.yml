@@ -1,0 +1,254 @@
+name: Wayland
+on:
+  push:
+    branches:
+    - "main"
+    - "core-9-1-branch"
+    tags:
+    - "core-*"
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+    working-directory: tk/unix
+env:
+  ERROR_ON_FAILURES: 1
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler:
+          - "gcc"
+          - "clang"
+        config:
+          - ""
+          - "CFLAGS=-DTK_NO_DEPRECATED=1"
+          - "--disable-shared"
+          - "--enable-symbols"
+    steps:
+      - name: Checkout Tk
+        uses: actions/checkout@v7
+        with:
+          path: tk
+      - name: Checkout Tcl 9.1
+        uses: actions/checkout@v7
+        with:
+          repository: tcltk/tcl
+          ref: main
+          path: tcl
+      - name: Setup Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            wayland-protocols libwayland-dev libwayland-egl1 \
+            libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+            libdecor-0-dev libfontconfig-dev libsystemd-dev \
+            libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev
+          mkdir "$HOME/install dir"
+          touch tk/doc/man.macros tk/generic/tkStubInit.c
+          echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
+          echo "CC=$COMPILER" >> $GITHUB_ENV
+          echo "TOOL_DIR=$(cd tcl/tools;pwd)" >> $GITHUB_ENV
+          echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
+        working-directory: "."
+        env:
+          CFGOPT: ${{ matrix.config }}
+          COMPILER: ${{ matrix.compiler }}
+          OPTS: ${{ matrix.compiler }}${{ matrix.config }}
+      - name: Configure and Build Tcl
+        run: |
+          ./configure "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
+          make all install || exit 1
+          echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
+        working-directory: tcl/unix
+      - name: Configure
+        run: |
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
+      - name: Build
+        run: make binaries libraries
+      - name: Build Test Harness
+        run: make tktest
+
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler: ["gcc"]
+        config: ["", "--enable-symbols"]
+    steps:
+      - name: Checkout Tk
+        uses: actions/checkout@v7
+        with:
+          path: tk
+      - name: Checkout Tcl 9.1
+        uses: actions/checkout@v7
+        with:
+          repository: tcltk/tcl
+          ref: main
+          path: tcl
+      - name: Setup Environment
+        run: |
+          sudo apt-get update
+          # mutter: GNOME compositor, run headless with a virtual monitor
+          # waybar: provides org.kde.StatusNotifierWatcher + Host (tray/SNI)
+          # dunst: provides org.freedesktop.Notifications for sysnotify tests
+          sudo apt-get install \
+            wayland-protocols libwayland-dev libwayland-egl1 \
+            libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+            libdecor-0-dev libfontconfig-dev libsystemd-dev \
+            libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
+            libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont \
+            mutter waybar dbus dbus-x11 mesa-utils dunst
+          mkdir "$HOME/install dir"
+          touch tk/doc/man.macros tk/generic/tkStubInit.c
+          echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
+          echo "CC=$COMPILER" >> $GITHUB_ENV
+        working-directory: "."
+        env:
+          CFGOPT: ${{ matrix.config }}
+          COMPILER: ${{ matrix.compiler }}
+      - name: Configure and Build Tcl
+        run: |
+          ./configure "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
+          make all install || exit 1
+          echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
+        working-directory: tcl/unix
+      - name: Configure
+        run: |
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
+      - name: Build
+        run: make binaries libraries tktest || exit 1
+      - name: Run Tests
+        run: |
+          dbus-run-session -- bash -c '
+            set -eu
+
+            export LIBGL_ALWAYS_SOFTWARE=1
+
+            # Locate the Tk build directory (the one containing tktest).
+            # Accepts running from tk/unix or from the tk root.
+            TK_UNIX=""
+            for d in . ./unix; do
+              if [ -x "$d/tktest" ]; then
+                TK_UNIX=$(cd "$d" && pwd)
+                break
+              fi
+            done
+
+            # tktest is only built by "make tktest" (or "make test"), not by a
+            # plain "make". If it is missing but the tree has been configured,
+            # build it.
+            if [ -z "$TK_UNIX" ]; then
+              for d in . ./unix; do
+                if [ -f "$d/Makefile" ]; then
+                  echo "tktest not found; running \"make tktest\" in $d" >&2
+                  (cd "$d" && make tktest)
+                  TK_UNIX=$(cd "$d" && pwd)
+                  break
+                fi
+              done
+            fi
+
+            if [ -z "$TK_UNIX" ] || [ ! -x "$TK_UNIX/tktest" ]; then
+              echo "Cannot find tktest (and no configured Makefile to build it)." >&2
+              echo "Current directory: $(pwd)" >&2
+              echo "Contents:" >&2
+              ls -la . ./unix 2>&1 | sed "s/^/  /" >&2 || true
+              exit 1
+            fi
+
+            cd "$TK_UNIX"
+            echo "Using tktest in $TK_UNIX"
+
+            export XDG_RUNTIME_DIR="${RUNNER_TEMP:-/tmp}/xdg-runtime-wl"
+            mkdir -p "$XDG_RUNTIME_DIR"
+            chmod 0700 "$XDG_RUNTIME_DIR"
+            rm -f "$XDG_RUNTIME_DIR"/wayland-* "$XDG_RUNTIME_DIR"/wayland-*.lock
+
+            export XKB_DEFAULT_LAYOUT=us
+            export MUTTER_DEBUG_DUMMY_MODE_SPECS=1280x720
+            export MESA_LOADER_DRIVER_OVERRIDE=swrast
+
+            LOG="${RUNNER_TEMP:-/tmp}/mutter.log"
+
+            WAYBAR_CFG="${RUNNER_TEMP:-/tmp}/waybar-ci"
+            mkdir -p "$WAYBAR_CFG"
+            cat > "$WAYBAR_CFG/waybar.json" <<JSON
+          {
+            "layer": "top",
+            "height": 24,
+            "modules-right": ["tray"],
+            "tray": { "icon-size": 21, "spacing": 5 }
+          }
+          JSON
+
+            cleanup() {
+              [ -n "${COMPOSITOR_PID:-}" ] && kill "$COMPOSITOR_PID" 2>/dev/null || true
+              [ -n "${WAYBAR_PID:-}" ] && kill "$WAYBAR_PID" 2>/dev/null || true
+              [ -n "${DUNST_PID:-}" ] && kill "$DUNST_PID" 2>/dev/null || true
+            }
+            trap cleanup EXIT INT TERM
+
+            echo "::group::Starting waybar (SNI watcher) and dunst (notifications)"
+            waybar -c "$WAYBAR_CFG/waybar.json" >/dev/null 2>&1 &
+            WAYBAR_PID=$!
+            dunst >/dev/null 2>&1 &
+            DUNST_PID=$!
+            echo "::endgroup::"
+
+            echo "::group::Starting mutter headless --virtual-monitor 1280x720"
+            mutter --headless --virtual-monitor 1280x720 --wayland-display wayland-test >"$LOG" 2>&1 &
+            COMPOSITOR_PID=$!
+
+            for i in $(seq 1 100); do
+              if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
+                break
+              fi
+              if ! kill -0 "$COMPOSITOR_PID" 2>/dev/null; then
+                cat "$LOG"
+                exit 1
+              fi
+              sleep 0.1
+            done
+
+            if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
+              echo "mutter failed to create socket"
+              cat "$LOG"
+              ls -l "$XDG_RUNTIME_DIR"
+              exit 1
+            fi
+
+            export WAYLAND_DISPLAY=wayland-test
+            echo "Using WAYLAND_DISPLAY=$WAYLAND_DISPLAY"
+            echo "::endgroup::"
+
+            echo "::group::Waiting for SNI watcher (waybar) + Notifications (dunst)"
+            for i in $(seq 1 40); do
+              dbus-send --session --dest=org.freedesktop.DBus --type=method_call --print-reply \
+                /org/freedesktop/DBus org.freedesktop.DBus.NameHasOwner string:org.kde.StatusNotifierWatcher 2>/dev/null \
+                | grep -q "boolean true" && break
+              sleep 0.5
+            done
+            dbus-send --session --type=method_call --print-reply --dest=org.freedesktop.DBus \
+              /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "StatusNotifier|Notifications" || true
+            echo "::endgroup::"
+
+            # Find a source-built Tcl, if present.
+            ROOT=$(cd "$TK_UNIX/.." && pwd)
+            for d in "$ROOT/../tcl/unix" "$ROOT/../../tcl/unix"; do
+              if ls "$d"/libtcl*.so >/dev/null 2>&1; then
+                export LD_LIBRARY_PATH="$TK_UNIX:$d:${LD_LIBRARY_PATH:-}"
+                export TCL_LIBRARY="$d/../library"
+                break
+              fi
+            done
+            export TK_LIBRARY="$ROOT/library"
+
+            ./tktest ../tests/all.tcl -singleproc 0 | tee out-classic.txt
+            ./tktest ../tests/ttk/all.tcl -singleproc 0 | tee out-ttk.txt
+            grep -q "Failed     0" out-classic.txt
+            grep -q "Failed     0" out-ttk.txt
+          '
+        timeout-minutes: 15

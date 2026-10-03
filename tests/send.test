@@ -307,28 +307,29 @@ catch {
     t_s_1 eval wm withdraw .
 }
 
-test send-8.11 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend} {
+
+test send-8.11 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend !wayland} {
     set a us
     send t_s_1 set a them
     list $a [send t_s_1 set a]
 } {us them}
-test send-8.12 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend} {
+test send-8.12 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend !wayland} {
     set a us
     send t_s_1 {set a them}
     list $a [send t_s_1 {set a}]
 } {us them}
-test send-8.13 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend} {
+test send-8.13 {Tk_SendCmd procedure, local execution, different interp} {secureserver testsend !wayland} {
     set a us
     send t_s_1 {set a them}
     list $a [send t_s_1 {set a}]
 } {us them}
-test send-8.14 {Tk_SendCmd procedure, local interp killed by send} -constraints {secureserver testsend} -body {
+test send-8.14 {Tk_SendCmd procedure, local interp killed by send} -constraints {secureserver testsend !wayland} -body {
     childTkInterp t_s_2 -class Test
     list [catch {send t_s_2 {destroy .; concat result}} msg] $msg
 } -cleanup {
     catch {interp delete t_s_2}
 } -result {0 result}
-test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver testsend failsOnCILinux} {
+test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver testsend failsOnCILinux !wayland} {
     catch {error foo}
     list [catch {send t_s_1 {if 1 {open bogus_file_name}}} msg] $msg $errorInfo $errorCode
 } {1 {couldn't open "bogus_file_name": no such file or directory} {couldn't open "bogus_file_name": no such file or directory
@@ -338,7 +339,7 @@ test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver te
 "if 1 {open bogus_file_name}"
     invoked from within
 "send t_s_1 {if 1 {open bogus_file_name}}"} {POSIX ENOENT {no such file or directory}}}
-test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnCILinux failsOnXQuartz} {
+test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnCILinux failsOnXQuartz !wayland} {
     testsend prop root InterpRegistry "10234 bogus\n"
     set result [list [catch {send bogus bogus command} msg] $msg]
     winfo interps
@@ -351,7 +352,7 @@ test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend fa
 #
 catch {interp delete t_s_1}
 
-test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable notAqua} {
+test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortable notAqua !wayland} {
     # Non-portable because some window managers ignore "raise"
     # requests so can't guarantee that new app's window won't
     # obscure .f, thereby masking the Expose event.

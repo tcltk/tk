@@ -277,11 +277,18 @@ TkWaylandPopupCreateRenderer(
 
         /*
          * Load fonts using the Tk font system.
-         * The fonts will be loaded on demand.
+         * The fonts will be loaded on demand. Guard: during very early
+         * startup Tk_MainWindow may not yet be mapped, so TkWaylandGetTkWindow
+         * can return NULL and InitFont would have dereferenced NULL -> segv.
+         * InitFont now handles NULL, but we also tolerate failure here.
          */
-        TkWaylandLoadNamedFontIntoContext(renderer->vg, "sans");
-        TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkDefaultFont");
-        TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkMenuFont");
+        if (renderer->vg) {
+            int fid;
+            fid = TkWaylandLoadNamedFontIntoContext(renderer->vg, "sans");
+            if (fid < 0) DEBUG_LOG("PopupCreateRenderer: sans load failed (expected if fonts missing)");
+            fid = TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkDefaultFont");
+            fid = TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkMenuFont");
+        }
 
         DEBUG_LOG("TkWaylandPopupCreateRenderer: fonts registered using Tk font system");
 

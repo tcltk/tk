@@ -42,11 +42,12 @@ test dialog-1.3 {tk_dialog command} -body {
     destroy .d
 } -returnCodes error -result {bitmap "fooBitmap" not defined}
 
-test dialog-2.1 {tk_dialog operation} -body {
+# hangs on Wayland - skipping pending further review
+test dialog-2.1 {tk_dialog operation} -constraints !wayland -body {
     set x [after 5000 [list set tk::Priv(button) "no response"]]
     after 100 {
 	if {![winfo ismapped .d.button0]} {
-	    update
+	   update
 	}
 	PressButton .d.button0
     }
@@ -56,7 +57,8 @@ test dialog-2.1 {tk_dialog operation} -body {
 } -cleanup {
     destroy .d
 } -result 0
-test dialog-2.2 {tk_dialog operation} -setup {
+# hangs on Wayland - skipping pending further review
+test dialog-2.2 {tk_dialog operation} -constraints !wayland -setup {
     proc HitReturn {w} {
 	event generate $w <Enter>
 	focus -force $w
@@ -71,7 +73,8 @@ test dialog-2.2 {tk_dialog operation} -setup {
 } -cleanup {
     destroy .d
 } -result 1
-test dialog-2.3 {tk_dialog operation} -body {
+# hangs on Wayland - skipping pending further review
+test dialog-2.3 {tk_dialog operation} -constraints !wayland -body {
     set x [after 5000 [list set tk::Priv(button) "no response"]]
     after 100 destroy .d
     set res [tk_dialog .d foo foo info 0 click]

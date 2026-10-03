@@ -7,6 +7,31 @@ wm title $_w "Accessible Widget Demo"
 wm resizable $_w 0 0
 set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 
+menu .mb -tearoff 0
+
+# On Aqua, just use the default menu.
+if {[tk windowingsystem] ne "aqua"} {
+    # This is a tk-internal procedure to make i18n easier
+    ::tk::AmpMenuArgs .mb add cascade -label [mc "&File"] \
+	    -menu .mb.file
+    menu .mb.file -tearoff 0
+    ::tk::AmpMenuArgs .mb.file add command -label [mc "&About..."] \
+	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
+    bind . <F1> {tkAboutDialog}
+    .mb.file add sep
+    if {[tk windowingsystem] eq "win32"} {
+	# Windows doesn't usually have a Meta key
+	::tk::AmpMenuArgs .mb.file add command -label [mc "&Quit"] \
+		-command {exit} -accelerator [mc "Ctrl+Q"]
+	bind . <[mc "Control-q"]> {exit}
+    } else {
+	::tk::AmpMenuArgs .mb.file add command -label [mc "&Quit"] \
+		-command {exit} -accelerator [mc "Meta-Q"]
+	bind . <[mc "Meta-q"]> {exit}
+    }
+    $_w configure -menu .mb
+}
+
 ttk::label $_w.x -text "This is a demonstration of accessible widgets in Tcl/Tk. Please click on the buttons
 below to interact with the different widgets and see how they support accessibility." -padding 5
 

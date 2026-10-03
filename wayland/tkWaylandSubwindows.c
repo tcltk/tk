@@ -188,6 +188,82 @@ void createClipShaders(TkWindow *winPtr) {
     /* Restore GL defaults. */
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    winPtr->privatePtr->clipDirty = 1;
+    winPtr->privatePtr->scrollScratchFBO = 0;
+    winPtr->privatePtr->scrollScratchTex = 0;
+    winPtr->privatePtr->scrollScratchW = 0;
+    winPtr->privatePtr->scrollScratchH = 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * tkWaylandInvalidateClipRects --
+ *
+ *	Marks the clipping rectangles for a window and its ancestors and
+ *	siblings as dirty, forcing them to be recomputed before the next
+ *	draw.  This should be called whenever the window's geometry or
+ *	stacking order changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the clipDirty flag on winPtr, its ancestors, and its siblings.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+tkWaylandInvalidateClipRects(TkWindow *winPtr)
+{
+    if (!winPtr) return;
+    if (winPtr->privatePtr) {
+        winPtr->privatePtr->clipDirty = 1;
+    }
+    TkWindow *parent = winPtr->parentPtr;
+    while (parent) {
+        if (parent->privatePtr) {
+            parent->privatePtr->clipDirty = 1;
+        }
+        if (Tk_IsTopLevel(parent)) break;
+        parent = parent->parentPtr;
+    }
+    if (winPtr->parentPtr) {
+        for (TkWindow *sib = winPtr->parentPtr->childList; sib; sib = sib->nextPtr) {
+            if (sib != winPtr && sib->privatePtr) {
+                sib->privatePtr->clipDirty = 1;
+            }
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * tkWaylandInvalidateClipRectsForTree --
+ *
+ *	Marks the clipping rectangles for an entire subtree of windows as
+ *	dirty, forcing them to be recomputed before the next draw.  This
+ *	should be called when a major geometry change affects many windows.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the clipDirty flag on winPtr and all of its descendants.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr)
+{
+    if (!winPtr) return;
+    if (winPtr->privatePtr) winPtr->privatePtr->clipDirty = 1;
+    for (TkWindow *child = winPtr->childList; child; child = child->nextPtr) {
+        tkWaylandInvalidateClipRectsForTree(child);
+    }
 }
 
 /*
@@ -284,7 +360,8 @@ void intersectRectWithRect(
     rectPtr->h = fminf(ymaxFirst, ymaxSecond) - rectPtr->y;
 }
 
-/*----------------------------------------------------------------------
+/*
+ *----------------------------------------------------------------------
  *
  * addClipRect --
  *
@@ -399,6 +476,25 @@ appendVerticesForRect(
     /* Return the updated vertex count */
     return n;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * updateClipRects --
+ *
+ *	Rebuilds the list of clipping rectangles for a window based on the
+ *	current geometry of its mapped children and higher siblings.  The
+ *	rectangles are stored in the window's private data and uploaded to
+ *	the VBO.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates clipRectCount, clipRectBuffer, and the VBO contents.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void updateClipRects(
      TkWindow* winPtr,       /* The window to be updated. */
@@ -581,8 +677,9 @@ void tkWaylandDrawClipMask(
     TkWindow* winPtr,
     GLFWwindow* glfwWindow)
 {
-    if (1) { //// should be if the clipRects are invalid
-	updateClipRects(winPtr, glfwWindow);
+    if (winPtr->privatePtr && winPtr->privatePtr->clipDirty) {
+        updateClipRects(winPtr, glfwWindow);
+        winPtr->privatePtr->clipDirty = 0;
     }
     DEBUG_LOG("Drawing ClipMask for %s with %d clipRects",
 	   Tk_PathName(winPtr), winPtr->privatePtr->clipRectCount + 4);
@@ -613,7 +710,12 @@ void tkWaylandDrawClipMask(
     glUniform2f(winPtr->privatePtr->fbSizeUniform,
 		(float)fbWidth, (float)fbHeight);
     glBindVertexArray(winPtr->privatePtr->clipVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 12 * (winPtr->privatePtr->clipRectCount + 4));
+    /*
+     * 6 vertices per rect (two triangles, no EBO) -- matches exactly what
+     * updateClipRects allocates and uploads (vertices[6 * (clipRectCount +
+     * 4)]).
+     */
+    glDrawArrays(GL_TRIANGLES, 0, 6 * (winPtr->privatePtr->clipRectCount + 4));
     /* Restore defaults. */
     glBindVertexArray(0);
     glUseProgram(0);

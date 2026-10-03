@@ -47,6 +47,19 @@ extern GLFWwindow *mainGlfwWindow;
 static int  fcInitialized = 0;
 
 /*
+ * Cache for TkpGetFontFamilies().
+ *
+ * FcFontList(NULL, pat, os) with a NULL config forces Fontconfig to load
+ * its config and scan all font directories. Doing that on every call is
+ * expensive (seconds on a cold or large font cache), and "font families"
+ * is queried during widget/interp setup. Cache the resulting family list
+ * and invalidate only if the process's current FcConfig changes (which
+ * only happens if something calls FcConfigSetCurrent()).
+ */
+static Tcl_Obj  *cachedFamilies       = NULL;
+static FcConfig *cachedFamiliesConfig = NULL;
+
+/*
  * Clip state set by TkUnixSetXftClipRegion() and consumed by
  * TkpDrawAngledCharsInContext() via nvgScissor(). ttk's TextDraw()
  * (ttkLabel.c) only ever builds a single-rect region -- a bounding
@@ -79,6 +92,13 @@ static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
 static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
 static int         EncodeUtf8Char(FcChar32 uc, char out[4]);
+static void       ExpandRangeToClusterBoundaries(const ShapedGlyphBuffer *sbuf,
+						 int *start, int *end,
+						 int numBytes);
+MODULE_SCOPE int  TkWaylandClusterBoundaryAtOrBefore(Tk_Font tkfont,
+						 const char *source,
+						 Tcl_Size numBytes,
+						 int bytePos);
 
 /*
  *----------------------------------------------------------------------
@@ -207,6 +227,52 @@ IsMonospaceFace(FcPattern *pat)
         return true;
     }
     
+    return false;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * IsLoadableOutlineFace --
+ *
+ *   True if a Fontconfig pattern refers to a scalable outline font in a
+ *   container that nvgCreateFont()/stb_truetype can load (.ttf, .otf, or
+ *   face 0 of a .ttc).  Bitmap fonts such as the PCF "fixed" family are
+ *   fixed-pitch but unusable here; if one ends up as faces[0] the load
+ *   fails and the primary face silently degrades to DejaVu Sans.
+ *
+ * Results:
+ *   True if the face can be rendered by this backend.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsLoadableOutlineFace(FcPattern *pat)
+{
+    FcBool scalable = FcTrue;
+    FcChar8 *file = NULL;
+    int idx = 0;
+
+    if (!pat) return false;
+    if (FcPatternGetBool(pat, FC_SCALABLE, 0, &scalable) == FcResultMatch
+            && !scalable) {
+        return false;
+    }
+    if (FcPatternGetString(pat, FC_FILE, 0, &file) != FcResultMatch || !file) {
+        return false;
+    }
+    size_t n = strlen((const char *)file);
+    const char *ext = (const char *)file + (n >= 4 ? n - 4 : 0);
+    if (n >= 4 && (strcasecmp(ext, ".ttf") == 0 ||
+                   strcasecmp(ext, ".otf") == 0)) {
+        return true;
+    }
+    if (n >= 4 && strcasecmp(ext, ".ttc") == 0) {
+        FcPatternGetInteger(pat, FC_INDEX, 0, &idx);
+        return (idx & 0xFFFF) == 0;
+    }
     return false;
 }
 
@@ -624,7 +690,7 @@ IsSimpleOnly(const char *str, int len)
         /* 
          * Combining diacritical marks MUST go through HarfBuzz shaping,
          * unless every mark in the string can be precomposed onto its
-         * base character. Try brute-force precomposition to see whether
+         * base character. Try precomposition to see whether
          * the fast path is viable.
          *
          * IMPORTANT: this is a read-only classifier. It must NOT write
@@ -845,7 +911,7 @@ IsEmoji(FcChar32 uc)
  *----------------------------------------------------------------------
  * IsColorFcPattern --
  *
- *   Determine whether a Fontconfig pattern refers to a colour-glyph
+ *   Determine whether a Fontconfig pattern refers to a color-glyph
  *   font (CBDT/CBLC, COLR/CPAL, sbix, etc.), which stb_truetype/NanoVG
  *   cannot rasterize.
  *
@@ -1244,12 +1310,15 @@ FindFaceCoveringRange(
 
     /* If the range has both emoji and non-emoji, try primary first. */
     if (hasEmoji && hasNonEmoji) {
-        /* Check primary face first. */
+        /*
+         * Check primary face first. Coverage must be verified for
+         * EVERY character in the range, emoji included. 
+         */
         if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset) {
             int ok = 1;
             FcCharSet *cs = fontPtr->faces[0].charset;
             for (int i = start; i < start + len; i++) {
-                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                if (!FcCharSetHasChar(cs, ucs4[i])) {
                     ok = 0;
                     break;
                 }
@@ -1257,21 +1326,27 @@ FindFaceCoveringRange(
             if (ok) return 0;
         }
         
-        /* Then try other faces. */
+        /* Then try other faces -- same full-coverage requirement. */
         for (int fi = 1; fi < fontPtr->nfaces; fi++) {
             FcCharSet *cs = fontPtr->faces[fi].charset;
             if (!cs) continue;
             
             int ok = 1;
             for (int i = start; i < start + len; i++) {
-                if (!IsEmoji(ucs4[i]) && !FcCharSetHasChar(cs, ucs4[i])) {
+                if (!FcCharSetHasChar(cs, ucs4[i])) {
                     ok = 0;
                     break;
                 }
             }
             if (ok) return fi;
         }
-        /* Fall through to emoji-only handling. */
+        /*
+         * No single face covers both the plain text and the emoji in this
+         * range (the overwhelmingly common case) -- fall through to
+         * emoji-only handling below so at least glyphs and metrics come
+         * from one consistent, actually-emoji-capable face rather than
+         * silently defaulting to a face with no emoji coverage.
+         */
     }
 
     /* If any character in the range is an emoji, use the emoji face for emoji-only runs. */
@@ -1691,9 +1766,29 @@ WaylandShaper_ShapeString(
                  * Only break when we encounter a different script.
                  */
                 int subrunEnd = subrunStart + 1;
+                bool subrunIsEmoji = IsEmoji(ucs4Chars[subrunStart]);
                 while (subrunEnd < runStart + runLen) {
                     hb_script_t s = hb_unicode_script(
 						      hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+
+                    /*
+                     * Never let a subrun mix emoji and non-emoji codepoints,
+                     * even though emoji are HB_SCRIPT_COMMON (the same
+                     * script as plain punctuation/spaces) and would
+                     * otherwise be allowed to extend below. Mixing them
+                     * forces FindFaceCoveringRange() into its "mixed"
+                     * branch, which -- because it only validates coverage
+                     * of the *non*-emoji characters in the range -- ends up
+                     * silently choosing the plain-text face for the whole
+                     * subrun even when that face has zero emoji glyphs.
+                     * Every emoji then falls back to .notdef, and since
+                     * text-widget cursor placement (CharBboxProc /
+                     * CharMeasureProc) derives its geometry from these same
+                     * shaped advances, the caret stops tracking forward as
+                     * soon as it reaches a run of collapsed/zero-advance
+                     * substitute glyphs.
+                     */
+                    if (IsEmoji(ucs4Chars[subrunEnd]) != subrunIsEmoji) break;
 
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                         /* Keep extending; do not break on face mismatch. */
@@ -1975,6 +2070,124 @@ WaylandShaper_ShapeString(
 
 /*
  *----------------------------------------------------------------------
+ * ExpandRangeToClusterBoundaries --
+ *
+ *   Expand a byte range to the nearest grapheme cluster boundaries
+ *   based on the ShapedGlyphBuffer's cluster break table.  Ensures that 
+ *   rendering and measurement ranges never split a
+ *   grapheme cluster (e.g., a base character and its combining mark),
+ *   which would cause the combining mark to be rendered separately.
+ *
+ * Results:
+ *   Updates start and end to cluster-aligned positions.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static void
+ExpandRangeToClusterBoundaries(
+    const ShapedGlyphBuffer *sbuf,
+    int *start,
+    int *end,
+    int numBytes)
+{
+    if (!sbuf || sbuf->clusterBreakCount <= 0) return;
+
+    /* Find the cluster boundary at or before 'start'. */
+    int newStart = 0;
+    for (int i = 0; i < sbuf->clusterBreakCount; i++) {
+        int pos = sbuf->clusterBreaks[i];
+        if (pos <= *start) {
+            newStart = pos;
+        } else {
+            break;
+        }
+    }
+
+    /* Find the cluster boundary at or after 'end'. */
+    int newEnd = numBytes;
+    for (int i = 0; i < sbuf->clusterBreakCount; i++) {
+        int pos = sbuf->clusterBreaks[i];
+        if (pos >= *end) {
+            newEnd = pos;
+            break;
+        }
+    }
+
+    *start = newStart;
+    *end = newEnd;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandClusterBoundaryAtOrBefore --
+ *
+ *   Return the grapheme-cluster boundary at or before an arbitrary byte
+ *   offset into `source`.
+ *
+ *   This is the canonical "safe split point" that callers outside this
+ *   file MUST use whenever a single logical string has to be divided
+ *   into two adjacent sub-ranges that will each be handed to a
+ *   separate Tk_DrawCharsInContext() / Tk_MeasureCharsInContext() call
+ *   -- most notably the text display code splitting a line's rendering
+ *   at the insertion cursor into a "before caret" and "after caret"
+ *   piece.
+ *
+ *
+ * Results:
+ *   A byte offset in [0, numBytes] that is guaranteed to fall on a
+ *   cluster boundary. Returns bytePos unchanged (clamped to
+ *   [0, numBytes]) if shaping fails or the string has no cluster
+ *   structure to worry about.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandClusterBoundaryAtOrBefore(
+    Tk_Font     tkfont,
+    const char *source,
+    Tcl_Size    numBytes,
+    int         bytePos)
+{
+    if (!tkfont || !source || numBytes <= 0) {
+        return bytePos;
+    }
+    if (bytePos <= 0) {
+        return 0;
+    }
+    if (bytePos >= (int)numBytes) {
+        return (int)numBytes;
+    }
+
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+    ShapedGlyphBuffer sbuf;
+
+    if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                   (int)numBytes, &sbuf)
+        || sbuf.clusterBreakCount <= 0) {
+        /* No shaping/cluster info available -- nothing to snap to. */
+        return bytePos;
+    }
+
+    int best = 0;
+    for (int i = 0; i < sbuf.clusterBreakCount; i++) {
+        int pos = sbuf.clusterBreaks[i];
+        if (pos <= bytePos) {
+            best = pos;
+        } else {
+            break;
+        }
+    }
+    return best;
+}
+
+/*
+ *----------------------------------------------------------------------
  * EnsureNvgFaceFont --
  *
  *   Load a single WaylandFtFace into the NanoVG context on demand.
@@ -2151,10 +2364,18 @@ EnsureNvgFont(
 
     /* Load each face into this context. */
     int primaryId = -1;
+    int primaryFace = -1;
     for (int i = 0; i < fontPtr->nfaces; i++) {
         int id = EnsureNvgFaceFont(fontPtr, i, vg);
-        if (i == 0) {
+        /*
+         * Use the first face that actually loads as primary, so an
+         * unloadable faces[0] (bitmap/CFF/missing file) falls through to
+         * the next Fontconfig match (e.g. DejaVu Sans Mono) instead of
+         * straight to the hard-coded DejaVu Sans fallback below.
+         */
+        if (primaryId < 0 && id >= 0) {
             primaryId = id;
+            primaryFace = i;
         }
     }
 
@@ -2201,9 +2422,9 @@ EnsureNvgFont(
      * it would sit dead.
      */
     if (primaryId >= 0) {
-        for (int i = 1; i < fontPtr->nfaces; i++) {
+        for (int i = 0; i < fontPtr->nfaces; i++) {
             int fb = fontPtr->faces[i].nvgFontId;
-            if (fb >= 0) {
+            if (i != primaryFace && fb >= 0) {
                 nvgAddFallbackFontId(vg, primaryId, fb);
             }
         }
@@ -2284,19 +2505,26 @@ InitFont(
 	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);
     }
 
-    /* Default dpi in case the screen info does not exist. */
+    /* Default dpi in case the screen info does not exist or tkwin is NULL
+     * (early startup: bootstrap window exists but winPtr not yet wired). */
     double dpi = 96.0;
-    DEBUG_LOG("InitFont: font %s for window %s at size %lf",
-	faPtr->family, Tk_PathName(tkwin), fa->size);
-    DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
-    Screen *screen = Tk_Screen(tkwin);
-    if (screen && WidthMMOfScreen(screen) > 0) {
+    if (!tkwin) {
+        DEBUG_LOG("InitFont: font %s with no tkwin yet (family=%s size=%lf) - using %.0f dpi fallback",
+                  faPtr->family ? faPtr->family : "(null)", faPtr->family ? faPtr->family : "(null)", fa->size, dpi);
+    } else {
+        DEBUG_LOG("InitFont: font %s for window %s at size %lf",
+                  faPtr->family, Tk_PathName(tkwin), fa->size);
+        DEBUG_LOG("InitFont: computing dpi for %s", Tk_PathName(tkwin));
+        Screen *screen = Tk_Screen(tkwin);
+        if (screen && WidthMMOfScreen(screen) > 0) {
+
 	double screenDpi = (double)WidthOfScreen(screen) * 25.4
 	    / (double)WidthMMOfScreen(screen);
 	/* Use actual screen DPI for all fonts. */
 	if (screenDpi >= 72.0 && screenDpi <= 480.0) {
 	    dpi = screenDpi;
 	}
+    }
     }
     DEBUG_LOG("InitFont: Using dpi = %f", dpi);
     if (ptSize < 0.0) {
@@ -2359,6 +2587,7 @@ InitFont(
         isGenericSerif = true;
     } else if (family && (strcasestr(family, "mono") ||
                strcasestr(family, "courier") ||
+               strcasecmp(family, "TkFixedFont") == 0 ||
                strcasestr(family, "fixed"))) {
         isGenericMono = true;
     }
@@ -2428,6 +2657,11 @@ InitFont(
     FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
     FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* Reject color fonts. */
+    FcPatternAddBool(pat, FC_SCALABLE,  FcTrue);    /* No bitmap fonts. */
+    if (isGenericMono) {
+        /* Prefer fixed-pitch faces over merely mono-sounding names. */
+        FcPatternAddInteger(pat, FC_SPACING, FC_MONO);
+    }
 
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
@@ -2521,6 +2755,36 @@ InitFont(
             FcPattern *tmp = set->fonts[0];
             set->fonts[0] = set->fonts[best];
             set->fonts[best] = tmp;
+        }
+    }
+
+    /*
+     * When a monospace font was requested, make sure faces[0] really is
+     * fixed-pitch.  Mirrors the sans-serif correction above: FcFontSort
+     * can rank a proportional face first when the requested family is
+     * unknown or a generic alias.  Runs after the name-match step so it
+     * has the final say.
+     */
+    if (isGenericMono && set && set->nfont > 1) {
+        int monoIdx = -1;
+        for (int i = 0; i < set->nfont && monoIdx < 0; i++) {
+            int spacing = FC_PROPORTIONAL;
+            bool isMono = false;
+            if (FcPatternGetInteger(set->fonts[i], FC_SPACING, 0, &spacing)
+                    == FcResultMatch && spacing >= FC_DUAL) {
+                isMono = true;
+            } else if (IsMonospaceFace(set->fonts[i])) {
+                isMono = true;
+            }
+            if (isMono && !IsColorFcPattern(set->fonts[i]) &&
+                    IsLoadableOutlineFace(set->fonts[i])) {
+                monoIdx = i;
+            }
+        }
+        if (monoIdx > 0) {
+            FcPattern *tmp = set->fonts[0];
+            set->fonts[0] = set->fonts[monoIdx];
+            set->fonts[monoIdx] = tmp;
         }
     }
 
@@ -2935,6 +3199,14 @@ static void
 CreateStandardNamedFonts(ClientData clientData)
 {
     TkMainInfo *mainPtr = (TkMainInfo *) clientData;
+    if (mainPtr == NULL || mainPtr->winPtr == NULL) {
+        return;
+    }
+
+    TkWindow *winPtr = (TkWindow *) mainPtr->winPtr;
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+        return;
+    }
     Tcl_Interp *interp = mainPtr->interp;
     Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
 
@@ -2949,7 +3221,28 @@ CreateStandardNamedFonts(ClientData clientData)
         if (TkCreateNamedFont(interp, tkwin, wlNamedFonts[i].tkName, &fa)
                 != TCL_OK) {
             const char *msg = Tcl_GetStringResult(interp);
-            if (!msg || !strstr(msg, "already exists")) {
+            if (msg && strstr(msg, "already exists")) {
+                /*
+                 * Something (a script, another init path) defined this
+                 * name before us.  If it was created with no attributes
+                 * (empty family, size 0) it is useless and resolves to
+                 * the default sans face, so fill it in.  A font that
+                 * already has a family is left alone so applications
+                 * can still customise the standard fonts.
+                 */
+                Tcl_ResetResult(interp);
+                Tcl_Obj *cmd = Tcl_ObjPrintf(
+                    "if {[font configure {%s} -family] eq {}} {"
+                    "font configure {%s} -family {%s} -size %d "
+                    "-weight %s -slant %s}",
+                    wlNamedFonts[i].tkName, wlNamedFonts[i].tkName,
+                    wlNamedFonts[i].family, wlNamedFonts[i].points,
+                    wlNamedFonts[i].bold   ? "bold"   : "normal",
+                    wlNamedFonts[i].italic ? "italic" : "roman");
+                Tcl_IncrRefCount(cmd);
+                Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+                Tcl_DecrRefCount(cmd);
+            } else {
                 DEBUG_LOG("tkWaylandFont: failed to create named font "
                         "\"%s\": %s",
                         wlNamedFonts[i].tkName,
@@ -2989,6 +3282,29 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
 
 /*
  *----------------------------------------------------------------------
+ * TkWaylandCancelNamedFontIdle --
+ * 
+ *   Cancel a pending CreateStandardNamedFonts idle for mainPtr.
+ *   Must be called from the TkMainInfo teardown path before mainPtr is
+ *   freed, to prevent the idle firing against a deleted named-font hash
+ *   table.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Cancels font idle task.
+ *----------------------------------------------------------------------
+ */
+void
+TkWaylandCancelNamedFontIdle(TkMainInfo *mainPtr)
+{
+    Tcl_CancelIdleCall(CreateStandardNamedFonts, (ClientData) mainPtr);
+}
+
+
+/*
+ *----------------------------------------------------------------------
  * TkpGetNativeFont --
  *
  *   Create a TkFont from a native font name (not used extensively on Wayland).
@@ -3004,11 +3320,28 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
 TkFont *
 TkpGetNativeFont(Tk_Window tkwin, const char *name)
 {
-    /* Wayland has no native font-name syntax (no XLFD, no HFONT, …).
-     * Returning NULL forces the generic attribute parser so that
-     * descriptions like {Helvetica 72} and {Times 16 bold} are
-     * handled by TkpGetFontFromAttributes with the real size/weight.
+    /*
+     * The standard named fonts (TkFixedFont, ...) are only registered from
+     * an idle callback, so widgets created before the event loop first goes
+     * idle would otherwise see them as unknown family names.  Resolve them
+     * here with their real family/size/weight.
      */
+    if (name != NULL) {
+        for (int i = 0; wlNamedFonts[i].tkName != NULL; i++) {
+            if (strcmp(name, wlNamedFonts[i].tkName) == 0) {
+                TkFontAttributes fa;
+                TkInitFontAttributes(&fa);
+                fa.family = Tk_GetUid(wlNamedFonts[i].family);
+                fa.size   = (double) wlNamedFonts[i].points;
+                fa.weight = wlNamedFonts[i].bold ? TK_FW_BOLD : TK_FW_NORMAL;
+                fa.slant  = wlNamedFonts[i].italic ? TK_FS_ITALIC : TK_FS_ROMAN;
+                return TkpGetFontFromAttributes(NULL, tkwin, &fa);
+            }
+        }
+    }
+
+    /* Otherwise no native syntax (no XLFD, no HFONT, …): return NULL so the
+     * generic parser handles {Helvetica 72} and {Times 16 bold}. */
     return NULL;
 }
 
@@ -3079,11 +3412,21 @@ TkpDeleteFont(TkFont *tkFontPtr)
  *
  *   Return a list of available font family names.
  *
+ *   The family list is built with FcFontList() against the process's
+ *   current FcConfig. With a NULL config argument Fontconfig is forced
+ *   to load its config and scan every font directory, which is
+ *   expensive (seconds on a cold or large cache) and happens on every
+ *   call - "font families" is queried during widget/interp setup, so
+ *   that cost lands directly in interp bootstrap. Cache the resulting
+ *   Tcl list and invalidate it only if the process's current FcConfig
+ *   pointer changes (i.e. something called FcConfigSetCurrent()), so
+ *   repeated calls in the same process are O(1).
+ *
  * Results:
  *   None (sets interpreter result).
  *
  * Side effects:
- *   Queries Fontconfig.
+ *   Queries Fontconfig on cache miss; otherwise returns the cached list.
  *----------------------------------------------------------------------
  */
 
@@ -3092,10 +3435,17 @@ TkpGetFontFamilies(
 		   Tcl_Interp *interp,
 		   TCL_UNUSED(Tk_Window))
 {
+    FcConfig *cfg = FcConfigGetCurrent();
+
+    if (cachedFamilies && cfg == cachedFamiliesConfig) {
+	Tcl_SetObjResult(interp, Tcl_DuplicateObj(cachedFamilies));
+	return;
+    }
+
     Tcl_Obj    *resultPtr = Tcl_NewListObj(0, NULL);
     FcPattern  *pat       = FcPatternCreate();
     FcObjectSet*os        = FcObjectSetBuild(FC_FAMILY, NULL);
-    FcFontSet  *fs        = FcFontList(NULL, pat, os);
+    FcFontSet  *fs        = FcFontList(cfg, pat, os);
 
     if (fs) {
         Tcl_Obj *seen = Tcl_NewDictObj();
@@ -3120,6 +3470,15 @@ TkpGetFontFamilies(
 
     FcObjectSetDestroy(os);
     FcPatternDestroy(pat);
+
+    /* Refresh the cache. */
+    if (cachedFamilies) {
+	Tcl_DecrRefCount(cachedFamilies);
+    }
+    cachedFamilies       = Tcl_DuplicateObj(resultPtr);
+    Tcl_IncrRefCount(cachedFamilies);
+    cachedFamiliesConfig = cfg;
+
     Tcl_SetObjResult(interp, resultPtr);
 }
 
@@ -3285,14 +3644,33 @@ Tk_MeasureCharsInContext(
         i += clen;
     }
 
+    /*
+     * For strings with combining marks, emoji, or complex
+     * scripts, shape the entire string first, then expand the range to
+     * cluster boundaries before measuring.
+     */
+    if (!IsSimpleOnly(source + rangeStart, (int)rangeLength) || hasCombining || hasEmoji) {
+        ShapedGlyphBuffer sbuf;
+        if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                      (int)numBytes, &sbuf)
+            && sbuf.glyphCount > 0) {
+            /* Expand range to cluster boundaries. */
+            ExpandRangeToClusterBoundaries(&sbuf, &start, &end, (int)numBytes);
+            if (start >= end) {
+                *lengthPtr = 0;
+                return 0;
+            }
+        }
+    }
+
     /* Simple LTR path: for strings WITHOUT combining characters or emoji. */
-    if (IsSimpleOnly(source + rangeStart, (int)rangeLength) && !hasCombining && !hasEmoji) {
+    if (IsSimpleOnly(source + start, end - start) && !hasCombining && !hasEmoji) {
         NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
         if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
             int         width          = 0;
-            const char *p              = source + rangeStart;
-            const char *endPtr         = source + rangeStart + rangeLength;
+            const char *p              = source + start;
+            const char *endPtr         = source + end;
             const char *lastBreak      = p;
             int         lastBreakWidth = 0;
             while (p < endPtr) {
@@ -3302,7 +3680,7 @@ Tk_MeasureCharsInContext(
                 if (maxLength >= 0 && width + adv > maxLength) {
                     if ((flags & TK_WHOLE_WORDS) && lastBreak > p) {
                         *lengthPtr = lastBreakWidth;
-                        return (int)(lastBreak - source - rangeStart);
+                        return (int)(lastBreak - source - start);
                     }
                     if (!(flags & TK_PARTIAL_OK)) break;
                 }
@@ -3313,12 +3691,12 @@ Tk_MeasureCharsInContext(
                 width += adv;
                 p = next;
             }
-            if ((flags & TK_AT_LEAST_ONE) && p == source + rangeStart) {
+            if ((flags & TK_AT_LEAST_ONE) && p == source + start) {
                 int ch; p += Tcl_UtfToUniChar(p, &ch);
                 width += fontPtr->pixelSize / 2;
             }
             *lengthPtr = width;
-            return (int)(p - source - rangeStart);
+            return (int)(p - source - start);
         }
 
         nvgSave(vg);
@@ -3326,8 +3704,8 @@ Tk_MeasureCharsInContext(
         nvgFontSize(vg, (float)fontPtr->pixelSize);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
-        const char *rangePtr = source + rangeStart;
-        const char *rangeEnd = rangePtr + rangeLength;
+        const char *rangePtr = source + start;
+        const char *rangeEnd = source + end;
 
         int nchars = 0;
         for (const char *p = rangePtr; p < rangeEnd; ) {
@@ -3397,6 +3775,13 @@ Tk_MeasureCharsInContext(
         return 0;
     }
 
+    /* Expand range to cluster boundaries. */
+    int expandedStart = start;
+    int expandedEnd = end;
+    ExpandRangeToClusterBoundaries(&sbuf, &expandedStart, &expandedEnd, (int)numBytes);
+    start = expandedStart;
+    end = expandedEnd;
+
     if (maxLength < 0) {
         int minX = INT_MAX, maxX = INT_MIN;
         for (int i = 0; i < sbuf.glyphCount; i++) {
@@ -3410,7 +3795,7 @@ Tk_MeasureCharsInContext(
             }
         }
         *lengthPtr = (minX <= maxX) ? (maxX - minX) : 0;
-        return (int)rangeLength;
+        return (int)(end - start);
     }
 
     typedef struct { int start; int end; int advance; } ClusterInfo;
@@ -3460,7 +3845,7 @@ Tk_MeasureCharsInContext(
     }
 
     if ((flags & TK_WHOLE_WORDS) && bestBytes > 0
-	&& bestBytes < (int)rangeLength) {
+	&& bestBytes < (int)(end - start)) {
         int rollback = -1;
         for (int i = bestBytes - 1; i >= 0; i--) {
             unsigned char c = (unsigned char)source[start + i];
@@ -3590,18 +3975,11 @@ Tk_DrawCharsInContext(
  *   ShapedGlyphBuffer so that HarfBuzz advances and RTL reordering are
  *   reflected in the final pixel positions.
  *
- *   The NanoVG fallback chain (primary → fallback faces) is wired by
- *   EnsureNvgFont and handles any codepoint the primary face lacks in
- *   the simple LTR path. (Emoji never take this path - see IsSimpleOnly -
- *   so their coverage instead comes from GetRunFaceIndex() over the same
- *   Fontconfig-discovered face list in the complex/RTL path below.)
- *
- *   IMPORTANT: For strings with combining marks, we DO NOT attempt to
- *   pre-compose them. Instead, we let HarfBuzz shape the string with
- *   its default (NFC) normalization. HarfBuzz will properly position
- *   combining marks with zero advance, attaching them to their base
- *   characters. The composition table is only used as a fallback for
- *   fonts that don't support combining marks directly.
+ *   Before rendering, expand the range to grapheme cluster
+ *   boundaries so that we never render a partial grapheme. This fixes
+ *   the cursor/selection issue where a range that ends between a base
+ *   character and its combining mark would render the combining mark
+ *   separately.
  *
  * Results:
  *   None.
@@ -3625,7 +4003,6 @@ TkpDrawAngledCharsInContext(
     double     y,
     double     angle)
 {
-
     TkWaylandDrawingContext dc;
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
@@ -3672,6 +4049,7 @@ TkpDrawAngledCharsInContext(
 
     /* If there are newlines, render each line separately. */
     if (hasNewline) {
+
         const char *lineStart = rangePtr;
         const char *p = rangePtr;
         double lineY = y;
@@ -3742,6 +4120,31 @@ TkpDrawAngledCharsInContext(
     }
 
     /*
+     * For strings with combining marks, emoji, or complex
+     * scripts, shape the entire string first, then expand the rendering
+     * range to cluster boundaries before drawing. This ensures we never
+     * render a partial grapheme (e.g., a combining mark without its base).
+     */
+    int drawStart = (int)rangeStart;
+    int drawEnd = (int)(rangeStart + rangeLength);
+
+    if (!fullIsSimple || hasCombining || hasEmoji) {
+        ShapedGlyphBuffer sbuf;
+        if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
+                                      source, (int)numBytes, &sbuf)
+            && sbuf.glyphCount > 0) {
+            /* Expand range to cluster boundaries. */
+            ExpandRangeToClusterBoundaries(&sbuf, &drawStart, &drawEnd, (int)numBytes);
+        }
+    }
+
+    /* If the range was expanded, update the pointers. */
+    if (drawStart != (int)rangeStart || drawEnd != (int)(rangeStart + rangeLength)) {
+        rangePtr = source + drawStart;
+        rangeEnd = source + drawEnd;
+    }
+
+    /*
      * Determine whether we need to add the width of preceding text to the
      * X coordinate. When the substring is part of a larger string and we're
      * rendering it in isolation, we need to know where it starts horizontally.
@@ -3755,12 +4158,14 @@ TkpDrawAngledCharsInContext(
      * the prefix width would incorrectly shift the rendering.
      */
     bool needsPrefixOffset = hasCombining ||
-        (fullIsSimple && IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji);
+        (fullIsSimple && IsSimpleOnly(rangePtr, (int)(rangeEnd - rangePtr)) && !hasEmoji);
 
     double drawX = x;
-    if (rangeStart > 0 && needsPrefixOffset) {
+    if (drawStart > 0 && needsPrefixOffset) {
         /* Simple path: directly measure the width of the prefix text. */
-        if (IsSimpleOnly(source, (int)rangeStart)) {
+
+
+        if (IsSimpleOnly(source, drawStart)) {
             nvgFontFaceId(vg, primaryId);
             /* Measure a precomposed copy: NanoVG has no mark-attachment
              * support, so measuring raw base+mark sequences directly
@@ -3768,14 +4173,14 @@ TkpDrawAngledCharsInContext(
              * is purely a local scratch buffer for pixel measurement --
              * it never replaces `source`, so byte-offset-based indexing
              * elsewhere is unaffected. */
-            char *composedPrefix = ComposeUTF8String(source, (int)rangeStart);
+            char *composedPrefix = ComposeUTF8String(source, drawStart);
             if (composedPrefix) {
                 float advance = nvgTextBounds(vg, 0, 0, composedPrefix,
                                               composedPrefix + strlen(composedPrefix), NULL);
                 drawX += (double)advance;
                 free(composedPrefix);
             } else {
-                float advance = nvgTextBounds(vg, 0, 0, source, source + rangeStart, NULL);
+                float advance = nvgTextBounds(vg, 0, 0, source, source + drawStart, NULL);
                 drawX += (double)advance;
             }
         } else {
@@ -3784,11 +4189,11 @@ TkpDrawAngledCharsInContext(
             if (WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                           (int)numBytes, &psbuf)
                 && psbuf.glyphCount > 0) {
-                /* Find the horizontal extent of all glyphs before rangeStart. */
+                /* Find the horizontal extent of all glyphs before drawStart. */
                 int minX = INT_MAX, maxX = INT_MIN;
                 for (int i = 0; i < psbuf.glyphCount; i++) {
                     int bo = psbuf.glyphs[i].byteOffset;
-                    if (bo < (int)rangeStart) {
+                    if (bo < drawStart) {
                         int gx0 = psbuf.glyphs[i].x;
                         int gx1 = gx0 + psbuf.glyphs[i].advanceX;
                         if (gx0 < minX) minX = gx0;
@@ -3829,10 +4234,10 @@ TkpDrawAngledCharsInContext(
      * single nvgText() call advances its own pen internally, so no
      * manual per-glyph position bookkeeping is needed.
      */
-    if (fullIsSimple && IsSimpleOnly(rangePtr, (int)rangeLength) && !hasEmoji) {
+    if (fullIsSimple && IsSimpleOnly(rangePtr, (int)(rangeEnd - rangePtr)) && !hasEmoji) {
         nvgFontFaceId(vg, primaryId);
         if (hasCombining) {
-            char *composedRange = ComposeUTF8String(rangePtr, (int)rangeLength);
+            char *composedRange = ComposeUTF8String(rangePtr, (int)(rangeEnd - rangePtr));
             if (composedRange) {
                 nvgText(vg, 0.0f, 0.0f, composedRange,
                         composedRange + strlen(composedRange));
@@ -3888,7 +4293,7 @@ TkpDrawAngledCharsInContext(
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
             /* Skip glyphs that fall outside our rendering range. */
-            if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
+            if (boe <= drawStart || bo >= drawEnd)
                 continue;
 
             /* Check if this cluster already exists. */
@@ -3999,7 +4404,7 @@ decorations:
         /* Skip any leading/trailing newlines for decoration measurement. */
         while (decoStart < decoEnd && (*decoStart == '\n' || *decoStart == '\r')) decoStart++;
         while (decoEnd > decoStart && (*(decoEnd-1) == '\n' || *(decoEnd-1) == '\r')) decoEnd--;
-        
+               
         runWidth = nvgTextBounds(vg, 0, 0, decoStart, decoEnd, NULL);
 
         nvgStrokeColor(vg, ColorFromGC(gc));
@@ -4008,16 +4413,16 @@ decorations:
         if (fontPtr->font.fa.underline) {
             float uy = (float)(y + fontPtr->underlinePos);
             nvgBeginPath(vg);
-            nvgMoveTo(vg, (float)x, uy);
-            nvgLineTo(vg, (float)(x + runWidth), uy);
+            nvgMoveTo(vg, (float)drawX, uy);
+            nvgLineTo(vg, (float)(drawX + runWidth), uy);
             nvgStroke(vg);
         }
 
         if (fontPtr->font.fa.overstrike) {
             float oy = (float)(y - fontPtr->font.fm.ascent / 2);
             nvgBeginPath(vg);
-            nvgMoveTo(vg, (float)x, oy);
-            nvgLineTo(vg, (float)(x + runWidth), oy);
+            nvgMoveTo(vg, (float)drawX, oy);
+            nvgLineTo(vg, (float)(drawX + runWidth), oy);
             nvgStroke(vg);
         }
 

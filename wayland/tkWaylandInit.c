@@ -16,7 +16,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging.
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "init"
 */
@@ -33,6 +33,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/*
+ * TKWL_EARLY_EXPOSE_QUEUED is set the first time TkWaylandBeginDraw queues
+ * an early Expose for a window that has never been focused, so that the
+ * request is made only once.  It belongs next to the other TKWL_* flags in
+ * tkWaylandInt.h; this fallback definition uses a high bit so it cannot
+ * collide with them.  Move it into the header and drop this block.
+ */
+#ifndef TKWL_EARLY_EXPOSE_QUEUED
+#define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -186,12 +197,22 @@ static glfwTkInfo* createGlfwTkInfo(
         glfwTerminate();
         return NULL;
     }
-    nvgCreateFontMem(infoPtr->vg, "sans", sans_data,
-		     (int)sans_size, 0);
-    nvgCreateFontMem(infoPtr->vg, "sans-bold", bold_data,
-		     (int)bold_size, 0);
-    nvgCreateFontMem(infoPtr->vg, "mono", mono_data,
-		     (int)mono_size, 0);
+    /* Guard: readFont() can return NULL; nvgCreateFontMem derefs immediately */
+    if (sans_data && sans_size > 0) {
+        nvgCreateFontMem(infoPtr->vg, "sans", sans_data, (int)sans_size, 0);
+    } else {
+        DEBUG_LOG("createGlfwTkInfo: sans_data missing, skipping");
+    }
+    if (bold_data && bold_size > 0) {
+        nvgCreateFontMem(infoPtr->vg, "sans-bold", bold_data, (int)bold_size, 0);
+    } else {
+        DEBUG_LOG("createGlfwTkInfo: bold_data missing, skipping");
+    }
+    if (mono_data && mono_size > 0) {
+        nvgCreateFontMem(infoPtr->vg, "mono", mono_data, (int)mono_size, 0);
+    } else {
+        DEBUG_LOG("createGlfwTkInfo: mono_data missing, skipping");
+    }
     return infoPtr;
 }
 
@@ -216,10 +237,10 @@ static void destroyGlfwTkInfo(
 	     */
 	    TkWaylandFontContextDestroyed(infoPtr->vg);
 	    GL_DEBUG_LOG("destroyGlfwTkInfo: before destroying vg for %s\n",
-		Tk_PathName(infoPtr->winPtr));
+		infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "<bootstrap>");
 	    nvgDeleteGLES3(infoPtr->vg);
 	    GL_DEBUG_LOG("destroyGlfwTkInfo: after destroying vg for %s\n",
-		Tk_PathName(infoPtr->winPtr));
+		infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "<bootstrap>");
 	    Tcl_Free(infoPtr);
 	    return;
 	}
@@ -244,6 +265,69 @@ getGlfwTkInfo(
 }
 
 /*
+ *----------------------------------------------------------------------
+ * isGlfwWindowValid --
+ *
+ *   True if win is a non-NULL GLFW window that is still registered in
+ *   the glfwTkInfoList of live windows.  Callers use this to guard
+ *   against acting on a GLFWwindow pointer that has already been
+ *   destroyed or that never belonged to this interpreter; a stale
+ *   pointer would otherwise be dereferenced or passed back into GLFW.
+ *
+ * Results:
+ *   1 if win is non-NULL and present in glfwTkInfoList, 0 otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+isGlfwWindowValid(GLFWwindow *win)
+{
+    if (!win) return 0;
+    for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr)
+	if (p->glfwWindow==win) return 1;
+    return 0;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ * IsUnmappedEmptyRoot --
+ *
+ *   True if the toplevel containing winPtr is the interpreter's main
+ *   window, has no children, and has not been mapped yet.  Such a window
+ *   is not drawn or presented (this avoids painting a root that is about
+ *   to be withdrawn).  Once TkWmMapWindow has set TK_MAPPED, an empty
+ *   root must be drawn and presented like any other toplevel; otherwise
+ *   no buffer is ever committed after glfwShowWindow and the compositor
+ *   never displays it.
+ *
+ * Results:
+ *   1 if window meets the specified condition, 0 otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+IsUnmappedEmptyRoot(TkWindow *winPtr)
+{
+    TkWindow *top = winPtr;
+
+    while (top && !Tk_IsTopLevel(top)) {
+        top = top->parentPtr;
+    }
+    if (top == NULL || top->childList != NULL || (top->flags & TK_MAPPED)) {
+        return 0;
+    }
+    return top->mainPtr && top->mainPtr->interp
+            && top == (TkWindow *) Tk_MainWindow(top->mainPtr->interp);
+}
+
+/*
  * ----------------------------------------------------------------------
  *
  * renderFBO --
@@ -264,58 +348,37 @@ getGlfwTkInfo(
  * ----------------------------------------------------------------------
  */
 
-
-static void renderFBO(
+static int renderFBO(
     GLFWwindow *glfwWindow)
 {
+    if (shutdownInProgress) return 1;
+    if (!glfwWindow) return 1;
+    if (!isGlfwWindowValid(glfwWindow)) return 1;
+    if (glfwWindowShouldClose(glfwWindow)) return 1;
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
+    if (glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) return 1;
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!infoPtr) {
-        DEBUG_LOG("renderFBO: No UserPointer");
-        return;
-    }
-    
-    if (!infoPtr->winPtr) {
-        DEBUG_LOG("renderFBO: winPtr is NULL");
-        return;
-    }
-    
-    if (!infoPtr->winPtr->privatePtr) {
-        DEBUG_LOG("renderFBO: privatePtr is NULL");
-        return;
-    }
-    
+    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) return 1;
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
-    
-    int fbWidth, fbHeight;
-    glfwMakeContextCurrent(glfwWindow);
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    
-    /* Ensure framebuffer is valid by checking its fbo ID. */
-    if (fb->fbo == 0) {
-        fprintf(stderr, "renderFBO: framebuffer has invalid fbo ID - recreating\n");
-        nvgluDeleteFramebuffer(fb);
-        fb = nvgluCreateFramebuffer(infoPtr->vg, fbWidth, fbHeight, 0);
-        if (!fb) {
-            fprintf(stderr, "renderFBO: failed to recreate framebuffer\n");
-            return;
-        }
-        infoPtr->winPtr->privatePtr->fb = fb;
-
-        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
-        glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-    }
-    
-    glfwMakeContextCurrent(glfwWindow);
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    if (!fb || fb->fbo==0) return 1;
+    if (IsUnmappedEmptyRoot(infoPtr->winPtr)) return 1;
+    int fbW,fbH; glfwMakeContextCurrent(glfwWindow); glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
+    if (fbW<=0||fbH<=0) return 1;
+    glFlush();
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-                      0, 0, fbWidth, fbHeight,
-                      GL_COLOR_BUFFER_BIT,
-                      GL_NEAREST);
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE) { glBindFramebuffer(GL_FRAMEBUFFER,0); return 1; }
+    glBlitFramebuffer(0,0,fbW,fbH,0,0,fbW,fbH,GL_COLOR_BUFFER_BIT,GL_NEAREST);
+    glFlush();
+    if (!isGlfwWindowValid(glfwWindow)) return 1;
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
+    static double lastSwap=0; double now=glfwGetTime();
+    if (now-lastSwap<0.008) return 0;  /* throttled: caller keeps NEEDS_DISPLAY */
     glfwSwapBuffers(glfwWindow);
+    lastSwap=glfwGetTime();
+    return 1;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -364,24 +427,66 @@ Tk_ClipDrawableToRect(
 	return;
     }
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    if (!glfwWindow) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no glfwWindow for drawable");
+        return;
+    }
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!glfwInfoPtr) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no infoPtr");
+        return;
+    }
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    if (!winPtr) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no winPtr");
+        return;
+    }
+    if (!winPtr->privatePtr) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no privatePtr for %s", Tk_PathName(winPtr));
+        return;
+    }
+    /*
+     * The backing-store framebuffer lives on the TOPLEVEL's privatePtr,
+     * not on each individual child widget's -- only InitializeGlfwWindow
+     * (called for toplevels) ever populates ->fb.  A non-toplevel widget
+     * such as a Text widget always has privatePtr->fb == NULL, so
+     * checking winPtr->privatePtr->fb directly made every clip Begin/End
+     * call for a child widget fall into the "not ready" branch below.
+     * Walk up to the toplevel here so he readiness check 
+     * matches where ->fb actually lives.
+     */
+    TkWindow *toplevelPtr = winPtr;
+    while (!Tk_IsTopLevel(toplevelPtr)) {
+        toplevelPtr = toplevelPtr->parentPtr;
+    }
+    if (!toplevelPtr->privatePtr || !toplevelPtr->privatePtr->fb) {
+        DEBUG_LOG("Tk_ClipDrawableToRect: no fb for toplevel of %s - skipping",
+                Tk_PathName(winPtr));
+        /* Still clear/set flags to avoid stale DONT_SWAP state */
+        if (width == -1 || height == -1) {
+            glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
+            glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+        }
+        return;
+    }
     DEBUG_LOG("Tk_ClipDrawableToRect: %s %dx%d+%d+%d",
 	Tk_PathName(winPtr), width, height, x, y);
 
-    /* Should check for NULL here. */
     if (width == -1 || height == -1) {
 	DEBUG_LOG("Clearing clipRect for %s", Tk_PathName(winPtr));
 	glfwInfoPtr->flags &= ~TKWL_DONT_SWAP;
 	glfwInfoPtr->flags |= TKWL_NEEDS_DISPLAY;
-	renderFBO(glfwWindow);
+	/* deferred to DisplayAllWindows */
     } else {
 	DEBUG_LOG("Adding clipRect for %s", Tk_PathName(winPtr));
-	glfwInfoPtr->flags |= TKWL_DONT_SWAP;
-	glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+	if (winPtr == toplevelPtr) {
+	    glfwInfoPtr->flags |= TKWL_DONT_SWAP;
+	    glfwInfoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+	}
     }
     winPtr->privatePtr->boundsRect = (clipRect) {
 	.x = x, .y = y, .w = width, .h = height};
+    winPtr->privatePtr->clipDirty = 1;
 }
 
 /*
@@ -405,31 +510,54 @@ Tk_ClipDrawableToRect(
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
-    for (glfwTkInfo* infoPtr = glfwTkInfoList;
-         infoPtr != NULL;
-         infoPtr = infoPtr->nextPtr) {
-        if (infoPtr->flags & TKWL_NEEDS_DISPLAY) {
-            /* Skip if window or framebuffer is not ready. */
-            if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr || 
-                !infoPtr->winPtr->privatePtr->fb) {
-                /* Clear the flag to avoid repeated attempts. */
-                infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
-                DEBUG_LOG("TkWaylandDisplayAllWindows: skipping %s (no FBO)",
-                        infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
-                continue;
+    static double lastDisplay=0;
+    double nowDisp=glfwGetTime();
+    if (nowDisp-lastDisplay<0.005) return;
+    lastDisplay=nowDisp;
+    if (shutdownInProgress) return;
+    if (glfwTkInfoList==NULL) return;
+    int anyMappable=0;
+    for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
+        if (!p->glfwWindow) continue;
+        if (glfwWindowShouldClose(p->glfwWindow)) continue;
+        if (!p->winPtr || !p->winPtr->privatePtr || !p->winPtr->privatePtr->fb) continue;
+        if (!glfwGetWindowAttrib(p->glfwWindow, GLFW_VISIBLE)) continue;
+        if (glfwGetWindowAttrib(p->glfwWindow, GLFW_ICONIFIED)) continue;
+        int w=0,h=0; glfwGetFramebufferSize(p->glfwWindow,&w,&h);
+        if (w<=0||h<=0) continue;
+        anyMappable=1; break;
+    }
+    if (!anyMappable) {
+        for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
+            if (!p->glfwWindow) continue;
+            if (!glfwGetWindowAttrib(p->glfwWindow, GLFW_VISIBLE) || glfwGetWindowAttrib(p->glfwWindow, GLFW_ICONIFIED)) {
+                p->flags &= ~TKWL_NEEDS_DISPLAY;
             }
-            
-            GLFWwindow *glfwWindow = infoPtr->glfwWindow;
-            if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE) ||
-				glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
-				continue;   /* Leave TKWL_NEEDS_DISPLAY set for when it becomes visible. */
-			}
-            DEBUG_LOG("Displaying %s", Tk_PathName(infoPtr->winPtr));
-            renderFBO(glfwWindow);
+        }
+        return;
+    }
+    for (glfwTkInfo *infoPtr=glfwTkInfoList; infoPtr; infoPtr=infoPtr->nextPtr) {
+        if (!(infoPtr->flags & TKWL_NEEDS_DISPLAY)) continue;
+        if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr || !infoPtr->winPtr->privatePtr->fb) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+        GLFWwindow *glfwWindow=infoPtr->glfwWindow;
+        if (!glfwWindow || glfwWindowShouldClose(glfwWindow)) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+        if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE) || glfwGetWindowAttrib(glfwWindow, GLFW_ICONIFIED)) {
+            if (glfwWindow==mainGlfwWindow) infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+            continue;
+        }
+        int fbW=0,fbH=0; glfwGetFramebufferSize(glfwWindow,&fbW,&fbH);
+        if (fbW<=0||fbH<=0) { infoPtr->flags &= ~TKWL_NEEDS_DISPLAY; continue; }
+        if (infoPtr->winPtr && IsUnmappedEmptyRoot(infoPtr->winPtr)) {
+            infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+            continue;
+        }
+        /* If the swap was throttled, leave NEEDS_DISPLAY set and retry. */
+        if (renderFBO(glfwWindow)) {
             infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
         }
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -547,6 +675,44 @@ TkWaylandInitialize(Tcl_Interp *interp)
     glfwPollEvents();
 
     /*
+     * Load fonts BEFORE bootstrap - createGlfwTkInfo dereferences sans_data
+     */
+    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                         &sans_size);
+    if (!sans_data) {
+        sans_data = readFont("/usr/share/fonts/TTF/DejaVuSans.ttf", &sans_size);
+    }
+    if (!sans_data) {
+        sans_data = readFont("/usr/share/fonts/dejavu/DejaVuSans.ttf", &sans_size);
+    }
+    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                         &bold_size);
+    if (!bold_data) {
+        bold_data = readFont("/usr/share/fonts/TTF/DejaVuSans-Bold.ttf", &bold_size);
+    }
+    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+                         &mono_size);
+    if (!mono_data) {
+        mono_data = readFont("/usr/share/fonts/TTF/DejaVuSansMono.ttf", &mono_size);
+    }
+
+    /*
+     * Attach a real glfwTkInfo (and therefore a working NVG context) to
+     * the bootstrap window right away. winPtr is filled in once
+     * the real Tk root window exists; TkWaylandCreateWindow() updates
+     * it in place rather than creating a second NVG context.
+     */
+    {
+        glfwTkInfo *bootstrapInfo = createGlfwTkInfo(mainGlfwWindow, NULL);
+        if (!bootstrapInfo) {
+            DEBUG_LOG("TkWaylandInitialize: createGlfwTkInfo() failed for bootstrap window");
+            glfwTerminate();
+            return TCL_ERROR;
+        }
+        glfwSetWindowUserPointer(mainGlfwWindow, bootstrapInfo);
+    }
+
+    /*
      * Now GL is guaranteed valid.
      */
     DEBUG_LOG("GL_VENDOR   = %s", glGetString(GL_VENDOR));
@@ -560,7 +726,7 @@ TkWaylandInitialize(Tcl_Interp *interp)
      */
     glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glfwSwapBuffers(mainGlfwWindow);
+    glFlush();
 
     /*
      * Wayland display (for wl_subsurfaces/popups).
@@ -578,16 +744,6 @@ TkWaylandInitialize(Tcl_Interp *interp)
      * - current GL context (implicit via GLFW)
      */
     TkWaylandPopupSetMainWindow(mainGlfwWindow);
-
-    /*
-     * Load fonts for window decorations.
-     */
-    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                         &sans_size);
-    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                         &bold_size);
-    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-                         &mono_size);
 
     glfwSwapInterval(0);
 
@@ -637,10 +793,40 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         ibus_bus = NULL;
     }
 
-    glfwMakeContextCurrent(NULL);
-    TkWaylandClearCallbacks(mainGlfwWindow);
-    glfwSetErrorCallback(NULL);
-    mainGlfwWindow = NULL;
+    /* 
+     * Destroy all NanoVG contexts BEFORE freeing font data.
+     * nvgCreateFontMem does not copy the buffer, it keeps the pointer,
+     * so freeing sans_data/bold_data/mono_data while vg is alive is
+     * use-after-free.
+     */
+    {
+        glfwTkInfo *infoPtr = glfwTkInfoList;
+        while (infoPtr) {
+            glfwTkInfo *next = infoPtr->nextPtr;
+            if (infoPtr->glfwWindow) {
+                glfwMakeContextCurrent(infoPtr->glfwWindow);
+                glfwSetWindowUserPointer(infoPtr->glfwWindow, NULL);
+                TkWaylandClearCallbacks(infoPtr->glfwWindow);
+                if (infoPtr->vg) {
+                    TkWaylandFontContextDestroyed(infoPtr->vg);
+                    nvgDeleteGLES3(infoPtr->vg);
+                }
+            }
+            Tcl_Free(infoPtr);
+            infoPtr = next;
+        }
+        glfwTkInfoList = NULL;
+    }
+
+    if (mainGlfwWindow) {
+        glfwMakeContextCurrent(NULL);
+        glfwSetErrorCallback(NULL);
+        mainGlfwWindow = NULL;
+    } else {
+        glfwMakeContextCurrent(NULL);
+        glfwSetErrorCallback(NULL);
+    }
+
     if (GlfwIsInitialized) {
         glfwTerminate();
         GlfwIsInitialized = 0;
@@ -696,10 +882,19 @@ TkWaylandCreateWindow(
 
     GLFWwindow *glfwWindow = NULL;
 
-    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
+    glfwTkInfo *mainInfoTmp = NULL;
+    if (mainGlfwWindow) {
+        mainInfoTmp = glfwGetWindowUserPointer(mainGlfwWindow);
+    }
+    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)
+        && mainGlfwWindow != NULL
+        && mainInfoTmp && mainInfoTmp->winPtr
+        && mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr) {
         /*
          * Root window: ensure we have a GL ES context and that it is current.
          * If this is the first time, create mainGlfwWindow here.
+         * Only reuse mainGlfwWindow when it belongs to the same TkMainInfo
+         * (same interp). Child interps that load Tk get their own GLFWwindow.
          */
         if (mainGlfwWindow == NULL) {
             glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
@@ -764,11 +959,22 @@ TkWaylandCreateWindow(
         glfwSwapInterval(0);
     }
 
-    glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (infoPtr) {
+        /*
+         * glfwWindow is the bootstrap mainGlfwWindow, which already has
+         * a glfwTkInfo (and NVG context) attached from
+         * TkWaylandInitialize(). Just fill in winPtr now that the real
+         * root TkWindow exists.
+         */
+        infoPtr->winPtr = winPtr;
+    } else {
+        infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
+        glfwSetWindowUserPointer(glfwWindow, infoPtr);
+    }
     DEBUG_LOG("nvgContext for %s is at %p",
             Tk_PathName(winPtr), infoPtr);
 
-    glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkWaylandSetupCallbacks(glfwWindow);
 
     winPtr->privatePtr->glfwWindow = glfwWindow;
@@ -789,6 +995,15 @@ TkWaylandCreateWindow(
                                                      fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fb == NULL) {
         DEBUG_LOG("Could not create NanoVG framebuffer");
+        /* Clean up and fail - don't leave window with NULL fb to crash later */
+        TkWaylandClearCallbacks(glfwWindow);
+        glfwSetWindowUserPointer(glfwWindow, NULL);
+        /* destroyGlfwTkInfo will free vg */
+        destroyGlfwTkInfo(glfwWindow);
+        if (glfwWindow != mainGlfwWindow) {
+            glfwDestroyWindow(glfwWindow);
+        }
+        return NULL;
     }
 
     DEBUG_LOG("Window %s has glfwWindow %p and framebuffer %p",
@@ -901,7 +1116,10 @@ TkWaylandBeginDraw(
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
+	if (!pixmap || !pixmap->glfwWindow || !pixmap->fb || pixmap->fb->fbo==0) return TCL_ERROR;
+	if (!isGlfwWindowValid(pixmap->glfwWindow)) return TCL_ERROR;
 	glfwTkInfo *infoPtr = getGlfwTkInfo(pixmap->glfwWindow);
+	if (!infoPtr) return TCL_ERROR;
 	DEBUG_LOG("BeginDraw: received pixmap %p", pixmap);
 
 	dcPtr->vg = infoPtr->vg;
@@ -923,7 +1141,21 @@ TkWaylandBeginDraw(
 	nvgluBindFramebuffer(pixmap->fb);
 	glViewport(0, 0, pixmap->width, pixmap->height);
 	nvgResetTransform(dcPtr->vg);
-	nvgBeginFrame(dcPtr->vg, pixmap->width, pixmap->height, 1.0f);
+
+	/*
+	 * Use the real window content scale here, not a hardcoded 1.0.
+	 * devicePxRatio determines the resolution at which a (font, size)
+	 * pair gets baked into the shared glyph atlas the first time it's
+	 * used, and fontstash does not re-bake at a different resolution
+	 * later. If text is first drawn via a pixmap with scale 1.0 while
+	 * real window draws use the display's actual content scale (e.g.
+	 * 1.25/1.5/2.0 on HiDPI), that font's advances permanently disagree
+	 * between the two, producing visible spacing drift wherever it's
+	 * drawn to a window afterward.
+	 */
+	float pixmapScale;
+	glfwGetWindowContentScale(pixmap->glfwWindow, &pixmapScale, NULL);
+	nvgBeginFrame(dcPtr->vg, pixmap->width, pixmap->height, pixmapScale);
 	TkWaylandApplyGC(dcPtr->vg, gc);
 	return TCL_OK;
     }
@@ -943,15 +1175,33 @@ TkWaylandBeginDraw(
      * Now winPtr is the containing toplevel and the offsets of
      * the child are given by x and y.
      */
+    if (!winPtr->privatePtr || !winPtr->privatePtr->glfwWindow) return TCL_ERROR;
+    if (winPtr->flags & TK_ALREADY_DEAD) return TCL_ERROR;
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    if (!isGlfwWindowValid(glfwWindow)) return TCL_ERROR;
+    int _bw,_bh; glfwGetFramebufferSize(glfwWindow,&_bw,&_bh);
+    if (_bw<=0||_bh<=0) return TCL_ERROR;
+    if (IsUnmappedEmptyRoot(winPtr)) return TCL_ERROR;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
+    if (!infoPtr) return TCL_ERROR;
+    if ((infoPtr->flags & TKWL_NEVER_FOCUSED)
+	    && !(infoPtr->flags & TKWL_EARLY_EXPOSE_QUEUED)) {
 	/*
 	 * It may be too early to be drawing in this window.  It may not have
-	 * a GL context yet.  Schedule a redraw.
+	 * a GL context yet.  Schedule a redraw.  Keep the single-shot guard
+	 * but make it clearable by TkWmMapWindow (see ReExposeIdle) so that
+	 * a toplevel that maps children after the first expose can still
+	 * request a second early expose.
 	 */
+	infoPtr->flags |= TKWL_EARLY_EXPOSE_QUEUED;
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, Tk_Width(winPtr),
 				  Tk_Height(winPtr));
+        /* Also expose mapped children - fixes initial empty frame */
+        for (TkWindow *c = winPtr->childList; c != NULL; c = c->nextPtr) {
+            if (c->flags & TK_MAPPED) {
+                TkWaylandQueueExposeEvent(c, 0, 0, Tk_Width(c), Tk_Height(c));
+            }
+        }
     }
 
     /* Set up the nanoVG drawing context for this nvgFrame. */
@@ -1063,8 +1313,19 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     while (!Tk_IsTopLevel(toplevelPtr)) {
 	toplevelPtr = toplevelPtr->parentPtr;
     }
+    if (!toplevelPtr->privatePtr || !toplevelPtr->privatePtr->glfwWindow) return;
+    if (toplevelPtr->flags & TK_ALREADY_DEAD) return;
     GLFWwindow *glfwWindow = toplevelPtr->privatePtr->glfwWindow;
+    if (!isGlfwWindowValid(glfwWindow)) return;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    if (!infoPtr) return;
+    if (!(infoPtr->flags & TKWL_IS_DRAWING)) return;
+    if (IsUnmappedEmptyRoot(toplevelPtr)) {
+        nvgCancelFrame(infoPtr->vg);
+        infoPtr->flags &= ~TKWL_IS_DRAWING;
+        return;
+    }
+
     
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
@@ -1231,14 +1492,58 @@ TkWaylandGetNVGContext(
 MODULE_SCOPE NVGcontext *
 TkWaylandGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || shutdownInProgress) {
+    if (!GlfwIsInitialized || shutdownInProgress || !mainGlfwWindow) {
         return NULL;
 	}
-	
+
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(mainGlfwWindow);
+    if (!glfwInfoPtr) {
+        return NULL;
+    }
+
+    /*
+     * Read the NVGcontext straight off glfwTkInfo instead of round-tripping
+     * through winPtr -> Drawable -> TkWaylandGetNVGContext(), which just
+     * re-derives this same field. 
+     */
+    NVGcontext *vg = glfwInfoPtr->vg;
+    if (!vg) {
+        return NULL;
+    }
+
     glfwMakeContextCurrent(mainGlfwWindow);
-    Drawable drawable = TkWaylandDrawableForTkWindow(glfwInfoPtr->winPtr);
-    return TkWaylandGetNVGContext(drawable);
+
+    /*
+     * Text metrics (nvgTextBounds / nvgTextGlyphPositions) depend on the
+     * devicePxRatio a (font, size) pair was FIRST baked into the shared
+     * atlas at -- fontstash does not re-bake at a different resolution
+     * later. TkWaylandBeginDraw() always starts its real frame with the
+     * target window's actual content scale; without this, a font measured
+     * here before it's ever been drawn for real gets baked with no scale
+     * set (effectively 1.0) and its advances permanently disagree with
+     * what later gets drawn on a HiDPI display. Bracket measurement in a
+     * matching-scale frame so whichever path -- measuring or drawing --
+     * touches a given (font, size) first bakes it identically. 
+     * 
+     * Skip this if a real frame is already active on this window (e.g.
+     * measurement invoked reentrantly from inside a draw callback):
+     * nvgBeginFrame must never nest (see TKWL_IS_DRAWING elsewhere), and
+     * the active frame's scale already applies in that case.
+     */
+    if (!(glfwInfoPtr->flags & TKWL_IS_DRAWING)) {
+        float scale;
+        int   winW, winH;
+        glfwGetWindowContentScale(mainGlfwWindow, &scale, NULL);
+        glfwGetWindowSize(mainGlfwWindow, &winW, &winH);
+        nvgResetTransform(vg);
+        nvgBeginFrame(vg, winW, winH, scale);
+        nvgEndFrame(vg);
+        /* nvgEndFrame doesn't pop nvgBeginFrame's internal nvgSave --
+         * see the matching nvgRestore() in TkWaylandEndDraw(). */
+        nvgRestore(vg);
+    }
+
+    return vg;
 }
 
 /*
