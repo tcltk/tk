@@ -492,6 +492,30 @@ Please install the HarfBuzz development package:
         AC_SUBST([HB_LIBS])
 
         #--------------------------------------------------------------------
+        # ATK / Atk-bridge — REQUIRED for Wayland accessibility
+        # Pure GLib/GObject based; no X11 dependency.
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for ATK and Atk-bridge (Wayland accessibility)])
+        if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
+            AC_MSG_RESULT([yes])
+            ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+            ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+            found_atk=yes
+            AC_DEFINE([HAVE_ATK], [1],
+                [Define if ATK and Atk-bridge are available])
+        else
+            AC_MSG_RESULT([no])
+            found_atk=no
+            AC_MSG_ERROR([ATK and Atk-bridge are required when building the Wayland backend.
+Please install the ATK and at-spi2-atk development packages:
+  - Debian/Ubuntu:   sudo apt install libatk1.0-dev libatk-bridge2.0-dev
+  - Fedora/RHEL:     sudo dnf install atk-devel at-spi2-atk-devel
+  - Arch:            sudo pacman -S atk at-spi2-atk])
+        fi
+        AC_SUBST([ATK_CFLAGS])
+        AC_SUBST([ATK_LIBS])
+
+        #--------------------------------------------------------------------
         # NanoVG is bundled in the wayland source tree, so no external check needed.
         #--------------------------------------------------------------------
         AC_MSG_NOTICE([NanoVG will be built from bundled sources in wayland/nanovg.c])
@@ -525,17 +549,18 @@ Please install wl-clipboard:
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
            && test "$found_harfbuzz" = yes \
+           && test "$found_atk" = yes \
            && test -n "$WL_COPY" \
            && test -n "$WL_PASTE"; then
 
             TK_USE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS -lspeechd"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS $ATK_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS $ATK_LIBS -lspeechd"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + wl-clipboard])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + wl-clipboard])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
@@ -550,6 +575,7 @@ Required (all mandatory when --enable-wayland is used):
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
   - HarfBuzz >= 2.8.2
+  - ATK + Atk-bridge (accessibility)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
   - wl-clipboard (wl-copy + wl-paste)
 
@@ -557,7 +583,8 @@ On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
     libdecor-0-dev libfontconfig-dev libsystemd-dev \
-    libharfbuzz-dev wl-clipboard libwayland-egl1
+    libharfbuzz-dev libatk1.0-dev libatk-bridge2.0-dev \
+    wl-clipboard libwayland-egl1
 ])
         fi
     fi
@@ -724,6 +751,12 @@ if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
     # They are already set from the earlier check.
     AC_SUBST(HB_CFLAGS)
     AC_SUBST(HB_LIBS)
+
+    # ATK is already required and checked above for Wayland,
+    # but we need to ensure ATK_CFLAGS/ATK_LIBS are substituted.
+    # They are already set from the earlier check.
+    AC_SUBST([ATK_CFLAGS])
+    AC_SUBST([ATK_LIBS])
 
     AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support (Wayland)])
     AC_ARG_ENABLE(bidi,
@@ -1010,20 +1043,21 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support
-#   - ONLY valid for X11
-#   - COMPLETELY disabled for Wayland and Aqua
+#	Check for ATK support
+#   - HARD dependency for both X11 and Wayland (accessibility)
+#   - ATK/Atk-bridge are GLib/GObject based and do not pull in X11
+#   - Still disabled for Aqua (macOS uses native accessibility APIs)
 #--------------------------------------------------------------------
 
-ATK_CFLAGS=""
-ATK_LIBS=""
-
-if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
-    AC_MSG_NOTICE([ATK support forcibly disabled (Wayland backend)])
-elif test "$tk_aqua" = yes; then
-    AC_MSG_NOTICE([ATK support disabled (Aqua backend)])
+if test $tk_aqua = yes; then
+    AC_MSG_NOTICE([ATK support disabled (Aqua backend uses native accessibility)])
+    ATK_CFLAGS=""
+    ATK_LIBS=""
 else
-    AC_MSG_CHECKING([for ATK and Atk-bridge])
+    # Both X11 and Wayland require ATK and Atk-bridge.
+    # The ATK stack (atk, atk-bridge-2.0) is built on GLib/GObject and
+    # does NOT depend on X11, so this is safe for the Wayland backend.
+    AC_MSG_CHECKING([for ATK and Atk-bridge (required for accessibility)])
     if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
         AC_MSG_RESULT([yes])
         ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
@@ -1032,8 +1066,11 @@ else
             [Define if ATK and Atk-bridge are available])
     else
         AC_MSG_RESULT([no])
-        ATK_CFLAGS=""
-        ATK_LIBS=""
+        AC_MSG_ERROR([ATK and Atk-bridge are required for accessibility support.
+Please install the ATK and at-spi2-atk development packages:
+  - Debian/Ubuntu:   sudo apt install libatk1.0-dev libatk-bridge2.0-dev
+  - Fedora/RHEL:     sudo dnf install atk-devel at-spi2-atk-devel
+  - Arch:            sudo pacman -S atk at-spi2-atk])
     fi
 fi
 
