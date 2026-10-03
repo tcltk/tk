@@ -53,7 +53,9 @@ to the userbase.
  - [Improper look of ttk::checkbutton -style Toolbutton](https://core.tcl-lang.org/tk/tktview/341467)
  - [ttk Toolbutton has wrong default anchor](https://core.tcl-lang.org/tk/tktview/186783)
  - [segfault in textDisp-26.14.2](https://core.tcl-lang.org/tk/tktview/7353d9)
+ - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
 
+>>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
 Tk 9.1.0 continues the Tk 9.x series of releases.  The Tk 9.x series
