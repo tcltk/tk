@@ -485,6 +485,7 @@ CreateWidget(
     Tk_OptionTable optionTable;
     TkTextIndex startIndex;
     Tk_Window newWin;
+    
 
     /*
      * Create the window.
@@ -678,6 +679,9 @@ TextWidgetObjCmd(
     TkText *textPtr = (TkText *)clientData;
     int result = TCL_OK;
     int idx;
+    
+    /* Make sure the grapheme dictionary is initialized. */
+    mojibake_dict_init();
 
     static const char *const optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
@@ -818,7 +822,8 @@ TextWidgetObjCmd(
     case TEXT_COUNT: {
 	const TkTextIndex *indexFromPtr, *indexToPtr;
 	Tcl_Size i;
-	int found = 0, update = 0;
+	int found = 0;
+	bool update = false;
 	Tcl_Obj *objPtr = NULL;
 
 	if (objc < 4) {
@@ -968,7 +973,7 @@ TextWidgetObjCmd(
 			- TkBTreeLinesTo(textPtr, indexFromPtr->linePtr);
 	    } else if (c == 'u'
 		    && !strncmp("-update", option, (size_t)length)) {
-		update = 1;
+		update = true;
 		continue;
 	    } else if (c == 'x'
 		    && !strncmp("-xpixels", option, (size_t)length)) {

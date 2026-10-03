@@ -745,6 +745,34 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
 } -cleanup {
     deleteWindows
 } -result {}
+test menuDraw-17.3 {AdjustMenuCoords - menubar near bottom of screen} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    menu .m1 -tearoff 0
+    .m1 add cascade -label test -menu .m1.m2
+    menu .m1.m2 -tearoff 0
+    for {set i 0} {$i < 20} {incr i} {
+	.m1.m2 add command -label "Item $i"
+    }
+    toplevel .t -menu .m1
+    wm geometry .t 200x60+0+[expr {[winfo screenheight .t] - 100}]
+    update
+    foreach w [winfo children .t] {
+	if {[winfo class $w] eq "Menu" && [$w cget -type] eq "menubar"} {
+	    break
+	}
+    }
+    $w postcascade 0
+    update
+    set submenu [$w entrycget 0 -menu]
+    expr {[winfo rooty $submenu] + [winfo reqheight $submenu]
+	    < [winfo rooty $w] + [winfo height $w]}
+} -cleanup {
+    catch {$w unpost}
+    deleteWindows
+} -result 1
 
 #
 # TESTFILE CLEANUP

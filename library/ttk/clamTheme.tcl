@@ -57,7 +57,7 @@ namespace eval ttk::theme::clam {
 	    -bordercolor {alternate #000000}
 
 	ttk::style configure Toolbutton \
-	    -anchor center -padding 1.5p -relief flat
+	    -anchor center -justify center -padding 1.5p -relief flat
 	ttk::style map Toolbutton \
 	    -relief [list \
 		    disabled flat \
@@ -67,9 +67,12 @@ namespace eval ttk::theme::clam {
 	    -background [list \
 		    disabled $colors(-frame) \
 		    pressed $colors(-darker) \
+		    selected $colors(-darker) \
 		    active $colors(-lighter)] \
-	    -lightcolor [list pressed $colors(-darker)] \
-	    -darkcolor [list pressed $colors(-darker)]
+	    -lightcolor [list \
+		    pressed $colors(-darker) selected $colors(-darker)] \
+	    -darkcolor [list \
+		    pressed $colors(-darker) selected $colors(-darker)]
 
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \

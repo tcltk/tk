@@ -448,6 +448,7 @@ addFormattedText {
     @@demo menu		Menus and cascades (sub-menus)
     @@demo menubu	Menu-buttons
     @@demo ttkmenu	Themed menu buttons
+    @@demo popup	Popup (context) menus
     @@demo toolbar	Themed toolbar
 
     @@subtitle	Common Dialogs

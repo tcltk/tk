@@ -1230,7 +1230,7 @@ TkpTestsendCmd(
 	    if (property != NULL) {
 		XFree(property);
 	    }
-	} else if (Tcl_GetString(objv[4])[0] == 0) {
+	} else if (TkObjIsEmpty(objv[4])) {
 	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
 		    -1, -1, -1, NULL, NULL);
 	    DeleteProperty(winPtr->dispPtr->display, w, propName);

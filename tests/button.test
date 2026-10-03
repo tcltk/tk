@@ -4114,6 +4114,29 @@ test button-15.3 {Bug [5d991b822e]} -constraints !wayland -body {
     destroy .b
 } -result {}
 
+test button-16.1 {button keeps -overrelief after click, Bug 1100518} -setup {
+    set count 0
+    button .b -text Button -relief flat -overrelief raised \
+	    -command {incr count}
+    pack .b
+    update
+} -body {
+    set res {}
+    event generate .b <Enter> -x 5 -y 5
+    lappend res [.b cget -relief]
+    # On Aqua the pressed state is drawn natively and the relief is not changed.
+    event generate .b <ButtonPress-1> -x 5 -y 5
+    lappend res [.b cget -relief]
+    event generate .b <ButtonRelease-1> -x 5 -y 5
+    lappend res [.b cget -relief]
+    event generate .b <Leave> -x 5 -y 5
+    lappend res [.b cget -relief] $count
+} -cleanup {
+    destroy .b
+    unset -nocomplain count res
+} -result [list raised [expr {[tk windowingsystem] eq "aqua" ? "raised" : "sunken"}] \
+	raised flat 1]
+
 #
 # TESTFILE CLEANUP
 #

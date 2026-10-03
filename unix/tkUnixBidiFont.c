@@ -24,7 +24,7 @@
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 200
-#define MAX_GLYPHS 512
+#define MAX_GLYPHS 2048
 #define MAX_FONTS 200
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
@@ -86,7 +86,7 @@ typedef struct {
     int next;
 } UnixFtColorList;
 
-#define MAX_CLUSTER_BREAKS 512
+#define MAX_CLUSTER_BREAKS 2048
 
 /*
  * ShapedGlyphBuffer --
@@ -219,6 +219,10 @@ typedef struct {
 
 typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
+    int errorFlag;		/* Set by InitFontErrorProc. Not a local
+				 * variable, because X errors can be
+				 * reported after the error handler is
+				 * deleted. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -862,8 +866,10 @@ InitFont(
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    int i, iWidth, errorFlag;
+    int i, iWidth;
     Tk_ErrorHandler handler;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!fontPtr) {
     fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
@@ -962,12 +968,12 @@ InitFont(
     /*
      * Fill in platform-specific fields of TkFont.
      */
-    errorFlag = 0;
+    tsdPtr->errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	    -1, -1, -1, InitFontErrorProc, (void *)&tsdPtr->errorFlag);
 
     ftFont = GetFont(fontPtr, 0, 0.0);
-    if ((ftFont == NULL) || errorFlag) {
+    if ((ftFont == NULL) || tsdPtr->errorFlag) {
     Tk_DeleteErrorHandler(handler);
     FinishedWithFont(fontPtr);
     if (!fontPtr->font.fid) {
@@ -982,7 +988,7 @@ InitFont(
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
 
     Tk_DeleteErrorHandler(handler);
-    if (errorFlag) {
+    if (tsdPtr->errorFlag) {
     FinishedWithFont(fontPtr);
     if (!fontPtr->font.fid) {
 	Tcl_Free(fontPtr);
@@ -998,14 +1004,14 @@ InitFont(
 
     fPtr->underlinePos = fPtr->fm.descent / 2;
 
-    errorFlag = 0;
+    tsdPtr->errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-	    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	    -1, -1, -1, InitFontErrorProc, (void *)&tsdPtr->errorFlag);
 
     Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
 
     Tk_DeleteErrorHandler(handler);
-    if (errorFlag) {
+    if (tsdPtr->errorFlag) {
 	FinishedWithFont(fontPtr);
 	if (!fontPtr->font.fid) {
 	Tcl_Free(fontPtr);
@@ -1580,6 +1586,26 @@ X11Shaper_ShapeString(
 		int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
 
 		/*
+		 * The look-ahead anchor above may be a later character of a
+		 * different script (e.g. an emoji followed by a Thai word picks
+		 * the Thai anchor).  If that face cannot render the first
+		 * character of this subrun, use the character's own face and
+		 * HB_SCRIPT_COMMON.  Otherwise the character is shaped with the
+		 * wrong face, comes back as .notdef (glyph 0), and is skipped
+		 * at draw time, leaving only a blank gap.
+		 */
+		{
+		    FcCharSet *anchorCs = fontPtr->faces[runFaceIndex].charset;
+
+		    if (!anchorCs ||
+			    !FcCharSetHasChar(anchorCs, ucs4Chars[subrunStart])) {
+			runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars,
+				subrunStart, 1);
+			subrunScript = HB_SCRIPT_COMMON;
+		    }
+		}
+
+		/*
 		 * Extend the subrun while both script and face remain
 		 * consistent.
 		 *
@@ -2000,9 +2026,13 @@ TkpGetFontFromAttributes(
     int slant = (faPtr->slant == TK_FS_ROMAN) ? XFT_SLANT_ROMAN : XFT_SLANT_ITALIC;
     XftPatternAddInteger(pattern, XFT_SLANT, slant);
 
-    /* Perform system substitution. */
-    XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    /*
+     * No substitution here: InitFont substitutes the pattern itself
+     * (FcConfigSubstitute, then XftDefaultSubstitute) before FcFontSort.
+     * Running FcConfigSubstitute twice on the same pattern re-applies the
+     * fontconfig alias rules and changes which family the generic names
+     * (sans-serif, serif, ...) resolve to.
+     */
 
     UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
     fontPtr = InitFont(tkwin, pattern, fontPtr);
@@ -2013,6 +2043,15 @@ TkpGetFontFromAttributes(
 	pattern = XftPatternBuild(NULL, XFT_FAMILY, XftTypeString, "sans",
 				  XFT_SIZE, XftTypeDouble, size, NULL);
 	fontPtr = InitFont(tkwin, pattern, (UnixFtFont *)tkFontPtr);
+    }
+
+    if (fontPtr) {
+	/*
+	 * Fontconfig knows nothing about underline/overstrike; carry the
+	 * requested values into the actual attributes (as tkUnixRFont.c does).
+	 */
+	fontPtr->font.fa.underline = faPtr->underline;
+	fontPtr->font.fa.overstrike = faPtr->overstrike;
     }
 
     return (TkFont *)fontPtr;
@@ -2705,6 +2744,8 @@ Tk_DrawCharsInContext(
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     int rangeEnd = (int)(rangeStart + rangeLength);
 
+    int barX0 = x, barX1 = x;	/* Horizontal extent of the glyphs drawn. */
+
     if (rangeLength <= 0) return;
 
     XftDraw *ftDraw = XftDrawCreate(display, drawable,
@@ -2769,6 +2810,7 @@ Tk_DrawCharsInContext(
 	    offsetX = tmpX;
 	}
 	penX = x + offsetX;
+	barX0 = penX;
 
 	/* Build specs for visible range. */
 	Tcl_Size i = rangeStart;
@@ -2810,6 +2852,7 @@ Tk_DrawCharsInContext(
 	    penX += ext.xOff;
 	    i += clen;
 	}
+	barX1 = penX;
 
 	if (nspec > 0) {
 	    LOCK;
@@ -2861,6 +2904,12 @@ Tk_DrawCharsInContext(
 	    specs[nspec].glyph = glyphId;
 	    specs[nspec].x     = x + buffer.glyphs[i].x;   /* Absolute visual position. */
 	    specs[nspec].y     = y + buffer.glyphs[i].y;
+	    if (nspec == 0 || specs[nspec].x < barX0) {
+		barX0 = specs[nspec].x;
+	    }
+	    if (nspec == 0 || specs[nspec].x + buffer.glyphs[i].advanceX > barX1) {
+		barX1 = specs[nspec].x + buffer.glyphs[i].advanceX;
+	    }
 	    nspec++;
 	}
 
@@ -2871,6 +2920,23 @@ Tk_DrawCharsInContext(
 	}
     }
  done:
+    /*
+     * Draw the underline / overstrike bars over the extent of the glyphs
+     * just drawn, as tkUnixRFont.c does.
+     */
+    if (barX1 > barX0) {
+	if (fontPtr->font.fa.underline != 0) {
+	    XFillRectangle(display, drawable, gc, barX0,
+		    y + fontPtr->font.underlinePos, (unsigned) (barX1 - barX0),
+		    (unsigned) fontPtr->font.underlineHeight);
+	}
+	if (fontPtr->font.fa.overstrike != 0) {
+	    XFillRectangle(display, drawable, gc, barX0,
+		    y - fontPtr->font.fm.descent - (fontPtr->font.fm.ascent) / 10,
+		    (unsigned) (barX1 - barX0),
+		    (unsigned) fontPtr->font.underlineHeight);
+	}
+    }
     XftDrawDestroy(ftDraw);
 }
 

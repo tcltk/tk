@@ -123,8 +123,13 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 \fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-selectbackground\fP \fIcolor\fP
-.br
+.RS
+If empty, the selected text has no distinct background.
+.RE
 \fB\-selectforeground\fP \fIcolor\fP
+.RS
+If empty, the \fB\-foreground\fP color is used.
+.RE
 .PP
 Some options are only available for specific themes.
 .PP
@@ -134,8 +139,8 @@ ttk styles.
 Besides the standard \fBTSpinbox\fP layout with small arrow buttons, in
 which the up arrow is placed above the down arrow, \fBttk::spinbox\fP
 widgets support the \fBWide.TSpinbox\fP style, whose up and down arrows
-are of a more user-friendly size and in which the up arrow is placed to
-the right of the down arrow.  The size of these arrows depends on the
+are of a more user-friendly size and in which they are placed side by side
+to the right of the down arrow.  The size of these arrows depends on the
 display's scaling level and Tk's scaling factor given by \fB[tk scaling]\fP
 at the time the first themed spinbox widget is created.
 .SH "SEE ALSO"
