@@ -870,6 +870,7 @@ InitFont(
     Tk_ErrorHandler handler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    bool reused = (fontPtr != NULL);	/* Re-initialized in place. */
 
     if (!fontPtr) {
     fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
@@ -905,7 +906,7 @@ InitFont(
      */
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-    if (!fontPtr->font.fid) {
+    if (!reused) {
 	Tcl_Free(fontPtr);
     }
     FcPatternDestroy(pattern);
@@ -976,7 +977,7 @@ InitFont(
     if ((ftFont == NULL) || tsdPtr->errorFlag) {
     Tk_DeleteErrorHandler(handler);
     FinishedWithFont(fontPtr);
-    if (!fontPtr->font.fid) {
+    if (!reused) {
 	Tcl_Free(fontPtr);
     }
     return NULL;
@@ -990,7 +991,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (tsdPtr->errorFlag) {
     FinishedWithFont(fontPtr);
-    if (!fontPtr->font.fid) {
+    if (!reused) {
 	Tcl_Free(fontPtr);
     }
     return NULL;
@@ -1013,7 +1014,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (tsdPtr->errorFlag) {
 	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
+	if (!reused) {
 	Tcl_Free(fontPtr);
 	}
 	return NULL;
@@ -1093,12 +1094,22 @@ FinishedWithFont(
     }
     if (fontPtr->font.fid) {
 	XUnloadFont(fontPtr->display, fontPtr->font.fid);
+	fontPtr->font.fid = None;
     }
     if (fontPtr->fontset) {
 	FcFontSetDestroy(fontPtr->fontset);
     }
 
     X11Shaper_Destroy(&fontPtr->shaper);
+
+    /*
+     * The record may be re-initialized in place (TkpGetFontFromAttributes)
+     * or released again: do not leave dangling pointers.
+     */
+    fontPtr->faces = NULL;
+    fontPtr->nfaces = 0;
+    fontPtr->pattern = NULL;
+    fontPtr->fontset = NULL;
 
     Tk_DeleteErrorHandler(handler);
 }
@@ -2035,11 +2046,17 @@ TkpGetFontFromAttributes(
      */
 
     UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
+    if (fontPtr != NULL) {
+	/* Release the old contents of a font that is reconfigured in place. */
+	FinishedWithFont(fontPtr);
+    }
     fontPtr = InitFont(tkwin, pattern, fontPtr);
 
     if (!fontPtr) {
-	/* Emergency Fallback: If "sans-serif" failed, try "sans." */
-	XftPatternDestroy(pattern);
+	/*
+	 * Emergency Fallback: If "sans-serif" failed, try "sans."
+	 * InitFont() has already destroyed the pattern.
+	 */
 	pattern = XftPatternBuild(NULL, XFT_FAMILY, XftTypeString, "sans",
 				  XFT_SIZE, XftTypeDouble, size, NULL);
 	fontPtr = InitFont(tkwin, pattern, (UnixFtFont *)tkFontPtr);
