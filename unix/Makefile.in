@@ -264,8 +264,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ @EXTRA_WISH_LIBS@
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @SPEECHD_LIBS@ @HB_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @SPEECHD_LIBS@ @HB_LIBS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -313,6 +313,10 @@ CUPS_LIBS		= @CUPS_LIBS@
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
 
+# support for libspeechd (Speech Dispatcher)
+SPEECHD_CFLAGS		= @SPEECHD_CFLAGS@
+SPEECHD_LIBS		= @SPEECHD_LIBS@
+
 # Bidi support (SheenBidi + HarfBuzz text shaping)
 BIDI_CFLAGS		= @BIDI_CFLAGS@
 
@@ -356,7 +360,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${SHLIB_CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} \
 	${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
 	${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) \
-	$(XRENDER_CFLAGS) $(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
+	$(XRENDER_CFLAGS) $(SPEECHD_CFLAGS) $(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -365,7 +369,7 @@ APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
 	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) \
-	$(XRENDER_CFLAGS) $(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
+	$(XRENDER_CFLAGS) $(SPEECHD_CFLAGS) $(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
 
 WISH_OBJS = tkAppInit.o
 
@@ -1325,7 +1329,7 @@ tkUnix3d.o: $(UNIX_DIR)/tkUnix3d.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix3d.c
 
 tkUnixAccessibility.o: $(UNIX_DIR)/tkUnixAccessibility.c
-	$(CC) -c $(CC_SWITCHES) $(ATK_CFLAGS) $(UNIX_DIR)/tkUnixAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(ATK_CFLAGS) $(SPEECHD_CFLAGS) $(UNIX_DIR)/tkUnixAccessibility.c
 
 tkUnixButton.o: $(UNIX_DIR)/tkUnixButton.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixButton.c

@@ -86,32 +86,17 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
     namespace eval ::tk::accessible {
 
-	if {[tk windowingsystem] eq "x11" } {
-	    # ATK/Orca's API does not align well with Tk text, entry, and menu
-	    # widgets, and non-window elements such as listbox and tree/table
-	    # rows. There is too much of a mismatch between how Tk is
-	    # structured and what ATK expects. Managing this data at the
-	    # C level is fragile and complex.  In these cases, we do not
-	    # address those widgets in C but instead use Tk's script-level
-	    # bindings to manage the interaction by shelling out to
-	    # Speech Dispatcher (the same engine powering Orca's voice) to
-	    # vocalize text data and communicate state/data changes.
-	    # Windows and macOS have functions built in to their accessibility
-	    # API's to post custom announcements, but ATK does not, so we
-	    # must use this as a fallback.
-	    proc speak {text} {
-		if {[::tk::accessible::check_screenreader] eq "1"} {
-		    # Escape quotes in the text.
-		    set safe_text [string map {"\"" "\\\""} $text]
-
-		    # Try spd-say first.
-		    if {[catch {exec spd-say $safe_text} result]} {
-			# fallback to espeak if spd-say fails
-			catch {exec espeak $safe_text} result
-		    }
-		}
-	    }
-	}
+	# ATK/Orca's API does not align well with Tk text, entry, and menu
+	# widgets, and non-window elements such as listbox and tree/table
+	# rows. There is too much of a mismatch between how Tk is
+	# structured and what ATK expects. Managing this data at the
+	# C level is fragile and complex.  In these cases, we do not
+	# address those widgets in C but instead use Tk's script-level
+	# bindings to manage the interaction, calling ::tk::accessible::speak
+	# (implemented in C on top of libspeechd) to vocalize text data and
+	# communicate state/data changes. Windows and macOS have functions
+	# built in to their accessibility API's to post custom announcements,
+	# but ATK does not, so we must use this as a fallback.
 
 	# Attach a variable trace to run _updateselection when a button changes.
 	proc _attach_trace {w} {
@@ -144,7 +129,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    if {$class eq "Radiobutton" || $class eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
-		set description [::tk::accessible::get_acc_description $w]
+		set description [::tk::accessible::get_acc_name $w]
 
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
@@ -154,7 +139,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		}
 	    } elseif {$class eq "Checkbutton" || $class eq "TCheckbutton" || $class eq "Toggleswitch"} {
 		set state [::tk::accessible::_getcheckdata $w]
-		set description [::tk::accessible::get_acc_description $w]
+		set description [::tk::accessible::get_acc_name $w]
 
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
@@ -364,7 +349,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	proc _updateselection {w} {
 	    if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
-		set description [::tk::accessible::get_acc_description $w]
+		set description [::tk::accessible::get_acc_name $w]
 
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
@@ -376,7 +361,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    }
 	    if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton" || [winfo class $w] eq "Toggleswitch"} {
 		set state [::tk::accessible::_getcheckdata $w]
-		set description [::tk::accessible::get_acc_description $w]
+		set description [::tk::accessible::get_acc_name $w]
 
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
@@ -653,6 +638,38 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    }
 	}
 
+	# Orca announces name, then role, then description. For widgets whose
+	# visible label is their -text, publish that text as the accessible name
+	# and leave the description empty, so a button reads "test, button"
+	# rather than "button, button, test". Other platforms keep the existing
+	# name/description split.
+	proc _labelname {w default} {
+	    if {[tk windowingsystem] eq "x11"} {
+		if {[catch {$w cget -text} text]} {
+		    return {}
+		}
+		return $text
+	    }
+	    return $default
+	}
+
+	# Widgets with no visible text label: the class name is already spoken
+	# as the role, so on X11 publish an empty name/description instead of
+	# repeating it ("entry entry entry").
+	proc _clsname {default} {
+	    if {[tk windowingsystem] eq "x11"} {
+		return {}
+	    }
+	    return $default
+	}
+
+	proc _labeldesc {w} {
+	    if {[tk windowingsystem] eq "x11"} {
+		return {}
+	    }
+	    return [$w cget -text]
+	}
+
 	# Set initial accessible attributes and add binding to <Map> event.
 	# If the accessibility role is already set, return because
 	# we only want these to fire once.
@@ -678,23 +695,26 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	}
 
-	# Toplevel bindings.
-	bind Toplevel <Map> {+::tk::accessible::_init \
-				 %W \
-				 Toplevel \
-				 [wm title %W] \
-				 {}  \
-				 {} \
-				 {} \
-				 {} \
-			     }
+	# Toplevel bindings. The main window "." has class Tk, not Toplevel,
+	# so it needs its own binding.
+	foreach cls {Toplevel Tk} {
+	    bind $cls <Map> {+::tk::accessible::_init \
+				     %W \
+				     Toplevel \
+				     [wm title %W] \
+				     {}  \
+				     {} \
+				     {} \
+				     {} \
+				 }
+	}
 
 	# Button/TButton bindings.
 	bind Button <Map> {+::tk::accessible::_init \
 			       %W \
 			       Button \
-			       Button \
-			       [%W cget -text] \
+			       [::tk::accessible::_labelname %W Button] \
+			       [::tk::accessible::_labeldesc %W] \
 			       {} \
 			       [%W cget -state] \
 			       {%W invoke}\
@@ -702,8 +722,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TButton <Map> {+::tk::accessible::_init \
 				%W \
 				Button \
-				Button \
-				[%W cget -text] \
+				[::tk::accessible::_labelname %W Button] \
+				[::tk::accessible::_labeldesc %W] \
 				{}\
 				[%W cget -state] \
 				{%W invoke}\
@@ -713,8 +733,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Menubutton <Map> {+::tk::accessible::_init \
 				   %W \
 				   Button \
-				   Button \
-				   [%W cget -text] \
+				   [::tk::accessible::_labelname %W Button] \
+				   [::tk::accessible::_labeldesc %W] \
 				   {} \
 				   [%W cget -state] \
 				   {%W invoke}\
@@ -722,8 +742,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TMenubutton <Map> {+::tk::accessible::_init \
 				    %W \
 				    Button \
-				    Button \
-				    [%W cget -text] \
+				    [::tk::accessible::_labelname %W Button] \
+				    [::tk::accessible::_labeldesc %W] \
 				    {} \
 				    [%W cget -state] \
 				    {%W invoke}\
@@ -733,8 +753,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Canvas <Map> {+::tk::accessible::_init \
 			       %W \
 			       Canvas \
-			       Canvas \
-			       Canvas \
+			       [::tk::accessible::_clsname Canvas] \
+			       [::tk::accessible::_clsname Canvas] \
 			       {} \
 			       {} \
 			       {}\
@@ -744,8 +764,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Checkbutton <Map> {+::tk::accessible::_init \
 				    %W \
 				    Checkbutton \
-				    Checkbutton \
-				    [%W cget -text] \
+				    [::tk::accessible::_labelname %W Checkbutton] \
+				    [::tk::accessible::_labeldesc %W] \
 				    [set [%W cget -variable]] \
 				    [%W cget -state] \
 				    {%W invoke}\
@@ -753,8 +773,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TCheckbutton <Map> {+::tk::accessible::_init \
 				     %W \
 				     Checkbutton \
-				     Checkbutton \
-				     [%W cget -text] \
+				     [::tk::accessible::_labelname %W Checkbutton] \
+				     [::tk::accessible::_labeldesc %W] \
 				     [set [%W cget -variable]] \
 				     [%W cget -state] \
 				     {%W invoke}\
@@ -762,8 +782,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Toggleswitch <Map> {+::tk::accessible::_init \
 				     %W \
 				     Toggleswitch \
-				     Toggleswitch \
-				     Toggleswitch \
+				     [::tk::accessible::_labelname %W Toggleswitch] \
+				     [::tk::accessible::_clsname Toggleswitch] \
 				     [%W switchstate] \
 				     {} \
 				     {%W toggle}\
@@ -773,8 +793,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TCombobox <Map> {+::tk::accessible::_init \
 				  %W \
 				  Combobox \
-				  Combobox \
-				  Combobox \
+				  [::tk::accessible::_clsname Combobox] \
+				  [::tk::accessible::_clsname Combobox] \
 				  [%W get] \
 				  [%W cget -state] \
 				  {} \
@@ -795,8 +815,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Entry <Map> {+::tk::accessible::_init \
 			      %W \
 			      Entry \
-			      Entry \
-			      Entry \
+			      [::tk::accessible::_clsname Entry] \
+			      [::tk::accessible::_clsname Entry] \
 			      [%W get] \
 			      [%W cget -state] \
 			      {} \
@@ -806,8 +826,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TEntry <Map> {+::tk::accessible::_init \
 			       %W \
 			       Entry \
-			       Entry \
-			       Entry \
+			       [::tk::accessible::_clsname Entry] \
+			       [::tk::accessible::_clsname Entry] \
 			       [%W get] \
 			       [%W state]\
 			       {} \
@@ -818,8 +838,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Listbox <Map> {+::tk::accessible::_init \
 				%W \
 				Listbox \
-				Listbox \
-				Listbox \
+				[::tk::accessible::_clsname Listbox] \
+				[::tk::accessible::_clsname Listbox] \
 				[%W get [%W curselection]] \
 				[%W cget -state]\
 				{%W invoke}\
@@ -829,8 +849,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TProgressbar <Map> {+::tk::accessible::_init \
 				     %W \
 				     Progressbar \
-				     Progressbar \
-				     Progressbar \
+				     [::tk::accessible::_clsname Progressbar] \
+				     [::tk::accessible::_clsname Progressbar] \
 				     [::tk::accessible::_getpbvalue %W] \
 				     [%W state] \
 				     {}\
@@ -840,8 +860,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Radiobutton <Map> {+::tk::accessible::_init \
 				    %W \
 				    Radiobutton \
-				    Radiobutton \
-				    [%W cget -text] \
+				    [::tk::accessible::_labelname %W Radiobutton] \
+				    [::tk::accessible::_labeldesc %W] \
 				    [%W cget -variable] \
 				    [%W cget -state] \
 				    {%W invoke}\
@@ -849,8 +869,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TRadiobutton <Map> {+::tk::accessible::_init \
 				     %W \
 				     Radiobutton \
-				     Radiobutton \
-				     [%W cget -text] \
+				     [::tk::accessible::_labelname %W Radiobutton] \
+				     [::tk::accessible::_labeldesc %W] \
 				     [%W cget -variable] \
 				     [%W cget -state] \
 				     {%W invoke}\
@@ -860,8 +880,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Scale <Map> {+::tk::accessible::_init \
 			      %W \
 			      Scale \
-			      Scale \
-			      Scale \
+			      [::tk::accessible::_clsname Scale] \
+			      [::tk::accessible::_clsname Scale] \
 			      [%W get] \
 			      [%W cget -state]\
 			      {%W set}\
@@ -869,8 +889,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TScale <Map> {+::tk::accessible::_init \
 			       %W \
 			       Scale \
-			       Scale \
-			       Scale \
+			       [::tk::accessible::_clsname Scale] \
+			       [::tk::accessible::_clsname Scale] \
 			       [%W get] \
 			       [%W cget -state] \
 			       {%W set} \
@@ -998,7 +1018,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::_init \
 				 %W \
 				 $role \
-				 $role \
+				 [::tk::accessible::_clsname $role] \
 				 {} \
 				 {} \
 				 {} \
@@ -1036,8 +1056,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Scrollbar <Map> {+::tk::accessible::_init \
 				  %W \
 				  Scrollbar \
-				  Scrollbar \
-				  Scrollbar \
+				  [::tk::accessible::_clsname Scrollbar] \
+				  [::tk::accessible::_clsname Scrollbar] \
 				  {} \
 				  {} \
 				  {}\
@@ -1045,8 +1065,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TScrollbar <Map> {+::tk::accessible::_init \
 				   %W \
 				   Scrollbar \
-				   Scrollbar \
-				   Scrollbar \
+				   [::tk::accessible::_clsname Scrollbar] \
+				   [::tk::accessible::_clsname Scrollbar] \
 				   {} \
 				   {} \
 				   {}\
@@ -1056,8 +1076,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Spinbox <Map> {+::tk::accessible::_init \
 				%W \
 				Spinbox \
-				Spinbox \
-				Spinbox \
+				[::tk::accessible::_clsname Spinbox] \
+				[::tk::accessible::_clsname Spinbox] \
 				[%W get] \
 				[%W cget -state] \
 				{%W cget -command}\
@@ -1065,8 +1085,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TSpinbox <Map> {+::tk::accessible::_init \
 				 %W \
 				 Spinbox \
-				 Spinbox \
-				 Spinbox \
+				 [::tk::accessible::_clsname Spinbox] \
+				 [::tk::accessible::_clsname Spinbox] \
 				 [%W get] \
 				 [%W state] \
 				 {%W cget -command}\
@@ -1077,7 +1097,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Treeview <Map> {+::tk::accessible::_init \
 				 %W \
 				 [::tk::accessible::_checktree %W] \
-				 [::tk::accessible::_checktree %W] \
+				 [::tk::accessible::_clsname [::tk::accessible::_checktree %W]] \
 				 [::tk::accessible::_getcolumnnames %W] \
 				 [::tk::accessible::_gettreeviewdata %W] \
 				 [%W state] \
@@ -1088,8 +1108,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind Text <Map> {+::tk::accessible::_init \
 			     %W \
 			     Text \
-			     Text \
-			     Text \
+			     [::tk::accessible::_clsname Text] \
+			     [::tk::accessible::_clsname Text] \
 			     [::tk::accessible::_gettext %W] \
 			     [%W cget -state] \
 			     {}\
@@ -1123,8 +1143,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	bind TNotebook <<NotebookTabChanged>> {+::tk::accessible::_init \
 						   %W \
 						   Notebook \
-						   Notebook \
-						   Notebook \
+						   [::tk::accessible::_clsname Notebook] \
+						   [::tk::accessible::_clsname Notebook] \
 						   [%W tab current -text] \
 						   {} \
 						   {}\

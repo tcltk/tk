@@ -659,7 +659,7 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support
+#	Check for Atk support (required on X11)
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
@@ -671,11 +671,39 @@ if test "$tk_aqua" = no; then
     AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
   else
     AC_MSG_RESULT([no])
-    ATK_CFLAGS=""
-    ATK_LIBS=""
+    AC_MSG_ERROR([ATK and Atk-bridge are required for the X11 windowingsystem but were not found.
+Please install the ATK development packages:
+  - Debian/Ubuntu:   sudo apt install libatk1.0-dev libatk-bridge2.0-dev
+  - Fedora/RHEL:     sudo dnf install atk-devel at-spi2-atk-devel
+  - Arch:            sudo pacman -S atk at-spi2-atk
+  - macOS (Homebrew): brew install atk at-spi2-atk])
   fi
   AC_SUBST([ATK_CFLAGS])
   AC_SUBST([ATK_LIBS])
+fi
+
+#--------------------------------------------------------------------
+#	Check for libspeechd support (required on X11)
+#--------------------------------------------------------------------
+
+if test "$tk_aqua" = no; then
+  AC_MSG_CHECKING([for libspeechd])
+  if pkg-config --exists speech-dispatcher; then
+    AC_MSG_RESULT([yes])
+    SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
+    SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
+    AC_DEFINE([HAVE_SPEECHD], [1], [Define if libspeechd is available])
+  else
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([libspeechd (Speech Dispatcher) is required for the X11 windowingsystem but was not found.
+Please install the Speech Dispatcher development package:
+  - Debian/Ubuntu:   sudo apt install libspeechd-dev
+  - Fedora/RHEL:     sudo dnf install speech-dispatcher-devel
+  - Arch:            sudo pacman -S speech-dispatcher
+  - macOS (Homebrew): brew install speech-dispatcher])
+  fi
+  AC_SUBST([SPEECHD_CFLAGS])
+  AC_SUBST([SPEECHD_LIBS])
 fi
 
 #--------------------------------------------------------------------
@@ -975,6 +1003,11 @@ AC_SUBST(HB_CFLAGS)
 AC_SUBST(HB_LIBS)
 AC_SUBST(UNIX_FONT_OBJS)
 AC_SUBST(FONTSYSTEM)
+
+AC_SUBST(ATK_CFLAGS)
+AC_SUBST(ATK_LIBS)
+AC_SUBST(SPEECHD_CFLAGS)
+AC_SUBST(SPEECHD_LIBS)
 
 AC_CONFIG_FILES([
     Makefile:../unix/Makefile.in

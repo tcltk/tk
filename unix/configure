@@ -678,6 +678,8 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
+SPEECHD_LIBS
+SPEECHD_CFLAGS
 ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
@@ -9079,7 +9081,7 @@ fi
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support
+#	Check for Atk support (required on X11)
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
@@ -9096,8 +9098,41 @@ printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
   else
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-    ATK_CFLAGS=""
-    ATK_LIBS=""
+    as_fn_error $? "ATK and Atk-bridge are required for the X11 windowingsystem but were not found.
+Please install the ATK development packages:
+  - Debian/Ubuntu:   sudo apt install libatk1.0-dev libatk-bridge2.0-dev
+  - Fedora/RHEL:     sudo dnf install atk-devel at-spi2-atk-devel
+  - Arch:            sudo pacman -S atk at-spi2-atk
+  - macOS (Homebrew): brew install atk at-spi2-atk" "$LINENO" 5
+  fi
+
+
+fi
+
+#--------------------------------------------------------------------
+#	Check for libspeechd support (required on X11)
+#--------------------------------------------------------------------
+
+if test "$tk_aqua" = no; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for libspeechd" >&5
+printf %s "checking for libspeechd... " >&6; }
+  if pkg-config --exists speech-dispatcher; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+    SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
+    SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
+
+printf '%s\n' "#define HAVE_SPEECHD 1" >>confdefs.h
+
+  else
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+    as_fn_error $? "libspeechd (Speech Dispatcher) is required for the X11 windowingsystem but was not found.
+Please install the Speech Dispatcher development package:
+  - Debian/Ubuntu:   sudo apt install libspeechd-dev
+  - Fedora/RHEL:     sudo dnf install speech-dispatcher-devel
+  - Arch:            sudo pacman -S speech-dispatcher
+  - macOS (Homebrew): brew install speech-dispatcher" "$LINENO" 5
   fi
 
 
@@ -9699,6 +9734,11 @@ eval "TK_DEMO_DIR=\"`echo ${DEMO_DIR} | tr '()' '{}'`\""
 
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
+
+
+
+
 
 
 
