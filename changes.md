@@ -72,6 +72,7 @@ to the userbase.
  - [X11: wm deiconify loses the position of a window moved by the user](https://core.tcl-lang.org/tk/tktview/4c5184)
  - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
  - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
+ - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
