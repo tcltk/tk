@@ -653,15 +653,14 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    }
 	}
 
-	# Set initial accessible attributes and add binding to <Map> event.
-	# If the accessibility role is already set, return because
-	# we only want these to fire once.
+	# Set the class default accessible attributes; runs on every <Map>
+	# (and <<NotebookTabChanged>>), so defaults such as the current text
+	# are refreshed. An attribute the application has set itself is left
+	# alone: _init overwrites only attributes that are unset or still hold
+	# the value _init set last time.
+	variable _initValues
 	proc _init {w role name description value state action} {
-	    if {[catch {::tk::accessible::get_acc_role $w} msg]} {
-		if {$msg == $role} {
-		    return
-		}
-	    }
+	    variable _initValues
 	    if {[tk windowingsystem] ne "aqua"} {
 		# This is necessary to ensure correct accessible keyboard navigation
 		if [winfo exists $w] {
@@ -669,14 +668,19 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		}
 	    }
 
-	    ::tk::accessible::set_acc_role $w $role
-	    ::tk::accessible::set_acc_name $w $name
-	    ::tk::accessible::set_acc_description $w $description
-	    ::tk::accessible::set_acc_value $w $value
-	    ::tk::accessible::set_acc_state $w $state
-	    ::tk::accessible::set_acc_action $w $action
-
+	    # Role first: the other set_acc_* commands require it.
+	    foreach {attr new} [list role $role name $name \
+		    description $description value $value \
+		    state $state action $action] {
+		if {[catch {::tk::accessible::get_acc_$attr $w} current]
+			|| ([info exists _initValues($w,$attr)]
+			&& $current eq $_initValues($w,$attr))} {
+		    ::tk::accessible::set_acc_$attr $w $new
+		    set _initValues($w,$attr) $new
+		}
+	    }
 	}
+	bind all <Destroy> {+array unset ::tk::accessible::_initValues [string map {* \\* ? \\? [ \\[ ] \\]} %W],*}
 
 	# Toplevel bindings.
 	bind Toplevel <Map> {+::tk::accessible::_init \
@@ -734,7 +738,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			       %W \
 			       Canvas \
 			       Canvas \
-			       Canvas \
+			       {} \
 			       {} \
 			       {} \
 			       {}\
@@ -746,7 +750,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				    Checkbutton \
 				    Checkbutton \
 				    [%W cget -text] \
-				    [set [%W cget -variable]] \
+				    [::tk::accessible::_getcheckdata %W] \
 				    [%W cget -state] \
 				    {%W invoke}\
 				}
@@ -755,7 +759,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				     Checkbutton \
 				     Checkbutton \
 				     [%W cget -text] \
-				     [set [%W cget -variable]] \
+				     [::tk::accessible::_getcheckdata %W] \
 				     [%W cget -state] \
 				     {%W invoke}\
 				 }
@@ -763,7 +767,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				     %W \
 				     Toggleswitch \
 				     Toggleswitch \
-				     Toggleswitch \
+				     {} \
 				     [%W switchstate] \
 				     {} \
 				     {%W toggle}\
@@ -774,7 +778,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				  %W \
 				  Combobox \
 				  Combobox \
-				  Combobox \
+				  {} \
 				  [%W get] \
 				  [%W cget -state] \
 				  {} \
@@ -796,7 +800,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			      %W \
 			      Entry \
 			      Entry \
-			      Entry \
+			      {} \
 			      [%W get] \
 			      [%W cget -state] \
 			      {} \
@@ -807,7 +811,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			       %W \
 			       Entry \
 			       Entry \
-			       Entry \
+			       {} \
 			       [%W get] \
 			       [%W state]\
 			       {} \
@@ -819,7 +823,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				%W \
 				Listbox \
 				Listbox \
-				Listbox \
+				{} \
 				[%W get [%W curselection]] \
 				[%W cget -state]\
 				{%W invoke}\
@@ -830,7 +834,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				     %W \
 				     Progressbar \
 				     Progressbar \
-				     Progressbar \
+				     {} \
 				     [::tk::accessible::_getpbvalue %W] \
 				     [%W state] \
 				     {}\
@@ -842,7 +846,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				    Radiobutton \
 				    Radiobutton \
 				    [%W cget -text] \
-				    [%W cget -variable] \
+				    [::tk::accessible::_getradiodata %W] \
 				    [%W cget -state] \
 				    {%W invoke}\
 				}
@@ -851,7 +855,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				     Radiobutton \
 				     Radiobutton \
 				     [%W cget -text] \
-				     [%W cget -variable] \
+				     [::tk::accessible::_getradiodata %W] \
 				     [%W cget -state] \
 				     {%W invoke}\
 				 }
@@ -861,7 +865,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			      %W \
 			      Scale \
 			      Scale \
-			      Scale \
+			      {} \
 			      [%W get] \
 			      [%W cget -state]\
 			      {%W set}\
@@ -870,7 +874,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			       %W \
 			       Scale \
 			       Scale \
-			       Scale \
+			       {} \
 			       [%W get] \
 			       [%W cget -state] \
 			       {%W set} \
@@ -1037,7 +1041,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				  %W \
 				  Scrollbar \
 				  Scrollbar \
-				  Scrollbar \
+				  {} \
 				  {} \
 				  {} \
 				  {}\
@@ -1046,7 +1050,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				   %W \
 				   Scrollbar \
 				   Scrollbar \
-				   Scrollbar \
+				   {} \
 				   {} \
 				   {} \
 				   {}\
@@ -1057,7 +1061,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				%W \
 				Spinbox \
 				Spinbox \
-				Spinbox \
+				{} \
 				[%W get] \
 				[%W cget -state] \
 				{%W cget -command}\
@@ -1066,7 +1070,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				 %W \
 				 Spinbox \
 				 Spinbox \
-				 Spinbox \
+				 {} \
 				 [%W get] \
 				 [%W state] \
 				 {%W cget -command}\
@@ -1089,7 +1093,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			     %W \
 			     Text \
 			     Text \
-			     Text \
+			     {} \
 			     [::tk::accessible::_gettext %W] \
 			     [%W cget -state] \
 			     {}\
@@ -1258,16 +1262,20 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	# screen reader for vocalization. The help text here assists the user
 	# in switching to the standard keys for navigation as needed.
 
-	bind Listbox <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
-	bind Treeview <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
-	bind Entry <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-	bind TEntry <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
-	bind Scale <Map> {+::tk::accessible::set_acc_help %W "Click the right or left arrows to move the scale."}
-	bind TScale <Map> {+::tk::accessible::set_acc_help %W "Click the right or left arrows to move the scale."}
-	bind Spinbox <Map> {+::tk::accessible::set_acc_help %W "Click the up or down arrows to change the value."}
-	bind TSpinbox <Map> {+::tk::accessible::set_acc_help %W "Click the up or down arrows to change the value."}
-	bind Canvas <Map> {+::tk::accessible::set_acc_help %W "The canvas widget is not accessible."}
-	bind Scrollbar <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+	# On X11 these become the ATK description, which Orca reads on every
+	# focus change; the instructions are for mouse and trackpad users.
+	if {[tk windowingsystem] ne "x11"} {
+	    bind Listbox <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys."}
+	    bind Treeview <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use the standard Up-Arrow and Down-Arrow keys. To open or close a tree node, click the Space key."}
+	    bind Entry <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+	    bind TEntry <Map> {+::tk::accessible::set_acc_help %W "To navigate, click the mouse or trackpad and then use standard keyboard navigation. To hear the contents of the entry field, select all."}
+	    bind Scale <Map> {+::tk::accessible::set_acc_help %W "Click the right or left arrows to move the scale."}
+	    bind TScale <Map> {+::tk::accessible::set_acc_help %W "Click the right or left arrows to move the scale."}
+	    bind Spinbox <Map> {+::tk::accessible::set_acc_help %W "Click the up or down arrows to change the value."}
+	    bind TSpinbox <Map> {+::tk::accessible::set_acc_help %W "Click the up or down arrows to change the value."}
+	    bind Canvas <Map> {+::tk::accessible::set_acc_help %W "The canvas widget is not accessible."}
+	    bind Scrollbar <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
+	}
 	bind TScrollbar <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to move the scrollbar."}
 	bind Menubutton <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}
 	bind TMenubutton <Map> {+::tk::accessible::set_acc_help %W "Use the touchpad or mouse wheel to pop up the menu."}

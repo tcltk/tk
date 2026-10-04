@@ -44,6 +44,7 @@ static const struct AtkRoleMap {
 } roleMap[] = {
     {"Button", ATK_ROLE_PUSH_BUTTON},
     {"Checkbox", ATK_ROLE_CHECK_BOX},
+    {"Checkbutton", ATK_ROLE_CHECK_BOX},	/* The role accessibility.tcl sets. */
     {"Combobox", ATK_ROLE_COMBO_BOX},
     {"Entry", ATK_ROLE_ENTRY},
     {"Label", ATK_ROLE_LABEL},
@@ -71,6 +72,18 @@ static const struct AtkRoleMap {
 
 /* Variables for managing ATK objects. */
 static AtkObject *tk_root_accessible = NULL;
+
+/*
+ * The main window, for naming the application object by [tk appname]; reset
+ * when the main window is destroyed.
+ */
+static Tk_Window mainWindow = NULL;
+static void MainWindowEventProc(TCL_UNUSED(void *), XEvent *eventPtr)
+{
+    if (eventPtr->type == DestroyNotify) {
+	mainWindow = NULL;
+    }
+}
 static GList *toplevel_accessible_objects = NULL;
 static GHashTable *tk_to_atk_map = NULL;
 extern Tcl_HashTable *TkAccessibilityObject;
@@ -149,7 +162,8 @@ void RegisterAtkObjectForTkWindow(Tk_Window tkwin, AtkObject *atkobj);
 AtkObject *GetAtkObjectForTkWindow(Tk_Window tkwin);
 void UnregisterAtkObjectForTkWindow(Tk_Window tkwin);
 static AtkObject *tk_util_get_root(void);
-AtkObject *atk_get_root(void);
+static const gchar *tk_util_get_toolkit_name(void);
+static const gchar *tk_util_get_toolkit_version(void);
 
 /* Event handlers. */
 void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible);
@@ -304,6 +318,28 @@ static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordTyp
 	    y >= comp_y && y < comp_y + comp_height);
 }
 
+/*
+ * "active-descendant-changed" is meant for containers that manage their own
+ * items (lists, trees, tables, menus). Emitted from an ordinary parent such as
+ * a frame on every focus change, it makes screen readers (Orca) present the
+ * focused widget a second time, right after the focus event itself.
+ */
+static gboolean ParentManagesDescendants(AtkObject *parent)
+{
+    switch (atk_object_get_role(parent)) {
+    case ATK_ROLE_LIST:
+    case ATK_ROLE_LIST_BOX:
+    case ATK_ROLE_TREE:
+    case ATK_ROLE_TREE_TABLE:
+    case ATK_ROLE_TABLE:
+    case ATK_ROLE_MENU:
+    case ATK_ROLE_MENU_BAR:
+	return TRUE;
+    default:
+	return FALSE;
+    }
+}
+
 /* Force accessible focus on a Tk widget. */
 static gboolean tk_grab_focus(AtkComponent *component)
 {
@@ -327,7 +363,9 @@ static gboolean tk_grab_focus(AtkComponent *component)
    AtkObject *parent = atk_object_get_parent(obj);
    if (parent) {
        /* Notify parent about active descendant */
-       g_signal_emit_by_name(parent, "active-descendant-changed", obj);
+       if (ParentManagesDescendants(parent)) {
+	   g_signal_emit_by_name(parent, "active-descendant-changed", obj);
+       }
 
        /* Also emit children-changed to ensure ATK hierarchy is refreshed. */
        g_signal_emit_by_name(parent, "children-changed::add",
@@ -484,28 +522,53 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
     if (!win) return NULL;
 
     AtkRole role = GetAtkRoleForWidget(win);
+
+    /*
+     * The Windows and macOS bridges present the "description" attribute as
+     * the accessible name (accName, accessibilityLabel) and "help" as the
+     * hint; the class bindings in accessibility.tcl put the visible text in
+     * "description" and the role word in "name". Do the same here, so a
+     * button reads "Save, push button" rather than "Button, push button,
+     * Save". "name" remains the fallback (toplevels keep their title there).
+     */
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
+    Tcl_HashTable *attrs = hPtr ? (Tcl_HashTable *)Tcl_GetHashValue(hPtr) : NULL;
+    if (attrs) {
+	Tcl_HashEntry *descEntry = Tcl_FindHashEntry(attrs, "description");
+	if (descEntry) {
+	    const char *desc = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(descEntry));
+	    if (desc && desc[0]) return g_utf8_make_valid(desc, -1);
+	}
+    }
+
     /* If label, return the value instead of the name so Orca does not say "label" twice. */
     if (role == ATK_ROLE_LABEL) {
 	return GetAtkValueForWidget(win);
     }
 
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
-    if (!hPtr) return NULL;
-
-    Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     if (!attrs) return NULL;
 
     Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
     if (!nameEntry) return NULL;
 
     const char *name = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(nameEntry));
-    return name ? g_utf8_make_valid(name, -1) : NULL;
+    if (!name) return NULL;
+
+    /*
+     * The class bindings default "name" to the role word ("Entry", "Scale");
+     * the screen reader announces the role itself, so that is no name.
+     */
+    Tcl_HashEntry *roleEntry = Tcl_FindHashEntry(attrs, "role");
+    if (roleEntry && strcmp(name, Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(roleEntry))) == 0) {
+	return NULL;
+    }
+    return g_utf8_make_valid(name, -1);
 }
 
 static const gchar *tk_get_name(AtkObject *obj)
 {
     if (obj == tk_root_accessible) {
-	return "Tk Application";
+	return mainWindow ? Tk_Name(mainWindow) : "Tk Application";
     }
 
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
@@ -532,7 +595,8 @@ static gchar *GetAtkDescriptionForWidget(Tk_Window win)
     Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     if (!attrs) return NULL;
 
-    Tcl_HashEntry *descriptionEntry = Tcl_FindHashEntry(attrs, "description");
+    /* The ATK description is the hint: "help", as on Windows and macOS. */
+    Tcl_HashEntry *descriptionEntry = Tcl_FindHashEntry(attrs, "help");
     if (!descriptionEntry) return NULL;
 
     const char *description = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(descriptionEntry));
@@ -633,10 +697,13 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 	    const char *value = GetAtkValueForWidget(acc->tkwin);
 	    /* Check for proper state values. */
 	    if (value) {
-		/* For checkboxes/radiobuttons, check if value equals "selected" or "1" or onvalue. */
+		/*
+		 * The class bindings store "selected" / "not selected" (an
+		 * application may store "1" / "0"); the same test as the
+		 * state-changed event sent by EmitSelectionChanged.
+		 */
 		if (strcmp(value, "selected") == 0 ||
-		    strcmp(value, "1") == 0 ||
-		    (value[0] != '0' && value[0] != '\0')) {
+		    strcmp(value, "1") == 0) {
 		    atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
 		}
 	    }
@@ -1106,6 +1173,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     if (Tk_IsTopLevel(tkwin)) {
 	parentAcc = tk_root_accessible;
+	atk_object_set_parent(accessible, parentAcc);
 
 	if (!g_list_find(toplevel_accessible_objects, accessible)) {
 	    toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
@@ -1256,7 +1324,9 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 		Tk_Window parent = Tk_Parent(tkwin);
 		AtkObject *parentAc = GetAtkObjectForTkWindow(parent);
 		if (parentAc) {
-		    g_signal_emit_by_name(parentAc, "active-descendant-changed", acc);
+		    if (ParentManagesDescendants(parentAc)) {
+			g_signal_emit_by_name(parentAc, "active-descendant-changed", acc);
+		    }
 		}
 	    }
 	}
@@ -1364,7 +1434,9 @@ static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
 		/* Notify parent about active descendant. */
 		AtkObject *childAcc = GetAtkObjectForTkWindow(current);
 		if (childAcc) {
-		    g_signal_emit_by_name(parentAcc, "active-descendant-changed", childAcc);
+		    if (ParentManagesDescendants(parentAcc)) {
+			g_signal_emit_by_name(parentAcc, "active-descendant-changed", childAcc);
+		    }
 		}
 
 		/* Also emit children-changed to refresh ATK's view. */
@@ -1398,13 +1470,11 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 
 /*
  * Root window setup. These are the foundation of the
- * accessibility object system in ATK. atk_get_root() is the
- * critical link to at-spi - it is called by the ATK system
- * and at-spi bridge initialization will silently fail if this
- * function is not implemented. This API is confusing because
- * atk_get_root cannot be called directly in our functions, but
- * it still must be implemented if we are using a custom setup,
- * as we are here.
+ * accessibility object system in ATK. The root object is the
+ * critical link to at-spi - atk_get_root() returns it and at-spi
+ * bridge initialization fails if it is not provided. It is
+ * provided by setting the get_root method of the AtkUtil class,
+ * see TkAtkAccessibility_Init().
  */
 
 static AtkObject *tk_util_get_root(void)
@@ -1421,9 +1491,14 @@ static AtkObject *tk_util_get_root(void)
     return tk_root_accessible;
 }
 
-/* Core function linking Tk objects to the ATK root object and at-spi. */
-AtkObject *atk_get_root(void) {
-    return tk_util_get_root();
+static const gchar *tk_util_get_toolkit_name(void)
+{
+    return "Tk";
+}
+
+static const gchar *tk_util_get_toolkit_version(void)
+{
+    return TK_PATCH_LEVEL;
 }
 
 /* ATK-Tk object creation with proper parent/child relationship. */
@@ -1669,7 +1744,9 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 	if (role != ATK_ROLE_WINDOW) {
 	    AtkObject *parent = atk_object_get_parent(obj);
 	    if (parent) {
-		g_signal_emit_by_name(parent, "active-descendant-changed", obj);
+		if (ParentManagesDescendants(parent)) {
+		    g_signal_emit_by_name(parent, "active-descendant-changed", obj);
+		}
 
 		/* Also emit children-changed to refresh ATK's view. */
 		g_signal_emit_by_name(parent, "children-changed::add",
@@ -1929,6 +2006,19 @@ int TkAtkAccessibleObjCmd(
 #ifdef HAVE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
+    AtkUtilClass *utilClass;
+
+    /*
+     * Provide the root object and the toolkit name to ATK. The AT-SPI bridge
+     * gets the root object with atk_get_root(), which calls get_root of the
+     * AtkUtil class. [Bug b9d85fc100]
+     */
+
+    utilClass = ATK_UTIL_CLASS(g_type_class_ref(ATK_TYPE_UTIL));
+    utilClass->get_root = tk_util_get_root;
+    utilClass->get_toolkit_name = tk_util_get_toolkit_name;
+    utilClass->get_toolkit_version = tk_util_get_toolkit_version;
+
     /* Initialize AT-SPI bridge. */
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
 	Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
@@ -1959,6 +2049,8 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
 	return TCL_ERROR;
     }
+    mainWindow = mainWin;
+    Tk_CreateEventHandler(mainWin, StructureNotifyMask, MainWindowEventProc, NULL);
 
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {
