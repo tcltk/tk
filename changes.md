@@ -55,6 +55,7 @@ to the userbase.
  - [segfault in textDisp-26.14.2](https://core.tcl-lang.org/tk/tktview/7353d9)
  - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
  - [X11: wm deiconify loses the position of a window moved by the user](https://core.tcl-lang.org/tk/tktview/4c5184)
+ - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
