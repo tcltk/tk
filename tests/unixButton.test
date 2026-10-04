@@ -296,7 +296,11 @@ test unixbutton-3.1 {TkpDisplayButton: huge widget, bug bffa794b1b} -constraints
     label .w -text Wide -padx 20000
     label .h -text Tall -pady 20000
     button .b -text Huge -padx 40000 -pady 40000
-    grid .w .h .b
+    # Place them, so that the toplevel is not resized beyond the 16-bit
+    # limit of X window sizes.
+    place .w -x 0 -y 0
+    place .h -x 0 -y 0
+    place .b -x 0 -y 0
     update
     list [expr {[winfo width .w] > 40000}] [expr {[winfo height .h] > 40000}] \
 	    [expr {[winfo width .b] > 65536}] [expr {[winfo height .b] > 65536}]
