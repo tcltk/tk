@@ -480,6 +480,8 @@ proc ::tk::ConsoleBind {w} {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W
 	}
+	# Do not move the focus to the scrollbar. [Bug 9474bd2705]
+	break
     }
     bind Console <<Console_ExpandFile>> {
 	if {[%W compare insert > promptEnd]} {
