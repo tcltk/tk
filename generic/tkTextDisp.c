@@ -8874,7 +8874,7 @@ DisplayText(
 	damageRgn = XCreateRegion();
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, MAX(0, dInfoPtr->x - extent1), oldY,
 		dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, height, 0, y - oldY, damageRgn)) {
-#ifndef MACOSX_TK
+#ifndef MAC_OSX_TK
 	    /* No point in doing this on macOS. The DLines get redrawn anyway.*/
 	    TextInvalidateRegion(textPtr, damageRgn);
 #endif
@@ -15277,6 +15277,25 @@ GetForegroundGC(
     return chunkPtr->stylePtr->fgGC;
 }
 
+/*
+ * Debug trace of the text drawn by DrawChars: "pathName x chars", x being the
+ * position at which the characters are drawn without context drawing.
+ */
+
+static void
+LogCharsDisplay(
+    TkText *textPtr,
+    int x,
+    const char *chars,
+    int numBytes)
+{
+    Tcl_Obj *objPtr = Tcl_ObjPrintf("%s %d %.*s", Tk_PathName(textPtr->tkwin), x, numBytes, chars);
+
+    Tcl_IncrRefCount(objPtr);
+    LOG("tk_textCharsDisplay", Tcl_GetString(objPtr));
+    Tcl_DecrRefCount(objPtr);
+}
+
 #ifdef TK_DRAW_IN_CONTEXT
 # if defined(_WIN32) || defined(__UNIX__)
 
@@ -15338,7 +15357,7 @@ DrawChars(
     TkTextDispChunk *chunkPtr,	/* Display the content of this chunk. */
     int x,			/* X-position in dst at which to draw. */
     int y,			/* Y-position at which to draw. */
-    TCL_UNUSED(int),		/* Offset in x-direction. */
+    int offsetX,		/* X-position of the first drawn character. */
     int offsetBytes,		/* Offset in display string. */
     Display *display,		/* Display to use for drawing. */
     Drawable dst)		/* Pixmap or window in which to draw chunk. */
@@ -15380,9 +15399,9 @@ DrawChars(
 	 * Draw the text, underline, and overstrike for this chunk.
 	 */
 
+	TK_TEXT_DEBUG(LogCharsDisplay(textPtr, offsetX, string + start, len));
 	DrawCharsInContext(display, dst, fgGC, sValuePtr->tkfont, string, numBytes,
-		start, len, baseChunkPtr->x + xDisplacement, y - sValuePtr->offset,
-		chunkPtr->x + textPtr->dInfoPtr->x);
+		start, len, baseChunkPtr->x + xDisplacement, y - sValuePtr->offset, offsetX);
 
 	if (sValuePtr->underline) {
 	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ulGC, sValuePtr->tkfont, string,
@@ -15444,6 +15463,7 @@ DrawChars(
 	     * Draw the text, underline, and overstrike for this chunk.
 	     */
 
+	    TK_TEXT_DEBUG(LogCharsDisplay(textPtr, offsetX, string, numBytes));
 	    Tk_DrawChars(display, dst, fgGC, sValuePtr->tkfont, string, numBytes,
 		    offsetX, y - sValuePtr->offset);
 	    if (sValuePtr->underline) {
@@ -15492,7 +15512,7 @@ DisplayChars(
      */
 
     offsetX = x;
-    offsetBytes = (x >= 0) ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0,
+    offsetBytes = (x < 0) ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0,
 	    textPtr->spaceMode, 0, &offsetX) : 0;
     DrawChars(textPtr, chunkPtr, x, y + baseline, offsetX, offsetBytes, display, dst);
 }

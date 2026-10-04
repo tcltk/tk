@@ -5800,6 +5800,77 @@ test textDisp-41.8 {codepoint wrap of logical lines joined by an elided newline}
     destroy .t1
 } -result same
 
+# Each text drawn by DrawChars (tk_textCharsDisplay, debug on) must start at the
+# x position of the bbox of its first character, when visible.
+proc charsDisplayCheck {w} {
+    set res {}
+    set n 0
+    foreach entry $::tk_textCharsDisplay {
+	if {![regexp {^(\S+) (-?\d+) (.*)$} $entry -> path x chars] || $path ne $w} {
+	    continue
+	}
+	incr n
+	set index [$w search -exact -- $chars 1.0 end]
+	if {$index eq ""} {
+	    lappend res [list $chars notfound]
+	    continue
+	}
+	set bbox [$w bbox $index]
+	if {$bbox ne {} && [lindex $bbox 0] != $x} {
+	    lappend res [list $chars $x [lindex $bbox 0]]
+	}
+    }
+    list [expr {$n > 0}] $res
+}
+test textDisp-42.1 {x position of drawn text, chunks sharing a base chunk} -setup {
+    destroy .t1
+} -body {
+    text .t1 -wrap none -font $fixedFont -width 30 -height 2
+    .t1 tag configure red -foreground red
+    .t1 insert end "Hello wonderful world, this line is long enough to scroll"
+    .t1 tag add red 1.8 1.12
+    set tk_textCharsDisplay {}
+    pack .t1
+    update
+    charsDisplayCheck .t1
+} -cleanup {
+    destroy .t1
+} -result {1 {}}
+test textDisp-42.2 {x position of drawn text, chunks sharing a base chunk, xview} -setup {
+    destroy .t1
+} -body {
+    text .t1 -wrap none -font $fixedFont -width 30 -height 2
+    .t1 tag configure red -foreground red
+    .t1 insert end "Hello wonderful world, this line is long enough to scroll"
+    .t1 tag add red 1.8 1.12
+    pack .t1
+    update
+    set tk_textCharsDisplay {}
+    .t1 xview scroll [expr {8 * $fixedWidth}] pixels
+    update
+    charsDisplayCheck .t1
+} -cleanup {
+    destroy .t1
+} -result {1 {}}
+test textDisp-42.3 {x position of drawn text, tabs and embedded windows, xview} -setup {
+    destroy .t1
+} -body {
+    text .t1 -wrap none -font $fixedFont -width 30 -height 3 -tabs {80 480 580}
+    pack .t1
+    for {set i 1} {$i <= 2} {incr i} {
+	.t1 insert end "$i\tCHAUVET_OVATION-F415FC\t11CH\t"
+	.t1 window create end -window [frame .t1.f$i -width 10 -height 10]
+	.t1 insert end "\t[string repeat {more columns } 8]\n"
+    }
+    update
+    set tk_textCharsDisplay {}
+    .t1 xview scroll 40 pixels
+    update
+    charsDisplayCheck .t1
+} -cleanup {
+    destroy .t1
+} -result {1 {}}
+
 #
 # TESTFILE CLEANUP
 #
