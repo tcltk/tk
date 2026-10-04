@@ -4360,7 +4360,8 @@ LayoutBreakLine(
 	    TkrTextIndexForwBytes(data->textPtr, &index, chunkPtr->byteOffset, &index);
 	    segPtr = TkTextIndexGetContentSegment(&index, NULL);
 	    LayoutMakeCharInfo(data, segPtr, chunkPtr->segByteOffset, data->breakChunkPtr->breakIndex);
-	    segPtr->typePtr->layoutProc(&index, segPtr, chunkPtr->segByteOffset, data->maxX,
+	    /* No width limit: a tab may have moved the chunk, which must keep breakIndex bytes. */
+	    segPtr->typePtr->layoutProc(&index, segPtr, chunkPtr->segByteOffset, -1,
 		    data->breakChunkPtr->breakIndex, 0, data->wrapMode, data->textPtr->spaceMode,
 		    chunkPtr);
 	    LayoutFinalizeCharInfo(data, 0); /* second parameter doesn't matter here */
