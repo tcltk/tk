@@ -1060,7 +1060,7 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (slotPtrPtr == NULL && valuePtr != NULL && valuePtr != givenPtr) {
-	    /* A new value object from setProc (-locale), which no slot keeps. */
+	    /* A new value object from setProc, which no slot keeps. */
 	    Tcl_BounceRefCount(valuePtr);
 	}
 	break;
