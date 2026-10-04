@@ -16,6 +16,7 @@
 #define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
 #include <X11/XKBlib.h>
 #undef XkbOpenDisplay
+#include <time.h>
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -850,9 +851,12 @@ TkpWarpPointer(
 unsigned long
 TkpGetEventTime(void)
 {
-    return TkGetMS();
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long)(ts.tv_sec * 1000UL + ts.tv_nsec / 1000000UL);
 }
-
+
 /*
  * Local Variables:
  * mode: c

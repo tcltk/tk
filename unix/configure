@@ -678,8 +678,6 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
-ATK_LIBS
-ATK_CFLAGS
 CUPS_LIBS
 CUPS_CFLAGS
 XRENDER_LIBS
@@ -696,6 +694,8 @@ WAYLAND_LDFLAGS
 TK_USE_WAYLAND
 WL_PASTE
 WL_COPY
+ATK_LIBS
+ATK_CFLAGS
 HB_LIBS
 HB_CFLAGS
 FONTCONFIG_LIBS
@@ -8353,6 +8353,34 @@ Please install the HarfBuzz development package:
 
 
         #--------------------------------------------------------------------
+        # ATK / Atk-bridge — REQUIRED for Wayland accessibility
+        # Pure GLib/GObject based; no X11 dependency.
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge (Wayland accessibility)" >&5
+printf %s "checking for ATK and Atk-bridge (Wayland accessibility)... " >&6; }
+        if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+            ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+            ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+            found_atk=yes
+
+printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
+
+        else
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            found_atk=no
+            as_fn_error $? "ATK and Atk-bridge are required when building the Wayland backend.
+Please install the ATK and at-spi2-atk development packages:
+  - Debian/Ubuntu:   sudo apt install libatk1.0-dev libatk-bridge2.0-dev
+  - Fedora/RHEL:     sudo dnf install atk-devel at-spi2-atk-devel
+  - Arch:            sudo pacman -S atk at-spi2-atk" "$LINENO" 5
+        fi
+
+
+
+        #--------------------------------------------------------------------
         # NanoVG is bundled in the wayland source tree, so no external check needed.
         #--------------------------------------------------------------------
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: NanoVG will be built from bundled sources in wayland/nanovg.c" >&5
@@ -8480,20 +8508,21 @@ printf '%s\n' "yes" >&6; }
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
            && test "$found_harfbuzz" = yes \
+           && test "$found_atk" = yes \
            && test -n "$WL_COPY" \
            && test -n "$WL_PASTE"; then
 
             TK_USE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS -lspeechd"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS $ATK_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS $ATK_LIBS -lspeechd"
 
 printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + wl-clipboard" >&5
-printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + wl-clipboard" >&6;}
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + wl-clipboard" >&5
+printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + wl-clipboard" >&6;}
         else
             as_fn_error $? "Wayland backend requested but one or more required components missing.
 
@@ -8508,6 +8537,7 @@ Required (all mandatory when --enable-wayland is used):
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
   - HarfBuzz >= 2.8.2
+  - ATK + Atk-bridge (accessibility)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
   - wl-clipboard (wl-copy + wl-paste)
 
@@ -8515,7 +8545,8 @@ On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
     libdecor-0-dev libfontconfig-dev libsystemd-dev \
-    libharfbuzz-dev wl-clipboard libwayland-egl1
+    libharfbuzz-dev libatk1.0-dev libatk-bridge2.0-dev \
+    wl-clipboard libwayland-egl1
 " "$LINENO" 5
         fi
     fi
@@ -9119,6 +9150,12 @@ if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
 
 
 
+    # ATK is already required and checked above for Wayland,
+    # but we need to ensure ATK_CFLAGS/ATK_LIBS are substituted.
+    # They are already set from the earlier check.
+
+
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable bidirectional (Bidi) text support (Wayland)" >&5
 printf %s "checking whether to enable bidirectional (Bidi) text support (Wayland)... " >&6; }
     # Check whether --enable-bidi was given.
@@ -9636,23 +9673,23 @@ fi
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support
-#   - ONLY valid for X11
-#   - COMPLETELY disabled for Wayland and Aqua
+#	Check for ATK support
+#   - HARD dependency for both X11 and Wayland (accessibility)
+#   - ATK/Atk-bridge are GLib/GObject based and do not pull in X11
+#   - Still disabled for Aqua (macOS uses native accessibility APIs)
 #--------------------------------------------------------------------
 
-ATK_CFLAGS=""
-ATK_LIBS=""
-
-if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: ATK support forcibly disabled (Wayland backend)" >&5
-printf '%s\n' "$as_me: ATK support forcibly disabled (Wayland backend)" >&6;}
-elif test "$tk_aqua" = yes; then
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: ATK support disabled (Aqua backend)" >&5
-printf '%s\n' "$as_me: ATK support disabled (Aqua backend)" >&6;}
+if test $tk_aqua = yes; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: ATK support disabled (Aqua backend uses native accessibility)" >&5
+printf '%s\n' "$as_me: ATK support disabled (Aqua backend uses native accessibility)" >&6;}
+    ATK_CFLAGS=""
+    ATK_LIBS=""
 else
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge" >&5
-printf %s "checking for ATK and Atk-bridge... " >&6; }
+    # Both X11 and Wayland require ATK and Atk-bridge.
+    # The ATK stack (atk, atk-bridge-2.0) is built on GLib/GObject and
+    # does NOT depend on X11, so this is safe for the Wayland backend.
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge (required for accessibility)" >&5
+printf %s "checking for ATK and Atk-bridge (required for accessibility)... " >&6; }
     if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
@@ -9664,8 +9701,11 @@ printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
     else
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-        ATK_CFLAGS=""
-        ATK_LIBS=""
+        as_fn_error $? "ATK and Atk-bridge are required for accessibility support.
+Please install the ATK and at-spi2-atk development packages:
+  - Debian/Ubuntu:   sudo apt install libatk1.0-dev libatk-bridge2.0-dev
+  - Fedora/RHEL:     sudo dnf install atk-devel at-spi2-atk-devel
+  - Arch:            sudo pacman -S atk at-spi2-atk" "$LINENO" 5
     fi
 fi
 
