@@ -1,8 +1,9 @@
 /*
  * tkWaylandAccessibility.c --
  *
- * Wayland accessibility using ATK/AT-SPI.
- * Port of tkUnixAccessibility.c with X11 dependencies removed.
+ * This file implements accessibility/screen-reader support
+ * on Wayland systems based on the Gnome Accessibility Toolkit.
+ * the standard accessibility library for Unix-like systems.
  *
  * Copyright © 1995 Sun Microsystems, Inc.
  * Copyright © 2006, Marcus von Appen
@@ -1995,3 +1996,13 @@ TkWaylandAccessibility_Finalize(void)
 }
 
 #endif
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
+
+
