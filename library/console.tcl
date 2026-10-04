@@ -371,9 +371,9 @@ proc ::tk::console::Cut {w} {
     }
 }
 # Paste text from the clipboard
-proc ::tk::console::Paste {w} {
+proc ::tk::console::Paste {w {selection CLIPBOARD}} {
     catch {
-	set clip [::tk::GetSelection $w CLIPBOARD]
+	set clip [::tk::GetSelection $w $selection]
 	set list [split $clip \n\r]
 	tk::ConsoleInsert $w [lindex $list 0]
 	foreach x [lrange $list 1 end] {
@@ -604,6 +604,8 @@ proc ::tk::ConsoleBind {w} {
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
     bind Console <<Paste>> { ::tk::console::Paste %W }
+    # Paste on the input line regardless of the pointer position. [Bug 3295436]
+    bind Console <<PasteSelection>> { ::tk::console::Paste %W PRIMARY }
 
     foreach modifier {Control Command} {
 	bind Console <$modifier-MouseWheel> {

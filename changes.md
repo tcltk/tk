@@ -56,6 +56,7 @@ to the userbase.
  - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
  - [X11: wm deiconify loses the position of a window moved by the user](https://core.tcl-lang.org/tk/tktview/4c5184)
  - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
+ - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
