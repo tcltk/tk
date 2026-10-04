@@ -74,6 +74,7 @@ to the userbase.
  - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
  - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
  - [Focused button widgets invoked on Alt-Space](https://core.tcl-lang.org/tk/tktview/169275)
+ - ["focus" dumps core with certain extensions](https://core.tcl-lang.org/tk/tktview/704212)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
