@@ -5870,6 +5870,27 @@ test textDisp-42.3 {x position of drawn text, tabs and embedded windows, xview} 
 } -cleanup {
     destroy .t1
 } -result {1 {}}
+test textDisp-43.1 {break chunk moved by a numeric tab, on a line one pixel wide} -setup {
+    destroy .t1
+} -body {
+    # Laid out before the first display, so the line is one pixel wide; tab = ~,
+    # soft hyphen = _. Same lines as a mapped widget one character wide.
+    text .t1 -font {Courier -12} -width 17 -wrap word -tabstyle tabular -tabs {50 numeric}
+    pack .t1
+    .t1 insert end "\t[format %c 173] 7."
+    .t1 count -update -displaylines 1.0 end
+    set res {}
+    for {set i 1.0} {[.t1 compare $i < "end - 1c"]} {set i $next} {
+	set next [.t1 index "$i + 1 displaylines"]
+	if {[.t1 compare $next <= $i] || [.t1 compare $next > "end - 1c"]} {
+	    set next [.t1 index "end - 1c"]
+	}
+	lappend res [string map [list \t ~ [format %c 173] _] [.t1 get $i $next]]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {~ {_ } 7 .}
 
 #
 # TESTFILE CLEANUP
