@@ -1,8 +1,8 @@
 /*
- * tkWaylandAccessibility.c --
+ * tkUnixAccessibility.c --
  *
  * This file implements accessibility/screen-reader support
- * on Wayland systems based on the Gnome Accessibility Toolkit.
+ * on X11 systems based on the Gnome Accessibility Toolkit.
  * the standard accessibility library for Unix-like systems.
  *
  * Copyright © 1995 Sun Microsystems, Inc.
