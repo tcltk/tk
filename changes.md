@@ -58,6 +58,7 @@ to the userbase.
  - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
  - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
  - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
+ - [Focused button widgets invoked on Alt-Space](https://core.tcl-lang.org/tk/tktview/169275)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
