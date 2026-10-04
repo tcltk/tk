@@ -48,7 +48,8 @@ namespace eval ttk::theme::xpnative {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText]
 
-	ttk::style configure Toolbutton -padding {4 4}
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding {4 4}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
