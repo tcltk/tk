@@ -126,7 +126,7 @@ extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
  * e.g. Orca's GrabFocus, can call back into Tk and trigger further AT-SPI
  * traffic before the outer sd_bus_process loop returns).
  */
-extern void TkWaylandAtspiProcessEvents(void);  /* defined in tkWaylandAccessibility.c */
+//extern void TkWaylandAtspiProcessEvents(void);  /* defined in tkWaylandAccessibility.c */
 
 
 /* Thread-specific data for the event loop. */
@@ -476,7 +476,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
     }
 
     /* Drain and flush AT-SPI messages. */
-    TkWaylandAtspiProcessEvents();
+ //   TkWaylandAtspiProcessEvents();
 
     /* Process events for GLFW windows. */
     glfwPollEvents();

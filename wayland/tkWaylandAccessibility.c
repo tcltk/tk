@@ -1023,6 +1023,7 @@ static void tk_atk_accessible_finalize(GObject *gobject)
     }
 
     g_free(self->path);
+    self->path = NULL;
     /* Chain up to parent finalizer. */
     G_OBJECT_CLASS(tk_atk_accessible_parent_class)->finalize(gobject);
 }
@@ -1170,7 +1171,9 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 	toplevel_accessible_objects = g_list_remove(toplevel_accessible_objects, accessible);
 
 	/* Notify about removed child. */
-	g_signal_emit_by_name(tk_root_accessible, "children-changed::remove", index, accessible);
+	if (tk_root_accessible) {
+	    g_signal_emit_by_name(tk_root_accessible, "children-changed::remove", index, accessible);
+	}
     }
 }
 
@@ -1525,60 +1528,45 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 			  TkAtkAccessible_FocusHandler, tkAccessible);
     Tk_CreateEventHandler(tkwin, SubstructureNotifyMask,
 			  TkAtkAccessible_CreateHandler, tkAccessible);
-    Tk_CreateEventHandler(tkwin, ConfigureNotify,
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 			  TkAtkAccessible_ConfigureHandler, tkAccessible);
 
 }
 
-/* Respond to <CreateNotify> events. */
+/* Respond to widget creation - Wayland-safe, no X11 Window ID lookup */
 static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
 {
-    if (!eventPtr || eventPtr->type != CreateNotify) {
-	return;
-    }
-
-    Tk_Window parentWin = (Tk_Window)clientData;
-    if (!parentWin) return;
-
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    Tk_Window parentWin;
+    if (!acc || !acc->tkwin) return;
+    parentWin = acc->tkwin;
     Tcl_Interp *interp = Tk_Interp(parentWin);
     if (!interp) return;
-
-    if (!childWin) return;
-
-    if (GetAtkObjectForTkWindow(childWin)) {
-	return; /* Already registered. */
-    }
-
-    AtkObject *childAcc = TkCreateAccessibleAtkObject(interp, childWin, Tk_PathName(childWin));
-    if (!childAcc) return;
-
     AtkObject *parentAcc = GetAtkObjectForTkWindow(parentWin);
     if (!parentAcc) {
-	parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
-	if (parentAcc) {
-	    RegisterAtkObjectForTkWindow(parentWin, parentAcc);
-	    if (Tk_IsTopLevel(parentWin)) {
-		RegisterToplevelWindow(interp, parentWin, parentAcc);
-	    }
-	}
+        parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
+        if (parentAcc) {
+            RegisterAtkObjectForTkWindow(parentWin, parentAcc);
+            if (Tk_IsTopLevel(parentWin)) RegisterToplevelWindow(interp, parentWin, parentAcc);
+        }
     }
-
-    if (!parentAcc) {
-	parentAcc = tk_root_accessible;
-    }
-
-    atk_object_set_parent(childAcc, parentAcc);
-    RegisterAtkObjectForTkWindow(childWin, childAcc);
-    TkAtkAccessible_RegisterEventHandlers(childWin, (TkAtkAccessible *)childAcc);
-
-    /* Emit children-changed::add.*/
-    gint idx = atk_object_get_n_accessible_children(parentAcc);
-    g_signal_emit_by_name(parentAcc, "children-changed::add", idx, childAcc);
-
-    /* Notify visibility if mapped. */
-    if (Tk_IsMapped(childWin)) {
-	atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
-	atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
+    if (!parentAcc) parentAcc = tk_root_accessible;
+    if (!parentAcc) return;
+    TkWindow *childPtr;
+    for (childPtr = ((TkWindow*)parentWin)->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
+        Tk_Window childWin = (Tk_Window)childPtr;
+        if (GetAtkObjectForTkWindow(childWin)) continue;
+        AtkObject *childAcc = TkCreateAccessibleAtkObject(interp, childWin, Tk_PathName(childWin));
+        if (!childAcc) continue;
+        atk_object_set_parent(childAcc, parentAcc);
+        RegisterAtkObjectForTkWindow(childWin, childAcc);
+        TkAtkAccessible_RegisterEventHandlers(childWin, (TkAtkAccessible *)childAcc);
+        gint idx = atk_object_get_n_accessible_children(parentAcc);
+        g_signal_emit_by_name(parentAcc, "children-changed::add", idx > 0 ? idx - 1 : 0, childAcc);
+        if (Tk_IsMapped(childWin)) {
+            atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
+            atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
+        }
     }
 }
 
@@ -1588,28 +1576,57 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
 static void TkAtkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc) return;
-    tk_atk_accessible_finalize((GObject*)acc);
+    Tk_Window tkwin;
+
+    /* StructureNotifyMask also delivers Map/Unmap/Configure/etc. */
+    if (!acc || !eventPtr || eventPtr->type != DestroyNotify) return;
+    tkwin = acc->tkwin;
+    if (!tkwin) return;
+
+    /* Handlers hold a raw pointer to acc; remove them all (masks must match registration). */
+    Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
+			  TkAtkAccessible_DestroyHandler, acc);
+    Tk_DeleteEventHandler(tkwin, FocusChangeMask,
+			  TkAtkAccessible_FocusHandler, acc);
+    Tk_DeleteEventHandler(tkwin, SubstructureNotifyMask,
+			  TkAtkAccessible_CreateHandler, acc);
+    Tk_DeleteEventHandler(tkwin, StructureNotifyMask,
+			  TkAtkAccessible_ConfigureHandler, acc);
+
+    /*
+     * Never call finalize directly: let refcounting do it. Hold a ref during
+     * teardown, clear tkwin so finalize does not unregister again, then drop
+     * the hash table's ref via Unregister and our own.
+     */
+    g_object_ref(acc);
+    acc->tkwin = NULL;
+    UnregisterToplevelWindow(ATK_OBJECT(acc));
+    UnregisterAtkObjectForTkWindow(tkwin);
+    g_object_unref(acc);
 }
 
 
 /* Respond to configure - Wayland-safe */
 static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 {
-    Tk_Window tkwin = (Tk_Window)clientData;
-    if (!tkwin) return;
+    TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
+    Tk_Window tkwin;
+    if (!acc || !acc->tkwin || !eventPtr) return;
+    if (eventPtr->type != ConfigureNotify && eventPtr->type != MapNotify
+	    && eventPtr->type != UnmapNotify) return;
+    tkwin = acc->tkwin;
     AtkObject *accObj = GetAtkObjectForTkWindow(tkwin);
     if (!accObj) return;
-    gint x,y,w,h;
-    tk_get_extents(ATK_COMPONENT(accObj), &x,&y,&w,&h, ATK_XY_SCREEN);
+    gint x, y, w, h;
+    tk_get_extents(ATK_COMPONENT(accObj), &x, &y, &w, &h, ATK_XY_SCREEN);
     if (Tk_IsMapped(tkwin)) {
         atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, TRUE);
         atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, TRUE);
         if (!Tk_IsTopLevel(tkwin)) {
             AtkObject *parentAcc = GetAtkObjectForTkWindow(Tk_Parent(tkwin));
             if (parentAcc) {
-                gint idx = atk_object_get_n_accessible_children(parentAcc)-1;
-                if (idx<0) idx=0;
+                gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
+                if (idx < 0) idx = 0;
                 g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accObj);
             }
         }
@@ -1863,128 +1880,8 @@ int TkAtkAccessibleObjCmd(
 
     return TCL_OK;
 }
+
 #endif
-
-/*
- *----------------------------------------------------------------------
- *
- * TkAtkAccessibility_Init --
- *
- *  Initializes the accessibility module.
- *
- * Results:
- *
- *   A standard Tcl result.
- *
- * Side effects:
- *
- *  Accessibility module is now activated.
- *
- *----------------------------------------------------------------------
- */
-
-#ifdef HAVE_ATK
-int TkAtkAccessibility_Init(Tcl_Interp *interp)
-{
-    /* Initialize AT-SPI bridge. */
-    if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-	Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
-	return TCL_ERROR;
-    }
-
-    /* Get and initialize root accessible. */
-    tk_root_accessible = tk_util_get_root();
-    if (!tk_root_accessible) {
-	Tcl_SetResult(interp, "Failed to create root accessible object", TCL_STATIC);
-	return TCL_ERROR;
-    }
-
-    /* Activate widget-object hash table mapping. */
-    InitAtkTkMapping();
-
-    /* Establish GLib context for event loop processing. */
-    acc_context = ATK_CONTEXT;
-    Tcl_CreateEventSource(Atk_Event_Setup, Atk_Event_Check, 0);
-
-    /* Shut off GLib warnings. */
-    g_log_set_handler("Atk", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
-    g_log_set_handler("GLib-GObject", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
-
-    /* Initialize main window */
-    Tk_Window mainWin = Tk_MainWindow(interp);
-    if (!mainWin) {
-	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
-	return TCL_ERROR;
-    }
-
-    AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
-    if (!main_acc) {
-	Tcl_SetResult(interp, "Failed to create AtkObject for root window", TCL_STATIC);
-	return TCL_ERROR;
-    }
-
-    atk_object_set_role(main_acc, ATK_ROLE_WINDOW);
-    tk_set_name(main_acc, "Tk Application");
-    RegisterAtkObjectForTkWindow(mainWin, main_acc);
-    RegisterToplevelWindow(interp, mainWin, main_acc);
-
-    /* Recursively register ALL existing widgets. */
-    RegisterWidgetRecursive(interp, mainWin);
-
-	/* Force initial children-changed signals for all toplevels (helps Orca at startup).  */
-    GList *l;
-    for (l = toplevel_accessible_objects; l != NULL; l = l->next) {
-	AtkObject *top = ATK_OBJECT(l->data);
-	gint idx = g_list_index(toplevel_accessible_objects, top);
-	if (idx >= 0 && tk_root_accessible) {
-	    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", idx, top);
-	}
-
-	/* Also notify showing if mapped */
-	if (Tk_IsMapped(((TkAtkAccessible*)top)->tkwin)) {
-	    atk_object_notify_state_change(top, ATK_STATE_SHOWING, TRUE);
-	    atk_object_notify_state_change(top, ATK_STATE_VISIBLE, TRUE);
-	}
-    }
-
-    /* Register Wayland-safe event handlers for main window. */
-    TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
-
-    /* Register Tcl commands. */
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object",
-	    TkAtkAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change",
-	    EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_focus_change",
-	    EmitFocusChanged, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader",
-	    IsScreenReaderRunning, NULL, NULL);
-
-    return TCL_OK;
-}
-#else
-/* Stub command to run if Tk is compiled without accessibility support. */
-
-static int
-TkAccessibleStubObjCmd(
-    TCL_UNUSED(void *), /* clientData */
-    Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size), /* objc */
-    TCL_UNUSED(Tcl_Obj *const *)) /* objv */
-{
-    static int warned = 0;
-
-    if (!warned) {
-	Tcl_SetObjResult(interp,
-	Tcl_NewStringObj("Warning: Tk accessibility support not available in this build.", -1));
-	warned = 1;
-    } else {
-	Tcl_SetObjResult(interp, Tcl_NewObj()); /* Empty string after first warning. */
-    }
-
-    return TCL_OK;
-}
-
 
 #ifdef HAVE_ATK
 int
@@ -2075,7 +1972,9 @@ TkAccessibleStubObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp, TCL_UNUSED(Tcl_Si
     }
     return TCL_OK;
 }
-int TkWaylandAccessibility_Init(Tcl_Interp *interp)
+
+int
+TkWaylandAccessibility_Init(Tcl_Interp *interp)
 {
     Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkAccessibleStubObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", TkAccessibleStubObjCmd, NULL, NULL);
@@ -2083,14 +1982,16 @@ int TkWaylandAccessibility_Init(Tcl_Interp *interp)
     Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader", TkAccessibleStubObjCmd, NULL, NULL);
     return TCL_OK;
 }
-int TkAtkAccessibility_Init(Tcl_Interp *interp) { return TkWaylandAccessibility_Init(interp); }
-void TkWaylandAccessibility_Finalize(void) { }
-#endif
 
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
+int
+TkAtkAccessibility_Init(Tcl_Interp *interp)
+{
+    return TkWaylandAccessibility_Init(interp);
+}
+
+void
+TkWaylandAccessibility_Finalize(void)
+{
+}
+
+#endif
