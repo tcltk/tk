@@ -8442,3 +8442,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-05 (bug) [169275] Focused button widgets invoked on Alt-Space (nijtmans)
 
 2026-10-05 (bug) [704212] [focus] dumps core with certain extensions (nijtmans)
+
+2026-10-05 (bug) [b900dc] compilation using installed Tcl fails if Tcl source is not accessible (nijtmans)
