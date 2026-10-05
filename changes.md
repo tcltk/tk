@@ -78,6 +78,7 @@ to the userbase.
  - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
  - [canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size)](https://core.tcl-lang.org/tk/tktview/991849)
  - [compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
+ - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
