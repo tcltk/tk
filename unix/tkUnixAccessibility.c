@@ -47,6 +47,7 @@ static const struct AtkRoleMap {
 } roleMap[] = {
     {"Button", ATK_ROLE_PUSH_BUTTON},
     {"Checkbox", ATK_ROLE_CHECK_BOX},
+    {"Checkbutton", ATK_ROLE_CHECK_BOX},	
     {"Combobox", ATK_ROLE_COMBO_BOX},
     {"Entry", ATK_ROLE_ENTRY},
     {"Label", ATK_ROLE_LABEL},
@@ -105,6 +106,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj);
 
 /* ATK value interface. */
 static gchar *GetAtkValueForWidget(Tk_Window win);
+static gboolean TkAtkValueIsChecked(Tk_Window win);
 static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text);
 static AtkRange *tk_get_range(AtkValue *obj);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
@@ -699,15 +701,8 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 	    role == ATK_ROLE_RADIO_BUTTON ||
 	    role == ATK_ROLE_TOGGLE_BUTTON) {
 
-	    const char *value = GetAtkValueForWidget(acc->tkwin);
-	    /* Check for proper state values. */
-	    if (value) {
-		/* For checkboxes/radiobuttons, check if value equals "selected" or "1" or onvalue. */
-		if (strcmp(value, "selected") == 0 ||
-		    strcmp(value, "1") == 0 ||
-		    (value[0] != '0' && value[0] != '\0')) {
-		    atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
-		}
+	    if (TkAtkValueIsChecked(acc->tkwin)) {
+		atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
 	    }
 	}
     }
@@ -735,6 +730,24 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
 
     const char *value = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(valueEntry));
     return value ? g_utf8_make_valid(value, -1) : NULL;
+}
+
+/*
+ * The script layer stores the toggle state in the accessible value as the
+ * strings "selected" / "not selected" (see _getradiodata/_getcheckdata in
+ * accessibility.tcl). Only the exact string "selected" means checked; note
+ * that "not selected" is non-empty and does not start with '0'.
+ */
+static gboolean TkAtkValueIsChecked(Tk_Window win)
+{
+    gchar *value = GetAtkValueForWidget(win);
+    gboolean checked = FALSE;
+
+    if (value) {
+	checked = (strcmp(value, "selected") == 0 || strcmp(value, "1") == 0);
+	g_free(value);
+    }
+    return checked;
 }
 
 /* Modern AtkValue methods (replace deprecated stubs). */
@@ -885,21 +898,10 @@ static gboolean tk_action_do_action(AtkAction *action, gint i)
     }
 
     /*
-     * Toggle state notification.
+     * No CHECKED notification here: the cached accessible value is still the
+     * pre-invoke string at this point. The -variable write trace in
+     * accessibility.tcl refreshes the value and emits the notification.
      */
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    if (role == ATK_ROLE_CHECK_BOX ||
-	role == ATK_ROLE_RADIO_BUTTON) {
-
-	const char *value = GetAtkValueForWidget(acc->tkwin);
-	bool checked = (value && value[0] != '0');
-
-	atk_object_notify_state_change(
-	    ATK_OBJECT(acc),
-	    ATK_STATE_CHECKED,
-	    checked
-	);
-    }
 
     return TRUE;
 }
@@ -1792,8 +1794,7 @@ static int EmitSelectionChanged(
 
     /* For checkboxes and radiobuttons, emit state-changed signal. */
     if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
-	const char *value = GetAtkValueForWidget(tkwin);
-	bool checked = (value != NULL) && (strcmp(value, "selected") == 0 || strcmp(value, "1") == 0);
+	gboolean checked = TkAtkValueIsChecked(tkwin);
 
 	/* Emit the state change notification */
 	atk_object_notify_state_change(obj, ATK_STATE_CHECKED, checked);

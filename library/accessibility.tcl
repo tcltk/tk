@@ -134,7 +134,13 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11"} {
+		# Every radiobutton sharing the variable runs this proc when
+		# the variable is written. Speech is coalesced to the last
+		# call, so the button that just lost selection would
+		# overwrite the announcement for the newly selected one.
+		# Deselection is a side effect, so only narrate the button
+		# that became selected (ATK state is still updated above).
+		if {[tk windowingsystem] eq "x11" && $state eq "selected"} {
 		    ::tk::accessible::speak "$description $state"
 		}
 	    } elseif {$class eq "Checkbutton" || $class eq "TCheckbutton" || $class eq "Toggleswitch"} {
@@ -699,14 +705,14 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	# so it needs its own binding.
 	foreach cls {Toplevel Tk} {
 	    bind $cls <Map> {+::tk::accessible::_init \
-				     %W \
-				     Toplevel \
-				     [wm title %W] \
-				     {}  \
-				     {} \
-				     {} \
-				     {} \
-				 }
+				 %W \
+				 Toplevel \
+				 [wm title %W] \
+				 {}  \
+				 {} \
+				 {} \
+				 {} \
+			     }
 	}
 
 	# Button/TButton bindings.
@@ -766,7 +772,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				    Checkbutton \
 				    [::tk::accessible::_labelname %W Checkbutton] \
 				    [::tk::accessible::_labeldesc %W] \
-				    [set [%W cget -variable]] \
+				    [::tk::accessible::_getcheckdata %W] \
 				    [%W cget -state] \
 				    {%W invoke}\
 				}
@@ -775,7 +781,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				     Checkbutton \
 				     [::tk::accessible::_labelname %W Checkbutton] \
 				     [::tk::accessible::_labeldesc %W] \
-				     [set [%W cget -variable]] \
+				     [::tk::accessible::_getcheckdata %W] \
 				     [%W cget -state] \
 				     {%W invoke}\
 				 }
@@ -862,7 +868,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				    Radiobutton \
 				    [::tk::accessible::_labelname %W Radiobutton] \
 				    [::tk::accessible::_labeldesc %W] \
-				    [%W cget -variable] \
+				    [::tk::accessible::_getradiodata %W] \
 				    [%W cget -state] \
 				    {%W invoke}\
 				}
@@ -871,7 +877,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 				     Radiobutton \
 				     [::tk::accessible::_labelname %W Radiobutton] \
 				     [::tk::accessible::_labeldesc %W] \
-				     [%W cget -variable] \
+				     [::tk::accessible::_getradiodata %W] \
 				     [%W cget -state] \
 				     {%W invoke}\
 				 }
