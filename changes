@@ -8451,3 +8451,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
     instead of its column (nijtmans)
 
 2026-10-05 (bug) [991849] canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size) (storchaka)
+
+2026-10-05 (bug) [80213d] text widget's see subcommand can take many seconds (storchaka)
