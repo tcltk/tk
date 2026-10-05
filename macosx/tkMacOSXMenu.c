@@ -166,6 +166,25 @@ static void ClearMenubarActive(void);
 
 TKBackgroundLoop *backgroundLoop = nil;
 
+typedef struct invokeArgs {
+    TkMenu *menuPtr;
+    Tcl_Size itemIndex;
+} invokeArgs;
+    
+static void invokeMenuIdleTask(void *clientData) {
+    invokeArgs *args = (invokeArgs *) clientData;
+    int result = TkInvokeMenu(args->menuPtr->interp, args->menuPtr,
+			      args->itemIndex);
+    if (result != TCL_OK && result != TCL_CONTINUE &&
+	result != TCL_BREAK) {
+	Tcl_AddErrorInfo(args->menuPtr->interp, "\n    (menu invoke)");
+	Tcl_BackgroundException(args->menuPtr->interp, result);
+    }
+    Tcl_Release(args->menuPtr);
+    Tcl_Release(args->menuPtr->interp);
+    Tcl_Free(clientData);
+}
+
 #pragma mark TKMenu
 
 /*
@@ -364,19 +383,13 @@ static Bool runMenuCommand = true;
 	NSMenuItem *menuItem = (NSMenuItem *) sender;
 	TkMenu *menuPtr = (TkMenu *) _tkMenu;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
-
 	if (menuPtr && mePtr) {
-	    Tcl_Interp *interp = menuPtr->interp;
-	    Tcl_Preserve(interp);
-	    Tcl_Preserve(menuPtr);
-	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-	    if (result != TCL_OK && result != TCL_CONTINUE &&
-		    result != TCL_BREAK) {
-		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundException(interp, result);
-	    }
-	    Tcl_Release(menuPtr);
-	    Tcl_Release(interp);
+	    invokeArgs *args = Tcl_Alloc(sizeof(invokeArgs));
+	    args->menuPtr = menuPtr;
+	    args->itemIndex = mePtr->index;
+	    Tcl_Preserve(args->menuPtr);
+	    Tcl_Preserve(args->menuPtr->interp);
+	    Tcl_DoWhenIdle(invokeMenuIdleTask, args);
 	}
     }
 }
