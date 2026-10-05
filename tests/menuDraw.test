@@ -746,7 +746,7 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
     deleteWindows
 } -result {}
 
-test menuDraw-17.3 {AdjustMenuCoords - multi-column menu [bug fcb1398aa2]} -constraints unix -setup {
+test menuDraw-17.4 {AdjustMenuCoords - multi-column menu [bug fcb1398aa2]} -constraints x11 -setup {
     deleteWindows
 } -body {
     menu .m1 -tearoff 0
