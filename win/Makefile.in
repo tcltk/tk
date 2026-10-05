@@ -92,6 +92,8 @@ TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
 # The directory containing the platform specific Tcl sources and headers
 # appropriate for this version of Tk:
 TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/win
+TCL_INCLUDES		= @TCL_INCLUDES@
+TCL_RC_INCLUDE_DIR	= @TCL_RC_INCLUDE_DIR@
 
 TCL_TOOL_DIR		= @TCL_SRC_DIR@/tools
 
@@ -258,7 +260,7 @@ ZIP_INSTALL_OBJS =  @ZIP_INSTALL_OBJS@
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
--I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" \
+${TCL_INCLUDES} \
 ${AC_FLAGS} $(NO_DEPRECATED_FLAGS) -DUSE_TCL_STUBS
 
 CC_OBJNAME = @CC_OBJNAME@
@@ -322,6 +324,11 @@ TK_OBJS = \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \
 	stubs.$(OBJEXT) \
+	dictionaries.$(OBJEXT) \
+	khmer.$(OBJEXT) \
+	lao.$(OBJEXT) \
+	thai.$(OBJEXT) \
+	mojibake.$(OBJEXT) \
 	tk3d.$(OBJEXT) \
 	tkAccessibility.$(OBJEXT) \
 	tkArgv.$(OBJEXT) \
@@ -392,6 +399,7 @@ TK_OBJS = \
 	tkText.$(OBJEXT) \
 	tkTextBTree.$(OBJEXT) \
 	tkTextDisp.$(OBJEXT) \
+	tkTextGrapheme.$(OBJEXT) \
 	tkTextImage.$(OBJEXT) \
 	tkTextIndex.$(OBJEXT) \
 	tkTextMark.$(OBJEXT) \
@@ -823,7 +831,7 @@ tkMain2.$(OBJEXT): configure Makefile
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
-	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
+	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_RC_INCLUDE_DIR)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
 
 depend:
 

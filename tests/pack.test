@@ -1590,16 +1590,6 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     pack info .pack.a
 } -returnCodes error -result {window ".pack.a" isn't packed}
 
-# Tests pack-18.1.1 and pack-18.2 are constrained with failsOnCILinux
-# because they are failing in the GitHub CI environment, using Linux Ubuntu.
-# These tests are also constrained with failsOnXQuartz because they fail
-# on macOS when building with clang --disable-aqua (which uses XQuartz)
-# (this is the case both at GitHub CI and on a real Mac).
-# Analysis shows that, on both cases, WaitForMapNotify is giving up on
-# waiting for the MapNotify event that should show up when running
-# 'wm iconify'. The timeout delay (2s) is exceeded without the unmapping
-# having happened. The cause for this is unknown (see comments in WaitForMapNotify).
-
 # Tests pack-18.1.* are constrained because on Windows, when the width/height
 # is configured while the window is unmapped, the changes don't take
 # effect until the window is remapped. This is apparently by design of the
@@ -1615,7 +1605,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 # colored.  So, evidently, even though the size changes are honored,
 # the window is sometimes not completely configured.
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
-    macOrUnix failsOnCILinux failsOnXQuartz
+    macOrUnix
 } -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
@@ -1628,7 +1618,7 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
     pack .pack.a
     update
     set result [winfo ismapped .pack.a]
-    wm iconify .pack
+    wm withdraw .pack
     lappend result [winfo ismapped .pack.a]
     .pack.a configure -width 200 -height 75
     update
@@ -1661,7 +1651,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 1}
 
-test pack-18.2 {unmap content when container unmapped} -constraints {failsOnCILinux failsOnXQuartz} -setup {
+test pack-18.2 {unmap content when container unmapped} -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
@@ -1674,7 +1664,7 @@ test pack-18.2 {unmap content when container unmapped} -constraints {failsOnCILi
     pack .pack.b -in .pack.a
     update
     set result [winfo ismapped .pack.b]
-    wm iconify .pack
+    wm withdraw .pack
     lappend result [winfo ismapped .pack.b]
     .pack.b configure -width 100 -height 30
     update
@@ -1808,6 +1798,7 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
 } -cleanup {
     bind . <<NoManagedChild>> {}
     destroy .1
+    pack propagate . 1
 } -result 0
 
 #

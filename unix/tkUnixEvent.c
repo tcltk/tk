@@ -16,6 +16,7 @@
 #define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
 #include <X11/XKBlib.h>
 #undef XkbOpenDisplay
+#include <time.h>
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -163,6 +164,14 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
+
+    /*
+     * Do not generate KeyRelease events for auto-repeated keys, as on
+     * other platforms. [Bug d3b9644729]
+     */
+
+    XkbSetDetectableAutoRepeat(display, True, NULL);
+
     dispPtr = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
@@ -821,6 +830,32 @@ TkpWarpPointer(
     }
     XWarpPointer(dispPtr->display, None, w, 0, 0, 0, 0,
 	    (int) dispPtr->warpX, (int) dispPtr->warpY);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ * Returns current time.
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long)(ts.tv_sec * 1000UL + ts.tv_nsec / 1000000UL);
 }
 
 /*

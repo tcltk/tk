@@ -4863,7 +4863,15 @@ test Button_Events-47.6 {Click on Cell} -setup {
     list $state [expr {[.tv item pink -open] ? 1 : 0}]
 } -result {0 0}
 
-test Button_Events-47.7 {Cleanup} -body {
+test Button_Events-47.7 {Click on Empty Indicator} -setup {
+    .tv see purple
+    .tv selection set {}
+} -body {
+    ButtonPress .tv purple #0 10
+    $w selection size
+} -result {1}
+
+test Button_Events-47.8 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 
@@ -8757,6 +8765,62 @@ test Identify-89.41 {No tree column and reverse display order} -setup {
 test Identify-89.42 {Cleanup} -body {
     destroy .tv .sx .sy
 }
+
+
+test Scroll-90.1 {no scroll command before the treeview is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    ttk::treeview .top.tv -show headings -columns {a b} -height 10 \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    .top.tv column a -width 200 -stretch 0
+    .top.tv column b -width 200 -stretch 0
+    for {set i 0} {$i < 20} {incr i} {
+	.top.tv insert {} end -values [list $i $i]
+    }
+    place .top.tv -width 200 -height 150
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.tv
+    update
+    set xview [.top.tv xview]
+    set yview [.top.tv yview]
+    lappend res [expr {$log eq [list x {*}$xview y {*}$yview]}] \
+	    [expr {[lindex $xview 1] < 1}] [expr {[lindex $yview 1] < 1}]
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res i xview yview
+} -result {{} 1 1 1}
+test Scroll-90.2 {no scroll command after xview and yview before the treeview is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    ttk::treeview .top.tv -show headings -columns {a b} -height 10 \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    .top.tv column a -width 200 -stretch 0
+    .top.tv column b -width 200 -stretch 0
+    for {set i 0} {$i < 20} {incr i} {
+	.top.tv insert {} end -values [list $i $i]
+    }
+    place .top.tv -width 200 -height 150
+    .top.tv xview
+    .top.tv yview
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.tv
+    update
+    set xview [.top.tv xview]
+    set yview [.top.tv yview]
+    lappend res [expr {$log eq [list x {*}$xview y {*}$yview]}] \
+	    [expr {[lindex $xview 1] < 1}] [expr {[lindex $yview 1] < 1}]
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res i xview yview
+} -result {{} 1 1 1}
 
 #
 # TESTFILE CLEANUP

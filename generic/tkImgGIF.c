@@ -2003,7 +2003,7 @@ CommonWriteGIF(
     Tcl_Interp *interp,
     void *handle,
     WriteBytesFunc *writeProc,
-    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *format,
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
@@ -2012,6 +2012,25 @@ CommonWriteGIF(
     long width, height, x;
     unsigned char c;
     unsigned int top, left;
+    Tcl_Size objc = 0;
+    Tcl_Obj **objv;
+
+    /*
+     * No format options are supported when writing.
+     */
+
+    if (format && Tcl_ListObjGetElements(interp, format,
+	    &objc, &objv) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad format option \"%s\": no options allowed",
+		Tcl_GetString(objv[1])));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_OPTION",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
 
     top = 0;
     left = 0;
