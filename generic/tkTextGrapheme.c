@@ -6,7 +6,7 @@
  *      library.  Also, for scripts without spaces (Thai, Lao, Khmer),
  *      implements a forward maximum-matching word segmenter using
  *      ICU-derived dictionaries.
- *	
+ *
  * Copyright (c) 2026 Kevin Walzer.
  *
  * See the file "license.terms" for information on usage and redistribution.
@@ -33,7 +33,7 @@
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 static size_t
 Utf8EncodedBytes(mjb_codepoint cp)
 {
@@ -59,7 +59,7 @@ Utf8EncodedBytes(mjb_codepoint cp)
  *   Updates lastBoundary to the computed boundary value.
  * ---------------------------------------------------------------
  */
- 
+
 static size_t
 BoundaryFromState(size_t index,
 		  mjb_codepoint curCp,
@@ -150,7 +150,7 @@ mojibake_grapheme_breaks(const char *buf,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_grapheme_next(const char *buf,
 		       size_t byteLen,
@@ -186,7 +186,7 @@ mojibake_grapheme_next(const char *buf,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_grapheme_prev(const char *buf,
 		       size_t byteLen,
@@ -380,7 +380,7 @@ WordBoundaryFromState(const mjb_next_word_state *state,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_word_breaks(const char *buf,
 		     size_t byteLen,
@@ -418,7 +418,7 @@ mojibake_word_breaks(const char *buf,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_word_next(const char *buf,
 		   size_t byteLen,
@@ -454,7 +454,7 @@ mojibake_word_next(const char *buf,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_word_prev(const char *buf,
 		   size_t byteLen,
@@ -490,7 +490,7 @@ mojibake_word_prev(const char *buf,
  *   Updates lastBoundary.
  * ---------------------------------------------------------------
  */
- 
+
 static size_t
 SentenceBoundaryFromState(const mjb_next_sentence_state *state,
 			  size_t byteLen,
@@ -514,7 +514,7 @@ SentenceBoundaryFromState(const mjb_next_sentence_state *state,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_sentence_breaks(const char *buf,
 			 size_t byteLen,
@@ -570,7 +570,7 @@ typedef enum {
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 static ComplexScript
 ScriptFromCodepoint(mjb_codepoint cp)
 {
@@ -859,7 +859,7 @@ ForwardMaxMatchRun(const char *buf, size_t runStart, size_t runEnd,
  *   May allocate temporary grapheme break array if gBreaks_tmp is NULL.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_word_breaks_with_dict(const char *buf,
 			       size_t byteLen,
@@ -971,7 +971,7 @@ mojibake_word_breaks_with_dict(const char *buf,
  *   gBreaks_tmp or wBreaks_tmp is NULL.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_line_breaks_with_dict(const char *buf,
 			       size_t byteLen,
@@ -1047,7 +1047,7 @@ mojibake_line_breaks_with_dict(const char *buf,
  *   None.
  * ---------------------------------------------------------------
  */
- 
+
 int
 mojibake_grapheme_breaks_wrapper(const char *buf,
 				 size_t len,

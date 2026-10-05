@@ -62,6 +62,7 @@ to the userbase.
  - ["focus" dumps core with certain extensions](https://core.tcl-lang.org/tk/tktview/704212)
  - [canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size)](https://core.tcl-lang.org/tk/tktview/991849)
  - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
+ - [MinGW: compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

@@ -838,7 +838,7 @@ TkpWarpPointer(
  *
  * TkpGetEventTime --
  *
- * Returns current time. 
+ * Returns current time.
  *
  * Results:
  *	Number of milliseconds.

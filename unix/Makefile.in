@@ -1044,13 +1044,13 @@ mojibake.o: $(GENERIC_DIR)/mojibake.c
 
 dictionaries.o: $(GENERIC_DIR)/dictionaries.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/dictionaries.c
-	
+
 khmer.o: $(GENERIC_DIR)/khmer.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/khmer.c
 
 lao.o: $(GENERIC_DIR)/lao.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/lao.c
-	
+
 thai.o: $(GENERIC_DIR)/thai.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/thai.c
 
