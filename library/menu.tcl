@@ -314,6 +314,11 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     }
 
     set Priv(tearoff) $tearoff
+    if {$tearoff == 0 && [tk windowingsystem] ne "x11"} {
+	# A native menu is already closed here. [Bug 2128087]
+	MenuUnpost {}
+	return
+    }
     if {$tearoff != 0 && [tk windowingsystem] ne "aqua"} {
 	focus $menu
 	if {[winfo viewable $w]} {
@@ -1255,6 +1260,10 @@ proc ::tk::TraverseWithinMenu {w char} {
 
 proc ::tk::MenuFirstEntry menu {
     if {$menu eq ""} {
+	return
+    }
+    if {[tk windowingsystem] ne "x11" && ![winfo ismapped $menu]} {
+	# A native menu which is already closed.
 	return
     }
     tk_menuSetFocus $menu
