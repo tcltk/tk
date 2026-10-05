@@ -2021,7 +2021,14 @@ Tk_DrawCharsInContext(
 	int gFirst = 0, gLast = 0;
 	int glyphOffsetX = 0;  /* X offset from run start to first visible glyph. */
 
-	/* Find glyph range for the character range using logClust. */
+	/*
+	 * Find glyph range for the character range using logClust.  It maps
+	 * each character to the first glyph of its cluster in logical order:
+	 * the lowest glyph index in an LTR run and the highest in an RTL run.
+	 * The cluster continues up to the first glyph of the next cluster in
+	 * logical order, or to the end of the run.  Do not lose the remaining
+	 * glyphs of the last cluster in the range (e.g. combining marks).
+	 */
 	{
 	    int gMin = INT_MAX, gMax = -1;
 	    for (int ci = charFirst; ci < charLast; ci++) {
@@ -2032,8 +2039,25 @@ Tk_DrawCharsInContext(
 	    if (gMax < 0) {
 		continue;
 	    }
-	    gFirst = gMin;
-	    gLast = gMax + 1;
+	    if (run->sa.fRTL) {
+		gFirst = 0;
+		gLast = gMax + 1;
+		for (int ci = charLast; ci < run->charLen; ci++) {
+		    if ((int)run->logClust[ci] < gMin) {
+			gFirst = (int)run->logClust[ci] + 1;
+			break;
+		    }
+		}
+	    } else {
+		gFirst = gMin;
+		gLast = run->glyphCount;
+		for (int ci = charLast; ci < run->charLen; ci++) {
+		    if ((int)run->logClust[ci] > gMax) {
+			gLast = (int)run->logClust[ci];
+			break;
+		    }
+		}
+	    }
 
 	    /* Compute X offset to gFirst by summing advances of glyphs before it. */
 	    for (int g = 0; g < gFirst; g++) {

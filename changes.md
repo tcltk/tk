@@ -8,7 +8,7 @@ Release Tk 9.1.1 arises from the check-in with tag `core-9-1-1`.
 
 Tk 9.1.1 continues the Tk 9.x series of releases.  The Tk 9.x series
 do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
-To make use of Tk 9.1.0, first a Tcl 9.0 or 9.1 release must be present.
+To make use of Tk 9.1.1, first a Tcl 9.0 or 9.1 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9.2+, but not
 in Tk 8.
 
@@ -43,6 +43,25 @@ to the userbase.
  - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
  - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
  - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
+ - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
+ - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
+ - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
+ - [Tk text line breaks Thai words](https://core.tcl-lang.org/tk/info/b7ded5)
+ - [possible code issue: return before END_DRAWING](https://core.tcl-lang.org/tk/tktview/1c9965)
+ - [ttk::spinbox doesn't expand its height on Linux](https://core.tcl-lang.org/tk/tktview/331303)
+ - [spinbox -values overrides the value of the -textvariable](https://core.tcl-lang.org/tk/tktview/143926)
+ - [Improper look of ttk::checkbutton -style Toolbutton](https://core.tcl-lang.org/tk/tktview/341467)
+ - [ttk Toolbutton has wrong default anchor](https://core.tcl-lang.org/tk/tktview/186783)
+ - [segfault in textDisp-26.14.2](https://core.tcl-lang.org/tk/tktview/7353d9)
+ - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
+ - [X11: wm deiconify loses the position of a window moved by the user](https://core.tcl-lang.org/tk/tktview/4c5184)
+ - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
+ - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
+ - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
+ - [Focused button widgets invoked on Alt-Space](https://core.tcl-lang.org/tk/tktview/169275)
+ - ["focus" dumps core with certain extensions](https://core.tcl-lang.org/tk/tktview/704212)
+ - [canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size)](https://core.tcl-lang.org/tk/tktview/991849)
+ - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

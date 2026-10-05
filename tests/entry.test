@@ -30,6 +30,8 @@ resetWindows
 # Import utility procs for specific functional areas
 testutils import entry scroll
 
+testConstraint memory [llength [info commands memory]]
+
 #
 # COMMON TEST SETUP
 #
@@ -1817,6 +1819,29 @@ test entry-5.19 {-locale} -setup {
 } -cleanup {
     destroy .e
 } -result {-locale locale Locale C prg_001}
+test entry-5.20 {-locale: the normalized value is not leaked} -constraints {
+    memory
+} -setup {
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+    entry .e
+} -body {
+    list [growth {.e configure -locale ab_CD}] [growth {entry .w; destroy .w}]
+} -cleanup {
+    destroy .e
+    rename getbytes {}
+    rename growth {}
+} -result {0 0}
 
 # No tests for DisplayEntry.
 

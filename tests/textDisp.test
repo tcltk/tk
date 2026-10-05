@@ -5288,6 +5288,30 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
+    # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
+    label .l1 -text "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01" \
+        -font $fixedFont -width 20
+    pack .l1
+} -body {
+    update
+} -cleanup {
+    destroy .l1
+} -result {}
+
+test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
+    text .t1 -font $fixedFont -width 30 -height 3
+    pack .t1
+} -body {
+    # "ภาษาไทย mixed" — includes combining marks and cluster boundaries
+    .t1 insert end "Mixed \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 text"
+    update
+} -cleanup {
+    destroy .t1
+} -result {}
+
+
+
 #
 # TESTFILE CLEANUP
 #

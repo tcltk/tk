@@ -1353,21 +1353,35 @@ ConfigureEntry(
 	ComputeFormat(sbPtr);
 
 	if (valuesChanged > 0) {
-	    Tcl_Obj *objPtr;
+	    Tcl_Obj **elemPtrs;
+	    Tcl_Size i, nElems;
 
 	    /*
 	     * No check for error return, because there shouldn't be one given
 	     * the check for valid list above.
 	     */
 
-	    Tcl_ListObjIndex(interp, sbPtr->listObj, 0, &objPtr);
+	    Tcl_ListObjGetElements(interp, sbPtr->listObj, &nElems, &elemPtrs);
 
 	    /*
-	     * No check for error return here as well, because any possible
-	     * error will be trapped below when attempting tracing.
+	     * Keep the current value if it is one of the new values, as the
+	     * -from/-to range below keeps a value which is in the range.  It
+	     * can be set from the -textvariable above.  [Bug 1439266]
 	     */
 
-	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
+	    for (i = 0; i < nElems; i++) {
+		if (strcmp(Tcl_GetString(elemPtrs[i]), entryPtr->string) == 0) {
+		    break;
+		}
+	    }
+	    if (i >= nElems && nElems > 0) {
+		/*
+		 * No check for error return here as well, because any possible
+		 * error will be trapped below when attempting tracing.
+		 */
+
+		EntryValueChanged(entryPtr, Tcl_GetString(elemPtrs[0]));
+	    }
 	} else if ((sbPtr->valueObj == NULL)
 		&& !DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)
 		&& (!DOUBLES_EQ(sbPtr->fromValue, oldFrom)

@@ -1277,20 +1277,25 @@ AdjustMenuCoords(
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-	offset = borderWidth + activeBorderWidth + scaled2;
+	offset = activeBorderWidth + scaled2;
 
 	/*
-	 * Post the cascade to the right of the menu, or to the left of it if
-	 * this menu was itself posted to the left of its parent, as long as
-	 * it fits there. Otherwise post it on the other side if it fits
-	 * there. Otherwise it would be moved to overlap the menu, hiding its
+	 * Post the cascade to the right of the entry's column (of the menu
+	 * for the last column), or to the left of the column if this menu
+	 * was itself posted to the left of its parent, as long as it fits
+	 * there. Otherwise post it on the other side if it fits there.
+	 * Otherwise it would be moved to overlap the menu, hiding its
 	 * entries and the pointer, or overlap the parent menu.
 	 */
 
-	right = *xPtr + Tk_Width(menuPtr->tkwin) - offset;
+	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+	    right = *xPtr + Tk_Width(menuPtr->tkwin) - borderWidth - offset;
+	} else {
+	    right = *xPtr + mePtr->x + mePtr->width - offset;
+	}
 	if (childPtr != NULL) {
 	    int width = Tk_ReqWidth(childPtr->tkwin);
-	    int leftX = *xPtr + offset - width;
+	    int leftX = *xPtr + mePtr->x + offset - width;
 	    bool fitsRight = (right + width <= vRootX + vRootWidth);
 	    bool fitsLeft = (leftX >= vRootX);
 

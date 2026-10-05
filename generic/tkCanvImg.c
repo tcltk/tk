@@ -447,8 +447,8 @@ ComputeImageBbox(
 	}
     }
 
-    x = (int) (imgPtr->x + ((imgPtr->x >= 0) ? 0.5 : - 0.5));
-    y = (int) (imgPtr->y + ((imgPtr->y >= 0) ? 0.5 : - 0.5));
+    x = (int) (TkCanvClampCoord(imgPtr->x) + ((imgPtr->x >= 0) ? 0.5 : - 0.5));
+    y = (int) (TkCanvClampCoord(imgPtr->y) + ((imgPtr->y >= 0) ? 0.5 : - 0.5));
 
     if ((state == TK_STATE_HIDDEN) || (image == NULL)) {
 	imgPtr->header.x1 = imgPtr->header.x2 = x;
