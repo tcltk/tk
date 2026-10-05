@@ -62,6 +62,15 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
 
 #pragma mark TKApplication(TKHLEvents)
 
+static void showPreferencesWhenIdle(void *clientData) {
+    Tcl_Interp *interp = (Tcl_Interp *) clientData;
+    int code = Tcl_EvalEx(interp, "::tk::mac::ShowPreferences",
+			  -1, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+}
+
 @implementation TKApplication(TKHLEvents)
 - (void) terminate: (id) sender
 {
@@ -144,13 +153,9 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     (void)event;
     (void)replyEvent;
 
-    if (_eventInterp &&
-	    Tcl_FindCommand(_eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
-	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowPreferences",
-			      -1, TCL_EVAL_GLOBAL);
-	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
-	}
+    if (_eventInterp && Tcl_FindCommand(
+	   _eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
+	Tcl_DoWhenIdle(showPreferencesWhenIdle, (void *) _eventInterp);
     }
 }
 
