@@ -712,6 +712,8 @@ CFLAGS_DEBUG
 DL_LIBS
 WINE
 CYGPATH
+TCL_RC_INCLUDE_DIR
+TCL_INCLUDES
 TCL_DEFS
 TCL_STUB_LIB_SPEC
 TCL_STUB_LIB_FLAG
@@ -4316,6 +4318,21 @@ if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better." "$LINENO" 5
 fi
+
+#------------------------------------------------------------------------
+# Compile against the Tcl source tree if it is accessible, otherwise use
+# the installed Tcl headers.
+#------------------------------------------------------------------------
+
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+    TCL_INCLUDES='-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}"'
+    TCL_RC_INCLUDE_DIR='${TCL_GENERIC_NATIVE}'
+else
+    TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+    TCL_RC_INCLUDE_DIR=`echo "${TCL_INCLUDE_SPEC}" | sed 's/^-I//'`
+fi
+
+
 
 #--------------------------------------------------------------------
 # The statements below define a collection of compile flags.  This
