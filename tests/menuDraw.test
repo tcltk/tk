@@ -881,6 +881,30 @@ test menuDraw-17.7 {AdjustMenuCoords - cascade does not fit on the inherited sid
     rename menuWidth {}
     unset -nocomplain sw
 } -result {1 1}
+test menuDraw-17.8 {AdjustMenuCoords - cascade from a later column flips left} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "First column"
+    .m1 add cascade -label "Second" -menu .m1.m2 -columnbreak 1
+    menu .m1.m2 -tearoff 0
+    .m1.m2 add command -label "A rather long cascade entry"
+} -body {
+    .m1 post [expr {[winfo screenwidth .m1] - [winfo reqwidth .m1]}] 100
+    update
+    .m1 postcascade 1
+    update
+    # The cascade does not fit to the right, so it is posted to the left of
+    # its column, over the first column, not to the left of the whole menu.
+    set column [expr {[winfo rootx .m1] + [.m1 xposition 1]}]
+    set right [expr {[winfo rootx .m1.m2] + [winfo width .m1.m2]}]
+    list [expr {$right <= $column + 10}] [expr {$right > [winfo rootx .m1] + 10}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain column right
+} -result {1 1}
 
 #
 # TESTFILE CLEANUP
