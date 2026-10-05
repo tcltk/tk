@@ -146,8 +146,7 @@ chooser through the XDG desktop portal (as KDE Plasma and GNOME do), the
 desktop's own file dialog is shown; if not, a dialog implemented in Tk.
 While the desktop's dialog is open the application keeps processing
 events, but the toplevel of the \fB\-parent\fR window does not receive
-pointer events (see \fBtk busy\fR).  Some desktops ignore
-\fB\-initialdir\fR.
+pointer events (see \fBtk busy\fR).
 .SH "SPECIFYING FILE PATTERNS"
 .PP
 The \fIfilePatternList\fR value given by the \fB\-filetypes\fR option
