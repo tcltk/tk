@@ -289,7 +289,7 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
 } -result 1
 
 test unixbutton-3.1 {TkpDisplayButton: huge widget, bug bffa794b1b} -constraints {
-    unix
+    unix nonPortable
 } -setup {
     deleteWindows
 } -body {
