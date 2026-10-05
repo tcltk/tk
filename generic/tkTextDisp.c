@@ -4225,7 +4225,7 @@ TkTextUpdateOneLine(
     TkTextIndex index;
     int displayLines;
     int mergedLines;
-    Tcl_Size bytes;
+    Tcl_Size maxBytes;
 
     if (indexPtr == NULL) {
 	index.tree = textPtr->sharedTextPtr->tree;
@@ -4253,7 +4253,7 @@ TkTextUpdateOneLine(
      * in a row. [Bug 4c595d4d78]
      */
 
-    if (!IsEntirelyElidedLine(textPtr, indexPtr, &bytes)) {
+    if (!IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
 	TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
 	linePtr = indexPtr->linePtr;
     }
