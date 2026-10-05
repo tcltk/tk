@@ -587,8 +587,10 @@ HOST_OBJEXT		= @OBJEXT_FOR_BUILD@
 ZIPFS_BUILD		= @ZIPFS_BUILD@
 # Tcl 9 shell used to create ${TK_ZIP_FILE} with "zipfs mkzip". By default
 # the tclsh of the Tcl build directory or of the installed Tcl is used; set it
-# to a tclsh that runs on the build host when cross-compiling.
-TCLSH_NATIVE		=
+# to a tclsh that runs on the build host when cross-compiling. If there is no
+# usable Tcl 9 shell, the zip program is used instead.
+NATIVE_TCLSH		=
+NATIVE_ZIP		= @ZIP_PROG@
 SHARED_BUILD		= @SHARED_BUILD@
 INSTALL_LIBRARIES	= @INSTALL_LIBRARIES@
 INSTALL_MSGS		= @INSTALL_MSGS@
@@ -646,22 +648,40 @@ ${TK_ZIP_FILE}:
 	fi
 	rm -rf ${TK_VFS_PATH}/demos
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
-	@tclsh='${TCLSH_NATIVE}'; \
+	@tclsh='${NATIVE_TCLSH}'; \
 	if test -z "$$tclsh"; then \
 	    for f in '${BUILD_TCLSH}' '${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION}' '${TCL_EXE}'; do \
 		if test -n "$$f" && test -f "$$f"; then tclsh=$$f; break; fi; \
 	    done; \
 	fi; \
 	$(SHELL_ENV) \
-	echo 'if {${ZIPFS_BUILD} == 2} { \
-		foreach d {app lib/tcl} { \
-		    set lib [zipfs root]$$d/tcl_library; \
-		    if {[file isdirectory $$lib]} { \
-			file copy $$lib ${TK_VFS_ROOT}/tcl_library; break \
+	if test -n "$$tclsh" && \
+		echo 'exit [catch {zipfs root}]' | "$$tclsh" >/dev/null 2>&1; then \
+	    echo 'if {${ZIPFS_BUILD} == 2} { \
+		    foreach d {app lib/tcl} { \
+			set lib [zipfs root]$$d/tcl_library; \
+			if {[file isdirectory $$lib]} { \
+			    file copy $$lib ${TK_VFS_ROOT}/tcl_library; break \
+			} \
 		    } \
-		} \
-	    }; \
-	    zipfs mkzip ${TK_ZIP_FILE} ${TK_VFS_ROOT} ${TK_VFS_ROOT}' | "$$tclsh"
+		}; \
+		zipfs mkzip ${TK_ZIP_FILE} ${TK_VFS_ROOT} ${TK_VFS_ROOT}' | "$$tclsh"; \
+	elif test -x '${NATIVE_ZIP}'; then \
+	    echo "no Tcl 9 shell runs on this host, using ${NATIVE_ZIP}"; \
+	    rm -f ${TK_ZIP_FILE}; \
+	    if test "${ZIPFS_BUILD}" = "2"; then \
+		for f in '${BUILD_TCLSH}' '${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION}'; do \
+		    if test -f "$$f"; then cp "$$f" ${TK_ZIP_FILE}; break; fi; \
+		done; \
+		'${NATIVE_ZIP}' -qA ${TK_ZIP_FILE} && \
+		'${NATIVE_ZIP}' -qJ ${TK_ZIP_FILE} || exit 1; \
+	    fi; \
+	    (cd ${TK_VFS_ROOT} && '${NATIVE_ZIP}' -rqD ../${TK_ZIP_FILE} *); \
+	else \
+	    echo "cannot create ${TK_ZIP_FILE}: set NATIVE_TCLSH to a Tcl 9 shell" \
+		"that runs on this host, or install zip"; \
+	    exit 1; \
+	fi
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
