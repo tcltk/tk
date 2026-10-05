@@ -93,12 +93,31 @@ static Tcl_HashTable *toplevelChildTables = NULL;
 /* Data structures for managing execution on main thread. */
 typedef void (*MainThreadFunc)(int num_args, void** args);
 
+/*
+ * State shared between the calling thread and the main-thread event handler.
+ * It cannot live in the Tcl_Event itself, because Tcl frees the event as soon
+ * as the handler returns 1, which may be before or after the caller stops
+ * waiting. It is reference counted (one reference for the caller, one for the
+ * queued event) and freed by whichever side lets go last.
+ */
+enum {
+    SYNC_PENDING = 0,	/* Queued; neither run nor abandoned. */
+    SYNC_RUNNING = 1,	/* Handler has started executing func. */
+    SYNC_CANCELLED = 2	/* Caller timed out before the handler started. */
+};
+
+typedef struct {
+    volatile LONG refCount;
+    volatile LONG status;
+    HANDLE doneEvent;
+} MainThreadSyncState;
+
 typedef struct {
     Tcl_Event header;
     MainThreadFunc func;
     int num_args;
     void* args[6];
-    HANDLE doneEvent;
+    MainThreadSyncState *state;
 } MainThreadSyncEvent;
 
 /*
@@ -1098,15 +1117,27 @@ cache_and_notify:
     Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
     Tcl_IncrRefCount(valObj);
 
+    int changed = 1;
     if (!newEntry) {
 	/* Replace existing value: free previous Tcl_Obj if present. */
 	Tcl_Obj *old = (Tcl_Obj *)Tcl_GetHashValue(valuePtr);
 	if (old) {
+	    changed = strcmp(Tcl_GetString(old), buf) != 0;
 	    Tcl_DecrRefCount(old);
 	}
     }
     Tcl_SetHashValue(valuePtr, valObj);
     TkGlobalUnlock();
+
+    /*
+     * Notify only a real change. This runs for every check and radio button
+     * whenever the child-ID table is rebuilt, which get_accChild does on
+     * every call; reporting a change each time makes the screen reader call
+     * get_accChild again, a feedback loop.
+     */
+    if (!changed) {
+	return;
+    }
 
     /* Notify MSAA about both value and state changes. */
     {
@@ -1604,17 +1635,22 @@ void ClearChildIdTableForToplevel(
 				  Tk_Window toplevel)
 {
     if (!toplevel || !toplevelChildTables) return;
-    Tcl_HashEntry *entry = Tcl_FindHashEntry(toplevelChildTables, toplevel);
-    if (!entry) return;
-    Tcl_HashTable *childIdTable = (Tcl_HashTable *)Tcl_GetHashValue(entry);
-    Tcl_HashSearch search;
-    Tcl_HashEntry *childEntry;
     TkGlobalLock();
-    for (childEntry = Tcl_FirstHashEntry(childIdTable, &search); childEntry != NULL; childEntry = Tcl_NextHashEntry(&search)) {
-	Tcl_DeleteHashEntry(childEntry);
+    Tcl_HashEntry *entry = Tcl_FindHashEntry(toplevelChildTables, toplevel);
+    if (entry) {
+	Tcl_HashTable *childIdTable = (Tcl_HashTable *)Tcl_GetHashValue(entry);
+
+	/*
+	 * Tcl_DeleteHashTable frees the entries and any bucket array allocated
+	 * when the table grew; deleting entries one by one and freeing the
+	 * struct leaked the buckets of every table that had grown.
+	 */
+	if (childIdTable) {
+	    Tcl_DeleteHashTable(childIdTable);
+	    Tcl_Free(childIdTable);
+	}
+	Tcl_DeleteHashEntry(entry); /* Remove toplevel entry to prevent memory leaks. */
     }
-    Tcl_DeleteHashEntry(entry); /* Remove toplevel entry to prevent memory leaks. */
-    Tcl_Free(childIdTable);
     TkGlobalUnlock();
 }
 
@@ -1695,23 +1731,47 @@ void HandleWMGetObjectOnMainThread(
     }
 }
 
-/* Event handler that executes on main thread. */
+/* Drop one reference to the shared sync state; free it on the last one. */
+static void ReleaseSyncState(
+    MainThreadSyncState *state)
+{
+    if (InterlockedDecrement(&state->refCount) == 0) {
+	CloseHandle(state->doneEvent);
+	Tcl_Free(state);
+    }
+}
+
+/*
+ * Event handler that executes on the main thread. Tcl owns the event and frees
+ * it after this returns 1, so the handler must never free it itself.
+ */
 int ExecuteOnMainThreadSync(
     Tcl_Event *ev,
     TCL_UNUSED(int)) /*flags */
 {
     MainThreadSyncEvent *event = (MainThreadSyncEvent *)ev;
+    MainThreadSyncState *state;
+
     if (!event) return 1;
-    switch(event->num_args) {
-    case 0: event->func(0, NULL); break;
-    case 1: event->func(1, event->args); break;
-    case 2: event->func(2, event->args); break;
-    case 3: event->func(3, event->args); break;
-    case 4: event->func(4, event->args); break;
-    case 5: event->func(5, event->args); break;
+    state = event->state;
+
+    /*
+     * Run func only if the caller has not already given up: its arguments may
+     * point into the caller's stack frame, which is gone after a timeout.
+     */
+    if (InterlockedCompareExchange(&state->status, SYNC_RUNNING,
+	    SYNC_PENDING) == SYNC_PENDING) {
+	switch(event->num_args) {
+	case 0: event->func(0, NULL); break;
+	case 1: event->func(1, event->args); break;
+	case 2: event->func(2, event->args); break;
+	case 3: event->func(3, event->args); break;
+	case 4: event->func(4, event->args); break;
+	case 5: event->func(5, event->args); break;
+	}
+	SetEvent(state->doneEvent);
     }
-    SetEvent(event->doneEvent);
-    Tcl_Free(event);
+    ReleaseSyncState(state);
     return 1;
 }
 
@@ -1720,9 +1780,16 @@ void RunOnMainThreadSync(
     MainThreadFunc func,
     int num_args, ...)
 {
+    MainThreadSyncEvent *event;
+    MainThreadSyncState *state;
+    DWORD result;
+    va_list ap;
+
+    if (num_args < 0 || num_args > 5) {
+	return;
+    }
     if (Tcl_GetCurrentThread() == mainThreadId) {
 	void *args[6];
-	va_list ap;
 	va_start(ap, num_args);
 	for (int i = 0; i < num_args; i++) {
 	    args[i] = va_arg(ap, void*);
@@ -1731,30 +1798,45 @@ void RunOnMainThreadSync(
 	func(num_args, args);
 	return;
     }
-    MainThreadSyncEvent *event = (MainThreadSyncEvent *)Tcl_Alloc(sizeof(MainThreadSyncEvent));
-    if (!event) return;
-    event->header.proc = ExecuteOnMainThreadSync;
-    event->func = func;
-    event->num_args = num_args;
-    event->doneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    if (!event->doneEvent) {
-	Tcl_Free(event);
+
+    state = (MainThreadSyncState *)Tcl_Alloc(sizeof(MainThreadSyncState));
+    state->doneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (!state->doneEvent) {
+	Tcl_Free(state);
 	return;
     }
-    va_list ap;
+    state->refCount = 2;	/* One for us, one for the queued event. */
+    state->status = SYNC_PENDING;
+
+    event = (MainThreadSyncEvent *)Tcl_Alloc(sizeof(MainThreadSyncEvent));
+    event->header.proc = ExecuteOnMainThreadSync;
+    event->header.nextPtr = NULL;
+    event->func = func;
+    event->num_args = num_args;
+    event->state = state;
     va_start(ap, num_args);
     for (int i = 0; i < num_args; i++) {
 	event->args[i] = va_arg(ap, void*);
     }
     va_end(ap);
+
+    /* From here on the event belongs to Tcl; do not touch it again. */
     Tcl_ThreadQueueEvent(mainThreadId, (Tcl_Event *)event, TCL_QUEUE_TAIL);
     Tcl_ThreadAlert(mainThreadId);
-    DWORD result = WaitForSingleObject(event->doneEvent, 500);
-    if (result == WAIT_TIMEOUT) {
-	CloseHandle(event->doneEvent);
-	Tcl_Free(event);
+
+    result = WaitForSingleObject(state->doneEvent, 500);
+    if (result != WAIT_OBJECT_0) {
+	/*
+	 * Timed out. If the handler has not started, cancel it so that it
+	 * skips func. If it has started, func is using our arguments, so we
+	 * must wait for it to finish before returning.
+	 */
+	if (InterlockedCompareExchange(&state->status, SYNC_CANCELLED,
+		SYNC_PENDING) != SYNC_PENDING) {
+	    WaitForSingleObject(state->doneEvent, INFINITE);
+	}
     }
-    CloseHandle(event->doneEvent);
+    ReleaseSyncState(state);
 }
 
 /* Initialize during Tcl startup. */
