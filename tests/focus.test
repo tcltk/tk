@@ -111,6 +111,12 @@ if {[testConstraint altDisplay]} {
 button .b -text .b -relief raised -bd 2
 pack .b
 
+# Without a window manager the focus follows the pointer, so the pointer
+# must not be over the test windows, which are larger at high DPI.
+# Move it outside the area of the screen.
+event generate . <Motion> -warp 1 -x [winfo screenwidth .] -y 0
+controlPointerWarpTiming
+
 bind all <FocusIn> {
     append focusInfo "in %W %d\n"
 }
