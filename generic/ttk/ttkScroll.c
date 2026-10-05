@@ -130,6 +130,16 @@ static void UpdateScrollbarBG(ClientData clientData)
     int code;
 
     h->flags &= ~SCROLL_UPDATE_PENDING;
+
+    /*
+     * Postpone the scrollbar update until the window is mapped: the size of
+     * an unmapped window is not final. [Bug 991849]
+     */
+
+    if (!Tk_IsMapped(h->corePtr->tkwin)) {
+	TtkScrollbarUpdateRequired(h);
+	return;
+    }
     Tcl_Preserve((ClientData) interp);
     code = UpdateScrollbar(interp, h);
     if (code == TCL_ERROR && !Tcl_InterpDeleted(interp)) {

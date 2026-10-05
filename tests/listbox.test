@@ -3210,6 +3210,29 @@ test listbox-32.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+
+test listbox-33.1 {no scroll command before the listbox is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    listbox .top.l -font $fixed -width 10 -height 10 \
+	    -xscrollcommand "record x" -yscrollcommand "record y"
+    for {set i 0} {$i < 20} {incr i} {
+	.top.l insert end [string repeat x 20]
+    }
+    pack .top.l
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.l
+    update
+    lappend res $log
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res i
+} -result {{} {{y 0 0.5} {x 0 0.5}}}
+
 resetGridInfo
 deleteWindows
 option clear

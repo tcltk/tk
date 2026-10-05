@@ -2665,7 +2665,13 @@ DisplayCanvas(
     canvasPtr->flags &= ~(REDRAW_PENDING|BBOX_NOT_EMPTY);
     canvasPtr->redrawX1 = canvasPtr->redrawX2 = 0;
     canvasPtr->redrawY1 = canvasPtr->redrawY2 = 0;
-    if (canvasPtr->flags & UPDATE_SCROLLBARS) {
+
+    /*
+     * Postpone the scrollbar update until the window is mapped: the size of
+     * an unmapped window is not final. [Bug 991849]
+     */
+
+    if ((canvasPtr->flags & UPDATE_SCROLLBARS) && Tk_IsMapped(tkwin)) {
 	CanvasUpdateScrollbars(canvasPtr);
     }
 }

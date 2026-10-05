@@ -4759,7 +4759,8 @@ DisplayText(
      */
 
   doScrollbars:
-    if (textPtr->flags & UPDATE_SCROLLBARS) {
+    if ((textPtr->flags & UPDATE_SCROLLBARS)
+	    && Tk_IsMapped(textPtr->tkwin)) {
 	textPtr->flags &= ~UPDATE_SCROLLBARS;
 	if (textPtr->yScrollCmd != NULL) {
 	    GetYView(textPtr->interp, textPtr, 1);
@@ -6918,6 +6919,16 @@ GetYView(
 	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(first));
 	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewDoubleObj(last));
 	Tcl_SetObjResult(interp, listObj);
+	return;
+    }
+
+    /*
+     * Postpone the scrollbar update until the window is mapped: the size of
+     * an unmapped window is not final. [Bug 991849]
+     */
+
+    if (!Tk_IsMapped(textPtr->tkwin)) {
+	textPtr->flags |= UPDATE_SCROLLBARS;
 	return;
     }
 
