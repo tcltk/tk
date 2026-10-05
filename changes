@@ -8436,3 +8436,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-03 (bug) [bffa79] "BadAlloc (insufficient resources for operation)" in the grid command (storchaka)
 
 2026-10-034(bug) [4c5184] X11: wm deiconify loses the position of a window moved by the user (storchaka)
+
+2026-10-05 (bug) [329543] console does not handle <<PasteSelection>> (nijtmans)
