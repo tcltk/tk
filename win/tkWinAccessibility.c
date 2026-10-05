@@ -1005,10 +1005,10 @@ RefreshRadioGroupIfNeeded(
     TkWindow *topPtr = (TkWindow *)toplevel;
 
     /* 
-	  * Iterate direct children of toplevel - AssignChildIdsRecursive 
-	  * handles nested, so scan recursively.
-      * We will do a simple stack traversal.
-	  */
+     * Iterate direct children of toplevel - AssignChildIdsRecursive 
+     * handles nested, so scan recursively.
+     * We will do a simple stack traversal.
+     */
     TkWindow *stack[256];
     int sp = 0;
     if (topPtr->childList) {
