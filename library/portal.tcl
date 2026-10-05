@@ -166,15 +166,35 @@ proc ::tk::portal::Filters {filetypes} {
     return $filters
 }
 
+# ::tk::portal::Native --
+#
+#	Returns true if the path is in the native file system.  Other paths
+#	(zipfs and other Tcl virtual file systems) are not visible to the
+#	desktop.
+
+proc ::tk::portal::Native {path} {
+    return [expr {[lindex [file system $path] 0] eq "native"}]
+}
+
+# ::tk::portal::InitialDir --
+#
+#	Returns the directory to show first, or "" to let the desktop choose
+#	(as on Windows, directories outside the native file system are
+#	ignored).
+
 proc ::tk::portal::InitialDir {dir} {
     variable lastDir
-    if {$dir ne "" && [file isdirectory $dir]} {
+    if {$dir ne "" && [file isdirectory $dir] && [Native $dir]} {
 	return [file normalize $dir]
     }
-    if {[info exists lastDir] && [file isdirectory $lastDir]} {
+    if {[info exists lastDir] && [file isdirectory $lastDir]
+	    && [Native $lastDir]} {
 	return $lastDir
     }
-    return [pwd]
+    if {[Native [pwd]]} {
+	return [pwd]
+    }
+    return ""
 }
 
 proc ::tk::portal::CheckParent {w} {
@@ -247,21 +267,27 @@ proc ::tk::portal::FileDialog {type args} {
 	# that contains it (as on macOS).
 	if {$initialfile ne ""} {
 	    set path [file join $dir $initialfile]
-	    if {[file isdirectory $path]} {
+	    if {![Native $path]} {
+		# Not visible to the desktop.
+	    } elseif {[file isdirectory $path]} {
 		set dir [file normalize $path]
 	    } elseif {[file isdirectory [file dirname $path]]} {
 		set dir [file normalize [file dirname $path]]
 	    }
 	}
-	dict set options current_folder [list ay [PathBytes $dir]]
+	if {$dir ne ""} {
+	    dict set options current_folder [list ay [PathBytes $dir]]
+	}
     } else {
 	set method SaveFile
 	set file [file join $dir $initialfile]
-	if {$initialfile ne "" && [file isfile $file]} {
+	if {$initialfile ne "" && [file isfile $file] && [Native $file]} {
 	    dict set options current_file \
 		    [list ay [PathBytes [file normalize $file]]]
 	} else {
-	    dict set options current_folder [list ay [PathBytes $dir]]
+	    if {$dir ne ""} {
+		dict set options current_folder [list ay [PathBytes $dir]]
+	    }
 	    if {$initialfile ne ""} {
 		dict set options current_name [list s [file tail $initialfile]]
 	    }
@@ -345,8 +371,10 @@ proc ::tk::portal::ChooseDirectory {args} {
 	set title [mc "Choose Directory"]
     }
     set dir [InitialDir [dict get $opts -initialdir]]
-    set options [dict create modal {b 1} directory {b 1} \
-	    current_folder [list ay [PathBytes $dir]]]
+    set options [dict create modal {b 1} directory {b 1}]
+    if {$dir ne ""} {
+	dict set options current_folder [list ay [PathBytes $dir]]
+    }
     set result [Request [dict get $opts -parent] FileChooser OpenFile \
 	    [list s $title] [list a{sv} $options]]
     if {[Failed $result [dict get $opts -parent] FileChooser]} {
