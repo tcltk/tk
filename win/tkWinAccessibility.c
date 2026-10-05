@@ -987,12 +987,8 @@ typedef struct {
     int success;
 } CheckedFetchRequest;
 
-/*
- * Runs on main thread: evaluate "%s instate selected" (primary, works for
- * both classic and ttk) and fall back to -variable / -onvalue / -value if needed.
- */
 
-/* Refresh all other radiobuttons in same toplevel that share variable */
+/* Refresh all other radiobuttons in same toplevel that share variable. */
 static void
 RefreshRadioGroupIfNeeded(
     Tk_Window changedWin,
@@ -1008,8 +1004,11 @@ RefreshRadioGroupIfNeeded(
     if (!toplevel) return;
     TkWindow *topPtr = (TkWindow *)toplevel;
 
-    /* Iterate direct children of toplevel - AssignChildIdsRecursive handles nested, so scan recursively */
-    /* We will do a simple stack traversal */
+    /* 
+	  * Iterate direct children of toplevel - AssignChildIdsRecursive 
+	  * handles nested, so scan recursively.
+      * We will do a simple stack traversal.
+	  */
     TkWindow *stack[256];
     int sp = 0;
     if (topPtr->childList) {
@@ -1022,13 +1021,13 @@ RefreshRadioGroupIfNeeded(
         if (!cur) continue;
         Tk_Window curWin = (Tk_Window)cur;
         if (curWin == changedWin) {
-            /* push its children */
+            /* Push its children. */
             for (TkWindow *ch = cur->childList; ch; ch = ch->nextPtr) {
                 if (sp < 255) stack[sp++] = ch;
             }
             continue;
         }
-        /* Check if this window is a radiobutton */
+        /* Check if this window is a radiobutton. */
         Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)curWin);
         if (hPtr) {
             Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
@@ -1051,10 +1050,10 @@ RefreshRadioGroupIfNeeded(
                                 Tcl_DecrRefCount(varCmd);
                                 Tcl_ResetResult(interp);
                                 if (otherVar[0] && strcmp(otherVar, changedVarName) == 0) {
-                                    /* Same group - recompute its cached state */
+                                    /* Same group - recompute its cached state. */
                                     Tcl_Interp *ip = Tk_Interp(curWin);
                                     if (ip) {
-                                        /* Re-use ComputeAndCacheCheckedState logic without recursion */
+                                        /* Re-use ComputeAndCacheCheckedState logic without recursion. */
                                         int live = 0;
                                         Tcl_Obj *stCmd = Tcl_ObjPrintf("%s instate selected", path);
                                         if (stCmd) {
@@ -1066,7 +1065,7 @@ RefreshRadioGroupIfNeeded(
                                             Tcl_DecrRefCount(stCmd);
                                             Tcl_ResetResult(interp);
                                         }
-                                        /* Update cache */
+                                        /* Update cache. */
                                         Tcl_HashEntry *valPtr; int newEntry;
                                         valPtr = Tcl_CreateHashEntry(attrs, "value", &newEntry);
                                         char buf[2]; snprintf(buf, sizeof(buf), "%d", live);
@@ -1100,6 +1099,7 @@ RefreshRadioGroupIfNeeded(
     }
 }
 
+/* Retrieve checked state on main thread. */
 static void
 FetchCheckedStateMainThread(
 
@@ -1145,7 +1145,7 @@ FetchCheckedStateMainThread(
             Tcl_DecrRefCount(cmd);
             Tcl_ResetResult(interp);
             if (earlyChecked) {
-                /* If radiobutton, refresh its group so other radios become unchecked */
+                /* If radiobutton, refresh its group so other radios become unchecked. */
                 Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(TkAccessibilityObject, (char *)win);
                 if (hPtr2) {
                     Tcl_HashTable *attrs2 = (Tcl_HashTable *)Tcl_GetHashValue(hPtr2);
@@ -1271,7 +1271,7 @@ GetLiveCheckedState(
 
 /*
  * Helper function to get selected state on check/radiobuttons.
- * Now safe: dups result strings and prefers instate selected.
+ * Dups result strings and prefers instate selected.
  */
 
 static void
