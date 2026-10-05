@@ -754,6 +754,25 @@ test menuDraw-17.3 {AdjustMenuCoords - menubar near bottom of screen} -constrain
     catch {$w unpost}
     deleteWindows
 } -result 1
+test menuDraw-17.4 {AdjustMenuCoords - multi-column menu [bug fcb1398aa2]} -constraints x11 -setup {
+    deleteWindows
+} -body {
+    menu .m1 -tearoff 0
+    menu .m2 -tearoff 0
+    .m2 add command -label foo
+    .m1 add cascade -label first -menu .m2
+    .m1 add command -label second -columnbreak 1
+    .m1 post 100 100
+    update
+    .m1 postcascade 0
+    update
+    # the cascade is posted at the right edge of the first column
+    set x [expr {[winfo rootx .m2] - [winfo rootx .m1]}]
+    expr {[.m1 xposition 0] < $x && $x < [.m1 xposition 1]}
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result 1
 
 # cleanup
 imageFinish
