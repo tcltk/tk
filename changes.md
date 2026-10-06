@@ -80,6 +80,7 @@ to the userbase.
  - [compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
  - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
  - [Aqua: "pack forget" leaves window on screen](https://core.tcl-lang.org/tk/tktview/2ef5dd)
+ - [leak of a new value object of a custom option](https://core.tcl-lang.org/tk/tktview/2b6398)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
