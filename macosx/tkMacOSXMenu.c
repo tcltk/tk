@@ -767,6 +767,24 @@ TkpConfigureMenuEntry(
 	[image setTemplate:YES];
     }
     [menuItem setImage:image];
+
+#if defined(MAC_OS_VERSION_27_0) && \
+	MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_27_0
+
+    /*
+     * Starting with macOS 27 (Golden Gate), AppKit decides whether menu item
+     * images are visible and will typically hide them unless the item asks
+     * otherwise.  Tk entries only have an image if the script requested one,
+     * so ask that it always be shown.
+     */
+
+    if (@available(macOS 27.0, *)) {
+	[menuItem setPreferredImageVisibility:(image ?
+		NSMenuItemImageVisibilityVisible :
+		NSMenuItemImageVisibilityAutomatic)];
+    }
+#endif
+
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
 	title = [[[TKNSString alloc]
