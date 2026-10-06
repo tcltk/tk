@@ -8457,3 +8457,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-06 (bug) [2b6398] leak of a new value object of a custom option (nab)
 
 2026-10-06 (bug) [a0c1a9] Make the base chunk of the text layout thread-specific (nijtmans)
+
+2026-10-06 (bug) [13aabd] Click to the right of the end of a line moves the insert cursor to the next line (nijtmans)

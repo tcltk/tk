@@ -5,7 +5,7 @@
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998 by Scriptics Corporation.
+# Copyright (c) 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -42,7 +42,7 @@
 
 # Standard Motif bindings:
 
-bind Text <1> {
+bind Text <Button-1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 0.0 end
 }
@@ -51,26 +51,26 @@ bind Text <B1-Motion> {
     set tk::Priv(y) %y
     tk::TextSelectTo %W %x %y
 }
-bind Text <Double-1> {
+bind Text <Double-Button-1> {
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.first}
 }
-bind Text <Triple-1> {
+bind Text <Triple-Button-1> {
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.first}
 }
-bind Text <Shift-1> {
+bind Text <Shift-Button-1> {
     tk::TextResetAnchor %W @%x,%y
     set tk::Priv(selectMode) char
     tk::TextSelectTo %W %x %y
 }
-bind Text <Double-Shift-1>	{
+bind Text <Double-Shift-Button-1>	{
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y 1
 }
-bind Text <Triple-Shift-1>	{
+bind Text <Triple-Shift-Button-1>	{
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
 }
@@ -86,7 +86,7 @@ bind Text <ButtonRelease-1> {
     tk::CancelRepeat
 }
 
-bind Text <Control-1> {
+bind Text <Control-Button-1> {
     %W mark set insert @%x,%y
     # An operation that moves the insert mark without making it
     # one end of the selection must insert an autoseparator
@@ -95,7 +95,7 @@ bind Text <Control-1> {
     }
 }
 # stop an accidental double click triggering <Double-Button-1>
-bind Text <Double-Control-1> { # nothing }
+bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
@@ -431,7 +431,7 @@ bind Text <Control-h> {
     }
 }
 if {[tk windowingsystem] ne "aqua"} {
-    bind Text <2> {
+    bind Text <Button-2> {
         if {!$tk_strictMotif} {
         tk::TextScanMark %W %x %y
         }
@@ -442,7 +442,7 @@ if {[tk windowingsystem] ne "aqua"} {
         }
     }
 } else {
-    bind Text <3> {
+    bind Text <Button-3> {
         if {!$tk_strictMotif} {
         tk::TextScanMark %W %x %y
         }
@@ -542,8 +542,11 @@ proc ::tk::TextClosestGap {w x y} {
     # The check on y coord of the line bbox with dlineinfo is to fix
     # [a9cf210a42] to properly handle selecting and moving the mouse
     # out of the widget.
+    # The bbox of a newline extends to the right edge of the widget, and
+    # the gap after it is on the next line. [13aabdb3c1]
     if {$y < [lindex [$w dlineinfo $pos] 1] ||
-            $x - [lindex $bbox 0] < [lindex $bbox 2]/2} {
+	    $x - [lindex $bbox 0] < [lindex $bbox 2]/2 ||
+	    [$w get $pos] eq "\n"} {
 	return $pos
     }
     $w index "$pos + 1 char"
@@ -597,7 +600,7 @@ proc ::tk::TextButton1 {w x y} {
 # Arguments:
 # w -		The text window in which the button was pressed.
 # x -		Mouse x position.
-# y - 		Mouse y position.
+# y -		Mouse y position.
 
 set ::tk::Priv(textanchoruid) 0
 
@@ -710,7 +713,7 @@ proc ::tk::TextKeyExtend {w index} {
 #
 # Arguments:
 # w -		The text window.
-# x, y - 	Position of the mouse.
+# x, y -	Position of the mouse.
 
 proc ::tk::TextPasteSelection {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
