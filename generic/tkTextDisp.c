@@ -485,7 +485,7 @@ typedef struct BaseCharInfo {
  */
 
 typedef struct {
-    TkTextDispChunk *tsdPtr->baseCharChunkPtr;
+    TkTextDispChunk *baseCharChunkPtr;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -1565,11 +1565,11 @@ LayoutDLine(
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    if (tsdPtr->baseCharChunkPtr != NULL) {
 		int expectedX =
-			((BaseCharInfo *) tsdPtr->tsdPtr->baseCharChunkPtr->clientData)->width
-			+ tsdPtr->tsdPtr->baseCharChunkPtr->x;
+			((BaseCharInfo *) tsdPtr->baseCharChunkPtr->clientData)->width
+			+ tsdPtr->baseCharChunkPtr->x;
 
 		if ((expectedX != x) || !IsSameFGStyle(
-			tsdPtr->tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
+			tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
 		    FinalizeBaseChunk(NULL);
 		}
 	    }
