@@ -80,7 +80,7 @@
  *	always performed with maximum context.
  *
  *	This is necessary for text rendering engines that provide ligatures
- *	and sub-pixel layout, like ATSU on macOS. If we don't do this, the
+ *	and sub-pixel layout, like CoreText on macOS. If we don't do this, the
  *	measuring will change all the time, leading to an ugly "tremble and
  *	shiver" effect. This is because of the continuous splitting and
  *	re-merging of chunks that goes on in a text widget, when the cursor or
@@ -554,7 +554,7 @@ static void		CharUndisplayProc(TkText *textPtr,
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 static void		FinalizeBaseChunk(TkTextDispChunk *additionalChunkPtr);
 static void		FreeBaseChunk(TkTextDispChunk *baseChunkPtr);
-static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
+static bool		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
 #endif
 /*
@@ -605,7 +605,7 @@ static void		TextChanged(TkText *textPtr,
 static void		TextInvalidateRegion(TkText *textPtr, TkRegion region);
 static void		TextRedrawTag(TkText *textPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
-			    TkTextTag *tagPtr, int withTag);
+			    TkTextTag *tagPtr, bool withTag);
 static void		TextInvalidateLineMetrics(TkText *textPtr,
 			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
 static int		CalculateDisplayLineHeight(TkText *textPtr,
@@ -622,7 +622,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
-static int		IsStartOfNotMergedLine(const TkText *textPtr,
+static bool		IsStartOfNotMergedLine(const TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 
 /*
@@ -868,8 +868,7 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthObj != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
+	if (!TkObjIsEmpty(tagPtr->borderWidthObj)
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &styleValues.borderWidth);
 	    borderWidthPrio = tagPtr->priority;
@@ -1110,7 +1109,7 @@ FreeStyle(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 IsEntirelyElidedLine(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* Index at the start of a logical line. */
@@ -1120,7 +1119,7 @@ IsEntirelyElidedLine(
     TkTextElideInfo info;
     TkTextSegment *segPtr;
     Tcl_Size maxBytes = 0;
-    int elide;
+    bool elide;
 
     if (indexPtr->byteIndex != 0) {
 	return false;
@@ -1129,7 +1128,7 @@ IsEntirelyElidedLine(
     if (elide) {
 	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
 	    if (segPtr->size > 0) {
-		if (elide == 0) {
+		if (!elide) {
 		    /*
 		     * We toggled a tag and the elide state changed to
 		     * visible, and we have something of non-zero size.
@@ -1259,11 +1258,6 @@ LayoutDLine(
     int breakByteOffset;	/* Byte offset of character within
 				 * breakChunkPtr just to right of best break
 				 * point. */
-    int noCharsYet;		/* Non-zero means that no characters have been
-				 * placed on the line yet. */
-    int paragraphStart;		/* Non-zero means that we are on the first
-				 * line of a paragraph (used to choose between
-				 * lmargin1, lmargin2). */
     int justify;		/* How to justify line: taken from style for
 				 * the first character in line. */
     int jIndent;		/* Additional indentation (beyond margins) due
@@ -1272,10 +1266,15 @@ LayoutDLine(
     TkWrapMode wrapMode;	/* Wrap mode to use for this line. */
     int x = 0, maxX = 0;	/* Initializations needed only to stop
 				 * compiler warnings. */
-    int wholeLine;		/* Non-zero means this display line runs to
-				 * the end of the text line. */
     int tabIndex;		/* Index of the current tab stop. */
-    int gotTab;			/* Non-zero means the current chunk contains a
+    bool noCharsYet;		/* True means that no characters have been
+				 * placed on the line yet. */
+    bool paragraphStart;		/* True means that we are on the first
+				 * line of a paragraph (used to choose between
+				 * lmargin1, lmargin2). */
+    bool wholeLine;		/* True means this display line runs to
+				 * the end of the text line. */
+    bool gotTab;			/* True means the current chunk contains a
 				 * tab. */
     TkTextDispChunk *tabChunkPtr;
 				/* Pointer to the chunk containing the
@@ -1295,7 +1294,7 @@ LayoutDLine(
     Tcl_Size byteOffset;
     int ascent, descent, code;
     int elidesize;
-    int elide;
+    bool elide;
     StyleValues *sValuePtr;
 
     /*
@@ -1358,8 +1357,8 @@ LayoutDLine(
     curIndex = *indexPtr;
     lastChunkPtr = NULL;
     chunkPtr = NULL;
-    noCharsYet = 1;
-    elide = 0;
+    noCharsYet = true;
+    elide = false;
     breakChunkPtr = NULL;
     breakByteOffset = 0;
     justify = TK_JUSTIFY_LEFT;
@@ -1482,7 +1481,7 @@ LayoutDLine(
 	    chunkPtr->clientData = NULL;
 	}
 	chunkPtr->stylePtr = GetStyle(textPtr, &curIndex);
-	elide = chunkPtr->stylePtr->sValuePtr->elide;
+	elide = chunkPtr->stylePtr->sValuePtr->elide != 0;
 
 	/*
 	 * Save style information such as justification and indentation, up
@@ -1627,7 +1626,7 @@ LayoutDLine(
 	 */
 
 	if (!elide && chunkPtr->numBytes > 0) {
-	    noCharsYet = 0;
+	    noCharsYet = false;
 	    lastCharChunkPtr = chunkPtr;
 	}
 	if (lastChunkPtr == NULL) {
@@ -1731,7 +1730,7 @@ LayoutDLine(
     }
     if ((breakChunkPtr != NULL) && ((lastChunkPtr != breakChunkPtr)
 	    || (breakByteOffset != lastChunkPtr->numBytes))) {
-	while (1) {
+	while (true) {
 	    chunkPtr = breakChunkPtr->nextPtr;
 	    if (chunkPtr == NULL) {
 		break;
@@ -1756,7 +1755,7 @@ LayoutDLine(
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
 	lastChunkPtr = breakChunkPtr;
-	wholeLine = 0;
+	wholeLine = false;
     }
 
     /*
@@ -2487,10 +2486,10 @@ DisplayDLine(
     int height, y_off;
     struct TextStyle tmpStyle;
     TkBorder *borderPtr;
-    int blockCursor = textPtr->insertCursorType != 0;
-    int haveFocus = (textPtr->flags & GOT_FOCUS) != 0;
-    int showInsertCursor = (textPtr->flags & INSERT_ON) != 0;
-    int solidUnfocussed =
+    bool blockCursor = textPtr->insertCursorType != 0;
+    bool haveFocus = (textPtr->flags & GOT_FOCUS) != 0;
+    bool showInsertCursor = (textPtr->flags & INSERT_ON) != 0;
+    bool solidUnfocussed =
 	    textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID;
 #ifndef TK_NO_DOUBLE_BUFFERING
     const int y = 0;
@@ -3355,7 +3354,7 @@ TkTextUpdateLineMetrics(
     TkTextLine *linePtr = NULL;
     int count = 0;
     int totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
-    int fullUpdateRequested = (lineNum == 0 &&
+    bool fullUpdateRequested = (lineNum == 0 &&
 			       endLine == totalLines &&
 			       doThisMuch == -1);
 
@@ -3367,7 +3366,7 @@ TkTextUpdateLineMetrics(
 	return endLine;
     }
 
-    while (1) {
+    while (true) {
 
 	/*
 	 * Get a suitable line.
@@ -3777,7 +3776,7 @@ TkTextFindDisplayLineEnd(
     index.byteIndex = 0;
     index.textPtr = NULL;
 
-    while (1) {
+    while (true) {
 	TkTextIndex endOfLastLine;
 
 	if (TkTextIndexBackBytes(textPtr, &index, 1, &endOfLastLine)) {
@@ -5165,11 +5164,11 @@ TkTextRedrawTag(
 				 * tag, 0 means redraw those without. */
 {
     if (sharedTextPtr == NULL) {
-	TextRedrawTag(textPtr, index1Ptr, index2Ptr, tagPtr, withTag);
+	TextRedrawTag(textPtr, index1Ptr, index2Ptr, tagPtr, withTag != 0);
     } else {
 	textPtr = sharedTextPtr->peers;
 	while (textPtr != NULL) {
-	    TextRedrawTag(textPtr, index1Ptr, index2Ptr, tagPtr, withTag);
+	    TextRedrawTag(textPtr, index1Ptr, index2Ptr, tagPtr, withTag != 0);
 	    textPtr = textPtr->next;
 	}
     }
@@ -5185,12 +5184,12 @@ TextRedrawTag(
 				 * for redisplay. NULL means process all the
 				 * characters in the text. */
     TkTextTag *tagPtr,		/* Information about tag. */
-    int withTag)		/* 1 means redraw characters that have the
-				 * tag, 0 means redraw those without. */
+    bool withTag)		/* True means redraw characters that have the
+				 * tag, false means redraw those without. */
 {
     DLine *dlPtr;
     DLine *endPtr;
-    int tagOn;
+    bool tagOn;
     TkTextSearch search;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex *curIndexPtr;
@@ -5265,7 +5264,7 @@ TextRedrawTag(
      */
 
     curIndexPtr = index1Ptr;
-    tagOn = TkBTreeCharTagged(index1Ptr, tagPtr);
+    tagOn = TkBTreeCharTagged(index1Ptr, tagPtr) != 0;
     if (tagOn != withTag) {
 	if (!TkBTreeNextTag(&search)) {
 	    return;
@@ -7193,7 +7192,7 @@ FindDLine(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 IsStartOfNotMergedLine(
       const TkText *textPtr,		/* Widget record for text widget. */
       const TkTextIndex *indexPtr)	/* Index to check. */
@@ -7204,24 +7203,24 @@ IsStartOfNotMergedLine(
 	/*
 	 * Not the start of a logical line.
 	 */
-	return 0;
+	return false;
     }
 
     if (TkTextIndexBackBytes(textPtr, indexPtr, 1, &indexPtr2)) {
 	/*
 	 * indexPtr is the first index of the text widget.
 	 */
-	return 1;
+	return true;
     }
 
     if (!TkTextIsElided(textPtr, &indexPtr2, NULL)) {
 	/*
 	 * The eol of the line just before indexPtr is elided.
 	 */
-	return 1;
+	return true;
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -9248,7 +9247,7 @@ FreeBaseChunk(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 IsSameFGStyle(
     TextStyle *style1,
     TextStyle *style2)
@@ -9257,7 +9256,7 @@ IsSameFGStyle(
     StyleValues *sv2;
 
     if (style1 == style2) {
-	return 1;
+	return true;
     }
 
 #ifndef TK_DRAW_IN_CONTEXT
@@ -9269,7 +9268,7 @@ IsSameFGStyle(
 	    style1->fgGC->foreground != style2->fgGC->foreground
 #endif
 	    ) {
-	return 0;
+	return false;
     }
 #endif /* !TK_DRAW_IN_CONTEXT */
 

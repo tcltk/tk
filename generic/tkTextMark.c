@@ -461,7 +461,7 @@ TkTextMarkNameToIndex(
      * (bug 1630271).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

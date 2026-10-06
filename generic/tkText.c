@@ -3424,7 +3424,7 @@ DeleteIndexRange(
 		 * the following call adjusts to both.
 		 */
 
-		TkTextIndexAdjustToStartEnd(tPtr, &indexTmp, 0);
+		TkTextIndexAdjustToStartEnd(tPtr, &indexTmp, false);
 
 		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
