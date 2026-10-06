@@ -107,6 +107,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj);
 /* ATK value interface. */
 static gchar *GetAtkValueForWidget(Tk_Window win);
 static gboolean TkAtkValueIsChecked(Tk_Window win);
+static gboolean TkAtkValueIsIndeterminate(Tk_Window win);
 static void tk_get_value_and_text(AtkValue *obj, gdouble *value, gchar **text);
 static AtkRange *tk_get_range(AtkValue *obj);
 static void tk_get_current_value(AtkValue *obj, GValue *value);
@@ -702,7 +703,10 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 	    role == ATK_ROLE_RADIO_BUTTON ||
 	    role == ATK_ROLE_TOGGLE_BUTTON) {
 
-	    if (TkAtkValueIsChecked(acc->tkwin)) {
+	    if (TkAtkValueIsIndeterminate(acc->tkwin)) {
+		/* Tri-state (mixed): INDETERMINATE, not CHECKED. */
+		atk_state_set_add_state(state_set, ATK_STATE_INDETERMINATE);
+	    } else if (TkAtkValueIsChecked(acc->tkwin)) {
 		atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
 	    }
 	}
@@ -749,6 +753,23 @@ static gboolean TkAtkValueIsChecked(Tk_Window win)
 	g_free(value);
     }
     return checked;
+}
+
+/*
+ * Tri-state checkbuttons: the script layer stores "partially selected" in the
+ * accessible value when the variable equals -tristatevalue (or the ttk
+ * alternate state is set).
+ */
+static gboolean TkAtkValueIsIndeterminate(Tk_Window win)
+{
+    gchar *value = GetAtkValueForWidget(win);
+    gboolean mixed = FALSE;
+
+    if (value) {
+	mixed = (strcmp(value, "partially selected") == 0);
+	g_free(value);
+    }
+    return mixed;
 }
 
 /* Modern AtkValue methods (replace deprecated stubs). */
@@ -1802,6 +1823,8 @@ static int EmitSelectionChanged(
 
 	/* Emit the state change notification */
 	atk_object_notify_state_change(obj, ATK_STATE_CHECKED, checked);
+	atk_object_notify_state_change(obj, ATK_STATE_INDETERMINATE,
+				       TkAtkValueIsIndeterminate(tkwin));
     }
 
     /* For value-supporting widgets, emit text-changed or value-changed */

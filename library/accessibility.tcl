@@ -150,7 +150,12 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11"} {
+		# A checkbutton's variable can be written by a script as a side
+		# effect of another button (e.g. a tri-state parent following its
+		# children). Speech is coalesced to the last call, so only narrate
+		# the button the user is operating; ATK state is updated above
+		# for every button.
+		if {[tk windowingsystem] eq "x11" && [focus] eq $w} {
 		    ::tk::accessible::speak "$description $state"
 		}
 	    }
@@ -346,9 +351,21 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    # Check current state (not predicted state)
 	    if {$currentValue eq $onValue} {
 		return "selected"
-	    } else {
-		return "not selected"
 	    }
+
+	    # Tri-state (mixed) value: -tristatevalue for tk::checkbutton,
+	    # the alternate state for ttk::checkbutton.
+	    set class [winfo class $w]
+	    if {$class eq "Checkbutton"} {
+		if {$currentValue eq [$w cget -tristatevalue]} {
+		    return "partially selected"
+		}
+	    } elseif {$class eq "TCheckbutton"} {
+		if {[$w instate alternate]} {
+		    return "partially selected"
+		}
+	    }
+	    return "not selected"
 	}
 
 	# Update data selection for various widgets.
@@ -372,7 +389,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
 
-		if {[tk windowingsystem] eq "x11"} {
+		if {[tk windowingsystem] eq "x11" && [focus] eq $w} {
 		    # Announce: description, role, state
 		    if {[winfo class $w] eq "Toggleswitch"} {
 			::tk::accessible::speak "$description toggleswitch $state"
