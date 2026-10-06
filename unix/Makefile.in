@@ -317,6 +317,13 @@ ATK_LIBS		= @ATK_LIBS@
 SPEECHD_CFLAGS		= @SPEECHD_CFLAGS@
 SPEECHD_LIBS		= @SPEECHD_LIBS@
 
+# Accessibility support (ATK + Atk-bridge + libspeechd).
+# Controlled by configure --enable-accessibility / --disable-accessibility.
+# When "yes", both ATK/Atk-bridge and libspeechd were found and are enabled.
+# When "no", accessibility support is disabled (either explicitly or because
+# the required development packages were not found).
+ACCESSIBILITY_ENABLED	= @enable_accessibility@
+
 # Bidi support (SheenBidi + HarfBuzz text shaping)
 BIDI_CFLAGS		= @BIDI_CFLAGS@
 
