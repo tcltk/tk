@@ -64,6 +64,7 @@ to the userbase.
  - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
  - [MinGW: compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
  - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
+ - [Aqua: "pack forget" leaves window on screen](https://core.tcl-lang.org/tk/tktview/2ef5dd)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

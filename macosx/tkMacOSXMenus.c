@@ -215,7 +215,7 @@ static void ShowAboutIdleTask(void *clientData) {
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	[super orderFrontStandardAboutPanel:NSApp];
     } else {
-	Tcl_DoWhenIdle(ShowAboutIdleTask, (void *)_eventInterp);
+	Tcl_DoWhenIdle(ShowAboutIdleTask, _eventInterp);
     }
 }
 

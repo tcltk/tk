@@ -156,7 +156,7 @@ static void showPreferencesWhenIdle(void *clientData) {
 
     if (_eventInterp && Tcl_FindCommand(
 	   _eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
-	Tcl_DoWhenIdle(showPreferencesWhenIdle, (void *) _eventInterp);
+	Tcl_DoWhenIdle(showPreferencesWhenIdle, _eventInterp);
     }
 }
 
