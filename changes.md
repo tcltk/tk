@@ -66,6 +66,7 @@ to the userbase.
  - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
  - [Aqua: "pack forget" leaves window on screen](https://core.tcl-lang.org/tk/tktview/2ef5dd)
  - [leak of a new value object of a custom option](https://core.tcl-lang.org/tk/tktview/2b6398)
+ - [Make the base chunk of the text layout thread-specific](https://core.tcl-lang.org/tk/tktview/a0c1a9)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
