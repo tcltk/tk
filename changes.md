@@ -68,6 +68,7 @@ to the userbase.
  - [leak of a new value object of a custom option](https://core.tcl-lang.org/tk/tktview/2b6398)
  - [Make the base chunk of the text layout thread-specific](https://core.tcl-lang.org/tk/tktview/a0c1a9)
  - [wrapped text counts spaces at end of line, splits words, breaks after leading spaces (X11 with bidi, Windows)](https://core.tcl-lang.org/tk/tktview/d08538)
+ - [X11 (HarfBuzz/SheenBidi font backend): "font configure" of a font in use leaks the old font](https://core.tcl-lang.org/tk/tktview/e8d4c8)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
