@@ -1506,8 +1506,8 @@ TkMacOSXRestoreDrawingContext(
      * backing layer.
      */
 
-    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
-    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, dcPtr->view);
+    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, dcPtr->view);
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));

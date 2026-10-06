@@ -180,7 +180,7 @@ static void invokeMenuIdleTask(void *clientData) {
     }
     Tcl_Release(args->menuPtr);
     Tcl_Release(args->menuPtr->interp);
-    Tcl_Free(clientData);
+    ckfree(clientData);
 }
 
 #pragma mark TKMenu
@@ -382,7 +382,7 @@ static Bool runMenuCommand = true;
 	TkMenu *menuPtr = (TkMenu *) _tkMenu;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
 	if (menuPtr && mePtr) {
-	    invokeArgs *args = Tcl_Alloc(sizeof(invokeArgs));
+	    invokeArgs *args = ckalloc(sizeof(invokeArgs));
 	    args->menuPtr = menuPtr;
 	    args->itemIndex = mePtr->index;
 	    Tcl_Preserve(args->menuPtr);
