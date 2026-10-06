@@ -4566,9 +4566,13 @@ static int TreeviewMoveCommand(
 	    return TCL_ERROR;
 	}
 
-	/* Locate previous sibling based on $index: */
+	/* Get sibling at $index: */
 	if (FindItemByIndex(interp, parent, objv[4], 1, 1, &sibling) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	/* Adjust index if sibling is after item in children */
+	if (sibling && sibling->itemPos >= item->itemPos && sibling->next) {
+	    sibling = sibling->next;
 	}
     }
 
@@ -4582,7 +4586,7 @@ static int TreeviewMoveCommand(
 	return TCL_OK;
     }
 
-    /* Move item: */
+    /* Move item after sibling */
     DetachItem(item);
     InsertItem(parent, sibling, item);
 
