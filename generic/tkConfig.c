@@ -903,11 +903,16 @@ DoObjConfig(
     }
     case TK_OPTION_CUSTOM: {
 	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	Tcl_Obj *givenPtr = valuePtr;
 
 	if (custom->setProc(custom->clientData, interp, tkwin,
 		&valuePtr, recordPtr, optionPtr->specPtr->internalOffset,
 		(char *)oldInternalPtr, optionPtr->specPtr->flags) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if (slotPtrPtr == NULL && valuePtr != NULL && valuePtr != givenPtr) {
+	    /* A new value object from setProc, which no slot keeps. */
+	    Tcl_BounceRefCount(valuePtr);
 	}
 	break;
     }
@@ -1189,7 +1194,7 @@ static void
 FreeOptionInternalRep(
     Tcl_Obj *objPtr)	/* Object whose internal rep to free. */
 {
-    Tk_OptionTable tablePtr = (Tk_OptionTable) objPtr->internalRep.twoPtrValue.ptr1;
+    Tk_OptionTable tablePtr = (Tk_OptionTable)objPtr->internalRep.twoPtrValue.ptr1;
 
     Tk_DeleteOptionTable(tablePtr);
     objPtr->typePtr = NULL;
@@ -1481,7 +1486,7 @@ Tk_RestoreSavedOptions(
 		*((int *)internalPtr) = *((int *)ptr);
 		break;
 	    case TK_OPTION_WINDOW:
-		*((Tk_Window *) internalPtr) = *((Tk_Window *) ptr);
+		*((Tk_Window *)internalPtr) = *((Tk_Window *)ptr);
 		break;
 	    case TK_OPTION_CUSTOM: {
 		const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
@@ -1696,9 +1701,9 @@ FreeResources(
 	break;
     case TK_OPTION_CURSOR:
 	if (internalFormExists) {
-	    if (*((Tk_Cursor *) internalPtr) != NULL) {
+	    if (*((Tk_Cursor *)internalPtr) != NULL) {
 		Tk_FreeCursor(Tk_Display(tkwin), *((Tk_Cursor *) internalPtr));
-		*((Tk_Cursor *) internalPtr) = NULL;
+		*((Tk_Cursor *)internalPtr) = NULL;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeCursorFromObj(tkwin, objPtr);
