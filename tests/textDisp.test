@@ -3414,6 +3414,16 @@ test textDisp-19.19 {count -ypixels with indices in elided lines} {
     update
     set res [list [.t count -ypixels 5.0 11.0] [.t count -ypixels 5.0 11.20]]
 } [list [expr {1 * $fixedHeight}] [expr {2 * $fixedHeight}]]
+test textDisp-19.20 {count -update -ypixels in entirely elided lines merged with the previous line} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 25} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add hidden 5.3 11.0
+    .t tag configure hidden -elide true
+    # Lines 6 to 10 are entirely elided and merged with line 5
+    list [.t count -update -ypixels 7.0 8.0] [.t count -update -ypixels 1.0 12.0]
+} [list 0 [expr {5 * $fixedHeight}]]
 
 #
 # COMMON TEST SETUP

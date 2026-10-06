@@ -3875,7 +3875,8 @@ TkTextFindDisplayLineEnd(
  *	line heights. That should be done, where necessary, by its callers.
  *
  *	The behaviour of this function is _undefined_ if indexPtr is not
- *	currently at the beginning of a display line.
+ *	currently at the beginning of a display line or of an entirely elided
+ *	logical line.
  *
  * Results:
  *	The number of vertical pixels used by the display line.
@@ -3901,7 +3902,8 @@ static int
 CalculateDisplayLineHeight(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* The index at the beginning of the display
-				 * line of interest. */
+				 * line of interest, or of an entirely elided
+				 * logical line. */
     int *byteCountPtr,		/* NULL or used to return the number of byte
 				 * indices on the given display line. */
     int *mergedLinePtr)		/* NULL or used to return if the given display
@@ -3910,12 +3912,14 @@ CalculateDisplayLineHeight(
 {
     DLine *dlPtr;
     int pixelHeight;
+    Tcl_Size maxBytes;
 
-    if (tkTextDebug) {
+    if (tkTextDebug && !IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
 	int oldtkTextDebug = tkTextDebug;
 	/*
 	 * Check that the indexPtr we are given really is at the start of a
-	 * display line. The gymnastics with tkTextDebug is to prevent
+	 * display line or of an entirely elided line. [Bug 80213d1b1c]
+	 * The gymnastics with tkTextDebug is to prevent
 	 * failure of a test suite test, that checks that lines are rendered
 	 * exactly once. TkTextFindDisplayLineEnd is used here for checking
 	 * indexPtr but it calls LayoutDLine/FreeDLine which makes the
@@ -4131,12 +4135,11 @@ TkTextUpdateOneLine(
      * an index at the beginning of a display line. In turn this causes the
      * merged lines to receive their correct zero pixel height in
      * TkBTreeAdjustPixelHeight.
-     */
-
-    /*
-     * An entirely elided line is its own display line, and finding the
-     * display line start would be very expensive if there are many of them
-     * in a row. [Bug 4c595d4d78]
+     *
+     * An entirely elided line is an exception: it is laid out as its own
+     * zero-height display line even if it is merged with the previous line,
+     * and finding the display line start would be very expensive if there
+     * are many of them in a row. [Bug 4c595d4d78]
      */
 
     if (!IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
