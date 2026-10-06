@@ -910,9 +910,9 @@ DoObjConfig(
 		(char *)oldInternalPtr, optionPtr->specPtr->flags) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (slotPtrPtr == NULL && valuePtr != NULL && valuePtr != givenPtr) {
+	if (slotPtrPtr == NULL && valuePtr != NULL && valuePtr != givenPtr && !valuePtr->refCount) {
 	    /* A new value object from setProc, which no slot keeps. */
-	    Tcl_BounceRefCount(valuePtr);
+	    Tcl_DecrRefCount(valuePtr);
 	}
 	break;
     }
