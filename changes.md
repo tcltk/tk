@@ -74,6 +74,7 @@ to the userbase.
  - [MS-Win: fix menubutton key invokation (Alt+Underline or F10)](https://core.tcl-lang.org/tk/tktview/222550)
  - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
  - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
+ - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
