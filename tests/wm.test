@@ -2190,6 +2190,19 @@ test wm-state-2.18 {state change after map} -constraints win -body {
 } -cleanup {
     deleteWindows
 } -result {zoomed}
+test wm-state-2.19 {deiconify keeps a withdrawn window zoomed} -constraints win -body {
+    toplevel .t
+    update
+    wm state .t zoomed
+    update
+    wm withdraw .t
+    update
+    wm deiconify .t
+    update
+    wm state .t
+} -cleanup {
+    deleteWindows
+} -result {zoomed}
 
 
 ### wm withdraw ###
