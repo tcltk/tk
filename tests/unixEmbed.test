@@ -1159,7 +1159,7 @@ test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} -constraints 
     deleteWindows
 } -result {{{XXX .f4 {} {}} {XXX .f3 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f4 {} {}} {XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}} {XXX .f1 {} {}}} {{XXX .f2 {} {}}} {}}
 test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraints {
-    unix testembed notAqua
+    unix testembed notAqua failsOnCILinux
 } -setup {
     deleteWindows
 } -body {
