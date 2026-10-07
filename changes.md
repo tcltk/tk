@@ -90,6 +90,7 @@ to the userbase.
  - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
  - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
  - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
+ - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
