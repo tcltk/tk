@@ -86,6 +86,7 @@ to the userbase.
  - [Mismatch between button number and %b substitution in bindings](https://core.tcl-lang.org/tk/tktview/8f73af)
  - [MS-Win: fix menubutton key invokation (Alt+Underline or F10)](https://core.tcl-lang.org/tk/tktview/222550)
  - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
+ - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
