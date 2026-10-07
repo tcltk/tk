@@ -8489,10 +8489,12 @@ TkpWinToplevelDeiconify(
 
     /*
      * If we were in the ZoomState (maximized), 'wm deiconify' should not
-     * cause the window to shrink
+     * cause the window to shrink. A withdrawn window has lost its ZoomState,
+     * but a hidden wrapper keeps its maximized style.
      */
 
-    if (wmPtr->hints.initial_state == ZoomState) {
+    if (wmPtr->hints.initial_state == ZoomState
+	    || (wmPtr->wrapper && IsZoomed(wmPtr->wrapper))) {
 	TkpWmSetState(winPtr, ZoomState);
     } else {
 	TkpWmSetState(winPtr, NormalState);
