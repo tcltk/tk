@@ -348,6 +348,7 @@ static int		SetFontFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static void		TheWorldHasChanged(ClientData clientData);
 static void		FreeUnusedFonts(void *clientData);
 static void		DeleteFont(TkFont *fontPtr);
+static Tk_Window	FindWindowOnScreen(TkWindow *winPtr, Screen *screen);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
 			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
 
@@ -862,6 +863,7 @@ UpdateDependentFonts(
     Tcl_HashEntry *cacheHashPtr;
     Tcl_HashSearch search;
     TkFont *fontPtr;
+    Tk_Window fontWin;
     NamedFont *nfPtr = (NamedFont *)Tcl_GetHashValue(namedHashPtr);
 
     if (nfPtr->refCount == 0) {
@@ -878,7 +880,20 @@ UpdateDependentFonts(
 	for (fontPtr = (TkFont *)Tcl_GetHashValue(cacheHashPtr);
 		fontPtr != NULL; fontPtr = fontPtr->nextPtr) {
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
-		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
+		/*
+		 * The font must be recreated for the screen where it is used,
+		 * which may be not the screen of tkwin. [Bug 483387]
+		 */
+
+		fontWin = tkwin;
+		if (Tk_Screen(tkwin) != fontPtr->screen) {
+		    fontWin = FindWindowOnScreen(fiPtr->mainPtr->winPtr,
+			    fontPtr->screen);
+		    if (fontWin == NULL) {
+			continue;
+		    }
+		}
+		TkpGetFontFromAttributes(fontPtr, fontWin, &nfPtr->fa);
 		if (!fiPtr->updatePending) {
 		    fiPtr->updatePending = 1;
 		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
@@ -887,6 +902,43 @@ UpdateDependentFonts(
 	}
 	cacheHashPtr = Tcl_NextHashEntry(&search);
     }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * FindWindowOnScreen --
+ *
+ *	Finds a window of the application on the given screen.
+ *
+ * Results:
+ *	The window, or NULL if there is no window on that screen.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static Tk_Window
+FindWindowOnScreen(
+    TkWindow *winPtr,		/* Root of the window hierarchy to search. */
+    Screen *screen)		/* The screen to look for. */
+{
+    TkWindow *childPtr;
+    Tk_Window found;
+
+    if (Tk_Screen((Tk_Window) winPtr) == screen) {
+	return (Tk_Window) winPtr;
+    }
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	found = FindWindowOnScreen(childPtr, screen);
+	if (found != NULL) {
+	    return found;
+	}
+    }
+    return NULL;
 }
 
 static void
