@@ -76,6 +76,7 @@ to the userbase.
  - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
  - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
  - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
+ - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
