@@ -88,6 +88,7 @@ to the userbase.
  - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
  - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
  - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
+ - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
