@@ -659,13 +659,15 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support (optional, controlled by --enable-accessibility)
+#	Check for accessibility support (ATK + Atk-bridge AND libspeechd)
 #
-#	Accessibility support (ATK + Atk-bridge and libspeechd) is enabled
-#	by default on X11, but if the required development packages are not
-#	found, configure will simply warn and continue with accessibility
-#	disabled rather than aborting.  Passing --disable-accessibility
-#	skips the checks entirely.
+#	On X11, accessibility support is enabled by default.  When enabled,
+#	BOTH ATK/Atk-bridge AND libspeechd are required.  If either of
+#	them is missing, configure emits a warning, sets
+#	enable_accessibility=no (equivalent to --disable-accessibility),
+#	and the build continues without accessibility support.
+#
+#	Passing --disable-accessibility skips all checks entirely.
 #--------------------------------------------------------------------
 
 ATK_CFLAGS=""
@@ -683,48 +685,58 @@ if test "$tk_aqua" = no; then
 
   if test "$enable_accessibility" = "yes"; then
     #------------------------------------------------------------------
-    # ATK and Atk-bridge
+    # ATK and Atk-bridge (required for accessibility)
     #------------------------------------------------------------------
     AC_MSG_CHECKING([for ATK and Atk-bridge])
     if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
       AC_MSG_RESULT([yes])
       ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
       ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-      AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
     else
       AC_MSG_RESULT([no])
-      AC_MSG_WARN([ATK and Atk-bridge were not found -- accessibility support disabled.])
+      AC_MSG_WARN([ATK and/or Atk-bridge were not found.])
+      AC_MSG_WARN([Disabling accessibility support (--disable-accessibility).])
       AC_MSG_WARN([To enable accessibility, install the ATK development packages:])
       AC_MSG_WARN([  - Debian/Ubuntu:    sudo apt install libatk1.0-dev libatk-bridge2.0-dev])
       AC_MSG_WARN([  - Fedora/RHEL:      sudo dnf install atk-devel at-spi2-atk-devel])
       AC_MSG_WARN([  - Arch:             sudo pacman -S atk at-spi2-atk])
       AC_MSG_WARN([  - macOS (Homebrew): brew install atk at-spi2-atk])
       enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
     fi
+  fi
 
-    #------------------------------------------------------------------
-    # libspeechd (Speech Dispatcher)
-    #------------------------------------------------------------------
-    if test "$enable_accessibility" = "yes"; then
-      AC_MSG_CHECKING([for libspeechd])
-      if pkg-config --exists speech-dispatcher; then
-	AC_MSG_RESULT([yes])
-	SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
-	SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
-	AC_DEFINE([HAVE_SPEECHD], [1], [Define if libspeechd is available])
-      else
-	AC_MSG_RESULT([no])
-	AC_MSG_WARN([libspeechd (Speech Dispatcher) was not found -- speech support disabled.])
-	AC_MSG_WARN([To enable speech support, install the Speech Dispatcher development package:])
-	AC_MSG_WARN([  - Debian/Ubuntu:    sudo apt install libspeechd-dev])
-	AC_MSG_WARN([  - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel])
-	AC_MSG_WARN([  - Arch:             sudo pacman -S speech-dispatcher])
-	AC_MSG_WARN([  - macOS (Homebrew): brew install speech-dispatcher])
-	# Keep accessibility enabled (ATK only); just no speech.
-	SPEECHD_CFLAGS=""
-	SPEECHD_LIBS=""
-      fi
+  #------------------------------------------------------------------
+  # libspeechd (Speech Dispatcher) — required for accessibility
+  #------------------------------------------------------------------
+  if test "$enable_accessibility" = "yes"; then
+    AC_MSG_CHECKING([for libspeechd])
+    if pkg-config --exists speech-dispatcher; then
+      AC_MSG_RESULT([yes])
+      SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
+      SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
+    else
+      AC_MSG_RESULT([no])
+      AC_MSG_WARN([libspeechd (Speech Dispatcher) was not found.])
+      AC_MSG_WARN([Disabling accessibility support (--disable-accessibility).])
+      AC_MSG_WARN([To enable accessibility, install the Speech Dispatcher development package:])
+      AC_MSG_WARN([  - Debian/Ubuntu:    sudo apt install libspeechd-dev])
+      AC_MSG_WARN([  - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel])
+      AC_MSG_WARN([  - Arch:             sudo pacman -S speech-dispatcher])
+      AC_MSG_WARN([  - macOS (Homebrew): brew install speech-dispatcher])
+      enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+      SPEECHD_CFLAGS=""
+      SPEECHD_LIBS=""
     fi
+  fi
+
+  # Now that both checks have passed (or not), define the feature macros.
+  if test "$enable_accessibility" = "yes"; then
+    AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
+    AC_DEFINE([HAVE_SPEECHD], [1], [Define if libspeechd is available])
   fi
 
   AC_SUBST([ATK_CFLAGS])

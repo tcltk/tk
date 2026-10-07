@@ -2149,7 +2149,7 @@ UpdateWrapper(
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
     wmPtr->flags |= WM_APPEARANCE_PENDING;
-    Tcl_DoWhenIdle(AppearanceIdleProc, (void *)winPtr);
+    Tcl_DoWhenIdle(AppearanceIdleProc, winPtr);
     if (winPtr->flags & TK_EMBEDDED &&
 	    SendMessageW(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0)) {
 	SendMessageW(wmPtr->wrapper, TK_GEOMETRYREQ,

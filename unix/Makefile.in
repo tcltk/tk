@@ -284,8 +284,7 @@ TK_SHLIB_LD_EXTRAS	= @TK_SHLIB_LD_EXTRAS@
 CC_SEARCH_FLAGS	= @CC_SEARCH_FLAGS@
 LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 
-# support for embedded libraries on Darwin / Mac OS X
-DYLIB_INSTALL_DIR	= $(libdir)
+# support for embedded libraries on Darwin / Mac OS XDYLIB_INSTALL_DIR	= $(libdir)
 
 # support for building the Aqua resource file
 TK_RSRC_FILE		= @TK_RSRC_FILE@
@@ -317,11 +316,11 @@ ATK_LIBS		= @ATK_LIBS@
 SPEECHD_CFLAGS		= @SPEECHD_CFLAGS@
 SPEECHD_LIBS		= @SPEECHD_LIBS@
 
-# Accessibility support (ATK + Atk-bridge + libspeechd).
+# Accessibility support (ATK + Atk-bridge AND libspeechd).
 # Controlled by configure --enable-accessibility / --disable-accessibility.
-# When "yes", both ATK/Atk-bridge and libspeechd were found and are enabled.
-# When "no", accessibility support is disabled (either explicitly or because
-# the required development packages were not found).
+# On X11 this defaults to "yes"; when "yes" both ATK/Atk-bridge and
+# libspeechd must be found.  If either is missing, configure warns and
+# falls back to "no" (equivalent to --disable-accessibility).
 ACCESSIBILITY_ENABLED	= @enable_accessibility@
 
 # Bidi support (SheenBidi + HarfBuzz text shaping)

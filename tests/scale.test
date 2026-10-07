@@ -1690,6 +1690,31 @@ test scale-22.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+test scale-23.1 {trough click repeat stops when the command grabs - Bug [99bb36df86]} -setup {
+    pack [scale .s -length 400 -orient horizontal -from 0 -to 100 \
+	    -repeatdelay 100 -repeatinterval 50 -command {apply {v {
+	if {[incr ::count] == 1} {
+	    toplevel .d
+	    update
+	    grab .d
+	    after 100 {destroy .d}
+	    tkwait window .d
+	}
+    }}}]
+    update
+    set count 0
+} -body {
+    set y [lindex [.s coords] 1]
+    event generate .s <Button-1> -x 350 -y $y
+    after 50 [list event generate .s <ButtonRelease-1> -x 350 -y $y]
+    after 1000 {set done 1}
+    vwait done
+    set count
+} -cleanup {
+    destroy .s .d
+    unset -nocomplain count done
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #

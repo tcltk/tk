@@ -60,6 +60,17 @@ to the userbase.
  - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
  - [Focused button widgets invoked on Alt-Space](https://core.tcl-lang.org/tk/tktview/169275)
  - ["focus" dumps core with certain extensions](https://core.tcl-lang.org/tk/tktview/704212)
+ - [canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size)](https://core.tcl-lang.org/tk/tktview/991849)
+ - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
+ - [MinGW: compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
+ - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
+ - [Aqua: "pack forget" leaves window on screen](https://core.tcl-lang.org/tk/tktview/2ef5dd)
+ - [leak of a new value object of a custom option](https://core.tcl-lang.org/tk/tktview/2b6398)
+ - [Make the base chunk of the text layout thread-specific](https://core.tcl-lang.org/tk/tktview/a0c1a9)
+ - [wrapped text counts spaces at end of line, splits words, breaks after leading spaces (X11 with bidi, Windows)](https://core.tcl-lang.org/tk/tktview/d08538)
+ - [X11 (HarfBuzz/SheenBidi font backend): "font configure" of a font in use leaks the old font](https://core.tcl-lang.org/tk/tktview/e8d4c8)
+ - [Click to the right of the end of a line moves the insert cursor to the next line](https://core.tcl-lang.org/tk/tktview/13aabd)
+ - [Mismatch between button number and %b substitution in bindings](https://core.tcl-lang.org/tk/tktview/8f73af)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

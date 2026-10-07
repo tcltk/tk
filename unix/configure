@@ -9085,13 +9085,15 @@ fi
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support (optional, controlled by --enable-accessibility)
+#	Check for accessibility support (ATK + Atk-bridge AND libspeechd)
 #
-#	Accessibility support (ATK + Atk-bridge and libspeechd) is enabled
-#	by default on X11, but if the required development packages are not
-#	found, configure will simply warn and continue with accessibility
-#	disabled rather than aborting.  Passing --disable-accessibility
-#	skips the checks entirely.
+#	On X11, accessibility support is enabled by default.  When enabled,
+#	BOTH ATK/Atk-bridge AND libspeechd are required.  If either of
+#	them is missing, configure emits a warning, sets
+#	enable_accessibility=no (equivalent to --disable-accessibility),
+#	and the build continues without accessibility support.
+#
+#	Passing --disable-accessibility skips all checks entirely.
 #--------------------------------------------------------------------
 
 ATK_CFLAGS=""
@@ -9116,7 +9118,7 @@ printf '%s\n' "$enable_accessibility" >&6; }
 
   if test "$enable_accessibility" = "yes"; then
     #------------------------------------------------------------------
-    # ATK and Atk-bridge
+    # ATK and Atk-bridge (required for accessibility)
     #------------------------------------------------------------------
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge" >&5
 printf %s "checking for ATK and Atk-bridge... " >&6; }
@@ -9125,14 +9127,13 @@ printf %s "checking for ATK and Atk-bridge... " >&6; }
 printf '%s\n' "yes" >&6; }
       ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
       ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-
-printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
-
     else
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: ATK and Atk-bridge were not found -- accessibility support disabled." >&5
-printf '%s\n' "$as_me: WARNING: ATK and Atk-bridge were not found -- accessibility support disabled." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: ATK and/or Atk-bridge were not found." >&5
+printf '%s\n' "$as_me: WARNING: ATK and/or Atk-bridge were not found." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling accessibility support (--disable-accessibility)." >&2;}
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable accessibility, install the ATK development packages:" >&5
 printf '%s\n' "$as_me: WARNING: To enable accessibility, install the ATK development packages:" >&2;}
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libatk1.0-dev libatk-bridge2.0-dev" >&5
@@ -9144,42 +9145,55 @@ printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S atk at-spi2
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install atk at-spi2-atk" >&5
 printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install atk at-spi2-atk" >&2;}
       enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
     fi
+  fi
 
-    #------------------------------------------------------------------
-    # libspeechd (Speech Dispatcher)
-    #------------------------------------------------------------------
-    if test "$enable_accessibility" = "yes"; then
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for libspeechd" >&5
+  #------------------------------------------------------------------
+  # libspeechd (Speech Dispatcher) — required for accessibility
+  #------------------------------------------------------------------
+  if test "$enable_accessibility" = "yes"; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for libspeechd" >&5
 printf %s "checking for libspeechd... " >&6; }
-      if pkg-config --exists speech-dispatcher; then
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+    if pkg-config --exists speech-dispatcher; then
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-	SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
-	SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
+      SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
+      SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
+    else
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: libspeechd (Speech Dispatcher) was not found." >&5
+printf '%s\n' "$as_me: WARNING: libspeechd (Speech Dispatcher) was not found." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling accessibility support (--disable-accessibility)." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable accessibility, install the Speech Dispatcher development package:" >&5
+printf '%s\n' "$as_me: WARNING: To enable accessibility, install the Speech Dispatcher development package:" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&5
+printf '%s\n' "$as_me: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&5
+printf '%s\n' "$as_me: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&5
+printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&5
+printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&2;}
+      enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+      SPEECHD_CFLAGS=""
+      SPEECHD_LIBS=""
+    fi
+  fi
+
+  # Now that both checks have passed (or not), define the feature macros.
+  if test "$enable_accessibility" = "yes"; then
+
+printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
+
 
 printf '%s\n' "#define HAVE_SPEECHD 1" >>confdefs.h
 
-      else
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: libspeechd (Speech Dispatcher) was not found -- speech support disabled." >&5
-printf '%s\n' "$as_me: WARNING: libspeechd (Speech Dispatcher) was not found -- speech support disabled." >&2;}
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable speech support, install the Speech Dispatcher development package:" >&5
-printf '%s\n' "$as_me: WARNING: To enable speech support, install the Speech Dispatcher development package:" >&2;}
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&5
-printf '%s\n' "$as_me: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&2;}
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&5
-printf '%s\n' "$as_me: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&2;}
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&5
-printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&2;}
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&5
-printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&2;}
-	# Keep accessibility enabled (ATK only); just no speech.
-	SPEECHD_CFLAGS=""
-	SPEECHD_LIBS=""
-      fi
-    fi
   fi
 
 
