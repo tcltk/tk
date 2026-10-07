@@ -354,9 +354,7 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     list [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
-test textDisp-2.7 {LayoutDLine, marks and tags} -constraints {win32} -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping
-    # with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
+test textDisp-2.7 {LayoutDLine, marks and tags} -body {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
@@ -1573,11 +1571,9 @@ test textDisp-9.6 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag haveBigFontTwiceLargerThanTextFont} \
-    -constraints {!win32} \
+test textDisp-9.7 {TkTextRedrawTag} \
+    -constraints haveBigFontTwiceLargerThanTextFont \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Uniscribe (Windows); run on macOS and X11.
 	.t configure -wrap char
 	.t delete 1.0 end
 	.t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -2678,10 +2674,7 @@ test textDisp-16.40 {text count -xpixels} {
       [.t count -xpixels 1.0 end]
 } [list [expr {5*$fixedWidth}] [expr {-5*$fixedWidth}] 0 [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] 0]
 test textDisp-16.41 {text count -xpixels with indices in elided lines} \
-    -constraints {win32} \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
 	set res {}
 	.t delete 1.0 end
 	for {set i 1} {$i < 40} {incr i} {
@@ -3428,6 +3421,16 @@ test textDisp-19.19 {count -ypixels with indices in elided lines} {
     update
     set res [list [.t count -ypixels 5.0 11.0] [.t count -ypixels 5.0 11.20]]
 } [list [expr {1 * $fixedHeight}] [expr {2 * $fixedHeight}]]
+test textDisp-19.20 {count -update -ypixels in entirely elided lines merged with the previous line} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 25} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add hidden 5.3 11.0
+    .t tag configure hidden -elide true
+    # Lines 6 to 10 are entirely elided and merged with line 5
+    list [.t count -update -ypixels 7.0 8.0] [.t count -update -ypixels 1.0 12.0]
+} [list 0 [expr {5 * $fixedHeight}]]
 
 #
 # COMMON TEST SETUP
@@ -3485,10 +3488,7 @@ test textDisp-20.5 {FindDLine} -setup {
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 test textDisp-21.1 {TkTextPixelIndex} \
-    -constraints {!win32} \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Uniscribe (Windows); run on macOS and X11.
 	.t yview 48.0
 	set off [expr {[bo]+3}]
 	list [.t index @-10,-10] [.t index @$off,$off] [.t index @[expr {[xchar 2]+2}],$off] \
@@ -5287,6 +5287,30 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
 } -cleanup {
     destroy .t1
 } -result {}
+
+test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
+    # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
+    label .l1 -text "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01" \
+        -font $fixedFont -width 20
+    pack .l1
+} -body {
+    update
+} -cleanup {
+    destroy .l1
+} -result {}
+
+test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
+    text .t1 -font $fixedFont -width 30 -height 3
+    pack .t1
+} -body {
+    # "ภาษาไทย mixed" — includes combining marks and cluster boundaries
+    .t1 insert end "Mixed \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 text"
+    update
+} -cleanup {
+    destroy .t1
+} -result {}
+
+
 
 #
 # TESTFILE CLEANUP

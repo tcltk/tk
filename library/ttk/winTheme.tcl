@@ -57,9 +57,24 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure TSpinbox -padding {1.5p 0.75p 12p 0.75p} \
 	    -insertwidth 0.75p
 
+	# As in the native up-down control, each arrow takes half of the
+	# height of the field (see SpinboxDoLayout).
+	ttk::style layout TSpinbox {
+	    Spinbox.field -sticky nswe -children {
+		null -side right -sticky ns -children {
+		    Spinbox.uparrow -side top -sticky e
+		    Spinbox.downarrow -side bottom -sticky e
+		}
+		Spinbox.padding -sticky nswe -children {
+		    Spinbox.textarea -sticky nswe
+		}
+	    }
+	}
+
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure Toolbutton -relief flat -padding {6p 3p}
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding {6p 3p} -relief flat -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat  selected sunken  pressed sunken  active raised}
 

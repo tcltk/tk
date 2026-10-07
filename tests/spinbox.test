@@ -2115,6 +2115,32 @@ test spinbox-5.12 {ConfigureSpinbox procedure, -from and -to swapping} -setup {
     destroy .e
 } -result {0 1971.0 2016.0 1971.0 2016.0 1971.0 2016.0}
 
+test spinbox-5.13 {ConfigureSpinbox procedure, -values and -textvariable - bug 1439266} -setup {
+    unset -nocomplain textVar
+    set textVar February
+} -body {
+    # The value of the variable is kept, as with the -from/-to range.
+    spinbox .e -values {January February March} -textvariable textVar
+    list $textVar [.e get]
+} -cleanup {
+    destroy .e
+    unset -nocomplain textVar
+} -result {February February}
+
+test spinbox-5.14 {ConfigureSpinbox procedure, -values not containing the value - bug 1439266} -setup {
+    unset -nocomplain textVar
+    set textVar Sunday
+} -body {
+    # A value which is not in the list is replaced by the first value.
+    spinbox .e -values {January February March} -textvariable textVar
+    set res [list $textVar [.e get]]
+    .e configure -values {April May June}
+    lappend res $textVar [.e get]
+} -cleanup {
+    destroy .e
+    unset -nocomplain textVar
+} -result {January January April April}
+
 # No tests for DisplaySpinbox.
 
 test spinbox-6.1 {SpinboxComputeGeometry procedure} -constraints {

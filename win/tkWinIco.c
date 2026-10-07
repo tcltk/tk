@@ -4,16 +4,20 @@
  *	This file contains functions for icon-manipulation routines
  *      in Windows.
  *
- * Copyright Â© 1995-1996 Microsoft Corp.
- * Copyright Â© 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
+ * Copyright © 1995-1996 Microsoft Corp.
+ * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tclWinPort.h"				/* for the macro S_ISDIR */
+#include <sys/stat.h>	/* before tcl.h, for Tcl_StatBuf with MinGW */
 #include "tkInt.h"
 #include "tkWinIco.h"
+
+#ifndef S_ISDIR
+#   define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
 
 #ifndef SHIL_JUMBO
 #   define SHIL_JUMBO 0x4

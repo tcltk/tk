@@ -811,6 +811,200 @@ test menubutton-9.2 {Bug [5d991b822e]} {
     unset new
 } {}
 
+test menubutton-11.1 {keyboard traversal posts the menu again after it was dismissed - bug 2225507} -constraints {
+    win testsendinput
+} -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    menubutton $t.mb -text File -underline 0 -menu $t.mb.m
+    menu $t.mb.m -tearoff 0 -postcommand {lappend res posted}
+    $t.mb.m add command -label Open
+    pack $t.mb
+    update
+    testsendinput foreground $t.mb
+    focus -force $t.mb
+    update
+    # F10 posts the menu, Escape dismisses it, twice.
+    testsendinput key 0x79
+    testsendinput key 0x1B
+    testsendinput key 0x79
+    testsendinput key 0x1B
+    # Wait for the events to be processed.
+    after 1000 {set done 1}
+    vwait done
+    lappend res $::tk::Priv(postedMb)
+} -cleanup {
+    deleteWindows
+    unset -nocomplain done res
+} -result {posted posted {}}
+
+test menubutton-12.1 {a menu which does not fit below its menubutton is
+	posted above it - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    # The menubutton is near the bottom of the screen, so that its menu does
+    # not fit below it.  The menu must not be posted over the menubutton and
+    # the pointer, because the release of the click which posted it would
+    # then select an entry.
+    toplevel .t
+    wm geometry .t 200x60+100+[expr {[winfo screenheight .] - 80}]
+    menubutton .t.mb -text File -menu .t.mb.m -indicatoron 0
+    pack .t.mb -anchor w
+    menu .t.mb.m -tearoff 0
+    for {set i 0} {$i < 20} {incr i} {
+	.t.mb.m add command -label "Item $i"
+    }
+    update
+    tk::MbPost .t.mb [winfo rootx .t.mb] [winfo rooty .t.mb]
+    update
+    expr {[winfo rooty .t.mb.m] + [winfo height .t.mb.m] <= [winfo rooty .t.mb]}
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result 1
+test menubutton-12.2 {a menu which fits below its menubutton is posted below
+	it - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    toplevel .t
+    wm geometry .t 200x60+100+50
+    menubutton .t.mb -text File -menu .t.mb.m -indicatoron 0
+    pack .t.mb -anchor w
+    menu .t.mb.m -tearoff 0
+    for {set i 0} {$i < 5} {incr i} {
+	.t.mb.m add command -label "Item $i"
+    }
+    update
+    tk::MbPost .t.mb [winfo rootx .t.mb] [winfo rooty .t.mb]
+    update
+    expr {[winfo rooty .t.mb.m] >= [winfo rooty .t.mb] + [winfo height .t.mb]}
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result 1
+
+test menubutton-12.3 {a menu which fits neither below nor above its
+	menubutton is posted aside of the pointer - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    # The menu is higher than the screen (it is scrolled), so it will cover
+    # the pointer whereever it is posted; it is moved aside instead.
+    toplevel .t
+    wm geometry .t 200x60+100+[expr {[winfo screenheight .] - 80}]
+    menubutton .t.mb -text File -menu .t.mb.m -indicatoron 0
+    pack .t.mb -anchor w
+    menu .t.mb.m -tearoff 0
+    set n [expr {[winfo screenheight .] / 20 + 10}]
+    for {set i 0} {$i < $n} {incr i} {
+	.t.mb.m add command -label "Item $i"
+    }
+    update
+    set cx [expr {[winfo rootx .t.mb] + 10}]
+    set cy [expr {[winfo rooty .t.mb] + 10}]
+    tk::MbPost .t.mb $cx $cy
+    update
+    list [expr {[lindex [.t.mb.m yview] 1] < 1.0}] \
+	    [expr {[winfo rootx .t.mb.m] > $cx}]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result {1 1}
+
+test menubutton-13.1 {the release of the click which posted the menu over the
+	menubutton does not invoke an entry - bug 680660} -constraints {
+    x11
+} -setup {
+    # An option menu posts the menu over the menubutton, with the current
+    # entry under the pointer.
+    menubutton .mb -text One -menu .mb.m -indicatoron 1 -direction flush
+    menu .mb.m -tearoff 0
+    .mb.m add command -label One -command {set res invoked}
+    .mb.m add command -label Two -command {set res invoked}
+    pack .mb
+    update
+    set res {}
+} -body {
+    event generate .mb <Enter>
+    event generate .mb <Motion> -warp 1 -x 5 -y 5
+    update
+    event generate .mb <Button-1> -x 5 -y 5
+    update
+    lassign [winfo pointerxy .] x y
+    lappend res [winfo containing $x $y]
+    event generate .mb.m <ButtonRelease-1> \
+	    -x [expr {$x - [winfo rootx .mb.m]}] -y [expr {$y - [winfo rooty .mb.m]}]
+    update
+    lappend res [winfo ismapped .mb.m]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .mb
+    unset -nocomplain res x y
+} -result {.mb.m 1}
+test menubutton-13.2 {the release of the click which posted the menu over the
+	ttk::menubutton does not invoke an entry - bug 680660} -constraints {
+    x11
+} -setup {
+    ttk::menubutton .mb -text One -menu .mb.m -direction flush
+    menu .mb.m -tearoff 0
+    .mb.m add command -label One -command {set res invoked}
+    .mb.m add command -label Two -command {set res invoked}
+    pack .mb
+    update
+    set res {}
+} -body {
+    set x0 [expr {[winfo width .mb] / 2}]
+    set y0 [expr {[winfo height .mb] / 2}]
+    event generate .mb <Motion> -warp 1 -x $x0 -y $y0
+    update
+    event generate .mb <Button-1> -x $x0 -y $y0
+    update
+    lassign [winfo pointerxy .] x y
+    lappend res [winfo containing $x $y]
+    event generate .mb.m <ButtonRelease-1> \
+	    -x [expr {$x - [winfo rootx .mb.m]}] -y [expr {$y - [winfo rooty .mb.m]}]
+    update
+    lappend res [winfo ismapped .mb.m] [.mb.m index active]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .mb
+    unset -nocomplain res x y x0 y0
+} -result {.mb.m 1 {}}
+test menubutton-13.3 {press, drag and release still invokes the entry} -constraints {
+    x11
+} -setup {
+    menubutton .mb -text One -menu .mb.m -indicatoron 1 -direction flush
+    menu .mb.m -tearoff 0
+    .mb.m add command -label One
+    .mb.m add command -label Two -command {set res invoked}
+    pack .mb
+    update
+    set res {}
+} -body {
+    event generate .mb <Enter>
+    event generate .mb <Motion> -warp 1 -x 5 -y 5
+    update
+    event generate .mb <Button-1> -x 5 -y 5
+    update
+    set y [expr {[.mb.m yposition 1] + 5}]
+    event generate .mb.m <Motion> -warp 1 -x 10 -y $y
+    update
+    event generate .mb.m <ButtonRelease-1> -x 10 -y $y
+    update
+    set res
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .mb
+    unset -nocomplain res y
+} -result invoked
+
 #
 # TESTFILE CLEANUP
 #

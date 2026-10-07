@@ -469,8 +469,15 @@ typedef struct BaseCharInfo {
 				 * LayoutDLine(). */
 } BaseCharInfo;
 
-/* TODO: Thread safety */
-static TkTextDispChunk *baseCharChunkPtr = NULL;
+/*
+ * The base chunk of the stretch being laid out. Layout may run concurrently
+ * in several threads, each with its own interpreter and text widgets.
+ */
+
+typedef struct {
+    TkTextDispChunk *baseCharChunkPtr;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * ChunkIsRtl --
@@ -947,8 +954,7 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthObj != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
+	if (!TkObjIsEmpty(tagPtr->borderWidthObj)
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, tagPtr->borderWidthObj, &styleValues.borderWidth);
 	    borderWidthPrio = tagPtr->priority;
@@ -1178,133 +1184,39 @@ FreeStyle(
 /*
  *----------------------------------------------------------------------
  *
- * LayoutDLine --
+ * IsEntirelyElidedLine --
  *
- *	This function generates a single DLine structure for a display line
- *	whose leftmost character is given by indexPtr.
+ *	Determine whether the logical line containing the given index, which
+ *	must be at the start of the line, is elided from its beginning to its
+ *	end, so that it is laid out as a single zero-height display line.
  *
  * Results:
- *	The return value is a pointer to a DLine structure describing the
- *	display line. All fields are filled in and correct except for y and
- *	nextPtr.
+ *	Returns true if the line is entirely elided, in which case the number
+ *	of bytes in the line is stored at *bytesPtr.
  *
  * Side effects:
- *	Storage is allocated for the new DLine.
- *
- *	See the comments in 'GetYView' for some thoughts on what the side-
- *	effects of this call (or its callers) should be; the synchronisation
- *	of TkTextLine->pixelHeight with the sum of the results of this
- *	function operating on all display lines within each logical line.
- *	Ideally the code should be refactored to ensure the cached pixel
- *	height is never behind what is known when this function is called
- *	elsewhere.
- *
- *	Unfortunately, this function is currently called from many different
- *	places, not just to layout a display line for actual display, but also
- *	simply to calculate some metric or other of one or more display lines
- *	(typically the height). It would be a good idea to do some profiling
- *	of typical text widget usage and the way in which this is called and
- *	see if some optimization could or should be done.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
-static DLine *
-LayoutDLine(
-    TkText *textPtr,		/* Overall information about text widget. */
-    const TkTextIndex *indexPtr)/* Beginning of display line. May not
-				 * necessarily point to a character
-				 * segment. */
+static bool
+IsEntirelyElidedLine(
+    TkText *textPtr,		/* Widget record for text widget. */
+    const TkTextIndex *indexPtr,/* Index at the start of a logical line. */
+    Tcl_Size *bytesPtr)		/* Where to store the number of bytes in the
+				 * line. */
 {
-    DLine *dlPtr;	/* New display line. */
-    TkTextSegment *segPtr;	/* Current segment in text. */
-    TkTextDispChunk *lastChunkPtr;
-				/* Last chunk allocated so far for line. */
-    TkTextDispChunk *chunkPtr;	/* Current chunk. */
-    TkTextIndex curIndex;
-    TkTextDispChunk *breakChunkPtr;
-				/* Chunk containing best word break point, if
-				 * any. */
-    TkTextIndex breakIndex;	/* Index of first character in
-				 * breakChunkPtr. */
-    Tcl_Size breakByteOffset;	/* Byte offset of character within
-				 * breakChunkPtr just to right of best break
-				 * point. */
-    int justify;		/* How to justify line: taken from style for
-				 * the first character in line. */
-    int jIndent;		/* Additional indentation (beyond margins) due
-				 * to justification. */
-    int rMargin;		/* Right margin width for line. */
-    TkWrapMode wrapMode;	/* Wrap mode to use for this line. */
-    int x = 0, maxX = 0;	/* Initializations needed only to stop
-				 * compiler warnings. */
-    int tabIndex;		/* Index of the current tab stop. */
-    bool noCharsYet;		/* True means that no characters have been
-				 * placed on the line yet. */
-    bool paragraphStart;		/* True means that we are on the first
-				 * line of a paragraph (used to choose between
-				 * lmargin1, lmargin2). */
-    bool wholeLine;		/* Non-zero means this display line runs to
-				 * the end of the text line. */
-    bool gotTab;			/* True means the current chunk contains a
-				 * tab. */
-    TkTextDispChunk *tabChunkPtr;
-				/* Pointer to the chunk containing the
-				 * previous tab stop. */
-    Tcl_Size maxBytes;		/* Maximum number of bytes to include in this
-				 * chunk. */
-    TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
-				 * the first character on line. */
-    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR
-				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
-    int tabSize;		/* Number of pixels consumed by current tab
-				 * stop. */
-    TkTextDispChunk *lastCharChunkPtr;
-				/* Pointer to last chunk in display lines with
-				 * numBytes > 0. Used to drop 0-sized chunks
-				 * from the end of the line. */
-    Tcl_Size byteOffset;
-    int ascent, descent, code;
-	Tcl_Size elidesize;
+    TkTextElideInfo info;
+    TkTextSegment *segPtr;
+    Tcl_Size maxBytes = 0;
     bool elide;
-    StyleValues *sValuePtr;
-    TkTextElideInfo info;	/* Keep track of elide state. */
 
-    /*
-     * Create and initialize a new DLine structure.
-     */
-
-    dlPtr = (DLine *)Tcl_Alloc(sizeof(DLine));
-    dlPtr->index = *indexPtr;
-    dlPtr->byteCount = 0;
-    dlPtr->y = 0;
-    dlPtr->oldY = 0;		/* Only set to avoid compiler warnings. */
-    dlPtr->height = 0;
-    dlPtr->baseline = 0;
-    dlPtr->chunkPtr = NULL;
-    dlPtr->nextPtr = NULL;
-    dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
-    dlPtr->logicalLinesMerged = 0;
-    dlPtr->lMarginColor = NULL;
-    dlPtr->lMarginWidth = 0;
-    dlPtr->rMarginColor = NULL;
-    dlPtr->rMarginWidth = 0;
-
-    /*
-     * This is not necessarily totally correct, where we have merged logical
-     * lines. Fixing this would require a quite significant overhaul, though,
-     * so currently we make do with this.
-     */
-
-    paragraphStart = (indexPtr->byteIndex == 0);
-
-    /*
-     * Special case entirely elide line as there may be 1000s or more.
-     */
-
+    if (indexPtr->byteIndex != 0) {
+	return false;
+    }
     elide = TkTextIsElided(textPtr, indexPtr, &info);
-    if (elide && indexPtr->byteIndex == 0) {
-	maxBytes = 0;
+    if (elide) {
 	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
 	    if (segPtr->size > 0) {
 		if (elide == 0) {
@@ -1370,30 +1282,162 @@ LayoutDLine(
 		}
 	    }
 	}
-
-	if (elide) {
-	    dlPtr->byteCount = maxBytes;
-	    dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
-	    if (dlPtr->index.byteIndex == 0) {
-		/*
-		 * Elided state goes from beginning to end of an entire
-		 * logical line. This means we can update the line's pixel
-		 * height, and bring its pixel calculation up to date.
-		 */
-
-		TkBTreeLinePixelEpoch(textPtr, dlPtr->index.linePtr)
-			= textPtr->dInfoPtr->lineMetricUpdateEpoch;
-
-		if (TkBTreeLinePixelCount(textPtr,dlPtr->index.linePtr) != 0) {
-		    TkBTreeAdjustPixelHeight(textPtr,
-			    dlPtr->index.linePtr, 0, 0);
-		}
-	    }
-	    TkTextFreeElideInfo(&info);
-	    return dlPtr;
-	}
     }
     TkTextFreeElideInfo(&info);
+    if (elide) {
+	*bytesPtr = maxBytes;
+    }
+    return elide;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LayoutDLine --
+ *
+ *	This function generates a single DLine structure for a display line
+ *	whose leftmost character is given by indexPtr.
+ *
+ * Results:
+ *	The return value is a pointer to a DLine structure describing the
+ *	display line. All fields are filled in and correct except for y and
+ *	nextPtr.
+ *
+ * Side effects:
+ *	Storage is allocated for the new DLine.
+ *
+ *	See the comments in 'GetYView' for some thoughts on what the side-
+ *	effects of this call (or its callers) should be; the synchronisation
+ *	of TkTextLine->pixelHeight with the sum of the results of this
+ *	function operating on all display lines within each logical line.
+ *	Ideally the code should be refactored to ensure the cached pixel
+ *	height is never behind what is known when this function is called
+ *	elsewhere.
+ *
+ *	Unfortunately, this function is currently called from many different
+ *	places, not just to layout a display line for actual display, but also
+ *	simply to calculate some metric or other of one or more display lines
+ *	(typically the height). It would be a good idea to do some profiling
+ *	of typical text widget usage and the way in which this is called and
+ *	see if some optimization could or should be done.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static DLine *
+LayoutDLine(
+    TkText *textPtr,		/* Overall information about text widget. */
+    const TkTextIndex *indexPtr)/* Beginning of display line. May not
+				 * necessarily point to a character
+				 * segment. */
+{
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+#endif
+    DLine *dlPtr;	/* New display line. */
+    TkTextSegment *segPtr;	/* Current segment in text. */
+    TkTextDispChunk *lastChunkPtr;
+				/* Last chunk allocated so far for line. */
+    TkTextDispChunk *chunkPtr;	/* Current chunk. */
+    TkTextIndex curIndex;
+    TkTextDispChunk *breakChunkPtr;
+				/* Chunk containing best word break point, if
+				 * any. */
+    TkTextIndex breakIndex;	/* Index of first character in
+				 * breakChunkPtr. */
+    Tcl_Size breakByteOffset;	/* Byte offset of character within
+				 * breakChunkPtr just to right of best break
+				 * point. */
+    int justify;		/* How to justify line: taken from style for
+				 * the first character in line. */
+    int jIndent;		/* Additional indentation (beyond margins) due
+				 * to justification. */
+    int rMargin;		/* Right margin width for line. */
+    TkWrapMode wrapMode;	/* Wrap mode to use for this line. */
+    int x = 0, maxX = 0;	/* Initializations needed only to stop
+				 * compiler warnings. */
+    int tabIndex;		/* Index of the current tab stop. */
+    bool noCharsYet;		/* True means that no characters have been
+				 * placed on the line yet. */
+    bool paragraphStart;		/* True means that we are on the first
+				 * line of a paragraph (used to choose between
+				 * lmargin1, lmargin2). */
+    bool wholeLine;		/* Non-zero means this display line runs to
+				 * the end of the text line. */
+    bool gotTab;			/* True means the current chunk contains a
+				 * tab. */
+    TkTextDispChunk *tabChunkPtr;
+				/* Pointer to the chunk containing the
+				 * previous tab stop. */
+    Tcl_Size maxBytes;		/* Maximum number of bytes to include in this
+				 * chunk. */
+    TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
+				 * the first character on line. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR
+				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    int tabSize;		/* Number of pixels consumed by current tab
+				 * stop. */
+    TkTextDispChunk *lastCharChunkPtr;
+				/* Pointer to last chunk in display lines with
+				 * numBytes > 0. Used to drop 0-sized chunks
+				 * from the end of the line. */
+    Tcl_Size byteOffset;
+    int ascent, descent, code;
+	Tcl_Size elidesize;
+    bool elide;
+    StyleValues *sValuePtr;
+
+    /*
+     * Create and initialize a new DLine structure.
+     */
+
+    dlPtr = (DLine *)Tcl_Alloc(sizeof(DLine));
+    dlPtr->index = *indexPtr;
+    dlPtr->byteCount = 0;
+    dlPtr->y = 0;
+    dlPtr->oldY = 0;		/* Only set to avoid compiler warnings. */
+    dlPtr->height = 0;
+    dlPtr->baseline = 0;
+    dlPtr->chunkPtr = NULL;
+    dlPtr->nextPtr = NULL;
+    dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
+    dlPtr->logicalLinesMerged = 0;
+    dlPtr->lMarginColor = NULL;
+    dlPtr->lMarginWidth = 0;
+    dlPtr->rMarginColor = NULL;
+    dlPtr->rMarginWidth = 0;
+
+    /*
+     * This is not necessarily totally correct, where we have merged logical
+     * lines. Fixing this would require a quite significant overhaul, though,
+     * so currently we make do with this.
+     */
+
+    paragraphStart = (indexPtr->byteIndex == 0);
+
+    /*
+     * Special case entirely elide line as there may be 1000s or more.
+     */
+
+    if (IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
+	dlPtr->byteCount = maxBytes;
+	dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
+
+	/*
+	 * Elided state goes from beginning to end of an entire logical
+	 * line. This means we can update the line's pixel height, and
+	 * bring its pixel calculation up to date.
+	 */
+
+	TkBTreeLinePixelEpoch(textPtr, dlPtr->index.linePtr)
+		= textPtr->dInfoPtr->lineMetricUpdateEpoch;
+
+	if (TkBTreeLinePixelCount(textPtr,dlPtr->index.linePtr) != 0) {
+	    TkBTreeAdjustPixelHeight(textPtr, dlPtr->index.linePtr, 0, 0);
+	}
+	return dlPtr;
+    }
 
     /*
      * Each iteration of the loop below creates one TkTextDispChunk for the
@@ -1597,13 +1641,13 @@ LayoutDLine(
 	    }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    if (baseCharChunkPtr != NULL) {
+	    if (tsdPtr->baseCharChunkPtr != NULL) {
 		int expectedX =
-			((BaseCharInfo *) baseCharChunkPtr->clientData)->width
-			+ baseCharChunkPtr->x;
+			((BaseCharInfo *) tsdPtr->baseCharChunkPtr->clientData)->width
+			+ tsdPtr->baseCharChunkPtr->x;
 
 		if ((expectedX != x) || !IsSameFGStyle(
-			baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
+			tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
 		    FinalizeBaseChunk(NULL);
 		}
 	    }
@@ -1808,6 +1852,9 @@ LayoutDLine(
 	    breakChunkPtr->nextPtr = chunkPtr->nextPtr;
 	    if (chunkPtr->undisplayProc != NULL) {
 		chunkPtr->undisplayProc(textPtr, chunkPtr);
+	    }
+	    if (chunkPtr == tabChunkPtr) {
+		tabChunkPtr = NULL;	/* The tab moved to the next line. */
 	    }
 	    Tcl_Free(chunkPtr);
 	}
@@ -3815,6 +3862,16 @@ TextInvalidateLineMetrics(
  *	these calls will map and unmap embedded windows respectively, which I
  *	would hope isn't exactly necessary!
  *
+ *	mojibake audit note: this function walks display-line and byte
+ *	boundaries only (TkTextIndexBackBytes/TkTextIndexForwBytes and the
+ *	dlPtr->byteCount produced by LayoutDLine) -- it contains no
+ *	codepoint- or cluster-level iteration of its own, so there is
+ *	nothing here for mojibake to replace. Display-line boundaries are
+ *	themselves always chunk boundaries, and chunk boundaries are now
+ *	guaranteed cluster-safe by the mojibake_grapheme_prev() clamp in
+ *	TkTextCharLayoutProc, so this function inherits that guarantee for
+ *	free rather than needing its own mojibake call.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -3943,7 +4000,8 @@ TkTextFindDisplayLineEnd(
  *	line heights. That should be done, where necessary, by its callers.
  *
  *	The behaviour of this function is _undefined_ if indexPtr is not
- *	currently at the beginning of a display line.
+ *	currently at the beginning of a display line or of an entirely elided
+ *	logical line.
  *
  * Results:
  *	The number of vertical pixels used by the display line.
@@ -3969,7 +4027,8 @@ static int
 CalculateDisplayLineHeight(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* The index at the beginning of the display
-				 * line of interest. */
+				 * line of interest, or of an entirely elided
+				 * logical line. */
     int *byteCountPtr,		/* NULL or used to return the number of byte
 				 * indices on the given display line. */
     int *mergedLinePtr)		/* NULL or used to return if the given display
@@ -3978,12 +4037,14 @@ CalculateDisplayLineHeight(
 {
     DLine *dlPtr;
     int pixelHeight;
+    Tcl_Size maxBytes;
 
-    if (tkTextDebug) {
+    if (tkTextDebug && !IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
 	bool oldtkTextDebug = tkTextDebug;
 	/*
 	 * Check that the indexPtr we are given really is at the start of a
-	 * display line. The gymnastics with tkTextDebug is to prevent
+	 * display line or of an entirely elided line. [Bug 80213d1b1c]
+	 * The gymnastics with tkTextDebug is to prevent
 	 * failure of a test suite test, that checks that lines are rendered
 	 * exactly once. TkTextFindDisplayLineEnd is used here for checking
 	 * indexPtr but it calls LayoutDLine/FreeDLine which makes the
@@ -4179,6 +4240,7 @@ TkTextUpdateOneLine(
     TkTextIndex index;
     int displayLines;
     int mergedLines;
+    Tcl_Size maxBytes;
 
     if (indexPtr == NULL) {
 	index.tree = textPtr->sharedTextPtr->tree;
@@ -4198,10 +4260,17 @@ TkTextUpdateOneLine(
      * an index at the beginning of a display line. In turn this causes the
      * merged lines to receive their correct zero pixel height in
      * TkBTreeAdjustPixelHeight.
+     *
+     * An entirely elided line is an exception: it is laid out as its own
+     * zero-height display line even if it is merged with the previous line,
+     * and finding the display line start would be very expensive if there
+     * are many of them in a row. [Bug 4c595d4d78]
      */
 
-    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
-    linePtr = indexPtr->linePtr;
+    if (!IsEntirelyElidedLine(textPtr, indexPtr, &maxBytes)) {
+	TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+	linePtr = indexPtr->linePtr;
+    }
 
     /*
      * Iterate through all display-lines corresponding to the single logical
@@ -4855,7 +4924,8 @@ DisplayText(
      */
 
   doScrollbars:
-    if (textPtr->flags & UPDATE_SCROLLBARS) {
+    if ((textPtr->flags & UPDATE_SCROLLBARS)
+	    && Tk_IsMapped(textPtr->tkwin)) {
 	textPtr->flags &= ~UPDATE_SCROLLBARS;
 	if (textPtr->yScrollCmdObj != NULL) {
 	    GetYView(textPtr->interp, textPtr, 1);
@@ -5843,6 +5913,7 @@ MeasureUp(
     Tcl_Size lineNum;		/* Number of current line. */
     Tcl_Size bytesToCount;		/* Maximum number of bytes to measure in
 				 * current line. */
+    Tcl_Size bytes;
     TkTextIndex index;
     DLine *dlPtr, *lowestPtr;
 
@@ -5861,6 +5932,17 @@ MeasureUp(
 
 	index.linePtr = TkBTreeFindLine(srcPtr->tree, textPtr, lineNum);
 	index.byteIndex = 0;
+
+	/*
+	 * An entirely elided line has zero height, and finding its display
+	 * line start would be very expensive if there are many of them in a
+	 * row. [Bug 80213d1b1c]
+	 */
+
+	if (IsEntirelyElidedLine(textPtr, &index, &bytes)) {
+	    bytesToCount = INT_MAX;
+	    continue;
+	}
 	TkTextFindDisplayLineEnd(textPtr, &index, 0, NULL);
 	lineNum = TkBTreeLinesTo(textPtr, index.linePtr);
 	lowestPtr = NULL;
@@ -7025,6 +7107,16 @@ GetYView(
 	return;
     }
 
+    /*
+     * Postpone the scrollbar update until the window is mapped: the size of
+     * an unmapped window is not final. [Bug 991849]
+     */
+
+    if (!Tk_IsMapped(textPtr->tkwin)) {
+	textPtr->flags |= UPDATE_SCROLLBARS;
+	return;
+    }
+
     if (FP_EQUAL_SCALE(first, dInfoPtr->yScrollFirst, totalPixels) &&
 	    FP_EQUAL_SCALE(last, dInfoPtr->yScrollLast, totalPixels)) {
 	return;
@@ -8148,6 +8240,99 @@ ElideMeasureProc(
 /*
  *--------------------------------------------------------------
  *
+ * WordBreakIndex --
+ *
+ *	Find the last word wrap opportunity in the first bytesThatFit bytes
+ *	of a chunk: after an ASCII white space character (as before UAX #14,
+ *	which has no break before a tab, for instance), or at a UAX #14 line
+ *	break which is also a word boundary (with the dictionaries for Thai,
+ *	Lao, Khmer and Myanmar). The breaks are
+ *	computed with the text which follows the chunk, in its segment and in
+ *	the next character segments, since the end of a segment (a tag
+ *	boundary, for instance) is no break by itself. WORD_BREAK_CONTEXT is
+ *	longer than the longest dictionary word.
+ *
+ * Results:
+ *	The byte offset of the break in the chunk, or -1 if there is none.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+#define WORD_BREAK_CONTEXT 128
+
+static Tcl_Size
+WordBreakIndex(
+    TkTextSegment *segPtr,	/* Segment of the chunk. */
+    Tcl_Size byteOffset,	/* Offset of the chunk in the segment. */
+    Tcl_Size bytesThatFit)	/* Number of bytes of the chunk which fit. */
+{
+    Tcl_Size want = bytesThatFit + WORD_BREAK_CONTEXT;
+    Tcl_Size len = segPtr->size - byteOffset;
+    Tcl_Size n, i, best = -1;
+    Tcl_DString text;
+    const char *chars;
+    unsigned char *breaks;
+
+    Tcl_DStringInit(&text);
+    Tcl_DStringAppend(&text, segPtr->body.chars + byteOffset, len < want ? len : want);
+    if (len < want) {
+	TkTextSegment *nextPtr;
+
+	for (nextPtr = segPtr->nextPtr; nextPtr && Tcl_DStringLength(&text) < want;
+		nextPtr = nextPtr->nextPtr) {
+	    Tcl_Size size = want - Tcl_DStringLength(&text);
+
+	    if (nextPtr->size == 0) {
+		continue;
+	    }
+	    if (nextPtr->typePtr != &tkTextCharType) {
+		break;
+	    }
+	    Tcl_DStringAppend(&text, nextPtr->body.chars, nextPtr->size < size ? nextPtr->size : size);
+	}
+    }
+    n = Tcl_DStringLength(&text);
+
+    if (n == bytesThatFit) {
+	/*
+	 * The chunk ends its segment, and no text follows (end of line, image,
+	 * window...): its end is a break.
+	 */
+
+	Tcl_DStringFree(&text);
+	return bytesThatFit;
+    }
+
+    chars = Tcl_DStringValue(&text);
+    breaks = (unsigned char *)Tcl_Alloc(3 * (n + 1));
+    mojibake_line_breaks_with_dict(chars, (size_t) n, breaks,
+	    breaks + (n + 1), breaks + 2 * (n + 1));
+    for (i = bytesThatFit; i > 0; --i) {
+	switch (chars[i - 1]) {
+	case ' ': case '\t': case '\n': case '\v': case '\f': case '\r':
+	    best = i;
+	    break;
+	default:
+	    if (breaks[i] && breaks[(n + 1) + i] && breaks[2 * (n + 1) + i]) {
+		best = i;
+	    }
+	    break;
+	}
+	if (best != -1) {
+	    break;
+	}
+    }
+    Tcl_Free(breaks);
+    Tcl_DStringFree(&text);
+    return best;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TkTextCharLayoutProc --
  *
  *	This function is the "layoutProc" for character segments.
@@ -8188,6 +8373,10 @@ TkTextCharLayoutProc(
 				 * this chunk. The x field has already been
 				 * set by the caller. */
 {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+#endif
     Tk_Font tkfont;
     int nextX;
     Tcl_Size bytesThatFit;
@@ -8221,8 +8410,8 @@ TkTextCharLayoutProc(
     tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    if (baseCharChunkPtr == NULL) {
-	baseCharChunkPtr = chunkPtr;
+    if (tsdPtr->baseCharChunkPtr == NULL) {
+	tsdPtr->baseCharChunkPtr = chunkPtr;
 	bciPtr = (BaseCharInfo *)Tcl_Alloc(sizeof(BaseCharInfo));
 	baseString = &bciPtr->baseChars;
 	Tcl_DStringInit(baseString);
@@ -8230,7 +8419,7 @@ TkTextCharLayoutProc(
 
 	ciPtr = &bciPtr->ci;
     } else {
-	bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
+	bciPtr = (BaseCharInfo *)tsdPtr->baseCharChunkPtr->clientData;
 	ciPtr = (CharInfo *)Tcl_Alloc(sizeof(CharInfo));
 	baseString = &bciPtr->baseChars;
     }
@@ -8239,7 +8428,7 @@ TkTextCharLayoutProc(
     line = Tcl_DStringAppend(baseString,p,maxBytes);
 
     chunkPtr->clientData = ciPtr;
-    ciPtr->baseChunkPtr = baseCharChunkPtr;
+    ciPtr->baseChunkPtr = tsdPtr->baseCharChunkPtr;
     ciPtr->baseOffset = lineOffset;
     ciPtr->chars = NULL;
     ciPtr->numBytes = 0;
@@ -8253,10 +8442,57 @@ TkTextCharLayoutProc(
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
+    /*
+     * mojibake integration: CharChunkMeasureChars() and the shaping
+     * backend it drives (HarfBuzz/SheenBidi/CoreText/Uniscribe) measure
+     * and break in codepoint / shaping-run units, which are not
+     * guaranteed to land on Unicode extended grapheme cluster (UAX #29)
+     * boundaries -- e.g. a Thai tone mark, a Devanagari/Bengali virama
+     * holding two consonants together, a Khmer subscript stack, or an
+     * emoji ZWJ sequence can all be split mid-cluster by a purely
+     * pixel-driven cutoff. Snap bytesThatFit back to the nearest cluster
+     * boundary at or before the measured cutoff so a cluster is never
+     * divided between this chunk and the next; mojibake is the only
+     * authority consulted for where that boundary is.
+     */
+    if (bytesThatFit > 0 && bytesThatFit < maxBytes) {
+	size_t clusterStart;
+
+	if (mojibake_grapheme_prev(p, (size_t) maxBytes,
+		(size_t) bytesThatFit + 1, &clusterStart)
+		&& clusterStart < (size_t) bytesThatFit) {
+	    bytesThatFit = (Tcl_Size) clusterStart;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
+		    lineOffset + bytesThatFit, lineOffset, -1, chunkPtr->x,
+		    -1, 0, &nextX);
+#else /* !TK_LAYOUT_WITH_BASE_CHUNKS */
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, p, bytesThatFit,
+		    0, -1, chunkPtr->x, -1, 0, &nextX);
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	}
+    }
+
     if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && (noCharsYet & 1)) {
-	    int ch;
-	    Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+	    /*
+	     * Nothing fits, but this display line has no characters on it
+	     * yet, so we must place at least one atomic unit or the line
+	     * would never advance. That unit is a full grapheme cluster --
+	     * e.g. a base consonant plus its dependent vowel/tone mark, or
+	     * a multi-codepoint emoji ZWJ sequence -- not a single
+	     * codepoint, so we ask mojibake for the cluster length rather
+	     * than calling Tcl_UtfToUniChar() for one codepoint.
+	     */
+	    Tcl_Size chLen;
+	    size_t clusterEnd;
+
+	    if (mojibake_grapheme_next(p, (size_t) maxBytes, 0, &clusterEnd)) {
+		chLen = (Tcl_Size) clusterEnd;
+	    } else {
+		int ch;
+		chLen = Tcl_UtfToUniChar(p, &ch);
+	    }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -8309,8 +8545,8 @@ TkTextCharLayoutProc(
 	if (bytesThatFit == 0) {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    chunkPtr->clientData = NULL;
-	    if (chunkPtr == baseCharChunkPtr) {
-		baseCharChunkPtr = NULL;
+	    if (chunkPtr == tsdPtr->baseCharChunkPtr) {
+		tsdPtr->baseCharChunkPtr = NULL;
 		Tcl_DStringFree(baseString);
 	    } else {
 		Tcl_DStringSetLength(baseString,lineOffset);
@@ -8366,7 +8602,7 @@ TkTextCharLayoutProc(
      */
 
     Tcl_DStringSetLength(baseString,lineOffset+ciPtr->numBytes);
-    bciPtr->width = nextX - baseCharChunkPtr->x;
+    bciPtr->width = nextX - tsdPtr->baseCharChunkPtr->x;
 
     /*
      * Finalize the base chunk if this chunk ends in a tab, which definitly
@@ -8380,111 +8616,116 @@ TkTextCharLayoutProc(
 
     /*
      * Compute a break location. If we're in word wrap mode, a break can occur
-     * after any space character, or at the end of the chunk if the next
-     * segment (ignoring those with zero size) is not a character segment.
+     * at UAX #14 line break opportunities (including CJK) plus
+     * dictionary word boundaries for Thai/Lao/Khmer/Myanmar.
+     * Primary: mojibake_line_breaks_with_dict over the whole logical remainder
+     * (maxBytes), then pick last opportunity that fits within bytesThatFit.
+     * This fixes Thai where forward max-match needs lookahead beyond the
+     * pixel-fitting prefix.
      */
 
     if (wrapMode != TEXT_WRAPMODE_WORD) {
 	chunkPtr->breakIndex = chunkPtr->numBytes;
     } else {
-	/*
-	 * Scan backwards through the chunk looking for a word-break
-	 * opportunity.  We must walk UTF-8 character boundaries rather than
-	 * raw bytes, otherwise we can mis-identify a continuation byte as an
-	 * ASCII space character (0x20 is a valid continuation byte in some
-	 * legacy encodings, and even in valid UTF-8 the original byte-level
-	 * reverse walk can start mid-character after CharChunkMeasureChars
-	 * splits the buffer at an arbitrary pixel boundary).
-	 *
-	 * Don't use isspace(); effects are unpredictable and can lead to odd
-	 * word-wrapping problems on some platforms.  Also don't use
-	 * Tcl_UniCharIsSpace here either, as it identifies non-breaking spaces
-	 * as places to break.  We only want the ASCII whitespace characters,
-	 * checked via Tcl_UtfPrev so every step lands on a character boundary.
-	 *
-	 * RTL note: for RTL chunks (Arabic, Hebrew, …) the platform font
-	 * back-end (Uniscribe on Windows, HarfBuzz/Xft on X11) returns
-	 * bytesThatFit as a logical-byte count from the start of the segment
-	 * slice.  In RTL visual order the logical-start bytes correspond to the
-	 * right-most (trailing) glyphs, so a word-boundary space at the visual
-	 * right edge sits at a *low* logical byte offset, not near bytesThatFit.
-	 * The standard backward scan from bytesThatFit will therefore miss it.
-	 *
-	 * To handle RTL text we perform two scans:
-	 *   (a) the standard backward scan from bytesThatFit – covers LTR and
-	 *       mixed text as before, now UTF-8 safe.
-	 *   (b) if (a) finds nothing and the chunk is RTL, a forward scan from
-	 *       byte 0 looking for the first ASCII space; that space is the
-	 *       visual trailing separator between the last word on this display
-	 *       line and the first word on the next wrapped line.  We absorb it
-	 *       into the current chunk so the next line starts cleanly.
-	 */
+	const char *chunkStart = p;
+	size_t bFit = (size_t)bytesThatFit;
 
-	const char *chunkStart = p;           /* logical byte 0 of this slice */
-	const char *chunkEnd   = p + bytesThatFit; /* one past last byte kept */
-	const char *scanPtr    = chunkEnd;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	bool foundBreak  = false;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-
-	while (scanPtr > chunkStart) {
-	    int ch3;
-	    const char *prevPtr = Tcl_UtfPrev(scanPtr, chunkStart);
-	    Tcl_UtfToUniChar(prevPtr, &ch3);
-	    switch (ch3) {
-	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
-		/* breakIndex is the byte offset *after* the space character */
-		chunkPtr->breakIndex = (Tcl_Size)(prevPtr - chunkStart) + 1;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		foundBreak = true;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-		goto checkForNextChunk;
-	    }
-	    scanPtr = prevPtr;
-	}
-
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	if (!foundBreak && ciPtr->isRtl) {
+	{
 	    /*
-	     * RTL forward scan: the word separator that visually trails this
-	     * run sits at a low logical byte offset.  Walk forward from byte 0;
-	     * the first ASCII space found is the break point.  Include the
-	     * space in this chunk (absorb it) so the next wrapped line begins
-	     * with a non-space character.
-	     *
-	     * This path is reached on all three platforms:
-	     *   - Windows and macOS: TK_LAYOUT_WITH_BASE_CHUNKS is always
-	     *     defined and bidi support is built-in.
-	     *   - X11: TK_LAYOUT_WITH_BASE_CHUNKS is defined when
-	     *     --enable-bidi is passed (which also defines HAVE_BIDI).
-	     * isRtl is a field of the TK_LAYOUT_WITH_BASE_CHUNKS CharInfo
-	     * variant, so this guard is both necessary and sufficient.
+	     * A candidate must be BOTH a raw UAX#14 line-break-class
+	     * opportunity AND a genuine word boundary per the dictionary
+	     * segmenter (see WordBreakIndex): the default line-break class of
+	     * Thai/Lao/Khmer/Myanmar is "complex context", which is breakable
+	     * pretty much anywhere absent dictionary input.
 	     */
-	    const char *fwdPtr = chunkStart;
-	    while (fwdPtr < chunkEnd) {
-		int ch4;
-		Tcl_Size chLen4 = Tcl_UtfToUniChar(fwdPtr, &ch4);
-		if (chLen4 <= 0) {
-		    break;
+	    Tcl_Size best = WordBreakIndex(segPtr, byteOffset, bytesThatFit);
+
+	    /* Also handle ASCII space / tab via UAX#14 already includes them,
+	     * but keep RTL forward scan for visual trailing separator */
+	    if (best == -1) {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		if (ciPtr->isRtl) {
+		    const char *fwdPtr = chunkStart;
+		    const char *chunkEnd = chunkStart + bFit;
+		    while (fwdPtr < chunkEnd) {
+			int ch4;
+			Tcl_Size chLen4 = Tcl_UtfToUniChar(fwdPtr, &ch4);
+			if (chLen4 <= 0) break;
+			if (ch4 == ' ' || ch4 == '\t') {
+			    size_t pos = (size_t)(fwdPtr - chunkStart);
+			    size_t cand = pos + (size_t)chLen4;
+			    size_t cEnd;
+			    if (mojibake_grapheme_next(chunkStart, (size_t)maxBytes, pos, &cEnd) && cEnd == cand) {
+				best = (Tcl_Size)cand;
+				break;
+			    }
+			}
+			fwdPtr += chLen4;
+		    }
 		}
-		if (ch4 == ' ' || ch4 == '\t') {
-		    chunkPtr->breakIndex = (Tcl_Size)(fwdPtr - chunkStart) + chLen4;
-		    break;
+#endif
+		/*
+		 * No genuine UAX#14/dict break opportunity inside the fitting
+		 * range. Do NOT invent one here. This chunk may be just one
+		 * fragment of a single unbroken word that got split into
+		 * several TkTextDispChunks purely because of tag boundaries
+		 * (e.g. a single-character tag applied in the middle of a
+		 * long word) -- such a fragment must not be reported to
+		 * LayoutDLine as a valid word-wrap point, or the line will
+		 * wrap in the middle of the word at whatever tag/segment
+		 * boundary happens to fall there instead of at the real word
+		 * boundary. Leaving best == -1 (and therefore breakIndex ==
+		 * -1 below) is correct: LayoutDLine already falls back to
+		 * cutting at the last fitted character chunk (breakChunkPtr
+		 * == NULL case) when no chunk anywhere on the line ever
+		 * records a real break, and that fallback point is already
+		 * grapheme-safe thanks to the bytesThatFit snapping above.
+		 */
+	    }
+
+	    if (best > 0) {
+		size_t b = (size_t)best;
+		while (b < bFit && chunkStart[b] == ' ') {
+		    b++;
 		}
-		fwdPtr += chLen4;
+		chunkPtr->breakIndex = (Tcl_Size)b;
+	    } else {
+		/*
+		 * No acceptable UAX14+grapheme+dictionary break inside the fit.
+		 * Mark this chunk as having no internal break. LayoutDLine will
+		 * fall back to the last fitted grapheme boundary.
+		 */
+		chunkPtr->breakIndex = -1;
 	    }
 	}
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    checkForNextChunk:
-	if ((bytesThatFit + byteOffset) == segPtr->size) {
-	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
-		    nextPtr = nextPtr->nextPtr) {
-		if (nextPtr->size != 0) {
-		    if (nextPtr->typePtr != &tkTextCharType) {
-			chunkPtr->breakIndex = chunkPtr->numBytes;
+	if (chunkPtr->breakIndex == -1) {
+	    if ((bytesThatFit + byteOffset) == segPtr->size) {
+		/*
+		 * We've exhausted this chunk's own segment with no internal
+		 * break opportunity found. Look at what (if anything) comes
+		 * next: if it's another char segment, the "word" continues
+		 * there and this chunk correctly stays a non-break (-1). But
+		 * if the next non-empty segment is a non-text one (mark,
+		 * image, window, ...) OR there is no next segment at all --
+		 * i.e. this is the tail of the entire line/buffer -- then
+		 * nothing can extend this run any further, so the end of
+		 * this chunk IS a legitimate break point. Failing to treat
+		 * "no next segment" as such caused the final chunk of a line
+		 * to be silently discarded by LayoutDLine's "throw away
+		 * everything after the last break" trim, corrupting line
+		 * heights/counts for the whole buffer.
+		 */
+		bool nextIsText = false;
+
+		for (nextPtr = segPtr->nextPtr; nextPtr != NULL; nextPtr = nextPtr->nextPtr) {
+		    if (nextPtr->size != 0) {
+			nextIsText = (nextPtr->typePtr == &tkTextCharType);
+			break;
 		    }
-		    break;
+		}
+		if (!nextIsText) {
+		    chunkPtr->breakIndex = chunkPtr->numBytes;
 		}
 	    }
 	}
@@ -9738,19 +9979,21 @@ FinalizeBaseChunk(
 				 * list yet. Used by the LayoutProc, otherwise
 				 * NULL. */
 {
-    if (baseCharChunkPtr == NULL) return;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    if (tsdPtr->baseCharChunkPtr == NULL) return;
 
-    BaseCharInfo *bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
+    BaseCharInfo *bciPtr = (BaseCharInfo *)tsdPtr->baseCharChunkPtr->clientData;
     const char *baseChars = Tcl_DStringValue(&bciPtr->baseChars);
 
-    for (TkTextDispChunk *chunkPtr = baseCharChunkPtr;
+    for (TkTextDispChunk *chunkPtr = tsdPtr->baseCharChunkPtr;
 	 chunkPtr != NULL;
 	 chunkPtr = chunkPtr->nextPtr) {
 
 	if (chunkPtr->displayProc != CharDisplayProc) break;
 
 	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-	if (ciPtr == NULL || ciPtr->baseChunkPtr != baseCharChunkPtr) break;
+	if (ciPtr == NULL || ciPtr->baseChunkPtr != tsdPtr->baseCharChunkPtr) break;
 
 	ciPtr->chars = baseChars + ciPtr->baseOffset;
     }
@@ -9762,7 +10005,7 @@ FinalizeBaseChunk(
 	}
     }
 
-    baseCharChunkPtr = NULL;
+    tsdPtr->baseCharChunkPtr = NULL;
 }
 
 /*
@@ -9792,13 +10035,15 @@ FreeBaseChunk(
 				/* The base chunk of the stretch and head of
 				 * the linked list. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 #ifdef _WIN32	/* MSVC prefers this block - the next block causes hangs. */
 	TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
 
-    if (baseCharChunkPtr == baseChunkPtr) {
-	baseCharChunkPtr = NULL;
+    if (tsdPtr->baseCharChunkPtr == baseChunkPtr) {
+	tsdPtr->baseCharChunkPtr = NULL;
     }
 
     for (chunkPtr=baseChunkPtr; chunkPtr!=NULL; chunkPtr=chunkPtr->nextPtr) {
@@ -9821,8 +10066,8 @@ FreeBaseChunk(
     TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
 
-    if (baseCharChunkPtr == baseChunkPtr) {
-	baseCharChunkPtr = NULL;
+    if (tsdPtr->baseCharChunkPtr == baseChunkPtr) {
+	tsdPtr->baseCharChunkPtr = NULL;
     }
 
     for (chunkPtr=baseChunkPtr; chunkPtr!=NULL; chunkPtr=chunkPtr->nextPtr) {
@@ -9945,6 +10190,8 @@ RemoveFromBaseChunk(
     TkTextDispChunk *chunkPtr)	/* The chunk to remove from the end of the
 				 * stretch. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
 	return;
@@ -9958,7 +10205,7 @@ RemoveFromBaseChunk(
     bciPtr->width = -1;
 
     /* Re-instate base chunk for next layout pass */
-    baseCharChunkPtr = ciPtr->baseChunkPtr;
+    tsdPtr->baseCharChunkPtr = ciPtr->baseChunkPtr;
 
     /* Detach this chunk */
     ciPtr->baseChunkPtr = NULL;

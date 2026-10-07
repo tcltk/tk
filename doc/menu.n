@@ -541,6 +541,40 @@ window of the leftmost pixel in the entry specified by \fIindex\fR.
 .
 Returns a decimal string giving the y-coordinate within the menu
 window of the topmost pixel in the entry specified by \fIindex\fR.
+If the menu is scrolled (see \fByview\fR), the coordinate is given as if
+the menu was not scrolled.
+.\" METHOD: yview
+.TP
+\fIpathName \fByview \fR?\fIargs\fR?
+.
+This command is used to query and change the vertical scrolling of the
+entries of a menu which is higher than the screen.  Such a menu is
+limited to the height of the screen, and its entries can be scrolled with
+the arrows displayed at its top and bottom.  This is only done on X11;
+on Windows and macOS the system scrolls menus.
+It can take any of the following forms:
+.RS
+.TP
+\fIpathName \fByview\fR
+.
+Returns a list containing two elements, both of which are real fractions
+between 0 and 1.  The first element gives the position of the entries at
+the top of the visible area, relative to the height of all entries (0.0
+means the first entry is at the top).  The second element gives the
+position just after the visible area.  For a menu which is not scrolled,
+the result is \fB0.0 1.0\fR.
+.TP
+\fIpathName \fByview moveto \fIfraction\fR
+.
+Scrolls the entries so that the given fraction of their height is above
+the visible area.
+.TP
+\fIpathName \fByview scroll \fInumber what\fR
+.
+Scrolls the entries by \fInumber\fR lines or pages.  \fIWhat\fR must be
+either \fBunits\fR (the height of a line of the menu font) or
+\fBpages\fR (the height of the visible area, minus a line).
+.RE
 .SH "MENU ENTRY OPTIONS"
 The following options are allowed on menu entries. Most options are not
 supported by all entry types.
@@ -831,6 +865,9 @@ a menu to a cascaded submenu.
 .IP [3]
 When a button is released over a menu, the active entry (if any) is invoked.
 The menu also unposts unless it is a torn-off menu.
+However, if the menu was posted under the mouse cursor by the button press
+(for example, a menu moved to fit on the screen), the release is ignored
+and no entry is activated until the mouse moves.
 .IP [4]
 The Space and Return keys invoke the active entry and
 unpost the menu.
@@ -866,6 +903,10 @@ in the submenu.
 Otherwise, if the current menu was posted from a
 menubutton, then the current menubutton is unposted and the
 next menubutton to the right is posted.
+.IP [10]
+On X11, a menu higher than the screen is scrolled with the mouse wheel, or
+while the mouse is over the arrow at its top or bottom.  An entry which
+is activated with the keyboard is scrolled into view.
 .PP
 Disabled menu entries are non-responsive:  they do not activate and
 they ignore mouse button presses and releases.

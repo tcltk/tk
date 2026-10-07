@@ -428,7 +428,7 @@ test option-15.6 {database files} -body {
 test option-15.7 {database files} -body {
     option read $option1
 	option get . x9 color
-} -result " \\\t\\A\n"
+} -result " \t\\A\n"
 test option-15.8 {database files} -body {
     option read $option1 widget foo
 } -returnCodes error -result {wrong # args: should be "option readfile fileName ?priority?"}
@@ -448,6 +448,17 @@ test option-15.11 {database files} -setup {
 } -body {
     option get . {x 4} color
 } -result brówn
+test option-15.12 {database files: escaped blanks anywhere in the value, ticket d5d7f548bd} -setup {
+    set option6 [makeFile {} option.file6]
+    set file [open $option6 w]
+    puts $file "*x10:\t\\\t\\\t\\ a\\ b\\\tc\\089"
+    close $file
+} -body {
+    option read $option6
+    option get . x10 color
+} -cleanup {
+    removeFile $option6
+} -result "\t\t a b\tc\\089"
 
 test option-16.1 {ReadOptionFile} -body {
     set option4 [makeFile {} option.file4]
@@ -461,7 +472,7 @@ test option-16.1 {ReadOptionFile} -body {
     removeFile $option4
 } -result {true false}
 
-test option-16.2 {ticket 766ef52f3} -setup {
+test option-16.2 {list value escaped for the resource file syntax, ticket 766ef52f3} -setup {
     set expected [split {label {
   foo bar
 }
@@ -470,7 +481,7 @@ test option-16.2 {ticket 766ef52f3} -setup {
     set option5 [makeFile {} option.file5]
     set file [open $option5 w]
     fconfigure $file -translation crlf
-    puts $file "*notok: $expected"
+    puts $file "*notok: [string map {\\ \\\\ \n \\n} $expected]"
     close $file
     option read $option5 userDefault
     expr {[option get . notok notok] eq $expected}

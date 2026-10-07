@@ -21,6 +21,8 @@ static void		AdjustMenuCoords(TkMenu *menuPtr, TkMenuEntry *mePtr,
 			    int *xPtr, int *yPtr);
 static void		ComputeMenuGeometry(void *clientData);
 static void		DisplayMenu(void *clientData);
+static void		DrawMenuScrollArrows(TkMenu *menuPtr,
+			    Tk_3DBorder border, int borderWidth);
 
 /*
  *----------------------------------------------------------------------
@@ -542,16 +544,41 @@ ComputeMenuGeometry(
 	return;
     }
 
+    int height;
+
     if (menuPtr->menuType == MENUBAR) {
 	TkpComputeMenubarGeometry(menuPtr);
     } else {
 	TkpComputeStandardMenuGeometry(menuPtr);
     }
 
+    /*
+     * A menu higher than the screen is limited to the screen height, and
+     * its entries can be scrolled with the arrows at its top and bottom.
+     * Menus on Windows and macOS are native and scrolled by the system.
+     */
+
+    height = menuPtr->totalHeight;
+    menuPtr->scrollArrowHeight = 0;
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+    if ((menuPtr->menuType != MENUBAR)
+	    && (height > HeightOfScreen(Tk_Screen(menuPtr->tkwin)))) {
+	Tk_FontMetrics fm;
+	int borderWidth;
+
+	Tk_GetFontMetrics(Tk_GetFontFromObj(menuPtr->tkwin,
+		menuPtr->fontPtr), &fm);
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+		&borderWidth);
+	menuPtr->scrollArrowHeight = borderWidth + fm.linespace;
+	height = HeightOfScreen(Tk_Screen(menuPtr->tkwin));
+    }
+#endif
+    TkMenuSetScrollOffset(menuPtr, menuPtr->scrollOffset);
+
     if ((menuPtr->totalWidth != Tk_ReqWidth(menuPtr->tkwin)) ||
-	    (menuPtr->totalHeight != Tk_ReqHeight(menuPtr->tkwin))) {
-	Tk_GeometryRequest(menuPtr->tkwin, menuPtr->totalWidth,
-		menuPtr->totalHeight);
+	    (height != Tk_ReqHeight(menuPtr->tkwin))) {
+	Tk_GeometryRequest(menuPtr->tkwin, menuPtr->totalWidth, height);
     }
 
     /*
@@ -605,6 +632,120 @@ TkMenuSelectImageProc(
 /*
  *----------------------------------------------------------------------
  *
+ * TkMenuScrollDelta, TkMenuGetScrollRange, TkMenuSetScrollOffset,
+ * TkMenuSeeEntry --
+ *
+ *	Helpers for scrolling the entries of a menu higher than the screen.
+ *	The entries are displayed between the areas with the scroll arrows
+ *	at the top and the bottom of the menu, shifted up by scrollOffset.
+ *
+ *	TkMenuScrollDelta returns the value to add to the y coordinate of an
+ *	entry to get its position in the window.  TkMenuGetScrollRange
+ *	returns the height of all entries and the height of the area in which
+ *	they are displayed.  TkMenuSetScrollOffset scrolls the entries,
+ *	limiting the offset to the valid range.  TkMenuSeeEntry scrolls the
+ *	entries so that the given entry is visible.
+ *
+ * Results:
+ *	See above.
+ *
+ * Side effects:
+ *	TkMenuSetScrollOffset and TkMenuSeeEntry may redisplay the menu.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+MenuWindowHeight(
+    TkMenu *menuPtr)
+{
+    return Tk_IsMapped(menuPtr->tkwin) ? Tk_Height(menuPtr->tkwin)
+	    : Tk_ReqHeight(menuPtr->tkwin);
+}
+
+int
+TkMenuScrollDelta(
+    TkMenu *menuPtr)
+{
+    int borderWidth;
+
+    if (menuPtr->scrollArrowHeight == 0) {
+	return 0;
+    }
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+	    &borderWidth);
+    return menuPtr->scrollArrowHeight - borderWidth - menuPtr->scrollOffset;
+}
+
+void
+TkMenuGetScrollRange(
+    TkMenu *menuPtr,
+    int *contentPtr,		/* Height of all entries. */
+    int *visiblePtr)		/* Height of the area with the entries. */
+{
+    int borderWidth;
+
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+	    &borderWidth);
+    *contentPtr = menuPtr->totalHeight - 2 * borderWidth;
+    if (menuPtr->scrollArrowHeight == 0) {
+	*visiblePtr = *contentPtr;
+    } else {
+	*visiblePtr = MenuWindowHeight(menuPtr)
+		- 2 * menuPtr->scrollArrowHeight;
+    }
+}
+
+void
+TkMenuSetScrollOffset(
+    TkMenu *menuPtr,
+    int offset)
+{
+    int content, visible;
+
+    if (menuPtr->scrollArrowHeight == 0) {
+	offset = 0;
+    } else {
+	TkMenuGetScrollRange(menuPtr, &content, &visible);
+	if (offset > content - visible) {
+	    offset = content - visible;
+	}
+	if (offset < 0) {
+	    offset = 0;
+	}
+    }
+    if (offset != menuPtr->scrollOffset) {
+	menuPtr->scrollOffset = offset;
+	TkEventuallyRedrawMenu(menuPtr, NULL);
+    }
+}
+
+void
+TkMenuSeeEntry(
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr)
+{
+    int content, visible, borderWidth, top, offset;
+
+    if (menuPtr->scrollArrowHeight == 0) {
+	return;
+    }
+    TkMenuGetScrollRange(menuPtr, &content, &visible);
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+	    &borderWidth);
+    top = mePtr->y - borderWidth;
+    offset = menuPtr->scrollOffset;
+    if (top < offset) {
+	offset = top;
+    } else if (top + mePtr->height > offset + visible) {
+	offset = top + mePtr->height - visible;
+    }
+    TkMenuSetScrollOffset(menuPtr, offset);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * DisplayMenu --
  *
  *	This function is invoked to display a menu widget.
@@ -631,6 +772,7 @@ DisplayMenu(
     int width;
     int borderWidth;
     Tk_3DBorder border;
+    int delta, entryY, arrowHeight;
 
 
     menuPtr->menuFlags &= ~REDRAW_PENDING;
@@ -662,6 +804,15 @@ DisplayMenu(
     Tk_GetFontMetrics(tkfont, &menuMetrics);
 
     /*
+     * The entries of a menu higher than the screen are shifted by the
+     * scroll offset, and are not drawn if they are hidden by the areas with
+     * the scroll arrows.
+     */
+
+    delta = TkMenuScrollDelta(menuPtr);
+    arrowHeight = menuPtr->scrollArrowHeight;
+
+    /*
      * Loop through all of the entries, drawing them one at a time.
      */
 
@@ -673,6 +824,11 @@ DisplayMenu(
 	    }
 	}
 	mePtr->entryFlags &= ~ENTRY_NEEDS_REDISPLAY;
+	entryY = mePtr->y + delta;
+	if ((arrowHeight > 0) && ((entryY + mePtr->height <= arrowHeight)
+		|| (entryY >= Tk_Height(tkwin) - arrowHeight))) {
+	    continue;
+	}
 
 #ifndef TK_NO_DOUBLE_BUFFERING
 	/*
@@ -689,12 +845,12 @@ DisplayMenu(
 		    mePtr->width, mePtr->height, drawingParameters);
 	    XCopyArea(menuPtr->display, pixmap, Tk_WindowId(tkwin),
 		    menuPtr->textGC, 0, 0, (unsigned) mePtr->width,
-		    (unsigned) mePtr->height, mePtr->x, mePtr->y);
+		    (unsigned) mePtr->height, mePtr->x, entryY);
 	    Tk_FreePixmap(menuPtr->display, pixmap);
 	}
 #else
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
-		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
+		&menuMetrics, mePtr->x, entryY, mePtr->width,
 		mePtr->height, drawingParameters);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
@@ -706,7 +862,7 @@ DisplayMenu(
 	     */
 
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
-		    mePtr->x + mePtr->width, mePtr->y,
+		    mePtr->x + mePtr->width, entryY,
 		    Tk_Width(tkwin) - mePtr->x - mePtr->width - borderWidth,
 		    mePtr->height, 0, TK_RELIEF_FLAT);
 	}
@@ -720,9 +876,9 @@ DisplayMenu(
 
 	    mePtr = menuPtr->entries[index - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
-		mePtr->x, mePtr->y + mePtr->height, mePtr->width,
-		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
-		0, TK_RELIEF_FLAT);
+		mePtr->x, mePtr->y + delta + mePtr->height, mePtr->width,
+		Tk_Height(tkwin) - mePtr->y - delta - mePtr->height
+		- borderWidth, 0, TK_RELIEF_FLAT);
 	}
     }
 
@@ -741,11 +897,11 @@ DisplayMenu(
 	     */
 
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
-		border, mePtr->x, mePtr->y + mePtr->height, mePtr->width,
-		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
-		0, TK_RELIEF_FLAT);
+		border, mePtr->x, mePtr->y + delta + mePtr->height,
+		mePtr->width, Tk_Height(tkwin) - mePtr->y - delta
+		- mePtr->height - borderWidth, 0, TK_RELIEF_FLAT);
 	    x = mePtr->x + mePtr->width;
-	    y = mePtr->y + mePtr->height;
+	    y = mePtr->y + delta + mePtr->height;
 	    width = Tk_Width(tkwin) - x - borderWidth;
 	    height = Tk_Height(tkwin) - y - borderWidth;
 	}
@@ -759,11 +915,78 @@ DisplayMenu(
 		width, height, 0, TK_RELIEF_FLAT);
     }
 
+    if (arrowHeight > 0) {
+	DrawMenuScrollArrows(menuPtr, border, borderWidth);
+    }
+
     Tk_Draw3DRectangle(menuPtr->tkwin, Tk_WindowId(tkwin),
 	    border, 0, 0, Tk_Width(tkwin), Tk_Height(tkwin), borderWidth,
 	    menuPtr->relief);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawMenuScrollArrows --
+ *
+ *	Draws the areas with the scroll arrows at the top and the bottom of a
+ *	menu higher than the screen.  An arrow is drawn in the disabled color
+ *	if the entries cannot be scrolled further in its direction.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The arrows are drawn over the entries which are partially hidden.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DrawMenuScrollArrows(
+    TkMenu *menuPtr,
+    Tk_3DBorder border,
+    int borderWidth)
+{
+    Tk_Window tkwin = menuPtr->tkwin;
+    int width = Tk_Width(tkwin), height = Tk_Height(tkwin);
+    int areaHeight = menuPtr->scrollArrowHeight - borderWidth;
+    int size = areaHeight / 3, content, visible;
+    XPoint points[3];
+    GC gc;
+
+    if (size < 2) {
+	size = 2;
+    }
+    TkMenuGetScrollRange(menuPtr, &content, &visible);
+
+    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, borderWidth,
+	    borderWidth, width - 2 * borderWidth, areaHeight, 0, TK_RELIEF_FLAT);
+    gc = (menuPtr->scrollOffset > 0 || menuPtr->disabledGC == NULL)
+	    ? menuPtr->textGC : menuPtr->disabledGC;
+    points[0].x = width / 2 - size;
+    points[0].y = borderWidth + areaHeight / 2 + size / 2;
+    points[1].x = width / 2 + size;
+    points[1].y = points[0].y;
+    points[2].x = width / 2;
+    points[2].y = points[0].y - size;
+    XFillPolygon(menuPtr->display, Tk_WindowId(tkwin), gc, points, 3,
+	    Convex, CoordModeOrigin);
+
+    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, borderWidth,
+	    height - menuPtr->scrollArrowHeight, width - 2 * borderWidth,
+	    areaHeight, 0, TK_RELIEF_FLAT);
+    gc = (menuPtr->scrollOffset < content - visible
+	    || menuPtr->disabledGC == NULL)
+	    ? menuPtr->textGC : menuPtr->disabledGC;
+    points[0].y = height - menuPtr->scrollArrowHeight + areaHeight / 2
+	    - size / 2;
+    points[1].y = points[0].y;
+    points[2].y = points[0].y + size;
+    XFillPolygon(menuPtr->display, Tk_WindowId(tkwin), gc, points, 3,
+	    Convex, CoordModeOrigin);
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -1012,8 +1235,31 @@ AdjustMenuCoords(
     int *yPtr)
 {
     if (menuPtr->menuType == MENUBAR) {
+	TkMenu *childPtr = (mePtr->childMenuRefPtr != NULL)
+		? mePtr->childMenuRefPtr->menuPtr : NULL;
+
 	*xPtr += mePtr->x;
 	*yPtr += mePtr->y + mePtr->height;
+
+	/*
+	 * If the submenu does not fit below the menubar, but fits above it,
+	 * post it above. Otherwise it would be moved up to overlap the
+	 * menubar entry, and releasing the mouse button would invoke the
+	 * menu item under the pointer.
+	 */
+
+	if ((childPtr != NULL) && (childPtr->tkwin != NULL)) {
+	    int vRootX, vRootY, vRootWidth, vRootHeight, height;
+
+	    TkRecomputeMenu(childPtr);
+	    height = Tk_ReqHeight(childPtr->tkwin);
+	    Tk_GetVRootGeometry(menuPtr->tkwin, &vRootX, &vRootY,
+		    &vRootWidth, &vRootHeight);
+	    if ((*yPtr + height > vRootY + vRootHeight)
+		    && (*yPtr - mePtr->height - height >= vRootY)) {
+		*yPtr -= mePtr->height + height;
+	    }
+	}
     } else {
 	int borderWidth, activeBorderWidth;
 	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
@@ -1023,8 +1269,12 @@ AdjustMenuCoords(
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-	*xPtr += Tk_Width(menuPtr->tkwin) - borderWidth	- activeBorderWidth
-		- scaled2;
+	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+	    *xPtr += Tk_Width(menuPtr->tkwin) - borderWidth;
+	} else {
+	    *xPtr += mePtr->x + mePtr->width;
+	}
+	*xPtr -= activeBorderWidth + scaled2;
 	*yPtr += mePtr->y + activeBorderWidth + scaled2;
     }
 }

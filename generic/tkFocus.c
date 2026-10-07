@@ -540,7 +540,7 @@ TkSetFocusWin(
 {
     ToplevelFocusInfo *tlFocusPtr;
     DisplayFocusInfo *displayFocusPtr;
-    TkWindow *topLevelPtr;
+    TkWindow *topLevelPtr, *wrapperPtr;
     size_t serial;
     bool allMapped;
 
@@ -660,10 +660,15 @@ TkSetFocusWin(
 
 	/*
 	 * Call the platform specific function TkpChangeFocus to move the
-	 * window manager's focus to a new toplevel.
+	 * window manager's focus to a new toplevel. A top of hierarchy window
+	 * created by an extension may have no wrapper. [Bug 704212]
 	 */
 
-	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
+	wrapperPtr = TkpGetWrapperWindow(topLevelPtr);
+	if (wrapperPtr == NULL) {
+	    wrapperPtr = topLevelPtr;
+	}
+	serial = TkpChangeFocus(wrapperPtr, force);
 	if (serial != 0) {
 	    displayFocusPtr->focusSerial = serial;
 	}

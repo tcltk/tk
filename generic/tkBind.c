@@ -3024,7 +3024,7 @@ ExpandPercents(
 	    break;
 	case 'b':
 	    if (flags & BUTTON) {
-		SET_UNUMBER(evPtr->xbutton.button);
+		SET_UNUMBER((evPtr->xbutton.button > 7) ? evPtr->xbutton.button - 4 : evPtr->xbutton.button);
 	    }
 	    break;
 	case 'c':

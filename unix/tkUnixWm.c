@@ -239,6 +239,9 @@ typedef struct TkWmInfo {
  * WM_VROOT_OFFSET_STALE -	non-zero means that (x,y) offset information
  *				about the virtual root window is stale and
  *				needs to be fetched fresh from the X server.
+ * WM_KEEP_POSITION -		non-zero means the window was withdrawn after
+ *				being mapped; ask the window manager to keep
+ *				its position when it is mapped again.
  * WM_ABOUT_TO_MAP -		non-zero means that the window is about to be
  *				mapped by TkWmMapWindow. This is used by
  *				UpdateGeometryInfo to modify its behavior.
@@ -272,6 +275,7 @@ typedef struct TkWmInfo {
 #define WM_UPDATE_SIZE_HINTS		0x10
 #define WM_SYNC_PENDING			0x20
 #define WM_VROOT_OFFSET_STALE		0x40
+#define WM_KEEP_POSITION		0x80
 #define WM_ABOUT_TO_MAP			0x100
 #define WM_MOVE_PENDING			0x200
 #define WM_COLORMAPS_EXPLICIT		0x400
@@ -2606,7 +2610,7 @@ WmIconpositionCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->hints.flags &= ~IconPositionHint;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
@@ -3599,7 +3603,7 @@ WmTransientCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	if (containerPtr != NULL) {
 	    /*
 	     * If we had a container, tell them that we aren't tied to them
@@ -4934,6 +4938,9 @@ UpdateSizeHints(
     hintsPtr->max_aspect.y = wmPtr->maxAspect.y;
     hintsPtr->win_gravity = wmPtr->gravity;
     hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize | PResizeInc;
+    if (wmPtr->flags & WM_KEEP_POSITION) {
+	hintsPtr->flags |= USPosition;
+    }
 
     /*
      * If the window isn't supposed to be resizable, then set the minimum and
@@ -5187,6 +5194,17 @@ CheckNetWmState(
     }
 
     wmPtr->attributes.zoomed = (zoomed == 3);
+
+    /*
+     * Keep the states changed through the window manager when the window is
+     * mapped again. The window manager may remove them from a withdrawn window.
+     */
+
+    if (!wmPtr->withdrawn) {
+	wmPtr->reqState.topmost = wmPtr->attributes.topmost;
+	wmPtr->reqState.zoomed = wmPtr->attributes.zoomed;
+	wmPtr->reqState.fullscreen = wmPtr->attributes.fullscreen;
+    }
 
     return;
 }
@@ -7495,6 +7513,7 @@ TkpWmSetState(
 	    return false;
 	}
 	WaitForMapNotify(winPtr, 0);
+	wmPtr->flags |= WM_KEEP_POSITION | WM_UPDATE_SIZE_HINTS;
     } else if (state == NormalState) {
 	wmPtr->hints.initial_state = NormalState;
 	wmPtr->withdrawn = false;
@@ -7514,6 +7533,7 @@ TkpWmSetState(
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
+	    wmPtr->withdrawn = false;
 	    return true;
 	}
 	if (wmPtr->withdrawn) {
