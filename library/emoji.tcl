@@ -1,6 +1,7 @@
-# emoji_mono.tcl -- simplified monochrome emoji chooser
+# emoji.tcl -- simplified Tk emoji chooser
 #
-# For Windows, X11, Wayland only. macOS (aqua) is ignored.
+# For Windows, X11, Wayland only. macOS (aqua) is ignored
+# because its system emoji picker already integrates with Tk.
 #  - Uses monochrome fonts: Segoe UI Emoji / Noto Emoji
 #  - Bound to Win-. / Super-. and Control-. on text, entry, ttk::entry
 #  - Popup over the widget, insert at insertion cursor
@@ -11,7 +12,7 @@ namespace eval ::tk::emoji {
     variable S
     array set S {
         top    .tkemojipicker
-        cell   36
+        cell   26
         cat    ""
         cur    -1
         cols   1
@@ -199,9 +200,9 @@ proc ::tk::emoji::EnsureFonts {} {
             break
         }
     }
-    set S(font)    [list $family 20]
-    set S(catfont) [list $family 12]
-    set S(bigfont) [list $family 28]
+    set S(font)    [list $family 16]
+    set S(catfont) [list $family 9]
+    set S(bigfont) [list $family 14]
 }
 
 # -- public entry
@@ -240,30 +241,31 @@ proc ::tk::emoji::Build {} {
     wm protocol $top WM_DELETE_WINDOW [namespace code Close]
     bind $top <Escape> [namespace code Close]
 
-    # Minimal colors - monochrome friendly
+    # Minimal colors - monochrome friendly, royal blue selection
     set bg white
     set fg black
-    set selbg "#3a3a3a"
+    set selbg "#4169E1"
     set selfg white
     set S(bg) $bg; set S(fg) $fg; set S(selbg) $selbg; set S(selfg) $selfg
 
-    ttk::style configure Emoji.Toolbutton -font $S(catfont) -padding 2
+    ttk::style configure Emoji.Toolbutton -font $S(catfont) -padding 1
 
-    set f [ttk::frame $top.f -padding 4]
+    set f [ttk::frame $top.f -padding 2]
     pack $f -fill both -expand 1
 
     ttk::frame $f.bar
     foreach cat $categories {
         set key [string tolower $cat]
         ttk::radiobutton $f.bar.$key -style Emoji.Toolbutton \
-            -text $cat -width 8 \
+            -text $cat -width 7 \
             -variable ::tk::emoji::S(cat) -value $cat \
             -command [namespace code SetCategory]
-        pack $f.bar.$key -side left -padx 1
+        pack $f.bar.$key -side left -padx 0
     }
 
-    canvas $f.f.c -width [expr {9*$S(cell)}] -height [expr {6*$S(cell)}] \
-        -highlightthickness 1 -borderwidth 0 -background $bg -takefocus 1 \
+    ttk::frame $f.f
+    canvas $f.f.c -width [expr {12*$S(cell)}] -height [expr {6*$S(cell)}] \
+        -highlightthickness 0 -borderwidth 0 -background $bg -takefocus 1 \
         -yscrollincrement $S(cell)
     ttk::scrollbar $f.f.sb -command [list $f.f.c yview]
     $f.f.c configure -yscrollcommand [list $f.f.sb set]
@@ -273,13 +275,13 @@ proc ::tk::emoji::Build {} {
 
     ttk::frame $f.pv
     ttk::label $f.pv.big -font $S(bigfont) -width 2 -anchor center
-    ttk::label $f.pv.name -textvariable ::tk::emoji::S(cat) -anchor w
+    ttk::label $f.pv.name -textvariable ::tk::emoji::S(cat) -anchor w -font $S(catfont)
     pack $f.pv.big -side left
-    pack $f.pv.name -side left -padx 6
+    pack $f.pv.name -side left -padx 4
     set S(prevBig) $f.pv.big
 
-    grid $f.bar -sticky w -pady 2
-    grid $f.f   -sticky nsew -pady 2
+    grid $f.bar -sticky w -pady 1
+    grid $f.f   -sticky nsew -pady 1
     grid $f.pv  -sticky ew
     grid columnconfigure $f 0 -weight 1
     grid rowconfigure $f 1 -weight 1
@@ -402,7 +404,7 @@ proc ::tk::emoji::SetCur {idx} {
     }
     set cell $S(cell)
     lassign [Origin $idx] x y
-    $c coords cursor [expr {$x+2}] [expr {$y+2}] [expr {$x+$cell-2}] [expr {$y+$cell-2}]
+    $c coords cursor [expr {$x+1}] [expr {$y+1}] [expr {$x+$cell-1}] [expr {$y+$cell-1}]
     $c itemconfigure cursor -state normal
     $c itemconfigure e$idx -fill $S(selfg)
     $S(prevBig) configure -text [lindex $S(items) $idx]
