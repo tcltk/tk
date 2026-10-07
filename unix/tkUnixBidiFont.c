@@ -257,7 +257,7 @@ static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
  *    neutral characters.
  *
  *    Note: All other scripts requiring complex shaping (Arabic, Indic,
- *    Thai, CJK ideographs, emoji requiring COLR, etc.) return 0 to
+ *    Thai, CJK ideographs, supplementary-plane characters, etc.) return 0 to
  *    ensure HarfBuzz handling.
  * ---------------------------------------------------------------
  */
@@ -307,9 +307,7 @@ IsSimpleOnly(const char *str, int len)
 	    (uc >= 0x0E00 && uc <= 0x0E7F) ||	   /* Thai */
 	    (uc >= 0x0E80 && uc <= 0x0EFF) ||	   /* Lao */
 
-	    /* Emoji and supplementary that need COLR/CBDT shaping. */
-	    (uc >= 0x1F000 && uc <= 0x1FAFF) ||
-	    (uc >= 0x1F300 && uc <= 0x1F9FF) ||
+	    /* Supplementary planes (this includes emoji). */
 	    uc > 0xFFFF) {
 
 	    return false;   /* Use complex shaper. */
@@ -1572,12 +1570,11 @@ X11Shaper_ShapeString(
 		 * symbols, general punctuation without a preceding context) the
 		 * anchor is subrunStart itself - GetRunFaceIndex will pick the
 		 * face that has charset coverage for the first codepoint, which
-		 * is exactly what we want (e.g. Noto Color Emoji for U+1F600).
+		 * is exactly what we want (e.g. a symbol font for U+1F600).
 		 *
 		 * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
-		 * all-COMMON case so that HarfBuzz activates the correct feature
-		 * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
-		 * by colour-emoji fonts).
+		 * all-COMMON case so that HarfBuzz does not apply Latin-specific
+		 * features to symbol runs.
 		 */
 		int anchorChar = subrunStart;
 		if (subrunScript != HB_SCRIPT_INVALID) {
@@ -1626,8 +1623,7 @@ X11Shaper_ShapeString(
 		 * word, where the emoji face is different from the Latin face)
 		 * break immediately so the emoji gets its own subrun with the
 		 * correct face and HB_SCRIPT_COMMON.  Without this check the
-		 * emoji would be shaped with the Latin face, producing .notdef
-		 * or the wrong monochrome glyph.
+		 * emoji would be shaped with the Latin face, producing .notdef.
 		 */
 		int subrunEnd = subrunStart + 1;
 		while (subrunEnd < runStart + runLen) {

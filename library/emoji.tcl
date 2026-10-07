@@ -10,6 +10,11 @@
 
 package require Tk 9.0-
 
+# Bail if X11 and compiled without Xft support
+if {[tk::build-info no-xft]} {
+	return
+}
+
 namespace eval ::tk::emoji {
     variable S
     array set S {
@@ -248,11 +253,13 @@ proc ::tk::emoji::Build {} {
     set f [ttk::frame $top.f -padding 2]
     pack $f -fill both -expand 1
 
+	variable icons
     ttk::frame $f.bar
     foreach cat $categories {
         set key [string tolower $cat]
+        set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
         ttk::radiobutton $f.bar.$key -style Emoji.Toolbutton \
-            -text $cat -width 7 \
+            -text "$ico $cat" -width 8 \
             -variable ::tk::emoji::S(cat) -value $cat \
             -command [namespace code SetCategory]
         pack $f.bar.$key -side left -padx 0
