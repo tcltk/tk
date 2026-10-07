@@ -1,10 +1,12 @@
-# emoji.tcl -- simplified Tk emoji chooser
+# emoji.tcl -- simplified Tk emoji chooser for Linux (X11 and Wayland)
 #
-# For Windows, X11, Wayland only. macOS (aqua) is ignored
-# because its system emoji picker already integrates with Tk.
-#  - Uses monochrome fonts: Segoe UI Emoji / Noto Emoji
-#  - Bound to Win-. / Super-. and Control-. on text, entry, ttk::entry
+# A pure Tk dialog; no native code needed.
+#  - Uses monochrome fonts: Noto Emoji and similar
+#  - Bound to Control-. / Control-; and Super-. / Super-; (Mod4) on text,
+#    entry and ttk::entry
 #  - Popup over the widget, insert at insertion cursor
+#
+# Does nothing on Windows and macOS, which have their own system pickers.
 
 package require Tk 9.0-
 
@@ -154,6 +156,11 @@ proc ::tk::emoji::Items {cat} {
     return $out
 }
 
+# The picker is for X11 and Wayland; other windowing systems have their own.
+proc ::tk::emoji::Active {} {
+    return [expr {[tk windowingsystem] ni {win32 aqua}}]
+}
+
 proc ::tk::emoji::Supported {w} {
     if {![winfo exists $w]} {return 0}
     set c [winfo class $w]
@@ -172,25 +179,13 @@ proc ::tk::emoji::Insert {w s} {
 proc ::tk::emoji::EnsureFonts {} {
     variable S
     if {[info exists S(font)]} return
-    # Monochrome preference per your request
-    switch -- [tk windowingsystem] {
-        win32 {
-            set candidates {
-                {Segoe UI Emoji}
-                {Segoe UI Symbol}
-                {Segoe UI}
-            }
-        }
-        default {
-            # X11 / Wayland
-            set candidates {
-                {Noto Emoji}
-                {Noto Sans Symbols2}
-                {Noto Sans Symbols}
-                {Symbola}
-                {DejaVu Sans}
-            }
-        }
+    # Monochrome fonts, in order of preference
+    set candidates {
+        {Noto Emoji}
+        {Noto Sans Symbols2}
+        {Noto Sans Symbols}
+        {Symbola}
+        {DejaVu Sans}
     }
     set family [font actual TkDefaultFont -family]
     set available [font families]
@@ -200,7 +195,7 @@ proc ::tk::emoji::EnsureFonts {} {
             break
         }
     }
-    set S(font)    [list $family 16]
+    set S(font)    [list $family 14]
     set S(catfont) [list $family 9]
     set S(bigfont) [list $family 14]
 }
@@ -209,7 +204,7 @@ proc ::tk::emoji::EnsureFonts {} {
 
 proc ::tk::emoji::choose {{target ""}} {
     variable S
-    if {[tk windowingsystem] eq "aqua"} {return}
+    if {![Active]} {return}
     if {$target eq ""} {set target [focus]}
     if {$target eq "" || ![winfo exists $target]} {bell; return}
     if {[winfo exists $S(top)] && [string match $S(top)* $target]} {return}
@@ -476,52 +471,32 @@ proc ::tk::emoji::Pick {idx keep} {
     if {!$keep} {Close}
 }
 
-# -- bindings for Win/Linux only
+# -- bindings
 
-if {[tk windowingsystem] ne "aqua"} {
-    # virtual event - period and semicolon
+if {[::tk::emoji::Active]} {
     event add <<EmojiPicker>> <Control-period>
     event add <<EmojiPicker>> <Control-KP_Decimal>
     event add <<EmojiPicker>> <Control-semicolon>
 
-    catch {event add <<EmojiPicker>> <Mod4-period>}
-    catch {event add <<EmojiPicker>> <Super-period>}
-    catch {event add <<EmojiPicker>> <Win-period>}
-    catch {event add <<EmojiPicker>> <Win_L-period>}
-    catch {event add <<EmojiPicker>> <Mod4-semicolon>}
-    catch {event add <<EmojiPicker>> <Super-semicolon>}
-    catch {event add <<EmojiPicker>> <Win-semicolon>}
-    catch {event add <<EmojiPicker>> <Win_L-semicolon>}
+    # Super (Mod4) variants. A compositor may reserve these for itself, in
+    # which case Tk never sees them.
+    event add <<EmojiPicker>> <Mod4-period>
+    event add <<EmojiPicker>> <Mod4-semicolon>
 
-    # Intercept OS emoji picker on Windows: bind with break to suppress
-    # native panel and force monochrome picker
+    # Class bindings with break, so the key is handled here and only once.
     foreach cls {Entry TEntry Text} {
         bind $cls <<EmojiPicker>> {::tk::emoji::choose %W; break}
-        # Direct Win/Super binds with break - higher priority than virtual
-        catch {bind $cls <Mod4-period> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Super-period> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Win-period> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Win_L-period> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Mod4-semicolon> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Super-semicolon> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Win-semicolon> {::tk::emoji::choose %W; break}}
-        catch {bind $cls <Win_L-semicolon> {::tk::emoji::choose %W; break}}
-    }
-    # Also bind on 'all' as fallback if widget class binding missed
-    if {[tk windowingsystem] eq "win32"} {
-        catch {bind all <Win-period> {::tk::emoji::choose %W; break}}
-        catch {bind all <Win-semicolon> {::tk::emoji::choose %W; break}}
     }
 }
 
 # demo when run directly
 if {[info exists ::argv0] && [info script] ne "" \
         && [file normalize $::argv0] eq [file normalize [info script]]} {
-    wm title . "Emoji picker mono demo"
+    wm title . "Emoji picker demo"
     ttk::frame .f -padding 10; pack .f -fill both -expand 1
-    ttk::label .f.l1 -text "Entry (Ctrl-. or Win-.) :"
+    ttk::label .f.l1 -text "Entry (Ctrl-. or Super-.) :"
     ttk::entry .f.e -width 40
-    ttk::label .f.l2 -text "Text (Ctrl-. or Win-.) :"
+    ttk::label .f.l2 -text "Text (Ctrl-. or Super-.) :"
     text .f.t -width 40 -height 6
     pack .f.l1 -anchor w; pack .f.e -fill x -pady {2 8}
     pack .f.l2 -anchor w; pack .f.t -fill both -expand 1
