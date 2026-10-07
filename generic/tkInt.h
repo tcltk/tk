@@ -567,9 +567,11 @@ typedef struct TkDisplay {
 
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
-#ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
-#endif /* TK_USE_INPUT_METHODS */
+    Tcl_HashTable deletedWinTable;
+				/* Maps from X window ids of recently deleted
+				 * windows to the serial number of the last
+				 * request made before the deletion. */
 } TkDisplay;
 
 /*
@@ -1254,6 +1256,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
+MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,

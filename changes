@@ -8461,3 +8461,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-06 (bug) [13aabd] Click to the right of the end of a line moves the insert cursor to the next line (nijtmans)
 
 2026-10-06 (bug) [99bb36] Slider trough click repeats if command creates modal dialogue (nijtmans)
+
+2026-10-07 (bug) [4a25f3] Embedded application exits with BadDrawable when its container is destroyed (nijtmans)

@@ -274,6 +274,7 @@ TkCloseDisplay(
      */
 
     Tcl_DeleteHashTable(&dispPtr->winTable);
+    Tcl_DeleteHashTable(&dispPtr->deletedWinTable);
 
     ckfree(dispPtr);
 
@@ -488,6 +489,7 @@ GetScreen(
 	    dispPtr->flags |= TK_DISPLAY_COLLAPSE_MOTION_EVENTS;
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
+	    Tcl_InitHashTable(&dispPtr->deletedWinTable, TCL_ONE_WORD_KEYS);
 
 	    dispPtr->name = (char *)ckalloc(length + 1);
 	    strncpy(dispPtr->name, screenName, length);
@@ -1533,6 +1535,7 @@ Tk_DestroyWindow(
 #endif
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
 		(char *) winPtr->window));
+	TkRecordDeletedWindow(dispPtr, winPtr->window);
 	winPtr->window = None;
     }
     UnlinkWindow(winPtr);
