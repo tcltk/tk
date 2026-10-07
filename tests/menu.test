@@ -4064,7 +4064,53 @@ test menu-35.1 {menu -underline string overruns Bug 1599877} -setup {
     tk::TraverseToMenu . "e"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result 0
+test menu-35.2 {tk::TraverseToMenu posts a menubutton from another window} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    # On Windows the native menu would wait for input.
+    menubutton .mb -text File -underline 0 -menu .mb.m
+    menu .mb.m -tearoff 0
+    .mb.m add command -label Dummy
+    entry .e
+    pack .mb .e
+    update
+    list [tk::TraverseToMenu .e f] $tk::Priv(postedMb)
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result {1 .mb}
+test menu-35.3 {tk::TraverseToMenu traverses to a menubar entry} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    menu .m -tearoff 0
+    menu .m.file -tearoff 0
+    .m add cascade -label File -underline 0 -menu .m.file
+    .m.file add command -label Dummy
+    . configure -menu .m
+    update
+    list [tk::TraverseToMenu . f] [$tk::Priv(window) cget -type]
+} -cleanup {
+    tk::MenuUnpost $tk::Priv(window)
+    set tk::Priv(window) {}
+    . configure -menu {}
+    deleteWindows
+} -result {1 menubar}
+test menu-35.4 {tk::TraverseToMenu without a matching menu} -setup {
+    deleteWindows
+} -body {
+    menubutton .mb -text File -underline 0 -menu .mb.m
+    menu .mb.m -tearoff 0
+    pack .mb
+    update
+    list [tk::TraverseToMenu .mb q] $tk::Priv(postedMb)
+} -cleanup {
+    deleteWindows
+} -result {0 {}}
 
 test menu-37.1 {menubar menues cannot be posted - bug 2160206} -setup {
     catch {destroy .m}

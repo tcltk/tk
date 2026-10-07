@@ -84,6 +84,7 @@ to the userbase.
  - [Make the base chunk of the text layout thread-specific](https://core.tcl-lang.org/tk/tktview/a0c1a9)
  - [Click to the right of the end of a line moves the insert cursor to the next line](https://core.tcl-lang.org/tk/tktview/13aabd)
  - [Mismatch between button number and %b substitution in bindings](https://core.tcl-lang.org/tk/tktview/8f73af)
+ - [MS-Win: fix menubutton key invokation (Alt+Underline or F10)](https://core.tcl-lang.org/tk/tktview/2225507)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
