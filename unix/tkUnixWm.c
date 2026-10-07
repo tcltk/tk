@@ -5150,6 +5150,17 @@ CheckNetWmState(
 
     wmPtr->attributes.zoomed = (zoomed == 3);
 
+    /*
+     * Keep the states changed through the window manager when the window is
+     * mapped again. The window manager may remove them from a withdrawn window.
+     */
+
+    if (!wmPtr->withdrawn) {
+	wmPtr->reqState.topmost = wmPtr->attributes.topmost;
+	wmPtr->reqState.zoomed = wmPtr->attributes.zoomed;
+	wmPtr->reqState.fullscreen = wmPtr->attributes.fullscreen;
+    }
+
     return;
 }
 
