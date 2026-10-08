@@ -690,7 +690,6 @@ CreateCGImageFromDrawableRect(
 		CGImageGetBitsPerPixel(cg_image) * width * dstScaleFactor / 8,
 		colorspace,
 		CGImageGetBitmapInfo(cg_image));
-	CGColorSpaceRelease(colorspace);
 	// Prevent a faint outline from appearing when downscaling Retina captures; possibly also faster
 	CGContextSetInterpolationQuality(cg_context, kCGInterpolationNone);
 	if (cg_context) {
