@@ -5310,6 +5310,18 @@ test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.3 {layout of the text in a window which has not been mapped uses the requested size - bug 7d8d10e4a9} -setup {
+    toplevel .top
+    wm withdraw .top
+    text .top.t -width 20 -height 5 -wrap char -font {Courier 12}
+    pack .top.t
+} -body {
+    .top.t insert end [string repeat x 100]
+    .top.t count -displaylines 1.0 end
+} -cleanup {
+    destroy .top
+} -result 5
+
 # Display lines of $w, each one as its code points U+XXXX joined by ".".
 proc displayLineCodePoints {w} {
     set res {}
