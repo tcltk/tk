@@ -35,7 +35,7 @@ namespace eval ::tk::emoji {
     }
     variable icons [dict create \
 			Recent \u263A Smileys \u263A Gestures \u270B People \u263A \
-			Animals \u2766 Food \u2615 Travel \u2708 Activities \u26BD \
+			Animals \U1F43E Food \u2615 Travel \u2708 Activities \u26BD \
 			Objects \u2692 Symbols \u2665]
 
     # Only code points with reliable monochrome coverage in Noto Emoji,
