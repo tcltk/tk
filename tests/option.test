@@ -433,6 +433,23 @@ test option-16.2 {ticket 766ef52f3} -body {
     removeFile $option5
 } -result $opt162list
 
+test option-17.1 {SetupStacks: stack reallocated while scanned, bug 1652598} -setup {
+    option clear
+    for {set i 1} {$i <= 30} {incr i} {
+	option add *Frame*C$i*x v$i
+    }
+    option add *Frame*Frame*y deep
+} -body {
+    frame .stk1
+    frame .stk1.stk2
+    frame .stk1.stk2.stk3 -class C30
+    list [option get .stk1.stk2 y Y] [option get .stk1.stk2.stk3 x X]
+} -cleanup {
+    destroy .stk1
+    option clear
+    unset -nocomplain i
+} -result {deep v30}
+
 deleteWindows
 
 # cleanup

@@ -8467,3 +8467,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-07 (bug) [897f66] Windows: wm deiconify restores a maximized window as normal (storchaka)
 
 2026-10-07 (bug) [fecd6b] linux only: window -zoomed attribute is restored when it should not be (storchaka)
+
+2026-10-08 (bug) [165259] Free memory read by SetupStacks in tkOption.c (storchaka)
