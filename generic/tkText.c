@@ -485,7 +485,7 @@ CreateWidget(
     Tk_OptionTable optionTable;
     TkTextIndex startIndex;
     Tk_Window newWin;
-    
+
 
     /*
      * Create the window.
@@ -679,7 +679,7 @@ TextWidgetObjCmd(
     TkText *textPtr = (TkText *)clientData;
     int result = TCL_OK;
     int idx;
-    
+
     /* Make sure the grapheme dictionary is initialized. */
     mojibake_dict_init();
 

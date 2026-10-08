@@ -6923,7 +6923,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     event generate .top <Motion> -x 20 -y 20 -warp 1
     controlPointerWarpTiming
     set pointerPos1 [winfo pointerxy .top]
-    wm geometry .top +600+600
+    wm geometry .top +400+400
     after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
     controlPointerWarpTiming
@@ -6932,7 +6932,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     # pointer should have moved the same amount as the window moved
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
-	if {$pos1 != ($pos2 - 400)} {
+	if {$pos1 != ($pos2 - 200)} {
 	    set res [list $pointerPos1 $pointerPos2]
 	}
     }

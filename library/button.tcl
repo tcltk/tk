@@ -110,6 +110,10 @@ bind Checkbutton <space> {
 bind Radiobutton <space> {
     tk::CheckRadioInvoke %W
 }
+# Alt-space opens the window menu on Windows. [Bug 1692755]
+bind Button <Alt-space> {# nothing}
+bind Checkbutton <Alt-space> {# nothing}
+bind Radiobutton <Alt-space> {# nothing}
 bind Button <<Invoke>> {
     tk::ButtonInvoke %W
 }
