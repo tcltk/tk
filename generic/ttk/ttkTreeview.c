@@ -2302,12 +2302,14 @@ static void DrawCells(
     DisplayItem *displayItem,
     DisplayItem *displayItemSel,
     DisplayItem *displayItemActive,
-    Drawable d, int x, int y, int title) {
+    Drawable d, int x, int y, int title)
+{
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
     short horizPad = (short)round(4 * TkScalingLevel(tv->core.tkwin));
     Ttk_Padding cellPadding = {horizPad, 0, horizPad, 0};
+    DisplayItem displayItemLocal;
     DisplayItem displayItemCell, displayItemCellSel, displayItemCellActive;
     int rowHeight = tv->tree.rowHeight * item->height;
     int xPad = 0, defaultPadding = 1;
@@ -2368,7 +2370,7 @@ static void DrawCells(
 	}
 
 	if (column->tagset) {
-	    DisplayItem displayItemLocal = *displayItemUsed;
+	    displayItemLocal = *displayItemUsed;
 	    displayItemUsed = &displayItemLocal;
 	    Ttk_TagSetValues(tv->tree.tagTable,column->tagset,displayItemUsed);
 	    OverrideStriped(tv, item, displayItemUsed);
@@ -2406,10 +2408,12 @@ static void DrawCells(
  *	Draw an item (row background, tree label, and cells).
  */
 static void DrawItem(
-    Treeview *tv, TreeItem *item, Drawable d, int depth) {
+    Treeview *tv, TreeItem *item, Drawable d, int depth)
+{
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item), state1, state2;
-    DisplayItem displayItem, displayItemSel, displayItemActive;
+    DisplayItem displayItem, displayItemSel, displayItemLocal;
+    DisplayItem displayItemActive;
     int x, y, h, xTitle, dispRow, rowHeight;
     Ttk_Box rowBox;
 
@@ -2480,7 +2484,7 @@ static void DrawItem(
 	}
 
 	if (column->tagset) {
-	    DisplayItem displayItemLocal = *displayItemUsed;
+	    displayItemLocal = *displayItemUsed;
 	    displayItemUsed = &displayItemLocal;
 	    Ttk_TagSetValues(tv->tree.tagTable,column->tagset,displayItemUsed);
 	    OverrideStriped(tv, item, displayItemUsed);
@@ -2528,7 +2532,8 @@ static void DrawForest(	/* forward */
     Treeview *tv, TreeItem *item, Drawable d, int depth);
 
 static void DrawSubtree(
-    Treeview *tv, TreeItem *item, Drawable d, int depth) {
+    Treeview *tv, TreeItem *item, Drawable d, int depth)
+{
     int dispRow = DisplayRow(item->rowPos, tv);
 
     if (dispRow >= 0) {
@@ -2544,7 +2549,8 @@ static void DrawSubtree(
  *	Draw a sequence of items and their visible descendants.
  */
 static void DrawForest(
-    Treeview *tv, TreeItem *item, Drawable d, int depth) {
+    Treeview *tv, TreeItem *item, Drawable d, int depth)
+{
     while (item) {
 	DrawSubtree(tv, item, d, depth);
 	item = item->next;
@@ -2554,7 +2560,8 @@ static void DrawForest(
 /* + DrawTreeArea --
  *     Draw the tree area including the headings, if any
  */
-static void DrawTreeArea(Treeview *tv, Drawable d) {
+static void DrawTreeArea(Treeview *tv, Drawable d)
+{
     if (tv->tree.showFlags & SHOW_HEADINGS) {
 	DrawHeadings(tv, d);
     }
@@ -2565,7 +2572,8 @@ static void DrawTreeArea(Treeview *tv, Drawable d) {
 /* + TreeviewDisplay --
  *	Display() widget hook.  Draw the widget contents.
  */
-static void TreeviewDisplay(void *clientData, Drawable d) {
+static void TreeviewDisplay(void *clientData, Drawable d)
+{
     Treeview *tv = (Treeview *)clientData;
     Tk_Window tkwin = tv->core.tkwin;
     int width, height, winWidth, winHeight;
@@ -2649,7 +2657,8 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
  *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
  */
 static int NotAncestryCheck(
-    Tcl_Interp *interp, TreeItem *item, TreeItem *parent) {
+    Tcl_Interp *interp, TreeItem *item, TreeItem *parent)
+{
     TreeItem *p = parent;
     while (p) {
 	if (p == item) {
@@ -2668,7 +2677,8 @@ static int NotAncestryCheck(
  *	returns 1 if OK, 0 and leaves an error message in interp otherwise.
  */
 static int AncestryCheck(
-    Tcl_Interp *interp, TreeItem *item, TreeItem *parent) {
+    Tcl_Interp *interp, TreeItem *item, TreeItem *parent)
+{
     TreeItem *p = item;
     while (p) {
 	if (p == parent) {
@@ -2687,7 +2697,8 @@ static int AncestryCheck(
  *	and detach them from the tree; returns a linked list (chained
  *	along the ->next pointer) of deleted items.
  */
-static TreeItem *DeleteItems(TreeItem *item, TreeItem *delq) {
+static TreeItem *DeleteItems(TreeItem *item, TreeItem *delq)
+{
     if (item->entryPtr) {
 	DetachItem(item);
 	while (item->children) {
@@ -2849,7 +2860,8 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-Tcl_Size TreeviewCountItems(TreeItem *parent, bool hidden, bool recurse) {
+Tcl_Size TreeviewCountItems(TreeItem *parent, bool hidden, bool recurse)
+{
     Tcl_Size count = 0;
     TreeItem *item;
 

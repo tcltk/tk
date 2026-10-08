@@ -71,6 +71,14 @@ to the userbase.
  - [X11 (HarfBuzz/SheenBidi font backend): "font configure" of a font in use leaks the old font](https://core.tcl-lang.org/tk/tktview/e8d4c8)
  - [Click to the right of the end of a line moves the insert cursor to the next line](https://core.tcl-lang.org/tk/tktview/13aabd)
  - [Mismatch between button number and %b substitution in bindings](https://core.tcl-lang.org/tk/tktview/8f73af)
+ - [MS-Win: fix menubutton key invokation (Alt+Underline or F10)](https://core.tcl-lang.org/tk/tktview/222550)
+ - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
+ - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
+ - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
+ - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
+ - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
+ - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
+ - [MS-Win: toplevel menu does not honor font and color](https://core.tcl-lang.org/tk/tktview/11bd4a)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
