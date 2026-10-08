@@ -238,9 +238,10 @@ test sysnotify-2.2 {system notification is not linked to any systray icon on X11
     tk sysnotify {Alert} {This is an alert}
 } -result {}
 
-# The command used for the notifications is only created if libnotify is
-# loaded.
-testConstraint libnotify [llength [info commands ::tk::sysnotify::_sysnotify]]
+# On X11, the command used for the notifications is only created if libnotify
+# is loaded.  On Windows and macOS, it uses the native notifications.
+testConstraint libnotify [expr {[tk windowingsystem] eq "x11"
+	&& [llength [info commands ::tk::sysnotify::_sysnotify]]}]
 
 test sysnotify-3 {libnotify is not unloaded when the last interpreter which used it is deleted - bug 35e67b8124} -constraints {
     libnotify
