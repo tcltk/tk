@@ -342,8 +342,6 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo), TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_VAR(bool), 0 ,0},
     {TK_OPTION_BOOLEAN, "-undotagging", "undoTagging", "UndoTagging",
 	"1", TCL_INDEX_NONE, offsetof(TkText, undoTagging), TK_OPTION_VAR(bool), 0 ,0},
-    {TK_OPTION_BOOLEAN, "-useunibreak", "useUniBreak", "UseUniBreak",
-	"0", TCL_INDEX_NONE, offsetof(TkText, useUniBreak), TK_OPTION_VAR(bool), 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_TEXT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, width), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
@@ -1625,31 +1623,18 @@ TextWidgetObjCmd(
     case TEXT_BRKS: {
 	Tcl_Obj *arrPtr;
 	unsigned length, i;
-	char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-	char buf[1];
 
-	if (objc != 3 && objc != 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    result = TCL_ERROR;
 	    goto done;
-	}
-	if (objc == 4) {
-	    if (!TkTextParseLocale(interp, objv[3], locale)) {
-		result = TCL_ERROR;
-		goto done;
-	    }
-	    if (!TkTextComputeBreakLocations(interp, "", 0, "en", buf)) {
-		ErrorNotAllowed(interp, "external library libunibreak/liblinebreak is not available");
-		result = TCL_ERROR;
-		goto done;
-	    }
 	}
 	/* As in LayoutComputeBreakLocations: one more byte for the trailing nul. */
 	if ((length = GetByteLength(objv[2])) > textPtr->brksBufferSize || !textPtr->brksBuffer) {
 	    textPtr->brksBufferSize = MAX(length, textPtr->brksBufferSize + 512);
 	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
 	}
-	TkTextComputeBreakLocations(interp, Tcl_GetString(objv[2]), length, locale, textPtr->brksBuffer);
+	TkTextComputeBreakLocations(Tcl_GetString(objv[2]), length, textPtr->brksBuffer);
 	arrPtr = Tcl_NewObj();
 
 	for (i = 0; i < length; ++i) {
@@ -3928,44 +3913,6 @@ TkTextReleaseIfDestroyed(
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
     }
     return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkTextParseLocale --
- *
- *	Parse the given locale, whether it satisfies ISO 639-1,
- *	and set an error message if the code is invalid.
- *
- * Results:
- *	The return value is 'true' if given language code will be accepted,
- *	otherwise 'false' will be returned.
- *
- * Side effects:
- *	An error message in the interpreter may be set.
- *
- *----------------------------------------------------------------------
- */
-
-bool
-TkTextParseLocale(
-    Tcl_Interp *interp,
-    Tcl_Obj *localePtr,
-    char *locale)
-{
-    Tcl_Obj *localeObj = localePtr;
-    char oldLocale[8];
-    int result;
-
-    Tcl_IncrRefCount(localePtr);
-    result = TkLocaleOption.setProc(NULL, interp, NULL, &localeObj, locale, 0, oldLocale, 0);
-    if (localeObj && localeObj != localePtr) {
-	Tcl_BounceRefCount(localeObj); /* the normalized value is not used */
-    }
-    Tcl_DecrRefCount(localePtr);
-
-    return result == TCL_OK;
 }
 
 /*

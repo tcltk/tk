@@ -1,11 +1,9 @@
 /*
  * tkTextLineBreak.c --
  *
- *	This module provides line break computation for line wrapping.
- *	It uses the library "libunibreak" (from Wu Yongwei) for the
- *	computation, but only if available (currently only UNIX), and if
- *	the language support is enabled, otherwise mojibake (UAX #14, see
- *	tkTextGrapheme.c).
+ *	This module provides line break computation for line wrapping, with
+ *	mojibake: UAX #14, and dictionary word boundaries for the scripts
+ *	written without spaces (see tkTextGrapheme.c).
  *
  * Copyright © 2015-2017 Gregor Cramer
  *
@@ -15,121 +13,14 @@
 
 #include "tkText.h"
 
-#include <ctype.h>
 #include <assert.h>
 
 #ifndef MAX
 # define MAX(a,b) (((int) a) < ((int) b) ? b : a)
 #endif
 
+static void ComputeBreakLocations(const unsigned char *text, size_t len, char *brks);
 
-typedef void (*ComputeBreakLocationsFunc)(
-    const unsigned char *text, size_t len, const char *lang, char *brks);
-
-static void ComputeBreakLocations(
-    const unsigned char *text, size_t len, const char *lang, char *brks);
-
-static ComputeBreakLocationsFunc libLinebreakFunc = ComputeBreakLocations;
-
-/*
- *----------------------------------------------------------------------
- *
- * GetLineBreakFunc --
- *
- *	Return the appropriate line break function. If argument 'lang'
- *	is NULL, then mojibake will be used. If 'lang' is not NULL, then
- *	this function tries to load the library "libunibreak" (currently
- *	only UNIX).
- *	If the load succeeds, then set_linebreaks_utf8 will be returned,
- *	otherwise ComputeBreakLocations will be returned.
- *
- *	Note that "libunibreak" has language specific support, but
- *	currently only for zh, ja, and ko. Nethertheless any non-NULL
- *	value for 'lang' tries to use this library.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The "libunibreak" library may be loaded, if available.
- *
- *----------------------------------------------------------------------
- */
-
-#ifdef __UNIX__
-
-static int
-LoadFile(
-    Tcl_Interp *interp,
-    Tcl_Obj *pathPtr,
-    Tcl_LoadHandle *handle,
-    char const **symbols,
-    void **funcs)
-{
-    return Tcl_LoadFile(interp, pathPtr, symbols, TCL_LOAD_GLOBAL, funcs, handle);
-}
-
-static void
-LoadLibUnibreak(
-    Tcl_Interp *interp)
-{
-    typedef void *VoidP;
-    typedef void (*InitFunc)();
-
-    static char const *Symbols[3] = {
-	"init_linebreak",
-	"set_linebreaks_utf8",
-	NULL
-    };
-
-    VoidP Funcs[sizeof(Symbols)/sizeof(Symbols[0])];
-    Tcl_LoadHandle handle;
-    Tcl_Obj *pathPtr = Tcl_NewStringObj("libunibreak.so.1", TCL_INDEX_NONE);
-    int rc;
-
-    Tcl_IncrRefCount(pathPtr);
-    rc = LoadFile(interp, pathPtr, &handle, Symbols, Funcs);
-    if (rc != TCL_OK) {
-	/*
-	 * We couldn't find "libunibreak.so.1", so try the predecessor "liblinebreak.so.2".
-	 */
-
-	Tcl_ResetResult(interp);
-	Tcl_DecrRefCount(pathPtr);
-	Tcl_IncrRefCount(pathPtr = Tcl_NewStringObj("liblinebreak.so.2", TCL_INDEX_NONE));
-	rc = LoadFile(interp, pathPtr, &handle, Symbols, Funcs);
-    }
-    Tcl_DecrRefCount(pathPtr);
-    if (rc == TCL_OK) {
-	((InitFunc)(void *)Funcs[0])();
-	libLinebreakFunc = (ComputeBreakLocationsFunc)(void *)Funcs[1];
-    } else {
-	Tcl_ResetResult(interp);
-    }
-}
-
-#endif /* __UNIX__ */
-
-static ComputeBreakLocationsFunc
-GetLineBreakFunc(
-    Tcl_Interp *interp,
-    char const *lang)
-{
-#ifdef __UNIX__
-    if (lang) {
-	static int loaded = 0;
-
-	if (!loaded) {
-	    LoadLibUnibreak(interp);
-	}
-    }
-#else
-    (void)interp;
-    (void)lang;
-#endif
-    return libLinebreakFunc;
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -138,15 +29,10 @@ GetLineBreakFunc(
  *	Compute break locations in UTF-8 text. This function expects
  *	a nul-terminated string (this mean that the character at position
  *	'len' must be NUL). Thus it is also required that the break buffer
- *	'brks' has at least size 'len+1'. If 'lang' is not NULL, then the
- *	external library linunibreak will be used for the line break
- *	computation, but only if this library is loadable, otherwise
- *	mojibake will be used.
+ *	'brks' has at least size 'len+1'.
  *
  * Results:
- *	The computed break locations. This function returns 'true' if
- *	the external linebreak library has been used for the computation,
- *	otherwise 'false' will be returned.
+ *	The computed break locations, in 'brks'.
  *
  * Side effects:
  *	None.
@@ -154,38 +40,25 @@ GetLineBreakFunc(
  *----------------------------------------------------------------------
  */
 
-int
+void
 TkTextComputeBreakLocations(
-    Tcl_Interp *interp,
     const char *text,	/* must be nul-terminated */
     unsigned len,	/* without trailing nul byte */
-    const char *locale,	/* can be NULL */
     char *brks)
 {
-    ComputeBreakLocationsFunc func;
     int lastBreakablePos = -1;
-    char lang[3] = { 0, 0, 0 };
     unsigned i;
 
-    if (locale && locale[0] && locale[1] && ((locale[2] == '_') || (locale[2] == '\0'))) {
-	lang[0] = locale[0];
-	lang[1] = locale[1];
-    }
     assert(text);
     assert(brks);
     assert(text[len] == '\0');
-    assert(!lang[0] || (isalpha(lang[0]) && isalpha(lang[1])));
-
-    func = GetLineBreakFunc(interp, lang[0] ? lang : NULL);
 
     /*
      * The algorithm don't give us a break value for the last character if we do
      * not include the final nul char into the computation.
      */
 
-    len += 1;
-    (*func)((const unsigned char *) text, len, lang[0] ? lang : NULL, brks);
-    len -= 1;
+    ComputeBreakLocations((const unsigned char *) text, len + 1, brks);
 
     for (i = 0; i < len; ++i) {
 	switch (brks[i]) {
@@ -195,8 +68,8 @@ TkTextComputeBreakLocations(
 	    if (text[i] == '-') {
 		if (brks[i] == LINEBREAK_ALLOWBREAK) {
 		    /*
-		     * Fix the problem with the contextual hyphen-minus sign, the implementation of
-		     * libunibreak has (possibly) forgotten this case.
+		     * UAX #14 allows a break after the hyphen-minus sign, but its meaning is
+		     * contextual.
 		     *
 		     * The HYPHEN-MINUS (U+002D) needs special context treatment. For simplicity we
 		     * will only check whether we have two preceding, and two succeeding letters.
@@ -260,8 +133,6 @@ TkTextComputeBreakLocations(
 	    break;
 	}
     }
-
-    return func != ComputeBreakLocations;
 }
 
 /*
@@ -376,9 +247,8 @@ IsMandatoryBreak(
  * ComputeBreakLocations --
  *
  *	Compute break locations in UTF-8 text with mojibake: UAX #14, and
- *	dictionary word boundaries for Thai, Lao, Khmer and Myanmar. Same
- *	interface as set_linebreaks_utf8 from "libunibreak": 'len' includes
- *	the trailing nul, the status of the break after a character is stored
+ *	dictionary word boundaries for Thai, Lao, Khmer and Myanmar. 'len'
+ *	includes the trailing nul, the status of the break after a character is stored
  *	at its last byte, its other bytes get LINEBREAK_INSIDEACHAR. Nothing
  *	is known about a break after the last character, unless mandatory.
  *
@@ -396,7 +266,6 @@ static void
 ComputeBreakLocations(
     const unsigned char *text,
     size_t len,
-    TCL_UNUSED(const char *),
     char *brks)
 {
     const unsigned char *end;

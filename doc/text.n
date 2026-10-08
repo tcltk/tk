@@ -250,8 +250,7 @@ even gap on each side of each line.
 The locale which is used for determining word and character
 boundaries within the text. The default is "C".
 It may be used to restrict the hyphenation rules (see
-\fB\-hyphenrules\fR). The locale will also be used for line breaking
-(but only if option \fB\-useunibreak\fR is also set).
+\fB\-hyphenrules\fR).
 .OP \-maxredo maxRedo MaxRedo
 Specifies the maximum number of redo actions on the undo stack. A zero value
 will prevent any redo action, only undoes are possible. A negative value
@@ -493,19 +492,6 @@ given by the \fB\-font\fR option. If the font does not have a uniform width
 then the width of the character
 .QW 0
 is used in translating from character units to screen units.
-.OP \-useunibreak useUniBreak UseUniBreak
-If this option is enabled then wrap mode \fBcodepoint\fR (see option
-\fB\-wrap\fR) will use the external library \fIlibunibreak\fR (from Wu Yongwei)
-for the computation of line breaks, but only if this library is available
-(currently only UNIX). This library even supports language dependent line
-breaking. Otherwise, if this option is not enabled, or if \fIlibunibreak\fR is not
-available, the built-in implementation of the Unicode line breaking algorithm
-(UAX #14) will be used, with dictionaries for the word boundaries of Thai, Lao
-and Khmer. Per default this option is not enabled.
-.RS
-.PP
-For a simple test whether the unibreak libary is available see command \fBbrks\fR.
-.RE
 .OP \-wrap wrap Wrap
 Specifies how to handle lines in the text that are too long to be displayed
 in a single line of the text's window. The value must be \fBnone\fR,
@@ -517,14 +503,8 @@ necessary to keep all the characters visible. In \fBchar\fR mode a screen
 line break may occur after any character; in \fBword\fR mode a line break
 will only be made at word boundaries: after white space, and between the words
 of Thai, Lao and Khmer, which are written without spaces. The elaborated mode
-\fBcodepoint\fR follows the Unicode line breaking algorithm (UAX #14). If
-option \fB\-useunibreak\fR is set, then the unibreak library
-(from Wu Yongwei) will be used for the line break computation. This library
-even supports locale dependent line breaking (see option \fB\-locale\fR).
-Otherwise, if \fB\-useunibreak\fR is not set, or if the
-unibreak library is not available, the built-in implementation of this
-algorithm will be used, with dictionaries for the word boundaries of Thai, Lao
-and Khmer.
+\fBcodepoint\fR follows the Unicode line breaking algorithm (UAX #14), with
+dictionaries for the word boundaries of Thai, Lao and Khmer.
 .BE
 .SH DESCRIPTION
 .PP
@@ -2114,33 +2094,22 @@ pixels are not visible on screen. If the line which contains this character
 is not visible on the screen, then the return value is an empty list.
 .RE
 .TP
-\fIpathName \fBbrks\fR \fIstring\fR \fI?locale\fR?
+\fIpathName \fBbrks\fR \fIstring\fR
 .
 This command expects a \fIstring\fR of characters, and the result is a list of
 integers. This list has exactly the character length of the given string,
 and integer value 1 in this list denotes a potential line break point at
 this character position, value 2 denotes a mandatory line break point, and
-value 0 (zero) denotes no line break at this character position. If the
-optional locale is specified (see widget option \fB\-locale\fR),
-then the external library \fIlibunibreak\fR (from Wu
-Yongwei) will be used for the line break computation; an error will be
-thrown if this library is not available. If no locale is specified,
-then the built-in implementation of the Unicode line breaking algorithm
-(UAX #14) will be used, with dictionaries for the word boundaries of Thai,
-Lao and Khmer.
+value 0 (zero) denotes no line break at this character position. The line
+breaks are those of wrap mode \fBcodepoint\fR: the Unicode line breaking
+algorithm (UAX #14), with dictionaries for the word boundaries of Thai, Lao
+and Khmer.
 .RS
 .PP
-This command has three purposes:
+This command has two purposes:
 .IP [1] 4
-It provides a simple check whether \fIlibunibreak\fR is available or not
-(even an empty string, and any locale, e.g.
-.QW xx ,
-works for this check). An error will be thrown if \fIlibunibreak\fR
-is not available, but a locale has been specified (\fB\-locale\fR).
+For a proof of the line break algorithm.
 .IP [2] 4
-For a proof of the line break algorithm, especially for testing the internal
-algorithm.
-.IP [3] 4
 It is also conceivable to use this function for the computation of line
 breaks inside other widgets.
 .RE

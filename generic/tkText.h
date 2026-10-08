@@ -1397,8 +1397,6 @@ typedef struct TkText {
     bool useHyphenSupport;	/* Indicating the hypenation support. */
     bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
 				 * (if not in state TK_TEXT_STATE_NORMAL). */
-    bool useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
-				 * internal algorithm will be used. */
     bool showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
 				 * each logical line. */
     bool showEndOfText;		/* Flag whether the end of text symbol will be shown at end of text. */
@@ -2135,12 +2133,10 @@ MODULE_SCOPE bool	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex 
 			    Tcl_Size count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
-			    const char *lang, char *brks);
+MODULE_SCOPE void	TkTextComputeBreakLocations(const char *text, unsigned len, char *brks);
 MODULE_SCOPE bool	TkTextIsComplexScript(const char *p);
 MODULE_SCOPE bool	TkTextHasComplexScript(const char *text, size_t len);
 MODULE_SCOPE void	TkTextComputeWordBreaks(const char *text, size_t len, unsigned char *breaks);
-MODULE_SCOPE bool	TkTextParseLocale(Tcl_Interp *interp, Tcl_Obj *localePtr, char *locale);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE void	TkTextPushUndoToken(TkSharedText *sharedTextPtr, void *token,
