@@ -504,7 +504,9 @@ line break may occur after any character; in \fBword\fR mode a line break
 will only be made at word boundaries: after white space, and between the words
 of Thai, Lao and Khmer, which are written without spaces. The elaborated mode
 \fBcodepoint\fR follows the Unicode line breaking algorithm (UAX #14), with
-dictionaries for the word boundaries of Thai, Lao and Khmer.
+dictionaries for the word boundaries of Thai, Lao and Khmer. In all modes a
+line is never broken inside a grapheme cluster (a character with its combining
+marks, or an emoji sequence).
 .BE
 .SH DESCRIPTION
 .PP
