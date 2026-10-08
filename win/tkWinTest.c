@@ -32,6 +32,7 @@ static Tcl_ObjCmdProc2 TestfindwindowObjCmd;
 static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
 static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
 static Tcl_ObjCmdProc2 TestsendinputObjCmd;
+static Tcl_ObjCmdProc2 TestwinpixelObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -71,6 +72,69 @@ TkplatformtestInit(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testsendinput", TestsendinputObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testwinpixel", TestwinpixelObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestwinpixelObjCmd --
+ *
+ *	"testwinpixel window x y": color of the pixel at (x, y) in the
+ *	window, as #rrggbb, read back from its device context.  Tk has no
+ *	way to read the screen; this is what lets a test see the color layers
+ *	of an emoji.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestwinpixelObjCmd(
+    void *clientData,		/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    Tk_Window tkwin;
+    HWND hwnd;
+    HDC hdc;
+    COLORREF color;
+    int x, y;
+    char buf[8];
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window)clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    Tk_MakeWindowExist(tkwin);
+    hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    hdc = GetDC(hwnd);
+    color = GetPixel(hdc, x, y);
+    ReleaseDC(hwnd, hdc);
+    if (color == CLR_INVALID) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("pixel outside the window", -1));
+	return TCL_ERROR;
+    }
+    snprintf(buf, sizeof(buf), "#%02x%02x%02x", GetRValue(color),
+	    GetGValue(color), GetBValue(color));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
 

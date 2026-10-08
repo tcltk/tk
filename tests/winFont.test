@@ -478,6 +478,70 @@ test winfont-8.8 {TkWinShapeString: VS15 stays with its base character} -constra
 	    == [font measure $f [format %c 0x2764]]}
 } -result 1
 
+#
+# Color emoji: the color layers of a COLR font are drawn (DirectWrite/Direct2D), text
+# presentation and glyphs without layers stay in the text color (GDI).  The pixels are
+# read back with testwinpixel on a grid inside the glyph: a saturated pixel (chroma
+# above 100) can only come from a color layer, never from a black glyph on white.
+#
+testConstraint testwinpixel [llength [info commands testwinpixel]]
+
+proc winfontColoredSamples {w} {
+    set n 0
+    set width [winfo width $w]
+    set height [winfo height $w]
+    foreach fx {0.35 0.5 0.65} {
+	foreach fy {0.3 0.45 0.6} {
+	    set c [testwinpixel $w [expr {int($width * $fx)}] [expr {int($height * $fy)}]]
+	    scan $c "#%2x%2x%2x" r g b
+	    if {max($r, $g, $b) - min($r, $g, $b) > 100} {
+		incr n
+	    }
+	}
+    }
+    return $n
+}
+
+test winfont-9.1 {TkWinDrawColorGlyphs: color layers of an emoji are drawn} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    label .l -text [format %c 0x1F600] -font {{Segoe UI} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    expr {[winfontColoredSamples .l] >= 3}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-9.2 {TkWinDrawColorGlyphs: text presentation stays in the text color} -constraints {
+    win segoeSymbol testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    label .l -text [format %c 0x2764] -font {{Segoe UI} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    expr {[winfontColoredSamples .l] <= 1}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-9.3 {TkWinDrawColorGlyphs: a glyph without color layers stays in the text color} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    label .l -text [format %c 0xA9] -font {{Segoe UI Emoji} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    expr {[winfontColoredSamples .l] <= 1}
+} -cleanup {
+    destroy .l
+} -result 1
+
 cleanupTests
 
 # Local variables:
