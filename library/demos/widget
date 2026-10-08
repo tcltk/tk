@@ -441,6 +441,7 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
+	@@demo emojichoose Emoji picker
     @@demo systray      System tray icon and notification
     @@demo print        Printing from canvas and text widgets
 
