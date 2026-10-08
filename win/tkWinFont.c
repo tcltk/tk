@@ -17,6 +17,7 @@
 #include "tkWinInt.h"
 #include "tkFont.h"
 #include <usp10.h>      /* Uniscribe */
+#include <mojibake.h>   /* UTS #51 emoji properties */
 
 /*
  * The following structure represents a font family. It is assumed that all
@@ -55,6 +56,8 @@ typedef struct FontFamily {
     int isSymbolFont;		/* Non-zero if this is a symbol font. */
     int isWideFont;		/* 1 if this is a double-byte font, 0
 				 * otherwise. */
+    int isColor;		/* 1 if the face has a COLR table (color
+				 * emoji layers), 0 otherwise. */
     BOOL (WINAPI *textOutProc)(HDC hdc, int x, int y, WCHAR *str, int len);
 				/* The procedure to use to draw text after it
 				 * has been converted from UTF-8 to the
@@ -262,7 +265,7 @@ static SubFont *	CanUseFallbackWithAliases(HDC hdc, WinFont *fontPtr,
 static int		FamilyExists(HDC hdc, const char *faceName);
 static const char *	FamilyOrAliasExists(HDC hdc, const char *faceName);
 static SubFont *	FindSubFontForChar(WinFont *fontPtr, int ch,
-			    SubFont **subFontPtrPtr);
+			    int preferColor, SubFont **subFontPtrPtr);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
 static void		FreeFontFamily(FontFamily *familyPtr);
@@ -272,6 +275,7 @@ static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
 static HFONT		GetScreenFont(const TkFontAttributes *faPtr,
 			    const char *faceName, int pixelSize,
 			    double angle);
+static int		HasFontTable(HDC hdc, HFONT hFont, const char *tag);
 static void		InitFont(Tk_Window tkwin, HFONT hFont,
 			    int overstrike, WinFont *tkFontPtr);
 static inline void	InitSubFont(HDC hdc, HFONT hFont, int base,
@@ -309,6 +313,11 @@ static void		TkWinFreeShapedRuns(TkWinShapedRun *runs, int nRuns);
 static int		TkWinShapedRunsWidth(const TkWinShapedRun *runs,
 			    int nRuns);
 static int		ClampIndex(int idx, int totalChars);
+static void		AssignSubFonts(WinFont *fontPtr, const WCHAR *wstr,
+			    int start, int len, int *subIdx);
+static int		DecodeUtf16(const WCHAR *wstr, int i, int end,
+			    int *unitsPtr);
+static int		IsEmojiContinuation(int ch, int inEmoji);
 
 /*
  *-------------------------------------------------------------------------
@@ -816,8 +825,9 @@ TkpGetFontAttrsForChar(
 				/* Pointer to subfont array in case
 				 * FindSubFontForChar needs to fix up the
 				 * memory allocation. */
-    SubFont *thisSubFontPtr =
-	    FindSubFontForChar(fontPtr, c, &lastSubFontPtr);
+    SubFont *thisSubFontPtr = FindSubFontForChar(fontPtr, c,
+	    (c > 0x7f && mjb_codepoint_is_emoji_presentation((mjb_codepoint) c)),
+	    &lastSubFontPtr);
 				/* Pointer to the subfont to use for the given
 				 * character. */
     FontFamily *familyPtr = thisSubFontPtr->familyPtr;
@@ -859,41 +869,120 @@ TkpGetFontAttrsForChar(
 /*
  *---------------------------------------------------------------------------
  *
- * TkWinPreScanForSupplementaryPlanes --
+ * DecodeUtf16 --
  *
- *	Scan a UTF-16 string for supplementary-plane codepoints (U+10000 and
- *	above, including emoji) and eagerly load appropriate fallback fonts
- *	so they're available during Uniscribe shaping.
+ *	Return the code point at wstr[i] (a surrogate pair counts as one) and
+ *	the number of UTF-16 units it uses.
  *
- *	This avoids the fragile .notdef-detection fallback loop inside the
- *	shaper and ensures emoji/CJK fonts are selected before script analysis.
+ *---------------------------------------------------------------------------
+ */
+
+static int
+DecodeUtf16(
+    const WCHAR *wstr,
+    int i,
+    int end,
+    int *unitsPtr)
+{
+    if (IS_HIGH_SURROGATE(wstr[i]) && i + 1 < end
+	    && IS_LOW_SURROGATE(wstr[i + 1])) {
+	*unitsPtr = 2;
+	return 0x10000 + ((wstr[i] - 0xD800) << 10) + (wstr[i + 1] - 0xDC00);
+    }
+    *unitsPtr = 1;
+    return wstr[i];
+}
+
+/*
+ *---------------------------------------------------------------------------
  *
- * Results:
- *	None. Subfonts may be added to fontPtr->subFontArray.
+ * IsEmojiContinuation --
+ *
+ *	Tell whether ch must stay in the font of the character before it:
+ *	variation selectors, ZWJ, keycap and tag characters always (zero-width
+ *	or combining), skin tone modifiers only inside an emoji cluster, since
+ *	a modifier on its own is a color swatch (UTS #51).
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+IsEmojiContinuation(
+    int ch,
+    int inEmoji)		/* Non-zero inside an emoji cluster. */
+{
+    return ch == 0xFE0E || ch == 0xFE0F || ch == 0x200D || ch == 0x20E3
+	    || (ch >= 0xE0020 && ch <= 0xE007F)
+	    || (inEmoji && mjb_codepoint_is_emoji_modifier((mjb_codepoint) ch));
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * AssignSubFonts --
+ *
+ *	Store in subIdx[0..len) the index of the subfont for each UTF-16 unit
+ *	of wstr[start..start+len): the base font for ASCII, one subfont per
+ *	emoji cluster.  A VS16 after a character asks for a color font, a
+ *	VS15 for the text glyph; what follows a ZWJ inside an emoji cluster
+ *	stays in the cluster, so the font gets the whole sequence to ligate.
  *
  * Side effects:
- *	May allocate new SubFont entries. This is intentional and beneficial:
- *	we want emoji fonts loaded before the shaper runs.
+ *	May load additional SubFonts into fontPtr->subFontArray.
  *
  *---------------------------------------------------------------------------
  */
 
 static void
-TkWinPreScanForSupplementaryPlanes(
+AssignSubFonts(
     WinFont *fontPtr,
     const WCHAR *wstr,
-    int wlen)
+    int start,
+    int len,
+    int *subIdx)
 {
-    for (int i = 0; i < wlen; i++) {
-	int ch = wstr[i];
-	if (IS_HIGH_SURROGATE(wstr[i]) && (i + 1 < wlen) && IS_LOW_SURROGATE(wstr[i + 1])) {
-	    ch = 0x10000 + ((wstr[i] - 0xD800) << 10) + (wstr[i + 1] - 0xDC00);
-	    i++;
+    int end = start + len;
+    int i = start;
+    int curIdx = 0, curEmoji = 0, joinNext = 0;
+
+    while (i < end) {
+	int units, nextUnits, idx, k;
+	int ch = DecodeUtf16(wstr, i, end, &units);
+	int next = (i + units < end)
+		? DecodeUtf16(wstr, i + units, end, &nextUnits) : -1;
+
+	if (IsEmojiContinuation(ch, curEmoji)) {
+	    idx = curIdx;
+	    joinNext = (ch == 0x200D && curEmoji);
+	} else if (joinNext) {
+	    idx = curIdx;
+	    joinNext = 0;
+	} else {
+	    int preferColor = 0;
+
+	    if (next == 0xFE0F) {
+		preferColor = 2;
+	    } else if (ch > 0x7f && next != 0xFE0E
+		    && mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
+		preferColor = 1;
+	    }
+	    if (ch < 0x80 && !preferColor) {
+		idx = 0;
+	    } else {
+		SubFont *subFontPtr = &fontPtr->subFontArray[0];
+
+		subFontPtr = FindSubFontForChar(fontPtr, ch, preferColor,
+			&subFontPtr);
+		idx = (int)(subFontPtr - fontPtr->subFontArray);
+	    }
+	    curIdx = idx;
+	    curEmoji = (preferColor != 0);
+	    joinNext = 0;
 	}
-	if (ch > 0x7f) {
-	    SubFont *dummy = &fontPtr->subFontArray[0];
-	    FindSubFontForChar(fontPtr, ch, &dummy);
+	for (k = 0; k < units; k++) {
+	    subIdx[i - start + k] = idx;
 	}
+	i += units;
     }
 }
 
@@ -902,23 +991,24 @@ TkWinPreScanForSupplementaryPlanes(
  *
  * TkWinShapeString --
  *
- *	Convert a UTF-8 string to a bidi-reordered, shaped array of glyph
+ *	Convert a UTF-16 string to a bidi-reordered, shaped array of glyph
  *	runs using Uniscribe.
  *
  *	Pipeline:
- *	  1. UTF-8 -> UTF-16 (Tcl_UtfToWCharDString)
- *	  2. ScriptItemize  -- split into script/bidi items
- *	  3. ScriptLayout   -- compute visual order of items
- *	  4. For each item in visual order:
- *	       a. Select the appropriate WinFont subfont (with fallback).
- *	       b. ScriptShape  -- map chars -> glyphs
- *	       c. ScriptPlace  -- compute advance widths and offsets
- *	  5. Return the run array to the caller.
+ *	  1. ScriptItemize  -- split into script/bidi items
+ *	  2. For each item:
+ *	       a. AssignSubFonts -- one WinFont subfont per emoji cluster
+ *	          (UTS #51), the base font for the rest.
+ *	       b. For each range of the item that shares a subfont:
+ *	          ScriptShape -- map chars -> glyphs
+ *	          ScriptPlace -- compute advance widths and offsets
+ *	  3. Return the run array to the caller.
  *
- *	Subfont fallback: if ScriptShape returns a missing-glyph for any
- *	position we retry with every subfont in fontPtr->subFontArray (and
- *	load new ones via FindSubFontForChar) until a match is found or we
- *	give up and leave the .notdef glyph in place.
+ *	Shaping a range of an item is the documented way to change fonts
+ *	inside an item: an emoji cluster keeps its ligatures in the color
+ *	font, the text around it stays in the base font.  If ScriptShape
+ *	still returns a missing glyph, the range is reshaped once with a
+ *	subfont that has the character.
  *
  * Results:
  *	Returns the number of runs stored in *runsOut on success, or -1 on a
@@ -940,203 +1030,152 @@ TkWinShapeString(
     TkWinShapedRun **runsOut,
     int *runCountOut)
 {
-    /*
-     * Validate font parameters.  Without subfonts we cannot shape.
-     */
-    if (fontPtr == NULL || fontPtr->subFontArray == NULL || fontPtr->numSubFonts < 1) {
-	*runsOut = NULL;
-	*runCountOut = 0;
+#define ITEM_STACK 64
+    SCRIPT_ITEM stackItems[ITEM_STACK + 1];
+    SCRIPT_ITEM *items = stackItems;
+    int itemCount = 0;
+    HRESULT hr;
+    int *subIdx;
+    TkWinShapedRun *runs;
+    int nRuns = 0, maxRuns;
+
+    *runsOut = NULL;
+    *runCountOut = 0;
+    if (fontPtr == NULL || fontPtr->subFontArray == NULL
+	    || fontPtr->numSubFonts < 1 || wlen <= 0) {
 	return -1;
     }
 
     /*
-     * Pre-scan the string to detect supplementary plane characters
-     * and possibly adjust font fallback flags (implementation not
-     * shown here, but it may influence later font selection).
-     */
-    TkWinPreScanForSupplementaryPlanes(fontPtr, wstr, wlen);
-
-#define ITEM_STACK 64
-    /*
-     * Stack-allocate SCRIPT_ITEM array for ScriptItemize.
-     * If more items are needed, we fall back to heap allocation.
-     */
-    SCRIPT_ITEM  stackItems[ITEM_STACK + 1];
-    SCRIPT_ITEM *items = stackItems;
-    int	  itemCount = 0;
-    HRESULT      hr;
-
-    /*
      * ScriptItemize breaks the string into script runs (e.g., Latin,
-     * Arabic, CJK) each with its own bidi level and script analysis.
+     * Arabic, CJK) each with its own bidi level and script analysis.  The
+     * stack array covers the common case; retry on the heap otherwise.
      */
     hr = ScriptItemize(wstr, wlen, ITEM_STACK, NULL, NULL, items, &itemCount);
     if (hr == E_OUTOFMEMORY) {
-	/*
-	 * Not enough stack space; allocate enough for the worst case:
-	 * one item per character plus one terminator.
-	 */
 	int maxItems = wlen + 1;
+
 	items = (SCRIPT_ITEM *)Tcl_Alloc(sizeof(SCRIPT_ITEM) * (maxItems + 1));
 	hr = ScriptItemize(wstr, wlen, maxItems, NULL, NULL, items, &itemCount);
     }
     if (FAILED(hr)) {
-	/* Clean up if heap allocation was used, then report failure. */
 	if (items != stackItems) Tcl_Free(items);
-	*runsOut = NULL;
-	*runCountOut = 0;
 	return -1;
     }
 
     /*
-     * ScriptLayout reorders glyph runs according to the resolved bidi levels.
-     * We only need the levels array for this call; the actual reordering
-     * is performed by Uniscribe internally when shaping/placing.
+     * One subfont index per UTF-16 unit, then one run per range of equal
+     * subfont inside an item.  One run per item is the common case; the
+     * array grows when emoji split an item.
      */
-    {
-	BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * itemCount);
-	for (int i = 0; i < itemCount; i++) levels[i] = items[i].a.s.uBidiLevel;
-	ScriptLayout(itemCount, levels, NULL, NULL);
-	Tcl_Free(levels);
-    }
+    subIdx = (int *)Tcl_Alloc(sizeof(int) * wlen);
+    maxRuns = itemCount;
+    runs = (TkWinShapedRun *)Tcl_Alloc(sizeof(TkWinShapedRun) * maxRuns);
 
-    /*
-     * Prepare an array to hold shaped runs.  At most one run per script
-     * item (itemCount).  Each run will own its glyph, advance, and other
-     * arrays.
-     */
-    TkWinShapedRun *runs = (TkWinShapedRun *)Tcl_Alloc(sizeof(TkWinShapedRun) * itemCount);
-    int nRuns = 0;
-
-    /* Process each script item individually. */
     for (int li = 0; li < itemCount; li++) {
 	SCRIPT_ITEM *item = &items[li];
 	int itemStart = item->iCharPos;
-	int itemLen = items[li + 1].iCharPos - itemStart;
+	int itemEnd = items[li + 1].iCharPos;
+	int rs, re;
 
-	/*
-	 * Determine the first character of the item (handling surrogate pairs)
-	 * to choose an initial subfont.  Characters <= 0x7F are ASCII and
-	 * typically covered by the base font; we start with index 0.
-	 */
-	int firstCh = wstr[itemStart];
-	if (IS_HIGH_SURROGATE(wstr[itemStart]) && itemStart + 1 < wlen &&
-	    IS_LOW_SURROGATE(wstr[itemStart + 1])) {
-	    firstCh = 0x10000 + ((wstr[itemStart] - 0xD800) << 10) +
-		      (wstr[itemStart + 1] - 0xDC00);
-	}
+	AssignSubFonts(fontPtr, wstr, itemStart, itemEnd - itemStart,
+		subIdx + itemStart);
 
-	SubFont *subFontPtr = &fontPtr->subFontArray[0];
-	int subFontIdx = 0;
+	for (rs = itemStart; rs < itemEnd; rs = re) {
+	    int subFontIdx = subIdx[rs];
+	    int rangeLen, maxGlyphs, glyphCount = 0;
+	    HFONT hFont;
+	    WORD *glyphs, *logClust;
+	    SCRIPT_VISATTR *visAttr;
+	    int *advances;
+	    GOFFSET *offsets;
+	    ABC abc;
 
-	/* For non‑ASCII, try to find a better subfont that contains this character. */
-	if (firstCh > 0x7f) {
-	    subFontPtr = FindSubFontForChar(fontPtr, firstCh, &subFontPtr);
-	    subFontIdx = (int)(subFontPtr - fontPtr->subFontArray);
-	    /* Safety check: ensure the computed index is valid. */
-	    if (subFontIdx < 0 || subFontIdx >= fontPtr->numSubFonts) {
-		subFontIdx = 0;
+	    for (re = rs + 1; re < itemEnd && subIdx[re] == subFontIdx; re++) {
+		/* Extend the range while the subfont is the same. */
 	    }
-	}
+	    rangeLen = re - rs;
 
-	/* Select the logical font (HFONT) into the HDC. */
-	HFONT hFont = fontPtr->subFontArray[subFontIdx].hFont0;
-	SelectObject(hdc, hFont);
+	    hFont = fontPtr->subFontArray[subFontIdx].hFont0;
+	    SelectObject(hdc, hFont);
 
-	/*
-	 * Allocate buffers for glyph generation.
-	 * maxGlyphs = ceil(itemLen * 1.5) + 32, a common heuristic.
-	 */
-	int maxGlyphs = (itemLen * 3) / 2 + 32;
-	WORD  *glyphs    = (WORD *)Tcl_Alloc(sizeof(WORD) * maxGlyphs);
-	WORD  *logClust  = (WORD *)Tcl_Alloc(sizeof(WORD) * itemLen);
-	SCRIPT_VISATTR *visAttr = (SCRIPT_VISATTR *)Tcl_Alloc(sizeof(SCRIPT_VISATTR) * maxGlyphs);
-	int    glyphCount = 0;
+	    /* maxGlyphs = ceil(rangeLen * 1.5) + 32, a common heuristic. */
+	    maxGlyphs = (rangeLen * 3) / 2 + 32;
+	    glyphs = (WORD *)Tcl_Alloc(sizeof(WORD) * maxGlyphs);
+	    logClust = (WORD *)Tcl_Alloc(sizeof(WORD) * rangeLen);
+	    visAttr = (SCRIPT_VISATTR *)Tcl_Alloc(sizeof(SCRIPT_VISATTR) * maxGlyphs);
 
-	/* ScriptShape converts the character string into glyph IDs. */
-	hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-			 wstr + itemStart, itemLen, maxGlyphs, &item->a,
-			 glyphs, logClust, visAttr, &glyphCount);
+	    hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+		    wstr + rs, rangeLen, maxGlyphs, &item->a,
+		    glyphs, logClust, visAttr, &glyphCount);
 
-	/*
-	 * Missing glyph fallback:
-	 * If shaping succeeded, scan for glyphs that are zero (missing).
-	 * When a missing glyph is found, locate a subfont that provides it,
-	 * reselect that font, and reshape the entire item.
-	 */
-	if (SUCCEEDED(hr)) {
-	    for (int ci = 0; ci < itemLen; ci++) {
-		int gi = logClust[ci];
-		if (gi >= glyphCount || glyphs[gi] == 0) {
-		    /* Re‑extract the character (may be a surrogate pair). */
-		    int ch = wstr[itemStart + ci];
-		    if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && ci + 1 < itemLen &&
-			IS_LOW_SURROGATE(wstr[itemStart + ci + 1])) {
-			ch = 0x10000 + ((wstr[itemStart + ci] - 0xD800) << 10) +
-			     (wstr[itemStart + ci + 1] - 0xDC00);
-		    }
-		    SubFont *fb = &fontPtr->subFontArray[subFontIdx];
-		    fb = FindSubFontForChar(fontPtr, ch, &fb);
-		    int newIdx = (int)(fb - fontPtr->subFontArray);
-		    if (newIdx != subFontIdx) {
-			/* Switch to the new subfont and re‑shape. */
-			subFontIdx = newIdx;
-			hFont = fontPtr->subFontArray[subFontIdx].hFont0;
-			SelectObject(hdc, hFont);
-			hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-					 wstr + itemStart, itemLen, maxGlyphs, &item->a,
-					 glyphs, logClust, visAttr, &glyphCount);
-			break;  /* One fallback attempt per item is sufficient. */
+	    /*
+	     * Missing glyph fallback: find a subfont that has the character
+	     * and reshape the whole range with it, once.
+	     */
+	    if (SUCCEEDED(hr)) {
+		for (int ci = 0; ci < rangeLen; ci++) {
+		    int gi = logClust[ci];
+
+		    if (gi >= glyphCount || glyphs[gi] == 0) {
+			int units;
+			int ch = DecodeUtf16(wstr, rs + ci, re, &units);
+			SubFont *fb = &fontPtr->subFontArray[subFontIdx];
+			int newIdx;
+
+			fb = FindSubFontForChar(fontPtr, ch, 0, &fb);
+			newIdx = (int)(fb - fontPtr->subFontArray);
+			if (newIdx != subFontIdx) {
+			    subFontIdx = newIdx;
+			    hFont = fontPtr->subFontArray[subFontIdx].hFont0;
+			    SelectObject(hdc, hFont);
+			    hr = ScriptShape(hdc,
+				    &fontPtr->scriptCacheArray[subFontIdx],
+				    wstr + rs, rangeLen, maxGlyphs, &item->a,
+				    glyphs, logClust, visAttr, &glyphCount);
+			    break;
+			}
 		    }
 		}
 	    }
+	    if (FAILED(hr)) {
+		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
+		continue;
+	    }
+
+	    advances = (int *)Tcl_Alloc(sizeof(int) * glyphCount);
+	    offsets = (GOFFSET *)Tcl_Alloc(sizeof(GOFFSET) * glyphCount);
+	    hr = ScriptPlace(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+		    glyphs, glyphCount, visAttr, &item->a,
+		    advances, offsets, &abc);
+	    if (FAILED(hr)) {
+		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
+		Tcl_Free(advances); Tcl_Free(offsets);
+		continue;
+	    }
+
+	    if (nRuns == maxRuns) {
+		maxRuns *= 2;
+		runs = (TkWinShapedRun *)Tcl_Realloc(runs,
+			sizeof(TkWinShapedRun) * maxRuns);
+	    }
+	    runs[nRuns].hFont = hFont;
+	    runs[nRuns].scriptCacheIdx = subFontIdx;
+	    runs[nRuns].sa = item->a;
+	    runs[nRuns].glyphCount = glyphCount;
+	    runs[nRuns].glyphs = glyphs;
+	    runs[nRuns].advances = advances;
+	    runs[nRuns].offsets = offsets;
+	    runs[nRuns].abc = abc;
+	    runs[nRuns].charStart = rs;
+	    runs[nRuns].charLen = rangeLen;
+	    runs[nRuns].logClust = logClust;
+	    runs[nRuns].visAttr = visAttr;
+	    nRuns++;
 	}
-
-	/* If shaping still fails, discard this item and move to the next. */
-	if (FAILED(hr)) {
-	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
-	    continue;
-	}
-
-	/*
-	 * Allocate arrays for advance widths and glyph offsets.
-	 * ScriptPlace computes glyph positions from the shaped output.
-	 */
-	int *advances = (int *)Tcl_Alloc(sizeof(int) * glyphCount);
-	GOFFSET *offsets = (GOFFSET *)Tcl_Alloc(sizeof(GOFFSET) * glyphCount);
-	ABC abc;
-
-	hr = ScriptPlace(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-			 glyphs, glyphCount, visAttr, &item->a,
-			 advances, offsets, &abc);
-
-	if (FAILED(hr)) {
-	    /* Placement failed; clean up and skip this run. */
-	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
-	    Tcl_Free(advances); Tcl_Free(offsets);
-	    continue;
-	}
-
-	/*
-	 * Fill the TkWinShapedRun structure.
-	 * The run takes ownership of the allocated glyph, advance, etc. arrays.
-	 */
-	runs[nRuns].hFont	  = hFont;
-	runs[nRuns].scriptCacheIdx = subFontIdx;
-	runs[nRuns].sa	     = item->a;
-	runs[nRuns].glyphCount     = glyphCount;
-	runs[nRuns].glyphs	 = glyphs;
-	runs[nRuns].advances       = advances;
-	runs[nRuns].offsets	= offsets;
-	runs[nRuns].abc	    = abc;
-	runs[nRuns].charStart      = itemStart;
-	runs[nRuns].charLen	= itemLen;
-	runs[nRuns].logClust       = logClust;
-	runs[nRuns].visAttr	= visAttr;
-	nRuns++;
     }
 
-    /* Free the item array if it was heap‑allocated. */
+    Tcl_Free(subIdx);
     if (items != stackItems) Tcl_Free(items);
 
     *runsOut = runs;
@@ -1435,6 +1474,8 @@ Tk_MeasureCharsInContext(
     {
 	ReleaseDC(fontPtr->hwnd, hdc);
 	Tcl_DStringFree(&fullUni);
+	*lengthPtr = 0;
+	return 0;
     }
 
     /*
@@ -2004,19 +2045,25 @@ Tk_DrawCharsInContext(
 
 	SelectObject(dc, run->hFont);
 
-	/* Use scriptCacheIdx to look up the current cache pointer. */
-	ScriptTextOut(
-	    dc,
-	    &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-	    runX[j] + glyphOffsetX, y,  /* Offset to first visible glyph. */
-	    0, NULL,
-	    &run->sa,
-	    NULL, 0,
-	    run->glyphs + gFirst,
-	    gLast - gFirst,
-	    run->advances + gFirst,
-	    NULL,
-	    run->offsets + gFirst);
+	/* Color emoji layers first; GDI only draws the outlines. */
+	if (!(fontPtr->subFontArray[run->scriptCacheIdx].familyPtr->isColor
+		&& TkWinDrawColorGlyphs(dc, run->hFont, runX[j] + glyphOffsetX, y,
+			&run->sa, run->glyphs + gFirst, run->advances + gFirst,
+			run->offsets + gFirst, gLast - gFirst))) {
+	    /* Use scriptCacheIdx to look up the current cache pointer. */
+	    ScriptTextOut(
+		dc,
+		&fontPtr->scriptCacheArray[run->scriptCacheIdx],
+		runX[j] + glyphOffsetX, y,  /* Offset to first visible glyph. */
+		0, NULL,
+		&run->sa,
+		NULL, 0,
+		run->glyphs + gFirst,
+		gLast - gFirst,
+		run->advances + gFirst,
+		NULL,
+		run->offsets + gFirst);
+	}
 
 	/* Always advance by the full visual width of this run. */
 	penX += TkWinShapedRunsWidth(run, 1);
@@ -2114,25 +2161,6 @@ MultiFontTextOut(
     wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
-    /*
-     * Aggressive pre‑loading for characters outside ASCII.
-     * For each non‑ASCII character (including surrogates), we call
-     * FindSubFontForChar to ensure font‑matching data is cached.
-     * This may help reduce per‑item fallback costs later.
-     */
-    for (i = 0; i < wlen; i++) {
-	int ch = wstr[i];
-	/* Combine a surrogate pair into a single Unicode scalar value. */
-	if (IS_HIGH_SURROGATE(wstr[i]) && (i + 1 < wlen) && IS_LOW_SURROGATE(wstr[i + 1])) {
-	    ch = 0x10000 + ((wstr[i] - 0xD800) << 10) + (wstr[i + 1] - 0xDC00);
-	    i++;  /* Skip the low surrogate. */
-	}
-	if (ch > 0x7f) {
-	    SubFont *dummy = &fontPtr->subFontArray[0];
-	    FindSubFontForChar(fontPtr, ch, &dummy);
-	}
-    }
-
     TkWinShapedRun *runs = NULL;
     int nRuns = 0;
 
@@ -2184,19 +2212,26 @@ MultiFontTextOut(
 
 	SelectObject(hdc, hDrawFont);
 
-	/*
-	 * Render the glyph run using Uniscribe.
-	 * The (x, y) position is the current baseline start.
-	 * 0, NULL, 0 are unused parameters (control overrides).
-	 */
-	ScriptTextOut(
-	    hdc,
-	    &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-	    (int)(x + 0.5), (int)(y + 0.5),
-	    0, NULL,
-	    &run->sa, NULL, 0,
-	    run->glyphs, run->glyphCount,
-	    run->advances, NULL, run->offsets);
+	/* Color emoji layers first (no rotation); GDI only draws outlines. */
+	if (!(hAngled == NULL
+		&& fontPtr->subFontArray[run->scriptCacheIdx].familyPtr->isColor
+		&& TkWinDrawColorGlyphs(hdc, hDrawFont, (int)(x + 0.5),
+			(int)(y + 0.5), &run->sa, run->glyphs, run->advances,
+			run->offsets, run->glyphCount))) {
+	    /*
+	     * Render the glyph run using Uniscribe.
+	     * The (x, y) position is the current baseline start.
+	     * 0, NULL, 0 are unused parameters (control overrides).
+	     */
+	    ScriptTextOut(
+		hdc,
+		&fontPtr->scriptCacheArray[run->scriptCacheIdx],
+		(int)(x + 0.5), (int)(y + 0.5),
+		0, NULL,
+		&run->sa, NULL, 0,
+		run->glyphs, run->glyphCount,
+		run->advances, NULL, run->offsets);
+	}
 
 	/*
 	 * Compute the total advance width of this run (sum of glyph advances).
@@ -2375,18 +2410,39 @@ ReleaseFont(
  */
 
 /*
- * FOURCC_TAG --
+ *-------------------------------------------------------------------------
  *
- *   Build a big-endian DWORD from four characters, as required by
- *   GetFontData() for OpenType table tags.  The Windows GDI expects
- *   the tag in the byte order used in the font file, which is big-endian.
- *   So "COLR" becomes 0x434F4C52.
+ * HasFontTable --
+ *
+ *	Tell whether the font hFont has the given OpenType table.
+ *	GetFontData() takes the tag bytes in file order, hence the DWORD
+ *	built from the bytes rather than from a numeric constant.
+ *
+ * Results:
+ *	1 if the table exists, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
  */
-#ifndef FOURCC_TAG
-#define FOURCC_TAG(a,b,c,d) \
-    ((DWORD)(BYTE)(a) << 24 | (DWORD)(BYTE)(b) << 16 | \
-     (DWORD)(BYTE)(c) << 8  | (DWORD)(BYTE)(d))
-#endif
+
+static int
+HasFontTable(
+    HDC hdc,			/* HDC in which the font can be selected. */
+    HFONT hFont,		/* The screen font. */
+    const char *tag)		/* Four-character table tag, e.g. "COLR". */
+{
+    DWORD key;
+    HFONT oldFont;
+    int found;
+
+    memcpy(&key, tag, sizeof(key));
+    oldFont = (HFONT)SelectObject(hdc, hFont);
+    found = (GetFontData(hdc, key, 0, NULL, 0) != GDI_ERROR);
+    SelectObject(hdc, oldFont);
+    return found;
+}
 
 static inline void
 InitSubFont(
@@ -2517,6 +2573,7 @@ AllocFontFamily(
      */
 
     familyPtr->refCount = 2;
+    familyPtr->isColor = HasFontTable(hdc, hFont, "COLR");
 
     familyPtr->segCount = LoadFontRanges(hdc, hFont, &familyPtr->startCount,
 	    &familyPtr->endCount, &familyPtr->isSymbolFont,
@@ -2641,6 +2698,11 @@ FreeFontFamily(
  *	display the character, another screen font may be loaded into the font
  *	object, following a set of preferred fallback rules.
  *
+ *	preferColor selects the subfont for emoji: 0 keeps the usual order
+ *	(base font, loaded subfonts, fallback list); 1 prefers a color font
+ *	unless the base font has the character; 2 (VS16) prefers a color font
+ *	over the base font.
+ *
  * Results:
  *	The return value is the SubFont to use to display the given character.
  *
@@ -2655,6 +2717,9 @@ static SubFont *
 FindSubFontForChar(
     WinFont *fontPtr,
     int ch,
+    int preferColor,		/* 0: text presentation.  1: emoji
+				 * presentation by default.  2: emoji
+				 * presentation requested by VS16. */
     SubFont **subFontPtrPtr)
 {
     int i;
@@ -2664,36 +2729,45 @@ FindSubFontForChar(
     SubFont *subFontPtr = NULL;
 
     /*
-     * Fast path: check already-loaded subfonts.
-     *
-     * CRITICAL: Always check base font (subFontArray[0]) first,
-     * even for ASCII characters. The base font is the one the
-     * user actually requested (e.g., "times", "courier", "arial").
-     *
-     * Fallbacks should ONLY be used when the base font genuinely
-     * cannot display the character. This ensures:
-     *   - "font actual {times 10} a" returns "times", not "Segoe UI Emoji"
-     *   - Menu strings are drawn in the correct font
-     *   - Basic font commands work as expected
+     * Fast paths on the subfonts already loaded.  The base font is the one
+     * the user asked for: it wins whenever it has the character, unless a
+     * VS16 asks for the emoji glyph (keycaps, "heart + VS16").  Then the
+     * loaded subfonts of the wanted kind: a color font for emoji
+     * presentation (Segoe UI Symbol has outlines for most emoji but no
+     * color layers), a font without color layers for text presentation,
+     * whatever the load order.
      */
+
+    if (preferColor < 2 && FontMapLookup(&fontPtr->subFontArray[0], ch)) {
+	return &fontPtr->subFontArray[0];
+    }
     for (i = 0; i < fontPtr->numSubFonts; i++) {
-	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
+	if ((fontPtr->subFontArray[i].familyPtr->isColor != 0) == (preferColor != 0)
+		&& FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
 	}
     }
 
-    /*
-     * Character not found in any already-loaded subfont.
-     * Now search for appropriate fallback fonts.
-     *
-     * For ASCII and common Latin characters, the base font should
-     * have already matched above. If we reach here with an ASCII
-     * character, something is wrong with the base font, so we still
-     * need to find a fallback.
-     */
-
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
+
+    if (preferColor) {
+	static const char *const colorFonts[] = {
+	    "Segoe UI Emoji", "Noto Color Emoji", NULL
+	};
+
+	for (i = 0; colorFonts[i] != NULL; i++) {
+	    subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, colorFonts[i],
+		    ch, &ds, subFontPtrPtr);
+	    if (subFontPtr != NULL) goto end;
+	}
+	for (i = 0; i < fontPtr->numSubFonts; i++) {
+	    if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
+		subFontPtr = &fontPtr->subFontArray[i];
+		goto end;
+	    }
+	}
+    }
 
     /*
      * Priority fallback fonts for complex scripts, emoji, and CJK.
@@ -2770,6 +2844,16 @@ FindSubFontForChar(
 	    subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
 		    ch, &ds, subFontPtrPtr);
 	    if (subFontPtr != NULL) goto end;
+	}
+    }
+
+    if (!preferColor) {
+	/* Last resort for text presentation: a color font already loaded. */
+	for (i = 0; i < fontPtr->numSubFonts; i++) {
+	    if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
+		subFontPtr = &fontPtr->subFontArray[i];
+		break;
+	    }
 	}
     }
 

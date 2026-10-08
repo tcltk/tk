@@ -418,6 +418,66 @@ test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints
 #
 
 testutils forget geometry
+#
+# Subfont selection for emoji (UTS #51): a color emoji font for the default emoji
+# presentation and for VS16 sequences, text presentation left to the usual fallbacks,
+# an explicit base font respected, and a ZWJ sequence shaped as one glyph.
+#
+testConstraint segoeEmoji [expr {"Segoe UI Emoji" in [font families]}]
+testConstraint segoeSymbol [expr {"Segoe UI Symbol" in [font families]}]
+
+test winfont-8.1 {FindSubFontForChar: default emoji presentation gets the color font} -constraints {
+    win segoeEmoji
+} -body {
+    font actual TkDefaultFont -family -- [format %c 0x1F600]
+} -result {Segoe UI Emoji}
+test winfont-8.2 {FindSubFontForChar: text presentation is not sent to the color font} -constraints {
+    win segoeEmoji
+} -body {
+    expr {[font actual TkDefaultFont -family -- [format %c 0x2764]] eq "Segoe UI Emoji"}
+} -result 0
+test winfont-8.3 {FindSubFontForChar: an explicit base font keeps its own glyphs} -constraints {
+    win segoeSymbol
+} -body {
+    font actual {{Segoe UI Symbol} 14} -family -- [format %c 0x1F600]
+} -result {Segoe UI Symbol}
+test winfont-8.4 {TkWinShapeString: ZWJ sequence shaped as one glyph} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set zwj "[format %c 0x1F469][format %c 0x200D][format %c 0x1F4BB]"
+    expr {[font measure $f $zwj] == [font measure $f [format %c 0x1F469]]}
+} -result 1
+test winfont-8.5 {TkWinShapeString: VS16 selects the emoji glyph} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f "[format %c 0x2764][format %c 0xFE0F]"]
+	    > [font measure $f [format %c 0x2764]]}
+} -result 1
+test winfont-8.6 {TkWinShapeString: skin tone modifier joins its base} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f "[format %c 0x1F44D][format %c 0x1F3FD]"]
+	    == [font measure $f [format %c 0x1F44D]]}
+} -result 1
+test winfont-8.7 {TkWinShapeString: text around an emoji stays in the base font} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set e [format %c 0x1F600]
+    expr {[font measure $f "a${e}b"]
+	    == [font measure $f a] + [font measure $f $e] + [font measure $f b]}
+} -result 1
+test winfont-8.8 {TkWinShapeString: VS15 stays with its base character} -constraints {
+    win segoeSymbol
+} -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f "[format %c 0x2764][format %c 0xFE0E]"]
+	    == [font measure $f [format %c 0x2764]]}
+} -result 1
+
 cleanupTests
 
 # Local variables:

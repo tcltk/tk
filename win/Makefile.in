@@ -301,6 +301,7 @@ TK_OBJS = \
 	tkWinButton.$(OBJEXT) \
 	tkWinClipboard.$(OBJEXT) \
 	tkWinColor.$(OBJEXT) \
+	tkWinColorEmoji.$(OBJEXT) \
 	tkWinConfig.$(OBJEXT) \
 	tkWinCursor.$(OBJEXT) \
 	tkWinDialog.$(OBJEXT) \

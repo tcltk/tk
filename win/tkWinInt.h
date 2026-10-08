@@ -22,6 +22,7 @@
 
 #ifndef _TKWIN
 #include "tkWin.h"
+#include <usp10.h>
 #endif
 
 #ifndef _TKINT
@@ -173,6 +174,9 @@ MODULE_SCOPE HICON TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
  */
 
 MODULE_SCOPE void TkWinDisplayChanged(Display *display);
+MODULE_SCOPE int TkWinDrawColorGlyphs(HDC hdc, HFONT hFont, int x, int y,
+	const SCRIPT_ANALYSIS *saPtr, const WORD *glyphs, const int *advances,
+	const GOFFSET *offsets, int glyphCount);
 MODULE_SCOPE void TkWinCleanupContainerList(void);
 MODULE_SCOPE LRESULT TkWinEmbeddedEventProc(HWND, UINT, WPARAM, LPARAM);
 MODULE_SCOPE unsigned int TkWinGetModifierState(void);
