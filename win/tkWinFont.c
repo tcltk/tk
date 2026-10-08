@@ -216,6 +216,9 @@ typedef struct TkWinShapedRun {
     int	 *advances;      /* Glyph advance widths in pixels (malloced).*/
     GOFFSET     *offsets;       /* Per-glyph x/y offsets (malloced). */
     ABC	  abc;	   /* Total run A+B+C metrics from ScriptPlace. */
+    int	  item;		/* Index of the Uniscribe item the run comes
+				 * from: an item split by subfont gives several
+				 * runs. */
     int	  charStart;     /* UTF-16 character index in the full string
 				 * where this run begins. */
     int	  charLen;       /* Number of UTF-16 characters in this run. */
@@ -1182,6 +1185,7 @@ TkWinShapeString(
 			sizeof(TkWinShapedRun) * maxRuns);
 	    }
 	    runs[nRuns].hFont = hFont;
+	    runs[nRuns].item = li;
 	    runs[nRuns].scriptCacheIdx = subFontIdx;
 	    runs[nRuns].sa = sa;
 	    runs[nRuns].glyphCount = glyphCount;
@@ -1290,6 +1294,16 @@ static int GetVisualXForLogicalIndex(
     }
 
     logicalIdx = ClampIndex(logicalIdx, totalChars);
+
+    /*
+     * The end of the text is the right end of the line, whichever run is
+     * the last one in logical order: in right-to-left text that run is the
+     * leftmost, and its end is not the width of the line.
+     */
+
+    if (logicalIdx >= totalChars && nRuns > 0) {
+	return TkWinShapedRunsWidth(runs, nRuns);
+    }
 
     for (i = 0; i < nRuns; i++) {
 	int start = runs[i].charStart;
@@ -2215,24 +2229,25 @@ MultiFontTextOut(
     double cosA = cos(angle * PI / 180.0);
 
     /*
-     * Draw the runs in visual order, from their bidi levels, as
-     * Tk_DrawCharsInContext does: the ranges of a right-to-left item go
-     * right to left, like its glyphs.
+     * The runs are drawn in logical order, as before, except inside a
+     * right-to-left item: its ranges, split by subfont, go right to left
+     * like its glyphs.
      */
-    int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
-    BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
-    for (i = 0; i < nRuns; i++) {
-	levels[i] = runs[i].sa.s.uBidiLevel;
-    }
-    if (FAILED(ScriptLayout(nRuns, levels, visualOrder, NULL))) {
-	for (i = 0; i < nRuns; i++) {
-	    visualOrder[i] = i;
+    int *order = (int *)Tcl_Alloc(sizeof(int) * nRuns);
+    for (i = 0; i < nRuns; ) {
+	int last = i, j;
+
+	while (last + 1 < nRuns && runs[last + 1].item == runs[i].item) {
+	    last++;
 	}
+	for (j = i; j <= last; j++) {
+	    order[j] = runs[i].sa.fRTL ? last - (j - i) : j;
+	}
+	i = last + 1;
     }
-    Tcl_Free(levels);
 
     for (i = 0; i < nRuns; i++) {
-	TkWinShapedRun *run = &runs[visualOrder[i]];
+	TkWinShapedRun *run = &runs[order[i]];
 	HFONT hDrawFont = run->hFont;
 	HFONT hAngled = NULL;
 
@@ -2298,7 +2313,7 @@ MultiFontTextOut(
     SelectObject(hdc, oldFont);
 
     /* Free all resources allocated by TkWinShapeString for the runs. */
-    Tcl_Free(visualOrder);
+    Tcl_Free(order);
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
 }
