@@ -432,7 +432,7 @@ test winfont-8.1 {FindSubFontForChar: default emoji presentation gets the color 
     font actual TkDefaultFont -family -- [format %c 0x1F600]
 } -result {Segoe UI Emoji}
 test winfont-8.2 {FindSubFontForChar: text presentation is not sent to the color font} -constraints {
-    win segoeEmoji
+    win segoeEmoji segoeSymbol
 } -body {
     expr {[font actual TkDefaultFont -family -- [format %c 0x2764]] eq "Segoe UI Emoji"}
 } -result 0
@@ -486,6 +486,10 @@ test winfont-8.8 {TkWinShapeString: VS15 stays with its base character} -constra
 #
 testConstraint testwinpixel [llength [info commands testwinpixel]]
 testConstraint testwingdiobjects [llength [info commands testwingdiobjects]]
+
+# The pixels are read from the screen: keep the test window above everything.
+wm attributes . -topmost 1
+raise .
 
 proc winfontColoredSamples {w} {
     set n 0
@@ -646,6 +650,8 @@ test winfont-9.7 {glyph cache: bounded pages, no GDI object leak} -constraints {
 } -cleanup {
     destroy .t
 } -result {1 1}
+
+wm attributes . -topmost 0
 
 cleanupTests
 

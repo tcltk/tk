@@ -925,10 +925,11 @@ IsEmojiContinuation(
  * AssignSubFonts --
  *
  *	Store in subIdx[0..len) the index of the subfont for each UTF-16 unit
- *	of wstr[start..start+len): the base font for ASCII, one subfont per
- *	emoji cluster.  A VS16 after a character asks for a color font, a
- *	VS15 for the text glyph; what follows a ZWJ inside an emoji cluster
- *	stays in the cluster, so the font gets the whole sequence to ligate.
+ *	of wstr[start..start+len): the base font for ASCII, one subfont for
+ *	the rest of the text of the item, one subfont per emoji cluster.  A
+ *	VS16 after a character asks for a color font, a VS15 for the text
+ *	glyph; what follows a ZWJ inside an emoji cluster stays in the
+ *	cluster, so the font gets the whole sequence to ligate.
  *
  * Side effects:
  *	May load additional SubFonts into fontPtr->subFontArray.
@@ -946,7 +947,7 @@ AssignSubFonts(
 {
     int end = start + len;
     int i = start;
-    int curIdx = 0, curEmoji = 0, joinNext = 0;
+    int curIdx = 0, curEmoji = 0, joinNext = 0, textIdx = -1;
 
     while (i < end) {
 	int units, nextUnits, idx, k;
@@ -954,7 +955,9 @@ AssignSubFonts(
 	int next = (i + units < end)
 		? DecodeUtf16(wstr, i + units, end, &nextUnits) : -1;
 
-	if (IsEmojiContinuation(ch, curEmoji)) {
+	if (IsEmojiContinuation(ch, curEmoji)
+		|| (ch > 0x7f && mjb_codepoint_is_combining((mjb_codepoint) ch))) {
+	    /* Marks and selectors stay with the character before them. */
 	    idx = curIdx;
 	    joinNext = (ch == 0x200D && curEmoji);
 	} else if (joinNext) {
@@ -969,14 +972,29 @@ AssignSubFonts(
 		    && mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
 		preferColor = 1;
 	    }
-	    if (ch < 0x80 && !preferColor) {
-		idx = 0;
-	    } else {
+	    if (preferColor) {
 		SubFont *subFontPtr = &fontPtr->subFontArray[0];
 
 		subFontPtr = FindSubFontForChar(fontPtr, ch, preferColor,
 			&subFontPtr);
 		idx = (int)(subFontPtr - fontPtr->subFontArray);
+	    } else if (ch < 0x80) {
+		idx = 0;
+	    } else {
+		/*
+		 * Text: one subfont for the whole item, chosen by its first
+		 * character, so that marks and joining letters are shaped
+		 * together; a character it lacks gets the run reshaped with
+		 * another subfont, as before.
+		 */
+
+		if (textIdx < 0) {
+		    SubFont *subFontPtr = &fontPtr->subFontArray[0];
+
+		    subFontPtr = FindSubFontForChar(fontPtr, ch, 0, &subFontPtr);
+		    textIdx = (int)(subFontPtr - fontPtr->subFontArray);
+		}
+		idx = textIdx;
 	    }
 	    curIdx = idx;
 	    curEmoji = (preferColor != 0);
@@ -1085,6 +1103,7 @@ TkWinShapeString(
 		subIdx + itemStart);
 
 	for (rs = itemStart; rs < itemEnd; rs = re) {
+	    SCRIPT_ANALYSIS sa = item->a;	/* ScriptShape may set fNoGlyphIndex. */
 	    int subFontIdx = subIdx[rs];
 	    int rangeLen, maxGlyphs, glyphCount = 0;
 	    HFONT hFont;
@@ -1109,7 +1128,7 @@ TkWinShapeString(
 	    visAttr = (SCRIPT_VISATTR *)Tcl_Alloc(sizeof(SCRIPT_VISATTR) * maxGlyphs);
 
 	    hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-		    wstr + rs, rangeLen, maxGlyphs, &item->a,
+		    wstr + rs, rangeLen, maxGlyphs, &sa,
 		    glyphs, logClust, visAttr, &glyphCount);
 
 	    /*
@@ -1128,13 +1147,13 @@ TkWinShapeString(
 
 			fb = FindSubFontForChar(fontPtr, ch, 0, &fb);
 			newIdx = (int)(fb - fontPtr->subFontArray);
-			if (newIdx != subFontIdx) {
+			if (newIdx != subFontIdx && FontMapLookup(fb, ch)) {
 			    subFontIdx = newIdx;
 			    hFont = fontPtr->subFontArray[subFontIdx].hFont0;
 			    SelectObject(hdc, hFont);
 			    hr = ScriptShape(hdc,
 				    &fontPtr->scriptCacheArray[subFontIdx],
-				    wstr + rs, rangeLen, maxGlyphs, &item->a,
+				    wstr + rs, rangeLen, maxGlyphs, &sa,
 				    glyphs, logClust, visAttr, &glyphCount);
 			    break;
 			}
@@ -1149,7 +1168,7 @@ TkWinShapeString(
 	    advances = (int *)Tcl_Alloc(sizeof(int) * glyphCount);
 	    offsets = (GOFFSET *)Tcl_Alloc(sizeof(GOFFSET) * glyphCount);
 	    hr = ScriptPlace(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-		    glyphs, glyphCount, visAttr, &item->a,
+		    glyphs, glyphCount, visAttr, &sa,
 		    advances, offsets, &abc);
 	    if (FAILED(hr)) {
 		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
@@ -1164,7 +1183,7 @@ TkWinShapeString(
 	    }
 	    runs[nRuns].hFont = hFont;
 	    runs[nRuns].scriptCacheIdx = subFontIdx;
-	    runs[nRuns].sa = item->a;
+	    runs[nRuns].sa = sa;
 	    runs[nRuns].glyphCount = glyphCount;
 	    runs[nRuns].glyphs = glyphs;
 	    runs[nRuns].advances = advances;

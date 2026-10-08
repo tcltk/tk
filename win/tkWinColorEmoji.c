@@ -22,9 +22,8 @@
  *	Anything missing or failing makes TkWinDrawColorGlyphs() report that
  *	nothing was drawn, and the caller falls back to ScriptTextOut().
  *
- *	The headers of the Windows SDK declare Direct2D and DirectWrite for
- *	C++ only, so with MSVC this file is a stub for now: GDI draws the
- *	outlines, as before.
+ *	The interfaces are declared in tkWinDirect2D.h, for C on every
+ *	toolchain.
  *
  * Copyright © 2026 Nicolas Bats
  *
@@ -33,35 +32,7 @@
  */
 
 #include "tkWinInt.h"
-
-#ifdef _MSC_VER
-
-int
-TkWinDrawColorGlyphs(
-    TCL_UNUSED(HDC),
-    TCL_UNUSED(HFONT),
-    TCL_UNUSED(TkWinColorGlyphCache **),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(const SCRIPT_ANALYSIS *),
-    TCL_UNUSED(const WORD *),
-    TCL_UNUSED(const int *),
-    TCL_UNUSED(const GOFFSET *),
-    TCL_UNUSED(int))
-{
-    return 0;
-}
-
-void
-TkWinFreeColorGlyphCache(
-    TCL_UNUSED(TkWinColorGlyphCache **))
-{
-}
-
-#else /* !_MSC_VER */
-
-#include <d2d1.h>
-#include <dwrite_2.h>
+#include "tkWinDirect2D.h"
 
 /*
  * The two IIDs needed to create the factories, defined here so that no uuid
@@ -149,9 +120,7 @@ struct TkWinColorGlyphCache {
 };
 
 /*
- * Every method is called through the interface that introduces it: the C
- * vtables of MinGW nest the base interfaces while those of MSVC flatten
- * them, and only the introducing interface has the member in both.
+ * Every method is called through the interface that introduces it.
  */
 
 #define UNKNOWN(obj)	((IUnknown *) (obj))
@@ -791,8 +760,9 @@ AllocCell(
  *	of the page into its DIB, paid once for all the cells of the run.
  *
  * Results:
- *	1 on success, 0 on failure: the cells not rendered are given up and
- *	the context is released after a lost device.
+ *	1 on success, 0 on failure.  A cell not rendered is given up, so that
+ *	no entry points to an empty cell; a lost device releases the context
+ *	and gives up every pending cell.
  *
  *----------------------------------------------------------------------
  */
@@ -811,7 +781,7 @@ RenderPending(
     RECT pageRect = {0, 0, PAGE_SIZE, PAGE_SIZE};
     int p, k, ok = 1;
 
-    for (p = 0; p < cache->pageCount && ok; p++) {
+    for (p = 0; p < cache->pageCount; p++) {
 	int onPage = 0;
 
 	for (k = 0; k < pendingCount; k++) {
@@ -826,8 +796,13 @@ RenderPending(
 	SelectObject(cache->memDC, cache->pages[p].dib);
 	if (FAILED(tsdPtr->target->lpVtbl->BindDC(tsdPtr->target, cache->memDC,
 		&pageRect))) {
+	    for (k = 0; k < pendingCount; k++) {
+		if (entries[pending[k]]->page == p) {
+		    entries[pending[k]]->page = -1;
+		}
+	    }
 	    ok = 0;
-	    break;
+	    continue;
 	}
 	RENDER_TARGET(tsdPtr)->lpVtbl->BeginDraw(RENDER_TARGET(tsdPtr));
 	for (k = 0; k < pendingCount; k++) {
@@ -848,12 +823,10 @@ RenderPending(
 	if (FAILED(RENDER_TARGET(tsdPtr)->lpVtbl->EndDraw(RENDER_TARGET(tsdPtr),
 		NULL, NULL))) {
 	    for (k = 0; k < pendingCount; k++) {
-		if (entries[pending[k]]->page == p) {
-		    entries[pending[k]]->page = -1;
-		}
+		entries[pending[k]]->page = -1;
 	    }
 	    ReleaseContext(tsdPtr);
-	    ok = 0;
+	    return 0;
 	}
     }
     return ok;
@@ -1043,6 +1016,9 @@ TkWinDrawColorGlyphs(
 	if (seen) {
 	    continue;
 	}
+	if (entry->page >= 0 && advances[i] + 2 * cache->margin > entry->width) {
+	    entry->page = -1;		/* Wider than its cell: a new one. */
+	}
 	if (entry->page < 0) {
 	    if (!AllocCell(cache, advances[i] + 2 * cache->margin, entry)) {
 		continue;		/* Drawn directly below. */
@@ -1088,8 +1064,6 @@ TkWinDrawColorGlyphs(
     Tcl_Free(entries);
     return drawn;
 }
-
-#endif /* !_MSC_VER */
 
 /*
  * Local Variables:

@@ -22,12 +22,13 @@
 
 #ifndef _TKWIN
 #include "tkWin.h"
-#include <usp10.h>
 #endif
 
 #ifndef _TKINT
 #include "tkInt.h"
 #endif
+
+#include <usp10.h>		/* Uniscribe types of the font interfaces. */
 
 /*
  * Define constants missing from older Win32 SDK header files.
