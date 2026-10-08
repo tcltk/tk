@@ -5379,6 +5379,7 @@ TkTextRelayoutWindow(
     Bool inSync = 1;
     int padX, padY;
     int borderWidth, highlightWidth;
+    int width, height;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5428,8 +5429,21 @@ TkTextRelayoutWindow(
     }
     dInfoPtr->x = highlightWidth + borderWidth + padX;
     dInfoPtr->y = highlightWidth + borderWidth + padY;
-    dInfoPtr->maxX = Tk_Width(textPtr->tkwin) - highlightWidth
-	    - borderWidth - padX;
+
+    /*
+     * A window which has not been mapped yet has size 1x1. Laying out the
+     * text in such a small area is very expensive (a display line per
+     * character), and the result is useless. Use the requested size instead.
+     * [Bug 7d8d10e4a9]
+     */
+
+    width = Tk_Width(textPtr->tkwin);
+    height = Tk_Height(textPtr->tkwin);
+    if (width <= 1 && height <= 1) {
+	width = Tk_ReqWidth(textPtr->tkwin);
+	height = Tk_ReqHeight(textPtr->tkwin);
+    }
+    dInfoPtr->maxX = width - highlightWidth - borderWidth - padX;
     if (dInfoPtr->maxX <= dInfoPtr->x) {
 	dInfoPtr->maxX = dInfoPtr->x + 1;
     }
@@ -5438,8 +5452,7 @@ TkTextRelayoutWindow(
      * This is the only place where dInfoPtr->maxY is set.
      */
 
-    dInfoPtr->maxY = Tk_Height(textPtr->tkwin) - highlightWidth
-	    - borderWidth - padY;
+    dInfoPtr->maxY = height - highlightWidth - borderWidth - padY;
     if (dInfoPtr->maxY <= dInfoPtr->y) {
 	dInfoPtr->maxY = dInfoPtr->y + 1;
     }

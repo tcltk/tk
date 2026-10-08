@@ -95,6 +95,7 @@ to the userbase.
  - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
  - [MacOS aqua: <<ContextMenu >> binding sometimes triggers for incorrect toplevel](https://core.tcl-lang.org/tk/tktview/061f63)
  - [errors in ::tk::mac::PerformService were ignored](https://core.tcl-lang.org/tk/tktview/173622)
+ - [Tk console extremely slow before first display](https://core.tcl-lang.org/tk/tktview/7d8d10)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
