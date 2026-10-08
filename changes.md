@@ -92,6 +92,7 @@ to the userbase.
  - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
  - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
  - [Long dashed lines cause problems on canvases](https://core.tcl-lang.org/tk/tktview/663981)
+ - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
