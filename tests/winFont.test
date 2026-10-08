@@ -651,6 +651,75 @@ test winfont-9.7 {glyph cache: bounded pages, no GDI object leak} -constraints {
     destroy .t
 } -result {1 1}
 
+#
+# Right-to-left text next to emoji: the runs of an item are shaped by subfont, so an
+# Arabic word must stay joined, its width must not depend on an emoji next to it, and a
+# label must draw the ranges of a right-to-left item right to left.
+#
+proc winfontArabic {} {
+    return "[format %c 0x633][format %c 0x644][format %c 0x627][format %c 0x645]"
+}
+proc winfontIsolatedSum {font} {
+    set sum 0
+    foreach cp {0x633 0x644 0x627 0x645} {
+	incr sum [font measure $font [format %c $cp]]
+    }
+    return $sum
+}
+# Leftmost column of the label holding a saturated pixel (a color layer), or -1.
+proc winfontLeftmostColored {w} {
+    set width [winfo width $w]
+    set height [winfo height $w]
+    for {set x 1} {$x < $width} {incr x 2} {
+	for {set y 1} {$y < $height} {incr y 3} {
+	    scan [testwinpixel $w $x $y] "#%2x%2x%2x" r g b
+	    if {max($r, $g, $b) - min($r, $g, $b) > 100} {
+		return $x
+	    }
+	}
+    }
+    return -1
+}
+
+test winfont-10.1 {RTL: an Arabic word is shaped with joined forms} -constraints win -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f [winfontArabic]] < [winfontIsolatedSum $f]}
+} -result 1
+test winfont-10.2 {RTL: an emoji next to an Arabic word leaves it joined} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set e [format %c 0x1F600]
+    list [expr {[font measure $f "[winfontArabic]$e"]
+	    == [font measure $f [winfontArabic]] + [font measure $f $e]}] \
+	[expr {[font measure $f "$e[winfontArabic]"]
+	    == [font measure $f [winfontArabic]] + [font measure $f $e]}]
+} -result {1 1}
+test winfont-10.3 {RTL: a base font without Arabic falls back to one joining font} -constraints {
+    win
+} -body {
+    set f {Verdana 14}
+    expr {[font measure $f [winfontArabic]] < [winfontIsolatedSum $f]}
+} -result 1
+test winfont-10.4 {RTL: a label draws the ranges of a right-to-left item right to left} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    # seen + emoji + lam alef meem: the emoji sits between the two groups of letters,
+    # with the wider group (three letters) on its left, so its first colored column
+    # must be well inside the label; in logical order it would be near the left edge.
+    set text "[format %c 0x633][format %c 0x1F600][format %c 0x644][format %c 0x627][format %c 0x645]"
+    label .l -text $text -font {{Segoe UI} 72} -foreground black -background white \
+	-padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    set left [winfontLeftmostColored .l]
+    expr {$left > [winfo width .l] * 0.35}
+} -cleanup {
+    destroy .l
+} -result 1
+
 wm attributes . -topmost 0
 
 cleanupTests

@@ -2214,9 +2214,25 @@ MultiFontTextOut(
     double sinA = sin(angle * PI / 180.0);
     double cosA = cos(angle * PI / 180.0);
 
-    /* Process each shaped run in order (already bidi‑ordered by ScriptLayout). */
+    /*
+     * Draw the runs in visual order, from their bidi levels, as
+     * Tk_DrawCharsInContext does: the ranges of a right-to-left item go
+     * right to left, like its glyphs.
+     */
+    int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
+    BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
     for (i = 0; i < nRuns; i++) {
-	TkWinShapedRun *run = &runs[i];
+	levels[i] = runs[i].sa.s.uBidiLevel;
+    }
+    if (FAILED(ScriptLayout(nRuns, levels, visualOrder, NULL))) {
+	for (i = 0; i < nRuns; i++) {
+	    visualOrder[i] = i;
+	}
+    }
+    Tcl_Free(levels);
+
+    for (i = 0; i < nRuns; i++) {
+	TkWinShapedRun *run = &runs[visualOrder[i]];
 	HFONT hDrawFont = run->hFont;
 	HFONT hAngled = NULL;
 
@@ -2282,6 +2298,7 @@ MultiFontTextOut(
     SelectObject(hdc, oldFont);
 
     /* Free all resources allocated by TkWinShapeString for the runs. */
+    Tcl_Free(visualOrder);
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
 }
