@@ -485,6 +485,7 @@ test winfont-8.8 {TkWinShapeString: VS15 stays with its base character} -constra
 # above 100) can only come from a color layer, never from a black glyph on white.
 #
 testConstraint testwinpixel [llength [info commands testwinpixel]]
+testConstraint testwingdiobjects [llength [info commands testwingdiobjects]]
 
 proc winfontColoredSamples {w} {
     set n 0
@@ -528,12 +529,12 @@ test winfont-9.2 {TkWinDrawColorGlyphs: text presentation stays in the text colo
 } -cleanup {
     destroy .l
 } -result 1
-test winfont-9.3 {TkWinDrawColorGlyphs: a glyph without color layers stays in the text color} -constraints {
+test winfont-9.3 {TkWinDrawColorGlyphs: a run without color layers is left to GDI} -constraints {
     win segoeEmoji testwinpixel
 } -setup {
     destroy .l
 } -body {
-    label .l -text [format %c 0xA9] -font {{Segoe UI Emoji} 72} -foreground black \
+    label .l -text a -font {{Segoe UI Emoji} 72} -foreground black \
 	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
     pack .l
     update
@@ -541,6 +542,110 @@ test winfont-9.3 {TkWinDrawColorGlyphs: a glyph without color layers stays in th
 } -cleanup {
     destroy .l
 } -result 1
+
+# Scan the label on a grid of 3 pixels for a pixel of the given dominant color.
+proc winfontHasPixel {w test} {
+    set width [winfo width $w]
+    set height [winfo height $w]
+    for {set x 1} {$x < $width} {incr x 3} {
+	for {set y 1} {$y < $height} {incr y 3} {
+	    scan [testwinpixel $w $x $y] "#%2x%2x%2x" r g b
+	    if {[expr $test]} {
+		return 1
+	    }
+	}
+    }
+    return 0
+}
+
+test winfont-9.4 {glyph cache: the same emoji drawn twice (second draw from the cache)} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l1 .l2
+} -body {
+    foreach w {.l1 .l2} {
+	label $w -text [format %c 0x1F600] -font {{Segoe UI} 72} -foreground black \
+	    -background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+	pack $w -side left
+    }
+    update
+    expr {[winfontColoredSamples .l1] >= 3 && [winfontColoredSamples .l2] >= 3}
+} -cleanup {
+    destroy .l1 .l2
+} -result 1
+test winfont-9.5 {glyph cache: a glyph in the text color follows a color change} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    # "a" has no color layers but shares the run of the emoji: drawn from the cache
+    # in the text color, and rendered again when that color changes.
+    label .l -text "a[format %c 0x1F600]" -font {{Segoe UI Emoji} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    set before [winfontHasPixel .l {$r > 200 && $g < 60 && $b < 60}]
+    .l configure -foreground red
+    update
+    list $before [winfontHasPixel .l {$r > 200 && $g < 60 && $b < 60}]
+} -cleanup {
+    destroy .l
+} -result {0 1}
+test winfont-9.6 {glyph cache: a new size and a new scaling render fresh glyphs} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l .m
+    set scaling [tk scaling]
+} -body {
+    label .l -text [format %c 0x1F600] -font {{Segoe UI} 36} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l -side left
+    update
+    set small [winfo width .l]
+    .l configure -font {{Segoe UI} 72}
+    update
+    set large [winfo width .l]
+    tk scaling [expr {$scaling * 2}]
+    label .m -text [format %c 0x1F600] -font {{Segoe UI} 36} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .m -side left
+    update
+    list [expr {$large > $small * 1.5}] [expr {[winfo width .m] > $small * 1.5}] \
+	[expr {[winfontColoredSamples .l] >= 3}] [expr {[winfontColoredSamples .m] >= 3}]
+} -cleanup {
+    tk scaling $scaling
+    destroy .l .m
+} -result {1 1 1 1}
+test winfont-9.7 {glyph cache: bounded pages, no GDI object leak} -constraints {
+    win segoeEmoji testwingdiobjects
+} -setup {
+    destroy .t
+    set emoji {}
+    for {set cp 0x1F300} {$cp < 0x1F550} {incr cp} {
+	append emoji [format %c $cp]
+    }
+} -body {
+    text .t -width 40 -height 10 -wrap char
+    pack .t
+    update
+    set before [testwingdiobjects]
+    .t tag configure small -font {{Segoe UI} 12}
+    .t tag configure large -font {{Segoe UI} 24}
+    .t insert end $emoji\n small $emoji\n large
+    for {set i 0} {$i < 40} {incr i} {
+	.t yview moveto [expr {$i / 40.0}]
+	update
+    }
+    set during [testwingdiobjects]
+    destroy .t
+    update
+    set after [testwingdiobjects]
+    # per size: the base font, the emoji and symbol subfonts, one DC and at most
+    # 4 pages; plus the Direct2D context
+    list [expr {$during - $before <= 2 * 8 + 6}] [expr {$after - $before <= 2}]
+} -cleanup {
+    destroy .t
+} -result {1 1}
 
 cleanupTests
 

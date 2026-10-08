@@ -33,6 +33,7 @@ static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
 static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
 static Tcl_ObjCmdProc2 TestsendinputObjCmd;
 static Tcl_ObjCmdProc2 TestwinpixelObjCmd;
+static Tcl_ObjCmdProc2 TestwingdiobjectsObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -74,6 +75,42 @@ TkplatformtestInit(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwinpixel", TestwinpixelObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testwingdiobjects", TestwingdiobjectsObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestwingdiobjectsObjCmd --
+ *
+ *	"testwingdiobjects": number of GDI objects of the process, as the
+ *	Task Manager counts them.  Lets a test check that drawing does not
+ *	leak fonts, bitmaps or device contexts.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestwingdiobjectsObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
+	    GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS)));
     return TCL_OK;
 }
 

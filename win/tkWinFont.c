@@ -118,6 +118,9 @@ typedef struct SubFont {
 
     HFONT hFontAngled;		/* The angled version of the screen font. */
     double angle;		/* The angle of the screen font. */
+    TkWinColorGlyphCache *colorCache;
+				/* Color emoji glyphs already rendered, NULL
+				 * until the first one (tkWinColorEmoji.c). */
 } SubFont;
 
 /*
@@ -2047,9 +2050,11 @@ Tk_DrawCharsInContext(
 
 	/* Color emoji layers first; GDI only draws the outlines. */
 	if (!(fontPtr->subFontArray[run->scriptCacheIdx].familyPtr->isColor
-		&& TkWinDrawColorGlyphs(dc, run->hFont, runX[j] + glyphOffsetX, y,
-			&run->sa, run->glyphs + gFirst, run->advances + gFirst,
-			run->offsets + gFirst, gLast - gFirst))) {
+		&& TkWinDrawColorGlyphs(dc, run->hFont,
+			&fontPtr->subFontArray[run->scriptCacheIdx].colorCache,
+			runX[j] + glyphOffsetX, y, &run->sa, run->glyphs + gFirst,
+			run->advances + gFirst, run->offsets + gFirst,
+			gLast - gFirst))) {
 	    /* Use scriptCacheIdx to look up the current cache pointer. */
 	    ScriptTextOut(
 		dc,
@@ -2215,9 +2220,10 @@ MultiFontTextOut(
 	/* Color emoji layers first (no rotation); GDI only draws outlines. */
 	if (!(hAngled == NULL
 		&& fontPtr->subFontArray[run->scriptCacheIdx].familyPtr->isColor
-		&& TkWinDrawColorGlyphs(hdc, hDrawFont, (int)(x + 0.5),
-			(int)(y + 0.5), &run->sa, run->glyphs, run->advances,
-			run->offsets, run->glyphCount))) {
+		&& TkWinDrawColorGlyphs(hdc, hDrawFont,
+			&fontPtr->subFontArray[run->scriptCacheIdx].colorCache,
+			(int)(x + 0.5), (int)(y + 0.5), &run->sa, run->glyphs,
+			run->advances, run->offsets, run->glyphCount))) {
 	    /*
 	     * Render the glyph run using Uniscribe.
 	     * The (x, y) position is the current baseline start.
@@ -2464,6 +2470,7 @@ InitSubFont(
 
     subFontPtr->hFontAngled = NULL;
     subFontPtr->angle       = 0.0;
+    subFontPtr->colorCache  = NULL;
 
     SelectObject(hdc, hFont);
 }
@@ -2489,6 +2496,7 @@ static inline void
 ReleaseSubFont(
     SubFont *subFontPtr)	/* The SubFont to delete. */
 {
+    TkWinFreeColorGlyphCache(&subFontPtr->colorCache);
     DeleteObject(subFontPtr->hFont0);
     if (subFontPtr->hFontAngled) {
 	DeleteObject(subFontPtr->hFontAngled);
