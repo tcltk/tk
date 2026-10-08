@@ -8477,3 +8477,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-08 (bug) [434c8d] crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid (storchaka)
 
 2026-10-08 (bug) [ad9a02] Applying canvas move command to objects leaves trails
+
+2026-10-08 (bug) [4face8] wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display (storchaka)
