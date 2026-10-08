@@ -4,6 +4,102 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
+Release Tk 9.0.5 arises from the check-in with tag `core-9-0-5`.
+
+Tk 9.0.5 continues the Tk 9.0 series of releases.  The Tk 9.0 series
+does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
+To make use of Tk 9.0.5, first a Tcl 9.0 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9, but not
+necessarily in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.
+
+# Bug fixes
+ - [tk inactive returns a negative value on Windows for long inactivity](https://core.tcl-lang.org/tk/tktview/3cb7c4)
+ - [nanosvg possible zero malloc on file error](https://github.com/memononen/nanosvg/pull/291)
+ - [Scaling on aqua gets unexpectedly reset](https://core.tcl-lang.org/tk/tktview/fe932e)
+ - [ttk::entry has a wrong background in clam theme and readonly state](https://core.tcl-lang.org/tk/tktview/2f8570)
+ - [Xlib emulation for macOS causes many visual artifacts](https://core.tcl-lang.org/tk/tktview/971a26)
+ - [tk console manual errors and undocumented bindings](https://core.tcl-lang.org/tk/tktview/d62ee2)
+ - [Usage of private symbol NSWindowDidOrderOnScreenNotification](https://core.tcl-lang.org/tk/tktview/a9969f)
+ - [tk.pc omits private pkg-config dependency for static linking](https://core.tcl-lang.org/tk/tktview/3e5d09)
+ - [Modal window is not restored after "show desktop"](https://core.tcl-lang.org/tk/tktview/ed6c3a)
+ - [tk_getOpenFile -multiple (tkfbox): confirmed files are appended -initialfile](https://core.tcl-lang.org/tk/tktview/56eec5)
+ - [ttk::style configure has no effect on options with a non-empty widget default](https://core.tcl-lang.org/tk/tktview/aba849)
+ - [MS-Win: Modifier-bindings of non-latin bindings use latin (ex: <Ctrl-c>)](https://core.tcl-lang.org/tk/tktview/433261)
+ - [Scrolling a frame in a canvas is very slow since TIP 262](https://core.tcl-lang.org/tk/tktview/9438cc)
+ - [Aqua: Tk should not replace signal handlers](https://core.tcl-lang.org/tk/tktview/989b1c)
+ - [Partial WM_INPUTLANGCHANGE support ignores keyboard layout changes](https://core.tcl-lang.org/tk/tktview/a9bd2a)
+ - [MS-Win: characters entered via an IME or the touch keyboard get the keysym of a function key (F1, F3, F5, ...)](https://core.tcl-lang.org/tk/tktview/f492c3)
+ - [Tk textbox not working with "Bengali" set as keyboard input language](https://core.tcl-lang.org/tk/tktview/62f134)
+ - [Certain characters (like ț and ș) become question marks in Entry Box on Windows](https://core.tcl-lang.org/tk/tktview/51436f)
+ - [Incorrect reproduction of the Azerbaijani letter "əƏ" in the Enter field](https://core.tcl-lang.org/tk/tktview/704842)
+ - [spinbox parsing depends on the LC_NUMERIC locale](https://core.tcl-lang.org/tk/tktview/9e8932)
+ - ["grid forget" silently resets the forgotten window's own "grid propagate" setting](https://core.tcl-lang.org/tk/tktview/eb0393)
+ - [ttk::style command moves ttk::panedwindow sashes](https://core.tcl-lang.org/tk/tktview/b086bb)
+ - [MS-Win: Add keysims for non-latin keys + MacOS: correct 338 pre-2004 keysyms](https://core.tcl-lang.org/tk/tktview/52e9b0)
+ - [NULL dereference as result of peculiarly formed font name](https://core.tcl-lang.org/tk/tktview/2236352)
+ - [ttk::notebook takes the focus when clicked, even with the -takefocus 0 option](https://core.tcl-lang.org/tk/tktview/3de1b7)
+ - [Performance problems with "photo copy -to"](https://core.tcl-lang.org/tk/tktview/e7fc29)
+ - [Mapped/Unmapped and Iconic State Problems](https://core.tcl-lang.org/tk/tktview/313169)
+ - [double click is lost if processing a click takes too long](https://core.tcl-lang.org/tk/tktview/195423)
+ - [canvas scrolls when the scrollbar indicates that it cannot](https://core.tcl-lang.org/tk/tktview/214852)
+ - [configure: X11 header check always fails](https://core.tcl-lang.org/tk/tktview/9087fa)
+ - [creating widgets is slow when an input method is active](https://core.tcl-lang.org/tk/tktview/5d52ad)
+ - [menu entries are drawn directly on the screen](https://core.tcl-lang.org/tk/tktview/791527)
+ - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
+ - [window is not focused on create](https://core.tcl-lang.org/tk/tktview/2effa4)
+ - [send to a dead application returned "target application died"](https://core.tcl-lang.org/tk/tktview/729f9c)
+ - [configure may not find cups.h](https://core.tcl-lang.org/tk/tktview/3ac12f)
+ - [MS-Win: fix grab-global window inresponsive after key Win-D](https://core.tcl-lang.org/tk/tktview/3138512)
+ - [X11 <KeyRelease> should not fire on repeated key](https://core.tcl-lang.org/tk/tktview/d3b964)
+ - [ttk::spinbox -font does not resize buttons](https://core.tcl-lang.org/tk/tktview/330155)
+ - [Button should stay in -overrelief state after event](https://core.tcl-lang.org/tk/tktview/110051)
+ - [loop race in canvas Enter / Leave bindings](https://core.tcl-lang.org/tk/tktview/181359)
+ - [Displaced menus do not stay open](https://core.tcl-lang.org/tk/tktview/470331)
+ - [Menu items accidentally selected](https://core.tcl-lang.org/tk/tktview/680660)
+ - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
+ - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
+ - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
+ - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
+ - [possible code issue: return before END_DRAWING](https://core.tcl-lang.org/tk/tktview/1c9965)
+ - [ttk::spinbox doesn't expand its height on Linux](https://core.tcl-lang.org/tk/tktview/331303)
+ - [spinbox -values overrides the value of the -textvariable](https://core.tcl-lang.org/tk/tktview/143926)
+ - [Improper look of ttk::checkbutton -style Toolbutton](https://core.tcl-lang.org/tk/tktview/341467)
+ - [ttk Toolbutton has wrong default anchor](https://core.tcl-lang.org/tk/tktview/186783)
+ - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
+ - [X11: wm deiconify loses the position of a window moved by the user](https://core.tcl-lang.org/tk/tktview/4c5184)
+ - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
+ - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
+ - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
+ - [Focused button widgets invoked on Alt-Space](https://core.tcl-lang.org/tk/tktview/169275)
+ - ["focus" dumps core with certain extensions](https://core.tcl-lang.org/tk/tktview/704212)
+ - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
+ - [canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size)](https://core.tcl-lang.org/tk/tktview/991849)
+ - [compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
+ - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
+ - [Aqua: "pack forget" leaves window on screen](https://core.tcl-lang.org/tk/tktview/2ef5dd)
+ - [leak of a new value object of a custom option](https://core.tcl-lang.org/tk/tktview/2b6398)
+ - [Make the base chunk of the text layout thread-specific](https://core.tcl-lang.org/tk/tktview/a0c1a9)
+ - [Click to the right of the end of a line moves the insert cursor to the next line](https://core.tcl-lang.org/tk/tktview/13aabd)
+ - [Mismatch between button number and %b substitution in bindings](https://core.tcl-lang.org/tk/tktview/8f73af)
+ - [MS-Win: fix menubutton key invokation (Alt+Underline or F10)](https://core.tcl-lang.org/tk/tktview/222550)
+ - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
+ - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
+ - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
+ - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
+ - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
+ - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
+ - [Long dashed lines cause problems on canvases](https://core.tcl-lang.org/tk/tktview/663981)
+ - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
+ - [MacOS aqua: <<ContextMenu >> binding sometimes triggers for incorrect toplevel](https://core.tcl-lang.org/tk/tktview/061f63)
+ - [errors in ::tk::mac::PerformService were ignored](https://core.tcl-lang.org/tk/tktview/173622)
+ - [Tk console extremely slow before first display](https://core.tcl-lang.org/tk/tktview/7d8d10)
+ - [crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid](https://core.tcl-lang.org/tk/tktview/434c8d)
+ - [Applying canvas move command to objects leaves trails](https://core.tcl-lang.org/tk/tktview/ad9a02)
+ - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
+
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
 Tk 9.0.4 continues the Tk 9.0 series of releases.  The Tk 9.0 series
@@ -17,6 +113,29 @@ to the userbase.
 
 # Bug fixes
  - [Improve the look of the ttk::spinbox widgets in the built-in themes](https://core.tcl-lang.org/tk/tktview/4d2baa)
+ - [SVG rendering: Correctly paint stroke leftover path](https://core.tcl-lang.org/tk/tktview/c51a56)
+ - [Error in ::tk::spinbox::ButtonUp on MacOS](https://core.tcl-lang.org/tk/tktview/fe5549])
+ - [crash in text sync subcommand](https://core.tcl-lang.org/tk/tktview/8e4fb0])
+ - [Random semantic color values on macOS 10.15.6 Catalina](https://core.tcl-lang.org/tk/tktview/544140])
+ - [Widgets on aqua no longer receive <Deactivate> events](https://core.tcl-lang.org/tk/tktview/9654e3])
+ - [X11: crash by wm forget on menu](https://core.tcl-lang.org/tk/tktview/c77b42)
+ - [fails to build with glibc 2.43](https://core.tcl-lang.org/tk/tktview/5d2061)
+ - [Pointer warp relative to the screen's root window fails if the Tk root window is withdrawn](https://core.tcl-lang.org/tk/tktview/e2418c)
+ - [Directory library/demos unexpectedly embedded into tcl9tk9x.dll](https://core.tcl-lang.org/tk/tktview/6a9bae)
+ - [Use the native selection colors for listbox and ttk::treeview widgets on aqua](https://core.tcl-lang.org/tk/tktview/c6292f)
+ - [ttk::entry placeholder length computation confuses string length and character length](https://core.tcl-lang.org/tk/tktview/992d6f)
+ - [crash with invalid data in [image create photo]](https://core.tcl-lang.org/tk/tktview/f0b3fa)
+ - [Segfault under Windows when executing test file menu.test with "-singleproc 0"](https://core.tcl-lang.org/tk/tktview/d8f964)
+ - [Check recursive menu usage to avoid crash](https://core.tcl-lang.org/tk/info/7f67bb40)
+ - [Get rid of the ugly Motif-style cascade arrows on X11](https://core.tcl-lang.org/tk/info/aca9953f)
+ - ["wm forget ." segfaults](https://core.tcl-lang.org/tk/info/8c362075)
+ - [macOS/aqua: <Map> events are generated for windows that are already mapped, and wish crashes](https://core.tcl-lang.org/tk/info/d4d89d13)
+ - [Block cursor in text widget may hide the character underneath](https://core.tcl-lang.org/tk/info/556606)
+ - [Flip ttk::notebook tab states "first" and "last" for "-tabplacement e*|s*"](https://core.tcl-lang.org/tk/info/011533)
+ - [tk image photo svg: nanosvg "Basic style sheets support" #284](https://core.tcl-lang.org/tk/info/c8c8b724)
+ - [Error in ::tk::ScrollByUnits](https://core.tcl-lang.org/tk/info/082a30)
+ - [Tk_FindPhoto crash](https://core.tcl-lang.org/tk/info/0beaef)
+ - [scale, spinbox and place format floating-point values using the LC_NUMERIC locale](https://core.tcl-lang.org/tk/info/348b48)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
@@ -54,6 +173,7 @@ to the userbase.
  - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
  - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
  - [Fix crash on exit due to faulty asm code in DllMain](https://core.tcl-lang.org/tk/info/44b34c)
+ - [::tk::startOfCluster (and friends) only understand ICU locale syntax](https://core.tcl-lang.org/tk/info/095db8)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 

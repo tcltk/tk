@@ -253,7 +253,7 @@ LT##_ElemInit(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsEmpty(LT *head)								\
 {										\
     assert(head);								\
@@ -261,7 +261,7 @@ LT##_IsEmpty(LT *head)								\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsLinked(struct ElemType *elem)						\
 {										\
     assert(elem);								\
@@ -269,7 +269,7 @@ LT##_IsLinked(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsFirst(struct ElemType *elem)						\
 {										\
     assert(LT##_IsLinked(elem));						\
@@ -277,7 +277,7 @@ LT##_IsFirst(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsLast(struct ElemType *elem)						\
 {										\
     assert(LT##_IsLinked(elem));						\
@@ -317,11 +317,11 @@ LT##_Prev(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static unsigned									\
+static size_t									\
 LT##_Size(const LT *head)							\
 {										\
     const struct ElemType *elem;						\
-    unsigned size = 0;								\
+    size_t size = 0;								\
     assert(head);								\
     if ((elem = head->first)) {							\
 	for ( ; elem != (void *) head; elem = elem->_dl_.next) {		\

@@ -53,12 +53,12 @@ typedef struct
     GetThemeSysSizeProc			*GetThemeSysSize;
     DrawThemeBackgroundProc		*DrawThemeBackground;
     DrawThemeEdgeProc			*DrawThemeEdge;
-    DrawThemeTextProc		        *DrawThemeText;
+    DrawThemeTextProc			*DrawThemeText;
     GetThemeTextExtentProc		*GetThemeTextExtent;
     IsThemeActiveProc			*IsThemeActive;
     IsAppThemedProc			*IsAppThemed;
 
-    HWND                                stubWindow;
+    HWND				stubWindow;
 } XPThemeProcs;
 
 typedef struct
@@ -139,10 +139,8 @@ XPThemeEnabled(
     void *clientData)
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
-    int active = themeData->procs->IsThemeActive();
-    int themed = themeData->procs->IsAppThemed();
 
-    return (active && themed);
+    return (themeData->procs->IsThemeActive() && themeData->procs->IsAppThemed());
 }
 
 /*
@@ -438,12 +436,12 @@ static void DestroyElementData(void *clientData)
  *	also initializes DC.
  *
  * Returns:
- *	1 on success, 0 on error.
+ *	true on success, false on error.
  *	Caller must later call FreeElementData() so this element
  *	can be reused.
  */
 
-static int
+static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
@@ -458,7 +456,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd, elementData->info->className);
 
     if (!elementData->hTheme) {
-	return 0;
+	return false;
     }
 
     elementData->drawable = d;
@@ -467,7 +465,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 		&elementData->dcState);
     }
 
-    return 1;
+    return true;
 }
 
 static void
@@ -740,18 +738,19 @@ static void TabElementSize(
     int *heightPtr,
     Ttk_Padding *paddingPtr)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     GenericElementSize(clientData, elementRecord, tkwin,
 	    widthPtr, heightPtr, paddingPtr);
 
     *paddingPtr = Ttk_UniformPadding(3);
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    paddingPtr->bottom = 0;
@@ -776,32 +775,48 @@ static void TabElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPosStickBit = TTK_STICK_W;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
-    int isSelected = (state & TTK_STATE_SELECTED);
+    bool isSelected = (state & TTK_STATE_SELECTED) != 0;
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPosStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPosition & 0x0f);
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     /*
      * Correct the members of b if needed
      */
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    break;
 	case TTK_STICK_N:
 	    b.y -= isSelected ? 0 : 1; b.height -= isSelected ? 1 : 0;
+	    if (nbTabPosStickBit == TTK_STICK_E && isSelected &&
+		    (state & TTK_STATE_LAST)) {		/* rightmost tab */
+		b.x -= 2;
+	    }
 	    break;
 	case TTK_STICK_E:
 	    b.width -= isSelected ? 1 : 0;
+	    if (nbTabPosStickBit == TTK_STICK_S && isSelected &&
+		    (state & TTK_STATE_LAST)) {		/* bottommost tab */
+		b.y -= 1;
+	    }
 	    break;
 	case TTK_STICK_W:
 	    b.x -= isSelected ? 1 : 2; b.width -= isSelected ? 1 : 0;
+	    if (nbTabPosStickBit == TTK_STICK_S && isSelected &&
+		    (state & TTK_STATE_LAST)) {		/* bottommost tab */
+		b.y -= 1;
+	    }
 	    break;
     }
 
@@ -811,9 +826,11 @@ static void TabElementDraw(
 	return;
     }
 
-    if (nbTabsStickBit == TTK_STICK_S) {
+    if (nbTabPlcStickBit == TTK_STICK_S) {
 	if (state & TTK_STATE_FIRST) {
 	    partId = TABP_TABITEMLEFTEDGE;
+	} else if (state & TTK_STATE_LAST) {
+	    partId = TABP_TABITEMRIGHTEDGE;
 	}
 
 	/*
@@ -834,7 +851,7 @@ static void TabElementDraw(
     /*
      * Draw a flat border at 3 edges
      */
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    break;
@@ -870,13 +887,13 @@ static const Ttk_ElementSpec TabElementSpec =
 /*----------------------------------------------------------------------
  * +++  Tree indicator element.
  *
- *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
+ *	Generic element, but don't display at all if TTK_STATE_LEAF set
  */
 
 static const Ttk_StateTable header_statemap[] =
 {
     { HIS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { HIS_HOT,	TTK_STATE_ACTIVE, 0 },
+    { HIS_HOT,		TTK_STATE_ACTIVE, 0 },
     { HIS_NORMAL,	0,0 },
 };
 

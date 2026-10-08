@@ -30,14 +30,14 @@ namespace eval ttk::theme::winnative {
 	    -padding {6p 3p} -arrowsize 2.25p -relief raised
 
 	ttk::style configure TEntry \
-	    -padding 2 -insertwidth 1
+	    -padding 1.5p -insertwidth 0.75p
 	ttk::style map TEntry \
 	    -fieldbackground \
 		{readonly SystemButtonFace disabled SystemButtonFace} \
 	    -selectbackground {!focus SystemWindow} \
 	    -selectforeground {!focus SystemWindowText}
 
-	ttk::style configure TCombobox -padding 1.5p
+	ttk::style configure TCombobox -padding 1.5p -insertwidth 0.75p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -54,11 +54,27 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-	ttk::style configure TSpinbox -padding {1.5p 0 12p 0}
+	ttk::style configure TSpinbox -padding {1.5p 0.75p 12p 0.75p} \
+	    -insertwidth 0.75p
+
+	# As in the native up-down control, each arrow takes half of the
+	# height of the field (see SpinboxDoLayout).
+	ttk::style layout TSpinbox {
+	    Spinbox.field -sticky nswe -children {
+		null -side right -sticky ns -children {
+		    Spinbox.uparrow -side top -sticky e
+		    Spinbox.downarrow -side bottom -sticky e
+		}
+		Spinbox.padding -sticky nswe -children {
+		    Spinbox.textarea -sticky nswe
+		}
+	    }
+	}
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure Toolbutton -relief flat -padding {6p 3p}
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding {6p 3p} -relief flat -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat  selected sunken  pressed sunken  active raised}
 
@@ -68,17 +84,21 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure TNotebook.Tab -padding {2.25p 0.75p} -borderwidth 1
 	ttk::style map TNotebook.Tab -expand {selected {2 2 2 0}}
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
 	ttk::setTreeviewRowHeight
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
+				background #d9d9d9 \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
+				background SystemWindowText \
 				selected SystemHighlightText]
 
 	ttk::style configure TProgressbar \

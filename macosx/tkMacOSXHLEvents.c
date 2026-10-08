@@ -7,7 +7,7 @@
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2015-2019 Marc Culler
- * Copyright © 2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2019 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -62,6 +62,15 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
 static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
 #pragma mark TKApplication(TKHLEvents)
+
+static void showPreferencesWhenIdle(void *clientData) {
+    Tcl_Interp *interp = (Tcl_Interp *) clientData;
+    int code = Tcl_EvalEx(interp, "::tk::mac::ShowPreferences",
+			  TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+}
 
 @implementation TKApplication(TKHLEvents)
 - (void) terminate: (id) sender
@@ -145,13 +154,9 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     (void)event;
     (void)replyEvent;
 
-    if (_eventInterp &&
-	    Tcl_FindCommand(_eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
-	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowPreferences",
-			      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
-	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
-	}
+    if (_eventInterp && Tcl_FindCommand(
+	   _eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
+	Tcl_DoWhenIdle(showPreferencesWhenIdle, _eventInterp);
     }
 }
 

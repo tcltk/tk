@@ -1036,6 +1036,12 @@ Tk_GetImageModelData(
     Tcl_HashEntry *hPtr;
     ImageModel *modelPtr;
 
+    if (!winPtr) {
+	/* application has been destroyed */
+	*typePtrPtr = NULL;
+	return NULL;
+    }
+
     hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, name);
     if (hPtr == NULL) {
 	*typePtrPtr = NULL;

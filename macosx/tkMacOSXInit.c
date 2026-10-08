@@ -25,7 +25,7 @@
  * This flag is set if tests are being run.
  */
 
-int testsAreRunning = 0;
+bool testsAreRunning = false;
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -399,18 +399,18 @@ static void closePanels(
  */
 
 #if defined(USE_CUSTOM_EXIT_PROC)
-static Bool doCleanupFromExit = NO;
+static bool doCleanupFromExit = false;
 
 int TkpWantsExitProc(void) {
-    return doCleanupFromExit == YES;
+    return doCleanupFromExit;
 }
 
 TCL_NORETURN void TkpExitProc(
     void *clientdata)
 {
-    Bool doCleanup = doCleanupFromExit;
+    bool doCleanup = doCleanupFromExit;
     if (doCleanupFromExit) {
-	doCleanupFromExit = NO; /* prevent possible recursive call. */
+	doCleanupFromExit = false; /* prevent possible recursive call. */
 	closePanels();
     }
 
@@ -457,6 +457,23 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 }
 
 /*
+ * Install TkMacOSXSignalHandler for the given signal, unless the application
+ * which embeds Tk has installed its own handler (e.g. Python raises
+ * KeyboardInterrupt from its SIGINT handler).
+ */
+
+static void
+InstallSignalHandler(
+    int sig)
+{
+    struct sigaction action;
+
+    if (sigaction(sig, NULL, &action) == 0 && action.sa_handler == SIG_DFL) {
+	signal(sig, TkMacOSXSignalHandler);
+    }
+}
+
+/*
  * This static function is run as an idle task to order the root window front.
  * This is only done if the window is in the normal state.  This avoids
  * flashing the root window on the screen if it was withdrawn immediately after
@@ -480,7 +497,7 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
-    static int initialized = 0;
+    static bool initialized = false;
 
     /*
      * TkpInit can be called multiple times with different interpreters. But
@@ -489,8 +506,8 @@ TkpInit(
 
     if (!initialized) {
 	struct stat st;
-	Bool shouldOpenConsole = NO;
-	Bool stdinIsNullish = (!isatty(0) &&
+	bool shouldOpenConsole = false;
+	bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
@@ -501,7 +518,7 @@ TkpInit(
 #   error Mac OS X 10.9 required
 #endif
 
-	initialized = 1;
+	initialized = true;
 
 #ifdef TK_FRAMEWORK
 
@@ -581,7 +598,7 @@ TkpInit(
 	 */
 
 	if (getenv("TK_CONSOLE")) {
-	    shouldOpenConsole = YES;
+	    shouldOpenConsole = true;
 	} else if (stdinIsNullish && Tcl_GetStartupScript(NULL) == NULL) {
 	    const char *intvar = Tcl_GetVar2(interp, "tcl_interactive",
 					     NULL, TCL_GLOBAL_ONLY);
@@ -591,10 +608,10 @@ TkpInit(
 	    }
 
 #if defined(USE_CUSTOM_EXIT_PROC)
-	    doCleanupFromExit = YES;
+	    doCleanupFromExit = true;
 #endif
 
-	    shouldOpenConsole = YES;
+	    shouldOpenConsole = true;
 	}
 	if (shouldOpenConsole) {
 	    Tk_InitConsoleChannels(interp);
@@ -617,7 +634,7 @@ TkpInit(
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
 #if defined(USE_CUSTOM_EXIT_PROC)
-	    doCleanupFromExit = YES;
+	    doCleanupFromExit = true;
 #endif
 	} else if (getenv("TK_NO_STDERR") != NULL) {
 	    FILE *null = fopen("/dev/null", "w");
@@ -670,7 +687,7 @@ TkpInit(
 # if defined(USE_CUSTOM_EXIT_PROC)
 
 	if ((isatty(0) && isatty(1))) {
-	    doCleanupFromExit = YES;
+	    doCleanupFromExit = true;
 	}
 
 # endif
@@ -681,9 +698,9 @@ TkpInit(
 	 * application is killed with one of these signals.
 	 */
 
-	signal(SIGINT, TkMacOSXSignalHandler);
-	signal(SIGHUP, TkMacOSXSignalHandler);
-	signal(SIGTERM, TkMacOSXSignalHandler);
+	InstallSignalHandler(SIGINT);
+	InstallSignalHandler(SIGHUP);
+	InstallSignalHandler(SIGTERM);
     }
     /*
      * Initialization steps that are needed for all interpreters.
@@ -730,7 +747,7 @@ TkpInit(
 
 static int
 TkMacOSXGetAppPathObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -818,7 +835,7 @@ TkpGetAppName(
 
 static int
 TkMacOSVersionObjCmd(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])

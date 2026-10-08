@@ -4,6 +4,18 @@
 
 # NOTES
 #
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
 # * [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
 #   what it currently does)
 #
@@ -714,7 +726,7 @@ test treeview-9.2 {scrolling on see command - bug [14188104c3]} -setup {
     setrows 10
     set res [.top.vs get]
     setrows 20
-    lappend res [expr [lindex [.top.vs get] 1] < 1]
+    lappend res [expr {[lindex [.top.vs get] 1] < 1}]
 } -cleanup {
     destroy .top
 } -result {0.0 1.0 1}
@@ -742,7 +754,7 @@ test treeview-9.3 {scrolling on see command, requested item is closed} -setup {
     .top.tree see e
     update idletasks
     set after [lindex [.top.vs get] 1]
-    expr ($after < $before)
+    expr {$after < $before}
 } -cleanup {
     destroy .top
 } -result 1
@@ -770,7 +782,7 @@ test treeview-9.4 {no scrolling on see command on an item below a detached item;
     .top.tree see dirD-4
     update
     set after [lindex [.top.vs get] 1]
-    set res [expr ($after == $before)]
+    set res [expr {$after == $before}]
     lappend res [.top.tree bbox dirD-4]
 } -cleanup {
     destroy .top
@@ -1542,6 +1554,62 @@ test treeview-23.1 "cell padding" -setup {
 } -cleanup {
     destroy .tv
 } -result {2 4 6 8}
+
+
+test Scroll-90.1 {no scroll command before the treeview is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    ttk::treeview .top.tv -show headings -columns {a b} -height 10 \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    .top.tv column a -width 200 -stretch 0
+    .top.tv column b -width 200 -stretch 0
+    for {set i 0} {$i < 20} {incr i} {
+	.top.tv insert {} end -values [list $i $i]
+    }
+    place .top.tv -width 200 ;# -height 150
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.tv
+    update
+    set xview [.top.tv xview]
+    set yview [.top.tv yview]
+    lappend res [expr {$log eq [list x {*}$xview y {*}$yview]}] \
+	    [expr {[lindex $xview 1] < 1}] [expr {[lindex $yview 1] < 1}]
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res i xview yview
+} -result {{} 1 1 1}
+test Scroll-90.2 {no scroll command after xview and yview before the treeview is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    ttk::treeview .top.tv -show headings -columns {a b} -height 10 \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    .top.tv column a -width 200 -stretch 0
+    .top.tv column b -width 200 -stretch 0
+    for {set i 0} {$i < 20} {incr i} {
+	.top.tv insert {} end -values [list $i $i]
+    }
+    place .top.tv -width 200 ;# -height 150
+    .top.tv xview
+    .top.tv yview
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.tv
+    update
+    set xview [.top.tv xview]
+    set yview [.top.tv yview]
+    lappend res [expr {$log eq [list x {*}$xview y {*}$yview]}] \
+	    [expr {[lindex $xview 1] < 1}] [expr {[lindex $yview 1] < 1}]
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res i xview yview
+} -result {{} 1 1 1}
 
 #
 # TESTFILE CLEANUP

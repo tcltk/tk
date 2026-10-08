@@ -191,13 +191,20 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
 }
 
 /*public*/
-void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr)
+void TtkArrowSize(
+    int h, ArrowDirection direction, int *widthPtr, int *heightPtr)
 {
     switch (direction) {
 	case ARROW_UP:
-	case ARROW_DOWN:	*widthPtr = 2*h+1; *heightPtr = h+1; break;
+	case ARROW_DOWN:
+	    *widthPtr = 2*h+1;
+	    *heightPtr = h+1;
+	    break;
 	case ARROW_LEFT:
-	case ARROW_RIGHT:	*widthPtr = h+1; *heightPtr = 2*h+1;
+	case ARROW_RIGHT:
+	    *widthPtr = h+1;
+	    *heightPtr = 2*h+1;
+	    break;
     }
 }
 
@@ -522,9 +529,9 @@ typedef struct {
 } IndicatorElement;
 
 static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
-    { "-background", TK_OPTION_COLOR,
+    { "-indicatorbackground", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
-    { "-foreground", TK_OPTION_COLOR,
+    { "-indicatorforeground", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,foregroundObj), DEFAULT_FOREGROUND },
     { "-indicatorcolor", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,colorObj), "#FFFFFF" },
@@ -583,8 +590,9 @@ static void IndicatorElementDraw(
     int width = spec->width * scalingLevel;
     int height = spec->height * scalingLevel;
 
-    char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
+    char bgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
+    char fgColorStr[7] = "000000";
     unsigned int selected = (state & TTK_STATE_SELECTED);
     Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[70];
@@ -603,8 +611,9 @@ static void IndicatorElementDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+#if 0
     /*
-     * Sanity check
+     * Sanity check -- not needed and no longer used
      */
     if (   b.x < 0
 	|| b.y < 0
@@ -616,6 +625,7 @@ static void IndicatorElementDraw(
 	 */
 	return;
     }
+#endif
 
     /*
      * Construct the color strings bgColorStr, fgColorStr,
@@ -623,8 +633,10 @@ static void IndicatorElementDraw(
      */
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->backgroundObj),
 	       bgColorStr);
-    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
-	       fgColorStr);
+    if (indicator->foregroundObj) {
+	ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
+		   fgColorStr);
+    }
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->colorObj),
 	       indicatorColorStr);
     ColorToStr(Tk_GetColorFromObj(tkwin, indicator->shadeColorObj),
@@ -1247,7 +1259,9 @@ static void TreeitemIndicatorSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
     if (size % 2 == 0) --size;  /* An odd size is better for the indicator. */
+
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
+
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
 }
@@ -1272,8 +1286,7 @@ static void TreeitemIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XDrawRectangle(Tk_Display(tkwin), d, gc,
-	    b.x, b.y, b.width - 1, b.height - 1);
+    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;

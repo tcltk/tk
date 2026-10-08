@@ -963,7 +963,7 @@ InactiveCmd(
 	Tcl_WideInt inactive;
 
 	inactive = (Tcl_IsSafe(interp) ? -1 :
-		Tk_GetUserInactiveTime(Tk_Display(tkwin)));
+		TkGetUserInactiveTime(Tk_Display(tkwin)));
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(inactive));
     } else if (objc == 2 + skip) {
 	const char *string;

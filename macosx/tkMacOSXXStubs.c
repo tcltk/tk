@@ -94,8 +94,10 @@ TkMacOSXDisplayChanged(
 	DefaultDepthOfScreen(screen) = NSBitsPerPixelFromDepth([s depth]);
 	WidthOfScreen(screen) = bounds.size.width;
 	HeightOfScreen(screen) = bounds.size.height;
-	WidthMMOfScreen(screen) = (bounds.size.width * 381 + 720) / 1440; /* = 3/4 * 254/720 */
-	HeightMMOfScreen(screen) = (bounds.size.height * 381 + 720) / 1440; /* = 3/4 * 254/720 */
+	if (WidthMMOfScreen(screen) == 0) {
+	    WidthMMOfScreen(screen) = (bounds.size.width * 381 + 720) / 1440; /* = 3/4 * 254/720 */
+	    HeightMMOfScreen(screen) = (bounds.size.height * 381 + 720) / 1440; /* = 3/4 * 254/720 */
+	}
 
 	for (s in nsScreens) {
 	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
@@ -281,7 +283,7 @@ XkbOpenDisplay(
 	display->proto_minor_version = [[cgVers objectAtIndex:2] integerValue];
     }
     if (!vendor[0]) {
-	snprintf(vendor, sizeof(vendor), "Apple AppKit %g",
+	TkFormatDouble(vendor, sizeof(vendor), "Apple AppKit %g",
 		NSAppKitVersionNumber);
     }
     display->vendor = vendor;
@@ -520,7 +522,7 @@ XChangeProperty(
     TCL_UNUSED(Atom),
     TCL_UNUSED(int),
     TCL_UNUSED(int),
-    TCL_UNUSED(_Xconst unsigned char *),
+    TCL_UNUSED(const unsigned char *),
     TCL_UNUSED(int))
 {
     Debugger();
@@ -728,7 +730,7 @@ int
 XLookupColor(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Colormap),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(XColor *),
     TCL_UNUSED(XColor *))
 {
@@ -1161,8 +1163,8 @@ TkGetDefaultScreenName(
  *----------------------------------------------------------------------
  */
 
-long
-Tk_GetUserInactiveTime(
+long long
+TkGetUserInactiveTime(
     TCL_UNUSED(Display *))
 {
     io_registry_entry_t regEntry;
@@ -1176,7 +1178,7 @@ Tk_GetUserInactiveTime(
 	    IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {
-	return -1l;
+	return -1;
     }
 
     result = IORegistryEntryCreateCFProperties(regEntry, &props,
@@ -1184,7 +1186,7 @@ Tk_GetUserInactiveTime(
     IOObjectRelease(regEntry);
 
     if (result != KERN_SUCCESS || props == NULL) {
-	return -1l;
+	return -1;
     }
 
     timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
@@ -1207,7 +1209,7 @@ Tk_GetUserInactiveTime(
 	ret = elapsed;
     }
 
-    return ret;
+    return (long long)(ret);
 }
 
 /*

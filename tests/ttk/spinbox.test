@@ -2,6 +2,21 @@
 # ttk::spinbox widget tests
 #
 
+# NOTES
+#
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -412,6 +427,67 @@ test spinbox-5.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.TSpinbox customStyle.TSpinbox TSpinbox}
+
+# A tall spinbox, and the elements along its arrow column.
+proc tallSpinbox {theme} {
+    ttk::style theme use $theme
+    ttk::spinbox .sb -from 0 -to 10
+    pack .sb -fill both -expand 1
+    wm geometry . 200x120
+    update
+    set x [expr {[winfo width .sb] - 6}]
+    set h [winfo height .sb]
+    lmap y [list [expr {$h / 4}] [expr {$h / 2 - 5}] [expr {$h / 2 + 5}] \
+	    [expr {$h * 3 / 4}]] {
+	.sb identify element $x $y
+    }
+}
+
+test spinbox-6.1 {the field fills a tall spinbox - bug 3313032} -setup {
+    ttk::spinbox .sb
+    pack .sb -fill both -expand 1
+    wm geometry . 200x120
+    update
+} -body {
+    .sb identify element 20 [expr {[winfo height .sb] / 2}]
+} -cleanup {
+    destroy .sb
+    wm geometry . {}
+} -result textarea
+test spinbox-6.2 {arrows of a tall spinbox are grouped in the middle} -setup {
+    set theme [ttk::style theme use]
+} -body {
+    tallSpinbox default
+} -cleanup {
+    destroy .sb
+    wm geometry . {}
+    ttk::style theme use $theme
+    unset theme
+} -result {field Spinbox.uparrow Spinbox.downarrow field}
+test spinbox-6.3 {arrows of a tall spinbox take half of its height} -setup {
+    set theme [ttk::style theme use]
+} -body {
+    tallSpinbox classic
+} -cleanup {
+    destroy .sb
+    wm geometry . {}
+    ttk::style theme use $theme
+    unset theme
+} -result {Spinbox.uparrow Spinbox.uparrow Spinbox.downarrow Spinbox.downarrow}
+test spinbox-6.4 {arrows of a tall spinbox take half of its height} -constraints {
+    win
+} -setup {
+    set theme [ttk::style theme use]
+} -body {
+    tallSpinbox winnative
+} -cleanup {
+    destroy .sb
+    wm geometry . {}
+    ttk::style theme use $theme
+    unset theme
+} -result {Spinbox.uparrow Spinbox.uparrow Spinbox.downarrow Spinbox.downarrow}
+
+rename tallSpinbox {}
 
 #
 # TESTFILE CLEANUP

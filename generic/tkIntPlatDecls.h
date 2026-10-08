@@ -162,8 +162,7 @@ EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
 /* 7 */
 EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
-/* 8 */
-EXTERN unsigned int	TkMacOSXButtonKeyState(void);
+/* Slot 8 is reserved */
 /* 9 */
 EXTERN void		TkMacOSXClearMenubarActive(void);
 /* 10 */
@@ -241,9 +240,7 @@ EXTERN Tk_Window	TkpGetCapture(void);
 /* Slot 48 is reserved */
 /* 49 */
 EXTERN Tk_Window	TkMacOSXGetContainer(TkWindow *winPtr);
-/* 50 */
-EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
-				unsigned int state);
+/* Slot 50 is reserved */
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
 #endif /* AQUA */
@@ -374,7 +371,7 @@ typedef struct TkIntPlatStubs {
     void (*tkpSetCursor) (TkpCursor cursor); /* 5 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 7 */
-    unsigned int (*tkMacOSXButtonKeyState) (void); /* 8 */
+    void (*reserved8)(void);
     void (*tkMacOSXClearMenubarActive) (void); /* 9 */
     int (*tkMacOSXDispatchMenuEvent) (int menuID, int index); /* 10 */
     void (*tkpSetCapture) (TkWindow *winPtr); /* 11 */
@@ -416,7 +413,7 @@ typedef struct TkIntPlatStubs {
     Tk_Window (*tkpGetCapture) (void); /* 47 */
     void (*reserved48)(void);
     Tk_Window (*tkMacOSXGetContainer) (TkWindow *winPtr); /* 49 */
-    int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
+    void (*reserved50)(void);
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
@@ -592,8 +589,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 6 */
 #define TkpWmSetState \
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 7 */
-#define TkMacOSXButtonKeyState \
-	(tkIntPlatStubsPtr->tkMacOSXButtonKeyState) /* 8 */
+/* Slot 8 is reserved */
 #define TkMacOSXClearMenubarActive \
 	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 9 */
 #define TkMacOSXDispatchMenuEvent \
@@ -666,8 +662,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 /* Slot 48 is reserved */
 #define TkMacOSXGetContainer \
 	(tkIntPlatStubsPtr->tkMacOSXGetContainer) /* 49 */
-#define TkGenerateButtonEvent \
-	(tkIntPlatStubsPtr->tkGenerateButtonEvent) /* 50 */
+/* Slot 50 is reserved */
 #define TkGenWMDestroyEvent \
 	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 51 */
 #endif /* AQUA */

@@ -567,6 +567,10 @@ declare 147 {
 declare 149 {
     void Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr, int *heightPtr)
 }
+# Just a stub entry, for binary compatibility with Tk 9.1.
+declare 150 {deprecated {MODULE_SCOPE, only for internal use}} {
+    Tcl_Size TkPointToChar(Tk_TextLayout layout, int x, int y)
+}
 declare 151 {
     int Tk_PointToChar(Tk_TextLayout layout, int x, int y)
 }
@@ -794,9 +798,9 @@ declare 215 {
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
-#declare 218 {
-#    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, void *typePtr)
-#}
+declare 218 {deprecated {MODULE_SCOPE, only for internal use}} {
+    long long TkGetUserInactiveTime(Display *dpy)
+}
 #declare 219 {
 #    void *Tk_GetCanvasVisitor(Tcl_Interp *interp, const char *name)
 #}

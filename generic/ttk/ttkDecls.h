@@ -17,16 +17,6 @@ extern const char *TtkInitializeStubs(
 
 #endif
 
-#if !defined(BUILD_tk)
-# define TTK_DEPRECATED(msg) TTKAPI TCL_DEPRECATED_API(msg)
-#elif defined(TK_NO_DEPRECATED)
-# define TTK_DEPRECATED(msg) MODULE_SCOPE
-#else
-# define TTK_DEPRECATED(msg) TTKAPI
-#endif
-
-
-
 /* !BEGIN!: Do not edit below this line. */
 
 #define TTK_STUBS_EPOCH 0

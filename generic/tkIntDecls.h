@@ -1110,14 +1110,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#undef TkpRedrawWidget
+#undef TkpWillDrawWidget
+#define TkpRedrawWidget(w)
+#define TkpWillDrawWidget(w) 0
 #if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
-#   undef TkpWillDrawWidget
-#   undef TkpRedrawWidget
 #   undef TkpDefineNativeBitmaps
 #   undef TkpCreateNativeBitmap
 #   undef TkpGetNativeAppBitmap
-#   define TkpWillDrawWidget(w) 0
-#   define TkpRedrawWidget(w)
 #   define TkpDefineNativeBitmaps()
 #   define TkpCreateNativeBitmap(display, source) None
 #   define TkpGetNativeAppBitmap(display, name, w, h) None

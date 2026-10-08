@@ -63,6 +63,10 @@ typedef struct {
 
 typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
+    int errorFlag;		/* Set by InitFontErrorProc. Not a local
+				 * variable, because X errors can be
+				 * reported after the error handler is
+				 * deleted. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -309,8 +313,10 @@ InitFont(
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    int i, iWidth, errorFlag;
+    int i, iWidth;
     Tk_ErrorHandler handler;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!fontPtr) {
 	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
@@ -363,11 +369,11 @@ InitFont(
      * Fill in platform-specific fields of TkFont.
      */
 
-    errorFlag = 0;
+    tsdPtr->errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-		    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+		    -1, -1, -1, InitFontErrorProc, (void *)&tsdPtr->errorFlag);
     ftFont = GetFont(fontPtr, 0, 0.0);
-    if ((ftFont == NULL) || errorFlag) {
+    if ((ftFont == NULL) || tsdPtr->errorFlag) {
 	Tk_DeleteErrorHandler(handler);
 	FinishedWithFont(fontPtr);
 	ckfree(fontPtr);
@@ -377,7 +383,7 @@ InitFont(
     GetTkFontAttributes(tkwin, ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
     Tk_DeleteErrorHandler(handler);
-    if (errorFlag) {
+    if (tsdPtr->errorFlag) {
 	FinishedWithFont(fontPtr);
 	ckfree(fontPtr);
 	return NULL;
@@ -407,11 +413,11 @@ InitFont(
 
 	fPtr->underlinePos = fPtr->fm.descent / 2;
 	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-			-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
-	errorFlag = 0;
+			-1, -1, -1, InitFontErrorProc, (void *)&tsdPtr->errorFlag);
+	tsdPtr->errorFlag = 0;
 	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
 	Tk_DeleteErrorHandler(handler);
-	if (errorFlag) {
+	if (tsdPtr->errorFlag) {
 	    FinishedWithFont(fontPtr);
 	    ckfree(fontPtr);
 	    return NULL;
@@ -743,15 +749,18 @@ Tk_MeasureChars(
     XGlyphInfo extents;
     Tcl_Size clen;
     int curX, newX, curByte, newByte, sawNonSpace;
-    int termByte = 0, termX = 0, errorFlag = 0;
+    int termByte = 0, termX = 0;
     Tk_ErrorHandler handler;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #if DEBUG_FONTSEL
     char string[256];
     int len = 0;
 #endif /* DEBUG_FONTSEL */
 
+    tsdPtr->errorFlag = 0;
     handler = Tk_CreateErrorHandler(fontPtr->display,
-	    -1, -1, -1, InitFontErrorProc, &errorFlag);
+	    -1, -1, -1, InitFontErrorProc, &tsdPtr->errorFlag);
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
@@ -786,14 +795,14 @@ Tk_MeasureChars(
 #endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c, 0.0);
 
-	if (!errorFlag) {
+	if (!tsdPtr->errorFlag) {
 	    LOCK;
 	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
 	    UNLOCK;
 	}
-	if (errorFlag) {
+	if (tsdPtr->errorFlag) {
 	    extents.xOff = 0;
-	    errorFlag = 0;
+	    tsdPtr->errorFlag = 0;
 	}
 
 	newX = curX + extents.xOff;

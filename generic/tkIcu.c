@@ -32,6 +32,7 @@ typedef int32_t	(*fn_icu_following)(void *, int32_t);
 typedef int32_t	(*fn_icu_previous)(void *);
 typedef int32_t	(*fn_icu_next)(void *);
 typedef void	(*fn_icu_setText)(void *, const void *, int32_t, UErrorCodex *);
+typedef int32_t (*fn_icu_canonicalize)(const char *, char *, int32_t, UErrorCodex *);
 
 static struct {
     size_t				nopen;
@@ -43,8 +44,9 @@ static struct {
     fn_icu_previous	previous;
     fn_icu_next	next;
     fn_icu_setText	setText;
+    fn_icu_canonicalize	canonicalize;
 } icu_fns = {
-    0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #define FLAG_WORD 1
@@ -58,6 +60,7 @@ static struct {
 #define icu_previous		icu_fns.previous
 #define icu_next		icu_fns.next
 #define icu_setText		icu_fns.setText
+#define icu_canonicalize	icu_fns.canonicalize
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
@@ -76,17 +79,20 @@ startEndOfCmd(
     Tcl_Size idx;
     int flags = PTR2INT(clientData);
     const uint16_t *ustr;
-    const char *locale = NULL;
+    char locale[128];
 
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
+    locale[0] = '\0';
     if (objc > 3) {
-	locale = Tcl_GetString(objv[3]);
-	if (!*locale) {
-	    locale = NULL;
+	if (!TkObjIsEmpty(objv[3]) && icu_canonicalize) {
+	    icu_canonicalize(Tcl_GetString(objv[3]), locale, sizeof(locale), &errorCode);
+	} else {
+	    strncpy(locale, Tcl_GetString(objv[3]), sizeof(locale));
 	}
+	locale[sizeof(locale) - 1] = '\0';
     }
     Tcl_DStringInit(&ds);
     str = Tcl_GetStringFromObj(objv[1], &len);
@@ -99,7 +105,7 @@ startEndOfCmd(
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
-    it = icu_open((UBreakIteratorTypex)(flags&3), locale,
+    it = icu_open((UBreakIteratorTypex)(flags&3), locale[0] ? locale : NULL,
 		NULL, -1, &errorCode);
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
@@ -298,6 +304,10 @@ Icu_Init(
 	    ICU_SYM(previous);
 	    ICU_SYM(next);
 	    ICU_SYM(setText);
+	    strcpy(symbol, "uloc_canonicalize");
+	    strcat(symbol, icuversion);
+	    icu_fns.canonicalize = (fn_icu_canonicalize)
+		    Tcl_FindSymbol(NULL, icu_fns.lib, symbol);
 #undef ICU_SYM
 	}
     }

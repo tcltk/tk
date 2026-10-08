@@ -850,8 +850,8 @@ TTK_LAYOUT("TCombobox",
 /* "classic" spinbox, includes highlight border */
 TTK_LAYOUT("TSpinbox",
     TTK_GROUP("Spinbox.highlight", TTK_FILL_BOTH,
-	TTK_GROUP("Spinbox.field", TTK_FILL_BOTH|TTK_FILL_X,
-	    TTK_GROUP("null", TTK_PACK_RIGHT,
+	TTK_GROUP("Spinbox.field", TTK_FILL_BOTH,
+	    TTK_GROUP("null", TTK_PACK_RIGHT|TTK_FILL_Y,
 		TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
 		TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
 	    TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,

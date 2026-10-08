@@ -169,8 +169,8 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	NULL, offsetof(Entry, entry.invalidCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", TCL_INDEX_NONE, offsetof(Entry, entry.justify),
-	TK_OPTION_ENUM_VAR, 0, GEOMETRY_CHANGED},
+	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.justify),
+	TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	NULL, offsetof(Entry, entry.placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -293,10 +293,10 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
  *	of (the first character in the string) 'showChar'.
  *	Used to compute the displayString if -show is non-NULL.
  */
-static char *EntryDisplayString(const char *showChar, int numChars)
+static char *EntryDisplayString(const char *showChar, Tcl_Size numChars)
 {
     char *displayString, *p;
-    int size;
+    Tcl_Size size;
     int ch;
     char buf[6];
 
@@ -319,8 +319,6 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
-    Tcl_Size length;
-    char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
 	entryPtr->entry.textLayout = Tk_ComputeTextLayout(
@@ -329,10 +327,10 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-	text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
+	Tcl_Size length = Tcl_GetCharLength(entryPtr->entry.placeholderObj);
 	entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
-	    text, length,
+	    Tcl_GetString(entryPtr->entry.placeholderObj), length,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     }
@@ -426,15 +424,13 @@ ExpandPercents(
      const char *templ,	/* Script template */
      const char *newValue,		/* Potential new value of entry string */
      Tcl_Size index,			/* index of insert/delete */
-     int count,			/* #changed characters */
+     Tcl_Size count,			/* #changed characters */
      VREASON reason,		/* Reason for change */
      Tcl_DString *dsPtr)	/* Result of %-substitutions */
 {
-    int spaceNeeded, cvtFlags;
-    int number, length;
+    Tcl_Size spaceNeeded, length, stringLength;
     const char *string;
-    int stringLength;
-    int ch;
+    int ch, number, cvtFlags;
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (*templ) {
@@ -700,7 +696,7 @@ static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
  *	Adjust index to account for insertion (nChars > 0)
  *	or deletion (nChars < 0) at specified index.
  */
-static int AdjustIndex(int i0, int index, int nChars)
+static Tcl_Size AdjustIndex(Tcl_Size i0, Tcl_Size index, Tcl_Size nChars)
 {
     if (i0 >= index) {
 	i0 += nChars;
@@ -716,7 +712,7 @@ static int AdjustIndex(int i0, int index, int nChars)
  *	Note that insertPos, and selectFirst have "right gravity",
  *	while leftIndex (=xscroll.first) and selectLast have "left gravity".
  */
-static void AdjustIndices(Entry *entryPtr, int index, int nChars)
+static void AdjustIndices(Entry *entryPtr, Tcl_Size index, Tcl_Size nChars)
 {
     EntryPart *e = &entryPtr->entry;
     int g = nChars > 0;		/* left gravity adjustment */
@@ -852,7 +848,7 @@ InsertChars(
     const char *value = Tcl_GetString(obj);
     size_t byteIndex = Tcl_UtfAtIndex(string, index) - string;
     size_t byteCount = strlen(value);
-    int charsAdded = Tcl_NumUtfChars(value, byteCount);
+    Tcl_Size charsAdded = Tcl_NumUtfChars(value, byteCount);
     size_t newByteCount = entryPtr->entry.numBytes + byteCount + 1;
     char *newBytes;
     int code;
@@ -978,6 +974,7 @@ EntryInitialize(
     entryPtr->entry.displayString	= entryPtr->entry.string;
     entryPtr->entry.textVariableTrace	= 0;
     entryPtr->entry.numBytes = entryPtr->entry.numChars = 0;
+    entryPtr->entry.justify		= TK_JUSTIFY_NULL;
 
     EntryInitStyleDefaults(&entryPtr->entry.styleDefaults);
 
@@ -1021,7 +1018,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Ttk_TraceHandle *vt = 0;
 
     if (mask & TEXTVAR_CHANGED) {
-	if (textVarName && *Tcl_GetString(textVarName) != '\0') {
+	if (!TkObjIsEmpty(textVarName)) {
 	    vt = Ttk_TraceVariable(interp,
 		    textVarName,EntryTextVariableTrace,entryPtr);
 	    if (!vt) return TCL_ERROR;
@@ -1129,8 +1126,8 @@ EntryDoLayout(void *recordPtr)
     Entry *entryPtr = (Entry *)recordPtr;
     WidgetCore *corePtr = &entryPtr->core;
     Tk_TextLayout textLayout = entryPtr->entry.textLayout;
-    int leftIndex = entryPtr->entry.xscroll.first;
-    int rightIndex;
+    Tcl_Size leftIndex = entryPtr->entry.xscroll.first;
+    Tcl_Size rightIndex;
     Ttk_Box textarea;
 
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
@@ -1163,7 +1160,7 @@ EntryDoLayout(void *recordPtr)
 	 * of empty space on the right.
 	 */
 	int overflow = entryPtr->entry.layoutWidth - textarea.width;
-	int maxLeftIndex = 1 + Tk_PointToChar(textLayout, overflow, 0);
+	Tcl_Size maxLeftIndex = 1 + TkPointToChar(textLayout, overflow, 0);
 	int leftX;
 
 	if (leftIndex > maxLeftIndex) {
@@ -1174,7 +1171,7 @@ EntryDoLayout(void *recordPtr)
 	 * rightIndex is set to one past the last fully-visible character.
 	 */
 	Tk_CharBbox(textLayout, leftIndex, &leftX, NULL, NULL, NULL);
-	rightIndex = Tk_PointToChar(textLayout, leftX + textarea.width, 0);
+	rightIndex = TkPointToChar(textLayout, leftX + textarea.width, 0);
 	entryPtr->entry.layoutX = textarea.x - leftX;
     }
 
@@ -1203,7 +1200,7 @@ static GC EntryGetGC(Entry *entryPtr, Tcl_Obj *colorObj, TkRegion clip)
     }
     gc = Tk_GetGC(entryPtr->core.tkwin, mask, &gcValues);
     if (clip != NULL) {
-	TkSetRegion(Tk_Display(entryPtr->core.tkwin), gc, clip);
+	XSetRegion(Tk_Display(entryPtr->core.tkwin), gc, clip);
     }
     return gc;
 }
@@ -1287,12 +1284,12 @@ static void EntryDisplay(void *clientData, Drawable d)
      * clipping area from the GC, so we have to supply that by other means.
      */
 
-    rect.x = textarea.x;
-    rect.y = textarea.y;
-    rect.width = textarea.width;
-    rect.height = textarea.height;
-    clipRegion = TkCreateRegion();
-    TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
+    rect.x = (short)textarea.x;
+    rect.y = (short)textarea.y;
+    rect.width = (unsigned short)textarea.width;
+    rect.height = (unsigned short)textarea.height;
+    clipRegion = XCreateRegion();
+    XUnionRectWithRegion(&rect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
     TkUnixSetXftClipRegion(clipRegion);
 #endif
@@ -1332,14 +1329,14 @@ static void EntryDisplay(void *clientData, Drawable d)
     if ((*(entryPtr->entry.displayString) == '\0')
 		&& (entryPtr->entry.placeholderObj != NULL)) {
 	/* No text displayed, but -placeholder is given */
-	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
+	if (!TkObjIsEmpty(es.placeholderForegroundObj)) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
 	    foregroundObj = es.foregroundObj;
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	(void)Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
+	rightIndex = Tcl_GetCharLength(entryPtr->entry.placeholderObj);
     } else {
 	foregroundObj = es.foregroundObj;
     }
@@ -1390,7 +1387,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 #ifdef HAVE_XFT
     TkUnixSetXftClipRegion(NULL);
 #endif
-    TkDestroyRegion(clipRegion);
+    XDestroyRegion(clipRegion);
 }
 
 /*------------------------------------------------------------------------
@@ -1464,7 +1461,7 @@ EntryIndex(
 	    x = maxWidth;
 	    roundUp = 1;
 	}
-	*indexPtr = Tk_PointToChar(entryPtr->entry.textLayout,
+	*indexPtr = TkPointToChar(entryPtr->entry.textLayout,
 		x - entryPtr->entry.layoutX, 0);
 
 	TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
@@ -2047,6 +2044,39 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     return EntryConfigure(interp, recordPtr, mask);
 }
 
+/* SpinboxDoLayout --
+ *	If the layout places the arrows at the top and at the bottom of the
+ *	same column, as the vista theme does, extend them to fill the space
+ *	between them, as in the native up-down control. [Bug 3301552]
+ */
+static void
+SpinboxDoLayout(void *recordPtr)
+{
+    Entry *entryPtr = (Entry *)recordPtr;
+    Ttk_Layout layout = entryPtr->core.layout;
+    Ttk_Element up, down;
+
+    EntryDoLayout(recordPtr);
+
+    up = Ttk_FindElement(layout, "uparrow");
+    down = Ttk_FindElement(layout, "downarrow");
+    if (up && down) {
+	Ttk_Box ub = Ttk_ElementParcel(up);
+	Ttk_Box db = Ttk_ElementParcel(down);
+
+	if (ub.x == db.x && ub.width == db.width
+		&& ub.y + ub.height < db.y) {
+	    int top = ub.y, bottom = db.y + db.height;
+	    int middle = top + (bottom - top) / 2;
+
+	    Ttk_PlaceElement(layout, up,
+		    Ttk_MakeBox(ub.x, top, ub.width, middle - top));
+	    Ttk_PlaceElement(layout, down,
+		    Ttk_MakeBox(db.x, middle, db.width, bottom - middle));
+	}
+    }
+}
+
 static const Ttk_Ensemble SpinboxCommands[] = {
     { "bbox",		EntryBBoxCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
@@ -2078,7 +2108,7 @@ static const WidgetSpec SpinboxWidgetSpec = {
     EntryPostConfigure,	/* postConfigureProc */
     TtkWidgetGetLayout,	/* getLayoutProc */
     TtkWidgetSize,		/* sizeProc */
-    EntryDoLayout,		/* layoutProc */
+    SpinboxDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };
 
@@ -2152,7 +2182,7 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(SpinboxLayout)
-    TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
+    TTK_GROUP("Spinbox.field", TTK_FILL_BOTH,
 	TTK_GROUP("null", TTK_PACK_RIGHT,
 	    TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
 	    TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))

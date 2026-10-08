@@ -31,18 +31,18 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev
+          sudo apt-get install libtommath-dev libxss-dev libxft-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -111,7 +111,7 @@ jobs:
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
@@ -119,7 +119,7 @@ jobs:
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
@@ -135,18 +135,18 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
+          sudo apt-get install libtommath-dev libxss-dev libxft-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

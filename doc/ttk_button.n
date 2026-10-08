@@ -41,10 +41,6 @@ with an extra highlight ring, or with a different border color.
 .RE
 .\" Not documented -- may go away
 .\" .OP \-padding padding Padding
-.\" .OP \-foreground foreground Foreground
-.\" .OP \-font font Font
-.\" .OP \-anchor anchor Anchor
-.\" .OP \-relief relief Relief
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
@@ -94,6 +90,8 @@ are:
 \fB\-highlightcolor\fP \fIcolor\fP
 .br
 \fB\-highlightthickness\fP \fIamount\fP
+.br
+\fB\-justify\fP \fIjustification\fP
 .br
 \fB\-lightcolor\fP \fIcolor\fP
 .br

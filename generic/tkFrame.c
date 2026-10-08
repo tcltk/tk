@@ -458,7 +458,7 @@ TkCreateFrame(
     Colormap colormap;
     Visual *visual;
 
-    if (objc < 2) {
+    if ((objc < 2) || ((objc & 1) != 0)) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
@@ -788,7 +788,7 @@ FrameWidgetObjCmd(
 			    "can't modify %s option after widget is created",
 			    arg));
 		    Tcl_SetErrorCode(interp, "TK", "FRAME", "CREATE_ONLY",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		    goto done;
 		}
@@ -1319,8 +1319,8 @@ ComputeFrameGeometry(
      * Calculate the available size for the label
      */
 
-    labelframePtr->labelBox.width = labelframePtr->labelReqWidth;
-    labelframePtr->labelBox.height = labelframePtr->labelReqHeight;
+    labelframePtr->labelBox.width = (unsigned short)labelframePtr->labelReqWidth;
+    labelframePtr->labelBox.height = (unsigned short)labelframePtr->labelReqHeight;
 
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
@@ -1346,10 +1346,10 @@ ComputeFrameGeometry(
 	}
     }
     if (labelframePtr->labelBox.width > maxWidth) {
-	labelframePtr->labelBox.width = maxWidth;
+	labelframePtr->labelBox.width = (unsigned short)maxWidth;
     }
     if (labelframePtr->labelBox.height > maxHeight) {
-	labelframePtr->labelBox.height = maxHeight;
+	labelframePtr->labelBox.height = (unsigned short)maxHeight;
     }
 
     /*
@@ -1369,23 +1369,23 @@ ComputeFrameGeometry(
     case LABELANCHOR_EN:
     case LABELANCHOR_ES:
 	labelframePtr->labelTextX = otherWidthT - padding;
-	labelframePtr->labelBox.x = otherWidth - padding;
+	labelframePtr->labelBox.x = (short)(otherWidth - padding);
 	break;
     case LABELANCHOR_N:
     case LABELANCHOR_NE:
     case LABELANCHOR_NW:
 	labelframePtr->labelTextY = padding;
-	labelframePtr->labelBox.y = padding;
+	labelframePtr->labelBox.y = (short)padding;
 	break;
     case LABELANCHOR_S:
     case LABELANCHOR_SE:
     case LABELANCHOR_SW:
 	labelframePtr->labelTextY = otherHeightT - padding;
-	labelframePtr->labelBox.y = otherHeight - padding;
+	labelframePtr->labelBox.y = (short)(otherHeight - padding);
 	break;
     default:
 	labelframePtr->labelTextX = padding;
-	labelframePtr->labelBox.x = padding;
+	labelframePtr->labelBox.x = (short)padding;
 	break;
     }
 
@@ -1397,31 +1397,31 @@ ComputeFrameGeometry(
     case LABELANCHOR_NW:
     case LABELANCHOR_SW:
 	labelframePtr->labelTextX = padding;
-	labelframePtr->labelBox.x = padding;
+	labelframePtr->labelBox.x = (short)padding;
 	break;
     case LABELANCHOR_N:
     case LABELANCHOR_S:
 	labelframePtr->labelTextX = otherWidthT / 2;
-	labelframePtr->labelBox.x = otherWidth / 2;
+	labelframePtr->labelBox.x = (short)(otherWidth / 2);
 	break;
     case LABELANCHOR_NE:
     case LABELANCHOR_SE:
 	labelframePtr->labelTextX = otherWidthT - padding;
-	labelframePtr->labelBox.x = otherWidth - padding;
+	labelframePtr->labelBox.x = (short)(otherWidth - padding);
 	break;
     case LABELANCHOR_EN:
     case LABELANCHOR_WN:
 	labelframePtr->labelTextY = padding;
-	labelframePtr->labelBox.y = padding;
+	labelframePtr->labelBox.y = (short)padding;
 	break;
     case LABELANCHOR_E:
     case LABELANCHOR_W:
 	labelframePtr->labelTextY = otherHeightT / 2;
-	labelframePtr->labelBox.y = otherHeight / 2;
+	labelframePtr->labelBox.y = (short)(otherHeight / 2);
 	break;
     default:
 	labelframePtr->labelTextY = otherHeightT - padding;
-	labelframePtr->labelBox.y = otherHeight - padding;
+	labelframePtr->labelBox.y = (short)(otherHeight - padding);
 	break;
     }
 }
@@ -1451,6 +1451,9 @@ DisplayFrame(
     int bdX1, bdY1, bdX2, bdY2;
     Pixmap pixmap;
     Bool useClipping = False;
+#ifndef TK_NO_DOUBLE_BUFFERING
+    Bool useBuffer;
+#endif /* TK_NO_DOUBLE_BUFFERING */
     int borderWidth, highlightWidth;
 
     framePtr->flags &= ~REDRAW_PENDING;
@@ -1488,7 +1491,22 @@ DisplayFrame(
 	return;
     }
 
+    /*
+     * Double buffering is only needed when a background image or a label
+     * is drawn. The pixmap covers the whole frame, which may be huge if it
+     * is scrolled in a canvas. [Bug 9438cce0bd]
+     */
+
 #ifndef TK_NO_DOUBLE_BUFFERING
+    useBuffer = (framePtr->bgimg != NULL);
+    if (framePtr->type == TYPE_LABELFRAME) {
+	Labelframe *labelframePtr = (Labelframe *) framePtr;
+
+	if (labelframePtr->textPtr != NULL || labelframePtr->labelWin != NULL) {
+	    useBuffer = True;
+	}
+    }
+
     /*
      * In order to avoid screen flashes, this function redraws the frame into
      * off-screen memory, then copies it back on-screen in a single operation.
@@ -1498,10 +1516,14 @@ DisplayFrame(
      * crashes, see [610aa08858].
      */
 
-    pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
-	(Tk_Width(tkwin) > 0 ? Tk_Width(tkwin) : 1),
-	(Tk_Height(tkwin) > 0 ? Tk_Height(tkwin) : 1),
-	Tk_Depth(tkwin));
+    if (useBuffer) {
+	pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
+	    (Tk_Width(tkwin) > 0 ? Tk_Width(tkwin) : 1),
+	    (Tk_Height(tkwin) > 0 ? Tk_Height(tkwin) : 1),
+	    Tk_Depth(tkwin));
+    } else {
+	pixmap = Tk_WindowId(tkwin);
+    }
 #else
     pixmap = Tk_WindowId(tkwin);
     Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap, 0, 0,
@@ -1646,12 +1668,16 @@ DisplayFrame(
      * free up the pixmap.
      */
 
-    XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
-	    framePtr->copyGC, highlightWidth, highlightWidth,
-	    (unsigned) (Tk_Width(tkwin) - 2 * highlightWidth),
-	    (unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
-	    highlightWidth, highlightWidth);
-    Tk_FreePixmap(framePtr->display, pixmap);
+    if (useBuffer) {
+	XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
+		framePtr->copyGC, highlightWidth, highlightWidth,
+		(unsigned) (Tk_Width(tkwin) - 2 * highlightWidth),
+		(unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
+		highlightWidth, highlightWidth);
+	Tk_FreePixmap(framePtr->display, pixmap);
+    }
+#else
+    Tk_ClipDrawableToRect(framePtr->display, pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 }
 

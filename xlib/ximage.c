@@ -36,7 +36,7 @@ Pixmap
 XCreateBitmapFromData(
     Display *display,
     Drawable d,
-    _Xconst char *data,
+    const char *data,
     unsigned int width,
     unsigned int height)
 {

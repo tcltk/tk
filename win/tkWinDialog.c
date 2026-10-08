@@ -1763,7 +1763,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 		"invalid filename \"%s\"",
 		ConvertExternalFilename(ofn.lpstrFile, &ds)));
 	Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "INVALID_FILENAME",
-		NULL);
+		(char *)NULL);
 	Tcl_DStringFree(&ds);
     } else {
 	result = TCL_OK;
@@ -2031,7 +2031,7 @@ MakeFilter(
 	initial = Tcl_GetString(initialPtr);
     }
     TkInitFileFilters(&flist);
-    if (TkGetFileFilters(interp, &flist, valuePtr, 1) != TCL_OK) {
+    if (TkGetFileFilters(interp, &flist, valuePtr, true) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2219,7 +2219,7 @@ static int MakeFilterVista(
 	initial = Tcl_GetString(optsPtr->initialTypeObj);
 
     TkInitFileFilters(&flist);
-    if (TkGetFileFilters(interp, &flist, optsPtr->filterObj, 1) != TCL_OK)
+    if (TkGetFileFilters(interp, &flist, optsPtr->filterObj, true) != TCL_OK)
 	return TCL_ERROR;
 
     if (flist.filters == NULL) {
@@ -2859,7 +2859,7 @@ Tk_MessageBoxObjCmd(
     tmpObj = messageObj ? Tcl_DuplicateObj(messageObj) : Tcl_NewObj();
     Tcl_IncrRefCount(tmpObj);
     if (detailObj) {
-	Tcl_AppendStringsToObj(tmpObj, "\n\n", NULL);
+	Tcl_AppendStringsToObj(tmpObj, "\n\n", (char *)NULL);
 	Tcl_AppendObjToObj(tmpObj, detailObj);
     }
 

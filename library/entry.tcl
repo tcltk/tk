@@ -695,6 +695,7 @@ proc ::tk::EntryScanDrag {w x} {
     # Make sure these exist, as some weird situations can trigger the
     # motion binding without the initial press.  [Bug #220269]
     if {![info exists ::tk::Priv(x)]} {set ::tk::Priv(x) $x}
+
     # allow for a delta
     if {abs($x-$::tk::Priv(x)) > 2} {
 	set ::tk::Priv(mouseMoved) 1

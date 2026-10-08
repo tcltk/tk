@@ -2778,7 +2778,7 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
-    int isModKeyOnly = 0;
+    bool isModKeyOnly = false;
     Tcl_Size i;
 
     assert(dispPtr);
@@ -2808,7 +2808,7 @@ MatchPatterns(
     if (IsKeyEventType(curEvent->xev.type)) {
 	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
-		isModKeyOnly = 1;
+		isModKeyOnly = true;
 		break;
 	    }
 	}
@@ -3024,7 +3024,7 @@ ExpandPercents(
 	    break;
 	case 'b':
 	    if (flags & BUTTON) {
-		SET_UNUMBER(evPtr->xbutton.button);
+		SET_UNUMBER((evPtr->xbutton.button > 7) ? evPtr->xbutton.button - 4 : evPtr->xbutton.button);
 	    }
 	    break;
 	case 'c':
@@ -4413,10 +4413,11 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * We only allow warping if the window is mapped.
+	 * We allow warping relative to the screen's root window, or relative to a
+	 * Tk window provided that it is mapped.
 	 */
 
-	if (warp && Tk_IsMapped(tkwin)) {
+	if (warp && (! windowName[0] || Tk_IsMapped(tkwin))) {
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);

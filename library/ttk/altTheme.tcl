@@ -71,13 +71,15 @@ namespace eval ttk::theme::alt {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0} \
+	ttk::style configure TSpinbox -arrowsize 7.5p \
+	    -padding {1.5p 0.75p 7.5p 0.75p} \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure Toolbutton -relief flat -padding 1.5p
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding 1.5p -relief flat -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \
@@ -131,22 +133,27 @@ proc ttk::theme::alt::configureNotebookStyle {style} {
     switch -- [string index $tabPos 0] {
 	n {
 	    ttk::style configure $style -tabmargins     {1.5p 1.5p 0.75p 0}
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 1.5p 0.75p 0}}
 	}
 	s {
 	    ttk::style configure $style -tabmargins     {1.5p 0 0.75p 1.5p}
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 0 0.75p 1.5p}}
 	}
 	w {
 	    ttk::style configure $style -tabmargins     {1.5p 1.5p 0 0.75p}
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 1.5p 0 0.75p}}
 	}
 	e {
 	    ttk::style configure $style -tabmargins     {0 1.5p 1.5p 0.75p}
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
 	    ttk::style map $style.Tab -expand {selected {0 1.5p 1.5p 0.75p}}
 	}
 	default {
 	    ttk::style configure $style -tabmargins     {1.5p 1.5p 0.75p 0}
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 1.5p 0.75p 0}}
 	}
     }

@@ -5,7 +5,7 @@ on:
     - "main"
     - "core-9-0-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 jobs:
@@ -20,18 +20,18 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
           path: tcl
       - name: Setup Environment
         run: |
-          sudo apt-get install libxss-dev libxft-dev
+          sudo apt-get install libtommath-dev libxss-dev libxft-dev
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -64,7 +64,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.tar
@@ -84,17 +84,17 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
           path: tcl
       - name: Checkout create-dmg
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: create-dmg/create-dmg
           ref: v1.2.2
@@ -156,7 +156,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.dmg
@@ -176,11 +176,11 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.0
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: core-9-0-branch
@@ -219,7 +219,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (snapshot)
           path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_snapshot.exe

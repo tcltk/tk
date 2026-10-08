@@ -1,8 +1,7 @@
 # constraints.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It defines test constraints that are used by several test files in the
-# Tk test suite.
+# This file is sourced into each test file by "main.tcl". It defines test
+# constraints that are used by several test files in the Tk test suite.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,7 +11,7 @@ namespace import -force tcltest::testConstraint
 #
 # OPERATING SYSTEM
 #
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnCILinux [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 if {$tcl_platform(os) eq "Darwin"} {
     scan $tcl_platform(osVersion) "%d" macosVersion
 }
@@ -32,6 +31,27 @@ testConstraint aquaOrWin32 [expr {
 }]
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
+
+# constraint for tests that need a window manager, e.g. to iconify a toplevel.
+# On X11 there may be none (e.g. on GitHub CI). A window manager sets the
+# WM_STATE property on the toplevels it manages before mapping them, so check
+# it when the main window is mapped. Without the test commands, check whether
+# the main window was reparented, as most (but not all) window managers do.
+if {[testConstraint x11]} {
+    wm deiconify .
+    if {![winfo ismapped .]} {
+	tkwait visibility .
+    }
+    if {[llength [info commands testprop]] && [llength [info commands testwrapper]]} {
+	testConstraint withWindowManager [expr {
+	    [testprop [testwrapper .] WM_STATE] ne ""
+	}]
+    } else {
+	testConstraint withWindowManager [expr {[wm frame .] ne [winfo id .]}]
+    }
+} else {
+    testConstraint withWindowManager 1
+}
 
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
@@ -78,7 +98,6 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 }
 
 testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-testConstraint withoutXft [expr {![testConstraint withXft]}]
 unset fs
 
 # Expected results of some tests on Linux rely on availability of the "times"
@@ -153,7 +172,6 @@ testConstraint defaultPseudocolor8 [expr {
 #
 # VARIOUS
 #
-testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
     [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])
@@ -178,8 +196,11 @@ testConstraint testmovemouse   [llength [info commands testmovemouse]]
 testConstraint testobjconfig   [llength [info commands testobjconfig]]
 testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
+testConstraint testsendinput   [llength [info commands testsendinput]]
+testConstraint testsetlocale   [llength [info commands testsetlocale]]
 testConstraint testtext        [llength [info commands testtext]]
 testConstraint testwinevent    [llength [info commands testwinevent]]
 testConstraint testwrapper     [llength [info commands testwrapper]]
+testConstraint testxfocus      [llength [info commands testxfocus]]
 
 # EOF

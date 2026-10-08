@@ -17,8 +17,13 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 9)
+#if (TCL_MAJOR_VERSION < 9) && defined(BUILD_tk)
 #	error Tk 9.0 must be compiled with tcl.h from Tcl 9.0 or better
+#endif
+#if (TCL_MAJOR_VERSION < 9) && !defined(Tcl_Size)
+    /* tcl.h from Tcl >= 9.0.4 undefines Tcl_Size at its end in Tcl 8 mode */
+#   define Tcl_Size int
+#   define _TKSIZEHANDLED
 #endif
 
 #ifndef EXTERN
@@ -70,10 +75,10 @@ extern "C" {
 #if TK_MAJOR_VERSION == 9
 #   define TK_MINOR_VERSION	0
 #   define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#   define TK_RELEASE_SERIAL	4
+#   define TK_RELEASE_SERIAL	5
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0.4"
+#   define TK_PATCH_LEVEL		"9.0.5"
 #endif /* TK_MAJOR_VERSION */
 
 /*
@@ -92,6 +97,7 @@ extern "C" {
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
+#   define NeedWidePrototypes 1
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
@@ -1561,6 +1567,11 @@ typedef Tcl_Size (Tk_SelectionProc) (void *clientData, Tcl_Size offset,
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* RC_INVOKED */
+
+#ifdef _TKSIZEHANDLED
+#   undef _TKSIZEHANDLED
+#   undef Tcl_Size
+#endif
 
 /*
  * end block for C++

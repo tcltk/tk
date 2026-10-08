@@ -338,7 +338,7 @@ CreateXIC(
 	preedit_attlist = XVaCreateNestedList(0,
 		XNSpotLocation, &spot,
 		XNFontSet, dispPtr->inputXfs,
-		NULL);
+		(char *)NULL);
     }
 
     winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
@@ -346,7 +346,7 @@ CreateXIC(
 	    XNClientWindow, winPtr->window,
 	    XNFocusWindow, winPtr->window,
 	    preedit_attname, preedit_attlist,
-	    NULL);
+	    (char *)NULL);
 
     if (preedit_attlist) {
 	XFree(preedit_attlist);
@@ -362,7 +362,7 @@ CreateXIC(
     /*
      * Adjust the window's event mask if the IM requires it.
      */
-    XGetICValues(winPtr->inputContext, XNFilterEvents, &im_event_mask, NULL);
+    XGetICValues(winPtr->inputContext, XNFilterEvents, &im_event_mask, (char *)NULL);
     if ((winPtr->atts.event_mask & im_event_mask) != im_event_mask) {
 	winPtr->atts.event_mask |= im_event_mask;
 	XSelectInput(winPtr->display, winPtr->window, winPtr->atts.event_mask);
@@ -1200,17 +1200,25 @@ Tk_HandleEvent(
 	winPtr->inputContext = NULL;
     }
 
-    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
-	    winPtr->flags |= TK_CHECKED_IC;
-	    if (winPtr->dispPtr->inputMethod != NULL) {
+    /*
+     * Create the input context only for a toplevel or for the window which
+     * gets the focus.  Creating it for every window costs a round trip to
+     * the input method for each of them.  [Bug 5d52ad92fa]
+     */
+
+    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
+	    && (winPtr->dispPtr->inputMethod != NULL)
+	    && !(winPtr->flags & TK_ALREADY_DEAD)) {
+	if ((winPtr->flags & TK_TOP_LEVEL) && (winPtr->inputContext == NULL)) {
+	    CreateXIC(winPtr);
+	}
+	if (eventPtr->type == FocusIn) {
+	    if (winPtr->inputContext == NULL) {
 		CreateXIC(winPtr);
 	    }
-	}
-	if ((eventPtr->type == FocusIn) &&
-		(winPtr->dispPtr->inputMethod != NULL) &&
-		(winPtr->inputContext != NULL)) {
-	    XSetICFocus(winPtr->inputContext);
+	    if (winPtr->inputContext != NULL) {
+		XSetICFocus(winPtr->inputContext);
+	    }
 	}
     }
 

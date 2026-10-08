@@ -29,9 +29,11 @@
  * Modifiers for index parsing: 'display', 'any' or nothing.
  */
 
-#define TKINDEX_NONE	0
-#define TKINDEX_DISPLAY	1
-#define TKINDEX_ANY	2
+typedef enum {
+    TKINDEX_NONE,
+    TKINDEX_DISPLAY,
+    TKINDEX_ANY
+} indexModifier;
 
 /*
  * Forward declarations for functions defined later in this file:
@@ -393,7 +395,7 @@ TkTextMakeByteIndex(
     TkTextSegment *segPtr;
     int index;
     const char *p, *start;
-    int ch;
+    Tcl_UniChar ch;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -881,7 +883,8 @@ GetIndex(
     }
 
     if (isdigit(UCHAR(string[0])) || (string[0] == '-')) {
-	int lineIndex, charIndex;
+	int lineIndex;
+	int charIndex;
 
 	/*
 	 * Base is identified with line and character indices.
@@ -977,7 +980,7 @@ GetIndex(
 
   gotBase:
     cp = endOfBase;
-    while (1) {
+    while (true) {
 	while (isspace(UCHAR(*cp))) {
 	    cp++;
 	}
@@ -1003,7 +1006,7 @@ GetIndex(
     if (indexPtr->linePtr == NULL) {
 	Tcl_Panic("Bad index created");
     }
-    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 0);
+    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, false);
     return TCL_OK;
 
   error:
@@ -1037,9 +1040,9 @@ int
 TkTextIndexAdjustToStartEnd(
     TkText *textPtr,
     TkTextIndex *indexPtr,  /* Pointer to index. */
-    int check)		    /* 1 means only check indexPtr against
+    bool check)		    /* true means only check indexPtr against
 			     * the -startline/-endline range
-			     * 0 means adjust to this range */
+			     * false means adjust to this range */
 {
     int bound;
     TkTextIndex indexBound;
@@ -1221,8 +1224,10 @@ ForwBack(
 {
     const char *p, *units;
     char *end;
-    int count, lineIndex, modifier;
+    int lineIndex;
+    int modifier;
     size_t length;
+    int count;
 
     /*
      * Get the count (how many units forward or backward).
@@ -1559,8 +1564,8 @@ TkTextIndexForwChars(
     Tcl_Size byteOffset;
     char *start, *end, *p;
     int ch;
-    int elide = 0;
-    int checkElided = (type & COUNT_DISPLAY);
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
 
     if (charCount < 0) {
 	TkTextIndexBackChars(textPtr, srcPtr, -charCount, dstPtr, type);
@@ -1590,7 +1595,7 @@ TkTextIndexForwChars(
 	segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
     }
 
-    while (1) {
+    while (true) {
 	/*
 	 * Go through each segment in line looking for specified character
 	 * index.
@@ -1822,8 +1827,8 @@ TkTextIndexCount(
     TkTextSegment *segPtr, *seg2Ptr = NULL;
     TkTextElideInfo *infoPtr = NULL;
     Tcl_Size byteOffset, maxBytes, count = 0;
-    int elide = 0;
-    int checkElided = (type & COUNT_DISPLAY);
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
 
     /*
      * Find seg that contains src index, and remember how many bytes not to
@@ -1840,7 +1845,7 @@ TkTextIndexCount(
 	elide = TkTextIsElided(textPtr, indexPtr1, infoPtr);
     }
 
-    while (1) {
+    while (true) {
 	/*
 	 * Go through each segment in line adding up the number of characters.
 	 */
@@ -2084,10 +2089,11 @@ TkTextIndexBackChars(
 {
     TkTextSegment *segPtr, *oldPtr;
     TkTextElideInfo *infoPtr = NULL;
-    int lineIndex, segSize;
+    int lineIndex;
+    int segSize;
     const char *p, *start, *end;
-    int elide = 0;
-    int checkElided = (type & COUNT_DISPLAY);
+    bool elide = false;
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
 
     if (charCount < 0) {
 	TkTextIndexForwChars(textPtr, srcPtr, -charCount, dstPtr, type);
@@ -2135,7 +2141,7 @@ TkTextIndexBackChars(
      * Now segPtr points to the segment containing the starting index.
      */
 
-    while (1) {
+    while (true) {
 	/*
 	 * If we do need to pay attention to the visibility of
 	 * characters/indices, check that first. If the current segment isn't
@@ -2174,7 +2180,7 @@ TkTextIndexBackChars(
 			 * will be zero, of course).
 			 */
 
-			elide = 0;
+			elide = false;
 			while (--infoPtr->elidePriority > 0) {
 			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
 				elide = infoPtr->tagPtrs[
@@ -2383,7 +2389,7 @@ StartEnd(
 		    COUNT_DISPLAY_INDICES);
 	}
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
-	while (1) {
+	while (true) {
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
@@ -2428,7 +2434,7 @@ StartEnd(
 	 */
 
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
-	while (1) {
+	while (true) {
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {

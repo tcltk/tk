@@ -104,7 +104,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(fontObj);
 	}
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	if (cachedPtr) {
 	    TkWindow fakeWin;
 	    Tcl_Obj *fontObj = cachedPtr->objPtr;
@@ -135,7 +135,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(colorObj);
 	}
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	if (cachedPtr) {
 	    TkWindow fakeWin;
 	    Tcl_Obj *colorObj = cachedPtr->objPtr;
@@ -166,7 +166,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(borderObj);
 	}
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	if (cachedPtr) {
 	    TkWindow fakeWin;
 	    Tcl_Obj *borderObj = cachedPtr->objPtr;
@@ -351,7 +351,7 @@ static Tcl_Obj *Ttk_Use(
 #if !NEED_EXTRA_INFO
 	return (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	return cachedPtr ? cachedPtr->objPtr : NULL;
 #endif
     }
@@ -363,7 +363,7 @@ static Tcl_Obj *Ttk_Use(
 #if !NEED_EXTRA_INFO
 	Tcl_SetHashValue(entryPtr, cacheObj);
 #else
-	Ttk_Cached *cachedPtr = ckalloc(sizeof(*cachedPtr));
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)ckalloc(sizeof(*cachedPtr));
 	cachedPtr->objPtr = cacheObj;
 	cachedPtr->display = Tk_Display(tkwin);
 	cachedPtr->screenNum = Tk_ScreenNumber(tkwin);

@@ -279,7 +279,7 @@ DisplayVerticalValue(
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     Tcl_Size length = strlen(valueString);
@@ -370,7 +370,7 @@ DisplayHorizontalScale(
 
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
-	    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+	    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
 		    scalePtr->fromValue) < 0) {
 		valueString[TCL_DOUBLE_SPACE - 1] = '\0';
 	    }
@@ -508,7 +508,7 @@ DisplayHorizontalValue(
     x = TkScaleValueToPixel(scalePtr, value);
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     Tcl_Size length = strlen(valueString);
@@ -578,7 +578,7 @@ TkpDisplayScale(
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
 	Tcl_Preserve(interp);
-	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+	if (TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {
 	    string[TCL_DOUBLE_SPACE - 1] = '\0';
 	}

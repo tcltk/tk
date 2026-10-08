@@ -164,6 +164,25 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 TKBackgroundLoop *backgroundLoop = nil;
 
+typedef struct invokeArgs {
+    TkMenu *menuPtr;
+    Tcl_Size itemIndex;
+} invokeArgs;
+    
+static void invokeMenuIdleTask(void *clientData) {
+    invokeArgs *args = (invokeArgs *) clientData;
+    int result = TkInvokeMenu(args->menuPtr->interp, args->menuPtr,
+			      args->itemIndex);
+    if (result != TCL_OK && result != TCL_CONTINUE &&
+	result != TCL_BREAK) {
+	Tcl_AddErrorInfo(args->menuPtr->interp, "\n    (menu invoke)");
+	Tcl_BackgroundException(args->menuPtr->interp, result);
+    }
+    Tcl_Release(args->menuPtr);
+    Tcl_Release(args->menuPtr->interp);
+    ckfree(clientData);
+}
+
 #pragma mark TKMenu
 
 /*
@@ -362,19 +381,13 @@ static Bool runMenuCommand = true;
 	NSMenuItem *menuItem = (NSMenuItem *) sender;
 	TkMenu *menuPtr = (TkMenu *) _tkMenu;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
-
 	if (menuPtr && mePtr) {
-	    Tcl_Interp *interp = menuPtr->interp;
-	    Tcl_Preserve(interp);
-	    Tcl_Preserve(menuPtr);
-	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-	    if (result != TCL_OK && result != TCL_CONTINUE &&
-		    result != TCL_BREAK) {
-		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundException(interp, result);
-	    }
-	    Tcl_Release(menuPtr);
-	    Tcl_Release(interp);
+	    invokeArgs *args = ckalloc(sizeof(invokeArgs));
+	    args->menuPtr = menuPtr;
+	    args->itemIndex = mePtr->index;
+	    Tcl_Preserve(args->menuPtr);
+	    Tcl_Preserve(args->menuPtr->interp);
+	    Tcl_DoWhenIdle(invokeMenuIdleTask, args);
 	}
     }
 }
@@ -759,6 +772,24 @@ TkpConfigureMenuEntry(
 	[image setTemplate:YES];
     }
     [menuItem setImage:image];
+
+#if defined(MAC_OS_VERSION_27_0) && \
+	MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_27_0
+
+    /*
+     * Starting with macOS 27 (Golden Gate), AppKit decides whether menu item
+     * images are visible and will typically hide them unless the item asks
+     * otherwise.  Tk entries only have an image if the script requested one,
+     * so ask that it always be shown.
+     */
+
+    if (@available(macOS 27.0, *)) {
+	[menuItem setPreferredImageVisibility:(image ?
+		NSMenuItemImageVisibilityVisible :
+		NSMenuItemImageVisibilityAutomatic)];
+    }
+#endif
+
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
 	title = [[[TKNSString alloc]

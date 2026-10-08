@@ -144,7 +144,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TSpinbox \
 	    -arrowsize 7.5p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
+	    -fieldbackground $colors(-window) -padding {1.5p 0.75p 7.5p 0.75p} \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -179,8 +179,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -highlight [list selected 1] \
 	    -highlightcolor [list selected $colors(-selectbg)]
 
-	# Treeview.
-	#
+	# Treeview
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item -indicatorsize 9p \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
@@ -220,7 +219,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    }
 	}
 	ttk::style configure Toolbutton \
-	    -padding 1.5p -relief flat
+	    -anchor center -justify center -padding 1.5p -relief flat \
+	    -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
@@ -229,3 +229,23 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 }
 
 ttk::theme::default::reconfigureDefaultTheme
+
+# ttk::theme::default::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook tab style $style.Tab.
+# Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::default::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n - s {
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
+	}
+	w - e {
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
+	}
+	default {
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
+	}
+    }
+}

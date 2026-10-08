@@ -73,8 +73,8 @@ XDestroyWindow(
     if (!Tk_IsTopLevel(macWin->winPtr)) {
 	if (macWin->winPtr->parentPtr != NULL) {
 	    TkMacOSXInvalClipRgns((Tk_Window)macWin->winPtr->parentPtr);
-	    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) view);
-	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, (void *) view);
+	    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
+	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
@@ -337,6 +337,7 @@ XUnmapWindow(
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
 	    [win orderOut:NSApp];
+	    [[win contentView] setOnScreen:NO];
 	    if ([win isKeyWindow]) {
 
 		/*
@@ -369,14 +370,20 @@ XUnmapWindow(
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
     } else {
+	TKContentView *view = [win contentView];
 
 	/*
 	 * Rebuild the clip regions for the parent so it will be allowed
 	 * to draw in the space from which this subwindow was removed and then
-	 * redraw the window.
+	 * redraw the window.  As in XMapWindow, the redraw is done in an idle
+	 * task, so that unmapping many windows redraws the view only once.
 	 */
 
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
+	if (view) {
+	    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
+	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
+	}
     }
     return Success;
 }
@@ -1277,39 +1284,6 @@ TkMacOSXWinCGBounds(
     bounds->origin.y = winPtr->privatePtr->yOff;
     bounds->size.width = winPtr->changes.width;
     bounds->size.height = winPtr->changes.height;
-}
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXWinNSBounds --
- *
- *	Given a Tk window this function determines the window's bounds in
- *	the coordinate system of the TKContentView in which this Tk window
- *	is contained, which has the origin at the lower left corner.  This
- *      fills in an NSRect struct and requires the TKContentView as a
- *      parameter
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Fills in an NSRect.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXWinNSBounds(
-    TkWindow *winPtr,
-    NSView *view,
-    NSRect *bounds)
-{
-    bounds->size.width = winPtr->changes.width;
-    bounds->size.height = winPtr->changes.height;
-    bounds->origin.x = winPtr->privatePtr->xOff;
-    bounds->origin.y = ([view bounds].size.height -
-		       bounds->size.height -
-		       winPtr->privatePtr->yOff);
 }
 
 /*

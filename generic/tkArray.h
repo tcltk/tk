@@ -201,7 +201,7 @@ AT##_BufferSize(size_t numElems)						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_IsEmpty(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -365,7 +365,7 @@ AT##_Free(AT **arrp)								\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static Tcl_Size									\
 AT##_Find(const AT *arr, const ElemType *elem)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -374,7 +374,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
 	    if (memcmp(&buf[i], elem, sizeof(ElemType)) == 0) {			\
-		return (int) i;							\
+		return (Tcl_Size) i;							\
 	    }									\
 	}									\
     }										\
@@ -382,7 +382,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_Contains(const AT *arr, const ElemType *elem)				\
 {										\
     return AT##_Find(arr, elem) != -1;						\
@@ -412,7 +412,7 @@ AT##_BufferSize(size_t numElems)						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_IsEmpty(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -574,7 +574,7 @@ AT##_Free(AT **arrp)								\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static Tcl_Size									\
 AT##_Find(const AT *arr, const ElemType *elem)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -583,7 +583,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
 	    if (buf[i] == elem) {						\
-		return (int) i;							\
+		return (Tcl_Size) i;							\
 	    }									\
 	}									\
     }										\
@@ -591,7 +591,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_Contains(const AT *arr, const ElemType *elem)				\
 {										\
     return AT##_Find(arr, elem) != -1;						\

@@ -45,8 +45,10 @@ proc populateTree {tree node} {
 		-values [list $f $type]]
 
 	if {$type eq "directory"} {
-	    ## Make it so that this node is openable
-	    $tree insert $id 0 -text dummy ;# a dummy
+	    if {[file readable $f]} {
+		## Make it so that this node is openable
+		$tree insert $id 0 -text dummy ;# a dummy
+	    }
 	    $tree item $id -text [file tail $f]/
 
 	} elseif {$type eq "file"} {

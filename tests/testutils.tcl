@@ -1,8 +1,8 @@
 # testutils.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It implements the testutils mechanism which is used to import utility procs
-# into test files that need them.
+# This file is sourced into each test file by "main.tcl". It implements the
+# testutils mechanism which is used to import utility procs into test files
+# that need them.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -66,10 +66,10 @@ namespace eval ::tk::test::generic {
     #      happens just before the notification from the OS has been received,
     #      Tk will be using not yet updated info (e.g. mouse coordinates).
     #
-    #         Hickup, choke etc ... !
+    #	 Hickup, choke etc ... !
     #
-    #            *  the function SendInput() of the Win32 API
-    #            ** the callback function is TkWinChildProc()
+    #	    *  the function SendInput() of the Win32 API
+    #	    ** the callback function is TkWinChildProc()
     #
     #    This timing issue can be addressed by putting the Tk process on hold
     #    (do nothing at all) for a somewhat extended amount of time, while
@@ -148,8 +148,16 @@ namespace eval ::tk::test::generic {
     #
     proc resetWindows {} {
 	deleteWindows
+
+	# Reset the geometry of the Tk root window:
+	# - use 200x200 as a standard size
+	# - use a fixed position on the screen where we expect no interference of
+	#   areas with a special function provided by a desktop environment
+	#   (dock, hotspots, ...), i.e. away from screen borders and corners.
+	# - make it adapt its size to its children
+	wm deiconify .
+	. configure -width 200 -height 200
 	wm geometry . {}
-	raise .
 	update
     }
 
@@ -184,7 +192,7 @@ namespace eval ::tk::test::generic {
     # Arguments:
     #    subCmd : "export", "import" or "forget"
     #    args   : a sequence of domains that need to be imported/forgotten,
-    #             unused for "export"
+    #	     unused for "export"
     #
     proc testutils {subCmd args} {
 	variable importedDomains
@@ -227,9 +235,7 @@ namespace eval ::tk::test::generic {
 
 	    switch -- $subCmd {
 		import {
-		    if {[info exists importedDomains($ns)] && ($domain in $importedDomains($ns))} {
-			return -code error "testutils domain \"$domain\" was already imported"
-		    } else {
+		    if {(! [info exists importedDomains($ns)]) || ($domain ni $importedDomains($ns))} {
 
 			# import procs
 			if {[catch {
@@ -396,7 +402,7 @@ namespace eval ::tk::test::child {
 		    set interpCount 1
 		}
 		set fd [open "|[list [::tcltest::interpreter] \
-			-geometry +0+0 -name tktest[incr interpCount]] $args" r+]
+			-geometry +100+100 -name tktest[incr interpCount]] $args" r+]
 		puts $fd "puts foo; flush stdout"
 		flush $fd
 		if {[gets $fd data] < 0} {
@@ -473,9 +479,9 @@ namespace eval ::tk::test::colors {
     # otherwise.
     #
     # Arguments:
-    #	w                : name of window in which to check.
+    #	w		: name of window in which to check.
     #	red, green, blue : intensities to use in a trial color allocation
-    #	                   to see if there are colormap entries free.
+    #			   to see if there are colormap entries free.
     #
     proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
@@ -648,7 +654,7 @@ namespace eval ::tk::test::dialog {
 	variable testDialogFont
 	variable iter_after
 	variable testDialog; # On MS Windows, this variable is set at the C level
-	                     # by SetTestDialog() in tkWinDialog.c
+			     # by SetTestDialog() in tkWinDialog.c
 
 	switch -- $stage {
 	    launch {
@@ -912,7 +918,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc handler {type offset count} {
@@ -923,7 +929,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc reallyBadHandler {path type offset count} {
@@ -1035,12 +1041,15 @@ namespace eval ::tk::test::timing {
 	return $result
     }
 
-    proc dt.reset {{granularity milliseconds}} {
-	if {$granularity ni "microseconds milliseconds seconds"} {
-	    return -code error "invalid parameter \"$granularity\", expected \"microseconds\", \"milliseconds\" or \"seconds\""
-	}
+    proc dt.reset {{granularity ""}} {
 	variable dt
-	set dt(granularity) $granularity
+	set usage "Usage: dt.reset ?-granularity granularity?"
+	if {$granularity ne ""} {
+	    if {$granularity ni "microseconds milliseconds seconds"} {
+		return -code error "invalid parameter \"$granularity\", expected \"microseconds\", \"milliseconds\" or \"seconds\""
+	    }
+	    set dt(granularity) $granularity
+	}
 	set dt(t0) [clock $dt(granularity)]
     }
 

@@ -88,11 +88,6 @@ static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
-static Tcl_Encoding keyInputEncoding = NULL;
-					/* The current character encoding for
-					 * keyboard input */
-static int keyInputCharset = -1;	/* The Win32 CHARSET for the keyboard
-					 * encoding */
 static Tcl_Encoding unicodeEncoding = NULL;
 					/* The UNICODE encoding */
 
@@ -118,7 +113,7 @@ static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
 static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
-static void		UpdateInputLanguage(int charset);
+static void		AppendTransChar(TkKeyEvent *xkey, int ch);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
 /*
@@ -146,23 +141,43 @@ TkGetServerInfo(
     TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
-    static char buffer[32]; /* Empty string means not initialized yet. */
+    char buffer[80];
     OSVERSIONINFOW os;
+    typedef int(__stdcall getVersionProc)(void *);
 
-    if (!buffer[0]) {
-	GetVersionExW(&os);
-	/* Write the first character last, preventing multi-thread issues. */
-	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
-		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
-#ifdef _WIN64
-		"Win64"
-#else
-		"Win32"
-#endif
-	);
-	buffer[0] = 'W';
+    /*
+     * Not a performance critical so don't bother with static cache and MT
+     * synchronization
+     */
+
+    /*
+     * GetVersionExW will not return the "real" Windows version so use
+     * RtlGetVersion if available and falling back.
+     */
+    HMODULE handle = GetModuleHandleW(L"NTDLL"); /* No need to free this */
+    getVersionProc *getVersion =
+	(getVersionProc *)(void *)GetProcAddress(handle, "RtlGetVersion");
+
+    os.dwOSVersionInfoSize = sizeof(os);
+    if (getVersion == NULL || getVersion(&os) != 0) {
+	/* Should never happen but ... */
+	if (!GetVersionExW(&os)) {
+	    memset(&os, 0, sizeof(os));
+	}
     }
-    Tcl_AppendResult(interp, buffer, NULL);
+    if (os.dwMajorVersion == 10 &&
+	os.dwBuildNumber >= 22000) {
+	os.dwMajorVersion = 11;
+    }
+    snprintf(buffer, sizeof(buffer), "Windows %d.%d %d %s",
+	(int)os.dwMajorVersion, (int)os.dwMinorVersion, (int)os.dwBuildNumber,
+#ifdef _WIN64
+	"Win64"
+#else
+	"Win32"
+#endif
+    );
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 /*
@@ -235,8 +250,6 @@ TkWinXInit(
     HINSTANCE hInstance)
 {
     INITCOMMONCONTROLSEX comctl;
-    CHARSETINFO lpCs;
-    DWORD lpCP;
 
     if (childClassInitialized != 0) {
 	return;
@@ -267,17 +280,6 @@ TkWinXInit(
 
     if (!RegisterClassW(&childClass)) {
 	Tcl_Panic("Unable to register TkChild class");
-    }
-
-    /*
-     * Initialize input language info
-     */
-
-    if (GetLocaleInfoW(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
-	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
-	    && TranslateCharsetInfo((DWORD *)INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
-	UpdateInputLanguage((int) lpCs.ciCharset);
     }
 
     /*
@@ -469,7 +471,7 @@ TkWinDisplayChanged(
      */
 
     screen->ext_data = (XExtData *)INT2PTR(GetDeviceCaps(dc, PLANES));
-    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
+    screen->root_depth = (int)(GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data));
 
     if (screen->root_visual != NULL) {
 	ckfree(screen->root_visual);
@@ -553,7 +555,7 @@ TkpOpenDisplay(
     display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
     TkWinDisplayChanged(display);
 
-    tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
+    tsdPtr->winDisplay =(TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
@@ -754,14 +756,9 @@ TkWinChildProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    LRESULT result;
+    LRESULT result = 0;
 
     switch (message) {
-    case WM_INPUTLANGCHANGE:
-	UpdateInputLanguage((int) wParam);
-	result = 1;
-	break;
-
     case WM_IME_COMPOSITION:
 	result = 0;
 	if (HandleIMEComposition(hwnd, lParam) == 0) {
@@ -866,7 +863,7 @@ TkTranslateWinEvent(
 	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	if (winPtr) {
-	    TkWinClipboardRender(winPtr->dispPtr, wParam);
+	    TkWinClipboardRender(winPtr->dispPtr, (UINT)wParam);
 	}
 	return 1;
     }
@@ -927,12 +924,17 @@ TkTranslateWinEvent(
 
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
 	if (wParam == VK_PACKET) {
 	    /*
-	     * This will trigger WM_CHAR event(s) with unicode data.
+	     * A character entered via an input method or the touch keyboard.
+	     * TranslateMessage() has converted it to a WM_CHAR message, which
+	     * generates the key events. Do not generate events for the key
+	     * itself, since its keycode is not a virtual key code.
+	     * [Bug f492c3de04]
 	     */
-	    *resultPtr =
-		PostMessageW(hwnd, message, HIWORD(lParam), LOWORD(lParam));
+
 	    return 1;
 	}
 	/* else fall through */
@@ -942,8 +944,6 @@ TkTranslateWinEvent(
     case WM_DESTROYCLIPBOARD:
     case WM_UNICHAR:
     case WM_CHAR:
-    case WM_SYSKEYUP:
-    case WM_KEYUP:
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL:
 	GenerateXEvent(hwnd, message, wParam, lParam);
@@ -1113,7 +1113,7 @@ GenerateXEvent(
     case WM_KEYDOWN:
     case WM_KEYUP: {
 	unsigned int state = GetState(message, wParam, lParam);
-	Time time = TkpGetMS();
+	Time time = TkpGetEventTime();
 	POINT clientPoint;
 	union {DWORD msgpos; POINTS point;} root;	/* Note: POINT and POINTS are different */
 
@@ -1214,12 +1214,12 @@ GenerateXEvent(
 	     * xany.send_event to -1 indicates to the Windows implementation
 	     * of TkpGetString() that this event was generated by windows and
 	     * that the Windows extension xkey.trans_chars is filled with the
-	     * MBCS characters that came from the TranslateMessage call.
+	     * UTF-8 characters that came from the TranslateMessage call.
 	     */
 
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -1;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
 		    WM_SYSCHAR);
 	    break;
@@ -1233,7 +1233,7 @@ GenerateXEvent(
 	     */
 
 	    event.x.type = KeyRelease;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    break;
 
@@ -1259,11 +1259,8 @@ GenerateXEvent(
 	     *	  characters in the IME window. A bunch of simulated
 	     *	  KeyPress/KeyRelease events will be generated, one for each
 	     *	  character. Adjacent WM_CHAR messages may actually specify
-	     *	  the high and low bytes of a multi-byte character -- in that
-	     *	  case the two WM_CHAR messages will be combined into one
-	     *	  event. It is the event-consumer's responsibility to convert
-	     *	  the string returned from XLookupString from system encoding
-	     *	  to UTF-8.
+	     *	  the two halves of a surrogate pair -- in that case the two
+	     *	  WM_CHAR messages will be combined into one event.
 	     * 5. And finally we get the WM_KEYUP for the "confirm typing"
 	     *    character.
 	     */
@@ -1271,36 +1268,14 @@ GenerateXEvent(
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -1;
 	    event.x.xkey.keycode = 0;
-	    if ((int)wParam & 0xff00) {
-		int ch1 = wParam & 0xffff;
+	    event.key.nbytes = 0;
+	    AppendTransChar(&event.key, (int) (wParam & 0xFFFF));
+	    if (event.key.nbytes == 0) {
+		/*
+		 * The first half of a surrogate pair: wait for the second.
+		 */
 
-		if ((ch1 & 0xfc00) == 0xd800) {
-		    tsdPtr->surrogateBuffer = ch1;
-		    return;
-		}
-		if ((ch1 & 0xfc00) == 0xdc00) {
-		    ch1 = ((tsdPtr->surrogateBuffer & 0x3ff) << 10) |
-			    (ch1 & 0x3ff) | 0x10000;
-		    tsdPtr->surrogateBuffer = 0;
-		}
-		event.x.xany.send_event = -3;
-		event.key.nbytes = 0;
-		event.x.xkey.keycode = ch1;
-	    } else {
-		event.key.nbytes = 1;
-		event.key.trans_chars[0] = (char) wParam;
-
-		if (IsDBCSLeadByte((BYTE) wParam)) {
-		    MSG msg;
-
-		    if ((PeekMessageW(&msg, NULL, WM_CHAR, WM_CHAR,
-			    PM_NOREMOVE) != 0)
-			    && (msg.message == WM_CHAR)) {
-			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
-			event.key.nbytes = 2;
-			event.key.trans_chars[1] = (char) msg.wParam;
-		   }
-		}
+		return;
 	    }
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 	    event.x.type = KeyRelease;
@@ -1309,7 +1284,7 @@ GenerateXEvent(
 	case WM_UNICHAR: {
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -3;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 	    event.x.type = KeyRelease;
@@ -1417,6 +1392,52 @@ GetState(
 /*
  *----------------------------------------------------------------------
  *
+ * AppendTransChar --
+ *
+ *	Append a character from a WM_CHAR message to the translated
+ *	characters of a key event, as UTF-8.  A surrogate pair, which arrives
+ *	in two WM_CHAR messages, is combined into one character.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates xkey->trans_chars, xkey->nbytes and the surrogate buffer.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+AppendTransChar(
+    TkKeyEvent *xkey,
+    int ch)			/* UTF-16 code unit. */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    char buf[4];
+    int len;
+
+    if ((ch & 0xFC00) == 0xD800) {
+	tsdPtr->surrogateBuffer = ch;
+	return;
+    }
+    if ((ch & 0xFC00) == 0xDC00) {
+	if (tsdPtr->surrogateBuffer == 0) {
+	    return;
+	}
+	ch = ((tsdPtr->surrogateBuffer & 0x3FF) << 10) | (ch & 0x3FF) | 0x10000;
+	tsdPtr->surrogateBuffer = 0;
+    }
+    len = Tcl_UniCharToUtf(ch, buf);
+    if (xkey->nbytes + len <= (int) sizeof(xkey->trans_chars)) {
+	memcpy(xkey->trans_chars + xkey->nbytes, buf, len);
+	xkey->nbytes += len;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GetTranslatedKey --
  *
  *	Retrieves WM_CHAR messages that are placed on the system queue by the
@@ -1443,12 +1464,12 @@ GetTranslatedKey(
     xkey->nbytes = 0;
 
     while ((xkey->nbytes < sizeof(xkey->trans_chars))
-	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
+	    && (PeekMessageW(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
 	if (msg.message != type) {
 	    break;
 	}
 
-	GetMessageA(&msg, NULL, type, type);
+	GetMessageW(&msg, NULL, type, type);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
@@ -1460,108 +1481,10 @@ GetTranslatedKey(
 	if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
 	    xkey->keyEvent.state = 0;
 	}
-	xkey->trans_chars[xkey->nbytes++] = (char) msg.wParam;
-
-	if (((unsigned short) msg.wParam) > ((unsigned short) 0xff)) {
-	    /*
-	     * Some "addon" input devices, such as the popular PenPower
-	     * Chinese writing pad, generate 16 bit values in WM_CHAR messages
-	     * (instead of passing them in two separate WM_CHAR messages
-	     * containing two 8-bit values.
-	     */
-
-	    xkey->trans_chars[xkey->nbytes] = (char) (msg.wParam >> 8);
-	    xkey->nbytes ++;
-	}
+	AppendTransChar(xkey, (int) (msg.wParam & 0xFFFF));
     }
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * UpdateInputLanguage --
- *
- *	Gets called when a WM_INPUTLANGCHANGE message is received by the Tk
- *	child window function. This message is sent by the Input Method Editor
- *	system when the user chooses a different input method. All subsequent
- *	WM_CHAR messages will contain characters in the new encoding. We
- *	record the new encoding so that TkpGetString() knows how to correctly
- *	translate the WM_CHAR into unicode.
- *
- * Results:
- *	Records the new encoding in keyInputEncoding.
- *
- * Side effects:
- *	Old value of keyInputEncoding is freed.
- *
- *----------------------------------------------------------------------
- */
 
-static void
-UpdateInputLanguage(
-    int charset)
-{
-    CHARSETINFO charsetInfo;
-    Tcl_Encoding encoding;
-    char codepage[4 + TCL_INTEGER_SPACE];
-
-    if (keyInputCharset == charset) {
-	return;
-    }
-    if (TranslateCharsetInfo((DWORD*)INT2PTR(charset), &charsetInfo,
-	    TCI_SRCCHARSET) == 0) {
-	/*
-	 * Some mysterious failure.
-	 */
-
-	return;
-    }
-
-    if (charsetInfo.ciACP == CP_UTF8) {
-	strcpy(codepage, "utf-8");
-    } else {
-	snprintf(codepage, sizeof(codepage), "cp%d", charsetInfo.ciACP);
-    }
-
-    if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
-	/*
-	 * The encoding is not supported by Tcl.
-	 */
-
-	return;
-    }
-
-    if (keyInputEncoding != NULL) {
-	Tcl_FreeEncoding(keyInputEncoding);
-    }
-
-    keyInputEncoding = encoding;
-    keyInputCharset = charset;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGetKeyInputEncoding --
- *
- *	Returns the current keyboard input encoding selected by the user (with
- *	WM_INPUTLANGCHANGE events).
- *
- * Results:
- *	The current keyboard input encoding.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Tcl_Encoding
-TkWinGetKeyInputEncoding(void)
-{
-    return keyInputEncoding;
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1643,7 +1566,7 @@ HandleIMEComposition(
     n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	WCHAR *buff = (WCHAR *) ckalloc(n);
+	WCHAR *buff = (WCHAR *)ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
@@ -1671,7 +1594,7 @@ HandleIMEComposition(
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
 	event.xkey.subwindow = None;
 	event.xkey.state = TkWinGetModifierState();
-	event.xkey.time = TkpGetMS();
+	event.xkey.time = TkpGetEventTime();
 	event.xkey.same_screen = True;
 
 	for (i=0; i<n; ) {
@@ -1806,6 +1729,30 @@ unsigned long
 TkpGetMS(void)
 {
     return GetTickCount();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetEventTime --
+ *
+ *	The time of the message which is currently being processed, in the
+ *	same units as TkpGetMS(). It is earlier than the current time if the
+ *	message waited in the queue while a script was running. [Bug 1954237]
+ *
+ * Results:
+ *	Number of milliseconds.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+unsigned long
+TkpGetEventTime(void)
+{
+    return (unsigned long) GetMessageTime();
 }
 
 /*
@@ -1952,11 +1899,12 @@ Tk_SetCaretPos(
  *----------------------------------------------------------------------
  */
 
-long
-Tk_GetUserInactiveTime(
+long long
+TkGetUserInactiveTime(
      TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
+    DWORD inactive;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1967,7 +1915,9 @@ Tk_GetUserInactiveTime(
      * Last input info is in milliseconds, since restart time.
      */
 
-    return (GetTickCount()-li.dwTime);
+    inactive = GetTickCount() - li.dwTime;
+
+    return (long long)inactive;
 }
 
 /*

@@ -1373,7 +1373,7 @@ TkTextWindowIndex(
      * reachable from this text widget (it may be reachable from a peer).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

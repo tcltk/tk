@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.0
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=0
-TK_PATCH_LEVEL=".4"
+TK_PATCH_LEVEL=".5"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -41,6 +41,18 @@ if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
     AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}])
 fi
+
+#------------------------------------------------------------------------
+# Compile against the Tcl source tree if it is accessible, otherwise use
+# the installed Tcl headers.
+#------------------------------------------------------------------------
+
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+    TCL_INCLUDES='-I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR}'
+else
+    TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+fi
+AC_SUBST(TCL_INCLUDES)
 
 SC_PROG_TCLSH
 SC_BUILD_TCLSH
@@ -76,6 +88,7 @@ if test "${CFLAGS+set}" != "set" ; then
 fi
 
 AC_PROG_CC
+AC_PROG_CPP
 AC_C_INLINE
 
 #------------------------------------------------------------------------
@@ -350,6 +363,7 @@ if test $tk_aqua = no; then
 	[enable_xft=$enableval], [enable_xft="default"])
     XFT_CFLAGS=""
     XFT_LIBS=""
+    XFT_DEPS=""
     if test "$enable_xft" = "no" ; then
 	AC_MSG_RESULT([$enable_xft])
     else
@@ -369,19 +383,20 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
 		found_xft=no
 	    ],[#include <X11/Xlib.h>])
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
+	    XFT_DEPS="xft fontconfig"
 	fi
 	dnl make sure that linking against Xft libraries finds freetype
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    AC_CHECK_LIB(Xft, XftFontOpen, [], [
 		found_xft=no
 	    ])
@@ -393,7 +408,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
 	    AC_CHECK_LIB(fontconfig, FcFontSort, [
 		XFT_LIBS="$XFT_LIBS -lfontconfig"
 	    ], [])
@@ -408,6 +423,7 @@ if test $tk_aqua = no; then
 	    enable_xft=no
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
+	    XFT_DEPS=""
 	else
 	    enable_xft=yes
 	fi
@@ -420,6 +436,7 @@ if test $tk_aqua = no; then
     fi
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
+    AC_SUBST(XFT_DEPS)
     AC_SUBST(UNIX_FONT_OBJS)
 fi
 
@@ -445,7 +462,7 @@ if test $tk_aqua = no; then
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	AC_MSG_RESULT([$found_cups])
@@ -454,7 +471,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(cups/cups.h, [], [
 		found_cups=no
 		CUPS_CFLAGS=""
@@ -697,7 +714,7 @@ if test "${ZIPFS_BUILD}" = 1; then
        INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
      else
-       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])\
+       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])
        INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
     fi
@@ -717,9 +734,8 @@ AC_SUBST(INSTALL_MSGS)
 #       stub support.
 #--------------------------------------------------------------------
 
-# Replace ${VERSION} with contents of ${TK_VERSION}
-    TK_STUB_LIB_FILE="libtkstub.a"
-    TK_STUB_LIB_FLAG="-ltkstub"
+TK_STUB_LIB_FILE="libtkstub.a"
+TK_STUB_LIB_FLAG="-ltkstub"
 eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"

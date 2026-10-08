@@ -686,7 +686,17 @@ GridForgetRemoveCommand(
 		if (contentPtr->flags & REQUESTED_RELAYOUT) {
 		    Tcl_CancelIdleCall(ArrangeGrid, contentPtr);
 		}
-		contentPtr->flags = 0;
+		/*
+		 * The flags field is shared with this window's container
+		 * role: DONT_PROPAGATE ([grid propagate $w 0]) and
+		 * ALLOCED_CONTAINER must survive a [grid forget] of the
+		 * window as content, otherwise a container that is
+		 * forgotten from its own container silently starts
+		 * propagating its content's size again once re-gridded.
+		 * Only clear the relayout bit, whose idle call was
+		 * cancelled above.
+		 */
+		contentPtr->flags &= ~REQUESTED_RELAYOUT;
 		contentPtr->sticky = 0;
 	    } else {
 		/*
@@ -1052,7 +1062,7 @@ GridRowColumnConfigureCommand(
 	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retrieving options only integer indices are "
-		    "allowed)", NULL);
+		    "allowed)", (char *)NULL);
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_FORMAT", (char *)NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;

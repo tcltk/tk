@@ -41,7 +41,7 @@ set other {}
 set 32bitsVisual {}
 if {[llength $avail] > 1} {
     foreach visual $avail {
-	if {$visual != $default} {
+	if {$visual ne $default} {
 	    set other $visual
 	    break
 	}

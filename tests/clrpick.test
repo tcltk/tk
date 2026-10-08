@@ -38,19 +38,19 @@ if {[testConstraint defaultPseudocolor8]} {
     canvas .c
     pack .c -expand 1 -fill both
     while {$i<$numcolors} {
-	set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
-	.c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
+	set color \#[format "%02x%02x%02x" $i [expr {$i+1}] [expr {$i+3}]]
+	.c create rectangle [expr {10+$i}] [expr {10+$i}] [expr {50+$i}] [expr {50+$i}] -fill $color -outline $color
 	incr i
     }
     set i 0
     while {$i<$numcolors} {
 	set color [.c itemcget $i -fill]
-	if {$color != ""} {
+	if {$color ne ""} {
 	    foreach {r g b} [winfo rgb . $color] {}
-	    set r [expr $r/256]
-	    set g [expr $g/256]
-	    set b [expr $b/256]
-	    if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
+	    set r [expr {$r/256}]
+	    set g [expr {$g/256}]
+	    set b [expr {$b/256}]
+	    if {"$color" ne "#[format %02x%02x%02x $r $g $b]"} {
 		testConstraint colorsLeftover 0
 	    }
 	}

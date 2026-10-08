@@ -7,19 +7,18 @@
  *
  * Copyright © 1995-1996 Microsoft Corp.
  * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
- * Copyright © 2020 Eric Boudaillier.
- * Copyright © 2020 Francois Vogel.
+ * Copyright © 2020 Kevin Walzer
+ * Copyright © 2020 Eric Boudaillier
+ * Copyright © 2020 Francois Vogel
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWinInt.h"
 #include "tkInt.h"
 #include <windows.h>
-#include <shellapi.h>
 #include "tkWin.h"
-#include "tkWinInt.h"
 #include "tkWinIco.h"
 
 /*
@@ -46,7 +45,7 @@ typedef struct IcoInfo {
     struct IcoInfo *nextPtr;
 } IcoInfo;
 
-/* Per-interp struture */
+/* Per-interp structure */
 typedef struct IcoInterpInfo {
     HWND hwnd;                  /* Handler window */
     int counter;                /* Counter for IcoInfo id generation */
@@ -381,7 +380,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-	"\" does not exist", NULL);
+	"\" does not exist", (char *)NULL);
     return NULL;
 }
 
@@ -964,7 +963,7 @@ WinSystrayCmd(
 		if (i+1 >= objc) {
 		    Tcl_AppendResult(interp,
 			    "missing value for option \"", Tcl_GetString(objv[i]),
-			    "\"", NULL);
+			    "\"", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		switch (opt) {
@@ -1083,7 +1082,7 @@ WinSysNotifyCmd(
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
 	Tcl_AppendResult(interp, "unknown subcommand \"", Tcl_GetString(objv[1]),
-		"\": must be notify", NULL);
+		"\": must be notify", (char *)NULL);
 	return TCL_ERROR;
     }
     if (objc != 5) {
@@ -1149,7 +1148,7 @@ WinIcoInit(
 	return TCL_ERROR;
     }
 
-    icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
+    icoInterpPtr = (IcoInterpInfo*)ckalloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
     icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();

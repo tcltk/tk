@@ -2,6 +2,21 @@
 # Diverse tests for ttk
 #
 
+# NOTES
+#
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -480,11 +495,11 @@ test ttk-9.8 "-textvariable overrides -text" -body {
 test ttk-9.9 "default for -justify" -body {
     ttk::label .tl
     .tl cget -justify
-} -cleanup { destroy .tl } -result "left"
+} -cleanup { destroy .tl } -result ""
 test ttk-9.10 "default for -anchor" -body {
     ttk::label .tl
     .tl cget -anchor
-} -cleanup { destroy .tl } -result "w"
+} -cleanup { destroy .tl } -result ""
 
 #
 # Frame widget tests:
@@ -702,6 +717,53 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     # depending on platform, versions, improvements...)
     expr {[llength [ttk::style theme styles alt]] > 0}
 } -result 1
+
+test ttk-17.1 {Toolbutton text is centered in all built-in themes, also multi-line text, Bug 1867834} -setup {
+    set oldTheme [ttk::style theme use]
+} -body {
+    set res {}
+    foreach theme {default alt clam classic winnative xpnative vista aqua} {
+	if {$theme in [ttk::style theme names]} {
+	    ttk::style theme use $theme
+	    foreach option {-anchor -justify} {
+		if {[ttk::style lookup Toolbutton $option] ne "center"} {
+		    lappend res $theme $option
+		}
+	    }
+	}
+    }
+    set res
+} -cleanup {
+    ttk::style theme use $oldTheme
+    unset -nocomplain oldTheme res theme option
+} -result {}
+
+test ttk-17.2 {Toolbutton looks pressed when selected, Bug 3414673} -setup {
+    set oldTheme [ttk::style theme use]
+} -body {
+    set res {}
+    foreach theme {default alt clam classic winnative xpnative vista aqua} {
+	if {$theme in [ttk::style theme names]} {
+	    ttk::style theme use $theme
+	    # The contents are shifted if they are shifted in a TButton.
+	    set b [ttk::style lookup TButton -shiftrelief {} 0]
+	    set t [ttk::style lookup Toolbutton -shiftrelief {} 0]
+	    if {($b > 0) != ($t > 0)} {
+		lappend res $theme -shiftrelief
+	    }
+	    # The clam border does not show the relief, only the background.
+	    if {$theme eq "clam" &&
+		    [ttk::style lookup Toolbutton -background selected] ne
+		    [ttk::style lookup Toolbutton -background pressed]} {
+		lappend res $theme -background
+	    }
+	}
+    }
+    set res
+} -cleanup {
+    ttk::style theme use $oldTheme
+    unset -nocomplain oldTheme res theme b t
+} -result {}
 
 #
 # TESTFILE CLEANUP
