@@ -1200,6 +1200,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     if (Tk_IsTopLevel(tkwin)) {
 	parentAcc = tk_root_accessible;
+	atk_object_set_parent(accessible, parentAcc);
 
 	if (!g_list_find(toplevel_accessible_objects, accessible)) {
 	    toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
