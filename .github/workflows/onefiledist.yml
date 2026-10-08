@@ -173,7 +173,7 @@ jobs:
       - name: Install MSYS2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: UCRT64
+          msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
         uses: actions/checkout@v7
