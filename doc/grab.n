@@ -72,6 +72,16 @@ interpreter which receives key or mouse events.  Windows belonging to the
 same process but created by different interpreters continue to receive
 key and mouse events normally.
 .PP
+On Windows a global grab does not lock out other applications: the
+pointer is only captured while it is over a window of the grabbing
+application or a mouse button is pressed, and keyboard events are only
+redirected within the application.  During a grab, a toplevel window
+outside the grab subtree cannot be activated: clicking it, raising or
+deiconifying it gives the focus to the grab window instead, which is
+brought to the front.  Its system menu commands other than moving,
+sizing and restoring are ignored, and toplevel windows in the grab
+subtree other than the main window cannot be minimized.
+.PP
 Grabs apply to particular displays.  If an application has windows
 on multiple displays then it can establish a separate grab on each
 display.
