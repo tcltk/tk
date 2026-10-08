@@ -95,6 +95,18 @@ Tk_CanvasTkwin(
 }
 
 /*
+ * Round a coordinate in the same way as in the bounding boxes of the items.
+ * [Bug ad9a023e45]
+ */
+
+static inline double
+RoundCoord(
+    double x)
+{
+    return (x >= 0) ? floor(x + 0.5) : ceil(x - 0.5);
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * Tk_CanvasDrawableCoords --
@@ -125,12 +137,7 @@ Tk_CanvasDrawableCoords(
 {
     double tmp;
 
-    tmp = x - Canvas(canvas)->drawableXOrigin;
-    if (tmp > 0) {
-	tmp += 0.5;
-    } else {
-	tmp -= 0.5;
-    }
+    tmp = RoundCoord(x) - Canvas(canvas)->drawableXOrigin;
     if (tmp > 32767) {
 	*drawableXPtr = 32767;
     } else if (tmp < -32768) {
@@ -139,12 +146,7 @@ Tk_CanvasDrawableCoords(
 	*drawableXPtr = (short) tmp;
     }
 
-    tmp = y - Canvas(canvas)->drawableYOrigin;
-    if (tmp > 0) {
-	tmp += 0.5;
-    } else {
-	tmp -= 0.5;
-    }
+    tmp = RoundCoord(y) - Canvas(canvas)->drawableYOrigin;
     if (tmp > 32767) {
 	*drawableYPtr = 32767;
     } else if (tmp < -32768) {
@@ -184,12 +186,7 @@ Tk_CanvasWindowCoords(
 {
     double tmp;
 
-    tmp = x - Canvas(canvas)->xOrigin;
-    if (tmp > 0) {
-	tmp += 0.5;
-    } else {
-	tmp -= 0.5;
-    }
+    tmp = RoundCoord(x) - Canvas(canvas)->xOrigin;
     if (tmp > 32767) {
 	*screenXPtr = 32767;
     } else if (tmp < -32768) {
@@ -198,12 +195,7 @@ Tk_CanvasWindowCoords(
 	*screenXPtr = (short) tmp;
     }
 
-    tmp = y - Canvas(canvas)->yOrigin;
-    if (tmp > 0) {
-	tmp += 0.5;
-    } else {
-	tmp -= 0.5;
-    }
+    tmp = RoundCoord(y) - Canvas(canvas)->yOrigin;
     if (tmp > 32767) {
 	*screenYPtr = 32767;
     } else if (tmp < -32768) {
