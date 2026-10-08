@@ -314,9 +314,6 @@ TkFocusFilterEvent(
 	 *	change. For FocusIn we may see this when focus goes into an
 	 *	embedded child. We don't care about this, although we may end
 	 *	up getting a NotifyPointer later.
-	 * NotifyInferior - focus is coming to us from an embedded child. When
-	 *	focus is on an embedded focus, we still think we have the
-	 *	focus, too, so this message doesn't change our state.
 	 * NotifyPointerRoot - should never happen because this is sent to the
 	 *	root window.
 	 *
@@ -329,12 +326,13 @@ TkFocusFilterEvent(
 	 *	has been set to the root window but the mouse is over this
 	 *	toplevel. We take the focus implicitly (probably no window
 	 *	manager)
+	 * NotifyInferior - focus is coming to us from an embedded child, see
+	 *	below.
 	 */
 
 	if ((eventPtr->xfocus.detail == NotifyVirtual)
 		|| (eventPtr->xfocus.detail == NotifyNonlinearVirtual)
-		|| (eventPtr->xfocus.detail == NotifyPointerRoot)
-		|| (eventPtr->xfocus.detail == NotifyInferior)) {
+		|| (eventPtr->xfocus.detail == NotifyPointerRoot)) {
 	    return retValue;
 	}
     } else if (eventPtr->type == FocusOut) {
@@ -430,6 +428,21 @@ TkFocusFilterEvent(
     }
 
     if (eventPtr->type == FocusIn) {
+	if (eventPtr->xfocus.detail == NotifyInferior) {
+	    /*
+	     * The X focus came back from an embedded application (e.g. the
+	     * window manager set it to the toplevel after a click). We still
+	     * think we have the focus, so only pass the X focus on to the
+	     * embedded application again, by generating a FocusIn event for
+	     * the container. [Bug a4fa3ad2d6]
+	     */
+
+	    if ((newFocusPtr == displayFocusPtr->focusWinPtr)
+		    && (newFocusPtr->flags & TK_CONTAINER)) {
+		GenerateFocusEvents(NULL, newFocusPtr);
+	    }
+	    return retValue;
+	}
 	GenerateFocusEvents(displayFocusPtr->focusWinPtr, newFocusPtr);
 	displayFocusPtr->focusWinPtr = newFocusPtr;
 	dispPtr->focusPtr = newFocusPtr;
