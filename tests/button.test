@@ -4074,6 +4074,27 @@ test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destr
     destroy .top.b .top
 } -result {}
 
+test button-14.2 {Alt-space does not invoke the button [1692755]} -body {
+    set res {}
+    button .b -command {lappend res b}
+    checkbutton .c -command {lappend res c}
+    radiobutton .r -command {lappend res r}
+    pack .b .c .r
+    update
+    foreach w {.b .c .r} {
+	focus -force $w
+	update
+	event generate $w <Alt-space>
+	event generate $w <space>
+    }
+    after 200 {set done 1}
+    vwait done
+    set res
+} -cleanup {
+    destroy .b .c .r
+    unset -nocomplain res done
+} -result {c r b}
+
 test button-15.1 {Bug [5d991b822e]} {
     # Want this not to segfault
     set var INIT

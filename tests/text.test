@@ -8917,6 +8917,50 @@ test text-40.1 {Extending selection with mouse going outside the widget - Bug a9
 } -cleanup {
     destroy .t
 } -result {1.0}
+test text-44.1 {Click to the right of the end of a line - Bug 13aabdb3c1} -setup {
+    pack [text .t -width 40 -height 10]
+    .t insert end "short\nsecond line\n"
+    update
+} -body {
+    set x [expr {[winfo width .t] - 10}]
+    set y [expr {[lindex [.t bbox 1.0] 1] + 5}]
+    event generate .t <Button-1> -x $x -y $y
+    event generate .t <ButtonRelease-1> -x $x -y $y
+    set res [.t index insert]
+    event generate .t <Button-1> -x 2 -y $y
+    event generate .t <B1-Motion> -x $x -y $y
+    event generate .t <ButtonRelease-1> -x $x -y $y
+    lappend res {*}[.t tag ranges sel]
+} -cleanup {
+    destroy .t
+} -result {1.5 1.0 1.5}
+
+
+test text-45.1 {no scroll command before the text is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    text .top.t -width 20 -height 10 -wrap none \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    .top.t insert end [string repeat [string repeat x 40]\n 19]
+    pack .top.t
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.t
+    update
+    # The line heights are computed asynchronously: the first y values after
+    # mapping may be estimates, only the last ones are final.
+    set last {}
+    foreach {cmd first end} $log {
+	dict set last $cmd [list $first $end]
+    }
+    lappend res [dict get $last y] [dict get $last x]
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res last cmd first end
+} -result {{} {0.0 0.5} {0.0 0.5}}
 
 test text-41.1 {TextChecksumCmd, single line} -setup {
     destroy .t

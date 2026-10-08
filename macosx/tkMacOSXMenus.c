@@ -18,6 +18,16 @@
 static void		GenerateEditEvent(const char *name);
 static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
+static void ShowAboutIdleTask(void *clientData) {
+    Tcl_Interp *interp = (Tcl_Interp *) clientData;
+    int code = Tcl_EvalEx(interp, "tkAboutDialog", TCL_INDEX_NONE,
+			  TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+    Tcl_ResetResult(interp);
+}
+
 
 #pragma mark TKApplication(TKMenus)
 
@@ -205,13 +215,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	[super orderFrontStandardAboutPanel:NSApp];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", TCL_INDEX_NONE,
-		TCL_EVAL_GLOBAL);
-
-	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
-	}
-	Tcl_ResetResult(_eventInterp);
+	Tcl_DoWhenIdle(ShowAboutIdleTask, _eventInterp);
     }
 }
 

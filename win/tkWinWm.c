@@ -2149,7 +2149,7 @@ UpdateWrapper(
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
     wmPtr->flags |= WM_APPEARANCE_PENDING;
-    Tcl_DoWhenIdle(AppearanceIdleProc, (void *)winPtr);
+    Tcl_DoWhenIdle(AppearanceIdleProc, winPtr);
     if (winPtr->flags & TK_EMBEDDED &&
 	    SendMessageW(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0)) {
 	SendMessageW(wmPtr->wrapper, TK_GEOMETRYREQ,
@@ -8152,6 +8152,14 @@ WmProc(
 	result = 0;
 	goto done;
 
+    case WM_UAHDRAWMENU:
+    case WM_UAHDRAWMENUITEM:
+    case WM_UAHMEASUREMENUITEM:
+	if (TkWinHandleMenubarDraw(hwnd, message, wParam, lParam, &result)) {
+	    goto done;
+	}
+	break;
+
     case WM_ENTERSIZEMOVE:
 	inMoveSize = 1;
 
@@ -8415,6 +8423,9 @@ WmProc(
 	}
     } else {
 	result = DefWindowProcW(hwnd, message, wParam, lParam);
+    }
+    if (message == WM_NCPAINT || message == WM_NCACTIVATE) {
+	TkWinDrawMenubarLine(hwnd);
     }
 
   done:
@@ -8795,10 +8806,12 @@ TkpWinToplevelDeiconify(
 
     /*
      * If we were in the ZoomState (maximized), 'wm deiconify' should not
-     * cause the window to shrink
+     * cause the window to shrink. A withdrawn window has lost its ZoomState,
+     * but a hidden wrapper keeps its maximized style.
      */
 
-    if (wmPtr->hints.initial_state == ZoomState) {
+    if (wmPtr->hints.initial_state == ZoomState
+	    || (wmPtr->wrapper && IsZoomed(wmPtr->wrapper))) {
 	TkpWmSetState(winPtr, ZoomState);
     } else {
 	TkpWmSetState(winPtr, NormalState);

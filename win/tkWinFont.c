@@ -35,8 +35,6 @@
 /* Cover the full Unicode range (0x110000). */
 #define FONTMAP_NUMCHARS	0x110000
 #define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
-/* Helper macro: Check if character is whitespace that gets absorbed at EOL. */
-#define IsEOLSpace(wc) ((wc) == L' ' || (wc) == L'\t')
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -1494,113 +1492,52 @@ Tk_MeasureCharsInContext(
 	bestChars = wRangeEnd - wRangeStart;
     } else {
 	/*
-	 * Bounded search: find how many characters fit in maxLength pixels.
+	 * Bounded search: find how many characters fit in maxLength pixels,
+	 * applying the TK_PARTIAL_OK, TK_WHOLE_WORDS and TK_AT_LEAST_ONE
+	 * flags in the same way as the other font backends. A word boundary
+	 * is the start of a run of spaces that follows a non-space, so that
+	 * the spaces at the end of a line are not counted in its width.
 	 */
-	int ci;
+	int ci = wRangeStart;
+	int termChars = 0, termX = 0, sawNonSpace = 0;
 
-	for (ci = wRangeStart; ci <= wRangeEnd; ci++) {
-	    int endX = GetVisualXForLogicalIndex(
-		runs, nRuns, runOriginX, totalChars,
-		ClampIndex(ci, totalChars));
-	    int width = abs(endX - startX);
+	while (ci < wRangeEnd) {
+	    WCHAR wc = wfull[ci];
+	    int next = ci + 1;
+	    int newX;
 
-	    if (width > maxLength && bestChars > 0) {
-		break;
+	    if (IS_HIGH_SURROGATE(wc) && next < wRangeEnd
+		    && IS_LOW_SURROGATE(wfull[next])) {
+		next++;
 	    }
-
-	    bestChars = ci - wRangeStart;
-	    bestWidth = width;
-
-	    if (width == maxLength) {
-		break;
-	    }
-	}
-
-	/*
-	 * TK_WHOLE_WORDS rollback (UTF-16 safe).
-	 *
-	 * When wrapping on word boundaries, we need to handle trailing
-	 * spaces correctly according to legacy Tk behavior:
-	 * - Include the breaking space in the line's character count.
-	 * - But absorb the space's width for the next line.
-	 *
-	 * Old behavior: lastBoundary pointed AT the space.
-	 * New behavior: we include the space in wcCount for proper indexing.
-	 */
-	if ((flags & TK_WHOLE_WORDS) &&
-	    bestChars > 0 &&
-	    bestChars < (wRangeEnd - wRangeStart))
-	{
-	    int lastBoundary = -1;
-	    int i;
-
-	    /* Find the last word boundary (space/tab/newline). */
-	    for (i = wRangeStart; i < wRangeStart + bestChars; i++) {
-		WCHAR wc = wfull[i];
-		if (IsEOLSpace(wc) || wc == L'\n' || wc == L'\r') {
-		    lastBoundary = i;
+	    if (wc < 256 && isspace(wc)) {
+		if (sawNonSpace) {
+		    termChars = ci - wRangeStart;
+		    termX = bestWidth;
+		    sawNonSpace = 0;
 		}
+	    } else {
+		sawNonSpace = 1;
 	    }
-
-	    if (lastBoundary >= 0) {
-		/*
-		 * CRITICAL FIX:
-		 * lastBoundary is the INDEX of the space character.
-		 * For proper wrapping behavior that matches the tests:
-		 *
-		 * "000 000" wrapping at 5ax should:
-		 * - Line 1: "000 " (4 chars including space, but width of "000")
-		 * - Line 2: "000"
-		 *
-		 * The space is INCLUDED in the char count but its width
-		 * is absorbed (not counted) at end of line.
-		 */
-		int wcCount;
-		WCHAR boundaryChar = wfull[lastBoundary];
-
-		if (IsEOLSpace(boundaryChar)) {
-		    /*
-		     * Include the space in the character count.
-		     * The width calculation below will measure UP TO but
-		     * NOT INCLUDING the space's width.
-		     */
-		    wcCount = (lastBoundary + 1) - wRangeStart;
-
-		    /*
-		     * Measure width up to (but not including) the space.
-		     * This is the "absorb spaces at eol" behavior.
-		     */
-		    int wordEndX = GetVisualXForLogicalIndex(
-			runs, nRuns, runOriginX, totalChars,
-			ClampIndex(wRangeStart + wcCount - 1, totalChars));
-		    bestWidth = abs(wordEndX - startX);
-		} else {
-		    /* Newline/other: don't include it. */
-		    wcCount = lastBoundary - wRangeStart;
-		    int wordEndX = GetVisualXForLogicalIndex(
-			runs, nRuns, runOriginX, totalChars,
-			ClampIndex(wRangeStart + wcCount, totalChars));
-		    bestWidth = abs(wordEndX - startX);
-		}
-
-		bestChars = wcCount;
-	    }
-	}
-
-	/*
-	 * TK_AT_LEAST_ONE: even if nothing fits, return at least one character.
-	 */
-	if ((flags & TK_AT_LEAST_ONE) &&
-	    bestChars == 0 &&
-	    wRangeEnd > wRangeStart)
-	{
-	    bestChars = 1;
-	    {
-		int oneX = GetVisualXForLogicalIndex(
+	    newX = abs(GetVisualXForLogicalIndex(
 		    runs, nRuns, runOriginX, totalChars,
-		    ClampIndex(wRangeStart + 1, totalChars));
-		bestWidth = abs(oneX - startX);
+		    ClampIndex(next, totalChars)) - startX);
+	    if (newX > maxLength) {
+		if ((flags & TK_PARTIAL_OK) ||
+			((flags & TK_AT_LEAST_ONE) && bestChars == 0)) {
+		    bestWidth = newX;
+		    bestChars = next - wRangeStart;
+		} else if (flags & TK_WHOLE_WORDS) {
+		    if (!((flags & TK_AT_LEAST_ONE) && termX == 0)) {
+			bestWidth = termX;
+			bestChars = termChars;
+		    }
+		}
+		break;
 	    }
+	    bestWidth = newX;
+	    bestChars = next - wRangeStart;
+	    ci = next;
 	}
     }
 

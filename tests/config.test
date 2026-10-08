@@ -144,18 +144,20 @@ test config-1.9 {Tk_CreateOptionTable - chained tables} -constraints {
 test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
     testobjconfig
 } -body {
-    set x {}
     testobjconfig chain1 .a
     testobjconfig chain2 .b
     testobjconfig chain3 .c
     deleteWindows
+    # The reference counts also include the option objects cached by
+    # previous tests, so compare with the counts before the deletion.
+    lassign [testobjconfig info chain2] n2 - - n1
     testobjconfig delete chain3
-    lappend x [testobjconfig info chain2] [testobjconfig info chain1]
-    testobjconfig delete chain2
-    lappend x [testobjconfig info chain2] [testobjconfig info chain1]
+    lassign [testobjconfig info chain2] m2 - - m1
+    list [expr {$n2 - $m2}] [expr {$n1 - $m1}] \
+	    [lrange [testobjconfig info chain2] 1 2] [lrange [testobjconfig info chain1] 1 end]
 } -cleanup {
     killTables
-} -result {{3 4 -three 2 2 -one} {2 2 -one} {} {2 2 -one}}
+} -result {1 0 {4 -three} {2 -one}}
 
 test config-3.1 {Tk_InitOptions - priority of chained tables} -constraints {
     testobjconfig

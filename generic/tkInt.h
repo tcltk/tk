@@ -543,6 +543,8 @@ typedef struct TkDisplay {
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
+    Tcl_HashTable inputXfsTable;/* Maps pixel sizes to XFontSets for
+				 * over-the-spot XIM. */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
     Tcl_Size refCount;		/* Reference count of how many Tk applications
@@ -568,6 +570,10 @@ typedef struct TkDisplay {
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
     int ximGeneration;          /* Used to invalidate XIC */
+    Tcl_HashTable deletedWinTable;
+				/* Maps from X window ids of recently deleted
+				 * windows to the serial number of the last
+				 * request made before the deletion. */
 } TkDisplay;
 
 /*
@@ -1183,6 +1189,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
+MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
 MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
