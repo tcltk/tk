@@ -666,16 +666,24 @@ proc winfontIsolatedSum {font} {
     }
     return $sum
 }
-# Leftmost column of the label holding a saturated pixel (a color layer), or -1.
+# Leftmost column of the label where at least a third of the sampled rows hold a
+# saturated pixel: the body of a color emoji, never the one-pixel ClearType fringe of a
+# black glyph.  -1 if none.
 proc winfontLeftmostColored {w} {
     set width [winfo width $w]
     set height [winfo height $w]
     for {set x 1} {$x < $width} {incr x 2} {
+	set rows 0
+	set colored 0
 	for {set y 1} {$y < $height} {incr y 3} {
+	    incr rows
 	    scan [testwinpixel $w $x $y] "#%2x%2x%2x" r g b
 	    if {max($r, $g, $b) - min($r, $g, $b) > 100} {
-		return $x
+		incr colored
 	    }
+	}
+	if {$colored * 3 >= $rows} {
+	    return $x
 	}
     }
     return -1
