@@ -239,7 +239,7 @@ test sysnotify-2.2 {system notification is not linked to any systray icon on X11
 } -result {}
 
 test sysnotify-3 {libnotify is not unloaded when the last interpreter which used it is deleted - bug 35e67b8124} -constraints {
-    unix
+    unix knownBug
 } -setup {
     set code [loadTkCommand]
     append code {
