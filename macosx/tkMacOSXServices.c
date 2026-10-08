@@ -25,7 +25,14 @@ ServicesEventProc(
 {
     TkMainInfo *info = TkGetMainInfoList();
 
-    Tcl_GlobalEval(info->interp, "::tk::mac::PerformService");
+    if (Tcl_FindCommand(info->interp, "::tk::mac::PerformService", NULL, 0)) {
+	int code = Tcl_EvalEx(info->interp, "::tk::mac::PerformService",
+		TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(info->interp, code);
+	}
+    }
     return 1;
 }
 
