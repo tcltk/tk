@@ -82,6 +82,7 @@ to the userbase.
  - [Long dashed lines cause problems on canvases](https://core.tcl-lang.org/tk/tktview/663981)
  - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
  - [MacOS aqua: <<ContextMenu >> binding sometimes triggers for incorrect toplevel](https://core.tcl-lang.org/tk/tktview/061f63)
+ - [errors in ::tk::mac::PerformService were ignored](https://core.tcl-lang.org/tk/tktview/173622)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
