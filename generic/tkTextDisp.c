@@ -9803,6 +9803,7 @@ TkTextRelayoutWindow(
     unsigned firstLineNo;
     unsigned lastLineNo;
     int maxX;
+    int width, height;
 
     if ((mask & TK_TEXT_LINE_REDRAW_BOTTOM_LINE) && dInfoPtr->lastDLinePtr) {
 	dInfoPtr->lastDLinePtr->flags |= OLD_Y_INVALID;
@@ -9842,8 +9843,21 @@ TkTextRelayoutWindow(
 	dInfoPtr->insertFgGC = Tk_GetGC(textPtr->tkwin, GCForeground, &gcValues);
     }
 
-    maxX = MAX(Tk_Width(textPtr->tkwin) - dInfoPtr->x, dInfoPtr->x + 1);
-    firstLineNo = TkBTreeLinesTo(sharedTextPtr->tree, NULL, TkBTreeGetStartLine(textPtr), NULL);
+    /*
+     * A window which has not been mapped yet has size 1x1: laying out the
+     * text there would give a display line per character. Use the requested
+     * size instead. [Bug 7d8d10e4a9]
+     */
+
+    width = Tk_Width(textPtr->tkwin);
+    height = Tk_Height(textPtr->tkwin);
+    if (width <= 1 && height <= 1) {
+	width = Tk_ReqWidth(textPtr->tkwin);
+	height = Tk_ReqHeight(textPtr->tkwin);
+    }
+
+    maxX = MAX(width - dInfoPtr->x, dInfoPtr->x + 1);
+    firstLineNo =TkBTreeLinesTo(sharedTextPtr->tree, NULL, TkBTreeGetStartLine(textPtr), NULL);
     lastLineNo = TkBTreeLinesTo(sharedTextPtr->tree, NULL, TkBTreeGetLastLine(textPtr), NULL);
     recomputeGeometry = (maxX != dInfoPtr->maxX) || (mask & TK_TEXT_LINE_GEOMETRY);
 
@@ -9882,13 +9896,13 @@ TkTextRelayoutWindow(
     dInfoPtr->x = highlightWidth + borderWidth + padX;
     dInfoPtr->y = highlightWidth + borderWidth + padY;
 
-    dInfoPtr->maxX = MAX(Tk_Width(textPtr->tkwin) - dInfoPtr->x, dInfoPtr->x + 1);
+    dInfoPtr->maxX = MAX(width - dInfoPtr->x, dInfoPtr->x + 1);
 
     /*
      * This is the only place where dInfoPtr->maxY is set.
      */
 
-    dInfoPtr->maxY = MAX(Tk_Height(textPtr->tkwin) - dInfoPtr->y, dInfoPtr->y + 1);
+    dInfoPtr->maxY = MAX(height - dInfoPtr->y, dInfoPtr->y + 1);
     dInfoPtr->topOfEof = dInfoPtr->maxY;
 
     /*

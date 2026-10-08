@@ -79,6 +79,14 @@ to the userbase.
  - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
  - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
  - [MS-Win: toplevel menu does not honor font and color](https://core.tcl-lang.org/tk/tktview/11bd4a)
+ - [Long dashed lines cause problems on canvases](https://core.tcl-lang.org/tk/tktview/663981)
+ - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
+ - [MacOS aqua: <<ContextMenu >> binding sometimes triggers for incorrect toplevel](https://core.tcl-lang.org/tk/tktview/061f63)
+ - [errors in ::tk::mac::PerformService were ignored](https://core.tcl-lang.org/tk/tktview/173622)
+ - [Tk console extremely slow before first display](https://core.tcl-lang.org/tk/tktview/7d8d10)
+ - [crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid](https://core.tcl-lang.org/tk/tktview/434c8d)
+ - [Applying canvas move command to objects leaves trails](https://core.tcl-lang.org/tk/tktview/ad9a02)
+ - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

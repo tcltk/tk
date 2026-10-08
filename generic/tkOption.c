@@ -1332,7 +1332,7 @@ SetupStacks(
 
     for (iPtr = searchOrder; *iPtr != -1; iPtr++) {
 	Element *elPtr;
-	int count;
+	int j;
 	Tk_Uid id;
 
 	i = *iPtr;
@@ -1341,23 +1341,22 @@ SetupStacks(
 	} else {
 	    id = winPtr->nameUid;
 	}
-	elPtr = tsdPtr->stacks[i]->els;
-	count = levelPtr->bases[i];
 
 	/*
 	 * For wildcard stacks, check all entries; for non-wildcard stacks,
 	 * only check things that matched in the parent.
+	 *
+	 * ExtendStacks() can add elements to the stack being scanned and
+	 * reallocate it, so the element is fetched anew on each iteration.
+	 * [Bug 1652598]
 	 */
 
-	if (!(i & WILDCARD)) {
-	    elPtr += levelPtr[-1].bases[i];
-	    count -= levelPtr[-1].bases[i];
-	}
-	for ( ; count > 0; elPtr++, count--) {
-	    if (elPtr->nameUid != id) {
-		continue;
+	j = (i & WILDCARD) ? 0 : levelPtr[-1].bases[i];
+	for ( ; j < levelPtr->bases[i]; j++) {
+	    elPtr = &tsdPtr->stacks[i]->els[j];
+	    if (elPtr->nameUid == id) {
+		ExtendStacks(elPtr->child.arrayPtr, leaf);
 	    }
-	    ExtendStacks(elPtr->child.arrayPtr, leaf);
 	}
     }
     tsdPtr->cachedWindow = winPtr;

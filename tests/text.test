@@ -8712,13 +8712,15 @@ test text-39.3 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
     .t configure -width 42 -height 26 -font {{Courier} -15} -bg white
     .t insert end $message
     # Either one of the following commands is OK. Both together used to cause a failed
-    # assertion and a segfault.
-    HowMuchIndent .t 1.0
-    HowMuchIndent .t 2.0
+    # assertion and a segfault. Before the first display, the text is laid out with the
+    # requested size, so the results are those of the drawn widget.
+    set early [list [HowMuchIndent .t 1.0] [HowMuchIndent .t 2.0]]
+    update
+    expr {$early eq [list [HowMuchIndent .t 1.0] [HowMuchIndent .t 2.0]]}
 } -cleanup {
     destroy .t
-    unset message
-} -result {0}
+    unset -nocomplain message early
+} -result {1}
 test text-39.4 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
 		Segfaults in revised_text - Case 2 (undo after tag lower)" -setup {
     pack [text .t] -padx 2

@@ -5873,10 +5873,11 @@ test textDisp-42.3 {x position of drawn text, tabs and embedded windows, xview} 
 test textDisp-43.1 {break chunk moved by a numeric tab, on a line one pixel wide} -setup {
     destroy .t1
 } -body {
-    # Laid out before the first display, so the line is one pixel wide; tab = ~,
-    # soft hyphen = _. Same lines as a mapped widget one character wide.
-    text .t1 -font {Courier -12} -width 17 -wrap word -tabstyle tabular -tabs {50 numeric}
-    pack .t1
+    # A window one pixel wide; tab = ~, soft hyphen = _. Same lines as a
+    # widget one character wide.
+    text .t1 -font {Courier -12} -wrap word -tabstyle tabular -tabs {50 numeric}
+    place .t1 -x 0 -y 0 -width 1 -height 100
+    update
     .t1 insert end "\t[format %c 173] 7."
     .t1 count -update -displaylines 1.0 end
     set res {}
@@ -5914,11 +5915,12 @@ test textDisp-44.1 {no line break inside a grapheme cluster, line one pixel wide
     destroy .t1
     set res {}
 } -body {
-    # Laid out before the first display: a single grapheme is forced on each line.
+    # A window one pixel wide: a single grapheme is forced on each line.
     foreach mode {char word codepoint} {
 	destroy .t1
-	text .t1 -font {Courier -12} -width 17 -wrap $mode
-	pack .t1
+	text .t1 -font {Courier -12} -wrap $mode
+	place .t1 -x 0 -y 0 -width 1 -height 100
+	update
 	.t1 insert end $graphemeText
 	.t1 count -update -displaylines 1.0 end
 	lappend res $mode [displayLineCodePoints .t1]
@@ -5933,7 +5935,7 @@ test textDisp-44.2 {no line break inside an emoji ZWJ sequence, widget one chara
     destroy .t1
     set res {}
 } -body {
-    foreach mode {char codepoint} {
+    foreach mode {char word codepoint} {
 	destroy .t1
 	text .t1 -font {Courier -12} -width 1 -wrap $mode
 	pack .t1
@@ -5945,7 +5947,20 @@ test textDisp-44.2 {no line break inside an emoji ZWJ sequence, widget one chara
 } -cleanup {
     destroy .t1
 } -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
 codepoint {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
+
+test textDisp-45.1 {layout of the text in a window which has not been mapped uses the requested size - bug 7d8d10e4a9} -setup {
+    toplevel .top
+    wm withdraw .top
+    text .top.t -width 20 -height 5 -wrap char -font {Courier 12}
+    pack .top.t
+} -body {
+    .top.t insert end [string repeat x 100]
+    .top.t count -displaylines 1.0 end
+} -cleanup {
+    destroy .top
+} -result 5
 
 #
 # TESTFILE CLEANUP
