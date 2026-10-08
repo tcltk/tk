@@ -1005,6 +1005,34 @@ test menubutton-13.3 {press, drag and release still invokes the entry} -constrai
     unset -nocomplain res y
 } -result invoked
 
+test menubutton-14.1 {menu destroyed while it is posted - bug a4c72a04e3} -setup {
+    toplevel .t
+    menubutton .t.mb -text One -menu .t.mb.m -indicatoron 1
+    menu .t.mb.m -tearoff 0 -postcommand {destroy .t}
+    .t.mb.m add command -label One
+    .t.mb.m add command -label Two
+    pack .t.mb
+    update
+} -body {
+    tk::MbPost .t.mb
+    list [winfo exists .t] $tk::Priv(postedMb)
+} -cleanup {
+    destroy .t
+} -result {0 {}}
+test menubutton-14.2 {menu destroyed while it is posted - bug a4c72a04e3} -setup {
+    toplevel .t
+    menubutton .t.mb -text One -menu .t.mb.m -direction below
+    menu .t.mb.m -tearoff 0 -postcommand {destroy .t}
+    .t.mb.m add command -label One
+    pack .t.mb
+    update
+} -body {
+    tk::MbPost .t.mb
+    list [winfo exists .t] $tk::Priv(postedMb)
+} -cleanup {
+    destroy .t
+} -result {0 {}}
+
 #
 # TESTFILE CLEANUP
 #

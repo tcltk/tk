@@ -4625,6 +4625,18 @@ test menu-44.8 {yview errors} -setup {
 } -returnCodes error -result {bad argument "foo": must be pages or units}
 rename tallMenu {}
 
+test menu-46.1 {tk_popup: menu destroyed while it is posted - bug a4c72a04e3} -setup {
+    menu .m -tearoff 0 -postcommand {destroy .m}
+    .m add command -label One
+    .m add command -label Two
+} -body {
+    tk_popup .m 10 10 1
+    winfo exists .m
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .m
+} -result 0
+
 #
 # TESTFILE CLEANUP
 #
