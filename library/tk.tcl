@@ -628,6 +628,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile iconbadges
 	SourceLibFile button
 	SourceLibFile entry
+	SourceLibFile emoji
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow

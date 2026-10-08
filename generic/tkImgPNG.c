@@ -225,6 +225,7 @@ static int		FileWritePNG(Tcl_Interp *interp, const char *filename,
 static int		InitPNGImage(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tcl_Channel chan, Tcl_Obj *objPtr, int dir);
 static inline unsigned char Paeth(int a, int b, int c);
+static int		CheckWriteFormat(Tcl_Interp *interp, Tcl_Obj *fmtObj);
 static int		ParseFormat(Tcl_Interp *interp, Tcl_Obj *fmtObj,
 			    PNGImage *pngPtr);
 static int		ReadBase64(Tcl_Interp *interp, PNGImage *pngPtr,
@@ -2459,6 +2460,46 @@ ParseFormat(
 /*
  *----------------------------------------------------------------------
  *
+ * CheckWriteFormat --
+ *
+ *	This function checks the -format string that can be specified when
+ *	writing PNG data. No options are supported.
+ *
+ * Results:
+ *	TCL_OK, or TCL_ERROR if the format specification is invalid.
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CheckWriteFormat(
+    Tcl_Interp *interp,
+    Tcl_Obj *fmtObj)
+{
+    Tcl_Obj **objv;
+    Tcl_Size objc = 0;
+
+    if (fmtObj &&
+	    Tcl_ListObjGetElements(interp, fmtObj, &objc, &objv) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad format option \"%s\": no options allowed",
+		Tcl_GetString(objv[1])));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_OPTION",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * DecodePNG --
  *
  *	This function handles the entirety of reading a PNG file (or data)
@@ -3737,13 +3778,17 @@ static int
 FileWritePNG(
     Tcl_Interp *interp,
     const char *filename,
-    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *fmtObj,
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
     PNGImage png;
     int result = TCL_ERROR;
+
+    if (CheckWriteFormat(interp, fmtObj) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
 
     /*
      * Open a Tcl file channel where the image data will be stored. Tk ought
@@ -3803,13 +3848,17 @@ FileWritePNG(
 static int
 StringWritePNG(
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *fmtObj,
     Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Obj *resultObj = Tcl_NewObj();
     PNGImage png;
     int result = TCL_ERROR;
+
+    if (CheckWriteFormat(interp, fmtObj) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
 
     /*
      * Initalize PNGImage instance for encoding.

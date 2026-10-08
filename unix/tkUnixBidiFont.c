@@ -257,7 +257,7 @@ static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
  *    neutral characters.
  *
  *    Note: All other scripts requiring complex shaping (Arabic, Indic,
- *    Thai, CJK ideographs, emoji requiring COLR, etc.) return 0 to
+ *    Thai, CJK ideographs, supplementary-plane characters, etc.) return 0 to
  *    ensure HarfBuzz handling.
  * ---------------------------------------------------------------
  */
@@ -307,9 +307,7 @@ IsSimpleOnly(const char *str, int len)
 	    (uc >= 0x0E00 && uc <= 0x0E7F) ||	   /* Thai */
 	    (uc >= 0x0E80 && uc <= 0x0EFF) ||	   /* Lao */
 
-	    /* Emoji and supplementary that need COLR/CBDT shaping. */
-	    (uc >= 0x1F000 && uc <= 0x1FAFF) ||
-	    (uc >= 0x1F300 && uc <= 0x1F9FF) ||
+	    /* Supplementary planes (this includes emoji). */
 	    uc > 0xFFFF) {
 
 	    return false;   /* Use complex shaper. */
@@ -870,6 +868,7 @@ InitFont(
     Tk_ErrorHandler handler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    bool reused = (fontPtr != NULL);	/* Re-initialized in place. */
 
     if (!fontPtr) {
     fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
@@ -905,7 +904,7 @@ InitFont(
      */
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-    if (!fontPtr->font.fid) {
+    if (!reused) {
 	Tcl_Free(fontPtr);
     }
     FcPatternDestroy(pattern);
@@ -976,7 +975,7 @@ InitFont(
     if ((ftFont == NULL) || tsdPtr->errorFlag) {
     Tk_DeleteErrorHandler(handler);
     FinishedWithFont(fontPtr);
-    if (!fontPtr->font.fid) {
+    if (!reused) {
 	Tcl_Free(fontPtr);
     }
     return NULL;
@@ -990,7 +989,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (tsdPtr->errorFlag) {
     FinishedWithFont(fontPtr);
-    if (!fontPtr->font.fid) {
+    if (!reused) {
 	Tcl_Free(fontPtr);
     }
     return NULL;
@@ -1013,7 +1012,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (tsdPtr->errorFlag) {
 	FinishedWithFont(fontPtr);
-	if (!fontPtr->font.fid) {
+	if (!reused) {
 	Tcl_Free(fontPtr);
 	}
 	return NULL;
@@ -1093,12 +1092,22 @@ FinishedWithFont(
     }
     if (fontPtr->font.fid) {
 	XUnloadFont(fontPtr->display, fontPtr->font.fid);
+	fontPtr->font.fid = None;
     }
     if (fontPtr->fontset) {
 	FcFontSetDestroy(fontPtr->fontset);
     }
 
     X11Shaper_Destroy(&fontPtr->shaper);
+
+    /*
+     * The record may be re-initialized in place (TkpGetFontFromAttributes)
+     * or released again: do not leave dangling pointers.
+     */
+    fontPtr->faces = NULL;
+    fontPtr->nfaces = 0;
+    fontPtr->pattern = NULL;
+    fontPtr->fontset = NULL;
 
     Tk_DeleteErrorHandler(handler);
 }
@@ -1561,12 +1570,11 @@ X11Shaper_ShapeString(
 		 * symbols, general punctuation without a preceding context) the
 		 * anchor is subrunStart itself - GetRunFaceIndex will pick the
 		 * face that has charset coverage for the first codepoint, which
-		 * is exactly what we want (e.g. Noto Color Emoji for U+1F600).
+		 * is exactly what we want (e.g. a symbol font for U+1F600).
 		 *
 		 * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
-		 * all-COMMON case so that HarfBuzz activates the correct feature
-		 * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
-		 * by colour-emoji fonts).
+		 * all-COMMON case so that HarfBuzz does not apply Latin-specific
+		 * features to symbol runs.
 		 */
 		int anchorChar = subrunStart;
 		if (subrunScript != HB_SCRIPT_INVALID) {
@@ -1615,8 +1623,7 @@ X11Shaper_ShapeString(
 		 * word, where the emoji face is different from the Latin face)
 		 * break immediately so the emoji gets its own subrun with the
 		 * correct face and HB_SCRIPT_COMMON.  Without this check the
-		 * emoji would be shaped with the Latin face, producing .notdef
-		 * or the wrong monochrome glyph.
+		 * emoji would be shaped with the Latin face, producing .notdef.
 		 */
 		int subrunEnd = subrunStart + 1;
 		while (subrunEnd < runStart + runLen) {
@@ -2035,11 +2042,17 @@ TkpGetFontFromAttributes(
      */
 
     UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
+    if (fontPtr != NULL) {
+	/* Release the old contents of a font that is reconfigured in place. */
+	FinishedWithFont(fontPtr);
+    }
     fontPtr = InitFont(tkwin, pattern, fontPtr);
 
     if (!fontPtr) {
-	/* Emergency Fallback: If "sans-serif" failed, try "sans." */
-	XftPatternDestroy(pattern);
+	/*
+	 * Emergency Fallback: If "sans-serif" failed, try "sans."
+	 * InitFont() has already destroyed the pattern.
+	 */
 	pattern = XftPatternBuild(NULL, XFT_FAMILY, XftTypeString, "sans",
 				  XFT_SIZE, XftTypeDouble, size, NULL);
 	fontPtr = InitFont(tkwin, pattern, (UnixFtFont *)tkFontPtr);
@@ -2283,6 +2296,75 @@ GetSimpleCharWidth(
 
 /*
  * ---------------------------------------------------------------
+ * MeasureStep --
+ *
+ *   Add one character (or cluster) to a bounded measurement, applying
+ *   the TK_PARTIAL_OK, TK_WHOLE_WORDS and TK_AT_LEAST_ONE flags in the
+ *   same way as the other font backends. A word boundary is the start
+ *   of a run of spaces that follows a non-space, so that the spaces at
+ *   the end of a line are not counted in its width.
+ *
+ * Results:
+ *   Returns 1 if the next character should be measured, 0 if the
+ *   measurement is finished. The result is in m->curByte and m->curX.
+ *
+ * Side effects:
+ *   Updates *m.
+ * ---------------------------------------------------------------
+ */
+
+typedef struct {
+    int curX;			/* Width of the accepted characters. */
+    int curByte;		/* Bytes of the accepted characters. */
+    int termX;			/* Width up to the last word boundary. */
+    int termByte;		/* Bytes up to the last word boundary. */
+    int sawNonSpace;		/* A non-space was seen since the last
+				 * word boundary. */
+} MeasureState;
+
+static int
+MeasureStep(
+    MeasureState *m,
+    FcChar32 c,			/* First character of the unit. */
+    int unitStart,		/* Byte offset of the unit. */
+    int unitEnd,		/* Byte offset after the unit. */
+    int advance,		/* Width of the unit. */
+    int maxLength,
+    int flags)
+{
+    int newX;
+
+    if (c < 256 && isspace((int) c)) {
+	if (m->sawNonSpace) {
+	    m->termByte = unitStart;
+	    m->termX = m->curX;
+	    m->sawNonSpace = 0;
+	}
+    } else {
+	m->sawNonSpace = 1;
+    }
+
+    newX = m->curX + advance;
+    if (newX > maxLength) {
+	if ((flags & TK_PARTIAL_OK) ||
+		((flags & TK_AT_LEAST_ONE) && m->curByte == 0)) {
+	    m->curX = newX;
+	    m->curByte = unitEnd;
+	} else if (flags & TK_WHOLE_WORDS) {
+	    if (!((flags & TK_AT_LEAST_ONE) && m->termX == 0)) {
+		m->curX = m->termX;
+		m->curByte = m->termByte;
+	    }
+	}
+	return 0;
+    }
+    m->curX = newX;
+    m->curByte = unitEnd;
+    return 1;
+}
+
+/*
+ * ---------------------------------------------------------------
  * Tk_MeasureCharsInContext --
  *
  *   Measure a substring of a larger string, preserving shaping context.
@@ -2389,10 +2471,7 @@ Tk_MeasureCharsInContext(
 	 * Incrementally measure UTF-8 character boundaries.
 	 */
 
-	int bestBytes = 0;
-	int bestWidth = 0;
-
-	int width = 0;
+	MeasureState m = {0, 0, 0, 0, 0};
 	int pos = 0;
 
 	while (pos < subLen) {
@@ -2407,90 +2486,15 @@ Tk_MeasureCharsInContext(
 		clen = 1;
 	    }
 
-	    int nextWidth = width + GetSimpleCharWidth(fontPtr, uc);
-
-	    if (nextWidth > maxLength) {
+	    if (!MeasureStep(&m, uc, pos, pos + clen,
+		    GetSimpleCharWidth(fontPtr, uc), maxLength, flags)) {
 		break;
 	    }
-
-	    width = nextWidth;
-	    bestBytes = pos + clen;
-	    bestWidth = width;
-
 	    pos += clen;
 	}
 
-	/*
-	 * Whole-word wrapping.
-	 */
-
-	if ((flags & TK_WHOLE_WORDS)
-	    && bestBytes > 0
-	    && bestBytes < subLen) {
-
-	    int rollback = -1;
-
-	    for (int i = bestBytes - 1; i >= 0; i--) {
-		unsigned char c = (unsigned char)sub[i];
-		if (c == ' '
-		    || c == '\t'
-		    || c == '\n'
-		    || c == '\r') {
-
-		    rollback = i + 1;
-		    break;
-		}
-	    }
-
-	    if (rollback > 0 && rollback < bestBytes) {
-		int rbWidth = 0;
-		int rpos = 0;
-
-		while (rpos < rollback) {
-		    FcChar32 uc;
-		    int clen = FcUtf8ToUcs4(
-			(const FcChar8 *)(sub + rpos),
-			&uc,
-			rollback - rpos);
-
-		    if (clen <= 0) {
-			clen = 1;
-		    }
-
-		    rbWidth += GetSimpleCharWidth(fontPtr, uc);
-		    rpos += clen;
-		}
-
-		bestBytes = rollback;
-		bestWidth = rbWidth;
-	    }
-	}
-
-	/*
-	 * AT_LEAST_ONE support.
-	 */
-
-	if ((flags & TK_AT_LEAST_ONE)
-	    && bestBytes == 0
-	    && subLen > 0) {
-
-	    FcChar32 uc;
-
-	    int clen = FcUtf8ToUcs4(
-		(const FcChar8 *)sub,
-		&uc,
-		subLen);
-
-	    if (clen <= 0) {
-		clen = 1;
-	    }
-
-	    bestBytes = clen;
-	    bestWidth = GetSimpleCharWidth(fontPtr, uc);
-	}
-
-	*lengthPtr = bestWidth;
-	return bestBytes;
+	*lengthPtr = m.curX;
+	return m.curByte;
     }
 
     /*
@@ -2610,68 +2614,24 @@ Tk_MeasureCharsInContext(
      * Measure fitting clusters.
      */
 
-    int width = 0;
-    int bestBytes = 0;
+    MeasureState m = {0, 0, 0, 0, 0};
 
     for (int i = 0; i < clusterCount; i++) {
+	int cstart = clusters[i].start > start ? clusters[i].start : start;
+	FcChar32 uc;
 
-	int nextWidth = width + clusters[i].advance;
-	if (nextWidth > maxLength) {
+	if (FcUtf8ToUcs4((const FcChar8 *)(source + cstart), &uc,
+		end - cstart) <= 0) {
+	    uc = (unsigned char)source[cstart];
+	}
+	if (!MeasureStep(&m, uc, cstart - start, clusters[i].end - start,
+		clusters[i].advance, maxLength, flags)) {
 	    break;
 	}
-	width = nextWidth;
-	bestBytes = clusters[i].end - start;
     }
 
-    /*
-     * Whole-word rollback.
-     */
-
-    if ((flags & TK_WHOLE_WORDS)
-	&& bestBytes > 0
-	&& bestBytes < (int)rangeLength) {
-
-	int rollback = -1;
-
-	for (int i = bestBytes - 1; i >= 0; i--) {
-	    unsigned char c =
-		(unsigned char)source[start + i];
-	    if (c == ' '
-		|| c == '\t'
-		|| c == '\n'
-		|| c == '\r') {
-
-		rollback = i + 1;
-		break;
-	    }
-	}
-
-	if (rollback > 0 && rollback < bestBytes) {
-	    width = 0;
-	    int target = start + rollback;
-	    for (int i = 0; i < clusterCount; i++) {
-		if (clusters[i].end <= target) {
-		    width += clusters[i].advance;
-		}
-	    }
-	    bestBytes = rollback;
-	}
-    }
-
-    /*
-     * AT_LEAST_ONE safety.
-     */
-
-    if ((flags & TK_AT_LEAST_ONE)
-	&& bestBytes == 0
-	&& clusterCount > 0) {
-	bestBytes = clusters[0].end - start;
-	width = clusters[0].advance;
-    }
-
-    *lengthPtr = width;
-
-    return bestBytes;
+    *lengthPtr = m.curX;
+    return m.curByte;
 }
 
 /*

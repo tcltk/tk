@@ -236,7 +236,9 @@ TkpGetString(
     } else if (keyEv->send_event == -3) {
 
 	/*
-	 * Special case for WM_UNICHAR and win2000 multilingual IME input
+	 * Special case for WM_UNICHAR and win2000 multilingual IME input. The
+	 * keycode holds a whole code point, which can be outside the BMP (for
+	 * example an emoji from the Windows emoji picker).
 	 */
 
 	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
@@ -328,10 +330,15 @@ KeycodeToKeysym(
      * Do not run keycodes of lock keys through ToUnicode(). One of ToUnicode()'s
      * side effects is to handle the lights on the keyboard, and we don't want
      * to mess that up.
+     *
+     * Virtual key codes fit in a byte. A larger value is not a key at all but
+     * a Unicode character carried in the keycode of an event with send_event
+     * == -3 (IME input, WM_UNICHAR, the emoji picker), which may be above
+     * 0xFFFF. Never pass such a value to ToUnicode() as a virtual key.
      */
 
-    if (noascii || keycode == VK_CAPITAL || keycode == VK_SCROLL ||
-	    keycode == VK_NUMLOCK) {
+    if (noascii || keycode > 0xFF || keycode == VK_CAPITAL
+	    || keycode == VK_SCROLL || keycode == VK_NUMLOCK) {
 	goto skipToUnicode;
     }
 

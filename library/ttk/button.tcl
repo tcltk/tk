@@ -21,6 +21,7 @@ namespace eval ttk::button {}
 bind TButton <Enter>		{ %W instate !disabled {%W state active} }
 bind TButton <Leave>		{ %W state !active }
 bind TButton <space>		{ ttk::button::activate %W }
+bind TButton <Alt-space>	{# nothing; opens the window menu on Windows }
 bind TButton <<Invoke>>		{ ttk::button::activate %W }
 
 bind TButton <Button-1> \
