@@ -4156,6 +4156,65 @@ test button-16.1 {button keeps -overrelief after click, Bug 1100518} -setup {
 } -result [list raised [expr {[tk windowingsystem] eq "aqua" ? "raised" : "sunken"}] \
 	raised flat 1]
 
+test button-17.1 {checkbutton toggles on mouse button release, Bug 3565268} -setup {
+    # Not set in a new application.
+    unset -nocomplain ::tk::Priv(repeated)
+    set count 0
+    checkbutton .b -text Check -variable var -command {incr count}
+    pack .b
+    update
+} -body {
+    set res {}
+    event generate .b <Enter> -x 5 -y 5
+    event generate .b <ButtonPress-1> -x 5 -y 5
+    lappend res $var $count
+    event generate .b <ButtonRelease-1> -x 5 -y 5
+    lappend res $var $count
+    event generate .b <ButtonPress-1> -x 5 -y 5
+    lappend res $var $count
+    event generate .b <ButtonRelease-1> -x 5 -y 5
+    lappend res $var $count
+} -cleanup {
+    destroy .b
+    unset -nocomplain var count res
+} -result {0 0 1 1 1 1 0 2}
+test button-17.2 {radiobutton is selected on mouse button release, Bug 3565268} -setup {
+    # Not set in a new application.
+    unset -nocomplain ::tk::Priv(repeated)
+    set count 0
+    set var 0
+    radiobutton .b -text Radio -variable var -value 1 -command {incr count}
+    pack .b
+    update
+} -body {
+    set res {}
+    event generate .b <Enter> -x 5 -y 5
+    event generate .b <ButtonPress-1> -x 5 -y 5
+    lappend res $var $count
+    event generate .b <ButtonRelease-1> -x 5 -y 5
+    lappend res $var $count
+} -cleanup {
+    destroy .b
+    unset -nocomplain var count res
+} -result {0 0 1 1}
+test button-17.3 {checkbutton is not toggled if the mouse leaves before release} -setup {
+    # Not set in a new application.
+    unset -nocomplain ::tk::Priv(repeated)
+    set count 0
+    checkbutton .b -text Check -variable var -command {incr count}
+    pack .b
+    update
+} -body {
+    event generate .b <Enter> -x 5 -y 5
+    event generate .b <ButtonPress-1> -x 5 -y 5
+    event generate .b <Leave> -x 5 -y 5
+    event generate .b <ButtonRelease-1> -x 5 -y 5
+    list $var $count
+} -cleanup {
+    destroy .b
+    unset -nocomplain var count
+} -result {0 0}
+
 #
 # TESTFILE CLEANUP
 #
