@@ -86,6 +86,7 @@ to the userbase.
  - [Tk console extremely slow before first display](https://core.tcl-lang.org/tk/tktview/7d8d10)
  - [crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid](https://core.tcl-lang.org/tk/tktview/434c8d)
  - [Applying canvas move command to objects leaves trails](https://core.tcl-lang.org/tk/tktview/ad9a02)
+ - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
