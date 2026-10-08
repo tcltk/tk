@@ -84,6 +84,7 @@ to the userbase.
  - [MacOS aqua: <<ContextMenu >> binding sometimes triggers for incorrect toplevel](https://core.tcl-lang.org/tk/tktview/061f63)
  - [errors in ::tk::mac::PerformService were ignored](https://core.tcl-lang.org/tk/tktview/173622)
  - [Tk console extremely slow before first display](https://core.tcl-lang.org/tk/tktview/7d8d10)
+ - [crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid](https://core.tcl-lang.org/tk/tktview/434c8d)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
