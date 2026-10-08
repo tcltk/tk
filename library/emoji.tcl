@@ -12,7 +12,7 @@ package require Tk 9.0-
 
 # Bail if X11 and compiled without Xft support
 if {[tk::build-info no-xft]} {
-    bgerror "Modern font support such as Xft required for emojis"
+    return
 }
 
 namespace eval ::tk::emoji {
