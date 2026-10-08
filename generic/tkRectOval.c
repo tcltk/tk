@@ -929,8 +929,34 @@ DisplayRectOval(
     if (rectOvalPtr->outline.gc != NULL) {
 	Tk_ChangeOutlineGC(canvas, itemPtr, &(rectOvalPtr->outline));
 	if (rectOvalPtr->header.typePtr == &tkRectangleType) {
-	    XDrawRectangle(display, drawable, rectOvalPtr->outline.gc,
-		    x1, y1, (unsigned) (x2-x1), (unsigned) (y2-y1));
+	    if ((rectOvalPtr->bbox[2] - rectOvalPtr->bbox[0] > 32000)
+		    || (rectOvalPtr->bbox[3] - rectOvalPtr->bbox[1] > 32000)) {
+		/*
+		 * The rectangle is too large for the 16-bit coordinates of
+		 * the X protocol; with clamped coordinates a dashed outline
+		 * is not drawn at all. Draw the outline as a path clipped to
+		 * the drawable area, as the line and polygon items do.
+		 * [Bug 663981]
+		 */
+
+		double coords[10];
+		XPoint points[15];
+		Tcl_Size numPoints;
+
+		coords[0] = coords[6] = coords[8] = rectOvalPtr->bbox[0];
+		coords[1] = coords[3] = coords[9] = rectOvalPtr->bbox[1];
+		coords[2] = coords[4] = rectOvalPtr->bbox[2];
+		coords[5] = coords[7] = rectOvalPtr->bbox[3];
+		numPoints = TkCanvTranslatePath((TkCanvas *) canvas, 5, coords,
+			1, points);
+		if (numPoints > 1) {
+		    XDrawLines(display, drawable, rectOvalPtr->outline.gc,
+			    points, (int) numPoints, CoordModeOrigin);
+		}
+	    } else {
+		XDrawRectangle(display, drawable, rectOvalPtr->outline.gc,
+			x1, y1, (unsigned) (x2-x1), (unsigned) (y2-y1));
+	    }
 	} else {
 	    XDrawArc(display, drawable, rectOvalPtr->outline.gc,
 		    x1, y1, (unsigned) (x2-x1), (unsigned) (y2-y1), 0, 360*64);
