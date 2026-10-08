@@ -709,16 +709,16 @@ test winfont-10.3 {RTL: a base font without Arabic falls back to one joining fon
     set f {Verdana 14}
     expr {[font measure $f [winfontArabic]] < [winfontIsolatedSum $f]}
 } -result 1
-test winfont-10.4 {RTL: the ranges of a right-to-left item are drawn right to left} -constraints {
+test winfont-10.4 {RTL: an emoji inside Arabic text is drawn where Uniscribe puts it} -constraints {
     win segoeEmoji testwinpixel
 } -setup {
     destroy .l
 } -body {
-    # seen + sun with VS16 + "al-arabiya".  The sun is a BMP character, which
-    # Uniscribe keeps in the Arabic item (an emoji of the supplementary planes
-    # becomes an LTR item of its own); the color font splits the item in three
-    # runs.  Right to left, the long word is drawn first, at the left, and the sun
-    # starts after it; in logical order the sun would start after the seen.
+    # seen + sun with VS16 + "al-arabiya".  Without a bidi state, Uniscribe gives
+    # a neutral the direction of the paragraph: the sun is a left-to-right item of
+    # its own, drawn after the seen as in logical order, on trunk as well.  The
+    # first colored column tells where it was drawn; the Arabic around it is
+    # shaped by the base font, the sun by the color font.
     set f {{Segoe UI} 72}
     set prefix [format %c 0x633]
     set sun "[format %c 0x2600][format %c 0xFE0F]"
@@ -731,24 +731,27 @@ test winfont-10.4 {RTL: the ranges of a right-to-left item are drawn right to le
     pack .l
     update
     set left [winfontLeftmostColored .l]
-    set rtl [font measure $f $suffix]
     set logical [font measure $f $prefix]
-    expr {abs($left - $rtl) < abs($left - $logical) ? 1
-	    : "left $left, rtl $rtl, logical $logical"}
+    set rtl [font measure $f $suffix]
+    expr {abs($left - $logical) < abs($left - $rtl) ? 1
+	    : "left $left, logical $logical, rtl $rtl"}
 } -cleanup {
     destroy .l
 } -result 1
 test winfont-10.5 {RTL: two Arabic words in a font without Arabic measure as their sum} -constraints {
     win
 } -body {
+    # Verdana has no Arabic: the item is shaped by a fallback font, space included.
     set f {Verdana 14}
     set w1 ""
     foreach cp {0x627 0x644 0x639 0x631 0x628 0x64A 0x629} {
 	append w1 [format %c $cp]
     }
     set w2 "[format %c 0x644][format %c 0x63A][format %c 0x629]"
-    set sum [expr {[font measure $f $w1] + [font measure $f " "] + [font measure $f $w2]}]
-    expr {abs([font measure $f "$w1 $w2"] - $sum) <= 2 ? 1 : "[font measure $f "$w1 $w2"] vs $sum"}
+    set words [expr {[font measure $f $w1] + [font measure $f $w2]}]
+    set space [font measure $f " "]
+    set both [font measure $f "$w1 $w2"]
+    expr {$both > $words && $both <= $words + 2 * $space ? 1 : "$both vs $words + $space"}
 } -result 1
 test winfont-10.6 {RTL: an emoji inside an Arabic word measures with the word} -constraints {
     win segoeEmoji

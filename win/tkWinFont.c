@@ -928,8 +928,8 @@ IsEmojiContinuation(
  * AssignSubFonts --
  *
  *	Store in subIdx[0..len) the index of the subfont for each UTF-16 unit
- *	of wstr[start..start+len): the base font for ASCII, one subfont for
- *	the rest of the text of the item, one subfont per emoji cluster.  A
+ *	of wstr[start..start+len): one subfont for the text of the item, ASCII
+ *	included, and one subfont per emoji cluster.  A
  *	VS16 after a character asks for a color font, a VS15 for the text
  *	glyph; what follows a ZWJ inside an emoji cluster stays in the
  *	cluster, so the font gets the whole sequence to ligate.
@@ -952,6 +952,37 @@ AssignSubFonts(
     int i = start;
     int curIdx = 0, curEmoji = 0, joinNext = 0, textIdx = -1;
 
+    /*
+     * The subfont of the text of the item, from its first character that
+     * is neither ASCII nor emoji, as the first character of the item chose
+     * it before.  ASCII follows it: the item is shaped with its script, and
+     * a font without that script fails to shape even a space of the item.
+     */
+
+    while (i < end) {
+	int units, nextUnits;
+	int ch = DecodeUtf16(wstr, i, end, &units);
+	int next = (i + units < end)
+		? DecodeUtf16(wstr, i + units, end, &nextUnits) : -1;
+
+	if (ch > 0x7f && next != 0xFE0F
+		&& !mjb_codepoint_is_combining((mjb_codepoint) ch)
+		&& !IsEmojiContinuation(ch, 1)
+		&& !mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
+	    SubFont *subFontPtr = &fontPtr->subFontArray[0];
+
+	    subFontPtr = FindSubFontForChar(fontPtr, ch, 0, &subFontPtr);
+	    textIdx = (int)(subFontPtr - fontPtr->subFontArray);
+	    break;
+	}
+	i += units;
+    }
+    if (textIdx < 0) {
+	textIdx = 0;
+    }
+    curIdx = textIdx;
+
+    i = start;
     while (i < end) {
 	int units, nextUnits, idx, k;
 	int ch = DecodeUtf16(wstr, i, end, &units);
@@ -981,22 +1012,13 @@ AssignSubFonts(
 		subFontPtr = FindSubFontForChar(fontPtr, ch, preferColor,
 			&subFontPtr);
 		idx = (int)(subFontPtr - fontPtr->subFontArray);
-	    } else if (ch < 0x80) {
-		idx = 0;
 	    } else {
 		/*
-		 * Text: one subfont for the whole item, chosen by its first
-		 * character, so that marks and joining letters are shaped
-		 * together; a character it lacks gets the run reshaped with
-		 * another subfont, as before.
+		 * Text, ASCII included: the subfont of the item, so that marks
+		 * and joining letters are shaped together; a character it
+		 * lacks gets the run reshaped with another subfont, as before.
 		 */
 
-		if (textIdx < 0) {
-		    SubFont *subFontPtr = &fontPtr->subFontArray[0];
-
-		    subFontPtr = FindSubFontForChar(fontPtr, ch, 0, &subFontPtr);
-		    textIdx = (int)(subFontPtr - fontPtr->subFontArray);
-		}
 		idx = textIdx;
 	    }
 	    curIdx = idx;
@@ -1162,6 +1184,17 @@ TkWinShapeString(
 			}
 		    }
 		}
+	    }
+	    if (FAILED(hr)) {
+		/*
+		 * The font has no shaping for the script of the item: draw the
+		 * characters as they are rather than dropping the range.
+		 */
+
+		sa.fNoGlyphIndex = TRUE;
+		hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+			wstr + rs, rangeLen, maxGlyphs, &sa,
+			glyphs, logClust, visAttr, &glyphCount);
 	    }
 	    if (FAILED(hr)) {
 		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
