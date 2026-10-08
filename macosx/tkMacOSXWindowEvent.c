@@ -400,11 +400,22 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  * Idle task which forces focus to a particular window.
  */
 
-static void RefocusGrabWindow(void *data) {
-    TkWindow *winPtr = (TkWindow *) data;
+static void RefocusGrabWindow(void *clientData) {
+    TkWindow *winPtr = (TkWindow *) clientData;
     TkpChangeFocus(winPtr, 1);
     Tcl_Release(winPtr);
 }
+
+/*
+ * Idle task which calls updateLayer for a window.
+ */
+
+static void updateLayerIdleTask(void *clientData)
+{
+    TKWindow *winPtr = (TKWindow *) clientData;
+    [winPtr updateLayer];
+}
+
 
 #pragma mark TKApplication(TKApplicationEvent)
 
@@ -1017,20 +1028,20 @@ ExposeRestrictProc(
 {
     return YES;
 }
+
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
     if (context && ![NSApp tkWillExit]) {
 	/*
 	 * If this ContentView is off screen, Run any pending widget
-	 * display procs before updating the layer.
+	 * display procs before updating the layer.  Also schedule
+	 * another call to updateLayer at idle.  (See bug [40dc19ee9e].)
 	 */
-
 	if (! [self onScreen]) {
-	    //printf("Running event loop.\n");
 	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	    Tcl_DoWhenIdle(updateLayerIdleTask, self);
 	    [self setOnScreen:YES];
 	}
-
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -1039,7 +1050,6 @@ ExposeRestrictProc(
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
-
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
