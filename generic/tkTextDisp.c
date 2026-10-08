@@ -14996,18 +14996,26 @@ TkTextCharLayoutProc(
 	    ciPtr->baseOffset, -1, chunkPtr->x, maxX, spaceMode, TK_ISOLATE_END, &nextX);
 
     if (bytesThatFit < maxBytes) {
-	if (bytesThatFit == 0 && noCharsYet) {
-	    int chLen;
-	    Tcl_UniChar ch;
-
-	    chLen = Tcl_UtfToUniChar(p, &ch);
-
+	if (p[bytesThatFit] != '\n') {
 	    /*
-	     * At least one character should be contained in current display line.
+	     * Cut only at a grapheme cluster boundary; at least one grapheme cluster
+	     * should be contained in current display line.
 	     */
 
-	    bytesThatFit = CharChunkMeasureChars(chunkPtr, ciPtr->u.chars, ciPtr->baseOffset + chLen,
-		    ciPtr->baseOffset, -1, chunkPtr->x, -1, spaceMode, 0, &nextX);
+	    size_t cut = 0;
+
+	    if (bytesThatFit > 0) {
+		mojibake_grapheme_prev(p, maxBytes, bytesThatFit + 1, &cut);
+	    }
+	    if (cut == 0 && noCharsYet) {
+		mojibake_grapheme_next(p, maxBytes, 0, &cut);
+	    }
+	    if ((int) cut != bytesThatFit) {
+		nextX = chunkPtr->x;
+		bytesThatFit = (cut == 0) ? 0 : CharChunkMeasureChars(chunkPtr, ciPtr->u.chars,
+			ciPtr->baseOffset + cut, ciPtr->baseOffset, -1, chunkPtr->x, -1, spaceMode, 0,
+			&nextX);
+	    }
 	}
 	if (spaceMode == TEXT_SPACEMODE_TRIM) {
 	    while (IsBlank(p[bytesThatFit])) {
