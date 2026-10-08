@@ -80,6 +80,7 @@ to the userbase.
  - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
  - [MS-Win: toplevel menu does not honor font and color](https://core.tcl-lang.org/tk/tktview/11bd4a)
  - [Long dashed lines cause problems on canvases](https://core.tcl-lang.org/tk/tktview/663981)
+ - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
