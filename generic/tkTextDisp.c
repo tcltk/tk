@@ -2649,110 +2649,74 @@ static unsigned
 LayoutComputeBreakLocations(
     LayoutData *data)
 {
-    unsigned totalSize = 0;
     TkText *textPtr = data->textPtr;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextSegment *segPtr = data->logicalLinePtr->segPtr;
     TkTextLine *linePtr = data->logicalLinePtr;
     TkTextLine *endLinePtr = LayoutEndOfLogicalLine(data);
-    bool useUniBreak = data->textPtr->useUniBreak;
-    char const *locale = useUniBreak ? textPtr->locale : NULL;
-    char const *nextLocale = NULL;
     unsigned capacity = dInfoPtr->strBufferSize;
     char *str = dInfoPtr->strBuffer;
-    char *brks = textPtr->brksBuffer;
+    unsigned size = 0;
 
     /*
-     * The codepoint line break computation requires the whole logical line (due to a
-     * poor design of libunibreak), but separated by locale, because this line break
-     * algorithm is in general locale dependent. The elided content is included, the
-     * layout counts its bytes too (in elided chunks).
+     * The codepoint line break computation requires the whole logical line. The
+     * elided content is included, the layout counts its bytes too (in elided chunks).
      */
 
-    while (segPtr) {
-	unsigned size = 0;
-	unsigned newTotalSize;
+    for ( ; segPtr; segPtr = LayoutNextSegmentOfLine(segPtr, &linePtr, endLinePtr)) {
+	switch ((int) segPtr->typePtr->group) {
+	case SEG_GROUP_CHAR: {
+	    unsigned newSize;
 
-	for ( ; segPtr; segPtr = LayoutNextSegmentOfLine(segPtr, &linePtr, endLinePtr)) {
-	    switch ((int) segPtr->typePtr->group) {
-	    case SEG_GROUP_CHAR: {
-		unsigned newSize;
-
-		if (useUniBreak) {
-		    const char *myLocale = TkBTreeGetLocale(textPtr, segPtr);
-
-		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
-			nextLocale = myLocale;
-			goto endOfRun; /* this segment starts the next run */
-		    }
-		}
-		if ((newSize = size + segPtr->size) >= capacity) {
-		    capacity = MAX(2*capacity, newSize + 1);
-		    str = (char *)Tcl_Realloc(str, capacity);
-		}
-		memcpy(str + size, segPtr->body.chars, segPtr->size);
-		size = newSize;
-		break;
+	    if ((newSize = size + segPtr->size) >= capacity) {
+		capacity = MAX(2*capacity, newSize + 1);
+		str = (char *)Tcl_Realloc(str, capacity);
 	    }
-	    case SEG_GROUP_HYPHEN:
-		if (useUniBreak) {
-		    const char *myLocale = TkBTreeGetLocale(textPtr, segPtr);
-
-		    if (myLocale[0] != locale[0] || myLocale[1] != locale[1]) {
-			nextLocale = myLocale;
-			goto endOfRun; /* this segment starts the next run */
-		    }
-		}
-
-		/*
-		 * Use TAB (U+0009) instead of SHY (U+00AD), because SHY needs two bytes,
-		 * but TAB needs only one byte, and this corresponds to the byte size of
-		 * a hyphen segment. The TAB character has the same character class as
-		 * the SHY character, so it's a proper substitution.
-		 *
-		 * NOTE: Do not use '-' (U+002D) for substitution, because the meaning
-		 * of this character is contextual.
-		 */
-
-		/* FALLTHRU */
-	    case SEG_GROUP_IMAGE:
-	    case SEG_GROUP_WINDOW:
-		/* The language variable doesn't matter here. */
-		if (size + 1 >= capacity) {
-		    assert(2*capacity > size + 1);
-		    str = (char *)Tcl_Realloc(str, capacity *= 2);
-		}
-		/* Substitute with a TAB, so we can break at this point. */
-		str[size++] = '\t';
-		break;
-	    }
+	    memcpy(str + size, segPtr->body.chars, segPtr->size);
+	    size = newSize;
+	    break;
 	}
-    endOfRun:
-	if (size > 0) {
-	    newTotalSize = totalSize + size;
+	case SEG_GROUP_HYPHEN:
+	    /*
+	     * Use TAB (U+0009) instead of SHY (U+00AD), because SHY needs two bytes,
+	     * but TAB needs only one byte, and this corresponds to the byte size of
+	     * a hyphen segment. The TAB character has the same character class as
+	     * the SHY character, so it's a proper substitution.
+	     *
+	     * NOTE: Do not use '-' (U+002D) for substitution, because the meaning
+	     * of this character is contextual.
+	     */
 
-	    if (newTotalSize > textPtr->brksBufferSize) {
-		/*
-		 * Take into account that the buffer must be a bit larger, because we need
-		 * one additional byte for trailing NUL (see below).
-		 */
-		textPtr->brksBufferSize = MAX(newTotalSize, textPtr->brksBufferSize + 512);
-		textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
-		brks = textPtr->brksBuffer;
+	    /* FALLTHRU */
+	case SEG_GROUP_IMAGE:
+	case SEG_GROUP_WINDOW:
+	    if (size + 1 >= capacity) {
+		assert(2*capacity > size + 1);
+		str = (char *)Tcl_Realloc(str, capacity *= 2);
 	    }
-
-	    str[size] = '\0'; /* TkTextComputeBreakLocations expects traling nul */
-	    TkTextComputeBreakLocations(data->textPtr->interp, str, size,
-		    locale ? (*locale ? locale : "en") : NULL, brks + totalSize);
-	    totalSize = newTotalSize;
+	    /* Substitute with a TAB, so we can break at this point. */
+	    str[size++] = '\t';
+	    break;
 	}
-	locale = nextLocale;
+    }
+
+    if (size > 0) {
+	if (size > textPtr->brksBufferSize) {
+	    /*
+	     * Take into account that the buffer must be a bit larger, because we need
+	     * one additional byte for trailing NUL (see below).
+	     */
+	    textPtr->brksBufferSize = MAX(size, textPtr->brksBufferSize + 512);
+	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
+	}
+	str[size] = '\0'; /* TkTextComputeBreakLocations expects traling nul */
+	TkTextComputeBreakLocations(str, size, textPtr->brksBuffer);
     }
 
     dInfoPtr->strBuffer = str;
     dInfoPtr->strBufferSize = capacity;
 
-    return totalSize;
+    return size;
 }
 
 static void

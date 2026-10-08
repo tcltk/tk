@@ -1088,25 +1088,13 @@ test text-1.106 {configuration option: "tagging"} -setup {
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
-test text-1.107 {configuration option: "useunibreak"} -setup {
+test text-1.107 {configuration option: "useunibreak" no longer exists} -setup {
     text .t
-    pack .t
-    update
 } -body {
     .t configure -useunibreak 1
-    .t cget -useunibreak
 } -cleanup {
     destroy .t
-} -result {1}
-test text-1.108 {configuration option: "useunibreak"} -setup {
-    text .t
-    pack .t
-    update
-} -body {
-    .t configure -useunibreak eh
-} -cleanup {
-    destroy .t
-} -match glob -returnCodes {error} -result {*}
+} -returnCodes {error} -result {unknown option "-useunibreak"}
 test text-1.109 {configuration option: "undotagging"} -setup {
     text .t
     update
@@ -9234,7 +9222,7 @@ test text-43.9 {brks: string with a nul character} -setup {
     destroy .t
 } -result {5 1}
 
-test text-43.10 {no leak of the -locale value, nor of the locale of [brks]} -constraints {
+test text-43.10 {no leak of the -locale value} -constraints {
     memory
 } -setup {
     destroy .t
@@ -9252,12 +9240,20 @@ test text-43.10 {no leak of the -locale value, nor of the locale of [brks]} -con
     }
     text .t
 } -body {
-    list [growth {text .w; destroy .w}] [growth {set l fr; catch {.t brks a [string cat $l _FR]}}]
+    growth {text .w; destroy .w}
 } -cleanup {
     destroy .t
     rename getbytes {}
     rename growth {}
-} -result {0 0}
+} -result {0}
+test text-43.11 {brks: no locale argument} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t brks abc en
+} -cleanup {
+    destroy .t
+} -returnCodes {error} -result {wrong # args: should be ".t brks string"}
 
 #
 # TESTFILE CLEANUP
