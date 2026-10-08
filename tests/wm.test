@@ -229,7 +229,7 @@ test wm-attributes-1.2.5.3 {usage} -constraints aqua -returnCodes error -body {
 #
 deleteWindows
 
-test wm-attributes-1.3.0 {default -fullscreen value} -constraints win -body {
+test wm-attributes-1.3.0 {default -fullscreen value} -body {
     toplevel .t
     wm attributes .t -fullscreen
 } -cleanup {
@@ -242,7 +242,7 @@ test wm-attributes-1.3.1 {change -fullscreen before map} -constraints win -body 
 } -cleanup {
     deleteWindows
 } -result 1
-test wm-attributes-1.3.2 {change -fullscreen before map} -constraints win -body {
+test wm-attributes-1.3.2 {change -fullscreen before map} -body {
     toplevel .t
     wm attributes .t -fullscreen 1
     update
@@ -412,7 +412,7 @@ test wm-attributes-1.4.1 {setting fullscreen does not generate FocusIn on wrappe
 
 test wm-attributes-1.5.0 {fullscreen stackorder} -setup {
     set results [list]
-} -constraints win -body {
+} -body {
     toplevel .t
     lappend results [wm stackorder .]
     pause 200
@@ -460,7 +460,7 @@ test wm-attributes-1.5.2 {fullscreen stackorder} -setup {
 } -result {{.t .} {.t .}}
 test wm-attributes-1.5.3 {fullscreen stackorder} -setup {
     set results [list]
-} -constraints win -body {
+} -body {
     toplevel .t
     pause 200
     lappend results [wm stackorder .]

@@ -1980,9 +1980,7 @@ test entry-6.10 {EntryComputeGeometry procedure} -constraints {
 } -cleanup {
     destroy .e
 } -result {23 53 43}
-test entry-6.11 {EntryComputeGeometry procedure} -constraints {
-    win
-} -setup {
+test entry-6.11 {EntryComputeGeometry procedure} -setup {
     entry .e -highlightthickness 2
     pack .e ; update idletasks
 } -body {
@@ -2760,7 +2758,7 @@ test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 
 # why when string in .e index changed to not beginning with s,
 # it behaves differently?
-test entry-13.12.1 {GetEntryIndex procedure} -constraints unix -body {
+test entry-13.12.1 {GetEntryIndex procedure} -body {
 # Previous settings:
 	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
 	pack .e ; update idletasks
@@ -2794,7 +2792,7 @@ test entry-13.13 {GetEntryIndex procedure} -constraints win -body {
     destroy .e
 } -returnCodes error -result {bad entry index "sbogus"}
 
-test entry-13.14 {GetEntryIndex procedure} -constraints win -body {
+test entry-13.14 {GetEntryIndex procedure} -body {
 # On mac and pc, when selection is cleared, entry widget remembers
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
@@ -2814,7 +2812,7 @@ test entry-13.14 {GetEntryIndex procedure} -constraints win -body {
     destroy .e
 } -returnCodes error -match glob -result {*}
 
-test entry-13.14.1 {GetEntryIndex procedure} -constraints win -body {
+test entry-13.14.1 {GetEntryIndex procedure} -body {
 # On mac and pc, when selection is cleared, entry widget remembers
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
@@ -3034,9 +3032,7 @@ test entry-16.2 {EntryVisibleRange procedure} -constraints {
 } -cleanup {
     destroy .e
 } -result {0.000000 0.275862}
-test entry-16.3 {EntryVisibleRange procedure} -constraints {
-    win
-} -body {
+test entry-16.3 {EntryVisibleRange procedure} -body {
     entry .e -show . -width 10  -font {Helvetica -12}
 	pack .e ; update idletasks
     update

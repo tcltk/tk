@@ -150,24 +150,22 @@ test focus-1.3 {Tk_FocusCmd procedure} -constraints unix -body {
     focus .t.b3
     focus
 } -result {}
-test focus-1.4 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.4 {Tk_FocusCmd procedure} -body {
     focus ""
 } -returnCodes ok -result {}
-test focus-1.5 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.5 {Tk_FocusCmd procedure} -body {
     focusClear
     focus -force .t
     focus .t.b3
     focus
 }  -result {.t.b3}
-test focus-1.6 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.6 {Tk_FocusCmd procedure} -body {
     focus .gorp
 } -returnCodes error -result {bad window path name ".gorp"}
-test focus-1.7 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.7 {Tk_FocusCmd procedure} -body {
     focus .gorp a
 } -returnCodes error -result {bad option ".gorp": must be -displayof, -force, or -lastfor}
-test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
-    unix
-} -setup {
+test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -setup {
     destroy .t2
 } -body {
     focusClear
@@ -191,19 +189,13 @@ test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
 } -cleanup {
     destroy .t2
 } -result {.t2.f2 .t2 .t2}
-test focus-1.9 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.9 {Tk_FocusCmd procedure, -displayof option} -body {
     focus -displayof
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
-test focus-1.10 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.10 {Tk_FocusCmd procedure, -displayof option} -body {
     focus -displayof a b
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
-test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -body {
     focus -displayof .lousy
 } -returnCodes error -result {bad window path name ".lousy"}
 test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
@@ -215,9 +207,7 @@ test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
     focus .t
     focus -displayof .t.b3
 }  -result {}
-test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -body {
     focusClear
     focus -force .t
     focus -displayof .t.b3
@@ -229,16 +219,16 @@ test focus-1.14 {Tk_FocusCmd procedure, -displayof option} -constraints {
     focus -force .alt.c
     focus -displayof .alt
 } -result {.alt.c}
-test focus-1.15 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.15 {Tk_FocusCmd procedure, -force option} -body {
     focus -force
 } -returnCodes error -result {wrong # args: should be "focus -force window"}
-test focus-1.16 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.16 {Tk_FocusCmd procedure, -force option} -body {
     focus -force a b
 } -returnCodes error -result {wrong # args: should be "focus -force window"}
-test focus-1.17 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.17 {Tk_FocusCmd procedure, -force option} -body {
     focus -force foo
 } -returnCodes error -result {bad window path name "foo"}
-test focus-1.18 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.18 {Tk_FocusCmd procedure, -force option} -body {
     focus -force ""
 } -returnCodes ok -result {}
 test focus-1.19 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
@@ -248,39 +238,29 @@ test focus-1.19 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
     focus -force .t.b1
     lappend x [focus]
 } -result {{} .t.b1}
-test focus-1.20 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.20 {Tk_FocusCmd procedure, -lastfor option} -body {
     focus -lastfor
 } -returnCodes error -result {wrong # args: should be "focus -lastfor window"}
-test focus-1.21 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.21 {Tk_FocusCmd procedure, -lastfor option} -body {
     focus -lastfor 1 2
 } -returnCodes error -result {wrong # args: should be "focus -lastfor window"}
-test focus-1.22 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.22 {Tk_FocusCmd procedure, -lastfor option} -body {
     focus -lastfor who_knows?
 } -returnCodes error -result {bad window path name "who_knows?"}
-test focus-1.23 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.23 {Tk_FocusCmd procedure, -lastfor option} -body {
     focusClear
     focusSetup
     focus .b
     focus .t.b1
     list [focus -lastfor .] [focus -lastfor .t.b3]
 } -result {.b .t.b1}
-test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} -body {
     focusClear
     focusSetup
     update
     focus -lastfor .t.b2
 } -result {.t}
-test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.25 {Tk_FocusCmd procedure} -body {
     focus -unknown
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 

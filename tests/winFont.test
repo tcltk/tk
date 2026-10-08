@@ -43,13 +43,11 @@ testutils import geometry
 # TESTS
 #
 
-test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
-    win
-} -body {
+test winfont-1.1 {TkpGetNativeFont procedure: not native} -body {
     catch {font delete xyz}
     font measure {} xyz
 } -returnCodes error -result {font "" does not exist}
-test winfont-1.2 {TkpGetNativeFont procedure: native} -constraints win -body {
+test winfont-1.2 {TkpGetNativeFont procedure: native} -body {
     font measure ansifixed 0
     font measure ansi 0
     font measure device 0
@@ -60,29 +58,19 @@ test winfont-1.2 {TkpGetNativeFont procedure: native} -constraints win -body {
 } -result {}
 
 
-test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
-    win
-} -body {
+test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -body {
     expr {[font actual {-size -10} -size] > 0}
 } -result 1
-test winfont-2.2 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
-    win
-} -body {
+test winfont-2.2 {TkpGetFontFromAttributes procedure: pointsize} -body {
     expr {[font actual {-family Arial} -size] > 0}
 } -result 1
-test winfont-2.3 {TkpGetFontFromAttributes procedure: normal weight} -constraints {
-    win
-} -body {
+test winfont-2.3 {TkpGetFontFromAttributes procedure: normal weight} -body {
     font actual {-weight normal} -weight
 } -result {normal}
-test winfont-2.4 {TkpGetFontFromAttributes procedure: bold weight} -constraints {
-    win
-} -body {
+test winfont-2.4 {TkpGetFontFromAttributes procedure: bold weight} -body {
     font actual {-weight bold} -weight
 } -result {bold}
-test winfont-2.5 {TkpGetFontFromAttributes procedure: no family} -constraints {
-    win
-} -body {
+test winfont-2.5 {TkpGetFontFromAttributes procedure: no family} -body {
     catch {expr {[font actual {-size 10} -size]}}
 } -result 0
 test winfont-2.6 {TkpGetFontFromAttributes procedure: family} -constraints {
@@ -117,21 +105,19 @@ test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constrai
     lappend x [font actual {-family "Geneva"} -family]
     lappend x [font actual {-family "Arial"} -family]
 } -match regexp -result {Helvetica (Helvetica|Geneva) Arial}
-test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -constraints {
-    win
-} -body {
+test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -body {
     # No way to get it to fail! Any font name is acceptable.
 } -result {}
 
 
-test winfont-3.1 {TkpDeleteFont procedure} -constraints win -body {
+test winfont-3.1 {TkpDeleteFont procedure} -body {
     catch {font delete xyz}
     font actual {-family xyz}
     set x {}
 } -result {}
 
 
-test winfont-4.1 {TkpGetFontFamilies procedure} -constraints win -body {
+test winfont-4.1 {TkpGetFontFamilies procedure} -body {
     font families
     set x {}
 } -result {}
@@ -157,9 +143,7 @@ update
 set ax [winfo reqwidth .t.l]
 set ay [winfo reqheight .t.l]
 
-test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraints {
-    win
-} -setup {
+test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -setup {
     destroy .t.l
 } -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -176,9 +160,7 @@ test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraint
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -constraints {
-    win
-} -setup {
+test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -195,9 +177,7 @@ test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -cons
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
-    win
-} -setup {
+test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -214,9 +194,7 @@ test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
-    win
-} -setup {
+test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -233,9 +211,7 @@ test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -constraints {
-    win
-} -setup {
+test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -setup {
     destroy .t.c
 }  -body {
     canvas .t.c -closeenough 0
@@ -250,9 +226,7 @@ test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -constra
     destroy .t.c
 } -result 2
 
-test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -constraints {
-    win
-} -setup {
+test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -269,9 +243,7 @@ test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -constra
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
-    win
-} -setup {
+test winfont-5.7 {Tk_MeasureChars procedure: whole words} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -290,9 +262,7 @@ test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
 
 # After adding Uniscribe support for RTL text, this test's assumptions about
 # space are no longer valid.
-test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constraints {
-    win
-} -setup {
+test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -311,9 +281,7 @@ test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constra
 
 # After adding Uniscribe support for RTL text, this test's assumptions about
 # space are no longer valid.
-test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -constraints {
-    win
-} -setup {
+test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -330,9 +298,7 @@ test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -const
     destroy .t.l
 } -match glob -result *
 
-test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -constraints {
-    win
-} -setup {
+test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -371,7 +337,7 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
 } -result 1
 
 
-test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
+test winfont-6.1 {Tk_DrawChars procedure: loop test} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -385,7 +351,7 @@ test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
 } -result {}
 
 
-test winfont-7.1 {InitFont procedure: use old font} -constraints win -setup {
+test winfont-7.1 {InitFont procedure: use old font} -setup {
     destroy .c
 } -setup {
     catch {font delete xyz}
@@ -402,9 +368,7 @@ test winfont-7.2 {InitFont procedure: extract info from logfont} -constraints {
 } -body {
     font actual {arial 10 bold italic underline overstrike}
 } -result {-family Arial -size 10 -weight bold -slant italic -underline 1 -overstrike 1}
-test winfont-7.3 {InitFont procedure: extract info from textmetric} -constraints {
-    win
-} -body {
+test winfont-7.3 {InitFont procedure: extract info from textmetric} -body {
     font metric {arial 10 bold italic underline overstrike} -fixed
 } -result 0
 test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints {
