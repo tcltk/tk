@@ -706,16 +706,24 @@ test winfont-10.4 {RTL: a label draws the ranges of a right-to-left item right t
 } -setup {
     destroy .l
 } -body {
-    # seen + emoji + lam alef meem: the emoji sits between the two groups of letters,
-    # with the wider group (three letters) on its left, so its first colored column
-    # must be well inside the label; in logical order it would be near the left edge.
-    set text "[format %c 0x633][format %c 0x1F600][format %c 0x644][format %c 0x627][format %c 0x645]"
-    label .l -text $text -font {{Segoe UI} 72} -foreground black -background white \
-	-padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    # seen + emoji + "al-arabiya": right to left, the long word is drawn first, at
+    # the left, and the emoji starts after it; in logical order the emoji would
+    # start after the short seen.  The first colored column tells which.
+    set f {{Segoe UI} 72}
+    set prefix [format %c 0x633]
+    set suffix ""
+    foreach cp {0x627 0x644 0x639 0x631 0x628 0x64A 0x629} {
+	append suffix [format %c $cp]
+    }
+    label .l -text "$prefix[format %c 0x1F600]$suffix" -font $f -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
     pack .l
     update
     set left [winfontLeftmostColored .l]
-    expr {$left > [winfo width .l] * 0.35}
+    set rtl [font measure $f $suffix]
+    set logical [font measure $f $prefix]
+    expr {abs($left - $rtl) < abs($left - $logical) ? 1
+	    : "left $left, rtl $rtl, logical $logical"}
 } -cleanup {
     destroy .l
 } -result 1
