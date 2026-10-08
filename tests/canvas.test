@@ -1393,7 +1393,7 @@ test canvas-24.1 {Enter and Leave bindings which move the current item do not ha
 } -result 1
 
 test canvas-24.2 {an item with negative coordinates ending in .5 is drawn inside its bounding box - bug ad9a023e45} -constraints {
-    testpixel
+    testpixel unix
 } -setup {
     canvas .c -width 60 -height 60 -scrollregion {-30 -30 30 30} \
 	-highlightthickness 0 -borderwidth 0 -background white
