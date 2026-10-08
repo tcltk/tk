@@ -1,6 +1,6 @@
 #!/bin/sh
 # the next line restarts using wish \
-exec wish "$0" ${1+"$@"}
+    exec wish "$0" ${1+"$@"}
 
 # widget --
 # This script demonstrates the various widgets provided by Tk, along with many
@@ -20,9 +20,9 @@ namespace import ::msgcat::mc
 
 # Divert to the accessible widget demo if screen reader is on.
 if {[info commands ::tk::accessible::check_screenreader] ne ""}  {
-	if {[::tk::accessible::check_screenreader] eq "1"} {
-	    source [file join $tk_demoDirectory accessiblewidget]
-	}
+    if {[::tk::accessible::check_screenreader] eq "1"} {
+	source [file join $tk_demoDirectory accessiblewidget]
+    }
 }
 
 
@@ -31,7 +31,7 @@ if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     # This won't work everywhere, but there's no other way in core Tk at the
     # moment to display a coloured icon.
     image create photo TclPowered \
-	    -file [file join $tk_library images logo64.gif]
+	-file [file join $tk_library images logo64.gif]
     wm iconwindow . [toplevel ._iconWindow]
     pack [label ._iconWindow.i -image TclPowered]
     wm iconname . [mc "tkWidgetDemo"]
@@ -75,22 +75,22 @@ set font mainFont
 set viewData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" fill="#000000"/>
+    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" fill="#000000"/>
     </svg>
 }
 
 set refreshData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z" fill="#000000"/>
+    <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z" fill="#000000"/>
     </svg>
 }
 
 set printData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" fill="#000000"/>
-     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" fill="#000000"/>
+    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" fill="#000000"/>
+    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" fill="#000000"/>
     </svg>
 }
 
@@ -98,21 +98,21 @@ proc images {arg} {
     set fgColor [ttk::style lookup . -foreground {} black]
     lassign [winfo rgb . $fgColor] r g b
     set fgColor [format "#%02x%02x%02x" \
-	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+		     [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
 
     foreach action {view refresh print} {
 	upvar ${action}Data imgData
 	for {set data $imgData; set startIdx 0} \
-		{[set idx1 [string first "#000000" $data $startIdx]] >= 0} \
-		{set startIdx [expr {$idx1 + 7}]} {
-	    set idx2 [expr {$idx1 + 6}]
-	    set data [string replace $data $idx1 $idx2 $fgColor]
-	}
+	    {[set idx1 [string first "#000000" $data $startIdx]] >= 0} \
+	    {set startIdx [expr {$idx1 + 7}]} {
+		set idx2 [expr {$idx1 + 6}]
+		set data [string replace $data $idx1 $idx2 $fgColor]
+	    }
 
 	switch $arg {
 	    create {
 		image create photo ::img::$action -format $::tk::svgFmt \
-			-data $data
+		    -data $data
 	    }
 	    configure { ::img::$action configure -data $data }
 	}
@@ -129,7 +129,7 @@ unset mainClass event
 image create photo ::img::delete -format $::tk::svgFmt -data {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" fill="#d00000"/>
+    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" fill="#d00000"/>
     </svg>
 }
 
@@ -145,20 +145,20 @@ menu .menuBar -tearoff 0
 if {[tk windowingsystem] ne "aqua"} {
     # This is a tk-internal procedure to make i18n easier
     ::tk::AmpMenuArgs .menuBar add cascade -label [mc "&File"] \
-	    -menu .menuBar.file
+	-menu .menuBar.file
     menu .menuBar.file -tearoff 0
     ::tk::AmpMenuArgs .menuBar.file add command -label [mc "&About..."] \
-	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
+	-command {tkAboutDialog} -accelerator [mc "<F1>"]
     bind . <F1> {tkAboutDialog}
     .menuBar.file add sep
     if {[tk windowingsystem] eq "win32"} {
 	# Windows doesn't usually have a Meta key
 	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
-		-command {exit} -accelerator [mc "Ctrl+Q"]
+	    -command {exit} -accelerator [mc "Ctrl+Q"]
 	bind . <[mc "Control-q"]> {exit}
     } else {
 	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
-		-command {exit} -accelerator [mc "Meta-Q"]
+	    -command {exit} -accelerator [mc "Meta-Q"]
 	bind . <[mc "Meta-q"]> {exit}
     }
     . configure -menu .menuBar
@@ -180,17 +180,17 @@ pack .statusBar -side bottom -fill x -pady 1.5p
 set textheight 30
 catch {
     set textheight [expr {
-	([winfo screenheight .] * 0.7) /
-	[font metrics mainFont -displayof . -linespace]
-    }]
+			  ([winfo screenheight .] * 0.7) /
+			  [font metrics mainFont -displayof . -linespace]
+		      }]
 }
 
 ttk::frame .textFrame
 ttk::scrollbar .s -orient vertical -command {.t yview} -takefocus 1
 pack .s -in .textFrame -side right -fill y
 text .t -yscrollcommand {.s set} -wrap word -width 70 -height $textheight \
-	-font mainFont -setgrid 1 -highlightthickness 0 \
-	-padx 3p -pady 1.5p -takefocus 0
+    -font mainFont -setgrid 1 -highlightthickness 0 \
+    -padx 3p -pady 1.5p -takefocus 0
 pack .t -in .textFrame -expand y -fill both -padx 1
 pack .textFrame -expand yes -fill both
 if {[tk windowingsystem] eq "aqua"} {
@@ -306,13 +306,13 @@ proc addFormattedText {formattedText} {
 		}
 		subtitle {
 		    .t insert end "\n" {} [mc $values] subtitle \
-			    " \n " demospace
+			" \n " demospace
 		    set demoCount 0
 		}
 		demo {
 		    set description [lassign $values name]
 		    .t insert end "[incr demoCount]. [mc $description]" \
-			    [list demo demo-$name]
+			[list demo demo-$name]
 		    if {$new} {
 			.t insert end " [mc NEW]" new
 			set new 0
@@ -441,7 +441,7 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
-	@@demo emojichoose Emoji picker
+    @@demo emojichoose Emoji picker
     @@demo systray      System tray icon and notification
     @@demo print        Printing from canvas and text widgets
 
@@ -708,8 +708,8 @@ proc printCode {w file} {
 #
 proc tkAboutDialog {} {
     tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
-	    -message [mc "Tk widget demonstration application"] -detail \
-"[mc "Copyright © %s" {1996-1997 Sun Microsystems, Inc.}]
+	-message [mc "Tk widget demonstration application"] -detail \
+	"[mc "Copyright © %s" {1996-1997 Sun Microsystems, Inc.}]
 [mc "Copyright © %s" {1997-2000 Ajuba Solutions, Inc.}]
 [mc "Copyright © %s" {2001-2009 Donal K. Fellows}]
 [mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]

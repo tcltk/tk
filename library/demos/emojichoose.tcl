@@ -18,14 +18,14 @@ positionWindow $w
 
 
 label $w.msg -font $font -wraplength 4i -anchor w -justify left \
-	-text "This is a demonstration of Tk's support for emojis.\
+    -text "This is a demonstration of Tk's support for emojis.\
 	To access the emoji picker, use the following platform-specific \
 	keyboard shortcuts:\n\n\
 	macOS: Command-Control-Space\n\
 	Windows: Windows-.\n\
 	X11: Control-.\n\n\The emoji picker will appear near the text or entry widget\
 	below and will insert the selected emoji."
-	
+
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
