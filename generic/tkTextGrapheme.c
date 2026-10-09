@@ -131,10 +131,10 @@ mojibake_grapheme_breaks(const char *buf,
     state.index = 0;
     breaks[0]=1;
     while ((bt = mjb_next_grapheme_break(buf, byteLen, MJB_ENC_UTF_8, &state)) != MJB_BT_NOT_SET) {
-        if (bt == MJB_BT_ALLOWED) {
-            size_t pos = GraphemeBoundaryFromState(&state, byteLen, &lastBoundary);
-            breaks[pos]=1;
-        }
+	if (bt == MJB_BT_ALLOWED) {
+	    size_t pos = GraphemeBoundaryFromState(&state, byteLen, &lastBoundary);
+	    breaks[pos]=1;
+	}
     }
     breaks[byteLen]=1;
     return 1;
@@ -168,10 +168,10 @@ mojibake_grapheme_next(const char *buf,
     if (buf==NULL || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
     state.index=0;
     while ((bt=mjb_next_grapheme_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos>byteOffset) { *nextOffset=pos; return 1; }
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos>byteOffset) { *nextOffset=pos; return 1; }
+	}
     }
     *nextOffset=byteLen; return 1;
 }
@@ -204,11 +204,11 @@ mojibake_grapheme_prev(const char *buf,
     if (buf==NULL || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
     state.index=0;
     while ((bt=mjb_next_grapheme_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos>=byteOffset) break;
-            last=pos;
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=GraphemeBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos>=byteOffset) break;
+	    last=pos;
+	}
     }
     *prevOffset=last; return 1;
 }
@@ -265,10 +265,10 @@ mojibake_line_breaks(const char *buf,
     breaks[0]=1;
     state.index=0;
     while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos<=byteLen) breaks[pos]=1;
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos<=byteLen) breaks[pos]=1;
+	}
     }
     breaks[byteLen]=1;
     return 1;
@@ -302,10 +302,10 @@ mojibake_line_next(const char *buf,
     if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
     state.index=0;
     while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos>byteOffset) { *nextOffset=pos; return 1; }
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos>byteOffset) { *nextOffset=pos; return 1; }
+	}
     }
     *nextOffset=byteLen; return 1;
 }
@@ -338,11 +338,11 @@ mojibake_line_prev(const char *buf,
     if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
     state.index=0;
     while ((bt=mjb_next_line_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos>=byteOffset) break;
-            last=pos;
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=LineBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos>=byteOffset) break;
+	    last=pos;
+	}
     }
     *prevOffset=last; return 1;
 }
@@ -399,10 +399,10 @@ mojibake_word_breaks(const char *buf,
     breaks[0]=1;
     state.index=0;
     while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos<=byteLen) breaks[pos]=1;
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos<=byteLen) breaks[pos]=1;
+	}
     }
     breaks[byteLen]=1;
     return 1;
@@ -436,10 +436,10 @@ mojibake_word_next(const char *buf,
     if (!buf || byteOffset>=byteLen) { *nextOffset=byteLen; return buf!=NULL; }
     state.index=0;
     while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos>byteOffset) { *nextOffset=pos; return 1; }
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos>byteOffset) { *nextOffset=pos; return 1; }
+	}
     }
     *nextOffset=byteLen; return 1;
 }
@@ -472,11 +472,11 @@ mojibake_word_prev(const char *buf,
     if (!buf || byteOffset==0) { *prevOffset=0; return buf!=NULL; }
     state.index=0;
     while ((bt=mjb_next_word_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos>=byteOffset) break;
-            last=pos;
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=WordBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos>=byteOffset) break;
+	    last=pos;
+	}
     }
     *prevOffset=last; return 1;
 }
@@ -533,10 +533,10 @@ mojibake_sentence_breaks(const char *buf,
     breaks[0]=1;
     state.index=0;
     while ((bt=mjb_next_sentence_break(buf,byteLen,MJB_ENC_UTF_8,&state))!=MJB_BT_NOT_SET) {
-        if (bt==MJB_BT_ALLOWED) {
-            size_t pos=SentenceBoundaryFromState(&state,byteLen,&lastBoundary);
-            if (pos<=byteLen) breaks[pos]=1;
-        }
+	if (bt==MJB_BT_ALLOWED) {
+	    size_t pos=SentenceBoundaryFromState(&state,byteLen,&lastBoundary);
+	    if (pos<=byteLen) breaks[pos]=1;
+	}
     }
     breaks[byteLen]=1;
     return 1;
@@ -597,9 +597,9 @@ ScriptFromCodepoint(mjb_codepoint cp)
 typedef struct {
     const char* const* orig_words;
     size_t count;
-    const char** sorted;      /* malloced array of pointers sorted */
-    size_t* lens;             /* byte lengths */
-    size_t max_len;           /* max byte length */
+    const char** sorted;	/* malloced array of pointers sorted */
+    size_t* lens;		/* byte lengths */
+    size_t max_len;		/* max byte length */
     int initialized;
 } DictCache;
 
@@ -655,18 +655,18 @@ InitDictCache(DictCache *c, const char* const* words, size_t count)
     if (!c->sorted || !c->lens) return;
     size_t max=0;
     for (size_t i=0;i<count;i++) {
-        c->sorted[i]=words[i];
-        size_t l = strlen(words[i]);
-        c->lens[i]=l; /* Temporary, will recompute after sort. */
-        if (l>max) max=l;
+	c->sorted[i]=words[i];
+	size_t l = strlen(words[i]);
+	c->lens[i]=l; /* Temporary, will recompute after sort. */
+	if (l>max) max=l;
     }
     qsort(c->sorted, count, sizeof(char*), cmp_strptr);
     /* Recompute lens after sort and max. */
     max=0;
     for (size_t i=0;i<count;i++) {
-        size_t l = strlen(c->sorted[i]);
-        c->lens[i]=l;
-        if (l>max) max=l;
+	size_t l = strlen(c->sorted[i]);
+	c->lens[i]=l;
+	if (l>max) max=l;
     }
     c->max_len = max;
     c->initialized=1;
@@ -745,17 +745,17 @@ DictContains(DictCache *c, const char *query, size_t qlen)
     if (!c || !c->initialized || qlen==0 || qlen>c->max_len) return 0;
     size_t lo=0, hi=c->count;
     while (lo < hi) {
-        size_t mid = lo + (hi-lo)/2;
-        size_t mlen = c->lens[mid];
-        size_t cmpLen = mlen < qlen ? mlen : qlen;
-        int cmp = strncmp(c->sorted[mid], query, cmpLen);
-        if (cmp==0) {
-            if (mlen < qlen) cmp = -1;
-            else if (mlen > qlen) cmp = 1;
-            else return 1;
-        }
-        if (cmp < 0) lo = mid+1;
-        else hi = mid;
+	size_t mid = lo + (hi-lo)/2;
+	size_t mlen = c->lens[mid];
+	size_t cmpLen = mlen < qlen ? mlen : qlen;
+	int cmp = strncmp(c->sorted[mid], query, cmpLen);
+	if (cmp==0) {
+	    if (mlen < qlen) cmp = -1;
+	    else if (mlen > qlen) cmp = 1;
+	    else return 1;
+	}
+	if (cmp < 0) lo = mid+1;
+	else hi = mid;
     }
     return 0;
 }
@@ -779,69 +779,69 @@ DictContains(DictCache *c, const char *query, size_t qlen)
 
 static size_t
 ForwardMaxMatchRun(const char *buf, size_t runStart, size_t runEnd,
-                   const unsigned char *gBreaks,
-                   unsigned char *wBreaks,
-                   unsigned char *lBreaks,
-                   DictCache *dc)
+		   const unsigned char *gBreaks,
+		   unsigned char *wBreaks,
+		   unsigned char *lBreaks,
+		   DictCache *dc)
 {
     size_t pos = runStart;
     size_t words = 0;
 
     while (pos < runEnd) {
 
-        /* Find next grapheme boundary after pos. */
-        size_t nextG = pos + 1;
-        while (nextG < runEnd && !gBreaks[nextG]) nextG++;
-        if (nextG > runEnd) nextG = runEnd;
+	/* Find next grapheme boundary after pos. */
+	size_t nextG = pos + 1;
+	while (nextG < runEnd && !gBreaks[nextG]) nextG++;
+	if (nextG > runEnd) nextG = runEnd;
 
-        /* Ensure forward progress. */
-        if (nextG == pos) {
-            nextG = pos + 1;
-            while (nextG < runEnd && (buf[nextG] & 0xC0) == 0x80) nextG++;
-        }
+	/* Ensure forward progress. */
+	if (nextG == pos) {
+	    nextG = pos + 1;
+	    while (nextG < runEnd && (buf[nextG] & 0xC0) == 0x80) nextG++;
+	}
 
-        size_t bestEnd = 0;
+	size_t bestEnd = 0;
 
-        /* Try longest dictionary match first. */
-        size_t maxTry = dc->max_len;
-        size_t remaining = runEnd - pos;
-        if (maxTry > remaining) maxTry = remaining;
+	/* Try longest dictionary match first. */
+	size_t maxTry = dc->max_len;
+	size_t remaining = runEnd - pos;
+	if (maxTry > remaining) maxTry = remaining;
 
-        size_t tryEnd = pos + maxTry;
+	size_t tryEnd = pos + maxTry;
 
-        /* Snap tryEnd to a grapheme boundary. */
-        while (tryEnd > pos && tryEnd < runEnd && !gBreaks[tryEnd]) tryEnd--;
+	/* Snap tryEnd to a grapheme boundary. */
+	while (tryEnd > pos && tryEnd < runEnd && !gBreaks[tryEnd]) tryEnd--;
 
-        for (; tryEnd > pos; ) {
-            size_t tryLen = tryEnd - pos;
-            if (tryLen > 0 && DictContains(dc, buf + pos, tryLen)) {
-                bestEnd = tryEnd;
-                break;
-            }
+	for (; tryEnd > pos; ) {
+	    size_t tryLen = tryEnd - pos;
+	    if (tryLen > 0 && DictContains(dc, buf + pos, tryLen)) {
+		bestEnd = tryEnd;
+		break;
+	    }
 
-            /* Move tryEnd to previous grapheme boundary. */
-            size_t prev = tryEnd - 1;
-            while (prev > pos && !gBreaks[prev]) prev--;
-            if (prev == pos) break;
-            tryEnd = prev;
-        }
+	    /* Move tryEnd to previous grapheme boundary. */
+	    size_t prev = tryEnd - 1;
+	    while (prev > pos && !gBreaks[prev]) prev--;
+	    if (prev == pos) break;
+	    tryEnd = prev;
+	}
 
-        if (bestEnd) {
-            /* Dictionary hit → real word boundary. */
-            wBreaks[bestEnd] = 1;
-            if (lBreaks) lBreaks[bestEnd] = 1;
-            pos = bestEnd;
-        } else {
-            /*
-             * Fallback: break at grapheme boundary.
-             * This prevents giant unbreakable Thai runs.
-             */
-            wBreaks[nextG] = 1;
-            if (lBreaks) lBreaks[nextG] = 1;
-            pos = nextG;
-        }
+	if (bestEnd) {
+	    /* Dictionary hit → real word boundary. */
+	    wBreaks[bestEnd] = 1;
+	    if (lBreaks) lBreaks[bestEnd] = 1;
+	    pos = bestEnd;
+	} else {
+	    /*
+	     * Fallback: break at grapheme boundary.
+	     * This prevents giant unbreakable Thai runs.
+	     */
+	    wBreaks[nextG] = 1;
+	    if (lBreaks) lBreaks[nextG] = 1;
+	    pos = nextG;
+	}
 
-        words++;
+	words++;
     }
 
     return words;
@@ -867,8 +867,8 @@ ForwardMaxMatchRun(const char *buf, size_t runStart, size_t runEnd,
 int
 mojibake_word_breaks_with_dict(const char *buf,
 			       size_t byteLen,
-                               unsigned char *wBreaks,
-                               unsigned char *gBreaks_tmp)
+			       unsigned char *wBreaks,
+			       unsigned char *gBreaks_tmp)
 {
     if (!buf || !wBreaks) return 0;
     EnsureDictsInitialized();
@@ -876,9 +876,9 @@ mojibake_word_breaks_with_dict(const char *buf,
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
     if (!gBreaks) {
-        localG = (unsigned char*)malloc(byteLen+1);
-        if (!localG) return 0;
-        gBreaks = localG;
+	localG = (unsigned char*)malloc(byteLen+1);
+	if (!localG) return 0;
+	gBreaks = localG;
     }
     mojibake_grapheme_breaks(buf, byteLen, gBreaks);
     mojibake_word_breaks(buf, byteLen, wBreaks);
@@ -886,72 +886,72 @@ mojibake_word_breaks_with_dict(const char *buf,
     /* Now walk the buffer codepoint by codepoint to find runs of complex script. */
     size_t i=0;
     while (i < byteLen) {
-        /* Skip if not at grapheme start. */
-        if (!gBreaks[i]) { i++; continue; }
-        /* decode codepoint at i */
-        mjb_codepoint cp=0;
-        int clen=0;
-        unsigned char b = (unsigned char)buf[i];
-        if (b < 0x80) { cp=b; clen=1; }
-        else if ((b>>5)==0x6) { if (i+1<byteLen){ cp=((b&0x1F)<<6)|(buf[i+1]&0x3F); clen=2; } else clen=1; }
-        else if ((b>>4)==0xE) { if (i+2<byteLen){ cp=((b&0x0F)<<12)|((buf[i+1]&0x3F)<<6)|(buf[i+2]&0x3F); clen=3; } else clen=1; }
-        else if ((b>>3)==0x1E) { if (i+3<byteLen){ cp=((b&0x07)<<18)|((buf[i+1]&0x3F)<<12)|((buf[i+2]&0x3F)<<6)|(buf[i+3]&0x3F); clen=4; } else clen=1; }
-        else { cp=b; clen=1; }
+	/* Skip if not at grapheme start. */
+	if (!gBreaks[i]) { i++; continue; }
+	/* decode codepoint at i */
+	mjb_codepoint cp=0;
+	int clen=0;
+	unsigned char b = (unsigned char)buf[i];
+	if (b < 0x80) { cp=b; clen=1; }
+	else if ((b>>5)==0x6) { if (i+1<byteLen){ cp=((b&0x1F)<<6)|(buf[i+1]&0x3F); clen=2; } else clen=1; }
+	else if ((b>>4)==0xE) { if (i+2<byteLen){ cp=((b&0x0F)<<12)|((buf[i+1]&0x3F)<<6)|(buf[i+2]&0x3F); clen=3; } else clen=1; }
+	else if ((b>>3)==0x1E) { if (i+3<byteLen){ cp=((b&0x07)<<18)|((buf[i+1]&0x3F)<<12)|((buf[i+2]&0x3F)<<6)|(buf[i+3]&0x3F); clen=4; } else clen=1; }
+	else { cp=b; clen=1; }
 
-        ComplexScript sc = ScriptFromCodepoint(cp);
-        if (sc==SCRIPT_OTHER) { i+=clen; continue; }
+	ComplexScript sc = ScriptFromCodepoint(cp);
+	if (sc==SCRIPT_OTHER) { i+=clen; continue; }
 
-        /*
+	/*
 	 * Start of run: continue while same script and not space
 	 * and not word break from base? Actually we merge until script
 	 *changes or space/newline.
 	 */
-        size_t runStart=i;
-        size_t runEnd=runStart;
-        ComplexScript curSc=sc;
-        size_t j=i;
-        while (j < byteLen) {
-            if (!gBreaks[j]) { j++; continue; }
-            if (j>=byteLen) break;
-            /* Decode at j. */
-            unsigned char bj = (unsigned char)buf[j];
-            mjb_codepoint cpj=0; int lj=1;
-            if (bj < 0x80) { cpj=bj; lj=1; }
-            else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); lj=2; } }
-            else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); lj=3; } }
-            else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); lj=4; } }
-            else { cpj=bj; lj=1; }
+	size_t runStart=i;
+	size_t runEnd=runStart;
+	ComplexScript curSc=sc;
+	size_t j=i;
+	while (j < byteLen) {
+	    if (!gBreaks[j]) { j++; continue; }
+	    if (j>=byteLen) break;
+	    /* Decode at j. */
+	    unsigned char bj = (unsigned char)buf[j];
+	    mjb_codepoint cpj=0; int lj=1;
+	    if (bj < 0x80) { cpj=bj; lj=1; }
+	    else if ((bj>>5)==0x6) { if (j+1<byteLen){ cpj=((bj&0x1F)<<6)|(buf[j+1]&0x3F); lj=2; } }
+	    else if ((bj>>4)==0xE) { if (j+2<byteLen){ cpj=((bj&0x0F)<<12)|((buf[j+1]&0x3F)<<6)|(buf[j+2]&0x3F); lj=3; } }
+	    else if ((bj>>3)==0x1E) { if (j+3<byteLen){ cpj=((bj&0x07)<<18)|((buf[j+1]&0x3F)<<12)|((buf[j+2]&0x3F)<<6)|(buf[j+3]&0x3F); lj=4; } }
+	    else { cpj=bj; lj=1; }
 
-            ComplexScript scj = ScriptFromCodepoint(cpj);
-            if (scj!=curSc) break;
-            /* Break run on ASCII space or line break already? Keep spaces as separators, so stop before space */
-            if (cpj==0x20 || cpj==0x09 || cpj==0x0A || cpj==0x0D) break;
-            runEnd = j+lj;
-            j += lj;
-        }
-        if (runEnd>runStart+1) {
-            /*
-             * The baseline mojibake_word_breaks() call above has no
-             * knowledge of Thai/Lao/Khmer/Myanmar word boundaries, so
-             * per UAX #29's documented fallback for scripts without
-             * spaces, it marks a word break after every single grapheme
-             * cluster in this run. Left in place, those per-character
-             * breaks would sit alongside the real boundaries found by
-             * the dictionary matcher below, and every downstream
-             * consumer (line-break promotion, the line-wrap search)
-             * would see "break allowed" almost everywhere -- effectively
-             * degrading word-wrap to character-wrap for this run. Clear
-             * them so only genuine dictionary-derived boundaries (plus
-             * ForwardMaxMatchRun's own fallback breaks for real
-             * dictionary misses) remain.
-             */
-            memset(wBreaks + runStart + 1, 0, runEnd - runStart - 1);
-            DictCache *dc = CacheForScript(curSc);
-            if (dc) {
-                ForwardMaxMatchRun(buf, runStart, runEnd, gBreaks, wBreaks, NULL, dc);
-            }
-        }
-        i = runEnd ? runEnd : i+clen;
+	    ComplexScript scj = ScriptFromCodepoint(cpj);
+	    if (scj!=curSc) break;
+	    /* Break run on ASCII space or line break already? Keep spaces as separators, so stop before space */
+	    if (cpj==0x20 || cpj==0x09 || cpj==0x0A || cpj==0x0D) break;
+	    runEnd = j+lj;
+	    j += lj;
+	}
+	if (runEnd>runStart+1) {
+	    /*
+	     * The baseline mojibake_word_breaks() call above has no
+	     * knowledge of Thai/Lao/Khmer/Myanmar word boundaries, so
+	     * per UAX #29's documented fallback for scripts without
+	     * spaces, it marks a word break after every single grapheme
+	     * cluster in this run. Left in place, those per-character
+	     * breaks would sit alongside the real boundaries found by
+	     * the dictionary matcher below, and every downstream
+	     * consumer (line-break promotion, the line-wrap search)
+	     * would see "break allowed" almost everywhere -- effectively
+	     * degrading word-wrap to character-wrap for this run. Clear
+	     * them so only genuine dictionary-derived boundaries (plus
+	     * ForwardMaxMatchRun's own fallback breaks for real
+	     * dictionary misses) remain.
+	     */
+	    memset(wBreaks + runStart + 1, 0, runEnd - runStart - 1);
+	    DictCache *dc = CacheForScript(curSc);
+	    if (dc) {
+		ForwardMaxMatchRun(buf, runStart, runEnd, gBreaks, wBreaks, NULL, dc);
+	    }
+	}
+	i = runEnd ? runEnd : i+clen;
     }
 
     if (localG) free(localG);
@@ -979,9 +979,9 @@ mojibake_word_breaks_with_dict(const char *buf,
 int
 mojibake_line_breaks_with_dict(const char *buf,
 			       size_t byteLen,
-                               unsigned char *lBreaks,
-                               unsigned char *gBreaks_tmp,
-                               unsigned char *wBreaks_tmp)
+			       unsigned char *lBreaks,
+			       unsigned char *gBreaks_tmp,
+			       unsigned char *wBreaks_tmp)
 {
     if (!buf || !lBreaks) return 0;
     EnsureDictsInitialized();
@@ -989,18 +989,18 @@ mojibake_line_breaks_with_dict(const char *buf,
     unsigned char *gBreaks = gBreaks_tmp;
     unsigned char *localG = NULL;
     if (!gBreaks) {
-        localG = (unsigned char*)malloc(byteLen+1);
-        if (!localG) return 0;
-        gBreaks = localG;
-        mojibake_grapheme_breaks(buf, byteLen, gBreaks);
+	localG = (unsigned char*)malloc(byteLen+1);
+	if (!localG) return 0;
+	gBreaks = localG;
+	mojibake_grapheme_breaks(buf, byteLen, gBreaks);
     }
 
     unsigned char *wBreaks = wBreaks_tmp;
     unsigned char *localW = NULL;
     if (!wBreaks) {
-        localW = (unsigned char*)malloc(byteLen+1);
-        if (!localW) { if(localG) free(localG); return 0; }
-        wBreaks = localW;
+	localW = (unsigned char*)malloc(byteLen+1);
+	if (!localW) { if(localG) free(localG); return 0; }
+	wBreaks = localW;
     }
 
     /* Base line breaks. */
@@ -1010,27 +1010,27 @@ mojibake_line_breaks_with_dict(const char *buf,
 
     /* For complex scripts, every dictionary word boundary is an allowed line break. */
     for (size_t i=0;i<=byteLen;i++) {
-        if (wBreaks[i]) {
-            /*
+	if (wBreaks[i]) {
+	    /*
 	     * Only promote if inside complex script run - check surrounding cp.
 	     *  Simple: if i>0, look at cp before i.
 	     */
-            if (i>0 && i<byteLen) {
-                /* Find start of cluster ending at i: previous grapheme start. */
-                size_t prev = i-1;
-                while (prev>0 && !gBreaks[prev]) prev--;
-                /* Decode cp at prev. */
-                unsigned char b = (unsigned char)buf[prev];
-                mjb_codepoint cp=0;
-                if (b < 0x80) cp=b;
-                else if ((b>>5)==0x6 && prev+1<byteLen) cp=((b&0x1F)<<6)|(buf[prev+1]&0x3F);
-                else if ((b>>4)==0xE && prev+2<byteLen) cp=((b&0x0F)<<12)|((buf[prev+1]&0x3F)<<6)|(buf[prev+2]&0x3F);
-                else if ((b>>3)==0x1E && prev+3<byteLen) cp=((b&0x07)<<18)|((buf[prev+1]&0x3F)<<12)|((buf[prev+2]&0x3F)<<6)|(buf[prev+3]&0x3F);
-                if (ScriptFromCodepoint(cp)!=SCRIPT_OTHER) {
-                    lBreaks[i]=1;
-                }
-            }
-        }
+	    if (i>0 && i<byteLen) {
+		/* Find start of cluster ending at i: previous grapheme start. */
+		size_t prev = i-1;
+		while (prev>0 && !gBreaks[prev]) prev--;
+		/* Decode cp at prev. */
+		unsigned char b = (unsigned char)buf[prev];
+		mjb_codepoint cp=0;
+		if (b < 0x80) cp=b;
+		else if ((b>>5)==0x6 && prev+1<byteLen) cp=((b&0x1F)<<6)|(buf[prev+1]&0x3F);
+		else if ((b>>4)==0xE && prev+2<byteLen) cp=((b&0x0F)<<12)|((buf[prev+1]&0x3F)<<6)|(buf[prev+2]&0x3F);
+		else if ((b>>3)==0x1E && prev+3<byteLen) cp=((b&0x07)<<18)|((buf[prev+1]&0x3F)<<12)|((buf[prev+2]&0x3F)<<6)|(buf[prev+3]&0x3F);
+		if (ScriptFromCodepoint(cp)!=SCRIPT_OTHER) {
+		    lBreaks[i]=1;
+		}
+	    }
+	}
     }
 
     if (localG) free(localG);

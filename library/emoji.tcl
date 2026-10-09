@@ -18,20 +18,20 @@ if {[tk::build-info no-xft]} {
 namespace eval ::tk::emoji {
     variable S
     array set S {
-        top    .tkemojipicker
-        cell   26
-        cat    ""
-        cur    -1
-        cols   1
-        items  {}
-        drawnW -1
+	top    .tkemojipicker
+	cell   26
+	cat    ""
+	cur    -1
+	cols   1
+	items  {}
+	drawnW -1
     }
     variable recent {}
     variable maxRecent 24
 
     variable categories {
-        Recent Smileys Gestures People Animals Food Travel Activities
-        Objects Symbols
+	Recent Smileys Gestures People Animals Food Travel Activities
+	Objects Symbols
     }
     variable icons [dict create \
 			Recent \u263A Smileys \u263A Gestures \u270B People \u263A \
@@ -154,10 +154,10 @@ proc ::tk::emoji::Items {cat} {
     set out {}
     set seen {}
     foreach e $list {
-        if {![IsSimple $e]} continue
-        if {[dict exists $seen $e]} continue
-        dict set seen $e 1
-        lappend out $e
+	if {![IsSimple $e]} continue
+	if {[dict exists $seen $e]} continue
+	dict set seen $e 1
+	lappend out $e
     }
     return $out
 }
@@ -179,9 +179,9 @@ proc ::tk::emoji::Insert {w s} {
     # letting a color font claim the glyph.
     set s [string map {"\uFE0F" ""} $s]
     switch -- [winfo class $w] {
-        Entry  { ::tk::EntryInsert $w $s }
-        TEntry { ttk::entry::Insert $w $s }
-        Text   { ::tk::TextInsert $w $s }
+	Entry  { ::tk::EntryInsert $w $s }
+	TEntry { ttk::entry::Insert $w $s }
+	Text   { ::tk::TextInsert $w $s }
     }
 }
 
@@ -190,19 +190,19 @@ proc ::tk::emoji::EnsureFonts {} {
     if {[info exists S(font)]} return
     # Monochrome fonts, in order of preference
     set candidates {
-        {Noto Emoji}
-        {Noto Sans Symbols2}
-        {Noto Sans Symbols}
-        {Symbola}
-        {DejaVu Sans}
+	{Noto Emoji}
+	{Noto Sans Symbols2}
+	{Noto Sans Symbols}
+	{Symbola}
+	{DejaVu Sans}
     }
     set family [font actual TkDefaultFont -family]
     set available [font families]
     foreach fam $candidates {
-        if {$fam in $available} {
-            set family $fam
-            break
-        }
+	if {$fam in $available} {
+	    set family $fam
+	    break
+	}
     }
     set S(font)    [list $family 14]
     set S(catfont) [list $family 9]
@@ -260,19 +260,19 @@ proc ::tk::emoji::Build {} {
     variable icons
     ttk::frame $f.bar
     foreach cat $categories {
-        set key [string tolower $cat]
-        set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
-        ttk::radiobutton $f.bar.$key -style Emoji.Toolbutton \
-            -text "$ico $cat" -width 8 \
-            -variable ::tk::emoji::S(cat) -value $cat \
-            -command [namespace code SetCategory]
-        pack $f.bar.$key -side left -padx 0
+	set key [string tolower $cat]
+	set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
+	ttk::radiobutton $f.bar.$key -style Emoji.Toolbutton \
+	    -text "$ico $cat" -width 8 \
+	    -variable ::tk::emoji::S(cat) -value $cat \
+	    -command [namespace code SetCategory]
+	pack $f.bar.$key -side left -padx 0
     }
 
     ttk::frame $f.f
     canvas $f.f.c -width [expr {12*$S(cell)}] -height [expr {6*$S(cell)}] \
-        -highlightthickness 0 -borderwidth 0 -background $bg -takefocus 1 \
-        -yscrollincrement $S(cell)
+	-highlightthickness 0 -borderwidth 0 -background $bg -takefocus 1 \
+	-yscrollincrement $S(cell)
     ttk::scrollbar $f.f.sb -command [list $f.f.c yview]
     $f.f.c configure -yscrollcommand [list $f.f.sb set]
     pack $f.f.sb -side right -fill y
@@ -293,22 +293,22 @@ proc ::tk::emoji::Build {} {
     grid rowconfigure $f 1 -weight 1
 
     set c $S(canvas)
-    bind $c <Configure>           [namespace code {Reflow %w}]
-    bind $c <Motion>              [namespace code {Hover %x %y}]
-    bind $c <ButtonPress-1>       [namespace code {Click %x %y 0}]
+    bind $c <Configure> [namespace code {Reflow %w}]
+    bind $c <Motion> [namespace code {Hover %x %y}]
+    bind $c <ButtonPress-1> [namespace code {Click %x %y 0}]
     bind $c <Shift-ButtonPress-1> [namespace code {Click %x %y 1}]
-    bind $c <MouseWheel>          [namespace code {Wheel %D}]
-    bind $c <Button-4>            [namespace code {Wheel 1}]
-    bind $c <Button-5>            [namespace code {Wheel -1}]
-    bind $c <Key-Left>            [namespace code {Move left}]
-    bind $c <Key-Right>           [namespace code {Move right}]
-    bind $c <Key-Up>              [namespace code {Move up}]
-    bind $c <Key-Down>            [namespace code {Move down}]
-    bind $c <Key-Home>            [namespace code {Move home}]
-    bind $c <Key-End>             [namespace code {Move end}]
-    bind $c <Return>              [namespace code {PickCurrent 0}]
-    bind $c <space>               [namespace code {PickCurrent 0}]
-    bind $c <Shift-Return>        [namespace code {PickCurrent 1}]
+    bind $c <MouseWheel> [namespace code {Wheel %D}]
+    bind $c <Button-4> [namespace code {Wheel 1}]
+    bind $c <Button-5> [namespace code {Wheel -1}]
+    bind $c <Key-Left> [namespace code {Move left}]
+    bind $c <Key-Right> [namespace code {Move right}]
+    bind $c <Key-Up> [namespace code {Move up}]
+    bind $c <Key-Down> [namespace code {Move down}]
+    bind $c <Key-Home> [namespace code {Move home}]
+    bind $c <Key-End> [namespace code {Move end}]
+    bind $c <Return> [namespace code {PickCurrent 0}]
+    bind $c <space> [namespace code {PickCurrent 0}]
+    bind $c <Shift-Return> [namespace code {PickCurrent 1}]
 }
 
 proc ::tk::emoji::Place {} {
@@ -321,9 +321,9 @@ proc ::tk::emoji::Place {} {
     set x [winfo rootx $t]
     set y [expr {[winfo rooty $t] + [winfo height $t]}]
     catch {
-        lassign [$t bbox insert] bx by bw bh
-        set x [expr {[winfo rootx $t] + $bx}]
-        set y [expr {[winfo rooty $t] + $by + $bh + 2}]
+	lassign [$t bbox insert] bx by bw bh
+	set x [expr {[winfo rootx $t] + $bx}]
+	set y [expr {[winfo rooty $t] + $by + $bh + 2}]
     }
     set sw [winfo screenwidth $t]
     set sh [winfo screenheight $t]
@@ -375,25 +375,25 @@ proc ::tk::emoji::Draw {keep} {
     $c create rectangle 0 0 0 0 -fill $S(selbg) -outline {} -state hidden -tags cursor
     set i 0
     foreach e $S(items) {
-        lassign [Origin $i] x y
-        $c create text [expr {$x+$cell/2}] [expr {$y+$cell/2}] \
-            -text $e -font $S(font) -fill $S(fg) -tags [list emoji e$i]
-        incr i
+	lassign [Origin $i] x y
+	$c create text [expr {$x+$cell/2}] [expr {$y+$cell/2}] \
+	    -text $e -font $S(font) -fill $S(fg) -tags [list emoji e$i]
+	incr i
     }
     if {$i==0} {
-        $c create text [expr {$width/2}] [expr {$cell}] -fill gray50 \
-            -text "Nothing yet" -font TkDefaultFont
+	$c create text [expr {$width/2}] [expr {$cell}] -fill gray50 \
+	    -text "Nothing yet" -font TkDefaultFont
     }
     $c lower cursor
     set rows [expr {($i+$S(cols)-1)/$S(cols)}]
     set S(total) [expr {max(1,$rows)*$cell}]
     $c configure -scrollregion [list 0 0 $width $S(total)]
     if {$keep} {
-        $c yview moveto $frac
-        if {$oldcur>=0 && $oldcur<$i} {SetCur $oldcur}
+	$c yview moveto $frac
+	if {$oldcur>=0 && $oldcur<$i} {SetCur $oldcur}
     } else {
-        $c yview moveto 0
-        $S(prevBig) configure -text ""
+	$c yview moveto 0
+	$S(prevBig) configure -text ""
     }
 }
 
@@ -404,9 +404,9 @@ proc ::tk::emoji::SetCur {idx} {
     if {$S(cur)>=0} {$c itemconfigure e$S(cur) -fill $S(fg)}
     set S(cur) $idx
     if {$idx<0} {
-        $c itemconfigure cursor -state hidden
-        $S(prevBig) configure -text ""
-        return
+	$c itemconfigure cursor -state hidden
+	$S(prevBig) configure -text ""
+	return
     }
     set cell $S(cell)
     lassign [Origin $idx] x y
@@ -423,9 +423,9 @@ proc ::tk::emoji::EnsureVisible {idx} {
     set y [lindex [Origin $idx] 1]
     set top [$c canvasy 0]
     if {$y<$top} {
-        $c yview moveto [expr {double($y)/$S(total)}]
+	$c yview moveto [expr {double($y)/$S(total)}]
     } elseif {$y+$S(cell) > $top+$h} {
-        $c yview moveto [expr {double($y+$S(cell)-$h)/$S(total)}]
+	$c yview moveto [expr {double($y+$S(cell)-$h)/$S(total)}]
     }
 }
 
@@ -449,18 +449,18 @@ proc ::tk::emoji::Move {how} {
     variable S; set n [llength $S(items)]; if {$n==0} return
     set i $S(cur)
     switch -- $how {
-        home {set i 0}
-        end  {set i [expr {$n-1}]}
-        default {
-            if {$i<0} {set i 0} else {
-                switch -- $how {
-                    left  {incr i -1}
-                    right {incr i}
-                    up    {incr i [expr {-$S(cols)}]}
-                    down  {incr i $S(cols)}
-                }
-            }
-        }
+	home {set i 0}
+	end  {set i [expr {$n-1}]}
+	default {
+	    if {$i<0} {set i 0} else {
+		switch -- $how {
+		    left  {incr i -1}
+		    right {incr i}
+		    up    {incr i [expr {-$S(cols)}]}
+		    down  {incr i $S(cols)}
+		}
+	    }
+	}
     }
     set i [expr {max(0,min($n-1,$i))}]
     SetCur $i; EnsureVisible $i
@@ -496,13 +496,13 @@ if {[::tk::emoji::Active]} {
 
     # Class bindings with break, so the key is handled here and only once.
     foreach cls {Entry TEntry Text} {
-        bind $cls <<EmojiPicker>> {::tk::emoji::choose %W; break}
+	bind $cls <<EmojiPicker>> {::tk::emoji::choose %W; break}
     }
 }
 
 # demo when run directly
 if {[info exists ::argv0] && [info script] ne "" \
-        && [file normalize $::argv0] eq [file normalize [info script]]} {
+	&& [file normalize $::argv0] eq [file normalize [info script]]} {
     wm title . "Emoji picker demo"
     ttk::frame .f -padding 10; pack .f -fill both -expand 1
     ttk::label .f.l1 -text "Entry (Ctrl-. or Super-.) :"

@@ -94,6 +94,7 @@ to the userbase.
  - [Windows: cursor files with non-ASCII names could not be loaded](https://core.tcl-lang.org/tk/tktview/0d4c08)
  - [windows: after using tk_messageBox, parent window remains unresponsive](https://core.tcl-lang.org/tk/tktview/adb71e)
  - [entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called](https://core.tcl-lang.org/tk/tktview/df09b0)
+ - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f3732)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
