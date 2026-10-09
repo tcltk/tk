@@ -1470,7 +1470,7 @@ X11Shaper_ShapeString(
 	if (clen <= 0) { bytePos++; continue; }
 
 	if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
-	    (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
+	    (uc >= 0x0080 && uc <= 0x009F)) {
 	    bytePos += clen;
 	    continue;
 	}

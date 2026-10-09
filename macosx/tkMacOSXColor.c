@@ -700,7 +700,7 @@ TkpGetColor(
 		color.red   = (unsigned short)(rgba[0] * 65535.0);
 		color.green = (unsigned short)(rgba[1] * 65535.0);
 		color.blue  = (unsigned short)(rgba[2] * 65535.0);
-		haveValidXColor = True;
+		haveValidXColor = true;
 	    } else if (SetCGColorComponents(entry, 0, &c, windowAppearanceIsDark)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);

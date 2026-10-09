@@ -134,6 +134,9 @@ foreach test {
     }
     .s configure $name [lindex [.s configure $name] 3]
 }
+test scrollbar-1.100 {configuration options: synonyms - bug 707778} -body {
+    lsearch -all -inline [.s configure] {-b? *}
+} -result {{-bd -borderwidth} {-bg -background}}
 
 #
 # COMMON TEST CLEANUP
