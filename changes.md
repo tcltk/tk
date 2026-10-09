@@ -90,6 +90,8 @@ to the userbase.
  - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
  - [X11 with bidi: a string consisting only of U+FFFD hung text layout](https://core.tcl-lang.org/tk/tktview/6f054b)
  - [canvas/scrollbar return wrong configure synonym info](https://core.tcl-lang.org/tk/tktview/707778)
+ - [Middle-click paste focused a spinbox only when it was disabled](https://core.tcl-lang.org/tk/tktview/c9f675)
+ - [Stop indeterminate ttk::progressbar redraws continuously](https://core.tcl-lang.org/tk/tktview/89436b)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
