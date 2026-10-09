@@ -253,9 +253,7 @@ test unixbutton-1.11 {TkpComputeButtonGeometry procedure} -constraints {
 } -result {27 37}
 
 
-test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
-    unix
-} -setup {
+test unixbutton-2.1 {disabled coloring check, bug 669595} -setup {
     deleteWindows
     catch {unset value}
 } -body {
@@ -288,9 +286,7 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     deleteWindows
 } -result 1
 
-test unixbutton-3.1 {TkpDisplayButton: huge widget, bug bffa794b1b} -constraints {
-    unix
-} -setup {
+test unixbutton-3.1 {TkpDisplayButton: huge widget, bug bffa794b1b} -setup {
     deleteWindows
 } -body {
     # Each widget is huge in one direction only: a widget huge in both

@@ -38,7 +38,7 @@ resetWindows
 # TESTS
 #
 
-test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
+test winWm-1.1 {TkWmMapWindow} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -49,7 +49,7 @@ test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
 } -cleanup {
     destroy .t
 } -result {0 0}
-test winWm-1.2 {TkWmMapWindow} -constraints win -setup {
+test winWm-1.2 {TkWmMapWindow} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -63,7 +63,7 @@ test winWm-1.2 {TkWmMapWindow} -constraints win -setup {
 } -cleanup {
     destroy .t
 } -returnCodes error -result {can't iconify ".t": it is a transient}
-test winWm-1.3 {TkWmMapWindow} -constraints win -setup {
+test winWm-1.3 {TkWmMapWindow} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -87,7 +87,7 @@ test winWm-1.4 {TkWmMapWindow} -constraints win -setup {
 } -cleanup {
     destroy .t .t2
 } -result {10 40}
-test winWm-1.5 {TkWmMapWindow} -constraints win -setup {
+test winWm-1.5 {TkWmMapWindow} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -97,7 +97,7 @@ test winWm-1.5 {TkWmMapWindow} -constraints win -setup {
 } -result {iconic}
 
 
-test winWm-2.1 {TkpWmSetState} -constraints win -setup {
+test winWm-2.1 {TkpWmSetState} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -113,7 +113,7 @@ test winWm-2.1 {TkpWmSetState} -constraints win -setup {
 } -cleanup {
     destroy .t
 } -result {normal iconic normal}
-test winWm-2.2 {TkpWmSetState} -constraints win -setup {
+test winWm-2.2 {TkpWmSetState} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -132,7 +132,7 @@ test winWm-2.2 {TkpWmSetState} -constraints win -setup {
 } -cleanup {
     destroy .t
 } -result {normal withdrawn iconic normal}
-test winWm-2.3 {TkpWmSetState} -constraints win -setup {
+test winWm-2.3 {TkpWmSetState} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -173,9 +173,7 @@ test winWm-2.4 {TkpWmSetState} -constraints win -setup {
 } -result {{normal 150x50+10+10} {iconic 150x50+10+10} {iconic 150x50+10+10} {normal 200x50+10+10}}
 
 
-test winWm-3.1 {ConfigureTopLevel: window geometry propagation} -constraints {
-    win
-} -setup {
+test winWm-3.1 {ConfigureTopLevel: window geometry propagation} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -325,7 +323,7 @@ test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
 } -result {1.0 {} 0.5 {} 0.0 {} 1.0}
 
-test winWm-6.5 {wm attributes -alpha} -constraints win -setup {
+test winWm-6.5 {wm attributes -alpha} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -334,7 +332,7 @@ test winWm-6.5 {wm attributes -alpha} -constraints win -setup {
     destroy .t
 } -returnCodes error -result {expected floating-point number but got "foo"}
 
-test winWm-6.6 {wm attributes -alpha} -constraints win -setup {
+test winWm-6.6 {wm attributes -alpha} -setup {
     destroy .t
 } -body {
     # This test is just to show off -alpha
@@ -419,7 +417,7 @@ test winWm-7.2 {deiconify on an already mapped toplevel\
     destroy .t
 } -result {1 .t}
 
-test winWm-7.3 {UpdateWrapper must maintain Z order} -constraints win -setup {
+test winWm-7.3 {UpdateWrapper must maintain Z order} -setup {
     destroy .t
 } -body {
     destroy .t
@@ -434,7 +432,7 @@ test winWm-7.3 {UpdateWrapper must maintain Z order} -constraints win -setup {
     destroy .t
 } -result {1 1}
 
-test winWm-7.4 {UpdateWrapper must maintain focus} -constraints win -setup {
+test winWm-7.4 {UpdateWrapper must maintain focus} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -449,10 +447,10 @@ test winWm-7.4 {UpdateWrapper must maintain focus} -constraints win -setup {
 } -result {.t .t}
 
 
-test winWm-8.1 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -body {
+test winWm-8.1 {Tk_WmCmd procedure, "iconphoto" option} -body {
     wm iconph .
 } -returnCodes error -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
-test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -setup {
+test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} -setup {
     destroy .t
 } -body {
     toplevel .t

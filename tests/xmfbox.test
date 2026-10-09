@@ -79,9 +79,7 @@ catch {unset data foo}
 # TESTS
 #
 
-test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -constraints {
-    unix
-} -setup {
+test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -setup {
     catch {unset foo}
 } -body {
     set x [tk::MotifFDialog_Create foo open {-parent .}]
@@ -89,9 +87,7 @@ test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -constraints {
     destroy $x
 } -result {.foo}
 
-test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -constraints {
-    unix
-} -setup {
+test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -setup {
     catch {unset foo}
     deleteWindows
 } -body {
@@ -105,9 +101,7 @@ test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -constraints {
 }  -result {.bar.foo}
 
 
-test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -constraints {
-    unix
-} -body {
+test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -body {
     cleanup
     file mkdir ./~nosuchuser1
     set x [tk::MotifFDialog_Create foo open {}]
@@ -117,9 +111,7 @@ test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -constraints {
     file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
 } -result "$testPWD/~nosuchuser1/*"
 
-test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -constraints {
-    unix
-} -body {
+test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -body {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
@@ -129,9 +121,7 @@ test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -constraints {
     file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
 } -result "$testPWD/~nosuchuser1"
 
-test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} -constraints {
-    unix
-} -body {
+test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} -body {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
@@ -143,9 +133,7 @@ test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} -constraints {
     $::tk::dialog::file::foo(fList) get end
 } -result {~nosuchuser1}
 
-test xmfbox-2.4 {tk::MotifFDialog_LoadFile, ~ in file names} -constraints {
-    unix
-} -body {
+test xmfbox-2.4 {tk::MotifFDialog_LoadFile, ~ in file names} -body {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
@@ -154,9 +142,7 @@ test xmfbox-2.4 {tk::MotifFDialog_LoadFile, ~ in file names} -constraints {
     expr {$i >= 0}
 } -result 1
 
-test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} -constraints {
-    unix
-} -body {
+test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} -body {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
@@ -168,9 +154,7 @@ test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} -constraints {
     file normalize [$::tk::dialog::file::foo(sEnt) get]
 } -result "$testPWD/~nosuchuser1"
 
-test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
-    unix
-} -body {
+test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -body {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]

@@ -194,9 +194,7 @@ test winDialog-5.1 {GetFileName: no arguments} -constraints {
 	Click cancel
     }
 } -result 0
-test winDialog-5.2 {GetFileName: one argument} -constraints {
-    nt
-} -body {
+test winDialog-5.2 {GetFileName: one argument} -body {
     tk_getOpenFile -foo
 } -returnCodes error -result {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
@@ -224,9 +222,7 @@ test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
     # $x is expected to be empty
     append x $y
 } -result 0
-test winDialog-5.6 {GetFileName: valid option, but missing value} -constraints {
-    nt
-} -body {
+test winDialog-5.6 {GetFileName: valid option, but missing value} -body {
     tk_getOpenFile -initialdir bar -title
 } -returnCodes error -result {value for "-title" missing}
 
@@ -420,9 +416,7 @@ test winDialog-5.9 {GetFileName: file types} -constraints {
     }
     return $x
 } -result {foo files (*.foo)}
-test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -constraints {
-    nt
-} -body {
+test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -body {
 #        if (MakeFilter(interp, string, &utfFilterString) != TCL_OK)
 
     tk_getSaveFile -filetypes {{"foo" .foo FOO}}
@@ -783,9 +777,7 @@ test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} -constraints {
     # $x should be "" on a Cancel
     append x $y
 } -result 0
-test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} -constraints {
-    nt
-} -body {
+test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} -body {
     tk_chooseDirectory -foo
 } -returnCodes error -result {bad option "-foo": must be -initialdir, -mustexist, -parent, or -title}
 test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} -constraints {
@@ -811,9 +803,7 @@ test winDialog-9.5 {Tk_ChooseDirectoryObjCmd: Tcl_GetIndexFromObj() == TCL_OK} -
 	Click cancel
     }
 } -result 0
-test winDialog-9.6 {Tk_ChooseDirectoryObjCmd: valid option, but missing value} -constraints {
-    nt
-} -body {
+test winDialog-9.6 {Tk_ChooseDirectoryObjCmd: valid option, but missing value} -body {
     tk_chooseDirectory -initialdir bar -title
 } -returnCodes error -result {value for "-title" missing}
 test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
