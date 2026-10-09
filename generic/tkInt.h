@@ -570,6 +570,10 @@ typedef struct TkDisplay {
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
     int ximGeneration;          /* Used to invalidate XIC */
+    Tcl_HashTable deletedWinTable;
+				/* Maps from X window ids of recently deleted
+				 * windows to the serial number of the last
+				 * request made before the deletion. */
 } TkDisplay;
 
 /*
@@ -580,11 +584,15 @@ typedef struct TkDisplay {
  *	Whether to use input methods for this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
+ *  TK_DISPLAY_HAS_EMBEDDED:		(default off)
+ *	A toplevel of this application has been embedded in a container on
+ *	this display, so its windows can be destroyed by the container.
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
+#define TK_DISPLAY_HAS_EMBEDDED			(1 << 4)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -1187,6 +1195,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
+MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
 MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
