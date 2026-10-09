@@ -89,8 +89,8 @@ list with one of the following forms:
 .TP
 \fIname\fR\0[\fIfgColor\fR\0[\fIbgColor\fR]]
 .
-\fIName\fR is the name of a cursor in the standard X cursor cursor,
-i.e., any of the names defined in \fBcursorcursor.h\fR, without
+\fIName\fR is the name of a cursor in the standard X cursor font,
+i.e., any of the names defined in \fBcursorfont.h\fR, without
 the \fBXC_\fR.  Some example values are \fBX_cursor\fR, \fBhand2\fR,
 or \fBleft_ptr\fR.  Appendix B of
 .QW "The X Window System"
@@ -103,24 +103,22 @@ will be no background color:  the background will be transparent.
 If no colors are specified, then the cursor
 will use black for its foreground color and white for its background
 color.
+The colors are only supported on X11, and if a cursor theme is used
+(with the Xcursor library), a cursor with two colors is shown with the
+colors of the theme.
 .RS
 .PP
-The Macintosh version of Tk supports all of the X cursors and
-will also accept any of the standard Mac cursors
-including \fBibeam\fR, \fBcrosshair\fR, \fBwatch\fR, \fBplus\fR, and
-\fBarrow\fR.  In addition, Tk will load Macintosh cursor resources of
-the types \fBcrsr\fR (color) and \fBCURS\fR (black and white) by the
-name of the resource.  The application and all its open
-dynamic library's resource files will be searched for the named
-cursor.  If there are conflicts color cursors will always be loaded
-in preference to black and white cursors.
+On macOS and Windows, the X cursor names are supported, as well as
+platform-specific cursor names (see \fBcursors\fR(n)).
+The colors are ignored.
 .RE
 .TP
 \fB@\fIsourceName\0maskName\0fgColor\0bgColor\fR
 .
 In this form, \fIsourceName\fR and \fImaskName\fR are the names of
 files describing cursors for the cursor's source bits and mask.
-Each file must be in standard X11 cursor format.
+Each file must be an X bitmap file (see \fBbitmap\fR(n)), and
+\fIsourceName\fR must define the hot spot of the cursor.
 \fIFgColor\fR and \fIbgColor\fR
 indicate the colors to use for the
 cursor, in any of the forms acceptable to \fBTk_GetColor\fR.  This
@@ -135,9 +133,13 @@ or Windows computers.
 .TP
 \fB@\fIsourceName\fR
 .
-This form only works on Windows, and will load a Windows system
-cursor (\fB.ani\fR or \fB.cur\fR) from the file specified in
-\fIsourceName\fR.
+On Windows, this form will load a Windows system cursor (\fB.ani\fR or
+\fB.cur\fR) from the file specified in \fIsourceName\fR.
+On macOS, it will load an image in any format supported by the system
+(for example PNG, TIFF or \fB.cur\fR) from the file specified in
+\fIsourceName\fR; the hot spot is read from a \fB.cur\fR file, and is
+the center of the image otherwise.
+This form of the command will not work on X11.
 .PP
 \fBTk_GetCursor\fR is identical to \fBTk_AllocCursorFromObj\fR except
 that the description of the cursor is specified with a string instead
