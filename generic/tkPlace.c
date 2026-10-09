@@ -630,6 +630,15 @@ ConfigureContent(
 	return TCL_ERROR;
     }
 
+    /*
+     * Ignore half-dead windows (e.g. in a <Destroy> binding), otherwise
+     * a stale entry would be left in the hash table.
+     */
+
+    if (((TkWindow *) tkwin)->flags & TK_ALREADY_DEAD) {
+	return TCL_OK;
+    }
+
     contentPtr = CreateContent(tkwin, table);
 
     if (Tk_SetOptions(interp, contentPtr, table, objc, objv,
@@ -651,6 +660,10 @@ ConfigureContent(
 	Tk_Window ancestor;
 
 	win = contentPtr->inTkwin;
+	if (((TkWindow *) win)->flags & TK_ALREADY_DEAD) {
+	    Tk_RestoreSavedOptions(&savedOptions);
+	    return TCL_OK;
+	}
 
 	/*
 	 * Make sure that the new container is either the logical parent of the
