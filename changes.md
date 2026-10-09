@@ -100,6 +100,7 @@ to the userbase.
  - [Applying canvas move command to objects leaves trails](https://core.tcl-lang.org/tk/tktview/ad9a02)
  - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
  - [canvas/scrollbar return wrong configure synonym info](https://core.tcl-lang.org/tk/tktview/707778)
+ - [Middle-click paste focused a spinbox only when it was disabled](https://core.tcl-lang.org/tk/tktview/c9f675)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
