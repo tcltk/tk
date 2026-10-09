@@ -8477,3 +8477,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-08 (bug) [ad9a02] Applying canvas move command to objects leaves trails
 
 2026-10-08 (bug) [4face8] wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display (storchaka)
+
+2026-10-09 (bug) [adb71e] windows: after using tk_messageBox, parent window remains unresponsive (storchaka)
+
+2026-10-09 (bug) [df09b0] entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called (storchaka)
