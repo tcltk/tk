@@ -5414,6 +5414,77 @@ test panedwindow-29.2 {display on depths other than the default one} -constraint
     deleteWindows
 } -result {}
 
+test panedwindow-30.1 {sash cursor: set when the pointer enters on the sash} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Enter> -x $x -y 10
+    .p cget -cursor
+} -cleanup {
+    deleteWindows
+} -result {sb_h_double_arrow}
+test panedwindow-30.2 {sash cursor: kept while the sash is dragged} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Motion> -x $x -y 10
+    event generate .p <Button-1> -x $x -y 10
+    event generate .p <B1-Motion> -x [expr {$x + 40}] -y 10
+    # The pointer moves ahead of the sash, out of the panedwindow.
+    event generate .p <Leave>
+    ::tk::panedwindow::Cursor .p
+    .p cget -cursor
+} -cleanup {
+    event generate .p <ButtonRelease-1> -x [expr {$x + 40}] -y 10
+    deleteWindows
+} -result {sb_h_double_arrow}
+test panedwindow-30.3 {sash cursor: restored after the drag if not over the sash} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Motion> -x $x -y 10
+    event generate .p <Button-1> -x $x -y 10
+    event generate .p <ButtonRelease-1> -x $x -y 10
+    .p cget -cursor
+} -cleanup {
+    deleteWindows
+} -result {}
+test panedwindow-30.4 {sash cursor: widget destroyed while its sash is dragged} -setup {
+    deleteWindows
+    panedwindow .p -orient horizontal -sashwidth 6
+    .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
+    pack .p
+    update
+} -body {
+    set x [expr {[lindex [.p sash coord 0] 0] + 2}]
+    event generate .p <Motion> -x $x -y 10
+    event generate .p <Button-1> -x $x -y 10
+    destroy .p
+    panedwindow .q -orient horizontal -sashwidth 6
+    .q add [frame .q.l -width 100 -height 50] [frame .q.r -width 100 -height 50]
+    pack .q
+    update
+    set x [expr {[lindex [.q sash coord 0] 0] + 2}]
+    event generate .q <Enter> -x $x -y 10
+    .q cget -cursor
+} -cleanup {
+    deleteWindows
+} -result {sb_h_double_arrow}
+
 #
 # TESTFILE CLEANUP
 #
