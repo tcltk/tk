@@ -154,6 +154,17 @@ proc create_and_pack_frames {{w {}}} {
     pack propagate $w.f1 0
     frame $w.f1.f2 -bg yellow -width 100 -height 100
     pack $w.f1.f2 $w.f1 -side bottom -anchor se
+    # The call to update idletasks above is intended to make sure
+    # that the window has been constructed before starting
+    # a test.  But on macOS that is not sufficient because
+    # it is also necessary for the window to actually be displayed
+    # on the screen, since testing for which window is the highest
+    # one over a specific point on the screen uses the window list
+    # maintained by the AppKit, and a window does not appear on that
+    # list until AppKit actually draws it on the screen.
+    if {[tk windowingsystem] eq "aqua"} {
+        after 100
+    }
     update idletasks
 }
 
