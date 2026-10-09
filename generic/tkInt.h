@@ -589,11 +589,15 @@ typedef struct TkDisplay {
  *	Whether to use input methods for this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
+ *  TK_DISPLAY_HAS_EMBEDDED:		(default off)
+ *	A toplevel of this application has been embedded in a container on
+ *	this display, so its windows can be destroyed by the container.
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
+#define TK_DISPLAY_HAS_EMBEDDED			(1 << 4)
 
 /*
  * One of the following structures exists for each error handler created by a

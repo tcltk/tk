@@ -335,7 +335,8 @@ ErrorProc(
  *	of the last request made before its deletion. A window can be
  *	destroyed by someone else (e.g. the container of an embedded window)
  *	before Tk deletes it, so the X errors for requests made before the
- *	deletion can arrive after it; ErrorProc ignores them.
+ *	deletion can arrive after it; ErrorProc ignores them. This is only
+ *	done for applications embedded in a container.
  *
  * Results:
  *	None.
@@ -356,6 +357,17 @@ TkRecordDeletedWindow(
     Tcl_HashSearch search;
     unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
     int isNew;
+
+    /*
+     * Only the windows of an embedded application can be destroyed by
+     * someone else (the container). Do not record the windows of other
+     * applications, the table would grow until the server processed the
+     * requests made before their deletion.
+     */
+
+    if (!(dispPtr->flags & TK_DISPLAY_HAS_EMBEDDED)) {
+	return;
+    }
 
     for (hPtr = Tcl_FirstHashEntry(&dispPtr->deletedWinTable, &search);
 	    hPtr != NULL; hPtr = nextPtr) {
@@ -425,9 +437,19 @@ TkRecordNewPixmap(
 {
     Tcl_HashEntry *hPtr, *nextPtr;
     Tcl_HashSearch search;
-    unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
+    unsigned long lastSerial;
     int isNew;
 
+    /*
+     * Only the windows of an embedded application can be destroyed by
+     * someone else, see TkRecordDeletedWindow.
+     */
+
+    if (!(dispPtr->flags & TK_DISPLAY_HAS_EMBEDDED)) {
+	return;
+    }
+
+    lastSerial = LastKnownRequestProcessed(dispPtr->display);
     for (hPtr = Tcl_FirstHashEntry(&dispPtr->newPixmapTable, &search);
 	    hPtr != NULL; hPtr = nextPtr) {
 	nextPtr = Tcl_NextHashEntry(&search);
@@ -466,6 +488,9 @@ TkRecordFreedPixmap(
 {
     Tcl_HashEntry *hPtr;
 
+    if (!(dispPtr->flags & TK_DISPLAY_HAS_EMBEDDED)) {
+	return;
+    }
     hPtr = Tcl_FindHashEntry(&dispPtr->deletedWinTable, UINT2PTR(pixmap));
     if (hPtr != NULL) {
 	TkRecordDeletedWindow(dispPtr, (Window) pixmap);
