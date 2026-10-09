@@ -727,6 +727,38 @@ test winDialog-5.26 {GetFileName: no toplevel has been mapped yet - bug 35a8df9a
 } -cleanup {
     removeFile script
 } -result {0 {}}
+test winDialog-5.27 {GetFileName: focus after a dialog whose parent was mapped while it was open - bug adb71ed70b} -constraints {
+    nt testwinevent
+} -setup {
+    set code [loadTkCommand]
+    append code {
+	update
+	# The parent toplevel is mapped while the dialog is open.
+	toplevel .t
+	entry .t.e
+	pack .t.e
+	proc cancelDialog {} {
+	    if {[catch {testfindwindow "" #32770} dlg]} {
+		after 200 cancelDialog
+		return
+	    }
+	    testwinevent $dlg 2 WM_LBUTTONDOWN 1 0x000a000b
+	    testwinevent $dlg 2 WM_LBUTTONUP 0 0x000a000b
+	}
+	after 500 cancelDialog
+	after 10000 {puts timeout; exit}
+	tk_getOpenFile -parent .t -title Open
+	focus .t.e
+	update
+	puts [focus]
+	exit
+    }
+    set script [makeFile $code script]
+} -body {
+    exec [interpreter] <$script
+} -cleanup {
+    removeFile script
+} -result {.t.e}
 
 
 test winDialog-6.1 {MakeFilter} -constraints {emptyTest nt} -body {}

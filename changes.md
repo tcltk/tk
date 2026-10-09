@@ -90,6 +90,8 @@ to the userbase.
  - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
  - [X11 with bidi: a string consisting only of U+FFFD hung text layout](https://core.tcl-lang.org/tk/tktview/6f054b)
  - [event misbehavior with certain widgets when embedding](https://core.tcl-lang.org/tk/tktview/a4fa3a)
+ - [windows: after using tk_messageBox, parent window remains unresponsive](https://core.tcl-lang.org/tk/tktview/adb71e)
+ - [entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called](https://core.tcl-lang.org/tk/tktview/df09b0)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
