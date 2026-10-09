@@ -25,7 +25,6 @@ testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 testConstraint win32 [expr {[tk windowingsystem] eq "win32"}]
-testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint aquaOrWin32 [expr {
     ([tk windowingsystem] eq "win32") || [testConstraint aqua]
 }]
@@ -56,6 +55,12 @@ if {[testConstraint x11]} {
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
+
+# This constraint is for running an aqua test only when user interaction is
+# possible, not on a CI runner.  Some actions, such as writing to the
+# filesystem, require that the user review and dismiss a system dialog, which
+# cannot be done on a CI runner.
+testConstraint notMacCI [expr {[testConstraint notAqua] || ![info exists ::env(CI)]}]
 
 # constraint based on whether our display is secure
 testutils import child
@@ -194,6 +199,7 @@ testConstraint testmenubar     [llength [info commands testmenubar]]
 testConstraint testmetrics     [llength [info commands testmetrics]]
 testConstraint testmovemouse   [llength [info commands testmovemouse]]
 testConstraint testobjconfig   [llength [info commands testobjconfig]]
+testConstraint testpixel       [llength [info commands testpixel]]
 testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
 testConstraint testsendinput   [llength [info commands testsendinput]]

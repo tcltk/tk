@@ -176,7 +176,7 @@ test systray-15 {systray icon creation, create one per interp} -setup {
 } -result {}
 
 test systray-16 {systray icon creation from a bitmap, on Linux and macOS only} -constraints {
-    nonwin
+    unix
 } -setup {
     set data1 {
 	#define foo_width 16
@@ -231,29 +231,35 @@ test sysnotify-2.1 {system notification stems from a systray icon on Windows} -c
     tk sysnotify {Alert} {This is an alert}
 } -returnCodes error -result {must create a system tray icon with the "tk systray" command first}
 test sysnotify-2.2 {system notification is not linked to any systray icon on X11 or aqua} -constraints {
-    nonwin
+    unix
 } -setup {
     catch {tk systray destroy}
 } -body {
     tk sysnotify {Alert} {This is an alert}
 } -result {}
 
+# On X11, the command used for the notifications is only created if libnotify
+# is loaded.  On Windows and macOS, it uses the native notifications.
+testConstraint libnotify [expr {[tk windowingsystem] eq "x11"
+	&& [llength [info commands ::tk::sysnotify::_sysnotify]]}]
+
 test sysnotify-3 {libnotify is not unloaded when the last interpreter which used it is deleted - bug 35e67b8124} -constraints {
-    unix knownBug
+    libnotify
 } -setup {
     set code [loadTkCommand]
-    append code {
+    append code [string map [list @LOADTK@ [list [loadTkCommand]]] {
         # Delete the command of the main interpreter, so that the child
         # interpreters are the only users of libnotify.
         rename ::tk::sysnotify::_sysnotify {}
         foreach name {i j} {
             interp create $name
-            $name eval {package require Tk; tk sysnotify "Tk test" "test notification"}
+            $name eval @LOADTK@
+            $name eval {tk sysnotify "Tk test" "test notification"}
             interp delete $name
         }
         puts ok
         exit
-    }
+    }]
     set script [makeFile $code script]
 } -body {
     exec [interpreter] <$script
