@@ -406,17 +406,6 @@ static void RefocusGrabWindow(void *clientData) {
     Tcl_Release(winPtr);
 }
 
-/*
- * Idle task which calls updateLayer for a window.
- */
-
-static void updateLayerIdleTask(void *clientData)
-{
-    TKWindow *winPtr = (TKWindow *) clientData;
-    [winPtr updateLayer];
-}
-
-
 #pragma mark TKApplication(TKApplicationEvent)
 
 @implementation TKApplication(TKApplicationEvent)
@@ -1030,17 +1019,26 @@ ExposeRestrictProc(
 }
 
 - (void) updateLayer {
-    CGContextRef context = self.tkLayerBitmapContext;
-    if (context && ![NSApp tkWillExit]) {
+    if (![NSApp tkWillExit]) {
 	/*
-	 * If this ContentView is off screen, Run any pending widget
-	 * display procs before updating the layer.  Also schedule
-	 * another call to updateLayer at idle.  (See bug [40dc19ee9e].)
+	 * This block runs exactly once for each toplevel during the first call
+	 * to updateLayer for a new toplevel.  It processes any pending idle
+	 * tasks.  The purpose of this is to allow a window to be iconified
+	 * immediately after it is created, and to be configured while
+	 * iconified in order to avoid display artifacts when widgets are added
+	 * to the window.
 	 */
 	if (! [self onScreen]) {
 	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    Tcl_DoWhenIdle(updateLayerIdleTask, self);
 	    [self setOnScreen:YES];
+	}
+	/* The loop above could have changed the context, so we must not
+	 * retrieve the context before the loop has run.  (See bug
+	 * [40dc19ee9e7].)
+	 */
+	CGContextRef context = self.tkLayerBitmapContext;
+	if (!context) {
+	    return;
 	}
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
