@@ -97,6 +97,7 @@ to the userbase.
  - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f)
  - [Do not crash or leave dangling entries when grid or place is used on a half-dead window](https://core.tcl-lang.org/tk/tktview/302055)
  - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
+ - [Windows: clipboard clear crashed when its window had not been made yet](https://core.tcl-lang.org/tk/tktview/bd3528)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
