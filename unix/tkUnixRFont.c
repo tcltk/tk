@@ -74,6 +74,44 @@ TCL_DECLARE_MUTEX(xftMutex);
 #define LOCK Tcl_MutexLock(&xftMutex)
 #define UNLOCK Tcl_MutexUnlock(&xftMutex)
 
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * IgnoreBadPicture --
+ *
+ *	Creates an error handler for drawing text with Xft. Xft draws into
+ *	an XRender picture which it creates for the drawable. If the drawable
+ *	does not exist any more (e.g. a pixmap created for an embedded window
+ *	whose container has been destroyed), the picture is not created, and
+ *	drawing into it gives a RenderBadPicture error.
+ *
+ * Results:
+ *	The error handler, to be deleted after drawing.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static Tk_ErrorHandler
+IgnoreBadPicture(
+    Display *display)
+{
+    int eventBase, errorBase;
+
+    if (!XRenderQueryExtension(display, &eventBase, &errorBase)) {
+	/*
+	 * No error code is 0, so this handler does not ignore anything.
+	 */
+
+	errorBase = -BadPicture;
+    }
+    return Tk_CreateErrorHandler(display, errorBase + BadPicture, -1, -1,
+	    NULL, NULL);
+}
+
 /*
  *-------------------------------------------------------------------------
  *
@@ -982,6 +1020,7 @@ Tk_DrawChars(
     int clen, nspec, xStart = x;
     XftGlyphFontSpec specs[NUM_SPEC];
     XGlyphInfo metrics;
+    Tk_ErrorHandler handler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -990,9 +1029,7 @@ Tk_DrawChars(
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		fontPtr->visual, fontPtr->colormap);
 } else {
-	Tk_ErrorHandler handler =
-		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
-
+	handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 	XftDrawChange(fontPtr->ftDraw, drawable);
 	Tk_DeleteErrorHandler(handler);
     }
@@ -1036,10 +1073,12 @@ Tk_DrawChars(
 		specs[nspec].x = x;
 		specs[nspec].y = y;
 		if (++nspec == NUM_SPEC) {
+		    handler = IgnoreBadPicture(display);
 		    LOCK;
 		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			    specs, nspec);
 		    UNLOCK;
+		    Tk_DeleteErrorHandler(handler);
 		    nspec = 0;
 		}
 	    }
@@ -1048,9 +1087,11 @@ Tk_DrawChars(
 	}
     }
     if (nspec) {
+	handler = IgnoreBadPicture(display);
 	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
 	UNLOCK;
+	Tk_DeleteErrorHandler(handler);
     }
 
   doUnderlineStrikeout:
@@ -1114,6 +1155,7 @@ TkDrawAngledChars(
     XGCValues values;
     XftColor *xftcolor;
     int xStart = x, yStart = y;
+    Tk_ErrorHandler handler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #ifdef XFT_HAS_FIXED_ROTATED_PLACEMENT
@@ -1128,9 +1170,7 @@ TkDrawAngledChars(
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		fontPtr->visual, fontPtr->colormap);
     } else {
-	Tk_ErrorHandler handler =
-		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
-
+	handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 	XftDrawChange(fontPtr->ftDraw, drawable);
 	Tk_DeleteErrorHandler(handler);
     }
@@ -1201,10 +1241,12 @@ TkDrawAngledChars(
 		     * a very small barely readable font)
 		     */
 
+		    handler = IgnoreBadPicture(display);
 		    LOCK;
 		    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 			    originX, originY, glyphs, nglyph);
 		    UNLOCK;
+		    Tk_DeleteErrorHandler(handler);
 		}
 	    }
 	    originX = ROUND16(x);
@@ -1226,10 +1268,12 @@ TkDrawAngledChars(
 	if (x >= minCoord && y >= minCoord &&
 	    x <= maxCoord - metrics.width &&
 	    y <= maxCoord - metrics.height) {
+	    handler = IgnoreBadPicture(display);
 	    LOCK;
 	    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 		    originX, originY, glyphs, nglyph);
 	    UNLOCK;
+	    Tk_DeleteErrorHandler(handler);
 	}
     }
 #else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
@@ -1244,9 +1288,7 @@ TkDrawAngledChars(
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		fontPtr->visual, fontPtr->colormap);
     } else {
-	Tk_ErrorHandler handler =
-		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
-
+	handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 	XftDrawChange(fontPtr->ftDraw, drawable);
 	Tk_DeleteErrorHandler(handler);
     }
@@ -1291,10 +1333,12 @@ TkDrawAngledChars(
 		specs[nspec].x = ROUND16(x);
 		specs[nspec].y = ROUND16(y);
 		if (++nspec == NUM_SPEC) {
+		    handler = IgnoreBadPicture(display);
 		    LOCK;
 		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			    specs, nspec);
 		    UNLOCK;
+		    Tk_DeleteErrorHandler(handler);
 		    nspec = 0;
 		}
 	    }
@@ -1303,9 +1347,11 @@ TkDrawAngledChars(
 	}
     }
     if (nspec) {
+	handler = IgnoreBadPicture(display);
 	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
 	UNLOCK;
+	Tk_DeleteErrorHandler(handler);
     }
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 

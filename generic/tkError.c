@@ -15,6 +15,17 @@
 
 #include "tkInt.h"
 
+#ifndef X_CreatePixmap
+#   define X_CreatePixmap 53
+#endif
+
+/*
+ * Marks a pixmap which could not be created in deletedWinTable until it is
+ * freed.
+ */
+
+#define PIXMAP_NOT_FREED ((unsigned long) -1)
+
 /*
  * The default X error handler gets saved here, so that it can be invoked if
  * an error occurs that we can't handle.
@@ -276,14 +287,33 @@ ErrorProc(
      * deleted. If so, it may be that Tk generated operations on windows that
      * were deleted by the container. Now we are getting the errors
      * (BadWindow) after Tk already deleted the window itself.
+     *
+     * A pixmap created for such a window does not exist, so the following
+     * requests which use it fail too. Remember it until it is freed, and
+     * ignore these errors in the same way.
      */
 
     if (errEventPtr->error_code == BadWindow
-	    || errEventPtr->error_code == BadDrawable) {
+	    || errEventPtr->error_code == BadDrawable
+	    || errEventPtr->error_code == BadPixmap) {
 	Window w = (Window) errEventPtr->resourceid;
 
 	if ((Tk_IdToWindow(display, w) != NULL)
 		|| WindowWasRecentlyDeleted(dispPtr, w, errEventPtr->serial)) {
+	    if (errEventPtr->request_code == X_CreatePixmap) {
+		Tcl_HashEntry *hPtr = Tcl_FindHashEntry(
+			&dispPtr->newPixmapTable,
+			UINT2PTR(errEventPtr->serial));
+
+		if (hPtr != NULL) {
+		    Tcl_HashEntry *dPtr;
+		    int isNew;
+
+		    dPtr = Tcl_CreateHashEntry(&dispPtr->deletedWinTable,
+			    Tcl_GetHashValue(hPtr), &isNew);
+		    Tcl_SetHashValue(dPtr, UINT2PTR(PIXMAP_NOT_FREED));
+		}
+	    }
 	    return 0;
 	}
     }
@@ -367,6 +397,79 @@ WindowWasRecentlyDeleted(
     hPtr = Tcl_FindHashEntry(&dispPtr->deletedWinTable, (char *) window);
     return (hPtr != NULL)
 	    && (serial <= (unsigned long) PTR2UINT(Tcl_GetHashValue(hPtr)));
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkRecordNewPixmap --
+ *
+ *	Remember the serial number of the request which created a pixmap,
+ *	until the server has processed it. If the drawable for which it was
+ *	created no longer exists, the creation fails, and ErrorProc uses this
+ *	to find the pixmap which was not created.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Forgets the pixmaps whose creation has been processed by the server.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkRecordNewPixmap(
+    TkDisplay *dispPtr,		/* Display of the pixmap. */
+    Pixmap pixmap)		/* The pixmap just created. */
+{
+    Tcl_HashEntry *hPtr, *nextPtr;
+    Tcl_HashSearch search;
+    unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
+    int isNew;
+
+    for (hPtr = Tcl_FirstHashEntry(&dispPtr->newPixmapTable, &search);
+	    hPtr != NULL; hPtr = nextPtr) {
+	nextPtr = Tcl_NextHashEntry(&search);
+	if ((unsigned long) PTR2UINT(Tcl_GetHashKey(&dispPtr->newPixmapTable,
+		hPtr)) <= lastSerial) {
+	    Tcl_DeleteHashEntry(hPtr);
+	}
+    }
+    hPtr = Tcl_CreateHashEntry(&dispPtr->newPixmapTable,
+	    UINT2PTR(NextRequest(dispPtr->display) - 1), &isNew);
+    Tcl_SetHashValue(hPtr, UINT2PTR(pixmap));
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkRecordFreedPixmap --
+ *
+ *	Called when a pixmap is freed. If the pixmap could not be created,
+ *	the errors of the requests made until it was freed, including freeing
+ *	it, are still ignored, as for a deleted window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkRecordFreedPixmap(
+    TkDisplay *dispPtr,		/* Display of the pixmap. */
+    Pixmap pixmap)		/* The pixmap just freed. */
+{
+    Tcl_HashEntry *hPtr;
+
+    hPtr = Tcl_FindHashEntry(&dispPtr->deletedWinTable, UINT2PTR(pixmap));
+    if (hPtr != NULL) {
+	TkRecordDeletedWindow(dispPtr, (Window) pixmap);
+    }
 }
 
 /*

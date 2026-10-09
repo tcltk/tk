@@ -48,8 +48,14 @@ Tk_GetPixmap(
     if (height > 32767) {
 	height = 32767;
     }
-    return XCreatePixmap(display, d, (unsigned) width, (unsigned) height,
-	    (unsigned) depth);
+    Pixmap pixmap = XCreatePixmap(display, d, (unsigned) width,
+	    (unsigned) height, (unsigned) depth);
+    TkDisplay *dispPtr = TkGetDisplay(display);
+
+    if (dispPtr != NULL) {
+	TkRecordNewPixmap(dispPtr, pixmap);
+    }
+    return pixmap;
 }
 
 /*
@@ -75,7 +81,12 @@ Tk_FreePixmap(
     Display *display,		/* Display for which pixmap was allocated. */
     Pixmap pixmap)		/* Identifier for pixmap. */
 {
+    TkDisplay *dispPtr = TkGetDisplay(display);
+
     XFreePixmap(display, pixmap);
+    if (dispPtr != NULL) {
+	TkRecordFreedPixmap(dispPtr, pixmap);
+    }
 }
 
 

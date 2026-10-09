@@ -246,6 +246,44 @@ static int GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars,
 			   int runStart, int runLen);
 static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
 static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
+static Tk_ErrorHandler IgnoreBadPicture(Display *display);
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * IgnoreBadPicture --
+ *
+ *	Creates an error handler for drawing text with Xft. Xft draws into
+ *	an XRender picture which it creates for the drawable. If the drawable
+ *	does not exist any more (e.g. a pixmap created for an embedded window
+ *	whose container has been destroyed), the picture is not created, and
+ *	drawing into it or freeing it gives a RenderBadPicture error.
+ *
+ * Results:
+ *	The error handler, to be deleted after drawing.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static Tk_ErrorHandler
+IgnoreBadPicture(
+    Display *display)
+{
+    int eventBase, errorBase;
+
+    if (!XRenderQueryExtension(display, &eventBase, &errorBase)) {
+	/*
+	 * No error code is 0, so this handler does not ignore anything.
+	 */
+
+	errorBase = -BadPicture;
+    }
+    return Tk_CreateErrorHandler(display, errorBase + BadPicture, -1, -1,
+	    NULL, NULL);
+}
 
 /*
  * ---------------------------------------------------------------
@@ -2712,11 +2750,15 @@ Tk_DrawCharsInContext(
 				    fontPtr->visual, fontPtr->colormap);
     if (!ftDraw) return;
 
+    /* Errors for a drawable which does not exist any more. */
+    Tk_ErrorHandler handler = IgnoreBadPicture(display);
+
     XGCValues values;
     XGetGCValues(display, gc, GCForeground, &values);
     XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
     if (!xftcolor) {
 	XftDrawDestroy(ftDraw);
+	Tk_DeleteErrorHandler(handler);
 	return;
     }
 
@@ -2898,6 +2940,7 @@ Tk_DrawCharsInContext(
 	}
     }
     XftDrawDestroy(ftDraw);
+    Tk_DeleteErrorHandler(handler);
 }
 
 /*
@@ -2935,11 +2978,15 @@ TkDrawAngledChars(
 				    fontPtr->visual, fontPtr->colormap);
     if (!ftDraw) return;
 
+    /* Errors for a drawable which does not exist any more. */
+    Tk_ErrorHandler handler = IgnoreBadPicture(display);
+
     XGCValues values;
     XGetGCValues(display, gc, GCForeground, &values);
     XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
     if (!xftcolor) {
 	XftDrawDestroy(ftDraw);
+	Tk_DeleteErrorHandler(handler);
 	return;
     }
 
@@ -3067,6 +3114,7 @@ TkDrawAngledChars(
 	XftDrawSetClip(ftDraw, NULL);
     }
     XftDrawDestroy(ftDraw);
+    Tk_DeleteErrorHandler(handler);
 }
 
 /*

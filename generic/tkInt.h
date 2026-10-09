@@ -574,6 +574,11 @@ typedef struct TkDisplay {
 				/* Maps from X window ids of recently deleted
 				 * windows to the serial number of the last
 				 * request made before the deletion. */
+    Tcl_HashTable newPixmapTable;
+				/* Maps from the serial numbers of the
+				 * requests which create pixmaps to the
+				 * pixmaps, until the requests have been
+				 * processed by the server. */
 } TkDisplay;
 
 /*
@@ -1192,6 +1197,8 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
+MODULE_SCOPE void	TkRecordNewPixmap(TkDisplay *dispPtr, Pixmap pixmap);
+MODULE_SCOPE void	TkRecordFreedPixmap(TkDisplay *dispPtr, Pixmap pixmap);
 MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,

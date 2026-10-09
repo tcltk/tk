@@ -1231,6 +1231,70 @@ test unixEmbed-9.3 {embedded window redrawn after the container was destroyed} -
     childTkProcess exit
     childTkProcess create
 } -result alive
+test unixEmbed-9.4 {embedded window with a double-buffered widget redrawn after the container was destroyed} -constraints {
+    unix notAqua
+} -setup {
+    deleteWindows
+} -body {
+    frame .f1 -container 1 -width 200 -height 50
+    pack .f1
+    update
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
+	destroy {*}[winfo children .]
+	toplevel .t1 -use $w1
+	entry .t1.e
+	pack .t1.e
+	update
+    }
+    # Destroy the container while the child does not process events.
+    after 200 {destroy .f1; update}
+    childTkProcess eval {
+	after 1000
+	# The entry draws into a pixmap created for its window, which
+	# does not exist any more.
+	.t1.e insert end text
+	update idletasks
+	winfo pointerxy .
+	set x alive
+    }
+} -cleanup {
+    deleteWindows
+    # The child process could exit because of an X error.
+    childTkProcess exit
+    childTkProcess create
+} -result alive
+test unixEmbed-9.5 {embedded window claims the focus after the container was destroyed} -constraints {
+    unix notAqua
+} -setup {
+    deleteWindows
+} -body {
+    frame .f1 -container 1 -width 200 -height 50
+    pack .f1
+    update
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
+	destroy {*}[winfo children .]
+	toplevel .t1 -use $w1
+	entry .t1.e
+	pack .t1.e
+	update
+    }
+    # Destroy the container while the child does not process events.
+    after 200 {destroy .f1; update}
+    childTkProcess eval {
+	after 1000
+	focus -force .t1.e
+	update idletasks
+	winfo pointerxy .
+	set x alive
+    }
+} -cleanup {
+    deleteWindows
+    # The child process could exit because of an X error.
+    childTkProcess exit
+    childTkProcess create
+} -result alive
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
     unix
