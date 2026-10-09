@@ -234,6 +234,9 @@ test canvas-1.45 {configuration options: good value for "yscrollcommand"} -body 
     .c configure -yscrollcommand {Another command}
     .c cget -yscrollcommand
 } -result {Another command}
+test canvas-1.45.1 {configuration options: synonyms - bug 707778} -body {
+    lsearch -all -inline [.c configure] {-b? *}
+} -result {{-bd -borderwidth} {-bg -background}}
 test canvas-1.46 {configure throws error on bad option} -body {
     .c configure -gorp foo
 } -returnCodes error -match glob -result {*}

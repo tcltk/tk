@@ -99,6 +99,7 @@ to the userbase.
  - [crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid](https://core.tcl-lang.org/tk/tktview/434c8d)
  - [Applying canvas move command to objects leaves trails](https://core.tcl-lang.org/tk/tktview/ad9a02)
  - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
+ - [canvas/scrollbar return wrong configure synonym info](https://core.tcl-lang.org/tk/tktview/707778)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
