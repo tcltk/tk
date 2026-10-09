@@ -673,6 +673,10 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
     unix notAqua
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -722,6 +726,10 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
     unix notAqua
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -770,6 +778,10 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
     unix notAqua
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -825,6 +837,10 @@ test unixEmbed-5.4 {EmbedFocusProc procedure, X focus set to the container's top
     unix notAqua testxfocus
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -849,7 +865,12 @@ test unixEmbed-5.4 {EmbedFocusProc procedure, X focus set to the container's top
     update
     childTkProcess eval {update; testxfocus}
 } -cleanup {
+    # Restart the child process before destroying the container: its focused
+    # entry would redraw itself after the container is destroyed, and its
+    # focus state would affect the following tests.
+    childTkProcess exit
     deleteWindows
+    childTkProcess create
 } -result {.t1}
 
 
@@ -953,6 +974,10 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
     unix notAqua
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     deleteWindows
     frame .f1 -container 1 -width 200 -height 50
@@ -1017,6 +1042,10 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     unix notAqua
 } -setup {
     deleteWindows
+    # Without a window manager the focus follows the pointer, so the pointer
+    # must not be over the embedded window.
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
