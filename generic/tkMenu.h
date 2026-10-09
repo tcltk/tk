@@ -368,7 +368,9 @@ typedef struct TkMenu {
 				/* A pointer to the original menu for this
 				 * clone chain. Points back to this structure
 				 * if this menu is a main menu. */
-    void *reserved1; /* not used any more. */
+    bool cascadeLeft;		/* True if this menu was posted as a cascade
+				 * to the left of its parent menu, so that its
+				 * own cascades are posted to the left too. */
     Tk_Window parentTopLevelPtr;/* If this menu is a menubar, this is the
 				 * toplevel that owns the menu. Only
 				 * applicable for menubar clones. */
