@@ -3499,7 +3499,6 @@ WmIconwindowCmd(
 		}
 	    }
 	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen: NO];
 	    [win setExcludedFromWindowsMenu:YES];
 	}
 	Tk_MakeWindowExist(tkwin2);

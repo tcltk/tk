@@ -299,7 +299,7 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 
-@synthesize onScreen = _onScreen;
+@synthesize hasBeenDisplayed = _hasBeenDisplayed;
 
 /*
  * Implementation of the NSTextInputClient protocol.

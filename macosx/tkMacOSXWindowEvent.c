@@ -406,6 +406,22 @@ static void RefocusGrabWindow(void *clientData) {
     Tcl_Release(winPtr);
 }
 
+/*
+ * Idle task which processes idle tasks posted before this one and then
+ * schedules a call to updateLayer for a specific window.  This task is
+ * scheduled on the first call to updateLayer for each toplevel, to
+ * avoid artifacts when a window is iconified before being displayed
+ * so that it can be configured before its first display.
+ */
+
+static void deferredUpdateLayer(void *clientData) {
+    if (!clientData) {
+	return;
+    }
+    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+    [(TKContentView *) clientData setNeedsDisplay:YES];
+}
+
 #pragma mark TKApplication(TKApplicationEvent)
 
 @implementation TKApplication(TKApplicationEvent)
@@ -441,7 +457,6 @@ static void RefocusGrabWindow(void *clientData) {
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen:NO];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -1021,23 +1036,13 @@ ExposeRestrictProc(
 - (void) updateLayer {
     if (![NSApp tkWillExit]) {
 	/*
-	 * This block runs exactly once for each toplevel during the first call
-	 * to updateLayer for a new toplevel.  It processes any pending idle
-	 * tasks.  The purpose of this is to allow a window to be iconified
-	 * immediately after it is created, and to be configured while
-	 * iconified in order to avoid display artifacts when widgets are added
-	 * to the window.
+	 * If this view has never been displayed before we defer the update
+	 * until after the toplevel has been configured.  The configuration is
+	 * done in an idle task, which then marks this view as needing display.
 	 */
-	if (! [self onScreen]) {
-	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    [self setOnScreen:YES];
-	}
-	/* The loop above could have changed the context, so we must not
-	 * retrieve the context before the loop has run.  (See bug
-	 * [40dc19ee9e7].)
-	 */
-	CGContextRef context = self.tkLayerBitmapContext;
-	if (!context) {
+	if (![self hasBeenDisplayed]) {
+	    Tcl_DoWhenIdle(deferredUpdateLayer, self);
+	    [self setHasBeenDisplayed:YES];
 	    return;
 	}
 	/*
@@ -1048,6 +1053,10 @@ ExposeRestrictProc(
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
+	CGContextRef context = self.tkLayerBitmapContext;
+	if (!context) {
+	    return;
+	}
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
