@@ -96,6 +96,7 @@ to the userbase.
  - [entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called](https://core.tcl-lang.org/tk/tktview/df09b0)
  - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f)
  - [Do not crash or leave dangling entries when grid or place is used on a half-dead window](https://core.tcl-lang.org/tk/tktview/302055)
+ - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
