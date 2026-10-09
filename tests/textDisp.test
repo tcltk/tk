@@ -5344,11 +5344,12 @@ test textDisp-39.1 {no line break inside a grapheme cluster ending the text, lin
     destroy .t1
     set res {}
 } -body {
-    # Laid out before the first display: a single grapheme cluster is forced on each line.
+    # A window one pixel wide: a single grapheme cluster is forced on each line.
     foreach mode {char word} {
 	destroy .t1
-	text .t1 -font {Courier -12} -width 17 -wrap $mode
-	pack .t1
+	text .t1 -font {Courier -12} -wrap $mode
+	place .t1 -x 0 -y 0 -width 1 -height 100
+	update
 	.t1 insert end $graphemeText
 	.t1 count -update -displaylines 1.0 end
 	lappend res $mode [displayLineCodePoints .t1]

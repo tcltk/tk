@@ -3708,6 +3708,30 @@ test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several wor
     destroy .e
 } -result {{} {}}
 
+test entry-26.1 {pasting the selection focuses the entry unless it is disabled} -setup {
+    entry .e
+    button .b
+    pack .e .b
+    update
+    selection own .b
+    selection handle .b {apply {{offset maxChars} {return pasted}}}
+    set res {}
+} -body {
+    foreach state {normal disabled} {
+	.e configure -state normal
+	.e delete 0 end
+	.e configure -state $state
+	focus -force .b
+	update
+	event generate .e <<PasteSelection>> -x 5 -y 5
+	update
+	lappend res [focus] [.e get]
+    }
+    set res
+} -cleanup {
+    destroy .e .b
+} -result {.e pasted .b {}}
+
 #
 # TESTFILE CLEANUP
 #
