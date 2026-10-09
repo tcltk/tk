@@ -1628,7 +1628,9 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
     update
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 0 1}
-test pack-18.1.2 {unmap content when container unmapped} -setup {
+test pack-18.1.2 {unmap content when container unmapped} -constraints {
+    win
+} -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big

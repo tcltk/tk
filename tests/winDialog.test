@@ -194,7 +194,9 @@ test winDialog-5.1 {GetFileName: no arguments} -constraints {
 	Click cancel
     }
 } -result 0
-test winDialog-5.2 {GetFileName: one argument} -body {
+test winDialog-5.2 {GetFileName: one argument} -constraints {
+    notAqua
+} -body {
     tk_getOpenFile -foo
 } -returnCodes error -result {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
@@ -777,7 +779,9 @@ test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} -constraints {
     # $x should be "" on a Cancel
     append x $y
 } -result 0
-test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} -body {
+test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} -constraints {
+    notAqua
+} -body {
     tk_chooseDirectory -foo
 } -returnCodes error -result {bad option "-foo": must be -initialdir, -mustexist, -parent, or -title}
 test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} -constraints {

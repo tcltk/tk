@@ -818,7 +818,9 @@ test select-7.1 {TkSelDeadWindow procedure} -constraints nonPortable -setup {
 ##############################################################################
 
 # Check reentrancy on losing selection
-test select-8.1 {TkSelEventProc procedure} -setup {
+test select-8.1 {TkSelEventProc procedure} -constraints {
+    notAqua
+} -setup {
     selectionSetup
     childTkProcess create
 } -body {

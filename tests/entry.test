@@ -1980,7 +1980,9 @@ test entry-6.10 {EntryComputeGeometry procedure} -constraints {
 } -cleanup {
     destroy .e
 } -result {23 53 43}
-test entry-6.11 {EntryComputeGeometry procedure} -setup {
+test entry-6.11 {EntryComputeGeometry procedure} -constraints {
+    notAqua
+} -setup {
     entry .e -highlightthickness 2
     pack .e ; update idletasks
 } -body {

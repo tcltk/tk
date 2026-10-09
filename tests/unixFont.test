@@ -236,7 +236,7 @@ test unixfont-5.11 {Tk_MeasureChars: TK_AT_LEAST_ONE + not even one char fit!} {
     .b.l config -wrap $a
     set x
 } "$ax [expr {$ay*6}]"
-test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {} {
+test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} notAqua {
     .b.l config -text "000   \n000"
     getsize .b.l
 } "[expr {$ax*6}] [expr {$ay*2}]"

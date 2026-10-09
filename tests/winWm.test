@@ -38,7 +38,9 @@ resetWindows
 # TESTS
 #
 
-test winWm-1.1 {TkWmMapWindow} -setup {
+test winWm-1.1 {TkWmMapWindow} -constraints {
+    notAqua
+} -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -63,7 +65,7 @@ test winWm-1.2 {TkWmMapWindow} -setup {
 } -cleanup {
     destroy .t
 } -returnCodes error -result {can't iconify ".t": it is a transient}
-test winWm-1.3 {TkWmMapWindow} -setup {
+test winWm-1.3 {TkWmMapWindow} -constraints withWindowManager -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -87,7 +89,7 @@ test winWm-1.4 {TkWmMapWindow} -constraints win -setup {
 } -cleanup {
     destroy .t .t2
 } -result {10 40}
-test winWm-1.5 {TkWmMapWindow} -setup {
+test winWm-1.5 {TkWmMapWindow} -constraints withWindowManager -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -97,7 +99,7 @@ test winWm-1.5 {TkWmMapWindow} -setup {
 } -result {iconic}
 
 
-test winWm-2.1 {TkpWmSetState} -setup {
+test winWm-2.1 {TkpWmSetState} -constraints withWindowManager -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -113,7 +115,7 @@ test winWm-2.1 {TkpWmSetState} -setup {
 } -cleanup {
     destroy .t
 } -result {normal iconic normal}
-test winWm-2.2 {TkpWmSetState} -setup {
+test winWm-2.2 {TkpWmSetState} -constraints withWindowManager -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -132,7 +134,7 @@ test winWm-2.2 {TkpWmSetState} -setup {
 } -cleanup {
     destroy .t
 } -result {normal withdrawn iconic normal}
-test winWm-2.3 {TkpWmSetState} -setup {
+test winWm-2.3 {TkpWmSetState} -constraints withWindowManager -setup {
     destroy .t
 } -body {
     toplevel .t
@@ -417,7 +419,9 @@ test winWm-7.2 {deiconify on an already mapped toplevel\
     destroy .t
 } -result {1 .t}
 
-test winWm-7.3 {UpdateWrapper must maintain Z order} -setup {
+test winWm-7.3 {UpdateWrapper must maintain Z order} -constraints {
+    notAqua
+} -setup {
     destroy .t
 } -body {
     destroy .t

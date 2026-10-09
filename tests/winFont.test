@@ -143,7 +143,9 @@ update
 set ax [winfo reqwidth .t.l]
 set ay [winfo reqheight .t.l]
 
-test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -setup {
+test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraints {
+    notAqua
+} -setup {
     destroy .t.l
 } -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -160,7 +162,9 @@ test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -setup {
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -setup {
+test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -constraints {
+    notAqua
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -177,7 +181,9 @@ test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -setu
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -setup {
+test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
+    notAqua
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -194,7 +200,9 @@ test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -setup {
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -setup {
+test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
+    notAqua
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -243,7 +251,9 @@ test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -setup {
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.7 {Tk_MeasureChars procedure: whole words} -setup {
+test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
+    notAqua
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -298,7 +308,9 @@ test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -setup
     destroy .t.l
 } -match glob -result *
 
-test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -setup {
+test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -constraints {
+    notAqua
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \

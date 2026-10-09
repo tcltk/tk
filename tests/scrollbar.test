@@ -519,14 +519,14 @@ test scrollbar-6.9 {ScrollbarPosition procedure} {
 test scrollbar-6.10 {ScrollbarPosition procedure} {
     .s identify [winfo width .s] [expr {[winfo height .s] / 2}]
 } {}
-test scrollbar-6.11.1 {ScrollbarPosition procedure} {} {
+test scrollbar-6.11.1 {ScrollbarPosition procedure} notAqua {
     .s identify 8 4
 } {arrow1}
 test scrollbar-6.11.2 {ScrollbarPosition procedure} aqua {
     # macOS aqua scrollbars have no arrows nowadays
     .s identify 8 4
 } {trough1}
-test scrollbar-6.12.1 {ScrollbarPosition procedure} {} {
+test scrollbar-6.12.1 {ScrollbarPosition procedure} notAqua {
     # x11 scrollbars have arrows 19 pixels height,
     # but on XQuartz they are 15 pixels height
     .s identify 8 15
@@ -586,7 +586,7 @@ test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr {[winfo width .s] / 2}] [expr {[winfo height .s]
 						 - [testmetrics cyvscroll .s] - 1}]
 } {trough2}
-test scrollbar-6.29.1 {ScrollbarPosition procedure} {} {
+test scrollbar-6.29.1 {ScrollbarPosition procedure} notAqua {
     # x11 scrollbars have arrows at least 19 pixels height
     # but on XQuartz they are 15 pixels height
     .s identify 8 184
@@ -595,7 +595,7 @@ test scrollbar-6.29.2 {ScrollbarPosition procedure} aqua {
     # macOS aqua scrollbars have no arrows nowadays
     .s identify 8 184
 } {trough2}
-test scrollbar-6.30.1 {ScrollbarPosition procedure} {} {
+test scrollbar-6.30.1 {ScrollbarPosition procedure} notAqua {
     .s identify 8 195
 } {arrow2}
 test scrollbar-6.30.2 {ScrollbarPosition procedure} aqua {
@@ -637,7 +637,7 @@ place .t.s -width 200
 .t.s set .2 .4
 update
 
-test scrollbar-6.39.1 {ScrollbarPosition procedure} {} {
+test scrollbar-6.39.1 {ScrollbarPosition procedure} notAqua {
     .t.s identify 4 8
 } {arrow1}
 test scrollbar-6.39.2 {ScrollbarPosition procedure} aqua {
@@ -647,7 +647,7 @@ test scrollbar-6.39.2 {ScrollbarPosition procedure} aqua {
 test scrollbar-6.40 {ScrollbarPosition procedure} win {
     .t.s identify 0 [expr {[winfo height .t.s] / 2}]
 } {arrow1}
-test scrollbar-6.41.1 {ScrollbarPosition procedure} {} {
+test scrollbar-6.41.1 {ScrollbarPosition procedure} notAqua {
     .t.s identify 82 8
 } {slider}
 test scrollbar-6.41.2 {ScrollbarPosition procedure} aqua {
