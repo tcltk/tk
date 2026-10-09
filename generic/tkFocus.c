@@ -342,7 +342,10 @@ TkFocusFilterEvent(
 	 * Skip FocusOut events that cause confusion.
 	 * NotifyPointer - the pointer is in us or a child, and we are losing
 	 *	focus because of an XSetInputFocus. Other focus events will
-	 *	set our state properly.
+	 *	set our state properly. But if we only had the focus because
+	 *	of the pointer (see NotifyPointer for FocusIn below), the focus
+	 *	was taken by another application, and no other event will
+	 *	come.
 	 * NotifyPointerRoot - should never happen because this is sent to the
 	 *	root window.
 	 * NotifyInferior - focus leaving us for an embedded child. We retain
@@ -357,6 +360,10 @@ TkFocusFilterEvent(
 	 */
 
 	if ((eventPtr->xfocus.detail == NotifyPointer)
+		&& (dispPtr->implicitWinPtr != NULL)
+		&& (dispPtr->implicitWinPtr == TkWmFocusToplevel(winPtr))) {
+	    dispPtr->implicitWinPtr = NULL;
+	} else if ((eventPtr->xfocus.detail == NotifyPointer)
 		|| (eventPtr->xfocus.detail == NotifyPointerRoot)
 		|| (eventPtr->xfocus.detail == NotifyInferior)) {
 	    return retValue;

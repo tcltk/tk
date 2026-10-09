@@ -851,6 +851,31 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
     crashit
 } -result {Reached}
 
+testConstraint noWindowManager [expr {![testConstraint withWindowManager]}]
+test focus-9.1 {implicit focus is lost when another application takes the focus} -constraints {
+    unix testxfocus noWindowManager
+} -setup {
+    deleteWindows
+    # Without a window manager, the main window of the child process (at
+    # +100+100) gets the focus implicitly when it appears under the pointer
+    # while the X focus follows the pointer.
+    event generate . <Motion> -warp 1 \
+	    -x [expr {150 - [winfo rootx .]}] -y [expr {150 - [winfo rooty .]}]
+    controlPointerWarpTiming
+    testxfocus pointerroot
+    childTkProcess create
+} -body {
+    childTkProcess eval {update; after 200; update}
+    set x [childTkProcess eval focus]
+    focus -force .
+    update
+    lappend x [childTkProcess eval {update; focus}]
+} -cleanup {
+    childTkProcess exit
+    event generate . <Motion> -warp 1 -x 2000 -y 2000
+    controlPointerWarpTiming
+} -result {. {}}
+
 #
 # TESTFILE CLEANUP
 #
