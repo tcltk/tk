@@ -5310,7 +5310,72 @@ test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.3 {layout of the text in a window which has not been mapped uses the requested size - bug 7d8d10e4a9} -setup {
+    toplevel .top
+    wm withdraw .top
+    text .top.t -width 20 -height 5 -wrap char -font {Courier 12}
+    pack .top.t
+} -body {
+    .top.t insert end [string repeat x 100]
+    .top.t count -displaylines 1.0 end
+} -cleanup {
+    destroy .top
+} -result 5
 
+# Display lines of $w, each one as its code points U+XXXX joined by ".".
+proc displayLineCodePoints {w} {
+    set res {}
+    for {set i 1.0} {[$w compare $i < "end - 1c"]} {set i $next} {
+	set next [$w index "$i + 1 displaylines"]
+	if {[$w compare $next <= $i] || [$w compare $next > "end - 1c"]} {
+	    set next [$w index "end - 1c"]
+	}
+	set cps {}
+	foreach c [split [$w get $i $next] {}] {
+	    lappend cps [format U+%04X [scan $c %c]]
+	}
+	lappend res [join $cps .]
+    }
+    return $res
+}
+# e + combining acute accent, twice, then woman + ZWJ + laptop (one emoji).
+set graphemeText "e[format %c 0x301]e[format %c 0x301][format %c 0x1F469][format %c 0x200D][format %c 0x1F4BB]"
+test textDisp-39.1 {no line break inside a grapheme cluster ending the text, line one pixel wide} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # A window one pixel wide: a single grapheme cluster is forced on each line.
+    foreach mode {char word} {
+	destroy .t1
+	text .t1 -font {Courier -12} -wrap $mode
+	place .t1 -x 0 -y 0 -width 1 -height 100
+	update
+	.t1 insert end $graphemeText
+	.t1 count -update -displaylines 1.0 end
+	lappend res $mode [displayLineCodePoints .t1]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
+test textDisp-39.2 {no line break inside an emoji ZWJ sequence, widget one character wide} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    foreach mode {char word} {
+	destroy .t1
+	text .t1 -font {Courier -12} -width 1 -wrap $mode
+	pack .t1
+	.t1 insert end $graphemeText
+	update
+	lappend res $mode [displayLineCodePoints .t1]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
 
 #
 # TESTFILE CLEANUP

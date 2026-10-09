@@ -81,6 +81,7 @@ enum {
     NSPoint location = [theEvent locationInWindow];
     //NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
+    TkWindow *buttonTarget = NULL;
     Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
     NSInteger button;
@@ -304,6 +305,27 @@ enum {
     }
 
     /*
+     * Clicking with the right or middle button does not make the window the
+     * key window, so tkEventTarget is still the toplevel which has the focus.
+     * These events should be sent to the toplevel which was clicked.
+     */
+
+    switch (eventType) {
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+    case NSRightMouseDragged:
+    case NSOtherMouseDown:
+    case NSOtherMouseUp:
+    case NSOtherMouseDragged:
+	if (!isTestingEvent && eventWindow != [NSApp keyWindow]) {
+	    buttonTarget = TkMacOSXGetTkWindow(eventWindow);
+	}
+	break;
+    default:
+	break;
+    }
+
+    /*
      * Find the toplevel window for the event.
      */
 
@@ -326,6 +348,8 @@ enum {
 	}
     } else if (eventType == NSScrollWheel) {
 	winPtr = scrollTarget;
+    } else if (buttonTarget) {
+	winPtr = buttonTarget;
     } else {
 	winPtr = [NSApp tkEventTarget];
     }

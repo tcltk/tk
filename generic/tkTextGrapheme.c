@@ -69,6 +69,10 @@ BoundaryFromState(size_t index,
     size_t idx = (index > byteLen) ? byteLen : index;
     size_t enc = Utf8EncodedBytes(curCp);
     size_t boundary = (enc > idx) ? 0 : (idx - enc);
+    if (index > byteLen) {
+	/* End of text: no lookahead codepoint, curCp is the last one. */
+	boundary = byteLen;
+    }
     if (boundary < *lastBoundary) boundary = *lastBoundary;
     *lastBoundary = boundary;
     return boundary;
