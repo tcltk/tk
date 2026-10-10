@@ -2635,6 +2635,43 @@ Tk_MeasureCharsInContext(
 }
 
 /*
+ *---------------------------------------------------------------------------
+ *
+ * IgnoreBadPicture --
+ *
+ *	Creates an error handler for drawing text with Xft into a window.
+ *	Xft draws into an XRender picture which it creates for the drawable.
+ *	A window of an embedded application can be destroyed by its container
+ *	before Tk knows it; then the picture is not created, and drawing into
+ *	it gives a RenderBadPicture error. Pixmaps are created for the root
+ *	window (see Tk_GetPixmap), so they always exist. [f1fe739a4f]
+ *
+ * Results:
+ *	The error handler, to be deleted after drawing, or NULL if the
+ *	drawable is not a Tk window.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static Tk_ErrorHandler
+IgnoreBadPicture(
+    Display *display,
+    Drawable drawable)
+{
+    int eventBase, errorBase;
+
+    if (Tk_IdToWindow(display, drawable) == NULL
+	    || !XRenderQueryExtension(display, &eventBase, &errorBase)) {
+	return NULL;
+    }
+    return Tk_CreateErrorHandler(display, errorBase + BadPicture, -1, -1,
+	    NULL, NULL);
+}
+
+/*
  * ---------------------------------------------------------------
  * Tk_DrawChars --
  *
@@ -2719,6 +2756,8 @@ Tk_DrawCharsInContext(
 	XftDrawDestroy(ftDraw);
 	return;
     }
+
+    Tk_ErrorHandler pictureHandler = IgnoreBadPicture(display, drawable);
 
     if (tsdPtr->clipRegion) {
 	XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
@@ -2898,6 +2937,9 @@ Tk_DrawCharsInContext(
 	}
     }
     XftDrawDestroy(ftDraw);
+    if (pictureHandler != NULL) {
+	Tk_DeleteErrorHandler(pictureHandler);
+    }
 }
 
 /*
@@ -2942,6 +2984,8 @@ TkDrawAngledChars(
 	XftDrawDestroy(ftDraw);
 	return;
     }
+
+    Tk_ErrorHandler pictureHandler = IgnoreBadPicture(display, drawable);
 
     if (tsdPtr->clipRegion) {
 	XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
@@ -3067,6 +3111,9 @@ TkDrawAngledChars(
 	XftDrawSetClip(ftDraw, NULL);
     }
     XftDrawDestroy(ftDraw);
+    if (pictureHandler != NULL) {
+	Tk_DeleteErrorHandler(pictureHandler);
+    }
 }
 
 /*

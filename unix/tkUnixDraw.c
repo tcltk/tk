@@ -359,7 +359,7 @@ TkpPutRGBAImage(
     }
     argb->byte_order = LSBFirst;	/* Bytes were written B,G,R,A. */
 
-    srcPix = XCreatePixmap(display, drawable, width, height, 32);
+    srcPix = Tk_GetPixmap(display, drawable, width, height, 32);
     srcGC = XCreateGC(display, srcPix, 0, NULL);
     XPutImage(display, srcPix, srcGC, argb, 0, 0, 0, 0, width, height);
     XFreeGC(display, srcGC);
@@ -373,7 +373,7 @@ TkpPutRGBAImage(
 	    0, 0, 0, 0, dest_x, dest_y, width, height);
     XRenderFreePicture(display, dstPic);
     XRenderFreePicture(display, srcPic);
-    XFreePixmap(display, srcPix);
+    Tk_FreePixmap(display, srcPix);
     return Success;
 }
 #endif /* HAVE_XRENDER */
