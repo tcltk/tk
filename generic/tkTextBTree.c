@@ -4807,6 +4807,7 @@ TkBTreeInsertChars(
     unsigned chunkSize = 0; /* satisifies the compiler */
     int size = 0;
     int hyphenRules = 0;
+    int recompute = 0;		/* Recompute the elide info of an enclosing elided range. */
 
     assert(*string); /* otherwise tag information might become erroneous */
 
@@ -5187,6 +5188,19 @@ TkBTreeInsertChars(
 	    }
 	}
 
+	if (tagPtr && tagPtr->elide == 0) {
+	    /*
+	     * The new segments are not elided (-elide 0 wins), but they may
+	     * have been inserted inside an elided range: split it like for
+	     * untagged segments below. The tag based update would search the
+	     * start of the elided range from the new segments, which are not
+	     * elided.
+	     */
+
+	    tagPtr = NULL;
+	    recompute = TkBTreeHaveElidedSegments(sharedTextPtr);
+	}
+
 	if (tagPtr) {
 	    firstSegPtr->protectionFlag = 1;
 	    lastSegPtr->protectionFlag = 1;
@@ -5204,7 +5218,11 @@ TkBTreeInsertChars(
 		hyphenElideTagPtr = NULL;
 	    }
 	}
-    } else if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
+    } else {
+	recompute = TkBTreeHaveElidedSegments(sharedTextPtr);
+    }
+
+    if (recompute) {
 	TkTextSegment *predPtr = firstSegPtr->prevPtr;
 	TkTextLine *prevLinePtr = firstSegPtr->sectionPtr->linePtr->prevPtr;
 
@@ -5213,9 +5231,10 @@ TkBTreeInsertChars(
 	 * inside an elided range: this happens when the insertion point is
 	 * the meeting point of two distinct elide tags, because the new
 	 * segments received the intersection of the neighboring tag sets,
-	 * which does not contain the elide tags anymore. Then the elided
-	 * range has to be split, a branch/link pair must not span non-elided
-	 * content. Search the preceding content segment, but do not skip
+	 * which does not contain the elide tags anymore, or when the new
+	 * segments have a tag with -elide 0 and not the elide tag of the
+	 * range. Then the elided range has to be split, a branch/link pair
+	 * must not span non-elided content. Search the preceding content segment, but do not skip
 	 * branches or links: content inserted right after a link (or right
 	 * before a branch) lies outside of any elided range.
 	 */

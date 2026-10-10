@@ -2043,6 +2043,22 @@ test btree-14.54 {insert at the end boundary of an elided range stays outside} -
     destroy .t
 } -result {5 aigh}
 
+test btree-14.121 {insert text with an -elide 0 tag inside an elided range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure A -elide 0
+    .t tag configure B -elide 1
+    for {set i 1} {$i <= 9} {incr i} {.t insert end "row $i abcdef\n"}
+    .t tag add B 3.2 6.4
+    .t insert 4.4 "xy\n" A  ; # used to search the elided range from "xy" -> assertion
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "row 1 abcdef\nrow 2 abcdef\nroxy\n6 abcdef\nrow 7 abcdef\nrow 8 abcdef\nrow 9 abcdef\n\n"
+
 test btree-14.55 {redo of an insert adjacent to an elided range start, switches annihilated meanwhile} -setup {
     destroy .t
     text .t -undo 1
