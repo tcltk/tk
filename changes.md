@@ -107,6 +107,7 @@ to the userbase.
  - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f3732)
  - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
  - [Bug regarding numeric keypad on solaris](https://core.tcl-lang.org/tk/tktview/481308)
+ - [w32: Creating Alt-Key binding on all breaks default handling](https://core.tcl-lang.org/tk/tktview/145727)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
