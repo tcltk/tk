@@ -8485,3 +8485,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-09 (bug) [218252] Ttk combobox fails to restore grab (storchaka)
 
 2026-10-10 (bug) [481308] Bug regarding numeric keypad on solaris (storchaka)
+
+2026-10-10 (bug) [145727] w32: Creating Alt-Key binding on all breaks default handling (storchaka)
