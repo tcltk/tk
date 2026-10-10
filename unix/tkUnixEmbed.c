@@ -188,6 +188,7 @@ Tk_UseWindow(
     }
     containerPtr->embeddedPtr = winPtr;
     winPtr->flags |= TK_EMBEDDED;
+    winPtr->dispPtr->flags |= TK_DISPLAY_HAS_EMBEDDED;
     return TCL_OK;
 }
 

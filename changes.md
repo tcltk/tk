@@ -90,6 +90,15 @@ to the userbase.
  - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
  - [X11 with bidi: a string consisting only of U+FFFD hung text layout](https://core.tcl-lang.org/tk/tktview/6f054b)
  - [canvas/scrollbar return wrong configure synonym info](https://core.tcl-lang.org/tk/tktview/707778)
+ - [Middle-click paste focused a spinbox only when it was disabled](https://core.tcl-lang.org/tk/tktview/c9f675)
+ - [Stop indeterminate ttk::progressbar redraws continuously](https://core.tcl-lang.org/tk/tktview/89436b)
+ - [Windows: cursor files with non-ASCII names could not be loaded](https://core.tcl-lang.org/tk/tktview/0d4c08)
+ - [windows: after using tk_messageBox, parent window remains unresponsive](https://core.tcl-lang.org/tk/tktview/adb71e)
+ - [entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called](https://core.tcl-lang.org/tk/tktview/df09b0)
+ - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f)
+ - [Do not crash or leave dangling entries when grid or place is used on a half-dead window](https://core.tcl-lang.org/tk/tktview/302055)
+ - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
+ - [Windows: clipboard clear crashed when its window had not been made yet](https://core.tcl-lang.org/tk/tktview/bd3528)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

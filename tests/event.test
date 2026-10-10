@@ -163,7 +163,7 @@ proc create_and_pack_frames {{w {}}} {
     # maintained by the AppKit, and a window does not appear on that
     # list until AppKit actually draws it on the screen.
     if {[tk windowingsystem] eq "aqua"} {
-        after 100
+        after 50
     }
     update idletasks
 }
@@ -201,7 +201,7 @@ proc setup_win_mousepointer {w} {
 #
 # Result: none
 #
-proc waitForWindowEvent {w event {timeout 100}} {
+proc waitForWindowEvent {w event {timeout 150}} {
     variable _windowEvent
 
     if {! [winfo exists $w]} {

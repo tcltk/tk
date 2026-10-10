@@ -546,7 +546,14 @@ Tk_ClipboardObjCmd(
 	}
 	result = Tk_ClipboardClear(interp, tkwin);
 	if (result == TCL_OK) {
-	    TkSelUpdateClipboard((TkWindow *) tkwin, CLIPBOARD_CLEAR);
+	    /*
+	     * Use the clipboard window, as Tk_ClipboardAppend does: the
+	     * -displayof window may not have been made yet.
+	     */
+
+	    TkSelUpdateClipboard(
+		    (TkWindow *) ((TkWindow *) tkwin)->dispPtr->clipWindow,
+		    CLIPBOARD_CLEAR);
 	}
 	return result;
     }
