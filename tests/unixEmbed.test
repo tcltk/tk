@@ -1328,6 +1328,47 @@ test unixEmbed-9.6 {embedded message widget redrawn after the container was dest
     childTkProcess exit
     childTkProcess create
 } -result alive
+test unixEmbed-9.7 {embedded widgets get new colors after the container was destroyed} -constraints {
+    unix notAqua
+} -setup {
+    deleteWindows
+} -body {
+    frame .f1 -container 1 -width 200 -height 50
+    pack .f1
+    update
+    childTkProcess eval "set w1 [winfo id .f1]"
+    childTkProcess eval {
+	destroy {*}[winfo children .]
+	toplevel .t1 -use $w1
+	message .t1.m -text abc -width 100
+	button .t1.b -text abc
+	pack .t1.m .t1.b
+	update
+    }
+    # Destroy the container while the child does not process events.
+    after 200 {destroy .f1; update}
+    childTkProcess eval {
+	after 1000
+	# New GCs are created for the new colors, and the windows do not
+	# exist any more.
+	.t1.m configure -fg #123456
+	.t1.b configure -bg #654321 -highlightbackground #abcdef
+	update idletasks
+	# The GCs are shared with the widgets in other windows.
+	toplevel .t2
+	message .t2.m -text abc -width 100 -fg #123456
+	button .t2.b -text abc -bg #654321 -highlightbackground #abcdef
+	pack .t2.m .t2.b
+	update
+	winfo pointerxy .
+	set x alive
+    }
+} -cleanup {
+    deleteWindows
+    # The child process could exit because of an X error.
+    childTkProcess exit
+    childTkProcess create
+} -result alive
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
     unix
