@@ -421,8 +421,6 @@ VISIBILITY_HIDDEN
     NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
-@property Bool hasBeenDisplayed;
-@property Bool windowIsDead;
 @end
 
 @interface TKContentView(TKKeyEvent)

@@ -1329,7 +1329,6 @@ TkWmDeadWindow(
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
-	[[deadNSWindow contentView] setWindowIsDead:YES];
 	if (winPtr->window) {
 	    ((MacDrawable *)winPtr->window)->view = nil;
 	}
@@ -2509,6 +2508,8 @@ WmDeiconifyCmd(
     if (win) {
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
+	[[win contentView] setNeedsDisplay:YES];
+	[win displayIfNeeded];
 	[win orderFront:NSApp];
     }
     if (wmPtr->icon) {
@@ -7039,6 +7040,8 @@ TkpWmSetState(
 	TkWmUnmapWindow(winPtr);
     } else if (state == NormalState || state == ZoomState) {
 	TkWmMapWindow(winPtr);
+	[[macWin contentView] setNeedsDisplay:YES];
+	[macWin displayIfNeeded];
 	[macWin deminiaturize:NSApp];
 	[macWin orderFront:NSApp];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
@@ -7608,6 +7611,8 @@ ApplyContainerOverrideChanges(
 	    [macWindow setExcludedFromWindowsMenu:YES];
 	    [macWindow setStyleMask:styleMask];
 	    if (wmPtr->hints.initial_state == NormalState) {
+		[[macWindow contentView] setNeedsDisplay:YES];
+	        [macWindow displayIfNeeded];
 		[macWindow orderFront:NSApp];
 	    }
 	    if (wmPtr->container != NULL) {
@@ -7654,6 +7659,8 @@ ApplyContainerOverrideChanges(
 		    if (parentWindow && parentWindow != containerMacWin) {
 			[parentWindow removeChildWindow:macWindow];
 		    }
+		    [[macWindow contentView] setNeedsDisplay:YES];
+		    [macWindow displayIfNeeded];
 		    [macWindow orderFront:NSApp];
 		    [containerMacWin addChildWindow:macWindow
 					    ordered:NSWindowAbove];

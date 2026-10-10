@@ -299,9 +299,6 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 
-@synthesize hasBeenDisplayed = _hasBeenDisplayed;
-@synthesize windowIsDead = _windowIsDead;
-
 /*
  * Implementation of the NSTextInputClient protocol.
  */

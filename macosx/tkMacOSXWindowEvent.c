@@ -406,23 +406,6 @@ static void RefocusGrabWindow(void *clientData) {
     Tcl_Release(winPtr);
 }
 
-/*
- * Idle task which processes idle tasks posted before this one and then
- * schedules a call to updateLayer for a specific window.  This task is
- * scheduled on the first call to updateLayer for each toplevel, to
- * avoid artifacts when a window is iconified before being displayed
- * so that it can be configured before its first display.
- */
-
-static void deferredUpdateLayer(void *clientData) {
-    TKContentView *view = (TKContentView*) clientData;
-    if ([view windowIsDead]) {
-	return;
-    }
-    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-    [view setNeedsDisplay:YES];
-}
-
 #pragma mark TKApplication(TKApplicationEvent)
 
 @implementation TKApplication(TKApplicationEvent)
@@ -1036,16 +1019,6 @@ ExposeRestrictProc(
 
 - (void) updateLayer {
     if (![NSApp tkWillExit]) {
-	/*
-	 * If this view has never been displayed before we defer the update
-	 * until after the toplevel has been configured.  The configuration is
-	 * done in an idle task, which then marks this view as needing display.
-	 */
-	if (![self hasBeenDisplayed]) {
-	    Tcl_DoWhenIdle(deferredUpdateLayer, self);
-	    [self setHasBeenDisplayed:YES];
-	    return;
-	}
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
