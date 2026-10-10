@@ -8483,3 +8483,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-09 (bug) [df09b0] entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called (storchaka)
 
 2026-10-09 (bug) [218252] Ttk combobox fails to restore grab (storchaka)
+
+2026-10-10 (bug) [481308] Bug regarding numeric keypad on solaris (storchaka)
