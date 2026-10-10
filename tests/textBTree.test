@@ -3991,6 +3991,23 @@ test btree-14.63 {SplitSection: piling up marks without elision stays sane} -set
     destroy .t
 } -result {1.25 2.0}
 
+test btree-14.120 {Bug [ad458a3a72] - tag remove across adjacent elided ranges of different tags} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure A -elide 1
+    .t tag configure B -elide 1
+    for {set i 1} {$i <= 9} {incr i} {.t insert end "row $i\n"}
+    .t tag add B 2.0 4.0
+    .t tag add A 4.0 8.0
+    .t tag remove B 3.0 6.0  ; # lines 4 and 5 were left without switches -> panic
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "row 1\nrow 3\nrow 8\nrow 9\n\n"
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

@@ -9635,6 +9635,39 @@ RemoveExpiredSwitch(
     }
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * LineIsElided --
+ *
+ *	Return the elide state of a line without switches: all its content
+ *	has the same elide state.
+ *
+ * Results:
+ *	Whether the content of the line is elided.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+LineIsElided(
+    const TkSharedText *sharedTextPtr,
+    const TkTextLine *linePtr)
+{
+    const TkTextSegment *segPtr = linePtr->segPtr;
+
+    assert(linePtr->numBranches == 0 && linePtr->numLinks == 0);
+
+    while (!segPtr->tagInfoPtr) {
+	segPtr = segPtr->nextPtr;
+	assert(segPtr);
+    }
+    return SegmentIsElided(sharedTextPtr, segPtr, NULL);
+}
+
 static void
 UpdateElideInfo(
     TkSharedText *sharedTextPtr,
@@ -9837,12 +9870,19 @@ UpdateElideInfo(
 		 * inside an elided range is a transition which has to be
 		 * processed (in normal mode the range extension guarantees
 		 * that the boundary lines carry the toggled tag).
+		 *
+		 * In normal mode a line without the toggled tag is unaffected
+		 * only if its elide state is the current state of the walk:
+		 * when the tag is removed from the end of a range elided
+		 * together with an adjacent range of another tag, the line
+		 * where the other range starts opens a new elided range.
 		 */
 		while (linePtr != lastLinePtr
 			&& linePtr->numLinks == 0
 			&& linePtr->numBranches == 0
 			&& (tagPtr
-			    ? !TestTag(linePtr->tagonPtr, tagPtr)
+			    ? (!TestTag(linePtr->tagonPtr, tagPtr)
+				&& LineIsElided(sharedTextPtr, linePtr) == actualElided)
 			    : (!actualElided && !TkTextTagSetIntersectsBits(
 				    linePtr->tagonPtr, sharedTextPtr->elisionTags)))) {
 		    /* Skip (nearly) unaffected line. */
