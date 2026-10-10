@@ -106,6 +106,7 @@ to the userbase.
  - [entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called](https://core.tcl-lang.org/tk/tktview/df09b0)
  - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f3732)
  - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
+ - [Bug regarding numeric keypad on solaris](https://core.tcl-lang.org/tk/tktview/481308)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
