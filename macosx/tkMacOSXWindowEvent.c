@@ -415,11 +415,12 @@ static void RefocusGrabWindow(void *clientData) {
  */
 
 static void deferredUpdateLayer(void *clientData) {
-    if (!clientData) {
+    TKContentView *view = (TKContentView*) clientData;
+    if ([view windowIsDead]) {
 	return;
     }
     while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-    [(TKContentView *) clientData setNeedsDisplay:YES];
+    [view setNeedsDisplay:YES];
 }
 
 #pragma mark TKApplication(TKApplicationEvent)

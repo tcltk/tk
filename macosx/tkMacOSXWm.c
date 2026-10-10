@@ -1329,6 +1329,7 @@ TkWmDeadWindow(
     if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
+	[[deadNSWindow contentView] setWindowIsDead:YES];
 	if (winPtr->window) {
 	    ((MacDrawable *)winPtr->window)->view = nil;
 	}

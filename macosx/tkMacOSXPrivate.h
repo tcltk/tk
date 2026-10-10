@@ -422,6 +422,7 @@ VISIBILITY_HIDDEN
 }
 @property CGContextRef tkLayerBitmapContext;
 @property Bool hasBeenDisplayed;
+@property Bool windowIsDead;
 @end
 
 @interface TKContentView(TKKeyEvent)
