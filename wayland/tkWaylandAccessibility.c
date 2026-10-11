@@ -31,8 +31,9 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     char *path;
     bool is_focused;
-    bool is_active;     /* Toplevels only: window has keyboard focus. */
-    bool focus_announced; /* Last FOCUSED value sent to AT-SPI (dedupe). */
+    bool is_active;
+    bool focus_announced;
+    bool visible_announced; 
     int virtual_count;
 } TkAtkAccessible;
 
@@ -149,11 +150,12 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 /* Registration and mapping functions. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 static void UnregisterToplevelWindow(AtkObject *accessible);
-static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
+static bool RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
 static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin);
 static void UpdateAtkFocusChain(Tk_Window focused);
 static void SetWindowActive(TkAtkAccessible *acc, bool active);
 static void NotifyFocus(TkAtkAccessible *acc, bool focused);
+static void NotifyVisible(TkAtkAccessible *acc, bool visible);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 void InitAtkTkMapping(void);
@@ -214,12 +216,77 @@ static void tk_atk_window_interface_init(TCL_UNUSED(AtkWindowIface *)) /* iface 
 {
 }
 
+/*
+ * Orca walks the accessible tree with dozens of back-to-back synchronous
+ * D-Bus calls, so the latency of each round trip matters. Polling GLib on a
+ * timer means every call can wait out the poll interval. Instead, register
+ * the file descriptors GLib is waiting on (the AT-SPI bus connection) with
+ * Tcl's notifier, so Tcl_WaitForEvent returns the moment a request arrives.
+ * The timer stays only as a fallback for GLib timeouts.
+ */
+#define ATK_IDLE_POLL_US 10000
+#define ATK_MAX_WATCH_FDS 16
+static int atk_watched_fds[ATK_MAX_WATCH_FDS];
+static int atk_n_watched = 0;
+
+/* No-op, but still a required parameter
+ * for the event loop integration. 
+ * Waking Tcl is the whole point; 
+ * Atk_Event_Check/Run do the work. 
+ */
+static void AtkFdProc(TCL_UNUSED(void *), 
+	TCL_UNUSED(int))
+{
+}
+
+static int AtkFdInList(const int *list, int n, int fd)
+{
+    for (int i = 0; i < n; i++) {
+	if (list[i] == fd) return 1;
+    }
+    return 0;
+}
+
+/* Keep Tcl's file handlers in sync with the fds GLib is polling. */
+static void AtkWatchGLibFds(void)
+{
+    GPollFD fds[ATK_MAX_WATCH_FDS];
+    int newFds[ATK_MAX_WATCH_FDS];
+    int nNew = 0;
+    gint timeout = -1;
+    gint n = g_main_context_query(acc_context, G_MAXINT, &timeout,
+				  fds, ATK_MAX_WATCH_FDS);
+
+    if (n > ATK_MAX_WATCH_FDS) n = ATK_MAX_WATCH_FDS;
+    for (gint i = 0; i < n; i++) {
+	if ((fds[i].events & (G_IO_IN | G_IO_HUP | G_IO_ERR)) && fds[i].fd >= 0
+		&& !AtkFdInList(newFds, nNew, fds[i].fd)) {
+	    newFds[nNew++] = fds[i].fd;
+	}
+    }
+
+    for (int i = 0; i < atk_n_watched; i++) {
+	if (!AtkFdInList(newFds, nNew, atk_watched_fds[i])) {
+	    Tcl_DeleteFileHandler(atk_watched_fds[i]);
+	}
+    }
+    for (int i = 0; i < nNew; i++) {
+	if (!AtkFdInList(atk_watched_fds, atk_n_watched, newFds[i])) {
+	    Tcl_CreateFileHandler(newFds[i], TCL_READABLE, AtkFdProc, NULL);
+	}
+    }
+    for (int i = 0; i < nNew; i++) {
+	atk_watched_fds[i] = newFds[i];
+    }
+    atk_n_watched = nNew;
+}
+
 /* Configure event loop. */
 static void Atk_Event_Setup(
     TCL_UNUSED(void *), /* clientData */
     int flags)
 {
-    Tcl_Time block_time = {0, 10000};
+    Tcl_Time block_time = {0, ATK_IDLE_POLL_US};
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -228,6 +295,7 @@ static void Atk_Event_Setup(
     if (g_main_context_pending(acc_context)) {
 	block_time.usec = 0;
     }
+    AtkWatchGLibFds();
     Tcl_SetMaxBlockTime(&block_time);
 }
 
@@ -1256,8 +1324,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)accessible);
 
     if (Tk_IsMapped(tkwin)) {
-	atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_VISIBLE, TRUE);
-	atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_SHOWING, TRUE);
+	NotifyVisible((TkAtkAccessible *)accessible, true);
     }
 }
 
@@ -1281,16 +1348,17 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 }
 
 /* Recursively register widget and all its children with proper events. */
-static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
+static bool RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 {
-    if (!tkwin) return;
+    if (!tkwin) return false;
 
     AtkObject *acc = GetAtkObjectForTkWindow(tkwin);
+    bool createdAny = (acc == NULL);
 
     /* Create accessible object if it doesn't exist. */
     if (!acc) {
 	acc = TkCreateAccessibleAtkObject(interp, tkwin, Tk_PathName(tkwin));
-	if (!acc) return;
+	if (!acc) return false;
 
 	AtkObject *parentAcc = NULL;
 
@@ -1329,19 +1397,18 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 	    TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)acc);
 	}
 
-	/* Notify visibility if already mapped. */
+	/* Notify visibility if already mapped (once per transition). */
 	if (Tk_IsMapped(tkwin)) {
-	    atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
-	    atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+	    NotifyVisible((TkAtkAccessible *)acc, true);
 
-	    /* Also ensure SHOWING state is set for parents. */
+	    /* Also ensure ancestors that are mapped have been announced. */
 	    Tk_Window current = tkwin;
 	    while (current && !Tk_IsTopLevel(current)) {
 		Tk_Window parent = Tk_Parent(current);
-		if (parent) {
+		if (parent && Tk_IsMapped(parent)) {
 		    AtkObject *pAcc = GetAtkObjectForTkWindow(parent);
 		    if (pAcc) {
-			atk_object_notify_state_change(pAcc, ATK_STATE_SHOWING, TRUE);
+			NotifyVisible((TkAtkAccessible *)pAcc, true);
 		    }
 		}
 		current = parent;
@@ -1362,16 +1429,22 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
     for (child = ((TkWindow*)tkwin)->childList;
 	 child != NULL;
 	 child = child->nextPtr) {
-	RegisterWidgetRecursive(interp, (Tk_Window)child);
+	if (RegisterWidgetRecursive(interp, (Tk_Window)child)) {
+	    createdAny = true;
+	}
     }
 
-    /* After registering all children, emit one more children-changed
-     * for this container to ensure ATK sees all children. */
-    if (acc) {
+    /* After registering new children, emit one more children-changed
+     * for this container so ATK sees all of them. Only when something was
+     * actually created: add_acc_object is called repeatedly on the same
+     * widgets, and re-announcing an unchanged subtree every time floods
+     * Orca with ChildrenChanged signals. */
+    if (acc && createdAny) {
 	g_signal_emit_by_name(acc, "children-changed::add",
 			      atk_object_get_n_accessible_children(acc),
 			      NULL);
     }
+    return createdAny;
 }
 
  /*  Function to ensure a widget and all its ancestors are in the ATK hierarchy. */
@@ -1417,8 +1490,7 @@ static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
 
 		/* Update state if widget is mapped. */
 		if (Tk_IsMapped(win)) {
-		    atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
-		    atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+		    NotifyVisible((TkAtkAccessible *)acc, true);
 		}
 	    }
 	}
@@ -1639,8 +1711,7 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
         gint idx = atk_object_get_n_accessible_children(parentAcc);
         g_signal_emit_by_name(parentAcc, "children-changed::add", idx > 0 ? idx - 1 : 0, childAcc);
         if (Tk_IsMapped(childWin)) {
-            atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
-            atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
+            NotifyVisible((TkAtkAccessible *)childAcc, true);
         }
     }
 }
@@ -1694,10 +1765,14 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
     if (!accObj) return;
     gint x, y, w, h;
     tk_get_extents(ATK_COMPONENT(accObj), &x, &y, &w, &h, ATK_XY_SCREEN);
+    /*
+     * ConfigureNotify arrives for every geometry change (and, on Wayland,
+     * possibly very often). Announce only real mapped/unmapped transitions.
+     */
     if (Tk_IsMapped(tkwin)) {
-        atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, TRUE);
-        atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, TRUE);
-        if (!Tk_IsTopLevel(tkwin)) {
+        bool wasVisible = ((TkAtkAccessible *)accObj)->visible_announced;
+        NotifyVisible((TkAtkAccessible *)accObj, true);
+        if (!wasVisible && !Tk_IsTopLevel(tkwin)) {
             AtkObject *parentAcc = GetAtkObjectForTkWindow(Tk_Parent(tkwin));
             if (parentAcc) {
                 gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
@@ -1706,8 +1781,7 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
             }
         }
     } else {
-        atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, FALSE);
-        atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, FALSE);
+        NotifyVisible((TkAtkAccessible *)accObj, false);
     }
 }
 
@@ -1725,6 +1799,25 @@ static void NotifyFocus(TkAtkAccessible *acc, bool focused)
     if (!acc || acc->focus_announced == focused) return;
     acc->focus_announced = focused;
     atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_FOCUSED, focused);
+}
+
+/*
+ * Tell AT-SPI that a widget became visible/hidden - once per real transition.
+ * Every extra VISIBLE/SHOWING emission is a D-Bus signal that Orca has to
+ * receive and react to, so repeats (e.g. one per ConfigureNotify, or one per
+ * ancestor every time a child registers) must not be sent.
+ */
+static void NotifyVisible(TkAtkAccessible *acc, bool visible)
+{
+    if (!acc || acc->visible_announced == visible) return;
+    acc->visible_announced = visible;
+    if (visible) {
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_SHOWING, TRUE);
+    } else {
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_SHOWING, FALSE);
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_VISIBLE, FALSE);
+    }
 }
 
 /* Mark a toplevel (frame) active/inactive and tell AT-SPI. */
@@ -2234,8 +2327,7 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
             g_signal_emit_by_name(tk_root_accessible, "children-changed::add", idx, top);
         }
         if (Tk_IsMapped(((TkAtkAccessible*)top)->tkwin)) {
-            atk_object_notify_state_change(top, ATK_STATE_SHOWING, TRUE);
-            atk_object_notify_state_change(top, ATK_STATE_VISIBLE, TRUE);
+            NotifyVisible((TkAtkAccessible *)top, true);
         }
     }
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
