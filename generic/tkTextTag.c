@@ -218,16 +218,21 @@ UndoChangeTagPriorityPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    TCL_UNUSED(int))
+    int isRedo)
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) undoInfo->token;
     unsigned oldPriority = token->tagPtr->priority;
 
-    ChangeTagPriority(sharedTextPtr, token->tagPtr, token->priority, 1);
+    /*
+     * The token itself becomes the redo (or undo) item: no retained token
+     * for this change.
+     */
+
+    ChangeTagPriority(sharedTextPtr, token->tagPtr, token->priority, 0);
 
     if (redoInfo) {
 	redoInfo->token = undoInfo->token;
-	redoInfo->token->undoType = &redoTokenTagPriorityType;
+	redoInfo->token->undoType = isRedo ? &undoTokenTagPriorityType : &redoTokenTagPriorityType;
 	token->priority = oldPriority;
     }
 }
@@ -236,9 +241,13 @@ static void
 UndoChangeTagPriorityDestroy(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *item,
-    TCL_UNUSED(int))
+    int reused)
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
+
+    if (reused) {
+	return; /* the token lives on as redo (or undo) item */
+    }
 
     TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
 }
