@@ -1680,6 +1680,27 @@ test textTag-19.1 {Repick after tag add/remove} -setup {
     destroy .t
 } -result {enter leave}
 
+test textTag-20.1 {undo and redo of tag raise, then destroy} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t tag configure B
+    .t tag configure P
+    .t tag raise B
+    set res [list [.t tag names]]
+    .t edit undo
+    lappend res [.t tag names]
+    .t edit redo
+    lappend res [.t tag names]
+    .t edit undo
+    lappend res [.t tag names]
+    .t insert 1.0 x B
+    destroy .t ; # used to release the tag once too often
+    set res
+} -cleanup {
+    destroy .t
+} -result {{sel P B} {sel B P} {sel P B} {sel B P}}
+
 #
 # TESTFILE CLEANUP
 #
