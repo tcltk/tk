@@ -17,7 +17,7 @@
 #include "tkWinInt.h"
 #include "tkFont.h"
 #include <usp10.h>      /* Uniscribe */
-#include <mojibake.h>   /* UTS #51 emoji properties */
+#include <mojibake.h>   /* mjb_codepoint_is_combining */
 
 /*
  * The following structure represents a font family. It is assumed that all
@@ -323,7 +323,6 @@ static void		AssignSubFonts(WinFont *fontPtr, const WCHAR *wstr,
 			    int start, int len, int *subIdx);
 static int		DecodeUtf16(const WCHAR *wstr, int i, int end,
 			    int *unitsPtr);
-static int		IsEmojiContinuation(int ch, int inEmoji);
 
 /*
  *-------------------------------------------------------------------------
@@ -832,8 +831,7 @@ TkpGetFontAttrsForChar(
 				 * FindSubFontForChar needs to fix up the
 				 * memory allocation. */
     SubFont *thisSubFontPtr = FindSubFontForChar(fontPtr, c,
-	    (c > 0x7f && mjb_codepoint_is_emoji_presentation((mjb_codepoint) c)),
-	    &lastSubFontPtr);
+	    TkFontEmojiPresentation(c, -1), &lastSubFontPtr);
 				/* Pointer to the subfont to use for the given
 				 * character. */
     FontFamily *familyPtr = thisSubFontPtr->familyPtr;
@@ -902,37 +900,14 @@ DecodeUtf16(
 /*
  *---------------------------------------------------------------------------
  *
- * IsEmojiContinuation --
- *
- *	Tell whether ch must stay in the font of the character before it:
- *	variation selectors, ZWJ, keycap and tag characters always (zero-width
- *	or combining), skin tone modifiers only inside an emoji cluster, since
- *	a modifier on its own is a color swatch (UTS #51).
- *
- *---------------------------------------------------------------------------
- */
-
-static int
-IsEmojiContinuation(
-    int ch,
-    int inEmoji)		/* Non-zero inside an emoji cluster. */
-{
-    return ch == 0xFE0E || ch == 0xFE0F || ch == 0x200D || ch == 0x20E3
-	    || (ch >= 0xE0020 && ch <= 0xE007F)
-	    || (inEmoji && mjb_codepoint_is_emoji_modifier((mjb_codepoint) ch));
-}
-
-/*
- *---------------------------------------------------------------------------
- *
  * AssignSubFonts --
  *
  *	Store in subIdx[0..len) the index of the subfont for each UTF-16 unit
  *	of wstr[start..start+len): one subfont for the text of the item, ASCII
- *	included, and one subfont per emoji cluster.  A
- *	VS16 after a character asks for a color font, a VS15 for the text
- *	glyph; what follows a ZWJ inside an emoji cluster stays in the
- *	cluster, so the font gets the whole sequence to ligate.
+ *	included, and one subfont per emoji cluster, as classified by
+ *	TkFontEmojiPresentation and TkFontEmojiContinuation (UTS #51); what
+ *	follows a ZWJ inside an emoji cluster stays in the cluster, so the
+ *	font gets the whole sequence to ligate.
  *
  * Side effects:
  *	May load additional SubFonts into fontPtr->subFontArray.
@@ -965,10 +940,11 @@ AssignSubFonts(
 	int next = (i + units < end)
 		? DecodeUtf16(wstr, i + units, end, &nextUnits) : -1;
 
-	if (ch > 0x7f && next != 0xFE0F
-		&& !mjb_codepoint_is_combining((mjb_codepoint) ch)
-		&& !IsEmojiContinuation(ch, 1)
-		&& !mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
+	if (ch > 0x7f && !mjb_codepoint_is_combining((mjb_codepoint) ch)
+		&& !TkFontEmojiContinuation(ch, 1)
+		&& !TkFontEmojiPresentation(ch, next)
+		&& !TkFontEmojiPresentation(ch, -1)) {
+	    /* Neither an emoji cluster nor an emoji shown as text by a VS15. */
 	    SubFont *subFontPtr = &fontPtr->subFontArray[0];
 
 	    subFontPtr = FindSubFontForChar(fontPtr, ch, 0, &subFontPtr);
@@ -989,7 +965,7 @@ AssignSubFonts(
 	int next = (i + units < end)
 		? DecodeUtf16(wstr, i + units, end, &nextUnits) : -1;
 
-	if (IsEmojiContinuation(ch, curEmoji)
+	if (TkFontEmojiContinuation(ch, curEmoji)
 		|| (ch > 0x7f && mjb_codepoint_is_combining((mjb_codepoint) ch))) {
 	    /* Marks and selectors stay with the character before them. */
 	    idx = curIdx;
@@ -998,14 +974,8 @@ AssignSubFonts(
 	    idx = curIdx;
 	    joinNext = 0;
 	} else {
-	    int preferColor = 0;
+	    int preferColor = TkFontEmojiPresentation(ch, next);
 
-	    if (next == 0xFE0F) {
-		preferColor = 2;
-	    } else if (ch > 0x7f && next != 0xFE0E
-		    && mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
-		preferColor = 1;
-	    }
 	    if (preferColor) {
 		SubFont *subFontPtr = &fontPtr->subFontArray[0];
 
