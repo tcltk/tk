@@ -645,23 +645,28 @@ test send-12.2 {TimeoutProc procedure} {secureserver} {
 winfo interps
 tk appname tktest
 
+# Other applications can be registered, e.g. the parent process with
+# -singleproc 0 on Aqua, where the registry is not reset by this file:
+# check only the names of the applications of the test.
 test send-13.1 {DeleteProc procedure} -constraints {secureserver} -body {
     childTkProcess create
     set app [childTkProcess eval {rename send {}; tk appname}]
-    set result [list [catch {send $app foo} msg] $msg [winfo interps]]
+    set result [list [catch {send $app foo} msg] $msg \
+	    [expr {[tk appname] in [winfo interps]}] \
+	    [expr {$app in [winfo interps]}]]
     childTkProcess exit
     set result
-}  -match regexp -result {1 {no application named "tktest[0-9]+"} tktest}
+}  -match regexp -result {1 {no application named "tktest[0-9]+"} 1 0}
 
-test send-13.2 {DeleteProc procedure} {secureserver} {
+test send-13.2 {DeleteProc procedure} -constraints {secureserver} -body {
     winfo interps
     tk appname tktest
     rename send {}
     set result {}
-    lappend result [winfo interps] [info commands send]
+    lappend result [expr {"tktest" in [winfo interps]}] [info commands send]
     tk appname foo
-    lappend result [winfo interps] [info commands send]
-} {{} {} foo send}
+    lappend result [expr {"foo" in [winfo interps]}] [info commands send]
+} -result {0 {} 1 send}
 
 test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay} {
     childTkProcess create -display $env(TK_ALT_DISPLAY)
