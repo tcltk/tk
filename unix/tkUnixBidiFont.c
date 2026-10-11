@@ -25,8 +25,7 @@
 #include <mojibake.h>   /* UTS #51 emoji properties - shared with tkFont.c */
 
 /* Generic emoji classification shared by the font engines (mojibake).
- * Declared in generic/tkFont.c and internal stubs; used by Windows engine
- * in place of its own.
+ * Declared in generic/tkFont.c and internal stubs.
  */
 extern int TkFontEmojiPresentation(int ch, int next);
 extern int TkFontEmojiContinuation(int ch, int inEmoji);
@@ -851,13 +850,26 @@ GetBidiRuns(
  * BuildEmojiCharSet --
  *
  *   Build the set of code points that should be drawn from a color
- *   emoji face when one is available.  This deliberately excludes
+ *   emoji face when one is available. This deliberately excludes
  *   ASCII digits, '#', '*', the copyright/registered signs and the
  *   joiner U+200D (which Arabic/Indic shaping needs in the text face),
  *   even though Noto Color Emoji covers some of them.
  *
+ *   The ranges are hand-picked from the Unicode emoji data files to
+ *   cover the code points that have a color presentation but are also
+ *   commonly covered by monochrome symbol fonts (DejaVu, Symbola,
+ *   Noto Sans Symbols), which Fontconfig tends to sort ahead of Noto
+ *   Color Emoji. Restricting the color face's charset to these ranges
+ *   lets it win those code points without stealing ordinary text
+ *   characters it also happens to contain.
+ *
  * Results:
- *   A new FcCharSet, to be destroyed by the caller, or NULL.
+ *   A new FcCharSet, to be destroyed by the caller, or NULL if the
+ *   set could not be allocated.
+ *
+ * Side effects:
+ *   Allocates an FcCharSet. The caller is responsible for destroying
+ *   it with FcCharSetDestroy().
  * ---------------------------------------------------------------
  */
 
@@ -892,16 +904,25 @@ BuildEmojiCharSet(void)
  * AssignEmojiCoverage --
  *
  *   Faces are searched in order and the first face whose charset has
- *   the character wins.  A monochrome face that happens to cover emoji
+ *   the character wins. A monochrome face that happens to cover emoji
  *   (DejaVu, Symbola, Noto Sans Symbols...) is usually sorted ahead of
  *   Noto Color Emoji, so it claimed the emoji and they were drawn
- *   monochrome.  Fix this in the charsets rather than at every lookup
+ *   monochrome. Fix this in the charsets rather than at every lookup
  *   site:
  *     - a color face only claims code points in the emoji set, so
  *       digits and punctuation it also contains stay in the text face;
  *     - every other face gives up the emoji code points that a color
  *       face really covers, so the color face wins them.
  *   Text faces keep everything else, so Latin/CJK/etc. are unaffected.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Modifies fontPtr->faces[i].charset for every face and sets
+ *   fontPtr->faces[i].isColor. Any charset that is replaced is
+ *   destroyed; the caller must not hold pointers into those sets
+ *   across this call.
  * ---------------------------------------------------------------
  */
 
@@ -986,6 +1007,22 @@ AssignEmojiCoverage(
  */
 
 static void FinishedWithFont(UnixFtFont *fontPtr);
+
+/*
+ * ---------------------------------------------------------------
+ * InitFontErrorProc --
+ *
+ *   X error handler installed during font initialization. Records
+ *   that an error occurred in the thread-specific error flag so the
+ *   caller can detect failures without the error being fatal.
+ *
+ * Results:
+ *   Returns 0.
+ *
+ * Side effects:
+ *   Sets *errorFlagPtr to 1 if errorFlagPtr is non-NULL.
+ * ---------------------------------------------------------------
+ */
 
 static int
 InitFontErrorProc(
@@ -1443,13 +1480,12 @@ GetRunFaceIndex(
     int presentation = TkFontEmojiPresentation((int) uc, next);
 
     /*
-     * Generic emoji presentation logic shared with Windows engine:
+     * Generic emoji presentation logic:
      *  0 = text presentation (VS15 forces text, or not emoji)
      *  1 = emoji presentation by default (color font preferred unless
      *      text font has it)
      *  2 = VS16 after emoji (heart + VS16, keycap) - color font preferred
      *      over the font asked for.
-     * See generic/tkFont.c, font-48.1 to 48.5 in tkTest.c.
      */
 
     /* Direct-mapped hash index - bypass cache for emoji VS cases. */
