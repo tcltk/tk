@@ -543,6 +543,13 @@ TkCanvPostscriptObjCmd(
 	    Tcl_DecrRefCount(psObj);
 	    psObj = Tcl_NewObj();
 	}
+    } else if (psInfo.x != 0) {
+	/*
+	 * The y offset is applied by Tk_PostscriptY(), the x offset is not.
+	 * [Bug 969636]
+	 */
+
+	Tcl_AppendPrintfToObj(psObj, "%d 0 translate\n", -psInfo.x);
     }
 
     /*
