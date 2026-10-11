@@ -108,6 +108,7 @@ to the userbase.
  - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
  - [Bug regarding numeric keypad on solaris](https://core.tcl-lang.org/tk/tktview/481308)
  - [w32: Creating Alt-Key binding on all breaks default handling](https://core.tcl-lang.org/tk/tktview/145727)
+ - [Container is not displaying embedded window](https://core.tcl-lang.org/tk/tktview/da5eab)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
