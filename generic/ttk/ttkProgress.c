@@ -104,12 +104,11 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
  */
 static int AnimationEnabled(Progressbar *pb)
 {
-    double maximum = 100, value = 0;
+    double value = 0;
 
-    Tcl_GetDoubleFromObj(NULL, pb->progress.maximumObj, &maximum);
     Tcl_GetDoubleFromObj(NULL, pb->progress.valueObj, &value);
 
-    return (pb->progress.period > 0
+    return (pb->progress.period > 0 && value > 0.0
 	    && pb->progress.mode == TTK_PROGRESSBAR_INDETERMINATE);
 }
 
