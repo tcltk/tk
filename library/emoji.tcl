@@ -1055,6 +1055,7 @@ proc ::tk::emoji::choose {{target ""}} {
 
 # Create the picker toplevel and all of its child widgets, bindings, and
 # category buttons; called once per session on the first choose.
+#
 proc ::tk::emoji::Build {} {
     variable S
     variable categories
@@ -1076,27 +1077,48 @@ proc ::tk::emoji::Build {} {
     bind $top <Escape> [namespace code Close]
 
     # Minimal colors
-    set bg white
-    set fg black
-    set selbg "#4169E1"
-    set selfg white
+    set bg     white
+    set fg     black
+    set selbg  "#4169E1"
+    set selfg  white
+    set barbg  "#f0f0f0"
+    set barfg  "#202020"
     set S(bg) $bg; set S(fg) $fg; set S(selbg) $selbg; set S(selfg) $selfg
-
-    ttk::style configure Emoji.Toolbutton -font {"sans-serif" 10} -padding 2 ;#$S(catfont) 
 
     set f [ttk::frame $top.f -padding 2]
     pack $f -fill both -expand 1
 
     variable icons
-    ttk::frame $f.bar
+    frame $f.bar -background $barbg
     foreach cat $categories {
-	set key [string tolower $cat]
-	set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
-	ttk::radiobutton $f.bar.$key -style Emoji.Toolbutton \
-	    -text "$ico $cat" \
-	    -variable ::tk::emoji::S(cat) -value $cat \
-	    -command [namespace code SetCategory]
-	pack $f.bar.$key -side left -padx 0
+        set key [string tolower $cat]
+        set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
+        # Classic radiobutton styled as a flat toggle button: no indicator
+        # dot, gentle padding, and a highlighted look when selected.
+        radiobutton $f.bar.$key \
+            -text "$ico $cat" \
+            -variable ::tk::emoji::S(cat) -value $cat \
+            -command [namespace code SetCategory] \
+            -indicatoron 0 \
+            -relief flat -overrelief raised \
+            -offrelief flat \
+            -selectcolor $selbg \
+            -foreground $barfg \
+            -activeforeground $barfg \
+            -background $barbg \
+            -activebackground "#e0e0e0" \
+            -highlightthickness 0 \
+            -borderwidth 1 \
+            -padx 6 -pady 2 \
+            -font {"sans-serif" 9}
+        pack $f.bar.$key -side left -padx 1 -pady 1
+    }
+    # Make selected state readable: white text on the select color.
+    # (Classic radiobutton uses -foreground for the selected label when
+    # -indicatoron 0 and -selectcolor is set, so we re-tint on select.)
+    foreach cat $categories {
+        set key [string tolower $cat]
+        $f.bar.$key configure -selectcolor $selbg
     }
 
     ttk::frame $f.f
@@ -1122,12 +1144,13 @@ proc ::tk::emoji::Build {} {
 
     ttk::frame $f.pv
     ttk::label $f.pv.big -font $S(font) -width 3 -anchor center
-    ttk::label $f.pv.name -textvariable ::tk::emoji::S(cat) -anchor w -font {"sans-serif" 10} ;#-font $S(catfont)
+    ttk::label $f.pv.name -textvariable ::tk::emoji::S(cat) -anchor w \
+        -font {"sans-serif" 10}
     pack $f.pv.big -side left
     pack $f.pv.name -side left -padx 4
     set S(prevBig) $f.pv.big
 
-    grid $f.bar -sticky w -pady 1
+    grid $f.bar -sticky ew -pady {0 2}
     grid $f.f   -sticky nsew -pady 1
     grid $f.pv  -sticky ew
     grid columnconfigure $f 0 -weight 1
