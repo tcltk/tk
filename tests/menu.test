@@ -3794,6 +3794,21 @@ test menu-25.16 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -result {.t2 {}}
 
+test menu-25.17 {Tk_SetWindowMenubar: clone destroyed with the children of the toplevel} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -label foo
+    toplevel .t2 -menu .m1
+    update
+    destroy {*}[winfo children .t2]
+    set res [winfo exists .t2.#m1]
+    .t2 configure -menu .m1
+    lappend res [winfo exists .t2.#m1]
+} -cleanup {
+    deleteWindows
+} -result {0 1}
+
 
 test menu-26.1 {DestroyMenuHashTable} -setup {
     catch {interp delete testinterp}
