@@ -7,10 +7,8 @@
  *
  *   Color emoji: fonts with PNG bitmap strikes (Noto Color Emoji CBDT,
  *   sbix) are shaped by HarfBuzz like any other face but drawn as
- *   NanoVG image-pattern quads (see "Color emoji support" below).  Set
- *   WL_COLOR_EMOJI=0 at compile time to disable.  Requires HarfBuzz
- *   with hb-ot-color (>= 2.1) and stb_image.h (the implementation is
- *   already compiled into nanovg.c).
+ *   NanoVG image-pattern quads (see "Color emoji support" below). Requires 
+ * 	 HarfBuzz with hb-ot-color (>= 2.1) and stb_image.h (included with NanoVG).
  *
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
@@ -37,8 +35,7 @@
 #include <mojibake.h>   /* UTS #51 emoji properties - shared with tkFont.c */
 
 /* Generic emoji classification shared by the font engines (mojibake).
- * Declared in generic/tkFont.c and internal stubs; used by Windows
- * engine in place of its own. testemoji in tkTest.c, font-48.1 to 48.5.
+ * Declared in generic/tkFont.c and internal stubs.
  */
 extern int TkFontEmojiPresentation(int ch, int next);
 extern int TkFontEmojiContinuation(int ch, int inEmoji);
@@ -892,6 +889,12 @@ IsSimpleOnly(const char *str, int len)
  *   True for '#', '*' and ASCII digits: the bases of keycap sequences
  *   (base + U+FE0F + U+20E3).  They have Emoji=Yes in UTS #51 but must
  *   only be treated as emoji in sequence context (see EmojiKindAt()).
+ *
+ * Results:
+ *   True if the codepoint is a keycap base.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -953,6 +956,12 @@ IsEmoji(FcChar32 uc)
  *   consistent with the callers' hasEmoji tests: whenever a caller takes
  *   the cluster path because of emoji, the shaper must supply real
  *   advances.
+ *
+ * Results:
+ *   True if at least one emoji codepoint is present.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -990,6 +999,9 @@ ContainsEmoji(const char *s, int n)
  *
  * Results:
  *   true if the pattern is (or looks like) a color font.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -1545,11 +1557,19 @@ GetHbFont(
 
 
 /*
+ *----------------------------------------------------------------------
  * IsEmojiPresentation --
  *
  *   True if the codepoint has the Unicode Emoji_Presentation property,
  *   i.e. it is drawn as a color emoji by default without U+FE0F.
  *   Now implemented via mojibake, shared with generic/tkFont.c.
+ *
+ * Results:
+ *   True if the codepoint has Emoji_Presentation=Yes.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
 
 static bool
@@ -1576,6 +1596,9 @@ IsEmojiPresentation(FcChar32 uc)
  *
  *   ZWJ and tag characters inherit the kind of the character before
  *   them so a ZWJ sequence is never split across faces.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -1639,7 +1662,7 @@ EmojiKindAt(const FcChar32 *ucs4, int idx, int count)
      *   0 = text presentation (VS15 forces text)
      *   1 = emoji presentation by default (color preferred)
      *   2 = VS16 after emoji (heart + VS16, keycap) - color over text
-     * This is what testemoji in tkTest.c font-48.1..48.5 expects on
+     * This is what Tk test suite expects on
      * every platform, handled via HarfBuzz on Wayland.
      */
     int pres = TkFontEmojiPresentation((int) uc, next);
@@ -1662,6 +1685,12 @@ EmojiKindAt(const FcChar32 *ucs4, int idx, int count)
  *   HarfBuzz can hand back (CBDT/CBLC format 17/18/19, or sbix/png).
  *   COLR/CPAL-only fonts are NOT reported: they still go through
  *   stb_truetype and render as their monochrome base outlines.
+ *
+ * Results:
+ *   True if the face is a color bitmap face.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -1692,6 +1721,9 @@ IsColorBitmapFace(
  *
  * Results:
  *   Face index, or -1 if there is no such face.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -1736,6 +1768,12 @@ GetColorEmojiFaceIndex(
  *   Color-presentation runs use a color bitmap face when one covers the
  *   whole run; everything else (text-presentation symbols, or no color
  *   face installed) uses the monochrome emoji face as before.
+ *
+ * Results:
+ *   Face index to use for the run.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -1901,6 +1939,12 @@ ColorFreeSlot(ColorGlyphSlot *s)
  *   before the context is destroyed (the renderer frees the textures
  *   itself); otherwise a recycled NVGcontext address would resolve to
  *   a handle that was never created in the new context.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Clears per-context image handles and pending-delete entries.
  *----------------------------------------------------------------------
  */
 
@@ -1934,6 +1978,13 @@ ColorGlyphContextDestroyed(NVGcontext *vg)
  *
  *   Fetch the PNG strike for gid from HarfBuzz and decode it into a
  *   premultiplied RGBA buffer owned by the slot.
+ *
+ * Results:
+ *   None.  On success, s->px/s->w/s->h are populated; on failure
+ *   they are left untouched.
+ *
+ * Side effects:
+ *   Allocates and stores a decoded bitmap in the slot.
  *----------------------------------------------------------------------
  */
 
@@ -1989,6 +2040,13 @@ DecodeColorGlyph(
  *   single entry serves every font size.  Uses a fixed number of slots
  *   with least-recently-used replacement; eviction goes through
  *   ColorFreeSlot().
+ *
+ * Results:
+ *   Pointer to the cache slot, or NULL if the face has no file path
+ *   or the slot's font path could not be duplicated.
+ *
+ * Side effects:
+ *   May evict an LRU slot, freeing its resources.
  *----------------------------------------------------------------------
  */
 
@@ -2041,10 +2099,16 @@ GetColorGlyphSlot(
  *   first use.  Each slot caches up to COLOR_TEX_PER_SLOT per-context
  *   handles; when that many distinct contexts have been seen, the
  *   oldest handle is queued for deletion and reused.
+ *
+ * Results:
+ *   NanoVG image handle, or -1 on failure.
+ *
+ * Side effects:
+ *   May upload a texture to the GPU and queue an old handle for
+ *   deletion.
  *----------------------------------------------------------------------
  */
 
-/* Returns the NanoVG image handle for the slot in this context, or -1. */
 static int
 ColorSlotImage(
     NVGcontext *vg,
@@ -2077,6 +2141,12 @@ ColorSlotImage(
  *
  *   Stub for builds with WL_COLOR_EMOJI disabled.  Does nothing; the
  *   color-glyph cache does not exist in that configuration.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 static void
@@ -2199,6 +2269,12 @@ DrawColorGlyph(
  *   Add a Fontconfig match to fontPtr->fontset and to fontPtr->faces,
  *   filling the WaylandFtFace the same way InitFont() does.  On success
  *   the fontset owns `match`; on failure the caller still owns it.
+ *
+ * Results:
+ *   True on success, false on failure.
+ *
+ * Side effects:
+ *   Grows fontPtr->faces by one entry and increments fontPtr->nfaces.
  *----------------------------------------------------------------------
  */
 
@@ -2245,6 +2321,12 @@ AppendFontsetFace(
  *   True if the font file behind pat has CBDT/sbix PNG strikes
  *   according to HarfBuzz.  Opens the file via hb_blob and checks
  *   hb_ot_color_has_png() on the face.
+ *
+ * Results:
+ *   True if the file has PNG color strikes, false otherwise.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -2285,6 +2367,12 @@ FontFileHasColorPng(FcPattern *pat)
  *   bitmap emoji face is present if the system has one.  The Fontconfig
  *   lookup is done once per process; each font gets its own duplicate
  *   of the pattern because the fontset destroys its patterns.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May append a face to fontPtr->faces and to fontPtr->fontset.
  *----------------------------------------------------------------------
  */
 
@@ -3390,15 +3478,24 @@ EnsureNvgFont(
 
 /*
  *----------------------------------------------------------------------
- * TkpGetFontPixelSize --
+ * InitFont --
  *
- *   Get the pixel size of a Tk_Font for use by menu drawing.
+ *   Initialize a WaylandFont from the requested Tk font attributes:
+ *   resolve the family through Fontconfig (building an appropriate
+ *   serif/sans/mono/emoji fallback stack), populate fontPtr->faces
+ *   with the resulting matches, compute pixel metrics from the primary
+ *   face via stb_truetype, and initialize the HarfBuzz shaper.
+ *
+ *   Also bumps fontPtr->generation so that NanoVG font names derived
+ *   from fontPtr address + face index (see EnsureNvgFaceFont) are
+ *   unique across "font configure" reconfigure cycles.
  *
  * Results:
- *   Pixel size in pixels.
+ *   None.  fontPtr is fully populated.
  *
  * Side effects:
- *   None.
+ *   Allocates Fontconfig patterns, fontsets, and per-face metadata;
+ *   queries Fontconfig and reads the primary font file.
  *----------------------------------------------------------------------
  */
 
@@ -5596,12 +5693,19 @@ TkWaylandLoadNamedFontIntoContext(
  * TkWaylandDrawMenuText --
  *
  *   Draw a menu label string with full color-emoji support via
- *   HarfBuzz shaping.  Used by tkWaylandMenu.c: the old nvgText()
+ *   HarfBuzz shaping.  Used by tkWaylandMenu.c: the default nvgText()
  *   path bypassed the color-emoji pipeline (DrawColorGlyph) and fell
  *   back to the monochrome emoji face, so labels like "📋 Copy"
  *   appeared monochrome.  This wrapper reuses the same shaping +
  *   color-glyph cache as TkpDrawCharsInContext(), but draws at an
  *   explicit NVG position with an explicit NVGcolor.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Renders text into the given NVGcontext; may populate the color
+ *   glyph cache and upload textures.
  *----------------------------------------------------------------------
  */
 
