@@ -101,6 +101,7 @@ to the userbase.
  - [Windows: clipboard clear crashed when its window had not been made yet](https://core.tcl-lang.org/tk/tktview/bd3528)
  - [Bug regarding numeric keypad on solaris](https://core.tcl-lang.org/tk/tktview/481308)
  - [w32: Creating Alt-Key binding on all breaks default handling](https://core.tcl-lang.org/tk/tktview/145727)
+ - [Container is not displaying embedded window](https://core.tcl-lang.org/tk/tktview/da5eab)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
