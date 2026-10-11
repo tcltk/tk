@@ -2735,6 +2735,7 @@ ChangeTagPriority(
     }
 
     tagPtr->priority = newPriority;
+    TkBTreeUpdateElideInfoPriority(sharedTextPtr, tagPtr);
 
     return true;
 }
