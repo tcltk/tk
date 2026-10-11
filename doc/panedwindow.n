@@ -85,6 +85,12 @@ horizontally or vertically, according to the value of the
 \fB\-orient\fR option.  Each pane contains one widget, and each pair of
 panes is separated by a moveable (via mouse movements) sash.  Moving a
 sash causes the widgets on either side of the sash to be resized.
+.PP
+If a pane is not a child of the panedwindow, it must be higher in the
+stacking order than the panedwindow, otherwise the panedwindow will obscure
+it.  The easiest way to ensure this is to create the panedwindow first:
+the most recently created window is highest in the stacking order.
+Or, you can use the \fBraise\fR and \fBlower\fR commands.
 .SH "WIDGET COMMAND"
 .PP
 The \fBpanedwindow\fR command creates a new Tcl command whose name is
