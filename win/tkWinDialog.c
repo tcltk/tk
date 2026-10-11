@@ -589,8 +589,51 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(void *clientData);
+static HWND		ReleaseMouseCapture(void);
+static void		RestoreMouseCapture(HWND hwnd);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
 static void             LoadShellProcs(void);
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * ReleaseMouseCapture, RestoreMouseCapture --
+ *
+ *	A native modal dialog does not get mouse input while a Tk window
+ *	has captured the mouse (a global grab). Release the capture before
+ *	displaying the dialog and restore it afterwards. [Bug 2814003]
+ *
+ * Results:
+ *	ReleaseMouseCapture returns the window which had the capture, or NULL.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static HWND
+ReleaseMouseCapture(void)
+{
+    HWND hwnd = GetCapture();
+
+    if (hwnd != NULL) {
+	TkpSetCapture(NULL);
+    }
+    return hwnd;
+}
+
+static void
+RestoreMouseCapture(
+    HWND hwnd)			/* Result of ReleaseMouseCapture. */
+{
+    TkWindow *winPtr;
+
+    if ((hwnd != NULL) && IsWindow(hwnd)) {
+	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+	if ((winPtr != NULL) && (winPtr->dispPtr->grabWinPtr != NULL)
+		&& (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
+	    TkpSetCapture(winPtr);
+	}
+    }
+}
 
 
 /* Definitions of dynamically loaded Win32 calls */
@@ -779,7 +822,7 @@ Tk_ChooseColorObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
-    HWND hWnd;
+    HWND hWnd, hCapture;
     int i, oldMode, winCode, result;
     CHOOSECOLORW chooseColor;
     static int inited = 0;
@@ -869,7 +912,9 @@ Tk_ChooseColorObjCmd(
     chooseColor.hwndOwner = hWnd;
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    hCapture = ReleaseMouseCapture();
     winCode = ChooseColorW(&chooseColor);
+    RestoreMouseCapture(hCapture);
     (void) Tcl_SetServiceMode(oldMode);
 
     EnableParent(hWnd);
@@ -1280,7 +1325,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                             enum OFNOper oper)
 {
     HRESULT hr;
-    HWND hWnd;
+    HWND hWnd, hCapture;
     DWORD flags, nfilters, defaultFilterIndex;
     TCLCOMDLG_FILTERSPEC *filterPtr = NULL;
     IFileDialog *fdlgIf = NULL;
@@ -1445,7 +1490,9 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     }
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    hCapture = ReleaseMouseCapture();
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
+    RestoreMouseCapture(hCapture);
     Tcl_SetServiceMode(oldMode);
     EatSpuriousMessageBugFix();
 
@@ -2805,7 +2852,7 @@ Tk_MessageBoxObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
-    HWND hWnd;
+    HWND hWnd, hCapture;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
     int defaultBtn, icon, type;
     int i, oldMode, winCode;
@@ -2962,7 +3009,9 @@ Tk_MessageBoxObjCmd(
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);
     }
+    hCapture = ReleaseMouseCapture();
     winCode = MessageBoxW(hWnd, tmpPtr, titlePtr, flags);
+    RestoreMouseCapture(hCapture);
     Tcl_DStringFree(&titleBuf);
     Tcl_DStringFree(&tmpBuf);
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
@@ -3453,7 +3502,8 @@ FontchooserShowCmd(
     LOGFONTW lf;
     HDC hdc;
     HookData *hdPtr;
-    int r = TCL_OK, oldMode = 0;
+    int r = TCL_OK, oldMode = 0, winCode;
+    HWND hCapture;
 
     hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
 
@@ -3525,7 +3575,10 @@ FontchooserShowCmd(
 
     if (TCL_OK == r) {
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	if (ChooseFontW(&cf)) {
+	hCapture = ReleaseMouseCapture();
+	winCode = ChooseFontW(&cf);
+	RestoreMouseCapture(hCapture);
+	if (winCode) {
 	    if (hdPtr->cmdObj) {
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
