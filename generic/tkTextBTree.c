@@ -2892,16 +2892,15 @@ TkBTreeJoinUndoInsert(
     struct UndoTokenInsert *myToken1 = (UndoTokenInsert *) token1;
     struct UndoTokenInsert *myToken2 = (UndoTokenInsert *) token2;
 
-    if (UndoIndexIsEqual(&myToken1->endIndex, &myToken2->startIndex)) {
-	/* append to first token */
-	myToken1->endIndex = myToken2->endIndex;
-    } else if (UndoIndexIsEqual(&myToken1->startIndex, &myToken2->endIndex)) {
-	/* prepend to first token */
-	myToken1->startIndex = myToken2->startIndex;
-    } else {
+    /*
+     * Only an append can be joined: text inserted before the first token
+     * shifts it, then its recorded indices no longer designate it.
+     */
+
+    if (!UndoIndexIsEqual(&myToken1->endIndex, &myToken2->startIndex)) {
 	return 0;
     }
-
+    myToken1->endIndex = myToken2->endIndex;
     return 1;
 }
 
