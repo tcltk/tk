@@ -26,6 +26,7 @@ static void ShowAboutIdleTask(void *clientData) {
 	Tcl_BackgroundException(interp, code);
     }
     Tcl_ResetResult(interp);
+    Tcl_Release(interp);
 }
 
 
@@ -215,6 +216,7 @@ static void ShowAboutIdleTask(void *clientData) {
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	[super orderFrontStandardAboutPanel:NSApp];
     } else {
+	Tcl_Preserve(_eventInterp);
 	Tcl_DoWhenIdle(ShowAboutIdleTask, _eventInterp);
     }
 }

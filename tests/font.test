@@ -459,6 +459,9 @@ test font-9.7 {font command: measure -d with -displayof} -body {
 test font-9.8 {font command: measure: arguments} -body {
     font measure $fixed -displayof .
 } -returnCodes error -result {wrong # args: should be "font measure font ?-displayof window? text"}
+test font-9.9 {font command: measure: replacement character only, bug 6f054bf319} -body {
+     expr {[font measure TkDefaultFont \uFFFD] > 0}
+} -result 1
 
 
 test font-10.1 {font command: metrics: arguments} -body {
@@ -1689,6 +1692,22 @@ test font-24.15 {Tk_ComputeTextLayout: justification} -setup {
 } -cleanup {
     destroy .t.c
 } -result {2 1 0}
+test font-24.16 {Tk_ComputeTextLayout: replacement character only, bug 6f054bf319} -constraints {
+    x11
+} -setup {
+    # A fresh process: the bug depends on what was shaped before.
+    set script [makeFile {
+	label .l -text \uFFFD
+	puts [expr {[winfo reqwidth .l] > 0}]
+	exit
+    } fffd.tcl]
+} -body {
+    # This hung before the fix.
+    exec [interpreter] $script 2>@stderr
+} -cleanup {
+    removeFile fffd.tcl
+    unset -nocomplain script
+} -result 1
 
 
 test font-25.1 {Tk_FreeTextLayout procedure} -setup {
