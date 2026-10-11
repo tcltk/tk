@@ -31,6 +31,7 @@ static Tcl_ObjCmdProc TestwineventObjCmd;
 static Tcl_ObjCmdProc TestfindwindowObjCmd;
 static Tcl_ObjCmdProc TestgetwindowinfoObjCmd;
 static Tcl_ObjCmdProc TestwinlocaleObjCmd;
+static Tcl_ObjCmdProc TestgetcaptureObjCmd;
 static Tcl_ObjCmdProc TestsendinputObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
@@ -68,6 +69,8 @@ TkplatformtestInit(
     Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testgetcapture", TestgetcaptureObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsendinput", TestsendinputObjCmd,
 	    Tk_MainWindow(interp), NULL);
@@ -576,6 +579,33 @@ TestwinlocaleObjCmd(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetThreadLocale()));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestgetcaptureObjCmd --
+ *
+ *	This function implements the "testgetcapture" command. It returns
+ *	the handle of the window which has captured the mouse in the current
+ *	thread, or 0.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestgetcaptureObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(GetCapture())));
     return TCL_OK;
 }
 
