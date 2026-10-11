@@ -282,10 +282,10 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 # configure script.
 # On Wayland, X11_LIB_SWITCHES expands to empty (XLIBSW is cleared by configure),
 # so this definition is safe for both X11 and Wayland builds.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ \
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @SPEECHD_LIBS@ @HB_LIBS@ \
 	$(WAYLAND_LIBS) @WAYLAND_LDFLAGS@
 
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ \
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @SPEECHD_LIBS@ @HB_LIBS@ \
 	$(WAYLAND_LIBS) @WAYLAND_LDFLAGS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
@@ -333,6 +333,17 @@ CUPS_LIBS		= @CUPS_LIBS@
 # support for atk (X11 only; configure forces empty for Wayland)
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
+
+# support for libspeechd (Speech Dispatcher)
+SPEECHD_CFLAGS		= @SPEECHD_CFLAGS@
+SPEECHD_LIBS		= @SPEECHD_LIBS@
+
+# Accessibility support (ATK + Atk-bridge AND libspeechd).
+# Controlled by configure --enable-accessibility / --disable-accessibility.
+# On X11 this defaults to "yes"; when "yes" both ATK/Atk-bridge and
+# libspeechd must be found.  If either is missing, configure warns and
+# falls back to "no" (equivalent to --disable-accessibility).
+ACCESSIBILITY_ENABLED	= @enable_accessibility@
 
 # Bidi support: SheenBidi include paths + HarfBuzz cflags
 # (configure sets BIDI_CFLAGS to empty when --disable-bidi)
@@ -402,6 +413,13 @@ MAN_FLAGS               = @MAN_FLAGS@
 
 CC			= @CC@
 
+# NOTE: $(HB_CFLAGS) is included unconditionally below.  On Wayland it is
+# always non-empty (HarfBuzz is a hard dependency, and tkWaylandInt.h includes
+# <hb.h> unconditionally).  On X11 it is non-empty when --enable-bidi (default).
+# On X11 --disable-bidi or Aqua, configure sets HB_CFLAGS to the empty string,
+# so including it here is a no-op.  Do NOT wrap this in $(if $(filter yes,...))
+# against @enable_bidi@ — @enable_bidi@ is not AC_SUBST'd, and the construct
+# silently drops HB_CFLAGS on Wayland.
 CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 	${SHLIB_CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} \
@@ -409,8 +427,8 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${NO_DEPRECATED_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
 	${WAYLAND_CLIENT_CFLAGS} ${WAYLAND_EGL_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
 	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	@EXTRA_CC_SWITCHES@ $(XRENDER_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
-
+	@EXTRA_CC_SWITCHES@ $(XRENDER_CFLAGS) $(BIDI_CFLAGS) \
+	$(SPEECHD_CFLAGS) $(HB_CFLAGS)
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
@@ -420,7 +438,8 @@ DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
 	${WAYLAND_CLIENT_CFLAGS} ${WAYLAND_EGL_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
 	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	@EXTRA_CC_SWITCHES@ $(XRENDER_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
+	@EXTRA_CC_SWITCHES@ $(XRENDER_CFLAGS) $(BIDI_CFLAGS) \
+	$(SPEECHD_CFLAGS) $(HB_CFLAGS)
 
 WISH_OBJS = tkAppInit.o
 
@@ -1197,13 +1216,13 @@ mojibake.o: $(GENERIC_DIR)/mojibake.c
 
 dictionaries.o: $(GENERIC_DIR)/dictionaries.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/dictionaries.c
-
+	
 khmer.o: $(GENERIC_DIR)/khmer.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/khmer.c
 
 lao.o: $(GENERIC_DIR)/lao.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/lao.c
-
+	
 thai.o: $(GENERIC_DIR)/thai.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/thai.c
 
@@ -1478,7 +1497,7 @@ tkUnix3d.o: $(UNIX_DIR)/tkUnix3d.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix3d.c
 
 tkUnixAccessibility.o: $(UNIX_DIR)/tkUnixAccessibility.c
-	$(CC) -c $(CC_SWITCHES) $(ATK_CFLAGS) $(UNIX_DIR)/tkUnixAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(ATK_CFLAGS) $(SPEECHD_CFLAGS) $(UNIX_DIR)/tkUnixAccessibility.c
 
 tkUnixButton.o: $(UNIX_DIR)/tkUnixButton.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixButton.c

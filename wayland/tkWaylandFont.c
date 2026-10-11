@@ -34,6 +34,14 @@
 #include <hb-ot.h>
 #include <SheenBidi/SheenBidi.h>
 #include "stb_truetype.h"
+#include <mojibake.h>   /* UTS #51 emoji properties - shared with tkFont.c */
+
+/* Generic emoji classification shared by the font engines (mojibake).
+ * Declared in generic/tkFont.c and internal stubs; used by Windows
+ * engine in place of its own. testemoji in tkTest.c, font-48.1 to 48.5.
+ */
+extern int TkFontEmojiPresentation(int ch, int next);
+extern int TkFontEmojiContinuation(int ch, int inEmoji);
 
 /*
  * Color emoji (PNG bitmap strikes).  stb_image's implementation lives in
@@ -879,6 +887,22 @@ IsSimpleOnly(const char *str, int len)
 
 /*
  *----------------------------------------------------------------------
+ * IsKeycapBase --
+ *
+ *   True for '#', '*' and ASCII digits: the bases of keycap sequences
+ *   (base + U+FE0F + U+20E3).  They have Emoji=Yes in UTS #51 but must
+ *   only be treated as emoji in sequence context (see EmojiKindAt()).
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsKeycapBase(FcChar32 uc)
+{
+    return uc == '#' || uc == '*' || (uc >= '0' && uc <= '9');
+}
+
+/*
+ *----------------------------------------------------------------------
  * IsEmoji --
  *
  *   Determine whether a Unicode codepoint is an emoji character.
@@ -896,48 +920,53 @@ IsSimpleOnly(const char *str, int len)
 static bool
 IsEmoji(FcChar32 uc)
 {
-    /* Extended emoji ranges - more comprehensive */
-    return
-        (uc >= 0x1F000 && uc <= 0x1FAFF) ||   /* Main emoji blocks */
-        (uc >= 0x1F300 && uc <= 0x1F9FF) ||
-        (uc >= 0x2600  && uc <= 0x27BF)  ||   /* Misc symbols */
-        (uc >= 0x2300  && uc <= 0x23FF)  ||   /* Misc technical */
-        (uc >= 0x2B00  && uc <= 0x2BFF)  ||   /* Misc symbols arrows */
-        (uc >= 0xFE00  && uc <= 0xFE0F)  ||   /* Variation selectors */
-        (uc == 0x200D) ||                     /* Zero-width joiner */
-        (uc >= 0xE0020 && uc <= 0xE007F) ||   /* Tag characters (subdivision flags) */
-        (uc >= 0x1F1E6 && uc <= 0x1F1FF) ||   /* Regional indicators (flags) */
-        (uc >= 0x1F3FB && uc <= 0x1F3FF) ||   /* Skin tone modifiers */
-        (uc >= 0x00A9 && uc <= 0x00AE)  ||   /* Copyright/registered */
-        (uc == 0x2122) ||                     /* TM */
-        (uc == 0x2139) ||                     /* Information */
-        (uc == 0x2194) || (uc == 0x2195) ||  /* Arrows */
-        (uc >= 0x2196 && uc <= 0x2199) ||
-        (uc >= 0x21A9 && uc <= 0x21AA) ||
-        (uc == 0x231A) || (uc == 0x231B) ||
-        (uc == 0x2328) ||
-        (uc >= 0x23CF && uc <= 0x23FF) ||
-        (uc >= 0x24C2 && uc <= 0x24FF) ||
-        (uc >= 0x25A0 && uc <= 0x25FF) ||
-        (uc >= 0x2600 && uc <= 0x26FF) ||
-        (uc >= 0x2700 && uc <= 0x27BF) ||
-        (uc >= 0x2934 && uc <= 0x2935) ||
-        (uc >= 0x2B05 && uc <= 0x2B07) ||
-        (uc == 0x2B1B) || (uc == 0x2B1C) ||
-        (uc == 0x2B50) || (uc == 0x2B55) ||
-        (uc == 0x3030) || (uc == 0x303D) ||
-        (uc == 0x3297) || (uc == 0x3299) ||
-        (uc >= 0x1F004 && uc <= 0x1F0CF) ||   /* Mahjong/playing cards */
-        (uc >= 0x1F170 && uc <= 0x1F251) ||   /* Enclosed alphanum */
-        (uc >= 0x1F600 && uc <= 0x1F64F) ||   /* Emoticons */
-        (uc >= 0x1F680 && uc <= 0x1F6C0) ||   /* Transport */
-        (uc >= 0x1F6C0 && uc <= 0x1F6FF) ||   /* Transport symbols */
-        (uc >= 0x1F700 && uc <= 0x1F77F) ||   /* Alchemical */
-        (uc >= 0x1F780 && uc <= 0x1F7FF) ||   /* Geometric */
-        (uc >= 0x1F800 && uc <= 0x1F8FF) ||   /* Supplemental arrows */
-        (uc >= 0x1F900 && uc <= 0x1F9FF) ||   /* Supplemental symbols */
-        (uc >= 0x1FA00 && uc <= 0x1FA6F) ||   /* Chess/symbols */
-        (uc >= 0x1FA70 && uc <= 0x1FAFF);     /* More symbols */
+    /* Generic emoji classification via mojibake (UTS #51), shared with
+     * generic/tkFont.c: TkFontEmojiPresentation / Continuation.
+     * This replaces the hard-coded range table so every platform
+     * picks the same characters for color-emoji handling (font-48.1..48.5).
+     *
+     * ASCII is never classified per character: 0-9, '#' and '*' have
+     * Emoji=Yes only as keycap bases, which EmojiKindAt() recognizes in
+     * sequence context.  Classifying them here sent every digit to the
+     * emoji face and made hasEmoji true for simple strings, which then
+     * collapsed the layout (see ContainsEmoji()).
+     */
+    if (uc < 0x80) {
+        return false;
+    }
+    if (uc == 0x200D || uc == 0xFE0E || uc == 0xFE0F || uc == 0x20E3
+            || (uc >= 0xE0020 && uc <= 0xE007F)
+            || (uc >= 0x1F3FB && uc <= 0x1F3FF)) {
+        return true;
+    }
+    return mjb_codepoint_is_emoji((mjb_codepoint) uc)
+        || mjb_codepoint_is_emoji_presentation((mjb_codepoint) uc)
+        || mjb_codepoint_is_emoji_modifier((mjb_codepoint) uc);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ContainsEmoji --
+ *
+ *   True if any character of the UTF-8 string is classified by IsEmoji().
+ *   Keeps the zero-advance fast path in WaylandShaper_ShapeString()
+ *   consistent with the callers' hasEmoji tests: whenever a caller takes
+ *   the cluster path because of emoji, the shaper must supply real
+ *   advances.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+ContainsEmoji(const char *s, int n)
+{
+    for (int i = 0; i < n; ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(s + i), &uc, n - i);
+        if (clen <= 0) { i++; continue; }
+        if (IsEmoji(uc)) return true;
+        i += clen;
+    }
+    return false;
 }
 
 /*
@@ -1515,61 +1544,18 @@ GetHbFont(
  */
 
 
-typedef struct { FcChar32 lo, hi; } EmojiRange;
-
-static const EmojiRange emojiPresentationRanges[] = {
-    {0x231A, 0x231B}, {0x23E9, 0x23EC}, {0x23F0, 0x23F0}, {0x23F3, 0x23F3},
-    {0x25FD, 0x25FE}, {0x2614, 0x2615}, {0x2648, 0x2653}, {0x267F, 0x267F},
-    {0x2693, 0x2693}, {0x26A1, 0x26A1}, {0x26AA, 0x26AB}, {0x26BD, 0x26BE},
-    {0x26C4, 0x26C5}, {0x26CE, 0x26CE}, {0x26D4, 0x26D4}, {0x26EA, 0x26EA},
-    {0x26F2, 0x26F3}, {0x26F5, 0x26F5}, {0x26FA, 0x26FA}, {0x26FD, 0x26FD},
-    {0x2705, 0x2705}, {0x270A, 0x270B}, {0x2728, 0x2728}, {0x274C, 0x274C},
-    {0x274E, 0x274E}, {0x2753, 0x2755}, {0x2757, 0x2757}, {0x2795, 0x2797},
-    {0x27B0, 0x27B0}, {0x27BF, 0x27BF}, {0x2B1B, 0x2B1C}, {0x2B50, 0x2B50},
-    {0x2B55, 0x2B55},
-    {0x1F004, 0x1F004}, {0x1F0CF, 0x1F0CF}, {0x1F18E, 0x1F18E},
-    {0x1F191, 0x1F19A}, {0x1F1E6, 0x1F1FF}, {0x1F201, 0x1F201},
-    {0x1F232, 0x1F236}, {0x1F238, 0x1F23A}, {0x1F250, 0x1F251},
-    {0x1F300, 0x1F320}, {0x1F32D, 0x1F335}, {0x1F337, 0x1F37C},
-    {0x1F37E, 0x1F393}, {0x1F3A0, 0x1F3CA}, {0x1F3CF, 0x1F3D3},
-    {0x1F3E0, 0x1F3F0}, {0x1F3F4, 0x1F3F4}, {0x1F3F8, 0x1F43E},
-    {0x1F440, 0x1F440}, {0x1F442, 0x1F4FC}, {0x1F4FF, 0x1F53D},
-    {0x1F54B, 0x1F54E}, {0x1F550, 0x1F567}, {0x1F57A, 0x1F57A},
-    {0x1F595, 0x1F596}, {0x1F5A4, 0x1F5A4}, {0x1F5FB, 0x1F64F},
-    {0x1F680, 0x1F6C5}, {0x1F6CC, 0x1F6CC}, {0x1F6D0, 0x1F6D2},
-    {0x1F6D5, 0x1F6D7}, {0x1F6DC, 0x1F6DF}, {0x1F6EB, 0x1F6EC},
-    {0x1F6F4, 0x1F6FC}, {0x1F7E0, 0x1F7EB}, {0x1F7F0, 0x1F7F0},
-    {0x1F90C, 0x1F93A}, {0x1F93C, 0x1F945}, {0x1F947, 0x1F9FF},
-    {0x1FA70, 0x1FAFF}
-};
-
 /*
- *----------------------------------------------------------------------
  * IsEmojiPresentation --
  *
  *   True if the codepoint has the Unicode Emoji_Presentation property,
  *   i.e. it is drawn as a color emoji by default without U+FE0F.
- *----------------------------------------------------------------------
+ *   Now implemented via mojibake, shared with generic/tkFont.c.
  */
 
 static bool
 IsEmojiPresentation(FcChar32 uc)
 {
-    int lo = 0;
-    int hi = (int)(sizeof(emojiPresentationRanges) /
-                   sizeof(emojiPresentationRanges[0])) - 1;
-
-    while (lo <= hi) {
-        int mid = (lo + hi) / 2;
-        if (uc < emojiPresentationRanges[mid].lo) {
-            hi = mid - 1;
-        } else if (uc > emojiPresentationRanges[mid].hi) {
-            lo = mid + 1;
-        } else {
-            return true;
-        }
-    }
-    return false;
+    return mjb_codepoint_is_emoji_presentation((mjb_codepoint) uc);
 }
 
 /*
@@ -1598,36 +1584,74 @@ enum { EMOJI_KIND_NONE = 0, EMOJI_KIND_TEXT = 1, EMOJI_KIND_COLOR = 2 };
 static int
 EmojiKindAt(const FcChar32 *ucs4, int idx, int count)
 {
-    int j = idx;
-    FcChar32 uc;
-
-    if (idx < 0 || idx >= count || !IsEmoji(ucs4[idx])) {
+    if (idx < 0 || idx >= count) {
+        return EMOJI_KIND_NONE;
+    }
+    if (!IsEmoji(ucs4[idx])) {
+        /* Keycap sequence: ASCII base followed by VS16 or U+20E3. */
+        if (IsKeycapBase(ucs4[idx]) && idx + 1 < count
+                && (ucs4[idx + 1] == 0xFE0F || ucs4[idx + 1] == 0x20E3)) {
+            return EMOJI_KIND_COLOR;
+        }
         return EMOJI_KIND_NONE;
     }
 
-    /* Walk back over joiners/tags to the character that owns them. */
+    /*
+     * Walk back over generic continuation characters (ZWJ, VS16/VS15,
+     * keycap, tags, skin-tone modifiers inside a cluster) to the
+     * owning base character.  Uses TkFontEmojiContinuation() from
+     * generic/tkFont.c, shared with the Windows engine and the
+     * Unix Bidi engine (font-48.1 to 48.5).
+     */
+    int j = idx;
     for (;;) {
-        uc = ucs4[j];
-        if (uc == 0x200D || (uc >= 0xE0020 && uc <= 0xE007F)) {
-            if (j > 0 && IsEmoji(ucs4[j - 1])) {
+        FcChar32 cur = ucs4[j];
+        if (j > 0 && TkFontEmojiContinuation((int)cur, 1)) {
+            if (IsEmoji(ucs4[j - 1])
+                    || (IsKeycapBase(ucs4[j - 1])
+                        && (cur == 0xFE0F || cur == 0x20E3))) {
                 j--;
                 continue;
             }
-            return EMOJI_KIND_TEXT;
+            /* Lone continuation (e.g. stray ZWJ/VS) - treat as TEXT
+             * so it does not force color face. */
+            if (cur == 0xFE0E || cur == 0x200D || cur == 0x20E3
+                    || (cur >= 0xE0020 && cur <= 0xE007F)) {
+                return EMOJI_KIND_TEXT;
+            }
+            break;
         }
         break;
     }
 
+    FcChar32 uc = ucs4[j];
     if (uc == 0xFE0F) return EMOJI_KIND_COLOR;
     if (uc == 0xFE0E) return EMOJI_KIND_TEXT;
 
+    int next = -1;
     if (j + 1 < count) {
-        FcChar32 next = ucs4[j + 1];
-        if (next == 0xFE0F) return EMOJI_KIND_COLOR;
-        if (next == 0xFE0E) return EMOJI_KIND_TEXT;
-        if (next >= 0x1F3FB && next <= 0x1F3FF) return EMOJI_KIND_COLOR;
+        next = (int) ucs4[j + 1];
     }
-    return IsEmojiPresentation(uc) ? EMOJI_KIND_COLOR : EMOJI_KIND_TEXT;
+
+    /*
+     * Generic UTS #51 presentation via mojibake, same as
+     * TkFontEmojiPresentation() in tkFont.c:
+     *   0 = text presentation (VS15 forces text)
+     *   1 = emoji presentation by default (color preferred)
+     *   2 = VS16 after emoji (heart + VS16, keycap) - color over text
+     * This is what testemoji in tkTest.c font-48.1..48.5 expects on
+     * every platform, handled via HarfBuzz on Wayland.
+     */
+    int pres = TkFontEmojiPresentation((int) uc, next);
+    if (pres == 2) return EMOJI_KIND_COLOR;
+    if (pres == 0) return EMOJI_KIND_TEXT;
+    /* pres == 1 => emoji presentation by default, but still check
+     * if next is skin-tone modifier - that also forces color. */
+    if (next >= 0x1F3FB && next <= 0x1F3FF) return EMOJI_KIND_COLOR;
+    return EMOJI_KIND_COLOR; /* pres == 1 */
+
+    /* Fallback for non-presentation emoji that are still emoji range
+     * but default to text (e.g. U+00A9 without VS16) */
 }
 
 /*
@@ -1688,8 +1712,9 @@ GetColorEmojiFaceIndex(
         if (face->charset) {
             for (int i = start; i < end && ok; i++) {
                 FcChar32 uc = ucs4[i];
-                if (uc == 0x200D || uc == 0xFE0F || uc == 0xFE0E ||
-                        (uc >= 0xE0020 && uc <= 0xE007F)) {
+                /* Use generic continuation - VS, ZWJ, keycap, tags are
+                 * consumed by HarfBuzz GSUB, not needing charset coverage. */
+                if (TkFontEmojiContinuation((int)uc, 1)) {
                     continue;
                 }
                 if (!FcCharSetHasChar(face->charset, uc)) ok = false;
@@ -2128,6 +2153,32 @@ DrawColorGlyph(
         dy = penY - 0.79f * dh;
     }
 
+    /*
+     * Keep the bitmap inside the line box.  Color emoji strikes are taller
+     * than the metrics of most text fonts (Thai, CJK, ...), and Tk's text
+     * widget (and ttk) clip each line to ascent + descent of the font in
+     * use, so an unconstrained quad is cut off at the top and/or bottom.
+     * Bounds are relative to penY, the glyph baseline.
+     */
+    {
+        float asc  = (float)fontPtr->font.fm.ascent;
+        float desc = (float)fontPtr->font.fm.descent;
+        float room = asc + desc;
+
+        if (room > 0.0f && dh > 0.0f
+                && (dy < penY - asc || dy + dh > penY + desc)) {
+            if (dh > room) {
+                float sc = room / dh;
+                float ndw = dw * sc;
+                dx += (dw - ndw) / 2.0f;      /* shrink about the center. */
+                dw  = ndw;
+                dh  = room;
+            }
+            if (dy < penY - asc)       dy = penY - asc;
+            if (dy + dh > penY + desc) dy = penY + desc - dh;
+        }
+    }
+
     NVGpaint paint = nvgImagePattern(vg, dx, dy, dw, dh, 0.0f, img, 1.0f);
     nvgBeginPath(vg);
     nvgRect(vg, dx, dy, dw, dh);
@@ -2400,7 +2451,8 @@ WaylandShaper_ShapeString(
      * supplies correct positions regardless of whether the caller then
      * chooses to draw the marks composed or decomposed.
      */
-    if (IsSimpleOnly(source, numBytes) && !ContainsCombiningMark(source, numBytes)) {
+    if (IsSimpleOnly(source, numBytes) && !ContainsCombiningMark(source, numBytes)
+            && !ContainsEmoji(source, numBytes)) {
         int i = 0;
         while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
             FcChar32 uc;
@@ -2702,15 +2754,13 @@ WaylandShaper_ShapeString(
             int         runFaceIndex;
 
             /* If this subrun contains any emoji, force emoji face. */
-            bool subrunHasEmoji = false;
-            bool subrunHasNonEmoji = false;
-            for (int ci = subrunStart; ci < subrunEnd; ci++) {
-                if (IsEmoji(ucs4Chars[ci])) {
-                    subrunHasEmoji = true;
-                } else {
-                    subrunHasNonEmoji = true;
-                }
-            }
+            /* Subruns are split by EmojiKindAt(), so the kind at the
+             * start is the kind of the whole subrun (this also covers
+             * keycap sequences, whose ASCII base is not IsEmoji()). */
+            bool subrunHasEmoji =
+                EmojiKindAt(ucs4Chars, subrunStart, charCount)
+                    != EMOJI_KIND_NONE;
+            bool subrunHasNonEmoji = !subrunHasEmoji;
 
             if (subrunHasEmoji && !subrunHasNonEmoji) {
                 runFaceIndex = PickEmojiFaceForRun(fontPtr, ucs4Chars,
@@ -5538,6 +5588,99 @@ TkWaylandLoadNamedFontIntoContext(
 
     /* Don't delete the font — it's cached by Tk. */
     return id;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandDrawMenuText --
+ *
+ *   Draw a menu label string with full color-emoji support via
+ *   HarfBuzz shaping.  Used by tkWaylandMenu.c: the old nvgText()
+ *   path bypassed the color-emoji pipeline (DrawColorGlyph) and fell
+ *   back to the monochrome emoji face, so labels like "📋 Copy"
+ *   appeared monochrome.  This wrapper reuses the same shaping +
+ *   color-glyph cache as TkpDrawCharsInContext(), but draws at an
+ *   explicit NVG position with an explicit NVGcolor.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandDrawMenuText(
+    NVGcontext *vg,
+    Tk_Font tkfont,
+    float x,
+    float y,
+    const char *text,
+    int len,
+    NVGcolor color)
+{
+    if (!vg || !tkfont || !text || len <= 0) return;
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+
+    if (EnsureNvgFont(fontPtr, vg) < 0) return;
+
+    bool hasEmoji = ContainsEmoji(text, len);
+    bool plain = !hasEmoji && IsSimpleOnly(text, len);
+
+    nvgSave(vg);
+    nvgFillColor(vg, color);
+
+    ShapedGlyphBuffer sbuf;
+
+    /*
+     * Plain text goes straight to NanoVG.  So does anything the shaper
+     * cannot place: the shaper's simple-text fast path leaves every x and
+     * advanceX at 0 (and totalAdvance 0), which would stack all glyphs at
+     * the same pen position.  Real HarfBuzz output always has a positive
+     * totalAdvance.
+     */
+    if (plain
+            || !WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, text, len,
+                                          &sbuf)
+            || sbuf.glyphCount <= 0 || sbuf.totalAdvance <= 0) {
+        int fid = fontPtr->nvgFontId >= 0 ? fontPtr->nvgFontId
+                : EnsureNvgFont(fontPtr, vg);
+        if (fid >= 0) nvgFontFaceId(vg, fid);
+        nvgFontSize(vg, (float)fontPtr->pixelSize);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+        nvgText(vg, x, y, text, text + len);
+        nvgRestore(vg);
+        return;
+    }
+
+    for (int i = 0; i < sbuf.glyphCount; i++) {
+        int faceIdx = sbuf.glyphs[i].faceIndex;
+        if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+        float gx = x + (float)sbuf.glyphs[i].x;
+        float gy = y + (float)sbuf.glyphs[i].y;
+
+        if (IsColorBitmapFace(fontPtr, faceIdx)) {
+            DrawColorGlyph(vg, fontPtr, faceIdx,
+                           sbuf.glyphs[i].glyphId,
+                           gx, gy,
+                           (float)sbuf.glyphs[i].advanceX);
+            nvgFillColor(vg, color);
+        } else {
+            WaylandFtFace *face = &fontPtr->faces[faceIdx];
+            int nvgId = face->nvgFontId;
+            if (nvgId < 0) {
+                nvgId = EnsureNvgFaceFont(fontPtr, faceIdx, vg);
+            }
+            if (nvgId < 0) continue;
+            nvgFontFaceId(vg, nvgId);
+            nvgFontSize(vg, (float)fontPtr->pixelSize);
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+            int bo = sbuf.glyphs[i].byteOffset;
+            int clen = sbuf.glyphs[i].clusterLen;
+            if (bo < 0 || bo + clen > len) continue;
+            if (i > 0 && sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset) {
+                continue;
+            }
+            nvgText(vg, gx, gy, text + bo, text + bo + clen);
+        }
+    }
+    nvgRestore(vg);
 }
 
 /*

@@ -248,17 +248,17 @@ test sysnotify-3 {libnotify is not unloaded when the last interpreter which used
 } -setup {
     set code [loadTkCommand]
     append code [string map [list @LOADTK@ [list [loadTkCommand]]] {
-        # Delete the command of the main interpreter, so that the child
-        # interpreters are the only users of libnotify.
-        rename ::tk::sysnotify::_sysnotify {}
-        foreach name {i j} {
-            interp create $name
-            $name eval @LOADTK@
-            $name eval {tk sysnotify "Tk test" "test notification"}
-            interp delete $name
-        }
-        puts ok
-        exit
+	# Delete the command of the main interpreter, so that the child
+	# interpreters are the only users of libnotify.
+	rename ::tk::sysnotify::_sysnotify {}
+	foreach name {i j} {
+	    interp create $name
+	    $name eval @LOADTK@
+	    $name eval {tk sysnotify "Tk test" "test notification"}
+	    interp delete $name
+	}
+	puts ok
+	exit
     }]
     set script [makeFile $code script]
 } -body {
