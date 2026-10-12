@@ -339,7 +339,17 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     NSString *name = [notification name];
     if ([name isEqualToString:NSWindowWillStartLiveResizeNotification]) {
 	// fprintf(stderr, "Starting live resize.\n");
+	// Copied from TKApplication menuBeginTracking:
+	[self.backgroundLoop cancel];
+	TKBackgroundLoop *newBackgroundLoop = [[TKBackgroundLoop alloc] init];
+	self.backgroundLoop = newBackgroundLoop;
+	[newBackgroundLoop release];
+	[self.backgroundLoop start];
     } else if ([name isEqualToString:NSWindowDidEndLiveResizeNotification]) {
+	// Copied from TKApplication menuEndTracking:
+	[self.backgroundLoop cancel];
+	self.backgroundLoop = nil;
+
 	[self setTkLiveResizeEnded:YES];
 	// fprintf(stderr, "Ending live resize\n");
     }
