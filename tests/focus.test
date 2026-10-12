@@ -26,6 +26,11 @@ resetWindows
 testutils import child
 
 #
+# LOCAL TEST CONSTRAINTS
+#
+testConstraint noWindowManager [expr {![testConstraint withWindowManager]}]
+
+#
 # LOCAL UTILITY PROCS
 #
 
@@ -851,7 +856,6 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
     crashit
 } -result {Reached}
 
-testConstraint noWindowManager [expr {![testConstraint withWindowManager]}]
 test focus-9.1 {implicit focus is lost when another application takes the focus} -constraints {
     unix testxfocus noWindowManager
 } -setup {
@@ -872,8 +876,7 @@ test focus-9.1 {implicit focus is lost when another application takes the focus}
     lappend x [childTkProcess eval {update; focus}]
 } -cleanup {
     childTkProcess exit
-    event generate . <Motion> -warp 1 -x 2000 -y 2000
-    controlPointerWarpTiming
+    movePointerAwayFromTestArea
 } -result {. {}}
 
 #
