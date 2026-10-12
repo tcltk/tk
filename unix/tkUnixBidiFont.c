@@ -2456,6 +2456,8 @@ Tk_MeasureCharsInContext(
 		    subLen - pos);
 
 		if (clen <= 0) {
+		    /* Not a whole UTF-8 character here: the byte itself. */
+		    uc = (unsigned char)sub[pos];
 		    clen = 1;
 		}
 
@@ -2483,6 +2485,8 @@ Tk_MeasureCharsInContext(
 		subLen - pos);
 
 	    if (clen <= 0) {
+		/* Not a whole UTF-8 character here: the byte itself. */
+		uc = (unsigned char)sub[pos];
 		clen = 1;
 	    }
 
