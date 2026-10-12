@@ -318,6 +318,11 @@ VISIBILITY_HIDDEN
 @interface TKMenu(TKMenuDelegate) <NSMenuDelegate>
 @end
 
+// Is this in the right place? Is using VISIBILITY_HIDDEN correct?
+VISIBILITY_HIDDEN
+@interface TKBackgroundLoop: NSThread
+@end
+
 VISIBILITY_HIDDEN
 @interface TKApplication : NSApplication {
 @private
@@ -333,6 +338,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
 @property Bool tkWillExit;
+@property(strong) TKBackgroundLoop *backgroundLoop;
 
 /*
  * Persistent state variables used by processMouseEvent.

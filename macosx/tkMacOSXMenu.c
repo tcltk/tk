@@ -131,9 +131,6 @@ static void ClearMenubarActive(void);
  * menuEndTracking].
  */
 
-@interface TKBackgroundLoop: NSThread
-@end
-
 @implementation TKBackgroundLoop
 - (void) main
 {
@@ -163,8 +160,6 @@ static void ClearMenubarActive(void);
     [pool drain];
 }
 @end
-
-TKBackgroundLoop *backgroundLoop = nil;
 
 typedef struct invokeArgs {
     TkMenu *menuPtr;
@@ -518,12 +513,11 @@ static Bool runMenuCommand = true;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    if (backgroundLoop) {
-	[backgroundLoop cancel];
-	[backgroundLoop release];
-    }
-    backgroundLoop = [[TKBackgroundLoop alloc] init];
-    [backgroundLoop start];
+    [self.backgroundLoop cancel];
+    TKBackgroundLoop *newBackgroundLoop = [[TKBackgroundLoop alloc] init];
+    self.backgroundLoop = newBackgroundLoop;
+    [newBackgroundLoop release];
+    [self.backgroundLoop start];
 
     /*
      * Make sure that we can run commands when actually using a menu.
@@ -539,11 +533,8 @@ static Bool runMenuCommand = true;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    if (backgroundLoop) {
-	[backgroundLoop cancel];
-	[backgroundLoop release];
-	backgroundLoop = nil;
-    }
+    [self.backgroundLoop cancel];
+    self.backgroundLoop = nil;
     if (!inPostMenu) {
 	ClearMenubarActive();
     }
