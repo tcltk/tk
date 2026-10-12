@@ -2761,9 +2761,9 @@ FreeFontFamily(
  *	object, following a set of preferred fallback rules.
  *
  *	preferColor selects the subfont for emoji: 0 keeps the usual order
- *	(base font, loaded subfonts, fallback list); 1 prefers a color font
- *	unless the base font has the character; 2 (VS16) prefers a color font
- *	over the base font.
+ *	(base font, loaded subfonts, fallback list); 1 and 2 prefer a color
+ *	font, over the base font too, as users expect emoji in color; the
+ *	base font is used when no color font has the character.
  *
  * Results:
  *	The return value is the SubFont to use to display the given character.
@@ -2792,15 +2792,15 @@ FindSubFontForChar(
 
     /*
      * Fast paths on the subfonts already loaded.  The base font is the one
-     * the user asked for: it wins whenever it has the character, unless a
-     * VS16 asks for the emoji glyph (keycaps, "heart + VS16").  Then the
-     * loaded subfonts of the wanted kind: a color font for emoji
-     * presentation (Segoe UI Symbol has outlines for most emoji but no
-     * color layers), a font without color layers for text presentation,
-     * whatever the load order.
+     * the user asked for: it wins whenever it has the character, except for
+     * emoji presentation, where a color font comes first (Segoe UI Symbol
+     * has outlines for most emoji but no color layers).  Then the loaded
+     * subfonts of the wanted kind, a color font for emoji presentation, a
+     * font without color layers for text presentation, whatever the load
+     * order.
      */
 
-    if (preferColor < 2 && FontMapLookup(&fontPtr->subFontArray[0], ch)) {
+    if (preferColor == 0 && FontMapLookup(&fontPtr->subFontArray[0], ch)) {
 	return &fontPtr->subFontArray[0];
     }
     for (i = 0; i < fontPtr->numSubFonts; i++) {

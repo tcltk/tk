@@ -4504,10 +4504,10 @@ TkFontGetSymbolClass(void)
  *
  * Results:
  *	0 for text presentation.  1 when ch has emoji presentation by
- *	default: a color font is preferred, unless the font asked for has the
- *	character.  2 when a VS16 after an emoji character asks for the emoji
- *	glyph (keycaps, "heart + VS16"): a color font is preferred over the
- *	font asked for.  A VS15 after ch forces text presentation.
+ *	default, 2 when a VS16 after an emoji character asks for the emoji
+ *	glyph (keycaps, "heart + VS16"): in both cases a color font is
+ *	preferred, over the font asked for too, as users expect emoji in
+ *	color.  A VS15 after ch forces text presentation.
  *
  * Side effects:
  *	None.

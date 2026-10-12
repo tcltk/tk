@@ -421,7 +421,8 @@ testutils forget geometry
 #
 # Subfont selection for emoji (UTS #51): a color emoji font for the default emoji
 # presentation and for VS16 sequences, text presentation left to the usual fallbacks,
-# an explicit base font respected, and a ZWJ sequence shaped as one glyph.
+# a color font preferred over a base font that has the emoji too, and a ZWJ sequence
+# shaped as one glyph.
 #
 testConstraint segoeEmoji [expr {"Segoe UI Emoji" in [font families]}]
 testConstraint segoeSymbol [expr {"Segoe UI Symbol" in [font families]}]
@@ -436,11 +437,12 @@ test winfont-8.2 {FindSubFontForChar: text presentation is not sent to the color
 } -body {
     expr {[font actual TkDefaultFont -family -- [format %c 0x2764]] eq "Segoe UI Emoji"}
 } -result 0
-test winfont-8.3 {FindSubFontForChar: an explicit base font keeps its own glyphs} -constraints {
-    win segoeSymbol
+test winfont-8.3 {FindSubFontForChar: a color font wins over a base font that has the emoji} -constraints {
+    win segoeEmoji segoeSymbol
 } -body {
+    # Segoe UI Symbol has an outline for the grinning face; users expect color.
     font actual {{Segoe UI Symbol} 14} -family -- [format %c 0x1F600]
-} -result {Segoe UI Symbol}
+} -result {Segoe UI Emoji}
 test winfont-8.4 {TkWinShapeString: ZWJ sequence shaped as one glyph} -constraints {
     win segoeEmoji
 } -body {
