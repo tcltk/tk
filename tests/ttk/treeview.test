@@ -3513,7 +3513,7 @@ test Move-35.15 {Move under grandchild} -setup {
 test Move-35.16 {Move first to last} -body {
     .tv move red {} last
     .tv identifier {} last
-} -result {gray}
+} -result {red}
 
 test Move-35.17 {Move end to first} -body {
     .tv move red {} first
@@ -3582,48 +3582,60 @@ test Move-35.28 {Move detached item} -setup {
 test Move-35.29 {Move child after self} -body {
     .tv move red {} 1
     .tv index red
-} -result {0}
+} -result {1}
 
 test Move-35.30 {Move child before self} -body {
     .tv move red {} 0
     .tv index red
 } -result {0}
 
-test Move-35.31 {Check Order} -body {
+test Move-35.31 {Move child down 1 position} -body {
+    set idx [.tv index [.tv next orange]]
+    .tv move orange {} $idx
+    expr {[.tv index orange] == $idx}
+} -result {1}
+
+test Move-35.32 {Move child up 1 position} -body {
+    set idx [.tv index [.tv prev orange]]
+    .tv move orange {} $idx
+    expr {[.tv index orange] == $idx}
+} -result {1}
+
+test Move-35.33 {Check Order} -body {
     checkorder {}
 } -result {1}
 
-test Move-35.32 {Move before first item} -body {
+test Move-35.34 {Move before first item} -body {
     .tv move blue before red
     lindex [.tv children {}] 0
 } -result {blue}
 
-test Move-35.33 {Move after first item} -body {
+test Move-35.35 {Move after first item} -body {
     .tv move blue after red
     lindex [.tv children {}] 1
 } -result {blue}
 
-test Move-35.34 {Move before end item} -body {
+test Move-35.36 {Move before end item} -body {
     .tv move blue before gray
     lindex [.tv children {}] end-1
 } -result {blue}
 
-test Move-35.35 {Move after end item} -body {
+test Move-35.37 {Move after end item} -body {
     .tv move blue after gray
     lindex [.tv children {}] end
 } -result {blue}
 
-test Move-35.36 {Move before detached item} -setup {
+test Move-35.38 {Move before detached item} -setup {
     .tv detach white
 } -body {
     .tv move blue before white
 } -result {cannot move before detached item} -returnCodes {1}
 
-test Move-35.37 {Move after detached item} -body {
+test Move-35.39 {Move after detached item} -body {
     .tv move blue after white
 } -result {cannot move after detached item} -returnCodes {1}
 
-test Move-35.38 {Selected item} -setup {
+test Move-35.40 {Selected item} -setup {
     .tv selection set yellow
     set children [.tv children {}]
 } -body {
@@ -3634,7 +3646,7 @@ test Move-35.38 {Selected item} -setup {
     .tv children {} $children
 } -result {yellow yellow}
 
-test Move-35.39 {Focus item} -setup {
+test Move-35.41 {Focus item} -setup {
     .tv focus yellow
     set children [.tv children {}]
 } -body {
@@ -3645,7 +3657,7 @@ test Move-35.39 {Focus item} -setup {
     .tv children {} $children
 } -result {yellow yellow}
 
-test Move-35.40 {Selection anchor} -setup {
+test Move-35.42 {Selection anchor} -setup {
     .tv selection anchor yellow
     set children [.tv children {}]
 } -body {
@@ -3656,7 +3668,7 @@ test Move-35.40 {Selection anchor} -setup {
     .tv children {} $children
 } -result {yellow yellow}
 
-test Move-35.41 {Cleanup} -body {
+test Move-35.43 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 
