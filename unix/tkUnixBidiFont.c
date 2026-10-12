@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <hb.h>
-#include <hb-ft.h>
 #include <SheenBidi/SheenBidi.h>
 #include <mojibake.h>   /* UTS #51 emoji properties - shared with tkFont.c */
 
