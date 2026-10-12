@@ -444,8 +444,8 @@ if test $tk_aqua = no; then
 		CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
 		LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
 
-		AC_CHECK_HEADER(harfbuzz/hb.h, [], [
-		    AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+		AC_CHECK_HEADER(hb.h, [], [
+		    AC_MSG_ERROR([HarfBuzz header <hb.h> not found with $HB_CFLAGS])
 		], [#include <X11/Xlib.h>])
 
 		AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
