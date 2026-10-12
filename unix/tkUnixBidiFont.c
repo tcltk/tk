@@ -22,11 +22,6 @@
 #include <hb.h>
 #include <SheenBidi/SheenBidi.h>
 
-/*
- * The generic emoji helpers TkFontEmojiPresentation() and
- * TkFontEmojiContinuation() (generic/tkFont.c) are declared through
- * tkInt.h / tkIntDecls.h.
- */
 
 #ifndef FC_COLOR
 #define FC_COLOR "color"
@@ -71,8 +66,8 @@ typedef struct {
 			 * For a color face this is restricted to the code
 			 * points with default emoji presentation. */
     FcCharSet *fullCharset;	/* Complete cmap of a color face (NULL for
-			 * other faces); used for VS16 lookups and to
-			 * decide whether the face can draw a character. */
+				 * other faces); used for VS16 lookups and to
+				 * decide whether the face can draw a character. */
     double angle;	      /* Current rotation angle. */
 
     /* HarfBuzz font mapping. */
@@ -89,9 +84,18 @@ typedef struct {
 } UnixFtFace;
 
 /*
+ * ---------------------------------------------------------------
  * FaceHasChar --
+ *
  *	True if the face can draw ucs4: for a color face this tests the
  *	complete cmap, not the restricted claim set.
+ *
+ * Results:
+ *	Returns true if the face has a glyph for ucs4, false otherwise.
+ *
+ * Side effects:
+ *	None.
+ * ---------------------------------------------------------------
  */
 
 static inline bool
@@ -291,6 +295,13 @@ static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
  *    Note: All other scripts requiring complex shaping (Arabic, Indic,
  *    Thai, CJK ideographs, supplementary-plane characters, etc.) return 0 to
  *    ensure HarfBuzz handling.
+ *
+ * Results:
+ *	Returns true if the string can use the simple fast path,
+ *	false if it requires HarfBuzz/SheenBidi shaping.
+ *
+ * Side effects:
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -976,20 +987,7 @@ AssignEmojiCoverage(
     }
 }
 
-/*
- * ---------------------------------------------------------------
- * InitFont --
- *
- *   Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
- *   also allocates a new UnixFtFont.
- *
- * Results:
- *   On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
- *
- * Side effects:
- *   Allocates memory, loads fonts, initializes shaper.
- * ---------------------------------------------------------------
- */
+
 
 static void FinishedWithFont(UnixFtFont *fontPtr);
 
@@ -1022,6 +1020,21 @@ InitFontErrorProc(
     return 0;
 }
 
+/*
+ * ---------------------------------------------------------------
+ * InitFont --
+ *
+ *   Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
+ *   also allocates a new UnixFtFont.
+ *
+ * Results:
+ *   On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
+ *
+ * Side effects:
+ *   Allocates memory, loads fonts, initializes shaper.
+ * ---------------------------------------------------------------
+ */
+ 
 static UnixFtFont *
 InitFont(
     Tk_Window tkwin,
@@ -2924,6 +2937,12 @@ Tk_DrawChars(
  *   We shape the full string for correct joining/ligatures, then draw
  *   only the glyphs whose clusters fall within [rangeStart, rangeEnd).
  *   No clip rectangle is needed: we simply skip out-of-range glyphs.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Draws the selected substring on drawable.
  * ---------------------------------------------------------------
  */
 
