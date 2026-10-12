@@ -5452,8 +5452,7 @@ test panedwindow-30.3 {sash cursor: restored after the drag if not over the sash
     .p add [frame .p.l -width 100 -height 50] [frame .p.r -width 100 -height 50]
     pack .p
     update
-    event generate . <Motion> -warp 1 -x 2000 -y 2000
-    controlPointerWarpTiming
+    movePointerAwayFromTestArea
 } -body {
     set x [expr {[lindex [.p sash coord 0] 0] + 2}]
     event generate .p <Motion> -x $x -y 10

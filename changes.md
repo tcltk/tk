@@ -75,6 +75,7 @@ to the userbase.
  - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
  - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
  - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
+ - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
  - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
  - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
  - [MS-Win: toplevel menu does not honor font and color](https://core.tcl-lang.org/tk/tktview/11bd4a)
@@ -98,6 +99,12 @@ to the userbase.
  - [Do not crash or leave dangling entries when grid or place is used on a half-dead window](https://core.tcl-lang.org/tk/tktview/302055)
  - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
  - [Windows: clipboard clear crashed when its window had not been made yet](https://core.tcl-lang.org/tk/tktview/bd3528)
+ - [Bug regarding numeric keypad on solaris](https://core.tcl-lang.org/tk/tktview/481308)
+ - [w32: Creating Alt-Key binding on all breaks default handling](https://core.tcl-lang.org/tk/tktview/145727)
+ - [Container is not displaying embedded window](https://core.tcl-lang.org/tk/tktview/da5eab)
+ - [tk_messageBox unresponsive on global grab](https://core.tcl-lang.org/tk/tktview/281400)
+ - [Canvas widget loses track of mouse](https://core.tcl-lang.org/tk/tktview/220902)
+ - [tkMenuFind doesn't locate cloned menubars](https://core.tcl-lang.org/tk/tktview/223112)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
