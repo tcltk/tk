@@ -20,15 +20,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <hb.h>
-#include <hb-ft.h>
 #include <SheenBidi/SheenBidi.h>
-#include <mojibake.h>   /* UTS #51 emoji properties - shared with tkFont.c */
 
-/* Generic emoji classification shared by the font engines (mojibake).
- * Declared in generic/tkFont.c and internal stubs.
+/*
+ * The generic emoji helpers TkFontEmojiPresentation() and
+ * TkFontEmojiContinuation() (generic/tkFont.c) are declared through
+ * tkInt.h / tkIntDecls.h.
  */
-extern int TkFontEmojiPresentation(int ch, int next);
-extern int TkFontEmojiContinuation(int ch, int inEmoji);
+
+#ifndef FC_COLOR
+#define FC_COLOR "color"
+#endif
 
 #define MAX_CACHED_COLORS 200
 #define MAX_GLYPHS 2048
@@ -65,7 +67,12 @@ typedef struct {
     XftFont *ftFont;	   /* Rotated font. */
     XftFont *ft0Font;	  /* Unrotated font. */
     FcPattern *source;	 /* Fontconfig pattern. */
-    FcCharSet *charset;	/* Supported characters. */
+    FcCharSet *charset;	/* Characters this face claims in the face search.
+			 * For a color face this is restricted to the code
+			 * points with default emoji presentation. */
+    FcCharSet *fullCharset;	/* Complete cmap of a color face (NULL for
+			 * other faces); used for VS16 lookups and to
+			 * decide whether the face can draw a character. */
     double angle;	      /* Current rotation angle. */
 
     /* HarfBuzz font mapping. */
@@ -80,6 +87,23 @@ typedef struct {
     double ascender;	   /* Font ascender in design units. */
     double descender;	  /* Font descender in design units. */
 } UnixFtFace;
+
+/*
+ * FaceHasChar --
+ *	True if the face can draw ucs4: for a color face this tests the
+ *	complete cmap, not the restricted claim set.
+ */
+
+static inline bool
+FaceHasChar(
+    const UnixFtFace *face,
+    FcChar32 ucs4)
+{
+    const FcCharSet *cs = face->fullCharset ? face->fullCharset
+	    : face->charset;
+
+    return cs && FcCharSetHasChar(cs, ucs4);
+}
 
 /*
  * ---------------------------------------------------------------
@@ -293,6 +317,10 @@ IsSimpleOnly(const char *str, int len)
 	 * FORCE through HarfBuzz + Bidi for scripts that need it:
 	 */
 	if (
+	    /* Emoji: presentation depends on the following code point. */
+	    uc == 0x200D || uc == 0xFE0E || uc == 0xFE0F || uc == 0x20E3 ||
+	    (uc >= 0x231A && TkFontEmojiPresentation((int) uc, -1) == 1) ||
+
 	    /* Right-to-Left scripts. */
 	    (uc >= 0x0590 && uc <= 0x05FF) ||	   /* Hebrew */
 	    (uc >= 0x0600 && uc <= 0x06FF) ||	   /* Arabic */
@@ -842,88 +870,36 @@ GetBidiRuns(
 }
 
 
-#ifndef FC_COLOR
-#define FC_COLOR "color"
-#endif
-
-/*
- * ---------------------------------------------------------------
- * BuildEmojiCharSet --
- *
- *   Build the set of code points that should be drawn from a color
- *   emoji face when one is available. This deliberately excludes
- *   ASCII digits, '#', '*', the copyright/registered signs and the
- *   joiner U+200D (which Arabic/Indic shaping needs in the text face),
- *   even though Noto Color Emoji covers some of them.
- *
- *   The ranges are hand-picked from the Unicode emoji data files to
- *   cover the code points that have a color presentation but are also
- *   commonly covered by monochrome symbol fonts (DejaVu, Symbola,
- *   Noto Sans Symbols), which Fontconfig tends to sort ahead of Noto
- *   Color Emoji. Restricting the color face's charset to these ranges
- *   lets it win those code points without stealing ordinary text
- *   characters it also happens to contain.
- *
- * Results:
- *   A new FcCharSet, to be destroyed by the caller, or NULL if the
- *   set could not be allocated.
- *
- * Side effects:
- *   Allocates an FcCharSet. The caller is responsible for destroying
- *   it with FcCharSetDestroy().
- * ---------------------------------------------------------------
- */
-
-static FcCharSet *
-BuildEmojiCharSet(void)
-{
-    static const struct { FcChar32 lo, hi; } ranges[] = {
-	{0x203C, 0x203C}, {0x2049, 0x2049}, {0x2122, 0x2122}, {0x2139, 0x2139},
-	{0x2194, 0x21AA}, {0x20E3, 0x20E3}, {0x231A, 0x23FF}, {0x24C2, 0x24C2},
-	{0x25AA, 0x25FE}, {0x2600, 0x27BF}, {0x2934, 0x2935}, {0x2B05, 0x2B07},
-	{0x2B1B, 0x2B1C}, {0x2B50, 0x2B50}, {0x2B55, 0x2B55}, {0x3030, 0x3030},
-	{0x303D, 0x303D}, {0x3297, 0x3297}, {0x3299, 0x3299}, {0xFE0F, 0xFE0F},
-	{0x1F000, 0x1FAFF}
-    };
-    FcCharSet *cs = FcCharSetCreate();
-    size_t i;
-    FcChar32 c;
-
-    if (!cs) {
-	return NULL;
-    }
-    for (i = 0; i < sizeof(ranges) / sizeof(ranges[0]); i++) {
-	for (c = ranges[i].lo; c <= ranges[i].hi; c++) {
-	    FcCharSetAddChar(cs, c);
-	}
-    }
-    return cs;
-}
-
 /*
  * ---------------------------------------------------------------
  * AssignEmojiCoverage --
  *
- *   Faces are searched in order and the first face whose charset has
- *   the character wins. A monochrome face that happens to cover emoji
- *   (DejaVu, Symbola, Noto Sans Symbols...) is usually sorted ahead of
- *   Noto Color Emoji, so it claimed the emoji and they were drawn
- *   monochrome. Fix this in the charsets rather than at every lookup
- *   site:
- *     - a color face only claims code points in the emoji set, so
- *       digits and punctuation it also contains stay in the text face;
- *     - every other face gives up the emoji code points that a color
- *       face really covers, so the color face wins them.
- *   Text faces keep everything else, so Latin/CJK/etc. are unaffected.
+ *   Decide which face claims which emoji, following UTS #51 through
+ *   the generic helper TkFontEmojiPresentation().
+ *
+ *   A color face (Noto Color Emoji) keeps its complete cmap in
+ *   fullCharset, and its claim set (charset) is restricted to the code
+ *   points that have emoji presentation by default, i.e.
+ *   TkFontEmojiPresentation(c, -1) == 1. Text-presentation characters
+ *   (U+2600, U+2764, U+2122, arrows, digits, '#', '*', ...) are not
+ *   claimed, so they stay in the text faces unless a VS16 follows, in
+ *   which case GetRunFaceIndex() finds the color face through
+ *   fullCharset. VS15 therefore works: the text faces still have the
+ *   character.
+ *
+ *   The code points the color faces claim are then removed from every
+ *   text face, so that charset-ordered lookups (which do not see the
+ *   following variation selector) also give those characters to the
+ *   color face. The requested font does not keep them: an emoji with
+ *   default emoji presentation is drawn in color on X11.
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   Modifies fontPtr->faces[i].charset for every face and sets
- *   fontPtr->faces[i].isColor. Any charset that is replaced is
- *   destroyed; the caller must not hold pointers into those sets
- *   across this call.
+ *   Sets faces[i].isColor and faces[i].fullCharset, and modifies
+ *   faces[i].charset. Replaced charsets are destroyed; the caller must
+ *   not hold pointers into them across this call.
  * ---------------------------------------------------------------
  */
 
@@ -931,48 +907,58 @@ static void
 AssignEmojiCoverage(
     UnixFtFont *fontPtr)
 {
-    FcCharSet *emoji, *colorCover = NULL;
+    FcCharSet *colorCover = NULL;
     int i;
 
     for (i = 0; i < fontPtr->nfaces; i++) {
-	FcBool color = FcFalse;
 	UnixFtFace *face = &fontPtr->faces[i];
+	FcBool color = FcFalse;
+	FcCharSet *claim;
+	FcChar32 map[FC_CHARSET_MAP_SIZE], base, next;
 
 	face->isColor = false;
-	if (FcPatternGetBool(face->source, FC_COLOR, 0, &color) == FcResultMatch
-		&& color && face->charset) {
-	    face->isColor = true;
+	if (FcPatternGetBool(face->source, FC_COLOR, 0, &color) != FcResultMatch
+		|| !color || !face->charset || face->fullCharset) {
+	    continue;
 	}
-    }
+	face->isColor = true;
 
-    emoji = BuildEmojiCharSet();
-    if (!emoji) {
-	return;
-    }
+	claim = FcCharSetCreate();
+	if (!claim) {
+	    continue;
+	}
+	for (base = FcCharSetFirstPage(face->charset, map, &next);
+		base != FC_CHARSET_DONE;
+		base = FcCharSetNextPage(face->charset, map, &next)) {
+	    int j, k;
 
-    /* Restrict color faces to emoji and accumulate what they cover. */
-    for (i = 0; i < fontPtr->nfaces; i++) {
-	UnixFtFace *face = &fontPtr->faces[i];
+	    for (j = 0; j < FC_CHARSET_MAP_SIZE; j++) {
+		if (!map[j]) {
+		    continue;
+		}
+		for (k = 0; k < 32; k++) {
+		    FcChar32 c = base + (FcChar32) j * 32 + (FcChar32) k;
 
-	if (face->isColor) {
-	    FcCharSet *restricted = FcCharSetIntersect(face->charset, emoji);
-	    FcCharSet *merged;
-
-	    if (!restricted) {
-		continue;
+		    if ((map[j] & (1U << k))
+			    && TkFontEmojiPresentation((int) c, -1) == 1) {
+			FcCharSetAddChar(claim, c);
+		    }
+		}
 	    }
-	    FcCharSetDestroy(face->charset);
-	    face->charset = restricted;
-	    merged = colorCover ? FcCharSetUnion(colorCover, restricted)
-		    : FcCharSetCopy(restricted);
-	    if (colorCover) {
-		FcCharSetDestroy(colorCover);
-	    }
+	}
+	face->fullCharset = face->charset;
+	face->charset = claim;
+	if (colorCover) {
+	    FcCharSet *merged = FcCharSetUnion(colorCover, claim);
+
+	    FcCharSetDestroy(colorCover);
 	    colorCover = merged;
+	} else {
+	    colorCover = FcCharSetCopy(claim);
 	}
     }
 
-    /* Make every non-color face give those code points up. */
+    /* Make every non-color face give the claimed code points up. */
     if (colorCover) {
 	for (i = 0; i < fontPtr->nfaces; i++) {
 	    UnixFtFace *face = &fontPtr->faces[i];
@@ -989,7 +975,6 @@ AssignEmojiCoverage(
 	}
 	FcCharSetDestroy(colorCover);
     }
-    FcCharSetDestroy(emoji);
 }
 
 /*
@@ -1119,6 +1104,7 @@ InitFont(
     fontPtr->faces[i].hbFace     = NULL;
     fontPtr->faces[i].isLoaded   = false;
     fontPtr->faces[i].isColor    = false;
+	fontPtr->faces[i].fullCharset = NULL;
     fontPtr->faces[i].unitsPerEm = 0.0;
     fontPtr->faces[i].ascender   = 0.0;
     fontPtr->faces[i].descender  = 0.0;
@@ -1273,6 +1259,9 @@ FinishedWithFont(
 	}
 	if (fontPtr->faces[i].charset) {
 	    FcCharSetDestroy(fontPtr->faces[i].charset);
+	}
+	if (fontPtr->faces[i].fullCharset) {
+	    FcCharSetDestroy(fontPtr->faces[i].fullCharset);
 	}
     }
     if (fontPtr->faces) {
@@ -1463,78 +1452,82 @@ GetHbFont(
 
 static int
 GetRunFaceIndex(
-		UnixFtFont *fontPtr,
-		FcChar32 *ucs4Chars,
-		int runStart,
-		int runLen,
-		int totalChars)
+	UnixFtFont *fontPtr,
+	FcChar32 *ucs4Chars,
+	int runStart,
+	int runLen,
+	int totalChars)
 {
-    if (runLen <= 0 || runStart < 0) return 0;
-    FcChar32 uc = ucs4Chars[runStart];
+    FcChar32 uc;
     X11Shaper *shaper = &fontPtr->shaper;
+    int next = -1, presentation, cacheIdx, fi;
 
-    int next = -1;
-    if (runStart + 1 < totalChars) {
-        next = (int) ucs4Chars[runStart + 1];
+    if (runLen <= 0 || runStart < 0) {
+	return 0;
     }
-
-    int presentation = TkFontEmojiPresentation((int) uc, next);
+    uc = ucs4Chars[runStart];
+    if (runStart + 1 < totalChars) {
+	next = (int) ucs4Chars[runStart + 1];
+    }
 
     /*
-     * Generic emoji presentation logic:
+     * Generic emoji presentation (UTS #51), from the character and the
+     * code point after it:
      *  0 = text presentation (VS15 forces text, or not emoji)
-     *  1 = emoji presentation by default (color font preferred unless
-     *      text font has it)
-     *  2 = VS16 after emoji (heart + VS16, keycap) - color font preferred
-     *      over the font asked for.
+     *  1 = emoji presentation by default - color face preferred
+     *  2 = VS16 after an emoji character (heart + VS16, keycap) - color
+     *      face preferred.
+     * On X11 a color face wins over the requested font in both cases
+     * (see AssignEmojiCoverage).
      */
 
-    /* Direct-mapped hash index - bypass cache for emoji VS cases. */
-    int cacheIdx = uc & 63;
-    if (presentation == 0 && shaper->charCache[cacheIdx].uc == uc) {
-	return shaper->charCache[cacheIdx].faceIdx;
-    }
+    presentation = TkFontEmojiPresentation((int) uc, next);
 
-    /* For emoji presentation, prefer a color face that covers the char. */
-    if (presentation != 0) {
-        for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-            if (!fontPtr->faces[fi].isColor) continue;
-            if (fontPtr->faces[fi].charset
-                    && FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                shaper->charCache[cacheIdx].uc = uc;
-                shaper->charCache[cacheIdx].faceIdx = fi;
-                return fi;
-            }
-        }
-        /* If presentation == 2 (VS16), we still want color even if no
-         * explicit charset match - fallback to first color face.
-         */
-        if (presentation == 2) {
-            for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-                if (fontPtr->faces[fi].isColor) {
-                    return fi;
-                }
-            }
-        }
-        /* For presentation == 1, if no color face has it, fall through to
-         * normal search so a text face can still render it.
-         */
+    /*
+     * The per-character cache holds the presentation 0 answer only: the
+     * result for presentation 1 and 2 depends on the following code
+     * point, so it is never read or written for them.
+     */
+
+    cacheIdx = uc & 63;
+    if (presentation == 0) {
+	if (shaper->charCache[cacheIdx].uc == uc) {
+	    return shaper->charCache[cacheIdx].faceIdx;
+	}
+    } else {
+	/* The full cmap decides, so VS16 bases (U+2764...) are found. */
+	for (fi = 0; fi < fontPtr->nfaces; fi++) {
+	    if (fontPtr->faces[fi].isColor
+		    && FaceHasChar(&fontPtr->faces[fi], uc)) {
+		return fi;
+	    }
+	}
+	/*
+	 * No color face has it: fall through to the normal search so a
+	 * text face can still draw it instead of .notdef.
+	 */
     }
 
     /* Check existing loaded faces in order. */
-    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
-	if (fontPtr->faces[fi].charset && FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-	    shaper->charCache[cacheIdx].uc = uc;
-	    shaper->charCache[cacheIdx].faceIdx = fi;
+    for (fi = 0; fi < fontPtr->nfaces; fi++) {
+	if (fontPtr->faces[fi].charset
+		&& FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+	    if (presentation == 0) {
+		shaper->charCache[cacheIdx].uc = uc;
+		shaper->charCache[cacheIdx].faceIdx = fi;
+	    }
 	    return fi;
 	}
     }
 
     /* Fallback to face 0. */
-    shaper->charCache[cacheIdx].uc = uc;
-    shaper->charCache[cacheIdx].faceIdx = 0;
+    if (presentation == 0) {
+	shaper->charCache[cacheIdx].uc = uc;
+	shaper->charCache[cacheIdx].faceIdx = 0;
+    }
     return 0;
 }
+
 /*
  * ---------------------------------------------------------------
  * X11Shaper_ShapeString --
@@ -1835,10 +1828,8 @@ X11Shaper_ShapeString(
 		 * at draw time, leaving only a blank gap.
 		 */
 		{
-		    FcCharSet *anchorCs = fontPtr->faces[runFaceIndex].charset;
-
-		    if (!anchorCs ||
-			    !FcCharSetHasChar(anchorCs, ucs4Chars[subrunStart])) {
+		    if (!FaceHasChar(&fontPtr->faces[runFaceIndex],
+			    ucs4Chars[subrunStart])) {
 			runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1, charCount);
 			subrunScript = HB_SCRIPT_COMMON;
 		    }
@@ -1885,12 +1876,19 @@ X11Shaper_ShapeString(
 			FcChar32 nc = ucs4Chars[subrunEnd];
 
 			/*
-			 * ZWJ, VS16 and the keycap mark belong to the emoji
-			 * sequence they follow; keep them in the color face's
-			 * subrun so HarfBuzz can form the sequence glyph.
+			 * Variation selectors, ZWJ, keycap, tag characters and
+			 * (inside a cluster) skin tone modifiers belong to the
+			 * emoji sequence they follow: keep them in the color
+			 * face's subrun so HarfBuzz can form the sequence glyph.
+			 * The character after a ZWJ joins the cluster too, if
+			 * the color face has it (e.g. U+2642 in a profession
+			 * sequence, which is not claimed by the face search).
 			 */
-			if ((nc == 0x200D || nc == 0xFE0F || nc == 0x20E3) &&
-				fontPtr->faces[runFaceIndex].isColor) {
+			if (fontPtr->faces[runFaceIndex].isColor
+				&& (TkFontEmojiContinuation((int) nc, 1)
+				|| (ucs4Chars[subrunEnd - 1] == 0x200D
+					&& FaceHasChar(&fontPtr->faces[runFaceIndex],
+						nc)))) {
 			    subrunEnd++;
 			    continue;
 			}

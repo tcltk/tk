@@ -32,13 +32,13 @@
 #include <hb-ot.h>
 #include <SheenBidi/SheenBidi.h>
 #include "stb_truetype.h"
-#include <mojibake.h>   /* UTS #51 emoji properties - shared with tkFont.c */
+#include <mojibake.h>   /* UTS #51 emoji properties (mjb_*), also used by tkFont.c */
 
-/* Generic emoji classification shared by the font engines (mojibake).
- * Declared in generic/tkFont.c and internal stubs.
+/*
+ * The generic emoji helpers TkFontEmojiPresentation() and
+ * TkFontEmojiContinuation() (generic/tkFont.c) are declared through
+ * tkInt.h / tkIntDecls.h.
  */
-extern int TkFontEmojiPresentation(int ch, int next);
-extern int TkFontEmojiContinuation(int ch, int inEmoji);
 
 /*
  * Color emoji (PNG bitmap strikes).  stb_image's implementation lives in
@@ -1620,6 +1620,17 @@ EmojiKindAt(const FcChar32 *ucs4, int idx, int count)
     }
 
     /*
+     * The character after a ZWJ inside a color cluster belongs to the
+     * cluster, whatever its own presentation (e.g. U+2642 or U+2695
+     * without VS16 in a profession sequence); TkFontEmojiContinuation()
+     * does not cover it, so this rule lives here.
+     */
+    if (idx > 0 && ucs4[idx - 1] == 0x200D
+            && EmojiKindAt(ucs4, idx - 1, count) == EMOJI_KIND_COLOR) {
+        return EMOJI_KIND_COLOR;
+    }
+
+    /*
      * Walk back over generic continuation characters (ZWJ, VS16/VS15,
      * keycap, tags, skin-tone modifiers inside a cluster) to the
      * owning base character.  Uses TkFontEmojiContinuation() from
@@ -1740,17 +1751,18 @@ GetColorEmojiFaceIndex(
         if (!face->source || !IsColorFcPattern(face->source)) continue;
         if (!IsColorBitmapFace(fontPtr, fi)) continue;
 
+        /* Unknown coverage: do not guess, the glyphs could be .notdef. */
+        if (!face->charset) continue;
+
         bool ok = true;
-        if (face->charset) {
-            for (int i = start; i < end && ok; i++) {
-                FcChar32 uc = ucs4[i];
-                /* Use generic continuation - VS, ZWJ, keycap, tags are
-                 * consumed by HarfBuzz GSUB, not needing charset coverage. */
-                if (TkFontEmojiContinuation((int)uc, 1)) {
-                    continue;
-                }
-                if (!FcCharSetHasChar(face->charset, uc)) ok = false;
+        for (int i = start; i < end && ok; i++) {
+            FcChar32 uc = ucs4[i];
+            /* Use generic continuation - VS, ZWJ, keycap, tags are
+             * consumed by HarfBuzz GSUB, not needing charset coverage. */
+            if (TkFontEmojiContinuation((int)uc, 1)) {
+                continue;
             }
+            if (!FcCharSetHasChar(face->charset, uc)) ok = false;
         }
         if (ok) return fi;
     }
