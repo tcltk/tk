@@ -8491,3 +8491,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-11 (bug) [da5eab] Container is not displaying embedded window (storchaka)
 
 2026-10-11 (bug) [281400] tk_messageBox unresponsive on global grab (storchaka)
+
+2026-10-12 (bug) [220902] Canvas widget loses track of mouse (storchaka)
