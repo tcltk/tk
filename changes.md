@@ -110,6 +110,7 @@ to the userbase.
  - [w32: Creating Alt-Key binding on all breaks default handling](https://core.tcl-lang.org/tk/tktview/145727)
  - [Container is not displaying embedded window](https://core.tcl-lang.org/tk/tktview/da5eab)
  - [tk_messageBox unresponsive on global grab](https://core.tcl-lang.org/tk/tktview/281400)
+ - [Canvas widget loses track of mouse](https://core.tcl-lang.org/tk/tktview/220902)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
