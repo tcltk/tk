@@ -28,6 +28,11 @@ resetWindows
 #
 
 testConstraint testprintf [llength [info command testprintf]]
+# "tk accessible" exists only if Tk was built with accessibility support
+# (on X11: ATK and libspeechd).
+testConstraint accessibility [expr {
+    [catch {tk accessible} msg] == 0 || ![string match "unknown or ambiguous subcommand*" $msg]
+}]
 
 #
 # TESTS
@@ -38,7 +43,8 @@ test tk-1.1 {tk command: general} -body {
 } -returnCodes error -result {wrong # args: should be "tk subcommand ?arg ...?"}
 test tk-1.2 {tk command: general} -constraints {failsOnXQuartz} -body {
     tk xyz
-} -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be accessible, appname, attribtable, busy, caret, fileicon, fontchooser, inactive, print, scaling, sysnotify, systray, useinputmethods, or windowingsystem}
+} -returnCodes error -result [format {unknown or ambiguous subcommand "xyz": must be %sappname, attribtable, busy, caret, fileicon, fontchooser, inactive, print, scaling, sysnotify, systray, useinputmethods, or windowingsystem} \
+    [expr {[testConstraint accessibility] ? "accessible, " : ""}]]
 
 #
 # COMMON TEST SETUP
