@@ -43,11 +43,13 @@ testutils import geometry
 # TESTS
 #
 
-test winfont-1.1 {TkpGetNativeFont procedure: not native} -body {
+test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
+    win
+} -body {
     catch {font delete xyz}
     font measure {} xyz
 } -returnCodes error -result {font "" does not exist}
-test winfont-1.2 {TkpGetNativeFont procedure: native} -body {
+test winfont-1.2 {TkpGetNativeFont procedure: native} -constraints win -body {
     font measure ansifixed 0
     font measure ansi 0
     font measure device 0
@@ -58,19 +60,29 @@ test winfont-1.2 {TkpGetNativeFont procedure: native} -body {
 } -result {}
 
 
-test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -body {
+test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
+    win
+} -body {
     expr {[font actual {-size -10} -size] > 0}
 } -result 1
-test winfont-2.2 {TkpGetFontFromAttributes procedure: pointsize} -body {
+test winfont-2.2 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
+    win
+} -body {
     expr {[font actual {-family Arial} -size] > 0}
 } -result 1
-test winfont-2.3 {TkpGetFontFromAttributes procedure: normal weight} -body {
+test winfont-2.3 {TkpGetFontFromAttributes procedure: normal weight} -constraints {
+    win
+} -body {
     font actual {-weight normal} -weight
 } -result {normal}
-test winfont-2.4 {TkpGetFontFromAttributes procedure: bold weight} -body {
+test winfont-2.4 {TkpGetFontFromAttributes procedure: bold weight} -constraints {
+    win
+} -body {
     font actual {-weight bold} -weight
 } -result {bold}
-test winfont-2.5 {TkpGetFontFromAttributes procedure: no family} -body {
+test winfont-2.5 {TkpGetFontFromAttributes procedure: no family} -constraints {
+    win
+} -body {
     catch {expr {[font actual {-size 10} -size]}}
 } -result 0
 test winfont-2.6 {TkpGetFontFromAttributes procedure: family} -constraints {
@@ -105,19 +117,21 @@ test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constrai
     lappend x [font actual {-family "Geneva"} -family]
     lappend x [font actual {-family "Arial"} -family]
 } -match regexp -result {Helvetica (Helvetica|Geneva) Arial}
-test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -body {
+test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -constraints {
+    win
+} -body {
     # No way to get it to fail! Any font name is acceptable.
 } -result {}
 
 
-test winfont-3.1 {TkpDeleteFont procedure} -body {
+test winfont-3.1 {TkpDeleteFont procedure} -constraints win -body {
     catch {font delete xyz}
     font actual {-family xyz}
     set x {}
 } -result {}
 
 
-test winfont-4.1 {TkpGetFontFamilies procedure} -body {
+test winfont-4.1 {TkpGetFontFamilies procedure} -constraints win -body {
     font families
     set x {}
 } -result {}
@@ -144,7 +158,7 @@ set ax [winfo reqwidth .t.l]
 set ay [winfo reqheight .t.l]
 
 test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraints {
-    notAqua
+    win
 } -setup {
     destroy .t.l
 } -body {
@@ -163,7 +177,7 @@ test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraint
 } -result {1 1}
 
 test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -constraints {
-    notAqua
+    win
 } -setup {
     destroy .t.l
 }  -body {
@@ -182,7 +196,7 @@ test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -cons
 } -result {1 1}
 
 test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
-    notAqua
+    win
 } -setup {
     destroy .t.l
 }  -body {
@@ -201,7 +215,7 @@ test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
 } -result {1 1}
 
 test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
-    notAqua
+    win
 } -setup {
     destroy .t.l
 }  -body {
@@ -219,7 +233,9 @@ test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
     destroy .t.l
 } -result {1 1}
 
-test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -setup {
+test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -constraints {
+    win
+} -setup {
     destroy .t.c
 }  -body {
     canvas .t.c -closeenough 0
@@ -234,7 +250,9 @@ test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -setup {
     destroy .t.c
 } -result 2
 
-test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -setup {
+test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -constraints {
+    win
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -252,7 +270,7 @@ test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -setup {
 } -result {1 1}
 
 test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
-    notAqua
+    win
 } -setup {
     destroy .t.l
 }  -body {
@@ -272,7 +290,9 @@ test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
 
 # After adding Uniscribe support for RTL text, this test's assumptions about
 # space are no longer valid.
-test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -setup {
+test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constraints {
+    win
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -291,7 +311,9 @@ test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -setup {
 
 # After adding Uniscribe support for RTL text, this test's assumptions about
 # space are no longer valid.
-test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -setup {
+test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -constraints {
+    win
+} -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -309,7 +331,7 @@ test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -setup
 } -match glob -result *
 
 test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -constraints {
-    notAqua
+    win
 } -setup {
     destroy .t.l
 }  -body {
@@ -349,7 +371,7 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
 } -result 1
 
 
-test winfont-6.1 {Tk_DrawChars procedure: loop test} -setup {
+test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
     destroy .t.l
 }  -body {
     label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
@@ -363,7 +385,7 @@ test winfont-6.1 {Tk_DrawChars procedure: loop test} -setup {
 } -result {}
 
 
-test winfont-7.1 {InitFont procedure: use old font} -setup {
+test winfont-7.1 {InitFont procedure: use old font} -constraints win -setup {
     destroy .c
 } -setup {
     catch {font delete xyz}
@@ -380,7 +402,9 @@ test winfont-7.2 {InitFont procedure: extract info from logfont} -constraints {
 } -body {
     font actual {arial 10 bold italic underline overstrike}
 } -result {-family Arial -size 10 -weight bold -slant italic -underline 1 -overstrike 1}
-test winfont-7.3 {InitFont procedure: extract info from textmetric} -body {
+test winfont-7.3 {InitFont procedure: extract info from textmetric} -constraints {
+    win
+} -body {
     font metric {arial 10 bold italic underline overstrike} -fixed
 } -result 0
 test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints {
@@ -394,6 +418,360 @@ test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints
 #
 
 testutils forget geometry
+#
+# Subfont selection for emoji (UTS #51): a color emoji font for the default emoji
+# presentation and for VS16 sequences, text presentation left to the usual fallbacks,
+# a color font preferred over a base font that has the emoji too, and a ZWJ sequence
+# shaped as one glyph.
+#
+testConstraint segoeEmoji [expr {"Segoe UI Emoji" in [font families]}]
+testConstraint segoeSymbol [expr {"Segoe UI Symbol" in [font families]}]
+
+test winfont-8.1 {FindSubFontForChar: default emoji presentation gets the color font} -constraints {
+    win segoeEmoji
+} -body {
+    font actual TkDefaultFont -family -- [format %c 0x1F600]
+} -result {Segoe UI Emoji}
+test winfont-8.2 {FindSubFontForChar: text presentation is not sent to the color font} -constraints {
+    win segoeEmoji segoeSymbol
+} -body {
+    expr {[font actual TkDefaultFont -family -- [format %c 0x2764]] eq "Segoe UI Emoji"}
+} -result 0
+test winfont-8.3 {FindSubFontForChar: a color font wins over a base font that has the emoji} -constraints {
+    win segoeEmoji segoeSymbol
+} -body {
+    # Segoe UI Symbol has an outline for the grinning face; users expect color.
+    font actual {{Segoe UI Symbol} 14} -family -- [format %c 0x1F600]
+} -result {Segoe UI Emoji}
+test winfont-8.4 {TkWinShapeString: ZWJ sequence shaped as one glyph} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set zwj "[format %c 0x1F469][format %c 0x200D][format %c 0x1F4BB]"
+    expr {[font measure $f $zwj] == [font measure $f [format %c 0x1F469]]}
+} -result 1
+test winfont-8.5 {TkWinShapeString: VS16 selects the emoji glyph} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f "[format %c 0x2764][format %c 0xFE0F]"]
+	    > [font measure $f [format %c 0x2764]]}
+} -result 1
+test winfont-8.6 {TkWinShapeString: skin tone modifier joins its base} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f "[format %c 0x1F44D][format %c 0x1F3FD]"]
+	    == [font measure $f [format %c 0x1F44D]]}
+} -result 1
+test winfont-8.7 {TkWinShapeString: text around an emoji stays in the base font} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set e [format %c 0x1F600]
+    expr {[font measure $f "a${e}b"]
+	    == [font measure $f a] + [font measure $f $e] + [font measure $f b]}
+} -result 1
+test winfont-8.8 {TkWinShapeString: VS15 stays with its base character} -constraints {
+    win segoeSymbol
+} -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f "[format %c 0x2764][format %c 0xFE0E]"]
+	    == [font measure $f [format %c 0x2764]]}
+} -result 1
+
+#
+# Color emoji: the color layers of a COLR font are drawn (DirectWrite/Direct2D), text
+# presentation and glyphs without layers stay in the text color (GDI).  The pixels are
+# read back with testwinpixel on a grid inside the glyph: a saturated pixel (chroma
+# above 100) can only come from a color layer, never from a black glyph on white.
+#
+testConstraint testwinpixel [llength [info commands testwinpixel]]
+testConstraint testwingdiobjects [llength [info commands testwingdiobjects]]
+
+# The pixels are read from the screen: keep the test window above everything.
+wm attributes . -topmost 1
+raise .
+
+proc winfontColoredSamples {w} {
+    set n 0
+    set width [winfo width $w]
+    set height [winfo height $w]
+    foreach fx {0.35 0.5 0.65} {
+	foreach fy {0.3 0.45 0.6} {
+	    set c [testwinpixel $w [expr {int($width * $fx)}] [expr {int($height * $fy)}]]
+	    scan $c "#%2x%2x%2x" r g b
+	    if {max($r, $g, $b) - min($r, $g, $b) > 100} {
+		incr n
+	    }
+	}
+    }
+    return $n
+}
+
+test winfont-9.1 {TkWinDrawColorGlyphs: color layers of an emoji are drawn} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    label .l -text [format %c 0x1F600] -font {{Segoe UI} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    expr {[winfontColoredSamples .l] >= 3}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-9.2 {TkWinDrawColorGlyphs: text presentation stays in the text color} -constraints {
+    win segoeSymbol testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    label .l -text [format %c 0x2764] -font {{Segoe UI} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    expr {[winfontColoredSamples .l] <= 1}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-9.3 {TkWinDrawColorGlyphs: a run without color layers is left to GDI} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    label .l -text a -font {{Segoe UI Emoji} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    expr {[winfontColoredSamples .l] <= 1}
+} -cleanup {
+    destroy .l
+} -result 1
+
+# Scan the label on a grid of 3 pixels for a pixel of the given dominant color.
+proc winfontHasPixel {w test} {
+    set width [winfo width $w]
+    set height [winfo height $w]
+    for {set x 1} {$x < $width} {incr x 3} {
+	for {set y 1} {$y < $height} {incr y 3} {
+	    scan [testwinpixel $w $x $y] "#%2x%2x%2x" r g b
+	    if {[expr $test]} {
+		return 1
+	    }
+	}
+    }
+    return 0
+}
+
+test winfont-9.4 {glyph cache: the same emoji drawn twice (second draw from the cache)} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l1 .l2
+} -body {
+    foreach w {.l1 .l2} {
+	label $w -text [format %c 0x1F600] -font {{Segoe UI} 72} -foreground black \
+	    -background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+	pack $w -side left
+    }
+    update
+    expr {[winfontColoredSamples .l1] >= 3 && [winfontColoredSamples .l2] >= 3}
+} -cleanup {
+    destroy .l1 .l2
+} -result 1
+test winfont-9.5 {glyph cache: a glyph in the text color follows a color change} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    # "a" has no color layers but shares the run of the emoji: drawn from the cache
+    # in the text color, and rendered again when that color changes.
+    label .l -text "a[format %c 0x1F600]" -font {{Segoe UI Emoji} 72} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    set before [winfontHasPixel .l {$r > 200 && $g < 60 && $b < 60}]
+    .l configure -foreground red
+    update
+    list $before [winfontHasPixel .l {$r > 200 && $g < 60 && $b < 60}]
+} -cleanup {
+    destroy .l
+} -result {0 1}
+test winfont-9.6 {glyph cache: a new size and a new scaling render fresh glyphs} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l .m
+    set scaling [tk scaling]
+} -body {
+    label .l -text [format %c 0x1F600] -font {{Segoe UI} 36} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l -side left
+    update
+    set small [winfo width .l]
+    .l configure -font {{Segoe UI} 72}
+    update
+    set large [winfo width .l]
+    tk scaling [expr {$scaling * 2}]
+    label .m -text [format %c 0x1F600] -font {{Segoe UI} 36} -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .m -side left
+    update
+    list [expr {$large > $small * 1.5}] [expr {[winfo width .m] > $small * 1.5}] \
+	[expr {[winfontColoredSamples .l] >= 3}] [expr {[winfontColoredSamples .m] >= 3}]
+} -cleanup {
+    tk scaling $scaling
+    destroy .l .m
+} -result {1 1 1 1}
+test winfont-9.7 {glyph cache: bounded pages, no GDI object leak} -constraints {
+    win segoeEmoji testwingdiobjects
+} -setup {
+    destroy .t
+    set emoji {}
+    for {set cp 0x1F300} {$cp < 0x1F550} {incr cp} {
+	append emoji [format %c $cp]
+    }
+} -body {
+    text .t -width 40 -height 10 -wrap char
+    pack .t
+    update
+    set before [testwingdiobjects]
+    .t tag configure small -font {{Segoe UI} 12}
+    .t tag configure large -font {{Segoe UI} 24}
+    .t insert end $emoji\n small $emoji\n large
+    for {set i 0} {$i < 40} {incr i} {
+	.t yview moveto [expr {$i / 40.0}]
+	update
+    }
+    set during [testwingdiobjects]
+    destroy .t
+    update
+    set after [testwingdiobjects]
+    # per size: the base font, the emoji and symbol subfonts, one DC and at most
+    # 4 pages; plus the Direct2D context
+    list [expr {$during - $before <= 2 * 8 + 6}] [expr {$after - $before <= 2}]
+} -cleanup {
+    destroy .t
+} -result {1 1}
+
+#
+# Right-to-left text next to emoji: the runs of an item are shaped by subfont, so an
+# Arabic word must stay joined, its width must not depend on an emoji next to it, and a
+# label must draw the ranges of a right-to-left item right to left.
+#
+proc winfontArabic {} {
+    return "[format %c 0x633][format %c 0x644][format %c 0x627][format %c 0x645]"
+}
+proc winfontIsolatedSum {font} {
+    set sum 0
+    foreach cp {0x633 0x644 0x627 0x645} {
+	incr sum [font measure $font [format %c $cp]]
+    }
+    return $sum
+}
+# Leftmost column of the label where at least a third of the sampled rows hold a
+# saturated pixel: the body of a color emoji, never the one-pixel ClearType fringe of a
+# black glyph.  -1 if none.
+proc winfontLeftmostColored {w} {
+    set width [winfo width $w]
+    set height [winfo height $w]
+    for {set x 1} {$x < $width} {incr x 2} {
+	set rows 0
+	set colored 0
+	for {set y 1} {$y < $height} {incr y 3} {
+	    incr rows
+	    scan [testwinpixel $w $x $y] "#%2x%2x%2x" r g b
+	    if {max($r, $g, $b) - min($r, $g, $b) > 100} {
+		incr colored
+	    }
+	}
+	if {$colored * 3 >= $rows} {
+	    return $x
+	}
+    }
+    return -1
+}
+
+test winfont-10.1 {RTL: an Arabic word is shaped with joined forms} -constraints win -body {
+    set f {{Segoe UI} 14}
+    expr {[font measure $f [winfontArabic]] < [winfontIsolatedSum $f]}
+} -result 1
+test winfont-10.2 {RTL: an emoji next to an Arabic word leaves it joined} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set e [format %c 0x1F600]
+    list [expr {[font measure $f "[winfontArabic]$e"]
+	    == [font measure $f [winfontArabic]] + [font measure $f $e]}] \
+	[expr {[font measure $f "$e[winfontArabic]"]
+	    == [font measure $f [winfontArabic]] + [font measure $f $e]}]
+} -result {1 1}
+test winfont-10.3 {RTL: a base font without Arabic falls back to one joining font} -constraints {
+    win
+} -body {
+    set f {Verdana 14}
+    expr {[font measure $f [winfontArabic]] < [winfontIsolatedSum $f]}
+} -result 1
+test winfont-10.4 {RTL: an emoji inside Arabic text is drawn where Uniscribe puts it} -constraints {
+    win segoeEmoji testwinpixel
+} -setup {
+    destroy .l
+} -body {
+    # seen + sun with VS16 + "al-arabiya".  Without a bidi state, Uniscribe gives
+    # a neutral the direction of the paragraph: the sun is a left-to-right item of
+    # its own, drawn after the seen as in logical order, on trunk as well.  The
+    # first colored column tells where it was drawn; the Arabic around it is
+    # shaped by the base font, the sun by the color font.
+    set f {{Segoe UI} 72}
+    set prefix [format %c 0x633]
+    set sun "[format %c 0x2600][format %c 0xFE0F]"
+    set suffix ""
+    foreach cp {0x627 0x644 0x639 0x631 0x628 0x64A 0x629} {
+	append suffix [format %c $cp]
+    }
+    label .l -text "$prefix$sun$suffix" -font $f -foreground black \
+	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    set left [winfontLeftmostColored .l]
+    set logical [font measure $f $prefix]
+    set rtl [font measure $f $suffix]
+    expr {abs($left - $logical) < abs($left - $rtl) ? 1
+	    : "left $left, logical $logical, rtl $rtl"}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-10.5 {RTL: two Arabic words in a font without Arabic measure as their sum} -constraints {
+    win
+} -body {
+    # Verdana has no Arabic: the item is shaped by a fallback font, space included.
+    set f {Verdana 14}
+    set w1 ""
+    foreach cp {0x627 0x644 0x639 0x631 0x628 0x64A 0x629} {
+	append w1 [format %c $cp]
+    }
+    set w2 "[format %c 0x644][format %c 0x63A][format %c 0x629]"
+    set words [expr {[font measure $f $w1] + [font measure $f $w2]}]
+    set space [font measure $f " "]
+    set both [font measure $f "$w1 $w2"]
+    expr {$both > $words && $both <= $words + 2 * $space ? 1 : "$both vs $words + $space"}
+} -result 1
+test winfont-10.6 {RTL: an emoji inside an Arabic word measures with the word} -constraints {
+    win segoeEmoji
+} -body {
+    set f {{Segoe UI} 14}
+    set prefix [format %c 0x633]
+    set sun "[format %c 0x2600][format %c 0xFE0F]"
+    set suffix ""
+    foreach cp {0x627 0x644 0x639 0x631 0x628 0x64A 0x629} {
+	append suffix [format %c $cp]
+    }
+    set sum [expr {[font measure $f $prefix] + [font measure $f $sun] + [font measure $f $suffix]}]
+    expr {abs([font measure $f "$prefix$sun$suffix"] - $sum) <= 2 ? 1
+	    : "[font measure $f "$prefix$sun$suffix"] vs $sum"}
+} -result 1
+
+wm attributes . -topmost 0
+
 cleanupTests
 
 # Local variables:

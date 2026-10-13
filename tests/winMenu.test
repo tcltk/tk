@@ -37,14 +37,14 @@ resetWindows
 # TESTS
 #
 
-test winMenu-1.1 {GetNewID} -setup {
+test winMenu-1.1 {GetNewID} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
 } -cleanup {
     destroy .m1
 } -returnCodes ok -result {.m1}
-test winMenu-1.2 {GetNewID} -setup {
+test winMenu-1.2 {GetNewID} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -54,7 +54,7 @@ test winMenu-1.2 {GetNewID} -setup {
 
 # Basically impossible to test menu IDs wrapping.
 
-test winMenu-2.1 {FreeID} -setup {
+test winMenu-2.1 {FreeID} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -62,12 +62,12 @@ test winMenu-2.1 {FreeID} -setup {
 } -returnCodes ok
 
 
-test winMenu-3.1 {TkpNewMenu} -setup {
+test winMenu-3.1 {TkpNewMenu} -constraints win -setup {
     destroy .m1
 } -body {
     list [catch {menu .m1} msg] $msg [catch {destroy .m1} msg2] $msg2
 } -result {0 .m1 0 {}}
-test winMenu-3.2 {TkpNewMenu} -setup {
+test winMenu-3.2 {TkpNewMenu} -constraints win -setup {
     destroy .m1
 } -body {
     . configure -menu ""
@@ -77,13 +77,13 @@ test winMenu-3.2 {TkpNewMenu} -setup {
 } -result {0 {} {} 0 {}}
 
 
-test winMenu-4.1 {TkpDestroyMenu} -setup {
+test winMenu-4.1 {TkpDestroyMenu} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     destroy .m1
 } -returnCodes ok
-test winMenu-4.2 {TkpDestroyMenu - help menu} -setup {
+test winMenu-4.2 {TkpDestroyMenu - help menu} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -93,7 +93,7 @@ test winMenu-4.2 {TkpDestroyMenu - help menu} -setup {
 } -result {0 {} {} {}}
 
 
-test winMenu-5.1 {TkpDestroyMenuEntry} -setup {
+test winMenu-5.1 {TkpDestroyMenuEntry} -constraints win -setup {
     destroy .m1
 } -body {
     . configure -menu ""
@@ -104,13 +104,14 @@ test winMenu-5.1 {TkpDestroyMenuEntry} -setup {
 } -result {0 {} {}}
 
 
-test winMenu-6.1 {GetEntryText} -setup {
+test winMenu-6.1 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     list [catch {menu .m1} msg] $msg [destroy .m1]
 } -result {0 .m1 {}}
 test winMenu-6.2 {GetEntryText} -constraints {
-    testImageType } -setup {
+    testImageType win
+} -setup {
     destroy .m1
 } -body {
     catch {image delete image1}
@@ -118,92 +119,94 @@ test winMenu-6.2 {GetEntryText} -constraints {
     image create test image1
     list [catch {.m1 add command -image image1} msg] $msg [destroy .m1] [image delete image1]
 } -result {0 e001 {} {}}
-test winMenu-6.3 {GetEntryText} -setup {
+test winMenu-6.3 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -bitmap questhead} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.4 {GetEntryText} -setup {
+test winMenu-6.4 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.5 {GetEntryText} -setup {
+test winMenu-6.5 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "foo"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.6 {GetEntryText} -setup {
+test winMenu-6.6 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "This string has one & in it"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.7 {GetEntryText} -setup {
+test winMenu-6.7 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The & should be underlined." -underline 4} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.8 {GetEntryText} -setup {
+test winMenu-6.8 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The * should be underlined." -underline 4} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.9 {GetEntryText} -setup {
+test winMenu-6.9 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "foo" -accel "bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.10 {GetEntryText} -setup {
+test winMenu-6.10 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "This string has one & in it" -accel "bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.11 {GetEntryText} -setup {
+test winMenu-6.11 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The & should be underlined." -underline 4 -accel "bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.12 {GetEntryText} -setup {
+test winMenu-6.12 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The * should be underlined." -underline 4 -accel "bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.13 {GetEntryText} -setup {
+test winMenu-6.13 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "foo" -accel "&bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.14 {GetEntryText} -setup {
+test winMenu-6.14 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "This string has one & in it" -accel "&bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.15 {GetEntryText} -setup {
+test winMenu-6.15 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The & should be underlined." -underline 4 -accel "&bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
-test winMenu-6.16 {GetEntryText} -setup {
+test winMenu-6.16 {GetEntryText} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command -label "The * should be underlined." -underline 4 -accel "&bar"} msg] $msg [destroy .m1]
 } -result {0 e001 {}}
 
-test winMenu-7.1 {ReconfigureWindowsMenu - system menu item removal} -setup {
+test winMenu-7.1 {ReconfigureWindowsMenu - system menu item removal} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -214,7 +217,9 @@ test winMenu-7.1 {ReconfigureWindowsMenu - system menu item removal} -setup {
     .m1.system add command -label bar
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
-test winMenu-7.2 {ReconfigureWindowsMenu - menu item removal} -setup {
+test winMenu-7.2 {ReconfigureWindowsMenu - menu item removal} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -223,7 +228,7 @@ test winMenu-7.2 {ReconfigureWindowsMenu - menu item removal} -setup {
     .m1 add command -label foo
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.3 {ReconfigureWindowsMenu - zero items} -setup {
+test winMenu-7.3 {ReconfigureWindowsMenu - zero items} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -231,14 +236,14 @@ test winMenu-7.3 {ReconfigureWindowsMenu - zero items} -setup {
     .m1 delete Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.4 {ReconfigureWindowsMenu - one item} -setup {
+test winMenu-7.4 {ReconfigureWindowsMenu - one item} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add command -label Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.5 {ReconfigureWindowsMenu - two items} -setup {
+test winMenu-7.5 {ReconfigureWindowsMenu - two items} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -246,42 +251,54 @@ test winMenu-7.5 {ReconfigureWindowsMenu - two items} -setup {
     .m1 add command -label Two
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.6 {ReconfigureWindowsMenu - separator item} -setup {
+test winMenu-7.6 {ReconfigureWindowsMenu - separator item} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add separator
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.7 {ReconfigureWindowsMenu - non-text item} -setup {
+test winMenu-7.7 {ReconfigureWindowsMenu - non-text item} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add command -label Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.8 {ReconfigureWindowsMenu - disabled item} -setup {
+test winMenu-7.8 {ReconfigureWindowsMenu - disabled item} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add command -label Hello -state disabled
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.9 {ReconfigureWindowsMenu - non-selected checkbutton} -setup {
+test winMenu-7.9 {ReconfigureWindowsMenu - non-selected checkbutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add checkbutton -label Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.10 {ReconfigureWindowsMenu - non-selected radiobutton} -setup {
+test winMenu-7.10 {ReconfigureWindowsMenu - non-selected radiobutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add radiobutton -label Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.11 {ReconfigureWindowsMenu - selected checkbutton} -setup {
+test winMenu-7.11 {ReconfigureWindowsMenu - selected checkbutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -289,7 +306,9 @@ test winMenu-7.11 {ReconfigureWindowsMenu - selected checkbutton} -setup {
     .m1 invoke Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.12 {ReconfigureWindowsMenu - selected radiobutton} -setup {
+test winMenu-7.12 {ReconfigureWindowsMenu - selected radiobutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -297,14 +316,16 @@ test winMenu-7.12 {ReconfigureWindowsMenu - selected radiobutton} -setup {
     .m1 invoke Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.13 {ReconfigureWindowsMenu - cascade missing} -setup {
+test winMenu-7.13 {ReconfigureWindowsMenu - cascade missing} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add cascade -label Hello
     list [catch {update idletasks} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-test winMenu-7.14 {ReconfigureWindowsMenu - cascade} -setup {
+test winMenu-7.14 {ReconfigureWindowsMenu - cascade} -constraints win -setup {
     destroy .m1
 } -body {
     catch {destroy .m2}
@@ -313,7 +334,9 @@ test winMenu-7.14 {ReconfigureWindowsMenu - cascade} -setup {
     .m1 add cascade -menu .m2 -label Hello
     list [catch {update idletasks} msg] $msg [destroy .m1] [destroy .m2]
 } -result {0 {} {} {}}
-test winMenu-7.15 {ReconfigureWindowsMenu - menubar without system menu} -setup {
+test winMenu-7.15 {ReconfigureWindowsMenu - menubar without system menu} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -322,7 +345,9 @@ test winMenu-7.15 {ReconfigureWindowsMenu - menubar without system menu} -setup 
     . configure -menu .m1
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
-test winMenu-7.16 {ReconfigureWindowsMenu - system menu already created} -setup {
+test winMenu-7.16 {ReconfigureWindowsMenu - system menu already created} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -333,7 +358,9 @@ test winMenu-7.16 {ReconfigureWindowsMenu - system menu already created} -setup 
     .m1.system add command -label Hello
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
-test winMenu-7.17 {ReconfigureWindowsMenu - system menu update pending} -setup {
+test winMenu-7.17 {ReconfigureWindowsMenu - system menu update pending} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -342,7 +369,9 @@ test winMenu-7.17 {ReconfigureWindowsMenu - system menu update pending} -setup {
     . configure -menu .m1
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
-test winMenu-7.18 {ReconfigureWindowsMenu - system menu update not pending} -setup {
+test winMenu-7.18 {ReconfigureWindowsMenu - system menu update not pending} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -353,7 +382,9 @@ test winMenu-7.18 {ReconfigureWindowsMenu - system menu update not pending} -set
     . configure -menu .m1
     list [catch {update idletasks} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
-test winMenu-7.19 {ReconfigureWindowsMenu - column break} -setup {
+test winMenu-7.19 {ReconfigureWindowsMenu - column break} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -365,20 +396,20 @@ test winMenu-7.19 {ReconfigureWindowsMenu - column break} -setup {
 
 #Don't know how to generate nested post menus
 
-test winMenu-8.1 {TkpPostMenu} -setup {
+test winMenu-8.1 {TkpPostMenu} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -postcommand "blork"
     .m1 post 40 40
 } -returnCodes error -result {invalid command name "blork"}
-test winMenu-8.2 {TkpPostMenu} -setup {
+test winMenu-8.2 {TkpPostMenu} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -postcommand "blork"
     .m1 post 40 40
     destroy .m1
 } -returnCodes error -result {invalid command name "blork"}
-test winMenu-8.3 {TkpPostMenu} -setup {
+test winMenu-8.3 {TkpPostMenu} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -postcommand "destroy .m1"
@@ -416,7 +447,7 @@ test winMenu-8.6 {TkpPostMenu - update not pending} -constraints {
 } -result {0 {} {}}
 
 
-test winMenu-9.1 {TkpMenuNewEntry} -setup {
+test winMenu-9.1 {TkpMenuNewEntry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -526,7 +557,7 @@ test winMenu-11.8 {TkWinHandleMenuEvent - WM_INITMENU - not pending} -constraint
 } -result {0 {} {}}
 
 
-test winMenu-12.1 {TkpSetWindowMenuBar} -setup {
+test winMenu-12.1 {TkpSetWindowMenuBar} -constraints win -setup {
     destroy .m1
 } -body {
     . configure -menu ""
@@ -534,7 +565,7 @@ test winMenu-12.1 {TkpSetWindowMenuBar} -setup {
     .m1 add command -label foo
     list [catch {. configure -menu .m1} msg] $msg [. configure -menu ""] [catch {destroy .m1} msg2] $msg2
 } -result {0 {} {} 0 {}}
-test winMenu-12.2 {TkpSetWindowMenuBar} -setup {
+test winMenu-12.2 {TkpSetWindowMenuBar} -constraints win -setup {
     destroy .m1
 } -body {
     . configure -menu ""
@@ -543,7 +574,9 @@ test winMenu-12.2 {TkpSetWindowMenuBar} -setup {
     . configure -menu .m1
     list [catch {. configure -menu ""} msg] $msg [catch {destroy .m1} msg2] $msg2
 } -result {0 {} 0 {}}
-test winMenu-12.3 {TkpSetWindowMenuBar - no update pending} -setup {
+test winMenu-12.3 {TkpSetWindowMenuBar - no update pending} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     . configure -menu ""
@@ -559,7 +592,7 @@ test winMenu-13.1 {Tk_SetMainMenubar - nothing to do} -constraints {
 } -body {}
 
 
-test winMenu-14.1 {GetMenuIndicatorGeometry} -setup {
+test winMenu-14.1 {GetMenuIndicatorGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -567,7 +600,7 @@ test winMenu-14.1 {GetMenuIndicatorGeometry} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test winMenu-14.2 {GetMenuIndicatorGeometry} -setup {
+test winMenu-14.2 {GetMenuIndicatorGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -577,7 +610,7 @@ test winMenu-14.2 {GetMenuIndicatorGeometry} -setup {
 } -returnCodes ok
 
 
-test winMenu-15.1 {GetMenuAccelGeometry} -setup {
+test winMenu-15.1 {GetMenuAccelGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -585,7 +618,7 @@ test winMenu-15.1 {GetMenuAccelGeometry} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test winMenu-15.2 {GetMenuAccelGeometry} -setup {
+test winMenu-15.2 {GetMenuAccelGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -593,7 +626,7 @@ test winMenu-15.2 {GetMenuAccelGeometry} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test winMenu-15.3 {GetMenuAccelGeometry} -setup {
+test winMenu-15.3 {GetMenuAccelGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -614,7 +647,7 @@ test winMenu-16.1 {GetTearoffEntryGeometry} -constraints {
 } -result {{} {}}
 
 
-test winMenu-17.1 {GetMenuSeparatorGeometry} -setup {
+test winMenu-17.1 {GetMenuSeparatorGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -626,7 +659,9 @@ test winMenu-17.1 {GetMenuSeparatorGeometry} -setup {
 
 # Currently, the only callers to DrawWindowsSystemBitmap want things
 # centered vertically, and either centered or right aligned horizontally.
-test winMenu-18.1 {DrawWindowsSystemBitmap - center aligned} -setup {
+test winMenu-18.1 {DrawWindowsSystemBitmap - center aligned} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -635,7 +670,9 @@ test winMenu-18.1 {DrawWindowsSystemBitmap - center aligned} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-18.2 {DrawWindowsSystemBitmap - right aligned} -setup {
+test winMenu-18.2 {DrawWindowsSystemBitmap - right aligned} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -645,7 +682,9 @@ test winMenu-18.2 {DrawWindowsSystemBitmap - right aligned} -setup {
 } -result {{} {}}
 
 
-test winMenu-19.1 {DrawMenuEntryIndicator - not checkbutton or radiobutton} -setup {
+test winMenu-19.1 {DrawMenuEntryIndicator - not checkbutton or radiobutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -653,7 +692,9 @@ test winMenu-19.1 {DrawMenuEntryIndicator - not checkbutton or radiobutton} -set
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-19.2 {DrawMenuEntryIndicator - not selected} -setup {
+test winMenu-19.2 {DrawMenuEntryIndicator - not selected} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -661,7 +702,9 @@ test winMenu-19.2 {DrawMenuEntryIndicator - not selected} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-19.3 {DrawMenuEntryIndicator - checkbutton} -setup {
+test winMenu-19.3 {DrawMenuEntryIndicator - checkbutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -670,7 +713,9 @@ test winMenu-19.3 {DrawMenuEntryIndicator - checkbutton} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-19.4 {DrawMenuEntryIndicator - radiobutton} -setup {
+test winMenu-19.4 {DrawMenuEntryIndicator - radiobutton} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -679,7 +724,7 @@ test winMenu-19.4 {DrawMenuEntryIndicator - radiobutton} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-19.5 {DrawMenuEntryIndicator - disabled} -setup {
+test winMenu-19.5 {DrawMenuEntryIndicator - disabled} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -689,7 +734,9 @@ test winMenu-19.5 {DrawMenuEntryIndicator - disabled} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-19.6 {DrawMenuEntryIndicator - indicator not on} -setup {
+test winMenu-19.6 {DrawMenuEntryIndicator - indicator not on} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -700,7 +747,7 @@ test winMenu-19.6 {DrawMenuEntryIndicator - indicator not on} -setup {
 } -result {{} {}}
 
 
-test winMenu-20.1 {DrawMenuEntryAccelerator - disabled} -setup {
+test winMenu-20.1 {DrawMenuEntryAccelerator - disabled} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground red
@@ -708,7 +755,9 @@ test winMenu-20.1 {DrawMenuEntryAccelerator - disabled} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-20.2 {DrawMenuEntryAccelerator - normal text} -setup {
+test winMenu-20.2 {DrawMenuEntryAccelerator - normal text} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -716,7 +765,9 @@ test winMenu-20.2 {DrawMenuEntryAccelerator - normal text} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-20.3 {DrawMenuEntryAccelerator - disabled, no disabledforeground} -setup {
+test winMenu-20.3 {DrawMenuEntryAccelerator - disabled, no disabledforeground} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground ""
@@ -724,7 +775,9 @@ test winMenu-20.3 {DrawMenuEntryAccelerator - disabled, no disabledforeground} -
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-20.4 {DrawMenuEntryAccelerator - cascade, drawArrow true} -setup {
+test winMenu-20.4 {DrawMenuEntryAccelerator - cascade, drawArrow true} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -743,7 +796,7 @@ test winMenu-20.5 {DrawMenuEntryAccelerator - cascade, drawArrow false} -constra
 } -result {{} {}}
 
 
-test winMenu-21.1 {DrawMenuSeparator} -setup {
+test winMenu-21.1 {DrawMenuSeparator} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -753,7 +806,7 @@ test winMenu-21.1 {DrawMenuSeparator} -setup {
 } -result {{} {}}
 
 
-test winMenu-22.1 {DrawMenuUnderline} -setup {
+test winMenu-22.1 {DrawMenuUnderline} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -773,7 +826,7 @@ test winMenu-24.1 {TkpInitializeMenuBindings called at boot time} -constraints {
 } -body {}
 
 
-test winMenu-25.1 {DrawMenuEntryLabel - normal} -setup {
+test winMenu-25.1 {DrawMenuEntryLabel - normal} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -781,7 +834,9 @@ test winMenu-25.1 {DrawMenuEntryLabel - normal} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-25.2 {DrawMenuEntryLabel - disabled with fg} -setup {
+test winMenu-25.2 {DrawMenuEntryLabel - disabled with fg} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground red
@@ -789,7 +844,9 @@ test winMenu-25.2 {DrawMenuEntryLabel - disabled with fg} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-25.3 {DrawMenuEntryLabel - disabled with no fg} -setup {
+test winMenu-25.3 {DrawMenuEntryLabel - disabled with no fg} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground ""
@@ -799,7 +856,7 @@ test winMenu-25.3 {DrawMenuEntryLabel - disabled with no fg} -setup {
 } -result {{} {}}
 
 
-test winMenu-26.1 {TkpComputeMenubarGeometry} -setup {
+test winMenu-26.1 {TkpComputeMenubarGeometry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -819,14 +876,18 @@ test winMenu-27.1 {DrawTearoffEntry} -constraints {
 } -result {{} {}}
 
 
-test winMenu-28.1 {TkpConfigureMenuEntry - update pending} -setup {
+test winMenu-28.1 {TkpConfigureMenuEntry - update pending} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add command -label Hello
     list [catch {.m1 add command -label Two} msg] $msg [destroy .m1]
 } -result {0 e002 {}}
-test winMenu-28.2 {TkpConfigureMenuEntry - update not pending} -setup {
+test winMenu-28.2 {TkpConfigureMenuEntry - update not pending} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -836,7 +897,9 @@ test winMenu-28.2 {TkpConfigureMenuEntry - update not pending} -setup {
 } -result {0 e002 {}}
 
 
-test winMenu-29.1 {TkpDrawMenuEntry - gc for active and not strict motif} -setup {
+test winMenu-29.1 {TkpDrawMenuEntry - gc for active and not strict motif} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -845,7 +908,9 @@ test winMenu-29.1 {TkpDrawMenuEntry - gc for active and not strict motif} -setup
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} -setup {
+test winMenu-29.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -854,7 +919,9 @@ test winMenu-29.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} -
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.3 {TkpDrawMenuEntry - gc for active and strict motif} -setup {
+test winMenu-29.3 {TkpDrawMenuEntry - gc for active and strict motif} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -864,7 +931,9 @@ test winMenu-29.3 {TkpDrawMenuEntry - gc for active and strict motif} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } -result {{} {} 0}
-test winMenu-29.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom entry} -setup {
+test winMenu-29.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground blue
@@ -872,7 +941,9 @@ test winMenu-29.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -setup {
+test winMenu-29.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground blue
@@ -880,7 +951,9 @@ test winMenu-29.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -setup {
+test winMenu-29.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground ""
@@ -888,7 +961,9 @@ test winMenu-29.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.7 {TkpDrawMenuEntry - gc for normal - custom entry} -setup {
+test winMenu-29.7 {TkpDrawMenuEntry - gc for normal - custom entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -896,7 +971,7 @@ test winMenu-29.7 {TkpDrawMenuEntry - gc for normal - custom entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.8 {TkpDrawMenuEntry - gc for normal} -setup {
+test winMenu-29.8 {TkpDrawMenuEntry - gc for normal} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -904,7 +979,9 @@ test winMenu-29.8 {TkpDrawMenuEntry - gc for normal} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.9 {TkpDrawMenuEntry - gc for indicator - custom entry} -setup {
+test winMenu-29.9 {TkpDrawMenuEntry - gc for indicator - custom entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -913,7 +990,9 @@ test winMenu-29.9 {TkpDrawMenuEntry - gc for indicator - custom entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.10 {TkpDrawMenuEntry - gc for indicator} -setup {
+test winMenu-29.10 {TkpDrawMenuEntry - gc for indicator} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -922,7 +1001,9 @@ test winMenu-29.10 {TkpDrawMenuEntry - gc for indicator} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.11 {TkpDrawMenuEntry - border - custom entry} -setup {
+test winMenu-29.11 {TkpDrawMenuEntry - border - custom entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -931,7 +1012,7 @@ test winMenu-29.11 {TkpDrawMenuEntry - border - custom entry} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.12 {TkpDrawMenuEntry - border} -setup {
+test winMenu-29.12 {TkpDrawMenuEntry - border} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -940,7 +1021,9 @@ test winMenu-29.12 {TkpDrawMenuEntry - border} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.13 {TkpDrawMenuEntry - active border - strict motif} -setup {
+test winMenu-29.13 {TkpDrawMenuEntry - active border - strict motif} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     set tk_strictMotif 1
@@ -950,7 +1033,9 @@ test winMenu-29.13 {TkpDrawMenuEntry - active border - strict motif} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } -result {{} {} 0}
-test winMenu-29.14 {TkpDrawMenuEntry - active border - custom entry} -setup {
+test winMenu-29.14 {TkpDrawMenuEntry - active border - custom entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -959,7 +1044,7 @@ test winMenu-29.14 {TkpDrawMenuEntry - active border - custom entry} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.15 {TkpDrawMenuEntry - active border} -setup {
+test winMenu-29.15 {TkpDrawMenuEntry - active border} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -968,7 +1053,9 @@ test winMenu-29.15 {TkpDrawMenuEntry - active border} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.16 {TkpDrawMenuEntry - font - custom entry} -setup {
+test winMenu-29.16 {TkpDrawMenuEntry - font - custom entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -976,7 +1063,7 @@ test winMenu-29.16 {TkpDrawMenuEntry - font - custom entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.17 {TkpDrawMenuEntry - font} -setup {
+test winMenu-29.17 {TkpDrawMenuEntry - font} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1 -font "Courier 72"
@@ -984,7 +1071,7 @@ test winMenu-29.17 {TkpDrawMenuEntry - font} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.18 {TkpDrawMenuEntry - separator} -setup {
+test winMenu-29.18 {TkpDrawMenuEntry - separator} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -992,7 +1079,7 @@ test winMenu-29.18 {TkpDrawMenuEntry - separator} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.19 {TkpDrawMenuEntry - standard} -setup {
+test winMenu-29.19 {TkpDrawMenuEntry - standard} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1000,7 +1087,9 @@ test winMenu-29.19 {TkpDrawMenuEntry - standard} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.20 {TkpDrawMenuEntry - disabled cascade item} -setup {
+test winMenu-29.20 {TkpDrawMenuEntry - disabled cascade item} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1011,7 +1100,7 @@ test winMenu-29.20 {TkpDrawMenuEntry - disabled cascade item} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.21 {TkpDrawMenuEntry - indicator} -setup {
+test winMenu-29.21 {TkpDrawMenuEntry - indicator} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1020,7 +1109,7 @@ test winMenu-29.21 {TkpDrawMenuEntry - indicator} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-29.22 {TkpDrawMenuEntry - indicator} -setup {
+test winMenu-29.22 {TkpDrawMenuEntry - indicator} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1032,7 +1121,8 @@ test winMenu-29.22 {TkpDrawMenuEntry - indicator} -setup {
 
 
 test winMenu-30.1 {GetMenuLabelGeometry - image} -constraints {
-    testImageType } -setup {
+    testImageType win
+} -setup {
     destroy .m1
     catch {image delete image1}
 } -body {
@@ -1041,21 +1131,21 @@ test winMenu-30.1 {GetMenuLabelGeometry - image} -constraints {
     .m1 add command -image image1
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
-test winMenu-30.2 {GetMenuLabelGeometry - bitmap} -setup {
+test winMenu-30.2 {GetMenuLabelGeometry - bitmap} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -bitmap questhead
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-30.3 {GetMenuLabelGeometry - no text} -setup {
+test winMenu-30.3 {GetMenuLabelGeometry - no text} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-30.4 {GetMenuLabelGeometry - text} -setup {
+test winMenu-30.4 {GetMenuLabelGeometry - text} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1064,7 +1154,7 @@ test winMenu-30.4 {GetMenuLabelGeometry - text} -setup {
 } -result {{} {}}
 
 
-test winMenu-31.1 {DrawMenuEntryBackground} -setup {
+test winMenu-31.1 {DrawMenuEntryBackground} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1072,7 +1162,7 @@ test winMenu-31.1 {DrawMenuEntryBackground} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test winMenu-31.2 {DrawMenuEntryBackground} -setup {
+test winMenu-31.2 {DrawMenuEntryBackground} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1083,20 +1173,26 @@ test winMenu-31.2 {DrawMenuEntryBackground} -setup {
 } -result {{} {}}
 
 
-test winMenu-32.1 {TkpComputeStandardMenuGeometry - no entries} -setup {
+test winMenu-32.1 {TkpComputeStandardMenuGeometry - no entries} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.2 {TkpComputeStandardMenuGeometry - one entry} -setup {
+test winMenu-32.2 {TkpComputeStandardMenuGeometry - one entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -label "one"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.3 {TkpComputeStandardMenuGeometry - more than one entry} -setup {
+test winMenu-32.3 {TkpComputeStandardMenuGeometry - more than one entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1104,7 +1200,9 @@ test winMenu-32.3 {TkpComputeStandardMenuGeometry - more than one entry} -setup 
     .m1 add command -label "two"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.4 {TkpComputeStandardMenuGeometry - separator} -setup {
+test winMenu-32.4 {TkpComputeStandardMenuGeometry - separator} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1112,7 +1210,7 @@ test winMenu-32.4 {TkpComputeStandardMenuGeometry - separator} -setup {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 test winMenu-32.5 {TkpComputeStandardMenuGeometry - tearoff entry} -constraints {
-    nonUnixUserInteraction
+    win nonUnixUserInteraction
 } -setup {
     destroy .mb
 } -body {
@@ -1123,21 +1221,27 @@ test winMenu-32.5 {TkpComputeStandardMenuGeometry - tearoff entry} -constraints 
     catch {tk::MbPost .mb}
     list [update] [destroy .mb]
 } -result {{} {}}
-test winMenu-32.6 {TkpComputeStandardMenuGeometry - standard label geometry} -setup {
+test winMenu-32.6 {TkpComputeStandardMenuGeometry - standard label geometry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -label "test"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.7 {TkpComputeStandardMenuGeometry - different font for entry} -setup {
+test winMenu-32.7 {TkpComputeStandardMenuGeometry - different font for entry} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -font "Helvetica 12"
     .m1 add command -label "test" -font "Courier 12"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.8 {TkpComputeStandardMenuGeometry - second entry larger} -setup {
+test winMenu-32.8 {TkpComputeStandardMenuGeometry - second entry larger} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1145,7 +1249,9 @@ test winMenu-32.8 {TkpComputeStandardMenuGeometry - second entry larger} -setup 
     .m1 add command -label "test test"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.9 {TkpComputeStandardMenuGeometry - first entry larger} -setup {
+test winMenu-32.9 {TkpComputeStandardMenuGeometry - first entry larger} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1153,14 +1259,18 @@ test winMenu-32.9 {TkpComputeStandardMenuGeometry - first entry larger} -setup {
     .m1 add command -label "test"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.10 {TkpComputeStandardMenuGeometry - accelerator} -setup {
+test winMenu-32.10 {TkpComputeStandardMenuGeometry - accelerator} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -label "test" -accel "Ctrl+S"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.11 {TkpComputeStandardMenuGeometry - second accel larger} -setup {
+test winMenu-32.11 {TkpComputeStandardMenuGeometry - second accel larger} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1168,7 +1278,9 @@ test winMenu-32.11 {TkpComputeStandardMenuGeometry - second accel larger} -setup
     .m1 add command -label "test" -accel "1 1"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.12 {TkpComputeStandardMenuGeometry - second accel smaller} -setup {
+test winMenu-32.12 {TkpComputeStandardMenuGeometry - second accel smaller} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1176,7 +1288,9 @@ test winMenu-32.12 {TkpComputeStandardMenuGeometry - second accel smaller} -setu
     .m1 add command -label "test" -accel "1"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.13 {TkpComputeStandardMenuGeometry - indicator} -setup {
+test winMenu-32.13 {TkpComputeStandardMenuGeometry - indicator} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1185,7 +1299,8 @@ test winMenu-32.13 {TkpComputeStandardMenuGeometry - indicator} -setup {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 test winMenu-32.14 {TkpComputeStandardMenuGeometry - second indicator less or equal} -constraints {
-    testImageType } -setup {
+    testImageType win
+} -setup {
     destroy .m1
     catch {image delete image1}
 } -body {
@@ -1198,7 +1313,8 @@ test winMenu-32.14 {TkpComputeStandardMenuGeometry - second indicator less or eq
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
 test winMenu-32.15 {TkpComputeStandardMenuGeometry - second indicator larger} -constraints {
-    testImageType } -setup {
+    testImageType win
+} -setup {
     destroy .m1
     catch {image delete image1}
 } -body {
@@ -1210,13 +1326,17 @@ test winMenu-32.15 {TkpComputeStandardMenuGeometry - second indicator larger} -c
     .m1 invoke 2
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
-test winMenu-32.16 {TkpComputeStandardMenuGeometry - zero sized menus} -setup {
+test winMenu-32.16 {TkpComputeStandardMenuGeometry - zero sized menus} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.17 {TkpComputeStandardMenuGeometry - first column bigger} -setup {
+test winMenu-32.17 {TkpComputeStandardMenuGeometry - first column bigger} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1225,7 +1345,9 @@ test winMenu-32.17 {TkpComputeStandardMenuGeometry - first column bigger} -setup
     .m1 add command -label three -columnbreak 1
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.18 {TkpComputeStandardMenuGeometry - second column bigger} -setup {
+test winMenu-32.18 {TkpComputeStandardMenuGeometry - second column bigger} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -1234,7 +1356,9 @@ test winMenu-32.18 {TkpComputeStandardMenuGeometry - second column bigger} -setu
     .m1 add command -label three
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test winMenu-32.19 {TkpComputeStandardMenuGeometry - three columns} -setup {
+test winMenu-32.19 {TkpComputeStandardMenuGeometry - three columns} -constraints {
+    win
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -1248,14 +1372,16 @@ test winMenu-32.19 {TkpComputeStandardMenuGeometry - three columns} -setup {
 } -result {{} {}}
 
 
-test winMenu-33.1 {TkpNotifyTopLevelCreate - no menu yet} -setup {
+test winMenu-33.1 {TkpNotifyTopLevelCreate - no menu yet} -constraints {
+    win
+} -setup {
     destroy .m1 .t2
 } -body {
     toplevel .t2 -menu .m1
     wm geometry .t2 +0+0
     list [update idletasks] [destroy .t2]
 } -result {{} {}}
-test winMenu-33.2 {TkpNotifyTopLevelCreate - menu} -setup {
+test winMenu-33.2 {TkpNotifyTopLevelCreate - menu} -constraints win -setup {
     destroy .m1 .t2
 } -body {
     menu .m1

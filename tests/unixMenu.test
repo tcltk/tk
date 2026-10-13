@@ -37,12 +37,12 @@ resetWindows
 # TESTS
 #
 
-test unixMenu-1.1 {TkpNewMenu - normal menu} -setup {
+test unixMenu-1.1 {TkpNewMenu - normal menu} -constraints unix -setup {
     destroy .m1
 } -body {
     list [menu .m1] [destroy .m1]
 } -returnCodes ok -result {.m1 {}}
-test unixMenu-1.2 {TkpNewMenu - help menu} -setup {
+test unixMenu-1.2 {TkpNewMenu - help menu} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -52,20 +52,24 @@ test unixMenu-1.2 {TkpNewMenu - help menu} -setup {
 } -returnCodes ok -result {.m1.help {} {}}
 
 
-test unixMenu-2.1 {TkpDestroyMenu - nothing to do} -body {}
+test unixMenu-2.1 {TkpDestroyMenu - nothing to do} -constraints unix -body {}
 
 
-test unixMenu-3.1 {TkpDestroymenuEntry - nothing to do} -body {}
+test unixMenu-3.1 {TkpDestroymenuEntry - nothing to do} -constraints unix -body {}
 
 
-test unixMenu-4.1 {TkpConfigureMenuEntry - non-cascade entry} -setup {
+test unixMenu-4.1 {TkpConfigureMenuEntry - non-cascade entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     .m1 add command -label test
     list [.m1 entryconfigure test -label foo] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-test unixMenu-4.2 {TkpConfigureMenuEntry - cascade entry} -setup {
+test unixMenu-4.2 {TkpConfigureMenuEntry - cascade entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -75,10 +79,10 @@ test unixMenu-4.2 {TkpConfigureMenuEntry - cascade entry} -setup {
 } -returnCodes ok -result {{} {}}
 
 
-test unixMenu-5.1 {TkpMenuNewEntry - nothing to do} -body {}
+test unixMenu-5.1 {TkpMenuNewEntry - nothing to do} -constraints unix -body {}
 
 
-test unixMenu-6.1 {TkpSetWindowMenuBar - null menu} -setup {
+test unixMenu-6.1 {TkpSetWindowMenuBar - null menu} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -86,7 +90,7 @@ test unixMenu-6.1 {TkpSetWindowMenuBar - null menu} -setup {
     . configure -menu .m1
     list [. configure -menu ""] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-test unixMenu-6.2 {TkpSetWindowMenuBar - menu} -setup {
+test unixMenu-6.2 {TkpSetWindowMenuBar - menu} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -95,10 +99,12 @@ test unixMenu-6.2 {TkpSetWindowMenuBar - menu} -setup {
 } -returnCodes ok -result {{} {} {}}
 
 
-test unixMenu-7.1 {Tk_SetMainMenubar - nothing to do} -body {}
+test unixMenu-7.1 {Tk_SetMainMenubar - nothing to do} -constraints unix -body {}
 
 
-test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} -setup {
+test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -106,7 +112,9 @@ test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test unixMenu-8.2 {GetMenuIndicatorGeometry - not checkbutton or radio} -setup {
+test unixMenu-8.2 {GetMenuIndicatorGeometry - not checkbutton or radio} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -115,7 +123,7 @@ test unixMenu-8.2 {GetMenuIndicatorGeometry - not checkbutton or radio} -setup {
     destroy .m1
 } -returnCodes ok
 test unixMenu-8.3 {GetMenuIndicatorGeometry - checkbutton image} -constraints {
-    testImageType
+    unix testImageType
 } -setup {
     destroy .m1
     catch {image delete image1}
@@ -129,7 +137,9 @@ test unixMenu-8.3 {GetMenuIndicatorGeometry - checkbutton image} -constraints {
 } -cleanup {
     image delete image1
 } -returnCodes ok
-test unixMenu-8.4 {GetMenuIndicatorGeometry - checkbutton bitmap} -setup {
+test unixMenu-8.4 {GetMenuIndicatorGeometry - checkbutton bitmap} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -138,7 +148,9 @@ test unixMenu-8.4 {GetMenuIndicatorGeometry - checkbutton bitmap} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test unixMenu-8.5 {GetMenuIndicatorGeometry - checkbutton} -setup {
+test unixMenu-8.5 {GetMenuIndicatorGeometry - checkbutton} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -148,7 +160,7 @@ test unixMenu-8.5 {GetMenuIndicatorGeometry - checkbutton} -setup {
     destroy .m1
 } -returnCodes ok
 test unixMenu-8.6 {GetMenuIndicatorGeometry - radiobutton image} -constraints {
-    testImageType
+    unix testImageType
 } -setup {
     destroy .m1
     catch {image delete image1}
@@ -161,7 +173,9 @@ test unixMenu-8.6 {GetMenuIndicatorGeometry - radiobutton image} -constraints {
     destroy .m1
     image delete image1
 } -returnCodes ok
-test unixMenu-8.7 {GetMenuIndicatorGeometry - radiobutton bitmap} -setup {
+test unixMenu-8.7 {GetMenuIndicatorGeometry - radiobutton bitmap} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -170,7 +184,9 @@ test unixMenu-8.7 {GetMenuIndicatorGeometry - radiobutton bitmap} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test unixMenu-8.8 {GetMenuIndicatorGeometry - radiobutton} -setup {
+test unixMenu-8.8 {GetMenuIndicatorGeometry - radiobutton} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -179,7 +195,9 @@ test unixMenu-8.8 {GetMenuIndicatorGeometry - radiobutton} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test unixMenu-8.9 {GetMenuIndicatorGeometry - hideMargin} -setup {
+test unixMenu-8.9 {GetMenuIndicatorGeometry - hideMargin} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -190,7 +208,9 @@ test unixMenu-8.9 {GetMenuIndicatorGeometry - hideMargin} -setup {
 } -returnCodes ok
 
 
-test unixMenu-9.1 {GetMenuAccelGeometry - cascade entry} -setup {
+test unixMenu-9.1 {GetMenuAccelGeometry - cascade entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -198,7 +218,9 @@ test unixMenu-9.1 {GetMenuAccelGeometry - cascade entry} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test unixMenu-9.2 {GetMenuAccelGeometry - non-null label} -setup {
+test unixMenu-9.2 {GetMenuAccelGeometry - non-null label} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -206,7 +228,7 @@ test unixMenu-9.2 {GetMenuAccelGeometry - non-null label} -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-test unixMenu-9.3 {GetMenuAccelGeometry - null label} -setup {
+test unixMenu-9.3 {GetMenuAccelGeometry - null label} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -216,7 +238,9 @@ test unixMenu-9.3 {GetMenuAccelGeometry - null label} -setup {
 } -returnCodes ok
 
 
-test unixMenu-10.1 {DrawMenuEntryBackground - active menubar} -setup {
+test unixMenu-10.1 {DrawMenuEntryBackground - active menubar} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -225,7 +249,7 @@ test unixMenu-10.1 {DrawMenuEntryBackground - active menubar} -setup {
     .m1 activate 1
     list [update] [. configure -menu ""] [destroy .m1]
 } -returnCodes ok -result {{} {} {}}
-test unixMenu-10.2 {DrawMenuEntryBackground - active} -setup {
+test unixMenu-10.2 {DrawMenuEntryBackground - active} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -234,7 +258,9 @@ test unixMenu-10.2 {DrawMenuEntryBackground - active} -setup {
     $tearoff activate 0
     list [update] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-test unixMenu-10.3 {DrawMenuEntryBackground - non-active} -setup {
+test unixMenu-10.3 {DrawMenuEntryBackground - non-active} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -244,7 +270,9 @@ test unixMenu-10.3 {DrawMenuEntryBackground - non-active} -setup {
 } -returnCodes ok -result {{} {}}
 
 
-test unixMenu-11.1 {DrawMenuEntryAccelerator - menubar} -setup {
+test unixMenu-11.1 {DrawMenuEntryAccelerator - menubar} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -253,7 +281,9 @@ test unixMenu-11.1 {DrawMenuEntryAccelerator - menubar} -setup {
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
 # drawArrow parameter is never false under Unix
-test unixMenu-11.2 {DrawMenuEntryAccelerator - cascade entry} -setup {
+test unixMenu-11.2 {DrawMenuEntryAccelerator - cascade entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -261,7 +291,9 @@ test unixMenu-11.2 {DrawMenuEntryAccelerator - cascade entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 }  -result {{} {}}
-test unixMenu-11.3 {DrawMenuEntryAccelerator - normal entry} -setup {
+test unixMenu-11.3 {DrawMenuEntryAccelerator - normal entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -269,7 +301,9 @@ test unixMenu-11.3 {DrawMenuEntryAccelerator - normal entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-11.4 {DrawMenuEntryAccelerator - null entry} -setup {
+test unixMenu-11.4 {DrawMenuEntryAccelerator - null entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -279,7 +313,9 @@ test unixMenu-11.4 {DrawMenuEntryAccelerator - null entry} -setup {
 } -result {{} {}}
 
 
-test unixMenu-12.1 {DrawMenuEntryIndicator - non-check or radio} -setup {
+test unixMenu-12.1 {DrawMenuEntryIndicator - non-check or radio} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -287,7 +323,9 @@ test unixMenu-12.1 {DrawMenuEntryIndicator - non-check or radio} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-12.2 {DrawMenuEntryIndicator - checkbutton - indicator off} -setup {
+test unixMenu-12.2 {DrawMenuEntryIndicator - checkbutton - indicator off} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -295,7 +333,9 @@ test unixMenu-12.2 {DrawMenuEntryIndicator - checkbutton - indicator off} -setup
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-12.3 {DrawMenuEntryIndicator - checkbutton - not selected} -setup {
+test unixMenu-12.3 {DrawMenuEntryIndicator - checkbutton - not selected} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -303,7 +343,9 @@ test unixMenu-12.3 {DrawMenuEntryIndicator - checkbutton - not selected} -setup 
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-12.4 {DrawMenuEntryIndicator - checkbutton - selected} -setup {
+test unixMenu-12.4 {DrawMenuEntryIndicator - checkbutton - selected} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -312,7 +354,9 @@ test unixMenu-12.4 {DrawMenuEntryIndicator - checkbutton - selected} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-12.5 {DrawMenuEntryIndicator - radiobutton - indicator off} -setup {
+test unixMenu-12.5 {DrawMenuEntryIndicator - radiobutton - indicator off} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -320,7 +364,9 @@ test unixMenu-12.5 {DrawMenuEntryIndicator - radiobutton - indicator off} -setup
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-12.6 {DrawMenuEntryIndicator - radiobutton - not selected} -setup {
+test unixMenu-12.6 {DrawMenuEntryIndicator - radiobutton - not selected} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -328,7 +374,9 @@ test unixMenu-12.6 {DrawMenuEntryIndicator - radiobutton - not selected} -setup 
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-12.7 {DrawMenuEntryIndicator - radiobutton - selected} -setup {
+test unixMenu-12.7 {DrawMenuEntryIndicator - radiobutton - selected} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -339,7 +387,7 @@ test unixMenu-12.7 {DrawMenuEntryIndicator - radiobutton - selected} -setup {
 } -result {{} {}}
 
 
-test unixMenu-13.1 {DrawMenuSeparator - menubar case} -setup {
+test unixMenu-13.1 {DrawMenuSeparator - menubar case} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -347,7 +395,7 @@ test unixMenu-13.1 {DrawMenuSeparator - menubar case} -setup {
     . configure -menu .m1
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-13.2 {DrawMenuSepartor - normal menu} -setup {
+test unixMenu-13.2 {DrawMenuSepartor - normal menu} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -357,7 +405,7 @@ test unixMenu-13.2 {DrawMenuSepartor - normal menu} -setup {
 } -result {{} {}}
 
 
-test unixMenu-14.1 {DrawMenuEntryLabel} -setup {
+test unixMenu-14.1 {DrawMenuEntryLabel} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -367,7 +415,7 @@ test unixMenu-14.1 {DrawMenuEntryLabel} -setup {
 } -result {{} {}}
 
 
-test unixMenu-15.1 {DrawMenuUnderline - menubar} -setup {
+test unixMenu-15.1 {DrawMenuUnderline - menubar} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -375,7 +423,7 @@ test unixMenu-15.1 {DrawMenuUnderline - menubar} -setup {
     . configure -menu .m1
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-15.2 {DrawMenuUnderline - no menubar} -setup {
+test unixMenu-15.2 {DrawMenuUnderline - no menubar} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -385,7 +433,7 @@ test unixMenu-15.2 {DrawMenuUnderline - no menubar} -setup {
 } -result {{} {}}
 
 
-test unixMenu-16.1 {TkpPostMenu} -setup {
+test unixMenu-16.1 {TkpPostMenu} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -395,7 +443,7 @@ test unixMenu-16.1 {TkpPostMenu} -setup {
 } -returnCodes ok
 
 
-test unixMenu-17.1 {GetMenuSeparatorGeometry} -setup {
+test unixMenu-17.1 {GetMenuSeparatorGeometry} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -421,7 +469,9 @@ test unixMenu-18.1 {GetTearoffEntryGeometry} -constraints {
 
 # Don't know how to reproduce the case where the tkwin has been deleted.
 
-test unixMenu-19.1 {TkpComputeMenubarGeometry - zero entries} -setup {
+test unixMenu-19.1 {TkpComputeMenubarGeometry - zero entries} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -429,7 +479,9 @@ test unixMenu-19.1 {TkpComputeMenubarGeometry - zero entries} -setup {
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
 # Don't know how to generate one width windows
-test unixMenu-19.2 {TkpComputeMenubarGeometry - one entry} -setup {
+test unixMenu-19.2 {TkpComputeMenubarGeometry - one entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -437,7 +489,9 @@ test unixMenu-19.2 {TkpComputeMenubarGeometry - one entry} -setup {
     . configure -menu .m1
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.3 {TkpComputeMenubarGeometry - entry with different font} -setup {
+test unixMenu-19.3 {TkpComputeMenubarGeometry - entry with different font} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -font "Courier 24"
@@ -445,7 +499,9 @@ test unixMenu-19.3 {TkpComputeMenubarGeometry - entry with different font} -setu
     . configure -menu .m1
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.4 {TkpComputeMenubarGeometry - separator} -setup {
+test unixMenu-19.4 {TkpComputeMenubarGeometry - separator} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -453,7 +509,9 @@ test unixMenu-19.4 {TkpComputeMenubarGeometry - separator} -setup {
     . configure -menu .m1
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.5 {TkpComputeMenubarGeometry - First entry} -setup {
+test unixMenu-19.5 {TkpComputeMenubarGeometry - First entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -461,7 +519,9 @@ test unixMenu-19.5 {TkpComputeMenubarGeometry - First entry} -setup {
     . configure -menu .m1
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.6 {TkpComputeMenubarGeometry - First entry too wide} -setup {
+test unixMenu-19.6 {TkpComputeMenubarGeometry - First entry too wide} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -470,7 +530,9 @@ test unixMenu-19.6 {TkpComputeMenubarGeometry - First entry too wide} -setup {
     wm geometry . 10x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.7 {TkpComputeMenubarGeometry - two entries fit} -setup {
+test unixMenu-19.7 {TkpComputeMenubarGeometry - two entries fit} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -480,7 +542,9 @@ test unixMenu-19.7 {TkpComputeMenubarGeometry - two entries fit} -setup {
     wm geometry . 200x200
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.8 {TkpComputeMenubarGeometry - two entries; 2nd don't fit} -setup {
+test unixMenu-19.8 {TkpComputeMenubarGeometry - two entries; 2nd don't fit} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -490,7 +554,9 @@ test unixMenu-19.8 {TkpComputeMenubarGeometry - two entries; 2nd don't fit} -set
     wm geometry . 100x100
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.9 {TkpComputeMenubarGeometry - two entries; 1st dont fit} -setup {
+test unixMenu-19.9 {TkpComputeMenubarGeometry - two entries; 1st dont fit} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -500,7 +566,9 @@ test unixMenu-19.9 {TkpComputeMenubarGeometry - two entries; 1st dont fit} -setu
     wm geometry . 100x100
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.10 {TkpComputeMenubarGeometry - two entries; neither fit} -setup {
+test unixMenu-19.10 {TkpComputeMenubarGeometry - two entries; neither fit} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0 -font "Times 72"
@@ -512,7 +580,7 @@ test unixMenu-19.10 {TkpComputeMenubarGeometry - two entries; neither fit} -setu
 } -result {{} {} {}}
 # ABC notation; capital A means first window fits, small a means it
 # does not. capital B menu means second window fist, etc.
-test unixMenu-19.11 {TkpComputeMenubarGeometry - abc} -setup {
+test unixMenu-19.11 {TkpComputeMenubarGeometry - abc} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0 -font "Times 72"
@@ -523,7 +591,7 @@ test unixMenu-19.11 {TkpComputeMenubarGeometry - abc} -setup {
     wm geometry . 10x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.12 {TkpComputeMenubarGeometry - abC} -setup {
+test unixMenu-19.12 {TkpComputeMenubarGeometry - abC} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -534,7 +602,7 @@ test unixMenu-19.12 {TkpComputeMenubarGeometry - abC} -setup {
     wm geometry . 10x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.13 {TkpComputeMenubarGeometry - aBc} -setup {
+test unixMenu-19.13 {TkpComputeMenubarGeometry - aBc} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -545,7 +613,7 @@ test unixMenu-19.13 {TkpComputeMenubarGeometry - aBc} -setup {
     wm geometry . 10x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.14 {TkpComputeMenubarGeometry - aBC} -setup {
+test unixMenu-19.14 {TkpComputeMenubarGeometry - aBC} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -556,7 +624,7 @@ test unixMenu-19.14 {TkpComputeMenubarGeometry - aBC} -setup {
     wm geometry . 60x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.15 {TkpComputeMenubarGeometry - Abc} -setup {
+test unixMenu-19.15 {TkpComputeMenubarGeometry - Abc} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -567,7 +635,7 @@ test unixMenu-19.15 {TkpComputeMenubarGeometry - Abc} -setup {
     wm geometry . 60x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.16 {TkpComputeMenubarGeometry - AbC} -setup {
+test unixMenu-19.16 {TkpComputeMenubarGeometry - AbC} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -578,7 +646,7 @@ test unixMenu-19.16 {TkpComputeMenubarGeometry - AbC} -setup {
     wm geometry . 60x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.17 {TkpComputeMenubarGeometry - ABc} -setup {
+test unixMenu-19.17 {TkpComputeMenubarGeometry - ABc} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -589,7 +657,7 @@ test unixMenu-19.17 {TkpComputeMenubarGeometry - ABc} -setup {
     wm geometry . 60x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.18 {TkpComputeMenubarGeometry - ABC} -setup {
+test unixMenu-19.18 {TkpComputeMenubarGeometry - ABC} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -600,7 +668,9 @@ test unixMenu-19.18 {TkpComputeMenubarGeometry - ABC} -setup {
     wm geometry . 100x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.19 {TkpComputeMenubarGeometry - help menu in first position} -setup {
+test unixMenu-19.19 {TkpComputeMenubarGeometry - help menu in first position} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -614,7 +684,9 @@ test unixMenu-19.19 {TkpComputeMenubarGeometry - help menu in first position} -s
     wm geometry . 100x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.20 {TkpComputeMenubarGeometry - help menu in middle} -setup {
+test unixMenu-19.20 {TkpComputeMenubarGeometry - help menu in middle} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -628,7 +700,9 @@ test unixMenu-19.20 {TkpComputeMenubarGeometry - help menu in middle} -setup {
     wm geometry . 100x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.21 {TkpComputeMenubarGeometry - help menu in first position} -setup {
+test unixMenu-19.21 {TkpComputeMenubarGeometry - help menu in first position} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -642,7 +716,9 @@ test unixMenu-19.21 {TkpComputeMenubarGeometry - help menu in first position} -s
     wm geometry . 100x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.22 {TkpComputeMenubarGeometry - help item fits} -setup {
+test unixMenu-19.22 {TkpComputeMenubarGeometry - help item fits} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -654,7 +730,9 @@ test unixMenu-19.22 {TkpComputeMenubarGeometry - help item fits} -setup {
     wm geometry . 100x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.23 {TkpComputeMenubarGeometry - help item does not fit} -setup {
+test unixMenu-19.23 {TkpComputeMenubarGeometry - help item does not fit} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -666,7 +744,9 @@ test unixMenu-19.23 {TkpComputeMenubarGeometry - help item does not fit} -setup 
     wm geometry . 100x10
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-test unixMenu-19.24 {TkpComputeMenubarGeometry - help item only one} -setup {
+test unixMenu-19.24 {TkpComputeMenubarGeometry - help item only one} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -678,7 +758,7 @@ test unixMenu-19.24 {TkpComputeMenubarGeometry - help item only one} -setup {
 } -result {{} {} {}}
 
 
-test unixMenu-20.1 {DrawTearoffEntry - menubar} -setup {
+test unixMenu-20.1 {DrawTearoffEntry - menubar} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -698,10 +778,10 @@ test unixMenu-20.2 {DrawTearoffEntry - non-menubar} -constraints {
 } -result {{} {}}
 
 
-test unixMenu-21.1 {TkpInitializeMenuBindings - nothing to do} -body {}
+test unixMenu-21.1 {TkpInitializeMenuBindings - nothing to do} -constraints unix -body {}
 
 
-test unixMenu-22.1 {SetHelpMenu - no menubars} -setup {
+test unixMenu-22.1 {SetHelpMenu - no menubars} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -709,7 +789,9 @@ test unixMenu-22.1 {SetHelpMenu - no menubars} -setup {
     list [menu .m1.test] [destroy .m1]
 } -result {.m1.test {}}
 # Don't know how to automate missing tkwins
-test unixMenu-22.2 {SetHelpMenu - menubar but no help menu} -setup {
+test unixMenu-22.2 {SetHelpMenu - menubar but no help menu} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -717,7 +799,9 @@ test unixMenu-22.2 {SetHelpMenu - menubar but no help menu} -setup {
     .m1 add cascade -label .m1.file
     list [menu .m1.file] [. configure -menu ""] [destroy .m1]
 } -result {.m1.file {} {}}
-test unixMenu-22.3 {SetHelpMenu - menubar with help menu} -setup {
+test unixMenu-22.3 {SetHelpMenu - menubar with help menu} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -725,7 +809,9 @@ test unixMenu-22.3 {SetHelpMenu - menubar with help menu} -setup {
     .m1 add cascade -label .m1.help
     list [menu .m1.help] [. configure -menu ""] [destroy .m1]
 } -result {.m1.help {} {}}
-test unixMenu-22.4 {SetHelpMenu - multiple menubars with same help menu} -setup {
+test unixMenu-22.4 {SetHelpMenu - multiple menubars with same help menu} -constraints {
+    unix
+} -setup {
     destroy .m1 .t2
 } -body {
     toplevel .t2
@@ -738,7 +824,9 @@ test unixMenu-22.4 {SetHelpMenu - multiple menubars with same help menu} -setup 
 } -result {.m1.help {} {} {}}
 
 
-test unixMenu-23.1 {TkpDrawMenuEntry - gc for active and not strict motif} -setup {
+test unixMenu-23.1 {TkpDrawMenuEntry - gc for active and not strict motif} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -747,7 +835,9 @@ test unixMenu-23.1 {TkpDrawMenuEntry - gc for active and not strict motif} -setu
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} -setup {
+test unixMenu-23.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -756,7 +846,9 @@ test unixMenu-23.2 {TkpDrawMenuEntry - gc for active menu item with its own gc} 
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.3 {TkpDrawMenuEntry - gc for active and strict motif} -setup {
+test unixMenu-23.3 {TkpDrawMenuEntry - gc for active and strict motif} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -766,7 +858,9 @@ test unixMenu-23.3 {TkpDrawMenuEntry - gc for active and strict motif} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } -result {{} {} 0}
-test unixMenu-23.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom entry} -setup {
+test unixMenu-23.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custom entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground blue
@@ -774,7 +868,9 @@ test unixMenu-23.4 {TkpDrawMenuEntry - gc for disabled with disabledfg and custo
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -setup {
+test unixMenu-23.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground blue
@@ -782,7 +878,9 @@ test unixMenu-23.5 {TkpDrawMenuEntry - gc for disabled with disabledFg} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -setup {
+test unixMenu-23.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -disabledforeground ""
@@ -790,7 +888,9 @@ test unixMenu-23.6 {TkpDrawMenuEntry - gc for disabled - no disabledFg} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.7 {TkpDrawMenuEntry - gc for normal - custom entry} -setup {
+test unixMenu-23.7 {TkpDrawMenuEntry - gc for normal - custom entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -798,7 +898,7 @@ test unixMenu-23.7 {TkpDrawMenuEntry - gc for normal - custom entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.8 {TkpDrawMenuEntry - gc for normal} -setup {
+test unixMenu-23.8 {TkpDrawMenuEntry - gc for normal} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -806,7 +906,9 @@ test unixMenu-23.8 {TkpDrawMenuEntry - gc for normal} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.9 {TkpDrawMenuEntry - gc for indicator - custom entry} -setup {
+test unixMenu-23.9 {TkpDrawMenuEntry - gc for indicator - custom entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -815,7 +917,9 @@ test unixMenu-23.9 {TkpDrawMenuEntry - gc for indicator - custom entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.10 {TkpDrawMenuEntry - gc for indicator} -setup {
+test unixMenu-23.10 {TkpDrawMenuEntry - gc for indicator} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -824,7 +928,9 @@ test unixMenu-23.10 {TkpDrawMenuEntry - gc for indicator} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.11 {TkpDrawMenuEntry - border - custom entry} -setup {
+test unixMenu-23.11 {TkpDrawMenuEntry - border - custom entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -833,7 +939,7 @@ test unixMenu-23.11 {TkpDrawMenuEntry - border - custom entry} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.12 {TkpDrawMenuEntry - border} -setup {
+test unixMenu-23.12 {TkpDrawMenuEntry - border} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -842,7 +948,9 @@ test unixMenu-23.12 {TkpDrawMenuEntry - border} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.13 {TkpDrawMenuEntry - active border - strict motif} -setup {
+test unixMenu-23.13 {TkpDrawMenuEntry - active border - strict motif} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     set tk_strictMotif 1
@@ -852,7 +960,9 @@ test unixMenu-23.13 {TkpDrawMenuEntry - active border - strict motif} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1] [set tk_strictMotif 0]
 } -result {{} {} 0}
-test unixMenu-23.14 {TkpDrawMenuEntry - active border - custom entry} -setup {
+test unixMenu-23.14 {TkpDrawMenuEntry - active border - custom entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -861,7 +971,7 @@ test unixMenu-23.14 {TkpDrawMenuEntry - active border - custom entry} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.15 {TkpDrawMenuEntry - active border} -setup {
+test unixMenu-23.15 {TkpDrawMenuEntry - active border} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -870,7 +980,9 @@ test unixMenu-23.15 {TkpDrawMenuEntry - active border} -setup {
     .m1 entryconfigure 1 -state active
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.16 {TkpDrawMenuEntry - font - custom entry} -setup {
+test unixMenu-23.16 {TkpDrawMenuEntry - font - custom entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -878,7 +990,7 @@ test unixMenu-23.16 {TkpDrawMenuEntry - font - custom entry} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.17 {TkpDrawMenuEntry - font} -setup {
+test unixMenu-23.17 {TkpDrawMenuEntry - font} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1 -font "Courier 72"
@@ -886,7 +998,7 @@ test unixMenu-23.17 {TkpDrawMenuEntry - font} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.18 {TkpDrawMenuEntry - separator} -setup {
+test unixMenu-23.18 {TkpDrawMenuEntry - separator} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -894,7 +1006,7 @@ test unixMenu-23.18 {TkpDrawMenuEntry - separator} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.19 {TkpDrawMenuEntry - standard} -setup {
+test unixMenu-23.19 {TkpDrawMenuEntry - standard} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -902,7 +1014,9 @@ test unixMenu-23.19 {TkpDrawMenuEntry - standard} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.20 {TkpDrawMenuEntry - disabled cascade item} -setup {
+test unixMenu-23.20 {TkpDrawMenuEntry - disabled cascade item} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -913,7 +1027,7 @@ test unixMenu-23.20 {TkpDrawMenuEntry - disabled cascade item} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.21 {TkpDrawMenuEntry - indicator} -setup {
+test unixMenu-23.21 {TkpDrawMenuEntry - indicator} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -922,7 +1036,7 @@ test unixMenu-23.21 {TkpDrawMenuEntry - indicator} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-test unixMenu-23.22 {TkpDrawMenuEntry - hide margin} -setup {
+test unixMenu-23.22 {TkpDrawMenuEntry - hide margin} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -934,7 +1048,8 @@ test unixMenu-23.22 {TkpDrawMenuEntry - hide margin} -setup {
 
 
 test unixMenu-24.1 {GetMenuLabelGeometry - image} -constraints {
-    testImageType } -setup {
+    testImageType unix
+} -setup {
     destroy .m1
     catch {image delete image1}
 } -body {
@@ -943,21 +1058,21 @@ test unixMenu-24.1 {GetMenuLabelGeometry - image} -constraints {
     .m1 add command -image image1
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
-test unixMenu-24.2 {GetMenuLabelGeometry - bitmap} -setup {
+test unixMenu-24.2 {GetMenuLabelGeometry - bitmap} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -bitmap questhead
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-24.3 {GetMenuLabelGeometry - no text} -setup {
+test unixMenu-24.3 {GetMenuLabelGeometry - no text} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-24.4 {GetMenuLabelGeometry - text} -setup {
+test unixMenu-24.4 {GetMenuLabelGeometry - text} -constraints unix -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -966,20 +1081,26 @@ test unixMenu-24.4 {GetMenuLabelGeometry - text} -setup {
 } -result {{} {}}
 
 
-test unixMenu-25.1 {TkpComputeStandardMenuGeometry - no entries} -setup {
+test unixMenu-25.1 {TkpComputeStandardMenuGeometry - no entries} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.2 {TkpComputeStandardMenuGeometry - one entry} -setup {
+test unixMenu-25.2 {TkpComputeStandardMenuGeometry - one entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -label "one"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.3 {TkpComputeStandardMenuGeometry - more than one entry} -setup {
+test unixMenu-25.3 {TkpComputeStandardMenuGeometry - more than one entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -987,7 +1108,9 @@ test unixMenu-25.3 {TkpComputeStandardMenuGeometry - more than one entry} -setup
     .m1 add command -label "two"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.4 {TkpComputeStandardMenuGeometry - separator} -setup {
+test unixMenu-25.4 {TkpComputeStandardMenuGeometry - separator} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1006,21 +1129,27 @@ test unixMenu-25.5 {TkpComputeStandardMenuGeometry - tearoff entry} -constraints
     catch {tk::MbPost .mb}
     list [update] [tk::MenuUnpost .mb.m] [destroy .mb]
 } -result {{} {} {}}
-test unixMenu-25.6 {TkpComputeStandardMenuGeometry - standard label geometry} -setup {
+test unixMenu-25.6 {TkpComputeStandardMenuGeometry - standard label geometry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -label "test"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.7 {TkpComputeStandardMenuGeometry - different font for entry} -setup {
+test unixMenu-25.7 {TkpComputeStandardMenuGeometry - different font for entry} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -font "Helvetica 12"
     .m1 add command -label "test" -font "Courier 12"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.8 {TkpComputeStandardMenuGeometry - second entry larger} -setup {
+test unixMenu-25.8 {TkpComputeStandardMenuGeometry - second entry larger} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1028,7 +1157,9 @@ test unixMenu-25.8 {TkpComputeStandardMenuGeometry - second entry larger} -setup
     .m1 add command -label "test test"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.9 {TkpComputeStandardMenuGeometry - first entry larger} -setup {
+test unixMenu-25.9 {TkpComputeStandardMenuGeometry - first entry larger} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1036,14 +1167,18 @@ test unixMenu-25.9 {TkpComputeStandardMenuGeometry - first entry larger} -setup 
     .m1 add command -label "test"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.10 {TkpComputeStandardMenuGeometry - accelerator} -setup {
+test unixMenu-25.10 {TkpComputeStandardMenuGeometry - accelerator} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
     .m1 add command -label "test" -accel "Ctrl+S"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.11 {TkpComputeStandardMenuGeometry - second accel larger} -setup {
+test unixMenu-25.11 {TkpComputeStandardMenuGeometry - second accel larger} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1051,7 +1186,9 @@ test unixMenu-25.11 {TkpComputeStandardMenuGeometry - second accel larger} -setu
     .m1 add command -label "test" -accel "1 1"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.12 {TkpComputeStandardMenuGeometry - second accel smaller} -setup {
+test unixMenu-25.12 {TkpComputeStandardMenuGeometry - second accel smaller} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1059,7 +1196,9 @@ test unixMenu-25.12 {TkpComputeStandardMenuGeometry - second accel smaller} -set
     .m1 add command -label "test" -accel "1"
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.13 {TkpComputeStandardMenuGeometry - indicator} -setup {
+test unixMenu-25.13 {TkpComputeStandardMenuGeometry - indicator} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1068,7 +1207,7 @@ test unixMenu-25.13 {TkpComputeStandardMenuGeometry - indicator} -setup {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 test unixMenu-25.14 {TkpComputeStandardMenuGeometry - second indicator less or equal } -constraints {
-    testImageType
+    unix testImageType
 } -setup {
     destroy .m1
     catch {image delete image1}
@@ -1082,7 +1221,7 @@ test unixMenu-25.14 {TkpComputeStandardMenuGeometry - second indicator less or e
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
 test unixMenu-25.15 {TkpComputeStandardMenuGeometry - second indicator larger } -constraints {
-    testImageType
+    unix testImageType
 } -setup {
     destroy .m1
     catch {image delete image1}
@@ -1095,13 +1234,17 @@ test unixMenu-25.15 {TkpComputeStandardMenuGeometry - second indicator larger } 
     .m1 invoke 2
     list [update idletasks] [destroy .m1] [image delete image1]
 } -result {{} {} {}}
-test unixMenu-25.16 {TkpComputeStandardMenuGeometry - zero sized menus} -setup {
+test unixMenu-25.16 {TkpComputeStandardMenuGeometry - zero sized menus} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.17 {TkpComputeStandardMenuGeometry - first column bigger} -setup {
+test unixMenu-25.17 {TkpComputeStandardMenuGeometry - first column bigger} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1
@@ -1110,7 +1253,9 @@ test unixMenu-25.17 {TkpComputeStandardMenuGeometry - first column bigger} -setu
     .m1 add command -label three -columnbreak 1
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.18 {TkpComputeStandardMenuGeometry - second column bigger} -setup {
+test unixMenu-25.18 {TkpComputeStandardMenuGeometry - second column bigger} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -1119,7 +1264,9 @@ test unixMenu-25.18 {TkpComputeStandardMenuGeometry - second column bigger} -set
     .m1 add command -label three
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.19 {TkpComputeStandardMenuGeometry - three columns} -setup {
+test unixMenu-25.19 {TkpComputeStandardMenuGeometry - three columns} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -1131,7 +1278,9 @@ test unixMenu-25.19 {TkpComputeStandardMenuGeometry - three columns} -setup {
     .m1 add command -label six
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -setup {
+test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -constraints {
+    unix
+} -setup {
     destroy .m1
 } -body {
     menu .m1 -tearoff 0
@@ -1140,7 +1289,7 @@ test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -setup {
 } -result {{} {}}
 
 
-test unixMenu-26.1 {TkpMenuInit - nothing to do} -body {}
+test unixMenu-26.1 {TkpMenuInit - nothing to do} -constraints unix -body {}
 
 #
 # TESTFILE CLEANUP
