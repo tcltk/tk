@@ -3001,7 +3001,7 @@ test spinbox-13.12 {GetSpinboxIndex procedure} -constraints x11 -body {
     destroy .e
 } -returnCodes error -result {selection isn't in widget .e}
 
-test spinbox-13.12.1 {GetSpinboxIndex procedure} -constraints unix -body {
+test spinbox-13.12.1 {GetSpinboxIndex procedure} -body {
 # Previous settings:
     spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
     pack .e
@@ -3035,7 +3035,7 @@ test spinbox-13.13 {GetSpinboxIndex procedure} -constraints win -body {
     destroy .e
 } -returnCodes error -result {bad spinbox index "sbogus"}
 
-test spinbox-13.14 {GetSpinboxIndex procedure} -constraints win -body {
+test spinbox-13.14 {GetSpinboxIndex procedure} -body {
 # On mac and pc, when selection is cleared, spinbox widget remembers
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
@@ -3055,7 +3055,7 @@ test spinbox-13.14 {GetSpinboxIndex procedure} -constraints win -body {
     destroy .e
 } -returnCodes error -match glob -result {*}
 
-test spinbox-13.14.1 {GetSpinboxIndex procedure} -constraints win -body {
+test spinbox-13.14.1 {GetSpinboxIndex procedure} -body {
 # On mac and pc, when selection is cleared, spinbox widget remembers
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.

@@ -390,7 +390,7 @@ test menuDraw-11.3 {TkMenuSelectImageProc - entry not selected} -constraints {
 } -result {{} {}}
 
 #Don't know how to test missing tkwin in DisplayMenu
-test menuDraw-12.1 {DisplayMenu - menubar background} -constraints unix -setup {
+test menuDraw-12.1 {DisplayMenu - menubar background} -setup {
     deleteWindows
 } -body {
     menu .m1
@@ -469,9 +469,7 @@ test menuDraw.12.7 {DisplayMenu - three columns} -setup {
 } -cleanup {
     deleteWindows
 } -result {}
-test menuDraw-12.6 {Display menu - testing for extra space and menubars} -constraints {
-    unix
-} -setup {
+test menuDraw-12.6 {Display menu - testing for extra space and menubars} -setup {
     deleteWindows
 } -body {
     menu .m1
@@ -714,7 +712,7 @@ test menuDraw-16.8 {Recursive cloned menu [bug 7f67bb4054]} -setup {
     deleteWindows
 } -result {cannot add recursive cascade menu ".mbar"}
 
-test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
+test menuDraw-17.1 {AdjustMenuCoords - menubar} -setup {
     deleteWindows
 } -body {
     menu .m1 -tearoff 0
