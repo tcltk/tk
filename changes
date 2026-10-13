@@ -8497,3 +8497,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-12 (bug) [223112] tkMenuFind doesn't locate cloned menubars (storchaka)
 
 2026-10-13 (bug) [680884] menubutton scripts are confused about their owning menu (storchaka)
+
+2026-10-13 (bug) [299533] ttk::sizegrip strange behaviour (storchaka)
