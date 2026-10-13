@@ -3944,6 +3944,35 @@ test btree-14.122 {chars after a soft hyphen merge with the following chars} -se
     destroy .t
 } -result {text g 1.0 text hx 1.2}
 
+test btree-14.123 {soft hyphen and newline inserted into a line with other tags} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The line split after a soft hyphen asserted that the line had no partial tag.
+    .t debug 1
+    .t insert end ab A
+    .t insert end c
+    .t insert 1.3 "s\u00ad\no"
+    .t debug 0
+    split [string map [list \u00ad -] [.t get 1.0 end-1c]] \n
+} -cleanup {
+    destroy .t
+} -result {abcs- o}
+
+test btree-14.124 {-hyphentags over several lines} -setup {
+    destroy .t
+    text .t
+} -body {
+    # A line without soft hyphen kept the hyphen tags of a line with one.
+    .t debug 1
+    .t insert end q
+    .t tk_textInsert 1.0 -hyphentags P "a\u00adb\nc\nd\u00ade"
+    .t debug 0
+    .t tag ranges P
+} -cleanup {
+    destroy .t
+} -result {1.1 1.2 3.1 3.2}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
