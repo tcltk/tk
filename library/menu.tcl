@@ -461,7 +461,7 @@ proc ::tk::MbButtonUp w {
     unset -nocomplain Priv(pressed)
     set menu [$w cget -menu]
     set tearoff [expr {[tk windowingsystem] eq "x11" || \
-	    ($menu ne "" && [$menu cget -type] eq "tearoff")}]
+	    ($menu ne "" && [winfo exists $menu] && [$menu cget -type] eq "tearoff")}]
     if {($tearoff != 0) && $Priv(postedMb) eq $w \
 	    && $Priv(inMenubutton) eq $w} {
 	MenuFirstEntry [$Priv(postedMb) cget -menu]
