@@ -922,6 +922,20 @@ individual widgets or by redefining the class bindings.
 At present it is not possible to use the
 option database to specify values for the options to individual
 entries.
+.SH PLATFORM NOTES
+.TP
+\fBWindows\fR
+.
+The menubar of a toplevel may only honor font and color options when
+the not documented MS-Windows messages
+WM_UAHDRAWMENU, WM_UAHDRAWMENUITEM and WM_UAHMEASUREMENUITEM are sent
+by the system.
+Currently, this is the case for MS-Windows 8 to 11, but not for Wine.
+Any sub-menu will always honor those options.
+.TP
+\fBmacOS\fR
+.
+font and colors of menus may not be customized.
 .SH "SEE ALSO"
 bind(n), menubutton(n), ttk::menubutton(n), toplevel(n)
 .SH KEYWORDS

@@ -1399,6 +1399,56 @@ test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
     emptyTest win
 } -body {}
 
+test winMenu-35.1 {menu bar is drawn with the font of the menu, Bug 11bd4a03a0} -constraints {
+    win
+} -setup {
+    destroy .t2
+} -body {
+    toplevel .t2 -menu .t2.m
+    wm geometry .t2 300x100+0+0
+    menu .t2.m
+    .t2.m add cascade -label File -menu [menu .t2.m.f]
+    .t2.m.f add command -label Open
+    .t2.m add command -label Help
+    update
+    set y0 [winfo rooty .t2]
+    .t2.m configure -font {Arial 24}
+    update
+    set y1 [winfo rooty .t2]
+    .t2.m configure -font TkMenuFont
+    update
+    list [expr {$y1 > $y0}] [expr {[winfo rooty .t2] == $y0}]
+} -cleanup {
+    destroy .t2
+} -result {1 1}
+test winMenu-35.2 {menu bar with the colors of the menu and its entries, Bug 11bd4a03a0} -constraints {
+    win
+} -setup {
+    destroy .t2
+    image create photo winmenu35 -width 10 -height 10
+} -body {
+    toplevel .t2 -menu .t2.m
+    wm geometry .t2 300x100+0+0
+    menu .t2.m -bg black -fg white -activebackground gray -activeforeground yellow
+    .t2.m add cascade -label File -underline 0 -menu [menu .t2.m.f]
+    .t2.m add command -label Edit -background red -font {Arial 14}
+    .t2.m add command -image winmenu35
+    .t2.m add command -label Disabled -state disabled
+    update
+    .t2.m delete Edit
+    .t2.m insert 1 command -label New
+    update
+    .t2.m configure -bg SystemMenu -fg SystemMenuText
+    update
+    .t2.m entryconfigure 1 -background blue
+    update
+    .t2.m delete 0 end
+    update
+} -cleanup {
+    destroy .t2
+    image delete winmenu35
+} -result {}
+
 #
 # TESTFILE CLEANUP
 #

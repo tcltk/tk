@@ -152,8 +152,8 @@ namespace eval ttk::theme::classic {
 		}
 	    }
 	}
-	ttk::style configure Toolbutton -padding 1.5p -relief flat \
-	    -shiftrelief 2 -focussolid 1
+	ttk::style configure Toolbutton -anchor center -justify center \
+	    -padding 1.5p -relief flat -shiftrelief 2 -focussolid 1
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \

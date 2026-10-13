@@ -2019,10 +2019,31 @@ UpdateWrapper(
 	 */
 
 	if (wmPtr->flags & WM_FULLSCREEN) {
-	    x = 0;
-	    y = 0;
-	    width = WidthOfScreen(Tk_Screen(winPtr));
-	    height = HeightOfScreen(Tk_Screen(winPtr));
+	    /*
+	     * Cover the monitor the window currently is on, not always the
+	     * primary one.
+	     */
+
+	    RECT winRect;
+	    MONITORINFO mi;
+
+	    winRect.left = wmPtr->x;
+	    winRect.top = wmPtr->y;
+	    winRect.right = wmPtr->x + width;
+	    winRect.bottom = wmPtr->y + height;
+	    mi.cbSize = sizeof(mi);
+	    if (GetMonitorInfoW(MonitorFromRect(&winRect,
+		    MONITOR_DEFAULTTONEAREST), &mi)) {
+		x = mi.rcMonitor.left;
+		y = mi.rcMonitor.top;
+		width = mi.rcMonitor.right - mi.rcMonitor.left;
+		height = mi.rcMonitor.bottom - mi.rcMonitor.top;
+	    } else {
+		x = 0;
+		y = 0;
+		width = WidthOfScreen(Tk_Screen(winPtr));
+		height = HeightOfScreen(Tk_Screen(winPtr));
+	    }
 	} else if (!(wmPtr->sizeHintsFlags & (USPosition | PPosition))
 		&& (wmPtr->flags & WM_NEVER_MAPPED)) {
 	    x = CW_USEDEFAULT;
@@ -2149,7 +2170,7 @@ UpdateWrapper(
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
     wmPtr->flags |= WM_APPEARANCE_PENDING;
-    Tcl_DoWhenIdle(AppearanceIdleProc, (void *)winPtr);
+    Tcl_DoWhenIdle(AppearanceIdleProc, winPtr);
     if (winPtr->flags & TK_EMBEDDED &&
 	    SendMessageW(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0)) {
 	SendMessageW(wmPtr->wrapper, TK_GEOMETRYREQ,
@@ -2554,11 +2575,13 @@ static void CheckForPointer(TkWindow *winPtr)
     if (windows != NULL) {
 	for (w = windows; *w ; w++) {
 	    RECT windowRect;
-	    HWND hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) *w));
-	    if (GetWindowRect(hwnd, &windowRect) == 0) {
+	    Window window = Tk_WindowId((Tk_Window) *w);
+
+	    if ((winPtr == *w) || (window == None)
+		    || (GetWindowRect(Tk_GetHWND(window), &windowRect) == 0)) {
 		continue;
 	    }
-	    if (winPtr != *w && PtInRect(&windowRect, mouse)) {
+	    if (PtInRect(&windowRect, mouse)) {
 		Tk_Window target = Tk_CoordsToWindow(x, y, (Tk_Window) *w);
 		Tk_UpdatePointer((Tk_Window) target, x, y, state);
 		break;
@@ -6996,6 +7019,18 @@ TkWmStackorderToplevel(
 	    (LPARAM) &pair) == 0) {
 	Tcl_Free(windows);
 	windows = NULL;
+    } else {
+	/*
+	 * Not all toplevels may have been found (e.g. one being destroyed).
+	 * Move the found ones to the beginning of the array. [Bug 7f05a19378]
+	 */
+
+	Tcl_Size found = (windows + table.numEntries) - (pair.windowPtr + 1);
+
+	if (found < table.numEntries) {
+	    memmove(windows, pair.windowPtr + 1,
+		    (found + 1) * sizeof(TkWindow *));
+	}
     }
 
   done:
@@ -8152,6 +8187,14 @@ WmProc(
 	result = 0;
 	goto done;
 
+    case WM_UAHDRAWMENU:
+    case WM_UAHDRAWMENUITEM:
+    case WM_UAHMEASUREMENUITEM:
+	if (TkWinHandleMenubarDraw(hwnd, message, wParam, lParam, &result)) {
+	    goto done;
+	}
+	break;
+
     case WM_ENTERSIZEMOVE:
 	inMoveSize = 1;
 
@@ -8415,6 +8458,9 @@ WmProc(
 	}
     } else {
 	result = DefWindowProcW(hwnd, message, wParam, lParam);
+    }
+    if (message == WM_NCPAINT || message == WM_NCACTIVATE) {
+	TkWinDrawMenubarLine(hwnd);
     }
 
   done:
@@ -8795,10 +8841,12 @@ TkpWinToplevelDeiconify(
 
     /*
      * If we were in the ZoomState (maximized), 'wm deiconify' should not
-     * cause the window to shrink
+     * cause the window to shrink. A withdrawn window has lost its ZoomState,
+     * but a hidden wrapper keeps its maximized style.
      */
 
-    if (wmPtr->hints.initial_state == ZoomState) {
+    if (wmPtr->hints.initial_state == ZoomState
+	    || (wmPtr->wrapper && IsZoomed(wmPtr->wrapper))) {
 	TkpWmSetState(winPtr, ZoomState);
     } else {
 	TkpWmSetState(winPtr, NormalState);

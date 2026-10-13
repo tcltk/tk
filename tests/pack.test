@@ -1798,6 +1798,7 @@ test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagat
 } -cleanup {
     bind . <<NoManagedChild>> {}
     destroy .1
+    pack propagate . 1
 } -result 0
 
 #

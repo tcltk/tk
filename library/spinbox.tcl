@@ -514,7 +514,7 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 proc ::tk::spinbox::Paste {w x} {
     $w icursor [::tk::spinbox::ClosestGap $w $x]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
-    if {"disabled" eq [$w cget -state]} {
+    if {"disabled" ne [$w cget -state]} {
 	focus $w
     }
 }

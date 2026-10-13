@@ -91,8 +91,8 @@ proc xe {n {w .t}} {
 
 # Create entries in the option database to be sure that geometry options
 # like border width have selected values.
-option add *Text.borderWidth 2         ; # tests work with [1-3]
-option add *Text.highlightThickness 2  ; # tests work with [0-5]
+option add *Text.borderWidth 2	; # tests work with [1-3]
+option add *Text.highlightThickness 2	; # tests work with [0-5]
 option add *Text.padX 1  ; # same padding in x and y, see proc bo; tests work with [0-4]
 option add *Text.padY 1  ; # same padding in x and y, see proc bo; tests work with [0-4]
 
@@ -354,9 +354,7 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     list [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
-test textDisp-2.7 {LayoutDLine, marks and tags} -constraints {win32} -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping
-    # with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
+test textDisp-2.7 {LayoutDLine, marks and tags} -body {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
@@ -400,7 +398,6 @@ test textDisp-2.9 {LayoutDLine, marks and tags} {
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
 	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.10 {LayoutDLine, marks and tags} {
-# now incorporates grapheme breaks/spacing
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This is a very_very_long_word_that_wraps."
@@ -408,25 +405,10 @@ test textDisp-2.10 {LayoutDLine, marks and tags} {
     .t tag add foo 1.15
     .t tag add foo 1.17
     .t tag add foo 1.19
-
-    set b1 [.t bbox 1.9]
-    set b2 [.t bbox 1.10]
-    set b3 [.t bbox 1.25]
-
-    # Validate structure, not exact pixel values
-    foreach b [list $b1 $b2 $b3] {
-        if {[llength $b] != 4} {return "wrong-length"}
-        if {[lindex $b 0] < 0} {return "negative-x"}
-        if {[lindex $b 1] < 0} {return "negative-y"}
-        if {[lindex $b 2] <= 0} {return "nonpositive-width"}
-        if {[lindex $b 3] <= 0} {return "nonpositive-height"}
-    }
-
-    # Ensure the third bbox is on a lower line than the first two
-    expr {[lindex $b3 1] > [lindex $b1 1]}
-} 1
-
-
+    list [.t bbox 1.9] [.t bbox 1.10] [.t bbox 1.25]
+} [list [list [xchar 9] [yline 1] [xe 9] $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	    [list [xchar 15] [yline 2] $fixedWidth $fixedHeight]]
 test textDisp-2.11 {LayoutDLine, newline width} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -612,7 +594,6 @@ test textDisp-2.22 {LayoutDLine, spacing options} {
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
 
 test textDisp-2.23 {LayoutDLine, spacing options} {
-	#now incorporates grapheme breaks/spacing
     .t configure -wrap word
     .t delete 1.0 end
     .t tag delete x y
@@ -642,8 +623,7 @@ test textDisp-2.23 {LayoutDLine, spacing options} {
     set i [.t dlineinfo 3.0]
     set b4 [expr {[lindex $i 1] + [lindex $i 4] - $b4}]
     list $b1 $b2 $b3 $b4
-} [list 1 5 -2 1]
-
+} [list 1 5 13 16]
 
 #
 # COMMON TEST SETUP
@@ -1490,19 +1470,19 @@ test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past an
     .t tag configure hidden -elide true
     .t mark set insert 9.0
     update
-    .t mark set insert 8.0        ; # up one line
+    .t mark set insert 8.0; # up one line
     update
     set res [list $tk_textRedraw]
-    .t mark set insert 12.2       ; # in the visible text
+    .t mark set insert 12.2; # in the visible text
     update
     lappend res $tk_textRedraw
-    .t mark set insert 6.5        ; # in the hidden text
+    .t mark set insert 6.5; # in the hidden text
     update
     lappend res $tk_textRedraw
-    .t mark set insert 3.5        ; # in the visible text again
+    .t mark set insert 3.5; # in the visible text again
     update
     lappend res $tk_textRedraw
-    .t mark set insert 3.8        ; # within the same line
+    .t mark set insert 3.8; # within the same line
     update
     lappend res $tk_textRedraw
 } {{8.0 9.0} {8.0 12.0} {8.0 12.0} {3.0 8.0} {3.0 4.0}}
@@ -1591,11 +1571,9 @@ test textDisp-9.6 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag haveBigFontTwiceLargerThanTextFont} \
-    -constraints {!win32} \
+test textDisp-9.7 {TkTextRedrawTag} \
+    -constraints haveBigFontTwiceLargerThanTextFont \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Uniscribe (Windows); run on macOS and X11.
 	.t configure -wrap char
 	.t delete 1.0 end
 	.t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -2696,10 +2674,7 @@ test textDisp-16.40 {text count -xpixels} {
       [.t count -xpixels 1.0 end]
 } [list [expr {5*$fixedWidth}] [expr {-5*$fixedWidth}] 0 [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] 0]
 test textDisp-16.41 {text count -xpixels with indices in elided lines} \
-    -constraints {win32} \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
 	set res {}
 	.t delete 1.0 end
 	for {set i 1} {$i < 40} {incr i} {
@@ -3249,19 +3224,12 @@ test textDisp-19.11.22 {TextWidgetCmd procedure, "index +displaylines"} {
 test textDisp-19.11.23 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.3" "16.0 +1displaylines"
-
-    # Compute values
-    .t index "11.5 +1d lines"
-    .t index "11.5 +2d lines"
-    .t index "12.0 +1d lines"
-    .t index "12.0 +2d lines"
-    .t index "11.0 +2d lines"
-    .t index "13.0 +2d lines"
-    .t index "13.0 +3d lines"
-    .t index "13.0 +4d lines"
-    return {}
-} {}
-
+    list [.t index "11.5 +1d lines"] [.t index "11.5 +2d lines"] \
+      [.t index "12.0 +1d lines"] \
+      [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
+      [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
+      [.t index "13.0 +4d lines"]
+} {16.23 16.44 16.39 16.57 16.39 16.60 16.77 16.79}
 
 #
 # COMMON TEST CLEANUP
@@ -3453,6 +3421,16 @@ test textDisp-19.19 {count -ypixels with indices in elided lines} {
     update
     set res [list [.t count -ypixels 5.0 11.0] [.t count -ypixels 5.0 11.20]]
 } [list [expr {1 * $fixedHeight}] [expr {2 * $fixedHeight}]]
+test textDisp-19.20 {count -update -ypixels in entirely elided lines merged with the previous line} {
+    .t delete 1.0 end
+    for {set i 1} {$i < 25} {incr i} {
+	.t insert end "Line $i\n"
+    }
+    .t tag add hidden 5.3 11.0
+    .t tag configure hidden -elide true
+    # Lines 6 to 10 are entirely elided and merged with line 5
+    list [.t count -update -ypixels 7.0 8.0] [.t count -update -ypixels 1.0 12.0]
+} [list 0 [expr {5 * $fixedHeight}]]
 
 #
 # COMMON TEST SETUP
@@ -3510,10 +3488,7 @@ test textDisp-20.5 {FindDLine} -setup {
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
 test textDisp-21.1 {TkTextPixelIndex} \
-    -constraints {!win32} \
     -body {
-	# Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Uniscribe (Windows); run on macOS and X11.
 	.t yview 48.0
 	set off [expr {[bo]+3}]
 	list [.t index @-10,-10] [.t index @$off,$off] [.t index @[expr {[xchar 2]+2}],$off] \
@@ -4410,23 +4385,17 @@ test textDisp-26.14 {AdjustForTab procedure, not enough space} {
 	    [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]
 } [list [xchar 11] [xchar 32] [xchar 11] [xchar 32]]
 test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {
-	#now incorporates grapheme breaks/spacing
     .t delete 1.0 end
     .t configure -tabstyle wordprocessor
     .t insert end "a \tb \tc \td \te \tf \tg\n"
     .t insert end "Watch the \tX and the \t\t\tY\n"
     .t tag configure moop -tabs [expr {8*$fixedWidth}]
     .t insert end "Watch the \tX and the \t\t\tY\n" moop
-
-    set x1 [lindex [.t bbox 2.11] 0]
-    set x2 [lindex [.t bbox 2.24] 0]
-    set x3 [lindex [.t bbox 3.11] 0]
-    set x4 [lindex [.t bbox 3.24] 0]
-
-    # Validate tab progression: second tab > first tab
-    expr {($x2 > $x1) && ($x4 > $x3)}
-} 1
-
+    set res [list [lindex [.t bbox 2.11] 0] [lindex [.t bbox 2.24] 0] \
+      [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]]
+    .t configure -tabstyle tabular
+    set res
+} [list [xchar 16] [xchar 8] [xchar 16] [xchar 8]]
 
 #
 # COMMON TEST SETUP
@@ -4439,14 +4408,10 @@ update
 test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
-
-    # Compute values
-    .t bbox 1.2
-    .t bbox 1.10
-    .t bbox 1.12
-
-    return {}
-} {}
+    list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]
+} [list [list [xchar 8] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar [expr {8+8}]] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar [expr {8+8+1+1}]] [yline 1] $fixedWidth $fixedHeight]]
 test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
@@ -5326,7 +5291,7 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
 test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
     # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
     label .l1 -text "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01" \
-        -font $fixedFont -width 20
+	-font $fixedFont -width 20
     pack .l1
 } -body {
     update
@@ -5345,7 +5310,72 @@ test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     destroy .t1
 } -result {}
 
+test textDisp-38.3 {layout of the text in a window which has not been mapped uses the requested size - bug 7d8d10e4a9} -setup {
+    toplevel .top
+    wm withdraw .top
+    text .top.t -width 20 -height 5 -wrap char -font {Courier 12}
+    pack .top.t
+} -body {
+    .top.t insert end [string repeat x 100]
+    .top.t count -displaylines 1.0 end
+} -cleanup {
+    destroy .top
+} -result 5
 
+# Display lines of $w, each one as its code points U+XXXX joined by ".".
+proc displayLineCodePoints {w} {
+    set res {}
+    for {set i 1.0} {[$w compare $i < "end - 1c"]} {set i $next} {
+	set next [$w index "$i + 1 displaylines"]
+	if {[$w compare $next <= $i] || [$w compare $next > "end - 1c"]} {
+	    set next [$w index "end - 1c"]
+	}
+	set cps {}
+	foreach c [split [$w get $i $next] {}] {
+	    lappend cps [format U+%04X [scan $c %c]]
+	}
+	lappend res [join $cps .]
+    }
+    return $res
+}
+# e + combining acute accent, twice, then woman + ZWJ + laptop (one emoji).
+set graphemeText "e[format %c 0x301]e[format %c 0x301][format %c 0x1F469][format %c 0x200D][format %c 0x1F4BB]"
+test textDisp-39.1 {no line break inside a grapheme cluster ending the text, line one pixel wide} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # A window one pixel wide: a single grapheme cluster is forced on each line.
+    foreach mode {char word} {
+	destroy .t1
+	text .t1 -font {Courier -12} -wrap $mode
+	place .t1 -x 0 -y 0 -width 1 -height 100
+	update
+	.t1 insert end $graphemeText
+	.t1 count -update -displaylines 1.0 end
+	lappend res $mode [displayLineCodePoints .t1]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
+test textDisp-39.2 {no line break inside an emoji ZWJ sequence, widget one character wide} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    foreach mode {char word} {
+	destroy .t1
+	text .t1 -font {Courier -12} -width 1 -wrap $mode
+	pack .t1
+	.t1 insert end $graphemeText
+	update
+	lappend res $mode [displayLineCodePoints .t1]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
+word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
 
 #
 # TESTFILE CLEANUP

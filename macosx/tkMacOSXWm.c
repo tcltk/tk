@@ -1383,8 +1383,8 @@ TkWmDeadWindow(
 	 */
 
 	TKContentView *deadView = [deadNSWindow contentView];
-	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) deadView);
-	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) deadView);
+	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, deadView);
+	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, deadView);
 	CGContextRelease(deadView.tkLayerBitmapContext);
 	[deadNSWindow close];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400

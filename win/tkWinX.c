@@ -1484,7 +1484,9 @@ TkWinGetUnicodeEncoding(void)
  *	"?".
  *
  *	This function correctly processes the composition data and sends the
- *	UNICODE values of the composed characters to TK's event queue.
+ *	UNICODE values of the composed characters to TK's event queue. Surrogate
+ *	pairs are combined, so characters outside the BMP (such as the emoji
+ *	inserted by the Windows emoji picker) are delivered as one character.
  *
  * Results:
  *	If this function has processed the composition data, returns true.
@@ -1503,7 +1505,6 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
-    int high = 0;
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1552,22 +1553,33 @@ HandleIMEComposition(
 	event.xkey.time = TkpGetEventTime();
 	event.xkey.same_screen = True;
 
-	for (i=0; i<n; ) {
+	for (i=0; i<n; i++) {
+	    unsigned int ch = buff[i];
+
+	    /*
+	     * Characters outside the BMP, which includes most emoji (the
+	     * Windows emoji picker delivers its text this way), arrive as a
+	     * UTF-16 surrogate pair. Combine the pair into a single code point.
+	     * A surrogate without its partner is not a character: skip it, but
+	     * keep going so the rest of the string is not lost.
+	     */
+
+	    if ((ch & 0xFC00) == 0xD800) {
+		if ((i + 1 < n) && ((buff[i + 1] & 0xFC00) == 0xDC00)) {
+		    ch = 0x10000 + ((ch & 0x3FF) << 10) + (buff[++i] & 0x3FF);
+		} else {
+		    continue;
+		}
+	    } else if ((ch & 0xFC00) == 0xDC00) {
+		continue;
+	    }
+
 	    /*
 	     * Simulate a pair of KeyPress and KeyRelease events for each
 	     * UNICODE character in the composition.
 	     */
 
-	    event.xkey.keycode = buff[i++];
-
-	    if ((event.xkey.keycode & 0xfc00) == 0xd800) {
-		high = ((event.xkey.keycode & 0x3ff) << 10) + 0x10000;
-		break;
-	    } else if (high && (event.xkey.keycode & 0xfc00) == 0xdc00) {
-		event.xkey.keycode &= 0x3ff;
-		event.xkey.keycode += high;
-		high = 0;
-	    }
+	    event.xkey.keycode = ch;
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 

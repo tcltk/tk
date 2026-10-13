@@ -31,6 +31,7 @@ resetWindows
 #
 
 testConstraint getwindowinfo [expr {[llength [info command ::testgetwindowinfo]] > 0}]
+testConstraint testgetcapture [llength [info commands ::testgetcapture]]
 
 #
 # COMMON TEST SETUP
@@ -308,6 +309,27 @@ test winMsgbox-3.2 {tk_messageBox detail (unicode)} -constraints {
 } -cleanup {
     wm deiconify .
 } -result [list ok "Поиск\n\nстраниц"]
+
+test winMsgbox-4.1 {tk_messageBox releases the mouse capture of a global grab} -constraints {
+    win getwindowinfo testgetcapture
+} -setup {
+    pack [button .b -text b]
+    update
+} -body {
+    grab -global .b
+    set title "winMsgbox-4.1 [pid]"
+    set captured [expr {[testgetcapture] == [winfo id .b]}]
+    after 100 [list apply {{title} {
+	lappend ::captured [testgetcapture]
+	GetWindowInfo $title 2
+    }} $title]
+    tk_messageBox -icon info -type ok -title $title -message Message
+    lappend captured [expr {[testgetcapture] == [winfo id .b]}]
+} -cleanup {
+    grab release .b
+    destroy .b
+    unset -nocomplain captured
+} -result {1 0 1}
 
 #
 # TESTFILE CLEANUP

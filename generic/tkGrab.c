@@ -470,6 +470,17 @@ Tk_Grab(
 	    }
 	    Tcl_Sleep(100);
 	}
+	if ((grabResult == GrabNotViewable)
+		&& (dispPtr->grabFlags & GRAB_TEMP_GLOBAL)) {
+	    /*
+	     * A local grab of a window which is not viewable cannot be turned
+	     * into a global grab while a button is down. Make it a plain local
+	     * grab instead of failing. [Bug 2182522]
+	     */
+
+	    dispPtr->grabFlags &= ~GRAB_TEMP_GLOBAL;
+	    goto localGrab;
+	}
 	if (grabResult != 0) {
 	    goto grabError;
 	}
@@ -498,6 +509,7 @@ Tk_Grab(
 	EatGrabEvents(dispPtr, serial);
     }
 
+  localGrab:
     /*
      * Synthesize leave events to move the pointer from its current window up
      * to the lowest ancestor that it has in common with the grab window.
