@@ -47,9 +47,7 @@ resetWindows
 #
 
 test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
- -constraints {
-     aqua
-} -body {
+ -body {
     ttk::scrollbar .sb -command "yadda"
     list [winfo class .sb] [.sb cget -command]
 } -result [list TScrollbar yadda] -cleanup {
@@ -57,9 +55,7 @@ test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
 }
 
 test scrollbar-swapout-2 "... regardless of whether -style ..." \
--constraints {
-    aqua
-} -body {
+-body {
     ttk::style layout Vertical.Custom.TScrollbar \
 	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
     ttk::scrollbar .sb -command "yadda" -style Custom.TScrollbar
@@ -68,9 +64,7 @@ test scrollbar-swapout-2 "... regardless of whether -style ..." \
     destroy .sb
 }
 
-test scrollbar-swapout-3 "... or -class is specified." -constraints {
-    aqua
-} -body {
+test scrollbar-swapout-3 "... or -class is specified." -body {
     ttk::scrollbar .sb -command "yadda" -class Custom.TScrollbar
     list [winfo class .sb] [.sb cget -command]
 } -result [list Custom.TScrollbar yadda] -cleanup {
