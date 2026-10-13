@@ -8495,3 +8495,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-12 (bug) [220902] Canvas widget loses track of mouse (storchaka)
 
 2026-10-12 (bug) [223112] tkMenuFind doesn't locate cloned menubars (storchaka)
+
+2026-10-13 (bug) [680884] menubutton scripts are confused about their owning menu (storchaka)
