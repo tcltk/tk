@@ -1439,6 +1439,50 @@ test canvas-25.1 {a canvas is not scrolled if its scroll region fits in it - bug
     destroy .c
 } -result 0.0
 
+test canvas-26.1 {no scroll command before the canvas is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    canvas .top.c -width 100 -height 100 -highlightthickness 0 \
+	    -scrollregion {0 0 200 200} \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    pack .top.c
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.c
+    update
+    lappend res $log
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res
+} -result {{} {x 0.0 0.5 y 0.0 0.5}}
+
+test canvas-26.2 {the current item is repicked with the pointer position after a <ButtonRelease> binding which processed events - bug 220902} -setup {
+    canvas .c -width 300 -height 100 -borderwidth 0 -highlightthickness 0
+    pack .c
+    update
+    .c create rectangle 10 10 100 90 -fill red -tags a
+    .c create rectangle 200 10 290 90 -fill blue -tags b
+    set res {}
+} -body {
+    .c bind a <ButtonRelease-1> {
+	# Like a modal dialog: the pointer moves to item b while the
+	# binding script processes events.
+	event generate .c <Motion> -x 250 -y 50 -time [expr {%t + 100}]
+	update
+	lappend res [.c gettags current]
+    }
+    event generate .c <Motion> -x 50 -y 50 -time 1000
+    event generate .c <Button-1> -x 50 -y 50 -time 1000
+    event generate .c <ButtonRelease-1> -x 50 -y 50 -time 1000 -state 0x100
+    lappend res [.c gettags current]
+} -cleanup {
+    destroy .c
+    unset res
+} -result {{b current} {b current}}
+
 test canvas-29.1 {bounding boxes of items with huge coordinates - bug 701927} -setup {
     destroy .c
     canvas .c -width 100 -height 100 -background white -highlightthickness 0
@@ -1461,27 +1505,6 @@ test canvas-29.1 {bounding boxes of items with huge coordinates - bug 701927} -s
 } -cleanup {
     destroy .c
 } -result {{1 2 3 4 5 6} {1 1 1 1 1 1 1 1}}
-
-
-test canvas-26.1 {no scroll command before the canvas is mapped - bug 991849} -setup {
-    toplevel .top
-    wm withdraw .top
-    set log {}
-} -body {
-    canvas .top.c -width 100 -height 100 -highlightthickness 0 \
-	    -scrollregion {0 0 200 200} \
-	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
-    pack .top.c
-    update
-    set res [list $log]
-    wm deiconify .top
-    tkwait visibility .top.c
-    update
-    lappend res $log
-} -cleanup {
-    destroy .top
-    unset -nocomplain log res
-} -result {{} {x 0.0 0.5 y 0.0 0.5}}
 
 #
 # TESTFILE CLEANUP
