@@ -796,6 +796,30 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
     crashit
 } -result {Reached}
 
+testConstraint noWindowManager [expr {![testConstraint withWindowManager]}]
+test focus-9.1 {implicit focus is lost when another application takes the focus} -constraints {
+    x11 testxfocus noWindowManager
+} -setup {
+    deleteWindows
+    # Without a window manager, the main window of the background process
+    # (at +100+100) gets the focus implicitly when it appears under the
+    # pointer while the X focus follows the pointer.
+    event generate . <Motion> -warp 1 \
+	    -x [expr {150 - [winfo rootx .]}] -y [expr {150 - [winfo rooty .]}]
+    controlPointerWarpTiming
+    testxfocus pointerroot
+    setupbg -geometry +100+100
+} -body {
+    dobg {update; after 200; update}
+    set x [dobg focus]
+    focus -force .
+    update
+    lappend x [dobg {update; focus}]
+} -cleanup {
+    cleanupbg
+    movePointerAwayFromTestArea
+} -result {. {}}
+
 deleteWindows
 
 # cleanup
