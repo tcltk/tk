@@ -711,16 +711,18 @@ test winfont-10.3 {RTL: a base font without Arabic falls back to one joining fon
     set f {Verdana 14}
     expr {[font measure $f [winfontArabic]] < [winfontIsolatedSum $f]}
 } -result 1
-test winfont-10.4 {RTL: an emoji inside Arabic text is drawn where Uniscribe puts it} -constraints {
+test winfont-10.4 {RTL: an emoji inside Arabic text is drawn where the bidi algorithm puts it} -constraints {
     win segoeEmoji testwinpixel
 } -setup {
     destroy .l
 } -body {
-    # seen + sun with VS16 + "al-arabiya".  Without a bidi state, Uniscribe gives
-    # a neutral the direction of the paragraph: the sun is a left-to-right item of
-    # its own, drawn after the seen as in logical order, on trunk as well.  The
-    # first colored column tells where it was drawn; the Arabic around it is
-    # shaped by the base font, the sun by the color font.
+    # seen + sun with VS16 + "al-arabiya": a neutral between two right-to-left
+    # letters takes their direction (UAX #9 N1), so the sun is drawn after the
+    # suffix, left of the seen.  Red when Uniscribe runs without a bidi state:
+    # the sun was then a left-to-right item of its own, drawn after the seen as
+    # in logical order.  The first colored column tells where it was drawn; the
+    # Arabic around it is shaped by the base font, in the background color so that
+    # its ClearType fringes do not count, the sun by the color font.
     set f {{Segoe UI} 72}
     set prefix [format %c 0x633]
     set sun "[format %c 0x2600][format %c 0xFE0F]"
@@ -728,14 +730,14 @@ test winfont-10.4 {RTL: an emoji inside Arabic text is drawn where Uniscribe put
     foreach cp {0x627 0x644 0x639 0x631 0x628 0x64A 0x629} {
 	append suffix [format %c $cp]
     }
-    label .l -text "$prefix$sun$suffix" -font $f -foreground black \
+    label .l -text "$prefix$sun$suffix" -font $f -foreground white \
 	-background white -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
     pack .l
     update
     set left [winfontLeftmostColored .l]
     set logical [font measure $f $prefix]
     set rtl [font measure $f $suffix]
-    expr {abs($left - $logical) < abs($left - $rtl) ? 1
+    expr {abs($left - $rtl) < abs($left - $logical) ? 1
 	    : "left $left, logical $logical, rtl $rtl"}
 } -cleanup {
     destroy .l
@@ -768,6 +770,56 @@ test winfont-10.6 {RTL: an emoji inside an Arabic word measures with the word} -
     set sum [expr {[font measure $f $prefix] + [font measure $f $sun] + [font measure $f $suffix]}]
     expr {abs([font measure $f "$prefix$sun$suffix"] - $sum) <= 2 ? 1
 	    : "[font measure $f "$prefix$sun$suffix"] vs $sum"}
+} -result 1
+
+#
+# Paragraph direction: that of the first strong character (UAX #9 P2 and P3), as on X11
+# and macOS.  An emoji after a right-to-left word is drawn at the left end of the line,
+# a Latin first character keeps the line left to right.  A label with a 72-point font, the
+# first colored column read back; the letters are drawn in the background color, so that
+# only the emoji is colored (the ClearType fringe of a tall stem fills a column too).
+#
+proc winfontEmojiLabel {text} {
+    destroy .l
+    label .l -text $text -font {{Segoe UI} 72} -foreground white -background white \
+	-padx 0 -pady 0 -borderwidth 0 -highlightthickness 0
+    pack .l
+    update
+    return [winfontLeftmostColored .l]
+}
+test winfont-11.1 {paragraph direction: an emoji after an Arabic word is drawn at the left} -constraints {
+    win segoeEmoji testwinpixel
+} -body {
+    # Red without the bidi state: the emoji was drawn after the word, at the right.
+    set left [winfontEmojiLabel "[winfontArabic] [format %c 0x1F600]"]
+    expr {$left >= 0 && $left < [winfo width .l] / 3 ? 1 : "left $left of [winfo width .l]"}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-11.2 {paragraph direction: a Latin first character keeps left to right} -constraints {
+    win segoeEmoji testwinpixel
+} -body {
+    set left [winfontEmojiLabel "Hi [winfontArabic] [format %c 0x1F600]"]
+    expr {$left > [winfo width .l] * 2 / 3 ? 1 : "left $left of [winfo width .l]"}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-11.3 {paragraph direction: Hebrew} -constraints {
+    win segoeEmoji testwinpixel
+} -body {
+    set hebrew "[format %c 0x5E9][format %c 0x5DC][format %c 0x5D5][format %c 0x5DD]"
+    set left [winfontEmojiLabel "$hebrew [format %c 0x1F600]"]
+    expr {$left >= 0 && $left < [winfo width .l] / 3 ? 1 : "left $left of [winfo width .l]"}
+} -cleanup {
+    destroy .l
+} -result 1
+test winfont-11.4 {paragraph direction: leading spaces and digits are not strong} -constraints {
+    win segoeEmoji testwinpixel
+} -body {
+    set left [winfontEmojiLabel "  12 [winfontArabic] [format %c 0x1F600]"]
+    expr {$left >= 0 && $left < [winfo width .l] / 3 ? 1 : "left $left of [winfo width .l]"}
+} -cleanup {
+    destroy .l
 } -result 1
 
 wm attributes . -topmost 0

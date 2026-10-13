@@ -323,6 +323,7 @@ static void		AssignSubFonts(WinFont *fontPtr, const WCHAR *wstr,
 			    int start, int len, int *subIdx);
 static int		DecodeUtf16(const WCHAR *wstr, int i, int end,
 			    int *unitsPtr);
+static int		FirstStrongIsRtl(const WCHAR *wstr, int wlen);
 
 /*
  *-------------------------------------------------------------------------
@@ -900,6 +901,53 @@ DecodeUtf16(
 /*
  *---------------------------------------------------------------------------
  *
+ * FirstStrongIsRtl --
+ *
+ *	Paragraph direction of a string, as UAX #9 P2 and P3: that of its
+ *	first strong character, left to right when there is none.  The X11
+ *	engine (SheenBidi) and CoreText do the same; Uniscribe takes it as the
+ *	base level of its bidi state.
+ *
+ * Results:
+ *	1 when the first strong character is right to left (R or AL), else 0.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+FirstStrongIsRtl(
+    const WCHAR *wstr,
+    int wlen)
+{
+    int i = 0, units;
+
+    while (i < wlen) {
+	int ch = DecodeUtf16(wstr, i, wlen, &units);
+	mjb_character c;
+
+	if (ch < 0x80) {
+	    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+		return 0;
+	    }
+	} else if (mjb_codepoint_info((mjb_codepoint) ch, &c) == MJB_STATUS_OK) {
+	    switch (c.bidirectional) {
+	    case MJB_PR_BIDI_CLASS_L:
+		return 0;
+	    case MJB_PR_BIDI_CLASS_R:
+	    case MJB_PR_BIDI_CLASS_AL:
+		return 1;
+	    default:
+		break;
+	    }
+	}
+	i += units;
+    }
+    return 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * AssignSubFonts --
  *
  *	Store in subIdx[0..len) the index of the subfont for each UTF-16 unit
@@ -1054,6 +1102,9 @@ TkWinShapeString(
     int *subIdx;
     TkWinShapedRun *runs;
     int nRuns = 0, maxRuns;
+    int rtl;
+    SCRIPT_CONTROL control;
+    SCRIPT_STATE state;
 
     *runsOut = NULL;
     *runCountOut = 0;
@@ -1065,14 +1116,26 @@ TkWinShapeString(
     /*
      * ScriptItemize breaks the string into script runs (e.g., Latin,
      * Arabic, CJK) each with its own bidi level and script analysis.  The
-     * stack array covers the common case; retry on the heap otherwise.
+     * bidi state gives it the paragraph direction (UAX #9 P2, P3) and makes
+     * it resolve the neutrals and the digits by their context; without a
+     * state it does no bidi analysis, and a neutral after a right-to-left
+     * word landed on its right.  The stack array covers the common case;
+     * retry on the heap otherwise.
      */
-    hr = ScriptItemize(wstr, wlen, ITEM_STACK, NULL, NULL, items, &itemCount);
+    rtl = FirstStrongIsRtl(wstr, wlen);
+    memset(&control, 0, sizeof(control));
+    memset(&state, 0, sizeof(state));
+    state.uBidiLevel = rtl;
+    hr = ScriptItemize(wstr, wlen, ITEM_STACK, &control, &state, items,
+	    &itemCount);
     if (hr == E_OUTOFMEMORY) {
 	int maxItems = wlen + 1;
 
 	items = (SCRIPT_ITEM *)Tcl_Alloc(sizeof(SCRIPT_ITEM) * (maxItems + 1));
-	hr = ScriptItemize(wstr, wlen, maxItems, NULL, NULL, items, &itemCount);
+	memset(&state, 0, sizeof(state));
+	state.uBidiLevel = rtl;
+	hr = ScriptItemize(wstr, wlen, maxItems, &control, &state, items,
+		&itemCount);
     }
     if (FAILED(hr)) {
 	if (items != stackItems) Tcl_Free(items);
