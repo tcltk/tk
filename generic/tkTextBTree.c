@@ -4806,6 +4806,7 @@ TkBTreeInsertChars(
     unsigned chunkSize = 0; /* satisifies the compiler */
     int size = 0;
     int hyphenRules = 0;
+    int recompute = 0;		/* Recompute the elide info of an enclosing elided range. */
 
     assert(*string); /* otherwise tag information might become erroneous */
 
@@ -5210,6 +5211,19 @@ TkBTreeInsertChars(
 	    }
 	}
 
+	if (tagPtr && tagPtr->elide == 0) {
+	    /*
+	     * The new segments are not elided (-elide 0 wins), but they may
+	     * have been inserted inside an elided range: split it like for
+	     * untagged segments below. The tag based update would search the
+	     * start of the elided range from the new segments, which are not
+	     * elided.
+	     */
+
+	    tagPtr = NULL;
+	    recompute = TkBTreeHaveElidedSegments(sharedTextPtr);
+	}
+
 	if (tagPtr) {
 	    if (hyphenElideTagPtr == tagPtr) {
 		hyphenElideTagPtr = NULL; /* the soft hyphens carry this tag too */
@@ -5227,7 +5241,11 @@ TkBTreeInsertChars(
 		}
 	    }
 	}
-    } else if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
+    } else {
+	recompute = TkBTreeHaveElidedSegments(sharedTextPtr);
+    }
+
+    if (recompute) {
 	TkTextSegment *predPtr = firstSegPtr->prevPtr;
 	TkTextLine *prevLinePtr = firstSegPtr->sectionPtr->linePtr->prevPtr;
 
@@ -5236,9 +5254,10 @@ TkBTreeInsertChars(
 	 * inside an elided range: this happens when the insertion point is
 	 * the meeting point of two distinct elide tags, because the new
 	 * segments received the intersection of the neighboring tag sets,
-	 * which does not contain the elide tags anymore. Then the elided
-	 * range has to be split, a branch/link pair must not span non-elided
-	 * content. Search the preceding content segment, but do not skip
+	 * which does not contain the elide tags anymore, or when the new
+	 * segments have a tag with -elide 0 and not the elide tag of the
+	 * range. Then the elided range has to be split, a branch/link pair
+	 * must not span non-elided content. Search the preceding content segment, but do not skip
 	 * branches or links: content inserted right after a link (or right
 	 * before a branch) lies outside of any elided range.
 	 */
@@ -9658,6 +9677,39 @@ RemoveExpiredSwitch(
     }
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * LineIsElided --
+ *
+ *	Return the elide state of a line without switches: all its content
+ *	has the same elide state.
+ *
+ * Results:
+ *	Whether the content of the line is elided.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+LineIsElided(
+    const TkSharedText *sharedTextPtr,
+    const TkTextLine *linePtr)
+{
+    const TkTextSegment *segPtr = linePtr->segPtr;
+
+    assert(linePtr->numBranches == 0 && linePtr->numLinks == 0);
+
+    while (!segPtr->tagInfoPtr) {
+	segPtr = segPtr->nextPtr;
+	assert(segPtr);
+    }
+    return SegmentIsElided(sharedTextPtr, segPtr, NULL);
+}
+
 static void
 UpdateElideInfo(
     TkSharedText *sharedTextPtr,
@@ -9860,12 +9912,19 @@ UpdateElideInfo(
 		 * inside an elided range is a transition which has to be
 		 * processed (in normal mode the range extension guarantees
 		 * that the boundary lines carry the toggled tag).
+		 *
+		 * In normal mode a line without the toggled tag is unaffected
+		 * only if its elide state is the current state of the walk:
+		 * when the tag is removed from the end of a range elided
+		 * together with an adjacent range of another tag, the line
+		 * where the other range starts opens a new elided range.
 		 */
 		while (linePtr != lastLinePtr
 			&& linePtr->numLinks == 0
 			&& linePtr->numBranches == 0
 			&& (tagPtr
-			    ? !TestTag(linePtr->tagonPtr, tagPtr)
+			    ? (!TestTag(linePtr->tagonPtr, tagPtr)
+				&& LineIsElided(sharedTextPtr, linePtr) == actualElided)
 			    : (!actualElided && !TkTextTagSetIntersectsBits(
 				    linePtr->tagonPtr, sharedTextPtr->elisionTags)))) {
 		    /* Skip (nearly) unaffected line. */

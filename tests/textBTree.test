@@ -2043,6 +2043,22 @@ test btree-14.54 {insert at the end boundary of an elided range stays outside} -
     destroy .t
 } -result {5 aigh}
 
+test btree-14.121 {insert text with an -elide 0 tag inside an elided range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure A -elide 0
+    .t tag configure B -elide 1
+    for {set i 1} {$i <= 9} {incr i} {.t insert end "row $i abcdef\n"}
+    .t tag add B 3.2 6.4
+    .t insert 4.4 "xy\n" A  ; # used to search the elided range from "xy" -> assertion
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "row 1 abcdef\nrow 2 abcdef\nroxy\n6 abcdef\nrow 7 abcdef\nrow 8 abcdef\nrow 9 abcdef\n\n"
+
 test btree-14.55 {redo of an insert adjacent to an elided range start, switches annihilated meanwhile} -setup {
     destroy .t
     text .t -undo 1
@@ -3886,7 +3902,7 @@ test btree-14.119 {delete -inclusive without -marks with a single mark bound lea
     destroy .t
 } -result {aef 1 1.1}
 
-test btree-14.120 {-hyphentags without a soft hyphen in the inserted text} -setup {
+test btree-14.125 {-hyphentags without a soft hyphen in the inserted text} -setup {
     destroy .t
     text .t
 } -body {
@@ -3900,7 +3916,7 @@ test btree-14.120 {-hyphentags without a soft hyphen in the inserted text} -setu
     destroy .t
 } -result {gx {}}
 
-test btree-14.121 {inserted text and soft hyphen with the same elide tag} -setup {
+test btree-14.126 {inserted text and soft hyphen with the same elide tag} -setup {
     destroy .t
     text .t
 } -body {
@@ -4032,6 +4048,23 @@ test btree-14.63 {SplitSection: piling up marks without elision stays sane} -set
 } -cleanup {
     destroy .t
 } -result {1.25 2.0}
+
+test btree-14.120 {Bug [ad458a3a72] - tag remove across adjacent elided ranges of different tags} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure A -elide 1
+    .t tag configure B -elide 1
+    for {set i 1} {$i <= 9} {incr i} {.t insert end "row $i\n"}
+    .t tag add B 2.0 4.0
+    .t tag add A 4.0 8.0
+    .t tag remove B 3.0 6.0  ; # lines 4 and 5 were left without switches -> panic
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "row 1\nrow 3\nrow 8\nrow 9\n\n"
 
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
