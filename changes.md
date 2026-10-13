@@ -106,6 +106,7 @@ to the userbase.
  - [Canvas widget loses track of mouse](https://core.tcl-lang.org/tk/tktview/220902)
  - [tkMenuFind doesn't locate cloned menubars](https://core.tcl-lang.org/tk/tktview/223112)
  - [menubutton scripts are confused about their owning menu](https://core.tcl-lang.org/tk/tktview/680884)
+ - [ttk::sizegrip strange behaviour](https://core.tcl-lang.org/tk/tktview/299533)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
