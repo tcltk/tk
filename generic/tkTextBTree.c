@@ -5002,13 +5002,14 @@ TkBTreeInsertChars(
 	 * Update line tag information.
 	 */
 
-	if (changeToLineCount == 0
-		&& (hyphenTagInfoPtr
-		    || (tagInfoPtr && linePtr->tagonPtr != tagInfoPtr)
-		    || linePtr->tagoffPtr != emptyTagInfoPtr)) {
+	if (hyphenTagInfoPtr
+		|| (changeToLineCount == 0
+		    && ((tagInfoPtr && linePtr->tagonPtr != tagInfoPtr)
+			|| linePtr->tagoffPtr != emptyTagInfoPtr))) {
 	    /*
 	     * In this case we have to recompute the line tag information, because
-	     * the line will be split before segPtr->nextPtr.
+	     * the line will be split before segPtr->nextPtr. The hyphen tags may
+	     * cover a part of any line only.
 	     */
 	    RecomputeLineTagInfo(linePtr, segPtr->nextPtr, sharedTextPtr);
 	}
@@ -5032,7 +5033,6 @@ TkBTreeInsertChars(
 	AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 	if (hyphenTagInfoPtr) {
 	    assert(TkTextTagSetContains(hyphenTagInfoPtr, tagInfoPtr));
-	    assert(linePtr->tagoffPtr == emptyTagInfoPtr);
 	    TagSetAssign(&newLinePtr->tagonPtr, hyphenTagInfoPtr);
 	    TagSetAssign(&newLinePtr->tagoffPtr, hyphenTagInfoPtr);
 	    newLinePtr->tagoffPtr = TagSetRemove(newLinePtr->tagoffPtr, tagInfoPtr, sharedTextPtr);
@@ -5096,11 +5096,7 @@ TkBTreeInsertChars(
 
     if (changeToLineCount == 0) {
 	if (hyphenTagInfoPtr) {
-	    assert(TkTextTagSetContains(hyphenTagInfoPtr, tagInfoPtr));
-	    linePtr->tagoffPtr = TagSetJoinNonIntersection(
-		    linePtr->tagoffPtr, linePtr->tagonPtr, hyphenTagInfoPtr, sharedTextPtr);
-	    linePtr->tagonPtr = TkTextTagSetJoin(linePtr->tagonPtr, hyphenTagInfoPtr);
-	    myTagInfoPtr = hyphenTagInfoPtr;
+	    RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr); /* hyphen tags on a part only */
 	} else if (linePtr->tagonPtr != tagInfoPtr || linePtr->tagoffPtr != emptyTagInfoPtr) {
 	    linePtr->tagoffPtr = TagSetJoinNonIntersection(
 		    linePtr->tagoffPtr, linePtr->tagonPtr, tagInfoPtr, sharedTextPtr);
