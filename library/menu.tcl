@@ -276,7 +276,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	return
     }
     set menu [$w cget -menu]
-    if {$menu eq ""} {
+    if {$menu eq "" || ![winfo exists $menu]} {
 	return
     }
     set tearoff [expr {[tk windowingsystem] eq "x11" \
@@ -444,6 +444,11 @@ proc ::tk::MbMotion {w upDown rootx rooty} {
     variable ::tk::Priv
 
     if {$Priv(inMenubutton) eq $w} {
+	return
+    }
+    # Only switch to another menubutton while a menu is posted; a binding
+    # script of the pressed menubutton may still be running. [Bug 680884]
+    if {$upDown eq "down" && $Priv(postedMb) eq ""} {
 	return
     }
     set new [winfo containing $rootx $rooty]
@@ -1086,6 +1091,11 @@ proc ::tk::MenuFind {w char} {
 	}
 	if {[winfo class $child] eq "Menu" && \
 		[$child cget -type] eq "menubar"} {
+	    # Skip the original menu if it was created with "-type menubar";
+	    # its clone is the actual menubar of the toplevel. [Bug 223112]
+	    if {![winfo viewable $child]} {
+		continue
+	    }
 	    if {$char eq ""} {
 		return $child
 	    }
