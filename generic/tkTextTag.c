@@ -1263,7 +1263,7 @@ TkConfigureTag(
 	 * the elide information of this tag.
 	 */
 
-	TkBTreeUpdateElideInfo(textPtr, tagPtr);
+	TkBTreeUpdateElideInfo(textPtr, tagPtr, elide);
     }
 
     if (redraw && !newTag && affectsDisplay) {

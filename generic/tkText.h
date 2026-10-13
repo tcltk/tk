@@ -1946,7 +1946,8 @@ MODULE_SCOPE TkTextTag * TkBTreeClearTags(TkSharedText *sharedTextPtr, TkText *t
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    TkTextUndoInfo *undoInfo, bool discardSelection,
 			    TkTextTagChangedProc changedProc);
-MODULE_SCOPE void	TkBTreeUpdateElideInfo(TkText *textPtr, TkTextTag *tagPtr);
+MODULE_SCOPE void	TkBTreeUpdateElideInfo(TkText *textPtr, TkTextTag *tagPtr,
+			    int oldElide);
 MODULE_SCOPE void	TkBTreeUpdateElideInfoPriority(TkSharedText *sharedTextPtr,
 			    TkTextTag *tagPtr);
 MODULE_SCOPE void	TkBTreeUnlinkSegment(const TkSharedText *sharedTextPtr, TkTextSegment *segPtr);

@@ -9363,7 +9363,7 @@ RemoveTagFromNode(
  * TkBTreeUpdateElideInfo --
  *
  *	This function will be called if the elide info of any tag has been
- *	changed.
+ *	changed; oldElide is the -elide value of the tag before the change.
  *
  * Results:
  *	None.
@@ -10389,10 +10389,96 @@ UpdateElideInfo(
     assert(!(tagPtr && reason == ELISION_WILL_BE_REMOVED) || tagPtr->textPtr == oldTextPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * RecomputeElideInfoOfTag --
+ *
+ *	Recompute the elided ranges from the first to the last range of the
+ *	given tag, extended to the enclosing elided ranges, from the current
+ *	tag information.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Some branches and links may be inserted, or removed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RecomputeElideInfoOfTag(
+    TkSharedText *sharedTextPtr,
+    TkTextTag *tagPtr)
+{
+    TkTextIndex index1, index2;
+    TkTextSearch search;
+    TkTextSegment *firstSegPtr = NULL;
+    TkTextSegment *lastSegPtr = NULL;
+    TkTextSegment *fPtr, *lPtr, *predPtr, *succPtr;
+    TkTextLine *nextLinePtr;
+
+    if (!tagPtr->rootPtr) {
+	return;
+    }
+
+    TkTextIndexSetupToStartOfText(&index1, NULL, sharedTextPtr->tree);
+    TkTextIndexSetupToEndOfText(&index2, NULL, sharedTextPtr->tree);
+    TkBTreeStartSearch(&index1, &index2, tagPtr, &search, SEARCH_NEXT_TAGON);
+
+    while (TkBTreeNextTag(&search)) {
+	if (!firstSegPtr) {
+	    firstSegPtr = search.segPtr;
+	}
+	TkBTreeNextTag(&search);
+	assert(search.segPtr);
+	lastSegPtr = search.segPtr;
+    }
+
+    if (!firstSegPtr) {
+	return;
+    }
+
+    /*
+     * Bound the recompute by the tag information, not by the switch
+     * structure, which still reflects the old elide state.
+     */
+
+    fPtr = firstSegPtr;
+    lPtr = lastSegPtr;
+    predPtr = GetPrevTagInfoSegment(firstSegPtr);
+    if (lastSegPtr->nextPtr) {
+	succPtr = GetNextTagInfoSegment(lastSegPtr->nextPtr);
+    } else if ((nextLinePtr = lastSegPtr->sectionPtr->linePtr->nextPtr)) {
+	succPtr = GetFirstTagInfoSegment(NULL, nextLinePtr);
+    } else {
+	succPtr = NULL;
+    }
+    if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
+    }
+    if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
+	lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
+    }
+
+    fPtr->protectionFlag = 1;
+    lPtr->protectionFlag = 1;
+    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+    CleanupSplitPoint(fPtr, sharedTextPtr);
+    if (fPtr != lPtr) {
+	CleanupSplitPoint(lPtr, sharedTextPtr);
+    }
+
+    TkBTreeIncrEpoch(sharedTextPtr->tree);
+    TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
+}
+
 void
 TkBTreeUpdateElideInfo(
     TkText *textPtr,
-    TkTextTag *tagPtr)
+    TkTextTag *tagPtr,
+    int oldElide)		/* -elide of the tag before the change. */
 {
     TkSharedText *sharedTextPtr;
     TkTextIndex index1, index2;
@@ -10403,6 +10489,15 @@ TkBTreeUpdateElideInfo(
 
     sharedTextPtr = textPtr->sharedTextPtr;
 
+    if (oldElide < 0 || tagPtr->elide < 0) {
+	/*
+	 * The old elide state cannot be obtained by inverting -elide, and
+	 * removing an -elide 0 tag can elide text not elided yet.
+	 */
+
+	RecomputeElideInfoOfTag(sharedTextPtr, tagPtr);
+	return;
+    }
     if (tagPtr->elide < 1 && !TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	return;
     }
@@ -10456,13 +10551,6 @@ TkBTreeUpdateElideInfoPriority(
     TkSharedText *sharedTextPtr,
     TkTextTag *tagPtr)
 {
-    TkTextIndex index1, index2;
-    TkTextSearch search;
-    TkTextSegment *firstSegPtr = NULL;
-    TkTextSegment *lastSegPtr = NULL;
-    TkTextSegment *fPtr, *lPtr, *predPtr, *succPtr;
-    TkTextLine *nextLinePtr;
-
     /*
      * Only the order relative to another elide tag matters. Lowering a tag
      * with -elide 0 can elide text, even if nothing is elided yet.
@@ -10471,56 +10559,7 @@ TkBTreeUpdateElideInfoPriority(
     if (tagPtr->elide < 0 || !tagPtr->rootPtr || sharedTextPtr->numElisionTags < 2) {
 	return;
     }
-
-    TkTextIndexSetupToStartOfText(&index1, NULL, sharedTextPtr->tree);
-    TkTextIndexSetupToEndOfText(&index2, NULL, sharedTextPtr->tree);
-    TkBTreeStartSearch(&index1, &index2, tagPtr, &search, SEARCH_NEXT_TAGON);
-
-    while (TkBTreeNextTag(&search)) {
-	if (!firstSegPtr) {
-	    firstSegPtr = search.segPtr;
-	}
-	TkBTreeNextTag(&search);
-	assert(search.segPtr);
-	lastSegPtr = search.segPtr;
-    }
-
-    if (!firstSegPtr) {
-	return;
-    }
-
-    /*
-     * Bound the recompute by the tag information, not by the switch
-     * structure, which still reflects the old priorities.
-     */
-
-    fPtr = firstSegPtr;
-    lPtr = lastSegPtr;
-    predPtr = GetPrevTagInfoSegment(firstSegPtr);
-    if (lastSegPtr->nextPtr) {
-	succPtr = GetNextTagInfoSegment(lastSegPtr->nextPtr);
-    } else if ((nextLinePtr = lastSegPtr->sectionPtr->linePtr->nextPtr)) {
-	succPtr = GetFirstTagInfoSegment(NULL, nextLinePtr);
-    } else {
-	succPtr = NULL;
-    }
-    if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
-	fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
-    }
-    if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
-	lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
-    }
-
-    fPtr->protectionFlag = 1;
-    lPtr->protectionFlag = 1;
-    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
-    CleanupSplitPoint(fPtr, sharedTextPtr);
-    if (fPtr != lPtr) {
-	CleanupSplitPoint(lPtr, sharedTextPtr);
-    }
-
-    TkBTreeIncrEpoch(sharedTextPtr->tree);
-    TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
+    RecomputeElideInfoOfTag(sharedTextPtr, tagPtr);
 }
 
 /*

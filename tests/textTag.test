@@ -1837,6 +1837,60 @@ test textTag-20.4 {lowering a tag with -elide 0 can elide text} -setup {
     destroy .t
 } -result {nabc abc}
 
+test textTag-20.5 {setting -elide to {} next to another elided range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end zxk
+    .t tag configure C -elide 1
+    .t tag configure B -elide 1
+    .t tag add C 1.0 1.1
+    .t tag add B 1.1 1.3
+    .t tag configure B -elide {}
+    set res [list [.t get -displaychars 1.0 end-1c]]
+    .t tag configure B -elide 1
+    lappend res [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    .t debug 0
+    destroy .t
+} -result {xk {}}
+
+test textTag-20.6 {setting -elide to {} next to another elided range, several lines} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "ab\ncd\nef\ngh"
+    .t tag configure C -elide 1
+    .t tag configure B -elide 1
+    .t tag add C 1.1 2.1
+    .t tag add B 2.1 3.2
+    .t tag configure B -elide {}
+    split [.t get -displaychars 1.0 end-1c] \n
+} -cleanup {
+    .t debug 0
+    destroy .t
+} -result {ad ef gh}
+
+test textTag-20.7 {setting -elide 0 to {} can elide text} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end abcdef
+    .t tag configure B -elide 1
+    .t tag configure A -elide 0
+    .t tag add B 1.2 1.4
+    .t tag add A 1.0 1.6
+    set res [list [.t get -displaychars 1.0 end-1c]]
+    .t tag configure A -elide {} ; # nothing was elided before
+    lappend res [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    .t debug 0
+    destroy .t
+} -result {abcdef abef}
+
 #
 # TESTFILE CLEANUP
 #
