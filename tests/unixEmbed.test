@@ -43,9 +43,7 @@ childTkProcess eval {wm withdraw .}
 # TESTS
 #
 
-test unixEmbed-1.1 {Tk_UseWindow procedure, bad window identifier} -constraints {
-    unix
-} -setup {
+test unixEmbed-1.1 {Tk_UseWindow procedure, bad window identifier} -setup {
     deleteWindows
 } -body {
     toplevel .t -use xyz
@@ -185,7 +183,7 @@ test unixEmbed-1.7 {Tk_UseWindow procedure, container and embedded in same app} 
 
 
 test unixEmbed-2.1 {EmbeddedEventProc procedure} -constraints {
-    unix testembed notAqua
+    testembed notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -231,7 +229,7 @@ test unixEmbed-2.1a {EmbeddedEventProc procedure} -constraints {
     deleteWindows
 } -result {}
 test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
-    unix testembed notAqua
+    testembed notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -249,7 +247,7 @@ test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
     deleteWindows
 } -result {}
 test unixEmbed-2.2a {EmbeddedEventProc procedure} -constraints {
-    unix testembed
+    testembed
 } -setup {
     deleteWindows
     catch {interp delete child}
@@ -271,7 +269,7 @@ test unixEmbed-2.2a {EmbeddedEventProc procedure} -constraints {
     deleteWindows
 } -result {}
 test unixEmbed-2.3 {EmbeddedEventProc procedure} -constraints {
-    unix testembed notAqua
+    testembed notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -336,9 +334,7 @@ test unixEmbed-3.1a {ContainerEventProc procedure, detect creation} -constraints
     interp delete child
     deleteWindows
 } -result {{{XXX .f1 {} {}}} {{XXX .f1 {} {}}}}
-test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constraints {
-    unix
-} -setup {
+test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -setup {
     deleteWindows
     update
 } -body {
@@ -351,7 +347,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constra
     deleteWindows
 } -result {200x200+0+0}
 test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -371,9 +367,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
 } -cleanup {
     deleteWindows
 } -result {200x200+0+0}
-test unixEmbed-3.3a {ContainerEventProc procedure, disallow position changes} -constraints {
-    unix
-} -setup {
+test unixEmbed-3.3a {ContainerEventProc procedure, disallow position changes} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -395,7 +389,7 @@ test unixEmbed-3.3a {ContainerEventProc procedure, disallow position changes} -c
     deleteWindows
 } -result {200x200+0+0}
 test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -415,9 +409,7 @@ test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -co
 } -cleanup {
     deleteWindows
 } -result {300x100+0+0}
-test unixEmbed-3.4a {ContainerEventProc procedure, disallow position changes} -constraints {
-    unix
-} -setup {
+test unixEmbed-3.4a {ContainerEventProc procedure, disallow position changes} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -439,7 +431,7 @@ test unixEmbed-3.4a {ContainerEventProc procedure, disallow position changes} -c
     deleteWindows
 } -result {300x100+0+0}
 test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -459,9 +451,7 @@ test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraint
 } -cleanup {
     deleteWindows
 } -result {300 80 300x80+0+0}
-test unixEmbed-3.5a {ContainerEventProc procedure, geometry requests} -constraints {
-    unix
-} -setup {
+test unixEmbed-3.5a {ContainerEventProc procedure, geometry requests} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -482,7 +472,7 @@ test unixEmbed-3.5a {ContainerEventProc procedure, geometry requests} -constrain
     deleteWindows
 } -result {300 80 300x80+0+0}
 test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -504,9 +494,7 @@ test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
 } -cleanup {
     deleteWindows
 } -result {mapped}
-test unixEmbed-3.6a {ContainerEventProc procedure, map requests} -constraints {
-    unix
-} -setup {
+test unixEmbed-3.6a {ContainerEventProc procedure, map requests} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -579,7 +567,7 @@ test unixEmbed-3.7a {ContainerEventProc procedure, destroy events} -constraints 
 } -result {dead 0}
 
 test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -601,9 +589,7 @@ test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints
 } -cleanup {
     deleteWindows
 } -result {180x100+0+0}
-test unixEmbed-4.1a {EmbedStructureProc procedure, configure events} -constraints {
-    unix
-} -setup {
+test unixEmbed-4.1a {EmbedStructureProc procedure, configure events} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -719,7 +705,7 @@ test unixEmbed-5.1a {EmbedFocusProc procedure, FocusIn events} -constraints {
     deleteWindows
 } -result {{focus in .t1}}
 test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -741,9 +727,7 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
 } -cleanup {
     deleteWindows
 } -result {}
-test unixEmbed-5.2a {EmbedFocusProc procedure, focusing on dead window} -constraints {
-    unix
-} -setup {
+test unixEmbed-5.2a {EmbedFocusProc procedure, focusing on dead window} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -844,9 +828,7 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constr
 } -cleanup {
     deleteWindows
 } -result {{{configure .t1 300 120}} 300x120+0+0}
-test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -constraints {
-    unix
-} -setup {
+test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -890,9 +872,7 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constr
 } -cleanup {
     deleteWindows
 } -result {{{configure .t1 200 200}} 200x200+0+0}
-test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -constraints {
-    unix
-} -setup {
+test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -setup {
     deleteWindows
     catch {interp delete child}
     childTkInterp child
@@ -1202,7 +1182,7 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
     deleteWindows
 } -result {{{XXX {} {} .t1}} {}}
 test unixEmbed-9.3 {embedded window redrawn after the container was destroyed} -constraints {
-    unix notAqua
+    notAqua
 } -setup {
     deleteWindows
 } -body {
@@ -1232,9 +1212,7 @@ test unixEmbed-9.3 {embedded window redrawn after the container was destroyed} -
     childTkProcess create
 } -result alive
 
-test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-    unix
-} -setup {
+test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -setup {
     deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
@@ -1264,9 +1242,7 @@ test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
     deleteWindows
 } -result {70x300+0+0}
 
-test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
-    unix
-} -setup {
+test unixEmbed-11.1 {focus -force works for embedded toplevels} -setup {
     deleteWindows
 } -body {
     toplevel .t

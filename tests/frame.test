@@ -366,7 +366,7 @@ test frame-2.8 {toplevel configuration options} -constraints win -setup {
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {window "0x44022" does not exist}
-test frame-2.9 {toplevel configuration options} -constraints win -setup {
+test frame-2.9 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100
@@ -385,7 +385,7 @@ test frame-2.10 {toplevel configuration options} -constraints macOrUnix -setup {
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {can't modify -use option after widget is created}
-test frame-2.11 {toplevel configuration options} -constraints macOrUnix -setup {
+test frame-2.11 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100
@@ -644,9 +644,7 @@ test frame-3.8 {TkCreateFrame procedure} -setup {
     deleteWindows
     option clear
 } -result {Silly #122334}
-test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
-    unix
-} -setup {
+test frame-3.9 {TkCreateFrame procedure, -use option} -setup {
     deleteWindows
 } -body {
     toplevel .t -container 1 -width 300 -height 120
@@ -659,9 +657,7 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
 } -cleanup {
     deleteWindows
 } -result {0 0 140 300}
-test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
-    unix
-} -setup {
+test frame-3.10 {TkCreateFrame procedure, -use option} -setup {
     deleteWindows
 } -body {
     toplevel .t -container 1 -width 300 -height 120

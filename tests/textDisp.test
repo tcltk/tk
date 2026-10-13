@@ -5175,7 +5175,7 @@ test textDisp-33.4 {one line longer than fits in the widget} {
     set idx [.tt index "1.0 + 1 displaylines"]
     set result
 } {ok}
-test textDisp-33.5 {bold or italic fonts} win {
+test textDisp-33.5 {bold or italic fonts} {} {
     destroy .tt
     pack [text .tt -wrap char -font {{MS Sans Serif} 15}]
     font create no -family [lindex [.tt cget -font] 0] -size 24

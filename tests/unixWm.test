@@ -83,7 +83,7 @@ if {[tk windowingsystem] eq "aqua"} {
 set i 1
 foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
     destroy .t
-    test unixWm-1.$i {initial window position} unix {
+    test unixWm-1.$i {initial window position} {} {
 	toplevel .t -width 200 -height 150
 	wm geom .t $geom
 	update
@@ -232,18 +232,18 @@ wm geom .t +100+$Y0
 wm minsize .t 1 1
 update
 
-test unixWm-6.1 {size changes} unix {
+test unixWm-6.1 {size changes} {} {
     .t config -width 180 -height 150
     update
     wm geom .t
 } 180x150+100+$Y0
-test unixWm-6.2 {size changes} unix {
+test unixWm-6.2 {size changes} {} {
     wm geom .t 250x60
     .t config -width 170 -height 140
     update
     wm geom .t
 } 250x60+100+$Y0
-test unixWm-6.3 {size changes} unix {
+test unixWm-6.3 {size changes} {} {
     wm geom .t 250x60
     .t config -width 170 -height 140
     wm geom .t {}
@@ -298,18 +298,18 @@ foreach i {{Test label} Another {Yet another} {Last label}} j {1 2 3} {
 wm geometry .m +[expr {100 - [winfo vrootx .]}]+[expr {200 - [winfo vrooty .]}]
 update
 
-test unixWm-7.1 {override_redirect and Tk_MoveTopLevelWindow} unix {
+test unixWm-7.1 {override_redirect and Tk_MoveTopLevelWindow} {} {
     list [winfo ismapped .m] [wm state .m] [winfo x .m] [winfo y .m]
 } {1 normal 100 200}
 
-test unixWm-7.2 {override_redirect and Tk_MoveTopLevelWindow} -constraints unix -setup {
+test unixWm-7.2 {override_redirect and Tk_MoveTopLevelWindow} -setup {
     wm geometry .m +[expr {150 - [winfo vrootx .]}]+[expr {210 - [winfo vrooty .]}]
     update
 } -body {
     list [winfo ismapped .m] [wm state .m] [winfo x .m] [winfo y .m]
 } -result {1 normal 150 210}
 
-test unixWm-7.3 {override_redirect and Tk_MoveTopLevelWindow} -constraints unix -setup {
+test unixWm-7.3 {override_redirect and Tk_MoveTopLevelWindow} -setup {
     wm withdraw .m
 } -body {
     list [winfo ismapped .m]
@@ -318,7 +318,7 @@ test unixWm-7.3 {override_redirect and Tk_MoveTopLevelWindow} -constraints unix 
     destroy .t
 } -result 0
 
-test unixWm-8.1 {icon windows} unix {
+test unixWm-8.1 {icon windows} {} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -327,17 +327,17 @@ test unixWm-8.1 {icon windows} unix {
     wm iconwindow .t .icon
     list [catch {wm withdraw .icon} msg] $msg
 } {1 {can't withdraw .icon: it is an icon for .t}}
-test unixWm-8.2 {icon windows} unix {
+test unixWm-8.2 {icon windows} {} {
     destroy .t
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow} msg] $msg
 } {1 {wrong # args: should be "wm option window ?arg ...?"}}
-test unixWm-8.3 {icon windows} unix {
+test unixWm-8.3 {icon windows} {} {
     destroy .t
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t b c} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
-test unixWm-8.4 {icon windows} {unix withWindowManager} {
+test unixWm-8.4 {icon windows} {withWindowManager} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -355,12 +355,12 @@ test unixWm-8.4 {icon windows} {unix withWindowManager} {
     update idletasks
     lappend result [winfo ismapped .t] [winfo ismapped .icon]
 } {.icon icon {} withdrawn 1 0 0 0}
-test unixWm-8.5 {icon windows} unix {
+test unixWm-8.5 {icon windows} {} {
     destroy .t
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t .gorp} msg] $msg
 } {1 {bad window path name ".gorp"}}
-test unixWm-8.6 {icon windows} unix {
+test unixWm-8.6 {icon windows} {} {
     destroy .t
     toplevel .t -width 100 -height 30
     frame .t.icon -width 50 -height 50 -bg red
@@ -380,7 +380,7 @@ test unixWm-8.7 {icon windows} -constraints unix -body {
 } -cleanup {
     destroy .icon2
 } -result {.icon icon normal .icon2 withdrawn icon}
-test unixWm-8.8 {icon windows} unix {
+test unixWm-8.8 {icon windows} {} {
     destroy .t
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg red
@@ -414,7 +414,7 @@ test unixWm-8.9 {icon windows} {unix nonPortable} {
     lappend result [winfo ismapped .icon] [wm state .icon]
 } {icon 1 0 0 withdrawn 1 normal}
 
-test unixWm-8.10.1 {test for memory leaks} unix {
+test unixWm-8.10.1 {test for memory leaks} {} {
     wm title .t "This is a long long long long long long title"
     wm title .t "This is a long long long long long long title"
     wm title .t "This is a long long long long long long title"
@@ -425,7 +425,7 @@ test unixWm-8.10.1 {test for memory leaks} unix {
     wm title .t "This is a long long long long long long title"
     set x 1
 } 1
-test unixWm-8.10.2 {test for memory leaks} unix {
+test unixWm-8.10.2 {test for memory leaks} {} {
     wm group .t .
     wm group .t .
     wm group .t .
@@ -457,14 +457,14 @@ test unixWm-9.2 {TkWmMapWindow procedure, command property} {unix testwrapper} {
 } {test
 command
 }
-test unixWm-9.3 {TkWmMapWindow procedure, iconic windows} unix {
+test unixWm-9.3 {TkWmMapWindow procedure, iconic windows} {} {
     destroy .t
     toplevel .t -width 100 -height 300 -bg blue
     wm geom .t +0+0
     wm iconify .t
     winfo ismapped .t
 } 0
-test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
+test unixWm-9.4 {TkWmMapWindow procedure, icon windows} {} {
     destroy .t
     toplevel .t -width 100 -height 50 -bg blue
     tkwait visibility .t
@@ -472,7 +472,7 @@ test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     update
     set result [winfo ismapped .t]
 } 0
-test unixWm-9.5 {TkWmMapWindow procedure, normal windows} unix {
+test unixWm-9.5 {TkWmMapWindow procedure, normal windows} {} {
     destroy .t
     toplevel .t -width 200 -height 20
     wm geom .t +0+0
@@ -480,7 +480,7 @@ test unixWm-9.5 {TkWmMapWindow procedure, normal windows} unix {
     winfo ismapped .t
 } 1
 
-test unixWm-10.1 {TkWmDeadWindow procedure, canceling UpdateGeometry idle handler} unix {
+test unixWm-10.1 {TkWmDeadWindow procedure, canceling UpdateGeometry idle handler} {} {
     destroy .t
     toplevel .t -width 100 -height 50
     wm geom .t +0+0
@@ -503,16 +503,16 @@ test unixWm-10.2 {TkWmDeadWindow procedure, destroying menubar} {unix testmenuba
     lappend result [winfo exists .f]
 } {destroyed 0}
 
-test unixWm-11.1 {Tk_WmCmd procedure, miscellaneous errors} unix {
+test unixWm-11.1 {Tk_WmCmd procedure, miscellaneous errors} {} {
     list [catch {wm} msg] $msg
 } {1 {wrong # args: should be "wm option window ?arg ...?"}}
-test unixWm-11.2 {Tk_WmCmd procedure, miscellaneous errors} unix {
+test unixWm-11.2 {Tk_WmCmd procedure, miscellaneous errors} {} {
     list [catch {wm aspect} msg] $msg
 } {1 {wrong # args: should be "wm option window ?arg ...?"}}
-test unixWm-11.3 {Tk_WmCmd procedure, miscellaneous errors} unix {
+test unixWm-11.3 {Tk_WmCmd procedure, miscellaneous errors} {} {
     list [catch {wm iconify bogus} msg] $msg
 } {1 {bad window path name "bogus"}}
-test unixWm-11.4 {Tk_WmCmd procedure, miscellaneous errors} unix {
+test unixWm-11.4 {Tk_WmCmd procedure, miscellaneous errors} {} {
     destroy .b
     button .b -text hello
     list [catch {wm geometry .b} msg] $msg
@@ -528,13 +528,13 @@ toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update
 
-test unixWm-12.1 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.1 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 12} msg] $msg
 } {1 {wrong # args: should be "wm aspect window ?minNumer minDenom maxNumer maxDenom?"}}
-test unixWm-12.2 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.2 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 12 13 14 15 16} msg] $msg
 } {1 {wrong # args: should be "wm aspect window ?minNumer minDenom maxNumer maxDenom?"}}
-test unixWm-12.3 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.3 {Tk_WmCmd procedure, "aspect" option} {} {
     set result {}
     lappend result [wm aspect .t]
     wm aspect .t 3 4 10 2
@@ -542,32 +542,32 @@ test unixWm-12.3 {Tk_WmCmd procedure, "aspect" option} unix {
     wm aspect .t {} {} {} {}
     lappend result [wm aspect .t]
 } {{} {3 4 10 2} {}}
-test unixWm-12.4 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.4 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t bad 14 15 16} msg] $msg
 } {1 {expected integer but got "bad"}}
-test unixWm-12.5 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.5 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 13 foo 15 16} msg] $msg
 } {1 {expected integer but got "foo"}}
-test unixWm-12.6 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.6 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 13 14 bar 16} msg] $msg
 } {1 {expected integer but got "bar"}}
-test unixWm-12.7 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.7 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 13 14 15 baz} msg] $msg
 } {1 {expected integer but got "baz"}}
-test unixWm-12.8 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.8 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 0 14 15 16} msg] $msg
 } {1 {aspect number can't be <= 0}}
-test unixWm-12.9 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.9 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 13 0 15 16} msg] $msg
 } {1 {aspect number can't be <= 0}}
-test unixWm-12.10 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.10 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 13 14 0 16} msg] $msg
 } {1 {aspect number can't be <= 0}}
-test unixWm-12.11 {Tk_WmCmd procedure, "aspect" option} unix {
+test unixWm-12.11 {Tk_WmCmd procedure, "aspect" option} {} {
     list [catch {wm aspect .t 13 14 15 0} msg] $msg
 } {1 {aspect number can't be <= 0}}
 
-test unixWm-13.1 {Tk_WmCmd procedure, "client" option} unix {
+test unixWm-13.1 {Tk_WmCmd procedure, "client" option} {} {
     list [catch {wm client .t x y} msg] $msg
 } {1 {wrong # args: should be "wm client window ?name?"}}
 test unixWm-13.2 {Tk_WmCmd procedure, "client" option} {unix testwrapper} {
@@ -580,7 +580,7 @@ test unixWm-13.2 {Tk_WmCmd procedure, "client" option} {unix testwrapper} {
     wm client .t {}
     lappend result [wm client .t] [testprop [testwrapper .t] WM_CLIENT_MACHINE]
 } {{} Test_String New {} {}}
-test unixWm-13.3 {Tk_WmCmd procedure, "client" option, unmapped window} unix {
+test unixWm-13.3 {Tk_WmCmd procedure, "client" option, unmapped window} {} {
     destroy .t2
     toplevel .t2
     wm client .t2 Test_String
@@ -589,10 +589,10 @@ test unixWm-13.3 {Tk_WmCmd procedure, "client" option, unmapped window} unix {
     destroy .t2
 } {}
 
-test unixWm-14.1 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.1 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     list [catch {wm colormapwindows .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm colormapwindows window ?windowList?"}}
-test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     destroy .t2
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
@@ -606,13 +606,13 @@ test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} unix {
     update
     list $x [wm colormapwindows .t2]
 } {{.t2.b .t2} {.t2.b .t2.c .t2}}
-test unixWm-14.3 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.3 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     list [catch {wm col . "a \{"} msg] $msg
 } {1 {unmatched open brace in list}}
-test unixWm-14.4 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.4 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     list [catch {wm colormapwindows . foo} msg] $msg
 } {1 {bad window path name "foo"}}
-test unixWm-14.5 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.5 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     destroy .t2
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
@@ -623,7 +623,7 @@ test unixWm-14.5 {Tk_WmCmd procedure, "colormapwindows" option} unix {
     wm colormapwindows .t2 {.t2.c .t2 .t2.a}
     wm colormapwindows .t2
 } {.t2.c .t2 .t2.a}
-test unixWm-14.6 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.6 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     destroy .t2
     toplevel .t2 -width 200 -height 200
     wm geom .t2 +0+0
@@ -634,7 +634,7 @@ test unixWm-14.6 {Tk_WmCmd procedure, "colormapwindows" option} unix {
     wm colormapwindows .t2 {.t2.b .t2.a}
     wm colormapwindows .t2
 } {.t2.b .t2.a}
-test unixWm-14.7 {Tk_WmCmd procedure, "colormapwindows" option} unix {
+test unixWm-14.7 {Tk_WmCmd procedure, "colormapwindows" option} {} {
     destroy .t2
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
@@ -648,10 +648,10 @@ test unixWm-14.7 {Tk_WmCmd procedure, "colormapwindows" option} unix {
 #
 destroy .t2
 
-test unixWm-15.1 {Tk_WmCmd procedure, "command" option} unix {
+test unixWm-15.1 {Tk_WmCmd procedure, "command" option} {} {
     list [catch {wm command .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm command window ?value?"}}
-test unixWm-15.2 {Tk_WmCmd procedure, "command" option} unix {
+test unixWm-15.2 {Tk_WmCmd procedure, "command" option} {} {
     list [catch {wm command .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm command window ?value?"}}
 test unixWm-15.3 {Tk_WmCmd procedure, "command" option} {unix testwrapper} {
@@ -666,7 +666,7 @@ test unixWm-15.3 {Tk_WmCmd procedure, "command" option} {unix testwrapper} {
 } {{} {test
 command
 } {new command} {} {}}
-test unixWm-15.4 {Tk_WmCmd procedure, "command" option, window not mapped} unix {
+test unixWm-15.4 {Tk_WmCmd procedure, "command" option, window not mapped} {} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -675,14 +675,14 @@ test unixWm-15.4 {Tk_WmCmd procedure, "command" option, window not mapped} unix 
     wm command .t2 {}
     destroy .t2
 } {}
-test unixWm-15.5 {Tk_WmCmd procedure, "command" option} unix {
+test unixWm-15.5 {Tk_WmCmd procedure, "command" option} {} {
     list [catch {wm command .t "a \{b"} msg] $msg
 } {1 {unmatched open brace in list}}
 
-test unixWm-16.1 {Tk_WmCmd procedure, "deiconify" option} unix {
+test unixWm-16.1 {Tk_WmCmd procedure, "deiconify" option} {} {
     list [catch {wm deiconify .t 12} msg] $msg
 } {1 {wrong # args: should be "wm deiconify window"}}
-test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
+test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} {} {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg red
     wm iconwindow .t .icon
@@ -690,7 +690,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     set result
 } {1 {can't deiconify .icon: it is an icon for .t}}
-test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix withWindowManager} {
+test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {withWindowManager} {
     wm iconify .t
     set result {}
     lappend result [winfo ismapped .t] [wm state .t]
@@ -698,13 +698,13 @@ test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix withWindowManage
     lappend result [winfo ismapped .t] [wm state .t]
 } {0 iconic 1 normal}
 
-test unixWm-17.1 {Tk_WmCmd procedure, "focusmodel" option} unix {
+test unixWm-17.1 {Tk_WmCmd procedure, "focusmodel" option} {} {
     list [catch {wm focusmodel .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm focusmodel window ?active|passive?"}}
-test unixWm-17.2 {Tk_WmCmd procedure, "focusmodel" option} unix {
+test unixWm-17.2 {Tk_WmCmd procedure, "focusmodel" option} {} {
     list [catch {wm focusmodel .t bogus} msg] $msg
 } {1 {bad argument "bogus": must be active or passive}}
-test unixWm-17.3 {Tk_WmCmd procedure, "focusmodel" option} unix {
+test unixWm-17.3 {Tk_WmCmd procedure, "focusmodel" option} {} {
     set result {}
     lappend result [wm focusmodel .t]
     wm focusmodel .t active
@@ -714,7 +714,7 @@ test unixWm-17.3 {Tk_WmCmd procedure, "focusmodel" option} unix {
     set result
 } {passive active passive}
 
-test unixWm-18.1 {Tk_WmCmd procedure, "frame" option} unix {
+test unixWm-18.1 {Tk_WmCmd procedure, "frame" option} {} {
     list [catch {wm frame .t 12} msg] $msg
 } {1 {wrong # args: should be "wm frame window"}}
 test unixWm-18.2 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
@@ -731,7 +731,7 @@ test unixWm-18.3 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
     set result
 } 1
 
-test unixWm-19.1 {Tk_WmCmd procedure, "geometry" option} unix {
+test unixWm-19.1 {Tk_WmCmd procedure, "geometry" option} {} {
     list [catch {wm geometry .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm geometry window ?newGeometry?"}}
 test unixWm-19.2 {Tk_WmCmd procedure, "geometry" option} {unix nonPortable} {
@@ -764,17 +764,17 @@ test unixWm-19.5 {Tk_WmCmd procedure, "geometry" option} {unix nonPortable} {
     update
     lappend result [wm geometry .t]
 } {150x300+5+6 100x50+5+6}
-test unixWm-19.6 {Tk_WmCmd procedure, "geometry" option} unix {
+test unixWm-19.6 {Tk_WmCmd procedure, "geometry" option} {} {
     list [catch {wm geometry .t qrs} msg] $msg
 } {1 {bad geometry specifier "qrs"}}
 
-test unixWm-20.1 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.1 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm grid window ?baseWidth baseHeight widthInc heightInc?"}}
-test unixWm-20.2 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.2 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 12 13 14 15 16} msg] $msg
 } {1 {wrong # args: should be "wm grid window ?baseWidth baseHeight widthInc heightInc?"}}
-test unixWm-20.3 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.3 {Tk_WmCmd procedure, "grid" option} {} {
     set result {}
     lappend result [wm grid .t]
     wm grid .t 5 6 20 10
@@ -782,28 +782,28 @@ test unixWm-20.3 {Tk_WmCmd procedure, "grid" option} unix {
     wm grid .t {} {} {} {}
     lappend result [wm grid .t]
 } {{} {5 6 20 10} {}}
-test unixWm-20.4 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.4 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t bad 10 11 12} msg] $msg
 } {1 {expected integer but got "bad"}}
-test unixWm-20.5 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.5 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t -1 11 12 13} msg] $msg
 } {1 {baseWidth can't be < 0}}
-test unixWm-20.6 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.6 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 10 foo 12 13} msg] $msg
 } {1 {expected integer but got "foo"}}
-test unixWm-20.7 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.7 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 10 -11 12 13} msg] $msg
 } {1 {baseHeight can't be < 0}}
-test unixWm-20.8 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.8 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 10 11 bar 13} msg] $msg
 } {1 {expected integer but got "bar"}}
-test unixWm-20.9 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.9 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 10 11 -2 13} msg] $msg
 } {1 {widthInc can't be <= 0}}
-test unixWm-20.10 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.10 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 10 11 12 bogus} msg] $msg
 } {1 {expected integer but got "bogus"}}
-test unixWm-20.11 {Tk_WmCmd procedure, "grid" option} unix {
+test unixWm-20.11 {Tk_WmCmd procedure, "grid" option} {} {
     list [catch {wm grid .t 10 11 12 -1} msg] $msg
 } {1 {heightInc can't be <= 0}}
 
@@ -817,10 +817,10 @@ toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update
 
-test unixWm-21.1 {Tk_WmCmd procedure, "group" option} unix {
+test unixWm-21.1 {Tk_WmCmd procedure, "group" option} {} {
     list [catch {wm group .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm group window ?pathName?"}}
-test unixWm-21.2 {Tk_WmCmd procedure, "group" option} unix {
+test unixWm-21.2 {Tk_WmCmd procedure, "group" option} {} {
     list [catch {wm group .t bogus} msg] $msg
 } {1 {bad window path name "bogus"}}
 test unixWm-21.3 {Tk_WmCmd procedure, "group" option} {unix testwrapper} {
@@ -874,14 +874,14 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
 	    WM_HINTS] 0]}]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option} unix {
+test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option} {} {
     list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
 } {1 {bitmap "bad-bitmap" not defined}}
 
-test unixWm-23.1 {Tk_WmCmd procedure, "iconify" option} unix {
+test unixWm-23.1 {Tk_WmCmd procedure, "iconify" option} {} {
     list [catch {wm iconify .t 12} msg] $msg
 } {1 {wrong # args: should be "wm iconify window"}}
-test unixWm-23.2 {Tk_WmCmd procedure, "iconify" option} unix {
+test unixWm-23.2 {Tk_WmCmd procedure, "iconify" option} {} {
     destroy .t2
     toplevel .t2
     wm overrideredirect .t2 1
@@ -889,7 +889,7 @@ test unixWm-23.2 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": override-redirect flag is set}}
-test unixWm-23.3 {Tk_WmCmd procedure, "iconify" option} unix {
+test unixWm-23.3 {Tk_WmCmd procedure, "iconify" option} {} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -898,7 +898,7 @@ test unixWm-23.3 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is a transient}}
-test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
+test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} {} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -907,7 +907,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is an icon for ".t"}}
-test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix withWindowManager} {
+test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {withWindowManager} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -918,7 +918,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix withWindowManager}
     destroy .t2
     set result
 } 0
-test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix withWindowManager} {
+test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {withWindowManager} {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -931,7 +931,7 @@ test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix withWindowManager}
     set result
 } {1 0}
 
-test unixWm-24.1 {Tk_WmCmd procedure, "iconmask" option} unix {
+test unixWm-24.1 {Tk_WmCmd procedure, "iconmask" option} {} {
     list [catch {wm iconmask .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm iconmask window ?bitmap?"}}
 test unixWm-24.2 {Tk_WmCmd procedure, "iconmask" option} {unix testwrapper} {
@@ -946,14 +946,14 @@ test unixWm-24.2 {Tk_WmCmd procedure, "iconmask" option} {unix testwrapper} {
 	    WM_HINTS] 0]}]]
     lappend result [wm iconmask .t] $bit
 } {{} questhead 0x20 {} 0x0}
-test unixWm-24.3 {Tk_WmCmd procedure, "iconmask" option} unix {
+test unixWm-24.3 {Tk_WmCmd procedure, "iconmask" option} {} {
     list [catch {wm iconmask .t bogus} msg] $msg
 } {1 {bitmap "bogus" not defined}}
 
-test unixWm-25.1 {Tk_WmCmd procedure, "iconname" option} unix {
+test unixWm-25.1 {Tk_WmCmd procedure, "iconname" option} {} {
     list [catch {wm icon .t} msg] $msg
 } {1 {ambiguous option "icon": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
-test unixWm-25.2 {Tk_WmCmd procedure, "iconname" option} unix {
+test unixWm-25.2 {Tk_WmCmd procedure, "iconname" option} {} {
     list [catch {wm iconname .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm iconname window ?newName?"}}
 test unixWm-25.3 {Tk_WmCmd procedure, "iconname" option} {unix testwrapper} {
@@ -965,10 +965,10 @@ test unixWm-25.3 {Tk_WmCmd procedure, "iconname" option} {unix testwrapper} {
     lappend result [wm iconname .t] [testprop [testwrapper .t] WM_ICON_NAME]
 } {{} test_name test_name {} {}}
 
-test unixWm-26.1 {Tk_WmCmd procedure, "iconposition" option} unix {
+test unixWm-26.1 {Tk_WmCmd procedure, "iconposition" option} {} {
     list [catch {wm iconposition .t 12} msg] $msg
 } {1 {wrong # args: should be "wm iconposition window ?x y?"}}
-test unixWm-26.2 {Tk_WmCmd procedure, "iconposition" option} unix {
+test unixWm-26.2 {Tk_WmCmd procedure, "iconposition" option} {} {
     list [catch {wm iconposition .t 12 13 14} msg] $msg
 } {1 {wrong # args: should be "wm iconposition window ?x y?"}}
 test unixWm-26.3 {Tk_WmCmd procedure, "iconposition" option} {unix testwrapper} {
@@ -983,14 +983,14 @@ test unixWm-26.3 {Tk_WmCmd procedure, "iconposition" option} {unix testwrapper} 
 	    WM_HINTS] 0]}]]
     lappend result [wm iconposition .t] $bit
 } {{} {10 15} 0xa 0xf 0x10 {} 0x0}
-test unixWm-26.4 {Tk_WmCmd procedure, "iconposition" option} unix {
+test unixWm-26.4 {Tk_WmCmd procedure, "iconposition" option} {} {
     list [catch {wm iconposition .t bad 13} msg] $msg
 } {1 {expected integer but got "bad"}}
-test unixWm-26.5 {Tk_WmCmd procedure, "iconposition" option} unix {
+test unixWm-26.5 {Tk_WmCmd procedure, "iconposition" option} {} {
     list [catch {wm iconposition .t 13 lousy} msg] $msg
 } {1 {expected integer but got "lousy"}}
 
-test unixWm-27.1 {Tk_WmCmd procedure, "iconwindow" option} unix {
+test unixWm-27.1 {Tk_WmCmd procedure, "iconwindow" option} {} {
     list [catch {wm iconwindow .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
 test unixWm-27.2 {Tk_WmCmd procedure, "iconwindow" option} {unix testwrapper} {
@@ -1010,17 +1010,17 @@ test unixWm-27.2 {Tk_WmCmd procedure, "iconwindow" option} {unix testwrapper} {
     destroy .icon
     set result
 } {{} .icon icon 0x8 1 {} withdrawn 0x0}
-test unixWm-27.3 {Tk_WmCmd procedure, "iconwindow" option} unix {
+test unixWm-27.3 {Tk_WmCmd procedure, "iconwindow" option} {} {
     list [catch {wm iconwindow .t bogus} msg] $msg
 } {1 {bad window path name "bogus"}}
-test unixWm-27.4 {Tk_WmCmd procedure, "iconwindow" option} unix {
+test unixWm-27.4 {Tk_WmCmd procedure, "iconwindow" option} {} {
     destroy .b
     button .b -text Help
     set result [list [catch {wm iconwindow .t .b} msg] $msg]
     destroy .b
     set result
 } {1 {can't use .b as icon window: not at top level}}
-test unixWm-27.5 {Tk_WmCmd procedure, "iconwindow" option} unix {
+test unixWm-27.5 {Tk_WmCmd procedure, "iconwindow" option} {} {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg green
     destroy .t2
@@ -1045,7 +1045,7 @@ test unixWm-27.6 {Tk_WmCmd procedure, "iconwindow" option, changing icons} unix 
     destroy .icon .icon2
     set result
 } {icon normal withdrawn icon}
-test unixWm-27.7 {Tk_WmCmd procedure, "iconwindow" option, withdrawing icon} unix {
+test unixWm-27.7 {Tk_WmCmd procedure, "iconwindow" option, withdrawing icon} {} {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg green
     wm geometry .icon +0+0
@@ -1149,13 +1149,13 @@ toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update
 
-test unixWm-30.1 {Tk_WmCmd procedure, "overrideredirect" option} unix {
+test unixWm-30.1 {Tk_WmCmd procedure, "overrideredirect" option} {} {
     list [catch {wm overrideredirect .t 1 2} msg]  $msg
 } {1 {wrong # args: should be "wm overrideredirect window ?boolean?"}}
-test unixWm-30.2 {Tk_WmCmd procedure, "overrideredirect" option} unix {
+test unixWm-30.2 {Tk_WmCmd procedure, "overrideredirect" option} {} {
     list [catch {wm overrideredirect .t boo} msg]  $msg
 } {1 {expected boolean value but got "boo"}}
-test unixWm-30.3 {Tk_WmCmd procedure, "overrideredirect" option} unix {
+test unixWm-30.3 {Tk_WmCmd procedure, "overrideredirect" option} {} {
     set result {}
     lappend result [wm overrideredirect .t]
     wm overrideredirect .t true
@@ -1164,7 +1164,7 @@ test unixWm-30.3 {Tk_WmCmd procedure, "overrideredirect" option} unix {
     lappend result [wm overrideredirect .t]
 } {0 1 0}
 
-test unixWm-31.1 {Tk_WmCmd procedure, "positionfrom" option} unix {
+test unixWm-31.1 {Tk_WmCmd procedure, "positionfrom" option} {} {
     list [catch {wm positionfrom .t 1 2} msg]  $msg
 } {1 {wrong # args: should be "wm positionfrom window ?user/program?"}}
 test unixWm-31.2 {Tk_WmCmd procedure, "positionfrom" option} {unix testwrapper} {
@@ -1181,14 +1181,14 @@ test unixWm-31.2 {Tk_WmCmd procedure, "positionfrom" option} {unix testwrapper} 
 	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm positionfrom .t] $bit
 } {user program 0x4 user 0x1}
-test unixWm-31.3 {Tk_WmCmd procedure, "positionfrom" option} unix {
+test unixWm-31.3 {Tk_WmCmd procedure, "positionfrom" option} {} {
     list [catch {wm positionfrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
 
-test unixWm-32.1 {Tk_WmCmd procedure, "protocol" option} unix {
+test unixWm-32.1 {Tk_WmCmd procedure, "protocol" option} {} {
     list [catch {wm protocol .t 1 2 3} msg]  $msg
 } {1 {wrong # args: should be "wm protocol window ?name? ?command?"}}
-test unixWm-32.2 {Tk_WmCmd procedure, "protocol" option} unix {
+test unixWm-32.2 {Tk_WmCmd procedure, "protocol" option} {} {
     wm protocol .t {foo a} {a b c}
     wm protocol .t bar {test script for bar}
     set result [wm protocol .t]
@@ -1219,7 +1219,7 @@ test unixWm-32.3 {Tk_WmCmd procedure, "protocol" option} {unix testwrapper} {
     }
     lappend result [wm protocol .t] $x
 } {{} WM_DELETE_WINDOW {bar foo} {WM_DELETE_WINDOW bar foo} {} WM_DELETE_WINDOW}
-test unixWm-32.4 {Tk_WmCmd procedure, "protocol" option} unix {
+test unixWm-32.4 {Tk_WmCmd procedure, "protocol" option} {} {
     set result {}
     wm protocol .t foo {a b c}
     wm protocol .t bar {test script for bar}
@@ -1228,7 +1228,7 @@ test unixWm-32.4 {Tk_WmCmd procedure, "protocol" option} unix {
     wm protocol .t bar {}
     lappend result [wm protocol .t foo] [wm protocol .t bar]
 } {{a b c} {test script for bar} {} {}}
-test unixWm-32.5 {Tk_WmCmd procedure, "protocol" option} unix {
+test unixWm-32.5 {Tk_WmCmd procedure, "protocol" option} {} {
     wm protocol .t foo {a b c}
     wm protocol .t foo {test script}
     set result [wm protocol .t foo]
@@ -1236,22 +1236,22 @@ test unixWm-32.5 {Tk_WmCmd procedure, "protocol" option} unix {
     set result
 } {test script}
 
-test unixWm-33.1 {Tk_WmCmd procedure, "resizable" option} unix {
+test unixWm-33.1 {Tk_WmCmd procedure, "resizable" option} {} {
     list [catch {wm resizable . a} msg]  $msg
 } {1 {wrong # args: should be "wm resizable window ?width height?"}}
-test unixWm-33.2 {Tk_WmCmd procedure, "resizable" option} unix {
+test unixWm-33.2 {Tk_WmCmd procedure, "resizable" option} {} {
     list [catch {wm resizable . a b c} msg]  $msg
 } {1 {wrong # args: should be "wm resizable window ?width height?"}}
-test unixWm-33.3 {Tk_WmCmd procedure, "resizable" option} unix {
+test unixWm-33.3 {Tk_WmCmd procedure, "resizable" option} {} {
     list [catch {wm resizable .foo a b c} msg]  $msg
 } {1 {bad window path name ".foo"}}
-test unixWm-33.4 {Tk_WmCmd procedure, "resizable" option} unix {
+test unixWm-33.4 {Tk_WmCmd procedure, "resizable" option} {} {
     list [catch {wm resizable . x 1} msg]  $msg
 } {1 {expected boolean value but got "x"}}
-test unixWm-33.5 {Tk_WmCmd procedure, "resizable" option} unix {
+test unixWm-33.5 {Tk_WmCmd procedure, "resizable" option} {} {
     list [catch {wm resizable . 0 gorp} msg]  $msg
 } {1 {expected boolean value but got "gorp"}}
-test unixWm-33.6 {Tk_WmCmd procedure, "resizable" option} unix {
+test unixWm-33.6 {Tk_WmCmd procedure, "resizable" option} {} {
     destroy .t2
     toplevel .t2 -width 200 -height 100
     wm geom .t2 +0+0
@@ -1267,7 +1267,7 @@ test unixWm-33.6 {Tk_WmCmd procedure, "resizable" option} unix {
     set result
 } {{1 1} {1 0} {0 0} {0 1}}
 
-test unixWm-34.1 {Tk_WmCmd procedure, "sizefrom" option} unix {
+test unixWm-34.1 {Tk_WmCmd procedure, "sizefrom" option} {} {
     list [catch {wm sizefrom .t 1 2} msg]  $msg
 } {1 {wrong # args: should be "wm sizefrom window ?user|program?"}}
 test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
@@ -1284,19 +1284,19 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm sizefrom .t] $bit
 } {{} program 0x8 user 0x2}
-test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
+test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} {} {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
 test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
 } {1 {bad argument "1": must be iconic, normal, or withdrawn}}
-test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} {unix aqua} {
+test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} {aqua} {
     list [catch {wm state .t 1} msg]  $msg
 } {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
-test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
+test unixWm-35.2 {Tk_WmCmd procedure, "state" option} {} {
     list [catch {wm state .t iconic 1} msg]  $msg
 } {1 {wrong # args: should be "wm state window ?state?"}}
-test unixWm-35.3 {Tk_WmCmd procedure, "state" option} unix {
+test unixWm-35.3 {Tk_WmCmd procedure, "state" option} {} {
     set result {}
     destroy .t2
     toplevel .t2 -width 120 -height 300
@@ -1313,7 +1313,7 @@ test unixWm-35.3 {Tk_WmCmd procedure, "state" option} unix {
     destroy .t2
     set result
 } {normal normal withdrawn iconic normal}
-test unixWm-35.4 {Tk_WmCmd procedure, "state" option} unix {
+test unixWm-35.4 {Tk_WmCmd procedure, "state" option} {} {
     set result {}
     destroy .t2
     toplevel .t2 -width 120 -height 300
@@ -1331,7 +1331,7 @@ test unixWm-35.4 {Tk_WmCmd procedure, "state" option} unix {
     set result
 } {normal normal withdrawn iconic normal}
 
-test unixWm-36.1 {Tk_WmCmd procedure, "title" option} unix {
+test unixWm-36.1 {Tk_WmCmd procedure, "title" option} {} {
     list [catch {wm title .t 1 2} msg]  $msg
 } {1 {wrong # args: should be "wm title window ?newTitle?"}}
 test unixWm-36.2 {Tk_WmCmd procedure, "title" option} {unix testwrapper} {
@@ -1385,10 +1385,10 @@ test unixWm-37.5 {Tk_WmCmd procedure, "transient" option, create toplevel wrappe
     set result
 } {{} 0}
 
-test unixWm-38.1 {Tk_WmCmd procedure, "withdraw" option} unix {
+test unixWm-38.1 {Tk_WmCmd procedure, "withdraw" option} {} {
     list [catch {wm withdraw .t 1} msg]  $msg
 } {1 {wrong # args: should be "wm withdraw window"}}
-test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} unix {
+test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} {} {
     destroy .t2
     toplevel .t2 -width 120 -height 300
     wm geometry .t2 +0+0
@@ -1397,7 +1397,7 @@ test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} unix {
     destroy .t2
     set result
 } {1 {can't withdraw .t2: it is an icon for .t}}
-test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
+test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} {} {
     set result {}
     wm withdraw .t
     lappend result [wm state .t] [winfo ismapped .t]
@@ -1405,7 +1405,7 @@ test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
     lappend result [wm state .t] [winfo ismapped .t]
 } {withdrawn 0 normal 1}
 
-test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} unix {
+test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} {} {
     list [catch {wm unknown .t} msg] $msg
 } {1 {bad option "unknown": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 
@@ -1423,7 +1423,7 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
     update
     wm geometry .t
 } {30x10+0+0}
-test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} unix {
+test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} {} {
     update
     destroy .t
     update
@@ -1437,7 +1437,7 @@ test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already 
     wm geometry .t
 } "20x20+100+$Y0"
 
-test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} unix {
+test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} {} {
     destroy .t
     toplevel .t -width 400 -height 150
     tkwait visibility .t
@@ -1474,7 +1474,7 @@ test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} 
 	    [expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}] \
 	    [winfo width .t] [winfo height .t]
 } {{.t.m: 200x20} {.t: 200x300} 0 0 200 20 0 20 200 300}
-test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} unix {
+test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} {} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1485,7 +1485,7 @@ test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} unix {
     update
     set result
 } {configured: 400 150}
-test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
+test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} {} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1518,7 +1518,7 @@ test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} unix {
     lappend result $x [winfo ismapped .t]
 } {unmapped 0 mapped 1}
 
-test unixWm-43.1 {TopLevelReqProc procedure, embedded in same process} unix {
+test unixWm-43.1 {TopLevelReqProc procedure, embedded in same process} {} {
     destroy .t
     toplevel .t -width 200 -height 200
     wm geom .t +0+0
@@ -1551,7 +1551,7 @@ test unixWm-43.2 {TopLevelReqProc procedure, resize causes window to move} \
 	    [winfo width .t] [winfo height .t]
 } {-100 50 300 150}
 
-test unixWm-44.1 {UpdateGeometryInfo procedure, width/height computation} unix {
+test unixWm-44.1 {UpdateGeometryInfo procedure, width/height computation} {} {
     destroy .t
     toplevel .t -width 100 -height 200
     wm geometry .t +30+40
@@ -1561,7 +1561,7 @@ test unixWm-44.1 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {180 20}
-test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} unix {
+test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} {} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm grid .t 5 4 10 12
@@ -1572,7 +1572,7 @@ test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {130 36}
-test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
+test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} {} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm grid .t 5 4 10 12
@@ -1583,7 +1583,7 @@ test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {40 132}
-test unixWm-44.4 {UpdateGeometryInfo procedure, width/height computation} unix {
+test unixWm-44.4 {UpdateGeometryInfo procedure, width/height computation} {} {
     destroy .t
     toplevel .t -width 100 -height 200
     wm geometry .t +30+40
@@ -1593,7 +1593,7 @@ test unixWm-44.4 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {300 150}
-test unixWm-44.5 {UpdateGeometryInfo procedure, negative width} unix {
+test unixWm-44.5 {UpdateGeometryInfo procedure, negative width} {} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm grid .t 18 7 10 12
@@ -1605,7 +1605,7 @@ test unixWm-44.5 {UpdateGeometryInfo procedure, negative width} unix {
     list [winfo width .t] [winfo height .t]
 } {1 72}
 
-test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} -constraints unix -setup {
+test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} -setup {
     destroy .t
     toplevel .t -width 80 -height 60
 } -body {
@@ -1630,7 +1630,7 @@ if {! [winfo exists .t]} {
     frame .t
 }
 
-test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} -constraints unix -setup {
+test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} -setup {
     destroy .t
     toplevel .t -width 80 -height 60
 } -body {
@@ -1641,7 +1641,7 @@ test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} -constraints
     update
     list [winfo x .t] [winfo y .t]
 } -result [list 5 [expr {[winfo screenheight .t] - 70}]]
-test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} -constraints unix -setup {
+test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} -setup {
     destroy .t
     toplevel .t -width 80 -height 60
 } -body {
@@ -1740,7 +1740,7 @@ test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenub
 
 # I don't know how to test WaitForConfigureNotify.
 
-test unixWm-46.1 {WaitForEvent procedure, use of modal timeout} unix {
+test unixWm-46.1 {WaitForEvent procedure, use of modal timeout} {} {
     destroy .t
     toplevel .t -width 200 -height 200
     wm geom .t +0+0
@@ -1794,40 +1794,40 @@ test unixWm-48.1 {ParseGeometry procedure} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {100 120}
-test unixWm-48.2 {ParseGeometry procedure} unix {
+test unixWm-48.2 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t =10zx120} msg] $msg
 } {1 {bad geometry specifier "=10zx120"}}
-test unixWm-48.3 {ParseGeometry procedure} unix {
+test unixWm-48.3 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t x120} msg] $msg
 } {1 {bad geometry specifier "x120"}}
-test unixWm-48.4 {ParseGeometry procedure} unix {
+test unixWm-48.4 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t =100x120a} msg] $msg
 } {1 {bad geometry specifier "=100x120a"}}
-test unixWm-48.5 {ParseGeometry procedure} unix {
+test unixWm-48.5 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t z} msg] $msg
 } {1 {bad geometry specifier "z"}}
-test unixWm-48.6 {ParseGeometry procedure} unix {
+test unixWm-48.6 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t +20&} msg] $msg
 } {1 {bad geometry specifier "+20&"}}
-test unixWm-48.7 {ParseGeometry procedure} unix {
+test unixWm-48.7 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t +-} msg] $msg
 } {1 {bad geometry specifier "+-"}}
-test unixWm-48.8 {ParseGeometry procedure} unix {
+test unixWm-48.8 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t +20a} msg] $msg
 } {1 {bad geometry specifier "+20a"}}
-test unixWm-48.9 {ParseGeometry procedure} unix {
+test unixWm-48.9 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t +20-} msg] $msg
 } {1 {bad geometry specifier "+20-"}}
-test unixWm-48.10 {ParseGeometry procedure} unix {
+test unixWm-48.10 {ParseGeometry procedure} {} {
     list [catch {wm geometry .t +20+10z} msg] $msg
 } {1 {bad geometry specifier "+20+10z"}}
-test unixWm-48.11 {ParseGeometry procedure} unix {
+test unixWm-48.11 {ParseGeometry procedure} {} {
     catch {wm geometry .t +-10+20}
 } 0
-test unixWm-48.12 {ParseGeometry procedure} unix {
+test unixWm-48.12 {ParseGeometry procedure} {} {
     catch {wm geometry .t +30+-10}
 } 0
-test unixWm-48.13 {ParseGeometry procedure, resize causes window to move} unix {
+test unixWm-48.13 {ParseGeometry procedure, resize causes window to move} {} {
     destroy .t
     toplevel .t -width 200 -height 200
     wm geom .t +0+0
@@ -1915,7 +1915,7 @@ test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, tit
 	 [winfo containing [expr {$x + 200}] [expr {$y + 250}]] \
 	 [winfo containing [expr {$x + 220}] [expr {$y + 250}]] \
 } $result_50_1
-test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} unix {
+test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} {} {
     deleteWindows
     toplevel .t -width 400 -height 300 -bg yellow
     tkwait visibility .t
@@ -1941,7 +1941,7 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {
     Tk_CoordsToWindow procedure, finding a toplevel with embedding
-} tempNotWin {
+} {} {
     deleteWindows
     catch {interp delete child}
     toplevel .t -width 300 -height 400 -bg blue
@@ -1970,7 +1970,7 @@ test unixWm-50.3 {
 	[winfo containing [expr {$x + 200}] [expr {$y +50}]]
     set result
 } {{} .x .t .t.f}
-test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix {
+test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} {} {
     destroy .t
     catch {interp delete child}
     toplevel .t -width 200 -height 200 -bg green
@@ -2007,7 +2007,7 @@ test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenu
 	 [winfo containing [expr {$x + 11}] [expr {$y + 152}]] \
 	 [winfo containing [expr {$x + 12}] [expr {$y + 152}]]
 } {{} .t.menu .t.menu .t.menu.f .t .t .t.f}
-test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
+test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} {} {
     deleteWindows
     toplevel .t -width 300 -height 400 -bg orange
     wm geom .t +0+50
@@ -2024,7 +2024,7 @@ test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
 	    [winfo containing [expr {$x +249}] [expr {$y +80}]] \
 	    [winfo containing [expr {$x +250}] [expr {$y +80}]]
 } {.t .t2 .t2 .t}
-test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
+test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} {} {
     destroy .t
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +0+0
@@ -2041,7 +2041,7 @@ test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing $x [expr {$y + 350}]] \
 	    [winfo containing $x [expr {$y + 450}]]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
+test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} {} {
     destroy .t
     toplevel .t -width 400 -height 300 -bg green
     wm geom .t +0+30
@@ -2058,7 +2058,7 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing [expr {$x + 350}] $y] \
 	    [winfo containing [expr {$x + 450}] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {} {
     destroy .t
     destroy .t2
     update
@@ -2078,7 +2078,7 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     update
     lappend result [winfo containing 120 120]
 } {.t2 .t}
-test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
+test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} {} {
     destroy .t
     toplevel .t -width 200 -height 200 -bg green
     wm geometry .t +0+0
@@ -2155,7 +2155,7 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
 #
 deleteWindows
 
-test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} unix {
+test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} {} {
     wm geometry . +300+300
     destroy .t
     update idletasks
@@ -2168,7 +2168,7 @@ test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapp
     # This test assumes that .t2 is not mapped yet, but that is not really guaranteed.
     winfo containing 100 100
 } {.t}
-test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuartz} {
+test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {failsOnXQuartz} {
     foreach w {.t .t2 .t3} {
 	destroy $w
 	toplevel $w -width 200 -height 200 -bg green
@@ -2185,7 +2185,7 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
     update
     lappend result [winfo containing 200 200]
 } {.t3 .t}
-test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
+test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} {} {
     destroy .t
     toplevel .t -width 200 -height 200 -bg green
     wm overrideredirect .t 1
@@ -2211,7 +2211,7 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     lappend result [winfo containing $x $y]
 } {.t2 .t .t2}
 
-test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} -constraints unix -setup {
+test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} -setup {
     # The mac won't put an overrideredirect window above the root,
     if {[tk windowingsystem] eq "aqua"} {
 	wm withdraw .
@@ -2247,36 +2247,36 @@ test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} 
 	update
     }
 } -result {.t2 .t3}
-test unixWm-51.10 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
+test unixWm-51.10 {TkWmRestackToplevel procedure, don't move window that's already in the right place} {} {
     makeToplevels
     raise .raise1
     set time [lindex [time {raise .raise1}] 0]
     expr {$time < 2000000}
 } 1
-test unixWm-51.11 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
+test unixWm-51.11 {TkWmRestackToplevel procedure, don't move window that's already in the right place} {} {
     makeToplevels
     set time [lindex [time {lower .raise1}] 0]
     expr {$time < 2000000}
 } 1
-test unixWm-51.12 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
+test unixWm-51.12 {TkWmRestackToplevel procedure, don't move window that's already in the right place} {} {
     makeToplevels
     set time [lindex [time {raise .raise3 .raise2}] 0]
     expr {$time < 2000000}
 } 1
-test unixWm-51.13 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
+test unixWm-51.13 {TkWmRestackToplevel procedure, don't move window that's already in the right place} {} {
     makeToplevels
     set time [lindex [time {lower .raise1 .raise2}] 0]
     expr {$time < 2000000}
 } 1
 
-test unixWm-52.1 {TkWmAddToColormapWindows procedure} unix {
+test unixWm-52.1 {TkWmAddToColormapWindows procedure} {} {
     destroy .t
     toplevel .t -width 200 -height 200 -colormap new -relief raised -bd 2
     wm geom .t +0+0
     update
     wm colormap .t
 } {}
-test unixWm-52.2 {TkWmAddToColormapWindows procedure} unix {
+test unixWm-52.2 {TkWmAddToColormapWindows procedure} {} {
     destroy .t
     toplevel .t -colormap new -relief raised -bd 2
     wm geom .t +0+0
@@ -2285,7 +2285,7 @@ test unixWm-52.2 {TkWmAddToColormapWindows procedure} unix {
     update
     wm colormap .t
 } {.t.f .t}
-test unixWm-52.3 {TkWmAddToColormapWindows procedure} unix {
+test unixWm-52.3 {TkWmAddToColormapWindows procedure} {} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
@@ -2296,7 +2296,7 @@ test unixWm-52.3 {TkWmAddToColormapWindows procedure} unix {
     update
     wm colormap .t
 } {.t.f .t.f2 .t}
-test unixWm-52.4 {TkWmAddToColormapWindows procedure} unix {
+test unixWm-52.4 {TkWmAddToColormapWindows procedure} {} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
@@ -2310,7 +2310,7 @@ test unixWm-52.4 {TkWmAddToColormapWindows procedure} unix {
     wm colormapwindows .t
 } {.t.f}
 
-test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} unix {
+test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} {} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
@@ -2322,7 +2322,7 @@ test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} unix {
     destroy .t.f2
     wm colormap .t
 } {.t.f .t}
-test unixWm-53.2 {TkWmRemoveFromColormapWindows procedure} unix {
+test unixWm-53.2 {TkWmRemoveFromColormapWindows procedure} {} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
@@ -2558,7 +2558,7 @@ argumentNumber18
 
 # Test exit processing and cleanup:
 
-test unixWm-59.1 {exit processing} unix {
+test unixWm-59.1 {exit processing} {} {
     set script [makeFile {
 	update
 	exit
@@ -2571,7 +2571,7 @@ test unixWm-59.1 {exit processing} unix {
     removeFile script
     list $error $msg
 } {0 {}}
-test unixWm-59.2 {exit processing} unix {
+test unixWm-59.2 {exit processing} {} {
     set code [loadTkCommand]
     append code  {
 	interp create x
@@ -2590,7 +2590,7 @@ test unixWm-59.2 {exit processing} unix {
     removeFile script
     list $error $msg
 } {0 {}}
-test unixWm-59.3 {exit processing} unix {
+test unixWm-59.3 {exit processing} {} {
     set code [loadTkCommand]
     append code  {
 	interp create x
@@ -2634,35 +2634,35 @@ test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
     wm attributes .t
 } -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 
-test unixWm-60.2 {wm attributes - test} -constraints unix -body {
+test unixWm-60.2 {wm attributes - test} -body {
     destroy .t
     toplevel .t
     wm attributes .t -topmost
 } -result 0
 
-test unixWm-60.3 {wm attributes - set (unrealized)} -constraints unix -body {
+test unixWm-60.3 {wm attributes - set (unrealized)} -body {
     destroy .t
     toplevel .t
     wm attributes .t -topmost 1
 }
 
-test unixWm-60.4 {wm attributes - set (realized)} -constraints unix -body {
+test unixWm-60.4 {wm attributes - set (realized)} -body {
     destroy .t
     toplevel .t
     tkwait visibility .t
     wm attributes .t -topmost 1
 }
 
-test unixWm-60.5 {wm attributes - bad attribute} -constraints unix -body {
+test unixWm-60.5 {wm attributes - bad attribute} -body {
     destroy .t
     toplevel .t
     wm attributes .t -foo
 } -returnCodes 1 -match glob -result {bad attribute "-foo":*}
 
-test unixWm-61.1 {Tk_WmCmd procedure, "iconphoto" option} unix {
+test unixWm-61.1 {Tk_WmCmd procedure, "iconphoto" option} {} {
     list [catch {wm iconph .} msg] $msg
 } {1 {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}}
-test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} unix {
+test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} {} {
     destroy .t
     toplevel .t
     image create photo blank16 -width 16 -height 16

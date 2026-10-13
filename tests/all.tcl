@@ -51,10 +51,6 @@ tcltest::configure -testdir [file normalize [file dirname [info script]]]
 set skipFiles [tcltest::configure -notfile]
 foreach {constraint definition fileList} {
     testutils	{}		    testutils.test
-    unix	TCLTEST_BUILT_IN    {unixButton.test unixEmbed.test unixFont.test unixMenu.test \
-					    unixSelect.test unixWm.test}
-    win		TCLTEST_BUILT_IN    {winButton.test winClipboard.test winDialog.test winFont.test \
-					    winMenu.test winMsgbox.test winSend.test winWm.test}
 } {
     set toSkip 0
     if {$definition eq "TCLTEST_BUILT_IN"} {
