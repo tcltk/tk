@@ -3886,6 +3886,48 @@ test btree-14.119 {delete -inclusive without -marks with a single mark bound lea
     destroy .t
 } -result {aef 1 1.1}
 
+test btree-14.120 {-hyphentags without a soft hyphen in the inserted text} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The hyphen tags were added to the node although no segment got them.
+    .t debug 1
+    .t insert end x
+    .t tk_textInsert 1.0 -hyphentags P g
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t tag ranges P]
+} -cleanup {
+    destroy .t
+} -result {gx {}}
+
+test btree-14.121 {inserted text and soft hyphen with the same elide tag} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The elide update of the soft hyphens was dropped, its split points kept their protection.
+    .t debug 1
+    .t insert end "ab\ncd"
+    .t tag configure E -elide 1
+    .t tk_textInsert 2.0 -hyphentags {E P} "g­h" E
+    .t debug 0
+    split [.t get -displaychars 1.0 end-1c] \n
+} -cleanup {
+    destroy .t
+} -result {ab cd}
+
+test btree-14.122 {chars after a soft hyphen merge with the following chars} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end x
+    .t insert 1.0 "g­h"
+    .t debug 0
+    .t dump -text 1.0 end-1c
+} -cleanup {
+    destroy .t
+} -result {text g 1.0 text hx 1.2}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t

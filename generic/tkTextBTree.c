@@ -4852,24 +4852,6 @@ TkBTreeInsertChars(
 	}
     }
 
-    if (hyphenTagPtr) {
-	int highestPriority = -1;
-	TkText *textPtr = indexPtr->textPtr;
-
-	assert(textPtr);
-
-	for (tagPtr1 = hyphenTagPtr; tagPtr1; tagPtr1 = tagPtr1->nextPtr) {
-	    if (!TkTextTagSetTest(linePtr->parentPtr->tagonPtr, tagPtr1->index)) {
-		AddTagToNode(linePtr->parentPtr, tagPtr1, 1);
-	    }
-	    if ((tagPtr1->elide >= 0)
-		    && (int) tagPtr1->priority > highestPriority
-		    && (!tagPtr1->textPtr || tagPtr1->textPtr == textPtr)) {
-		highestPriority = (hyphenElideTagPtr = tagPtr1)->priority;
-	    }
-	}
-    }
-
     DEBUG(indexPtr->discardConsistencyCheck = true);
 
     /*
@@ -5064,6 +5046,48 @@ TkBTreeInsertChars(
     }
 
     /*
+     * After a soft hyphen the last chunk is a new segment: merge it with
+     * the char segment which follows the insertion point.
+     */
+
+    if (lastSegPtr
+	    && lastSegPtr->typePtr == &tkTextCharType
+	    && lastSegPtr->nextPtr
+	    && lastSegPtr->nextPtr->typePtr == &tkTextCharType) {
+	TkTextSegment *joinedPtr = CleanupCharSegments(sharedTextPtr, lastSegPtr);
+
+	if (joinedPtr != lastSegPtr) {
+	    if (firstSegPtr == lastSegPtr) {
+		firstSegPtr = joinedPtr;
+	    }
+	    lastSegPtr = joinedPtr;
+	    TkBTreeIncrEpoch(tree);
+	}
+    }
+
+    if (hyphenTagInfoPtr) {
+	int highestPriority = -1;
+	TkText *textPtr = indexPtr->textPtr;
+
+	/*
+	 * The hyphen tags are used only if a soft hyphen has been inserted.
+	 */
+
+	assert(textPtr);
+
+	for (tagPtr1 = hyphenTagPtr; tagPtr1; tagPtr1 = tagPtr1->nextPtr) {
+	    if (!TkTextTagSetTest(firstLinePtr->parentPtr->tagonPtr, tagPtr1->index)) {
+		AddTagToNode(firstLinePtr->parentPtr, tagPtr1, 1);
+	    }
+	    if ((tagPtr1->elide >= 0)
+		    && (int) tagPtr1->priority > highestPriority
+		    && (!tagPtr1->textPtr || tagPtr1->textPtr == textPtr)) {
+		highestPriority = (hyphenElideTagPtr = tagPtr1)->priority;
+	    }
+	}
+    }
+
+    /*
      * Update line tag information of last line.
      */
 
@@ -5187,6 +5211,10 @@ TkBTreeInsertChars(
 	}
 
 	if (tagPtr) {
+	    if (hyphenElideTagPtr == tagPtr) {
+		hyphenElideTagPtr = NULL; /* the soft hyphens carry this tag too */
+	    }
+
 	    firstSegPtr->protectionFlag = 1;
 	    lastSegPtr->protectionFlag = 1;
 
@@ -5197,10 +5225,6 @@ TkBTreeInsertChars(
 		if (firstSegPtr != lastSegPtr) {
 		    CleanupSplitPoint(lastSegPtr, sharedTextPtr);
 		}
-	    }
-
-	    if (hyphenElideTagPtr == tagPtr) {
-		hyphenElideTagPtr = NULL;
 	    }
 	}
     } else if (TkBTreeHaveElidedSegments(sharedTextPtr)) {
