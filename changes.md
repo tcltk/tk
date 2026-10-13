@@ -112,6 +112,7 @@ to the userbase.
  - [tk_messageBox unresponsive on global grab](https://core.tcl-lang.org/tk/tktview/281400)
  - [Canvas widget loses track of mouse](https://core.tcl-lang.org/tk/tktview/220902)
  - [tkMenuFind doesn't locate cloned menubars](https://core.tcl-lang.org/tk/tktview/223112)
+ - [menubutton scripts are confused about their owning menu](https://core.tcl-lang.org/tk/tktview/680884)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
