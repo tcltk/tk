@@ -110,6 +110,9 @@ typedef struct TkWmInfo {
     int           isMapped;
     int           lastX, lastY;
     int           lastWidth, lastHeight;
+    Tcl_TimerToken updateTimer;	/* Timer which runs UpdateGeometryInfo
+				 * again while the window waits for its
+				 * first focus, or NULL. */
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
