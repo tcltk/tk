@@ -3763,8 +3763,8 @@ SetDefaults(
     char sizeString[TCL_INTEGER_SPACE];
     char faceName[LF_FACESIZE];
     HDC scratchDC;
-    int bold = 0;
-    int italic = 0;
+    bool bold = false;
+    bool italic = false;
     TEXTMETRICW tm;
     int pointSize;
     HFONT menuFont;
@@ -3798,10 +3798,10 @@ SetDefaults(
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
     if (tm.tmWeight >= 700) {
-	bold = 1;
+	bold = true;
     }
     if (tm.tmItalic) {
-	italic = 1;
+	italic = true;
     }
 
     SelectObject(scratchDC, GetStockObject(SYSTEM_FONT));

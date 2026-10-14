@@ -708,9 +708,9 @@ TkPointerEvent(
     TkWindow *winPtr2;
     TkDisplay *dispPtr = winPtr->dispPtr;
     unsigned int serial;
-    int outsideGrabTree = 0;
-    int ancestorOfGrab = 0;
-    int appGrabbed = 0;		/* Non-zero means event is being reported to
+    bool outsideGrabTree = false;
+    bool ancestorOfGrab = false;
+    bool appGrabbed = false;	/* Non-zero means event is being reported to
 				 * an application that is affected by the
 				 * grab. */
 
@@ -720,16 +720,16 @@ TkPointerEvent(
 
     switch (TkGrabState(winPtr)) {
     case TK_GRAB_IN_TREE:
-	appGrabbed = 1;
+	appGrabbed = true;
 	break;
     case TK_GRAB_ANCESTOR:
-	appGrabbed = 1;
-	outsideGrabTree = 1;
-	ancestorOfGrab = 1;
+	appGrabbed = true;
+	outsideGrabTree = true;
+	ancestorOfGrab = true;
 	break;
     case TK_GRAB_EXCLUDED:
-	appGrabbed = 1;
-	outsideGrabTree = 1;
+	appGrabbed = true;
+	outsideGrabTree = true;
 	break;
     }
 

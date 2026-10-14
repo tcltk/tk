@@ -359,7 +359,7 @@ typedef struct {
     bool initialized;		/* Flag indicating whether thread-specific
 				 * elements of module have been
 				 * initialized. */
-    int firstWindow;		/* Flag, cleared when the first window is
+    bool firstWindow;		/* Flag, cleared when the first window is
 				 * mapped in a non-iconic state. */
     WinIconPtr iconPtr;		/* IconPtr being used as default for all
 				 * toplevels, or NULL. */
@@ -677,7 +677,7 @@ InitWindowClass(
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = true;
-	tsdPtr->firstWindow = 1;
+	tsdPtr->firstWindow = true;
 	tsdPtr->iconPtr = NULL;
     }
     if (!initialized) {
@@ -775,11 +775,11 @@ WinSetIcon(
 {
     WmInfo *wmPtr;
     HWND hwnd;
-    int application = 0;
+    bool application = false;
 
     if (tkw == NULL) {
 	tkw = Tk_MainWindow(interp);
-	application = 1;
+	application = true;
     }
 
     if (!(Tk_IsTopLevel(tkw))) {
@@ -2267,7 +2267,7 @@ UpdateWrapper(
 
 	state = wmPtr->hints.initial_state;
 	if (state == NormalState || state == ZoomState) {
-	    tsdPtr->firstWindow = 0;
+	    tsdPtr->firstWindow = false;
 	    SetActiveWindow(wmPtr->wrapper);
 	}
     } else if (focusHWND) {
@@ -2465,21 +2465,21 @@ setStateEnd:
 static void
 TkpWmSetFullScreen(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
-    int full_screen_state)	/* True if window should be full screen */
+    bool full_screen_state)	/* True if window should be full screen */
 {
-    int changed = 0;
-    int full_screen = False;
+    bool changed = false;
+    bool full_screen = false;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (full_screen_state) {
 	if (! (wmPtr->flags & WM_FULLSCREEN)) {
-	    full_screen = True;
-	    changed = 1;
+	    full_screen = true;
+	    changed = true;
 	}
     } else {
 	if (wmPtr->flags & WM_FULLSCREEN) {
-	    full_screen = False;
-	    changed = 1;
+	    full_screen = false;
+	    changed = true;
 	}
     }
 
@@ -8755,7 +8755,7 @@ TkpWinToplevelWithDraw(
     TkWindow *winPtr)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int resetTempStyle = 0;
+    bool resetTempStyle = false;
     LONG_PTR exStyle = 0;
 
     /*
@@ -8776,7 +8776,7 @@ TkpWinToplevelWithDraw(
 	if ( !(exStyle & WS_EX_TOOLWINDOW) ) {
 	    SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
 		     exStyle | WS_EX_TOOLWINDOW);
-	    resetTempStyle=1;
+	    resetTempStyle = true;
 	}
     }
 
