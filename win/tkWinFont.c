@@ -1394,13 +1394,20 @@ static int GetVisualXForLogicalIndex(
 
 	    if (runs[i].sa.fRTL) {
 		/*
-		 * RTL run: Use trailing=TRUE for consistent LTR cursor tracking.
-		 * ScriptCPtoX returns X from the logical start (visual right),
-		 * so we flip it to get LTR distance from visual left.
+		 * RTL run: the boundary before character local is its leading
+		 * (right) edge; the end of the run is the trailing edge of the
+		 * last character. ScriptCPtoX measures from the left of the run:
+		 * flipped, x is the width of the characters before the boundary.
 		 */
-		ScriptCPtoX(local, TRUE, runs[i].charLen, runs[i].glyphCount,
+		if (local < runs[i].charLen) {
+		    ScriptCPtoX(local, FALSE, runs[i].charLen, runs[i].glyphCount,
 			    runs[i].logClust, runs[i].visAttr, runs[i].advances,
 			    &runs[i].sa, &x);
+		} else {
+		    ScriptCPtoX(local - 1, TRUE, runs[i].charLen, runs[i].glyphCount,
+			    runs[i].logClust, runs[i].visAttr, runs[i].advances,
+			    &runs[i].sa, &x);
+		}
 
 		/* Compute total run width */
 		int runWidth = 0;

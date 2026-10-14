@@ -5287,6 +5287,32 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
 } -cleanup {
     destroy .t1
 } -result {}
+test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
+    text .t1 -font $fixedFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    # Hebrew has no contextual forms: a letter measures the same alone and in its
+    # word. Not the space: when the widget font has no Hebrew, it is shaped with
+    # the words by another font. The letters whose bbox is wider or narrower than
+    # their glyph:
+    set heb "\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd"
+    .t1 insert end $heb
+    update
+    set res {}
+    for {set i 0} {$i < [string length $heb]} {incr i} {
+	if {[string index $heb $i] eq " "} {
+	    continue
+	}
+	set w [lindex [.t1 bbox 1.$i] 2]
+	if {abs($w - [font measure $fixedFont [string index $heb $i]]) > 1} {
+	    lappend res "1.$i $w"
+	}
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain heb res i w
+} -result {}
 
 test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
     # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
