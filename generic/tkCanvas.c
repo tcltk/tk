@@ -5189,7 +5189,17 @@ CanvasBindProc(
 	    CanvasDoEvent(canvasPtr, eventPtr);
 	    eventPtr->xbutton.state ^= mask;
 	    canvasPtr->state = eventPtr->xbutton.state;
-	    PickCurrentItem(canvasPtr, eventPtr);
+	    if ((long) (canvasPtr->pickEvent.xcrossing.time
+		    - eventPtr->xbutton.time) > 0) {
+		/*
+		 * The pointer moved while the binding script processed
+		 * events. [Bug 220902]
+		 */
+
+		PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
+	    } else {
+		PickCurrentItem(canvasPtr, eventPtr);
+	    }
 	    eventPtr->xbutton.state ^= mask;
 	}
 	break;

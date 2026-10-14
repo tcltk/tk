@@ -1095,6 +1095,8 @@ proc ::tk::emoji::Build {} {
         set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
         # Classic radiobutton styled as a flat toggle button: no indicator
         # dot, gentle padding, and a highlighted look when selected.
+        # -takefocus 1 and a visible focus highlight so the button that
+        # currently owns the keyboard focus is obvious.
         radiobutton $f.bar.$key \
             -text "$ico $cat" \
             -variable ::tk::emoji::S(cat) -value $cat \
@@ -1107,9 +1109,12 @@ proc ::tk::emoji::Build {} {
             -activeforeground $barfg \
             -background $barbg \
             -activebackground "#e0e0e0" \
-            -highlightthickness 0 \
+            -highlightthickness 1 \
+            -highlightcolor $selbg \
+            -highlightbackground $barbg \
             -borderwidth 1 \
             -padx 6 -pady 2 \
+            -takefocus 1 \
             -font {"sans-serif" 9}
         pack $f.bar.$key -side left -padx 1 -pady 1
     }
@@ -1120,6 +1125,11 @@ proc ::tk::emoji::Build {} {
         set key [string tolower $cat]
         $f.bar.$key configure -selectcolor $selbg
     }
+
+    # Remember the bar and its button names so we can drive Tab
+    # traversal through the bar ourselves.
+    set S(bar) $f.bar
+    set S(barKeys) [lmap cat $categories {string tolower $cat}]
 
     ttk::frame $f.f
     canvas $f.f.c -width [expr {12*$S(cell)}] -height [expr {6*$S(cell)}] \
@@ -1156,6 +1166,15 @@ proc ::tk::emoji::Build {} {
     grid columnconfigure $f 0 -weight 1
     grid rowconfigure $f 1 -weight 1
 
+    # Install Tab/Shift-Tab bindings on every category button so we drive
+    # focus ourselves instead of relying on Tk's default traversal (which
+    # can skip these toolbutton-style radiobuttons or recurse into frames).
+    foreach key $S(barKeys) {
+        set w $f.bar.$key
+        bind $w <Tab>          {::tk::emoji::CycleBar  1; break}
+        bind $w <ISO_Left_Tab> {::tk::emoji::CycleBar -1; break}
+    }
+
     set c $S(canvas)
     bind $c <Configure> [namespace code {Reflow %w}]
     bind $c <Motion> [namespace code {Hover %x %y}]
@@ -1173,6 +1192,39 @@ proc ::tk::emoji::Build {} {
     bind $c <Return> [namespace code {PickCurrent 0}]
     bind $c <space> [namespace code {PickCurrent 0}]
     bind $c <Shift-Return> [namespace code {PickCurrent 1}]
+    # Tab out of the canvas moves focus into the category bar. The break
+    # suppresses Tk's default Tab handling so only our handler runs.
+    bind $c <Tab>          {::tk::emoji::CycleBar  1; break}
+    bind $c <ISO_Left_Tab> {::tk::emoji::CycleBar -1; break}
+}
+
+# Move focus forward (dir > 0) or backward (dir < 0) within the category
+# bar. At either end, wrap to the canvas so Tab cycles the whole picker.
+proc ::tk::emoji::CycleBar {dir} {
+    variable S
+    set keys $S(barKeys)
+    set n [llength $keys]
+    if {$n == 0} return
+    # Find which button (if any) currently has focus.
+    set cur -1
+    set fw [focus]
+    for {set i 0} {$i < $n} {incr i} {
+        if {$fw eq "$S(bar).[lindex $keys $i]"} {set cur $i; break}
+    }
+    if {$cur < 0} {
+        # Not on a bar button: enter the bar from the appropriate end.
+        set idx [expr {$dir < 0 ? $n-1 : 0}]
+    } else {
+        set idx [expr {$cur + $dir}]
+    }
+    if {$idx < 0 || $idx >= $n} {
+        # Wrap to the canvas grid.
+        focus -force $S(canvas)
+        if {$S(cur) < 0 && [llength $S(items)] > 0} {SetCur 0}
+        return
+    }
+    set w $S(bar).[lindex $keys $idx]
+    if {[winfo exists $w]} {focus -force $w}
 }
 
 # Compute and apply a screen position for the picker just below the

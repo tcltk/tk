@@ -7881,6 +7881,127 @@ test text-39.1 {no scroll command before the text is mapped - bug 991849} -setup
     unset -nocomplain log res
 } -result {{} {y 0.0 0.5 x 0.0 0.5}}
 
+# A word made only of right-to-left characters (Hebrew).
+set rtlWord [format %c%c%c%c 0x5E9 0x5DC 0x5D5 0x5DD]
+
+test text-46.1 {RTL detection: a text destroyed before its idle check does not stop the others} -setup {
+    destroy .t1 .t2
+    pack [text .t1] [text .t2]
+    update
+} -body {
+    .t1 insert end "x\n"
+    .t1 mark set insert end
+    tk::TextInsert .t2 x
+    destroy .t2
+    tk::TextInsert .t1 $rtlWord
+    update
+    .t1 tag ranges tk_rtl_right
+} -cleanup {
+    destroy .t1 .t2
+} -result {2.0 2.4}
+
+test text-46.2 {RTL detection: every text edited before the idle check is checked} -setup {
+    destroy .t1 .t2
+    pack [text .t1] [text .t2]
+    update
+} -body {
+    .t2 insert end "x\n"
+    .t2 mark set insert end
+    tk::TextInsert .t1 x
+    tk::TextInsert .t2 $rtlWord
+    update
+    .t2 tag ranges tk_rtl_right
+} -cleanup {
+    destroy .t1 .t2
+} -result {2.0 2.4}
+
+test text-46.3 {RTL detection: a text recreated with the same name is checked when mapped} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    foreach i {1 2} {
+	destroy .t1
+	text .t1
+	.t1 insert end $rtlWord
+	pack .t1
+	update
+	lappend res [.t1 tag ranges tk_rtl_right]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain res i
+} -result {{1.0 1.4} {1.0 1.4}}
+
+test text-46.4 {RTL detection: tagged lines are the lines accepted by tk::TextIsRtlLine} -setup {
+    destroy .t1
+    text .t1
+    set chars [list a Z 1 " " "\t" - _ : \; , . ! ? ( \" [format %c 0x1] [format %c 0xB] \
+	    [format %c 0x85] [format %c 0xA0] [format %c 0x1680] [format %c 0x180E] \
+	    [format %c 0x200B] [format %c 0x2028] [format %c 0x2060] [format %c 0x3000] \
+	    [format %c 0xFEFF] [format %c 0x58F] [format %c 0x590] [format %c 0x5D0] \
+	    [format %c 0x627] [format %c 0x8FF] [format %c 0x900] [format %c 0x200F] \
+	    [format %c 0x1F600]]
+    set lines {}
+    set expected {}
+} -body {
+    expr {srand(46)}
+    for {set i 1} {$i <= 3000} {incr i} {
+	set line ""
+	for {set k [expr {int(rand()*7)}]} {$k > 0} {incr k -1} {
+	    append line [lindex $chars [expr {int(rand()*[llength $chars])}]]
+	}
+	lappend lines $line
+	if {[string trim $line] ne "" && [tk::TextIsRtlLine $line]} {
+	    lappend expected $i.0 $i.[string length $line]
+	}
+    }
+    .t1 insert end [join $lines \n]
+    tk::TextDetectAndTagRtl .t1
+    list [expr {[llength $expected] > 500}] [expr {[.t1 tag ranges tk_rtl_right] eq $expected}]
+} -cleanup {
+    destroy .t1
+    unset -nocomplain chars lines expected line i k
+} -result {1 1}
+
+test text-46.5 {RTL detection: the tag is removed from a line that is no longer right-to-left} -setup {
+    destroy .t1
+    text .t1
+    set res {}
+} -body {
+    .t1 insert end $rtlWord
+    tk::TextDetectAndTagRtl .t1
+    # Spaces typed inside the tagged range get the tag, then the RTL letters go.
+    .t1 insert 1.2 "  "
+    .t1 delete 1.0 1.2
+    .t1 delete 1.2 1.end
+    lappend res [.t1 get 1.0 1.end] [.t1 tag ranges tk_rtl_right]
+    tk::TextDetectAndTagRtl .t1
+    lappend res [.t1 tag ranges tk_rtl_right]
+} -cleanup {
+    destroy .t1
+    unset -nocomplain res
+} -result {{  } {1.0 1.2} {}}
+
+test text-46.6 {RTL detection: a pasted right-to-left line is tagged} -setup {
+    destroy .t1
+    pack [text .t1]
+    update
+    clipboard clear
+} -body {
+    clipboard append $rtlWord
+    .t1 insert end "x\n"
+    .t1 mark set insert end
+    tk_textPaste .t1
+    update
+    .t1 tag ranges tk_rtl_right
+} -cleanup {
+    destroy .t1
+    clipboard clear
+} -result {2.0 2.4}
+
+unset -nocomplain rtlWord
+
 #
 # TESTFILE CLEANUP
 #
