@@ -411,8 +411,34 @@ addClipRect(
      * subwindow.
      */
 
-    subwinPtr->privatePtr->container = winPtr;
+    subwinPtr->privatePtr->container = Tk_WindowId(winPtr);
     subwinPtr->privatePtr->containerRect = data->clipRectBuffer[n];
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetContainer --
+ *
+ *	The window whose clipping rectangles include winPtr, as recorded by
+ *	addClipRect.  It is looked up by its ID: it need not be the parent
+ *	of winPtr (pack -in), so it can be destroyed before winPtr.
+ *
+ * Results:
+ *	The container, or NULL if there is none or it was destroyed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWindow *
+TkWaylandGetContainer(
+    TkWindow *winPtr)
+{
+    if (winPtr->privatePtr == NULL || winPtr->privatePtr->container == None) {
+	return NULL;
+    }
+    return (TkWindow *)Tk_IdToWindow(winPtr->display,
+	    winPtr->privatePtr->container);
 }
 
 /*
