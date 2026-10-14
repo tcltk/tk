@@ -1592,7 +1592,7 @@ ReadIconOrCursorFromFile(
     BlockOfIconImagesPtr lpIR;
     Tcl_Channel channel;
     int i;
-    DWORD dwBytesRead;
+    int dwBytesRead;
     LPICONDIRENTRY lpIDE;
 
     /*
@@ -1649,7 +1649,7 @@ ReadIconOrCursorFromFile(
 
     dwBytesRead = Tcl_Read(channel, (char *) lpIDE,
 	    (int) (lpIR->nNumImages * sizeof(ICONDIRENTRY)));
-    if (dwBytesRead != lpIR->nNumImages * sizeof(ICONDIRENTRY)) {
+    if (dwBytesRead != lpIR->nNumImages * (int)sizeof(ICONDIRENTRY)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file: %s", Tcl_PosixError(interp)));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "READ", NULL);
@@ -5772,8 +5772,19 @@ WmWaitVisibilityOrMapProc(
 	int state = containerPtr->wmInfoPtr->hints.initial_state;
 
 	if ((state == NormalState) || (state == ZoomState)) {
+	    HWND wrapper = winPtr->wmInfoPtr->wrapper;
+
+	    /*
+	     * Recreate the wrapper only if it is not yet owned by the
+	     * container's wrapper. Destroying it needlessly would also destroy
+	     * any dialog that is owned by it. [Bug 3009885]
+	     */
+
 	    state = winPtr->wmInfoPtr->hints.initial_state;
-	    if ((state == NormalState) || (state == ZoomState)) {
+	    if (((state == NormalState) || (state == ZoomState))
+		    && (wrapper == NULL || containerPtr->window == None
+		    || GetWindow(wrapper, GW_OWNER) != GetAncestor(
+			    Tk_GetHWND(containerPtr->window), GA_ROOT))) {
 		UpdateWrapper(winPtr);
 	    }
 	}
@@ -8450,7 +8461,7 @@ TkpWinToplevelWithDraw(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int resetTempStyle = 0;
-    LONG exStyle = 0;
+    LONG_PTR exStyle = 0;
 
     /*
      * Special handling of transient toplevels (wmPtr->containerPtr != NULL),
