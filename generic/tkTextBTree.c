@@ -8605,9 +8605,24 @@ DeleteIndexRange(
 	DEBUG_ALLOC(tkTextCountNewUndoToken++);
     }
 
+    /*
+     * Only a char segment needs the cleanup, another boundary segment may
+     * die with the deletion (a switch pulled into the range, a mark deleted
+     * with -marks).
+     */
+
+    if (segPtr1 && segPtr1->typePtr != &tkTextCharType) {
+	segPtr1->protectionFlag = 0;
+	segPtr1 = NULL;
+    }
+    if (segPtr2 && segPtr2->typePtr != &tkTextCharType) {
+	segPtr2->protectionFlag = 0;
+	segPtr2 = NULL;
+    }
+
     DeleteRange(sharedTextPtr, firstPtr, lastPtr, myFlags, redoInfo);
 
-    assert(segPtr1 != segPtr2);
+    assert(!segPtr1 || segPtr1 != segPtr2);
     CleanupSplitPoint(segPtr1, sharedTextPtr);
     CleanupSplitPoint(segPtr2, sharedTextPtr);
 
@@ -12456,6 +12471,7 @@ TkBTreeClearTags(
 		    TkTextSegment *fPtr = segPtr1;
 		    TkTextSegment *lPtr = segPtr2;
 		    TkTextSegment *predPtr = GetPrevTagInfoSegment(segPtr1);
+		    int isSegPtr1, isSegPtr2;
 
 		    if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
 			fPtr = TkBTreeFindStartOfElidedRange(sharedTextPtr, NULL, predPtr);
@@ -12464,9 +12480,14 @@ TkBTreeClearTags(
 			lPtr = ContentBeforeLink(
 				TkBTreeFindEndOfElidedRange(sharedTextPtr, NULL, lPtr));
 		    }
+		    isSegPtr1 = (fPtr == segPtr1);
+		    isSegPtr2 = (lPtr == segPtr2);
 		    fPtr->protectionFlag = 1;
 		    lPtr->protectionFlag = 1;
 		    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+		    /* A removed split point (a switch) follows the boundary. */
+		    if (isSegPtr1) { segPtr1 = fPtr; }
+		    if (isSegPtr2) { segPtr2 = lPtr; }
 		    if (fPtr != segPtr1 && fPtr != segPtr2) {
 			CleanupSplitPoint(fPtr, sharedTextPtr);
 		    }
