@@ -857,7 +857,7 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
 } -result {Reached}
 
 test focus-9.1 {implicit focus is lost when another application takes the focus} -constraints {
-    unix testxfocus noWindowManager
+    x11 testxfocus noWindowManager
 } -setup {
     deleteWindows
     # Without a window manager, the main window of the child process (at
