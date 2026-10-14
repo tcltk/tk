@@ -4785,7 +4785,7 @@ XResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *contPtr = winPtr->privatePtr->container;
+    TkWindow *contPtr = TkWaylandGetContainer(winPtr);
     if (contPtr) {
 	DEBUG_LOG("XResizeWindow: Exposing container %s", Tk_PathName(contPtr));
         TkWaylandQueueExposeEvent(contPtr, 0, 0,
@@ -4835,7 +4835,7 @@ XMoveWindow(
     TCL_UNUSED(int))  /* y */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *contPtr = winPtr->privatePtr->container;
+    TkWindow *contPtr = TkWaylandGetContainer(winPtr);
     if (contPtr) {
 	DEBUG_LOG("XMoveWindow: Exposing container %s", Tk_PathName(contPtr));
         TkWaylandQueueExposeEvent(contPtr, 0, 0,
@@ -4889,7 +4889,7 @@ XMoveResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *contPtr = winPtr->privatePtr->container;
+    TkWindow *contPtr = TkWaylandGetContainer(winPtr);
     if (contPtr) {
 	DEBUG_LOG("XMoveResizeWindow: Exposing container %s",
 	    Tk_PathName(contPtr));

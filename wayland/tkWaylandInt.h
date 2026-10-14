@@ -447,7 +447,10 @@ typedef struct TkWindowPrivate {
     GLint fbSizeUniform;
     int flags;
     int clipDirty;
-    TkWindow *container;
+    Window container;		/* ID of the window whose clipping rectangles
+				 * include this one, or None.  Not a pointer,
+				 * which would dangle once that window is
+				 * destroyed: see TkWaylandGetContainer. */
     clipRect containerRect;
     clipRect boundsRect;
     GLuint scrollScratchFBO;
@@ -630,6 +633,7 @@ MODULE_SCOPE void TkWaylandClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
+MODULE_SCOPE TkWindow *	TkWaylandGetContainer(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);

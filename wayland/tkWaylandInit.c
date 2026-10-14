@@ -1228,14 +1228,14 @@ TkWaylandBeginDraw(
 	     * It is not clear to me why this happens, and I wish
 	     * there were an alternative to this crude workaround.
 	     */
-	    if (childPtr->privatePtr->container) {
+	    if (TkWaylandGetContainer(childPtr) != NULL) {
 		DEBUG_LOG("==============> Bad ClipRects for child %s contained in %s: ",
 		       Tk_PathName(childPtr),
-		       Tk_PathName(childPtr->privatePtr->container));
+		       Tk_PathName(TkWaylandGetContainer(childPtr)));
 		DEBUG_LOG("clip xy = %.0f, %0.f: win xy = %.0f, %.0f",
 		       clip.x, clip.y, scale * x, scale * y);
 #if 0
-		TkWindow *container = childPtr->privatePtr->container;
+		TkWindow *container = TkWaylandGetContainer(childPtr);
 		TkWaylandQueueExposeEvent(container, 0, 0, Tk_Width(container),
 					  Tk_Height(container));
 #endif
