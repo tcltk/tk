@@ -1203,6 +1203,23 @@ Tk_MakeWindow(
                  (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
 
         /*
+         * A size set with "wm geometry" before the window is mapped wins, as
+         * on X11.  It cannot wait for UpdateGeometryInfo, which postpones
+         * resizing until the first focus, and a compositor need not focus a
+         * new window (or may have no keyboard).
+         */
+        if (winPtr->wmInfoPtr != NULL) {
+            WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+            if (wmPtr->width > 0) {
+                width = wmPtr->width;
+            }
+            if (wmPtr->height > 0) {
+                height = wmPtr->height;
+            }
+        }
+
+        /*
          * Create the GLFW window and get a drawable ID.
          * drawable is ignored; we use winPtr->window instead.
          */
@@ -3818,9 +3835,12 @@ TopLevelEventProc(
 
     switch (eventPtr->type) {
     case ConfigureNotify:
-        /* Update our internal state from Tk's changes. */
+	/*
+	 * Keep a size set with "wm geometry": as on X11 it stays in force
+	 * until "wm geometry" changes it, whatever the content requests.
+	 * Tk sends this event itself, also when the window is first mapped.
+	 */
 	DEBUG_LOG("ConfigureNotify received for %s", Tk_PathName(winPtr));
-	wmPtr->width = wmPtr->height = -1;
         break;
     case MapNotify:
 	DEBUG_LOG("MapNotify received for %s", Tk_PathName(winPtr));
