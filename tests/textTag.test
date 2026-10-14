@@ -1891,6 +1891,40 @@ test textTag-20.7 {setting -elide 0 to {} can elide text} -setup {
     destroy .t
 } -result {abcdef abef}
 
+test textTag-21.1 {a new tag leaves -underline, -overstrike and -indentbackground unset} -setup {
+    text .t21
+} -body {
+    .t21 tag configure x -justify right
+    list [.t21 tag cget x -underline] [.t21 tag cget x -overstrike] [.t21 tag cget x -indentbackground]
+} -cleanup {
+    destroy .t21
+} -result {{} {} {}}
+test textTag-21.2 {a higher tag without -underline keeps the underline of a lower tag} -constraints {
+    testpixel
+} -setup {
+    # White glyphs: only the black underline is seen.
+    text .t21 -font {Courier 20} -background white -foreground white -borderwidth 0 \
+	-highlightthickness 0 -insertwidth 0 -padx 0 -pady 0
+    pack .t21
+} -body {
+    .t21 tag configure u -underline 1 -underlinecolor black
+    .t21 tag configure x -justify left
+    .t21 insert end abcd {u x}
+    update
+    lassign [.t21 dlineinfo 1.0] x y w h base
+    set n 0
+    for {set yy [expr {$y + $base}]} {$yy < $y + $h} {incr yy} {
+	for {set xx $x} {$xx < $x + $w} {incr xx} {
+	    if {[testpixel .t21 $xx $yy] eq "#000000"} {
+		incr n
+	    }
+	}
+    }
+    expr {$n > 0}
+} -cleanup {
+    destroy .t21
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
