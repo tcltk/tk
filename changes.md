@@ -107,6 +107,8 @@ to the userbase.
  - [tkMenuFind doesn't locate cloned menubars](https://core.tcl-lang.org/tk/tktview/223112)
  - [menubutton scripts are confused about their owning menu](https://core.tcl-lang.org/tk/tktview/680884)
  - [ttk::sizegrip strange behaviour](https://core.tcl-lang.org/tk/tktview/299533)
+ - [tk_messageBox can return empty string on Windows](https://core.tcl-lang.org/tk/tktview/300988)
+ - [remove empty directories from the zipfs VFS with POSIX find options](https://core.tcl-lang.org/tcl/tktview/9336f1)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
