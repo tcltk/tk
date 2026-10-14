@@ -191,6 +191,7 @@ static void TopLevelEventProc(void *clientData, XEvent *eventPtr);
 static void TopLevelReqProc(void *clientData, Tk_Window tkwin);
 static void ApplyPendingGeometry(TkWindow *winPtr);
 static void UpdateGeometryInfo(void *clientData);
+static void CancelGeometryUpdate(TkWindow *winPtr);
 static void UpdateHints(TkWindow *winPtr);
 static void UpdateSizeHints(TkWindow *winPtr);
 static void UpdateTitle(TkWindow *winPtr);
@@ -875,7 +876,7 @@ TkWmDeadWindow(
 
     /* Cancel any pending UpdateGeometryInfo idle tasks  */
     if (wmPtr->flags & WM_UPDATE_PENDING) {
-        Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+        CancelGeometryUpdate(winPtr);
 	wmPtr->flags &= ~WM_UPDATE_PENDING;
     }
 
@@ -1547,7 +1548,7 @@ Tk_MoveToplevelWindow(
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+            CancelGeometryUpdate(winPtr);
         }
 	DEBUG_LOG("Tk_MoveToplevelWindow: scheduling UpdateGeometryInfo");
         UpdateGeometryInfo((void *)winPtr);
@@ -2478,7 +2479,7 @@ WmGeometryCmd(
         wmPtr->width = wmPtr->height = -1;
 
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+            CancelGeometryUpdate(winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
 	DEBUG_LOG("WmGeometryCmd: calling UpdateGeometryInfo");
@@ -2502,7 +2503,7 @@ WmGeometryCmd(
 
         /* Cancel any pending idle callback. */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+            CancelGeometryUpdate(winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
 
@@ -3874,7 +3875,7 @@ TopLevelReqProc(
 
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	DEBUG_LOG("TopLevelReqProc: Cancelling pending UpdateGeometryInfo");
-	Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+	CancelGeometryUpdate(winPtr);
 	//return;
     }
 
@@ -3989,6 +3990,32 @@ ApplyPendingGeometry(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * CancelGeometryUpdate --
+ *
+ *	Cancel a pending call of UpdateGeometryInfo: the idle call, and the
+ *	timer which repeats it while the window waits for its first focus.
+ *	The timer must be deleted with the window, or it fires on freed
+ *	memory.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+CancelGeometryUpdate(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+    if (wmPtr != NULL && wmPtr->updateTimer != NULL) {
+	Tcl_DeleteTimerHandler(wmPtr->updateTimer);
+	wmPtr->updateTimer = NULL;
+    }
+}
+
 static void
 UpdateGeometryInfo(
     void *clientData)
@@ -4015,6 +4042,8 @@ UpdateGeometryInfo(
 	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
 	return;
     }
+    /* If this call is from the timer, the timer has fired. */
+    wmPtr->updateTimer = NULL;
 
     /*
      * Likewise, the toplevel's GLFW window (and glfwTkInfo) may already
@@ -4039,7 +4068,8 @@ UpdateGeometryInfo(
 	 */
 	wmPtr->flags |= WM_UPDATE_PENDING;
 	DEBUG_LOG("UpdateGeometryInfo: waiting for focus.");
-	Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
+	wmPtr->updateTimer = Tcl_CreateTimerHandler(17, UpdateGeometryInfo,
+		clientData);
 	return;
     }
     if (wmPtr == NULL) {
