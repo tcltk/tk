@@ -578,6 +578,28 @@ test winWm-9.3 "restore iconified window during global grab" -constraints {
     wm deiconify .
     update
 } -result normal
+test winWm-9.4 "deiconifying the master keeps the wrapper of a transient" -constraints {
+    win
+} -setup {
+    destroy .t
+    toplevel .t
+    wm transient .t .
+    update
+} -body {
+    # Recreating the wrapper would destroy the dialogs it owns, e.g. a
+    # tk_messageBox with -parent .t [Bug 3009885]
+    set frame [wm frame .t]
+    wm iconify .
+    update
+    wm deiconify .
+    update
+    expr {[wm frame .t] eq $frame}
+} -cleanup {
+    destroy .t
+    wm deiconify .
+    update
+    unset -nocomplain frame
+} -result 1
 
 test winWm-10.1 "Set and get -appearence dark" -constraints win -setup {
     catch {destroy .t}
