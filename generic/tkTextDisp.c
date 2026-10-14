@@ -270,8 +270,8 @@ typedef struct TextStyle {
 
 typedef struct CharInfo {
     union {
-	const char *chars;	/* UTF characters to display. Actually points into the baseChars of
-				 * the base chunk. */
+	const char *chars;	/* UTF characters to display. NULL with base chunks: the chars live
+				 * in baseChars of the base chunk, see GetBaseChars. */
 	struct CharInfo *next;	/* Pointer to next free info struct. */
     } u;
     Tcl_Size numBytes;		/* Number of bytes that belong to this chunk. */
@@ -1296,6 +1296,23 @@ IsCharChunk(
     return chunkPtr->layoutProcs && chunkPtr->layoutProcs->type == TEXT_DISP_CHAR;
 }
 
+/*
+ * Chars of a char chunk start at offset baseOffset in the returned string. Never keep this
+ * pointer: the next chunks of the stretch may reallocate baseChars.
+ */
+
+static const char *
+GetBaseChars(
+    const TkTextDispChunk *chunkPtr)
+{
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    assert(chunkPtr->baseChunkPtr);
+    return Tcl_DStringValue(&chunkPtr->baseChunkPtr->baseChars);
+#else
+    return ((const CharInfo *)chunkPtr->clientData)->u.chars;
+#endif
+}
+
 static char
 GetLastCharInChunk(
     const TkTextDispChunk *chunkPtr)
@@ -1315,7 +1332,7 @@ GetLastCharInChunk(
 
     ciPtr = (const CharInfo *)chunkPtr->clientData;
     assert(ciPtr->numBytes > 0);
-    return ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 1];
+    return GetBaseChars(chunkPtr)[ciPtr->baseOffset + ciPtr->numBytes - 1];
 }
 
 static char
@@ -1333,12 +1350,12 @@ GetSecondLastCharInChunk(
     assert(ciPtr->numBytes > 0);
 
     if (ciPtr->numBytes > 1) {
-	return ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 2];
+	return GetBaseChars(chunkPtr)[ciPtr->baseOffset + ciPtr->numBytes - 2];
     }
     if ((chunkPtr = chunkPtr->prevCharChunkPtr) && IsCharChunk(chunkPtr)) {
 	ciPtr = (const CharInfo *)chunkPtr->clientData;
 	assert(ciPtr->numBytes > 0);
-	return ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 1];
+	return GetBaseChars(chunkPtr)[ciPtr->baseOffset + ciPtr->numBytes - 1];
     }
 
     return '\0';
@@ -2782,7 +2799,8 @@ LayoutApplyHyphenRules(
 		return;
 	    }
 	}
-	prevCharPtr = prevCiPtr->u.chars + prevCiPtr->baseOffset + prevCiPtr->numBytes - 1;
+	prevCharPtr = GetBaseChars(prevCharChunkPtr) + prevCiPtr->baseOffset
+		+ prevCiPtr->numBytes - 1;
 
 	/*
 	 * We know that we have to inspect only Latin-1 characters, either
@@ -2837,7 +2855,7 @@ LayoutApplyHyphenRules(
 	    }
 	    nextCharPtr = segPtr->body.chars;
 	} else {
-	    nextCharPtr = nextCiPtr->u.chars + nextCiPtr->baseOffset;
+	    nextCharPtr = GetBaseChars(nextCharChunkPtr) + nextCiPtr->baseOffset;
 	}
 	if (UCHAR(nextCharPtr[0]) < 0x80) {
 	    nextChar = UCHAR(nextCharPtr[0]);
@@ -2934,7 +2952,8 @@ LayoutMakeCharInfo(
 
     data->chunkPtr->baseChunkPtr = data->baseChunkPtr;
     ciPtr->baseOffset = Tcl_DStringLength(&data->baseChunkPtr->baseChars);
-    ciPtr->u.chars = Tcl_DStringAppend(&data->baseChunkPtr->baseChars, p, maxBytes);
+    Tcl_DStringAppend(&data->baseChunkPtr->baseChars, p, maxBytes);
+    ciPtr->u.chars = NULL;
 
 #else
 
@@ -2972,7 +2991,7 @@ LayoutFinalizeCharInfo(
      * to display the newline character.
      */
 
-    if (ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 1] == '\n') {
+    if (GetBaseChars(data->chunkPtr)[ciPtr->baseOffset + ciPtr->numBytes - 1] == '\n') {
 	ciPtr->numBytes -= 1;
     }
 
@@ -4301,8 +4320,9 @@ LayoutBreakLine(
 	if (data->breakChunkPtr->breakIndex > 0 && data->breakChunkPtr->numSpaces > 0) {
 	    const TkTextDispChunk *breakChunkPtr = data->breakChunkPtr;
 	    const CharInfo *ciPtr = (const CharInfo *)breakChunkPtr->clientData;
-	    const char *p = ciPtr->u.chars + ciPtr->baseOffset + breakChunkPtr->breakIndex;
-	    const char *q = Tcl_UtfPrev(p, ciPtr->u.chars + ciPtr->baseOffset);
+	    const char *chars = GetBaseChars(breakChunkPtr) + ciPtr->baseOffset;
+	    const char *p = chars + breakChunkPtr->breakIndex;
+	    const char *q = Tcl_UtfPrev(p, chars);
 
 	    if (IsExpandableSpace(q)
 		    && !(breakChunkPtr->wrappedAtSpace
@@ -13240,6 +13260,7 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in pixels. */
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+    const char *chars = GetBaseChars(chunkPtr);
     int offset = ciPtr->baseOffset + byteIndex;
     int maxX = chunkPtr->width + chunkPtr->x;
     int nextX;
@@ -13254,7 +13275,7 @@ CharBboxProc(
 	 */
 
 	*widthPtr = maxX - *xPtr;
-    } else if (ciPtr->u.chars[offset] == '\t' && byteIndex == ciPtr->numBytes - 1) {
+    } else if (chars[offset] == '\t' && byteIndex == ciPtr->numBytes - 1) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
@@ -13270,14 +13291,14 @@ CharBboxProc(
 	} else {
 	    *widthPtr = nextX - *xPtr;
 
-	    if (chunkPtr->additionalWidth && IsExpandableSpace(ciPtr->u.chars + offset)) {
+	    if (chunkPtr->additionalWidth && IsExpandableSpace(chars + offset)) {
 		/*
 		 * We've expanded some spaces for full line justification. Compute the
 		 * width of this specific space character.
 		 */
 
-		const char *base = ciPtr->u.chars + ciPtr->baseOffset;
-		const char *q = ciPtr->u.chars + offset;
+		const char *base = chars + ciPtr->baseOffset;
+		const char *q = chars + offset;
 		unsigned numSpaces = chunkPtr->numSpaces;
 		unsigned remaining = chunkPtr->additionalWidth;
 
@@ -13292,7 +13313,7 @@ CharBboxProc(
 		    if (base == q) {
 			break;
 		    }
-		    q = Tcl_UtfPrev(q, ciPtr->u.chars);
+		    q = Tcl_UtfPrev(q, chars);
 		} while (IsExpandableSpace(q));
 	    }
 	}
@@ -15006,8 +15027,9 @@ TkTextCharLayoutProc(
     chunkPtr->layoutProcs = &layoutCharProcs;
     p = segPtr->body.chars + byteOffset;
 
-    bytesThatFit = CharChunkMeasureChars(chunkPtr, ciPtr->u.chars, ciPtr->baseOffset + maxBytes,
-	    ciPtr->baseOffset, -1, chunkPtr->x, maxX, spaceMode, TK_ISOLATE_END, &nextX);
+    bytesThatFit = CharChunkMeasureChars(chunkPtr, GetBaseChars(chunkPtr),
+	    ciPtr->baseOffset + maxBytes, ciPtr->baseOffset, -1, chunkPtr->x, maxX, spaceMode,
+	    TK_ISOLATE_END, &nextX);
 
     if (bytesThatFit < maxBytes) {
 	if (p[bytesThatFit] != '\n') {
@@ -15026,9 +15048,9 @@ TkTextCharLayoutProc(
 	    }
 	    if ((int) cut != bytesThatFit) {
 		nextX = chunkPtr->x;
-		bytesThatFit = (cut == 0) ? 0 : CharChunkMeasureChars(chunkPtr, ciPtr->u.chars,
-			ciPtr->baseOffset + cut, ciPtr->baseOffset, -1, chunkPtr->x, -1, spaceMode, 0,
-			&nextX);
+		bytesThatFit = (cut == 0) ? 0 : CharChunkMeasureChars(chunkPtr,
+			GetBaseChars(chunkPtr), ciPtr->baseOffset + cut, ciPtr->baseOffset, -1,
+			chunkPtr->x, -1, spaceMode, 0, &nextX);
 	    }
 	}
 	if (spaceMode == TEXT_SPACEMODE_TRIM) {
@@ -15436,7 +15458,7 @@ DrawChars(
 	    const char *string;
 	    GC fgGC;
 
-	    string = ciPtr->u.chars + offsetBytes;
+	    string = GetBaseChars(chunkPtr) + offsetBytes;
 	    numBytes -= offsetBytes;
 
 	    if (string[numBytes - 1] == '\t' && --numBytes == 0) {
@@ -15538,7 +15560,7 @@ TkpTextPrintDispChunk(
 	    Tcl_Size i;
 
 	    for (i = 0; i < ciPtr->numBytes; ++i) {
-		char c = ciPtr->u.chars[i];
+		char c = GetBaseChars(chunkPtr)[ciPtr->baseOffset + i];
 
 		switch (c) {
 		case '\t': fprintf(stdout, "\\t"); break;
