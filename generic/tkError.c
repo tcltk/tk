@@ -155,6 +155,20 @@ Tk_DeleteErrorHandler(
     errorPtr->lastRequest = NextRequest(dispPtr->display) - 1;
 
     /*
+     * If no request was made while the handler was active, no error can be
+     * reported for it. Handlers are usually deleted in the reverse order of
+     * creation, so it is normally the first one in the list: free it now.
+     * Otherwise it is freed by the cleanup below.
+     */
+
+    if (errorPtr->lastRequest < errorPtr->firstRequest
+	    && dispPtr->errorPtr == errorPtr) {
+	dispPtr->errorPtr = errorPtr->nextPtr;
+	Tcl_Free(errorPtr);
+	return;
+    }
+
+    /*
      * Every once-in-a-while, cleanup handlers that are no longer active. We
      * probably won't be able to free the handler that was just deleted (need
      * to wait for any outstanding requests to be processed by server), but
@@ -179,6 +193,7 @@ Tk_DeleteErrorHandler(
 
 	if (errorPtr->lastRequest > lastSerial) {
 	    XSync(dispPtr->display, False);
+	    lastSerial = LastKnownRequestProcessed(dispPtr->display);
 	}
 	dispPtr->deleteCount = 0;
 	errorPtr = dispPtr->errorPtr;
