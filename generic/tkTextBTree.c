@@ -263,6 +263,8 @@ static TkTextSegment *	ScanElidedRangeEnd(const TkSharedText *sharedTextPtr,
 			    TkTextSegment *contentPtr);
 static void		UpdateElideInfo(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    TkTextSegment **firstSegPtr, TkTextSegment **lastSegPtr, unsigned reason);
+static void		RecomputeElideInfoOfRange(TkSharedText *sharedTextPtr,
+			    TkTextSegment *firstSegPtr, TkTextSegment *lastSegPtr);
 static int		SegmentIsElided(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr,
 			    const TkText *textPtr);
 static TkTextLine *	GetStartLine(const TkSharedText *sharedTextPtr, const TkText *textPtr);
@@ -5229,13 +5231,22 @@ TkBTreeInsertChars(
 	    firstSegPtr->protectionFlag = 1;
 	    lastSegPtr->protectionFlag = 1;
 
-	    UpdateElideInfo(sharedTextPtr, tagPtr, &firstSegPtr, &lastSegPtr, ELISION_HAS_BEEN_ADDED);
+	    if (hyphenElideTagPtr) {
+		/*
+		 * The soft hyphens have another elide tag, the tag based update
+		 * of the chars would meet them: recompute the whole range.
+		 */
 
-	    if (!hyphenElideTagPtr) {
-		CleanupSplitPoint(firstSegPtr, sharedTextPtr);
-		if (firstSegPtr != lastSegPtr) {
-		    CleanupSplitPoint(lastSegPtr, sharedTextPtr);
-		}
+		RecomputeElideInfoOfRange(sharedTextPtr, firstSegPtr, lastSegPtr);
+		hyphenElideTagPtr = NULL;
+	    } else {
+		UpdateElideInfo(sharedTextPtr, tagPtr, &firstSegPtr, &lastSegPtr,
+			ELISION_HAS_BEEN_ADDED);
+	    }
+
+	    CleanupSplitPoint(firstSegPtr, sharedTextPtr);
+	    if (firstSegPtr != lastSegPtr) {
+		CleanupSplitPoint(lastSegPtr, sharedTextPtr);
 	    }
 	}
     } else {
@@ -5303,8 +5314,17 @@ TkBTreeInsertChars(
 	firstSegPtr->protectionFlag = 1;
 	lastSegPtr->protectionFlag = 1;
 
-	UpdateElideInfo(sharedTextPtr, hyphenElideTagPtr, &firstSegPtr, &lastSegPtr,
-		ELISION_HAS_BEEN_ADDED);
+	if (hyphenElideTagPtr->elide == 0) {
+	    /*
+	     * The soft hyphens are not elided, but may be inside an elided range:
+	     * the tag based update would search its start from them.
+	     */
+
+	    RecomputeElideInfoOfRange(sharedTextPtr, firstSegPtr, lastSegPtr);
+	} else {
+	    UpdateElideInfo(sharedTextPtr, hyphenElideTagPtr, &firstSegPtr, &lastSegPtr,
+		    ELISION_HAS_BEEN_ADDED);
+	}
 
 	CleanupSplitPoint(firstSegPtr, sharedTextPtr);
 	if (firstSegPtr != lastSegPtr) {
@@ -10555,6 +10575,65 @@ RecomputeElideInfoOfTag(
 
     TkBTreeIncrEpoch(sharedTextPtr->tree);
     TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RecomputeElideInfoOfRange --
+ *
+ *	Recompute the elided ranges from firstSegPtr to lastSegPtr, extended to
+ *	the enclosing elided ranges, from the current tag information. The
+ *	caller protects firstSegPtr and lastSegPtr, and cleans them up.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Some branches and links may be inserted, or removed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RecomputeElideInfoOfRange(
+    TkSharedText *sharedTextPtr,
+    TkTextSegment *firstSegPtr,
+    TkTextSegment *lastSegPtr)
+{
+    TkTextSegment *fPtr = firstSegPtr;
+    TkTextSegment *lPtr = lastSegPtr;
+    TkTextSegment *predPtr, *succPtr;
+    TkTextLine *nextLinePtr;
+
+    assert(firstSegPtr->protectionFlag);
+    assert(lastSegPtr->protectionFlag);
+
+    predPtr = GetPrevTagInfoSegment(firstSegPtr);
+    if (lastSegPtr->nextPtr) {
+	succPtr = GetNextTagInfoSegment(lastSegPtr->nextPtr);
+    } else if ((nextLinePtr = lastSegPtr->sectionPtr->linePtr->nextPtr)) {
+	succPtr = GetFirstTagInfoSegment(NULL, nextLinePtr);
+    } else {
+	succPtr = NULL;
+    }
+    if (predPtr && SegmentIsElided(sharedTextPtr, predPtr, NULL)) {
+	fPtr = ScanElidedRangeStart(sharedTextPtr, predPtr);
+    }
+    if (succPtr && SegmentIsElided(sharedTextPtr, succPtr, NULL)) {
+	lPtr = ScanElidedRangeEnd(sharedTextPtr, succPtr);
+    }
+
+    fPtr->protectionFlag = 1;
+    lPtr->protectionFlag = 1;
+    UpdateElideInfo(sharedTextPtr, NULL, &fPtr, &lPtr, ELISION_HAS_BEEN_CHANGED);
+    if (fPtr != firstSegPtr && fPtr != lastSegPtr) {
+	CleanupSplitPoint(fPtr, sharedTextPtr);
+    }
+    if (lPtr != lastSegPtr && lPtr != firstSegPtr && lPtr != fPtr) {
+	CleanupSplitPoint(lPtr, sharedTextPtr);
+    }
+    TkBTreeIncrEpoch(sharedTextPtr->tree);
 }
 
 void
