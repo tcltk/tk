@@ -20,7 +20,7 @@ text, \%tk_mergeRange, \%tk_textCopy, \%tk_textCut, \%tk_textInsert, \%tk_textPa
 \fBtk_textInsert\fR \fIpathName\fR ?\fB\-hyphentags\fI tagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
 \fBtk_textPaste\fR \fIpathName\fR
 \fBtk_textRebindMouseWheel\fR \fIpathName\fR ?\fIpathName ...\fR?
-\fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
+\fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
@@ -1502,7 +1502,7 @@ tk_textReplace \- replace a range of characters inside a text widget regarding s
 .TP
 SYNOPSYS
 .
-\fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
+\fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
 .TP
 DESCRIPTION
 .
