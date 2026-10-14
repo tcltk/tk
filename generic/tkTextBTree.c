@@ -9602,7 +9602,9 @@ RemoveExpiredSwitch(
     TkTextSegment **danglingBranchPtr,
     TkTextSegment **danglingLinkPtr,
     TkTextSegment **deletedBranchPtr,
-    TkTextSegment **deletedLinkPtr)
+    TkTextSegment **deletedLinkPtr,
+    TkTextSegment **expiredPtr)	/* Removed switches chained by nextPtr,
+				 * freed at the end of the walk. */
 {
     TkTextSegment *prevPtr, *nextPtr, *mergedPtr;
     int isBranch = switchPtr->typePtr == &tkTextBranchType;
@@ -9675,7 +9677,12 @@ RemoveExpiredSwitch(
 	}
 	TkBTreeFreeSegment(switchPtr);
     } else if (*(isBranch ? deletedBranchPtr : deletedLinkPtr)) {
-	TkBTreeFreeSegment(switchPtr);
+	/*
+	 * Not freed before the end of the walk: a surviving switch may still
+	 * claim this one, the walk reads the claimed switch.
+	 */
+	switchPtr->nextPtr = *expiredPtr;
+	*expiredPtr = switchPtr;
     } else {
 	/*
 	 * The fork is expired with the removal - a surviving switch still
@@ -9753,6 +9760,7 @@ UpdateElideInfo(
 				/* Surviving branch whose link has been removed. */
     TkTextSegment *danglingLinkPtr;
 				/* Surviving link whose branch has been removed. */
+    TkTextSegment *expiredPtr;	/* Removed switches, see RemoveExpiredSwitch. */
     TkTextSegment *endSegPtr;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
@@ -9804,7 +9812,7 @@ UpdateElideInfo(
 
     linePtr = (*firstSegPtr)->sectionPtr->linePtr;
     prevBranchPtr = lastBranchPtr = newBranchPtr = keptBranchPtr = NULL;
-    deletedBranchPtr = deletedLinkPtr = NULL;
+    deletedBranchPtr = deletedLinkPtr = expiredPtr = NULL;
     danglingBranchPtr = danglingLinkPtr = NULL;
     prevLinkPtr = lastLinkPtr = NULL;
     anyChanges = 0;
@@ -10005,7 +10013,8 @@ UpdateElideInfo(
 
 		    RemoveExpiredSwitch(sharedTextPtr, prevBranchPtr, &segPtr,
 			    firstSegPtr, lastSegPtr, &danglingBranchPtr,
-			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
+			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr,
+			    &expiredPtr);
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		} else {
@@ -10021,7 +10030,8 @@ UpdateElideInfo(
 
 		    RemoveExpiredSwitch(sharedTextPtr, prevLinkPtr, &segPtr,
 			    firstSegPtr, lastSegPtr, &danglingBranchPtr,
-			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
+			    &danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr,
+			    &expiredPtr);
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		} else if (newBranchPtr) {
@@ -10279,7 +10289,8 @@ UpdateElideInfo(
 		RemoveExpiredSwitch(sharedTextPtr,
 			prevBranchPtr ? prevBranchPtr : prevLinkPtr, &segPtr,
 			firstSegPtr, lastSegPtr, &danglingBranchPtr,
-			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
+			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr,
+			&expiredPtr);
 		if (!startLinePtr) { startLinePtr = linePtr; }
 		endLinePtr = linePtr;
 		anyChanges = 1;
@@ -10292,7 +10303,8 @@ UpdateElideInfo(
 		RemoveExpiredSwitch(sharedTextPtr,
 			prevBranchPtr ? prevBranchPtr : prevLinkPtr, &segPtr,
 			firstSegPtr, lastSegPtr, &danglingBranchPtr,
-			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr);
+			&danglingLinkPtr, &deletedBranchPtr, &deletedLinkPtr,
+			&expiredPtr);
 		if (!startLinePtr) { startLinePtr = linePtr; }
 		endLinePtr = linePtr;
 		anyChanges = 1;
@@ -10355,9 +10367,6 @@ UpdateElideInfo(
 	    danglingLinkPtr = NULL;
 	}
     }
-
-    if (deletedBranchPtr) { TkBTreeFreeSegment(deletedBranchPtr); }
-    if (deletedLinkPtr) { TkBTreeFreeSegment(deletedLinkPtr); }
 
     if (linePtr->logicalLine) {
 	linePtr->changed = 1;
@@ -10485,6 +10494,19 @@ UpdateElideInfo(
 
 	TkTextInvalidateLineMetrics(sharedTextPtr, NULL, startLinePtr,
 		lineNo2 - lineNo1, TK_TEXT_INVALIDATE_ELIDE);
+    }
+
+    /*
+     * The removed switches are freed last: the forks of a dangling switch
+     * may still point to them during the sub-walks above.
+     */
+
+    if (deletedBranchPtr) { TkBTreeFreeSegment(deletedBranchPtr); }
+    if (deletedLinkPtr) { TkBTreeFreeSegment(deletedLinkPtr); }
+    while (expiredPtr) {
+	segPtr = expiredPtr;
+	expiredPtr = segPtr->nextPtr;
+	TkBTreeFreeSegment(segPtr);
     }
 
     assert(!danglingBranchPtr);
