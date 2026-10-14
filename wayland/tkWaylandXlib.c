@@ -48,10 +48,13 @@
  *	Intern an atom name.
  *
  * Results:
- *	A synthesized atom value (incremented static counter).
+ *	A synthesized atom value (incremented static counter).  Tk keeps the
+ *	names itself (tkAtom.c), and numbers up to XA_LAST_PREDEFINED are the
+ *	predefined atoms (XA_PRIMARY, XA_SECONDARY, ...), so the counter starts
+ *	after them, as in xlib/xutil.c.
  *
  * Side effects:
- *	Increments the fakeAtom counter.
+ *	Increments the counter.
  *
  *----------------------------------------------------------------------
  */
@@ -62,8 +65,8 @@ XInternAtom(
     TCL_UNUSED(const char *),
     TCL_UNUSED(Bool))
 {
-    static Atom fakeAtom = 1;
-    return fakeAtom++;
+    static Atom atom = XA_LAST_PREDEFINED;
+    return ++atom;
 }
 
 /*
