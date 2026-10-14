@@ -4067,6 +4067,25 @@ test btree-14.132 {delete -marks up to a normal mark, the mark dies with the ran
     destroy .t
 } -result {aef 0}
 
+test btree-14.133 {delete -marks with a normal mark between the last chars and the newline} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Unsetting m1 joined "abc" and the newline: the walk went on with the
+    # freed newline segment.
+    .t debug 1
+    .t insert end abc
+    .t mark set insert 1.0
+    .t mark set current 1.0
+    .t mark set m1 1.3
+    .t mark set mm end
+    .t delete -marks 1.0 2.0
+    .t debug 0
+    list [.t index end] [.t get 1.0 end-1c] [.t mark exists m1] [.t mark exists mm]
+} -cleanup {
+    destroy .t
+} -result {2.0 {} 0 0}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
