@@ -1095,6 +1095,7 @@ proc ::tk::emoji::Build {} {
         set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
         # Classic radiobutton styled as a flat toggle button: no indicator
         # dot, gentle padding, and a highlighted look when selected.
+        # -takefocus 1 so Tab lands on each category button.
         radiobutton $f.bar.$key \
             -text "$ico $cat" \
             -variable ::tk::emoji::S(cat) -value $cat \
@@ -1110,6 +1111,7 @@ proc ::tk::emoji::Build {} {
             -highlightthickness 0 \
             -borderwidth 1 \
             -padx 6 -pady 2 \
+            -takefocus 1 \
             -font {"sans-serif" 9}
         pack $f.bar.$key -side left -padx 1 -pady 1
     }
@@ -1120,6 +1122,11 @@ proc ::tk::emoji::Build {} {
         set key [string tolower $cat]
         $f.bar.$key configure -selectcolor $selbg
     }
+
+    # Remember the bar and its button names so we can shift focus into
+    # the bar from the canvas via Tab.
+    set S(bar) $f.bar
+    set S(barKeys) [lmap cat $categories {string tolower $cat}]
 
     ttk::frame $f.f
     canvas $f.f.c -width [expr {12*$S(cell)}] -height [expr {6*$S(cell)}] \
@@ -1173,6 +1180,22 @@ proc ::tk::emoji::Build {} {
     bind $c <Return> [namespace code {PickCurrent 0}]
     bind $c <space> [namespace code {PickCurrent 0}]
     bind $c <Shift-Return> [namespace code {PickCurrent 1}]
+    # Tab out of the canvas goes to the category bar so the whole picker
+    # stays keyboard-navigable.
+    bind $c <Tab>          [namespace code {FocusFirstCategory 1}]
+    bind $c <ISO_Left_Tab> [namespace code {FocusFirstCategory -1}]
+}
+
+# Move focus to the first (dir > 0) or last (dir < 0) category button so
+# Tab cycles between the canvas grid and the category bar.
+proc ::tk::emoji::FocusFirstCategory {dir} {
+    variable S
+    set keys $S(barKeys)
+    if {[llength $keys] == 0} return
+    set key [lindex $keys [expr {$dir < 0 ? end : 0}]]
+    set w $S(bar).$key
+    if {[winfo exists $w]} {focus -force $w}
+    break
 }
 
 # Compute and apply a screen position for the picker just below the
