@@ -570,6 +570,10 @@ typedef struct TkDisplay {
 #ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
+    Tcl_HashTable deletedWinTable;
+				/* Maps from X window ids of recently deleted
+				 * windows to the serial number of the last
+				 * request made before the deletion. */
 } TkDisplay;
 
 /*
@@ -582,6 +586,9 @@ typedef struct TkDisplay {
  *	Whether we should do wm tracing on this display.
  *  TK_DISPLAY_IN_WARP:			(default off)
  *	Indicates that we are in a pointer warp
+ *  TK_DISPLAY_HAS_EMBEDDED:		(default off)
+ *	A toplevel of this application has been embedded in a container on
+ *	this display, so its windows can be destroyed by the container.
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
@@ -589,6 +596,7 @@ typedef struct TkDisplay {
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
 #define TK_DISPLAY_IN_WARP			(1 << 4)
 #define TK_DISPLAY_USE_XKB			(1 << 5)
+#define TK_DISPLAY_HAS_EMBEDDED			(1 << 6)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -1254,6 +1262,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 			    const char *name);
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
+MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,

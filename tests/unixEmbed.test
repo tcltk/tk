@@ -1243,7 +1243,6 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
     deleteWindows
 } -result {{{XXX {} {} .t1}} {}}
 
-
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
     unix
 } -setup {
