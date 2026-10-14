@@ -9323,14 +9323,14 @@ printf '%s\n' "HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&6; }
 		CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
 		LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
 
-		ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
+		ac_fn_c_check_header_compile "$LINENO" "hb.h" "ac_cv_header_hb_h" "#include <X11/Xlib.h>
 "
-if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
+if test "x$ac_cv_header_hb_h" = xyes
 then :
 
 else case e in #(
   e)
-		    as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
+		    as_fn_error $? "HarfBuzz header <hb.h> not found with $HB_CFLAGS" "$LINENO" 5
 		 ;;
 esac
 fi
