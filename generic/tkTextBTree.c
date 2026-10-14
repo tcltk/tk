@@ -4926,6 +4926,7 @@ TkBTreeInsertChars(
 		    assert(!info.tagInfoPtr);
 		    tagInfoPtr = segPtr->tagInfoPtr = MakeTagInfo(indexPtr->textPtr, segPtr);
 		    info.tagInfoPtr = tagInfoPtr;
+		    firstSegPtr = segPtr;
 		}
 		for (tagPtr = hyphenTagPtr; tagPtr; tagPtr = tagPtr->nextPtr) {
 		    segPtr->tagInfoPtr = TagSetAdd(segPtr->tagInfoPtr, tagPtr);
