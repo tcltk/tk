@@ -192,6 +192,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     // operation has completed.  If the window is iconified by clicking on its
     // dock icon, as opposed to calling wm deiconify, then the Tk state of
     // the window needs to be updated.  That is the purpose of this method.
+    // This includes clearing the WM_HIDDEN flag..
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
@@ -199,6 +200,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    winPtr->wmInfoPtr->flags &= ~WM_HIDDEN;
     if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
@@ -439,8 +441,9 @@ static void RefocusGrabWindow(void *clientData) {
 	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
-	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
-	    [win orderOut:NSApp];
+	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState &&
+	    [win isVisible]) {
+		[win orderOut:nil];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -452,9 +455,10 @@ static void RefocusGrabWindow(void *clientData) {
     }
     if ([self keyWindow] == nil && iconifiedWindow != nil) {
 	[iconifiedWindow makeKeyAndOrderFront:self];
-    } else {
-	[[self keyWindow] orderFront:self];
     }
+    //    else {
+    //	[(TKWindow *)[self keyWindow] tkOrderFront];
+    //    }
 
 }
 
@@ -1016,6 +1020,12 @@ ExposeRestrictProc(
 {
     return YES;
 }
+#if 0
+static void DebugIdleTask(void *clientData) {
+    TKWindow *win = (TKWindow *)clientData;
+    printf("updateLayer visibility %d\n", [win isVisible]);
+}
+#endif
 
 - (void) updateLayer {
     if (![NSApp tkWillExit]) {
@@ -1027,6 +1037,7 @@ ExposeRestrictProc(
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
+	//Tcl_DoWhenIdle(DebugIdleTask, [self window]);
 	CGContextRef context = self.tkLayerBitmapContext;
 	if (!context) {
 	    return;

@@ -150,11 +150,13 @@ proc _text_ind_to_x_y {text ind} {
 }
 
 proc create_and_pack_frames {{w {}}} {
+    update
     frame $w.f1 -bg blue -width 200 -height 200
     pack propagate $w.f1 0
     frame $w.f1.f2 -bg yellow -width 100 -height 100
     pack $w.f1.f2 $w.f1 -side bottom -anchor se
     update idletasks
+    after 300
 }
 
 # setup_win_mousepointer --
@@ -190,7 +192,8 @@ proc setup_win_mousepointer {w} {
 #
 # Result: none
 #
-proc waitForWindowEvent {w event {timeout 100}} {
+
+proc waitForWindowEvent {w event {timeout 1000}} {
     variable _windowEvent
 
     if {! [winfo exists $w]} {

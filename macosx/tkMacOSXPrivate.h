@@ -454,6 +454,7 @@ VISIBILITY_HIDDEN
 
 @interface TKWindow(TKWm)
 - (void)    tkLayoutChanged;
+- (void)    tkOrderFront;
 @end
 
 @interface TKDrawerWindow : NSWindow

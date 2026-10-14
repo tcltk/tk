@@ -489,8 +489,10 @@ static void showRootWindow(void *clientData) {
     }
     TkWindow *winPtr = TkMacOSXGetTkWindow(root);
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr->hints.initial_state == NormalState) {
-	[root makeKeyAndOrderFront:NSApp];
+    if (wmPtr->hints.initial_state == NormalState &
+	(wmPtr->flags & WM_HIDDEN) == 0) {
+	[root makeKeyWindow];
+        [(TKWindow *)root tkOrderFront];
     }
     [NSApp activateIgnoringOtherApps: YES];
 }

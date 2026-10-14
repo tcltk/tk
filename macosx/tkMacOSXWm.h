@@ -246,6 +246,13 @@ typedef struct TkWmInfo {
  * WM_HEIGHT_NOT_RESIZABLE -	non-zero means that we're not supposed to
  *				allow the user to change the height of the
  *				window (controlled by "wm resizable" command).
+ * WM_HIDDEN - 			The window is off screen.  This is independent
+ *				from being mapped, and from states like
+ *				deiconified, withddrawn, etc.  Tk is completely
+ *				unaware of this property, but when non-zero
+ *				AppKit has ordered the window out.  The purpose
+ *				is to allow complex windows to be rendered off
+ *				screen so rendering artifacts are not visible.
  */
 
 #define WM_NEVER_MAPPED			0x0001
@@ -264,6 +271,7 @@ typedef struct TkWmInfo {
 #define WM_TOPMOST			0x2000
 #define WM_FULLSCREEN			0x4000
 #define WM_TRANSPARENT			0x8000
+#define WM_HIDDEN			0x10000
 
 #endif /* _TKMACWM */
 
