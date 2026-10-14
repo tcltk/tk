@@ -9458,6 +9458,20 @@ test text-47.3 {tk_textReplace: -hyphentags before the indices, insert mark in t
     destroy .t
 } -result {abu-vef 1.3 {1.3 1.4}}
 
+test text-47.4 {insert and replace: an empty tagList gives no tags} -setup {
+    destroy .t
+    text .t
+} -body {
+    # An empty tagList gave the tags around the index, like no tagList.
+    .t insert end abcdef P
+    .t insert 1.2 x {}
+    set res [list [.t tag ranges P]]
+    .t replace 1.4 1.6 y {}
+    lappend res [.t tag ranges P]
+} -cleanup {
+    destroy .t
+} -result {{1.0 1.2 1.3 1.7} {1.0 1.2 1.3 1.4 1.5 1.6}}
+
 unset -nocomplain rtlWord
 
 #

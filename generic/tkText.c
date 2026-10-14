@@ -6581,7 +6581,10 @@ TextInsertCmd(
 
 		if (Tcl_ListObjGetElements(interp, tagPtr, &numTags, &tagNamePtrs) != TCL_OK) {
 		    rc = TCL_ERROR;
-		} else if (numTags > 0) {
+		} else if (numTags == 0) {
+		    /* An empty tagList means no tags, not the tags around the index. */
+		    TkTextTagSetIncrRefCount(tagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
+		} else {
 		    TkTextTag *tTagPtr;
 
 		    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
