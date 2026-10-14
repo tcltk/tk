@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <mqueue.h>
 #include <pthread.h>
+#include <pwd.h>
 
 /* The realtime signal that we use with mq_notify */
 #define TK_MQUEUE_SIGNAL (SIGRTMIN + 0)
@@ -53,7 +54,8 @@ typedef struct RegisteredInterp {
 
 /*
  * A registry of all Tk applications running on this host and owned by the
- * current user is maintained in the file $HOME/.cache/tksend/appnames.  The
+ * current user is maintained in the file tksend/appnames of the user's cache
+ * directory ($XDG_CACHE_HOME, by default $HOME/.cache).  The
  * file contains the string representatikon of a TclDictObj.  The dictionary
  * keys are appname strings and the value assigned to a key is a Tcl list
  * containing two Tcl_IntObj items whose integer values are, respectively, the
@@ -297,6 +299,62 @@ static Tcl_CmdDeleteProc DeleteProc;
 #define TK_MQ_MSGSIZE 8192
 #define TK_MQ_MAXMSG 10
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegistryPath --
+ *
+ *	The path of the file of the application name registry:
+ *	tksend/appnames in $XDG_CACHE_HOME, by default in $HOME/.cache (or
+ *	in the home directory from the password file if HOME is not set).
+ *	The directories are created if needed.
+ *
+ * Results:
+ *	The path, which the caller frees with Tcl_Free.  If the directory
+ *	cannot be created, the registry cannot be opened, and send and
+ *	winfo interps find no applications.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static char *
+RegistryPath(void)
+{
+    Tcl_DString ds;
+    const char *cache = getenv("XDG_CACHE_HOME");
+    char *p, *path;
+
+    Tcl_DStringInit(&ds);
+    if (cache != NULL && cache[0] == '/') {
+	Tcl_DStringAppend(&ds, cache, TCL_INDEX_NONE);
+    } else {
+	const char *home = getenv("HOME");
+
+	if (home == NULL || home[0] == '\0') {
+	    struct passwd *pw = getpwuid(getuid());
+
+	    home = (pw != NULL) ? pw->pw_dir : "/tmp";
+	}
+	Tcl_DStringAppend(&ds, home, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&ds, "/.cache", TCL_INDEX_NONE);
+    }
+    Tcl_DStringAppend(&ds, "/tksend/appnames", TCL_INDEX_NONE);
+
+    /*
+     * Create the missing directories of the path, as mkdir -p does.
+     */
+
+    path = (char *)Tcl_Alloc(Tcl_DStringLength(&ds) + 1);
+    strcpy(path, Tcl_DStringValue(&ds));
+    Tcl_DStringFree(&ds);
+    for (p = strchr(path + 1, '/'); p != NULL; p = strchr(p + 1, '/')) {
+	*p = '\0';
+	mkdir(path, S_IRWXU);
+	*p = '/';
+    }
+    return path;
+}
+
 static int
 SendInit(Tcl_Interp *interp)
 {
@@ -309,15 +367,7 @@ SendInit(Tcl_Interp *interp)
     if (firstCall == 1) {
 	firstCall = 0;
 
-	const char *home = getenv("HOME");
-	const char *dir = "/.cache/tksend";
-	const char *file = "/appnames";
-	appNameRegistryPath = (char *)Tcl_Alloc(strlen(home) + strlen(dir)
-				      + strlen(file) + 1);
-	strcpy(appNameRegistryPath, home);
-	strcat(appNameRegistryPath, dir);
-	mkdir(appNameRegistryPath, S_IRWXU);
-	strcat(appNameRegistryPath, file);
+	appNameRegistryPath = RegistryPath();
 	Tcl_InitHashTable(&dynamicData.nameToTid, TCL_STRING_KEYS);
 	SET_QNAME(staticData.qname, getpid());
 	struct mq_attr attr = {
@@ -419,12 +469,17 @@ loadAppNameRegistry(
     char *bytes = NULL;
     Tcl_Obj *result;
 
+    /*
+     * A registry which cannot be read is taken as empty.
+     */
+
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
-	Tcl_Panic("fopen failed on %s", path);
+	return NULL;
     }
     if (flock(fileno(appNameFile), LOCK_EX)) {
-	Tcl_Panic("flock failed on %s", path);
+	fclose(appNameFile);
+	return NULL;
     }
     /*
      * In macOS, "ab+" sets read and write position at the end.
@@ -444,8 +499,8 @@ loadAppNameRegistry(
 	return Tcl_NewDictObj();
     }
     if (bytesRead != length) {
-	Tcl_Panic("read failed on %s: length %lu; read %lu", path,
-		length, bytesRead);
+	Tcl_Free(bytes);
+	return NULL;
     }
     result = Tcl_NewStringObj(bytes, length);
     Tcl_Free(bytes);
@@ -469,26 +524,26 @@ saveAppNameRegistry(
     /* Open the file ab+ to avoid truncating it before flocking it. */
     FILE *appNameFile = fopen(path, "ab+");
     char *bytes;
+    /*
+     * A registry which cannot be written is left as it is: the other
+     * applications do not see the names of this one.
+     */
+
     if (appNameFile == NULL) {
-	Tcl_Panic("fopen failed on %s", path);
 	return;
     }
     if (flock(fileno(appNameFile), LOCK_EX)) {
-	Tcl_Panic("flock failed on %s", path);
-    }
-    /* Now we can truncate the file. */
-    if (ftruncate(fileno(appNameFile), 0) != 0) {
-	Tcl_Panic("ftruncate failed on %s", path);
-    }
-    bytes = Tcl_GetStringFromObj(dict, &length);
-    bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
-    flock(fileno(appNameFile), LOCK_UN);
-    fclose(appNameFile);
-    if (bytesWritten != length) {
-	Tcl_Panic("write failed on %s: length: %lu wrote: %lu", path,
-		length, bytesWritten);
+	fclose(appNameFile);
 	return;
     }
+    /* Now we can truncate the file. */
+    if (ftruncate(fileno(appNameFile), 0) == 0) {
+	bytes = Tcl_GetStringFromObj(dict, &length);
+	bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
+	(void) bytesWritten;
+    }
+    flock(fileno(appNameFile), LOCK_UN);
+    fclose(appNameFile);
 }
 
 
