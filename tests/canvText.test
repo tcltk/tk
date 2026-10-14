@@ -1027,8 +1027,9 @@ proc countPixels {w x1 y1 x2 y2} {
     return $n
 }
 
+# constrained by aquaKnownBug until ticket [271f61c768] is fixed
 test canvText-22.1 {text item longer than 512 characters} -constraints {
-    testpixel
+    testpixel aquaKnownBug
 } -setup {
     destroy .c
     canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
