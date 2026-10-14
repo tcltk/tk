@@ -7255,9 +7255,9 @@ SplitSeg(
 
     for ( ; segPtr; segPtr = segPtr->nextPtr) {
 	if (segPtr->size > count) {
-	    if (splitInfo && segPtr->typePtr == &tkTextCharType) {
-		TkTextSegment *prevPtr;
+	    TkTextSegment *prevPtr;
 
+	    if (splitInfo && segPtr->typePtr == &tkTextCharType) {
 		if (splitInfo->tagInfoPtr
 			? TkTextTagSetIsEqual(segPtr->tagInfoPtr, splitInfo->tagInfoPtr)
 			: CanInsertLeft(indexPtr->textPtr, count, segPtr)) {
@@ -7273,17 +7273,20 @@ SplitSeg(
 		     */
 		    return SplitCharSegment(segPtr, count);
 		}
-		if ((prevPtr = segPtr->prevPtr)
-			&& prevPtr->typePtr == &tkTextCharType
-			&& (splitInfo->tagInfoPtr
-			    ? TkTextTagSetIsEqual(prevPtr->tagInfoPtr, splitInfo->tagInfoPtr)
-			    : CanInsertRight(indexPtr->textPtr, prevPtr, segPtr))) {
-		    /*
-		     * Append more content at the end of the preceding char segment.
-		     */
-		    splitInfo->tagInfoPtr = prevPtr->tagInfoPtr;
-		    return PrepareInsertIntoCharSeg(prevPtr, prevPtr->size, splitInfo);
-		}
+	    }
+	    if (splitInfo
+		    && count == 0
+		    && (prevPtr = segPtr->prevPtr)
+		    && prevPtr->typePtr == &tkTextCharType
+		    && (splitInfo->tagInfoPtr
+			? TkTextTagSetIsEqual(prevPtr->tagInfoPtr, splitInfo->tagInfoPtr)
+			: CanInsertRight(indexPtr->textPtr, prevPtr, segPtr))) {
+		/*
+		 * Append more content at the end of the preceding char segment, also
+		 * before a soft hyphen, an image, or a window.
+		 */
+		splitInfo->tagInfoPtr = prevPtr->tagInfoPtr;
+		return PrepareInsertIntoCharSeg(prevPtr, prevPtr->size, splitInfo);
 	    }
 	    if (count == 0) {
 		/*
