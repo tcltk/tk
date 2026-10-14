@@ -5888,15 +5888,17 @@ DeleteMarksOnLastLine(
 	unsigned offs = 0;
 
 	while (segPtr) {
-	    TkTextSegment *nextPtr = segPtr->nextPtr;
-
 	    if (offs >= byteIndex && TkTextIsNormalMark(segPtr)) {
 		if (*boundSegPtr1 == segPtr) { *boundSegPtr1 = NULL; }
 		if (*boundSegPtr2 == segPtr) { *boundSegPtr2 = NULL; }
 		TkTextUnsetMark(textPtr, segPtr);
+		/* The unlink may join (free) the neighboring chars: rescan. */
+		segPtr = linePtr->segPtr;
+		offs = 0;
+		continue;
 	    }
 	    offs += segPtr->size;
-	    segPtr = nextPtr;
+	    segPtr = segPtr->nextPtr;
 	}
 	linePtr = linePtr->nextPtr;
 	byteIndex = 0;

@@ -4037,6 +4037,87 @@ test btree-14.130 {soft hyphens with an -elide 0 hyphen tag inside an elided ran
     destroy .t
 } -result {a-}
 
+test btree-14.131 {delete -marks from a normal mark, the mark dies with the range} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The boundary mark was cleaned up after its deletion (use after free).
+    .t debug 1
+    .t insert end abcdef
+    .t mark set m1 1.1
+    .t delete -marks m1 1.4
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists m1]
+} -cleanup {
+    destroy .t
+} -result {aef 0}
+
+test btree-14.132 {delete -marks up to a normal mark, the mark dies with the range} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Same at the end of the range.
+    .t debug 1
+    .t insert end abcdef
+    .t mark set m2 1.4
+    .t delete -marks 1.1 m2
+    .t debug 0
+    list [.t get 1.0 end-1c] [.t mark exists m2]
+} -cleanup {
+    destroy .t
+} -result {aef 0}
+
+test btree-14.133 {delete -marks with a normal mark between the last chars and the newline} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Unsetting m1 joined "abc" and the newline: the walk went on with the
+    # freed newline segment.
+    .t debug 1
+    .t insert end abc
+    .t mark set insert 1.0
+    .t mark set current 1.0
+    .t mark set m1 1.3
+    .t mark set mm end
+    .t delete -marks 1.0 2.0
+    .t debug 0
+    list [.t index end] [.t get 1.0 end-1c] [.t mark exists m1] [.t mark exists mm]
+} -cleanup {
+    destroy .t
+} -result {2.0 {} 0 0}
+
+test btree-14.134 {soft hyphen inserted inside an elided char segment of the same tag} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The split at the soft hyphen freed the segment holding the first chunk.
+    .t debug 1
+    .t insert end abcdef
+    .t tag configure B -elide 1
+    .t tag add B 1.1 1.6
+    tk_textInsert .t 1.3 "u\u00adv" B
+    .t debug 0
+    string map [list \u00ad -] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {a}
+
+test btree-14.135 {untagged soft hyphen inserted inside a char segment, elided range elsewhere} -setup {
+    destroy .t
+    text .t
+} -body {
+    # Same as btree-14.134 without tag, with an elided range elsewhere.
+    .t debug 1
+    .t insert end abcdef
+    .t tag configure B -elide 1
+    .t tag add B 1.4 1.5
+    .t insert 1.2 "u\u00adv"
+    .t debug 0
+    string map [list \u00ad -] [.t get -displaychars 1.0 end-1c]
+} -cleanup {
+    destroy .t
+} -result {abu-vcdf}
+
 test btree-14.59 {RebuildSections: no short unpinned section before a link} -setup {
     destroy .t
     text .t
