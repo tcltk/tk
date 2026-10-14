@@ -9422,6 +9422,42 @@ test text-46.6 {RTL detection: a pasted right-to-left line is tagged} -setup {
     clipboard clear
 } -result {2.0 2.4}
 
+test text-47.1 {tk_textInsert: -hyphentags before the index, as documented} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t insert end abcdef
+    tk_textInsert .t -hyphentags P 1.1 "x\u00ady" T
+    list [.t tag ranges P] [.t tag ranges T]
+} -cleanup {
+    destroy .t
+} -result {{1.2 1.3} {1.1 1.4}}
+
+test text-47.2 {tk_textInsert and tk_textReplace: chars starting with "-" and a tag list} -setup {
+    destroy .t
+    text .t
+} -body {
+    # The chars were taken for an option.
+    .t insert end abc
+    tk_textInsert .t end "-z" {}
+    tk_textReplace .t 1.0 1.1 "-y" {}
+    .t get 1.0 end-1c
+} -cleanup {
+    destroy .t
+} -result {-ybc-z}
+
+test text-47.3 {tk_textReplace: -hyphentags before the indices, insert mark in the range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t insert end abcdef
+    .t mark set insert 1.3
+    tk_textReplace .t -hyphentags Q 1.2 1.4 "u\u00adv"
+    list [string map [list \u00ad -] [.t get 1.0 end-1c]] [.t index insert] [.t tag ranges Q]
+} -cleanup {
+    destroy .t
+} -result {abu-vef 1.3 {1.3 1.4}}
+
 unset -nocomplain rtlWord
 
 #

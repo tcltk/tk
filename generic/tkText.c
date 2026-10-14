@@ -461,11 +461,13 @@ static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
 			    int viewUpdate, int triggerWatchDelete, int triggerWatchInsert,
-			    int userFlag, int parseHyphens);
+			    int userFlag, Tcl_Obj *hyphenTagsObj, int parseHyphens);
 static int		TextReplaceCmd(TkText *textPtr, Tcl_Interp *interp,
 			    const TkTextIndex *indexFromPtr, const TkTextIndex *indexToPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[], int viewUpdate, int triggerWatch,
-			    int userFlag, int parseHyphens);
+			    int userFlag, Tcl_Obj *hyphenTagsObj, int parseHyphens);
+static Tcl_Size		GetHyphenTagsOption(Tcl_Size objc, Tcl_Obj *const objv[],
+			    Tcl_Size numIndices, Tcl_Obj **tagsObjPtr, Tcl_Size *charsPtr);
 static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
@@ -2342,8 +2344,13 @@ TextWidgetObjCmd(
     case TEXT_TK_TEXTINSERT: {
 	TkTextIndex index;
 	int triggerUserMod, triggerWatch;
+	Tcl_Obj *hyphenTagsObj = NULL;
+	Tcl_Size first = 2, chars = 3;
 
-	if (objc < 4) {
+	if (commandIndex == TEXT_TK_TEXTINSERT) {
+	    first = GetHyphenTagsOption(objc, objv, 1, &hyphenTagsObj, &chars);
+	}
+	if (objc < chars + 1) {
 	    const char *args = (commandIndex == TEXT_TK_TEXTINSERT) ?
 		"?-hyphentags tags? index chars ?tagList chars tagList ...?" :
 		"index chars ?tagList chars tagList ...?";
@@ -2351,7 +2358,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[2], &index)) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[first], &index)) {
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -2361,14 +2368,14 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 
-	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
+	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[first]);
 	triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 	if (triggerWatch) {
 	    TkTextSaveCursorIndex(textPtr);
 	}
-	result = TextInsertCmd(textPtr, interp, objc - 3, objv + 3, &index, 1, triggerWatch,
-		triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTINSERT);
+	result = TextInsertCmd(textPtr, interp, objc - chars, objv + chars, &index, 1, triggerWatch,
+		triggerWatch, triggerUserMod, hyphenTagsObj, commandIndex == TEXT_TK_TEXTINSERT);
 	break;
     }
     case TEXT_INSPECT:
@@ -2515,21 +2522,28 @@ TextWidgetObjCmd(
     case TEXT_TK_TEXTREPLACE: {
 	TkTextIndex indexFrom, indexTo, index;
 	int triggerUserMod, triggerWatch;
+	Tcl_Obj *hyphenTagsObj = NULL;
+	Tcl_Size first = 2, chars = 4;
 
-	if (objc < 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index1 index2 chars ?tagList chars tagList ...?");
+	if (commandIndex == TEXT_TK_TEXTREPLACE) {
+	    first = GetHyphenTagsOption(objc, objv, 2, &hyphenTagsObj, &chars);
+	}
+	if (objc < chars + 1) {
+	    Tcl_WrongNumArgs(interp, 2, objv, (commandIndex == TEXT_TK_TEXTREPLACE) ?
+		    "?-hyphentags tags? index1 index2 chars ?tagList chars tagList ...?" :
+		    "index1 index2 chars ?tagList chars tagList ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[2], &indexFrom)
-		|| !TkTextGetIndexFromObj(interp, textPtr, objv[3], &indexTo)) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[first], &indexFrom)
+		|| !TkTextGetIndexFromObj(interp, textPtr, objv[first + 1], &indexTo)) {
 	    result = TCL_ERROR;
 	    goto done;
 	}
 	if (TkTextIndexCompare(&indexFrom, &indexTo) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "index \"%s\" before \"%s\" in the text",
-		    Tcl_GetString(objv[3]), Tcl_GetString(objv[2])));
+		    Tcl_GetString(objv[first + 1]), Tcl_GetString(objv[first])));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
@@ -2538,7 +2552,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 
-	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
+	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[first]);
 	triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 	/*
@@ -2572,7 +2586,7 @@ TextWidgetObjCmd(
 	    int deleteInsertOffset, insertLength, j;
 
 	    insertLength = 0;
-	    for (j = 4; j < objc; j += 2) {
+	    for (j = (int) chars; j < objc; j += 2) {
 		insertLength += Tcl_GetCharLength(objv[j]);
 	    }
 
@@ -2586,8 +2600,9 @@ TextWidgetObjCmd(
 		deleteInsertOffset = insertLength;
 	    }
 
-	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, 0,
-		    triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTREPLACE);
+	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc - chars,
+		    objv + chars, 0, triggerWatch, triggerUserMod, hyphenTagsObj,
+		    commandIndex == TEXT_TK_TEXTREPLACE);
 	    if (textPtr->flags & DESTROYED) {
 		return result;
 	    }
@@ -2603,8 +2618,9 @@ TextWidgetObjCmd(
 		textPtr->insertIndex = index;
 	    }
 	} else {
-	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, 0,
-		    triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTREPLACE);
+	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc - chars,
+		    objv + chars, 0, triggerWatch, triggerUserMod, hyphenTagsObj,
+		    commandIndex == TEXT_TK_TEXTREPLACE);
 	    if (textPtr->flags & DESTROYED) {
 		return result;
 	    }
@@ -3192,11 +3208,12 @@ TextReplaceCmd(
 				/* Index from which to replace. */
     const TkTextIndex *indexToPtr,
 				/* Index to which to replace. */
-    Tcl_Size objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[],	/* Argument objects. */
+    Tcl_Size objc,			/* Number of chars and tagList arguments. */
+    Tcl_Obj *const objv[],	/* The chars and tagList arguments. */
     int viewUpdate,		/* Update vertical view if set. */
     int triggerWatch,		/* Should we trigger the watch command? */
     int userFlag,		/* Trigger due to user modification? */
+    Tcl_Obj *hyphenTagsObj,	/* Value of -hyphentags, can be NULL. */
     int parseHyphens)		/* Should we parse hyphens (tk_textReplace)? */
 {
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
@@ -3231,8 +3248,8 @@ TextReplaceCmd(
 
     if (notDestroyed) {
 	TkTextIndexRebuild(&indexTmp);
-	result = TextInsertCmd(textPtr, interp, objc - 4, objv + 4, &indexTmp,
-		viewUpdate, 0, triggerWatch, userFlag, parseHyphens);
+	result = TextInsertCmd(textPtr, interp, objc, objv, &indexTmp,
+		viewUpdate, 0, triggerWatch, userFlag, hyphenTagsObj, parseHyphens);
     }
 
     if (sharedTextPtr->undoStack) {
@@ -6424,6 +6441,49 @@ TextBlinkProc(
 /*
  *----------------------------------------------------------------------
  *
+ * GetHyphenTagsOption --
+ *
+ *	Find the -hyphentags option of "tk_textInsert" and "tk_textReplace":
+ *	before the indices, as documented, or after them. A chars argument is
+ *	never taken for an option.
+ *
+ * Results:
+ *	The position of the first index; *tagsObjPtr receives the tag list or
+ *	NULL, *charsPtr the position of the first chars argument.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tcl_Size
+GetHyphenTagsOption(
+    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[],	/* Argument objects, the indices start at objv[2]. */
+    Tcl_Size numIndices,	/* 1 for tk_textInsert, 2 for tk_textReplace. */
+    Tcl_Obj **tagsObjPtr,	/* Receives the value of -hyphentags, or NULL. */
+    Tcl_Size *charsPtr)		/* Receives the position of the first chars argument. */
+{
+    *tagsObjPtr = NULL;
+    *charsPtr = 2 + numIndices;
+
+    if (objc >= 4 + numIndices && strcmp(Tcl_GetString(objv[2]), "-hyphentags") == 0) {
+	*tagsObjPtr = objv[3];
+	*charsPtr = 4 + numIndices;
+	return 4;
+    }
+    if (objc >= 5 + numIndices
+	    && strcmp(Tcl_GetString(objv[2 + numIndices]), "-hyphentags") == 0) {
+	*tagsObjPtr = objv[3 + numIndices];
+	*charsPtr = 4 + numIndices;
+    }
+    return 2;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TextInsertCmd --
  *
  *	This function is invoked to process the "insert" and "replace" widget
@@ -6452,6 +6512,7 @@ TextInsertCmd(
     int triggerWatchDelete,	/* Should we trigger the watch command for deletion? */
     int triggerWatchInsert,	/* Should we trigger the watch command for insertion? */
     int userFlag,		/* Trigger user modification? */
+    Tcl_Obj *hyphenTagsObj,	/* Value of -hyphentags, can be NULL. */
     int parseHyphens)		/* Should we parse hyphens? (tk_textInsert) */
 {
     TkTextIndex index1, index2;
@@ -6465,17 +6526,11 @@ TextInsertCmd(
 
     sharedTextPtr = textPtr->sharedTextPtr;
 
-    if (parseHyphens && objc > 1 && *Tcl_GetString(objv[0]) == '-') {
+    if (hyphenTagsObj) {
 	Tcl_Size argc;
 	Tcl_Obj **argv;
 
-	if (strcmp(Tcl_GetString(objv[0]), "-hyphentags") != 0) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad option \"%s\": must be -hyphentags", Tcl_GetString(objv[0])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", (char *)NULL);
-	    return TCL_ERROR;
-	}
-	if (Tcl_ListObjGetElements(interp, objv[1], &argc, &argv) != TCL_OK) {
+	if (Tcl_ListObjGetElements(interp, hyphenTagsObj, &argc, &argv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	for (j = 0; j < argc; ++j) {
@@ -6483,8 +6538,6 @@ TextInsertCmd(
 	    tagPtr->nextPtr = hyphenTagPtr;
 	    hyphenTagPtr = tagPtr;
 	}
-	objc -= 2;
-	objv += 2;
     }
 
     for (j = 0; j < (Tcl_Size)objc && GetByteLength(objv[j]) == 0; j += 2) {
