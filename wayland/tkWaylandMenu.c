@@ -96,6 +96,8 @@ MODULE_SCOPE NVGcolor TkWaylandXColorToNVG(XColor *xcolor);
 MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
 MODULE_SCOPE void TkWaylandMenubarDestroy(TkWindow *winPtr);
 MODULE_SCOPE int TkWaylandLoadNamedFontIntoContext(NVGcontext *vg, const char *tkFontName);
+MODULE_SCOPE void TkWaylandDrawMenuText(NVGcontext *vg, Tk_Font tkfont,
+                float x, float y, const char *text, int len, NVGcolor color);
 MODULE_SCOPE void TkWaylandPopupDrawBorderWithShadow(TkWaylandPopup *popup);
 MODULE_SCOPE int TkWaylandMenubarActivateFirst(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandMenubarMove(TkWindow *winPtr, int direction);
@@ -2038,11 +2040,8 @@ DrawMenuEntryAccelerator(
 
         int fontId = EnsureNvgFont(fontPtr, vg);
         if (fontId >= 0) {
-            nvgFontFaceId(vg, fontId);
-            nvgFontSize(vg, (float)fontPtr->pixelSize);
-            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-            nvgFillColor(vg, textColor);
-            nvgText(vg, (float)left, (float)ty, accel, NULL);
+            TkWaylandDrawMenuText(vg, tkfont, (float)left, (float)ty,
+                    accel, (int)strlen(accel), textColor);
         } else {
             int fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
             if (fallbackId < 0) {
@@ -2568,12 +2567,13 @@ DrawMenuEntryLabel(
                 int fontId = EnsureNvgFont(fontPtr, vg);
 
                 if (fontId >= 0) {
-                    nvgFontFaceId(vg, fontId);
-                    nvgFontSize(vg, (float)fontPtr->pixelSize);
-                    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-                    nvgFillColor(vg, textColor);
-                    nvgText(vg, (float)(leftEdge + textXOffset),
-                            (float)textY, label, NULL);
+                    /*
+                     * Shaped draw with color-emoji support; plain text
+                     * still ends up in nvgText() inside the helper.
+                     */
+                    TkWaylandDrawMenuText(vg, tkfont,
+                            (float)(leftEdge + textXOffset), (float)textY,
+                            label, labelLen, textColor);
                 } else {
                     int fallbackId =
                         TkWaylandLoadNamedFontIntoContext(vg, "sans");

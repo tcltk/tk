@@ -44,9 +44,6 @@
  *   Since these are not processed by gflwPollEvents, the CheckProc processes
  *   them separately using wayland calls.
  *
- * Inter-Thread Wakeups
- *   TkWaylandWakeupGLFW forces instant wakeups using
- *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
 
 /* Debugging.
@@ -280,6 +277,16 @@ TkWaylandClearStoredText(TkWindow *winPtr)
  */
 
 static void TkWaylandNotifyExitHandler(void *clientData);
+static void TkWaylandFdProc(void *clientData, int mask);
+static void TkWaylandWatchFd(int *slot, int fd);
+
+/*
+ * Descriptors registered with Tcl's notifier so that Tcl_WaitForEvent wakes
+ * as soon as the Wayland socket or the IBus connection has data, instead of
+ * waiting out the block time below. -1 means none registered.
+ */
+static int watchedWaylandFd = -1;
+static int watchedIBusFd = -1;
 static void TkWaylandSetupProc(void *clientData, int flags);
 static void TkWaylandCheckProc(void *clientData, int flags);
 
@@ -337,10 +344,34 @@ Tk_WaylandSetupTkNotifier(void)
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
     
-    /* Wake up the event loop. */
-    TkWaylandWakeupGLFW();
 }
 
+/* 
+ * No-op: the file handler exists only to wake Tcl_WaitForEvent. 
+ * This is still a required parameter. The CheckProc
+ * drains the sockets on every pass through the loop. 
+ */
+static void
+TkWaylandFdProc(TCL_UNUSED(void *), 
+	TCL_UNUSED(int))
+{
+}
+
+/* Keep one descriptor registered with Tcl (re-register only on change). */
+static void
+TkWaylandWatchFd(int *slot, int fd)
+{
+    if (*slot == fd) {
+        return;
+    }
+    if (*slot >= 0) {
+        Tcl_DeleteFileHandler(*slot);
+    }
+    if (fd >= 0) {
+        Tcl_CreateFileHandler(fd, TCL_READABLE, TkWaylandFdProc, NULL);
+    }
+    *slot = fd;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -415,6 +446,16 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
      *     nfds++;
      * }
      */
+
+    /*
+     * Wake Tcl immediately on Wayland/IBus socket activity rather than
+     * only when the block time below expires. This removes up to one frame
+     * (~16ms) of input latency, and lets IBus replies be handled promptly.
+     */
+    TkWaylandWatchFd(&watchedWaylandFd, pfds[0].fd);
+    TkWaylandWatchFd(&watchedIBusFd,
+	    (ibus_bus && sd_bus_get_fd(ibus_bus) >= 0)
+	    ? sd_bus_get_fd(ibus_bus) : -1);
 
     int r = poll(pfds, nfds, 0);
     if (r > 0) {
@@ -510,6 +551,8 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
     /* Remove event source. */
     Tcl_DeleteEventSource(TkWaylandSetupProc,
                           TkWaylandCheckProc, NULL);
+    TkWaylandWatchFd(&watchedWaylandFd, -1);
+    TkWaylandWatchFd(&watchedIBusFd, -1);
 
     tsdPtr->initialized = false;
     
@@ -1919,30 +1962,6 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
 			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWakeupGLFW --
- *
- *      Public function to wake up the GLFW event loop from another
- *      thread or context. Used by GLFW callbacks to ensure Tcl
- *      processes events promptly.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Writes to the eventfd, causing the file handler to trigger.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandWakeupGLFW(void)
-{
-    TSD_INIT();
-
-}
 
 /*
  *----------------------------------------------------------------------

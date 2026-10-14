@@ -5,6 +5,11 @@
  *   shaping, SheenBidi bidirectional analysis, and Fontconfig multi-face
  *   fallback.
  *
+ *   Color emoji: fonts with PNG bitmap strikes (Noto Color Emoji CBDT,
+ *   sbix) are shaped by HarfBuzz like any other face but drawn as
+ *   NanoVG image-pattern quads (see "Color emoji support" below). Requires 
+ * 	 HarfBuzz with hb-ot-color (>= 2.1) and stb_image.h (included with NanoVG).
+ *
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -27,6 +32,27 @@
 #include <hb-ot.h>
 #include <SheenBidi/SheenBidi.h>
 #include "stb_truetype.h"
+#include <mojibake.h>   /* UTS #51 emoji properties (mjb_*), also used by tkFont.c */
+
+/*
+ * The generic emoji helpers TkFontEmojiPresentation() and
+ * TkFontEmojiContinuation() (generic/tkFont.c) are declared through
+ * tkInt.h / tkIntDecls.h.
+ */
+
+/*
+ * Color emoji (PNG bitmap strikes).  stb_image's implementation lives in
+ * nanovg.c (STB_IMAGE_IMPLEMENTATION).
+ */
+#ifndef WL_COLOR_EMOJI
+#define WL_COLOR_EMOJI 1
+#endif
+#if WL_COLOR_EMOJI
+#include "stb_image.h"
+#endif
+
+/* Extra pen gap (in em) after a color emoji cluster; the mono path uses 0.5. */
+#define COLOR_EMOJI_GAP 0.0
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
@@ -75,6 +101,17 @@ static bool       IsSimpleOnly(const char *str, int len);
 static bool       ContainsCombiningMark(const char *str, int len);
 static bool       IsEmoji(FcChar32 uc);
 static int        GetEmojiFaceIndex(WaylandFont *fontPtr);
+static bool       IsColorFcPattern(FcPattern *pat);
+static bool       IsColorBitmapFace(WaylandFont *fontPtr, int faceIndex);
+static int        EmojiKindAt(const FcChar32 *ucs4, int idx, int count);
+static int        PickEmojiFaceForRun(WaylandFont *fontPtr,
+				      const FcChar32 *ucs4, int start, int end,
+				      int count);
+static void       ColorGlyphContextDestroyed(NVGcontext *vg);
+static bool       DrawColorGlyph(NVGcontext *vg, WaylandFont *fontPtr,
+				   int faceIndex, hb_codepoint_t gid,
+				   float penX, float penY, float advancePx);
+static void       EnsureColorEmojiFace(WaylandFont *fontPtr);
 static int        GetRunFaceIndex(WaylandFont *fontPtr, FcChar32 *ucs4Chars,
 				  int runStart, int runLen);
 static int        FindFaceCoveringRange(WaylandFont *fontPtr, FcChar32 *ucs4,
@@ -847,6 +884,28 @@ IsSimpleOnly(const char *str, int len)
 
 /*
  *----------------------------------------------------------------------
+ * IsKeycapBase --
+ *
+ *   True for '#', '*' and ASCII digits: the bases of keycap sequences
+ *   (base + U+FE0F + U+20E3).  They have Emoji=Yes in UTS #51 but must
+ *   only be treated as emoji in sequence context (see EmojiKindAt()).
+ *
+ * Results:
+ *   True if the codepoint is a keycap base.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsKeycapBase(FcChar32 uc)
+{
+    return uc == '#' || uc == '*' || (uc >= '0' && uc <= '9');
+}
+
+/*
+ *----------------------------------------------------------------------
  * IsEmoji --
  *
  *   Determine whether a Unicode codepoint is an emoji character.
@@ -864,47 +923,59 @@ IsSimpleOnly(const char *str, int len)
 static bool
 IsEmoji(FcChar32 uc)
 {
-    /* Extended emoji ranges - more comprehensive */
-    return
-        (uc >= 0x1F000 && uc <= 0x1FAFF) ||   /* Main emoji blocks */
-        (uc >= 0x1F300 && uc <= 0x1F9FF) ||
-        (uc >= 0x2600  && uc <= 0x27BF)  ||   /* Misc symbols */
-        (uc >= 0x2300  && uc <= 0x23FF)  ||   /* Misc technical */
-        (uc >= 0x2B00  && uc <= 0x2BFF)  ||   /* Misc symbols arrows */
-        (uc >= 0xFE00  && uc <= 0xFE0F)  ||   /* Variation selectors */
-        (uc == 0x200D) ||                     /* Zero-width joiner */
-        (uc >= 0x1F1E6 && uc <= 0x1F1FF) ||   /* Regional indicators (flags) */
-        (uc >= 0x1F3FB && uc <= 0x1F3FF) ||   /* Skin tone modifiers */
-        (uc >= 0x00A9 && uc <= 0x00AE)  ||   /* Copyright/registered */
-        (uc == 0x2122) ||                     /* TM */
-        (uc == 0x2139) ||                     /* Information */
-        (uc == 0x2194) || (uc == 0x2195) ||  /* Arrows */
-        (uc >= 0x2196 && uc <= 0x2199) ||
-        (uc >= 0x21A9 && uc <= 0x21AA) ||
-        (uc == 0x231A) || (uc == 0x231B) ||
-        (uc == 0x2328) ||
-        (uc >= 0x23CF && uc <= 0x23FF) ||
-        (uc >= 0x24C2 && uc <= 0x24FF) ||
-        (uc >= 0x25A0 && uc <= 0x25FF) ||
-        (uc >= 0x2600 && uc <= 0x26FF) ||
-        (uc >= 0x2700 && uc <= 0x27BF) ||
-        (uc >= 0x2934 && uc <= 0x2935) ||
-        (uc >= 0x2B05 && uc <= 0x2B07) ||
-        (uc == 0x2B1B) || (uc == 0x2B1C) ||
-        (uc == 0x2B50) || (uc == 0x2B55) ||
-        (uc == 0x3030) || (uc == 0x303D) ||
-        (uc == 0x3297) || (uc == 0x3299) ||
-        (uc >= 0x1F004 && uc <= 0x1F0CF) ||   /* Mahjong/playing cards */
-        (uc >= 0x1F170 && uc <= 0x1F251) ||   /* Enclosed alphanum */
-        (uc >= 0x1F600 && uc <= 0x1F64F) ||   /* Emoticons */
-        (uc >= 0x1F680 && uc <= 0x1F6C0) ||   /* Transport */
-        (uc >= 0x1F6C0 && uc <= 0x1F6FF) ||   /* Transport symbols */
-        (uc >= 0x1F700 && uc <= 0x1F77F) ||   /* Alchemical */
-        (uc >= 0x1F780 && uc <= 0x1F7FF) ||   /* Geometric */
-        (uc >= 0x1F800 && uc <= 0x1F8FF) ||   /* Supplemental arrows */
-        (uc >= 0x1F900 && uc <= 0x1F9FF) ||   /* Supplemental symbols */
-        (uc >= 0x1FA00 && uc <= 0x1FA6F) ||   /* Chess/symbols */
-        (uc >= 0x1FA70 && uc <= 0x1FAFF);     /* More symbols */
+    /* Generic emoji classification via mojibake (UTS #51), shared with
+     * generic/tkFont.c: TkFontEmojiPresentation / Continuation.
+     * This replaces the hard-coded range table so every platform
+     * picks the same characters for color-emoji handling (font-48.1..48.5).
+     *
+     * ASCII is never classified per character: 0-9, '#' and '*' have
+     * Emoji=Yes only as keycap bases, which EmojiKindAt() recognizes in
+     * sequence context.  Classifying them here sent every digit to the
+     * emoji face and made hasEmoji true for simple strings, which then
+     * collapsed the layout (see ContainsEmoji()).
+     */
+    if (uc < 0x80) {
+        return false;
+    }
+    if (uc == 0x200D || uc == 0xFE0E || uc == 0xFE0F || uc == 0x20E3
+            || (uc >= 0xE0020 && uc <= 0xE007F)
+            || (uc >= 0x1F3FB && uc <= 0x1F3FF)) {
+        return true;
+    }
+    return mjb_codepoint_is_emoji((mjb_codepoint) uc)
+        || mjb_codepoint_is_emoji_presentation((mjb_codepoint) uc)
+        || mjb_codepoint_is_emoji_modifier((mjb_codepoint) uc);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ContainsEmoji --
+ *
+ *   True if any character of the UTF-8 string is classified by IsEmoji().
+ *   Keeps the zero-advance fast path in WaylandShaper_ShapeString()
+ *   consistent with the callers' hasEmoji tests: whenever a caller takes
+ *   the cluster path because of emoji, the shaper must supply real
+ *   advances.
+ *
+ * Results:
+ *   True if at least one emoji codepoint is present.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+ContainsEmoji(const char *s, int n)
+{
+    for (int i = 0; i < n; ) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(s + i), &uc, n - i);
+        if (clen <= 0) { i++; continue; }
+        if (IsEmoji(uc)) return true;
+        i += clen;
+    }
+    return false;
 }
 
 /*
@@ -928,6 +999,9 @@ IsEmoji(FcChar32 uc)
  *
  * Results:
  *   true if the pattern is (or looks like) a color font.
+ *
+ * Side effects:
+ *   None.
  *----------------------------------------------------------------------
  */
 
@@ -972,6 +1046,11 @@ IsColorFcPattern(FcPattern *pat)
  *   1. Check font family names for emoji indicators
  *   2. Check for high coverage of emoji codepoints
  *   3. Check for specific emoji fonts by name
+ *
+ *   Only monochrome (outline) faces are considered here.  Color bitmap
+ *   faces are chosen by GetColorEmojiFaceIndex() for color-presentation
+ *   runs (see PickEmojiFaceForRun()); this function is the fallback for
+ *   text-presentation symbols and for systems with no color emoji font.
  *
  * Results:
  *   Face index (0..nfaces-1) that supports emoji, or 0 as fallback.
@@ -1452,6 +1531,927 @@ GetHbFont(
     return face->hbFont;
 }
 
+/*
+ * Color emoji support (bitmap strikes: CBDT/CBLC and sbix)
+ *
+ * stb_truetype/NanoVG can only rasterize 'glyf'/CFF outlines, so color
+ * emoji fonts take a separate path:
+ *
+ *   1. HarfBuzz shapes the emoji run exactly as before (ZWJ sequences,
+ *      flags, skin tones and tag sequences collapse to one glyph ID via
+ *      the font's GSUB).
+ *   2. For each shaped glyph, hb_ot_color_glyph_reference_png() returns
+ *      the PNG strike, stb_image decodes it, and the pixels are
+ *      premultiplied once and cached on the CPU.
+ *   3. The bitmap is uploaded to the current NVGcontext on demand
+ *      (nvgCreateImageRGBA) and drawn as an image-pattern quad.  It is
+ *      therefore affected by the same nvgScissor / nvgTranslate /
+ *      nvgRotate state as ordinary text, and is not tinted by the GC
+ *      foreground color.
+ *
+ * Image handles belong to one NVGcontext.  Popups destroy and recreate
+ * their context, so every cached handle is purged from
+ * TkWaylandFontContextDestroyed() (via ColorGlyphContextDestroyed()).
+ *
+ */
+
+
+/*
+ *----------------------------------------------------------------------
+ * IsEmojiPresentation --
+ *
+ *   True if the codepoint has the Unicode Emoji_Presentation property,
+ *   i.e. it is drawn as a color emoji by default without U+FE0F.
+ *   Now implemented via mojibake, shared with generic/tkFont.c.
+ *
+ * Results:
+ *   True if the codepoint has Emoji_Presentation=Yes.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsEmojiPresentation(FcChar32 uc)
+{
+    return mjb_codepoint_is_emoji_presentation((mjb_codepoint) uc);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * EmojiKindAt --
+ *
+ *   Classify ucs4[idx] for face selection and subrun splitting.
+ *
+ * Results:
+ *   EMOJI_KIND_NONE  - not an emoji codepoint.
+ *   EMOJI_KIND_TEXT  - emoji-range codepoint with text presentation
+ *                      (e.g. (c), (R), U+25A0, U+2600 without FE0F).
+ *                      Drawn with the monochrome emoji face as before.
+ *   EMOJI_KIND_COLOR - color presentation: Emoji_Presentation=Yes, or
+ *                      followed by U+FE0F or a skin tone modifier, or a
+ *                      ZWJ/tag/variation selector continuing such a
+ *                      sequence.
+ *
+ *   ZWJ and tag characters inherit the kind of the character before
+ *   them so a ZWJ sequence is never split across faces.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+enum { EMOJI_KIND_NONE = 0, EMOJI_KIND_TEXT = 1, EMOJI_KIND_COLOR = 2 };
+
+static int
+EmojiKindAt(const FcChar32 *ucs4, int idx, int count)
+{
+    if (idx < 0 || idx >= count) {
+        return EMOJI_KIND_NONE;
+    }
+    if (!IsEmoji(ucs4[idx])) {
+        /* Keycap sequence: ASCII base followed by VS16 or U+20E3. */
+        if (IsKeycapBase(ucs4[idx]) && idx + 1 < count
+                && (ucs4[idx + 1] == 0xFE0F || ucs4[idx + 1] == 0x20E3)) {
+            return EMOJI_KIND_COLOR;
+        }
+        return EMOJI_KIND_NONE;
+    }
+
+    /*
+     * The character after a ZWJ inside a color cluster belongs to the
+     * cluster, whatever its own presentation (e.g. U+2642 or U+2695
+     * without VS16 in a profession sequence); TkFontEmojiContinuation()
+     * does not cover it, so this rule lives here.
+     */
+    if (idx > 0 && ucs4[idx - 1] == 0x200D
+            && EmojiKindAt(ucs4, idx - 1, count) == EMOJI_KIND_COLOR) {
+        return EMOJI_KIND_COLOR;
+    }
+
+    /*
+     * Walk back over generic continuation characters (ZWJ, VS16/VS15,
+     * keycap, tags, skin-tone modifiers inside a cluster) to the
+     * owning base character.  Uses TkFontEmojiContinuation() from
+     * generic/tkFont.c, shared with the Windows engine and the
+     * Unix Bidi engine (font-48.1 to 48.5).
+     */
+    int j = idx;
+    for (;;) {
+        FcChar32 cur = ucs4[j];
+        if (j > 0 && TkFontEmojiContinuation((int)cur, 1)) {
+            if (IsEmoji(ucs4[j - 1])
+                    || (IsKeycapBase(ucs4[j - 1])
+                        && (cur == 0xFE0F || cur == 0x20E3))) {
+                j--;
+                continue;
+            }
+            /* Lone continuation (e.g. stray ZWJ/VS) - treat as TEXT
+             * so it does not force color face. */
+            if (cur == 0xFE0E || cur == 0x200D || cur == 0x20E3
+                    || (cur >= 0xE0020 && cur <= 0xE007F)) {
+                return EMOJI_KIND_TEXT;
+            }
+            break;
+        }
+        break;
+    }
+
+    FcChar32 uc = ucs4[j];
+    if (uc == 0xFE0F) return EMOJI_KIND_COLOR;
+    if (uc == 0xFE0E) return EMOJI_KIND_TEXT;
+
+    int next = -1;
+    if (j + 1 < count) {
+        next = (int) ucs4[j + 1];
+    }
+
+    /*
+     * Generic UTS #51 presentation via mojibake, same as
+     * TkFontEmojiPresentation() in tkFont.c:
+     *   0 = text presentation (VS15 forces text)
+     *   1 = emoji presentation by default (color preferred)
+     *   2 = VS16 after emoji (heart + VS16, keycap) - color over text
+     * This is what Tk test suite expects on
+     * every platform, handled via HarfBuzz on Wayland.
+     */
+    int pres = TkFontEmojiPresentation((int) uc, next);
+    if (pres == 2) return EMOJI_KIND_COLOR;
+    if (pres == 0) return EMOJI_KIND_TEXT;
+    /* pres == 1 => emoji presentation by default, but still check
+     * if next is skin-tone modifier - that also forces color. */
+    if (next >= 0x1F3FB && next <= 0x1F3FF) return EMOJI_KIND_COLOR;
+    return EMOJI_KIND_COLOR; /* pres == 1 */
+
+    /* Fallback for non-presentation emoji that are still emoji range
+     * but default to text (e.g. U+00A9 without VS16) */
+}
+
+/*
+ *----------------------------------------------------------------------
+ * IsColorBitmapFace --
+ *
+ *   True if face faceIndex is a color font whose glyphs are PNG strikes
+ *   HarfBuzz can hand back (CBDT/CBLC format 17/18/19, or sbix/png).
+ *   COLR/CPAL-only fonts are NOT reported: they still go through
+ *   stb_truetype and render as their monochrome base outlines.
+ *
+ * Results:
+ *   True if the face is a color bitmap face.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsColorBitmapFace(
+    WaylandFont *fontPtr,
+    int faceIndex)
+{
+#if WL_COLOR_EMOJI
+    if (!fontPtr || faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+        return false;
+    }
+    hb_font_t *hf = GetHbFont(fontPtr, faceIndex);
+    return hf && hb_ot_color_has_png(hb_font_get_face(hf));
+#else
+    (void)fontPtr; (void)faceIndex;
+    return false;
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ * GetColorEmojiFaceIndex --
+ *
+ *   Find a color bitmap face that covers every base codepoint in
+ *   ucs4[start..end).  ZWJ, variation selectors and tag characters are
+ *   ignored for the coverage test (they are consumed by GSUB).
+ *
+ * Results:
+ *   Face index, or -1 if there is no such face.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+GetColorEmojiFaceIndex(
+    WaylandFont *fontPtr,
+    const FcChar32 *ucs4,
+    int start,
+    int end)
+{
+#if WL_COLOR_EMOJI
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        WaylandFtFace *face = &fontPtr->faces[fi];
+        if (!face->source || !IsColorFcPattern(face->source)) continue;
+        if (!IsColorBitmapFace(fontPtr, fi)) continue;
+
+        /* Unknown coverage: do not guess, the glyphs could be .notdef. */
+        if (!face->charset) continue;
+
+        bool ok = true;
+        for (int i = start; i < end && ok; i++) {
+            FcChar32 uc = ucs4[i];
+            /* Use generic continuation - VS, ZWJ, keycap, tags are
+             * consumed by HarfBuzz GSUB, not needing charset coverage. */
+            if (TkFontEmojiContinuation((int)uc, 1)) {
+                continue;
+            }
+            if (!FcCharSetHasChar(face->charset, uc)) ok = false;
+        }
+        if (ok) return fi;
+    }
+#else
+    (void)fontPtr; (void)ucs4; (void)start; (void)end;
+#endif
+    return -1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * PickEmojiFaceForRun --
+ *
+ *   Face selection for a subrun made only of emoji-range codepoints.
+ *   Color-presentation runs use a color bitmap face when one covers the
+ *   whole run; everything else (text-presentation symbols, or no color
+ *   face installed) uses the monochrome emoji face as before.
+ *
+ * Results:
+ *   Face index to use for the run.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+static int
+PickEmojiFaceForRun(
+    WaylandFont *fontPtr,
+    const FcChar32 *ucs4,
+    int start,
+    int end,
+    int count)
+{
+    if (start < end && EmojiKindAt(ucs4, start, count) == EMOJI_KIND_COLOR) {
+        int ci = GetColorEmojiFaceIndex(fontPtr, ucs4, start, end);
+        if (ci >= 0) return ci;
+    }
+    return GetEmojiFaceIndex(fontPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * Color glyph cache
+ *
+ *   CPU side: decoded, premultiplied RGBA keyed by (file, ttc index,
+ *   glyph id).  A strike is size independent, so one entry serves every
+ *   font size.  Fixed number of slots, least recently used replaced.
+ *
+ *   GPU side: each slot remembers one NanoVG image handle per
+ *   NVGcontext.  Handles of an evicted slot are not deleted at once: a
+ *   frame may still have queued draw calls that reference them, so
+ *   deletion is deferred by COLOR_DELETE_DELAY draw calls and performed
+ *   from DrawColorGlyph() while that context is current.
+ *----------------------------------------------------------------------
+ */
+
+#if WL_COLOR_EMOJI
+
+#define COLOR_CACHE_SLOTS    384
+#define COLOR_TEX_PER_SLOT   4
+#define COLOR_DELETE_DELAY   4096
+#define COLOR_MAX_DIM        1024
+
+typedef struct ColorGlyphSlot {
+    char          *path;        /* strdup'd font file; NULL => slot free. */
+    int            ttcIndex;
+    unsigned       gid;
+    int            w, h;        /* 0 x 0 with px == NULL: no bitmap.      */
+    unsigned char *px;          /* premultiplied RGBA.                    */
+    unsigned long  stamp;       /* LRU clock.                             */
+    int            nextTex;
+    struct {
+        NVGcontext *vg;
+        int         id;
+    } tex[COLOR_TEX_PER_SLOT];
+} ColorGlyphSlot;
+
+typedef struct ColorPendingDelete {
+    NVGcontext *vg;
+    int         id;
+    unsigned long due;
+    struct ColorPendingDelete *next;
+} ColorPendingDelete;
+
+static ColorGlyphSlot      gColorSlots[COLOR_CACHE_SLOTS];
+static ColorPendingDelete *gColorPending = NULL;
+static unsigned long       gColorClock = 0;
+
+/*
+ *----------------------------------------------------------------------
+ * ColorQueueDelete --
+ *
+ *   Schedule a NanoVG image handle for deferred deletion.  Handles are
+ *   not deleted immediately because the current frame may still have
+ *   queued draw calls that reference them; deletion happens from
+ *   ColorFlushPending() once the LRU clock has advanced by
+ *   COLOR_DELETE_DELAY.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Allocates a ColorPendingDelete node (leaked if malloc fails).
+ *----------------------------------------------------------------------
+ */
+static void
+ColorQueueDelete(NVGcontext *vg, int id)
+{
+    ColorPendingDelete *p;
+
+    if (!vg || id <= 0) return;
+    p = (ColorPendingDelete *)malloc(sizeof(*p));
+    if (!p) return;
+    p->vg   = vg;
+    p->id   = id;
+    p->due  = gColorClock + COLOR_DELETE_DELAY;
+    p->next = gColorPending;
+    gColorPending = p;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ColorFlushPending --
+ *
+ *   Delete any pending color-glyph image handles belonging to vg whose
+ *   deferral delay has elapsed.  Called at the start of
+ *   DrawColorGlyph() while vg is current.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Calls nvgDeleteImage() and frees list nodes.
+ *----------------------------------------------------------------------
+ */
+static void
+ColorFlushPending(NVGcontext *vg)
+{
+    ColorPendingDelete **pp = &gColorPending;
+
+    while (*pp) {
+        ColorPendingDelete *p = *pp;
+        if (p->vg == vg && gColorClock >= p->due) {
+            nvgDeleteImage(vg, p->id);
+            *pp = p->next;
+            free(p);
+            continue;
+        }
+        pp = &p->next;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ColorFreeSlot --
+ *
+ *   Release all resources owned by a color-glyph cache slot: queue each
+ *   per-context NanoVG image handle for deferred deletion, free the
+ *   strdup'd font path, release the decoded RGBA pixels, and zero the
+ *   slot.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Frees memory and queues image handles for deletion.
+ *----------------------------------------------------------------------
+ */
+static void
+ColorFreeSlot(ColorGlyphSlot *s)
+{
+    for (int i = 0; i < COLOR_TEX_PER_SLOT; i++) {
+        if (s->tex[i].vg) ColorQueueDelete(s->tex[i].vg, s->tex[i].id);
+    }
+    free(s->path);
+    if (s->px) stbi_image_free(s->px);
+    memset(s, 0, sizeof(*s));
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ColorGlyphContextDestroyed --
+ *
+ *   Forget every image handle that belongs to vg.  Must be called
+ *   before the context is destroyed (the renderer frees the textures
+ *   itself); otherwise a recycled NVGcontext address would resolve to
+ *   a handle that was never created in the new context.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Clears per-context image handles and pending-delete entries.
+ *----------------------------------------------------------------------
+ */
+
+static void
+ColorGlyphContextDestroyed(NVGcontext *vg)
+{
+    ColorPendingDelete **pp = &gColorPending;
+
+    for (int i = 0; i < COLOR_CACHE_SLOTS; i++) {
+        for (int t = 0; t < COLOR_TEX_PER_SLOT; t++) {
+            if (gColorSlots[i].tex[t].vg == vg) {
+                gColorSlots[i].tex[t].vg = NULL;
+                gColorSlots[i].tex[t].id = 0;
+            }
+        }
+    }
+    while (*pp) {
+        ColorPendingDelete *p = *pp;
+        if (p->vg == vg) {
+            *pp = p->next;
+            free(p);
+            continue;
+        }
+        pp = &p->next;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * DecodeColorGlyph --
+ *
+ *   Fetch the PNG strike for gid from HarfBuzz and decode it into a
+ *   premultiplied RGBA buffer owned by the slot.
+ *
+ * Results:
+ *   None.  On success, s->px/s->w/s->h are populated; on failure
+ *   they are left untouched.
+ *
+ * Side effects:
+ *   Allocates and stores a decoded bitmap in the slot.
+ *----------------------------------------------------------------------
+ */
+
+static void
+DecodeColorGlyph(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    hb_codepoint_t gid,
+    ColorGlyphSlot *s)
+{
+    hb_font_t *hf = GetHbFont(fontPtr, faceIndex);
+    if (!hf || gid == 0) return;
+
+    hb_blob_t *png = hb_ot_color_glyph_reference_png(hf, gid);
+    unsigned int len = 0;
+    const char *data = png ? hb_blob_get_data(png, &len) : NULL;
+    if (!data || len == 0) {
+        if (png) hb_blob_destroy(png);
+        return;
+    }
+
+    int w = 0, h = 0, n = 0;
+    unsigned char *px = stbi_load_from_memory((const unsigned char *)data,
+                                              (int)len, &w, &h, &n, 4);
+    hb_blob_destroy(png);
+    if (!px) return;
+    if (w <= 0 || h <= 0 || w > COLOR_MAX_DIM || h > COLOR_MAX_DIM) {
+        stbi_image_free(px);
+        return;
+    }
+
+    /* NanoVG is told the image is premultiplied (see ColorSlotImage). */
+    for (size_t i = 0, cnt = (size_t)w * (size_t)h; i < cnt; i++) {
+        unsigned char *p = px + 4 * i;
+        unsigned a = p[3];
+        if (a != 255) {
+            p[0] = (unsigned char)((p[0] * a + 127) / 255);
+            p[1] = (unsigned char)((p[1] * a + 127) / 255);
+            p[2] = (unsigned char)((p[2] * a + 127) / 255);
+        }
+    }
+    s->px = px;
+    s->w  = w;
+    s->h  = h;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * GetColorGlyphSlot --
+ *
+ *   Look up (or create) the CPU-side color-glyph cache entry for
+ *   (file, TTC index, glyph ID).  A strike is size-independent, so a
+ *   single entry serves every font size.  Uses a fixed number of slots
+ *   with least-recently-used replacement; eviction goes through
+ *   ColorFreeSlot().
+ *
+ * Results:
+ *   Pointer to the cache slot, or NULL if the face has no file path
+ *   or the slot's font path could not be duplicated.
+ *
+ * Side effects:
+ *   May evict an LRU slot, freeing its resources.
+ *----------------------------------------------------------------------
+ */
+
+static ColorGlyphSlot *
+GetColorGlyphSlot(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    hb_codepoint_t gid)
+{
+    WaylandFtFace  *face = &fontPtr->faces[faceIndex];
+    ColorGlyphSlot *freeSlot = NULL, *lru = NULL;
+
+    if (!face->filePath) return NULL;
+    gColorClock++;
+
+    for (int i = 0; i < COLOR_CACHE_SLOTS; i++) {
+        ColorGlyphSlot *s = &gColorSlots[i];
+        if (!s->path) {
+            if (!freeSlot) freeSlot = s;
+            continue;
+        }
+        if (s->gid == gid && s->ttcIndex == face->faceIndex &&
+                strcmp(s->path, face->filePath) == 0) {
+            s->stamp = gColorClock;
+            return s;
+        }
+        if (!lru || s->stamp < lru->stamp) lru = s;
+    }
+
+    ColorGlyphSlot *s = freeSlot;
+    if (!s) {
+        s = lru;
+        ColorFreeSlot(s);
+    }
+    s->path = strdup(face->filePath);
+    if (!s->path) return NULL;
+    s->ttcIndex = face->faceIndex;
+    s->gid      = gid;
+    s->stamp    = gColorClock;
+    DecodeColorGlyph(fontPtr, faceIndex, gid, s);   /* may leave px NULL */
+    return s;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * ColorSlotImage --
+ *
+ *   Return the NanoVG image handle for the slot in the given context,
+ *   uploading the decoded RGBA pixels via nvgCreateImageRGBA() on
+ *   first use.  Each slot caches up to COLOR_TEX_PER_SLOT per-context
+ *   handles; when that many distinct contexts have been seen, the
+ *   oldest handle is queued for deletion and reused.
+ *
+ * Results:
+ *   NanoVG image handle, or -1 on failure.
+ *
+ * Side effects:
+ *   May upload a texture to the GPU and queue an old handle for
+ *   deletion.
+ *----------------------------------------------------------------------
+ */
+
+static int
+ColorSlotImage(
+    NVGcontext *vg,
+    ColorGlyphSlot *s)
+{
+    int empty = -1;
+
+    for (int i = 0; i < COLOR_TEX_PER_SLOT; i++) {
+        if (s->tex[i].vg == vg) return s->tex[i].id;
+        if (!s->tex[i].vg && empty < 0) empty = i;
+    }
+    int id = nvgCreateImageRGBA(vg, s->w, s->h,
+                                NVG_IMAGE_PREMULTIPLIED |
+                                NVG_IMAGE_GENERATE_MIPMAPS, s->px);
+    if (id <= 0) return -1;
+    if (empty < 0) {
+        empty = s->nextTex++ % COLOR_TEX_PER_SLOT;
+        ColorQueueDelete(s->tex[empty].vg, s->tex[empty].id);
+    }
+    s->tex[empty].vg = vg;
+    s->tex[empty].id = id;
+    return id;
+}
+
+#else
+
+/*
+ *----------------------------------------------------------------------
+ * ColorGlyphContextDestroyed --
+ *
+ *   Stub for builds with WL_COLOR_EMOJI disabled.  Does nothing; the
+ *   color-glyph cache does not exist in that configuration.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+static void
+ColorGlyphContextDestroyed(NVGcontext *vg)
+{
+    (void)vg;
+}
+
+#endif /* WL_COLOR_EMOJI */
+
+/*
+ *----------------------------------------------------------------------
+ * DrawColorGlyph --
+ *
+ *   Draw one shaped glyph of a color bitmap face with its pen origin at
+ *   (penX, penY) in the current NanoVG transform (y down, baseline).
+ *   advancePx is HarfBuzz's advance for the glyph and is only used if
+ *   HarfBuzz reports no usable extents.
+ *
+ *   The glyph is scaled so the strike matches HarfBuzz's metrics for
+ *   the font's pixel size (HarfBuzz scales CBDT/sbix extents from the
+ *   strike's ppem to the font scale).
+ *
+ * Results:
+ *   True if something was drawn.
+ *
+ * Side effects:
+ *   Replaces the NanoVG fill paint; the caller must restore its fill
+ *   color afterwards.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+DrawColorGlyph(
+    NVGcontext *vg,
+    WaylandFont *fontPtr,
+    int faceIndex,
+    hb_codepoint_t gid,
+    float penX,
+    float penY,
+    float advancePx)
+{
+#if WL_COLOR_EMOJI
+    if (!vg || faceIndex < 0 || faceIndex >= fontPtr->nfaces) return false;
+
+    ColorFlushPending(vg);
+
+    ColorGlyphSlot *s = GetColorGlyphSlot(fontPtr, faceIndex, gid);
+    if (!s || !s->px) return false;
+
+    int img = ColorSlotImage(vg, s);
+    if (img <= 0) return false;
+
+    float em = (float)fontPtr->pixelSize;
+    float dx, dy, dw, dh;
+    bool haveExt = false;
+
+    hb_font_t *hf = GetHbFont(fontPtr, faceIndex);
+    hb_glyph_extents_t ext;
+    if (hf && hb_font_get_glyph_extents(hf, gid, &ext) &&
+            ext.width > 0 && ext.height != 0) {
+        dw = ext.width / 64.0f;
+        dh = -ext.height / 64.0f;            /* HarfBuzz height is negative. */
+        dx = penX + ext.x_bearing / 64.0f;
+        dy = penY - ext.y_bearing / 64.0f;   /* HarfBuzz y is up.            */
+        haveExt = (dw >= 0.25f * em && dw <= 4.0f * em &&
+                   dh >= 0.25f * em && dh <= 4.0f * em);
+    }
+    if (!haveExt) {
+        /* Fit the bitmap to the advance; sit it slightly below baseline. */
+        dw = advancePx > 0.0f ? advancePx : em;
+        dh = dw * (float)s->h / (float)s->w;
+        dx = penX;
+        dy = penY - 0.79f * dh;
+    }
+
+    /*
+     * Keep the bitmap inside the line box.  Color emoji strikes are taller
+     * than the metrics of most text fonts (Thai, CJK, ...), and Tk's text
+     * widget (and ttk) clip each line to ascent + descent of the font in
+     * use, so an unconstrained quad is cut off at the top and/or bottom.
+     * Bounds are relative to penY, the glyph baseline.
+     */
+    {
+        float asc  = (float)fontPtr->font.fm.ascent;
+        float desc = (float)fontPtr->font.fm.descent;
+        float room = asc + desc;
+
+        if (room > 0.0f && dh > 0.0f
+                && (dy < penY - asc || dy + dh > penY + desc)) {
+            if (dh > room) {
+                float sc = room / dh;
+                float ndw = dw * sc;
+                dx += (dw - ndw) / 2.0f;      /* shrink about the center. */
+                dw  = ndw;
+                dh  = room;
+            }
+            if (dy < penY - asc)       dy = penY - asc;
+            if (dy + dh > penY + desc) dy = penY + desc - dh;
+        }
+    }
+
+    NVGpaint paint = nvgImagePattern(vg, dx, dy, dw, dh, 0.0f, img, 1.0f);
+    nvgBeginPath(vg);
+    nvgRect(vg, dx, dy, dw, dh);
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+    return true;
+#else
+    (void)vg; (void)fontPtr; (void)faceIndex; (void)gid;
+    (void)penX; (void)penY; (void)advancePx;
+    return false;
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ * AppendFontsetFace --
+ *
+ *   Add a Fontconfig match to fontPtr->fontset and to fontPtr->faces,
+ *   filling the WaylandFtFace the same way InitFont() does.  On success
+ *   the fontset owns `match`; on failure the caller still owns it.
+ *
+ * Results:
+ *   True on success, false on failure.
+ *
+ * Side effects:
+ *   Grows fontPtr->faces by one entry and increments fontPtr->nfaces.
+ *----------------------------------------------------------------------
+ */
+
+static bool
+AppendFontsetFace(
+    WaylandFont *fontPtr,
+    FcPattern *match)
+{
+    if (!fontPtr->fontset || !match) return false;
+    if (!FcFontSetAdd(fontPtr->fontset, match)) return false;
+
+    WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(fontPtr->faces,
+            (fontPtr->nfaces + 1) * sizeof(WaylandFtFace));
+    WaylandFtFace *nf = &grown[fontPtr->nfaces];
+    memset(nf, 0, sizeof(*nf));
+
+    nf->source    = match;
+    nf->nvgFontId = -1;
+
+    FcCharSet *cs = NULL;
+    if (FcPatternGetCharSet(match, FC_CHARSET, 0, &cs) == FcResultMatch) {
+        nf->charset = FcCharSetCopy(cs);
+    }
+    FcChar8 *fcPath = NULL;
+    if (FcPatternGetString(match, FC_FILE, 0, &fcPath) == FcResultMatch &&
+            fcPath) {
+        nf->filePath = strdup((char *)fcPath);
+    }
+    int fcIdx = 0;
+    FcPatternGetInteger(match, FC_INDEX, 0, &fcIdx);
+    nf->faceIndex = fcIdx;
+
+    fontPtr->faces = grown;
+    fontPtr->nfaces++;
+    return true;
+}
+
+#if WL_COLOR_EMOJI
+
+/*
+ *----------------------------------------------------------------------
+ * FontFileHasColorPng --
+ *
+ *   True if the font file behind pat has CBDT/sbix PNG strikes
+ *   according to HarfBuzz.  Opens the file via hb_blob and checks
+ *   hb_ot_color_has_png() on the face.
+ *
+ * Results:
+ *   True if the file has PNG color strikes, false otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+
+/* True if the font file behind pat has CBDT/sbix PNG strikes. */
+static bool
+FontFileHasColorPng(FcPattern *pat)
+{
+    FcChar8 *file = NULL;
+    int idx = 0;
+    bool has = false;
+
+    if (FcPatternGetString(pat, FC_FILE, 0, &file) != FcResultMatch || !file) {
+        return false;
+    }
+    FcPatternGetInteger(pat, FC_INDEX, 0, &idx);
+
+    hb_blob_t *blob = hb_blob_create_from_file((const char *)file);
+    if (blob && hb_blob_get_length(blob) > 0) {
+        hb_face_t *face = hb_face_create(blob, (unsigned)(idx & 0xFFFF));
+        if (face) {
+            has = hb_ot_color_has_png(face);
+            hb_face_destroy(face);
+        }
+    }
+    if (blob) hb_blob_destroy(blob);
+    return has;
+}
+
+#endif /* WL_COLOR_EMOJI */
+
+/*
+ *----------------------------------------------------------------------
+ * EnsureColorEmojiFace --
+ *
+ *   FcFontSort ranks color fonts last (InitFont asks for FC_COLOR=false
+ *   so faces[0] is never a color font) and MAX_FACES can truncate them
+ *   away entirely.  Like the CJK probe in InitFont, make sure a color
+ *   bitmap emoji face is present if the system has one.  The Fontconfig
+ *   lookup is done once per process; each font gets its own duplicate
+ *   of the pattern because the fontset destroys its patterns.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May append a face to fontPtr->faces and to fontPtr->fontset.
+ *----------------------------------------------------------------------
+ */
+
+static void
+EnsureColorEmojiFace(WaylandFont *fontPtr)
+{
+#if WL_COLOR_EMOJI
+    static const FcChar32 probe = 0x1F600;       /* GRINNING FACE */
+    static bool       probed = false;
+    static FcPattern *cached = NULL;
+
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        WaylandFtFace *f = &fontPtr->faces[fi];
+        if (f->source && f->charset && IsColorFcPattern(f->source) &&
+                FcCharSetHasChar(f->charset, probe) &&
+                FontFileHasColorPng(f->source)) {
+            return;
+        }
+    }
+
+    if (!probed) {
+        probed = true;
+        FcPattern *want = FcPatternCreate();
+        if (want) {
+            FcCharSet *cs = FcCharSetCreate();
+            if (cs) {
+                FcCharSetAddChar(cs, probe);
+                FcPatternAddCharSet(want, FC_CHARSET, cs);
+                FcCharSetDestroy(cs);
+            }
+#ifdef FC_COLOR
+            FcPatternAddBool(want, FC_COLOR, FcTrue);
+#endif
+            FcPatternAddString(want, FC_FAMILY, (FcChar8 *)"Noto Color Emoji");
+            FcConfigSubstitute(NULL, want, FcMatchPattern);
+            FcDefaultSubstitute(want);
+
+            FcResult res;
+            FcPattern *match = FcFontMatch(NULL, want, &res);
+            FcPatternDestroy(want);
+
+            if (match) {
+                FcCharSet *mcs = NULL;
+                if (IsColorFcPattern(match) &&
+                        FcPatternGetCharSet(match, FC_CHARSET, 0, &mcs)
+                            == FcResultMatch && mcs &&
+                        FcCharSetHasChar(mcs, probe) &&
+                        FontFileHasColorPng(match)) {
+                    cached = match;
+                } else {
+                    FcPatternDestroy(match);
+                }
+            }
+        }
+    }
+
+    if (cached) {
+        FcPattern *dup = FcPatternDuplicate(cached);
+        if (dup && !AppendFontsetFace(fontPtr, dup)) {
+            FcPatternDestroy(dup);
+        }
+    }
+#else
+    (void)fontPtr;
+#endif
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -1551,7 +2551,8 @@ WaylandShaper_ShapeString(
      * supplies correct positions regardless of whether the caller then
      * chooses to draw the marks composed or decomposed.
      */
-    if (IsSimpleOnly(source, numBytes) && !ContainsCombiningMark(source, numBytes)) {
+    if (IsSimpleOnly(source, numBytes) && !ContainsCombiningMark(source, numBytes)
+            && !ContainsEmoji(source, numBytes)) {
         int i = 0;
         while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
             FcChar32 uc;
@@ -1766,7 +2767,7 @@ WaylandShaper_ShapeString(
                  * Only break when we encounter a different script.
                  */
                 int subrunEnd = subrunStart + 1;
-                bool subrunIsEmoji = IsEmoji(ucs4Chars[subrunStart]);
+                int subrunKind = EmojiKindAt(ucs4Chars, subrunStart, charCount);
                 while (subrunEnd < runStart + runLen) {
                     hb_script_t s = hb_unicode_script(
 						      hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
@@ -1788,7 +2789,16 @@ WaylandShaper_ShapeString(
                      * soon as it reaches a run of collapsed/zero-advance
                      * substitute glyphs.
                      */
-                    if (IsEmoji(ucs4Chars[subrunEnd]) != subrunIsEmoji) break;
+                    /*
+                     * Split on emoji *kind* (none / text / color), not
+                     * just IsEmoji(): text-presentation symbols such as
+                     * (c) or U+25A0 must stay on the monochrome face
+                     * while color-presentation emoji go to the color face.
+                     * ZWJ, variation selectors, skin tones and tag
+                     * characters inherit the kind of the sequence they
+                     * belong to, so sequences are never split.
+                     */
+                    if (EmojiKindAt(ucs4Chars, subrunEnd, charCount) != subrunKind) break;
 
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                         /* Keep extending; do not break on face mismatch. */
@@ -1844,18 +2854,18 @@ WaylandShaper_ShapeString(
             int         runFaceIndex;
 
             /* If this subrun contains any emoji, force emoji face. */
-            bool subrunHasEmoji = false;
-            bool subrunHasNonEmoji = false;
-            for (int ci = subrunStart; ci < subrunEnd; ci++) {
-                if (IsEmoji(ucs4Chars[ci])) {
-                    subrunHasEmoji = true;
-                } else {
-                    subrunHasNonEmoji = true;
-                }
-            }
+            /* Subruns are split by EmojiKindAt(), so the kind at the
+             * start is the kind of the whole subrun (this also covers
+             * keycap sequences, whose ASCII base is not IsEmoji()). */
+            bool subrunHasEmoji =
+                EmojiKindAt(ucs4Chars, subrunStart, charCount)
+                    != EMOJI_KIND_NONE;
+            bool subrunHasNonEmoji = !subrunHasEmoji;
 
             if (subrunHasEmoji && !subrunHasNonEmoji) {
-                runFaceIndex = GetEmojiFaceIndex(fontPtr);
+                runFaceIndex = PickEmojiFaceForRun(fontPtr, ucs4Chars,
+                                                   subrunStart, subrunEnd,
+                                                   charCount);
             } else if (subrunHasEmoji && subrunHasNonEmoji) {
                 /* Mixed run - try to find a face that covers non-emoji parts. */
                 int mixedFace = FindFaceCoveringRange(fontPtr, ucs4Chars,
@@ -1879,6 +2889,7 @@ WaylandShaper_ShapeString(
 
             hb_font_t *runHbFont = GetHbFont(fontPtr, runFaceIndex);
             if (!runHbFont) { continue; }
+            bool runIsColorFace = IsColorBitmapFace(fontPtr, runFaceIndex);
 
             /* Shape. */
             hb_buffer_clear_contents(shaper->buffer);
@@ -1928,7 +2939,8 @@ WaylandShaper_ShapeString(
                  
                 if (byteOff != lastClusterByteOff) {
                     if (lastClusterWasEmoji) {
-			runPenX += (int)(fontPtr->pixelSize * 0.5 + 0.5);
+			runPenX += (int)(fontPtr->pixelSize *
+					 (runIsColorFace ? COLOR_EMOJI_GAP : 0.5) + 0.5);
                     }
                     FcChar32 startUc;
                     lastClusterWasEmoji =
@@ -2215,6 +3227,17 @@ EnsureNvgFaceFont(
     WaylandFtFace *face = &fontPtr->faces[faceIndex];
 
     /*
+     * Color bitmap faces (CBDT/sbix) are never handed to NanoVG: they
+     * are drawn from their PNG strikes by DrawColorGlyph(), and loading
+     * a ~10 MB emoji font into fontstash would be wasted work.
+     */
+    if (face->source && IsColorFcPattern(face->source) &&
+            IsColorBitmapFace(fontPtr, faceIndex)) {
+        face->nvgFontId = -1;
+        return -1;
+    }
+
+    /*
      * Make the name unique to this WaylandFont + faceIndex + generation.
      * The font pointer and face index alone are NOT enough: fontPtr is
      * reused in place across "font configure" (DeleteFont() frees and
@@ -2302,6 +3325,9 @@ TkWaylandFontContextDestroyed(
     NVGcontext *vg)
 {
     if (!vg) return;
+
+    /* Color emoji image handles are per-context as well. */
+    ColorGlyphContextDestroyed(vg);
 
     NvgFontRegEntry **pp = &gNvgFontRegistry;
     while (*pp) {
@@ -2464,15 +3490,24 @@ EnsureNvgFont(
 
 /*
  *----------------------------------------------------------------------
- * TkpGetFontPixelSize --
+ * InitFont --
  *
- *   Get the pixel size of a Tk_Font for use by menu drawing.
+ *   Initialize a WaylandFont from the requested Tk font attributes:
+ *   resolve the family through Fontconfig (building an appropriate
+ *   serif/sans/mono/emoji fallback stack), populate fontPtr->faces
+ *   with the resulting matches, compute pixel metrics from the primary
+ *   face via stb_truetype, and initialize the HarfBuzz shaper.
+ *
+ *   Also bumps fontPtr->generation so that NanoVG font names derived
+ *   from fontPtr address + face index (see EnsureNvgFaceFont) are
+ *   unique across "font configure" reconfigure cycles.
  *
  * Results:
- *   Pixel size in pixels.
+ *   None.  fontPtr is fully populated.
  *
  * Side effects:
- *   None.
+ *   Allocates Fontconfig patterns, fontsets, and per-face metadata;
+ *   queries Fontconfig and reads the primary font file.
  *----------------------------------------------------------------------
  */
 
@@ -2644,8 +3679,10 @@ InitFont(
     }
 
     /*
-     * Monochrome emoji only – color emoji fonts are unusable
-     * by stb_truetype / NanoVG.
+     * Monochrome emoji fallbacks for text-presentation symbols.  Color
+     * emoji fonts are not requested here (FC_COLOR=false below keeps
+     * them out of faces[0]); a color bitmap face is appended later by
+     * EnsureColorEmojiFace() and drawn via DrawColorGlyph().
      */
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Noto Emoji");
     FcPatternAddString(pat, FC_FAMILY, (FcChar8 *)"Symbola");
@@ -2659,7 +3696,7 @@ InitFont(
     FcPatternAddBool(pat, FC_HINTING,   FcTrue);
     FcPatternAddBool(pat, FC_AUTOHINT,  FcTrue);
     FcPatternAddBool(pat, FC_ANTIALIAS, FcTrue);
-    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* Reject color fonts. */
+    FcPatternAddBool(pat, FC_COLOR,     FcFalse);   /* Keep color fonts out of faces[0]. */
     FcPatternAddBool(pat, FC_SCALABLE,  FcTrue);    /* No bitmap fonts. */
     if (isGenericMono) {
         /* Prefer fixed-pitch faces over merely mono-sounding names. */
@@ -2923,6 +3960,13 @@ InitFont(
             }
         }
     }
+
+    /*
+     * Guarantee a color bitmap emoji face (if the system has one) even
+     * when FcFontSort ranked it past MAX_FACES.
+     */
+    EnsureColorEmojiFace(fontPtr);
+    nfaces = fontPtr->nfaces;
 
     /* Record the actual family that ended up as primary. */
     if (nfaces > 0 && fontPtr->faces[0].source) {
@@ -4341,25 +5385,57 @@ TkpDrawAngledCharsInContext(
          * with the original bytes still works, but using glyphId is
          * always correct.
          */
+        NVGcolor fillCol = ColorFromGC(gc);
+
         for (int i = 0; i < cluster_count; i++) {
             int faceIdx = clusters[i].face_idx;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
-            FcChar32 uc;
-            if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
-                             (int)strlen(clusters[i].text)) > 0) {
-                if (IsEmoji(uc)) {
-                    int emojiFace = GetEmojiFaceIndex(fontPtr);
-                    if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) faceIdx = emojiFace;
-                } else {
-                    if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
-                        FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
-                        faceIdx = 0;
+            /*
+             * Color bitmap face chosen by the shaper: draw every shaped
+             * glyph of the cluster by glyph ID (a ZWJ sequence that the
+             * font cannot ligate arrives as several glyphs sharing one
+             * cluster).  If nothing could be drawn, fall back to the
+             * monochrome emoji face below.
+             */
+            if (IsColorBitmapFace(fontPtr, faceIdx)) {
+                bool drew = false;
+                for (int g = 0; g < sbuf.glyphCount; g++) {
+                    int gbo = sbuf.glyphs[g].byteOffset;
+                    if (gbo < clusters[i].start_byte ||
+                            gbo >= clusters[i].end_byte) continue;
+                    if (sbuf.glyphs[g].faceIndex != faceIdx) continue;
+                    if (DrawColorGlyph(vg, fontPtr, faceIdx,
+                                       (hb_codepoint_t)sbuf.glyphs[g].glyphId,
+                                       (float)sbuf.glyphs[g].x,
+                                       (float)sbuf.glyphs[g].y,
+                                       (float)sbuf.glyphs[g].advanceX)) {
+                        drew = true;
+                    }
+                }
+                nvgFillColor(vg, fillCol);   /* DrawColorGlyph changed the paint. */
+                if (drew) continue;
+
+                int mono = GetEmojiFaceIndex(fontPtr);
+                faceIdx = (mono >= 0 && mono < fontPtr->nfaces &&
+                           !IsColorBitmapFace(fontPtr, mono)) ? mono : 0;
+            } else {
+                FcChar32 uc;
+                if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
+                                 (int)strlen(clusters[i].text)) > 0) {
+                    if (IsEmoji(uc)) {
+                        int emojiFace = GetEmojiFaceIndex(fontPtr);
+                        if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) faceIdx = emojiFace;
                     } else {
-                        for (int fi = 1; fi < fontPtr->nfaces; fi++) {
-                            if (fontPtr->faces[fi].charset &&
-                                FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                                faceIdx = fi; break;
+                        if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
+                            FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
+                            faceIdx = 0;
+                        } else {
+                            for (int fi = 1; fi < fontPtr->nfaces; fi++) {
+                                if (fontPtr->faces[fi].charset &&
+                                    FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+                                    faceIdx = fi; break;
+                                }
                             }
                         }
                     }
@@ -4621,6 +5697,106 @@ TkWaylandLoadNamedFontIntoContext(
 
     /* Don't delete the font — it's cached by Tk. */
     return id;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandDrawMenuText --
+ *
+ *   Draw a menu label string with full color-emoji support via
+ *   HarfBuzz shaping.  Used by tkWaylandMenu.c: the default nvgText()
+ *   path bypassed the color-emoji pipeline (DrawColorGlyph) and fell
+ *   back to the monochrome emoji face, so labels like "📋 Copy"
+ *   appeared monochrome.  This wrapper reuses the same shaping +
+ *   color-glyph cache as TkpDrawCharsInContext(), but draws at an
+ *   explicit NVG position with an explicit NVGcolor.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Renders text into the given NVGcontext; may populate the color
+ *   glyph cache and upload textures.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandDrawMenuText(
+    NVGcontext *vg,
+    Tk_Font tkfont,
+    float x,
+    float y,
+    const char *text,
+    int len,
+    NVGcolor color)
+{
+    if (!vg || !tkfont || !text || len <= 0) return;
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+
+    if (EnsureNvgFont(fontPtr, vg) < 0) return;
+
+    bool hasEmoji = ContainsEmoji(text, len);
+    bool plain = !hasEmoji && IsSimpleOnly(text, len);
+
+    nvgSave(vg);
+    nvgFillColor(vg, color);
+
+    ShapedGlyphBuffer sbuf;
+
+    /*
+     * Plain text goes straight to NanoVG.  So does anything the shaper
+     * cannot place: the shaper's simple-text fast path leaves every x and
+     * advanceX at 0 (and totalAdvance 0), which would stack all glyphs at
+     * the same pen position.  Real HarfBuzz output always has a positive
+     * totalAdvance.
+     */
+    if (plain
+            || !WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, text, len,
+                                          &sbuf)
+            || sbuf.glyphCount <= 0 || sbuf.totalAdvance <= 0) {
+        int fid = fontPtr->nvgFontId >= 0 ? fontPtr->nvgFontId
+                : EnsureNvgFont(fontPtr, vg);
+        if (fid >= 0) nvgFontFaceId(vg, fid);
+        nvgFontSize(vg, (float)fontPtr->pixelSize);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+        nvgText(vg, x, y, text, text + len);
+        nvgRestore(vg);
+        return;
+    }
+
+    for (int i = 0; i < sbuf.glyphCount; i++) {
+        int faceIdx = sbuf.glyphs[i].faceIndex;
+        if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+        float gx = x + (float)sbuf.glyphs[i].x;
+        float gy = y + (float)sbuf.glyphs[i].y;
+
+        if (IsColorBitmapFace(fontPtr, faceIdx)) {
+            DrawColorGlyph(vg, fontPtr, faceIdx,
+                           sbuf.glyphs[i].glyphId,
+                           gx, gy,
+                           (float)sbuf.glyphs[i].advanceX);
+            nvgFillColor(vg, color);
+        } else {
+            WaylandFtFace *face = &fontPtr->faces[faceIdx];
+            int nvgId = face->nvgFontId;
+            if (nvgId < 0) {
+                nvgId = EnsureNvgFaceFont(fontPtr, faceIdx, vg);
+            }
+            if (nvgId < 0) continue;
+            nvgFontFaceId(vg, nvgId);
+            nvgFontSize(vg, (float)fontPtr->pixelSize);
+            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+            int bo = sbuf.glyphs[i].byteOffset;
+            int clen = sbuf.glyphs[i].clusterLen;
+            if (bo < 0 || bo + clen > len) continue;
+            if (i > 0 && sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset) {
+                continue;
+            }
+            nvgText(vg, gx, gy, text + bo, text + bo + clen);
+        }
+    }
+    nvgRestore(vg);
 }
 
 /*

@@ -448,6 +448,7 @@ addFormattedText {
     @@demo menu		Menus and cascades (sub-menus)
     @@demo menubu	Menu-buttons
     @@demo ttkmenu	Themed menu buttons
+    @@new
     @@demo popup	Popup (context) menus
     @@demo toolbar	Themed toolbar
 
@@ -456,6 +457,7 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
+    @@new
     @@demo emojichoose Emoji picker
     @@demo systray      System tray icon and notification
     @@demo print        Printing from canvas and text widgets

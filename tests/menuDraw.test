@@ -792,6 +792,119 @@ test menuDraw-17.4 {AdjustMenuCoords - multi-column menu [bug fcb1398aa2]} -cons
     .m1 unpost
     deleteWindows
 } -result 1
+test menuDraw-17.5 {AdjustMenuCoords - cascade near right edge of screen} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add cascade -label "Cascade entry" -menu .m1.m2
+    menu .m1.m2 -tearoff 0
+    .m1.m2 add cascade -label "Second cascade entry" -menu .m1.m2.m3
+    menu .m1.m2.m3 -tearoff 0
+    for {set i 0} {$i < 5} {incr i} {
+	.m1.m2 add command -label "A rather long entry $i"
+	.m1.m2.m3 add command -label "Another long entry $i"
+    }
+} -body {
+    .m1 post [expr {[winfo screenwidth .m1] - [winfo reqwidth .m1]}] 100
+    update
+    .m1 postcascade 0
+    update
+    .m1.m2 postcascade 0
+    update
+    # The cascades do not fit to the right, so they are posted to the left,
+    # without overlapping their parent menus.
+    list [expr {[winfo rootx .m1.m2] + [winfo width .m1.m2] <= [winfo rootx .m1] + 10}] \
+	    [expr {[winfo rootx .m1.m2.m3] + [winfo width .m1.m2.m3]
+		<= [winfo rootx .m1.m2] + 10}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result {1 1}
+test menuDraw-17.6 {AdjustMenuCoords - cascade with room on the right} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add cascade -label "Cascade entry" -menu .m1.m2
+    menu .m1.m2 -tearoff 0
+    .m1.m2 add command -label "An entry"
+} -body {
+    .m1 post 100 100
+    update
+    .m1 postcascade 0
+    update
+    expr {[winfo rootx .m1.m2] >= [winfo rootx .m1] + [winfo width .m1] - 10}
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result 1
+test menuDraw-17.7 {AdjustMenuCoords - cascade does not fit on the inherited side} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    # Make a menu at least the given width.
+    proc menuWidth {m width} {
+	set label x
+	$m add command -label $label
+	update idletasks
+	while {[winfo reqwidth $m] < $width} {
+	    append label xxxxxxxxxx
+	    $m entryconfigure last -label $label
+	    update idletasks
+	}
+    }
+    set sw [winfo screenwidth .]
+    menu .m1 -tearoff 0
+    .m1 add cascade -label "Cascade entry" -menu .m1.m2
+    menu .m1.m2 -tearoff 0
+    .m1.m2 add cascade -label "Second cascade entry" -menu .m1.m2.m3
+    menu .m1.m2.m3 -tearoff 0
+    menuWidth .m1 [expr {$sw * 40 / 100}]
+    menuWidth .m1.m2 [expr {$sw * 30 / 100}]
+    menuWidth .m1.m2.m3 [expr {$sw * 35 / 100}]
+} -body {
+    .m1 post [expr {$sw - [winfo reqwidth .m1]}] 100
+    update
+    .m1 postcascade 0
+    update
+    .m1.m2 postcascade 0
+    update
+    # The first cascade does not fit to the right, so it is posted to the
+    # left. The second one does not fit to the left of it, so it is posted
+    # to the right of it.
+    list [expr {[winfo rootx .m1.m2] + [winfo width .m1.m2] <= [winfo rootx .m1] + 10}] \
+	    [expr {[winfo rootx .m1.m2.m3] >= [winfo rootx .m1.m2] + [winfo width .m1.m2] - 10}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    rename menuWidth {}
+    unset -nocomplain sw
+} -result {1 1}
+test menuDraw-17.8 {AdjustMenuCoords - cascade from a later column flips left} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "First column"
+    .m1 add cascade -label "Second" -menu .m1.m2 -columnbreak 1
+    menu .m1.m2 -tearoff 0
+    .m1.m2 add command -label "A rather long cascade entry"
+} -body {
+    .m1 post [expr {[winfo screenwidth .m1] - [winfo reqwidth .m1]}] 100
+    update
+    .m1 postcascade 1
+    update
+    # The cascade does not fit to the right, so it is posted to the left of
+    # its column, over the first column, not to the left of the whole menu.
+    set column [expr {[winfo rootx .m1] + [.m1 xposition 1]}]
+    set right [expr {[winfo rootx .m1.m2] + [winfo width .m1.m2]}]
+    list [expr {$right <= $column + 10}] [expr {$right > [winfo rootx .m1] + 10}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain column right
+} -result {1 1}
 
 #
 # TESTFILE CLEANUP
