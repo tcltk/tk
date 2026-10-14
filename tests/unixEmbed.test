@@ -1054,8 +1054,7 @@ test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
     deleteWindows
     # Without a window manager the focus follows the pointer, so the pointer
     # must not be over the embedded window.
-    event generate . <Motion> -warp 1 -x 2000 -y 2000
-    controlPointerWarpTiming
+    movePointerAwayFromTestArea
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -width 200 -height 50
