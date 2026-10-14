@@ -36,6 +36,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 #include <tcl.h>
+#include <wayland-client.h>
 
 #define NANOVG_GLES3 1
 #include "nanovg_gl.h"
@@ -55,6 +56,63 @@ static int pixmapTableInitialized = 0;
  * TkDisplay, aScreen, and a Visual.  GLFW is initialized here so that the primary
  * monitor dimensions can be queried immediately.
  */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CompositorHasSeat --
+ *
+ *  Check that the compositor offers a wl_seat.  GLFW crashes in
+ *  glfwInit() without one (e.g. with Weston --backend=headless), so
+ *  TkpOpenDisplay fails instead of calling it.
+ *
+ * Results:
+ *  1 if the compositor can be connected to and offers a seat, else 0.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RegistryGlobal(
+    void *data,
+    TCL_UNUSED(struct wl_registry *),
+    TCL_UNUSED(uint32_t),	/* name */
+    const char *interface,
+    TCL_UNUSED(uint32_t))	/* version */
+{
+    if (strcmp(interface, "wl_seat") == 0) {
+	*(int *)data = 1;
+    }
+}
+
+static void
+RegistryGlobalRemove(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(struct wl_registry *),
+    TCL_UNUSED(uint32_t))	/* name */
+{
+}
+
+static int
+CompositorHasSeat(void)
+{
+    static const struct wl_registry_listener listener = {
+	RegistryGlobal, RegistryGlobalRemove
+    };
+    struct wl_display *wlDisplay = wl_display_connect(NULL);
+    struct wl_registry *registry;
+    int hasSeat = 0;
+
+    if (wlDisplay == NULL) {
+	return 0;
+    }
+    registry = wl_display_get_registry(wlDisplay);
+    wl_registry_add_listener(registry, &listener, &hasSeat);
+    wl_display_roundtrip(wlDisplay);
+    wl_registry_destroy(registry);
+    wl_display_disconnect(wlDisplay);
+    return hasSeat;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -115,7 +173,7 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     bzero(visual, sizeof(Visual));
 
     /* Initialize GLFW (Wayland support). */
-    if (!glfwInit()) {
+    if (!CompositorHasSeat() || !glfwInit()) {
         Tcl_Free(visual);
         Tcl_Free(screen);
         Tcl_Free(display);
