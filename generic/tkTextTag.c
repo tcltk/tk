@@ -1894,6 +1894,9 @@ TkTextCreateTag(
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
     tagPtr->elide = -1;
+    tagPtr->indentBg = -1;
+    tagPtr->overstrike = -1;
+    tagPtr->underline = -1;
     tagPtr->justify = TK_TEXT_JUSTIFY_NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
