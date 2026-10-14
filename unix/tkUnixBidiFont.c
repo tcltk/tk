@@ -2110,7 +2110,6 @@ X11Shaper_ShapeString(
 			    subrunEnd++;
 			    continue;
 			}
-			FcChar32 nc = ucs4Chars[subrunEnd];
 
 			/*
 			 * Variation selectors, ZWJ, keycap, tag characters and
