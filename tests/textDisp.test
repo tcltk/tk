@@ -5988,6 +5988,357 @@ test textDisp-45.1 {layout of the text in a window which has not been mapped use
     destroy .top
 } -result 5
 
+# Right-to-left text. The font systems of aqua, win32 and of x11 with bidi
+# draw a right-to-left run from right to left: the positions given to the
+# characters (bbox, @x,y, the selection) must follow the drawing.
+testConstraint bidiLayout [expr {![::tk::build-info no-bidi]}]
+# Two Hebrew words, and a line with a number between them.
+set textDispHebrew [format %c%c%c%c%c%c%c%c%c 0x5E9 0x5DC 0x5D5 0x5DD 0x20 0x5E2 0x5D5 0x5DC 0x5DD]
+set textDispHebrewNum [format %c%c%c%c%s%c%c%c%c 0x5E9 0x5DC 0x5D5 0x5DD " 123 " 0x5E2 0x5D5 0x5DC 0x5DD]
+
+# The x coordinates of the characters first .. last-1 of a line.
+proc textDispCharXs {w line first last} {
+    set xs {}
+    for {set i $first} {$i < $last} {incr i} {
+	lappend xs [lindex [$w bbox $line.$i] 0]
+    }
+    return $xs
+}
+# 1 if the list is strictly increasing, -1 if strictly decreasing, else 0.
+proc textDispOrder {xs} {
+    set inc 1
+    set dec -1
+    foreach a [lrange $xs 0 end-1] b [lrange $xs 1 end] {
+	if {$b <= $a} {set inc 0}
+	if {$b >= $a} {set dec 0}
+    }
+    return [expr {$inc ? $inc : $dec}]
+}
+# The characters which are not found at the centre of their own bbox.
+proc textDispRoundTrip {w line first last} {
+    set bad {}
+    for {set i $first} {$i < $last} {incr i} {
+	lassign [$w bbox $line.$i] x y wd ht
+	if {[$w index @[expr {$x + $wd / 2}],[expr {$y + $ht / 2}]] ne "$line.$i"} {
+	    lappend bad $i
+	}
+    }
+    return $bad
+}
+
+test textDisp-46.1 {right-to-left line: the characters are placed from right to left} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end $textDispHebrew
+    update
+    textDispOrder [textDispCharXs .t1 1 0 9]
+} -cleanup {
+    destroy .t1
+} -result -1
+test textDisp-46.2 {right-to-left line: the positions do not change when the selection splits the line} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end $textDispHebrew
+    update
+    set res [list [textDispOrder [set xs [textDispCharXs .t1 1 0 9]]]]
+    .t1 tag add sel 1.2 1.6
+    update
+    lappend res [expr {[textDispCharXs .t1 1 0 9] eq $xs}] [textDispRoundTrip .t1 1 0 9]
+} -cleanup {
+    destroy .t1
+} -result {-1 1 {}}
+test textDisp-46.3 {right-to-left line: the first character is at the right end of the line} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end $textDispHebrew
+    .t1 tag add sel 1.2 1.6
+    update
+    # The extent of the characters, whatever their order.
+    set left 100000
+    set right 0
+    for {set i 0} {$i < 9} {incr i} {
+	lassign [.t1 bbox 1.$i] x y w h
+	set left [expr {min($left, $x)}]
+	set right [expr {max($right, $x + $w)}]
+    }
+    set y [expr {$y + $h / 2}]
+    list [.t1 index @[expr {$right - 2}],$y] [.t1 index @[expr {$left + 1}],$y]
+} -cleanup {
+    destroy .t1
+} -result {1.0 1.8}
+test textDisp-46.4 {mixed line: a right-to-left run between left-to-right words} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 40 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "abc $textDispHebrew def"
+    update
+    set xs [textDispCharXs .t1 1 0 17]
+    set heb [lrange $xs 4 12]
+    list [textDispOrder [lrange $xs 0 2]] [textDispOrder $heb] \
+	[textDispOrder [lrange $xs 14 16]] \
+	[expr {[lindex $xs 2] < [tcl::mathfunc::min {*}$heb]}] \
+	[expr {[tcl::mathfunc::max {*}$heb] < [lindex $xs 14]}]
+} -cleanup {
+    destroy .t1
+} -result {1 -1 1 1 1}
+test textDisp-46.5 {mixed line: the positions do not change when the selection splits the right-to-left run} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 40 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "abc $textDispHebrew def"
+    update
+    set xs [textDispCharXs .t1 1 0 17]
+    .t1 tag add sel 1.6 1.10
+    update
+    list [textDispOrder [lrange $xs 4 12]] [expr {[textDispCharXs .t1 1 0 17] eq $xs}] \
+	[textDispRoundTrip .t1 1 0 17]
+} -cleanup {
+    destroy .t1
+} -result {-1 1 {}}
+test textDisp-46.6 {right-to-left line: a number between two words is drawn left to right} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end $textDispHebrewNum
+    update
+    set xs [textDispCharXs .t1 1 0 13]
+    set w1 [lrange $xs 0 3]
+    set num [lrange $xs 5 7]
+    set w2 [lrange $xs 9 12]
+    list [textDispOrder $w1] [textDispOrder $num] [textDispOrder $w2] \
+	[expr {[tcl::mathfunc::max {*}$w2] < [tcl::mathfunc::min {*}$num]}] \
+	[expr {[tcl::mathfunc::max {*}$num] < [tcl::mathfunc::min {*}$w1]}]
+} -cleanup {
+    destroy .t1
+} -result {-1 1 -1 1 1}
+
+test textDisp-46.7 {right-to-left line: beside the text, the end of the line is on the left} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end $textDispHebrew
+    update
+    .t1 tag remove tk_rtl_right 1.0 end
+    .t1 tag configure right -justify right
+    .t1 tag add right 1.0 end
+    update
+    # The extent of the characters, the line being right-justified.
+    lassign [.t1 bbox 1.0] x y w h
+    set left [tcl::mathfunc::min {*}[textDispCharXs .t1 1 0 9]]
+    set y [expr {$y + $h / 2}]
+    set res [list [.t1 index @[expr {$left - 5}],$y]]
+    .t1 tag remove right 1.0 end
+    update
+    lassign [.t1 bbox 1.0] x y w h
+    lappend res [.t1 index @[expr {$x + $w + 5}],$y]
+} -cleanup {
+    destroy .t1
+} -result {1.9 1.0}
+test textDisp-46.8 {right-to-left line: the end of the line is left of the characters} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end $textDispHebrew
+    update
+    expr {[lindex [.t1 bbox 1.9] 0] <= [tcl::mathfunc::min {*}[textDispCharXs .t1 1 0 9]]}
+} -cleanup {
+    destroy .t1
+} -result 1
+
+test textDisp-46.9 {right-to-left line: a word in another font keeps its place in the line} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    .t1 tag configure B -font {TkDefaultFont 13 bold}
+    pack .t1
+} -body {
+    # Three words, the second one bold: drawn right to left.
+    .t1 insert end [string range $textDispHebrew 0 4] {} \
+	[string range $textDispHebrew 5 8] B " [string range $textDispHebrew 0 3]"
+    update
+    set w1 [textDispCharXs .t1 1 0 4]
+    set w2 [textDispCharXs .t1 1 5 9]
+    set w3 [textDispCharXs .t1 1 10 14]
+    list [textDispOrder $w1] [textDispOrder $w2] [textDispOrder $w3] \
+	[expr {[tcl::mathfunc::max {*}$w3] < [tcl::mathfunc::min {*}$w2]}] \
+	[expr {[tcl::mathfunc::max {*}$w2] < [tcl::mathfunc::min {*}$w1]}]
+} -cleanup {
+    destroy .t1
+} -result {-1 -1 -1 1 1}
+test textDisp-46.10 {mixed line: a right-to-left run with a word in another font} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 40 -height 3 -wrap none
+    .t1 tag configure B -font {TkDefaultFont 13 bold}
+    pack .t1
+} -body {
+    .t1 insert end "abc [string range $textDispHebrew 0 4]" {} \
+	[string range $textDispHebrew 5 8] B " def"
+    update
+    set abc [textDispCharXs .t1 1 0 3]
+    set w1 [textDispCharXs .t1 1 4 8]
+    set w2 [textDispCharXs .t1 1 9 13]
+    set def [textDispCharXs .t1 1 14 17]
+    list [textDispOrder $w1] [textDispOrder $w2] \
+	[expr {[tcl::mathfunc::max {*}$abc] < [tcl::mathfunc::min {*}$w2]}] \
+	[expr {[tcl::mathfunc::max {*}$w2] < [tcl::mathfunc::min {*}$w1]}] \
+	[expr {[tcl::mathfunc::max {*}$w1] < [tcl::mathfunc::min {*}$def]}]
+} -cleanup {
+    destroy .t1
+} -result {-1 -1 1 1 1}
+test textDisp-46.11 {right-to-left line: an embedded window between two words} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "[string range $textDispHebrew 0 4]"
+    .t1 window create end -window [frame .t1.f -width 10 -height 10]
+    .t1 insert end " [string range $textDispHebrew 5 8]"
+    update
+    set w1 [textDispCharXs .t1 1 0 4]
+    set w2 [textDispCharXs .t1 1 7 11]
+    set fx [lindex [.t1 bbox 1.5] 0]
+    list [expr {[tcl::mathfunc::max {*}$w2] < $fx}] [expr {$fx < [tcl::mathfunc::min {*}$w1]}] \
+	[expr {[winfo x .t1.f] == $fx}]
+} -cleanup {
+    destroy .t1
+} -result {1 1 1}
+test textDisp-46.12 {right-to-left line with a word in another font: the characters under the pointer} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 30 -height 3 -wrap none
+    .t1 tag configure B -font {TkDefaultFont 13 bold}
+    pack .t1
+} -body {
+    .t1 insert end [string range $textDispHebrew 0 4] {} \
+	[string range $textDispHebrew 5 8] B " [string range $textDispHebrew 0 3]"
+    update
+    set xs [textDispCharXs .t1 1 0 14]
+    set res [list [textDispRoundTrip .t1 1 0 14]]
+    .t1 tag add sel 1.2 1.7
+    update
+    lappend res [expr {[textDispCharXs .t1 1 0 14] eq $xs}] [textDispRoundTrip .t1 1 0 14]
+} -cleanup {
+    destroy .t1
+} -result {{} 1 {}}
+
+test textDisp-46.13 {right-to-left paragraph wrapped on several display lines} -constraints {
+    bidiLayout
+} -setup {
+    text .t1 -font TkDefaultFont -width 12 -height 6 -wrap word
+    pack .t1
+} -body {
+    # Each display line is placed right to left, the space where the line
+    # wraps on its left side.
+    .t1 insert end "$textDispHebrew $textDispHebrew $textDispHebrew"
+    update
+    # The x of the letters, by display line.
+    set textDispRows {}
+    for {set i 0} {$i < 29} {incr i} {
+	if {[.t1 get 1.$i] ne " "} {
+	    lassign [.t1 bbox 1.$i] x y
+	    dict lappend textDispRows $y $x
+	}
+    }
+    set res [list [expr {[dict size $textDispRows] > 1}]]
+    dict for {y xs} $textDispRows {
+	lappend res [textDispOrder $xs]
+    }
+    list [lsort -unique $res] [textDispRoundTrip .t1 1 0 29]
+} -cleanup {
+    destroy .t1
+    unset -nocomplain textDispRows
+} -result {{-1 1} {}}
+
+test textDisp-46.14 {right-to-left line: the words are drawn at the place of their characters} -constraints {
+    bidiLayout testpixel
+} -setup {
+    text .t1 -font {TkDefaultFont 20} -width 30 -height 2 -wrap none -background white \
+	-borderwidth 0 -highlightthickness 0 -padx 0 -insertwidth 0
+    pack .t1
+} -body {
+    # The space ending the first word is drawn on its left, the font system
+    # may draw it outside of the word. No ink in the boxes of the two spaces.
+    .t1 insert end $textDispHebrewNum
+    update
+    set res {}
+    foreach i {4 8 0} {
+	lassign [.t1 bbox 1.$i] x y w h
+	set n 0
+	for {set xx [expr {$x + 1}]} {$xx < $x + $w - 1} {incr xx} {
+	    for {set yy $y} {$yy < $y + $h} {incr yy 2} {
+		if {[testpixel .t1 $xx $yy] ne "#ffffff"} {
+		    incr n
+		}
+	    }
+	}
+	lappend res [expr {$n > 0}]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {0 0 1}
+test textDisp-46.15 {right-to-left line: an underlined word} -constraints {
+    bidiLayout testpixel
+} -setup {
+    # White glyphs: only the black underline is seen.
+    text .t1 -font {TkDefaultFont 20} -width 30 -height 2 -wrap none -background white \
+	-foreground white -borderwidth 0 -highlightthickness 0 -padx 0 -insertwidth 0
+    .t1 tag configure ul -underline 1 -underlinecolor black
+    pack .t1
+} -body {
+    .t1 insert end [string range $textDispHebrew 0 3] ul [string range $textDispHebrew 4 end]
+    update
+    lassign [.t1 dlineinfo 1.0] dx dy dw dh base
+    set res {}
+    foreach {first last} {0 4 5 9} {
+	set left 100000
+	set right 0
+	for {set i $first} {$i < $last} {incr i} {
+	    lassign [.t1 bbox 1.$i] x y w h
+	    set left [expr {min($left, $x)}]
+	    set right [expr {max($right, $x + $w)}]
+	}
+	set n 0
+	for {set yy [expr {$dy + $base}]} {$yy < $dy + $dh} {incr yy} {
+	    for {set xx $left} {$xx < $right} {incr xx} {
+		if {[testpixel .t1 $xx $yy] eq "#000000"} {
+		    incr n
+		}
+	    }
+	}
+	lappend res [expr {$n > 0}]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1 0}
+
+rename textDispCharXs {}
+rename textDispOrder {}
+rename textDispRoundTrip {}
+unset textDispHebrew textDispHebrewNum
+
 # The chunks of a stretch share the string of the base chunk, which the next
 # chunks may reallocate. Without the fix, these tests read freed memory: ASan
 # (with a Tcl using the system malloc) reports it, and TCL_MEM_DEBUG, which

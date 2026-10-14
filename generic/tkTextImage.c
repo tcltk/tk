@@ -1099,7 +1099,7 @@ EmbImageDisplayProc(
 		&imageY, &width, &height);
 
 	if (x + chunkPtr->width > 0) {
-	    int imageX = lineX - chunkPtr->x + x;
+	    int imageX = lineX - TkTextChunkX(chunkPtr) + x;
 	    Tk_RedrawImage(image, 0, 0, width, height, dst, imageX, imageY);
 	}
     }
@@ -1162,7 +1162,7 @@ EmbImageBboxProc(
     if (img->padXObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, img->padYObj, &padY);
     }
-    *xPtr = chunkPtr->x + padX;
+    *xPtr = TkTextChunkX(chunkPtr) + padX;
 
     switch (img->align) {
     case ALIGN_BOTTOM:

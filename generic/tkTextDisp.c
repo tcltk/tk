@@ -459,6 +459,14 @@ typedef struct TextDInfo {
 				/* A token pointing to the current scrollbar update callback. */
     Tcl_TimerToken repickTimer;
 				/* A token pointing to the current repick callback. */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    TkTextLine *bidiLinePtr;	/* Logical line of bidiLevels, see GetBidiLevels. */
+    Tcl_Size bidiEpoch;		/* Epoch of the tree when bidiLevels was computed. */
+    unsigned char *bidiLevels;	/* Bidi level of each byte of the line, NULL if it has no
+				 * right-to-left text. */
+    Tcl_Size bidiNumBytes;	/* Number of bytes in bidiLevels. */
+    int bidiParagraphLevel;	/* Level of the paragraph, odd if right-to-left. */
+#endif
 } TextDInfo;
 
 typedef struct TkTextDispChunkSection {
@@ -579,6 +587,16 @@ typedef struct LayoutData {
 
     TkTextDispChunk *baseChunkPtr;
 				/* The chunk which contains the actual context data. */
+
+    /*
+     * Bidi levels of the logical line (NULL without right-to-left text), see
+     * LayoutBidiReorder.
+     */
+
+    const unsigned char *bidiLevels;
+    Tcl_Size bidiNumBytes;
+    int bidiParagraphLevel;
+    Tcl_Size lineByteOffset;	/* Offset of the display line in the logical line. */
 #endif
 } LayoutData;
 
@@ -799,7 +817,17 @@ static CharInfo *	AllocCharInfo(TkText *textPtr);
 static void		FreeCharInfo(TkText *textPtr, CharInfo *ciPtr);
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 static bool		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
+static bool		HasRtlChars(const char *chars, Tcl_Size numBytes);
+static const unsigned char *GetBidiLevels(TkText *textPtr, TkTextLine *linePtr,
+			    Tcl_Size *numBytesPtr, int *paragraphLevelPtr);
+static bool		IsBlankChunk(const TkTextDispChunk *chunkPtr);
+static void		LayoutBidiReorder(LayoutData *data, DLine *dlPtr);
+static void		DisplayReorderedLineBackground(TkText *textPtr, DLine *dlPtr,
+			    Pixmap pixmap);
+static void		BaseChunkSpan(const TkTextDispChunk *chunkPtr, int *leftPtr, int *rightPtr);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+static int		ChunkSpanX(const TkTextDispChunk *chunkPtr, int offset, int width);
+static int		GetCursorX(TkText *textPtr, TkTextDispChunk *cursorPtr);
 
 static const TkTextDispChunkProcs layoutCharProcs = {
     TEXT_DISP_CHAR,		/* type */
@@ -1836,6 +1864,11 @@ TkTextFreeDInfo(
     TkRangeListDestroy(&dInfoPtr->lineMetricUpdateRanges);
     TkBTreeFreeSegment(dInfoPtr->endOfLineSegPtr);
     TkBTreeFreeSegment(dInfoPtr->endOfTextSegPtr);
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (dInfoPtr->bidiLevels) {
+	Tcl_Free(dInfoPtr->bidiLevels);
+    }
+#endif
     Tcl_Free(dInfoPtr->strBuffer);
     Tcl_Free(dInfoPtr);
 }
@@ -2382,6 +2415,352 @@ IsSameFGStyle(
     return sv1->tkfont == sv2->tkfont && sv1->offset == sv2->offset;
 }
 
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+/*
+ *----------------------------------------------------------------------
+ *
+ * HasRtlChars --
+ *
+ *	Tell whether a string holds a character of a right-to-left script, or
+ *	a right-to-left mark, embedding, override or isolate.
+ *
+ * Results:
+ *	True if it does: its display order may differ from its logical order.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+HasRtlChars(
+    const char *chars,
+    Tcl_Size numBytes)
+{
+    const char *p = chars, *end = chars + numBytes;
+
+    while (p < end) {
+	int ch;
+
+	if (UCHAR(*p) < 0xC0) {
+	    p++;			/* ASCII, or a trailing byte. */
+	    continue;
+	}
+	if (!Tcl_UtfCharComplete(p, end - p)) {
+	    break;
+	}
+	p += Tcl_UtfToUniChar(p, &ch);
+	if ((ch >= 0x0590 && ch <= 0x08FF) || ch == 0x200F || ch == 0x202B || ch == 0x202E
+		|| ch == 0x2067 || (ch >= 0xFB1D && ch <= 0xFDFF) || (ch >= 0xFE70 && ch <= 0xFEFE)
+		|| (ch >= 0x10800 && ch <= 0x10FFF) || (ch >= 0x1E800 && ch <= 0x1EFFF)) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetBidiLevels --
+ *
+ *	Give the bidi embedding level (UAX #9) of each byte of a logical
+ *	line; an embedded image or window counts as a neutral character. The
+ *	levels of the last line asked for are kept in the display information.
+ *
+ * Results:
+ *	NULL if the line holds no right-to-left text, else the levels, valid
+ *	until the next call. *paragraphLevelPtr is odd for a right-to-left
+ *	paragraph.
+ *
+ * Side effects:
+ *	Memory is allocated, freed by the next call or with the widget.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static const unsigned char *
+GetBidiLevels(
+    TkText *textPtr,
+    TkTextLine *linePtr,
+    Tcl_Size *numBytesPtr,
+    int *paragraphLevelPtr)
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    Tcl_Size epoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+
+    if (dInfoPtr->bidiLinePtr != linePtr || dInfoPtr->bidiEpoch != epoch) {
+	const TkTextSegment *segPtr;
+	Tcl_DString chars;
+	bool hasRtl = false;
+
+	if (dInfoPtr->bidiLevels) {
+	    Tcl_Free(dInfoPtr->bidiLevels);
+	    dInfoPtr->bidiLevels = NULL;
+	}
+	dInfoPtr->bidiLinePtr = linePtr;
+	dInfoPtr->bidiEpoch = epoch;
+	dInfoPtr->bidiNumBytes = 0;
+	dInfoPtr->bidiParagraphLevel = 0;
+
+	Tcl_DStringInit(&chars);
+	for (segPtr = linePtr->segPtr; segPtr; segPtr = segPtr->nextPtr) {
+	    if (segPtr->size <= 0) {
+		continue;
+	    }
+	    if (segPtr->typePtr == &tkTextCharType) {
+		Tcl_DStringAppend(&chars, segPtr->body.chars, segPtr->size);
+		hasRtl = hasRtl || HasRtlChars(segPtr->body.chars, segPtr->size);
+	    } else {
+		Tcl_Size i;
+
+		for (i = 0; i < segPtr->size; i++) {
+		    Tcl_DStringAppend(&chars, "!", 1);	/* A neutral, as U+FFFC. */
+		}
+	    }
+	}
+	if (hasRtl) {
+	    dInfoPtr->bidiLevels = mojibake_bidi_levels(Tcl_DStringValue(&chars),
+		    Tcl_DStringLength(&chars), &dInfoPtr->bidiParagraphLevel);
+	    dInfoPtr->bidiNumBytes = Tcl_DStringLength(&chars);
+	}
+	Tcl_DStringFree(&chars);
+    }
+    *numBytesPtr = dInfoPtr->bidiNumBytes;
+    *paragraphLevelPtr = dInfoPtr->bidiParagraphLevel;
+    return dInfoPtr->bidiLevels;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsBlankChunk --
+ *
+ *	Tell whether a char chunk holds only spaces or tabs.
+ *
+ * Results:
+ *	True for such a chunk.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsBlankChunk(
+    const TkTextDispChunk *chunkPtr)
+{
+    const CharInfo *ciPtr = (const CharInfo *)chunkPtr->clientData;
+    const char *p, *end;
+
+    if (!IsCharChunk(chunkPtr) || !ciPtr) {
+	return false;
+    }
+    p = GetBaseChars(chunkPtr) + ciPtr->baseOffset;
+    for (end = p + ciPtr->numBytes; p < end; p++) {
+	if (*p != ' ' && *p != '\t') {
+	    return false;
+	}
+    }
+    return true;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LayoutBidiReorder --
+ *
+ *	Place the chunks of a display line in display order (UAX #9 rule L2).
+ *	The layout gives each chunk characters of a single level, and its x
+ *	in logical order; here each chunk gets its visualX, chunks of a level
+ *	run being reversed for each level from the highest level down to the
+ *	lowest odd level. The characters of a right-to-left chunk are mirrored
+ *	inside it (see ChunkSpanX).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets visualX and bidiLevel of the chunks, reordered and rtlParagraph of
+ *	the line.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+LayoutBidiReorder(
+    LayoutData *data,
+    DLine *dlPtr)
+{
+    TkTextDispChunk *chunkPtr, **chunks;
+    unsigned char *levels;
+    unsigned char minLevel = 255, maxLevel = 0;
+    unsigned n, i, j, k, a, b;
+    int x;
+
+    dlPtr->reordered = false;
+    dlPtr->rtlParagraph = false;
+    if (!data->bidiLevels || !dlPtr->chunkPtr) {
+	return;
+    }
+    dlPtr->reordered = true;
+    dlPtr->rtlParagraph = (data->bidiParagraphLevel & 1) != 0;
+
+    for (n = 0, chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+	n++;
+    }
+    chunks = (TkTextDispChunk **)Tcl_Alloc(n * (sizeof(TkTextDispChunk *) + 1));
+    levels = (unsigned char *) (chunks + n);
+
+    for (i = 0, chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr, i++) {
+	Tcl_Size byte = data->lineByteOffset + chunkPtr->byteOffset;
+
+	if (chunkPtr->numBytes == 0) {
+	    /* The insert cursor, an empty chunk: it keeps by the chunk before it. */
+	    chunkPtr->bidiLevel = i > 0 ? levels[i - 1] : data->bidiParagraphLevel;
+	} else {
+	    chunkPtr->bidiLevel = byte < data->bidiNumBytes
+		    ? data->bidiLevels[byte] : data->bidiParagraphLevel;
+	}
+	chunks[i] = chunkPtr;
+	levels[i] = chunkPtr->bidiLevel;
+    }
+
+    /*
+     * Rule L1: the white space at the end of the line gets the level of the
+     * paragraph (mojibake has applied it to the end of the logical line).
+     */
+
+    for (i = n; i-- > 0 && (chunks[i]->width == 0 || IsBlankChunk(chunks[i])); ) {
+	chunks[i]->bidiLevel = levels[i] = data->bidiParagraphLevel;
+    }
+
+    for (i = 0; i < n; i++) {
+	minLevel = MIN(minLevel, levels[i]);
+	maxLevel = MAX(maxLevel, levels[i]);
+    }
+
+    /*
+     * Rule L2.
+     */
+
+    for (k = maxLevel; k >= (unsigned) (minLevel | 1); k--) {
+	for (i = 0; i < n; i = j) {
+	    if (levels[i] < k) {
+		j = i + 1;
+		continue;
+	    }
+	    for (j = i; j < n && levels[j] >= k; j++) {
+		/* Empty body. */
+	    }
+	    for (a = i, b = j - 1; a < b; a++, b--) {
+		TkTextDispChunk *c = chunks[a];
+		unsigned char l = levels[a];
+
+		chunks[a] = chunks[b];
+		chunks[b] = c;
+		levels[a] = levels[b];
+		levels[b] = l;
+	    }
+	}
+    }
+
+    /*
+     * The space after a chunk (up to a tab stop) moves with it.
+     */
+
+    x = dlPtr->chunkPtr->x;
+    for (i = 0; i < n; i++) {
+	chunkPtr = chunks[i];
+	chunkPtr->visualX = x;
+	x += chunkPtr->nextPtr ? chunkPtr->nextPtr->x - chunkPtr->x : chunkPtr->width;
+    }
+    Tcl_Free(chunks);
+}
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ChunkSpanX --
+ *
+ *	Give the x of a span of a chunk as displayed, the span being measured
+ *	in logical order from the start of the chunk: in a reordered line, the
+ *	chunk lies at its visualX, and a right-to-left chunk is mirrored.
+ *
+ * Results:
+ *	The x of the left side of the span, as the x of the chunks.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ChunkSpanX(
+    const TkTextDispChunk *chunkPtr,
+    int offset,			/* Offset of the span from the start of the chunk. */
+    int width)			/* Width of the span. */
+{
+    if (chunkPtr->dlPtr && chunkPtr->dlPtr->reordered) {
+	if (chunkPtr->bidiLevel & 1) {
+	    return chunkPtr->visualX + chunkPtr->width - offset - width;
+	}
+	return chunkPtr->visualX + offset;
+    }
+    return chunkPtr->x + offset;
+}
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+/*
+ *----------------------------------------------------------------------
+ *
+ * BaseChunkSpan --
+ *
+ *	Give the left and right x of the stretch of a char chunk as displayed.
+ *
+ * Results:
+ *	None. In a line not reordered, only *leftPtr is set: the x of the
+ *	base chunk.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+BaseChunkSpan(
+    const TkTextDispChunk *chunkPtr,
+    int *leftPtr,
+    int *rightPtr)
+{
+    const TkTextDispChunk *baseChunkPtr = chunkPtr->baseChunkPtr;
+    const TkTextDispChunk *cPtr;
+
+    *leftPtr = baseChunkPtr->x;
+    if (!chunkPtr->dlPtr->reordered) {
+	return;
+    }
+    *leftPtr = baseChunkPtr->visualX;
+    *rightPtr = baseChunkPtr->visualX + baseChunkPtr->width;
+    for (cPtr = baseChunkPtr->nextPtr; cPtr; cPtr = cPtr->nextPtr) {
+	if (IsCharChunk(cPtr)) {
+	    if (cPtr->baseChunkPtr != baseChunkPtr) {
+		break;
+	    }
+	    *leftPtr = MIN(*leftPtr, cPtr->visualX);
+	    *rightPtr = MAX(*rightPtr, cPtr->visualX + cPtr->width);
+	} else if (cPtr->numBytes > 0 || cPtr->width > 0) {
+	    break;
+	}
+    }
+}
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 /*
@@ -2940,7 +3319,8 @@ LayoutMakeCharInfo(
 
     if (data->baseChunkPtr
 	    && (!IsSameFGStyle(data->baseChunkPtr->stylePtr, data->chunkPtr->stylePtr)
-		|| (data->lastCharChunkPtr && data->lastCharChunkPtr->numSpaces > 0))) {
+		|| (data->lastCharChunkPtr && data->lastCharChunkPtr->numSpaces > 0)
+		|| data->baseChunkPtr->bidiLevel != data->chunkPtr->bidiLevel)) {
 	data->baseChunkPtr = NULL;
     }
 
@@ -3560,6 +3940,29 @@ LayoutChars(
 	    }
 	}
     }
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (data->bidiLevels && !chunkPtr->endOfLineSymbol && segPtr->sectionPtr) {
+	/*
+	 * A chunk holds characters of a single bidi level, see LayoutBidiReorder.
+	 */
+
+	Tcl_Size i = data->lineByteOffset + chunkPtr->byteOffset + chunkPtr->skipFirstChar;
+
+	if (i < data->bidiNumBytes) {
+	    Tcl_Size j, end = MIN(i + (Tcl_Size) maxBytes, data->bidiNumBytes);
+
+	    chunkPtr->bidiLevel = data->bidiLevels[i];
+	    for (j = i + 1; j < end && data->bidiLevels[j] == chunkPtr->bidiLevel; j++) {
+		/* Empty body. */
+	    }
+	    if (j < end) {
+		maxBytes = j - i;
+		gotTab = 0;
+	    }
+	}
+    }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (maxBytes == 0) {
 	/*
@@ -4577,6 +4980,14 @@ LayoutDLine(
 	}
     }
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (data.logicalLinePtr == TkTextIndexGetLine(&dlPtr->index)) {
+	/* A logical line joined by elided newlines is laid out in logical order. */
+	data.bidiLevels = GetBidiLevels(textPtr, data.logicalLinePtr, &data.bidiNumBytes,
+		&data.bidiParagraphLevel);
+	data.lineByteOffset = TkTextIndexGetByteIndex(&dlPtr->index);
+    }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
     endOfLogicalLine = LayoutLogicalLine(&data, dlPtr);
     assert(data.numBytesSoFar > 0);
 
@@ -4702,6 +5113,10 @@ LayoutDLine(
 	    dlPtr->flags |= HAS_3D_BORDER;
 	}
     }
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    LayoutBidiReorder(&data, dlPtr);
+#endif
 
     leading = ascent + descent;
 
@@ -6327,6 +6742,57 @@ FreeDLines(
 /*
  *----------------------------------------------------------------------
  *
+ * GetCursorX --
+ *
+ *	Give the x of the insert cursor. In a reordered line it lies by the
+ *	character after it: on its right side if it is right-to-left (a block
+ *	cursor covers it); at the end of the line, left of a right-to-left
+ *	paragraph.
+ *
+ * Results:
+ *	The x, as the x of the chunks.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GetCursorX(
+    TkText *textPtr,		/* Text widget. */
+    TkTextDispChunk *cursorPtr)	/* The insert cursor chunk. */
+{
+    const DLine *dlPtr = cursorPtr->dlPtr;
+    TkTextDispChunk *cPtr;
+
+    if (!dlPtr || !dlPtr->reordered) {
+	return cursorPtr->x;
+    }
+    for (cPtr = cursorPtr->nextPtr; cPtr && cPtr->width == 0; cPtr = cPtr->nextPtr) {
+	/* Empty body. */
+    }
+    if (cPtr) {
+	if (!(cPtr->bidiLevel & 1)) {
+	    return cPtr->visualX;
+	}
+	if (textPtr->blockCursorType && cPtr->layoutProcs->bboxProc) {
+	    int x, y, w, h;
+
+	    cPtr->layoutProcs->bboxProc(textPtr, cPtr, 0, 0, 0, 0, &x, &y, &w, &h);
+	    return x;
+	}
+	return cPtr->visualX + cPtr->width;
+    }
+    if (dlPtr->rtlParagraph) {
+	return dlPtr->chunkPtr->x - (textPtr->blockCursorType ? textPtr->charWidth : 0);
+    }
+    return cursorPtr->x;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * DisplayDLine --
  *
  *	This function is invoked to draw a single line on the screen.
@@ -6475,7 +6941,8 @@ DisplayDLine(
 
 	if (!delayBlockCursorDrawing) {
 	    dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, dlPtr->cursorChunkPtr,
-		    dlPtr->cursorChunkPtr->x + xOffs, yBase, height, baseline, display, pixmap, screenY);
+		    GetCursorX(textPtr, dlPtr->cursorChunkPtr) + xOffs, yBase, height, baseline,
+		    display, pixmap, screenY);
 	}
     }
 
@@ -6490,7 +6957,7 @@ DisplayDLine(
 	}
 
 	if (chunkPtr->layoutProcs->displayProc) {
-	    int x = chunkPtr->x + xOffs;
+	    int x = TkTextChunkX(chunkPtr) + xOffs;
 
 	    if (x + chunkPtr->width <= 0 || dInfoPtr->maxX <= x) {
 		/*
@@ -6542,7 +7009,7 @@ DisplayDLine(
 
 	assert(dInfoPtr->insertFgGC != NULL);
 
-	cxMin = dlPtr->cursorChunkPtr->x + xOffs;
+	cxMin = GetCursorX(textPtr, dlPtr->cursorChunkPtr) + xOffs;
 	cWidth = TkTextGetCursorWidth(textPtr, &cxMin, &cOffs);
 
 	if (cWidth > 0) {
@@ -6574,9 +7041,12 @@ DisplayDLine(
 	    XSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
 
 	    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
-		int x = chunkPtr->x + xOffs;
+		int x = TkTextChunkX(chunkPtr) + xOffs;
 
 		if (x >= cxMax) {
+		    if (dlPtr->reordered) {
+			continue;	/* The chunks are not in display order. */
+		    }
 		    break;
 		}
 		if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
@@ -6669,6 +7139,85 @@ SameBackground(
 	&& s1->sValuePtr->indentBg == s2->sValuePtr->indentBg;
 }
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+/*
+ *----------------------------------------------------------------------
+ *
+ * DisplayReorderedLineBackground --
+ *
+ *	Pass 1 of DisplayLineBackground for a reordered line: the background
+ *	of each chunk at its visualX. The leftmost and rightmost chunks take
+ *	the space up to the sides of the line (see Note A of
+ *	DisplayLineBackground). No horizontal bevels.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws in the pixmap.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DisplayReorderedLineBackground(
+    TkText *textPtr,		/* Text widget containing line. */
+    DLine *dlPtr,		/* Information about line to draw. */
+    Pixmap pixmap)		/* Pixmap to use for double-buffering. */
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    TkTextDispChunk *chunkPtr, *leftPtr = dlPtr->chunkPtr, *rightPtr = dlPtr->chunkPtr;
+    int minX = dInfoPtr->curXPixelOffset;
+    int xOffset = dInfoPtr->x - minX;
+    int maxX = minX + dInfoPtr->maxX - dInfoPtr->x;
+#ifndef TK_NO_DOUBLE_BUFFERING
+    const int y = 0;
+#else
+    const int y = dlPtr->y;
+#endif /* TK_NO_DOUBLE_BUFFERING */
+
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr->visualX < leftPtr->visualX) {
+	    leftPtr = chunkPtr;
+	}
+	if (chunkPtr->visualX + chunkPtr->width >= rightPtr->visualX + rightPtr->width) {
+	    rightPtr = chunkPtr;
+	}
+    }
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+	const StyleValues *sValuePtr = chunkPtr->stylePtr->sValuePtr;
+	int left = chunkPtr->visualX, right = left + chunkPtr->width;
+
+	if (!chunkPtr->stylePtr->bgGC) {
+	    continue;
+	}
+	if (chunkPtr == leftPtr) {
+	    left = 0;			/* See Note A of DisplayLineBackground. */
+	}
+	if (chunkPtr == rightPtr && right < maxX) {
+	    right = maxX;
+	}
+	if (right + xOffset <= 0 || right <= left) {
+	    continue;
+	}
+	if (left + xOffset < -sValuePtr->borderWidth) {
+	    left = -sValuePtr->borderWidth - xOffset;
+	}
+	XFillRectangle(Tk_Display(textPtr->tkwin), pixmap, chunkPtr->stylePtr->bgGC,
+		left + xOffset, y, right - left, dlPtr->height);
+	if (sValuePtr->relief != TK_RELIEF_FLAT) {
+	    int borderWidth = MIN(sValuePtr->borderWidth, right - left);
+
+	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
+		    left + xOffset, y, borderWidth, dlPtr->height, 1, sValuePtr->relief);
+	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
+		    right - borderWidth + xOffset, y, borderWidth, dlPtr->height, 0,
+		    sValuePtr->relief);
+	}
+    }
+}
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
 static void
 DisplayLineBackground(
     TkText *textPtr,		/* Text widget containing line. */
@@ -6702,6 +7251,13 @@ DisplayLineBackground(
 #else
     const int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (dlPtr->reordered) {
+	DisplayReorderedLineBackground(textPtr, dlPtr, pixmap);
+	return;
+    }
+#endif
 
     /*
      * Pass 1: scan through dlPtr from left to right. For each range of chunks
@@ -8271,7 +8827,7 @@ TkTextGetXPixelFromChunk(
     assert(chunkPtr);
 
     dInfoPtr = textPtr->dInfoPtr;
-    return chunkPtr->x + dInfoPtr->x + dInfoPtr->curXPixelOffset;
+    return TkTextChunkX(chunkPtr) + dInfoPtr->x + dInfoPtr->curXPixelOffset;
 }
 
 /*
@@ -9079,7 +9635,7 @@ DisplayText(
 		    if (chunkPtr->layoutProcs->type != TEXT_DISP_WINDOW) {
 			continue;
 		    }
-		    x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curXPixelOffset;
+		    x = TkTextChunkX(chunkPtr) + dInfoPtr->x - dInfoPtr->curXPixelOffset;
 		    if (x + chunkPtr->width <= 0 || x >= dInfoPtr->maxX) {
 			/*
 			 * Note: we have to call the displayProc even for
@@ -12302,7 +12858,8 @@ TkTextPixelIndex(
 	if (currDLinePtr->y <= y && y < currDLinePtr->y + currDLinePtr->height) {
 	    int rx = x - dInfoPtr->x + dInfoPtr->curXPixelOffset;
 
-	    if (currChunkPtr->x <= rx && rx < currChunkPtr->x + currChunkPtr->width) {
+	    if (TkTextChunkX(currChunkPtr) <= rx
+		    && rx < TkTextChunkX(currChunkPtr) + currChunkPtr->width) {
 		/*
 		 * We have luck, it's inside the cache.
 		 */
@@ -12468,6 +13025,31 @@ DLineChunkOfX(
 
     x -= dInfoPtr->x - dInfoPtr->curXPixelOffset;
 
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (dlPtr->reordered) {
+	/*
+	 * The chunk at x in display order; beside the line, its start or its
+	 * end, as the direction of the paragraph says (see CharMeasureProc).
+	 */
+
+	TkTextDispChunk *firstPtr = chunkPtr;
+
+	for ( ; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+	    if (chunkPtr->visualX <= x && x < chunkPtr->visualX + chunkPtr->width) {
+		break;
+	    }
+	}
+	if (!chunkPtr) {
+	    if (nearby) {
+		*nearby = 1;
+	    }
+	    chunkPtr = ((x < firstPtr->x) == dlPtr->rtlParagraph) ? dlPtr->lastChunkPtr : firstPtr;
+	}
+	TkrTextIndexForwBytes(textPtr, indexPtr, chunkPtr->byteOffset, indexPtr);
+	return chunkPtr;
+    }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
     if (x < chunkPtr->x) {
 	if (chunkPtr->stylePtr->sValuePtr->indentBg) {
 	    /* if -indentbackground is enabled, then do not trigger when hovering the margin */
@@ -12595,7 +13177,7 @@ DLineXOfIndex(
     TkTextDispChunk *chunkPtr;
     int x;
 
-    if (byteIndex == 0 || !(sectionPtr = dlPtr->chunkPtr->sectionPtr)) {
+    if ((byteIndex == 0 && !dlPtr->reordered) || !(sectionPtr = dlPtr->chunkPtr->sectionPtr)) {
 	return 0;
     }
 
@@ -12626,7 +13208,7 @@ DLineXOfIndex(
 	    break;
 	}
 	if (!chunkPtr->nextPtr || byteIndex == chunkPtr->numBytes) {
-	    x = chunkPtr->x + chunkPtr->width;
+	    x = ChunkSpanX(chunkPtr, chunkPtr->width, 0);
 	    break;
 	}
 	byteIndex -= chunkPtr->numBytes;
@@ -12722,7 +13304,20 @@ TkTextIndexBbox(
     } else {
 	*xPtr = *xPtr + dInfoPtr->x;
 
-	if (isLastCharInLine) {
+	if (isLastCharInLine && dlPtr->rtlParagraph) {
+	    /*
+	     * Last character in a right-to-left display line: all the space from
+	     * the start of the line.
+	     */
+
+	    int right = MAX(*xPtr + *widthPtr, dInfoPtr->x);
+
+	    if (charWidthPtr) {
+		*charWidthPtr = MIN(right - dInfoPtr->x, textPtr->charWidth);
+	    }
+	    *widthPtr = right - dInfoPtr->x;
+	    *xPtr = dInfoPtr->x;
+	} else if (isLastCharInLine) {
 	    /*
 	     * Last character in display line. Give it all the space up to the line.
 	     */
@@ -13176,7 +13771,7 @@ ElideBboxProc(
     int *widthPtr,		/* Gets filled in with width of character, in pixels. */
     int *heightPtr)		/* Gets filled in with height of character, in pixels. */
 {
-    *xPtr = chunkPtr->x;
+    *xPtr = TkTextChunkX(chunkPtr);
     *yPtr = y;
     *widthPtr = *heightPtr = 0;
 }
@@ -13218,6 +13813,20 @@ CharMeasureProc(
 {
     if (chunkPtr->endOfLineSymbol) {
 	return 0;
+    }
+    if (chunkPtr->dlPtr->reordered) {
+	const DLine *dlPtr = chunkPtr->dlPtr;
+	int left = dlPtr->chunkPtr->x;
+	int right = dlPtr->lastChunkPtr->x + dlPtr->lastChunkPtr->width;
+
+	if (x < left || x >= right) {
+	    /* Beside the line: its end is left of a right-to-left paragraph. */
+	    return ((x < left) == dlPtr->rtlParagraph) ? (Tcl_Size) chunkPtr->numBytes - 1 : 0;
+	}
+
+	/* Back to the logical order of the chunk. */
+	x = chunkPtr->x + ((chunkPtr->bidiLevel & 1)
+		? chunkPtr->visualX + chunkPtr->width - 1 - x : x - chunkPtr->visualX);
     }
     assert(chunkPtr->dlPtr->index.textPtr);
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes - 1, chunkPtr->x, x,
@@ -13319,6 +13928,7 @@ CharBboxProc(
 	}
     }
 
+    *xPtr = ChunkSpanX(chunkPtr, *xPtr - chunkPtr->x, *widthPtr);
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 }
@@ -15384,7 +15994,7 @@ DrawChars(
 	const CharInfo *ciPtr;
 	const TextStyle *stylePtr;
 	const StyleValues *sValuePtr;
-	int xDisplacement, start, len;
+	int xDisplacement, start, len, baseX, baseRight = 0;
 	GC fgGC;
 
 	string = Tcl_DStringValue(&baseChunkPtr->baseChars);
@@ -15401,8 +16011,35 @@ DrawChars(
 	stylePtr = chunkPtr->stylePtr;
 	sValuePtr = stylePtr->sValuePtr;
 	ciPtr = (const CharInfo *)chunkPtr->clientData;
-	xDisplacement = x - chunkPtr->x;
+	xDisplacement = x - TkTextChunkX(chunkPtr);
 	fgGC = GetForegroundGC(textPtr, chunkPtr);
+	BaseChunkSpan(chunkPtr, &baseX, &baseRight);
+	baseX += xDisplacement;
+	if (chunkPtr->dlPtr->reordered && (chunkPtr->bidiLevel & 1)) {
+	    /*
+	     * A right-to-left stretch is aligned on its right side, where its first
+	     * character is drawn: a space at its end may be left out by the layout
+	     * (wrappedAtSpace), and drawn outside of the string by the font system.
+	     */
+
+	    int fullWidth, rangeWidth, *ext;
+
+	    MeasureChars(sValuePtr->tkfont, string, numBytes, 0, numBytes, 0, -1, 0, &fullWidth);
+	    if ((ext = (int *)Tcl_AttemptAlloc(2 * numBytes * sizeof(int)))) {
+		if (TkpGetCharsVisualExtents(sValuePtr->tkfont, string, numBytes, ext,
+			ext + numBytes, NULL)) {
+		    Tcl_Size i;
+
+		    for (fullWidth = ext[numBytes], i = 1; i < numBytes; i++) {
+			fullWidth = MAX(fullWidth, ext[numBytes + i]);
+		    }
+		}
+		Tcl_Free(ext);
+	    }
+	    baseX = baseRight + xDisplacement - fullWidth;
+	    MeasureChars(sValuePtr->tkfont, string, numBytes, start, len, 0, -1, 0, &rangeWidth);
+	    offsetX -= MAX(0, rangeWidth - chunkPtr->width);
+	}
 
 	/*
 	 * Draw the text, underline, and overstrike for this chunk.
@@ -15410,20 +16047,29 @@ DrawChars(
 
 	TK_TEXT_DEBUG(LogCharsDisplay(textPtr, offsetX, string + start, len));
 	DrawCharsInContext(display, dst, fgGC, sValuePtr->tkfont, string, numBytes,
-		start, len, baseChunkPtr->x + xDisplacement, y - sValuePtr->offset, offsetX);
+		start, len, baseX, y - sValuePtr->offset, offsetX);
 
+	if (chunkPtr->dlPtr->reordered) {
+	    /*
+	     * The characters of the chunk are displayed together: draw the lines
+	     * under or over all of them, wherever they are in the stretch.
+	     */
+
+	    string += start;
+	    numBytes = len;
+	    start = 0;
+	    baseX = x + (offsetBytes ? offsetX - x : 0);
+	}
 	if (sValuePtr->underline) {
 	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ulGC, sValuePtr->tkfont, string,
-		    numBytes, baseChunkPtr->x + xDisplacement, y - sValuePtr->offset,
-		    start, start + len);
+		    numBytes, baseX, y - sValuePtr->offset, start, start + len);
 	}
 	if (sValuePtr->overstrike) {
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
 	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ovGC, sValuePtr->tkfont, string,
-		    numBytes, baseChunkPtr->x + xDisplacement,
-		    y - sValuePtr->offset - fm.descent - (fm.ascent*3)/10,
+		    numBytes, baseX, y - sValuePtr->offset - fm.descent - (fm.ascent*3)/10,
 		    start, start + len);
 	}
     }
@@ -15521,8 +16167,9 @@ DisplayChars(
      */
 
     offsetX = x;
-    offsetBytes = (x < 0) ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0,
-	    textPtr->spaceMode, 0, &offsetX) : 0;
+    offsetBytes = (x < 0 && !(chunkPtr->dlPtr->reordered && (chunkPtr->bidiLevel & 1)))
+	    ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0, textPtr->spaceMode, 0, &offsetX)
+	    : 0;
     DrawChars(textPtr, chunkPtr, x, y + baseline, offsetX, offsetBytes, display, dst);
 }
 
