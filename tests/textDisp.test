@@ -5962,6 +5962,42 @@ test textDisp-45.1 {layout of the text in a window which has not been mapped use
     destroy .top
 } -result 5
 
+# The chunks of a stretch share the string of the base chunk, which the next
+# chunks may reallocate. Without the fix, these tests read freed memory: ASan
+# (with a Tcl using the system malloc) reports it, and TCL_MEM_DEBUG, which
+# fills freed blocks, changes the result of textDisp-47.2.
+test textDisp-47.1 {bbox in the first chunk of a stretch reallocated by the next chunk} -setup {
+    toplevel .top
+    text .top.t -wrap none -font $fixedFont -width 60 -height 3
+    pack .top.t
+} -body {
+    .top.t tag configure red -foreground red
+    .top.t insert end [string repeat x 250] {} [string repeat y 300] red
+    update
+    set bbox [.top.t bbox 1.5]
+    list [expr {([lindex $bbox 0] - [lindex [.top.t bbox 1.0] 0]) / $fixedWidth}] \
+	    [expr {[lindex $bbox 2] == $fixedWidth}]
+} -cleanup {
+    destroy .top
+    unset -nocomplain bbox
+} -result {5 1}
+test textDisp-47.2 {hyphen rule "ck" when the chunk after the hyphen reallocates the stretch} -setup {
+    toplevel .top
+    text .top.t -wrap word -font $fixedFont -width 115 -height 3 -hyphens 1 -locale de
+    pack .top.t
+} -body {
+    # 210 bytes before "Druc" on 105 columns.
+    .top.t insert end "[string repeat \u00e9 105] "
+    .top.t tk_textInsert end "Druc\\:ck:kereinstellungen[string repeat z 300]"
+    .top.t configure -state readonly
+    update
+    # "Druk-" at end of line: the hyphen chunk "k-" replaces the "c".
+    list [.top.t index {1.0 display lineend}] \
+	    [expr {([lindex [.top.t bbox 1.110] 0] - [lindex [.top.t bbox 1.106] 0]) / $fixedWidth}]
+} -cleanup {
+    destroy .top
+} -result {1.110 3}
+
 #
 # TESTFILE CLEANUP
 #
