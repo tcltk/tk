@@ -111,6 +111,7 @@ to the userbase.
  - [remove empty directories from the zipfs VFS with POSIX find options](https://core.tcl-lang.org/tcl/tktview/9336f1)
  - [tk_dialog is centered over its parent window](https://core.tcl-lang.org/tcl/tktview/341469)
  - [the size hints of a toplevel ignore its menubar](https://core.tcl-lang.org/tcl/tktview/726351)
+ - [focus test failures](https://core.tcl-lang.org/tcl/tktview/147446)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

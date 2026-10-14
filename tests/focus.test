@@ -378,7 +378,7 @@ in .t.b1 NotifyNonlinear
 } .t.b1}
 
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix testxfocus
+    unix
 } -body {
     focus -force .t.b1
     testxfocus .
@@ -391,7 +391,7 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix testxfocus
+    unix
 } -body {
     set result {}
     focus -force .t.b1
@@ -410,7 +410,7 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix testxfocus
+    unix
 } -body {
     focus -force .b
     update
