@@ -1188,6 +1188,165 @@ done:
 /*
  *---------------------------------------------------------------------------
  *
+ * HasRtlChars --
+ *
+ *	Tell whether a string holds a character of a right-to-left script, or
+ *	a right-to-left mark, embedding, override or isolate. Without one, the
+ *	visual order of the string is its logical order.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+HasRtlChars(
+    const char *source,
+    Tcl_Size numBytes)
+{
+    const char *p = source, *end = source + numBytes;
+
+    while (p < end) {
+	int ch;
+
+	if (UCHAR(*p) < 0xC0) {
+	    p++;			/* ASCII, or a trailing byte. */
+	    continue;
+	}
+	if (!Tcl_UtfCharComplete(p, end - p)) {
+	    break;
+	}
+	p += Tcl_UtfToUniChar(p, &ch);
+	if ((ch >= 0x0590 && ch <= 0x08FF) || ch == 0x200F || ch == 0x202B
+		|| ch == 0x202E || ch == 0x2067
+		|| (ch >= 0xFB1D && ch <= 0xFDFF) || (ch >= 0xFE70 && ch <= 0xFEFE)
+		|| (ch >= 0x10800 && ch <= 0x10FFF) || (ch >= 0x1E800 && ch <= 0x1EFFF)) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GetLineUnitExtents --
+ *
+ *	Give the horizontal extent, from the origin of a laid out line, of
+ *	each UTF-16 unit of its string, from the glyphs of its runs. A unit
+ *	without a glyph of its own (a part of a cluster or of a ligature, the
+ *	second half of a surrogate pair) takes the extent of the unit before.
+ *
+ * Results:
+ *	0 if the line has no right-to-left run (the arrays are then not
+ *	filled), else 1. rtls (may be NULL) gets 1 for the units of the
+ *	right-to-left runs.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+GetLineUnitExtents(
+    CTLineRef line,
+    CFIndex numUnits,
+    CGFloat *lefts,		/* numUnits entries. */
+    CGFloat *rights,		/* numUnits entries. */
+    unsigned char *rtls)	/* numUnits entries, or NULL. */
+{
+    CFArrayRef runs = CTLineGetGlyphRuns(line);
+    CFIndex r, g, u, first, numRuns = CFArrayGetCount(runs);
+    unsigned char *has;
+    int hasRtl = 0;
+
+    for (r = 0; r < numRuns && !hasRtl; r++) {
+	CTRunRef run = (CTRunRef) CFArrayGetValueAtIndex(runs, r);
+
+	hasRtl = (CTRunGetStatus(run) & kCTRunStatusRightToLeft) != 0;
+    }
+    if (!hasRtl || numUnits <= 0) {
+	return 0;
+    }
+
+    has = (unsigned char *)Tcl_Alloc(numUnits);
+    memset(has, 0, numUnits);
+    if (rtls) {
+	memset(rtls, 0, numUnits);
+    }
+    for (r = 0; r < numRuns; r++) {
+	CTRunRef run = (CTRunRef) CFArrayGetValueAtIndex(runs, r);
+	CFIndex numGlyphs = CTRunGetGlyphCount(run);
+	CFRange range = CTRunGetStringRange(run);
+	int rtl = (CTRunGetStatus(run) & kCTRunStatusRightToLeft) != 0;
+	CFIndex *indices;
+	CGPoint *positions;
+	CGSize *advances;
+
+	if (rtls) {
+	    for (u = range.location; u < range.location + range.length && u < numUnits; u++) {
+		rtls[u] = rtl;
+	    }
+	}
+	if (numGlyphs <= 0) {
+	    continue;
+	}
+	indices = (CFIndex *)Tcl_Alloc(numGlyphs * sizeof(CFIndex));
+	positions = (CGPoint *)Tcl_Alloc(numGlyphs * sizeof(CGPoint));
+	advances = (CGSize *)Tcl_Alloc(numGlyphs * sizeof(CGSize));
+	CTRunGetStringIndices(run, CFRangeMake(0, 0), indices);
+	CTRunGetPositions(run, CFRangeMake(0, 0), positions);
+	CTRunGetAdvances(run, CFRangeMake(0, 0), advances);
+	for (g = 0; g < numGlyphs; g++) {
+	    CGFloat left = positions[g].x, right = left + advances[g].width;
+
+	    u = indices[g];
+	    if (u < 0 || u >= numUnits) {
+		continue;
+	    }
+	    if (!has[u]) {
+		lefts[u] = left;
+		rights[u] = right;
+		has[u] = 1;
+	    } else {
+		lefts[u] = MIN(lefts[u], left);
+		rights[u] = MAX(rights[u], right);
+	    }
+	}
+	Tcl_Free(indices);
+	Tcl_Free(positions);
+	Tcl_Free(advances);
+    }
+
+    for (first = 0; first < numUnits && !has[first]; first++) {
+	/* Empty body. */
+    }
+    for (u = 0; u < numUnits; u++) {
+	if (first == numUnits) {
+	    lefts[u] = rights[u] = 0.0;
+	} else if (u < first) {
+	    lefts[u] = lefts[first];
+	    rights[u] = rights[first];
+	} else if (!has[u]) {
+	    lefts[u] = lefts[u - 1];
+	    rights[u] = rights[u - 1];
+	}
+    }
+    Tcl_Free(has);
+    return 1;
+}
+
+/* Order pairs of CGFloat (left and right x) by their left x. */
+static int
+CompareSpans(
+    const void *a,
+    const void *b)
+{
+    CGFloat la = *(const CGFloat *)a, lb = *(const CGFloat *)b;
+
+    return (la > lb) - (la < lb);
+}
+
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * Tk_DrawChars --
  *
  *	Draw a string of characters on the screen.
@@ -1439,9 +1598,51 @@ TkpDrawAngledCharsInContext(
 	 * accidentally clip ascenders/descenders.
 	 */
 	CGContextSaveGState(context);
-	CGContextClipToRect(context, CGRectMake(
-		textX + rangeStartX - italicOvershoot, textY - 32768.0,
-		clipWidth + 2.0 * italicOvershoot, 65536.0));
+	{
+	    /*
+	     * With right-to-left text the range can be drawn in several
+	     * pieces, which the offsets of its two ends do not give.
+	     */
+
+	    CGFloat *ext = NULL;
+	    CGRect *rects = NULL;
+	    CFIndex numRects = 0;
+
+	    if (length > 0 && HasRtlChars(source, numBytes)) {
+		ext = (CGFloat *)Tcl_Alloc(2 * fullLength * sizeof(CGFloat));
+		if (GetLineUnitExtents(full, fullLength, ext, ext + fullLength, NULL)) {
+		    CGFloat *spans = (CGFloat *)Tcl_Alloc(2 * length * sizeof(CGFloat));
+		    CFIndex u, n = 0;
+
+		    for (u = start; u < start + length && u < fullLength; u++, n++) {
+			spans[2*n] = ext[u];
+			spans[2*n + 1] = ext[fullLength + u];
+		    }
+		    qsort(spans, n, 2 * sizeof(CGFloat), CompareSpans);
+		    rects = (CGRect *)Tcl_Alloc((n + 1) * sizeof(CGRect));
+		    for (u = 0; u < n; ) {
+			CGFloat left = spans[2*u], right = spans[2*u + 1];
+
+			for (u++; u < n && spans[2*u] <= right; u++) {
+			    right = MAX(right, spans[2*u + 1]);
+			}
+			rects[numRects++] = CGRectMake(
+				textX + left - italicOvershoot, textY - 32768.0,
+				right - left + 2.0 * italicOvershoot, 65536.0);
+		    }
+		    Tcl_Free(spans);
+		}
+		Tcl_Free(ext);
+	    }
+	    if (rects) {
+		CGContextClipToRects(context, rects, numRects);
+		Tcl_Free(rects);
+	    } else {
+		CGContextClipToRect(context, CGRectMake(
+			textX + rangeStartX - italicOvershoot, textY - 32768.0,
+			clipWidth + 2.0 * italicOvershoot, 65536.0));
+	    }
+	}
 	CGContextSetTextPosition(context, textX, textY);
 	CTLineDraw(full, context);
 	CGContextRestoreGState(context);
@@ -1451,6 +1652,102 @@ TkpDrawAngledCharsInContext(
     [attributedString release];
     [attributes release];
     TkMacOSXRestoreDrawingContext(&drawingContext);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpGetCharsVisualExtents --
+ *
+ *	Give the horizontal extent of each character of a string laid out as
+ *	a whole, as Tk_DrawCharsInContext draws it: with right-to-left text
+ *	the visual order of the characters is not their logical order.
+ *
+ * Results:
+ *	0 if the visual order is the logical order; the arrays are then not
+ *	filled. Else 1: for each byte of the string, lefts and rights give the
+ *	extent of the character it belongs to, from the origin of the string,
+ *	and rtls (may be NULL) gets 1 if the character is in a right-to-left
+ *	run.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpGetCharsVisualExtents(
+    Tk_Font tkfont,		/* Font in which the string is drawn. */
+    const char *source,		/* UTF-8 string, need not be nul terminated. */
+    Tcl_Size numBytes,		/* Number of bytes in the string. */
+    int *lefts,			/* numBytes entries. */
+    int *rights,		/* numBytes entries. */
+    unsigned char *rtls)	/* numBytes entries, or NULL. */
+{
+    const MacFont *fontPtr = (const MacFont *) tkfont;
+    NSString *string;
+    NSAttributedString *attributedString;
+    CTTypesetterRef typesetter;
+    CTLineRef line;
+    CFIndex numUnits, u;
+    CGFloat *ext;
+    unsigned char *unitRtls;
+    int result;
+
+    if (numBytes <= 0 || !HasRtlChars(source, numBytes)) {
+	return 0;
+    }
+    string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
+    if (!string) {
+	return 0;
+    }
+    numUnits = [string length];
+    attributedString = [[NSAttributedString alloc] initWithString:string
+	    attributes:fontPtr->nsAttributes];
+    [string release];
+    typesetter = CTTypesetterCreateWithAttributedString(
+	    (CFAttributedStringRef)attributedString);
+    line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, numUnits));
+    ext = (CGFloat *)Tcl_Alloc(2 * numUnits * sizeof(CGFloat) + numUnits + 1);
+    unitRtls = (unsigned char *)(ext + 2 * numUnits);
+    result = GetLineUnitExtents(line, numUnits, ext, ext + numUnits, unitRtls);
+
+    if (result) {
+	const char *p = source, *end = source + numBytes;
+
+	for (u = 0; p < end; ) {
+	    CFIndex v = MIN(u, numUnits - 1);
+	    CGFloat left = ext[v], right = ext[numUnits + v];
+	    Tcl_Size i, len;
+	    int ch;
+
+	    if (Tcl_UtfCharComplete(p, end - p)) {
+		len = Tcl_UtfToUniChar(p, &ch);
+	    } else {
+		len = end - p;
+		ch = 0;
+	    }
+	    if (ch > 0xFFFF && v + 1 < numUnits) {
+		left = MIN(left, ext[v + 1]);
+		right = MAX(right, ext[numUnits + v + 1]);
+	    }
+	    for (i = p - source; i < (p - source) + len; i++) {
+		lefts[i] = (int) floor(left + 0.5);
+		rights[i] = (int) floor(right + 0.5);
+		if (rtls) {
+		    rtls[i] = unitRtls[v];
+		}
+	    }
+	    p += len;
+	    u += (ch > 0xFFFF) ? 2 : 1;
+	}
+    }
+    Tcl_Free(ext);
+    CFRelease(line);
+    CFRelease(typesetter);
+    [attributedString release];
+    return result;
 }
 
 #pragma mark -

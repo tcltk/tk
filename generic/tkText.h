@@ -674,6 +674,10 @@ struct TkTextDispChunk {
     bool endOfLineSymbol;	/* This flag will be set if this chunk contains (only) the end of
 				 * line symbol. */
     bool integralPart;		/* This chunk contains the start of the integral part of a numeric. */
+    uint8_t bidiLevel;		/* Bidi embedding level of the content (UAX #9), the same for all
+				 * the characters of the chunk. */
+    int32_t visualX;		/* X position of the chunk in display order, used if its display
+				 * line is reordered, see TkTextChunkX. */
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
@@ -741,7 +745,18 @@ typedef struct TkTextDispLine {
 				 * of spacing options. This is included in height. */
     uint32_t length;		/* Total length of line, in pixels, including possible left indent. */
     uint32_t flags;		/* Various flag bits: see below for values. */
+    bool reordered;		/* The line holds right-to-left text: the display order of its chunks
+				 * is not their logical order, see TkTextChunkX. */
+    bool rtlParagraph;		/* The logical line is a right-to-left paragraph. */
 } TkTextDispLine;
+
+/*
+ * The x position of a chunk as displayed: in a reordered line the chunks are
+ * laid out in logical order (x), then placed in display order (visualX).
+ */
+
+#define TkTextChunkX(chunkPtr) \
+    ((chunkPtr)->dlPtr && (chunkPtr)->dlPtr->reordered ? (chunkPtr)->visualX : (chunkPtr)->x)
 
 /*
  * One data structure of the following type is used for each tag in a text
@@ -2108,6 +2123,10 @@ MODULE_SCOPE int	mojibake_sentence_next(const char *buf,
 MODULE_SCOPE int	mojibake_sentence_prev(const char *buf,
 			    size_t byteLen, size_t byteOffset,
 			    size_t *prevOffset);
+
+/* UAX #9 - Bidirectional embedding levels of a paragraph */
+MODULE_SCOPE unsigned char *mojibake_bidi_levels(const char *buf,
+			    size_t byteLen, int *paragraphLevelPtr);
 
 /*
  * Dictionary-enhanced breaking for scripts without spaces:

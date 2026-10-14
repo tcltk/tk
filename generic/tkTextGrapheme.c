@@ -1080,6 +1080,57 @@ mojibake_dict_init(void) {
 }
 
 /*
+ * ---------------------------------------------------------------
+ * mojibake_bidi_levels --
+ *
+ *   Resolve the embedding levels of a paragraph (UAX #9, its
+ *   direction taken from its first strong character), rule L1
+ *   applied as for a single line.
+ *
+ * Results:
+ *   An array of one level per byte, to free with Tcl_Free, or NULL
+ *   if the paragraph cannot be resolved. A character removed by
+ *   rule X9 gets the level of the character before it. mojibake
+ *   gives the offset of the last byte of each character.
+ *
+ * Side effects:
+ *   Memory is allocated.
+ * ---------------------------------------------------------------
+ */
+
+unsigned char *
+mojibake_bidi_levels(const char *buf,
+		     size_t byteLen,
+		     int *paragraphLevelPtr) {
+    mjb_bidi_paragraph paragraph;
+    unsigned char *levels;
+    size_t i;
+
+    if (byteLen == 0 || mjb_bidi_resolve(buf, byteLen, MJB_ENC_UTF_8,
+	    MJB_DIRECTION_AUTO, &paragraph) != MJB_STATUS_OK) {
+	return NULL;
+    }
+    levels = (unsigned char *)Tcl_Alloc(byteLen);
+    memset(levels, paragraph.paragraph_level, byteLen);
+    for (i = 0; i < paragraph.count; i++) {
+	const mjb_bidi_char *c = &paragraph.chars[i];
+	size_t start = c->byte_offset + 1 - Utf8EncodedBytes(c->codepoint);
+	size_t end = byteLen;
+
+	if (i + 1 < paragraph.count) {
+	    c = &paragraph.chars[i + 1];
+	    end = c->byte_offset + 1 - Utf8EncodedBytes(c->codepoint);
+	}
+	if (start < end && end <= byteLen) {
+	    memset(levels + start, paragraph.chars[i].level, end - start);
+	}
+    }
+    *paragraphLevelPtr = paragraph.paragraph_level;
+    mjb_bidi_paragraph_free(&paragraph);
+    return levels;
+}
+
+/*
  * Local Variables:
  * c-basic-offset: 4
  * fill-column: 78

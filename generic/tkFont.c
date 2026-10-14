@@ -2060,6 +2060,17 @@ Tk_UnderlineChars(
 	    lastByte, x, y, firstByte, lastByte);
 }
 
+/* Order pairs of ints (left and right x) by their left x. */
+static int
+ComparePieces(
+    const void *a,
+    const void *b)
+{
+    int la = *(const int *)a, lb = *(const int *)b;
+
+    return (la > lb) - (la < lb);
+}
+
 void
 Tk_UnderlineCharsInContext(
     Display *display,		/* Display on which to draw. */
@@ -2080,6 +2091,46 @@ Tk_UnderlineCharsInContext(
 {
     TkFont *fontPtr = (TkFont *) tkfont;
     int startX, endX;
+    int *lefts;
+
+    if (firstByte < lastByte && lastByte <= numBytes
+	    && (lefts = (int *)Tcl_AttemptAlloc(4 * numBytes * sizeof(int)))) {
+	int *rights = lefts + numBytes;
+	int *pieces = rights + numBytes;
+
+	if (TkpGetCharsVisualExtents(tkfont, string, numBytes, lefts, rights, NULL)) {
+	    /*
+	     * Right-to-left text: a range of characters can be drawn in several
+	     * pieces, underline each of them.
+	     */
+
+	    Tcl_Size i, n = 0;
+
+	    for (i = firstByte; i < lastByte; i++) {
+		pieces[2*n] = lefts[i];
+		pieces[2*n + 1] = rights[i];
+		n++;
+	    }
+	    qsort(pieces, n, 2 * sizeof(int), ComparePieces);
+	    for (i = 0; i < n; ) {
+		startX = pieces[2*i];
+		endX = pieces[2*i + 1];
+		for (i++; i < n && pieces[2*i] <= endX; i++) {
+		    if (pieces[2*i + 1] > endX) {
+			endX = pieces[2*i + 1];
+		    }
+		}
+		if (endX > startX) {
+		    XFillRectangle(display, drawable, gc, x + startX,
+			    y + fontPtr->underlinePos, (unsigned) (endX - startX),
+			    (unsigned) fontPtr->underlineHeight);
+		}
+	    }
+	    Tcl_Free(lefts);
+	    return;
+	}
+	Tcl_Free(lefts);
+    }
 
     Tk_MeasureCharsInContext(tkfont, string, numBytes, 0, firstByte, -1, 0,
 	    &startX);
@@ -2090,6 +2141,37 @@ Tk_UnderlineCharsInContext(
 	    y + fontPtr->underlinePos, (unsigned) (endX - startX),
 	    (unsigned) fontPtr->underlineHeight);
 }
+
+#ifndef MAC_OSX_TK
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpGetCharsVisualExtents --
+ *
+ *	Font systems which do not give the visual position of the characters
+ *	of a string laid out as a whole.
+ *
+ * Results:
+ *	Always 0: the visual order is taken to be the logical order.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpGetCharsVisualExtents(
+    TCL_UNUSED(Tk_Font),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(unsigned char *))
+{
+    return 0;
+}
+#endif /* !MAC_OSX_TK */
 
 /*
  *---------------------------------------------------------------------------

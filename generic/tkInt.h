@@ -1232,6 +1232,9 @@ MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Tcl_Size rangeLength, double x, double y, double angle);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
+MODULE_SCOPE int	TkpGetCharsVisualExtents(Tk_Font tkfont,
+			    const char *source, Tcl_Size numBytes, int *lefts,
+			    int *rights, unsigned char *rtls);
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
 			    Tk_3DBorder border, int highlightWidth,
 			    int borderWidth, int relief);

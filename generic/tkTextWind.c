@@ -1682,7 +1682,7 @@ EmbWinDisplayProc(
 
     EmbWinBboxProc(textPtr, chunkPtr, 0, screenY, lineHeight, baseline,
 	    &lineX, &windowY, &width, &height);
-    windowX = lineX - chunkPtr->x + x;
+    windowX = lineX - TkTextChunkX(chunkPtr) + x;
 
     /*
      * Mark the window as displayed so that it won't get unmapped.
@@ -1825,7 +1825,7 @@ EmbWinBboxProc(
     if (ewPtr->body.ew.padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
     }
-    *xPtr = chunkPtr->x + padX;
+    *xPtr = TkTextChunkX(chunkPtr) + padX;
     if (ewPtr->body.ew.stretch) {
 	if (ewPtr->body.ew.align == ALIGN_BASELINE) {
 	    *heightPtr = baseline - padY;
