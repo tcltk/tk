@@ -4906,8 +4906,15 @@ TkBTreeInsertChars(
 
 	if (chunkSize == 0) {
 	    TkTextTag *tagPtr;
+	    TkTextSegment *splitPtr;
+	    Tcl_Size offset;
 
+	    splitPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
 	    prevPtr = SplitSeg(indexPtr, NULL);
+	    if (offset > 0 && splitPtr == firstSegPtr) {
+		/* Freed by the split: its left part replaces it. */
+		firstSegPtr = prevPtr;
+	    }
 	    segPtr = MakeHyphen();
 	    segPtr->body.hyphen.rules = hyphenRules;
 	    LinkSegment(linePtr, prevPtr, segPtr);
