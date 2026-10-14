@@ -2101,17 +2101,6 @@ X11Shaper_ShapeString(
 			FcChar32 nc = ucs4Chars[subrunEnd];
 
 			/*
-			 * ZWJ, VS16 and the keycap mark belong to the emoji
-			 * sequence they follow; keep them in the color face's
-			 * subrun so HarfBuzz can form the sequence glyph.
-			 */
-			if ((nc == 0x200D || nc == 0xFE0F || nc == 0x20E3) &&
-				fontPtr->faces[runFaceIndex].isColor) {
-			    subrunEnd++;
-			    continue;
-			}
-
-			/*
 			 * Variation selectors, ZWJ, keycap, tag characters and
 			 * (inside a cluster) skin tone modifiers belong to the
 			 * emoji sequence they follow: keep them in the color
