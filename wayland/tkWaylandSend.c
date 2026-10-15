@@ -1138,11 +1138,8 @@ sendRequest(
     }
     status = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
 				 &abs_timeout);
-    if (errno == ETIMEDOUT) {
-	goto error;
-    }
     if (status == -1) {
-	if (kill(pid, 0)) {
+	if (errno != ETIMEDOUT && kill(pid, 0)) {
 	    Tcl_AddErrorInfo(interp, "Target application died.");
 	}
 	goto error;
@@ -1151,11 +1148,34 @@ sendRequest(
     char **replyStrings;
     unpackMessage((message *) msg, &header, &replyStrings);
     if (mq_close(qdReply) == -1 || mq_unlink(qnameReply) == -1) {
+	for (int i = 0; i < header.count; i++) {
+	    Tcl_Free(replyStrings[i]);
+	}
+	Tcl_Free(replyStrings);
 	goto error;
+    }
+
+    /*
+     * Report an error in the target application as if it happened here:
+     * the reply then also has errorInfo and errorCode.
+     */
+    if (header.code == TCL_ERROR) {
+	Tcl_ResetResult(interp);
+	if (header.count > 1) {
+	    Tcl_AddErrorInfo(interp, replyStrings[1]);
+	}
+	if (header.count > 2) {
+	    Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(replyStrings[2],
+		    TCL_INDEX_NONE));
+	}
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(replyStrings[0],
 	TCL_INDEX_NONE));
-    return TCL_OK;
+    for (int i = 0; i < header.count; i++) {
+	Tcl_Free(replyStrings[i]);
+    }
+    Tcl_Free(replyStrings);
+    return header.code;
 error:
     HANDLE_POSIX_ERROR("sendRequest")
 }
@@ -1208,10 +1228,26 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
     if (!async) {
 	/* Send a reply */
 	Tcl_Size resultLength;
-	const char *resultString = Tcl_GetStringFromObj(
-	    Tcl_GetObjResult(riPtr->interp), &resultLength);
+	const char *replyStrings[3];
+	int count = 1;
 	size_t messageSize;
-	message *m = packMessage(code, 1, &resultString, &messageSize);
+
+	/*
+	 * After an error, send also errorInfo and errorCode, so that the
+	 * sender can report the error as if it happened locally.
+	 */
+	replyStrings[0] = Tcl_GetStringFromObj(
+	    Tcl_GetObjResult(riPtr->interp), &resultLength);
+	if (code == TCL_ERROR) {
+	    const char *errorInfo = Tcl_GetVar2(riPtr->interp, "errorInfo",
+		    NULL, TCL_GLOBAL_ONLY);
+	    const char *errorCode = Tcl_GetVar2(riPtr->interp, "errorCode",
+		    NULL, TCL_GLOBAL_ONLY);
+	    replyStrings[1] = errorInfo ? errorInfo : "";
+	    replyStrings[2] = errorCode ? errorCode : "NONE";
+	    count = 3;
+	}
+	message *m = packMessage(code, count, replyStrings, &messageSize);
 	mqd_t replyQd = mq_open(strings[requestSender], O_RDWR);
 	if (replyQd == -1) {
 	    Tcl_SetErrno(errno);
