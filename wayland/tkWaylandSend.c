@@ -336,11 +336,24 @@ RemoveStaleQueues(void)
 	char *end;
 	long pid;
 
-	if (strncmp(entry->d_name, "tksend_", 7) != 0) {
+	/*
+	 * The request queue "tksend_<pid>" and the reply queues
+	 * "tkreply_<pid>_<serial>" of a process.
+	 */
+	const char *digits;
+	int isReply = 0;
+
+	if (strncmp(entry->d_name, "tksend_", 7) == 0) {
+	    digits = entry->d_name + 7;
+	} else if (strncmp(entry->d_name, "tkreply_", 8) == 0) {
+	    digits = entry->d_name + 8;
+	    isReply = 1;
+	} else {
 	    continue;
 	}
-	pid = strtol(entry->d_name + 7, &end, 10);
-	if (end == entry->d_name + 7 || *end != '\0' || pid <= 0) {
+	pid = strtol(digits, &end, 10);
+	if (end == digits || pid <= 0
+		|| (isReply ? *end != '_' : *end != '\0')) {
 	    continue;
 	}
 	if (kill((pid_t)pid, 0) == -1 && errno == ESRCH) {
