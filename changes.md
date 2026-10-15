@@ -114,6 +114,7 @@ to the userbase.
  - [focus test failures](https://core.tcl-lang.org/tcl/tktview/147446)
  - [missing <Leave> event when posting cascade menus](https://core.tcl-lang.org/tcl/tktview/873655)
  - [panedwindow misbehaving when resizing window](https://core.tcl-lang.org/tcl/tktview/7c5162)
+ - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tcl/tktview/a4c72a)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
