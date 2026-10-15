@@ -3511,6 +3511,9 @@ EnsureNvgFont(
  *----------------------------------------------------------------------
  */
 
+/* The last generation given to a WaylandFont, see InitFont(). */
+static unsigned int fontGenerationCounter = 0;
+
 static void
 InitFont(
     Tk_Window tkwin,
@@ -3536,8 +3539,13 @@ InitFont(
      * loaded -- the font never visibly updates. Bumping the generation
      * here and folding it into the name guarantees each reconfigure gets
      * a name NanoVG has never seen.
+     *
+     * The generation comes from a global counter, not from fontPtr: a new
+     * WaylandFont can be allocated at the address of a freed one, and
+     * starting from the same generation would give it the name of the
+     * freed font, with the glyph data of a different typeface.
      */
-    fontPtr->generation++;
+    fontPtr->generation = ++fontGenerationCounter;
 
     if (!tkwin) {
 	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);
