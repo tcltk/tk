@@ -874,11 +874,13 @@ TkWmDeadWindow(
                           StructureNotifyMask | PropertyChangeMask,
                           TopLevelEventProc, (void *)winPtr);
 
-    /* Cancel any pending UpdateGeometryInfo idle tasks  */
-    if (wmPtr->flags & WM_UPDATE_PENDING) {
-        CancelGeometryUpdate(winPtr);
-	wmPtr->flags &= ~WM_UPDATE_PENDING;
-    }
+    /*
+     * Cancel any pending UpdateGeometryInfo idle task or timer, even if
+     * WM_UPDATE_PENDING is not set: a direct call of UpdateGeometryInfo
+     * clears it while an idle call can still be pending.
+     */
+    CancelGeometryUpdate(winPtr);
+    wmPtr->flags &= ~WM_UPDATE_PENDING;
 
     /* Destroy wrapper window if present. */
     if (wmPtr->wrapperPtr != NULL) {
@@ -4062,8 +4064,15 @@ UpdateGeometryInfo(
 	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
 	return;
     }
-    /* If this call is from the timer, the timer has fired. */
-    wmPtr->updateTimer = NULL;
+    /*
+     * If this call is from the timer, the timer has fired.  Otherwise
+     * delete the pending timer, or it would be lost and fire later,
+     * possibly after the window was destroyed.
+     */
+    if (wmPtr->updateTimer != NULL) {
+	Tcl_DeleteTimerHandler(wmPtr->updateTimer);
+	wmPtr->updateTimer = NULL;
+    }
 
     /*
      * Likewise, the toplevel's GLFW window (and glfwTkInfo) may already
