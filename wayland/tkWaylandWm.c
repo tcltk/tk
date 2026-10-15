@@ -1941,7 +1941,7 @@ Tk_WmObjCmd(
             return TCL_ERROR;
         }
         if (objc < 3) {
-            Tcl_WrongNumArgs(interp, 2, objv, "window ?arg ...?");
+            Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg ...?");
             return TCL_ERROR;
         }
         winPtr = (TkWindow *)Tk_NameToWindow(
@@ -2033,7 +2033,7 @@ WmAspectCmd(
 
     if (objc != 0 && objc != 4) {
         Tcl_WrongNumArgs(interp, 0, objv,
-			 "pathName aspect ?minNumer minDenom maxNumer maxDenom?");
+			 "wm aspect window ?minNumer minDenom maxNumer maxDenom?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -2345,7 +2345,7 @@ WmDeiconifyCmd(
 	       Tcl_Obj *const objv[])
 {
     if (objc != 0) {
-        Tcl_WrongNumArgs(interp, 0, objv, "pathName deiconify");
+        Tcl_WrongNumArgs(interp, 0, objv, "wm deiconify window");
         return TCL_ERROR;
     }
 
@@ -2473,7 +2473,7 @@ WmGeometryCmd(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
 
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp, 0, objv, "pathName geometry ?newGeometry?");
+        Tcl_WrongNumArgs(interp, 0, objv, "wm geometry window ?newGeometry?");
         return TCL_ERROR;
     }
 
@@ -2580,7 +2580,7 @@ WmGridCmd(
 
     if (objc != 0 && objc != 4) {
         Tcl_WrongNumArgs(interp,0,objv,
-			 "pathName grid ?baseWidth baseHeight widthInc heightInc?");
+			 "wm grid window ?baseWidth baseHeight widthInc heightInc?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -2733,7 +2733,7 @@ WmIconifyCmd(
 	     Tcl_Obj *const objv[])
 {
     if (objc != 0) {
-        Tcl_WrongNumArgs(interp, 0, objv, "pathName iconify");
+        Tcl_WrongNumArgs(interp, 0, objv, "wm iconify window");
         return TCL_ERROR;
     }
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
@@ -2917,7 +2917,7 @@ WmManageCmd(
             Tcl_Obj *const objv[])
 {
     if (objc != 0) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName manage"); return TCL_ERROR;
+        Tcl_WrongNumArgs(interp,0,objv,"wm manage window"); return TCL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_NewObj());
     return TCL_OK;
@@ -2953,7 +2953,7 @@ WmMaxsizeCmd(
     int     w, h;
 
     if (objc != 0 && objc != 2) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName maxsize ?width height?");
+        Tcl_WrongNumArgs(interp,0,objv,"wm maxsize window ?width height?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -3000,7 +3000,7 @@ WmMinsizeCmd(
     int     w, h;
 
     if (objc != 0 && objc != 2) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName minsize ?width height?");
+        Tcl_WrongNumArgs(interp,0,objv,"wm minsize window ?width height?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -3047,7 +3047,7 @@ WmOverrideredirectCmd(
     XSetWindowAttributes atts;
 
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp, 0, objv, "pathName overrideredirect ?boolean?");
+        Tcl_WrongNumArgs(interp, 0, objv, "wm overrideredirect window ?boolean?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -3092,7 +3092,7 @@ WmPositionfromCmd(
     int idx;
 
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName positionfrom ?user|program?");
+        Tcl_WrongNumArgs(interp,0,objv,"wm positionfrom window ?user|program?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -3226,7 +3226,7 @@ WmResizableCmd(
     int     w, h;
 
     if (objc != 0 && objc != 2) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName resizable ?width height?");
+        Tcl_WrongNumArgs(interp,0,objv,"wm resizable window ?width height?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -3279,7 +3279,7 @@ WmSizefromCmd(
     int idx;
 
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName sizefrom ?user|program?");
+        Tcl_WrongNumArgs(interp,0,objv,"wm sizefrom window ?user|program?");
         return TCL_ERROR;
     }
     if (objc == 0) {
@@ -3376,7 +3376,7 @@ WmStateCmd(
      * new state (same convention as WmTitleCmd et al).
      */
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp, 0, objv, "pathName state ?state?");
+        Tcl_WrongNumArgs(interp, 0, objv, "wm state window ?state?");
         return TCL_ERROR;
     }
 
@@ -3498,7 +3498,7 @@ WmTitleCmd(
     Tcl_Size    len;
 
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName title ?newTitle?"); return TCL_ERROR;
+        Tcl_WrongNumArgs(interp,0,objv,"wm title window ?newTitle?"); return TCL_ERROR;
     }
     if (objc == 0) {
         Tcl_SetObjResult(interp,Tcl_NewStringObj(
@@ -3566,7 +3566,7 @@ WmWithdrawCmd(
 	      Tcl_Obj *const objv[])
 {
     if (objc != 0) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName withdraw"); return TCL_ERROR;
+        Tcl_WrongNumArgs(interp,0,objv,"wm withdraw window"); return TCL_ERROR;
     }
 
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
