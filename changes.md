@@ -124,6 +124,7 @@ to the userbase.
  - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tcl/tktview/a4c72a)
  - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
+ - [Tk performance regression on X11](https://core.tcl-lang.org/tcl/tktview/290ce5)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
