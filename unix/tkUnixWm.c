@@ -4923,10 +4923,15 @@ UpdateSizeHints(
 	hintsPtr->max_height = hintsPtr->base_height
 		+ (maxHeight * wmPtr->heightInc);
     } else {
+	/*
+	 * The sizes are set for the wrapper, which is higher than the
+	 * toplevel by the height of the menubar.  [Bug 726351]
+	 */
+
 	hintsPtr->min_width = wmPtr->minWidth;
-	hintsPtr->min_height = wmPtr->minHeight;
+	hintsPtr->min_height = wmPtr->minHeight + wmPtr->menuHeight;
 	hintsPtr->max_width = maxWidth;
-	hintsPtr->max_height = maxHeight;
+	hintsPtr->max_height = maxHeight + wmPtr->menuHeight;
 	hintsPtr->base_width = 0;
 	hintsPtr->base_height = 0;
     }
@@ -5688,6 +5693,7 @@ ParseGeometry(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, flags;
+    bool hasPosition = false;
     char *end;
     const char *p = string;
 
@@ -5729,6 +5735,7 @@ ParseGeometry(
      */
 
     if (*p != '\0') {
+	hasPosition = true;
 	flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
 	if (*p == '-') {
 	    flags |= WM_NEGATIVE_X;
@@ -5778,7 +5785,15 @@ ParseGeometry(
     wmPtr->height = height;
     wmPtr->x = x;
     wmPtr->y = y;
-    flags |= WM_MOVE_PENDING;
+
+    /*
+     * Sending back the position recorded from the window manager's frame
+     * makes some window managers move the window. [Bug 2995339]
+     */
+
+    if (hasPosition || (flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y))) {
+	flags |= WM_MOVE_PENDING;
+    }
     wmPtr->flags = flags;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {

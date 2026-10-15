@@ -432,7 +432,7 @@ colorcmp(
 {
     int r;
     int c, d;
-    int notequal = 0;
+    bool notequal = false;
     int num = 0;
 
     do {
@@ -450,7 +450,7 @@ colorcmp(
 	     * depends on what follows.
 	     */
 
-	    notequal = 1;
+	    notequal = true;
 	}
 	c = *spec++;
 	if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A')) {

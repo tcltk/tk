@@ -247,7 +247,7 @@ TkTextTagCmd(
 	}
 
 	if (objc == 6) {
-	    int append = 0;
+	    bool append = false;
 	    unsigned long mask;
 	    const char *fifth = Tcl_GetString(objv[5]);
 
@@ -258,7 +258,7 @@ TkTextTagCmd(
 	    }
 	    if (fifth[0] == '+') {
 		fifth++;
-		append = 1;
+		append = true;
 	    }
 	    mask = Tk_CreateBinding(interp,
 		    textPtr->sharedTextPtr->bindingTable,

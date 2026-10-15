@@ -74,7 +74,7 @@ static HRESULT		RegisterInterp(const char *name,
 static int		FindInterpreterObject(Tcl_Interp *interp,
 			    const char *name, LPDISPATCH *ppdisp);
 static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
-			    int async, void *clientData, Tcl_Size objc,
+			    bool async, void *clientData, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		SendTrace(const char *format, ...);
 static Tcl_EventProc	SendEventProc;
@@ -333,8 +333,8 @@ Tk_SendObjCmd(
 	"-async",   "-displayof",   "--",  NULL
     };
     const char *stringRep;
-    int result = TCL_OK;
-    int async = 0, index;
+    int result = TCL_OK, index;
+    bool async = false;
     Tcl_Size i;
 
     /*
@@ -349,7 +349,7 @@ Tk_SendObjCmd(
 		break;
 	    }
 	    if (index == SEND_ASYNC) {
-		async = 1;
+		async = true;
 	    } else if (index == SEND_DISPLAYOF) {
 		i++;
 	    } else /* if (index == SEND_LAST) */ {
@@ -703,7 +703,7 @@ Send(
     LPDISPATCH pdispInterp,	/* Pointer to the remote interp's COM
 				 * object. */
     Tcl_Interp *interp,		/* The local interpreter. */
-    int async,			/* Flag for the calling style. */
+    bool async,			/* Flag for the calling style. */
     TCL_UNUSED(void *),
     Tcl_Size objc,			/* Number of arguments to be sent. */
     Tcl_Obj *const objv[])	/* The arguments to be sent. */

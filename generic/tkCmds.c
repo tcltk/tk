@@ -207,7 +207,7 @@ Tk_BindObjCmd(
      */
 
     if (objc == 4) {
-	int append = 0;
+	bool append = false;
 	unsigned long mask;
 	const char *sequence = Tcl_GetString(objv[2]);
 	const char *script = Tcl_GetString(objv[3]);
@@ -228,7 +228,7 @@ Tk_BindObjCmd(
 
 	if (script[0] == '+') {
 	    script++;
-	    append = 1;
+	    append = true;
 	}
 	mask = Tk_CreateBinding(interp, winPtr->mainPtr->bindingTable,
 		object, sequence, script, append);
@@ -1951,14 +1951,14 @@ Tk_WinfoObjCmd(
 	}
 	break;
     case WIN_VIEWABLE: {
-	int viewable = 0;
+	bool viewable = false;
 
 	for ( ; ; winPtr = winPtr->parentPtr) {
 	    if ((winPtr == NULL) || !(winPtr->flags & TK_MAPPED)) {
 		break;
 	    }
 	    if (winPtr->flags & TK_TOP_HIERARCHY) {
-		viewable = 1;
+		viewable = true;
 		break;
 	    }
 	}

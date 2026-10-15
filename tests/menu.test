@@ -4210,6 +4210,21 @@ test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
     testpressbutton 530 510
 }
 
+test menu-40.3 {tk::MenuFind finds the menubar clone, not the original created with -type menubar - bug 223112} -constraints x11 -setup {
+    deleteWindows
+} -body {
+    menu .m -type menubar
+    menu .m.file
+    .m.file add command -label Open -underline 0
+    .m add cascade -label File -menu .m.file -underline 0
+    . configure -menu .m
+    update
+    list [tk::MenuFind . f] [tk::MenuFind . ""]
+} -cleanup {
+    . configure -menu {}
+    deleteWindows
+} -result {.#m .#m}
+
 test menu-41.1 {identifiers - auto generated} -setup {
     destroy .m
 } -body {
@@ -4624,6 +4639,48 @@ test menu-44.8 {yview errors} -setup {
     deleteWindows
 } -returnCodes error -result {bad argument "foo": must be pages or units}
 rename tallMenu {}
+
+test menu-45.1 {tk_popup followed by postcascade generates Leave - bug 873655ffff} -setup {
+    destroy .top .m
+    set log {}
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top +100+100
+    button .top.b -text Button
+    pack .top.b -padx 50 -pady 50
+    menu .m -tearoff 0
+    menu .m.c -tearoff 0
+    .m add cascade -menu .m.c -label cascade
+    .m.c add command -label Hi
+    update
+    event generate .top.b <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
+    update
+    bind .top.b <Leave> {lappend log %m}
+    tk_popup .m [winfo rootx .top.b] \
+	    [expr {[winfo rooty .top.b] + [winfo height .top.b]}]
+    .m activate 0
+    .m postcascade 0
+    update
+    set log
+} -cleanup {
+    .m unpost
+    grab release .m
+    destroy .top .m
+    unset log
+} -result {NotifyGrab}
+
+test menu-46.1 {tk_popup: menu destroyed while it is posted - bug a4c72a04e3} -setup {
+    menu .m -tearoff 0 -postcommand {destroy .m}
+    .m add command -label One
+    .m add command -label Two
+} -constraints notAqua -body {
+    tk_popup .m 10 10 1
+    winfo exists .m
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .m
+} -result 0
 
 #
 # TESTFILE CLEANUP

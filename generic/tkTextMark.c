@@ -281,11 +281,11 @@ TkTextSetMark(
     if (!strcmp(name, "insert")) {
 	widgetSpecific = 1;
 	markPtr = textPtr->insertMarkPtr;
-	isNew = (markPtr == NULL ? 1 : 0);
+	isNew = (markPtr == NULL);
     } else if (!strcmp(name, "current")) {
 	widgetSpecific = 2;
 	markPtr = textPtr->currentMarkPtr;
-	isNew = (markPtr == NULL ? 1 : 0);
+	isNew = (markPtr == NULL);
     } else {
 	widgetSpecific = 0;
 	hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->markTable, name,

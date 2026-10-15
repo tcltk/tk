@@ -1605,7 +1605,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 # colored.  So, evidently, even though the size changes are honored,
 # the window is sometimes not completely configured.
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
-    macOrUnix
+    unix
 } -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch

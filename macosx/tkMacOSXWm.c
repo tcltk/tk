@@ -7075,7 +7075,7 @@ TkpWmSetState(
     if (winPtr && winPtr->window) {
 	macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
     }
-
+#if 0
     /*
      * Make sure windows are updated before the state change.  As an exception,
      * do not process idle tasks before withdrawing a window.  The purpose of
@@ -7089,6 +7089,7 @@ TkpWmSetState(
     if (state != WithdrawnState) {
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
     }
+#endif
     if (state == WithdrawnState) {
 	TkWmUnmapWindow(winPtr);
     } else if (state == IconicState) {

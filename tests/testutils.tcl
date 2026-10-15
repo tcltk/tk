@@ -129,6 +129,22 @@ namespace eval ::tk::test::generic {
 	return $TkLoadCmd
     }
 
+    # movePointerAwayFromTestArea --
+    #
+    #	Moves the screen pointer away from the area where most tests position
+    #	their windows (the upper left area of the screen). The pointer
+    #	destination should be where there is a low risk of hitting
+    #	desktop-provided hotspots (like KDE/Plasma does).
+    #
+    #	The [winfo screen(width|height) .] is there to make this robust against
+    #	variation in screen sizes, whatever the future brings for the hardware.
+    #
+    proc movePointerAwayFromTestArea {} {
+	event generate {} <Motion> -warp 1 -x [winfo screenwidth .] \
+		-y [expr {[winfo screenheight .]/2}]
+	controlPointerWarpTiming
+    }
+
     # Suspend script execution for a given amount of time, but continue
     # processing events.
     proc pause {ms} {
