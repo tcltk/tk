@@ -113,6 +113,7 @@ to the userbase.
  - [the size hints of a toplevel ignore its menubar](https://core.tcl-lang.org/tcl/tktview/726351)
  - [focus test failures](https://core.tcl-lang.org/tcl/tktview/147446)
  - [missing <Leave> event when posting cascade menus](https://core.tcl-lang.org/tcl/tktview/873655)
+ - [panedwindow misbehaving when resizing window](https://core.tcl-lang.org/tcl/tktview/7c5162)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
