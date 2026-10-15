@@ -3901,10 +3901,8 @@ TopLevelReqProc(
 
     if (Tk_IsMapped(winPtr)) {
 	wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
-	DEBUG_LOG("TopLevelReqProc: scheduling UpdateGeometryInfo %s to -1x-1",
+	DEBUG_LOG("TopLevelReqProc: scheduling UpdateGeometryInfo %s",
 	    Tk_PathName(winPtr));
-	/* Signals to UpdateGeometryInfo to use reqWidth and reqHeight. */
-	winPtr->flags |= TKWL_USE_REQUESTED;
 	/* Schedule a size update. */
 	Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     } else {
@@ -3946,14 +3944,13 @@ ApplyPendingGeometry(
 
     /*
      * Look up the target size for this window in the wmPtr.  If the
-     * TKWL_USE_REQUESTED flag is set or if the wmPtr value is negative
-     * we use the reqWidth or reqHeight stored in the TkWindow struct.
+     * wmPtr value is negative (no size set with "wm geometry") we use the
+     * reqWidth or reqHeight stored in the TkWindow struct.  As on X11, a
+     * size set with "wm geometry" overrides the requested size.
      */
 
-    int useReq = winPtr->flags & TKWL_USE_REQUESTED;
-    tw = useReq || wmPtr->width < 0 ? winPtr->reqWidth  : wmPtr->width;
-    th = useReq || wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
-    winPtr->flags &= ~TKWL_USE_REQUESTED;
+    tw = wmPtr->width < 0 ? winPtr->reqWidth  : wmPtr->width;
+    th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
 
     /* Ensure at least minimum size. */
     if (tw < wmPtr->minWidth)  tw = wmPtr->minWidth;
@@ -4078,16 +4075,18 @@ UpdateGeometryInfo(
 	return;
     }
 
-    if (infoPtr->flags & TKWL_NEVER_FOCUSED) {
-	/* Newly created windows are hidden and set to be focused when they
-	 * are first shown.  If a window is resized before it is has been
-	 * shown, the missing window decorations trigger a wayland error which
-	 * resets the size back to the last successful size, which will be its
-	 * initial size, 200x200.  So we wait for the first call to the
-	 * WindowFocusCallback before resizing it.
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	/* Newly created windows are hidden until they are first shown.  If a
+	 * window is resized before it has been shown, the missing window
+	 * decorations trigger a wayland error which resets the size back to
+	 * the last successful size, which will be its initial size, 200x200.
+	 * So we wait until GLFW reports the window as visible, which happens
+	 * when the compositor has configured it.  Do not wait for the focus:
+	 * the compositor may never give it (no keyboard, or focus stealing
+	 * prevention).
 	 */
 	wmPtr->flags |= WM_UPDATE_PENDING;
-	DEBUG_LOG("UpdateGeometryInfo: waiting for focus.");
+	DEBUG_LOG("UpdateGeometryInfo: waiting for the window to be shown.");
 	wmPtr->updateTimer = Tcl_CreateTimerHandler(17, UpdateGeometryInfo,
 		clientData);
 	return;
@@ -4113,8 +4112,7 @@ UpdateGeometryInfo(
         return;
     }
 
-    DEBUG_LOG("UpdateGeometryInfo: calling ApplyPendingGeometry with flag %d",
-	winPtr->flags & TKWL_USE_REQUESTED);
+    DEBUG_LOG("UpdateGeometryInfo: calling ApplyPendingGeometry");
     ApplyPendingGeometry(winPtr);
 }
 
