@@ -1287,10 +1287,12 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
+# On Aqua and Wayland "wm state" can also set the "zoomed" state.
+testConstraint zoomedState [expr {[tk windowingsystem] in {aqua wayland}}]
+test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix && !zoomedState} {
     list [catch {wm state .t 1} msg]  $msg
 } {1 {bad argument "1": must be iconic, normal, or withdrawn}}
-test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} {unix aqua} {
+test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} {unix zoomedState} {
     list [catch {wm state .t 1} msg]  $msg
 } {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
