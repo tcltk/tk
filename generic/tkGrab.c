@@ -1421,6 +1421,9 @@ GrabWinEventProc(
 
     grabEvPtr->dispPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(
 	    grabEvPtr->dispPtr->display, grabEvPtr->grabWindow);
+    if (grabEvPtr->dispPtr->grabWinPtr == NULL) {
+	TkFocusGrabReleased(grabEvPtr->dispPtr);
+    }
     return 1;
 }
 
