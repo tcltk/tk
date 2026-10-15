@@ -1294,6 +1294,43 @@ GetBidiRuns(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ * FaceCoversRange --
+ *
+ *   Check whether a face of the font has all the characters ucs4[start]
+ *   ... ucs4[end - 1].
+ *
+ * Results:
+ *   true if it has them, false otherwise (also for an invalid index).
+ *----------------------------------------------------------------------
+ */
+
+static bool
+FaceCoversRange(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    const FcChar32 *ucs4,
+    int start,
+    int end)
+{
+    FcCharSet *cs;
+
+    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+        return false;
+    }
+    cs = fontPtr->faces[faceIndex].charset;
+    if (cs == NULL) {
+        return false;
+    }
+    for (int i = start; i < end; i++) {
+        if (!FcCharSetHasChar(cs, ucs4[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static int
 GetRunFaceIndex(
 		WaylandFont *fontPtr,
@@ -1428,9 +1465,17 @@ FindFaceCoveringRange(
          */
     }
 
-    /* If any character in the range is an emoji, use the emoji face for emoji-only runs. */
+    /*
+     * If any character in the range is an emoji, use the emoji face for
+     * emoji-only runs -- if it has them.  Symbols such as U+2603 count as
+     * emoji, but the emoji face may be missing or may not cover them; then
+     * look for a face which does, as for other characters.
+     */
     if (hasEmoji && !hasNonEmoji) {
-        return GetEmojiFaceIndex(fontPtr);
+        int emojiFace = GetEmojiFaceIndex(fontPtr);
+        if (FaceCoversRange(fontPtr, emojiFace, ucs4, start, start + len)) {
+            return emojiFace;
+        }
     }
 
     /* First check if primary face covers all characters. */
@@ -1801,7 +1846,17 @@ PickEmojiFaceForRun(
         int ci = GetColorEmojiFaceIndex(fontPtr, ucs4, start, end);
         if (ci >= 0) return ci;
     }
-    return GetEmojiFaceIndex(fontPtr);
+
+    /*
+     * Text-presentation symbols (such as U+2603) are drawn with the emoji
+     * face only if it has them, otherwise with a face which has them.
+     */
+    int fi = GetEmojiFaceIndex(fontPtr);
+    if (!FaceCoversRange(fontPtr, fi, ucs4, start, end)) {
+        return FindFaceCoveringRange(fontPtr, (FcChar32 *)ucs4, start,
+                end - start);
+    }
+    return fi;
 }
 
 /*
