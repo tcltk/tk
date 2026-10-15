@@ -515,7 +515,7 @@ XSetInputFocus(
 /*
  *----------------------------------------------------------------------
  *
- * TkpChangeFocus --
+ * TkpChangeFocus2 --
  *
  *	This procedure is invoked to move the system focus from one window to
  *	another.
@@ -533,16 +533,17 @@ XSetInputFocus(
  *----------------------------------------------------------------------
  */
 
-int
-TkpChangeFocus(
+unsigned long
+TkpChangeFocus2(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
+    bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
     Window focusWindow;
-    int dummy, serial;
+    unsigned long serial;
+    int dummy;
     TkWindow *winPtr2;
 
     if (!force) {

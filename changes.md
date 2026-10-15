@@ -125,6 +125,7 @@ to the userbase.
  - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
  - [Tk performance regression on X11](https://core.tcl-lang.org/tcl/tktview/290ce5)
+ - [LastKnownRequestProcessed() assigned to unsigned int](https://core.tcl-lang.org/tcl/tktview/451cb3)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

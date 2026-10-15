@@ -474,7 +474,7 @@ enum {
 	}
 	if (w != (Tk_Window)grabWinPtr) {
 	    /* Force the focus back to the grab window. */
-	    TkpChangeFocus(grabWinPtr, 1);
+	    TkpChangeFocus2(grabWinPtr, true);
 	}
     }
 

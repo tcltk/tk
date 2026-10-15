@@ -323,7 +323,7 @@ static const TkIntStubs tkIntStubs = {
     TkPolygonToPoint, /* 71 */
     TkPositionInTree, /* 72 */
     TkpRedirectKeyEvent, /* 73 */
-    0, /* 74 */
+    TkpChangeFocus2, /* 74 */
     0, /* 75 */
     0, /* 76 */
     TkQueueEventForAllChildren, /* 77 */

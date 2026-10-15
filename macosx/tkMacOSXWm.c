@@ -7307,7 +7307,7 @@ XSetInputFocus(
 /*
  *----------------------------------------------------------------------
  *
- * TkpChangeFocus --
+ * TkpChangeFocus2 --
  *
  *	This function is called when Tk moves focus from one window to another.
  *      It should be passed a non-embedded TopLevel. That toplevel gets raised
@@ -7326,10 +7326,10 @@ XSetInputFocus(
  *----------------------------------------------------------------------
  */
 
-int
-TkpChangeFocus(
+unsigned long
+TkpChangeFocus2(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
+    bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
