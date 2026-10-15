@@ -699,6 +699,17 @@ TkWmMapWindow(TkWindow *winPtr)
         glfwShowWindow(glfwWindow);
 
         /*
+         * glfwShowWindow() waits for the compositor to configure the window,
+         * so a geometry change postponed while the window was hidden (e.g.
+         * made while it was withdrawn) can be applied now, synchronously as
+         * on X11.
+         */
+        if (wmPtr->flags & WM_UPDATE_PENDING) {
+            CancelGeometryUpdate(winPtr);
+            UpdateGeometryInfo(winPtr);
+        }
+
+        /*
          * Dispatch a MapNotify event synchronously so any
          * resulting cascade (e.g. pack mapping child frames, which in turn
          * generates their own MapNotify synchronously too) completes
