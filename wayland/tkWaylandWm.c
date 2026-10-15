@@ -22,6 +22,7 @@
 #include "tkPort.h"
 #include "tkWaylandWm.h"
 #include "tkWaylandInt.h"
+#include "tkMenu.h"
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
@@ -306,6 +307,7 @@ static void             WmWaitMapProc(void *clientData, XEvent *eventPtr);
 
 /* GLFW integration helpers. */
 static void InitializeGlfwWindow(TkWindow *winPtr);
+static int IsPopupMenuWindow(TkWindow *winPtr);
 static void DestroyGlfwWindow(TkWindow *winPtr);
 static void ApplyFullscreenState(TkWindow *winPtr);
 
@@ -375,6 +377,47 @@ TkWmNewWindow(
 
     /* Assign the wmMgrType to manage the geometry of this toplevel. */
     Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, (void *)0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsPopupMenuWindow --
+ *
+ *	Checks whether a toplevel is a menu that is displayed in an
+ *	xdg_popup surface (or in the menubar) rather than in a GLFW window
+ *	of its own.  Tear-off menus are shown as ordinary toplevels.
+ *
+ * Results:
+ *	1 for menu and menubar windows other than tear-off menus, 0
+ *	otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+IsPopupMenuWindow(
+    TkWindow *winPtr)
+{
+    TkMenuReferences *menuRefPtr;
+
+    if (winPtr->classUid != Tk_GetUid("Menu") &&
+	    winPtr->classUid != Tk_GetUid("Menubar")) {
+	return 0;
+    }
+    if (winPtr->mainPtr && winPtr->mainPtr->interp && winPtr->pathName) {
+	menuRefPtr = TkFindMenuReferences(winPtr->mainPtr->interp,
+		winPtr->pathName);
+	if (menuRefPtr && menuRefPtr->menuPtr
+		&& menuRefPtr->menuPtr->tkwin == (Tk_Window) winPtr
+		&& menuRefPtr->menuPtr->menuType == TEAROFF_MENU) {
+	    return 0;
+	}
+    }
+    return 1;
 }
 
 /*
@@ -680,8 +723,7 @@ TkWmMapWindow(TkWindow *winPtr)
 
     if (!Tk_IsEmbedded(winPtr)) {
         /* Menu/clipboard toplevels have no GLFW window - don't init. */
-        if (winPtr->classUid == Tk_GetUid("Menu") ||
-            winPtr->classUid == Tk_GetUid("Menubar")) {
+        if (IsPopupMenuWindow(winPtr)) {
             DEBUG_LOG("TkWmMapWindow: %s is menu/menubar, skipping GLFW init", Tk_PathName(winPtr));
         } else {
             InitializeGlfwWindow(winPtr);
@@ -1167,8 +1209,7 @@ Tk_MakeWindow(
          * Menu windows should use subsurfaces, not full GLFW windows.
          * Skip GLFW window creation entirely for menu windows.
          */
-        if (winPtr->classUid == Tk_GetUid("Menu") ||
-            winPtr->classUid == Tk_GetUid("Menubar")) {
+        if (IsPopupMenuWindow(winPtr)) {
             
             DEBUG_LOG("Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation", 
                     Tk_PathName(tkwin), Tk_GetUid(winPtr->classUid));

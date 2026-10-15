@@ -1681,6 +1681,8 @@ TkpDrawMenuEntry(
     Tk_3DBorder activeBorder = NULL;
     NVGcontext *vg = NULL;
     int isMenubar = 0;
+    TkWaylandDrawingContext dc;
+    int inFrame = 0;
 
     /* Safety check. */
     if (!mePtr || !mePtr->menuPtr || !mePtr->menuPtr->tkwin) return;
@@ -1744,12 +1746,20 @@ TkpDrawMenuEntry(
         }
     }
 
-    if (!popup) {
+    if (popup) {
+        vg = TkWaylandPopupGetNVGContext(popup);
+    } else if (mePtr->menuPtr->menuType == TEAROFF_MENU) {
+        /*
+         * A tear-off menu is an ordinary toplevel; draw into it.
+         */
+        if (TkWaylandBeginDraw(d, NULL, &dc) == TCL_OK) {
+            vg = dc.vg;
+            inFrame = 1;
+        }
+    } else {
         DEBUG_LOG("TkpDrawMenuEntry: no popup found for menu %p!", (void*)mePtr->menuPtr);
         return;
     }
-
-    vg = TkWaylandPopupGetNVGContext(popup);
     if (!vg) {
         DEBUG_LOG("TkpDrawMenuEntry: no NVG context available");
         return;
@@ -1851,11 +1861,8 @@ TkpDrawMenuEntry(
                                    entryFont, entryFmPtr, x, y, width, height,
                                    textColor);
         }
-        return;
-    }
-
-    /* For non-menubar entries, use type-based drawing. */
-    if (mePtr->type == SEPARATOR_ENTRY) {
+    } else if (mePtr->type == SEPARATOR_ENTRY) {
+        /* For non-menubar entries, use type-based drawing. */
         DrawMenuSeparator(mePtr->menuPtr, mePtr, vg,
                           entryFont, entryFmPtr, x, y, width, height);
     } else if (mePtr->type == TEAROFF_ENTRY) {
@@ -1876,6 +1883,9 @@ TkpDrawMenuEntry(
                                    entryFont, entryFmPtr, x, y, width, height,
                                    textColor);
         }
+    }
+    if (inFrame) {
+        TkWaylandEndDraw(&dc);
     }
 }
 
@@ -4356,8 +4366,12 @@ TkpPostTearoffMenu(
 
     DEBUG_LOG("TkpPostTearoffMenu called");
 
-    TkWaylandActivateMenuEntry(menuPtr, -1);
+    /*
+     * Compute the geometry first: posting <<MenuSelect>> creates the
+     * window, and it is created with the requested size.
+     */
     TkRecomputeMenu(menuPtr);
+    TkWaylandActivateMenuEntry(menuPtr, -1);
 
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
