@@ -13,6 +13,8 @@ bind Panedwindow <ButtonRelease-1> {::tk::panedwindow::ReleaseSash %W 1}
 bind Panedwindow <ButtonRelease-2> {::tk::panedwindow::ReleaseSash %W 0}
 
 bind Panedwindow <Motion> { ::tk::panedwindow::Motion %W %x %y }
+bind Panedwindow <Enter> { ::tk::panedwindow::Motion %W %x %y }
+bind Panedwindow <Destroy> { ::tk::panedwindow::Destroy %W }
 
 bind Panedwindow <Leave> { ::tk::panedwindow::Leave %W }
 
@@ -44,6 +46,7 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
 		$w sash mark $index $x $y
 	    }
 	    set Priv(sash) $index
+	    set Priv(sashwindow) $w
 	    lassign [$w sash coord $index] sx sy
 	    set Priv(dx) [expr {$sx-$x}]
 	    set Priv(dy) [expr {$sy-$y}]
@@ -101,7 +104,11 @@ proc ::tk::panedwindow::ReleaseSash {w proxy} {
 	    $w sash place $Priv(sash) $x $y
 	    $w proxy forget
 	}
-	unset Priv(sash) Priv(dx) Priv(dy)
+	unset -nocomplain Priv(sash) Priv(dx) Priv(dy) Priv(sashwindow)
+	# The cursor was kept while dragging; update it for where the
+	# pointer is now.
+	Motion $w [expr {[winfo pointerx $w] - [winfo rootx $w]}] \
+		[expr {[winfo pointery $w] - [winfo rooty $w]}]
     }
 }
 
@@ -120,6 +127,10 @@ proc ::tk::panedwindow::ReleaseSash {w proxy} {
 #
 proc ::tk::panedwindow::Motion {w x y} {
     variable ::tk::Priv
+    if {[Dragging $w]} {
+	# Keep the cursor while a sash is dragged.
+	return
+    }
     set id [$w identify $x $y]
     if {([llength $id] == 2) && \
 	    (!$::tk_strictMotif || [lindex $id 1] eq "handle")} {
@@ -162,7 +173,8 @@ proc ::tk::panedwindow::Cursor {w} {
     variable ::tk::Priv
     # Make sure to check window existence in case it is destroyed.
     if {[info exists Priv($w,panecursor)] && [winfo exists $w]} {
-	if {[winfo containing [winfo pointerx $w] [winfo pointery $w]] eq $w} {
+	if {[Dragging $w] || ([winfo containing \
+		[winfo pointerx $w] [winfo pointery $w]] eq $w)} {
 	    set Priv($w,pwAfterId) [after 150 \
 		    [list ::tk::panedwindow::Cursor $w]]
 	} else {
@@ -187,8 +199,40 @@ proc ::tk::panedwindow::Cursor {w} {
 #
 proc ::tk::panedwindow::Leave {w} {
     variable ::tk::Priv
-    if {[info exists Priv($w,panecursor)]} {
+    if {[info exists Priv($w,panecursor)] && ![Dragging $w]} {
 	$w configure -cursor $Priv($w,panecursor)
 	unset Priv($w,panecursor)
     }
+}
+
+# ::tk::panedwindow::Destroy --
+#
+#   Forget the cursor state of a destroyed widget, so that a new widget
+#   with the same name does not inherit it.
+#
+# Arguments:
+#   w		the widget
+#
+proc ::tk::panedwindow::Destroy {w} {
+    variable ::tk::Priv
+    if {[info exists Priv($w,pwAfterId)]} {
+	after cancel $Priv($w,pwAfterId)
+    }
+    unset -nocomplain Priv($w,panecursor) Priv($w,pwAfterId)
+    if {[Dragging $w]} {
+	unset -nocomplain Priv(sash) Priv(dx) Priv(dy) Priv(sashwindow)
+    }
+}
+
+# ::tk::panedwindow::Dragging --
+#
+#   Whether a sash of the widget is being dragged.
+#
+# Arguments:
+#   w		the widget
+#
+proc ::tk::panedwindow::Dragging {w} {
+    variable ::tk::Priv
+    expr {[info exists Priv(sash)] && [info exists Priv(sashwindow)]
+	    && $Priv(sashwindow) eq $w}
 }
