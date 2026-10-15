@@ -1825,12 +1825,17 @@ TkWaylandSyncAppId(Tcl_Interp *interp)
     Tcl_InterpState state;
     const char *name;
 
-    if (interp == NULL || Tk_MainWindow(interp) == NULL) {
+    if (interp == NULL) {
         return;
     }
 
+    /*
+     * Save the state before calling Tk_MainWindow(): it sets an error
+     * result when the application is not (or no longer) registered.
+     */
     state = Tcl_SaveInterpState(interp, TCL_OK);
-    if (Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+    if (Tk_MainWindow(interp) != NULL
+	    && Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
         name = Tcl_GetStringResult(interp);
         if (name != NULL && *name != '\0') {
             TkWaylandSetAppId(name);
