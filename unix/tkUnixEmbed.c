@@ -655,6 +655,7 @@ EmbedSendConfigure(
 {
     TkWindow *winPtr = containerPtr->parentPtr;
     XEvent event;
+    Tk_ErrorHandler errHandler;
 
     event.xconfigure.type = ConfigureNotify;
     event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
@@ -673,10 +674,14 @@ EmbedSendConfigure(
      * Note: when sending the event below, the ButtonPressMask causes the
      * event to be sent only to applications that have selected for
      * ButtonPress events, which should be just the embedded application.
+     * Ignore the error if the embedded application has deleted its window.
      */
 
+    errHandler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1, NULL,
+	    NULL);
     XSendEvent(winPtr->display, containerPtr->wrapper, False,
 	    0, &event);
+    Tk_DeleteErrorHandler(errHandler);
 
     /*
      * The following needs to be done if the embedded window is not in the
@@ -761,6 +766,7 @@ TkpRedirectKeyEvent(
 {
     Container *containerPtr;
     Window saved;
+    Tk_ErrorHandler errHandler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -798,8 +804,11 @@ TkpRedirectKeyEvent(
 	}
 	saved = eventPtr->xkey.window;
 	eventPtr->xkey.window = containerPtr->parent;
+	errHandler = Tk_CreateErrorHandler(eventPtr->xkey.display, -1, -1,
+		-1, NULL, NULL);
 	XSendEvent(eventPtr->xkey.display, eventPtr->xkey.window, False,
 		KeyPressMask|KeyReleaseMask, eventPtr);
+	Tk_DeleteErrorHandler(errHandler);
 	eventPtr->xkey.window = saved;
     }
 }
@@ -833,6 +842,7 @@ TkpClaimFocus(
 {
     XEvent event;
     Container *containerPtr;
+    Tk_ErrorHandler errHandler;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -853,7 +863,15 @@ TkpClaimFocus(
     event.xfocus.window = containerPtr->parent;
     event.xfocus.mode = EMBEDDED_APP_WANTS_FOCUS;
     event.xfocus.detail = force;
+
+    /*
+     * Ignore the error if the container has already been destroyed.
+     */
+
+    errHandler = Tk_CreateErrorHandler(event.xfocus.display, -1, -1, -1,
+	    NULL, NULL);
     XSendEvent(event.xfocus.display, event.xfocus.window, False, 0, &event);
+    Tk_DeleteErrorHandler(errHandler);
 }
 
 /*
