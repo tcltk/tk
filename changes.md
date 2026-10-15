@@ -117,6 +117,7 @@ to the userbase.
  - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tcl/tktview/a4c72a)
  - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
+ - [wm overrideredirect zaps additions to system menu](https://core.tcl-lang.org/tcl/tktview/220781)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

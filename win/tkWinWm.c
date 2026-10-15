@@ -2227,6 +2227,9 @@ UpdateWrapper(
 	wmPtr->flags |= WM_SYNC_PENDING;
 	SetMenu(wmPtr->wrapper, wmPtr->hMenu);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
+	if (oldWrapper != NULL) {
+	    TkWinMenuWrapperChanged(wmPtr->hMenu);
+	}
     }
 
     if (childStateInfo) {
