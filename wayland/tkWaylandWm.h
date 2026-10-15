@@ -101,6 +101,14 @@ typedef struct TkWmInfo {
     Tcl_Size      cmdArgc;
     Tcl_Obj     **cmdArgv;
     char         *clientMachine;
+    int           activeFocus;	/* "wm focusmodel" is active. */
+    int           iconPositionSet; /* "wm iconposition" was set: */
+    int           iconX, iconY;	/* the position. */
+    Pixmap        iconBitmap;	/* "wm iconbitmap", or None. */
+    Pixmap        iconMask;	/* "wm iconmask", or None. */
+    Tcl_Obj      *cmapList;	/* "wm colormapwindows", or NULL. */
+    double        stackPos;	/* Position in the stacking order which Tk
+				 * requested; higher is above. */
     int           flags;
     int           numTransients;
     int           iconDataSize;
@@ -134,6 +142,8 @@ typedef struct TkWmInfo {
 #define WM_HEIGHT_NOT_RESIZABLE     (1<<14)
 #define WM_WITHDRAWN                (1<<15)
 #define WM_FULLSCREEN_PENDING       (1<<16)
+#define WM_MAP_DEFERRED             (1<<17) /* Tk tried to map the window
+					      * while it was withdrawn. */
 
 /* Size-hint flags. */
 #define WM_USPosition   (1<<0)
