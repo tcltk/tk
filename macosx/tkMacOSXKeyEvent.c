@@ -30,6 +30,16 @@
 
 #define NS_KEYLOG 0
 #define XEVENT_MOD_MASK (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask)
+
+/*
+ * Virtual keycode of the space bar (kVK_Space in HIToolbox/Events.h) and the
+ * modifier mask used to recognize the system shortcut for the Emoji & Symbols
+ * character palette, Control-Command-Space.
+ */
+
+#define TK_VK_SPACE 49
+#define TK_PALETTE_MODS (NSShiftKeyMask | NSControlKeyMask | \
+			 NSAlternateKeyMask | NSCommandKeyMask)
 static Tk_Window keyboardGrabWinPtr = NULL; /* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil; /* Its underlying NSWindow.*/
 static NSModalSession modalSession = nil;
@@ -177,6 +187,30 @@ static NSUInteger textInputModifiers;
 	return theEvent;
     }
     can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
+
+    /*
+     * The system shortcut Control-Command-Space is normally the key equivalent
+     * of the "Emoji & Symbols" item which AppKit adds to a menu titled "Edit".
+     * An application which installs its own menubar without an Edit menu has
+     * no such item, so the shortcut does nothing.  To make the palette
+     * available regardless of the menubar, we handle the shortcut here by
+     * sending the same action which the menu item would send.  The action is
+     * only sent when the focus widget can input text, and when no composition
+     * is in progress.  The palette is positioned using the caret information
+     * recorded by Tk_SetCaretPos, and the selected characters are delivered
+     * through insertText:replacementRange: below.
+     *
+     * We return nil so that the event is not also passed to NSApp sendEvent:,
+     * where a menu item with the same key equivalent, if there is one, would
+     * invoke the palette a second time.
+     */
+
+    if (type == NSKeyDown && virt == TK_VK_SPACE && can_input_text
+	    && !processingCompose && ![theEvent isARepeat]
+	    && (modifiers & TK_PALETTE_MODS) == (NSControlKeyMask | NSCommandKeyMask)) {
+	[NSApp orderFrontCharacterPalette:nil];
+	return nil;
+    }
 
 #if (NS_KEYLOG)
     TKLog(@"keyDown: %s compose sequence.\n",

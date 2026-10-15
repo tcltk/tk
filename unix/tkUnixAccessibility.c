@@ -47,7 +47,7 @@ static const struct AtkRoleMap {
 } roleMap[] = {
     {"Button", ATK_ROLE_PUSH_BUTTON},
     {"Checkbox", ATK_ROLE_CHECK_BOX},
-    {"Checkbutton", ATK_ROLE_CHECK_BOX},	
+    {"Checkbutton", ATK_ROLE_CHECK_BOX},
     {"Combobox", ATK_ROLE_COMBO_BOX},
     {"Entry", ATK_ROLE_ENTRY},
     {"Label", ATK_ROLE_LABEL},
@@ -1200,7 +1200,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     if (Tk_IsTopLevel(tkwin)) {
 	parentAcc = tk_root_accessible;
-	
+
 	if (!g_list_find(toplevel_accessible_objects, accessible)) {
 	    toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
 	    gint index = g_list_index(toplevel_accessible_objects, accessible);
@@ -1610,29 +1610,29 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
     if (!interp) return;
     AtkObject *parentAcc = GetAtkObjectForTkWindow(parentWin);
     if (!parentAcc) {
-        parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
-        if (parentAcc) {
-            RegisterAtkObjectForTkWindow(parentWin, parentAcc);
-            if (Tk_IsTopLevel(parentWin)) RegisterToplevelWindow(interp, parentWin, parentAcc);
-        }
+	parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
+	if (parentAcc) {
+	    RegisterAtkObjectForTkWindow(parentWin, parentAcc);
+	    if (Tk_IsTopLevel(parentWin)) RegisterToplevelWindow(interp, parentWin, parentAcc);
+	}
     }
     if (!parentAcc) parentAcc = tk_root_accessible;
     if (!parentAcc) return;
     TkWindow *childPtr;
     for (childPtr = ((TkWindow*)parentWin)->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-        Tk_Window childWin = (Tk_Window)childPtr;
-        if (GetAtkObjectForTkWindow(childWin)) continue;
-        AtkObject *childAcc = TkCreateAccessibleAtkObject(interp, childWin, Tk_PathName(childWin));
-        if (!childAcc) continue;
-        atk_object_set_parent(childAcc, parentAcc);
-        RegisterAtkObjectForTkWindow(childWin, childAcc);
-        TkAtkAccessible_RegisterEventHandlers(childWin, (TkAtkAccessible *)childAcc);
-        gint idx = atk_object_get_n_accessible_children(parentAcc);
-        g_signal_emit_by_name(parentAcc, "children-changed::add", idx > 0 ? idx - 1 : 0, childAcc);
-        if (Tk_IsMapped(childWin)) {
-            atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
-            atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
-        }
+	Tk_Window childWin = (Tk_Window)childPtr;
+	if (GetAtkObjectForTkWindow(childWin)) continue;
+	AtkObject *childAcc = TkCreateAccessibleAtkObject(interp, childWin, Tk_PathName(childWin));
+	if (!childAcc) continue;
+	atk_object_set_parent(childAcc, parentAcc);
+	RegisterAtkObjectForTkWindow(childWin, childAcc);
+	TkAtkAccessible_RegisterEventHandlers(childWin, (TkAtkAccessible *)childAcc);
+	gint idx = atk_object_get_n_accessible_children(parentAcc);
+	g_signal_emit_by_name(parentAcc, "children-changed::add", idx > 0 ? idx - 1 : 0, childAcc);
+	if (Tk_IsMapped(childWin)) {
+	    atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
+	    atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
+	}
     }
 }
 
@@ -1686,19 +1686,19 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
     gint x, y, w, h;
     tk_get_extents(ATK_COMPONENT(accObj), &x, &y, &w, &h, ATK_XY_SCREEN);
     if (Tk_IsMapped(tkwin)) {
-        atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, TRUE);
-        atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, TRUE);
-        if (!Tk_IsTopLevel(tkwin)) {
-            AtkObject *parentAcc = GetAtkObjectForTkWindow(Tk_Parent(tkwin));
-            if (parentAcc) {
-                gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
-                if (idx < 0) idx = 0;
-                g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accObj);
-            }
-        }
+	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, TRUE);
+	if (!Tk_IsTopLevel(tkwin)) {
+	    AtkObject *parentAcc = GetAtkObjectForTkWindow(Tk_Parent(tkwin));
+	    if (parentAcc) {
+		gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
+		if (idx < 0) idx = 0;
+		g_signal_emit_by_name(parentAcc, "children-changed::add", idx, accObj);
+	    }
+	}
     } else {
-        atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, FALSE);
-        atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, FALSE);
+	atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, FALSE);
+	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, FALSE);
     }
 }
 
@@ -2189,13 +2189,13 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
     utilClass->get_toolkit_version = tk_util_get_toolkit_version;
 
     if (atk_bridge_adaptor_init(NULL, NULL) != 0) {
-        Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(interp, "Failed to initialize AT-SPI bridge", TCL_STATIC);
+	return TCL_ERROR;
     }
     tk_root_accessible = tk_util_get_root();
     if (!tk_root_accessible) {
-        Tcl_SetResult(interp, "Failed to create root accessible object", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(interp, "Failed to create root accessible object", TCL_STATIC);
+	return TCL_ERROR;
     }
     InitAtkTkMapping();
     acc_context = ATK_CONTEXT;
@@ -2204,13 +2204,13 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
     g_log_set_handler("GLib-GObject", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
     Tk_Window mainWin = Tk_MainWindow(interp);
     if (!mainWin) {
-        Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
+	return TCL_ERROR;
     }
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {
-        Tcl_SetResult(interp, "Failed to create AtkObject for root window", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_SetResult(interp, "Failed to create AtkObject for root window", TCL_STATIC);
+	return TCL_ERROR;
     }
     atk_object_set_role(main_acc, ATK_ROLE_FRAME);
     tk_set_name(main_acc, "Tk Application");
@@ -2219,15 +2219,15 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
     RegisterWidgetRecursive(interp, mainWin);
     GList *l;
     for (l = toplevel_accessible_objects; l != NULL; l = l->next) {
-        AtkObject *top = ATK_OBJECT(l->data);
-        gint idx = g_list_index(toplevel_accessible_objects, top);
-        if (idx >= 0 && tk_root_accessible) {
-            g_signal_emit_by_name(tk_root_accessible, "children-changed::add", idx, top);
-        }
-        if (Tk_IsMapped(((TkAtkAccessible*)top)->tkwin)) {
-            atk_object_notify_state_change(top, ATK_STATE_SHOWING, TRUE);
-            atk_object_notify_state_change(top, ATK_STATE_VISIBLE, TRUE);
-        }
+	AtkObject *top = ATK_OBJECT(l->data);
+	gint idx = g_list_index(toplevel_accessible_objects, top);
+	if (idx >= 0 && tk_root_accessible) {
+	    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", idx, top);
+	}
+	if (Tk_IsMapped(((TkAtkAccessible*)top)->tkwin)) {
+	    atk_object_notify_state_change(top, ATK_STATE_SHOWING, TRUE);
+	    atk_object_notify_state_change(top, ATK_STATE_VISIBLE, TRUE);
+	}
     }
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
     Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkAtkAccessibleObjCmd, NULL, NULL);
@@ -2252,31 +2252,31 @@ TkWaylandAccessibility_Finalize(void)
 {
     StopSpeech();
     if (tk_to_atk_map) {
-        g_hash_table_destroy(tk_to_atk_map);
-        tk_to_atk_map = NULL;
+	g_hash_table_destroy(tk_to_atk_map);
+	tk_to_atk_map = NULL;
     }
     if (toplevel_accessible_objects) {
-        g_list_free(toplevel_accessible_objects);
-        toplevel_accessible_objects = NULL;
+	g_list_free(toplevel_accessible_objects);
+	toplevel_accessible_objects = NULL;
     }
     if (tk_root_accessible) {
-        g_object_unref(tk_root_accessible);
-        tk_root_accessible = NULL;
+	g_object_unref(tk_root_accessible);
+	tk_root_accessible = NULL;
     }
 }
 
 #else
 static int
-TkAccessibleStubObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp, 
-	TCL_UNUSED(Tcl_Size), 
+TkAccessibleStubObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp,
+	TCL_UNUSED(Tcl_Size),
 	TCL_UNUSED(Tcl_Obj *const *))
 {
-    static int warned = 0;
+    static bool warned = false;
     if (!warned) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("Warning: Tk accessibility support not available in this build.", -1));
-        warned = 1;
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Warning: Tk accessibility support not available in this build.", -1));
+	warned = true;
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewObj());
+	Tcl_SetObjResult(interp, Tcl_NewObj());
     }
     return TCL_OK;
 }

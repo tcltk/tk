@@ -608,6 +608,14 @@ declare 187 {
 	    Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
+# Emoji classification shared by the font engines (UTS #51)
+declare 188 {
+    int TkFontEmojiPresentation(int ch, int next)
+}
+declare 189 {
+    int TkFontEmojiContinuation(int ch, int inEmoji)
+}
+
 
 ##############################################################################
 

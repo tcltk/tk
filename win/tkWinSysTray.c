@@ -621,7 +621,7 @@ TaskbarEval(
     char evalspace[200];
     size_t evalsize = 200;
     char *expanded;
-    int fixup = 0;
+    bool fixup = false;
 
     switch (lParam) {
     case WM_MOUSEMOVE:
@@ -630,43 +630,43 @@ TaskbarEval(
 	break;
     case WM_LBUTTONDOWN:
 	msgstring = "WM_LBUTTONDOWN";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_LBUTTONUP:
 	msgstring = "WM_LBUTTONUP";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_LBUTTONDBLCLK:
 	msgstring = "WM_LBUTTONDBLCLK";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_RBUTTONDOWN:
 	msgstring = "WM_RBUTTONDOWN";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_RBUTTONUP:
 	msgstring = "WM_RBUTTONUP";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_RBUTTONDBLCLK:
 	msgstring = "WM_RBUTTONDBLCLK";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_MBUTTONDOWN:
 	msgstring = "WM_MBUTTONDOWN";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_MBUTTONUP:
 	msgstring = "WM_MBUTTONUP";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_MBUTTONDBLCLK:
 	msgstring = "WM_MBUTTONDBLCLK";
-	fixup = 1;
+	fixup = true;
 	break;
     default:
 	msgstring = "WM_NULL";
-	fixup = 0;
+	fixup = false;
     }
     expanded = TaskbarExpandPercents(icoPtr, msgstring, wParam, lParam,
 	    Tcl_GetString(icoPtr->taskbar_command), evalspace, &evalsize);
@@ -833,13 +833,13 @@ RegisterHandlerClass(
 
 static HWND
 CreateTaskbarHandlerWindow(void) {
-    static int registered = 0;
+    static bool registered = false;
     HINSTANCE hInstance = GETHINSTANCE;
     if (!registered) {
 	if (!RegisterHandlerClass(hInstance)) {
 	    return 0;
 	}
-	registered = 1;
+	registered = true;
     }
     return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
 	    CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
@@ -1102,7 +1102,7 @@ WinSysNotifyCmd(
      *  We only set the AppID *once* the first time this routine runs.
      *  Setting it after the tray icon exists breaks callbacks + image.
      */
-    static int appidSet = 0;
+    static bool appidSet = false;
     if (!appidSet) {
 	Tk_Window mainWin = Tk_MainWindow(interp);
 	if (mainWin == NULL) {
@@ -1135,7 +1135,7 @@ WinSysNotifyCmd(
 	}
 
 	SetCurrentProcessExplicitAppUserModelID(appid);
-	appidSet = 1;
+	appidSet = true;
     }
 
     /*

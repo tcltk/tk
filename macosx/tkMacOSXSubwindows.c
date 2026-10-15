@@ -143,6 +143,19 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
+static bool mouseIsInTkWindow(TkWindow *winPtr)
+{
+    TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    NSRect toplevelFrame = [macWin frame];
+    int viewHeight = (int) [[macWin contentView] frame].size.height;
+    int widgetY = viewHeight - Tk_Height(winPtr) - winPtr->privatePtr->yOff;
+    NSRect widgetFrame = NSMakeRect(
+	  toplevelFrame.origin.x + winPtr->privatePtr->xOff,
+	  toplevelFrame.origin.y + widgetY,
+	  Tk_Width(winPtr), Tk_Height(winPtr));
+    return NSMouseInRect([NSEvent mouseLocation], widgetFrame, NO);
+}
+			      
 int
 XMapWindow(
     Display *display,		/* Display. */
@@ -155,10 +168,10 @@ XMapWindow(
     static bool initialized = false;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
+    //fprintf(stderr, "XMapWindow: mapping %s\n", Tk_PathName(macWin->winPtr));
 
     /*
-     * Under certain situations it's possible for this function to be called
+     * In certain situations it's possible for this function to be called
      * before the toplevel window it's associated with has actually been
      * mapped. In that case we need to create the real Macintosh window now as
      * this function as well as other X functions assume that the portPtr is
@@ -196,11 +209,13 @@ XMapWindow(
 		    [win orderFrontRegardless];
 		}
 
+		////XXXX Do we need this at all????
+		////XXXX Should hidden windows get Visibility Notifications?
 		/*
 		 * Delay for up to 20 milliseconds until the toplevel has
 		 * actually become the highest toplevel.  This is to ensure
 		 * that the Visibility event occurs after the toplevel is
-		 * visible.
+		 * visible.  We don't do this for hidden windows.
 		 */
 
 		if ((winPtr->wmInfoPtr->flags & WM_HIDDEN) == 0) {
@@ -215,11 +230,10 @@ XMapWindow(
 
 	    /*
 	     * Call Tk_UpdatePointer to tell Tk whether the pointer is in the
-	     * new window.
+	     * contentView of the new toplevel window.
 	     */
 
-	    NSPoint viewLocation = [view convertPoint:mouse fromView:nil];
-	    if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
+	    if (mouseIsInTkWindow(winPtr)) {
 		Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
 	    }
 	} else {
@@ -233,6 +247,14 @@ XMapWindow(
 	    TkMacOSXInvalClipRgns(contWinPtr);
 	}
     } else {
+	/*
+	 * Call Tk_UpdatePointer to tell Tk whether the pointer is in the
+	 * window which we are mapping.
+	 */
+
+	if (mouseIsInTkWindow(winPtr)) {
+	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+	}
 
 	/*
 	 * For non-toplevel windows, rebuild the parent's clipping region
@@ -327,13 +349,14 @@ XUnmapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
 {
-    MacDrawable *macWin = (MacDrawable *)window;
-    TkWindow *winPtr = macWin->winPtr;
-    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-
     if (!window) {
 	return BadWindow;
     }
+    MacDrawable *macWin = (MacDrawable *)window;
+    TkWindow *winPtr = macWin->winPtr;
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
+    TkWindow *toplevelPtr = TkMacOSXGetTkWindow(win);
+    bool containsPointer = mouseIsInTkWindow(winPtr);
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
@@ -385,6 +408,39 @@ XUnmapWindow(
 	if (view) {
 	    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
 	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
+	}
+    }
+
+    /*
+     * If the window being unmapped contains the mouse pointer We have to tell Tk
+     * which window will contain the mouse pointer after this window is unmapped.
+     */
+
+    if (containsPointer) {
+	NSPoint mouse = [NSEvent mouseLocation];
+	NSPoint local = [win tkConvertPointFromScreen: mouse];
+	int top_x = floor(local.x),
+	    top_y = floor(win.frame.size.height - local.y);
+	int root_x = floor(mouse.x),
+	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
+	bool doUpdatePointer = true;
+	int dummy_x, dummy_y;
+	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr, top_x, top_y,
+					       &dummy_x, &dummy_y);
+	if (!Tk_IsTopLevel(target) && (Tk_Parent(target) == NULL)) {
+	   /*
+	    * The parent of the Tk window is in the process of being destroyed.
+	    * Don't call Tk_UpdatePointer in this case.
+	    */
+	    doUpdatePointer = False;
+	}
+	if (doUpdatePointer) {
+	    Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
+	    if (target == NULL) {
+		[NSApp setTkPointerWindow:nil];
+	    } else {
+		[NSApp setTkPointerWindow: (TkWindow *)target];
+	    }
 	}
     }
     return Success;

@@ -3185,7 +3185,7 @@ test listbox-28.1 {listbox -activestyle} -setup {
     destroy .l
 } -result none
 test listbox-28.2 {listbox -activestyle} -constraints {
-	macOrUnix
+	unix
 } -setup {
     destroy .l
 } -body {
