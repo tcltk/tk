@@ -260,9 +260,10 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
  */
 
 void
-TkpCloseDisplay(TCL_UNUSED(TkDisplay*)) /* dispPtr */
+TkpCloseDisplay(TkDisplay *dispPtr)
 {
-	/* no-op */
+    /* Remove the message queue of send, as on X11. */
+    TkSendCleanup(dispPtr);
 }
 
 /*
