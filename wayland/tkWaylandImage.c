@@ -133,10 +133,15 @@ ImageGetPixel(
     switch (image->bits_per_pixel) {
     case 32:
     case 24:
-        /* Tk photo is RGBA in memory; return 0xRRGGBB for XImage API */
-        return ((unsigned long)srcPtr[0] << 16)
+        /*
+         * As on X11, the pixel 0xRRGGBB is stored in the LSBFirst byte
+         * order of the image: blue, green, red (and alpha).  The generic
+         * code (e.g. the canvas "image" command) reads the bytes directly
+         * and decodes them with the masks of the visual.
+         */
+        return ((unsigned long)srcPtr[2] << 16)
              | ((unsigned long)srcPtr[1] << 8)
-             |  (unsigned long)srcPtr[2];
+             |  (unsigned long)srcPtr[0];
     case 16:
         return (unsigned long)(*(unsigned short *)srcPtr);
     case 8:
@@ -186,15 +191,16 @@ PutPixel(
 
     switch (image->bits_per_pixel) {
     case 32:
-        destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF); /* R */
+        /* LSBFirst 0xRRGGBB, see ImageGetPixel. */
+        destPtr[0] = (unsigned char)(pixel & 0xFF);         /* B */
         destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF); /* G */
-        destPtr[2] = (unsigned char)(pixel & 0xFF);         /* B */
+        destPtr[2] = (unsigned char)((pixel >> 16) & 0xFF); /* R */
         destPtr[3] = 0xFF;
         break;
     case 24:
-        destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF);
+        destPtr[0] = (unsigned char)(pixel & 0xFF);
         destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF);
-        destPtr[2] = (unsigned char)(pixel & 0xFF);
+        destPtr[2] = (unsigned char)((pixel >> 16) & 0xFF);
         break;
     case 16:
         (*(unsigned short*)destPtr) = (unsigned short)pixel;
@@ -917,8 +923,43 @@ XPutImage(
     unsigned int  width,
     unsigned int  height)
 {
-    int rc = TkpPutRGBAImage(display, drawable, gc, image,
-                             src_x, src_y, dest_x, dest_y, width, height);
+    int rc;
+
+    if (image && image->data
+	    && (image->bits_per_pixel == 32 || image->bits_per_pixel == 24)) {
+	/*
+	 * An XImage stores the pixels in the LSBFirst byte order of the
+	 * visual (blue, green, red), but TkpPutRGBAImage() takes the RGBA
+	 * data of a photo image.  Convert the pixels.
+	 */
+
+	XImage rgba = *image;
+	size_t size = (size_t) image->bytes_per_line * image->height;
+	int bpp = image->bits_per_pixel / 8;
+
+	rgba.data = (char *) ckalloc(size);
+	for (int j = 0; j < image->height; j++) {
+	    unsigned char *src = (unsigned char *) image->data
+		    + (size_t) j * image->bytes_per_line;
+	    unsigned char *dst = (unsigned char *) rgba.data
+		    + (size_t) j * image->bytes_per_line;
+
+	    for (int i = 0; i < image->width; i++, src += bpp, dst += bpp) {
+		dst[0] = src[2];
+		dst[1] = src[1];
+		dst[2] = src[0];
+		if (bpp == 4) {
+		    dst[3] = 0xFF;
+		}
+	    }
+	}
+	rc = TkpPutRGBAImage(display, drawable, gc, &rgba,
+		src_x, src_y, dest_x, dest_y, width, height);
+	ckfree(rgba.data);
+    } else {
+	rc = TkpPutRGBAImage(display, drawable, gc, image,
+		src_x, src_y, dest_x, dest_y, width, height);
+    }
     return (rc == 0) ? Success : BadAlloc;
 }
 
