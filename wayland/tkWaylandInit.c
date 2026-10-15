@@ -1838,7 +1838,25 @@ TkWaylandSyncAppId(Tcl_Interp *interp)
 	    && Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
         name = Tcl_GetStringResult(interp);
         if (name != NULL && *name != '\0') {
+	    Tcl_DString defaultName;
+	    Tcl_Size length;
+
+	    /*
+	     * Keep the app_id "tk" (see TkWaylandInitialize) while the
+	     * application has its default name, possibly with a suffix such
+	     * as " #2"; use the name only if it was set with "-name" or
+	     * "tk appname".
+	     */
+	    Tcl_DStringInit(&defaultName);
+	    TkpGetAppName(interp, &defaultName);
+	    length = Tcl_DStringLength(&defaultName);
+	    if (strncmp(name, Tcl_DStringValue(&defaultName), length) == 0
+		    && (name[length] == '\0'
+		    || strncmp(name + length, " #", 2) == 0)) {
+		name = "tk";
+	    }
             TkWaylandSetAppId(name);
+	    Tcl_DStringFree(&defaultName);
         }
     }
     Tcl_RestoreInterpState(interp, state);
