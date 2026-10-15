@@ -119,6 +119,7 @@ to the userbase.
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
  - [wm overrideredirect zaps additions to system menu](https://core.tcl-lang.org/tcl/tktview/220781)
  - [Windows ConfigureNotify uses stale WINDOWPOS x/y](https://core.tcl-lang.org/tcl/tktview/90f5cd)
+ - [Tk performance regression on X11](https://core.tcl-lang.org/tcl/tktview/290ce5)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
