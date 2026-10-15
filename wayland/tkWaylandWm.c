@@ -2486,8 +2486,10 @@ WmGeometryCmd(
             width = (wmPtr->width >= 0) ? wmPtr->width : winPtr->reqWidth;
             height = (wmPtr->height >= 0) ? wmPtr->height : winPtr->reqHeight;
         }
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d+%d+%d",
-		 width, height, wmPtr->x, wmPtr->y));
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
+		 width, height,
+		 (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+', wmPtr->x,
+		 (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+', wmPtr->y));
         return TCL_OK;
     }
 
@@ -4324,6 +4326,11 @@ ParseGeometry(
         return TCL_OK;
     }
 
+    /* The leading "=" is optional. */
+    if (*p == '=') {
+        p++;
+    }
+
     /* Optional WxH part. */
     if (*p != '+' && *p != '-') {
         width = (int)strtol(p, &end, 10);
@@ -4376,8 +4383,13 @@ ParseGeometry(
 
     /* Apply position if specified */
     if (hasPos) {
-        wmPtr->x = xNeg ? -x : x;
-        wmPtr->y = yNeg ? -y : y;
+        /*
+         * As on X11, a negative offset is the distance from the right or
+         * bottom edge of the screen, and is kept with its sign flag, so
+         * that "-0" is reported back.
+         */
+        wmPtr->x = x;
+        wmPtr->y = y;
 
         if (xNeg) wmPtr->flags |= WM_NEGATIVE_X;
         else      wmPtr->flags &= ~WM_NEGATIVE_X;
