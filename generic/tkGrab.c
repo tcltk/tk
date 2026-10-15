@@ -91,7 +91,7 @@
 
 typedef struct {
     Display *display;		/* Display from which to discard events. */
-    unsigned int serial;	/* Serial number with which to compare. */
+    unsigned long serial;	/* Serial number with which to compare. */
 } GrabInfo;
 
 /*
@@ -140,7 +140,7 @@ typedef struct NewGrabWinEvent {
  * Forward declarations for functions declared later in this file:
  */
 
-static void		EatGrabEvents(TkDisplay *dispPtr, unsigned int serial);
+static void		EatGrabEvents(TkDisplay *dispPtr, unsigned long serial);
 static TkWindow *	FindCommonAncestor(TkWindow *winPtr1,
 			    TkWindow *winPtr2, int *countPtr1, int *countPtr2);
 static Tk_RestrictProc GrabRestrictProc;
@@ -401,7 +401,7 @@ Tk_Grab(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkWindow *winPtr2;
-    unsigned int serial;
+    unsigned long serial;
 
     ReleaseButtonGrab(dispPtr);
     if (dispPtr->eventualGrabWinPtr != NULL) {
@@ -582,7 +582,7 @@ Tk_Ungrab(
 {
     TkDisplay *dispPtr;
     TkWindow *grabWinPtr, *winPtr;
-    unsigned int serial;
+    unsigned long serial;
 
     grabWinPtr = (TkWindow *) tkwin;
     dispPtr = grabWinPtr->dispPtr;
@@ -654,7 +654,7 @@ ReleaseButtonGrab(
     TkDisplay *dispPtr)/* Display whose button grab is to be
 				 * released. */
 {
-    unsigned int serial;
+    unsigned long serial;
 
     if (dispPtr->buttonWinPtr != NULL) {
 	if (dispPtr->buttonWinPtr != dispPtr->serverWinPtr) {
@@ -707,7 +707,7 @@ TkPointerEvent(
 {
     TkWindow *winPtr2;
     TkDisplay *dispPtr = winPtr->dispPtr;
-    unsigned int serial;
+    unsigned long serial;
     bool outsideGrabTree = false;
     bool ancestorOfGrab = false;
     bool appGrabbed = false;	/* Non-zero means event is being reported to
@@ -1279,7 +1279,7 @@ TkGrabDeadWindow(
 static void
 EatGrabEvents(
     TkDisplay *dispPtr,		/* Display from which to consume events. */
-    unsigned int serial)	/* Only discard events that have a serial
+    unsigned long serial)	/* Only discard events that have a serial
 				 * number at least this great. */
 {
     Tk_RestrictProc *prevProc;
