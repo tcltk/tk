@@ -25,6 +25,18 @@
 #   pragma comment (lib, "uxtheme.lib")
 #endif
 
+/* Prototype definitions */
+typedef HTHEME	(STDAPICALLTYPE OpenThemeDataForDpiProc)(HWND hwnd, LPCWSTR pszClassList, UINT dpi);
+typedef UINT	(STDAPICALLTYPE GetDpiForWindowProc)(HWND hwnd);
+
+typedef struct {
+    OpenThemeDataForDpiProc	*OpenThemeDataForDpi;
+    GetDpiForWindowProc		*GetDpiForWindow;
+
+    HWND			hwnd;
+} VistaThemeData;
+
+
 /*
  * VistaThemeDeleteProc --
  *
@@ -33,8 +45,10 @@
 
 static void
 VistaThemeDeleteProc(
-    TCL_UNUSED(void *))
+    void *clientData)
 {
+    VistaThemeData *themeData = (VistaThemeData *)clientData;
+    ckfree(themeData);
 }
 
 static int
@@ -42,10 +56,7 @@ VistaThemeEnabled(
     TCL_UNUSED(Ttk_Theme),
     TCL_UNUSED(void *))
 {
-    int active = IsThemeActive();
-    int themed = IsAppThemed();
-
-    return (active && themed);
+    return (IsThemeActive() && IsAppThemed());
 }
 
 /*
@@ -92,22 +103,18 @@ static const Ttk_StateTable pushbutton_statemap[] =
 static const Ttk_StateTable checkbox_statemap[] =
 {
     { CBS_EXCLUDEDDISABLED,	TTK_STATE_INVALID|TTK_STATE_DISABLED, 0 },
-    { CBS_EXCLUDEDNORMAL,	TTK_STATE_INVALID|TTK_STATE_READONLY, 0 },
     { CBS_EXCLUDEDPRESSED,	TTK_STATE_INVALID|TTK_STATE_PRESSED, 0 },
     { CBS_EXCLUDEDHOT,		TTK_STATE_INVALID|TTK_STATE_ACTIVE, 0 },
     { CBS_EXCLUDEDNORMAL,	TTK_STATE_INVALID, 0 },
     { CBS_MIXEDDISABLED,	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0 },
-    { CBS_MIXEDNORMAL,		TTK_STATE_ALTERNATE|TTK_STATE_READONLY, 0 },
     { CBS_MIXEDPRESSED,		TTK_STATE_ALTERNATE|TTK_STATE_PRESSED, 0 },
     { CBS_MIXEDHOT,		TTK_STATE_ALTERNATE|TTK_STATE_ACTIVE, 0 },
     { CBS_MIXEDNORMAL,		TTK_STATE_ALTERNATE, 0 },
     { CBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { CBS_CHECKEDNORMAL,	TTK_STATE_SELECTED|TTK_STATE_READONLY, 0 },
     { CBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0 },
     { CBS_CHECKEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
     { CBS_CHECKEDNORMAL,	TTK_STATE_SELECTED, 0 },
     { CBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, 0 },
-    { CBS_UNCHECKEDNORMAL,	TTK_STATE_READONLY, 0 },
     { CBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, 0 },
     { CBS_UNCHECKEDHOT,		TTK_STATE_ACTIVE, 0 },
     { CBS_UNCHECKEDNORMAL,	0, 0 }
@@ -119,18 +126,30 @@ static const Ttk_StateTable checkbox_statemap[] =
 static const Ttk_StateTable radiobutton_statemap[] =
 {
     { RBS_UNCHECKEDDISABLED,	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0 },
-    { RBS_UNCHECKEDNORMAL,	TTK_STATE_ALTERNATE|TTK_STATE_READONLY, 0 },
+    { RBS_UNCHECKEDPRESSED,	TTK_STATE_ALTERNATE|TTK_STATE_PRESSED, 0 },
+    { RBS_UNCHECKEDHOT,		TTK_STATE_ALTERNATE|TTK_STATE_ACTIVE, 0 },
     { RBS_UNCHECKEDNORMAL,	TTK_STATE_ALTERNATE, 0 },
     { RBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { RBS_CHECKEDNORMAL,	TTK_STATE_SELECTED|TTK_STATE_READONLY, 0 },
     { RBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0 },
     { RBS_CHECKEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
     { RBS_CHECKEDNORMAL,	TTK_STATE_SELECTED, 0 },
     { RBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, 0 },
-    { RBS_UNCHECKEDNORMAL,	TTK_STATE_READONLY, 0 },
     { RBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, 0 },
     { RBS_UNCHECKEDHOT,		TTK_STATE_ACTIVE, 0 },
     { RBS_UNCHECKEDNORMAL,	0, 0 }
+};
+
+/*
+ * Toolbar buttons (TP_BUTTON):
+ */
+static const Ttk_StateTable toolbutton_statemap[] =
+{
+    { TS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { TS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { TS_HOTCHECKED,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
+    { TS_CHECKED,	TTK_STATE_SELECTED, 0 },
+    { TS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { TS_NORMAL,	0, 0 }
 };
 
 /*
@@ -143,67 +162,113 @@ static const Ttk_StateTable groupbox_statemap[] =
 };
 
 /*
- * Edit fields (tk: "entry" and "spinbox")
+ * Edit border (tk: "entry" and "spinbox")
  */
-static const Ttk_StateTable edittext_statemap[] =
+static const Ttk_StateTable edit_statemap[] =
 {
-    { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { ETS_READONLY,	TTK_STATE_READONLY, 0 },
-    { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
-    { ETS_SELECTED,	TTK_STATE_SELECTED, 0 },
-    { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { ETS_HOT,		TTK_STATE_HOVER, 0 },
-    { ETS_NORMAL,	0, 0 }
-/* NOT USED: ETS_ASSIST, ETS_SELECTED */
+    { EPSH_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { EPSH_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { EPSH_HOT,		TTK_STATE_ACTIVE, 0 },
+    { EPSH_HOT,		TTK_STATE_HOVER, 0 },
+    { EPSH_NORMAL,	0, 0 }
 };
 
 /*
- * Combobox text field statemap:
- * Same as edittext_statemap, but doesn't use ETS_READONLY
- * (fixes: #1032409)
+ * Edit background (EP_BACKGROUND)
  */
-static const Ttk_StateTable combotext_statemap[] =
+static const Ttk_StateTable editbackground_statemap[] =
 {
-    { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
-/*    { ETS_READONLY,	TTK_STATE_READONLY, 0 },*/
-    { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
-    { ETS_SELECTED,	TTK_STATE_SELECTED, 0 },
-    { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { ETS_HOT,		TTK_STATE_HOVER, 0 },
-    { ETS_NORMAL,	0, 0 }
+    { EBS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { EBS_READONLY,	TTK_STATE_READONLY, 0 },
+    { EBS_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { EBS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { EBS_HOT,		TTK_STATE_HOVER, 0 },
+    { EBS_NORMAL,	0, 0 }
+};
+
+/*
+ * Combobox border: (CP_BORDER)
+ */
+static const Ttk_StateTable combo_statemap[] =
+{
+    { CBB_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { CBB_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { CBB_HOT,		TTK_STATE_ACTIVE, 0 },
+    { CBB_HOT,		TTK_STATE_HOVER, 0 },
+    { CBB_NORMAL,	0, 0 }
 };
 
 /*
  * Combobox button: (CBP_DROPDOWNBUTTON)
  */
-static const Ttk_StateTable combobox_statemap[] = {
-    { CBXS_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { CBXS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { CBXS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { CBXS_HOT,		TTK_STATE_HOVER, 0 },
-    { CBXS_NORMAL,	0, 0 }
+static const Ttk_StateTable combodown_statemap[] =
+{
+    { CBXSR_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { CBXSR_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { CBXSR_HOT,	TTK_STATE_ACTIVE, 0 },
+    { CBXSR_NORMAL,	0, 0 }
 };
 
 /*
- * Menu buttons (NAV_MENUBUTTON):
+ * Combobox dropdown listbox
  */
-static const Ttk_StateTable menubutton_statemap[] =  {
-    { NAV_MB_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { NAV_MB_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { NAV_MB_HOT,	TTK_STATE_ACTIVE, 0 },
-    { NAV_MB_NORMAL,	0, 0 }
+static const Ttk_StateTable combolist_statemap[] =
+{
+    { LBPSV_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { LBPSV_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { LBPSV_HOT,	TTK_STATE_FOCUS, 0 },
+    { LBPSV_HOT,	TTK_STATE_ACTIVE, 0 },
+    { LBPSV_NORMAL,	0, 0 }
 };
 
 /*
- * Toolbar buttons (TP_BUTTON):
+ * Spinbox
  */
-static const Ttk_StateTable toolbutton_statemap[] =  {
-    { TS_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { TS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { TS_HOTCHECKED,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
-    { TS_CHECKED,	TTK_STATE_SELECTED, 0 },
-    { TS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { TS_NORMAL,	0, 0 }
+static const Ttk_StateTable spinup_statemap[] =
+{
+    { UPS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { UPS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { UPS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { UPS_NORMAL,	0, 0 }
+};
+
+static const Ttk_StateTable spindown_statemap[] =
+{
+    { DNS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { DNS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { DNS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { DNS_NORMAL,	0, 0 }
+};
+
+/*
+ * Notebook tab
+ */
+static const Ttk_StateTable tabitem_statemap[] =
+{
+    { TIS_DISABLED,     TTK_STATE_DISABLED, 0 },
+    { TIS_HOT,          TTK_STATE_ACTIVE, 0 },
+    { TIS_FOCUSED,      TTK_STATE_FOCUS, 0 },
+    { TIS_SELECTED,     TTK_STATE_SELECTED, 0 },
+    { TIS_NORMAL,       0, 0 }
+};
+
+/*
+ * Progressbar
+ */
+static const Ttk_StateTable pbarhoriz_statemap[] =
+{
+    { PBFS_ERROR,	TTK_STATE_INVALID, 0 },
+    { PBFS_PARTIAL,	TTK_STATE_SELECTED, 0 },
+    { PBFS_PAUSED,	TTK_STATE_ALTERNATE, 0 },
+    { PBFS_NORMAL,	0, 0 }
+};
+
+static const Ttk_StateTable pbarvert_statemap[] =
+{
+    { PBFVS_ERROR,	TTK_STATE_INVALID, 0 },
+    { PBFVS_PARTIAL,	TTK_STATE_SELECTED, 0 },
+    { PBFVS_PAUSED,	TTK_STATE_ALTERNATE, 0 },
+    { PBFVS_NORMAL,	0, 0 }
 };
 
 /*
@@ -254,60 +319,40 @@ static const Ttk_StateTable rightarrow_statemap[] =
     { ABS_RIGHTNORMAL,	0, 0 }
 };
 
-static const Ttk_StateTable spinup_statemap[] =
-{
-    { UPS_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { UPS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { UPS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { UPS_HOT,		TTK_STATE_HOVER, 0 },
-    { UPS_NORMAL,	0, 0 }
-};
-
-static const Ttk_StateTable spindown_statemap[] =
-{
-    { DNS_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { DNS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { DNS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { DNS_HOT,		TTK_STATE_HOVER, 0 },
-    { DNS_NORMAL,	0, 0 }
-};
-
 /*
  * Trackbar thumb: (Tk: "scale slider")
  */
-static const Ttk_StateTable scale_statemap[] =
+static const Ttk_StateTable scalehoriz_statemap[] =
 {
     { TUBS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { TUBS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { TUBS_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { TUBS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { TUBS_HOT,		TTK_STATE_HOVER, 0 },
     { TUBS_NORMAL,	0, 0 }
 };
 
-static const Ttk_StateTable track_statemap[] =
+static const Ttk_StateTable scalevert_statemap[] =
+{
+    { TUVS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { TUVS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { TUVS_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { TUVS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { TUVS_NORMAL,	0, 0 }
+};
+
+static const Ttk_StateTable trackhoriz_statemap[] =
 {
     { TRS_NORMAL,	0, 0 }
 };
 
-static const Ttk_StateTable pbar_statemap[] =
+static const Ttk_StateTable trackvert_statemap[] =
 {
-    { PBFS_ERROR,	TTK_STATE_INVALID, 0 },
-    { PBFS_PARTIAL,	TTK_STATE_SELECTED, 0 },
-    { PBFS_PAUSED,	TTK_STATE_ALTERNATE, 0 },
-    { PBFS_NORMAL,	0, 0 }
+    { TRVS_NORMAL,	0, 0 }
 };
 
-static const Ttk_StateTable tabitem_statemap[] =
-{
-    { TIS_DISABLED,     TTK_STATE_DISABLED, 0 },
-    { TIS_HOT,          TTK_STATE_ACTIVE, 0 },
-    { TIS_FOCUSED,      TTK_STATE_FOCUS, 0 },
-    { TIS_SELECTED,     TTK_STATE_SELECTED, 0 },
-    { TIS_NORMAL,       0, 0 }
-};
-
-/* Treeview header */
+/*
+ * Treeview header and sort indicator
+ */
 static const Ttk_StateTable header_statemap[] =
 {
     { HIS_NORMAL,		TTK_STATE_DISABLED, 0 },
@@ -322,7 +367,6 @@ static const Ttk_StateTable header_statemap[] =
     { HIS_NORMAL,		0, 0 }
 };
 
-/* Treeview sort indicator */
 static const Ttk_StateTable treesort_statemap[] =
 {
     { HSAS_SORTEDDOWN,	TTK_STATE_SELECTED|TTK_STATE_USER1, 0 },
@@ -330,7 +374,9 @@ static const Ttk_StateTable treesort_statemap[] =
     { 0,		0, 0 }
 };
 
-/* Treeview item: Win states don't match TTK states or colors, so remap them */
+/*
+ * Treeview item: Win states don't match TTK states or colors, so remap them
+ */
 static const Ttk_StateTable treeitem_statemap[] =
 {
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_DISABLED, 0 }, /* gray */
@@ -355,7 +401,7 @@ static const Ttk_StateTable treeview_statemap[] =
     { TREIS_NORMAL,		0, 0 }
 };
 
-/* Treeview indicator */
+/* Treeview open/close indicator */
 static const Ttk_StateTable tvpglyph_statemap[] =
 {
     { HGLPS_OPENED,	TTK_STATE_ACTIVE|TTK_STATE_OPEN, 0 },
@@ -419,19 +465,25 @@ typedef struct
     /* For TkWinDrawableReleaseDC: */
     Drawable	drawable;
     TkWinDCState dcState;
+
+    /* Compatibility */
+    OpenThemeDataForDpiProc	*OpenThemeDataForDpi;
+    GetDpiForWindowProc		*GetDpiForWindow;
 } ElementData;
 
 /*
  * Create theme element
  */
 static ElementData *
-NewElementData(HWND hwnd, const ElementInfo *info)
+NewElementData(VistaThemeData *themeData, const ElementInfo *info)
 {
     ElementData *elementData = (ElementData *)Tcl_Alloc(sizeof(ElementData));
 
-    elementData->parentHwnd = hwnd;
+    elementData->parentHwnd = themeData->hwnd;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
+    elementData->OpenThemeDataForDpi = themeData->OpenThemeDataForDpi;
+    elementData->GetDpiForWindow = themeData->GetDpiForWindow;
 
     return elementData;
 }
@@ -469,6 +521,8 @@ static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
+    UINT dpi = USER_DEFAULT_SCREEN_DPI;
 
     if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
@@ -476,8 +530,24 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd = elementData->parentHwnd;
     }
 
-    elementData->hTheme = OpenThemeData(elementData->hwnd,
+    /* Needs Windows 10, version 1607 */
+    if (elementData->GetDpiForWindow) {
+ 	dpi = elementData->GetDpiForWindow(elementData->hwnd);
+    }
+    
+    dpi = (UINT) trunc(((double) dpi * scalingFactor + 12.0) / 24.0) * 24;
+    if (dpi < USER_DEFAULT_SCREEN_DPI) {
+	dpi = USER_DEFAULT_SCREEN_DPI;
+    }
+
+    /* Windows 10, version 1703 */
+    if (elementData->OpenThemeDataForDpi) {
+	elementData->hTheme = elementData->OpenThemeDataForDpi(elementData->hwnd,
+	    elementData->info->className, dpi);
+    } else {
+	elementData->hTheme = OpenThemeData(elementData->hwnd,
 	    elementData->info->className);
+    }
 
     if (!elementData->hTheme) {
 	return false;
@@ -488,7 +558,6 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hDC = TkWinGetDrawableDC(Tk_Display(tkwin), d,
 		&elementData->dcState);
     }
-
     return true;
 }
 
@@ -520,15 +589,15 @@ static void GenericElementSize(
 {
     ElementData *elementData = (ElementData *)clientData;
     double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
-    HRESULT result;
-    SIZE size;
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
     }
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-	result = GetThemePartSize(
+	SIZE size;
+
+	HRESULT result = GetThemePartSize(
 	    elementData->hTheme,	/* Theme data handle */
 	    NULL,			/* HDC to select font into & measure against */
 	    elementData->info->partId,	/* Part number to retrieve size for */
@@ -560,6 +629,8 @@ static void GenericElementSize(
 	*widthPtr += Ttk_PaddingWidth(elementData->info->padding);
 	*heightPtr += Ttk_PaddingHeight(elementData->info->padding);
     }
+
+    FreeElementData(elementData);
 }
 
 static void GenericElementDraw(
@@ -638,40 +709,29 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin, state,
 	widthPtr, heightPtr, paddingPtr);
 
-    /*
-     * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
-     * returns values for the monitor DPI under PerMonitorV2 awareness.  Scale
-     * by TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using this
-     * scaling factor, the element box will be stretched to the *expected*
-     * size, and not stretched at all in the most common case that Tk's
-     * scaling factor was not changed via "tk scaling".
-     */
+	/*
+	 * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
+	 * returns values for the monitor DPI under PerMonitorV2 awareness.  Scale
+	 * by TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using this
+	 * scaling factor, the element box will be stretched to the *expected*
+	 * size, and not stretched at all in the most common case that Tk's
+	 * scaling factor was not changed via "tk scaling".
+	 */
     *widthPtr = (int)round(GetThemeSysSize(NULL,
-	(elementData->info->flags >> 8) & 0xff) * scalingFactor);
+	    (elementData->info->flags >> 8) & 0xff) * scalingFactor);
     *heightPtr = (int)round(GetThemeSysSize(NULL,
-	elementData->info->flags & 0xff) * scalingFactor);
+	    elementData->info->flags & 0xff) * scalingFactor);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
     }
     if (elementData->info->flags & HALF_WIDTH) {
 	*widthPtr /= 2;
     }
+
+    FreeElementData(elementData);
 }
 
-static const Ttk_ElementSpec GenericSizedElementSpec = {
-    TK_STYLE_VERSION_2,
-    sizeof(NullElement),
-    TtkNullElementOptions,
-    GenericSizedElementSize,
-    GenericElementDraw
-};
-
-/*----------------------------------------------------------------------
- * +++ Scrollbar thumb element.
- *     Same as a GenericElement, but don't draw in the disabled state.
- */
-
-static void ThumbElementDraw(
+static void GenericSizedElementDraw(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
@@ -680,33 +740,17 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
-    int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
-    RECT rc = BoxToRect(b);
 
-    /*
-     * Don't draw the thumb if we are disabled.
-     */
-    if (state & TTK_STATE_DISABLED) {
-	return;
-    }
-
-    if (!InitElementData(elementData, tkwin, d)) {
-	return;
-    }
-
-    DrawThemeBackground(elementData->hTheme, elementData->hDC,
-	elementData->info->partId, stateId, &rc, NULL);
-
-    FreeElementData(elementData);
+    SetWindowTheme(elementData->hwnd, L"Explorer", NULL);
+    GenericElementDraw(clientData, NULL, tkwin, d, b, state);
 }
 
-static const Ttk_ElementSpec ThumbElementSpec =
-{
+static const Ttk_ElementSpec GenericSizedElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    GenericElementSize,
-    ThumbElementDraw
+    GenericSizedElementSize,
+    GenericSizedElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -734,7 +778,12 @@ static void PbarElementSize(
 	*widthPtr *= nBars;
     } else if (elementData->info->partId == PP_CHUNKVERT) {
 	*heightPtr *= nBars;
+    } else if (elementData->info->partId == PP_FILL) {
+	*widthPtr /= nBars;
+    } else if (elementData->info->partId == PP_FILLVERT) {
+	*heightPtr /= nBars;
     }
+
 }
 
 static const Ttk_ElementSpec PbarElementSpec =
@@ -1142,6 +1191,55 @@ TTK_LAYOUT("TMenubutton",
 	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
 		TTK_NODE("Menubutton.label", 0))))
 
+TTK_LAYOUT("TEntry",
+    TTK_GROUP("Entry.field", TTK_FILL_BOTH,
+	TTK_GROUP("Entry.background", TTK_FILL_BOTH,
+	    TTK_GROUP("Entry.padding", TTK_FILL_BOTH,
+		TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
+
+TTK_LAYOUT("TCombobox",
+    TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
+	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
+	TTK_GROUP("Combobox.background", TTK_FILL_BOTH,
+	    TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
+		TTK_GROUP("Combobox.focus", TTK_FILL_BOTH,
+		    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))))
+
+TTK_LAYOUT("ComboboxPopdownFrame",
+    TTK_GROUP("ComboboxPopdownFrame.border", TTK_FILL_BOTH|TTK_BORDER,
+	TTK_GROUP("ComboboxPopdownFrame.background", TTK_FILL_BOTH,
+	    TTK_NODE("ComboboxPopdownFrame.padding", TTK_FILL_BOTH))))
+
+TTK_LAYOUT("TSpinbox",
+    TTK_GROUP("Spinbox.field", TTK_FILL_BOTH,
+	TTK_GROUP("Spinbox.background", TTK_FILL_BOTH,
+	    TTK_GROUP("null", TTK_PACK_RIGHT|TTK_FILL_Y,
+		TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
+		TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
+	    TTK_GROUP("Spinbox.padding", TTK_PACK_LEFT|TTK_FILL_BOTH,
+		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
+
+TTK_LAYOUT("Horizontal.TProgressbar",
+    TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
+	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
+	TTK_NODE("Horizontal.Progressbar.ctext", TTK_FILL_BOTH)))
+
+TTK_LAYOUT("Vertical.TProgressbar",
+    TTK_GROUP("Vertical.Progressbar.trough", TTK_FILL_BOTH,
+	TTK_NODE("Vertical.Progressbar.pbar", TTK_PACK_BOTTOM|TTK_FILL_X)))
+
+TTK_LAYOUT("Horizontal.TScale",
+    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+	    TTK_NODE("Horizontal.Scale.track", TTK_FILL_X)
+	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
+
+TTK_LAYOUT("Vertical.TScale",
+    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
+	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
+	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
+
 TTK_LAYOUT("Horizontal.TScrollbar",
     TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
 	TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_LEFT)
@@ -1155,18 +1253,6 @@ TTK_LAYOUT("Vertical.TScrollbar",
 	TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
 	TTK_GROUP("Vertical.Scrollbar.thumb", TTK_FILL_BOTH|TTK_UNIT,
 	    TTK_NODE("Vertical.Scrollbar.grip", 0))))
-
-TTK_LAYOUT("Horizontal.TScale",
-    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
-	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	    TTK_NODE("Horizontal.Scale.track", TTK_FILL_X)
-	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
-
-TTK_LAYOUT("Vertical.TScale",
-    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
-	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
-	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
-	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 
 TTK_LAYOUT("Heading",
     TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
@@ -1188,101 +1274,126 @@ TTK_END_LAYOUT_TABLE
 /* name spec className partId statemap padding flags */
 
 static const ElementInfo ElementInfoTable[] = {
+    /* Buttons */
     { "Checkbutton.indicator", &GenericElementSpec, L"BUTTON",
-	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
+	BP_CHECKBOX, checkbox_statemap, PAD(0,0,4,0), PAD_MARGINS },
     { "Radiobutton.indicator", &GenericElementSpec, L"BUTTON",
-	BP_RADIOBUTTON, radiobutton_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
+	BP_RADIOBUTTON, radiobutton_statemap, PAD(0,0,4,0), PAD_MARGINS },
     { "Button.button", &GenericElementSpec, L"BUTTON",
-	BP_PUSHBUTTON, pushbutton_statemap, PAD(3, 3, 3, 3), IGNORE_THEMESIZE },
-    { "Labelframe.border", &GenericElementSpec, L"BUTTON",
-	BP_GROUPBOX, groupbox_statemap, PAD(2, 2, 2, 2), 0 },
-    { "Entry.field", &GenericElementSpec, L"EDIT", EP_EDITTEXT,
-	edittext_statemap, PAD(1, 1, 1, 1), 0 },
-    { "Combobox.field", &GenericElementSpec, L"EDIT",
-	EP_EDITTEXT, combotext_statemap, PAD(1, 1, 1, 1), 0 },
-    { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
-	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD,
+	BP_PUSHBUTTON, pushbutton_statemap, PAD(3,3,3,3), IGNORE_THEMESIZE },
+    { "Toolbutton.border", &GenericElementSpec, L"TOOLBAR",
+	TP_BUTTON, toolbutton_statemap, NOPAD, 0 },
+    { "Menubutton.button", &GenericElementSpec, L"TOOLBAR",
+	TP_SPLITBUTTON, toolbutton_statemap, NOPAD, 0 },
+    { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
+	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
 	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
-    /* ttk::scrollbar elements */
-    { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
-	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
-    { "Vertical.Scrollbar.thumb", &ThumbElementSpec, L"SCROLLBAR",
-	SBP_THUMBBTNVERT, scrollbar_statemap, NOPAD, 0 },
-    { "Vertical.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
-	SBP_GRIPPERVERT, scrollbar_statemap, NOPAD, 0 },
-    { "Horizontal.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
-	SBP_UPPERTRACKHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Horizontal.Scrollbar.thumb", &ThumbElementSpec, L"SCROLLBAR",
-	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Horizontal.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
-	SBP_GRIPPERHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Scrollbar.uparrow", &GenericSizedElementSpec, L"SCROLLBAR",
-	SBP_ARROWBTN, uparrow_statemap, NOPAD,
+
+    /* Entry, Combobox, Spinbox */
+    { "Entry.field", &GenericElementSpec, L"EDIT",
+	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,2), 0 },
+    { "Entry.background", &GenericElementSpec, L"EDIT",
+	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
+
+    { "Combobox.field", &GenericElementSpec, L"COMBOBOX",
+	CP_BORDER, combo_statemap, PAD(1,1,1,1), 0 },
+    { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
+	CP_DROPDOWNBUTTONRIGHT, combodown_statemap, NOPAD,
 	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "Scrollbar.downarrow", &GenericSizedElementSpec, L"SCROLLBAR",
-	SBP_ARROWBTN, downarrow_statemap, NOPAD,
-	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "Scrollbar.leftarrow", &GenericSizedElementSpec, L"SCROLLBAR",
-	SBP_ARROWBTN, leftarrow_statemap, NOPAD,
-	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
-    { "Scrollbar.rightarrow", &GenericSizedElementSpec, L"SCROLLBAR",
-	SBP_ARROWBTN, rightarrow_statemap, NOPAD,
-	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
-    { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMBBOTTOM, scale_statemap, NOPAD, 0 },
-    { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMBVERT, scale_statemap, NOPAD, 0 },
-    { "Horizontal.Scale.track", &GenericElementSpec, L"TRACKBAR",
-	TKP_TRACK, track_statemap, NOPAD, 0 },
-    { "Vertical.Scale.track", &GenericElementSpec, L"TRACKBAR",
-	TKP_TRACKVERT, track_statemap, NOPAD, 0 },
-    /* ttk::progressbar elements */
-    { "Horizontal.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
-	PP_FILL, pbar_statemap, NOPAD, 0 },
-    { "Vertical.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
-	PP_FILLVERT, pbar_statemap, NOPAD, 0 },
-    { "Horizontal.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BAR, null_statemap, PAD(3,3,3,3), IGNORE_THEMESIZE },
-    { "Vertical.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
-	PP_BARVERT, null_statemap, PAD(3,3,3,3), IGNORE_THEMESIZE },
-    /* ttk::notebook */
+    { "Combobox.background", &GenericElementSpec, L"EDIT",
+	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
+
+    { "ComboboxPopdownFrame.border", &GenericElementSpec, L"LISTBOX",
+	LBCP_BORDER_VSCROLL, combolist_statemap, PAD(1,1,1,1), 0 },
+    { "ComboboxPopdownFrame.background", &GenericElementSpec, L"LISTVIEW",
+	LVP_GROUPHEADER, treeitem_statemap, NOPAD, 0 },
+
+    { "Spinbox.field", &GenericElementSpec, L"EDIT",
+	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,2), 0 },
+    { "Spinbox.background", &GenericElementSpec, L"EDIT",
+	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
+    { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
+	SPNP_UP, spinup_statemap, NOPAD,
+	HALF_HEIGHT | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
+	SPNP_DOWN, spindown_statemap, NOPAD,
+	HALF_HEIGHT | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+
+    /* Frame */
+    { "Labelframe.border", &GenericElementSpec, L"BUTTON",
+	BP_GROUPBOX, groupbox_statemap, PAD(2,2,2,2), 0 },
+
+    /* Notebook */
     { "tab", &TabElementSpec, L"TAB",
 	TABP_TABITEM, tabitem_statemap, PAD(3,3,3,0), 0 },
     { "client", &GenericElementSpec, L"TAB",
 	TABP_PANE, null_statemap, PAD(1,1,3,3), 0 },
     { "NotebookPane.background", &GenericElementSpec, L"TAB",
 	TABP_BODY, null_statemap, NOPAD, 0 },
-    { "Toolbutton.border", &GenericElementSpec, L"TOOLBAR",
-	TP_BUTTON, toolbutton_statemap, NOPAD, 0 },
-    { "Menubutton.button", &GenericElementSpec, L"TOOLBAR",
-	TP_SPLITBUTTON, toolbutton_statemap, NOPAD, 0 },
-/*    { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
-	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
-	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },*/
-    { "Menubutton.dropdown", &GenericSizedElementSpec, L"NAVIGATION",
-	NAV_MENUBUTTON, menubutton_statemap, NOPAD,
-	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
-    /* ttk::treeview */
+
+    /* Progressbar elements */
+    { "Horizontal.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
+	PP_FILL, pbarhoriz_statemap, NOPAD, 0 },
+    { "Vertical.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
+	PP_FILLVERT, pbarvert_statemap, NOPAD, 0 },
+    { "Horizontal.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
+	PP_BAR, null_statemap, PAD(1,1,1,1), 0 },
+    { "Vertical.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
+	PP_BARVERT, null_statemap, PAD(1,1,1,1), 0 },
+
+    /* Scale */
+    { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
+	TKP_THUMB, scalehoriz_statemap, PAD(5,12,5,12), IGNORE_THEMESIZE },
+    { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
+	TKP_THUMBVERT, scalevert_statemap, PAD(12,5,12,5), IGNORE_THEMESIZE },
+    { "Horizontal.Scale.track", &GenericElementSpec, L"TRACKBAR",
+	TKP_TRACK, trackhoriz_statemap, NOPAD, 0 },
+    { "Vertical.Scale.track", &GenericElementSpec, L"TRACKBAR",
+	TKP_TRACKVERT, trackvert_statemap, NOPAD, 0 },
+
+    /* Scrollbar elements */
+    { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
+	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
+    { "Vertical.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_THUMBBTNVERT, scrollbar_statemap, NOPAD,
+	(SM_CYVTHUMB << 8) | SM_CXVSCROLL },
+    { "Vertical.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
+	SBP_GRIPPERVERT, scrollbar_statemap, NOPAD, 0 },
+    { "Horizontal.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
+	SBP_UPPERTRACKHORZ, scrollbar_statemap, NOPAD, 0 },
+    { "Horizontal.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD,
+	(SM_CXHTHUMB << 8) | SM_CYHSCROLL },
+    { "Horizontal.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
+	SBP_GRIPPERHORZ, scrollbar_statemap, NOPAD, 0 },
+    { "Vertical.Scrollbar.uparrow", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_ARROWBTN, uparrow_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Vertical.Scrollbar.downarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_ARROWBTN, downarrow_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Horizontal.Scrollbar.leftarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_ARROWBTN, leftarrow_statemap, NOPAD,
+	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
+    { "Horizontal.Scrollbar.rightarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+	SBP_ARROWBTN, rightarrow_statemap, NOPAD,
+	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
+
+    /* Sizegrip */
+    { "sizegrip", &GenericElementSpec, L"STATUS",
+	SP_GRIPPER, null_statemap, NOPAD, 0 },
+
+    /* Treeview */
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
-	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
+	TVP_TREEITEM, treeview_statemap, PAD(1,1,1,1), 0 },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
 	HP_HEADERITEM, header_statemap, PAD(4,0,4,0), 0 },
     { "Treeheading.indicator", &TreeheadingIndicatorElementSpec, L"HEADER",
-	HP_HEADERSORTARROW, treesort_statemap, PAD(1,1,1,1), 0 },
+	HP_HEADERSORTARROW, treesort_statemap, PAD(1,1,1,1), PAD_MARGINS },
     { "Treeitem.indicator", &TreeitemIndicatorElementSpec, L"TREEVIEW",
 	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeitem.row", &RowElementSpec, L"LISTVIEW",
 	LVP_GROUPHEADER, treeitem_statemap, NOPAD, 0 },
-    { "sizegrip", &GenericElementSpec, L"STATUS",
-	SP_GRIPPER, null_statemap, NOPAD, 0 },
-    { "Spinbox.field", &GenericElementSpec, L"EDIT",
-	EP_EDITTEXT, edittext_statemap, PAD(1, 1, 1, 1), 0 },
-    { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_UP, spinup_statemap, NOPAD,
-	HALF_HEIGHT | PAD_MARGINS | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_DOWN, spindown_statemap, NOPAD,
-	HALF_HEIGHT | PAD_MARGINS | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { 0, 0, 0, 0, 0, NOPAD, 0 }
 };
 #undef PAD
@@ -1346,7 +1457,7 @@ Ttk_CreateVsapiElement(
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    HWND hwnd = (HWND)clientData;
+    VistaThemeData *themeData = (VistaThemeData *)clientData;
     ElementInfo *elementPtr = NULL;
     void *elementData;
     LPCWSTR className;
@@ -1496,7 +1607,7 @@ Ttk_CreateVsapiElement(
     wcscpy(wname, className);
     elementPtr->className = wname;
 
-    elementData = NewElementData(hwnd, elementPtr);
+    elementData = NewElementData(themeData, elementPtr);
     Ttk_RegisterElement(NULL, theme, elementName, elementPtr->elementSpec,
 	elementData);
 
@@ -1519,6 +1630,8 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
+    VistaThemeData *themeData;
+    HMODULE module;
 
     /*
      * Create the new style engine.
@@ -1533,15 +1646,38 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
     /*
      * Set theme data and cleanup proc
      */
-    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, hwnd);
-    Ttk_RegisterCleanup(interp, hwnd, VistaThemeDeleteProc);
-    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, hwnd);
+    themeData = (VistaThemeData *)ckalloc(sizeof(VistaThemeData));
+    themeData->OpenThemeDataForDpi = NULL;
+    themeData->GetDpiForWindow = NULL;
+    themeData->hwnd = hwnd;
+
+    /*
+     * Compatibility functions
+     *
+     * OpenThemeDataForDpi needs Windows 10, version 1703.
+     * GetDpiForWindow needs Windows 10 version 1607.
+     */
+    module = GetModuleHandleW(L"uxtheme.dll");
+    if (module != NULL) {
+	themeData->OpenThemeDataForDpi = (OpenThemeDataForDpiProc *) GetProcAddress(module,"OpenThemeDataForDpi");
+    }
+    module = GetModuleHandleW(L"User32.dll");
+    if (module != NULL) {
+	themeData->GetDpiForWindow = (GetDpiForWindowProc *) GetProcAddress(module,"GetDpiForWindow");
+    }
+
+    /*
+     * Set theme data and cleanup proc
+     */
+    Ttk_SetThemeEnabledProc(themePtr, VistaThemeEnabled, themeData);
+    Ttk_RegisterCleanup(interp, themeData, VistaThemeDeleteProc);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
 
     /*
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	void *clientData = NewElementData(hwnd, infoPtr);
+	void *clientData = NewElementData(themeData, infoPtr);
 	Ttk_RegisterElement(NULL, themePtr, infoPtr->elementName,
 	    infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
