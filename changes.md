@@ -122,6 +122,7 @@ to the userbase.
  - [focus test failures](https://core.tcl-lang.org/tcl/tktview/147446)
  - [missing <Leave> event when posting cascade menus](https://core.tcl-lang.org/tcl/tktview/873655)
  - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tcl/tktview/a4c72a)
+ - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
