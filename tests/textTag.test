@@ -1555,7 +1555,7 @@ test textTag-17.1 {insert procedure inserts tags} -setup {
 } -result {tagon x 1.0 tagoff x 1.4 tagon y 2.0 tagoff y 2.4}
 
 
-test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
+test textTag-18.1 {TkTextPickCurrent tag bindings} -constraints pointerWarp -setup {
     destroy .t
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
