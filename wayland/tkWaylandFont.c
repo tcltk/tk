@@ -2660,9 +2660,12 @@ WaylandShaper_ShapeString(
 				numBytes - bytePos);
         if (clen <= 0) { bytePos++; continue; }
 
-        /* Skip C0/C1 control characters except whitespace. */
+        /*
+         * Skip C0/C1 control characters except whitespace.  (U+FFFD, the
+         * replacement character, is a visible character.)
+         */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
-	    (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
+	    (uc >= 0x0080 && uc <= 0x009F)) {
             bytePos += clen;
             continue;
         }
