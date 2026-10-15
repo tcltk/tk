@@ -4800,8 +4800,9 @@ Tk_MeasureCharsInContext(
         }
 
         int         pixelWidth     = 0;
-        const char *lastBreak      = rangePtr;
-        int         lastBreakWidth = 0;
+        const char *term           = rangePtr;
+        int         termWidth      = 0;
+        int         sawNonSpace    = 0;
         const char *p              = rangePtr;
         int         pos            = 0;
 
@@ -4810,24 +4811,41 @@ Tk_MeasureCharsInContext(
             const char *next = p + Tcl_UtfToUniChar(p, &ch);
 
             /*
+             * As on X11, a word ends before the first white space after a
+             * non-space, so the white space at the end of a line does not
+             * count.
+             */
+            if (ch < 256 && isspace(ch)) {
+                if (sawNonSpace) {
+                    term = p;
+                    termWidth = pixelWidth;
+                    sawNonSpace = 0;
+                }
+            } else {
+                sawNonSpace = 1;
+            }
+
+            /*
              * The width up to the end of this character is where the next
              * one starts (its advance), not the right edge of its ink
              * (maxx), which can be wider and is not what Tk measures.
              */
             float glyphRight = (pos + 1 < npos) ? positions[pos + 1].x :
                     nvgTextBounds(vg, 0, 0, rangePtr, next, NULL);
-            if (maxLength >= 0 && glyphRight > maxLength) {
-                if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
-                    p = lastBreak; pixelWidth = lastBreakWidth;
-                } else if (flags & TK_PARTIAL_OK) {
-                    pixelWidth = (int)ceil(glyphRight); p = next;
+            int newWidth = (int)ceil(glyphRight);
+            if (maxLength >= 0 && newWidth > maxLength) {
+                if ((flags & TK_PARTIAL_OK)
+                        || ((flags & TK_AT_LEAST_ONE) && p == rangePtr)) {
+                    pixelWidth = newWidth;
+                    p = next;
+                } else if ((flags & TK_WHOLE_WORDS)
+                        && !((flags & TK_AT_LEAST_ONE) && termWidth == 0)) {
+                    p = term;
+                    pixelWidth = termWidth;
                 }
                 break;
             }
-            pixelWidth = (int)ceil(glyphRight);
-            if (ch == ' ' || ch == '\t') {
-                lastBreak = next; lastBreakWidth = pixelWidth;
-            }
+            pixelWidth = newWidth;
             p = next; pos++;
         }
 
