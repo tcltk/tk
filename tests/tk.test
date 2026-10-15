@@ -206,7 +206,7 @@ test tk-6.5 {tk inactive} -body {
     expr {$i < 0 || ( $i > 90 && $i < 300 )}
 } -result 1
 
-test tk-7.1 {tk inactive in a safe interpreter} -body {
+test tk-7.1 {tk inactive in a safe interpreter} -constraints embedding -body {
 # tk inactive in safe interpreters
     safe::interpCreate foo
     safe::loadTk foo
@@ -214,7 +214,7 @@ test tk-7.1 {tk inactive in a safe interpreter} -body {
 } -cleanup {
     ::safe::interpDelete foo
 } -result -1
-test tk-7.2 {tk inactive reset in a safe interpreter} -body {
+test tk-7.2 {tk inactive reset in a safe interpreter} -constraints embedding -body {
 # tk inactive in safe interpreters
     safe::interpCreate foo
     safe::loadTk foo

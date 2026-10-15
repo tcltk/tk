@@ -123,7 +123,7 @@ test winfo-4.3 {"winfo containing" command} -body {
 test winfo-4.4 {"winfo containing" command} -body {
     winfo containing -displayof geek 25 30
 } -returnCodes error -result {bad window path name "geek"}
-test winfo-4.5 {"winfo containing" command} -body {
+test winfo-4.5 {"winfo containing" command} -constraints screenCoords -body {
 } -setup {
     destroy .t
 } -body {
@@ -153,7 +153,7 @@ test winfo-4.6 {"winfo containing" command} -constraints {
 } -cleanup {
     destroy .t
 } -result .t
-test winfo-4.7 {"winfo containing" command} -setup {
+test winfo-4.7 {"winfo containing" command} -constraints screenCoords -setup {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
@@ -168,7 +168,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
 } -cleanup {
     destroy .t
 } -result 1
-test winfo-4.8 {"winfo containing": don't consider unmapped toplevel windows (bug #591829e948-B)} -setup {
+test winfo-4.8 {"winfo containing": don't consider unmapped toplevel windows (bug #591829e948-B)} -constraints screenCoords -setup {
     wm geometry . 200x200+100+100
     after 10; update
     wm withdraw .
@@ -412,7 +412,7 @@ test winfo-12.2 {GetDisplayOf procedure} -body {
 
 # Some embedding tests
 #
-test winfo-13.1 {root coordinates of embedded toplevel} -setup {
+test winfo-13.1 {root coordinates of embedded toplevel} -constraints embedding -setup {
     deleteWindows
 } -body {
     frame .con -container 1
@@ -430,7 +430,7 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
 
 # Windows does not destroy the container when an embedded window is
 # destroyed.  Unix and macOS do destroy it.  See ticket [67384bce7d].
-test winfo-13.2 {destroying embedded toplevel} -setup {
+test winfo-13.2 {destroying embedded toplevel} -constraints embedding -setup {
     deleteWindows
 } -body {
     frame .con -container 1
@@ -447,7 +447,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
     deleteWindows
 } -result [expr {[tk windowingsystem] eq "win32"?{embedded 0 container 1}:{embedded 0 container 0}}]
 
-test winfo-13.3 {destroying container window} -setup {
+test winfo-13.3 {destroying container window} -constraints embedding -setup {
     deleteWindows
 } -body {
     frame .con -container 1
@@ -464,7 +464,7 @@ test winfo-13.3 {destroying container window} -setup {
     deleteWindows
 } -result {child 0 parent 0}
 
-test winfo-13.4 {[winfo containing] with embedded windows} -setup {
+test winfo-13.4 {[winfo containing] with embedded windows} -constraints embedding -setup {
     deleteWindows
 } -body {
     wm geometry . +100+100
