@@ -820,6 +820,34 @@ test focus-9.1 {implicit focus is lost when another application takes the focus}
     movePointerAwayFromTestArea
 } -result {. {}}
 
+test focus-10.1 {a toplevel which got the X focus during a grab gets the Tk focus when the grab is released - bug 220892} -constraints {
+    unix testxfocus
+} -setup {
+    deleteWindows
+} -body {
+    toplevel .a
+    entry .a.e
+    pack .a.e
+    toplevel .b
+    entry .b.e
+    pack .b.e
+    wm geometry .b +200+0
+    update
+    focus -force .a.e
+    update
+    grab .a
+    # The window manager moves the X focus to the other toplevel, e.g. on
+    # a click; Tk ignores it while the grab is active.
+    testxfocus .b
+    update
+    set res [list [focus]]
+    grab release .a
+    update
+    lappend res [focus]
+} -cleanup {
+    deleteWindows
+} -result {{} .b}
+
 deleteWindows
 
 # cleanup
