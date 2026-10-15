@@ -16,7 +16,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * TkpChangeFocus --
+ * TkpChangeFocus2 --
  *
  *	This function is invoked to move the official X focus from one window
  *	to another.
@@ -34,17 +34,18 @@
  *----------------------------------------------------------------------
  */
 
-int
-TkpChangeFocus(
+unsigned long
+TkpChangeFocus2(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
+    bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
     Tk_ErrorHandler errHandler;
     Window window, root, parent, *children;
-    unsigned int numChildren, serial;
+    unsigned long serial;
+    unsigned int numChildren;
     TkWindow *winPtr2;
     int dummy;
 
@@ -80,7 +81,7 @@ TkpChangeFocus(
 	 */
 
 	XGetInputFocus(dispPtr->display, &window, &dummy);
-	while (1) {
+	while (true) {
 	    winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
 	    if ((winPtr2 != NULL) && (winPtr2->mainPtr == winPtr->mainPtr)) {
 		break;

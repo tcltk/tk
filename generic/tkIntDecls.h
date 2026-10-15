@@ -232,7 +232,8 @@ EXTERN int		TkPositionInTree(TkWindow *winPtr, TkWindow *treePtr);
 /* 73 */
 EXTERN void		TkpRedirectKeyEvent(TkWindow *winPtr,
 				XEvent *eventPtr);
-/* Slot 74 is reserved */
+/* 74 */
+EXTERN unsigned long	TkpChangeFocus2(TkWindow *winPtr, bool force);
 /* Slot 75 is reserved */
 /* Slot 76 is reserved */
 /* 77 */
@@ -624,7 +625,7 @@ typedef struct TkIntStubs {
     double (*tkPolygonToPoint) (double *polyPtr, int numPoints, double *pointPtr); /* 71 */
     int (*tkPositionInTree) (TkWindow *winPtr, TkWindow *treePtr); /* 72 */
     void (*tkpRedirectKeyEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 73 */
-    void (*reserved74)(void);
+    unsigned long (*tkpChangeFocus2) (TkWindow *winPtr, bool force); /* 74 */
     void (*reserved75)(void);
     void (*reserved76)(void);
     void (*tkQueueEventForAllChildren) (TkWindow *winPtr, XEvent *eventPtr); /* 77 */
@@ -894,7 +895,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkPositionInTree) /* 72 */
 #define TkpRedirectKeyEvent \
 	(tkIntStubsPtr->tkpRedirectKeyEvent) /* 73 */
-/* Slot 74 is reserved */
+#define TkpChangeFocus2 \
+	(tkIntStubsPtr->tkpChangeFocus2) /* 74 */
 /* Slot 75 is reserved */
 /* Slot 76 is reserved */
 #define TkQueueEventForAllChildren \
