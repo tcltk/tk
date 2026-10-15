@@ -191,6 +191,7 @@ static void TopLevelEventProc(void *clientData, XEvent *eventPtr);
 static void TopLevelReqProc(void *clientData, Tk_Window tkwin);
 static void ApplyPendingGeometry(TkWindow *winPtr);
 static void UpdateGeometryInfo(void *clientData);
+static void CancelGeometryUpdate(TkWindow *winPtr);
 static void UpdateHints(TkWindow *winPtr);
 static void UpdateSizeHints(TkWindow *winPtr);
 static void UpdateTitle(TkWindow *winPtr);
@@ -875,7 +876,7 @@ TkWmDeadWindow(
 
     /* Cancel any pending UpdateGeometryInfo idle tasks  */
     if (wmPtr->flags & WM_UPDATE_PENDING) {
-        Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+        CancelGeometryUpdate(winPtr);
 	wmPtr->flags &= ~WM_UPDATE_PENDING;
     }
 
@@ -1200,6 +1201,23 @@ Tk_MakeWindow(
                  (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
         height = (winPtr->reqHeight > 1) ? winPtr->reqHeight :
                  (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
+
+        /*
+         * A size set with "wm geometry" before the window is mapped wins, as
+         * on X11.  It cannot wait for UpdateGeometryInfo, which postpones
+         * resizing until the first focus, and a compositor need not focus a
+         * new window (or may have no keyboard).
+         */
+        if (winPtr->wmInfoPtr != NULL) {
+            WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+            if (wmPtr->width > 0) {
+                width = wmPtr->width;
+            }
+            if (wmPtr->height > 0) {
+                height = wmPtr->height;
+            }
+        }
 
         /*
          * Create the GLFW window and get a drawable ID.
@@ -1547,7 +1565,7 @@ Tk_MoveToplevelWindow(
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+            CancelGeometryUpdate(winPtr);
         }
 	DEBUG_LOG("Tk_MoveToplevelWindow: scheduling UpdateGeometryInfo");
         UpdateGeometryInfo((void *)winPtr);
@@ -2478,7 +2496,7 @@ WmGeometryCmd(
         wmPtr->width = wmPtr->height = -1;
 
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+            CancelGeometryUpdate(winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
 	DEBUG_LOG("WmGeometryCmd: calling UpdateGeometryInfo");
@@ -2502,7 +2520,7 @@ WmGeometryCmd(
 
         /* Cancel any pending idle callback. */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+            CancelGeometryUpdate(winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
 
@@ -3817,9 +3835,12 @@ TopLevelEventProc(
 
     switch (eventPtr->type) {
     case ConfigureNotify:
-        /* Update our internal state from Tk's changes. */
+	/*
+	 * Keep a size set with "wm geometry": as on X11 it stays in force
+	 * until "wm geometry" changes it, whatever the content requests.
+	 * Tk sends this event itself, also when the window is first mapped.
+	 */
 	DEBUG_LOG("ConfigureNotify received for %s", Tk_PathName(winPtr));
-	wmPtr->width = wmPtr->height = -1;
         break;
     case MapNotify:
 	DEBUG_LOG("MapNotify received for %s", Tk_PathName(winPtr));
@@ -3874,7 +3895,7 @@ TopLevelReqProc(
 
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	DEBUG_LOG("TopLevelReqProc: Cancelling pending UpdateGeometryInfo");
-	Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+	CancelGeometryUpdate(winPtr);
 	//return;
     }
 
@@ -3989,6 +4010,32 @@ ApplyPendingGeometry(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * CancelGeometryUpdate --
+ *
+ *	Cancel a pending call of UpdateGeometryInfo: the idle call, and the
+ *	timer which repeats it while the window waits for its first focus.
+ *	The timer must be deleted with the window, or it fires on freed
+ *	memory.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+CancelGeometryUpdate(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+    if (wmPtr != NULL && wmPtr->updateTimer != NULL) {
+	Tcl_DeleteTimerHandler(wmPtr->updateTimer);
+	wmPtr->updateTimer = NULL;
+    }
+}
+
 static void
 UpdateGeometryInfo(
     void *clientData)
@@ -4015,6 +4062,8 @@ UpdateGeometryInfo(
 	DEBUG_LOG("Cannot update geometry for a window with no WmInfo");
 	return;
     }
+    /* If this call is from the timer, the timer has fired. */
+    wmPtr->updateTimer = NULL;
 
     /*
      * Likewise, the toplevel's GLFW window (and glfwTkInfo) may already
@@ -4039,7 +4088,8 @@ UpdateGeometryInfo(
 	 */
 	wmPtr->flags |= WM_UPDATE_PENDING;
 	DEBUG_LOG("UpdateGeometryInfo: waiting for focus.");
-	Tcl_CreateTimerHandler(17, UpdateGeometryInfo, clientData);
+	wmPtr->updateTimer = Tcl_CreateTimerHandler(17, UpdateGeometryInfo,
+		clientData);
 	return;
     }
     if (wmPtr == NULL) {
@@ -4755,7 +4805,7 @@ XResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *contPtr = winPtr->privatePtr->container;
+    TkWindow *contPtr = TkWaylandGetContainer(winPtr);
     if (contPtr) {
 	DEBUG_LOG("XResizeWindow: Exposing container %s", Tk_PathName(contPtr));
         TkWaylandQueueExposeEvent(contPtr, 0, 0,
@@ -4805,7 +4855,7 @@ XMoveWindow(
     TCL_UNUSED(int))  /* y */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *contPtr = winPtr->privatePtr->container;
+    TkWindow *contPtr = TkWaylandGetContainer(winPtr);
     if (contPtr) {
 	DEBUG_LOG("XMoveWindow: Exposing container %s", Tk_PathName(contPtr));
         TkWaylandQueueExposeEvent(contPtr, 0, 0,
@@ -4859,7 +4909,7 @@ XMoveResizeWindow(
     unsigned int height)     /* new height */
 {
     TkWindow *winPtr = (TkWindow *)Tk_IdToWindow(display, window);
-    TkWindow *contPtr = winPtr->privatePtr->container;
+    TkWindow *contPtr = TkWaylandGetContainer(winPtr);
     if (contPtr) {
 	DEBUG_LOG("XMoveResizeWindow: Exposing container %s",
 	    Tk_PathName(contPtr));

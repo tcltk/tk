@@ -825,8 +825,9 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 	set item [$w identify item $x $y]
 	set element [$w identify element $x $y]
 	if {$item eq ""} return
+
 	if {[$w haschildren $item] &&
-		[string eq "Treeitem.indicator"} {
+		[string match "*Treeitem.indicator" $element]} {
 	    ToggleOpenState $w $item
 	} elseif {[info procs ActivateItem] ne ""} {
 	    ActivateHandler $w $item $column
@@ -993,8 +994,8 @@ proc ::ttk::treeview::Press {w x y} {
 	heading { Heading.press $w $x $y }
 	separator { Resize.press $w $x $y }
 	tree {
-	    switch -- [$w identify element $x $y] {
-		Treeitem.indicator {
+	    switch -glob -- [$w identify element $x $y] {
+		*Treeitem.indicator {
 		    set item [$w identify item $x $y]
 		    if {[$w haschildren $item]} {
 			ToggleOpenState $w $item
@@ -1002,8 +1003,8 @@ proc ::ttk::treeview::Press {w x y} {
 			Select.press $w $x $y
 		    }
 		}
-		Checkbutton.button -
-		Checkbutton.indicator { ToggleSelected $w $x $y }
+		*Checkbutton.button -
+		*Checkbutton.indicator { ToggleSelected $w $x $y }
 		default { Select.press $w $x $y }
 	    }
 	}
@@ -1415,7 +1416,7 @@ proc ::ttk::treeview::CloseItem {w item} {
 #
 proc ::ttk::treeview::ToggleOpenState {w item} {
     # don't allow toggling on indicators that
-    # are not present in front of leaf items
+    # are present in front of leaf items
     if {![$w haschildren $item]} {
 	return
     }
