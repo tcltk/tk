@@ -202,7 +202,6 @@ XMapWindow(
 	    [NSApp activateIgnoringOtherApps:initialized];
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
-		    [win makeKeyWindow];
 		    [(TKWindow *) win tkOrderFront];
 		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 		} else {
@@ -386,7 +385,7 @@ XUnmapWindow(
 		    isOnScreen = (wmInfoPtr->hints.initial_state != IconicState &&
 				  wmInfoPtr->hints.initial_state != WithdrawnState);
 		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
-			[w makeKeyAndOrderFront:NSApp];
+			[w makeKeyAndOrderFront:nil];
 			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 			break;
 		    }

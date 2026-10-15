@@ -592,8 +592,8 @@ static void placeAsTab(TKWindow *macWindow) {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
-	if (wmPtr && (wmPtr->flags & WM_HIDDEN) == 0) {
-	    [self orderFront:nil];
+	if (!wmPtr || (wmPtr->flags & WM_HIDDEN) == 0) {
+	    [self makeKeyAndOrderFront:nil];
 	}
     }
 }
@@ -627,8 +627,8 @@ static void placeAsTab(TKWindow *macWindow) {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
-	if (wmPtr && (wmPtr->flags & WM_HIDDEN) == 0) {
-	    [self orderFront:nil];
+	if (!wmPtr || (wmPtr->flags & WM_HIDDEN) == 0) {
+	    [self makeKeyAndOrderFront:nil];
 	}
     }
 }
@@ -906,7 +906,6 @@ void TkMacOSXAssignNewKeyWindow(
 		      wmPtr->hints.initial_state != WithdrawnState);
 	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
 	    TKMenu *menu;
-	    [w makeKeyWindow];
 	    [(TKWindow *) w tkOrderFront];
 	    /* Set the menubar for the new front window. */
 	    if (winPtr->wmInfoPtr &&
@@ -7275,7 +7274,6 @@ TkpChangeFocus(
 	    [NSApp activateIgnoringOtherApps:YES];
 	}
 	if (win && [win canBecomeKeyWindow]) {
-	    [win makeKeyWindow];
 	    [(TKWindow *) win tkOrderFront];
 	    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 	}
@@ -7585,7 +7583,6 @@ ApplyWindowAttributeFlagChanges(
                 case NormalState:
                 case ZoomState:
 		    [(TKWindow *)macWin tkOrderFront];
-		    [macWin makeKeyWindow];
 		    break;
 		}
 	   }

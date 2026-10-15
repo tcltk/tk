@@ -491,7 +491,6 @@ static void showRootWindow(void *clientData) {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (wmPtr->hints.initial_state == NormalState &
 	(wmPtr->flags & WM_HIDDEN) == 0) {
-	[root makeKeyWindow];
         [(TKWindow *)root tkOrderFront];
     }
     [NSApp activateIgnoringOtherApps: YES];

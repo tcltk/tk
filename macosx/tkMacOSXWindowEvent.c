@@ -457,12 +457,8 @@ static void RefocusGrabWindow(void *clientData) {
 	}
     }
     if ([self keyWindow] == nil && iconifiedWindow != nil) {
-	[iconifiedWindow makeKeyAndOrderFront:self];
+	[iconifiedWindow makeKeyAndOrderFront:nil];
     }
-    //    else {
-    //	[(TKWindow *)[self keyWindow] tkOrderFront];
-    //    }
-
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
