@@ -543,7 +543,13 @@ XGetImage(
         }
     }
 
-    /* For non-bitmap pixmaps, fall back to glReadPixels. */
+    /*
+     * Otherwise read the pixels from the framebuffer: the backing store of
+     * the toplevel containing the window, or the framebuffer of the pixmap.
+     * The pixels are stored in the format of the visual (0xRRGGBB), which
+     * the callers (generic code) decode with XGetPixel and the masks of
+     * the visual.
+     */
     imagePtr = XCreateImage(display, NULL, 32, ZPixmap, 0, NULL, width, height, 32, 0);
     if (!imagePtr) {
         return NULL;
@@ -553,27 +559,81 @@ XGetImage(
     size = bpl * height;
     imagePtr->data = (char *)ckalloc(size);
     memset(imagePtr->data, 0, size);
+    _XInitImageFuncPtrs(imagePtr);
 
-    /* Bind context to securely read current screen surface framebuffers. */
-    if (TkWaylandBeginDraw(drawable, NULL, &dc) == TCL_OK) {
-        size_t numPixels = (size_t)width * (size_t)height;
-        if (numPixels <= SIZE_MAX / 4) {
-            unsigned char *glBuffer = ckalloc(numPixels * 4);
-            if (glBuffer) {
-                glReadPixels(x, y, (GLsizei)width, (GLsizei)height, GL_RGBA, GL_UNSIGNED_BYTE, glBuffer);
+    GLFWwindow *glfwWindow = NULL;
+    NVGLUframebuffer *fb = NULL;
+    int fbW = 0, fbH = 0;
+    float scale = 1.0f;
+    int left = x, top = y;	/* In window coordinates. */
 
-                for (unsigned int yy = 0; yy < height; yy++) {
-                    unsigned char *srcRow = glBuffer + (size_t)(height - 1 - yy) * width * 4;
-                    unsigned char *dstRow = (unsigned char *)imagePtr->data + (size_t)yy * bpl;
-                    memcpy(dstRow, srcRow, (size_t)width * 4);
-                }
-                ckfree(glBuffer);
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromDrawable(drawable);
+        if (pixmapPtr) {
+            glfwWindow = pixmapPtr->glfwWindow;
+            fb = pixmapPtr->fb;
+            fbW = pixmapPtr->width;
+            fbH = pixmapPtr->height;
+        }
+    } else {
+        TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+        while (winPtr && !Tk_IsTopLevel(winPtr)) {
+            left += winPtr->changes.x;
+            top += winPtr->changes.y;
+            winPtr = winPtr->parentPtr;
+        }
+        if (winPtr && winPtr->privatePtr && Tk_Width(winPtr) > 0) {
+            glfwWindow = winPtr->privatePtr->glfwWindow;
+            fb = winPtr->privatePtr->fb;
+            if (glfwWindow) {
+                glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
+                scale = (float)fbW / Tk_Width(winPtr);
             }
         }
-        TkWaylandEndDraw(&dc);
     }
 
-    _XInitImageFuncPtrs(imagePtr);
+    if (glfwWindow && fb && fbW > 0 && fbH > 0) {
+        /* The rectangle in framebuffer pixels, clipped to it. */
+        int x0 = (int)(left * scale), y0 = (int)(top * scale);
+        int x1 = (int)ceilf((left + (int)width) * scale);
+        int y1 = (int)ceilf((top + (int)height) * scale);
+        if (x0 < 0) x0 = 0;
+        if (y0 < 0) y0 = 0;
+        if (x1 > fbW) x1 = fbW;
+        if (y1 > fbH) y1 = fbH;
+
+        if (x1 > x0 && y1 > y0) {
+            int rw = x1 - x0, rh = y1 - y0;
+            unsigned char *glBuffer = ckalloc((size_t)rw * rh * 4);
+
+            glfwMakeContextCurrent(glfwWindow);
+            nvgluBindFramebuffer(fb);
+            /* GL rows go from the bottom up. */
+            glReadPixels(x0, fbH - y1, rw, rh, GL_RGBA, GL_UNSIGNED_BYTE,
+                    glBuffer);
+            nvgluBindFramebuffer(NULL);
+
+            for (unsigned int j = 0; j < height; j++) {
+                int fy = (int)((top + (int)j) * scale);
+                if (fy < y0 || fy >= y1) {
+                    continue;
+                }
+                unsigned char *row = glBuffer + (size_t)(y1 - 1 - fy) * rw * 4;
+                for (unsigned int i = 0; i < width; i++) {
+                    int fx = (int)((left + (int)i) * scale);
+                    if (fx < x0 || fx >= x1) {
+                        continue;
+                    }
+                    unsigned char *p = row + (size_t)(fx - x0) * 4;
+                    XPutPixel(imagePtr, (int)i, (int)j,
+                            ((unsigned long)p[0] << 16)
+                            | ((unsigned long)p[1] << 8) | p[2]);
+                }
+            }
+            ckfree(glBuffer);
+        }
+    }
+
     return imagePtr;
 }
 
