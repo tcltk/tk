@@ -34,6 +34,10 @@ if {[tk windowingsystem] eq "wayland"} {
             variable haveOwner 0  ;# do we (this app) currently own CLIPBOARD
             variable released  0  ;# we owned CLIPBOARD, then released/cleared
             variable ownTime   0  ;# [clock milliseconds] of our last write
+            variable ownerWin  "" ;# window given to "selection own", if any
+            variable ownerCmd  "" ;# its -command, run when it loses CLIPBOARD
+            variable handlers     ;# handlers($win,$type) -> command
+            array set handlers {}
 
             # wl-paste is only ever consulted as a *fallback* when this
             # interpreter does not own the CLIPBOARD and has not just
@@ -359,6 +363,7 @@ if {[tk windowingsystem] eq "wayland"} {
                 error "format \"$format\" does not match current format\
                         \"$fmt($type)\" for $type"
             }
+            LoseOwner
             if {![info exists data($type)]} {
                 lappend order $type
                 set data($type) $value
@@ -386,9 +391,42 @@ if {[tk windowingsystem] eq "wayland"} {
             set order {}
         }
 
+        # The window given to "selection own" loses CLIPBOARD: forget it
+        # and run its -command.
+        proc ::tk::wayland::clip::LoseOwner {} {
+            variable ownerWin
+            variable ownerCmd
+            set cmd $ownerCmd
+            set ownerWin ""
+            set ownerCmd ""
+            if {$cmd ne ""} {
+                uplevel #0 $cmd
+            }
+        }
+
+        # The handler of the window for the type, or "" if none.
+        proc ::tk::wayland::clip::HandlerFor {win type} {
+            variable handlers
+            if {![info exists handlers($win,$type)]} {
+                return ""
+            }
+            return $handlers($win,$type)
+        }
+
+        # Call the original command, reporting "wrong # args" under the
+        # public name of the command.
+        proc ::tk::wayland::clip::CallOriginal {name orig args} {
+            if {[catch {$orig {*}$args} res opts]} {
+                regsub "^(wrong # args: should be \")$orig " $res "\\1$name " res
+                return -options $opts $res
+            }
+            return $res
+        }
+
         proc ::tk::wayland::clip::DoClear {} {
             variable haveOwner
             variable released
+            LoseOwner
             ResetBuffer
             set haveOwner 0
             set released 1
@@ -432,16 +470,52 @@ if {[tk windowingsystem] eq "wayland"} {
             variable released
             variable ownTime
 
+            variable ownerWin
+            variable handlers
+
+            set owner ""
+            if {$haveOwner && $ownerWin ne "" && [winfo exists $ownerWin]} {
+                set owner $ownerWin
+            }
             switch -- $type {
                 TARGETS {
+                    set targets $order
+                    if {$owner ne ""} {
+                        foreach key [array names handlers $owner,*] {
+                            set t [string range $key \
+                                    [string length $owner,] end]
+                            if {[HandlerFor $owner $t] ne "" && $t ni $targets} {
+                                lappend targets $t
+                            }
+                        }
+                    }
                     return [concat {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION \
-                            TK_WINDOW} $order]
+                            TK_WINDOW} $targets]
                 }
                 TK_APPLICATION {
                     return [tk appname]
                 }
                 TK_WINDOW {
+                    if {$owner ne ""} {
+                        return $owner
+                    }
                     return .
+                }
+            }
+
+            # A handler of the owner window is called as for other
+            # selections: with an offset and a maximum length, until it
+            # returns less.
+            if {$owner ne "" && [set handler [HandlerFor $owner $type]] ne ""} {
+                set result ""
+                set offset 0
+                while 1 {
+                    set chunk [uplevel #0 $handler [list $offset 4000]]
+                    append result $chunk
+                    if {[string length $chunk] < 4000} {
+                        return $result
+                    }
+                    incr offset 4000
                 }
             }
 
@@ -551,7 +625,8 @@ if {[tk windowingsystem] eq "wayland"} {
             }
 
             if {$seltype ne "CLIPBOARD"} {
-                return [tcl_selection $option {*}$args]
+                return [::tk::wayland::clip::CallOriginal selection \
+                        tcl_selection $option {*}$args]
             }
 
             # Strip the -selection <name> pair before handing to our
@@ -579,27 +654,108 @@ if {[tk windowingsystem] eq "wayland"} {
                     # slots, and we deliberately do *not* forward to the
                     # native/GLFW own path, which is the one that can
                     # hang on Wayland.
-                    if {[llength $stripped] > 1} {
-                        return -code error \
-                            "wrong # args: should be \"selection own ?-selection selection? ?window?\""
+                    set cmd ""
+                    set n [llength $stripped]
+                    for {set i 0} {$i < $n} {incr i 2} {
+                        set a [lindex $stripped $i]
+                        if {[string index $a 0] ne "-" || $i + 1 >= $n} {
+                            break
+                        }
+                        set v [lindex $stripped [expr {$i + 1}]]
+                        if {[::tk::wayland::clip::OptMatches $a "-command"]} {
+                            set cmd $v
+                        } elseif {[::tk::wayland::clip::OptMatches $a "-displayof"]} {
+                            if {![winfo exists $v]} {
+                                return -code error "bad window path name \"$v\""
+                            }
+                        } else {
+                            return -code error "bad option \"$a\":\
+                                    must be -command, -displayof, or -selection"
+                        }
                     }
+                    set rest [lrange $stripped $i end]
+                    if {[llength $rest] > 1} {
+                        return -code error \
+                            "wrong # args: should be \"selection own ?-option value ...? ?window?\""
+                    }
+                    if {[llength $rest] == 0} {
+                        # Query the owner.
+                        if {$::tk::wayland::clip::haveOwner
+                                && $::tk::wayland::clip::ownerWin ne ""
+                                && [winfo exists $::tk::wayland::clip::ownerWin]} {
+                            return $::tk::wayland::clip::ownerWin
+                        }
+                        return {}
+                    }
+                    set win [lindex $rest 0]
+                    if {![winfo exists $win]} {
+                        return -code error "bad window path name \"$win\""
+                    }
+                    ::tk::wayland::clip::LoseOwner
                     ::tk::wayland::clip::DoOwn
+                    set ::tk::wayland::clip::ownerWin $win
+                    set ::tk::wayland::clip::ownerCmd $cmd
                     return {}
                 }
                 clear {
+                    # "selection clear ?-displayof window? ?window?"
+                    set n [llength $stripped]
+                    if {$n == 1 || ($n == 3 && [string index [lindex $stripped 0] 0] eq "-")} {
+                        set win [lindex $stripped end]
+                        if {![winfo exists $win]} {
+                            return -code error "bad window path name \"$win\""
+                        }
+                        set stripped [lrange $stripped 0 end-1]
+                    }
                     if {[catch {::tk::wayland::clip::ParseClearArgs $stripped} msg opts]} {
+                        regsub {"clipboard clear } $msg {"selection clear } msg
                         return -options $opts $msg
                     }
                     ::tk::wayland::clip::DoClear
                     return {}
                 }
                 handle {
-                    # Not meaningful without real selection ownership;
-                    # accepted as a no-op for script compatibility.
+                    # "selection handle ?-type type? ?-format format?
+                    # window command": the handler is called by "get"
+                    # while the window owns CLIPBOARD.
+                    set type STRING
+                    set n [llength $stripped]
+                    for {set i 0} {$i < $n - 2} {incr i 2} {
+                        set a [lindex $stripped $i]
+                        if {[string index $a 0] ne "-"} {
+                            break
+                        }
+                        set v [lindex $stripped [expr {$i + 1}]]
+                        if {[::tk::wayland::clip::OptMatches $a "-type"]} {
+                            set type $v
+                        } elseif {![::tk::wayland::clip::OptMatches $a "-format"]} {
+                            return -code error "bad option \"$a\":\
+                                    must be -format, -selection, or -type"
+                        }
+                    }
+                    set rest [lrange $stripped $i end]
+                    if {[llength $rest] == 3} {
+                        # Old form: window command ?type?
+                        lassign $rest win command type
+                    } elseif {[llength $rest] == 2} {
+                        lassign $rest win command
+                    } else {
+                        return -code error \
+                            "wrong # args: should be \"selection handle ?-option value ...? window command\""
+                    }
+                    if {![winfo exists $win]} {
+                        return -code error "bad window path name \"$win\""
+                    }
+                    if {$command eq ""} {
+                        unset -nocomplain ::tk::wayland::clip::handlers($win,$type)
+                    } else {
+                        set ::tk::wayland::clip::handlers($win,$type) $command
+                    }
                     return {}
                 }
                 default {
-                    return [tcl_selection $option {*}$args]
+                    return [::tk::wayland::clip::CallOriginal selection \
+                            tcl_selection $option {*}$args]
                 }
             }
         }
