@@ -4770,9 +4770,34 @@ Tk_MeasureCharsInContext(
             positions = (NVGglyphPosition *)
 		Tcl_Alloc(nchars * sizeof(NVGglyphPosition));
 
-        int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
-                                           positions, nchars);
-        float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
+        /*
+         * With a limit, lay out only a prefix of the range: 64 characters,
+         * then 4 times more while all of them fit.  The text widget measures
+         * a display line with the rest of the logical line as the range, and
+         * laying out all of it each time made a long wrapped line quadratic
+         * in its length.  Each prefix is laid out from the start of the
+         * range, so the kerning is the same as for the whole range.
+         */
+        const char *layoutEnd = rangeEnd;
+        int         npos;
+        int         limit = (maxLength >= 0) ? 64 : nchars;
+
+        for (;;) {
+            int n = (limit < nchars) ? limit : nchars;
+
+            layoutEnd = rangePtr;
+            for (int i = 0; i < n && layoutEnd < rangeEnd; i++) {
+                int ch;
+                layoutEnd += Tcl_UtfToUniChar(layoutEnd, &ch);
+            }
+            npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, layoutEnd,
+                                         positions, n);
+            if (n >= nchars || npos <= 0
+                    || positions[npos - 1].maxx > maxLength) {
+                break;
+            }
+            limit *= 4;
+        }
 
         int         pixelWidth     = 0;
         const char *lastBreak      = rangePtr;
@@ -4780,7 +4805,7 @@ Tk_MeasureCharsInContext(
         const char *p              = rangePtr;
         int         pos            = 0;
 
-        while (p < rangeEnd && pos < npos) {
+        while (p < layoutEnd && pos < npos) {
             int ch;
             const char *next = p + Tcl_UtfToUniChar(p, &ch);
             float glyphRight = positions[pos].maxx;
@@ -4802,7 +4827,8 @@ Tk_MeasureCharsInContext(
         if ((flags & TK_AT_LEAST_ONE) && p == rangePtr && rangePtr < rangeEnd) {
             int ch;
             const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
-            float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
+            float glyphRight = (npos > 1) ? positions[1].x :
+                    nvgTextBounds(vg, 0, 0, rangePtr, next, NULL);
             pixelWidth = (int)ceil(glyphRight);
             p = next;
         }
