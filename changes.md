@@ -10,7 +10,7 @@ Tk 9.0.5 continues the Tk 9.0 series of releases.  The Tk 9.0 series
 does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
 To make use of Tk 9.0.5, first a Tcl 9.0 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+in Tk 8.
 
 Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.
@@ -128,7 +128,7 @@ Tk 9.0.4 continues the Tk 9.0 series of releases.  The Tk 9.0 series
 does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
 To make use of Tk 9.0.4, first a Tcl 9.0 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+in Tk 8.
 
 Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.
@@ -165,7 +165,7 @@ Tk 9.0.3 continues the Tk 9.0 series of releases.  The Tk 9.0 series
 does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
 To make use of Tk 9.0.3, first a Tcl 9.0 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+in Tk 8.
 
 Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.
@@ -203,7 +203,7 @@ Tk 9.0.2 continues the Tk 9.0 series of releases.  The Tk 9.0 series
 does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
 To make use of Tk 9.0.2, first a Tcl 9.0 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+in Tk 8.
 
 Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.
@@ -245,7 +245,7 @@ Tk 9.0.1 continues the Tk 9.0 series of releases.  The Tk 9.0 series
 does not support Tcl 8.6.  The Tk 9.0 series extends the Tcl 9.0 series.
 To make use of Tk 9.0.1, first a Tcl 9.0 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+in Tk 8.
 
 Tk patch releases have the primary purpose of delivering bug fixes
 to the userbase.  As the first patch release in the Tk 9.0 series,
