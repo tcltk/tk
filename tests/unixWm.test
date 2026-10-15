@@ -593,7 +593,7 @@ test unixWm-14.1 {Tk_WmCmd procedure, "colormapwindows" option} unix {
     list [catch {wm colormapwindows .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm colormapwindows window ?windowList?"}}
 # Colormap is unsupported on Wayland.
-test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} {unix !wayland} {
+test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} {unix && !wayland} {
     destroy .t2
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
@@ -2278,7 +2278,7 @@ test unixWm-52.1 {TkWmAddToColormapWindows procedure} unix {
     wm colormap .t
 } {}
 # Colormap is unsupported on Wayland.
-test unixWm-52.2 {TkWmAddToColormapWindows procedure} {unix !wayland} {
+test unixWm-52.2 {TkWmAddToColormapWindows procedure} {unix && !wayland} {
     destroy .t
     toplevel .t -colormap new -relief raised -bd 2
     wm geom .t +0+0
@@ -2288,7 +2288,7 @@ test unixWm-52.2 {TkWmAddToColormapWindows procedure} {unix !wayland} {
     wm colormap .t
 } {.t.f .t}
 # Colormap is unsupported on Wayland.
-test unixWm-52.3 {TkWmAddToColormapWindows procedure} {unix !wayland} {
+test unixWm-52.3 {TkWmAddToColormapWindows procedure} {unix && !wayland} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
@@ -2314,7 +2314,7 @@ test unixWm-52.4 {TkWmAddToColormapWindows procedure} unix {
 } {.t.f}
 
 # Colormap is unsupported on Wayland.
-test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} {unix !wayland} {
+test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} {unix && !wayland} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
