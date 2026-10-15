@@ -2515,6 +2515,7 @@ WmGeometryCmd(
         if (wmPtr->width > 0 && wmPtr->height > 0) {
 	    DEBUG_LOG("GeometryCmd setting window size %s -> %dx%d",
 		Tk_PathName(winPtr), wmPtr->width, wmPtr->height);
+	    TkWaylandFlushConfigures();
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 
@@ -3982,6 +3983,7 @@ ApplyPendingGeometry(
 
 	DEBUG_LOG("ApplyPendingGeometry: calling glfwSetWindowSize %s -> %dx%d",
 	    Tk_PathName(winPtr), tw, th);
+	TkWaylandFlushConfigures();
         glfwSetWindowSize(glfwWindow, tw, th);
 	
 	/* Update the window data. */

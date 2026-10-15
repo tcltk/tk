@@ -1475,6 +1475,35 @@ TkWaylandGetNVGContext(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandFlushConfigures --
+ *
+ *	Make a roundtrip to the compositor before the client resizes a
+ *	window.  The compositor answers a commit of a new window size with a
+ *	configure event carrying that size, and GLFW resizes the window to
+ *	the size of each configure event.  If such an answer to an earlier
+ *	commit arrived after a new resize, it would undo the resize.  The
+ *	roundtrip dispatches these answers before the resize.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Dispatches pending Wayland events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandFlushConfigures(void)
+{
+    if (waylandDisplay != NULL && !shutdownInProgress) {
+	wl_display_roundtrip(waylandDisplay);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandGetNVGContextForMeasure --
  *
  *	Return the NanoVG context with the shared GL context current,
