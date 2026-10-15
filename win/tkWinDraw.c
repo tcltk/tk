@@ -541,8 +541,15 @@ TkPutImage(
 	    bitmap = CreateBitmap(image->width, image->height, 1, 1,
 		    image->data);
 	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
+
+	/*
+	 * Windows draws the 1 bits of a monochrome bitmap with the background
+	 * color and the 0 bits with the text color, while X draws the 1 bits
+	 * with the foreground color. [Bug 481255]
+	 */
+
+	SetTextColor(dc, gc->background);
+	SetBkColor(dc, gc->foreground);
     } else {
 	int i, usePalette;
 

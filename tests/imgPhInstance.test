@@ -267,6 +267,39 @@ test imgPhInstance-7.2 "-palette is applied" \
     image delete photo.palette
     update
 } -result {#000000 #ffffff}
+test imgPhInstance-7.3 "-palette 2 draws black and white pixels in place, Bug 481255" \
+	-constraints {pixelProbe notAqua} -body {
+    set result {}
+    foreach width {1 10 16 17 33 40} {
+	image create photo photo.palette -width $width -height 3 -palette 2
+	for {set y 0} {$y < 3} {incr y} {
+	    for {set x 0} {$x < $width} {incr x} {
+		set color [expr {($x + $y) % 3 ? "#ffffff" : "#000000"}]
+		photo.palette put $color -to $x $y
+	    }
+	}
+	.c create image 10 10 -anchor nw -image photo.palette
+	update
+	for {set y 0} {$y < 3} {incr y} {
+	    for {set x 0} {$x < $width} {incr x} {
+		set color [expr {($x + $y) % 3 ? "#ffffff" : "#000000"}]
+		if {[testpixel .c [expr {10 + $x}] [expr {10 + $y}]] ne $color} {
+		    lappend result $width
+		    break
+		}
+	    }
+	    if {[lindex $result end] eq $width} break
+	}
+	.c delete all
+	image delete photo.palette
+    }
+    set result
+} -cleanup {
+    .c delete all
+    catch {image delete photo.palette}
+    unset -nocomplain result width x y color
+    update
+} -result {}
 
 #
 # TESTFILE CLEANUP
