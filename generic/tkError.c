@@ -321,7 +321,7 @@ ErrorProc(
  *	destroyed by someone else (e.g. the container of an embedded window)
  *	before Tk deletes it, so the X errors for requests made before the
  *	deletion can arrive after it; ErrorProc ignores them. This is only
- *	done for applications embedded in a container.
+ *	done for the windows of embedded toplevels.
  *
  * Results:
  *	None.
