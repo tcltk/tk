@@ -212,6 +212,7 @@ static void		DeleteWindowsExitProc(void *clientData);
 static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
 static int		Initialize(Tcl_Interp *interp);
+static int		IsInEmbeddedToplevel(const TkWindow *winPtr);
 static int		NameWindow(Tcl_Interp *interp, TkWindow *winPtr,
 			    TkWindow *parentPtr, const char *name);
 static void		UnlinkWindow(TkWindow *winPtr);
@@ -1048,11 +1049,10 @@ TkCreateMainWindow(
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
 		".x11"
 #endif
-	;
-	if (info.isNativeObjectProc == 2) {
+		;
+	if (info.isNativeObjectProc) {
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
-		    info.objProc2, (void *)
-		    version, NULL);
+		    info.objProc2, (void *)version, NULL);
 
 	} else {
 	Tcl_CreateObjCommand(interp, "::tk::build-info",
@@ -1327,6 +1327,34 @@ Tk_CreateWindowFromPath(
 /*
  *--------------------------------------------------------------
  *
+ * IsInEmbeddedToplevel --
+ *
+ *	Check whether a window belongs to an embedded toplevel. Only such
+ *	windows can be destroyed by the container before Tk knows it, so only
+ *	their deletion has to be recorded (see TkRecordDeletedWindow).
+ *
+ * Results:
+ *	Nonzero if the toplevel of the window is embedded.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+IsInEmbeddedToplevel(
+    const TkWindow *winPtr)
+{
+    while (winPtr && !(winPtr->flags & TK_TOP_HIERARCHY)) {
+	winPtr = winPtr->parentPtr;
+    }
+    return winPtr && (winPtr->flags & TK_EMBEDDED);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * Tk_DestroyWindow --
  *
  *	Destroy an existing window. After this call, the caller should never
@@ -1593,7 +1621,9 @@ Tk_DestroyWindow(
 #endif
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
 		winPtr->window));
-	TkRecordDeletedWindow(dispPtr, winPtr->window);
+	if (IsInEmbeddedToplevel(winPtr)) {
+	    TkRecordDeletedWindow(dispPtr, winPtr->window);
+	}
 	winPtr->window = None;
     }
     UnlinkWindow(winPtr);
