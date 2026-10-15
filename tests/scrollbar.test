@@ -43,7 +43,7 @@ proc getTroughSize {w} {
 	    return [expr {[winfo width $w] - 2*[testmetrics cxhscroll $w]}]
 	}
     } else {
-	if {[tk windowingsystem] eq "x11"} {
+	if {[tk windowingsystem] in {x11 wayland}} {
 	    # Calculations here assume that the arrow area is a square.
 	    if [string match v* [$w cget -orient]] {
 		return [expr {[winfo height $w] \
@@ -353,7 +353,7 @@ test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} -setup {
 	# Only Windows has [testmetrics]
 	place configure .t.s -width [expr {2*[testmetrics cxhscroll .t.s]+1}]
     } else {
-	if {[tk windowingsystem] eq "x11"} {
+	if {[tk windowingsystem] in {x11 wayland}} {
 	    place configure .t.s -width [expr {[winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)}]
 	} else {
 	    # macOS aqua
