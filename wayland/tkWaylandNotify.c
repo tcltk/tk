@@ -830,45 +830,54 @@ TkWaylandFramebufferSizeCallback(
         DEBUG_LOG("TkWaylandFramebufferSizeCallback: infoPtr is NULL");
         return;
     }
-    
+
+    /*
+     * The FBO belongs to the GL context of this window, which need not be
+     * current: e.g. after another toplevel was destroyed.  Without it
+     * nvgluCreateFramebuffer() fails.  Even if the FBO cannot be created,
+     * Tk must still learn the new size below.
+     */
+    glfwMakeContextCurrent(window);
+
     NVGcontext *vg = infoPtr->vg;
     if (vg == NULL) {
         DEBUG_LOG("TkWaylandFramebufferSizeCallback: No NVG context!");
-        return;
-    }
-    /* Delete the old FBO if it exists. */
-    if (winPtr->privatePtr->fb) {
-	nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-	winPtr->privatePtr->fb = NULL;
-    }
-    /* Create a new FBO. */
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    if (!winPtr->privatePtr->fb) {
-        DEBUG_LOG("TkWaylandFramebufferSizeCallback: Failed to create FBO");
-        return;
-    }
-    /* Check FBO completeness. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fb);
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        DEBUG_LOG("FBO incomplete (status=0x%x)", status);
-        nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-        winPtr->privatePtr->fb = NULL;
-        return;
-    }    
-    DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
-	      "FBO created successfully: %dx%d", width, height);
+    } else {
+	/* Delete the old FBO if it exists. */
+	if (winPtr->privatePtr->fb) {
+	    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+	    winPtr->privatePtr->fb = NULL;
+	}
+	/* Create a new FBO. */
+	winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
+	if (!winPtr->privatePtr->fb) {
+	    DEBUG_LOG("TkWaylandFramebufferSizeCallback: Failed to create FBO");
+	} else {
+	    /* Check FBO completeness. */
+	    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+	    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	    if (status != GL_FRAMEBUFFER_COMPLETE) {
+		DEBUG_LOG("FBO incomplete (status=0x%x)", status);
+		nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+		winPtr->privatePtr->fb = NULL;
+	    } else {
+		DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
+			"FBO created successfully: %dx%d", width, height);
 
-    /*
-     * nvgluCreateFramebuffer does not clear the color attachment it
-     * allocates, and this resize path unconditionally discards the old
-     * FBO and its content along with it. Without an explicit clear here,
-     * every resize (including the handful that happen during initial
-     * layout) briefly/permanently exposes raw GPU memory as visible
-     * static in any region a widget hasn't repainted yet.
-     */
-    glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+		/*
+		 * nvgluCreateFramebuffer does not clear the color attachment
+		 * it allocates, and this resize path unconditionally discards
+		 * the old FBO and its content along with it. Without an
+		 * explicit clear here, every resize (including the handful
+		 * that happen during initial layout) briefly/permanently
+		 * exposes raw GPU memory as visible static in any region a
+		 * widget hasn't repainted yet.
+		 */
+		glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+	    }
+	}
+    }
 
     /*
      * Notify the menubar subsurface to recreate itself at the new width.
