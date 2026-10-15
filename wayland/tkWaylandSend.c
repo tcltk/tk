@@ -1150,7 +1150,17 @@ sendRequest(
     }
     const char *strings[3] = {NULL, recipient, request};
     if (!async) {
-	snprintf(qnameReply, NAME_MAX, "/tkreply_%s", sender);
+	/*
+	 * Message queue names are global to the system, but application
+	 * names are only unique in the registry of a user.  Name the reply
+	 * queue after this process and request, which also keeps nested
+	 * (recursive) sends apart.
+	 */
+
+	static unsigned int replySerial = 0;
+
+	snprintf(qnameReply, NAME_MAX, "/tkreply_%d_%u", (int) getpid(),
+		++replySerial);
 	strings[0] = qnameReply;
     } else {
 	strings[0] = sender;
