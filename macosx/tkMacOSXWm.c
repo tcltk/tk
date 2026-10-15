@@ -582,6 +582,22 @@ static void placeAsTab(TKWindow *macWindow) {
     syncLayout(self);
 }
 
+/*
+ *  This method calls orderFront if the WM_HIDDEN flag is not set.
+ *  Otherwise it does nothing.
+ */
+
+- (void) tkOrderFront
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+	if (wmPtr && (wmPtr->flags & WM_HIDDEN) == 0) {
+	    [self orderFront:nil];
+	}
+    }
+}
+
 @end
 
 @implementation TKDrawerWindow: NSWindow
@@ -1830,10 +1846,8 @@ WmSetAttribute(
         if (boolValue != ((wmPtr->flags & WM_HIDDEN) != 0)) {
 	    int oldFlags = wmPtr->flags;
             if (boolValue) {
-		printf("Setting hidden flag to 1\n");
                 wmPtr->flags |= WM_HIDDEN;
             } else {
-		printf("Setting hidden flag to 0\n");
                 wmPtr->flags &= ~WM_HIDDEN;
             }
 	    ApplyWindowAttributeFlagChanges(winPtr, macWindow,
@@ -7570,6 +7584,7 @@ ApplyWindowAttributeFlagChanges(
                 case NormalState:
                 case ZoomState:
 		    [(TKWindow *)macWin tkOrderFront];
+		    [macWin makeKeyWindow];
 		    break;
 		}
 	   }

@@ -189,7 +189,8 @@ XMapWindow(
 	    [NSApp activateIgnoringOtherApps:initialized];
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
-		    [win makeKeyAndOrderFront:NSApp];
+		    [win makeKeyWindow];
+		    [(TKWindow *) win tkOrderFront];
 		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 		} else {
 		    [win orderFrontRegardless];
@@ -202,11 +203,13 @@ XMapWindow(
 		 * visible.
 		 */
 
-		for (int count = 0; count < 20; count++) {
-		    if ([[NSApp orderedWindows] firstObject] == win) {
-			break;
+		if ((winPtr->wmInfoPtr->flags & WM_HIDDEN) == 0) {
+		    for (int count = 0; count < 20; count++) {
+			if ([[NSApp orderedWindows] firstObject] == win) {
+			    break;
+			}
+			[NSThread sleepForTimeInterval:.001];
 		    }
-		    [NSThread sleepForTimeInterval:.001];
 		}
 	    }
 

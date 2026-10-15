@@ -472,6 +472,7 @@ VISIBILITY_HIDDEN
 
 @interface TKPanel(TKWm)
 - (void)    tkLayoutChanged;
+- (void)    tkOrderFront;
 @end
 #pragma mark NSMenu & NSMenuItem Utilities
 

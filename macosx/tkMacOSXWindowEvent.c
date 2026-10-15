@@ -200,6 +200,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    if (!winPtr) {
+	return;
+    }
     winPtr->wmInfoPtr->flags &= ~WM_HIDDEN;
     if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
