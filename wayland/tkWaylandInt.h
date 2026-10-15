@@ -315,6 +315,7 @@ extern const char *const WmAttributeNames[];
 #define TKWL_DONT_SWAP           2
 #define TKWL_NEVER_FOCUSED       4
 #define TKWL_IS_DRAWING          8
+#define TKWL_SHOWN               16	/* The window has been shown. */
 #define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
 
 typedef struct glfwTkInfo {

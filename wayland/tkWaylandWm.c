@@ -746,7 +746,7 @@ TkWmMapWindow(TkWindow *winPtr)
         if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
             glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(winPtr->privatePtr->glfwWindow);
             if (infoPtr) {
-                infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+                infoPtr->flags |= TKWL_NEEDS_DISPLAY | TKWL_SHOWN;
                 infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
             }
         }
@@ -3910,7 +3910,11 @@ TopLevelReqProc(
 	//return;
     }
 
-    if (Tk_IsMapped(winPtr)) {
+    /*
+     * As on X11, also update a withdrawn window which has been mapped
+     * before; see UpdateGeometryInfo.
+     */
+    if (Tk_IsMapped(winPtr) || !(wmPtr->flags & WM_NEVER_MAPPED)) {
 	wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
 	DEBUG_LOG("TopLevelReqProc: scheduling UpdateGeometryInfo %s",
 	    Tk_PathName(winPtr));
@@ -4086,6 +4090,23 @@ UpdateGeometryInfo(
 	return;
     }
 
+    if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)
+	    && (infoPtr->flags & TKWL_SHOWN)) {
+	/*
+	 * A window which has been shown before and is now hidden (e.g.
+	 * withdrawn) can be resized: GLFW keeps the size and uses it when the
+	 * window is shown again.  As on X11, resize it now, so that its
+	 * children are laid out for the new size.
+	 */
+	wmPtr->flags &= ~WM_UPDATE_PENDING;
+	if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
+	    UpdateSizeHints(winPtr);
+	    wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
+	}
+	DEBUG_LOG("UpdateGeometryInfo: resizing hidden %s", Tk_PathName(winPtr));
+	ApplyPendingGeometry(winPtr);
+	return;
+    }
     if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
 	/* Newly created windows are hidden until they are first shown.  If a
 	 * window is resized before it has been shown, the missing window
