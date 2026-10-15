@@ -4302,6 +4302,31 @@ CreateStandardNamedFonts(ClientData clientData)
 
 /*
  *----------------------------------------------------------------------
+ * MainWindowDestroyed --
+ *
+ *   Event handler for the main window: cancels a pending
+ *   CreateStandardNamedFonts idle when the main window is destroyed.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Cancels font idle task.
+ *----------------------------------------------------------------------
+ */
+
+static void
+MainWindowDestroyed(
+    ClientData clientData,
+    XEvent *eventPtr)
+{
+    if (eventPtr->type == DestroyNotify) {
+	Tcl_CancelIdleCall(CreateStandardNamedFonts, clientData);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * TkpFontPkgInit --
  *
  *   Initialize the font subsystem and schedule creation of standard Tk
@@ -4325,28 +4350,15 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
     }
 
     Tcl_DoWhenIdle(CreateStandardNamedFonts, (ClientData) mainPtr);
-}
 
-/*
- *----------------------------------------------------------------------
- * TkWaylandCancelNamedFontIdle --
- * 
- *   Cancel a pending CreateStandardNamedFonts idle for mainPtr.
- *   Must be called from the TkMainInfo teardown path before mainPtr is
- *   freed, to prevent the idle firing against a deleted named-font hash
- *   table.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Cancels font idle task.
- *----------------------------------------------------------------------
- */
-void
-TkWaylandCancelNamedFontIdle(TkMainInfo *mainPtr)
-{
-    Tcl_CancelIdleCall(CreateStandardNamedFonts, (ClientData) mainPtr);
+    /*
+     * The application can be deleted before the idle callback runs (e.g.
+     * a child interpreter which loads Tk and is deleted at once).  Cancel
+     * the callback when the main window is destroyed, before mainPtr is
+     * freed.
+     */
+    Tk_CreateEventHandler((Tk_Window) mainPtr->winPtr, StructureNotifyMask,
+	    MainWindowDestroyed, mainPtr);
 }
 
 
