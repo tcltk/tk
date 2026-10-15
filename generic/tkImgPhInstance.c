@@ -1236,10 +1236,16 @@ GetColorTable(
 	 */
 
 	colorPtr = (ColorTable *)Tcl_Alloc(sizeof(ColorTable));
-	memset(colorPtr, 0, sizeof(ColorTable));
-	colorPtr->id = id;
+
+	/* Make sure padding bytes are copied as well */
+	memcpy(&colorPtr->id, &id, sizeof(ColorTableId));
 	Tk_PreserveColormap(colorPtr->id.display, colorPtr->id.colormap);
+	colorPtr->flags = 0;
+	colorPtr->refCount = 0;
+	colorPtr->liveRefCount = 0;
+	colorPtr->numColors = 0;
 	colorPtr->visualInfo = instancePtr->visualInfo;
+	colorPtr->pixelMap = NULL;
 	Tcl_SetHashValue(entry, colorPtr);
     }
 
