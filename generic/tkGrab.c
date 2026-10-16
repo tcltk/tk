@@ -73,9 +73,9 @@
  * Event(state)		Enter/Leave From -> To
  * ------------		----------------------
  * LastRelease(B | GB): restrict window -> anc(grab window, event window)
- * Grab(U | B): 	event window -> anc(grab window, event window)
+ * Grab(U | B):	event window -> anc(grab window, event window)
  * Grab(G):		anc(old grab window, event window) ->
- * 				anc(new grab window, event window)
+ *				anc(new grab window, event window)
  * Grab(GB):		restrict window -> anc(new grab window, event window)
  * Ungrab(G):		anc(grab window, event window) -> event window
  * Ungrab(GB):		restrict window -> event window
@@ -91,7 +91,7 @@
 
 typedef struct {
     Display *display;		/* Display from which to discard events. */
-    unsigned int serial;	/* Serial number with which to compare. */
+    unsigned long serial;	/* Serial number with which to compare. */
 } GrabInfo;
 
 /*
@@ -140,7 +140,7 @@ typedef struct NewGrabWinEvent {
  * Forward declarations for functions declared later in this file:
  */
 
-static void		EatGrabEvents(TkDisplay *dispPtr, unsigned int serial);
+static void		EatGrabEvents(TkDisplay *dispPtr, unsigned long serial);
 static TkWindow *	FindCommonAncestor(TkWindow *winPtr1,
 			    TkWindow *winPtr2, int *countPtr1, int *countPtr2);
 static Tk_RestrictProc GrabRestrictProc;
@@ -170,7 +170,7 @@ static void		ReleaseButtonGrab(TkDisplay *dispPtr);
 
 int
 Tk_GrabObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -204,7 +204,7 @@ Tk_GrabObjCmd(
 
 	Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
 	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-		" option ?arg ...?\"", NULL);
+		" option ?arg ...?\"", (char *)NULL);
 	/* This API not exposed:
 	 *
 	((Interp *) interp)->flags |= INTERP_ALTERNATE_WRONG_ARGS;
@@ -401,7 +401,7 @@ Tk_Grab(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkWindow *winPtr2;
-    unsigned int serial;
+    unsigned long serial;
 
     ReleaseButtonGrab(dispPtr);
     if (dispPtr->eventualGrabWinPtr != NULL) {
@@ -536,24 +536,24 @@ Tk_Grab(
     if (grabResult == GrabNotViewable) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: window not viewable", -1));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", (char *)NULL);
     } else if (grabResult == AlreadyGrabbed) {
     alreadyGrabbed:
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: another application has grab", -1));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", (char *)NULL);
     } else if (grabResult == GrabFrozen) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: keyboard or pointer frozen", -1));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", (char *)NULL);
     } else if (grabResult == GrabInvalidTime) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: invalid time", -1));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", (char *)NULL);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"grab failed for unknown reason (code %d)", grabResult));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", (char *)NULL);
     }
     return TCL_ERROR;
 }
@@ -582,7 +582,7 @@ Tk_Ungrab(
 {
     TkDisplay *dispPtr;
     TkWindow *grabWinPtr, *winPtr;
-    unsigned int serial;
+    unsigned long serial;
 
     grabWinPtr = (TkWindow *) tkwin;
     dispPtr = grabWinPtr->dispPtr;
@@ -654,7 +654,7 @@ ReleaseButtonGrab(
     TkDisplay *dispPtr)/* Display whose button grab is to be
 				 * released. */
 {
-    unsigned int serial;
+    unsigned long serial;
 
     if (dispPtr->buttonWinPtr != NULL) {
 	if (dispPtr->buttonWinPtr != dispPtr->serverWinPtr) {
@@ -680,6 +680,9 @@ ReleaseButtonGrab(
  *	This function is called for each pointer-related event, before the
  *	event has been processed. It does various things to make grabs work
  *	correctly.
+ *	Also, this function takes care of warping the mouse pointer with
+ *	respect to a given window, both when there is a grab in effect and
+ *	when there is none.
  *
  * Results:
  *	If the return value is 1 it means the event should be processed (event
@@ -691,6 +694,7 @@ ReleaseButtonGrab(
  *	Grab state information may be updated. New events may also be pushed
  *	back onto the event queue to replace or augment the one passed in
  *	here.
+ *	The mouse pointer may be moved.
  *
  *----------------------------------------------------------------------
  */
@@ -703,7 +707,7 @@ TkPointerEvent(
 {
     TkWindow *winPtr2;
     TkDisplay *dispPtr = winPtr->dispPtr;
-    unsigned int serial;
+    unsigned long serial;
     int outsideGrabTree = 0;
     int ancestorOfGrab = 0;
     int appGrabbed = 0;		/* Non-zero means event is being reported to
@@ -754,9 +758,13 @@ TkPointerEvent(
 	 * 2. Allow Enter and Leave events to pass through the windows above
 	 *    the grab window, but never let them end up with the pointer *in*
 	 *    one of those windows.
+	 *
+	 * Events generated by a grab change are always delivered, even if
+	 * the new grab is already in effect.
 	 */
 
-	if (dispPtr->grabWinPtr != NULL) {
+	if ((dispPtr->grabWinPtr != NULL)
+		&& (eventPtr->xcrossing.send_event != GENERATED_GRAB_EVENT_MAGIC)) {
 	    if (outsideGrabTree && appGrabbed) {
 		if (!ancestorOfGrab) {
 		    return 0;
@@ -790,6 +798,10 @@ TkPointerEvent(
     if (!appGrabbed) {
 	return 1;
     }
+
+    /*
+     * From this point on, there is a grab in effect.
+     */
 
     if (eventPtr->type == MotionNotify) {
 	/*
@@ -1250,12 +1262,12 @@ TkGrabDeadWindow(
 static void
 EatGrabEvents(
     TkDisplay *dispPtr,		/* Display from which to consume events. */
-    unsigned int serial)	/* Only discard events that have a serial
+    unsigned long serial)	/* Only discard events that have a serial
 				 * number at least this great. */
 {
     Tk_RestrictProc *prevProc;
     GrabInfo info;
-    ClientData prevArg;
+    void *prevArg;
 
     info.display = dispPtr->display;
     info.serial = serial;
@@ -1288,7 +1300,7 @@ EatGrabEvents(
 
 static Tk_RestrictAction
 GrabRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     GrabInfo *info = (GrabInfo *)arg;
@@ -1392,6 +1404,9 @@ GrabWinEventProc(
 
     grabEvPtr->dispPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(
 	    grabEvPtr->dispPtr->display, grabEvPtr->grabWindow);
+    if (grabEvPtr->dispPtr->grabWinPtr == NULL) {
+	TkFocusGrabReleased(grabEvPtr->dispPtr);
+    }
     return 1;
 }
 

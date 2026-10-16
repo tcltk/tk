@@ -34,8 +34,8 @@
  *----------------------------------------------------------------------
  */
 
-int
-TkpChangeFocus(
+unsigned long
+TkpChangeFocus_(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
     int force)			/* Non-zero means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
@@ -44,8 +44,9 @@ TkpChangeFocus(
     TkDisplay *dispPtr = winPtr->dispPtr;
     Tk_ErrorHandler errHandler;
     Window window, root, parent, *children;
-    unsigned int numChildren, serial;
     TkWindow *winPtr2;
+    unsigned long serial;
+    unsigned int numChildren;
     int dummy;
 
     /*

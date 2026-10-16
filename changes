@@ -8505,3 +8505,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-13 (bug) [300988] tk_messageBox can return empty string on Windows (storchaka)
 
 2026-10-13 (bug) [3414693] tk_dialog is centered over its parent window (vogel)
+
+2026-10-13 (bug) [451cb3] LastKnownRequestProcessed() assigned to unsigned int

@@ -574,6 +574,11 @@ typedef struct TkDisplay {
 				/* Maps from X window ids of recently deleted
 				 * windows to the serial number of the last
 				 * request made before the deletion. */
+    struct TkWindow *focusInGrabPtr;
+				/* Toplevel window which received the focus
+				 * while it was excluded by a grab, or NULL.
+				 * Its FocusIn event is processed when the
+				 * grab is released. */
 } TkDisplay;
 
 /*
@@ -621,7 +626,7 @@ typedef struct TkErrorHandler {
 				 * codes). */
     Tk_ErrorProc *errorProc;	/* Function to invoke when a matching error
 				 * occurs. NULL means just ignore errors. */
-    ClientData clientData;	/* Arbitrary value to pass to errorProc. */
+    void *clientData;		/* Arbitrary value to pass to errorProc. */
     struct TkErrorHandler *nextPtr;
 				/* Pointer to next older handler for this
 				 * display, or NULL for end of list. */
@@ -636,7 +641,7 @@ typedef struct TkEventHandler {
     unsigned long mask;		/* Events for which to invoke proc. */
     Tk_EventProc *proc;		/* Function to invoke when an event in mask
 				 * occurs. */
-    ClientData clientData;	/* Argument to pass to proc. */
+    void *clientData;		/* Argument to pass to proc. */
     struct TkEventHandler *nextPtr;
 				/* Next in list of handlers associated with
 				 * window (NULL means end of list). */
@@ -812,7 +817,7 @@ typedef struct TkWindow {
      * in tkCmds.c):
      */
 
-    ClientData *tagPtr;		/* Points to array of tags used for bindings
+    void **tagPtr;		/* Points to array of tags used for bindings
 				 * on this window. Each tag is a Tk_Uid.
 				 * Malloc'ed. NULL means no tags. */
     int numTags;		/* Number of tags at *tagPtr. */
@@ -840,7 +845,7 @@ typedef struct TkWindow {
     const Tk_GeomMgr *geomMgrPtr;
 				/* Information about geometry manager for this
 				 * window. */
-    ClientData geomData;	/* Argument for geometry manager functions. */
+    void *geomData;	/* Argument for geometry manager functions. */
     int reqWidth, reqHeight;	/* Arguments from last call to
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been called. */
@@ -865,7 +870,7 @@ typedef struct TkWindow {
      */
 
     const Tk_ClassProcs *classProcsPtr;
-    ClientData instanceData;
+    void *instanceData;
 
     /*
      * Platform specific information private to each port.
@@ -1268,6 +1273,7 @@ MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
+MODULE_SCOPE void	TkFocusGrabReleased(TkDisplay *display);
 MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *string, double *doublePtr);
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
@@ -1320,6 +1326,7 @@ MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
 MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
+MODULE_SCOPE unsigned long TkpChangeFocus_(TkWindow *winPtr, int force);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv, int flags);
 MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin,

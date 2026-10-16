@@ -509,8 +509,8 @@ XSetInputFocus(
  *----------------------------------------------------------------------
  */
 
-int
-TkpChangeFocus(
+unsigned long
+TkpChangeFocus_(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
     int force)			/* Non-zero means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
@@ -518,8 +518,9 @@ TkpChangeFocus(
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
     Window focusWindow;
-    int dummy, serial;
     TkWindow *winPtr2;
+    unsigned long serial;
+    int dummy;
 
     if (!force) {
 	XGetInputFocus(dispPtr->display, &focusWindow, &dummy);

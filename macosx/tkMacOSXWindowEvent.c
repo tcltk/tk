@@ -332,7 +332,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
-    TkpChangeFocus(winPtr, 1);
+    TkpChangeFocus_(winPtr, 1);
     Tcl_Release(winPtr);
 }
 
@@ -1163,8 +1163,6 @@ ConfigureRestrictProc(
 
 - (void) generateExposeEvents: (NSRect) rect
 {
-    unsigned long serial;
-    int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     void *oldArg;
@@ -1181,19 +1179,17 @@ ConfigureRestrictProc(
     updateBounds = NSRectToCGRect(rect);
     updateBounds.origin.y = ([self bounds].size.height - updateBounds.origin.y
 			     - updateBounds.size.height);
-    updatesNeeded = GenerateUpdates(&updateBounds, winPtr);
-    if (updatesNeeded) {
-
-	serial = LastKnownRequestProcessed(Tk_Display(winPtr));
+    if (GenerateUpdates(&updateBounds, winPtr)) {
+	unsigned long serial = LastKnownRequestProcessed(Tk_Display(winPtr));
 
 	/*
-	 * Use the ExposeRestrictProc to process only the expose events.  This
-	 * will create idle drawing tasks, which we handle before we return.
+	 * Use the ExposeRestrictProc to process the expose events we just
+	 * generated.  This will create idle drawing tasks, which we handle
+	 * before we return in the case of a live resize.
 	 */
-
-    	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
-    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
-    	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
+	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
+	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
 	 * Starting with OSX 10.14, which uses Core Animation to draw windows,
