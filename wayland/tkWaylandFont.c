@@ -4023,13 +4023,18 @@ InitFont(
 			offset = 0;
 		    }
                     if (stbtt_InitFont(&info, buf, offset)) {
-                        /* Use proper pixel height scaling. */
-                        float scale = stbtt_ScaleForPixelHeight(
+                        /*
+                         * The pixel size is the em size, as in fontstash
+                         * (which draws the text) and on other platforms,
+                         * not the height from descender to ascender.
+                         */
+                        float scale = stbtt_ScaleForMappingEmToPixels(
                             &info, (float)fontPtr->pixelSize);
                         int asc, desc, linegap;
                         stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                        fm->ascent  = (int)(asc * scale + 0.5f);
-                        fm->descent = (int)(-desc * scale + 0.5f);
+                        /* Round up, as Xft does. */
+                        fm->ascent  = (int)ceilf(asc * scale);
+                        fm->descent = (int)ceilf(-desc * scale);
                         /* Get proper character widths. */
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
@@ -4060,13 +4065,18 @@ InitFont(
                     if (stbtt_InitFont(&info, buf,
                                        stbtt_GetFontOffsetForIndex(
                                            buf, fontPtr->faces[0].faceIndex))) {
-                        /* Use proper pixel height scaling. */
-                        float scale = stbtt_ScaleForPixelHeight(
+                        /*
+                         * The pixel size is the em size, as in fontstash
+                         * (which draws the text) and on other platforms,
+                         * not the height from descender to ascender.
+                         */
+                        float scale = stbtt_ScaleForMappingEmToPixels(
                             &info, (float)fontPtr->pixelSize);
                         int asc, desc, linegap;
                         stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                        fm->ascent  = (int)(asc * scale + 0.5f);
-                        fm->descent = (int)(-desc * scale + 0.5f);
+                        /* Round up, as Xft does. */
+                        fm->ascent  = (int)ceilf(asc * scale);
+                        fm->descent = (int)ceilf(-desc * scale);
                         /* Get proper character widths. */
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
