@@ -1027,9 +1027,8 @@ proc countPixels {w x1 y1 x2 y2} {
     return $n
 }
 
-# constrained by aquaKnownBug until ticket [271f61c768] is fixed
 test canvText-22.1 {text item longer than 512 characters} -constraints {
-    testpixel aquaKnownBug
+    testpixel
 } -setup {
     destroy .c
     canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
@@ -1037,14 +1036,23 @@ test canvText-22.1 {text item longer than 512 characters} -constraints {
     pack .c
     update
 } -body {
-    .c create text 0 20 -anchor w -text [string repeat M 1000] -font {Courier 14}
-    set width [font measure {Courier 14} M]
-    # Scroll to the 999th character.
-    .c xview moveto [expr {998 * $width / 100000.0}]
+    # The leading CJK character makes the whole text shaped (by HarfBuzz on
+    # X11), which drew and measured at most 512 glyphs (bug 4eef1fa86e).
+    set font {Courier 14}
+    .c create text 0 20 -anchor w -text \u4e2d[string repeat M 1000] \
+	    -font $font
+    # Scroll to the 1000th character.  Measure parts shorter than 512
+    # characters: with the bug a longer text is measured short.  Do not
+    # multiply the width of one character: the advance width can be
+    # fractional (on Aqua), and the measured width is rounded.
+    set x [expr {[font measure $font \u4e2d]
+	    + 2 * [font measure $font [string repeat M 499]]}]
+    .c xview moveto [expr {$x / 100000.0}]
     update
-    expr {[countPixels .c 0 10 [expr {2 * $width}] 30] > 0}
+    expr {[countPixels .c 0 10 [font measure $font MM] 30] > 0}
 } -cleanup {
     destroy .c
+    unset -nocomplain font x
 } -result 1
 
 test canvText-22.2 {very long text item scrolled far away - bug 770578} -constraints {
