@@ -100,6 +100,8 @@ TkGetCursorByName(
     TkWinCursor *cursorPtr;
     int argc;
     const char **argv = NULL;
+    Tcl_Obj *pathObj;
+    const WCHAR *nativePath;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -137,7 +139,13 @@ TkGetCursorByName(
 	    ckfree(cursorPtr);
 	    return NULL;
 	}
-	cursorPtr->winCursor = LoadCursorFromFileA(&(argv[0][1]));
+	pathObj = Tcl_NewStringObj(&argv[0][1], -1);
+	Tcl_IncrRefCount(pathObj);
+	nativePath = (const WCHAR *) Tcl_FSGetNativePath(pathObj);
+	if (nativePath != NULL) {
+	    cursorPtr->winCursor = LoadCursorFromFileW(nativePath);
+	}
+	Tcl_DecrRefCount(pathObj);
     } else {
 	/*
 	 * Check for the cursor in the system cursor set.
