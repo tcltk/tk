@@ -1171,8 +1171,14 @@ XCreateColormap(
     TCL_UNUSED(Visual *),
     TCL_UNUSED(int))
 {
-    /* No-op - colormaps not used in Wayland port. */
-    return 0;
+    static Colormap index = 16;
+
+    /*
+     * Colormaps are not used in the Wayland port, but the colormap must not
+     * be 0 (None), which means failure for Tk_GetColormap's callers.  Just
+     * return a new value each time, as on macOS.
+     */
+    return index++;
 }
 
 /*
