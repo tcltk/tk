@@ -2039,6 +2039,36 @@ test grid-23 {grid configure -in leaked from previous container window - bug
     winfo ismapped .t ; # must return 1
 } 1
 grid_reset 23
+
+test grid-25.1 {grid -in half-dead window in <Destroy> binding - bug 3020550} -setup {
+    frame .f
+    frame .x
+} -body {
+    bind .f <Destroy> {grid .x -in .f}
+    destroy .f
+    update
+    list [winfo exists .f] [winfo manager .x] [winfo ismapped .x]
+} -cleanup {
+    grid_reset 25.1
+} -result {0 {} 0}
+test grid-25.2 {grid -in half-dead window unmanages content - bug 3020550} -setup {
+    frame .f
+    frame .x -width 20 -height 20
+    frame .p
+    frame .p.y -width 20 -height 20
+    grid .f .x .p
+    pack .p.y
+    update
+} -body {
+    bind .f <Destroy> {grid .x .p.y -in .f}
+    destroy .f
+    update
+    list [winfo manager .x] [winfo ismapped .x] [grid content .] \
+	    [winfo manager .p.y] [winfo ismapped .p.y] [pack content .p]
+} -cleanup {
+    grid_reset 25.2
+} -result {{} 0 .p {} 0 {}}
+
 
 # cleanup
 cleanupTests

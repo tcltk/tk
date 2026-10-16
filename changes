@@ -8513,3 +8513,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-16 (bug) [726351] the size hints of a toplevel ignore its menubar (storchaka)
 
 2026-10-16 (bug) [969636] embedded windows representation offset (horiz.) (storchaka)
+
+2026-10-16 (bug) [302055] Do not crash or leave dangling entries when grid or place is used on a half-dead window (storchaka)
