@@ -8509,3 +8509,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-16 (bug) [451cb3] LastKnownRequestProcessed() assigned to unsigned int (nijtmans)
 
 2026-10-16 (bug) [290ce5] Tk performance regression on X11 (storchaka)
+
+2026-10-16 (bug) [726351] the size hints of a toplevel ignore its menubar (storchaka)
