@@ -64,13 +64,21 @@ static int pixmapTableInitialized = 0;
  *
  *  Check that the compositor offers a wl_seat.  GLFW crashes in
  *  glfwInit() without one (e.g. with Weston --backend=headless), so
- *  TkpOpenDisplay fails instead of calling it.
+ *  TkpOpenDisplay fails instead of calling it.  Also record whether it
+ *  offers server-side decorations (zxdg_decoration_manager_v1), which
+ *  GLFW and libdecor use when available.
  *
  * Results:
  *  1 if the compositor can be connected to and offers a seat, else 0.
  *
+ * Side effects:
+ *  Sets tkWaylandServerDecorations.
+ *
  *----------------------------------------------------------------------
  */
+
+/* Whether the compositor draws the window decorations. */
+int tkWaylandServerDecorations = 0;
 
 static void
 RegistryGlobal(
@@ -82,6 +90,8 @@ RegistryGlobal(
 {
     if (strcmp(interface, "wl_seat") == 0) {
 	*(int *)data = 1;
+    } else if (strcmp(interface, "zxdg_decoration_manager_v1") == 0) {
+	tkWaylandServerDecorations = 1;
     }
 }
 
