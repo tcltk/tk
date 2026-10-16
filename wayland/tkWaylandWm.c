@@ -4505,10 +4505,17 @@ static void
 WmUpdateGeom(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    if (wmPtr->flags & WM_UPDATE_PENDING) {
+
+    /*
+     * If the update is only pending as the timer which waits for the window
+     * to be shown, schedule it at idle too: the window may be shown by now,
+     * and "update" does not wait for the timer.
+     */
+    if ((wmPtr->flags & WM_UPDATE_PENDING) && wmPtr->updateTimer == NULL) {
 	return;
     }
     wmPtr->flags |= WM_UPDATE_PENDING;
+    Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
     Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
 }
 
