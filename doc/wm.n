@@ -126,7 +126,22 @@ does not correspond to an existing window.  Doing that causes the
 class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
-.\" OPTION: -modified
+.\" OPTION: -hidden
+.TP
+\fB\-hidden\fR
+.
+When this boolean attribute is set to true the toplevel window is
+removed from the screen.  Tk is unaware that the window has been
+ordered out, so all normal Tk operations are allowed, including
+configuring, withdrawing or iconifying the window. Drawing works while
+the window is off screen.  The intended purpose of this attribute is
+to allow a complex window to be drawn while off screen and not
+presented to the user until it is complete.  To do this, set the
+hidden attribute to true immediately after creating the toplevel,
+configure the toplevel, then set its hidden attribute to 1, which will
+cause the window to appear on the screen fully rendered.
+
+.\" OPTION: -hidden
 .TP
 \fB\-modified\fR
 .
