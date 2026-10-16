@@ -602,6 +602,7 @@ MODULE_SCOPE int         TkWaylandBeginDraw(Drawable drawable, GC gc, TkWaylandD
 MODULE_SCOPE void        TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkWaylandGetNVGContext(Drawable drawable);
 MODULE_SCOPE NVGcontext *TkWaylandGetNVGContextForMeasure(void);
+MODULE_SCOPE void        TkWaylandFlushConfigures(void);
 MODULE_SCOPE void        createClipShaders(TkWindow *winPtr);
 
 /*
