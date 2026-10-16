@@ -1095,6 +1095,37 @@ TkWmCleanup(
 /*
  *----------------------------------------------------------------------
  *
+ * AllocPrivateData --
+ *
+ *	Allocate and initialize the private data of a window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets winPtr->privatePtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+AllocPrivateData(
+    TkWindow *winPtr)
+{
+#define CLIPRECTBUFSIZE 8
+    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+    memset(winPtr->privatePtr, 0, sizeof(glfwData));
+    Tcl_DStringInit(&winPtr->privatePtr->pendingText);
+    winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
+    winPtr->privatePtr->clipRectBuffer = ckalloc(
+	CLIPRECTBUFSIZE * sizeof(clipRect));
+    winPtr->privatePtr->clipDirty = 1;
+#undef CLIPRECTBUFSIZE
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_MakeWindow --
  *
  *      Platform-specific window creation called by Tk's generic layer.
@@ -1126,17 +1157,7 @@ Tk_MakeWindow(
     result = TkWaylandDrawableForTkWindow(winPtr);
 
     if (winPtr->privatePtr == NULL) {
-	winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
-	Tcl_DStringInit(&winPtr->privatePtr->pendingText);
-	memset(winPtr->privatePtr, 0, sizeof(glfwData));
-#define CLIPRECTBUFSIZE 8
-	winPtr->privatePtr->clipRectBufferSize = CLIPRECTBUFSIZE;
-	winPtr->privatePtr->clipRectBuffer = ckalloc(
-	    CLIPRECTBUFSIZE * sizeof(clipRect));
-	winPtr->privatePtr->clipDirty = 1;
-	winPtr->privatePtr->scrollScratchFBO = 0;
-	winPtr->privatePtr->scrollScratchTex = 0;
-#undef CLIPRECTBUFSIZE    
+	AllocPrivateData(winPtr);
     }
     if (Tk_IsTopLevel(winPtr)) {
 		
@@ -1920,18 +1941,19 @@ Tk_WmObjCmd(
     if ((argv1[0] == '.') && (length > 1)) {
         winPtr = (TkWindow *)Tk_NameToWindow(interp, argv1, tkwin);
         if (winPtr == NULL) return TCL_ERROR;
-        if (!(winPtr->flags & TK_TOP_LEVEL)) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-						   "window \"%s\" isn't a top-level window", argv1));
-            Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", argv1, NULL);
-            return TCL_ERROR;
-        }
         if (objc == 2) {
             Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
             return TCL_ERROR;
         }
         if (Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
 				      sizeof(char *), "option", 0, &index) != TCL_OK) {
+            return TCL_ERROR;
+        }
+        if (!(winPtr->flags & TK_TOP_LEVEL)
+		&& index != WMOPT_MANAGE && index != WMOPT_FORGET) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+						   "window \"%s\" isn't a top-level window", argv1));
+            Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", argv1, NULL);
             return TCL_ERROR;
         }
         objc -= 3; objv += 3;
@@ -1947,7 +1969,8 @@ Tk_WmObjCmd(
         winPtr = (TkWindow *)Tk_NameToWindow(
 					     interp, Tcl_GetString(objv[2]), tkwin);
         if (winPtr == NULL) return TCL_ERROR;
-        if (!(winPtr->flags & TK_TOP_LEVEL)) {
+        if (!(winPtr->flags & TK_TOP_LEVEL)
+		&& index != WMOPT_MANAGE && index != WMOPT_FORGET) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 						   "window \"%s\" isn't a top-level window",
 						   Tcl_GetString(objv[2])));
@@ -2406,12 +2429,31 @@ WmFocusmodelCmd(
 static int
 WmForgetCmd(
             TCL_UNUSED(Tk_Window),
-            TCL_UNUSED(TkWindow *),
-            Tcl_Interp *interp,
+            TkWindow *winPtr,
+            TCL_UNUSED(Tcl_Interp *),
             TCL_UNUSED(int),
             TCL_UNUSED(Tcl_Obj *const *))
 {
-    Tcl_SetObjResult(interp, Tcl_NewObj());
+    Tk_Window frameWin = (Tk_Window)winPtr;
+
+    if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
+	TkFocusJoin(winPtr);
+	Tk_UnmapWindow(frameWin);
+	/*
+	 * Destroys the GLFW window, the WmInfo and the private data, which
+	 * the window still needs as a child window.
+	 */
+	TkWmDeadWindow(winPtr);
+	if (winPtr->privatePtr == NULL) {
+	    AllocPrivateData(winPtr);
+	}
+	winPtr->flags &=
+		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+	Tk_ManageGeometry(frameWin, NULL, NULL);
+
+	/* The flags (above) must be cleared before calling TkMapTopFrame. */
+	TkMapTopFrame(frameWin);
+    }
     return TCL_OK;
 }
 
@@ -2912,15 +2954,61 @@ WmIconwindowCmd(
 static int
 WmManageCmd(
             TCL_UNUSED(Tk_Window),
-            TCL_UNUSED(TkWindow *),
+            TkWindow *winPtr,
             Tcl_Interp *interp,
             int objc,
             Tcl_Obj *const objv[])
 {
+    Tk_Window frameWin = (Tk_Window)winPtr;
+
     if (objc != 0) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName manage"); return TCL_ERROR;
     }
-    Tcl_SetObjResult(interp, Tcl_NewObj());
+    if (!Tk_IsTopLevel(frameWin)) {
+	if (!Tk_IsManageable(frameWin)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" is not manageable: must be a frame,"
+		    " labelframe or toplevel", Tk_PathName(frameWin)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	/* Create the window as a child first, with its private data. */
+	Tk_MakeWindowExist(frameWin);
+	TkFocusSplit(winPtr);
+	Tk_UnmapWindow(frameWin);
+	winPtr->flags |= TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_WIN_MANAGED;
+	if (winPtr->wmInfoPtr == NULL) {
+	    TkWmNewWindow(winPtr);
+	}
+
+	/*
+	 * Tk_MakeWindow creates the GLFW window of a toplevel, but this
+	 * window already exists.  Create its GLFW window here.
+	 */
+	if (TkWaylandGetGLFWwindow(winPtr) == NULL) {
+	    Drawable drawable;
+	    int width = (winPtr->reqWidth > 1) ? winPtr->reqWidth : 200;
+	    int height = (winPtr->reqHeight > 1) ? winPtr->reqHeight : 200;
+
+	    if (TkWaylandCreateWindow(winPtr, width, height,
+		    Tk_Name(frameWin), &drawable) == NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"cannot create a window for \"%s\"",
+			Tk_PathName(frameWin)));
+		Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", (char *)NULL);
+		return TCL_ERROR;
+	    }
+	    createClipShaders(winPtr);
+	    ((WmInfo *)winPtr->wmInfoPtr)->flags |= WM_NEVER_MAPPED;
+	}
+	winPtr->flags &= ~TK_MAPPED;
+
+	/*
+	 * The flags (above) must be set before calling TkMapTopFrame.  The
+	 * GLFW window is created when the new toplevel is mapped.
+	 */
+	TkMapTopFrame(frameWin);
+    }
     return TCL_OK;
 }
 
