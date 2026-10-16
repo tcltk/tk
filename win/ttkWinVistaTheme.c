@@ -28,10 +28,12 @@
 /* Prototype definitions */
 typedef HTHEME	(STDAPICALLTYPE OpenThemeDataForDpiProc)(HWND hwnd, LPCWSTR pszClassList, UINT dpi);
 typedef UINT	(STDAPICALLTYPE GetDpiForWindowProc)(HWND hwnd);
+typedef int	(STDAPICALLTYPE GetSystemMetricsForDpiProc)(int nIndex, UINT dpi);
 
 typedef struct {
     OpenThemeDataForDpiProc	*OpenThemeDataForDpi;
     GetDpiForWindowProc		*GetDpiForWindow;
+    GetSystemMetricsForDpiProc	*GetSystemMetricsForDpi;
 
     HWND			hwnd;
 } VistaThemeData;
@@ -86,11 +88,12 @@ BoxToRect(Ttk_Box b)
 static const Ttk_StateTable null_statemap[] = { {0,0,0} };
 
 /*
- * Pushbuttons (Tk: "Button")
+ * Pushbuttons (ttk::button)
  */
 static const Ttk_StateTable pushbutton_statemap[] =
 {
     { PBS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { PBS_DEFAULTED_ANIMATING,	TTK_STATE_PRESSED|TTK_STATE_ALTERNATE, 0 },
     { PBS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { PBS_HOT,		TTK_STATE_ACTIVE, 0 },
     { PBS_DEFAULTED,	TTK_STATE_ALTERNATE, 0 },
@@ -98,7 +101,7 @@ static const Ttk_StateTable pushbutton_statemap[] =
 };
 
 /*
- * Checkboxes (Tk: "Checkbutton")
+ * Checkboxes (ttk::checkbutton)
  */
 static const Ttk_StateTable checkbox_statemap[] =
 {
@@ -121,7 +124,7 @@ static const Ttk_StateTable checkbox_statemap[] =
 };
 
 /*
- * Radiobuttons:
+ * Radiobuttons (ttk::radiobutton)
  */
 static const Ttk_StateTable radiobutton_statemap[] =
 {
@@ -140,7 +143,7 @@ static const Ttk_StateTable radiobutton_statemap[] =
 };
 
 /*
- * Toolbar buttons (TP_BUTTON):
+ * Toolbar buttons (ttk::button, Toolbutton style)
  */
 static const Ttk_StateTable toolbutton_statemap[] =
 {
@@ -153,7 +156,7 @@ static const Ttk_StateTable toolbutton_statemap[] =
 };
 
 /*
- * Groupboxes (tk: "frame" and "labelframe")
+ * Groupboxes (ttk::frame and ttk::labelframe)
  */
 static const Ttk_StateTable groupbox_statemap[] =
 {
@@ -162,7 +165,7 @@ static const Ttk_StateTable groupbox_statemap[] =
 };
 
 /*
- * Edit border (tk: "entry" and "spinbox")
+ * Edit border (ttk::entry, ttk::spinbox)
  */
 static const Ttk_StateTable edit_statemap[] =
 {
@@ -174,7 +177,7 @@ static const Ttk_StateTable edit_statemap[] =
 };
 
 /*
- * Edit background (EP_BACKGROUND)
+ * Edit background (ttk::entry, ttk::combobox, ttk::spinbox)
  */
 static const Ttk_StateTable editbackground_statemap[] =
 {
@@ -187,7 +190,7 @@ static const Ttk_StateTable editbackground_statemap[] =
 };
 
 /*
- * Combobox border: (CP_BORDER)
+ * Combobox border: (ttk::combobox)
  */
 static const Ttk_StateTable combo_statemap[] =
 {
@@ -199,18 +202,18 @@ static const Ttk_StateTable combo_statemap[] =
 };
 
 /*
- * Combobox button: (CBP_DROPDOWNBUTTON)
+ * Combobox button: (ttk::combobox)
  */
 static const Ttk_StateTable combodown_statemap[] =
 {
-    { CBXSR_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { CBXSR_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { CBXSR_HOT,	TTK_STATE_ACTIVE, 0 },
-    { CBXSR_NORMAL,	0, 0 }
+    { CBXS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { CBXS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { CBXS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { CBXS_NORMAL,	0, 0 }
 };
 
 /*
- * Combobox dropdown listbox
+ * Combobox dropdown listbox (ttk::combobox popdown listbox)
  */
 static const Ttk_StateTable combolist_statemap[] =
 {
@@ -222,7 +225,7 @@ static const Ttk_StateTable combolist_statemap[] =
 };
 
 /*
- * Spinbox
+ * Spinbox (ttk::spinbox)
  */
 static const Ttk_StateTable spinup_statemap[] =
 {
@@ -241,7 +244,7 @@ static const Ttk_StateTable spindown_statemap[] =
 };
 
 /*
- * Notebook tab
+ * Notebook tab (ttk::notebook)
  */
 static const Ttk_StateTable tabitem_statemap[] =
 {
@@ -253,7 +256,7 @@ static const Ttk_StateTable tabitem_statemap[] =
 };
 
 /*
- * Progressbar
+ * Progressbar (ttk::progressbar)
  */
 static const Ttk_StateTable pbarhoriz_statemap[] =
 {
@@ -272,7 +275,7 @@ static const Ttk_StateTable pbarvert_statemap[] =
 };
 
 /*
- * Scrollbars (Tk: "Scrollbar.thumb")
+ * Scrollbars (ttk::scrollbar)
  */
 static const Ttk_StateTable scrollbar_statemap[] =
 {
@@ -320,7 +323,7 @@ static const Ttk_StateTable rightarrow_statemap[] =
 };
 
 /*
- * Trackbar thumb: (Tk: "scale slider")
+ * Trackbar thumb: (ttk::scale)
  */
 static const Ttk_StateTable scalehoriz_statemap[] =
 {
@@ -351,7 +354,7 @@ static const Ttk_StateTable trackvert_statemap[] =
 };
 
 /*
- * Treeview header and sort indicator
+ * Treeview header and sort indicator (ttk::treeview)
  */
 static const Ttk_StateTable header_statemap[] =
 {
@@ -469,6 +472,7 @@ typedef struct
     /* Compatibility */
     OpenThemeDataForDpiProc	*OpenThemeDataForDpi;
     GetDpiForWindowProc		*GetDpiForWindow;
+    GetSystemMetricsForDpiProc	*GetSystemMetricsForDpi;
 } ElementData;
 
 /*
@@ -482,9 +486,10 @@ NewElementData(VistaThemeData *themeData, const ElementInfo *info)
     elementData->parentHwnd = themeData->hwnd;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
+    elementData->drawable = 0;
     elementData->OpenThemeDataForDpi = themeData->OpenThemeDataForDpi;
     elementData->GetDpiForWindow = themeData->GetDpiForWindow;
-
+    elementData->GetSystemMetricsForDpi = themeData->GetSystemMetricsForDpi;
     return elementData;
 }
 
@@ -507,6 +512,43 @@ DestroyElementData(void *clientData)
 }
 
 /*
+ *----------------------------------------------------------------------
+ * +++ Get Current DPI:
+ *
+ *	Get current DPI for window
+ */
+
+unsigned int
+GetDpiValue(
+    ElementData *elementData,
+    Tk_Window tkwin)
+{
+    double scalingFactor = round(TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin) * 100.0) / 100.0;
+    UINT dpi = 0;
+
+    /* Get current DPI - Needs Windows 10, version 1607 */
+    if (elementData->GetDpiForWindow) {
+ 	dpi = elementData->GetDpiForWindow(elementData->hwnd);
+    } else {
+	HDC hDC = GetDC(NULL);
+	if (hDC) {
+	    dpi = GetDeviceCaps(hDC, LOGPIXELSX);
+	}
+	ReleaseDC(NULL, hDC);
+    }
+    if (dpi == 0) {
+	dpi = USER_DEFAULT_SCREEN_DPI;
+    }
+
+    /* Scale DPI value */
+    dpi = (UINT) trunc(((double) dpi * scalingFactor + 12.0) / 24.0) * 24;
+    if (dpi < USER_DEFAULT_SCREEN_DPI) {
+	dpi = USER_DEFAULT_SCREEN_DPI;
+    }
+    return dpi;
+}
+
+/*
  * InitElementData --
  *	Looks up theme handle.  If Drawable argument is non-NULL,
  *	also initializes DC.
@@ -521,8 +563,7 @@ static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
-    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
-    UINT dpi = USER_DEFAULT_SCREEN_DPI;
+    UINT dpi;
 
     if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
@@ -530,33 +571,33 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd = elementData->parentHwnd;
     }
 
-    /* Needs Windows 10, version 1607 */
-    if (elementData->GetDpiForWindow) {
- 	dpi = elementData->GetDpiForWindow(elementData->hwnd);
-    }
-    
-    dpi = (UINT) trunc(((double) dpi * scalingFactor + 12.0) / 24.0) * 24;
-    if (dpi < USER_DEFAULT_SCREEN_DPI) {
-	dpi = USER_DEFAULT_SCREEN_DPI;
-    }
-
-    /* Windows 10, version 1703 */
-    if (elementData->OpenThemeDataForDpi) {
-	elementData->hTheme = elementData->OpenThemeDataForDpi(elementData->hwnd,
-	    elementData->info->className, dpi);
-    } else {
-	elementData->hTheme = OpenThemeData(elementData->hwnd,
-	    elementData->info->className);
-    }
-
-    if (!elementData->hTheme) {
-	return false;
-    }
-
     elementData->drawable = d;
     if (d != 0) {
 	elementData->hDC = TkWinGetDrawableDC(Tk_Display(tkwin), d,
 		&elementData->dcState);
+    }
+
+    /* Get current DPI */
+    dpi = GetDpiValue(elementData, tkwin);
+
+    /* Open Theme with scaling - Needs Windows 10, version 1703 */
+    if (elementData->OpenThemeDataForDpi) {
+	elementData->hTheme = elementData->OpenThemeDataForDpi(elementData->hwnd,
+	    elementData->info->className, dpi);
+    } else {
+	elementData->hTheme = OpenThemeDataEx(elementData->hwnd,
+	    elementData->info->className, OTD_FORCE_RECT_SIZING|OTD_NONCLIENT);
+    }
+    if (elementData->hTheme == NULL) {
+    }
+
+    if (!elementData->hTheme) {
+	if (elementData->drawable != 0) {
+	    TkWinReleaseDrawableDC(elementData->drawable, elementData->hDC,
+		&elementData->dcState);
+	    elementData->drawable = 0;
+	}
+	return false;
     }
     return true;
 }
@@ -568,6 +609,7 @@ FreeElementData(ElementData *elementData)
     if (elementData->drawable != 0) {
 	TkWinReleaseDrawableDC(
 	    elementData->drawable, elementData->hDC, &elementData->dcState);
+	elementData->drawable = 0;
     }
 }
 
@@ -582,44 +624,43 @@ static void GenericElementSize(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
-    TCL_UNUSED(Ttk_State), /* state */
+    Ttk_State state, /* state */
     int *widthPtr,
     int *heightPtr,
     Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
     double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
+    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
     }
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-	SIZE size;
+	int height=0, width=0;
+	SIZE size = { 0 };
 
+	/* Most parts only return size for TS_TRUE, not TS_DRAW */
 	HRESULT result = GetThemePartSize(
 	    elementData->hTheme,	/* Theme data handle */
 	    NULL,			/* HDC to select font into & measure against */
 	    elementData->info->partId,	/* Part number to retrieve size for */
-	    Ttk_StateTableLookup(elementData->info->statemap, 0), /* States */
+	    stateId,			/* State number (of the part) to draw */
 	    NULL,			/* (optional) rect for part drawing dest */
-	    TS_TRUE,			/* Best fit to available space */
+	    TS_TRUE,			/* Best fit to DPI or stretch */
 	    &size);			/* Returned size */
 
 	if (SUCCEEDED(result)) {
-	    /*
-	     * The process is PerMonitorV2 DPI-aware (see wish.exe.manifest),
-	     * so the Visual Styles API already reports sizes scaled to the
-	     * monitor DPI.  Do not scale again here by TkScalingLevel(tkwin);
-	     * doing so over-sizes the element box and forces
-	     * DrawThemeBackground to stretch the part.  Instead, scale by
-	     * TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using
-	     * this scaling factor, the element box will be stretched to the
-	     * *expected* size, and not stretched at all in the most common
-	     * case that Tk's scaling factor was not changed via "tk scaling".
-	     */
-	    *widthPtr = (int)round(size.cx * scalingFactor);
-	    *heightPtr = (int)round(size.cy * scalingFactor);
+	    *widthPtr = size.cx;
+	    *heightPtr = size.cy;
+
+	    GetThemeMetric(elementData->hTheme, elementData->hDC,
+		elementData->info->partId, stateId, TMT_WIDTH, &width);
+	    GetThemeMetric(elementData->hTheme, elementData->hDC,
+		elementData->info->partId, stateId, TMT_HEIGHT, &height);
+	    if (*widthPtr == 0 && width > 0) *widthPtr = width;
+	    if (*heightPtr == 0 && height > 0) *heightPtr = height;
 	}
     }
 
@@ -628,6 +669,28 @@ static void GenericElementSize(
     if (elementData->info->flags & PAD_MARGINS) {
 	*widthPtr += Ttk_PaddingWidth(elementData->info->padding);
 	*heightPtr += Ttk_PaddingHeight(elementData->info->padding);
+    }
+
+    /*
+     * The process is PerMonitorV2 DPI-aware (see wish.exe.manifest),
+     * so the Visual Styles API already reports sizes scaled to the
+     * monitor DPI.  Do not scale again here by TkScalingLevel(tkwin);
+     * doing so over-sizes the element box and forces
+     * DrawThemeBackground to stretch the part.  Instead, scale by
+     * TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using
+     * this scaling factor, the element box will be stretched to the
+     * *expected* size, and not stretched at all in the most common
+     * case that Tk's scaling factor was not changed via "tk scaling".
+     */
+    *widthPtr = (int)round(*widthPtr * scalingFactor);
+    *heightPtr = (int)round(*heightPtr * scalingFactor);
+
+    /* Adjust size for half height/width elements */
+    if (elementData->info->flags & HALF_HEIGHT) {
+	*heightPtr /= 2;
+    }
+    if (elementData->info->flags & HALF_WIDTH) {
+	*widthPtr /= 2;
     }
 
     FreeElementData(elementData);
@@ -643,7 +706,7 @@ static void GenericElementDraw(
 {
     ElementData *elementData = (ElementData *)clientData;
     RECT rc;
-    unsigned stateId;
+    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     if (!InitElementData(elementData, tkwin, d)) {
 	return;
@@ -654,7 +717,6 @@ static void GenericElementDraw(
     }
     rc = BoxToRect(b);
 
-    stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     if (IsThemeBackgroundPartiallyTransparent(elementData->hTheme,
 	    elementData->info->partId, stateId)) {
 	DrawThemeParentBackground(elementData->hwnd, elementData->hDC, &rc);
@@ -682,7 +744,7 @@ static const Ttk_ElementSpec GenericElementSpec =
 };
 
 /*----------------------------------------------------------------------
- * +++ Sized element implementation.
+ * +++ System Metrics Defined Sized element implementation.
  *
  * Used for elements which are handled entirely by the Vista Theme API,
  * but that require a fixed size adjustment. Note that GetThemeSysSize
@@ -690,7 +752,7 @@ static const Ttk_ElementSpec GenericElementSpec =
  */
 
 static void
-GenericSizedElementSize(
+SysMetricsElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
@@ -701,26 +763,53 @@ GenericSizedElementSize(
 {
     ElementData *elementData = (ElementData *)clientData;
     double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
+    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
     }
 
-    GenericElementSize(clientData, elementRecord, tkwin, state,
-	widthPtr, heightPtr, paddingPtr);
+    if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
+	int height=0, width=0;
+	SIZE size = { 0 };
 
-	/*
-	 * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
-	 * returns values for the monitor DPI under PerMonitorV2 awareness.  Scale
-	 * by TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using this
-	 * scaling factor, the element box will be stretched to the *expected*
-	 * size, and not stretched at all in the most common case that Tk's
-	 * scaling factor was not changed via "tk scaling".
-	 */
-    *widthPtr = (int)round(GetThemeSysSize(NULL,
-	    (elementData->info->flags >> 8) & 0xff) * scalingFactor);
-    *heightPtr = (int)round(GetThemeSysSize(NULL,
-	    elementData->info->flags & 0xff) * scalingFactor);
+	/* Most parts only return size for TS_TRUE, not TS_DRAW */
+	HRESULT result = GetThemePartSize(
+	    elementData->hTheme,	/* Theme data handle */
+	    NULL,			/* HDC to select font into & measure against */
+	    elementData->info->partId,	/* Part number to retrieve size for */
+	    stateId,			/* State number (of the part) to draw */
+	    NULL,			/* (optional) rect for part drawing dest */
+	    TS_TRUE,			/* Best fit to DPI or stretch */
+	    &size);			/* Returned size */
+
+	if (SUCCEEDED(result)) {
+	    *widthPtr = size.cx;
+	    *heightPtr = size.cy;
+
+	    /* Get system metric size scaled for specified DPI */
+	    width  = GetSystemMetrics((elementData->info->flags >> 8) & 0xff);
+	    height = GetSystemMetrics(elementData->info->flags & 0xff);
+	    if (*widthPtr == 0) *widthPtr = width;
+	    if (*heightPtr == 0) *heightPtr = height;
+	}
+    }
+
+    /*
+     * The process is PerMonitorV2 DPI-aware (see wish.exe.manifest),
+     * so the Visual Styles API already reports sizes scaled to the
+     * monitor DPI.  Do not scale again here by TkScalingLevel(tkwin);
+     * doing so over-sizes the element box and forces
+     * DrawThemeBackground to stretch the part.  Instead, scale by
+     * TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using
+     * this scaling factor, the element box will be stretched to the
+     * *expected* size, and not stretched at all in the most common
+     * case that Tk's scaling factor was not changed via "tk scaling".
+     */
+    *widthPtr = (int)round(*widthPtr * scalingFactor);
+    *heightPtr = (int)round(*heightPtr * scalingFactor);
+
+    /* Adjust size for half height/width elements */
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
     }
@@ -731,26 +820,97 @@ GenericSizedElementSize(
     FreeElementData(elementData);
 }
 
-static void GenericSizedElementDraw(
-    void *clientData,
-    TCL_UNUSED(void *), /* elementRecord */
-    Tk_Window tkwin,
-    Drawable d,
-    Ttk_Box b,
-    Ttk_State state)
-{
-    ElementData *elementData = (ElementData *)clientData;
-
-    SetWindowTheme(elementData->hwnd, L"Explorer", NULL);
-    GenericElementDraw(clientData, NULL, tkwin, d, b, state);
-}
-
-static const Ttk_ElementSpec GenericSizedElementSpec = {
+static const Ttk_ElementSpec SysMetricsElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    GenericSizedElementSize,
-    GenericSizedElementDraw
+    SysMetricsElementSize,
+    GenericElementDraw
+};
+
+/*----------------------------------------------------------------------
+ * +++ Scrollbar element implementation.
+ *
+ * Used for scrollbar elements which need to be scaled for DPI.
+ */
+
+static void
+ScrollbarElementSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Ttk_State state, /* state */
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
+{
+    ElementData *elementData = (ElementData *)clientData;
+    double scalingFactor = TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin);
+    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+
+    if (!InitElementData(elementData, tkwin, 0)) {
+	return;
+    }
+
+    if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
+	int height=0, width=0;
+	SIZE size = { 0 };
+
+	/* Most parts only return size for TS_TRUE, not TS_DRAW */
+	HRESULT result = GetThemePartSize(
+	    elementData->hTheme,	/* Theme data handle */
+	    NULL,			/* HDC to select font into & measure against */
+	    elementData->info->partId,	/* Part number to retrieve size for */
+	    stateId,			/* State number (of the part) to draw */
+	    NULL,			/* (optional) rect for part drawing dest */
+	    TS_TRUE,			/* Best fit to DPI or stretch */
+	    &size);			/* Returned size */
+
+	if (SUCCEEDED(result)) {
+	    *widthPtr = size.cx;
+	    *heightPtr = size.cy;
+
+	    /* Get system metric size scaled for specified DPI */
+	    if (elementData->GetSystemMetricsForDpi) {
+		UINT dpi = GetDpiValue(elementData, tkwin);
+		width  = elementData->GetSystemMetricsForDpi((elementData->info->flags >> 8) & 0xff, dpi);
+		height = elementData->GetSystemMetricsForDpi(elementData->info->flags & 0xff, dpi);
+		if (*widthPtr == 0) *widthPtr = width;
+		if (*heightPtr == 0) *heightPtr = height;
+	    }
+	}
+    }
+
+    /* See NOTE-GetThemeMargins for PAD_MARGINS */
+    *paddingPtr = elementData->info->padding;
+    if (elementData->info->flags & PAD_MARGINS) {
+	*widthPtr += Ttk_PaddingWidth(elementData->info->padding);
+	*heightPtr += Ttk_PaddingHeight(elementData->info->padding);
+    }
+
+    /*
+     * The process is PerMonitorV2 DPI-aware (see wish.exe.manifest),
+     * so the Visual Styles API already reports sizes scaled to the
+     * monitor DPI.  Do not scale again here by TkScalingLevel(tkwin);
+     * doing so over-sizes the element box and forces
+     * DrawThemeBackground to stretch the part.  Instead, scale by
+     * TkScalingLevel(tkwin) / TkStartScalingLevel(tkwin); by using
+     * this scaling factor, the element box will be stretched to the
+     * *expected* size, and not stretched at all in the most common
+     * case that Tk's scaling factor was not changed via "tk scaling".
+     */
+    *widthPtr = (int)round(*widthPtr * scalingFactor);
+    *heightPtr = (int)round(*heightPtr * scalingFactor);
+
+    FreeElementData(elementData);
+}
+
+static const Ttk_ElementSpec ScrollbarElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    ScrollbarElementSize,
+    GenericElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -908,7 +1068,9 @@ static void TabElementDraw(
     }
 
     if (nbTabPlcStickBit == TTK_STICK_S) {
-	if (state & TTK_STATE_FIRST) {
+	if (state & TTK_STATE_FIRST && state & TTK_STATE_LAST) {
+	    partId = TABP_TABITEMBOTHEDGE;
+	} else if (state & TTK_STATE_FIRST) {
 	    partId = TABP_TABITEMLEFTEDGE;
 	} else if (state & TTK_STATE_LAST) {
 	    partId = TABP_TABITEMRIGHTEDGE;
@@ -1115,7 +1277,7 @@ static void RowElementDraw(
     Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
-    unsigned stateId;
+    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc;
 
     if (!InitElementData(elementData, tkwin, d)) {
@@ -1127,7 +1289,6 @@ static void RowElementDraw(
 	state |= TTK_STATE_ALTERNATE;
 	state &= ~TTK_STATE_USER1;
     }
-    stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     /* Apply padding */
     if (elementData->info->flags & PAD_MARGINS) {
@@ -1148,7 +1309,7 @@ static void RowElementDraw(
 	    elementData->hTheme,	/* Theme data handle */
 	    elementData->hDC,		/* HDC to draw into */
 	    elementData->info->partId,	/* Part number to draw */
-	    stateId,			/* Fill style/state for partId */
+	    stateId,			/* State number (of the part) to draw */
 	    &rc,			/* Space to fill */
 	    NULL);			/* Optional clipping rect */
     } else {
@@ -1186,10 +1347,10 @@ TTK_LAYOUT("TButton",
 		TTK_NODE("Button.label", TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TMenubutton",
-    TTK_NODE("Menubutton.dropdown", TTK_PACK_RIGHT|TTK_FILL_Y)
     TTK_GROUP("Menubutton.button", TTK_FILL_BOTH,
-	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
-		TTK_NODE("Menubutton.label", 0))))
+	TTK_NODE("Menubutton.dropdown", TTK_PACK_RIGHT|TTK_FILL_Y)
+	TTK_GROUP("Menubutton.padding", TTK_FILL_X,
+	    TTK_NODE("Menubutton.label", 0))))
 
 TTK_LAYOUT("TEntry",
     TTK_GROUP("Entry.field", TTK_FILL_BOTH,
@@ -1284,10 +1445,10 @@ static const ElementInfo ElementInfoTable[] = {
     { "Toolbutton.border", &GenericElementSpec, L"TOOLBAR",
 	TP_BUTTON, toolbutton_statemap, NOPAD, 0 },
     { "Menubutton.button", &GenericElementSpec, L"TOOLBAR",
-	TP_SPLITBUTTON, toolbutton_statemap, NOPAD, 0 },
-    { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
-	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
-	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
+	TP_SPLITBUTTON, toolbutton_statemap, PAD(3,3,3,3), 0 },
+    { "Menubutton.dropdown", &ScrollbarElementSpec, L"TOOLBAR",
+	TP_DROPDOWNBUTTONGLYPH, toolbutton_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
 
     /* Entry, Combobox, Spinbox */
     { "Entry.field", &GenericElementSpec, L"EDIT",
@@ -1297,9 +1458,8 @@ static const ElementInfo ElementInfoTable[] = {
 
     { "Combobox.field", &GenericElementSpec, L"COMBOBOX",
 	CP_BORDER, combo_statemap, PAD(1,1,1,1), 0 },
-    { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
-	CP_DROPDOWNBUTTONRIGHT, combodown_statemap, NOPAD,
-	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Combobox.downarrow", &GenericElementSpec, L"COMBOBOX",
+	CP_DROPDOWNBUTTON, combodown_statemap, PAD(1,1,1,1), 0 },
     { "Combobox.background", &GenericElementSpec, L"EDIT",
 	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
 
@@ -1312,12 +1472,10 @@ static const ElementInfo ElementInfoTable[] = {
 	EP_EDITBORDER_HSCROLL, edit_statemap, PAD(1,1,1,2), 0 },
     { "Spinbox.background", &GenericElementSpec, L"EDIT",
 	EP_BACKGROUND, editbackground_statemap, NOPAD, 0 },
-    { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_UP, spinup_statemap, NOPAD,
-	HALF_HEIGHT | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_DOWN, spindown_statemap, NOPAD,
-	HALF_HEIGHT | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Spinbox.uparrow", &GenericElementSpec, L"SPIN",
+	SPNP_UP, spinup_statemap, NOPAD, 0 },
+    { "Spinbox.downarrow", &GenericElementSpec, L"SPIN",
+	SPNP_DOWN, spindown_statemap, NOPAD, 0 },
 
     /* Frame */
     { "Labelframe.border", &GenericElementSpec, L"BUTTON",
@@ -1342,40 +1500,40 @@ static const ElementInfo ElementInfoTable[] = {
 	PP_BARVERT, null_statemap, PAD(1,1,1,1), 0 },
 
     /* Scale */
-    { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMB, scalehoriz_statemap, PAD(5,12,5,12), IGNORE_THEMESIZE },
-    { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMBVERT, scalevert_statemap, PAD(12,5,12,5), IGNORE_THEMESIZE },
     { "Horizontal.Scale.track", &GenericElementSpec, L"TRACKBAR",
 	TKP_TRACK, trackhoriz_statemap, NOPAD, 0 },
     { "Vertical.Scale.track", &GenericElementSpec, L"TRACKBAR",
 	TKP_TRACKVERT, trackvert_statemap, NOPAD, 0 },
+    { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
+	TKP_THUMB, scalehoriz_statemap, PAD(5,12,5,12), 0 },
+    { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
+	TKP_THUMBVERT, scalevert_statemap, PAD(12,4,12,4), 0 },
 
     /* Scrollbar elements */
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
-    { "Vertical.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
-	SBP_THUMBBTNVERT, scrollbar_statemap, NOPAD,
-	(SM_CYVTHUMB << 8) | SM_CXVSCROLL },
+    { "Vertical.Scrollbar.thumb", &ScrollbarElementSpec, L"SCROLLBAR",
+	SBP_THUMBBTNVERT, scrollbar_statemap, NOPAD, /* SM_CYVTHUMB */
+	(SM_CXVSCROLL << 8) | SM_CYVTHUMB },
     { "Vertical.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
 	SBP_GRIPPERVERT, scrollbar_statemap, NOPAD, 0 },
     { "Horizontal.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Horizontal.Scrollbar.thumb", &GenericSizedElementSpec, L"SCROLLBAR",
+    { "Horizontal.Scrollbar.thumb", &ScrollbarElementSpec, L"SCROLLBAR",
 	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD,
-	(SM_CXHTHUMB << 8) | SM_CYHSCROLL },
+	(SM_CXHTHUMB << 8) | SM_CYHSCROLL }, /* SM_CXHTHUMB */
     { "Horizontal.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
 	SBP_GRIPPERHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Vertical.Scrollbar.uparrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    { "Vertical.Scrollbar.uparrow", &ScrollbarElementSpec, L"SCROLLBAR",
 	SBP_ARROWBTN, uparrow_statemap, NOPAD,
 	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "Vertical.Scrollbar.downarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    { "Vertical.Scrollbar.downarrow", &ScrollbarElementSpec, L"SCROLLBAR",
 	SBP_ARROWBTN, downarrow_statemap, NOPAD,
 	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
-    { "Horizontal.Scrollbar.leftarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    { "Horizontal.Scrollbar.leftarrow", &ScrollbarElementSpec, L"SCROLLBAR",
 	SBP_ARROWBTN, leftarrow_statemap, NOPAD,
 	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
-    { "Horizontal.Scrollbar.rightarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    { "Horizontal.Scrollbar.rightarrow", &ScrollbarElementSpec, L"SCROLLBAR",
 	SBP_ARROWBTN, rightarrow_statemap, NOPAD,
 	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
 
@@ -1399,20 +1557,24 @@ static const ElementInfo ElementInfoTable[] = {
 #undef PAD
 
 
+/*----------------------------------------------------------------------
+ * Get Generic Element Size For VSAPI -size option
+ */
+
 static int
 GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 {
     static const char *const names[] = {
 	"SM_CXBORDER", "SM_CYBORDER", "SM_CXVSCROLL", "SM_CYVSCROLL",
 	"SM_CXHSCROLL", "SM_CYHSCROLL", "SM_CXMENUCHECK", "SM_CYMENUCHECK",
-	"SM_CXMENUSIZE", "SM_CYMENUSIZE", "SM_CXSIZE", "SM_CYSIZE", "SM_CXSMSIZE",
-	"SM_CYSMSIZE", NULL
+	"SM_CXMENUSIZE", "SM_CYMENUSIZE", "SM_CXSIZE", "SM_CYSIZE",
+	"SM_CXSMSIZE", "SM_CYSMSIZE", "SM_CXHTHUMB", "SM_CYVTHUMB", NULL
     };
     int flags[] = {
 	SM_CXBORDER, SM_CYBORDER, SM_CXVSCROLL, SM_CYVSCROLL,
 	SM_CXHSCROLL, SM_CYHSCROLL, SM_CXMENUCHECK, SM_CYMENUCHECK,
 	SM_CXMENUSIZE, SM_CYMENUSIZE, SM_CXSIZE, SM_CYSIZE, SM_CXSMSIZE,
-	SM_CYSMSIZE
+	SM_CYSMSIZE, SM_CXHTHUMB, SM_CYVTHUMB
     };
 
     Tcl_Obj **objv;
@@ -1536,7 +1698,7 @@ Ttk_CreateVsapiElement(
 		if (GetSysFlagFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		elementSpec = &GenericSizedElementSpec;
+		elementSpec = &SysMetricsElementSpec;
 		flags |= (tmp & 0xFFFF);
 		break;
 	    case O_HALFHEIGHT:
@@ -1631,7 +1793,7 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
     Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
     VistaThemeData *themeData;
-    HMODULE module;
+    HMODULE hModule;
 
     /*
      * Create the new style engine.
@@ -1655,15 +1817,16 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Compatibility functions
      *
      * OpenThemeDataForDpi needs Windows 10, version 1703.
-     * GetDpiForWindow needs Windows 10 version 1607.
+     * GetDpiForWindow and GetSystemMetricsForDpi need Windows 10 version 1607.
      */
-    module = GetModuleHandleW(L"uxtheme.dll");
-    if (module != NULL) {
-	themeData->OpenThemeDataForDpi = (OpenThemeDataForDpiProc *) GetProcAddress(module,"OpenThemeDataForDpi");
+    hModule = GetModuleHandleW(L"uxtheme.dll");
+    if (hModule != NULL) {
+	themeData->OpenThemeDataForDpi = (OpenThemeDataForDpiProc *) GetProcAddress(hModule, "OpenThemeDataForDpi");
     }
-    module = GetModuleHandleW(L"User32.dll");
-    if (module != NULL) {
-	themeData->GetDpiForWindow = (GetDpiForWindowProc *) GetProcAddress(module,"GetDpiForWindow");
+    hModule = GetModuleHandleW(L"User32.dll");
+    if (hModule != NULL) {
+	themeData->GetDpiForWindow = (GetDpiForWindowProc *) GetProcAddress(hModule, "GetDpiForWindow");
+	themeData->GetSystemMetricsForDpi = (GetSystemMetricsForDpiProc *) GetProcAddress(hModule, "GetSystemMetricsForDpi");
     }
 
     /*
