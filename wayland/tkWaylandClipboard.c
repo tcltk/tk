@@ -41,13 +41,17 @@
 int
 TkSelGetSelection(
     Tcl_Interp *interp,
-    TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(Atom),
-    TCL_UNUSED(Atom),
+    Tk_Window tkwin,
+    Atom selection,
+    Atom target,
     TCL_UNUSED(Tk_GetSelProc *),
     TCL_UNUSED(void *))
 {
-    return TCL_OK;
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "%s selection doesn't exist or form \"%s\" not defined",
+	    Tk_GetAtomName(tkwin, selection), Tk_GetAtomName(tkwin, target)));
+    Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
+    return TCL_ERROR;
 }
 
 /*
