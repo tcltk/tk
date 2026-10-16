@@ -3013,6 +3013,7 @@ ConfigureContent(
     const char *string;
     char firstChar;
     int positionGiven;
+    int deadContainer;
 
     /*
      * Count the number of windows, or window short-cuts.
@@ -3171,6 +3172,7 @@ ConfigureContent(
      */
 
     positionGiven = 0;
+    deadContainer = 0;
     for (j = 0; j < numWindows; j++) {
 	string = Tcl_GetString(objv[j]);
 	firstChar = string[0];
@@ -3268,10 +3270,11 @@ ConfigureContent(
 		    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		positionGiven = 1;
 		if (!(containerPtr = GetGrid(other))) {
+		    deadContainer = 1;
 		    continue;
 		}
+		positionGiven = 1;
 		InitContainerData(containerPtr);
 		break;
 	    case CONF_STICKY: {
@@ -3349,6 +3352,30 @@ ConfigureContent(
 		}
 		break;
 	    }
+	}
+
+	/*
+	 * If the -in container is being destroyed (e.g. in its <Destroy>
+	 * binding), leave the content unmanaged and unmapped.
+	 */
+
+	if (deadContainer) {
+	    if (contentPtr->containerPtr != NULL) {
+		Tk_ManageGeometry(content, NULL, NULL);
+		if (contentPtr->containerPtr->tkwin != Tk_Parent(content)) {
+		    Tk_UnmaintainGeometry(content, contentPtr->containerPtr->tkwin);
+		}
+		Unlink(contentPtr);
+	    } else if (((TkWindow *) content)->geomMgrPtr != NULL) {
+		/*
+		 * Take the content away from its current geometry manager.
+		 */
+
+		Tk_ManageGeometry(content, &gridMgrType, contentPtr);
+		Tk_ManageGeometry(content, NULL, NULL);
+	    }
+	    Tk_UnmapWindow(content);
+	    continue;
 	}
 
 	/*
@@ -3484,6 +3511,10 @@ ConfigureContent(
 	    containerPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, containerPtr);
 	}
+    }
+
+    if (deadContainer) {
+	return TCL_OK;
     }
 
     /*
