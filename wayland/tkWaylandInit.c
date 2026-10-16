@@ -1060,6 +1060,41 @@ TkWaylandCreateWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * GlfwNeedsFractionalScaleDrain --
+ *
+ *	GLFW 3.4 never destroys window->wl.fractionalScale in
+ *	_glfwDestroyWindowWayland() (fixed upstream in commit 42dc1ffaee,
+ *	first released in GLFW 3.5).  The wp_fractional_scale_v1 object
+ *	then outlives the freed _GLFWwindow, and a queued preferred_scale
+ *	event writes into freed memory.
+ *
+ * Results:
+ *	Nonzero if the GLFW library in use is 3.4.x and needs the
+ *	workaround in TkWaylandDestroyWindow.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GlfwNeedsFractionalScaleDrain(void)
+{
+    static int cached = -1;
+
+    if (cached < 0) {
+        int major = 0, minor = 0, rev = 0;
+
+        glfwGetVersion(&major, &minor, &rev);
+        cached = (major == 3 && minor == 4);
+    }
+    return cached;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandDestroyWindow --
  *
  *	Destroy a GLFW window and clean up associated resources.
@@ -1086,6 +1121,19 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
     /* Drop cursor-module references before the handle goes stale. */
     TkWaylandCursorForgetWindow(glfwWindow);
     destroyGlfwTkInfo(glfwWindow);
+
+    /*
+     * Workaround for GLFW 3.4 leaking the fractional scale object:
+     * dispatch everything the compositor has already sent (notably
+     * wp_fractional_scale_v1.preferred_scale) while the _GLFWwindow is
+     * still valid, so no stale event can reach freed memory later.
+     * Tk callbacks are cleared first so only GLFW's internal listeners
+     * run and nothing re-enters Tk for a window being torn down.
+     */
+    if (waylandDisplay && GlfwNeedsFractionalScaleDrain()) {
+        TkWaylandClearCallbacks(glfwWindow);
+        wl_display_roundtrip(waylandDisplay);
+    }
     glfwDestroyWindow(glfwWindow);
 
     /* Check if this was the last window. */
