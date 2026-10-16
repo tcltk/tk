@@ -4813,7 +4813,7 @@ Tk_MeasureCharsInContext(
             npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, layoutEnd,
                                          positions, n);
             if (n >= nchars || npos <= 0
-                    || positions[npos - 1].maxx > maxLength) {
+                    || positions[npos - 1].x > maxLength) {
                 break;
             }
             limit *= 4;
@@ -4828,7 +4828,14 @@ Tk_MeasureCharsInContext(
         while (p < layoutEnd && pos < npos) {
             int ch;
             const char *next = p + Tcl_UtfToUniChar(p, &ch);
-            float glyphRight = positions[pos].maxx;
+
+            /*
+             * The width up to the end of this character is where the next
+             * one starts (its advance), not the right edge of its ink
+             * (maxx), which can be wider and is not what Tk measures.
+             */
+            float glyphRight = (pos + 1 < npos) ? positions[pos + 1].x :
+                    nvgTextBounds(vg, 0, 0, rangePtr, next, NULL);
             if (maxLength >= 0 && glyphRight > maxLength) {
                 if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
                     p = lastBreak; pixelWidth = lastBreakWidth;
