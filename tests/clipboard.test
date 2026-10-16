@@ -374,6 +374,17 @@ test clipboard-7.20 {Tk_ClipboardCmd procedure} -setup {
 } -cleanup {
     clipboard clear
 } -result {-type}
+test clipboard-7.21 {Tk_ClipboardCmd procedure, clear with a window not made yet} -setup {
+    clipboard clear
+} -body {
+    toplevel .t
+    clipboard clear -displayof .t
+    clipboard append -displayof .t text
+    clipboard get
+} -cleanup {
+    destroy .t
+    clipboard clear
+} -result {text}
 
 #
 # TESTFILE CLEANUP
