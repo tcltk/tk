@@ -671,9 +671,7 @@ ReconfigureWindowsMenu(
 		    itemID = (UINT)PTR2INT(childMenuHdl);
 		}
 	    }
-	    if ((menuPtr->menuType == MENUBAR)
-		    && !(mePtr->childMenuRefPtr->menuPtr->menuFlags
-			    & MENU_SYSTEM_MENU)) {
+	    if (menuPtr->menuType == MENUBAR) {
 		Tcl_DString ds;
 		TkMenuReferences *menuRefPtr;
 		TkMenu *systemMenuPtr = mePtr->childMenuRefPtr->menuPtr;
@@ -696,13 +694,24 @@ ReconfigureWindowsMenu(
 		    HMENU systemMenuHdl = (HMENU) systemMenuPtr->platformData;
 		    HWND wrapper = TkWinGetWrapperWindow(menuPtr
 			    ->parentTopLevelPtr);
+		    HMENU wrapperSystemMenuHdl = (wrapper != NULL)
+			    ? GetSystemMenu(wrapper, FALSE) : NULL;
 
-		    if (wrapper != NULL) {
-			DestroyMenu(systemMenuHdl);
-			systemMenuHdl = GetSystemMenu(wrapper, FALSE);
+		    /*
+		     * Bind the menu to the system menu of the wrapper window
+		     * of the toplevel. The wrapper may have been recreated
+		     * since the last time, e.g. by "wm overrideredirect", so
+		     * this may be a different system menu. [Bug 220781]
+		     */
+
+		    if ((wrapperSystemMenuHdl != NULL)
+			    && (systemMenuHdl != wrapperSystemMenuHdl)) {
+			if (!(systemMenuPtr->menuFlags & MENU_SYSTEM_MENU)) {
+			    DestroyMenu(systemMenuHdl);
+			}
 			systemMenuPtr->menuFlags |= MENU_SYSTEM_MENU;
 			systemMenuPtr->platformData =
-				(TkMenuPlatformData) systemMenuHdl;
+				(TkMenuPlatformData) wrapperSystemMenuHdl;
 			ScheduleMenuReconfigure(systemMenuPtr);
 		    }
 		}
@@ -1904,6 +1913,38 @@ RecursivelyClearActiveMenu(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinMenuWrapperChanged --
+ *
+ *	This function is called when the wrapper window of a toplevel has
+ *	been recreated. The menubar is reconfigured, so that its system menu
+ *	is bound to the system menu of the new wrapper. [Bug 220781]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinMenuWrapperChanged(
+    HMENU hMenu)		/* The menubar of the toplevel. */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_HashEntry *hashEntryPtr =
+	    Tcl_FindHashEntry(&tsdPtr->winMenuTable, hMenu);
+
+    if (hashEntryPtr != NULL) {
+	ScheduleMenuReconfigure((TkMenu *) Tcl_GetHashValue(hashEntryPtr));
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3763,8 +3804,8 @@ SetDefaults(
     char sizeString[TCL_INTEGER_SPACE];
     char faceName[LF_FACESIZE];
     HDC scratchDC;
-    int bold = 0;
-    int italic = 0;
+    bool bold = false;
+    bool italic = false;
     TEXTMETRICW tm;
     int pointSize;
     HFONT menuFont;
@@ -3798,10 +3839,10 @@ SetDefaults(
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
     if (tm.tmWeight >= 700) {
-	bold = 1;
+	bold = true;
     }
     if (tm.tmItalic) {
-	italic = 1;
+	italic = true;
     }
 
     SelectObject(scratchDC, GetStockObject(SYSTEM_FONT));

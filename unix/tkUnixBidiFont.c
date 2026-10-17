@@ -39,7 +39,7 @@
  * ---------------------------------------------------------------
  * BidiRun --
  *
- *   Structure to hold bidirectional run information.
+ *	Structure to hold bidirectional run information.
  * ---------------------------------------------------------------
  */
 
@@ -53,8 +53,8 @@ typedef struct {
  * ---------------------------------------------------------------
  * UnixFtFace --
  *
- *   Structure representing a single font face from fontconfig,
- *   with cached Xft fonts for rotated and unrotated versions.
+ *	Structure representing a single font face from fontconfig,
+ *	with cached Xft fonts for rotated and unrotated versions.
  * ---------------------------------------------------------------
  */
 
@@ -113,7 +113,7 @@ FaceHasChar(
  * ---------------------------------------------------------------
  * UnixFtColorList --
  *
- *   Cached XftColor entry with LRU next pointer.
+ *	Cached XftColor entry with LRU next pointer.
  * ---------------------------------------------------------------
  */
 
@@ -125,7 +125,7 @@ typedef struct {
 /*
  * ShapedGlyph --
  *
- *   One glyph of a shaped string.
+ *	One glyph of a shaped string.
  */
 typedef struct {
     int fontIndex;	/* Which UnixFtFace produced this glyph. */
@@ -140,7 +140,7 @@ typedef struct {
 /*
  * VisualCluster --
  *
- *   One entry of the visual index used for cursor positioning.
+ *	One entry of the visual index used for cursor positioning.
  */
 typedef struct {
     int x;		/* Visual X position (pixels). */
@@ -153,13 +153,13 @@ typedef struct {
 /*
  * ShapedGlyphBuffer --
  *
- *   Result buffer from HarfBuzz shaping. Contains glyph positions,
- *   visual index for cursor placement, and cluster break boundaries
- *   for efficient line fitting.
+ *	Result buffer from HarfBuzz shaping. Contains glyph positions,
+ *	visual index for cursor placement, and cluster break boundaries
+ *	for efficient line fitting.
  *
- *   The arrays grow as needed, so there is no limit on the length of the
- *   string. A buffer must be initialized with zeros before the first use
- *   and released with FreeGlyphBuffer().
+ *	The arrays grow as needed, so there is no limit on the length of the
+ *	string. A buffer must be initialized with zeros before the first use
+ *	and released with FreeGlyphBuffer().
  */
 typedef struct {
     /* Shaped glyphs array. */
@@ -200,8 +200,8 @@ typedef struct {
  * ---------------------------------------------------------------
  * X11Shaper --
  *
- *   Persistent per-font shaping state. Owns the HarfBuzz context,
- *   font mapping, and string cache.
+ *	Persistent per-font shaping state. Owns the HarfBuzz context,
+ *	font mapping, and string cache.
  * ---------------------------------------------------------------
  */
 
@@ -241,8 +241,8 @@ typedef struct {
  * ---------------------------------------------------------------
  * UnixFtFont --
  *
- *   Main font structure - must have TkFont as first member.
- *   Contains all faces, shaper state, and cached resources.
+ *	Main font structure - must have TkFont as first member.
+ *	Contains all faces, shaper state, and cached resources.
  * ---------------------------------------------------------------
  */
 
@@ -356,14 +356,14 @@ static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
  * ---------------------------------------------------------------
  * IsSimpleOnly --
  *
- *    Returns 1 if the string consists of codepoints that can be
- *    handled without shaping. This includes Latin, CJK punctuation,
- *    Kana, and a wide range of common symbols, punctuation, and
- *    neutral characters.
+ *	 Returns 1 if the string consists of codepoints that can be
+ *	 handled without shaping. This includes Latin, CJK punctuation,
+ *	 Kana, and a wide range of common symbols, punctuation, and
+ *	 neutral characters.
  *
- *    Note: All other scripts requiring complex shaping (Arabic, Indic,
- *    Thai, CJK ideographs, supplementary-plane characters, etc.) return 0 to
- *    ensure HarfBuzz handling.
+ *	 Note: All other scripts requiring complex shaping (Arabic, Indic,
+ *	 Thai, CJK ideographs, supplementary-plane characters, etc.) return 0 to
+ *	 ensure HarfBuzz handling.
  *
  * Results:
  *	Returns true if the string can use the simple fast path,
@@ -502,13 +502,13 @@ IsSimpleOnly(const char *str, int len)
  * ---------------------------------------------------------------
  * GetVisualXForByteOffset --
  *
- *    Proper visual-position lookup using the visualIndex.
+ *	 Proper visual-position lookup using the visualIndex.
  *
- *    Result:
- *      Returns index.
+ *	 Result:
+ *	   Returns index.
  *
- *    Side effects:
- *      None.
+ *	 Side effects:
+ *	   None.
  * ---------------------------------------------------------------
  */
 
@@ -547,14 +547,14 @@ GetVisualXForByteOffset(const ShapedGlyphBuffer *buffer, int byteOffset)
  * ---------------------------------------------------------------
  * GetFaceFont --
  *
- *   Retrieve or create an XftFont for a specific face index and rotation
- *   angle.
+ *	Retrieve or create an XftFont for a specific face index and rotation
+ *	angle.
  *
  * Results:
- *   Pointer to XftFont, or NULL if not available.
+ *	Pointer to XftFont, or NULL if not available.
  *
  * Side effects:
- *   May create new XftFont if not already cached.
+ *	May create new XftFont if not already cached.
  * ---------------------------------------------------------------
  */
 
@@ -669,14 +669,14 @@ GetFaceFont(
  * ---------------------------------------------------------------
  * GetFont --
  *
- *   Retrieve an XftFont for a given character and rotation angle.
- *   Selects the face that contains the character, falling back to first face.
+ *	Retrieve an XftFont for a given character and rotation angle.
+ *	Selects the face that contains the character, falling back to first face.
  *
  * Results:
- *   Pointer to XftFont, or NULL if not available.
+ *	Pointer to XftFont, or NULL if not available.
  *
  * Side effects:
- *   May create new XftFont if not already cached.
+ *	May create new XftFont if not already cached.
  * ---------------------------------------------------------------
  */
 
@@ -710,13 +710,13 @@ GetFont(
  * ---------------------------------------------------------------
  * LookUpColor --
  *
- *   Convert a pixel value to an XftColor. Uses a small LRU cache.
+ *	Convert a pixel value to an XftColor. Uses a small LRU cache.
  *
  * Results:
- *   Pointer to XftColor, or NULL if cache is full.
+ *	Pointer to XftColor, or NULL if cache is full.
  *
  * Side effects:
- *   May update the color cache.
+ *	May update the color cache.
  * ---------------------------------------------------------------
  */
 
@@ -773,13 +773,13 @@ LookUpColor(
  * ---------------------------------------------------------------
  * GetTkFontAttributes --
  *
- *   Fill in TkFontAttributes from an XftFont.
+ *	Fill in TkFontAttributes from an XftFont.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   The TkFontAttributes structure is updated.
+ *	The TkFontAttributes structure is updated.
  * ---------------------------------------------------------------
  */
 
@@ -827,13 +827,13 @@ GetTkFontAttributes(
  * ---------------------------------------------------------------
  * GetTkFontMetrics --
  *
- *   Fill in TkFontMetrics from an XftFont.
+ *	Fill in TkFontMetrics from an XftFont.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   The TkFontMetrics structure is updated.
+ *	The TkFontMetrics structure is updated.
  * ---------------------------------------------------------------
  */
 
@@ -859,15 +859,15 @@ GetTkFontMetrics(
  * ---------------------------------------------------------------
  * GetBidiRuns --
  *
- *   Use SheenBidi to properly analyze text per UAX#9 and split it into
- *   level runs with correct directionality in visual order.
+ *	Use SheenBidi to properly analyze text per UAX#9 and split it into
+ *	level runs with correct directionality in visual order.
  *
  * Results:
- *   Returns number of runs created (at least 1). Fills runs array
- *   in visual display order (left-to-right on screen).
+ *	Returns number of runs created (at least 1). Fills runs array
+ *	in visual display order (left-to-right on screen).
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -954,32 +954,32 @@ GetBidiRuns(
  * ---------------------------------------------------------------
  * AssignEmojiCoverage --
  *
- *   Decide which face claims which emoji, following UTS #51 through
- *   the generic helper TkFontEmojiPresentation().
+ *	Decide which face claims which emoji, following UTS #51 through
+ *	the generic helper TkFontEmojiPresentation().
  *
- *   A color face (Noto Color Emoji) keeps its complete cmap in
- *   fullCharset, and its claim set (charset) is restricted to the code
- *   points that have emoji presentation by default, i.e.
- *   TkFontEmojiPresentation(c, -1) == 1. Text-presentation characters
- *   (U+2600, U+2764, U+2122, arrows, digits, '#', '*', ...) are not
- *   claimed, so they stay in the text faces unless a VS16 follows, in
- *   which case GetRunFaceIndex() finds the color face through
- *   fullCharset. VS15 therefore works: the text faces still have the
- *   character.
+ *	A color face (Noto Color Emoji) keeps its complete cmap in
+ *	fullCharset, and its claim set (charset) is restricted to the code
+ *	points that have emoji presentation by default, i.e.
+ *	TkFontEmojiPresentation(c, -1) == 1. Text-presentation characters
+ *	(U+2600, U+2764, U+2122, arrows, digits, '#', '*', ...) are not
+ *	claimed, so they stay in the text faces unless a VS16 follows, in
+ *	which case GetRunFaceIndex() finds the color face through
+ *	fullCharset. VS15 therefore works: the text faces still have the
+ *	character.
  *
- *   The code points the color faces claim are then removed from every
- *   text face, so that charset-ordered lookups (which do not see the
- *   following variation selector) also give those characters to the
- *   color face. The requested font does not keep them: an emoji with
- *   default emoji presentation is drawn in color on X11.
+ *	The code points the color faces claim are then removed from every
+ *	text face, so that charset-ordered lookups (which do not see the
+ *	following variation selector) also give those characters to the
+ *	color face. The requested font does not keep them: an emoji with
+ *	default emoji presentation is drawn in color on X11.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Sets faces[i].isColor and faces[i].fullCharset, and modifies
- *   faces[i].charset. Replaced charsets are destroyed; the caller must
- *   not hold pointers into them across this call.
+ *	Sets faces[i].isColor and faces[i].fullCharset, and modifies
+ *	faces[i].charset. Replaced charsets are destroyed; the caller must
+ *	not hold pointers into them across this call.
  * ---------------------------------------------------------------
  */
 
@@ -1065,15 +1065,15 @@ static void FinishedWithFont(UnixFtFont *fontPtr);
  * ---------------------------------------------------------------
  * InitFontErrorProc --
  *
- *   X error handler installed during font initialization. Records
- *   that an error occurred in the thread-specific error flag so the
- *   caller can detect failures without the error being fatal.
+ *	X error handler installed during font initialization. Records
+ *	that an error occurred in the thread-specific error flag so the
+ *	caller can detect failures without the error being fatal.
  *
  * Results:
- *   Returns 0.
+ *	Returns 0.
  *
  * Side effects:
- *   Sets *errorFlagPtr to 1 if errorFlagPtr is non-NULL.
+ *	Sets *errorFlagPtr to 1 if errorFlagPtr is non-NULL.
  * ---------------------------------------------------------------
  */
 
@@ -1094,17 +1094,17 @@ InitFontErrorProc(
  * ---------------------------------------------------------------
  * InitFont --
  *
- *   Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
- *   also allocates a new UnixFtFont.
+ *	Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
+ *	also allocates a new UnixFtFont.
  *
  * Results:
- *   On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
+ *	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
  *
  * Side effects:
- *   Allocates memory, loads fonts, initializes shaper.
+ *	Allocates memory, loads fonts, initializes shaper.
  * ---------------------------------------------------------------
  */
- 
+
 static UnixFtFont *
 InitFont(
     Tk_Window tkwin,
@@ -1297,13 +1297,13 @@ InitFont(
  * ---------------------------------------------------------------
  * FinishedWithFont --
  *
- *   Release all resources associated with a UnixFtFont.
+ *	Release all resources associated with a UnixFtFont.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Font data is freed, Xft fonts closed, shaper destroyed.
+ *	Font data is freed, Xft fonts closed, shaper destroyed.
  * ---------------------------------------------------------------
  */
 
@@ -1378,14 +1378,14 @@ FinishedWithFont(
  * ---------------------------------------------------------------
  * GrowSize --
  *
- *   Compute the new size of a growing array: at least needed, and at
- *   least double the current size.
+ *	Compute the new size of a growing array: at least needed, and at
+ *	least double the current size.
  *
  * Results:
- *   The new size.
+ *	The new size.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -1407,14 +1407,14 @@ GrowSize(
  * ---------------------------------------------------------------
  * ReserveGlyphBuffer --
  *
- *   Make room for at least numGlyphs glyphs (and visual index entries)
- *   and numBreaks cluster breaks in a shaped glyph buffer.
+ *	Make room for at least numGlyphs glyphs (and visual index entries)
+ *	and numBreaks cluster breaks in a shaped glyph buffer.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   May reallocate the arrays of the buffer.
+ *	May reallocate the arrays of the buffer.
  * ---------------------------------------------------------------
  */
 
@@ -1446,13 +1446,13 @@ ReserveGlyphBuffer(
  * ---------------------------------------------------------------
  * CopyGlyphBuffer --
  *
- *   Copy the contents of a shaped glyph buffer into another one.
+ *	Copy the contents of a shaped glyph buffer into another one.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   May reallocate the arrays of dst.
+ *	May reallocate the arrays of dst.
  * ---------------------------------------------------------------
  */
 
@@ -1483,13 +1483,13 @@ CopyGlyphBuffer(
  * ---------------------------------------------------------------
  * FreeGlyphBuffer --
  *
- *   Release the arrays of a shaped glyph buffer.
+ *	Release the arrays of a shaped glyph buffer.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Frees memory; the buffer is left empty and can be reused.
+ *	Frees memory; the buffer is left empty and can be reused.
  * ---------------------------------------------------------------
  */
 
@@ -1513,14 +1513,14 @@ FreeGlyphBuffer(
  * ---------------------------------------------------------------
  * X11Shaper_Init --
  *
- *   Initialize persistent shaping context.
- *   Fonts are loaded lazily on first use (see X11Shaper_ShapeString).
+ *	Initialize persistent shaping context.
+ *	Fonts are loaded lazily on first use (see X11Shaper_ShapeString).
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Allocates shaping buffer.
+ *	Allocates shaping buffer.
  * ---------------------------------------------------------------
  */
 
@@ -1563,13 +1563,13 @@ X11Shaper_Init(
  * ---------------------------------------------------------------
  * X11Shaper_Destroy --
  *
- *   Release shaping context.
+ *	Release shaping context.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Frees shaping context.
+ *	Frees shaping context.
  * ---------------------------------------------------------------
  */
 
@@ -1594,10 +1594,10 @@ X11Shaper_Destroy(
  *  The font is cached in the UnixFtFace structure.
  *
  *  Results:
- *    hb_font_t pointer, or NULL on failure.
+ *	 hb_font_t pointer, or NULL on failure.
  *
  *  Side effects:
- *    May open font file and create hb_font_t, hb_face_t, hb_blob_t.
+ *	 May open font file and create hb_font_t, hb_face_t, hb_blob_t.
  * ---------------------------------------------------------------
  */
 
@@ -1664,10 +1664,10 @@ GetHbFont(
  *  Uses a small direct-mapped cache for speed.
  *
  *  Results:
- *    Font face; falls back to face 0 if no match is found.
+ *	 Font face; falls back to face 0 if no match is found.
  *
  *  Side effects:
- *    Updates the character cache.
+ *	 Updates the character cache.
  * ---------------------------------------------------------------
  */
 
@@ -1753,14 +1753,14 @@ GetRunFaceIndex(
  * ---------------------------------------------------------------
  * X11Shaper_ShapeString --
  *
- *   Shape a UTF-8 string using HarfBuzz and produce glyph buffer
- *   WITH cluster boundary metadata for proper line wrapping (including RTL).
+ *	Shape a UTF-8 string using HarfBuzz and produce glyph buffer
+ *	WITH cluster boundary metadata for proper line wrapping (including RTL).
  *
  * Results:
- *   true on success, false on failure.
+ *	true on success, false on failure.
  *
  * Side effects:
- *   Updates the shaper cache; buffer is filled with glyphs and clusters.
+ *	Updates the shaper cache; buffer is filled with glyphs and clusters.
  * ---------------------------------------------------------------
  */
 
@@ -2399,15 +2399,15 @@ X11Shaper_ShapeString(
  * ---------------------------------------------------------------
  * TkpFontPkgInit --
  *
- *   This procedure is called when an application is created. It
- *   initializes all the structures that are used by the
- *   platform-dependant code on a per application basis.
+ *	This procedure is called when an application is created. It
+ *	initializes all the structures that are used by the
+ *	platform-dependant code on a per application basis.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -2422,13 +2422,13 @@ TkpFontPkgInit(
  * ---------------------------------------------------------------
  * TkpGetNativeFont --
  *
- *   Create a Tk font from a platform-specific font name (XLFD).
+ *	Create a Tk font from a platform-specific font name (XLFD).
  *
  * Results:
- *   Returns a pointer to a TkFont, or NULL on failure.
+ *	Returns a pointer to a TkFont, or NULL on failure.
  *
  * Side effects:
- *   Allocates font resources.
+ *	Allocates font resources.
  * ---------------------------------------------------------------
  */
 
@@ -2456,13 +2456,13 @@ TkpGetNativeFont(
  * ---------------------------------------------------------------
  * TkpGetFontFromAttributes --
  *
- *   Create a Tk font matching the given attributes.
+ *	Create a Tk font matching the given attributes.
  *
  * Results:
- *   Returns a pointer to a TkFont, or NULL on failure.
+ *	Returns a pointer to a TkFont, or NULL on failure.
  *
  * Side effects:
- *   Allocates font resources; may reuse an existing font structure.
+ *	Allocates font resources; may reuse an existing font structure.
  * ---------------------------------------------------------------
  */
 
@@ -2539,13 +2539,13 @@ TkpGetFontFromAttributes(
  * ---------------------------------------------------------------
  * TkpDeleteFont --
  *
- *   Release all resources associated with a font.
+ *	Release all resources associated with a font.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Font data is freed.
+ *	Font data is freed.
  * ---------------------------------------------------------------
  */
 
@@ -2562,15 +2562,15 @@ TkpDeleteFont(
  * ---------------------------------------------------------------
  * TkpGetFontFamilies --
  *
- *   Return information about the font families that are available on the
- *   display of the given window.
+ *	Return information about the font families that are available on the
+ *	display of the given window.
  *
  * Results:
- *   Modifies interp's result object to hold a list of all the available
- *   font families.
+ *	Modifies interp's result object to hold a list of all the available
+ *	font families.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -2599,13 +2599,13 @@ TkpGetFontFamilies(
  * ---------------------------------------------------------------
  * TkpGetSubFonts --
  *
- *   Called by [testfont subfonts] in the Tk testing package.
+ *	Called by [testfont subfonts] in the Tk testing package.
  *
  * Results:
- *   Sets interp's result to a list of the faces used by tkfont.
+ *	Sets interp's result to a list of the faces used by tkfont.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -2645,14 +2645,14 @@ TkpGetSubFonts(
  * ---------------------------------------------------------------
  * TkpGetFontAttrsForChar --
  *
- *   Retrieve the font attributes of the actual font used to render a given
- *   character.
+ *	Retrieve the font attributes of the actual font used to render a given
+ *	character.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   The TkFontAttributes structure is filled.
+ *	The TkFontAttributes structure is filled.
  * ---------------------------------------------------------------
  */
 
@@ -2680,14 +2680,14 @@ TkpGetFontAttrsForChar(
  * ---------------------------------------------------------------
  * Tk_MeasureChars --
  *
- *   Measure the width of a string when drawn in the given font.
+ *	Measure the width of a string when drawn in the given font.
  *
  *
  * Results:
- *   Calls Tk_MeasureCharsinContext.
+ *	Calls Tk_MeasureCharsinContext.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -2708,26 +2708,26 @@ Tk_MeasureChars(
  * ---------------------------------------------------------------
  * GetSimpleCharWidth --
  *
- *   Return the on-screen advance width of a single codepoint in the
- *   "simple" (non-shaped) rendering path, using the same font-fallback
- *   and glyph-existence check that Tk_DrawCharsInContext uses to decide
- *   what actually gets painted.
+ *	Return the on-screen advance width of a single codepoint in the
+ *	"simple" (non-shaped) rendering path, using the same font-fallback
+ *	and glyph-existence check that Tk_DrawCharsInContext uses to decide
+ *	what actually gets painted.
  *
- *   If no loaded face has a real glyph for this codepoint (e.g. control
- *   characters such as '\n' or '\r', which are never drawn), this
- *   returns 0. This mirrors Tk_DrawCharsInContext's simple-path draw
- *   loop, which silently skips such characters (no glyph emitted, no
- *   advance). Measurement and drawing must agree on this, or pixel
- *   positions derived from measurement (such as the insertion cursor's
- *   x coordinate) drift away from where characters are actually painted
- *   -- accumulating by one phantom glyph width for every such character
- *   that precedes the measured point.
+ *	If no loaded face has a real glyph for this codepoint (e.g. control
+ *	characters such as '\n' or '\r', which are never drawn), this
+ *	returns 0. This mirrors Tk_DrawCharsInContext's simple-path draw
+ *	loop, which silently skips such characters (no glyph emitted, no
+ *	advance). Measurement and drawing must agree on this, or pixel
+ *	positions derived from measurement (such as the insertion cursor's
+ *	x coordinate) drift away from where characters are actually painted
+ *	-- accumulating by one phantom glyph width for every such character
+ *	that precedes the measured point.
  *
  * Results:
- *   Pixel advance width, or 0 if the codepoint has no real glyph.
+ *	Pixel advance width, or 0 if the codepoint has no real glyph.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -2762,7 +2762,7 @@ GetSimpleCharWidth(
 /*
  * ClusterInfo --
  *
- *   A cluster of a shaped string, used by Tk_MeasureCharsInContext.
+ *	A cluster of a shaped string, used by Tk_MeasureCharsInContext.
  */
 
 typedef struct {
@@ -2792,7 +2792,7 @@ typedef struct {
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int
 CompareClusters(
     const void *a,
@@ -2813,11 +2813,11 @@ CompareClusters(
 /*
  * MeasureState --
  *
- *   Holds the running state used while scanning a string to
+ *	Holds the running state used while scanning a string to
  *	measure character widths and byte lengths for line-wrapping
- *	 and word-boundary calculations. 
+ *	and word-boundary calculations.
  */
- 
+
 typedef struct {
     int curX;			/* Width of the accepted characters. */
     int curByte;		/* Bytes of the accepted characters. */
@@ -2831,18 +2831,18 @@ typedef struct {
  * ---------------------------------------------------------------
  * MeasureStep --
  *
- *   Add one character (or cluster) to a bounded measurement, applying
- *   the TK_PARTIAL_OK, TK_WHOLE_WORDS and TK_AT_LEAST_ONE flags in the
- *   same way as the other font backends. A word boundary is the start
- *   of a run of spaces that follows a non-space, so that the spaces at
- *   the end of a line are not counted in its width.
+ *	Add one character (or cluster) to a bounded measurement, applying
+ *	the TK_PARTIAL_OK, TK_WHOLE_WORDS and TK_AT_LEAST_ONE flags in the
+ *	same way as the other font backends. A word boundary is the start
+ *	of a run of spaces that follows a non-space, so that the spaces at
+ *	the end of a line are not counted in its width.
  *
  * Results:
- *   Returns 1 if the next character should be measured, 0 if the
- *   measurement is finished. The result is in m->curByte and m->curX.
+ *	Returns 1 if the next character should be measured, 0 if the
+ *	measurement is finished. The result is in m->curByte and m->curX.
  *
  * Side effects:
- *   Updates *m.
+ *	Updates *m.
  * ---------------------------------------------------------------
  */
 
@@ -2892,26 +2892,26 @@ MeasureStep(
  * ---------------------------------------------------------------
  * Tk_MeasureCharsInContext --
  *
- *   Measure a substring of a larger string, preserving shaping context.
+ *	Measure a substring of a larger string, preserving shaping context.
  *
- *   Uses cluster boundaries to do width-aware fitting WITHOUT
- *   reshaping. This prevents RTL runs from being passed to LayoutLine
- *   as single monolithic units.
+ *	Uses cluster boundaries to do width-aware fitting WITHOUT
+ *	reshaping. This prevents RTL runs from being passed to LayoutLine
+ *	as single monolithic units.
  *
- *   Algorithm:
- *   1. Shape the full source string once (HarfBuzz shaping with full context).
- *   2. Use cluster boundaries from the shaped buffer to find the longest
- *      fitting subrange that starts at rangeStart.
- *   3. Return bytes consumed and pixel width.
+ *	Algorithm:
+ *	1. Shape the full source string once (HarfBuzz shaping with full context).
+ *	2. Use cluster boundaries from the shaped buffer to find the longest
+ *	   fitting subrange that starts at rangeStart.
+ *	3. Return bytes consumed and pixel width.
  *
- *   No reshaping happens during the fitting loop — we use the glyph
- *   positions and cluster boundaries already computed by shaping.
+ *	No reshaping happens during the fitting loop — we use the glyph
+ *	positions and cluster boundaries already computed by shaping.
  *
  * Results:
- *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
+ *	Returns number of bytes consumed; *lengthPtr filled with pixel width.
  *
  * Side effects:
- *   None.
+ *	None.
  * ---------------------------------------------------------------
  */
 
@@ -3209,13 +3209,13 @@ Tk_MeasureCharsInContext(
  * ---------------------------------------------------------------
  * Tk_DrawChars --
  *
- *   Draw a UTF-8 string using the given font.
+ *	Draw a UTF-8 string using the given font.
  *
  * Results:
- *   Calls Tk_DrawCharsinContext.
+ *	Calls Tk_DrawCharsinContext.
  *
  * Side effects:
- *   Draws text on the specified drawable.
+ *	Draws text on the specified drawable.
  * ---------------------------------------------------------------
  */
 
@@ -3245,22 +3245,22 @@ Tk_DrawChars(
  * ---------------------------------------------------------------
  * Tk_DrawCharsInContext --
  *
- *   Draw a substring of text with full shaping context.
+ *	Draw a substring of text with full shaping context.
  *
- *   source/numBytes is the full base-chunk string (from baseChars).
- *   rangeStart/rangeLength selects which bytes to draw.
- *   x/y is the screen origin of the full base-chunk string (position 0
- *   of the shaped buffer maps to this point).
+ *	source/numBytes is the full base-chunk string (from baseChars).
+ *	rangeStart/rangeLength selects which bytes to draw.
+ *	x/y is the screen origin of the full base-chunk string (position 0
+ *	of the shaped buffer maps to this point).
  *
- *   We shape the full string for correct joining/ligatures, then draw
- *   only the glyphs whose clusters fall within [rangeStart, rangeEnd).
- *   No clip rectangle is needed: we simply skip out-of-range glyphs.
+ *	We shape the full string for correct joining/ligatures, then draw
+ *	only the glyphs whose clusters fall within [rangeStart, rangeEnd).
+ *	No clip rectangle is needed: we simply skip out-of-range glyphs.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Draws the selected substring on drawable.
+ *	Draws the selected substring on drawable.
  * ---------------------------------------------------------------
  */
 
@@ -3471,13 +3471,13 @@ Tk_DrawCharsInContext(
  * ---------------------------------------------------------------
  * TkDrawAngledChars --
  *
- *   Draw some characters at an angle.
+ *	Draw some characters at an angle.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Draws rotated text.
+ *	Draws rotated text.
  * ---------------------------------------------------------------
  */
 
@@ -3626,13 +3626,13 @@ TkDrawAngledChars(
  * ---------------------------------------------------------------
  * TkpDrawAngledCharsInContext --
  *
- *   Draw a substring of rotated text.
+ *	Draw a substring of rotated text.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Draws rotated characters.
+ *	Draws rotated characters.
  * ---------------------------------------------------------------
  */
 
@@ -3657,13 +3657,13 @@ TkpDrawAngledCharsInContext(
  * ---------------------------------------------------------------
  * TkUnixSetXftClipRegion --
  *
- *   Set the clipping region for subsequent Xft drawing.
+ *	Set the clipping region for subsequent Xft drawing.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Updates thread-local clipping region.
+ *	Updates thread-local clipping region.
  * ---------------------------------------------------------------
  */
 

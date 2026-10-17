@@ -578,6 +578,28 @@ test winWm-9.3 "restore iconified window during global grab" -constraints {
     wm deiconify .
     update
 } -result normal
+test winWm-9.4 "deiconifying the master keeps the wrapper of a transient" -constraints {
+    win
+} -setup {
+    destroy .t
+    toplevel .t
+    wm transient .t .
+    update
+} -body {
+    # Recreating the wrapper would destroy the dialogs it owns, e.g. a
+    # tk_messageBox with -parent .t [Bug 3009885]
+    set frame [wm frame .t]
+    wm iconify .
+    update
+    wm deiconify .
+    update
+    expr {[wm frame .t] eq $frame}
+} -cleanup {
+    destroy .t
+    wm deiconify .
+    update
+    unset -nocomplain frame
+} -result 1
 
 test winWm-10.1 "Set and get -appearence dark" -constraints win -setup {
     catch {destroy .t}
@@ -631,6 +653,27 @@ test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
 } -cleanup {
     destroy .t
 } -result 0
+
+test winWm-11.1 "stale position in WINDOWPOS with SWP_NOMOVE - bug 90f5cd3f21" -constraints {
+    win testwindowposchanged
+} -setup {
+    destroy .t
+    set res [list ]
+} -body {
+    toplevel .t
+    wm geometry .t 200x100+300+200
+    update
+    bind .t <Configure> {lappend res [list configure %x %y %w %h]}
+    # After Aero Shake, Windows sends WM_WINDOWPOSCHANGED with SWP_NOMOVE
+    # and SWP_NOSIZE set and stale position and size (0x37 is SWP_NOSIZE |
+    # SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED).
+    testwindowposchanged .t 1111 2222 333 444 0x37
+    update
+    lappend res [winfo x .t] [winfo y .t] [wm geometry .t]
+} -cleanup {
+    destroy .t
+    unset -nocomplain res
+} -result {{configure 300 200 200 100} 300 200 200x100+300+200}
 
 #
 # TESTFILE CLEANUP

@@ -14,7 +14,7 @@
 package require Tk 9.0-
 
 namespace eval ::tk::emoji {
-	
+
 	# Bail if X11 and compiled without Xft support
 	if {[tk::build-info no-xft]} {
 	    return
@@ -22,7 +22,7 @@ namespace eval ::tk::emoji {
 
     variable S
     array set S {
-        drawnW -1
+	drawnW -1
 	top    .tkemojipicker
 	cell   28
 	cat    ""
@@ -155,773 +155,773 @@ namespace eval ::tk::emoji {
     # Names are the canonical "text to speech" strings from CLDR's
     # common/annotations/en.xml (type="tts"), lowercased.
     variable names [dict create \
-        \u263A  "smiling face" \
-        \u263B  "smiling face with open mouth" \
-        \u2620  "skull and crossbones" \
-        \u270B  "raised hand" \
-        \u270C  "victory hand" \
-        \u270A  "raised fist" \
-        \u270D  "writing hand" \
-        \u2615  "hot beverage" \
-        \u2708  "airplane" \
-        \u26F5  "sailboat" \
-        \u2693  "anchor" \
-        \u26FD  "fuel pump" \
-        \u26F2  "fountain" \
-        \u26F0  "mountain" \
-        \u26BD  "soccer ball" \
-        \u26BE  "baseball" \
-        \u26F3  "flag in hole" \
-        \u26F8  "ice skate" \
-        \u26F7  "skier" \
-        \u26F9  "person bouncing ball" \
-        \u265F  "chess pawn" \
-        \u231A  "watch" \
-        \u2328  "keyboard" \
-        \u260E  "telephone" \
-        \u23F1  "stopwatch" \
-        \u23F2  "timer clock" \
-        \u23F0  "alarm clock" \
-        \u231B  "hourglass done" \
-        \u23F3  "hourglass not done" \
-        \u2696  "balance scale" \
-        \u2692  "hammer and pick" \
-        \u26CF  "pick" \
-        \u2699  "gear" \
-        \u26D3  "chains" \
-        \u2694  "crossed swords" \
-        \u26B0  "coffin" \
-        \u26B1  "funeral urn" \
-        \u2764  "red heart" \
-        \u2763  "heart with arrow" \
-        \u262E  "peace symbol" \
-        \u271D  "latin cross" \
-        \u262A  "star and crescent" \
-        \u2626  "orthodox cross" \
-        \u271F  "star of david" \
-        \u262F  "yin yang" \
-        \u26CE  "ophiuchus" \
-        \u2648  "aries" \
-        \u2649  "taurus" \
-        \u264A  "gemini" \
-        \u264B  "cancer" \
-        \u264C  "leo" \
-        \u264D  "virgo" \
-        \u264E  "libra" \
-        \u264F  "scorpio" \
-        \u2650  "sagittarius" \
-        \u2651  "capricorn" \
-        \u2652  "aquarius" \
-        \u2653  "pisces" \
-        \u269B  "atom symbol" \
-        \u2622  "radioactive" \
-        \u2623  "biohazard" \
-        \u2734  "eight pointed star" \
-        \u3299  "japanese secret button" \
-        \u3297  "japanese congratulations button" \
-        \u274C  "cross mark" \
-        \u2B55  "hollow red circle" \
-        \u26D4  "no entry" \
-        \u2668  "hot springs" \
-        \u2757  "exclamation mark" \
-        \u2755  "white exclamation mark" \
-        \u2753  "question mark" \
-        \u2754  "white question mark" \
-        \u203C  "double exclamation mark" \
-        \u2049  "exclamation question mark" \
-        \u303D  "part alternation mark" \
-        \u26A0  "warning" \
-        \u269C  "fleur de lis" \
-        \U1F600 "grinning face" \
-        \U1F603 "grinning face with big eyes" \
-        \U1F604 "grinning face with smiling eyes" \
-        \U1F601 "beaming face with smiling eyes" \
-        \U1F606 "grinning squinting face" \
-        \U1F605 "grinning face with sweat" \
-        \U1F602 "face with tears of joy" \
-        \U1F923 "rolling on the floor laughing" \
-        \U1F642 "slightly smiling face" \
-        \U1F643 "upside down face" \
-        \U1F609 "winking face" \
-        \U1F60A "smiling face with smiling eyes" \
-        \U1F607 "smiling face with halo" \
-        \U1F970 "smiling face with hearts" \
-        \U1F60D "smiling face with heart eyes" \
-        \U1F929 "star struck" \
-        \U1F618 "face blowing a kiss" \
-        \U1F617 "kissing face" \
-        \U1F61A "kissing face with closed eyes" \
-        \U1F619 "kissing face with smiling eyes" \
-        \U1F972 "smiling face with tear" \
-        \U1F60B "face savoring food" \
-        \U1F61B "face with tongue" \
-        \U1F61C "winking face with tongue" \
-        \U1F92A "zany face" \
-        \U1F61D "squinting face with tongue" \
-        \U1F911 "money mouth face" \
-        \U1F917 "hugging face" \
-        \U1F92D "face with hand over mouth" \
-        \U1F92B "shushing face" \
-        \U1F914 "thinking face" \
-        \U1F910 "zipper mouth face" \
-        \U1F928 "face with raised eyebrow" \
-        \U1F610 "neutral face" \
-        \U1F611 "expressionless face" \
-        \U1F636 "face without mouth" \
-        \U1F60F "smirking face" \
-        \U1F612 "unamused face" \
-        \U1F644 "face with rolling eyes" \
-        \U1F62C "grimacing face" \
-        \U1F925 "lying face" \
-        \U1F60C "relieved face" \
-        \U1F614 "pensive face" \
-        \U1F62A "sleepy face" \
-        \U1F924 "drooling face" \
-        \U1F634 "sleeping face" \
-        \U1F637 "face with medical mask" \
-        \U1F912 "face with thermometer" \
-        \U1F915 "face with head bandage" \
-        \U1F922 "nauseated face" \
-        \U1F92E "face vomiting" \
-        \U1F927 "sneezing face" \
-        \U1F975 "hot face" \
-        \U1F976 "cold face" \
-        \U1F974 "woozy face" \
-        \U1F635 "face with crossed out eyes" \
-        \U1F92F "exploding head" \
-        \U1F920 "cowboy hat face" \
-        \U1F973 "partying face" \
-        \U1F978 "disguised face" \
-        \U1F60E "smiling face with sunglasses" \
-        \U1F913 "nerd face" \
-        \U1F9D0 "face with monocle" \
-        \U1F615 "confused face" \
-        \U1F61F "worried face" \
-        \U1F641 "slightly frowning face" \
-        \U1F62E "face with open mouth" \
-        \U1F62F "hushed face" \
-        \U1F632 "astonished face" \
-        \U1F633 "flushed face" \
-        \U1F97A "pleading face" \
-        \U1F626 "frowning face with open mouth" \
-        \U1F627 "anguished face" \
-        \U1F628 "fearful face" \
-        \U1F630 "anxious face with sweat" \
-        \U1F625 "sad but relieved face" \
-        \U1F622 "crying face" \
-        \U1F62D "loudly crying face" \
-        \U1F631 "face screaming in fear" \
-        \U1F616 "confounded face" \
-        \U1F623 "persevering face" \
-        \U1F61E "disappointed face" \
-        \U1F613 "downcast face with sweat" \
-        \U1F629 "weary face" \
-        \U1F62B "tired face" \
-        \U1F971 "yawning face" \
-        \U1F624 "face with steam from nose" \
-        \U1F621 "enraged face" \
-        \U1F620 "angry face" \
-        \U1F92C "face with symbols on mouth" \
-        \U1F608 "smiling face with horns" \
-        \U1F47F "angry face with horns" \
-        \U1F480 "skull" \
-        \U1F4A9 "pile of poo" \
-        \U1F921 "clown face" \
-        \U1F479 "ogre" \
-        \U1F47A "goblin" \
-        \U1F47B "ghost" \
-        \U1F47D "alien" \
-        \U1F47E "alien monster" \
-        \U1F916 "robot" \
-        \U1F63A "grinning cat" \
-        \U1F638 "grinning cat with smiling eyes" \
-        \U1F639 "cat with tears of joy" \
-        \U1F63B "smiling cat with heart eyes" \
-        \U1F63C "cat with wry smile" \
-        \U1F63D "kissing cat" \
-        \U1F640 "weary cat" \
-        \U1F63F "crying cat" \
-        \U1F63E "pouting cat" \
-        \U1F44B "waving hand" \
-        \U1F91A "raised back of hand" \
-        \U1F590 "hand with fingers splayed" \
-        \U1F596 "vulcan salute" \
-        \U1F44C "ok hand" \
-        \U1F90C "pinched fingers" \
-        \U1F90F "pinching hand" \
-        \U1F91E "crossed fingers" \
-        \U1F91F "love you gesture" \
-        \U1F918 "sign of the horns" \
-        \U1F919 "call me hand" \
-        \U1F448 "backhand index pointing left" \
-        \U1F449 "backhand index pointing right" \
-        \U1F446 "backhand index pointing up" \
-        \U1F595 "middle finger" \
-        \U1F447 "backhand index pointing down" \
-        \u261D "index pointing up" \
-        \U1F44A "oncoming fist" \
-        \U1F44D "thumbs up" \
-        \U1F44E "thumbs down" \
-        \U1F91B "left facing fist" \
-        \U1F91C "right facing fist" \
-        \U1F44F "clapping hands" \
-        \U1F64C "raising hands" \
-        \U1F450 "open hands" \
-        \U1F932 "palms up together" \
-        \U1F91D "handshake" \
-        \U1F64F "folded hands" \
-        \U1F485 "nail polish" \
-        \U1F933 "selfie" \
-        \U1F4AA "flexed biceps" \
-        \U1F9BE "mechanical arm" \
-        \U1F9BF "mechanical leg" \
-        \U1F9B5 "leg" \
-        \U1F9B6 "foot" \
-        \U1F442 "ear" \
-        \U1F9BB "ear with hearing aid" \
-        \U1F443 "nose" \
-        \U1F9E0 "brain" \
-        \U1F9B7 "tooth" \
-        \U1F9B4 "bone" \
-        \U1F445 "tongue" \
-        \U1F444 "mouth" \
-        \U1F476 "baby" \
-        \U1F9D2 "child" \
-        \U1F466 "boy" \
-        \U1F467 "girl" \
-        \U1F9D1 "person" \
-        \U1F471 "person blond hair" \
-        \U1F468 "man" \
-        \U1F9D4 "man beard" \
-        \U1F469 "woman" \
-        \U1F474 "old man" \
-        \U1F475 "old woman" \
-        \U1F64D "person frowning" \
-        \U1F64E "person pouting" \
-        \U1F645 "person gesturing no" \
-        \U1F646 "person gesturing ok" \
-        \U1F481 "person tipping hand" \
-        \U1F64B "person raising hand" \
-        \U1F9CF "deaf person" \
-        \U1F647 "person bowing" \
-        \U1F926 "person facepalming" \
-        \U1F937 "person shrugging" \
-        \U1F46E "police officer" \
-        \U1F575 "detective" \
-        \U1F482 "guard" \
-        \U1F977 "ninja" \
-        \U1F477 "construction worker" \
-        \U1F934 "prince" \
-        \U1F478 "princess" \
-        \U1F473 "person wearing turban" \
-        \U1F472 "person with skullcap" \
-        \U1F9D5 "person with headscarf" \
-        \U1F935 "person in tuxedo" \
-        \U1F470 "person with veil" \
-        \U1F930 "pregnant woman" \
-        \U1F931 "breast feeding" \
-        \U1F47C "baby angel" \
-        \U1F385 "santa claus" \
-        \U1F936 "mrs claus" \
-        \U1F9B8 "superhero" \
-        \U1F9B9 "supervillain" \
-        \U1F9D9 "mage" \
-        \U1F9DA "fairy" \
-        \U1F9DB "vampire" \
-        \U1F9DC "merperson" \
-        \U1F9DD "elf" \
-        \U1F9DE "genie" \
-        \U1F9DF "zombie" \
-        \U1F486 "person getting massage" \
-        \U1F487 "person getting haircut" \
-        \U1F6B6 "person walking" \
-        \U1F9CD "person standing" \
-        \U1F9CE "person kneeling" \
-        \U1F3C3 "person running" \
-        \U1F483 "woman dancing" \
-        \U1F57A "man dancing" \
-        \U1F574 "person in suit levitating" \
-        \U1F46F "people with bunny ears" \
-        \U1F9D6 "person in steamy room" \
-        \U1F9D7 "person climbing" \
-        \U1F93A "person fencing" \
-        \U1F3C7 "horse racing" \
-        \U1F9D8 "person in lotus position" \
-        \U1F46D "women holding hands" \
-        \U1F46B "woman and man holding hands" \
-        \U1F46C "men holding hands" \
-        \U1F48F "kiss" \
-        \U1F491 "couple with heart" \
-        \U1F46A "family" \
-        \U1F435 "monkey face" \
-        \U1F412 "monkey" \
-        \U1F98D "gorilla" \
-        \U1F9A7 "orangutan" \
-        \U1F436 "dog face" \
-        \U1F415 "dog" \
-        \U1F9AE "guide dog" \
-        \U1F429 "poodle" \
-        \U1F9A9 "service dog" \
-        \U1F43A "wolf" \
-        \U1F98A "fox" \
-        \U1F99D "raccoon" \
-        \U1F431 "cat face" \
-        \U1F408 "cat" \
-        \U1F981 "lion" \
-        \U1F42F "tiger face" \
-        \U1F405 "tiger" \
-        \U1F406 "leopard" \
-        \U1F434 "horse face" \
-        \U1F40E "horse" \
-        \U1F984 "unicorn" \
-        \U1F993 "zebra" \
-        \U1F98C "deer" \
-        \U1F42E "cow face" \
-        \U1F402 "ox" \
-        \U1F403 "water buffalo" \
-        \U1F404 "cow" \
-        \U1F437 "pig face" \
-        \U1F416 "pig" \
-        \U1F417 "boar" \
-        \U1F43D "pig nose" \
-        \U1F40F "ram" \
-        \U1F411 "ewe" \
-        \U1F410 "goat" \
-        \U1F42A "camel" \
-        \U1F42B "two hump camel" \
-        \U1F999 "llama" \
-        \U1F992 "giraffe" \
-        \U1F418 "elephant" \
-        \U1F98F "rhinoceros" \
-        \U1F99B "hippopotamus" \
-        \U1F42D "mouse face" \
-        \U1F439 "hamster" \
-        \U1F430 "rabbit face" \
-        \U1F407 "rabbit" \
-        \U1F99A "chipmunk" \
-        \U1F99C "hedgehog" \
-        \U1F438 "frog" \
-        \U1F40A "crocodile" \
-        \U1F422 "turtle" \
-        \U1F98E "lizard" \
-        \U1F40D "snake" \
-        \U1F432 "dragon face" \
-        \U1F409 "dragon" \
-        \U1F995 "sauropod" \
-        \U1F996 "t rex" \
-        \U1F433 "spouting whale" \
-        \U1F40B "whale" \
-        \U1F42C "dolphin" \
-        \U1F41F "fish" \
-        \U1F420 "tropical fish" \
-        \U1F421 "blowfish" \
-        \U1F988 "shark" \
-        \U1F419 "octopus" \
-        \U1F41A "spiral shell" \
-        \U1F980 "crab" \
-        \U1F99E "lobster" \
-        \U1F990 "shrimp" \
-        \U1F991 "squid" \
-        \U1F9AA "oyster" \
-        \U1F40C "snail" \
-        \U1F98B "butterfly" \
-        \U1F41B "bug" \
-        \U1F41C "ant" \
-        \U1F41D "honeybee" \
-        \U1F41E "lady beetle" \
-        \U1F997 "cricket" \
-        \U1F577 "spider" \
-        \U1F578 "spider web" \
-        \U1F982 "scorpion" \
-        \U1F99F "mosquito" \
-        \U1F9A0 "microbe" \
-        \U1F9A1 "badger" \
-        \U1F9A2 "swan" \
-        \U1F9A3 "mammoth" \
-        \U1F9A4 "dodo" \
-        \U1F9A5 "sloth" \
-        \U1F9A6 "otter" \
-        \U1F9A8 "skunk" \
-        \U1F9AB "beaver" \
-        \U1F9AC "bison" \
-        \U1F9AD "seal" \
-        \U1F43E "paw prints" \
-        \U1F347 "grapes" \
-        \U1F348 "melon" \
-        \U1F349 "watermelon" \
-        \U1F34A "tangerine" \
-        \U1F34B "lemon" \
-        \U1F34C "banana" \
-        \U1F34D "pineapple" \
-        \U1F96D "mango" \
-        \U1F34E "red apple" \
-        \U1F34F "green apple" \
-        \U1F350 "pear" \
-        \U1F351 "peach" \
-        \U1F352 "cherries" \
-        \U1F353 "strawberry" \
-        \U1F95D "kiwi fruit" \
-        \U1F345 "tomato" \
-        \U1F965 "coconut" \
-        \U1F951 "avocado" \
-        \U1F346 "eggplant" \
-        \U1F954 "potato" \
-        \U1F955 "carrot" \
-        \U1F33D "ear of corn" \
-        \U1F336 "hot pepper" \
-        \U1F33C "leafy green" \
-        \U1F96C "leafy green" \
-        \U1F966 "broccoli" \
-        \U1F9C4 "garlic" \
-        \U1F9C5 "onion" \
-        \U1F344 "mushroom" \
-        \U1F95C "peanuts" \
-        \U1F330 "chestnut" \
-        \U1F35E "bread" \
-        \U1F950 "croissant" \
-        \U1F956 "baguette bread" \
-        \U1F968 "pretzel" \
-        \U1F9C0 "cheese wedge" \
-        \U1F95A "egg" \
-        \U1F373 "cooking" \
-        \U1F9C8 "butter" \
-        \U1F95E "pancakes" \
-        \U1F9C7 "waffle" \
-        \U1F953 "bacon" \
-        \U1F969 "cut of meat" \
-        \U1F357 "poultry leg" \
-        \U1F356 "meat on bone" \
-        \U1F32D "hot dog" \
-        \U1F354 "hamburger" \
-        \U1F35F "french fries" \
-        \U1F355 "pizza" \
-        \U1F32E "taco" \
-        \U1F32F "burrito" \
-        \U1F959 "stuffed flatbread" \
-        \U1F9C6 "falafel" \
-        \U1F96A "sandwich" \
-        \U1F9C3 "beverage box" \
-        \U1F958 "shallow pan of food" \
-        \U1F35D "spaghetti" \
-        \U1F96B "canned food" \
-        \U1F35C "steaming bowl" \
-        \U1F372 "pot of food" \
-        \U1F963 "bowl with spoon" \
-        \U1F957 "green salad" \
-        \U1F37F "popcorn" \
-        \U1F9C2 "salt" \
-        \U1F96F "bagel" \
-        \U1F95F "dumpling" \
-        \U1F960 "fortune cookie" \
-        \U1F961 "takeout box" \
-        \U1F980 "crab" \
-        \U1F365 "fish cake with swirl" \
-        \U1F363 "sushi" \
-        \U1F364 "fried shrimp" \
-        \U1F359 "rice ball" \
-        \U1F35A "cooked rice" \
-        \U1F358 "rice cracker" \
-        \U1F362 "oden" \
-        \U1F361 "dango" \
-        \U1F367 "shaved ice" \
-        \U1F368 "ice cream" \
-        \U1F366 "soft ice cream" \
-        \U1F967 "pie" \
-        \U1F370 "shortcake" \
-        \U1F382 "birthday cake" \
-        \U1F9C1 "cupcake" \
-        \U1F36E "custard" \
-        \U1F36D "lollipop" \
-        \U1F36C "candy" \
-        \U1F36B "chocolate bar" \
-        \U1F37F "popcorn" \
-        \U1F369 "doughnut" \
-        \U1F36A "cookie" \
-        \U1F36F "honey pot" \
-        \U1F37C "baby bottle" \
-        \U1F375 "teacup without handle" \
-        \U1F376 "sake" \
-        \U1F37E "bottle with popping cork" \
-        \U1F377 "wine glass" \
-        \U1F378 "cocktail glass" \
-        \U1F379 "tropical drink" \
-        \U1F37A "beer mug" \
-        \U1F37B "clinking beer mugs" \
-        \U1F942 "clinking glasses" \
-        \U1F943 "tumbler glass" \
-        \U1F964 "cup with straw" \
-        \U1F9CB "bubble tea" \
-        \U1F9C3 "beverage box" \
-        \U1F697 "automobile" \
-        \U1F695 "taxi" \
-        \U1F699 "sport utility vehicle" \
-        \U1F68C "bus" \
-        \U1F68E "trolleybus" \
-        \U1F3CE "racing car" \
-        \U1F693 "police car" \
-        \U1F691 "ambulance" \
-        \U1F692 "fire engine" \
-        \U1F690 "minibus" \
-        \U1F69A "delivery truck" \
-        \U1F69B "articulated lorry" \
-        \U1F69C "tractor" \
-        \U1F6B2 "bicycle" \
-        \U1F6F4 "kick scooter" \
-        \U1F6F5 "motor scooter" \
-        \U1F6F9 "skateboard" \
-        \U1F68F "bus stop" \
-        \U1F6A8 "police car light" \
-        \U1F694 "oncoming police car" \
-        \U1F68D "oncoming bus" \
-        \U1F698 "oncoming automobile" \
-        \U1F68B "tram car" \
-        \U1F682 "locomotive" \
-        \U1F683 "railway car" \
-        \U1F684 "high speed train" \
-        \U1F685 "bullet train" \
-        \U1F686 "train" \
-        \U1F687 "metro" \
-        \U1F688 "light rail" \
-        \U1F689 "station" \
-        \U1F68A "tram" \
-        \U1F69D "monorail" \
-        \U1F69E "mountain railway" \
-        \U1F6EB "airplane departure" \
-        \U1F6EC "airplane arrival" \
-        \U1F6E9 "small airplane" \
-        \U1F4BA "seat" \
-        \U1F680 "rocket" \
-        \U1F6F8 "flying saucer" \
-        \U1F6F6 "canoe" \
-        \U1F6A4 "speedboat" \
-        \U1F6F3 "passenger ship" \
-        \u26F4 "ferry" \
-        \U1F6E5 "motor boat" \
-        \U1F6A2 "ship" \
-        \U1F6A7 "construction" \
-        \U1F6A6 "vertical traffic light" \
-        \U1F6A5 "horizontal traffic light" \
-        \U1F5FA "world map" \
-        \U1F5FF "moai" \
-        \U1F3D4 "snow capped mountain" \
-        \U1F30B "volcano" \
-        \U1F5FB "mount fuji" \
-        \U1F3D5 "camping" \
-        \U1F3D6 "beach with umbrella" \
-        \U1F3DC "desert" \
-        \U1F3DD "desert island" \
-        \U1F3DE "national park" \
-        \U1F3DF "stadium" \
-        \U1F3E0 "house" \
-        \U1F3E1 "house with garden" \
-        \U1F3D8 "houses" \
-        \U1F3DA "derelict house" \
-        \U1F3D7 "building construction" \
-        \U1F3ED "factory" \
-        \U1F3E2 "office building" \
-        \U1F3EC "department store" \
-        \U1F3E3 "japanese post office" \
-        \U1F3E4 "european post office" \
-        \U1F3E5 "hospital" \
-        \U1F3E6 "bank" \
-        \U1F3E8 "hotel" \
-        \U1F3EA "convenience store" \
-        \U1F3EB "school" \
-        \U1F3E9 "love hotel" \
-        \U1F492 "wedding" \
-        \U1F3EF "japanese castle" \
-        \U1F3F0 "castle" \
-        \U1F3A1 "ferris wheel" \
-        \U1F3A2 "roller coaster" \
-        \U1F3A0 "carousel horse" \
-        \u26F2 "fountain" \
-        \u26F0 "mountain" \
-        \U1F3C0 "basketball" \
-        \U1F3C8 "american football" \
-        \U1F3BE "tennis" \
-        \U1F94E "softball" \
-        \U1F3D0 "volleyball" \
-        \U1F3C9 "rugby football" \
-        \U1F94F "flying disc" \
-        \U1F3B1 "pool 8 ball" \
-        \U1F3D3 "ping pong" \
-        \U1F3F8 "badminton" \
-        \U1F3D2 "ice hockey" \
-        \U1F3D1 "field hockey" \
-        \U1F94D "lacrosse" \
-        \U1F3CF "cricket game" \
-        \U1F94A "boxing glove" \
-        \U1F94B "martial arts uniform" \
-        \U1F945 "goal net" \
-        \U1F3A3 "fishing pole" \
-        \U1F93F "diving mask" \
-        \U1F3BD "running shirt" \
-        \U1F3BF "skis" \
-        \U1F6F7 "sled" \
-        \U1F94C "curling stone" \
-        \U1F3C2 "snowboarder" \
-        \U1F3CB "person lifting weights" \
-        \U1F938 "person cartwheeling" \
-        \U1F93C "people wrestling" \
-        \U1F93D "person playing water polo" \
-        \U1F93E "person playing handball" \
-        \U1F939 "person juggling" \
-        \U1F3CC "person golfing" \
-        \U1F3C4 "person surfing" \
-        \U1F6A3 "person rowing boat" \
-        \U1F3CA "person swimming" \
-        \U1F3C6 "trophy" \
-        \U1F947 "first place medal" \
-        \U1F948 "second place medal" \
-        \U1F949 "third place medal" \
-        \U1F3C5 "sports medal" \
-        \U1F396 "military medal" \
-        \U1F3F5 "rosette" \
-        \U1F397 "reminder ribbon" \
-        \U1F39F "admission tickets" \
-        \U1F3AB "ticket" \
-        \U1F3AA "circus tent" \
-        \U1F3AD "performing arts" \
-        \U1F3A8 "artist palette" \
-        \U1F3AC "clapper board" \
-        \U1F3A4 "microphone" \
-        \U1F3A7 "headphone" \
-        \U1F3BC "musical score" \
-        \U1F3B9 "musical keyboard" \
-        \U1F941 "drum" \
-        \U1F3B7 "saxophone" \
-        \U1F3BA "trumpet" \
-        \U1F3B8 "guitar" \
-        \U1F3BB "violin" \
-        \U1F3B2 "game die" \
-        \U1F3AF "direct hit" \
-        \U1F3B3 "bowling" \
-        \U1F3AE "video game" \
-        \U1F3B0 "slot machine" \
-        \U1F9E9 "puzzle piece" \
-        \U1F4F1 "mobile phone" \
-        \U1F4F2 "mobile phone with arrow" \
-        \U1F4BB "laptop" \
-        \U1F5A5 "desktop computer" \
-        \U1F5A8 "printer" \
-        \U1F5B1 "computer mouse" \
-        \U1F5B2 "trackball" \
-        \U1F579 "joystick" \
-        \U1F5DC "clamp" \
-        \U1F4BD "computer disk" \
-        \U1F4BE "floppy disk" \
-        \U1F4BF "optical disk" \
-        \U1F4C0 "dvd" \
-        \U1F4FC "videocassette" \
-        \U1F4F7 "camera" \
-        \U1F4F8 "camera with flash" \
-        \U1F4F9 "video camera" \
-        \U1F3A5 "movie camera" \
-        \U1F4FD "film projector" \
-        \U1F39E "film frames" \
-        \U1F4DE "telephone receiver" \
-        \U1F4DF "pager" \
-        \U1F4E0 "fax machine" \
-        \U1F4FA "television" \
-        \U1F4FB "radio" \
-        \U1F399 "studio microphone" \
-        \U1F39A "level slider" \
-        \U1F39B "control knobs" \
-        \U1F570 "mantelpiece clock" \
-        \U1F4E1 "satellite antenna" \
-        \U1F50B "battery" \
-        \U1F50C "electric plug" \
-        \U1F4A1 "light bulb" \
-        \U1F526 "flashlight" \
-        \U1F56F "candle" \
-        \U1F6E2 "oil drum" \
-        \U1F4B8 "money with wings" \
-        \U1F4B5 "dollar banknote" \
-        \U1F4B4 "yen banknote" \
-        \U1F4B6 "euro banknote" \
-        \U1F4B7 "pound banknote" \
-        \U1F4B0 "money bag" \
-        \U1F4B3 "credit card" \
-        \U1F48E "gem stone" \
-        \U1F9F0 "toolbox" \
-        \U1F527 "wrench" \
-        \U1F528 "hammer" \
-        \U1F6E0 "hammer and wrench" \
-        \U1F529 "nut and bolt" \
-        \U1F9F1 "brick" \
-        \U1F4A3 "bomb" \
-        \U1F52A "kitchen knife" \
-        \U1F5E1 "dagger" \
-        \U1F6E1 "shield" \
-        \U1F6AC "cigarette" \
-        \U1F52E "crystal ball" \
-        \U1F52D "telescope" \
-        \U1F52C "microscope" \
-        \U1F573 "hole" \
-        \U1F9F2 "magnet" \
-        \U1F9F3 "lotion bottle" \
-        \U1F6BD "toilet" \
-        \U1F9F4 "lotion bottle" \
-        \U1F9F5 "thread" \
-        \U1F9F6 "yarn" \
-        \U1F9F7 "safety pin" \
-        \U1F9F8 "teddy bear" \
-        \U1F9F9 "broom" \
-        \U1F9FA "basket" \
-        \U1F9FB "roll of paper" \
-        \U1F9FC "soap" \
-        \U1F9FD "sponge" \
-        \U1F9FE "receipt" \
-        \U1F9FF "nazar amulet" \
-        \U1F9E1 "orange heart" \
-        \U1F5A4 "black heart" \
-        \U1F90D "white heart" \
-        \U1F90E "brown heart" \
-        \U1F495 "two hearts" \
-        \U1F49E "revolving hearts" \
-        \U1F493 "beating heart" \
-        \U1F497 "growing heart" \
-        \U1F496 "sparkling heart" \
-        \U1F498 "heart with arrow" \
-        \U1F49D "heart with ribbon" \
-        \U1F49F "heart decoration" \
-        \U1F6D0 "place of worship" \
-        \U1F194 "id button" \
-        \U1F251 "japanese acceptable button" \
-        \U1F4F4 "mobile phone off" \
-        \U1F4F3 "vibration mode" \
-        \U1F236 "japanese not free of charge button" \
-        \U1F21A "japanese free of charge button" \
-        \U1F238 "japanese application button" \
-        \U1F23A "japanese open for business button" \
-        \U1F237 "japanese monthly amount button" \
-        \U1F19A "japanese reserved button" \
-        \U1F4AE "white flower" \
-        \U1F250 "japanese bargain button" \
-        \U1F234 "japanese passing grade button" \
-        \U1F235 "japanese no vacancy button" \
-        \U1F239 "japanese discount button" \
-        \U1F232 "japanese prohibited button" \
-        \U1F170 "a button" \
-        \U1F171 "b button" \
-        \U1F18E "ab button" \
-        \U1F191 "cl button" \
-        \U1F17E "o button" \
-        \U1F198 "sos button" \
-        \U1F6D1 "stop sign" \
-        \U1F4DB "name badge" \
-        \U1F6AB "prohibited" \
-        \U1F4AF "hundred points" \
-        \U1F4A2 "anger symbol" \
-        \U1F6B7 "no pedestrians" \
-        \U1F6AF "no littering" \
-        \U1F6B3 "no bicycles" \
-        \U1F6B1 "non potable water" \
-        \U1F51E "no one under eighteen" \
-        \U1F4F5 "no mobile phones" \
-        \U1F6AD "no smoking" \
-        \U1F6B8 "children crossing" \
-        \U1F531 "trident emblem" \
+	\u263A  "smiling face" \
+	\u263B  "smiling face with open mouth" \
+	\u2620  "skull and crossbones" \
+	\u270B  "raised hand" \
+	\u270C  "victory hand" \
+	\u270A  "raised fist" \
+	\u270D  "writing hand" \
+	\u2615  "hot beverage" \
+	\u2708  "airplane" \
+	\u26F5  "sailboat" \
+	\u2693  "anchor" \
+	\u26FD  "fuel pump" \
+	\u26F2  "fountain" \
+	\u26F0  "mountain" \
+	\u26BD  "soccer ball" \
+	\u26BE  "baseball" \
+	\u26F3  "flag in hole" \
+	\u26F8  "ice skate" \
+	\u26F7  "skier" \
+	\u26F9  "person bouncing ball" \
+	\u265F  "chess pawn" \
+	\u231A  "watch" \
+	\u2328  "keyboard" \
+	\u260E  "telephone" \
+	\u23F1  "stopwatch" \
+	\u23F2  "timer clock" \
+	\u23F0  "alarm clock" \
+	\u231B  "hourglass done" \
+	\u23F3  "hourglass not done" \
+	\u2696  "balance scale" \
+	\u2692  "hammer and pick" \
+	\u26CF  "pick" \
+	\u2699  "gear" \
+	\u26D3  "chains" \
+	\u2694  "crossed swords" \
+	\u26B0  "coffin" \
+	\u26B1  "funeral urn" \
+	\u2764  "red heart" \
+	\u2763  "heart with arrow" \
+	\u262E  "peace symbol" \
+	\u271D  "latin cross" \
+	\u262A  "star and crescent" \
+	\u2626  "orthodox cross" \
+	\u271F  "star of david" \
+	\u262F  "yin yang" \
+	\u26CE  "ophiuchus" \
+	\u2648  "aries" \
+	\u2649  "taurus" \
+	\u264A  "gemini" \
+	\u264B  "cancer" \
+	\u264C  "leo" \
+	\u264D  "virgo" \
+	\u264E  "libra" \
+	\u264F  "scorpio" \
+	\u2650  "sagittarius" \
+	\u2651  "capricorn" \
+	\u2652  "aquarius" \
+	\u2653  "pisces" \
+	\u269B  "atom symbol" \
+	\u2622  "radioactive" \
+	\u2623  "biohazard" \
+	\u2734  "eight pointed star" \
+	\u3299  "japanese secret button" \
+	\u3297  "japanese congratulations button" \
+	\u274C  "cross mark" \
+	\u2B55  "hollow red circle" \
+	\u26D4  "no entry" \
+	\u2668  "hot springs" \
+	\u2757  "exclamation mark" \
+	\u2755  "white exclamation mark" \
+	\u2753  "question mark" \
+	\u2754  "white question mark" \
+	\u203C  "double exclamation mark" \
+	\u2049  "exclamation question mark" \
+	\u303D  "part alternation mark" \
+	\u26A0  "warning" \
+	\u269C  "fleur de lis" \
+	\U1F600 "grinning face" \
+	\U1F603 "grinning face with big eyes" \
+	\U1F604 "grinning face with smiling eyes" \
+	\U1F601 "beaming face with smiling eyes" \
+	\U1F606 "grinning squinting face" \
+	\U1F605 "grinning face with sweat" \
+	\U1F602 "face with tears of joy" \
+	\U1F923 "rolling on the floor laughing" \
+	\U1F642 "slightly smiling face" \
+	\U1F643 "upside down face" \
+	\U1F609 "winking face" \
+	\U1F60A "smiling face with smiling eyes" \
+	\U1F607 "smiling face with halo" \
+	\U1F970 "smiling face with hearts" \
+	\U1F60D "smiling face with heart eyes" \
+	\U1F929 "star struck" \
+	\U1F618 "face blowing a kiss" \
+	\U1F617 "kissing face" \
+	\U1F61A "kissing face with closed eyes" \
+	\U1F619 "kissing face with smiling eyes" \
+	\U1F972 "smiling face with tear" \
+	\U1F60B "face savoring food" \
+	\U1F61B "face with tongue" \
+	\U1F61C "winking face with tongue" \
+	\U1F92A "zany face" \
+	\U1F61D "squinting face with tongue" \
+	\U1F911 "money mouth face" \
+	\U1F917 "hugging face" \
+	\U1F92D "face with hand over mouth" \
+	\U1F92B "shushing face" \
+	\U1F914 "thinking face" \
+	\U1F910 "zipper mouth face" \
+	\U1F928 "face with raised eyebrow" \
+	\U1F610 "neutral face" \
+	\U1F611 "expressionless face" \
+	\U1F636 "face without mouth" \
+	\U1F60F "smirking face" \
+	\U1F612 "unamused face" \
+	\U1F644 "face with rolling eyes" \
+	\U1F62C "grimacing face" \
+	\U1F925 "lying face" \
+	\U1F60C "relieved face" \
+	\U1F614 "pensive face" \
+	\U1F62A "sleepy face" \
+	\U1F924 "drooling face" \
+	\U1F634 "sleeping face" \
+	\U1F637 "face with medical mask" \
+	\U1F912 "face with thermometer" \
+	\U1F915 "face with head bandage" \
+	\U1F922 "nauseated face" \
+	\U1F92E "face vomiting" \
+	\U1F927 "sneezing face" \
+	\U1F975 "hot face" \
+	\U1F976 "cold face" \
+	\U1F974 "woozy face" \
+	\U1F635 "face with crossed out eyes" \
+	\U1F92F "exploding head" \
+	\U1F920 "cowboy hat face" \
+	\U1F973 "partying face" \
+	\U1F978 "disguised face" \
+	\U1F60E "smiling face with sunglasses" \
+	\U1F913 "nerd face" \
+	\U1F9D0 "face with monocle" \
+	\U1F615 "confused face" \
+	\U1F61F "worried face" \
+	\U1F641 "slightly frowning face" \
+	\U1F62E "face with open mouth" \
+	\U1F62F "hushed face" \
+	\U1F632 "astonished face" \
+	\U1F633 "flushed face" \
+	\U1F97A "pleading face" \
+	\U1F626 "frowning face with open mouth" \
+	\U1F627 "anguished face" \
+	\U1F628 "fearful face" \
+	\U1F630 "anxious face with sweat" \
+	\U1F625 "sad but relieved face" \
+	\U1F622 "crying face" \
+	\U1F62D "loudly crying face" \
+	\U1F631 "face screaming in fear" \
+	\U1F616 "confounded face" \
+	\U1F623 "persevering face" \
+	\U1F61E "disappointed face" \
+	\U1F613 "downcast face with sweat" \
+	\U1F629 "weary face" \
+	\U1F62B "tired face" \
+	\U1F971 "yawning face" \
+	\U1F624 "face with steam from nose" \
+	\U1F621 "enraged face" \
+	\U1F620 "angry face" \
+	\U1F92C "face with symbols on mouth" \
+	\U1F608 "smiling face with horns" \
+	\U1F47F "angry face with horns" \
+	\U1F480 "skull" \
+	\U1F4A9 "pile of poo" \
+	\U1F921 "clown face" \
+	\U1F479 "ogre" \
+	\U1F47A "goblin" \
+	\U1F47B "ghost" \
+	\U1F47D "alien" \
+	\U1F47E "alien monster" \
+	\U1F916 "robot" \
+	\U1F63A "grinning cat" \
+	\U1F638 "grinning cat with smiling eyes" \
+	\U1F639 "cat with tears of joy" \
+	\U1F63B "smiling cat with heart eyes" \
+	\U1F63C "cat with wry smile" \
+	\U1F63D "kissing cat" \
+	\U1F640 "weary cat" \
+	\U1F63F "crying cat" \
+	\U1F63E "pouting cat" \
+	\U1F44B "waving hand" \
+	\U1F91A "raised back of hand" \
+	\U1F590 "hand with fingers splayed" \
+	\U1F596 "vulcan salute" \
+	\U1F44C "ok hand" \
+	\U1F90C "pinched fingers" \
+	\U1F90F "pinching hand" \
+	\U1F91E "crossed fingers" \
+	\U1F91F "love you gesture" \
+	\U1F918 "sign of the horns" \
+	\U1F919 "call me hand" \
+	\U1F448 "backhand index pointing left" \
+	\U1F449 "backhand index pointing right" \
+	\U1F446 "backhand index pointing up" \
+	\U1F595 "middle finger" \
+	\U1F447 "backhand index pointing down" \
+	\u261D "index pointing up" \
+	\U1F44A "oncoming fist" \
+	\U1F44D "thumbs up" \
+	\U1F44E "thumbs down" \
+	\U1F91B "left facing fist" \
+	\U1F91C "right facing fist" \
+	\U1F44F "clapping hands" \
+	\U1F64C "raising hands" \
+	\U1F450 "open hands" \
+	\U1F932 "palms up together" \
+	\U1F91D "handshake" \
+	\U1F64F "folded hands" \
+	\U1F485 "nail polish" \
+	\U1F933 "selfie" \
+	\U1F4AA "flexed biceps" \
+	\U1F9BE "mechanical arm" \
+	\U1F9BF "mechanical leg" \
+	\U1F9B5 "leg" \
+	\U1F9B6 "foot" \
+	\U1F442 "ear" \
+	\U1F9BB "ear with hearing aid" \
+	\U1F443 "nose" \
+	\U1F9E0 "brain" \
+	\U1F9B7 "tooth" \
+	\U1F9B4 "bone" \
+	\U1F445 "tongue" \
+	\U1F444 "mouth" \
+	\U1F476 "baby" \
+	\U1F9D2 "child" \
+	\U1F466 "boy" \
+	\U1F467 "girl" \
+	\U1F9D1 "person" \
+	\U1F471 "person blond hair" \
+	\U1F468 "man" \
+	\U1F9D4 "man beard" \
+	\U1F469 "woman" \
+	\U1F474 "old man" \
+	\U1F475 "old woman" \
+	\U1F64D "person frowning" \
+	\U1F64E "person pouting" \
+	\U1F645 "person gesturing no" \
+	\U1F646 "person gesturing ok" \
+	\U1F481 "person tipping hand" \
+	\U1F64B "person raising hand" \
+	\U1F9CF "deaf person" \
+	\U1F647 "person bowing" \
+	\U1F926 "person facepalming" \
+	\U1F937 "person shrugging" \
+	\U1F46E "police officer" \
+	\U1F575 "detective" \
+	\U1F482 "guard" \
+	\U1F977 "ninja" \
+	\U1F477 "construction worker" \
+	\U1F934 "prince" \
+	\U1F478 "princess" \
+	\U1F473 "person wearing turban" \
+	\U1F472 "person with skullcap" \
+	\U1F9D5 "person with headscarf" \
+	\U1F935 "person in tuxedo" \
+	\U1F470 "person with veil" \
+	\U1F930 "pregnant woman" \
+	\U1F931 "breast feeding" \
+	\U1F47C "baby angel" \
+	\U1F385 "santa claus" \
+	\U1F936 "mrs claus" \
+	\U1F9B8 "superhero" \
+	\U1F9B9 "supervillain" \
+	\U1F9D9 "mage" \
+	\U1F9DA "fairy" \
+	\U1F9DB "vampire" \
+	\U1F9DC "merperson" \
+	\U1F9DD "elf" \
+	\U1F9DE "genie" \
+	\U1F9DF "zombie" \
+	\U1F486 "person getting massage" \
+	\U1F487 "person getting haircut" \
+	\U1F6B6 "person walking" \
+	\U1F9CD "person standing" \
+	\U1F9CE "person kneeling" \
+	\U1F3C3 "person running" \
+	\U1F483 "woman dancing" \
+	\U1F57A "man dancing" \
+	\U1F574 "person in suit levitating" \
+	\U1F46F "people with bunny ears" \
+	\U1F9D6 "person in steamy room" \
+	\U1F9D7 "person climbing" \
+	\U1F93A "person fencing" \
+	\U1F3C7 "horse racing" \
+	\U1F9D8 "person in lotus position" \
+	\U1F46D "women holding hands" \
+	\U1F46B "woman and man holding hands" \
+	\U1F46C "men holding hands" \
+	\U1F48F "kiss" \
+	\U1F491 "couple with heart" \
+	\U1F46A "family" \
+	\U1F435 "monkey face" \
+	\U1F412 "monkey" \
+	\U1F98D "gorilla" \
+	\U1F9A7 "orangutan" \
+	\U1F436 "dog face" \
+	\U1F415 "dog" \
+	\U1F9AE "guide dog" \
+	\U1F429 "poodle" \
+	\U1F9A9 "service dog" \
+	\U1F43A "wolf" \
+	\U1F98A "fox" \
+	\U1F99D "raccoon" \
+	\U1F431 "cat face" \
+	\U1F408 "cat" \
+	\U1F981 "lion" \
+	\U1F42F "tiger face" \
+	\U1F405 "tiger" \
+	\U1F406 "leopard" \
+	\U1F434 "horse face" \
+	\U1F40E "horse" \
+	\U1F984 "unicorn" \
+	\U1F993 "zebra" \
+	\U1F98C "deer" \
+	\U1F42E "cow face" \
+	\U1F402 "ox" \
+	\U1F403 "water buffalo" \
+	\U1F404 "cow" \
+	\U1F437 "pig face" \
+	\U1F416 "pig" \
+	\U1F417 "boar" \
+	\U1F43D "pig nose" \
+	\U1F40F "ram" \
+	\U1F411 "ewe" \
+	\U1F410 "goat" \
+	\U1F42A "camel" \
+	\U1F42B "two hump camel" \
+	\U1F999 "llama" \
+	\U1F992 "giraffe" \
+	\U1F418 "elephant" \
+	\U1F98F "rhinoceros" \
+	\U1F99B "hippopotamus" \
+	\U1F42D "mouse face" \
+	\U1F439 "hamster" \
+	\U1F430 "rabbit face" \
+	\U1F407 "rabbit" \
+	\U1F99A "chipmunk" \
+	\U1F99C "hedgehog" \
+	\U1F438 "frog" \
+	\U1F40A "crocodile" \
+	\U1F422 "turtle" \
+	\U1F98E "lizard" \
+	\U1F40D "snake" \
+	\U1F432 "dragon face" \
+	\U1F409 "dragon" \
+	\U1F995 "sauropod" \
+	\U1F996 "t rex" \
+	\U1F433 "spouting whale" \
+	\U1F40B "whale" \
+	\U1F42C "dolphin" \
+	\U1F41F "fish" \
+	\U1F420 "tropical fish" \
+	\U1F421 "blowfish" \
+	\U1F988 "shark" \
+	\U1F419 "octopus" \
+	\U1F41A "spiral shell" \
+	\U1F980 "crab" \
+	\U1F99E "lobster" \
+	\U1F990 "shrimp" \
+	\U1F991 "squid" \
+	\U1F9AA "oyster" \
+	\U1F40C "snail" \
+	\U1F98B "butterfly" \
+	\U1F41B "bug" \
+	\U1F41C "ant" \
+	\U1F41D "honeybee" \
+	\U1F41E "lady beetle" \
+	\U1F997 "cricket" \
+	\U1F577 "spider" \
+	\U1F578 "spider web" \
+	\U1F982 "scorpion" \
+	\U1F99F "mosquito" \
+	\U1F9A0 "microbe" \
+	\U1F9A1 "badger" \
+	\U1F9A2 "swan" \
+	\U1F9A3 "mammoth" \
+	\U1F9A4 "dodo" \
+	\U1F9A5 "sloth" \
+	\U1F9A6 "otter" \
+	\U1F9A8 "skunk" \
+	\U1F9AB "beaver" \
+	\U1F9AC "bison" \
+	\U1F9AD "seal" \
+	\U1F43E "paw prints" \
+	\U1F347 "grapes" \
+	\U1F348 "melon" \
+	\U1F349 "watermelon" \
+	\U1F34A "tangerine" \
+	\U1F34B "lemon" \
+	\U1F34C "banana" \
+	\U1F34D "pineapple" \
+	\U1F96D "mango" \
+	\U1F34E "red apple" \
+	\U1F34F "green apple" \
+	\U1F350 "pear" \
+	\U1F351 "peach" \
+	\U1F352 "cherries" \
+	\U1F353 "strawberry" \
+	\U1F95D "kiwi fruit" \
+	\U1F345 "tomato" \
+	\U1F965 "coconut" \
+	\U1F951 "avocado" \
+	\U1F346 "eggplant" \
+	\U1F954 "potato" \
+	\U1F955 "carrot" \
+	\U1F33D "ear of corn" \
+	\U1F336 "hot pepper" \
+	\U1F33C "leafy green" \
+	\U1F96C "leafy green" \
+	\U1F966 "broccoli" \
+	\U1F9C4 "garlic" \
+	\U1F9C5 "onion" \
+	\U1F344 "mushroom" \
+	\U1F95C "peanuts" \
+	\U1F330 "chestnut" \
+	\U1F35E "bread" \
+	\U1F950 "croissant" \
+	\U1F956 "baguette bread" \
+	\U1F968 "pretzel" \
+	\U1F9C0 "cheese wedge" \
+	\U1F95A "egg" \
+	\U1F373 "cooking" \
+	\U1F9C8 "butter" \
+	\U1F95E "pancakes" \
+	\U1F9C7 "waffle" \
+	\U1F953 "bacon" \
+	\U1F969 "cut of meat" \
+	\U1F357 "poultry leg" \
+	\U1F356 "meat on bone" \
+	\U1F32D "hot dog" \
+	\U1F354 "hamburger" \
+	\U1F35F "french fries" \
+	\U1F355 "pizza" \
+	\U1F32E "taco" \
+	\U1F32F "burrito" \
+	\U1F959 "stuffed flatbread" \
+	\U1F9C6 "falafel" \
+	\U1F96A "sandwich" \
+	\U1F9C3 "beverage box" \
+	\U1F958 "shallow pan of food" \
+	\U1F35D "spaghetti" \
+	\U1F96B "canned food" \
+	\U1F35C "steaming bowl" \
+	\U1F372 "pot of food" \
+	\U1F963 "bowl with spoon" \
+	\U1F957 "green salad" \
+	\U1F37F "popcorn" \
+	\U1F9C2 "salt" \
+	\U1F96F "bagel" \
+	\U1F95F "dumpling" \
+	\U1F960 "fortune cookie" \
+	\U1F961 "takeout box" \
+	\U1F980 "crab" \
+	\U1F365 "fish cake with swirl" \
+	\U1F363 "sushi" \
+	\U1F364 "fried shrimp" \
+	\U1F359 "rice ball" \
+	\U1F35A "cooked rice" \
+	\U1F358 "rice cracker" \
+	\U1F362 "oden" \
+	\U1F361 "dango" \
+	\U1F367 "shaved ice" \
+	\U1F368 "ice cream" \
+	\U1F366 "soft ice cream" \
+	\U1F967 "pie" \
+	\U1F370 "shortcake" \
+	\U1F382 "birthday cake" \
+	\U1F9C1 "cupcake" \
+	\U1F36E "custard" \
+	\U1F36D "lollipop" \
+	\U1F36C "candy" \
+	\U1F36B "chocolate bar" \
+	\U1F37F "popcorn" \
+	\U1F369 "doughnut" \
+	\U1F36A "cookie" \
+	\U1F36F "honey pot" \
+	\U1F37C "baby bottle" \
+	\U1F375 "teacup without handle" \
+	\U1F376 "sake" \
+	\U1F37E "bottle with popping cork" \
+	\U1F377 "wine glass" \
+	\U1F378 "cocktail glass" \
+	\U1F379 "tropical drink" \
+	\U1F37A "beer mug" \
+	\U1F37B "clinking beer mugs" \
+	\U1F942 "clinking glasses" \
+	\U1F943 "tumbler glass" \
+	\U1F964 "cup with straw" \
+	\U1F9CB "bubble tea" \
+	\U1F9C3 "beverage box" \
+	\U1F697 "automobile" \
+	\U1F695 "taxi" \
+	\U1F699 "sport utility vehicle" \
+	\U1F68C "bus" \
+	\U1F68E "trolleybus" \
+	\U1F3CE "racing car" \
+	\U1F693 "police car" \
+	\U1F691 "ambulance" \
+	\U1F692 "fire engine" \
+	\U1F690 "minibus" \
+	\U1F69A "delivery truck" \
+	\U1F69B "articulated lorry" \
+	\U1F69C "tractor" \
+	\U1F6B2 "bicycle" \
+	\U1F6F4 "kick scooter" \
+	\U1F6F5 "motor scooter" \
+	\U1F6F9 "skateboard" \
+	\U1F68F "bus stop" \
+	\U1F6A8 "police car light" \
+	\U1F694 "oncoming police car" \
+	\U1F68D "oncoming bus" \
+	\U1F698 "oncoming automobile" \
+	\U1F68B "tram car" \
+	\U1F682 "locomotive" \
+	\U1F683 "railway car" \
+	\U1F684 "high speed train" \
+	\U1F685 "bullet train" \
+	\U1F686 "train" \
+	\U1F687 "metro" \
+	\U1F688 "light rail" \
+	\U1F689 "station" \
+	\U1F68A "tram" \
+	\U1F69D "monorail" \
+	\U1F69E "mountain railway" \
+	\U1F6EB "airplane departure" \
+	\U1F6EC "airplane arrival" \
+	\U1F6E9 "small airplane" \
+	\U1F4BA "seat" \
+	\U1F680 "rocket" \
+	\U1F6F8 "flying saucer" \
+	\U1F6F6 "canoe" \
+	\U1F6A4 "speedboat" \
+	\U1F6F3 "passenger ship" \
+	\u26F4 "ferry" \
+	\U1F6E5 "motor boat" \
+	\U1F6A2 "ship" \
+	\U1F6A7 "construction" \
+	\U1F6A6 "vertical traffic light" \
+	\U1F6A5 "horizontal traffic light" \
+	\U1F5FA "world map" \
+	\U1F5FF "moai" \
+	\U1F3D4 "snow capped mountain" \
+	\U1F30B "volcano" \
+	\U1F5FB "mount fuji" \
+	\U1F3D5 "camping" \
+	\U1F3D6 "beach with umbrella" \
+	\U1F3DC "desert" \
+	\U1F3DD "desert island" \
+	\U1F3DE "national park" \
+	\U1F3DF "stadium" \
+	\U1F3E0 "house" \
+	\U1F3E1 "house with garden" \
+	\U1F3D8 "houses" \
+	\U1F3DA "derelict house" \
+	\U1F3D7 "building construction" \
+	\U1F3ED "factory" \
+	\U1F3E2 "office building" \
+	\U1F3EC "department store" \
+	\U1F3E3 "japanese post office" \
+	\U1F3E4 "european post office" \
+	\U1F3E5 "hospital" \
+	\U1F3E6 "bank" \
+	\U1F3E8 "hotel" \
+	\U1F3EA "convenience store" \
+	\U1F3EB "school" \
+	\U1F3E9 "love hotel" \
+	\U1F492 "wedding" \
+	\U1F3EF "japanese castle" \
+	\U1F3F0 "castle" \
+	\U1F3A1 "ferris wheel" \
+	\U1F3A2 "roller coaster" \
+	\U1F3A0 "carousel horse" \
+	\u26F2 "fountain" \
+	\u26F0 "mountain" \
+	\U1F3C0 "basketball" \
+	\U1F3C8 "american football" \
+	\U1F3BE "tennis" \
+	\U1F94E "softball" \
+	\U1F3D0 "volleyball" \
+	\U1F3C9 "rugby football" \
+	\U1F94F "flying disc" \
+	\U1F3B1 "pool 8 ball" \
+	\U1F3D3 "ping pong" \
+	\U1F3F8 "badminton" \
+	\U1F3D2 "ice hockey" \
+	\U1F3D1 "field hockey" \
+	\U1F94D "lacrosse" \
+	\U1F3CF "cricket game" \
+	\U1F94A "boxing glove" \
+	\U1F94B "martial arts uniform" \
+	\U1F945 "goal net" \
+	\U1F3A3 "fishing pole" \
+	\U1F93F "diving mask" \
+	\U1F3BD "running shirt" \
+	\U1F3BF "skis" \
+	\U1F6F7 "sled" \
+	\U1F94C "curling stone" \
+	\U1F3C2 "snowboarder" \
+	\U1F3CB "person lifting weights" \
+	\U1F938 "person cartwheeling" \
+	\U1F93C "people wrestling" \
+	\U1F93D "person playing water polo" \
+	\U1F93E "person playing handball" \
+	\U1F939 "person juggling" \
+	\U1F3CC "person golfing" \
+	\U1F3C4 "person surfing" \
+	\U1F6A3 "person rowing boat" \
+	\U1F3CA "person swimming" \
+	\U1F3C6 "trophy" \
+	\U1F947 "first place medal" \
+	\U1F948 "second place medal" \
+	\U1F949 "third place medal" \
+	\U1F3C5 "sports medal" \
+	\U1F396 "military medal" \
+	\U1F3F5 "rosette" \
+	\U1F397 "reminder ribbon" \
+	\U1F39F "admission tickets" \
+	\U1F3AB "ticket" \
+	\U1F3AA "circus tent" \
+	\U1F3AD "performing arts" \
+	\U1F3A8 "artist palette" \
+	\U1F3AC "clapper board" \
+	\U1F3A4 "microphone" \
+	\U1F3A7 "headphone" \
+	\U1F3BC "musical score" \
+	\U1F3B9 "musical keyboard" \
+	\U1F941 "drum" \
+	\U1F3B7 "saxophone" \
+	\U1F3BA "trumpet" \
+	\U1F3B8 "guitar" \
+	\U1F3BB "violin" \
+	\U1F3B2 "game die" \
+	\U1F3AF "direct hit" \
+	\U1F3B3 "bowling" \
+	\U1F3AE "video game" \
+	\U1F3B0 "slot machine" \
+	\U1F9E9 "puzzle piece" \
+	\U1F4F1 "mobile phone" \
+	\U1F4F2 "mobile phone with arrow" \
+	\U1F4BB "laptop" \
+	\U1F5A5 "desktop computer" \
+	\U1F5A8 "printer" \
+	\U1F5B1 "computer mouse" \
+	\U1F5B2 "trackball" \
+	\U1F579 "joystick" \
+	\U1F5DC "clamp" \
+	\U1F4BD "computer disk" \
+	\U1F4BE "floppy disk" \
+	\U1F4BF "optical disk" \
+	\U1F4C0 "dvd" \
+	\U1F4FC "videocassette" \
+	\U1F4F7 "camera" \
+	\U1F4F8 "camera with flash" \
+	\U1F4F9 "video camera" \
+	\U1F3A5 "movie camera" \
+	\U1F4FD "film projector" \
+	\U1F39E "film frames" \
+	\U1F4DE "telephone receiver" \
+	\U1F4DF "pager" \
+	\U1F4E0 "fax machine" \
+	\U1F4FA "television" \
+	\U1F4FB "radio" \
+	\U1F399 "studio microphone" \
+	\U1F39A "level slider" \
+	\U1F39B "control knobs" \
+	\U1F570 "mantelpiece clock" \
+	\U1F4E1 "satellite antenna" \
+	\U1F50B "battery" \
+	\U1F50C "electric plug" \
+	\U1F4A1 "light bulb" \
+	\U1F526 "flashlight" \
+	\U1F56F "candle" \
+	\U1F6E2 "oil drum" \
+	\U1F4B8 "money with wings" \
+	\U1F4B5 "dollar banknote" \
+	\U1F4B4 "yen banknote" \
+	\U1F4B6 "euro banknote" \
+	\U1F4B7 "pound banknote" \
+	\U1F4B0 "money bag" \
+	\U1F4B3 "credit card" \
+	\U1F48E "gem stone" \
+	\U1F9F0 "toolbox" \
+	\U1F527 "wrench" \
+	\U1F528 "hammer" \
+	\U1F6E0 "hammer and wrench" \
+	\U1F529 "nut and bolt" \
+	\U1F9F1 "brick" \
+	\U1F4A3 "bomb" \
+	\U1F52A "kitchen knife" \
+	\U1F5E1 "dagger" \
+	\U1F6E1 "shield" \
+	\U1F6AC "cigarette" \
+	\U1F52E "crystal ball" \
+	\U1F52D "telescope" \
+	\U1F52C "microscope" \
+	\U1F573 "hole" \
+	\U1F9F2 "magnet" \
+	\U1F9F3 "lotion bottle" \
+	\U1F6BD "toilet" \
+	\U1F9F4 "lotion bottle" \
+	\U1F9F5 "thread" \
+	\U1F9F6 "yarn" \
+	\U1F9F7 "safety pin" \
+	\U1F9F8 "teddy bear" \
+	\U1F9F9 "broom" \
+	\U1F9FA "basket" \
+	\U1F9FB "roll of paper" \
+	\U1F9FC "soap" \
+	\U1F9FD "sponge" \
+	\U1F9FE "receipt" \
+	\U1F9FF "nazar amulet" \
+	\U1F9E1 "orange heart" \
+	\U1F5A4 "black heart" \
+	\U1F90D "white heart" \
+	\U1F90E "brown heart" \
+	\U1F495 "two hearts" \
+	\U1F49E "revolving hearts" \
+	\U1F493 "beating heart" \
+	\U1F497 "growing heart" \
+	\U1F496 "sparkling heart" \
+	\U1F498 "heart with arrow" \
+	\U1F49D "heart with ribbon" \
+	\U1F49F "heart decoration" \
+	\U1F6D0 "place of worship" \
+	\U1F194 "id button" \
+	\U1F251 "japanese acceptable button" \
+	\U1F4F4 "mobile phone off" \
+	\U1F4F3 "vibration mode" \
+	\U1F236 "japanese not free of charge button" \
+	\U1F21A "japanese free of charge button" \
+	\U1F238 "japanese application button" \
+	\U1F23A "japanese open for business button" \
+	\U1F237 "japanese monthly amount button" \
+	\U1F19A "japanese reserved button" \
+	\U1F4AE "white flower" \
+	\U1F250 "japanese bargain button" \
+	\U1F234 "japanese passing grade button" \
+	\U1F235 "japanese no vacancy button" \
+	\U1F239 "japanese discount button" \
+	\U1F232 "japanese prohibited button" \
+	\U1F170 "a button" \
+	\U1F171 "b button" \
+	\U1F18E "ab button" \
+	\U1F191 "cl button" \
+	\U1F17E "o button" \
+	\U1F198 "sos button" \
+	\U1F6D1 "stop sign" \
+	\U1F4DB "name badge" \
+	\U1F6AB "prohibited" \
+	\U1F4AF "hundred points" \
+	\U1F4A2 "anger symbol" \
+	\U1F6B7 "no pedestrians" \
+	\U1F6AF "no littering" \
+	\U1F6B3 "no bicycles" \
+	\U1F6B1 "non potable water" \
+	\U1F51E "no one under eighteen" \
+	\U1F4F5 "no mobile phones" \
+	\U1F6AD "no smoking" \
+	\U1F6B8 "children crossing" \
+	\U1F531 "trident emblem" \
     ]
 }
 
@@ -985,12 +985,12 @@ proc ::tk::emoji::EnsureFonts {} {
     # Prefer color emoji fonts; fall back to monochrome ones.
     set candidates {
 		{Noto Color Emoji}
-        {Apple Color Emoji}
-        {Segoe UI Emoji}
-        {Twemoji}
-        {JoyPixels}
-        {EmojiOne Color}
-        {Noto Emoji}
+	{Apple Color Emoji}
+	{Segoe UI Emoji}
+	{Twemoji}
+	{JoyPixels}
+	{EmojiOne Color}
+	{Noto Emoji}
 		{Noto Sans Symbols2}
 		{Noto Sans Symbols}
 		{Symbola}
@@ -1015,12 +1015,12 @@ proc ::tk::emoji::ShortName {e} {
     variable names
     set key [string map {"\uFE0F" ""} $e]
     if {[dict exists $names $key]} {
-        return [dict get $names $key]
+	return [dict get $names $key]
     }
     set out {}
     foreach cp [split $key ""] {
-        scan $cp %c n
-        lappend out [format "U+%04X" $n]
+	scan $cp %c n
+	lappend out [format "U+%04X" $n]
     }
     return [join $out " "]
 }
@@ -1091,39 +1091,39 @@ proc ::tk::emoji::Build {} {
     variable icons
     frame $f.bar -background $barbg
     foreach cat $categories {
-        set key [string tolower $cat]
-        set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
-        # Classic radiobutton styled as a flat toggle button: no indicator
-        # dot, gentle padding, and a highlighted look when selected.
-        # -takefocus 1 and a visible focus highlight so the button that
-        # currently owns the keyboard focus is obvious.
-        radiobutton $f.bar.$key \
-            -text "$ico $cat" \
-            -variable ::tk::emoji::S(cat) -value $cat \
-            -command [namespace code SetCategory] \
-            -indicatoron 0 \
-            -relief flat -overrelief raised \
-            -offrelief flat \
-            -selectcolor $selbg \
-            -foreground $barfg \
-            -activeforeground $barfg \
-            -background $barbg \
-            -activebackground "#e0e0e0" \
-            -highlightthickness 1 \
-            -highlightcolor $selbg \
-            -highlightbackground $barbg \
-            -borderwidth 1 \
-            -padx 6 -pady 2 \
-            -takefocus 1 \
-            -font {"sans-serif" 9}
-        pack $f.bar.$key -side left -padx 1 -pady 1
+	set key [string tolower $cat]
+	set ico [expr {[dict exists $icons $cat] ? [dict get $icons $cat] : ""}]
+	# Classic radiobutton styled as a flat toggle button: no indicator
+	# dot, gentle padding, and a highlighted look when selected.
+	# -takefocus 1 and a visible focus highlight so the button that
+	# currently owns the keyboard focus is obvious.
+	radiobutton $f.bar.$key \
+	    -text "$ico $cat" \
+	    -variable ::tk::emoji::S(cat) -value $cat \
+	    -command [namespace code SetCategory] \
+	    -indicatoron 0 \
+	    -relief flat -overrelief raised \
+	    -offrelief flat \
+	    -selectcolor $selbg \
+	    -foreground $barfg \
+	    -activeforeground $barfg \
+	    -background $barbg \
+	    -activebackground "#e0e0e0" \
+	    -highlightthickness 1 \
+	    -highlightcolor $selbg \
+	    -highlightbackground $barbg \
+	    -borderwidth 1 \
+	    -padx 6 -pady 2 \
+	    -takefocus 1 \
+	    -font {"sans-serif" 9}
+	pack $f.bar.$key -side left -padx 1 -pady 1
     }
     # Make selected state readable: white text on the select color.
     # (Classic radiobutton uses -foreground for the selected label when
     # -indicatoron 0 and -selectcolor is set, so we re-tint on select.)
     foreach cat $categories {
-        set key [string tolower $cat]
-        $f.bar.$key configure -selectcolor $selbg
+	set key [string tolower $cat]
+	$f.bar.$key configure -selectcolor $selbg
     }
 
     # Remember the bar and its button names so we can drive Tab
@@ -1144,18 +1144,18 @@ proc ::tk::emoji::Build {} {
     # Override the generic "canvas is not accessible" help text so screen
     # readers describe the picker and its navigation keys.
     if {[llength [info commands ::tk::accessible::set_acc_help]]} {
-        catch {
-            ::tk::accessible::set_acc_name $S(canvas) "Emoji picker"
-            ::tk::accessible::set_acc_role $S(canvas) "List"
-            ::tk::accessible::set_acc_help $S(canvas) \
-                "Emoji picker. Use arrow keys to move, Return to insert, Escape to close."
-        }
+	catch {
+	    ::tk::accessible::set_acc_name $S(canvas) "Emoji picker"
+	    ::tk::accessible::set_acc_role $S(canvas) "List"
+	    ::tk::accessible::set_acc_help $S(canvas) \
+		"Emoji picker. Use arrow keys to move, Return to insert, Escape to close."
+	}
     }
 
     ttk::frame $f.pv
     ttk::label $f.pv.big -font $S(font) -width 3 -anchor center
     ttk::label $f.pv.name -textvariable ::tk::emoji::S(cat) -anchor w \
-        -font {"sans-serif" 10}
+	-font {"sans-serif" 10}
     pack $f.pv.big -side left
     pack $f.pv.name -side left -padx 4
     set S(prevBig) $f.pv.big
@@ -1170,9 +1170,9 @@ proc ::tk::emoji::Build {} {
     # focus ourselves instead of relying on Tk's default traversal (which
     # can skip these toolbutton-style radiobuttons or recurse into frames).
     foreach key $S(barKeys) {
-        set w $f.bar.$key
-        bind $w <Tab>          {::tk::emoji::CycleBar  1; break}
-        bind $w <ISO_Left_Tab> {::tk::emoji::CycleBar -1; break}
+	set w $f.bar.$key
+	bind $w <Tab>	  {::tk::emoji::CycleBar  1; break}
+	bind $w <ISO_Left_Tab> {::tk::emoji::CycleBar -1; break}
     }
 
     set c $S(canvas)
@@ -1194,7 +1194,7 @@ proc ::tk::emoji::Build {} {
     bind $c <Shift-Return> [namespace code {PickCurrent 1}]
     # Tab out of the canvas moves focus into the category bar. The break
     # suppresses Tk's default Tab handling so only our handler runs.
-    bind $c <Tab>          {::tk::emoji::CycleBar  1; break}
+    bind $c <Tab>	  {::tk::emoji::CycleBar  1; break}
     bind $c <ISO_Left_Tab> {::tk::emoji::CycleBar -1; break}
 }
 
@@ -1209,19 +1209,19 @@ proc ::tk::emoji::CycleBar {dir} {
     set cur -1
     set fw [focus]
     for {set i 0} {$i < $n} {incr i} {
-        if {$fw eq "$S(bar).[lindex $keys $i]"} {set cur $i; break}
+	if {$fw eq "$S(bar).[lindex $keys $i]"} {set cur $i; break}
     }
     if {$cur < 0} {
-        # Not on a bar button: enter the bar from the appropriate end.
-        set idx [expr {$dir < 0 ? $n-1 : 0}]
+	# Not on a bar button: enter the bar from the appropriate end.
+	set idx [expr {$dir < 0 ? $n-1 : 0}]
     } else {
-        set idx [expr {$cur + $dir}]
+	set idx [expr {$cur + $dir}]
     }
     if {$idx < 0 || $idx >= $n} {
-        # Wrap to the canvas grid.
-        focus -force $S(canvas)
-        if {$S(cur) < 0 && [llength $S(items)] > 0} {SetCur 0}
-        return
+	# Wrap to the canvas grid.
+	focus -force $S(canvas)
+	if {$S(cur) < 0 && [llength $S(items)] > 0} {SetCur 0}
+	return
     }
     set w $S(bar).[lindex $keys $idx]
     if {[winfo exists $w]} {focus -force $w}

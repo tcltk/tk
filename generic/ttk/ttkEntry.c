@@ -1475,7 +1475,7 @@ EntryIndex(
 	    goto badIndex;
 	}
     } else if (string[0] == '@') {
-	int roundUp = 0;
+	bool roundUp = false;
 	int maxWidth = EntryWidth(entryPtr);
 	int x;
 
@@ -1484,7 +1484,7 @@ EntryIndex(
 	}
 	if (x > maxWidth) {
 	    x = maxWidth;
-	    roundUp = 1;
+	    roundUp = true;
 	}
 	*indexPtr = Tk_PointToChar(entryPtr->entry.textLayout,
 		x - entryPtr->entry.layoutX, 0);
