@@ -20,6 +20,7 @@
 #include <mqueue.h>
 #include <pthread.h>
 #include <pwd.h>
+#include <dirent.h>
 
 /* The realtime signal that we use with mq_notify */
 #define TK_MQUEUE_SIGNAL (SIGRTMIN + 0)
@@ -256,6 +257,7 @@ enum requestParts {
  */
 
 static int		SendInit(Tcl_Interp *interp);
+static void		RemoveStaleQueues(void);
 static NameRegistry*	RegOpen(Tcl_Interp *interp, TkDisplay *dispPtr);
 static void		RegClose(NameRegistry *regPtr);
 static void		RegAddName(NameRegistry *regPtr, const char *name);
@@ -301,6 +303,69 @@ static Tcl_CmdDeleteProc DeleteProc;
 
 #define TK_MQ_MSGSIZE 8192
 #define TK_MQ_MAXMSG 10
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemoveStaleQueues --
+ *
+ *	Remove the request queues of processes which no longer run (killed
+ *	or crashed, so that TkSendCleanup was not called).  Each queue counts
+ *	against the per-user limit of message queue memory (RLIMIT_MSGQUEUE),
+ *	so after a few such processes no new queue could be created and send
+ *	would not work at all.  The queues are found in /dev/mqueue, where
+ *	Linux mounts the message queue file system; elsewhere nothing is done.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Unlinks queues.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RemoveStaleQueues(void)
+{
+    DIR *dir = opendir("/dev/mqueue");
+    struct dirent *entry;
+
+    if (dir == NULL) {
+	return;
+    }
+    while ((entry = readdir(dir)) != NULL) {
+	char qname[NAME_MAX];
+	char *end;
+	long pid;
+
+	/*
+	 * The request queue "tksend_<pid>" and the reply queues
+	 * "tkreply_<pid>_<serial>" of a process.
+	 */
+	const char *digits;
+	int isReply = 0;
+
+	if (strncmp(entry->d_name, "tksend_", 7) == 0) {
+	    digits = entry->d_name + 7;
+	} else if (strncmp(entry->d_name, "tkreply_", 8) == 0) {
+	    digits = entry->d_name + 8;
+	    isReply = 1;
+	} else {
+	    continue;
+	}
+	pid = strtol(digits, &end, 10);
+	if (end == digits || pid <= 0
+		|| (isReply ? *end != '_' : *end != '\0')) {
+	    continue;
+	}
+	if (kill((pid_t)pid, 0) == -1 && errno == ESRCH) {
+	    snprintf(qname, sizeof(qname), "/%s", entry->d_name);
+	    mq_unlink(qname);
+	}
+    }
+    closedir(dir);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -372,6 +437,7 @@ SendInit(Tcl_Interp *interp)
 
 	appNameRegistryPath = RegistryPath();
 	Tcl_InitHashTable(&dynamicData.nameToTid, TCL_STRING_KEYS);
+	RemoveStaleQueues();
 	SET_QNAME(staticData.qname, getpid());
 	struct mq_attr attr = {
 	    .mq_maxmsg = TK_MQ_MAXMSG,
@@ -456,9 +522,15 @@ TkSendCleanup(
     (void) dispPtr;  /* Specified in stub table. */
     if (appNameRegistryPath) {
         Tcl_Free(appNameRegistryPath);
+	appNameRegistryPath = NULL;
     }
-    mq_close(staticData.qd);
-    mq_unlink(staticData.qname);
+
+    /* Only if the queue was created (by SendInit), and only once. */
+    if (staticData.qname[0] != '\0') {
+	mq_close(staticData.qd);
+	mq_unlink(staticData.qname);
+	staticData.qname[0] = '\0';
+    }
 }
 
 
@@ -1713,7 +1785,7 @@ Tk_SendObjCmd(
 	     */
 	    char qname[NAME_MAX];
 	    snprintf(qname, NAME_MAX, "/tkreply_%s", replyName);
-	    if (mq_unlink(qname)) {
+	    if (mq_unlink(qname) && errno != ENOENT) {
 		perror("mq_unlink");
 	    }
 	}
