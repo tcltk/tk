@@ -244,6 +244,7 @@ static void TkpDisplayMenu(void *clientData);
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
 static void MenuInvokeTearoff(TkMenu *menuPtr);
+static void DisplayTearoffMenu(TkMenu *menuPtr);
 static void MenuMouseLeave(TkMenu *menuPtr);
 
 /*
@@ -818,6 +819,12 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     int j;
     int lastColumnBreak = 0;
     TkMenuEntry *mePtr;
+    /*
+     * Popups keep a minimum content width; a torn-off menu is a normal
+     * toplevel and must shrink to its widest entry.
+     */
+    int minContentWidth = (menuPtr->menuType == TEAROFF_MENU)
+        ? 0 : MENU_MIN_CONTENT_WIDTH;
     if (menuPtr->tkwin == NULL) {
         return;
     }
@@ -842,9 +849,8 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         }
         if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) {
             if (i != 0) {
-                if (indicatorSpace + labelWidth + accelWidth
-                        < MENU_MIN_CONTENT_WIDTH) {
-                    labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace
+                if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
+                    labelWidth = minContentWidth - indicatorSpace
                         - accelWidth;
                 }
                 for (j = lastColumnBreak; j < i; j++) {
@@ -888,8 +894,8 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         mePtr->y = y;
         y += mePtr->height;
     }
-    if (indicatorSpace + labelWidth + accelWidth < MENU_MIN_CONTENT_WIDTH) {
-        labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace - accelWidth;
+    if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
+        labelWidth = minContentWidth - indicatorSpace - accelWidth;
     }
     for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
         menuPtr->entries[j]->indicatorSpace = indicatorSpace;
@@ -4109,6 +4115,67 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
 }
 
 /*
+ *---------------------------------------------------------------------------
+ *
+ * DisplayTearoffMenu --
+ *
+ *     Redraw a torn-off menu. A tear-off is an ordinary toplevel with no
+ *     popup subsurface and is not in menuStack[], so TkpDisplayMenu() has
+ *     no popup to hand to MenuDrawIntoPopup(); draw each entry straight
+ *     into the toplevel instead (TkpDrawMenuEntry() has a TEAROFF_MENU
+ *     branch for exactly this). Without this, hover/active changes in a
+ *     torn-off menu never repaint.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Draws into the tear-off's window.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+DisplayTearoffMenu(
+    TkMenu *menuPtr)
+{
+    Tk_Font menuFont;
+    Tk_FontMetrics menuMetrics;
+    Drawable d;
+    int i;
+
+    if (!Tk_IsMapped(menuPtr->tkwin)) {
+        return;
+    }
+    if (menuPtr->menuFlags & RESIZE_PENDING) {
+        TkRecomputeMenu(menuPtr);
+    }
+
+    d = Tk_WindowId(menuPtr->tkwin);
+    menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
+    Tk_GetFontMetrics(menuFont, &menuMetrics);
+
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        Tk_Font entryFont = menuFont;
+        Tk_FontMetrics entryMetrics;
+        const Tk_FontMetrics *fmPtr = &menuMetrics;
+
+        if (!mePtr) {
+            continue;
+        }
+        if (mePtr->fontPtr != NULL) {
+            entryFont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr);
+            Tk_GetFontMetrics(entryFont, &entryMetrics);
+            fmPtr = &entryMetrics;
+        }
+        TkpDrawMenuEntry(mePtr, d, entryFont, fmPtr,
+                mePtr->x, mePtr->y, mePtr->width, mePtr->height,
+                DRAW_MENU_ENTRY_ARROW);
+    }
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * TkpDisplayMenu --
@@ -4168,6 +4235,10 @@ TkpDisplayMenu(
     }
 
     if (!popup) {
+        if (menuPtr->menuType == TEAROFF_MENU) {
+            DisplayTearoffMenu(menuPtr);
+            return;
+        }
         DEBUG_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
         return;
     }
@@ -4430,7 +4501,18 @@ TkpPostTearoffMenu(
         y = 0;
     }
 
-    Tk_MoveWindow(menuPtr->tkwin, x, y);
+    /*
+     * Wayland clients cannot position toplevels, and this backend treats
+     * every toplevel as sitting at (0,0) in root coordinates (see
+     * TkWaylandCursorPosCallback: pointer coords are fed to
+     * Tk_UpdatePointer/Tk_CoordsToWindow as root coords). Moving the
+     * tear-off to (x,y) would make Tk subtract that offset from every
+     * pointer position, so hit-testing and %y for the Menu bindings would
+     * be off by (x,y) and most entries could never be reached.
+     */
+    (void)x;
+    (void)y;
+    Tk_MoveWindow(menuPtr->tkwin, 0, 0);
     Tk_ResizeWindow(menuPtr->tkwin, reqW, reqH);
     Tk_MapWindow(menuPtr->tkwin);
 
