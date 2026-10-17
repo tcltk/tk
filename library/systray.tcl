@@ -115,7 +115,12 @@ namespace eval ::tk::systray {
     # --- Wayland tray menu ----------------------------------------------
     # Wayland has no usable popup-menu positioning from a system tray
     # callback, so while a -button1/-button3 command runs, tk_popup is
-    # redirected to turn the menu into a standalone tearoff menu instead.
+    # redirected to show the menu as a standalone tearoff menu instead.
+
+    # The torn-off menu which shows the tray menu, and the [after] which
+    # destroys it after it has been closed.
+    variable _traymenu ._traymenu
+    variable _traymenu_destroy ""
 
     # Wraps a configured -button1/-button3 command. On Wayland, tk_popup is
     # swapped for the tearoff version only for the duration of the command.
@@ -136,14 +141,61 @@ namespace eval ::tk::systray {
 	}
     }
 
-    # Configures the menu with -tearoff 1 and tears it off at x y as a
-    # standalone menu window.
+    # Shows a copy of the menu as a torn-off menu at x y, replacing the
+    # previous one. It is a copy rather than a clone, so that the menu of
+    # the application is not changed and choosing an entry of the copy
+    # can close it, as a popup menu would be.
     proc _tearoff_menu {menu x y} {
+	variable _traymenu
 	if {![winfo exists $menu]} {
 	    return
 	}
-	$menu configure -tearoff 1
-	::tk::TearOffMenu $menu $x $y
+	_destroy_traymenu
+	set w $_traymenu
+	::tk::MenuDup $menu $w tearoff
+	$w configure -tearoff 0
+	set last [$w index last]
+	for {set i 0} {$i <= $last} {incr i} {
+	    if {[$w type $i] in {command checkbutton radiobutton}} {
+		$w entryconfigure $i -command [list \
+			::tk::systray::_traymenu_invoke [$w entrycget $i -command]]
+	    }
+	}
+	if {[$menu cget -title] ne ""} {
+	    wm title $w [$menu cget -title]
+	} else {
+	    wm title $w [tk appname]
+	}
+	bind $w <Escape> ::tk::systray::_dismiss_traymenu
+	$w post $x $y
+    }
+
+    # Runs the command of the chosen entry after closing the tray menu.
+    proc _traymenu_invoke {cmd} {
+	_dismiss_traymenu
+	uplevel #0 $cmd
+    }
+
+    # Closes the tray menu. It is withdrawn at once, but destroyed later,
+    # because this is called while one of its entries is invoked.
+    proc _dismiss_traymenu {} {
+	variable _traymenu
+	variable _traymenu_destroy
+	if {[winfo exists $_traymenu] && $_traymenu_destroy eq ""} {
+	    wm withdraw $_traymenu
+	    set _traymenu_destroy [after idle ::tk::systray::_destroy_traymenu]
+	}
+    }
+
+    # Destroys the tray menu.
+    proc _destroy_traymenu {} {
+	variable _traymenu
+	variable _traymenu_destroy
+	after cancel $_traymenu_destroy
+	set _traymenu_destroy ""
+	if {[winfo exists $_traymenu]} {
+	    ::destroy $_traymenu
+	}
     }
     # ----------------------------------------------------------------------
 
