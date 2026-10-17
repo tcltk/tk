@@ -4144,6 +4144,7 @@ DisplayTearoffMenu(
     Drawable d;
     int i;
 
+    DEBUG_LOG("DisplayTearoffMenu called for %s", Tk_PathName(menuPtr->tkwin));
     if (!Tk_IsMapped(menuPtr->tkwin)) {
         return;
     }
@@ -4154,6 +4155,87 @@ DisplayTearoffMenu(
     d = Tk_WindowId(menuPtr->tkwin);
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     Tk_GetFontMetrics(menuFont, &menuMetrics);
+
+    /*
+     * The window can be wider than the menu's natural width (the window
+     * manager/decoration enforces a minimum, or the user resizes it).
+     * Stretch every entry of a single-column tear-off to fill the window
+     * so there is no dead space. The target is computed from the window
+     * width, not added to the current width, so repeated redraws are
+     * idempotent; TkRecomputeMenu() resets entries to natural width.
+     */
+    {
+        int borderWidth = 0, multiColumn = 0;
+        int winW = Tk_Width(menuPtr->tkwin);
+        GLFWwindow *tgw = TkWaylandGetGLFWwindow((TkWindow *)menuPtr->tkwin);
+
+        /*
+         * Trust the real GLFW window width if it is larger than what Tk
+         * believes: the compositor/decoration can force a wider window
+         * and Tk's idea of the size only catches up via the framebuffer
+         * callback.
+         */
+        if (tgw) {
+            int gw = 0, gh = 0;
+
+            glfwGetWindowSize(tgw, &gw, &gh);
+            if (gw > winW) {
+                winW = gw;
+            }
+        }
+        DEBUG_LOG("DisplayTearoffMenu: tkWidth=%d effectiveWidth=%d total=%d",
+                Tk_Width(menuPtr->tkwin), winW, menuPtr->totalWidth);
+
+        int activeBorderWidth = 0;
+        Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+                &borderWidth);
+        Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+                menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+        for (i = 1; i < menuPtr->numEntries; i++) {
+            if (menuPtr->entries[i]
+                    && (menuPtr->entries[i]->entryFlags & ENTRY_LAST_COLUMN)) {
+                multiColumn = 1;
+                break;
+            }
+        }
+        if (!multiColumn) {
+            for (i = 0; i < menuPtr->numEntries; i++) {
+                TkMenuEntry *me = menuPtr->entries[i];
+                int target;
+
+                if (!me) {
+                    continue;
+                }
+                /*
+                 * Force every entry to span the full toplevel width so the
+                 * background fills without a beige dead zone.  For normal
+                 * entries we keep indicator/accel space intact and grow or
+                 * shrink only the label column.  For separators/tearoff
+                 * entries the whole width is the entry.
+                 */
+                target = winW - me->x - borderWidth;
+                if (target < 1) {
+                    target = winW > 0 ? winW : me->width;
+                }
+                if (me->type == SEPARATOR_ENTRY
+                        || me->type == TEAROFF_ENTRY) {
+                    me->width = target;
+                } else {
+                    int accelWidth = me->width - me->indicatorSpace
+                        - me->labelWidth - 2 * activeBorderWidth;
+                    if (accelWidth < 0) {
+                        accelWidth = 0;
+                    }
+                    me->width = target;
+                    me->labelWidth = target - me->indicatorSpace
+                        - accelWidth - 2 * activeBorderWidth;
+                    if (me->labelWidth < 0) {
+                        me->labelWidth = 0;
+                    }
+                }
+            }
+        }
+    }
 
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
@@ -4515,6 +4597,30 @@ TkpPostTearoffMenu(
     Tk_MoveWindow(menuPtr->tkwin, 0, 0);
     Tk_ResizeWindow(menuPtr->tkwin, reqW, reqH);
     Tk_MapWindow(menuPtr->tkwin);
+
+    /*
+     * The GLFW window is the size authority on this backend:
+     * TkWaylandFramebufferSizeCallback overwrites winPtr->changes.width/
+     * height from glfwGetWindowSize(), so the Tk_ResizeWindow() above is
+     * undone whenever the real window came up at some other size. Push
+     * the requested size (the widest entry, see
+     * TkpComputeStandardMenuGeometry) down to the GLFW window explicitly.
+     */
+    {
+        GLFWwindow *tgw = TkWaylandGetGLFWwindow((TkWindow *)menuPtr->tkwin);
+
+        if (tgw && reqW > 0 && reqH > 0) {
+            /*
+             * Tearoff toplevels must be non-resizable and must match the
+             * widest label.  Fix the size limits to the requested size and
+             * clear the RESIZABLE hint so the compositor does not add resize
+             * handles or enforce a larger minimum.
+             */
+            glfwSetWindowSizeLimits(tgw, reqW, reqH, reqW, reqH);
+            glfwSetWindowAttrib(tgw, GLFW_RESIZABLE, GLFW_FALSE);
+            glfwSetWindowSize(tgw, reqW, reqH);
+        }
+    }
 
     Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
 
