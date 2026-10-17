@@ -295,6 +295,14 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	MenuUnpost {}
 	return -options $opt $msg
     }
+    if {![winfo exists $menu]} {
+	# The menu was destroyed while it was posted, e.g. by the
+	# -postcommand, or on macOS while the native menu was shown.
+	# [Bug a4c72a04e3]
+	MenuUnpost {}
+	set Priv(postedMb) {}
+	return
+    }
 
     set Priv(tearoff) $tearoff
     if {$tearoff != 0 && [tk windowingsystem] ne "aqua"} {
@@ -1363,6 +1371,11 @@ if {[tk windowingsystem] ne "win32"} {
     proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	if {$entry ne ""} {
 	    $menu post $x $y $entry
+	    # The menu can be destroyed while it is posted, e.g. by the
+	    # -postcommand, or on macOS while the native menu is shown.
+	    if {![winfo exists $menu]} {
+		return
+	    }
 	    if {[$menu type $entry] ni {separator tearoff} &&
 		[$menu entrycget $entry -state] ne "disabled"} {
 		$menu activate $entry
@@ -1406,6 +1419,11 @@ if {[tk windowingsystem] ne "win32"} {
 	    }
 	}
 	$menu post $x $y
+	# The menu can be destroyed while it is posted, e.g. by the
+	# -postcommand.
+	if {![winfo exists $menu]} {
+	    return
+	}
 	if {$entry ne "" && [$menu entrycget $entry -state] ne "disabled"} {
 	    $menu activate $entry
 	    GenerateMenuSelect $menu
@@ -1507,7 +1525,8 @@ proc ::tk_popup {menu x y {entry {}}} {
 	}
     }
     tk::PostOverPoint $menu $x $y $entry
-    if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
+    if {[tk windowingsystem] eq "x11" && [winfo exists $menu]
+	    && [winfo viewable $menu]} {
 	tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
