@@ -2462,29 +2462,34 @@ XRootWindow(
  *
  * XDrawLine --
  *
- *	Draw a line. No-op in Wayland port.
+ *	Draw a line.
  *
  * Results:
- *	Always returns 0 (Success).
+ *	Success, or an error code.
  *
  * Side effects:
- *	None.
+ *	Draws the line.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XDrawLine(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x1,
+    int y1,
+    int x2,
+    int y2)
 {
-    /* No-op - drawing handled by NanoVG. */
-    return 0;
+    XPoint points[2];
+
+    points[0].x = x1;
+    points[0].y = y1;
+    points[1].x = x2;
+    points[1].y = y2;
+    return XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
 }
 
 /*

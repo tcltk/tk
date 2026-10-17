@@ -244,6 +244,42 @@ XDrawImageString(
 /*
  *----------------------------------------------------------------------
  *
+ * AlignStroke --
+ *
+ *	X11 draws a line of odd width (or a thin line of width 0) through
+ *	the centers of the pixels, so a 1-pixel line covers exactly one row
+ *	or column of pixels.  NanoVG strokes the path itself, which at
+ *	integer coordinates lies between two pixels and blurs a 1-pixel line
+ *	over both.  Shift the path by half a pixel for such lines.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Translates the current NanoVG transform.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+AlignStroke(
+    NVGcontext *vg,
+    GC gc)
+{
+    XGCValues v;
+    int lineWidth = 0;
+
+    if (gc && TkWaylandGetGCValues(gc, GCLineWidth, &v)) {
+	lineWidth = v.line_width;
+    }
+    if (lineWidth <= 1 || (lineWidth & 1)) {
+	nvgTranslate(vg, 0.5f, 0.5f);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawPoint --
  *
  *	Draw a single point (filled 1×1 rectangle).
@@ -358,17 +394,21 @@ XDrawLines(
     if (rc != TCL_OK)
         return BadDrawable;
 
+    AlignStroke(dc.vg, gc);
     nvgBeginPath(dc.vg);
-    nvgMoveTo(dc.vg, points[0].x, points[0].y);
+    int px = points[0].x, py = points[0].y;
+    nvgMoveTo(dc.vg, px, py);
 
     for (i = 1; i < npoints; i++) {
         if (mode == CoordModeOrigin) {
-            nvgLineTo(dc.vg, points[i].x, points[i].y);
+            px = points[i].x;
+            py = points[i].y;
         } else {
-            nvgLineTo(dc.vg,
-                      points[i-1].x + points[i].x,
-                      points[i-1].y + points[i].y);
+            /* Relative to the previous point. */
+            px += points[i].x;
+            py += points[i].y;
         }
+        nvgLineTo(dc.vg, px, py);
     }
     nvgStroke(dc.vg);
 
@@ -407,6 +447,7 @@ XDrawSegments(
     if (rc != TCL_OK)
         return BadDrawable;
 
+    AlignStroke(dc.vg, gc);
     for (i = 0; i < nsegments; i++) {
         nvgBeginPath(dc.vg);
         nvgMoveTo(dc.vg, segments[i].x1, segments[i].y1);
@@ -508,11 +549,12 @@ XDrawRectangle(
 {
     TkWaylandDrawingContext dc;
 
-    if (width == 0 || height == 0) return BadValue;
+    /* As on X11, a zero width or height draws a line. */
     int rc = TkWaylandBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
         return BadDrawable;
     }
+    AlignStroke(dc.vg, gc);
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, x, y, width, height);
     nvgStroke(dc.vg);
@@ -552,6 +594,7 @@ XDrawRectangles(
     if (rc != TCL_OK)
         return BadDrawable;
 
+    AlignStroke(dc.vg, gc);
     for (i = 0; i < nRects; i++) {
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
@@ -853,6 +896,7 @@ XDrawArc(
     if (rc != TCL_OK)
         return BadDrawable;
 
+    AlignStroke(dc.vg, gc);
     cx = x + width  / 2.0f;
     cy = y + height / 2.0f;
     rx = width  / 2.0f;
@@ -908,6 +952,7 @@ XDrawArcs(
     if (rc != TCL_OK)
         return BadDrawable;
 
+    AlignStroke(dc.vg, gc);
     for (i = 0; i < nArcs; i++) {
         float cx, cy, rx, ry, startAngle, endAngle;
 
