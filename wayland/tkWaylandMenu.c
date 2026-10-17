@@ -827,11 +827,9 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     int maxY;
     TkMenuEntry *mePtr;
     /*
-     * Popups keep a minimum content width; a torn-off menu is a normal
-     * toplevel and must shrink to its widest entry.
+     * A torn-off menu has the same width as the posted menu, as on X11.
      */
-    int minContentWidth = (menuPtr->menuType == TEAROFF_MENU)
-        ? 0 : MENU_MIN_CONTENT_WIDTH;
+    int minContentWidth = MENU_MIN_CONTENT_WIDTH;
     if (menuPtr->tkwin == NULL) {
         return;
     }
