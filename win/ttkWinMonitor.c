@@ -210,6 +210,25 @@ WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	/* The system sends a WM_PAINT message to all affected windows. */
 	break;
 
+    case WM_DWMCOLORIZATIONCOLORCHANGED: {
+	/* DWM colorization (accent) color has changed. */
+	/* wParam is new color in ARGB format, lParam is opacity boolean */
+	XColor colorSpec;
+
+	colorSpec.pixel = (int)wParam;
+	colorSpec.red = GetRValue(colorSpec.pixel) * 257;
+	colorSpec.green = GetGValue(colorSpec.pixel) * 257;
+	colorSpec.blue = GetBValue(colorSpec.pixel) * 257;
+	colorSpec.pad = (char) (colorSpec.pixel >> 24); /* Alpha */
+	Ttk_ResourceCache cache = Ttk_GetResourceCache(minfo->interp);
+	Ttk_RegisterNamedColor(cache, "SystemAccent", &colorSpec);
+	break;
+    }
+    case WM_STYLECHANGED:
+	/* Windows style has changed. */
+	/* wParam is GWL_EXSTYLE or GWL_STYLE, lParam is STYLESTRUCT ptr. */
+	break;
+
     case WM_THEMECHANGED: {
 	/* Windows theme has changed from SetWindowTheme call. No params. */
 	/* Will receive a WM_SETTINGCHANGE if changed via a settings call. */
