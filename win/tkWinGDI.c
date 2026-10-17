@@ -3300,12 +3300,13 @@ static int GdiGetColor(
 	*color = GetSysColor(sysColors[i].index);
 	return 1;
     } else {
-    int result;
-    XColor xcolor;
+	int result;
+	XColor xcolor;
+
 	result = XParseColor(NULL, 0, name, &xcolor);
 	*color = ((xcolor.red & 0xFF00)>>8) | (xcolor.green & 0xFF00)
 		| ((xcolor.blue & 0xFF00)<<8);
-    return result;
+	return result;
     }
 }
 

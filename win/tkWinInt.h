@@ -256,6 +256,14 @@ MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const c
 
 
 /*
+ * Used by tkWinWm.c for color and theme update handling.
+ */
+
+MODULE_SCOPE void TkWinUpdateColors(TkWindow *winPtr);
+MODULE_SCOPE void TkWinUpdateThemeColors(HWND hwnd, TkWindow *winPtr);
+
+
+/*
  * The following allows us to cache these encoding for multiple functions.
  */
 

@@ -8312,12 +8312,17 @@ WmProc(
 	goto done;
 
     case WM_SYSCOLORCHANGE:
-	/*
-	 * XXX: Called when system color changes. We need to update any
-	 * system colors, widgets that use them, and common controls widgets
-	 * such as Tk button, menu, and scrollbar widgets.
+	/* 
+	 * Sent when a change is made to a system color setting. The
+	 * system also sends a WM_PAINT message to all affected windows.
 	 */
+	winPtr = GetTopLevel(hwnd);
 
+	if (IsAppThemed() && IsThemeActive()) {
+	    TkWinUpdateThemeColors(hwnd, winPtr);
+	} else {
+	    TkWinUpdateColors(winPtr);
+	}
 	break;
 
     case WM_PALETTECHANGED:
@@ -8331,11 +8336,15 @@ WmProc(
 
     case WM_SETTINGCHANGE:
 	winPtr = GetTopLevel(hwnd);
+
+	/* Update system fonts */
 	if (wParam == SPI_SETNONCLIENTMETRICS) {
 	    TkWinSetupSystemFonts(winPtr->mainPtr);
 	    result = 0;
 	    goto done;
 	}
+
+	/* Dark/light mode change */
 	if (lParam != 0 &&
 	    wcscmp((const wchar_t*)lParam, L"ImmersiveColorSet") == 0) {
 	    /* This message gets sent multiple times for each change of the

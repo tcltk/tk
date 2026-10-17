@@ -7,7 +7,8 @@
 #include <windows.h>
 #include <uxtheme.h>
 
-static LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+/* Prototype definitions */
+static LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 typedef struct {
     HWND hwnd;
@@ -16,9 +17,7 @@ typedef struct {
 } MonitorInfo;
 
 /*
- * RegisterSystemColors --
- *	Register all known Windows system colors (as per GetSysColor) as Tk
- *	named colors.
+ *	Define Window system colors for use by TTk themes.
  */
 
 typedef struct {
@@ -64,6 +63,12 @@ static const SystemColorEntry sysColors[] = {
 	{ NULL, 0 }
 };
 
+/*
+ * RegisterSystemColors --
+ *
+ *	Register all known Windows system colors as Tk named colors.
+ */
+
 static void RegisterSystemColors(Tcl_Interp *interp, HWND hwnd) {
     Ttk_ResourceCache cache = Ttk_GetResourceCache(interp);
     const SystemColorEntry *sysColor;
@@ -73,6 +78,7 @@ static void RegisterSystemColors(Tcl_Interp *interp, HWND hwnd) {
 	DWORD pixel = GetThemeSysColor(hTheme, sysColor->index);
 	XColor colorSpec;
 
+	colorSpec.pixel = pixel;
 	colorSpec.red = GetRValue(pixel) * 257;
 	colorSpec.green = GetGValue(pixel) * 257;
 	colorSpec.blue = GetBValue(pixel) * 257;
@@ -81,6 +87,11 @@ static void RegisterSystemColors(Tcl_Interp *interp, HWND hwnd) {
     CloseThemeData(hTheme);
 }
 
+/*
+ * CreateThemeMonitorWindow and DestroyThemeMonitorWindow--
+ *
+ *	Create or destroy window to serve as handler for OS window events.
+ */
 static MonitorInfo*
 CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp) {
     WNDCLASSEXW wc;
@@ -133,58 +144,95 @@ DestroyThemeMonitorWindow(void *clientData) {
     Tcl_Free(clientData);
 }
 
+/*
+ * TkWinUpdateThemeColors --
+ *
+ *	Update system colors after they are changed by Windows. This is the
+ *	themed version of the TkWinUpdateColors for WM_SYSCOLORCHANGE events.
+ */
+
 void
-themeUpdateHandler(void *clientData) {
-    MonitorInfo *info = (MonitorInfo *)clientData;
-    Ttk_Theme theme;
-    info->timer = NULL;
+TkWinUpdateThemeColors(HWND hwnd, TkWindow *winPtr) {
+    HTHEME hTheme = GetWindowTheme(hwnd);
+    TkDisplay *dispPtr;
+    Tcl_HashEntry *entryPtr;
+    Tcl_HashSearch search;
 
-    /* Update colors used by theme */
-    RegisterSystemColors(info->interp, info->hwnd);
+    /* Returns NULL for monitor window */
+    if (!winPtr) return;
+    dispPtr = winPtr->dispPtr;
 
-    /* Reload the application theme due to color changes. */
-    theme = Ttk_GetCurrentTheme(info->interp);
-    if (theme) {
-	Ttk_UseTheme(info->interp, theme);
+    entryPtr = Tcl_FirstHashEntry(&dispPtr->colorNameTable, &search);
+    while (entryPtr) {
+	TkColor *tkColPtr = (TkColor *)Tcl_GetHashValue(entryPtr);
 
-	/* @@@ What to do about errors here? */
+	while (tkColPtr) {
+	    XColor *colorPtr = &tkColPtr->color;
+	    int index = TkWinIndexOfColor(colorPtr);
+
+	    /* Update system color */
+	    if (index > -1) {
+		/* If hTheme is NULL same as GetSysColor. */
+		colorPtr->pixel = GetThemeSysColor(hTheme, index);
+		colorPtr->red = GetRValue(colorPtr->pixel) * 257;
+		colorPtr->green = GetGValue(colorPtr->pixel) * 257;
+		colorPtr->blue = GetBValue(colorPtr->pixel) * 257;
+		colorPtr->flags = DoRed|DoGreen|DoBlue;
+	    }
+
+	    /* Get next screen/display for color */
+	    tkColPtr = tkColPtr->nextPtr;
+	}
+
+	/* Get next color */
+	entryPtr = Tcl_NextHashEntry(&search);
     }
 }
-
+
+/*
+ * WndProc --
+ *
+ * Handler for Windows events
+ */
 static LRESULT WINAPI
-WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     MonitorInfo *info = (MonitorInfo *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    LRESULT res = 0; /* success */
 
     switch (msg) {
     case WM_DESTROY:
 	break;
 
-    case WM_SETTINGCHANGE:
-	/* SystemParametersInfo changed a system-wide setting or
-	   when policy settings have changed. */
-	if (wp != SPI_GETNONCLIENTMETRICS) {
-	    break;
-	}
     case WM_SYSCOLORCHANGE:
-	/* Change has been made to a system color setting. */
-    case WM_STYLECHANGED:
-	/* Window style has changed. */
-    case WM_THEMECHANGED:
-	/* Window theme has changed. */
-    case WM_DWMCOLORIZATIONCOLORCHANGED:
-	/* DWM Colorization color has changed. */
+	/* Change has been made to a system color setting. No params. */
 
-	/* Throttle updates */
-	if (info->timer == NULL) {
-	    info->timer = Tcl_CreateTimerHandler(1000, themeUpdateHandler, (void *) info);
+	RegisterSystemColors(minfo->interp, hwnd);
+	/* The system sends a WM_PAINT message to all affected windows. */
+	break;
+
+    case WM_THEMECHANGED: {
+	/* Windows theme has changed from SetWindowTheme call. No params. */
+	/* Will receive a WM_SETTINGCHANGE if changed via a settings call. */
+	Ttk_Theme theme = Ttk_GetCurrentTheme(minfo->interp);
+
+	if (theme) {
+	    if (Ttk_UseTheme(minfo->interp, theme) != TCL_OK) {
+		/* Should not happen since using same theme */
+		res = 1;
+	    }
 	}
-	return 0;
 	break;
     }
-    return DefWindowProcW(hwnd, msg, wp, lp);
+
+    default:
+	res = DefWindowProcW(hwnd, msg, wParam, lParam);
+    }
+    return res;
 }
 
 /*
+ * Ttk_WinPlatformInit --
+ *
  * Windows-specific platform initialization:
  */
 
@@ -201,7 +249,10 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp) {
     hwnd = info->hwnd;
     Ttk_RegisterCleanup(interp, info, DestroyThemeMonitorWindow);
 
+    /* Cache Windows theme system colors */
     RegisterSystemColors(interp, hwnd);
+
+    /* Init Ttk themes */
     TtkWinTheme_Init(interp, hwnd);
     TtkWinVistaTheme_Init(interp, hwnd);
 

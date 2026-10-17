@@ -76,8 +76,6 @@ static const SystemColorEntry sysColors[] = {
  * Forward declarations for functions defined later in this file.
  */
 
-static int		FindSystemColor(const char *name, XColor *colorPtr,
-			    int *indexPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -141,6 +139,60 @@ FindSystemColor(
     colorPtr->flags = DoRed|DoGreen|DoBlue;
     colorPtr->pad = 0;
     return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinUpdateColors --
+ *
+ *	Update system colors after they are changed by Windows. This is
+ *	the handler for WM_SYSCOLORCHANGE events.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Updates system colors.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinUpdateColors(
+    TkWindow *winPtr)
+{
+    TkDisplay *dispPtr;
+    Tcl_HashEntry *entryPtr;
+    Tcl_HashSearch search;
+
+    if (!winPtr) return;
+    dispPtr = winPtr->dispPtr;
+
+    entryPtr = Tcl_FirstHashEntry(&dispPtr->colorNameTable, &search);
+    while (entryPtr) {
+	TkColor *tkColPtr = (TkColor *)Tcl_GetHashValue(entryPtr);
+
+	while (tkColPtr) {
+	    XColor *colorPtr = &tkColPtr->color;
+	    int index = TkWinIndexOfColor(colorPtr);
+
+	    /* Update system color */
+	    if (index > -1) {
+		colorPtr->pixel = GetSysColor(index);
+		colorPtr->red = GetRValue(colorPtr->pixel) * 257;
+		colorPtr->green = GetGValue(colorPtr->pixel) * 257;
+		colorPtr->blue = GetBValue(colorPtr->pixel) * 257;
+		colorPtr->flags = DoRed|DoGreen|DoBlue;
+	    }
+
+	    /* Get next screen/display for color */
+	    tkColPtr = tkColPtr->nextPtr;
+	}
+
+	/* Get next color */
+	entryPtr = Tcl_NextHashEntry(&search);
+    }
 }
 
 /*
