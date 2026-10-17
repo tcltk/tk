@@ -4163,30 +4163,46 @@ DisplayTearoffMenu(
      * so there is no dead space. The target is computed from the window
      * width, not added to the current width, so repeated redraws are
      * idempotent; TkRecomputeMenu() resets entries to natural width.
+     *
+     * For non-resizable tearoffs we also clamp the toplevel to the widest
+     * label width so the WM cannot force a larger minimum.
      */
     {
-        int borderWidth = 0, multiColumn = 0;
+        int borderWidth = 0, activeBorderWidth = 0, multiColumn = 0;
         int winW = Tk_Width(menuPtr->tkwin);
+        int winH = Tk_Height(menuPtr->tkwin);
         GLFWwindow *tgw = TkWaylandGetGLFWwindow((TkWindow *)menuPtr->tkwin);
 
         /*
          * Trust the real GLFW window width if it is larger than what Tk
          * believes: the compositor/decoration can force a wider window
          * and Tk's idea of the size only catches up via the framebuffer
-         * callback.
+         * callback.  Prefer the GLFW size as authoritative.
          */
         if (tgw) {
             int gw = 0, gh = 0;
-
             glfwGetWindowSize(tgw, &gw, &gh);
-            if (gw > winW) {
-                winW = gw;
+            if (gw > 0) {
+                /* If compositor forced larger, use it for filling. */
+                if (gw > winW) {
+                    winW = gw;
+                }
+                /* If our requested size is larger than current, keep it. */
+                if (menuPtr->totalWidth > winW) {
+                    winW = menuPtr->totalWidth;
+                }
+            }
+            /* Enforce non-resizable fixed size to match content if not yet. */
+            if (menuPtr->totalWidth > 0 && menuPtr->totalHeight > 0) {
+                glfwSetWindowSizeLimits(tgw, menuPtr->totalWidth,
+                    menuPtr->totalHeight, menuPtr->totalWidth,
+                    menuPtr->totalHeight);
+                glfwSetWindowAttrib(tgw, GLFW_RESIZABLE, GLFW_FALSE);
             }
         }
         DEBUG_LOG("DisplayTearoffMenu: tkWidth=%d effectiveWidth=%d total=%d",
                 Tk_Width(menuPtr->tkwin), winW, menuPtr->totalWidth);
 
-        int activeBorderWidth = 0;
         Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
                 &borderWidth);
         Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
@@ -4212,10 +4228,17 @@ DisplayTearoffMenu(
                  * entries we keep indicator/accel space intact and grow or
                  * shrink only the label column.  For separators/tearoff
                  * entries the whole width is the entry.
+                 * Use inner width (winW - 2*border) to account for Tk border.
                  */
-                target = winW - me->x - borderWidth;
+                target = winW - 2 * borderWidth;
                 if (target < 1) {
-                    target = winW > 0 ? winW : me->width;
+                    target = me->width;
+                    if (winW > 0) {
+                        target = winW - me->x - borderWidth;
+                    }
+                }
+                if (target < 1) {
+                    target = me->width;
                 }
                 if (me->type == SEPARATOR_ENTRY
                         || me->type == TEAROFF_ENTRY) {
@@ -4257,20 +4280,6 @@ DisplayTearoffMenu(
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkpDisplayMenu --
- *
- *     Called by Tk's display system to redraw a posted menu.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     Renders menu using NanoVG into the menu's xdg_popup surface.
- *----------------------------------------------------------------------
- */
 
 static void
 TkpDisplayMenu(
@@ -4594,6 +4603,17 @@ TkpPostTearoffMenu(
      */
     (void)x;
     (void)y;
+    /*
+     * Use totalWidth/Height as authoritative size for tearoffs - it is the
+     * widest label, not Tk_ReqWidth which may be stale.  This makes the
+     * toplevel match the label width.
+     */
+    if (menuPtr->totalWidth > 0) {
+        reqW = menuPtr->totalWidth;
+    }
+    if (menuPtr->totalHeight > 0) {
+        reqH = menuPtr->totalHeight;
+    }
     Tk_MoveWindow(menuPtr->tkwin, 0, 0);
     Tk_ResizeWindow(menuPtr->tkwin, reqW, reqH);
     Tk_MapWindow(menuPtr->tkwin);
@@ -4605,20 +4625,33 @@ TkpPostTearoffMenu(
      * undone whenever the real window came up at some other size. Push
      * the requested size (the widest entry, see
      * TkpComputeStandardMenuGeometry) down to the GLFW window explicitly.
+     * Also make it non-resizable.
      */
     {
         GLFWwindow *tgw = TkWaylandGetGLFWwindow((TkWindow *)menuPtr->tkwin);
 
         if (tgw && reqW > 0 && reqH > 0) {
-            /*
-             * Tearoff toplevels must be non-resizable and must match the
-             * widest label.  Fix the size limits to the requested size and
-             * clear the RESIZABLE hint so the compositor does not add resize
-             * handles or enforce a larger minimum.
-             */
             glfwSetWindowSizeLimits(tgw, reqW, reqH, reqW, reqH);
             glfwSetWindowAttrib(tgw, GLFW_RESIZABLE, GLFW_FALSE);
             glfwSetWindowSize(tgw, reqW, reqH);
+            /* Also set min/max to same via GLFW to prevent compositor resize. */
+            glfwSetWindowAttrib(tgw, GLFW_DECORATED, GLFW_TRUE);
+        }
+        /*
+         * Tell Tk's WM that this toplevel is not resizable and its min/max
+         * size is fixed to the content size.  This complements the GLFW
+         * hint and ensures tkWaylandWm respects it.
+         */
+        if (menuPtr->tkwin && menuPtr->interp) {
+            char cmd[512];
+            const char *pathName = Tk_PathName(menuPtr->tkwin);
+            /* wm resizable 0 0 makes it non-resizable */
+            snprintf(cmd, sizeof(cmd), "wm resizable %s 0 0", pathName);
+            Tcl_EvalEx(menuPtr->interp, cmd, -1, TCL_EVAL_GLOBAL);
+            snprintf(cmd, sizeof(cmd), "wm minsize %s %d %d", pathName, reqW, reqH);
+            Tcl_EvalEx(menuPtr->interp, cmd, -1, TCL_EVAL_GLOBAL);
+            snprintf(cmd, sizeof(cmd), "wm maxsize %s %d %d", pathName, reqW, reqH);
+            Tcl_EvalEx(menuPtr->interp, cmd, -1, TCL_EVAL_GLOBAL);
         }
     }
 
