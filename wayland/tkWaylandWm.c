@@ -910,6 +910,9 @@ TkWmDeadWindow(
 
     DEBUG_LOG("TkWmDeadWindow: %s", Tk_PathName(winPtr));
 
+    /* A deferred setup of the menubar must not run for a dead window. */
+    TkWaylandMenubarForget(winPtr);
+
     /*
      * Clean up the private data. We need to be very careful here
      * because the GLFW window might already be destroyed or invalid.

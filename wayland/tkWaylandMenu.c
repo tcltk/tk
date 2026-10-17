@@ -1295,6 +1295,7 @@ TkpSetWindowMenuBar(
 
     /* Only destroy menubar popup if we're actually removing the menubar. */
     if (!menuPtr) {
+        Tcl_CancelIdleCall(MenuBarDeferredSetup, winPtr);
         if (wmPtr->menubarPopup) {
             if (wmPtr->popup == wmPtr->menubarPopup) {
                 wmPtr->popup = NULL;
@@ -1535,6 +1536,30 @@ MenuBarDeferredSetup(
               "TkWaylandMenubarCreateOrResize for %s",
               Tk_PathName((Tk_Window)winPtr));
     TkWaylandMenubarCreateOrResize(winPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenubarForget --
+ *
+ *	Called when a toplevel is destroyed. Cancels the deferred setup of
+ *	its menubar, whose idle callback holds a pointer to the toplevel.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Cancels an idle callback.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenubarForget(
+    TkWindow *winPtr)
+{
+    Tcl_CancelIdleCall(MenuBarDeferredSetup, winPtr);
 }
 
 /*
