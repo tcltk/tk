@@ -91,6 +91,7 @@ typedef struct {
     int redisplayPending;
     int item_is_menu;                 /* false - we don't implement a menu */
     Tcl_TimerToken refreshTimer;      /* timer for delayed property refresh */
+    Tcl_TimerToken tooltipTimers[2];  /* timers for extra tooltip refreshes */
 } DockIcon;
 
 /* Forward declarations. */
@@ -112,6 +113,7 @@ static void TrayIconRedisplayIdle(void *cd);
 static void TrayIconImageChanged(void *cd, int x, int y, int w, int h,
                                  int imgw, int imgh);
 static void RefreshProperties(void *clientData);
+static void TooltipTimerProc(void *clientData);
 
 /* Global item ID counter. */
 static int global_item_id = 0;
@@ -577,6 +579,36 @@ RefreshProperties(void *clientData) {
 /*
  *----------------------------------------------------------------------
  *
+ * TooltipTimerProc --
+ *
+ *    Timer callback for the extra tooltip refreshes after registration.
+ *
+ * Results:
+ *    None.
+ *
+ * Side effects:
+ *    Updates the tooltip.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TooltipTimerProc(void *clientData) {
+    DockIcon *icon = (DockIcon *)clientData;
+    int i;
+
+    for (i = 0; i < 2; i++) {
+        if (icon->tooltipTimers[i]) {
+            icon->tooltipTimers[i] = NULL;
+            break;
+        }
+    }
+    UpdateTooltip(icon);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * ProcessDBusEvents --
  *
  *    Timer callback to process pending D‑Bus messages.
@@ -895,10 +927,14 @@ RegisterStatusNotifierItem(DockIcon *icon) {
          */
     }
 
-    /* Initial registration with the watcher. */
-    r = RegisterWithWatcher(icon);
-    if (r < 0) {
-        return r;
+    /*
+     * Initial registration with the watcher.  If there is no watcher yet
+     * (no tray, or the GNOME extension is not running), the item is
+     * registered when one appears (see WatcherOwnerChanged), as on X11 the
+     * icon is docked when a tray appears.
+     */
+    if (RegisterWithWatcher(icon) < 0) {
+        DEBUG_LOG("No StatusNotifierWatcher yet, waiting for one\n");
     }
 
     /* Start the event processing timer. */
@@ -910,8 +946,10 @@ RegisterStatusNotifierItem(DockIcon *icon) {
      */
     icon->refreshTimer = Tcl_CreateTimerHandler(300, (Tcl_TimerProc *)RefreshProperties, icon);
     /* Extra refreshes for tooltip which is particularly finicky on GNOME */
-    Tcl_CreateTimerHandler(1200, (Tcl_TimerProc *)UpdateTooltip, icon);
-    Tcl_CreateTimerHandler(1500, (Tcl_TimerProc *)UpdateTooltip, icon);
+    icon->tooltipTimers[0] = Tcl_CreateTimerHandler(1200, TooltipTimerProc,
+	    icon);
+    icon->tooltipTimers[1] = Tcl_CreateTimerHandler(1500, TooltipTimerProc,
+	    icon);
 
     return 0;
 }
@@ -934,9 +972,17 @@ RegisterStatusNotifierItem(DockIcon *icon) {
 
 static void
 UnregisterStatusNotifierItem(DockIcon *icon) {
+    int i;
+
     if (icon->refreshTimer) {
         Tcl_DeleteTimerHandler(icon->refreshTimer);
         icon->refreshTimer = NULL;
+    }
+    for (i = 0; i < 2; i++) {
+        if (icon->tooltipTimers[i]) {
+            Tcl_DeleteTimerHandler(icon->tooltipTimers[i]);
+            icon->tooltipTimers[i] = NULL;
+        }
     }
     if (icon->busTimer) {
         Tcl_DeleteTimerHandler(icon->busTimer);
@@ -1090,7 +1136,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
                                   Tcl_GetString(icon->imageObj),
                                   TrayIconImageChanged, icon);
         if (!icon->image) {
-            Tcl_AppendResult(interp, "invalid image name", NULL);
+            /* Tk_GetImage() has left the error message. */
             WaylandSystrayDeleteProc(iconPtr);
             return TCL_ERROR;
         }
@@ -1147,7 +1193,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
                                       Tcl_GetString(icon->imageObj),
                                       TrayIconImageChanged, icon);
             if (!icon->image) {
-                Tcl_AppendResult(interp, "invalid image name", NULL);
+                /* Tk_GetImage() has left the error message. */
                 return TCL_ERROR;
             }
             CaptureIconPixmap(icon);
@@ -1208,6 +1254,9 @@ WaylandSystrayDeleteProc(void *clientData) {
     if (!icon) return;
 
     UnregisterStatusNotifierItem(icon);
+    if (icon->redisplayPending) {
+        Tcl_CancelIdleCall(TrayIconRedisplayIdle, icon);
+    }
 
     if (icon->image) Tk_FreeImage(icon->image);
     if (icon->imageObj) Tcl_DecrRefCount(icon->imageObj);
