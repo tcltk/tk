@@ -263,6 +263,9 @@ static Tcl_Obj*         loadAppNameRegistry(const char *path);
 static void             saveAppNameRegistry(Tcl_Obj *dict, const char *path);
 static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
+static Tk_RestrictAction SendRestrictProc(void *clientData,
+			    XEvent *eventPtr);
+static int              ProcessIsAlive(int pid);
 static int              sendRequest(Tcl_Interp *interp, int pid,
 				    const char *sender, const char *recipient,
 				    const char *request);
@@ -1048,6 +1051,77 @@ static void unpackMessage(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * SendRestrictProc --
+ *
+ *	Restrict proc used while waiting for the reply to a send: all window
+ *	events are deferred.  Send requests are not window events and are
+ *	still served.
+ *
+ * Results:
+ *	TK_DEFER_EVENT.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tk_RestrictAction
+SendRestrictProc(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(XEvent *))
+{
+    return TK_DEFER_EVENT;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ProcessIsAlive --
+ *
+ *	Checks whether a process is still running.  A zombie (a process which
+ *	has exited but has not been waited for yet) is not.
+ *
+ * Results:
+ *	1 if the process is running, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ProcessIsAlive(
+    int pid)
+{
+    char path[64], buf[256];
+    FILE *f;
+    int alive = 1;
+
+    if (kill((pid_t) pid, 0) == -1 && errno == ESRCH) {
+	return 0;
+    }
+    snprintf(path, sizeof(path), "/proc/%d/stat", pid);
+    f = fopen(path, "r");
+    if (f != NULL) {
+	if (fgets(buf, sizeof(buf), f) != NULL) {
+	    /* The state follows the command name in parentheses. */
+	    char *p = strrchr(buf, ')');
+
+	    if (p != NULL && p[1] == ' ' && p[2] == 'Z') {
+		alive = 0;
+	    }
+	}
+	fclose(f);
+    }
+    return alive;
+}
+
+
+/*
  *--------------------------------------------------------------
  *
  * sendRequest --
@@ -1076,7 +1150,17 @@ sendRequest(
     }
     const char *strings[3] = {NULL, recipient, request};
     if (!async) {
-	snprintf(qnameReply, NAME_MAX, "/tkreply_%s", sender);
+	/*
+	 * Message queue names are global to the system, but application
+	 * names are only unique in the registry of a user.  Name the reply
+	 * queue after this process and request, which also keeps nested
+	 * (recursive) sends apart.
+	 */
+
+	static unsigned int replySerial = 0;
+
+	snprintf(qnameReply, NAME_MAX, "/tkreply_%d_%u", (int) getpid(),
+		++replySerial);
 	strings[0] = qnameReply;
     } else {
 	strings[0] = sender;
@@ -1107,23 +1191,11 @@ sendRequest(
     };
 
     struct timespec abs_timeout;
-    if (clock_gettime(CLOCK_REALTIME, &abs_timeout) == -1) {
-	goto error;
-    }
-    abs_timeout.tv_sec += 5;
     qdReply = mq_open(qnameReply, O_RDWR|O_CREAT, 0660, &attr);
     if (qdReply == -1) {
 	fprintf(stderr, "failed to open queue %s\n", qnameReply);
 	goto error;
     }
-
-    // TODO
-    // This is incomplete.
-    // The code belose waits 5 seconds for a response to the request and gives
-    // up (after checking whether the recipient process is still running.  We
-    // need to deal with the possibility of sending a long-running command to
-    // another application.  How long should we wait?  How should we interrupt
-    // the other process if it is taking too long?
 
     char msg[TK_MQ_MSGSIZE];
 
@@ -1136,26 +1208,88 @@ sendRequest(
 	// Warning: this assumes that Tcl_ThreadId can be cast to pthread_t.
 	pthread_kill((pthread_t) tid, TK_MQUEUE_SIGNAL);
     }
-    status = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
-				 &abs_timeout);
-    if (errno == ETIMEDOUT) {
-	goto error;
-    }
-    if (status == -1) {
-	if (kill(pid, 0)) {
-	    Tcl_AddErrorInfo(interp, "Target application died.");
+
+    /*
+     * As on X11, wait until the reply comes or the target application has
+     * died, however long the command takes.  Meanwhile serve the requests
+     * sent to this application, e.g. by the target (a recursive send), but
+     * defer all other events, so that the send is synchronous with respect
+     * to them.  A request is delivered by a signal, which interrupts
+     * mq_timedreceive() with EINTR, and then queued as a Tcl event.
+     */
+
+    Tk_RestrictProc *prevProc;
+    void *prevArg;
+
+    prevProc = Tk_RestrictEvents(SendRestrictProc, NULL, &prevArg);
+    while (1) {
+	if (clock_gettime(CLOCK_REALTIME, &abs_timeout) == -1) {
+	    status = -1;
+	    break;
 	}
+	abs_timeout.tv_nsec += 20000000;	/* 20 ms */
+	if (abs_timeout.tv_nsec >= 1000000000) {
+	    abs_timeout.tv_sec++;
+	    abs_timeout.tv_nsec -= 1000000000;
+	}
+	status = mq_timedreceive(qdReply, msg, TK_MQ_MSGSIZE, NULL,
+		&abs_timeout);
+	if (status != -1 || (errno != EINTR && errno != ETIMEDOUT)) {
+	    break;
+	}
+	if (!ProcessIsAlive(pid)) {
+	    break;
+	}
+	while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT)) {
+	    /* Empty loop body. */
+	}
+    }
+    Tk_RestrictEvents(prevProc, prevArg, &prevArg);
+    if (status == -1) {
+	int savedErrno = errno;
+
+	mq_close(qdReply);
+	mq_unlink(qnameReply);
+	if (savedErrno == EINTR || savedErrno == ETIMEDOUT) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "target application died", TCL_INDEX_NONE));
+	    return TCL_ERROR;
+	}
+	errno = savedErrno;
 	goto error;
     }
     message header;
     char **replyStrings;
     unpackMessage((message *) msg, &header, &replyStrings);
     if (mq_close(qdReply) == -1 || mq_unlink(qnameReply) == -1) {
+	for (int i = 0; i < header.count; i++) {
+	    Tcl_Free(replyStrings[i]);
+	}
+	Tcl_Free(replyStrings);
 	goto error;
+    }
+
+    /*
+     * Report an error in the target application as if it happened here:
+     * the reply then also has errorInfo and errorCode.
+     */
+    if (header.code == TCL_ERROR) {
+	Tcl_ResetResult(interp);
+	if (header.count > 1) {
+	    Tcl_AddErrorInfo(interp, replyStrings[1]);
+	}
+	if (header.count > 2) {
+	    Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(replyStrings[2],
+		    TCL_INDEX_NONE));
+	}
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(replyStrings[0],
 	TCL_INDEX_NONE));
-    return TCL_OK;
+    for (int i = 0; i < header.count; i++) {
+	Tcl_Free(replyStrings[i]);
+    }
+    Tcl_Free(replyStrings);
+    return header.code;
 error:
     HANDLE_POSIX_ERROR("sendRequest")
 }
@@ -1208,10 +1342,26 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
     if (!async) {
 	/* Send a reply */
 	Tcl_Size resultLength;
-	const char *resultString = Tcl_GetStringFromObj(
-	    Tcl_GetObjResult(riPtr->interp), &resultLength);
+	const char *replyStrings[3];
+	int count = 1;
 	size_t messageSize;
-	message *m = packMessage(code, 1, &resultString, &messageSize);
+
+	/*
+	 * After an error, send also errorInfo and errorCode, so that the
+	 * sender can report the error as if it happened locally.
+	 */
+	replyStrings[0] = Tcl_GetStringFromObj(
+	    Tcl_GetObjResult(riPtr->interp), &resultLength);
+	if (code == TCL_ERROR) {
+	    const char *errorInfo = Tcl_GetVar2(riPtr->interp, "errorInfo",
+		    NULL, TCL_GLOBAL_ONLY);
+	    const char *errorCode = Tcl_GetVar2(riPtr->interp, "errorCode",
+		    NULL, TCL_GLOBAL_ONLY);
+	    replyStrings[1] = errorInfo ? errorInfo : "";
+	    replyStrings[2] = errorCode ? errorCode : "NONE";
+	    count = 3;
+	}
+	message *m = packMessage(code, count, replyStrings, &messageSize);
 	mqd_t replyQd = mq_open(strings[requestSender], O_RDWR);
 	if (replyQd == -1) {
 	    Tcl_SetErrno(errno);
