@@ -559,7 +559,8 @@ test wm-colormapwindows-1.4 {usage} -returnCodes error -body {
     wm colormapwindows . foo
 } -result {bad window path name "foo"}
 
-test wm-colormapwindows-2.1 {reading values} -body {
+# Colormap is unsupported on Wayland.
+test wm-colormapwindows-2.1 {reading values} -constraints !wayland -body {
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
     frame .t2.a -width 100 -height 30
@@ -640,7 +641,7 @@ test wm-deiconify-1.5 {usage} -constraints win -setup {
     destroy .t.f .embed
 } -result {can't deiconify .embed: the container does not support the request}
 # test embedded window for other platforms
-test wm-deiconify-1.6 {usage} -constraints unix -setup {
+test wm-deiconify-1.6 {usage} -constraints {macOrUnix embedding} -setup {
     destroy .embed
 } -body {
     frame .t.f -container 1
@@ -999,7 +1000,7 @@ test wm-iconify-2.4.1 {Misc errors} -constraints win -setup {
     destroy .t2 .r.f
 } -result {can't iconify ".t2": the container does not support the request}
 # test embedded window for other platforms
-test wm-iconify-2.4.2 {Misc errors} -constraints unix -setup {
+test wm-iconify-2.4.2 {Misc errors} -constraints {macOrUnix embedding} -setup {
     destroy .t2
 } -body {
     frame .t.f -container 1
@@ -1815,7 +1816,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 } -result 1
 
 test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
-	 stacking order} -body {
+	 stacking order} -constraints embedding -body {
     toplevel .real -container 1
     raiseDelay
     toplevel .embd -bg blue -use [winfo id .real]
@@ -2612,7 +2613,7 @@ test wm-forget-1.5 {check wm forget for unmapped parent (ref. #3205464,#2967911,
     #
     # Moved here from winWm.test, test winWm-9.2 (cf. ticket #83eed90f93).
     #
-} -setup {
+} -constraints screenCoords -setup {
     destroy .t
     toplevel .t
     wm geometry .t +100+100

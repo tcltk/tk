@@ -428,7 +428,7 @@ test frame-2.14 {toplevel configuration options} -constraints !wayland -setup {
     deleteWindows
 } -result {unknown or ambiguous visual name "who_knows?": class must be best, directcolor, grayscale, greyscale, pseudocolor, staticcolor, staticgray, staticgrey, truecolor, or default}
 # cget -screen not supported on Wayland. 
-test frame-2.15 {toplevel configuration options} -constraints {haveDISPLAY !wayland} -setup {
+test frame-2.15 {toplevel configuration options} -constraints {haveDISPLAY && !wayland} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -438,7 +438,7 @@ test frame-2.15 {toplevel configuration options} -constraints {haveDISPLAY !wayl
     deleteWindows
 } -result [expr {[tcltest::testConstraint haveDISPLAY]?[list -screen screen Screen {} $env(DISPLAY)]:""}]
 # cget -screen not supported on Wayland. 
-test frame-2.16 {toplevel configuration options} -constraints {haveDISPLAY !wayland} -setup {
+test frame-2.16 {toplevel configuration options} -constraints {haveDISPLAY && !wayland} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen $env(DISPLAY)
@@ -656,9 +656,7 @@ test frame-3.8 {TkCreateFrame procedure} -setup {
     option clear
 } -result {Silly #122334}
 # Embedding/container not supported on Wayland. 
-test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
-    !wayland unix 
-} -setup {
+test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {!wayland && unix} -setup {
     deleteWindows
 } -body {
     toplevel .t -container 1 -width 300 -height 120
@@ -672,9 +670,7 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
     deleteWindows
 } -result {0 0 140 300}
 # Embedding/container not supported on Wayland. 
-test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
-    !wayland unix
-} -setup {
+test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {!wayland && unix} -setup {
     deleteWindows
 } -body {
     toplevel .t -container 1 -width 300 -height 120
@@ -716,9 +712,7 @@ test frame-3.11 {TkCreateFrame procedure} -constraints {
     destroy .t
 } -result 0
 # Colormap is unsupported on Wayland.
-test frame-3.12 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable !wayland
-} -setup {
+test frame-3.12 {TkCreateFrame procedure} -constraints {defaultPseudocolor8 && nonPortable && !wayland} -setup {
     destroy .t
 } -body {
     toplevel .t -width 300 -height 200 -bg #475601 -colormap new
@@ -728,9 +722,7 @@ test frame-3.12 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
-test frame-3.13 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable !wayland
-} -setup {
+test frame-3.13 {TkCreateFrame procedure} -constraints {defaultPseudocolor8 && nonPortable && !wayland} -setup {
     destroy .t
 } -body {
     option add *t.class Toplevel2
@@ -743,9 +735,7 @@ test frame-3.13 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
-test frame-3.14 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable !wayland
-} -setup {
+test frame-3.14 {TkCreateFrame procedure} -constraints {defaultPseudocolor8 && nonPortable && !wayland} -setup {
     destroy .t
 } -body {
     option add *t.class Toplevel3
@@ -758,9 +748,7 @@ test frame-3.14 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
-test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -constraints {
-    defaultPseudocolor8 unix nonPortable !wayland
-} -setup {
+test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -constraints {defaultPseudocolor8 && unix && nonPortable && !wayland} -setup {
     destroy .t
 } -body {
     toplevel .t -container 1 -width 300 -height 120
@@ -783,9 +771,7 @@ test frame-3.16 {TkCreateFrame procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result 0
-test frame-3.17 {TkCreateFrame procedure} -constraints {
-    defaultPseudocolor8 nonPortable !wayland
-} -setup {
+test frame-3.17 {TkCreateFrame procedure} -constraints {defaultPseudocolor8 && nonPortable && !wayland} -setup {
     destroy .t
 } -body {
     toplevel .t -width 300 -height 200 -bg #475601 -visual default \

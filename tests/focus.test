@@ -244,7 +244,7 @@ test focus-1.17 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
 test focus-1.18 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
     focus -force ""
 } -returnCodes ok -result {}
-test focus-1.19 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.19 {Tk_FocusCmd procedure, -force option} -constraints {unix testxfocus} -body {
     focusClear
     focus .t.b1
     set x  [list [focus]]

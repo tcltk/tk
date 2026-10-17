@@ -78,7 +78,7 @@ set hidden_cmds [lsort $hidden_cmds]
 # TESTS
 #
 
-test safe-1.1 {Safe Tk loading into an interpreter} -setup {
+test safe-1.1 {Safe Tk loading into an interpreter} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::loadTk [safe::interpCreate a]
@@ -86,7 +86,7 @@ test safe-1.1 {Safe Tk loading into an interpreter} -setup {
     set x {}
     return $x
 } -result {}
-test safe-1.2 {Safe Tk loading into an interpreter, see bug [https://core.tcl-lang.org/tcl/tktview/8f5e7a2633]} -setup {
+test safe-1.2 {Safe Tk loading into an interpreter, see bug [https://core.tcl-lang.org/tcl/tktview/8f5e7a2633]} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -95,7 +95,7 @@ test safe-1.2 {Safe Tk loading into an interpreter, see bug [https://core.tcl-la
 } -cleanup {
     safe::interpDelete a
 } -result $hidden_cmds
-test safe-1.3 {Safe Tk loading into an interpreter} -setup {
+test safe-1.3 {Safe Tk loading into an interpreter} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -105,7 +105,7 @@ test safe-1.3 {Safe Tk loading into an interpreter} -setup {
     safe::interpDelete a
 } -match glob -result {*encoding*exit*glob*load*source*}
 
-test safe-2.1 {Unsafe commands not available} -setup {
+test safe-2.1 {Unsafe commands not available} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -118,7 +118,7 @@ test safe-2.1 {Unsafe commands not available} -setup {
 } -cleanup {
     safe::interpDelete a
 } -result ok
-test safe-2.2 {Unsafe commands not available} -setup {
+test safe-2.2 {Unsafe commands not available} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -131,7 +131,7 @@ test safe-2.2 {Unsafe commands not available} -setup {
 } -cleanup {
     safe::interpDelete a
 } -result ok
-test safe-2.3 {Unsafe subcommands not available} -setup {
+test safe-2.3 {Unsafe subcommands not available} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -144,7 +144,7 @@ test safe-2.3 {Unsafe subcommands not available} -setup {
 } -cleanup {
     safe::interpDelete a
 } -result {ok {appname not accessible in a safe interpreter}}
-test safe-2.4 {Unsafe subcommands not available} -setup {
+test safe-2.4 {Unsafe subcommands not available} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -158,7 +158,7 @@ test safe-2.4 {Unsafe subcommands not available} -setup {
     safe::interpDelete a
 } -result {ok {setting the scaling not accessible in a safe interpreter}}
 
-test safe-3.1 {Unsafe commands are available hidden} -setup {
+test safe-3.1 {Unsafe commands are available hidden} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -171,7 +171,7 @@ test safe-3.1 {Unsafe commands are available hidden} -setup {
 } -cleanup {
     safe::interpDelete a
 } -result ok
-test safe-3.2 {Unsafe commands are available hidden} -setup {
+test safe-3.2 {Unsafe commands are available hidden} -constraints embedding -setup {
     catch {safe::interpDelete a}
 } -body {
     safe::interpCreate a
@@ -185,7 +185,7 @@ test safe-3.2 {Unsafe commands are available hidden} -setup {
     safe::interpDelete a
 } -result ok
 
-test safe-4.1 {testing loadTk} -body {
+test safe-4.1 {testing loadTk} -constraints embedding -body {
     # no error shall occur, the user will eventually see a new toplevel
     set i [safe::loadTk [safe::interpCreate]]
     interp eval $i {button .b -text "hello world!"; pack .b}
@@ -194,7 +194,7 @@ test safe-4.1 {testing loadTk} -body {
     # test suite not runable non interactively
     safe::interpDelete $i
 } -result {}
-test safe-4.2 {testing loadTk -use} -setup {
+test safe-4.2 {testing loadTk -use} -constraints embedding -setup {
     destroy .safeTkFrame
 } -body {
     set w .safeTkFrame
@@ -212,7 +212,7 @@ test safe-5.1 {loading Tk in safe interps without parent's clearance} -body {
 } -cleanup {
     safe::interpDelete $i
 } -returnCodes error -match glob -result {*not allowed}
-test safe-5.2 {multi-level Tk loading with clearance} -setup {
+test safe-5.2 {multi-level Tk loading with clearance} -constraints embedding -setup {
     set safeParent [safe::interpCreate]
 } -body {
     # No error shall occur in that test and no window shall remain at the end.
@@ -228,7 +228,7 @@ test safe-5.2 {multi-level Tk loading with clearance} -setup {
     safe::interpDelete $safeParent
 } -result {}
 
-test safe-6.1 {loadTk -use windowPath} -setup {
+test safe-6.1 {loadTk -use windowPath} -constraints embedding -setup {
     destroy .safeTkFrame
 } -body {
     set w .safeTkFrame
@@ -253,7 +253,7 @@ test safe-6.2 {loadTk -use windowPath, conflicting -display} -setup {
     destroy $w
 } -result {conflicting -display :23.56 and -use }
 
-test safe-7.1 {canvas printing} -body {
+test safe-7.1 {canvas printing} -constraints embedding -body {
     set i [safe::loadTk [safe::interpCreate]]
     interp eval $i {canvas .c; .c postscript}
 } -cleanup {

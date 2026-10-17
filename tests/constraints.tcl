@@ -32,6 +32,12 @@ testConstraint aquaOrWin32 [expr {
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 
+# Wayland clients cannot embed windows (-use, -container), warp the pointer,
+# or know and set the positions of their toplevels on the screen.
+testConstraint embedding [expr {![testConstraint wayland]}]
+testConstraint pointerWarp [expr {![testConstraint wayland]}]
+testConstraint screenCoords [expr {![testConstraint wayland]}]
+
 # constraint for tests that need a window manager, e.g. to iconify a toplevel.
 # On X11 there may be none (e.g. on GitHub CI). A window manager sets the
 # WM_STATE property on the toplevels it manages before mapping them, so check

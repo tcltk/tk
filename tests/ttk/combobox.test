@@ -115,7 +115,7 @@ test combobox-3 "Read postoffset value dynamically from current style" -body {
 }
 
 test combobox-1890211 "ComboboxSelected event after listbox unposted" \
-    -constraints {notAqua} -body {
+    -constraints {notAqua && !wayland} -body {
     # whitebox test...
     pack [ttk::combobox .cb -values [list a b c]]
     update idletasks
@@ -171,19 +171,19 @@ proc postComboboxAt {y height} {
 	    [$popdown.f.l cget -height]
 }
 test combobox-5.1 "Popdown higher than the screen is limited to the screen below" \
-	-constraints {notAqua} -body {
+	-constraints {notAqua && !wayland} -body {
     lrange [postComboboxAt 50 150] 0 3
 } -cleanup {
     destroy .t
 } -result {below 1 1 1}
 test combobox-5.2 "Popdown higher than the screen is limited to the screen above" \
-	-constraints {notAqua} -body {
+	-constraints {notAqua && !wayland} -body {
     lrange [postComboboxAt [expr {[winfo screenheight .] - 80}] 150] 0 3
 } -cleanup {
     destroy .t
 } -result {above 1 1 1}
 test combobox-5.3 "Popdown which fits below is posted below" \
-	-constraints {notAqua} -body {
+	-constraints {notAqua && !wayland} -body {
     postComboboxAt 50 10
 } -cleanup {
     destroy .t
