@@ -117,6 +117,8 @@ static int        GetRunFaceIndex(WaylandFont *fontPtr, FcChar32 *ucs4Chars,
 static int        FindFaceCoveringRange(WaylandFont *fontPtr, FcChar32 *ucs4,
 					int start, int len);
 static hb_font_t *GetHbFont(WaylandFont *fontPtr, int faceIndex);
+static void       MakeNvgFaceName(WaylandFont *fontPtr, int faceIndex,
+			    char *buf, size_t bufSize);
 static int        EnsureNvgFaceFont(WaylandFont *fontPtr, int faceIndex,
 				    NVGcontext *vg);
 static void       InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr,
@@ -3206,6 +3208,121 @@ TkWaylandClusterBoundaryAtOrBefore(
 
 /*
  *----------------------------------------------------------------------
+ * GetFontFileData --
+ *
+ *   Return the contents of a font file, read once per process and kept
+ *   for its lifetime.  Every WaylandFont and every NanoVG context (one
+ *   per toplevel) loads each face of its fallback stack into NanoVG, which
+ *   never frees fonts; with a copy of the file each, every new font size
+ *   or toplevel cost tens of megabytes.  The NanoVG fonts share this data
+ *   instead (freeData == 0).
+ *
+ * Results:
+ *   The data (and its size in *sizePtr), or NULL if the file cannot be
+ *   read.
+ *
+ * Side effects:
+ *   Reads the file and keeps it in memory.
+ *----------------------------------------------------------------------
+ */
+
+typedef struct FontFileData {
+    char *path;
+    unsigned char *data;
+    int size;
+    struct FontFileData *nextPtr;
+} FontFileData;
+
+static FontFileData *fontFileList = NULL;
+TCL_DECLARE_MUTEX(fontFileMutex)
+
+static unsigned char *
+GetFontFileData(
+    const char *path,
+    int *sizePtr)
+{
+    FontFileData *filePtr;
+    unsigned char *data = NULL;
+    FILE *f;
+    long size;
+
+    Tcl_MutexLock(&fontFileMutex);
+    for (filePtr = fontFileList; filePtr != NULL; filePtr = filePtr->nextPtr) {
+	if (strcmp(filePtr->path, path) == 0) {
+	    *sizePtr = filePtr->size;
+	    Tcl_MutexUnlock(&fontFileMutex);
+	    return filePtr->data;
+	}
+    }
+    f = fopen(path, "rb");
+    if (f != NULL) {
+	if (fseek(f, 0, SEEK_END) == 0 && (size = ftell(f)) > 0
+		&& size <= INT_MAX && fseek(f, 0, SEEK_SET) == 0) {
+	    data = (unsigned char *)Tcl_Alloc(size);
+	    if (fread(data, 1, size, f) != (size_t)size) {
+		Tcl_Free(data);
+		data = NULL;
+	    }
+	}
+	fclose(f);
+    }
+    if (data != NULL) {
+	filePtr = (FontFileData *)Tcl_Alloc(sizeof(FontFileData));
+	filePtr->path = (char *)Tcl_Alloc(strlen(path) + 1);
+	strcpy(filePtr->path, path);
+	filePtr->data = data;
+	filePtr->size = (int)size;
+	filePtr->nextPtr = fontFileList;
+	fontFileList = filePtr;
+	*sizePtr = (int)size;
+    }
+    Tcl_MutexUnlock(&fontFileMutex);
+    return data;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * MakeNvgFaceName --
+ *
+ *   Make the NanoVG font name of a face: a hash of its file and index in
+ *   the file.  NanoVG falls back from the primary face (face 0) to the
+ *   other faces of the WaylandFont (see EnsureNvgFont), so its name also
+ *   depends on all the faces.  Fonts which differ only in size (and a
+ *   "font configure" which keeps the faces) share the NanoVG fonts.
+ *
+ * Results:
+ *   None.  The name is written to buf.
+ *----------------------------------------------------------------------
+ */
+
+static void
+MakeNvgFaceName(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    char *buf,
+    size_t bufSize)
+{
+    uint64_t hash = 14695981039346656037ULL;	/* FNV-1a */
+    int first = faceIndex, last = faceIndex;
+
+    if (faceIndex == 0) {
+	last = fontPtr->nfaces - 1;
+    }
+    for (int i = first; i <= last; i++) {
+	const char *p = fontPtr->faces[i].filePath;
+	for (; p && *p; p++) {
+	    hash = (hash ^ (unsigned char)*p) * 1099511628211ULL;
+	}
+	hash = (hash ^ (unsigned)fontPtr->faces[i].faceIndex)
+		* 1099511628211ULL;
+	hash = (hash ^ 0xff) * 1099511628211ULL;
+    }
+    snprintf(buf, bufSize, "__wlface_%d_%016llx", faceIndex == 0,
+	    (unsigned long long)hash);
+}
+
+/*
+ *----------------------------------------------------------------------
  * EnsureNvgFaceFont --
  *
  *   Load a single WaylandFtFace into the NanoVG context on demand.
@@ -3241,20 +3358,15 @@ EnsureNvgFaceFont(
     }
 
     /*
-     * Make the name unique to this WaylandFont + faceIndex + generation.
-     * The font pointer and face index alone are NOT enough: fontPtr is
-     * reused in place across "font configure" (DeleteFont() frees and
-     * this file reallocates fontPtr->faces with the same fontPtr/index),
-     * so a name built only from those would go stale -- nvgFindFont()
-     * would keep resolving to whatever glyph data was registered under
-     * it before the reconfigure, since NanoVG/fontstash has no API to
-     * remove or replace a font entry. Regenerating unconditionally
-     * (rather than only when empty) also means we don't depend on a
-     * freshly (re)allocated WaylandFtFace having a zeroed nvgName.
+     * The name identifies the font data (see MakeNvgFaceName), so the
+     * NanoVG font is shared by all WaylandFonts using the same face.
+     * NanoVG/fontstash has no API to remove a font, so a name per
+     * WaylandFont made the fonts accumulate.  Regenerating unconditionally
+     * also means we don't depend on a freshly (re)allocated WaylandFtFace
+     * having a zeroed nvgName.
      */
-    snprintf(face->nvgName, sizeof(face->nvgName),
-             "__wlfont_%p_%d_%u", (void*)fontPtr, faceIndex,
-             fontPtr->generation);
+    MakeNvgFaceName(fontPtr, faceIndex, face->nvgName,
+	    sizeof(face->nvgName));
 
     int id = nvgFindFont(vg, face->nvgName);
     if (id >= 0) {
@@ -3262,10 +3374,14 @@ EnsureNvgFaceFont(
         return id;
     }
 
-    if (face->filePath && access(face->filePath, R_OK) == 0) {
-        id = nvgCreateFont(vg, face->nvgName, face->filePath);
+    if (face->filePath) {
+        int size;
+        unsigned char *data = GetFontFileData(face->filePath, &size);
+
+        id = data ? nvgCreateFontMemAtIndex(vg, face->nvgName, data, size,
+                0, face->faceIndex) : -1;
 	GL_DEBUG_LOG("nvgCreatFont %s\n", face->filePath);
-    } else if (face->filePath) { id = -1; }
+    }
 
     face->nvgFontId = id;
     return id;
@@ -3394,6 +3510,17 @@ EnsureNvgFont(
         ctx = ctx->next;
     }
 
+    /*
+     * The primary NanoVG font is shared (see MakeNvgFaceName); if it
+     * exists, its fallbacks were already added.
+     */
+    int primaryExisted = 0;
+    if (fontPtr->nfaces > 0) {
+	char name[64];
+	MakeNvgFaceName(fontPtr, 0, name, sizeof(name));
+	primaryExisted = (nvgFindFont(vg, name) >= 0);
+    }
+
     /* Load each face into this context. */
     int primaryId = -1;
     int primaryFace = -1;
@@ -3453,7 +3580,7 @@ EnsureNvgFont(
      * internal nvgText() fallback, which the shaped path never calls, so
      * it would sit dead.
      */
-    if (primaryId >= 0) {
+    if (primaryId >= 0 && !(primaryExisted && primaryFace == 0)) {
         for (int i = 0; i < fontPtr->nfaces; i++) {
             int fb = fontPtr->faces[i].nvgFontId;
             if (i != primaryFace && fb >= 0) {
