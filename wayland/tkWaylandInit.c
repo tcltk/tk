@@ -323,8 +323,7 @@ IsUnmappedEmptyRoot(TkWindow *winPtr)
     if (top == NULL || top->childList != NULL || (top->flags & TK_MAPPED)) {
         return 0;
     }
-    return top->mainPtr && top->mainPtr->interp
-            && top == (TkWindow *) Tk_MainWindow(top->mainPtr->interp);
+    return top->mainPtr && top == top->mainPtr->winPtr;
 }
 
 /*
@@ -886,7 +885,12 @@ TkWaylandCreateWindow(
     if (mainGlfwWindow) {
         mainInfoTmp = glfwGetWindowUserPointer(mainGlfwWindow);
     }
-    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)
+    /*
+     * Compare with mainPtr->winPtr, not Tk_MainWindow(): that sets an
+     * error result when the application is not (or no longer) registered,
+     * which would replace the error of a failed main window creation.
+     */
+    if (winPtr == winPtr->mainPtr->winPtr
         && mainGlfwWindow != NULL
         && mainInfoTmp && mainInfoTmp->winPtr
         && mainInfoTmp->winPtr->mainPtr == winPtr->mainPtr) {
@@ -1056,6 +1060,41 @@ TkWaylandCreateWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * GlfwNeedsFractionalScaleDrain --
+ *
+ *	GLFW 3.4 never destroys window->wl.fractionalScale in
+ *	_glfwDestroyWindowWayland() (fixed upstream in commit 42dc1ffaee,
+ *	first released in GLFW 3.5).  The wp_fractional_scale_v1 object
+ *	then outlives the freed _GLFWwindow, and a queued preferred_scale
+ *	event writes into freed memory.
+ *
+ * Results:
+ *	Nonzero if the GLFW library in use is 3.4.x and needs the
+ *	workaround in TkWaylandDestroyWindow.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GlfwNeedsFractionalScaleDrain(void)
+{
+    static int cached = -1;
+
+    if (cached < 0) {
+        int major = 0, minor = 0, rev = 0;
+
+        glfwGetVersion(&major, &minor, &rev);
+        cached = (major == 3 && minor == 4);
+    }
+    return cached;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandDestroyWindow --
  *
  *	Destroy a GLFW window and clean up associated resources.
@@ -1082,6 +1121,19 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
     /* Drop cursor-module references before the handle goes stale. */
     TkWaylandCursorForgetWindow(glfwWindow);
     destroyGlfwTkInfo(glfwWindow);
+
+    /*
+     * Workaround for GLFW 3.4 leaking the fractional scale object:
+     * dispatch everything the compositor has already sent (notably
+     * wp_fractional_scale_v1.preferred_scale) while the _GLFWwindow is
+     * still valid, so no stale event can reach freed memory later.
+     * Tk callbacks are cleared first so only GLFW's internal listeners
+     * run and nothing re-enters Tk for a window being torn down.
+     */
+    if (waylandDisplay && GlfwNeedsFractionalScaleDrain()) {
+        TkWaylandClearCallbacks(glfwWindow);
+        wl_display_roundtrip(waylandDisplay);
+    }
     glfwDestroyWindow(glfwWindow);
 
     /* Check if this was the last window. */
@@ -1475,6 +1527,35 @@ TkWaylandGetNVGContext(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandFlushConfigures --
+ *
+ *	Make a roundtrip to the compositor before the client resizes a
+ *	window.  The compositor answers a commit of a new window size with a
+ *	configure event carrying that size, and GLFW resizes the window to
+ *	the size of each configure event.  If such an answer to an earlier
+ *	commit arrived after a new resize, it would undo the resize.  The
+ *	roundtrip dispatches these answers before the resize.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Dispatches pending Wayland events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandFlushConfigures(void)
+{
+    if (waylandDisplay != NULL && !shutdownInProgress) {
+	wl_display_roundtrip(waylandDisplay);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandGetNVGContextForMeasure --
  *
  *	Return the NanoVG context with the shared GL context current,
@@ -1821,15 +1902,38 @@ TkWaylandSyncAppId(Tcl_Interp *interp)
     Tcl_InterpState state;
     const char *name;
 
-    if (interp == NULL || Tk_MainWindow(interp) == NULL) {
+    if (interp == NULL) {
         return;
     }
 
+    /*
+     * Save the state before calling Tk_MainWindow(): it sets an error
+     * result when the application is not (or no longer) registered.
+     */
     state = Tcl_SaveInterpState(interp, TCL_OK);
-    if (Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+    if (Tk_MainWindow(interp) != NULL
+	    && Tcl_EvalEx(interp, "tk appname", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
         name = Tcl_GetStringResult(interp);
         if (name != NULL && *name != '\0') {
+	    Tcl_DString defaultName;
+	    Tcl_Size length;
+
+	    /*
+	     * Keep the app_id "tk" (see TkWaylandInitialize) while the
+	     * application has its default name, possibly with a suffix such
+	     * as " #2"; use the name only if it was set with "-name" or
+	     * "tk appname".
+	     */
+	    Tcl_DStringInit(&defaultName);
+	    TkpGetAppName(interp, &defaultName);
+	    length = Tcl_DStringLength(&defaultName);
+	    if (strncmp(name, Tcl_DStringValue(&defaultName), length) == 0
+		    && (name[length] == '\0'
+		    || strncmp(name + length, " #", 2) == 0)) {
+		name = "tk";
+	    }
             TkWaylandSetAppId(name);
+	    Tcl_DStringFree(&defaultName);
         }
     }
     Tcl_RestoreInterpState(interp, state);

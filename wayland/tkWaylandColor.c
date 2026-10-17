@@ -212,6 +212,7 @@ TkpCmapStressed(
  *        - #RGB (3-digit hexadecimal)
  *        - #RRGGBB (6-digit hexadecimal)
  *        - #RRGGBBAA (8-digit hexadecimal with alpha)
+ *        - #RRRGGGBBB (9-digit hexadecimal, X11 12-bit format)
  *        - #RRRRGGGGBBBB (12-digit hexadecimal, X11 16-bit format)
  *
  * Results:
@@ -234,7 +235,11 @@ ParseHexColor(const char *name, NVGcolor *color)
     unsigned int hex = 0;
     int len = strlen(name + 1);
 
-    if (sscanf(name + 1, "%x", &hex) != 1) {
+    /* All characters must be hex digits ("%x" stops at the first other). */
+    if (len == 0 || (int)strspn(name + 1, "0123456789abcdefABCDEF") != len) {
+        return false;
+    }
+    if (len <= 8 && sscanf(name + 1, "%x", &hex) != 1) {
         return false;
     }
 
@@ -258,6 +263,16 @@ ParseHexColor(const char *name, NVGcolor *color)
         color->b = ((hex >>  8) & 0xFF) / 255.0f;
         color->a = ( hex        & 0xFF) / 255.0f;
         return true;
+    }
+    if (len == 9) {         /* #RRRGGGBBB (X11 12-bit per channel) */
+        unsigned int r, g, b;
+        if (sscanf(name + 1, "%3x%3x%3x", &r, &g, &b) == 3) {
+            color->r = r / 4095.0f;
+            color->g = g / 4095.0f;
+            color->b = b / 4095.0f;
+            color->a = 1.0f;
+            return true;
+        }
     }
     if (len == 12) {        /* #RRRRGGGGBBBB (X11 16-bit per channel) */
         unsigned int r, g, b;
@@ -368,6 +383,43 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
     color->b = base.b * s;
     color->a = base.a;
     return true;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ColorNameMatches --
+ *
+ *      Compare a color name with a name in the table, ignoring case.  As
+ *      in xlib/xcolors.c, a space in the name matches the start of a word
+ *      (an uppercase letter) in the table, so "alice blue" matches
+ *      "aliceBlue".
+ *
+ * Results:
+ *      true if the names match, false otherwise.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+ColorNameMatches(const char *name, const char *tableName)
+{
+    while (*name != '\0' && *tableName != '\0') {
+        if (*name == ' ' && isupper((unsigned char)*tableName)) {
+            name++;
+            continue;
+        }
+        if (tolower((unsigned char)*name)
+                != tolower((unsigned char)*tableName)) {
+            return false;
+        }
+        name++;
+        tableName++;
+    }
+    return *name == '\0' && *tableName == '\0';
 }
 
 /*
@@ -872,7 +924,7 @@ LookupNamedColor(const char *name, NVGcolor *color)
     };
 
     for (int i = 0; named[i].name != NULL; i++) {
-        if (strcasecmp(name, named[i].name) == 0) {
+        if (ColorNameMatches(name, named[i].name)) {
             color->r = named[i].r;
             color->g = named[i].g;
             color->b = named[i].b;

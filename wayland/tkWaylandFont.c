@@ -117,6 +117,8 @@ static int        GetRunFaceIndex(WaylandFont *fontPtr, FcChar32 *ucs4Chars,
 static int        FindFaceCoveringRange(WaylandFont *fontPtr, FcChar32 *ucs4,
 					int start, int len);
 static hb_font_t *GetHbFont(WaylandFont *fontPtr, int faceIndex);
+static void       MakeNvgFaceName(WaylandFont *fontPtr, int faceIndex,
+			    char *buf, size_t bufSize);
 static int        EnsureNvgFaceFont(WaylandFont *fontPtr, int faceIndex,
 				    NVGcontext *vg);
 static void       InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr,
@@ -2660,9 +2662,12 @@ WaylandShaper_ShapeString(
 				numBytes - bytePos);
         if (clen <= 0) { bytePos++; continue; }
 
-        /* Skip C0/C1 control characters except whitespace. */
+        /*
+         * Skip C0/C1 control characters except whitespace.  (U+FFFD, the
+         * replacement character, is a visible character.)
+         */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
-	    (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
+	    (uc >= 0x0080 && uc <= 0x009F)) {
             bytePos += clen;
             continue;
         }
@@ -3203,6 +3208,121 @@ TkWaylandClusterBoundaryAtOrBefore(
 
 /*
  *----------------------------------------------------------------------
+ * GetFontFileData --
+ *
+ *   Return the contents of a font file, read once per process and kept
+ *   for its lifetime.  Every WaylandFont and every NanoVG context (one
+ *   per toplevel) loads each face of its fallback stack into NanoVG, which
+ *   never frees fonts; with a copy of the file each, every new font size
+ *   or toplevel cost tens of megabytes.  The NanoVG fonts share this data
+ *   instead (freeData == 0).
+ *
+ * Results:
+ *   The data (and its size in *sizePtr), or NULL if the file cannot be
+ *   read.
+ *
+ * Side effects:
+ *   Reads the file and keeps it in memory.
+ *----------------------------------------------------------------------
+ */
+
+typedef struct FontFileData {
+    char *path;
+    unsigned char *data;
+    int size;
+    struct FontFileData *nextPtr;
+} FontFileData;
+
+static FontFileData *fontFileList = NULL;
+TCL_DECLARE_MUTEX(fontFileMutex)
+
+static unsigned char *
+GetFontFileData(
+    const char *path,
+    int *sizePtr)
+{
+    FontFileData *filePtr;
+    unsigned char *data = NULL;
+    FILE *f;
+    long size;
+
+    Tcl_MutexLock(&fontFileMutex);
+    for (filePtr = fontFileList; filePtr != NULL; filePtr = filePtr->nextPtr) {
+	if (strcmp(filePtr->path, path) == 0) {
+	    *sizePtr = filePtr->size;
+	    Tcl_MutexUnlock(&fontFileMutex);
+	    return filePtr->data;
+	}
+    }
+    f = fopen(path, "rb");
+    if (f != NULL) {
+	if (fseek(f, 0, SEEK_END) == 0 && (size = ftell(f)) > 0
+		&& size <= INT_MAX && fseek(f, 0, SEEK_SET) == 0) {
+	    data = (unsigned char *)Tcl_Alloc(size);
+	    if (fread(data, 1, size, f) != (size_t)size) {
+		Tcl_Free(data);
+		data = NULL;
+	    }
+	}
+	fclose(f);
+    }
+    if (data != NULL) {
+	filePtr = (FontFileData *)Tcl_Alloc(sizeof(FontFileData));
+	filePtr->path = (char *)Tcl_Alloc(strlen(path) + 1);
+	strcpy(filePtr->path, path);
+	filePtr->data = data;
+	filePtr->size = (int)size;
+	filePtr->nextPtr = fontFileList;
+	fontFileList = filePtr;
+	*sizePtr = (int)size;
+    }
+    Tcl_MutexUnlock(&fontFileMutex);
+    return data;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * MakeNvgFaceName --
+ *
+ *   Make the NanoVG font name of a face: a hash of its file and index in
+ *   the file.  NanoVG falls back from the primary face (face 0) to the
+ *   other faces of the WaylandFont (see EnsureNvgFont), so its name also
+ *   depends on all the faces.  Fonts which differ only in size (and a
+ *   "font configure" which keeps the faces) share the NanoVG fonts.
+ *
+ * Results:
+ *   None.  The name is written to buf.
+ *----------------------------------------------------------------------
+ */
+
+static void
+MakeNvgFaceName(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    char *buf,
+    size_t bufSize)
+{
+    uint64_t hash = 14695981039346656037ULL;	/* FNV-1a */
+    int first = faceIndex, last = faceIndex;
+
+    if (faceIndex == 0) {
+	last = fontPtr->nfaces - 1;
+    }
+    for (int i = first; i <= last; i++) {
+	const char *p = fontPtr->faces[i].filePath;
+	for (; p && *p; p++) {
+	    hash = (hash ^ (unsigned char)*p) * 1099511628211ULL;
+	}
+	hash = (hash ^ (unsigned)fontPtr->faces[i].faceIndex)
+		* 1099511628211ULL;
+	hash = (hash ^ 0xff) * 1099511628211ULL;
+    }
+    snprintf(buf, bufSize, "__wlface_%d_%016llx", faceIndex == 0,
+	    (unsigned long long)hash);
+}
+
+/*
+ *----------------------------------------------------------------------
  * EnsureNvgFaceFont --
  *
  *   Load a single WaylandFtFace into the NanoVG context on demand.
@@ -3238,20 +3358,15 @@ EnsureNvgFaceFont(
     }
 
     /*
-     * Make the name unique to this WaylandFont + faceIndex + generation.
-     * The font pointer and face index alone are NOT enough: fontPtr is
-     * reused in place across "font configure" (DeleteFont() frees and
-     * this file reallocates fontPtr->faces with the same fontPtr/index),
-     * so a name built only from those would go stale -- nvgFindFont()
-     * would keep resolving to whatever glyph data was registered under
-     * it before the reconfigure, since NanoVG/fontstash has no API to
-     * remove or replace a font entry. Regenerating unconditionally
-     * (rather than only when empty) also means we don't depend on a
-     * freshly (re)allocated WaylandFtFace having a zeroed nvgName.
+     * The name identifies the font data (see MakeNvgFaceName), so the
+     * NanoVG font is shared by all WaylandFonts using the same face.
+     * NanoVG/fontstash has no API to remove a font, so a name per
+     * WaylandFont made the fonts accumulate.  Regenerating unconditionally
+     * also means we don't depend on a freshly (re)allocated WaylandFtFace
+     * having a zeroed nvgName.
      */
-    snprintf(face->nvgName, sizeof(face->nvgName),
-             "__wlfont_%p_%d_%u", (void*)fontPtr, faceIndex,
-             fontPtr->generation);
+    MakeNvgFaceName(fontPtr, faceIndex, face->nvgName,
+	    sizeof(face->nvgName));
 
     int id = nvgFindFont(vg, face->nvgName);
     if (id >= 0) {
@@ -3259,10 +3374,14 @@ EnsureNvgFaceFont(
         return id;
     }
 
-    if (face->filePath && access(face->filePath, R_OK) == 0) {
-        id = nvgCreateFont(vg, face->nvgName, face->filePath);
+    if (face->filePath) {
+        int size;
+        unsigned char *data = GetFontFileData(face->filePath, &size);
+
+        id = data ? nvgCreateFontMemAtIndex(vg, face->nvgName, data, size,
+                0, face->faceIndex) : -1;
 	GL_DEBUG_LOG("nvgCreatFont %s\n", face->filePath);
-    } else if (face->filePath) { id = -1; }
+    }
 
     face->nvgFontId = id;
     return id;
@@ -3391,6 +3510,17 @@ EnsureNvgFont(
         ctx = ctx->next;
     }
 
+    /*
+     * The primary NanoVG font is shared (see MakeNvgFaceName); if it
+     * exists, its fallbacks were already added.
+     */
+    int primaryExisted = 0;
+    if (fontPtr->nfaces > 0) {
+	char name[64];
+	MakeNvgFaceName(fontPtr, 0, name, sizeof(name));
+	primaryExisted = (nvgFindFont(vg, name) >= 0);
+    }
+
     /* Load each face into this context. */
     int primaryId = -1;
     int primaryFace = -1;
@@ -3450,7 +3580,7 @@ EnsureNvgFont(
      * internal nvgText() fallback, which the shaped path never calls, so
      * it would sit dead.
      */
-    if (primaryId >= 0) {
+    if (primaryId >= 0 && !(primaryExisted && primaryFace == 0)) {
         for (int i = 0; i < fontPtr->nfaces; i++) {
             int fb = fontPtr->faces[i].nvgFontId;
             if (i != primaryFace && fb >= 0) {
@@ -3511,6 +3641,9 @@ EnsureNvgFont(
  *----------------------------------------------------------------------
  */
 
+/* The last generation given to a WaylandFont, see InitFont(). */
+static unsigned int fontGenerationCounter = 0;
+
 static void
 InitFont(
     Tk_Window tkwin,
@@ -3536,8 +3669,13 @@ InitFont(
      * loaded -- the font never visibly updates. Bumping the generation
      * here and folding it into the name guarantees each reconfigure gets
      * a name NanoVG has never seen.
+     *
+     * The generation comes from a global counter, not from fontPtr: a new
+     * WaylandFont can be allocated at the address of a freed one, and
+     * starting from the same generation would give it the name of the
+     * freed font, with the glyph data of a different typeface.
      */
-    fontPtr->generation++;
+    fontPtr->generation = ++fontGenerationCounter;
 
     if (!tkwin) {
 	tkwin = (Tk_Window) TkWaylandGetTkWindow(mainGlfwWindow);
@@ -4015,13 +4153,18 @@ InitFont(
 			offset = 0;
 		    }
                     if (stbtt_InitFont(&info, buf, offset)) {
-                        /* Use proper pixel height scaling. */
-                        float scale = stbtt_ScaleForPixelHeight(
+                        /*
+                         * The pixel size is the em size, as in fontstash
+                         * (which draws the text) and on other platforms,
+                         * not the height from descender to ascender.
+                         */
+                        float scale = stbtt_ScaleForMappingEmToPixels(
                             &info, (float)fontPtr->pixelSize);
                         int asc, desc, linegap;
                         stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                        fm->ascent  = (int)(asc * scale + 0.5f);
-                        fm->descent = (int)(-desc * scale + 0.5f);
+                        /* Round up, as Xft does. */
+                        fm->ascent  = (int)ceilf(asc * scale);
+                        fm->descent = (int)ceilf(-desc * scale);
                         /* Get proper character widths. */
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
@@ -4052,13 +4195,18 @@ InitFont(
                     if (stbtt_InitFont(&info, buf,
                                        stbtt_GetFontOffsetForIndex(
                                            buf, fontPtr->faces[0].faceIndex))) {
-                        /* Use proper pixel height scaling. */
-                        float scale = stbtt_ScaleForPixelHeight(
+                        /*
+                         * The pixel size is the em size, as in fontstash
+                         * (which draws the text) and on other platforms,
+                         * not the height from descender to ascender.
+                         */
+                        float scale = stbtt_ScaleForMappingEmToPixels(
                             &info, (float)fontPtr->pixelSize);
                         int asc, desc, linegap;
                         stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
-                        fm->ascent  = (int)(asc * scale + 0.5f);
-                        fm->descent = (int)(-desc * scale + 0.5f);
+                        /* Round up, as Xft does. */
+                        fm->ascent  = (int)ceilf(asc * scale);
+                        fm->descent = (int)ceilf(-desc * scale);
                         /* Get proper character widths. */
                         int adv_W, adv_space, lsb;
                         stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
@@ -4302,6 +4450,31 @@ CreateStandardNamedFonts(ClientData clientData)
 
 /*
  *----------------------------------------------------------------------
+ * MainWindowDestroyed --
+ *
+ *   Event handler for the main window: cancels a pending
+ *   CreateStandardNamedFonts idle when the main window is destroyed.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Cancels font idle task.
+ *----------------------------------------------------------------------
+ */
+
+static void
+MainWindowDestroyed(
+    ClientData clientData,
+    XEvent *eventPtr)
+{
+    if (eventPtr->type == DestroyNotify) {
+	Tcl_CancelIdleCall(CreateStandardNamedFonts, clientData);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * TkpFontPkgInit --
  *
  *   Initialize the font subsystem and schedule creation of standard Tk
@@ -4325,28 +4498,15 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
     }
 
     Tcl_DoWhenIdle(CreateStandardNamedFonts, (ClientData) mainPtr);
-}
 
-/*
- *----------------------------------------------------------------------
- * TkWaylandCancelNamedFontIdle --
- * 
- *   Cancel a pending CreateStandardNamedFonts idle for mainPtr.
- *   Must be called from the TkMainInfo teardown path before mainPtr is
- *   freed, to prevent the idle firing against a deleted named-font hash
- *   table.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Cancels font idle task.
- *----------------------------------------------------------------------
- */
-void
-TkWaylandCancelNamedFontIdle(TkMainInfo *mainPtr)
-{
-    Tcl_CancelIdleCall(CreateStandardNamedFonts, (ClientData) mainPtr);
+    /*
+     * The application can be deleted before the idle callback runs (e.g.
+     * a child interpreter which loads Tk and is deleted at once).  Cancel
+     * the callback when the main window is destroyed, before mainPtr is
+     * freed.
+     */
+    Tk_CreateEventHandler((Tk_Window) mainPtr->winPtr, StructureNotifyMask,
+	    MainWindowDestroyed, mainPtr);
 }
 
 
@@ -4770,9 +4930,34 @@ Tk_MeasureCharsInContext(
             positions = (NVGglyphPosition *)
 		Tcl_Alloc(nchars * sizeof(NVGglyphPosition));
 
-        int   npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
-                                           positions, nchars);
-        float totalWidth = nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, NULL);
+        /*
+         * With a limit, lay out only a prefix of the range: 64 characters,
+         * then 4 times more while all of them fit.  The text widget measures
+         * a display line with the rest of the logical line as the range, and
+         * laying out all of it each time made a long wrapped line quadratic
+         * in its length.  Each prefix is laid out from the start of the
+         * range, so the kerning is the same as for the whole range.
+         */
+        const char *layoutEnd = rangeEnd;
+        int         npos;
+        int         limit = (maxLength >= 0) ? 64 : nchars;
+
+        for (;;) {
+            int n = (limit < nchars) ? limit : nchars;
+
+            layoutEnd = rangePtr;
+            for (int i = 0; i < n && layoutEnd < rangeEnd; i++) {
+                int ch;
+                layoutEnd += Tcl_UtfToUniChar(layoutEnd, &ch);
+            }
+            npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, layoutEnd,
+                                         positions, n);
+            if (n >= nchars || npos <= 0
+                    || positions[npos - 1].x > maxLength) {
+                break;
+            }
+            limit *= 4;
+        }
 
         int         pixelWidth     = 0;
         const char *lastBreak      = rangePtr;
@@ -4780,10 +4965,17 @@ Tk_MeasureCharsInContext(
         const char *p              = rangePtr;
         int         pos            = 0;
 
-        while (p < rangeEnd && pos < npos) {
+        while (p < layoutEnd && pos < npos) {
             int ch;
             const char *next = p + Tcl_UtfToUniChar(p, &ch);
-            float glyphRight = positions[pos].maxx;
+
+            /*
+             * The width up to the end of this character is where the next
+             * one starts (its advance), not the right edge of its ink
+             * (maxx), which can be wider and is not what Tk measures.
+             */
+            float glyphRight = (pos + 1 < npos) ? positions[pos + 1].x :
+                    nvgTextBounds(vg, 0, 0, rangePtr, next, NULL);
             if (maxLength >= 0 && glyphRight > maxLength) {
                 if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
                     p = lastBreak; pixelWidth = lastBreakWidth;
@@ -4802,7 +4994,8 @@ Tk_MeasureCharsInContext(
         if ((flags & TK_AT_LEAST_ONE) && p == rangePtr && rangePtr < rangeEnd) {
             int ch;
             const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
-            float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
+            float glyphRight = (npos > 1) ? positions[1].x :
+                    nvgTextBounds(vg, 0, 0, rangePtr, next, NULL);
             pixelWidth = (int)ceil(glyphRight);
             p = next;
         }

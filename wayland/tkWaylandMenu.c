@@ -392,6 +392,12 @@ TkpDestroyMenu(TkMenu *menuPtr)
 
     DEBUG_LOG("TkpDestroyMenu called for menu %p", (void *)menuPtr);
 
+    /*
+     * TkpPostTearoffMenu schedules a redraw, which must not run on a freed
+     * menu.
+     */
+    Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
+
     winPtr = (TkWindow *)menuPtr->tkwin;
     if (!winPtr) {
         return;

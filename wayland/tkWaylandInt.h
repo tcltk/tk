@@ -315,7 +315,6 @@ extern const char *const WmAttributeNames[];
 #define TKWL_DONT_SWAP           2
 #define TKWL_NEVER_FOCUSED       4
 #define TKWL_IS_DRAWING          8
-#define TKWL_USE_REQUESTED       16
 #define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
 
 typedef struct glfwTkInfo {
@@ -603,6 +602,8 @@ MODULE_SCOPE int         TkWaylandBeginDraw(Drawable drawable, GC gc, TkWaylandD
 MODULE_SCOPE void        TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkWaylandGetNVGContext(Drawable drawable);
 MODULE_SCOPE NVGcontext *TkWaylandGetNVGContextForMeasure(void);
+MODULE_SCOPE void        TkWaylandFlushConfigures(void);
+MODULE_SCOPE int         tkWaylandServerDecorations;
 MODULE_SCOPE void        createClipShaders(TkWindow *winPtr);
 
 /*
