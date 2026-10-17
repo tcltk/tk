@@ -1245,11 +1245,6 @@ static void UpdatePointerWinAfterDestroy (
     }
     if (doUpdatePointer) {
 	Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
-	if (target == NULL) {
-	    [NSApp setTkPointerWindow:nil];
-	} else {
-	    [NSApp setTkPointerWindow: (TkWindow *)target];
-	}
     }
 }
 

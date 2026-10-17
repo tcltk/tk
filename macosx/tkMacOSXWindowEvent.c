@@ -1028,6 +1028,7 @@ static void DebugIdleTask(void *clientData) {
 
 - (void) updateLayer {
     if (![NSApp tkWillExit]) {
+	//Tcl_DoWhenIdle(DebugIdleTask, [self window]);
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -1036,7 +1037,6 @@ static void DebugIdleTask(void *clientData) {
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
-	//Tcl_DoWhenIdle(DebugIdleTask, [self window]);
 	CGContextRef context = self.tkLayerBitmapContext;
 	if (!context) {
 	    return;

@@ -52,20 +52,8 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkWillExit = _tkWillExit;
-@synthesize tkPointerWindow = _tkPointerWindow;
-
-- (void) setTkPointerWindow: (TkWindow *)winPtr
-{
-    if (winPtr) {
-	Tcl_Preserve(winPtr);
-    }
-    if (_tkPointerWindow) {
-	Tcl_Release(_tkPointerWindow);
-    }
-    _tkPointerWindow = winPtr;
-    return;
-}
 @synthesize tkEventTarget = _tkEventTarget;
+
 - (void) setTkEventTarget: (TkWindow *)winPtr
 {
     if (winPtr) {
