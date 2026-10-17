@@ -2629,6 +2629,43 @@ TkpWmGetState(
  *--------------------------------------------------------------
  */
 
+static void CheckForPointer(TkWindow *winPtr)
+{
+    if (winPtr == NULL || winPtr->mainPtr == NULL) {
+	/*
+	 * Bug [d233f01e2a] - clipboard clean up after main window destroyed
+	 * Nothing to do.
+	 */
+	return;
+    }
+
+    POINT mouse;
+    int x, y;
+    unsigned int state = TkWinGetModifierState();
+    TkWindow **windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
+    TkWindow **w;
+    TkGetPointerCoords(NULL, &x, &y);
+    mouse.x = x;
+    mouse.y = y;
+    if (windows != NULL) {
+	for (w = windows; *w ; w++) {
+	    RECT windowRect;
+	    Window window = Tk_WindowId((Tk_Window) *w);
+
+	    if ((winPtr == *w) || (window == None)
+		    || (GetWindowRect(Tk_GetHWND(window), &windowRect) == 0)) {
+		continue;
+	    }
+	    if (PtInRect(&windowRect, mouse)) {
+		Tk_Window target = Tk_CoordsToWindow(x, y, (Tk_Window) *w);
+		Tk_UpdatePointer((Tk_Window) target, x, y, state);
+		break;
+	    }
+	}
+	ckfree(windows);
+    }
+}
+
 void
 TkWmDeadWindow(
     TkWindow *winPtr)		/* Top-level window that's being deleted. */
@@ -2679,8 +2716,9 @@ TkWmDeadWindow(
 	    }
 	}
     }
-    if (wmPtr->numTransients != 0)
+    if (wmPtr->numTransients != 0) {
 	Tcl_Panic("numTransients should be 0");
+    }
 
     if (wmPtr->title != NULL) {
 	ckfree(wmPtr->title);
@@ -2767,6 +2805,13 @@ TkWmDeadWindow(
 	DecrIconRefCount(wmPtr->iconPtr);
     }
 
+    /*
+     * Check if the dead window is a toplevel containing the pointer.  If so,
+     * find the window which will inherit the pointer and call
+     * TkUpdatePointer.
+     */
+
+    CheckForPointer(winPtr);
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
@@ -6874,6 +6919,18 @@ TkWmStackorderToplevel(
 	    (LPARAM) &pair) == 0) {
 	ckfree(windows);
 	windows = NULL;
+    } else {
+	/*
+	 * Not all toplevels may have been found (e.g. one being destroyed).
+	 * Move the found ones to the beginning of the array. [Bug 7f05a19378]
+	 */
+
+	int found = (windows + table.numEntries) - (pair.windowPtr + 1);
+
+	if (found < table.numEntries) {
+	    memmove(windows, pair.windowPtr + 1,
+		    (found + 1) * sizeof(TkWindow *));
+	}
     }
 
   done:
