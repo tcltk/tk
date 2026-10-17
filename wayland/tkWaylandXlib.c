@@ -2571,34 +2571,6 @@ XVisualIDFromVisual(
 /*
  *----------------------------------------------------------------------
  *
- * XRectInRegion --
- *
- *	Test if rectangle is in region. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (RectangleOut).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XRectInRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(unsigned int))
-{
-    /* No-op - regions not used in Wayland port. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XSetICFocus --
  *
  *	Set input context focus. No-op in Wayland port.
