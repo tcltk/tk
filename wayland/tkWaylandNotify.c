@@ -105,6 +105,7 @@ extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
 extern void TkWaylandMenuHandleEscape(void);
 extern void TkWaylandMenuDismissAll(void);
 extern void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
+extern void TkWaylandMenuInvokeTearoff(TkMenu *menuPtr);
 static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
 
 /*
@@ -1790,6 +1791,13 @@ TkWaylandKeyCallback(GLFWwindow *window,
                     if (mePtr) {
                         if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
                             TkWaylandMenuOpenCascade(menuPtr, mePtr);
+                        } else if (mePtr->type == TEAROFF_ENTRY) {
+                            /*
+                             * TkInvokeMenu() is a no-op for tearoff
+                             * entries; run ::tk::TearOffMenu (which also
+                             * dismisses the menu stack).
+                             */
+                            TkWaylandMenuInvokeTearoff(menuPtr);
                         } else if (mePtr->type != SEPARATOR_ENTRY) {
                             TkInvokeMenu(menuPtr->interp, menuPtr, menuPtr->active);
                             TkWaylandMenuDismissAll();

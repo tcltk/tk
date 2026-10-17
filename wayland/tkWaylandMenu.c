@@ -243,6 +243,8 @@ static void TkpDisplayMenu(void *clientData);
 /* Menu input handling. */
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
+static void MenuInvokeTearoff(TkMenu *menuPtr);
+static void DisplayTearoffMenu(TkMenu *menuPtr);
 static void MenuMouseLeave(TkMenu *menuPtr);
 
 /*
@@ -292,6 +294,7 @@ MODULE_SCOPE int TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
 MODULE_SCOPE Tk_Window TkWaylandMenuGetParentWindow(void);
 MODULE_SCOPE void TkWaylandMenubarResize(TkWindow *winPtr);
 MODULE_SCOPE int TkWaylandMenuPopupActive(void);
+MODULE_SCOPE void TkWaylandMenuInvokeTearoff(TkMenu *menuPtr);
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
 
 /*
@@ -821,7 +824,12 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     int i;
     int j;
     int lastColumnBreak = 0;
+    int maxY;
     TkMenuEntry *mePtr;
+    /*
+     * A torn-off menu has the same width as the posted menu, as on X11.
+     */
+    int minContentWidth = MENU_MIN_CONTENT_WIDTH;
     if (menuPtr->tkwin == NULL) {
         return;
     }
@@ -829,7 +837,7 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     indicatorSpace = labelWidth = accelWidth = 0;
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
                         menuPtr->borderWidthObj, &borderWidth);
-    x = y = borderWidth;
+    x = y = maxY = borderWidth;
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
                         menuPtr->activeBorderWidthPtr, &activeBorderWidth);
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
@@ -844,20 +852,20 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
             Tk_GetFontMetrics(tkfont, &entryMetrics);
             fmPtr = &entryMetrics;
         }
-        if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) {
-            if (i != 0) {
-                if (indicatorSpace + labelWidth + accelWidth
-                        < MENU_MIN_CONTENT_WIDTH) {
-                    labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace
-                        - accelWidth;
-                }
-                for (j = lastColumnBreak; j < i; j++) {
-                    menuPtr->entries[j]->indicatorSpace = indicatorSpace;
-                    menuPtr->entries[j]->labelWidth = labelWidth;
-                    menuPtr->entries[j]->width = indicatorSpace + labelWidth
-                        + accelWidth + 2 * activeBorderWidth;
-                }
+        if ((i > 0) && mePtr->columnBreak) {
+            if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
+                labelWidth = minContentWidth - indicatorSpace - accelWidth;
             }
+            for (j = lastColumnBreak; j < i; j++) {
+                menuPtr->entries[j]->indicatorSpace = indicatorSpace;
+                menuPtr->entries[j]->labelWidth = labelWidth;
+                menuPtr->entries[j]->width = indicatorSpace + labelWidth
+                    + accelWidth + 2 * activeBorderWidth;
+                menuPtr->entries[j]->x = x;
+                menuPtr->entries[j]->entryFlags &= ~ENTRY_LAST_COLUMN;
+            }
+            x += indicatorSpace + labelWidth + accelWidth
+                + 2 * activeBorderWidth;
             indicatorSpace = labelWidth = accelWidth = 0;
             lastColumnBreak = i;
             y = borderWidth;
@@ -888,22 +896,26 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
             }
             mePtr->height += 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT;
         }
-        mePtr->x = x;
         mePtr->y = y;
         y += mePtr->height;
+        if (y > maxY) {
+            maxY = y;
+        }
     }
-    if (indicatorSpace + labelWidth + accelWidth < MENU_MIN_CONTENT_WIDTH) {
-        labelWidth = MENU_MIN_CONTENT_WIDTH - indicatorSpace - accelWidth;
+    if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
+        labelWidth = minContentWidth - indicatorSpace - accelWidth;
     }
     for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
         menuPtr->entries[j]->indicatorSpace = indicatorSpace;
         menuPtr->entries[j]->labelWidth = labelWidth;
         menuPtr->entries[j]->width = indicatorSpace + labelWidth
             + accelWidth + 2 * activeBorderWidth;
+        menuPtr->entries[j]->x = x;
+        menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
     width = x + indicatorSpace + labelWidth + accelWidth
-        + 2 * activeBorderWidth + 2 * borderWidth;
-    height = y + borderWidth;
+        + 2 * activeBorderWidth + borderWidth;
+    height = maxY + borderWidth;
     menuPtr->totalWidth = width;
     menuPtr->totalHeight = height;
 }
@@ -1687,6 +1699,8 @@ TkpDrawMenuEntry(
     Tk_3DBorder activeBorder = NULL;
     NVGcontext *vg = NULL;
     int isMenubar = 0;
+    TkWaylandDrawingContext dc;
+    int inFrame = 0;
 
     /* Safety check. */
     if (!mePtr || !mePtr->menuPtr || !mePtr->menuPtr->tkwin) return;
@@ -1750,12 +1764,20 @@ TkpDrawMenuEntry(
         }
     }
 
-    if (!popup) {
+    if (popup) {
+        vg = TkWaylandPopupGetNVGContext(popup);
+    } else if (mePtr->menuPtr->menuType == TEAROFF_MENU) {
+        /*
+         * A tear-off menu is an ordinary toplevel; draw into it.
+         */
+        if (TkWaylandBeginDraw(d, NULL, &dc) == TCL_OK) {
+            vg = dc.vg;
+            inFrame = 1;
+        }
+    } else {
         DEBUG_LOG("TkpDrawMenuEntry: no popup found for menu %p!", (void*)mePtr->menuPtr);
         return;
     }
-
-    vg = TkWaylandPopupGetNVGContext(popup);
     if (!vg) {
         DEBUG_LOG("TkpDrawMenuEntry: no NVG context available");
         return;
@@ -1857,11 +1879,8 @@ TkpDrawMenuEntry(
                                    entryFont, entryFmPtr, x, y, width, height,
                                    textColor);
         }
-        return;
-    }
-
-    /* For non-menubar entries, use type-based drawing. */
-    if (mePtr->type == SEPARATOR_ENTRY) {
+    } else if (mePtr->type == SEPARATOR_ENTRY) {
+        /* For non-menubar entries, use type-based drawing. */
         DrawMenuSeparator(mePtr->menuPtr, mePtr, vg,
                           entryFont, entryFmPtr, x, y, width, height);
     } else if (mePtr->type == TEAROFF_ENTRY) {
@@ -1882,6 +1901,9 @@ TkpDrawMenuEntry(
                                    entryFont, entryFmPtr, x, y, width, height,
                                    textColor);
         }
+    }
+    if (inFrame) {
+        TkWaylandEndDraw(&dc);
     }
 }
 
@@ -4103,19 +4125,34 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
- * TkpDisplayMenu --
+ * DisplayTearoffMenu --
  *
- *     Called by Tk's display system to redraw a posted menu.
+ *     Redraw a torn-off menu. A tear-off is an ordinary toplevel with no
+ *     popup subsurface and is not in menuStack[], so TkpDisplayMenu() has
+ *     no popup to draw into; let the generic DisplayMenu() redraw all
+ *     entries into the toplevel, as on X11. It also paints the area at
+ *     the right of the entries when the window is wider than the menu.
  *
  * Results:
  *     None.
  *
  * Side effects:
- *     Renders menu using NanoVG into the menu's xdg_popup surface.
- *----------------------------------------------------------------------
+ *     Schedules a redraw of the menu.
+ *
+ *---------------------------------------------------------------------------
  */
+
+static void
+DisplayTearoffMenu(
+    TkMenu *menuPtr)
+{
+    if (Tk_IsMapped(menuPtr->tkwin)) {
+        TkEventuallyRedrawMenu(menuPtr, NULL);
+    }
+}
+
 
 static void
 TkpDisplayMenu(
@@ -4162,6 +4199,10 @@ TkpDisplayMenu(
     }
 
     if (!popup) {
+        if (menuPtr->menuType == TEAROFF_MENU) {
+            DisplayTearoffMenu(menuPtr);
+            return;
+        }
         DEBUG_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
         return;
     }
@@ -4362,8 +4403,12 @@ TkpPostTearoffMenu(
 
     DEBUG_LOG("TkpPostTearoffMenu called");
 
-    TkWaylandActivateMenuEntry(menuPtr, -1);
+    /*
+     * Compute the geometry first: posting <<MenuSelect>> creates the
+     * window, and it is created with the requested size.
+     */
     TkRecomputeMenu(menuPtr);
+    TkWaylandActivateMenuEntry(menuPtr, -1);
 
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
@@ -4420,13 +4465,100 @@ TkpPostTearoffMenu(
         y = 0;
     }
 
-    Tk_MoveWindow(menuPtr->tkwin, x, y);
+    /*
+     * Wayland clients cannot position toplevels, and this backend treats
+     * every toplevel as sitting at (0,0) in root coordinates (see
+     * TkWaylandCursorPosCallback: pointer coords are fed to
+     * Tk_UpdatePointer/Tk_CoordsToWindow as root coords). Moving the
+     * tear-off to (x,y) would make Tk subtract that offset from every
+     * pointer position, so hit-testing and %y for the Menu bindings would
+     * be off by (x,y) and most entries could never be reached.
+     */
+    (void)x;
+    (void)y;
+    /*
+     * Use totalWidth/Height as authoritative size for tearoffs - it is the
+     * widest label, not Tk_ReqWidth which may be stale.  This makes the
+     * toplevel match the label width.
+     */
+    if (menuPtr->totalWidth > 0) {
+        reqW = menuPtr->totalWidth;
+    }
+    if (menuPtr->totalHeight > 0) {
+        reqH = menuPtr->totalHeight;
+    }
+    Tk_MoveWindow(menuPtr->tkwin, 0, 0);
     Tk_ResizeWindow(menuPtr->tkwin, reqW, reqH);
     Tk_MapWindow(menuPtr->tkwin);
 
     Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
 
     return TCL_OK;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuInvokeTearoff --
+ *
+ *     Invoke the tearoff entry of a posted menu: run ::tk::TearOffMenu
+ *     (the same script menu.tcl's tk::MenuInvoke runs for a tearoff
+ *     entry), then end the menu session. Tk core's TkInvokeMenu() does
+ *     nothing for TEAROFF_ENTRY, and this backend's raw pointer/keyboard
+ *     path bypasses the Menu class bindings, so it must be done here.
+ *     Also exported for the Return/Enter handler in tkWaylandNotify.c.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Creates a cloned TEAROFF_MENU toplevel (posted through
+ *     TkpPostTearoffMenu) and dismisses the menu stack.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuInvokeTearoff(
+    TkMenu *menuPtr)
+{
+    MenuInvokeTearoff(menuPtr);
+}
+
+static void
+MenuInvokeTearoff(
+    TkMenu *menuPtr)
+{
+    Tcl_Interp *interp;
+    Tcl_Obj *cmdObj;
+    int result;
+
+    if (menuPtr == NULL || menuPtr->tkwin == NULL
+            || menuPtr->menuType != MAIN_MENU) {
+        TkWaylandMenuDismissAll();
+        return;
+    }
+
+    interp = menuPtr->interp;
+    cmdObj = Tcl_NewListObj(0, NULL);
+    Tcl_IncrRefCount(cmdObj);
+    Tcl_ListObjAppendElement(NULL, cmdObj,
+            Tcl_NewStringObj("::tk::TearOffMenu", -1));
+    Tcl_ListObjAppendElement(NULL, cmdObj,
+            Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin), -1));
+
+    /*
+     * Tear off first, then unpost, matching tk::MenuInvoke: the script
+     * reads the posted menu's geometry to place the clone.
+     */
+    result = Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(cmdObj);
+    if (result != TCL_OK) {
+        Tcl_AddErrorInfo(interp, "\n    (tearing off menu)");
+        Tcl_BackgroundException(interp, result);
+    }
+
+    TkWaylandMenuDismissAll();
 }
 
 /*
@@ -4468,12 +4600,19 @@ MenuMouseClick(
             y >= mePtr->y && y < mePtr->y + mePtr->height) {
 
             if (mePtr->state == ENTRY_DISABLED ||
-                mePtr->type == SEPARATOR_ENTRY ||
-                mePtr->type == TEAROFF_ENTRY) {
+                mePtr->type == SEPARATOR_ENTRY) {
                 return;
             }
 
             switch (mePtr->type) {
+            case TEAROFF_ENTRY:
+                /*
+                 * The dashed line at the top of the menu: clicking it
+                 * tears the menu off into its own toplevel.
+                 */
+                MenuInvokeTearoff(menuPtr);
+                break;
+
             case COMMAND_ENTRY:
                 TkInvokeMenu(menuPtr->interp, menuPtr, i);
                 TkWaylandMenuDismissAll();
@@ -4604,10 +4743,14 @@ MenuMouseMotion(
                      i, mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
                      mePtr->type, mePtr->state);
 
+            /*
+             * Tearoff entries are deliberately NOT skipped here: like
+             * stock Tk they highlight on hover so the user can see the
+             * line is clickable.
+             */
             if (mePtr->state == ENTRY_DISABLED ||
-                mePtr->type == SEPARATOR_ENTRY ||
-                mePtr->type == TEAROFF_ENTRY) {
-                DEBUG_LOG("MenuMouseMotion: entry %d is disabled/separator/tearoff, skipping", i);
+                mePtr->type == SEPARATOR_ENTRY) {
+                DEBUG_LOG("MenuMouseMotion: entry %d is disabled/separator, skipping", i);
                 continue;
             }
 
