@@ -4263,10 +4263,11 @@ WmStateCmd(
     Tcl_Obj *const objv[])
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    /* As on Aqua: "icon" is only reported, and "zoomed" can be set. */
     static const char *const opts[] = {
-        "normal", "iconic", "withdrawn", "icon", "zoomed", NULL
+        "iconic", "normal", "withdrawn", "zoomed", NULL
     };
-    enum { OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN, OPT_ICON, OPT_ZOOMED };
+    enum { OPT_ICONIC, OPT_NORMAL, OPT_WITHDRAWN, OPT_ZOOMED };
     int idx;
 
     /*
@@ -4303,7 +4304,7 @@ WmStateCmd(
 
     /* Get requested state. */
     if (Tcl_GetIndexFromObjStruct(interp, objv[0], opts, sizeof(char *),
-                                  "state", TCL_EXACT, &idx) != TCL_OK) {
+                                  "argument", 0, &idx) != TCL_OK) {
         return TCL_ERROR;
     }
 
@@ -4349,12 +4350,6 @@ WmStateCmd(
             wmPtr->flags |= WM_WITHDRAWN;
             TkWmUnmapWindow(winPtr);
             break;
-
-        case OPT_ICON:
-            Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                "can't change state to icon: not implemented", -1));
-            Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
-            return TCL_ERROR;
 
         case OPT_ZOOMED:
             wmPtr->attributes.zoomed = 1;
