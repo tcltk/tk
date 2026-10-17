@@ -5562,6 +5562,31 @@ test panedwindow-29.2 {display on depths other than the default one} -constraint
     deleteWindows
 } -result {}
 
+test panedwindow-31.1 {sash move in an enlarged panedwindow keeps its requested size} -setup {
+    deleteWindows
+} -body {
+    toplevel .t
+    panedwindow .t.p -orient horizontal
+    frame .t.p.f1 -width 100 -height 50
+    frame .t.p.f2 -width 100 -height 50
+    .t.p add .t.p.f1 .t.p.f2 -stretch always
+    pack .t.p -expand 1 -fill both
+    update
+    set req [winfo reqwidth .t.p]
+    wm geometry .t 400x100
+    update
+    set res {}
+    foreach x {60 250} {
+	.t.p sash place 0 $x 0
+	update
+	lappend res [expr {[winfo reqwidth .t.p] - $req}] \
+		[expr {abs([lindex [.t.p sash coord 0] 0] - $x) <= 1}]
+    }
+    set res
+} -cleanup {
+    deleteWindows
+} -result {0 1 0 1}
+
 #
 # TESTFILE CLEANUP
 #

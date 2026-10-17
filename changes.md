@@ -124,6 +124,7 @@ to the userbase.
  - [the size hints of a toplevel ignore its menubar](https://core.tcl-lang.org/tcl/tktview/726351)
  - [focus test failures](https://core.tcl-lang.org/tcl/tktview/147446)
  - [missing <Leave> event when posting cascade menus](https://core.tcl-lang.org/tcl/tktview/873655)
+ - [panedwindow misbehaving when resizing window](https://core.tcl-lang.org/tcl/tktview/7c5162)
  - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tcl/tktview/a4c72a)
  - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
