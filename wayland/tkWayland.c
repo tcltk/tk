@@ -233,8 +233,9 @@ TkpBuildRegionFromAlphaData(
  *	Return the number of milliseconds the user was inactive.
  *
  * Results:
- *	The number of milliseconds since the user's latest interaction with
- *	the system on the given display.
+ *	Always -1: Wayland does not let clients query how long the user has
+ *	been inactive.  (The second field of /proc/uptime is the idle time of
+ *	the CPUs, not of the user.)
  *
  * Side effects:
  *	None.
@@ -243,24 +244,9 @@ TkpBuildRegionFromAlphaData(
 
 long long
 Tk_GetUserInactiveTime(
-    TCL_UNUSED(Display*))	/* Unused with GLFW */
+    TCL_UNUSED(Display*))
 {
-    long inactiveTime = -1;
-
-    /* With GLFW, we need platform-specific idle time detection. */
-#if defined(__linux__)
-    /* On Linux with GLFW, we might use DBus or read from /proc */
-    FILE *fp = fopen("/proc/uptime", "r");
-    if (fp) {
-        double uptime, idle_time;
-        if (fscanf(fp, "%lf %lf", &uptime, &idle_time) == 2) {
-            inactiveTime = (long)(idle_time * 1000); /* Convert to milliseconds */
-        }
-        fclose(fp);
-    }
-#endif
-
-    return inactiveTime;
+    return -1;
 }
 
 /*
