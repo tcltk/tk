@@ -818,6 +818,7 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     int i;
     int j;
     int lastColumnBreak = 0;
+    int maxY;
     TkMenuEntry *mePtr;
     /*
      * Popups keep a minimum content width; a torn-off menu is a normal
@@ -832,7 +833,7 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     indicatorSpace = labelWidth = accelWidth = 0;
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
                         menuPtr->borderWidthObj, &borderWidth);
-    x = y = borderWidth;
+    x = y = maxY = borderWidth;
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
                         menuPtr->activeBorderWidthPtr, &activeBorderWidth);
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
@@ -847,19 +848,20 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
             Tk_GetFontMetrics(tkfont, &entryMetrics);
             fmPtr = &entryMetrics;
         }
-        if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) {
-            if (i != 0) {
-                if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
-                    labelWidth = minContentWidth - indicatorSpace
-                        - accelWidth;
-                }
-                for (j = lastColumnBreak; j < i; j++) {
-                    menuPtr->entries[j]->indicatorSpace = indicatorSpace;
-                    menuPtr->entries[j]->labelWidth = labelWidth;
-                    menuPtr->entries[j]->width = indicatorSpace + labelWidth
-                        + accelWidth + 2 * activeBorderWidth;
-                }
+        if ((i > 0) && mePtr->columnBreak) {
+            if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
+                labelWidth = minContentWidth - indicatorSpace - accelWidth;
             }
+            for (j = lastColumnBreak; j < i; j++) {
+                menuPtr->entries[j]->indicatorSpace = indicatorSpace;
+                menuPtr->entries[j]->labelWidth = labelWidth;
+                menuPtr->entries[j]->width = indicatorSpace + labelWidth
+                    + accelWidth + 2 * activeBorderWidth;
+                menuPtr->entries[j]->x = x;
+                menuPtr->entries[j]->entryFlags &= ~ENTRY_LAST_COLUMN;
+            }
+            x += indicatorSpace + labelWidth + accelWidth
+                + 2 * activeBorderWidth;
             indicatorSpace = labelWidth = accelWidth = 0;
             lastColumnBreak = i;
             y = borderWidth;
@@ -890,9 +892,11 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
             }
             mePtr->height += 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT;
         }
-        mePtr->x = x;
         mePtr->y = y;
         y += mePtr->height;
+        if (y > maxY) {
+            maxY = y;
+        }
     }
     if (indicatorSpace + labelWidth + accelWidth < minContentWidth) {
         labelWidth = minContentWidth - indicatorSpace - accelWidth;
@@ -902,10 +906,12 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
         menuPtr->entries[j]->labelWidth = labelWidth;
         menuPtr->entries[j]->width = indicatorSpace + labelWidth
             + accelWidth + 2 * activeBorderWidth;
+        menuPtr->entries[j]->x = x;
+        menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
     width = x + indicatorSpace + labelWidth + accelWidth
-        + 2 * activeBorderWidth + 2 * borderWidth;
-    height = y + borderWidth;
+        + 2 * activeBorderWidth + borderWidth;
+    height = maxY + borderWidth;
     menuPtr->totalWidth = width;
     menuPtr->totalHeight = height;
 }
