@@ -1634,12 +1634,11 @@ test scale-23.1 {trough click repeat stops when the command grabs - Bug [99bb36d
     set y [lindex [.s coords] 1]
     event generate .s <Button-1> -x 350 -y $y
     after 50 [list event generate .s <ButtonRelease-1> -x 350 -y $y]
-    after 1000 {set done 1}
-    vwait done
+    pause 1000
     set count
 } -cleanup {
     destroy .s .d
-    unset -nocomplain count done
+    unset -nocomplain count
 } -result 1
 
 option clear

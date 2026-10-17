@@ -3971,12 +3971,11 @@ test button-14.2 {Alt-space does not invoke the button [1692755]} -body {
 	event generate $w <Alt-space>
 	event generate $w <space>
     }
-    after 200 {set done 1}
-    vwait done
+    pause 200
     set res
 } -cleanup {
     destroy .b .c .r
-    unset -nocomplain res done
+    unset -nocomplain res
 } -result {c r b}
 
 test button-15.1 {Bug [5d991b822e]} {
