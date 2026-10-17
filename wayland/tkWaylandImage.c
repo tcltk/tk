@@ -133,10 +133,15 @@ ImageGetPixel(
     switch (image->bits_per_pixel) {
     case 32:
     case 24:
-        /* Tk photo is RGBA in memory; return 0xRRGGBB for XImage API */
-        return ((unsigned long)srcPtr[0] << 16)
+        /*
+         * As on X11, the pixel 0xRRGGBB is stored in the LSBFirst byte
+         * order of the image: blue, green, red (and alpha).  The generic
+         * code (e.g. the canvas "image" command) reads the bytes directly
+         * and decodes them with the masks of the visual.
+         */
+        return ((unsigned long)srcPtr[2] << 16)
              | ((unsigned long)srcPtr[1] << 8)
-             |  (unsigned long)srcPtr[2];
+             |  (unsigned long)srcPtr[0];
     case 16:
         return (unsigned long)(*(unsigned short *)srcPtr);
     case 8:
@@ -186,15 +191,16 @@ PutPixel(
 
     switch (image->bits_per_pixel) {
     case 32:
-        destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF); /* R */
+        /* LSBFirst 0xRRGGBB, see ImageGetPixel. */
+        destPtr[0] = (unsigned char)(pixel & 0xFF);         /* B */
         destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF); /* G */
-        destPtr[2] = (unsigned char)(pixel & 0xFF);         /* B */
+        destPtr[2] = (unsigned char)((pixel >> 16) & 0xFF); /* R */
         destPtr[3] = 0xFF;
         break;
     case 24:
-        destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF);
+        destPtr[0] = (unsigned char)(pixel & 0xFF);
         destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF);
-        destPtr[2] = (unsigned char)(pixel & 0xFF);
+        destPtr[2] = (unsigned char)((pixel >> 16) & 0xFF);
         break;
     case 16:
         (*(unsigned short*)destPtr) = (unsigned short)pixel;
@@ -543,7 +549,13 @@ XGetImage(
         }
     }
 
-    /* For non-bitmap pixmaps, fall back to glReadPixels. */
+    /*
+     * Otherwise read the pixels from the framebuffer: the backing store of
+     * the toplevel containing the window, or the framebuffer of the pixmap.
+     * The pixels are stored in the format of the visual (0xRRGGBB), which
+     * the callers (generic code) decode with XGetPixel and the masks of
+     * the visual.
+     */
     imagePtr = XCreateImage(display, NULL, 32, ZPixmap, 0, NULL, width, height, 32, 0);
     if (!imagePtr) {
         return NULL;
@@ -553,27 +565,81 @@ XGetImage(
     size = bpl * height;
     imagePtr->data = (char *)ckalloc(size);
     memset(imagePtr->data, 0, size);
+    _XInitImageFuncPtrs(imagePtr);
 
-    /* Bind context to securely read current screen surface framebuffers. */
-    if (TkWaylandBeginDraw(drawable, NULL, &dc) == TCL_OK) {
-        size_t numPixels = (size_t)width * (size_t)height;
-        if (numPixels <= SIZE_MAX / 4) {
-            unsigned char *glBuffer = ckalloc(numPixels * 4);
-            if (glBuffer) {
-                glReadPixels(x, y, (GLsizei)width, (GLsizei)height, GL_RGBA, GL_UNSIGNED_BYTE, glBuffer);
+    GLFWwindow *glfwWindow = NULL;
+    NVGLUframebuffer *fb = NULL;
+    int fbW = 0, fbH = 0;
+    float scale = 1.0f;
+    int left = x, top = y;	/* In window coordinates. */
 
-                for (unsigned int yy = 0; yy < height; yy++) {
-                    unsigned char *srcRow = glBuffer + (size_t)(height - 1 - yy) * width * 4;
-                    unsigned char *dstRow = (unsigned char *)imagePtr->data + (size_t)yy * bpl;
-                    memcpy(dstRow, srcRow, (size_t)width * 4);
-                }
-                ckfree(glBuffer);
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromDrawable(drawable);
+        if (pixmapPtr) {
+            glfwWindow = pixmapPtr->glfwWindow;
+            fb = pixmapPtr->fb;
+            fbW = pixmapPtr->width;
+            fbH = pixmapPtr->height;
+        }
+    } else {
+        TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+        while (winPtr && !Tk_IsTopLevel(winPtr)) {
+            left += winPtr->changes.x;
+            top += winPtr->changes.y;
+            winPtr = winPtr->parentPtr;
+        }
+        if (winPtr && winPtr->privatePtr && Tk_Width(winPtr) > 0) {
+            glfwWindow = winPtr->privatePtr->glfwWindow;
+            fb = winPtr->privatePtr->fb;
+            if (glfwWindow) {
+                glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
+                scale = (float)fbW / Tk_Width(winPtr);
             }
         }
-        TkWaylandEndDraw(&dc);
     }
 
-    _XInitImageFuncPtrs(imagePtr);
+    if (glfwWindow && fb && fbW > 0 && fbH > 0) {
+        /* The rectangle in framebuffer pixels, clipped to it. */
+        int x0 = (int)(left * scale), y0 = (int)(top * scale);
+        int x1 = (int)ceilf((left + (int)width) * scale);
+        int y1 = (int)ceilf((top + (int)height) * scale);
+        if (x0 < 0) x0 = 0;
+        if (y0 < 0) y0 = 0;
+        if (x1 > fbW) x1 = fbW;
+        if (y1 > fbH) y1 = fbH;
+
+        if (x1 > x0 && y1 > y0) {
+            int rw = x1 - x0, rh = y1 - y0;
+            unsigned char *glBuffer = ckalloc((size_t)rw * rh * 4);
+
+            glfwMakeContextCurrent(glfwWindow);
+            nvgluBindFramebuffer(fb);
+            /* GL rows go from the bottom up. */
+            glReadPixels(x0, fbH - y1, rw, rh, GL_RGBA, GL_UNSIGNED_BYTE,
+                    glBuffer);
+            nvgluBindFramebuffer(NULL);
+
+            for (unsigned int j = 0; j < height; j++) {
+                int fy = (int)((top + (int)j) * scale);
+                if (fy < y0 || fy >= y1) {
+                    continue;
+                }
+                unsigned char *row = glBuffer + (size_t)(y1 - 1 - fy) * rw * 4;
+                for (unsigned int i = 0; i < width; i++) {
+                    int fx = (int)((left + (int)i) * scale);
+                    if (fx < x0 || fx >= x1) {
+                        continue;
+                    }
+                    unsigned char *p = row + (size_t)(fx - x0) * 4;
+                    XPutPixel(imagePtr, (int)i, (int)j,
+                            ((unsigned long)p[0] << 16)
+                            | ((unsigned long)p[1] << 8) | p[2]);
+                }
+            }
+            ckfree(glBuffer);
+        }
+    }
+
     return imagePtr;
 }
 
@@ -857,8 +923,43 @@ XPutImage(
     unsigned int  width,
     unsigned int  height)
 {
-    int rc = TkpPutRGBAImage(display, drawable, gc, image,
-                             src_x, src_y, dest_x, dest_y, width, height);
+    int rc;
+
+    if (image && image->data
+	    && (image->bits_per_pixel == 32 || image->bits_per_pixel == 24)) {
+	/*
+	 * An XImage stores the pixels in the LSBFirst byte order of the
+	 * visual (blue, green, red), but TkpPutRGBAImage() takes the RGBA
+	 * data of a photo image.  Convert the pixels.
+	 */
+
+	XImage rgba = *image;
+	size_t size = (size_t) image->bytes_per_line * image->height;
+	int bpp = image->bits_per_pixel / 8;
+
+	rgba.data = (char *) ckalloc(size);
+	for (int j = 0; j < image->height; j++) {
+	    unsigned char *src = (unsigned char *) image->data
+		    + (size_t) j * image->bytes_per_line;
+	    unsigned char *dst = (unsigned char *) rgba.data
+		    + (size_t) j * image->bytes_per_line;
+
+	    for (int i = 0; i < image->width; i++, src += bpp, dst += bpp) {
+		dst[0] = src[2];
+		dst[1] = src[1];
+		dst[2] = src[0];
+		if (bpp == 4) {
+		    dst[3] = 0xFF;
+		}
+	    }
+	}
+	rc = TkpPutRGBAImage(display, drawable, gc, &rgba,
+		src_x, src_y, dest_x, dest_y, width, height);
+	ckfree(rgba.data);
+    } else {
+	rc = TkpPutRGBAImage(display, drawable, gc, image,
+		src_x, src_y, dest_x, dest_y, width, height);
+    }
     return (rc == 0) ? Success : BadAlloc;
 }
 
