@@ -243,6 +243,7 @@ static void TkpDisplayMenu(void *clientData);
 /* Menu input handling. */
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
+static void MenuInvokeTearoff(TkMenu *menuPtr);
 static void MenuMouseLeave(TkMenu *menuPtr);
 
 /*
@@ -292,6 +293,7 @@ MODULE_SCOPE int TkWaylandMenubarHandleMotion(TkWindow *winPtr, int x, int y);
 MODULE_SCOPE Tk_Window TkWaylandMenuGetParentWindow(void);
 MODULE_SCOPE void TkWaylandMenubarResize(TkWindow *winPtr);
 MODULE_SCOPE int TkWaylandMenuPopupActive(void);
+MODULE_SCOPE void TkWaylandMenuInvokeTearoff(TkMenu *menuPtr);
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
 
 /*
@@ -4440,6 +4442,71 @@ TkpPostTearoffMenu(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkWaylandMenuInvokeTearoff --
+ *
+ *     Invoke the tearoff entry of a posted menu: run ::tk::TearOffMenu
+ *     (the same script menu.tcl's tk::MenuInvoke runs for a tearoff
+ *     entry), then end the menu session. Tk core's TkInvokeMenu() does
+ *     nothing for TEAROFF_ENTRY, and this backend's raw pointer/keyboard
+ *     path bypasses the Menu class bindings, so it must be done here.
+ *     Also exported for the Return/Enter handler in tkWaylandNotify.c.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Creates a cloned TEAROFF_MENU toplevel (posted through
+ *     TkpPostTearoffMenu) and dismisses the menu stack.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuInvokeTearoff(
+    TkMenu *menuPtr)
+{
+    MenuInvokeTearoff(menuPtr);
+}
+
+static void
+MenuInvokeTearoff(
+    TkMenu *menuPtr)
+{
+    Tcl_Interp *interp;
+    Tcl_Obj *cmdObj;
+    int result;
+
+    if (menuPtr == NULL || menuPtr->tkwin == NULL
+            || menuPtr->menuType != MAIN_MENU) {
+        TkWaylandMenuDismissAll();
+        return;
+    }
+
+    interp = menuPtr->interp;
+    cmdObj = Tcl_NewListObj(0, NULL);
+    Tcl_IncrRefCount(cmdObj);
+    Tcl_ListObjAppendElement(NULL, cmdObj,
+            Tcl_NewStringObj("::tk::TearOffMenu", -1));
+    Tcl_ListObjAppendElement(NULL, cmdObj,
+            Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin), -1));
+
+    /*
+     * Tear off first, then unpost, matching tk::MenuInvoke: the script
+     * reads the posted menu's geometry to place the clone.
+     */
+    result = Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(cmdObj);
+    if (result != TCL_OK) {
+        Tcl_AddErrorInfo(interp, "\n    (tearing off menu)");
+        Tcl_BackgroundException(interp, result);
+    }
+
+    TkWaylandMenuDismissAll();
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * MenuMouseClick --
  *
  *     Handle mouse click events in a menu.
@@ -4476,12 +4543,19 @@ MenuMouseClick(
             y >= mePtr->y && y < mePtr->y + mePtr->height) {
 
             if (mePtr->state == ENTRY_DISABLED ||
-                mePtr->type == SEPARATOR_ENTRY ||
-                mePtr->type == TEAROFF_ENTRY) {
+                mePtr->type == SEPARATOR_ENTRY) {
                 return;
             }
 
             switch (mePtr->type) {
+            case TEAROFF_ENTRY:
+                /*
+                 * The dashed line at the top of the menu: clicking it
+                 * tears the menu off into its own toplevel.
+                 */
+                MenuInvokeTearoff(menuPtr);
+                break;
+
             case COMMAND_ENTRY:
                 TkInvokeMenu(menuPtr->interp, menuPtr, i);
                 TkWaylandMenuDismissAll();
@@ -4612,10 +4686,14 @@ MenuMouseMotion(
                      i, mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
                      mePtr->type, mePtr->state);
 
+            /*
+             * Tearoff entries are deliberately NOT skipped here: like
+             * stock Tk they highlight on hover so the user can see the
+             * line is clickable.
+             */
             if (mePtr->state == ENTRY_DISABLED ||
-                mePtr->type == SEPARATOR_ENTRY ||
-                mePtr->type == TEAROFF_ENTRY) {
-                DEBUG_LOG("MenuMouseMotion: entry %d is disabled/separator/tearoff, skipping", i);
+                mePtr->type == SEPARATOR_ENTRY) {
+                DEBUG_LOG("MenuMouseMotion: entry %d is disabled/separator, skipping", i);
                 continue;
             }
 
