@@ -313,6 +313,10 @@ static void             RaiseTransients(TkWindow *winPtr);
 static void InitializeGlfwWindow(TkWindow *winPtr);
 static void DestroyGlfwWindow(TkWindow *winPtr);
 static void ApplyFullscreenState(TkWindow *winPtr);
+static void WmPixelSize(TkWindow *winPtr, int *widthPtr, int *heightPtr);
+static void WmPixelLimits(TkWindow *winPtr, int *minWidthPtr,
+			    int *minHeightPtr, int *maxWidthPtr,
+			    int *maxHeightPtr);
 
 /*
  * This defines the geometry manager used by the window manager, as the
@@ -1333,13 +1337,14 @@ Tk_MakeWindow(
          * new window (or may have no keyboard).
          */
         if (winPtr->wmInfoPtr != NULL) {
-            WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+            int w, h;
 
-            if (wmPtr->width > 0) {
-                width = wmPtr->width;
+            WmPixelSize(winPtr, &w, &h);
+            if (w > 0) {
+                width = w;
             }
-            if (wmPtr->height > 0) {
-                height = wmPtr->height;
+            if (h > 0) {
+                height = h;
             }
         }
 
@@ -1487,6 +1492,96 @@ Tk_UnsetGrid(
         wmPtr->flags |= WM_UPDATE_PENDING;
 	DEBUG_LOG("Tk_UnsetGrid: scheduling UpdateGeometryInfo");
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmPixelSize --
+ *
+ *	Converts the size requested with "wm geometry" to pixels.  For a
+ *	gridded window wmPtr->width and wmPtr->height are in grid units,
+ *	as on X11.
+ *
+ * Results:
+ *	Stores the width and height in pixels, or -1 for a dimension that
+ *	was not requested.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WmPixelSize(
+    TkWindow *winPtr,
+    int *widthPtr,
+    int *heightPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    *widthPtr = wmPtr->width;
+    *heightPtr = wmPtr->height;
+    if (wmPtr->gridWin != NULL) {
+	if (*widthPtr >= 0) {
+	    *widthPtr = winPtr->reqWidth
+		    + (*widthPtr - wmPtr->reqGridWidth) * wmPtr->widthInc;
+	}
+	if (*heightPtr >= 0) {
+	    *heightPtr = winPtr->reqHeight
+		    + (*heightPtr - wmPtr->reqGridHeight) * wmPtr->heightInc;
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmPixelLimits --
+ *
+ *	Converts the limits set with "wm minsize" and "wm maxsize" to
+ *	pixels.  For a gridded window they are in grid units, as on X11.
+ *
+ * Results:
+ *	Stores the limits in pixels; a maximum of 0 means no limit.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WmPixelLimits(
+    TkWindow *winPtr,
+    int *minWidthPtr,
+    int *minHeightPtr,
+    int *maxWidthPtr,
+    int *maxHeightPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    *minWidthPtr = wmPtr->minWidth;
+    *minHeightPtr = wmPtr->minHeight;
+    *maxWidthPtr = (wmPtr->maxWidth > 0) ? wmPtr->maxWidth : 0;
+    *maxHeightPtr = (wmPtr->maxHeight > 0) ? wmPtr->maxHeight : 0;
+    if (wmPtr->gridWin != NULL) {
+	*minWidthPtr = winPtr->reqWidth
+		+ (wmPtr->minWidth - wmPtr->reqGridWidth) * wmPtr->widthInc;
+	*minHeightPtr = winPtr->reqHeight
+		+ (wmPtr->minHeight - wmPtr->reqGridHeight) * wmPtr->heightInc;
+	if (*maxWidthPtr > 0) {
+	    *maxWidthPtr = winPtr->reqWidth
+		    + (wmPtr->maxWidth - wmPtr->reqGridWidth) * wmPtr->widthInc;
+	}
+	if (*maxHeightPtr > 0) {
+	    *maxHeightPtr = winPtr->reqHeight
+		    + (wmPtr->maxHeight - wmPtr->reqGridHeight) * wmPtr->heightInc;
+	}
+	if (*minWidthPtr < 1) *minWidthPtr = 1;
+	if (*minHeightPtr < 1) *minHeightPtr = 1;
     }
 }
 
@@ -2841,6 +2936,17 @@ WmGeometryCmd(
             width = winPtr->changes.width;
             height = winPtr->changes.height;
         }
+        if (wmPtr->gridWin != NULL) {
+            /* As on X11, the size of a gridded window is in grid units. */
+            if (glfwWindow == NULL || (wmPtr->flags & WM_NEVER_MAPPED)) {
+                width = winPtr->changes.width;
+                height = winPtr->changes.height;
+            }
+            width = wmPtr->reqGridWidth
+                    + (width - winPtr->reqWidth) / wmPtr->widthInc;
+            height = wmPtr->reqGridHeight
+                    + (height - winPtr->reqHeight) / wmPtr->heightInc;
+        }
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
 		 width, height,
 		 (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+', wmPtr->x,
@@ -2868,8 +2974,11 @@ WmGeometryCmd(
 
     /* Immediately set GLFW window size and position. */
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-        /* Set size only if positive values were provided. */
-        if (wmPtr->width > 0 && wmPtr->height > 0) {
+        /*
+         * Set size only if positive values were provided.  The size of a
+         * gridded window is in grid units and is set by UpdateGeometryInfo.
+         */
+        if (wmPtr->gridWin == NULL && wmPtr->width > 0 && wmPtr->height > 0) {
 	    DEBUG_LOG("GeometryCmd setting window size %s -> %dx%d",
 		Tk_PathName(winPtr), wmPtr->width, wmPtr->height);
 	    TkWaylandFlushConfigures();
@@ -2894,11 +3003,13 @@ WmGeometryCmd(
          * If the size didn't change (e.g., constrained by min/max),
 	     * update wmPtr. 
 	     */
-        if (wmPtr->width > 0 && wmPtr->width != newWidth) {
-            wmPtr->width = newWidth;
-        }
-        if (wmPtr->height > 0 && wmPtr->height != newHeight) {
-            wmPtr->height = newHeight;
+        if (wmPtr->gridWin == NULL) {
+            if (wmPtr->width > 0 && wmPtr->width != newWidth) {
+                wmPtr->width = newWidth;
+            }
+            if (wmPtr->height > 0 && wmPtr->height != newHeight) {
+                wmPtr->height = newHeight;
+            }
         }
 
         /* Update Tk's changes structure. */
@@ -2953,6 +3064,9 @@ WmGridCmd(
         return TCL_OK;
     }
     if (*Tcl_GetString(objv[0]) == '\0') {
+        if (wmPtr->gridWin == (Tk_Window) winPtr) {
+            Tk_UnsetGrid((Tk_Window) winPtr);
+        }
         wmPtr->sizeHintsFlags &= ~(WM_PBaseSize|WM_PResizeInc);
         wmPtr->widthInc = wmPtr->heightInc = 1;
         wmPtr->reqGridWidth = wmPtr->reqGridHeight = 0;
@@ -2976,9 +3090,9 @@ WmGridCmd(
             Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
             return TCL_ERROR;
         }
-        wmPtr->sizeHintsFlags |= WM_PBaseSize|WM_PResizeInc;
-        wmPtr->reqGridWidth=rw; wmPtr->reqGridHeight=rh;
-        wmPtr->widthInc=wi;    wmPtr->heightInc=hi;
+        /* As on X11, the toplevel becomes the gridded window. */
+        Tk_SetGrid((Tk_Window) winPtr, rw, rh, wi, hi);
+        wmPtr->sizeHintsFlags |= WM_PResizeInc;
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(winPtr);
@@ -4430,6 +4544,12 @@ ApplyFullscreenState(TkWindow *winPtr)
     if (desiredFullscreen && currentMonitor == NULL) {
         /* Transitioning from windowed to fullscreen: save current geometry. */
         glfwGetWindowSize(glfwWindow, &wmPtr->width, &wmPtr->height);
+        if (wmPtr->gridWin != NULL) {
+            wmPtr->width = wmPtr->reqGridWidth
+                    + (wmPtr->width - winPtr->reqWidth) / wmPtr->widthInc;
+            wmPtr->height = wmPtr->reqGridHeight
+                    + (wmPtr->height - winPtr->reqHeight) / wmPtr->heightInc;
+        }
 
         /* Switch to fullscreen on the primary monitor. */
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -4439,8 +4559,15 @@ ApplyFullscreenState(TkWindow *winPtr)
     }
     else if (!desiredFullscreen && currentMonitor != NULL) {
         /* Transitioning from fullscreen to windowed: restore saved geometry. */
-        int w = (wmPtr->width  > 0) ? wmPtr->width  : winPtr->reqWidth;
-        int h = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
+        int w, h;
+
+        WmPixelSize(winPtr, &w, &h);
+        if (w <= 0) {
+            w = winPtr->reqWidth;
+        }
+        if (h <= 0) {
+            h = winPtr->reqHeight;
+        }
         glfwSetWindowMonitor(glfwWindow, NULL, wmPtr->x, wmPtr->y,
 			     w, h, GLFW_DONT_CARE);
     }
@@ -4809,14 +4936,41 @@ ApplyPendingGeometry(
      * size set with "wm geometry" overrides the requested size.
      */
 
-    tw = wmPtr->width < 0 ? winPtr->reqWidth  : wmPtr->width;
-    th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
+    WmPixelSize(winPtr, &tw, &th);
+    if (tw < 0) tw = winPtr->reqWidth;
+    if (th < 0) th = winPtr->reqHeight;
 
     /* Ensure at least minimum size, and at most maximum size. */
     if (wmPtr->maxWidth > 0 && tw > wmPtr->maxWidth)  tw = wmPtr->maxWidth;
     if (wmPtr->maxHeight > 0 && th > wmPtr->maxHeight) th = wmPtr->maxHeight;
     if (tw < wmPtr->minWidth)  tw = wmPtr->minWidth;
     if (th < wmPtr->minHeight) th = wmPtr->minHeight;
+
+    if (wmPtr->gridWin != NULL) {
+	/*
+	 * For a gridded window the size and its limits are in grid units, as
+	 * on X11.
+	 */
+
+	int minW, minH, maxW, maxH;
+
+	WmPixelSize(winPtr, &tw, &th);
+	if (tw < 0) tw = winPtr->reqWidth;
+	if (th < 0) th = winPtr->reqHeight;
+	WmPixelLimits(winPtr, &minW, &minH, &maxW, &maxH);
+	if (tw < minW) {
+	    tw = minW;
+	} else if (maxW > 0 && tw > maxW) {
+	    tw = maxW;
+	}
+	if (th < minH) {
+	    th = minH;
+	} else if (maxH > 0 && th > maxH) {
+	    th = maxH;
+	}
+	if (tw <= 0) tw = 1;
+	if (th <= 0) th = 1;
+    }
 
     /* Apply size change if the target size is different from the
        configured. */
@@ -5039,10 +5193,12 @@ UpdateSizeHints(TkWindow *winPtr)
 	return;
     }
 
-    glfwSetWindowSizeLimits(glfwWindow,
-	 wmPtr->minWidth, wmPtr->minHeight,
-	 (wmPtr->maxWidth  > 0) ? wmPtr->maxWidth  : GLFW_DONT_CARE,
-	 (wmPtr->maxHeight > 0) ? wmPtr->maxHeight : GLFW_DONT_CARE);
+    int minW, minH, maxW, maxH;
+
+    WmPixelLimits(winPtr, &minW, &minH, &maxW, &maxH);
+    glfwSetWindowSizeLimits(glfwWindow, minW, minH,
+	 (maxW > 0) ? maxW : GLFW_DONT_CARE,
+	 (maxH > 0) ? maxH : GLFW_DONT_CARE);
 
     if (wmPtr->sizeHintsFlags & WM_PAspect) {
         glfwSetWindowAspectRatio(glfwWindow,
