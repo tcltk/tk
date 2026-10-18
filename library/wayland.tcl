@@ -38,6 +38,8 @@ if {[tk windowingsystem] eq "wayland"} {
             variable ownerCmd  "" ;# its -command, run when it loses CLIPBOARD
             variable handlers     ;# handlers($win,$type) -> command
             array set handlers {}
+            variable traced       ;# traced($win): its handlers are removed
+            array set traced {}   ;# when it is destroyed
 
             # wl-paste is only ever consulted as a *fallback* when this
             # interpreter does not own the CLIPBOARD and has not just
@@ -404,6 +406,21 @@ if {[tk windowingsystem] eq "wayland"} {
             }
         }
 
+        # Removes the handlers of a destroyed window, so that a new window
+        # with the same name does not get them.  Called by a trace on the
+        # deletion of the widget command of the window.
+        proc ::tk::wayland::clip::ForgetHandlers {win args} {
+            variable handlers
+            variable traced
+            set prefix $win,
+            foreach key [array names handlers] {
+                if {[string equal -length [string length $prefix] $prefix $key]} {
+                    unset handlers($key)
+                }
+            }
+            unset -nocomplain traced($win)
+        }
+
         # The handler of the window for the type, or "" if none.
         proc ::tk::wayland::clip::HandlerFor {win type} {
             variable handlers
@@ -750,6 +767,11 @@ if {[tk windowingsystem] eq "wayland"} {
                         unset -nocomplain ::tk::wayland::clip::handlers($win,$type)
                     } else {
                         set ::tk::wayland::clip::handlers($win,$type) $command
+                        if {![info exists ::tk::wayland::clip::traced($win)]} {
+                            trace add command $win delete [list \
+                                    ::tk::wayland::clip::ForgetHandlers $win]
+                            set ::tk::wayland::clip::traced($win) 1
+                        }
                     }
                     return {}
                 }
