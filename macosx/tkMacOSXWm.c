@@ -7570,15 +7570,18 @@ ApplyWindowAttributeFlagChanges(
 				   winPtr->window);
 	    if (wmPtr->flags & WM_HIDDEN) {
 		[macWin orderOut:nil];
+		TkMacOSXUpdatePointerAfterUnmap(winPtr);
             } else {
                 switch (wmPtr->hints.initial_state) {
                 case IconicState:
 	        case WithdrawnState:
 		    [macWin orderOut:nil];
+		    TkMacOSXUpdatePointerAfterUnmap(winPtr);
                     break;
                 case NormalState:
                 case ZoomState:
 		    [(TKWindow *)macWin tkOrderFront];
+		    TkMacOSXUpdatePointerAfterMap(winPtr);
 		    break;
 		}
 	   }
