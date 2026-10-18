@@ -766,6 +766,50 @@ XDestroyRegion(
 /*
  *----------------------------------------------------------------------
  *
+ * XRectInRegion --
+ *
+ *	Tests whether a rectangle is inside a region. A region of this port
+ *	is a single rectangle, its extents.
+ *
+ * Results:
+ *	RectangleIn if the rectangle is inside the region, RectanglePart if
+ *	it overlaps it, RectangleOut otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XRectInRegion(
+    Region region,
+    int x, int y,
+    unsigned int width, unsigned int height)
+{
+    long rx0, ry0, rx1, ry1;
+
+    if (region == NULL || !region->valid || width == 0 || height == 0) {
+	return RectangleOut;
+    }
+    rx0 = region->extents.x;
+    ry0 = region->extents.y;
+    rx1 = rx0 + region->extents.width;
+    ry1 = ry0 + region->extents.height;
+    if (x >= rx1 || y >= ry1 || (long) x + width <= rx0
+	    || (long) y + height <= ry0) {
+	return RectangleOut;
+    }
+    if (x >= rx0 && y >= ry0 && (long) x + width <= rx1
+	    && (long) y + height <= ry1) {
+	return RectangleIn;
+    }
+    return RectanglePart;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XCreateRegion --
  *
  *	Create an empty region. See the struct _XRegion comment near the

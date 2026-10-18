@@ -756,6 +756,18 @@ TkWmMapWindow(TkWindow *winPtr)
     if (glfwWindow) {
         winPtr->flags |= TK_MAPPED;
 	wmPtr->stackPos = ++stackTop;
+
+        /*
+         * Give the window its requested size before it is shown for the
+         * first time.  The GLFW window may have been created with the
+         * default size before the content requested its size (a ttk
+         * widget creates the window of its toplevel at once), and a resize
+         * after it has been shown can be overridden by the first configure
+         * of the compositor.
+         */
+        if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+            ApplyPendingGeometry(winPtr);
+        }
         UpdateGeometryInfo(winPtr);
         DEBUG_LOG("TkWmMapWindow: Showing %s", Tk_PathName(winPtr));
         glfwShowWindow(glfwWindow);
