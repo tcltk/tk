@@ -841,6 +841,12 @@ MODULE_SCOPE int  TkWaylandMenuGetScrollInfo(int level,
 MODULE_SCOPE int  TkWaylandMenuGetDepth(void);
 MODULE_SCOPE void TkWaylandMenuPopToDepth(int depth);
 
+/*
+ * Minimum width of a toplevel with client-side (libdecor) decorations; see
+ * ApplyPendingGeometry() in tkWaylandWm.c.
+ */
+#define TK_WAYLAND_CSD_MIN_WIDTH          180
+
 #define TK_WAYLAND_MENU_SCROLL_ARROW_H     16
 #define TK_WAYLAND_MENU_SCROLL_STEP        32
 #define TK_WAYLAND_MENU_SCROLLBAR_WIDTH     6
