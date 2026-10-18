@@ -641,7 +641,7 @@ XFillRectangles(
     if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
         color = TkWaylandPixelToNVG(v.foreground);
     } else {
-	printf("Failed to get color from gc - using white.\n");
+	DEBUG_LOG("Failed to get color from gc - using white.\n");
         color = nvgRGB(255, 255, 255);
     }
     if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
