@@ -808,6 +808,7 @@ elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
 	AS_HELP_STRING([--enable-xft],
 	    [use freetype/fontconfig/xft for antialiased fonts (default: yes)]),
 	[enable_xft=$enableval], [enable_xft="yes"])
+    AC_MSG_RESULT([$enable_xft])
 
     XFT_CFLAGS=""
     XFT_LIBS=""
