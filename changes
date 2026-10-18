@@ -8533,3 +8533,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-17 (bug) [a4c72a] errors when a menu is destroyed while it is posted (storchaka)
 
 2026-10-18 (bug) [7d8d10] Tk console extremely slow before first display (storchaka)
+
+2026-10-18 (bug) [5f7ba8] only record windows belonging to an embedded toplevel in the deletedWinTable (storchaka)

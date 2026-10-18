@@ -1325,6 +1325,41 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     deleteWindows
 } -result {.main.b {pushed .main.b} .embed.b {pushed .embed.b}}
 
+test unixEmbed-12.1 {deleted windows are recorded only in embedded toplevels} -constraints {
+    unix notAqua memory
+} -setup {
+    deleteWindows
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	for {set i 0} {$i < 10} {incr i} {
+	    uplevel 1 $script
+	}
+	set start [getbytes]
+	for {set i 0} {$i < 20} {incr i} {
+	    uplevel 1 $script
+	}
+	expr {[getbytes] - $start}
+    }
+} -body {
+    set before [growth {frame .w; destroy .w}]
+    frame .f1 -container 1 -width 200 -height 50
+    pack .f1
+    update
+    toplevel .t1 -use [winfo id .f1]
+    update
+    destroy .t1 .f1
+    update
+    # Without event processing, recorded windows are kept until the server
+    # has processed the requests made before their deletion.
+    expr {[growth {frame .w; destroy .w}] - $before}
+} -cleanup {
+    deleteWindows
+    rename getbytes {}
+    rename growth {}
+} -result 0
+
 
 # cleanup
 deleteWindows
