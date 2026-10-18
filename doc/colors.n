@@ -918,23 +918,24 @@ On Windows, the following additional system colors are available
 .RS
 .DS
 .ta 6c
-system3dDarkShadow	systemHighlight
-system3dFace		systemHighlightText
-system3dHighlight	systemHotLight
-system3dLight		systemInactiveBorder
-system3dShadow		systemInactiveCaption
-systemActiveBorder	systemInactiveCaptionText
-systemActiveCaption	systemInfoBackground
-systemAppWorkspace	systemInfoText
-systemBackground	systemMenu
-systemButtonFace	systemMenuHighlight
-systemButtonHighlight	systemMenubar
-systemButtonShadow	systemMenuText
-systemButtonText	systemPlaceholderText
-systemCaptionText	systemScrollbar
-systemDesktop		systemWindow
-systemDisabledText	systemWindowFrame
-systemGrayText		systemWindowText
+system3dDarkShadow		systemGrayText
+system3dFace			systemHighlight
+system3dHighlight		systemHighlightText
+system3dLight			systemHotLight
+system3dShadow			systemInactiveBorder
+systemActiveBorder		systemInactiveCaption
+systemActiveCaption		systemInactiveCaptionText
+systemAppWorkspace		systemInfoBackground
+systemBackground		systemInfoText
+systemButtonFace		systemMenu
+systemButtonHighlight		systemMenuHighlight
+systemButtonShadow		systemMenubar
+systemButtonText		systemMenuText
+systemCaptionText		systemPlaceholderText
+systemDesktop			systemScrollbar
+systemDisabledText		systemWindow
+systemGradientActiveCaption	systemWindowFrame
+systemGradientInactiveCaption	systemWindowText
 .DE
 .RE
 .SH "SEE ALSO"

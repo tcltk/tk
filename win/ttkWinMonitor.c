@@ -42,6 +42,8 @@ static const SystemColorEntry sysColors[] = {
 	{ "SystemCaptionText",		COLOR_CAPTIONTEXT },
 	{ "SystemDesktop",		COLOR_DESKTOP },
 	{ "SystemDisabledText",		COLOR_GRAYTEXT },
+	{ "SystemGradientActiveCaption",  COLOR_GRADIENTACTIVECAPTION},
+	{ "SystemGradientInactiveCaption",COLOR_GRADIENTINACTIVECAPTION},
 	{ "SystemGrayText",		COLOR_GRAYTEXT },
 	{ "SystemHighlight",		COLOR_HIGHLIGHT },
 	{ "SystemHighlightText",	COLOR_HIGHLIGHTTEXT },
