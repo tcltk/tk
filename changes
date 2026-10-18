@@ -8514,6 +8514,12 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-10-16 (bug) [969636] embedded windows representation offset (horiz.) (storchaka)
 
+2026-10-16 (bug) [707778] canvas/scrollbar return wrong configure synonym info (storchaka)
+
+2026-10-16 (bug) [c9f675] Middle-click paste focused a spinbox only when it was disabled (storchaka)
+
+2026-10-16 (bug) [0d4c08] Windows: cursor files with non-ASCII names could not be loaded (storchaka)
+
 2026-10-16 (bug) [302055] Do not crash or leave dangling entries when grid or place is used on a half-dead window (storchaka)
 
 2026-10-16 (bug) [bd3528] Windows: clipboard clear crashed when its window had not been made yet (storchaka)
