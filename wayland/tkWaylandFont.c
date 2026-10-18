@@ -3696,6 +3696,35 @@ EnsureNvgFont(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ActualPointSize --
+ *
+ *	Converts the pixel size of a font to points, for its actual
+ *	attributes, as the other platforms report them ("font actual").
+ *
+ * Results:
+ *	The size in points.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static double
+ActualPointSize(
+    Tk_Window tkwin,		/* For the pixel->point conversion, or NULL. */
+    int pixels,			/* Pixel size of the font. */
+    double dpi)			/* Resolution to use if tkwin is NULL. */
+{
+    if (tkwin) {
+	return TkFontGetPoints(tkwin, -(double)pixels);
+    }
+    return pixels * 72.0 / dpi;
+}
+
 /* The last generation given to a WaylandFont, see InitFont(). */
 static unsigned int fontGenerationCounter = 0;
 
@@ -3764,8 +3793,16 @@ InitFont(
 	DEBUG_LOG("InitFont: specified %f pixels -> %d pixels",
 	    -ptSize, basePixels);
     } else if (ptSize > 0.0) {
-        /* Positive size means points - convert to pixels at screen DPI. */
-        basePixels = (int)(ptSize * dpi / 72.0 + 0.5);
+        /*
+         * Positive size means points - convert to pixels as the other
+         * platforms do, so that "tk scaling" applies, and so that
+         * TkFontGetPoints() converts the pixels back to the same points.
+         */
+        if (tkwin) {
+            basePixels = (int)(TkFontGetPixels(tkwin, ptSize) + 0.5);
+        } else {
+            basePixels = (int)(ptSize * dpi / 72.0 + 0.5);
+        }
         if (basePixels < 1) {
             basePixels = 1;
         }
@@ -4237,7 +4274,7 @@ InitFont(
                                     adv_W == adv_dot && 
                                     adv_W == adv_x);
                         
-                        fa->size = (double)(-fontPtr->pixelSize);
+                        fa->size = ActualPointSize(tkwin, fontPtr->pixelSize, dpi);
                     }
                 }
                 /* StackBuf automatically freed when scope ends. */
@@ -4280,7 +4317,7 @@ InitFont(
                                     adv_W == adv_dot && 
                                     adv_W == adv_x);
                         
-                        fa->size = (double)(-fontPtr->pixelSize);
+                        fa->size = ActualPointSize(tkwin, fontPtr->pixelSize, dpi);
                     }
                 }
                 if (heapAllocated && buf) {
