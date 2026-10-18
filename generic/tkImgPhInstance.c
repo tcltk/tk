@@ -1091,17 +1091,8 @@ GetColorTable(
 
 	colorPtr = ckalloc(sizeof(ColorTable));
 
-	/*
-	 * The following line of code should not normally be needed due to the
-	 * assignment in the following line. However, it compensates for bugs
-	 * in some compilers (HP, for example) where sizeof(ColorTable) is 24
-	 * but the assignment only copies 20 bytes, leaving 4 bytes
-	 * uninitialized; these cause problems when using the id for lookups
-	 * in imgPhotoColorHash, and can result in core dumps.
-	 */
-
-	memset(&colorPtr->id, 0, sizeof(ColorTableId));
-	colorPtr->id = id;
+	/* Make sure padding bytes are copied as well */
+	memcpy(&colorPtr->id, &id, sizeof(ColorTableId));
 	Tk_PreserveColormap(colorPtr->id.display, colorPtr->id.colormap);
 	colorPtr->flags = 0;
 	colorPtr->refCount = 0;
