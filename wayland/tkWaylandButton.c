@@ -407,7 +407,7 @@ TkpDisplayButton(void *clientData)
                         butPtr->indicatorSpace + fullWidth,
                         fullHeight, &x, &y);
 
-        x -= butPtr->indicatorSpace;
+        x += butPtr->indicatorSpace;
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
         /* Draw image with offset. */
@@ -453,7 +453,9 @@ TkpDisplayButton(void *clientData)
         int indType = (butPtr->type == TYPE_CHECK_BUTTON)
           ? CHECK_BUTTON : RADIO_BUTTON;
 
-	int ind_x = padX;
+	/* Centered in the space reserved for it, as on X11. */
+	int ind_x = padX
+		+ (butPtr->indicatorSpace - butPtr->indicatorDiameter) / 2;
 	int ind_y = winHeight / 2 - butPtr->indicatorDiameter / 2;
 	DEBUG_LOG("height: %d, fullHeight = %d, winHeight = %d, "
 		  "diam = %d, padY = %d, ind_y = %d",
@@ -654,13 +656,13 @@ TkpComputeButtonGeometry(
 	 * record the indicator diameter in the button struct.
 	 */
         if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	    /* Currently both of our indicators have diameter 12. */
+	    /* The indicator is sized from the height, as on X11. */
+	    butPtr->indicatorSpace = height;
             if (butPtr->type == TYPE_CHECK_BUTTON) {
-	      butPtr->indicatorDiameter = 12;
+		butPtr->indicatorDiameter = (65*height)/100;
             } else {
-	      butPtr->indicatorDiameter = 12;
+		butPtr->indicatorDiameter = (75*height)/100;
             }
-	    butPtr->indicatorSpace = butPtr->indicatorDiameter;
         }
         width += 2 * padX;
         height += 2 * padY;
@@ -677,12 +679,13 @@ TkpComputeButtonGeometry(
                 height = butPtrHeight;
             }
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
+		/* The indicator is sized from the height, as on X11. */
+		butPtr->indicatorSpace = height;
                 if (butPtr->type == TYPE_CHECK_BUTTON) {
-		    butPtr->indicatorDiameter = 12;
+		    butPtr->indicatorDiameter = (65*height)/100;
                 } else {
-		    butPtr->indicatorDiameter = 12;
+		    butPtr->indicatorDiameter = (75*height)/100;
 		}
-		butPtr->indicatorSpace = 2*butPtr->indicatorDiameter;
             }
         } else {
 	   /* For text-only buttons the user-specified width or height
