@@ -4205,10 +4205,10 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
 
 static void
 DisplayTearoffMenu(
-    TkMenu *menuPtr)
+		   TkMenu *menuPtr)
 {
     if (Tk_IsMapped(menuPtr->tkwin)) {
-      TkEventuallyRedrawMenu(menuPtr, NULL);
+	TkEventuallyRedrawMenu(menuPtr, NULL);
     }
 }
 
