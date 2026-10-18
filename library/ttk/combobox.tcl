@@ -566,7 +566,11 @@ if {[tk windowingsystem] ni {aqua wayland}} {
 	# close to the bottom of the screen, and it may be posted above the
 	# button if necessary to be visible.
 
-	$popdown post [expr {$x + 2}] [expr {$y + $height + 2}]
+	if {[tk windowingsystem] eq "aqua"} {
+	    $popdown post [expr {$x + 2}] [expr {$y + $height + 2}]
+	} else {
+	    $popdown post $x [expr {$y + $height}]
+	}
     }
 }
 
