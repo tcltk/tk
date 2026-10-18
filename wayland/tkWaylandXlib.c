@@ -2554,10 +2554,10 @@ XDeleteProperty(
  *
  * XVisualIDFromVisual --
  *
- *	Get visual ID from visual. No-op in Wayland port.
+ *	Get visual ID from visual.
  *
  * Results:
- *	Always returns 0.
+ *	The ID of the visual.
  *
  * Side effects:
  *	None.
@@ -2567,10 +2567,9 @@ XDeleteProperty(
 
 VisualID
 XVisualIDFromVisual(
-    TCL_UNUSED(Visual *))
+    Visual *visual)
 {
-    /* No-op - visuals not used in Wayland port. */
-    return 0;
+    return visual ? visual->visualid : 0;
 }
 
 /*
