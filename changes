@@ -8543,3 +8543,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-18 (bug) [212808] Windows: menubutton menu-traversal shortkeys don't work (storchaka)
 
 2026-10-18 (bug) [115170] XIM input box font size hard coded (storchaka)
+
+2026-10-18 (bug) [220781] wm overrideredirect zaps additions to system menu (storchaka)

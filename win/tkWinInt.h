@@ -169,6 +169,7 @@ MODULE_SCOPE void TkWinCleanupContainerList(void);
 
 MODULE_SCOPE HWND Tk_GetMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE HWND Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
+MODULE_SCOPE void Tk_WinMenuWrapperChanged(HMENU hMenu);
 
 /*
  * The following allows us to cache these encoding for multiple functions.
