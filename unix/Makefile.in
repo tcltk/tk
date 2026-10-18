@@ -438,8 +438,8 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
 	tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
 	tkMacOSXMenu.o tkMacOSXMenubutton.o tkMacOSXMenus.o \
-	tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
-	tkMacOSXScrlbr.o tkMacOSXSend.o tkMacOSXServices.o \
+	tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPointer.o tkMacOSXPrint.o \
+	tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o tkMacOSXServices.o \
 	tkMacOSXSubwindows.o tkMacOSXSysTray.o tkMacOSXWindowEvent.o tkMacOSXWm.o \
 	tkMacOSXXStubs.o tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o \
 	tkUnixScale.o xcolors.o xdraw.o xgc.o ximage.o xutil.o \
@@ -1484,6 +1484,9 @@ tkMacOSXMouseEvent.o: $(MAC_OSX_DIR)/tkMacOSXMouseEvent.c
 
 tkMacOSXNotify.o: $(MAC_OSX_DIR)/tkMacOSXNotify.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXNotify.c
+
+tkMacOSXPointer.o: $(MAC_OSX_DIR)/tkMacOSXPointer.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXPointer.c
 
 tkMacOSXPrint.o: $(MAC_OSX_DIR)/tkMacOSXPrint.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXPrint.c

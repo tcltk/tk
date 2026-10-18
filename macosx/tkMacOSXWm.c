@@ -349,7 +349,7 @@ static void		TopLevelEventProc(void *clientData,
 static void		WmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *table);
 static void		UpdateGeometryInfo(void *clientData);
-static void		UpdatePointerWinAfterDestroy(TKWindow *deadNSWindow);
+//static void		UpdatePointerWinAfterDestroy(TKWindow *deadNSWindow);
 static void		UpdateSizeHints(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -1170,6 +1170,7 @@ TkWmUnmapWindow(
     }
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -1227,7 +1228,6 @@ static void UpdatePointerWinAfterDestroy (
     int root_x = floor(mouse.x),
 	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 
-    Bool doUpdatePointer = True;
     if (target) {
 	/*
 	 * Step 2: Find the Tk internal window within the toplevel that will contain
@@ -1240,13 +1240,13 @@ static void UpdatePointerWinAfterDestroy (
 	    * The parent of the Tk internal window is in the process of being destroyed.
 	    * Don't call Tk_UpdatePointer in this case.
 	    */
-	    doUpdatePointer = False;
+	    return;
+	} else {
+	    Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
 	}
     }
-    if (doUpdatePointer) {
-	Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
-    }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1347,8 +1347,9 @@ TkWmDeadWindow(
 	Tcl_Free(transientPtr);
     }
 
-    UpdatePointerWinAfterDestroy(deadNSWindow);
-
+    //UpdatePointerWinAfterDestroy(deadNSWindow);
+    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);
+				    
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
      * data structures.  If the NSWindow is a child, disassociate it from
