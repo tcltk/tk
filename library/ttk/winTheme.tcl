@@ -7,16 +7,16 @@ namespace eval ttk::theme::winnative {
     ttk::style theme settings winnative {
 
 	ttk::style configure "." \
-	    -background SystemButtonFace \
-	    -foreground SystemWindowText \
-	    -selectforeground SystemHighlightText \
-	    -selectbackground SystemHighlight \
-	    -fieldbackground SystemWindow \
-	    -insertcolor SystemWindowText \
-	    -troughcolor SystemScrollbar \
+	    -background systemButtonFace \
+	    -foreground systemWindowText \
+	    -selectforeground systemHighlightText \
+	    -selectbackground systemHighlight \
+	    -fieldbackground systemWindow \
+	    -insertcolor systemWindowText \
+	    -troughcolor systemScrollbar \
 	    -font TkDefaultFont
 
-	ttk::style map "." -foreground {disabled SystemGrayText}
+	ttk::style map "." -foreground {disabled systemGrayText}
 	ttk::style map "." -embossed {disabled 1}
 
 	ttk::style configure TButton \
@@ -33,7 +33,7 @@ namespace eval ttk::theme::winnative {
 	    -padding 1.5p -insertwidth 0.75p
 	ttk::style map TEntry \
 	    -fieldbackground \
-		{readonly SystemButtonFace disabled SystemButtonFace} \
+		{readonly systemButtonFace disabled systemButtonFace} \
 	    -selectbackground {!focus {}} \
 	    -selectforeground {!focus {}}
 
@@ -42,13 +42,13 @@ namespace eval ttk::theme::winnative {
 	    -selectbackground [list !focus {}] \
 	    -selectforeground [list !focus {}] \
 	    -fieldbackground [list \
-		readonly SystemButtonFace \
-		disabled SystemButtonFace] \
+		readonly systemButtonFace \
+		disabled systemButtonFace] \
 	    -foreground	[list \
-		disabled		SystemGrayText \
-		{readonly focus}	SystemHighlightText \
+		disabled		systemGrayText \
+		{readonly focus}	systemHighlightText \
 	    ] \
-	    -focusfill {{readonly focus} SystemHighlight}
+	    -focusfill {{readonly focus} systemHighlight}
 
 	ttk::style element create ComboboxPopdownFrame.border from default
 	ttk::style configure ComboboxPopdownFrame \
@@ -95,20 +95,20 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 0 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Treeview -background SystemWindow \
-	    -stripedbackground System3dLight -indent 15p
+	ttk::style configure Treeview -background systemWindow \
+	    -stripedbackground system3dLight -indent 15p
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list   disabled SystemButtonFace \
-				background SystemScrollbar \
-				selected SystemHighlight] \
-	    -foreground [list   disabled SystemGrayText \
-				background SystemWindowText \
-				selected SystemHighlightText]
+	    -background [list   disabled systemButtonFace \
+				background systemScrollbar \
+				selected systemHighlight] \
+	    -foreground [list   disabled systemGrayText \
+				background systemWindowText \
+				selected systemHighlightText]
 
 	ttk::style configure TProgressbar \
-	    -background SystemHighlight -borderwidth 0 \
+	    -background systemHighlight -borderwidth 0 \
 	    -barsize 22.5p -thickness 11.25p
     }
 }

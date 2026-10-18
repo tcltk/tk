@@ -27,7 +27,7 @@ typedef struct WinColor {
 /*
  * The sysColors array contains the names and index values for the Windows
  * indirect system color names. In use, all of the names will have the string
- * "System" prepended, but we omit it in the table to save space.
+ * "system" prepended, but we omit it in the table to save space.
  */
 
 typedef struct {

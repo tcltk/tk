@@ -26,19 +26,19 @@
 #define BLACK			"Black"
 #define WHITE			"White"
 
-#define NORMAL_BG		"SystemButtonFace"
-#define NORMAL_FG		"SystemButtonText"
+#define NORMAL_BG		"systemButtonFace"
+#define NORMAL_FG		"systemButtonText"
 #define ACTIVE_BG		NORMAL_BG
-#define TEXT_FG			"SystemWindowText"
-#define SELECT_BG		"SystemHighlight"
-#define SELECT_FG		"SystemHighlightText"
+#define TEXT_FG			"systemWindowText"
+#define SELECT_BG		"systemHighlight"
+#define SELECT_FG		"systemHighlightText"
 #define INACTIVE_SELECT_BG	"#d9d9d9"
-#define TROUGH			"SystemScrollbar"
-#define INDICATOR		"SystemWindow"
-#define DISABLED		"SystemDisabledText"
-#define MENU_BG			"SystemMenu"
-#define MENU_FG			"SystemMenuText"
-#define HIGHLIGHT		"SystemWindowFrame"
+#define TROUGH			"systemScrollbar"
+#define INDICATOR		"systemWindow"
+#define DISABLED		"systemDisabledText"
+#define MENU_BG			"systemMenu"
+#define MENU_FG			"systemMenuText"
+#define HIGHLIGHT		"systemWindowFrame"
 
 /*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
@@ -138,11 +138,11 @@
  * Defaults for entries:
  */
 
-#define DEF_ENTRY_BG_COLOR		"SystemWindow"
+#define DEF_ENTRY_BG_COLOR		"systemWindow"
 #define DEF_ENTRY_BG_MONO		WHITE
 #define DEF_ENTRY_BORDER_WIDTH		"1"
 #define DEF_ENTRY_CURSOR		"xterm"
-#define DEF_ENTRY_DISABLED_BG_COLOR	"SystemButtonFace"
+#define DEF_ENTRY_DISABLED_BG_COLOR	"systemButtonFace"
 #define DEF_ENTRY_DISABLED_BG_MONO	WHITE
 #define DEF_ENTRY_DISABLED_FG		DISABLED
 #define DEF_ENTRY_EXPORT_SELECTION	"1"
@@ -159,8 +159,8 @@
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
 #define DEF_ENTRY_PLACEHOLDER		""
-#define DEF_ENTRY_PLACEHOLDERFG		"SystemPlaceHolderText"
-#define DEF_ENTRY_READONLY_BG_COLOR	"SystemButtonFace"
+#define DEF_ENTRY_PLACEHOLDERFG		"systemPlaceHolderText"
+#define DEF_ENTRY_READONLY_BG_COLOR	"systemButtonFace"
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
 #define DEF_ENTRY_SCROLL_COMMAND	""
@@ -217,7 +217,7 @@
  */
 
 #define DEF_LISTBOX_ACTIVE_STYLE	"underline"
-#define DEF_LISTBOX_BG_COLOR		"SystemWindow"
+#define DEF_LISTBOX_BG_COLOR		"systemWindow"
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"1"
 #define DEF_LISTBOX_CURSOR		""
@@ -472,7 +472,7 @@
  */
 
 #define DEF_TEXT_AUTO_SEPARATORS	"1"
-#define DEF_TEXT_BG_COLOR		"SystemWindow"
+#define DEF_TEXT_BG_COLOR		"systemWindow"
 #define DEF_TEXT_BG_MONO		WHITE
 #define DEF_TEXT_BLOCK_CURSOR		"0"
 #define DEF_TEXT_BORDER_WIDTH		"1"

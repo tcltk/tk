@@ -20,8 +20,8 @@
 
 typedef struct {
     TkBorder info;
-    XColor *light2ColorPtr;	/* System3dLight */
-    XColor *dark2ColorPtr;	/* System3dDarkShadow */
+    XColor *light2ColorPtr;	/* system3dLight */
+    XColor *dark2ColorPtr;	/* system3dDarkShadow */
 } WinBorder;
 
 /*
@@ -350,17 +350,17 @@ TkpGetShadows(
     if ((TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_3DFACE)
 	    || (TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_WINDOW)) {
 	borderPtr->darkColorPtr = Tk_GetColor(NULL, tkwin,
-		"SystemButtonShadow");
+		"systemButtonShadow");
 	gcValues.foreground = borderPtr->darkColorPtr->pixel;
 	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
 	borderPtr->lightColorPtr = Tk_GetColor(NULL, tkwin,
-		"SystemButtonHighlight");
+		"systemButtonHighlight");
 	gcValues.foreground = borderPtr->lightColorPtr->pixel;
 	borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
 	((WinBorder*)borderPtr)->dark2ColorPtr = Tk_GetColor(NULL, tkwin,
-		"System3dDarkShadow");
+		"system3dDarkShadow");
 	((WinBorder*)borderPtr)->light2ColorPtr = Tk_GetColor(NULL, tkwin,
-		"System3dLight");
+		"system3dLight");
 	return;
     }
     darkColor.red = 0;

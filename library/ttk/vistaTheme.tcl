@@ -17,14 +17,14 @@ namespace eval ttk::theme::vista {
     ttk::style theme settings vista {
 
 	ttk::style configure . \
-	    -background SystemButtonFace \
-	    -foreground SystemButtonText \
-	    -selectforeground SystemHighlightText \
-	    -selectbackground SystemHighlight \
-	    -insertcolor SystemWindowText \
+	    -background systemButtonFace \
+	    -foreground systemButtonText \
+	    -selectforeground systemHighlightText \
+	    -selectbackground systemHighlight \
+	    -insertcolor systemWindowText \
 	    -font TkDefaultFont
 
-	ttk::style map . -foreground [list disabled SystemGrayText]
+	ttk::style map . -foreground [list disabled systemGrayText]
 
 	# Buttons
 	ttk::style configure TButton -anchor center -padding 0.75p -width -11
@@ -36,28 +36,28 @@ namespace eval ttk::theme::vista {
 
 	# Combobox
 	ttk::style configure TCombobox -padding 1 \
-	    -foreground SystemWindowText
+	    -foreground systemWindowText
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus {}] \
 	    -selectforeground [list !focus {}] \
-	    -focusfill	[list {readonly focus} SystemHighlight] \
+	    -focusfill	[list {readonly focus} systemHighlight] \
 	    -foreground	[list \
-		disabled		SystemGrayText \
-		{readonly focus}	SystemHighlightText \
-		readonly		SystemGrayText]
+		disabled		systemGrayText \
+		{readonly focus}	systemHighlightText \
+		readonly		systemGrayText]
 
 	# Vista.Combobox droplist frame ComboboxPopdownFrame
 
 	# Entry
 	ttk::style configure TEntry -padding 1 \
-	    -foreground SystemWindowText
+	    -foreground systemWindowText
 	ttk::style map TEntry \
 	    -selectbackground [list !focus {}] \
 	    -selectforeground [list !focus {}] \
-	    -foreground	[list disabled SystemGrayText readonly SystemGrayText]
+	    -foreground	[list disabled systemGrayText readonly systemGrayText]
 
 	# Frame
-	ttk::style configure TLabelframe.Label -foreground SystemButtonText
+	ttk::style configure TLabelframe.Label -foreground systemButtonText
 
 	# Notebook
 	ttk::style configure TNotebook -tabmargins {2 2 2 0}
@@ -71,11 +71,11 @@ namespace eval ttk::theme::vista {
 
 	# Spinbox
 	ttk::style configure TSpinbox -padding 1 \
-	    -foreground SystemWindowText
+	    -foreground systemWindowText
 	ttk::style map TSpinbox \
-	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    -foreground	[list disabled SystemGrayText readonly SystemGrayText]
+	    -selectbackground [list !focus systemWindow] \
+	    -selectforeground [list !focus systemWindowText] \
+	    -foreground	[list disabled systemGrayText readonly systemGrayText]
 
 	# Treeview
 	ttk::style configure Heading -font TkHeadingFont \
@@ -90,12 +90,12 @@ namespace eval ttk::theme::vista {
 	ttk::style map Row -focusthickness [list focus 1]
 
 	ttk::style configure Treeview -indent 15p \
-	    -stripedbackground SystemInactiveBorder
+	    -stripedbackground systemInactiveBorder
 	ttk::style map Treeview \
-	    -foreground	[list disabled SystemGrayText]
+	    -foreground	[list disabled systemGrayText]
 
 	ttk::style configure Treeview.Separator \
-	    -background System3dLight
+	    -background system3dLight
     }
 }
 
