@@ -961,7 +961,7 @@ XGetVisualInfo(
     /* Populate defaults matching baseline initialization values. */
     memset(heapInfo, 0, sizeof(XVisualInfo));
     heapInfo->visual        = cachedVisual;
-    heapInfo->visualid      = (vinfo_template && (vinfo_mask & VisualIDMask)) ? vinfo_template->visualid : 1;
+    heapInfo->visualid      = 1;
     heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
     heapInfo->depth         = (vinfo_template && (vinfo_mask & VisualDepthMask)) ? vinfo_template->depth : 24;
     heapInfo->class         = TrueColor;
@@ -978,14 +978,9 @@ XGetVisualInfo(
             goto match_failed;
         }
 
-        /* If Tk requests a specific visual ID, dynamically mirror it into
-         * our response structure to pass the filtering check smoothly.
-         */
-        if (vinfo_mask & VisualIDMask) {
-            heapInfo->visualid = vinfo_template->visualid;
-            if (heapInfo->visual) {
-                heapInfo->visual->visualid = vinfo_template->visualid;
-            }
+        /* There is only one visual, with the ID 1. */
+        if ((vinfo_mask & VisualIDMask) && vinfo_template->visualid != 1) {
+            goto match_failed;
         }
 
         /* Accept standard 24-bit RGB or composited 32-bit RGBA depths. */
