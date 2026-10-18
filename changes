@@ -8537,3 +8537,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-18 (bug) [5f7ba8] only record windows belonging to an embedded toplevel in the deletedWinTable (storchaka)
 
 2026-10-18 (bug) [663981] Long dashed lines cause problems on canvases (storchaka)
+
+2026-10-18 (bug) [9474bd] Pressing <Tab> in wish console for command completion loses keyboard input (storchaka)
