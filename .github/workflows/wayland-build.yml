@@ -41,7 +41,7 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get update
-          sudo apt-get install \
+          sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
             libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
@@ -74,9 +74,11 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         compiler: ["gcc"]
         config: ["", "--enable-symbols"]
+    name: test (${{ matrix.compiler }}, ${{ matrix.config || 'default' }})
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v7
@@ -91,16 +93,18 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get update
-          # mutter: GNOME compositor, run headless with a virtual monitor
-          # waybar: provides org.kde.StatusNotifierWatcher + Host (tray/SNI)
-          # dunst: provides org.freedesktop.Notifications for sysnotify tests
-          sudo apt-get install \
+          # gnome-shell: headless Wayland compositor + org.freedesktop.Notifications
+          # gnome-shell-extension-appindicator: org.kde.StatusNotifierWatcher + Host
+          # libglib2.0-bin / dconf: gsettings, used to enable the extension
+          sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
             libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
             libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
             libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont \
-            mutter waybar dbus dbus-x11 mesa-utils dunst
+            dbus dbus-x11 mesa-utils \
+            gnome-shell gnome-shell-extension-appindicator gnome-shell-common \
+            libglib2.0-bin dconf-gsettings-backend dconf-service
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
@@ -121,134 +125,113 @@ jobs:
       - name: Build
         run: make binaries libraries tktest || exit 1
       - name: Run Tests
+        # Replaces unix/run_wayland_tests. Runs in tk/unix (see defaults above).
+        # GitHub's default "bash -e -o pipefail" is relaxed below so that a failing
+        # classic suite doesn't skip the ttk suite; the grep gates at the end decide.
         run: |
-          dbus-run-session -- bash -c '
-            set -eu
+          set -eu
+          set +o pipefail
 
-            export LIBGL_ALWAYS_SOFTWARE=1
+          TK_UNIX=$(pwd)
+          ROOT=$(cd "$TK_UNIX/.." && pwd)
+          [ -x "$TK_UNIX/tktest" ] || { echo "tktest not found in $TK_UNIX" >&2; ls -la >&2; exit 1; }
 
-            # Locate the Tk build directory (the one containing tktest).
-            # Accepts running from tk/unix or from the tk root.
-            TK_UNIX=""
-            for d in . ./unix; do
-              if [ -x "$d/tktest" ]; then
-                TK_UNIX=$(cd "$d" && pwd)
-                break
-              fi
-            done
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export MESA_LOADER_DRIVER_OVERRIDE=swrast
+          export XKB_DEFAULT_LAYOUT=us
+          export MUTTER_DEBUG_DUMMY_MODE_SPECS=1280x720
 
-            # tktest is only built by "make tktest" (or "make test"), not by a
-            # plain "make". If it is missing but the tree has been configured,
-            # build it.
-            if [ -z "$TK_UNIX" ]; then
-              for d in . ./unix; do
-                if [ -f "$d/Makefile" ]; then
-                  echo "tktest not found; running \"make tktest\" in $d" >&2
-                  (cd "$d" && make tktest)
-                  TK_UNIX=$(cd "$d" && pwd)
-                  break
-                fi
+          # Isolated HOME / XDG dirs so nothing leaks in from the runner image
+          SCRATCH="${RUNNER_TEMP:-/tmp}/xdg-$$"
+          mkdir -p "$SCRATCH/home" "$SCRATCH/cache" "$SCRATCH/config"
+          export HOME="$SCRATCH/home"
+          export XDG_CONFIG_HOME="$SCRATCH/config"
+          export XDG_CACHE_HOME="$SCRATCH/cache"
+          export XDG_DATA_DIRS="/usr/share:/usr/local/share"
+          export GIO_USE_VFS=local
+          export GVFS_DISABLE_FUSE=1
+
+          export XDG_RUNTIME_DIR="${RUNNER_TEMP:-/tmp}/run-$$"
+          mkdir -p "$XDG_RUNTIME_DIR"
+          chmod 0700 "$XDG_RUNTIME_DIR"
+          rm -f "$XDG_RUNTIME_DIR"/wayland-*
+
+          LOG_DIR="${RUNNER_TEMP:-/tmp}/wl-logs"
+          mkdir -p "$LOG_DIR"
+
+          # Session bus (needed for SNI + notifications)
+          eval "$(dbus-launch --sh-syntax)"
+          export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
+
+          COMPOSITOR_PID=""
+          cleanup() {
+            rc=$?
+            [ -n "$COMPOSITOR_PID" ] && kill "$COMPOSITOR_PID" 2>/dev/null || true
+            [ -n "${DBUS_SESSION_BUS_PID:-}" ] && kill "$DBUS_SESSION_BUS_PID" 2>/dev/null || true
+            if [ "$rc" -ne 0 ]; then
+              for f in "$LOG_DIR"/*.log; do
+                [ -s "$f" ] && { echo "::group::tail of $f"; tail -n 80 "$f"; echo "::endgroup::"; }
               done
             fi
-
-            if [ -z "$TK_UNIX" ] || [ ! -x "$TK_UNIX/tktest" ]; then
-              echo "Cannot find tktest (and no configured Makefile to build it)." >&2
-              echo "Current directory: $(pwd)" >&2
-              echo "Contents:" >&2
-              ls -la . ./unix 2>&1 | sed "s/^/  /" >&2 || true
-              exit 1
-            fi
-
-            cd "$TK_UNIX"
-            echo "Using tktest in $TK_UNIX"
-
-            export XDG_RUNTIME_DIR="${RUNNER_TEMP:-/tmp}/xdg-runtime-wl"
-            mkdir -p "$XDG_RUNTIME_DIR"
-            chmod 0700 "$XDG_RUNTIME_DIR"
-            rm -f "$XDG_RUNTIME_DIR"/wayland-* "$XDG_RUNTIME_DIR"/wayland-*.lock
-
-            export XKB_DEFAULT_LAYOUT=us
-            export MUTTER_DEBUG_DUMMY_MODE_SPECS=1280x720
-            export MESA_LOADER_DRIVER_OVERRIDE=swrast
-
-            LOG="${RUNNER_TEMP:-/tmp}/mutter.log"
-
-            WAYBAR_CFG="${RUNNER_TEMP:-/tmp}/waybar-ci"
-            mkdir -p "$WAYBAR_CFG"
-            cat > "$WAYBAR_CFG/waybar.json" <<JSON
-          {
-            "layer": "top",
-            "height": 24,
-            "modules-right": ["tray"],
-            "tray": { "icon-size": 21, "spacing": 5 }
+            rm -rf "$SCRATCH" "$XDG_RUNTIME_DIR"
           }
-          JSON
+          trap cleanup EXIT INT TERM
 
-            cleanup() {
-              [ -n "${COMPOSITOR_PID:-}" ] && kill "$COMPOSITOR_PID" 2>/dev/null || true
-              [ -n "${WAYBAR_PID:-}" ] && kill "$WAYBAR_PID" 2>/dev/null || true
-              [ -n "${DUNST_PID:-}" ] && kill "$DUNST_PID" 2>/dev/null || true
-            }
-            trap cleanup EXIT INT TERM
-
-            echo "::group::Starting waybar (SNI watcher) and dunst (notifications)"
-            waybar -c "$WAYBAR_CFG/waybar.json" >/dev/null 2>&1 &
-            WAYBAR_PID=$!
-            dunst >/dev/null 2>&1 &
-            DUNST_PID=$!
-            echo "::endgroup::"
-
-            echo "::group::Starting mutter headless --virtual-monitor 1280x720"
-            mutter --headless --virtual-monitor 1280x720 --wayland-display wayland-test >"$LOG" 2>&1 &
-            COMPOSITOR_PID=$!
-
-            for i in $(seq 1 100); do
-              if [ -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
-                break
-              fi
-              if ! kill -0 "$COMPOSITOR_PID" 2>/dev/null; then
-                cat "$LOG"
-                exit 1
-              fi
-              sleep 0.1
-            done
-
-            if [ ! -S "$XDG_RUNTIME_DIR/wayland-test" ]; then
-              echo "mutter failed to create socket"
-              cat "$LOG"
-              ls -l "$XDG_RUNTIME_DIR"
-              exit 1
-            fi
-
-            export WAYLAND_DISPLAY=wayland-test
-            echo "Using WAYLAND_DISPLAY=$WAYLAND_DISPLAY"
-            echo "::endgroup::"
-
-            echo "::group::Waiting for SNI watcher (waybar) + Notifications (dunst)"
-            for i in $(seq 1 40); do
+          # wait_name <dbus-name> <tries (0.5s each)>
+          wait_name() {
+            for _ in $(seq 1 "$2"); do
               dbus-send --session --dest=org.freedesktop.DBus --type=method_call --print-reply \
-                /org/freedesktop/DBus org.freedesktop.DBus.NameHasOwner string:org.kde.StatusNotifierWatcher 2>/dev/null \
-                | grep -q "boolean true" && break
+                /org/freedesktop/DBus org.freedesktop.DBus.NameHasOwner "string:$1" 2>/dev/null \
+                | grep -q "boolean true" && return 0
               sleep 0.5
             done
-            dbus-send --session --type=method_call --print-reply --dest=org.freedesktop.DBus \
-              /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "StatusNotifier|Notifications" || true
-            echo "::endgroup::"
+            return 1
+          }
 
-            # Find a source-built Tcl, if present.
-            ROOT=$(cd "$TK_UNIX/.." && pwd)
-            for d in "$ROOT/../tcl/unix" "$ROOT/../../tcl/unix"; do
-              if ls "$d"/libtcl*.so >/dev/null 2>&1; then
-                export LD_LIBRARY_PATH="$TK_UNIX:$d:${LD_LIBRARY_PATH:-}"
-                export TCL_LIBRARY="$d/../library"
-                break
-              fi
-            done
-            export TK_LIBRARY="$ROOT/library"
+          echo "::group::Starting gnome-shell headless (1280x720) + AppIndicator extension"
+          # Enable the extension before the shell starts so it loads at startup
+          gsettings set org.gnome.shell disable-user-extensions false
+          gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
+          export XDG_CURRENT_DESKTOP=GNOME
+          export XDG_SESSION_TYPE=wayland
+          gnome-shell --headless --wayland --no-x11 \
+            --virtual-monitor 1280x720 --wayland-display wayland-test \
+            >"$LOG_DIR/gnome-shell.log" 2>&1 &
+          COMPOSITOR_PID=$!
 
-            ./tktest ../tests/all.tcl -singleproc 0 | tee out-classic.txt
-            ./tktest ../tests/ttk/all.tcl -singleproc 0 | tee out-ttk.txt
-            grep -q "Failed     0" out-classic.txt
-            grep -q "Failed     0" out-ttk.txt
-          '
+          for _ in $(seq 1 100); do
+            [ -S "$XDG_RUNTIME_DIR/wayland-test" ] && break
+            kill -0 "$COMPOSITOR_PID" 2>/dev/null || { echo "gnome-shell exited early" >&2; exit 1; }
+            sleep 0.1
+          done
+          [ -S "$XDG_RUNTIME_DIR/wayland-test" ] || {
+            echo "gnome-shell failed to create socket" >&2
+            ls -l "$XDG_RUNTIME_DIR" >&2
+            exit 1
+          }
+          export WAYLAND_DISPLAY=wayland-test
+          echo "Using WAYLAND_DISPLAY=$WAYLAND_DISPLAY"
+          echo "::endgroup::"
+
+          echo "::group::Waiting for SNI watcher + Notifications"
+          if ! wait_name org.kde.StatusNotifierWatcher 60; then
+            echo "::error::StatusNotifierWatcher never appeared (AppIndicator extension not loaded?)"
+            gnome-extensions list --enabled 2>&1 || true
+            gnome-extensions info appindicatorsupport@rgcjonas.gmail.com 2>&1 || true
+            exit 1
+          fi
+          wait_name org.freedesktop.Notifications 20 || echo "::warning::no Notifications service"
+          dbus-send --session --type=method_call --print-reply --dest=org.freedesktop.DBus \
+            /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "StatusNotifier|Notifications" || true
+          echo "::endgroup::"
+
+          # Use the source-built Tcl
+          export LD_LIBRARY_PATH="$TK_UNIX:$TCL_CONFIG_PATH:${LD_LIBRARY_PATH:-}"
+          export TCL_LIBRARY="$TCL_CONFIG_PATH/../library"
+          export TK_LIBRARY="$ROOT/library"
+
+          ./tktest ../tests/all.tcl -singleproc 0 | tee out-classic.txt
+          ./tktest ../tests/ttk/all.tcl -singleproc 0 | tee out-ttk.txt
+          grep -q "Failed     0" out-classic.txt
+          grep -q "Failed     0" out-ttk.txt
         timeout-minutes: 15
