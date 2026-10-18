@@ -285,6 +285,16 @@ DrawButtonText(
         currentGC = butPtr->normalTextGC;
     }
 
+    if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	TkDrawAngledTextLayout(butPtr->display, drawable, currentGC,
+		butPtr->textLayout, x + butPtr->xoffset,
+		y + butPtr->yoffset, butPtr->angle, 0, -1);
+	TkUnderlineAngledTextLayout(butPtr->display, drawable, currentGC,
+		butPtr->textLayout, x + butPtr->xoffset,
+		y + butPtr->yoffset, butPtr->angle, butPtr->underline);
+	return;
+    }
+
     /* Draw the text layout. */
     Tk_DrawTextLayout(butPtr->display, drawable, currentGC,
 		      butPtr->textLayout, x, y, 0, -1);
@@ -590,6 +600,10 @@ TkpComputeButtonGeometry(
         butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
                 Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, wrapLength,
                 butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkAdjustAngledTextLayout(butPtr->angle, &butPtr->textWidth,
+		    &butPtr->textHeight, &butPtr->xoffset, &butPtr->yoffset);
+	}
 
         txtWidth = butPtr->textWidth;
         txtHeight = butPtr->textHeight;
@@ -702,6 +716,11 @@ TkpComputeButtonGeometry(
             if (butPtrHeight > 0) {
                 height = butPtrHeight * fm.linespace;
             }
+	    if (butPtrWidth > 0 && butPtrHeight > 0 &&
+		    butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+		TkAdjustAngledTextLayout(butPtr->angle, &width, &height,
+			NULL, NULL);
+	    }
             if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
                 butPtr->indicatorDiameter = fm.linespace;
                 butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
