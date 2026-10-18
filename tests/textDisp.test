@@ -5457,6 +5457,31 @@ test textDisp-39.2 {no line break inside an emoji ZWJ sequence, widget one chara
 } -result {char {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}\
 word {U+0065.U+0301 U+0065.U+0301 U+1F469.U+200D.U+1F4BB}}
 
+test textDisp-40.1 {index @x,y inside a multi-byte character in a font of its own} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # The character is a display chunk of its own, which the search for the
+    # index at x measures without its last byte: inside the character.
+    text .t1 -font {Courier -12} -wrap none
+    .t1 tag configure big -font $bigFont
+    pack .t1
+    foreach ch [list \u00e9 \u2611] {
+	.t1 delete 1.0 end
+	.t1 insert end $ch big " text"
+	update
+	lassign [.t1 bbox 1.0] x y w h
+	set indices {}
+	for {set dx 0} {$dx < $w} {incr dx} {
+	    lappend indices [.t1 index @[expr {$x + $dx}],[expr {$y + $h/2}]]
+	}
+	lappend res [lsort -unique $indices]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1.0 1.0}
+
 #
 # TESTFILE CLEANUP
 #

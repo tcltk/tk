@@ -2959,17 +2959,21 @@ test Index-31.12 {Last Grandchild} -body {
     .tv index red last
 } -result {3}
 
-test Index-31.13 {Detached item} -setup {
+test Index-31.13 {End Grandchild} -body {
+    .tv index red end
+} -result {4}
+
+test Index-31.14 {Detached item} -setup {
     .tv detach white
 } -body {
     .tv index white
 } -result {0}
 
-test Index-31.14 {Cleanup} -body {
+test Index-31.15 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 
-# Index Id
+# Index Id - Check valid forms of index
 
 
 test Index_Id-32.1 {Create} -body {
@@ -2992,55 +2996,73 @@ test Index_Id-32.5 {End} -body {
     .tv index {} end
 } -result {10}
 
-test Index_Id-32.6 {Partial index} -body {
+test Index_Id-32.6 {Partial index name} -body {
     .tv index {} en
 } -result {bad index "en": must be first, last, end, end-n, m+n, m-n, or an index number >= 0} -returnCodes {1}
 
-test Index_Id-32.7 {0th Child} -body {
+test Index_Id-32.7 {Partial index number} -body {
+    .tv index {} 3-
+} -result {bad index "3-": must be first, last, end, end-n, m+n, m-n, or an index number >= 0} -returnCodes {1}
+
+test Index_Id-32.8 {0th Child} -body {
     .tv index {} 0
 } -result {0}
 
-test Index_Id-32.8 {8th Child} -body {
+test Index_Id-32.9 {8th Child} -body {
     .tv index {} 8
 } -result {8}
 
-test Index_Id-32.9 {Negative index} -body {
+test Index_Id-32.10 {Negative index} -body {
     .tv index {} -1
 }
 
-test Index_Id-32.10 {Out of range index} -body {
+test Index_Id-32.11 {Out of range index} -body {
     .tv index {} 100
 } -result {100}
 
-test Index_Id-32.11 {End+10} -body {
+test Index_Id-32.12 {End+10} -body {
     .tv index {} end+10
 }
 
-test Index_Id-32.12 {End-1} -body {
+test Index_Id-32.13 {End-1} -body {
     .tv index {} end-1
 } -result {9}
 
-test Index_Id-32.13 {End-100} -body {
+test Index_Id-32.14 {End-100} -body {
     .tv index {} end-100
 }
 
-test Index_Id-32.14 {M+N Index} -body {
+test Index_Id-32.15 {M+N Index} -body {
     .tv index {} 1+4
 } -result {5}
 
-test Index_Id-32.15 {M-N Index} -body {
+test Index_Id-32.16 {M-N Index} -body {
     .tv index {} 6-3
 } -result {3}
 
-test Index_Id-32.16 {M-N Negative index} -body {
+test Index_Id-32.17 {M-N Negative index} -body {
     .tv index {} 6-20
 }
 
-test Index_Id-32.17 {M+N Out of range index} -body {
+test Index_Id-32.18 {M+N Out of range index} -body {
     .tv index {} 5+10
 } -result {15}
 
-test Index_Id-32.18 {Cleanup} -body {
+test Index_Id-31.19 {Empty List Index First} -setup {
+    .tv children {} {}
+} -body {
+    .tv index {} first
+} -result {0}
+
+test Index_Id-31.20 {Empty List Index Last} -body {
+    .tv index {} last
+} -result {0}
+
+test Index_Id-31.21 {Empty List Index End} -body {
+    .tv index {} end
+} -result {0}
+
+test Index_Id-32.22 {Cleanup} -body {
     destroy .tv .sx .sy
 }
 

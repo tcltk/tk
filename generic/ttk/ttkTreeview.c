@@ -3068,7 +3068,11 @@ static int TreeviewPrevCommand(
 /* + GetPrevItem --
  *	Return the previous visible item in widget view
  */
-TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
+TreeItem *GetPrevItem(
+    TreeItem *root,
+    TreeItem *item,
+    int hidden,
+    int recurse) {
     TreeItem *current = item;
 
     if (!current || !root) {
@@ -3141,7 +3145,11 @@ static int TreeviewBeforeCommand(
 /* + GetNextItem --
  *	Return the next visible item in widget view
  */
-TreeItem *GetNextItem(TreeItem *root, TreeItem *item, bool hidden, bool recurse) {
+TreeItem *GetNextItem(
+    TreeItem *root,
+    TreeItem *item,
+    bool hidden,
+    bool recurse) {
     TreeItem *current = item;
 
     if (!current || !root) {
@@ -3223,7 +3231,12 @@ static int TreeviewAfterCommand(
  *	Get a list of items between from and to in widget
  */
 Tcl_Obj *GetBetweenList(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *from, TreeItem *to, bool hidden, bool recurse) {
+    Tcl_Interp *interp,
+    Treeview *tv,
+    TreeItem *from,
+    TreeItem *to,
+    bool hidden,
+    bool recurse) {
     TreeItem *item = from;
     bool forwards;
     Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
@@ -3300,29 +3313,35 @@ static const char *const indexStrings[] = {"end", "first", "last", NULL};
 
 /* + FindIndex --
  *	Returns the index for value where index can be a valid index form.
- *	If index is negative, -1 is returned. For an error, -2 is returned.
+ *	Returns TCL_ERROR for invalid index value or index -1 if not found.
  */
-static Tcl_Size FindIndex(
-    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj) {
+static int FindIndex(
+    Tcl_Interp *interp,
+    TreeItem *item,
+    Tcl_Obj *indexObj,
+    Tcl_Size *index) {
     int fn;
-    Tcl_Size index = -1;
+    *index = -1;
 
     if (Tcl_GetIndexFromObjStruct(NULL, indexObj, indexStrings, sizeof(char *),
 	    "index", TCL_EXACT, &fn) == TCL_OK) {
 	/* Index enums: first, last, end */
-	if (fn == index_first) {
-	    index = 0;
+	if (!item->children) {
+	    *index = 0;
+	} else if (fn == index_first) {
+	    *index = 0;
 	} else if (fn == index_last) {
-	    index = TreeviewCountItems(item, true, false) - 1;
+	    *index = TreeviewCountItems(item, true, false) - 1;
 	} else {
-	    index = TreeviewCountItems(item, true, false);
+	    *index = TreeviewCountItems(item, true, false);
 	}
 
-    } else if ((Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
-	TkGetIntForIndex(indexObj, TreeviewCountItems(item, true, false)-1, 1, &index) == TCL_OK)) {
+    } else if ((Tcl_GetSizeIntFromObj(NULL, indexObj, index) == TCL_OK ||
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, true, false)-1, 1,
+	index) == TCL_OK)) {
 	/* Index number, end-n, m+n, or m-n */
-	if (index < 0 || index > LONG_MAX - 4) {
-	    index = -1;
+	if (*index < 0 || *index > LONG_MAX - 4) {
+	    *index = -1;
 	}
 
     } else {
@@ -3330,17 +3349,22 @@ static Tcl_Size FindIndex(
 	    "bad index \"%s\": must be first, last, end, end-n, m+n, m-n, or an index number >= 0",
 	    Tcl_GetString(indexObj)));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "INDEX", (char *)NULL);
-	index = -2;
+	return TCL_ERROR;
     }
-    return index;
+    return TCL_OK;
 }
 
 /* + FindItemByIndex --
  *	Returns the item at index in item where index can be a valid index form.
- *	If index is invalid, result is set to error message and TCL_ERROR is returned.
+ *	Returns TCL_ERROR for invalid index value or found NULL if not found.
  */
 static int FindItemByIndex(
-    Tcl_Interp *interp, TreeItem *item, Tcl_Obj *indexObj, int before, int endIsSize, TreeItem **found) {
+    Tcl_Interp *interp,
+    TreeItem *item,
+    Tcl_Obj *indexObj,
+    int before,
+    int endIsSize,
+    TreeItem **found) {
     int fn;
     Tcl_Size index = -1;
     *found = NULL;
@@ -3359,7 +3383,8 @@ static int FindItemByIndex(
 	}
 
     } else if (Tcl_GetSizeIntFromObj(NULL, indexObj, &index) == TCL_OK ||
-	TkGetIntForIndex(indexObj, TreeviewCountItems(item, true, false)-1, endIsSize, &index) == TCL_OK) {
+	TkGetIntForIndex(indexObj, TreeviewCountItems(item, true, false)-1,
+	endIsSize, &index) == TCL_OK) {
 	/* Index number, end-n, m+n, or m-n */
 
 	*found = item->children;
@@ -3436,10 +3461,7 @@ static int TreeviewIndexCommand(
     }
 
     if (objc == 4) {
-	index = FindIndex(interp, item, objv[3]);
-	if (index == -1) {
-	    return TCL_OK;
-	} else if (index == -2) {
+	if (FindIndex(interp, item, objv[3], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {

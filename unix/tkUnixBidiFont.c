@@ -2975,12 +2975,20 @@ Tk_MeasureCharsInContext(
 
 	    while (pos < subLen) {
 		FcChar32 uc;
+		/*
+		 * (The bytes up to the end of the source, not of the range:
+		 * a character the range ends inside, as CharMeasureProc's
+		 * does, is measured whole, as the other font systems do.)
+		 */
+
 		int clen = FcUtf8ToUcs4(
 		    (const FcChar8 *)(sub + pos),
 		    &uc,
-		    subLen - pos);
+		    (int)numBytes - start - pos);
 
 		if (clen <= 0) {
+		    /* Not a whole UTF-8 character here: the byte itself. */
+		    uc = (unsigned char)sub[pos];
 		    clen = 1;
 		}
 
@@ -3005,9 +3013,11 @@ Tk_MeasureCharsInContext(
 	    int clen = FcUtf8ToUcs4(
 		(const FcChar8 *)(sub + pos),
 		&uc,
-		subLen - pos);
+		(int)numBytes - start - pos);
 
 	    if (clen <= 0) {
+		/* Not a whole UTF-8 character here: the byte itself. */
+		uc = (unsigned char)sub[pos];
 		clen = 1;
 	    }
 
