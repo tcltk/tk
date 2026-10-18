@@ -814,6 +814,7 @@ MODULE_SCOPE void TkWaylandPopupGetPosition(TkWaylandPopup *popup, int *xOut, in
  */
 
 MODULE_SCOPE void TkWaylandMenuInit(void);
+MODULE_SCOPE void TkWaylandMenubarForget(TkWindow *winPtr);
 
 /* Non-zero if one or more menu popups are currently posted. */
 MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
