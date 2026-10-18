@@ -1751,7 +1751,7 @@ TkpDrawMenuEntry(
 
     /*
      * If a tear-off is resized wider than its entries, let the last column
-     * fill the window, as tkUnixMenu.c does.
+     * fill the window.
      */
     if (mePtr->menuPtr->menuType == TEAROFF_MENU
             && (mePtr->entryFlags & ENTRY_LAST_COLUMN)
