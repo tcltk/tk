@@ -407,7 +407,7 @@ they include all the alphanumeric ASCII characters (e.g.
 is the keysym for the ASCII character
 .QW a ),
 plus descriptions for non-alphanumeric characters
-.PQ comma "is the keysym for the comma character" ,
+.PQ comma " is the keysym for the comma character" ,
 plus descriptions for all the non-ASCII keys on the keyboard (e.g.
 .QW Shift_L
 is the keysym for the left shift key, and
