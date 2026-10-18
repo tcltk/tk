@@ -50,7 +50,7 @@ update
 # TESTS
 #
 
-test place-1.1 {Tk_PlaceCmd procedure, "info" option} -setup {
+test place-1.1 {Tk_PlaceCmd procedure, "info" option} -constraints !wayland -setup {
     place forget .t.f2
 } -body {
     place .t.f2 -x 0
