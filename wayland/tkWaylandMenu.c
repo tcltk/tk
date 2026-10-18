@@ -44,6 +44,35 @@ extern GLFWwindow *mainGlfwWindow;
 #define MENU_DIVIDER_HEIGHT     2
 
 /*
+ * Horizontal padding inside popup menu entries (pixels):
+ *   MENU_PAD_LEFT      - space left of the check/radio indicator, or of the
+ *                        label when the entry has no indicator.
+ *   MENU_INDICATOR_GAP - space between the indicator and the label.
+ *   MENU_ACCEL_GAP     - space between the label and the accelerator text.
+ *   MENU_PAD_RIGHT     - space right of the accelerator / cascade arrow /
+ *                        label.
+ */
+#define MENU_PAD_LEFT           8
+#define MENU_INDICATOR_GAP      6
+#define MENU_ACCEL_GAP          16
+#define MENU_PAD_RIGHT          8
+
+/*
+ * Size of the check/radio indicator for an entry of the given total height.
+ * Shared by the geometry and drawing code so the reserved space always
+ * matches what is painted.
+ */
+static inline int
+MenuIndicatorSize(int isCheck, int entryHeight)
+{
+    int size = ((isCheck ? 65 : 75) * entryHeight) / 100;
+
+    if (size < 10) size = 10;
+    if (size > 22) size = 22;
+    return size;
+}
+
+/*
  * Minimum width for menus to prevent unreasonable clipping.
  */
 #define MENU_MIN_CONTENT_WIDTH  90
@@ -974,41 +1003,29 @@ GetMenuIndicatorGeometry(
     int *widthPtr,
     int *heightPtr)
 {
-    int borderWidth;
+    int borderWidth, activeBorderWidth, size;
 
-    if ((mePtr->type == CHECK_BUTTON_ENTRY) || (mePtr->type == RADIO_BUTTON_ENTRY)) {
-        if (!mePtr->hideMargin && mePtr->indicatorOn) {
-            if ((mePtr->image != NULL) || (mePtr->bitmapPtr != NULL)) {
-                *widthPtr = (14 * mePtr->height) / 10;
-                *heightPtr = mePtr->height;
-                if (mePtr->type == CHECK_BUTTON_ENTRY) {
-                    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-                        INT2PTR((65 * mePtr->height) / 100);
-                } else {
-                    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-                        INT2PTR((75 * mePtr->height) / 100);
-                }
-            } else {
-                *widthPtr = *heightPtr = mePtr->height;
-                if (mePtr->type == CHECK_BUTTON_ENTRY) {
-                    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-                        INT2PTR((80 * mePtr->height) / 100);
-                } else {
-                    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-                        INT2PTR(mePtr->height);
-                }
-            }
-        } else {
-            Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
-                                &borderWidth);
-            *heightPtr = 0;
-            *widthPtr = borderWidth;
-        }
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+                        &borderWidth);
+
+    if ((mePtr->type == CHECK_BUTTON_ENTRY || mePtr->type == RADIO_BUTTON_ENTRY)
+            && !mePtr->hideMargin && mePtr->indicatorOn) {
+        /*
+         * At this point mePtr->height is only the label height; the drawing
+         * code sees the full entry height, so reproduce that here to get
+         * the same indicator size.
+         */
+        Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+                            menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+        size = MenuIndicatorSize(mePtr->type == CHECK_BUTTON_ENTRY,
+                mePtr->height + 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT);
+        *widthPtr = MENU_PAD_LEFT + size + MENU_INDICATOR_GAP;
+        *heightPtr = mePtr->height;
+        mePtr->platformEntryData = (TkMenuPlatformEntryData) INT2PTR(size);
     } else {
-        Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
-                            &borderWidth);
         *heightPtr = 0;
-        *widthPtr = borderWidth;
+        *widthPtr = (menuPtr->menuType == MENUBAR)
+                ? borderWidth : borderWidth + MENU_PAD_LEFT;
     }
 }
 
@@ -1043,12 +1060,14 @@ GetMenuAccelGeometry(
     *heightPtr = fm.linespace;
 
     if (mePtr->type == CASCADE_ENTRY) {
-        *widthPtr = 2 * CASCADE_ARROW_WIDTH;
+        *widthPtr = 2 * CASCADE_ARROW_WIDTH + MENU_PAD_RIGHT;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
         const char *accel = Tcl_GetString(mePtr->accelPtr);
-        *widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
+        *widthPtr = MENU_ACCEL_GAP
+                + Tk_TextWidth(tkfont, accel, mePtr->accelLength)
+                + MENU_PAD_RIGHT;
     } else {
-        *widthPtr = 0;
+        *widthPtr = (menuPtr->menuType == MENUBAR) ? 0 : MENU_PAD_RIGHT;
     }
 }
 
@@ -2083,7 +2102,8 @@ DrawMenuEntryAccelerator(
         int arrowW = CASCADE_ARROW_WIDTH;
         int arrowH = CASCADE_ARROW_HEIGHT;
 
-        px = x + width - borderWidth - activeBorderWidth - arrowW - 2;
+        px = x + width - borderWidth - activeBorderWidth - arrowW
+            - MENU_PAD_RIGHT;
         py = y + (height - arrowH)/2;
 
         /* Draw cascade arrow as filled triangle using NanoVG. */
@@ -2108,7 +2128,7 @@ DrawMenuEntryAccelerator(
     } else if (mePtr->accelPtr != NULL) {
         const char *accel = Tcl_GetString(mePtr->accelPtr);
         int left = x + mePtr->labelWidth + activeBorderWidth
-            + mePtr->indicatorSpace;
+            + mePtr->indicatorSpace + MENU_ACCEL_GAP;
         int ty;
 
         if (menuPtr->menuType == MENUBAR) {
@@ -2193,20 +2213,16 @@ DrawMenuEntryIndicator(
     /* Calculate indicator position - centered vertically in the entry. */
     top = y + height / 2;
     
-    /* Add proper left padding for the indicator. */
-    left = x + activeBorderWidth + 6;
-
     /* Determine indicator size - proportional to entry height. */
-    if (isCheck) {
-        size = (65 * height) / 100;
-        if (size < 10) size = 10;
-        if (size > 22) size = 22;
-    } else { /* radio */
-        size = (75 * height) / 100;
-        if (size < 10) size = 10;
-        if (size > 22) size = 22;
-    }
+    size = MenuIndicatorSize(isCheck, height);
     radius = size / 2;
+
+    /*
+     * left is the horizontal CENTER of the indicator: skip the left
+     * padding, then half the indicator, so its left edge sits MENU_PAD_LEFT
+     * pixels inside the entry instead of being clipped by the menu edge.
+     */
+    left = x + activeBorderWidth + MENU_PAD_LEFT + radius;
 
     /* Determine colors based on state. */
     if (mePtr->state == ENTRY_DISABLED) {
