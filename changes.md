@@ -128,6 +128,7 @@ to the userbase.
  - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tcl/tktview/a4c72a)
  - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
+ - [wm overrideredirect zaps additions to system menu](https://core.tcl-lang.org/tcl/tktview/220781)
  - [Tk performance regression on X11](https://core.tcl-lang.org/tcl/tktview/290ce5)
  - [LastKnownRequestProcessed() assigned to unsigned int](https://core.tcl-lang.org/tcl/tktview/451cb3)
  - [Application crash on Windows when destroying toplevel that is "not responding"](https://core.tcl-lang.org/tcl/tktview/7f05a1)
