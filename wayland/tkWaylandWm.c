@@ -5052,15 +5052,16 @@ ApplyPendingGeometry(
 	 * to be too small for the window, which causes part of the window to
 	 * not be drawn.  There seems to be no way for us to detect the size
 	 * increase.  So as a last resort / shameless hack we just make sure
-	 * that the window is always at least 180 logical pixels wide.
+	 * that the window is always at least TK_WAYLAND_CSD_MIN_WIDTH
+	 * logical pixels wide.
 	 *
 	 * This only happens with decorations drawn by the client (libdecor
 	 * with GNOME).  If the compositor draws them, the window can have
 	 * any width.
 	 */
 
-	if (!tkWaylandServerDecorations && tw < 180) {
-	    tw = 180;
+	if (!tkWaylandServerDecorations && tw < TK_WAYLAND_CSD_MIN_WIDTH) {
+	    tw = TK_WAYLAND_CSD_MIN_WIDTH;
 	}
 
 	DEBUG_LOG("ApplyPendingGeometry: calling glfwSetWindowSize %s -> %dx%d",

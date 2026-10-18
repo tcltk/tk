@@ -47,11 +47,6 @@ extern GLFWwindow *mainGlfwWindow;
  * Minimum width for menus to prevent unreasonable clipping.
  */
 #define MENU_MIN_CONTENT_WIDTH  90
-/*
- * Minimum width of a toplevel with client-side (libdecor) decorations.
- * Keep in sync with the clamp in ApplyPendingGeometry() (tkWaylandWm.c).
- */
-#define TEAROFF_CSD_MIN_WIDTH   180
 #define ENTRY_HELP_MENU         ENTRY_PLATFORM_FLAG1
 
 /*
@@ -910,11 +905,11 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     if (menuPtr->menuType == TEAROFF_MENU && !tkWaylandServerDecorations) {
         /*
          * With client-side decorations the compositor/libdecor never makes
-         * the toplevel narrower than TEAROFF_CSD_MIN_WIDTH.  Request that
+         * the toplevel narrower than TK_WAYLAND_CSD_MIN_WIDTH.  Request that
          * width ourselves, so the entries fill the window instead of leaving
          * dead space at the right.
          */
-        int needed = TEAROFF_CSD_MIN_WIDTH - x - 2 * activeBorderWidth
+        int needed = TK_WAYLAND_CSD_MIN_WIDTH - x - 2 * activeBorderWidth
             - borderWidth;
 
         if (needed > minContentWidth) {
@@ -937,6 +932,21 @@ TkpComputeStandardMenuGeometry(TkMenu *menuPtr)
     height = maxY + borderWidth;
     menuPtr->totalWidth = width;
     menuPtr->totalHeight = height;
+
+    /*
+     * If a tear-off has been resized wider than it requests, let the last
+     * column fill the window.  The requested size is not changed.  This is
+     * recomputed when the window is resized (TkMenuEventProc).
+     */
+
+    if (menuPtr->menuType == TEAROFF_MENU && Tk_IsMapped(menuPtr->tkwin)
+            && Tk_Width(menuPtr->tkwin) > width) {
+        int extra = Tk_Width(menuPtr->tkwin) - width;
+
+        for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
+            menuPtr->entries[j]->width += extra;
+        }
+    }
 }
 
 /*
@@ -1748,21 +1758,6 @@ TkpDrawMenuEntry(
 
     /* Safety check. */
     if (!mePtr || !mePtr->menuPtr || !mePtr->menuPtr->tkwin) return;
-
-    /*
-     * If a tear-off is resized wider than its entries, let the last column
-     * fill the window.
-     */
-    if (mePtr->menuPtr->menuType == TEAROFF_MENU
-            && (mePtr->entryFlags & ENTRY_LAST_COLUMN)
-            && mePtr->menuPtr->numEntries > 0) {
-        int margin = mePtr->menuPtr->entries[0]->x;
-        int fill = Tk_Width(mePtr->menuPtr->tkwin) - margin - x;
-
-        if (fill > width) {
-            width = fill;
-        }
-    }
 
     DEBUG_LOG("TkpDrawMenuEntry: entry label='%s', menuType=%d, pos=(%d,%d) size=%dx%d, type=%d",
              mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
