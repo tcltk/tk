@@ -266,6 +266,19 @@ namespace eval tk {
 	}
 	namespace export movePointerAwayFromTestArea
 
+	# Suspend script execution for a given amount of time, but continue
+	# processing events.
+	proc pause {ms} {
+		variable _pause
+
+		set num [incr _pause(count)]
+		set _pause($num) 1
+
+		after $ms [list unset [namespace current]::_pause($num)]
+		vwait [namespace current]::_pause($num)
+	}
+	namespace export pause
+
     }
 }
 
