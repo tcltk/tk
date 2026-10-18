@@ -680,7 +680,6 @@ TkPremultiplyRGBA(
  *----------------------------------------------------------------------
  */
 
-#if !defined(TK_CAN_RENDER_RGBA) || defined(_WIN32)
 static void
 DisplayInstancePixmap(
     PhotoInstance *instancePtr,	/* Instance to be displayed. */
@@ -709,7 +708,6 @@ DisplayInstancePixmap(
     XSetClipMask(display, instancePtr->gc, None);
     XSetClipOrigin(display, instancePtr->gc, 0, 0);
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -756,7 +754,6 @@ TkImgPhotoDisplay(
 
 #ifdef TK_CAN_RENDER_RGBA
 
-#ifdef _WIN32
     /*
      * The RGBA rendering below draws the pixels of the model, so it ignores
      * -gamma and -palette, which are only applied to the pixmap of the
@@ -772,7 +769,6 @@ TkImgPhotoDisplay(
 	(void)XFlush(display);
 	return;
     }
-#endif /* _WIN32 */
 
     /*
      * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
