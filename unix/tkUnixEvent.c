@@ -188,6 +188,7 @@ TkpOpenDisplay(
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
+    Tcl_InitHashTable(&dispPtr->inputXfsTable, TCL_ONE_WORD_KEYS);
     XSetLocaleModifiers("");
     OpenIM(dispPtr);
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
@@ -248,6 +249,20 @@ TkpCloseDisplay(
     TkWmCleanup(dispPtr);
 
 #ifdef TK_USE_INPUT_METHODS
+    {
+	Tcl_HashSearch search;
+	Tcl_HashEntry *hPtr;
+
+	for (hPtr = Tcl_FirstHashEntry(&dispPtr->inputXfsTable, &search);
+		hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+	    XFontSet xfs = (XFontSet) Tcl_GetHashValue(hPtr);
+
+	    if (xfs != dispPtr->inputXfs) {
+		XFreeFontSet(dispPtr->display, xfs);
+	    }
+	}
+	Tcl_DeleteHashTable(&dispPtr->inputXfsTable);
+    }
     if (dispPtr->inputXfs) {
 	XFreeFontSet(dispPtr->display, dispPtr->inputXfs);
     }
@@ -796,7 +811,8 @@ OpenIM(
     /*
      * Create an XFontSet for preedit area.
      */
-    if (dispPtr->inputStyle & XIMPreeditPosition) {
+    if ((dispPtr->inputStyle & XIMPreeditPosition)
+	    && (dispPtr->inputXfs == NULL)) {
 	char **missing_list;
 	int missing_count;
 	char *def_string;
