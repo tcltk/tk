@@ -9230,6 +9230,8 @@ else case e in #(
 esac
 fi
 
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xft" >&5
+printf '%s\n' "$enable_xft" >&6; }
 
     XFT_CFLAGS=""
     XFT_LIBS=""
