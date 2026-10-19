@@ -129,6 +129,7 @@ to the userbase.
  - [focus changes forgotten during grab](https://core.tcl-lang.org/tcl/tktview/220892)
  - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tcl/tktview/5f7ba8)
  - [wm overrideredirect zaps additions to system menu](https://core.tcl-lang.org/tcl/tktview/220781)
+ - [Windows ConfigureNotify uses stale WINDOWPOS x/y](https://core.tcl-lang.org/tcl/tktview/90f5cd)
  - [Tk performance regression on X11](https://core.tcl-lang.org/tcl/tktview/290ce5)
  - [LastKnownRequestProcessed() assigned to unsigned int](https://core.tcl-lang.org/tcl/tktview/451cb3)
  - [Application crash on Windows when destroying toplevel that is "not responding"](https://core.tcl-lang.org/tcl/tktview/7f05a1)
