@@ -680,7 +680,6 @@ TkPremultiplyRGBA(
  *----------------------------------------------------------------------
  */
 
-#if !defined(TK_CAN_RENDER_RGBA) || defined(_WIN32)
 static void
 DisplayInstancePixmap(
     PhotoInstance *instancePtr,	/* Instance to be displayed. */
@@ -709,7 +708,6 @@ DisplayInstancePixmap(
     XSetClipMask(display, instancePtr->gc, None);
     XSetClipOrigin(display, instancePtr->gc, 0, 0);
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -756,7 +754,6 @@ TkImgPhotoDisplay(
 
 #ifdef TK_CAN_RENDER_RGBA
 
-#ifdef _WIN32
     /*
      * The RGBA rendering below draws the pixels of the model, so it ignores
      * -gamma and -palette, which are only applied to the pixmap of the
@@ -772,7 +769,6 @@ TkImgPhotoDisplay(
 	(void)XFlush(display);
 	return;
     }
-#endif /* _WIN32 */
 
     /*
      * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
@@ -1240,17 +1236,8 @@ GetColorTable(
 
 	colorPtr = (ColorTable *)Tcl_Alloc(sizeof(ColorTable));
 
-	/*
-	 * The following line of code should not normally be needed due to the
-	 * assignment in the following line. However, it compensates for bugs
-	 * in some compilers (HP, for example) where sizeof(ColorTable) is 24
-	 * but the assignment only copies 20 bytes, leaving 4 bytes
-	 * uninitialized; these cause problems when using the id for lookups
-	 * in imgPhotoColorHash, and can result in core dumps.
-	 */
-
-	memset(&colorPtr->id, 0, sizeof(ColorTableId));
-	colorPtr->id = id;
+	/* Make sure padding bytes are copied as well */
+	memcpy(&colorPtr->id, &id, sizeof(ColorTableId));
 	Tk_PreserveColormap(colorPtr->id.display, colorPtr->id.colormap);
 	colorPtr->flags = 0;
 	colorPtr->refCount = 0;
