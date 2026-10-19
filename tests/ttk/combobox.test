@@ -100,7 +100,8 @@ test combobox-2.end "Cleanup" -body { destroy .cb }
 
 test combobox-3 "Read postoffset value dynamically from current style" -body {
     ttk::combobox .cb -values [list a b c] -style "DerivedStyle.TCombobox"
-    pack .cb -expand true -fill both
+    # Leave room at the right: on Wayland a menu is kept within its toplevel.
+    pack .cb -expand true -fill both -padx {0 50}
     update idletasks
     ttk::style configure DerivedStyle.TCombobox -postoffset [list 25 0 0 0]
     if {[tk windowingsystem] eq "aqua"} {
@@ -109,7 +110,9 @@ test combobox-3 "Read postoffset value dynamically from current style" -body {
 	}
     }
     ttk::combobox::Post .cb
-    expr {[winfo rootx .cb.popdown] - [winfo rootx .cb]}
+    # On Aqua the native menu is posted 2 pixels to the right.
+    expr {[winfo rootx .cb.popdown] - [winfo rootx .cb]
+	    - ([tk windowingsystem] eq "aqua" ? 2 : 0)}
 } -result 25 -cleanup {
     destroy .cb
 }
