@@ -410,6 +410,24 @@ TkpGetShadows(
     borderPtr->darkColorPtr  = Tk_GetColorByValue(tkwin, &darkColor);
     borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
 
+    /*
+     * Create the light and dark GCs, as tkUnix3d.c does.  Code that draws
+     * with Tk_3DBorderGC() (the ttk default theme's size grip, separators
+     * and scrollbar arrows, Tk_Draw3DPolygon, etc.) needs these.  Without
+     * them the GCs are NULL, TkWaylandApplyGC() returns early, and NanoVG
+     * falls back to its default black stroke.  Setting lightGC also makes
+     * the early return at the top of this function work, so shadow colors
+     * are computed only once per border.
+     */
+    {
+        XGCValues gcValues;
+
+        gcValues.foreground = borderPtr->lightColorPtr->pixel;
+        borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+        gcValues.foreground = borderPtr->darkColorPtr->pixel;
+        borderPtr->darkGC  = Tk_GetGC(tkwin, GCForeground, &gcValues);
+    }
+
     /* Cache NVG colors. */
     if (borderPtr->bgColorPtr) {
         waylandBorderPtr->bgColor = TkWaylandXColorToNVG(borderPtr->bgColorPtr);
