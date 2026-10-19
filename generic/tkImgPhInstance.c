@@ -177,10 +177,15 @@ TkImgPhotoConfigureInstance(
      * If the user has specified a width and/or height for the model which is
      * different from our current width/height, set the size to the values
      * specified by the user. If we have no pixmap, we do this also, since it
-     * has the side effect of allocating a pixmap for us.
+     * has the side effect of allocating a pixmap for us. Platforms which
+     * render RGBA images do not use the pixmap.
      */
 
-    if ((instancePtr->pixels == None) || (instancePtr->error == NULL)
+    if (
+#ifndef TK_CAN_RENDER_RGBA
+	    (instancePtr->pixels == None) ||
+#endif
+	    (instancePtr->error == NULL)
 	    || (instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)) {
 	TkImgPhotoInstanceSetSize(instancePtr);
@@ -750,15 +755,6 @@ TkImgPhotoDisplay(
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
 
-    /*
-     * If there's no pixmap, it means that an error occurred while creating
-     * the image instance so it can't be displayed.
-     */
-
-    if (instancePtr->pixels == None) {
-	return;
-    }
-
 #ifdef TK_CAN_RENDER_RGBA
 
     /*
@@ -780,6 +776,15 @@ TkImgPhotoDisplay(
     XDestroyImage(photo);
 
 #else
+
+    /*
+     * If there's no pixmap, it means that an error occurred while creating
+     * the image instance so it can't be displayed.
+     */
+
+    if (instancePtr->pixels == None) {
+	return;
+    }
 
     if ((instancePtr->modelPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
@@ -936,10 +941,17 @@ TkImgPhotoInstanceSetSize(
     schar *newError, *errSrcPtr, *errDestPtr;
     int h, offset;
     XRectangle validBox;
+#ifndef TK_CAN_RENDER_RGBA
     Pixmap newPixmap;
+#endif
 
     modelPtr = instancePtr->modelPtr;
     XClipBox(modelPtr->validRegion, &validBox);
+
+#ifndef TK_CAN_RENDER_RGBA
+    /*
+     * Platforms which render RGBA images do not use the pixmap.
+     */
 
     if ((instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)
@@ -977,6 +989,7 @@ TkImgPhotoInstanceSetSize(
 	}
 	instancePtr->pixels = newPixmap;
     }
+#endif /* TK_CAN_RENDER_RGBA */
 
     if ((instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)
