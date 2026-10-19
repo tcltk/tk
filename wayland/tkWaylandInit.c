@@ -348,7 +348,8 @@ IsUnmappedEmptyRoot(TkWindow *winPtr)
  */
 
 static int renderFBO(
-    GLFWwindow *glfwWindow)
+    GLFWwindow *glfwWindow,
+    int force)			/* Swap even if the last swap was recent. */
 {
     if (shutdownInProgress) return 1;
     if (!glfwWindow) return 1;
@@ -372,7 +373,7 @@ static int renderFBO(
     if (!isGlfwWindowValid(glfwWindow)) return 1;
     if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
     static double lastSwap=0; double now=glfwGetTime();
-    if (now-lastSwap<0.008) return 0;  /* throttled: caller keeps NEEDS_DISPLAY */
+    if (!force && now-lastSwap<0.008) return 0;  /* throttled: caller keeps NEEDS_DISPLAY */
     glfwSwapBuffers(glfwWindow);
     lastSwap=glfwGetTime();
     return 1;
@@ -491,6 +492,38 @@ Tk_ClipDrawableToRect(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandPresentWindow --
+ *
+ *	Show the backing store framebuffer of a window at once, without
+ *	throttling, e.g. to commit a new size.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Swaps the buffers of the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandPresentWindow(
+    GLFWwindow *glfwWindow)
+{
+    glfwTkInfo *infoPtr;
+
+    if (!glfwWindow || !isGlfwWindowValid(glfwWindow)) {
+	return;
+    }
+    infoPtr = (glfwTkInfo *) glfwGetWindowUserPointer(glfwWindow);
+    if (renderFBO(glfwWindow, 1) && infoPtr) {
+	infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandDisplayAllWindows --
  *
  *	Called by TkWaylandSetupProc to display any "dirty" windows whose
@@ -551,7 +584,7 @@ TkWaylandDisplayAllWindows()
             continue;
         }
         /* If the swap was throttled, leave NEEDS_DISPLAY set and retry. */
-        if (renderFBO(glfwWindow)) {
+        if (renderFBO(glfwWindow, 0)) {
             infoPtr->flags &= ~TKWL_NEEDS_DISPLAY;
         }
     }

@@ -5068,7 +5068,15 @@ ApplyPendingGeometry(
 	    Tk_PathName(winPtr), tw, th);
 	TkWaylandFlushConfigures();
         glfwSetWindowSize(glfwWindow, tw, th);
-	
+
+	/*
+	 * Commit the new size at once, even if nothing is redrawn, or the
+	 * compositor (e.g. sway) can send the old size back.
+	 */
+	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	    TkWaylandPresentWindow(glfwWindow);
+	}
+
 	/* Update the window data. */
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
