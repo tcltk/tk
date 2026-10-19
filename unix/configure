@@ -678,6 +678,9 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
+enable_accessibility
+SPEECHD_LIBS
+SPEECHD_CFLAGS
 ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
@@ -736,6 +739,7 @@ CC
 MAN_FLAGS
 BUILD_TCLSH
 TCLSH_PROG
+TCL_INCLUDES
 TCL_STUB_LIB_SPEC
 TCL_STUB_LIB_FLAG
 TCL_STUB_LIB_FILE
@@ -807,6 +811,7 @@ enable_xft
 enable_bidi
 enable_xrender
 enable_libcups
+enable_accessibility
 enable_xss
 enable_framework
 enable_zipfs
@@ -1466,6 +1471,8 @@ Optional Features:
   --enable-xrender        use Xrender to composite photo images with alpha
                           (default: yes)
   --enable-libcups        use libcups (default: on)
+  --enable-accessibility  enable accessibility support using ATK/Atk-bridge
+                          and libspeechd (default: yes)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
@@ -2740,7 +2747,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="b1"
+TK_PATCH_LEVEL=".1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -2939,6 +2946,18 @@ if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
     as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
 fi
+
+#------------------------------------------------------------------------
+# Compile against the Tcl source tree if it is accessible, otherwise use
+# the installed Tcl headers.
+#------------------------------------------------------------------------
+
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+    TCL_INCLUDES='-I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR}'
+else
+    TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+fi
+
 
 
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for tclsh" >&5
@@ -8588,14 +8607,14 @@ printf '%s\n' "HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&6; }
 		CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
 		LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
 
-		ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
+		ac_fn_c_check_header_compile "$LINENO" "hb.h" "ac_cv_header_hb_h" "#include <X11/Xlib.h>
 "
-if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
+if test "x$ac_cv_header_hb_h" = xyes
 then :
 
 else case e in #(
   e)
-		    as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
+		    as_fn_error $? "HarfBuzz header <hb.h> not found with $HB_CFLAGS" "$LINENO" 5
 		 ;;
 esac
 fi
@@ -9033,7 +9052,7 @@ printf '%s\n' "$enable_libcups" >&6; }
 	    found_cups=no
 	else
 	    found_cups=yes
-	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS=`cups-config --libs`
 	fi
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_cups" >&5
@@ -9066,29 +9085,126 @@ fi
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support
+#	Check for accessibility support (ATK + Atk-bridge AND libspeechd)
+#
+#	On X11, accessibility support is enabled by default.  When enabled,
+#	BOTH ATK/Atk-bridge AND libspeechd are required.  If either of
+#	them is missing, configure emits a warning, sets
+#	enable_accessibility=no (equivalent to --disable-accessibility),
+#	and the build continues without accessibility support.
+#
+#	Passing --disable-accessibility skips all checks entirely.
 #--------------------------------------------------------------------
 
+ATK_CFLAGS=""
+ATK_LIBS=""
+SPEECHD_CFLAGS=""
+SPEECHD_LIBS=""
+
 if test "$tk_aqua" = no; then
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge" >&5
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable accessibility support" >&5
+printf %s "checking whether to enable accessibility support... " >&6; }
+  # Check whether --enable-accessibility was given.
+if test ${enable_accessibility+y}
+then :
+  enableval=$enable_accessibility; enable_accessibility=$enableval
+else case e in #(
+  e) enable_accessibility="yes" ;;
+esac
+fi
+
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_accessibility" >&5
+printf '%s\n' "$enable_accessibility" >&6; }
+
+  if test "$enable_accessibility" = "yes"; then
+    #------------------------------------------------------------------
+    # ATK and Atk-bridge (required for accessibility)
+    #------------------------------------------------------------------
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge" >&5
 printf %s "checking for ATK and Atk-bridge... " >&6; }
-  if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+    if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+      ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+      ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+    else
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: ATK and/or Atk-bridge were not found." >&5
+printf '%s\n' "$as_me: WARNING: ATK and/or Atk-bridge were not found." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling accessibility support (--disable-accessibility)." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable accessibility, install the ATK development packages:" >&5
+printf '%s\n' "$as_me: WARNING: To enable accessibility, install the ATK development packages:" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libatk1.0-dev libatk-bridge2.0-dev" >&5
+printf '%s\n' "$as_me: WARNING:   - Debian/Ubuntu:    sudo apt install libatk1.0-dev libatk-bridge2.0-dev" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Fedora/RHEL:      sudo dnf install atk-devel at-spi2-atk-devel" >&5
+printf '%s\n' "$as_me: WARNING:   - Fedora/RHEL:      sudo dnf install atk-devel at-spi2-atk-devel" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Arch:             sudo pacman -S atk at-spi2-atk" >&5
+printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S atk at-spi2-atk" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install atk at-spi2-atk" >&5
+printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install atk at-spi2-atk" >&2;}
+      enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+    fi
+  fi
+
+  #------------------------------------------------------------------
+  # libspeechd (Speech Dispatcher) — required for accessibility
+  #------------------------------------------------------------------
+  if test "$enable_accessibility" = "yes"; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for libspeechd" >&5
+printf %s "checking for libspeechd... " >&6; }
+    if pkg-config --exists speech-dispatcher; then
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+      SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
+      SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
+    else
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: libspeechd (Speech Dispatcher) was not found." >&5
+printf '%s\n' "$as_me: WARNING: libspeechd (Speech Dispatcher) was not found." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling accessibility support (--disable-accessibility)." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable accessibility, install the Speech Dispatcher development package:" >&5
+printf '%s\n' "$as_me: WARNING: To enable accessibility, install the Speech Dispatcher development package:" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&5
+printf '%s\n' "$as_me: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&5
+printf '%s\n' "$as_me: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&5
+printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&5
+printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&2;}
+      enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+      SPEECHD_CFLAGS=""
+      SPEECHD_LIBS=""
+    fi
+  fi
+
+  # Now that both checks have passed (or not), define the feature macros.
+  if test "$enable_accessibility" = "yes"; then
 
 printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
 
-  else
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-    ATK_CFLAGS=""
-    ATK_LIBS=""
+
+printf '%s\n' "#define HAVE_SPEECHD 1" >>confdefs.h
+
   fi
 
 
+
+
+
+else
+  enable_accessibility=no
 fi
+
+
 
 #--------------------------------------------------------------------
 # XXX Do this last.
@@ -9686,6 +9802,11 @@ eval "TK_DEMO_DIR=\"`echo ${DEMO_DIR} | tr '()' '{}'`\""
 
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
+
+
+
+
 
 
 

@@ -24,6 +24,61 @@
 /*
  *----------------------------------------------------------------------
  *
+ * GetPreeditFontSet --
+ *
+ *	Get an XFontSet of the given pixel size for the preedit area of an
+ *	over-the-spot input method, so that it matches the font of the
+ *	widget. [Bug 1151700]
+ *
+ * Results:
+ *	The XFontSet, cached for the display.
+ *
+ * Side effects:
+ *	May create an XFontSet.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#ifdef TK_USE_INPUT_METHODS
+static XFontSet
+GetPreeditFontSet(
+    TkDisplay *dispPtr,
+    int height)
+{
+    Tcl_HashEntry *hPtr;
+    int isNew;
+    XFontSet xfs;
+
+    if (height <= 0 || dispPtr->inputXfs == NULL) {
+	return dispPtr->inputXfs;
+    }
+    hPtr = Tcl_CreateHashEntry(&dispPtr->inputXfsTable, INT2PTR(height),
+	    &isNew);
+    if (isNew) {
+	char pattern[64];
+	char **missing_list;
+	int missing_count;
+	char *def_string;
+
+	snprintf(pattern, sizeof(pattern), "-*-*-*-R-Normal--%d-*-*-*-*-*",
+		height);
+	xfs = XCreateFontSet(dispPtr->display, pattern, &missing_list,
+		&missing_count, &def_string);
+	if (missing_count > 0) {
+	    XFreeStringList(missing_list);
+	}
+	if (xfs == NULL) {
+	    xfs = dispPtr->inputXfs;
+	}
+	Tcl_SetHashValue(hPtr, xfs);
+    }
+    return (XFontSet) Tcl_GetHashValue(hPtr);
+}
+#endif
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SetCaretPos --
  *
  *	This enables correct placement of the XIM caret. This is called by
@@ -68,7 +123,8 @@ Tk_SetCaretPos(
 
 	spot.x = dispPtr->caret.x;
 	spot.y = dispPtr->caret.y + dispPtr->caret.height;
-	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot,
+		XNFontSet, GetPreeditFontSet(dispPtr, height), NULL);
 	XSetICValues(winPtr->inputContext, XNPreeditAttributes, preedit_attr,
 		NULL);
 	XFree(preedit_attr);
@@ -391,6 +447,27 @@ TkpGetKeySym(
     if ((index & 1) && (sym == NoSymbol)) {
 	sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
 		0, index & ~1);
+    }
+
+    /*
+     * Num Lock selects the shifted keysym of a keypad key, and Shift
+     * reverts it, as in XLookupString(). [Bug 481308]
+     */
+
+    if (eventPtr->xkey.state
+	    & XkbKeysymToModifiers(dispPtr->display, XK_Num_Lock)) {
+	KeySym sym2 = XkbKeycodeToKeysym(dispPtr->display,
+		eventPtr->xkey.keycode, 0, index | 1);
+
+	if (IsKeypadKey(sym2) || IsPrivateKeypadKey(sym2)) {
+	    if ((eventPtr->xkey.state & ShiftMask)
+		    || ((dispPtr->lockUsage == LU_SHIFT)
+		    && (eventPtr->xkey.state & LockMask))) {
+		sym2 = XkbKeycodeToKeysym(dispPtr->display,
+			eventPtr->xkey.keycode, 0, index & ~1);
+	    }
+	    sym = sym2;
+	}
     }
     return sym;
 }

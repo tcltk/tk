@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  9.1b1
+package require -exact tk  9.1.1
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -551,6 +551,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile iconbadges
 	SourceLibFile button
 	SourceLibFile entry
+	SourceLibFile emoji
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow

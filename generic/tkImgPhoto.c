@@ -1952,7 +1952,7 @@ ImgPhotoConfigureModel(
      * Regard the empty string for -file, -data, -format or -metadata as the null value.
      */
 
-    if ((modelPtr->fileObj != NULL) && (Tcl_GetString(modelPtr->fileObj)[0] == 0)) {
+    if ((modelPtr->fileObj != NULL) && TkObjIsEmpty(modelPtr->fileObj)) {
 	Tcl_DecrRefCount(modelPtr->fileObj);
 	modelPtr->fileObj = NULL;
     }
@@ -2971,7 +2971,7 @@ MatchStringFormat(
 	     * a generic image data error.
 	     */
 
-	    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] == '\0') {
+	    if (TkObjIsEmpty(Tcl_GetObjResult(interp))) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't recognize image data", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",

@@ -36,6 +36,7 @@ typedef struct {
     HHOOK hMsgBoxHook;		/* Hook proc for tk_messageBox and the */
     HICON hSmallIcon;		/* icons used by a parent to be used in */
     HICON hBigIcon;		/* the message box */
+    bool comInitialized;	/* Whether CoInitialize() has been called. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -160,7 +161,50 @@ static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTestDialog(void *clientData);
+static HWND		ReleaseMouseCapture(void);
+static void		RestoreMouseCapture(HWND hwnd);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * ReleaseMouseCapture, RestoreMouseCapture --
+ *
+ *	A native modal dialog does not get mouse input while a Tk window
+ *	has captured the mouse (a global grab). Release the capture before
+ *	displaying the dialog and restore it afterwards. [Bug 2814003]
+ *
+ * Results:
+ *	ReleaseMouseCapture returns the window which had the capture, or NULL.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static HWND
+ReleaseMouseCapture(void)
+{
+    HWND hwnd = GetCapture();
+
+    if (hwnd != NULL) {
+	TkpSetCapture(NULL);
+    }
+    return hwnd;
+}
+
+static void
+RestoreMouseCapture(
+    HWND hwnd)			/* Result of ReleaseMouseCapture. */
+{
+    TkWindow *winPtr;
+
+    if ((hwnd != NULL) && IsWindow(hwnd)) {
+	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+	if ((winPtr != NULL) && (winPtr->dispPtr->grabWinPtr != NULL)
+		&& (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
+	    TkpSetCapture(winPtr);
+	}
+    }
+}
 
 /*
  *-------------------------------------------------------------------------
@@ -243,6 +287,33 @@ TkWinDialogDebug(
 /*
  *-------------------------------------------------------------------------
  *
+ * EnableParent --
+ *
+ *	Re-enables the parent window after a modal dialog and restores the
+ *	keyboard focus to it.
+ *
+ *	The dialog disables its owner, the window of the parent toplevel.
+ *	If the toplevel is mapped while the dialog is open, the window is
+ *	reparented into the new wrapper. Then the dialog re-enables and
+ *	activates the wrapper instead, and the focus stays on the wrapper,
+ *	because the disabled window cannot receive it. [Bug adb71ed70b]
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static void
+EnableParent(
+    HWND hWnd)
+{
+    EnableWindow(hWnd, 1);
+    if (GetFocus() == GetParent(hWnd)) {
+	SetFocus(hWnd);
+    }
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
  * Tk_ChooseColorObjCmd --
  *
  *	This function implements the color dialog box for the Windows
@@ -267,7 +338,7 @@ Tk_ChooseColorObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
-    HWND hWnd;
+    HWND hWnd, hCapture;
     Tcl_Size i;
     int oldMode, winCode, result;
     CHOOSECOLORW chooseColor;
@@ -358,16 +429,12 @@ Tk_ChooseColorObjCmd(
     chooseColor.hwndOwner = hWnd;
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    hCapture = ReleaseMouseCapture();
     winCode = ChooseColorW(&chooseColor);
+    RestoreMouseCapture(hCapture);
     (void) Tcl_SetServiceMode(oldMode);
 
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    EnableWindow(hWnd, 1);
+    EnableParent(hWnd);
 
     /*
      * Clear the interp result since anything may have happened during the
@@ -706,7 +773,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 			    enum OFNOper oper)
 {
     HRESULT hr;
-    HWND hWnd;
+    HWND hWnd, hCapture;
     DWORD flags, nfilters, defaultFilterIndex;
     COMDLG_FILTERSPEC *filterPtr = NULL;
     IFileDialog *fdlgIf = NULL;
@@ -714,6 +781,17 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     LPWSTR wstr;
     Tcl_Obj *resultObj = NULL;
     int oldMode;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /*
+     * COM must be initialized before the dialog can be created.
+     */
+
+    if (!tsdPtr->comInitialized) {
+	(void) CoInitialize(NULL);
+	tsdPtr->comInitialized = true;
+    }
 
     /*
      * At this point new interfaces are supposed to be available.
@@ -865,18 +943,15 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     }
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+    hCapture = ReleaseMouseCapture();
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
+    RestoreMouseCapture(hCapture);
     Tcl_SetServiceMode(oldMode);
     EatSpuriousMessageBugFix();
 
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    if (hWnd)
-	EnableWindow(hWnd, 1);
+    if (hWnd) {
+	EnableParent(hWnd);
+    }
 
     /*
      * Clear interp result since it might have been set during the modal loop.
@@ -1288,7 +1363,7 @@ Tk_MessageBoxObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
-    HWND hWnd;
+    HWND hWnd, hCapture;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
     int defaultBtn, icon, type, oldMode, winCode;
     Tcl_Size i;
@@ -1445,19 +1520,15 @@ Tk_MessageBoxObjCmd(
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);
     }
+    hCapture = ReleaseMouseCapture();
     winCode = MessageBoxW(hWnd, tmpPtr, titlePtr, flags);
+    RestoreMouseCapture(hCapture);
     Tcl_DStringFree(&titleBuf);
     Tcl_DStringFree(&tmpBuf);
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
     (void) Tcl_SetServiceMode(oldMode);
 
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    EnableWindow(hWnd, 1);
+    EnableParent(hWnd);
 
     Tcl_DecrRefCount(tmpObj);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -1944,7 +2015,8 @@ FontchooserShowCmd(
     LOGFONTW lf;
     HDC hdc;
     HookData *hdPtr;
-    int r = TCL_OK, oldMode = 0;
+    int r = TCL_OK, oldMode = 0, winCode;
+    HWND hCapture;
 
     hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
 
@@ -2016,7 +2088,10 @@ FontchooserShowCmd(
 
     if (TCL_OK == r) {
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	if (ChooseFontW(&cf)) {
+	hCapture = ReleaseMouseCapture();
+	winCode = ChooseFontW(&cf);
+	RestoreMouseCapture(hCapture);
+	if (winCode) {
 	    if (hdPtr->cmdObj) {
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
@@ -2025,7 +2100,7 @@ FontchooserShowCmd(
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);
-	EnableWindow(cf.hwndOwner, 1);
+	EnableParent(cf.hwndOwner);
     }
 
     ReleaseDC(cf.hwndOwner, hdc);

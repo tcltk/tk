@@ -981,8 +981,16 @@ TkpPostTearoffMenu(
     if (index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
+
+    /*
+     * A menu higher than the screen is posted scrolled to the top, or so
+     * that the specified entry is visible.
+     */
+
+    TkMenuSetScrollOffset(menuPtr, 0);
     if (index >= 0) {
-	y -= menuPtr->entries[index]->y;
+	TkMenuSeeEntry(menuPtr, menuPtr->entries[index]);
+	y -= menuPtr->entries[index]->y + TkMenuScrollDelta(menuPtr);
     }
 
     /*

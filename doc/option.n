@@ -63,6 +63,21 @@ options specified in that file to the option database.  If \fIpriority\fR
 is specified, it indicates the priority level at which to enter the
 options;  \fIpriority\fR defaults to \fBinteractive\fR.
 .PP
+In the values in the file, the escape sequences of the X resource file
+syntax are recognized: a backslash followed by a newline is removed
+(so that the value continues on the next line), \fB\en\fR is replaced
+by a newline, a backslash followed by a space or a tab is replaced by
+that character, \fB\e\e\fR by a single backslash, and a backslash
+followed by three octal digits by the byte with that value (so a
+character outside ASCII can be written as the octal escapes of its
+UTF-8 bytes).
+Therefore a value which contains backslashes or newlines, such as a Tcl
+list, must be escaped before it is written to the file, for example:
+.PP
+.CS
+puts $file "*items: [string map {\e\e \e\e\e\e \en \e\en} $value]"
+.CE
+.PP
 The file is read through a channel which is in "utf-8" encoding,
 invalid byte sequences are automatically converted to valid ones.
 This means that encodings like ISO 8859-1 or cp1252 with high

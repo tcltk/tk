@@ -22,6 +22,7 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
+#include "tkFont.h"
 #include "tkText.h"
 #include <locale.h>
 
@@ -158,6 +159,7 @@ static Tcl_ObjCmdProc2 TestborderObjCmd;
 static Tcl_ObjCmdProc2 TestcolorObjCmd;
 static Tcl_ObjCmdProc2 TestcursorObjCmd;
 static Tcl_ObjCmdProc2 TestdeleteappsObjCmd;
+static Tcl_ObjCmdProc2 TestemojiObjCmd;
 static Tcl_ObjCmdProc2 TestfontObjCmd;
 static Tcl_ObjCmdProc2 TestmakeexistObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
@@ -238,6 +240,7 @@ Tktest_Init(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testobjconfig", TestobjconfigObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testemoji", TestemojiObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testfont", TestfontObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testmakeexist", TestmakeexistObjCmd,
@@ -1273,6 +1276,63 @@ TrivialEventProc(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestemojiObjCmd --
+ *
+ *	This function implements the "testemoji" command, which exposes the
+ *	emoji classification shared by the font engines:
+ *	    testemoji presentation codePoint ?nextCodePoint?
+ *	    testemoji continuation codePoint ?inEmoji?
+ *
+ * Results:
+ *	A standard Tcl result: the value of TkFontEmojiPresentation or
+ *	TkFontEmojiContinuation.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestemojiObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    static const char *const options[] = {"continuation", "presentation", NULL};
+    enum option {CONTINUATION, PRESENTATION};
+    int index, ch, arg = -1, result = 0;
+
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option codePoint ?arg?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &ch) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc == 4 && Tcl_GetIntFromObj(interp, objv[3], &arg) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    switch ((enum option) index) {
+    case CONTINUATION:
+	result = TkFontEmojiContinuation(ch, objc == 4 && arg != 0);
+	break;
+    case PRESENTATION:
+	result = TkFontEmojiPresentation(ch, arg);
+	break;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *

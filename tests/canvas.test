@@ -234,6 +234,9 @@ test canvas-1.45 {configuration options: good value for "yscrollcommand"} -body 
     .c configure -yscrollcommand {Another command}
     .c cget -yscrollcommand
 } -result {Another command}
+test canvas-1.45.1 {configuration options: synonyms - bug 707778} -body {
+    lsearch -all -inline [.c configure] {-b? *}
+} -result {{-bd -borderwidth} {-bg -background}}
 test canvas-1.46 {configure throws error on bad option} -body {
     .c configure -gorp foo
 } -returnCodes error -match glob -result {*}
@@ -1371,7 +1374,53 @@ test canvas-23.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
-test canvas-32.1 {a canvas is not scrolled if its scroll region fits in it - bug 2148529} -setup {
+test canvas-24.1 {Enter and Leave bindings which move the current item do not hang - bug 1813595} -setup {
+    destroy .c
+    canvas .c -width 200 -height 200
+    pack .c
+    update
+} -body {
+    .c create rectangle 50 100 150 150 -fill red -tags card
+    # Moving the item away from the pointer and back makes it the current
+    # item again and again.
+    .c bind card <Enter> {.c move card 0 -30}
+    .c bind card <Leave> {.c move card 0 30}
+    event generate .c <Motion> -x 100 -y 125
+    # The timer does not fire if the event loop is blocked.
+    after 200 {set done 1}
+    vwait done
+    set done
+} -cleanup {
+    destroy .c
+    unset -nocomplain done
+} -result 1
+
+test canvas-24.2 {an item with negative coordinates ending in .5 is drawn inside its bounding box - bug ad9a023e45} -constraints {
+    testpixel
+} -setup {
+    canvas .c -width 60 -height 60 -scrollregion {-30 -30 30 30} \
+	-highlightthickness 0 -borderwidth 0 -background white
+    pack .c
+    update
+} -body {
+    .c create rectangle -10.5 -10.5 -5.5 -5.5 -fill black -outline {}
+    update
+    # The coordinates are rounded to -11 and -6, so the pixels from -11 to -7
+    # are filled.  The canvas coordinate (x, y) is at the pixel (x + 30,
+    # y + 30) of the window.  The bounding box must contain the filled pixels
+    # (on Windows it is one pixel larger).
+    lassign [.c bbox 1] x1 y1 x2 y2
+    set res [expr {$x1 <= -11 && $y1 <= -11 && $x2 >= -6 && $y2 >= -6}]
+    foreach {x y} {-11 -11  -7 -7  -12 -12  -6 -6} {
+	lappend res [testpixel .c [expr {$x + 30}] [expr {$y + 30}]]
+    }
+    set res
+} -cleanup {
+    destroy .c
+    unset -nocomplain res x1 y1 x2 y2 x y
+} -result {1 #000000 #000000 #ffffff #ffffff}
+
+test canvas-25.1 {a canvas is not scrolled if its scroll region fits in it - bug 2148529} -setup {
     destroy .c
     canvas .c -width 200 -height 200 -scrollregion {0 0 50 50} \
 	    -highlightthickness 0
@@ -1389,6 +1438,73 @@ test canvas-32.1 {a canvas is not scrolled if its scroll region fits in it - bug
 } -cleanup {
     destroy .c
 } -result 0.0
+
+test canvas-26.1 {no scroll command before the canvas is mapped - bug 991849} -setup {
+    toplevel .top
+    wm withdraw .top
+    set log {}
+} -body {
+    canvas .top.c -width 100 -height 100 -highlightthickness 0 \
+	    -scrollregion {0 0 200 200} \
+	    -xscrollcommand {lappend log x} -yscrollcommand {lappend log y}
+    pack .top.c
+    update
+    set res [list $log]
+    wm deiconify .top
+    tkwait visibility .top.c
+    update
+    lappend res $log
+} -cleanup {
+    destroy .top
+    unset -nocomplain log res
+} -result {{} {x 0.0 0.5 y 0.0 0.5}}
+
+test canvas-26.2 {the current item is repicked with the pointer position after a <ButtonRelease> binding which processed events - bug 220902} -setup {
+    canvas .c -width 300 -height 100 -borderwidth 0 -highlightthickness 0
+    pack .c
+    update
+    .c create rectangle 10 10 100 90 -fill red -tags a
+    .c create rectangle 200 10 290 90 -fill blue -tags b
+    set res {}
+} -body {
+    .c bind a <ButtonRelease-1> {
+	# Like a modal dialog: the pointer moves to item b while the
+	# binding script processes events.
+	event generate .c <Motion> -x 250 -y 50 -time [expr {%t + 100}]
+	update
+	lappend res [.c gettags current]
+    }
+    event generate .c <Motion> -x 50 -y 50 -time 1000
+    event generate .c <Button-1> -x 50 -y 50 -time 1000
+    event generate .c <ButtonRelease-1> -x 50 -y 50 -time 1000 -state 0x100
+    lappend res [.c gettags current]
+} -cleanup {
+    destroy .c
+    unset res
+} -result {{b current} {b current}}
+
+test canvas-29.1 {bounding boxes of items with huge coordinates - bug 701927} -setup {
+    destroy .c
+    canvas .c -width 100 -height 100 -background white -highlightthickness 0
+    pack .c
+    update
+} -body {
+    set huge [expr {2**31 - 3}]
+    .c create line 0 10 $huge 10 -width 2
+    .c create line 0 20 $huge 20 -width 3 -dash {4 4}
+    .c create rectangle 0 30 1e12 35
+    .c create oval -1e12 40 1e12 45
+    .c create polygon 0 50 1e12 50 1e12 55 0 55
+    .c create arc -1e12 60 1e12 65 -start 0 -extent 180
+    .c create text 1e12 70 -text X
+    .c create bitmap 1e12 80 -bitmap gray50
+    list [.c find overlapping 0 0 100 100] [lmap i [.c find all] {
+	lassign [.c bbox $i] x1 y1 x2 y2
+	expr {$x1 <= $x2 && $y1 <= $y2}
+    }]
+} -cleanup {
+    destroy .c
+} -result {{1 2 3 4 5 6} {1 1 1 1 1 1 1 1}}
 
 #
 # TESTFILE CLEANUP

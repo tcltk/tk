@@ -28,6 +28,8 @@ static TkXErrorHandler	defaultHandler = NULL;
  */
 
 static int	ErrorProc(Display *display, XErrorEvent *errEventPtr);
+static int	WindowWasRecentlyDeleted(TkDisplay *dispPtr,
+			    Window window, unsigned long serial);
 
 /*
  *--------------------------------------------------------------
@@ -153,6 +155,20 @@ Tk_DeleteErrorHandler(
     errorPtr->lastRequest = NextRequest(dispPtr->display) - 1;
 
     /*
+     * If no request was made while the handler was active, no error can be
+     * reported for it. Handlers are usually deleted in the reverse order of
+     * creation, so it is normally the first one in the list: free it now.
+     * Otherwise it is freed by the cleanup below.
+     */
+
+    if (errorPtr->lastRequest < errorPtr->firstRequest
+	    && dispPtr->errorPtr == errorPtr) {
+	dispPtr->errorPtr = errorPtr->nextPtr;
+	Tcl_Free(errorPtr);
+	return;
+    }
+
+    /*
      * Every once-in-a-while, cleanup handlers that are no longer active. We
      * probably won't be able to free the handler that was just deleted (need
      * to wait for any outstanding requests to be processed by server), but
@@ -172,11 +188,16 @@ Tk_DeleteErrorHandler(
 	/*
 	 * Last chance to catch errors for this handler: if no event/error
 	 * processing took place to follow up the end of this error handler
-	 * we need a round trip with the X server now.
+	 * we need a round trip with the X server now. Not needed if no
+	 * requests were issued while the handler was active: it is often
+	 * used around calls (like measuring text with Xft) which rarely send
+	 * requests, and a round trip is expensive on remote displays.
 	 */
 
-	if (errorPtr->lastRequest > lastSerial) {
+	if ((errorPtr->lastRequest > lastSerial)
+		&& (errorPtr->lastRequest >= errorPtr->firstRequest)) {
 	    XSync(dispPtr->display, False);
+	    lastSerial = LastKnownRequestProcessed(dispPtr->display);
 	}
 	dispPtr->deleteCount = 0;
 	errorPtr = dispPtr->errorPtr;
@@ -267,16 +288,21 @@ ErrorProc(
      * long enough to clean up internally and remove the entry from the window
      * table.
      *
+     * Drawing into such a window gives a BadDrawable error, which is handled
+     * in the same way.
+     *
      * NOTE: For embedding, we must also check whether the window was recently
      * deleted. If so, it may be that Tk generated operations on windows that
      * were deleted by the container. Now we are getting the errors
      * (BadWindow) after Tk already deleted the window itself.
      */
 
-    if (errEventPtr->error_code == BadWindow) {
+    if (errEventPtr->error_code == BadWindow
+	    || errEventPtr->error_code == BadDrawable) {
 	Window w = (Window) errEventPtr->resourceid;
 
-	if (Tk_IdToWindow(display, w) != NULL) {
+	if ((Tk_IdToWindow(display, w) != NULL)
+		|| WindowWasRecentlyDeleted(dispPtr, w, errEventPtr->serial)) {
 	    return 0;
 	}
     }
@@ -289,6 +315,91 @@ ErrorProc(
     return defaultHandler(display, errEventPtr);
 }
 
+/*
+ *--------------------------------------------------------------
+ *
+ * TkRecordDeletedWindow --
+ *
+ *	Remember that a window was deleted, together with the serial number
+ *	of the last request made before its deletion. A window can be
+ *	destroyed by someone else (e.g. the container of an embedded window)
+ *	before Tk deletes it, so the X errors for requests made before the
+ *	deletion can arrive after it; ErrorProc ignores them. This is only
+ *	done for the windows of embedded toplevels.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Forgets the windows for which all requests made before their
+ *	deletion have been processed by the server.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkRecordDeletedWindow(
+    TkDisplay *dispPtr,		/* Display of the deleted window. */
+    Window window)		/* X identifier of the deleted window. */
+{
+    Tcl_HashEntry *hPtr, *nextPtr;
+    Tcl_HashSearch search;
+    unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
+    int isNew;
+
+    /*
+     * Only the windows of an embedded application can be destroyed by
+     * someone else (the container). Do not record the windows of other
+     * applications, the table would grow until the server processed the
+     * requests made before their deletion.
+     */
+
+    if (!(dispPtr->flags & TK_DISPLAY_HAS_EMBEDDED)) {
+	return;
+    }
+
+    for (hPtr = Tcl_FirstHashEntry(&dispPtr->deletedWinTable, &search);
+	    hPtr != NULL; hPtr = nextPtr) {
+	nextPtr = Tcl_NextHashEntry(&search);
+	if ((unsigned long) PTR2UINT(Tcl_GetHashValue(hPtr)) <= lastSerial) {
+	    Tcl_DeleteHashEntry(hPtr);
+	}
+    }
+    hPtr = Tcl_CreateHashEntry(&dispPtr->deletedWinTable, (char *) window,
+	    &isNew);
+    Tcl_SetHashValue(hPtr, UINT2PTR(NextRequest(dispPtr->display) - 1));
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * WindowWasRecentlyDeleted --
+ *
+ *	Check whether a window was deleted after the given request.
+ *
+ * Results:
+ *	Non-zero if the window was deleted and the request was made before
+ *	the deletion.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+WindowWasRecentlyDeleted(
+    TkDisplay *dispPtr,		/* Display of the window. */
+    Window window,		/* X identifier of the window. */
+    unsigned long serial)	/* Serial number of the failed request. */
+{
+    Tcl_HashEntry *hPtr;
+
+    hPtr = Tcl_FindHashEntry(&dispPtr->deletedWinTable, (char *) window);
+    return (hPtr != NULL)
+	    && (serial <= (unsigned long) PTR2UINT(Tcl_GetHashValue(hPtr)));
+}
+
 /*
  * Local Variables:
  * mode: c

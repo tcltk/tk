@@ -1074,6 +1074,84 @@ MODULE_SCOPE void	TkTextFindDisplayLineEnd(TkText *textPtr,
 MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,
 			    const TkTextIndex *srcPtr, Tcl_Size count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
+
+/*
+ * Grapheme-cluster (UAX #29) segmentation, delegated in full to mojibake.
+ * See tkTextGrapheme.c: these three entry points are the *only* sanctioned
+ * way for the generic layer to reason about cluster boundaries. Nothing
+ * else in Tk re-implements grapheme-breaking rules.
+ *
+ * These are purely an internal text-shaping/layout detail of tkTextDisp.c
+ * (used to keep chunk/wrap boundaries from falling inside a cluster) --
+ * there is no Tcl-visible index modifier, widget option, or command built
+ * on top of them, and index/cursor/selection semantics (TkTextIndexForwChars,
+ * TkTextIndexBackChars, and everything driven by them) are completely
+ * unaffected and still operate one Tcl_UniChar (codepoint) at a time, same
+ * as before this file existed.
+ */
+MODULE_SCOPE int	mojibake_grapheme_breaks(const char *buf,
+			    size_t byteLen, unsigned char *breaks);
+MODULE_SCOPE int	mojibake_grapheme_next(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *nextOffset);
+MODULE_SCOPE int	mojibake_grapheme_prev(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *prevOffset);
+
+/*
+ * Full UAX #14 / UAX #29 API - implemented in tkTextGrapheme.c
+ * mojibake is single source of truth; no LB/WB/SB rule duplicated here.
+ * All offsets are byte offsets in UTF-8, with lookahead correction
+ * (BoundaryFromState: index - encoded_len(current)).
+ */
+
+/* UAX #14 - Line breaking */
+MODULE_SCOPE int	mojibake_line_breaks(const char *buf,
+			    size_t byteLen, unsigned char *breaks);
+MODULE_SCOPE int	mojibake_line_next(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *nextOffset);
+MODULE_SCOPE int	mojibake_line_prev(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *prevOffset);
+
+/* UAX #29 - Word breaking (base, without dictionary) */
+MODULE_SCOPE int	mojibake_word_breaks(const char *buf,
+			    size_t byteLen, unsigned char *breaks);
+MODULE_SCOPE int	mojibake_word_next(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *nextOffset);
+MODULE_SCOPE int	mojibake_word_prev(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *prevOffset);
+
+/* UAX #29 - Sentence breaking */
+MODULE_SCOPE int	mojibake_sentence_breaks(const char *buf,
+			    size_t byteLen, unsigned char *breaks);
+MODULE_SCOPE int	mojibake_sentence_next(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *nextOffset);
+MODULE_SCOPE int	mojibake_sentence_prev(const char *buf,
+			    size_t byteLen, size_t byteOffset,
+			    size_t *prevOffset);
+
+/*
+ * Dictionary-enhanced breaking for scripts without spaces:
+ * Thai U+0E00-0E7F, Lao U+0E80-0EFF, Khmer U+1780-17FF/19E0-19FF,
+ * Myanmar U+1000-109F/AA60-AA7F/A9E0-A9FF.
+ * Uses dictionaries.h (ICU word lists) with forward maximum-match.
+ * Word boundaries are promoted to line break opportunities.
+ * gBreaks_tmp / wBreaks_tmp may be NULL (malloc internally) or caller
+ * supplied buffers of byteLen+1 to avoid allocs in layout hot path.
+ */
+MODULE_SCOPE int	mojibake_word_breaks_with_dict(const char *buf,
+			    size_t byteLen, unsigned char *wBreaks,
+			    unsigned char *gBreaks_tmp);
+MODULE_SCOPE int	mojibake_line_breaks_with_dict(const char *buf,
+			    size_t byteLen, unsigned char *lBreaks,
+			    unsigned char *gBreaks_tmp,
+			    unsigned char *wBreaks_tmp);
+MODULE_SCOPE void	mojibake_dict_init(void);
 MODULE_SCOPE int	TkTextIndexCmp(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
 MODULE_SCOPE Tcl_Size	TkTextIndexCountBytes(const TkText *textPtr,

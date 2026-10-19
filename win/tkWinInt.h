@@ -28,6 +28,8 @@
 #include "tkInt.h"
 #endif
 
+#include <usp10.h>		/* Uniscribe types of the font interfaces. */
+
 /*
  * Define constants missing from older Win32 SDK header files.
  */
@@ -173,6 +175,13 @@ MODULE_SCOPE HICON TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
  */
 
 MODULE_SCOPE void TkWinDisplayChanged(Display *display);
+typedef struct TkWinColorGlyphCache TkWinColorGlyphCache;
+				/* Color emoji cache of a subfont (tkWinColorEmoji.c). */
+MODULE_SCOPE int TkWinDrawColorGlyphs(HDC hdc, HFONT hFont,
+	TkWinColorGlyphCache **cachePtr, int x, int y,
+	const SCRIPT_ANALYSIS *saPtr, const WORD *glyphs, const int *advances,
+	const GOFFSET *offsets, int glyphCount);
+MODULE_SCOPE void TkWinFreeColorGlyphCache(TkWinColorGlyphCache **cachePtr);
 MODULE_SCOPE void TkWinCleanupContainerList(void);
 MODULE_SCOPE LRESULT TkWinEmbeddedEventProc(HWND, UINT, WPARAM, LPARAM);
 MODULE_SCOPE unsigned int TkWinGetModifierState(void);
@@ -183,6 +192,55 @@ MODULE_SCOPE HPALETTE TkWinSelectPalette(HDC, Colormap);
 
 
 /*
+ * Undocumented messages which Windows sends to a window to let it draw its
+ * menu bar, and their parameters.
+ */
+
+#define WM_UAHDRAWMENU		0x0091
+#define WM_UAHDRAWMENUITEM	0x0092
+#define WM_UAHMEASUREMENUITEM	0x0094
+
+typedef struct {
+    HMENU hmenu;
+    HDC hdc;
+    DWORD dwFlags;
+} UAHMENU;
+
+typedef union {
+    struct {
+	DWORD cx;
+	DWORD cy;
+    } rgsizeBar[2];
+    struct {
+	DWORD cx;
+	DWORD cy;
+    } rgsizePopup[4];
+} UAHMENUITEMMETRICS;
+
+typedef struct {
+    DWORD rgcx[4];
+    DWORD fUpdateMaxWidths : 2;
+} UAHMENUPOPUPMETRICS;
+
+typedef struct {
+    int iPosition;
+    UAHMENUITEMMETRICS umim;
+    UAHMENUPOPUPMETRICS umpm;
+} UAHMENUITEM;
+
+typedef struct {
+    DRAWITEMSTRUCT dis;
+    UAHMENU um;
+    UAHMENUITEM umi;
+} UAHDRAWMENUITEM;
+
+typedef struct {
+    MEASUREITEMSTRUCT mis;
+    UAHMENU um;
+    UAHMENUITEM umi;
+} UAHMEASUREMENUITEM;
+
+/*
  * Used by tkWinWm.c for embedded menu handling.
  */
 
@@ -190,7 +248,10 @@ MODULE_SCOPE HWND TkGetMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE HWND TkGetEmbeddedMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE void TkWinCancelMouseTimer(void);
 MODULE_SCOPE int TkWinHandleMenuEvent(HWND *, UINT *, WPARAM *, LPARAM *, LRESULT *);
+MODULE_SCOPE int TkWinHandleMenubarDraw(HWND, UINT, WPARAM, LPARAM, LRESULT *);
+MODULE_SCOPE void TkWinDrawMenubarLine(HWND);
 MODULE_SCOPE void TkWinSetMenu(Tk_Window, HMENU);
+MODULE_SCOPE void TkWinMenuWrapperChanged(HMENU);
 MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const char *);
 
 

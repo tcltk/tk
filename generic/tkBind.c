@@ -3024,7 +3024,7 @@ ExpandPercents(
 	    break;
 	case 'b':
 	    if (flags & BUTTON) {
-		SET_UNUMBER(evPtr->xbutton.button);
+		SET_UNUMBER((evPtr->xbutton.button > 7) ? evPtr->xbutton.button - 4 : evPtr->xbutton.button);
 	    }
 	    break;
 	case 'c':
@@ -3973,7 +3973,13 @@ HandleEventGenerate(
 	event.general.xkey.y_root = -1;
     }
 
-    if (event.general.xany.type == FocusIn || event.general.xany.type == FocusOut) {
+    /*
+     * Generated focus events do not change the focus, unless generated for
+     * a wrapper window (only accessible in tests) to simulate the X server.
+     */
+
+    if ((event.general.xany.type == FocusIn || event.general.xany.type == FocusOut)
+	    && !(((TkWindow *) tkwin)->flags & TK_WRAPPER)) {
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
@@ -4665,7 +4671,7 @@ FindSequence(
     unsigned patsBufSize = 1;
     unsigned numPats;
     unsigned totalCount = 0;
-    int virtualFound = 0;
+    bool virtualFound = false;
     const char *p = eventString;
     TkPattern *patPtr;
     PatSeq *psPtr;
@@ -4710,7 +4716,7 @@ FindSequence(
 		Tcl_Free(psPtr);
 		return NULL;
 	    }
-	    virtualFound = 1;
+	    virtualFound = true;
 	}
 
 	if (count > 1u) {

@@ -20,6 +20,7 @@
 #ifdef _WIN32
 #include "tkWinInt.h"
 #endif
+#include <mojibake.h>	/* UTS #51 emoji properties */
 
 /*
  * The following structure is used to keep track of all the fonts that exist
@@ -348,6 +349,7 @@ static int		SetFontFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static void		TheWorldHasChanged(void *clientData);
 static void		FreeUnusedFonts(void *clientData);
 static void		DeleteFont(TkFont *fontPtr);
+static Tk_Window	FindWindowOnScreen(TkWindow *winPtr, Screen *screen);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
 			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
 
@@ -866,6 +868,7 @@ UpdateDependentFonts(
     Tcl_HashEntry *cacheHashPtr;
     Tcl_HashSearch search;
     TkFont *fontPtr;
+    Tk_Window fontWin;
     NamedFont *nfPtr = (NamedFont *)Tcl_GetHashValue(namedHashPtr);
 
     if (nfPtr->refCount == 0) {
@@ -882,7 +885,20 @@ UpdateDependentFonts(
 	for (fontPtr = (TkFont *)Tcl_GetHashValue(cacheHashPtr);
 		fontPtr != NULL; fontPtr = fontPtr->nextPtr) {
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
-		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
+		/*
+		 * The font must be recreated for the screen where it is used,
+		 * which may be not the screen of tkwin. [Bug 483387]
+		 */
+
+		fontWin = tkwin;
+		if (Tk_Screen(tkwin) != fontPtr->screen) {
+		    fontWin = FindWindowOnScreen(fiPtr->mainPtr->winPtr,
+			    fontPtr->screen);
+		    if (fontWin == NULL) {
+			continue;
+		    }
+		}
+		TkpGetFontFromAttributes(fontPtr, fontWin, &nfPtr->fa);
 		if (!fiPtr->updatePending) {
 		    fiPtr->updatePending = true;
 		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
@@ -891,6 +907,43 @@ UpdateDependentFonts(
 	}
 	cacheHashPtr = Tcl_NextHashEntry(&search);
     }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * FindWindowOnScreen --
+ *
+ *	Finds a window of the application on the given screen.
+ *
+ * Results:
+ *	The window, or NULL if there is no window on that screen.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static Tk_Window
+FindWindowOnScreen(
+    TkWindow *winPtr,		/* Root of the window hierarchy to search. */
+    Screen *screen)		/* The screen to look for. */
+{
+    TkWindow *childPtr;
+    Tk_Window found;
+
+    if (Tk_Screen((Tk_Window) winPtr) == screen) {
+	return (Tk_Window) winPtr;
+    }
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	found = FindWindowOnScreen(childPtr, screen);
+	if (found != NULL) {
+	    return found;
+	}
+    }
+    return NULL;
 }
 
 static void
@@ -4437,6 +4490,76 @@ const char *const *
 TkFontGetSymbolClass(void)
 {
     return symbolClass;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkFontEmojiPresentation --
+ *
+ *	Presentation of the character ch (UTS #51, properties from mojibake)
+ *	given the character after it, next, or -1 at the end of the text.
+ *	Shared by the font engines, so that every platform picks a color font
+ *	for the same characters.
+ *
+ * Results:
+ *	0 for text presentation.  1 when ch has emoji presentation by
+ *	default, 2 when a VS16 after an emoji character asks for the emoji
+ *	glyph (keycaps, "heart + VS16"): in both cases a color font is
+ *	preferred, over the font asked for too, as users expect emoji in
+ *	color.  A VS15 after ch forces text presentation.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+int
+TkFontEmojiPresentation(
+    int ch,			/* Code point of the character. */
+    int next)			/* Code point after it, or -1. */
+{
+    if (next == 0xFE0F && mjb_codepoint_is_emoji((mjb_codepoint) ch)) {
+	return 2;
+    }
+    if (ch > 0x7f && next != 0xFE0E
+	    && mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
+	return 1;
+    }
+    return 0;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkFontEmojiContinuation --
+ *
+ *	Tell whether ch must stay in the font of the character before it:
+ *	the variation selectors, ZWJ, the keycap and the tag characters
+ *	always (zero-width or combining); the skin tone modifiers only inside
+ *	an emoji cluster, since a modifier on its own is a color swatch.  The
+ *	character after a ZWJ inside an emoji cluster belongs to the cluster
+ *	too, so that the font ligates the whole sequence; that is for the
+ *	caller, which knows where the cluster started.
+ *
+ * Results:
+ *	Non-zero if ch continues the cluster of the character before it.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+int
+TkFontEmojiContinuation(
+    int ch,			/* Code point of the character. */
+    int inEmoji)		/* Non-zero inside an emoji cluster. */
+{
+    return ch == 0xFE0E || ch == 0xFE0F || ch == 0x200D || ch == 0x20E3
+	    || (ch >= 0xE0020 && ch <= 0xE007F)
+	    || (inEmoji && mjb_codepoint_is_emoji_modifier((mjb_codepoint) ch));
 }
 
 /*

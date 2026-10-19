@@ -205,6 +205,15 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
 
     if {![winfo exists $w]} return
 
+    # Stop if another window (e.g. a modal dialog opened by the -command
+    # script) has the grab, the button release will not reach the scale.
+    # [99bb36df86]
+    set grab [grab current $w]
+    if {$repeat eq "again" && $grab ne "" && $grab ne "." && $grab ne $w
+	    && ![string match "$grab.*" $w]} {
+	return
+    }
+
     # give the cancel callback a chance to be serviced if the execution time of
     # the -command script lasts longer than -repeatdelay
     set clockms [clock milliseconds]

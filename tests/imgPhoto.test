@@ -1739,6 +1739,22 @@ test imgPhoto-14.6 {Access Subimage after Subimage with buffer overflow. Ticket 
 } -cleanup {
     catch {image delete photo1}
 } -result photo1
+test imgPhoto-14.7 {GIF data with unknown format option, bug [fef61fae66]} -setup {
+    image create photo photo1 -width 2 -height 2
+} -body {
+    photo1 data -format {gif -foobar}
+} -cleanup {
+    image delete photo1
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
+test imgPhoto-14.8 {GIF write with unknown format option, bug [fef61fae66]} -setup {
+    image create photo photo1 -width 2 -height 2
+    set f [makeFile {} test.gif]
+} -body {
+    photo1 write $f -format {gif -foobar}
+} -cleanup {
+    image delete photo1
+    removeFile $f
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
 
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} -constraints {
     nonPortable
