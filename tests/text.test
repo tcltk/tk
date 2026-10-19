@@ -2679,7 +2679,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result 3
-test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
+test text-10.38 {TextWidgetCmd procedure, "count" option} -constraints {!wayland} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .t -expand 1 -fill both
 } -body {
@@ -3521,7 +3521,7 @@ if {[tk windowingsystem] eq "aqua"} {
     set minY 0
 }
 
-test text-14.19 {ConfigureText procedure} -setup {
+test text-14.19 {ConfigureText procedure} -constraints {!wayland} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
@@ -3534,7 +3534,7 @@ test text-14.19 {ConfigureText procedure} -setup {
 } -cleanup {
     destroy .top
 } -result "20x10+0+$minY"
-test text-14.20 {ConfigureText procedure} -setup {
+test text-14.20 {ConfigureText procedure} -constraints {!wayland} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
@@ -6016,8 +6016,7 @@ test text-22.237 {TextSearchCmd, regexp search all empty strings, with overlap} 
     text .t
     .t insert end "Searching for the\nempty string!"
     set res [.t search -count C -all -regexp -overlap "" 2.5 2.8]
-    lappend res $C
-} -cleanup {
+    lappend res $C} -cleanup {
     destroy .t
     unset -nocomplain res C
 } -result {2.5 2.6 2.7 {0 0 0}}

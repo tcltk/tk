@@ -1783,10 +1783,11 @@ test frame-15.13 {TIP 262: toplevel background images} -constraints !wayland -se
     deleteWindows
     catch {image delete gorp}
 } -result {{gorp get} {gorp display 0 0 30 15}}
+#overrideredirect not well-supported on Wayland
 test frame-15.14 {TIP 262: toplevel background images} -setup {
     deleteWindows
     set result {}
-} -constraints testImageType -body {
+} -constraints {testImageType !wayland}  -body {
     image create test gorp -variable result
     toplevel .t -width 50 -height 25 -bgimg gorp -tile 1
     wm overrideredirect .t 1;	# Reduce trouble from window managers
