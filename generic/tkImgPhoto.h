@@ -208,6 +208,10 @@ struct PhotoInstance {
     Pixmap pixels;		/* X pixmap containing dithered image. */
     int width, height;		/* Dimensions of the pixmap. */
     schar *error;		/* Error image, used in dithering. */
+    unsigned char *pix32;	/* Pixels of the model with the gamma and
+				 * palette applied, rendered on platforms
+				 * which render RGBA images, or NULL if they
+				 * are the defaults. */
     XImage *imagePtr;		/* Image structure for converted pixels. */
     XVisualInfo visualInfo;	/* Information about the visual that these
 				 * windows are using. */

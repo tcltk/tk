@@ -46,6 +46,10 @@ extern int		_XInitImageFuncPtrs(XImage *image);
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 			    int xOffset, int yOffset, int width, int height);
 #endif
+#ifdef TK_CAN_RENDER_RGBA
+static void		DitherInstanceRGBA(PhotoInstance *instancePtr,
+			    int xStart, int yStart, int width, int height);
+#endif
 static int		IsValidPalette(PhotoInstance *instancePtr,
 			    const char *palette);
 static int		CountBits(unsigned mask);
@@ -304,6 +308,7 @@ TkImgPhotoGet(
     instancePtr->colorTablePtr = NULL;
     instancePtr->pixels = None;
     instancePtr->error = NULL;
+    instancePtr->pix32 = NULL;
     instancePtr->width = 0;
     instancePtr->height = 0;
     instancePtr->imagePtr = 0;
@@ -680,6 +685,7 @@ TkPremultiplyRGBA(
  *----------------------------------------------------------------------
  */
 
+#ifndef TK_CAN_RENDER_RGBA
 static void
 DisplayInstancePixmap(
     PhotoInstance *instancePtr,	/* Instance to be displayed. */
@@ -708,6 +714,7 @@ DisplayInstancePixmap(
     XSetClipMask(display, instancePtr->gc, None);
     XSetClipOrigin(display, instancePtr->gc, 0, 0);
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -755,27 +762,13 @@ TkImgPhotoDisplay(
 #ifdef TK_CAN_RENDER_RGBA
 
     /*
-     * The RGBA rendering below draws the pixels of the model, so it ignores
-     * -gamma and -palette, which are only applied to the pixmap of the
-     * instance. Draw images without partial transparency from that pixmap
-     * if they have a non-default gamma or palette.
-     */
-
-    if (!(instancePtr->modelPtr->flags & COMPLEX_ALPHA)
-	    && ((instancePtr->gamma != 1.0)
-	    || (instancePtr->palette != instancePtr->defaultPalette))) {
-	DisplayInstancePixmap(instancePtr, display, drawable, imageX, imageY,
-		width, height, drawableX, drawableY);
-	(void)XFlush(display);
-	return;
-    }
-
-    /*
      * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
      * no need to call XGetImage or to do the Porter-Duff compositing by hand.
+     * Use the pixels with the gamma and palette applied, if any.
      */
 
-    unsigned char *rgbaPixels = instancePtr->modelPtr->pix32;
+    unsigned char *rgbaPixels = instancePtr->pix32 ? instancePtr->pix32
+	    : instancePtr->modelPtr->pix32;
     XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0, (char*)rgbaPixels,
 				 (unsigned int)instancePtr->width,
 				 (unsigned int)instancePtr->height,
@@ -1053,6 +1046,31 @@ TkImgPhotoInstanceSetSize(
 	}
 
 	instancePtr->error = newError;
+    }
+
+    if (((instancePtr->width != modelPtr->width)
+	    || (instancePtr->height != modelPtr->height))
+	    && (instancePtr->pix32 != NULL)) {
+	/*
+	 * Copy the common area to the new RGBA pixels, as for the pixmap.
+	 */
+
+	unsigned char *newPix32 = NULL;
+
+	if (modelPtr->width > 0 && modelPtr->height > 0) {
+	    size_t size = (size_t) modelPtr->width * modelPtr->height * 4;
+	    int w = MIN(instancePtr->width, modelPtr->width);
+
+	    newPix32 = (unsigned char *)Tcl_Alloc(size);
+	    memset(newPix32, 0, size);
+	    for (h = 0; h < MIN(instancePtr->height, modelPtr->height); h++) {
+		memcpy(newPix32 + (size_t) h * modelPtr->width * 4,
+			instancePtr->pix32 + (size_t) h * instancePtr->width * 4,
+			(size_t) w * 4);
+	    }
+	}
+	Tcl_Free(instancePtr->pix32);
+	instancePtr->pix32 = newPix32;
     }
 
     instancePtr->width = modelPtr->width;
@@ -1757,6 +1775,9 @@ TkImgDisposeInstance(
     if (instancePtr->error != NULL) {
 	Tcl_Free(instancePtr->error);
     }
+    if (instancePtr->pix32 != NULL) {
+	Tcl_Free(instancePtr->pix32);
+    }
     if (instancePtr->colorTablePtr != NULL) {
 	FreeColorTable(instancePtr->colorTablePtr, 1);
     }
@@ -1798,6 +1819,13 @@ TkImgDitherInstance(
 				 * block to be dithered. */
     int width, int height)	/* Dimensions of the block to be dithered. */
 {
+#ifdef TK_CAN_RENDER_RGBA
+    /*
+     * The image is rendered from RGBA pixels, not from the pixmap.
+     */
+
+    DitherInstanceRGBA(instancePtr, xStart, yStart, width, height);
+#else
     PhotoModel *modelPtr = instancePtr->modelPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
@@ -2117,7 +2145,153 @@ TkImgDitherInstance(
 
     Tcl_Free(imagePtr->data);
     imagePtr->data = NULL;
+#endif /* TK_CAN_RENDER_RGBA */
 }
+
+#ifdef TK_CAN_RENDER_RGBA
+/*
+ *----------------------------------------------------------------------
+ *
+ * DitherInstanceRGBA --
+ *
+ *	This function is called on platforms which render RGBA images to
+ *	apply the gamma and palette of an instance to a block of pixels of
+ *	the model. The colors are computed and dithered in the same way as
+ *	for the pixmap of the instance on X11.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	instancePtr->pix32 is updated, allocated or freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DitherInstanceRGBA(
+    PhotoInstance *instancePtr,	/* The instance to be updated. */
+    int xStart, int yStart,	/* Coordinates of the top-left pixel in the
+				 * block to be dithered. */
+    int width, int height)	/* Dimensions of the block to be dithered. */
+{
+    PhotoModel *modelPtr = instancePtr->modelPtr;
+    unsigned char quant[3][256], value[3][256];
+    int n[3], i, k, c, r, x, y, lineLength;
+    bool mono, doDithering;
+    double igam;
+
+    if ((instancePtr->gamma == 1.0)
+	    && (instancePtr->palette == instancePtr->defaultPalette)) {
+	if (instancePtr->pix32 != NULL) {
+	    Tcl_Free(instancePtr->pix32);
+	    instancePtr->pix32 = NULL;
+	}
+	return;
+    }
+    if ((instancePtr->error == NULL) || (modelPtr->width <= 0)
+	    || (modelPtr->height <= 0)) {
+	return;
+    }
+    if (instancePtr->pix32 == NULL) {
+	size_t size = (size_t) modelPtr->width * modelPtr->height * 4;
+
+	instancePtr->pix32 = (unsigned char *)Tcl_Alloc(size);
+	memset(instancePtr->pix32, 0, size);
+    }
+
+    /*
+     * Compute the displayed value of each intensity, with the gamma applied,
+     * and its quantized value, used to compute the error, as
+     * AllocateColors() does for a 24-bit TrueColor visual.
+     */
+
+    mono = sscanf(instancePtr->palette, "%d/%d/%d", &n[0], &n[1], &n[2])
+	    <= 1;
+    if (mono) {
+	n[1] = n[2] = n[0];
+    }
+    doDithering = false;
+    igam = 1.0 / instancePtr->gamma;
+    for (k = 0; k < 3; k++) {
+	if (n[k] < 2) {
+	    n[k] = 2;
+	} else if (n[k] > 256) {
+	    n[k] = 256;
+	}
+	if (n[k] < 256) {
+	    doDithering = true;
+	}
+	for (i = 0; i < 256; i++) {
+	    r = (i * (n[k] - 1) + 127) / 255;
+	    if (igam == 1.0) {
+		value[k][i] = (r * 65535 / (n[k] - 1)) >> 8;
+		quant[k][i] = value[k][i];
+	    } else {
+		value[k][i] = (int)(65535 * pow((double) r / (n[k] - 1),
+			igam)) >> 8;
+		quant[k][i] = (int)(pow(value[k][i] / 255.0,
+			instancePtr->gamma) * 255.99);
+	    }
+	}
+    }
+
+    /*
+     * Floyd-Steinberg dithering, as in TkImgDitherInstance(). The error
+     * propagated into a pixel from e[x,y] is
+     *     7/16 * e[x-1,y] + 1/16 * e[x-1,y-1]
+     *   + 5/16 * e[x,y-1] + 3/16 * e[x+1,y-1]
+     * and ((c + 2056) >> 4) - 128 computes round(c / 16).
+     */
+
+#define PROPAGATED_ERROR(errPtr, x, y) \
+    ((((((x) > 0) ? (errPtr)[-3] * 7 : 0) \
+	+ (((y) > 0) ? ((((x) > 0) ? (errPtr)[-lineLength-3] : 0) \
+	    + (errPtr)[-lineLength] * 5 \
+	    + (((x) + 1 < modelPtr->width) ? (errPtr)[-lineLength+3] * 3 : 0)) \
+	    : 0) + 2056) >> 4) - 128)
+
+    lineLength = modelPtr->width * 3;
+    for (y = yStart; y < yStart + height; y++) {
+	size_t offset = (size_t) y * modelPtr->width + xStart;
+	unsigned char *srcPtr = modelPtr->pix32 + offset * 4;
+	unsigned char *dstPtr = instancePtr->pix32 + offset * 4;
+	schar *errPtr = instancePtr->error + offset * 3;
+
+	for (x = xStart; x < xStart + width; x++) {
+	    if (mono) {
+		if (modelPtr->flags & COLOR_IMAGE) {
+		    c = (srcPtr[0] * 11 + srcPtr[1] * 16 + srcPtr[2] * 5
+			    + 16) >> 5;
+		} else {
+		    c = srcPtr[0];
+		}
+		if (doDithering) {
+		    c += PROPAGATED_ERROR(errPtr, x, y);
+		    c = (c < 0) ? 0 : (c > 255) ? 255 : c;
+		    errPtr[0] = c - quant[0][c];
+		}
+		dstPtr[0] = dstPtr[1] = dstPtr[2] = value[0][c];
+	    } else {
+		for (k = 0; k < 3; k++) {
+		    c = srcPtr[k];
+		    if (doDithering) {
+			c += PROPAGATED_ERROR(errPtr + k, x, y);
+			c = (c < 0) ? 0 : (c > 255) ? 255 : c;
+			errPtr[k] = c - quant[k][c];
+		    }
+		    dstPtr[k] = value[k][c];
+		}
+	    }
+	    dstPtr[3] = srcPtr[3];
+	    srcPtr += 4;
+	    dstPtr += 4;
+	    errPtr += 3;
+	}
+    }
+#undef PROPAGATED_ERROR
+}
+#endif /* TK_CAN_RENDER_RGBA */
 
 /*
  *----------------------------------------------------------------------
@@ -2144,6 +2318,10 @@ TkImgResetDither(
 	memset(instancePtr->error, 0,
 		(size_t) instancePtr->modelPtr->width
 		* instancePtr->modelPtr->height * 3 * sizeof(schar));
+    }
+    if (instancePtr->pix32 != NULL) {
+	memset(instancePtr->pix32, 0,
+		(size_t) instancePtr->width * instancePtr->height * 4);
     }
 }
 

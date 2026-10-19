@@ -1221,6 +1221,7 @@ readCleanup:
 	    bool boolMode;
 	    XRectangle setBox;
 	    Region modRegion;
+	    PhotoInstance *instancePtr;
 
 	    /*
 	     * Parse args and option, check for valid values
@@ -1291,6 +1292,13 @@ readCleanup:
 		pixelPtr[3] = newVal ? 0 : 255;
 	    } else {
 		pixelPtr[3] = newVal;
+	    }
+	    for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
+		    instancePtr = instancePtr->nextPtr) {
+		if (instancePtr->pix32 != NULL) {
+		    instancePtr->pix32[(y * modelPtr->width + x) * 4 + 3] =
+			    pixelPtr[3];
+		}
 	    }
 
 	    /*
