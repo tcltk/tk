@@ -5768,6 +5768,41 @@ XDestroySubwindows(
 /*
  *----------------------------------------------------------------------
  *
+ * QueueChildRectExpose --
+ *
+ *	Queue an Expose on a window's parent covering just the area the
+ *	window occupies, as an X server does when a child is mapped or
+ *	unmapped.  TkWaylandQueueExposeEvent passes the intersection on
+ *	to any sibling the area overlaps.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues Expose events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+QueueChildRectExpose(
+    TkWindow *childPtr)
+{
+    TkWindow *parentPtr = childPtr->parentPtr;
+    int bw = childPtr->changes.border_width;
+
+    if (parentPtr == NULL || (parentPtr->flags & TK_ALREADY_DEAD)) {
+        return;
+    }
+    TkWaylandQueueExposeEvent(parentPtr,
+            childPtr->changes.x, childPtr->changes.y,
+            childPtr->changes.width + 2*bw,
+            childPtr->changes.height + 2*bw);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XMapWindow --
  *
  *	Called by Tk_MapWindow.  Just generates an Expose event, to try
@@ -5816,9 +5851,7 @@ XMapWindow(
         }
     }
     if (winPtr->parentPtr != NULL) {
-        TkWaylandQueueExposeEvent(winPtr->parentPtr, 0, 0,
-            Tk_Width(winPtr->parentPtr),
-            Tk_Height(winPtr->parentPtr));
+        QueueChildRectExpose(winPtr);
     }
 
     /*
@@ -5894,6 +5927,9 @@ XUnmapWindow(
 {
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
     DEBUG_LOG("XUnmapWindow: %s", Tk_PathName(winPtr));
+    if (winPtr != NULL && !(winPtr->flags & TK_TOP_LEVEL)) {
+        QueueChildRectExpose(winPtr);
+    }
     tkWaylandInvalidateClipRects(winPtr);
     return Success;
 }

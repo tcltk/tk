@@ -632,14 +632,33 @@ TkWaylandQueueExposeEvent(
 	Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Recurse through the children of this window. */
+    /*
+     * Recurse through the mapped children that intersect the exposed
+     * area, passing each the part of the area that overlaps it in its own
+     * coordinates, as an X server would.  Children outside the area get
+     * nothing.
+     */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
+        int cx, cy, cw, ch, ix0, iy0, ix1, iy1;
+
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
             continue;
         }
-        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-	    Tk_Height(childPtr));
+        cx = Tk_X(childPtr);
+        cy = Tk_Y(childPtr);
+        cw = Tk_Width(childPtr);
+        ch = Tk_Height(childPtr);
+
+        ix0 = (x > cx) ? x : cx;
+        iy0 = (y > cy) ? y : cy;
+        ix1 = (x + width  < cx + cw) ? x + width  : cx + cw;
+        iy1 = (y + height < cy + ch) ? y + height : cy + ch;
+        if (ix0 >= ix1 || iy0 >= iy1) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr, ix0 - cx, iy0 - cy,
+                ix1 - ix0, iy1 - iy0);
     }
 }
 
