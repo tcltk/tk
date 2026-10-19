@@ -2829,6 +2829,14 @@ IdentifySymbolEncodings(
     const char *const *aliases;
     const char *const *symbolClass;
 
+    if (faPtr->fa.family == NULL) {
+	/*
+	 * TkFontParseXLFD() leaves the family NULL for a wildcard field, which
+	 * the X server can return, e.g. "????".  [Bug 2236352]
+	 */
+
+	return 0;
+    }
     symbolClass = TkFontGetSymbolClass();
     for (i = 0; symbolClass[i] != NULL; i++) {
 	if (strcasecmp(faPtr->fa.family, symbolClass[i]) == 0) {

@@ -144,11 +144,12 @@ Can only be changed when using non-native and non-graphical themes.
 .br
 \fB\-selectbackground\fP \fIcolor\fP
 .RS
-Text entry select background.
+Text entry select background.  If empty, the selected text has no distinct
+background.
 .RE
 \fB\-selectforeground\fP \fIcolor\fP
 .RS
-Text entry select foreground.
+Text entry select foreground.  If empty, the \fB\-foreground\fP color is used.
 .RE
 .PP
 The \fBttk::combobox\fP popdown listbox cannot be configured using

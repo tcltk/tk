@@ -4,13 +4,140 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
-Release Tk 9.1b1 arises from the check-in with tag `core-9-1-b1`.
+Release Tk 9.1.1 arises from the check-in with tag `core-9-1-1`.
 
-Tk 9.1b1 continues the Tk 9.x series of releases.  The Tk 9.x series
+Tk 9.1.1 continues the Tk 9.x series of releases.  The Tk 9.x series
 do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
-To make use of Tk 9.1b1, first a Tcl 9.0 or 9.1 release must be present.
-As new Tk features are developed, expect them to appear in Tk 9, but not
-necessarily in Tk 8.
+To make use of Tk 9.1.1, first a Tcl 9.0 or 9.1 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9.2+, but not
+in Tk 8.
+
+Tk patch releases have the primary purpose of delivering bug fixes
+to the userbase.
+
+# Bug fixes
+ - [to allow select when no open/close indicator](https://core.tcl-lang.org/tk/tktview/7f3bea)
+ - [MS-Win: tk_getOpenFile and tk_getSaveFile leak memory when -initialfile is given more than once](https://core.tcl-lang.org/tk/tktview/7ca431)
+ - [double click is lost if processing a click takes too long](https://core.tcl-lang.org/tk/tktview/195423)
+ - [canvas scrolls when the scrollbar indicates that it cannot](https://core.tcl-lang.org/tk/tktview/214852)
+ - [Make --disable-bidi compile/work again.](https://core.tcl-lang.org/tk/tktview/0ec933)
+ - [configure: X11 header check always fails](https://core.tcl-lang.org/tk/tktview/9087fa)
+ - [Text widget: wrong bbox widths for non-ASCII characters with bidi text rendering](https://core.tcl-lang.org/tk/tktview/7579c3)
+ - [creating widgets is slow when an input method is active](https://core.tcl-lang.org/tk/tktview/5d52ad)
+ - [menu entries are drawn directly on the screen](https://core.tcl-lang.org/tk/tktview/791527)
+ - [slow widget creation if default font is not used](https://core.tcl-lang.org/tk/tktview/8da7af)
+ - [window is not focused on create](https://core.tcl-lang.org/tk/tktview/2effa4)
+ - [send to a dead application returned "target application died"](https://core.tcl-lang.org/tk/tktview/729f9c)
+ - [configure may not find cups.h](https://core.tcl-lang.org/tk/tktview/3ac12f)
+ - [MS-Win: fix grab-global window inresponsive after key Win-D](https://core.tcl-lang.org/tk/tktview/3138512)
+ - [X11 <KeyRelease> should not fire on repeated key](https://core.tcl-lang.org/tk/tktview/d3b964)
+ - [loop race in canvas Enter / Leave bindings](https://core.tcl-lang.org/tk/tktview/181359)
+ - [After "wm withdraw .;wm state . iconic", "wm state ." always returns "withdrawn"](https://core.tcl-lang.org/tk/tktview/d01ec1)
+ - [ttk -justify widget option is ignored](https://core.tcl-lang.org/tk/tktview/e6b5b7)
+ - [ttk::spinbox -font does not resize buttons](https://core.tcl-lang.org/tk/tktview/330155)
+ - [Button should stay in -overrelief state after event](https://core.tcl-lang.org/tk/tktview/110051)
+ - [MS-Win: tk_getOpenFile errors out if no toplevel has been mapped yet](https://core.tcl-lang.org/tk/tktview/35a8df)
+ - [MS-Win: photo -gamma and -palette are ignored](https://core.tcl-lang.org/tk/tktview/32f2e1)
+ - [Displaced menus do not stay open](https://core.tcl-lang.org/tk/tktview/470331)
+ - [Menu items accidentally selected](https://core.tcl-lang.org/tk/tktview/680660)
+ - [Menu behaviour at screen bottom](https://core.tcl-lang.org/tk/tktview/159666)
+ - [Linux menu problem if menu near the bottom of screen](https://core.tcl-lang.org/tk/tktview/f9d316)
+ - [X11: menus taller than the screen cannot be scrolled](https://core.tcl-lang.org/tk/tktview/4e7fbe)
+ - [MS-Win: last cluster of a drawn range loses its trailing glyphs (combining marks)](https://core.tcl-lang.org/tk/tktview/d41b4d)
+ - ["$canvas postscript" crashes on X11 with never mapped windows](https://core.tcl-lang.org/tk/tktview/f7d4e4)
+ - [ttk::combobox: popdown list goes off screen when it fits neither below nor above](https://core.tcl-lang.org/tk/tktview/001f8d)
+ - [Tk text line breaks Thai words](https://core.tcl-lang.org/tk/info/b7ded5)
+ - [possible code issue: return before END_DRAWING](https://core.tcl-lang.org/tk/tktview/1c9965)
+ - [ttk::spinbox doesn't expand its height on Linux](https://core.tcl-lang.org/tk/tktview/331303)
+ - [spinbox -values overrides the value of the -textvariable](https://core.tcl-lang.org/tk/tktview/143926)
+ - [Improper look of ttk::checkbutton -style Toolbutton](https://core.tcl-lang.org/tk/tktview/341467)
+ - [ttk Toolbutton has wrong default anchor](https://core.tcl-lang.org/tk/tktview/186783)
+ - [segfault in textDisp-26.14.2](https://core.tcl-lang.org/tk/tktview/7353d9)
+ - ["BadAlloc (insufficient resources for operation)" in the grid command](https://core.tcl-lang.org/tk/tktview/bffa79)
+ - [X11: wm deiconify loses the position of a window moved by the user](https://core.tcl-lang.org/tk/tktview/4c5184)
+ - [reject unknown -format options in the GIF, PNG and PPM photo image handlers](https://core.tcl-lang.org/tk/tktview/fef61f)
+ - [console doesn't handle <<PasteSelection>>](https://core.tcl-lang.org/tk/tktview/329543)
+ - [macOS: Pressing <Tab> in wish console for command completion loses keyboard input](https://core.tcl-lang.org/tk/tktview/9474bd)
+ - [Focused button widgets invoked on Alt-Space](https://core.tcl-lang.org/tk/tktview/169275)
+ - ["focus" dumps core with certain extensions](https://core.tcl-lang.org/tk/tktview/704212)
+ - [canvas,text,ttk widgets: call scrollbar commands after window mapping (and not with 1x1 initial size)](https://core.tcl-lang.org/tk/tktview/991849)
+ - [Cascade in a multi-column menu is posted at the right edge of the whole menu instead of its column](https://core.tcl-lang.org/tk/tktview/fcb139)
+ - [MinGW: compilation using installed Tcl fails if Tcl source is not accessible](https://core.tcl-lang.org/tk/tktview/b900dc)
+ - [text widget's see subcommand can take many seconds](https://core.tcl-lang.org/tk/tktview/80213d)
+ - [Aqua: "pack forget" leaves window on screen](https://core.tcl-lang.org/tk/tktview/2ef5dd)
+ - [leak of a new value object of a custom option](https://core.tcl-lang.org/tk/tktview/2b6398)
+ - [Make the base chunk of the text layout thread-specific](https://core.tcl-lang.org/tk/tktview/a0c1a9)
+ - [wrapped text counts spaces at end of line, splits words, breaks after leading spaces (X11 with bidi, Windows)](https://core.tcl-lang.org/tk/tktview/d08538)
+ - [X11 (HarfBuzz/SheenBidi font backend): "font configure" of a font in use leaks the old font](https://core.tcl-lang.org/tk/tktview/e8d4c8)
+ - [Click to the right of the end of a line moves the insert cursor to the next line](https://core.tcl-lang.org/tk/tktview/13aabd)
+ - [Mismatch between button number and %b substitution in bindings](https://core.tcl-lang.org/tk/tktview/8f73af)
+ - [MS-Win: fix menubutton key invokation (Alt+Underline or F10)](https://core.tcl-lang.org/tk/tktview/222550)
+ - [BadFont error when a named font used on another display was changed or recreated](https://core.tcl-lang.org/tk/tktview/483387)
+ - [tk sysnotify crashes after the interpreter which used it was deleted](https://core.tcl-lang.org/tk/tktview/35e67b)
+ - [XIM input box font size hard coded](https://core.tcl-lang.org/tk/tktview/115170)
+ - [Embedded application exits with BadDrawable when its container is destroyed](https://core.tcl-lang.org/tk/tktview/4a25f3)
+ - [Windows: wm deiconify restores a maximized window as normal](https://core.tcl-lang.org/tk/tktview/897f66)
+ - [linux only: window -zoomed attribute is restored when it should not be](https://core.tcl-lang.org/tk/tktview/fecd6b)
+ - [MS-Win: toplevel menu does not honor font and color](https://core.tcl-lang.org/tk/tktview/11bd4a)
+ - [Long dashed lines cause problems on canvases](https://core.tcl-lang.org/tk/tktview/663981)
+ - [Free memory read by SetupStacks in tkOption.c](https://core.tcl-lang.org/tk/tktview/165259)
+ - [MacOS aqua: <<ContextMenu >> binding sometimes triggers for incorrect toplevel](https://core.tcl-lang.org/tk/tktview/061f63)
+ - [errors in ::tk::mac::PerformService were ignored](https://core.tcl-lang.org/tk/tktview/173622)
+ - [Tk console extremely slow before first display](https://core.tcl-lang.org/tk/tktview/7d8d10)
+ - [crash in Tk_ConfigureWidget when a default value of a canvas item option is invalid](https://core.tcl-lang.org/tk/tktview/434c8d)
+ - [Applying canvas move command to objects leaves trails](https://core.tcl-lang.org/tk/tktview/ad9a02)
+ - [embedded windows representation offset (horiz.)](https://core.tcl-lang.org/tk/tktview/969636)
+ - [wm attributes -fullscreen w/dual monitor opens to fullscreen in the wrong display](https://core.tcl-lang.org/tk/tktview/4face8)
+ - [X11 with bidi: a string consisting only of U+FFFD hung text layout](https://core.tcl-lang.org/tk/tktview/6f054b)
+ - [canvas/scrollbar return wrong configure synonym info](https://core.tcl-lang.org/tk/tktview/707778)
+ - [Middle-click paste focused a spinbox only when it was disabled](https://core.tcl-lang.org/tk/tktview/c9f675)
+ - [Stop indeterminate ttk::progressbar redraws continuously](https://core.tcl-lang.org/tk/tktview/89436b)
+ - [Windows: cursor files with non-ASCII names could not be loaded](https://core.tcl-lang.org/tk/tktview/0d4c08)
+ - [windows: after using tk_messageBox, parent window remains unresponsive](https://core.tcl-lang.org/tk/tktview/adb71e)
+ - [entry can't get the focus after tk_getSaveFile or tk_getOpenFile is called](https://core.tcl-lang.org/tk/tktview/df09b0)
+ - ["raise" command fails on recent linux](https://core.tcl-lang.org/tk/tktview/22172f)
+ - [Do not crash or leave dangling entries when grid or place is used on a half-dead window](https://core.tcl-lang.org/tk/tktview/302055)
+ - [Ttk combobox fails to restore grab](https://core.tcl-lang.org/tk/tktview/218252)
+ - [Windows: clipboard clear crashed when its window had not been made yet](https://core.tcl-lang.org/tk/tktview/bd3528)
+ - [Bug regarding numeric keypad on solaris](https://core.tcl-lang.org/tk/tktview/481308)
+ - [w32: Creating Alt-Key binding on all breaks default handling](https://core.tcl-lang.org/tk/tktview/145727)
+ - [Container is not displaying embedded window](https://core.tcl-lang.org/tk/tktview/da5eab)
+ - [tk_messageBox unresponsive on global grab](https://core.tcl-lang.org/tk/tktview/281400)
+ - [Canvas widget loses track of mouse](https://core.tcl-lang.org/tk/tktview/220902)
+ - [tkMenuFind doesn't locate cloned menubars](https://core.tcl-lang.org/tk/tktview/223112)
+ - [menubutton scripts are confused about their owning menu](https://core.tcl-lang.org/tk/tktview/680884)
+ - [ttk::sizegrip strange behaviour](https://core.tcl-lang.org/tk/tktview/299533)
+ - [tk_messageBox can return empty string on Windows](https://core.tcl-lang.org/tk/tktview/300988)
+ - [remove empty directories from the zipfs VFS with POSIX find options](https://core.tcl-lang.org/tcl/tktview/9336f1)
+ - [tk_dialog is centered over its parent window](https://core.tcl-lang.org/tk/tktview/341469)
+ - [the size hints of a toplevel ignore its menubar](https://core.tcl-lang.org/tk/tktview/726351)
+ - [focus test failures](https://core.tcl-lang.org/tk/tktview/147446)
+ - [missing <Leave> event when posting cascade menus](https://core.tcl-lang.org/tk/tktview/873655)
+ - [panedwindow misbehaving when resizing window](https://core.tcl-lang.org/tk/tktview/7c5162)
+ - [errors when a menu is destroyed while it is posted](https://core.tcl-lang.org/tk/tktview/a4c72a)
+ - [focus changes forgotten during grab](https://core.tcl-lang.org/tk/tktview/220892)
+ - [only record windows belonging to an embedded toplevel in the deletedWinTable](https://core.tcl-lang.org/tk/tktview/5f7ba8)
+ - [wm overrideredirect zaps additions to system menu](https://core.tcl-lang.org/tk/tktview/220781)
+ - [Windows ConfigureNotify uses stale WINDOWPOS x/y](https://core.tcl-lang.org/tk/tktview/90f5cd)
+ - [Tk performance regression on X11](https://core.tcl-lang.org/tk/tktview/290ce5)
+ - [LastKnownRequestProcessed() assigned to unsigned int](https://core.tcl-lang.org/tk/tktview/451cb3)
+ - [Application crash on Windows when destroying toplevel that is "not responding"](https://core.tcl-lang.org/tk/tktview/7f05a1)
+ - [Windows: pointer warp could land one pixel short of the requested position](https://core.tcl-lang.org/tk/tktview/3f1ad1)
+ - [MS-Win: activation if embedded application within tk window](https://core.tcl-lang.org/tk/tktview/564897)
+
+Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
+
+Tk 9.1.0 continues the Tk 9.x series of releases.  The Tk 9.x series
+do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
+To make use of Tk 9.1.0, first a Tcl 9.0 or 9.1 release must be present.
+As new Tk features are developed, expect them to appear in Tk 9.2+, but not
+in Tk 8.
+
+# Potential incompatibilities to 9.0
+ - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
+ - [BiDi support is now the default build option on X11 and harfbuzz is a hard build dependency](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)
 
 # 9.1 Features and Interfaces
  - [MS-Win: remove Windows XP dialog variants for tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
@@ -36,8 +163,3 @@ necessarily in Tk 8.
  - [Locale support for word handling in text and entry](https://core.tcl-lang.org/tips/doc/trunk/tip/687.md)
  - [Provide access to the full contents of the Info.plist file of a Tk-based macOS app](https://core.tcl-lang.org/tips/doc/trunk/tip/725.md)
 
-# Potential incompatibilities to 9.0
- - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
- - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
- - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
- - [BiDi support is now the default build option on X11 and harfbuzz is a hard build dependency](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)

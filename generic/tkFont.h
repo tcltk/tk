@@ -92,17 +92,16 @@ typedef struct TkFont {
     Tcl_Size resourceRefCount;	/* Number of active uses of this font (each
 				 * active use corresponds to a call to
 				 * Tk_AllocFontFromTable or Tk_GetFont). If
-				 * this count is 0, then this TkFont structure
-				 * is no longer valid and it isn't present in
-				 * a hash table: it is being kept around only
-				 * because there are objects referring to it.
-				 * The structure is freed when
-				 * resourceRefCount and objRefCount are both
-				 * 0. */
+				 * this count is 0, the font is deleted at
+				 * idle time. */
     Tcl_Size objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     Tcl_HashEntry *cacheHashPtr;/* Entry in font cache for this structure,
-				 * used when deleting it. */
+				 * used when deleting it. NULL if the font
+				 * has been deleted: the structure is then
+				 * kept around only because there are objects
+				 * referring to it, and it is freed when
+				 * objRefCount is 0. */
     Tcl_HashEntry *namedHashPtr;/* Pointer to hash table entry that
 				 * corresponds to the named font that the
 				 * tkfont was based on, or NULL if the tkfont

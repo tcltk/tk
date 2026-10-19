@@ -874,14 +874,14 @@ TkIncludePoint(
 {
     int tmp;
 
-    tmp = (int) (pointPtr[0] + 0.5);
+    tmp = (int) (TkCanvClampCoord(pointPtr[0]) + 0.5);
     if (tmp < itemPtr->x1) {
 	itemPtr->x1 = tmp;
     }
     if (tmp > itemPtr->x2) {
 	itemPtr->x2 = tmp;
     }
-    tmp = (int) (pointPtr[1] + 0.5);
+    tmp = (int) (TkCanvClampCoord(pointPtr[1]) + 0.5);
     if (tmp < itemPtr->y1) {
 	itemPtr->y1 = tmp;
     }

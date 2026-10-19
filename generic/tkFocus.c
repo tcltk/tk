@@ -342,7 +342,10 @@ TkFocusFilterEvent(
 	 * Skip FocusOut events that cause confusion.
 	 * NotifyPointer - the pointer is in us or a child, and we are losing
 	 *	focus because of an XSetInputFocus. Other focus events will
-	 *	set our state properly.
+	 *	set our state properly. But if we only had the focus because
+	 *	of the pointer (see NotifyPointer for FocusIn below), the focus
+	 *	was taken by another application, and no other event will
+	 *	come.
 	 * NotifyPointerRoot - should never happen because this is sent to the
 	 *	root window.
 	 * NotifyInferior - focus leaving us for an embedded child. We retain
@@ -357,6 +360,10 @@ TkFocusFilterEvent(
 	 */
 
 	if ((eventPtr->xfocus.detail == NotifyPointer)
+		&& (dispPtr->implicitWinPtr != NULL)
+		&& (dispPtr->implicitWinPtr == TkWmFocusToplevel(winPtr))) {
+	    dispPtr->implicitWinPtr = NULL;
+	} else if ((eventPtr->xfocus.detail == NotifyPointer)
 		|| (eventPtr->xfocus.detail == NotifyPointerRoot)
 		|| (eventPtr->xfocus.detail == NotifyInferior)) {
 	    return retValue;
@@ -379,11 +386,17 @@ TkFocusFilterEvent(
 
     /*
      * If there is a grab in effect and this window is outside the grabbed
-     * tree, then ignore the event.
+     * tree, then ignore the event, but remember the window which got the
+     * focus, to process its FocusIn event when the grab is released.
+     * [Bug 220892]
      */
 
     if (TkGrabState(winPtr) == TK_GRAB_EXCLUDED) {
+	dispPtr->focusInGrabPtr = (eventPtr->type == FocusIn) ? winPtr : NULL;
 	return retValue;
+    }
+    if (eventPtr->type == FocusIn || eventPtr->type == FocusOut) {
+	dispPtr->focusInGrabPtr = NULL;
     }
 
     /*
@@ -540,7 +553,7 @@ TkSetFocusWin(
 {
     ToplevelFocusInfo *tlFocusPtr;
     DisplayFocusInfo *displayFocusPtr;
-    TkWindow *topLevelPtr;
+    TkWindow *topLevelPtr, *wrapperPtr;
     size_t serial;
     bool allMapped;
 
@@ -660,10 +673,15 @@ TkSetFocusWin(
 
 	/*
 	 * Call the platform specific function TkpChangeFocus to move the
-	 * window manager's focus to a new toplevel.
+	 * window manager's focus to a new toplevel. A top of hierarchy window
+	 * created by an extension may have no wrapper. [Bug 704212]
 	 */
 
-	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
+	wrapperPtr = TkpGetWrapperWindow(topLevelPtr);
+	if (wrapperPtr == NULL) {
+	    wrapperPtr = topLevelPtr;
+	}
+	serial = TkpChangeFocus(wrapperPtr, force);
 	if (serial != 0) {
 	    displayFocusPtr->focusSerial = serial;
 	}
@@ -792,6 +810,49 @@ TkFocusKeyEvent(
 /*
  *----------------------------------------------------------------------
  *
+ * TkFocusGrabReleased --
+ *
+ *	This function is invoked when a grab is released. If a toplevel
+ *	window received the focus while it was excluded by the grab, its
+ *	FocusIn event is processed now.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The focus may change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkFocusGrabReleased(
+    TkDisplay *dispPtr)		/* Display on which the grab was released. */
+{
+    TkWindow *winPtr = dispPtr->focusInGrabPtr, *wrapperPtr;
+    XEvent event;
+
+    if (winPtr == NULL) {
+	return;
+    }
+    dispPtr->focusInGrabPtr = NULL;
+    wrapperPtr = TkpGetWrapperWindow(winPtr);
+    if ((wrapperPtr == NULL) || !Tk_IsMapped(winPtr)) {
+	return;
+    }
+    memset(&event, 0, sizeof(event));
+    event.xfocus.type = FocusIn;
+    event.xfocus.serial = LastKnownRequestProcessed(dispPtr->display);
+    event.xfocus.display = dispPtr->display;
+    event.xfocus.window = wrapperPtr->window;
+    event.xfocus.mode = NotifyNormal;
+    event.xfocus.detail = NotifyNonlinear;
+    TkFocusFilterEvent(wrapperPtr, &event);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkFocusDeadWindow --
  *
  *	This function is invoked when it is determined that a window is dead.
@@ -823,6 +884,9 @@ TkFocusDeadWindow(
 
     if (winPtr->mainPtr == NULL) {
 	return;
+    }
+    if (dispPtr->focusInGrabPtr == winPtr) {
+	dispPtr->focusInGrabPtr = NULL;
     }
 
     /*

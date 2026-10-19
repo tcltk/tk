@@ -717,9 +717,7 @@ test canvText-9.15 {TextInsert procedure: cursor doesn't move} -body {
 #
 .c delete test
 
-test canvText-10.1 {TextToPoint procedure} -constraints {!win32} -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# via Uniscribe (Windows). Run on X11 and macOS.
+test canvText-10.1 {TextToPoint procedure} -body {
     .c create text 0 0 -tag test
     .c itemconfig test -text 0 -anchor center
     .c index test @0,0
@@ -925,15 +923,12 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} -setup {
     unset -nocomplain bbox x2 y2
 } -result 1
 
-test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -constraints {aqua} -setup {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping
-	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively.
+test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup {
     destroy .c
     set c [canvas .c -bg black -width 964]
     pack $c
     $c delete all
-    after 100 "set done 1"; vwait done
+    pause 100
 } -body {
     set f {Arial 28 bold}
     set s1 {    Yeah-ah-ah-ah-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-Yow}
@@ -954,7 +949,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -const
 	-anchor nw \
 	-tags tbox2
     $c create rect {*}[$c bbox tbox2] -outline red
-    after 500 "set done 1" ; vwait done
+    pause 500
     set results [list]
     $c select from tbox2 4
     $c select to tbox2 8
@@ -1052,6 +1047,47 @@ test canvText-21.1 {stippled text - bug 220796} -constraints {
 } -cleanup {
     destroy .c
 } -result {1 1}
+
+# constrained by aquaKnownBug until ticket [271f61c768] is fixed
+test canvText-22.1 {text item longer than 512 characters} -constraints {
+    testpixel aquaKnownBug
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
+	    -scrollregion {0 0 100000 40}
+    pack .c
+    update
+} -body {
+    .c create text 0 20 -anchor w -text [string repeat M 1000] -font {Courier 14}
+    set width [font measure {Courier 14} M]
+    # Scroll to the 999th character.
+    .c xview moveto [expr {998 * $width / 100000.0}]
+    update
+    expr {[countPixels .c 0 10 [expr {2 * $width}] 30] > 0}
+} -cleanup {
+    destroy .c
+} -result 1
+
+test canvText-22.2 {very long text item scrolled far away - bug 770578} -constraints {
+    testpixel && (withXft || !x11)
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
+	    -scrollregion {0 0 200000 40}
+    pack .c
+    update
+} -body {
+    .c create text 0 20 -anchor w -text [string repeat bug!_ 10000] -font {Courier 14}
+    set res {}
+    foreach frac {0 0.25 0.5} {
+	.c xview moveto $frac
+	update
+	lappend res [expr {[countPixels .c 0 10 200 30] > 0}]
+    }
+    set res
+} -cleanup {
+    destroy .c
+} -result {1 1 1}
 
 #
 # TESTFILE CLEANUP

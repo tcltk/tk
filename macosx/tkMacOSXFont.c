@@ -1338,6 +1338,7 @@ TkpDrawAngledCharsInContext(
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
+	TkMacOSXRestoreDrawingContext(&drawingContext);
 	return;
     }
 

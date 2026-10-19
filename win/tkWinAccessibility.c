@@ -1026,12 +1026,8 @@ ComputeAndCacheCheckedState(
     Tcl_IncrRefCount(varCmd);
 
     const char *varName = NULL;
-    int haveVarName = 0;
     if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 	varName = Tcl_GetStringResult(interp);
-	if (varName && *varName) {
-	    haveVarName = 1;
-	}
     } else {
 	/* evaluation failed; clean up and return */
 	Tcl_DecrRefCount(varCmd);
@@ -1039,7 +1035,7 @@ ComputeAndCacheCheckedState(
     }
     Tcl_DecrRefCount(varCmd);
 
-    if (haveVarName) {
+    if (varName && *varName) {
 	/* Grab the variable value (global). */
 	const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
 	if (varVal) {

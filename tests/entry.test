@@ -30,6 +30,8 @@ resetWindows
 # Import utility procs for specific functional areas
 testutils import entry scroll
 
+testConstraint memory [llength [info commands memory]]
+
 #
 # COMMON TEST SETUP
 #
@@ -1817,6 +1819,29 @@ test entry-5.19 {-locale} -setup {
 } -cleanup {
     destroy .e
 } -result {-locale locale Locale C prg_001}
+test entry-5.20 {-locale: the normalized value is not leaked} -constraints {
+    memory
+} -setup {
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+    entry .e
+} -body {
+    list [growth {.e configure -locale ab_CD}] [growth {entry .w; destroy .w}]
+} -cleanup {
+    destroy .e
+    rename getbytes {}
+    rename growth {}
+} -result {0 0}
 
 # No tests for DisplayEntry.
 
@@ -3682,6 +3707,30 @@ test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several wor
 } -cleanup {
     destroy .e
 } -result {{} {}}
+
+test entry-26.1 {pasting the selection focuses the entry unless it is disabled} -setup {
+    entry .e
+    button .b
+    pack .e .b
+    update
+    selection own .b
+    selection handle .b {apply {{offset maxChars} {return pasted}}}
+    set res {}
+} -body {
+    foreach state {normal disabled} {
+	.e configure -state normal
+	.e delete 0 end
+	.e configure -state $state
+	focus -force .b
+	update
+	event generate .e <<PasteSelection>> -x 5 -y 5
+	update
+	lappend res [focus] [.e get]
+    }
+    set res
+} -cleanup {
+    destroy .e .b
+} -result {.e pasted .b {}}
 
 #
 # TESTFILE CLEANUP

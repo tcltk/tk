@@ -62,6 +62,14 @@ to the toplevel window and all its internal windows.
 .IP \(bu 3
 If \fItag\fR has the value \fBall\fR,
 the binding applies to all windows in the application.
+.PP
+Tk creates some bindings for the \fBall\fR tag itself, for example for
+keyboard traversal of menus.  On Windows, the bindings for
+\fB<Alt-Key>\fR, \fB<Alt-KeyRelease>\fR, \fB<F10>\fR,
+\fB<KeyRelease-F10>\fR and the Alt keys pass the key to Windows, which
+handles the native menubar and system keys such as Alt-F4.  Replacing
+these bindings disables that; extend them by prefixing the script with
+\fB+\fR instead.
 .SH "EVENT PATTERNS"
 .PP
 The \fIsequence\fR argument specifies a sequence of one or more

@@ -110,6 +110,10 @@ bind Checkbutton <space> {
 bind Radiobutton <space> {
     tk::CheckRadioInvoke %W
 }
+# Alt-space opens the window menu on Windows. [Bug 1692755]
+bind Button <Alt-space> {# nothing}
+bind Checkbutton <Alt-space> {# nothing}
+bind Radiobutton <Alt-space> {# nothing}
 bind Button <<Invoke>> {
     tk::ButtonInvoke %W
 }
@@ -239,7 +243,8 @@ proc ::tk::ButtonDown w {
 
 # ::tk::ButtonUp --
 # The procedure below is invoked when the mouse button is released
-# in a button widget.  It restores the button's relief and invokes
+# in a button widget.  It restores the button's relief (or sets it to
+# the -overrelief value if the mouse is still in the button) and invokes
 # the command as long as the mouse hasn't left the button.
 #
 # Arguments:
@@ -258,6 +263,16 @@ proc ::tk::ButtonUp w {
 		$w configure -relief $Priv($w,relief)
 	    }
 	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
+	}
+
+	# If the mouse is still in the button, set the relief to the
+	# -overrelief value, as on entry. [Bug 1100518]
+
+	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"
+		&& [set over [$w cget -overrelief]] ne ""} {
+	    set Priv($w,relief) [$w cget -relief]
+	    $w configure -relief $over
+	    set Priv($w,prelief) $over
 	}
 
 	# Clean up the after event from the auto-repeater
@@ -422,7 +437,8 @@ proc ::tk::ButtonDown w {
 
 # ::tk::ButtonUp --
 # The procedure below is invoked when the mouse button is released
-# in a button widget.  It restores the button's relief and invokes
+# in a button widget.  It restores the button's relief (or sets it to
+# the -overrelief value if the mouse is still in the button) and invokes
 # the command as long as the mouse hasn't left the button.
 #
 # Arguments:
@@ -441,6 +457,16 @@ proc ::tk::ButtonUp w {
 		$w configure -relief $Priv($w,relief)
 	    }
 	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
+	}
+
+	# If the mouse is still in the button, set the relief to the
+	# -overrelief value, as on entry. [Bug 1100518]
+
+	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"
+		&& [set over [$w cget -overrelief]] ne ""} {
+	    set Priv($w,relief) [$w cget -relief]
+	    $w configure -relief $over
+	    set Priv($w,prelief) $over
 	}
 
 	# Clean up the after event from the auto-repeater
@@ -548,7 +574,8 @@ proc ::tk::ButtonDown w {
 
 # ::tk::ButtonUp --
 # The procedure below is invoked when the mouse button is released
-# in a button widget.  It restores the button's relief and invokes
+# in a button widget.  It restores the button's relief (or sets it to
+# the -overrelief value if the mouse is still in the button) and invokes
 # the command as long as the mouse hasn't left the button.
 #
 # Arguments:
@@ -568,6 +595,16 @@ proc ::tk::ButtonUp w {
 		$w configure -relief $Priv($w,relief)
 	    }
 	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
+	}
+
+	# If the mouse is still in the button, set the relief to the
+	# -overrelief value, as on entry. [Bug 1100518]
+
+	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"
+		&& [set over [$w cget -overrelief]] ne ""} {
+	    set Priv($w,relief) [$w cget -relief]
+	    $w configure -relief $over
+	    set Priv($w,prelief) $over
 	}
 
 	# Clean up the after event from the auto-repeater

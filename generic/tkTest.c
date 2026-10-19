@@ -22,7 +22,9 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
+#include "tkFont.h"
 #include "tkText.h"
+#include <locale.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -157,6 +159,7 @@ static Tcl_ObjCmdProc2 TestborderObjCmd;
 static Tcl_ObjCmdProc2 TestcolorObjCmd;
 static Tcl_ObjCmdProc2 TestcursorObjCmd;
 static Tcl_ObjCmdProc2 TestdeleteappsObjCmd;
+static Tcl_ObjCmdProc2 TestemojiObjCmd;
 static Tcl_ObjCmdProc2 TestfontObjCmd;
 static Tcl_ObjCmdProc2 TestmakeexistObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
@@ -173,8 +176,10 @@ static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
 static Tcl_ObjCmdProc2 TestpropObjCmd;
 static Tcl_ObjCmdProc2 TestprintfObjCmd;
+static Tcl_ObjCmdProc2 TestsetlocaleObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static Tcl_ObjCmdProc2 TestwrapperObjCmd;
+static Tcl_ObjCmdProc2 TestxfocusObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(void *clientData);
 static Tcl_ObjCmdProc2 TrivialConfigObjCmd;
@@ -235,6 +240,7 @@ Tktest_Init(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testobjconfig", TestobjconfigObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testemoji", TestemojiObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testfont", TestfontObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testmakeexist", TestmakeexistObjCmd,
@@ -244,6 +250,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testsetlocale", TestsetlocaleObjCmd, NULL,
+	    NULL);
     Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testphotostringmatch",
@@ -259,6 +267,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testsend", TkpTestsendCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwrapper", TestwrapperObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testxfocus", TestxfocusObjCmd,
 	    Tk_MainWindow(interp), NULL);
 #endif /* _WIN32 */
 
@@ -1269,6 +1279,63 @@ TrivialEventProc(
 /*
  *----------------------------------------------------------------------
  *
+ * TestemojiObjCmd --
+ *
+ *	This function implements the "testemoji" command, which exposes the
+ *	emoji classification shared by the font engines:
+ *	    testemoji presentation codePoint ?nextCodePoint?
+ *	    testemoji continuation codePoint ?inEmoji?
+ *
+ * Results:
+ *	A standard Tcl result: the value of TkFontEmojiPresentation or
+ *	TkFontEmojiContinuation.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestemojiObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    static const char *const options[] = {"continuation", "presentation", NULL};
+    enum option {CONTINUATION, PRESENTATION};
+    int index, ch, arg = -1, result = 0;
+
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option codePoint ?arg?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &ch) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc == 4 && Tcl_GetIntFromObj(interp, objv[3], &arg) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    switch ((enum option) index) {
+    case CONTINUATION:
+	result = TkFontEmojiContinuation(ch, objc == 4 && arg != 0);
+	break;
+    case PRESENTATION:
+	result = TkFontEmojiPresentation(ch, arg);
+	break;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TestfontObjCmd --
  *
  *	This function implements the "testfont" command, which is used to test
@@ -1928,6 +1995,49 @@ TestprintfObjCmd(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestsetlocaleObjCmd --
+ *
+ *	This function implements the "testsetlocale" command, which sets the
+ *	LC_NUMERIC locale of the C library, as an extension or the embedding
+ *	application could do.  It lets the test suite check that Tk does not
+ *	depend on it.
+ *
+ * Results:
+ *	A standard Tcl result.  The result is the name of the new locale, or
+ *	of the current one if no argument is given.
+ *
+ * Side effects:
+ *	The LC_NUMERIC locale is changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestsetlocaleObjCmd(
+    TCL_UNUSED(void *),	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    const char *locale;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?locale?");
+	return TCL_ERROR;
+    }
+    locale = setlocale(LC_NUMERIC, (objc > 1) ? Tcl_GetString(objv[1]) : NULL);
+    if (locale == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("unsupported locale \"%s\"",
+		Tcl_GetString(objv[1])));
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(locale, TCL_INDEX_NONE));
+    return TCL_OK;
+}
+
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 /*
  *----------------------------------------------------------------------
@@ -1974,6 +2084,85 @@ TestwrapperObjCmd(
 
 	TkpPrintWindowId(buf, Tk_WindowId(wrapperPtr));
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestxfocusObjCmd --
+ *
+ *	This function implements the "testxfocus" command. It returns the
+ *	Tk window which has the input focus of the X server (the toplevel if
+ *	the focus is on its wrapper window), or an empty string if it is on
+ *	a window of another application or on no window. With a window
+ *	argument it first sets the input focus to the wrapper window of the
+ *	toplevel of that window, as a window manager would do. With "none"
+ *	or "pointerroot" it sets the input focus to None or PointerRoot.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	With an argument, changes the input focus of the X server.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestxfocusObjCmd(
+    void *clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_Window tkwin = (Tk_Window)clientData, focusWin;
+    Window window;
+    int revert;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?window|none|pointerroot?");
+	return TCL_ERROR;
+    }
+    if (objc == 2) {
+	const char *arg = Tcl_GetString(objv[1]);
+
+	if (strcmp(arg, "none") == 0) {
+	    XSetInputFocus(Tk_Display(tkwin), None, RevertToNone,
+		    CurrentTime);
+	} else if (strcmp(arg, "pointerroot") == 0) {
+	    XSetInputFocus(Tk_Display(tkwin), PointerRoot, RevertToPointerRoot,
+		    CurrentTime);
+	} else {
+	    TkWindow *winPtr = (TkWindow *) Tk_NameToWindow(interp, arg, tkwin);
+	    TkWindow *wrapperPtr;
+
+	    if (winPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
+		winPtr = winPtr->parentPtr;
+	    }
+	    wrapperPtr = TkpGetWrapperWindow(winPtr);
+	    if (wrapperPtr == NULL) {
+		wrapperPtr = winPtr;
+	    }
+	    XSetInputFocus(Tk_Display(tkwin), Tk_WindowId(wrapperPtr),
+		    RevertToParent, CurrentTime);
+	}
+	XSync(Tk_Display(tkwin), False);
+    }
+    XGetInputFocus(Tk_Display(tkwin), &window, &revert);
+    focusWin = Tk_IdToWindow(Tk_Display(tkwin), window);
+    if (focusWin != NULL) {
+	if (((TkWindow *) focusWin)->flags & TK_WRAPPER) {
+	    focusWin = (Tk_Window) TkWmFocusToplevel((TkWindow *) focusWin);
+	}
+	if (focusWin != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(focusWin),
+		    TCL_INDEX_NONE));
+	}
     }
     return TCL_OK;
 }

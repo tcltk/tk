@@ -195,6 +195,8 @@ static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
 			    PhotoModel *modelPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		ToggleComplexAlphaIfNeeded(PhotoModel *mPtr);
+static void		UpdateComplexAlpha(PhotoModel *mPtr, int x, int y,
+			    int width, int height);
 static int		ImgPhotoSetSize(PhotoModel *modelPtr, int width,
 			    int height);
 static char *		ImgGetPhoto(PhotoModel *modelPtr,
@@ -1950,7 +1952,7 @@ ImgPhotoConfigureModel(
      * Regard the empty string for -file, -data, -format or -metadata as the null value.
      */
 
-    if ((modelPtr->fileObj != NULL) && (Tcl_GetString(modelPtr->fileObj)[0] == 0)) {
+    if ((modelPtr->fileObj != NULL) && TkObjIsEmpty(modelPtr->fileObj)) {
 	Tcl_DecrRefCount(modelPtr->fileObj);
 	modelPtr->fileObj = NULL;
     }
@@ -2289,6 +2291,50 @@ ToggleComplexAlphaIfNeeded(
 	}
     }
     return (mPtr->flags & COMPLEX_ALPHA);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * UpdateComplexAlpha --
+ *
+ *	Updates the COMPLEX_ALPHA flag of the model after the pixels in the
+ *	given rectangle have been changed. Only these pixels are scanned,
+ *	unless the flag was set and they have no partial transparency, in
+ *	which case the last partially transparent pixels may have been
+ *	overwritten and the whole image is rescanned. [Bug e7fc29ce4c]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	(Re)sets COMPLEX_ALPHA flag of model.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+UpdateComplexAlpha(
+    PhotoModel *mPtr,
+    int x, int y,		/* Top-left pixel of the changed rectangle. */
+    int width, int height)	/* Size of the changed rectangle. */
+{
+    unsigned char *linePtr = mPtr->pix32 + (y * mPtr->width + x) * 4 + 3;
+    int i, j;
+
+    for (i = 0; i < height; i++, linePtr += mPtr->width * 4) {
+	unsigned char *c = linePtr;
+
+	for (j = 0; j < width; j++, c += 4) {
+	    if (*c && *c != 255) {
+		mPtr->flags |= COMPLEX_ALPHA;
+		return;
+	    }
+	}
+    }
+    if (mPtr->flags & COMPLEX_ALPHA) {
+	ToggleComplexAlphaIfNeeded(mPtr);
+    }
 }
 
 /*
@@ -2925,7 +2971,7 @@ MatchStringFormat(
 	     * a generic image data error.
 	     */
 
-	    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] == '\0') {
+	    if (TkObjIsEmpty(Tcl_GetObjResult(interp))) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't recognize image data", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -3386,12 +3432,10 @@ Tk_PhotoPutBlock(
     } else if ((alphaOffset != 0) || (modelPtr->flags & COMPLEX_ALPHA)) {
 	/*
 	 * Check for partial transparency if alpha pixels are specified, or
-	 * rescan if we already knew such pixels existed. To restrict this
-	 * Toggle to only checking the changed pixels requires knowing where
-	 * the alpha pixels are.
+	 * if we already knew such pixels existed.
 	 */
 
-	ToggleComplexAlphaIfNeeded(modelPtr);
+	UpdateComplexAlpha(modelPtr, x, y, width, height);
     }
 
     /*
@@ -3743,11 +3787,9 @@ Tk_PhotoPutZoomedBlock(
     } else if ((alphaOffset != 0) || (modelPtr->flags & COMPLEX_ALPHA)) {
 	/*
 	 * Check for partial transparency if alpha pixels are specified, or
-	 * rescan if we already knew such pixels existed. To restrict this
-	 * Toggle to only checking the changed pixels requires knowing where
-	 * the alpha pixels are.
+	 * if we already knew such pixels existed.
 	 */
-	ToggleComplexAlphaIfNeeded(modelPtr);
+	UpdateComplexAlpha(modelPtr, x, y, width, height);
     }
 
     /*

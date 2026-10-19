@@ -647,8 +647,10 @@ ComputePolygonBbox(
     }
 
     coordPtr = polyPtr->coordPtr;
-    polyPtr->header.x1 = polyPtr->header.x2 = (int) *coordPtr;
-    polyPtr->header.y1 = polyPtr->header.y2 = (int) coordPtr[1];
+    polyPtr->header.x1 = polyPtr->header.x2 =
+	    (int) TkCanvClampCoord(coordPtr[0]);
+    polyPtr->header.y1 = polyPtr->header.y2 =
+	    (int) TkCanvClampCoord(coordPtr[1]);
 
     /*
      * Compute the bounding box of all the points in the polygon, then expand

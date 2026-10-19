@@ -81,8 +81,8 @@ test embed-1.5.win {Tk_UseWindow procedure, -container must be set} -constraints
 } -returnCodes error -result {the window to use is not a Tk container}
 
 # testing window embedding for other than win platforms
-test embed-1.4.macOrUnix {Tk_UseWindow procedure, -container must be set} -constraints {
-	macOrUnix
+test embed-1.4.unix {Tk_UseWindow procedure, -container must be set} -constraints {
+	unix
 } -setup {
     deleteWindows
 } -body {
@@ -92,8 +92,8 @@ test embed-1.4.macOrUnix {Tk_UseWindow procedure, -container must be set} -const
     deleteWindows
 } -returnCodes error -result {window ".container" doesn't have -container option set}
 # testing window embedding for other than win platforms
-test embed-1.5.macOrUnix {Tk_UseWindow procedure, -container must be set} -constraints {
-	macOrUnix
+test embed-1.5.unix {Tk_UseWindow procedure, -container must be set} -constraints {
+	unix
 } -setup {
     deleteWindows
 } -body {

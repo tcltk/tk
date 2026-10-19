@@ -1412,7 +1412,6 @@ DisplayFrame(
     int bdX1, bdY1, bdX2, bdY2;
     Pixmap pixmap;
     bool useClipping = false;
-    bool useBuffer;
     int borderWidth, highlightWidth;
 
     framePtr->flags &= ~REDRAW_PENDING;
@@ -1456,7 +1455,8 @@ DisplayFrame(
      * is scrolled in a canvas. [Bug 9438cce0bd]
      */
 
-    useBuffer = (framePtr->bgimg != NULL);
+#ifndef TK_NO_DOUBLE_BUFFERING
+    bool useBuffer = (framePtr->bgimg != NULL);
     if (framePtr->type == TYPE_LABELFRAME) {
 	Labelframe *labelframePtr = (Labelframe *) framePtr;
 
@@ -1465,7 +1465,6 @@ DisplayFrame(
 	}
     }
 
-#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * In order to avoid screen flashes, this function redraws the frame into
      * off-screen memory, then copies it back on-screen in a single operation.

@@ -186,7 +186,7 @@ TkpDisplayButton(
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
-    int needhighlight = 0;
+    bool needhighlight = false;
     int highlightWidth;
 
     butPtr->flags &= ~REDRAW_PENDING;
@@ -216,7 +216,7 @@ TkpDisplayButton(
 	 */
 
 	DrawButtonImageAndText(butPtr);
-	needhighlight = 1;
+	needhighlight = true;
     } else {
 	/*
 	 * Draw the native portion of the buttons.
@@ -229,7 +229,7 @@ TkpDisplayButton(
 	 */
 
 	if (highlightWidth < 3) {
-	    needhighlight = 1;
+	    needhighlight = true;
 	}
     }
 
@@ -272,7 +272,8 @@ void
 TkpComputeButtonGeometry(
     TkButton *butPtr)		/* Button whose geometry may have changed. */
 {
-    int width = 0, height = 0, charWidth = 1, haveImage = 0, haveText = 0;
+    int width = 0, height = 0, charWidth = 1;
+    bool haveImage = false, haveText = false;
     int txtWidth = 0, txtHeight = 0;
     MacButton *mbPtr = (MacButton *) butPtr;
     Tk_FontMetrics fm;
@@ -313,10 +314,10 @@ TkpComputeButtonGeometry(
 
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
 
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->widthObj, &butPtrWidth);
@@ -324,7 +325,7 @@ TkpComputeButtonGeometry(
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &padY);
     Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->wrapLengthObj, &wrapLength);
-    if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
+    if (!haveImage || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
 		text, TCL_INDEX_NONE, wrapLength, butPtr->justify, 0,
@@ -337,7 +338,7 @@ TkpComputeButtonGeometry(
 
 	txtWidth = butPtr->textWidth + 2 * padX;
 	txtHeight = butPtr->textHeight + 2 * padY;
-	haveText = 1;
+	haveText = true;
     }
 
     if (haveImage) {
@@ -464,7 +465,8 @@ DrawButtonImageAndText(
     MacButton *mbPtr = (MacButton *) butPtr;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
-    int haveImage = 0, haveText = 0, pressed = 0;
+    bool haveImage = false;
+    int pressed = 0;
     int imageWidth = 0, imageHeight = 0;
     int imageXOffset = 0, imageYOffset = 0;
     int textXOffset = 0, textYOffset = 0;
@@ -481,10 +483,10 @@ DrawButtonImageAndText(
 
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+	haveImage = true;
     }
 
     imageWidth = width;
@@ -499,7 +501,7 @@ DrawButtonImageAndText(
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &highlightWidth);
 
-    haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
+    bool haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) { /* Image and Text */
 	int x, y;
 

@@ -20,6 +20,7 @@
 #ifdef _WIN32
 #include "tkWinInt.h"
 #endif
+#include <mojibake.h>	/* UTS #51 emoji properties */
 
 /*
  * The following structure is used to keep track of all the fonts that exist
@@ -36,9 +37,11 @@ typedef struct TkFontInfo {
 				 * a named font description. Keys are strings,
 				 * values are NamedFont pointers. */
     TkMainInfo *mainPtr;	/* Application that owns this structure. */
-    int updatePending;		/* Non-zero when a World Changed event has
+    bool updatePending;		/* True when a World Changed event has
 				 * already been queued to handle a change to a
 				 * named font. */
+    bool freePending;		/* True when FreeUnusedFonts has already
+				 * been scheduled. */
 } TkFontInfo;
 
 /*
@@ -344,6 +347,9 @@ static int		ParseFontNameObj(Tcl_Interp *interp, Tk_Window tkwin,
 static void		RecomputeWidgets(TkWindow *winPtr);
 static int		SetFontFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static void		TheWorldHasChanged(void *clientData);
+static void		FreeUnusedFonts(void *clientData);
+static void		DeleteFont(TkFont *fontPtr);
+static Tk_Window	FindWindowOnScreen(TkWindow *winPtr, Screen *screen);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
 			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
 
@@ -390,7 +396,8 @@ TkFontPkgInit(
     Tcl_InitHashTable(&fiPtr->fontCache, TCL_STRING_KEYS);
     Tcl_InitHashTable(&fiPtr->namedTable, TCL_STRING_KEYS);
     fiPtr->mainPtr = mainPtr;
-    fiPtr->updatePending = 0;
+    fiPtr->updatePending = false;
+    fiPtr->freePending = false;
     mainPtr->fontInfoPtr = fiPtr;
 
     TkpFontPkgInit(mainPtr);
@@ -424,6 +431,11 @@ TkFontPkgFree(
 #ifdef PURIFY
     int fontsLeft = 0;
 #endif
+
+    if (fiPtr->freePending) {
+	Tcl_CancelIdleCall(FreeUnusedFonts, fiPtr);
+    }
+    FreeUnusedFonts(fiPtr);
 
     for (searchPtr = Tcl_FirstHashEntry(&fiPtr->fontCache, &search);
 	    searchPtr != NULL;
@@ -856,6 +868,7 @@ UpdateDependentFonts(
     Tcl_HashEntry *cacheHashPtr;
     Tcl_HashSearch search;
     TkFont *fontPtr;
+    Tk_Window fontWin;
     NamedFont *nfPtr = (NamedFont *)Tcl_GetHashValue(namedHashPtr);
 
     if (nfPtr->refCount == 0) {
@@ -872,15 +885,65 @@ UpdateDependentFonts(
 	for (fontPtr = (TkFont *)Tcl_GetHashValue(cacheHashPtr);
 		fontPtr != NULL; fontPtr = fontPtr->nextPtr) {
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
-		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
+		/*
+		 * The font must be recreated for the screen where it is used,
+		 * which may be not the screen of tkwin. [Bug 483387]
+		 */
+
+		fontWin = tkwin;
+		if (Tk_Screen(tkwin) != fontPtr->screen) {
+		    fontWin = FindWindowOnScreen(fiPtr->mainPtr->winPtr,
+			    fontPtr->screen);
+		    if (fontWin == NULL) {
+			continue;
+		    }
+		}
+		TkpGetFontFromAttributes(fontPtr, fontWin, &nfPtr->fa);
 		if (!fiPtr->updatePending) {
-		    fiPtr->updatePending = 1;
+		    fiPtr->updatePending = true;
 		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
 		}
 	    }
 	}
 	cacheHashPtr = Tcl_NextHashEntry(&search);
     }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * FindWindowOnScreen --
+ *
+ *	Finds a window of the application on the given screen.
+ *
+ * Results:
+ *	The window, or NULL if there is no window on that screen.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static Tk_Window
+FindWindowOnScreen(
+    TkWindow *winPtr,		/* Root of the window hierarchy to search. */
+    Screen *screen)		/* The screen to look for. */
+{
+    TkWindow *childPtr;
+    Tk_Window found;
+
+    if (Tk_Screen((Tk_Window) winPtr) == screen) {
+	return (Tk_Window) winPtr;
+    }
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	found = FindWindowOnScreen(childPtr, screen);
+	if (found != NULL) {
+	    return found;
+	}
+    }
+    return NULL;
 }
 
 static void
@@ -889,7 +952,7 @@ TheWorldHasChanged(
 {
     TkFontInfo *fiPtr = (TkFontInfo *)clientData;
 
-    fiPtr->updatePending = 0;
+    fiPtr->updatePending = false;
     RecomputeWidgets(fiPtr->mainPtr->winPtr);
 }
 
@@ -1126,7 +1189,7 @@ Tk_AllocFontFromObj(
 
     oldFontPtr = (TkFont *)objPtr->internalRep.twoPtrValue.ptr1;
     if (oldFontPtr != NULL) {
-	if (oldFontPtr->resourceRefCount == 0) {
+	if (oldFontPtr->cacheHashPtr == NULL) {
 	    /*
 	     * This is a stale reference: it refers to a TkFont that's no
 	     * longer in use. Clear the reference.
@@ -1323,7 +1386,7 @@ Tk_GetFontFromObj(
 
     fontPtr = (TkFont *)objPtr->internalRep.twoPtrValue.ptr1;
     if (fontPtr != NULL) {
-	if (fontPtr->resourceRefCount == 0) {
+	if (fontPtr->cacheHashPtr == NULL) {
 	    /*
 	     * This is a stale reference: it refers to a TkFont that's no
 	     * longer in use. Clear the reference.
@@ -1463,8 +1526,8 @@ void
 Tk_FreeFont(
     Tk_Font tkfont)		/* Font to be released. */
 {
-    TkFont *fontPtr = (TkFont *) tkfont, *prevPtr;
-    NamedFont *nfPtr;
+    TkFont *fontPtr = (TkFont *) tkfont;
+    TkFontInfo *fiPtr;
 
     if (fontPtr == NULL) {
 	return;
@@ -1472,6 +1535,82 @@ Tk_FreeFont(
     if (fontPtr->resourceRefCount-- > 1) {
 	return;
     }
+
+    /*
+     * Keep the unused font until idle time, since it may be needed again
+     * soon, e.g. the default font of a widget created with another -font
+     * value. [Bug 8da7af2f8e]
+     */
+
+    fiPtr = (TkFontInfo *) fontPtr->cacheHashPtr->tablePtr;
+    if (!fiPtr->freePending) {
+	fiPtr->freePending = true;
+	Tcl_DoWhenIdle(FreeUnusedFonts, fiPtr);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * FreeUnusedFonts --
+ *
+ *	Deletes the unused fonts. Called as an idle handler.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	See DeleteFont.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+FreeUnusedFonts(
+    void *clientData)		/* Info about application's fonts. */
+{
+    TkFontInfo *fiPtr = (TkFontInfo *)clientData;
+    Tcl_HashEntry *hPtr, *nextHPtr;
+    Tcl_HashSearch search;
+    TkFont *fontPtr, *nextPtr;
+
+    fiPtr->freePending = false;
+    for (hPtr = Tcl_FirstHashEntry(&fiPtr->fontCache, &search);
+	    hPtr != NULL; hPtr = nextHPtr) {
+	nextHPtr = Tcl_NextHashEntry(&search);
+	for (fontPtr = (TkFont *)Tcl_GetHashValue(hPtr); fontPtr != NULL;
+		fontPtr = nextPtr) {
+	    nextPtr = fontPtr->nextPtr;
+	    if (fontPtr->resourceRefCount == 0) {
+		DeleteFont(fontPtr);
+	    }
+	}
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DeleteFont --
+ *
+ *	Removes an unused font from the cache and releases its resources.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The font structure is freed unless objects still refer to it.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+DeleteFont(
+    TkFont *fontPtr)		/* Font to be deleted. */
+{
+    TkFont *prevPtr;
+    NamedFont *nfPtr;
+
     if (fontPtr->namedHashPtr != NULL) {
 	/*
 	 * This font derived from a named font. Reduce the reference count on
@@ -1499,6 +1638,7 @@ Tk_FreeFont(
 	prevPtr->nextPtr = fontPtr->nextPtr;
     }
 
+    fontPtr->cacheHashPtr = NULL;
     TkpDeleteFont(fontPtr);
     if (fontPtr->objRefCount == 0) {
 	Tcl_Free(fontPtr);
@@ -1566,7 +1706,7 @@ FreeFontObj(
     TkFont *fontPtr = (TkFont *)objPtr->internalRep.twoPtrValue.ptr1;
 
     if (fontPtr != NULL) {
-	if ((fontPtr->objRefCount-- <= 1) && (fontPtr->resourceRefCount == 0)) {
+	if ((fontPtr->objRefCount-- <= 1) && (fontPtr->cacheHashPtr == NULL)) {
 	    Tcl_Free(fontPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
@@ -4350,6 +4490,76 @@ const char *const *
 TkFontGetSymbolClass(void)
 {
     return symbolClass;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkFontEmojiPresentation --
+ *
+ *	Presentation of the character ch (UTS #51, properties from mojibake)
+ *	given the character after it, next, or -1 at the end of the text.
+ *	Shared by the font engines, so that every platform picks a color font
+ *	for the same characters.
+ *
+ * Results:
+ *	0 for text presentation.  1 when ch has emoji presentation by
+ *	default, 2 when a VS16 after an emoji character asks for the emoji
+ *	glyph (keycaps, "heart + VS16"): in both cases a color font is
+ *	preferred, over the font asked for too, as users expect emoji in
+ *	color.  A VS15 after ch forces text presentation.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+int
+TkFontEmojiPresentation(
+    int ch,			/* Code point of the character. */
+    int next)			/* Code point after it, or -1. */
+{
+    if (next == 0xFE0F && mjb_codepoint_is_emoji((mjb_codepoint) ch)) {
+	return 2;
+    }
+    if (ch > 0x7f && next != 0xFE0E
+	    && mjb_codepoint_is_emoji_presentation((mjb_codepoint) ch)) {
+	return 1;
+    }
+    return 0;
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkFontEmojiContinuation --
+ *
+ *	Tell whether ch must stay in the font of the character before it:
+ *	the variation selectors, ZWJ, the keycap and the tag characters
+ *	always (zero-width or combining); the skin tone modifiers only inside
+ *	an emoji cluster, since a modifier on its own is a color swatch.  The
+ *	character after a ZWJ inside an emoji cluster belongs to the cluster
+ *	too, so that the font ligates the whole sequence; that is for the
+ *	caller, which knows where the cluster started.
+ *
+ * Results:
+ *	Non-zero if ch continues the cluster of the character before it.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+int
+TkFontEmojiContinuation(
+    int ch,			/* Code point of the character. */
+    int inEmoji)		/* Non-zero inside an emoji cluster. */
+{
+    return ch == 0xFE0E || ch == 0xFE0F || ch == 0x200D || ch == 0x20E3
+	    || (ch >= 0xE0020 && ch <= 0xE007F)
+	    || (inEmoji && mjb_codepoint_is_emoji_modifier((mjb_codepoint) ch));
 }
 
 /*

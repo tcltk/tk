@@ -294,6 +294,25 @@ MODULE_SCOPE int	TkCanvPostscriptObjCmd(TkCanvas *canvasPtr,
 MODULE_SCOPE Tcl_Size	TkCanvTranslatePath(TkCanvas *canvPtr,
 			    Tcl_Size numVertex, double *coordPtr, int closed,
 			    XPoint *outPtr);
+
+/*
+ * Clamp a coordinate before converting it to an int for the bounding box of
+ * an item, so that the conversion and enlarging the box by the width of the
+ * item cannot overflow. [Bug 701927]
+ */
+
+static inline double
+TkCanvClampCoord(
+    double coord)
+{
+    if (coord > INT_MAX/2) {
+	return INT_MAX/2;
+    }
+    if (coord < INT_MIN/2) {
+	return INT_MIN/2;
+    }
+    return coord;
+}
 /*
  * Standard item types provided by Tk:
  */

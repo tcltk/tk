@@ -732,7 +732,8 @@ Tk_GetOpenFileObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     Tcl_Size i;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int index, multiple = 0;
     Tcl_Size len;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
@@ -791,7 +792,7 @@ Tk_GetOpenFileObjCmd(
 	    if (!tkwin) {
 		goto end;
 	    }
-	    haveParentOption = 1;
+	    haveParentOption = true;
 	    break;
 	case OPEN_TITLE:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -1018,7 +1019,8 @@ Tk_GetSaveFileObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     Tcl_Size i;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int confirmOverwrite = 1;
     int index;
     Tcl_Size len;
@@ -1081,7 +1083,7 @@ Tk_GetSaveFileObjCmd(
 		if (!tkwin) {
 		    goto end;
 		}
-		haveParentOption = 1;
+		haveParentOption = true;
 		break;
 	    case SAVE_TITLE:
 		str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -1261,7 +1263,8 @@ Tk_ChooseDirectoryObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int index, mustexist = 0;
     Tcl_Size len;
     Tcl_Size i;
@@ -1311,7 +1314,7 @@ Tk_ChooseDirectoryObjCmd(
 	    if (!tkwin) {
 		goto end;
 	    }
-	    haveParentOption = 1;
+	    haveParentOption = true;
 	    break;
 	case CHOOSE_TITLE:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -1444,7 +1447,8 @@ Tk_MessageBoxObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     Tcl_Size i;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
     int defaultNativeButtonIndex = 1; /* 1, 2, 3: right to left */
     Tcl_Obj *cmdObj = NULL;
@@ -1508,7 +1512,7 @@ Tk_MessageBoxObjCmd(
 	    if (!tkwin) {
 		goto end;
 	    }
-	    haveParentOption = 1;
+	    haveParentOption = true;
 	    break;
 
 	case ALERT_TITLE:

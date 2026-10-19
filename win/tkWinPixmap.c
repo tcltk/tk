@@ -72,7 +72,7 @@ Tk_GetPixmap(
      */
 
     if (newTwdPtr->bitmap.handle == NULL) {
-	static int repeatError = 0;
+	static bool repeatError = false;
 	void *bits = NULL;
 	BITMAPINFO bitmapInfo;
 	HDC dc;
@@ -99,7 +99,7 @@ Tk_GetPixmap(
 	if (newTwdPtr->bitmap.handle == NULL && !repeatError) {
 	    LPVOID lpMsgBuf;
 
-	    repeatError = 1;
+	    repeatError = true;
 	    if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 		    FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
 		    NULL, GetLastError(),
@@ -118,7 +118,7 @@ Tk_GetPixmap(
 	return None;
     }
 
-    return (Pixmap) newTwdPtr;
+    return (Pixmap)newTwdPtr;
 }
 
 /*
