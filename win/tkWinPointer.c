@@ -22,16 +22,16 @@
  * Declarations of static variables used in this file.
  */
 
-static int captured = 0;		/* 1 if mouse is currently captured. */
 static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
 static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
+static int captured = 0;		/* 1 if mouse is currently captured. */
 
 /*
  * Forward declarations of procedures used in this file.
  */
 
-static void		MouseTimerProc(ClientData clientData);
+static void		MouseTimerProc(void *clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -226,7 +226,7 @@ XUngrabKeyboard(
 
 void
 MouseTimerProc(
-    ClientData clientData)
+    void *clientData)
 {
     POINT pos;
 
@@ -367,13 +367,18 @@ void TkSetCursorPos(
      * requested position is off the primary screen.
      */
     if ( x < 0 || x > xscreen || y < 0 || y > yscreen ) {
-        SetCursorPos(x, y);
-        return;
+	SetCursorPos(x, y);
+	return;
     }
 
+    /*
+     * Windows maps the normalized coordinate d to the pixel
+     * d * size / 65536 rounded down. Round up here, so that the pointer
+     * lands on the requested pixel at any screen size.
+     */
     input.type = INPUT_MOUSE;
-    input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
-    input.mi.dy = (y * 65535 + yscreen/2) / yscreen;
+    input.mi.dx = (x * 65536 + xscreen) / (xscreen + 1);
+    input.mi.dy = (y * 65536 + yscreen) / (yscreen + 1);
 
     /*
      * Horrible workaround here. There is a bug on Win 10: when warping to
@@ -384,7 +389,7 @@ void TkSetCursorPos(
      * See ticket [69b48f427e].
      */
     if (input.mi.dx == 0 && input.mi.dy == 0) {
-        input.mi.dx = 1;
+	input.mi.dx = 1;
     }
 
     input.mi.mouseData = 0;
@@ -451,7 +456,7 @@ XGetInputFocus(
 {
     Tk_Window tkwin = Tk_HWNDToWindow(GetFocus());
 
-    *focus_return = tkwin ? Tk_WindowId(tkwin) : None;
+    *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
     LastKnownRequestProcessed(display)++;
     return Success;
@@ -579,11 +584,10 @@ void
 TkpSetCapture(
     TkWindow *winPtr)		/* Capture window, or NULL. */
 {
-    if (winPtr) {
+    captured = winPtr != NULL;
+    if (captured) {
 	SetCapture(Tk_GetHWND(Tk_WindowId(winPtr)));
-	captured = 1;
     } else {
-	captured = 0;
 	ReleaseCapture();
     }
 }
