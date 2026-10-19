@@ -272,6 +272,8 @@ static int		FamilyExists(HDC hdc, const char *faceName);
 static const char *	FamilyOrAliasExists(HDC hdc, const char *faceName);
 static SubFont *	FindSubFontForChar(WinFont *fontPtr, int ch,
 			    int preferColor, SubFont **subFontPtrPtr);
+static SubFont *	FindFallbackSubFont(WinFont *fontPtr, int ch,
+			    int preferColor, SubFont **subFontPtrPtr);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
 static void		FreeFontFamily(FontFamily *familyPtr);
@@ -1218,6 +1220,39 @@ TkWinShapeString(
 		    }
 		}
 	    }
+	    if (hr == USP_E_SCRIPT_NOT_IN_FONT) {
+		/*
+		 * The subfont has the characters (or claims them, as a raster
+		 * font claims Latin-1) but no shaping for the script of the
+		 * item: reshape the range with a fallback font which has its
+		 * first character that is not ASCII.
+		 */
+
+		int ci, units = 1, ch = 0;
+
+		for (ci = rs; ci < re; ci += units) {
+		    ch = DecodeUtf16(wstr, ci, re, &units);
+		    if (ch > 0x7f) {
+			break;
+		    }
+		}
+		if (ci < re) {
+		    SubFont *fb = &fontPtr->subFontArray[subFontIdx];
+		    int newIdx;
+
+		    fb = FindFallbackSubFont(fontPtr, ch, 0, &fb);
+		    newIdx = (int)(fb - fontPtr->subFontArray);
+		    if (newIdx != subFontIdx) {
+			subFontIdx = newIdx;
+			hFont = fontPtr->subFontArray[subFontIdx].hFont0;
+			SelectObject(hdc, hFont);
+			hr = ScriptShape(hdc,
+				&fontPtr->scriptCacheArray[subFontIdx],
+				wstr + rs, rangeLen, maxGlyphs, &sa,
+				glyphs, logClust, visAttr, &glyphCount);
+		    }
+		}
+	    }
 	    if (FAILED(hr)) {
 		/*
 		 * The font has no shaping for the script of the item: draw the
@@ -1581,10 +1616,46 @@ Tk_MeasureCharsInContext(
     if (TkWinShapeString(hdc, fontPtr, wfull, wfullLen, &runs, &nRuns) < 0 ||
 	nRuns == 0)
     {
-	ReleaseDC(fontPtr->hwnd, hdc);
-	Tcl_DStringFree(&fullUni);
-	*lengthPtr = 0;
-	return 0;
+	/*
+	 * No font could shape the string: measure the characters of the
+	 * range with the base font.  Never report that nothing fits when at
+	 * least one character is wanted, or the callers which lay out text
+	 * line by line would not advance.
+	 */
+
+	int len = wRangeEnd - wRangeStart, fit = 0;
+	SIZE size = {0, 0};
+
+	SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
+	if (len > 0 && GetTextExtentExPointW(hdc, wfull + wRangeStart, len,
+		(maxLength < 0) ? INT_MAX : maxLength, &fit, NULL, &size)) {
+	    if (maxLength < 0) {
+		fit = len;
+	    } else if (fit == 0
+		    && (flags & (TK_PARTIAL_OK | TK_AT_LEAST_ONE))) {
+		fit = (IS_HIGH_SURROGATE(wfull[wRangeStart]) && len > 1) ? 2 : 1;
+	    }
+	    if (fit > 0) {
+		GetTextExtentPoint32W(hdc, wfull + wRangeStart, fit, &size);
+	    }
+	} else {
+	    fit = 0;
+	}
+	bestChars = fit;
+	bestWidth = (fit > 0) ? size.cx : 0;
+	{
+	    Tcl_DString result;
+	    int resultBytes;
+
+	    Tcl_DStringInit(&result);
+	    Tcl_WCharToUtfDString(wfull + wRangeStart, bestChars, &result);
+	    resultBytes = Tcl_DStringLength(&result);
+	    Tcl_DStringFree(&result);
+	    ReleaseDC(fontPtr->hwnd, hdc);
+	    Tcl_DStringFree(&fullUni);
+	    *lengthPtr = bestWidth;
+	    return resultBytes;
+	}
     }
 
     /*
@@ -2855,10 +2926,6 @@ FindSubFontForChar(
     SubFont **subFontPtrPtr)
 {
     int i;
-    HDC hdc;
-    Tcl_DString ds;
-    const char *fallbackName;
-    SubFont *subFontPtr = NULL;
 
     /*
      * Fast paths on the subfonts already loaded.  The base font is the one
@@ -2879,6 +2946,39 @@ FindSubFontForChar(
 	    return &fontPtr->subFontArray[i];
 	}
     }
+    return FindFallbackSubFont(fontPtr, ch, preferColor, subFontPtrPtr);
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * FindFallbackSubFont --
+ *
+ *	The fallback fonts part of FindSubFontForChar: a color font for emoji
+ *	presentation, then the fallback fonts which have the character.  Also
+ *	used when the subfont which has the character cannot shape its script.
+ *
+ * Results:
+ *	The subfont found, or the base font if none has the character.
+ *
+ * Side effects:
+ *	May load a new subfont into fontPtr->subFontArray.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static SubFont *
+FindFallbackSubFont(
+    WinFont *fontPtr,
+    int ch,
+    int preferColor,
+    SubFont **subFontPtrPtr)
+{
+    int i;
+    HDC hdc;
+    Tcl_DString ds;
+    const char *fallbackName;
+    SubFont *subFontPtr = NULL;
 
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
