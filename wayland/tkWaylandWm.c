@@ -2038,23 +2038,32 @@ TkWmProtocolEventProc(
  *
  * TkpMakeMenuWindow --
  *
- *	No-op on Wayland (no special menu window configuration needed).
+ *	Configure a menu window. As on X11, a menu which is only posted
+ *	(dropdown, cascade or popup) is override-redirect, a tear-off
+ *	menu is not.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None.
+ *	Sets the override_redirect attribute of the window.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpMakeMenuWindow(
-		  TCL_UNUSED(Tk_Window),
-		  TCL_UNUSED(int))
+    Tk_Window tkwin,		/* New window. */
+    int typeFlag)		/* TK_MAKE_MENU_DROPDOWN, TK_MAKE_MENU_POPUP
+				 * or TK_MAKE_MENU_TEAROFF. */
 {
-    /* No special configuration needed in Wayland. */
+    XSetWindowAttributes atts;
+
+    if (!Tk_IsTopLevel(tkwin)) {
+	return;
+    }
+    atts.override_redirect = (typeFlag != TK_MAKE_MENU_TEAROFF);
+    Tk_ChangeWindowAttributes(tkwin, CWOverrideRedirect, &atts);
 }
 
 /*
@@ -2458,17 +2467,21 @@ WmAttributesCmd(
     if (objc == 0) {
         Tcl_Obj *result = Tcl_NewListObj(0, NULL);
 
+        /* The same attributes in the same order as on X11. */
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-alpha", -1));
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewDoubleObj(wmPtr->attributes.alpha));
+
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-fullscreen", -1));
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.fullscreen));
 
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-topmost", -1));
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.topmost));
 
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-type", -1));
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewObj());
+
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-zoomed", -1));
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.zoomed));
-
-        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-fullscreen", -1));
-        Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.fullscreen));
 
         Tcl_SetObjResult(interp, result);
         return TCL_OK;
@@ -5020,9 +5033,15 @@ ApplyPendingGeometry(
 
 	int minW, minH, maxW, maxH;
 
+	/*
+	 * A size set with "wm geometry" can give a negative size in pixels;
+	 * it is limited to the minimum size below, as on X11. Only use the
+	 * requested size if no size was set.
+	 */
+
 	WmPixelSize(winPtr, &tw, &th);
-	if (tw < 0) tw = winPtr->reqWidth;
-	if (th < 0) th = winPtr->reqHeight;
+	if (wmPtr->width < 0) tw = winPtr->reqWidth;
+	if (wmPtr->height < 0) th = winPtr->reqHeight;
 	WmPixelLimits(winPtr, &minW, &minH, &maxW, &maxH);
 	if (tw < minW) {
 	    tw = minW;
