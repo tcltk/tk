@@ -8547,3 +8547,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-18 (bug) [220781] wm overrideredirect zaps additions to system menu (storchaka)
 
 2026-10-18 (bug) [3f1ad1] Windows: pointer warp could land one pixel short of the requested position (storchaka)
+
+2026-10-19 (bug) [90f5cd] Windows ConfigureNotify uses stale WINDOWPOS x/y (storchaka)

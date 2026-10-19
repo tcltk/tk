@@ -348,6 +348,7 @@ testConstraint testsendinput [llength [info commands testsendinput]]
 testConstraint testsetlocale [llength [info commands testsetlocale]]
 testConstraint testtext      [llength [info commands testtext]]
 testConstraint testwinevent  [llength [info commands testwinevent]]
+testConstraint testwindowposchanged [llength [info commands testwindowposchanged]]
 testConstraint testwrapper   [llength [info commands testwrapper]]
 testConstraint testxfocus    [llength [info commands testxfocus]]
 
