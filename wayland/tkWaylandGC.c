@@ -594,7 +594,7 @@ Tk_GetPixmap(
     /* Check FBO completeness. */
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
+        DEBUG_LOG(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
     }
 
     /* Restore whatever framebuffer was bound before this call. */
