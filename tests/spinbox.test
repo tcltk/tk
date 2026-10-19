@@ -3992,6 +3992,30 @@ test spinbox-26.2 {values with leading zeros are not octal - bug 9e89324a0a} -se
     destroy .e
 } -result {08 09 10 11 10}
 
+test spinbox-27.1 {pasting the selection focuses the spinbox unless it is disabled} -setup {
+    spinbox .s
+    button .b
+    pack .s .b
+    update
+    selection own .b
+    selection handle .b {apply {{offset maxChars} {return pasted}}}
+    set res {}
+} -body {
+    foreach state {normal disabled} {
+	.s configure -state normal
+	.s delete 0 end
+	.s configure -state $state
+	focus -force .b
+	update
+	event generate .s <<PasteSelection>> -x 5 -y 5
+	update
+	lappend res [focus] [.s get]
+    }
+    set res
+} -cleanup {
+    destroy .s .b
+} -result {.s pasted .b {}}
+
 #
 # TESTFILE CLEANUP
 #

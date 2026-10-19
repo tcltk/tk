@@ -359,7 +359,7 @@ typedef struct {
     bool initialized;		/* Flag indicating whether thread-specific
 				 * elements of module have been
 				 * initialized. */
-    int firstWindow;		/* Flag, cleared when the first window is
+    bool firstWindow;		/* Flag, cleared when the first window is
 				 * mapped in a non-iconic state. */
     WinIconPtr iconPtr;		/* IconPtr being used as default for all
 				 * toplevels, or NULL. */
@@ -677,7 +677,7 @@ InitWindowClass(
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = true;
-	tsdPtr->firstWindow = 1;
+	tsdPtr->firstWindow = true;
 	tsdPtr->iconPtr = NULL;
     }
     if (!initialized) {
@@ -775,11 +775,11 @@ WinSetIcon(
 {
     WmInfo *wmPtr;
     HWND hwnd;
-    int application = 0;
+    bool application = false;
 
     if (tkw == NULL) {
 	tkw = Tk_MainWindow(interp);
-	application = 1;
+	application = true;
     }
 
     if (!(Tk_IsTopLevel(tkw))) {
@@ -2227,6 +2227,9 @@ UpdateWrapper(
 	wmPtr->flags |= WM_SYNC_PENDING;
 	SetMenu(wmPtr->wrapper, wmPtr->hMenu);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
+	if (oldWrapper != NULL) {
+	    TkWinMenuWrapperChanged(wmPtr->hMenu);
+	}
     }
 
     if (childStateInfo) {
@@ -2267,7 +2270,7 @@ UpdateWrapper(
 
 	state = wmPtr->hints.initial_state;
 	if (state == NormalState || state == ZoomState) {
-	    tsdPtr->firstWindow = 0;
+	    tsdPtr->firstWindow = false;
 	    SetActiveWindow(wmPtr->wrapper);
 	}
     } else if (focusHWND) {
@@ -2465,21 +2468,21 @@ setStateEnd:
 static void
 TkpWmSetFullScreen(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
-    int full_screen_state)	/* True if window should be full screen */
+    bool full_screen_state)	/* True if window should be full screen */
 {
-    int changed = 0;
-    int full_screen = False;
+    bool changed = false;
+    bool full_screen = false;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (full_screen_state) {
 	if (! (wmPtr->flags & WM_FULLSCREEN)) {
-	    full_screen = True;
-	    changed = 1;
+	    full_screen = true;
+	    changed = true;
 	}
     } else {
 	if (wmPtr->flags & WM_FULLSCREEN) {
-	    full_screen = False;
-	    changed = 1;
+	    full_screen = false;
+	    changed = true;
 	}
     }
 
@@ -2575,11 +2578,13 @@ static void CheckForPointer(TkWindow *winPtr)
     if (windows != NULL) {
 	for (w = windows; *w ; w++) {
 	    RECT windowRect;
-	    HWND hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) *w));
-	    if (GetWindowRect(hwnd, &windowRect) == 0) {
+	    Window window = Tk_WindowId((Tk_Window) *w);
+
+	    if ((winPtr == *w) || (window == None)
+		    || (GetWindowRect(Tk_GetHWND(window), &windowRect) == 0)) {
 		continue;
 	    }
-	    if (winPtr != *w && PtInRect(&windowRect, mouse)) {
+	    if (PtInRect(&windowRect, mouse)) {
 		Tk_Window target = Tk_CoordsToWindow(x, y, (Tk_Window) *w);
 		Tk_UpdatePointer((Tk_Window) target, x, y, state);
 		break;
@@ -5928,8 +5933,19 @@ WmWaitVisibilityOrMapProc(
 	int state = containerPtr->wmInfoPtr->hints.initial_state;
 
 	if ((state == NormalState) || (state == ZoomState)) {
+	    HWND wrapper = winPtr->wmInfoPtr->wrapper;
+
+	    /*
+	     * Recreate the wrapper only if it is not yet owned by the
+	     * container's wrapper. Destroying it needlessly would also destroy
+	     * any dialog that is owned by it. [Bug 3009885]
+	     */
+
 	    state = winPtr->wmInfoPtr->hints.initial_state;
-	    if ((state == NormalState) || (state == ZoomState)) {
+	    if (((state == NormalState) || (state == ZoomState))
+		    && (wrapper == NULL || containerPtr->window == None
+		    || GetWindow(wrapper, GW_OWNER) != GetAncestor(
+			    Tk_GetHWND(containerPtr->window), GA_ROOT))) {
 		UpdateWrapper(winPtr);
 	    }
 	}
@@ -7017,6 +7033,18 @@ TkWmStackorderToplevel(
 	    (LPARAM) &pair) == 0) {
 	Tcl_Free(windows);
 	windows = NULL;
+    } else {
+	/*
+	 * Not all toplevels may have been found (e.g. one being destroyed).
+	 * Move the found ones to the beginning of the array. [Bug 7f05a19378]
+	 */
+
+	Tcl_Size found = (windows + table.numEntries) - (pair.windowPtr + 1);
+
+	if (found < table.numEntries) {
+	    memmove(windows, pair.windowPtr + 1,
+		    (found + 1) * sizeof(TkWindow *));
+	}
     }
 
   done:
@@ -7407,6 +7435,26 @@ ConfigureTopLevel(
 	return;
     }
 
+
+    /*
+     * The position and size in pos are not valid if SWP_NOMOVE or SWP_NOSIZE
+     * is set (e.g. in the last message of Aero Shake), use the actual ones.
+     * [Bug 90f5cd3f21]
+     */
+
+    if (pos->flags & (SWP_NOMOVE | SWP_NOSIZE)) {
+	RECT winRect;
+
+	GetWindowRect(wmPtr->wrapper, &winRect);
+	if (pos->flags & SWP_NOMOVE) {
+	    pos->x = winRect.left;
+	    pos->y = winRect.top;
+	}
+	if (pos->flags & SWP_NOSIZE) {
+	    pos->cx = winRect.right - winRect.left;
+	    pos->cy = winRect.bottom - winRect.top;
+	}
+    }
 
     /*
      * Compute the current geometry of the client area, reshape the Tk window
@@ -8326,10 +8374,11 @@ WmProc(
 
     case WM_MOUSEACTIVATE: {
 	winPtr = GetTopLevel((HWND) wParam);
-	if (winPtr && (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
+	if (!winPtr || (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
 	    /*
 	     * This allows us to pass the message onto the native menus [Bug:
-	     * 2272]
+	     * 2272], and to activate a non-Tk toplevel into which the Tk
+	     * window has been reparented [Bug 564897].
 	     */
 
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
@@ -8730,7 +8779,7 @@ TkpWinToplevelWithDraw(
     TkWindow *winPtr)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int resetTempStyle = 0;
+    bool resetTempStyle = false;
     LONG_PTR exStyle = 0;
 
     /*
@@ -8751,7 +8800,7 @@ TkpWinToplevelWithDraw(
 	if ( !(exStyle & WS_EX_TOOLWINDOW) ) {
 	    SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
 		     exStyle | WS_EX_TOOLWINDOW);
-	    resetTempStyle=1;
+	    resetTempStyle = true;
 	}
     }
 

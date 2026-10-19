@@ -574,6 +574,11 @@ typedef struct TkDisplay {
 				/* Maps from X window ids of recently deleted
 				 * windows to the serial number of the last
 				 * request made before the deletion. */
+    struct TkWindow *focusInGrabPtr;
+				/* Toplevel window which received the focus
+				 * while it was excluded by a grab, or NULL.
+				 * Its FocusIn event is processed when the
+				 * grab is released. */
 } TkDisplay;
 
 /*
@@ -584,11 +589,15 @@ typedef struct TkDisplay {
  *	Whether to use input methods for this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
+ *  TK_DISPLAY_HAS_EMBEDDED:		(default off)
+ *	A toplevel of this application has been embedded in a container on
+ *	this display, so its windows can be destroyed by the container.
  */
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
+#define TK_DISPLAY_HAS_EMBEDDED			(1 << 4)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -1222,8 +1231,9 @@ MODULE_SCOPE void	TkAppendPadAmount(Tcl_Obj *bufferObj,
 MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr);
-MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
-MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
+MODULE_SCOPE void	TkFocusSplit(TkWindow *winPtr);
+MODULE_SCOPE void	TkFocusGrabReleased(TkDisplay *dispPtr);
+MODULE_SCOPE void	TkFocusJoin(TkWindow *winPtr);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,

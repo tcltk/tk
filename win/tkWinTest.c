@@ -30,8 +30,13 @@ static Tcl_ObjCmdProc2 TestclipboardObjCmd;
 static Tcl_ObjCmdProc2 TestwineventObjCmd;
 static Tcl_ObjCmdProc2 TestfindwindowObjCmd;
 static Tcl_ObjCmdProc2 TestgetwindowinfoObjCmd;
+static Tcl_ObjCmdProc2 TestwindowposchangedObjCmd;
+static Tcl_ObjCmdProc2 TestforeignwindowObjCmd;
 static Tcl_ObjCmdProc2 TestwinlocaleObjCmd;
+static Tcl_ObjCmdProc2 TestgetcaptureObjCmd;
 static Tcl_ObjCmdProc2 TestsendinputObjCmd;
+static Tcl_ObjCmdProc2 TestwinpixelObjCmd;
+static Tcl_ObjCmdProc2 TestwingdiobjectsObjCmd;
 static Tk_GetSelProc SetSelectionResult;
 
 /*
@@ -67,10 +72,115 @@ TkplatformtestInit(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testforeignwindow", TestforeignwindowObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testwindowposchanged",
+	    TestwindowposchangedObjCmd, Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwinlocale", TestwinlocaleObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testgetcapture", TestgetcaptureObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testsendinput", TestsendinputObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testwinpixel", TestwinpixelObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testwingdiobjects", TestwingdiobjectsObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestwingdiobjectsObjCmd --
+ *
+ *	"testwingdiobjects": number of GDI objects of the process, as the
+ *	Task Manager counts them.  Lets a test check that drawing does not
+ *	leak fonts, bitmaps or device contexts.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestwingdiobjectsObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
+	    GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS)));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestwinpixelObjCmd --
+ *
+ *	"testwinpixel window x y": color of the pixel at (x, y) in the
+ *	window, as #rrggbb, read back from its device context.  Tk has no
+ *	way to read the screen; this is what lets a test see the color layers
+ *	of an emoji.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestwinpixelObjCmd(
+    void *clientData,		/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    Tk_Window tkwin;
+    HWND hwnd;
+    HDC hdc;
+    COLORREF color;
+    int x, y;
+    char buf[8];
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window)clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    Tk_MakeWindowExist(tkwin);
+    hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    hdc = GetDC(hwnd);
+    color = GetPixel(hdc, x, y);
+    ReleaseDC(hwnd, hdc);
+    if (color == CLR_INVALID) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("pixel outside the window", -1));
+	return TCL_ERROR;
+    }
+    snprintf(buf, sizeof(buf), "#%02x%02x%02x", GetRValue(color),
+	    GetGValue(color), GetBValue(color));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
 
@@ -297,6 +407,7 @@ TestwineventObjCmd(
 	{WM_GETTEXT,		"WM_GETTEXT"},
 	{WM_SETTEXT,		"WM_SETTEXT"},
 	{WM_COMMAND,            "WM_COMMAND"},
+	{WM_MOUSEACTIVATE,	"WM_MOUSEACTIVATE"},
 	{WM_SYSCOMMAND,         "WM_SYSCOMMAND"},
 	{-1,			NULL}
     };
@@ -408,6 +519,10 @@ TestwineventObjCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
+    case WM_MOUSEACTIVATE:
+	result = SendMessageW(hwnd, message, wParam, lParam);
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+	break;
     default: {
 	char buf[TCL_INTEGER_SPACE];
 
@@ -506,6 +621,105 @@ EnumChildrenProc(
     return TRUE;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestwindowposchangedObjCmd --
+ *
+ *	Sends a WM_WINDOWPOSCHANGED message with the given WINDOWPOS fields
+ *	to the toplevel window of a Tk window, as Windows does e.g. after
+ *	Aero Shake.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The window may be reconfigured.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestwindowposchangedObjCmd(
+    void *clientData,		/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    Tk_Window tkwin;
+    WINDOWPOS pos;
+    int x, y, cx, cy, flags;
+
+    if (objc != 7) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y width height flags");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window) clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[4], &cx) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[5], &cy) != TCL_OK)
+	    || (Tcl_GetIntFromObj(interp, objv[6], &flags) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    memset(&pos, 0, sizeof(pos));
+    pos.hwnd = GetAncestor(Tk_GetHWND(Tk_WindowId(tkwin)), GA_ROOT);
+    pos.x = x;
+    pos.y = y;
+    pos.cx = cx;
+    pos.cy = cy;
+    pos.flags = (UINT) flags;
+    SendMessageW(pos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &pos);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestforeignwindowObjCmd --
+ *
+ *	Returns the handle of a hidden toplevel window which is not a Tk
+ *	window, creating it on first use.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	May create a window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestforeignwindowObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    static HWND hwnd = NULL;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    if (hwnd == NULL) {
+	hwnd = CreateWindowExW(0, L"STATIC", L"foreign", WS_OVERLAPPED,
+		0, 0, 100, 100, NULL, NULL, Tk_GetHINSTANCE(), NULL);
+	if (hwnd == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "cannot create window", TCL_INDEX_NONE));
+	    return TCL_ERROR;
+	}
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
+    return TCL_OK;
+}
+
 static int
 TestgetwindowinfoObjCmd(
     TCL_UNUSED(void *),
@@ -555,6 +769,9 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
 	    Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)(size_t)hwnd))));
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("sysmenu", 7),
+	    Tcl_NewWideIntObj(GetMenuItemCount(
+		    GetSystemMenu((HWND)(size_t)hwnd, FALSE))));
 
     childrenObj = Tcl_NewListObj(0, NULL);
     EnumChildWindows((HWND)(size_t)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
@@ -576,6 +793,33 @@ TestwinlocaleObjCmd(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetThreadLocale()));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestgetcaptureObjCmd --
+ *
+ *	This function implements the "testgetcapture" command. It returns
+ *	the handle of the window which has captured the mouse in the current
+ *	thread, or 0.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestgetcaptureObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(GetCapture())));
     return TCL_OK;
 }
 

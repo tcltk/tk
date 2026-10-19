@@ -4923,10 +4923,15 @@ UpdateSizeHints(
 	hintsPtr->max_height = hintsPtr->base_height
 		+ (maxHeight * wmPtr->heightInc);
     } else {
+	/*
+	 * The sizes are set for the wrapper, which is higher than the
+	 * toplevel by the height of the menubar.  [Bug 726351]
+	 */
+
 	hintsPtr->min_width = wmPtr->minWidth;
-	hintsPtr->min_height = wmPtr->minHeight;
+	hintsPtr->min_height = wmPtr->minHeight + wmPtr->menuHeight;
 	hintsPtr->max_width = maxWidth;
-	hintsPtr->max_height = maxHeight;
+	hintsPtr->max_height = maxHeight + wmPtr->menuHeight;
 	hintsPtr->base_width = 0;
 	hintsPtr->base_height = 0;
     }
@@ -5688,6 +5693,7 @@ ParseGeometry(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, flags;
+    bool hasPosition = false;
     char *end;
     const char *p = string;
 
@@ -5729,6 +5735,7 @@ ParseGeometry(
      */
 
     if (*p != '\0') {
+	hasPosition = true;
 	flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
 	if (*p == '-') {
 	    flags |= WM_NEGATIVE_X;
@@ -5778,7 +5785,15 @@ ParseGeometry(
     wmPtr->height = height;
     wmPtr->x = x;
     wmPtr->y = y;
-    flags |= WM_MOVE_PENDING;
+
+    /*
+     * Sending back the position recorded from the window manager's frame
+     * makes some window managers move the window. [Bug 2995339]
+     */
+
+    if (hasPosition || (flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y))) {
+	flags |= WM_MOVE_PENDING;
+    }
     wmPtr->flags = flags;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
@@ -6630,6 +6645,7 @@ TkWmRestackToplevel(
     XWindowChanges changes;
     unsigned mask;
     TkWindow *wrapperPtr;
+    XEvent event;
 
     memset(&changes, 0, sizeof(XWindowChanges));
     changes.stack_mode = aboveBelow;
@@ -6666,6 +6682,27 @@ TkWmRestackToplevel(
 
     XReconfigureWMWindow(winPtr->display, wrapperPtr->window,
 	    Tk_ScreenNumber((Tk_Window) winPtr), mask, &changes);
+
+    /*
+     * Window managers with focus stealing prevention (Mutter, KWin) ignore
+     * this request for a window which is not active, but honor the EWMH
+     * _NET_RESTACK_WINDOW request when the user has not interacted with
+     * another window more recently. [Bug 22172f3732]
+     */
+
+    memset(&event, 0, sizeof(event));
+    event.xclient.type = ClientMessage;
+    event.xclient.display = winPtr->display;
+    event.xclient.window = wrapperPtr->window;
+    event.xclient.message_type = Tk_InternAtom((Tk_Window) winPtr,
+	    "_NET_RESTACK_WINDOW");
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = 2;	/* Source indication: pager, as required
+					 * by the specification for this request. */
+    event.xclient.data.l[1] = (otherPtr != NULL) ? (long) changes.sibling : 0;
+    event.xclient.data.l[2] = aboveBelow;
+    XSendEvent(winPtr->display, RootWindow(winPtr->display, winPtr->screenNum),
+	    False, SubstructureRedirectMask|SubstructureNotifyMask, &event);
 }
 
 
