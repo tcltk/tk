@@ -16,7 +16,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * TkpChangeFocus2 --
+ * TkpChangeFocus_ --
  *
  *	This function is invoked to move the official X focus from one window
  *	to another.
@@ -35,7 +35,7 @@
  */
 
 unsigned long
-TkpChangeFocus2(
+TkpChangeFocus_(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
     bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's

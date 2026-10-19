@@ -260,9 +260,6 @@ declare 72 {
 declare 73 {
     void TkpRedirectKeyEvent(TkWindow *winPtr, XEvent *eventPtr)
 }
-declare 74 {
-    unsigned long TkpChangeFocus2(TkWindow *winPtr, bool force)
-}
 declare 77 {
     void TkQueueEventForAllChildren(TkWindow *winPtr, XEvent *eventPtr)
 }

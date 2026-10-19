@@ -1279,6 +1279,7 @@ MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
 MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
+MODULE_SCOPE unsigned long	TkpChangeFocus_(TkWindow *winPtr, bool force);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const *objv, int flags);
 MODULE_SCOPE void	TkDrawDottedRect(Display *disp, Drawable d, GC gc,

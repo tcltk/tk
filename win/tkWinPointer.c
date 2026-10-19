@@ -22,10 +22,10 @@
  * Declarations of static variables used in this file.
  */
 
-static int captured = 0;		/* 1 if mouse is currently captured. */
 static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
-static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
+static bool mouseTimerSet = false;		/* true if the mouse timer is active. */
+static bool captured = false;		/* true if mouse is currently captured. */
 
 /*
  * Forward declarations of procedures used in this file.
@@ -148,7 +148,7 @@ TkWinPointerEvent(
     Tk_UpdatePointer(tkwin, pos.x, pos.y, state);
 
     if ((captured || tkwin) && !mouseTimerSet) {
-	mouseTimerSet = 1;
+	mouseTimerSet = true;
 	mouseTimer = Tcl_CreateTimerHandler(MOUSE_TIMER_INTERVAL,
 		MouseTimerProc, NULL);
     }
@@ -239,7 +239,7 @@ MouseTimerProc(
 {
     POINT pos;
 
-    mouseTimerSet = 0;
+    mouseTimerSet = false;
 
     GetCursorPos(&pos);
     TkWinPointerEvent(NULL, pos.x, pos.y);
@@ -266,7 +266,7 @@ TkWinCancelMouseTimer(void)
 {
     if (mouseTimerSet) {
 	Tcl_DeleteTimerHandler(mouseTimer);
-	mouseTimerSet = 0;
+	mouseTimerSet = false;
     }
 }
 
@@ -381,9 +381,14 @@ void TkSetCursorPos(
 	return;
     }
 
+    /*
+     * Windows maps the normalized coordinate d to the pixel
+     * d * size / 65536 rounded down. Round up here, so that the pointer
+     * lands on the requested pixel at any screen size.
+     */
     input.type = INPUT_MOUSE;
-    input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
-    input.mi.dy = (y * 65535 + yscreen/2) / yscreen;
+    input.mi.dx = (x * 65536 + xscreen) / (xscreen + 1);
+    input.mi.dy = (y * 65536 + yscreen) / (yscreen + 1);
 
     /*
      * Horrible workaround here. There is a bug on Win 10: when warping to
@@ -515,7 +520,7 @@ XSetInputFocus(
 /*
  *----------------------------------------------------------------------
  *
- * TkpChangeFocus2 --
+ * TkpChangeFocus_ --
  *
  *	This procedure is invoked to move the system focus from one window to
  *	another.
@@ -534,7 +539,7 @@ XSetInputFocus(
  */
 
 unsigned long
-TkpChangeFocus2(
+TkpChangeFocus_(
     TkWindow *winPtr,		/* Window that is to receive the X focus. */
     bool force)			/* True means claim the focus even if it
 				 * didn't originally belong to topLevelPtr's
@@ -603,11 +608,10 @@ void
 TkpSetCapture(
     TkWindow *winPtr)		/* Capture window, or NULL. */
 {
-    if (winPtr) {
+    captured = winPtr != NULL;
+    if (captured) {
 	SetCapture(Tk_GetHWND(Tk_WindowId(winPtr)));
-	captured = 1;
     } else {
-	captured = 0;
 	ReleaseCapture();
     }
 }

@@ -389,7 +389,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
-    TkpChangeFocus2(winPtr, true);
+    TkpChangeFocus_(winPtr, true);
     Tcl_Release(winPtr);
 }
 
