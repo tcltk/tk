@@ -4095,7 +4095,7 @@ test button-14.2 {Alt-space does not invoke the button [1692755]} -body {
 } -result {c r b}
 
 # hangs on Wayland - skipping pending further review
-test button-15.1 {Bug [5d991b822e]} -constraints !wayland -body {
+test button-15.1 {Bug [5d991b822e]} -constraints notWayland -body {
     # Want this not to segfault
     set var INIT
     button .b -textvariable var
@@ -4121,7 +4121,7 @@ test button-15.2 {Bug [5d991b822e]} {
     unset new
 } {}
 # hangs on Wayland - skipping pending further review
-test button-15.3 {Bug [5d991b822e]} -constraints !wayland -body {
+test button-15.3 {Bug [5d991b822e]} -constraints notWayland -body {
     # Want this not to leak traces
     set var INIT
     checkbutton .b -variable var

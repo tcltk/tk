@@ -497,7 +497,7 @@ end
 
 # dashed lines not supported on Wayland
 test canvRect-12.1 {dashed outline of a rectangle wider than 16-bit coordinates is drawn - bug 663981} -constraints {
-    testpixel !wayland
+    testpixel notWayland
 } -setup {
     destroy .c
     canvas .c -width 100 -height 40 -borderwidth 0 -highlightthickness 0 \
