@@ -2681,7 +2681,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -result 3
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack .t -expand 1 -fill both
+    pack .t
 } -body {
     .t configure -width 20 -height 10
     update
@@ -3506,10 +3506,9 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # COMMON TEST SETUP
 #
 
-# Tests text-14.19 and text-14.20 were failing on Windows because the title bar
-# on .t was a certain minimum size and it was interfering with the size requested
-# by the -setgrid. The "overrideredirect" gets rid of the titlebar so the
-# toplevel can shrink to the appropriate size.
+# In tests text-14.19 and text-14.20 the toplevel must be wider than the
+# minimum width of a window with a title bar (about 400 pixels on Windows
+# with 350% scaling).
 # On macOS, however, there is no way to make the window overlap the
 # menubar. Starting with macOS 15 (Sequoia) it became impossible for
 # the y coordinate of the top of a window to be less than 10 plus the
@@ -3525,26 +3524,24 @@ test text-14.19 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 -setgrid 1
-    wm overrideredirect .top 1
+    .top.t configure -width 70 -height 10 -setgrid 1
     pack .top.t
     wm geometry .top +0+$minY
     update
     wm geometry .top
 } -cleanup {
     destroy .top
-} -result "20x10+0+$minY"
+} -result "70x10+0+$minY"
 test text-14.20 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 -setgrid 1
-    wm overrideredirect .top 1
+    .top.t configure -width 70 -height 10 -setgrid 1
     pack .top.t
     wm geometry .top +0+$minY
     update
     set result [wm geometry .top]
-    wm geometry .top 15x8
+    wm geometry .top 65x8
     update
     lappend result [wm geometry .top]
     .top.t configure -wrap word
@@ -3552,7 +3549,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     lappend result [wm geometry .top]
 } -cleanup {
     destroy .top
-} -result "20x10+0+$minY 15x8+0+$minY 15x8+0+$minY"
+} -result "70x10+0+$minY 65x8+0+$minY 65x8+0+$minY"
 
 
 test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {

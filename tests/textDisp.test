@@ -99,10 +99,10 @@ option add *Text.padY 1  ; # same padding in x and y, see proc bo; tests work wi
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
 # because some window managers don't allow the overall width of a window
-# to get very narrow.
+# to get very narrow (e.g. about 400 pixels on Windows with 350% scaling).
 
 catch {destroy .f .t}
-frame .f -width 100 -height 20
+frame .f -width 480 -height 20
 pack .f -side left
 
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
@@ -774,10 +774,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
-    wm geom . 103x$height
+    wm geom . [expr {[winfo reqwidth .f] + 3}]x$height
     update
     .t configure -wrap none
     .t delete 1.0 end
@@ -789,35 +786,16 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
 
-#
-# COMMON TEST SETUP
-#
-
-if {[tk windowingsystem] eq "win32"} {
-    wm overrideredirect . 0
-}
-
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
-    # This test was failing on Windows because the title bar on .
-    # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so
-    # the toplevel can shrink to the appropriate size.  On Unix, setting
-    # the overrideredirect on "." confuses the window manager and
-    # causes subsequent tests to fail.
-
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     frame .f2 -width 20 -height 100
     pack .f2 -before .f
-    wm geom . 103x103
+    wm geom . [expr {[winfo reqwidth .f] + 3}]x103
     update
     .t configure -wrap none -borderwidth 2
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
     set x [list [.t bbox 1.0] [.t bbox 2.0] $tk_textRelayout]
-    wm overrideredirect . 0
     update
     set expected [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
     lequal $x $expected
@@ -833,16 +811,6 @@ wm geom . {}
 update
 
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
-    # This test was failing on Windows because the title bar on .
-    # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so
-    # the toplevel can shrink to the appropriate size.  On Unix, setting
-    # the overrideredirect on "." confuses the window manager and
-    # causes subsequent tests to fail.
-
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 1.0
@@ -850,7 +818,6 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview 16.0
     update
     set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
-    wm overrideredirect . 0
     update
     set x
 } {8.0 {16.0 17.0 15.0 14.0 13.0 12.0 11.0 10.0 9.0 8.0} {8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0}}
@@ -4027,9 +3994,6 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
@@ -4041,14 +4005,6 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
 	[list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
-
-#
-# COMMON TEST SETUP
-#
-
-if {[tk windowingsystem] eq "win32"} {
-    wm overrideredirect . 0
-}
 
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word

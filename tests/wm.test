@@ -749,7 +749,7 @@ test wm-geometry-1.3 {usage} -returnCodes error -body {
 } -result {bad geometry specifier "bogus"}
 
 test wm-geometry-2.1 {setting values} -body {
-    wm geometry .t 150x150+50+50
+    wm geometry .t 480x150+50+50
     update
     set result [wm geometry .t]
     wm geometry .t {}
@@ -757,7 +757,7 @@ test wm-geometry-2.1 {setting values} -body {
     return [list $result [string equal [wm geometry .t] $result]]
 } -cleanup {
     unset result
-} -match glob -result [list 150x150+*+* 0]
+} -match glob -result [list 480x150+*+* 0]
 test wm-geometry-2.2 {setting only the size does not move the window - bug 2995339} -setup {
     destroy .geom
     toplevel .geom -width 200 -height 150
