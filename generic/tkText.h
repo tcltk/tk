@@ -370,6 +370,11 @@ typedef struct TkTextEmbWindowClient {
 				 * window. */
     bool displayed;		/* True means that the window has been
 				 * displayed on the screen recently. */
+    struct TkTextDispChunk *displayedChunk;
+				/* Chunk that last displayed the window, NULL
+				 * if none. Display lines kept for layout are
+				 * never drawn, so releasing this chunk is
+				 * what takes the window off the screen. */
     struct TkTextSegment *parent;
     struct TkTextEmbWindowClient *next;
 } TkTextEmbWindowClient;

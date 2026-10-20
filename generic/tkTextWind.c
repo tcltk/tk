@@ -1671,6 +1671,7 @@ EmbWinDisplayProc(
 	 */
 
 	client->displayed = false;
+	client->displayedChunk = NULL;
 	EmbWinDelayedUnmap(client);
 	return;
     }
@@ -1693,6 +1694,7 @@ EmbWinDisplayProc(
      */
 
     client->displayed = true;
+    client->displayedChunk = chunkPtr;
 
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if (windowX != Tk_X(tkwin)
@@ -1748,7 +1750,18 @@ EmbWinUndisplayProc(
     TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
 
-    if (client && --client->chunkCount == 0) {
+    if (!client) {
+	return;
+    }
+    client->chunkCount -= 1;
+
+    /*
+     * Cached display lines keep chunks of this window without drawing them,
+     * so the count may stay above zero after the drawn chunk is gone.
+     */
+
+    if (chunkPtr == client->displayedChunk
+	    || (client->chunkCount == 0 && client->displayed)) {
 	/*
 	 * Don't unmap the window immediately, since there's a good chance
 	 * that it will immediately be redisplayed, perhaps even in the same
@@ -1758,6 +1771,7 @@ EmbWinUndisplayProc(
 	 */
 
 	client->displayed = false;
+	client->displayedChunk = NULL;
 	Tcl_DoWhenIdle(EmbWinDelayedUnmap, client);
     }
 }
@@ -1862,8 +1876,8 @@ EmbWinBboxProc(
  *	None.
  *
  * Side effects:
- *	The window gets unmapped, unless its chunk reference count has become
- *	non-zero again.
+ *	The window gets unmapped, unless it has been displayed again in the
+ *	meantime.
  *
  *--------------------------------------------------------------
  */
