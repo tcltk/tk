@@ -952,7 +952,7 @@ CanvasWidgetCmd(
 	}
 
 	if (objc == 5) {
-	    int append = 0;
+	    bool append = false;
 	    unsigned int mask;
 	    const char *argv4 = Tcl_GetString(objv[4]);
 
@@ -993,7 +993,7 @@ CanvasWidgetCmd(
 	    }
 	    if (argv4[0] == '+') {
 		argv4++;
-		append = 1;
+		append = true;
 	    }
 	    mask = Tk_CreateBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]), argv4, append);

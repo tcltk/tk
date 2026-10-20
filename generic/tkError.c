@@ -188,10 +188,14 @@ Tk_DeleteErrorHandler(
 	/*
 	 * Last chance to catch errors for this handler: if no event/error
 	 * processing took place to follow up the end of this error handler
-	 * we need a round trip with the X server now.
+	 * we need a round trip with the X server now. Not needed if no
+	 * requests were issued while the handler was active: it is often
+	 * used around calls (like measuring text with Xft) which rarely send
+	 * requests, and a round trip is expensive on remote displays.
 	 */
 
-	if (errorPtr->lastRequest > lastSerial) {
+	if ((errorPtr->lastRequest > lastSerial)
+		&& (errorPtr->lastRequest >= errorPtr->firstRequest)) {
 	    XSync(dispPtr->display, False);
 	    lastSerial = LastKnownRequestProcessed(dispPtr->display);
 	}
@@ -321,7 +325,7 @@ ErrorProc(
  *	destroyed by someone else (e.g. the container of an embedded window)
  *	before Tk deletes it, so the X errors for requests made before the
  *	deletion can arrive after it; ErrorProc ignores them. This is only
- *	done for applications embedded in a container.
+ *	done for the windows of embedded toplevels.
  *
  * Results:
  *	None.

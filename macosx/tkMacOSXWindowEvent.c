@@ -1174,17 +1174,9 @@ ExposeRestrictProc(
 	 * generated.  This will create idle drawing tasks, which we handle
 	 * before we return in the case of a live resize.
 	 */
-	unsigned int serial = LastKnownRequestProcessed(Tk_Display(winPtr));
+	unsigned long serial = LastKnownRequestProcessed(Tk_Display(winPtr));
 	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
 	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
-
-	/*
-	 * Restore the previous restrict proc WITH its argument: this method
-	 * can run inside another restricted event loop (e.g. the exposure
-	 * pumping of UpdateDisplayInfo in tkTextDisp.c, whose argument is
-	 * the widget), and restoring the proc with a NULL argument crashes
-	 * the outer restrict proc on the next serviced window event.
-	 */
 	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
@@ -1384,6 +1376,7 @@ static const char *const accentNames[] = {
     );
     // CGDisplayCopyColorSpace retains the colorspace.
     CGColorSpaceRelease(colorspace);
+    CGContextSetInterpolationQuality(newCtx, kCGInterpolationNone);
     CGContextScaleCTM(newCtx, self.layer.contentsScale,
 		      self.layer.contentsScale);
 #if 0

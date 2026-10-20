@@ -170,7 +170,7 @@ typedef struct invokeArgs {
     TkMenu *menuPtr;
     Tcl_Size itemIndex;
 } invokeArgs;
-    
+
 static void invokeMenuIdleTask(void *clientData) {
     invokeArgs *args = (invokeArgs *) clientData;
     int result = TkInvokeMenu(args->menuPtr->interp, args->menuPtr,

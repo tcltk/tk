@@ -1872,7 +1872,8 @@ DisplayEntry(
 
 	    if ((xWidth > 1)) {
 		XPoint points[3];
-		int starty, space, offset;
+		int starty, space;
+		bool offset;
 
 		space = height - 2*pad;
 
@@ -1912,7 +1913,7 @@ DisplayEntry(
 		starty = inset + height + pad + space;
 		offset = (sbPtr->selElement == SEL_BUTTONDOWN);
 		points[0].x = (short)(startx + 1 + offset);
-		points[0].y = (short)(starty + (offset ? 1 : 0));
+		points[0].y = (short)(starty + offset);
 		points[1].x = (short)(startx + xWidth/2 + offset);
 		points[1].y = (short)(starty + tHeight + (offset ? 0 : -1));
 		points[2].x = (short)(startx - 1 + xWidth + offset);
