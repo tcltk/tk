@@ -24,7 +24,7 @@
 
 static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
-static bool mouseTimerSet = false;		/* true if the mouse timer is active. */
+static bool mouseTimerSet = false;	/* true if the mouse timer is active. */
 static int pointerSuspended = 0;	/* Non-zero while a native popup menu is
 					 * tracked; pointer events are ignored. */
 static bool captured = false;		/* 1 if mouse is currently captured. */
