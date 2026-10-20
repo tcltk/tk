@@ -247,6 +247,7 @@ typedef struct {
 MODULE_SCOPE HWND TkGetMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE HWND TkGetEmbeddedMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE void TkWinCancelMouseTimer(void);
+MODULE_SCOPE void TkWinSuspendPointer(int suspend);
 MODULE_SCOPE int TkWinHandleMenuEvent(HWND *, UINT *, WPARAM *, LPARAM *, LRESULT *);
 MODULE_SCOPE int TkWinHandleMenubarDraw(HWND, UINT, WPARAM, LPARAM, LRESULT *);
 MODULE_SCOPE void TkWinDrawMenubarLine(HWND);
