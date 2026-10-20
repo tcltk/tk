@@ -34,6 +34,15 @@
 /* Define to 1 if you have the 'open64' function. */
 #undef HAVE_OPEN64
 
+/* Define to 1 if you have the 'posix_spawnattr_setflags' function. */
+#undef HAVE_POSIX_SPAWNATTR_SETFLAGS
+
+/* Define to 1 if you have the 'posix_spawnp' function. */
+#undef HAVE_POSIX_SPAWNP
+
+/* Define to 1 if you have the 'posix_spawn_file_actions_adddup2' function. */
+#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2
+
 /* Define to 1 if you have the 'pthread_atfork' function. */
 #undef HAVE_PTHREAD_ATFORK
 
@@ -84,6 +93,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the 'vfork' function. */
+#undef HAVE_VFORK
 
 /* Is weak import available? */
 #undef HAVE_WEAK_IMPORT
