@@ -2634,6 +2634,12 @@ TkpWmGetState(
 
 static void CheckForPointer(TkWindow *winPtr)
 {
+    TkWindow **windows;
+    TkWindow **w;
+    POINT mouse;
+    int x, y;
+    unsigned int state;
+
     if (winPtr == NULL || winPtr->mainPtr == NULL) {
 	/*
 	 * Bug [d233f01e2a] - clipboard clean up after main window destroyed
@@ -2641,12 +2647,8 @@ static void CheckForPointer(TkWindow *winPtr)
 	 */
 	return;
     }
-
-    POINT mouse;
-    int x, y;
-    unsigned int state = TkWinGetModifierState();
-    TkWindow **windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
-    TkWindow **w;
+    state = TkWinGetModifierState();
+    windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
     TkGetPointerCoords(NULL, &x, &y);
     mouse.x = x;
     mouse.y = y;
