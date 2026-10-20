@@ -1673,6 +1673,40 @@ test textWind-18.3 {embedded window destruction in cascade} -setup {
     destroy .t .f
 } -result {}
 
+test textWind-19.1 {windows of a line scrolled out at the bottom are unmapped} -setup {
+    catch {destroy .fr}
+    frame .fr -width 200 -height 150
+    pack propagate .fr 0
+    pack .fr
+    text .fr.t -wrap none -borderwidth 0 -highlightthickness 0 -padx 0 -pady 0
+    pack .fr.t -fill both -expand 1
+    # 40-pixel lines, the last one partly visible; no newline after the last window
+    for {set i 0} {$i < 12} {incr i} {
+	if {$i} {.fr.t insert end \n}
+	.fr.t window create end -window [frame .fr.t.f$i -width 50 -height 40] -align top
+    }
+    update
+    .fr.t sync
+    set res {}
+} -body {
+    .fr.t yview moveto 1.0
+    update
+    lappend res [winfo ismapped .fr.t.f11]
+    for {set n 1} {$n <= 3} {incr n} {
+	.fr.t yview scroll -1 units
+	update
+	for {set i 0} {$i < 12} {incr i} {
+	    if {[winfo ismapped .fr.t.f$i] && [.fr.t dlineinfo .fr.t.f$i] eq {}} {
+		lappend res $n:f$i
+	    }
+	}
+    }
+    set res
+} -cleanup {
+    destroy .fr
+    unset -nocomplain res
+} -result {1}
+
 
 #
 # TESTFILE CLEANUP
