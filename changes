@@ -8551,3 +8551,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-19 (bug) [90f5cd] Windows ConfigureNotify uses stale WINDOWPOS x/y (storchaka)
 
 2026-10-20 (bug) [701d8f] X11: <Alt-key> bindings and %K do not work with a non-Latin keyboard layout (storchaka)
+
+2026-10-20 (bug) [88ffa7] Above roughly 10000 widgets wish hangs on Windows (storchaka)
