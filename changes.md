@@ -135,6 +135,7 @@ to the userbase.
  - [Application crash on Windows when destroying toplevel that is "not responding"](https://core.tcl-lang.org/tk/tktview/7f05a1)
  - [Windows: pointer warp could land one pixel short of the requested position](https://core.tcl-lang.org/tk/tktview/3f1ad1)
  - [MS-Win: activation if embedded application within tk window](https://core.tcl-lang.org/tk/tktview/564897)
+ - [<Alt-key> bindings and %K do not work with a non-Latin keyboard layout on X11](https://core.tcl-lang.org/tk/tktview/701d8f89)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

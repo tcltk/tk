@@ -943,6 +943,32 @@ test event-8.1 {keysym of Control and Alt keys with a non-Latin keyboard
     deleteWindows
 } -result {c C c 1}
 
+test event-8.2 {keysym of Control and Alt keys with a non-Latin keyboard
+	      layout on X11 - bug 701d8f8953} -constraints x11 -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    update
+    bind $e <Key> {set keycode %k}
+    event generate $e <Key> -keysym q
+    bind $e <Key> {lappend res %K}
+    # State bit 0x2000 selects the second XKB group, a non-Latin layout
+    # with e.g. "setxkbmap us,ua" (with a single layout it is the same as
+    # the first group).  The keysym must be the Latin letter of the key with
+    # Control (4), Control+Shift (5) and Alt (8) whatever the layout is.
+    event generate $e <Key> -keycode $keycode -state 0x2004
+    event generate $e <Key> -keycode $keycode -state 0x2005
+    event generate $e <Key> -keycode $keycode -state 0x2008
+    set res
+} -cleanup {
+    deleteWindows
+} -result {q Q q}
+
 test event-8.3 {keysym of a keypad key with Num Lock on X11 - bug 481308} -constraints x11 -setup {
     deleteWindows
     set useIM [tk useinputmethods]
@@ -961,12 +987,12 @@ test event-8.3 {keysym of a keypad key with Num Lock on X11 - bug 481308} -const
     # one of Mod1..Mod5 must select the keypad digit, and Shift with it
     # must revert to the cursor key, as in XLookupString().
     foreach mask {0x8 0x10 0x20 0x40 0x80} {
-        set res {}
-        event generate $e <Key> -keycode $keycode -state $mask
-        event generate $e <Key> -keycode $keycode -state [expr {$mask | 1}]
-        if {$res eq {KP_4 KP_Left}} {
-            lappend numlock $mask
-        }
+	set res {}
+	event generate $e <Key> -keycode $keycode -state $mask
+	event generate $e <Key> -keycode $keycode -state [expr {$mask | 1}]
+	if {$res eq {KP_4 KP_Left}} {
+	    lappend numlock $mask
+	}
     }
     llength $numlock
 } -cleanup {
@@ -1300,8 +1326,8 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.15 {pointer window is a toplevel, destination is screen root.
-    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.
-} -constraints notMacosSequoiaOrOlder -setup {
+    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on the macOS CI runner.
+} -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
 #    destroy .one
     toplevel .two
@@ -1348,6 +1374,11 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     destroy .one
     unset -nocomplain result
 } -result {|<Enter> NotifyInferior .one|}
+
+if {[tk windowingsystem] eq "aqua"} {
+    after 1000; # Give Apple's _windowserver some time to catch up.
+    update
+}
 
 test event-9.17 {Successive destructions (pointer window + parent), separate crossing events} -setup {
     # Tests correctness of overwriting the dead window struct in
@@ -1432,8 +1463,8 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
-    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.
-} -constraints notMacosSequoiaOrOlder -setup {
+    Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on macOS CI runners.
+} -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     destroy .one
     toplevel .two
