@@ -126,6 +126,7 @@ to the userbase.
  - [MS-Win: activation if embedded application within tk window](https://core.tcl-lang.org/tk/tktview/564897)
  - [<Alt-key> bindings and %K do not work with a non-Latin keyboard layout on X11](https://core.tcl-lang.org/tk/tktview/701d8f89)
  - [Above roughly 10000 widgets wish hangs on Windows](https://core.tcl-lang.org/tk/tktview/88ffa7)
+ - [Segmentation fault in menu-46.1 on MacOS](https://core.tcl-lang.org/tk/tktview/0625d1)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
