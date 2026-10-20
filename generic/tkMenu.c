@@ -892,7 +892,7 @@ MenuWidgetObjCmd(
 	 */
 
 	if (menuPtr->menuType == MENUBAR) {
-            Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
+            Tcl_AppendResult(interp, "a menubar menu cannot be posted", (char *)NULL);
             return TCL_ERROR;
         } else if (menuPtr->menuType != TEAROFF_MENU) {
 	    result = TkpPostMenu(interp, menuPtr, x, y, index);

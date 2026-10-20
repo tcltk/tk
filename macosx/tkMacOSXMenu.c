@@ -298,7 +298,11 @@ static Bool runMenuCommand = true;
 
 - (int) tkIndexOfItem: (NSMenuItem *) menuItem
 {
-    return [self indexOfItem:menuItem] - _tkOffset;
+    NSInteger index = [self indexOfItem:menuItem];
+    if (index < 0 || (NSUInteger) index < _tkOffset) {
+	return -1;
+    }
+    return ((int)index - _tkOffset);
 }
 
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index
