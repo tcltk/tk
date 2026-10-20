@@ -164,7 +164,7 @@ Tk_DeleteErrorHandler(
     if (errorPtr->lastRequest < errorPtr->firstRequest
 	    && dispPtr->errorPtr == errorPtr) {
 	dispPtr->errorPtr = errorPtr->nextPtr;
-	Tcl_Free(errorPtr);
+	ckfree(errorPtr);
 	return;
     }
 
