@@ -139,6 +139,7 @@ to the userbase.
  - [Above roughly 10000 widgets wish hangs on Windows](https://core.tcl-lang.org/tk/tktview/88ffa7)
  - [Segmentation fault in menu-46.1 on MacOS](https://core.tcl-lang.org/tk/tktview/0625d1)
  - [long, fat lines fail on Windows](https://core.tcl-lang.org/tk/tktview/630171)
+ - [phantom events with tk_popup](https://core.tcl-lang.org/tk/tktview/869305)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

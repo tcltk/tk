@@ -167,6 +167,7 @@ MODULE_SCOPE HICON TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
 
 MODULE_SCOPE void TkWinDisplayChanged(Display *display);
 MODULE_SCOPE void TkWinCleanupContainerList(void);
+MODULE_SCOPE void TkWinSuspendPointer(int suspend);
 
 /*
  * Used by tkWinWm.c for embedded menu handling. May become public.
