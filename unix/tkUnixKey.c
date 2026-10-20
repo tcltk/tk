@@ -373,13 +373,112 @@ TkpSetKeycodeAndState(
 #   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * KeycodeToKeysym --
+ *
+ *	Map the keycode of an X KeyPress or KeyRelease event into a KeySym
+ *	using the keymap of the given XKB group.
+ *
+ * Results:
+ *	The return value is the KeySym corresponding to eventPtr, or NoSymbol
+ *	if no matching Keysym could be found.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static KeySym
+KeycodeToKeysym(
+    TkDisplay *dispPtr,		/* Display in which to map keycode. */
+    XEvent *eventPtr,		/* Description of X event. */
+    int group)			/* XKB group whose keymap is used. */
+{
+    KeySym sym;
+    int index;
+
+    /*
+     * Figure out which of the four slots in the keymap vector to use for this
+     * key. Refer to Xlib documentation for more info on how this computation
+     * works.
+     */
+
+    index = 0;
+    if (eventPtr->xkey.state & dispPtr->modeModMask) {
+	index = 2;
+    }
+    if ((eventPtr->xkey.state & ShiftMask)
+	    || ((dispPtr->lockUsage != LU_IGNORE)
+	    && (eventPtr->xkey.state & LockMask))) {
+	index += 1;
+    }
+    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, group,
+	    index);
+
+    /*
+     * Special handling: if the key was shifted because of Lock, but lock is
+     * only caps lock, not shift lock, and the shifted keysym isn't upper-case
+     * alphabetic, then switch back to the unshifted keysym.
+     */
+
+#ifndef XK_Oslash
+    /* XK_Oslash is the official name, but might not be present in older X11 headers */
+#   define XK_Oslash XK_Ooblique
+#endif
+    if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
+	    && (dispPtr->lockUsage == LU_CAPS)) {
+	if (!(((sym >= XK_A) && (sym <= XK_Z))
+		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
+		|| ((sym >= XK_Oslash) && (sym <= XK_Thorn)))) {
+	    index &= ~1;
+	    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+		    group, index);
+	}
+    }
+
+    /*
+     * Another bit of special handling: if this is a shifted key and there is
+     * no keysym defined, then use the keysym for the unshifted key.
+     */
+
+    if ((index & 1) && (sym == NoSymbol)) {
+	sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+		group, index & ~1);
+    }
+
+    /*
+     * Num Lock selects the shifted keysym of a keypad key, and Shift
+     * reverts it, as in XLookupString(). [Bug 481308]
+     */
+
+    if (eventPtr->xkey.state
+	    & XkbKeysymToModifiers(dispPtr->display, XK_Num_Lock)) {
+	KeySym sym2 = XkbKeycodeToKeysym(dispPtr->display,
+		eventPtr->xkey.keycode, group, index | 1);
+
+	if (IsKeypadKey(sym2) || IsPrivateKeypadKey(sym2)) {
+	    if ((eventPtr->xkey.state & ShiftMask)
+		    || ((dispPtr->lockUsage == LU_SHIFT)
+		    && (eventPtr->xkey.state & LockMask))) {
+		sym2 = XkbKeycodeToKeysym(dispPtr->display,
+			eventPtr->xkey.keycode, group, index & ~1);
+	    }
+	    sym = sym2;
+	}
+    }
+    return sym;
+}
+
 KeySym
 TkpGetKeySym(
     TkDisplay *dispPtr,		/* Display in which to map keycode. */
     XEvent *eventPtr)		/* Description of X event. */
 {
-    KeySym sym;
-    int index;
+    KeySym sym = NoSymbol;
+    int haveSym = 0, numGroups = 1, group;
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
     /*
@@ -402,7 +501,7 @@ TkpGetKeySym(
 #ifdef TK_USE_INPUT_METHODS
     /*
      * If input methods are active, we may already have determined a keysym.
-     * Return it.
+     * Use it.
      */
 
     if (eventPtr->type == KeyPress && dispPtr
@@ -417,83 +516,57 @@ TkpGetKeySym(
 	    Tcl_DStringFree(&ds);
 	}
 	if (kePtr->charValuePtr != NULL) {
-	    return kePtr->keysym;
+	    sym = kePtr->keysym;
+	    haveSym = 1;
 	}
     }
 #endif
 
-    /*
-     * Figure out which of the four slots in the keymap vector to use for this
-     * key. Refer to Xlib documentation for more info on how this computation
-     * works.
-     */
-
-    index = 0;
-    if (eventPtr->xkey.state & dispPtr->modeModMask) {
-	index = 2;
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+    if (dispPtr->flags & TK_DISPLAY_USE_XKB) {
+	numGroups = XkbNumKbdGroups;
     }
-    if ((eventPtr->xkey.state & ShiftMask)
-	    || ((dispPtr->lockUsage != LU_IGNORE)
-	    && (eventPtr->xkey.state & LockMask))) {
-	index += 1;
-    }
-    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
-	    index);
-
-    /*
-     * Special handling: if the key was shifted because of Lock, but lock is
-     * only caps lock, not shift lock, and the shifted keysym isn't upper-case
-     * alphabetic, then switch back to the unshifted keysym.
-     */
-
-#ifndef XK_Oslash
-    /* XK_Oslash is the official name, but might not be present in older X11 headers */
-#   define XK_Oslash XK_Ooblique
 #endif
-    if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
-	    && (dispPtr->lockUsage == LU_CAPS)) {
-	if (!(((sym >= XK_A) && (sym <= XK_Z))
-		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
-		|| ((sym >= XK_Oslash) && (sym <= XK_Thorn)))) {
-	    index &= ~1;
-	    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
-		    0, index);
+
+    if (!haveSym) {
+	/*
+	 * Use the keymap of the current keyboard layout (XKB group).  Keys
+	 * which do not have that group use the first one.
+	 */
+
+	group = 0;
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+	if (dispPtr->flags & TK_DISPLAY_USE_XKB) {
+	    group = XkbGroupForCoreState(eventPtr->xkey.state);
+	}
+#endif
+	sym = KeycodeToKeysym(dispPtr, eventPtr, group);
+	if ((sym == NoSymbol) && (group != 0)) {
+	    sym = KeycodeToKeysym(dispPtr, eventPtr, 0);
 	}
     }
 
     /*
-     * Another bit of special handling: if this is a shifted key and there is
-     * no keysym defined, then use the keysym for the unshifted key.
+     * With a non-Latin keyboard layout, bindings like <Control-q> or <Alt-x>
+     * could never match.  If Control or Alt is down, use the keysym of the
+     * key in a Latin layout instead, as other X11 toolkits do.  The typed
+     * character (%A) is not affected.  [Bug 701d8f8953]
      */
 
-    if ((index & 1) && (sym == NoSymbol)) {
-	sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
-		0, index & ~1);
-    }
+    if (((sym == NoSymbol) || (sym > 0xFF))
+	    && (eventPtr->xkey.state & (ControlMask | dispPtr->altModMask))) {
+	for (group = 0; group < numGroups; group++) {
+	    KeySym latin = KeycodeToKeysym(dispPtr, eventPtr, group);
 
-    /*
-     * Num Lock selects the shifted keysym of a keypad key, and Shift
-     * reverts it, as in XLookupString(). [Bug 481308]
-     */
-
-    if (eventPtr->xkey.state
-	    & XkbKeysymToModifiers(dispPtr->display, XK_Num_Lock)) {
-	KeySym sym2 = XkbKeycodeToKeysym(dispPtr->display,
-		eventPtr->xkey.keycode, 0, index | 1);
-
-	if (IsKeypadKey(sym2) || IsPrivateKeypadKey(sym2)) {
-	    if ((eventPtr->xkey.state & ShiftMask)
-		    || ((dispPtr->lockUsage == LU_SHIFT)
-		    && (eventPtr->xkey.state & LockMask))) {
-		sym2 = XkbKeycodeToKeysym(dispPtr->display,
-			eventPtr->xkey.keycode, 0, index & ~1);
+	    if ((latin >= XK_space) && (latin <= 0xFF)) {
+		sym = latin;
+		break;
 	    }
-	    sym = sym2;
 	}
     }
     return sym;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
