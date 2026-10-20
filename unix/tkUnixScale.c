@@ -120,11 +120,11 @@ DisplayVerticalScale(
      */
 
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->vertTickRightX;
-	drawnAreaPtr->y = scalePtr->inset;
-	drawnAreaPtr->width = scalePtr->vertTroughX + scalePtr->width
-		+ 2*scalePtr->borderWidth - scalePtr->vertTickRightX;
-	drawnAreaPtr->height -= 2*scalePtr->inset;
+	drawnAreaPtr->x = (short)scalePtr->vertTickRightX;
+	drawnAreaPtr->y = (short)scalePtr->inset;
+	drawnAreaPtr->width = (short)(scalePtr->vertTroughX + scalePtr->width
+		+ 2 * scalePtr->borderWidth - scalePtr->vertTickRightX);
+	drawnAreaPtr->height -= (short)(2 * scalePtr->inset);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -187,25 +187,25 @@ DisplayVerticalScale(
 
     Tk_Draw3DRectangle(tkwin, drawable,
 	    scalePtr->bgBorder, scalePtr->vertTroughX, scalePtr->inset,
-	    scalePtr->width + 2*scalePtr->borderWidth,
-	    Tk_Height(tkwin) - 2*scalePtr->inset, scalePtr->borderWidth,
+	    scalePtr->width + 2 * scalePtr->borderWidth,
+	    Tk_Height(tkwin) - 2 * scalePtr->inset, scalePtr->borderWidth,
 	    TK_RELIEF_SUNKEN);
     XFillRectangle(scalePtr->display, drawable, scalePtr->troughGC,
 	    scalePtr->vertTroughX + scalePtr->borderWidth,
 	    scalePtr->inset + scalePtr->borderWidth,
 	    (unsigned) scalePtr->width,
-	    (unsigned) (Tk_Height(tkwin) - 2*scalePtr->inset
-		- 2*scalePtr->borderWidth));
+	    (unsigned) (Tk_Height(tkwin) - 2 * scalePtr->inset
+		- 2 * scalePtr->borderWidth));
     if (scalePtr->state == STATE_ACTIVE) {
 	sliderBorder = scalePtr->activeBorder;
     } else {
 	sliderBorder = scalePtr->bgBorder;
     }
     width = scalePtr->width;
-    height = scalePtr->sliderLength/2;
+    height = scalePtr->sliderLength / 2;
     x = scalePtr->vertTroughX + scalePtr->borderWidth;
     y = TkScaleValueToPixel(scalePtr, scalePtr->value) - height;
-    shadowWidth = scalePtr->borderWidth/2;
+    shadowWidth = scalePtr->borderWidth / 2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
     }
@@ -213,7 +213,7 @@ DisplayVerticalScale(
 	    2*height, shadowWidth, scalePtr->sliderRelief);
     x += shadowWidth;
     y += shadowWidth;
-    width -= 2*shadowWidth;
+    width -= 2 * shadowWidth;
     height -= shadowWidth;
     Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y, width,
 	    height, shadowWidth, scalePtr->sliderRelief);
@@ -335,11 +335,11 @@ DisplayHorizontalScale(
      */
 
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->inset;
-	drawnAreaPtr->y = scalePtr->horizValueY;
-	drawnAreaPtr->width -= 2*scalePtr->inset;
-	drawnAreaPtr->height = scalePtr->horizTroughY + scalePtr->width
-		+ 2*scalePtr->borderWidth - scalePtr->horizValueY;
+	drawnAreaPtr->x = (short)scalePtr->inset;
+	drawnAreaPtr->y = (short)scalePtr->horizValueY;
+	drawnAreaPtr->width -= (short)(2*scalePtr->inset);
+	drawnAreaPtr->height = (short)(scalePtr->horizTroughY + scalePtr->width
+		+ 2 * scalePtr->borderWidth - scalePtr->horizValueY);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -410,25 +410,25 @@ DisplayHorizontalScale(
     y = scalePtr->horizTroughY;
     Tk_Draw3DRectangle(tkwin, drawable,
 	    scalePtr->bgBorder, scalePtr->inset, y,
-	    Tk_Width(tkwin) - 2*scalePtr->inset,
-	    scalePtr->width + 2*scalePtr->borderWidth,
+	    Tk_Width(tkwin) - 2 * scalePtr->inset,
+	    scalePtr->width + 2 * scalePtr->borderWidth,
 	    scalePtr->borderWidth, TK_RELIEF_SUNKEN);
     XFillRectangle(scalePtr->display, drawable, scalePtr->troughGC,
 	    scalePtr->inset + scalePtr->borderWidth,
 	    y + scalePtr->borderWidth,
-	    (unsigned) (Tk_Width(tkwin) - 2*scalePtr->inset
-		- 2*scalePtr->borderWidth),
+	    (unsigned) (Tk_Width(tkwin) - 2 * scalePtr->inset
+		- 2 * scalePtr->borderWidth),
 	    (unsigned) scalePtr->width);
     if (scalePtr->state == STATE_ACTIVE) {
 	sliderBorder = scalePtr->activeBorder;
     } else {
 	sliderBorder = scalePtr->bgBorder;
     }
-    width = scalePtr->sliderLength/2;
+    width = scalePtr->sliderLength / 2;
     height = scalePtr->width;
     x = TkScaleValueToPixel(scalePtr, scalePtr->value) - width;
     y += scalePtr->borderWidth;
-    shadowWidth = scalePtr->borderWidth/2;
+    shadowWidth = scalePtr->borderWidth / 2;
     if (shadowWidth == 0) {
 	shadowWidth = 1;
     }
@@ -544,7 +544,7 @@ DisplayHorizontalValue(
 
 void
 TkpDisplayScale(
-    ClientData clientData)	/* Widget record for scale. */
+    void *clientData)	/* Widget record for scale. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
@@ -566,6 +566,12 @@ TkpDisplayScale(
 
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
+	/*
+	 * Clear the flag before calling the command, or the command is called
+	 * again if the scale is redrawn while the command runs.
+	 */
+
+	scalePtr->flags &= ~INVOKE_COMMAND;
 	Tcl_Preserve(interp);
 	if (TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {
@@ -605,8 +611,8 @@ TkpDisplayScale(
 #endif /* TK_NO_DOUBLE_BUFFERING */
     drawnArea.x = 0;
     drawnArea.y = 0;
-    drawnArea.width = Tk_Width(tkwin);
-    drawnArea.height = Tk_Height(tkwin);
+    drawnArea.width = (short)Tk_Width(tkwin);
+    drawnArea.height = (short)Tk_Height(tkwin);
 
     /*
      * Much of the redisplay is done totally differently for horizontal and

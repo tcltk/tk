@@ -1640,6 +1640,23 @@ test scale-23.1 {trough click repeat stops when the command grabs - Bug [99bb36d
     destroy .s .d
     unset -nocomplain count
 } -result 1
+test scale-23.2 {command is not called again if the scale is redrawn while it runs} -setup {
+    pack [scale .s -command {apply {v {
+	if {[incr ::count] == 1} {
+	    .s configure -troughcolor red
+	    update
+	}
+    }}}]
+    update
+    set count 0
+} -body {
+    .s set 10
+    update
+    set count
+} -cleanup {
+    destroy .s
+    unset -nocomplain count
+} -result 1
 
 option clear
 
