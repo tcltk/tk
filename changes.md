@@ -140,6 +140,7 @@ to the userbase.
  - [Segmentation fault in menu-46.1 on MacOS](https://core.tcl-lang.org/tk/tktview/0625d1)
  - [long, fat lines fail on Windows](https://core.tcl-lang.org/tk/tktview/630171)
  - [phantom events with tk_popup](https://core.tcl-lang.org/tk/tktview/869305)
+ - [photo: pixels made semi-transparent with "transparency set ... -alpha" are drawn opaque](https://core.tcl-lang.org/tk/tktview/54c2ca)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
