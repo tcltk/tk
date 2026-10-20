@@ -1002,22 +1002,21 @@ TkpPostMenu(
         inPostMenu = false;
         return result;
     }
-    if (itemIndex >= numItems) {
-    	itemIndex = numItems - 1;
-    }
-    if (itemIndex >= 0) {
-	item = [menu itemAtIndex:itemIndex];
-    }
-
     /*
      * The post commands could have deleted the menu, which means we are dead
      * and should go away.
      */
-
     if (menuPtr->tkwin == NULL) {
     	return TCL_OK;
     }
 
+    if (itemIndex >= numItems) {
+	itemIndex = numItems - 1;
+    }
+    if (itemIndex >= 0) {
+	item = [menu itemAtIndex:itemIndex];
+    }
+ 
     [menu popUpMenuPositioningItem:item
 			atLocation:location
 			    inView:nil
