@@ -542,7 +542,7 @@ static int
 TestwindowposchangedObjCmd(
     void *clientData,		/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,		/* Number of arguments. */
+    int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_Window tkwin;
@@ -597,7 +597,7 @@ static int
 TestforeignwindowObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,		/* Number of arguments. */
+    int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     static HWND hwnd = NULL;
