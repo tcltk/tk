@@ -8555,3 +8555,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-20 (bug) [88ffa7] Above roughly 10000 widgets wish hangs on Windows (storchaka)
 
 2026-10-20 (bug) [0625d1] Segmentation fault in menu-46.1 on MacOS (nijtmans)
+
+2026-10-20 (bug) [630171] long, fat lines fail on Windows (storchaka)
