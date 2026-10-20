@@ -520,6 +520,70 @@ test wm-attributes-1.5.5 {fullscreen stackorder} -setup {
     deleteWindows
 } -result {{. .a .b .c} {. .a .b .c} {. .a .b .c}}
 
+# Test that a window is hidden and revealed by the -hidden attribute
+# and that a window can be reconfigured and drawn while hidden.
+test wm-attributes-1.6.1 {-hidden} \
+    -constraints {aqua testpixel} \
+    -setup {set result [list]} \
+-body {
+    toplevel .a -bg red
+    wm geometry .a 200x200
+    update idletasks
+    after 300;# Allow humans to see the window.
+    # Check that the window is red.
+    lappend result [testpixel .a 100 100]
+    # Hide the red window.
+    wm attributes .a -hidden 1
+    update idletasks
+    # Turn it blue.
+    .a configure -bg blue
+    # Resize it
+    wm geometry .a 250x300
+    # Reveal it.
+    wm attributes .a -hidden 0
+    update idletasks
+    after 300; # Allow humans to see the window.
+    # Check that it is now blue.
+    lappend result [testpixel .a 100 100]
+    # Check that it got resized.
+    lappend result [winfo width .a]
+    lappend result [winfo height .a]
+} \
+-cleanup {
+    deleteWindows
+} \
+-result [list "#ff0000" "#0000ff" 250 300]
+
+# Test that <Enter> and <Leave> are generated when a window
+# is hidden or revealed.
+test wm-attributes-1.6.2 {-hidden} \
+-constraints {aqua testpixel} \
+-setup {set result [list]} \
+-body {
+    toplevel .a
+    wm geometry .a 200x200+100+100
+    #tkwait visibility .a
+    update idletasks
+    after 300; #Allow humans to see the window.
+    # Move the mouse pointer into the window.
+    event generate {} <Motion> -warp 1 -x 200 -y 200
+    update; # Process any <Leave> or <Enter caused by the warp.
+    bind .a <Leave> {lappend result "<Leave> %d %W"}
+    bind .a <Enter> {lappend result "<Enter> %d %W"}
+    # Hide the window - should generate a <Leave> event.
+    wm attributes .a -hidden 1
+    after 500; # Allow humans to see that the window is gone.
+    # Show the window - should generate an <Enter> event.
+    wm attributes .a -hidden 0
+    update; # Process the events.
+    after 300; # Allow humans to see that the window is back.
+    set result
+} \
+-cleanup {
+    deleteWindows
+} \
+-result {{<Leave> NotifyNonlinear .a} {<Enter> NotifyNonlinear .a}}
+
 ### wm client ###
 test wm-client-1.1 {usage} -returnCodes error -body {
     wm client

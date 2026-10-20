@@ -1,3 +1,4 @@
+
 /*
  * tkMacOSXSubwindows.c --
  *
@@ -52,7 +53,8 @@
  *----------------------------------------------------------------------
  */
 
-static bool mouseIsInTkWindow(TkWindow *winPtr)
+static bool mouseIsInTkWindow(
+    TkWindow *winPtr)
 {
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
@@ -89,28 +91,25 @@ TkMacOSXUpdatePointerAfterMap(
 {
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-
     if (!mouseIsInTkWindow(winPtr)) {
 	return;
     }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
     TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
-
     if (toplevelPtr &&
 	toplevelPtr->wmInfoPtr &&
 	(toplevelPtr->wmInfoPtr->flags & WM_HIDDEN)) {
 	return;
     }
-    
     Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXUpdatePointerAfterUnmap --
+ * TkMacOSXUpdatePointerBeforeUnmap --
  *
- *      The specified window is being unmapped or hidden.  If it is the
+ *      The specified window will be unmapped or hidden.  If it is the
  *      current pointer window, find the window which should become the
  *      next pointer window and pass it to TkUpdatePointer.
  *
@@ -124,23 +123,56 @@ TkMacOSXUpdatePointerAfterMap(
  */
 
 MODULE_SCOPE void
-TkMacOSXUpdatePointerAfterUnmap(
+TkMacOSXUpdatePointerBeforeUnmap(
     TkWindow *winPtr)
 {
+    TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    TkWindow *toplevelPtr = NULL;
+    Tk_Window target = NULL;
+    NSPoint mouse = [NSEvent mouseLocation];
     if (!mouseIsInTkWindow(winPtr)) {
 	return;
     }
-    TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
-    NSPoint mouse = [NSEvent mouseLocation];
+    if (Tk_IsTopLevel(winPtr)) {
+	/*
+	 * Set toplevelPtr to the highest toplevel other than this one which
+	 * contains the mouse pointer in its contentView.
+	 */
+	for (NSWindow *w in [NSApp orderedWindows]) {
+	    if (w == macWin) {
+		continue;
+	    }
+	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
+	    if (winPtr2) {
+		NSRect windowFrame = [w frame];
+		NSRect contentFrame = windowFrame;
+		contentFrame.size.height = [[w contentView] frame].size.height;
+		if (NSMouseInRect(mouse, contentFrame, NO)) {
+		    toplevelPtr = winPtr2;
+		    break;
+		} else if (NSMouseInRect(mouse, windowFrame, NO)) {
+		    break;
+		}
+	    }
+	}
+    } else {
+	/*
+	 * The new pointer window will be in the same toplevel.
+	 */
+	toplevelPtr = TkMacOSXGetTkWindow(macWin);
+    }
+    /*
+     * Now find the highest child window in the toplevel which contains
+     * the mouse pointer.
+     */
     NSPoint local = [macWin tkConvertPointFromScreen: mouse];
     int top_x = floor(local.x),
 	top_y = floor(macWin.frame.size.height - local.y);
     int root_x = floor(mouse.x),
 	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
     int dummy_x, dummy_y;
-    Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr, top_x, top_y,
-					    &dummy_x, &dummy_y);
+    target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr,
+	top_x, top_y, &dummy_x, &dummy_y);
     if (!Tk_IsTopLevel(target) && (Tk_Parent(target) == NULL)) {
 	/*
 	 * The parent of the Tk window is in the process of being destroyed.
@@ -228,3 +260,13 @@ void TkMacOSXUpdatePointerAfterDestroy (
 	}
     }
 }
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * eval: (c-set-offset 'arglist-intro '+)
+ * eval: (c-set-offset 'arglist-cont-nonempty '+)
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

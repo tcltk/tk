@@ -299,7 +299,7 @@ MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 					     NSWindow *ignore);
 MODULE_SCOPE void TkMacOSXUpdatePointerAfterMap(TkWindow *winPtr);
-MODULE_SCOPE void TkMacOSXUpdatePointerAfterUnmap(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXUpdatePointerBeforeUnmap(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXUpdatePointerAfterDestroy (NSWindow *deadNSWindow);
 
 #pragma mark Private Objective-C Classes
