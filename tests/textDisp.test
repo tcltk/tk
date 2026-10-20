@@ -773,7 +773,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
 	{} \
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
-test textDisp-4.5 {UpdateDisplayInfo, tiny window} -constraints {notWayland} {
+test textDisp-4.5 {UpdateDisplayInfo, tiny window} notWayland {
     if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
@@ -797,7 +797,7 @@ if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
 
-test textDisp-4.6 {UpdateDisplayInfo, tiny window} -constraints {notWayland} {
+test textDisp-4.6 {UpdateDisplayInfo, tiny window} notWayland {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
     # requested.  The "overrideredirect" gets rid of the titlebar so
@@ -3600,7 +3600,7 @@ test textDisp-22.4 {TkTextCharBbox, cut-off lines} {
 		       [list [xchar 1] [yline 11] $fixedWidth [expr {($height+1)-$oriHeight}]]]
     lequal [list [.t bbox 19.1] [.t bbox 20.1]] $expected
 } {1}
-test textDisp-22.5 {TkTextCharBbox, cut-off char} -constraints {notWayland} {
+test textDisp-22.5 {TkTextCharBbox, cut-off char} notWayland {
     wm geometry . {}
     update
     .t config -wrap none
@@ -3880,7 +3880,7 @@ test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar 20] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight]]
-test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} -constraints {notWayland} unix {
+test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {unix notWayland} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 0\n1\n
@@ -4026,7 +4026,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
 		       [list [xchar 20] [yline 1] [expr {$width-1-$oriWidth}] $fixedHeight]]
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
-test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} -constraints {notWayland} {
+test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} notWayland {
     if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }

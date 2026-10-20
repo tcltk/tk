@@ -6016,7 +6016,8 @@ test text-22.237 {TextSearchCmd, regexp search all empty strings, with overlap} 
     text .t
     .t insert end "Searching for the\nempty string!"
     set res [.t search -count C -all -regexp -overlap "" 2.5 2.8]
-    lappend res $C} -cleanup {
+    lappend res $C
+} -cleanup {
     destroy .t
     unset -nocomplain res C
 } -result {2.5 2.6 2.7 {0 0 0}}
