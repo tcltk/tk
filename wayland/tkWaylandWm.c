@@ -5712,6 +5712,66 @@ XCreateSimpleWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * ExposeVacatedArea --
+ *
+ *	A child window is being unmapped or destroyed.  Children are painted
+ *	straight into the toplevel's backing FBO, so the pixels the child
+ *	covered remain there until its parent repaints them -- which an X
+ *	server would arrange by sending Expose to the parent.  Do the
+ *	equivalent here: expose the parent (and, via
+ *	TkWaylandQueueExposeEvent, its still-live mapped children) and
+ *	invalidate the clip rects so the parent is no longer clipped around
+ *	the vanished window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues Expose events and marks clip rects dirty.  Does nothing for
+ *	toplevels, or when the parent is itself being destroyed (the whole
+ *	subtree is going away, so there is nothing to repaint).
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ExposeVacatedArea(
+    TkWindow *winPtr)
+{
+    TkWindow *parentPtr, *topPtr;
+
+    if (winPtr == NULL) {
+	return;
+    }
+    parentPtr = winPtr->parentPtr;
+    if (parentPtr == NULL || (winPtr->flags & TK_TOP_HIERARCHY)
+	    || (parentPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
+
+    TkWaylandQueueExposeEvent(parentPtr, 0, 0,
+	    Tk_Width(parentPtr), Tk_Height(parentPtr));
+
+    /*
+     * As in XMapWindow, invalidate the clip rects after queuing the
+     * exposes.
+     */
+
+    for (topPtr = parentPtr;
+	    topPtr != NULL && !(topPtr->flags & TK_TOP_LEVEL);
+	    topPtr = topPtr->parentPtr) {
+	/* empty */
+    }
+    if (topPtr != NULL) {
+	tkWaylandInvalidateClipRectsForTree(topPtr);
+    } else {
+	tkWaylandInvalidateClipRects(parentPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDestroyWindow --
  *
  *	Destroy a window. The GLFW surface is torn down elsewhere; here we
@@ -5721,7 +5781,8 @@ XCreateSimpleWindow(
  *	Success.
  *
  * Side effects:
- *	May clear the grab/restrict/last-window state in tkPointer.c.
+ *	Queues Expose events so the parent repaints the vacated area, and
+ *	may clear the grab/restrict/last-window state in tkPointer.c.
  *
  *----------------------------------------------------------------------
  */
@@ -5733,7 +5794,15 @@ XDestroyWindow(
 {
     /* Window XIDs are TkWindow pointers in this port. */
     if (window != None) {
-	TkPointerDeadWindow((TkWindow *)window);
+	TkWindow *winPtr = (TkWindow *)window;
+
+	/*
+	 * Repaint whatever the window was covering; otherwise its pixels
+	 * stay in the toplevel's backing store.
+	 */
+
+	ExposeVacatedArea(winPtr);
+	TkPointerDeadWindow(winPtr);
     }
     return Success;
 }
@@ -5876,13 +5945,14 @@ XMapRaised(
  *
  * XUnmapWindow --
  *
- *	Called by Tk_UnmapWindow.  But there is nothing we need to do.
+ *	Called by Tk_UnmapWindow.  There is no native window to unmap, but
+ *	the area the window covered must be repainted by its parent.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	None.
+ *	Invalidates clip rects and queues Expose events for the parent.
  *
  *----------------------------------------------------------------------
  */
@@ -5895,6 +5965,7 @@ XUnmapWindow(
     TkWindow* winPtr = (TkWindow*) Tk_IdToWindow(display, window);
     DEBUG_LOG("XUnmapWindow: %s", Tk_PathName(winPtr));
     tkWaylandInvalidateClipRects(winPtr);
+    ExposeVacatedArea(winPtr);
     return Success;
 }
 

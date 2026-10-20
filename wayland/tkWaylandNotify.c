@@ -635,7 +635,8 @@ TkWaylandQueueExposeEvent(
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)
+		|| (childPtr->flags & TK_ALREADY_DEAD)) {
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
