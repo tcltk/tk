@@ -1270,6 +1270,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE void	TkRecordDeletedWindow(TkDisplay *dispPtr, Window window);
+MODULE_SCOPE void	TkPointerClearButtons(void);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
