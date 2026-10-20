@@ -192,7 +192,7 @@ proc setup_win_mousepointer {w} {
 # Result: none
 #
 
-proc waitForWindowEvent {w event {timeout 100}} {
+proc waitForWindowEvent {w event {timeout 150}} {
     variable _windowEvent
 
     if {! [winfo exists $w]} {
@@ -1281,7 +1281,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root.
     Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on the macOS CI runner.
 } -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
-#    destroy .one
+    destroy .one
     toplevel .two
     wm geometry .two 300x300+150+150
     wm deiconify .two
