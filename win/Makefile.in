@@ -257,7 +257,11 @@ MINIZIP_OBJS = \
 
 ZIP_INSTALL_OBJS =  @ZIP_INSTALL_OBJS@
 
-CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
+# Flags to make the compiler write the header dependencies of each object
+# file into a .d file (see CC_DEPINCLUDE at the end of this file).
+CC_DEPFLAGS = @CC_DEPFLAGS@
+
+CC_SWITCHES = ${CC_DEPFLAGS} ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
 ${TCL_INCLUDES} \
@@ -840,7 +844,7 @@ cleanhelp:
 	$(RM) *.hlp *.cnt *.hpj *.GID *.rtf man2tcl.exe
 
 clean: cleanhelp
-	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *~ \#* TAGS a.out
+	$(RM) *.lib *.a *.exp *.dll *.res *.${OBJEXT} *.d *~ \#* TAGS a.out
 	$(RM) $(WISH) $(TKTEST) $(CAT32)
 	$(RM) *.pch *.ilk *.pdb *.zip
 	$(RMDIR) *.vfs
@@ -881,5 +885,8 @@ genstubs:
 .PHONY: install-binaries install-libraries install-demos install-doc
 .PHONY: install-private-headers clean distclean depend genstubs checkstubs
 .PHONY: checkuchar checkexports rpm dist alldist allpatch html html-tcl html-tk
+
+# Header dependencies written by the compiler (see CC_DEPFLAGS).
+@CC_DEPINCLUDE@
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

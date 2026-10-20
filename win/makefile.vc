@@ -669,7 +669,7 @@ depend:
 !else
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH_NATIVE) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
-		-passthru:"/DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
+		-passthru:"/DBUILD_tk $(COMPILERFLAGS) $(INCLUDES) -I$(TMP_DIR)" $(GENERICDIR),$$(GENERICDIR) \
 		$(WIN_DIR),$$(WIN_DIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
 		$(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
