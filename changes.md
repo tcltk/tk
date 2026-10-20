@@ -124,6 +124,10 @@ to the userbase.
  - [Application crash on Windows when destroying toplevel that is "not responding"](https://core.tcl-lang.org/tk/tktview/7f05a1)
  - [Windows: pointer warp could land one pixel short of the requested position](https://core.tcl-lang.org/tk/tktview/3f1ad1)
  - [MS-Win: activation if embedded application within tk window](https://core.tcl-lang.org/tk/tktview/564897)
+ - [<Alt-key> bindings and %K do not work with a non-Latin keyboard layout on X11](https://core.tcl-lang.org/tk/tktview/701d8f89)
+ - [Above roughly 10000 widgets wish hangs on Windows](https://core.tcl-lang.org/tk/tktview/88ffa7)
+ - [Segmentation fault in menu-46.1 on MacOS](https://core.tcl-lang.org/tk/tktview/0625d1)
+ - [long, fat lines fail on Windows](https://core.tcl-lang.org/tk/tktview/630171)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
