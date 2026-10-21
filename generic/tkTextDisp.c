@@ -3970,11 +3970,12 @@ TkTextFindDisplayLineEnd(
 	    }
 	    if (end) {
 		/*
-		 * The index we want is one less than the number of bytes in
-		 * the display line.
+		 * The index we want is the last character of the display
+		 * line, which can take more than one byte. [Bug 18f35ed566]
 		 */
 
-		TkTextIndexBackBytes(textPtr, &nextLineStart, 1, indexPtr);
+		TkTextIndexBackChars(textPtr, &nextLineStart, 1, indexPtr,
+			COUNT_INDICES);
 	    } else {
 		*indexPtr = index;
 	    }
