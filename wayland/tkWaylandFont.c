@@ -129,8 +129,7 @@ static bool       IsSerifFace(FcPattern *pat);
 static bool       IsSansSerifFace(FcPattern *pat);
 static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
-static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
-static int         EncodeUtf8Char(FcChar32 uc, char out[4]);
+static inline bool IsCombiningMark(FcChar32 uc);
 static void       ExpandRangeToClusterBoundaries(const ShapedGlyphBuffer *sbuf,
 						 int *start, int *end,
 						 int numBytes);
@@ -317,343 +316,95 @@ IsLoadableOutlineFace(FcPattern *pat)
 
 /*
  *----------------------------------------------------------------------
- * UnicodeCompose --
+ * IsCombiningMark --
  *
- *   Attempt to compose a base character and combining mark.
+ *   Test whether a codepoint is in the Combining Diacritical Marks
+ *   block (U+0300-U+036F). This is only a cheap trigger for deciding
+ *   whether a string needs normalization at all; the actual composition
+ *   (which bases accept which marks) is decided by utf8proc, not here.
  *
  * Results:
- *   Composed Unicode character, or 0 if no composition is possible.
+ *   True if the codepoint is a combining diacritical mark.
  *
  * Side effects:
  *   None.
  *----------------------------------------------------------------------
  */
 
-static FcChar32
-UnicodeCompose(FcChar32 base, FcChar32 mark)
+static inline bool
+IsCombiningMark(FcChar32 uc)
 {
-    /* Common Latin composition table. */
-    struct {
-        FcChar32 base;
-        FcChar32 mark;
-        FcChar32 composed;
-    } compTable[] = {
-        /* Latin lowercase. */
-        {0x0061, 0x0300, 0x00E0},  /* a + grave = à */
-        {0x0061, 0x0301, 0x00E1},  /* a + acute = á */
-        {0x0061, 0x0302, 0x00E2},  /* a + circumflex = â */
-        {0x0061, 0x0303, 0x00E3},  /* a + tilde = ã */
-        {0x0061, 0x0308, 0x00E4},  /* a + diaeresis = ä */
-        {0x0061, 0x030A, 0x00E5},  /* a + ring = å */
-        {0x0061, 0x0304, 0x0101},  /* a + macron = ā */
-        {0x0061, 0x0306, 0x0103},  /* a + breve = ă */
-        
-        {0x0065, 0x0300, 0x00E8},  /* e + grave = è */
-        {0x0065, 0x0301, 0x00E9},  /* e + acute = é */
-        {0x0065, 0x0302, 0x00EA},  /* e + circumflex = ê */
-        {0x0065, 0x0308, 0x00EB},  /* e + diaeresis = ë */
-        {0x0065, 0x0304, 0x0113},  /* e + macron = ē */
-        {0x0065, 0x0306, 0x0115},  /* e + breve = ĕ */
-        
-        {0x0069, 0x0300, 0x00EC},  /* i + grave = ì */
-        {0x0069, 0x0301, 0x00ED},  /* i + acute = í */
-        {0x0069, 0x0302, 0x00EE},  /* i + circumflex = î */
-        {0x0069, 0x0308, 0x00EF},  /* i + diaeresis = ï */
-        {0x0069, 0x0304, 0x012B},  /* i + macron = ī */
-        {0x0069, 0x0306, 0x012D},  /* i + breve = ĭ */
-        
-        {0x006F, 0x0300, 0x00F2},  /* o + grave = ò */
-        {0x006F, 0x0301, 0x00F3},  /* o + acute = ó */
-        {0x006F, 0x0302, 0x00F4},  /* o + circumflex = ô */
-        {0x006F, 0x0303, 0x00F5},  /* o + tilde = õ */
-        {0x006F, 0x0308, 0x00F6},  /* o + diaeresis = ö */
-        {0x006F, 0x030A, 0x00F8},  /* o + ring = ø (actually slash, but ring is close) */
-        {0x006F, 0x030B, 0x0151},  /* o + double acute = ő */
-        {0x006F, 0x0304, 0x014D},  /* o + macron = ō */
-        {0x006F, 0x0306, 0x014F},  /* o + breve = ŏ */
-        
-        {0x0075, 0x0300, 0x00F9},  /* u + grave = ù */
-        {0x0075, 0x0301, 0x00FA},  /* u + acute = ú */
-        {0x0075, 0x0302, 0x00FB},  /* u + circumflex = û */
-        {0x0075, 0x0308, 0x00FC},  /* u + diaeresis = ü */
-        {0x0075, 0x030A, 0x016F},  /* u + ring = ů */
-        {0x0075, 0x0304, 0x016B},  /* u + macron = ū */
-        {0x0075, 0x0306, 0x016D},  /* u + breve = ŭ */
-        {0x0075, 0x030B, 0x0171},  /* u + double acute = ű */
-        
-        {0x006E, 0x0303, 0x00F1},  /* n + tilde = ñ */
-        
-        /* Latin uppercase. */
-        {0x0041, 0x0300, 0x00C0},  /* A + grave = À */
-        {0x0041, 0x0301, 0x00C1},  /* A + acute = Á */
-        {0x0041, 0x0302, 0x00C2},  /* A + circumflex = Â */
-        {0x0041, 0x0303, 0x00C3},  /* A + tilde = Ã */
-        {0x0041, 0x0308, 0x00C4},  /* A + diaeresis = Ä */
-        {0x0041, 0x030A, 0x00C5},  /* A + ring = Å */
-        {0x0041, 0x0304, 0x0100},  /* A + macron = Ā */
-        {0x0041, 0x0306, 0x0102},  /* A + breve = Ă */
-        
-        {0x0045, 0x0300, 0x00C8},  /* E + grave = È */
-        {0x0045, 0x0301, 0x00C9},  /* E + acute = É */
-        {0x0045, 0x0302, 0x00CA},  /* E + circumflex = Ê */
-        {0x0045, 0x0308, 0x00CB},  /* E + diaeresis = Ë */
-        {0x0045, 0x0304, 0x0112},  /* E + macron = Ē */
-        {0x0045, 0x0306, 0x0114},  /* E + breve = Ĕ */
-        
-        {0x0049, 0x0300, 0x00CC},  /* I + grave = Ì */
-        {0x0049, 0x0301, 0x00CD},  /* I + acute = Í */
-        {0x0049, 0x0302, 0x00CE},  /* I + circumflex = Î */
-        {0x0049, 0x0308, 0x00CF},  /* I + diaeresis = Ï */
-        {0x0049, 0x0304, 0x012A},  /* I + macron = Ī */
-        {0x0049, 0x0306, 0x012C},  /* I + breve = Ĭ */
-        
-        {0x004F, 0x0300, 0x00D2},  /* O + grave = Ò */
-        {0x004F, 0x0301, 0x00D3},  /* O + acute = Ó */
-        {0x004F, 0x0302, 0x00D4},  /* O + circumflex = Ô */
-        {0x004F, 0x0303, 0x00D5},  /* O + tilde = Õ */
-        {0x004F, 0x0308, 0x00D6},  /* O + diaeresis = Ö */
-        {0x004F, 0x030A, 0x00D8},  /* O + ring = Ø (actually slash) */
-        {0x004F, 0x030B, 0x0150},  /* O + double acute = Ő */
-        {0x004F, 0x0304, 0x014C},  /* O + macron = Ō */
-        {0x004F, 0x0306, 0x014E},  /* O + breve = Ŏ */
-        
-        {0x0055, 0x0300, 0x00D9},  /* U + grave = Ù */
-        {0x0055, 0x0301, 0x00DA},  /* U + acute = Ú */
-        {0x0055, 0x0302, 0x00DB},  /* U + circumflex = Û */
-        {0x0055, 0x0308, 0x00DC},  /* U + diaeresis = Ü */
-        {0x0055, 0x030A, 0x016E},  /* U + ring = Ů */
-        {0x0055, 0x0304, 0x016A},  /* U + macron = Ū */
-        {0x0055, 0x0306, 0x016C},  /* U + breve = Ŭ */
-        {0x0055, 0x030B, 0x0170},  /* U + double acute = Ű */
-        
-        {0x004E, 0x0303, 0x00D1},  /* N + tilde = Ñ */
-
-        /* Vietnamese. */
-        /* Lowercase: o with horn + tone marks */
-        {0x01A1, 0x0301, 0x1EDB},  /* ơ + acute = ớ */
-        {0x01A1, 0x0300, 0x1EDD},  /* ơ + grave = ờ */
-        {0x01A1, 0x0309, 0x1EDF},  /* ơ + hook above = ở */
-        {0x01A1, 0x0303, 0x1ED9},  /* ơ + tilde = ỗ */
-        {0x01A1, 0x0323, 0x1EE1},  /* ơ + dot below = ợ */
-
-        /* Lowercase: u with horn + tone marks */
-        {0x01B0, 0x0301, 0x1EEB},  /* ư + acute = ứ */
-        {0x01B0, 0x0300, 0x1EED},  /* ư + grave = ừ */
-        {0x01B0, 0x0309, 0x1EEF},  /* ư + hook above = ử */
-        {0x01B0, 0x0303, 0x1EF1},  /* ư + tilde = ữ */
-        {0x01B0, 0x0323, 0x1EF3},  /* ư + dot below = ự */
-
-        /* Uppercase: O with horn + tone marks. */
-        {0x01A0, 0x0301, 0x1EDA},  /* Ơ + acute = Ớ */
-        {0x01A0, 0x0300, 0x1EDC},  /* Ơ + grave = Ờ */
-        {0x01A0, 0x0309, 0x1EDE},  /* Ơ + hook above = Ở */
-        {0x01A0, 0x0303, 0x1ED8},  /* Ơ + tilde = Ỗ */
-        {0x01A0, 0x0323, 0x1EE0},  /* Ơ + dot below = Ợ */
-
-        /* Uppercase: U with horn + tone marks. */
-        {0x01AF, 0x0301, 0x1EEA},  /* Ư + acute = Ứ */
-        {0x01AF, 0x0300, 0x1EEC},  /* Ư + grave = Ừ */
-        {0x01AF, 0x0309, 0x1EEE},  /* Ư + hook above = Ử */
-        {0x01AF, 0x0303, 0x1EF0},  /* Ư + tilde = Ữ */
-        {0x01AF, 0x0323, 0x1EF2},  /* Ư + dot below = Ự */
-
-        {0, 0, 0}
-    };
-
-    for (int i = 0; compTable[i].base != 0; i++) {
-        if (compTable[i].base == base && compTable[i].mark == mark) {
-            return compTable[i].composed;
-        }
-    }
-
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- * EncodeUtf8Char --
- *
- *   Encode a single Unicode codepoint as UTF-8 into a caller-supplied
- *   4-byte buffer (not NUL-terminated).
- *
- * Results:
- *   Number of bytes written (1-4).
- *
- * Side effects:
- *   None.
- *----------------------------------------------------------------------
- */
-
-static int
-EncodeUtf8Char(FcChar32 uc, char out[4])
-{
-    if (uc <= 0x7F) {
-        out[0] = (char)uc;
-        return 1;
-    } else if (uc <= 0x7FF) {
-        out[0] = (char)(0xC0 | ((uc >> 6) & 0x1F));
-        out[1] = (char)(0x80 | (uc & 0x3F));
-        return 2;
-    } else if (uc <= 0xFFFF) {
-        out[0] = (char)(0xE0 | ((uc >> 12) & 0x0F));
-        out[1] = (char)(0x80 | ((uc >> 6) & 0x3F));
-        out[2] = (char)(0x80 | (uc & 0x3F));
-        return 3;
-    } else {
-        out[0] = (char)(0xF0 | ((uc >> 18) & 0x07));
-        out[1] = (char)(0x80 | ((uc >> 12) & 0x3F));
-        out[2] = (char)(0x80 | ((uc >> 6) & 0x3F));
-        out[3] = (char)(0x80 | (uc & 0x3F));
-        return 4;
-    }
+    return uc >= 0x0300 && uc <= 0x036F;
 }
 
 /*
  *----------------------------------------------------------------------
  * ComposeUTF8String --
  *
- *   Compose combining diacritical marks in a UTF-8 string.
- *   Uses a composition table for common Latin sequences.
+ *   Precompose combining marks in a UTF-8 string by routing it through
+ *   Tcl_UtfToNormalizedDString(). 
+ *
+ *   The result is what gets handed to NanoVG: NanoVG has no GPOS mark
+ *   attachment, so base+mark sequences must be drawn and measured as
+ *   precomposed glyphs. Marks with no precomposed form (e.g. q + acute)
+ *   are left in place by NFC; callers detect that by rescanning the
+ *   result and fall back to HarfBuzz.
  *
  * Results:
- *   Newly allocated UTF-8 string in NFC form, or NULL on failure.
+ *   Newly allocated, NUL-terminated UTF-8 string in NFC form (free with
+ *   free()), or NULL on failure or if source is empty.
  *
  * Side effects:
- *   None.
+ *   None. The input buffer is never modified.
  *----------------------------------------------------------------------
  */
 
-static char*
+static char *
 ComposeUTF8String(const char *source, int len)
 {
     if (!source || len <= 0) return NULL;
-    
-    /* Check if there are any combining characters. */
+
+    /* Nothing to compose without marks: plain copy, skip the normalizer. */
     bool hasCombining = false;
     for (int i = 0; i < len; ) {
+        if ((unsigned char)source[i] < 0x80) { i++; continue; }
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, len - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) {
+        if (IsCombiningMark(uc)) {
             hasCombining = true;
             break;
         }
         i += clen;
     }
-    
+
+    char *result;
     if (!hasCombining) {
-        char *result = (char *)malloc(len + 1);
+        result = (char *)malloc((size_t)len + 1);
         if (result) {
-            memcpy(result, source, len);
+            memcpy(result, source, (size_t)len);
             result[len] = '\0';
         }
         return result;
     }
-    
-    /* Walk through the string and compose clusters. */
-    char *result = NULL;
-    int resultLen = 0;
-    int i = 0;
-    
-    while (i < len) {
-        FcChar32 base = 0;
-        int baseLen = 0;
-        int baseStart = i;
-        
-        /* Read the base character. */
-        if (i < len) {
-            FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, len - i);
-            if (clen > 0) {
-                /* Check if this is a combining mark with no base (unlikely). */
-                if (uc >= 0x0300 && uc <= 0x036F) {
-                    /* No base, copy the mark as-is. */
-                    char *newResult = (char *)realloc(result, resultLen + clen + 1);
-                    if (newResult) {
-                        result = newResult;
-                        memcpy(result + resultLen, source + i, clen);
-                        resultLen += clen;
-                    }
-                    i += clen;
-                    continue;
-                }
-                base = uc;
-                baseLen = clen;
-                i += clen;
-            } else {
-                i++;
-                continue;
-            }
-        } else {
-            break;
-        }
-        
-        /* Look ahead for combining marks. */
-        FcChar32 combined = base;
-        bool hadCombining = false;
-        
-        while (i < len) {
-            FcChar32 mark;
-            int markLen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &mark, len - i);
-            if (markLen <= 0) { i++; continue; }
-            if (mark >= 0x0300 && mark <= 0x036F) {
-                /* Try to compose. */
-                FcChar32 composed = UnicodeCompose(combined, mark);
-                if (composed > 0) {
-                    combined = composed;
-                    hadCombining = true;
-                    i += markLen;
-                    continue;
-                } else if (mark == 0x0303) { /* Tilde */
-                    /* Try some common Vietnamese combinations */
-                    if (combined == 0x01B0) { /* U with horn + tilde = Ữ */
-                        combined = 0x1EEF;
-                        hadCombining = true;
-                        i += markLen;
-                        continue;
-                    } else if (combined == 0x01A0) { /* O with horn + tilde = Ỗ */
-                        combined = 0x1ED6;
-                        hadCombining = true;
-                        i += markLen;
-                        continue;
-                    } else if (combined == 0x0041 || combined == 0x0061) {
-                        /* Already handled by UnicodeCompose for A/a. */
-                    }
-                }
-                /* Cannot compose this mark; stop and keep what we have. */
-                break;
-            } else {
-                /* Not a combining mark, stop. */
-                break;
-            }
-        }
-        
-        if (hadCombining && combined != base) {
-            /* Encode composed character as UTF-8. */
-            char utf8[4];
-            int utf8Len = EncodeUtf8Char(combined, utf8);
 
-            char *newResult = (char *)realloc(result, resultLen + utf8Len + 1);
-            if (newResult) {
-                result = newResult;
-                memcpy(result + resultLen, utf8, utf8Len);
-                resultLen += utf8Len;
-            }
-        } else {
-            /* No composition happened; copy the base as-is. */
-            char *newResult = (char *)realloc(result, resultLen + baseLen + 1);
-            if (newResult) {
-                result = newResult;
-                memcpy(result + resultLen, source + baseStart, baseLen);
-                resultLen += baseLen;
-            }
-        }
+    /*
+     * REPLACE profile: malformed UTF-8 becomes U+FFFD instead of failing
+     * the whole string, so one bad byte can't disable precomposition.
+     */
+    Tcl_DString ds;
+    if (Tcl_UtfToNormalizedDString(NULL, source, (Tcl_Size)len, TCL_NFC,
+                                   TCL_ENCODING_PROFILE_REPLACE, &ds)
+            != TCL_OK) {
+        return NULL;
     }
-    
+    Tcl_Size n = Tcl_DStringLength(&ds);
+    result = (char *)malloc((size_t)n + 1);
     if (result) {
-        result[resultLen] = '\0';
+        memcpy(result, Tcl_DStringValue(&ds), (size_t)n);
+        result[n] = '\0';
     }
-    
+    Tcl_DStringFree(&ds);
     return result;
 }
 
@@ -683,7 +434,7 @@ ContainsCombiningMark(const char *str, int len)
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) return true;
+        if (IsCombiningMark(uc)) return true;
         i += clen;
     }
     return false;
@@ -740,7 +491,7 @@ IsSimpleOnly(const char *str, int len)
          * under them. Actual precomposition for rendering happens later,
          * in a scratch buffer, at the point where glyphs are built.
          */
-        if (uc >= 0x0300 && uc <= 0x036F) {  /* Combining diacritics */
+        if (IsCombiningMark(uc)) {  /* Combining diacritics */
             char *composed = ComposeUTF8String(str, len);
             if (composed) {
                 int newLen = (int)strlen(composed);
@@ -754,7 +505,7 @@ IsSimpleOnly(const char *str, int len)
                     if (clen2 <= 0) { j++; continue; }
 
                     /* If any combining marks remain, still complex. */
-                    if (uc2 >= 0x0300 && uc2 <= 0x036F) {  /* Combining diacritics */
+                    if (IsCombiningMark(uc2)) {  /* Combining diacritics */
                         simple = false;
                         break;
                     }
@@ -4933,7 +4684,7 @@ Tk_MeasureCharsInContext(
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, end - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) {
+        if (IsCombiningMark(uc)) {
             hasCombining = true;
             break;
         }
@@ -5448,7 +5199,7 @@ TkpDrawAngledCharsInContext(
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
                                 (int)(rangeStart + rangeLength) - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) {
+        if (IsCombiningMark(uc)) {
             hasCombining = true;
             break;
         }
