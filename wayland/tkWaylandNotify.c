@@ -1163,7 +1163,7 @@ TkWaylandCursorEnterCallback(
     TkWaylandCursorPointerWindow(entered ? window : NULL);
 
     if (entered) {
-        target = Tk_CoordsToWindow((int) xpos, (int) ypos, (Tk_Window) winPtr);
+        target = TkWaylandPointerTarget((int) xpos, (int) ypos, (Tk_Window) winPtr);
     }
 
     memset(&event, 0, sizeof(XEvent));
@@ -1258,7 +1258,7 @@ TkWaylandCursorPosCallback(
      * The toplevel coordinates are the same as the root coordinates since
      * every toplevel is treated as having position (0, 0).
      */
-    Tk_UpdatePointer(Tk_CoordsToWindow((int) xpos, (int) ypos,
+    Tk_UpdatePointer(TkWaylandPointerTarget((int) xpos, (int) ypos,
 				       (Tk_Window) winPtr), (int) xpos, (int) ypos,
 		     glfwButtonState | glfwModifierState);
 }
@@ -1340,7 +1340,7 @@ TkWaylandMouseButtonCallback(
         /* Swallow both press and release â€” do not deliver to Tk widgets. */
         return;
     }
-    Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
+    Tk_Window target = TkWaylandPointerTarget((int) xpos, (int) ypos,
 					 (Tk_Window) winPtr);
 
     /* Update modifier state. */
@@ -1449,11 +1449,13 @@ TkWaylandScrollCallback(
     }
 
     /* Coords to child window */
-    Tk_Window target = Tk_CoordsToWindow((int)xpos, (int)ypos, (Tk_Window)winPtr);
+    Tk_Window target = TkWaylandPointerTarget((int)xpos, (int)ypos, (Tk_Window)winPtr);
     if (!target) {
         target = (Tk_Window)winPtr;
     }
     TkWindow *targetPtr = (TkWindow *)target;
+    int tgtRootX = 0, tgtRootY = 0;
+    Tk_GetRootCoords(target, &tgtRootX, &tgtRootY);
 
     /* GLFW gives fractional offsets for high-res touchpads.
      * Accumulate remainder so small deltas aren't lost.
@@ -1485,10 +1487,10 @@ TkWaylandScrollCallback(
         event.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
         event.xbutton.subwindow = None;
         event.xbutton.time = (Time)(glfwGetTime() * 1000.0);
-        event.xbutton.x = (int)xpos - Tk_X(targetPtr);
-        event.xbutton.y = (int)ypos - Tk_Y(targetPtr);
-        event.xbutton.x_root = targetPtr->changes.x + (int)xpos;
-        event.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        event.xbutton.x = (int)xpos - tgtRootX;
+        event.xbutton.y = (int)ypos - tgtRootY;
+        event.xbutton.x_root = (int)xpos;
+        event.xbutton.y_root = (int)ypos;
         event.xbutton.state = glfwButtonState | glfwModifierState;
         event.xbutton.button = delta;
         event.xbutton.same_screen = True;
@@ -1505,10 +1507,10 @@ TkWaylandScrollCallback(
         bevent.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
         bevent.xbutton.subwindow = None;
         bevent.xbutton.time = (Time)(glfwGetTime() * 1000.0);
-        bevent.xbutton.x = (int)xpos - Tk_X(targetPtr);
-        bevent.xbutton.y = (int)ypos - Tk_Y(targetPtr);
-        bevent.xbutton.x_root = targetPtr->changes.x + (int)xpos;
-        bevent.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        bevent.xbutton.x = (int)xpos - tgtRootX;
+        bevent.xbutton.y = (int)ypos - tgtRootY;
+        bevent.xbutton.x_root = (int)xpos;
+        bevent.xbutton.y_root = (int)ypos;
         bevent.xbutton.state = glfwButtonState | glfwModifierState;
         bevent.xbutton.button = (delta > 0 ? 4 : 5);
         bevent.xbutton.same_screen = True;
@@ -1541,10 +1543,10 @@ TkWaylandScrollCallback(
         event.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
         event.xbutton.subwindow = None;
         event.xbutton.time = (Time)(glfwGetTime() * 1000.0);
-        event.xbutton.x = (int)xpos - Tk_X(targetPtr);
-        event.xbutton.y = (int)ypos - Tk_Y(targetPtr);
-        event.xbutton.x_root = targetPtr->changes.x + (int)xpos;
-        event.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        event.xbutton.x = (int)xpos - tgtRootX;
+        event.xbutton.y = (int)ypos - tgtRootY;
+        event.xbutton.x_root = (int)xpos;
+        event.xbutton.y_root = (int)ypos;
         /* Mark horizontal: Tk convention is to add Shift or use separate handling.
          * We set state with ShiftMask already if user holds Shift, but for
          * pure horizontal we queue with Button 6/7 compat and MouseWheel with
@@ -1565,10 +1567,10 @@ TkWaylandScrollCallback(
         bevent.xbutton.display = targetPtr->display;
         bevent.xbutton.window = Tk_WindowId(targetPtr);
         bevent.xbutton.root = RootWindow(targetPtr->display, targetPtr->screenNum);
-        bevent.xbutton.x = (int)xpos - Tk_X(targetPtr);
-        bevent.xbutton.y = (int)ypos - Tk_Y(targetPtr);
-        bevent.xbutton.x_root = targetPtr->changes.x + (int)xpos;
-        bevent.xbutton.y_root = targetPtr->changes.y + (int)ypos;
+        bevent.xbutton.x = (int)xpos - tgtRootX;
+        bevent.xbutton.y = (int)ypos - tgtRootY;
+        bevent.xbutton.x_root = (int)xpos;
+        bevent.xbutton.y_root = (int)ypos;
         bevent.xbutton.state = glfwButtonState | glfwModifierState;
         bevent.xbutton.button = (delta > 0 ? 6 : 7);
         bevent.xbutton.same_screen = True;

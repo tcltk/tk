@@ -491,6 +491,64 @@ Tk_ClipDrawableToRect(
 /*
  *----------------------------------------------------------------------
  *
+ * PresentOverridePopup --
+ *
+ *	Copies the backing store of an override-redirect toplevel to its
+ *	wl_subsurface popup (see the comment on override-redirect toplevels
+ *	in tkWaylandWm.c).  The backing store is that of the toplevel's
+ *	hidden GLFW window, and is read in that window's GL context, which
+ *	owns the framebuffer object.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Commits a new buffer on the popup surface.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+PresentOverridePopup(
+    glfwTkInfo *infoPtr)
+{
+    TkWindow *winPtr = infoPtr->winPtr;
+    TkWaylandPopup *popup = TkWaylandWmGetOverridePopup(winPtr);
+    GLFWwindow *glfwWindow = infoPtr->glfwWindow;
+    NVGLUframebuffer *fb;
+    unsigned char *pixels;
+    int fbW = 0, fbH = 0;
+
+    if (popup == NULL || shutdownInProgress
+	    || (winPtr->flags & (TK_ALREADY_DEAD | TK_MAPPED)) != TK_MAPPED
+	    || !winPtr->privatePtr || !isGlfwWindowValid(glfwWindow)) {
+	return;
+    }
+    fb = winPtr->privatePtr->fb;
+    if (fb == NULL || fb->fbo == 0) {
+	return;
+    }
+    glfwMakeContextCurrent(glfwWindow);
+    glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
+    if (fbW <= 0 || fbH <= 0) {
+	return;
+    }
+    pixels = (unsigned char *) malloc((size_t) fbW * fbH * 4);
+    if (pixels == NULL) {
+	return;
+    }
+    glFlush();
+    glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, fbW, fbH, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    TkWaylandPopupPresentPixels(popup, pixels, fbW, fbH);
+    free(pixels);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandDisplayAllWindows --
  *
  *	Called by TkWaylandSetupProc to display any "dirty" windows whose
@@ -515,6 +573,20 @@ TkWaylandDisplayAllWindows()
     lastDisplay=nowDisp;
     if (shutdownInProgress) return;
     if (glfwTkInfoList==NULL) return;
+
+    /*
+     * Override-redirect toplevels are shown in subsurfaces, not by
+     * swapping the buffers of their (hidden) GLFW window, so they are
+     * presented first and skipped by the loops below.
+     */
+    for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
+        if (!(p->flags & TKWL_NEEDS_DISPLAY) || !p->winPtr) continue;
+        if (TkWaylandWmGetOverridePopup(p->winPtr) != NULL) {
+            p->flags &= ~TKWL_NEEDS_DISPLAY;
+            PresentOverridePopup(p);
+        }
+    }
+
     int anyMappable=0;
     for (glfwTkInfo *p=glfwTkInfoList; p; p=p->nextPtr) {
         if (!p->glfwWindow) continue;
