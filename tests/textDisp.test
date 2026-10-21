@@ -5280,6 +5280,47 @@ test textDisp-38.3 {layout of the text in a window which has not been mapped use
 } -cleanup {
     destroy .top
 } -result 5
+test textDisp-40.1 {index @x,y inside a multi-byte character in a font of its own} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    # The character is a display chunk of its own, which the search for the
+    # index at x measures without its last byte: inside the character.
+    text .t1 -font {Courier -12} -wrap none
+    .t1 tag configure big -font $bigFont
+    pack .t1
+    foreach ch [list \u00e9 \u2611] {
+	.t1 delete 1.0 end
+	.t1 insert end $ch big " text"
+	update
+	lassign [.t1 bbox 1.0] x y w h
+	set indices {}
+	for {set dx 0} {$dx < $w} {incr dx} {
+	    lappend indices [.t1 index @[expr {$x + $dx}],[expr {$y + $h/2}]]
+	}
+	lappend res [lsort -unique $indices]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1.0 1.0}
+test textDisp-40.2 {display lineend at a multi-byte character ending the display line - bug 18f35ed566} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    text .t1 -font {Courier -12} -width 1 -wrap char
+    pack .t1
+    foreach ch [list \u00e4 \u2611] {
+	.t1 delete 1.0 end
+	.t1 insert end a${ch}b
+	update
+	set end [.t1 index "1.1 display lineend"]
+	lappend res $end [expr {[.t1 get "1.1 display linestart" "$end +1c"] eq $ch}]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1.1 1 1.1 1}
 
 #
 # TESTFILE CLEANUP
