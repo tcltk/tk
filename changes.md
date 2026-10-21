@@ -130,6 +130,7 @@ to the userbase.
  - [long, fat lines fail on Windows](https://core.tcl-lang.org/tk/tktview/630171)
  - [phantom events with tk_popup](https://core.tcl-lang.org/tk/tktview/869305)
  - [photo: pixels made semi-transparent with "transparency set ... -alpha" are drawn opaque](https://core.tcl-lang.org/tk/tktview/54c2ca)
+ - [overrideredirect on linux/mac prevents certain binds from working](https://core.tcl-lang.org/tk/tktview/a53a90)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
