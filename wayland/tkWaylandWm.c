@@ -1052,7 +1052,7 @@ OverridePopupRect(
     glfwGetWindowSize(parent, &pw, &ph);
 
     /*
-     * FIX: wm overrideredirect must ALWAYS be placed in local relative
+     * wm overrideredirect must ALWAYS be placed in local relative
      * coordinates, just like menus. See tkWaylandMenu.c:TkWaylandPostMenuAtAnchor
      * which takes anchorX/Y in toplevel-surface-local and does postX=anchorX.
      * On this port winfo rootx/pointerx already return local (parentRoot==0),
@@ -1617,7 +1617,7 @@ TkWmMapWindow(TkWindow *winPtr)
          * still unmapped (DisplayFrame drops it), so queue a fresh one now.
          * This also makes an empty root produce a first frame to present.
          *
-         * FIX: Child widgets may not yet be mapped when this first Expose
+         * Child widgets may not yet be mapped when this first Expose
          * runs (pack/grid runs as idle tasks after MapNotify).  Queue exposes
          * for the whole subtree now, and schedule a second re-expose idle
          * after the geometry managers have had a chance to map children.
