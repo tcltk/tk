@@ -133,6 +133,7 @@ to the userbase.
  - [overrideredirect on linux/mac prevents certain binds from working](https://core.tcl-lang.org/tk/tktview/a53a90)
  - [-command option doesn't seem to work for cascade menu items on unix](https://core.tcl-lang.org/tk/tktview/220868)
  - ["display lineend" landed inside a multi-byte character](https://core.tcl-lang.org/tk/tktview/18f35e)
+ - [tk_popup platform differences](https://core.tcl-lang.org/tk/tktview/585003)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
