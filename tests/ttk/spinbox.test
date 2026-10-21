@@ -129,6 +129,7 @@ test spinbox-1.7.1 "-command option: set doesnt fire" -setup {
 
 test spinbox-1.7.2 "-command option: button handler will fire" -setup {
     ttk::spinbox .sb -from 0 -to 100 -command {set ::spinbox_test 1}
+    pack .sb; update
 } -body {
     set ::spinbox_test 0
     .sb set 50
@@ -261,6 +262,7 @@ test spinbox-3.0 "textarea should expand to fill widget" -setup {
 
 test spinbox-4.0 "Increment with duplicates in -values, wrap" -setup {
     ttk::spinbox .sb -values {one two three 4 5 two six} -wrap true
+    pack .sb; update
     set max [expr {[llength [.sb cget -values]] + 2}]
 } -body {
     set ::spinbox_test [.sb get]
@@ -280,6 +282,7 @@ test spinbox-4.0 "Increment with duplicates in -values, wrap" -setup {
 
 test spinbox-4.1 "Increment with duplicates in -values, wrap, initial value set" -setup {
     ttk::spinbox .sb -values {one two three 4 5 two six} -wrap true
+    pack .sb; update
     set max [expr {[llength [.sb cget -values]] + 2}]
 } -body {
     .sb set three
@@ -301,6 +304,7 @@ test spinbox-4.1 "Increment with duplicates in -values, wrap, initial value set"
 
 test spinbox-4.2 "Increment with duplicates in -values, no wrap" -setup {
     ttk::spinbox .sb -values {one two three 4 5 two six} -wrap false
+    pack .sb; update
     set max [expr {[llength [.sb cget -values]] + 2}]
 } -body {
     set ::spinbox_test [.sb get]
@@ -385,6 +389,7 @@ test spinbox-dieoctaldie-1 "Cope with leading zeros" -body {
     # See SF#2358545 -- ttk::spinbox also affected
     set secs 07
     ttk::spinbox .sb -from 0 -to 59 -format %02.0f -textvariable secs
+    pack .sb; update
 
     set result [list $secs]
     event generate .sb <<Increment>>; lappend result $secs
@@ -406,6 +411,7 @@ test spinbox-dieoctaldie-1 "Cope with leading zeros" -body {
 test spinbox-dieoctaldie-2 "Cope with general bad input" -body {
     set result [list]
     ttk::spinbox .sb -from 0 -to 100 -format %03.0f
+    pack .sb; update
     .sb set asdfasdf ; lappend result [.sb get]
     event generate .sb <<Increment>> ; lappend result [.sb get]
     .sb set asdfasdf ; lappend result [.sb get]

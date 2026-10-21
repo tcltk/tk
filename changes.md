@@ -124,6 +124,16 @@ to the userbase.
  - [Application crash on Windows when destroying toplevel that is "not responding"](https://core.tcl-lang.org/tk/tktview/7f05a1)
  - [Windows: pointer warp could land one pixel short of the requested position](https://core.tcl-lang.org/tk/tktview/3f1ad1)
  - [MS-Win: activation if embedded application within tk window](https://core.tcl-lang.org/tk/tktview/564897)
+ - [<Alt-key> bindings and %K do not work with a non-Latin keyboard layout on X11](https://core.tcl-lang.org/tk/tktview/701d8f89)
+ - [Above roughly 10000 widgets wish hangs on Windows](https://core.tcl-lang.org/tk/tktview/88ffa7)
+ - [Segmentation fault in menu-46.1 on MacOS](https://core.tcl-lang.org/tk/tktview/0625d1)
+ - [long, fat lines fail on Windows](https://core.tcl-lang.org/tk/tktview/630171)
+ - [phantom events with tk_popup](https://core.tcl-lang.org/tk/tktview/869305)
+ - [photo: pixels made semi-transparent with "transparency set ... -alpha" are drawn opaque](https://core.tcl-lang.org/tk/tktview/54c2ca)
+ - [overrideredirect on linux/mac prevents certain binds from working](https://core.tcl-lang.org/tk/tktview/a53a90)
+ - [-command option doesn't seem to work for cascade menu items on unix](https://core.tcl-lang.org/tk/tktview/220868)
+ - ["display lineend" landed inside a multi-byte character](https://core.tcl-lang.org/tk/tktview/18f35e)
+ - [tk_popup platform differences](https://core.tcl-lang.org/tk/tktview/585003)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

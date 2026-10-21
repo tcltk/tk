@@ -2001,6 +2001,18 @@ test menu-4.12 {TkInvokeMenu} -setup {
 } -cleanup {
     destroy .m1
 } -result {0 {} 1 {bad menu entry index "test"}}
+test menu-4.13 {TkInvokeMenu: cascade - bug 220868} -setup {
+    destroy .m1
+} -body {
+    menu .m1 -tearoff 0
+    menu .m1.c -tearoff 0
+    .m1.c add command -label "sub"
+    .m1 add cascade -menu .m1.c -label "test" -command {set foo invoked}
+    list [catch {.m1 invoke "test"} msg] $msg [catch {set foo} msg2] $msg2
+} -cleanup {
+    destroy .m1
+    unset -nocomplain foo
+} -result {0 invoked 0 invoked}
 
 test menu-5.1 {DestroyMenuInstance} -setup {
     destroy .m1

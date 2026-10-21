@@ -5427,6 +5427,23 @@ test textDisp-40.1 {index @x,y inside a multi-byte character in a font of its ow
 } -cleanup {
     destroy .t1
 } -result {1.0 1.0}
+test textDisp-40.2 {display lineend at a multi-byte character ending the display line - bug 18f35ed566} -setup {
+    destroy .t1
+    set res {}
+} -body {
+    text .t1 -font {Courier -12} -width 1 -wrap char
+    pack .t1
+    foreach ch [list \u00e4 \u2611] {
+	.t1 delete 1.0 end
+	.t1 insert end a${ch}b
+	update
+	set end [.t1 index "1.1 display lineend"]
+	lappend res $end [expr {[.t1 get "1.1 display linestart" "$end +1c"] eq $ch}]
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {1.1 1 1.1 1}
 
 #
 # TESTFILE CLEANUP
