@@ -654,7 +654,7 @@ test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
     destroy .t
 } -result 0
 
-test winWm-10.5 "dark appearance kept after wm resizable" -constraints win -setup {
+test winWm-10.5 "dark appearance after wm resizable - bug 354fbe9fe6" -constraints win -setup {
     catch {destroy .t}
     update
 } -body {
@@ -668,7 +668,7 @@ test winWm-10.5 "dark appearance kept after wm resizable" -constraints win -setu
     destroy .t
 } -result 1
 
-test winWm-10.6 "dark appearance kept after -toolwindow" -constraints win -setup {
+test winWm-10.6 "dark appearance after -toolwindow - bug 354fbe9fe6" -constraints win -setup {
     catch {destroy .t}
     update
 } -body {
