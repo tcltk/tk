@@ -13,7 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging.
+/*
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "wm"
 */
@@ -900,7 +900,6 @@ OverridePopupRect(
 {
     WmInfo *wmPtr = (WmInfo *) winPtr->wmInfoPtr;
     int w, h, pw = 0, ph = 0;
-    int parentRootX = 0, parentRootY = 0;
 
     WmPixelSize(winPtr, &w, &h);
     if (w <= 0) { w = winPtr->reqWidth; }
@@ -913,93 +912,68 @@ OverridePopupRect(
     if (h < 1) { h = 1; }
     glfwGetWindowSize(parent, &pw, &ph);
 
-    /* Get parent screen pos if available, else 0 */
-    {
-        TkWindow *parentWin = TkWaylandGetTkWindow(parent);
-        int winPosX = 0, winPosY = 0;
-        if (parent) {
-            glfwGetWindowPos(parent, &winPosX, &winPosY);
-            if (winPosX != 0 || winPosY != 0) {
-                parentRootX = winPosX;
-                parentRootY = winPosY;
-            } else if (parentWin) {
-                Tk_GetRootCoords((Tk_Window)parentWin, &parentRootX, &parentRootY);
-            }
-        }
-    }
+    /*
+     * ALWAYS local, like menus (tkWaylandMenu.c:TkWaylandPostMenuAtAnchor).
+     * Menus: anchorX/Y are toplevel-surface-local, post = anchor, then clamp.
+     * For overrideredirect, winfo rootx/pointerx on this port already return
+     * toplevel-local (parentRoot==0), so wmPtr->x/y are local.
+     *
+     * Tooltip bug: winfo pointerx uses tkWaylandLastRootX which can be stale
+     * (middle of window) when tooltip triggers 500ms after Enter. Use current
+     * cursor pos in parent surface via glfwGetCursorPos for small popups
+     * (tooltips) - this is generic, not hard-coded to a class name.
+     */
 
     int reqX = wmPtr->x;
     int reqY = wmPtr->y;
 
-    /* On Wayland there is no global coords, so root->local conversion
-     * often no-ops (parentRoot==0). The remaining bug is that
-     * winfo pointerx may be stale when tooltip triggers after 500ms
-     * Enter delay - it holds previous pointer location (middle of
-     * window) not current widget location.
-     *
-     * Generic fix: get current cursor pos in parent surface via
-     * glfwGetCursorPos (always up-to-date, parent-local). If requested
-     * geometry is 0,0 or looks like a stale screen coord that would
-     * place a small popup in the middle, use cursor pos + offset.
-     */
-    double cursorX = 0, cursorY = 0;
-    int hasCursor = 0;
-    if (parent) {
-        glfwGetCursorPos(parent, &cursorX, &cursorY);
-        /* cursor pos is valid if inside parent */
-        if (cursorX >= 0 && cursorX < pw && cursorY >= 0 && cursorY < ph) {
-            hasCursor = 1;
-        }
-    }
-
-    /* Heuristic for tooltip-like small popups: if size is small and
-     * requested pos is 0,0 or far from cursor (stale), use cursor pos.
-     * This is generic, not tied to a specific window name/class.
-     */
-    int isSmallPopup = (w < 400 && h < 200);
-    if (isSmallPopup && hasCursor) {
-        int dist = 0;
-        if (reqX != 0 || reqY != 0) {
-            int dx = reqX - (int)cursorX;
-            int dy = reqY - (int)cursorY;
-            dist = dx*dx + dy*dy;
-        }
-        /* If req is 0,0 or far from cursor (>200px), use cursor */
-        if ((reqX == 0 && reqY == 0) || dist > 40000) {
-            reqX = (int)cursorX;
-            reqY = (int)cursorY + 20;
+    /* For small popups (tooltips), use live cursor pos, not stale wmPtr->x */
+    int isSmall = (w < 400 && h < 200);
+    if (isSmall && parent) {
+        double cx = 0, cy = 0;
+        glfwGetCursorPos(parent, &cx, &cy);
+        if (cx >= 0 && cy >= 0 && cx < 10000 && cy < 10000) {
+            /* If wm geometry is 0,0 (first two tooltips) or far from cursor,
+             * replace with cursor. If wm geometry looks valid (near cursor),
+             * keep it - this preserves combobox which is not small.
+             */
+            int dx = reqX - (int)cx;
+            int dy = reqY - (int)cy;
+            int dist2 = dx*dx + dy*dy;
+            if ((reqX == 0 && reqY == 0) || dist2 > 40000 || isSmall) {
+                /* For tooltips always use cursor + offset, like menu anchor */
+                if (isSmall) {
+                    reqX = (int)cx;
+                    reqY = (int)cy + 20;
+                }
+            }
         }
     }
 
     if (wmPtr->flags & WM_NEGATIVE_X) {
         *xPtr = pw - w - wmPtr->x;
     } else {
-        if (reqX >= 0 && reqX < pw && parentRootX == 0) {
-            *xPtr = reqX;
-        } else {
-            *xPtr = reqX - parentRootX;
-        }
+        *xPtr = reqX;
     }
     if (wmPtr->flags & WM_NEGATIVE_Y) {
         *yPtr = ph - h - wmPtr->y;
     } else {
-        if (reqY >= 0 && reqY < ph && parentRootY == 0) {
-            *yPtr = reqY;
-        } else {
-            *yPtr = reqY - parentRootY;
-        }
+        *yPtr = reqY;
     }
 
-    if (*xPtr < 0) *xPtr = 0;
-    if (*yPtr < 0) *yPtr = 0;
-    if (*xPtr + w > pw) { *xPtr = pw - w; if (*xPtr < 0) *xPtr = 0; }
-    if (*yPtr + h > ph) { *yPtr = ph - h; if (*yPtr < 0) *yPtr = 0; }
+    if (pw > 0 && ph > 0) {
+        if (*xPtr + w > pw) { *xPtr = pw - w; }
+        if (*xPtr < 0) { *xPtr = 0; }
+        if (*yPtr + h > ph) { *yPtr = ph - h; }
+        if (*yPtr < 0) { *yPtr = 0; }
+    }
 
     *wPtr = w;
     *hPtr = h;
 
-    DEBUG_LOG("OverridePopupRect: reqRoot=(%d,%d) parentRoot=(%d,%d) cursor=(%.0f,%.0f) -> local=(%d,%d) size=%dx%d pw,ph=%dx%d",
-              wmPtr->x, wmPtr->y, parentRootX, parentRootY, cursorX, cursorY, *xPtr, *yPtr, w, h, pw, ph);
+    /* Debug - enable by uncommenting DEBUG_CHANNEL at top of file */
+    DEBUG_LOG("OverridePopupRect: wm=(%d,%d) req=(%d,%d) -> local=(%d,%d) size=%dx%d pw,ph=%dx%d small=%d",
+              wmPtr->x, wmPtr->y, reqX, reqY, *xPtr, *yPtr, w, h, pw, ph, isSmall);
 }
 
 /*
