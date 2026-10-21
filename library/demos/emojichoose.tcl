@@ -20,9 +20,9 @@ label $w.msg -font $font -wraplength 4i -anchor w -justify left -text \
 	To access the emoji picker, use the following platform-specific\
 	keyboard shortcuts:\n\n\
 
-	\tmacOS:  Command-Control-Space\n\
-	\tWindows:  Windows-.\n\
-	\tX11/Wayland:  Control-.\n\n\The emoji picker will appear near the text or\
+\tmacOS:  Command-Control-Space\n\
+\tWindows:  Windows-.\n\
+\tX11/Wayland:  Control-.\n\n\The emoji picker will appear near the text or\
 	entry widget below and will insert the selected emoji."
 
 pack $w.msg -side top
