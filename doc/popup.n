@@ -25,6 +25,13 @@ menu's upper left corner is positioned at the given point.
 Otherwise \fIentry\fR gives the index of an entry in \fImenu\fR and
 the menu will be positioned so that the entry is positioned over
 the given point.
+.PP
+On X11 the menu is a window of the application: \fBtk_popup\fR returns as
+soon as the menu is posted, and the menu generates \fB<Map>\fR and
+\fB<Unmap>\fR events when it is posted and unposted.  On Windows and macOS
+the menu is displayed by the system, which runs its own event loop while the
+menu is posted: \fBtk_popup\fR does not return before the menu is unposted
+again, and no \fB<Map>\fR or \fB<Unmap>\fR event is generated for it.
 .SH EXAMPLE
 .PP
 How to attach a simple popup menu to a widget.
