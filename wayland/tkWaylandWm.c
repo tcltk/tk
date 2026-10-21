@@ -520,18 +520,6 @@ InitializeGlfwWindow(TkWindow *winPtr)
                              (float)wmPtr->attributes.alpha);
     }
 
-    /*
-     * If override-redirect was set on this window before its GLFW
-     * counterpart existed (e.g. via [wm overrideredirect] on a window
-     * that hadn't been mapped yet), XChangeWindowAttributes had no
-     * GLFWwindow to act on at the time and silently dropped the
-     * request. Tk core still recorded the flag in winPtr->atts
-     * regardless, so re-apply it here now that the GLFW window exists.
-     */
-    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-        glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED, GLFW_FALSE);
-    }
-
     /* Register wm event handler */
     Tk_CreateEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
@@ -3875,7 +3863,10 @@ WmMinsizeCmd(
  *	Standard Tcl result.
  *
  * Side effects:
- *	Updates override-redirect (undecorated) state.
+ *	No-op on Wayland. Wayland does not support a truly unmanaged/
+ *  undecorated window; some compositors that support SSD will even
+ *  draw decorations if the window is explicitly configured as
+ *  overrideredirect.
  *
  *----------------------------------------------------------------------
  */
@@ -3883,28 +3874,20 @@ WmMinsizeCmd(
 static int
 WmOverrideredirectCmd(
     TCL_UNUSED(Tk_Window),
-    TkWindow   *winPtr,
+    TCL_UNUSED(TkWindow *),
     Tcl_Interp *interp,
     int         objc,
     Tcl_Obj *const objv[])
 {
-    int boolean;
-    XSetWindowAttributes atts;
 
     if (objc > 1) {
         Tcl_WrongNumArgs(interp, 0, objv, "wm overrideredirect window ?boolean?");
         return TCL_ERROR;
     }
     if (objc == 0) {
-        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-            Tk_Attributes((Tk_Window) winPtr)->override_redirect));
         return TCL_OK;
     }
-    if (Tcl_GetBooleanFromObj(interp, objv[0], &boolean) != TCL_OK) {
-        return TCL_ERROR;
-    }
-    atts.override_redirect = boolean ? True : False;
-    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    
     return TCL_OK;
 }
 
