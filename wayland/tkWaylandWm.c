@@ -13,7 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging.
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "wm"
 */
@@ -691,7 +691,6 @@ ReExposeIdle(void *clientData)
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -732,6 +731,23 @@ typedef struct OverrideInfo {
 static Tcl_HashTable overridePopupTable;
 static int overridePopupTableReady = 0;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetOverrideInfo --
+ *
+ *	Returns the override-redirect bookkeeping record for a toplevel,
+ *	or NULL if the window is not (yet) backed by a popup.
+ *
+ * Results:
+ *	A pointer to the OverrideInfo for winPtr, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static OverrideInfo *
 GetOverrideInfo(
     TkWindow *winPtr)
@@ -745,6 +761,23 @@ GetOverrideInfo(
     return hPtr ? (OverrideInfo *) Tcl_GetHashValue(hPtr) : NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetOverridePopup --
+ *
+ *	Returns the wl_subsurface popup backing an override-redirect
+ *	toplevel.
+ *
+ * Results:
+ *	The TkWaylandPopup for winPtr, or NULL if the window has no popup.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static TkWaylandPopup *
 GetOverridePopup(
     TkWindow *winPtr)
@@ -753,6 +786,25 @@ GetOverridePopup(
 
     return info ? info->popup : NULL;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetOverrideInfo --
+ *
+ *	Records, or forgets, the popup backing an override-redirect
+ *	toplevel.  Passing NULL for popup removes the entry and frees the
+ *	bookkeeping record.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May create the overridePopupTable hash table, allocate or free an
+ *	OverrideInfo, and modify the hash table.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 SetOverrideInfo(
@@ -788,8 +840,20 @@ SetOverrideInfo(
 }
 
 /*
- * Accessor for the drawing code (tkWaylandInit.c): the popup backing an
- * override-redirect toplevel, or NULL for an ordinary window.
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmGetOverridePopup --
+ *
+ *	Accessor for the drawing code (tkWaylandInit.c): the popup backing
+ *	an override-redirect toplevel, or NULL for an ordinary window.
+ *
+ * Results:
+ *	The TkWaylandPopup for winPtr, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE TkWaylandPopup *
@@ -800,10 +864,20 @@ TkWaylandWmGetOverridePopup(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * UsesOverridePopup --
  *
  *	Returns 1 if the toplevel has the override-redirect attribute and
  *	is not a menu or an embedded window.
+ *
+ * Results:
+ *	1 if winPtr should be shown as a popup, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -818,11 +892,21 @@ UsesOverridePopup(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * OverridePopupParent --
  *
  *	Finds the GLFW window that the popup is attached to: the master of
  *	"wm transient" if it has a window on screen, otherwise the main
- *	window of the application.  Returns NULL if there is none.
+ *	window of the application.
+ *
+ * Results:
+ *	The GLFW window to attach the popup to, or NULL if there is none.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static GLFWwindow *
@@ -855,12 +939,22 @@ OverridePopupParent(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * OverrideBacked --
  *
  *	True if the window is, or will be when mapped, shown as a popup.
  *	The Xlib emulation uses it to keep its hands off the hidden GLFW
  *	window (showing, focusing or iconifying it would map a real
  *	toplevel).
+ *
+ * Results:
+ *	1 if winPtr is or will be backed by a popup, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -872,6 +966,24 @@ OverrideBacked(
 	    && OverridePopupParent(winPtr) != NULL));
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsOverrideGLFW --
+ *
+ *	True if the GLFW window belongs to a Tk window that is backed by
+ *	an override-redirect popup.
+ *
+ * Results:
+ *	1 if gw is the hidden GLFW window of a popup-backed toplevel,
+ *	0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 IsOverrideGLFW(
     GLFWwindow *gw)
@@ -880,6 +992,8 @@ IsOverrideGLFW(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * OverridePopupRect --
  *
  *	Computes the position and size of the popup in the coordinates of
@@ -887,6 +1001,15 @@ IsOverrideGLFW(
  *	the requested size, within "wm minsize"/"wm maxsize"; negative
  *	positions ("-x-y") are measured from the right and bottom edges of
  *	the parent, as on X11.
+ *
+ * Results:
+ *	Stores the parent-relative x and y position and the width and
+ *	height through xPtr, yPtr, wPtr and hPtr.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -926,7 +1049,7 @@ OverridePopupRect(
     int reqX = wmPtr->x;
     int reqY = wmPtr->y;
 
-    /* For small popups (tooltips), use live cursor pos, not stale wmPtr->x */
+    /* For small popups (tooltips), use live cursor pos, not stale wmPtr->x. */
     int isSmall = (w < 400 && h < 200);
     if (isSmall && parent) {
         double cx = 0, cy = 0;
@@ -970,18 +1093,28 @@ OverridePopupRect(
     *wPtr = w;
     *hPtr = h;
 
-    /* Debug - enable by uncommenting DEBUG_CHANNEL at top of file */
     DEBUG_LOG("OverridePopupRect: wm=(%d,%d) req=(%d,%d) -> local=(%d,%d) size=%dx%d pw,ph=%dx%d small=%d",
               wmPtr->x, wmPtr->y, reqX, reqY, *xPtr, *yPtr, w, h, pw, ph, isSmall);
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * SyncBackingStoreSize --
  *
  *	Resizes the hidden GLFW window of a popup toplevel to the size of
  *	the popup.  GLFW's framebuffer-size callback then rebuilds the
  *	backing store and gives Tk its ConfigureNotify, exactly as for a
  *	resized ordinary toplevel.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May resize the hidden GLFW window and update winPtr's requested
+ *	width and height.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -1006,9 +1139,20 @@ SyncBackingStoreSize(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * MarkNeedsDisplay --
  *
  *	Asks TkWaylandDisplayAllWindows to present the backing store.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the TKWL_NEEDS_DISPLAY and TKWL_SHOWN flags in the window's
+ *	glfwTkInfo and clears TKWL_EARLY_EXPOSE_QUEUED.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -1028,10 +1172,21 @@ MarkNeedsDisplay(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * RaiseOverridePopup --
  *
  *	Stacks the popup above the other popups of the same parent, or
  *	directly above the parent if there are none.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Reorders the wl_subsurface stack through
+ *	TkWaylandSubsurfacePlaceAbove.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -1064,6 +1219,8 @@ RaiseOverridePopup(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandPointerTarget --
  *
  *	Replacement for Tk_CoordsToWindow in the pointer callbacks.  The
@@ -1071,6 +1228,14 @@ RaiseOverridePopup(
  *	mapped override-redirect popup of that toplevel covers the point
  *	(the topmost one wins) the widget in the popup is found,
  *	otherwise the widget in tkwin itself.
+ *
+ * Results:
+ *	The Tk_Window containing the given point.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE Tk_Window
@@ -1117,6 +1282,8 @@ TkWaylandPointerTarget(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * MapOverridePopup --
  *
  *	Shows an override-redirect toplevel as a subsurface.
@@ -1129,6 +1296,8 @@ TkWaylandPointerTarget(
  * Side effects:
  *	Creates the popup, marks the window mapped, and queues the events
  *	and exposes that TkWmMapWindow produces for ordinary toplevels.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -1193,11 +1362,22 @@ MapOverridePopup(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * UnmapOverridePopup --
  *
  *	Hides an override-redirect toplevel.  A wl_subsurface cannot be
  *	hidden, so the popup is destroyed and created again on the next
  *	map.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Clears TK_MAPPED, destroys the popup, removes its bookkeeping
+ *	record, and sends an UnmapNotify if the window was mapped.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -1218,11 +1398,22 @@ UnmapOverridePopup(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * DestroyOverridePopup --
  *
  *	Releases the popup of a window which is being destroyed.  Also
  *	unmaps the popups attached to it, whose parent surface is about to
  *	go away.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Unmaps the window's own popup and all popups whose parent is the
+ *	window's GLFW window.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -1253,10 +1444,22 @@ DestroyOverridePopup(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * ResizeOverridePopup --
  *
  *	Moves and resizes the popup of a mapped override-redirect toplevel
  *	to the given size, at the position from "wm geometry".
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Reconfigures the wl_subsurface, resizes the backing store, and
+ *	queues exposes and a display.  Generates a ConfigureNotify if the
+ *	popup moved.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
