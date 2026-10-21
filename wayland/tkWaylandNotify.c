@@ -667,6 +667,7 @@ static void TkWaylandKeyCallback(GLFWwindow *window, int key,
 				 int scancode, int action, int mods);
 static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
 static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
+static void ExposeSubtree(TkWindow *winPtr);
 static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 
 /*
@@ -903,7 +904,16 @@ TkWaylandFramebufferSizeCallback(
     DEBUG_LOG("TkWaylandFramebufferSizeCallback: configuring %s",
 	      Tk_PathName(winPtr));
     GenerateConfigureNotify(winPtr, 1);
-    
+
+    /*
+     * The backing store was just replaced and cleared, so everything that
+     * had been drawn in it is gone.  Widgets whose size did not change do
+     * not redisplay on ConfigureNotify, so expose the whole mapped subtree.
+     */
+    if (winPtr->privatePtr->fb) {
+	tkWaylandInvalidateClipRectsForTree(winPtr);
+	ExposeSubtree(winPtr);
+    }
 }
 
 /* Helper function to process configure events. */
@@ -1954,15 +1964,52 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandWindowRefreshCallback --
+ * ExposeSubtree --
  *
- *      Called by GLFW when window needs redraw. Generates Expose event.
+ *      Queues an Expose event for a window and all of its mapped
+ *      non-toplevel descendants.  Child toplevels are skipped: they have
+ *      their own GLFW window and backing store.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Queues Expose event for client area.
+ *      Queues Expose events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ExposeSubtree(TkWindow *winPtr)
+{
+    TkWindow *childPtr;
+
+    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
+    TkWaylandQueueExposeEvent(winPtr,
+			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	if (Tk_IsMapped(childPtr) && !Tk_IsTopLevel(childPtr)) {
+	    ExposeSubtree(childPtr);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWindowRefreshCallback --
+ *
+ *      Called by GLFW when window needs redraw. Generates Expose events
+ *      for the window and all of its mapped children.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Queues Expose events for the whole window.
  *
  *----------------------------------------------------------------------
  */
@@ -1977,9 +2024,9 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
 
     DEBUG_LOG("TkWaylandWindowRefreshCallback: Exposing %s",
 	    Tk_PathName(winPtr));
-	    	
-    TkWaylandQueueExposeEvent(winPtr,
-			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+
+    tkWaylandInvalidateClipRectsForTree(winPtr);
+    ExposeSubtree(winPtr);
 }
 
 
