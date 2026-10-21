@@ -13,7 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/*
+/* Debugging
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "wm"
 */
@@ -918,10 +918,9 @@ OverridePopupRect(
      * For overrideredirect, winfo rootx/pointerx on this port already return
      * toplevel-local (parentRoot==0), so wmPtr->x/y are local.
      *
-     * Tooltip bug: winfo pointerx uses tkWaylandLastRootX which can be stale
-     * (middle of window) when tooltip triggers 500ms after Enter. Use current
-     * cursor pos in parent surface via glfwGetCursorPos for small popups
-     * (tooltips) - this is generic, not hard-coded to a class name.
+     * Other popup windows (tooltips, etc.): winfo pointerx uses tkWaylandLastRootX 
+     * which can be stale.  Use current cursor pos in parent surface via glfwGetCursorPos 
+     * for small popups.
      */
 
     int reqX = wmPtr->x;
