@@ -783,6 +783,15 @@ MODULE_SCOPE NVGcontext *TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
 MODULE_SCOPE int          TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void         TkWaylandPopupEndDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void         TkWaylandPopupDrawBorderWithShadow(TkWaylandPopup *popup);
+MODULE_SCOPE void         TkWaylandPopupPresentPixels(TkWaylandPopup *popup,
+    const unsigned char *rgba, int srcW, int srcH);
+
+/*
+ * Override-redirect toplevels ("wm overrideredirect") are shown as
+ * subsurfaces; implemented in tkWaylandWm.c.
+ */
+MODULE_SCOPE TkWaylandPopup *TkWaylandWmGetOverridePopup(TkWindow *winPtr);
+MODULE_SCOPE Tk_Window    TkWaylandPointerTarget(int x, int y, Tk_Window tkwin);
 MODULE_SCOPE void         TkWaylandPopupSetBorder(
     TkWaylandPopup *popup,
     int enabled,
