@@ -8156,21 +8156,27 @@ static int SynchronizeAppearance(
     if (wmPtr == NULL) {
 	return TCL_ERROR;
     }
-    if (wmPtr->flags & WM_OVERRIDE_APPEARANCE) {
-	return TCL_OK;
-    }
-    bool appsShouldBeDark = !AppsShouldUseLightTheme();
+
+    /*
+     * An appearance forced to light or dark with "wm attributes -appearance"
+     * does not follow the system setting, but it must be applied again to a
+     * wrapper recreated by UpdateWrapper (wm resizable, wm transient...).
+     */
+
+    bool isOverridden = (wmPtr->flags & WM_OVERRIDE_APPEARANCE) != 0;
+    bool shouldBeDark = isOverridden ? (wmPtr->flags & WM_APPEARANCE_DARK) != 0
+	    : !AppsShouldUseLightTheme();
     long long isDarkParam; /* Alignment matters! */
     bool windowIsDark;
     TkpWindowIsDark(tkwin, &windowIsDark);
-    if (appsShouldBeDark == windowIsDark) {
+    if (shouldBeDark == windowIsDark) {
 #if 0 /* for debugging */
 	 Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 	    Tcl_ObjPrintf("Already in sync"));
 #endif
 	return TCL_OK;
     }
-    isDarkParam = appsShouldBeDark ? 1 : 0;
+    isDarkParam = shouldBeDark ? 1 : 0;
     long status = DwmSetWindowAttribute(
 	wmPtr->wrapper,
 	DWMWA_USE_IMMERSIVE_DARK_MODE,
@@ -8193,7 +8199,10 @@ static int SynchronizeAppearance(
     SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, !isWindowFocused, 0);
     SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, isWindowFocused, 0);
 
-    const char *newAppearance = appsShouldBeDark ? "dark" : "light";
+    if (isOverridden) {
+	return TCL_OK;
+    }
+    const char *newAppearance = shouldBeDark ? "dark" : "light";
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 			Tcl_ObjPrintf("appearance %s ", newAppearance));
     return TCL_OK;

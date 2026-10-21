@@ -654,6 +654,34 @@ test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
     destroy .t
 } -result 0
 
+test winWm-10.5 "dark appearance kept after wm resizable" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    update idletasks
+    wm attributes .t -appearance dark
+    wm resizable .t 0 1
+    update idletasks
+    winfo isdark .t
+} -cleanup {
+    destroy .t
+} -result 1
+
+test winWm-10.6 "dark appearance kept after -toolwindow" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    update idletasks
+    wm attributes .t -appearance dark
+    wm attributes .t -toolwindow 1
+    update idletasks
+    winfo isdark .t
+} -cleanup {
+    destroy .t
+} -result 1
+
 test winWm-11.1 "stale position in WINDOWPOS with SWP_NOMOVE - bug 90f5cd3f21" -constraints {
     win testwindowposchanged
 } -setup {
