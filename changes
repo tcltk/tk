@@ -8559,3 +8559,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-20 (bug) [630171] long, fat lines fail on Windows (storchaka)
 
 2026-10-20 (bug) [869305] phantom events with tk_popup (storchaka)
+
+2026-10-21 (bug) [a53a90] overrideredirect on linux/mac prevents certain binds from working (storchaka)
