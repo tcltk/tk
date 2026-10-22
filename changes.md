@@ -135,6 +135,7 @@ to the userbase.
  - ["display lineend" landed inside a multi-byte character](https://core.tcl-lang.org/tk/tktview/18f35e)
  - [tk_popup platform differences](https://core.tcl-lang.org/tk/tktview/585003)
  - [Busy canvas grinds after cursor change](https://core.tcl-lang.org/tk/tktview/195483)
+ - [Menu geometry info wrong if cascaded](https://core.tcl-lang.org/tk/tktview/911951)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
