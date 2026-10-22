@@ -8565,3 +8565,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-21 (bug) [220868] -command option doesn't seem to work for cascade menu items on unix (storchaka)
 
 2026-10-21 (bug) [585003] tk_popup platform differences (storchaka)
+
+2026-10-22 (bug) [195483] Busy canvas grinds after cursor change (storchaka)
