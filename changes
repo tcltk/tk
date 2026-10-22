@@ -8567,3 +8567,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-21 (bug) [585003] tk_popup platform differences (storchaka)
 
 2026-10-22 (bug) [195483] Busy canvas grinds after cursor change (storchaka)
+
+2026-10-22 (bug) [911951] Menu geometry info wrong if cascaded (storchaka)
