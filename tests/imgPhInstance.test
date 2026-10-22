@@ -234,8 +234,9 @@ test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
 
 # 7.* -- -gamma and -palette options of the photo instance
 
+# XCopyArea not implemented on Wayland
 test imgPhInstance-7.1 "-gamma is applied" \
-	-constraints pixelProbe -setup {
+	-constraints {pixelProbe notWayland} -setup {
     image create photo photo.gamma -width 20 -height 20 -gamma 2
     photo.gamma put #ffa500 -to 0 0 20 20
 } -body {
@@ -248,8 +249,9 @@ test imgPhInstance-7.1 "-gamma is applied" \
     image delete photo.gamma
     update
 } -result 1
+# XCopyArea not implemented on Wayland
 test imgPhInstance-7.2 "-palette is applied" \
-	-constraints pixelProbe -setup {
+	-constraints {pixelProbe notWayland"} -setup {
     image create photo photo.palette -width 20 -height 20 -palette 2
     photo.palette put #808080 -to 0 0 20 20
 } -body {
