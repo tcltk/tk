@@ -8571,3 +8571,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-22 (bug) [911951] Menu geometry info wrong if cascaded (storchaka)
 
 2026-10-22 (bug) [18f35e] "display lineend" landed inside a multi-byte character
+
+2026-10-22 (bug) [853414] Document undefined bindings (storchaka)
