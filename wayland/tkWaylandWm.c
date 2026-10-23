@@ -4094,31 +4094,17 @@ WmGroupCmd(
 static int
 WmIconbadgeCmd(
     TCL_UNUSED(Tk_Window),
-    TkWindow *winPtr,
+    TCL_UNUSED(TkWindow *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    Tcl_Obj *cmd[3];
-    int code;
-
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 0, objv, "wm iconbadge window badge");
 	return TCL_ERROR;
     }
-
-    /* As on X11: the badge is drawn on the icon photo. */
-    cmd[0] = Tcl_NewStringObj("::tk::icons::IconBadge", TCL_INDEX_NONE);
-    cmd[1] = Tk_NewWindowObj((Tk_Window)winPtr);
-    cmd[2] = objv[0];
-    for (int i = 0; i < 3; i++) {
-	Tcl_IncrRefCount(cmd[i]);
-    }
-    code = Tcl_EvalObjv(interp, 3, cmd, TCL_EVAL_GLOBAL);
-    for (int i = 0; i < 3; i++) {
-	Tcl_DecrRefCount(cmd[i]);
-    }
-    return code;
+    /* Wayland has no badge protocol; intentionally a no-op. */
+    return TCL_OK;
 }
  
 
