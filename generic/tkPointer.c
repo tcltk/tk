@@ -32,6 +32,8 @@ typedef struct {
 				 * reported. */
     TkWindow *cursorWinPtr;	/* Window that is currently controlling the
 				 * global cursor. */
+    bool restrictWinDead;	/* The restrict window was destroyed while
+				 * buttons were pressed. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -257,6 +259,23 @@ Tk_UpdatePointer(
     for (b = Button1; b <= Button9; b++) {
 	mask = Tk_GetButtonMask(b);
 	if (changes & mask) {
+	    if (tsdPtr->restrictWinDead) {
+		/*
+		 * As with the implicit grab on X11, discard button events
+		 * until all buttons are released, rather than delivering
+		 * them to the window that is now below the pointer.
+		 */
+
+		if ((state & mask) || (tsdPtr->lastState & ALL_BUTTONS) != mask) {
+		    tsdPtr->lastState ^= mask;
+		} else {
+		    tsdPtr->lastState &= ~mask;
+		    tsdPtr->restrictWinDead = false;
+		    TkpSetCapture(tsdPtr->grabWinPtr);
+		}
+		tsdPtr->lastPos = pos;
+		continue;
+	    }
 	    if (state & mask) {
 		type = ButtonPress;
 
@@ -384,7 +403,7 @@ Tk_UpdatePointer(
 	    targetWinPtr = tsdPtr->grabWinPtr;
 	}
 
-	if (targetWinPtr != NULL) {
+	if (targetWinPtr != NULL && !tsdPtr->restrictWinDead) {
 	    InitializeEvent(&event, targetWinPtr, MotionNotify, x, y,
 		    tsdPtr->lastState, NotifyAncestor);
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -534,6 +553,9 @@ TkPointerDeadWindow(
     }
     if (winPtr == tsdPtr->restrictWinPtr) {
 	tsdPtr->restrictWinPtr = NULL;
+	if (tsdPtr->lastState & ALL_BUTTONS) {
+	    tsdPtr->restrictWinDead = true;
+	}
     }
     if (!(tsdPtr->restrictWinPtr || tsdPtr->grabWinPtr)) {
 
