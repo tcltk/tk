@@ -20,7 +20,7 @@ to the userbase.
  - [MS-Win: tk_getOpenFile and tk_getSaveFile leak memory when -initialfile is given more than once](https://core.tcl-lang.org/tk/tktview/7ca431)
  - [double click is lost if processing a click takes too long](https://core.tcl-lang.org/tk/tktview/195423)
  - [canvas scrolls when the scrollbar indicates that it cannot](https://core.tcl-lang.org/tk/tktview/214852)
- - [Make --disable-bidi compile/work again.](https://core.tcl-lang.org/tk/tktview/0ec933)
+ - [Make --disable-bidi compile/work again](https://core.tcl-lang.org/tk/tktview/0ec933)
  - [configure: X11 header check always fails](https://core.tcl-lang.org/tk/tktview/9087fa)
  - [Text widget: wrong bbox widths for non-ASCII characters with bidi text rendering](https://core.tcl-lang.org/tk/tktview/7579c3)
  - [creating widgets is slow when an input method is active](https://core.tcl-lang.org/tk/tktview/5d52ad)
@@ -137,8 +137,9 @@ to the userbase.
  - [Busy canvas grinds after cursor change](https://core.tcl-lang.org/tk/tktview/195483)
  - [Menu geometry info wrong if cascaded](https://core.tcl-lang.org/tk/tktview/911951)
  - [Document undefined bindings](https://core.tcl-lang.org/tk/tktview/853414)
- - [MS-Win: winfo isdark crashes on a window which was never mapped](https://core.tcl-lang.org/tk/tktview/458a562c4275e37e)
+ - [MS-Win: winfo isdark crashes on a window which was never mapped](https://core.tcl-lang.org/tk/tktview/458a562c42)
  - [Stipple patterns don't work in arc/oval items on Windows](https://core.tcl-lang.org/tk/tktview/220787)
+ - [Do not reset the cursor over a window not managed by Tk](https://core.tcl-lang.org/tk/tktview/546607)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
