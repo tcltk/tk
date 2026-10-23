@@ -1506,6 +1506,48 @@ test canvas-29.1 {bounding boxes of items with huge coordinates - bug 701927} -s
     destroy .c
 } -result {{1 2 3 4 5 6} {1 1 1 1 1 1 1 1}}
 
+# Returns the two colors of an area stippled with gray50 at (x, y), sorted,
+# or an error message if the area is not a checkerboard.
+proc stippleColors {w x y} {
+    set c1 [testpixel $w $x $y]
+    set c2 [testpixel $w [expr {$x + 1}] $y]
+    if {$c1 eq $c2
+	    || [testpixel $w [expr {$x + 1}] [expr {$y + 1}]] ne $c1
+	    || [testpixel $w $x [expr {$y + 1}]] ne $c2} {
+	return "not stippled: $c1 $c2"
+    }
+    return [join [lsort [list $c1 $c2]]]
+}
+
+test canvas-27.1 {stippled arc fill - bug 220787} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create arc 10 10 110 110 -start 0 -extent 90 -style pieslice -fill red -stipple gray50 -outline {}
+    .c create arc 10 10 110 110 -start 180 -extent 90 -style chord -fill blue -stipple gray50 -outline {}
+    update
+    list [stippleColors .c 80 40] [stippleColors .c 35 95] [testpixel .c 40 40]
+} -cleanup {
+    destroy .c
+} -result {{#ff0000 #ffffff} {#0000ff #ffffff} #ffffff}
+
+test canvas-27.2 {stippled arc outline - bug 220787} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create arc 10 10 110 110 -start 0 -extent 180 -style arc -outline blue -outlinestipple gray50 -width 6
+    update
+    list [stippleColors .c 60 10] [testpixel .c 60 110]
+} -cleanup {
+    destroy .c
+} -result {{#0000ff #ffffff} #ffffff}
+
 test canvas-30.1 {a wide line with many points is drawn in reasonable time - bug 630171} -setup {
     canvas .c -width 301 -height 301
     pack .c
