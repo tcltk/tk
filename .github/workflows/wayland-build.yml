@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-1-branch"
+    - "wayland"
     tags:
     - "core-*"
 permissions:
