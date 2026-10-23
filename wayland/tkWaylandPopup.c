@@ -1439,6 +1439,84 @@ TkWaylandPopupFlushPixels(
 
 /*
  *----------------------------------------------------------------------
+ * TkWaylandPopupOverlayBorder --
+ *
+ *     Software equivalent of TkWaylandPopupDrawBorderWithShadow for
+ *     popups whose pixels are supplied by TkWaylandPopupPresentPixels
+ *     instead of being drawn with NanoVG (override-redirect toplevels).
+ *     It reproduces the menu geometry exactly: a 1px hairline in the
+ *     border color inset 1px from the surface edge (pixel row/column 1
+ *     and h-2/w-2), plus a faint black shadow on the outermost bottom
+ *     row (alpha 25) and right column (alpha 20), each stopping 2px
+ *     short of the corners.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Modifies the renderer's pixels (R,G,B,A byte order, opaque).
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandPopupBlendPixel(
+    unsigned char *p,
+    unsigned char r,
+    unsigned char g,
+    unsigned char b,
+    unsigned int a)
+{
+    p[0] = (unsigned char)((p[0] * (255 - a) + r * a) / 255);
+    p[1] = (unsigned char)((p[1] * (255 - a) + g * a) / 255);
+    p[2] = (unsigned char)((p[2] * (255 - a) + b * a) / 255);
+}
+
+static void
+TkWaylandPopupOverlayBorder(
+    TkWaylandPopup *popup)
+{
+    SoftRenderer *r = popup->renderer;
+    int w = popup->width, h = popup->height, i;
+    unsigned char *base = r->pixels;
+    size_t stride = (size_t) r->stride;
+
+    if (!popup->drawBorder || w < 4 || h < 4) {
+        return;
+    }
+
+    /* Hairline border, inset by one pixel. */
+    for (i = 1; i <= w - 2; i++) {
+        TkWaylandPopupBlendPixel(base + stride * 1 + i * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+        TkWaylandPopupBlendPixel(base + stride * (h - 2) + i * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+    }
+    for (i = 2; i <= h - 3; i++) {
+        TkWaylandPopupBlendPixel(base + stride * i + 1 * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+        TkWaylandPopupBlendPixel(base + stride * i + (w - 2) * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+    }
+
+    /* Shadow on the outermost bottom row and right column. */
+    if (popup->drawShadow) {
+        for (i = 2; i <= w - 3; i++) {
+            TkWaylandPopupBlendPixel(base + stride * (h - 1) + i * 4,
+                    0, 0, 0, 25);
+        }
+        for (i = 2; i <= h - 3; i++) {
+            TkWaylandPopupBlendPixel(base + stride * i + (w - 1) * 4,
+                    0, 0, 0, 20);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * TkWaylandPopupPresentPixels --
  *
  *     Show an externally rendered image in the popup.  The image is the
@@ -1520,6 +1598,9 @@ TkWaylandPopupPresentPixels(
             dst += 4;
         }
     }
+
+    /* Same border and drop shadow that menus get. */
+    TkWaylandPopupOverlayBorder(popup);
     TkWaylandPopupFlushPixels(popup);
 }
 

@@ -1334,8 +1334,12 @@ MapOverridePopup(
 	return 0;
     }
 
-    /* The widgets draw their own borders; no popup frame or shadow. */
-    TkWaylandPopupSetBorder(popup, 0, 0, 0, 0, 0, 0);
+    /*
+     * Give the window the same hairline border and drop shadow as a
+     * menu (TkWaylandPopupPresentPixels overlays them on every frame).
+     * To go back to widget-drawn borders only, pass 0 for enabled.
+     */
+    TkWaylandPopupSetBorder(popup, 1, 180, 180, 180, 255, 1);
     SetOverrideInfo(winPtr, popup, parent);
 
     winPtr->flags |= TK_MAPPED;
