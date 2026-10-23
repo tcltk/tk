@@ -138,6 +138,7 @@ to the userbase.
  - [Menu geometry info wrong if cascaded](https://core.tcl-lang.org/tk/tktview/911951)
  - [Document undefined bindings](https://core.tcl-lang.org/tk/tktview/853414)
  - [MS-Win: winfo isdark crashes on a window which was never mapped](https://core.tcl-lang.org/tk/tktview/458a562c4275e37e)
+ - [Stipple patterns don't work in arc/oval items on Windows](https://core.tcl-lang.org/tk/tktview/220787)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
