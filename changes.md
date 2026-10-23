@@ -136,7 +136,6 @@ to the userbase.
  - [tk_popup platform differences](https://core.tcl-lang.org/tk/tktview/585003)
  - [Busy canvas grinds after cursor change](https://core.tcl-lang.org/tk/tktview/195483)
  - [Menu geometry info wrong if cascaded](https://core.tcl-lang.org/tk/tktview/911951)
- - [Create many text widgets causes idle event overload](https://core.tcl-lang.org/tk/tktview/1348333)
  - [Document undefined bindings](https://core.tcl-lang.org/tk/tktview/853414)
  - [MS-Win: winfo isdark crashes on a window which was never mapped](https://core.tcl-lang.org/tk/tktview/458a562c4275e37e)
 
