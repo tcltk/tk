@@ -952,7 +952,7 @@ CanvasWidgetCmd(
 	}
 
 	if (objc == 5) {
-	    int append = 0;
+	    bool append = false;
 	    unsigned int mask;
 	    const char *argv4 = Tcl_GetString(objv[4]);
 
@@ -993,7 +993,7 @@ CanvasWidgetCmd(
 	    }
 	    if (argv4[0] == '+') {
 		argv4++;
-		append = 1;
+		append = true;
 	    }
 	    mask = Tk_CreateBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]), argv4, append);
@@ -2266,6 +2266,29 @@ ConfigureCanvas(
     Tk_State old_canvas_state=canvasPtr->canvas_state;
     int width, height, borderWidth, highlightWidth;
     int xScrollIncrement, yScrollIncrement;
+    Tcl_Size i;
+    int redrawItems = (objc == 0);
+
+    /*
+     * Options which do not affect the appearance of the items. If only such
+     * options are given, the items are not redrawn, which can be expensive
+     * for a canvas with many items. [Bug 1954833]
+     */
+
+    static const char *const noRedrawOptions[] = {
+	"-closeenough", "-cursor", "-takefocus", "-xscrollcommand",
+	"-xscrollincrement", "-yscrollcommand", "-yscrollincrement", NULL
+    };
+
+    for (i = 0; i < objc; i += 2) {
+	int index;
+
+	if (Tcl_GetIndexFromObj(NULL, objv[i], noRedrawOptions, "option", 0,
+		&index) != TCL_OK) {
+	    redrawItems = 1;
+	    break;
+	}
+    }
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, objv, canvasPtr,
@@ -2400,10 +2423,15 @@ ConfigureCanvas(
 
     CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, canvasPtr->yOrigin);
     canvasPtr->flags |= UPDATE_SCROLLBARS|REDRAW_BORDERS;
-    Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
-	    canvasPtr->xOrigin, canvasPtr->yOrigin,
-	    canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
-	    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
+    if (redrawItems) {
+	Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
+		canvasPtr->xOrigin, canvasPtr->yOrigin,
+		canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
+		canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
+    } else if (!(canvasPtr->flags & REDRAW_PENDING)) {
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+	canvasPtr->flags |= REDRAW_PENDING;
+    }
     return TCL_OK;
 }
 
@@ -3248,7 +3276,13 @@ DisplayCanvas(
     canvasPtr->flags &= ~(REDRAW_PENDING|BBOX_NOT_EMPTY);
     canvasPtr->redrawX1 = canvasPtr->redrawX2 = 0;
     canvasPtr->redrawY1 = canvasPtr->redrawY2 = 0;
-    if (canvasPtr->flags & UPDATE_SCROLLBARS) {
+
+    /*
+     * Postpone the scrollbar update until the window is mapped: the size of
+     * an unmapped window is not final. [Bug 991849]
+     */
+
+    if ((canvasPtr->flags & UPDATE_SCROLLBARS) && Tk_IsMapped(tkwin)) {
 	CanvasUpdateScrollbars(canvasPtr);
     }
     if (repickAgain) {
@@ -5151,7 +5185,17 @@ CanvasBindProc(
 	    CanvasDoEvent(canvasPtr, eventPtr);
 	    eventPtr->xbutton.state ^= mask;
 	    canvasPtr->state = eventPtr->xbutton.state;
-	    PickCurrentItem(canvasPtr, eventPtr);
+	    if ((long) (canvasPtr->pickEvent.xcrossing.time
+		    - eventPtr->xbutton.time) > 0) {
+		/*
+		 * The pointer moved while the binding script processed
+		 * events. [Bug 220902]
+		 */
+
+		PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
+	    } else {
+		PickCurrentItem(canvasPtr, eventPtr);
+	    }
 	    eventPtr->xbutton.state ^= mask;
 	}
 	break;

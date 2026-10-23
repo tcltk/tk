@@ -293,13 +293,21 @@ test unixbutton-3.1 {TkpDisplayButton: huge widget, bug bffa794b1b} -constraints
 } -setup {
     deleteWindows
 } -body {
+    # Each widget is huge in one direction only: a widget huge in both
+    # directions needs a 32767x32767 pixmap, which can lock up the system.
     label .w -text Wide -padx 20000
     label .h -text Tall -pady 20000
-    button .b -text Huge -padx 40000 -pady 40000
-    grid .w .h .b
+    label .ww -text Wide -padx 40000
+    label .hh -text Tall -pady 40000
+    # Place them, so that the toplevel is not resized beyond the 16-bit
+    # limit of X window sizes.
+    place .w -x 0 -y 0
+    place .h -x 0 -y 0
+    place .ww -x 0 -y 0
+    place .hh -x 0 -y 0
     update
     list [expr {[winfo width .w] > 40000}] [expr {[winfo height .h] > 40000}] \
-	    [expr {[winfo width .b] > 65536}] [expr {[winfo height .b] > 65536}]
+	    [expr {[winfo width .ww] > 65536}] [expr {[winfo height .hh] > 65536}]
 } -cleanup {
     deleteWindows
 } -result {1 1 1 1}

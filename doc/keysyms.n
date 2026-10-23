@@ -30,14 +30,14 @@ numbersign                          35     0x23
 dollar                              36     0x24
 % (percent)                         37     0x25
 & (ampersand)                       38     0x26
-' (apostrophe)                      39     0x27
+\&' (apostrophe)                      39     0x27
 ( (parenleft)                       40     0x28
 ) (parenright)                      41     0x29
 * (asterisk)                        42     0x2A
 + (plus)                            43     0x2B
 , (comma)                           44     0x2C
 minus                               45     0x2D
-. (period)                          46     0x2E
+\&. (period)                          46     0x2E
 / (slash)                           47     0x2F
 0                                   48     0x30
 1                                   49     0x31

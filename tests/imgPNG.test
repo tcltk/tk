@@ -1186,6 +1186,23 @@ test imgPNG-4.4 {file output with metadata} -setup {
     file delete $path
 } -result {DPI 99.9998 aspect 2.0}
 
+test imgPNG-5.1 {data with unknown format option, bug [fef61fae66]} -setup {
+    image create photo i1 -width 2 -height 2
+} -body {
+    i1 data -format {png -foobar}
+} -cleanup {
+    image delete i1
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
+test imgPNG-5.2 {write with unknown format option, bug [fef61fae66]} -setup {
+    image create photo i1 -width 2 -height 2
+    set path [file join [tcltest::configure -tmpdir] test.png]
+} -body {
+    i1 write $path -format {png -foobar}
+} -cleanup {
+    image delete i1
+    file delete $path
+} -returnCodes error -result {bad format option "-foobar": no options allowed}
+
 }
 
 #

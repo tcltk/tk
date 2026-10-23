@@ -80,6 +80,26 @@ test dialog-2.3 {tk_dialog operation} -body {
 } -cleanup {
     destroy .b
 } -result -1
+test dialog-2.4 {tk_dialog is centered over its parent} -setup {
+    toplevel .t
+    wm geometry .t 300x200+[expr {[winfo screenwidth .t] - 350}]+50
+    update
+} -body {
+    set x [after 5000 [list set tk::Priv(button) "no response"]]
+    after 100 {
+	set cx [expr {[winfo rootx .t.d] + [winfo width .t.d]/2 - [winfo rootx .t]}]
+	set cy [expr {[winfo rooty .t.d] + [winfo height .t.d]/2 - [winfo rooty .t]}]
+	set res [expr {$cx > 0 && $cx < [winfo width .t] &&
+		$cy > 0 && $cy < [winfo height .t]}]
+	destroy .t.d
+    }
+    tk_dialog .t.d foo foo info 0 click
+    after cancel $x
+    return $res
+} -cleanup {
+    destroy .t
+    unset -nocomplain res x cx cy
+} -result 1
 
 #
 # TESTFILE CLEANUP

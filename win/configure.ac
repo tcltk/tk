@@ -82,6 +82,21 @@ Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better.])
 fi
 
+#------------------------------------------------------------------------
+# Compile against the Tcl source tree if it is accessible, otherwise use
+# the installed Tcl headers.
+#------------------------------------------------------------------------
+
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+    TCL_INCLUDES='-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}"'
+    TCL_RC_INCLUDE_DIR='${TCL_GENERIC_NATIVE}'
+else
+    TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+    TCL_RC_INCLUDE_DIR=`echo "${TCL_INCLUDE_SPEC}" | sed 's/^-I//'`
+fi
+AC_SUBST(TCL_INCLUDES)
+AC_SUBST(TCL_RC_INCLUDE_DIR)
+
 #--------------------------------------------------------------------
 # The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called

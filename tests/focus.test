@@ -26,6 +26,11 @@ resetWindows
 testutils import child
 
 #
+# LOCAL TEST CONSTRAINTS
+#
+testConstraint noWindowManager [expr {![testConstraint withWindowManager]}]
+
+#
 # LOCAL UTILITY PROCS
 #
 
@@ -110,6 +115,10 @@ if {[testConstraint altDisplay]} {
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
 pack .b
+
+# Without a window manager the focus follows the pointer, so the pointer
+# must not be over the test windows, which are larger at high DPI.
+movePointerAwayFromTestArea
 
 bind all <FocusIn> {
     append focusInfo "in %W %d\n"
@@ -845,6 +854,74 @@ test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
     crashit
 } -result {Reached}
 
+test focus-9.1 {implicit focus is lost when another application takes the focus} -constraints {
+    x11 testxfocus noWindowManager
+} -setup {
+    deleteWindows
+    # Without a window manager, the main window of the child process (at
+    # +100+100) gets the focus implicitly when it appears under the pointer
+    # while the X focus follows the pointer.
+    event generate . <Motion> -warp 1 \
+	    -x [expr {150 - [winfo rootx .]}] -y [expr {150 - [winfo rooty .]}]
+    controlPointerWarpTiming
+    testxfocus pointerroot
+    childTkProcess create
+} -body {
+    childTkProcess eval {update; after 200; update}
+    set x [childTkProcess eval focus]
+    focus -force .
+    update
+    lappend x [childTkProcess eval {update; focus}]
+} -cleanup {
+    childTkProcess exit
+    movePointerAwayFromTestArea
+} -result {. {}}
+
+test focus-10.1 {a toplevel which got the X focus during a grab gets the Tk focus when the grab is released - bug 220892} -constraints {
+    unix testxfocus
+} -setup {
+    deleteWindows
+} -body {
+    toplevel .a
+    entry .a.e
+    pack .a.e
+    toplevel .b
+    entry .b.e
+    pack .b.e
+    wm geometry .b +200+0
+    update
+    focus -force .a.e
+    update
+    grab .a
+    # The window manager moves the X focus to the other toplevel, e.g. on
+    # a click; Tk ignores it while the grab is active.
+    testxfocus .b
+    update
+    set res [list [focus]]
+    grab release .a
+    update
+    lappend res [focus]
+} -cleanup {
+    deleteWindows
+} -result {{} .b}
+
+test focus-11.1 {focus -force moves the X focus to an override-redirect toplevel - bug a53a902ac6} -constraints {
+    unix testxfocus
+} -setup {
+    deleteWindows
+} -body {
+    toplevel .t
+    wm overrideredirect .t 1
+    wm geometry .t +100+100
+    entry .t.e
+    pack .t.e
+    update
+    focus -force .t.e
+    update
+    list [focus] [testxfocus]
+} -cleanup {
+    deleteWindows
+} -result {.t.e .t}
 #
 # TESTFILE CLEANUP
 #

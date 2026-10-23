@@ -437,6 +437,24 @@ test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
     wm deiconify .
 } -result {ok}
 
+test msgbox-4.1 {tk_messageBox with a global grab} -constraints {
+	nonUnixUserInteraction
+} -setup {
+    pack [button .b -text b]
+    update
+} -body {
+    grab -global .b
+    after 100 {set grabInBox [list [grab current] [grab status [grab current]]]}
+    ChooseMsg . "ok"
+    set result [tk_messageBox -title Hi -message "Please press ok" \
+	    -type ok -default ok]
+    list $result $grabInBox [grab current] [grab status .b]
+} -cleanup {
+    grab release .b
+    destroy .b
+    unset -nocomplain grabInBox result
+} -result {ok {.__tk__messagebox local} .b global}
+
 #
 # TESTFILE CLEANUP
 #

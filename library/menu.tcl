@@ -193,6 +193,18 @@ if {[tk windowingsystem] eq "x11"} {
     bind all <F10> {
 	tk::FirstMenu %W
     }
+} elseif {[tk windowingsystem] eq "win32"} {
+    # tk::WinMenuKey passes the key to Windows, for the native menubar
+    # and for system keys like Alt-F4. [Bug 2128087]
+    bind all <Alt-Key> {
+	if {![tk::TraverseToMenu %W %A]} {
+	    tk::WinMenuKey %W %N
+	}
+    }
+
+    bind Menubutton <F10> {
+	tk::FirstMenu %W
+    }
 } else {
     bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
@@ -264,7 +276,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	return
     }
     set menu [$w cget -menu]
-    if {$menu eq ""} {
+    if {$menu eq "" || ![winfo exists $menu]} {
 	return
     }
     set tearoff [expr {[tk windowingsystem] eq "x11" \
@@ -300,8 +312,21 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	MenuUnpost {}
 	return -options $opt $msg
     }
+    if {![winfo exists $menu]} {
+	# The menu was destroyed while it was posted, e.g. by the
+	# -postcommand, or on macOS while the native menu was shown.
+	# [Bug a4c72a04e3]
+	MenuUnpost {}
+	set Priv(postedMb) {}
+	return
+    }
 
     set Priv(tearoff) $tearoff
+    if {$tearoff == 0 && [tk windowingsystem] ne "x11"} {
+	# A native menu is already closed here. [Bug 2128087]
+	MenuUnpost {}
+	return
+    }
     if {$tearoff != 0 && [tk windowingsystem] ne "aqua"} {
 	focus $menu
 	if {[winfo viewable $w]} {
@@ -429,6 +454,11 @@ proc ::tk::MbMotion {w upDown rootx rooty} {
     if {$Priv(inMenubutton) eq $w} {
 	return
     }
+    # Only switch to another menubutton while a menu is posted; a binding
+    # script of the pressed menubutton may still be running. [Bug 680884]
+    if {$upDown eq "down" && $Priv(postedMb) eq ""} {
+	return
+    }
     set new [winfo containing $rootx $rooty]
     if {$new ne $Priv(inMenubutton) \
 	    && ($new eq "" || [winfo toplevel $new] eq [winfo toplevel $w])} {
@@ -462,7 +492,7 @@ proc ::tk::MbButtonUp w {
     unset -nocomplain Priv(pressed)
     set menu [$w cget -menu]
     set tearoff [expr {[tk windowingsystem] eq "x11" || \
-	    ($menu ne "" && [$menu cget -type] eq "tearoff")}]
+	    ($menu ne "" && [winfo exists $menu] && [$menu cget -type] eq "tearoff")}]
     if {($tearoff != 0) && $Priv(postedMb) eq $w \
 	    && $Priv(inMenubutton) eq $w} {
 	MenuFirstEntry [$Priv(postedMb) cget -menu]
@@ -1069,6 +1099,11 @@ proc ::tk::MenuFind {w char} {
 	}
 	if {[winfo class $child] eq "Menu" && \
 		[$child cget -type] eq "menubar"} {
+	    # Skip the original menu if it was created with "-type menubar";
+	    # its clone is the actual menubar of the toplevel. [Bug 223112]
+	    if {![winfo viewable $child]} {
+		continue
+	    }
 	    if {$char eq ""} {
 		return $child
 	    }
@@ -1121,7 +1156,8 @@ proc ::tk::MenuFind {w char} {
 # ::tk::TraverseToMenu --
 # This procedure implements keyboard traversal of menus.  Given an
 # ASCII character "char", it looks for a menubutton with that character
-# underlined.  If one is found, it posts the menubutton's menu
+# underlined.  If one is found, it posts the menubutton's menu and
+# returns 1, otherwise it returns 0.
 #
 # Arguments:
 # w -				Window in which the key was typed (selects
@@ -1133,29 +1169,35 @@ proc ::tk::MenuFind {w char} {
 proc ::tk::TraverseToMenu {w char} {
     variable ::tk::Priv
     if {![winfo exists $w] || $char eq ""} {
-	return
+	return 0
     }
     while {[winfo class $w] eq "Menu"} {
 	if {[$w cget -type] eq "menubar"} {
 	    break
 	} elseif {$Priv(postedMb) eq ""} {
-	    return
+	    return 0
 	}
 	set w [winfo parent $w]
     }
     set w [MenuFind [winfo toplevel $w] $char]
-    if {$w ne ""} {
-	if {[winfo class $w] eq "Menu"} {
-	    tk_menuSetFocus $w
-	    set Priv(window) $w
-	    SaveGrabInfo $w
-	    grab -global $w
-	    TraverseWithinMenu $w $char
-	} else {
-	    MbPost $w
-	    MenuFirstEntry [$w cget -menu]
-	}
+    if {$w eq ""} {
+	return 0
     }
+    if {[winfo class $w] eq "Menu"} {
+	if {[tk windowingsystem] ne "x11"} {
+	    # A native menubar handles the key itself.
+	    return 0
+	}
+	tk_menuSetFocus $w
+	set Priv(window) $w
+	SaveGrabInfo $w
+	grab -global $w
+	TraverseWithinMenu $w $char
+    } else {
+	MbPost $w
+	MenuFirstEntry [$w cget -menu]
+    }
+    return 1
 }
 
 # ::tk::FirstMenu --
@@ -1236,6 +1278,10 @@ proc ::tk::TraverseWithinMenu {w char} {
 
 proc ::tk::MenuFirstEntry menu {
     if {$menu eq ""} {
+	return
+    }
+    if {[tk windowingsystem] ne "x11" && ![winfo ismapped $menu]} {
+	# A native menu which is already closed.
 	return
     }
     tk_menuSetFocus $menu
@@ -1440,6 +1486,11 @@ if {[tk windowingsystem] ne "win32"} {
     proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	if {$entry ne ""} {
 	    $menu post $x $y $entry
+	    # The menu can be destroyed while it is posted, e.g. by the
+	    # -postcommand, or on macOS while the native menu is shown.
+	    if {![winfo exists $menu]} {
+		return
+	    }
 	    if {[$menu type $entry] ni {separator tearoff} &&
 		[$menu entrycget $entry -state] ne "disabled"} {
 		$menu activate $entry
@@ -1483,6 +1534,11 @@ if {[tk windowingsystem] ne "win32"} {
 	    }
 	}
 	$menu post $x $y
+	# The menu can be destroyed while it is posted, e.g. by the
+	# -postcommand.
+	if {![winfo exists $menu]} {
+	    return
+	}
 	if {$entry ne "" && [$menu entrycget $entry -state] ne "disabled"} {
 	    $menu activate $entry
 	    GenerateMenuSelect $menu
@@ -1584,7 +1640,8 @@ proc ::tk_popup {menu x y {entry {}}} {
 	}
     }
     tk::PostOverPoint $menu $x $y $entry
-    if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
+    if {[tk windowingsystem] eq "x11" && [winfo exists $menu]
+	    && [winfo viewable $menu]} {
 	tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu

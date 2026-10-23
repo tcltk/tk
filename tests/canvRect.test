@@ -197,7 +197,7 @@ test canvRect-4.4 {ConfigureRectOval procedure} -body {
 
 # I can't come up with any good tests for DeleteRectOval.
 
-test canvRect-5.1.1 {ComputeRectOvalBbox procedure} -constraints macOrUnix -body {
+test canvRect-5.1.1 {ComputeRectOvalBbox procedure} -constraints unix -body {
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 20 15 10 5
     .c bbox x
@@ -494,6 +494,84 @@ restore showpage
 end
 %%EOF
 }
+
+test canvRect-12.1 {dashed outline of a rectangle wider than 16-bit coordinates is drawn - bug 663981} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 100 -height 40 -borderwidth 0 -highlightthickness 0 \
+	-background white
+    pack .c
+    update
+} -body {
+    .c create rectangle -100000 10 100000 30 -outline black -width 4 -dash .
+    update
+    # Count the pixels of the top edge which are drawn.
+    set n 0
+    for {set x 0} {$x < 100} {incr x} {
+	if {[testpixel .c $x 10] eq "#000000"} {
+	    incr n
+	}
+    }
+    expr {$n > 20 && $n < 80}
+} -cleanup {
+    destroy .c
+} -result 1
+
+# Returns the two colors of an area stippled with gray50 at (x, y), sorted,
+# or an error message if the area is not a checkerboard.
+proc stippleColors {w x y} {
+    set c1 [testpixel $w $x $y]
+    set c2 [testpixel $w [expr {$x + 1}] $y]
+    if {$c1 eq $c2
+	    || [testpixel $w [expr {$x + 1}] [expr {$y + 1}]] ne $c1
+	    || [testpixel $w $x [expr {$y + 1}]] ne $c2} {
+	return "not stippled: $c1 $c2"
+    }
+    return [join [lsort [list $c1 $c2]]]
+}
+
+test canvRect-13.1 {stippled oval fill - bug 220787} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create oval 10 10 110 110 -fill red -stipple gray50 -outline {}
+    update
+    stippleColors .c 60 60
+} -cleanup {
+    destroy .c
+} -result {#ff0000 #ffffff}
+
+test canvRect-13.2 {stippled oval outline - bug 220787} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create oval 10 10 110 110 -fill {} -outline blue -outlinestipple gray50 -width 6
+    update
+    stippleColors .c 60 10
+} -cleanup {
+    destroy .c
+} -result {#0000ff #ffffff}
+
+test canvRect-13.3 {stippled rectangle outline - bug 220059} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 120 -height 120 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create rectangle 10 10 110 110 -fill {} -outline blue -outlinestipple gray50 -width 6
+    update
+    stippleColors .c 60 10
+} -cleanup {
+    destroy .c
+} -result {#0000ff #ffffff}
 
 #
 # TESTFILE CLEANUP

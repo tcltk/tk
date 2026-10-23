@@ -239,6 +239,9 @@ typedef struct TkWmInfo {
  * WM_VROOT_OFFSET_STALE -	non-zero means that (x,y) offset information
  *				about the virtual root window is stale and
  *				needs to be fetched fresh from the X server.
+ * WM_KEEP_POSITION -		non-zero means the window was withdrawn after
+ *				being mapped; ask the window manager to keep
+ *				its position when it is mapped again.
  * WM_ABOUT_TO_MAP -		non-zero means that the window is about to be
  *				mapped by TkWmMapWindow. This is used by
  *				UpdateGeometryInfo to modify its behavior.
@@ -272,6 +275,7 @@ typedef struct TkWmInfo {
 #define WM_UPDATE_SIZE_HINTS		0x10
 #define WM_SYNC_PENDING			0x20
 #define WM_VROOT_OFFSET_STALE		0x40
+#define WM_KEEP_POSITION		0x80
 #define WM_ABOUT_TO_MAP			0x100
 #define WM_MOVE_PENDING			0x200
 #define WM_COLORMAPS_EXPLICIT		0x400
@@ -4919,10 +4923,15 @@ UpdateSizeHints(
 	hintsPtr->max_height = hintsPtr->base_height
 		+ (maxHeight * wmPtr->heightInc);
     } else {
+	/*
+	 * The sizes are set for the wrapper, which is higher than the
+	 * toplevel by the height of the menubar.  [Bug 726351]
+	 */
+
 	hintsPtr->min_width = wmPtr->minWidth;
-	hintsPtr->min_height = wmPtr->minHeight;
+	hintsPtr->min_height = wmPtr->minHeight + wmPtr->menuHeight;
 	hintsPtr->max_width = maxWidth;
-	hintsPtr->max_height = maxHeight;
+	hintsPtr->max_height = maxHeight + wmPtr->menuHeight;
 	hintsPtr->base_width = 0;
 	hintsPtr->base_height = 0;
     }
@@ -4934,6 +4943,9 @@ UpdateSizeHints(
     hintsPtr->max_aspect.y = wmPtr->maxAspect.y;
     hintsPtr->win_gravity = wmPtr->gravity;
     hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize | PResizeInc;
+    if (wmPtr->flags & WM_KEEP_POSITION) {
+	hintsPtr->flags |= USPosition;
+    }
 
     /*
      * If the window isn't supposed to be resizable, then set the minimum and
@@ -5187,6 +5199,17 @@ CheckNetWmState(
     }
 
     wmPtr->attributes.zoomed = (zoomed == 3);
+
+    /*
+     * Keep the states changed through the window manager when the window is
+     * mapped again. The window manager may remove them from a withdrawn window.
+     */
+
+    if (!wmPtr->withdrawn) {
+	wmPtr->reqState.topmost = wmPtr->attributes.topmost;
+	wmPtr->reqState.zoomed = wmPtr->attributes.zoomed;
+	wmPtr->reqState.fullscreen = wmPtr->attributes.fullscreen;
+    }
 
     return;
 }
@@ -5670,6 +5693,7 @@ ParseGeometry(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, flags;
+    bool hasPosition = false;
     char *end;
     const char *p = string;
 
@@ -5711,6 +5735,7 @@ ParseGeometry(
      */
 
     if (*p != '\0') {
+	hasPosition = true;
 	flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
 	if (*p == '-') {
 	    flags |= WM_NEGATIVE_X;
@@ -5760,7 +5785,15 @@ ParseGeometry(
     wmPtr->height = height;
     wmPtr->x = x;
     wmPtr->y = y;
-    flags |= WM_MOVE_PENDING;
+
+    /*
+     * Sending back the position recorded from the window manager's frame
+     * makes some window managers move the window. [Bug 2995339]
+     */
+
+    if (hasPosition || (flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y))) {
+	flags |= WM_MOVE_PENDING;
+    }
     wmPtr->flags = flags;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
@@ -6612,6 +6645,7 @@ TkWmRestackToplevel(
     XWindowChanges changes;
     unsigned mask;
     TkWindow *wrapperPtr;
+    XEvent event;
 
     memset(&changes, 0, sizeof(XWindowChanges));
     changes.stack_mode = aboveBelow;
@@ -6648,6 +6682,27 @@ TkWmRestackToplevel(
 
     XReconfigureWMWindow(winPtr->display, wrapperPtr->window,
 	    Tk_ScreenNumber((Tk_Window) winPtr), mask, &changes);
+
+    /*
+     * Window managers with focus stealing prevention (Mutter, KWin) ignore
+     * this request for a window which is not active, but honor the EWMH
+     * _NET_RESTACK_WINDOW request when the user has not interacted with
+     * another window more recently. [Bug 22172f3732]
+     */
+
+    memset(&event, 0, sizeof(event));
+    event.xclient.type = ClientMessage;
+    event.xclient.display = winPtr->display;
+    event.xclient.window = wrapperPtr->window;
+    event.xclient.message_type = Tk_InternAtom((Tk_Window) winPtr,
+	    "_NET_RESTACK_WINDOW");
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = 2;	/* Source indication: pager, as required
+					 * by the specification for this request. */
+    event.xclient.data.l[1] = (otherPtr != NULL) ? (long) changes.sibling : 0;
+    event.xclient.data.l[2] = aboveBelow;
+    XSendEvent(winPtr->display, RootWindow(winPtr->display, winPtr->screenNum),
+	    False, SubstructureRedirectMask|SubstructureNotifyMask, &event);
 }
 
 
@@ -7495,6 +7550,7 @@ TkpWmSetState(
 	    return false;
 	}
 	WaitForMapNotify(winPtr, 0);
+	wmPtr->flags |= WM_KEEP_POSITION | WM_UPDATE_SIZE_HINTS;
     } else if (state == NormalState) {
 	wmPtr->hints.initial_state = NormalState;
 	wmPtr->withdrawn = false;

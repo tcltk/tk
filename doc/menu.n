@@ -208,8 +208,10 @@ On other platforms, the platform's native code takes care of unposting the
 menu.
 .PP
 If a \fB\-command\fR option is specified for a cascade entry then it is
-evaluated as a Tcl command whenever the entry is invoked. This is not
-supported on Windows.
+not evaluated when the user selects the entry: selecting it posts the
+associated submenu.  It is evaluated only if the entry is invoked with
+the \fBinvoke\fR widget command.  Use the \fB\-postcommand\fR option of
+the submenu for a command evaluated when the submenu is posted.
 .SS "TEAR-OFF ENTRIES"
 .PP
 A tear-off entry appears at the top of the menu if enabled with the
@@ -301,6 +303,12 @@ clone. Additionally, any cascades that are pointed to are also cloned
 so that menu traversal will work right. Clones are destroyed when
 either the tearoff or menubar goes away, or when the original menu is
 destroyed.
+.PP
+It is the clone which is posted and displayed, not the original menu, and on
+Windows and macOS the menus are drawn by the system, so no Tk window is mapped
+at all.  Therefore \fBwinfo\fR and \fBwm\fR do not return any meaningful
+geometry information for a menu which is used as a menubar or is torn off, nor
+for the menus of its cascade entries.
 .SH "WIDGET COMMAND"
 .PP
 The \fBmenu\fR command creates a new Tcl command whose
@@ -503,6 +511,9 @@ posting the menu and the result of that script is returned as the
 result of the \fBpost\fR widget command.  If an error returns while
 executing the command, then the error is returned without posting the
 menu.
+On X11 this command returns as soon as the menu is posted.  On Windows and
+macOS the menu is displayed by the system, which runs its own event loop, and
+the command does not return before the menu is unposted again.
 .\" METHOD: postcascade
 .TP
 \fIpathName \fBpostcascade \fIindex\fR
@@ -922,6 +933,20 @@ individual widgets or by redefining the class bindings.
 At present it is not possible to use the
 option database to specify values for the options to individual
 entries.
+.SH PLATFORM NOTES
+.TP
+\fBWindows\fR
+.
+The menubar of a toplevel may only honor font and color options when
+the not documented MS-Windows messages
+WM_UAHDRAWMENU, WM_UAHDRAWMENUITEM and WM_UAHMEASUREMENUITEM are sent
+by the system.
+Currently, this is the case for MS-Windows 8 to 11, but not for Wine.
+Any sub-menu will always honor those options.
+.TP
+\fBmacOS\fR
+.
+font and colors of menus may not be customized.
 .SH "SEE ALSO"
 bind(n), menubutton(n), ttk::menubutton(n), toplevel(n)
 .SH KEYWORDS

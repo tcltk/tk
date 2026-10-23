@@ -71,11 +71,52 @@ Tk_PhotoImageFormat tkImgFmtPPM = {
  * Prototypes for local functions defined in this file:
  */
 
+static int		CheckFormat(Tcl_Interp *interp, Tcl_Obj *format);
 static int		ReadPPMFileHeader(Tcl_Channel chan, int *widthPtr,
 			    int *heightPtr, int *maxIntensityPtr);
 static int		ReadPPMStringHeader(Tcl_Obj *dataObj, int *widthPtr,
 			    int *heightPtr, int *maxIntensityPtr,
 			    unsigned char **dataBufferPtr, int *dataSizePtr);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CheckFormat --
+ *
+ *	This function checks the -format string that can be specified when
+ *	reading or writing PPM data. No options are supported.
+ *
+ * Results:
+ *	TCL_OK, or TCL_ERROR if the format specification is invalid.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CheckFormat(
+    Tcl_Interp *interp,
+    Tcl_Obj *format)
+{
+    Tcl_Obj **objv;
+    Tcl_Size objc = 0;
+
+    if (format &&
+	    Tcl_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad format option \"%s\": no options allowed",
+		Tcl_GetString(objv[1])));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "BAD_OPTION",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -135,7 +176,7 @@ FileReadPPM(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
     const char *fileName,	/* The name of the image file. */
-    TCL_UNUSED(Tcl_Obj *),		/* User-specified format string, or NULL. */
+    Tcl_Obj *format,		/* User-specified format string, or NULL. */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -150,6 +191,9 @@ FileReadPPM(
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
 
+    if (CheckFormat(interp, format) != TCL_OK) {
+	return TCL_ERROR;
+    }
     type = ReadPPMFileHeader(chan, &fileWidth, &fileHeight, &maxIntensity);
     if (type == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -286,7 +330,7 @@ static int
 FileWritePPM(
     Tcl_Interp *interp,
     const char *fileName,
-    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
@@ -295,6 +339,9 @@ FileWritePPM(
     unsigned char *pixelPtr, *pixLinePtr;
     char header[16 + TCL_INTEGER_SPACE * 2];
 
+    if (CheckFormat(interp, format) != TCL_OK) {
+	return TCL_ERROR;
+    }
     chan = Tcl_OpenFileChannel(interp, fileName, "w", 0666);
     if (chan == NULL) {
 	return TCL_ERROR;
@@ -369,7 +416,7 @@ FileWritePPM(
 static int
 StringWritePPM(
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr)
 {
     int w, h, size, greenOffset, blueOffset;
@@ -377,6 +424,9 @@ StringWritePPM(
     char header[16 + TCL_INTEGER_SPACE * 2];
     Tcl_Obj *byteArrayObj;
 
+    if (CheckFormat(interp, format) != TCL_OK) {
+	return TCL_ERROR;
+    }
     snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
 
     /*
@@ -480,7 +530,7 @@ static int
 StringReadPPM(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Obj *dataObj,		/* The image data. */
-    TCL_UNUSED(Tcl_Obj *),		/* User-specified format string, or NULL. */
+    Tcl_Obj *format,		/* User-specified format string, or NULL. */
     Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
     int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
@@ -494,6 +544,9 @@ StringReadPPM(
     unsigned char *pixelPtr, *dataBuffer;
     Tk_PhotoImageBlock block;
 
+    if (CheckFormat(interp, format) != TCL_OK) {
+	return TCL_ERROR;
+    }
     type = ReadPPMStringHeader(dataObj, &fileWidth, &fileHeight,
 	    &maxIntensity, &dataBuffer, &dataSize);
     if (type == 0) {
