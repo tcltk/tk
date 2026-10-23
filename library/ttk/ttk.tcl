@@ -181,7 +181,14 @@ proc ttk::LoadThemes {} {
     }
 }
 
-ttk::LoadThemes; rename ::ttk::LoadThemes {}
+# This file is sourced again when [auto_reset] has removed the commands of
+# tk.tcl and one of them is autoloaded; the themes exist already then.
+# [Bug 3da0592db4]
+if {![info exists ::ttk::themesLoaded]} {
+    ttk::LoadThemes
+    set ::ttk::themesLoaded 1
+}
+rename ::ttk::LoadThemes {}
 
 ### Select platform-specific default theme:
 #
