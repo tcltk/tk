@@ -230,8 +230,8 @@ jobs:
           export TCL_LIBRARY="$TCL_CONFIG_PATH/../library"
           export TK_LIBRARY="$ROOT/library"
 
-          ./tktest ../tests/all.tcl -singleproc 0 | tee out-classic.txt
-          ./tktest ../tests/ttk/all.tcl -singleproc 0 | tee out-ttk.txt
+          ./tktest ../tests/all.tcl -singleproc 1 | tee out-classic.txt
+          ./tktest ../tests/ttk/all.tcl -singleproc 1 | tee out-ttk.txt
           grep -q "Failed     0" out-classic.txt
           grep -q "Failed     0" out-ttk.txt
         timeout-minutes: 15
