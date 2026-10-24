@@ -6010,16 +6010,15 @@ Tk_CoordsToWindow(
 		continue;
 	    }
 	    if (child == wmPtr->reparent) {
-		if (PointInWindow(x, y, wmPtr)) {
+		/*
+		 * Several toplevels may share this window, so look further if
+		 * the point is not in this one. [Bug 220856]
+		 */
+
+		if (PointInWindow(childX, childY, wmPtr)) {
 		    goto gotToplevel;
-		} else {
-
-		    /*
-		     * Return NULL if the point is in the title bar or border.
-		     */
-
-		    return NULL;
 		}
+		continue;
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
@@ -6059,6 +6058,15 @@ Tk_CoordsToWindow(
 	handler = NULL;
     }
     winPtr = wmPtr->winPtr;
+
+    /*
+     * The window manager may not have unmapped the frame of a withdrawn
+     * toplevel yet. [Bug 586f722cdd]
+     */
+
+    if (!Tk_IsMapped(winPtr)) {
+	return NULL;
+    }
 
     /*
      * Step 3: at this point winPtr and wmPtr refer to the toplevel that
