@@ -2266,6 +2266,29 @@ ConfigureCanvas(
     Tk_State old_canvas_state=canvasPtr->canvas_state;
     int width, height, borderWidth, highlightWidth;
     int xScrollIncrement, yScrollIncrement;
+    Tcl_Size i;
+    int redrawItems = (objc == 0);
+
+    /*
+     * Options which do not affect the appearance of the items. If only such
+     * options are given, the items are not redrawn, which can be expensive
+     * for a canvas with many items. [Bug 1954833]
+     */
+
+    static const char *const noRedrawOptions[] = {
+	"-closeenough", "-cursor", "-takefocus", "-xscrollcommand",
+	"-xscrollincrement", "-yscrollcommand", "-yscrollincrement", NULL
+    };
+
+    for (i = 0; i < objc; i += 2) {
+	int index;
+
+	if (Tcl_GetIndexFromObj(NULL, objv[i], noRedrawOptions, "option", 0,
+		&index) != TCL_OK) {
+	    redrawItems = 1;
+	    break;
+	}
+    }
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, objv, canvasPtr,
@@ -2400,10 +2423,15 @@ ConfigureCanvas(
 
     CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, canvasPtr->yOrigin);
     canvasPtr->flags |= UPDATE_SCROLLBARS|REDRAW_BORDERS;
-    Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
-	    canvasPtr->xOrigin, canvasPtr->yOrigin,
-	    canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
-	    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
+    if (redrawItems) {
+	Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
+		canvasPtr->xOrigin, canvasPtr->yOrigin,
+		canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
+		canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
+    } else if (!(canvasPtr->flags & REDRAW_PENDING)) {
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+	canvasPtr->flags |= REDRAW_PENDING;
+    }
     return TCL_OK;
 }
 
