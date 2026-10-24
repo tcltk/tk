@@ -5521,11 +5521,7 @@ TkpDrawAngledCharsInContext(
              * pen positions now yields correct joining because HarfBuzz has
              * already resolved init/medi/fina forms to distinct glyphIds and
              * we keep one nvgText call per HarfBuzz cluster (not per Unicode
-             * codepoint). This fixes the first screenshot where each codepoint
-             * was drawn separately at x=0.
-             *
-             * If you later add a direct glyph bitmap cache, replace this
-             * nvgText call with a textured quad using stbtt_GetGlyphBitmap.
+             * codepoint).
              */
             if (clusters[i].glyph_id != 0) {
                 nvgText(vg, gx, gy, clusters[i].text,
