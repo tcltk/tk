@@ -5456,18 +5456,24 @@ test textDisp-41.1 {many text widgets complete their line metrics update - bug 1
 	    pack .tt.f$i.t$j -side left
 	}
     }
-    after 1000 {set ::done 1}
-    vwait ::done
-    set pending 0
-    foreach f [winfo children .tt] {
-	foreach t [winfo children $f] {
-	    incr pending [$t pendingsync]
+    # Without the fix, no widget gets synchronized at all.  Allow up to 10
+    # seconds for slow machines.
+    for {set n 0} {$n < 100} {incr n} {
+	pause 100
+	set pending 0
+	foreach f [winfo children .tt] {
+	    foreach t [winfo children $f] {
+		incr pending [$t pendingsync]
+	    }
+	}
+	if {$pending == 0} {
+	    break
 	}
     }
     set pending
 } -cleanup {
     destroy .tt
-    unset -nocomplain ::done i j f t pending
+    unset -nocomplain i j f t n pending
 } -result 0
 #
 # TESTFILE CLEANUP
