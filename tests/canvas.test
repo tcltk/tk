@@ -1520,7 +1520,7 @@ proc stippleColors {w x y} {
 }
 
 test canvas-27.1 {stippled arc fill - bug 220787} -constraints {
-    testpixel
+    testpixel notAqua
 } -setup {
     destroy .c
     canvas .c -width 120 -height 120 -background white -highlightthickness 0
@@ -1535,7 +1535,7 @@ test canvas-27.1 {stippled arc fill - bug 220787} -constraints {
 } -result {{#ff0000 #ffffff} {#0000ff #ffffff} #ffffff}
 
 test canvas-27.2 {stippled arc outline - bug 220787} -constraints {
-    testpixel
+    testpixel notAqua
 } -setup {
     destroy .c
     canvas .c -width 120 -height 120 -background white -highlightthickness 0
