@@ -151,6 +151,7 @@ to the userbase.
  - [no longer replace "::" in manual page with "_" on installation](https://core.tcl-lang.org/tk/tktview/360434)
  - [entryconfigure destroys submenus](https://core.tcl-lang.org/tk/tktview/172305)
  - [Named font late creation](https://core.tcl-lang.org/tk/tktview/c81e0c)
+ - [transient windows don't appear on Windows](https://core.tcl-lang.org/tk/tktview/562c3a)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
