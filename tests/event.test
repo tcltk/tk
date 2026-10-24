@@ -1169,7 +1169,7 @@ test event-8.9 {event generate with a non-Latin keysym on Windows - bug 52e9b0f5
 
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
-} -body {
+} -constraints notAqua -body { #Disabled on Aqua due to [40dc19ee9e]
     wm geometry . 200x200+300+300
     wm deiconify .
     pause 200

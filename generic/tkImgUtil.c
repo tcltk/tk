@@ -49,13 +49,13 @@ TkAlignImageData(
     }
 
     /*
-     * Compute line width for output data buffer.
+     * Compute line width for output data buffer from the image width, since
+     * the lines of the input data can be padded to more bytes (e.g. 4 bytes
+     * for photo images). [Bug 481255]
      */
 
-    dataWidth = image->bytes_per_line;
-    if (dataWidth % alignment) {
-	dataWidth += (alignment - (dataWidth % alignment));
-    }
+    dataWidth = (image->width + 8 * alignment - 1) / (8 * alignment)
+	    * alignment;
 
     data = (char *)Tcl_Alloc(dataWidth * image->height);
 

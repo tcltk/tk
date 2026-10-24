@@ -11,7 +11,7 @@
 #
 # Does nothing on Windows and macOS, which have their own system pickers.
 
-package require Tk 9.0-
+package require tk 9.0-
 
 namespace eval ::tk::emoji {
 
