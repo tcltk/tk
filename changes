@@ -8573,3 +8573,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-22 (bug) [18f35e] "display lineend" landed inside a multi-byte character
 
 2026-10-22 (bug) [853414] Document undefined bindings (storchaka)
+
+2026-10-24 (bug) [172305] entryconfigure destroys submenus (storchaka)
