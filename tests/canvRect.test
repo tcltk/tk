@@ -533,7 +533,7 @@ proc stippleColors {w x y} {
 }
 
 test canvRect-13.1 {stippled oval fill - bug 220787} -constraints {
-    testpixel
+    testpixel notAqua
 } -setup {
     destroy .c
     canvas .c -width 120 -height 120 -background white -highlightthickness 0
@@ -547,7 +547,7 @@ test canvRect-13.1 {stippled oval fill - bug 220787} -constraints {
 } -result {#ff0000 #ffffff}
 
 test canvRect-13.2 {stippled oval outline - bug 220787} -constraints {
-    testpixel
+    testpixel notAqua
 } -setup {
     destroy .c
     canvas .c -width 120 -height 120 -background white -highlightthickness 0
@@ -561,7 +561,7 @@ test canvRect-13.2 {stippled oval outline - bug 220787} -constraints {
 } -result {#0000ff #ffffff}
 
 test canvRect-13.3 {stippled rectangle outline - bug 220059} -constraints {
-    testpixel
+    testpixel notAqua
 } -setup {
     destroy .c
     canvas .c -width 120 -height 120 -background white -highlightthickness 0

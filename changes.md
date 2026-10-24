@@ -142,6 +142,9 @@ to the userbase.
  - [Do not reset the cursor over a window not managed by Tk](https://core.tcl-lang.org/tk/tktview/546607)
  - [the icon list of the file dialog no longer clears the selection when it loses focus](https://core.tcl-lang.org/tk/tktview/600313)
  - [photo images with -palette 2 were corrupted on Windows](https://core.tcl-lang.org/tk/tktview/481255)
+ - [no longer replace "::" in manual page with "_" on installation](https://core.tcl-lang.org/tk/tktview/360434)
+ - [entryconfigure destroys submenus](https://core.tcl-lang.org/tk/tktview/172305)
+ - [Named font late creation](https://core.tcl-lang.org/tk/tktview/c81e0c)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
