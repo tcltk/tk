@@ -1391,8 +1391,7 @@ static void
 SetStipplePattern(
     MacDrawable *macDraw,
     GC gc,
-    CGContextRef context,
-    BOOL useDarkAppearance)
+    CGContextRef context)
 {
     static const CGPatternCallbacks callbacks = {
 	0, StippleDrawCell, StippleReleaseInfo
@@ -1410,9 +1409,9 @@ SetStipplePattern(
     if (!gc->stipple || !(mask = CreateStippleMask(gc->stipple))) {
 	return;
     }
-    TkSetMacColor2(gc->foreground, &fg, useDarkAppearance);
+    TkSetMacColor(gc->foreground, &fg);
     if (gc->fill_style == FillOpaqueStippled) {
-	TkSetMacColor2(gc->background, &bg, useDarkAppearance);
+	TkSetMacColor(gc->background, &bg);
     }
 
     /*
@@ -1704,8 +1703,7 @@ TkMacOSXSetupDrawingContext(
 	}
 	if (gc->fill_style == FillStippled
 		|| gc->fill_style == FillOpaqueStippled) {
-	    SetStipplePattern(macDraw, gc, dc.context,
-		    TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
+	    SetStipplePattern(macDraw, gc, dc.context);
 	}
 	if (gc->function != GXcopy) {
 	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
