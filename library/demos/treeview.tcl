@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk 9.1-
+package require tk 9.1-
 
 
 ####################

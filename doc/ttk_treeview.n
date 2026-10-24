@@ -153,7 +153,7 @@ Indicates the last child in the list of children.
 .IP \fBend-\fIn\fR 12
 Indicates the item at position \fIn\fR relative to the end
 where \fBend-1\fR is the last item in the list of children.
-.IP \fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR 12
+.IP "\fIm\fB-\fIn\fR or \fIm\fB+\fIn\fR" 12
 Indicates the item at position \fIn\fR relative to index \fIm\fR.
 See \fBstring index\fR for valid forms.
 .SH "COLUMN IDENTIFIERS"
@@ -981,12 +981,15 @@ greater than the second, respectively.
 .TP
 \fB\-increasing\fR
 .
-Sort the list in increasing order (“smallest” items first). This is the default.
+Sort the list in increasing order
+.PQ smallest " items first" .
+This is the default.
 .\" OPTION: -decreasing
 .TP
 \fB\-decreasing\fR
 .
-Sort the list in decreasing order (“largest” items first).
+Sort the list in decreasing order
+.PQ largest " items first" .
 .\" OPTION: -column
 .TP
 \fB\-column \fIcolumn\fR
@@ -1122,30 +1125,30 @@ detached, hidden, and all ancestors are open and not hidden.
 .PP
 The following item options can be set or get with the \fBinsert\fR and
 \fBitem\fR subcommands:
-.IP \fB\-height \fIinteger\fR
+.IP "\fB\-height \fIinteger\fR"
 The height of the item in multiples of \fB\-rowheight\fR. The default is 1.
-.IP \fB\-image \fIname\fR
+.IP "\fB\-image \fIname\fR"
 Display image \fIname\fR next to the label in the tree column, placed according
 to \fB\-imageanchor\fR.
-.IP \fB\-imageanchor \fIanchor\fR
+.IP "\fB\-imageanchor \fIanchor\fR"
 Specifies how the \fB\-image\fR is to be displayed relative to the text. The
 default is \fBw\fR. See \fBTk_GetAnchor\fR for valid values.
-.IP \fB\-hidden \fIboolean\fR
+.IP "\fB\-hidden \fIboolean\fR"
 A Boolean value indicating whether the item should be displayed (\fBfalse\fR) or
 hidden (\fBtrue\fR). If a parent is hidden, then all its descendants are hidden too.
-.IP \fB\-open \fIboolean\fR
+.IP "\fB\-open \fIboolean\fR"
 A Boolean value indicating whether the item's children should be displayed
 (\fBtrue\fR) or hidden (\fBfalse\fR).
-.IP \fB\-tags \fIlist\fR
+.IP "\fB\-tags \fIlist\fR"
 A list of tags associated with this item.
-.IP \fB\-text \fItext\fR
+.IP "\fB\-text \fItext\fR"
 The textual label to display for the item in the tree column.
-.IP \fB\-values \fIlist\fR
+.IP "\fB\-values \fIlist\fR"
 The list of values associated with the item. Each item should have the same
 number of values as the \fB\-columns\fR widget option. If there are fewer
 values than columns, the remaining values are assumed empty. If there are more
 values than columns, the extra values are ignored.
-.IP \fBstate \fIstateSpec\fR
+.IP "\fBstate \fIstateSpec\fR"
 Modify or query item state. If \fIstateSpec\fR is present, sets the widget
 state: for each flag in stateSpec, sets the corresponding flag or clears it if
 prefixed by an exclamation point. Without \fIstateSpec\fR, the current states
@@ -1156,20 +1159,20 @@ be set or cleared via the associated subcommands.
 .SH "TAG OPTIONS"
 .PP
 The following tag options can be set or get with the \fBtag configure\fR subcommand:
-.IP \fB\-foreground \fIcolor\fR
+.IP "\fB\-foreground \fIcolor\fR"
 Specifies the text foreground color.
-.IP \fB\-background \fIcolor\fR
+.IP "\fB\-background \fIcolor\fR"
 Specifies the cell or item background color.
-.IP \fB\-font \fIfont\fR
+.IP "\fB\-font \fIfont\fR"
 Specifies the font to use when drawing text.
-.IP \fB\-image \fIname\fR
+.IP "\fB\-image \fIname\fR"
 Specifies the cell or item image.
-.IP \fB\-imageanchor \fIanchor\fR
+.IP "\fB\-imageanchor \fIanchor\fR"
 Specifies the cell or item image anchor. See \fBTk_GetAnchor\fR for valid values.
-.IP \fB\-padding \fIamount\fR
+.IP "\fB\-padding \fIamount\fR"
 Specifies the cell padding. A data cell will have a default padding of {4 0}.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
-.IP \fB\-stripedbackground \fIboolean\fR
+.IP "\fB\-stripedbackground \fIboolean\fR"
 Specifies the cell or item background color for alternate lines,
 if \fB\-striped\fR is true.
 .PP
