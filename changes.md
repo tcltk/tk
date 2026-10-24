@@ -150,6 +150,7 @@ to the userbase.
  - [Document undefined bindings](https://core.tcl-lang.org/tk/tktview/853414)
  - [no longer replace "::" in manual page with "_" on installation](https://core.tcl-lang.org/tk/tktview/360434)
  - [entryconfigure destroys submenus](https://core.tcl-lang.org/tk/tktview/172305)
+ - [Named font late creation](https://core.tcl-lang.org/tk/tktview/c81e0c)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
