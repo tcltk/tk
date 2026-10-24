@@ -316,6 +316,25 @@ ringing the bell -> cannot invoke "bell" command: application has been destroyed
 done waiting
 bell -> cannot invoke "bell" command: application has been destroyed
 update -> }}
+test window-2.13 {destroy . before the root window is first shown - bugs aeb2ed51ab, 8e32cb7ece} -body {
+    set code [loadTkCommand]
+    append code {
+	after 1000 {set forever 1}
+	after 0 {destroy .}
+	puts "waiting"
+	vwait forever
+	puts "done waiting"
+    }
+    set script [makeFile $code script]
+    if {[catch {exec [interpreter] $script -geometry 10x10+0+0} msg]} {
+	set error 1
+    } else {
+	set error 0
+    }
+    removeFile script
+    list $error $msg
+} -result {0 {waiting
+done waiting}}
 
 
 test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -constraints {
