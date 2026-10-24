@@ -19,6 +19,7 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         compiler:
           - "gcc"
@@ -46,7 +47,8 @@ jobs:
             wayland-protocols libwayland-dev libwayland-egl1 \
             libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
-            libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev
+            libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
+            libatk1.0-dev libatk-bridge2.0-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
@@ -105,7 +107,8 @@ jobs:
             libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont \
             dbus dbus-x11 mesa-utils \
             gnome-shell gnome-shell-extension-appindicator gnome-shell-common \
-            libglib2.0-bin dconf-gsettings-backend dconf-service
+            libglib2.0-bin dconf-gsettings-backend dconf-service \
+            libatk1.0-dev libatk-bridge2.0-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
