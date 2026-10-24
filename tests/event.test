@@ -943,6 +943,32 @@ test event-8.1 {keysym of Control and Alt keys with a non-Latin keyboard
     deleteWindows
 } -result {c C c 1}
 
+test event-8.2 {keysym of Control and Alt keys with a non-Latin keyboard
+	      layout on X11 - bug 701d8f8953} -constraints x11 -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    update
+    bind $e <Key> {set keycode %k}
+    event generate $e <Key> -keysym q
+    bind $e <Key> {lappend res %K}
+    # State bit 0x2000 selects the second XKB group, a non-Latin layout
+    # with e.g. "setxkbmap us,ua" (with a single layout it is the same as
+    # the first group).  The keysym must be the Latin letter of the key with
+    # Control (4), Control+Shift (5) and Alt (8) whatever the layout is.
+    event generate $e <Key> -keycode $keycode -state 0x2004
+    event generate $e <Key> -keycode $keycode -state 0x2005
+    event generate $e <Key> -keycode $keycode -state 0x2008
+    set res
+} -cleanup {
+    deleteWindows
+} -result {q Q q}
+
 test event-8.3 {keysym of a keypad key with Num Lock on X11 - bug 481308} -constraints x11 -setup {
     deleteWindows
     set useIM [tk useinputmethods]
@@ -992,12 +1018,10 @@ test event-8.4 {characters entered via an input method (VK_PACKET) on Windows - 
     # Latin, Cyrillic and non-BMP (surrogate pair) characters.
     testsendinput unicode "r\u0439\U0001F600"
     # Wait for the events to arrive.
-    after 500 {set done 1}
-    vwait done
+    pause 500
     set res
 } -cleanup {
     deleteWindows
-    unset -nocomplain done
 } -result "{press r} {release r} {press \u0439} {release \u0439} {press \U0001F600} {release \U0001F600}"
 
 test event-8.5 {key input with a non-Latin keyboard layout on Windows - bug a9bd2ab98b} -constraints {
@@ -1019,13 +1043,11 @@ test event-8.5 {key input with a non-Latin keyboard layout on Windows - bug a9bd
     bind $e <Key> {lappend res %A}
     testsendinput key 0x51
     # Wait for the events to arrive.
-    after 500 {set done 1}
-    vwait done
+    pause 500
     lappend res [$e get]
 } -cleanup {
     testsendinput layout $klid
     deleteWindows
-    unset -nocomplain done
 } -result "\u0439 \u0439"
 
 test event-8.6 {key input with a keyboard layout without an ANSI code page on Windows - bug a9bd2ab98b} -constraints {
@@ -1047,13 +1069,11 @@ test event-8.6 {key input with a keyboard layout without an ANSI code page on Wi
     bind $e <Key> {lappend res %A}
     testsendinput key 0x51
     # Wait for the events to arrive.
-    after 500 {set done 1}
-    vwait done
+    pause 500
     lappend res [$e get]
 } -cleanup {
     testsendinput layout $klid
     deleteWindows
-    unset -nocomplain done
 } -result "\u10E6 \u10E6"
 
 test event-8.7 {keysym of a non-Latin key on Windows - bug 52e9b0f52c} -constraints {
@@ -1074,20 +1094,17 @@ test event-8.7 {keysym of a non-Latin key on Windows - bug 52e9b0f52c} -constrai
     testsendinput layout 00000422
     # Switching the keyboard layout releases the modifiers of the key which
     # switches the layout; let these events be delivered before binding.
-    after 200 {set done 1}
-    vwait done
+    pause 200
     bind $e <Key> {lappend res [list press %K]}
     bind $e <KeyRelease> {lappend res [list release %K]}
     bind $t <Cyrillic_shorti> {lappend res matched}
     testsendinput key 0x51
     # Wait for the events to arrive.
-    after 500 {set done 1}
-    vwait done
+    pause 500
     set res
 } -cleanup {
     testsendinput layout $klid
     deleteWindows
-    unset -nocomplain done
 } -result {{press Cyrillic_shorti} matched {release Cyrillic_shorti}}
 
 test event-8.8 {keysym of a key without a named keysym on Windows - bug 52e9b0f52c} -constraints {
@@ -1109,20 +1126,17 @@ test event-8.8 {keysym of a key without a named keysym on Windows - bug 52e9b0f5
     testsendinput layout 00000437
     # Switching the keyboard layout releases the modifiers of the key which
     # switches the layout; let these events be delivered before binding.
-    after 200 {set done 1}
-    vwait done
+    pause 200
     bind $e <Key> {lappend res [list press %K]}
     bind $e <KeyRelease> {lappend res [list release %K]}
     bind $t <\u10E6> {lappend res matched}
     testsendinput key 0x51
     # Wait for the events to arrive.
-    after 500 {set done 1}
-    vwait done
+    pause 500
     set res
 } -cleanup {
     testsendinput layout $klid
     deleteWindows
-    unset -nocomplain done
 } -result "{press \u10E6} matched {release \u10E6}"
 
 test event-8.9 {event generate with a non-Latin keysym on Windows - bug 52e9b0f52c} -constraints {
@@ -1155,7 +1169,7 @@ test event-8.9 {event generate with a non-Latin keysym on Windows - bug 52e9b0f5
 
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
-} -body {
+} -constraints notAqua -body { #Disabled on Aqua due to [40dc19ee9e]
     wm geometry . 200x200+300+300
     wm deiconify .
     pause 200
