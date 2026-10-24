@@ -178,15 +178,15 @@ TkImgPhotoConfigureInstance(
      * different from our current width/height, set the size to the values
      * specified by the user. If we have no pixmap, we do this also, since it
      * has the side effect of allocating a pixmap for us. Platforms which
-     * render RGBA images do not use the pixmap.
+     * render RGBA images do not use the pixmap, and allocate the error
+     * array only when needed.
      */
 
     if (
 #ifndef TK_CAN_RENDER_RGBA
-	    (instancePtr->pixels == None) ||
+	    (instancePtr->pixels == None) || (instancePtr->error == NULL) ||
 #endif
-	    (instancePtr->error == NULL)
-	    || (instancePtr->width != modelPtr->width)
+	    (instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)) {
 	TkImgPhotoInstanceSetSize(instancePtr);
     }
@@ -991,9 +991,19 @@ TkImgPhotoInstanceSetSize(
     }
 #endif /* TK_CAN_RENDER_RGBA */
 
+#ifdef TK_CAN_RENDER_RGBA
+    /*
+     * The error array is allocated by DitherInstanceRGBA() when needed.
+     */
+
+    if (((instancePtr->width != modelPtr->width)
+	    || (instancePtr->height != modelPtr->height))
+	    && (instancePtr->error != NULL)) {
+#else
     if ((instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)
 	    || (instancePtr->error == NULL)) {
+#endif
 	if (modelPtr->height > 0 && modelPtr->width > 0) {
 	    /*
 	     * TODO: use Tcl_AttemptAlloc() here once there is a strategy that
@@ -2176,7 +2186,8 @@ TkImgDitherInstance(
  *	None.
  *
  * Side effects:
- *	instancePtr->pix32 is updated, allocated or freed.
+ *	instancePtr->pix32 is updated, allocated or freed. The dithering
+ *	error array is allocated or freed.
  *
  *----------------------------------------------------------------------
  */
@@ -2200,10 +2211,13 @@ DitherInstanceRGBA(
 	    Tcl_Free(instancePtr->pix32);
 	    instancePtr->pix32 = NULL;
 	}
+	if (instancePtr->error != NULL) {
+	    Tcl_Free(instancePtr->error);
+	    instancePtr->error = NULL;
+	}
 	return;
     }
-    if ((instancePtr->error == NULL) || (modelPtr->width <= 0)
-	    || (modelPtr->height <= 0)) {
+    if ((modelPtr->width <= 0) || (modelPtr->height <= 0)) {
 	return;
     }
     if (instancePtr->pix32 == NULL) {
@@ -2211,6 +2225,12 @@ DitherInstanceRGBA(
 
 	instancePtr->pix32 = (unsigned char *)Tcl_Alloc(size);
 	memset(instancePtr->pix32, 0, size);
+    }
+    if (instancePtr->error == NULL) {
+	size_t size = (size_t) modelPtr->width * modelPtr->height * 3;
+
+	instancePtr->error = (schar *)Tcl_Alloc(size);
+	memset(instancePtr->error, 0, size);
     }
 
     /*

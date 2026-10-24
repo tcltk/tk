@@ -954,7 +954,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		}
 
 		# Announce menubar immediately.
-		if $isMenubar {
+		if {$isMenubar} {
 		    ::tk::accessible::speak $label
 
 		    # Clear dedupe cache so submenu index 1 is NOT skipped.

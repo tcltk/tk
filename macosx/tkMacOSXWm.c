@@ -1386,6 +1386,7 @@ TkWmDeadWindow(
 	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, deadView);
 	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, deadView);
 	CGContextRelease(deadView.tkLayerBitmapContext);
+	deadView.tkLayerBitmapContext = NULL;
 	[deadNSWindow close];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];

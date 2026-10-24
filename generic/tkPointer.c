@@ -473,6 +473,39 @@ XUngrabPointer(
 /*
  *----------------------------------------------------------------------
  *
+ * TkPointerClearButtons --
+ *
+ *	This function is called when the mouse buttons were released while
+ *	a native modal loop (e.g. a native popup menu) was active, which
+ *	consumed the release events. It forgets the buttons and the implicit
+ *	grab without generating ButtonRelease events. [Bug 869305]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The mouse capture is released.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkPointerClearButtons(void)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (!(tsdPtr->lastState & ALL_BUTTONS)) {
+	return;
+    }
+    tsdPtr->lastState &= ~ALL_BUTTONS;
+    tsdPtr->restrictWinPtr = NULL;
+    TkpSetCapture(tsdPtr->grabWinPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkPointerDeadWindow --
  *
  *	Clean up pointer module state when a window is destroyed.
@@ -541,11 +574,20 @@ UpdateCursor(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
+     * If the pointer is not over a window managed by Tk, leave the cursor to
+     * whoever owns that window.  [Bug 546607]
+     */
+
+    tsdPtr->cursorWinPtr = winPtr;
+    if (winPtr == NULL) {
+	return;
+    }
+
+    /*
      * A window inherits its cursor from its parent if it doesn't have one of
      * its own. Top level windows inherit the default cursor.
      */
 
-    tsdPtr->cursorWinPtr = winPtr;
     while (winPtr != NULL) {
 	if (winPtr->atts.cursor != None) {
 	    cursor = winPtr->atts.cursor;

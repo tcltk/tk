@@ -440,6 +440,8 @@ package require tk
 	    [namespace code {my Double1 %x %y}]
 
 	bind $canvas <Control-B1-Motion> {;}
+	bind $canvas <Control-Double-ButtonRelease-1> {;}
+	bind $canvas <Shift-Double-ButtonRelease-1> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
 	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
@@ -587,7 +589,6 @@ package require tk
     }
     method FocusOut {} {
 	$w state !focus
-	$w selection clear 0 end
     }
 
     #	Moves the active element up or down by one element
