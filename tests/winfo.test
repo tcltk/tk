@@ -513,6 +513,26 @@ test winfo-14.4 {"winfo ismapped" command, new toplevel is mapped at idle time} 
     destroy .t
 } -result 1
 
+test winfo-15.1 {"winfo isdark" command, toplevel which was never mapped} -setup {
+    destroy .t
+} -body {
+    toplevel .t
+    wm withdraw .t
+    string is boolean -strict [winfo isdark .t]
+} -cleanup {
+    destroy .t
+} -result 1
+test winfo-15.2 {"winfo isdark" command, widget in a toplevel which was never mapped} -setup {
+    destroy .t
+} -body {
+    toplevel .t
+    wm withdraw .t
+    frame .t.f
+    string is boolean -strict [winfo isdark .t.f]
+} -cleanup {
+    destroy .t
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #

@@ -874,12 +874,11 @@ test menubutton-11.1 {keyboard traversal posts the menu again after it was dismi
     testsendinput key 0x79
     testsendinput key 0x1B
     # Wait for the events to be processed.
-    after 1000 {set done 1}
-    vwait done
+    pause 1000
     lappend res $::tk::Priv(postedMb)
 } -cleanup {
     deleteWindows
-    unset -nocomplain done res
+    unset -nocomplain res
 } -result {posted posted {}}
 
 test menubutton-12.1 {a menu which does not fit below its menubutton is

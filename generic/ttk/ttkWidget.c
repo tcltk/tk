@@ -251,6 +251,10 @@ DestroyWidget(WidgetCore *corePtr)
  *
  *	For Deactivate/Activate pseudo-events, set/clear the background state
  *	flag.
+ *
+ *	On the first MapNotify event, update the layout: virtual events are
+ *	not delivered to unrealized windows, so <<ThemeChanged>> events sent
+ *	before the widget was mapped have been missed.
  */
 
 static const unsigned CoreEventMask
@@ -271,6 +275,12 @@ static void CoreEventProc(void *clientData, XEvent *eventPtr)
     {
 	case ConfigureNotify :
 	    TtkRedisplayWidget(corePtr);
+	    break;
+	case MapNotify :
+	    if (!(corePtr->flags & WIDGET_MAPPED)) {
+		corePtr->flags |= WIDGET_MAPPED;
+		WidgetWorldChanged(corePtr);
+	    }
 	    break;
 	case Expose :
 	    if (eventPtr->xexpose.count == 0) {
@@ -428,7 +438,6 @@ int TtkWidgetConstructorObjCmd(
     Tcl_Release(corePtr);
 
     SizeChanged(corePtr);
-    Tk_MakeWindowExist(tkwin);
 
     Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin), -1));
     return TCL_OK;

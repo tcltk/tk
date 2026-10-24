@@ -9121,10 +9121,18 @@ RemapWindows(
 
 int
 TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
-    HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    HWND hwnd;
     HRESULT result;
     long long answer = 0; /* Windows cares about the alignment. */
 
+    /*
+     * A window which was never mapped may have no HWND yet.
+     */
+
+    if (Tk_WindowId(tkwin) == None) {
+	Tk_MakeWindowExist(tkwin);
+    }
+    hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
     result = DwmGetWindowAttribute(
 	GetAncestor(hwnd, GA_ROOT),
 	DWMWA_USE_IMMERSIVE_DARK_MODE,

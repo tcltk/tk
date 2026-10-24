@@ -24,7 +24,9 @@
 
 static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
-static bool mouseTimerSet = false;		/* true if the mouse timer is active. */
+static bool mouseTimerSet = false;	/* true if the mouse timer is active. */
+static int pointerSuspended = 0;	/* Non-zero while a native popup menu is
+					 * tracked; pointer events are ignored. */
 static bool captured = false;		/* 1 if mouse is currently captured. */
 
 /*
@@ -119,6 +121,9 @@ TkWinPointerEvent(
     int state;
     Tk_Window tkwin;
 
+    if (pointerSuspended) {
+	return;
+    }
     pos.x = x;
     pos.y = y;
 
@@ -243,6 +248,32 @@ MouseTimerProc(
 
     GetCursorPos(&pos);
     TkWinPointerEvent(NULL, pos.x, pos.y);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinSuspendPointer --
+ *
+ *	Suspends or resumes the generation of pointer events. While a native
+ *	popup menu is tracked, Windows still dispatches mouse messages to Tk
+ *	windows, which must not generate Motion or Enter/Leave events, as if
+ *	the menu had a grab. [Bug 869305]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinSuspendPointer(
+    int suspend)		/* Non-zero to suspend, zero to resume. */
+{
+    pointerSuspended = suspend;
 }
 
 /*
@@ -381,9 +412,14 @@ void TkSetCursorPos(
 	return;
     }
 
+    /*
+     * Windows maps the normalized coordinate d to the pixel
+     * d * size / 65536 rounded down. Round up here, so that the pointer
+     * lands on the requested pixel at any screen size.
+     */
     input.type = INPUT_MOUSE;
-    input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
-    input.mi.dy = (y * 65535 + yscreen/2) / yscreen;
+    input.mi.dx = (x * 65536 + xscreen) / (xscreen + 1);
+    input.mi.dy = (y * 65536 + yscreen) / (yscreen + 1);
 
     /*
      * Horrible workaround here. There is a bug on Win 10: when warping to
