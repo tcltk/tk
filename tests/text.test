@@ -7881,6 +7881,39 @@ test text-39.1 {no scroll command before the text is mapped - bug 991849} -setup
     unset -nocomplain log res
 } -result {{} {y 0.0 0.5 x 0.0 0.5}}
 
+test text-42.1 {<<PrevWord>> stops at a one-character word before the cursor} -setup {
+    text .t
+    set res {}
+} -body {
+    .t insert end "a b c\nxy z"
+    .t mark set insert end-1c
+    for {set i 0} {$i < 5} {incr i} {
+	event generate .t <<PrevWord>>
+	lappend res [.t index insert]
+    }
+    .t mark set insert 2.4
+    event generate .t <<SelectPrevWord>>
+    lappend res [.t tag ranges sel]
+} -cleanup {
+    destroy .t
+    unset -nocomplain res i
+} -result {2.3 2.0 1.4 1.2 1.0 {2.3 2.4}}
+test text-42.2 {<<PrevWord>> stops at a one-character word before the cursor, -locale tcl8} -setup {
+    text .t -locale tcl8
+    set res {}
+} -body {
+    .t insert end "a b c\nxy z"
+    .t mark set insert end-1c
+    for {set i 0} {$i < 5} {incr i} {
+	event generate .t <<PrevWord>>
+	lappend res [.t index insert]
+    }
+    set res
+} -cleanup {
+    destroy .t
+    unset -nocomplain res i
+} -result {2.3 2.0 1.4 1.2 1.0}
+
 # A word made only of right-to-left characters (Hebrew).
 set rtlWord [format %c%c%c%c 0x5E9 0x5DC 0x5D5 0x5DD]
 

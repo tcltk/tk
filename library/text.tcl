@@ -123,7 +123,7 @@ bind Text <<SelectNextLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+    tk::TextSetCursor %W [tk::TextPrevWord %W insert]
 }
 bind Text <<NextWord>> {
     tk::TextSetCursor %W [tk::TextNextWord %W insert]
@@ -135,7 +135,7 @@ bind Text <<NextPara>> {
     tk::TextSetCursor %W [tk::TextNextPara %W insert]
 }
 bind Text <<SelectPrevWord>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+    tk::TextKeySelect %W [tk::TextPrevWord %W insert]
 }
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextSelectNextWord %W insert]
@@ -364,7 +364,7 @@ bind Text <<Redo>> {
 
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+	tk::TextSetCursor %W [tk::TextPrevWord %W insert]
     }
 }
 bind Text <Meta-d> {
@@ -389,12 +389,12 @@ bind Text <Meta-greater> {
 }
 bind Text <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 
@@ -1230,6 +1230,32 @@ proc ::tk_textPaste w {
 proc ::tk::TextNextWord {w start} {
     TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
 	    tk::startOfNextWord
+}
+
+# ::tk::TextPrevWord --
+# Returns the index of the start of the word before a given position in
+# the text.
+#
+# Arguments:
+# w -		The text window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::TextPrevWord {w start} {
+    TextPrevPos $w $start tk::TextStartOfPreviousWord
+}
+
+# ::tk::TextStartOfPreviousWord --
+# Called by TextPrevPos with "end", the index of the character just before
+# the starting position. A space is appended, so that a one-character word
+# just before the starting position is found too. A position at a space
+# means that there is no word.
+
+proc ::tk::TextStartOfPreviousWord {str start locale} {
+    set pos [startOfPreviousWord "$str " $start $locale]
+    if {$pos ne "" && $pos >= 0 && [string is space [string index $str $pos]]} {
+	return -1
+    }
+    return $pos
 }
 
 # ::tk::TextSelectNextWord --
