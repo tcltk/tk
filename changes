@@ -8579,3 +8579,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-24 (bug) [c81e0c] Named font late creation (werner, storchaka)
 
 2026-10-24 (bug) [562c3a] transient windows don't appear on Windows (storchaka)
+
+2026-10-25 (bug) [220931] option get command responding to invalid input (storchaka)
