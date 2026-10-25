@@ -92,7 +92,8 @@ TkMacOSXUpdatePointerAfterMap(
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
     if (!mouseIsInTkWindow(winPtr)) {
-	return;
+	/* If the mouse is not in the new window no update is needed. */
+    	return;
     }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
     TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
@@ -130,13 +131,16 @@ TkMacOSXUpdatePointerBeforeUnmap(
     TkWindow *toplevelPtr = NULL;
     Tk_Window target = NULL;
     NSPoint mouse = [NSEvent mouseLocation];
+    int root_x = floor(mouse.x),
+	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
     if (!mouseIsInTkWindow(winPtr)) {
-	return;
+	/* This is not the pointer window. No update is needed. */
+    	return;
     }
     if (Tk_IsTopLevel(winPtr)) {
 	/*
-	 * Set toplevelPtr to the highest toplevel other than this one which
-	 * contains the mouse pointer in its contentView.
+	 * Find the highest toplevel, other than this one, which contains the
+	 * mouse pointer in its contentView.
 	 */
 	for (NSWindow *w in [NSApp orderedWindows]) {
 	    if (w == macWin) {
@@ -154,22 +158,30 @@ TkMacOSXUpdatePointerBeforeUnmap(
 		    break;
 		}
 	    }
+	    if (toplevelPtr == NULL) {
+		/*
+		 * The mouse is not in any other toplevel and this one is about
+		 * to be unmapped.  Call TkUpdatePointer with a NULL window.
+		 */
+		Tk_UpdatePointer(NULL, root_x, root_y, [NSApp tkButtonState]);
+		return;
+	    }
 	}
     } else {
 	/*
-	 * The new pointer window will be in the same toplevel.
+	 * We are about to unmap a widget which contains the mouse pointer.  If
+	 * there is a new pointer window it must be in the same toplevel as the
+	 * widget.
 	 */
 	toplevelPtr = TkMacOSXGetTkWindow(macWin);
     }
     /*
-     * Now find the highest child window in the toplevel which contains
-     * the mouse pointer.
+     * We now have a toplevel containing the mouse pointer.  Find the highest
+     * widget which contains the pointer.
      */
     NSPoint local = [macWin tkConvertPointFromScreen: mouse];
     int top_x = floor(local.x),
 	top_y = floor(macWin.frame.size.height - local.y);
-    int root_x = floor(mouse.x),
-	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
     int dummy_x, dummy_y;
     target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr,
 	top_x, top_y, &dummy_x, &dummy_y);

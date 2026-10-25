@@ -39,11 +39,18 @@ resetWindows
 # operation. The raiseDelay procedure idles for a while to give the operation
 # a chance to complete.
 #
-proc raiseDelay {} {
-    after 300;
-    update idletasks
-    update
-}
+if {[tk windowingsystem] eq "aqua"} {
+    proc raiseDelay {} {
+        update idletasks
+	after 200
+    }
+} else {
+    proc raiseDelay {} {
+	after 300
+        update idletasks
+        update
+    }
+ }
 
 proc stdWindow {} {
     destroy .t
@@ -1700,7 +1707,7 @@ test wm-stackorder-2.6 {stacking order: non-toplevel widgets ignored} -body {
     raiseDelay
     button .t1.b
     pack .t1.b
-    update
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t1

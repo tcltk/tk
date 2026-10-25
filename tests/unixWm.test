@@ -2179,10 +2179,14 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
     }
     update
     raise .t .t2
+    update idletasks
     update
+    after 300
     set result [list [winfo containing 200 200]]
     lower .t3
+    update idletasks
     update
+    after 300
     lappend result [winfo containing 200 200]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
