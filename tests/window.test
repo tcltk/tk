@@ -320,6 +320,8 @@ test window-2.13 {destroy . before the root window is first shown - bugs aeb2ed5
     set code [loadTkCommand]
     append code {
 	after 1000 {set forever 1}
+	# The delay must be 0: "." must be destroyed before the idle
+	# handler that first shows the root window runs.
 	after 0 {destroy .}
 	puts "waiting"
 	vwait forever
