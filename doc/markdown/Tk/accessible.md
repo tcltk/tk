@@ -1,10 +1,10 @@
 ---
-CommandName: tk
-title: tk
-ManualSection: accessible
-Version: n
-TclPart: 
-TclDescription: Tk
+CommandName: tk accessible
+title: tk accessible
+ManualSection: n
+Version: unknown
+TclPart: Tk
+TclDescription: Tk Built-In Commands
 Keywords:
  - widget
  - tk
@@ -41,17 +41,17 @@ accessible - Adds screenreader support for core Tk and ttk  widgets.
 
 # Description
 
-The **tk accessible** command makes core Tk and ttk widgets accessible to a screen reader.
+The [tk accessible][tk] command makes core Tk and ttk widgets accessible to a screen reader.
 
 # Introduction
 
-All major computing platforms provide one or more API's to make GUI applications accessible to visually-impaired users who work using screen reader tools. Screen readers provide auditory feedback to users of a GUI application, and may provide additional or alternative methods to navigating GUI's apart from standard keyboard navigation. The **tk accessible** command layers a platform neutral API on top of platform-specific API's to support accessibility on Linux/Unix, macOS, and Windows.
+All major computing platforms provide one or more API's to make GUI applications accessible to visually-impaired users who work using screen reader tools. Screen readers provide auditory feedback to users of a GUI application, and may provide additional or alternative methods to navigating GUI's apart from standard keyboard navigation. The [tk accessible][tk] command layers a platform neutral API on top of platform-specific API's to support accessibility on Linux/Unix, macOS, and Windows.
 
-The **tk accessible** command is intended to provide a basic accessible-out-of-the-box experience for end users and requires little additional work by developers. If a screen reader is in operation, Tcl/Tk applications will be accessible. The **tk accessible** command set does allow for additional customization on the part of developers. And widgets that are not part of the core Tk widget set can enable accessibility by using the tk accessible command set to specific the accessible role, name, description, value, state (if applicable), and action (if applicable).
+The [tk accessible][tk] command is intended to provide a basic accessible-out-of-the-box experience for end users and requires little additional work by developers. If a screen reader is in operation, Tcl/Tk applications will be accessible. The [tk accessible][tk] command set does allow for additional customization on the part of developers. And widgets that are not part of the core Tk widget set can enable accessibility by using the tk accessible command set to specific the accessible role, name, description, value, state (if applicable), and action (if applicable).
 
 # Operations
 
-The following operations are available for the **tk accessible** command:
+The following operations are available for the [tk accessible][tk] command:
 
 **tk accessible set\_acc\_role** *window value*
 : Assigns one of the following accessibility roles to a Tk widget: Button, Canvas, Checkbutton, Combobox, Entry, Label, Listbox, Menu, Notebook, Progressbar, Scale, Scrollbar, Spinbox, Table, Text, and Tree. Tk and ttk widgets having similar roles, such as a button and a ttk::button, will both be assigned the same accessibility role as these widgets are the same from an accessibility standpoint.
@@ -111,4 +111,7 @@ The following operations are available for the **tk accessible** command:
 # Additional notes
 
 Some Tk GUI components, such as frames and panedwindows, are not included in the accessibility API because they are just containers and do not handle actions or data. Also, the canvas is not included in the accessibility API because it is a purely visual widget; the HTML5 canvas widget is not accessible to web API's for the same reason. Developers may choose to provide alternative data to provide information on the canvas widget, such as labels or help text. Finally, accessibility only runs in the main Tk interpreter, because of potential conflicts in child interpreters; also, accessibility is not supported under XQuartz (the X11 environment on macOS) because of too many conflicts between the X11 and macOS versions of accessibility.
+
+
+[tk]: tk.md
 
