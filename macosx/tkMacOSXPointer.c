@@ -158,14 +158,14 @@ TkMacOSXUpdatePointerBeforeUnmap(
 		    break;
 		}
 	    }
-	    if (toplevelPtr == NULL) {
-		/*
-		 * The mouse is not in any other toplevel and this one is about
-		 * to be unmapped.  Call TkUpdatePointer with a NULL window.
-		 */
-		Tk_UpdatePointer(NULL, root_x, root_y, [NSApp tkButtonState]);
-		return;
-	    }
+	}
+	if (toplevelPtr == NULL) {
+	    /*
+	     * The mouse is not in any other toplevel and this one is about
+	     * to be unmapped.  Call TkUpdatePointer with a NULL window.
+	     */
+	    Tk_UpdatePointer(NULL, root_x, root_y, [NSApp tkButtonState]);
+	    return;
 	}
     } else {
 	/*
