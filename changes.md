@@ -153,6 +153,7 @@ to the userbase.
  - [Named font late creation](https://core.tcl-lang.org/tk/tktview/c81e0c)
  - [transient windows don't appear on Windows](https://core.tcl-lang.org/tk/tktview/562c3a)
  - [option get command responding to invalid input](https://core.tcl-lang.org/tk/tktview/220931)
+ - [X error BadDrawable when using ttk::style element create with multiple displays](https://core.tcl-lang.org/tk/tktview/fde9dc)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
