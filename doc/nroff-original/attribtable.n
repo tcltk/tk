@@ -4,7 +4,7 @@
 .\" See the file "license.terms" for information on usage and redistribution
 .\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 .\"
-.TH "tk attribtable" n 9.1 "" Tk "Tk Built-in Commands"
+.TH "tk attribtable" n 9.1 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
@@ -49,7 +49,7 @@ widget whose attributes are being queried or modified via the \fItableName\fR
 command.
 .\" METHOD: set
 .TP
-\fItableName\fR \fBset\fR \fIpathName name value\fR ?\fIname value\fR ...?
+\fItableName\fR \fBset\fR \fIpathName name value\fR ?\fIname value ...\fR?
 .
 Sets (i.e., adds or updates) the attributes identified by the \fIname\fR
 arguments to the values given by the \fIvalue\fR arguments.  Returns an empty
@@ -65,7 +65,9 @@ table \fBset\fR .btn prevText [.btn cget -text]
 .RE
 .\" METHOD: get
 .TP
-\fItableName\fR \fBget\fR \fIpathName\fR ?\fIname\fR ?\fIdefaultValue\fR??
+\fItableName\fR \fBget\fR \fIpathName\fR ?\fIname\fR?
+.TP
+\fItableName\fR \fBget\fR \fIpathName\fR ?\fIname defaultValue\fR?
 .
 If \fIname\fR is specified then returns the corresponding attribute value, or
 an empty string or \fIdefaultValue\fR (if given) if no corresponding value
@@ -80,7 +82,7 @@ of the widget \fIpathName\fR.  Example:
 .RE
 .\" METHOD: unset
 .TP
-\fItableName\fR \fBunset\fR \fIpathName name\fR ?\fIname\fR ...?
+\fItableName\fR \fBunset\fR \fIpathName name\fR ?\fIname ...\fR?
 .
 Unsets the attributes identified by the \fIname\fR arguments.  Returns an
 empty string.  Example:

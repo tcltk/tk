@@ -34,8 +34,8 @@ busy \- Make Tk widgets busy, temporarily blocking user interactions
 \fBtk busy\fI window \fR?\fIoptions\fR?
 \fBtk busy busywindow \fIwindow\fR
 \fBtk busy hold\fI window \fR?\fIoptions\fR?
-\fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
-\fBtk busy forget\fI window \fR?\fIwindow \fR?...
+\fBtk busy configure \fIwindow\fR ?\fIoption value ...\fR?
+\fBtk busy forget\fI window \fR?\fIwindow ...\fR?
 \fBtk busy current\fR ?\fIpattern\fR?
 \fBtk busy status \fIwindow\fR
 .fi
@@ -122,7 +122,7 @@ busy\fR command.
 .PP
 The following operations are available for the \fBtk busy\fR command:
 .TP
-\fBtk busy \fIwindow\fR ?\fIoption value\fR?...
+\fBtk busy \fIwindow\fR ?\fIoption value ...\fR?
 .
 Shortcut for \fBtk busy hold\fR command.
 .\" METHOD: busywindow
@@ -143,7 +143,7 @@ Queries the \fBtk busy\fR command configuration options for \fIwindow\fR.
 \fBhold\fR operation.
 .\" METHOD: configure
 .TP
-\fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
+\fBtk busy configure \fIwindow\fR ?\fIoption value ...\fR?
 .
 Queries or modifies the \fBtk busy\fR command configuration options for
 \fIwindow\fR. \fIWindow\fR must be the path name of a widget previously made
@@ -177,7 +177,7 @@ Returns the pathnames of all widgets that are currently busy. If a
 \fIpattern\fR are returned.
 .\" METHOD: forget
 .TP
-\fBtk busy forget \fIwindow\fR ?\fIwindow\fR?...
+\fBtk busy forget \fIwindow\fR ?\fIwindow ...\fR?
 .
 Releases resources allocated by the \fBtk busy\fR command for \fIwindow\fR,
 including the transparent window. User events will again be received by
@@ -186,7 +186,7 @@ including the transparent window. User events will again be received by
 operation, otherwise an error is reported.
 .\" METHOD: hold
 .TP
-\fBtk busy hold \fIwindow\fR ?\fIoption value\fR?...
+\fBtk busy hold \fIwindow\fR ?\fIoption value ...\fR?
 .
 Makes the specified \fIwindow\fR (and its descendants in the Tk window
 hierarchy) appear busy. \fIWindow\fR must be a valid path name of a Tk widget.
