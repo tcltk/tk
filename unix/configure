@@ -8138,9 +8138,9 @@ Please install libxkbcommon development package:
 
 
 
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for glfw3 >= 3.3 with Wayland support" >&5
-printf %s "checking for glfw3 >= 3.3 with Wayland support... " >&6; }
-        if pkg-config --exists "glfw3 >= 3.3"; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for glfw3 >= 3.4 with Wayland support" >&5
+printf %s "checking for glfw3 >= 3.4 with Wayland support... " >&6; }
+        if pkg-config --exists "glfw3 >= 3.4"; then
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: glfw3 found" >&5
 printf '%s\n' "glfw3 found" >&6; }
             GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
@@ -8163,7 +8163,7 @@ Please rebuild GLFW with Wayland support enabled." "$LINENO" 5
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: glfw3 not found" >&5
 printf '%s\n' "glfw3 not found" >&6; }
             found_glfw=no
-            as_fn_error $? "glfw3 >= 3.3 with Wayland support is required when building the Wayland backend.
+            as_fn_error $? "glfw3 >= 3.4 with Wayland support is required when building the Wayland backend.
 Please install GLFW development package with Wayland support:
   - Debian/Ubuntu:   sudo apt install libglfw3-dev
   - Fedora/RHEL:     sudo dnf install glfw-devel
@@ -8553,7 +8553,7 @@ Required (all mandatory when --enable-wayland is used):
   - wayland-cursor >= 1.18
   - wayland-egl >= 1.18
   - xkbcommon >= 0.5.0
-  - glfw3 >= 3.3 with Wayland support
+  - glfw3 >= 3.4 with Wayland support
   - libdecor-0 >= 0.1.0
   - glesv2 (OpenGL ES 3.0)
   - fontconfig >= 2.12

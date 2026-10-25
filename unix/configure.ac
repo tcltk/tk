@@ -358,8 +358,8 @@ Please install libxkbcommon development package:
         AC_SUBST([XKBCOMMON_CFLAGS])
         AC_SUBST([XKBCOMMON_LIBS])
 
-        AC_MSG_CHECKING([for glfw3 >= 3.3 with Wayland support])
-        if pkg-config --exists "glfw3 >= 3.3"; then
+        AC_MSG_CHECKING([for glfw3 >= 3.4 with Wayland support])
+        if pkg-config --exists "glfw3 >= 3.4"; then
             AC_MSG_RESULT([glfw3 found])
             GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
             GLFW_LIBS="$(pkg-config --libs glfw3)"
@@ -378,7 +378,7 @@ Please rebuild GLFW with Wayland support enabled.])
         else
             AC_MSG_RESULT([glfw3 not found])
             found_glfw=no
-            AC_MSG_ERROR([glfw3 >= 3.3 with Wayland support is required when building the Wayland backend.
+            AC_MSG_ERROR([glfw3 >= 3.4 with Wayland support is required when building the Wayland backend.
 Please install GLFW development package with Wayland support:
   - Debian/Ubuntu:   sudo apt install libglfw3-dev
   - Fedora/RHEL:     sudo dnf install glfw-devel
@@ -581,7 +581,7 @@ Required (all mandatory when --enable-wayland is used):
   - wayland-cursor >= 1.18
   - wayland-egl >= 1.18
   - xkbcommon >= 0.5.0
-  - glfw3 >= 3.3 with Wayland support
+  - glfw3 >= 3.4 with Wayland support
   - libdecor-0 >= 0.1.0
   - glesv2 (OpenGL ES 3.0)
   - fontconfig >= 2.12

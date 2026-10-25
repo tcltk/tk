@@ -15,6 +15,7 @@ defaults:
     working-directory: tk/unix
 env:
   ERROR_ON_FAILURES: 1
+  GLFW_VERSION: "3.4"
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -45,7 +46,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
-            libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+            libxkbcommon-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
             libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
             libatk1.0-dev libatk-bridge2.0-dev
@@ -60,6 +61,40 @@ jobs:
           CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
           OPTS: ${{ matrix.compiler }}${{ matrix.config }}
+      - name: Cache GLFW ${{ env.GLFW_VERSION }}
+        id: glfw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/glfw-install
+          key: glfw-${{ env.GLFW_VERSION }}-ubuntu-24.04-wayland-v1
+      - name: Build GLFW ${{ env.GLFW_VERSION }}
+        if: steps.glfw-cache.outputs.cache-hit != 'true'
+        # Ubuntu 24.04 ships GLFW 3.3.x; the Wayland backend needs >= 3.4
+        # (GLFW_PLATFORM, GLFW_SCALE_FRAMEBUFFER, GLFW_WAYLAND_APP_ID).
+        run: |
+          set -e
+          sudo apt-get install -y cmake pkg-config
+          curl -fsSL -o "$RUNNER_TEMP/glfw.tar.gz" \
+            "https://github.com/glfw/glfw/archive/refs/tags/${GLFW_VERSION}.tar.gz"
+          tar -xzf "$RUNNER_TEMP/glfw.tar.gz" -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/glfw-${GLFW_VERSION}" -B "$RUNNER_TEMP/glfw-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DGLFW_BUILD_WAYLAND=ON -DGLFW_BUILD_X11=OFF \
+            -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/glfw-install" \
+            -DCMAKE_INSTALL_LIBDIR=lib
+          cmake --build "$RUNNER_TEMP/glfw-build" -j"$(nproc)"
+          cmake --install "$RUNNER_TEMP/glfw-build"
+        working-directory: "."
+      - name: Use GLFW ${{ env.GLFW_VERSION }}
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/glfw-install/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$HOME/glfw-install/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          export PKG_CONFIG_PATH="$HOME/glfw-install/lib/pkgconfig"
+          echo "GLFW version: $(pkg-config --modversion glfw3)"
+          pkg-config --atleast-version=3.4 glfw3 || { echo "::error::GLFW < 3.4"; exit 1; }
+        working-directory: "."
       - name: Configure and Build Tcl
         run: |
           ./configure "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
@@ -101,7 +136,7 @@ jobs:
           # libglib2.0-bin / dconf: gsettings, used to enable the extension
           sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
-            libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+            libxkbcommon-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
             libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
             libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont \
@@ -117,6 +152,40 @@ jobs:
         env:
           CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
+      - name: Cache GLFW ${{ env.GLFW_VERSION }}
+        id: glfw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/glfw-install
+          key: glfw-${{ env.GLFW_VERSION }}-ubuntu-24.04-wayland-v1
+      - name: Build GLFW ${{ env.GLFW_VERSION }}
+        if: steps.glfw-cache.outputs.cache-hit != 'true'
+        # Ubuntu 24.04 ships GLFW 3.3.x; the Wayland backend needs >= 3.4
+        # (GLFW_PLATFORM, GLFW_SCALE_FRAMEBUFFER, GLFW_WAYLAND_APP_ID).
+        run: |
+          set -e
+          sudo apt-get install -y cmake pkg-config
+          curl -fsSL -o "$RUNNER_TEMP/glfw.tar.gz" \
+            "https://github.com/glfw/glfw/archive/refs/tags/${GLFW_VERSION}.tar.gz"
+          tar -xzf "$RUNNER_TEMP/glfw.tar.gz" -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/glfw-${GLFW_VERSION}" -B "$RUNNER_TEMP/glfw-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DGLFW_BUILD_WAYLAND=ON -DGLFW_BUILD_X11=OFF \
+            -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/glfw-install" \
+            -DCMAKE_INSTALL_LIBDIR=lib
+          cmake --build "$RUNNER_TEMP/glfw-build" -j"$(nproc)"
+          cmake --install "$RUNNER_TEMP/glfw-build"
+        working-directory: "."
+      - name: Use GLFW ${{ env.GLFW_VERSION }}
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/glfw-install/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$HOME/glfw-install/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          export PKG_CONFIG_PATH="$HOME/glfw-install/lib/pkgconfig"
+          echo "GLFW version: $(pkg-config --modversion glfw3)"
+          pkg-config --atleast-version=3.4 glfw3 || { echo "::error::GLFW < 3.4"; exit 1; }
+        working-directory: "."
       - name: Configure and Build Tcl
         run: |
           ./configure "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
