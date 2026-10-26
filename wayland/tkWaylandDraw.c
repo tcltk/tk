@@ -904,6 +904,134 @@ XUnionRectWithRegion(
     return 1;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetRegion --
+ *
+ *	Set the clip region of a GC. A region of this port is a single
+ *	rectangle, its extents (see struct _XRegion comment near the top of
+ *	this file), so the clip is installed as one clip rectangle with a
+ *	zero origin. An empty or NULL region clips everything out.
+ *
+ * Results:
+ *	Always returns Success.
+ *
+ * Side effects:
+ *	Changes the clip mask of gc.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetRegion(
+    Display *display,
+    GC gc,
+    Region region)
+{
+    XRectangle rect;
+
+    if (gc == NULL) {
+        return Success;
+    }
+    if (region != NULL && region->valid) {
+        rect = region->extents;
+    } else {
+        rect.x = rect.y = 0;
+        rect.width = rect.height = 0;
+    }
+    XSetClipRectangles(display, gc, 0, 0, &rect, 1, YXBanded);
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSubtractRegion --
+ *
+ *	Subtract region srb from region sra, storing the result in
+ *	dr_return. Since a region of this port tracks only a bounding box,
+ *	the result is the bounding box of the difference: if srb covers sra
+ *	completely the result is empty; if srb spans sra's full width or
+ *	height and overlaps it along one edge, sra is trimmed on that side;
+ *	otherwise (no overlap, or srb punches a hole or corner that a single
+ *	rectangle cannot express) the result is sra unchanged. The result is
+ *	thus always a superset of the true difference, which is the safe
+ *	direction for damage and clip regions. Handles dr_return being the
+ *	same as sra or srb, as TkScrollWindow() does.
+ *
+ * Results:
+ *	Always returns 1 (Success).
+ *
+ * Side effects:
+ *	Updates dr_return's extents/valid fields.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSubtractRegion(
+    Region sra,
+    Region srb,
+    Region dr_return)
+{
+    long ax0, ay0, ax1, ay1, bx0, by0, bx1, by1;
+    XRectangle result;
+    int valid;
+
+    if (sra == NULL || dr_return == NULL) {
+        return 0;
+    }
+    result = sra->extents;
+    valid = sra->valid;
+
+    if (valid && srb != NULL && srb->valid) {
+        ax0 = sra->extents.x;
+        ay0 = sra->extents.y;
+        ax1 = ax0 + sra->extents.width;
+        ay1 = ay0 + sra->extents.height;
+        bx0 = srb->extents.x;
+        by0 = srb->extents.y;
+        bx1 = bx0 + srb->extents.width;
+        by1 = by0 + srb->extents.height;
+
+        if (bx0 < ax1 && bx1 > ax0 && by0 < ay1 && by1 > ay0) {
+            int coversX = (bx0 <= ax0 && bx1 >= ax1);
+            int coversY = (by0 <= ay0 && by1 >= ay1);
+
+            if (coversX && coversY) {
+                valid = 0;
+            } else if (coversX) {
+                if (by0 <= ay0) {
+                    ay0 = by1;
+                } else if (by1 >= ay1) {
+                    ay1 = by0;
+                }
+            } else if (coversY) {
+                if (bx0 <= ax0) {
+                    ax0 = bx1;
+                } else if (bx1 >= ax1) {
+                    ax1 = bx0;
+                }
+            }
+            if (valid) {
+                result.x = (short)ax0;
+                result.y = (short)ay0;
+                result.width = (unsigned short)(ax1 - ax0);
+                result.height = (unsigned short)(ay1 - ay0);
+            }
+        }
+    }
+
+    if (!valid) {
+        result.x = result.y = 0;
+        result.width = result.height = 0;
+    }
+    dr_return->extents = result;
+    dr_return->valid = valid;
+    return 1;
+}
+
 
 /*
  *----------------------------------------------------------------------
