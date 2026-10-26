@@ -4715,6 +4715,189 @@ test menu-47.1 {configuring a cascade entry of a menubar with the menu it
     destroy .bar
 } -result {1 1 .bar.sub2}
 
+testutils import child
+# Posts the cascade of the first entry of the menubar of $top, as a click
+# on it does, and returns the posted menu.
+proc postMenubarCascade {top} {
+    set bar [lsearch -inline -glob [winfo children $top] *#*]
+    update
+    set y [expr {[winfo height $bar] / 2}]
+    event generate $bar <Motion> -x 10 -y $y -warp 1
+    update
+    event generate $bar <Button-1> -x 10 -y $y
+    update
+    return [$bar entrycget 0 -menu]
+}
+# Makes another application take the focus.
+proc otherAppTakesFocus {} {
+    childTkProcess create
+    childTkProcess eval {
+	wm geometry . 100x100+600+100
+	update
+	focus -force .
+    }
+    pause 200
+    update
+}
+test menu-49.1 {a posted menubar menu is unposted when its toplevel is moved
+	- bug 2e3d6cdae4} -setup {
+    destroy .top
+} -constraints {x11} -body {
+    toplevel .top
+    menu .top.m
+    menu .top.m.file -tearoff 0
+    .top.m add cascade -label File -menu .top.m.file
+    .top.m.file add command -label Open
+    .top configure -menu .top.m
+    wm geometry .top 200x100+100+100
+    update
+    set m [postMenubarCascade .top]
+    set res [list [winfo ismapped $m] [expr {[grab current .top] ne ""}]]
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped $m] [grab current .top]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain m res
+} -result {1 1 0 {}}
+test menu-49.2 {a posted menubar menu is unposted when another application
+	takes the focus - bug 2e3d6cdae4} -setup {
+    destroy .top
+} -constraints {x11} -body {
+    toplevel .top
+    menu .top.m
+    menu .top.m.file -tearoff 0
+    .top.m add cascade -label File -menu .top.m.file
+    .top.m.file add command -label Open
+    .top configure -menu .top.m
+    wm geometry .top 200x100+100+100
+    update
+    focus -force .top
+    update
+    set m [postMenubarCascade .top]
+    set res [winfo ismapped $m]
+    otherAppTakesFocus
+    lappend res [winfo ismapped $m] [grab current .top]
+} -cleanup {
+    childTkProcess exit
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain m res
+} -result {1 0 {}}
+test menu-49.3 {a posted menubutton menu is unposted when its toplevel is
+	moved, not when it is resized - bug 2e3d6cdae4} -setup {
+    destroy .top
+} -constraints {x11} -body {
+    toplevel .top
+    menubutton .top.mb -text Menu -menu .top.mb.m
+    menu .top.mb.m -tearoff 0
+    .top.mb.m add command -label Open
+    pack .top.mb
+    wm geometry .top 200x100+100+100
+    update
+    tk::MbPost .top.mb
+    update
+    set res [winfo ismapped .top.mb.m]
+    wm geometry .top 250x150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped .top.mb.m]
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped .top.mb.m] [grab current .top]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain res
+} -result {1 1 0 {}}
+test menu-49.4 {a popup menu is unposted when the toplevel which had the
+	focus is moved - bug 2e3d6cdae4} -setup {
+    destroy .top .m
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top 200x100+100+100
+    menu .m -tearoff 0
+    .m add command -label Open
+    update
+    focus -force .top
+    update
+    tk_popup .m 150 150
+    update
+    set res [winfo ismapped .m]
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped .m] [grab current .m]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .top .m
+    unset -nocomplain res
+} -result {1 0 {}}
+test menu-49.5 {a torn-off menu stays when another application takes the
+	focus, its cascade is unposted - bug 2e3d6cdae4} -setup {
+    destroy .top .m
+} -constraints {x11} -body {
+    menu .m
+    menu .m.sub -tearoff 0
+    .m add cascade -label Sub -menu .m.sub
+    .m.sub add command -label Open
+    set t [tk::TearOffMenu .m 100 100]
+    update
+    focus -force $t
+    update
+    set y [expr {[$t yposition 0] + 5}]
+    event generate $t <Motion> -x 10 -y $y -warp 1
+    update
+    event generate $t <Button-1> -x 10 -y $y
+    update
+    set sub [$t entrycget 0 -menu]
+    set res [list [winfo ismapped $t] [winfo ismapped $sub]]
+    otherAppTakesFocus
+    lappend res [winfo ismapped $t] [winfo ismapped $sub]
+} -cleanup {
+    childTkProcess exit
+    tk::MenuUnpost {}
+    destroy $t .m
+    unset -nocomplain t y sub res
+} -result {1 1 1 0}
+test menu-49.6 {no error when the toplevel is moved after a posted popup menu
+	was destroyed - bug 2e3d6cdae4} -setup {
+    destroy .top .m
+    set res {}
+    proc bgerror {msg} {lappend ::res $msg}
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top 200x100+100+100
+    menu .m -tearoff 0
+    .m add command -label Open
+    update
+    focus -force .top
+    update
+    tk_popup .m 150 150
+    update
+    destroy .m
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [lsearch -exact [bindtags .top] TkMenuWatch]
+} -cleanup {
+    rename bgerror {}
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain res
+} -result -1
+rename postMenubarCascade {}
+rename otherAppTakesFocus {}
+testutils forget child
+
 #
 # TESTFILE CLEANUP
 #
