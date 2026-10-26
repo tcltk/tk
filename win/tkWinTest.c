@@ -232,7 +232,7 @@ SetSelectionResult(
     Tcl_Interp *interp,
     const char *selection)
 {
-    Tcl_AppendResult(interp, selection, NULL);
+    Tcl_AppendResult(interp, selection, (char *)NULL);
     return TCL_OK;
 }
 
@@ -336,7 +336,7 @@ TestwineventObjCmd(
 	}
 	if (child == NULL) {
 	    Tcl_AppendResult(interp, "could not find a control matching \"",
-		Tcl_GetString(objv[2]), "\"", NULL);
+		Tcl_GetString(objv[2]), "\"", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -370,7 +370,7 @@ TestwineventObjCmd(
 	SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
 		     (LPARAM) buf);
 #endif
-	Tcl_AppendResult(interp, Tcl_ExternalToUtfDString(NULL, buf, -1, &ds), NULL);
+	Tcl_AppendResult(interp, Tcl_ExternalToUtfDString(NULL, buf, -1, &ds), (char *)NULL);
 	Tcl_DStringFree(&ds);
 	break;
     }

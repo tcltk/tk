@@ -563,7 +563,7 @@ TkSelEventProc(
 			    Tk_GetAtomName(tkwin, retrPtr->selection),
 			    Tk_GetAtomName(tkwin, retrPtr->target)));
 		    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION",
-			    "NONE", NULL);
+			    "NONE", (char *)NULL);
 		    retrPtr->result = TCL_ERROR;
 		    return;
 		}
@@ -597,7 +597,7 @@ TkSelEventProc(
 			"bad format for string selection: wanted \"8\", got \"%d\"",
 			format));
 		Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "FORMAT",
-			NULL);
+			(char *)NULL);
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -643,7 +643,7 @@ TkSelEventProc(
 			"bad format for string selection: wanted \"8\", got \"%d\"",
 			format));
 		Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "FORMAT",
-			NULL);
+			(char *)NULL);
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -684,7 +684,7 @@ TkSelEventProc(
 			"bad format for selection: wanted \"32\" or "
 			"\"8\", got \"%d\"", format));
 		Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "FORMAT",
-			NULL);
+			(char *)NULL);
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -1167,7 +1167,7 @@ SelRcvIncrProc(
 		    "bad format for string selection: wanted \"8\", got \"%d\"",
 		    format));
 	    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "FORMAT",
-		    NULL);
+		    (char *)NULL);
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}
@@ -1273,7 +1273,7 @@ SelRcvIncrProc(
 		    "bad format for selection: wanted \"32\" or "
 		    "\"8\", got \"%d\"", format));
 	    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "FORMAT",
-		    NULL);
+		    (char *)NULL);
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}

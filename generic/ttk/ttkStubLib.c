@@ -68,7 +68,7 @@ error:
 	" (requested version '", version,
 	"', loaded version '", actualVersion, "'): ",
 	errMsg,
-	NULL);
+	(char *)NULL);
     return NULL;
 }
 
