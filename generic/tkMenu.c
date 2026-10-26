@@ -2237,7 +2237,7 @@ ConfigureMenuCloneEntries(
     if ((mePtr->type == CASCADE_ENTRY) && !cascadeEntryChanged && (objc > 0)) {
 	Tcl_Size i;
 
-	cloneObjv = (Tcl_Obj **)Tcl_Alloc(objc * sizeof(Tcl_Obj *));
+	cloneObjv = (Tcl_Obj **)ckalloc(objc * sizeof(Tcl_Obj *));
 	cloneObjc = 0;
 	for (i = 0; i < objc; i += 2) {
 	    if (strcmp(Tcl_GetString(objv[i]), "-menu") != 0) {
@@ -2267,7 +2267,7 @@ ConfigureMenuCloneEntries(
 
 	if (ConfigureMenuEntry(mePtr, cloneObjc, cloneObjv) != TCL_OK) {
 	    if (cloneObjv != objv) {
-		Tcl_Free(cloneObjv);
+		ckfree(cloneObjv);
 	    }
 	    return TCL_ERROR;
 	}
@@ -2302,7 +2302,7 @@ ConfigureMenuCloneEntries(
 	}
     }
     if (cloneObjv != objv) {
-	Tcl_Free(cloneObjv);
+	ckfree(cloneObjv);
     }
     return TCL_OK;
 }
@@ -2531,19 +2531,33 @@ MenuNewEntry(
     mePtr->nextCascadePtr = NULL;
     if (Tk_InitOptions(menuPtr->interp, mePtr,
 	    mePtr->optionTable, menuPtr->tkwin) != TCL_OK) {
-	ckfree(mePtr);
-	return NULL;
+	goto error;
     }
     mePtr->entryPtr = NULL;
     TkMenuInitializeEntryDrawingFields(mePtr);
     if (TkpMenuNewEntry(mePtr) != TCL_OK) {
 	Tk_FreeConfigOptions(mePtr, mePtr->optionTable,
 		menuPtr->tkwin);
-	ckfree(mePtr);
-	return NULL;
+	goto error;
     }
 
     return mePtr;
+
+    /*
+     * Remove the slot of the entry which could not be created.
+     */
+
+  error:
+    ckfree(mePtr);
+    for (i = index; i < menuPtr->numEntries - 1; i++) {
+	menuPtr->entries[i] = menuPtr->entries[i + 1];
+	menuPtr->entries[i]->index = i;
+    }
+    if (--menuPtr->numEntries == 0) {
+	ckfree(menuPtr->entries);
+	menuPtr->entries = NULL;
+    }
+    return NULL;
 }
 
 /*

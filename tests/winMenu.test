@@ -1424,6 +1424,36 @@ test winMenu-35.2 {additions to the system menu survive the recreation of the wr
     destroy .t
 } -result 1
 
+test winMenu-36.1 {error when no more menu command IDs can be allocated - bug 3464070} -constraints {
+    win
+} -setup {
+    set err {}
+} -body {
+    for {set k 0} {$k < 100 && $err eq {}} {incr k} {
+	menu .m36_$k -tearoff 0
+	for {set i 0} {$i < 1000} {incr i} {
+	    if {[catch {.m36_$k add command -label x$i} msg opts]} {
+		set err [list $msg [dict get $opts -errorcode]]
+		break
+	    }
+	}
+    }
+    set m .m36_[expr {$k - 1}]
+    if {[lindex $err 0] ne ""} {
+	# The menu is consistent and IDs are reused after a delete.
+	lappend err [expr {[$m index end] == $i - 1}] \
+		[$m entrycget end -label]
+	$m delete end
+	lappend err [catch {$m add command -label again}]
+    }
+    set err
+} -cleanup {
+    foreach m [info commands .m36_*] {
+	destroy $m
+    }
+    unset -nocomplain err k i m msg opts
+} -match glob -result {{No more menu entries can be allocated.} {TK MENU SYSTEM_RESOURCES} 1 x* 0}
+
 #
 # TESTFILE CLEANUP
 #
