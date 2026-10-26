@@ -7645,13 +7645,35 @@ RemapWindows(
 
 int
 TkpWindowIsDark(
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     bool *isdark)
 {
-    /*
-     * Always returns false for X11.
-     */
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    XColor color;
+
     *isdark = false;
+
+    /*
+     * X11 has no system setting for a window to follow, as Aqua and Windows
+     * do: the appearance of a window here is the colour it is painted.  So
+     * report whether the background this window has been given is a dark
+     * one.  A window backed by a pixmap has no such colour, and is left as
+     * not dark.
+     */
+
+    if (winPtr->atts.background_pixmap != None) {
+	return TCL_OK;
+    }
+    color.pixel = winPtr->atts.background_pixel;
+    XQueryColor(winPtr->display, Tk_Colormap(tkwin), &color);
+
+    /*
+     * The weighting tk_setPalette uses to choose between a black and a white
+     * foreground: the eye is most sensitive to green, then to red, then to
+     * blue.  A window which wants a white foreground is a dark one.
+     */
+
+    *isdark = (color.red + 1.5*color.green + 0.5*color.blue) <= 100000.0;
     return TCL_OK;
 }
 

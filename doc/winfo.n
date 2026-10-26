@@ -158,8 +158,11 @@ the display of the application's main window.
 .TP
 \fBwinfo isdark \fIwindow\fR
 .
-On Aqua and Windows returns \fB1\fR if \fIwindow\fR is in "dark mode", and
-\fB0\fR otherwise.   Returns \fB0\fR on linux.
+Returns \fB1\fR if \fIwindow\fR is in "dark mode", and \fB0\fR otherwise.
+On Aqua and Windows this is the appearance the system has given the window.
+On X11, where the system gives a window no appearance, it is whether the
+background the window has been given is a dark colour; a window backed by a
+pixmap rather than a colour is not dark.
 .\" METHOD: ismapped
 .TP
 \fBwinfo ismapped \fIwindow\fR
