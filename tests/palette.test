@@ -1,0 +1,87 @@
+# This file is a Tcl script to test the code in the file palette.tcl, and
+# the colour palette of the default ttk theme which it configures.
+#
+# Copyright © 2026 Tk contributors.
+# All rights reserved.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+source [file join [tcltest::configure -testdir] main.tcl]
+
+resetWindows
+
+#
+# COMMON TEST SETUP
+#
+
+# The palette of the default ttk theme is global state, as is the option
+# database.  Remember the palette so that every test can leave it as it
+# found it; the option database is cleared at the end of the file.
+variable stockColors [array get ::ttk::theme::default::colors]
+variable stockBackground [. cget -background]
+
+proc restorePalette {} {
+    variable stockColors
+    variable stockBackground
+    array set ::ttk::theme::default::colors $stockColors
+    ::ttk::theme::default::reconfigureDefaultTheme
+    . configure -background $stockBackground
+}
+
+
+#
+# tk_setPalette recolours the windows which already exist, but only those
+# which still have the colour they were given by default.
+#
+
+test palette-1.1 {tk_setPalette keeps a colour the application chose} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    # The palette is for the windows which take Tk's own colours.  A window
+    # the application has coloured itself is not one of them.
+    frame .chosen -background red
+    frame .default
+    tk_setPalette #3c3c3c
+    join [list [.chosen cget -background] [.default cget -background]]
+} -cleanup {
+    destroy .chosen .default
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result "red #3c3c3c"
+
+test palette-1.2 {tk_setPalette reaches the windows made after it} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    # Each palette must leave the option database holding the colours it
+    # chose, whatever palettes came before it.
+    tk_setPalette #3c3c3c
+    tk_setPalette #d9d9d9
+    tk_setPalette #3c3c3c
+    frame .f
+    set result [join [list [.f cget -background] \
+	    [option get .f background Background]]]
+    destroy .f
+    set result
+} -cleanup {
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result "#3c3c3c #3c3c3c"
+
+#
+# TESTFILE CLEANUP
+#
+
+unset -nocomplain stockColors stockBackground saved
+rename restorePalette {}
+option clear
+cleanupTests
+
+# Local variables:
+# mode: tcl
+# End:
