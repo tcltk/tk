@@ -463,10 +463,18 @@ proc ::tk::sysnotify::sysnotify {title message} {
 	    _sysnotify notify $::tk::systray::_ico $title $message
 	}
 	"x11" {
-	    if {[info commands ::tk::sysnotify::_sysnotify] eq ""} {
-		_notifywindow $title $message
-	    } else {
+	    # libnotify goes first: for applications that are not sandboxed
+	    # the portal attributes the notification to the application that
+	    # started them (e.g. the terminal), while libnotify uses the Tk
+	    # application name.  In a sandbox libnotify uses the portal itself.
+	    if {[info commands ::tk::sysnotify::_sysnotify] ne ""} {
 		_sysnotify $title $message
+	    } elseif {[info commands ::tk::portal::_call] ne ""
+		    && [::tk::portal::Available Notification]
+		    && ![catch {::tk::portal::Notify $title $message}]} {
+		# Shown by the desktop through the portal.
+	    } else {
+		_notifywindow $title $message
 	    }
 	}
 	"aqua" {

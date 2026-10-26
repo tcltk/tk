@@ -43,6 +43,7 @@ TkpInit(
     GetLibraryPath(interp);
     Tktray_Init(interp);
     (void)SysNotify_Init (interp);
+    Portal_Init(interp);
     Icu_Init(interp);
     Cups_Init(interp);
     TkAtkAccessibility_Init(interp);
