@@ -50,13 +50,17 @@ typedef struct {
 } WmAttributes;
 
 typedef enum {
-    WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_TOPMOST, WMATT_TYPE,
-    WMATT_ZOOMED, _WMATT_LAST_ATTRIBUTE
+    WMATT_ALPHA, WMATT_APPEARANCE, WMATT_FULLSCREEN, WMATT_TOPMOST,
+    WMATT_TYPE, WMATT_ZOOMED, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
-    "-alpha", "-fullscreen", "-topmost", "-type",
-    "-zoomed", NULL
+    "-alpha", "-appearance", "-fullscreen", "-topmost",
+    "-type", "-zoomed", NULL
+};
+
+static const char *const WmAppearanceNames[] = {
+    "light", "dark", "auto", NULL
 };
 
 /*
@@ -1299,6 +1303,33 @@ WmSetAttribute(
 
 	break;
     }
+    case WMATT_APPEARANCE: {
+	int index;
+	Tcl_Obj *cmd;
+	int code;
+
+	if (Tcl_GetIndexFromObjStruct(interp, value, WmAppearanceNames,
+		sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * X11 gives a window no appearance of its own, so the appearance of a
+	 * window here is the colour it is painted.  Setting it is a matter of
+	 * palette, which belongs in the script library; and because the
+	 * option database a palette is written to has no per-window scope,
+	 * this sets the appearance of the whole application.
+	 */
+
+	cmd = Tcl_ObjPrintf("::tk::SetAppearance %s", WmAppearanceNames[index]);
+	Tcl_IncrRefCount(cmd);
+	code = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+	Tcl_DecrRefCount(cmd);
+	if (code != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	break;
+    }
     case WMATT_TOPMOST:
 	if (Tcl_GetBooleanFromObj(interp, value,
 		&wmPtr->reqState.topmost) != TCL_OK) {
@@ -1357,6 +1388,20 @@ WmGetAttribute(
     switch (attribute) {
     case WMATT_ALPHA:
 	return Tcl_NewDoubleObj(wmPtr->attributes.alpha);
+    case WMATT_APPEARANCE: {
+	Tcl_Obj *appearance = Tcl_GetVar2Ex(winPtr->mainPtr->interp,
+		"::tk::appearance", NULL, TCL_GLOBAL_ONLY);
+
+	/*
+	 * The value last set, which is the default until one is set.  It is
+	 * the application's, not this window's: see WmSetAttribute.
+	 */
+
+	if (appearance == NULL) {
+	    appearance = Tcl_NewStringObj("auto", TCL_INDEX_NONE);
+	}
+	return appearance;
+    }
     case WMATT_TOPMOST:
 	return Tcl_NewBooleanObj(wmPtr->attributes.topmost);
     case WMATT_ZOOMED:
@@ -7645,13 +7690,35 @@ RemapWindows(
 
 int
 TkpWindowIsDark(
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     bool *isdark)
 {
-    /*
-     * Always returns false for X11.
-     */
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    XColor color;
+
     *isdark = false;
+
+    /*
+     * X11 has no system setting for a window to follow, as Aqua and Windows
+     * do: the appearance of a window here is the colour it is painted.  So
+     * report whether the background this window has been given is a dark
+     * one.  A window backed by a pixmap has no such colour, and is left as
+     * not dark.
+     */
+
+    if (winPtr->atts.background_pixmap != None) {
+	return TCL_OK;
+    }
+    color.pixel = winPtr->atts.background_pixel;
+    XQueryColor(winPtr->display, Tk_Colormap(tkwin), &color);
+
+    /*
+     * The weighting tk_setPalette uses to choose between a black and a white
+     * foreground: the eye is most sensitive to green, then to red, then to
+     * blue.  A window which wants a white foreground is a dark one.
+     */
+
+    *isdark = (color.red + 1.5*color.green + 0.5*color.blue) <= 100000.0;
     return TCL_OK;
 }
 

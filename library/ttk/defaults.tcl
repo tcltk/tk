@@ -57,13 +57,17 @@ namespace eval ttk::theme::default {
     # dark one alike.  A desktop which has an accent colour of its own
     # supplies it through the option database like any other colour.
     #
+    # A caller which has colours of its own to impose, rather than leaving
+    # them to the database, passes them in: see ::tk::SetAppearance, which
+    # keeps the palette's accent across a change of background.
+    #
     # Arguments:
-    # None.
+    # supplied -	a dictionary of colour names and values, which the
+    #		option database is not consulted for.
 
-    proc seedColors {} {
+    proc seedColors {{supplied {}}} {
 	variable colors
 
-	set supplied {}
 	foreach \
 		xResourceName {
 		    {	background		Background		}
@@ -82,12 +86,15 @@ namespace eval ttk::theme::default {
 		    -activebg -selectbg -selectfg
 		    -darker -disabledfg -indicator
 		    -disabledindicator -window } {
+	    if {[dict exists $supplied $colorName]} {
+		continue
+	    }
 	    set color [eval option get . $xResourceName]
 	    if {$color ne ""} {
-		set colors($colorName) $color
-		dict set supplied $colorName 1
+		dict set supplied $colorName $color
 	    }
 	}
+	array set colors $supplied
 
 	#
 	# What goes with the frame.  These are the rules tk_setPalette

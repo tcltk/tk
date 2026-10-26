@@ -314,3 +314,111 @@ proc ::tk_bisque {} {
 	    selectBackground #e6ceb1 selectForeground black \
 	    troughColor #cdb79e
 }
+
+# ::tk::CapturePalette --
+# Returns the palette in effect, in the form tk_setPalette accepts: the
+# colour each palette option now defaults to.  The values are read from one
+# widget of each kind, as tk_setPalette reads them, so that a colour Tk has
+# compiled in is reported as exactly that and not as something derived from
+# the background.
+#
+# Arguments:
+# None.
+
+proc ::tk::CapturePalette {} {
+    set probe [toplevel .___tk_capture_palette]
+    wm withdraw $probe
+    set widgets {}
+    foreach class {
+	frame label button entry listbox text checkbutton scale scrollbar
+	spinbox menu
+    } {
+	lappend widgets [$class $probe.$class]
+    }
+
+    set palette {}
+    foreach option {
+	activeBackground activeForeground background buttonBackground
+	disabledForeground foreground highlightBackground highlightColor
+	insertBackground selectBackground selectColor selectForeground
+	troughColor
+    } {
+	foreach w $widgets {
+	    if {![catch {$w cget -[string tolower $option]} color]
+		    && $color ne ""} {
+		lappend palette $option $color
+		break
+	    }
+	}
+    }
+
+    destroy $probe
+    return $palette
+}
+
+# ::tk::SetAppearance --
+# Applies the palette which [wm attributes $window -appearance] asks for.
+# On X11 a window has no appearance of its own, so this is the palette of
+# the whole application: the option database which tk_setPalette writes to
+# has no per-window scope.  Called from the C implementation of the
+# attribute, which has already checked the value.
+#
+# Only the colours which go with the background change.  The selection
+# colour does not: it is an accent, which goes with a light background and a
+# dark one alike, and the classic widgets and the themed ones have each had
+# their own.  See ticket [807b2f8916].
+#
+# Arguments:
+# appearance -	light, dark or auto.  "light" and "dark" ask for a palette
+#		whatever the user's X resources say; "auto" goes back to the
+#		palette which was in effect before the attribute was first
+#		set, which is the one Tk started with.
+
+proc ::tk::SetAppearance {appearance} {
+    variable SavedPalette
+    variable SavedTtkColors
+
+    if {$appearance eq "auto" && ![info exists SavedPalette]} {
+	# Nothing has been applied, so there is nothing to go back to.
+	set ::tk::appearance $appearance
+	return
+    }
+    if {![info exists SavedPalette]} {
+	set SavedPalette [CapturePalette]
+	set SavedTtkColors [array get ::ttk::theme::default::colors]
+    }
+
+    # The themed widgets are kept in step only where tk_setPalette keeps
+    # them: the default theme on X11.
+    set themed [expr {[tk windowingsystem] eq "x11"
+	    && [ttk::style theme use] eq "default"}]
+
+    if {$appearance eq "auto"} {
+	tk_setPalette {*}$SavedPalette
+	array set ::ttk::theme::default::colors $SavedTtkColors
+    } else {
+	# The light background is the one Tk has always had; the rest is
+	# computed from it, except the selection colours, which are supplied.
+	# An accent goes with a light frame and a dark one alike, and the
+	# classic widgets and the themed ones have each had their own.
+	set background [dict get {light #d9d9d9 dark #3c3c3c} $appearance]
+	tk_setPalette background $background \
+		selectBackground [dict get $SavedPalette selectBackground] \
+		selectForeground [dict get $SavedPalette selectForeground]
+	if {$themed} {
+	    # tk_setPalette reaches three of the theme's thirteen colours, so
+	    # compute the rest from the ones the option database now holds,
+	    # imposing the theme's own accent over the classic shade which
+	    # tk_setPalette has just written there.
+	    ::ttk::theme::default::seedColors [dict filter $SavedTtkColors \
+		    key -selectbg -selectfg -indicator -pressedindicator]
+	}
+    }
+    if {$themed} {
+	::ttk::theme::default::reconfigureDefaultTheme
+	::ttk::setTheme default
+    }
+
+    set ::tk::appearance $appearance
+    return
+}

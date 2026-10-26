@@ -292,6 +292,77 @@ test palette-7.14 {seedColors: the inactive selection follows a selection given 
 } -result 1
 
 #
+# The appearance attribute, which applies a palette rather than computing
+# one.  Each test leaves the palette as it found it, by the same route the
+# attribute itself offers.
+#
+
+test palette-8.1 {SetAppearance: dark gives the application a dark palette} -constraints x11 -body {
+    wm attributes . -appearance dark
+    frame .f
+    set result [list [winfo isdark .f] \
+	    [expr {$::ttk::theme::default::colors(-frame) ne "#d9d9d9"}]]
+    destroy .f
+    set result
+} -cleanup {
+    wm attributes . -appearance auto
+    option clear
+} -result {1 1}
+
+test palette-8.2 {SetAppearance: light gives it a light one} -constraints x11 -body {
+    wm attributes . -appearance dark
+    wm attributes . -appearance light
+    frame .f
+    set result [winfo isdark .f]
+    destroy .f
+    set result
+} -cleanup {
+    wm attributes . -appearance auto
+    option clear
+} -result 0
+
+test palette-8.3 {SetAppearance: auto restores every colour} -constraints x11 -body {
+    # Not a colour at a time: the whole palette, classic and themed, must
+    # come back as it was, including the colours Tk has compiled in rather
+    # than computed.
+    set before [list [::tk::CapturePalette] \
+	    [lsort [array get ::ttk::theme::default::colors]]]
+    wm attributes . -appearance dark
+    wm attributes . -appearance auto
+    set after [list [::tk::CapturePalette] \
+	    [lsort [array get ::ttk::theme::default::colors]]]
+    expr {$before eq $after}
+} -cleanup {
+    option clear
+} -result 1
+
+test palette-8.4 {SetAppearance: the accent survives a change of background} -constraints x11 -body {
+    # The selection colour goes with a dark frame as well as a light one,
+    # and the classic widgets and the themed ones have each had their own.
+    set themed $::ttk::theme::default::colors(-selectbg)
+    entry .e
+    set classic [.e cget -selectbackground]
+    destroy .e
+    wm attributes . -appearance dark
+    entry .e
+    set result [list [expr {$::ttk::theme::default::colors(-selectbg) eq $themed}] \
+	    [expr {[.e cget -selectbackground] eq $classic}]]
+    destroy .e
+    set result
+} -cleanup {
+    wm attributes . -appearance auto
+    option clear
+} -result {1 1}
+
+test palette-8.5 {SetAppearance: the value may be abbreviated} -constraints x11 -body {
+    wm attributes . -appearance d
+    wm attributes . -appearance
+} -cleanup {
+    wm attributes . -appearance auto
+    option clear
+} -result dark
+
+#
 # TESTFILE CLEANUP
 #
 

@@ -72,11 +72,21 @@ remains at \fB1.0\fR.
 .TP
 \fB\-appearance\fR
 .
-Specifies whether the window is rendered in "dark mode" on Windows or
-macOS; on linux this command has no effect.  Allowed values are
-\fBauto\fR, \fBlight\fR and \fBdark\fR.  On macOS, if the setting is
-\fBauto\fR then the appearance of the window is controlled by the
-System Settings.  On Windows \fBauto\fR is equivalent to \fBlight\fR.
+Specifies whether the window is rendered in "dark mode".  Allowed values are
+\fBauto\fR, \fBlight\fR and \fBdark\fR, and may be abbreviated.  On macOS, if
+the setting is \fBauto\fR then the appearance of the window is controlled by
+the System Settings.  On Windows \fBauto\fR is equivalent to \fBlight\fR.
+.RS
+.PP
+On X11 the system gives a window no appearance of its own, so the appearance
+of a window is the colour it is painted: \fBlight\fR and \fBdark\fR apply a
+palette, as \fBtk_setPalette\fR does, and the colours which go with the
+selection are left alone.  \fBauto\fR is the default, and is the palette Tk
+started with, which follows the user's X resources; setting it goes back to
+that palette.  The option database which a palette is written to has no
+per-window scope, so on X11 this attribute belongs to the application:
+setting it on any window sets the appearance of them all.
+.RE
 .\" OPTION: -fullscreen
 .TP
 \fB\-fullscreen\fR
