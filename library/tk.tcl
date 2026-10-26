@@ -959,7 +959,12 @@ if {[tk windowingsystem] eq "x11"} {
     # Not here but once the application is up: applying a palette makes a
     # window of its own, and making one while Tk is still initialising
     # disturbs what the application does next.
-    after idle {::tk::SetAppearance auto}
+    after idle {
+	if {![info exists ::tk::appearance]
+		|| $::tk::appearance eq "auto"} {
+	    ::tk::SetAppearance auto
+	}
+    }
 }
 
 
