@@ -8583,3 +8583,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-25 (bug) [220931] option get command responding to invalid input (storchaka)
 
 2026-10-25 (bug) [fde9dc] X error BadDrawable when using ttk::style element create with multiple displays (storchaka)
+
+2026-10-26 (bug) [139105] Win32 nonclient double-click causes spurious Button-1 in app (storchaka)

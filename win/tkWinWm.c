@@ -2649,7 +2649,7 @@ static void CheckForPointer(TkWindow *winPtr)
 	 */
 	return;
     }
-    state = TkWinGetModifierState();
+    state = TkWinGetPointerState();
     windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
     TkGetPointerCoords(NULL, &x, &y);
     mouse.x = x;
@@ -8122,6 +8122,25 @@ WmProc(
     case WM_WINDOWPOSCHANGED:
 	ConfigureTopLevel((WINDOWPOS *) lParam);
 	result = 0;
+	goto done;
+
+    case WM_NCLBUTTONDOWN:
+    case WM_NCLBUTTONDBLCLK:
+    case WM_NCMBUTTONDOWN:
+    case WM_NCMBUTTONDBLCLK:
+    case WM_NCRBUTTONDOWN:
+    case WM_NCRBUTTONDBLCLK:
+    case WM_NCXBUTTONDOWN:
+    case WM_NCXBUTTONDBLCLK:
+	/*
+	 * A button pressed in the non-client area can still be down after
+	 * the default processing if a double-click on the title bar has
+	 * maximized or closed the window. Do not report it to the Tk window
+	 * which is now under the pointer. [Bug 1391053]
+	 */
+
+	result = DefWindowProcW(hwnd, message, wParam, lParam);
+	TkWinNonClientButtons(TkWinGetModifierState());
 	goto done;
 
     case WM_NCHITTEST: {
