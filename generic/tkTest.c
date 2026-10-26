@@ -33,10 +33,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define LOG_DISPLAY(drawable) TkTestLogDisplay(drawable)
 #else
-#define LOG_DISPLAY(drawable) 1
 #endif
+#define LOG_DISPLAY(drawable) 1
 
 #ifdef __UNIX__
 #include "tkUnixInt.h"
@@ -80,7 +79,7 @@ typedef struct TImageInstance {
     TImageModel *modelPtr;	/* Pointer to model for image. */
     XColor *fg;			/* Foreground color for drawing in image. */
     GC gc;			/* Graphics context for drawing in image. */
-    Bool displayFailed;         /* macOS display attempted out of drawRect. */
+    bool displayFailed;         /* macOS display attempted out of drawRect. */
     char buffer[200 + TCL_INTEGER_SPACE * 6]; /* message to log on display. */
 } TImageInstance;
 
@@ -1550,7 +1549,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    instPtr->displayFailed = False;
+    instPtr->displayFailed = false;
     return instPtr;
 }
 
@@ -1602,34 +1601,20 @@ ImageDisplay(
      * how damage regions are computed.
      */
 
-    if (LOG_DISPLAY(drawable)) {
-	if (instPtr->displayFailed == False) {
+    if (!instPtr->displayFailed) {
 
-	    /*
-	     * Drawing is possible on the first call to DisplayImage.
-	     * Log the message.
-	     */
+	/*
+	 * Drawing is possible on the first call to DisplayImage.
+	 * Log the message.
+	 */
 
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-	    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
+	snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
+	instPtr->modelPtr->imageName, imageX, imageY, width, height);
+    }
 	Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName,
 		    NULL, instPtr->buffer,
 		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-	instPtr->displayFailed = False;
-    } else {
-
-	/*
-	 * Drawing is not possible on the first call to DisplayImage.
-	 * Save the message, but do not log it until the actual display.
-	 */
-
-	if (instPtr->displayFailed == False) {
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-		    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
-	instPtr->displayFailed = True;
-    }
+	instPtr->displayFailed = false;
     if (width > (instPtr->modelPtr->width - imageX)) {
 	width = instPtr->modelPtr->width - imageX;
     }

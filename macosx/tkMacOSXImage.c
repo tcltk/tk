@@ -1203,7 +1203,7 @@ XCopyPlane(
 		     */
 
 		    CGContextClipToMask(context, rect, submask);
-		    TkMacOSXSetColorInContext(gc, gc->background, dc.context,
+		    TkMacOSXSetColorInContext(gc->background, dc.context,
 			    TkMacOSXInDarkMode((Tk_Window)dstDraw->winPtr));
 		    CGContextFillRect(context, rect);
 
@@ -1215,7 +1215,7 @@ XCopyPlane(
 		    CGImageRef subimage = CGImageCreateWithImageInRect(
 			    img, srcRect);
 		    CGContextClipToMask(context, rect, subimage);
-		    TkMacOSXSetColorInContext(gc, gc->foreground, context,
+		    TkMacOSXSetColorInContext(gc->foreground, context,
 			    TkMacOSXInDarkMode((Tk_Window)dstDraw->winPtr));
 		    CGContextFillRect(context, rect);
 		    CGContextRestoreGState(context);
@@ -1527,7 +1527,7 @@ TkMacOSXNSImageConfigureModel(
 	newImage.size = size;
 	modelPtr->image = [newImage retain];
 	if (modelPtr->templ) {
-	    newImage.template = YES;
+	    newImage.template = true;
 	}
 	modelPtr->darkModeImage = [[newImage copy] retain];
 	if ([modelPtr->darkModeImage isTemplate]) {

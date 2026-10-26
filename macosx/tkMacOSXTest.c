@@ -100,35 +100,6 @@ TestmenubarheightObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TkTestLogDisplay --
- *
- *      The test image display procedure calls this to determine whether it
- *      should write a log message recording that it has being run.
- *
- * Results:
- *      Returns true if and only if the NSView of the drawable is the
- *      current focusView, which on 10.14 and newer systems can only be the
- *      case when within [NSView drawRect].
- *      NOTE: This is no longer needed when we use updateLayer instead
- *      of drawRect.  Now it always returns True.
- *
- * Side effects:
- *	None
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Bool
-TkTestLogDisplay(
-    Drawable drawable)
-{
-    (void) drawable;
-    return True;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpReadPixelSRGB --
  *
  *	Read one pixel from a window and convert it from the display's color

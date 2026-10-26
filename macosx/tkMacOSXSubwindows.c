@@ -352,7 +352,7 @@ XUnmapWindow(
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
 
-		    BOOL isOnScreen;
+		    bool isOnScreen;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 			continue;

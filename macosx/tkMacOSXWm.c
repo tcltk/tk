@@ -243,21 +243,21 @@ enum appearances {
     APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_AUTO
 };
 
-static Bool wantsToBeTab(NSWindow *macWindow) {
-    Bool result;
+static bool wantsToBeTab(NSWindow *macWindow) {
+    bool result;
     switch ([macWindow tabbingMode]) {
     case NSWindowTabbingModeDisallowed:
-	result = False;
+	result = false;
 	break;
     case NSWindowTabbingModePreferred:
-	result = True;
+	result = true;
 	break;
     case NSWindowTabbingModeAutomatic:
 	result = ([NSWindow userTabbingPreference] ==
 		NSWindowUserTabbingPreferenceAlways);
 	break;
     default:
-	result = False;
+	result = false;
 	break;
     }
     return result;
@@ -859,7 +859,7 @@ void TkMacOSXAssignNewKeyWindow(
     [NSApp setTkEventTarget: NULL];
     for (NSWindow *w in [NSApp orderedWindows]) {
 	WmInfo *wmPtr;
-	BOOL isOnScreen;
+	bool isOnScreen;
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
 	    || !winPtr->wmInfoPtr
@@ -1195,7 +1195,7 @@ static void UpdatePointerWinAfterDestroy (
     int root_x = floor(mouse.x),
 	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 
-    Bool doUpdatePointer = True;
+    bool doUpdatePointer = true;
     if (target) {
 	/*
 	 * Step 2: Find the Tk internal window within the toplevel that will contain
@@ -1208,7 +1208,7 @@ static void UpdatePointerWinAfterDestroy (
 	    * The parent of the Tk internal window is in the process of being destroyed.
 	    * Don't call Tk_UpdatePointer in this case.
 	    */
-	    doUpdatePointer = False;
+	    doUpdatePointer = false;
 	}
     }
     if (doUpdatePointer) {
@@ -1879,12 +1879,8 @@ WmSetAttribute(
 		    styleMaskValue |= NSWindowStyleMaskNonactivatingPanel;
 		}
 	    }
-	    if (styleMaskValue & NSWindowStyleMaskFullSizeContentView) {
-		macWindow.titlebarAppearsTransparent = YES;
-	    } else {
-		macWindow.titlebarAppearsTransparent = NO;
-	    }
-	} else {
+	    macWindow.titlebarAppearsTransparent = (styleMaskValue & NSWindowStyleMaskFullSizeContentView) != 0;
+} else {
 	    return TCL_ERROR;
 	}
 	NSRect oldFrame = [macWindow frame];
