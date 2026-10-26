@@ -6776,18 +6776,27 @@ TkMacOSXMakeRealWindowExist(
     /*
      * This is a hack to allow windows to be configured and drawn while off
      * screen, which requires that updateLayer be called for the contentView of
-     * the off-screen window.  Windows are normally created off screen and
-     * apparently the contentView of a window, or its CALayer, does not become
-     * fully initialized until the window is ordered front for the first
-     * time. Moreover, AppKit will not call the updateLayer method of a
-     * window's contentView until the initialization is complete.  The hack is
-     * to make the window completely transparent, to avoid a flash, then order
-     * it front, order it out, and remove the transparency.
+     * the off-screen window.
+     *
+     * Windows are normally created off screen and apparently the contentView
+     * of a window, or its CALayer, does not become fully initialized until the
+     * window is ordered front for the first time. Moreover, AppKit will not
+     * call the updateLayer method of a window's contentView until the
+     * initialization is complete.  So we must somehow force the initialization
+     * to happen if we want to draw the window.
+     *
+     * The hack is to order the window front and immediately order it out.  To
+     * avoid visual artifacts the window is made completely transparent and its
+     * animations are disabled before ordering it front.  The transparency and
+     * animation states are restored after it is ordered out.
      */
+    NSWindowAnimationBehavior savedBehavior = [window animationBehavior];
+    [window setAnimationBehavior: NSWindowAnimationBehaviorNone];
     [window setAlphaValue: 0.0];
     [window orderFront:nil];
     [window orderOut:nil];
     [window setAlphaValue: 1.0];
+    [window setAnimationBehavior: savedBehavior];
 						
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     if (tabbingId) {
