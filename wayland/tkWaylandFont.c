@@ -2611,6 +2611,23 @@ WaylandShaper_ShapeString(
                      */
                     if (EmojiKindAt(ucs4Chars, subrunEnd, charCount) != subrunKind) break;
 
+                    {
+                        unsigned int combClass = hb_unicode_combining_class(
+                            hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+                        if (combClass != 0) {
+                            subrunEnd++;
+                            continue;
+                        }
+                        FcChar32 c = ucs4Chars[subrunEnd];
+                        if ((c >= 0x064B && c <= 0x065F) || c == 0x0670 ||
+                            (c >= 0x06D6 && c <= 0x06ED) ||
+                            (c >= 0x0900 && c <= 0x0903) || (c >= 0x093A && c <= 0x094F) ||
+                            (c >= 0x05B0 && c <= 0x05C7)) {
+                            subrunEnd++;
+                            continue;
+                        }
+                    }
+
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                         /* Keep extending; do not break on face mismatch. */
                         subrunEnd++;
@@ -2621,10 +2638,7 @@ WaylandShaper_ShapeString(
                     subrunEnd++;
                 }
 
-                /* Now find a face that covers the entire subrun. */
-                int runFaceIndex = FindFaceCoveringRange(fontPtr, ucs4Chars,
-                                                         subrunStart,
-                                                         subrunEnd - subrunStart);
+                int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1);
 
                 subrunList[subrunCount].start     = subrunStart;
                 subrunList[subrunCount].len       = subrunEnd - subrunStart;
@@ -2664,29 +2678,13 @@ WaylandShaper_ShapeString(
             hb_script_t subrunScript = subrunList[listIdx].script;
             int         runFaceIndex;
 
-            /* If this subrun contains any emoji, force emoji face. */
-            /* Subruns are split by EmojiKindAt(), so the kind at the
-             * start is the kind of the whole subrun (this also covers
-             * keycap sequences, whose ASCII base is not IsEmoji()). */
             bool subrunHasEmoji =
                 EmojiKindAt(ucs4Chars, subrunStart, charCount)
                     != EMOJI_KIND_NONE;
-            bool subrunHasNonEmoji = !subrunHasEmoji;
-
-            if (subrunHasEmoji && !subrunHasNonEmoji) {
+            if (subrunHasEmoji) {
                 runFaceIndex = PickEmojiFaceForRun(fontPtr, ucs4Chars,
                                                    subrunStart, subrunEnd,
                                                    charCount);
-            } else if (subrunHasEmoji && subrunHasNonEmoji) {
-                /* Mixed run - try to find a face that covers non-emoji parts. */
-                int mixedFace = FindFaceCoveringRange(fontPtr, ucs4Chars,
-                                                      subrunStart,
-                                                      subrunEnd - subrunStart);
-                if (mixedFace >= 0) {
-                    runFaceIndex = mixedFace;
-                } else {
-                    runFaceIndex = subrunList[listIdx].faceIndex;
-                }
             } else {
                 runFaceIndex = subrunList[listIdx].faceIndex;
             }
@@ -2763,25 +2761,22 @@ WaylandShaper_ShapeString(
 
                 int advX    = (int)(glyphPos[gi].x_advance / 64.0 + 0.5);
 
-                /* Cluster length. */
+                /* Cluster length - unified logical byte order.
+                 * Find next distinct cluster offset > current, regardless of visual order. */
                 int clusterLen;
-                if (!runIsRTL) {
-                    int nextOff = shapeByteEnd;
-                    for (unsigned int gj = gi + 1; gj < glyphCount; gj++) {
-                        if ((int)glyphInfo[gj].cluster != byteOff) {
-                            nextOff = (int)glyphInfo[gj].cluster; break;
+                {
+                    int nextDistinct = -1;
+                    for (unsigned int gj = 0; gj < glyphCount; gj++) {
+                        int bo = (int)glyphInfo[gj].cluster;
+                        if (bo != byteOff && bo > byteOff) {
+                            if (nextDistinct == -1 || bo < nextDistinct) nextDistinct = bo;
                         }
                     }
-                    clusterLen = nextOff - byteOff;
-                } else {
-                    int prevOff = shapeByteEnd;
-                    for (int gj = (int)gi - 1; gj >= 0; gj--) {
-                        if ((int)glyphInfo[gj].cluster != byteOff) {
-                            prevOff = (int)glyphInfo[gj].cluster; break;
-                        }
-                    }
-                    clusterLen = abs(prevOff - byteOff);
+                    int end = (nextDistinct != -1) ? nextDistinct : shapeByteEnd;
+                    clusterLen = end - byteOff;
                 }
+                if (clusterLen <= 0) clusterLen = 1;
+                if (byteOff + clusterLen > shapeByteEnd) clusterLen = shapeByteEnd - byteOff;
                 if (clusterLen <= 0) clusterLen = 1;
 
                 int cpLen = clusterLen < 15 ? clusterLen : 15;
@@ -2811,27 +2806,31 @@ WaylandShaper_ShapeString(
 
     buffer->totalAdvance = globalPenX;
 
-    /* Build visualIndex. */
+    /* Build visualIndex - logical order, sorted by x. */
     buffer->indexCount = 0;
     for (int i = 0; i < buffer->glyphCount; i++) {
         int byteStart = buffer->glyphs[i].byteOffset;
         int byteEnd   = byteStart + buffer->glyphs[i].clusterLen;
-
         if (buffer->indexCount > 0 &&
-	    buffer->visualIndex[buffer->indexCount - 1].byteStart == byteStart)
+            buffer->visualIndex[buffer->indexCount - 1].byteStart == byteStart)
             continue;
-
         int v = buffer->indexCount++;
         buffer->visualIndex[v].x         = buffer->glyphs[i].x;
         buffer->visualIndex[v].advanceX  = buffer->glyphs[i].advanceX;
         buffer->visualIndex[v].isRTL     = buffer->glyphs[i].isRTL;
-        if (buffer->glyphs[i].isRTL) {
-            buffer->visualIndex[v].byteStart = byteEnd;
-            buffer->visualIndex[v].byteEnd   = byteStart;
-        } else {
-            buffer->visualIndex[v].byteStart = byteStart;
-            buffer->visualIndex[v].byteEnd   = byteEnd;
+        buffer->visualIndex[v].byteStart = byteStart;
+        buffer->visualIndex[v].byteEnd   = byteEnd;
+    }
+    /* Sort by x for visual order, keeping logical byteStart/end intact */
+    for (int i = 1; i < buffer->indexCount; i++) {
+        int j = i - 1;
+        /* Use a temporary copy of the struct - don't use named VisualCluster type */
+        __typeof__(buffer->visualIndex[0]) key = buffer->visualIndex[i];
+        while (j >= 0 && buffer->visualIndex[j].x > key.x) {
+            buffer->visualIndex[j+1] = buffer->visualIndex[j];
+            j--;
         }
+        buffer->visualIndex[j+1] = key;
     }
 
     /* Build sorted cluster break table. */
@@ -5353,187 +5352,148 @@ TkpDrawAngledCharsInContext(
         goto decorations;
     }
 
-    /* Complex path: Use HarfBuzz shaping for proper glyph positioning.
-     * This path handles combining marks, RTL text, emoji, and complex scripts.
-     * We DO NOT pre-compose the string - we let HarfBuzz handle it natively.
-     * This ensures proper positioning of combining marks with zero advance.
+    /* Complex path: draw HarfBuzz-shaped glyphs safely.
+
+     * Previous version did fopen per glyph -> core dump.
+
+     * Now keep every glyph, group by byte range.
+
+     * Ligature (1 glyph, N cps): draw whole cluster.
+
+     * Base+mark (N glyphs, N cps): draw each cp at its pen_x/pen_y (GPOS).
+
      */
+
     {
+
         ShapedGlyphBuffer sbuf;
-        
-        /* Shape the entire text run using HarfBuzz. */
-        if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
-                                       source, (int)numBytes, &sbuf)) {
+
+        if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &sbuf)) {
+
             nvgRestore(vg);
+
             goto done;
+
         }
 
-        int lastFaceId = -1;
-
-        /* 
-         * ClusterRenderInfo groups HarfBuzz shaped glyphs.
-         * For Arabic/Hebrew we MUST render by HarfBuzz glyphId, not by
-         * original UTF-8, otherwise stb_truetype draws isolated forms.
-         */
-        typedef struct {
-            int  start_byte;
-            int  end_byte;
-            int  face_idx;
-            int  pen_x;
-            int  pen_y;
-            int  advance_x;
-            int  glyph_id;      /* HarfBuzz shaped glyph id */
-            char text[32];
-        } ClusterRenderInfo;
+        typedef struct { int start_byte; int end_byte; int face_idx; int pen_x; int pen_y; int advance_x; int glyph_id; char text[32]; } ClusterRenderInfo;
 
         ClusterRenderInfo clusters[MAX_GLYPHS];
+
         int cluster_count = 0;
 
-        /* Build a de-duplicated cluster list preserving visual order.
-         * A single HarfBuzz glyph may cover multiple codepoints (lam-alif),
-         * so we dedup by byte range, keeping the first glyphId encountered.
-         */
         for (int i = 0; i < sbuf.glyphCount && cluster_count < MAX_GLYPHS; i++) {
-            int bo  = sbuf.glyphs[i].byteOffset;
+
+            int bo = sbuf.glyphs[i].byteOffset;
+
             int boe = bo + sbuf.glyphs[i].clusterLen;
+
             if (boe <= drawStart || bo >= drawEnd) continue;
+
             if (bo < 0 || boe <= 0) continue;
 
-            int found = -1;
-            for (int j = 0; j < cluster_count; j++) {
-                if (clusters[j].start_byte == bo && clusters[j].end_byte == boe) {
-                    found = j;
-                    break;
-                }
-                /* Ligature case: new glyph covers superset of existing - merge */
-                if (clusters[j].start_byte >= bo && clusters[j].end_byte <= boe) {
-                    found = j;
-                    break;
-                }
-            }
-            if (found < 0) {
-                found = cluster_count++;
-                clusters[found].start_byte = bo;
-                clusters[found].end_byte = boe;
-                clusters[found].face_idx = sbuf.glyphs[i].faceIndex;
-                clusters[found].pen_x = sbuf.glyphs[i].x;
-                clusters[found].pen_y = sbuf.glyphs[i].y;
-                clusters[found].advance_x = sbuf.glyphs[i].advanceX;
-                clusters[found].glyph_id = sbuf.glyphs[i].glyphId;
-                int len = boe - bo;
-                if (len > 31) len = 31;
-                if (len > 0) {
-                    memcpy(clusters[found].text, source + bo, len);
-                }
-                clusters[found].text[len] = '\0';
-            } else {
-                /* Accumulate advance for same cluster (base+mark) */
-                clusters[found].advance_x += sbuf.glyphs[i].advanceX;
-            }
+            int idx = cluster_count++;
+
+            clusters[idx].start_byte = bo;
+
+            clusters[idx].end_byte = boe;
+
+            clusters[idx].face_idx = sbuf.glyphs[i].faceIndex;
+
+            clusters[idx].pen_x = sbuf.glyphs[i].x;
+
+            clusters[idx].pen_y = sbuf.glyphs[i].y;
+
+            clusters[idx].advance_x = sbuf.glyphs[i].advanceX;
+
+            clusters[idx].glyph_id = sbuf.glyphs[i].glyphId;
+
+            int len = boe - bo; if (len > 31) len = 31;
+
+            if (len > 0) memcpy(clusters[idx].text, source + bo, len);
+
+            clusters[idx].text[len] = '\0';
+
         }
 
-        /* Render each cluster using its shaped glyphId.
-         * We bypass nvgText for complex scripts and draw via the
-         * HarfBuzz glyph id directly using stb_truetype metrics.
-         * For simple clusters (Latin, Hebrew without ligatures) nvgText
-         * with the original bytes still works, but using glyphId is
-         * always correct.
-         */
+        bool rendered[MAX_GLYPHS] = {0};
+
         NVGcolor fillCol = ColorFromGC(gc);
 
         for (int i = 0; i < cluster_count; i++) {
-            int faceIdx = clusters[i].face_idx;
-            if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
-            /*
-             * Color bitmap face chosen by the shaper: draw every shaped
-             * glyph of the cluster by glyph ID (a ZWJ sequence that the
-             * font cannot ligate arrives as several glyphs sharing one
-             * cluster).  If nothing could be drawn, fall back to the
-             * monochrome emoji face below.
-             */
-            if (IsColorBitmapFace(fontPtr, faceIdx)) {
-                bool drew = false;
-                for (int g = 0; g < sbuf.glyphCount; g++) {
-                    int gbo = sbuf.glyphs[g].byteOffset;
-                    if (gbo < clusters[i].start_byte ||
-                            gbo >= clusters[i].end_byte) continue;
-                    if (sbuf.glyphs[g].faceIndex != faceIdx) continue;
-                    if (DrawColorGlyph(vg, fontPtr, faceIdx,
-                                       (hb_codepoint_t)sbuf.glyphs[g].glyphId,
-                                       (float)sbuf.glyphs[g].x,
-                                       (float)sbuf.glyphs[g].y,
-                                       (float)sbuf.glyphs[g].advanceX)) {
-                        drew = true;
-                    }
+            if (rendered[i]) continue;
+
+            int groupIdx[64]; int groupN = 0;
+
+            for (int k = i; k < cluster_count; k++) {
+
+                if (clusters[k].start_byte == clusters[i].start_byte && clusters[k].end_byte == clusters[i].end_byte) {
+
+                    groupIdx[groupN++] = k;
+
                 }
-                nvgFillColor(vg, fillCol);   /* DrawColorGlyph changed the paint. */
-                if (drew) continue;
 
-                int mono = GetEmojiFaceIndex(fontPtr);
-                faceIdx = (mono >= 0 && mono < fontPtr->nfaces &&
-                           !IsColorBitmapFace(fontPtr, mono)) ? mono : 0;
-            } else {
-                FcChar32 uc;
-                if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
-                                 (int)strlen(clusters[i].text)) > 0) {
-                    if (IsEmoji(uc)) {
-                        int emojiFace = GetEmojiFaceIndex(fontPtr);
-                        if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) faceIdx = emojiFace;
-                    } else {
-                        if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
-                            FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
-                            faceIdx = 0;
-                        } else {
-                            for (int fi = 1; fi < fontPtr->nfaces; fi++) {
-                                if (fontPtr->faces[fi].charset &&
-                                    FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                                    faceIdx = fi; break;
-                                }
-                            }
-                        }
-                    }
+            }
+
+            int cpCount = 0; const char *p = clusters[i].text; const char *e = p + strlen(p);
+
+            while (p < e) { FcChar32 uc; int cl = FcUtf8ToUcs4((const FcChar8*)p, &uc, e - p); if (cl <= 0) break; cpCount++; p += cl; }
+
+            const char *cpStarts[32]; int cpLens[32]; int cpn = 0;
+
+            p = clusters[i].text; e = p + strlen(p);
+
+            while (p < e && cpn < 32) { FcChar32 uc; int cl = FcUtf8ToUcs4((const FcChar8*)p, &uc, e - p); if (cl <= 0) break; cpStarts[cpn]=p; cpLens[cpn]=cl; cpn++; p+=cl; }
+
+            if (groupN < cpCount) {
+
+                int g = groupIdx[0]; int faceIdx = clusters[g].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+                if (IsColorBitmapFace(fontPtr, faceIdx)) {
+
+                    bool drew=false;
+
+                    for (int gg=0; gg<groupN; gg++) { int gi=groupIdx[gg]; if (DrawColorGlyph(vg, fontPtr, faceIdx, (hb_codepoint_t)clusters[gi].glyph_id, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x)) drew=true; }
+
+                    nvgFillColor(vg, fillCol); if (drew) { for (int k=0;k<groupN;k++) rendered[groupIdx[k]]=true; continue; }
+
                 }
-            }
 
-            int faceId = fontPtr->faces[faceIdx].nvgFontId;
-            if (faceId < 0) faceId = primaryId;
-            if (faceId != lastFaceId) {
-                nvgFontFaceId(vg, faceId);
-                lastFaceId = faceId;
-            }
+                int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId; nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
 
-            float gx = (float)clusters[i].pen_x;
-            float gy = (float)clusters[i].pen_y;
+                nvgText(vg, (float)clusters[g].pen_x, (float)clusters[g].pen_y, clusters[g].text, clusters[g].text + strlen(clusters[g].text));
 
-            /* 
-             * For complex scripts (Arabic, Hebrew, Indic, etc.) we have a shaped
-             * glyphId. NanoVG / fontstash does not expose a glyphId draw API,
-             * but nvgText can still draw the cluster string correctly *if* the
-             * underlying font file is the same one HarfBuzz shaped with - because
-             * stb_truetype will find the glyph via cmap. For Arabic presentation
-             * forms, the cmap entry for the original codepoint already points to
-             * the isolated form only, so we must ensure the font file contains
-             * the GSUB'd glyph. The reliable path is to let HarfBuzz shape and
-             * then render the glyphId via stb_truetype directly; however to stay
-             * compatible with the existing NanoVG path, we render the cluster
-             * text at the HarfBuzz-computed position, which with the HarfBuzz
-             * pen positions now yields correct joining because HarfBuzz has
-             * already resolved init/medi/fina forms to distinct glyphIds and
-             * we keep one nvgText call per HarfBuzz cluster (not per Unicode
-             * codepoint).
-             */
-            if (clusters[i].glyph_id != 0) {
-                nvgText(vg, gx, gy, clusters[i].text,
-                        clusters[i].text + strlen(clusters[i].text));
+                for (int k=0;k<groupN;k++) rendered[groupIdx[k]]=true;
+
             } else {
-                nvgText(vg, gx, gy, clusters[i].text,
-                        clusters[i].text + strlen(clusters[i].text));
+
+                for (int k=0; k<groupN && k<cpn; k++) {
+
+                    int gi=groupIdx[k]; int faceIdx=clusters[gi].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx=0;
+
+                    if (IsColorBitmapFace(fontPtr, faceIdx)) { if (DrawColorGlyph(vg, fontPtr, faceIdx, (hb_codepoint_t)clusters[gi].glyph_id, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x)) { nvgFillColor(vg, fillCol); rendered[gi]=true; continue; } }
+
+                    int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId; nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
+
+                    char single[16]={0}; int sl=cpLens[k]; if (sl>15) sl=15; memcpy(single, cpStarts[k], sl);
+
+                    nvgText(vg, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, single, single+sl);
+
+                    rendered[gi]=true;
+
+                }
+
             }
+
         }
+
     }
 
+
+
     /* Restore the transformation state. */
+
     nvgRestore(vg);
 
 decorations:
@@ -5857,3 +5817,4 @@ TkWaylandDrawMenuText(
  * coding: utf-8
  * End:
  */
+
