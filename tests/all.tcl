@@ -74,7 +74,7 @@ foreach {constraint definition fileList} {
 
 # Files to skip when running under Wayland
 if {"wayland" in [tcltest::configure -constraints]} {
-    lappend skipFiles systray.test
+    lappend skipFiles {}
 }
 tcltest::configure -notfile [lsort -unique $skipFiles]
 unset constraint definition fileList skipFiles toSkip
