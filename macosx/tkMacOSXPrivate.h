@@ -299,6 +299,7 @@ MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 					     NSWindow *ignore);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
 
 #pragma mark Private Objective-C Classes
 

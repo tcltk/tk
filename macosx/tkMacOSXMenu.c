@@ -1173,8 +1173,9 @@ TkpSetWindowMenuBar(
  *
  *	Finds the toplevel whose menu belongs in the menubar: the key window,
  *	or else the frontmost visible toplevel that can become key, which is
- *	normally the one made key next.  A toplevel being destroyed never
- *	qualifies.
+ *	normally the one made key next.  If no window can become key, it is
+ *	the main window, as in an application that only shows its menubar.  A
+ *	toplevel being destroyed never qualifies.
  *
  * Results:
  *	The owner, or NULL if no Tk toplevel qualifies.
@@ -1186,7 +1187,8 @@ TkpSetWindowMenuBar(
  */
 
 static TkWindow *
-MenubarOwner(void)
+MenubarOwner(
+    TkWindow *mainWinPtr)	/* Main window of the application, or NULL. */
 {
     NSWindow *keyWindow = [NSApp keyWindow];
     TkWindow *winPtr = keyWindow ? TkMacOSXGetTkWindow(keyWindow) : NULL;
@@ -1209,6 +1211,10 @@ MenubarOwner(void)
 	    continue;
 	}
 	return winPtr;
+    }
+    if (mainWinPtr && mainWinPtr->wmInfoPtr
+	    && !(mainWinPtr->flags & TK_ALREADY_DEAD)) {
+	return mainWinPtr;
     }
     return NULL;
 }
@@ -1242,6 +1248,43 @@ TkMacOSXInstallWindowMenubar(
     }
     if (!menu || menu != (TKMenu *) [NSApp mainMenu]) {
 	[NSApp tkSetMainMenu:menu];
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInstallMainMenubar --
+ *
+ *	Puts the menu of the main window of an application into the menubar,
+ *	or the default menu if it has none.  Called when no window can become
+ *	key, so that an application that only shows its menubar keeps it.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The menubar may be changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXInstallMainMenubar(
+    Tcl_Interp *interp)		/* The application, or NULL for the first
+				 * one. */
+{
+    TkMainInfo *mainPtr;
+
+    for (mainPtr = TkGetMainInfoList(); mainPtr != NULL;
+	    mainPtr = mainPtr->nextPtr) {
+	if (!interp || mainPtr->interp == interp) {
+	    break;
+	}
+    }
+    if (mainPtr && mainPtr->winPtr
+	    && !(mainPtr->winPtr->flags & TK_ALREADY_DEAD)) {
+	TkMacOSXInstallWindowMenubar(mainPtr->winPtr);
     }
 }
 
@@ -1288,7 +1331,7 @@ Tk_SetMainMenubar(
 	return;
     }
 
-    ownerPtr = MenubarOwner();
+    ownerPtr = MenubarOwner(winPtr->mainPtr ? winPtr->mainPtr->winPtr : NULL);
     if (ownerPtr && ownerPtr != winPtr) {
 	TkMacOSXInstallWindowMenubar(ownerPtr);
 	return;

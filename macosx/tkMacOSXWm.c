@@ -883,9 +883,16 @@ void TkMacOSXAssignNewKeyWindow(
 		[NSApp tkSetMainMenu:menu];
 		[NSApp setTkEventTarget: winPtr];
 	    }
-	    break;
+	    return;
 	}
     }
+
+    /*
+     * No window can become key: show the menubar of the main window, which
+     * is all that an application without visible windows offers.
+     */
+
+    TkMacOSXInstallMainMenubar(interp);
 }
 
 /*
