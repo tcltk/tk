@@ -102,7 +102,7 @@ TkStateParseProc(
     }
     Tcl_AppendToObj(msgObj, " or disabled", -1);
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", (char *)NULL);
     *statePtr = TK_STATE_NORMAL;
     return TCL_ERROR;
 }
@@ -204,7 +204,7 @@ TkOrientParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad orientation \"%s\": must be vertical or horizontal",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", (char *)NULL);
     *orientPtr = 0;
     return TCL_ERROR;
 }
@@ -395,7 +395,7 @@ TkOffsetParseProc(
     }
     Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", -1);
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -494,7 +494,7 @@ TkPixelParseProc(
     if ((result == TCL_OK) && (clientData == NULL) && (*doublePtr < 0.0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad screen distance \"%s\"", value));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	return TCL_ERROR;
     }
     return result;
@@ -724,7 +724,7 @@ Tk_GetScrollInfo(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
 		    argv[0], argv[1], "moveto fraction"));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetDouble(interp, argv[3], dblPtr) != TCL_OK) {
@@ -737,7 +737,7 @@ Tk_GetScrollInfo(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
 		    argv[0], argv[1], "scroll number units|pages"));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetInt(interp, argv[3], intPtr) != TCL_OK) {
@@ -753,13 +753,13 @@ Tk_GetScrollInfo(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad argument \"%s\": must be units or pages", argv[4]));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", (char *)NULL);
 	return TK_SCROLL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "unknown option \"%s\": must be moveto or scroll", argv[2]));
     Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", argv[2],
-	    NULL);
+	    (char *)NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -831,12 +831,12 @@ Tk_GetScrollInfoObj(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad argument \"%s\": must be units or pages", arg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", (char *)NULL);
 	return TK_SCROLL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "unknown option \"%s\": must be moveto or scroll", arg));
-    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, NULL);
+    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, (char *)NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -1010,7 +1010,7 @@ TkFindStateNum(
 		    ((mPtr[1].strKey != NULL) ? "" : "or "), mPtr->strKey);
 	}
 	Tcl_SetObjResult(interp, msgObj);
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, (char *)NULL);
     }
     return mPtr->numKey;
 }
@@ -1071,7 +1071,7 @@ TkFindStateNumObj(
 	}
 	Tcl_SetObjResult(interp, msgObj);
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", Tcl_GetString(optionPtr),
-		key, NULL);
+		key, (char *)NULL);
     }
     return mPtr->numKey;
 }

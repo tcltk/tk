@@ -97,7 +97,7 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	    if (interp) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Invalid state name %s", stateName));
-		Tcl_SetErrorCode(interp, "TTK", "VALUE", "STATE", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "STATE", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -220,7 +220,7 @@ Tcl_Obj *Ttk_StateMapLookup(
     }
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("No match in state map", -1));
-	Tcl_SetErrorCode(interp, "TTK", "STATE", "UNMATCHED", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "STATE", "UNMATCHED", (char *)NULL);
     }
     return NULL;
 }
@@ -246,7 +246,7 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "State map must have an even number of elements", -1));
-	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STATEMAP", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STATEMAP", (char *)NULL);
 	}
 	return 0;
     }

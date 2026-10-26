@@ -260,7 +260,7 @@ WinItemCoords(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 2, got %d", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -273,7 +273,7 @@ WinItemCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -375,7 +375,7 @@ ConfigureWinItem(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "can't use %s in a window item of this canvas",
 	    Tk_PathName(winItemPtr->tkwin)));
-    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
     winItemPtr->tkwin = NULL;
     return TCL_ERROR;
 }

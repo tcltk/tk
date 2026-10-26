@@ -162,7 +162,7 @@ TkTextImageCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded image at index \"%s\"",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	objPtr = Tk_GetOptionValue(interp, (char *)&eiPtr->body.ei,
@@ -187,7 +187,7 @@ TkTextImageCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded image at index \"%s\"",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
@@ -382,7 +382,7 @@ EmbImageConfigure(
 		"Either a \"-name\" or a \"-image\" argument must be"
 		" provided to the \"image create\" subcommand", -1));
 	Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "IMAGE_CREATE_USAGE",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 

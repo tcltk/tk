@@ -777,7 +777,7 @@ EntryWidgetObjCmd(
 		    "bad scan option \"%s\": must be mark or dragto",
 		    minorCmd));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
-		    minorCmd, NULL);
+		    minorCmd, (char *)NULL);
 	    goto error;
 	}
 	break;
@@ -1190,7 +1190,7 @@ ConfigureEntry(
 			"-to value must be greater than -from value",
 			-1));
 		Tcl_SetErrorCode(interp, "TK", "SPINBOX", "RANGE_SANITY",
-			NULL);
+			(char *)NULL);
 		continue;
 	    }
 
@@ -1212,7 +1212,7 @@ ConfigureEntry(
 			    "bad spinbox format specifier \"%s\"",
 			    sbPtr->reqFormat));
 		    Tcl_SetErrorCode(interp, "TK", "SPINBOX", "FORMAT_SANITY",
-			    NULL);
+			    (char *)NULL);
 		    continue;
 		}
 		if ((sscanf(fmt, "%%%d.%d%[f]", &min, &max, fbuf) == 3)
@@ -2631,7 +2631,7 @@ GetEntryIndex(
 		    Tk_PathName(entryPtr->tkwin)));
 	    Tcl_SetErrorCode(interp, "TK",
 		    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
-		    "NO_SELECTION", NULL);
+		    "NO_SELECTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (length < 5) {
@@ -2693,7 +2693,7 @@ GetEntryIndex(
 	    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
     Tcl_SetErrorCode(interp, "TK",
 	    (entryPtr->type == TK_ENTRY) ? "ENTRY" : "SPINBOX",
-	    "BAD_INDEX", NULL);
+	    "BAD_INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -3984,7 +3984,7 @@ SpinboxWidgetObjCmd(
 		    "bad scan option \"%s\": must be mark or dragto",
 		    minorCmd));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
-		    minorCmd, NULL);
+		    minorCmd, (char *)NULL);
 	    goto error;
 	}
 	break;

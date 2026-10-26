@@ -871,7 +871,7 @@ ListboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", (char *)NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -908,7 +908,7 @@ ListboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", (char *)NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -1644,7 +1644,7 @@ ConfigureListbox(
 	    if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy)
 		    != TCL_OK) {
 		Tcl_AppendResult(listPtr->interp,
-			": invalid -listvariable value", NULL);
+			": invalid -listvariable value", (char *)NULL);
 		continue;
 	    }
 
@@ -2754,7 +2754,7 @@ GetListboxIndex(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad listbox index \"%s\": must be active, anchor, end, @x,y,"
 	    " or a number", Tcl_GetString(indexObj)));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "LISTBOX_INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "LISTBOX_INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 

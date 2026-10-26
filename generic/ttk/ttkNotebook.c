@@ -770,7 +770,7 @@ static int AddTab(
     if (Ttk_ContentIndex(nb->notebook.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s already added",
 	    Tk_PathName(window)));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", (char *)NULL);
 	return TCL_ERROR;
     }
 #endif
@@ -902,7 +902,7 @@ static int GetTabIndex(
     if (status == TCL_OK && *index_rtn < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "tab '%s' not found", Tcl_GetString(objPtr)));
-	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", (char *)NULL);
 	status = TCL_ERROR;
     }
     return status;

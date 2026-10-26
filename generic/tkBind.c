@@ -3904,7 +3904,7 @@ HandleEventGenerate(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window id \"%s\" doesn't exist in this application",
 		Tcl_GetString(objv[0])));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -3918,12 +3918,12 @@ HandleEventGenerate(
     if (count != 1u) {
 	Tcl_SetObjResult(interp,
 		Tcl_NewStringObj("Double, Triple, or Quadruple modifier not allowed", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", (char *)NULL);
 	return TCL_ERROR;
     }
     if (*p) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("only one event specification allowed", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -4010,7 +4010,7 @@ HandleEventGenerate(
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -4145,14 +4145,14 @@ HandleEventGenerate(
 	    keysym = TkStringToKeysym(value);
 	    if (keysym == NoSymbol) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, (char *)NULL);
 		return TCL_ERROR;
 	    }
 
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("no keycode for keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY)) {
@@ -4387,7 +4387,7 @@ HandleEventGenerate(
     	if (badOpt) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s event doesn't accept \"%s\" option", name, Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4505,7 +4505,7 @@ NameToWindow(
 
 	if (!tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad window name/identifier \"%s\"", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, (char *)NULL);
 	    return 0;
 	}
     }
@@ -4598,7 +4598,7 @@ GetVirtualEventUid(
 	    || virtString[length - 2] != '>'
 	    || virtString[length - 1] != '>') {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("virtual event \"%s\" is badly formed", virtString));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", (char *)NULL);
 	return NULL;
     }
     virtString[length - 2] = '\0';
@@ -4691,7 +4691,7 @@ FindSequence(
 	    if (!allowVirtual) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"virtual event not allowed in definition of another virtual event", -1));
-		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", NULL);
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", (char *)NULL);
 		ckfree(psPtr);
 		return NULL;
 	    }
@@ -4715,13 +4715,13 @@ FindSequence(
 
     if (numPats == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("no events specified in binding", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", (char *)NULL);
 	ckfree(psPtr);
 	return NULL;
     }
     if (numPats > 1u && virtualFound) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("virtual events may not be composed", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", (char *)NULL);
 	ckfree(psPtr);
 	return NULL;
     }
@@ -4821,7 +4821,7 @@ FinalizeParseEventDescription(
 
     if (errorObj) {
 	Tcl_SetObjResult(interp, errorObj);
-	Tcl_SetErrorCode(interp, "TK", "EVENT", errCode, NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", errCode, (char *)NULL);
     }
     patPtr->count = count;
     return count;

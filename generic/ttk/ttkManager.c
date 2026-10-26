@@ -465,7 +465,7 @@ int Ttk_GetContentIndexFromObj(
 	if (index < 0 || index >= mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Slave index %d out of bounds", index));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = index;
@@ -481,7 +481,7 @@ int Ttk_GetContentIndexFromObj(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
 		    Tk_PathName(mgr->window)));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = index;
@@ -490,7 +490,7 @@ int Ttk_GetContentIndexFromObj(
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "Invalid slave specification %s", string));
-    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
+    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -551,7 +551,7 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window window, Tk_Window container)
 badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as slave of %s",
 	    Tk_PathName(window), Tk_PathName(container)));
-    Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
+    Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", (char *)NULL);
     return 0;
 }
 

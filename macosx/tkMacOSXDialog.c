@@ -490,7 +490,7 @@ Tk_ChooseColorObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", (char *)NULL);
 	    goto end;
 	}
 	value = Tcl_GetString(objv[i + 1]);
@@ -748,7 +748,7 @@ Tk_GetOpenFileObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", (char *)NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -1034,7 +1034,7 @@ Tk_GetSaveFileObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", (char *)NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -1276,7 +1276,7 @@ Tk_ChooseDirectoryObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "VALUE", (char *)NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -1460,7 +1460,7 @@ Tk_MessageBoxObjCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", (char *)NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -1545,7 +1545,7 @@ Tk_MessageBoxObjCmd(
 	if (!defaultNativeButtonIndex) {
 	    Tcl_SetObjResult(interp,
 		    Tcl_NewStringObj("Illegal default option", -1));
-	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", (char *)NULL);
 	    goto end;
 	}
     }
@@ -1914,7 +1914,7 @@ FontchooserConfigureCmd(
 	if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	switch (optionIndex) {
@@ -1923,7 +1923,7 @@ FontchooserConfigureCmd(
 		    "\"-visible\": use the show or hide command";
 
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
-	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	case FontchooserParent: {

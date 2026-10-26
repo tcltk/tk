@@ -160,12 +160,12 @@ ImageCreate(
     for (i = 0; i < argc; i += 2) {
 	if (strcmp(argv[i], "-variable") != 0) {
 	    Tcl_AppendResult(interp, "bad option name \"",
-		    argv[i], "\"", NULL);
+		    argv[i], "\"", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if ((i+1) == argc) {
 	    Tcl_AppendResult(interp, "no value given for \"",
-		    argv[i], "\" option", NULL);
+		    argv[i], "\" option", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	varName = argv[i+1];
@@ -236,7 +236,7 @@ ImageObjCmd(
 		timPtr->height);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be changed", NULL);
+		"\": must be changed", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
