@@ -2638,7 +2638,11 @@ WaylandShaper_ShapeString(
                     subrunEnd++;
                 }
 
-                int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1);
+                int runFaceIndex = FindFaceCoveringRange(fontPtr, ucs4Chars, subrunStart, subrunEnd - subrunStart);
+                if (runFaceIndex == 0 && subrunEnd - subrunStart > 1) {
+                    int firstIdx = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1);
+                    if (firstIdx != 0) runFaceIndex = firstIdx;
+                }
 
                 subrunList[subrunCount].start     = subrunStart;
                 subrunList[subrunCount].len       = subrunEnd - subrunStart;
@@ -2711,6 +2715,10 @@ WaylandShaper_ShapeString(
             const char *langTag = "";
             if (subrunScript == HB_SCRIPT_ARABIC) langTag = "ar";
             else if (subrunScript == HB_SCRIPT_HEBREW) langTag = "he";
+            else if (subrunScript == HB_SCRIPT_THAI) langTag = "th";
+            else if (subrunScript == HB_SCRIPT_LAO) langTag = "lo";
+            else if (subrunScript == HB_SCRIPT_KHMER) langTag = "km";
+            else if (subrunScript == HB_SCRIPT_DEVANAGARI) langTag = "hi";
             hb_buffer_set_language(shaper->buffer,
                                    hb_language_from_string(langTag, -1));
             hb_buffer_set_cluster_level(shaper->buffer,
@@ -3876,68 +3884,73 @@ InitFont(
     }
 
     /*
-     * Guarantee CJK coverage the same way GetEmojiFaceIndex() guarantees
-     * emoji coverage: FcFontSort ranks candidates by closeness to a Latin
-     * pattern, not by script coverage, so a CJK-capable face (e.g. Noto
-     * Sans CJK) can easily sort past MAX_FACES and be silently dropped
-     * even though Fontconfig has one installed. Tk's X11/Xft backend has
-     * no equivalent truncation, which is why the same system fonts are
-     * found there but not here.
+     * Guarantee complex-script coverage the same way GetEmojiFaceIndex()
+     * guarantees emoji coverage: FcFontSort ranks candidates by closeness
+     * to a Latin pattern, not by script coverage, so a face for Thai,
+     * Lao, Khmer, CJK, Arabic or Hebrew can easily sort past MAX_FACES
+     * and be silently dropped even though Fontconfig has one installed.
+     * Tk's X11/Xft backend has no equivalent truncation, which is why the
+     * same system fonts are found there but not here.
+     *
+     * Fixed for Thai/Lao tofu bug - probe each script.
      */
     {
-        static const FcChar32 cjkProbe = 0x4E2D; /* CJK Unified Ideograph */
-        bool haveCjk = false;
-        for (int fi = 0; fi < nfaces && !haveCjk; fi++) {
-            if (fontPtr->faces[fi].charset &&
-                FcCharSetHasChar(fontPtr->faces[fi].charset, cjkProbe)) {
-                haveCjk = true;
-            }
-        }
-        if (!haveCjk) {
-            FcPattern *cjkPat = FcPatternCreate();
-            if (cjkPat) {
-                FcCharSet *want = FcCharSetCreate();
-                FcCharSetAddChar(want, cjkProbe);
-                FcPatternAddCharSet(cjkPat, FC_CHARSET, want);
-                FcPatternAddDouble(cjkPat, FC_PIXEL_SIZE,
-                                   (double)fontPtr->pixelSize);
-                FcConfigSubstitute(NULL, cjkPat, FcMatchPattern);
-                FcDefaultSubstitute(cjkPat);
-                FcResult cjkResult;
-                FcPattern *cjkMatch = FcFontMatch(NULL, cjkPat, &cjkResult);
-                if (cjkMatch && FcFontSetAdd(fontPtr->fontset, cjkMatch)) {
-                    /* Ownership of cjkMatch now belongs to fontPtr->fontset,
-                     * so it is freed by the existing FcFontSetDestroy() in
-                     * DeleteFont() - no separate cleanup needed. */
-                    WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(
-                        fontPtr->faces, (nfaces + 1) * sizeof(WaylandFtFace));
-                    if (grown) {
-                        fontPtr->faces = grown;
-                        memset(&fontPtr->faces[nfaces], 0, sizeof(WaylandFtFace));
-                        fontPtr->faces[nfaces].source    = cjkMatch;
-                        fontPtr->faces[nfaces].nvgFontId = -1;
-                        FcCharSet *cs = NULL;
-                        if (FcPatternGetCharSet(cjkMatch, FC_CHARSET, 0, &cs)
-                                == FcResultMatch) {
-                            fontPtr->faces[nfaces].charset = FcCharSetCopy(cs);
-                        }
-                        FcChar8 *fcPath = NULL;
-                        if (FcPatternGetString(cjkMatch, FC_FILE, 0, &fcPath)
-                                == FcResultMatch && fcPath) {
-                            fontPtr->faces[nfaces].filePath = strdup((char *)fcPath);
-                        }
-                        int fcIdx = 0;
-                        FcPatternGetInteger(cjkMatch, FC_INDEX, 0, &fcIdx);
-                        fontPtr->faces[nfaces].faceIndex = fcIdx;
-                        nfaces++;
-                        fontPtr->nfaces = nfaces;
-                    }
-                } else if (cjkMatch) {
-                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed. */
+        static const FcChar32 probes[] = {
+            0x0E01, /* Thai */
+            0x0E81, /* Lao */
+            0x1780, /* Khmer */
+            0x0EBC, /* Lao vowel */
+            0x0EC0, /* Lao */
+            0x4E2D  /* CJK */
+        };
+        for (size_t pi = 0; pi < sizeof(probes)/sizeof(probes[0]); pi++) {
+            FcChar32 probe = probes[pi];
+            bool have = false;
+            for (int fi = 0; fi < nfaces && !have; fi++) {
+                if (fontPtr->faces[fi].charset &&
+                    FcCharSetHasChar(fontPtr->faces[fi].charset, probe)) {
+                    have = true;
                 }
-                FcCharSetDestroy(want);
-                FcPatternDestroy(cjkPat);
             }
+            if (have) continue;
+            FcPattern *probePat = FcPatternCreate();
+            if (!probePat) continue;
+            FcCharSet *want = FcCharSetCreate();
+            if (!want) { FcPatternDestroy(probePat); continue; }
+            FcCharSetAddChar(want, probe);
+            FcPatternAddCharSet(probePat, FC_CHARSET, want);
+            FcPatternAddDouble(probePat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+            FcConfigSubstitute(NULL, probePat, FcMatchPattern);
+            FcDefaultSubstitute(probePat);
+            FcResult res;
+            FcPattern *match = FcFontMatch(NULL, probePat, &res);
+            if (match && FcFontSetAdd(fontPtr->fontset, match)) {
+                WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(
+                    fontPtr->faces, (nfaces + 1) * sizeof(WaylandFtFace));
+                if (grown) {
+                    fontPtr->faces = grown;
+                    memset(&fontPtr->faces[nfaces], 0, sizeof(WaylandFtFace));
+                    fontPtr->faces[nfaces].source    = match;
+                    fontPtr->faces[nfaces].nvgFontId = -1;
+                    FcCharSet *cs = NULL;
+                    if (FcPatternGetCharSet(match, FC_CHARSET, 0, &cs) == FcResultMatch) {
+                        fontPtr->faces[nfaces].charset = FcCharSetCopy(cs);
+                    }
+                    FcChar8 *fcPath = NULL;
+                    if (FcPatternGetString(match, FC_FILE, 0, &fcPath) == FcResultMatch && fcPath) {
+                        fontPtr->faces[nfaces].filePath = strdup((char *)fcPath);
+                    }
+                    int fcIdx = 0;
+                    FcPatternGetInteger(match, FC_INDEX, 0, &fcIdx);
+                    fontPtr->faces[nfaces].faceIndex = fcIdx;
+                    nfaces++;
+                    fontPtr->nfaces = nfaces;
+                }
+            } else if (match) {
+                FcPatternDestroy(match);
+            }
+            FcCharSetDestroy(want);
+            FcPatternDestroy(probePat);
         }
     }
 
@@ -5467,23 +5480,49 @@ TkpDrawAngledCharsInContext(
                 for (int k=0;k<groupN;k++) rendered[groupIdx[k]]=true;
 
             } else {
-
-                for (int k=0; k<groupN && k<cpn; k++) {
-
-                    int gi=groupIdx[k]; int faceIdx=clusters[gi].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx=0;
-
-                    if (IsColorBitmapFace(fontPtr, faceIdx)) { if (DrawColorGlyph(vg, fontPtr, faceIdx, (hb_codepoint_t)clusters[gi].glyph_id, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x)) { nvgFillColor(vg, fillCol); rendered[gi]=true; continue; } }
-
-                    int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId; nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
-
-                    char single[16]={0}; int sl=cpLens[k]; if (sl>15) sl=15; memcpy(single, cpStarts[k], sl);
-
-                    nvgText(vg, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, single, single+sl);
-
-                    rendered[gi]=true;
-
+                /* Base+mark case: Thai/Lao/Khmer marks must stay attached.
+                 * The old per-codepoint nvgText() split the cluster into
+                 * spacing glyphs (e.g. Thai  ิ +  ่ rendered to the side).
+                 * Draw the whole cluster as one unit at the base pen position
+                 * so HarfBuzz y_offset and zero-advance marks overlay correctly.
+                 * For other scripts keep per-glyph for GPOS.
+                 */
+                bool isComplexCluster = false;
+                for (int k=0;k<cpn;k++) {
+                    FcChar32 uc; FcUtf8ToUcs4((const FcChar8*)cpStarts[k], &uc, cpLens[k]);
+                    if ((uc>=0x0E00 && uc<=0x0EFF) || (uc>=0x1780 && uc<=0x17FF) || (uc>=0x0900 && uc<=0x0DFF)) {
+                        isComplexCluster = true; break;
+                    }
                 }
-
+                if (isComplexCluster) {
+                    int g0 = groupIdx[0];
+                    int faceIdx = clusters[g0].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+                    if (!IsColorBitmapFace(fontPtr, faceIdx)) {
+                        int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId;
+                        nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
+                        /* Draw whole cluster text once at base pen */
+                        const char *cstart = source + clusters[i].start_byte;
+                        const char *cend = source + clusters[i].end_byte;
+                        nvgText(vg, (float)clusters[g0].pen_x, (float)clusters[g0].pen_y, cstart, cend);
+                    } else {
+                        for (int kk=0; kk<groupN; kk++) {
+                            int gi=groupIdx[kk];
+                            DrawColorGlyph(vg, fontPtr, clusters[gi].face_idx, (hb_codepoint_t)clusters[gi].glyph_id,
+                                           (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x);
+                        }
+                        nvgFillColor(vg, fillCol);
+                    }
+                    for (int kk=0;kk<groupN;kk++) rendered[groupIdx[kk]]=true;
+                } else {
+                    for (int k=0; k<groupN && k<cpn; k++) {
+                        int gi=groupIdx[k]; int faceIdx=clusters[gi].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx=0;
+                        if (IsColorBitmapFace(fontPtr, faceIdx)) { if (DrawColorGlyph(vg, fontPtr, faceIdx, (hb_codepoint_t)clusters[gi].glyph_id, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x)) { nvgFillColor(vg, fillCol); rendered[gi]=true; continue; } }
+                        int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId; nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
+                        char single[16]={0}; int sl=cpLens[k]; if (sl>15) sl=15; memcpy(single, cpStarts[k], sl);
+                        nvgText(vg, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, single, single+sl);
+                        rendered[gi]=true;
+                    }
+                }
             }
 
         }
@@ -5817,4 +5856,3 @@ TkWaylandDrawMenuText(
  * coding: utf-8
  * End:
  */
-
