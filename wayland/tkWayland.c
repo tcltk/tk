@@ -135,18 +135,18 @@ TkGetMS(void)
 
 void
 TkpCopyRegion(
-    TkRegion dst,
-    TkRegion src)
+    Region dst,
+    Region src)
 {
     if (dst != src && src != NULL) {
         /* Free the old dst if necessary.  */
-        TkDestroyRegion(dst);
+        XDestroyRegion(dst);
 
         /* Create a new region for dst. */
-        dst = TkCreateRegion();
+        dst = XCreateRegion();
 
         /* Copy src into dst using API function. */
-        TkUnionRectWithRegion(NULL, src, dst);
+        XUnionRectWithRegion(NULL, src, dst);
     }
 }
 
@@ -169,7 +169,7 @@ TkpCopyRegion(
 
 void
 TkpBuildRegionFromAlphaData(
-    TkRegion region,		/* Region to be updated. */
+    Region region,		/* Region to be updated. */
     unsigned x, unsigned y,	/* Where in region to update. */
     unsigned width, unsigned height,
 				/* Size of rectangle to update. */
@@ -217,8 +217,8 @@ TkpBuildRegionFromAlphaData(
 		rect.y = (short)(y + y1);
 		rect.width = (unsigned short)(end - x1);
 		rect.height = 1;
-		/* Use the existing TkUnionRectWithRegion function. */
-		TkUnionRectWithRegion((XRectangle*)&rect, region, region);
+		/* Use the existing XUnionRectWithRegion function. */
+		XUnionRectWithRegion((XRectangle*)&rect, region, region);
 	    }
 	}
 	dataPtr += lineStride;

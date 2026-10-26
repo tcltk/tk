@@ -1272,13 +1272,13 @@ TkScrollWindow(
     int       x, int y,
     int       width, int height,
     int       dx, int dy,
-    TkRegion  damageRgn)
+    Region  damageRgn)
 {
     TkWindow  *childPtr = (TkWindow *)tkwin;
     TkWindow  *winPtr   = childPtr;
     float      offX = 0, offY = 0;
     XRectangle srcRect, dstRect;
-    TkRegion   coveredRgn;
+    Region   coveredRgn;
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
     GLuint scratchFbo = 0, scratchTex = 0;
@@ -1423,11 +1423,11 @@ TkScrollWindow(
     dstRect.x = (short)(x + dx);
     dstRect.y = (short)(y + dy);
 
-    coveredRgn = TkCreateRegion();
-    TkUnionRectWithRegion(&dstRect, coveredRgn, coveredRgn);
-    TkUnionRectWithRegion(&srcRect, damageRgn, damageRgn);
-    TkSubtractRegion(damageRgn, coveredRgn, damageRgn);
-    TkDestroyRegion(coveredRgn);
+    coveredRgn = XCreateRegion();
+    XUnionRectWithRegion(&dstRect, coveredRgn, coveredRgn);
+    XUnionRectWithRegion(&srcRect, damageRgn, damageRgn);
+    XSubtractRegion(damageRgn, coveredRgn, damageRgn);
+    XDestroyRegion(coveredRgn);
 
     return 1;
 }
