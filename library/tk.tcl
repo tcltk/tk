@@ -942,9 +942,24 @@ if {[tk windowingsystem] eq "x11"} {
     option add *Scrollbar.width		8.25p widgetDefault
 }
 
+# Add [tk appearance] to the tk command ensemble.
+namespace ensemble configure tk -map \
+    [dict merge [namespace ensemble configure tk -map] \
+	 {appearance ::tk::Appearance}]
+
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
+}
+
+# Follow the appearance the desktop asks for, now that both the classic
+# widgets and the themed ones are there to be coloured.  Where the desktop
+# asks for nothing, or cannot be asked, this does nothing at all.
+if {[tk windowingsystem] eq "x11"} {
+    # Not here but once the application is up: applying a palette makes a
+    # window of its own, and making one while Tk is still initialising
+    # disturbs what the application does next.
+    after idle {::tk::SetAppearance auto}
 }
 
 

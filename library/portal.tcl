@@ -22,6 +22,8 @@ namespace eval ::tk::portal {
     variable lastDir
     # For generating notification ids.
     variable notificationId 0
+    # The org.freedesktop.appearance settings, read once.
+    variable appearance
 }
 
 # ::tk::portal::Available --
@@ -48,6 +50,113 @@ proc ::tk::portal::Available {interface {minVersion 1}} {
 	dict set versions $interface $version
     }
     return [expr {[dict get $versions $interface] >= $minVersion}]
+}
+
+# ::tk::portal::SessionBus --
+#
+#	Returns true if the session bus can be reached without starting one.
+#	Where no address is set and no socket is in the place the convention
+#	gives it, libdbus would try to launch a bus of its own, which is not
+#	something a toolkit should do while it is starting up.
+
+proc ::tk::portal::SessionBus {} {
+    if {[info exists ::env(DBUS_SESSION_BUS_ADDRESS)]} {
+	return 1
+    }
+    return [expr {[info exists ::env(XDG_RUNTIME_DIR)]
+	    && [file exists [file join $::env(XDG_RUNTIME_DIR) bus]]}]
+}
+
+# ::tk::portal::Appearance --
+#
+#	The settings of the org.freedesktop.appearance namespace, under the
+#	names [tk appearance] reports them.  A setting the portal does not
+#	answer for takes its neutral value, as does every one of them where
+#	no portal answers at all.
+#
+#	The answer is kept, because the portal announces every change to it.
+
+proc ::tk::portal::Appearance {} {
+    variable appearance
+    if {[info exists appearance]} {
+	return $appearance
+    }
+
+    set settings {}
+    if {[SessionBus] && [Available Settings] && ![catch {
+	    _call org.freedesktop.portal.Settings ReadAll \
+		    {as {org.freedesktop.appearance}}} all]} {
+	if {[dict exists $all org.freedesktop.appearance]} {
+	    set settings [dict get $all org.freedesktop.appearance]
+	}
+
+	# Ask to be told of every later change, so that the answer kept here
+	# can be trusted and the application can follow the desktop.
+	catch {_watch org.freedesktop.appearance \
+		[list [namespace current]::SettingChanged]}
+    }
+
+    set appearance [dict create colorScheme {} accentColor {} \
+	    contrast normal reducedMotion 0]
+    dict for {key value} $settings {
+	switch -- $key {
+	    color-scheme {
+		# 1 is dark and 2 is light; 0, and anything the portal may
+		# come to answer which this does not know, is no preference.
+		dict set appearance colorScheme \
+			[lindex {{} dark light} [expr {$value in {1 2} ? $value : 0}]]
+	    }
+	    accent-color {
+		# Three sRGB components between 0 and 1.  A component outside
+		# that range means the desktop has chosen no accent.
+		set components {}
+		foreach component $value {
+		    if {$component < 0.0 || $component > 1.0} {
+			set components {}
+			break
+		    }
+		    lappend components [expr {round($component * 255)}]
+		}
+		if {[llength $components] == 3} {
+		    dict set appearance accentColor \
+			    [format #%02x%02x%02x {*}$components]
+		}
+	    }
+	    contrast {
+		if {$value == 1} {
+		    dict set appearance contrast high
+		}
+	    }
+	    reduced-motion {
+		dict set appearance reducedMotion [expr {$value == 1}]
+	    }
+	}
+    }
+    return $appearance
+}
+
+# ::tk::portal::SettingChanged --
+#
+#	Called from the portal watch when one of the settings changes.
+#	Keeps the answer of [Appearance] in step and lets the palette follow.
+#
+# Arguments:
+#	namespace	The namespace of the setting.
+#	key		Its name.
+#	value		Its new value.
+
+proc ::tk::portal::SettingChanged {namespace key value} {
+    variable appearance
+    if {$namespace ne "org.freedesktop.appearance"
+	    || ![info exists appearance]} {
+	return
+    }
+
+    # The reading is in one place: forget the answer and read it again.
+    unset appearance
+    Appearance
+    ::tk::DesktopAppearanceChanged
+    return
 }
 
 # ::tk::portal::Request --

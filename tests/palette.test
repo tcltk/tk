@@ -296,6 +296,15 @@ test palette-7.14 {seedColors: the inactive selection follows a selection given 
 # one.  Each test leaves the palette as it found it, by the same route the
 # attribute itself offers.
 #
+# What the desktop asks for is not Tk's to choose, and these tests are not
+# about it, so the portal is not consulted while they run: "auto" then means
+# the palette Tk started with, whatever the desktop of whoever runs them.
+#
+
+variable stockPortalEnabled $::tk::portal::enabled
+set ::tk::portal::enabled 0
+unset -nocomplain ::tk::portal::appearance
+::tk::SetAppearance auto
 
 test palette-8.1 {SetAppearance: dark gives the application a dark palette} -constraints x11 -body {
     wm attributes . -appearance dark
@@ -324,7 +333,9 @@ test palette-8.2 {SetAppearance: light gives it a light one} -constraints x11 -b
 test palette-8.3 {SetAppearance: auto restores every colour} -constraints x11 -body {
     # Not a colour at a time: the whole palette, classic and themed, must
     # come back as it was, including the colours Tk has compiled in rather
-    # than computed.
+    # than computed.  The starting point is the one the attribute itself
+    # gives, the tests before this one having cleared the option database.
+    wm attributes . -appearance auto
     set before [list [::tk::CapturePalette] \
 	    [lsort [array get ::ttk::theme::default::colors]]]
     wm attributes . -appearance dark
@@ -363,10 +374,99 @@ test palette-8.5 {SetAppearance: the value may be abbreviated} -constraints x11 
 } -result dark
 
 #
+# tk_setPalette recolours the windows which already exist, but only those
+# which still have the colour they were given by default.
+#
+
+test palette-6.1 {tk_setPalette keeps a colour the application chose} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    # The palette is for the windows which take Tk's own colours.  A window
+    # the application has coloured itself is not one of them.
+    frame .chosen -background red
+    frame .default
+    tk_setPalette #3c3c3c
+    join [list [.chosen cget -background] [.default cget -background]]
+} -cleanup {
+    destroy .chosen .default
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result "red #3c3c3c"
+
+test palette-6.2 {tk_setPalette reaches the windows made after it} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    # Each palette must leave the option database holding the colours it
+    # chose, whatever palettes came before it.
+    tk_setPalette #3c3c3c
+    tk_setPalette #d9d9d9
+    tk_setPalette #3c3c3c
+    frame .f
+    set result [join [list [.f cget -background] \
+	    [option get .f background Background]]]
+    destroy .f
+    set result
+} -cleanup {
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result "#3c3c3c #3c3c3c"
+
+#
+# The events which tell an application that the desktop has changed its
+# mind.  What the desktop says is not reachable from here, so the change is
+# announced as the portal watch announces it.
+#
+
+test palette-9.1 {the appearance events reach every toplevel} -constraints x11 -setup {
+    toplevel .t
+    update
+    set seen {}
+} -body {
+    foreach w {. .t} {
+	bind $w <<AppearanceChanged>> [list lappend seen $w %d]
+    }
+    ::tk::DesktopAppearanceChanged
+    update
+    lsort -stride 2 $seen
+} -cleanup {
+    foreach w {. .t} {
+	bind $w <<AppearanceChanged>> {}
+    }
+    destroy .t
+    wm attributes . -appearance auto
+    option clear
+    unset seen
+} -result [list . [expr {[winfo isdark .] ? "dark" : "light"}] \
+	.t [expr {[winfo isdark .] ? "dark" : "light"}]]
+
+test palette-9.2 {the light and dark events follow the appearance} -constraints x11 -setup {
+    set seen {}
+} -body {
+    bind . <<DarkAppearance>> {lappend seen dark}
+    bind . <<LightAppearance>> {lappend seen light}
+    wm attributes . -appearance dark
+    ::tk::DesktopAppearanceChanged
+    wm attributes . -appearance light
+    ::tk::DesktopAppearanceChanged
+    update
+    set seen
+} -cleanup {
+    bind . <<DarkAppearance>> {}
+    bind . <<LightAppearance>> {}
+    wm attributes . -appearance auto
+    option clear
+    unset seen
+} -result {dark light}
+
+#
 # TESTFILE CLEANUP
 #
 
-unset -nocomplain stockColors stockBackground saved
+set ::tk::portal::enabled $stockPortalEnabled
+unset -nocomplain ::tk::portal::appearance
+unset -nocomplain stockColors stockBackground saved stockPortalEnabled
 rename restorePalette {}
 rename seedFrom {}
 option clear

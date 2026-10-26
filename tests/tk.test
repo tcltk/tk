@@ -227,6 +227,41 @@ test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expec
     testprintf -21474836480
 } -result {-21474836480 18446744052234715136}
 
+test tk-9.1 {tk appearance: the settings the desktop asks for} -body {
+    # Every setting is answered for, whether or not the desktop has an
+    # opinion about it.
+    lsort [dict keys [tk appearance]]
+} -result {accentColor colorScheme contrast reducedMotion}
+
+test tk-9.2 {tk appearance: one setting at a time} -body {
+    lmap setting {colorScheme accentColor contrast reducedMotion} {
+	expr {[tk appearance $setting] eq [dict get [tk appearance] $setting]}
+    }
+} -result {1 1 1 1}
+
+test tk-9.3 {tk appearance: the values where no desktop answers} -constraints {
+    x11
+} -setup {
+    set enabled $::tk::portal::enabled
+    set ::tk::portal::enabled 0
+    unset -nocomplain ::tk::portal::appearance
+} -body {
+    # A setting the portal does not answer for, and every setting where
+    # there is no portal at all, expresses no preference.
+    tk appearance
+} -cleanup {
+    set ::tk::portal::enabled $enabled
+    unset -nocomplain ::tk::portal::appearance
+} -result {colorScheme {} accentColor {} contrast normal reducedMotion 0}
+
+test tk-9.4 {tk appearance: a setting which is not one} -returnCodes error -body {
+    tk appearance mauve
+} -result {bad setting "mauve": must be colorScheme, accentColor, contrast, or reducedMotion}
+
+test tk-9.5 {tk appearance: too many arguments} -returnCodes error -body {
+    tk appearance colorScheme contrast
+} -result {wrong # args: should be "tk appearance ?setting?"}
+
 #
 # TESTFILE CLEANUP
 #

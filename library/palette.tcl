@@ -174,8 +174,6 @@ proc ::tk::RecolorTree {w colors} {
 	     [string index $dbOption 0]]]
 	# Make sure this option is valid for this window.
 	if {![catch {$w configure $option} value]} {
-	    # Update the option for this window.
-	    $w configure $option $c($dbOption)
 	    # Retrieve a default value for this option.  First check
 	    # the option database. If it is not in the database use
 	    # the value for the temporary prototype widget.
@@ -188,15 +186,19 @@ proc ::tk::RecolorTree {w colors} {
 	    if {$defaultcolor ne ""} {
 		set defaultcolor [winfo rgb . $defaultcolor]
 	    }
-	    # If the color requested for this option differs from
-	    # the default, append a command to update the default.
-	    set requestcolor [lindex $value 4]
-	    if {$requestcolor ne ""} {
-		set requestcolor [winfo rgb . $requestcolor]
+	    # The colour the window has now, which is not the default one
+	    # when the application has given the window a colour of its own.
+	    set currentcolor [lindex $value 4]
+	    if {$currentcolor ne ""} {
+		set currentcolor [winfo rgb . $currentcolor]
 	    }
-	    if {![string match $defaultcolor $requestcolor]} {
+	    if {[string match $defaultcolor $currentcolor]} {
+		# The window still has the colour it was given by default, so
+		# give it the one the new palette has for it, and change the
+		# option database so that the windows made later get it too.
 		append result ";\noption add [list \
 		    *[winfo class $w].$dbOption $c($dbOption) 60]"
+		$w configure $option $c($dbOption)
 	    }
 	}
     }
@@ -356,6 +358,34 @@ proc ::tk::CapturePalette {} {
     return $palette
 }
 
+# ::tk::DatabaseColors --
+# The palette colours the option database answers for, in the form
+# tk_setPalette accepts.  Read before Tk has written a palette of its own,
+# these are the colours the user asked for in X resources, which outrank
+# anything the desktop asks for through the portal.
+#
+# Arguments:
+# None.
+
+proc ::tk::DatabaseColors {} {
+    set colors {}
+    foreach {option class} {
+	activeBackground	ActiveBackground
+	background		Background
+	disabledForeground	DisabledForeground
+	foreground		Foreground
+	selectBackground	SelectBackground
+	selectForeground	SelectForeground
+	troughColor		TroughColor
+    } {
+	set color [option get . $option $class]
+	if {$color ne ""} {
+	    dict set colors $option $color
+	}
+    }
+    return $colors
+}
+
 # ::tk::SetAppearance --
 # Applies the palette which [wm attributes $window -appearance] asks for.
 # On X11 a window has no appearance of its own, so this is the palette of
@@ -377,15 +407,26 @@ proc ::tk::CapturePalette {} {
 proc ::tk::SetAppearance {appearance} {
     variable SavedPalette
     variable SavedTtkColors
+    variable SavedDatabaseColors
 
-    if {$appearance eq "auto" && ![info exists SavedPalette]} {
-	# Nothing has been applied, so there is nothing to go back to.
+    # What the desktop asks for, which only "auto" follows.
+    set desktop {colorScheme {} accentColor {}}
+    if {$appearance eq "auto" && [tk windowingsystem] eq "x11"} {
+	set desktop [::tk::portal::Appearance]
+    }
+    set scheme [dict get $desktop colorScheme]
+
+    if {$appearance eq "auto" && $scheme eq ""
+	    && ![info exists SavedPalette]} {
+	# The desktop asks for nothing and nothing has been applied, so there
+	# is nothing to go back to.
 	set ::tk::appearance $appearance
 	return
     }
     if {![info exists SavedPalette]} {
 	set SavedPalette [CapturePalette]
 	set SavedTtkColors [array get ::ttk::theme::default::colors]
+	set SavedDatabaseColors [DatabaseColors]
     }
 
     # The themed widgets are kept in step only where tk_setPalette keeps
@@ -393,25 +434,45 @@ proc ::tk::SetAppearance {appearance} {
     set themed [expr {[tk windowingsystem] eq "x11"
 	    && [ttk::style theme use] eq "default"}]
 
-    if {$appearance eq "auto"} {
+    if {$appearance eq "auto" && $scheme eq ""} {
 	tk_setPalette {*}$SavedPalette
 	array set ::ttk::theme::default::colors $SavedTtkColors
     } else {
+	if {$appearance ne "auto"} {
+	    set scheme $appearance
+	}
+
 	# The light background is the one Tk has always had; the rest is
-	# computed from it, except the selection colours, which are supplied.
-	# An accent goes with a light frame and a dark one alike, and the
-	# classic widgets and the themed ones have each had their own.
-	set background [dict get {light #d9d9d9 dark #3c3c3c} $appearance]
-	tk_setPalette background $background \
+	# computed from it, except the selection colours.  An accent goes
+	# with a light frame and a dark one alike, so the palette keeps
+	# its own unless the desktop has one to offer.
+	set palette [dict create background \
+		[dict get {light #d9d9d9 dark #3c3c3c} $scheme] \
 		selectBackground [dict get $SavedPalette selectBackground] \
-		selectForeground [dict get $SavedPalette selectForeground]
+		selectForeground [dict get $SavedPalette selectForeground]]
+	set accent [dict filter $SavedTtkColors \
+		key -selectbg -selectfg -indicator -pressedindicator]
+	set accentColor [dict get $desktop accentColor]
+	if {$accentColor ne ""} {
+	    set accentForeground [ContrastColor $accentColor]
+	    dict set palette selectBackground $accentColor
+	    dict set palette selectForeground $accentForeground
+	    set accent [dict create -selectbg $accentColor \
+		    -selectfg $accentForeground -indicator $accentColor \
+		    -pressedindicator [Lighten $accentColor]]
+	}
+
+	# A colour the user chose in X resources outranks the desktop's.
+	if {$appearance eq "auto"} {
+	    set palette [dict merge $palette $SavedDatabaseColors]
+	}
+	tk_setPalette {*}$palette
 	if {$themed} {
 	    # tk_setPalette reaches three of the theme's thirteen colours, so
 	    # compute the rest from the ones the option database now holds,
-	    # imposing the theme's own accent over the classic shade which
+	    # imposing the accent over the shade of the background which
 	    # tk_setPalette has just written there.
-	    ::ttk::theme::default::seedColors [dict filter $SavedTtkColors \
-		    key -selectbg -selectfg -indicator -pressedindicator]
+	    ::ttk::theme::default::seedColors $accent
 	}
     }
     if {$themed} {
@@ -420,5 +481,59 @@ proc ::tk::SetAppearance {appearance} {
     }
 
     set ::tk::appearance $appearance
+    return
+}
+
+# ::tk::Appearance --
+# Implements [tk appearance], which reports the appearance the desktop asks
+# applications to use and changes nothing.  On X11 the desktop is asked
+# through the XDG desktop portal; see TIP 767.
+#
+# Arguments:
+# setting -	One of the settings, or nothing for all of them.
+
+proc ::tk::Appearance {{setting ""}} {
+    if {[tk windowingsystem] eq "x11"} {
+	set appearance [::tk::portal::Appearance]
+    } else {
+	# The systems which give a window an appearance of their own do not
+	# answer for these settings yet.
+	set appearance {}
+    }
+    if {$setting eq ""} {
+	return $appearance
+    }
+    if {![dict exists $appearance $setting]} {
+	return -code error -errorcode [list TK LOOKUP SETTING $setting] \
+		"bad setting \"$setting\": must be colorScheme, accentColor,\
+		contrast, or reducedMotion"
+    }
+    return [dict get $appearance $setting]
+}
+
+# ::tk::DesktopAppearanceChanged --
+# Called when the desktop has changed the appearance it asks for.  The
+# palette follows where the application has left the appearance to the
+# desktop, and the events of TIP 750 are sent whether it has or not, so that
+# an application which colours itself can follow too.
+#
+# Arguments:
+# None.
+
+proc ::tk::DesktopAppearanceChanged {} {
+    if {![info exists ::tk::appearance] || $::tk::appearance eq "auto"} {
+	SetAppearance auto
+    }
+
+    # The appearance the application now has, which is what the other
+    # platforms report in the data of <<AppearanceChanged>>.
+    set appearance [expr {[winfo isdark .] ? "dark" : "light"}]
+    foreach w [linsert [winfo children .] 0 .] {
+	if {[winfo toplevel $w] ne $w} {
+	    continue
+	}
+	event generate $w <<AppearanceChanged>> -data $appearance
+	event generate $w <<[string totitle $appearance]Appearance>>
+    }
     return
 }
