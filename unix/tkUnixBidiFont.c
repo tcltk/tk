@@ -1641,12 +1641,26 @@ GetHbFont(
         return NULL;
     }
 
-    /* Set font scale based on Xft size. */
+    /*
+     * Set the font scale from the real pixel size (the em), not from
+     * ascent + descent, which is the line height and is typically 15-40%
+     * larger. Using the line height inflated every HarfBuzz advance, so
+     * Latin text sharing a string with a color emoji (and therefore taking
+     * the shaping path rather than the simple path) came out letter-spaced.
+     * The color face keeps the old computation so emoji sizing is unchanged.
+     */
     XftFont *xft = GetFaceFont(fontPtr, faceIndex, 0.0);
     if (xft) {
-        int pixelSize = xft->ascent + xft->descent;
-        hb_font_set_scale(hbFont, pixelSize * 64, pixelSize * 64);
-        hb_font_set_ppem(hbFont, (unsigned)pixelSize, (unsigned)pixelSize);
+        double px = 0.0;
+
+        if (face->isColor
+                || FcPatternGetDouble(xft->pattern, FC_PIXEL_SIZE, 0,
+                        &px) != FcResultMatch
+                || px <= 0.0) {
+            px = xft->ascent + xft->descent;    /* Previous behavior. */
+        }
+        hb_font_set_scale(hbFont, (int)(px * 64 + 0.5), (int)(px * 64 + 0.5));
+        hb_font_set_ppem(hbFont, (unsigned)(px + 0.5), (unsigned)(px + 0.5));
     }
 
     face->hbBlob = blob;
