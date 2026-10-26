@@ -1526,7 +1526,7 @@ TextWidgetObjCmd(
 	    Tcl_Obj *cmd = objv[3];
 	    const char *option = Tcl_GetString(objv[2]);
 	    if (strncmp(option, "-command", objv[2]->length)) {
-		Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", NULL);
+		Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }

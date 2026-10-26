@@ -758,7 +758,7 @@ ImgPhotoCmd(
 			Tcl_GetString(options.format),
 			(matched ? "not supported" : "unknown")));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
-			Tcl_GetString(options.format), NULL);
+			Tcl_GetString(options.format), (char *)NULL);
 		if (options.background) {
 		    Tk_FreeColor(options.background);
 		}
@@ -925,7 +925,7 @@ ImgPhotoCmd(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"photo image dimensions exceed Tcl memory limits", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"OVERFLOW", NULL);
+			"OVERFLOW", (char *)NULL);
 		    break;
 		}
 
@@ -936,7 +936,7 @@ ImgPhotoCmd(
 			"all elements of color list must have the same"
 			" number of elements", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"NON_RECTANGULAR", NULL);
+			"NON_RECTANGULAR", (char *)NULL);
 		break;
 	    }
 
@@ -981,7 +981,7 @@ ImgPhotoCmd(
 			colorString, &color)) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "can't parse color \"%s\"", colorString));
-		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", (char *)NULL);
 		    break;
 		}
 		*pixelPtr++ = color.red >> 8;

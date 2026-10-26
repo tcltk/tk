@@ -280,7 +280,7 @@ Tk_ImageObjCmd(
 	if (typePtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image type \"%s\" doesn't exist", arg));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -313,7 +313,7 @@ Tk_ImageObjCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"images may not be named the same as the main window",
 			-1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SMASH_MAIN", NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SMASH_MAIN", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -511,7 +511,7 @@ Tk_ImageObjCmd(
 
   alreadyDeleted:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("image \"%s\" doesn't exist",arg));
-    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", arg, NULL);
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", arg, (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -657,7 +657,7 @@ Tk_GetImage(
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"image \"%s\" doesn't exist", name));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, (char *)NULL);
     }
     return NULL;
 }

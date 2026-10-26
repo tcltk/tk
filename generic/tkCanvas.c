@@ -931,7 +931,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
-			Tcl_GetString(objv[2]), NULL);
+			Tcl_GetString(objv[2]), (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -958,7 +958,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
-			Tcl_GetString(objv[2]), NULL);
+			Tcl_GetString(objv[2]), (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1037,7 +1037,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"requested illegal events; only key, button, motion,"
 			" enter, leave, and virtual events may be used", -1));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_EVENTS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_EVENTS", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1280,7 +1280,7 @@ CanvasWidgetCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "unknown or ambiguous item type \"%s\"", arg));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM_TYPE", arg,
-		    NULL);
+		    (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1567,7 +1567,7 @@ CanvasWidgetCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't find an indexable item \"%s\"",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "INDEXABLE_ITEM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "INDEXABLE_ITEM", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1670,7 +1670,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"tagOrId \"%s\" doesn't match any items",
 			Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1797,7 +1797,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"tagOrId \"%s\" doesn't match any items",
 			Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1878,7 +1878,7 @@ CanvasWidgetCmd(
 	if ((xScale == 0.0) || (yScale == 0.0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "scale factor cannot be zero", -1));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_SCALE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_SCALE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1960,7 +1960,7 @@ CanvasWidgetCmd(
 			"can't find an indexable and selectable item \"%s\"",
 			Tcl_GetString(objv[3])));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SELECTABLE_ITEM",
-			NULL);
+			(char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -3657,7 +3657,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "too many '!' in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "COMPLEXITY", NULL);
+			    "COMPLEXITY", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		looking_for_tag++;
@@ -3707,7 +3707,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "missing endquote in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "ENDQUOTE", NULL);
+			    "ENDQUOTE", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		if (!(tag - searchPtr->rewritebuffer)) {
@@ -3715,7 +3715,7 @@ TagSearchScanExpr(
 			    "null quoted tag string in tag search expression",
 			    -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "EMPTY", NULL);
+			    "EMPTY", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		*tag++ = '\0';
@@ -3732,7 +3732,7 @@ TagSearchScanExpr(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"unexpected operator in tag search expression", -1));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			"UNEXPECTED", NULL);
+			"UNEXPECTED", (char *)NULL);
 		return TCL_ERROR;
 
 	    default:		/* Unquoted tag string */
@@ -3796,7 +3796,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "singleton '&' in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "INCOMPLETE_OP", NULL);
+			    "INCOMPLETE_OP", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		expr->uids[expr->index++] = searchUids->andUid;
@@ -3809,7 +3809,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "singleton '|' in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "INCOMPLETE_OP", NULL);
+			    "INCOMPLETE_OP", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		expr->uids[expr->index++] = searchUids->orUid;
@@ -3830,7 +3830,7 @@ TagSearchScanExpr(
 			"invalid boolean operator in tag search expression",
 			-1));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "BAD_OP",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -3842,7 +3842,7 @@ TagSearchScanExpr(
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing tag in tag search expression", -1));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "NO_TAG", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "NO_TAG", (char *)NULL);
     return TCL_ERROR;
 }
 

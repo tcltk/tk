@@ -175,7 +175,7 @@ TkTextWindowCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded window at index \"%s\"",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -213,7 +213,7 @@ TkTextWindowCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no embedded window at index \"%s\"",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
@@ -447,7 +447,7 @@ EmbWinConfigure(
 			    Tk_PathName(ewPtr->body.ew.tkwin),
 			    Tk_PathName(textPtr->tkwin)));
 		    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY",
-			    "HIERARCHY", NULL);
+			    "HIERARCHY", (char *)NULL);
 		    ewPtr->body.ew.tkwin = NULL;
 		    if (client != NULL) {
 			client->tkwin = NULL;
@@ -944,7 +944,7 @@ EmbWinLayoutProc(
 		    Tk_PathName(ewPtr->body.ew.tkwin),
 		    Tk_PathName(textPtr->tkwin)));
 	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY",
-		    NULL);
+		    (char *)NULL);
 	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    ewPtr->body.ew.tkwin = NULL;
 	    goto gotWindow;

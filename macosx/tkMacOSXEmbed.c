@@ -254,7 +254,7 @@ TkpUseWindow(
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", -1));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -276,14 +276,14 @@ TkpUseWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"couldn't create child of window \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", (char *)NULL);
 	}
 	return TCL_ERROR;
     } else if (!(usePtr->flags & TK_CONTAINER)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" doesn't have -container option set",
 		usePtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", (char *)NULL);
 	return TCL_ERROR;
     }
 

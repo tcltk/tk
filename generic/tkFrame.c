@@ -573,7 +573,7 @@ CreateFrame(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"unable to create widget \"%s\"", Tcl_GetString(objv[1])));
-	Tcl_SetErrorCode(interp, "TK", "APPLICATION_GONE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "APPLICATION_GONE", (char *)NULL);
 	return TCL_ERROR;
     } else {
 	/*
@@ -693,7 +693,7 @@ CreateFrame(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "windows cannot have both the -use and the -container"
 		    " option set", -1));
-	    Tcl_SetErrorCode(interp, "TK", "FRAME", "CONTAINMENT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "FRAME", "CONTAINMENT", (char *)NULL);
 	    goto error;
 	}
 	TkpMakeContainer(framePtr->tkwin);
@@ -824,7 +824,7 @@ FrameWidgetObjCmd(
 			    "can't modify %s option after widget is created",
 			    arg));
 		    Tcl_SetErrorCode(interp, "TK", "FRAME", "CREATE_ONLY",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		    goto done;
 		}
@@ -1069,7 +1069,7 @@ ConfigureFrame(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "can't use %s as label in this frame",
 	    Tk_PathName(labelframePtr->labelWin)));
-    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
     labelframePtr->labelWin = NULL;
     return TCL_ERROR;
 }

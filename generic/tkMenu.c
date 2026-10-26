@@ -2353,7 +2353,7 @@ TkGetMenuIndex(
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad menu entry index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -2539,7 +2539,7 @@ MenuAddOrInsert(
     if (index < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\"", Tcl_GetString(indexPtr)));
-	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
     if (menuPtr->tearoff && (index == 0)) {

@@ -336,7 +336,7 @@ TkSetGeometryContainer(
 		    "cannot use geometry manager %s inside %s which already"
 		    " has slaves managed by %s",
 		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
-	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", (char *)NULL);
 	}
 	return TCL_ERROR;
     }

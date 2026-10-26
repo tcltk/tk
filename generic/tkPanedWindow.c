@@ -677,7 +677,7 @@ PanedWindowWidgetObjCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"not managed by this window", -1));
 		Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED",
-			NULL);
+			(char *)NULL);
 	    }
 	    result = TCL_ERROR;
 	} else {
@@ -802,7 +802,7 @@ ConfigurePanes(
 
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't add %s to itself", arg));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", (char *)NULL);
 		return TCL_ERROR;
 	    } else if (Tk_IsTopLevel(tkwin)) {
 		/*
@@ -812,7 +812,7 @@ ConfigurePanes(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't add toplevel %s to %s", arg,
 			Tk_PathName(pwPtr->tkwin)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", (char *)NULL);
 		return TCL_ERROR;
 	    } else {
 		/*
@@ -830,7 +830,7 @@ ConfigurePanes(
 				"can't add %s to %s", arg,
 				Tk_PathName(pwPtr->tkwin)));
 			Tcl_SetErrorCode(interp, "TK", "GEOMETRY",
-				"HIERARCHY", NULL);
+				"HIERARCHY", (char *)NULL);
 			return TCL_ERROR;
 		    }
 		}
@@ -890,7 +890,7 @@ ConfigurePanes(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" is not managed by %s",
 		Tk_PathName(tkwin), Tk_PathName(pwPtr->tkwin)));
-	Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED", (char *)NULL);
 	Tk_FreeConfigOptions((char *) &options, pwPtr->paneOpts,
 		pwPtr->tkwin);
 	return TCL_ERROR;
@@ -1130,7 +1130,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	panePtr = pwPtr->panes[sash];
@@ -1153,7 +1153,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1189,7 +1189,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2493,7 +2493,7 @@ SetSticky(
 			"bad stickyness value \"%s\": must be a string"
 			" containing zero or more of n, e, s, and w",
 			Tcl_GetString(*value)));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}

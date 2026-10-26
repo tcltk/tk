@@ -1363,12 +1363,12 @@ ImageCreate(
     for (i = 0; i < objc; i += 2) {
 	if (strcmp(Tcl_GetString(objv[i]), "-variable") != 0) {
 	    Tcl_AppendResult(interp, "bad option name \"",
-		    Tcl_GetString(objv[i]), "\"", NULL);
+		    Tcl_GetString(objv[i]), "\"", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if ((i+1) == objc) {
 	    Tcl_AppendResult(interp, "no value given for \"",
-		    Tcl_GetString(objv[i]), "\" option", NULL);
+		    Tcl_GetString(objv[i]), "\" option", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	varName = Tcl_GetString(objv[i+1]);
@@ -1438,7 +1438,7 @@ ImageObjCmd(
 		timPtr->height);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be changed", NULL);
+		"\": must be changed", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1742,13 +1742,13 @@ TestmenubarObjCmd(
 	}
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be  window", NULL);
+		"\": must be  window", (char *)NULL);
 	return TCL_ERROR;
     }
 
     return TCL_OK;
 #else
-    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", NULL);
+    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", (char *)NULL);
     return TCL_ERROR;
 #endif
 }
@@ -1793,11 +1793,11 @@ TestmetricsObjCmd(
 	val = GetSystemMetrics(SM_CXHSCROLL);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be cxhscroll or cyvscroll", NULL);
+		"\": must be cxhscroll or cyvscroll", (char *)NULL);
 	return TCL_ERROR;
     }
     snprintf(buf, sizeof(buf), "%d", val);
-    Tcl_AppendResult(interp, buf, NULL);
+    Tcl_AppendResult(interp, buf, (char *)NULL);
     return TCL_OK;
 }
 #endif

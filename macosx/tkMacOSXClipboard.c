@@ -146,7 +146,7 @@ TkSelGetSelection(
 	     "%s selection doesn't exist or form \"%s\" not defined",
 	     Tk_GetAtomName(tkwin, selection),
 	     Tk_GetAtomName(tkwin, target)));
-	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
     }
     return result;
 }

@@ -149,7 +149,7 @@ Tk_SetAppName(
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "failed to initialize the COM library", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", (char *)NULL);
 	    return "";
 	}
 	tsdPtr->initialized = 1;
@@ -376,7 +376,7 @@ Tk_SendObjCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"option not implemented: \"displayof\" is not available"
 		" for this platform.", -1));
-	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", (char *)NULL);
 	result = TCL_ERROR;
     }
 
@@ -451,7 +451,7 @@ FindInterpreterObject(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "no application named \"%s\"", name));
 		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		}
 

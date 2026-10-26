@@ -755,7 +755,7 @@ TkGetServerInfo(
     snprintf(buffer2, sizeof(buffer2), " Mac OS X %x",
 	    VendorRelease(Tk_Display(tkwin)));
     Tcl_AppendResult(interp, buffer, ServerVendor(Tk_Display(tkwin)),
-	    buffer2, NULL);
+	    buffer2, (char *)NULL);
 }
 
 /*

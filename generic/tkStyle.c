@@ -1357,7 +1357,7 @@ Tk_GetStyle(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "style \"%s\" doesn't exist", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, (char *)NULL);
 	}
 	return NULL;
     }

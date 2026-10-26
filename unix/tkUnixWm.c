@@ -1096,7 +1096,7 @@ Tk_WmObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -2429,7 +2429,7 @@ WmIconphotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use \"%s\" as iconphoto: not a photo image",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetSize(photo, &width, &height);
@@ -3711,7 +3711,7 @@ WmWithdrawCmd(
     if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"couldn't send withdraw message to window manager", -1));
-	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

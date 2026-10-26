@@ -480,7 +480,7 @@ ScrollbarWidgetObjCmd(
 	} else {
 		Tcl_WrongNumArgs(interp, 1, objv, "set firstFraction lastFraction");
 		Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-			" set totalUnits windowUnits firstUnit lastUnit\"", NULL);
+			" set totalUnits windowUnits firstUnit lastUnit\"", (char *)NULL);
 	    goto error;
 	}
 	TkpComputeScrollbarGeometry(scrollPtr);
