@@ -4715,6 +4715,79 @@ test menu-47.1 {configuring a cascade entry of a menubar with the menu it
     destroy .bar
 } -result {1 1 .bar.sub2}
 
+# Aqua: only the key toplevel, or the one that becomes key when the key
+# toplevel is destroyed, sets the menubar.
+proc menubarTop {w label} {
+    toplevel $w
+    wm withdraw $w
+    menu $w.mb
+    $w.mb add cascade -label $label -menu [menu $w.mb.m]
+    $w configure -menu $w.mb
+    wm geometry $w +100+100
+}
+proc menubarShow {w label} {
+    wm deiconify $w
+    focus -force $w
+    update
+    for {set i 0} {$i < 100 && [testmenubaritems] ne $label} {incr i} {
+	after 10 {set ::menubarWait 1}
+	vwait ::menubarWait
+    }
+    update
+}
+test menu-48.1 {aqua menubar: -menu of a withdrawn toplevel does not replace
+	the menubar of the key toplevel - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 KeyBar
+    menubarShow .t1 KeyBar
+} -body {
+    menubarTop .t2 OtherBar
+    testmenubaritems
+} -cleanup {
+    destroy .t1 .t2
+} -result KeyBar
+test menu-48.2 {aqua menubar: destroying the key toplevel installs the
+	menubar of the next one, not the default one - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 FirstBar
+    menubarShow .t1 FirstBar
+    menubarTop .t2 SecondBar
+    wm geometry .t2 +150+150
+    menubarShow .t2 SecondBar
+    set ::bars {}
+    bind .t2 <Destroy> {
+	if {"%W" eq ".t2"} {
+	    lappend ::bars [testmenubaritems]
+	}
+    }
+} -body {
+    destroy .t2
+    update
+    lappend ::bars [testmenubaritems]
+} -cleanup {
+    destroy .t1
+    unset ::bars
+} -result {FirstBar FirstBar}
+test menu-48.3 {aqua menubar: installed as soon as the toplevel becomes key,
+	before its Activate event is serviced - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 FirstBar
+    menubarShow .t1 FirstBar
+    menubarTop .t2 SecondBar
+    update
+} -body {
+    wm deiconify .t2
+    focus -force .t2
+    testmenubaritems
+} -cleanup {
+    destroy .t1 .t2
+} -result SecondBar
+rename menubarTop {}
+rename menubarShow {}
+
 #
 # TESTFILE CLEANUP
 #

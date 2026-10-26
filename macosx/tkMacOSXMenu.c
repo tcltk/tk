@@ -1169,10 +1169,92 @@ TkpSetWindowMenuBar(
 /*
  *----------------------------------------------------------------------
  *
+ * MenubarOwner --
+ *
+ *	Finds the toplevel whose menu belongs in the menubar: the key window,
+ *	or else the frontmost visible toplevel that can become key, which is
+ *	normally the one made key next.  A toplevel being destroyed never
+ *	qualifies.
+ *
+ * Results:
+ *	The owner, or NULL if no Tk toplevel qualifies.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkWindow *
+MenubarOwner(void)
+{
+    NSWindow *keyWindow = [NSApp keyWindow];
+    TkWindow *winPtr = keyWindow ? TkMacOSXGetTkWindow(keyWindow) : NULL;
+
+    if (winPtr && winPtr->wmInfoPtr && !(winPtr->flags & TK_ALREADY_DEAD)) {
+	return winPtr;
+    }
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	WmInfo *wmPtr;
+
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (!winPtr || !winPtr->wmInfoPtr
+		|| (winPtr->flags & TK_ALREADY_DEAD)) {
+	    continue;
+	}
+	wmPtr = winPtr->wmInfoPtr;
+	if (wmPtr->hints.initial_state == IconicState
+		|| wmPtr->hints.initial_state == WithdrawnState
+		|| ![w isVisible] || ![w canBecomeKeyWindow]) {
+	    continue;
+	}
+	return winPtr;
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInstallWindowMenubar --
+ *
+ *	Puts the menu of a toplevel into the menubar, or the default menu if
+ *	the toplevel has none, unless that menu is already installed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The menubar may be changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXInstallWindowMenubar(
+    TkWindow *winPtr)		/* A toplevel. */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    TKMenu *menu = nil;
+
+    if (wmPtr && wmPtr->menuPtr && wmPtr->menuPtr->mainMenuPtr) {
+	menu = (TKMenu *) wmPtr->menuPtr->platformData;
+    }
+    if (!menu || menu != (TKMenu *) [NSApp mainMenu]) {
+	[NSApp tkSetMainMenu:menu];
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SetMainMenubar --
  *
- *	Puts the menu associated with a window into the menubar. Should only be
- *	called when the window is in front.
+ *	Puts the menu associated with a window into the menubar, if the window
+ *	owns the menubar (see MenubarOwner) or if no window does.  Otherwise
+ *	the menu of the owner is put back: this keeps the menu of a window
+ *	that is not in front out of the menubar, and replaces the menu of a
+ *	key window being destroyed by that of the window that becomes key.
  *
  *      This is a no-op on all other platforms.  On OS X it installs the
  *      menubar with the specified menuName, if possible.  If the name is NULL
@@ -1195,6 +1277,7 @@ Tk_SetMainMenubar(
 {
     TKMenu *menu = nil;
     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *ownerPtr;
 
     /*
      * We will be called when an embedded window receives an ActivationNotify
@@ -1202,6 +1285,12 @@ Tk_SetMainMenubar(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
+	return;
+    }
+
+    ownerPtr = MenubarOwner();
+    if (ownerPtr && ownerPtr != winPtr) {
+	TkMacOSXInstallWindowMenubar(ownerPtr);
 	return;
     }
 
