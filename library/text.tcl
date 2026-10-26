@@ -1241,21 +1241,7 @@ proc ::tk::TextNextWord {w start} {
 # start -	Position at which to start search.
 
 proc ::tk::TextPrevWord {w start} {
-    TextPrevPos $w $start tk::TextStartOfPreviousWord
-}
-
-# ::tk::TextStartOfPreviousWord --
-# Called by TextPrevPos with "end", the index of the character just before
-# the starting position. A space is appended, so that a one-character word
-# just before the starting position is found too. A position at a space
-# means that there is no word.
-
-proc ::tk::TextStartOfPreviousWord {str start locale} {
-    set pos [startOfPreviousWord "$str " $start $locale]
-    if {$pos ne "" && $pos >= 0 && [string is space [string index $str $pos]]} {
-	return -1
-    }
-    return $pos
+    TextPrevPos $w $start tk::startOfPreviousWord end+1
 }
 
 # ::tk::TextSelectNextWord --
@@ -1302,13 +1288,15 @@ proc ::tk::TextNextPos {w start op} {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 # op -		Function to use to find next position.
+# index -	Index to pass to the function: "end" is the character before
+#		the starting position, "end+1" is the starting position.
 
-proc ::tk::TextPrevPos {w start op} {
+proc ::tk::TextPrevPos {w start op {index end}} {
     set text ""
     set cur $start
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
-	set pos [$op $text end [$w locale $cur]]
+	set pos [$op $text $index [$w locale $cur]]
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
