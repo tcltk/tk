@@ -170,6 +170,9 @@ startEndOfCmd(
 	idx = icu_preceding(it, (int32_t)idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
 	    flags &= ~FLAG_WORD; /* If 0 is reached here, don't do a further search */
+	    if (Tcl_UniCharIsSpace(ustr[0])) {
+		idx = TCL_INDEX_NONE; /* Only spaces before the start: no word */
+	    }
 	}
     }
     if ((flags & FLAG_WORD) && (idx != TCL_INDEX_NONE)) {
@@ -180,7 +183,13 @@ startEndOfCmd(
 		    idx = TCL_INDEX_NONE;
 		}
 	    } else {
-		idx = icu_previous(it);
+		/* Skip all space segments, e.g. " " followed by "\n" */
+		do {
+		    idx = icu_previous(it);
+		} while (idx > 0 && Tcl_UniCharIsSpace(ustr[idx]));
+		if (idx == 0 && Tcl_UniCharIsSpace(ustr[0])) {
+		    idx = TCL_INDEX_NONE;
+		}
 	    }
 	} else if (idx == 0 && !(flags & FLAG_FOLLOWING)) {
 	    idx = TCL_INDEX_NONE;
