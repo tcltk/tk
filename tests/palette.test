@@ -1,0 +1,302 @@
+# This file is a Tcl script to test the code in the file palette.tcl, and
+# the colour palette of the default ttk theme which it configures.
+#
+# Copyright © 2026 Tk contributors.
+# All rights reserved.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+source [file join [tcltest::configure -testdir] main.tcl]
+
+resetWindows
+
+#
+# COMMON TEST SETUP
+#
+
+# The palette of the default ttk theme is global state, as is the option
+# database.  Remember the palette so that every test can leave it as it
+# found it; the option database is cleared at the end of the file.
+variable stockColors [array get ::ttk::theme::default::colors]
+variable stockBackground [. cget -background]
+
+proc restorePalette {} {
+    variable stockColors
+    variable stockBackground
+    array set ::ttk::theme::default::colors $stockColors
+    ::ttk::theme::default::reconfigureDefaultTheme
+    . configure -background $stockBackground
+}
+
+#
+# The colour helpers.  Each replaced a formula written out in tk_setPalette,
+# so each is checked against the value that formula produced.
+#
+
+test palette-1.1 {ContrastColor: black on a light colour} -body {
+    ::tk::ContrastColor #ffffff
+} -result black
+
+test palette-1.2 {ContrastColor: white on a dark colour} -body {
+    ::tk::ContrastColor #000000
+} -result white
+
+test palette-1.3 {ContrastColor: the weighting favours green over blue} -body {
+    # The two colours carry the same amount of light between them, but the
+    # one which carries it in green counts as the lighter.
+    list [::tk::ContrastColor #00ff80] [::tk::ContrastColor #8000ff]
+} -result {black white}
+
+test palette-2.1 {Darken: nine tenths, as tk_setPalette computes it} -body {
+    ::tk::Darken #d9d9d9 90
+} -result #c4c4c4
+
+test palette-2.2 {Darken: of black is black} -body {
+    ::tk::Darken #000000 90
+} -result #000000
+
+test palette-3.1 {Lighten: a third of the way to white} -body {
+    ::tk::Lighten #d9d9d9
+} -result #f9f9f9
+
+test palette-3.2 {Lighten: a dark colour gains the most} -body {
+    ::tk::Lighten #353535
+} -result #787878
+
+test palette-3.3 {Lighten: white cannot be lightened} -body {
+    ::tk::Lighten #ffffff
+} -result #ffffff
+
+test palette-4.1 {BlendColors: the disabled foreground of the light palette} -body {
+    # Three parts background to one part foreground, which is how
+    # tk_setPalette arrives at the hardcoded #a3a3a3.
+    ::tk::BlendColors #d9d9d9 #000000
+} -result #a3a3a3
+
+test palette-4.2 {BlendColors: equal weights give the midpoint} -body {
+    ::tk::BlendColors #000000 #ffffff 1 1
+} -result #7f7f7f
+
+#
+# tk_setPalette, which now calls those helpers instead of computing the
+# same values itself.
+#
+
+test palette-5.1 {tk_setPalette derives the colours it was not given} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    tk_setPalette #d9d9d9
+    join [list [option get . activeBackground ActiveBackground] \
+	 [option get . disabledForeground DisabledForeground] \
+	 [option get . troughColor TroughColor]]
+} -cleanup {
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result {#f9f9f9 #a3a3a3 #c4c4c4}
+
+test palette-5.2 {tk_setPalette: an explicit colour is not derived} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    tk_setPalette background #d9d9d9 activeBackground #123456
+    option get . activeBackground ActiveBackground
+} -cleanup {
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result #123456
+
+#
+# Deriving the colours which no X resource supplied: ticket [807b2f8916].
+#
+
+#
+# Setting the palette: ticket [807b2f8916].  Each test puts colours into the
+# option database, as a user's X resources or the desktop would, and then
+# has seedColors read them and compute the rest.
+#
+
+proc seedFrom {args} {
+    option clear
+    foreach {resource value} $args {
+	option add *$resource $value widgetDefault
+    }
+    ::ttk::theme::default::seedColors
+}
+
+test palette-7.1 {seedColors: a dark background takes dark shades} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom background #353535 foreground #e0e0e0
+    join [list $::ttk::theme::default::colors(-activebg) \
+	       $::ttk::theme::default::colors(-darker) \
+	       $::ttk::theme::default::colors(-disabledfg)]
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result {#787878 #2f2f2f #606060}
+
+test palette-7.2 {seedColors: the selection accent is left alone} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    # An accent cannot be computed from a grey palette, and a palette which
+    # has one of its own supplies it: see the note in seedColors.
+    set before $::ttk::theme::default::colors(-selectbg)
+    seedFrom background #353535 foreground #e0e0e0
+    expr {$::ttk::theme::default::colors(-selectbg) eq $before}
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result 1
+
+test palette-7.3 {seedColors: a supplied colour is not computed over} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom background #353535 foreground #e0e0e0 activeBackground #123456
+    set ::ttk::theme::default::colors(-activebg)
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result #123456
+
+test palette-7.4 {seedColors: without a background, the shades are left alone} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    set before $::ttk::theme::default::colors(-activebg)
+    seedFrom foreground #e0e0e0
+    expr {$::ttk::theme::default::colors(-activebg) eq $before}
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result 1
+
+test palette-7.5 {seedColors: a dark frame gets a darker field, never white} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    # A white field under a dark frame would carry the frame's light
+    # foreground on it, and be unreadable.
+    seedFrom background #353535 foreground #e0e0e0
+    set window $::ttk::theme::default::colors(-window)
+    list [expr {$window ne "#ffffff"}] [::tk::ContrastColor $window]
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result {1 white}
+
+test palette-7.6 {seedColors: a light frame keeps a white field} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom background #d9d9d9 foreground #000000
+    set ::ttk::theme::default::colors(-window)
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result #ffffff
+
+test palette-7.7 {seedColors: an unfocused selection stays visible} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    # It used to be shown in the trough colour with the selection's own
+    # foreground on it, which against a dark frame meant black on nearly
+    # black.
+    seedFrom background #3c3c3c selectBackground #3daee9
+    set background $::ttk::theme::default::colors(-inactiveselectbg)
+    set foreground $::ttk::theme::default::colors(-inactiveselectfg)
+    list [expr {$background ne $::ttk::theme::default::colors(-frame)}] \
+	 [expr {$foreground eq [::tk::ContrastColor $background]}]
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result {1 1}
+
+test palette-7.8 {seedColors: the unfocused selection dims towards the frame} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom background #000000 selectBackground #ffffff
+    set ::ttk::theme::default::colors(-inactiveselectbg)
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result #7f7f7f
+
+test palette-7.9 {seedColors: a background given alone gets a foreground} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    # Tk's own foreground is black, which this background would hide.
+    seedFrom background #353535
+    join [list $::ttk::theme::default::colors(-foreground) \
+	       $::ttk::theme::default::colors(-text)]
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result {white white}
+
+test palette-7.10 {seedColors: a light background keeps a dark foreground} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom background #f0f0f0
+    set ::ttk::theme::default::colors(-foreground)
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result black
+
+test palette-7.11 {seedColors: a supplied foreground is left alone} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom background #353535 foreground #e0e0e0
+    set ::ttk::theme::default::colors(-foreground)
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result #e0e0e0
+
+test palette-7.12 {seedColors: a selection given alone gets a foreground} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    # Tk's own selection foreground is white, which this selection colour
+    # would hide.
+    seedFrom selectBackground #ffff00
+    set ::ttk::theme::default::colors(-selectfg)
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result black
+
+test palette-7.13 {seedColors: a pressed indicator is a lighter shade} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    seedFrom selectBackground #3daee9
+    set pressed $::ttk::theme::default::colors(-pressedindicator)
+    list [expr {$pressed ne "#3daee9"}] [expr {$pressed eq [::tk::Lighten #3daee9]}]
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result {1 1}
+
+test palette-7.14 {seedColors: the inactive selection follows a selection given alone} -setup {
+    set saved [array get ::ttk::theme::default::colors]
+} -body {
+    # No background is supplied here, and the inactive selection must still
+    # follow the selection which is.
+    set before $::ttk::theme::default::colors(-inactiveselectbg)
+    seedFrom selectBackground #ffff00
+    expr {$::ttk::theme::default::colors(-inactiveselectbg) ne $before}
+} -cleanup {
+    array set ::ttk::theme::default::colors $saved
+    option clear
+} -result 1
+
+#
+# TESTFILE CLEANUP
+#
+
+unset -nocomplain stockColors stockBackground saved
+rename restorePalette {}
+rename seedFrom {}
+option clear
+cleanupTests

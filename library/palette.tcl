@@ -41,20 +41,9 @@ proc ::tk_setPalette {args} {
     }
     set bg [winfo rgb . $new(background)]
     if {![info exists new(foreground)]} {
-	# Note that the range of each value in the triple returned by
-	# [winfo rgb] is 0-65535, and your eyes are more sensitive to
-	# green than to red, and more to red than to blue.
-	foreach {r g b} $bg {break}
-	if {$r+1.5*$g+0.5*$b > 100000} {
-	    set new(foreground) black
-	} else {
-	    set new(foreground) white
-	}
+	set new(foreground) [::tk::ContrastColor $new(background)]
     }
-    lassign [winfo rgb . $new(foreground)] fg_r fg_g fg_b
-    lassign $bg bg_r bg_g bg_b
-    set darkerBg [format #%02x%02x%02x [expr {(9*$bg_r)/2560}] \
-	    [expr {(9*$bg_g)/2560}] [expr {(9*$bg_b)/2560}]]
+    set darkerBg [::tk::Darken $new(background) 90]
 
     foreach i {activeForeground insertBackground selectForeground \
 	    highlightColor} {
@@ -63,10 +52,8 @@ proc ::tk_setPalette {args} {
 	}
     }
     if {![info exists new(disabledForeground)]} {
-	set new(disabledForeground) [format #%02x%02x%02x \
-		[expr {(3*$bg_r + $fg_r)/1024}] \
-		[expr {(3*$bg_g + $fg_g)/1024}] \
-		[expr {(3*$bg_b + $fg_b)/1024}]]
+	set new(disabledForeground) \
+		[::tk::BlendColors $new(background) $new(foreground)]
     }
     if {![info exists new(highlightBackground)]} {
 	set new(highlightBackground) $new(background)
@@ -86,26 +73,7 @@ proc ::tk_setPalette {args} {
 	}
     }
     if {![info exists new(activeBackground)]} {
-	# Pick a default active background that islighter than the
-	# normal background.  To do this, round each color component
-	# up by 15% or 1/3 of the way to full white, whichever is
-	# greater.
-
-	foreach i {0 1 2} color $bg {
-	    set light($i) [expr {$color/256}]
-	    set inc1 [expr {($light($i)*15)/100}]
-	    set inc2 [expr {(255-$light($i))/3}]
-	    if {$inc1 > $inc2} {
-		incr light($i) $inc1
-	    } else {
-		incr light($i) $inc2
-	    }
-	    if {$light($i) > 255} {
-		set light($i) 255
-	    }
-	}
-	set new(activeBackground) [format #%02x%02x%02x $light(0) \
-		$light(1) $light(2)]
+	set new(activeBackground) [::tk::Lighten $new(background)]
     }
     if {![info exists new(selectBackground)]} {
 	set new(selectBackground) $darkerBg
@@ -238,6 +206,67 @@ proc ::tk::RecolorTree {w colors} {
     return $result
 }
 
+# ::tk::ContrastColor --
+# Given a color name, returns black or white, whichever is the more legible
+# against it.  Note that the range of each value in the triple returned by
+# [winfo rgb] is 0-65535, and that your eyes are more sensitive to green
+# than to red, and more to red than to blue.
+#
+# Arguments:
+# color -	Name of the color to be contrasted with.
+
+proc ::tk::ContrastColor {color} {
+    lassign [winfo rgb . $color] r g b
+    if {$r + 1.5*$g + 0.5*$b > 100000} {
+	return black
+    } else {
+	return white
+    }
+}
+
+# ::tk::Lighten --
+# Given a color name, computes the lighter color which tk_setPalette uses
+# for an active background: each component is rounded up by 15%, or by one
+# third of the way to full white, whichever is the greater.
+#
+# Arguments:
+# color -	Name of starting color.
+
+proc ::tk::Lighten {color} {
+    set result {}
+    foreach component [winfo rgb . $color] {
+	set value [expr {$component/256}]
+	set inc1 [expr {($value*15)/100}]
+	set inc2 [expr {(255-$value)/3}]
+	incr value [expr {$inc1 > $inc2 ? $inc1 : $inc2}]
+	if {$value > 255} {
+	    set value 255
+	}
+	lappend result $value
+    }
+    return [format #%02x%02x%02x {*}$result]
+}
+
+# ::tk::BlendColors --
+# Given two color names, computes their weighted average.  The default
+# weights are the ones tk_setPalette uses to compute a disabled foreground
+# from a background and a foreground: three parts to one.
+#
+# Arguments:
+# color1 -	Name of the first color.
+# color2 -	Name of the second color.
+# weight1 -	Weight of the first color.
+# weight2 -	Weight of the second color.
+
+proc ::tk::BlendColors {color1 color2 {weight1 3} {weight2 1}} {
+    set total [expr {($weight1 + $weight2)*256}]
+    set result {}
+    foreach c1 [winfo rgb . $color1] c2 [winfo rgb . $color2] {
+	lappend result [expr {($weight1*$c1 + $weight2*$c2)/$total}]
+    }
+    return [format #%02x%02x%02x {*}$result]
+}
+
 # ::tk::Darken --
 # Given a color name, computes a new color value that darkens (or
 # brightens) the given color by a given percent.
@@ -254,15 +283,19 @@ proc ::tk::Darken {color percent} {
     } elseif {$percent > 200} {
 	return #ffffff
     } elseif {$percent <= 100} {
+	# The scaling is done on the component as [winfo rgb] gives it, and
+	# brought down to eight bits once, rather than being brought down
+	# first and scaled afterwards: dividing twice loses up to a whole
+	# unit of the result.
 	lassign [winfo rgb . $color] r g b
-	set r [expr {($r/256)*$percent/100}]
-	set g [expr {($g/256)*$percent/100}]
-	set b [expr {($b/256)*$percent/100}]
+	set r [expr {($r*$percent)/25600}]
+	set g [expr {($g*$percent)/25600}]
+	set b [expr {($b*$percent)/25600}]
     } elseif {$percent > 100} {
 	lassign [winfo rgb . $color] r g b
-	set r [expr {255 - ((65535-$r)/256)*(200-$percent)/100}]
-	set g [expr {255 - ((65535-$g)/256)*(200-$percent)/100}]
-	set b [expr {255 - ((65535-$b)/256)*(200-$percent)/100}]
+	set r [expr {255 - ((65535-$r)*(200-$percent))/25600}]
+	set g [expr {255 - ((65535-$g)*(200-$percent))/25600}]
+	set b [expr {255 - ((65535-$b)*(200-$percent))/25600}]
     }
     return [format #%02x%02x%02x $r $g $b]
 }
