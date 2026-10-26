@@ -132,8 +132,6 @@ jobs:
         run: |
           sudo apt-get update
           # gnome-shell: headless Wayland compositor + org.freedesktop.Notifications
-          # gnome-shell-extension-appindicator: org.kde.StatusNotifierWatcher + Host
-          # libglib2.0-bin / dconf: gsettings, used to enable the extension
           sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
             libxkbcommon-dev libgles2-mesa-dev \
@@ -141,7 +139,7 @@ jobs:
             libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
             libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont \
             dbus dbus-x11 mesa-utils \
-            gnome-shell gnome-shell-extension-appindicator gnome-shell-common \
+            gnome-shell gnome-shell-common \
             libglib2.0-bin dconf-gsettings-backend dconf-service \
             libatk1.0-dev libatk-bridge2.0-dev
           mkdir "$HOME/install dir"
@@ -232,7 +230,7 @@ jobs:
           LOG_DIR="${RUNNER_TEMP:-/tmp}/wl-logs"
           mkdir -p "$LOG_DIR"
 
-          # Session bus (needed for SNI + notifications)
+          # Session bus (needed for notifications)
           eval "$(dbus-launch --sh-syntax)"
           export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
 
@@ -261,10 +259,7 @@ jobs:
             return 1
           }
 
-          echo "::group::Starting gnome-shell headless (1280x720) + AppIndicator extension"
-          # Enable the extension before the shell starts so it loads at startup
-          gsettings set org.gnome.shell disable-user-extensions false
-          gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
+          echo "::group::Starting gnome-shell headless (1280x720)"
           export XDG_CURRENT_DESKTOP=GNOME
           export XDG_SESSION_TYPE=wayland
           gnome-shell --headless --wayland --no-x11 \
@@ -286,16 +281,10 @@ jobs:
           echo "Using WAYLAND_DISPLAY=$WAYLAND_DISPLAY"
           echo "::endgroup::"
 
-          echo "::group::Waiting for SNI watcher + Notifications"
-          if ! wait_name org.kde.StatusNotifierWatcher 60; then
-            echo "::error::StatusNotifierWatcher never appeared (AppIndicator extension not loaded?)"
-            gnome-extensions list --enabled 2>&1 || true
-            gnome-extensions info appindicatorsupport@rgcjonas.gmail.com 2>&1 || true
-            exit 1
-          fi
+          echo "::group::Waiting for Notifications"
           wait_name org.freedesktop.Notifications 20 || echo "::warning::no Notifications service"
           dbus-send --session --type=method_call --print-reply --dest=org.freedesktop.DBus \
-            /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "StatusNotifier|Notifications" || true
+            /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "Notifications" || true
           echo "::endgroup::"
 
           # Use the source-built Tcl

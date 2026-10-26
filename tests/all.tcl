@@ -55,7 +55,7 @@ foreach {constraint definition fileList} {
 					    unixSelect.test unixWm.test}
     win		TCLTEST_BUILT_IN    {winButton.test winClipboard.test winDialog.test winFont.test \
 					    winMenu.test winMsgbox.test winSend.test winWm.test}
-	wayland {} 			{cmds.test embed.test safePrimarySelection.test}				    
+	wayland {} 			{}				    
 } {
     set toSkip 0
     if {$definition eq "TCLTEST_BUILT_IN"} {
@@ -70,6 +70,11 @@ foreach {constraint definition fileList} {
     if {$toSkip} {
 	set skipFiles [concat $skipFiles $fileList]
     }
+}
+
+# Files to skip when running under Wayland
+if {"wayland" in [tcltest::configure -constraints]} {
+    lappend skipFiles systray.test
 }
 tcltest::configure -notfile [lsort -unique $skipFiles]
 unset constraint definition fileList skipFiles toSkip
