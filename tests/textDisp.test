@@ -5448,10 +5448,13 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
 test textDisp-41.1 {many text widgets complete their line metrics update - bug 1348333} -setup {
     toplevel .tt
 } -body {
-    for {set i 0} {$i < 20} {incr i} {
+    # About 600 widgets are needed to show the bug.  A small font keeps the
+    # toplevel within a small screen: the widgets of a row clipped by it are
+    # unmapped, and an unmapped text widget never completes the update.
+    for {set i 0} {$i < 30} {incr i} {
 	pack [frame .tt.f$i]
-	for {set j 0} {$j < 20} {incr j} {
-	    text .tt.f$i.t$j -height 1 -width 2
+	for {set j 0} {$j < 30} {incr j} {
+	    text .tt.f$i.t$j -height 1 -width 2 -font {TkFixedFont -8}
 	    .tt.f$i.t$j insert end $i$j
 	    pack .tt.f$i.t$j -side left
 	}
