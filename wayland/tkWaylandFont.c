@@ -3122,8 +3122,18 @@ GetFontFileData(
 #endif
 
 /*
- * True for the codepoints of joining scripts whose shaping NanoVG cannot
- * reproduce.  Deliberately narrow; extend here (and only here).
+ *----------------------------------------------------------------------
+ * IsJoiningScriptCodepoint --
+ *
+ *   True for the codepoints of joining scripts whose shaping NanoVG
+ *   cannot reproduce.  Deliberately narrow; extend here (and only here).
+ *
+ * Results:
+ *   True if the codepoint belongs to a joining script, false otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
 static bool
 IsJoiningScriptCodepoint(
@@ -3139,9 +3149,20 @@ IsJoiningScriptCodepoint(
 }
 
 /*
- * True if any codepoint of the cluster text belongs to a joining script.
- * Decided per cluster, not per codepoint: HarfBuzz output is in visual
- * order, so glyph k of an RTL cluster is not codepoint k.
+ *----------------------------------------------------------------------
+ * IsArabicJoiningCluster --
+ *
+ *   True if any codepoint of the cluster text belongs to a joining
+ *   script.  Decided per cluster, not per codepoint: HarfBuzz output is
+ *   in visual order, so glyph k of an RTL cluster is not codepoint k.
+ *
+ * Results:
+ *   True if the cluster contains a joining-script codepoint, false
+ *   otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
 static bool
 IsArabicJoiningCluster(
@@ -3185,6 +3206,21 @@ typedef struct OutlineRec {
     int failed;
 } OutlineRec;
 
+/*
+ *----------------------------------------------------------------------
+ * OutlineAdd --
+ *
+ *   Append a new drawing command of the given type to an outline
+ *   recording buffer, growing the buffer if necessary.
+ *
+ * Results:
+ *   Pointer to the new OutlineOp, or NULL if reallocation failed (in
+ *   which case rec->failed is set).
+ *
+ * Side effects:
+ *   May reallocate rec->ops and increments rec->count.
+ *----------------------------------------------------------------------
+ */
 static OutlineOp *
 OutlineAdd(
     OutlineRec *r,
@@ -3206,6 +3242,19 @@ OutlineAdd(
     return &r->ops[r->count++];
 }
 
+/*
+ *----------------------------------------------------------------------
+ * OutlineMoveTo --
+ *
+ *   HarfBuzz draw callback: record a move-to command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
 static void
 OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float x, float y, void *ud)
@@ -3215,6 +3264,19 @@ OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
     if (o) { o->v[0] = x; o->v[1] = y; }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * OutlineLineTo --
+ *
+ *   HarfBuzz draw callback: record a line-to command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
 static void
 OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float x, float y, void *ud)
@@ -3224,6 +3286,19 @@ OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
     if (o) { o->v[0] = x; o->v[1] = y; }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * OutlineQuadTo --
+ *
+ *   HarfBuzz draw callback: record a quadratic curve command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
 static void
 OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float cx, float cy, float x, float y, void *ud)
@@ -3233,6 +3308,19 @@ OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
     if (o) { o->v[0] = cx; o->v[1] = cy; o->v[2] = x; o->v[3] = y; }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * OutlineCubicTo --
+ *
+ *   HarfBuzz draw callback: record a cubic curve command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
 static void
 OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float c1x, float c1y, float c2x, float c2y, float x, float y, void *ud)
@@ -3245,6 +3333,19 @@ OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ * OutlineClose --
+ *
+ *   HarfBuzz draw callback: record a close-path command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
 static void
 OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
 {
@@ -3252,6 +3353,20 @@ OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
     OutlineAdd((OutlineRec *)dd, OL_CLOSE);
 }
 
+/*
+ *----------------------------------------------------------------------
+ * GetOutlineDrawFuncs --
+ *
+ *   Return the shared HarfBuzz draw-funcs object used by
+ *   DrawOutlineGlyph() to record glyph outlines.
+ *
+ * Results:
+ *   Pointer to the (lazily created, immutable) hb_draw_funcs_t.
+ *
+ * Side effects:
+ *   Creates the draw-funcs object on first call.
+ *----------------------------------------------------------------------
+ */
 static hb_draw_funcs_t *
 GetOutlineDrawFuncs(void)
 {
@@ -3269,7 +3384,20 @@ GetOutlineDrawFuncs(void)
     return funcs;
 }
 
-/* Number of coordinates (x,y pairs * 2) carried by an op. */
+/*
+ *----------------------------------------------------------------------
+ * OutlineOpCoords --
+ *
+ *   Number of coordinates (x,y pairs * 2) carried by an op.
+ *
+ * Results:
+ *   The count of coordinates (2, 4, or 6) for the given op type, or 0
+ *   for close-path and unknown op types.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
 static int
 OutlineOpCoords(int type)
 {
@@ -3284,9 +3412,21 @@ OutlineOpCoords(int type)
 #endif /* WL_HB_OUTLINES */
 
 /*
- * True if glyphs of this face can be drawn by DrawOutlineGlyph().  Color
- * bitmap faces never can; they have their own path.  Always false when
- * HarfBuzz is too old, which sends all text down the nvgText path.
+ *----------------------------------------------------------------------
+ * OutlineFaceUsable --
+ *
+ *   True if glyphs of this face can be drawn by DrawOutlineGlyph().
+ *   Color bitmap faces never can; they have their own path.  Always
+ *   false when HarfBuzz is too old, which sends all text down the
+ *   nvgText path.
+ *
+ * Results:
+ *   True if the face can be rendered by drawing its HarfBuzz outline,
+ *   false otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
  */
 static bool
 OutlineFaceUsable(
@@ -3359,7 +3499,7 @@ DrawOutlineGlyph(
     }
 
     /*
-     * NanoVG normalises the orientation of every subpath to its winding
+     * NanoVG normalizes the orientation of every subpath to its winding
      * (default solid) before filling, so counters (the loops of ه و ف ق ص
      * ع ...) would be filled in unless they are marked NVG_HOLE.  TrueType
      * and CFF use opposite orientations, so rather than assuming one,
