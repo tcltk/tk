@@ -1079,7 +1079,7 @@ TkCreateNamedFont(
 	nfPtr->fa = *faPtr;
 	nfPtr->deletePending = 0;
     } else {
-	nfPtr = (NamedFont *)Tcl_Alloc(sizeof(NamedFont));
+	nfPtr = (NamedFont *)ckalloc(sizeof(NamedFont));
 	nfPtr->deletePending = 0;
 	Tcl_SetHashValue(namedHashPtr, nfPtr);
 	nfPtr->fa = *faPtr;
