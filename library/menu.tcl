@@ -49,6 +49,9 @@
 # window -		When the mouse is over a menu, this holds the
 #			name of the menu;  it's cleared when the mouse
 #			leaves the menu.
+# watchTop -		On X11, the toplevel which posted the menus, watched
+#			by the TkMenuWatch binding tag.
+# watchPos -		Its root coordinates when the menus were posted.
 # tearoff -		Whether the last menu posted was a tearoff or not.
 #			This is true always for unix, for tearoffs for Mac
 #			and Windows.
@@ -123,6 +126,19 @@ bind Menubutton <<Invoke>> {
 # restored to wherever it was before menu selection started.
 
 bind Menu <FocusIn> {}
+bind Menu <FocusOut> {
+    tk::MenuWatchFocus
+}
+
+# On X11, unpost the menus when the toplevel which posted them is moved or
+# the application loses the focus. See tk::MenuWatch.
+
+bind TkMenuWatch <FocusOut> {
+    tk::MenuWatchFocus
+}
+bind TkMenuWatch <Configure> {
+    tk::MenuWatchMoved %W
+}
 
 bind Menu <Enter> {
     set tk::Priv(window) %W
@@ -350,6 +366,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 proc ::tk::MenuUnpost menu {
     variable ::tk::Priv
     set mb $Priv(postedMb)
+    MenuUnwatch
 
     # Restore focus right away (otherwise X will take focus away when
     # the menu is unmapped and under some window managers (e.g. olvwm)
@@ -1461,6 +1478,109 @@ proc tk::SaveGrabInfo w {
     set Priv(oldGrab) [grab current $w]
     if {$Priv(oldGrab) ne ""} {
 	set Priv(grabStatus) [grab status $Priv(oldGrab)]
+    }
+    if {[tk windowingsystem] eq "x11"} {
+	MenuWatch $w
+    }
+}
+
+# ::tk::MenuWatch --
+# On X11 the posted menus are override-redirect windows: they do not follow
+# the toplevel which posted them when it is moved, and they stay on top
+# when another application gets the focus, which the compositor of a
+# Wayland session allows in spite of the grab. Watch the toplevel, so that
+# the menus are unposted in these cases, as native menus are. A torn-off
+# menu is not unposted, only the cascades posted from it. [Bug 2e3d6cdae4]
+#
+# Arguments:
+# w -			The menubutton or menu which posts the menus.
+
+proc ::tk::MenuWatch w {
+    variable ::tk::Priv
+    MenuUnwatch
+    if {[winfo class $w] ne "Menu"} {
+	set top [winfo toplevel $w]
+    } elseif {[$w cget -type] eq "menubar"} {
+	set top [winfo toplevel [winfo parent $w]]
+    } elseif {[$w cget -type] eq "tearoff"} {
+	set top $w
+    } elseif {[focus -displayof $w] ne ""} {
+	# A popup menu: watch the toplevel which has the focus.
+	set top [winfo toplevel [focus -displayof $w]]
+    } else {
+	return
+    }
+    set Priv(watchTop) $top
+    set Priv(watchPos) [list [winfo rootx $top] [winfo rooty $top]]
+    bindtags $top [linsert [bindtags $top] 0 TkMenuWatch]
+}
+
+# ::tk::MenuUnwatch --
+# Stops watching the toplevel which posted the menus.
+
+proc ::tk::MenuUnwatch {} {
+    variable ::tk::Priv
+    after cancel ::tk::MenuWatchCheck
+    if {[info exists Priv(watchTop)]} {
+	if {[winfo exists $Priv(watchTop)]} {
+	    bindtags $Priv(watchTop) [lsearch -all -inline -not -exact \
+		    [bindtags $Priv(watchTop)] TkMenuWatch]
+	}
+	unset Priv(watchTop) Priv(watchPos)
+    }
+}
+
+# ::tk::MenuWatchFocus --
+# Called when the focus leaves a menu or the watched toplevel. Whether the
+# application lost the focus is known only after the focus events of a
+# change within the application have all been handled.
+
+proc ::tk::MenuWatchFocus {} {
+    variable ::tk::Priv
+    if {[info exists Priv(watchTop)]} {
+	after cancel ::tk::MenuWatchCheck
+	after idle ::tk::MenuWatchCheck
+    }
+}
+
+proc ::tk::MenuWatchCheck {} {
+    variable ::tk::Priv
+    if {[info exists Priv(watchTop)] && [winfo exists $Priv(watchTop)]
+	    && [focus -displayof $Priv(watchTop)] eq ""} {
+	MenuWatchUnpost
+    }
+}
+
+# ::tk::MenuWatchMoved --
+# Called when the watched toplevel is configured: unposts the menus if it
+# was moved.
+
+proc ::tk::MenuWatchMoved w {
+    variable ::tk::Priv
+    if {[info exists Priv(watchTop)] && $w eq $Priv(watchTop)
+	    && [list [winfo rootx $w] [winfo rooty $w]] ne $Priv(watchPos)} {
+	MenuWatchUnpost
+    }
+}
+
+# ::tk::MenuWatchUnpost --
+# Unposts all the posted menus, as a button release outside of them does.
+
+proc ::tk::MenuWatchUnpost {} {
+    variable ::tk::Priv
+    if {$Priv(postedMb) ne "" && [winfo exists $Priv(postedMb)]} {
+	MenuUnpost {}
+    } elseif {$Priv(popup) ne "" && [winfo exists $Priv(popup)]} {
+	MenuUnpost $Priv(popup)
+    } elseif {$Priv(menuBar) ne "" && [winfo exists $Priv(menuBar)]} {
+	set menu $Priv(menuBar)
+	$menu postcascade {}
+	$menu activate {}
+	GenerateMenuSelect $menu
+	MenuUnpost $menu
+    } else {
+	# The menus were destroyed without being unposted.
+	MenuUnwatch
     }
 }
 

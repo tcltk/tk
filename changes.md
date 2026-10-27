@@ -158,6 +158,7 @@ to the userbase.
  - [Win32 nonclient double-click causes spurious Button-1 in app](https://core.tcl-lang.org/tk/tktview/139105)
  - [Missing error-handling when MenuNewEntry() returns NULL](https://core.tcl-lang.org/tk/tktview/346407)
  - ["wm manage" is deficient and flickering](https://core.tcl-lang.org/tk/tktview/281753)
+ - [X11: a posted menu stays open when the application loses the focus or its toplevel moves](https://core.tcl-lang.org/tk/tktview/2e3d6c)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
