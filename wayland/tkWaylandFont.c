@@ -524,6 +524,7 @@ IsSimpleOnly(const char *str, int len)
                         (uc2 >= 0x0750 && uc2 <= 0x077F) ||  /* Arabic Supplement */
                         (uc2 >= 0xFB50 && uc2 <= 0xFDFF) ||  /* Arabic Presentation Forms-A */
                         (uc2 >= 0xFE70 && uc2 <= 0xFEFF) ||  /* Arabic Presentation Forms-B */
+                        (uc2 >= 0x0870 && uc2 <= 0x08FF) ||  /* Arabic Extended-B/A */
                         /* Other RTL scripts. */
                         (uc2 >= 0x0700 && uc2 <= 0x074F) ||  /* Syriac */
                         (uc2 >= 0x0780 && uc2 <= 0x07BF) ||  /* Thaana */
@@ -587,6 +588,7 @@ IsSimpleOnly(const char *str, int len)
             (uc >= 0x0750 && uc <= 0x077F) ||  /* Arabic Supplement */
             (uc >= 0xFB50 && uc <= 0xFDFF) ||  /* Arabic Presentation Forms-A */
             (uc >= 0xFE70 && uc <= 0xFEFF) ||  /* Arabic Presentation Forms-B */
+            (uc >= 0x0870 && uc <= 0x08FF) ||  /* Arabic Extended-B/A */
             /* Other RTL scripts. */
             (uc >= 0x0700 && uc <= 0x074F) ||  /* Syriac */
             (uc >= 0x0780 && uc <= 0x07BF) ||  /* Thaana */
@@ -3095,6 +3097,366 @@ GetFontFileData(
 
 /*
  *----------------------------------------------------------------------
+ * Outline drawing for joining scripts (Arabic, Syriac, N'Ko)
+ *
+ *   NanoVG/fontstash cannot draw a glyph by glyph ID, and nvgText() on a
+ *   cluster's text does a plain cmap lookup, so every Arabic letter comes
+ *   out in its isolated form and the GSUB joining/ligature work done by
+ *   HarfBuzz is thrown away.  For clusters of these scripts we therefore
+ *   take the glyph IDs HarfBuzz chose, ask the same hb_font_t for each
+ *   glyph's outline (hb_font_draw_glyph, HarfBuzz >= 7.0) and fill it
+ *   with NanoVG's public path API.  No second font parser is involved,
+ *   so glyph IDs are guaranteed to match.
+ *
+ *   With an older HarfBuzz, OutlineFaceUsable() is always false and
+ *   every cluster takes the existing nvgText path.  Everything that is
+ *   not a joining script never reaches this code: IsArabicJoiningCluster()
+ *   is the only gate.
+ *----------------------------------------------------------------------
+ */
+
+#if defined(HB_VERSION_ATLEAST) && HB_VERSION_ATLEAST(7, 0, 0)
+#define WL_HB_OUTLINES 1
+#else
+#define WL_HB_OUTLINES 0
+#endif
+
+/*
+ * True for the codepoints of joining scripts whose shaping NanoVG cannot
+ * reproduce.  Deliberately narrow; extend here (and only here).
+ */
+static bool
+IsJoiningScriptCodepoint(
+    FcChar32 uc)
+{
+    return (uc >= 0x0600 && uc <= 0x06FF)	/* Arabic */
+	|| (uc >= 0x0700 && uc <= 0x074F)	/* Syriac */
+	|| (uc >= 0x0750 && uc <= 0x077F)	/* Arabic Supplement */
+	|| (uc >= 0x07C0 && uc <= 0x07FF)	/* N'Ko */
+	|| (uc >= 0x0870 && uc <= 0x08FF)	/* Arabic Ext-B, Ext-A */
+	|| (uc >= 0xFB50 && uc <= 0xFDFF)	/* Arabic Presentation Forms-A */
+	|| (uc >= 0xFE70 && uc <= 0xFEFF);	/* Arabic Presentation Forms-B */
+}
+
+/*
+ * True if any codepoint of the cluster text belongs to a joining script.
+ * Decided per cluster, not per codepoint: HarfBuzz output is in visual
+ * order, so glyph k of an RTL cluster is not codepoint k.
+ */
+static bool
+IsArabicJoiningCluster(
+    const char *s,
+    int len)
+{
+    int i = 0;
+
+    while (i < len) {
+	FcChar32 uc;
+	int cl = FcUtf8ToUcs4((const FcChar8 *)(s + i), &uc, len - i);
+
+	if (cl <= 0) {
+	    break;
+	}
+	if (IsJoiningScriptCodepoint(uc)) {
+	    return true;
+	}
+	i += cl;
+    }
+    return false;
+}
+
+#if WL_HB_OUTLINES
+
+/*
+ * One recorded drawing command.  The outline is recorded first so that
+ * the orientation of each contour is known before any of it is handed to
+ * NanoVG (see DrawOutlineGlyph).
+ */
+enum { OL_MOVE, OL_LINE, OL_QUAD, OL_CUBIC, OL_CLOSE };
+
+typedef struct OutlineOp {
+    int type;
+    float v[6];			/* Point(s) in 1/64 px, y up. */
+} OutlineOp;
+
+typedef struct OutlineRec {
+    OutlineOp *ops;
+    int count, cap;
+    int failed;
+} OutlineRec;
+
+static OutlineOp *
+OutlineAdd(
+    OutlineRec *r,
+    int type)
+{
+    if (r->count == r->cap) {
+	int ncap = r->cap ? r->cap * 2 : 64;
+	OutlineOp *n = (OutlineOp *)Tcl_Realloc((char *)r->ops,
+		ncap * sizeof(OutlineOp));
+
+	if (!n) {
+	    r->failed = 1;
+	    return NULL;
+	}
+	r->ops = n;
+	r->cap = ncap;
+    }
+    r->ops[r->count].type = type;
+    return &r->ops[r->count++];
+}
+
+static void
+OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_MOVE);
+    (void)f; (void)st; (void)ud;
+    if (o) { o->v[0] = x; o->v[1] = y; }
+}
+
+static void
+OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_LINE);
+    (void)f; (void)st; (void)ud;
+    if (o) { o->v[0] = x; o->v[1] = y; }
+}
+
+static void
+OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float cx, float cy, float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_QUAD);
+    (void)f; (void)st; (void)ud;
+    if (o) { o->v[0] = cx; o->v[1] = cy; o->v[2] = x; o->v[3] = y; }
+}
+
+static void
+OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float c1x, float c1y, float c2x, float c2y, float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_CUBIC);
+    (void)f; (void)st; (void)ud;
+    if (o) {
+	o->v[0] = c1x; o->v[1] = c1y; o->v[2] = c2x; o->v[3] = c2y;
+	o->v[4] = x;   o->v[5] = y;
+    }
+}
+
+static void
+OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
+{
+    (void)f; (void)st; (void)ud;
+    OutlineAdd((OutlineRec *)dd, OL_CLOSE);
+}
+
+static hb_draw_funcs_t *
+GetOutlineDrawFuncs(void)
+{
+    static hb_draw_funcs_t *funcs = NULL;
+
+    if (!funcs) {
+	funcs = hb_draw_funcs_create();
+	hb_draw_funcs_set_move_to_func(funcs, OutlineMoveTo, NULL, NULL);
+	hb_draw_funcs_set_line_to_func(funcs, OutlineLineTo, NULL, NULL);
+	hb_draw_funcs_set_quadratic_to_func(funcs, OutlineQuadTo, NULL, NULL);
+	hb_draw_funcs_set_cubic_to_func(funcs, OutlineCubicTo, NULL, NULL);
+	hb_draw_funcs_set_close_path_func(funcs, OutlineClose, NULL, NULL);
+	hb_draw_funcs_make_immutable(funcs);
+    }
+    return funcs;
+}
+
+/* Number of coordinates (x,y pairs * 2) carried by an op. */
+static int
+OutlineOpCoords(int type)
+{
+    switch (type) {
+    case OL_MOVE: case OL_LINE: return 2;
+    case OL_QUAD:  return 4;
+    case OL_CUBIC: return 6;
+    }
+    return 0;
+}
+
+#endif /* WL_HB_OUTLINES */
+
+/*
+ * True if glyphs of this face can be drawn by DrawOutlineGlyph().  Color
+ * bitmap faces never can; they have their own path.  Always false when
+ * HarfBuzz is too old, which sends all text down the nvgText path.
+ */
+static bool
+OutlineFaceUsable(
+    WaylandFont *fontPtr,
+    int faceIndex)
+{
+#if WL_HB_OUTLINES
+    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+	return false;
+    }
+    if (IsColorBitmapFace(fontPtr, faceIndex)) {
+	return false;
+    }
+    return GetHbFont(fontPtr, faceIndex) != NULL;
+#else
+    (void)fontPtr; (void)faceIndex;
+    return false;
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ * DrawOutlineGlyph --
+ *
+ *   Fill the outline of glyph `gid` of the given face with the current
+ *   NanoVG fill paint.  (penX, penY) is the glyph origin on the baseline
+ *   in the current transform.  The glyph is drawn by the hb_font_t that
+ *   shaped it, whose scale is pixelSize * 64 (see GetHbFont).
+ *
+ * Results:
+ *   True if the glyph was drawn or has no outline (space, ZWNJ).  False
+ *   if nothing was drawn.
+ *----------------------------------------------------------------------
+ */
+static bool
+DrawOutlineGlyph(
+    NVGcontext *vg,
+    WaylandFont *fontPtr,
+    int faceIndex,
+    hb_codepoint_t gid,
+    float penX,
+    float penY,
+    float pixelSize)
+{
+#if WL_HB_OUTLINES
+    hb_font_t *hf;
+    OutlineRec rec = { NULL, 0, 0, 0 };
+    float areaBuf[64], *area = areaBuf, ref = 0.0f, k;
+    int xs = 0, ys = 0, nc = 0, c, i, j;
+    float sx = 0, sy = 0, px = 0, py = 0;
+    bool ok = true;
+
+    if (!vg || pixelSize <= 0.0f || !OutlineFaceUsable(fontPtr, faceIndex)) {
+	return false;
+    }
+    hf = GetHbFont(fontPtr, faceIndex);
+    hb_font_get_scale(hf, &xs, &ys);
+    if (xs <= 0) {
+	return false;
+    }
+    k = pixelSize / (float)xs;		/* HarfBuzz units -> pixels. */
+
+    hb_font_draw_glyph(hf, gid, GetOutlineDrawFuncs(), &rec);
+    if (rec.failed) {
+	ok = false;
+	goto done;
+    }
+    if (rec.count == 0) {
+	goto done;			/* Empty glyph: nothing to draw. */
+    }
+
+    /*
+     * NanoVG normalises the orientation of every subpath to its winding
+     * (default solid) before filling, so counters (the loops of ه و ف ق ص
+     * ع ...) would be filled in unless they are marked NVG_HOLE.  TrueType
+     * and CFF use opposite orientations, so rather than assuming one,
+     * take the largest contour as solid and treat opposite-signed
+     * contours as holes.  Pass 1: signed area of each contour.
+     */
+    for (i = 0; i < rec.count; i++) {
+	if (rec.ops[i].type == OL_MOVE) {
+	    nc++;
+	}
+    }
+    if (nc > 64) {
+	area = (float *)Tcl_Alloc(nc * sizeof(float));
+    }
+    c = -1;
+    for (i = 0; i < rec.count; i++) {
+	OutlineOp *o = &rec.ops[i];
+
+	if (o->type == OL_MOVE) {
+	    if (c >= 0) {
+		area[c] += px * sy - sx * py;	/* close previous */
+	    }
+	    c++;
+	    area[c] = 0.0f;
+	    sx = px = o->v[0];
+	    sy = py = o->v[1];
+	    continue;
+	}
+	if (c < 0) {
+	    continue;
+	}
+	for (j = 0; j < OutlineOpCoords(o->type); j += 2) {
+	    area[c] += px * o->v[j + 1] - o->v[j] * py;
+	    px = o->v[j];
+	    py = o->v[j + 1];
+	}
+    }
+    if (c >= 0) {
+	area[c] += px * sy - sx * py;
+    }
+    for (i = 0; i <= c; i++) {
+	if (fabsf(area[i]) > fabsf(ref)) {
+	    ref = area[i];
+	}
+    }
+
+    /* Pass 2: emit.  HarfBuzz output is y-up, NanoVG is y-down. */
+#define OLX(v) (penX + (v) * k)
+#define OLY(v) (penY - (v) * k)
+    nvgBeginPath(vg);
+    c = -1;
+    for (i = 0; i < rec.count; i++) {
+	OutlineOp *o = &rec.ops[i];
+
+	switch (o->type) {
+	case OL_MOVE:
+	    c++;
+	    nvgMoveTo(vg, OLX(o->v[0]), OLY(o->v[1]));
+	    nvgPathWinding(vg, (area[c] * ref >= 0.0f) ? NVG_SOLID : NVG_HOLE);
+	    break;
+	case OL_LINE:
+	    nvgLineTo(vg, OLX(o->v[0]), OLY(o->v[1]));
+	    break;
+	case OL_QUAD:
+	    nvgQuadTo(vg, OLX(o->v[0]), OLY(o->v[1]),
+		    OLX(o->v[2]), OLY(o->v[3]));
+	    break;
+	case OL_CUBIC:
+	    nvgBezierTo(vg, OLX(o->v[0]), OLY(o->v[1]),
+		    OLX(o->v[2]), OLY(o->v[3]), OLX(o->v[4]), OLY(o->v[5]));
+	    break;
+	case OL_CLOSE:
+	    nvgClosePath(vg);
+	    break;
+	}
+    }
+#undef OLX
+#undef OLY
+    nvgFill(vg);
+
+  done:
+    if (area != areaBuf) {
+	Tcl_Free((char *)area);
+    }
+    if (rec.ops) {
+	Tcl_Free((char *)rec.ops);
+    }
+    return ok;
+#else
+    (void)vg; (void)fontPtr; (void)faceIndex; (void)gid;
+    (void)penX; (void)penY; (void)pixelSize;
+    return false;
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
  * MakeNvgFaceName --
  *
  *   Make the NanoVG font name of a face: a hash of its file and index in
@@ -5449,6 +5811,32 @@ TkpDrawAngledCharsInContext(
 
             }
 
+            /*
+             * Joining scripts (Arabic, Syriac, N'Ko): draw every glyph of the
+             * cluster from its HarfBuzz glyph ID as an outline, so joining
+             * forms, ligatures and mark positions survive.  Only clusters
+             * containing such a codepoint get here; all other text takes
+             * the unchanged paths below.
+             */
+            if (IsArabicJoiningCluster(clusters[i].text, (int)strlen(clusters[i].text))) {
+                bool usable = true;
+                for (int gg = 0; gg < groupN; gg++) {
+                    if (!OutlineFaceUsable(fontPtr, clusters[groupIdx[gg]].face_idx)) { usable = false; break; }
+                }
+                if (usable) {
+                    nvgFillColor(vg, fillCol);
+                    for (int gg = 0; gg < groupN; gg++) {
+                        int gi = groupIdx[gg];
+                        DrawOutlineGlyph(vg, fontPtr, clusters[gi].face_idx,
+                                         (hb_codepoint_t)clusters[gi].glyph_id,
+                                         (float)clusters[gi].pen_x, (float)clusters[gi].pen_y,
+                                         (float)fontPtr->pixelSize);
+                        rendered[gi] = true;
+                    }
+                    continue;
+                }
+            }
+
             int cpCount = 0; const char *p = clusters[i].text; const char *e = p + strlen(p);
 
             while (p < e) { FcChar32 uc; int cl = FcUtf8ToUcs4((const FcChar8*)p, &uc, e - p); if (cl <= 0) break; cpCount++; p += cl; }
@@ -5839,6 +6227,17 @@ TkWaylandDrawMenuText(
             int bo = sbuf.glyphs[i].byteOffset;
             int clen = sbuf.glyphs[i].clusterLen;
             if (bo < 0 || bo + clen > len) continue;
+            /*
+             * Joining scripts: every glyph of the cluster (base and marks)
+             * is drawn from its glyph ID as an outline, one per loop turn.
+             */
+            if (IsArabicJoiningCluster(text + bo, clen)
+                    && OutlineFaceUsable(fontPtr, faceIdx)) {
+                DrawOutlineGlyph(vg, fontPtr, faceIdx,
+                                 sbuf.glyphs[i].glyphId, gx, gy,
+                                 (float)fontPtr->pixelSize);
+                continue;
+            }
             if (i > 0 && sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset) {
                 continue;
             }

@@ -698,7 +698,6 @@ TkWaylandInitialize(Tcl_Interp *interp)
      * IMPORTANT: do NOT force EGL here.
      * GLFW on Wayland will choose EGL automatically.
      */
-
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
