@@ -2703,6 +2703,50 @@ test wm-forget-2.1 {bug [c77b426dc9] - panic with [menu]+[wm forget]} -constrain
     destroy .m
     unset res
 } -result {1 1}
+test wm-forget-2.2 {bug [3515522fff] - crash with menubar + [wm forget]} -setup {
+    catch {destroy .t .m}
+} -body {
+    menu .m
+    menu .m.system
+    .m.system add command -label test
+    .m add cascade -label System -menu .m.system
+    toplevel .t -menu .m
+    update
+    wm forget .t
+    update
+    wm manage .t
+    update
+    wm forget .t
+    update
+    destroy .t
+    update
+    destroy .m
+    update
+    winfo exists .m
+} -cleanup {
+    destroy .t .m
+} -result 0
+test wm-forget-2.3 {bug [3515522fff] - [wm forget] releases the menubar} -setup {
+    catch {destroy .t .m}
+} -body {
+    menu .m
+    .m add command -label x
+    toplevel .t -menu .m
+    update
+    wm forget .t
+    update
+    destroy .m
+    menu .m
+    .m add command -label y
+    update
+    set res [list [winfo children .t]]
+    wm manage .t
+    update
+    lappend res [llength [winfo children .t]]
+} -cleanup {
+    destroy .t .m
+    unset -nocomplain res
+} -result {{} 1}
 
 #
 # TESTFILE CLEANUP
