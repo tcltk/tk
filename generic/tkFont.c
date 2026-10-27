@@ -916,7 +916,7 @@ UpdateDependentFonts(
 	cacheHashPtr = Tcl_NextHashEntry(&search);
     }
     if (doUpdate && !fiPtr->updatePending) {
-	fiPtr->updatePending = true;
+	fiPtr->updatePending = 1;
 	Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
     }
 }

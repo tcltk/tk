@@ -924,7 +924,7 @@ Tk_TranslateWinEvent(
 	 */
 
 	TkWinNonClientButtons(0);
-	TkWinPointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
+	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
     case WM_LBUTTONUP:
