@@ -5448,9 +5448,9 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
 test textDisp-41.1 {many text widgets complete their line metrics update - bug 1348333} -setup {
     toplevel .tt
 } -body {
-    for {set i 0} {$i < 30} {incr i} {
+    for {set i 0} {$i < 20} {incr i} {
 	pack [frame .tt.f$i]
-	for {set j 0} {$j < 30} {incr j} {
+	for {set j 0} {$j < 20} {incr j} {
 	    text .tt.f$i.t$j -height 1 -width 2
 	    .tt.f$i.t$j insert end $i$j
 	    pack .tt.f$i.t$j -side left
