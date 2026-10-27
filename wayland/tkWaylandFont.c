@@ -1048,45 +1048,8 @@ GetBidiRuns(
  *   Updates the character-to-face cache.
  *----------------------------------------------------------------------
  */
-
-/*
- *----------------------------------------------------------------------
- * FaceCoversRange --
- *
- *   Check whether a face of the font has all the characters ucs4[start]
- *   ... ucs4[end - 1].
- *
- * Results:
- *   true if it has them, false otherwise (also for an invalid index).
- *----------------------------------------------------------------------
- */
-
-static bool
-FaceCoversRange(
-    WaylandFont *fontPtr,
-    int faceIndex,
-    const FcChar32 *ucs4,
-    int start,
-    int end)
-{
-    FcCharSet *cs;
-
-    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
-        return false;
-    }
-    cs = fontPtr->faces[faceIndex].charset;
-    if (cs == NULL) {
-        return false;
-    }
-    for (int i = start; i < end; i++) {
-        if (!FcCharSetHasChar(cs, ucs4[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static int
+ 
+ static int
 GetRunFaceIndex(
 		WaylandFont *fontPtr,
 		FcChar32 *ucs4Chars,
@@ -1134,6 +1097,44 @@ GetRunFaceIndex(
     shaper->charCache[cacheIdx].uc      = uc;
     shaper->charCache[cacheIdx].faceIdx = 0;
     return 0;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ * FaceCoversRange --
+ *
+ *   Check whether a face of the font has all the characters ucs4[start]
+ *   ... ucs4[end - 1].
+ *
+ * Results:
+ *   true if it has them, false otherwise (also for an invalid index).
+ *----------------------------------------------------------------------
+ */
+
+static bool
+FaceCoversRange(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    const FcChar32 *ucs4,
+    int start,
+    int end)
+{
+    FcCharSet *cs;
+
+    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+        return false;
+    }
+    cs = fontPtr->faces[faceIndex].charset;
+    if (cs == NULL) {
+        return false;
+    }
+    for (int i = start; i < end; i++) {
+        if (!FcCharSetHasChar(cs, ucs4[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /*
@@ -1709,6 +1710,7 @@ ColorQueueDelete(NVGcontext *vg, int id)
  *   Calls nvgDeleteImage() and frees list nodes.
  *----------------------------------------------------------------------
  */
+ 
 static void
 ColorFlushPending(NVGcontext *vg)
 {
@@ -1742,6 +1744,7 @@ ColorFlushPending(NVGcontext *vg)
  *   Frees memory and queues image handles for deletion.
  *----------------------------------------------------------------------
  */
+ 
 static void
 ColorFreeSlot(ColorGlyphSlot *s)
 {
@@ -1971,6 +1974,7 @@ ColorSlotImage(
  *   None.
  *----------------------------------------------------------------------
  */
+ 
 static void
 ColorGlyphContextDestroyed(NVGcontext *vg)
 {
@@ -2152,7 +2156,6 @@ AppendFontsetFace(
  *----------------------------------------------------------------------
  */
 
-/* True if the font file behind pat has CBDT/sbix PNG strikes. */
 static bool
 FontFileHasColorPng(FcPattern *pat)
 {
@@ -2261,7 +2264,6 @@ EnsureColorEmojiFace(WaylandFont *fontPtr)
     (void)fontPtr;
 #endif
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -3135,6 +3137,7 @@ GetFontFileData(
  *   None.
  *----------------------------------------------------------------------
  */
+ 
 static bool
 IsJoiningScriptCodepoint(
     FcChar32 uc)
@@ -3164,6 +3167,7 @@ IsJoiningScriptCodepoint(
  *   None.
  *----------------------------------------------------------------------
  */
+ 
 static bool
 IsArabicJoiningCluster(
     const char *s,
@@ -3221,6 +3225,7 @@ typedef struct OutlineRec {
  *   May reallocate rec->ops and increments rec->count.
  *----------------------------------------------------------------------
  */
+ 
 static OutlineOp *
 OutlineAdd(
     OutlineRec *r,
@@ -3255,6 +3260,7 @@ OutlineAdd(
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
+ 
 static void
 OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float x, float y, void *ud)
@@ -3277,6 +3283,7 @@ OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
+ 
 static void
 OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float x, float y, void *ud)
@@ -3299,6 +3306,7 @@ OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
+ 
 static void
 OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float cx, float cy, float x, float y, void *ud)
@@ -3321,6 +3329,7 @@ OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
+ 
 static void
 OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
 	float c1x, float c1y, float c2x, float c2y, float x, float y, void *ud)
@@ -3346,6 +3355,7 @@ OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
  *   Appends to the OutlineRec passed as the draw data.
  *----------------------------------------------------------------------
  */
+ 
 static void
 OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
 {
@@ -3367,6 +3377,7 @@ OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
  *   Creates the draw-funcs object on first call.
  *----------------------------------------------------------------------
  */
+ 
 static hb_draw_funcs_t *
 GetOutlineDrawFuncs(void)
 {
@@ -3398,6 +3409,7 @@ GetOutlineDrawFuncs(void)
  *   None.
  *----------------------------------------------------------------------
  */
+ 
 static int
 OutlineOpCoords(int type)
 {
@@ -3428,6 +3440,7 @@ OutlineOpCoords(int type)
  *   None.
  *----------------------------------------------------------------------
  */
+ 
 static bool
 OutlineFaceUsable(
     WaylandFont *fontPtr,
@@ -3461,6 +3474,7 @@ OutlineFaceUsable(
  *   if nothing was drawn.
  *----------------------------------------------------------------------
  */
+ 
 static bool
 DrawOutlineGlyph(
     NVGcontext *vg,
