@@ -1028,13 +1028,13 @@ proc countPixels {w x1 y1 x2 y2} {
 }
 
 test canvText-21.1 {stippled text - bug 220796} -constraints {
-    testpixel && notAqua && !withXft && knownBug
+    testpixel && notAqua && !withXft
 } -setup {
     destroy .c
-    canvas .c -width 200 -height 60 -background white -highlightthickness 0
+    canvas .c -width 200 -height 200 -background white -highlightthickness 0
     pack .c
 } -body {
-    .c create text 10 10 -anchor nw -text MMMM -font {Courier 30 bold} -fill black
+    .c create text 10 10 -anchor nw -text M -font {Courier 30 bold} -fill black
     update
     set bbox [.c bbox 1]
     set plain [countPixels .c {*}$bbox]
@@ -1043,10 +1043,11 @@ test canvText-21.1 {stippled text - bug 220796} -constraints {
     set stippled [countPixels .c {*}$bbox]
     # About half of the pixels are drawn with a gray50 stipple.
     list [expr {[.c bbox 1] eq $bbox}] \
-	    [expr {$stippled * 10 > $plain * 3 && $stippled * 10 < $plain * 7}]
+	    [expr {$stippled > $plain * 0.4}] [expr {$stippled < $plain * 0.6}]
 } -cleanup {
     destroy .c
-} -result {1 1}
+    unset -nocomplain bbox plain stippled
+} -result {1 1 1}
 
 # constrained by aquaKnownBug until ticket [271f61c768] is fixed
 test canvText-22.1 {text item longer than 512 characters} -constraints {
