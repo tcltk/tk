@@ -157,6 +157,7 @@ to the userbase.
  - [Own file dialog: the icon list of the file dialog no longer clears the selection when it loses focus](https://core.tcl-lang.org/tk/tktview/600313)
  - [Win32 nonclient double-click causes spurious Button-1 in app](https://core.tcl-lang.org/tk/tktview/139105)
  - [Missing error-handling when MenuNewEntry() returns NULL](https://core.tcl-lang.org/tk/tktview/346407)
+ - ["wm manage" is deficient and flickering](https://core.tcl-lang.org/tk/tktview/281753)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
