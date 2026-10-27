@@ -863,6 +863,10 @@ NSWindow *TkMacOSXGetKeyWindowSuccessor(
 	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
 	    continue;
 	}
+	/*
+	 * Windows stay visible during the order out animation, so we need to
+	 * exclude any iconic or withdrawn windows as well.
+	 */
 	if (winPtr->wmInfoPtr->hints.initial_state == IconicState
 		|| winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    continue;
