@@ -1202,7 +1202,8 @@ getMenubarOwner(
 	}
     }
     /* Otherwise, if there is a successor keyWindow, it is the owner. */
-    NSWindow *successor = TkMacOSXGetKeyWindowSuccessor(Tk_Interp(winPtr), NULL);
+    NSWindow *successor = TkMacOSXGetKeyWindowSuccessor(
+	    Tk_Interp((Tk_Window) winPtr), NULL);
     if (successor) {
 	return TkMacOSXGetTkWindow(successor);
     }

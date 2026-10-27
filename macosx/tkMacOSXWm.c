@@ -854,13 +854,17 @@ NSWindow *TkMacOSXGetKeyWindowSuccessor(
 	    continue;
 	}
 	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	if (!winPtr) {
+	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
 	if (winPtr->flags & TK_ALREADY_DEAD) {
 	    continue;
 	}
 	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
+	    continue;
+	}
+	if (winPtr->wmInfoPtr->hints.initial_state == IconicState
+		|| winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    continue;
 	}
 	if ([w isVisible] && [w canBecomeKeyWindow]) {
