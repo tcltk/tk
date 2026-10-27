@@ -149,6 +149,7 @@ to the userbase.
  - [option get command responding to invalid input](https://core.tcl-lang.org/tk/tktview/220931)
  - [X error BadDrawable when using ttk::style element create with multiple displays](https://core.tcl-lang.org/tk/tktview/fde9dc)
  - [Win32 nonclient double-click causes spurious Button-1 in app](https://core.tcl-lang.org/tk/tktview/139105)
+ - [Missing error-handling when MenuNewEntry() returns NULL](https://core.tcl-lang.org/tk/tktview/346407)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

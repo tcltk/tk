@@ -62,7 +62,7 @@
     statusItem.button.target = self;
     statusItem.button.action = @selector(clickOnStatusItem);
     [statusItem.button sendActionOn : NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp];
-    statusItem.visible = YES;
+    statusItem.visible = true;
     interp = interpreter;
     b1_callback = NULL;
     b3_callback = NULL;

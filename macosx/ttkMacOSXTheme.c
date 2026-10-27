@@ -42,7 +42,7 @@ MODULE_SCOPE NSColor *controlAccentColor(void) {
 	accentPixel = temp->color.pixel;
 	Tcl_Free(temp);
     }
-    return TkMacOSXGetNSColor(NULL, accentPixel);
+    return TkMacOSXGetNSColor(accentPixel);
 }
 
 /*

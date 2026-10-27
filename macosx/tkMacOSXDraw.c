@@ -299,7 +299,7 @@ Tk_MacOSXGetCGContextForDrawable(
 void
 TkMacOSXDrawCGImage(
     Drawable d,
-    GC gc,
+    TCL_UNUSED(GC),
     CGContextRef context,
     CGImageRef image,
     unsigned long imageForeground,
@@ -324,11 +324,11 @@ TkMacOSXDrawCGImage(
 		CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
 	    } else {
 		if (imageBackground != transparentColor) {
-		    TkMacOSXSetColorInContext(gc, imageBackground, context,
+		    TkMacOSXSetColorInContext(imageBackground, context,
 			    TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 		    CGContextFillRect(context, dstBounds);
 		}
-		TkMacOSXSetColorInContext(gc, imageForeground, context,
+		TkMacOSXSetColorInContext(imageForeground, context,
 			TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	    }
 	}
@@ -1369,8 +1369,7 @@ static void
 SetStipplePattern(
     MacDrawable *macDraw,
     GC gc,
-    CGContextRef context,
-    BOOL useDarkAppearance)
+    CGContextRef context)
 {
     static const CGPatternCallbacks callbacks = {
 	0, StippleDrawCell, StippleReleaseInfo
@@ -1388,6 +1387,7 @@ SetStipplePattern(
     if (!gc->stipple || !(mask = CreateStippleMask(gc->stipple))) {
 	return;
     }
+	bool useDarkAppearance = TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr);
     TkSetMacColor2(gc->foreground, &fg, useDarkAppearance);
     if (gc->fill_style == FillOpaqueStippled) {
 	TkSetMacColor2(gc->background, &bg, useDarkAppearance);
@@ -1627,7 +1627,7 @@ TkMacOSXSetupDrawingContext(
 	bool shouldAntialias = !notAA(gc->line_width);
 	double w = gc->line_width;
 
-	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context,
+	TkMacOSXSetColorInContext(gc->foreground, dc.context,
 		TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	if (view) {
 	    CGSize size = NSSizeToCGSize([view bounds].size);
@@ -1635,8 +1635,7 @@ TkMacOSXSetupDrawingContext(
 	}
 	if (gc->fill_style == FillStippled
 		|| gc->fill_style == FillOpaqueStippled) {
-	    SetStipplePattern(macDraw, gc, dc.context,
-		    TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
+	    SetStipplePattern(macDraw, gc, dc.context);
 	}
 	if (gc->function != GXcopy) {
 	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
