@@ -131,8 +131,8 @@ static void initColorTable()
 	lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 
 	/*
-	 * These retains prevent a crash on some macOS versions.
-	 * See bug [3a4310ee].
+	 * Retain these so that they remain valid after the autorelease pool is drained.
+	 * See [43f57e5c].
 	 */
 	[darkAqua retain];
 	[lightAqua retain];
