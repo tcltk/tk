@@ -296,6 +296,8 @@ MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
 MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+MODULE_SCOPE NSWindow*  TkMacOSXGetKeyWindowSuccessor(
+			     Tcl_Interp *interp, NSWindow *w);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 					     NSWindow *ignore);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);

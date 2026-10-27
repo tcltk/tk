@@ -845,54 +845,60 @@ FrontMostToplevelAtPoint(
     return NULL;
 }
 
+NSWindow *TkMacOSXGetKeyWindowSuccessor(
+    Tcl_Interp *interp,
+    NSWindow *ignore)
+{
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	if (w == ignore) {
+	    continue;
+	}
+	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+	if (!winPtr) {
+	    continue;
+	}
+	if (winPtr->flags & TK_ALREADY_DEAD) {
+	    continue;
+	}
+	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
+	    continue;
+	}
+	if ([w isVisible] && [w canBecomeKeyWindow]) {
+	    return w;
+	}
+    }
+    return NULL;
+}
+
 void TkMacOSXAssignNewKeyWindow(
     Tcl_Interp *interp,
     NSWindow *ignore)
 {
-    TkWindow *winPtr;
-
     /*
      * Avoid bug 5692042764: set tkEventTarget to NULL if there is no window to
      * send Tk events to.
      */
 
     [NSApp setTkEventTarget: NULL];
-    for (NSWindow *w in [NSApp orderedWindows]) {
-	WmInfo *wmPtr;
-	BOOL isOnScreen;
-	winPtr = TkMacOSXGetTkWindow(w);
-	if (!winPtr
-	    || !winPtr->wmInfoPtr
-	    || (winPtr->flags & TK_ALREADY_DEAD)) {
-	    continue;
+    NSWindow *successor = TkMacOSXGetKeyWindowSuccessor(interp, ignore);
+    if (successor) {
+	TkWindow *winPtr= TkMacOSXGetTkWindow(successor);
+	[successor makeKeyAndOrderFront:NSApp];
+	/* Set the menubar for the new front window. */
+	if (winPtr->wmInfoPtr &&
+	    winPtr->wmInfoPtr->menuPtr &&
+	    winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
+	    TKMenu *menu = (TKMenu *) winPtr->wmInfoPtr->menuPtr->platformData;
+	    [NSApp tkSetMainMenu:menu];
+	    [NSApp setTkEventTarget: winPtr];
 	}
-	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
-	    continue;
-	}
-	wmPtr = winPtr->wmInfoPtr;
-	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
-		      wmPtr->hints.initial_state != WithdrawnState);
-	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
-	    TKMenu *menu;
-	    [w makeKeyAndOrderFront:NSApp];
-	    /* Set the menubar for the new front window. */
-	    if (winPtr->wmInfoPtr &&
-		winPtr->wmInfoPtr->menuPtr &&
-		winPtr->wmInfoPtr->menuPtr->mainMenuPtr) {
-		menu = (TKMenu *) winPtr->wmInfoPtr->menuPtr->platformData;
-		[NSApp tkSetMainMenu:menu];
-		[NSApp setTkEventTarget: winPtr];
-	    }
-	    return;
-	}
+    } else {
+	/*
+	 * No window can become key: show the menubar of the main window, which
+	 * is all that an application without visible windows offers.
+	 */
+	TkMacOSXInstallMainMenubar(interp);
     }
-
-    /*
-     * No window can become key: show the menubar of the main window, which
-     * is all that an application without visible windows offers.
-     */
-
-    TkMacOSXInstallMainMenubar(interp);
 }
 
 /*
