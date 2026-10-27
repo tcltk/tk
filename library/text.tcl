@@ -123,7 +123,7 @@ bind Text <<SelectNextLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+    tk::TextSetCursor %W [tk::TextPrevWord %W insert]
 }
 bind Text <<NextWord>> {
     tk::TextSetCursor %W [tk::TextNextWord %W insert]
@@ -135,7 +135,7 @@ bind Text <<NextPara>> {
     tk::TextSetCursor %W [tk::TextNextPara %W insert]
 }
 bind Text <<SelectPrevWord>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+    tk::TextKeySelect %W [tk::TextPrevWord %W insert]
 }
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextSelectNextWord %W insert]
@@ -364,7 +364,7 @@ bind Text <<Redo>> {
 
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+	tk::TextSetCursor %W [tk::TextPrevWord %W insert]
     }
 }
 bind Text <Meta-d> {
@@ -389,12 +389,12 @@ bind Text <Meta-greater> {
 }
 bind Text <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 
@@ -1232,6 +1232,18 @@ proc ::tk::TextNextWord {w start} {
 	    tk::startOfNextWord
 }
 
+# ::tk::TextPrevWord --
+# Returns the index of the start of the word before a given position in
+# the text.
+#
+# Arguments:
+# w -		The text window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::TextPrevWord {w start} {
+    TextPrevPos $w $start tk::startOfPreviousWord end+1
+}
+
 # ::tk::TextSelectNextWord --
 # Returns the index of the next end-of-word position after a given
 # position in the text.
@@ -1276,13 +1288,15 @@ proc ::tk::TextNextPos {w start op} {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 # op -		Function to use to find next position.
+# index -	Index to pass to the function: "end" is the character before
+#		the starting position, "end+1" is the starting position.
 
-proc ::tk::TextPrevPos {w start op} {
+proc ::tk::TextPrevPos {w start op {index end}} {
     set text ""
     set cur $start
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
-	set pos [$op $text end [$w locale $cur]]
+	set pos [$op $text $index [$w locale $cur]]
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
