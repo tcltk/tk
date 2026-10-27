@@ -153,6 +153,7 @@ to the userbase.
  - ["wm forget" did not release the menubar of the toplevel](https://core.tcl-lang.org/tk/tktview/351552)
  - ["wm manage" is deficient and flickering](https://core.tcl-lang.org/tk/tktview/281753)
  - [Canvas inconsistently draws lines on Windows](https://core.tcl-lang.org/tk/tktview/220895)
+ - [-stipple option for canvas text item disrupts positioning](https://core.tcl-lang.org/tk/tktview/220796)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
