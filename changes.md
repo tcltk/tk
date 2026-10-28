@@ -148,6 +148,7 @@ to the userbase.
  - [Busy canvas grinds after cursor change](https://core.tcl-lang.org/tk/tktview/195483)
  - [Menu geometry info wrong if cascaded](https://core.tcl-lang.org/tk/tktview/911951)
  - [Document undefined bindings](https://core.tcl-lang.org/tk/tktview/853414)
+ - [Stipple patterns don't work in arc/oval items on Windows](https://core.tcl-lang.org/tk/tktview/220787)
  - [no longer replace "::" in manual page with "_" on installation](https://core.tcl-lang.org/tk/tktview/360434)
  - [entryconfigure destroys submenus](https://core.tcl-lang.org/tk/tktview/172305)
  - [Named font late creation](https://core.tcl-lang.org/tk/tktview/c81e0c)
