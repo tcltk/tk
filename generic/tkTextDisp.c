@@ -1311,6 +1311,203 @@ IsEntirelyElidedLine(
 /*
  *----------------------------------------------------------------------
  *
+ * ChunkBidiDir --
+ *
+	Tri-state version of ChunkIsRtl: returns the strong bidi direction
+	of a chunk.  0 = neutral (no strong direction), 1 = LTR, 2 = RTL.
+	The strong ranges mirror ChunkIsRtl.
+ *
+ * Results:
+	0, 1 or 2 as described above.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ChunkBidiDir(
+    const char *chars,
+    Tcl_Size numBytes)
+{
+    const char *p = chars;
+    const char *end = chars + numBytes;
+
+    if (chars == NULL) {
+	return 0;
+    }
+    while (p < end) {
+	int ch;
+	Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+
+	if (chLen <= 0) {
+	    break;
+	}
+	/* Hebrew, Arabic, Syriac, NKo, Thaana, Samaritan and supplements */
+	if (ch >= 0x0590 && ch <= 0x08FF) {
+	    return 2;
+	}
+	/* Hebrew and Arabic presentation forms */
+	if (ch >= 0xFB1D && ch <= 0xFEFF) {
+	    return 2;
+	}
+	/* Historical RTL scripts */
+	if (ch >= 0x10800 && ch <= 0x10FFF) {
+	    return 2;
+	}
+	/* Any other letter is a strong LTR for our purposes. */
+	if (Tcl_UniCharIsAlpha(ch)) {
+	    return 1;
+	}
+	p += chLen;
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * BidiReorderChunks --
+ *
+	Reorder the chunks of a display line per UAX #9, so that the visual
+	placement of tag-separated chunks of RTL text matches the reading
+	order.  LayoutDLine lays chunks out left-to-right in logical order,
+	and each RTL chunk is shaped right-to-left by the platform font
+	backend; without this reordering, a tag - the "sel" tag included -
+	which splits an RTL line places the chunks left-to-right while each
+	of them is drawn right-to-left, which scrambles the line layout and
+	makes the mouse selection "dance" while dragging.  This is the
+	chunk-granularity port of the approach of the revised text widget
+	[e7c85cd941]: resolve the bidi level of each chunk, then apply rule
+	L2 by reversing each maximal run of RTL chunks.
+ *
+	Simplifications (deliberate, for a first fix): the paragraph base
+	level is always LTR (0), so RTL paragraphs whose text is entirely in
+	one chunk are unaffected (the font backend already shapes the whole
+	run); non-character chunks (tabs, images, windows, insertion cursor)
+	never move, because their x positions come from tab stops or are
+	zero-width; European numbers are treated as neutrals.
+ *
+ * Results:
+	None.
+ *
+ * Side effects:
+	The x positions of the chunks of RTL runs of dlPtr are reassigned.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+BidiReorderChunks(
+    DLine *dlPtr)				/* Display line to reorder. */
+{
+    TkTextDispChunk *chunkPtr;
+    TkTextDispChunk **chunks;
+    int *dir;
+    int nChunks = 0, i, j, n;
+
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    	chunkPtr = chunkPtr->nextPtr) {
+	nChunks++;
+    }
+    if (nChunks < 2) {
+	return;
+    }
+
+    chunks = (TkTextDispChunk **)Tcl_Alloc(nChunks * sizeof(TkTextDispChunk *));
+    dir = (int *)Tcl_Alloc(nChunks * sizeof(int));
+
+    i = 0;
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    	chunkPtr = chunkPtr->nextPtr) {
+	chunks[i] = chunkPtr;
+	dir[i] = -1;
+	if (chunkPtr->displayProc == CharDisplayProc
+			&& chunkPtr->clientData != NULL) {
+	    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+
+	    dir[i] = ChunkBidiDir(ciPtr->chars, ciPtr->numBytes);
+	}
+	i++;
+    }
+
+    /*
+     * Process each maximal group of consecutive char chunks.
+     */
+
+    for (i = 0; i < nChunks; ) {
+	int gStart, gEnd, nLo, nHi, before, after, d;
+
+	if (dir[i] < 0) {
+	    i++;
+	    continue;
+	}
+	gStart = i;
+	for (gEnd = i; gEnd + 1 < nChunks && dir[gEnd + 1] >= 0; gEnd++) {
+	    ;
+	}
+
+	/*
+	 * Resolve neutrals (UAX #9 N1/N2, simplified): a maximal run of
+	 * neutral chunks between two chunks of the same strong direction
+	 * takes that direction, otherwise the LTR base level.
+	 */
+
+	for (n = gStart; n <= gEnd; n++) {
+	    if (dir[n] != 0) {
+		continue;
+	    }
+	    for (nLo = n; nLo <= gEnd && dir[nLo] == 0; nLo++) {
+		;
+	    }
+	    nLo--;
+	    for (nHi = nLo; nHi <= gEnd && dir[nHi] == 0; nHi++) {
+		;
+	    }
+	    nHi--;
+	    before = (nLo > gStart) ? dir[nLo - 1] : 0;
+	    after = (nHi < gEnd) ? dir[nHi + 1] : 0;
+	    d = (before != 0 && before == after) ? before : 1;
+	    for (j = nLo; j <= nHi; j++) {
+		dir[j] = d;
+	    }
+	    n = nHi;
+	}
+
+	/*
+	 * Levels and rule L2 (chunk granularity): reverse each maximal run
+	 * of RTL chunks, reassigning their x positions in visual order.  The
+	 * run keeps its left edge and its total width, so the chunk
+	 * positions after the run, and the line length, are unaffected.
+	 */
+
+	for (n = gStart; n <= gEnd; n++) {
+	    int x, w, runEnd;
+
+	    if (dir[n] != 2) {
+		continue;
+	    }
+	    for (runEnd = n; runEnd + 1 <= gEnd && dir[runEnd + 1] == 2;
+	    	    	runEnd++) {
+		;
+	    }
+	    x = chunks[n]->x;
+	    w = 0;
+	    for (j = runEnd; j >= n; j--) {
+		chunks[j]->x = x + w;
+		w += chunks[j]->width;
+	    }
+	    n = runEnd;
+	}
+
+	i = gEnd + 1;
+    }
+
+    Tcl_Free(chunks);
+    Tcl_Free(dir);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * LayoutDLine --
  *
  *	This function generates a single DLine structure for a display line
@@ -1973,6 +2170,15 @@ LayoutDLine(
      */
 
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
+
+    /*
+     * Reorder the chunks of the line according to the bidi levels, so
+     * that tag-split RTL chunks are placed in visual order (see
+     * [e7c85cd941] for the revised text widget equivalent).  No chunk
+     * width changes, so the line length remains valid.
+     */
+
+    BidiReorderChunks(dlPtr);
 
     return dlPtr;
 }
@@ -8260,7 +8466,24 @@ TkTextDLineInfo(
 	return false;
     }
 
-    dlx = (dlPtr->chunkPtr != NULL? dlPtr->chunkPtr->x: 0);
+    /*
+     * The left edge of the line is the leftmost chunk: BidiReorderChunks
+     * may have put the first chunk of the list on the right side of an
+     * RTL line, so scanning the chunks for the minimum x is required.
+     */
+
+    dlx = 0;
+    if (dlPtr->chunkPtr != NULL) {
+	TkTextDispChunk *chunkPtr;
+
+	dlx = dlPtr->chunkPtr->x;
+	for (chunkPtr = dlPtr->chunkPtr->nextPtr; chunkPtr != NULL;
+		chunkPtr = chunkPtr->nextPtr) {
+	    if (chunkPtr->x < dlx) {
+		dlx = chunkPtr->x;
+	    }
+	}
+    }
     *xPtr = dInfoPtr->x - dInfoPtr->curXPixelOffset + dlx;
     *widthPtr = dlPtr->length - dlx;
     *yPtr = dlPtr->y;
@@ -8904,6 +9127,19 @@ CharChunkMeasureChars(
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
 			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
 
+	/*
+	 * The Windows backend (Uniscribe) can return a non-monotonic
+	 * position when the measured range ends with a control character
+	 * such as '\n': the returned right edge may be to the left of the
+	 * span start, producing chunks with negative width (e.g. the
+	 * newline chunk), which corrupts DLine length and justification.
+	 * Clamp to the span start so such characters get zero width.
+	 */
+
+	if (*nextXPtr < startX) {
+	    *nextXPtr = startX;
+	}
+
 	if (fit < bstart) {
 	    return 0;
 	} else {
@@ -8996,6 +9232,19 @@ CharChunkMeasureChars(
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
 			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
+
+	/*
+	 * The Windows backend (Uniscribe) can return a non-monotonic
+	 * position when the measured range ends with a control character
+	 * such as '\n': the returned right edge may be to the left of the
+	 * span start, producing chunks with negative width (e.g. the
+	 * newline chunk), which corrupts DLine length and justification.
+	 * Clamp to the span start so such characters get zero width.
+	 */
+
+	if (*nextXPtr < startX) {
+	    *nextXPtr = startX;
+	}
 
 	if (fit < bstart) {
 	    return 0;
@@ -9406,16 +9655,56 @@ CharBboxProc(
     if (ciPtr->isRtl) {
 	/* RTL: mirror the measurement. */
 	int xEnd, xStart;
+	int anchorX = chunkPtr->x;
+	int mirrorX = chunkPtr->x;
+	int mirrorW = chunkPtr->width;
+
+	/*
+	 * With base chunks, the measurement of a chunk is anchored at the
+	 * base chunk (see CharChunkMeasureChars: startX only displaces the
+	 * span, the advance is always computed from the start of the base
+	 * chars), so xEnd and xStart are cumulative from the base chunk.
+	 * When the base chunk itself is RTL, BidiReorderChunks has placed
+	 * it at the right edge of the line's RTL run: the cumulative
+	 * measurement must then be mirrored around the right edge of that
+	 * run, which is the right edge of the base chunk.
+	 */
+
+	if (ciPtr->baseChunkPtr != NULL
+		&& ciPtr->baseChunkPtr->clientData != NULL) {
+	    BaseCharInfo *baseCiPtr = (BaseCharInfo *)
+		    ciPtr->baseChunkPtr->clientData;
+
+	    anchorX = ciPtr->baseChunkPtr->x;
+	    if (baseCiPtr->ci.isRtl) {
+		mirrorX = anchorX;
+		mirrorW = ciPtr->baseChunkPtr->width;
+	    }
+	}
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, nextIndex,
 		chunkPtr->x, -1, 0, &xEnd);
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 		chunkPtr->x, -1, 0, &xStart);
 
-	*xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
+	*xPtr = mirrorX + mirrorW - (xEnd - anchorX);
 	*widthPtr = xEnd - xStart;
 
-	if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
-	if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
+	/*
+	 * Do NOT clamp *xPtr to the chunk box: with base chunks the
+	 * mirrored position is expressed in the line's coordinate space
+	 * and legitimately falls outside the chunk that merely carries
+	 * the character's style (e.g. a selection-tag chunk placed at
+	 * the right edge of an RTL line while its characters render
+	 * further left). Clamping x to the chunk box broke
+	 * before/after-selection position consistency ("dancing
+	 * selection"). Only guard against nonsensical widths.
+	 */
+
+	if (*widthPtr < 0) {
+	    *widthPtr = 0;
+	} else if (*xPtr < maxX && *xPtr + *widthPtr > maxX) {
+	    *widthPtr = maxX - *xPtr;
+	}
     } else
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
     {
