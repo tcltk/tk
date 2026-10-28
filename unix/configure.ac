@@ -463,7 +463,7 @@ if test $tk_aqua = no; then
 	else
 	    found_cups=yes
 	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
-	    CUPS_LIBS=`cups-config --libs`
+	    CUPS_LIBS="`cups-config --ldflags` `cups-config --libs`"
 	fi
 	AC_MSG_RESULT([$found_cups])
 	dnl make sure that compiling against CUPS header file doesn't bomb
@@ -477,6 +477,17 @@ if test $tk_aqua = no; then
 		CUPS_CFLAGS=""
 		CUPS_LIBS=""
 	    ],[#include <cups/cups.h>])
+	    if test "$found_cups" = "yes" ; then
+		AC_MSG_CHECKING([whether libcups can be linked])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <cups/cups.h>]],
+			[[cupsFreeDests(0, NULL);]])],
+		    [AC_MSG_RESULT([yes])], [
+		    AC_MSG_RESULT([no])
+		    found_cups=no
+		    CUPS_CFLAGS=""
+		    CUPS_LIBS=""
+		])
+	    fi
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
 	fi
