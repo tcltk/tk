@@ -8591,3 +8591,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-28 (bug) [2e3d6c] X11: a posted menu stays open when the application loses the focus or its toplevel moves (storchaka)
 
 2026-10-28 (bug) [134833] High number of text widgets block idle queue (storchaka)
+
+2026-10-28 (bug) [042da6] Pendulum demo text not visible under dark mode (storchaka)

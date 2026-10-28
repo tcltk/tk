@@ -82,7 +82,7 @@ interp alias {} doInsert {} $w.txt insert end	;# Make bindings easy to write
 grid $t.button $t.check $t.menu $t.combo -in $t.contents -padx 2 -pady 4 -sticky ns
 grid $t -sticky ew
 grid $w.sep -sticky ew
-grid $w.msg -sticky ew
+grid $w.msg -sticky ""
 grid $w.txt -sticky nsew
 grid rowconfigure $w $w.txt -weight 1
 grid columnconfigure $w $w.txt -weight 1
