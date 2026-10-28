@@ -670,6 +670,7 @@ DEMO_DIR
 INSTALL_MSGS
 INSTALL_LIBRARIES
 TK_ZIP_FILE
+TCL_SHARED_BUILD
 ZIPFS_BUILD
 ZIP_INSTALL_OBJS
 ZIP_PROG_VFSSEARCH
@@ -2973,8 +2974,13 @@ else case e in #(
 		    `ls -r $dir/tclsh* 2> /dev/null` ; do
 		if test x"$ac_cv_path_tclsh" = x ; then
 		    if test -f "$j" ; then
-			ac_cv_path_tclsh=$j
-			break
+			if ! echo 'if {![package vsatisfies [info tclversion] 8.6-]} { exit 1 }' | $j; then
+			    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: rejected $j - insufficient version, 8.6 or later is required." >&5
+			      printf %s "rejected $j - insufficient version, 8.6 or later is required. " >&6; }
+			else
+			    ac_cv_path_tclsh=$j
+			    break
+			fi
 		    fi
 		fi
 	    done
@@ -9768,6 +9774,7 @@ printf '%s\n' "no" >&6; }
 INSTALL_LIBRARIES=install-libraries
 INSTALL_MSGS=install-msgs
 fi
+
 
 
 

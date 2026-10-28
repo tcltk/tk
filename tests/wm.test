@@ -2276,6 +2276,21 @@ test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints 
 } -cleanup {
     deleteWindows
 } -result {0 0 1 1 {.t1 .t2}}
+test wm-transient-8.2 {deiconify transient withdrawn before its container
+	was mapped, Bug 562c3a3da5} -setup {
+    deleteWindows
+} -body {
+    toplevel .t1
+    toplevel .t2
+    wm transient .t2 .t1
+    wm withdraw .t2
+    update
+    wm deiconify .t2
+    update
+    list [wm state .t2] [winfo ismapped .t2]
+} -cleanup {
+    deleteWindows
+} -result {normal 1}
 
 
 ### wm state ###
@@ -2642,6 +2657,26 @@ test wm-manage-1.8 {unmanaging a toplevel} -setup {
 } -cleanup {
     deleteWindows
 } -result {wm .t.t pack .t wm .t.t}
+test wm-manage-1.9 {managed frame is not mapped before idle} -constraints {
+    notAqua
+} -setup {
+    set result [list]
+} -body {
+    toplevel .t
+    frame .t.f -width 100 -height 100
+    pack .t.f
+    update
+    bind .t.f <Map> {lappend result map}
+    wm manage .t.f
+    wm withdraw .t.f
+    update
+    lappend result [winfo ismapped .t.f]
+    wm deiconify .t.f
+    update
+    lappend result [winfo ismapped .t.f]
+} -cleanup {
+    deleteWindows
+} -result {0 map 1}
 
 test wm-forget-1.1 "bug #2009788: forget toplevel can cause crash" -body {
     toplevel .parent
@@ -2760,6 +2795,50 @@ test wm-forget-2.1 {bug [c77b426dc9] - panic with [menu]+[wm forget]} -constrain
     destroy .m
     unset res
 } -result {1 1}
+test wm-forget-2.2 {bug [3515522fff] - crash with menubar + [wm forget]} -setup {
+    catch {destroy .t .m}
+} -body {
+    menu .m
+    menu .m.system
+    .m.system add command -label test
+    .m add cascade -label System -menu .m.system
+    toplevel .t -menu .m
+    update
+    wm forget .t
+    update
+    wm manage .t
+    update
+    wm forget .t
+    update
+    destroy .t
+    update
+    destroy .m
+    update
+    winfo exists .m
+} -cleanup {
+    destroy .t .m
+} -result 0
+test wm-forget-2.3 {bug [3515522fff] - [wm forget] releases the menubar} -setup {
+    catch {destroy .t .m}
+} -body {
+    menu .m
+    .m add command -label x
+    toplevel .t -menu .m
+    update
+    wm forget .t
+    update
+    destroy .m
+    menu .m
+    .m add command -label y
+    update
+    set res [list [winfo children .t]]
+    wm manage .t
+    update
+    lappend res [llength [winfo children .t]]
+} -cleanup {
+    destroy .t .m
+    unset -nocomplain res
+} -result {{} 1}
 
 #
 # TESTFILE CLEANUP

@@ -88,13 +88,13 @@ enum {
     TkWindow *newFocus = NULL;
     int win_x, win_y;
     unsigned int buttonState = 0;
-    Bool isTestingEvent = NO;
-    Bool isMotionEvent = NO;
-    Bool isOutside = NO;
-    Bool firstDrag = NO;
+    bool isTestingEvent = false;
+    bool isMotionEvent = false;
+    bool isOutside = false;
+    bool firstDrag = false;
     TkWindow *pointerWindow = nil;
-    static Bool ignoreDrags = NO;
-    static Bool ignoreUpDown = NO;
+    static bool ignoreDrags = false;
+    static bool ignoreUpDown = false;
     static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -113,19 +113,19 @@ enum {
     if (![eventWindow isMemberOfClass:[TKWindow class]] &&
 	![eventWindow isMemberOfClass:[TKPanel class]]) {
 	if ([theEvent timestamp] == 0) {
-	    isTestingEvent = YES;
+	    isTestingEvent = true;
 	    eventWindow = [NSApp keyWindow];
 	}
 	if (eventType == NSLeftMouseDragged ||
 	    eventType == NSMouseMoved) {
 	    eventWindow = [NSApp keyWindow];
-	    isMotionEvent = YES;
+	    isMotionEvent = true;
 	}
 	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
 	}
     } else if (!NSPointInRect(location, [contentView bounds])) {
-	isOutside = YES;
+	isOutside = true;
     }
     button = [theEvent buttonNumber] + Button1;
     if ((button & -2) == Button2) {
@@ -140,9 +140,9 @@ enum {
 	buttonState |= Tk_GetButtonMask(button);
 	if (![NSApp tkDragTarget]) {
 	    if (isOutside) {
-		ignoreDrags = YES;
+		ignoreDrags = true;
 	    } else {
-		firstDrag = YES;
+		firstDrag = true;
 	    }
 	}
 	if (ignoreDrags) {
@@ -154,7 +154,7 @@ enum {
 	break;
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
-	isMotionEvent = YES;
+	isMotionEvent = true;
     case NSRightMouseDown:
     case NSOtherMouseDown:
 	buttonState |= Tk_GetButtonMask(button);
@@ -163,7 +163,7 @@ enum {
 	if (![eventWindow isKeyWindow] || isOutside) {
 	    return theEvent;
 	}
-	[NSApp setTkLiveResizeEnded:NO];
+	[NSApp setTkLiveResizeEnded:false];
 	pointerWindow = [NSApp tkEventTarget];
 	break;
     case NSMouseExited:
@@ -175,13 +175,13 @@ enum {
     case NSLeftMouseUp:
 	[NSApp setTkDragTarget: nil];
 	if ([theEvent clickCount] == 2) {
-	    ignoreUpDown = NO;
+	    ignoreUpDown = false;
 	}
 	if (ignoreUpDown) {
 	    return theEvent;
 	}
 	if (ignoreDrags) {
-	    ignoreDrags = NO;
+	    ignoreDrags = false;
 	    return theEvent;
 	}
 	buttonState &= ~Tk_GetButtonMask(Button1);
@@ -226,14 +226,14 @@ enum {
 	 */
 
 	if ([theEvent timestamp] - timestamp > 1) {
-	    ignoreUpDown = NO;
+	    ignoreUpDown = false;
 	}
 	if ([theEvent clickCount] == 2) {
-	    if (ignoreUpDown == YES) {
+	    if (ignoreUpDown == true) {
 		return theEvent;
 	    } else {
 		timestamp = [theEvent timestamp];
-		ignoreUpDown = YES;
+		ignoreUpDown = true;
 	    }
 	}
 	if (!isTestingEvent) {
@@ -247,7 +247,7 @@ enum {
 		return theEvent;
 	    }
 	    if ([NSApp tkLiveResizeEnded]) {
-		[NSApp setTkLiveResizeEnded:NO];
+		[NSApp setTkLiveResizeEnded:false];
 		return theEvent;
 	    }
 	}
@@ -282,7 +282,7 @@ enum {
 	if (eventWindow && eventWindow != [NSApp keyWindow]) {
 	    return theEvent;
 	}
-	isMotionEvent = YES;
+	isMotionEvent = true;
 	break;
     case NSScrollWheel:
 
@@ -570,7 +570,7 @@ enum {
 	static unsigned long scrollCounter = 0;
 	unsigned delta;
 	CGFloat Delta;
-	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
+	bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
 	xEvent.xbutton.x = win_x;
 	xEvent.xbutton.y = win_y;

@@ -2345,12 +2345,14 @@ TkWmMapWindow(
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	/*
-	 * Don't map a transient if the container is not mapped.
+	 * Don't map a transient if the container is not mapped, but create
+	 * its wrapper withdrawn, so that a later "wm deiconify" can map it.
+	 * [Bug 562c3a3da5]
 	 */
 
 	if (wmPtr->containerPtr != NULL && !Tk_IsMapped(wmPtr->containerPtr)) {
 	    wmPtr->hints.initial_state = WithdrawnState;
-	    return;
+	    Tk_MakeWindowExist((Tk_Window) wmPtr->containerPtr);
 	}
     } else {
 	if (wmPtr->hints.initial_state == WithdrawnState) {
@@ -2569,7 +2571,7 @@ static void CheckForPointer(TkWindow *winPtr)
 
     POINT mouse;
     int x, y;
-    unsigned int state = TkWinGetModifierState();
+    unsigned int state = TkWinGetPointerState();
     TkWindow **windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
     TkWindow **w;
     TkGetPointerCoords(NULL, &x, &y);
@@ -8355,6 +8357,25 @@ WmProc(
 	result = 0;
 	goto done;
 
+    case WM_NCLBUTTONDOWN:
+    case WM_NCLBUTTONDBLCLK:
+    case WM_NCMBUTTONDOWN:
+    case WM_NCMBUTTONDBLCLK:
+    case WM_NCRBUTTONDOWN:
+    case WM_NCRBUTTONDBLCLK:
+    case WM_NCXBUTTONDOWN:
+    case WM_NCXBUTTONDBLCLK:
+	/*
+	 * A button pressed in the non-client area can still be down after
+	 * the default processing if a double-click on the title bar has
+	 * maximized or closed the window. Do not report it to the Tk window
+	 * which is now under the pointer. [Bug 1391053]
+	 */
+
+	result = DefWindowProcW(hwnd, message, wParam, lParam);
+	TkWinNonClientButtons(TkWinGetModifierState());
+	goto done;
+
     case WM_NCHITTEST: {
 	winPtr = GetTopLevel(hwnd);
 	if (winPtr && (TkGrabState(winPtr) == TK_GRAB_EXCLUDED)) {
@@ -8569,6 +8590,13 @@ TkWinGetWrapperWindow(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
+    /*
+     * Could be a Frame (i.e. not a Toplevel), e.g. after [wm forget].
+     */
+
+    if (winPtr->wmInfoPtr == NULL) {
+	return NULL;
+    }
     return winPtr->wmInfoPtr->wrapper;
 }
 
@@ -9121,10 +9149,18 @@ RemapWindows(
 
 int
 TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
-    HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    HWND hwnd;
     HRESULT result;
     long long answer = 0; /* Windows cares about the alignment. */
 
+    /*
+     * A window which was never mapped may have no HWND yet.
+     */
+
+    if (Tk_WindowId(tkwin) == None) {
+	Tk_MakeWindowExist(tkwin);
+    }
+    hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
     result = DwmGetWindowAttribute(
 	GetAncestor(hwnd, GA_ROOT),
 	DWMWA_USE_IMMERSIVE_DARK_MODE,

@@ -250,7 +250,7 @@ InitHashTables(void)
 static void
 UpdateKeymaps()
 {
-    static Bool keymapInitialized = false;
+    static bool keymapInitialized = false;
     Tcl_HashEntry *hPtr;
     int virt, index, dummy;
 

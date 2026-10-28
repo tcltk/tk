@@ -99,7 +99,7 @@ TkMacOSXUpdatePointerAfterMap(
     TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
     if (toplevelPtr &&
 	toplevelPtr->wmInfoPtr &&
-	(toplevelPtr->wmInfoPtr->flags & WM_HIDDEN)) {
+	(toplevelPtr->wmInfoPtr->flags & WM_IS_HIDDEN)) {
 	return;
     }
     Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);

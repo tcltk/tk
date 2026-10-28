@@ -106,6 +106,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [NSApp setTkEventTarget: winPtr];
 
 	    /*
+	     * Put the menu of the new key window into the menubar now: the
+	     * ActivateNotify event that also does it waits in the Tcl event
+	     * queue until the application services it.
+	     */
+
+	    if (!Tk_IsEmbedded(winPtr) && !(winPtr->flags & TK_ALREADY_DEAD)) {
+		TkMacOSXInstallWindowMenubar(winPtr);
+	    }
+
+	    /*
 	     * Call Tk_UpdatePointer if the pointer is in the window.
 	     */
 
@@ -142,7 +152,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    BOOL movedOnly = [[notification name]
+    bool movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -192,7 +202,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     // operation has completed.  If the window is iconified by clicking on its
     // dock icon, as opposed to calling wm deiconify, then the Tk state of
     // the window needs to be updated.  That is the purpose of this method.
-    // This includes clearing the WM_HIDDEN flag..
+    // This includes clearing the WM_IS_HIDDEN flag..
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
@@ -203,7 +213,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (!winPtr) {
 	return;
     }
-    winPtr->wmInfoPtr->flags &= ~WM_HIDDEN;
+    winPtr->wmInfoPtr->flags &= ~WM_IS_HIDDEN;
     if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
@@ -997,7 +1007,7 @@ ExposeRestrictProc(
 {
     self = [super initWithFrame:frame];
     if (self) {
-	self.wantsLayer = YES;
+	self.wantsLayer = true;
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;

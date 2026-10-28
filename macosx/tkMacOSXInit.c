@@ -424,7 +424,7 @@ TCL_NORETURN void TkpExitProc(
      */
 
     Tcl_Finalize();
-    if (doCleanup == YES) {
+    if (doCleanup) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
     exit((int)PTR2INT(clientdata)); /* Convince the compiler that we don't return. */
@@ -478,7 +478,7 @@ static void showRootWindow(void *clientData) {
     TkWindow *winPtr = TkMacOSXGetTkWindow(root);
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (wmPtr->hints.initial_state == NormalState &
-	(wmPtr->flags & WM_HIDDEN) == 0) {
+	(wmPtr->flags & WM_IS_HIDDEN) == 0) {
         [(TKWindow *)root tkOrderFront];
     }
     [NSApp activateIgnoringOtherApps: YES];

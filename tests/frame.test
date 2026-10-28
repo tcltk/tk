@@ -1150,14 +1150,14 @@ test frame-12.3 {FrameWorldChanged procedure} -setup {
     deleteWindows
 } -body {
     # Check reaction on font change
-    font create myfont -family courier -size 10
+    font create myfont -family courier -size -13
     labelframe .f -font myfont -text Mupp
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
     update
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
-    font configure myfont -size 20
+    font configure myfont -size -27
     update  ; # services the "TheWorldHasChanged" event, queues "TkWorldChanged" events
     update  ; # services the queued "TkWorldChanged" events
     set h2 [font metrics myfont -linespace]

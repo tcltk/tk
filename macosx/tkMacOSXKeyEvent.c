@@ -43,7 +43,7 @@
 static Tk_Window keyboardGrabWinPtr = NULL; /* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil; /* Its underlying NSWindow.*/
 static NSModalSession modalSession = nil;
-static BOOL processingCompose = NO;
+static bool processingCompose = false;
 static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
@@ -69,13 +69,13 @@ static NSUInteger textInputModifiers;
     XEvent xEvent;
     MacKeycode macKC;
     UniChar keychar = 0;
-    Bool can_input_text, has_modifiers = NO, use_text_input = NO;
+    bool can_input_text, has_modifiers = false, use_text_input = false;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
 
     if (nsEvArray == nil) {
 	nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
-	processingCompose = NO;
+	processingCompose = false;
     }
     if (!winPtr) {
 	return theEvent;
@@ -142,7 +142,7 @@ static NSUInteger textInputModifiers;
 	     */
 
 	    if (!(modifiers & NSCommandKeyMask)) {
-		use_text_input = YES;
+		use_text_input = true;
 	    }
 	}
 
@@ -214,7 +214,7 @@ static NSUInteger textInputModifiers;
 
 #if (NS_KEYLOG)
     TKLog(@"keyDown: %s compose sequence.\n",
-	  processingCompose == YES ? "Continue" : "Begin");
+	  processingCompose ? "Continue" : "Begin");
 #endif
 
     /*
@@ -226,7 +226,7 @@ static NSUInteger textInputModifiers;
 	(type == NSKeyDown && can_input_text && !has_modifiers &&
 	 IS_PRINTABLE(keychar))
 	) {
-	use_text_input = YES;
+	use_text_input = true;
     }
 
     /*
@@ -350,7 +350,7 @@ static NSUInteger textInputModifiers;
     NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window)winPtr;
-    Bool sendingIMEText = NO;
+    bool sendingIMEText = false;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
 	[aString string] : aString;
@@ -365,7 +365,7 @@ static NSUInteger textInputModifiers;
      */
 
     if (privateWorkingText != nil) {
-	sendingIMEText = YES;
+	sendingIMEText = true;
 	[self deleteWorkingText];
     }
 
@@ -499,7 +499,7 @@ static NSUInteger textInputModifiers;
      */
 
     Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
-    processingCompose = YES;
+    processingCompose = true;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
@@ -529,7 +529,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"unmarkText");
     }
     [self deleteWorkingText];
-    processingCompose = NO;
+    processingCompose = false;
 }
 
 /*
@@ -568,7 +568,7 @@ static NSUInteger textInputModifiers;
     if (NS_KEYLOG) {
 	TKLog(@"doCommandBySelector: %@", NSStringFromSelector(aSelector));
     }
-    processingCompose = NO;
+    processingCompose = false;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
@@ -644,7 +644,7 @@ static NSUInteger textInputModifiers;
 
 	[privateWorkingText release];
 	privateWorkingText = nil;
-	processingCompose = NO;
+	processingCompose = false;
 	if (composeWin) {
 	    Tk_SendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
 	}
@@ -657,7 +657,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"cancelComposingText");
     }
     [self deleteWorkingText];
-    processingCompose = NO;
+    processingCompose = false;
 }
 
 @end

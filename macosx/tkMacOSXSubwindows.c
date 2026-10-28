@@ -180,7 +180,7 @@ updatePointerForMap(
 
     if (toplevelPtr &&
 	toplevelPtr->wmInfoPtr &&
-	(toplevelPtr->wmInfoPtr->flags & WM_HIDDEN)) {
+	(toplevelPtr->wmInfoPtr->flags & WM_IS_HIDDEN)) {
 	return;
     }
     Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
@@ -206,7 +206,6 @@ updatePointerForUnmap(
 	top_y = floor(macWin.frame.size.height - local.y);
     int root_x = floor(mouse.x),
 	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
-    bool doUpdatePointer = true;
     int dummy_x, dummy_y;
     Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) toplevelPtr, top_x, top_y,
 					    &dummy_x, &dummy_y);
@@ -280,7 +279,7 @@ XMapWindow(
 		 * visible.  We don't do this for hidden windows.
 		 */
 
-		if ((winPtr->wmInfoPtr->flags & WM_HIDDEN) == 0) {
+		if ((winPtr->wmInfoPtr->flags & WM_IS_HIDDEN) == 0) {
 		    for (int count = 0; count < 20; count++) {
 			if ([[NSApp orderedWindows] firstObject] == win) {
 			    break;
@@ -431,7 +430,7 @@ XUnmapWindow(
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
 
-		    BOOL isOnScreen;
+		    bool isOnScreen;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 			continue;
