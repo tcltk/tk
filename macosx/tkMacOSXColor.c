@@ -28,10 +28,6 @@ static int selectedTabTextIndex;
 static int pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-static NSAppearance *lightAqua = nil;
-static NSAppearance *darkAqua = nil;
-#endif
 
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
@@ -48,13 +44,6 @@ static void initColorTable()
     int index = 0;
     NSColorList *systemColorList = [NSColorList colorListNamed:@"System"];
     NSString *key;
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    if (@available(macOS 10.14, *)) {
-	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
-    }
-#endif
 
     /*
      * Build a hash table for looking up a color by its name.
