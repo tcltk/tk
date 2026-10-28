@@ -27,7 +27,7 @@ ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Four different
 	cities. The fourth one has a drop-down list with more values than\
 	can fit on the screen; the list is shortened to fit on the screen and\
 	can be scrolled."
-pack $w.msg -side top -fill x
+pack $w.msg -side top
 
 ## See Code / Dismiss buttons
 set btns [addSeeDismiss $w.buttons $w {firstValue secondValue ozCity longValue}]

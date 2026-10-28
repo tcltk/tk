@@ -18,18 +18,19 @@ wm iconname $w "ttkbut"
 positionWindow $w
 
 ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Ttk is the new Tk themed widget set. This is a Ttk themed label, and below are three groups of Ttk widgets in Ttk labelframes. The first group are all buttons that set the current application theme when pressed. The second group contains three sets of checkbuttons, with a separator widget between the sets. Note that the “Enabled” button controls whether all the other themed widgets in this toplevel are in the disabled state. The third group has a collection of linked radiobuttons."
-pack $w.msg -side top -fill x
+pack $w.msg -side top
 
 ## See Code / Dismiss
 pack [addSeeDismiss $w.seeDismiss $w {enabled cheese tomato basil oregano happiness}]\
 	-side bottom -fill x
 
-## Add buttons for setting the theme
+## Add buttons for setting the theme.  Take into account that widget names
+## must not start with an upper-case letter.
 ttk::labelframe $w.buttons -text "Buttons"
 foreach theme [lsort [ttk::themes]] {
-    ttk::button $w.buttons.$theme -text $theme \
+    ttk::button $w.buttons.b$theme -text $theme \
 	    -command [list ttk::setTheme $theme]
-    pack $w.buttons.$theme -pady 1.5p
+    pack $w.buttons.b$theme -pady 1.5p
 }
 
 ## Helper procedure for the top checkbutton
