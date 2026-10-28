@@ -335,6 +335,7 @@ KeyDataToUnicode(
     UniCharCount actuallength = 0;
 
     if (keyboardChanged) {
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	TISInputSourceRef currentKeyboardLayout =
 		TISCopyCurrentKeyboardLayoutInputSource();
 
@@ -348,7 +349,8 @@ KeyDataToUnicode(
 	    }
 	    CFRelease(currentKeyboardLayout);
 	}
-	keyboardChanged = 0;
+	[pool drain];
+	keyboardChanged = false;
     }
     if (layoutData) {
 	OptionBits options = 0;
