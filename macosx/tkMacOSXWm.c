@@ -243,21 +243,21 @@ enum appearances {
     APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_AUTO
 };
 
-static Bool wantsToBeTab(NSWindow *macWindow) {
-    Bool result;
+static bool wantsToBeTab(NSWindow *macWindow) {
+    bool result;
     switch ([macWindow tabbingMode]) {
     case NSWindowTabbingModeDisallowed:
-	result = False;
+	result = false;
 	break;
     case NSWindowTabbingModePreferred:
-	result = True;
+	result = true;
 	break;
     case NSWindowTabbingModeAutomatic:
 	result = ([NSWindow userTabbingPreference] ==
 		NSWindowUserTabbingPreferenceAlways);
 	break;
     default:
-	result = False;
+	result = false;
 	break;
     }
     return result;
@@ -859,7 +859,7 @@ void TkMacOSXAssignNewKeyWindow(
     [NSApp setTkEventTarget: NULL];
     for (NSWindow *w in [NSApp orderedWindows]) {
 	WmInfo *wmPtr;
-	BOOL isOnScreen;
+	bool isOnScreen;
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
 	    || !winPtr->wmInfoPtr
@@ -1195,7 +1195,7 @@ static void UpdatePointerWinAfterDestroy (
     int root_x = floor(mouse.x),
 	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 
-    Bool doUpdatePointer = True;
+    bool doUpdatePointer = true;
     if (target) {
 	/*
 	 * Step 2: Find the Tk internal window within the toplevel that will contain
@@ -1208,7 +1208,7 @@ static void UpdatePointerWinAfterDestroy (
 	    * The parent of the Tk internal window is in the process of being destroyed.
 	    * Don't call Tk_UpdatePointer in this case.
 	    */
-	    doUpdatePointer = False;
+	    doUpdatePointer = false;
 	}
     }
     if (doUpdatePointer) {
@@ -1386,6 +1386,7 @@ TkWmDeadWindow(
 	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, deadView);
 	Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, deadView);
 	CGContextRelease(deadView.tkLayerBitmapContext);
+	deadView.tkLayerBitmapContext = NULL;
 	[deadNSWindow close];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
@@ -1546,7 +1547,7 @@ Tk_WmObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1878,12 +1879,8 @@ WmSetAttribute(
 		    styleMaskValue |= NSWindowStyleMaskNonactivatingPanel;
 		}
 	    }
-	    if (styleMaskValue & NSWindowStyleMaskFullSizeContentView) {
-		macWindow.titlebarAppearsTransparent = YES;
-	    } else {
-		macWindow.titlebarAppearsTransparent = NO;
-	    }
-	} else {
+	    macWindow.titlebarAppearsTransparent = (styleMaskValue & NSWindowStyleMaskFullSizeContentView) != 0;
+} else {
 	    return TCL_ERROR;
 	}
 	NSRect oldFrame = [macWindow frame];
@@ -3109,7 +3106,7 @@ WmIconifyCmd(
 		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     } else if (wmPtr->container != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3471,7 +3468,7 @@ WmIconwindowCmd(
 		    "can't use %s as icon window: not at top level",
 		    Tk_PathName(tkwin2)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "TOPLEVEL",
-		    NULL);
+		    (char *)NULL);
 	    return TCL_ERROR;
 	}
 	wmPtr2 = ((TkWindow *)tkwin2)->wmInfoPtr;
@@ -4274,7 +4271,7 @@ WmStateCmd(
 			"can't iconify \"%s\": override-redirect flag is set",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
-			"OVERRIDE_REDIRECT", NULL);
+			"OVERRIDE_REDIRECT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (wmPtr->container != NULL) {
@@ -4282,7 +4279,7 @@ WmStateCmd(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "TRANSIENT",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    TkpWmSetState(winPtr, IconicState);

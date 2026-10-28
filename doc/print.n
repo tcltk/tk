@@ -7,11 +7,13 @@
 
 .TH tk print n "" Tk "Tk Built-in Commands"
 .so man.macros
+.BS
 .SH NAME
 print \- Print canvas and text widgets using native dialogs and APIs.
 .SH SYNOPSIS
 \fBtk print \fIwindow\fR
 .
+.BE
 .SH DESCRIPTION
 .PP
 The \fBtk print\fR command posts a dialog that allows users to print output

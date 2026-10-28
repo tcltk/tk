@@ -577,6 +577,12 @@ TkpDisplayScale(
 
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
+	/*
+	 * Clear the flag before calling the command, or the command is called
+	 * again if the scale is redrawn while the command runs.
+	 */
+
+	scalePtr->flags &= ~INVOKE_COMMAND;
 	Tcl_Preserve(interp);
 	if (TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {

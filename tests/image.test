@@ -305,11 +305,11 @@ test image-5.5 {Tk_ImageCmd procedure, "type" option} -constraints {
 } -returnCodes error -result {image "myimage" does not exist}
 
 # Returns bitmap/photo on Wayland
-test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {testImageType && !wayland} -body {
+test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {testImageType notWayland} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
 # Fails/hangs on Wayland 
-test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints !wayland -body {
+test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints notWayland -body {
     lsort [image types]
 } -match glob -result {bitmap*photo test}
 
@@ -576,7 +576,7 @@ test image-13.2 {DeleteImage procedure} -constraints testImageType -setup {
 } -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" does not exist} | {} |}
 
 # This hangs on Wayalnd 
-test image-14.1 {image command vs hidden commands} -constraints !wayland -body {
+test image-14.1 {image command vs hidden commands} -constraints notWayland -body {
     catch {image delete hidden}
     set l [imageNames]
     set h [interp hidden]
@@ -589,7 +589,7 @@ test image-14.1 {image command vs hidden commands} -constraints !wayland -body {
 } -result 1
 
 # This hangs on Wayland
-test image-15.1 {deleting image does not make widgets forget about it} -constraints !wayland  -setup {
+test image-15.1 {deleting image does not make widgets forget about it} -constraints notWayland  -setup {
     .c delete all
     imageCleanup
 } -body {

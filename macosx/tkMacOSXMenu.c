@@ -91,7 +91,7 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static Bool   inPostMenu = false;
+static bool   inPostMenu = false;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -238,7 +238,7 @@ static void invokeMenuIdleTask(void *clientData) {
  * sets the flag and then calls super. See ticket [ead70921a9].
  */
 
-static Bool runMenuCommand = true;
+static bool runMenuCommand = true;
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
     if ([[event characters] length] == 0) {
@@ -827,12 +827,12 @@ TkpConfigureMenuEntry(
 	Tcl_Free(tkColPtr);
     }
     if (gc->foreground != defaultFg) {
-	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc->foreground);
 	[attributes setObject:fgcolor
 		       forKey:NSForegroundColorAttributeName];
     }
     if (gc->background != defaultBg) {
-	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc->background);
 	[attributes setObject:bgcolor
 		       forKey:NSBackgroundColorAttributeName];
     }
@@ -1005,20 +1005,20 @@ TkpPostMenu(
 	inPostMenu = false;
 	return result;
     }
-    if (itemIndex >= numItems) {
-	itemIndex = numItems - 1;
-    }
-    if (itemIndex >= 0) {
-	item = [menu itemAtIndex:itemIndex];
-    }
 
     /*
      * The post commands could have deleted the menu, which means we are dead
      * and should go away.
      */
-
     if (menuPtr->tkwin == NULL) {
 	return TCL_OK;
+    }
+
+    if (itemIndex >= numItems) {
+	itemIndex = numItems - 1;
+    }
+    if (itemIndex >= 0) {
+	item = [menu itemAtIndex:itemIndex];
     }
 
     [menu popUpMenuPositioningItem:item

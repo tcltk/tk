@@ -247,6 +247,7 @@ typedef struct {
 MODULE_SCOPE HWND TkGetMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE HWND TkGetEmbeddedMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE void TkWinCancelMouseTimer(void);
+MODULE_SCOPE void TkWinSuspendPointer(int suspend);
 MODULE_SCOPE int TkWinHandleMenuEvent(HWND *, UINT *, WPARAM *, LPARAM *, LRESULT *);
 MODULE_SCOPE int TkWinHandleMenubarDraw(HWND, UINT, WPARAM, LPARAM, LRESULT *);
 MODULE_SCOPE void TkWinDrawMenubarLine(HWND);
@@ -290,6 +291,8 @@ MODULE_SCOPE int	TkpWmGetState(TkWindow *winPtr);
 MODULE_SCOPE int	TkTranslateWinEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam, LRESULT *result);
 MODULE_SCOPE void	TkWinPointerEvent(HWND hwnd, int x, int y);
+MODULE_SCOPE void	TkWinNonClientButtons(unsigned int buttons);
+MODULE_SCOPE unsigned int TkWinGetPointerState(void);
 
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c

@@ -62,7 +62,7 @@
     statusItem.button.target = self;
     statusItem.button.action = @selector(clickOnStatusItem);
     [statusItem.button sendActionOn : NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp];
-    statusItem.visible = YES;
+    statusItem.visible = true;
     interp = interpreter;
     b1_callback = NULL;
     b3_callback = NULL;
@@ -210,7 +210,7 @@ MacSystrayObjCmd(
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp,
 	    "StatusItem icons not supported on macOS versions lower than 10.10",
-	    NULL);
+	    (char *)NULL);
 	return TCL_OK;
     }
 
@@ -240,7 +240,7 @@ MacSystrayObjCmd(
 	    statusItem = [[TkStatusItem alloc] init: interp];
 	    *info = statusItem;
 	} else {
-	    Tcl_AppendResult(interp, "Only one system tray icon supported per interpreter", NULL);
+	    Tcl_AppendResult(interp, "Only one system tray icon supported per interpreter", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -273,7 +273,7 @@ MacSystrayObjCmd(
 
 	NSString *tooltip = [NSString stringWithUTF8String: Tcl_GetString(objv[3])];
 	if (tooltip == nil) {
-	    Tcl_AppendResult(interp, " unable to set tooltip for systray icon", NULL);
+	    Tcl_AppendResult(interp, " unable to set tooltip for systray icon", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -315,7 +315,7 @@ MacSystrayObjCmd(
 	    tk_image = Tk_GetImage(interp, tkwin, Tcl_GetString(objv[3]), NULL, NULL);
 	    if (tk_image == NULL) {
 		Tcl_AppendResult(interp, " unable to obtain image for systray icon",
-				 NULL);
+				 (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -337,7 +337,7 @@ MacSystrayObjCmd(
 	    NSString *tooltip = [NSString stringWithUTF8String:Tcl_GetString(objv[3])];
 	    if (tooltip == nil) {
 		Tcl_AppendResult(interp, "unable to set tooltip for systray icon",
-				 NULL);
+				 (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -411,7 +411,7 @@ static int SysNotifyObjCmd(
     if ([NSApp macOSVersion] < 101000) {
 	Tcl_AppendResult(interp,
 	    "Notifications not supported on macOS versions lower than 10.10",
-	     NULL);
+	     (char *)NULL);
 	return TCL_OK;
     }
 
@@ -442,7 +442,7 @@ static int SysNotifyObjCmd(
 
     Tcl_AppendResult(interp,
 		     output,
-		     NULL);
+		     (char *)NULL);
 
     return TCL_OK;
 }

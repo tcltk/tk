@@ -637,7 +637,6 @@ if {$::tk_library ne ""} {
 	    SourceLibFile systray
 	}
 	SourceLibFile text
-	SourceLibFile tooltip
 	SourceLibFile wayland
     }
 }

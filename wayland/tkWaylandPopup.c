@@ -160,6 +160,8 @@ static void TkWaylandPopupDestroyShmBuffer(WlShmBuffer *buffer);
 static void TkWaylandPopupReleaseBuffer(void *data, struct wl_buffer *buffer);
 static int TkWaylandPopupAttachBuffer(TkWaylandPopup *popup, WlShmBuffer *buffer);
 static void TkWaylandPopupCopyPixelsToBuffer(TkWaylandPopup *popup, WlShmBuffer *buffer);
+static void TkWaylandPopupPruneBuffers(TkWaylandPopup *popup, WlShmBuffer *keep);
+static void TkWaylandPopupFlushPixels(TkWaylandPopup *popup);
 
 /* wl_buffer listener for release events. */
 static const struct wl_buffer_listener buffer_listener = {
@@ -515,7 +517,11 @@ TkWaylandPopupCreateShmBuffer(
     }
 
     /* Create a temporary file for shared memory. */
-    char filename[] = "/tmp/wl-popup-shm-XXXXXX";
+    char filename[512];
+    const char *runtimeDir = getenv("XDG_RUNTIME_DIR");
+
+    snprintf(filename, sizeof(filename), "%s/wl-popup-shm-XXXXXX",
+             (runtimeDir && *runtimeDir) ? runtimeDir : "/tmp");
     fd = mkstemp(filename);
     if (fd < 0) {
         DEBUG_LOG("TkWaylandPopupCreateShmBuffer: mkstemp failed: %s", strerror(errno));
@@ -1331,6 +1337,274 @@ TkWaylandPopupSetBorder(
 }
 
 /*
+ *----------------------------------------------------------------------
+ * TkWaylandPopupPruneBuffers --
+ *
+ *     Destroy idle SHM buffers whose size no longer matches the popup.
+ *     Resizing used to leave every buffer of every earlier size on the
+ *     popup's list for the life of the popup.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Frees buffers other than keep and the current buffer.  Destroying
+ *     a wl_buffer the compositor still shows is legal: the committed
+ *     content stays until the next commit.
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandPopupPruneBuffers(
+    TkWaylandPopup *popup,
+    WlShmBuffer *keep)
+{
+    WlShmBuffer *b, *tmp;
+
+    wl_list_for_each_safe(b, tmp, &popup->buffers, link) {
+        if (b == keep || b == popup->current_buffer) {
+            continue;
+        }
+        if (b->width == popup->width && b->height == popup->height) {
+            continue;
+        }
+        wl_list_remove(&b->link);
+        popup->buffer_count--;
+        TkWaylandPopupDestroyShmBuffer(b);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandPopupFlushPixels --
+ *
+ *     Copy the renderer's pixels (top row first, RGBA) into a free SHM
+ *     buffer of the popup's size and commit it, creating a buffer if
+ *     all are in use.  Shared by EndDraw and PresentPixels.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Attaches and commits the surface and commits the parent.
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandPopupFlushPixels(
+    TkWaylandPopup *popup)
+{
+    WlShmBuffer *buffer = NULL, *b;
+
+    wl_list_for_each(b, &popup->buffers, link) {
+        if (!b->in_use && b->width == popup->width
+                && b->height == popup->height) {
+            buffer = b;
+            break;
+        }
+    }
+
+    if (!buffer && popup->shm) {
+        buffer = TkWaylandPopupCreateShmBuffer(popup->shm, popup->width,
+                popup->height);
+        if (buffer) {
+            wl_list_insert(&popup->buffers, &buffer->link);
+            popup->buffer_count++;
+        }
+    }
+
+    if (buffer && buffer->data) {
+        TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
+
+        if (popup->surface) {
+            wl_surface_attach(popup->surface, buffer->buffer, 0, 0);
+            wl_surface_damage(popup->surface, 0, 0, popup->width,
+                    popup->height);
+            wl_surface_commit(popup->surface);
+            buffer->in_use = 1;
+            popup->current_buffer = buffer;
+        }
+        TkWaylandPopupPruneBuffers(popup, buffer);
+
+        /* The subsurface is synchronized: it applies on a parent commit. */
+        if (popup->parentSurface) {
+            wl_surface_damage(popup->parentSurface, popup->x, popup->y,
+                    popup->width, popup->height);
+            wl_surface_commit(popup->parentSurface);
+        }
+    } else {
+        DEBUG_LOG("TkWaylandPopupFlushPixels: no buffer available");
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandPopupOverlayBorder --
+ *
+ *     Software equivalent of TkWaylandPopupDrawBorderWithShadow for
+ *     popups whose pixels are supplied by TkWaylandPopupPresentPixels
+ *     instead of being drawn with NanoVG (override-redirect toplevels).
+ *     It reproduces the menu geometry exactly: a 1px hairline in the
+ *     border color inset 1px from the surface edge (pixel row/column 1
+ *     and h-2/w-2), plus a faint black shadow on the outermost bottom
+ *     row (alpha 25) and right column (alpha 20), each stopping 2px
+ *     short of the corners.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Modifies the renderer's pixels (R,G,B,A byte order, opaque).
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandPopupBlendPixel(
+    unsigned char *p,
+    unsigned char r,
+    unsigned char g,
+    unsigned char b,
+    unsigned int a)
+{
+    p[0] = (unsigned char)((p[0] * (255 - a) + r * a) / 255);
+    p[1] = (unsigned char)((p[1] * (255 - a) + g * a) / 255);
+    p[2] = (unsigned char)((p[2] * (255 - a) + b * a) / 255);
+}
+
+static void
+TkWaylandPopupOverlayBorder(
+    TkWaylandPopup *popup)
+{
+    SoftRenderer *r = popup->renderer;
+    int w = popup->width, h = popup->height, i;
+    unsigned char *base = r->pixels;
+    size_t stride = (size_t) r->stride;
+
+    if (!popup->drawBorder || w < 4 || h < 4) {
+        return;
+    }
+
+    /* Hairline border, inset by one pixel. */
+    for (i = 1; i <= w - 2; i++) {
+        TkWaylandPopupBlendPixel(base + stride * 1 + i * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+        TkWaylandPopupBlendPixel(base + stride * (h - 2) + i * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+    }
+    for (i = 2; i <= h - 3; i++) {
+        TkWaylandPopupBlendPixel(base + stride * i + 1 * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+        TkWaylandPopupBlendPixel(base + stride * i + (w - 2) * 4,
+                popup->borderR, popup->borderG, popup->borderB,
+                popup->borderA);
+    }
+
+    /* Shadow on the outermost bottom row and right column. */
+    if (popup->drawShadow) {
+        for (i = 2; i <= w - 3; i++) {
+            TkWaylandPopupBlendPixel(base + stride * (h - 1) + i * 4,
+                    0, 0, 0, 25);
+        }
+        for (i = 2; i <= h - 3; i++) {
+            TkWaylandPopupBlendPixel(base + stride * i + (w - 1) * 4,
+                    0, 0, 0, 20);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandPopupPresentPixels --
+ *
+ *     Show an externally rendered image in the popup.  The image is the
+ *     raw result of glReadPixels(GL_RGBA) on a framebuffer, i.e. bottom
+ *     row first.  If its size differs from the popup (HiDPI backing
+ *     store) it is box-filtered down to the popup size.  This is how an
+ *     override-redirect toplevel, whose widgets draw into the backing
+ *     store of its hidden GLFW window, gets onto the screen.
+ *
+ * Results:
+ *     None.
+ *
+ * Side effects:
+ *     Overwrites the renderer's pixels and commits the surfaces.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandPopupPresentPixels(
+    TkWaylandPopup *popup,
+    const unsigned char *src,
+    int srcW,
+    int srcH)
+{
+    SoftRenderer *r;
+    int dw, dh, x, y;
+    unsigned char *dst;
+
+    if (!popup || !src || srcW <= 0 || srcH <= 0 || !popup->renderer
+            || !popup->renderer->pixels) {
+        return;
+    }
+    r = popup->renderer;
+    dw = popup->width;
+    dh = popup->height;
+    if (r->width != dw || r->height != dh) {
+        return;                         /* Mid-resize; the next frame fits. */
+    }
+
+    dst = r->pixels;
+    for (y = 0; y < dh; y++) {
+        /* Rows of the source, counted from the top, covered by row y. */
+        int t0 = (int)((long) y * srcH / dh);
+        int t1 = (int)(((long) (y + 1) * srcH + dh - 1) / dh);
+
+        if (t1 <= t0) {
+            t1 = t0 + 1;
+        }
+        if (t1 > srcH) {
+            t1 = srcH;
+        }
+        for (x = 0; x < dw; x++) {
+            int l0 = (int)((long) x * srcW / dw);
+            int l1 = (int)(((long) (x + 1) * srcW + dw - 1) / dw);
+            unsigned long sum[3] = {0, 0, 0};
+            int n = 0, tx, ty;
+
+            if (l1 <= l0) {
+                l1 = l0 + 1;
+            }
+            if (l1 > srcW) {
+                l1 = srcW;
+            }
+            for (ty = t0; ty < t1; ty++) {
+                const unsigned char *row =
+                        src + (size_t)(srcH - 1 - ty) * srcW * 4;
+
+                for (tx = l0; tx < l1; tx++) {
+                    sum[0] += row[tx * 4];
+                    sum[1] += row[tx * 4 + 1];
+                    sum[2] += row[tx * 4 + 2];
+                    n++;
+                }
+            }
+            dst[0] = (unsigned char)(sum[0] / n);
+            dst[1] = (unsigned char)(sum[1] / n);
+            dst[2] = (unsigned char)(sum[2] / n);
+            dst[3] = 255;       /* Override-redirect windows are opaque. */
+            dst += 4;
+        }
+    }
+
+    /* Same border and drop shadow that menus get. */
+    TkWaylandPopupOverlayBorder(popup);
+    TkWaylandPopupFlushPixels(popup);
+}
+
+/*
  *---------------------------------------------------------------------------
  *
  * TkWaylandPopupEndDraw --
@@ -1348,8 +1622,6 @@ TkWaylandPopupSetBorder(
 MODULE_SCOPE void
 TkWaylandPopupEndDraw(TkWaylandPopup *popup)
 {
-    WlShmBuffer *buffer;
-
     if (!popup || !popup->drawing) {
         return;
     }
@@ -1383,46 +1655,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    /* Find or create buffer. */
-    buffer = NULL;
-    WlShmBuffer *b;
-    wl_list_for_each(b, &popup->buffers, link) {
-        if (!b->in_use && b->width == popup->width && b->height == popup->height) {
-            buffer = b;
-            break;
-        }
-    }
-
-    if (!buffer && popup->shm) {
-        buffer = TkWaylandPopupCreateShmBuffer(popup->shm, popup->width, popup->height);
-        if (buffer) {
-            wl_list_insert(&popup->buffers, &buffer->link);
-            popup->buffer_count++;
-        }
-    }
-
-    if (buffer && buffer->data) {
-        TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
-
-        /* STRONG ATTACH + DAMAGE + COMMIT. */
-        if (popup->surface) {
-            wl_surface_attach(popup->surface, buffer->buffer, 0, 0);
-            wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
-            wl_surface_commit(popup->surface);
-            buffer->in_use = 1;
-            popup->current_buffer = buffer;
-            DEBUG_LOG("TkWaylandPopupEndDraw: committed surface with buffer %p", (void*)buffer);
-        }
-
-        /* Force parent commit for subsurface. */
-        if (popup->parentSurface) {
-            wl_surface_damage(popup->parentSurface, popup->x, popup->y, popup->width, popup->height);
-            wl_surface_commit(popup->parentSurface);
-            DEBUG_LOG("TkWaylandPopupEndDraw: committed parent surface");
-        }
-    } else {
-        DEBUG_LOG("TkWaylandPopupEndDraw: no buffer available");
-    }
+    TkWaylandPopupFlushPixels(popup);
 
     DEBUG_LOG("TkWaylandPopupEndDraw: ended drawing");
 }
@@ -1533,10 +1766,18 @@ TkWaylandSubsurfacePlaceAbove(
 {
     if (!popup || !popup->subsurface) return;
 
+    /*
+     * The sibling argument of wl_subsurface.place_above must be a valid
+     * surface (the parent or a sibling); NULL is a protocol error that
+     * kills the connection.  With no sibling, stack directly above the
+     * parent.
+     */
     if (sibling && sibling->surface) {
         wl_subsurface_place_above(popup->subsurface, sibling->surface);
+    } else if (popup->parentSurface) {
+        wl_subsurface_place_above(popup->subsurface, popup->parentSurface);
     } else {
-        wl_subsurface_place_above(popup->subsurface, NULL);
+        return;
     }
 
     if (popup->parentSurface) {
@@ -1604,6 +1845,7 @@ TkWaylandSubsurfaceReconfigure(
             }
 
             TkWaylandPopupAttachBuffer(popup, buffer);
+            TkWaylandPopupPruneBuffers(popup, buffer);
         }
     }
 
@@ -1686,6 +1928,10 @@ TkWaylandPopupResize(
             }
 
             TkWaylandPopupAttachBuffer(popup, buffer);
+            TkWaylandPopupPruneBuffers(popup, buffer);
+            if (popup->parentSurface) {
+                wl_surface_commit(popup->parentSurface);
+            }
             return TCL_OK;
         }
     }

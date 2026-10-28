@@ -822,6 +822,12 @@ test winfont-11.4 {paragraph direction: leading spaces and digits are not strong
     destroy .l
 } -result 1
 
+test winfont-12.1 {a script which the base font cannot shape is shaped with a fallback font - bug 1b22c74dc7} -constraints win -body {
+    # Courier claims Hebrew letters, but Uniscribe cannot shape Hebrew with
+    # it: nothing was measured, and a label with such text hung.
+    expr {[font measure {Courier -12} "\u05d0\u05d1\u05d2"] > 0}
+} -result 1
+
 wm attributes . -topmost 0
 
 cleanupTests

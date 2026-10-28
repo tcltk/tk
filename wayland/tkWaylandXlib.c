@@ -1900,31 +1900,7 @@ XFreeModifiermap(
     /* No-op - modifier maps not used in Wayland port. */
     return 0;
 }
-/*
- *----------------------------------------------------------------------
- *
- * XSubtractRegion --
- *
- *	Subtract one region from another. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
 
-int
-XSubtractRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region))
-{
-    /* No-op - regions not used in Wayland port. */
-    return 0;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -2271,39 +2247,6 @@ XSetStipple(
     TCL_UNUSED(Pixmap))
 {
     /* No-op - stippling handled by NanoVG. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetRegion --
- *
- *	Set clip region in GC. Intentional no-op: the NanoVG draw path
- *	(tkWaylandFont.c) never consults a GC's clip mask, so storing a
- *	region here wouldn't be read by anything. The text-clipping use
- *	case this exists for (ttk cell text overflow) is instead carried
- *	end-to-end via TkUnixSetXftClipRegion(), which tkWaylandFont.c's
- *	glyph draw does consult (via nvgScissor()). See XCreateRegion()/
- *	XUnionRectWithRegion()/XClipBox() in this file for the region
- *	half of that path.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetRegion(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(Region))
-{
-    /* No-op - see note above. */
     return 0;
 }
 

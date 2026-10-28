@@ -684,6 +684,10 @@ decorative frame and the user will not be able to manipulate the
 window using the normal window manager mechanisms.
 .RS
 .PP
+The window manager will not give the keyboard focus to such a window
+either; on X11 an application that needs key events in it has to claim the
+focus with \fBfocus \-force\fR.
+.PP
 Note that the override-redirect flag is only guaranteed to be taken notice of
 when the window is first mapped or when mapped after the state is changed from
 withdrawn to normal. Some, but not all, platforms will take notice at

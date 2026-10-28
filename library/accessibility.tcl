@@ -1389,4 +1389,3 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
     {accessible ::tk::accessible}]
-

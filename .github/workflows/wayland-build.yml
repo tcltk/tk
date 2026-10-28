@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-1-branch"
+    - "wayland"
     tags:
     - "core-*"
 permissions:
@@ -14,10 +15,12 @@ defaults:
     working-directory: tk/unix
 env:
   ERROR_ON_FAILURES: 1
+  GLFW_VERSION: "3.4"
 jobs:
   build:
     runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
         compiler:
           - "gcc"
@@ -43,9 +46,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
-            libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+            libxkbcommon-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
-            libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev
+            libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
+            libatk1.0-dev libatk-bridge2.0-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
@@ -57,6 +61,40 @@ jobs:
           CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
           OPTS: ${{ matrix.compiler }}${{ matrix.config }}
+      - name: Cache GLFW ${{ env.GLFW_VERSION }}
+        id: glfw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/glfw-install
+          key: glfw-${{ env.GLFW_VERSION }}-ubuntu-24.04-wayland-v1
+      - name: Build GLFW ${{ env.GLFW_VERSION }}
+        if: steps.glfw-cache.outputs.cache-hit != 'true'
+        # Ubuntu 24.04 ships GLFW 3.3.x; the Wayland backend needs >= 3.4
+        # (GLFW_PLATFORM, GLFW_SCALE_FRAMEBUFFER, GLFW_WAYLAND_APP_ID).
+        run: |
+          set -e
+          sudo apt-get install -y cmake pkg-config
+          curl -fsSL -o "$RUNNER_TEMP/glfw.tar.gz" \
+            "https://github.com/glfw/glfw/archive/refs/tags/${GLFW_VERSION}.tar.gz"
+          tar -xzf "$RUNNER_TEMP/glfw.tar.gz" -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/glfw-${GLFW_VERSION}" -B "$RUNNER_TEMP/glfw-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DGLFW_BUILD_WAYLAND=ON -DGLFW_BUILD_X11=OFF \
+            -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/glfw-install" \
+            -DCMAKE_INSTALL_LIBDIR=lib
+          cmake --build "$RUNNER_TEMP/glfw-build" -j"$(nproc)"
+          cmake --install "$RUNNER_TEMP/glfw-build"
+        working-directory: "."
+      - name: Use GLFW ${{ env.GLFW_VERSION }}
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/glfw-install/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$HOME/glfw-install/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          export PKG_CONFIG_PATH="$HOME/glfw-install/lib/pkgconfig"
+          echo "GLFW version: $(pkg-config --modversion glfw3)"
+          pkg-config --atleast-version=3.4 glfw3 || { echo "::error::GLFW < 3.4"; exit 1; }
+        working-directory: "."
       - name: Configure and Build Tcl
         run: |
           ./configure "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
@@ -94,17 +132,16 @@ jobs:
         run: |
           sudo apt-get update
           # gnome-shell: headless Wayland compositor + org.freedesktop.Notifications
-          # gnome-shell-extension-appindicator: org.kde.StatusNotifierWatcher + Host
-          # libglib2.0-bin / dconf: gsettings, used to enable the extension
           sudo apt-get install -y \
             wayland-protocols libwayland-dev libwayland-egl1 \
-            libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+            libxkbcommon-dev libgles2-mesa-dev \
             libdecor-0-dev libfontconfig-dev libsystemd-dev \
             libharfbuzz-dev libspeechd-dev wl-clipboard libcups2-dev \
             libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont \
             dbus dbus-x11 mesa-utils \
-            gnome-shell gnome-shell-extension-appindicator gnome-shell-common \
-            libglib2.0-bin dconf-gsettings-backend dconf-service
+            gnome-shell gnome-shell-common \
+            libglib2.0-bin dconf-gsettings-backend dconf-service \
+            libatk1.0-dev libatk-bridge2.0-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=--enable-wayland $CFGOPT" >> $GITHUB_ENV
@@ -113,6 +150,40 @@ jobs:
         env:
           CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
+      - name: Cache GLFW ${{ env.GLFW_VERSION }}
+        id: glfw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/glfw-install
+          key: glfw-${{ env.GLFW_VERSION }}-ubuntu-24.04-wayland-v1
+      - name: Build GLFW ${{ env.GLFW_VERSION }}
+        if: steps.glfw-cache.outputs.cache-hit != 'true'
+        # Ubuntu 24.04 ships GLFW 3.3.x; the Wayland backend needs >= 3.4
+        # (GLFW_PLATFORM, GLFW_SCALE_FRAMEBUFFER, GLFW_WAYLAND_APP_ID).
+        run: |
+          set -e
+          sudo apt-get install -y cmake pkg-config
+          curl -fsSL -o "$RUNNER_TEMP/glfw.tar.gz" \
+            "https://github.com/glfw/glfw/archive/refs/tags/${GLFW_VERSION}.tar.gz"
+          tar -xzf "$RUNNER_TEMP/glfw.tar.gz" -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/glfw-${GLFW_VERSION}" -B "$RUNNER_TEMP/glfw-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DGLFW_BUILD_WAYLAND=ON -DGLFW_BUILD_X11=OFF \
+            -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF \
+            -DCMAKE_INSTALL_PREFIX="$HOME/glfw-install" \
+            -DCMAKE_INSTALL_LIBDIR=lib
+          cmake --build "$RUNNER_TEMP/glfw-build" -j"$(nproc)"
+          cmake --install "$RUNNER_TEMP/glfw-build"
+        working-directory: "."
+      - name: Use GLFW ${{ env.GLFW_VERSION }}
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/glfw-install/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$HOME/glfw-install/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          export PKG_CONFIG_PATH="$HOME/glfw-install/lib/pkgconfig"
+          echo "GLFW version: $(pkg-config --modversion glfw3)"
+          pkg-config --atleast-version=3.4 glfw3 || { echo "::error::GLFW < 3.4"; exit 1; }
+        working-directory: "."
       - name: Configure and Build Tcl
         run: |
           ./configure "--prefix=$HOME/install dir" || { cat config.log; exit 1; }
@@ -159,7 +230,7 @@ jobs:
           LOG_DIR="${RUNNER_TEMP:-/tmp}/wl-logs"
           mkdir -p "$LOG_DIR"
 
-          # Session bus (needed for SNI + notifications)
+          # Session bus (needed for notifications)
           eval "$(dbus-launch --sh-syntax)"
           export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
 
@@ -188,10 +259,7 @@ jobs:
             return 1
           }
 
-          echo "::group::Starting gnome-shell headless (1280x720) + AppIndicator extension"
-          # Enable the extension before the shell starts so it loads at startup
-          gsettings set org.gnome.shell disable-user-extensions false
-          gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
+          echo "::group::Starting gnome-shell headless (1280x720)"
           export XDG_CURRENT_DESKTOP=GNOME
           export XDG_SESSION_TYPE=wayland
           gnome-shell --headless --wayland --no-x11 \
@@ -213,16 +281,10 @@ jobs:
           echo "Using WAYLAND_DISPLAY=$WAYLAND_DISPLAY"
           echo "::endgroup::"
 
-          echo "::group::Waiting for SNI watcher + Notifications"
-          if ! wait_name org.kde.StatusNotifierWatcher 60; then
-            echo "::error::StatusNotifierWatcher never appeared (AppIndicator extension not loaded?)"
-            gnome-extensions list --enabled 2>&1 || true
-            gnome-extensions info appindicatorsupport@rgcjonas.gmail.com 2>&1 || true
-            exit 1
-          fi
+          echo "::group::Waiting for Notifications"
           wait_name org.freedesktop.Notifications 20 || echo "::warning::no Notifications service"
           dbus-send --session --type=method_call --print-reply --dest=org.freedesktop.DBus \
-            /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "StatusNotifier|Notifications" || true
+            /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E "Notifications" || true
           echo "::endgroup::"
 
           # Use the source-built Tcl
@@ -230,8 +292,8 @@ jobs:
           export TCL_LIBRARY="$TCL_CONFIG_PATH/../library"
           export TK_LIBRARY="$ROOT/library"
 
-          ./tktest ../tests/all.tcl -singleproc 0 | tee out-classic.txt
-          ./tktest ../tests/ttk/all.tcl -singleproc 0 | tee out-ttk.txt
+          ./tktest ../tests/all.tcl -singleproc 1 | tee out-classic.txt
+          ./tktest ../tests/ttk/all.tcl -singleproc 1 | tee out-ttk.txt
           grep -q "Failed     0" out-classic.txt
           grep -q "Failed     0" out-ttk.txt
         timeout-minutes: 15

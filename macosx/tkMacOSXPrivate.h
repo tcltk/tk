@@ -250,8 +250,8 @@ MODULE_SCOPE bool	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
-MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
-			    CGContextRef context, BOOL useDarkAppearance);
+MODULE_SCOPE void	TkMacOSXSetColorInContext(unsigned long pixel,
+			    CGContextRef context, bool useDarkAppearance);
 MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
 MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
@@ -265,7 +265,7 @@ MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
-MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
+MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(unsigned long pixel);
 MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
 MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
@@ -286,12 +286,12 @@ MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE bool	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
-			    BOOL useDarkAppearance);
+			    bool useDarkAppearance);
 MODULE_SCOPE CGColorRef	TkMacOSXGetCGColorFromNSColorUsingAppearance(
-			    NSColor *color, BOOL useDarkAppearance);
+			    NSColor *color, bool useDarkAppearance);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
 			    NSColor *color, NSColorSpace *colorSpace,
-			    BOOL useDarkAppearance);
+			    bool useDarkAppearance);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);

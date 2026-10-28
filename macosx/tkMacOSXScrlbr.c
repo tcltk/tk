@@ -50,8 +50,8 @@ typedef struct MacScrollbar {
     TkScrollbar information;	/* Generic scrollbar info. */
     GC troughGC;		/* For drawing trough. */
     GC copyGC;			/* Used for copying from pixmap onto screen. */
-    Bool buttonDown;            /* Is the mouse button down? */
-    Bool mouseOver;             /* Is the pointer over the scrollbar. */
+    bool buttonDown;            /* Is the mouse button down? */
+    bool mouseOver;             /* Is the pointer over the scrollbar. */
     HIThemeTrackDrawInfo info;	/* Controls how the scrollbar is drawn. */
 } MacScrollbar;
 
@@ -127,7 +127,7 @@ TkpCreateScrollbar(
     scrollPtr->copyGC = NULL;
     scrollPtr->info = defaultInfo;
     scrollPtr->buttonDown = false;
-
+    scrollPtr->mouseOver = false;
     Tk_CreateEventHandler(tkwin,
 	    ExposureMask        |
 	    StructureNotifyMask |

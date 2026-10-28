@@ -2001,6 +2001,18 @@ test menu-4.12 {TkInvokeMenu} -setup {
 } -cleanup {
     destroy .m1
 } -result {0 {} 1 {bad menu entry index "test"}}
+test menu-4.13 {TkInvokeMenu: cascade - bug 220868} -setup {
+    destroy .m1
+} -body {
+    menu .m1 -tearoff 0
+    menu .m1.c -tearoff 0
+    .m1.c add command -label "sub"
+    .m1 add cascade -menu .m1.c -label "test" -command {set foo invoked}
+    list [catch {.m1 invoke "test"} msg] $msg [catch {set foo} msg2] $msg2
+} -cleanup {
+    destroy .m1
+    unset -nocomplain foo
+} -result {0 invoked 0 invoked}
 
 test menu-5.1 {DestroyMenuInstance} -setup {
     destroy .m1
@@ -4674,13 +4686,34 @@ test menu-46.1 {tk_popup: menu destroyed while it is posted - bug a4c72a04e3} -s
     menu .m -tearoff 0 -postcommand {destroy .m}
     .m add command -label One
     .m add command -label Two
-} -constraints notAqua -body {
+} -body {
     tk_popup .m 10 10 1
     winfo exists .m
 } -cleanup {
     tk::MenuUnpost {}
     destroy .m
 } -result 0
+
+test menu-47.1 {configuring a cascade entry of a menubar with the menu it
+	already has must not destroy that menu - bug 1723059} -setup {
+    destroy .bar
+    . configure -menu {}
+} -body {
+    menu .bar
+    . configure -menu .bar
+    .bar add cascade
+    menu .bar.sub1
+    menu .bar.sub2
+    .bar entryconfigure 1 -menu .bar.sub1
+    # the same menu once more, and then another one
+    .bar entryconfigure 1 -menu .bar.sub1
+    .bar entryconfigure 1 -menu .bar.sub2
+    list [winfo exists .bar.sub1] [winfo exists .bar.sub2] \
+	    [.bar entrycget 1 -menu]
+} -cleanup {
+    . configure -menu {}
+    destroy .bar
+} -result {1 1 .bar.sub2}
 
 #
 # TESTFILE CLEANUP

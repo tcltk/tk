@@ -175,7 +175,8 @@ typedef struct FONSttFontImpl FONSttFontImpl;
 #endif
 
 #ifndef FONS_SCRATCH_BUF_SIZE
-#	define FONS_SCRATCH_BUF_SIZE 96000
+//#	define FONS_SCRATCH_BUF_SIZE 96000
+#	define FONS_SCRATCH_BUF_SIZE 1048576   /* 1 MB; one-time allocation per stash */
 #endif
 #ifndef FONS_HASH_LUT_SIZE
 #	define FONS_HASH_LUT_SIZE 256

@@ -129,8 +129,7 @@ static bool       IsSerifFace(FcPattern *pat);
 static bool       IsSansSerifFace(FcPattern *pat);
 static bool       IsMonospaceFace(FcPattern *pat);
 static char      *ComposeUTF8String(const char *source, int len);
-static FcChar32   UnicodeCompose(FcChar32 base, FcChar32 mark);
-static int         EncodeUtf8Char(FcChar32 uc, char out[4]);
+static inline bool IsCombiningMark(FcChar32 uc);
 static void       ExpandRangeToClusterBoundaries(const ShapedGlyphBuffer *sbuf,
 						 int *start, int *end,
 						 int numBytes);
@@ -317,343 +316,95 @@ IsLoadableOutlineFace(FcPattern *pat)
 
 /*
  *----------------------------------------------------------------------
- * UnicodeCompose --
+ * IsCombiningMark --
  *
- *   Attempt to compose a base character and combining mark.
+ *   Test whether a codepoint is in the Combining Diacritical Marks
+ *   block (U+0300-U+036F). This is only a cheap trigger for deciding
+ *   whether a string needs normalization at all; the actual composition
+ *   (which bases accept which marks) is decided by utf8proc, not here.
  *
  * Results:
- *   Composed Unicode character, or 0 if no composition is possible.
+ *   True if the codepoint is a combining diacritical mark.
  *
  * Side effects:
  *   None.
  *----------------------------------------------------------------------
  */
 
-static FcChar32
-UnicodeCompose(FcChar32 base, FcChar32 mark)
+static inline bool
+IsCombiningMark(FcChar32 uc)
 {
-    /* Common Latin composition table. */
-    struct {
-        FcChar32 base;
-        FcChar32 mark;
-        FcChar32 composed;
-    } compTable[] = {
-        /* Latin lowercase. */
-        {0x0061, 0x0300, 0x00E0},  /* a + grave = à */
-        {0x0061, 0x0301, 0x00E1},  /* a + acute = á */
-        {0x0061, 0x0302, 0x00E2},  /* a + circumflex = â */
-        {0x0061, 0x0303, 0x00E3},  /* a + tilde = ã */
-        {0x0061, 0x0308, 0x00E4},  /* a + diaeresis = ä */
-        {0x0061, 0x030A, 0x00E5},  /* a + ring = å */
-        {0x0061, 0x0304, 0x0101},  /* a + macron = ā */
-        {0x0061, 0x0306, 0x0103},  /* a + breve = ă */
-        
-        {0x0065, 0x0300, 0x00E8},  /* e + grave = è */
-        {0x0065, 0x0301, 0x00E9},  /* e + acute = é */
-        {0x0065, 0x0302, 0x00EA},  /* e + circumflex = ê */
-        {0x0065, 0x0308, 0x00EB},  /* e + diaeresis = ë */
-        {0x0065, 0x0304, 0x0113},  /* e + macron = ē */
-        {0x0065, 0x0306, 0x0115},  /* e + breve = ĕ */
-        
-        {0x0069, 0x0300, 0x00EC},  /* i + grave = ì */
-        {0x0069, 0x0301, 0x00ED},  /* i + acute = í */
-        {0x0069, 0x0302, 0x00EE},  /* i + circumflex = î */
-        {0x0069, 0x0308, 0x00EF},  /* i + diaeresis = ï */
-        {0x0069, 0x0304, 0x012B},  /* i + macron = ī */
-        {0x0069, 0x0306, 0x012D},  /* i + breve = ĭ */
-        
-        {0x006F, 0x0300, 0x00F2},  /* o + grave = ò */
-        {0x006F, 0x0301, 0x00F3},  /* o + acute = ó */
-        {0x006F, 0x0302, 0x00F4},  /* o + circumflex = ô */
-        {0x006F, 0x0303, 0x00F5},  /* o + tilde = õ */
-        {0x006F, 0x0308, 0x00F6},  /* o + diaeresis = ö */
-        {0x006F, 0x030A, 0x00F8},  /* o + ring = ø (actually slash, but ring is close) */
-        {0x006F, 0x030B, 0x0151},  /* o + double acute = ő */
-        {0x006F, 0x0304, 0x014D},  /* o + macron = ō */
-        {0x006F, 0x0306, 0x014F},  /* o + breve = ŏ */
-        
-        {0x0075, 0x0300, 0x00F9},  /* u + grave = ù */
-        {0x0075, 0x0301, 0x00FA},  /* u + acute = ú */
-        {0x0075, 0x0302, 0x00FB},  /* u + circumflex = û */
-        {0x0075, 0x0308, 0x00FC},  /* u + diaeresis = ü */
-        {0x0075, 0x030A, 0x016F},  /* u + ring = ů */
-        {0x0075, 0x0304, 0x016B},  /* u + macron = ū */
-        {0x0075, 0x0306, 0x016D},  /* u + breve = ŭ */
-        {0x0075, 0x030B, 0x0171},  /* u + double acute = ű */
-        
-        {0x006E, 0x0303, 0x00F1},  /* n + tilde = ñ */
-        
-        /* Latin uppercase. */
-        {0x0041, 0x0300, 0x00C0},  /* A + grave = À */
-        {0x0041, 0x0301, 0x00C1},  /* A + acute = Á */
-        {0x0041, 0x0302, 0x00C2},  /* A + circumflex = Â */
-        {0x0041, 0x0303, 0x00C3},  /* A + tilde = Ã */
-        {0x0041, 0x0308, 0x00C4},  /* A + diaeresis = Ä */
-        {0x0041, 0x030A, 0x00C5},  /* A + ring = Å */
-        {0x0041, 0x0304, 0x0100},  /* A + macron = Ā */
-        {0x0041, 0x0306, 0x0102},  /* A + breve = Ă */
-        
-        {0x0045, 0x0300, 0x00C8},  /* E + grave = È */
-        {0x0045, 0x0301, 0x00C9},  /* E + acute = É */
-        {0x0045, 0x0302, 0x00CA},  /* E + circumflex = Ê */
-        {0x0045, 0x0308, 0x00CB},  /* E + diaeresis = Ë */
-        {0x0045, 0x0304, 0x0112},  /* E + macron = Ē */
-        {0x0045, 0x0306, 0x0114},  /* E + breve = Ĕ */
-        
-        {0x0049, 0x0300, 0x00CC},  /* I + grave = Ì */
-        {0x0049, 0x0301, 0x00CD},  /* I + acute = Í */
-        {0x0049, 0x0302, 0x00CE},  /* I + circumflex = Î */
-        {0x0049, 0x0308, 0x00CF},  /* I + diaeresis = Ï */
-        {0x0049, 0x0304, 0x012A},  /* I + macron = Ī */
-        {0x0049, 0x0306, 0x012C},  /* I + breve = Ĭ */
-        
-        {0x004F, 0x0300, 0x00D2},  /* O + grave = Ò */
-        {0x004F, 0x0301, 0x00D3},  /* O + acute = Ó */
-        {0x004F, 0x0302, 0x00D4},  /* O + circumflex = Ô */
-        {0x004F, 0x0303, 0x00D5},  /* O + tilde = Õ */
-        {0x004F, 0x0308, 0x00D6},  /* O + diaeresis = Ö */
-        {0x004F, 0x030A, 0x00D8},  /* O + ring = Ø (actually slash) */
-        {0x004F, 0x030B, 0x0150},  /* O + double acute = Ő */
-        {0x004F, 0x0304, 0x014C},  /* O + macron = Ō */
-        {0x004F, 0x0306, 0x014E},  /* O + breve = Ŏ */
-        
-        {0x0055, 0x0300, 0x00D9},  /* U + grave = Ù */
-        {0x0055, 0x0301, 0x00DA},  /* U + acute = Ú */
-        {0x0055, 0x0302, 0x00DB},  /* U + circumflex = Û */
-        {0x0055, 0x0308, 0x00DC},  /* U + diaeresis = Ü */
-        {0x0055, 0x030A, 0x016E},  /* U + ring = Ů */
-        {0x0055, 0x0304, 0x016A},  /* U + macron = Ū */
-        {0x0055, 0x0306, 0x016C},  /* U + breve = Ŭ */
-        {0x0055, 0x030B, 0x0170},  /* U + double acute = Ű */
-        
-        {0x004E, 0x0303, 0x00D1},  /* N + tilde = Ñ */
-
-        /* Vietnamese. */
-        /* Lowercase: o with horn + tone marks */
-        {0x01A1, 0x0301, 0x1EDB},  /* ơ + acute = ớ */
-        {0x01A1, 0x0300, 0x1EDD},  /* ơ + grave = ờ */
-        {0x01A1, 0x0309, 0x1EDF},  /* ơ + hook above = ở */
-        {0x01A1, 0x0303, 0x1ED9},  /* ơ + tilde = ỗ */
-        {0x01A1, 0x0323, 0x1EE1},  /* ơ + dot below = ợ */
-
-        /* Lowercase: u with horn + tone marks */
-        {0x01B0, 0x0301, 0x1EEB},  /* ư + acute = ứ */
-        {0x01B0, 0x0300, 0x1EED},  /* ư + grave = ừ */
-        {0x01B0, 0x0309, 0x1EEF},  /* ư + hook above = ử */
-        {0x01B0, 0x0303, 0x1EF1},  /* ư + tilde = ữ */
-        {0x01B0, 0x0323, 0x1EF3},  /* ư + dot below = ự */
-
-        /* Uppercase: O with horn + tone marks. */
-        {0x01A0, 0x0301, 0x1EDA},  /* Ơ + acute = Ớ */
-        {0x01A0, 0x0300, 0x1EDC},  /* Ơ + grave = Ờ */
-        {0x01A0, 0x0309, 0x1EDE},  /* Ơ + hook above = Ở */
-        {0x01A0, 0x0303, 0x1ED8},  /* Ơ + tilde = Ỗ */
-        {0x01A0, 0x0323, 0x1EE0},  /* Ơ + dot below = Ợ */
-
-        /* Uppercase: U with horn + tone marks. */
-        {0x01AF, 0x0301, 0x1EEA},  /* Ư + acute = Ứ */
-        {0x01AF, 0x0300, 0x1EEC},  /* Ư + grave = Ừ */
-        {0x01AF, 0x0309, 0x1EEE},  /* Ư + hook above = Ử */
-        {0x01AF, 0x0303, 0x1EF0},  /* Ư + tilde = Ữ */
-        {0x01AF, 0x0323, 0x1EF2},  /* Ư + dot below = Ự */
-
-        {0, 0, 0}
-    };
-
-    for (int i = 0; compTable[i].base != 0; i++) {
-        if (compTable[i].base == base && compTable[i].mark == mark) {
-            return compTable[i].composed;
-        }
-    }
-
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- * EncodeUtf8Char --
- *
- *   Encode a single Unicode codepoint as UTF-8 into a caller-supplied
- *   4-byte buffer (not NUL-terminated).
- *
- * Results:
- *   Number of bytes written (1-4).
- *
- * Side effects:
- *   None.
- *----------------------------------------------------------------------
- */
-
-static int
-EncodeUtf8Char(FcChar32 uc, char out[4])
-{
-    if (uc <= 0x7F) {
-        out[0] = (char)uc;
-        return 1;
-    } else if (uc <= 0x7FF) {
-        out[0] = (char)(0xC0 | ((uc >> 6) & 0x1F));
-        out[1] = (char)(0x80 | (uc & 0x3F));
-        return 2;
-    } else if (uc <= 0xFFFF) {
-        out[0] = (char)(0xE0 | ((uc >> 12) & 0x0F));
-        out[1] = (char)(0x80 | ((uc >> 6) & 0x3F));
-        out[2] = (char)(0x80 | (uc & 0x3F));
-        return 3;
-    } else {
-        out[0] = (char)(0xF0 | ((uc >> 18) & 0x07));
-        out[1] = (char)(0x80 | ((uc >> 12) & 0x3F));
-        out[2] = (char)(0x80 | ((uc >> 6) & 0x3F));
-        out[3] = (char)(0x80 | (uc & 0x3F));
-        return 4;
-    }
+    return uc >= 0x0300 && uc <= 0x036F;
 }
 
 /*
  *----------------------------------------------------------------------
  * ComposeUTF8String --
  *
- *   Compose combining diacritical marks in a UTF-8 string.
- *   Uses a composition table for common Latin sequences.
+ *   Precompose combining marks in a UTF-8 string by routing it through
+ *   Tcl_UtfToNormalizedDString(). 
+ *
+ *   The result is what gets handed to NanoVG: NanoVG has no GPOS mark
+ *   attachment, so base+mark sequences must be drawn and measured as
+ *   precomposed glyphs. Marks with no precomposed form (e.g. q + acute)
+ *   are left in place by NFC; callers detect that by rescanning the
+ *   result and fall back to HarfBuzz.
  *
  * Results:
- *   Newly allocated UTF-8 string in NFC form, or NULL on failure.
+ *   Newly allocated, NUL-terminated UTF-8 string in NFC form (free with
+ *   free()), or NULL on failure or if source is empty.
  *
  * Side effects:
- *   None.
+ *   None. The input buffer is never modified.
  *----------------------------------------------------------------------
  */
 
-static char*
+static char *
 ComposeUTF8String(const char *source, int len)
 {
     if (!source || len <= 0) return NULL;
-    
-    /* Check if there are any combining characters. */
+
+    /* Nothing to compose without marks: plain copy, skip the normalizer. */
     bool hasCombining = false;
     for (int i = 0; i < len; ) {
+        if ((unsigned char)source[i] < 0x80) { i++; continue; }
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, len - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) {
+        if (IsCombiningMark(uc)) {
             hasCombining = true;
             break;
         }
         i += clen;
     }
-    
+
+    char *result;
     if (!hasCombining) {
-        char *result = (char *)malloc(len + 1);
+        result = (char *)malloc((size_t)len + 1);
         if (result) {
-            memcpy(result, source, len);
+            memcpy(result, source, (size_t)len);
             result[len] = '\0';
         }
         return result;
     }
-    
-    /* Walk through the string and compose clusters. */
-    char *result = NULL;
-    int resultLen = 0;
-    int i = 0;
-    
-    while (i < len) {
-        FcChar32 base = 0;
-        int baseLen = 0;
-        int baseStart = i;
-        
-        /* Read the base character. */
-        if (i < len) {
-            FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, len - i);
-            if (clen > 0) {
-                /* Check if this is a combining mark with no base (unlikely). */
-                if (uc >= 0x0300 && uc <= 0x036F) {
-                    /* No base, copy the mark as-is. */
-                    char *newResult = (char *)realloc(result, resultLen + clen + 1);
-                    if (newResult) {
-                        result = newResult;
-                        memcpy(result + resultLen, source + i, clen);
-                        resultLen += clen;
-                    }
-                    i += clen;
-                    continue;
-                }
-                base = uc;
-                baseLen = clen;
-                i += clen;
-            } else {
-                i++;
-                continue;
-            }
-        } else {
-            break;
-        }
-        
-        /* Look ahead for combining marks. */
-        FcChar32 combined = base;
-        bool hadCombining = false;
-        
-        while (i < len) {
-            FcChar32 mark;
-            int markLen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &mark, len - i);
-            if (markLen <= 0) { i++; continue; }
-            if (mark >= 0x0300 && mark <= 0x036F) {
-                /* Try to compose. */
-                FcChar32 composed = UnicodeCompose(combined, mark);
-                if (composed > 0) {
-                    combined = composed;
-                    hadCombining = true;
-                    i += markLen;
-                    continue;
-                } else if (mark == 0x0303) { /* Tilde */
-                    /* Try some common Vietnamese combinations */
-                    if (combined == 0x01B0) { /* U with horn + tilde = Ữ */
-                        combined = 0x1EEF;
-                        hadCombining = true;
-                        i += markLen;
-                        continue;
-                    } else if (combined == 0x01A0) { /* O with horn + tilde = Ỗ */
-                        combined = 0x1ED6;
-                        hadCombining = true;
-                        i += markLen;
-                        continue;
-                    } else if (combined == 0x0041 || combined == 0x0061) {
-                        /* Already handled by UnicodeCompose for A/a. */
-                    }
-                }
-                /* Cannot compose this mark; stop and keep what we have. */
-                break;
-            } else {
-                /* Not a combining mark, stop. */
-                break;
-            }
-        }
-        
-        if (hadCombining && combined != base) {
-            /* Encode composed character as UTF-8. */
-            char utf8[4];
-            int utf8Len = EncodeUtf8Char(combined, utf8);
 
-            char *newResult = (char *)realloc(result, resultLen + utf8Len + 1);
-            if (newResult) {
-                result = newResult;
-                memcpy(result + resultLen, utf8, utf8Len);
-                resultLen += utf8Len;
-            }
-        } else {
-            /* No composition happened; copy the base as-is. */
-            char *newResult = (char *)realloc(result, resultLen + baseLen + 1);
-            if (newResult) {
-                result = newResult;
-                memcpy(result + resultLen, source + baseStart, baseLen);
-                resultLen += baseLen;
-            }
-        }
+    /*
+     * REPLACE profile: malformed UTF-8 becomes U+FFFD instead of failing
+     * the whole string, so one bad byte can't disable precomposition.
+     */
+    Tcl_DString ds;
+    if (Tcl_UtfToNormalizedDString(NULL, source, (Tcl_Size)len, TCL_NFC,
+                                   TCL_ENCODING_PROFILE_REPLACE, &ds)
+            != TCL_OK) {
+        return NULL;
     }
-    
+    Tcl_Size n = Tcl_DStringLength(&ds);
+    result = (char *)malloc((size_t)n + 1);
     if (result) {
-        result[resultLen] = '\0';
+        memcpy(result, Tcl_DStringValue(&ds), (size_t)n);
+        result[n] = '\0';
     }
-    
+    Tcl_DStringFree(&ds);
     return result;
 }
 
@@ -683,7 +434,7 @@ ContainsCombiningMark(const char *str, int len)
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) return true;
+        if (IsCombiningMark(uc)) return true;
         i += clen;
     }
     return false;
@@ -740,7 +491,7 @@ IsSimpleOnly(const char *str, int len)
          * under them. Actual precomposition for rendering happens later,
          * in a scratch buffer, at the point where glyphs are built.
          */
-        if (uc >= 0x0300 && uc <= 0x036F) {  /* Combining diacritics */
+        if (IsCombiningMark(uc)) {  /* Combining diacritics */
             char *composed = ComposeUTF8String(str, len);
             if (composed) {
                 int newLen = (int)strlen(composed);
@@ -754,7 +505,7 @@ IsSimpleOnly(const char *str, int len)
                     if (clen2 <= 0) { j++; continue; }
 
                     /* If any combining marks remain, still complex. */
-                    if (uc2 >= 0x0300 && uc2 <= 0x036F) {  /* Combining diacritics */
+                    if (IsCombiningMark(uc2)) {  /* Combining diacritics */
                         simple = false;
                         break;
                     }
@@ -773,6 +524,7 @@ IsSimpleOnly(const char *str, int len)
                         (uc2 >= 0x0750 && uc2 <= 0x077F) ||  /* Arabic Supplement */
                         (uc2 >= 0xFB50 && uc2 <= 0xFDFF) ||  /* Arabic Presentation Forms-A */
                         (uc2 >= 0xFE70 && uc2 <= 0xFEFF) ||  /* Arabic Presentation Forms-B */
+                        (uc2 >= 0x0870 && uc2 <= 0x08FF) ||  /* Arabic Extended-B/A */
                         /* Other RTL scripts. */
                         (uc2 >= 0x0700 && uc2 <= 0x074F) ||  /* Syriac */
                         (uc2 >= 0x0780 && uc2 <= 0x07BF) ||  /* Thaana */
@@ -836,6 +588,7 @@ IsSimpleOnly(const char *str, int len)
             (uc >= 0x0750 && uc <= 0x077F) ||  /* Arabic Supplement */
             (uc >= 0xFB50 && uc <= 0xFDFF) ||  /* Arabic Presentation Forms-A */
             (uc >= 0xFE70 && uc <= 0xFEFF) ||  /* Arabic Presentation Forms-B */
+            (uc >= 0x0870 && uc <= 0x08FF) ||  /* Arabic Extended-B/A */
             /* Other RTL scripts. */
             (uc >= 0x0700 && uc <= 0x074F) ||  /* Syriac */
             (uc >= 0x0780 && uc <= 0x07BF) ||  /* Thaana */
@@ -1295,45 +1048,8 @@ GetBidiRuns(
  *   Updates the character-to-face cache.
  *----------------------------------------------------------------------
  */
-
-/*
- *----------------------------------------------------------------------
- * FaceCoversRange --
- *
- *   Check whether a face of the font has all the characters ucs4[start]
- *   ... ucs4[end - 1].
- *
- * Results:
- *   true if it has them, false otherwise (also for an invalid index).
- *----------------------------------------------------------------------
- */
-
-static bool
-FaceCoversRange(
-    WaylandFont *fontPtr,
-    int faceIndex,
-    const FcChar32 *ucs4,
-    int start,
-    int end)
-{
-    FcCharSet *cs;
-
-    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
-        return false;
-    }
-    cs = fontPtr->faces[faceIndex].charset;
-    if (cs == NULL) {
-        return false;
-    }
-    for (int i = start; i < end; i++) {
-        if (!FcCharSetHasChar(cs, ucs4[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static int
+ 
+ static int
 GetRunFaceIndex(
 		WaylandFont *fontPtr,
 		FcChar32 *ucs4Chars,
@@ -1381,6 +1097,44 @@ GetRunFaceIndex(
     shaper->charCache[cacheIdx].uc      = uc;
     shaper->charCache[cacheIdx].faceIdx = 0;
     return 0;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ * FaceCoversRange --
+ *
+ *   Check whether a face of the font has all the characters ucs4[start]
+ *   ... ucs4[end - 1].
+ *
+ * Results:
+ *   true if it has them, false otherwise (also for an invalid index).
+ *----------------------------------------------------------------------
+ */
+
+static bool
+FaceCoversRange(
+    WaylandFont *fontPtr,
+    int faceIndex,
+    const FcChar32 *ucs4,
+    int start,
+    int end)
+{
+    FcCharSet *cs;
+
+    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+        return false;
+    }
+    cs = fontPtr->faces[faceIndex].charset;
+    if (cs == NULL) {
+        return false;
+    }
+    for (int i = start; i < end; i++) {
+        if (!FcCharSetHasChar(cs, ucs4[i])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /*
@@ -1956,6 +1710,7 @@ ColorQueueDelete(NVGcontext *vg, int id)
  *   Calls nvgDeleteImage() and frees list nodes.
  *----------------------------------------------------------------------
  */
+ 
 static void
 ColorFlushPending(NVGcontext *vg)
 {
@@ -1989,6 +1744,7 @@ ColorFlushPending(NVGcontext *vg)
  *   Frees memory and queues image handles for deletion.
  *----------------------------------------------------------------------
  */
+ 
 static void
 ColorFreeSlot(ColorGlyphSlot *s)
 {
@@ -2218,6 +1974,7 @@ ColorSlotImage(
  *   None.
  *----------------------------------------------------------------------
  */
+ 
 static void
 ColorGlyphContextDestroyed(NVGcontext *vg)
 {
@@ -2399,7 +2156,6 @@ AppendFontsetFace(
  *----------------------------------------------------------------------
  */
 
-/* True if the font file behind pat has CBDT/sbix PNG strikes. */
 static bool
 FontFileHasColorPng(FcPattern *pat)
 {
@@ -2508,7 +2264,6 @@ EnsureColorEmojiFace(WaylandFont *fontPtr)
     (void)fontPtr;
 #endif
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -2860,6 +2615,23 @@ WaylandShaper_ShapeString(
                      */
                     if (EmojiKindAt(ucs4Chars, subrunEnd, charCount) != subrunKind) break;
 
+                    {
+                        unsigned int combClass = hb_unicode_combining_class(
+                            hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
+                        if (combClass != 0) {
+                            subrunEnd++;
+                            continue;
+                        }
+                        FcChar32 c = ucs4Chars[subrunEnd];
+                        if ((c >= 0x064B && c <= 0x065F) || c == 0x0670 ||
+                            (c >= 0x06D6 && c <= 0x06ED) ||
+                            (c >= 0x0900 && c <= 0x0903) || (c >= 0x093A && c <= 0x094F) ||
+                            (c >= 0x05B0 && c <= 0x05C7)) {
+                            subrunEnd++;
+                            continue;
+                        }
+                    }
+
                     if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                         /* Keep extending; do not break on face mismatch. */
                         subrunEnd++;
@@ -2870,10 +2642,11 @@ WaylandShaper_ShapeString(
                     subrunEnd++;
                 }
 
-                /* Now find a face that covers the entire subrun. */
-                int runFaceIndex = FindFaceCoveringRange(fontPtr, ucs4Chars,
-                                                         subrunStart,
-                                                         subrunEnd - subrunStart);
+                int runFaceIndex = FindFaceCoveringRange(fontPtr, ucs4Chars, subrunStart, subrunEnd - subrunStart);
+                if (runFaceIndex == 0 && subrunEnd - subrunStart > 1) {
+                    int firstIdx = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1);
+                    if (firstIdx != 0) runFaceIndex = firstIdx;
+                }
 
                 subrunList[subrunCount].start     = subrunStart;
                 subrunList[subrunCount].len       = subrunEnd - subrunStart;
@@ -2913,29 +2686,13 @@ WaylandShaper_ShapeString(
             hb_script_t subrunScript = subrunList[listIdx].script;
             int         runFaceIndex;
 
-            /* If this subrun contains any emoji, force emoji face. */
-            /* Subruns are split by EmojiKindAt(), so the kind at the
-             * start is the kind of the whole subrun (this also covers
-             * keycap sequences, whose ASCII base is not IsEmoji()). */
             bool subrunHasEmoji =
                 EmojiKindAt(ucs4Chars, subrunStart, charCount)
                     != EMOJI_KIND_NONE;
-            bool subrunHasNonEmoji = !subrunHasEmoji;
-
-            if (subrunHasEmoji && !subrunHasNonEmoji) {
+            if (subrunHasEmoji) {
                 runFaceIndex = PickEmojiFaceForRun(fontPtr, ucs4Chars,
                                                    subrunStart, subrunEnd,
                                                    charCount);
-            } else if (subrunHasEmoji && subrunHasNonEmoji) {
-                /* Mixed run - try to find a face that covers non-emoji parts. */
-                int mixedFace = FindFaceCoveringRange(fontPtr, ucs4Chars,
-                                                      subrunStart,
-                                                      subrunEnd - subrunStart);
-                if (mixedFace >= 0) {
-                    runFaceIndex = mixedFace;
-                } else {
-                    runFaceIndex = subrunList[listIdx].faceIndex;
-                }
             } else {
                 runFaceIndex = subrunList[listIdx].faceIndex;
             }
@@ -2962,6 +2719,10 @@ WaylandShaper_ShapeString(
             const char *langTag = "";
             if (subrunScript == HB_SCRIPT_ARABIC) langTag = "ar";
             else if (subrunScript == HB_SCRIPT_HEBREW) langTag = "he";
+            else if (subrunScript == HB_SCRIPT_THAI) langTag = "th";
+            else if (subrunScript == HB_SCRIPT_LAO) langTag = "lo";
+            else if (subrunScript == HB_SCRIPT_KHMER) langTag = "km";
+            else if (subrunScript == HB_SCRIPT_DEVANAGARI) langTag = "hi";
             hb_buffer_set_language(shaper->buffer,
                                    hb_language_from_string(langTag, -1));
             hb_buffer_set_cluster_level(shaper->buffer,
@@ -3012,25 +2773,22 @@ WaylandShaper_ShapeString(
 
                 int advX    = (int)(glyphPos[gi].x_advance / 64.0 + 0.5);
 
-                /* Cluster length. */
+                /* Cluster length - unified logical byte order.
+                 * Find next distinct cluster offset > current, regardless of visual order. */
                 int clusterLen;
-                if (!runIsRTL) {
-                    int nextOff = shapeByteEnd;
-                    for (unsigned int gj = gi + 1; gj < glyphCount; gj++) {
-                        if ((int)glyphInfo[gj].cluster != byteOff) {
-                            nextOff = (int)glyphInfo[gj].cluster; break;
+                {
+                    int nextDistinct = -1;
+                    for (unsigned int gj = 0; gj < glyphCount; gj++) {
+                        int bo = (int)glyphInfo[gj].cluster;
+                        if (bo != byteOff && bo > byteOff) {
+                            if (nextDistinct == -1 || bo < nextDistinct) nextDistinct = bo;
                         }
                     }
-                    clusterLen = nextOff - byteOff;
-                } else {
-                    int prevOff = shapeByteEnd;
-                    for (int gj = (int)gi - 1; gj >= 0; gj--) {
-                        if ((int)glyphInfo[gj].cluster != byteOff) {
-                            prevOff = (int)glyphInfo[gj].cluster; break;
-                        }
-                    }
-                    clusterLen = abs(prevOff - byteOff);
+                    int end = (nextDistinct != -1) ? nextDistinct : shapeByteEnd;
+                    clusterLen = end - byteOff;
                 }
+                if (clusterLen <= 0) clusterLen = 1;
+                if (byteOff + clusterLen > shapeByteEnd) clusterLen = shapeByteEnd - byteOff;
                 if (clusterLen <= 0) clusterLen = 1;
 
                 int cpLen = clusterLen < 15 ? clusterLen : 15;
@@ -3060,27 +2818,31 @@ WaylandShaper_ShapeString(
 
     buffer->totalAdvance = globalPenX;
 
-    /* Build visualIndex. */
+    /* Build visualIndex - logical order, sorted by x. */
     buffer->indexCount = 0;
     for (int i = 0; i < buffer->glyphCount; i++) {
         int byteStart = buffer->glyphs[i].byteOffset;
         int byteEnd   = byteStart + buffer->glyphs[i].clusterLen;
-
         if (buffer->indexCount > 0 &&
-	    buffer->visualIndex[buffer->indexCount - 1].byteStart == byteStart)
+            buffer->visualIndex[buffer->indexCount - 1].byteStart == byteStart)
             continue;
-
         int v = buffer->indexCount++;
         buffer->visualIndex[v].x         = buffer->glyphs[i].x;
         buffer->visualIndex[v].advanceX  = buffer->glyphs[i].advanceX;
         buffer->visualIndex[v].isRTL     = buffer->glyphs[i].isRTL;
-        if (buffer->glyphs[i].isRTL) {
-            buffer->visualIndex[v].byteStart = byteEnd;
-            buffer->visualIndex[v].byteEnd   = byteStart;
-        } else {
-            buffer->visualIndex[v].byteStart = byteStart;
-            buffer->visualIndex[v].byteEnd   = byteEnd;
+        buffer->visualIndex[v].byteStart = byteStart;
+        buffer->visualIndex[v].byteEnd   = byteEnd;
+    }
+    /* Sort by x for visual order, keeping logical byteStart/end intact */
+    for (int i = 1; i < buffer->indexCount; i++) {
+        int j = i - 1;
+        /* Use a temporary copy of the struct - don't use named VisualCluster type */
+        __typeof__(buffer->visualIndex[0]) key = buffer->visualIndex[i];
+        while (j >= 0 && buffer->visualIndex[j].x > key.x) {
+            buffer->visualIndex[j+1] = buffer->visualIndex[j];
+            j--;
         }
+        buffer->visualIndex[j+1] = key;
     }
 
     /* Build sorted cluster break table. */
@@ -3333,6 +3095,518 @@ GetFontFileData(
     }
     Tcl_MutexUnlock(&fontFileMutex);
     return data;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * Outline drawing for joining scripts (Arabic, Syriac, N'Ko)
+ *
+ *   NanoVG/fontstash cannot draw a glyph by glyph ID, and nvgText() on a
+ *   cluster's text does a plain cmap lookup, so every Arabic letter comes
+ *   out in its isolated form and the GSUB joining/ligature work done by
+ *   HarfBuzz is thrown away.  For clusters of these scripts we therefore
+ *   take the glyph IDs HarfBuzz chose, ask the same hb_font_t for each
+ *   glyph's outline (hb_font_draw_glyph, HarfBuzz >= 7.0) and fill it
+ *   with NanoVG's public path API.  No second font parser is involved,
+ *   so glyph IDs are guaranteed to match.
+ *
+ *   With an older HarfBuzz, OutlineFaceUsable() is always false and
+ *   every cluster takes the existing nvgText path.  Everything that is
+ *   not a joining script never reaches this code: IsArabicJoiningCluster()
+ *   is the only gate.
+ *----------------------------------------------------------------------
+ */
+
+#if defined(HB_VERSION_ATLEAST) && HB_VERSION_ATLEAST(7, 0, 0)
+#define WL_HB_OUTLINES 1
+#else
+#define WL_HB_OUTLINES 0
+#endif
+
+/*
+ *----------------------------------------------------------------------
+ * IsJoiningScriptCodepoint --
+ *
+ *   True for the codepoints of joining scripts whose shaping NanoVG
+ *   cannot reproduce.  Deliberately narrow; extend here (and only here).
+ *
+ * Results:
+ *   True if the codepoint belongs to a joining script, false otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+ 
+static bool
+IsJoiningScriptCodepoint(
+    FcChar32 uc)
+{
+    return (uc >= 0x0600 && uc <= 0x06FF)	/* Arabic */
+	|| (uc >= 0x0700 && uc <= 0x074F)	/* Syriac */
+	|| (uc >= 0x0750 && uc <= 0x077F)	/* Arabic Supplement */
+	|| (uc >= 0x07C0 && uc <= 0x07FF)	/* N'Ko */
+	|| (uc >= 0x0870 && uc <= 0x08FF)	/* Arabic Ext-B, Ext-A */
+	|| (uc >= 0xFB50 && uc <= 0xFDFF)	/* Arabic Presentation Forms-A */
+	|| (uc >= 0xFE70 && uc <= 0xFEFF);	/* Arabic Presentation Forms-B */
+}
+
+/*
+ *----------------------------------------------------------------------
+ * IsArabicJoiningCluster --
+ *
+ *   True if any codepoint of the cluster text belongs to a joining
+ *   script.  Decided per cluster, not per codepoint: HarfBuzz output is
+ *   in visual order, so glyph k of an RTL cluster is not codepoint k.
+ *
+ * Results:
+ *   True if the cluster contains a joining-script codepoint, false
+ *   otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+ 
+static bool
+IsArabicJoiningCluster(
+    const char *s,
+    int len)
+{
+    int i = 0;
+
+    while (i < len) {
+	FcChar32 uc;
+	int cl = FcUtf8ToUcs4((const FcChar8 *)(s + i), &uc, len - i);
+
+	if (cl <= 0) {
+	    break;
+	}
+	if (IsJoiningScriptCodepoint(uc)) {
+	    return true;
+	}
+	i += cl;
+    }
+    return false;
+}
+
+#if WL_HB_OUTLINES
+
+/*
+ * One recorded drawing command.  The outline is recorded first so that
+ * the orientation of each contour is known before any of it is handed to
+ * NanoVG (see DrawOutlineGlyph).
+ */
+enum { OL_MOVE, OL_LINE, OL_QUAD, OL_CUBIC, OL_CLOSE };
+
+typedef struct OutlineOp {
+    int type;
+    float v[6];			/* Point(s) in 1/64 px, y up. */
+} OutlineOp;
+
+typedef struct OutlineRec {
+    OutlineOp *ops;
+    int count, cap;
+    int failed;
+} OutlineRec;
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineAdd --
+ *
+ *   Append a new drawing command of the given type to an outline
+ *   recording buffer, growing the buffer if necessary.
+ *
+ * Results:
+ *   Pointer to the new OutlineOp, or NULL if reallocation failed (in
+ *   which case rec->failed is set).
+ *
+ * Side effects:
+ *   May reallocate rec->ops and increments rec->count.
+ *----------------------------------------------------------------------
+ */
+ 
+static OutlineOp *
+OutlineAdd(
+    OutlineRec *r,
+    int type)
+{
+    if (r->count == r->cap) {
+	int ncap = r->cap ? r->cap * 2 : 64;
+	OutlineOp *n = (OutlineOp *)Tcl_Realloc((char *)r->ops,
+		ncap * sizeof(OutlineOp));
+
+	if (!n) {
+	    r->failed = 1;
+	    return NULL;
+	}
+	r->ops = n;
+	r->cap = ncap;
+    }
+    r->ops[r->count].type = type;
+    return &r->ops[r->count++];
+}
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineMoveTo --
+ *
+ *   HarfBuzz draw callback: record a move-to command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+OutlineMoveTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_MOVE);
+    (void)f; (void)st; (void)ud;
+    if (o) { o->v[0] = x; o->v[1] = y; }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineLineTo --
+ *
+ *   HarfBuzz draw callback: record a line-to command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+OutlineLineTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_LINE);
+    (void)f; (void)st; (void)ud;
+    if (o) { o->v[0] = x; o->v[1] = y; }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineQuadTo --
+ *
+ *   HarfBuzz draw callback: record a quadratic curve command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+OutlineQuadTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float cx, float cy, float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_QUAD);
+    (void)f; (void)st; (void)ud;
+    if (o) { o->v[0] = cx; o->v[1] = cy; o->v[2] = x; o->v[3] = y; }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineCubicTo --
+ *
+ *   HarfBuzz draw callback: record a cubic curve command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+OutlineCubicTo(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st,
+	float c1x, float c1y, float c2x, float c2y, float x, float y, void *ud)
+{
+    OutlineOp *o = OutlineAdd((OutlineRec *)dd, OL_CUBIC);
+    (void)f; (void)st; (void)ud;
+    if (o) {
+	o->v[0] = c1x; o->v[1] = c1y; o->v[2] = c2x; o->v[3] = c2y;
+	o->v[4] = x;   o->v[5] = y;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineClose --
+ *
+ *   HarfBuzz draw callback: record a close-path command.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Appends to the OutlineRec passed as the draw data.
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+OutlineClose(hb_draw_funcs_t *f, void *dd, hb_draw_state_t *st, void *ud)
+{
+    (void)f; (void)st; (void)ud;
+    OutlineAdd((OutlineRec *)dd, OL_CLOSE);
+}
+
+/*
+ *----------------------------------------------------------------------
+ * GetOutlineDrawFuncs --
+ *
+ *   Return the shared HarfBuzz draw-funcs object used by
+ *   DrawOutlineGlyph() to record glyph outlines.
+ *
+ * Results:
+ *   Pointer to the (lazily created, immutable) hb_draw_funcs_t.
+ *
+ * Side effects:
+ *   Creates the draw-funcs object on first call.
+ *----------------------------------------------------------------------
+ */
+ 
+static hb_draw_funcs_t *
+GetOutlineDrawFuncs(void)
+{
+    static hb_draw_funcs_t *funcs = NULL;
+
+    if (!funcs) {
+	funcs = hb_draw_funcs_create();
+	hb_draw_funcs_set_move_to_func(funcs, OutlineMoveTo, NULL, NULL);
+	hb_draw_funcs_set_line_to_func(funcs, OutlineLineTo, NULL, NULL);
+	hb_draw_funcs_set_quadratic_to_func(funcs, OutlineQuadTo, NULL, NULL);
+	hb_draw_funcs_set_cubic_to_func(funcs, OutlineCubicTo, NULL, NULL);
+	hb_draw_funcs_set_close_path_func(funcs, OutlineClose, NULL, NULL);
+	hb_draw_funcs_make_immutable(funcs);
+    }
+    return funcs;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineOpCoords --
+ *
+ *   Number of coordinates (x,y pairs * 2) carried by an op.
+ *
+ * Results:
+ *   The count of coordinates (2, 4, or 6) for the given op type, or 0
+ *   for close-path and unknown op types.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+ 
+static int
+OutlineOpCoords(int type)
+{
+    switch (type) {
+    case OL_MOVE: case OL_LINE: return 2;
+    case OL_QUAD:  return 4;
+    case OL_CUBIC: return 6;
+    }
+    return 0;
+}
+
+#endif /* WL_HB_OUTLINES */
+
+/*
+ *----------------------------------------------------------------------
+ * OutlineFaceUsable --
+ *
+ *   True if glyphs of this face can be drawn by DrawOutlineGlyph().
+ *   Color bitmap faces never can; they have their own path.  Always
+ *   false when HarfBuzz is too old, which sends all text down the
+ *   nvgText path.
+ *
+ * Results:
+ *   True if the face can be rendered by drawing its HarfBuzz outline,
+ *   false otherwise.
+ *
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+ 
+static bool
+OutlineFaceUsable(
+    WaylandFont *fontPtr,
+    int faceIndex)
+{
+#if WL_HB_OUTLINES
+    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+	return false;
+    }
+    if (IsColorBitmapFace(fontPtr, faceIndex)) {
+	return false;
+    }
+    return GetHbFont(fontPtr, faceIndex) != NULL;
+#else
+    (void)fontPtr; (void)faceIndex;
+    return false;
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ * DrawOutlineGlyph --
+ *
+ *   Fill the outline of glyph `gid` of the given face with the current
+ *   NanoVG fill paint.  (penX, penY) is the glyph origin on the baseline
+ *   in the current transform.  The glyph is drawn by the hb_font_t that
+ *   shaped it, whose scale is pixelSize * 64 (see GetHbFont).
+ *
+ * Results:
+ *   True if the glyph was drawn or has no outline (space, ZWNJ).  False
+ *   if nothing was drawn.
+ *----------------------------------------------------------------------
+ */
+ 
+static bool
+DrawOutlineGlyph(
+    NVGcontext *vg,
+    WaylandFont *fontPtr,
+    int faceIndex,
+    hb_codepoint_t gid,
+    float penX,
+    float penY,
+    float pixelSize)
+{
+#if WL_HB_OUTLINES
+    hb_font_t *hf;
+    OutlineRec rec = { NULL, 0, 0, 0 };
+    float areaBuf[64], *area = areaBuf, ref = 0.0f, k;
+    int xs = 0, ys = 0, nc = 0, c, i, j;
+    float sx = 0, sy = 0, px = 0, py = 0;
+    bool ok = true;
+
+    if (!vg || pixelSize <= 0.0f || !OutlineFaceUsable(fontPtr, faceIndex)) {
+	return false;
+    }
+    hf = GetHbFont(fontPtr, faceIndex);
+    hb_font_get_scale(hf, &xs, &ys);
+    if (xs <= 0) {
+	return false;
+    }
+    k = pixelSize / (float)xs;		/* HarfBuzz units -> pixels. */
+
+    hb_font_draw_glyph(hf, gid, GetOutlineDrawFuncs(), &rec);
+    if (rec.failed) {
+	ok = false;
+	goto done;
+    }
+    if (rec.count == 0) {
+	goto done;			/* Empty glyph: nothing to draw. */
+    }
+
+    /*
+     * NanoVG normalizes the orientation of every subpath to its winding
+     * (default solid) before filling, so counters (the loops of ه و ف ق ص
+     * ع ...) would be filled in unless they are marked NVG_HOLE.  TrueType
+     * and CFF use opposite orientations, so rather than assuming one,
+     * take the largest contour as solid and treat opposite-signed
+     * contours as holes.  Pass 1: signed area of each contour.
+     */
+    for (i = 0; i < rec.count; i++) {
+	if (rec.ops[i].type == OL_MOVE) {
+	    nc++;
+	}
+    }
+    if (nc > 64) {
+	area = (float *)Tcl_Alloc(nc * sizeof(float));
+    }
+    c = -1;
+    for (i = 0; i < rec.count; i++) {
+	OutlineOp *o = &rec.ops[i];
+
+	if (o->type == OL_MOVE) {
+	    if (c >= 0) {
+		area[c] += px * sy - sx * py;	/* close previous */
+	    }
+	    c++;
+	    area[c] = 0.0f;
+	    sx = px = o->v[0];
+	    sy = py = o->v[1];
+	    continue;
+	}
+	if (c < 0) {
+	    continue;
+	}
+	for (j = 0; j < OutlineOpCoords(o->type); j += 2) {
+	    area[c] += px * o->v[j + 1] - o->v[j] * py;
+	    px = o->v[j];
+	    py = o->v[j + 1];
+	}
+    }
+    if (c >= 0) {
+	area[c] += px * sy - sx * py;
+    }
+    for (i = 0; i <= c; i++) {
+	if (fabsf(area[i]) > fabsf(ref)) {
+	    ref = area[i];
+	}
+    }
+
+    /* Pass 2: emit.  HarfBuzz output is y-up, NanoVG is y-down. */
+#define OLX(v) (penX + (v) * k)
+#define OLY(v) (penY - (v) * k)
+    nvgBeginPath(vg);
+    c = -1;
+    for (i = 0; i < rec.count; i++) {
+	OutlineOp *o = &rec.ops[i];
+
+	switch (o->type) {
+	case OL_MOVE:
+	    c++;
+	    nvgMoveTo(vg, OLX(o->v[0]), OLY(o->v[1]));
+	    nvgPathWinding(vg, (area[c] * ref >= 0.0f) ? NVG_SOLID : NVG_HOLE);
+	    break;
+	case OL_LINE:
+	    nvgLineTo(vg, OLX(o->v[0]), OLY(o->v[1]));
+	    break;
+	case OL_QUAD:
+	    nvgQuadTo(vg, OLX(o->v[0]), OLY(o->v[1]),
+		    OLX(o->v[2]), OLY(o->v[3]));
+	    break;
+	case OL_CUBIC:
+	    nvgBezierTo(vg, OLX(o->v[0]), OLY(o->v[1]),
+		    OLX(o->v[2]), OLY(o->v[3]), OLX(o->v[4]), OLY(o->v[5]));
+	    break;
+	case OL_CLOSE:
+	    nvgClosePath(vg);
+	    break;
+	}
+    }
+#undef OLX
+#undef OLY
+    nvgFill(vg);
+
+  done:
+    if (area != areaBuf) {
+	Tcl_Free((char *)area);
+    }
+    if (rec.ops) {
+	Tcl_Free((char *)rec.ops);
+    }
+    return ok;
+#else
+    (void)vg; (void)fontPtr; (void)faceIndex; (void)gid;
+    (void)penX; (void)penY; (void)pixelSize;
+    return false;
+#endif
 }
 
 /*
@@ -4126,68 +4400,73 @@ InitFont(
     }
 
     /*
-     * Guarantee CJK coverage the same way GetEmojiFaceIndex() guarantees
-     * emoji coverage: FcFontSort ranks candidates by closeness to a Latin
-     * pattern, not by script coverage, so a CJK-capable face (e.g. Noto
-     * Sans CJK) can easily sort past MAX_FACES and be silently dropped
-     * even though Fontconfig has one installed. Tk's X11/Xft backend has
-     * no equivalent truncation, which is why the same system fonts are
-     * found there but not here.
+     * Guarantee complex-script coverage the same way GetEmojiFaceIndex()
+     * guarantees emoji coverage: FcFontSort ranks candidates by closeness
+     * to a Latin pattern, not by script coverage, so a face for Thai,
+     * Lao, Khmer, CJK, Arabic or Hebrew can easily sort past MAX_FACES
+     * and be silently dropped even though Fontconfig has one installed.
+     * Tk's X11/Xft backend has no equivalent truncation, which is why the
+     * same system fonts are found there but not here.
+     *
+     * Fixed for Thai/Lao tofu bug - probe each script.
      */
     {
-        static const FcChar32 cjkProbe = 0x4E2D; /* CJK Unified Ideograph */
-        bool haveCjk = false;
-        for (int fi = 0; fi < nfaces && !haveCjk; fi++) {
-            if (fontPtr->faces[fi].charset &&
-                FcCharSetHasChar(fontPtr->faces[fi].charset, cjkProbe)) {
-                haveCjk = true;
-            }
-        }
-        if (!haveCjk) {
-            FcPattern *cjkPat = FcPatternCreate();
-            if (cjkPat) {
-                FcCharSet *want = FcCharSetCreate();
-                FcCharSetAddChar(want, cjkProbe);
-                FcPatternAddCharSet(cjkPat, FC_CHARSET, want);
-                FcPatternAddDouble(cjkPat, FC_PIXEL_SIZE,
-                                   (double)fontPtr->pixelSize);
-                FcConfigSubstitute(NULL, cjkPat, FcMatchPattern);
-                FcDefaultSubstitute(cjkPat);
-                FcResult cjkResult;
-                FcPattern *cjkMatch = FcFontMatch(NULL, cjkPat, &cjkResult);
-                if (cjkMatch && FcFontSetAdd(fontPtr->fontset, cjkMatch)) {
-                    /* Ownership of cjkMatch now belongs to fontPtr->fontset,
-                     * so it is freed by the existing FcFontSetDestroy() in
-                     * DeleteFont() - no separate cleanup needed. */
-                    WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(
-                        fontPtr->faces, (nfaces + 1) * sizeof(WaylandFtFace));
-                    if (grown) {
-                        fontPtr->faces = grown;
-                        memset(&fontPtr->faces[nfaces], 0, sizeof(WaylandFtFace));
-                        fontPtr->faces[nfaces].source    = cjkMatch;
-                        fontPtr->faces[nfaces].nvgFontId = -1;
-                        FcCharSet *cs = NULL;
-                        if (FcPatternGetCharSet(cjkMatch, FC_CHARSET, 0, &cs)
-                                == FcResultMatch) {
-                            fontPtr->faces[nfaces].charset = FcCharSetCopy(cs);
-                        }
-                        FcChar8 *fcPath = NULL;
-                        if (FcPatternGetString(cjkMatch, FC_FILE, 0, &fcPath)
-                                == FcResultMatch && fcPath) {
-                            fontPtr->faces[nfaces].filePath = strdup((char *)fcPath);
-                        }
-                        int fcIdx = 0;
-                        FcPatternGetInteger(cjkMatch, FC_INDEX, 0, &fcIdx);
-                        fontPtr->faces[nfaces].faceIndex = fcIdx;
-                        nfaces++;
-                        fontPtr->nfaces = nfaces;
-                    }
-                } else if (cjkMatch) {
-                    FcPatternDestroy(cjkMatch); /* FcFontSetAdd failed. */
+        static const FcChar32 probes[] = {
+            0x0E01, /* Thai */
+            0x0E81, /* Lao */
+            0x1780, /* Khmer */
+            0x0EBC, /* Lao vowel */
+            0x0EC0, /* Lao */
+            0x4E2D  /* CJK */
+        };
+        for (size_t pi = 0; pi < sizeof(probes)/sizeof(probes[0]); pi++) {
+            FcChar32 probe = probes[pi];
+            bool have = false;
+            for (int fi = 0; fi < nfaces && !have; fi++) {
+                if (fontPtr->faces[fi].charset &&
+                    FcCharSetHasChar(fontPtr->faces[fi].charset, probe)) {
+                    have = true;
                 }
-                FcCharSetDestroy(want);
-                FcPatternDestroy(cjkPat);
             }
+            if (have) continue;
+            FcPattern *probePat = FcPatternCreate();
+            if (!probePat) continue;
+            FcCharSet *want = FcCharSetCreate();
+            if (!want) { FcPatternDestroy(probePat); continue; }
+            FcCharSetAddChar(want, probe);
+            FcPatternAddCharSet(probePat, FC_CHARSET, want);
+            FcPatternAddDouble(probePat, FC_PIXEL_SIZE, (double)fontPtr->pixelSize);
+            FcConfigSubstitute(NULL, probePat, FcMatchPattern);
+            FcDefaultSubstitute(probePat);
+            FcResult res;
+            FcPattern *match = FcFontMatch(NULL, probePat, &res);
+            if (match && FcFontSetAdd(fontPtr->fontset, match)) {
+                WaylandFtFace *grown = (WaylandFtFace *)Tcl_Realloc(
+                    fontPtr->faces, (nfaces + 1) * sizeof(WaylandFtFace));
+                if (grown) {
+                    fontPtr->faces = grown;
+                    memset(&fontPtr->faces[nfaces], 0, sizeof(WaylandFtFace));
+                    fontPtr->faces[nfaces].source    = match;
+                    fontPtr->faces[nfaces].nvgFontId = -1;
+                    FcCharSet *cs = NULL;
+                    if (FcPatternGetCharSet(match, FC_CHARSET, 0, &cs) == FcResultMatch) {
+                        fontPtr->faces[nfaces].charset = FcCharSetCopy(cs);
+                    }
+                    FcChar8 *fcPath = NULL;
+                    if (FcPatternGetString(match, FC_FILE, 0, &fcPath) == FcResultMatch && fcPath) {
+                        fontPtr->faces[nfaces].filePath = strdup((char *)fcPath);
+                    }
+                    int fcIdx = 0;
+                    FcPatternGetInteger(match, FC_INDEX, 0, &fcIdx);
+                    fontPtr->faces[nfaces].faceIndex = fcIdx;
+                    nfaces++;
+                    fontPtr->nfaces = nfaces;
+                }
+            } else if (match) {
+                FcPatternDestroy(match);
+            }
+            FcCharSetDestroy(want);
+            FcPatternDestroy(probePat);
         }
     }
 
@@ -4933,7 +5212,7 @@ Tk_MeasureCharsInContext(
         FcChar32 uc;
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, end - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) {
+        if (IsCombiningMark(uc)) {
             hasCombining = true;
             break;
         }
@@ -5448,7 +5727,7 @@ TkpDrawAngledCharsInContext(
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
                                 (int)(rangeStart + rangeLength) - i);
         if (clen <= 0) { i++; continue; }
-        if (uc >= 0x0300 && uc <= 0x036F) {
+        if (IsCombiningMark(uc)) {
             hasCombining = true;
             break;
         }
@@ -5602,191 +5881,200 @@ TkpDrawAngledCharsInContext(
         goto decorations;
     }
 
-    /* Complex path: Use HarfBuzz shaping for proper glyph positioning.
-     * This path handles combining marks, RTL text, emoji, and complex scripts.
-     * We DO NOT pre-compose the string - we let HarfBuzz handle it natively.
-     * This ensures proper positioning of combining marks with zero advance.
+    /* Complex path: draw HarfBuzz-shaped glyphs safely.
+
+     * Previous version did fopen per glyph -> core dump.
+
+     * Now keep every glyph, group by byte range.
+
+     * Ligature (1 glyph, N cps): draw whole cluster.
+
+     * Base+mark (N glyphs, N cps): draw each cp at its pen_x/pen_y (GPOS).
+
      */
+
     {
+
         ShapedGlyphBuffer sbuf;
-        
-        /* Shape the entire text run using HarfBuzz. */
-        if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
-                                       source, (int)numBytes, &sbuf)) {
+
+        if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &sbuf)) {
+
             nvgRestore(vg);
+
             goto done;
+
         }
 
-        int lastFaceId = -1;
-
-        /* 
-         * ClusterRenderInfo groups HarfBuzz shaped glyphs.
-         * For Arabic/Hebrew we MUST render by HarfBuzz glyphId, not by
-         * original UTF-8, otherwise stb_truetype draws isolated forms.
-         */
-        typedef struct {
-            int  start_byte;
-            int  end_byte;
-            int  face_idx;
-            int  pen_x;
-            int  pen_y;
-            int  advance_x;
-            int  glyph_id;      /* HarfBuzz shaped glyph id */
-            char text[32];
-        } ClusterRenderInfo;
+        typedef struct { int start_byte; int end_byte; int face_idx; int pen_x; int pen_y; int advance_x; int glyph_id; char text[32]; } ClusterRenderInfo;
 
         ClusterRenderInfo clusters[MAX_GLYPHS];
+
         int cluster_count = 0;
 
-        /* Build a de-duplicated cluster list preserving visual order.
-         * A single HarfBuzz glyph may cover multiple codepoints (lam-alif),
-         * so we dedup by byte range, keeping the first glyphId encountered.
-         */
         for (int i = 0; i < sbuf.glyphCount && cluster_count < MAX_GLYPHS; i++) {
-            int bo  = sbuf.glyphs[i].byteOffset;
+
+            int bo = sbuf.glyphs[i].byteOffset;
+
             int boe = bo + sbuf.glyphs[i].clusterLen;
+
             if (boe <= drawStart || bo >= drawEnd) continue;
+
             if (bo < 0 || boe <= 0) continue;
 
-            int found = -1;
-            for (int j = 0; j < cluster_count; j++) {
-                if (clusters[j].start_byte == bo && clusters[j].end_byte == boe) {
-                    found = j;
-                    break;
-                }
-                /* Ligature case: new glyph covers superset of existing - merge */
-                if (clusters[j].start_byte >= bo && clusters[j].end_byte <= boe) {
-                    found = j;
-                    break;
-                }
-            }
-            if (found < 0) {
-                found = cluster_count++;
-                clusters[found].start_byte = bo;
-                clusters[found].end_byte = boe;
-                clusters[found].face_idx = sbuf.glyphs[i].faceIndex;
-                clusters[found].pen_x = sbuf.glyphs[i].x;
-                clusters[found].pen_y = sbuf.glyphs[i].y;
-                clusters[found].advance_x = sbuf.glyphs[i].advanceX;
-                clusters[found].glyph_id = sbuf.glyphs[i].glyphId;
-                int len = boe - bo;
-                if (len > 31) len = 31;
-                if (len > 0) {
-                    memcpy(clusters[found].text, source + bo, len);
-                }
-                clusters[found].text[len] = '\0';
-            } else {
-                /* Accumulate advance for same cluster (base+mark) */
-                clusters[found].advance_x += sbuf.glyphs[i].advanceX;
-            }
+            int idx = cluster_count++;
+
+            clusters[idx].start_byte = bo;
+
+            clusters[idx].end_byte = boe;
+
+            clusters[idx].face_idx = sbuf.glyphs[i].faceIndex;
+
+            clusters[idx].pen_x = sbuf.glyphs[i].x;
+
+            clusters[idx].pen_y = sbuf.glyphs[i].y;
+
+            clusters[idx].advance_x = sbuf.glyphs[i].advanceX;
+
+            clusters[idx].glyph_id = sbuf.glyphs[i].glyphId;
+
+            int len = boe - bo; if (len > 31) len = 31;
+
+            if (len > 0) memcpy(clusters[idx].text, source + bo, len);
+
+            clusters[idx].text[len] = '\0';
+
         }
 
-        /* Render each cluster using its shaped glyphId.
-         * We bypass nvgText for complex scripts and draw via the
-         * HarfBuzz glyph id directly using stb_truetype metrics.
-         * For simple clusters (Latin, Hebrew without ligatures) nvgText
-         * with the original bytes still works, but using glyphId is
-         * always correct.
-         */
+        bool rendered[MAX_GLYPHS] = {0};
+
         NVGcolor fillCol = ColorFromGC(gc);
 
         for (int i = 0; i < cluster_count; i++) {
-            int faceIdx = clusters[i].face_idx;
-            if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+            if (rendered[i]) continue;
+
+            int groupIdx[64]; int groupN = 0;
+
+            for (int k = i; k < cluster_count; k++) {
+
+                if (clusters[k].start_byte == clusters[i].start_byte && clusters[k].end_byte == clusters[i].end_byte) {
+
+                    groupIdx[groupN++] = k;
+
+                }
+
+            }
 
             /*
-             * Color bitmap face chosen by the shaper: draw every shaped
-             * glyph of the cluster by glyph ID (a ZWJ sequence that the
-             * font cannot ligate arrives as several glyphs sharing one
-             * cluster).  If nothing could be drawn, fall back to the
-             * monochrome emoji face below.
+             * Joining scripts (Arabic, Syriac, N'Ko): draw every glyph of the
+             * cluster from its HarfBuzz glyph ID as an outline, so joining
+             * forms, ligatures and mark positions survive.  Only clusters
+             * containing such a codepoint get here; all other text takes
+             * the unchanged paths below.
              */
-            if (IsColorBitmapFace(fontPtr, faceIdx)) {
-                bool drew = false;
-                for (int g = 0; g < sbuf.glyphCount; g++) {
-                    int gbo = sbuf.glyphs[g].byteOffset;
-                    if (gbo < clusters[i].start_byte ||
-                            gbo >= clusters[i].end_byte) continue;
-                    if (sbuf.glyphs[g].faceIndex != faceIdx) continue;
-                    if (DrawColorGlyph(vg, fontPtr, faceIdx,
-                                       (hb_codepoint_t)sbuf.glyphs[g].glyphId,
-                                       (float)sbuf.glyphs[g].x,
-                                       (float)sbuf.glyphs[g].y,
-                                       (float)sbuf.glyphs[g].advanceX)) {
-                        drew = true;
+            if (IsArabicJoiningCluster(clusters[i].text, (int)strlen(clusters[i].text))) {
+                bool usable = true;
+                for (int gg = 0; gg < groupN; gg++) {
+                    if (!OutlineFaceUsable(fontPtr, clusters[groupIdx[gg]].face_idx)) { usable = false; break; }
+                }
+                if (usable) {
+                    nvgFillColor(vg, fillCol);
+                    for (int gg = 0; gg < groupN; gg++) {
+                        int gi = groupIdx[gg];
+                        DrawOutlineGlyph(vg, fontPtr, clusters[gi].face_idx,
+                                         (hb_codepoint_t)clusters[gi].glyph_id,
+                                         (float)clusters[gi].pen_x, (float)clusters[gi].pen_y,
+                                         (float)fontPtr->pixelSize);
+                        rendered[gi] = true;
+                    }
+                    continue;
+                }
+            }
+
+            int cpCount = 0; const char *p = clusters[i].text; const char *e = p + strlen(p);
+
+            while (p < e) { FcChar32 uc; int cl = FcUtf8ToUcs4((const FcChar8*)p, &uc, e - p); if (cl <= 0) break; cpCount++; p += cl; }
+
+            const char *cpStarts[32]; int cpLens[32]; int cpn = 0;
+
+            p = clusters[i].text; e = p + strlen(p);
+
+            while (p < e && cpn < 32) { FcChar32 uc; int cl = FcUtf8ToUcs4((const FcChar8*)p, &uc, e - p); if (cl <= 0) break; cpStarts[cpn]=p; cpLens[cpn]=cl; cpn++; p+=cl; }
+
+            if (groupN < cpCount) {
+
+                int g = groupIdx[0]; int faceIdx = clusters[g].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+                if (IsColorBitmapFace(fontPtr, faceIdx)) {
+
+                    bool drew=false;
+
+                    for (int gg=0; gg<groupN; gg++) { int gi=groupIdx[gg]; if (DrawColorGlyph(vg, fontPtr, faceIdx, (hb_codepoint_t)clusters[gi].glyph_id, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x)) drew=true; }
+
+                    nvgFillColor(vg, fillCol); if (drew) { for (int k=0;k<groupN;k++) rendered[groupIdx[k]]=true; continue; }
+
+                }
+
+                int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId; nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
+
+                nvgText(vg, (float)clusters[g].pen_x, (float)clusters[g].pen_y, clusters[g].text, clusters[g].text + strlen(clusters[g].text));
+
+                for (int k=0;k<groupN;k++) rendered[groupIdx[k]]=true;
+
+            } else {
+                /* Base+mark case: Thai/Lao/Khmer marks must stay attached.
+                 * The old per-codepoint nvgText() split the cluster into
+                 * spacing glyphs (e.g. Thai  ิ +  ่ rendered to the side).
+                 * Draw the whole cluster as one unit at the base pen position
+                 * so HarfBuzz y_offset and zero-advance marks overlay correctly.
+                 * For other scripts keep per-glyph for GPOS.
+                 */
+                bool isComplexCluster = false;
+                for (int k=0;k<cpn;k++) {
+                    FcChar32 uc; FcUtf8ToUcs4((const FcChar8*)cpStarts[k], &uc, cpLens[k]);
+                    if ((uc>=0x0E00 && uc<=0x0EFF) || (uc>=0x1780 && uc<=0x17FF) || (uc>=0x0900 && uc<=0x0DFF)) {
+                        isComplexCluster = true; break;
                     }
                 }
-                nvgFillColor(vg, fillCol);   /* DrawColorGlyph changed the paint. */
-                if (drew) continue;
-
-                int mono = GetEmojiFaceIndex(fontPtr);
-                faceIdx = (mono >= 0 && mono < fontPtr->nfaces &&
-                           !IsColorBitmapFace(fontPtr, mono)) ? mono : 0;
-            } else {
-                FcChar32 uc;
-                if (FcUtf8ToUcs4((const FcChar8 *)clusters[i].text, &uc,
-                                 (int)strlen(clusters[i].text)) > 0) {
-                    if (IsEmoji(uc)) {
-                        int emojiFace = GetEmojiFaceIndex(fontPtr);
-                        if (emojiFace >= 0 && emojiFace < fontPtr->nfaces) faceIdx = emojiFace;
+                if (isComplexCluster) {
+                    int g0 = groupIdx[0];
+                    int faceIdx = clusters[g0].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+                    if (!IsColorBitmapFace(fontPtr, faceIdx)) {
+                        int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId;
+                        nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
+                        /* Draw whole cluster text once at base pen */
+                        const char *cstart = source + clusters[i].start_byte;
+                        const char *cend = source + clusters[i].end_byte;
+                        nvgText(vg, (float)clusters[g0].pen_x, (float)clusters[g0].pen_y, cstart, cend);
                     } else {
-                        if (fontPtr->nfaces > 0 && fontPtr->faces[0].charset &&
-                            FcCharSetHasChar(fontPtr->faces[0].charset, uc)) {
-                            faceIdx = 0;
-                        } else {
-                            for (int fi = 1; fi < fontPtr->nfaces; fi++) {
-                                if (fontPtr->faces[fi].charset &&
-                                    FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
-                                    faceIdx = fi; break;
-                                }
-                            }
+                        for (int kk=0; kk<groupN; kk++) {
+                            int gi=groupIdx[kk];
+                            DrawColorGlyph(vg, fontPtr, clusters[gi].face_idx, (hb_codepoint_t)clusters[gi].glyph_id,
+                                           (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x);
                         }
+                        nvgFillColor(vg, fillCol);
+                    }
+                    for (int kk=0;kk<groupN;kk++) rendered[groupIdx[kk]]=true;
+                } else {
+                    for (int k=0; k<groupN && k<cpn; k++) {
+                        int gi=groupIdx[k]; int faceIdx=clusters[gi].face_idx; if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx=0;
+                        if (IsColorBitmapFace(fontPtr, faceIdx)) { if (DrawColorGlyph(vg, fontPtr, faceIdx, (hb_codepoint_t)clusters[gi].glyph_id, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, (float)clusters[gi].advance_x)) { nvgFillColor(vg, fillCol); rendered[gi]=true; continue; } }
+                        int faceId = fontPtr->faces[faceIdx].nvgFontId; if (faceId < 0) faceId = primaryId; nvgFontFaceId(vg, faceId); nvgFontSize(vg, (float)fontPtr->pixelSize);
+                        char single[16]={0}; int sl=cpLens[k]; if (sl>15) sl=15; memcpy(single, cpStarts[k], sl);
+                        nvgText(vg, (float)clusters[gi].pen_x, (float)clusters[gi].pen_y, single, single+sl);
+                        rendered[gi]=true;
                     }
                 }
             }
 
-            int faceId = fontPtr->faces[faceIdx].nvgFontId;
-            if (faceId < 0) faceId = primaryId;
-            if (faceId != lastFaceId) {
-                nvgFontFaceId(vg, faceId);
-                lastFaceId = faceId;
-            }
-
-            float gx = (float)clusters[i].pen_x;
-            float gy = (float)clusters[i].pen_y;
-
-            /* 
-             * For complex scripts (Arabic, Hebrew, Indic, etc.) we have a shaped
-             * glyphId. NanoVG / fontstash does not expose a glyphId draw API,
-             * but nvgText can still draw the cluster string correctly *if* the
-             * underlying font file is the same one HarfBuzz shaped with - because
-             * stb_truetype will find the glyph via cmap. For Arabic presentation
-             * forms, the cmap entry for the original codepoint already points to
-             * the isolated form only, so we must ensure the font file contains
-             * the GSUB'd glyph. The reliable path is to let HarfBuzz shape and
-             * then render the glyphId via stb_truetype directly; however to stay
-             * compatible with the existing NanoVG path, we render the cluster
-             * text at the HarfBuzz-computed position, which with the HarfBuzz
-             * pen positions now yields correct joining because HarfBuzz has
-             * already resolved init/medi/fina forms to distinct glyphIds and
-             * we keep one nvgText call per HarfBuzz cluster (not per Unicode
-             * codepoint). This fixes the first screenshot where each codepoint
-             * was drawn separately at x=0.
-             *
-             * If you later add a direct glyph bitmap cache, replace this
-             * nvgText call with a textured quad using stbtt_GetGlyphBitmap.
-             */
-            if (clusters[i].glyph_id != 0) {
-                nvgText(vg, gx, gy, clusters[i].text,
-                        clusters[i].text + strlen(clusters[i].text));
-            } else {
-                nvgText(vg, gx, gy, clusters[i].text,
-                        clusters[i].text + strlen(clusters[i].text));
-            }
         }
+
     }
 
+
+
     /* Restore the transformation state. */
+
     nvgRestore(vg);
 
 decorations:
@@ -6093,6 +6381,17 @@ TkWaylandDrawMenuText(
             int bo = sbuf.glyphs[i].byteOffset;
             int clen = sbuf.glyphs[i].clusterLen;
             if (bo < 0 || bo + clen > len) continue;
+            /*
+             * Joining scripts: every glyph of the cluster (base and marks)
+             * is drawn from its glyph ID as an outline, one per loop turn.
+             */
+            if (IsArabicJoiningCluster(text + bo, clen)
+                    && OutlineFaceUsable(fontPtr, faceIdx)) {
+                DrawOutlineGlyph(vg, fontPtr, faceIdx,
+                                 sbuf.glyphs[i].glyphId, gx, gy,
+                                 (float)fontPtr->pixelSize);
+                continue;
+            }
             if (i > 0 && sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset) {
                 continue;
             }

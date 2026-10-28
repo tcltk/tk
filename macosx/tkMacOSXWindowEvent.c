@@ -142,7 +142,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    BOOL movedOnly = [[notification name]
+    bool movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -995,7 +995,7 @@ ExposeRestrictProc(
 {
     self = [super initWithFrame:frame];
     if (self) {
-	self.wantsLayer = YES;
+	self.wantsLayer = true;
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;
@@ -1376,6 +1376,7 @@ static const char *const accentNames[] = {
     );
     // CGDisplayCopyColorSpace retains the colorspace.
     CGColorSpaceRelease(colorspace);
+    CGContextSetInterpolationQuality(newCtx, kCGInterpolationNone);
     CGContextScaleCTM(newCtx, self.layer.contentsScale,
 		      self.layer.contentsScale);
 #if 0

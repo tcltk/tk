@@ -26,7 +26,7 @@ static size_t controlAccentIndex;
 static size_t controlAlternatingRowIndex;
 static size_t selectedTabTextIndex;
 static size_t pressedButtonTextIndex;
-static Bool useFakeAccentColor = NO;
+static bool useFakeAccentColor = false;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 static NSAppearance *lightAqua = nil;
@@ -82,7 +82,7 @@ MODULE_SCOPE
 CGColorRef
 TkMacOSXGetCGColorFromNSColorUsingAppearance(
     NSColor *color,
-    BOOL useDarkAppearance)
+    bool useDarkAppearance)
 {
     __block CGColorRef result = NULL;
     [NSApp performAsCurrentDrawingAppearance:^{
@@ -98,7 +98,7 @@ NSColor *
 TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
     NSColor *color,
     NSColorSpace *colorSpace,
-    BOOL useDarkAppearance)
+    bool useDarkAppearance)
 {
     __block NSColor *result = nil;
     [NSApp performAsCurrentDrawingAppearance:^{
@@ -153,7 +153,7 @@ static void initColorTable()
 	    SEL colorSelector = NSSelectorFromString(colorName);
 	    if (![NSColor respondsToSelector:colorSelector]) {
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
-		    useFakeAccentColor = YES;
+		    useFakeAccentColor = true;
 		} else if (   ![colorName isEqualToString:@"selectedTabTextColor"]
 			   && ![colorName isEqualToString:@"controlAlternatingRowColor"]
 			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
@@ -371,7 +371,7 @@ GetRGBA(
     SystemColorDatum *entry,
     unsigned long pixel,
     CGFloat *rgba,
-    BOOL useDarkAppearance)
+    bool useDarkAppearance)
 {
     NSColor *bgColor, *color = nil;
     int OSVersion = [NSApp macOSVersion];
@@ -481,7 +481,7 @@ SetCGColorComponents(
     SystemColorDatum *entry,
     unsigned long pixel,
     CGColorRef *c,
-    BOOL useDarkAppearance)
+    bool useDarkAppearance)
 {
     CGFloat rgba[4] = {0, 0, 0, 1};
 
@@ -529,7 +529,7 @@ TkSetMacColor(
 {
     // Arbitrary; existing usage of TkSetMacColor() does not
     // seem to depend on appearance
-    BOOL useDarkAppearance = NO;
+    bool useDarkAppearance = false;
 
     return TkSetMacColor2(pixel, (CGColorRef *)macColor, useDarkAppearance);
 }
@@ -537,7 +537,7 @@ bool
 TkSetMacColor2(
     unsigned long pixel,	/* Pixel value to convert. */
     CGColorRef *color,		/* CGColorRef to modify. */
-    BOOL useDarkAppearance)
+    bool useDarkAppearance)
 {
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
 
@@ -567,7 +567,6 @@ TkSetMacColor2(
 
 NSColor*
 TkMacOSXGetNSColor(
-    TCL_UNUSED(GC),
     unsigned long pixel)		/* Pixel value to convert. */
 {
     CGColorRef cgColor = NULL;
@@ -603,10 +602,9 @@ TkMacOSXGetNSColor(
 
 void
 TkMacOSXSetColorInContext(
-    TCL_UNUSED(GC),
     unsigned long pixel,
     CGContextRef context,
-    BOOL useDarkAppearance)
+    bool useDarkAppearance)
 {
     OSStatus err = noErr;
     CGColorRef cgColor = NULL;
@@ -689,7 +687,7 @@ TkpGetColor(
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
 	    CGColorRef c = NULL;
-	    BOOL windowAppearanceIsDark = TkMacOSXInDarkMode(tkwin);
+	    bool windowAppearanceIsDark = TkMacOSXInDarkMode(tkwin);
 
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = (unsigned int)entry->index;

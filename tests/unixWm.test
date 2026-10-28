@@ -141,7 +141,7 @@ foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
 
 set i 1
 foreach geom "+$X+80 +$X+40 +$X+$Y0" {
-    test unixWm-4.$i {moving window while withdrawn} unix {
+    test unixWm-4.$i {moving window while withdrawn} {unix notWayland} {
 	wm withdraw .t
 	pause 10
 	wm geom .t $geom
@@ -243,7 +243,7 @@ test unixWm-6.2 {size changes} unix {
     update
     wm geom .t
 } 250x60+100+$Y0
-test unixWm-6.3 {size changes} unix {
+test unixWm-6.3 {size changes} {unix notWayland} {
     wm geom .t 250x60
     .t config -width 170 -height 140
     wm geom .t {}
@@ -593,7 +593,7 @@ test unixWm-14.1 {Tk_WmCmd procedure, "colormapwindows" option} unix {
     list [catch {wm colormapwindows .t 12 13} msg] $msg
 } {1 {wrong # args: should be "wm colormapwindows window ?windowList?"}}
 # Colormap is unsupported on Wayland.
-test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} {unix && !wayland} {
+test unixWm-14.2 {Tk_WmCmd procedure, "colormapwindows" option} {unix notWayland} {
     destroy .t2
     toplevel .t2 -width 200 -height 200 -colormap new
     wm geom .t2 +0+0
@@ -1426,7 +1426,7 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
     update
     wm geometry .t
 } {30x10+0+0}
-test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} unix {
+test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} {unix notWayland} {
     update
     destroy .t
     update
@@ -1477,7 +1477,7 @@ test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} 
 	    [expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}] \
 	    [winfo width .t] [winfo height .t]
 } {{.t.m: 200x20} {.t: 200x300} 0 0 200 20 0 20 200 300}
-test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} unix {
+test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} {unix notWayland} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1488,7 +1488,7 @@ test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} unix {
     update
     set result
 } {configured: 400 150}
-test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
+test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} {unix notWayland} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1575,7 +1575,7 @@ test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {130 36}
-test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
+test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} {unix notWayland} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm grid .t 5 4 10 12
@@ -1792,7 +1792,7 @@ toplevel .t -width 300 -height 200
 wm geometry .t +0+0
 tkwait visibility .t
 
-test unixWm-48.1 {ParseGeometry procedure} unix {
+test unixWm-48.1 {ParseGeometry procedure} {unix notWayland} {
     wm geometry .t =100x120
     update
     list [winfo width .t] [winfo height .t]
@@ -2280,7 +2280,7 @@ test unixWm-52.1 {TkWmAddToColormapWindows procedure} unix {
     wm colormap .t
 } {}
 # Colormap is unsupported on Wayland.
-test unixWm-52.2 {TkWmAddToColormapWindows procedure} {unix && !wayland} {
+test unixWm-52.2 {TkWmAddToColormapWindows procedure} {unix notWayland} {
     destroy .t
     toplevel .t -colormap new -relief raised -bd 2
     wm geom .t +0+0
@@ -2290,7 +2290,7 @@ test unixWm-52.2 {TkWmAddToColormapWindows procedure} {unix && !wayland} {
     wm colormap .t
 } {.t.f .t}
 # Colormap is unsupported on Wayland.
-test unixWm-52.3 {TkWmAddToColormapWindows procedure} {unix && !wayland} {
+test unixWm-52.3 {TkWmAddToColormapWindows procedure} {unix notWayland} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
@@ -2316,7 +2316,7 @@ test unixWm-52.4 {TkWmAddToColormapWindows procedure} unix {
 } {.t.f}
 
 # Colormap is unsupported on Wayland.
-test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} {unix && !wayland} {
+test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} {unix notWayland} {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
