@@ -22,6 +22,7 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
+#include "tkFont.h"
 #include "tkText.h"
 #include <locale.h>
 
@@ -32,9 +33,7 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define LOG_DISPLAY(drawable) TkTestLogDisplay(drawable)
 #else
-#define LOG_DISPLAY(drawable) 1
 #endif
 
 #ifdef __UNIX__
@@ -78,7 +77,7 @@ typedef struct TImageInstance {
     TImageModel *modelPtr;	/* Pointer to model for image. */
     XColor *fg;			/* Foreground color for drawing in image. */
     GC gc;			/* Graphics context for drawing in image. */
-    Bool displayFailed;         /* macOS display attempted out of drawRect. */
+    bool displayFailed;         /* macOS display attempted out of drawRect. */
     char buffer[200 + TCL_INTEGER_SPACE * 6]; /* message to log on display. */
 } TImageInstance;
 
@@ -166,6 +165,7 @@ static Tcl_ObjCmdProc TestmenubarObjCmd;
 static Tcl_ObjCmdProc TestmetricsObjCmd;
 #endif
 static Tcl_ObjCmdProc TestobjconfigObjCmd;
+static Tcl_ObjCmdProc TestpixelObjCmd;
 static Tk_CustomOptionSetProc CustomOptionSet;
 static Tk_CustomOptionGetProc CustomOptionGet;
 static Tk_CustomOptionRestoreProc CustomOptionRestore;
@@ -239,6 +239,8 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testfont", TestfontObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testmakeexist", TestmakeexistObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testpixel", TestpixelObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
@@ -1486,7 +1488,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    instPtr->displayFailed = False;
+    instPtr->displayFailed = false;
     return instPtr;
 }
 
@@ -1538,34 +1540,20 @@ ImageDisplay(
      * how damage regions are computed.
      */
 
-    if (LOG_DISPLAY(drawable)) {
-	if (instPtr->displayFailed == False) {
+    if (!instPtr->displayFailed) {
 
-	    /*
-	     * Drawing is possible on the first call to DisplayImage.
-	     * Log the message.
-	     */
+	/*
+	 * Drawing is possible on the first call to DisplayImage.
+	 * Log the message.
+	 */
 
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-	    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
+	snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
+	instPtr->modelPtr->imageName, imageX, imageY, width, height);
+    }
 	Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName,
 		    NULL, instPtr->buffer,
 		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-	instPtr->displayFailed = False;
-    } else {
-
-	/*
-	 * Drawing is not possible on the first call to DisplayImage.
-	 * Save the message, but do not log it until the actual display.
-	 */
-
-	if (instPtr->displayFailed == False) {
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-		    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
-	instPtr->displayFailed = True;
-    }
+	instPtr->displayFailed = false;
     if (width > (instPtr->modelPtr->width - imageX)) {
 	width = instPtr->modelPtr->width - imageX;
     }
@@ -2265,6 +2253,151 @@ TestPhotoStringMatchCmd(
     } else {
 	return TCL_ERROR;
     }
+}
+
+#ifndef MAC_OSX_TK
+/*
+ *----------------------------------------------------------------------
+ *
+ * PixelChannel --  (not on macOS, where testpixel reads via TkpReadPixelSRGB)
+ *
+ *	Extract one color channel from a pixel value using the visual's
+ *	channel mask, scaled to 8 bits.
+ *
+ * Results:
+ *	The channel value in the range 0..255, or 0 for an empty mask.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+PixelChannel(
+    unsigned long pixel,
+    unsigned long mask)
+{
+    int bits = 0;
+    unsigned long value;
+
+    if (mask == 0) {
+	return 0;
+    }
+    while ((mask & 1) == 0) {
+	mask >>= 1;
+	pixel >>= 1;
+    }
+    value = pixel & mask;
+    while (mask & 1) {
+	mask >>= 1;
+	bits++;
+    }
+    if (bits >= 8) {
+	return (int) (value >> (bits - 8));
+    }
+    return (int) ((value * 255) / ((1u << bits) - 1));
+}
+#endif /* !MAC_OSX_TK */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestpixelObjCmd --
+ *
+ *	This function implements the "testpixel" command, which reads one
+ *	pixel back from a mapped window and returns it in #rrggbb form.  It
+ *	lets the test suite verify actually rendered output -- e.g. the photo
+ *	alpha-compositing path in tkImgPhotoDisplay/TkpPutRGBAImage and the
+ *	ttk per-node render cache -- for which no script-level facility
+ *	exists.  The x and y coordinates are relative to the window.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestpixelObjCmd(
+    void *clientData,		/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_Window tkwin;
+    int x, y, r, g, b;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window) clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tk_WindowId(tkwin) == None || !Tk_IsMapped(tkwin)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" is not mapped", Tk_PathName(tkwin)));
+	return TCL_ERROR;
+    }
+    if (x < 0 || y < 0 || x >= Tk_Width(tkwin) || y >= Tk_Height(tkwin)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"coordinates %d,%d are outside window \"%s\"",
+		x, y, Tk_PathName(tkwin)));
+	return TCL_ERROR;
+    }
+#ifdef MAC_OSX_TK
+    /*
+     * macOS composites windows through the display's color profile, so a raw
+     * read-back differs from the sRGB values that were drawn.  Read and
+     * convert to sRGB so results match X11 and Windows.
+     */
+    {
+	unsigned char cr, cg, cb;
+
+	if (TkpReadPixelSRGB(tkwin, x, y, &cr, &cg, &cb) != TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	r = cr; g = cg; b = cb;
+    }
+#else
+    {
+	Visual *visual = Tk_Visual(tkwin);
+	XImage *image;
+	unsigned long pixel;
+
+	if (visual->red_mask == 0) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "testpixel requires a TrueColor visual", -1));
+	    return TCL_ERROR;
+	}
+	image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y, 1, 1,
+		AllPlanes, ZPixmap);
+	if (image == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	pixel = XGetPixel(image, 0, 0);
+	r = PixelChannel(pixel, visual->red_mask);
+	g = PixelChannel(pixel, visual->green_mask);
+	b = PixelChannel(pixel, visual->blue_mask);
+	XDestroyImage(image);
+    }
+#endif
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x", r, g, b));
+    return TCL_OK;
 }
 
 

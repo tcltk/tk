@@ -159,6 +159,7 @@ to the userbase.
  - [Missing error-handling when MenuNewEntry() returns NULL](https://core.tcl-lang.org/tk/tktview/346407)
  - ["wm forget" did not release the menubar of the toplevel](https://core.tcl-lang.org/tk/tktview/351552)
  - ["wm manage" is deficient and flickering](https://core.tcl-lang.org/tk/tktview/281753)
+ - [Canvas inconsistently draws lines on Windows](https://core.tcl-lang.org/tk/tktview/220895)
  - [X11: a posted menu stays open when the application loses the focus or its toplevel moves](https://core.tcl-lang.org/tk/tktview/2e3d6c)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
