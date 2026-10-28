@@ -918,6 +918,7 @@ next menubutton to the right is posted.
 On X11, a menu higher than the screen is scrolled with the mouse wheel, or
 while the mouse is over the arrow at its top or bottom.  An entry which
 is activated with the keyboard is scrolled into view.
+On Windows, a menu with scroll arrows is also scrolled with the mouse wheel.
 .PP
 Disabled menu entries are non-responsive:  they do not activate and
 they ignore mouse button presses and releases.

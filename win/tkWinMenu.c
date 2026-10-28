@@ -104,6 +104,8 @@ typedef struct {
 				 * when it sends its WM_MENUSELECT. */
     Tcl_HashTable commandTable;	/* A map of command ids to menu entries */
     Tcl_HashTable winMenuTable;	/* Need this to map HMENUs back to menuPtrs */
+    int wheelDelta;		/* Mouse wheel motion, times the lines per
+				 * notch, not yet turned into scrolling. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -1175,11 +1177,108 @@ TkWinEmbeddedMenuProc(
 /*
  *----------------------------------------------------------------------
  *
+ * ScrollMenuWithWheel --
+ *
+ *	Scrolls the menu under the pointer by a motion of the mouse wheel, if
+ *	it has scroll arrows: each line is a click on the arrow, posted in
+ *	screen coordinates as the menu loop expects them.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Posts mouse messages to the menu window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ScrollMenuWithWheel(
+    ThreadSpecificData *tsdPtr,
+    int delta)
+{
+    POINT pointer, pt;
+    HWND hwnd;
+    HMENU hMenu;
+    WCHAR className[8];
+    RECT winRect, clientRect, firstRect, lastRect;
+    UINT lines = 3;
+    int numItems, content, step, edge, band, count;
+    LPARAM arrow;
+
+    GetCursorPos(&pointer);
+    hwnd = WindowFromPoint(pointer);
+    if (!GetClassNameW(hwnd, className, 8)
+	    || (wcscmp(className, L"#32768") != 0)) {
+	return;
+    }
+
+    /*
+     * Only a menu higher than its window has scroll arrows, in the rows
+     * without entries at the top and the bottom of the window.
+     */
+
+    hMenu = (HMENU)SendMessageW(hwnd, MN_GETHMENU, 0, 0);
+    numItems = GetMenuItemCount(hMenu);
+    if (!GetMenuItemRect(hwnd, hMenu, 0, &firstRect)
+	    || !GetMenuItemRect(hwnd, hMenu, numItems - 1, &lastRect)) {
+	return;
+    }
+    content = lastRect.bottom - firstRect.top;
+    GetClientRect(hwnd, &clientRect);
+    if (content <= clientRect.bottom) {
+	return;
+    }
+    GetWindowRect(hwnd, &winRect);
+    step = (delta > 0) ? 1 : -1;
+    edge = (delta > 0) ? winRect.top : winRect.bottom - 1;
+    pt.x = (winRect.left + winRect.right) / 2;
+    for (pt.y = edge; MenuItemFromPoint(hwnd, hMenu, pt) < 0; pt.y += step) {
+	if (pt.y == (winRect.top + winRect.bottom) / 2) {
+	    return;
+	}
+    }
+    band = abs(pt.y - edge);
+    if (band == 0) {
+	return;
+    }
+
+    SystemParametersInfoW(SPI_GETWHEELSCROLLLINES, 0, &lines, 0);
+    if (lines == WHEEL_PAGESCROLL) {
+	lines = MulDiv(winRect.bottom - winRect.top - 2 * band, numItems,
+		content);
+    }
+    if ((delta < 0) != (tsdPtr->wheelDelta < 0)) {
+	tsdPtr->wheelDelta = 0;
+    }
+    tsdPtr->wheelDelta += delta * (int)lines;
+    count = abs(tsdPtr->wheelDelta / WHEEL_DELTA);
+    tsdPtr->wheelDelta %= WHEEL_DELTA;
+    if (count == 0) {
+	return;
+    }
+
+    /*
+     * Click the middle of the rows without entries, then activate the entry
+     * now under the pointer.
+     */
+
+    arrow = MAKELPARAM(pt.x, edge + step * (band / 2));
+    while (count-- > 0) {
+	PostMessageW(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, arrow);
+	PostMessageW(hwnd, WM_LBUTTONUP, 0, arrow);
+    }
+    PostMessageW(hwnd, WM_MOUSEMOVE, 0, MAKELPARAM(pointer.x, pointer.y));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWinHandleMenuEvent --
  *
  *	Filters out menu messages from messages passed to a top-level. Will
  *	respond appropriately to WM_COMMAND, WM_MENUSELECT, WM_MEASUREITEM,
- *	WM_DRAWITEM
+ *	WM_DRAWITEM, and scrolls menus with the mouse wheel.
  *
  * Result:
  *	Returns 1 if this handled the message; 0 if it did not.
@@ -1502,6 +1601,42 @@ TkWinHandleMenuEvent(
 		*plResult = 0;
 		returnResult = 1;
 	    }
+	}
+	break;
+    }
+
+    case WM_ENTERMENULOOP:
+    case WM_EXITMENULOOP: {
+	/*
+	 * Windows discards the mouse wheel while a menu is posted: receive it
+	 * as raw input meanwhile.
+	 */
+
+	RAWINPUTDEVICE rid;
+
+	rid.usUsagePage = 0x01;		/* Generic desktop controls */
+	rid.usUsage = 0x02;		/* Mouse */
+	if (*pMessage == WM_ENTERMENULOOP) {
+	    rid.dwFlags = RIDEV_INPUTSINK;
+	    rid.hwndTarget = tsdPtr->menuHWND;
+	} else {
+	    rid.dwFlags = RIDEV_REMOVE;
+	    rid.hwndTarget = NULL;
+	}
+	RegisterRawInputDevices(&rid, 1, sizeof(rid));
+	tsdPtr->wheelDelta = 0;
+	break;
+    }
+
+    case WM_INPUT: {
+	RAWINPUT input;
+	UINT size = sizeof(input);
+
+	if ((GetRawInputData((HRAWINPUT)*plParam, RID_INPUT, &input, &size,
+		sizeof(RAWINPUTHEADER)) != (UINT)-1)
+		&& (input.header.dwType == RIM_TYPEMOUSE)
+		&& (input.data.mouse.usButtonFlags & RI_MOUSE_WHEEL)) {
+	    ScrollMenuWithWheel(tsdPtr, (SHORT)input.data.mouse.usButtonData);
 	}
 	break;
     }

@@ -8487,6 +8487,8 @@ WmProc(
     case WM_MENUSELECT:
     case WM_ENTERIDLE:
     case WM_INITMENUPOPUP:
+    case WM_ENTERMENULOOP:
+    case WM_EXITMENULOOP:
 	if (winPtr) {
 	    HWND hMenuHWnd = TkGetEmbeddedMenuHWND((Tk_Window) winPtr);
 
