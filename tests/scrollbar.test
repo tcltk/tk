@@ -71,14 +71,30 @@ proc getTroughSize {w} {
     }
 }
 
+proc getArrowSize {w} {
+    if [string match v* [$w cget -orient]] {
+	return [expr {([winfo height $w] - [getTroughSize $w])/2}]
+    } else {
+	return [expr {([winfo width $w] - [getTroughSize $w])/2}]
+    }
+}
+
 #
 # COMMON TEST SETUP
 #
 # For tests scrollbar-1.*
 #
 
+# On Windows, the arrows and the minimal slider length grow with the scale.
+# At high scale, a scrollbar must be longer than 200 pixels to fit them.
+if {[testConstraint testmetrics]} {
+    set length [expr {max(200, 8*[testmetrics cyvscroll .])}]
+} else {
+    set length 200
+}
+
 foreach {width height} [wm minsize .] {
-    set height [expr {($height < 200) ? 200 : $height}]
+    set height [expr {($height < $length) ? $length : $height}]
     set width [expr {($width < 1) ? 1 : $width}]
 }
 
@@ -313,20 +329,17 @@ test scrollbar-3.34 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 0 1000]
 } 1
 test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
-    format {%.6g} [.s fraction 4 21]
-} [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
-       /([getTroughSize .s] - 1)}]]
+    format {%.6g} [.s fraction 4 [expr {[getArrowSize .s] + 4}]]
+} [format %.6g [expr {4.0/([getTroughSize .s] - 1)}]]
 test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {
-    format {%.6g} [.s fraction 4 179]
-} [format %.6g [expr {(179.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
-       /([getTroughSize .s] - 1)}]]
+    format {%.6g} [.s fraction 4 [expr {[winfo height .s] - [getArrowSize .s] - 4}]]
+} [format %.6g [expr {([getTroughSize .s] - 4.0)/([getTroughSize .s] - 1)}]]
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
-    format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
+    format {%.6g} [.s fraction 4 [expr {[winfo height .s] - [testmetrics cyvscroll .s]}]]
 } 1
 test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {
-    format {%.6g} [.s fraction 4 178]
-} [format %.6g [expr {(178.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
-       /([getTroughSize .s] - 1)}]]
+    format {%.6g} [.s fraction 4 [expr {[winfo height .s] - [getArrowSize .s] - 5}]]
+} [format %.6g [expr {([getTroughSize .s] - 5.0)/([getTroughSize .s] - 1)}]]
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
     expr {
     [format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s] - 2}]]]
@@ -401,17 +414,17 @@ test scrollbar-3.50.2 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
     .s identify 5 5
 } {trough1}
 test scrollbar-3.51 {ScrollbarWidgetCmd procedure, "identify" option} {
-    .s identify 5 35
+    .s identify 5 [expr {[getArrowSize .s] + int(0.1*[getTroughSize .s])}]
 } {trough1}
 test scrollbar-3.52 {ScrollbarWidgetCmd procedure, "identify" option} {
     .s set .3 .6
-    .s identify 5 80
+    .s identify 5 [expr {[getArrowSize .s] + int(0.45*[getTroughSize .s])}]
 } {slider}
 test scrollbar-3.53 {ScrollbarWidgetCmd procedure, "identify" option} {
-    .s identify 5 145
+    .s identify 5 [expr {[getArrowSize .s] + int(0.8*[getTroughSize .s])}]
 } {trough2}
 test scrollbar-3.54.1 {ScrollbarWidgetCmd procedure, "identify" option} notAqua {
-    .s identify 5 195
+    .s identify 5 [expr {[winfo height .s] - 5}]
 } {arrow2}
 test scrollbar-3.54.2 {ScrollbarWidgetCmd procedure, "identify" option} aqua {
     # macOS aqua scrollbars have no arrows nowadays

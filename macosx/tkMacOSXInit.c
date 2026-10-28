@@ -436,7 +436,7 @@ TCL_NORETURN void TkpExitProc(
      */
 
     Tcl_Finalize();
-    if (doCleanup == YES) {
+    if (doCleanup) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
     exit((int)PTR2INT(clientdata)); /* Convince the compiler that we don't return. */

@@ -145,6 +145,17 @@ to the userbase.
  - [no longer replace "::" in manual page with "_" on installation](https://core.tcl-lang.org/tk/tktview/360434)
  - [entryconfigure destroys submenus](https://core.tcl-lang.org/tk/tktview/172305)
  - [Named font late creation](https://core.tcl-lang.org/tk/tktview/c81e0c)
+ - [transient windows don't appear on Windows](https://core.tcl-lang.org/tk/tktview/562c3a)
+ - [option get command responding to invalid input](https://core.tcl-lang.org/tk/tktview/220931)
+ - [X error BadDrawable when using ttk::style element create with multiple displays](https://core.tcl-lang.org/tk/tktview/fde9dc)
+ - [Win32 nonclient double-click causes spurious Button-1 in app](https://core.tcl-lang.org/tk/tktview/139105)
+ - [Missing error-handling when MenuNewEntry() returns NULL](https://core.tcl-lang.org/tk/tktview/346407)
+ - ["wm forget" did not release the menubar of the toplevel](https://core.tcl-lang.org/tk/tktview/351552)
+ - ["wm manage" is deficient and flickering](https://core.tcl-lang.org/tk/tktview/281753)
+ - [Canvas inconsistently draws lines on Windows](https://core.tcl-lang.org/tk/tktview/220895)
+ - [-stipple option for canvas text item disrupts positioning](https://core.tcl-lang.org/tk/tktview/220796)
+ - [Ctrl+Left in text skips a one-character word before the cursor](https://core.tcl-lang.org/tk/tktview/cc736f)
+ - [X11: a posted menu stays open when the application loses the focus or its toplevel moves](https://core.tcl-lang.org/tk/tktview/2e3d6c)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

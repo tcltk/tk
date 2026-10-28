@@ -1099,7 +1099,7 @@ Tk_WmObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -2274,7 +2274,7 @@ WmIconifyCmd(
 		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->containerPtr != NULL) {
@@ -2787,10 +2787,17 @@ WmManageCmd(
 		TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
 	if (wmPtr == NULL) {
 	    TkWmNewWindow(winPtr);
-	    TkWmMapWindow(winPtr);
-	    Tk_UnmapWindow(frameWin);
 	}
 	wmPtr = winPtr->wmInfoPtr;
+	if (wmPtr->wrapperPtr == NULL) {
+	    /*
+	     * Create the wrapper but do not map it yet: the frame is mapped
+	     * at idle time by TkMapTopFrame, so that "wm withdraw",
+	     * "wm geometry", "wm overrideredirect" etc. can be applied first.
+	     */
+
+	    CreateWrapper(wmPtr);
+	}
 	winPtr->flags &= ~TK_MAPPED;
 	RemapWindows(winPtr, wmPtr->wrapperPtr);
 
@@ -3462,7 +3469,7 @@ WmStateCmd(
 			"can't iconify \"%s\": override-redirect flag is set",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
-			"OVERRIDE_REDIRECT", NULL);
+			"OVERRIDE_REDIRECT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (wmPtr->containerPtr != NULL) {
@@ -3470,7 +3477,7 @@ WmStateCmd(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "TRANSIENT",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (TkpWmSetState(winPtr, IconicState) == 0) {

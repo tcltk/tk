@@ -1572,6 +1572,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
     update; # opportunity to service crossing events
 
     set windowList [list "{}" . .f]
+    unset -nocomplain coords ;# Clear any existing scalar (see canvas.test)
     array set coords {
 	"A,{}" 150
 	"B,{}" 250

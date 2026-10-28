@@ -33,10 +33,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define LOG_DISPLAY(drawable) TkTestLogDisplay(drawable)
 #else
-#define LOG_DISPLAY(drawable) 1
 #endif
+#define LOG_DISPLAY(drawable) 1
 
 #ifdef __UNIX__
 #include "tkUnixInt.h"
@@ -80,7 +79,7 @@ typedef struct TImageInstance {
     TImageModel *modelPtr;	/* Pointer to model for image. */
     XColor *fg;			/* Foreground color for drawing in image. */
     GC gc;			/* Graphics context for drawing in image. */
-    Bool displayFailed;         /* macOS display attempted out of drawRect. */
+    bool displayFailed;         /* macOS display attempted out of drawRect. */
     char buffer[200 + TCL_INTEGER_SPACE * 6]; /* message to log on display. */
 } TImageInstance;
 
@@ -1506,7 +1505,7 @@ ImageObjCmd(
 		timPtr->height);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be changed", NULL);
+		"\": must be changed", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1550,7 +1549,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    instPtr->displayFailed = False;
+    instPtr->displayFailed = false;
     return instPtr;
 }
 
@@ -1602,34 +1601,20 @@ ImageDisplay(
      * how damage regions are computed.
      */
 
-    if (LOG_DISPLAY(drawable)) {
-	if (instPtr->displayFailed == False) {
+    if (!instPtr->displayFailed) {
 
-	    /*
-	     * Drawing is possible on the first call to DisplayImage.
-	     * Log the message.
-	     */
+	/*
+	 * Drawing is possible on the first call to DisplayImage.
+	 * Log the message.
+	 */
 
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-	    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
+	snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
+	instPtr->modelPtr->imageName, imageX, imageY, width, height);
+    }
 	Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName,
 		    NULL, instPtr->buffer,
 		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-	instPtr->displayFailed = False;
-    } else {
-
-	/*
-	 * Drawing is not possible on the first call to DisplayImage.
-	 * Save the message, but do not log it until the actual display.
-	 */
-
-	if (instPtr->displayFailed == False) {
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-		    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
-	instPtr->displayFailed = True;
-    }
+	instPtr->displayFailed = false;
     if (width > (instPtr->modelPtr->width - imageX)) {
 	width = instPtr->modelPtr->width - imageX;
     }
@@ -1810,13 +1795,13 @@ TestmenubarObjCmd(
 	}
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be  window", NULL);
+		"\": must be  window", (char *)NULL);
 	return TCL_ERROR;
     }
 
     return TCL_OK;
 #else
-    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", NULL);
+    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", (char *)NULL);
     return TCL_ERROR;
 #endif
 }
@@ -1861,11 +1846,11 @@ TestmetricsObjCmd(
 	val = GetSystemMetrics(SM_CXHSCROLL);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be cxhscroll or cyvscroll", NULL);
+		"\": must be cxhscroll or cyvscroll", (char *)NULL);
 	return TCL_ERROR;
     }
     snprintf(buf, sizeof(buf), "%d", val);
-    Tcl_AppendResult(interp, buf, NULL);
+    Tcl_AppendResult(interp, buf, (char *)NULL);
     return TCL_OK;
 }
 #endif
@@ -1991,7 +1976,7 @@ TestprintfObjCmd(
     snprintf(buffer, sizeof(buffer), "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
 	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
 	    longLongInt, (unsigned long long)longLongInt);
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
     return TCL_OK;
 }
 

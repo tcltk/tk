@@ -30,6 +30,21 @@
  * +++ ImageSpec management.
  */
 
+/*
+ * The images of an ImageSpec are got for the window passed to
+ * TtkGetImageSpecEx, and can only be drawn on its display. For other displays
+ * (X11 only), the images are got for a window on that display when they are
+ * needed, and released when that window is destroyed. [Bug fde9dc2392]
+ */
+
+typedef struct DisplayImages {
+    Ttk_ImageSpec	*imageSpec;	/* The ImageSpec. */
+    Tk_Window		tkwin;		/* Window the images are got for. */
+    Tk_Image		baseImage;	/* Base image to use */
+    Tk_Image		*images;	/* array[mapCount] of per-state images */
+    struct DisplayImages *nextPtr;	/* Images for the next display. */
+} DisplayImages;
+
 struct TtkImageSpec {
     Tk_Image		baseImage;	/* Base image to use */
     Tcl_Obj		*baseName;	/* Name of base image */
@@ -39,6 +54,8 @@ struct TtkImageSpec {
     Tcl_Obj		**names;	/* array[mapCount] of image names */
     Tk_ImageChangedProc *imageChanged;
     void		*imageChangedClientData;
+    Display		*display;	/* Display of the images above. */
+    DisplayImages	*otherDisplays;	/* Images for other displays. */
 };
 
 /* ImageSpecImageChanged --
@@ -53,6 +70,87 @@ static void ImageSpecImageChanged(void *clientData,
 		x, y, width, height,
 		imageWidth, imageHeight);
     }
+}
+
+/* FreeDisplayImages --
+ *	Release the images of an ImageSpec for another display.
+ */
+static void DisplayImagesEventProc(void *clientData, XEvent *eventPtr);
+
+static void FreeDisplayImages(DisplayImages *diPtr)
+{
+    DisplayImages **prevPtrPtr = &diPtr->imageSpec->otherDisplays;
+    int i;
+
+    while (*prevPtrPtr != diPtr) {
+	prevPtrPtr = &(*prevPtrPtr)->nextPtr;
+    }
+    *prevPtrPtr = diPtr->nextPtr;
+    Tk_DeleteEventHandler(diPtr->tkwin, StructureNotifyMask,
+	    DisplayImagesEventProc, diPtr);
+    for (i = 0; i < diPtr->imageSpec->mapCount; ++i) {
+	if (diPtr->images[i]) {
+	    Tk_FreeImage(diPtr->images[i]);
+	}
+    }
+    if (diPtr->baseImage) {
+	Tk_FreeImage(diPtr->baseImage);
+    }
+    if (diPtr->images) {
+	Tcl_Free(diPtr->images);
+    }
+    Tcl_Free(diPtr);
+}
+
+/* DisplayImagesEventProc --
+ *	Release the images for another display when the window they were
+ *	got for is destroyed, since an image instance may use its window.
+ */
+static void DisplayImagesEventProc(void *clientData, XEvent *eventPtr)
+{
+    if (eventPtr->type == DestroyNotify) {
+	FreeDisplayImages((DisplayImages *)clientData);
+    }
+}
+
+/* GetDisplayImages --
+ *	Get the images of an ImageSpec for the display of tkwin, which is
+ *	not the display of the ImageSpec.
+ */
+static DisplayImages *GetDisplayImages(
+    Ttk_ImageSpec *imageSpec,
+    Tk_Window tkwin)
+{
+    DisplayImages *diPtr;
+    int i;
+
+    for (diPtr = imageSpec->otherDisplays; diPtr != NULL;
+	    diPtr = diPtr->nextPtr) {
+	if (Tk_Display(diPtr->tkwin) == Tk_Display(tkwin)) {
+	    return diPtr;
+	}
+    }
+    diPtr = (DisplayImages *)Tcl_Alloc(sizeof(DisplayImages));
+    diPtr->imageSpec = imageSpec;
+    diPtr->tkwin = tkwin;
+    diPtr->baseImage = Tk_GetImage(NULL, tkwin,
+	    Tcl_GetString(imageSpec->baseName), ImageSpecImageChanged,
+	    imageSpec);
+    diPtr->images = NULL;
+    if (imageSpec->mapCount > 0) {
+	diPtr->images = (Tk_Image *)Tcl_Alloc(
+		imageSpec->mapCount * sizeof(Tk_Image));
+	for (i = 0; i < imageSpec->mapCount; ++i) {
+	    diPtr->images[i] = Tk_GetImage(NULL, tkwin,
+		    Tcl_GetString(imageSpec->names[i]), ImageSpecImageChanged,
+		    imageSpec);
+	}
+    }
+    diPtr->nextPtr = imageSpec->otherDisplays;
+    imageSpec->otherDisplays = diPtr;
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+	    DisplayImagesEventProc, diPtr);
+    return diPtr;
 }
 
 /* TtkGetImageSpec --
@@ -90,6 +188,8 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     imageSpec->names = 0;
     imageSpec->imageChanged = imageChangedProc;
     imageSpec->imageChangedClientData = imageChangedClientData;
+    imageSpec->display = Tk_Display(tkwin);
+    imageSpec->otherDisplays = NULL;
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
 	goto error;
@@ -156,6 +256,9 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 {
     int i;
 
+    while (imageSpec->otherDisplays != NULL) {
+	FreeDisplayImages(imageSpec->otherDisplays);
+    }
     for (i=0; i < imageSpec->mapCount; ++i) {
 	Tk_FreeImage(imageSpec->images[i]);
 	if (imageSpec->names && imageSpec->names[i]) {
@@ -173,20 +276,30 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 }
 
 /* TtkSelectImage --
- *	Return a state-specific image from an ImageSpec
+ *	Return a state-specific image from an ImageSpec, for the display
+ *	of tkwin.
  */
 Tk_Image TtkSelectImage(
     Ttk_ImageSpec *imageSpec,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     Ttk_State state)
 {
+    Tk_Image baseImage = imageSpec->baseImage;
+    Tk_Image *images = imageSpec->images;
     int i;
+
+    if (tkwin != NULL && Tk_Display(tkwin) != imageSpec->display) {
+	DisplayImages *diPtr = GetDisplayImages(imageSpec, tkwin);
+
+	baseImage = diPtr->baseImage;
+	images = diPtr->images;
+    }
     for (i = 0; i < imageSpec->mapCount; ++i) {
 	if (Ttk_StateMatches(state, imageSpec->states+i)) {
-	    return imageSpec->images[i];
+	    return images[i];
 	}
     }
-    return imageSpec->baseImage;
+    return baseImage;
 }
 
 #if !defined(TK_NO_DOUBLE_BUFFERING) || defined(TTK_TILE_BATCH)

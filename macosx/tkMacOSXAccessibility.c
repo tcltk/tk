@@ -589,7 +589,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 - (void) accessibilityPerformAction: (NSAccessibilityActionName)action
 {
     if (CFStringCompare((CFStringRef)action, kAXPressAction, 0) == kCFCompareEqualTo) {
-	BOOL success = [self accessibilityPerformPress];
+	bool success = [self accessibilityPerformPress];
 
 	if (success) {
 	    /* Post notification AFTER the action completes. */

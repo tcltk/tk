@@ -106,6 +106,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [NSApp setTkEventTarget: winPtr];
 
 	    /*
+	     * Put the menu of the new key window into the menubar now: the
+	     * ActivateNotify event that also does it waits in the Tcl event
+	     * queue until the application services it.
+	     */
+
+	    if (!Tk_IsEmbedded(winPtr) && !(winPtr->flags & TK_ALREADY_DEAD)) {
+		TkMacOSXInstallWindowMenubar(winPtr);
+	    }
+
+	    /*
 	     * Call Tk_UpdatePointer if the pointer is in the window.
 	     */
 
@@ -142,7 +152,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    BOOL movedOnly = [[notification name]
+    bool movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -995,7 +1005,7 @@ ExposeRestrictProc(
 {
     self = [super initWithFrame:frame];
     if (self) {
-	self.wantsLayer = YES;
+	self.wantsLayer = true;
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;

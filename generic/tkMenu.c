@@ -2536,19 +2536,33 @@ MenuNewEntry(
     mePtr->nextCascadePtr = NULL;
     if (Tk_InitOptions(menuPtr->interp, mePtr,
 	    mePtr->optionTable, menuPtr->tkwin) != TCL_OK) {
-	Tcl_Free(mePtr);
-	return NULL;
+	goto error;
     }
     mePtr->entryPtr = NULL;
     TkMenuInitializeEntryDrawingFields(mePtr);
     if (TkpMenuNewEntry(mePtr) != TCL_OK) {
 	Tk_FreeConfigOptions(mePtr, mePtr->optionTable,
 		menuPtr->tkwin);
-	Tcl_Free(mePtr);
-	return NULL;
+	goto error;
     }
 
     return mePtr;
+
+    /*
+     * Remove the slot of the entry which could not be created.
+     */
+
+  error:
+    Tcl_Free(mePtr);
+    for (i = index; i < menuPtr->numEntries - 1; i++) {
+	menuPtr->entries[i] = menuPtr->entries[i + 1];
+	menuPtr->entries[i]->index = i;
+    }
+    if (--menuPtr->numEntries == 0) {
+	Tcl_Free(menuPtr->entries);
+	menuPtr->entries = NULL;
+    }
+    return NULL;
 }
 
 /*

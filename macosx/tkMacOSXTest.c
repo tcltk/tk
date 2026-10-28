@@ -24,6 +24,7 @@ static Tcl_ObjCmdProc2 TestpressbuttonObjCmd;
 static Tcl_ObjCmdProc2 TestmovemouseObjCmd;
 static Tcl_ObjCmdProc2 TestinjectkeyeventObjCmd;
 static Tcl_ObjCmdProc2 TestmenubarheightObjCmd;
+static Tcl_ObjCmdProc2 TestmenubaritemsObjCmd;
 
 
 /*
@@ -61,6 +62,7 @@ TkplatformtestInit(
     Tcl_CreateObjCommand2(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmenubaritems", TestmenubaritemsObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -96,36 +98,44 @@ TestmenubarheightObjCmd(
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
- * TkTestLogDisplay --
+ * TestmenubaritemsObjCmd --
  *
- *      The test image display procedure calls this to determine whether it
- *      should write a log message recording that it has being run.
+ *	Returns the titles of the items of the menubar, without the
+ *	application menu, so that tests can tell which menu is installed.
  *
  * Results:
- *      Returns true if and only if the NSView of the drawable is the
- *      current focusView, which on 10.14 and newer systems can only be the
- *      case when within [NSView drawRect].
- *      NOTE: This is no longer needed when we use updateLayer instead
- *      of drawRect.  Now it always returns True.
+ *	A standard Tcl result.
  *
  * Side effects:
- *	None
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE Bool
-TkTestLogDisplay(
-    Drawable drawable)
+static int
+TestmenubaritemsObjCmd(
+    TCL_UNUSED(void *),		/* Not used. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TCL_UNUSED(Tcl_Size),		/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *))	/* Not used. */
 {
-    (void) drawable;
-    return True;
-}
+    NSArray *items = [[NSApp mainMenu] itemArray];
+    Tcl_Obj *result = Tcl_NewListObj(0, NULL);
 
+    for (NSUInteger i = 1; i < [items count]; i++) {
+	NSString *title = [(NSMenuItem *)[items objectAtIndex:i] title];
+
+	Tcl_ListObjAppendElement(NULL, result,
+		Tcl_NewStringObj([title UTF8String], TCL_INDEX_NONE));
+    }
+    Tcl_SetObjResult(interp, result);
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *

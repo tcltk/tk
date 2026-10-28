@@ -69,6 +69,7 @@ test dialog-2.2 {tk_dialog operation} -setup {
     after cancel $x
     return $res
 } -cleanup {
+    update
     destroy .d
 } -result 1
 test dialog-2.3 {tk_dialog operation} -body {
