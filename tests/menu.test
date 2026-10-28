@@ -4715,6 +4715,129 @@ test menu-47.1 {configuring a cascade entry of a menubar with the menu it
     destroy .bar
 } -result {1 1 .bar.sub2}
 
+# Aqua: only the key toplevel, or the one that becomes key when the key
+# toplevel is destroyed, sets the menubar.
+proc menubarTop {w label} {
+    toplevel $w
+    wm withdraw $w
+    if {$label ne ""} {
+	menu $w.mb
+	$w.mb add cascade -label $label -menu [menu $w.mb.m]
+	$w configure -menu $w.mb
+    }
+    wm geometry $w +100+100
+}
+proc menubarShow {w label} {
+    wm deiconify $w
+    focus -force $w
+    update
+    for {set i 0} {$i < 100 && [testmenubaritems] ne $label} {incr i} {
+	after 10 {set ::menubarWait 1}
+	vwait ::menubarWait
+    }
+    update
+}
+test menu-48.1 {aqua menubar: -menu of a withdrawn toplevel does not replace
+	the menubar of the key toplevel - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 KeyBar
+    menubarShow .t1 KeyBar
+} -body {
+    menubarTop .t2 OtherBar
+    testmenubaritems
+} -cleanup {
+    destroy .t1 .t2
+} -result KeyBar
+test menu-48.2 {aqua menubar: destroying the key toplevel installs the
+	menubar of the next one, not the default one - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 FirstBar
+    menubarShow .t1 FirstBar
+    menubarTop .t2 SecondBar
+    wm geometry .t2 +150+150
+    menubarShow .t2 SecondBar
+    set ::bars {}
+    bind .t2 <Destroy> {
+	if {"%W" eq ".t2"} {
+	    lappend ::bars [testmenubaritems]
+	}
+    }
+} -body {
+    destroy .t2
+    update
+    lappend ::bars [testmenubaritems]
+} -cleanup {
+    destroy .t1
+    unset ::bars
+} -result {FirstBar FirstBar}
+test menu-48.3 {aqua menubar: installed as soon as the toplevel becomes key,
+	before its Activate event is serviced - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 FirstBar
+    menubarShow .t1 FirstBar
+    menubarTop .t2 SecondBar
+    update
+} -body {
+    wm deiconify .t2
+    focus -force .t2
+    testmenubaritems
+} -cleanup {
+    destroy .t1 .t2
+} -result SecondBar
+test menu-48.4 {aqua menubar: once no window can become key, the menubar
+	of "." comes back - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    set oldMenu [. cget -menu]
+    set oldState [wm state .]
+    menu .mb48
+    .mb48 add cascade -label RootBar -menu [menu .mb48.m]
+    wm withdraw .
+    . configure -menu .mb48
+    menubarTop .t1 DialogBar
+    menubarShow .t1 DialogBar
+} -body {
+    destroy .t1
+    update
+    testmenubaritems
+} -cleanup {
+    . configure -menu $oldMenu
+    destroy .mb48
+    if {$oldState ne "withdrawn"} {
+	wm deiconify .
+    }
+    unset oldMenu oldState
+} -result RootBar
+test menu-48.5 {aqua menubar: "." given its menubar while a toplevel
+	without one is key, then that toplevel destroyed - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    set oldMenu [. cget -menu]
+    set oldState [wm state .]
+    menu .mb48
+    .mb48 add cascade -label RootBar -menu [menu .mb48.m]
+    wm withdraw .
+    menubarTop .t1 {}
+    menubarShow .t1 {File Edit Window Help}
+} -body {
+    . configure -menu .mb48
+    destroy .t1
+    update
+    testmenubaritems
+} -cleanup {
+    . configure -menu $oldMenu
+    destroy .mb48
+    if {$oldState ne "withdrawn"} {
+	wm deiconify .
+    }
+    unset oldMenu oldState
+} -result RootBar
+rename menubarTop {}
+rename menubarShow {}
+
 testutils import child
 # Posts the cascade of the first entry of the menubar of $top, as a click
 # on it does, and returns the posted menu.
