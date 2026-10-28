@@ -12,6 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+ 
 
 #include "tkInt.h"
 #include "tkScale.h"
@@ -30,7 +31,7 @@ static void		DisplayVerticalScale(TkScale *scalePtr,
 static void		DisplayVerticalValue(TkScale *scalePtr,
 			    Drawable drawable, double value, int rightEdge,
 			    const char *format);
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -51,9 +52,9 @@ TkScale *
 TkpCreateScale(
     TCL_UNUSED(Tk_Window))
 {
-    return Tcl_Alloc(sizeof(TkScale));
+    return (TkScale *)Tcl_Alloc(sizeof(TkScale));
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -78,7 +79,7 @@ TkpDestroyScale(
 {
     Tcl_EventuallyFree(scalePtr, TCL_DYNAMIC);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -123,11 +124,11 @@ DisplayVerticalScale(
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->vertTickRightX;
-	drawnAreaPtr->y = scalePtr->inset;
-	drawnAreaPtr->width = scalePtr->vertTroughX + scaleWidth
-		+ 2 * borderWidth - scalePtr->vertTickRightX;
-	drawnAreaPtr->height -= 2 * scalePtr->inset;
+	drawnAreaPtr->x = (short)scalePtr->vertTickRightX;
+	drawnAreaPtr->y = (short)scalePtr->inset;
+	drawnAreaPtr->width = (short)(scalePtr->vertTroughX + scaleWidth
+		+ 2 * borderWidth - scalePtr->vertTickRightX);
+	drawnAreaPtr->height -= (short)(2 * scalePtr->inset);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -142,7 +143,7 @@ DisplayVerticalScale(
 
 	    /*
 	     * Ensure that we will only draw enough of the tick values such
-	     * that they don't overlap.
+	     * that they don't overlap
 	     */
 
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
@@ -238,7 +239,7 @@ DisplayVerticalScale(
 		scalePtr->inset + (3 * fm.ascent) / 2);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -278,7 +279,7 @@ DisplayVerticalValue(
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     Tcl_Size length = strlen(valueString);
@@ -298,7 +299,7 @@ DisplayVerticalValue(
     Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
 	    scalePtr->tkfont, valueString, length, rightEdge - width, y);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -343,11 +344,11 @@ DisplayHorizontalScale(
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->inset;
-	drawnAreaPtr->y = scalePtr->horizValueY;
-	drawnAreaPtr->width -= 2*scalePtr->inset;
-	drawnAreaPtr->height = scalePtr->horizTroughY + scaleWidth
-		+ 2 * borderWidth - scalePtr->horizValueY;
+	drawnAreaPtr->x = (short)scalePtr->inset;
+	drawnAreaPtr->y = (short)scalePtr->horizValueY;
+	drawnAreaPtr->width -= (short)(2*scalePtr->inset);
+	drawnAreaPtr->height = (short)(scalePtr->horizTroughY + scaleWidth
+		+ 2 * borderWidth - scalePtr->horizValueY);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -369,7 +370,7 @@ DisplayHorizontalScale(
 
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
-	    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+	    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
 		    scalePtr->fromValue) < 0) {
 		valueString[TCL_DOUBLE_SPACE - 1] = '\0';
 	    }
@@ -458,17 +459,15 @@ DisplayHorizontalScale(
     if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelObj != NULL)) {
 	Tk_FontMetrics fm;
 	Tcl_Size labelLength;
-	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj,
-						 &labelLength);
+	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, label, labelLength,
-		     scalePtr->inset + fm.ascent/2,
+		scalePtr->tkfont, label, labelLength, scalePtr->inset + fm.ascent/2,
 		scalePtr->horizLabelY + fm.ascent);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -509,7 +508,7 @@ DisplayHorizontalValue(
     x = TkScaleValueToPixel(scalePtr, value);
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     Tcl_Size length = strlen(valueString);
@@ -535,7 +534,7 @@ DisplayHorizontalValue(
     Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
 	    scalePtr->tkfont, valueString, length, x, y);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -578,8 +577,14 @@ TkpDisplayScale(
 
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->commandObj != NULL)) {
+	/*
+	 * Clear the flag before calling the command, or the command is called
+	 * again if the scale is redrawn while the command runs.
+	 */
+
+	scalePtr->flags &= ~INVOKE_COMMAND;
 	Tcl_Preserve(interp);
-	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+	if (TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
 		scalePtr->value) < 0) {
 	    string[TCL_DOUBLE_SPACE - 1] = '\0';
 	}
@@ -601,11 +606,24 @@ TkpDisplayScale(
 	return;
     }
     Tcl_Release(scalePtr);
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /*
+     * In order to avoid screen flashes, this function redraws the scale in a
+     * pixmap, then copies the pixmap to the screen in a single operation.
+     * This means that there's no point in time where the on-sreen image has
+     * been cleared.
+     */
+
+    pixmap = Tk_GetPixmap(scalePtr->display, Tk_WindowId(tkwin),
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
     pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
     drawnArea.x = 0;
     drawnArea.y = 0;
-    drawnArea.width = Tk_Width(tkwin);
-    drawnArea.height = Tk_Height(tkwin);
+    drawnArea.width = (short)Tk_Width(tkwin);
+    drawnArea.height = (short)Tk_Height(tkwin);
 
     /*
      * Much of the redisplay is done totally differently for horizontal and
@@ -623,8 +641,7 @@ TkpDisplayScale(
      * vertical scales: border and traversal highlight.
      */
 
-    Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->highlightWidthObj,
-			&highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->highlightWidthObj, &highlightWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     if (scalePtr->flags & REDRAW_OTHER) {
 	if (scalePtr->relief != TK_RELIEF_FLAT) {
@@ -646,10 +663,23 @@ TkpDisplayScale(
 	    Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
 	}
     }
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /*
+     * Copy the information from the off-screen pixmap onto the screen, then
+     * delete the pixmap.
+     */
+
+    XCopyArea(scalePtr->display, pixmap, Tk_WindowId(tkwin),
+	    scalePtr->copyGC, drawnArea.x, drawnArea.y, drawnArea.width,
+	    drawnArea.height, drawnArea.x, drawnArea.y);
+    Tk_FreePixmap(scalePtr->display, pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
+
   done:
     scalePtr->flags &= ~REDRAW_ALL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -678,10 +708,10 @@ TkpScaleElement(
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->widthObj, &width);
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->sliderLengthObj, &sliderLength);
-
     if (scalePtr->orient == ORIENT_VERTICAL) {
 	if ((x < scalePtr->vertTroughX)
-		|| (x >= (scalePtr->vertTroughX + 2 * borderWidth + width))) {
+		|| (x >= (scalePtr->vertTroughX + 2 * borderWidth +
+		width))) {
 	    return OTHER;
 	}
 	if ((y < scalePtr->inset)
@@ -718,10 +748,11 @@ TkpScaleElement(
     }
     return TROUGH2;
 }
-
+
 /*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
  * fill-column: 78
+ * End:
  */
