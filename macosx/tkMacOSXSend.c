@@ -480,6 +480,7 @@ SendInit()
     /*
      * Intialize the path used for the appname registry.
      */
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(
 		 NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachesDirectory = [searchPaths objectAtIndex:0];
@@ -488,6 +489,7 @@ SendInit()
     size_t length = 1 + strlen(RegistryPath.UTF8String);
     appNameRegistryPath = (char *)Tcl_Alloc(length);
     strlcpy(appNameRegistryPath, (char *)RegistryPath.UTF8String, length);
+    [pool drain];
     return TCL_OK;
 }
 
