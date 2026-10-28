@@ -104,6 +104,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [NSApp setTkEventTarget: winPtr];
 
 	    /*
+	     * Put the menu of the new key window into the menubar now: the
+	     * ActivateNotify event that also does it waits in the Tcl event
+	     * queue until the application services it.
+	     */
+
+	    if (!Tk_IsEmbedded(winPtr) && !(winPtr->flags & TK_ALREADY_DEAD)) {
+		TkMacOSXInstallWindowMenubar(winPtr);
+	    }
+
+	    /*
 	     * Call Tk_UpdatePointer if the pointer is in the window.
 	     */
 
