@@ -20,6 +20,14 @@
 #undef TCLBOOLWARNING
 #define TCLBOOLWARNING(boolPtr) /* needed here because we compile with -Wc++-compat */
 
+/*
+ * This is required by MS-VC++ 6
+ */
+
+#ifndef MAPVK_VK_TO_VSC
+#define MAPVK_VK_TO_VSC 0
+#endif
+
 HWND tkWinCurrentDialog;
 
 /*
