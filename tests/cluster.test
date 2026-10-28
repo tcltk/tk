@@ -143,6 +143,21 @@ test cluster-4.8 {::tk::startOfPreviousWord} -body {
 test cluster-4.9 {::tk::startOfPreviousWord} -body {
     ::tk::startOfPreviousWord "ab cd" end-1
 } -result 0
+test cluster-4.10 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord " " 1
+} -result {}
+test cluster-4.11 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord "\n" 1
+} -result {}
+test cluster-4.12 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord " \n" 2
+} -result {}
+test cluster-4.13 {::tk::startOfPreviousWord, only spaces before start} -body {
+    ::tk::startOfPreviousWord "  ab" 2
+} -result {}
+test cluster-4.14 {::tk::startOfPreviousWord} -body {
+    ::tk::startOfPreviousWord "a \n" 3
+} -result 0
 
 test cluster-5.0 {::tk::startOfNextWord} -body {
     ::tk::startOfNextWord "ab cd" -1

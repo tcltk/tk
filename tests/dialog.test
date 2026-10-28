@@ -71,6 +71,7 @@ test dialog-2.2 {tk_dialog operation} -constraints notWayland -setup {
     after cancel $x
     return $res
 } -cleanup {
+    update
     destroy .d
 } -result 1
 # hangs on Wayland - skipping pending further review
