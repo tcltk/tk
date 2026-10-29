@@ -126,12 +126,6 @@
 #	define TCL_Z_MODIFIER	""
 #   endif
 #endif /* !TCL_Z_MODIFIER */
-#undef TCL_LL_MODIFIER
-#if defined(_WIN32) && (!defined(__USE_MINGW_ANSI_STDIO) || !__USE_MINGW_ANSI_STDIO)
-#   define TCL_LL_MODIFIER	"I64"
-#else
-#   define TCL_LL_MODIFIER	"ll"
-#endif
 
 #if !defined(TCL_SIZE_MODIFIER)
 #   define TCL_SIZE_MODIFIER ""
