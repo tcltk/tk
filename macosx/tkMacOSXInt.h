@@ -160,6 +160,8 @@ typedef struct TkWindowPrivate MacDrawable;
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
+MODULE_SCOPE int TkpReadPixelSRGB(Tk_Window tkwin, int x, int y,
+        unsigned char *r, unsigned char *g, unsigned char *b);
 
 /*
  * Include the stubbed internal platform-specific API.
