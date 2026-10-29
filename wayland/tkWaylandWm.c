@@ -630,6 +630,7 @@ extern void TkWaylandMenubarResize(TkWindow *winPtr);
 static void
 QueueVisibilityNotify(TkWindow *winPtr) {
     if (winPtr == NULL) return;
+    if (winPtr->flags & TK_ALREADY_DEAD) return;
 	if (!(winPtr->flags & TK_MAPPED)) return;
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
@@ -642,12 +643,16 @@ QueueVisibilityNotify(TkWindow *winPtr) {
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Recurse to mapped children safely. */
+    /* Recurse to mapped children safely - cache nextPtr and validate parent. */
     TkWindow *child;
-    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-        if (Tk_IsMapped((Tk_Window)child) || (child->flags & TK_MAPPED)) {
+    for (child = winPtr->childList; child != NULL; ) {
+        TkWindow *nextPtr = child->nextPtr;
+        if (child->parentPtr == winPtr
+                && !(child->flags & TK_ALREADY_DEAD)
+                && (Tk_IsMapped((Tk_Window)child) || (child->flags & TK_MAPPED))) {
             QueueVisibilityNotify(child);
         }
+        child = nextPtr;
     }
 }
 
@@ -661,13 +666,25 @@ static void
 QueueExposeTree(TkWindow *winPtr)
 {
     TkWindow *child;
+    int w, h;
     if (winPtr == NULL) return;
-    TkWaylandQueueExposeEvent(winPtr, 0, 0,
-        Tk_Width(winPtr), Tk_Height(winPtr));
-    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-        if (child->flags & TK_MAPPED) {
+    if (winPtr->flags & TK_ALREADY_DEAD) return;
+    if (!(winPtr->flags & TK_TOP_LEVEL)) return;
+    if (winPtr->wmInfoPtr == NULL) return;
+    if (winPtr->dispPtr == NULL) return;
+    w = Tk_Width(winPtr);
+    h = Tk_Height(winPtr);
+    if (w <= 0 || h <= 0) return;
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+    for (child = winPtr->childList; child != NULL; ) {
+        TkWindow *nextPtr = child->nextPtr;
+        if (child->parentPtr == winPtr
+                && !(child->flags & TK_ALREADY_DEAD)
+                && (child->flags & TK_MAPPED)
+                && !Tk_IsTopLevel(child)) {
             QueueExposeTree(child);
         }
+        child = nextPtr;
     }
 }
 
@@ -678,14 +695,14 @@ ReExposeIdle(void *clientData)
     if (winPtr == NULL) return;
     if (winPtr->flags & TK_ALREADY_DEAD) return;
     if (!(winPtr->flags & TK_TOP_LEVEL)) return;
-    /* Re-queue exposes after geometry managers have run. */
+    if (winPtr->wmInfoPtr == NULL) return;
+    if (winPtr->dispPtr == NULL) return;
     QueueExposeTree(winPtr);
-    if (winPtr->privatePtr) {
-        glfwTkInfo *infoPtr = winPtr->privatePtr->glfwWindow ?
-            (glfwTkInfo*)glfwGetWindowUserPointer(winPtr->privatePtr->glfwWindow) : NULL;
+    if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
+        GLFWwindow *gw = winPtr->privatePtr->glfwWindow;
+        glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(gw);
         if (infoPtr) {
             infoPtr->flags |= TKWL_NEEDS_DISPLAY;
-            /* Allow BeginDraw to queue another early expose if needed */
             infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
         }
     }
@@ -1827,6 +1844,7 @@ TkWmDeadWindow(
      * clears it while an idle call can still be pending.
      */
     CancelGeometryUpdate(winPtr);
+    Tcl_CancelIdleCall(ReExposeIdle, (void *)winPtr);
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
     /* Destroy wrapper window if present. */
@@ -2261,7 +2279,9 @@ Tk_MakeWindow(
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
     }
-    createClipShaders(winPtr);
+    if (!(winPtr->flags & TK_ALREADY_DEAD) && winPtr->privatePtr) {
+        createClipShaders(winPtr);
+    }
     return result;
 }
 
@@ -5377,8 +5397,7 @@ WmTransientCmd(
 		WmWaitMapProc, winPtr);
 	wmPtr->containerPtr = containerPtr;
     }
-    if (!(wmPtr->flags & WM_NEVER_MAPPED) && !Tk_IsMapped(containerPtr)
-	    && !wmPtr->withdrawn) {
+    if (!Tk_IsMapped(containerPtr) && !wmPtr->withdrawn) {
 	wmPtr->withdrawn = 1;
 	wmPtr->initialState = WithdrawnState;
 	TkWmUnmapWindow(winPtr);
@@ -5932,7 +5951,15 @@ ApplyPendingGeometry(
 	    Tk_PathName(winPtr), tw, th);
 	TkWaylandFlushConfigures();
         glfwSetWindowSize(glfwWindow, tw, th);
-	
+
+	/*
+	 * Commit the new size at once, even if nothing is redrawn, or the
+	 * compositor (e.g. sway) can send the old size back.
+	 */
+	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	    TkWaylandPresentWindow(glfwWindow);
+	}
+
 	/* Update the window data. */
         winPtr->changes.width = tw;
         winPtr->changes.height = th;

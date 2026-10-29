@@ -1338,6 +1338,9 @@ TkpSetWindowMenuBar(
 	return;
     }
     WmInfo *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr) {
+	return;
+    }
 
     DEBUG_LOG("TkpSetWindowMenuBar called for %s", Tk_PathName(tkwin));
 

@@ -637,6 +637,7 @@ MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
 MODULE_SCOPE TkWindow *	TkWaylandGetContainer(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
+MODULE_SCOPE void TkWaylandPresentWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);
 void TkWaylandIbusSetCursorLocation(Tk_Window tkwin, int x, int y, int w, int h);

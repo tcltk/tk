@@ -608,10 +608,15 @@ TkWaylandQueueExposeEvent(
     int height)
 {
     XEvent event;
-    TkWindow *childPtr;
     DEBUG_LOG("TkWaylandQueueExposeEvent for %s", Tk_PathName(winPtr));
     
     if (!winPtr) return;
+    if (winPtr->flags & TK_ALREADY_DEAD) return;
+    if (width <= 0 || height <= 0) return;
+    if (!Tk_IsMapped(winPtr) && !(winPtr->flags & TK_TOP_LEVEL)) {
+        /* For non-toplevels, don't queue expose if not mapped */
+        /* Top-levels may need expose even if not yet mapped for initial draw */
+    }
 
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
@@ -628,21 +633,11 @@ TkWaylandQueueExposeEvent(
     
     /* Queue it. */
     DEBUG_LOG("Queuing Expose(%lu) for %s in %dx%d",
-	event.xexpose.serial,
-	Tk_PathName(winPtr), width, height);
+        event.xexpose.serial,
+        Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    /* Recurse through the children of this window. */
-    for (childPtr = winPtr->childList; childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)
-		|| (childPtr->flags & TK_ALREADY_DEAD)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-	    Tk_Height(childPtr));
-    }
 }
+
 
 /* 
  * GLFW callbacks. These functions integrate the native GFLW events
@@ -1983,17 +1978,24 @@ static void
 ExposeSubtree(TkWindow *winPtr)
 {
     TkWindow *childPtr;
+    int w, h;
 
     if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
-	return;
+        return;
     }
-    TkWaylandQueueExposeEvent(winPtr,
-			      0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
-    for (childPtr = winPtr->childList; childPtr != NULL;
-	    childPtr = childPtr->nextPtr) {
-	if (Tk_IsMapped(childPtr) && !Tk_IsTopLevel(childPtr)) {
-	    ExposeSubtree(childPtr);
-	}
+    w = Tk_Width(winPtr);
+    h = Tk_Height(winPtr);
+    if (w <= 0 || h <= 0) return;
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+    for (childPtr = winPtr->childList; childPtr != NULL; ) {
+        TkWindow *nextPtr = childPtr->nextPtr;
+        if (childPtr->parentPtr == winPtr
+                && !(childPtr->flags & TK_ALREADY_DEAD)
+                && Tk_IsMapped(childPtr)
+                && !Tk_IsTopLevel(childPtr)) {
+            ExposeSubtree(childPtr);
+        }
+        childPtr = nextPtr;
     }
 }
 

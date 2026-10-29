@@ -105,8 +105,20 @@ static const char* clipFragmentShader =
 
 void createClipShaders(TkWindow *winPtr) {
     TkWindow* toplevelPtr;
-    for (toplevelPtr = winPtr; !Tk_IsTopLevel(toplevelPtr);
-	 toplevelPtr = toplevelPtr->parentPtr) {}
+    if (!winPtr) return;
+    if (winPtr->flags & TK_ALREADY_DEAD) return;
+    if (!winPtr->privatePtr) return;
+    for (toplevelPtr = winPtr; toplevelPtr && !Tk_IsTopLevel(toplevelPtr);
+         toplevelPtr = toplevelPtr->parentPtr) {
+        if (!toplevelPtr) return;
+        if (toplevelPtr->flags & TK_ALREADY_DEAD) return;
+        if (!toplevelPtr->parentPtr && !Tk_IsTopLevel(toplevelPtr)) return;
+    }
+    if (!toplevelPtr) return;
+    if (toplevelPtr->flags & TK_ALREADY_DEAD) return;
+    if (!toplevelPtr->privatePtr) return;
+    if (!toplevelPtr->privatePtr->glfwWindow) return;
+    if (toplevelPtr->wmInfoPtr == NULL) return;
     glfwMakeContextCurrent(toplevelPtr->privatePtr->glfwWindow);
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &clipVertexShader, NULL);
@@ -259,10 +271,16 @@ tkWaylandInvalidateClipRects(TkWindow *winPtr)
 MODULE_SCOPE void
 tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr)
 {
+    TkWindow *child;
     if (!winPtr) return;
+    if (winPtr->flags & TK_ALREADY_DEAD) return;
     if (winPtr->privatePtr) winPtr->privatePtr->clipDirty = 1;
-    for (TkWindow *child = winPtr->childList; child; child = child->nextPtr) {
-        tkWaylandInvalidateClipRectsForTree(child);
+    for (child = winPtr->childList; child; ) {
+        TkWindow *next = child->nextPtr;
+        if (child->parentPtr == winPtr && !(child->flags & TK_ALREADY_DEAD)) {
+            tkWaylandInvalidateClipRectsForTree(child);
+        }
+        child = next;
     }
 }
 
