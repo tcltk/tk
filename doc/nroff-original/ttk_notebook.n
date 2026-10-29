@@ -185,14 +185,18 @@ If \fItabid\fR is omitted, returns the widget name of the
 currently selected pane.
 .\" METHOD: tab
 .TP
-\fIpathname \fBtab \fItabid\fR ?\fI\-option \fR?\fIvalue ...\fR
+\fIpathname \fBtab \fItabid\fR
+.TP
+\fIpathname \fBtab \fItabid\fR \fI\-option\fR
+.TP
+\fIpathname \fBtab \fItabid\fR \fI\-option value\fR ?\fI\-option value ...\fR?
 .
 Query or modify the options of the specific tab.
-If no \fI\-option\fR is specified,
-returns a dictionary of the tab option values.
-If one \fI\-option\fR is specified,
+In its first form, when no \fI\-option\fR is specified,
+the command returns a dictionary of the tab options and their values.
+The second form, when one \fI\-option\fR is specified,
 returns the value of that \fIoption\fR.
-Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
+Otherwise, in its third form, it sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 See \fBTAB OPTIONS\fR for the available options.
 .\" METHOD: tabs
 .TP

@@ -25,7 +25,7 @@ The command can take any of a number of different forms
 depending on the \fIoption\fR argument.  The legal forms are:
 .\" METHOD: accessible
 .TP
-\fBtk accessible \fIsubcommand\fR ...
+\fBtk accessible \fIoption\fR ?\fIarg ...\fR? 
 .
 This command makes Tk widgets accessible to screen readers.
 For
@@ -62,7 +62,7 @@ attribute table is used to query and modify arbitrary data attached to any
 widget.  For more details see the \fBattribtable\fR manual page.
 .\" METHOD: busy
 .TP
-\fBtk busy \fIsubcommand\fR ...
+\fBtk busy \fIoption\fR ?\fIarg ...\fR?
 .
 This command controls the marking of window hierarchies as
 .QW busy ,
@@ -108,7 +108,7 @@ Displays a system-native file icon.  For more details see the
 \fBfileicon\fR manual page.
 .\" METHOD: fontchooser
 .TP
-\fBtk fontchooser \fIsubcommand\fR ...
+\fBtk fontchooser \fIoption\fR ?\fIarg ...\fR?
 .
 Controls the Tk font selection dialog.  For more details see the
 \fBfontchooser\fR manual page.
@@ -156,7 +156,7 @@ notification to the user by popping up a window that briefly appears in a
 corner of the screen.  For more details see the \fBsysnotify\fR manual page.
 .\" METHOD: systray
 .TP
-\fBtk systray \fIsubcommand\fR ...
+\fBtk systray \fIoption\fR ?\fIarg ...\fR?
 .
 The \fBtk systray\fP command creates an icon in the platform-specific
 tray.  For more details see the \fBsystray\fR manual page.

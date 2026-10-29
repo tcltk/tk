@@ -42,7 +42,7 @@ name wisely.  It is recommended to use a separate namespace for image names
 (e.g., \fB::img::logo\fR, \fB::img::large\fR).
 .\" METHOD: delete
 .TP
-\fBimage delete \fR?\fIname name\fR ...?
+\fBimage delete \fR?\fIname name ...\fR?
 .
 Deletes each of the named images and returns an empty string.
 If there are instances of the images displayed in widgets,

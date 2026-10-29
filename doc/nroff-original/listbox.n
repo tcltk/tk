@@ -381,7 +381,7 @@ Returns a decimal string indicating the total number of elements
 in the listbox.
 .\" METHOD: xview
 .TP
-\fIpathName \fBxview \fR?\fIargs\fR
+\fIpathName \fBxview \fR?\fIargs\fR?
 .
 This command is used to query and change the horizontal position of the
 information in the widget's window.  It can take any of the following
