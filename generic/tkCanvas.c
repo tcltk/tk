@@ -24,6 +24,10 @@
 #endif
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
+#if defined(_MSC_VER) && _MSC_VER < 1300
+#   pragma warning(disable:4022)
+#endif
+
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
  */
