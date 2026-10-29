@@ -24,6 +24,10 @@
 #endif
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
+#if defined(_MSC_VER) && _MSC_VER < 1300
+#   pragma warning(disable:4022)
+#endif
+
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
  */
@@ -4272,9 +4276,8 @@ DoItem(
 
 	itemPtr->tagSpace += 5;
 	newTagPtr = (Tk_Uid *)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
-	for (count = 0; count < itemPtr->numTags; count++) {
-	    newTagPtr[count] = itemPtr->tagPtr[count];
-	}
+	memcpy(newTagPtr, itemPtr->tagPtr,
+		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree(itemPtr->tagPtr);
 	}
