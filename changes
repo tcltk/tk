@@ -8593,3 +8593,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-28 (bug) [134833] High number of text widgets block idle queue (storchaka)
 
 2026-10-28 (bug) [042da6] Pendulum demo text not visible under dark mode (storchaka)
+
+2026-10-29 (bug) [ac7f77] panedwindow identify: report the sash only for its own pixels (storchaka)
+
+2026-10-29 (bug) [cc736f] Ctrl+Left in text skips a one-character word before the cursor (storchaka)

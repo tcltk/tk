@@ -123,7 +123,7 @@ bind Text <<SelectNextLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+    tk::TextSetCursor %W [tk::TextPrevWord %W insert]
 }
 bind Text <<NextWord>> {
     tk::TextSetCursor %W [tk::TextNextWord %W insert]
@@ -135,7 +135,7 @@ bind Text <<NextPara>> {
     tk::TextSetCursor %W [tk::TextNextPara %W insert]
 }
 bind Text <<SelectPrevWord>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+    tk::TextKeySelect %W [tk::TextPrevWord %W insert]
 }
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextNextWord %W insert]
@@ -358,7 +358,7 @@ bind Text <<Redo>> {
 
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+	tk::TextSetCursor %W [tk::TextPrevWord %W insert]
     }
 }
 bind Text <Meta-d> {
@@ -383,12 +383,12 @@ bind Text <Meta-greater> {
 }
 bind Text <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 
@@ -607,7 +607,7 @@ set ::tk::Priv(textanchoruid) 0
 proc ::tk::TextAnchor {w} {
     variable Priv
     if {![info exists Priv(textanchor,$w)]} {
-        set Priv(textanchor,$w) tk::anchor[incr Priv(textanchoruid)]
+	set Priv(textanchor,$w) tk::anchor[incr Priv(textanchoruid)]
     }
     return $Priv(textanchor,$w)
 }
@@ -807,9 +807,9 @@ proc ::tk::TextKeySelect {w new} {
 	}
 	$w mark set $anchorname insert
     } else {
-        if {[catch {$w index $anchorname}]} {
-            $w mark set $anchorname insert
-        }
+	if {[catch {$w index $anchorname}]} {
+	    $w mark set $anchorname insert
+	}
 	if {[$w compare $new < $anchorname]} {
 	    set first $new
 	    set last $anchorname
@@ -952,8 +952,8 @@ proc ::tk::TextUpDownLine {w n} {
 	    "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
     set Priv(prevPos) $new
     if {[$w compare $new == "end display lineend"] \
-            || [$w compare $new == "insert display linestart"]} {
-        set Priv(textPosOrig) $new
+	    || [$w compare $new == "insert display linestart"]} {
+	set Priv(textPosOrig) $new
     }
     return $new
 }
@@ -1093,8 +1093,8 @@ proc ::tk_textCopy w {
 
 proc ::tk_textCut w {
     if {![catch {set data [$w get sel.first sel.last]}]} {
-        # make <<Cut>> an atomic operation on the Undo stack,
-        # i.e. separate it from other delete operations on either side
+	# make <<Cut>> an atomic operation on the Undo stack,
+	# i.e. separate it from other delete operations on either side
 	set oldSeparator [$w cget -autoseparators]
 	if {([$w cget -state] eq "normal") && $oldSeparator} {
 	    $w edit separator
@@ -1153,6 +1153,18 @@ if {[tk windowingsystem] eq "win32"}  {
 	TextNextPos $w $start tcl_endOfWord
     }
 }
+# ::tk::TextPrevWord --
+# Returns the index of the start of the word before a given position in
+# the text.
+#
+# Arguments:
+# w -		The text window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::TextPrevWord {w start} {
+    TextPrevPos $w $start tcl_startOfPreviousWord end+1
+}
+
 
 # ::tk::TextNextPos --
 # Returns the index of the next position after the given starting
@@ -1185,13 +1197,15 @@ proc ::tk::TextNextPos {w start op} {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 # op -		Function to use to find next position.
+# index -	Index to pass to the function: "end" is the character before
+#		the starting position, "end+1" is the starting position.
 
-proc ::tk::TextPrevPos {w start op} {
+proc ::tk::TextPrevPos {w start op {index end}} {
     set text ""
     set cur $start
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
-	set pos [$op $text end]
+	set pos [$op $text $index]
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
