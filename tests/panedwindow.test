@@ -5188,131 +5188,57 @@ test panedwindow-25.2 {UnmapNotify and MapNotify events are propagated to panes}
 } -result {1 0 0 1 1}
 
 
-test panedwindow-26.1 {PanedWindowIdentifyCoords} -setup {
+test panedwindow-26.1 {PanedWindowIdentifyCoords, sash with padding} -setup {
     deleteWindows
 } -body {
     panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 0
+    lmap xy {{19 0} {20 0} {22 0} {24 0} {25 0} {26 0} {26 -1} {26 100} {22 19} {22 20}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {}
-test panedwindow-26.2 {PanedWindowIdentifyCoords, padding is included} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 20 0
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.3 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 22 0
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.4 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 24 0
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.5 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 26 0
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.6 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 26 -1
-} -cleanup {
-    deleteWindows
-} -result {}
-test panedwindow-26.7 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 26 100
-} -cleanup {
-    deleteWindows
-} -result {}
-test panedwindow-26.8 {PanedWindowIdentifyCoords} -setup {
+} -result {{{19 0} {}} {{20 0} {0 sash}} {{22 0} {0 sash}} {{24 0} {0 sash}} {{25 0} {0 sash}} {{26 0} {}} {{26 -1} {}} {{26 100} {}} {{22 19} {0 sash}} {{22 20} {}}}
+test panedwindow-26.8 {PanedWindowIdentifyCoords, handle wider than the sash} -setup {
     deleteWindows
 } -body {
     panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 6
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 22 4
+    lmap xy {{22 4} {22 5} {22 10} {22 11} {29 0} {30 0}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {0 sash}
-test panedwindow-26.9 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
-	    -handlesize 6
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 22 5
-} -cleanup {
-    deleteWindows
-} -result {0 handle}
-test panedwindow-26.10 {PanedWindowIdentifyCoords} -setup {
+} -result {{{22 4} {0 sash}} {{22 5} {0 handle}} {{22 10} {0 handle}} {{22 11} {0 sash}} {{29 0} {0 sash}} {{30 0} {}}}
+test panedwindow-26.10 {PanedWindowIdentifyCoords, handle} -setup {
     deleteWindows
 } -body {
     panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
 	    -handlesize 8
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 20 5
+    lmap xy {{20 5} {20 0}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {0 handle}
-test panedwindow-26.11 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
-	    -handlesize 8
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 20 0
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.12 {PanedWindowIdentifyCoords} -setup {
+} -result {{{20 5} {0 handle}} {{20 0} {0 sash}}}
+test panedwindow-26.12 {PanedWindowIdentifyCoords, second sash} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -bd 0 -sashwidth 2 -sashpad 2
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20] \
 	    [frame .f3 -bg green -width 20 -height 20]
-    .p identify 48 0
+    lmap xy {{48 0}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {1 sash}
+} -result {{{48 0} {1 sash}}}
 test panedwindow-26.13 {identify subcommand errors} -setup {
     deleteWindows
 } -body {
@@ -5337,131 +5263,57 @@ test panedwindow-26.15 {identify subcommand errors} -setup {
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {expected integer but got "bar"}
-test panedwindow-26.16 {PanedWindowIdentifyCoords} -setup {
+test panedwindow-26.16 {PanedWindowIdentifyCoords, sash with padding} -setup {
     deleteWindows
 } -body {
     panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 0
+    lmap xy {{0 19} {0 20} {0 22} {0 24} {0 25} {0 26} {-1 26} {100 26} {19 22} {20 22}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {}
-test panedwindow-26.17 {PanedWindowIdentifyCoords, padding is included} -setup {
+} -result {{{0 19} {}} {{0 20} {0 sash}} {{0 22} {0 sash}} {{0 24} {0 sash}} {{0 25} {0 sash}} {{0 26} {}} {{-1 26} {}} {{100 26} {}} {{19 22} {0 sash}} {{20 22} {}}}
+test panedwindow-26.23 {PanedWindowIdentifyCoords, handle wider than the sash} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
+    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical -showhandle 1 -handlepad 5 \
+	    -handlesize 6
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 20
+    lmap xy {{4 22} {5 22} {10 22} {11 22} {0 29} {0 30}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {0 sash}
-test panedwindow-26.18 {PanedWindowIdentifyCoords} -setup {
+} -result {{{4 22} {0 sash}} {{5 22} {0 handle}} {{10 22} {0 handle}} {{11 22} {0 sash}} {{0 29} {0 sash}} {{0 30} {}}}
+test panedwindow-26.25 {PanedWindowIdentifyCoords, handle} -setup {
     deleteWindows
 } -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
+    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical -showhandle 1 -handlepad 5 \
+	    -handlesize 8
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 22
+    lmap xy {{5 20} {0 20}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {0 sash}
-test panedwindow-26.19 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 24
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.20 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 26
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.21 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify -1 26
-} -cleanup {
-    deleteWindows
-} -result {}
-test panedwindow-26.22 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 100 26
-} -cleanup {
-    deleteWindows
-} -result {}
-test panedwindow-26.23 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
-	    -handlesize 6 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 4 22
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.24 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
-	    -handlesize 6 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 5 22
-} -cleanup {
-    deleteWindows
-} -result {0 handle}
-test panedwindow-26.25 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
-	    -handlesize 8 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 5 20
-} -cleanup {
-    deleteWindows
-} -result {0 handle}
-test panedwindow-26.26 {PanedWindowIdentifyCoords} -setup {
-    deleteWindows
-} -body {
-    panedwindow .p -bd 0 -sashwidth 2 -sashpad 2 -showhandle 1 -handlepad 5 \
-	    -handlesize 8 -orient vertical
-    .p add [frame .f -bg red -width 20 -height 20] \
-	    [frame .f2 -bg blue -width 20 -height 20]
-    .p identify 0 20
-} -cleanup {
-    deleteWindows
-} -result {0 sash}
-test panedwindow-26.27 {PanedWindowIdentifyCoords} -setup {
+} -result {{{5 20} {0 handle}} {{0 20} {0 sash}}}
+test panedwindow-26.27 {PanedWindowIdentifyCoords, second sash} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -bd 0 -sashwidth 2 -sashpad 2 -orient vertical
     .p add [frame .f -bg red -width 20 -height 20] \
 	    [frame .f2 -bg blue -width 20 -height 20] \
 	    [frame .f3 -bg green -width 20 -height 20]
-    .p identify 0 48
+    lmap xy {{0 48}} {
+	list $xy [.p identify {*}$xy]
+    }
 } -cleanup {
     deleteWindows
-} -result {1 sash}
+} -result {{{0 48} {1 sash}}}
 
 
 test panedwindow-27.1 {destroy the window cleanly on error [Bug #616589]} -setup {
