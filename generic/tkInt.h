@@ -108,38 +108,6 @@
 #endif
 
 /*
- * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE) or TIP #613/#618 (TCL_NULL_OK)
- */
-
-#ifndef TCL_NULL_OK
-#   define TCL_NULL_OK 32
-#endif
-#if !defined(TCL_INDEX_TEMP_TABLE)
-#   define TCL_INDEX_TEMP_TABLE 64
-#endif
-
-#ifndef TCL_Z_MODIFIER
-#   if defined(_WIN64)
-#	define TCL_Z_MODIFIER	"I"
-#   elif defined(__GNUC__) && !defined(_WIN32)
-#	define TCL_Z_MODIFIER	"z"
-#   else
-#	define TCL_Z_MODIFIER	""
-#   endif
-#endif /* !TCL_Z_MODIFIER */
-#undef TCL_LL_MODIFIER
-#if defined(_WIN32) && (!defined(__USE_MINGW_ANSI_STDIO) || !__USE_MINGW_ANSI_STDIO)
-#   define TCL_LL_MODIFIER	"I64"
-#else
-#   define TCL_LL_MODIFIER	"ll"
-#endif
-
-#if !defined(TCL_SIZE_MODIFIER)
-#   define TCL_SIZE_MODIFIER ""
-#endif
-
-/*
  * Opaque type declarations:
  */
 
@@ -1173,6 +1141,8 @@ MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LabelframeObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ListboxObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LowerObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MenuObjCmd;
+MODULE_SCOPE bool	TkMenubarCloneMissing(Tcl_Interp *interp, Tk_Window tkwin,
+			    const char *menuName);
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MenubuttonObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MessageBoxObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MessageObjCmd;

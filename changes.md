@@ -156,6 +156,10 @@ to the userbase.
  - [-stipple option for canvas text item disrupts positioning](https://core.tcl-lang.org/tk/tktview/220796)
  - [Ctrl+Left in text skips a one-character word before the cursor](https://core.tcl-lang.org/tk/tktview/cc736f)
  - [X11: a posted menu stays open when the application loses the focus or its toplevel moves](https://core.tcl-lang.org/tk/tktview/2e3d6c)
+ - [High number of text widgets block idle queue](https://core.tcl-lang.org/tk/tktview/1348333)
+ - [Pendulum demo text not visible under dark mode](https://core.tcl-lang.org/tk/tktview/042da6)
+ - [Add Xcursor support on X11](https://core.tcl-lang.org/tk/tktview/316486)
+ - [Toplevel lost its menubar when the menubar clone was destroyed](https://core.tcl-lang.org/tk/tktview/2903b4)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

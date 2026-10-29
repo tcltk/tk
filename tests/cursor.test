@@ -27,26 +27,30 @@ resetWindows
 # LOCAL UTILITY PROCS
 #
 
-# Windows and macOS read cursor files in the Windows format.  Animated cursors
-# are not supported on macOS.  A cursor spec of a single file name is not
-# supported on X11.
+# The format of a cursor file depends on the platform: Windows and macOS
+# read Windows cursors, X11 reads cursors in the Xcursor format if the
+# libXcursor library is available.  If it is loaded, [load] fails because it
+# has no Xcursor_Init.  Animated cursors are not supported on macOS.
 switch [tk windowingsystem] {
+    x11 {
+	set cursorFile cursor.xcur
+	set cursorAnimFile cursor-anim.xcur
+	testConstraint cursorFile [expr {
+	    [catch {load libXcursor.so.1 Xcursor} msg]
+	    && [string match "*Xcursor_Init*" $msg]}]
+	testConstraint cursorAnim [testConstraint cursorFile]
+	unset -nocomplain msg
+    }
     win32 {
 	set cursorFile cursor.cur
 	set cursorAnimFile cursor-anim.ani
 	testConstraint cursorFile 1
 	testConstraint cursorAnim 1
     }
-    aqua {
+    default {
 	set cursorFile cursor.cur
 	set cursorAnimFile {}
 	testConstraint cursorFile 1
-	testConstraint cursorAnim 0
-    }
-    default {
-	set cursorFile {}
-	set cursorAnimFile {}
-	testConstraint cursorFile 0
 	testConstraint cursorAnim 0
     }
 }
@@ -135,7 +139,7 @@ test cursor-2.4 {Tk_GetCursor procedure: cursor specs are lists} -constraints {
     removeDirectory {dir with spaces}
     unset file
 } -result {.b}
-test cursor-2.5 {Tk_GetCursor procedure: cursor file} -constraints {
+test cursor-2.5 {Tk_GetCursor procedure: cursor file - bug 3164867} -constraints {
     cursorFile
 } -body {
     set file [file join [testsDirectory] $cursorFile]
