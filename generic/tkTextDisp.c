@@ -467,6 +467,15 @@ typedef struct BaseCharInfo {
     int width;			/* Width in pixels of the whole string, if
 				 * known, else -1. Valid during
 				 * LayoutDLine(). */
+    bool placed;		/* True once BidiReorderChunks() has assigned
+				 * the visual position of the whole string. */
+    int originX;		/* Valid if placed: x of the left edge of the
+				 * whole string, i.e. the point at which the
+				 * string is drawn and measured from. This is
+				 * NOT the x of the base chunk once the chunks of
+				 * an RTL string have been mirrored. */
+    int unitWidth;		/* Valid if placed: pixel width of the whole
+				 * string (sum of the widths of its chunks). */
 } BaseCharInfo;
 
 /*
@@ -478,6 +487,32 @@ typedef struct {
     TkTextDispChunk *baseCharChunkPtr;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+/*
+ * BaseOriginX --
+ *
+ *	Returns the x coordinate from which the whole string of the base chunk
+ *	of ciPtr is drawn and measured.  Until BidiReorderChunks() has placed
+ *	the string this is the x of the base chunk.  Afterwards it is the left
+ *	edge of the string, which differs from the x of the base chunk when the
+ *	chunks of a right-to-left string were mirrored (the base chunk is the
+ *	logically first chunk, which is then the rightmost one).  Drawing and
+ *	measuring must never depend on where the base chunk itself lies, or the
+ *	glyphs jump when a tag splits the string into several chunks.
+ */
+
+static inline int
+BaseOriginX(
+    const CharInfo *ciPtr)
+{
+    const BaseCharInfo *bciPtr = (const BaseCharInfo *)
+	    ciPtr->baseChunkPtr->clientData;
+
+    if (bciPtr != NULL && bciPtr->placed) {
+	return bciPtr->originX;
+    }
+    return ciPtr->baseChunkPtr->x;
+}
 
 /*
  * ChunkIsRtl --
@@ -611,11 +646,6 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 #define DLINE_UNLINK	  1
 #define DLINE_FREE_TEMP	  2
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-but-set-global"
-#endif
-
 /*
  * The following counters keep statistics about redisplay that can be checked
  * to see how clever this code is at reducing redisplays.
@@ -628,11 +658,6 @@ static int numCopies;		/* Number of calls to XCopyArea to copy part
 static int lineHeightsRecalculated;
 				/* Number of line layouts purely for height
 				 * calculation purposes.*/
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -675,6 +700,8 @@ static void		ElideBboxProc(TkText *textPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
 static Tcl_Size	ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
+			    DLine *prevPtr, Pixmap pixmap);
+static void		DisplayLineBackgroundInner(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
@@ -1318,6 +1345,342 @@ IsEntirelyElidedLine(
     return elide;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ChunkBidiDir --
+ *
+	Tri-state version of ChunkIsRtl: returns the strong bidi direction
+	of a chunk.  0 = neutral (no strong direction), 1 = LTR, 2 = RTL.
+	The strong ranges mirror ChunkIsRtl.
+ *
+ * Results:
+	0, 1 or 2 as described above.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ChunkBidiDir(
+    const char *chars,
+    Tcl_Size numBytes)
+{
+    const char *p = chars;
+    const char *end = chars + numBytes;
+
+    if (chars == NULL) {
+	return 0;
+    }
+    while (p < end) {
+	int ch;
+	Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+
+	if (chLen <= 0) {
+	    break;
+	}
+	/* Hebrew, Arabic, Syriac, NKo, Thaana, Samaritan and supplements */
+	if (ch >= 0x0590 && ch <= 0x08FF) {
+	    return 2;
+	}
+	/* Hebrew and Arabic presentation forms */
+	if (ch >= 0xFB1D && ch <= 0xFEFF) {
+	    return 2;
+	}
+	/* Historical RTL scripts */
+	if (ch >= 0x10800 && ch <= 0x10FFF) {
+	    return 2;
+	}
+	/* Any other letter is a strong LTR for our purposes. */
+	if (Tcl_UniCharIsAlpha(ch)) {
+	    return 1;
+	}
+	p += chLen;
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * BidiReorderChunks --
+ *
+ *	Assign the visual x positions of the chunks of a display line.
+ *	LayoutDLine lays chunks out left-to-right in logical order.  The font
+ *	backends draw the whole string of a base chunk (the stretch of
+ *	consecutive chunks with the same font, whatever their tags) in context
+ *	and in visual order, so what must be fixed up is where each chunk
+ *	*lies*, because its x is used for the background (the "sel" highlight
+ *	included), for hit testing and for the bounding boxes.
+ *
+ *	Two levels are handled, both independent of how tags split the text
+ *	into chunks, so that a tag boundary never changes the picture:
+ *
+ *	1. Inside a string (all chunks sharing one base chunk) whose own
+ *	   direction is RTL the chunks are mirrored: the logically first chunk
+ *	   is the rightmost one.  The glyphs are not moved: they are drawn from
+ *	   the left edge of the string (BaseCharInfo.originX), which is never
+ *	   changed by the mirroring.
+ *
+ *	2. The strings (units) of the line are reordered per UAX #9 (rule L2)
+ *	   using the paragraph direction of the line (first strong unit), so
+ *	   that strings with different fonts also follow the reading order.
+ *
+ *	Embedded windows and images, and tab stops, never move: they delimit
+ *	groups that are reordered independently.  Zero-width chunks (the
+ *	insertion cursor) follow the string they are attached to.
+ *
+ *	Simplification: European numbers are treated as neutrals.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The x positions of the chunks of dlPtr are reassigned, and the origin
+ *	and width of each string are recorded in its BaseCharInfo.  Total
+ *	width and chunk widths are unchanged.  Lines without any chunk that
+ *	starts with RTL text are left untouched.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct BidiUnit {
+    int first, last;		/* Range of indices in the chunk array. */
+    TkTextDispChunk *base;	/* Base chunk of the string, NULL for a
+				 * barrier (window, image, ...). */
+    int x0, width;		/* Logical x and width of the unit. */
+    int dir;			/* Direction of the string itself: 0 neutral,
+				 * 1 LTR, 2 RTL (see ChunkBidiDir). */
+    int resolved;		/* 1 or 2: direction used for placement. */
+    int level;			/* Embedding level. */
+    int newX;			/* Resulting left edge. */
+    bool endsGroup;		/* Nothing may be reordered across the end of
+				 * this unit (barrier, or ends in a tab). */
+} BidiUnit;
+
+static void
+BidiReorderChunks(
+    DLine *dlPtr)		/* Display line to reorder. */
+{
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    TkTextDispChunk *chunkPtr, **chunks;
+    BidiUnit *units;
+    int *order;
+    int nChunks = 0, nUnits = 0, i, j, k, g, gEnd, paraLevel = 0;
+    bool anyRtl = false, haveStrong = false;
+
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr) {
+	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+
+	nChunks++;
+	if (chunkPtr->displayProc == CharDisplayProc && ciPtr != NULL
+		&& ciPtr->isRtl) {
+	    anyRtl = true;
+	}
+    }
+
+    /*
+     * Fast path: no chunk starts with RTL text, so nothing is mirrored or
+     * reordered, and all coordinates keep their logical meaning.
+     */
+
+    if (!anyRtl || nChunks == 0) {
+	return;
+    }
+
+    chunks = (TkTextDispChunk **)Tcl_Alloc(nChunks * sizeof(*chunks));
+    units = (BidiUnit *)Tcl_Alloc(nChunks * sizeof(*units));
+    order = (int *)Tcl_Alloc(nChunks * sizeof(int));
+
+    i = 0;
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr) {
+	chunks[i++] = chunkPtr;
+    }
+
+    /*
+     * Build the units: consecutive char chunks of the same base chunk;
+     * zero-width chunks are attached to the preceding char unit; any other
+     * chunk is a barrier of its own.
+     */
+
+    for (i = 0; i < nChunks; i++) {
+	CharInfo *ciPtr = (CharInfo *)chunks[i]->clientData;
+	TkTextDispChunk *base = NULL;
+
+	if (chunks[i]->displayProc == CharDisplayProc && ciPtr != NULL
+		&& ciPtr->baseChunkPtr != NULL
+		&& ciPtr->baseChunkPtr->clientData != NULL) {
+	    base = ciPtr->baseChunkPtr;
+	}
+	if (base != NULL && nUnits > 0 && units[nUnits-1].base == base) {
+	    units[nUnits-1].last = i;
+	} else if (base == NULL && chunks[i]->width == 0 && nUnits > 0
+		&& units[nUnits-1].base != NULL) {
+	    units[nUnits-1].last = i;
+	} else {
+	    units[nUnits].first = units[nUnits].last = i;
+	    units[nUnits].base = base;
+	    nUnits++;
+	}
+    }
+
+    for (i = 0; i < nUnits; i++) {
+	BidiUnit *u = &units[i];
+	TkTextDispChunk *lastPtr = chunks[u->last];
+	int endX = lastPtr->x + lastPtr->width;
+
+	u->x0 = chunks[u->first]->x;
+	u->width = endX - u->x0;
+	u->endsGroup = (u->base == NULL);
+	u->dir = 0;
+	if (u->base != NULL) {
+	    BaseCharInfo *bciPtr = (BaseCharInfo *)u->base->clientData;
+
+	    u->dir = ChunkBidiDir(Tcl_DStringValue(&bciPtr->baseChars),
+		    Tcl_DStringLength(&bciPtr->baseChars));
+	    for (j = u->last; j >= u->first; j--) {
+		CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
+
+		if (chunks[j]->displayProc == CharDisplayProc
+			&& ciPtr != NULL && ciPtr->numBytes > 0) {
+		    const char *p = ciPtr->chars;
+
+		    if (p != NULL && p[ciPtr->numBytes - 1] == '\t') {
+			u->endsGroup = true;
+		    }
+		    break;
+		}
+	    }
+	    if (!haveStrong && u->dir != 0) {
+		haveStrong = true;
+		paraLevel = (u->dir == 2) ? 1 : 0;	/* P2, P3 */
+	    }
+	}
+    }
+
+    /*
+     * Resolve neutrals (N1/N2) and assign levels, group by group.  The
+     * sos/eos of a group is the paragraph direction.
+     */
+
+    for (g = 0; g < nUnits; g = gEnd + 1) {
+	int pdir = paraLevel ? 2 : 1, maxLevel = 0, minOdd = 255;
+
+	for (gEnd = g; gEnd < nUnits - 1 && !units[gEnd].endsGroup; gEnd++) {
+	    ;
+	}
+	for (i = g; i <= gEnd; i++) {
+	    if (units[i].base == NULL) {
+		units[i].resolved = pdir;		/* Barrier. */
+	    } else if (units[i].dir != 0) {
+		units[i].resolved = units[i].dir;
+	    } else {
+		int before = (i > g) ? units[i-1].resolved : pdir;
+		int after = pdir;
+
+		for (k = i; k <= gEnd && units[k].base != NULL
+			&& units[k].dir == 0; k++) {
+		    ;
+		}
+		if (k <= gEnd && units[k].base != NULL) {
+		    after = units[k].dir;
+		}
+		units[i].resolved = (before == after) ? before : pdir;
+	    }
+	    units[i].level = (units[i].resolved == 2) ? 1 : (paraLevel ? 2 : 0);
+	    if (units[i].level > maxLevel) {
+		maxLevel = units[i].level;
+	    }
+	    if ((units[i].level & 1) && units[i].level < minOdd) {
+		minOdd = units[i].level;
+	    }
+	}
+	if (paraLevel && minOdd > 1) {
+	    minOdd = 1;
+	}
+
+	/*
+	 * Rule L2: from the highest level down to the lowest odd level,
+	 * reverse every maximal run of units at that level or higher.
+	 */
+
+	for (i = g; i <= gEnd; i++) {
+	    order[i] = i;
+	}
+	for (k = maxLevel; k >= minOdd && k > 0; k--) {
+	    for (i = g; i <= gEnd; i++) {
+		if (units[order[i]].level < k) {
+		    continue;
+		}
+		for (j = i; j < gEnd && units[order[j+1]].level >= k; j++) {
+		    ;
+		}
+		for (int lo = i, hi = j; lo < hi; lo++, hi--) {
+		    int t = order[lo];
+
+		    order[lo] = order[hi];
+		    order[hi] = t;
+		}
+		i = j;
+	    }
+	}
+
+	/*
+	 * The group keeps its left edge and its total width.
+	 */
+
+	{
+	    int x = units[g].x0;
+
+	    for (i = g; i <= gEnd; i++) {
+		units[order[i]].newX = x;
+		x += units[order[i]].width;
+	    }
+	}
+    }
+
+    /*
+     * Place the chunks.  Inside a string whose own direction is RTL the
+     * chunk positions are mirrored within the extent of the string.
+     */
+
+    for (i = 0; i < nUnits; i++) {
+	BidiUnit *u = &units[i];
+	bool mirror = (u->dir == 2);
+
+	if (u->base != NULL) {
+	    BaseCharInfo *bciPtr = (BaseCharInfo *)u->base->clientData;
+
+	    bciPtr->placed = true;
+	    bciPtr->originX = u->newX;
+	    bciPtr->unitWidth = u->width;
+	}
+	for (j = u->first; j <= u->last; j++) {
+	    CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
+	    int off = chunks[j]->x - u->x0;
+
+	    if (u->base == NULL) {
+		chunks[j]->x = u->newX;
+		continue;
+	    }
+	    if (chunks[j]->displayProc == CharDisplayProc && ciPtr != NULL) {
+		ciPtr->isRtl = mirror;
+	    }
+	    chunks[j]->x = mirror ?
+		    u->newX + u->width - off - chunks[j]->width :
+		    u->newX + off;
+	}
+    }
+
+    Tcl_Free(chunks);
+    Tcl_Free(units);
+    Tcl_Free(order);
+#else
+    (void)dlPtr;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1983,6 +2346,15 @@ LayoutDLine(
      */
 
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
+
+    /*
+     * Reorder the chunks of the line according to the bidi levels, so
+     * that tag-split RTL chunks are placed in visual order (see
+     * [e7c85cd941] for the revised text widget equivalent).  No chunk
+     * width changes, so the line length remains valid.
+     */
+
+    BidiReorderChunks(dlPtr);
 
     return dlPtr;
 }
@@ -2778,6 +3150,9 @@ DisplayDLine(
 		    bci.ci = *ciPtr;
 		    Tcl_DStringInit(&bci.baseChars);
 		    bci.width = -1;
+		    bci.placed = false;
+		    bci.originX = 0;
+		    bci.unitWidth = 0;
 		    Tcl_DStringAppend(&bci.baseChars,
 			    Tcl_DStringValue(&bciPtr->baseChars) +
 			    bci.ci.baseOffset, numBytes);
@@ -2910,7 +3285,7 @@ DisplayDLine(
  */
 
 static void
-DisplayLineBackground(
+DisplayLineBackgroundInner(
     TkText *textPtr,		/* Text widget containing line. */
     DLine *dlPtr,	/* Information about line to draw. */
     DLine *prevPtr,		/* Line just above dlPtr, or NULL if dlPtr is
@@ -3279,6 +3654,112 @@ DisplayLineBackground(
 	    }
 	}
     }
+}
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * VisualChunkOrder, DisplayLineBackground --
+ *
+ *	DisplayLineBackgroundInner scans the chunks of a line "from left to
+ *	right" by following the chunk list.  The chunks of RTL text lie in
+ *	visual order while the list is in logical order, so, for the duration
+ *	of the call, the lists of the lines involved are relinked in order of
+ *	increasing x (stable, so zero-width chunks keep their logical order),
+ *	and restored afterwards.  Without this the background of a tag that
+ *	splits RTL text (the selection!) is painted at the wrong place or with
+ *	a negative width, which looks like the highlight dancing.
+ *
+ *--------------------------------------------------------------
+ */
+
+typedef struct {
+    DLine *dlPtr;
+    TkTextDispChunk **chunks;	/* Logical order, or NULL if untouched. */
+    int count;
+} ChunkRelink;
+
+static void
+RelinkVisual(
+    ChunkRelink *rl,
+    DLine *dlPtr)
+{
+    TkTextDispChunk *chunkPtr, **sorted;
+    int n = 0, i, j;
+    bool ordered = true;
+
+    rl->dlPtr = dlPtr;
+    rl->chunks = NULL;
+    rl->count = 0;
+    if (dlPtr == NULL || dlPtr->chunkPtr == NULL) {
+	return;
+    }
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr->nextPtr != NULL && chunkPtr->nextPtr->x < chunkPtr->x) {
+	    ordered = false;
+	}
+	n++;
+    }
+    if (ordered) {
+	return;
+    }
+    rl->chunks = (TkTextDispChunk **)Tcl_Alloc(n * sizeof(*rl->chunks));
+    sorted = (TkTextDispChunk **)Tcl_Alloc(n * sizeof(*sorted));
+    rl->count = n;
+    for (i = 0, chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr, i++) {
+	rl->chunks[i] = chunkPtr;
+    }
+    for (i = 0; i < n; i++) {		/* Stable insertion sort by x. */
+	TkTextDispChunk *c = rl->chunks[i];
+
+	for (j = i; j > 0 && sorted[j-1]->x > c->x; j--) {
+	    sorted[j] = sorted[j-1];
+	}
+	sorted[j] = c;
+    }
+    for (i = 0; i < n; i++) {
+	sorted[i]->nextPtr = (i + 1 < n) ? sorted[i+1] : NULL;
+    }
+    dlPtr->chunkPtr = sorted[0];
+    Tcl_Free(sorted);
+}
+
+static void
+RestoreLogical(
+    ChunkRelink *rl)
+{
+    int i;
+
+    if (rl->chunks == NULL) {
+	return;
+    }
+    for (i = 0; i < rl->count; i++) {
+	rl->chunks[i]->nextPtr = (i + 1 < rl->count) ? rl->chunks[i+1] : NULL;
+    }
+    rl->dlPtr->chunkPtr = rl->chunks[0];
+    Tcl_Free(rl->chunks);
+    rl->chunks = NULL;
+}
+
+static void
+DisplayLineBackground(
+    TkText *textPtr,
+    DLine *dlPtr,
+    DLine *prevPtr,
+    Pixmap pixmap)
+{
+    ChunkRelink cur, prev, next;
+
+    RelinkVisual(&cur, dlPtr);
+    RelinkVisual(&prev, prevPtr);
+    RelinkVisual(&next, dlPtr->nextPtr);
+    DisplayLineBackgroundInner(textPtr, dlPtr, prevPtr, pixmap);
+    RestoreLogical(&next);
+    RestoreLogical(&prev);
+    RestoreLogical(&cur);
 }
 
 /*
@@ -7553,6 +8034,35 @@ TkTextPixelIndex(
  *----------------------------------------------------------------------
  */
 
+/*
+ * LineHasRtlChunk --
+ *
+ *	True if some char chunk of the display line belongs to an RTL string,
+ *	in which case the x positions of the chunks need not grow along the
+ *	chunk list.
+ */
+
+static bool
+LineHasRtlChunk(
+    const DLine *dlPtr)
+{
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    const TkTextDispChunk *chunkPtr;
+
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr->displayProc == CharDisplayProc
+		&& chunkPtr->clientData != NULL
+		&& ((const CharInfo *)chunkPtr->clientData)->isRtl) {
+	    return true;
+	}
+    }
+#else
+    (void)dlPtr;
+#endif
+    return false;
+}
+
 static void
 DlineIndexOfX(
     TkText *textPtr,		/* Widget record for text widget. */
@@ -7576,6 +8086,65 @@ DlineIndexOfX(
     *indexPtr = dlPtr->index;
     x = x - dInfoPtr->x + dInfoPtr->curXPixelOffset;
     chunkPtr = dlPtr->chunkPtr;
+
+    if (chunkPtr != NULL && LineHasRtlChunk(dlPtr)) {
+	/*
+	 * The chunk list is in logical order but the chunks of RTL text lie in
+	 * visual order, so x does not grow along the list and the scan below
+	 * does not work.  Look for the chunk that covers x anywhere in the
+	 * line; off to the left or right of all of them use the chunk at that
+	 * edge, with x clamped to it.  For RTL text the left edge is the
+	 * logically last character and the right edge the logically first one,
+	 * which is what a drag out of the window needs in order to extend the
+	 * selection steadily instead of jumping to the other end of the line.
+	 */
+
+	TkTextDispChunk *foundPtr = NULL, *leftPtr = NULL, *rightPtr = NULL;
+	Tcl_Size offset = 0, foundOffset = 0, leftOffset = 0, rightOffset = 0;
+
+	for (; chunkPtr != NULL; chunkPtr = chunkPtr->nextPtr) {
+	    if (chunkPtr->width > 0) {
+		if (x >= chunkPtr->x && x < chunkPtr->x + chunkPtr->width) {
+		    foundPtr = chunkPtr;
+		    foundOffset = offset;
+		    break;
+		}
+		if (leftPtr == NULL || chunkPtr->x < leftPtr->x) {
+		    leftPtr = chunkPtr;
+		    leftOffset = offset;
+		}
+		if (rightPtr == NULL || chunkPtr->x + chunkPtr->width
+			> rightPtr->x + rightPtr->width) {
+		    rightPtr = chunkPtr;
+		    rightOffset = offset;
+		}
+	    }
+	    offset += chunkPtr->numBytes;
+	}
+	if (foundPtr == NULL) {
+	    if (leftPtr == NULL) {
+		return;
+	    }
+	    if (x < leftPtr->x) {
+		foundPtr = leftPtr;
+		foundOffset = leftOffset;
+		x = leftPtr->x;
+	    } else {
+		foundPtr = rightPtr;
+		foundOffset = rightOffset;
+		x = rightPtr->x + rightPtr->width - 1;
+	    }
+	}
+	if (foundOffset > 0 && TkTextIndexForwBytes(NULL, indexPtr,
+		foundOffset, indexPtr)) {
+	    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr, COUNT_INDICES);
+	    return;
+	}
+	if (foundPtr->numBytes > 1) {
+	    indexPtr->byteIndex += foundPtr->measureProc(foundPtr, x);
+	}
+	return;
+    }
 
     if (chunkPtr == NULL || x == 0) {
 	/*
@@ -7695,7 +8264,24 @@ DlineXOfIndex(
     TkTextDispChunk *chunkPtr = dlPtr->chunkPtr;
     int x = 0;
 
-    if (byteIndex == 0 || chunkPtr == NULL) {
+    if (chunkPtr == NULL) {
+	return x;
+    }
+    if (byteIndex == 0) {
+	/*
+	 * The start of a line that begins with RTL text is at the right end
+	 * of that text.
+	 */
+
+	if (LineHasRtlChunk(dlPtr) && chunkPtr->bboxProc == CharBboxProc) {
+	    int y, width, height;
+
+	    chunkPtr->bboxProc(textPtr, chunkPtr, 0,
+		    dlPtr->y + dlPtr->spaceAbove,
+		    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
+		    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
+		    &height);
+	}
 	return x;
     }
 
@@ -8270,7 +8856,24 @@ TkTextDLineInfo(
 	return false;
     }
 
-    dlx = (dlPtr->chunkPtr != NULL? dlPtr->chunkPtr->x: 0);
+    /*
+     * The left edge of the line is the leftmost chunk: BidiReorderChunks
+     * may have put the first chunk of the list on the right side of an
+     * RTL line, so scanning the chunks for the minimum x is required.
+     */
+
+    dlx = 0;
+    if (dlPtr->chunkPtr != NULL) {
+	TkTextDispChunk *chunkPtr;
+
+	dlx = dlPtr->chunkPtr->x;
+	for (chunkPtr = dlPtr->chunkPtr->nextPtr; chunkPtr != NULL;
+		chunkPtr = chunkPtr->nextPtr) {
+	    if (chunkPtr->x < dlx) {
+		dlx = chunkPtr->x;
+	    }
+	}
+    }
     *xPtr = dInfoPtr->x - dInfoPtr->curXPixelOffset + dlx;
     *widthPtr = dlPtr->length - dlx;
     *yPtr = dlPtr->y;
@@ -8504,6 +9107,9 @@ TkTextCharLayoutProc(
 	baseString = &bciPtr->baseChars;
 	Tcl_DStringInit(baseString);
 	bciPtr->width = 0;
+	bciPtr->placed = false;
+	bciPtr->originX = 0;
+	bciPtr->unitWidth = 0;
 
 	ciPtr = &bciPtr->ci;
     } else {
@@ -8908,11 +9514,24 @@ CharChunkMeasureChars(
 
 	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
 			 0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
+	    xDisplacement = startX - widthUntilStart - BaseOriginX(ciPtr);
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
-			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
+			   BaseOriginX(ciPtr) + xDisplacement, maxX, flags, nextXPtr);
+
+	/*
+	 * The Windows backend (Uniscribe) can return a non-monotonic
+	 * position when the measured range ends with a control character
+	 * such as '\n': the returned right edge may be to the left of the
+	 * span start, producing chunks with negative width (e.g. the
+	 * newline chunk), which corrupts DLine length and justification.
+	 * Clamp to the span start so such characters get zero width.
+	 */
+
+	if (*nextXPtr < startX) {
+	    *nextXPtr = startX;
+	}
 
 	if (fit < bstart) {
 	    return 0;
@@ -9001,11 +9620,24 @@ CharChunkMeasureChars(
 
 	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
 			 0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
+	    xDisplacement = startX - widthUntilStart - BaseOriginX(ciPtr);
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
-			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
+			   BaseOriginX(ciPtr) + xDisplacement, maxX, flags, nextXPtr);
+
+	/*
+	 * The Windows backend (Uniscribe) can return a non-monotonic
+	 * position when the measured range ends with a control character
+	 * such as '\n': the returned right edge may be to the left of the
+	 * span start, producing chunks with negative width (e.g. the
+	 * newline chunk), which corrupts DLine length and justification.
+	 * Clamp to the span start so such characters get zero width.
+	 */
+
+	if (*nextXPtr < startX) {
+	    *nextXPtr = startX;
+	}
 
 	if (fit < bstart) {
 	    return 0;
@@ -9103,7 +9735,16 @@ CharDisplayProc(
 
     offsetX = x;
     offsetBytes = 0;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    /*
+     * The leading bytes of an RTL string are at its right end, so they are
+     * not the ones that may be off-screen to the left: draw it whole.
+     */
+
+    if (x < 0 && !ciPtr->isRtl) {
+#else
     if (x < 0) {
+#endif
 	offsetBytes = CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1,
 		x, 0, 0, &offsetX);
     }
@@ -9128,13 +9769,13 @@ CharDisplayProc(
 
 	Tk_DrawCharsInContext(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
 		string, numBytes, start, len,
-		ciPtr->baseChunkPtr->x + xDisplacement,
+		BaseOriginX(ciPtr) + xDisplacement,
 		y + baseline - sValuePtr->offset);
 
 	if (sValuePtr->underline) {
 	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ulGC,
 		    sValuePtr->tkfont, string, numBytes,
-		    ciPtr->baseChunkPtr->x + xDisplacement,
+		    BaseOriginX(ciPtr) + xDisplacement,
 		    y + baseline - sValuePtr->offset,
 		    start, start+len);
 	}
@@ -9144,7 +9785,7 @@ CharDisplayProc(
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
 	    Tk_UnderlineCharsInContext(display, dst, stylePtr->ovGC,
 		    sValuePtr->tkfont, string, numBytes,
-		    ciPtr->baseChunkPtr->x + xDisplacement,
+		    BaseOriginX(ciPtr) + xDisplacement,
 		    y + baseline - sValuePtr->offset
 			    - fm.descent - (fm.ascent * 3) / 10,
 		    start, start+len);
@@ -9321,20 +9962,22 @@ CharMeasureProc(
 
     if (ciPtr->isRtl) {
 	/*
-	 * For RTL chunks the font renders the first logical byte at the
-	 * rightmost pixel position of the chunk and the last logical byte at
-	 * the leftmost pixel position.  Mirror x relative to the chunk
-	 * centre so that CharChunkMeasureChars (which always measures
-	 * left-to-right in storage order) returns the correct byte offset.
+	 * The font draws an RTL string with its first logical byte at the
+	 * right end and its last logical byte at the left end of the string's
+	 * extent [originX, originX + unitWidth]; this extent is that of the
+	 * whole string (all chunks of the base chunk), not of this chunk.
+	 * CharChunkMeasureChars measures from the string start in logical
+	 * order, in a frame whose origin is originX, so mirror x around the
+	 * centre of the string's extent:
 	 *
-	 * chunkPtr->x                      chunkPtr->x + chunkPtr->width
-	 *   |<----------- chunk width ------------->|
-	 *   [ last-byte glyph ... first-byte glyph ]   (RTL visual order)
-	 *
-	 * Mirrored x:  x' = chunkPtr->x + (chunkPtr->x + chunkPtr->width - x)
-	 *                 = 2*chunkPtr->x + chunkPtr->width - x
+	 *   x' = originX + (originX + unitWidth - x)
 	 */
-	int mirroredX = 2 * chunkPtr->x + chunkPtr->width - x;
+	const BaseCharInfo *bciPtr = (const BaseCharInfo *)
+		ciPtr->baseChunkPtr->clientData;
+	int origin = BaseOriginX(ciPtr);
+	int unitWidth = (bciPtr != NULL && bciPtr->placed) ?
+		bciPtr->unitWidth : chunkPtr->width;
+	int mirroredX = 2 * origin + unitWidth - x;
 
 	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 				     chunkPtr->x, mirroredX, 0, &endX); /* CHAR OFFSET */
@@ -9414,18 +10057,36 @@ CharBboxProc(
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     if (ciPtr->isRtl) {
-	/* RTL: mirror the measurement. */
+	/*
+	 * RTL: with base chunks the measurement is anchored at the start of
+	 * the whole string (see CharChunkMeasureChars), so xStart and xEnd
+	 * are cumulative from originX.  The string occupies the extent
+	 * [originX, originX + unitWidth] with its first logical byte at the
+	 * right end, so a byte range [a, b) lies at
+	 *
+	 *   [originX + unitWidth - b, originX + unitWidth - a]
+	 *
+	 * (b and a being the measured advances).  This holds however the
+	 * string is split into chunks by tags (the "sel" tag included), which
+	 * is what keeps the highlight and the glyphs together.
+	 */
 	int xEnd, xStart;
+	const BaseCharInfo *bciPtr = (const BaseCharInfo *)
+		ciPtr->baseChunkPtr->clientData;
+	int origin = BaseOriginX(ciPtr);
+	int unitWidth = (bciPtr != NULL && bciPtr->placed) ?
+		bciPtr->unitWidth : chunkPtr->width;
+
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, nextIndex,
 		chunkPtr->x, -1, 0, &xEnd);
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 		chunkPtr->x, -1, 0, &xStart);
 
-	*xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
+	*xPtr = 2 * origin + unitWidth - xEnd;
 	*widthPtr = xEnd - xStart;
-
-	if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
-	if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
+	if (*widthPtr < 0) {
+	    *widthPtr = 0;
+	}
     } else
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
     {
