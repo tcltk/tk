@@ -3159,9 +3159,9 @@ PanedWindowIdentifyCoords(
 	}
 	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
-	    sashWidth = pwPtr->handleSize;
+	    sashWidth = pwPtr->sashWidth;
 	    lpad = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
-	    rpad = pwPtr->handleSize - lpad;
+	    rpad = pwPtr->handleSize - pwPtr->sashWidth - lpad;
 	    lpad += pwPtr->sashPad;
 	    rpad += pwPtr->sashPad;
 	} else {
@@ -3171,9 +3171,9 @@ PanedWindowIdentifyCoords(
 	tpad = bpad = 0;
     } else {
 	if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
-	    sashHeight = pwPtr->handleSize;
+	    sashHeight = pwPtr->sashWidth;
 	    tpad = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
-	    bpad = pwPtr->handleSize - tpad;
+	    bpad = pwPtr->handleSize - pwPtr->sashWidth - tpad;
 	    tpad += pwPtr->sashPad;
 	    bpad += pwPtr->sashPad;
 	} else {
@@ -3199,8 +3199,8 @@ PanedWindowIdentifyCoords(
 	thisx = pwPtr->panes[i]->sashx;
 	thisy = pwPtr->panes[i]->sashy;
 
-	if (((thisx - lpad) <= x && x <= (thisx + rpad + sashWidth)) &&
-		((thisy - tpad) <= y && y <= (thisy + bpad + sashHeight))) {
+	if (((thisx - lpad) <= x && x < (thisx + rpad + sashWidth)) &&
+		((thisy - tpad) <= y && y < (thisy + bpad + sashHeight))) {
 	    found = i;
 
 	    /*
@@ -3211,11 +3211,11 @@ PanedWindowIdentifyCoords(
 		thisx = pwPtr->panes[i]->handlex;
 		thisy = pwPtr->panes[i]->handley;
 		if (pwPtr->orient == ORIENT_HORIZONTAL) {
-		    if (thisy <= y && y <= (thisy + pwPtr->handleSize)) {
+		    if (thisy <= y && y < (thisy + pwPtr->handleSize)) {
 			isHandle = 1;
 		    }
 		} else {
-		    if (thisx <= x && x <= (thisx + pwPtr->handleSize)) {
+		    if (thisx <= x && x < (thisx + pwPtr->handleSize)) {
 			isHandle = 1;
 		    }
 		}
