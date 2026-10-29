@@ -165,6 +165,7 @@ to the userbase.
  - [X11: a posted menu stays open when the application loses the focus or its toplevel moves](https://core.tcl-lang.org/tk/tktview/2e3d6c)
  - [High number of text widgets block idle queue](https://core.tcl-lang.org/tk/tktview/1348333)
  - [Pendulum demo text not visible under dark mode](https://core.tcl-lang.org/tk/tktview/042da6)
+ - [Do not reset the cursor over a window not managed by Tk](https://core.tcl-lang.org/tk/tktview/546607)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
