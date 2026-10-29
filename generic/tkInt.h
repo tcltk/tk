@@ -1204,6 +1204,8 @@ MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelframeObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_ListboxObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_LowerObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_MenuObjCmd;
+MODULE_SCOPE bool	TkMenubarCloneMissing(Tcl_Interp *interp, Tk_Window tkwin,
+			    const char *menuName);
 MODULE_SCOPE Tcl_ObjCmdProc Tk_MenubuttonObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageBoxObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageObjCmd;
