@@ -3103,6 +3103,7 @@ FindFallbackSubFont(
     Tcl_DString ds;
     const char *fallbackName;
     SubFont *subFontPtr = NULL;
+    const char *const *const *fontFallbacks;
 
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
@@ -3137,7 +3138,7 @@ FindFallbackSubFont(
      *
      */
 
-    const char *priorityFonts[] = {
+    static const char *priorityFonts[] = {
 
 	/* Emoji / Symbols. */
 	"Segoe UI Symbol",
@@ -3193,7 +3194,7 @@ FindFallbackSubFont(
     }
 
     /* Standard fallbacks. */
-    const char *const *const *fontFallbacks = TkFontGetFallbacks();
+    fontFallbacks = TkFontGetFallbacks();
     for (i = 0; fontFallbacks[i] != NULL; i++) {
 	for (int j = 0; fontFallbacks[i][j] != NULL; j++) {
 	    fallbackName = fontFallbacks[i][j];

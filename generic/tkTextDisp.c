@@ -611,6 +611,11 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 #define DLINE_UNLINK	  1
 #define DLINE_FREE_TEMP	  2
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-but-set-global"
+#endif
+
 /*
  * The following counters keep statistics about redisplay that can be checked
  * to see how clever this code is at reducing redisplays.
@@ -623,6 +628,11 @@ static int numCopies;		/* Number of calls to XCopyArea to copy part
 static int lineHeightsRecalculated;
 				/* Number of line layouts purely for height
 				 * calculation purposes.*/
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */

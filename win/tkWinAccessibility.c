@@ -997,6 +997,7 @@ ComputeAndCacheCheckedState(
     }
 
     int isChecked = 0;
+    const char *varName = NULL;
     const char *path = Tk_PathName(win);
 
     /* Special-case: ttk::toggleswitch — ALWAYS use instate selected. */
@@ -1025,7 +1026,6 @@ ComputeAndCacheCheckedState(
     if (!varCmd) return;
     Tcl_IncrRefCount(varCmd);
 
-    const char *varName = NULL;
     if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 	varName = Tcl_GetStringResult(interp);
     } else {
