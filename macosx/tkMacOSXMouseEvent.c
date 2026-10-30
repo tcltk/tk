@@ -92,7 +92,6 @@ enum {
     bool isMotionEvent = false;
     bool isOutside = false;
     bool firstDrag = false;
-    TkWindow *pointerWindow = nil;
     static bool ignoreDrags = false;
     static bool ignoreUpDown = false;
     static NSTimeInterval timestamp = 0;
@@ -164,13 +163,13 @@ enum {
 	    return theEvent;
 	}
 	[NSApp setTkLiveResizeEnded:false];
-	pointerWindow = [NSApp tkEventTarget];
+	[NSApp setTkPointerWindow:[NSApp tkEventTarget]];
 	break;
     case NSMouseExited:
 	if (![eventWindow isKeyWindow] || !isOutside) {
 	    return theEvent;
 	}
-	pointerWindow = nil;
+	[NSApp setTkPointerWindow:nil];
 	break;
     case NSLeftMouseUp:
 	[NSApp setTkDragTarget: nil];
@@ -272,7 +271,7 @@ enum {
 	    }
 	    if (newFocus) {
 		[NSApp setTkEventTarget: newFocus];
-		pointerWindow = newFocus;
+		[NSApp setTkPointerWindow: newFocus];
 		target = (Tk_Window) newFocus;
 	    }
 	}
@@ -431,7 +430,6 @@ enum {
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
 
-
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
 
     /*
@@ -528,7 +526,7 @@ enum {
 	}
 	if (eventType == NSMouseEntered) {
 	    Tk_Window new_win = Tk_CoordsToWindow(global.x, global.y,
-		 (Tk_Window) pointerWindow);
+		 (Tk_Window) [NSApp tkPointerWindow]);
 	    Tk_UpdatePointer(new_win, global.x, global.y, state);
 	} else if (eventType == NSMouseExited) {
 	    if ([NSApp tkDragTarget]) {
@@ -539,7 +537,7 @@ enum {
 	    }
 	} else if (eventType == NSMouseMoved ||
 		   eventType == NSLeftMouseDragged) {
-	    if (pointerWindow) {
+	    if ([NSApp tkPointerWindow]) {
 		Tk_UpdatePointer(target, global.x, global.y, state);
 	    } else {
 		XEvent xEvent = {0};
