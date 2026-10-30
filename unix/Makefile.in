@@ -9,7 +9,7 @@
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
-VERSION		= @TK_VERSION@
+VERSION			= @TK_VERSION@
 MAJOR_VERSION		= @TK_MAJOR_VERSION@
 MINOR_VERSION		= @TK_MINOR_VERSION@
 PATCH_LEVEL		= @TK_PATCH_LEVEL@
@@ -159,7 +159,6 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 # configure script will try to set this value automatically, but you
 # can override it).
 X11_LIB_SWITCHES	= $(XFT_LIBS) @XLIBSW@
-
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
@@ -337,18 +336,18 @@ MAN_FLAGS               = @MAN_FLAGS@
 CC			= @CC@
 
 CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
-${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
-${SHLIB_CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} \
-${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+	{@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
+	{SHLIB_CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} \
+	{PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
+	{NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 
 DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
-${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
-${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
+	{@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${TCL_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
+	{MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
 WISH_OBJS = tkAppInit.o
 
@@ -626,6 +625,15 @@ ${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
 	then : ; else \
 	    cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	fi
+	@if test "x$(TK_SHARED_BUILD)" != "x1"; then \
+	    echo "Creating package index ${TK_VFS_PATH}/pkgIndex.tcl"; \
+	    rm -f "${TK_VFS_PATH}/pkgIndex.tcl"; \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load {} Tk]";\
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
+	    ) > "${TK_VFS_PATH}/pkgIndex.tcl"; \
+	    fi
 	rm -rf ${TK_VFS_PATH}/demos
 	@find ${TK_VFS_ROOT} -depth -type d -exec rmdir {} + 2>/dev/null || :
 	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
@@ -802,7 +810,7 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
-	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE_TCL9)]]]";\
+	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE_TCL9)]]]";\
 	    else \
 	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	    echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
@@ -811,6 +819,14 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
 	    echo "}";\
 	    fi; \
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
+	    ) > "$(PKG_INDEX)"; \
+	    elif test "${ZIPFS_BUILD}" = "0" ; then \
+	    echo "Creating package index $(PKG_INDEX)"; \
+	    rm -f "$(PKG_INDEX)"; \
+	    (\
+	    echo "if {![package vsatisfies [package provide Tcl] 9.0]} return";\
+	    echo "package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load {} Tk]";\
 	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
 	    ) > "$(PKG_INDEX)"; \
 	    fi
@@ -1667,16 +1683,19 @@ DIST_INSTALL_SCRIPT = $(INSTALL) -p -m 755
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/aclocal.m4
 	cd $(UNIX_DIR); autoconf
+
 $(MAC_OSX_DIR)/configure: $(MAC_OSX_DIR)/configure.ac $(UNIX_DIR)/configure
 	cd $(MAC_OSX_DIR); autoconf
+
 $(UNIX_DIR)/tkConfig.h.in: $(MAC_OSX_DIR)/configure
-	cd $(MAC_OSX_DIR); autoheader; touch $@
+	cd $(MAC_OSX_DIR); autoheader || touch $@
 
 $(TOP_DIR)/manifest.uuid:
 	printf "git-" >$(TOP_DIR)/manifest.uuid
 	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
 
-dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
+dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure \
+		$(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
 	rm -rf $(DISTDIR)
 	$(INSTALL_DATA_DIR) $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/manifest.uuid $(DISTDIR)

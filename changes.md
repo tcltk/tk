@@ -282,6 +282,7 @@ to the userbase.
  - [wm iconbitmap does not support icon files with png images on Windows](https://core.tcl-lang.org/tk/info/17b509)
  - [block cursor size on a tab is too large](https://core.tcl-lang.org/tk/info/5d0bc3)
  - [macOS clipboard managers do not notice clipboard changes done by Tk](https://core.tcl-lang.org/tk/info/e94c8b)
+ - [Unsafe child interpreters cannot find Tk if wish is statically linked](https://core.tcl-lang.org/tk/tktview/56d4d1)
 
 # Incompatibilities
  - [The ActiveCodePage element has been removed from the Windows executable manifest for wish](https://core.tcl-lang.org/tips/doc/trunk/tip/716.md)
