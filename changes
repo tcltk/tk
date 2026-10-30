@@ -8603,3 +8603,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-29 (bug) [481255] photo images with -palette 2 were corrupted on Windows (storchaka)
 
 2026-10-30 (bug) [346407] Missing error-handling when MenuNewEntry() returns NULL (storchaka)
+
+2026-10-30 (bug) [d80f8c] tcl/macosx Makefile has fragile `make distclean` (storchaka)
