@@ -476,6 +476,7 @@ typedef struct BaseCharInfo {
 				 * an RTL string have been mirrored. */
     int unitWidth;		/* Valid if placed: pixel width of the whole
 				 * string (sum of the widths of its chunks). */
+    int maxPrefixWidth;
 } BaseCharInfo;
 
 /*
@@ -1661,6 +1662,28 @@ BidiReorderChunks(
 	    bciPtr->placed = true;
 	    bciPtr->originX = u->newX;
 	    bciPtr->unitWidth = u->width;
+	    if (mirror) {
+		/*
+		 * The width of the chunks can exceed that of the text: the
+		 * last chunk gets the space left on a wrapped line, or the
+		 * space up to a tab stop.  That slack belongs to the logical
+		 * end, which is the visual left end of an RTL string, so the
+		 * text itself is flush with the right end of the extent.
+		 * Draw and measure it from there, using its real width.
+		 */
+
+		int realWidth = 0;
+
+		MeasureChars(chunks[u->first]->stylePtr->sValuePtr->tkfont,
+			Tcl_DStringValue(&bciPtr->baseChars),
+			Tcl_DStringLength(&bciPtr->baseChars), 0,
+			Tcl_DStringLength(&bciPtr->baseChars), 0, -1, 0,
+			&realWidth);
+		if (realWidth > 0 && realWidth < u->width) {
+		    bciPtr->originX = u->newX + u->width - realWidth;
+		    bciPtr->unitWidth = realWidth;
+		}
+	    }
 	}
 	for (j = u->first; j <= u->last; j++) {
 	    CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
@@ -2038,16 +2061,12 @@ LayoutDLine(
 	    }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    if (tsdPtr->baseCharChunkPtr != NULL) {
-		int expectedX =
-			((BaseCharInfo *) tsdPtr->baseCharChunkPtr->clientData)->width
-			+ tsdPtr->baseCharChunkPtr->x;
-
-		if ((expectedX != x) || !IsSameFGStyle(
-			tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
-		    FinalizeBaseChunk(NULL);
-		}
-	    }
+            if (tsdPtr->baseCharChunkPtr != NULL) {
+                if (!IsSameFGStyle(
+                        tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
+                    FinalizeBaseChunk(NULL);
+                }
+            }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
 	chunkPtr->x = x;
@@ -9116,6 +9135,7 @@ TkTextCharLayoutProc(
 	bciPtr->placed = false;
 	bciPtr->originX = 0;
 	bciPtr->unitWidth = 0;
+        bciPtr->maxPrefixWidth = 0;
 
 	ciPtr = &bciPtr->ci;
     } else {
@@ -9535,8 +9555,39 @@ CharChunkMeasureChars(
 	 * Clamp to the span start so such characters get zero width.
 	 */
 
-	if (*nextXPtr < startX) {
-	    *nextXPtr = startX;
+	/*
+	 * Not for the chunks of an RTL string once they are placed: their x
+	 * is a mirrored visual position while nextX is measured from the
+	 * left edge of the whole string, so the two are not comparable.
+	 */
+
+	if (!(ciPtr->isRtl
+		&& ((BaseCharInfo *)ciPtr->baseChunkPtr->clientData)->placed)) {
+	    BaseCharInfo *bciTmp = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+	    if (bstart != ciPtr->baseOffset) {
+		int prefixEnd = 0;
+		MeasureChars(tkfont, chars, charsLen, 0, bstart,
+		             0, -1, 0, &prefixEnd);
+		prefixEnd += BaseOriginX(ciPtr);
+		/* Enforce monotonic prefix: Uniscribe can go 975->885 */
+		if (prefixEnd < bciTmp->maxPrefixWidth) {
+		    prefixEnd = bciTmp->maxPrefixWidth;
+		}
+		if (*nextXPtr < prefixEnd) {
+		    int isolatedW = 0;
+		    MeasureChars(tkfont, chars, charsLen, bstart, bend - bstart,
+			         0, -1, 0, &isolatedW);
+		    if (isolatedW <= 0) isolatedW = 1;
+		    *nextXPtr = prefixEnd + isolatedW;
+		}
+	    }
+	    if (*nextXPtr < startX) {
+		*nextXPtr = startX;
+	    }
+	    /* Update monotonic max for this stretch */
+	    if (*nextXPtr > bciTmp->maxPrefixWidth) {
+		bciTmp->maxPrefixWidth = *nextXPtr;
+	    }
 	}
 
 	if (fit < bstart) {
@@ -9641,8 +9692,39 @@ CharChunkMeasureChars(
 	 * Clamp to the span start so such characters get zero width.
 	 */
 
-	if (*nextXPtr < startX) {
-	    *nextXPtr = startX;
+	/*
+	 * Not for the chunks of an RTL string once they are placed: their x
+	 * is a mirrored visual position while nextX is measured from the
+	 * left edge of the whole string, so the two are not comparable.
+	 */
+
+	if (!(ciPtr->isRtl
+		&& ((BaseCharInfo *)ciPtr->baseChunkPtr->clientData)->placed)) {
+	    BaseCharInfo *bciTmp = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+	    if (bstart != ciPtr->baseOffset) {
+		int prefixEnd = 0;
+		MeasureChars(tkfont, chars, charsLen, 0, bstart,
+		             0, -1, 0, &prefixEnd);
+		prefixEnd += BaseOriginX(ciPtr);
+		/* Enforce monotonic prefix: Uniscribe can go 975->885 */
+		if (prefixEnd < bciTmp->maxPrefixWidth) {
+		    prefixEnd = bciTmp->maxPrefixWidth;
+		}
+		if (*nextXPtr < prefixEnd) {
+		    int isolatedW = 0;
+		    MeasureChars(tkfont, chars, charsLen, bstart, bend - bstart,
+			         0, -1, 0, &isolatedW);
+		    if (isolatedW <= 0) isolatedW = 1;
+		    *nextXPtr = prefixEnd + isolatedW;
+		}
+	    }
+	    if (*nextXPtr < startX) {
+		*nextXPtr = startX;
+	    }
+	    /* Update monotonic max for this stretch */
+	    if (*nextXPtr > bciTmp->maxPrefixWidth) {
+		bciTmp->maxPrefixWidth = *nextXPtr;
+	    }
 	}
 
 	if (fit < bstart) {
