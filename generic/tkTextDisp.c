@@ -527,6 +527,9 @@ BaseOriginX(
  *
  * Results:
  *	true if the chunk is RTL, false if LTR or neutral.
+ * 
+ * Side effects: 
+ *  None.
  */
 
 static bool
@@ -1356,6 +1359,9 @@ IsEntirelyElidedLine(
  *
  * Results:
 	0, 1 or 2 as described above.
+ *	
+ * Side effects:
+ *  None.
  *
  *----------------------------------------------------------------------
  */
