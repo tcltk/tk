@@ -19,6 +19,56 @@
 #include <usp10.h>      /* Uniscribe */
 #include <mojibake.h>   /* mjb_codepoint_is_combining */
 
+/* FINAL Tcl9 Windows-only cluster fix - Uniscribe only, no mojibake calls */
+#ifdef _WIN32
+#ifdef a
+#undef a
+#endif
+#ifdef b
+#undef b
+#endif
+
+static int WinClusterFindBoundary(const char *utf8, Tcl_Size utf8Bytes, Tcl_Size byteIndex, int findStart)
+{
+    int wLen = MultiByteToWideChar(CP_UTF8, 0, utf8, (int)utf8Bytes, NULL, 0);
+    if (wLen <= 0) return (int)byteIndex;
+    WCHAR *wStr = (WCHAR *)Tcl_Alloc(wLen * sizeof(WCHAR));
+    MultiByteToWideChar(CP_UTF8, 0, utf8, (int)utf8Bytes, wStr, wLen);
+    SCRIPT_ANALYSIS sa; memset(&sa, 0, sizeof(sa)); sa.eScript = SCRIPT_UNDEFINED;
+    SCRIPT_LOGATTR *logAttr = (SCRIPT_LOGATTR *)Tcl_Alloc(wLen * sizeof(SCRIPT_LOGATTR));
+    HRESULT hr = ScriptBreak(wStr, wLen, &sa, logAttr);
+    int result = (int)byteIndex;
+    if (SUCCEEDED(hr)) {
+        int wIndex = MultiByteToWideChar(CP_UTF8, 0, utf8, (int)byteIndex, NULL, 0);
+        if (wIndex < 0) wIndex = 0; if (wIndex > wLen) wIndex = wLen;
+        if (findStart) { int s = wIndex; while (s > 0 && !logAttr[s].fCharStop) s--; result = WideCharToMultiByte(CP_UTF8, 0, wStr, s, NULL, 0, NULL, NULL); }
+        else { int e = wIndex + 1; if (e > wLen) e = wLen; while (e < wLen && !logAttr[e].fCharStop) e++; if (e > wLen) e = wLen; result = WideCharToMultiByte(CP_UTF8, 0, wStr, e, NULL, 0, NULL, NULL); }
+    }
+    Tcl_Free((char *)wStr); Tcl_Free((char *)logAttr); return result;
+}
+static Tcl_Size WinCharIdxToByte(const char *text, Tcl_Size textBytes, Tcl_Obj *idxObj, Tcl_Interp *interp){
+    const char *idxStr = Tcl_GetString(idxObj); if (strcmp(idxStr, "end")==0) return textBytes;
+    Tcl_WideInt charIdx; if (Tcl_GetWideIntFromObj(interp, idxObj, &charIdx)!=TCL_OK) return 0;
+    if (charIdx<0) return 0; const char *p = Tcl_UtfAtIndex(text, (Tcl_Size)charIdx); if (!p) return textBytes; return (Tcl_Size)(p - text); }
+static int WinStartOfClusterObjCmd(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]){
+    if (objc<3){ Tcl_WrongNumArgs(interp,1,objv,"text index ?locale?"); return TCL_ERROR; }
+    Tcl_Size tb; const char *text = Tcl_GetStringFromObj(objv[1], &tb);
+    Tcl_Size bi = WinCharIdxToByte(text, tb, objv[2], interp);
+    int res = WinClusterFindBoundary(text, tb, bi, 1);
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK; }
+static int WinEndOfClusterObjCmd(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]){
+    if (objc<3){ Tcl_WrongNumArgs(interp,1,objv,"text index ?locale?"); return TCL_ERROR; }
+    Tcl_Size tb; const char *text = Tcl_GetStringFromObj(objv[1], &tb);
+    Tcl_Size bi = WinCharIdxToByte(text, tb, objv[2], interp);
+    int res = WinClusterFindBoundary(text, tb, bi, 0);
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK; }
+int TkpWinRegisterClusterCommands(Tcl_Interp *interp){
+    if (Tcl_GetCommandInfo(interp, "::tk::startOfCluster", NULL)==0) Tcl_CreateObjCommand(interp, "::tk::startOfCluster", WinStartOfClusterObjCmd, NULL, NULL);
+    if (Tcl_GetCommandInfo(interp, "::tk::endOfCluster", NULL)==0) Tcl_CreateObjCommand(interp, "::tk::endOfCluster", WinEndOfClusterObjCmd, NULL, NULL);
+    return TCL_OK; }
+#endif
+
+
 /*
  * The following structure represents a font family. It is assumed that all
  * screen fonts constructed from the same "font family" share certain

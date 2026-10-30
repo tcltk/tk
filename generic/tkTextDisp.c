@@ -476,7 +476,6 @@ typedef struct BaseCharInfo {
 				 * an RTL string have been mirrored. */
     int unitWidth;		/* Valid if placed: pixel width of the whole
 				 * string (sum of the widths of its chunks). */
-    int maxPrefixWidth;
 } BaseCharInfo;
 
 /*
@@ -1464,6 +1463,7 @@ typedef struct BidiUnit {
 				 * this unit (barrier, or ends in a tab). */
 } BidiUnit;
 
+
 static void
 BidiReorderChunks(
     DLine *dlPtr)		/* Display line to reorder. */
@@ -1477,21 +1477,10 @@ BidiReorderChunks(
 
     for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
 	    chunkPtr = chunkPtr->nextPtr) {
-	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-
 	nChunks++;
-	if (chunkPtr->displayProc == CharDisplayProc && ciPtr != NULL
-		&& ciPtr->isRtl) {
-	    anyRtl = true;
-	}
     }
 
-    /*
-     * Fast path: no chunk starts with RTL text, so nothing is mirrored or
-     * reordered, and all coordinates keep their logical meaning.
-     */
-
-    if (!anyRtl || nChunks == 0) {
+    if (nChunks == 0) {
 	return;
     }
 
@@ -1546,6 +1535,9 @@ BidiReorderChunks(
 
 	    u->dir = ChunkBidiDir(Tcl_DStringValue(&bciPtr->baseChars),
 		    Tcl_DStringLength(&bciPtr->baseChars));
+		if (u->dir == 2) {
+		    anyRtl = true;
+		}
 	    for (j = u->last; j >= u->first; j--) {
 		CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
 
@@ -1564,6 +1556,13 @@ BidiReorderChunks(
 		paraLevel = (u->dir == 2) ? 1 : 0;	/* P2, P3 */
 	    }
 	}
+    }
+
+    if (!anyRtl) {
+	Tcl_Free(chunks);
+	Tcl_Free(units);
+	Tcl_Free(order);
+	return;
     }
 
     /*
@@ -1685,6 +1684,119 @@ BidiReorderChunks(
 		}
 	    }
 	}
+
+#ifdef _WIN32
+	/*
+	 * On Windows, Uniscribe has already shaped the text and produced the
+	 * correct visual glyph order. Tk's chunks, however, are still in 
+	 * logical order. 
+	 *
+	 * Instead of mathematically mirroring chunks (which fails on mixed 
+	 * text due to differing logical/visual widths), we detect runs of 
+	 * chunks by their bidi direction and place those runs into the layout 
+	 * in visual order. 
+	 * 
+	 * - For an LTR unit, runs are placed left-to-right.
+	 * - For an RTL unit, runs are placed right-to-left.
+	 * - Inside an RTL run, chunks are placed right-to-left.
+	 * - Inside an LTR run, chunks are placed left-to-right.
+	 */
+	if (u->base == NULL) {
+	    for (j = u->first; j <= u->last; j++) {
+		chunks[j]->x = u->newX;
+	    }
+	} else {
+	    int jj = u->first;
+	    int currentVisualLeft = u->newX;
+	    int currentVisualRight = u->newX + u->width;
+
+	    while (jj <= u->last) {
+		CharInfo *ci = (CharInfo *)chunks[jj]->clientData;
+		int cd = (chunks[jj]->displayProc == CharDisplayProc
+			&& ci != NULL && ci->numBytes > 0
+			&& ci->chars != NULL)
+		    ? ChunkBidiDir(ci->chars, ci->numBytes) : 0;
+
+		/* Neutrals (0) inherit the unit's direction or previous run's direction */
+		if (cd == 0) {
+		    cd = u->dir ? u->dir : 1; 
+		}
+
+		int rs = jj;
+		int rdir = cd;
+		int runWidth = 0;
+
+		/* Find the extent of this run */
+		while (jj <= u->last) {
+		    ci = (CharInfo *)chunks[jj]->clientData;
+		    cd = (chunks[jj]->displayProc == CharDisplayProc
+			    && ci != NULL && ci->numBytes > 0
+			    && ci->chars != NULL)
+			? ChunkBidiDir(ci->chars, ci->numBytes) : 0;
+		    
+		    if (cd == 0) cd = rdir; /* Neutral chunks inherit run direction */
+		    if (cd != rdir) break;
+
+		    runWidth += chunks[jj]->width;
+		    jj++;
+		}
+		int re = jj - 1;
+
+		if (u->dir == 2) {
+		    /* RTL unit: runs are placed right-to-left */
+		    int runLeft = currentVisualRight - runWidth;
+		    if (rdir == 1) {
+			/* LTR run inside RTL unit: chunks left-to-right */
+			int x = runLeft;
+			for (j = rs; j <= re; j++) {
+			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
+				((CharInfo *)chunks[j]->clientData)->isRtl = false;
+			    }
+			    chunks[j]->x = x;
+			    x += chunks[j]->width;
+			}
+		    } else {
+			/* RTL run inside RTL unit: chunks right-to-left */
+			int x = currentVisualRight;
+			for (j = rs; j <= re; j++) {
+			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
+				((CharInfo *)chunks[j]->clientData)->isRtl = true;
+			    }
+			    x -= chunks[j]->width;
+			    chunks[j]->x = x;
+			}
+		    }
+		    currentVisualRight = runLeft;
+		} else {
+		    /* LTR unit (or barrier): runs are placed left-to-right */
+		    if (rdir == 1) {
+			/* LTR run inside LTR unit: chunks left-to-right */
+			int x = currentVisualLeft;
+			for (j = rs; j <= re; j++) {
+			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
+				((CharInfo *)chunks[j]->clientData)->isRtl = false;
+			    }
+			    chunks[j]->x = x;
+			    x += chunks[j]->width;
+			}
+		    } else {
+			/* RTL run inside LTR unit: chunks right-to-left */
+			int x = currentVisualLeft + runWidth;
+			for (j = rs; j <= re; j++) {
+			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
+				((CharInfo *)chunks[j]->clientData)->isRtl = true;
+			    }
+			    x -= chunks[j]->width;
+			    chunks[j]->x = x;
+			}
+		    }
+		    currentVisualLeft += runWidth;
+		}
+	    }
+	}
+	continue; /* Skip the standard non-Windows placement logic below */
+#endif
+
 	for (j = u->first; j <= u->last; j++) {
 	    CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
 	    int off = chunks[j]->x - u->x0;
@@ -1694,7 +1806,7 @@ BidiReorderChunks(
 		continue;
 	    }
 	    if (chunks[j]->displayProc == CharDisplayProc && ciPtr != NULL) {
-		ciPtr->isRtl = mirror;
+		ciPtr->isRtl = (u->dir == 2);
 	    }
 	    chunks[j]->x = mirror ?
 		    u->newX + u->width - off - chunks[j]->width :
@@ -2061,12 +2173,25 @@ LayoutDLine(
 	    }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-            if (tsdPtr->baseCharChunkPtr != NULL) {
-                if (!IsSameFGStyle(
-                        tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
-                    FinalizeBaseChunk(NULL);
-                }
-            }
+	    if (tsdPtr->baseCharChunkPtr != NULL) {
+#ifdef _WIN32
+		/* Windows Uniscribe needs full baseChars. sel changes bg only,
+		 * so keep full stretch on Windows when FG same. */
+		if (!IsSameFGStyle(
+			    tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
+		    FinalizeBaseChunk(NULL);
+		}
+#else
+		int expectedX =
+			((BaseCharInfo *) tsdPtr->baseCharChunkPtr->clientData)->width
+			+ tsdPtr->baseCharChunkPtr->x;
+
+		if ((expectedX != x) || !IsSameFGStyle(
+			    tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
+		    FinalizeBaseChunk(NULL);
+		}
+#endif
+	    }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
 	chunkPtr->x = x;
@@ -9135,7 +9260,6 @@ TkTextCharLayoutProc(
 	bciPtr->placed = false;
 	bciPtr->originX = 0;
 	bciPtr->unitWidth = 0;
-        bciPtr->maxPrefixWidth = 0;
 
 	ciPtr = &bciPtr->ci;
     } else {
@@ -9561,33 +9685,9 @@ CharChunkMeasureChars(
 	 * left edge of the whole string, so the two are not comparable.
 	 */
 
-	if (!(ciPtr->isRtl
+	if (*nextXPtr < startX && !(ciPtr->isRtl
 		&& ((BaseCharInfo *)ciPtr->baseChunkPtr->clientData)->placed)) {
-	    BaseCharInfo *bciTmp = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
-	    if (bstart != ciPtr->baseOffset) {
-		int prefixEnd = 0;
-		MeasureChars(tkfont, chars, charsLen, 0, bstart,
-		             0, -1, 0, &prefixEnd);
-		prefixEnd += BaseOriginX(ciPtr);
-		/* Enforce monotonic prefix: Uniscribe can go 975->885 */
-		if (prefixEnd < bciTmp->maxPrefixWidth) {
-		    prefixEnd = bciTmp->maxPrefixWidth;
-		}
-		if (*nextXPtr < prefixEnd) {
-		    int isolatedW = 0;
-		    MeasureChars(tkfont, chars, charsLen, bstart, bend - bstart,
-			         0, -1, 0, &isolatedW);
-		    if (isolatedW <= 0) isolatedW = 1;
-		    *nextXPtr = prefixEnd + isolatedW;
-		}
-	    }
-	    if (*nextXPtr < startX) {
-		*nextXPtr = startX;
-	    }
-	    /* Update monotonic max for this stretch */
-	    if (*nextXPtr > bciTmp->maxPrefixWidth) {
-		bciTmp->maxPrefixWidth = *nextXPtr;
-	    }
+	    *nextXPtr = (ciPtr->numBytes > 0) ? startX + 1 : startX;
 	}
 
 	if (fit < bstart) {
@@ -9698,33 +9798,9 @@ CharChunkMeasureChars(
 	 * left edge of the whole string, so the two are not comparable.
 	 */
 
-	if (!(ciPtr->isRtl
+	if (*nextXPtr < startX && !(ciPtr->isRtl
 		&& ((BaseCharInfo *)ciPtr->baseChunkPtr->clientData)->placed)) {
-	    BaseCharInfo *bciTmp = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
-	    if (bstart != ciPtr->baseOffset) {
-		int prefixEnd = 0;
-		MeasureChars(tkfont, chars, charsLen, 0, bstart,
-		             0, -1, 0, &prefixEnd);
-		prefixEnd += BaseOriginX(ciPtr);
-		/* Enforce monotonic prefix: Uniscribe can go 975->885 */
-		if (prefixEnd < bciTmp->maxPrefixWidth) {
-		    prefixEnd = bciTmp->maxPrefixWidth;
-		}
-		if (*nextXPtr < prefixEnd) {
-		    int isolatedW = 0;
-		    MeasureChars(tkfont, chars, charsLen, bstart, bend - bstart,
-			         0, -1, 0, &isolatedW);
-		    if (isolatedW <= 0) isolatedW = 1;
-		    *nextXPtr = prefixEnd + isolatedW;
-		}
-	    }
-	    if (*nextXPtr < startX) {
-		*nextXPtr = startX;
-	    }
-	    /* Update monotonic max for this stretch */
-	    if (*nextXPtr > bciTmp->maxPrefixWidth) {
-		bciTmp->maxPrefixWidth = *nextXPtr;
-	    }
+	    *nextXPtr = (ciPtr->numBytes > 0) ? startX + 1 : startX;
 	}
 
 	if (fit < bstart) {
