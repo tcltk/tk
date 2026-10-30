@@ -16,6 +16,7 @@
 #include "tkInt.h"
 #include "tkText.h"
 #include "tk3d.h"
+#include <mojibake.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -544,6 +545,24 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 
 	if (chLen <= 0) {
 	    break;
+	}
+	
+	/*
+	 * Combining marks are not strong characters: UAX #9 rule P2
+	 * skips nonspacing marks when searching for the first strong
+	 * character, and rule W1 resolves a mark to the class of the
+	 * preceding character (to the embedding level at the start of
+	 * the text).  Their category is taken from the mojibake Unicode
+	 * tables (General_Category Mn, Mc or Me) so that no code-point
+	 * ranges are hand-maintained here.  This makes a base-less
+	 * vowel point such as an orphan Hebrew nikkud (U+05B0) neutral,
+	 * instead of letting it flip the direction of a whole chunk
+	 * that actually starts with strong LTR text. [8504cdc7c8]
+	 */
+
+	if (mjb_codepoint_is_combining(ch)) {
+	    p += chLen;
+	    continue;
 	}
 
 	/*
@@ -8407,9 +8426,9 @@ static int
 DlineXOfIndex(
     TkText *textPtr,		/* Widget record for text widget. */
     DLine *dlPtr,		/* Display information for this display
-				 * line. */
+			 * line. */
     Tcl_Size byteIndex)		/* The byte index for which we want the
-				 * coordinate. */
+			 * coordinate. */
 {
     TkTextDispChunk *chunkPtr = dlPtr->chunkPtr;
     int x = 0;
@@ -8419,49 +8438,93 @@ DlineXOfIndex(
     }
     if (byteIndex == 0) {
 	/*
-	 * The start of a line that begins with RTL text is at the right end
-	 * of that text.
+	 * Pure RTL: logical 0 is visually at right edge of the whole RTL run.
+	 * The bbox of char 0 is its left edge (one glyph inset), so we must
+	 * return origin+unitWidth, not bbox x.
 	 */
-
 	if (LineHasRtlChunk(dlPtr) && chunkPtr->bboxProc == CharBboxProc) {
-	    int y, width, height;
-
-	    chunkPtr->bboxProc(textPtr, chunkPtr, 0,
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+	    if (ciPtr != NULL && ciPtr->baseChunkPtr != NULL
+		    && ciPtr->baseChunkPtr->clientData != NULL) {
+		BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+		if (bciPtr->placed) {
+		    return bciPtr->originX + bciPtr->unitWidth;
+		}
+	    }
+#endif
+	    {
+		int y, width, height;
+		chunkPtr->bboxProc(textPtr, chunkPtr, 0,
 		    dlPtr->y + dlPtr->spaceAbove,
 		    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-		    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
-		    &height);
+		    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width, &height);
+		/* right edge, not left */
+		return x + width;
+	    }
 	}
 	return x;
     }
-
-    /*
-     * Scan through the line's chunks to find the one that contains the
-     * desired byte index.
-     */
 
     chunkPtr = dlPtr->chunkPtr;
     while (byteIndex > 0) {
 	if (byteIndex < chunkPtr->numBytes) {
 	    int y, width, height;
-
+	    int isRtl = 0;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+	    if (ciPtr) isRtl = ciPtr->isRtl;
+#endif
 	    chunkPtr->bboxProc(textPtr, chunkPtr, byteIndex,
 		    dlPtr->y + dlPtr->spaceAbove,
 		    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-		    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
-		    &height);
+		    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width, &height);
+	    if (isRtl) {
+		/* insertion point is at right edge of this RTL char */
+		x += width;
+	    }
 	    break;
 	}
 	byteIndex -= chunkPtr->numBytes;
 	if (chunkPtr->nextPtr == NULL || byteIndex == 0) {
-	    x = chunkPtr->x + chunkPtr->width;
+	    if (byteIndex == 0 && LineHasRtlChunk(dlPtr)) {
+		/* boundary inside RTL run - use visual left edge */
+		TkTextDispChunk *next = chunkPtr->nextPtr;
+		if (next != NULL) {
+		    /* if next chunk is same RTL string, its x is the boundary */
+		    x = next->x;
+		    /* For pure RTL end, we want left edge of whole run */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+		    if (ciPtr && ciPtr->baseChunkPtr && ciPtr->baseChunkPtr->clientData) {
+			BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+			if (bciPtr->placed && chunkPtr->nextPtr == NULL) {
+			    return bciPtr->originX;
+			}
+		    }
+#endif
+		} else {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+		    if (ciPtr && ciPtr->baseChunkPtr && ciPtr->baseChunkPtr->clientData) {
+			BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+			if (bciPtr->placed) {
+			    return bciPtr->originX;
+			}
+		    }
+#endif
+		    x = chunkPtr->x;
+		}
+	    } else {
+		x = chunkPtr->x + chunkPtr->width;
+	    }
 	    break;
 	}
 	chunkPtr = chunkPtr->nextPtr;
     }
-
     return x;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -9782,15 +9845,6 @@ CharChunkMeasureChars(
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
 			   BaseOriginX(ciPtr) + xDisplacement, maxX, flags, nextXPtr);
-
-	/*
-	 * The Windows backend (Uniscribe) can return a non-monotonic
-	 * position when the measured range ends with a control character
-	 * such as '\n': the returned right edge may be to the left of the
-	 * span start, producing chunks with negative width (e.g. the
-	 * newline chunk), which corrupts DLine length and justification.
-	 * Clamp to the span start so such characters get zero width.
-	 */
 
 	/*
 	 * Not for the chunks of an RTL string once they are placed: their x
