@@ -997,7 +997,9 @@ ComputeAndCacheCheckedState(
     }
 
     int isChecked = 0;
+    const char *varName = NULL;
     const char *path = Tk_PathName(win);
+    Tcl_Obj *varCmd;
 
     /* Special-case: ttk::toggleswitch — ALWAYS use instate selected. */
     if (strcmp(tkrole, "Toggleswitch") == 0) {
@@ -1021,11 +1023,10 @@ ComputeAndCacheCheckedState(
      * Note: ttk widgets sometimes auto-create variables — but toggleswitch was handled above.
      */
 
-    Tcl_Obj *varCmd = Tcl_ObjPrintf("%s cget -variable", path);
+    varCmd = Tcl_ObjPrintf("%s cget -variable", path);
     if (!varCmd) return;
     Tcl_IncrRefCount(varCmd);
 
-    const char *varName = NULL;
     if (Tcl_EvalObjEx(interp, varCmd, TCL_EVAL_GLOBAL) == TCL_OK) {
 	varName = Tcl_GetStringResult(interp);
     } else {
