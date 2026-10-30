@@ -5313,6 +5313,79 @@ test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
     destroy .t1
     unset -nocomplain heb res i w
 } -result {}
+test textDisp-37.4 {RTL text: a tag splitting it does not move it - bug 59d6d5f6c0} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap none
+    pack .t1
+    proc xs {} {
+	lmap i {0 3 4 7 8 12 15 16 20} {lindex [.t1 bbox 1.$i] 0}
+    }
+} -body {
+    .t1 insert end "שלום עליכם, זהו טקסט"
+    update
+    set a [xs]
+    .t1 tag configure b -background yellow
+    .t1 tag add b 1.4 1.8
+    update
+    set b [xs]
+    .t1 tag add sel 1.12 1.16
+    update
+    list [expr {$a eq $b}] [expr {$a eq [xs]}]
+} -cleanup {
+    destroy .t1
+    rename xs {}
+} -result {1 1}
+test textDisp-37.5 {RTL text split by a tag: @x,y gives the character at x - bug 59d6d5f6c0} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "abc שלום עליכם def"
+    .t1 tag configure b -background yellow
+    .t1 tag add b 1.6 1.11
+    update
+    set res {}
+    for {set i 0} {$i < 18} {incr i} {
+	lassign [.t1 bbox 1.$i] x y w h
+	set index [.t1 index @[expr {$x + $w/2}],[expr {$y + $h/2}]]
+	if {$index ne "1.$i"} {
+	    lappend res "1.$i $index"
+	}
+    }
+    set res
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-37.6 {RTL text: dragging the selection only extends it - bug 59d6d5f6c0} -setup {
+    text .t1 -font $fixedFont -width 40 -height 3 -wrap none
+    pack .t1
+    update
+} -body {
+    .t1 insert end "שלום עליכם, זהו טקסט"
+    update
+    # Drag from the first character (on the right if the text is laid out
+    # from right to left) to the last one.
+    lassign [.t1 bbox 1.0] x0 y w h
+    lassign [.t1 bbox 1.19] x1
+    set y [expr {$y + $h/2}]
+    set step [expr {$x1 < $x0 ? -2 : 2}]
+    event generate .t1 <Button-1> -x [expr {$x0 + $w/2}] -y $y
+    set res {}
+    set last 0
+    for {set x [expr {$x0 + $w/2}]} {($x - $x1) * $step < 0} {incr x $step} {
+	event generate .t1 <B1-Motion> -x $x -y $y
+	update
+	set range [.t1 tag ranges sel]
+	set n [expr {[llength $range] ? [.t1 count -chars {*}$range] : 0}]
+	if {$n < $last} {
+	    lappend res "$x: $last -> $n"
+	}
+	set last $n
+    }
+    event generate .t1 <ButtonRelease-1> -x $x -y $y
+    list $res [expr {$last > 15}]
+} -cleanup {
+    destroy .t1
+    unset -nocomplain x0 x1 y w h step x res last range n
+} -result {{} 1}
 
 test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
     # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)

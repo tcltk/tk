@@ -505,9 +505,24 @@ proc ::tk::TextClosestGap {w x y} {
     # out of the widget.
     # The bbox of a newline extends to the right edge of the widget, and
     # the gap after it is on the next line. [13aabdb3c1]
-    if {$y < [lindex [$w dlineinfo $pos] 1] ||
-	    $x - [lindex $bbox 0] < [lindex $bbox 2]/2 ||
-	    [$w get $pos] eq "\n"} {
+    if {$y < [lindex [$w dlineinfo $pos] 1] || [$w get $pos] eq "\n"} {
+	return $pos
+    }
+    # The gap after a right-to-left character is on its left: the next
+    # character on the line is on its left, or the previous one on its right.
+    # [59d6d5f6c0]
+    set rtl 0
+    set middle [expr {[lindex $bbox 0] + [lindex $bbox 2]/2}]
+    set next [$w bbox "$pos + 1 char"]
+    if {$next ne "" && [lindex $next 1] == [lindex $bbox 1]} {
+	set rtl [expr {[lindex $next 0] < $middle}]
+    } else {
+	set prev [$w bbox "$pos - 1 char"]
+	if {$prev ne "" && [lindex $prev 1] == [lindex $bbox 1]} {
+	    set rtl [expr {[lindex $prev 0] > $middle}]
+	}
+    }
+    if {($x < $middle) != $rtl} {
 	return $pos
     }
     $w index "$pos + 1 char"
