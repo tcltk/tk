@@ -160,6 +160,7 @@ to the userbase.
  - [Pendulum demo text not visible under dark mode](https://core.tcl-lang.org/tk/tktview/042da6)
  - [Add Xcursor support on X11](https://core.tcl-lang.org/tk/tktview/316486)
  - [Toplevel lost its menubar when the menubar clone was destroyed](https://core.tcl-lang.org/tk/tktview/2903b4)
+ - [Unsafe child interpreters cannot find Tk if wish is statically linked](https://core.tcl-lang.org/tk/tktview/56d4d1)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
