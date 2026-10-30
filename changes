@@ -8605,3 +8605,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-30 (bug) [346407] Missing error-handling when MenuNewEntry() returns NULL (storchaka)
 
 2026-10-30 (bug) [d80f8c] tcl/macosx Makefile has fragile `make distclean` (storchaka)
+
+2026-10-30 (bug) [351552] "wm forget" did not release the menubar of the toplevel (storchaka)

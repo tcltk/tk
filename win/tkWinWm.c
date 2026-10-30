@@ -8354,6 +8354,13 @@ TkWinGetWrapperWindow(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
+    /*
+     * Could be a Frame (i.e. not a Toplevel), e.g. after [wm forget].
+     */
+
+    if (winPtr->wmInfoPtr == NULL) {
+	return NULL;
+    }
     return winPtr->wmInfoPtr->wrapper;
 }
 

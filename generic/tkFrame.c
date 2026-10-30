@@ -1969,6 +1969,15 @@ TkMapTopFrame(
 	}
     } else if (!Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_TOPLEVEL) {
 	framePtr->type = TYPE_FRAME;
+	if (framePtr->menuName != NULL) {
+	    /*
+	     * The window is no longer a toplevel (wm forget): release its
+	     * menubar, so that no stale references to it remain.
+	     */
+
+	    TkSetWindowMenuBar(framePtr->interp, framePtr->tkwin,
+		    framePtr->menuName, NULL);
+	}
     } else {
 	/*
 	 * Not a frame or toplevel, skip it.
