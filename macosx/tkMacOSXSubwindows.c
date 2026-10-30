@@ -266,7 +266,7 @@ XMapWindow(
 		if ([win canBecomeKeyWindow]) {
 		    [(TKWindow *) win tkOrderFront];
 		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
-		} else {
+		} else if ((winPtr->wmInfoPtr->flags & WM_IS_HIDDEN) == 0) {
 		    [win orderFrontRegardless];
 		}
 
@@ -1184,7 +1184,6 @@ Tk_MacOSXGetNSWindowForDrawable(
 
     if (!macWin || macWin->flags & TK_IS_PIXMAP) {
 	result = nil;
-
     } else if (macWin->toplevel && macWin->toplevel->winPtr &&
 	    macWin->toplevel->winPtr->wmInfoPtr &&
 	    macWin->toplevel->winPtr->wmInfoPtr->window) {

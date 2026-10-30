@@ -1297,8 +1297,7 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
 } -body {
     toplevel .top1
     wm geometry .top1 200x200+300+300
-    wm deiconify .top1
-    pause 200
+    update idletasks
     toplevel .top2 -width 200 -height 200
     wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
     pause 200

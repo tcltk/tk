@@ -162,7 +162,6 @@ enum {
 	if (![eventWindow isKeyWindow] || isOutside) {
 	    return theEvent;
 	}
-	[NSApp setTkLiveResizeEnded:false];
 	[NSApp setTkPointerWindow:[NSApp tkEventTarget]];
 	break;
     case NSMouseExited:
