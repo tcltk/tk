@@ -848,6 +848,22 @@ TkTextCreateDInfo(
     dInfoPtr->lineUpdateTimer = NULL;
     dInfoPtr->scrollbarTimer = NULL;
 
+    /*
+     * BD2 diagnostic build marker: proves this object file is in the build
+     * and whether TK_LAYOUT_WITH_BASE_CHUNKS was defined when it was
+     * compiled.  Remove when the bidi investigation is done.
+     */
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (textPtr->interp != NULL) {
+	LOG("tkBidiLog", "BD2 build base-chunks=1 date=" __DATE__);
+    }
+#else
+    if (textPtr->interp != NULL) {
+	LOG("tkBidiLog", "BD2 build base-chunks=0 date=" __DATE__);
+    }
+#endif
+
     textPtr->dInfoPtr = dInfoPtr;
 }
 
@@ -1485,6 +1501,7 @@ typedef struct BidiUnit {
 
 static void
 BidiReorderChunks(
+    TkText *textPtr,		/* Widget, for diagnostics only. */
     DLine *dlPtr)		/* Display line to reorder. */
 {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -1501,6 +1518,13 @@ BidiReorderChunks(
 
     if (nChunks == 0) {
 	return;
+    }
+
+    if (textPtr != NULL && textPtr->interp != NULL) {
+	char buf[64];
+
+	snprintf(buf, sizeof(buf), "BD2 reorder nch=%d", nChunks);
+	LOG("tkBidiLog", buf);
     }
 
     chunks = (TkTextDispChunk **)Tcl_Alloc(nChunks * sizeof(*chunks));
@@ -1529,6 +1553,24 @@ BidiReorderChunks(
 	    base = ciPtr->baseChunkPtr;
 	}
 	if (base != NULL && nUnits > 0 && units[nUnits-1].base == base) {
+	    units[nUnits-1].last = i;
+	} else if (base != NULL && nUnits > 0 && units[nUnits-1].base == NULL
+		&& units[nUnits-1].first == units[nUnits-1].last
+		&& chunks[units[nUnits-1].first]->width == 0
+		&& chunks[units[nUnits-1].first]->x == chunks[i]->x) {
+	    /*
+	     * A zero-width chunk at the start of the line (typically the
+	     * insertion cursor at index 0, before the first character of the
+	     * string) is attached to the FOLLOWING string, not to a previous
+	     * one.  Otherwise it would become a barrier of its own and stay
+	     * at its logical (left) position, so the caret at the start of a
+	     * pure RTL cluster could never sit at the right margin, which is
+	     * where the logically first character of RTL text is inserted.
+	     * By adopting the string's base chunk, the caret is mirrored
+	     * together with the string and lands on its right edge.
+	     */
+
+	    units[nUnits-1].base = base;
 	    units[nUnits-1].last = i;
 	} else if (base == NULL && chunks[i]->width == 0 && nUnits > 0
 		&& units[nUnits-1].base != NULL) {
@@ -1578,6 +1620,9 @@ BidiReorderChunks(
     }
 
     if (!anyRtl) {
+	if (textPtr != NULL && textPtr->interp != NULL) {
+	    LOG("tkBidiLog", "BD2 reorder anyRtl=0");
+	}
 	Tcl_Free(chunks);
 	Tcl_Free(units);
 	Tcl_Free(order);
@@ -1704,117 +1749,24 @@ BidiReorderChunks(
 	    }
 	}
 
-#ifdef _WIN32
 	/*
-	 * On Windows, Uniscribe has already shaped the text and produced the
-	 * correct visual glyph order. Tk's chunks, however, are still in 
-	 * logical order. 
-	 *
-	 * Instead of mathematically mirroring chunks (which fails on mixed 
-	 * text due to differing logical/visual widths), we detect runs of 
-	 * chunks by their bidi direction and place those runs into the layout 
-	 * in visual order. 
-	 * 
-	 * - For an LTR unit, runs are placed left-to-right.
-	 * - For an RTL unit, runs are placed right-to-left.
-	 * - Inside an RTL run, chunks are placed right-to-left.
-	 * - Inside an LTR run, chunks are placed left-to-right.
+	 * Note: there is deliberately NO platform-specific chunk placement
+	 * here.  Even on Windows, where Uniscribe shapes the whole base
+	 * chunk string into visual glyph order, the glyphs themselves are
+	 * never placed through the chunk x positions: they are drawn and
+	 * measured from the left edge of the string (BaseCharInfo.originX,
+	 * see BaseOriginX).  The chunk x positions are used only for the
+	 * background (the "sel" highlight included), for hit testing and for
+	 * the bounding boxes, and all of those go through the mirroring
+	 * anchored at originX/unitWidth (see CharBboxProc,
+	 * CharMeasureProc).  A separate, run-based placement of the chunks
+	 * on Windows breaks exactly that invariant: the backgrounds and the
+	 * bboxes are then computed from a different placement than the one
+	 * the mirroring math assumes, which made the highlighted text
+	 * shimmer and the selection background appear in mirrored order
+	 * when dragging over right-to-left text.  Therefore all platforms
+	 * share the placement below.
 	 */
-	if (u->base == NULL) {
-	    for (j = u->first; j <= u->last; j++) {
-		chunks[j]->x = u->newX;
-	    }
-	} else {
-	    int jj = u->first;
-	    int currentVisualLeft = u->newX;
-	    int currentVisualRight = u->newX + u->width;
-
-	    while (jj <= u->last) {
-		CharInfo *ci = (CharInfo *)chunks[jj]->clientData;
-		int cd = (chunks[jj]->displayProc == CharDisplayProc
-			&& ci != NULL && ci->numBytes > 0
-			&& ci->chars != NULL)
-		    ? ChunkBidiDir(ci->chars, ci->numBytes) : 0;
-
-		/* Neutrals (0) inherit the unit's direction or previous run's direction */
-		if (cd == 0) {
-		    cd = u->dir ? u->dir : 1; 
-		}
-
-		int rs = jj;
-		int rdir = cd;
-		int runWidth = 0;
-
-		/* Find the extent of this run */
-		while (jj <= u->last) {
-		    ci = (CharInfo *)chunks[jj]->clientData;
-		    cd = (chunks[jj]->displayProc == CharDisplayProc
-			    && ci != NULL && ci->numBytes > 0
-			    && ci->chars != NULL)
-			? ChunkBidiDir(ci->chars, ci->numBytes) : 0;
-		    
-		    if (cd == 0) cd = rdir; /* Neutral chunks inherit run direction */
-		    if (cd != rdir) break;
-
-		    runWidth += chunks[jj]->width;
-		    jj++;
-		}
-		int re = jj - 1;
-
-		if (u->dir == 2) {
-		    /* RTL unit: runs are placed right-to-left */
-		    int runLeft = currentVisualRight - runWidth;
-		    if (rdir == 1) {
-			/* LTR run inside RTL unit: chunks left-to-right */
-			int x = runLeft;
-			for (j = rs; j <= re; j++) {
-			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
-				((CharInfo *)chunks[j]->clientData)->isRtl = false;
-			    }
-			    chunks[j]->x = x;
-			    x += chunks[j]->width;
-			}
-		    } else {
-			/* RTL run inside RTL unit: chunks right-to-left */
-			int x = currentVisualRight;
-			for (j = rs; j <= re; j++) {
-			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
-				((CharInfo *)chunks[j]->clientData)->isRtl = true;
-			    }
-			    x -= chunks[j]->width;
-			    chunks[j]->x = x;
-			}
-		    }
-		    currentVisualRight = runLeft;
-		} else {
-		    /* LTR unit (or barrier): runs are placed left-to-right */
-		    if (rdir == 1) {
-			/* LTR run inside LTR unit: chunks left-to-right */
-			int x = currentVisualLeft;
-			for (j = rs; j <= re; j++) {
-			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
-				((CharInfo *)chunks[j]->clientData)->isRtl = false;
-			    }
-			    chunks[j]->x = x;
-			    x += chunks[j]->width;
-			}
-		    } else {
-			/* RTL run inside LTR unit: chunks right-to-left */
-			int x = currentVisualLeft + runWidth;
-			for (j = rs; j <= re; j++) {
-			    if (chunks[j]->displayProc == CharDisplayProc && chunks[j]->clientData != NULL) {
-				((CharInfo *)chunks[j]->clientData)->isRtl = true;
-			    }
-			    x -= chunks[j]->width;
-			    chunks[j]->x = x;
-			}
-		    }
-		    currentVisualLeft += runWidth;
-		}
-	    }
-	}
-	continue; /* Skip the standard non-Windows placement logic below */
-#endif
 
 	for (j = u->first; j <= u->last; j++) {
 	    CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
@@ -1833,10 +1785,40 @@ BidiReorderChunks(
 	}
     }
 
+    if (textPtr != NULL && textPtr->interp != NULL) {
+	char buf[256];
+	int k2;
+
+	for (k2 = 0; k2 < nUnits; k2++) {
+	    BidiUnit *u = &units[k2];
+	    BaseCharInfo *bciPtr = (u->base != NULL)
+		    ? (BaseCharInfo *)u->base->clientData : NULL;
+
+	    snprintf(buf, sizeof(buf),
+		    "BD2 unit %d f=%d l=%d dir=%d rs=%d newx=%d w=%d org=%d uw=%d pl=%d",
+		    k2, u->first, u->last, u->dir, u->resolved, u->newX, u->width,
+		    bciPtr ? bciPtr->originX : -1,
+		    bciPtr ? bciPtr->unitWidth : -1,
+		    bciPtr ? (int)bciPtr->placed : -1);
+	    LOG("tkBidiLog", buf);
+	}
+	for (k2 = 0; k2 < nChunks; k2++) {
+	    CharInfo *ciPtr = (CharInfo *)chunks[k2]->clientData;
+
+	    snprintf(buf, sizeof(buf), "BD2 chunk %d x=%d w=%d nb=%d rtl=%d",
+		    k2, chunks[k2]->x, chunks[k2]->width,
+		    (int)chunks[k2]->numBytes,
+		    (chunks[k2]->displayProc == CharDisplayProc && ciPtr != NULL)
+		    ? (int)ciPtr->isRtl : -1);
+	    LOG("tkBidiLog", buf);
+	}
+    }
+
     Tcl_Free(chunks);
     Tcl_Free(units);
     Tcl_Free(order);
 #else
+    (void)textPtr;
     (void)dlPtr;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 }
@@ -2523,7 +2505,7 @@ LayoutDLine(
      * width changes, so the line length remains valid.
      */
 
-    BidiReorderChunks(dlPtr);
+    BidiReorderChunks(textPtr, dlPtr);
 
     return dlPtr;
 }
@@ -3247,6 +3229,12 @@ DisplayDLine(
 		chunkPtr = chunkPtr->nextPtr) {
 	    if (chunkPtr->displayProc == TkTextInsertDisplayProc) {
 		int x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curXPixelOffset;
+		char buf[128];
+
+		if (textPtr->interp != NULL) {
+		    snprintf(buf, sizeof(buf), "BD2 caret x=%d", x);
+		    LOG("tkBidiLog", buf);
+		}
 		chunkPtr->displayProc(textPtr, chunkPtr, x,
 			y + dlPtr->spaceAbove,
 			dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
@@ -8310,7 +8298,24 @@ DlineIndexOfX(
 	    return;
 	}
 	if (foundPtr->numBytes > 1) {
-	    indexPtr->byteIndex += foundPtr->measureProc(foundPtr, x);
+	    Tcl_Size m = foundPtr->measureProc(foundPtr, x);
+
+	    if (textPtr->interp != NULL) {
+		CharInfo *ci2 = (CharInfo *)foundPtr->clientData;
+		BaseCharInfo *bci2 = (ci2 != NULL && ci2->baseChunkPtr != NULL)
+			? (BaseCharInfo *)ci2->baseChunkPtr->clientData : NULL;
+		char buf[256];
+
+		snprintf(buf, sizeof(buf),
+			"BD2 click-rtl x=%d chunkx=%d w=%d nb=%d m=%d org=%d uw=%d pl=%d",
+			x, foundPtr->x, foundPtr->width,
+			(int)foundPtr->numBytes, (int)m,
+			bci2 ? bci2->originX : -1,
+			bci2 ? bci2->unitWidth : -1,
+			bci2 ? (int)bci2->placed : -1);
+		LOG("tkBidiLog", buf);
+	    }
+	    indexPtr->byteIndex += m;
 	}
 	return;
     }
@@ -8359,7 +8364,17 @@ DlineIndexOfX(
      */
 
     if (chunkPtr->numBytes > 1) {
-	indexPtr->byteIndex += chunkPtr->measureProc(chunkPtr, x);
+	Tcl_Size m = chunkPtr->measureProc(chunkPtr, x);
+
+	if (textPtr->interp != NULL) {
+	    char buf[128];
+
+	    snprintf(buf, sizeof(buf), "BD2 click-ltr x=%d chunkx=%d w=%d nb=%d m=%d",
+		    x, chunkPtr->x, chunkPtr->width, (int)chunkPtr->numBytes,
+		    (int)m);
+	    LOG("tkBidiLog", buf);
+	}
+	indexPtr->byteIndex += m;
     }
 }
 
@@ -10196,9 +10211,32 @@ CharMeasureProc(
 	int unitWidth = (bciPtr != NULL && bciPtr->placed) ?
 		bciPtr->unitWidth : chunkPtr->width;
 	int mirroredX = 2 * origin + unitWidth - x;
+	Tcl_Size n = CharChunkMeasureChars(chunkPtr, NULL, 0, 0,
+		chunkPtr->numBytes-1, chunkPtr->x, mirroredX, 0, &endX);
 
-	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
-				     chunkPtr->x, mirroredX, 0, &endX); /* CHAR OFFSET */
+	if (n > 0) {
+	    /*
+	     * The backends report at least one character/cluster even when
+	     * it does not fit in the span.  If the span [originX,
+	     * mirroredX) is narrower than the advance of the first logical
+	     * character, no character really fits in it: the click was
+	     * inside the visually first (rightmost) glyph, and the
+	     * character covering the position is character 0, not
+	     * character 1.  Without this the caret at the start of an RTL
+	     * cluster could never be placed at the right margin by
+	     * clicking, on any platform and for any right-to-left script.
+	     */
+
+	    int firstWidth = 0;
+
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, 1,
+		    chunkPtr->x, -1, 0, &firstWidth);
+	    if (mirroredX - origin < firstWidth) {
+		n = 0;
+	    }
+	}
+
+	return n; /* CHAR OFFSET */
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
