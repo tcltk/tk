@@ -639,7 +639,9 @@ TkpGetColor(
     TkColor *tkColPtr;
     XColor color;
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     NSView *view = nil;
+#endif
     static Bool initialized = NO;
 
     if (!initialized) {
@@ -648,8 +650,10 @@ TkpGetColor(
     }
     if (tkwin) {
 	display = Tk_Display(tkwin);
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	Drawable d = Tk_WindowId(tkwin);
 	view = TkMacOSXGetNSViewForDrawable(d);
+#endif
     }
 
     /*
