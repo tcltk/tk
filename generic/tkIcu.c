@@ -253,11 +253,7 @@ Icu_Init(
 	int i = 0;
 	Tcl_Obj *nameobj;
 	static const char *iculibs[] = {
-#if defined(_WIN32)
-	    "icuuc??.dll", /* When running under Windows, user-provided */
-	    NULL,
-	    "cygicuuc??.dll", /* When running under Cygwin */
-#elif defined(__CYGWIN__)
+#if defined(__CYGWIN__)
 	    "cygicuuc??.dll",
 #elif defined(MAC_OSX_TCL)
 	    "libicuuc.??.dylib",
@@ -362,6 +358,13 @@ Icu_Init(
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING|FLAG_SPACE), icuCleanup);
     icu_fns.nopen += 5;
     }
+#if defined(_WIN32)
+    else {
+        /* No ICU on Windows -> use Uniscribe ScriptBreak fallback */
+        extern int TkpWinRegisterClusterCommands(Tcl_Interp *interp);
+        TkpWinRegisterClusterCommands(interp);
+    }
+#endif
 }
 
 /*
