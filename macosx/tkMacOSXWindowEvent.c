@@ -1372,11 +1372,19 @@ static const char *const accentNames[] = {
 }
 
 -(void) resetTkLayerBitmapContext {
-    NSScreen *screen = [[self window] screen];
-    NSNumber *screenNumber = [[screen deviceDescription]
-				 objectForKey:@"NSScreenNumber"];
-    CGDirectDisplayID displayID = [screenNumber unsignedIntValue];
-    CGColorSpaceRef colorspace = CGDisplayCopyColorSpace(displayID);
+    CGColorSpaceRef colorspace;
+    if (testsAreRunning) {
+	// Use sRGB for accurate colors. See [35a71bf4]
+	// TODO: should Tk allow programs to request this?
+	colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    } else {
+	// Avoid colorspace conversion for performance. See [9108ce12]
+	NSScreen *screen = [[self window] screen];
+	NSNumber *screenNumber = [[screen deviceDescription]
+				     objectForKey:@"NSScreenNumber"];
+	CGDirectDisplayID displayID = [screenNumber unsignedIntValue];
+	colorspace = CGDisplayCopyColorSpace(displayID);
+    }
     CGContextRef newCtx = CGBitmapContextCreate(
 	    NULL, self.layer.contentsScale * self.frame.size.width,
 	    self.layer.contentsScale * self.frame.size.height, 8, 0,
@@ -1384,7 +1392,7 @@ static const char *const accentNames[] = {
 	    // will also need to specify this when capturing
 	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast
     );
-    // CGDisplayCopyColorSpace retains the colorspace.
+    // colorspace came from a Create or Copy function.
     CGColorSpaceRelease(colorspace);
     CGContextSetInterpolationQuality(newCtx, kCGInterpolationNone);
     CGContextScaleCTM(newCtx, self.layer.contentsScale,
