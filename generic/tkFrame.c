@@ -977,10 +977,7 @@ ConfigureFrame(
      */
 
     if (framePtr->type == TYPE_TOPLEVEL) {
-	//const char *oldMenuName = oldMenuNameObj
-		//? Tcl_GetString(oldMenuNameObj) : NULL;
 	const char *menuName = framePtr->menuName;
-		//? Tcl_GetString(framePtr->menuNameObj) : NULL;
 
 	/*
 	 * Also set the menubar again if it is unchanged but its clone has
