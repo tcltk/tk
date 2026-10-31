@@ -856,22 +856,6 @@ TkTextCreateDInfo(
     dInfoPtr->lineUpdateTimer = NULL;
     dInfoPtr->scrollbarTimer = NULL;
 
-    /*
-     * BD2 diagnostic build marker: proves this object file is in the build
-     * and whether TK_LAYOUT_WITH_BASE_CHUNKS was defined when it was
-     * compiled.  Remove when the bidi investigation is done.
-     */
-
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    if (textPtr->interp != NULL) {
-	LOG("tkBidiLog", "BD2 build base-chunks=1 date=" __DATE__);
-    }
-#else
-    if (textPtr->interp != NULL) {
-	LOG("tkBidiLog", "BD2 build base-chunks=0 date=" __DATE__);
-    }
-#endif
-
     textPtr->dInfoPtr = dInfoPtr;
 }
 
