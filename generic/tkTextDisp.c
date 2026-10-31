@@ -848,22 +848,6 @@ TkTextCreateDInfo(
     dInfoPtr->lineUpdateTimer = NULL;
     dInfoPtr->scrollbarTimer = NULL;
 
-    /*
-     * BD2 diagnostic build marker: proves this object file is in the build
-     * and whether TK_LAYOUT_WITH_BASE_CHUNKS was defined when it was
-     * compiled.  Remove when the bidi investigation is done.
-     */
-
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    if (textPtr->interp != NULL) {
-	LOG("tkBidiLog", "BD2 build base-chunks=1 date=" __DATE__);
-    }
-#else
-    if (textPtr->interp != NULL) {
-	LOG("tkBidiLog", "BD2 build base-chunks=0 date=" __DATE__);
-    }
-#endif
-
     textPtr->dInfoPtr = dInfoPtr;
 }
 
@@ -10214,25 +10198,48 @@ CharMeasureProc(
 	Tcl_Size n = CharChunkMeasureChars(chunkPtr, NULL, 0, 0,
 		chunkPtr->numBytes-1, chunkPtr->x, mirroredX, 0, &endX);
 
-	if (n > 0) {
+	if (n > 0 && bciPtr != NULL) {
 	    /*
 	     * The backends report at least one character/cluster even when
-	     * it does not fit in the span.  If the span [originX,
-	     * mirroredX) is narrower than the advance of the first logical
-	     * character, no character really fits in it: the click was
-	     * inside the visually first (rightmost) glyph, and the
-	     * character covering the position is character 0, not
-	     * character 1.  Without this the caret at the start of an RTL
-	     * cluster could never be placed at the right margin by
-	     * clicking, on any platform and for any right-to-left script.
+	     * it does not fit in the span.  If the span [originX, mirroredX)
+	     * does not reach past the end of the first logical character of
+	     * this chunk, no character of the chunk really fits in it: the
+	     * click was inside the first (visually rightmost) glyph of the
+	     * chunk, and the character covering the position is character 0,
+	     * not character 1.  Without this the caret at the start of an RTL
+	     * cluster could never be placed at the right margin by clicking,
+	     * on any platform and for any right-to-left script.
+	     *
+	     * Both sides of the comparison must be absolute positions in the
+	     * frame of the whole string (origin = left edge of the string):
+	     * mirroredX is one, so the end of the first character must be
+	     * measured as one too, over a whole character (cluster), not a
+	     * single byte, and without subtracting the origin.  Measuring one
+	     * byte of a multi-byte character yields no usable width, and
+	     * treating the result as a width (instead of an absolute x) breaks
+	     * for chunks that do not start at the left edge of the string,
+	     * e.g. in a right-justified block.
 	     */
 
-	    int firstWidth = 0;
+	    const char *chars = Tcl_DStringValue(&bciPtr->baseChars)
+		    + ciPtr->baseOffset;
+	    Tcl_Size firstLen = Tcl_UtfNext(chars) - chars;
+	    size_t clusterEnd;
+	    int firstEndX = 0;
 
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, 1,
-		    chunkPtr->x, -1, 0, &firstWidth);
-	    if (mirroredX - origin < firstWidth) {
+	    if (mojibake_grapheme_next(chars, (size_t) ciPtr->numBytes, 0,
+		    &clusterEnd) && clusterEnd > 0) {
+		firstLen = (Tcl_Size) clusterEnd;
+	    }
+	    if (firstLen >= ciPtr->numBytes) {
+		/* The chunk holds a single character: only index 0 exists. */
 		n = 0;
+	    } else {
+		CharChunkMeasureChars(chunkPtr, NULL, 0, 0, firstLen,
+			chunkPtr->x, -1, 0, &firstEndX);
+		if (mirroredX < firstEndX) {
+		    n = 0;
+		}
 	    }
 	}
 
