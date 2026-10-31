@@ -1198,6 +1198,8 @@ MODULE_SCOPE int	Tk_LowerObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_MenuObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE int	TkMenubarCloneMissing(Tcl_Interp *interp,
+			    Tk_Window tkwin, const char *menuName);
 MODULE_SCOPE int	Tk_MenubuttonObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);

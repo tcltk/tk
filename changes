@@ -8609,3 +8609,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-10-30 (bug) [351552] "wm forget" did not release the menubar of the toplevel (storchaka)
 
 2026-10-30 (bug) [220895] Canvas inconsistently draws lines on Windows (storchaka)
+
+2026-10-30 (bug) [2903b4] Toplevel lost its menubar when the menubar clone was destroyed (storchaka)

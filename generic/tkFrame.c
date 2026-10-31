@@ -976,13 +976,24 @@ ConfigureFrame(
      * A few of the options require additional processing.
      */
 
-    if ((((oldMenuName == NULL) && (framePtr->menuName != NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuName == NULL))
-	    || ((oldMenuName != NULL) && (framePtr->menuName != NULL)
-	    && strcmp(oldMenuName, framePtr->menuName) != 0))
-	    && framePtr->type == TYPE_TOPLEVEL) {
-	TkSetWindowMenuBar(interp, framePtr->tkwin, oldMenuName,
-		framePtr->menuName);
+    if (framePtr->type == TYPE_TOPLEVEL) {
+	//const char *oldMenuName = oldMenuNameObj
+		//? Tcl_GetString(oldMenuNameObj) : NULL;
+	const char *menuName = framePtr->menuName;
+		//? Tcl_GetString(framePtr->menuNameObj) : NULL;
+
+	/*
+	 * Also set the menubar again if it is unchanged but its clone has
+	 * been destroyed, e.g. together with the other children of the
+	 * toplevel.
+	 */
+
+	if (((oldMenuName == NULL) != (menuName == NULL))
+		|| (menuName != NULL && (strcmp(oldMenuName, menuName) != 0
+		|| TkMenubarCloneMissing(interp, framePtr->tkwin, menuName)))) {
+	    TkSetWindowMenuBar(interp, framePtr->tkwin, oldMenuName, menuName);
+
+	}
     }
 
     if (oldMenuName != NULL) {

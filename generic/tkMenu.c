@@ -3324,6 +3324,46 @@ TkNewMenuName(
 /*
  *----------------------------------------------------------------------
  *
+ * TkMenubarCloneMissing --
+ *
+ *	Check whether a toplevel has lost the clone of its menubar, e.g.
+ *	because the clone was destroyed together with the other children of
+ *	the toplevel.
+ *
+ * Results:
+ *	1 if the menu exists but has no menubar clone for the toplevel.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMenubarCloneMissing(
+    Tcl_Interp *interp,		/* The interpreter of the menu. */
+    Tk_Window tkwin,		/* The toplevel. */
+    const char *menuName)	/* The name of its menubar. */
+{
+    TkMenuReferences *menuRefPtr = TkFindMenuReferences(interp, menuName);
+    TkMenu *instancePtr;
+
+    if (menuRefPtr == NULL || menuRefPtr->menuPtr == NULL) {
+	return false;
+    }
+    for (instancePtr = menuRefPtr->menuPtr->masterMenuPtr; instancePtr != NULL;
+	    instancePtr = instancePtr->nextInstancePtr) {
+	if (instancePtr->menuType == MENUBAR
+		&& instancePtr->parentTopLevelPtr == tkwin) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkSetWindowMenuBar --
  *
  *	Associates a menu with a window. Called by ConfigureFrame in in
