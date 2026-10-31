@@ -1582,7 +1582,7 @@ ReadIconOrCursorFromFile(
 
 	dwBytesRead = Tcl_Read(channel, (char *)lpIR->IconImages[i].lpBits,
 		lpIDE[i].dwBytesInRes);
-	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
+	if (dwBytesRead != (Tcl_Size)lpIDE[i].dwBytesInRes) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "error reading file: %s", Tcl_PosixError(interp)));
 	    goto readError;
