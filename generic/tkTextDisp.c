@@ -9740,7 +9740,7 @@ static void
 ReorderBidiChunks(
     DLine *dlPtr)		/* Display line whose chunks are placed. */
 {
-    TkTextDispChunk *chunkPtr = dlPtr->chunkPtr;
+    TkTextDispChunk *chunkPtr = dlPtr->chunkPtr, *startPtr = NULL;
 
     while (chunkPtr != NULL) {
 	TkTextDispChunk *basePtr, *endPtr, *p;
@@ -9752,8 +9752,21 @@ ReorderBidiChunks(
 
 	if ((chunkPtr->displayProc != CharDisplayProc)
 		|| (chunkPtr->clientData == NULL)) {
+	    /*
+	     * Zero-width chunks just before a stretch, like the insertion
+	     * cursor at the start of a line, belong to it.
+	     */
+
+	    if (chunkPtr->width != 0) {
+		startPtr = NULL;
+	    } else if (startPtr == NULL) {
+		startPtr = chunkPtr;
+	    }
 	    chunkPtr = chunkPtr->nextPtr;
 	    continue;
+	}
+	if (startPtr == NULL) {
+	    startPtr = chunkPtr;
 	}
 	basePtr = ((CharInfo *)chunkPtr->clientData)->baseChunkPtr;
 	bciPtr = (BaseCharInfo *)basePtr->clientData;
@@ -9761,7 +9774,7 @@ ReorderBidiChunks(
 
 	/*
 	 * The stretch: the chunks of this base chunk, and the zero-width
-	 * chunks between them.
+	 * chunks before and between them.
 	 */
 
 	n = m = 0;
@@ -9776,7 +9789,7 @@ ReorderBidiChunks(
 		break;
 	    }
 	}
-	for (p = chunkPtr; p != endPtr; p = p->nextPtr) {
+	for (p = startPtr; p != endPtr; p = p->nextPtr) {
 	    n++;
 	}
 
@@ -9794,7 +9807,7 @@ ReorderBidiChunks(
 	 * The direction of each chunk; -2 for zero-width chunks.
 	 */
 
-	for (i = 0, p = chunkPtr; p != endPtr; p = p->nextPtr, i++) {
+	for (i = 0, p = startPtr; p != endPtr; p = p->nextPtr, i++) {
 	    chunks[i] = p;
 	    if ((p->displayProc == CharDisplayProc) && (p->clientData != NULL)) {
 		CharInfo *ciPtr = (CharInfo *)p->clientData;
@@ -9903,6 +9916,7 @@ ReorderBidiChunks(
 	Tcl_Free(chunks);
 	Tcl_Free(levels);
 	chunkPtr = endPtr;
+	startPtr = NULL;
     }
 }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
