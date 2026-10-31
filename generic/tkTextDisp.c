@@ -486,6 +486,14 @@ typedef struct BaseCharInfo {
 
 typedef struct {
     TkTextDispChunk *baseCharChunkPtr;
+#ifdef _WIN32
+    int paraDirClass;		/* Direction class (BIDI_LTR/BIDI_RTL) of the
+				 * paragraph of the display line being laid
+				 * out, 0 while not known. */
+    int lastDirClass;		/* Direction class of the last run laid out on
+				 * the display line, 0 if none. */
+    int baseDirClass;		/* Direction class of the current base chunk. */
+#endif
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -847,6 +855,22 @@ TkTextCreateDInfo(
     dInfoPtr->metricIndex.linePtr = NULL;
     dInfoPtr->lineUpdateTimer = NULL;
     dInfoPtr->scrollbarTimer = NULL;
+
+    /*
+     * BD2 diagnostic build marker: proves this object file is in the build
+     * and whether TK_LAYOUT_WITH_BASE_CHUNKS was defined when it was
+     * compiled.  Remove when the bidi investigation is done.
+     */
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (textPtr->interp != NULL) {
+	LOG("tkBidiLog", "BD2 build base-chunks=1 date=" __DATE__);
+    }
+#else
+    if (textPtr->interp != NULL) {
+	LOG("tkBidiLog", "BD2 build base-chunks=0 date=" __DATE__);
+    }
+#endif
 
     textPtr->dInfoPtr = dInfoPtr;
 }
@@ -1423,6 +1447,213 @@ ChunkBidiDir(
     }
     return 0;
 }
+
+#ifdef _WIN32
+/*
+ *----------------------------------------------------------------------
+ *
+ * BidiClusterClass, BidiParagraphClass, BidiRunLength --
+ *
+ *	On Windows the font engine (Uniscribe) shapes and draws a whole base
+ *	string in visual order, whereas the geometry of the text widget (the
+ *	chunk extents which the "sel" background, the hit testing and the
+ *	insertion cursor are computed from) is that of one direction: logical
+ *	order, or mirrored for a string that starts with right-to-left text.
+ *	For a string that mixes directions ("abc <hebrew> 123") the two do not
+ *	agree: the geometry of the right-to-left part is a mirror image of
+ *	what is drawn, and the highlight jumps about as the selection grows.
+ *
+ *	The cure is to never hand the font engine, and never describe the
+ *	geometry of, a string with more than one direction: LayoutDLine ends
+ *	the chunk, and the base chunk, wherever the (resolved) direction
+ *	changes.  BidiReorderChunks then puts the runs in visual order, one
+ *	unit per base chunk, exactly as it does for the chunks of a string
+ *	with different styles.  Text with one direction (all of pure left to
+ *	right and pure right to left text) is not split at all.
+ *
+ *	The direction of a run is resolved like UAX #9 does it: letters and
+ *	digits are strong left to right, Hebrew and Arabic letters strong
+ *	right to left; a combining mark or a joiner follows its grapheme
+ *	cluster; neutrals between two runs of the same direction take it, else
+ *	the one of the paragraph, which is that of the first strong character.
+ *
+ *----------------------------------------------------------------------
+ */
+
+enum { BIDI_NEUTRAL = 0, BIDI_LTR = 1, BIDI_RTL = 2 };
+#define BIDI_RUN_WINDOW 1024
+
+static int
+BidiClusterClass(
+    const char *s,
+    Tcl_Size n,
+    Tcl_Size pos,
+    Tcl_Size *endPtr)
+{
+    unsigned char b = (unsigned char) s[pos];
+    int ch = 0;
+    Tcl_Size len;
+    size_t end;
+    mjb_character c;
+
+    if (b < 0x80 && (pos + 1 >= n || (unsigned char) s[pos + 1] < 0x80)) {
+	*endPtr = pos + 1;
+	return ((b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
+		|| (b >= '0' && b <= '9')) ? BIDI_LTR : BIDI_NEUTRAL;
+    }
+    len = Tcl_UtfToUniChar(s + pos, &ch);
+    if (len <= 0) {
+	len = 1;
+    }
+    *endPtr = pos + len;
+    if (mojibake_grapheme_next(s, (size_t) n, (size_t) pos, &end)
+	    && end > (size_t) (pos + len) && end <= (size_t) n) {
+	*endPtr = (Tcl_Size) end;
+    }
+    if (ch < 0x80) {
+	return ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+		|| (ch >= '0' && ch <= '9')) ? BIDI_LTR : BIDI_NEUTRAL;
+    }
+    if (mjb_codepoint_info((mjb_codepoint) ch, &c) == MJB_STATUS_OK) {
+	if (c.bidirectional == MJB_PR_BIDI_CLASS_L) {
+	    return BIDI_LTR;
+	}
+	if (c.bidirectional == MJB_PR_BIDI_CLASS_R
+		|| c.bidirectional == MJB_PR_BIDI_CLASS_AL) {
+	    return BIDI_RTL;
+	}
+    }
+    if (Tcl_UniCharIsAlpha(ch) || Tcl_UniCharIsDigit(ch)) {
+	return BIDI_LTR;
+    }
+    return BIDI_NEUTRAL;
+}
+
+/* Direction of the first strong letter in s[0..n), 0 if there is none. */
+
+static int
+BidiParagraphClass(
+    const char *s,
+    Tcl_Size n)
+{
+    Tcl_Size pos = 0, end;
+
+    while (pos < n && pos < BIDI_RUN_WINDOW) {
+	int c = BidiClusterClass(s, n, pos, &end);
+
+	if (c != BIDI_NEUTRAL) {
+	    const char *q = s + pos;
+	    int ch;
+
+	    /* Digits are strong here, but they do not give the paragraph its
+	     * direction (UAX #9, P2). */
+	    if (c == BIDI_LTR && Tcl_UtfToUniChar(q, &ch) > 0
+		    && Tcl_UniCharIsDigit(ch)) {
+		pos = end;
+		continue;
+	    }
+	    return c;
+	}
+	pos = end;
+    }
+    return BIDI_NEUTRAL;
+}
+
+/*
+ * Returns the length in bytes of the run which starts at s, at a cluster
+ * boundary, and stores its direction in *clsPtr.  prev is the direction of
+ * the run laid out before it, para that of the paragraph (0 if not known).
+ */
+
+static Tcl_Size
+BidiRunLength(
+    const char *s,
+    Tcl_Size n,
+    int prev,
+    int para,
+    int *clsPtr)
+{
+    Tcl_Size pos = 0, end, lead, uEnd;
+    int cls = BIDI_NEUTRAL, c;
+
+    if (para == BIDI_NEUTRAL) {
+	para = BIDI_LTR;
+    }
+    if (prev == BIDI_NEUTRAL) {
+	prev = para;
+    }
+
+    /* Leading neutrals, then the first strong cluster. */
+
+    while (pos < n) {
+	c = BidiClusterClass(s, n, pos, &end);
+	if (c != BIDI_NEUTRAL) {
+	    cls = c;
+	    break;
+	}
+	pos = end;
+	if (pos >= BIDI_RUN_WINDOW) {
+	    break;
+	}
+    }
+    if (cls == BIDI_NEUTRAL) {
+	*clsPtr = para;
+	return (pos > 0) ? pos : n;
+    }
+    lead = pos;
+    if (lead > 0 && prev != cls && para == prev) {
+	/* The neutrals take the direction of the previous run. */
+	*clsPtr = prev;
+	return lead;
+    }
+
+    uEnd = lead;
+    while (pos < n) {
+	c = BidiClusterClass(s, n, pos, &end);
+	if (c == BIDI_NEUTRAL) {
+	    pos = end;
+	} else if (c == cls) {
+	    pos = end;
+	    uEnd = end;
+	} else {
+	    /* Strong text of the other direction: the neutrals before it
+	     * take the paragraph direction. */
+	    *clsPtr = cls;
+	    return (para == cls) ? pos : uEnd;
+	}
+	if (pos >= BIDI_RUN_WINDOW) {
+	    break;
+	}
+    }
+    *clsPtr = cls;
+    if (pos >= n) {
+	return (para == cls) ? n : uEnd;
+    }
+    return pos;
+}
+
+static bool
+ChunkHasDigit(
+    const char *chars,
+    Tcl_Size numBytes)
+{
+    const char *p = chars, *end = chars + numBytes;
+
+    while (p < end) {
+	int ch;
+	Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+
+	if (chLen <= 0) {
+	    break;
+	}
+	if (Tcl_UniCharIsDigit(ch)) {
+	    return true;
+	}
+	p += chLen;
+    }
+    return false;
+}
+#endif /* _WIN32 */
 
 /*
  *----------------------------------------------------------------------
@@ -1480,6 +1711,8 @@ typedef struct BidiUnit {
     int newX;			/* Resulting left edge. */
     bool endsGroup;		/* Nothing may be reordered across the end of
 				 * this unit (barrier, or ends in a tab). */
+    bool weakL;			/* Windows: the unit has digits but no letter;
+				 * it is left to right whatever surrounds it. */
 } BidiUnit;
 
 
@@ -1575,6 +1808,7 @@ BidiReorderChunks(
 	u->width = endX - u->x0;
 	u->endsGroup = (u->base == NULL);
 	u->dir = 0;
+	u->weakL = false;
 	if (u->base != NULL) {
 	    BaseCharInfo *bciPtr = (BaseCharInfo *)u->base->clientData;
 
@@ -1583,6 +1817,11 @@ BidiReorderChunks(
 		if (u->dir == 2) {
 		    anyRtl = true;
 		}
+#ifdef _WIN32
+	    u->weakL = (u->dir == 0 && ChunkHasDigit(
+		    Tcl_DStringValue(&bciPtr->baseChars),
+		    Tcl_DStringLength(&bciPtr->baseChars)));
+#endif
 	    for (j = u->last; j >= u->first; j--) {
 		CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
 
@@ -1629,6 +1868,10 @@ BidiReorderChunks(
 		units[i].resolved = pdir;		/* Barrier. */
 	    } else if (units[i].dir != 0) {
 		units[i].resolved = units[i].dir;
+#ifdef _WIN32
+	    } else if (units[i].weakL) {
+		units[i].resolved = 1;
+#endif
 	    } else {
 		int before = (i > g) ? units[i-1].resolved : pdir;
 		int after = pdir;
@@ -1900,6 +2143,9 @@ LayoutDLine(
 				 * numBytes > 0. Used to drop 0-sized chunks
 				 * from the end of the line. */
     Tcl_Size byteOffset;
+#ifdef _WIN32
+    int runCls = 0;		/* Direction class of the run being laid out. */
+#endif
     int ascent, descent, code;
 	Tcl_Size elidesize;
     bool elide;
@@ -1924,6 +2170,9 @@ LayoutDLine(
     dlPtr->lMarginWidth = 0;
     dlPtr->rMarginColor = NULL;
     dlPtr->rMarginWidth = 0;
+#if defined(TK_LAYOUT_WITH_BASE_CHUNKS) && defined(_WIN32)
+    tsdPtr->paraDirClass = tsdPtr->lastDirClass = tsdPtr->baseDirClass = 0;
+#endif
 
     /*
      * This is not necessarily totally correct, where we have merged logical
@@ -2137,6 +2386,9 @@ LayoutDLine(
 	}
 
 	gotTab = false;
+#ifdef _WIN32
+	runCls = 0;
+#endif
 	maxBytes = segPtr->size - byteOffset;
 	if (segPtr->typePtr == &tkTextCharType) {
 
@@ -2157,13 +2409,36 @@ LayoutDLine(
 		}
 	    }
 
+#if defined(TK_LAYOUT_WITH_BASE_CHUNKS) && defined(_WIN32)
+	    /*
+	     * Never let a chunk, nor a base chunk, hold text of more than one
+	     * (resolved) direction: see BidiRunLength.
+	     */
+
+	    if (!elide && maxBytes > 0) {
+		const char *runText = segPtr->body.chars + byteOffset;
+		Tcl_Size runLen;
+
+		if (tsdPtr->paraDirClass == BIDI_NEUTRAL) {
+		    tsdPtr->paraDirClass = BidiParagraphClass(runText, maxBytes);
+		}
+		runLen = BidiRunLength(runText, maxBytes, tsdPtr->lastDirClass,
+			tsdPtr->paraDirClass, &runCls);
+		if (runLen > 0 && runLen < maxBytes) {
+		    maxBytes = runLen;
+		    gotTab = false;
+		}
+	    }
+#endif
+
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    if (tsdPtr->baseCharChunkPtr != NULL) {
 #ifdef _WIN32
 		/* Windows Uniscribe needs full baseChars. sel changes bg only,
 		 * so keep full stretch on Windows when FG same. */
 		if (!IsSameFGStyle(
-			    tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)) {
+			    tsdPtr->baseCharChunkPtr->stylePtr, chunkPtr->stylePtr)
+			|| (runCls != 0 && tsdPtr->baseDirClass != runCls)) {
 		    FinalizeBaseChunk(NULL);
 		}
 #else
@@ -2230,6 +2505,12 @@ LayoutDLine(
 	    }
 	    break;
 	}
+
+#if defined(TK_LAYOUT_WITH_BASE_CHUNKS) && defined(_WIN32)
+	if (runCls != 0) {
+	    tsdPtr->lastDirClass = tsdPtr->baseDirClass = runCls;
+	}
+#endif
 
 	/*
 	 * We currently say we have some characters (and therefore something
