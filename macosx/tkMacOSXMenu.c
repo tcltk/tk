@@ -1016,11 +1016,18 @@ TkpPostMenu(
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
     }
- 
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if (@available(macOS 10.14, *)) {
+	[menu popUpMenuPositioningItem:item
+			    atLocation:location
+				inView:nil
+			    appearance:realWinView.effectiveAppearance];
+    } else
+#endif
     [menu popUpMenuPositioningItem:item
 			atLocation:location
-			    inView:nil
-			appearance:realWinView.effectiveAppearance];
+			    inView:nil];
     inPostMenu = false;
     return TCL_OK;
 }
