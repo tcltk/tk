@@ -22,7 +22,6 @@
  * Declarations of static variables used in this file.
  */
 
-static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
 static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
 static bool mouseTimerSet = false;	/* true if the mouse timer is active. */
 static int pointerSuspended = 0;	/* Non-zero while a native popup menu is
@@ -246,12 +245,12 @@ XGrabKeyboard(
     Time time)
 {
     (void)display;
+    (void)grab_window;
     (void)owner_events;
     (void)pointer_mode;
     (void)keyboard_mode;
     (void)time;
 
-    keyboardWinPtr = TkWinGetWinPtr(grab_window);
     return GrabSuccess;
 }
 
@@ -279,7 +278,6 @@ XUngrabKeyboard(
     (void)display;
     (void)time;
 
-    keyboardWinPtr = NULL;
     return Success;
 }
 

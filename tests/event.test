@@ -930,18 +930,53 @@ test event-8.1 {keysym of Control and Alt keys with a non-Latin keyboard
     bind $e <Key> {lappend res %K}
     focus -force $e
     update
-    # Virtual key codes of the C and 1 keys with Control (4),
-    # Control+Shift (5) and Alt (0x20000).  The keysym must be the Latin
-    # letter or digit of the key whatever the keyboard layout is, so that
-    # bindings like <Control-c> work with a non-Latin layout too.
-    event generate $e <Key> -keycode 0x43 -state 4
-    event generate $e <Key> -keycode 0x43 -state 5
-    event generate $e <Key> -keycode 0x43 -state 0x20000
-    event generate $e <Key> -keycode 0x31 -state 4
+    # Virtual key code of the Q key with Control (4), Control+Shift (5) and
+    # Alt (0x20000).  The keysym must be the Latin letter of the key with a
+    # non-Latin keyboard layout too, so that bindings like <Control-q> work.
+    event generate $e <Key> -keycode 0x51 -state 4
+    event generate $e <Key> -keycode 0x51 -state 5
+    event generate $e <Key> -keycode 0x51 -state 0x20000
     set res
 } -cleanup {
     deleteWindows
-} -result {c C c 1}
+} -result {q Q q}
+test event-8.1.1 {keysym of Control and a digit key on Windows - bug 433261290b} -constraints win -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    bind $e <Key> {lappend res %N}
+    focus -force $e
+    update
+    # Virtual key code of the 2 key without modifiers, with Shift (1),
+    # Control (4) and Control+Shift (5).  Without Control the keysym depends
+    # on the layout: "2" and "at" with US (00000409), "2" and "quotedbl" with
+    # Ukrainian (00000422), "eacute" and "2" with French (0000040C),
+    # "ccaron" and "Ccaron" with Lithuanian (00010427).  With Control it is
+    # the same if it is Latin, or the digit of the key: the layout can define
+    # a non-Latin character for Control (U+200C for Control+Shift with
+    # Arabic, 00000401).
+    foreach state {0 1 4 5} {
+	event generate $e <Key> -keycode 0x32 -state $state
+    }
+    lassign $res plain shifted
+    set exp [list $plain $shifted]
+    foreach sym [list $plain $shifted] got [lrange $res 2 3] {
+	set latin [expr {$sym > 0 && $sym <= 0xFF}]
+	if {$got == 0x32 || ($latin && $got == $sym)} {
+	    lappend exp $got
+	} else {
+	    lappend exp [expr {$latin ? $sym : 0x32}]
+	}
+    }
+    expr {$res eq $exp ? "ok" : "$res, expected $exp"}
+} -cleanup {
+    deleteWindows
+    unset -nocomplain res plain shifted exp sym got latin
+} -result ok
 
 test event-8.2 {keysym of Control and Alt keys with a non-Latin keyboard
 	      layout on X11 - bug 701d8f8953} -constraints x11 -setup {
@@ -956,18 +991,71 @@ test event-8.2 {keysym of Control and Alt keys with a non-Latin keyboard
     update
     bind $e <Key> {set keycode %k}
     event generate $e <Key> -keysym q
-    bind $e <Key> {lappend res %K}
-    # State bit 0x2000 selects the second XKB group, a non-Latin layout
-    # with e.g. "setxkbmap us,ua" (with a single layout it is the same as
-    # the first group).  The keysym must be the Latin letter of the key with
-    # Control (4), Control+Shift (5) and Alt (8) whatever the layout is.
-    event generate $e <Key> -keycode $keycode -state 0x2004
-    event generate $e <Key> -keycode $keycode -state 0x2005
-    event generate $e <Key> -keycode $keycode -state 0x2008
-    set res
+    bind $e <Key> {lappend res %N}
+    # State bit 0x2000 selects the second XKB group, e.g. a non-Latin layout
+    # with "setxkbmap us,ua" (with a single layout it is the same as the
+    # first group).  The key without modifiers (0x2000) and with Shift
+    # (0x2001) gives the keysym of that layout.  With Control (4),
+    # Control+Shift (5) and Alt (8) it is the same if it is ASCII (e.g. "a"
+    # with "setxkbmap lt,fr"), and a Latin keysym of another layout
+    # otherwise ("q" or "Q" with "setxkbmap us,ua").
+    foreach state {0x2000 0x2001 0x2004 0x2005 0x2008} {
+	event generate $e <Key> -keycode $keycode -state $state
+    }
+    lassign $res plain shifted
+    set exp [list $plain $shifted]
+    foreach sym [list $plain $shifted $plain] {
+	set latin [lindex $res [llength $exp]]
+	lappend exp [expr {$sym >= 0x20 && $sym < 0x7F ? $sym
+		: $latin >= 0x20 && $latin <= 0xFF ? $latin : "Latin"}]
+    }
+    expr {$res eq $exp ? "ok" : "$res, expected $exp"}
 } -cleanup {
     deleteWindows
-} -result {q Q q}
+    unset -nocomplain res plain shifted exp keycode latin
+} -result ok
+test event-8.2.1 {keysym of Control and a digit key on X11 - bug 701d8f8953} -constraints x11 -setup {
+    deleteWindows
+    set res [list ]
+    set result [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    update
+    bind $e <Key> {set keycode %k}
+    event generate $e <Key> -keysym 2
+    bind $e <Key> {lappend res %N}
+    # The 2 key without modifiers, with Shift (1), Control (4) and
+    # Control+Shift (5), in all four XKB groups (0, 0x2000, 0x4000, 0x6000,
+    # e.g. with "setxkbmap ua,lt,fr").  Without Control the keysym depends
+    # on the layout: "2" and "at" with "us", "2" and "quotedbl" with "ua",
+    # "eacute" and "2" with "fr", "ccaron" and "Ccaron" with "lt".  With
+    # Control it is the same if it is ASCII, and a Latin keysym otherwise:
+    # for a non-ASCII one Xlib may use another layout (e.g. "2" instead of
+    # "eacute" with "setxkbmap ua,fr").
+    foreach group {0 0x2000 0x4000 0x6000} {
+	set res [list ]
+	foreach state {0 1 4 5} {
+	    event generate $e <Key> -keycode $keycode \
+		    -state [expr {$group | $state}]
+	}
+	lassign $res plain shifted
+	set exp [list $plain $shifted]
+	foreach sym [list $plain $shifted] {
+	    set latin [lindex $res [llength $exp]]
+	    lappend exp [expr {$sym >= 0x20 && $sym < 0x7F ? $sym
+		    : $latin >= 0x20 && $latin <= 0xFF ? $latin : "Latin"}]
+	}
+	lappend result [expr {$res eq $exp ? "ok" : "$res, expected $exp"}]
+    }
+    set result
+} -cleanup {
+    deleteWindows
+    unset -nocomplain res result plain shifted exp keycode latin
+} -result {ok ok ok ok}
 
 test event-8.3 {keysym of a keypad key with Num Lock on X11 - bug 481308} -constraints x11 -setup {
     deleteWindows

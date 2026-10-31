@@ -25,6 +25,23 @@ typedef struct {
 } TkUnixCursor;
 
 /*
+ * Runtime linking of libXcursor, used to load cursor files in the Xcursor
+ * format (with colors, alpha channel and animation). [Bug 3164867]
+ */
+
+typedef Cursor (*fn_xc_filename_load_cursor)(Display *, const char *);
+
+static struct {
+    int initialized;
+    Tcl_LoadHandle lib;
+    fn_xc_filename_load_cursor filenameLoadCursor;
+} xc_fns = {
+    0, NULL, NULL
+};
+
+TCL_DECLARE_MUTEX(xc_mutex);
+
+/*
  * The table below is used to map from the name of a cursor to its index in
  * the official cursor font:
  */
@@ -180,6 +197,8 @@ static const struct TkCursorName {
 #define CURSORFONT "cursor"
 #endif
 
+static Cursor		LoadXcursorFile(Tcl_Interp *interp, Display *display,
+			    const char *fileName);
 static Cursor		CreateCursorFromTableOrFile(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Size argc, const char **argv,
 			    const struct TkCursorName *tkCursorPtr);
@@ -320,22 +339,33 @@ TkGetCursorByName(
 	}
 
 	/*
-	 * If the cursor is to be created from bitmap files, then there should
-	 * be either two elements in the list (source, color) or four (source
-	 * mask fg bg). A cursor defined in the Tk table accepts the same
-	 * arguments as an X cursor.
+	 * A single file name is a cursor file in the Xcursor format.
 	 */
 
-	if (inTkTable && (argc != 1) && (argc != 2) && (argc != 3)) {
-	    goto badString;
-	}
+	if (!inTkTable && (argc == 1)) {
+	    cursor = LoadXcursorFile(interp, display, &argv[0][1]);
+	    if (cursor == None) {
+		goto badString;
+	    }
+	} else {
+	    /*
+	     * If the cursor is to be created from bitmap files, then there
+	     * should be either two elements in the list (source, color) or four
+	     * (source mask fg bg). A cursor defined in the Tk table accepts the
+	     * same arguments as an X cursor.
+	     */
 
-	if (!inTkTable && (argc != 2) && (argc != 4)) {
-	    goto badString;
-	}
+	    if (inTkTable && (argc != 1) && (argc != 2) && (argc != 3)) {
+		goto badString;
+	    }
 
-	cursor = CreateCursorFromTableOrFile(interp, tkwin, argc, argv,
-		tkCursorPtr);
+	    if (!inTkTable && (argc != 2) && (argc != 4)) {
+		goto badString;
+	    }
+
+	    cursor = CreateCursorFromTableOrFile(interp, tkwin, argc, argv,
+		    tkCursorPtr);
+	}
     }
 
     if (cursor != None) {
@@ -359,6 +389,77 @@ TkGetCursorByName(
     return NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * LoadXcursorFile --
+ *
+ *	Load a cursor from a file in the Xcursor format, if the Xcursor
+ *	library is available.
+ *
+ * Results:
+ *	Returns a new cursor, or None if the Xcursor library is not available
+ *	or the file cannot be read as an Xcursor file.
+ *
+ * Side effects:
+ *	Loads the Xcursor library the first time.  Allocates a new X cursor.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Cursor
+LoadXcursorFile(
+    Tcl_Interp *interp,		/* Interpreter used for loading the library. */
+    Display *display,		/* Display for the cursor. */
+    const char *fileName)	/* Name of the Xcursor file. */
+{
+    Tcl_Obj *pathObj;
+    const char *nativePath;
+    Cursor cursor = None;
+
+    Tcl_MutexLock(&xc_mutex);
+    if (!xc_fns.initialized) {
+	static const char *const xclibs[] = {
+	    "libXcursor.so.1",
+	    "libXcursor.so",
+	    "libXcursor.1.dylib",
+	    NULL
+	};
+	int i;
+
+	xc_fns.initialized = 1;
+	for (i = 0; xclibs[i] != NULL; i++) {
+	    Tcl_Obj *nameObj = Tcl_NewStringObj(xclibs[i], TCL_INDEX_NONE);
+
+	    Tcl_IncrRefCount(nameObj);
+	    if (Tcl_LoadFile(interp, nameObj, NULL, 0, NULL, &xc_fns.lib)
+		    == TCL_OK) {
+		Tcl_DecrRefCount(nameObj);
+		break;
+	    }
+	    Tcl_DecrRefCount(nameObj);
+	}
+	if (xc_fns.lib != NULL) {
+	    xc_fns.filenameLoadCursor = (fn_xc_filename_load_cursor)
+		    Tcl_FindSymbol(NULL, xc_fns.lib, "XcursorFilenameLoadCursor");
+	}
+	Tcl_ResetResult(interp);
+    }
+    Tcl_MutexUnlock(&xc_mutex);
+    if (xc_fns.filenameLoadCursor == NULL) {
+	return None;
+    }
+
+    pathObj = Tcl_NewStringObj(fileName, TCL_INDEX_NONE);
+    Tcl_IncrRefCount(pathObj);
+    nativePath = (const char *) Tcl_FSGetNativePath(pathObj);
+    if (nativePath != NULL) {
+	cursor = xc_fns.filenameLoadCursor(display, nativePath);
+    }
+    Tcl_DecrRefCount(pathObj);
+    return cursor;
+}
+
 /*
  *----------------------------------------------------------------------
  *
