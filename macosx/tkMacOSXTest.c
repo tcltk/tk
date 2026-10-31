@@ -166,11 +166,8 @@ TkpReadPixelSRGB(
     Drawable d = Tk_WindowId(tkwin);
     XImage *image = XGetImage(Tk_Display(tkwin), d, x, y, 1, 1,
 	    AllPlanes, ZPixmap);
-    NSWindow *win = TkMacOSXGetNSWindowForDrawable(d);
-    NSNumber *screenNumber = [[[win screen] deviceDescription]
-	    objectForKey:@"NSScreenNumber"];
-    CGColorSpaceRef displaySpace = screenNumber ?
-	    CGDisplayCopyColorSpace([screenNumber unsignedIntValue]) : NULL;
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(d);
+    CGColorSpaceRef displaySpace = CGBitmapContextGetColorSpace(view.tkLayerBitmapContext);
     CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
     unsigned long pixel;
     CGFloat comps[4], cr, cg, cb;
@@ -179,7 +176,6 @@ TkpReadPixelSRGB(
 
     if (!image || !displaySpace || !srgb) {
 	if (image) XDestroyImage(image);
-	if (displaySpace) CGColorSpaceRelease(displaySpace);
 	if (srgb) CGColorSpaceRelease(srgb);
 	return TCL_ERROR;
     }
@@ -213,7 +209,6 @@ TkpReadPixelSRGB(
 
     if (src) CGColorRelease(src);
     if (dst) CGColorRelease(dst);
-    CGColorSpaceRelease(displaySpace);
     CGColorSpaceRelease(srgb);
     return out ? TCL_OK : TCL_ERROR;
 }
