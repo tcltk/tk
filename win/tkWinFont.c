@@ -19,7 +19,7 @@
 #include <usp10.h>      /* Uniscribe */
 #include <mojibake.h>   /* mjb_codepoint_is_combining */
 
-/* FINAL Tcl9 Windows-only cluster fix - Uniscribe only, no mojibake calls */
+/* Windows-only cluster API - Uniscribe only */
 #ifdef _WIN32
 #ifdef a
 #undef a
