@@ -1982,13 +1982,6 @@ BidiReorderChunks(
 	return;
     }
 
-    if (textPtr != NULL && textPtr->interp != NULL) {
-	char buf[64];
-
-	snprintf(buf, sizeof(buf), "BD2 reorder nch=%d", nChunks);
-	LOG("tkBidiLog", buf);
-    }
-
     chunks = (TkTextDispChunk **)Tcl_Alloc(nChunks * sizeof(*chunks));
     units = (BidiUnit *)Tcl_Alloc(nChunks * sizeof(*units));
     order = (int *)Tcl_Alloc(nChunks * sizeof(int));
@@ -2093,9 +2086,6 @@ BidiReorderChunks(
     }
 
     if (!anyRtl) {
-	if (textPtr != NULL && textPtr->interp != NULL) {
-	    LOG("tkBidiLog", "BD2 reorder anyRtl=0");
-	}
 	Tcl_Free(chunks);
 	Tcl_Free(units);
 	Tcl_Free(order);
@@ -2263,35 +2253,6 @@ BidiReorderChunks(
 	    chunks[j]->x = mirror ?
 		    u->newX + u->width - off - chunks[j]->width :
 		    u->newX + off;
-	}
-    }
-
-    if (textPtr != NULL && textPtr->interp != NULL) {
-	char buf[256];
-	int k2;
-
-	for (k2 = 0; k2 < nUnits; k2++) {
-	    BidiUnit *u = &units[k2];
-	    BaseCharInfo *bciPtr = (u->base != NULL)
-		    ? (BaseCharInfo *)u->base->clientData : NULL;
-
-	    snprintf(buf, sizeof(buf),
-		    "BD2 unit %d f=%d l=%d dir=%d rs=%d newx=%d w=%d org=%d uw=%d pl=%d",
-		    k2, u->first, u->last, u->dir, u->resolved, u->newX, u->width,
-		    bciPtr ? bciPtr->originX : -1,
-		    bciPtr ? bciPtr->unitWidth : -1,
-		    bciPtr ? (int)bciPtr->placed : -1);
-	    LOG("tkBidiLog", buf);
-	}
-	for (k2 = 0; k2 < nChunks; k2++) {
-	    CharInfo *ciPtr = (CharInfo *)chunks[k2]->clientData;
-
-	    snprintf(buf, sizeof(buf), "BD2 chunk %d x=%d w=%d nb=%d rtl=%d",
-		    k2, chunks[k2]->x, chunks[k2]->width,
-		    (int)chunks[k2]->numBytes,
-		    (chunks[k2]->displayProc == CharDisplayProc && ciPtr != NULL)
-		    ? (int)ciPtr->isRtl : -1);
-	    LOG("tkBidiLog", buf);
 	}
     }
 
@@ -3805,12 +3766,7 @@ DisplayDLine(
 		chunkPtr = chunkPtr->nextPtr) {
 	    if (chunkPtr->displayProc == TkTextInsertDisplayProc) {
 		int x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curXPixelOffset;
-		char buf[128];
 
-		if (textPtr->interp != NULL) {
-		    snprintf(buf, sizeof(buf), "BD2 caret x=%d", x);
-		    LOG("tkBidiLog", buf);
-		}
 		chunkPtr->displayProc(textPtr, chunkPtr, x,
 			y + dlPtr->spaceAbove,
 			dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
@@ -8854,21 +8810,6 @@ DlineIndexOfX(
 	if (foundPtr->numBytes > 1) {
 	    Tcl_Size m = foundPtr->measureProc(foundPtr, x);
 
-	    if (textPtr->interp != NULL) {
-		CharInfo *ci2 = (CharInfo *)foundPtr->clientData;
-		BaseCharInfo *bci2 = (ci2 != NULL && ci2->baseChunkPtr != NULL)
-			? (BaseCharInfo *)ci2->baseChunkPtr->clientData : NULL;
-		char buf[256];
-
-		snprintf(buf, sizeof(buf),
-			"BD2 click-rtl x=%d chunkx=%d w=%d nb=%d m=%d org=%d uw=%d pl=%d",
-			x, foundPtr->x, foundPtr->width,
-			(int)foundPtr->numBytes, (int)m,
-			bci2 ? bci2->originX : -1,
-			bci2 ? bci2->unitWidth : -1,
-			bci2 ? (int)bci2->placed : -1);
-		LOG("tkBidiLog", buf);
-	    }
 	    indexPtr->byteIndex += m;
 	}
 	return;
@@ -8920,14 +8861,6 @@ DlineIndexOfX(
     if (chunkPtr->numBytes > 1) {
 	Tcl_Size m = chunkPtr->measureProc(chunkPtr, x);
 
-	if (textPtr->interp != NULL) {
-	    char buf[128];
-
-	    snprintf(buf, sizeof(buf), "BD2 click-ltr x=%d chunkx=%d w=%d nb=%d m=%d",
-		    x, chunkPtr->x, chunkPtr->width, (int)chunkPtr->numBytes,
-		    (int)m);
-	    LOG("tkBidiLog", buf);
-	}
 	indexPtr->byteIndex += m;
     }
 }
@@ -11088,6 +11021,7 @@ AdjustForTab(
 	if (ciPtr == NULL) {
 	    continue;
 	}
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	if (ciPtr->chars == NULL) {
 	    if (ciPtr->baseChunkPtr && ciPtr->baseChunkPtr->clientData) {
 		BaseCharInfo *bciTmp = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
@@ -11101,6 +11035,7 @@ AdjustForTab(
 		continue;
 	    }
 	}
+#endif
 	for (p = ciPtr->chars, i = 0; i < ciPtr->numBytes; p++, i++) {
 	    if (isdigit(UCHAR(*p))) {
 		gotDigit = true;
