@@ -2983,10 +2983,15 @@ LayoutDLine(
 	    segPtr->typePtr->layoutProc(textPtr, &breakIndex, segPtr,
 		    byteOffset, maxX, breakByteOffset, 0, wrapMode,
 		    breakChunkPtr);
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    FinalizeBaseChunk(NULL);
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	/*
+	 * RemoveFromBaseChunk put back the stretch of the removed chunks: end it
+	 * even when the break chunk is kept as it is.
+	 */
+
+	FinalizeBaseChunk(NULL);
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	lastChunkPtr = breakChunkPtr;
 	wholeLine = false;
     }
@@ -11798,17 +11803,17 @@ IsSameFGStyle(
  * RemoveFromBaseChunk --
  *
  *	This procedure removes a chunk from the stretch as a result of
- *	UndisplayProc. The chunk in question should be the last in a stretch.
- *	This happens during re-layouting of the break position.
+ *	UndisplayProc, when the chunks after a line break are thrown away, first
+ *	to last, or when the break chunk is laid out again.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *	The characters that belong to this chunk are removed from the base
- *	chunk. It is assumed that LayoutProc and FinalizeBaseChunk are called
- *	next to repair any damage that this causes to the integrity of the
- *	stretch and the other chunks. For that reason the base chunk is also
+ *	chunk. It is assumed that FinalizeBaseChunk is called next, after the
+ *	LayoutProc if the break chunk is laid out again, to repair any damage
+ *	that this causes to the integrity of the stretch and the other chunks. For that reason the base chunk is also
  *	put into baseCharChunkPtr automatically, so that LayoutProc can resume
  *	correctly.
  *
@@ -11830,8 +11835,14 @@ RemoveFromBaseChunk(
     BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
     if (bciPtr == NULL) return;
 
-    /* Truncate the base string */
-    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
+    /*
+     * Truncate the base string, never lengthen it: that would bring back the
+     * null written by the previous truncation, and stale bytes after it.
+     */
+
+    if (ciPtr->baseOffset < Tcl_DStringLength(&bciPtr->baseChars)) {
+	Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
+    }
     bciPtr->width = -1;
 
     /* Re-instate base chunk for next layout pass */
