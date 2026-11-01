@@ -71,8 +71,8 @@ test palette-1.2 {tk_setPalette reaches the windows made after it} -setup {
     restorePalette
     option clear
 } -result "#3c3c3c #3c3c3c"
-#
 
+#
 # The colour helpers.  Each replaced a formula written out in tk_setPalette,
 # so each is checked against the value that formula produced.
 #
