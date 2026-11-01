@@ -25,6 +25,8 @@ resetWindows
 # Import utility procs for specific functional areas
 testutils import scroll text
 
+testConstraint memory [llength [info commands memory]]
+
 #
 # LOCAL UTILITY PROCS
 #
@@ -5478,6 +5480,254 @@ test textDisp-41.1 {many text widgets complete their line metrics update - bug 1
     destroy .tt
     unset -nocomplain i j f t n pending
 } -result 0
+
+test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -constraints {
+    memory
+} -setup {
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+    .t1 tag configure x -foreground red
+    .t1 insert end "English text flows from left to right.\n"
+    .t1 tag add x 1.8 1.12
+    update
+} -body {
+    growth {
+	.t1 tag add x 1.20 1.25
+	update
+	.t1 tag remove x 1.20 1.25
+	update
+	# The widget appends to this variable at each layout.
+	unset -nocomplain ::tkBidiLog
+    }
+} -cleanup {
+    destroy .t1
+    rename getbytes {}
+    rename growth {}
+} -result 0
+
+# The colours of the pixels of display line 1 of $w: all its rows if $all is
+# true, else the rows 2, 4 and 6 pixels above its baseline.
+proc linePixels {w {all 0}} {
+    update
+    lassign [$w dlineinfo 1.0] x y width height baseline
+    if {$all} {
+	set rows {}
+	for {set row $y} {$row < $y + $height} {incr row} {
+	    lappend rows $row
+	}
+    } else {
+	set rows [list [expr {$y + $baseline - 2}] [expr {$y + $baseline - 4}] \
+		[expr {$y + $baseline - 6}]]
+    }
+    set res {}
+    foreach row $rows {
+	for {set px $x} {$px < $x + $width} {incr px} {
+	    lappend res [testpixel $w $px $row]
+	}
+    }
+    return $res
+}
+proc countDiffs {a b} {
+    set n 0
+    foreach pa $a pb $b {
+	if {$pa ne $pb} {
+	    incr n
+	}
+    }
+    return $n
+}
+test textDisp-42.2 {a word moved to the next line and cut by a tag or by marks: the line above is drawn} -constraints {
+    testpixel
+} -setup {
+    text .t1 -font TkDefaultFont -width 20 -height 4 -wrap word \
+	    -foreground black -background white -insertwidth 0 \
+	    -borderwidth 0 -highlightthickness 0
+    pack .t1
+    .t1 tag configure x -foreground black
+} -body {
+    .t1 insert end "aaaa [string repeat b 60]\n"
+    .t1 mark set insert end
+    set ref [linePixels .t1 1]
+    set res {}
+    .t1 tag add x 1.5 1.6
+    .t1 configure -spacing1 0
+    lappend res [expr {[linePixels .t1 1] eq $ref}]
+    .t1 tag remove x 1.0 end
+    .t1 mark set insert 1.5
+    .t1 mark set current 1.6
+    .t1 configure -spacing1 0
+    lappend res [expr {[linePixels .t1 1] eq $ref}]
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ref res
+} -result {1 1}
+
+# The bboxes of the characters of line 1 of $w, after a relayout of the line.
+proc lineBboxes {w} {
+    $w tag add relayout 1.0 "1.0 lineend"
+    update
+    set res {}
+    for {set i 0} {$i < [$w count -chars 1.0 "1.0 lineend"]} {incr i} {
+	lappend res [$w bbox 1.$i]
+    }
+    $w tag remove relayout 1.0 end
+    return $res
+}
+# The indices of line 1 of $w at which the mark $mark changes the bbox of a
+# character of the line, compared with the mark on line 2.
+proc markMovesText {w mark} {
+    $w tag configure relayout -foreground [$w cget -foreground]
+    $w mark set $mark 2.0
+    set ref [lineBboxes $w]
+    set res {}
+    for {set i 1} {$i < [$w count -chars 1.0 "1.0 lineend"]} {incr i} {
+	$w mark set $mark 1.$i
+	if {[lineBboxes $w] ne $ref} {
+	    lappend res 1.$i
+	}
+    }
+    return $res
+}
+# The darkness of a rectangle of $w, summed over its pixels.
+proc cellInk {w x y width height} {
+    set sum 0
+    for {set py $y} {$py < $y + $height} {incr py} {
+	for {set px $x} {$px < $x + $width} {incr px} {
+	    scan [testpixel $w $px $py] #%2x%2x%2x r g b
+	    incr sum [expr {765 - $r - $g - $b}]
+	}
+    }
+    return $sum
+}
+test textDisp-42.3 {the insertion cursor does not move the text after it} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "English text flows from left to right.\n"
+    markMovesText .t1 insert
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.4 {the insertion cursor does not move right-to-left text} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "\u05d6\u05d4\u05d5 \u05d8\u05e7\u05e1\u05d8 \u05dc\u05d3\u05d5\u05d2\u05de\u05d4 \u05d1\u05e2\u05d1\u05e8\u05d9\u05ea.\n"
+    markMovesText .t1 insert
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.5 {the insertion cursor does not change the shape of Arabic text} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\n"
+    markMovesText .t1 insert
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.6 {a mark does not change the shape of Arabic text} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\n"
+    markMovesText .t1 m
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.7 {the insertion cursor does not move the glyphs} -constraints {
+    testpixel
+} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none \
+	    -foreground black -background white -insertwidth 0 \
+	    -borderwidth 0 -highlightthickness 0
+    pack .t1
+} -body {
+    .t1 insert end "The price is 100 USD (LTR) while \u0627\u0644\u0633\u0639\u0631 \u0647\u0648 \u0661\u0660\u0660 \u062f\u0648\u0644\u0627\u0631 (RTL).\n"
+    .t1 mark set insert 2.0
+    set ref [linePixels .t1]
+    set res {}
+    for {set i 1} {$i < [.t1 count -chars 1.0 "1.0 lineend"]} {incr i} {
+	.t1 mark set insert 1.$i
+	# A moved glyph changes many pixels; a pixel may be anti-aliased
+	# differently where the line is drawn in two pieces.
+	if {[countDiffs [linePixels .t1] $ref] > 2} {
+	    lappend res 1.$i
+	}
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ref res i
+} -result {}
+test textDisp-42.8 {the block cursor draws the character under it over its glyph} -constraints {
+    testpixel aqua
+} -setup {
+    text .t1 -font TkDefaultFont -width 70 -height 3 -wrap none \
+	    -foreground black -background white -blockcursor 1 \
+	    -insertunfocussed solid -insertbackground white \
+	    -borderwidth 0 -highlightthickness 0
+    pack .t1
+} -body {
+    .t1 insert end "English text flows from left to right, of fine office affairs.\n"
+    # The block and the character drawn in it have the background colour:
+    # the character vanishes, but for its edge, when drawn over its glyph
+    # (with grey anti-aliasing, not with ClearType).
+    set ink 0
+    set left 0
+    for {set i 0} {$i < [.t1 count -chars 1.0 "1.0 lineend"]} {incr i} {
+	if {[.t1 get 1.$i] eq " "} {
+	    continue
+	}
+	lassign [.t1 bbox 1.$i] x y w h
+	.t1 mark set insert end
+	update
+	incr ink [cellInk .t1 $x $y $w $h]
+	.t1 mark set insert 1.$i
+	update
+	incr left [cellInk .t1 $x $y $w $h]
+    }
+    expr {$left < $ink / 5}
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ink left i x y w h
+} -result 1
+test textDisp-42.9 {the edge of the selection does not change the drawing of joined letters} -constraints {
+    testpixel aqua
+} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none \
+	    -foreground black -background white -insertwidth 0 \
+	    -selectforeground black -selectbackground white \
+	    -inactiveselectbackground white -borderwidth 0 -highlightthickness 0
+    pack .t1
+} -body {
+    .t1 insert end "The price is 100 USD (LTR) while \u0627\u0644\u0633\u0639\u0631 \u0647\u0648 \u0661\u0660\u0660 \u062f\u0648\u0644\u0627\u0631 (RTL).\n"
+    set ref [linePixels .t1 1]
+    set res {}
+    for {set i 1} {$i < [.t1 count -chars 1.0 "1.0 lineend"]} {incr i} {
+	.t1 tag add sel 1.0 1.$i
+	if {[linePixels .t1 1] ne $ref} {
+	    lappend res 1.$i
+	}
+	.t1 tag remove sel 1.0 end
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ref res i
+} -result {}
 #
 # TESTFILE CLEANUP
 #
