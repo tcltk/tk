@@ -169,6 +169,7 @@ to the userbase.
  - [Toplevel lost its menubar when the menubar clone was destroyed](https://core.tcl-lang.org/tk/tktview/2903b4)
  - [photo images with -palette 2 were corrupted on Windows](https://core.tcl-lang.org/tk/tktview/481255)
  - [tk_setPalette overrides colours the application set, and records the wrong defaults](https://core.tcl-lang.org/tk/tktview/1c5165)
+ - [TIP 645 expects colors not defined by system theming](https://core.tcl-lang.org/tk/tktview/807b2f)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
