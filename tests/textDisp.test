@@ -5704,6 +5704,30 @@ test textDisp-42.8 {the block cursor draws the character under it over its glyph
     destroy .t1
     unset -nocomplain ink left i x y w h
 } -result 1
+test textDisp-42.9 {the edge of the selection does not change the drawing of joined letters} -constraints {
+    testpixel aqua
+} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none \
+	    -foreground black -background white -insertwidth 0 \
+	    -selectforeground black -selectbackground white \
+	    -inactiveselectbackground white -borderwidth 0 -highlightthickness 0
+    pack .t1
+} -body {
+    .t1 insert end "The price is 100 USD (LTR) while \u0627\u0644\u0633\u0639\u0631 \u0647\u0648 \u0661\u0660\u0660 \u062f\u0648\u0644\u0627\u0631 (RTL).\n"
+    set ref [linePixels .t1 1]
+    set res {}
+    for {set i 1} {$i < [.t1 count -chars 1.0 "1.0 lineend"]} {incr i} {
+	.t1 tag add sel 1.0 1.$i
+	if {[linePixels .t1 1] ne $ref} {
+	    lappend res 1.$i
+	}
+	.t1 tag remove sel 1.0 end
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ref res i
+} -result {}
 #
 # TESTFILE CLEANUP
 #
