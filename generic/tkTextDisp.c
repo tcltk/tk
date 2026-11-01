@@ -10709,9 +10709,8 @@ CharUndisplayProc(
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
-     * Determine whether this chunk is a base chunk or a dependent chunk.
-     * Base chunks own the CharInfo and must free it.
-     * Dependent chunks must NOT free CharInfo (it belongs to the base chunk).
+     * Each chunk owns its CharInfo: that of a base chunk is the BaseCharInfo,
+     * freed once the dependent chunks are detached from it.
      */
     if (chunkPtr == ciPtr->baseChunkPtr) {
 	/*
@@ -10733,18 +10732,13 @@ CharUndisplayProc(
 
     } else {
 	/*
-	 * This is a dependent chunk (not the base chunk).
-	 * Remove it from the base chunk's data structure if still connected.
-	 * DO NOT free the CharInfo - it belongs to the base chunk.
+	 * A dependent chunk: drop its characters from the base chunk if it is
+	 * still connected.
 	 */
 	if (ciPtr->baseChunkPtr != NULL) {
 	    RemoveFromBaseChunk(chunkPtr);
 	}
-
-	/*
-	 * Detach this chunk from the CharInfo to prevent stale access,
-	 * but don't free the CharInfo itself.
-	 */
+	Tcl_Free(ciPtr);
 	chunkPtr->clientData = NULL;
     }
 #else

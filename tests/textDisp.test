@@ -25,6 +25,8 @@ resetWindows
 # Import utility procs for specific functional areas
 testutils import scroll text
 
+testConstraint memory [llength [info commands memory]]
+
 #
 # LOCAL UTILITY PROCS
 #
@@ -5477,6 +5479,42 @@ test textDisp-41.1 {many text widgets complete their line metrics update - bug 1
 } -cleanup {
     destroy .tt
     unset -nocomplain i j f t n pending
+} -result 0
+
+test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -constraints {
+    memory
+} -setup {
+    proc getbytes {} {
+	lindex [split [memory info] "\n"] 3 3
+    }
+    proc growth {script} {
+	set end [getbytes]
+	for {set i 0} {$i < 5} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	expr {$end - $tmp}
+    }
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+    .t1 tag configure x -foreground red
+    .t1 insert end "English text flows from left to right.\n"
+    .t1 tag add x 1.8 1.12
+    update
+} -body {
+    growth {
+	.t1 tag add x 1.20 1.25
+	update
+	.t1 tag remove x 1.20 1.25
+	update
+	# The widget appends to this variable at each layout.
+	unset -nocomplain ::tkBidiLog
+    }
+} -cleanup {
+    destroy .t1
+    rename getbytes {}
+    rename growth {}
 } -result 0
 #
 # TESTFILE CLEANUP
