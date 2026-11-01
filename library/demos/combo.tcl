@@ -15,7 +15,8 @@ wm title $w "Combobox Demonstration"
 wm iconname $w "combo"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Four different\
+ttk::label $w.msg -font $font -wraplength 5i -justify left -anchor n -text \
+	"Four different\
 	combo-boxes are displayed below. You can add characters to the first\
 	one by pointing, clicking and typing, just as with an entry; pressing\
 	Return will cause the current value to be added to the list that is\
@@ -27,7 +28,7 @@ ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Four different
 	cities. The fourth one has a drop-down list with more values than\
 	can fit on the screen; the list is shortened to fit on the screen and\
 	can be scrolled."
-pack $w.msg -side top
+pack $w.msg -side top -fill x
 
 ## See Code / Dismiss buttons
 set btns [addSeeDismiss $w.buttons $w {firstValue secondValue ozCity longValue}]
