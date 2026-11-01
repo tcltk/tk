@@ -17,8 +17,8 @@ wm title $w "Simple Ttk Widgets"
 wm iconname $w "ttkbut"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Ttk is the new Tk themed widget set. This is a Ttk themed label, and below are four groups of Ttk widgets in Ttk labelframes. The first group are all buttons that set the current application theme when pressed. The second group contains two sets of checkbuttons, with a separator widget between the sets. The third group has a collection of linked radiobuttons. Finally, the toggleswitch in the fourth labelframe controls whether all the themed widgets in this toplevel, except that labelframe and the toggleswitch itself, are in the disabled state."
-pack $w.msg -side top
+ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -text "Ttk is the new Tk themed widget set. This is a Ttk themed label, and below are four groups of Ttk widgets in Ttk labelframes. The first group are all buttons that set the current application theme when pressed. The second group contains two sets of checkbuttons, with a separator widget between the sets. The third group has a collection of linked radiobuttons. Finally, the toggleswitch in the fourth labelframe controls whether all the themed widgets in this toplevel, except that labelframe and the toggleswitch itself, are in the disabled state."
+pack $w.msg -side top -fill x
 
 ## See Code / Dismiss
 pack [addSeeDismiss $w.seeDismiss $w {enabled cheese tomato basil oregano happiness}]\
