@@ -1982,13 +1982,6 @@ BidiReorderChunks(
 	return;
     }
 
-    if (textPtr != NULL && textPtr->interp != NULL) {
-	char buf[64];
-
-	snprintf(buf, sizeof(buf), "BD2 reorder nch=%d", nChunks);
-	LOG("tkBidiLog", buf);
-    }
-
     chunks = (TkTextDispChunk **)Tcl_Alloc(nChunks * sizeof(*chunks));
     units = (BidiUnit *)Tcl_Alloc(nChunks * sizeof(*units));
     order = (int *)Tcl_Alloc(nChunks * sizeof(int));
@@ -2093,9 +2086,6 @@ BidiReorderChunks(
     }
 
     if (!anyRtl) {
-	if (textPtr != NULL && textPtr->interp != NULL) {
-	    LOG("tkBidiLog", "BD2 reorder anyRtl=0");
-	}
 	Tcl_Free(chunks);
 	Tcl_Free(units);
 	Tcl_Free(order);
@@ -2263,35 +2253,6 @@ BidiReorderChunks(
 	    chunks[j]->x = mirror ?
 		    u->newX + u->width - off - chunks[j]->width :
 		    u->newX + off;
-	}
-    }
-
-    if (textPtr != NULL && textPtr->interp != NULL) {
-	char buf[256];
-	int k2;
-
-	for (k2 = 0; k2 < nUnits; k2++) {
-	    BidiUnit *u = &units[k2];
-	    BaseCharInfo *bciPtr = (u->base != NULL)
-		    ? (BaseCharInfo *)u->base->clientData : NULL;
-
-	    snprintf(buf, sizeof(buf),
-		    "BD2 unit %d f=%d l=%d dir=%d rs=%d newx=%d w=%d org=%d uw=%d pl=%d",
-		    k2, u->first, u->last, u->dir, u->resolved, u->newX, u->width,
-		    bciPtr ? bciPtr->originX : -1,
-		    bciPtr ? bciPtr->unitWidth : -1,
-		    bciPtr ? (int)bciPtr->placed : -1);
-	    LOG("tkBidiLog", buf);
-	}
-	for (k2 = 0; k2 < nChunks; k2++) {
-	    CharInfo *ciPtr = (CharInfo *)chunks[k2]->clientData;
-
-	    snprintf(buf, sizeof(buf), "BD2 chunk %d x=%d w=%d nb=%d rtl=%d",
-		    k2, chunks[k2]->x, chunks[k2]->width,
-		    (int)chunks[k2]->numBytes,
-		    (chunks[k2]->displayProc == CharDisplayProc && ciPtr != NULL)
-		    ? (int)ciPtr->isRtl : -1);
-	    LOG("tkBidiLog", buf);
 	}
     }
 
@@ -2773,13 +2734,13 @@ LayoutDLine(
 	} else {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    /*
-	     * Non-char chunks (window, image, etc) break the base-char
-	     * stretch. If we don't finalize here, the next char chunk after
-	     * the hole keeps baseChunkPtr pointing at the old stretch, and
-	     * FinalizeBaseChunk later breaks on the non-char chunk, leaving
-	     * chars == NULL for AdjustForTab -> crash (textDisp-26.12).
+	     * An embedded window or image is a hole in the base-char stretch:
+	     * end the stretch, or the chars after the hole would join it.  A
+	     * mark takes no room and the stretch goes on across it: the text on
+	     * both sides of the insertion cursor is shaped and placed as one
+	     * string, and does not move when the cursor moves.
 	     */
-	    if (segPtr->typePtr != &tkTextCharType) {
+	    if (segPtr->typePtr != &tkTextCharType && segPtr->size > 0) {
 		FinalizeBaseChunk(NULL);
 	    }
 #endif
@@ -2983,10 +2944,15 @@ LayoutDLine(
 	    segPtr->typePtr->layoutProc(textPtr, &breakIndex, segPtr,
 		    byteOffset, maxX, breakByteOffset, 0, wrapMode,
 		    breakChunkPtr);
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    FinalizeBaseChunk(NULL);
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	/*
+	 * RemoveFromBaseChunk put back the stretch of the removed chunks: end it
+	 * even when the break chunk is kept as it is.
+	 */
+
+	FinalizeBaseChunk(NULL);
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	lastChunkPtr = breakChunkPtr;
 	wholeLine = false;
     }
@@ -3738,11 +3704,7 @@ DisplayDLine(
 #else
     const int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    BaseCharInfo bci;
-#else
     CharInfo ci;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (dlPtr->chunkPtr == NULL) return;
 
@@ -3804,12 +3766,7 @@ DisplayDLine(
 		chunkPtr = chunkPtr->nextPtr) {
 	    if (chunkPtr->displayProc == TkTextInsertDisplayProc) {
 		int x = chunkPtr->x + dInfoPtr->x - dInfoPtr->curXPixelOffset;
-		char buf[128];
 
-		if (textPtr->interp != NULL) {
-		    snprintf(buf, sizeof(buf), "BD2 caret x=%d", x);
-		    LOG("tkBidiLog", buf);
-		}
 		chunkPtr->displayProc(textPtr, chunkPtr, x,
 			y + dlPtr->spaceAbove,
 			dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
@@ -3861,10 +3818,6 @@ DisplayDLine(
 		if (numBytes > 0) {
 		    XGCValues gcValues;
 		    unsigned long mask;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    CharInfo *ciPtr;
-		    BaseCharInfo *bciPtr;
-#endif
 
 		    otherChunkPtr->undisplayProc = NULL;
 		    tmpStyle = *otherChunkPtr->stylePtr;
@@ -3876,30 +3829,15 @@ DisplayDLine(
 		    borderPtr = (TkBorder *) textPtr->border;
 		    gcValues.foreground = borderPtr->bgColorPtr->pixel;
 		    tmpStyle.fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    ciPtr = (CharInfo *) otherChunkPtr->clientData;
-		    bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
-		    bci.ci = *ciPtr;
-		    Tcl_DStringInit(&bci.baseChars);
-		    bci.width = -1;
-		    bci.placed = false;
-		    bci.originX = 0;
-		    bci.unitWidth = 0;
-		    Tcl_DStringAppend(&bci.baseChars,
-			    Tcl_DStringValue(&bciPtr->baseChars) +
-			    bci.ci.baseOffset, numBytes);
-		    bci.ci.baseOffset = 0;
-		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
-		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
-		    bci.ci.baseChunkPtr = otherChunkPtr;
-		    otherChunkPtr->clientData = &bci;
-		    otherChunkPtr->numBytes = bci.ci.numBytes;
-#else
+		    /*
+		     * With base chunks the copy keeps the base chunk: the text
+		     * under the cursor is drawn in context, over the line.
+		     */
+
 		    ci = *((CharInfo *) (otherChunkPtr->clientData));
 		    ci.numBytes = numBytes;
 		    otherChunkPtr->clientData = &ci;
 		    otherChunkPtr->numBytes = ci.numBytes;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		} else {
 		    otherChunkPtr = NULL;
 		}
@@ -3959,9 +3897,6 @@ DisplayDLine(
 	    if (otherChunkPtr->stylePtr->fgGC != NULL) {
 		Tk_FreeGC(textPtr->display, otherChunkPtr->stylePtr->fgGC);
 	    }
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    Tcl_DStringFree(&bci.baseChars);
-#endif
 	    otherChunkPtr = NULL;
 	}
 
@@ -8875,21 +8810,6 @@ DlineIndexOfX(
 	if (foundPtr->numBytes > 1) {
 	    Tcl_Size m = foundPtr->measureProc(foundPtr, x);
 
-	    if (textPtr->interp != NULL) {
-		CharInfo *ci2 = (CharInfo *)foundPtr->clientData;
-		BaseCharInfo *bci2 = (ci2 != NULL && ci2->baseChunkPtr != NULL)
-			? (BaseCharInfo *)ci2->baseChunkPtr->clientData : NULL;
-		char buf[256];
-
-		snprintf(buf, sizeof(buf),
-			"BD2 click-rtl x=%d chunkx=%d w=%d nb=%d m=%d org=%d uw=%d pl=%d",
-			x, foundPtr->x, foundPtr->width,
-			(int)foundPtr->numBytes, (int)m,
-			bci2 ? bci2->originX : -1,
-			bci2 ? bci2->unitWidth : -1,
-			bci2 ? (int)bci2->placed : -1);
-		LOG("tkBidiLog", buf);
-	    }
 	    indexPtr->byteIndex += m;
 	}
 	return;
@@ -8941,14 +8861,6 @@ DlineIndexOfX(
     if (chunkPtr->numBytes > 1) {
 	Tcl_Size m = chunkPtr->measureProc(chunkPtr, x);
 
-	if (textPtr->interp != NULL) {
-	    char buf[128];
-
-	    snprintf(buf, sizeof(buf), "BD2 click-ltr x=%d chunkx=%d w=%d nb=%d m=%d",
-		    x, chunkPtr->x, chunkPtr->width, (int)chunkPtr->numBytes,
-		    (int)m);
-	    LOG("tkBidiLog", buf);
-	}
 	indexPtr->byteIndex += m;
     }
 }
@@ -10709,9 +10621,8 @@ CharUndisplayProc(
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
-     * Determine whether this chunk is a base chunk or a dependent chunk.
-     * Base chunks own the CharInfo and must free it.
-     * Dependent chunks must NOT free CharInfo (it belongs to the base chunk).
+     * Each chunk owns its CharInfo: that of a base chunk is the BaseCharInfo,
+     * freed once the dependent chunks are detached from it.
      */
     if (chunkPtr == ciPtr->baseChunkPtr) {
 	/*
@@ -10733,18 +10644,13 @@ CharUndisplayProc(
 
     } else {
 	/*
-	 * This is a dependent chunk (not the base chunk).
-	 * Remove it from the base chunk's data structure if still connected.
-	 * DO NOT free the CharInfo - it belongs to the base chunk.
+	 * A dependent chunk: drop its characters from the base chunk if it is
+	 * still connected.
 	 */
 	if (ciPtr->baseChunkPtr != NULL) {
 	    RemoveFromBaseChunk(chunkPtr);
 	}
-
-	/*
-	 * Detach this chunk from the CharInfo to prevent stale access,
-	 * but don't free the CharInfo itself.
-	 */
+	Tcl_Free(ciPtr);
 	chunkPtr->clientData = NULL;
     }
 #else
@@ -11115,6 +11021,7 @@ AdjustForTab(
 	if (ciPtr == NULL) {
 	    continue;
 	}
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	if (ciPtr->chars == NULL) {
 	    if (ciPtr->baseChunkPtr && ciPtr->baseChunkPtr->clientData) {
 		BaseCharInfo *bciTmp = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
@@ -11128,6 +11035,7 @@ AdjustForTab(
 		continue;
 	    }
 	}
+#endif
 	for (p = ciPtr->chars, i = 0; i < ciPtr->numBytes; p++, i++) {
 	    if (isdigit(UCHAR(*p))) {
 		gotDigit = true;
@@ -11626,7 +11534,8 @@ FinalizeBaseChunk(
 	 chunkPtr != NULL;
 	 chunkPtr = chunkPtr->nextPtr) {
 
-	if (chunkPtr->displayProc != CharDisplayProc) break;
+	/* The insertion cursor or elided text: the stretch goes on after it. */
+	if (chunkPtr->displayProc != CharDisplayProc) continue;
 
 	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr == NULL || ciPtr->baseChunkPtr != tsdPtr->baseCharChunkPtr) break;
@@ -11804,17 +11713,17 @@ IsSameFGStyle(
  * RemoveFromBaseChunk --
  *
  *	This procedure removes a chunk from the stretch as a result of
- *	UndisplayProc. The chunk in question should be the last in a stretch.
- *	This happens during re-layouting of the break position.
+ *	UndisplayProc, when the chunks after a line break are thrown away, first
+ *	to last, or when the break chunk is laid out again.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *	The characters that belong to this chunk are removed from the base
- *	chunk. It is assumed that LayoutProc and FinalizeBaseChunk are called
- *	next to repair any damage that this causes to the integrity of the
- *	stretch and the other chunks. For that reason the base chunk is also
+ *	chunk. It is assumed that FinalizeBaseChunk is called next, after the
+ *	LayoutProc if the break chunk is laid out again, to repair any damage
+ *	that this causes to the integrity of the stretch and the other chunks. For that reason the base chunk is also
  *	put into baseCharChunkPtr automatically, so that LayoutProc can resume
  *	correctly.
  *
@@ -11836,8 +11745,14 @@ RemoveFromBaseChunk(
     BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
     if (bciPtr == NULL) return;
 
-    /* Truncate the base string */
-    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
+    /*
+     * Truncate the base string, never lengthen it: that would bring back the
+     * null written by the previous truncation, and stale bytes after it.
+     */
+
+    if (ciPtr->baseOffset < Tcl_DStringLength(&bciPtr->baseChars)) {
+	Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
+    }
     bciPtr->width = -1;
 
     /* Re-instate base chunk for next layout pass */
