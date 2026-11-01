@@ -206,8 +206,6 @@ proc ::tk::RecolorTree {w colors} {
 	     [string index $dbOption 0]]]
 	# Make sure this option is valid for this window.
 	if {![catch {$w configure $option} value]} {
-	    # Update the option for this window.
-	    $w configure $option $c($dbOption)
 	    # Retrieve a default value for this option.  First check
 	    # the option database. If it is not in the database use
 	    # the value for the temporary prototype widget.
@@ -220,15 +218,19 @@ proc ::tk::RecolorTree {w colors} {
 	    if {$defaultcolor ne ""} {
 		set defaultcolor [winfo rgb . $defaultcolor]
 	    }
-	    # If the color requested for this option differs from
-	    # the default, append a command to update the default.
-	    set requestcolor [lindex $value 4]
-	    if {$requestcolor ne ""} {
-		set requestcolor [winfo rgb . $requestcolor]
+	    # The colour the window has now, which is not the default one
+	    # when the application has given the window a colour of its own.
+	    set currentcolor [lindex $value 4]
+	    if {$currentcolor ne ""} {
+		set currentcolor [winfo rgb . $currentcolor]
 	    }
-	    if {![string match $defaultcolor $requestcolor]} {
+	    if {[string match $defaultcolor $currentcolor]} {
+		# The window still has the colour it was given by default, so
+		# give it the one the new palette has for it, and change the
+		# option database so that the windows made later get it too.
 		append result ";\noption add [list \
 		    *[winfo class $w].$dbOption $c($dbOption) 60]"
+		$w configure $option $c($dbOption)
 	    }
 	}
     }
