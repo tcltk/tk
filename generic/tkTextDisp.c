@@ -2773,13 +2773,13 @@ LayoutDLine(
 	} else {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    /*
-	     * Non-char chunks (window, image, etc) break the base-char
-	     * stretch. If we don't finalize here, the next char chunk after
-	     * the hole keeps baseChunkPtr pointing at the old stretch, and
-	     * FinalizeBaseChunk later breaks on the non-char chunk, leaving
-	     * chars == NULL for AdjustForTab -> crash (textDisp-26.12).
+	     * An embedded window or image is a hole in the base-char stretch:
+	     * end the stretch, or the chars after the hole would join it.  A
+	     * mark takes no room and the stretch goes on across it: the text on
+	     * both sides of the insertion cursor is shaped and placed as one
+	     * string, and does not move when the cursor moves.
 	     */
-	    if (segPtr->typePtr != &tkTextCharType) {
+	    if (segPtr->typePtr != &tkTextCharType && segPtr->size > 0) {
 		FinalizeBaseChunk(NULL);
 	    }
 #endif
@@ -3743,11 +3743,7 @@ DisplayDLine(
 #else
     const int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    BaseCharInfo bci;
-#else
     CharInfo ci;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (dlPtr->chunkPtr == NULL) return;
 
@@ -3866,10 +3862,6 @@ DisplayDLine(
 		if (numBytes > 0) {
 		    XGCValues gcValues;
 		    unsigned long mask;
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    CharInfo *ciPtr;
-		    BaseCharInfo *bciPtr;
-#endif
 
 		    otherChunkPtr->undisplayProc = NULL;
 		    tmpStyle = *otherChunkPtr->stylePtr;
@@ -3881,30 +3873,15 @@ DisplayDLine(
 		    borderPtr = (TkBorder *) textPtr->border;
 		    gcValues.foreground = borderPtr->bgColorPtr->pixel;
 		    tmpStyle.fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    ciPtr = (CharInfo *) otherChunkPtr->clientData;
-		    bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
-		    bci.ci = *ciPtr;
-		    Tcl_DStringInit(&bci.baseChars);
-		    bci.width = -1;
-		    bci.placed = false;
-		    bci.originX = 0;
-		    bci.unitWidth = 0;
-		    Tcl_DStringAppend(&bci.baseChars,
-			    Tcl_DStringValue(&bciPtr->baseChars) +
-			    bci.ci.baseOffset, numBytes);
-		    bci.ci.baseOffset = 0;
-		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
-		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
-		    bci.ci.baseChunkPtr = otherChunkPtr;
-		    otherChunkPtr->clientData = &bci;
-		    otherChunkPtr->numBytes = bci.ci.numBytes;
-#else
+		    /*
+		     * With base chunks the copy keeps the base chunk: the text
+		     * under the cursor is drawn in context, over the line.
+		     */
+
 		    ci = *((CharInfo *) (otherChunkPtr->clientData));
 		    ci.numBytes = numBytes;
 		    otherChunkPtr->clientData = &ci;
 		    otherChunkPtr->numBytes = ci.numBytes;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		} else {
 		    otherChunkPtr = NULL;
 		}
@@ -3964,9 +3941,6 @@ DisplayDLine(
 	    if (otherChunkPtr->stylePtr->fgGC != NULL) {
 		Tk_FreeGC(textPtr->display, otherChunkPtr->stylePtr->fgGC);
 	    }
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    Tcl_DStringFree(&bci.baseChars);
-#endif
 	    otherChunkPtr = NULL;
 	}
 
@@ -11625,7 +11599,8 @@ FinalizeBaseChunk(
 	 chunkPtr != NULL;
 	 chunkPtr = chunkPtr->nextPtr) {
 
-	if (chunkPtr->displayProc != CharDisplayProc) break;
+	/* The insertion cursor or elided text: the stretch goes on after it. */
+	if (chunkPtr->displayProc != CharDisplayProc) continue;
 
 	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr == NULL || ciPtr->baseChunkPtr != tsdPtr->baseCharChunkPtr) break;

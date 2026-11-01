@@ -5573,6 +5573,137 @@ test textDisp-42.2 {a word moved to the next line and cut by a tag or by marks: 
     destroy .t1
     unset -nocomplain ref res
 } -result {1 1}
+
+# The bboxes of the characters of line 1 of $w, after a relayout of the line.
+proc lineBboxes {w} {
+    $w tag add relayout 1.0 "1.0 lineend"
+    update
+    set res {}
+    for {set i 0} {$i < [$w count -chars 1.0 "1.0 lineend"]} {incr i} {
+	lappend res [$w bbox 1.$i]
+    }
+    $w tag remove relayout 1.0 end
+    return $res
+}
+# The indices of line 1 of $w at which the mark $mark changes the bbox of a
+# character of the line, compared with the mark on line 2.
+proc markMovesText {w mark} {
+    $w tag configure relayout -foreground [$w cget -foreground]
+    $w mark set $mark 2.0
+    set ref [lineBboxes $w]
+    set res {}
+    for {set i 1} {$i < [$w count -chars 1.0 "1.0 lineend"]} {incr i} {
+	$w mark set $mark 1.$i
+	if {[lineBboxes $w] ne $ref} {
+	    lappend res 1.$i
+	}
+    }
+    return $res
+}
+# The darkness of a rectangle of $w, summed over its pixels.
+proc cellInk {w x y width height} {
+    set sum 0
+    for {set py $y} {$py < $y + $height} {incr py} {
+	for {set px $x} {$px < $x + $width} {incr px} {
+	    scan [testpixel $w $px $py] #%2x%2x%2x r g b
+	    incr sum [expr {765 - $r - $g - $b}]
+	}
+    }
+    return $sum
+}
+test textDisp-42.3 {the insertion cursor does not move the text after it} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "English text flows from left to right.\n"
+    markMovesText .t1 insert
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.4 {the insertion cursor does not move right-to-left text} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "\u05d6\u05d4\u05d5 \u05d8\u05e7\u05e1\u05d8 \u05dc\u05d3\u05d5\u05d2\u05de\u05d4 \u05d1\u05e2\u05d1\u05e8\u05d9\u05ea.\n"
+    markMovesText .t1 insert
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.5 {the insertion cursor does not change the shape of Arabic text} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\n"
+    markMovesText .t1 insert
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.6 {a mark does not change the shape of Arabic text} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
+    pack .t1
+} -body {
+    .t1 insert end "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\n"
+    markMovesText .t1 m
+} -cleanup {
+    destroy .t1
+} -result {}
+test textDisp-42.7 {the insertion cursor does not move the glyphs} -constraints {
+    testpixel
+} -setup {
+    text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none \
+	    -foreground black -background white -insertwidth 0 \
+	    -borderwidth 0 -highlightthickness 0
+    pack .t1
+} -body {
+    .t1 insert end "The price is 100 USD (LTR) while \u0627\u0644\u0633\u0639\u0631 \u0647\u0648 \u0661\u0660\u0660 \u062f\u0648\u0644\u0627\u0631 (RTL).\n"
+    .t1 mark set insert 2.0
+    set ref [linePixels .t1]
+    set res {}
+    for {set i 1} {$i < [.t1 count -chars 1.0 "1.0 lineend"]} {incr i} {
+	.t1 mark set insert 1.$i
+	# A moved glyph changes many pixels; a pixel may be anti-aliased
+	# differently where the line is drawn in two pieces.
+	if {[countDiffs [linePixels .t1] $ref] > 2} {
+	    lappend res 1.$i
+	}
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ref res i
+} -result {}
+test textDisp-42.8 {the block cursor draws the character under it over its glyph} -constraints {
+    testpixel aqua
+} -setup {
+    text .t1 -font TkDefaultFont -width 70 -height 3 -wrap none \
+	    -foreground black -background white -blockcursor 1 \
+	    -insertunfocussed solid -insertbackground white \
+	    -borderwidth 0 -highlightthickness 0
+    pack .t1
+} -body {
+    .t1 insert end "English text flows from left to right, of fine office affairs.\n"
+    # The block and the character drawn in it have the background colour:
+    # the character vanishes, but for its edge, when drawn over its glyph
+    # (with grey anti-aliasing, not with ClearType).
+    set ink 0
+    set left 0
+    for {set i 0} {$i < [.t1 count -chars 1.0 "1.0 lineend"]} {incr i} {
+	if {[.t1 get 1.$i] eq " "} {
+	    continue
+	}
+	lassign [.t1 bbox 1.$i] x y w h
+	.t1 mark set insert end
+	update
+	incr ink [cellInk .t1 $x $y $w $h]
+	.t1 mark set insert 1.$i
+	update
+	incr left [cellInk .t1 $x $y $w $h]
+    }
+    expr {$left < $ink / 5}
+} -cleanup {
+    destroy .t1
+    unset -nocomplain ink left i x y w h
+} -result 1
 #
 # TESTFILE CLEANUP
 #
