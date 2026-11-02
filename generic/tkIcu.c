@@ -252,7 +252,7 @@ Icu_Init(
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
-	static const char *iculibs[] = {
+	static const char *const iculibs[] = {
 #if defined(_WIN32)
 	    "icuuc??.dll", /* When running under Windows, user-provided */
 	    NULL,
@@ -350,18 +350,27 @@ Icu_Init(
     Tcl_MutexUnlock(&icu_mutex);
 
     if (icu_fns.lib != NULL) {
-	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
-		INT2PTR(0), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::startOfNextWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::startOfPreviousWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD), icuCleanup);
-	Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", startEndOfCmd,
-		INT2PTR(FLAG_FOLLOWING), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::endOfWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING|FLAG_SPACE), icuCleanup);
-    icu_fns.nopen += 5;
+#ifdef _WIN32
+	icu_fns.nopen += 3;
+#else
+	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
+		INT2PTR(0), icuCleanup);
+	Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", startEndOfCmd,
+		INT2PTR(FLAG_FOLLOWING), icuCleanup);
+	icu_fns.nopen += 5;
+#endif
     }
+#ifdef _WIN32
+    /* No ICU on Windows for startOfCluster/endOfCluster -> use Uniscribe ScriptBreak fallback */
+    extern int TkpWinRegisterClusterCommands(Tcl_Interp *interp);
+    TkpWinRegisterClusterCommands(interp);
+#endif
 }
 
 /*

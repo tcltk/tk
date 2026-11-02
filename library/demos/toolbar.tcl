@@ -15,7 +15,8 @@ wm title $w "Toolbar Demonstration"
 wm iconname $w "toolbar"
 positionWindow $w
 
-ttk::label $w.msg -wraplength 4i -text "This is a demonstration of how to do\
+ttk::label $w.msg -wraplength 4i -justify left -anchor n -text \
+	"This is a demonstration of how to do\
 	a toolbar that is styled correctly and which can be torn off. The\
 	buttons are configured to be “toolbar style” buttons by\
 	telling them that they are to use the Toolbutton style. At the left\
@@ -82,7 +83,7 @@ interp alias {} doInsert {} $w.txt insert end	;# Make bindings easy to write
 grid $t.button $t.check $t.menu $t.combo -in $t.contents -padx 1.5p -pady 3p -sticky ns
 grid $t -sticky ew
 grid $w.sep -sticky ew
-grid $w.msg -sticky ""
+grid $w.msg -sticky ew
 grid $w.txt -sticky nsew
 grid rowconfigure $w $w.txt -weight 1
 grid columnconfigure $w $w.txt -weight 1
