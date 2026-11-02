@@ -97,9 +97,9 @@ static int WinEndOfClusterObjCmd(
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK;
 }
 
-int TkpWinRegisterClusterCommands(Tcl_Interp *interp){
-    if (Tcl_GetCommandInfo(interp, "::tk::startOfCluster", NULL)==0) Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", WinStartOfClusterObjCmd, NULL, NULL);
-    if (Tcl_GetCommandInfo(interp, "::tk::endOfCluster", NULL)==0) Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", WinEndOfClusterObjCmd, NULL, NULL);
+MODULE_SCOPE int TkpWinRegisterClusterCommands(Tcl_Interp *interp) {
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", WinStartOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", WinEndOfClusterObjCmd, NULL, NULL);
     return TCL_OK; }
 #endif
 
