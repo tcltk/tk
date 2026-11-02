@@ -1238,7 +1238,8 @@ HasRtlChars(
  * Results:
  *	0 if the line has no right-to-left run (the arrays are then not
  *	filled), else 1. rtls (may be NULL) gets 1 for the units of the
- *	right-to-left runs.
+ *	right-to-left runs, owns (may be NULL) 1 for the units with a glyph
+ *	of their own.
  *
  *---------------------------------------------------------------------------
  */
@@ -1249,7 +1250,8 @@ GetLineUnitExtents(
     CFIndex numUnits,
     CGFloat *lefts,		/* numUnits entries. */
     CGFloat *rights,		/* numUnits entries. */
-    unsigned char *rtls)	/* numUnits entries, or NULL. */
+    unsigned char *rtls,	/* numUnits entries, or NULL. */
+    unsigned char *owns)	/* numUnits entries, or NULL. */
 {
     CFArrayRef runs = CTLineGetGlyphRuns(line);
     CFIndex r, g, u, first, numRuns = CFArrayGetCount(runs);
@@ -1265,7 +1267,7 @@ GetLineUnitExtents(
 	return 0;
     }
 
-    has = (unsigned char *)Tcl_Alloc(numUnits);
+    has = owns ? owns : (unsigned char *)Tcl_Alloc(numUnits);
     memset(has, 0, numUnits);
     if (rtls) {
 	memset(rtls, 0, numUnits);
@@ -1328,7 +1330,9 @@ GetLineUnitExtents(
 	    rights[u] = rights[u - 1];
 	}
     }
-    Tcl_Free(has);
+    if (has != owns) {
+	Tcl_Free(has);
+    }
     return 1;
 }
 
@@ -1633,14 +1637,31 @@ TkpDrawAngledCharsInContext(
 	    CFIndex numRects = 0;
 
 	    if (length > 0 && HasRtlChars(source, numBytes)) {
-		ext = (CGFloat *)Tcl_Alloc(2 * fullLength * sizeof(CGFloat));
-		if (GetLineUnitExtents(full, fullLength, ext, ext + fullLength, NULL)) {
+		unsigned char *owns;
+
+		ext = (CGFloat *)Tcl_Alloc(2 * fullLength * sizeof(CGFloat) + fullLength);
+		owns = (unsigned char *)(ext + 2 * fullLength);
+		if (GetLineUnitExtents(full, fullLength, ext, ext + fullLength, NULL, owns)) {
 		    CGFloat *spans = (CGFloat *)Tcl_Alloc(2 * length * sizeof(CGFloat));
+		    CGFloat lineLeft = ext[0], lineRight = ext[fullLength];
 		    CFIndex u, n = 0;
 
-		    for (u = start; u < start + length && u < fullLength; u++, n++) {
-			spans[2*n] = ext[u];
-			spans[2*n + 1] = ext[fullLength + u];
+		    for (u = 1; u < fullLength; u++) {
+			lineLeft = MIN(lineLeft, ext[u]);
+			lineRight = MAX(lineRight, ext[fullLength + u]);
+		    }
+
+		    /*
+		     * A ligature or a cluster is drawn with the range of its
+		     * first unit only.
+		     */
+
+		    for (u = start; u < start + length && u < fullLength; u++) {
+			if (owns[u]) {
+			    spans[2*n] = ext[u];
+			    spans[2*n + 1] = ext[fullLength + u];
+			    n++;
+			}
 		    }
 		    qsort(spans, n, 2 * sizeof(CGFloat), CompareSpans);
 		    rects = (CGRect *)Tcl_Alloc((n + 1) * sizeof(CGRect));
@@ -1650,9 +1671,26 @@ TkpDrawAngledCharsInContext(
 			for (u++; u < n && spans[2*u] <= right; u++) {
 			    right = MAX(right, spans[2*u + 1]);
 			}
+
+			/*
+			 * Inner edges on a pixel boundary too, but the nearest
+			 * one: an edge between left-to-right and right-to-left
+			 * characters has no logical end common to both ranges.
+			 */
+
+			if (left > lineLeft) {
+			    left = floor(textX + left + 0.5) - textX;
+			}
+			if (right < lineRight) {
+			    right = floor(textX + right + 0.5) - textX;
+			}
 			rects[numRects++] = CGRectMake(
 				textX + left - italicOvershoot, textY - 32768.0,
 				right - left + 2.0 * italicOvershoot, 65536.0);
+		    }
+		    if (numRects == 0) {
+			/* No glyph of its own in the range: draw nothing. */
+			rects[numRects++] = CGRectZero;
 		    }
 		    Tcl_Free(spans);
 		}
@@ -1735,7 +1773,7 @@ TkpGetCharsVisualExtents(
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, numUnits));
     ext = (CGFloat *)Tcl_Alloc(2 * numUnits * sizeof(CGFloat) + numUnits + 1);
     unitRtls = (unsigned char *)(ext + 2 * numUnits);
-    result = GetLineUnitExtents(line, numUnits, ext, ext + numUnits, unitRtls);
+    result = GetLineUnitExtents(line, numUnits, ext, ext + numUnits, unitRtls, NULL);
 
     if (result) {
 	const char *p = source, *end = source + numBytes;
