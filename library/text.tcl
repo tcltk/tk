@@ -527,11 +527,55 @@ proc ::tk::TextCursorPos {w x y} {
     return [TextClosestGap $w $x $y]
 }
 
+# ::tk::TextCharIsRtl --
+# Tells whether the character at pos is displayed right to left, which
+# [bbox] does not report: in right-to-left text the characters which follow
+# it in the logical order are displayed to its left.  The neighbours on the
+# same display line decide (the first one displayed at another x: marks and
+# zero-width characters share the x of their base); a character without
+# neighbours is taken as left to right.  Digits and Latin text inside
+# right-to-left text are therefore left to right, as they are displayed.
+#
+# Arguments:
+# w -		The text window.
+# pos -		Index of the character.
+# bbox -	The [bbox] of pos, which must not be empty.
+
+proc ::tk::TextCharIsRtl {w pos bbox} {
+    lassign $bbox bx by
+    foreach step {1 2 3 4} {
+	set nb [$w bbox [$w index "$pos + $step chars"]]
+	if {$nb eq "" || [lindex $nb 1] != $by} {
+	    break
+	}
+	if {[lindex $nb 0] != $bx} {
+	    return [expr {[lindex $nb 0] < $bx}]
+	}
+    }
+    foreach step {1 2 3 4} {
+	set pb [$w bbox [$w index "$pos - $step chars"]]
+	if {$pb eq "" || [lindex $pb 1] != $by} {
+	    break
+	}
+	if {[lindex $pb 0] != $bx} {
+	    return [expr {[lindex $pb 0] > $bx}]
+	}
+    }
+    return 0
+}
+
 # ::tk::TextClosestGap --
 # Given x and y coordinates, this procedure finds the closest boundary
 # between characters to the given coordinates and returns the index
 # of the character just after the boundary, except at display line end
 # where it returns that index.
+#
+# In left-to-right text the boundary before a character is its left edge
+# and the one after it its right edge; in right-to-left text it is the
+# opposite: the characters are displayed from right to left, so the boundary
+# before a character is its right edge.  A click in the right half of a
+# right-to-left character is therefore closest to the boundary BEFORE it,
+# not after it.
 #
 # Arguments:
 # w -		The text window.
@@ -550,9 +594,54 @@ proc ::tk::TextClosestGap {w x y} {
     # out of the widget.
     # The bbox of a newline extends to the right edge of the widget, and
     # the gap after it is on the next line. [13aabdb3c1]
-    if {$y < [lindex [$w dlineinfo $pos] 1] ||
-	    $x - [lindex $bbox 0] < [lindex $bbox 2]/2 ||
-	    [$w get $pos] eq "\n"} {
+    if {$y < [lindex [$w dlineinfo $pos] 1] || [$w get $pos] eq "\n"} {
+	return $pos
+    }
+    # $nearLeft: the click is closest to the left edge of the character.
+    # That edge is the boundary before the character in left-to-right text
+    # and the one after it in right-to-left text.
+    set rtl [TextCharIsRtl $w $pos $bbox]
+    set nearLeft [expr {$x - [lindex $bbox 0] < [lindex $bbox 2]/2}]
+    set before [expr {$nearLeft != $rtl}]
+    # Keep the selection boundary out of grapheme clusters (a base
+    # character plus its combining marks, e.g. the nikkud and teamim of
+    # pointed Hebrew): a cluster occupies a single position on screen
+    # although it spans several indices, and a boundary landing inside it
+    # makes the mouse selection oscillate between those indices while
+    # dragging (the "dancing selection" bug).  Snap the boundary to the
+    # edge of the cluster, using the tk::startOfCluster / tk::endOfCluster
+    # commands (UAX #29), when they are available.
+    if {[llength [info commands ::tk::startOfCluster]]} {
+	# $cend is the first cluster boundary after $pos, so the cluster
+	# [$cstart, $cend) is the one containing $pos.  When $pos is itself
+	# a cluster boundary, $cstart == $pos.
+	set cend [TextNextPos $w $pos tk::endOfCluster]
+	if {[$w compare $cend != $pos]} {
+	    set cstart [TextPrevPos $w $cend tk::startOfCluster]
+	    if {[$w compare $cstart != $pos]} {
+		# $pos is strictly inside a cluster: decide with the base
+		# character of the cluster, and return the nearest cluster edge.
+		set bb [$w bbox $cstart]
+		if {$bb eq ""} {
+		    set bb $bbox
+		}
+		set rtl [TextCharIsRtl $w $cstart $bb]
+		set nearLeft [expr {$x - [lindex $bb 0] < [lindex $bb 2]/2}]
+		if {$nearLeft != $rtl} {
+		    return $cstart
+		}
+		return $cend
+	    }
+	    # $pos is the start of a multi-character cluster: the gap after
+	    # this cluster is $cend, NOT "$pos + 1 char" which would land
+	    # inside the cluster (on a combining mark).
+	    if {$before} {
+		return $pos
+	    }
+	    return $cend
+	}
+    }
+    if {$before} {
 	return $pos
     }
     $w index "$pos + 1i"

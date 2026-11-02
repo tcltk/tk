@@ -19,6 +19,56 @@
 #include <usp10.h>      /* Uniscribe */
 #include <mojibake.h>   /* mjb_codepoint_is_combining */
 
+/* Windows-only cluster API - Uniscribe only */
+#ifdef _WIN32
+#ifdef a
+#undef a
+#endif
+#ifdef b
+#undef b
+#endif
+
+static int WinClusterFindBoundary(const char *utf8, Tcl_Size utf8Bytes, Tcl_Size byteIndex, int findStart)
+{
+    int wLen = MultiByteToWideChar(CP_UTF8, 0, utf8, (int)utf8Bytes, NULL, 0);
+    if (wLen <= 0) return (int)byteIndex;
+    WCHAR *wStr = (WCHAR *)Tcl_Alloc(wLen * sizeof(WCHAR));
+    MultiByteToWideChar(CP_UTF8, 0, utf8, (int)utf8Bytes, wStr, wLen);
+    SCRIPT_ANALYSIS sa; memset(&sa, 0, sizeof(sa)); sa.eScript = SCRIPT_UNDEFINED;
+    SCRIPT_LOGATTR *logAttr = (SCRIPT_LOGATTR *)Tcl_Alloc(wLen * sizeof(SCRIPT_LOGATTR));
+    HRESULT hr = ScriptBreak(wStr, wLen, &sa, logAttr);
+    int result = (int)byteIndex;
+    if (SUCCEEDED(hr)) {
+        int wIndex = MultiByteToWideChar(CP_UTF8, 0, utf8, (int)byteIndex, NULL, 0);
+        if (wIndex < 0) wIndex = 0; if (wIndex > wLen) wIndex = wLen;
+        if (findStart) { int s = wIndex; while (s > 0 && !logAttr[s].fCharStop) s--; result = WideCharToMultiByte(CP_UTF8, 0, wStr, s, NULL, 0, NULL, NULL); }
+        else { int e = wIndex + 1; if (e > wLen) e = wLen; while (e < wLen && !logAttr[e].fCharStop) e++; if (e > wLen) e = wLen; result = WideCharToMultiByte(CP_UTF8, 0, wStr, e, NULL, 0, NULL, NULL); }
+    }
+    Tcl_Free((char *)wStr); Tcl_Free((char *)logAttr); return result;
+}
+static Tcl_Size WinCharIdxToByte(const char *text, Tcl_Size textBytes, Tcl_Obj *idxObj, Tcl_Interp *interp){
+    const char *idxStr = Tcl_GetString(idxObj); if (strcmp(idxStr, "end")==0) return textBytes;
+    Tcl_WideInt charIdx; if (Tcl_GetWideIntFromObj(interp, idxObj, &charIdx)!=TCL_OK) return 0;
+    if (charIdx<0) return 0; const char *p = Tcl_UtfAtIndex(text, (Tcl_Size)charIdx); if (!p) return textBytes; return (Tcl_Size)(p - text); }
+static int WinStartOfClusterObjCmd(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]){
+    if (objc<3){ Tcl_WrongNumArgs(interp,1,objv,"text index ?locale?"); return TCL_ERROR; }
+    Tcl_Size tb; const char *text = Tcl_GetStringFromObj(objv[1], &tb);
+    Tcl_Size bi = WinCharIdxToByte(text, tb, objv[2], interp);
+    int res = WinClusterFindBoundary(text, tb, bi, 1);
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK; }
+static int WinEndOfClusterObjCmd(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]){
+    if (objc<3){ Tcl_WrongNumArgs(interp,1,objv,"text index ?locale?"); return TCL_ERROR; }
+    Tcl_Size tb; const char *text = Tcl_GetStringFromObj(objv[1], &tb);
+    Tcl_Size bi = WinCharIdxToByte(text, tb, objv[2], interp);
+    int res = WinClusterFindBoundary(text, tb, bi, 0);
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK; }
+int TkpWinRegisterClusterCommands(Tcl_Interp *interp){
+    if (Tcl_GetCommandInfo(interp, "::tk::startOfCluster", NULL)==0) Tcl_CreateObjCommand(interp, "::tk::startOfCluster", WinStartOfClusterObjCmd, NULL, NULL);
+    if (Tcl_GetCommandInfo(interp, "::tk::endOfCluster", NULL)==0) Tcl_CreateObjCommand(interp, "::tk::endOfCluster", WinEndOfClusterObjCmd, NULL, NULL);
+    return TCL_OK; }
+#endif
+
+
 /*
  * The following structure represents a font family. It is assumed that all
  * screen fonts constructed from the same "font family" share certain
@@ -289,9 +339,9 @@ static SubFont *	FindFallbackSubFont(WinFont *fontPtr, int ch,
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
 static void		FreeFontFamily(FontFamily *familyPtr);
-static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
-			    int nRuns, const int *runOriginX,
-			    int totalChars, int logicalIdx);
+static int		RunEdgeX(const TkWinShapedRun *run, int local);
+static int		LogicalRangeWidth(const TkWinShapedRun *runs, int nRuns,
+			    int from, int to);
 static HFONT		GetScreenFont(const TkFontAttributes *faPtr,
 			    const char *faceName, int pixelSize,
 			    double angle);
@@ -1384,112 +1434,78 @@ TkWinShapedRunsWidth(const TkWinShapedRun *runs, int nRuns)
 /*
  *---------------------------------------------------------------------------
  *
- * GetVisualXForLogicalIndex --
+ * RunEdgeX, LogicalRangeWidth --
  *
- *	Given shaped runs (in visual order) and a logical character index
- *	(0-based from the start of the full string), returns the visual X
- *	coordinate (from the line origin) of the boundary after that character.
- *	If index == total characters, returns total line width.
+ *	Tk measures a string by its logical order: the width of the first n
+ *	characters is the sum of the advances of those characters, whatever
+ *	the order in which bidi reordering displays them, and the widths of
+ *	consecutive ranges add up (the layout of the text widget relies on
+ *	this to place and wrap chunks).
  *
- *	This implementation uses Uniscribe's ScriptCPtoX function for accurate
- *	caret placement across RTL, ligatures, and combining marks.
+ *	RunEdgeX returns, for the boundary before character "local" of a run
+ *	(or after its last character if local == charLen), its x coordinate
+ *	counted from the left end of the run as ScriptCPtoX reports it.  In
+ *	a right-to-left run that is the right edge of the character.
+ *
+ *	LogicalRangeWidth returns the width of the characters [from, to) of
+ *	the full string: the sum, over the runs which overlap the range, of
+ *	the distance between the edges at the two ends of the overlap.  That
+ *	distance is independent of the direction of the run.
+ *
+ *	The previous code asked for the visual x of the boundary, adding the
+ *	visual origin of the run.  With several runs (a space, a digit or a
+ *	punctuation mark is an item of its own, as is each fallback font),
+ *	that gave the widths of the runs displayed to the left of the one
+ *	holding the boundary, which are not the characters before it in
+ *	logical order: the width of a prefix of right-to-left text was far
+ *	too large and not monotonic, so that nothing fit on the line.
  *
  *---------------------------------------------------------------------------
  */
 
-static int GetVisualXForLogicalIndex(
-    const TkWinShapedRun *runs,
-    int nRuns,
-    const int *runOriginX,
-    int totalChars,
-    int logicalIdx)
+static int
+RunEdgeX(
+    const TkWinShapedRun *run,
+    int local)
 {
-    int i;
+    int x = 0;
 
-    /*
-     * Index 0 should always map to X=0, regardless of anchor or shaping.
-     */
-    if (logicalIdx == 0 && nRuns > 0) {
+    if (run->charLen <= 0) {
 	return 0;
     }
-
-    logicalIdx = ClampIndex(logicalIdx, totalChars);
-
-    /*
-     * The end of the text is the right end of the line, whichever run is
-     * the last one in logical order: in right-to-left text that run is the
-     * leftmost, and its end is not the width of the line.
-     */
-
-    if (logicalIdx >= totalChars && nRuns > 0) {
-	return TkWinShapedRunsWidth(runs, nRuns);
+    if (local >= run->charLen) {
+	ScriptCPtoX(run->charLen - 1, TRUE, run->charLen, run->glyphCount,
+		run->logClust, run->visAttr, run->advances, &run->sa, &x);
+    } else {
+	ScriptCPtoX(local, FALSE, run->charLen, run->glyphCount,
+		run->logClust, run->visAttr, run->advances, &run->sa, &x);
     }
-
-    for (i = 0; i < nRuns; i++) {
-	int start = runs[i].charStart;
-	int end = start + runs[i].charLen;
-
-	if (logicalIdx >= start && logicalIdx <= end) {
-	    int local = logicalIdx - start;
-	    int x = 0;
-	    BOOL trailing = FALSE;
-
-	    /*
-	     * Determine when to use trailing edge.
-	     * - For hit testing and measurement, we want the visual position
-	     *   between characters.
-	     * - At run boundaries (local == charLen), use trailing edge
-	     *   to get the right side of the last character.
-	     * - This fixes cursor positioning issues.
-	     */
-	    if (local == runs[i].charLen && local > 0) {
-		trailing = TRUE;
-	    }
-
-	    if (runs[i].sa.fRTL) {
-		/*
-		 * RTL run: the boundary before character local is its leading
-		 * (right) edge; the end of the run is the trailing edge of the
-		 * last character. ScriptCPtoX measures from the left of the run:
-		 * flipped, x is the width of the characters before the boundary.
-		 */
-		if (local < runs[i].charLen) {
-		    ScriptCPtoX(local, FALSE, runs[i].charLen, runs[i].glyphCount,
-			    runs[i].logClust, runs[i].visAttr, runs[i].advances,
-			    &runs[i].sa, &x);
-		} else {
-		    ScriptCPtoX(local - 1, TRUE, runs[i].charLen, runs[i].glyphCount,
-			    runs[i].logClust, runs[i].visAttr, runs[i].advances,
-			    &runs[i].sa, &x);
-		}
-
-		/* Compute total run width */
-		int runWidth = 0;
-		for (int g = 0; g < runs[i].glyphCount; g++) {
-		    runWidth += runs[i].advances[g];
-		}
-		/* Flip to LTR coordinate system. */
-		x = runWidth - x;
-	    } else {
-		/*
-		 * LTR run: Use the trailing flag we computed above.
-		 * This gives proper character boundaries for click-to-index.
-		 */
-		ScriptCPtoX(local, trailing, runs[i].charLen, runs[i].glyphCount,
-			    runs[i].logClust, runs[i].visAttr, runs[i].advances,
-			    &runs[i].sa, &x);
-	    }
-
-	    return runOriginX[i] + x;
-	}
-    }
-
-    /* Beyond all runs: return total width. */
-    if (nRuns > 0) return TkWinShapedRunsWidth(runs, nRuns);
-    return 0;
+    return x;
 }
 
+static int
+LogicalRangeWidth(
+    const TkWinShapedRun *runs,
+    int nRuns,
+    int from,
+    int to)
+{
+    int i, width = 0;
 
+    for (i = 0; i < nRuns; i++) {
+	int start = runs[i].charStart, end = start + runs[i].charLen;
+	int a = (from > start) ? from : start;
+	int b = (to < end) ? to : end;
+	int d;
+
+	if (b <= a) {
+	    continue;
+	}
+	d = RunEdgeX(&runs[i], b - start) - RunEdgeX(&runs[i], a - start);
+	width += (d < 0) ? -d : d;
+    }
+    return width;
+}
 
 /*
  *---------------------------------------------------------------------------
@@ -1558,7 +1574,7 @@ ClampIndex(int idx, int totalChars)
  *	shaping context.
  *
  *	This implementation shapes the full string (up to the end of the range)
- *	and then uses Uniscribe's ScriptCPtoX (via GetVisualXForLogicalIndex)
+ *	and then uses Uniscribe's ScriptCPtoX (via LogicalRangeWidth)
  *	to map logical character positions to visual X coordinates.  This
  *	ensures that the measured width of a logical prefix matches the visual
  *	layout used for drawing, eliminating the cursor "snap" in RTL scripts.
@@ -1594,9 +1610,7 @@ Tk_MeasureCharsInContext(
     int nRuns = 0;
 
     int wRangeStart, wRangeEnd;
-    int *runOriginX = NULL;
     int totalChars;
-    int startX;
     int bestChars = 0;
     int bestWidth = 0;
 
@@ -1677,58 +1691,14 @@ Tk_MeasureCharsInContext(
 	}
     }
 
-    /*
-     * Precompute runOriginX in visual order.
-     * This matches the layout used in Tk_DrawCharsInContext.
-     */
-    runOriginX = (int *) Tcl_Alloc(sizeof(int) * nRuns);
-    {
-	int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
-	BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
-
-	/* Extract BiDi levels from each run. */
-	for (int i = 0; i < nRuns; i++) {
-	    levels[i] = runs[i].sa.s.uBidiLevel;
-	}
-
-	/* Get visual ordering. */
-	HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
-	if (FAILED(hr)) {
-	    /* Fallback: logical order. */
-	    for (int i = 0; i < nRuns; i++) {
-		visualOrder[i] = i;
-	    }
-	}
-	Tcl_Free(levels);
-
-	/* Compute X position for each run in visual order. */
-	int x = 0;
-	for (int vi = 0; vi < nRuns; vi++) {
-	    int i = visualOrder[vi];  /* visual -> logical. */
-	    runOriginX[i] = x;
-	    x += runs[i].abc.abcA + runs[i].abc.abcB + runs[i].abc.abcC;
-	}
-
-	Tcl_Free(visualOrder);
-    }
-
     totalChars = wfullLen;
 
     /*
-     * Visual X of start.
-     */
-    startX = GetVisualXForLogicalIndex(
-	runs, nRuns, runOriginX, totalChars,
-	ClampIndex(wRangeStart, totalChars));
-
-    /*
-     * Unbounded measurement.
+     * Unbounded measurement: the width of the range in logical terms.
      */
     if (maxLength < 0) {
-	int endX = GetVisualXForLogicalIndex(
-	    runs, nRuns, runOriginX, totalChars,
-	    ClampIndex(wRangeEnd, totalChars));
-	bestWidth = abs(endX - startX);
+	bestWidth = LogicalRangeWidth(runs, nRuns, wRangeStart,
+		ClampIndex(wRangeEnd, totalChars));
 	bestChars = wRangeEnd - wRangeStart;
     } else {
 	/*
@@ -1737,6 +1707,7 @@ Tk_MeasureCharsInContext(
 	 * flags in the same way as the other font backends. A word boundary
 	 * is the start of a run of spaces that follows a non-space, so that
 	 * the spaces at the end of a line are not counted in its width.
+	 * The width grows by the width of each character in turn.
 	 */
 	int ci = wRangeStart;
 	int termChars = 0, termX = 0, sawNonSpace = 0;
@@ -1759,9 +1730,8 @@ Tk_MeasureCharsInContext(
 	    } else {
 		sawNonSpace = 1;
 	    }
-	    newX = abs(GetVisualXForLogicalIndex(
-		    runs, nRuns, runOriginX, totalChars,
-		    ClampIndex(next, totalChars)) - startX);
+	    newX = bestWidth + LogicalRangeWidth(runs, nRuns, ci,
+		    ClampIndex(next, totalChars));
 	    if (newX > maxLength) {
 		if ((flags & TK_PARTIAL_OK) ||
 			((flags & TK_AT_LEAST_ONE) && bestChars == 0)) {
@@ -1792,7 +1762,6 @@ Tk_MeasureCharsInContext(
 	    int resultBytes = Tcl_DStringLength(&result);
 
 	    TkWinFreeShapedRuns(runs, nRuns);
-	    Tcl_Free(runOriginX);
 	    Tcl_DStringFree(&fullUni);
 	    ReleaseDC(fontPtr->hwnd, hdc);
 

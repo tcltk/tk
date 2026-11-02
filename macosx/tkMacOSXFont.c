@@ -1561,6 +1561,30 @@ TkpDrawAngledCharsInContext(
 	rangeEndX   = CTLineGetOffsetForStringIndex(full, start + length, NULL);
 
 	/*
+	 * Put an edge between two characters on a pixel boundary, or
+	 * CoreGraphics renders some pixels of the glyphs differently than in
+	 * the whole line (seen in joined letters).  Round towards the logical
+	 * end: the range next to this one rounds their shared edge alike, and
+	 * an end edge never cuts into the last glyph.
+	 */
+
+	if (rangeEndX < rangeStartX) {
+	    if (start > 0) {
+		rangeStartX = floor(textX + rangeStartX) - textX;
+	    }
+	    if (start + length < fullLength) {
+		rangeEndX = floor(textX + rangeEndX) - textX;
+	    }
+	} else {
+	    if (start > 0) {
+		rangeStartX = ceil(textX + rangeStartX) - textX;
+	    }
+	    if (start + length < fullLength) {
+		rangeEndX = ceil(textX + rangeEndX) - textX;
+	    }
+	}
+
+	/*
 	 * For RTL runs rangeEndX < rangeStartX.  Normalise so clipX is always
 	 * the left edge of the clip rectangle.
 	 */
