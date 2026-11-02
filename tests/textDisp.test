@@ -5315,6 +5315,40 @@ test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
     destroy .t1
     unset -nocomplain heb res i w
 } -result {}
+test textDisp-37.4 {RTL text: the insertion cursor does not change the text around it} -setup {
+    text .t1 -width 40 -height 3 -wrap none
+    pack .t1
+} -body {
+    # The text around the cursor is shaped as a whole: the Arabic letters stay
+    # joined and the space keeps the width it has between the Hebrew words.
+    set str "\u05e9\u05dc\u05d5\u05dd \u05e2\u05dc\u05d9\u05db\u05dd, \u05d6\u05d4\u05d5 \u0627\u0644\u0633\u0639\u0631"
+    .t1 insert end $str
+    set n [string length $str]
+    set res {}
+    foreach font [list $fixedFont TkDefaultFont] {
+	.t1 configure -font $font
+	.t1 mark set insert 1.0
+	update
+	set bboxes {}
+	for {set i 0} {$i < $n} {incr i} {
+	    lappend bboxes [.t1 bbox 1.$i]
+	}
+	for {set j 1} {$j < $n} {incr j} {
+	    .t1 mark set insert 1.$j
+	    update
+	    for {set i 0} {$i < $n} {incr i} {
+		if {[.t1 bbox 1.$i] ne [lindex $bboxes $i]} {
+		    lappend res "$font 1.$j"
+		    break
+		}
+	    }
+	}
+    }
+    set res
+} -cleanup {
+    destroy .t1
+    unset -nocomplain str n res font bboxes i j
+} -result {}
 
 test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
     # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)

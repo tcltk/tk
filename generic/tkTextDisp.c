@@ -2239,6 +2239,53 @@ BidiReorderChunks(
 	 * share the placement below.
 	 */
 
+	if (mirror) {
+	    /*
+	     * The chunks were measured while the line was laid out, when the
+	     * string only extended to the end of each chunk, so the shaping
+	     * of the last characters of a chunk could differ from that in
+	     * the whole string (e.g. the final form of a joining Arabic
+	     * letter instead of its medial form).  Place them by the
+	     * advances in the whole string, as CharBboxProc measures them.
+	     * The slack goes to the logically last chunk, at the left end.
+	     */
+
+	    BaseCharInfo *bciPtr = (BaseCharInfo *)u->base->clientData;
+	    Tk_Font tkfont = chunks[u->first]->stylePtr->sValuePtr->tkfont;
+	    const char *chars = Tcl_DStringValue(&bciPtr->baseChars);
+	    Tcl_Size len = Tcl_DStringLength(&bciPtr->baseChars);
+	    int right = bciPtr->originX + bciPtr->unitWidth;
+	    int lastChar = -1, advance = 0;
+
+	    for (j = u->first; j <= u->last; j++) {
+		if (chunks[j]->displayProc == CharDisplayProc
+			&& chunks[j]->clientData != NULL) {
+		    lastChar = j;
+		}
+	    }
+	    for (j = u->first; j <= u->last; j++) {
+		CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
+		int endAdvance;
+
+		if (chunks[j]->displayProc != CharDisplayProc
+			|| ciPtr == NULL) {
+		    chunks[j]->x = right - advance;
+		    continue;
+		}
+		ciPtr->isRtl = true;
+		MeasureChars(tkfont, chars, len, 0,
+			ciPtr->baseOffset + ciPtr->numBytes, 0, -1, 0,
+			&endAdvance);
+		if (endAdvance < advance) {
+		    endAdvance = advance;
+		}
+		chunks[j]->x = (j == lastChar) ? u->newX : right - endAdvance;
+		chunks[j]->width = right - advance - chunks[j]->x;
+		advance = endAdvance;
+	    }
+	    continue;
+	}
+
 	for (j = u->first; j <= u->last; j++) {
 	    CharInfo *ciPtr = (CharInfo *)chunks[j]->clientData;
 	    int off = chunks[j]->x - u->x0;
@@ -2248,11 +2295,9 @@ BidiReorderChunks(
 		continue;
 	    }
 	    if (chunks[j]->displayProc == CharDisplayProc && ciPtr != NULL) {
-		ciPtr->isRtl = (u->dir == 2);
+		ciPtr->isRtl = false;
 	    }
-	    chunks[j]->x = mirror ?
-		    u->newX + u->width - off - chunks[j]->width :
-		    u->newX + off;
+	    chunks[j]->x = u->newX + off;
 	}
     }
 
