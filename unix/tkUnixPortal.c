@@ -127,6 +127,7 @@ TCL_DECLARE_MUTEX(dbusMutex);
 #define PORTAL_OBJECT_PATH	"/org/freedesktop/portal/desktop"
 #define PORTAL_REQUEST_PATH	"/org/freedesktop/portal/desktop/request/"
 #define REQUEST_INTERFACE	"org.freedesktop.portal.Request"
+#define SETTINGS_INTERFACE	"org.freedesktop.portal.Settings"
 
 /*
  * A request waiting for its Response signal.
@@ -149,6 +150,11 @@ typedef struct {
     unsigned int counter;	/* For generating request tokens. */
     int exitHandlerSet;		/* CloseConnection is a thread exit
 				 * handler. */
+    Tcl_Interp *interp;		/* Interpreter of the settings watch, or
+				 * NULL. */
+    Tcl_Obj *watchScript;	/* Script to run when a watched setting
+				 * changes, or NULL.  The namespace, the key
+				 * and the value are appended to it. */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -156,6 +162,8 @@ static Tcl_ThreadDataKey dataKey;
 static Tcl_ObjCmdProc2 CallCmd;
 static Tcl_ObjCmdProc2 RequestCmd;
 static Tcl_ObjCmdProc2 ParentCmd;
+static Tcl_ObjCmdProc2 WatchCmd;
+static Tcl_Obj *	Unmarshal(DBusMessageIter *iter, Tcl_Encoding utf8);
 
 /*
  *----------------------------------------------------------------------
@@ -225,6 +233,81 @@ LoadDBus(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * EvalWatchScript --
+ *
+ *	Runs the script of a settings watch, once the event loop is idle.
+ *	The signal arrives while messages are being dispatched, which also
+ *	happens inside a call which is waiting for its reply, so the script
+ *	is not run there.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+EvalWatchScript(
+    void *clientData)
+{
+    Tcl_Obj *scriptObj = (Tcl_Obj *)clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_Interp *interp = tsdPtr->interp;
+
+    if (interp != NULL && !Tcl_InterpDeleted(interp)) {
+	Tcl_Preserve(interp);
+	if (Tcl_EvalObjEx(interp, scriptObj, TCL_EVAL_GLOBAL) != TCL_OK) {
+	    Tcl_BackgroundException(interp, TCL_ERROR);
+	}
+	Tcl_Release(interp);
+    }
+    Tcl_DecrRefCount(scriptObj);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SettingChanged --
+ *
+ *	Queues the script of the settings watch, with the namespace, the key
+ *	and the new value of the setting which changed appended to it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+SettingChanged(
+    ThreadSpecificData *tsdPtr,
+    DBusMessage *msg)
+{
+    DBusMessageIter iter;
+    Tcl_Encoding utf8;
+    Tcl_Obj *scriptObj;
+    int i;
+
+    if (tsdPtr->watchScript == NULL
+	    || !dbus.message_iter_init(msg, &iter)) {
+	return;
+    }
+    utf8 = Tcl_GetEncoding(NULL, "utf-8");
+    scriptObj = Tcl_DuplicateObj(tsdPtr->watchScript);
+    Tcl_IncrRefCount(scriptObj);
+    for (i = 0; i < 3; i++) {
+	Tcl_Obj *argObj = Unmarshal(&iter, utf8);
+
+	if (argObj == NULL) {
+	    Tcl_DecrRefCount(scriptObj);
+	    Tcl_FreeEncoding(utf8);
+	    return;
+	}
+	Tcl_ListObjAppendElement(NULL, scriptObj, argObj);
+	dbus.message_iter_next(&iter);
+    }
+    Tcl_FreeEncoding(utf8);
+    Tcl_DoWhenIdle(EvalWatchScript, scriptObj);
+}
+
 static void
 DispatchMessages(
     ThreadSpecificData *tsdPtr)
@@ -233,7 +316,9 @@ DispatchMessages(
     PendingRequest *reqPtr;
 
     while ((msg = dbus.connection_pop_message(tsdPtr->conn)) != NULL) {
-	if (dbus.message_is_signal(msg, REQUEST_INTERFACE, "Response")) {
+	if (dbus.message_is_signal(msg, SETTINGS_INTERFACE, "SettingChanged")) {
+	    SettingChanged(tsdPtr, msg);
+	} else if (dbus.message_is_signal(msg, REQUEST_INTERFACE, "Response")) {
 	    const char *path = dbus.message_get_path(msg);
 
 	    for (reqPtr = tsdPtr->pendingPtr; reqPtr != NULL;
@@ -283,6 +368,11 @@ CloseConnection(
 	dbus.connection_close(tsdPtr->conn);
 	dbus.connection_unref(tsdPtr->conn);
 	tsdPtr->conn = NULL;
+    }
+    if (tsdPtr->watchScript != NULL) {
+	Tcl_DecrRefCount(tsdPtr->watchScript);
+	tsdPtr->watchScript = NULL;
+	tsdPtr->interp = NULL;
     }
 }
 
@@ -1236,6 +1326,66 @@ RequestCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * WatchCmd --
+ *
+ *	Implements "::tk::portal::_watch namespace script".  Asks the portal
+ *	to announce the settings of that namespace, and arranges for script
+ *	to be run with the namespace, the key and the new value appended
+ *	whenever one of them changes.  A second call replaces the script.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WatchCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    DBusConnection *conn;
+    DBusError err;
+    Tcl_DString ds;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "namespace script");
+	return TCL_ERROR;
+    }
+    conn = GetConnection(interp);
+    if (conn == NULL) {
+	return TCL_ERROR;
+    }
+
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, "type='signal',sender='" PORTAL_BUS_NAME
+	    "',interface='" SETTINGS_INTERFACE "',member='SettingChanged'"
+	    ",arg0='", TCL_INDEX_NONE);
+    Tcl_DStringAppend(&ds, Tcl_GetString(objv[1]), TCL_INDEX_NONE);
+    Tcl_DStringAppend(&ds, "'", 1);
+    dbus.error_init(&err);
+    dbus.bus_add_match(conn, Tcl_DStringValue(&ds), &err);
+    Tcl_DStringFree(&ds);
+    if (dbus.error_is_set(&err)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(err.message, TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "PORTAL", "DBUS", err.name, (char *)NULL);
+	dbus.error_free(&err);
+	return TCL_ERROR;
+    }
+
+    if (tsdPtr->watchScript != NULL) {
+	Tcl_DecrRefCount(tsdPtr->watchScript);
+    }
+    tsdPtr->watchScript = objv[2];
+    Tcl_IncrRefCount(tsdPtr->watchScript);
+    tsdPtr->interp = interp;
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Portal_Init --
  *
  *	Creates the ::tk::portal::_* commands if libdbus is available.
@@ -1253,6 +1403,8 @@ Portal_Init(
 	Tcl_CreateObjCommand2(interp, "::tk::portal::_request", RequestCmd,
 		NULL, NULL);
 	Tcl_CreateObjCommand2(interp, "::tk::portal::_parent", ParentCmd,
+		NULL, NULL);
+	Tcl_CreateObjCommand2(interp, "::tk::portal::_watch", WatchCmd,
 		NULL, NULL);
     }
     return TCL_OK;

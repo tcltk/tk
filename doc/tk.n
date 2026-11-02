@@ -30,6 +30,40 @@ depending on the \fIoption\fR argument.  The legal forms are:
 This command makes Tk widgets accessible to screen readers.
 For
 more details see the \fBaccessible\fR manual page.
+.\" METHOD: appearance
+.TP
+\fBtk appearance \fR?\fIsetting\fR?
+.
+Returns what the desktop asks applications to make of their appearance.  It
+reports; it changes nothing.  With no argument it returns a dictionary, and
+with a \fIsetting\fR the value of that one.  The settings are:
+.RS
+.TP
+\fBcolorScheme\fR
+.
+\fBlight\fR, \fBdark\fR, or the empty string where the desktop expresses no
+preference.
+.TP
+\fBaccentColor\fR
+.
+A colour in \fB#\fIrrggbb\fR form, or the empty string where the desktop has
+chosen none.
+.TP
+\fBcontrast\fR
+.
+\fBnormal\fR or \fBhigh\fR.
+.TP
+\fBreducedMotion\fR
+.
+A boolean.
+.PP
+On X11 the desktop is asked through the XDG desktop portal.  Where it
+answers for a setting, its answer is reported; where it does not, and where
+there is no portal to ask, the setting takes the value above which expresses
+no preference.  On Windows and macOS the settings these systems report are
+returned and the rest are left out, so a \fIsetting\fR which is not among
+them is an error.
+.RE
 .\" METHOD: appname
 .TP
 \fBtk appname \fR?\fInewName\fR?
