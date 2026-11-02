@@ -1963,7 +1963,7 @@ typedef struct BidiUnit {
 
 static void
 BidiReorderChunks(
-    TkText *textPtr,		/* Widget, for diagnostics only. */
+    TCL_UNUSED(TkText *),	/* Widget, for diagnostics only. */
     DLine *dlPtr)		/* Display line to reorder. */
 {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -2260,7 +2260,6 @@ BidiReorderChunks(
     Tcl_Free(units);
     Tcl_Free(order);
 #else
-    (void)textPtr;
     (void)dlPtr;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 }
