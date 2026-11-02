@@ -668,6 +668,7 @@ TkpInit(
 	TkMacOSXServices_Init(interp);
 	TkMacOSXNSImage_Init(interp);
 	TkMacOSXAccessibility_Init(interp);
+	Icu_Init(interp);
 
 	/*
 	 * The root window has been created and mapped, but XMapWindow deferred its
