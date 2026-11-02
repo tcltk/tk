@@ -131,6 +131,14 @@ MODULE_SCOPE const int tkpWinRopModes[];
 MODULE_SCOPE const int tkpWinBltModes[];
 
 /*
+ * The following two raster ops are used to copy the foreground and background
+ * bits of a source pattern as defined by a stipple used as the pattern.
+ */
+
+#define COPYFG		0x00CA0749 /* dest = (pat & src) | (!pat & dst) */
+#define COPYBG		0x00AC0744 /* dest = (!pat & src) | (pat & dst) */
+
+/*
  * The following defines are used with TkWinGetBorderPixels to get the extra 2
  * border colors from a Tk_3DBorder.
  */

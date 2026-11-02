@@ -82,14 +82,6 @@ const int tkpWinBltModes[] = {
 #define MASKPAT		0x00E20746 /* dest = (src & pat) | (!src & dst) */
 
 /*
- * The following two raster ops are used to copy the foreground and background
- * bits of a source pattern as defined by a stipple used as the pattern.
- */
-
-#define COPYFG		0x00CA0749 /* dest = (pat & src) | (!pat & dst) */
-#define COPYBG		0x00AC0744 /* dest = (!pat & src) | (pat & dst) */
-
-/*
  * Macros used later in the file.
  */
 #ifndef MIN
