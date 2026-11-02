@@ -252,7 +252,7 @@ Icu_Init(
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
-	static const char *iculibs[] = {
+	static const char *const iculibs[] = {
 #if defined(__CYGWIN__)
 	    "cygicuuc??.dll",
 #elif defined(MAC_OSX_TCL)

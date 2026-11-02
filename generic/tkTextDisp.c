@@ -1963,7 +1963,6 @@ typedef struct BidiUnit {
 
 static void
 BidiReorderChunks(
-    TCL_UNUSED(TkText *),	/* Widget, for diagnostics only. */
     DLine *dlPtr)		/* Display line to reorder. */
 {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -2108,14 +2107,8 @@ BidiReorderChunks(
 		units[i].resolved = pdir;		/* Barrier. */
 	    } else if (units[i].dir != 0) {
 		units[i].resolved = units[i].dir;
-#ifdef _WIN32
 	    } else if (units[i].weakL) {
 		units[i].resolved = 1;
-#endif
-#ifndef _WIN32
-	    } else if (units[i].weakL) {
-		units[i].resolved = 1;
-#endif
 	    } else {
 		int before = (i > g) ? units[i-1].resolved : pdir;
 		int after = pdir;
@@ -3045,7 +3038,7 @@ LayoutDLine(
      * width changes, so the line length remains valid.
      */
 
-    BidiReorderChunks(textPtr, dlPtr);
+    BidiReorderChunks(dlPtr);
 
     return dlPtr;
 }
