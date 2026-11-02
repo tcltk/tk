@@ -497,8 +497,9 @@ proc ::tk::Appearance {{setting ""}} {
 	set appearance [::tk::portal::Appearance]
     } else {
 	# The systems which give a window an appearance of their own do not
-	# answer for these settings yet.
-	set appearance {}
+	# answer for these settings yet: no preference, as on X11 without a
+	# desktop portal.
+	set appearance {colorScheme {} accentColor {} contrast normal reducedMotion 0}
     }
     if {$setting eq ""} {
 	return $appearance

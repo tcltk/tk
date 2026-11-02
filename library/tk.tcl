@@ -960,7 +960,10 @@ if {[tk windowingsystem] eq "x11"} {
     # window of its own, and making one while Tk is still initialising
     # disturbs what the application does next.
     after idle {
-	if {![info exists ::tk::appearance]
+	# Not if "." was destroyed in the meantime: then even [winfo] fails.
+	if {[catch {winfo exists .}]} {
+	    # Nothing to colour.
+	} elseif {![info exists ::tk::appearance]
 		|| $::tk::appearance eq "auto"} {
 	    ::tk::SetAppearance auto
 	}
