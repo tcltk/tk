@@ -225,7 +225,7 @@ Icu_Init(
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
-	static const char *iculibs[] = {
+	static const char *const iculibs[] = {
 #if defined(_WIN32)
 	    "icuuc??.dll", /* When running under Windows, user-provided */
 	    NULL,

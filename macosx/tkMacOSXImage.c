@@ -1377,11 +1377,12 @@ static const Tk_OptionSpec systemImageOptions[] = {
  * provide the macOS icon for a particular file type.)
  */
 
-static const char *sourceInterpretations[] = {
+static const char *const sourceInterpretations[] = {
     "name",       /* A name for a named NSImage. */
     "file",       /* A path to an image file. */
     "path",       /* A path to a file whose type should be examined. */
     "filetype",   /* A file extension or 4-byte OSCode. */
+    NULL
 };
 
 enum {NAME_SOURCE, FILE_SOURCE, PATH_SOURCE, FILETYPE_SOURCE};
