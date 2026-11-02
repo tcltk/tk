@@ -126,6 +126,36 @@ does not correspond to an existing window.  Doing that causes the
 class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
+.\" OPTION: -hidden
+.TP
+\fB\-hidden\fR
+.
+On macOS, setting this boolean attribute to true causes the toplevel
+\fIwindow\fR not to be displayed on the screen, but does not change
+any aspect of its Tk state.  All normal Tk operations are allowed for
+a hidden window, including configuring, withdrawing or iconifying the
+window. Drawing operations take place while a window is hidden,
+provided that the window is not \fI withdrawn\fR, but their effect is
+not visible to the user until the hidden attribut is set to false.
+This makes setting the hidden attribute very different from calling
+\fBwm withdraw\fR, because that command marks the toplevel and all of
+its widgets as unmapped, and drawing operations are not scheduled or
+run for unmapped widgets.
+.PP
+.RS
+The purpose of this is to make it possible for a complex window with
+many child widgets to be presented to the user only after it is fully
+rendeered, avoiding the visual artifacts that arise when a partly
+rendered window is visible.  To do this, set the hidden attribute to
+true immediately after creating the toplevel, configure the toplevel,
+then set its hidden attribute to false.
+.PP
+A raise operation, or clicking the dock icon of an iconified hidden
+window, will unhide the window.
+.PP
+A hidden window never contains the mouse pointer for the purpose of
+the crossing events \fBEnter\fR and \fBLeave\fR.
+.RE
 .\" OPTION: -modified
 .TP
 \fB\-modified\fR
