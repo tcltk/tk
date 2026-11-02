@@ -35,14 +35,19 @@ style is the theme root style on which derived styles are based.
 The \fBttk::style\fR command takes the following arguments:
 .\" METHOD: configure
 .TP
-\fBttk::style configure \fIstyle\fR ?\fI\-option\fR ?\fIvalue option value...\fR? ?
+\fBttk::style configure \fIstyle\fR
+.TP
+\fBttk::style configure \fIstyle\fR \fI\-option\fR
+.TP
+\fBttk::style configure \fIstyle\fR \fI\-option value\fR ?\fIoption value ...\fR?
 .
-Sets the default value of the specified option(s) in \fIstyle\fR.
-If \fIstyle\fR does not exist, it is created.
-If only \fIstyle\fR and \fI\-option\fR are specified, get the default value
-for option \fI\-option\fR of style \fIstyle\fR.
-If only \fIstyle\fR is specified, get the default value for all options
-of style \fIstyle\fR.
+Get the value(s) or sets the default value(s) of the specified option(s) in \fIstyle\fR.
+If \fIstyle\fR does not exist, it is created. In its forst form (when only a
+\fIstyle\fR is specified), returns a list of all options and their default values
+of style \fIstyle\fR. In its second form (when only the \fIstyle\fR and an \fI\-option\fR
+are specified), get the default value for option \fI\-option\fR of style \fIstyle\fR.
+Otherwise, in its third form, set the specified \fI\-option\fRs to the given
+\fIvalue\fRs.
 .\" METHOD: element
 .TP
 \fBttk::style element\fI args\fR
@@ -75,12 +80,13 @@ If \fIlayoutSpec\fR is omitted, return the layout specification
 for style \fIstyle\fR.
 .\" METHOD: lookup
 .TP
-\fBttk::style lookup \fIstyle \-option \fR?\fIstate \fR?\fIdefault\fR??
+\fBttk::style lookup \fIstyle \-option\fR ?\fIstate\fR?
+.TP
+\fBttk::style lookup \fIstyle \-option\fR \fIstate\fR ?\fIdefault\fR?
 .
-Returns the value specified for \fI\-option\fR in style \fIstyle\fR
-in state \fIstate\fR, using the standard lookup rules for element options.
-\fIstate\fR is a list of state names; if omitted,
-it defaults to all bits off (the
+Returns the value(s) specified for \fI\-option\fR in style \fIstyle\fR,
+using the standard lookup rules for element options.
+\fIstate\fR is a list of state names; if omitted, it defaults to all bits off (the
 .QW normal
 state).
 If the \fIdefault\fR argument is present, it is used as a fallback
@@ -89,10 +95,11 @@ value in case no specification for \fI\-option\fR is found.
 If \fIstyle\fR does not exist, it is created.
 .\" METHOD: map
 .TP
-\fBttk::style map \fIstyle\fR ?\fI\-option\fB { \fIstatespec value...\fB }\fR?
+\fBttk::style map \fIstyle\fR ?\fI\-option statespecList ...\fR?
 .
 Sets dynamic (state dependent) values of the specified option(s) in \fIstyle\fR.
-Each \fIstatespec / value\fR pair is examined in order;
+\fIstatespecList\fR is a list with pairs of \fIstatespec\fR and \fIvalue\fR, and
+each pair is examined in order;
 the value corresponding to the first matching \fIstatespec\fR
 is used.
 If \fIstyle\fR does not exist, it is created.
@@ -152,9 +159,9 @@ Valid options are:
 .\" Specifies whether the element is drawn after its children. Defaults to 0.
 .\" OPTION: -children
 .TP
-\fB\-children { \fIsublayout...\fB }\fR
+\fB\-children \fIsublayoutList\fR
 .
-Specifies a list of elements to place inside the element.
+Specifies a list of one or more sublayouts with their elements to place inside the element.
 .\" OPTION: -expand
 .TP
 \fB\-expand\fI boolean\fR
@@ -175,11 +182,12 @@ If omitted, the allocated parcel is the entire cavity (same effect
 as \fB\-expand\fR 1).
 .\" OPTION: -sticky
 .TP
-\fB\-sticky\fR \fB[\fInswe\fB]\fR
+\fB\-sticky\fR \fBstyle\fR
 .
 Specifies the actual parcel position and size inside the allocated parcel.
+\fIstyle\fR is a string that contains zero or more of the characters n, s, e or w.
 If specified as an empty string then the actual parcel is centered in
-the allocated parcel. Default is \fBnswe\fR.
+the allocated parcel. The default \fIstyle\fR is nswe.
 .\" -unit should remain undocumented for now (dubious usefulness)
 .\" .TP
 .\" \fB\-unit\fI boolean\fR
