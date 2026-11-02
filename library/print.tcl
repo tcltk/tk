@@ -1421,6 +1421,11 @@ proc ::tk::print {w} {
 	}
 	"Canvas,x11" -
 	"Text,x11" {
+	    if {[info commands ::tk::portal::_call] ne ""
+		    && [::tk::portal::Available Print]
+		    && [::tk::portal::Print $w] >= 0} {
+		return
+	    }
 	    tailcall ::tk::print::_print $w
 	}
 	"Canvas,aqua" {
