@@ -2626,7 +2626,7 @@ test unixWm-60.1.1 {wm attributes - test} -constraints {unix notAqua} -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -match exact -result {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
+} -match exact -result {-alpha 1.0 -appearance auto -fullscreen 0 -topmost 0 -type {} -zoomed 0}
 
 test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
     destroy .t

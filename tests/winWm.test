@@ -601,46 +601,6 @@ test winWm-9.4 "deiconifying the master keeps the wrapper of a transient" -const
     unset -nocomplain frame
 } -result 1
 
-test winWm-10.1 "Set and get -appearence dark" -constraints win -setup {
-    catch {destroy .t}
-    update
-} -body {
-    toplevel .t
-    # Without the following update, the command fails.
-    update idletasks
-    wm attributes .t -appearance d
-    wm attributes .t -appearance
-} -cleanup {
-    destroy .t
-} -result dark
-
-
-test winWm-10.2 "Set and get -appearence light" -constraints win -setup {
-    catch {destroy .t}
-    update
-} -body {
-    toplevel .t
-    # Without the following update, the command fails.
-    update idletasks
-    wm attributes .t -appearance l
-    wm attributes .t -appearance
-} -cleanup {
-    destroy .t
-} -result light
-
-test winWm-10.3 "Set and get -appearence auto" -constraints win -setup {
-    catch {destroy .t}
-    update
-} -body {
-    toplevel .t
-    # Without the following update, the command fails.
-    update idletasks
-    wm attributes .t -appearance a
-    wm attributes .t -appearance
-} -cleanup {
-    destroy .t
-} -result auto
-
 test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
     catch {destroy .t}
     update

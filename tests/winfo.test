@@ -533,6 +533,86 @@ test winfo-15.2 {"winfo isdark" command, widget in a toplevel which was never ma
     destroy .t
 } -result 1
 
+test winfo-15.3 {"winfo isdark" command, a dark background on X11} -constraints {
+    x11
+} -setup {
+    frame .f -background #2b2b2b
+} -body {
+    winfo isdark .f
+} -cleanup {
+    destroy .f
+} -result 1
+
+test winfo-15.4 {"winfo isdark" command, a light background on X11} -constraints {
+    x11
+} -setup {
+    frame .f -background #ffffff
+} -body {
+    winfo isdark .f
+} -cleanup {
+    destroy .f
+} -result 0
+
+test winfo-15.5 {"winfo isdark" command, it weighs the components} -constraints {
+    x11
+} -setup {
+    frame .fy -background #ffff00
+    frame .fb -background #0000ff
+} -body {
+    # Yellow and blue each have one component at full intensity, and the eye
+    # is far more sensitive to the green in the one than to the blue in the
+    # other.
+    list [winfo isdark .fy] [winfo isdark .fb]
+} -cleanup {
+    destroy .fy .fb
+} -result {0 1}
+
+test winfo-15.6 {"winfo isdark" command, it follows tk_setPalette} -constraints {
+    x11
+} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    tk_setPalette #2b2b2b
+    frame .f
+    set dark [winfo isdark .f]
+    destroy .f
+    tk_setPalette #d9d9d9
+    frame .f
+    list $dark [winfo isdark .f]
+} -cleanup {
+    destroy .f
+    array set ::tk::Palette $saved
+    option clear
+} -result {1 0}
+
+test winfo-15.7 {"winfo isdark" command, a window which was never mapped} -constraints {
+    x11
+} -setup {
+    toplevel .t -background #2b2b2b
+    frame .t.f -background #ffffff
+} -body {
+    # The colour a window has been given is known before the window itself
+    # exists, so this answers without realizing anything.
+    list [winfo ismapped .t] [winfo isdark .t] [winfo isdark .t.f]
+} -cleanup {
+    destroy .t
+} -result {0 1 0}
+
+test winfo-15.8 {"winfo isdark" command, a window which has been unmapped} -constraints {
+    x11
+} -setup {
+    frame .f -background #353535
+    pack .f
+    update
+} -body {
+    set mapped [winfo isdark .f]
+    pack forget .f
+    update
+    list $mapped [winfo isdark .f]
+} -cleanup {
+    destroy .f
+} -result {1 1}
+
 #
 # TESTFILE CLEANUP
 #
