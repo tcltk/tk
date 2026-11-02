@@ -6700,6 +6700,45 @@ test textDisp-50.9 {the edge of the selection does not change the drawing of joi
     destroy .t1
     unset -nocomplain ref res i
 } -result {}
+
+# The x of the red pixels of the middle row of display line 1 of $w.
+proc redColumns {w} {
+    update
+    lassign [$w dlineinfo 1.0] x y width height
+    set res {}
+    for {set px 0} {$px < [winfo width $w]} {incr px} {
+	scan [testpixel $w $px [expr {$y + $height/2}]] #%2x%2x%2x r g b
+	if {$r > 200 && $g < 80 && $b < 80} {
+	    lappend res $px
+	}
+    }
+    return $res
+}
+test textDisp-51.1 {the insertion cursor after a space wrapped at the end of a line} -constraints {
+    testpixel
+} -setup {
+    text .t1 -font TkDefaultFont -width 40 -height 3 -wrap word \
+	    -foreground black -background white -insertwidth 2 \
+	    -insertbackground red -insertunfocussed solid \
+	    -borderwidth 0 -highlightthickness 0 -padx 0
+    pack .t1
+    update
+} -body {
+    .t1 insert end "abcdefgh"
+    update
+    # Room for the word, not for the space typed after it.
+    lassign [.t1 bbox 1.7] x y w
+    .t1 tag configure margin -rmargin [expr {[winfo width .t1] - $x - $w - 1}]
+    .t1 insert end " "
+    .t1 tag add margin 1.0 end
+    .t1 mark set insert 1.8
+    set before [redColumns .t1]
+    .t1 mark set insert "1.0 lineend"
+    expr {[lindex [redColumns .t1] 0] > [lindex $before 0]}
+} -cleanup {
+    destroy .t1
+    unset -nocomplain x y w before
+} -result 1
 #
 # TESTFILE CLEANUP
 #

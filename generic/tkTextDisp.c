@@ -116,6 +116,17 @@
  */
 
 /*
+ * TK_EMULATE_DRAW_IN_CONTEXT:
+ *
+ *	Set where each char chunk is drawn alone, at its own x: see
+ *	DrawCharsInContext.
+ */
+
+#if defined(TK_DRAW_IN_CONTEXT) && (defined(_WIN32) || defined(__UNIX__))
+# define TK_EMULATE_DRAW_IN_CONTEXT
+#endif
+
+/*
  * The following macro is used to compare two floating-point numbers to within
  * a certain degree of scale. Direct comparison fails on processors where the
  * processor and memory representations of FP numbers of a particular
@@ -825,6 +836,10 @@ static void		LayoutBidiReorder(LayoutData *data, DLine *dlPtr);
 static void		DisplayReorderedLineBackground(TkText *textPtr, DLine *dlPtr,
 			    Pixmap pixmap);
 static void		BaseChunkSpan(const TkTextDispChunk *chunkPtr, int *leftPtr, int *rightPtr);
+static TkTextDispChunk *NextStretchChunk(const TkTextDispChunk *chunkPtr);
+# ifndef TK_EMULATE_DRAW_IN_CONTEXT
+static void		LayoutPlaceStretchCuts(TkText *textPtr, TkTextDispChunk *chunkPtr);
+# endif
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 static int		ChunkSpanX(const TkTextDispChunk *chunkPtr, int offset, int width);
 static int		GetCursorX(TkText *textPtr, TkTextDispChunk *cursorPtr);
@@ -2749,18 +2764,99 @@ BaseChunkSpan(
     }
     *leftPtr = baseChunkPtr->visualX;
     *rightPtr = baseChunkPtr->visualX + baseChunkPtr->width;
-    for (cPtr = baseChunkPtr->nextPtr; cPtr; cPtr = cPtr->nextPtr) {
+    for (cPtr = NextStretchChunk(baseChunkPtr); cPtr; cPtr = NextStretchChunk(cPtr)) {
+	*leftPtr = MIN(*leftPtr, cPtr->visualX);
+	*rightPtr = MAX(*rightPtr, cPtr->visualX + cPtr->width);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NextStretchChunk --
+ *
+ *	Give the char chunk after a char chunk in its stretch. A chunk with
+ *	neither bytes nor width in between, like the insertion cursor, does
+ *	not end the stretch.
+ *
+ * Results:
+ *	The next char chunk of the stretch, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkTextDispChunk *
+NextStretchChunk(
+    const TkTextDispChunk *chunkPtr)
+{
+    TkTextDispChunk *cPtr;
+
+    for (cPtr = chunkPtr->nextPtr; cPtr; cPtr = cPtr->nextPtr) {
 	if (IsCharChunk(cPtr)) {
-	    if (cPtr->baseChunkPtr != baseChunkPtr) {
-		break;
-	    }
-	    *leftPtr = MIN(*leftPtr, cPtr->visualX);
-	    *rightPtr = MAX(*rightPtr, cPtr->visualX + cPtr->width);
-	} else if (cPtr->numBytes > 0 || cPtr->width > 0) {
+	    return cPtr->baseChunkPtr == chunkPtr->baseChunkPtr ? cPtr : NULL;
+	}
+	if (cPtr->numBytes > 0 || cPtr->width > 0) {
 	    break;
 	}
     }
+    return NULL;
 }
+
+# ifndef TK_EMULATE_DRAW_IN_CONTEXT
+/*
+ *----------------------------------------------------------------------
+ *
+ * LayoutPlaceStretchCuts --
+ *
+ *	Put the edges between the char chunks of each stretch of a display
+ *	line where the whole stretch puts them. A chunk is measured while the
+ *	stretch still ends with it: a letter joined to the next chunk is then
+ *	measured in its final form.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The x and width of chunks change, but not the right edge of a
+ *	stretch.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+LayoutPlaceStretchCuts(
+    TkText *textPtr,
+    TkTextDispChunk *chunkPtr)	/* First chunk of the display line. */
+{
+    for ( ; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+	TkTextDispChunk *nextPtr;
+
+	if (!IsCharChunk(chunkPtr) || chunkPtr != chunkPtr->baseChunkPtr) {
+	    continue;
+	}
+	while ((nextPtr = NextStretchChunk(chunkPtr))) {
+	    int x, right = nextPtr->x + nextPtr->width;
+	    TkTextDispChunk *cPtr;
+
+	    if (chunkPtr->wrappedAtSpace) {
+		/* Its space wrapped at the end of the line fills the room left. */
+		break;
+	    }
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, chunkPtr->x, -1, textPtr->spaceMode, 0, &x);
+	    chunkPtr->width = x - chunkPtr->x;
+	    for (cPtr = chunkPtr->nextPtr; cPtr != nextPtr; cPtr = cPtr->nextPtr) {
+		cPtr->x = x;
+	    }
+	    nextPtr->x = x;
+	    nextPtr->width = right - x;
+	    chunkPtr = nextPtr;
+	}
+    }
+}
+# endif /* !TK_EMULATE_DRAW_IN_CONTEXT */
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 /*
@@ -5039,6 +5135,10 @@ LayoutDLine(
     dlPtr->firstCharChunkPtr = data.firstCharChunkPtr;
     dlPtr->breakInfo = data.breakInfo;
     dlPtr->invisible = data.countVisibleChunks == 0;
+
+#if defined(TK_LAYOUT_WITH_BASE_CHUNKS) && !defined(TK_EMULATE_DRAW_IN_CONTEXT)
+    LayoutPlaceStretchCuts(textPtr, dlPtr->chunkPtr);
+#endif
 
     /*
      * Make tab adjustments for the last tab stop, if there is one.
@@ -15916,7 +16016,7 @@ LogCharsDisplay(
 }
 
 #ifdef TK_DRAW_IN_CONTEXT
-# if defined(_WIN32) || defined(__UNIX__)
+# ifdef TK_EMULATE_DRAW_IN_CONTEXT
 
 /*****************************************************************************
  * We need this function for the emulation of context drawing, in this way the
@@ -15944,7 +16044,7 @@ DrawCharsInContext(
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart, rangeLength, xOffset, y);
 }
 
-# else /* if !(defined(_WIN32) || defined(__UNIX__)) */
+# else /* if !TK_EMULATE_DRAW_IN_CONTEXT */
 
 static void
 DrawCharsInContext(
@@ -15968,7 +16068,7 @@ DrawCharsInContext(
 	    source, numBytes, rangeStart, rangeLength, x, y);
 }
 
-# endif /* defined(_WIN32) || defined(__UNIX__) */
+# endif /* TK_EMULATE_DRAW_IN_CONTEXT */
 
 static void
 DrawChars(
