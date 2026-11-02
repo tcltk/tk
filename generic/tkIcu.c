@@ -356,7 +356,7 @@ Icu_Init(
 		INT2PTR(FLAG_WORD), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::endOfWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING|FLAG_SPACE), icuCleanup);
-#ifdef _WIN32
+#if defined(_WIN32) || defined(MAC_OSX_TK)
 	icu_fns.nopen += 3;
 #else
 	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
@@ -366,7 +366,10 @@ Icu_Init(
 	icu_fns.nopen += 5;
 #endif
     }
-#ifdef _WIN32
+#if defined(MAC_OSX_TK)
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", TkStartEndOfClusterCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", TkStartEndOfClusterCmd, INT2PTR(1), NULL);
+#elif defined(_WIN32)
     /* No ICU on Windows for startOfCluster/endOfCluster -> use Uniscribe ScriptBreak fallback */
     extern int TkpWinRegisterClusterCommands(Tcl_Interp *interp);
     TkpWinRegisterClusterCommands(interp);

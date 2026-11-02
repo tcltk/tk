@@ -402,7 +402,7 @@ FONT_OBJS = @UNIX_FONT_OBJS@
 
 GENERIC_OBJS = mojibake.o dictionaries.o khmer.o lao.o thai.o \
 	tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
-	tkClipboard.o \
+	tkClipboard.o tkIcu.o \
 	tkCmds.o tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o \
 	tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o \
 	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o \
@@ -426,7 +426,7 @@ STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 # X11 objects including SheenBidi unity build
 X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixColor.o tkUnixConfig.o \
-	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
+	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \

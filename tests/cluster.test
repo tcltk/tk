@@ -70,7 +70,7 @@ test cluster-1.10 {::tk::startOfCluster: pointed Hebrew} -constraints needsICU -
     unset -nocomplain str
 } -result {0 0 0 3 4 4 6 7}
 
-test cluster-2.0 {::tk::endOfCluster} -body {
+test cluster-2.0 {::tk::endOfCluster} -constraints notAqua -body {
     ::tk::endOfCluster é -1
 } -result 0
 test cluster-2.1 {::tk::endOfCluster} -constraints needsICU -body {
@@ -79,16 +79,16 @@ test cluster-2.1 {::tk::endOfCluster} -constraints needsICU -body {
 test cluster-2.2 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster é 1
 } -result 2
-test cluster-2.3 {::tk::endOfCluster} -body {
+test cluster-2.3 {::tk::endOfCluster} -constraints notAqua -body {
     ::tk::endOfCluster é 2
 } -result {}
-test cluster-2.4 {::tk::endOfCluster} -body {
+test cluster-2.4 {::tk::endOfCluster} -constraints notAqua -body {
     ::tk::endOfCluster é 3
 } -result {}
 test cluster-2.5 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster é end
 } -result 2
-test cluster-2.6 {::tk::endOfCluster} -body {
+test cluster-2.6 {::tk::endOfCluster} -constraints notAqua -body {
     ::tk::endOfCluster é {}
 } -result 0
 test cluster-2.7 {::tk::endOfCluster} -constraints needsICU -body {
@@ -100,7 +100,7 @@ test cluster-2.8 {::tk::endOfCluster: end} -body {
 test cluster-2.9 {::tk::endOfCluster: character above U+FFFF} -body {
     list [::tk::endOfCluster a\U1F600b 0] [::tk::endOfCluster a\U1F600b 1]
 } -result {1 2}
-test cluster-2.10 {::tk::endOfCluster: pointed Hebrew} -constraints needsICU -body {
+test cluster-2.10 {::tk::endOfCluster: pointed Hebrew} -constraints {needsICU notAqua} -body {
     set str שָׁלוֹם
     lmap i {-1 0 1 2 3 4 5 6 7} {::tk::endOfCluster $str $i}
 } -cleanup {
