@@ -425,9 +425,9 @@ CreateNamedSystemFont(
 /*
  *----------------------------------------------------------------------
  *
- * startOfClusterObjCmd --
+ * TkStartEndOfClusterCmd --
  *
- *      This function is invoked to process the startOfCluster command.
+ *      This function is invoked to process the tk::(start|end)OfCluster commands.
  *
  * Results:
  *      A standard Tcl result.
@@ -438,9 +438,9 @@ CreateNamedSystemFont(
  *----------------------------------------------------------------------
  */
 
-static int
-startOfClusterObjCmd(
-    TCL_UNUSED(void *),
+int
+TkStartEndOfClusterCmd(
+    void *clientData,           /* != NULL means 'end' */
     Tcl_Interp *interp,         /* Current interpreter. */
     Tcl_Size objc,              /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
@@ -482,6 +482,9 @@ startOfClusterObjCmd(
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
 	    idx = range.location;
+        if (clientData) {
+            idx += range.length;
+        }
 	}
 	if (idx > 0 && len != ulen) {
 	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
@@ -490,65 +493,6 @@ startOfClusterObjCmd(
 		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
 	    }
 	    idx = newIdx;
-	}
-	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
-    }
-    return TCL_OK;
-}
-
-static int
-endOfClusterObjCmd(
-    TCL_UNUSED(void *),
-    Tcl_Interp *interp,         /* Current interpreter. */
-    Tcl_Size objc,              /* Number of arguments. */
-    Tcl_Obj *const objv[])      /* Argument objects. */
-{
-    TKNSString *S;
-    char *stringArg;
-    Tcl_Size idx, len;
-
-    if ((size_t)(objc - 3) > 1) {
-	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
-	return TCL_ERROR;
-    }
-    stringArg = Tcl_GetStringFromObj(objv[1], &len);
-    if (stringArg == NULL) {
-	return TCL_ERROR;
-    }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
-    len = [S length];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
-		Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
-	return TCL_ERROR;
-    }
-    if (idx >= ulen) {
-	idx = len;
-    } else if (idx > 0 && len != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
-	}
-	idx = newIdx;
-    }
-    if (idx + 1 <= len) {
-	if (idx < 0) {
-	    idx = 0;
-	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
-	    idx = range.location + range.length;
-	    if (idx > 0 && len != ulen) {
-		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-		Tcl_Size newIdx = 1;
-		for (Tcl_Size i = 1; i < idx; i++) {
-		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
-		}
-		idx = newIdx;
-	    }
 	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
@@ -651,8 +595,6 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*
@@ -1400,6 +1342,30 @@ TkpDrawAngledCharsInContext(
 	 */
 	rangeStartX = CTLineGetOffsetForStringIndex(full, start, NULL);
 	rangeEndX   = CTLineGetOffsetForStringIndex(full, start + length, NULL);
+
+	/*
+	 * Put an edge between two characters on a pixel boundary, or
+	 * CoreGraphics renders some pixels of the glyphs differently than in
+	 * the whole line (seen in joined letters).  Round towards the logical
+	 * end: the range next to this one rounds their shared edge alike, and
+	 * an end edge never cuts into the last glyph.
+	 */
+
+	if (rangeEndX < rangeStartX) {
+	    if (start > 0) {
+		rangeStartX = floor(textX + rangeStartX) - textX;
+	    }
+	    if (start + length < fullLength) {
+		rangeEndX = floor(textX + rangeEndX) - textX;
+	    }
+	} else {
+	    if (start > 0) {
+		rangeStartX = ceil(textX + rangeStartX) - textX;
+	    }
+	    if (start + length < fullLength) {
+		rangeEndX = ceil(textX + rangeEndX) - textX;
+	    }
+	}
 
 	/*
 	 * For RTL runs rangeEndX < rangeStartX.  Normalise so clipX is always

@@ -1252,7 +1252,7 @@ StippleReleaseInfo(
     CGImageRelease(info->mask);
     CGColorRelease(info->fg);
     CGColorRelease(info->bg);
-    ckfree(info);
+    Tcl_Free(info);
 }
 
 /*
@@ -1405,7 +1405,7 @@ SetStipplePattern(
 	return;
     }
 
-    info = (StippleInfo *)ckalloc(sizeof(StippleInfo));
+    info = (StippleInfo *)Tcl_Alloc(sizeof(StippleInfo));
     info->mask = mask;
     info->fg = fg;
     info->bg = bg;

@@ -199,10 +199,10 @@ MacSystrayObjCmd(
 {
     Tk_Image tk_image;
     int result, idx;
-    static const char *options[] =
+    static const char *const options[] =
 	{"create", "modify", "destroy", NULL};
     typedef enum {TRAY_CREATE, TRAY_MODIFY, TRAY_DESTROY} optionsEnum;
-    static const char *modifyOptions[] =
+    static const char *const modifyOptions[] =
 	{"image", "text", "b1_callback", "b3_callback", NULL};
     typedef enum {TRAY_IMAGE, TRAY_TEXT, TRAY_B1_CALLBACK, TRAY_B3_CALLBACK
 	} modifyOptionsEnum;

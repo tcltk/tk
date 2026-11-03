@@ -1979,7 +1979,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
     update
     interp create child
     load {} Tk child
-    child eval {wm geometry . 200x200+100+100; after 100; update}
+    child eval {wm geometry . 200x200+100+100; after 150; update}
     set result [list [winfo containing 200 200] \
 	[child eval {winfo containing 200 200}]]
     interp delete child
@@ -2179,10 +2179,14 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
     }
     update
     raise .t .t2
+    update idletasks
     update
+    after 300
     set result [list [winfo containing 200 200]]
     lower .t3
+    update idletasks
     update
+    after 300
     lappend result [winfo containing 200 200]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
@@ -2632,7 +2636,7 @@ test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
+} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -hidden 0 -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 
 test unixWm-60.2 {wm attributes - test} -constraints unix -body {
     destroy .t
