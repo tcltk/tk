@@ -816,7 +816,7 @@ or not the first window is currently above or below the second
 window in the stacking order.
 .\" METHOD: state
 .TP
-\fBwm state \fIwindow\fR ?newstate?
+\fBwm state \fIwindow\fR ?\fInewstate\fR?
 .
 If \fInewstate\fR is specified, the window will be set to the new state,
 otherwise it returns the current state of \fIwindow\fR: either
