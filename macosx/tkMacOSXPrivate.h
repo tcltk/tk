@@ -300,6 +300,9 @@ MODULE_SCOPE NSWindow*  TkMacOSXGetKeyWindowSuccessor(
 			     Tcl_Interp *interp, NSWindow *w);
 MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 					     NSWindow *ignore);
+MODULE_SCOPE void TkMacOSXUpdatePointerAfterMap(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXUpdatePointerBeforeUnmap(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXUpdatePointerAfterDestroy (NSWindow *deadNSWindow);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
 
@@ -425,7 +428,6 @@ VISIBILITY_HIDDEN
     NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
-@property Bool onScreen;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -459,6 +461,7 @@ VISIBILITY_HIDDEN
 
 @interface TKWindow(TKWm)
 - (void)    tkLayoutChanged;
+- (void)    tkOrderFront;
 @end
 
 @interface TKDrawerWindow : NSWindow
@@ -476,6 +479,7 @@ VISIBILITY_HIDDEN
 
 @interface TKPanel(TKWm)
 - (void)    tkLayoutChanged;
+- (void)    tkOrderFront;
 @end
 #pragma mark NSMenu & NSMenuItem Utilities
 
