@@ -28,43 +28,179 @@
 #undef b
 #endif
 
-static int WinClusterFindBoundary(const char *utf8, Tcl_Size utf8Bytes, Tcl_Size byteIndex, int findStart)
+/*
+ *---------------------------------------------------------------------------
+ *
+ * WinClusterCmd --
+ *
+ *	Implements ::tk::startOfCluster and ::tk::endOfCluster with the
+ *	grapheme cluster boundaries of Uniscribe (ScriptBreak), when ICU is
+ *	not used.  The arguments and results are the same as for the ICU
+ *	implementation in tkIcu.c: character indices, "end" is the last
+ *	character, startOfCluster returns "" for a negative index and the
+ *	length of the string for an index after its end, endOfCluster returns
+ *	"" for an index at or after the end of the string.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+WinClusterCmd(
+    void *clientData,		/* Nonzero for endOfCluster. */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
 {
-    int wLen = MultiByteToWideChar(CP_UTF8, 0, utf8, (int)utf8Bytes, NULL, 0);
-    if (wLen <= 0) return (int)byteIndex;
-    WCHAR *wStr = (WCHAR *)Tcl_Alloc(wLen * sizeof(WCHAR));
-    MultiByteToWideChar(CP_UTF8, 0, utf8, (int)utf8Bytes, wStr, wLen);
-    SCRIPT_ANALYSIS sa; memset(&sa, 0, sizeof(sa)); sa.eScript = SCRIPT_UNDEFINED;
-    SCRIPT_LOGATTR *logAttr = (SCRIPT_LOGATTR *)Tcl_Alloc(wLen * sizeof(SCRIPT_LOGATTR));
-    HRESULT hr = ScriptBreak(wStr, wLen, &sa, logAttr);
-    int result = (int)byteIndex;
-    if (SUCCEEDED(hr)) {
-        int wIndex = MultiByteToWideChar(CP_UTF8, 0, utf8, (int)byteIndex, NULL, 0);
-        if (wIndex < 0) wIndex = 0; if (wIndex > wLen) wIndex = wLen;
-        if (findStart) { int s = wIndex; while (s > 0 && !logAttr[s].fCharStop) s--; result = WideCharToMultiByte(CP_UTF8, 0, wStr, s, NULL, 0, NULL, NULL); }
-        else { int e = wIndex + 1; if (e > wLen) e = wLen; while (e < wLen && !logAttr[e].fCharStop) e++; if (e > wLen) e = wLen; result = WideCharToMultiByte(CP_UTF8, 0, wStr, e, NULL, 0, NULL, NULL); }
+    int following = PTR2INT(clientData);
+    Tcl_DString ds;
+    const char *str;
+    const WCHAR *ustr;
+    Tcl_Size len, ulen, idx, i;
+    SCRIPT_LOGATTR *logAttr = NULL;
+
+    if ((size_t)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "str start ?locale?");
+	return TCL_ERROR;
     }
-    Tcl_Free((char *)wStr); Tcl_Free((char *)logAttr); return result;
+    str = Tcl_GetStringFromObj(objv[1], &len);
+    ulen = Tcl_GetCharLength(objv[1]);
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", (char *)NULL);
+	return TCL_ERROR;
+    }
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToWCharDString(str, len, &ds);
+    ustr = (const WCHAR *)Tcl_DStringValue(&ds);
+    len = Tcl_DStringLength(&ds) / sizeof(WCHAR);
+
+    /*
+     * Convert the character index to a UTF-16 index.
+     */
+
+    if (idx >= ulen) {
+	idx = len;
+    } else if (idx > 0 && len != ulen) {
+	Tcl_Size newIdx = 0;
+
+	for (i = 0; i < idx; i++) {
+	    newIdx += 1 + ((newIdx < len - 1)
+		    && IS_HIGH_SURROGATE(ustr[newIdx])
+		    && IS_LOW_SURROGATE(ustr[newIdx + 1]));
+	}
+	idx = newIdx;
+    }
+
+    /*
+     * logAttr[i].fCharStop is set if a cluster starts at i.  The string is
+     * itemized first, so that each run is broken with its own script.
+     */
+
+    if (len > 0) {
+	int maxItems = 16, nItems = 0;
+	SCRIPT_ITEM *items = NULL;
+	HRESULT hr;
+
+	logAttr = (SCRIPT_LOGATTR *)Tcl_Alloc(len * sizeof(SCRIPT_LOGATTR));
+	do {
+	    items = (SCRIPT_ITEM *)Tcl_Realloc(items,
+		    (maxItems + 1) * sizeof(SCRIPT_ITEM));
+	    hr = ScriptItemize(ustr, (int)len, maxItems, NULL, NULL, items,
+		    &nItems);
+	    if (hr == E_OUTOFMEMORY) {
+		maxItems *= 2;
+	    }
+	} while (hr == E_OUTOFMEMORY);
+	if (SUCCEEDED(hr)) {
+	    int k;
+
+	    for (k = 0; k < nItems; k++) {
+		int first = items[k].iCharPos;
+
+		if (FAILED(ScriptBreak(ustr + first,
+			items[k + 1].iCharPos - first, &items[k].a,
+			logAttr + first))) {
+		    break;
+		}
+	    }
+	    if (k < nItems) {
+		hr = E_FAIL;
+	    }
+	}
+	Tcl_Free(items);
+	if (FAILED(hr)) {
+	    /*
+	     * Fall back to code points.
+	     */
+
+	    for (i = 0; i < len; i++) {
+		memset(&logAttr[i], 0, sizeof(SCRIPT_LOGATTR));
+		logAttr[i].fCharStop = !(i > 0 && IS_LOW_SURROGATE(ustr[i])
+			&& IS_HIGH_SURROGATE(ustr[i - 1]));
+	    }
+	}
+    }
+
+    if (following) {
+	/*
+	 * The first cluster boundary after idx.
+	 */
+
+	if (idx >= len) {
+	    idx = TCL_INDEX_NONE;
+	} else {
+	    if (idx < 0) {
+		idx = -1;
+	    }
+	    for (idx++; idx < len && !logAttr[idx].fCharStop; idx++) {
+		/* Empty loop body. */
+	    }
+	}
+    } else if (idx > 0 && idx < len) {
+	/*
+	 * The start of the cluster containing idx.
+	 */
+
+	while (idx > 0 && !logAttr[idx].fCharStop) {
+	    idx--;
+	}
+    }
+    if (logAttr) {
+	Tcl_Free(logAttr);
+    }
+
+    /*
+     * Convert the UTF-16 index back to a character index.
+     */
+
+    if (idx > 0 && len != ulen) {
+	Tcl_Size newIdx = 1;
+
+	for (i = 1; i < idx; i++) {
+	    if (!IS_HIGH_SURROGATE(ustr[i - 1]) || !IS_LOW_SURROGATE(ustr[i])) {
+		newIdx++;
+	    }
+	}
+	idx = newIdx;
+    }
+    Tcl_DStringFree(&ds);
+    if (idx != TCL_INDEX_NONE) {
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
+    }
+    return TCL_OK;
 }
-static Tcl_Size WinCharIdxToByte(const char *text, Tcl_Size textBytes, Tcl_Obj *idxObj, Tcl_Interp *interp){
-    const char *idxStr = Tcl_GetString(idxObj); if (strcmp(idxStr, "end")==0) return textBytes;
-    Tcl_WideInt charIdx; if (Tcl_GetWideIntFromObj(interp, idxObj, &charIdx)!=TCL_OK) return 0;
-    if (charIdx<0) return 0; const char *p = Tcl_UtfAtIndex(text, (Tcl_Size)charIdx); if (!p) return textBytes; return (Tcl_Size)(p - text); }
-static int WinStartOfClusterObjCmd(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]){
-    if (objc<3){ Tcl_WrongNumArgs(interp,1,objv,"text index ?locale?"); return TCL_ERROR; }
-    Tcl_Size tb; const char *text = Tcl_GetStringFromObj(objv[1], &tb);
-    Tcl_Size bi = WinCharIdxToByte(text, tb, objv[2], interp);
-    int res = WinClusterFindBoundary(text, tb, bi, 1);
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK; }
-static int WinEndOfClusterObjCmd(ClientData cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]){
-    if (objc<3){ Tcl_WrongNumArgs(interp,1,objv,"text index ?locale?"); return TCL_ERROR; }
-    Tcl_Size tb; const char *text = Tcl_GetStringFromObj(objv[1], &tb);
-    Tcl_Size bi = WinCharIdxToByte(text, tb, objv[2], interp);
-    int res = WinClusterFindBoundary(text, tb, bi, 0);
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj((Tcl_WideInt)res)); return TCL_OK; }
-int TkpWinRegisterClusterCommands(Tcl_Interp *interp){
-    if (Tcl_GetCommandInfo(interp, "::tk::startOfCluster", NULL)==0) Tcl_CreateObjCommand(interp, "::tk::startOfCluster", WinStartOfClusterObjCmd, NULL, NULL);
-    if (Tcl_GetCommandInfo(interp, "::tk::endOfCluster", NULL)==0) Tcl_CreateObjCommand(interp, "::tk::endOfCluster", WinEndOfClusterObjCmd, NULL, NULL);
+
+MODULE_SCOPE int TkpWinRegisterClusterCommands(Tcl_Interp *interp) {
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", WinClusterCmd,
+	    INT2PTR(0), NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", WinClusterCmd,
+	    INT2PTR(1), NULL);
     return TCL_OK; }
 #endif
 
@@ -3107,7 +3243,7 @@ FindFallbackSubFont(
      *
      */
 
-    static const char *priorityFonts[] = {
+    static const char *const priorityFonts[] = {
 
 	/* Emoji / Symbols. */
 	"Segoe UI Symbol",

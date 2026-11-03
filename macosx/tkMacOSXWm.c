@@ -164,7 +164,7 @@ enum NSWindowSubclass {
     subclassNSPanel = 1
 };
 /* This array must be indexed by the enum above.*/
-static const char *subclassNames[] = {"nswindow", "nspanel", NULL};
+static const char *const subclassNames[] = {"nswindow", "nspanel", NULL};
 
 typedef struct buttonField_t {
     unsigned zoom: 1;
@@ -173,7 +173,7 @@ typedef struct buttonField_t {
 } buttonField;
 
 /* The order of these names must match the order of the bits above! */
-static const char *buttonNames[] = {"zoom", "miniaturize", "close", NULL};
+static const char *const buttonNames[] = {"zoom", "miniaturize", "close", NULL};
 
 typedef union windowButtonState_t {
     int intvalue;

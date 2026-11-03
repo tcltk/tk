@@ -1965,7 +1965,6 @@ typedef struct BidiUnit {
 
 static void
 BidiReorderChunks(
-    TkText *textPtr,		/* Widget, for diagnostics only. */
     DLine *dlPtr)		/* Display line to reorder. */
 {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -2110,14 +2109,8 @@ BidiReorderChunks(
 		units[i].resolved = pdir;		/* Barrier. */
 	    } else if (units[i].dir != 0) {
 		units[i].resolved = units[i].dir;
-#ifdef _WIN32
 	    } else if (units[i].weakL) {
 		units[i].resolved = 1;
-#endif
-#ifndef _WIN32
-	    } else if (units[i].weakL) {
-		units[i].resolved = 1;
-#endif
 	    } else {
 		int before = (i > g) ? units[i-1].resolved : pdir;
 		int after = pdir;
@@ -2262,7 +2255,6 @@ BidiReorderChunks(
     Tcl_Free(units);
     Tcl_Free(order);
 #else
-    (void)textPtr;
     (void)dlPtr;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 }
@@ -3048,7 +3040,7 @@ LayoutDLine(
      * width changes, so the line length remains valid.
      */
 
-    BidiReorderChunks(textPtr, dlPtr);
+    BidiReorderChunks(dlPtr);
 
     return dlPtr;
 }
@@ -8986,8 +8978,10 @@ DlineXOfIndex(
 	    int y, width, height;
 	    int isRtl = 0;
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-	    if (ciPtr) isRtl = ciPtr->isRtl;
+	    if (chunkPtr->displayProc == CharDisplayProc
+		    && chunkPtr->clientData != NULL) {
+		isRtl = ((CharInfo *)chunkPtr->clientData)->isRtl;
+	    }
 #endif
 	    chunkPtr->bboxProc(textPtr, chunkPtr, byteIndex,
 		    dlPtr->y + dlPtr->spaceAbove,
@@ -9007,19 +9001,15 @@ DlineXOfIndex(
 		if (next != NULL) {
 		    /* if next chunk is same RTL string, its x is the boundary */
 		    x = next->x;
-		    /* For pure RTL end, we want left edge of whole run */
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-		    if (ciPtr && ciPtr->baseChunkPtr && ciPtr->baseChunkPtr->clientData) {
-			BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
-			if (bciPtr->placed && chunkPtr->nextPtr == NULL) {
-			    return bciPtr->originX;
-			}
-		    }
-#endif
 		} else {
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+		    /*
+		     * For pure RTL end, we want left edge of whole run.  The
+		     * chunk may be an embedded image or window.
+		     */
+
+		    CharInfo *ciPtr = (chunkPtr->displayProc == CharDisplayProc)
+			    ? (CharInfo *)chunkPtr->clientData : NULL;
 		    if (ciPtr && ciPtr->baseChunkPtr && ciPtr->baseChunkPtr->clientData) {
 			BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
 			if (bciPtr->placed) {

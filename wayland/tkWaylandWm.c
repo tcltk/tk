@@ -2964,24 +2964,30 @@ TkGetPointerCoords(
 {
     extern int tkWaylandLastRootX;
     extern int tkWaylandLastRootY;
+    extern int tkWaylandPointerEmulated;
+
     /*
-     * Fix stale winfo pointerx: update from live cursor pos on Enter,
-     * so tooltip position is current as soon as pointer enters window.
-     * This is what TkWaylandCursorEnterCallback should do via
-     * TkWaylandUpdatePointerState using glfwGetCursorPos.
+     * After an emulated warp the cached position is authoritative; the
+     * GLFW cursor position is stale until the next real motion event
+     * (which clears tkWaylandPointerEmulated).
      */
-    if (tkwin) {
+    if (tkwin && !tkWaylandPointerEmulated) {
         TkWindow *winPtr = (TkWindow *)tkwin;
+
         while (winPtr && !(winPtr->flags & TK_TOP_LEVEL) && winPtr->parentPtr) {
             winPtr = winPtr->parentPtr;
         }
         GLFWwindow *gw = winPtr ? TkWaylandGetGLFWwindow(winPtr) : NULL;
         if (gw) {
             double cx, cy;
+            int trX, trY;
+
             glfwGetCursorPos(gw, &cx, &cy);
             if (cx >= 0 && cy >= 0 && cx < 10000 && cy < 10000) {
-                tkWaylandLastRootX = (int)cx;
-                tkWaylandLastRootY = (int)cy;
+                /* GLFW coordinates are window-relative; make them root. */
+                Tk_GetRootCoords((Tk_Window)winPtr, &trX, &trY);
+                tkWaylandLastRootX = trX + (int)cx;
+                tkWaylandLastRootY = trY + (int)cy;
             }
         }
     }
@@ -2992,7 +2998,6 @@ TkGetPointerCoords(
         *yPtr = tkWaylandLastRootY;
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
