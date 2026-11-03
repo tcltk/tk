@@ -15,7 +15,7 @@ Copyright:
 
 # Name
 
-attribtable - Create an attribute table, used to query and modify arbitrary data attached to any widget.
+tk attribtable - Create an attribute table, used to query and modify arbitrary data attached to any widget.
 
 # Synopsis
 
@@ -43,14 +43,21 @@ tableName set|get|unset|clear|exists|names|pathnames args
 
 In the description of the supported forms below, *pathName* specifies a widget whose attributes are being queried or modified via the *tableName* command.
 
-[tableName]{.ins} [set]{.sub} [pathName]{.arg} [name]{.arg} [value]{.arg} [name value]{.optdot}
-: Sets (i.e., adds or updates) the attributes identified by the *name* arguments to the values given by the *value* arguments.  Returns an empty string.  Example:
+[tableName]{.ins} [clear]{.sub} [pathName]{.arg}
+: Unsets all attributes and removes *pathName* from the list of those widgets that have attributes set via *tableName* **set**.  Returns an empty string.  Example:
 
     ```
-    # Save and then change the button's text
-    tk attribtable table
-    table set .btn prevText [.btn cget -text]
-    .btn configure -text "NewText"
+    table clear .btn
+    ```
+
+[tableName]{.ins} [exists]{.sub} [pathName]{.arg} [name]{.optarg}
+: If the optional argument is present then returns **1** if the attribute identified by *name* exists and **0** otherwise.  Without the optional argument the return value is **1** if the widget *pathName* has at least one attribute set via *tableName* **set** and **0** otherwise. Example:
+
+    ```
+    if [table exists .btn prevText] {
+        # Restore the button's previous text
+        .btn configure -text [table get .btn prevText]
+    }
     ```
 
 [tableName]{.ins} [get]{.sub} [pathName]{.arg} [name]{.optarg}
@@ -64,30 +71,6 @@ In the description of the supported forms below, *pathName* specifies a widget w
     .btn configure -text [table get .btn prevText]
     ```
 
-[tableName]{.ins} [unset]{.sub} [pathName]{.arg} [name]{.arg} [name]{.optdot}
-: Unsets the attributes identified by the *name* arguments.  Returns an empty string.  Example:
-
-    ```
-    table unset .btn prevText
-    ```
-
-[tableName]{.ins} [clear]{.sub} [pathName]{.arg}
-: Unsets all attributes and removes *pathName* from the list of those widgets that have attributes set via *tableName* [set].  Returns an empty string.  Example:
-
-    ```
-    table clear .btn
-    ```
-
-[tableName]{.ins} [exists]{.sub} [pathName]{.arg} [name]{.optarg}
-: If the optional argument is present then returns **1** if the attribute identified by *name* exists and **0** otherwise.  Without the optional argument the return value is **1** if the widget *pathName* has at least one attribute set via *tableName* [set] and **0** otherwise. Example:
-
-    ```
-    if [table exists .btn prevText] {
-        # Restore the button's previous text
-        .btn configure -text [table get .btn prevText]
-    }
-    ```
-
 [tableName]{.ins} [names]{.sub} [pathName]{.arg}
 : Returns a list consisting of all attribute names of the widget *pathName*.  Example:
 
@@ -96,14 +79,30 @@ In the description of the supported forms below, *pathName* specifies a widget w
     ```
 
 [tableName]{.ins} [pathnames]{.sub}
-: Returns a list consisting of the path names of all widgets that have attributes set via *tableName* [set]. Example:
+: Returns a list consisting of the path names of all widgets that have attributes set via *tableName* **set**. Example:
 
     ```
     puts "widgets in table: [table pathnames]"
     ```
 
+[tableName]{.ins} [set]{.sub} [pathName]{.arg} [name]{.arg} [value]{.arg} [name value]{.optdot}
+: Sets (i.e., adds or updates) the attributes identified by the *name* arguments to the values given by the *value* arguments.  Returns an empty string.  Example:
+
+    ```
+    # Save and then change the button's text
+    tk attribtable table
+    table set .btn prevText [.btn cget -text]
+    .btn configure -text "NewText"
+    ```
+
+[tableName]{.ins} [unset]{.sub} [pathName]{.arg} [name]{.arg} [name]{.optdot}
+: Unsets the attributes identified by the *name* arguments.  Returns an empty string.  Example:
+
+    ```
+    table unset .btn prevText
+    ```
+
 
 
 [rename]: ../Tcl/rename.md
-[set]: ../Tcl/set.md
 
