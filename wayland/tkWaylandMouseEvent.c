@@ -34,7 +34,6 @@ int tkWaylandLastRootY = 200;
 int tkWaylandLastWinX = 0;
 int tkWaylandLastWinY = 0;
 TkWindow* tkWaylandLastPointerWinPtr = NULL;
-int tkWaylandPointerEmulated = 0;
 
 /*
  * Set when the pointer position was set by an emulated warp (Wayland cannot
@@ -42,6 +41,8 @@ int tkWaylandPointerEmulated = 0;
  * position instead of the GLFW cursor position.  Cleared by the next real
  * cursor motion.
  */
+ 
+int tkWaylandPointerEmulated = 0;
 
 void TkWaylandUpdatePointerState(int rootX, int rootY, int winX, int winY,
                                  unsigned int buttonState, TkWindow *winPtr) {
