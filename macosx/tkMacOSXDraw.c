@@ -1326,15 +1326,16 @@ CreateStippleMask(
  *
  * SetStipplePattern --
  *
- *	Replace the fill and stroke colors of the supplied CGContext
+ *	Replace the colors used by the supplied TkMacOSXDrawingContext
  *	with a colored CGPattern that emulates the X stipple described by
  *	the GC.  Each pattern cell is drawn by StippleDrawCell(), which
  *	fills with the GC background (opaque stipples only) and then
  *	paints the stipple mask in the GC foreground.  Because the
  *	pattern is installed as both the fill and stroke color, every
- *	subsequent fill, stroke and text-fill operation in the context
- *	honors the stipple without changes to the individual X drawing
- *	functions.
+ *	subsequent fill and stroke operation in the context honors the
+ *	stipple without changes to the individual X drawing functions.
+ *	The TkMacOSXDrawingContext's color reference can then also be
+ *	used separately to provide stippled text-fill operations.
  *
  *	The pattern matrix is scaled by the current CTM so that pattern
  *	tiles line up with device pixels on Retina displays, and the
@@ -1351,16 +1352,17 @@ CreateStippleMask(
  *	None.
  *
  * Side effects:
- *	The context's fill and stroke colors are replaced by a pattern
- *	color.  Memory allocated here is owned by CoreGraphics and is
- *	freed by StippleReleaseInfo() when the enclosing GState is
- *	restored.
+ *	The fill and stroke colors of the ThMacOSXDrawingContext's
+ *	context, and the TkMacOSXDrawingContext's color reference, are
+ *	replaced by a pattern color.  Memory allocated here is owned by
+ *	CoreGraphics and is freed by StippleReleaseInfo() when the color
+ *	is deallocated.
  *
  *----------------------------------------------------------------------
  */
 
 /*
- * Replace the fill and stroke colors of the context by the stipple pattern.
+ * Replace the colors of the TkMacOSXDrawingContext by the stipple pattern.
  * If anything goes wrong the solid foreground color that the caller already
  * installed is left in place.
  */
@@ -1369,7 +1371,7 @@ static void
 SetStipplePattern(
     MacDrawable *macDraw,
     GC gc,
-    CGContextRef context)
+    TkMacOSXDrawingContext *dcPtr)
 {
     static const CGPatternCallbacks callbacks = {
 	0, StippleDrawCell, StippleReleaseInfo
@@ -1421,7 +1423,7 @@ SetStipplePattern(
      * fine gray mesh.
      */
 
-    ctm = CGContextGetCTM(context);
+    ctm = CGContextGetCTM(dcPtr->context);
     scale = sqrt(ctm.a * ctm.a + ctm.b * ctm.b);
     if (scale <= 0.0) {
 	scale = 1.0;
@@ -1438,8 +1440,10 @@ SetStipplePattern(
     }
     patternSpace = CGColorSpaceCreatePattern(NULL);
     patternColor = CGColorCreateWithPattern(patternSpace, pattern, &alpha);
-    CGContextSetFillColorWithColor(context, patternColor);
-    CGContextSetStrokeColorWithColor(context, patternColor);
+    CGContextSetFillColorWithColor(dcPtr->context, patternColor);
+    CGContextSetStrokeColorWithColor(dcPtr->context, patternColor);
+    CGColorRelease(dcPtr->color);
+    dcPtr->color = patternColor;
 
     /*
      * The X tile origin is the top left corner of a tile in y-down Tk
@@ -1452,9 +1456,8 @@ SetStipplePattern(
     origin = CGPointApplyAffineTransform(CGPointMake(
 	    macDraw->xOff + gc->ts_x_origin,
 	    macDraw->yOff + gc->ts_y_origin + info->size.height), ctm);
-    CGContextSetPatternPhase(context, CGSizeMake(origin.x, origin.y));
+    CGContextSetPatternPhase(dcPtr->context, CGSizeMake(origin.x, origin.y));
 
-    CGColorRelease(patternColor);
     CGColorSpaceRelease(patternSpace);
     CGPatternRelease(pattern);
 }
@@ -1627,15 +1630,16 @@ TkMacOSXSetupDrawingContext(
 	bool shouldAntialias = !notAA(gc->line_width);
 	double w = gc->line_width;
 
-	TkMacOSXSetColorInContext(gc->foreground, dc.context,
-		TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
+	bool useDarkAppearance = TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr);
+	TkMacOSXSetColorInContext(gc->foreground, dc.context, useDarkAppearance);
+	TkSetMacColor2(gc->foreground, &dc.color, useDarkAppearance);
 	if (view) {
 	    CGSize size = NSSizeToCGSize([view bounds].size);
 	    CGContextSetPatternPhase(dc.context, size);
 	}
 	if (gc->fill_style == FillStippled
 		|| gc->fill_style == FillOpaqueStippled) {
-	    SetStipplePattern(macDraw, gc, dc.context);
+	    SetStipplePattern(macDraw, gc, &dc);
 	}
 	if (gc->function != GXcopy) {
 	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
@@ -1738,6 +1742,8 @@ TkMacOSXRestoreDrawingContext(
 	CFRelease(dcPtr->clipRgn);
 	dcPtr->clipRgn = NULL;
     }
+    CGColorRelease(dcPtr->color);
+    dcPtr->color = NULL;
 
     /*
      * Schedule a call to updateLayer, since we have drawn on the view's
