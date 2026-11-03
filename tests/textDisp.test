@@ -5482,7 +5482,7 @@ test textDisp-41.1 {many text widgets complete their line metrics update - bug 1
 } -result 0
 
 test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -constraints {
-    memory knownBug
+    memory
 } -setup {
     proc getbytes {} {
 	lindex [split [memory info] "\n"] 3 3
@@ -5496,6 +5496,9 @@ test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -con
 	}
 	expr {$end - $tmp}
     }
+    # With debug on, the text widgets log each line whose height they compute,
+    # and .t may still be computing those of its lines in the background.
+    .t debug off
     text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
     pack .t1
     .t1 tag configure x -foreground red
@@ -5508,10 +5511,9 @@ test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -con
 	update
 	.t1 tag remove x 1.20 1.25
 	update
-	# The widget appends to this variable at each layout.
-	unset -nocomplain ::tkBidiLog
     }
 } -cleanup {
+    .t debug on
     destroy .t1
     rename getbytes {}
     rename growth {}
