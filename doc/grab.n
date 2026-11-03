@@ -72,6 +72,17 @@ interpreter which receives key or mouse events.  Windows belonging to the
 same process but created by different interpreters continue to receive
 key and mouse events normally.
 .PP
+On Windows a global grab does not lock out other applications: they
+continue to receive key and mouse events normally.
+During a grab, a toplevel window of the application outside the grab
+subtree cannot be activated: clicking it, deiconifying it or setting the
+focus to it activates the grab window instead.  It can still be raised
+with \fBraise\fR, but it is not activated.  Its minimize, maximize and
+close commands are ignored, but it can be restored if it is minimized.
+During a local grab it can still be moved; during a global grab it
+cannot.  Toplevel windows in the grab subtree other than the main window
+cannot be minimized.
+.PP
 Grabs apply to particular displays.  If an application has windows
 on multiple displays then it can establish a separate grab on each
 display.

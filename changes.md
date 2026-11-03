@@ -164,6 +164,7 @@ to the userbase.
  - [tk_setPalette overrides colours the application set, and records the wrong defaults](https://core.tcl-lang.org/tk/tktview/1c5165)
  - [TIP 645 expects colors not defined by system theming](https://core.tcl-lang.org/tk/tktview/807b2f)
  - [Inconsistency between grid info, place info and pack info](https://core.tcl-lang.org/tk/tktview/3f5867)
+ - [Grab documentation does not have caveats for windows & mac](https://core.tcl-lang.org/tk/tktview/e02aac)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
