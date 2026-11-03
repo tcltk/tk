@@ -31,7 +31,7 @@
 /*
  *---------------------------------------------------------------------------
  *
- * WinClusterCmd --
+ * TkStartEndOfClusterCmd --
  *
  *	Implements ::tk::startOfCluster and ::tk::endOfCluster with the
  *	grapheme cluster boundaries of Uniscribe (ScriptBreak), when ICU is
@@ -50,14 +50,13 @@
  *---------------------------------------------------------------------------
  */
 
-static int
-WinClusterCmd(
+int
+TkStartEndOfClusterCmd(
     void *clientData,		/* Nonzero for endOfCluster. */
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int following = PTR2INT(clientData);
     Tcl_DString ds;
     const char *str;
     const WCHAR *ustr;
@@ -147,7 +146,7 @@ WinClusterCmd(
 	}
     }
 
-    if (following) {
+    if (clientData) {
 	/*
 	 * The first cluster boundary after idx.
 	 */
@@ -195,13 +194,6 @@ WinClusterCmd(
     }
     return TCL_OK;
 }
-
-MODULE_SCOPE int TkpWinRegisterClusterCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", WinClusterCmd,
-	    INT2PTR(0), NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", WinClusterCmd,
-	    INT2PTR(1), NULL);
-    return TCL_OK; }
 #endif
 
 
