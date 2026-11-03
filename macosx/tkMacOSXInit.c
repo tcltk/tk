@@ -485,19 +485,18 @@ InstallSignalHandler(
 static void showRootWindow(void *clientData) {
     NSWindow *root = (NSWindow *) clientData;
     TkWindow *winPtr;
-
+    if (![NSApp tkWillExit] && (winPtr = TkMacOSXGetTkWindow(root))) {
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+	if (wmPtr->hints.initial_state == NormalState &
+	    (wmPtr->flags & WM_IS_HIDDEN) == 0) {
+	    [(TKWindow *)root tkOrderFront];
+	}
+	[NSApp activateIgnoringOtherApps: YES];
+    }
     /*
      * The root window may have been destroyed before this idle handler runs,
      * e.g. by [after 0 {destroy .}].
      */
-
-    if (![NSApp tkWillExit] && (winPtr = TkMacOSXGetTkWindow(root))) {
-	WmInfo *wmPtr = winPtr->wmInfoPtr;
-	if (wmPtr->hints.initial_state == NormalState) {
-	    [root makeKeyAndOrderFront:NSApp];
-	}
-	[NSApp activateIgnoringOtherApps: YES];
-    }
     [root release];
 }
 
@@ -668,6 +667,7 @@ TkpInit(
 	TkMacOSXServices_Init(interp);
 	TkMacOSXNSImage_Init(interp);
 	TkMacOSXAccessibility_Init(interp);
+	Icu_Init(interp);
 
 	/*
 	 * The root window has been created and mapped, but XMapWindow deferred its
