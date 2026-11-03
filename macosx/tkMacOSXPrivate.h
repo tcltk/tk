@@ -214,6 +214,7 @@ typedef union MacKeycode_t {
 
 typedef struct TkMacOSXDrawingContext {
     CGContextRef context;
+    CGColorRef color;
     NSView *view;
     HIShapeRef clipRgn;
 } TkMacOSXDrawingContext;
