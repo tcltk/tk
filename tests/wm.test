@@ -1642,14 +1642,14 @@ test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} -body 
 deleteWindows
 
 test wm-stackorder-2.1 {stacking order} -body {
-    toplevel .t ; update
+    toplevel .t ; tkwait visibility .t
     raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t
 } -result {. .t}
 test wm-stackorder-2.2 {stacking order} -body {
-    toplevel .t ; update
+    toplevel .t ; tkwait visibility .t
     raise .
     raiseDelay
     wm stackorder .
