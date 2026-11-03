@@ -162,7 +162,6 @@ enum {
 	if (![eventWindow isKeyWindow] || isOutside) {
 	    return theEvent;
 	}
-	[NSApp setTkLiveResizeEnded:false];
 	[NSApp setTkPointerWindow:[NSApp tkEventTarget]];
 	break;
     case NSMouseExited:
@@ -429,7 +428,6 @@ enum {
     } else {
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
-
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
 
