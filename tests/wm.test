@@ -1658,12 +1658,8 @@ test wm-stackorder-2.2 {stacking order} -body {
 } -result {.t .}
 test wm-stackorder-2.3 {stacking order} -body {
     set res {}
-    toplevel .t
-    tkwait visibility .t
-    raiseDelay
-    toplevel .t2
-    tkwait visibility .t2
-    raiseDelay
+    toplevel .t ; tkwait visibility .t
+    toplevel .t2 ; tkwait visibility .t2
     lappend res [wm stackorder .]
     raise .
     raiseDelay
@@ -1676,8 +1672,8 @@ test wm-stackorder-2.3 {stacking order} -body {
     destroy .t .t2
 } -result {{. .t .t2} {.t .t2 .} {.t . .t2}}
 test wm-stackorder-2.4 {stacking order} -body {
-    toplevel .t ; update
-    toplevel .t2 ; update
+    toplevel .t ; tkwait visibility .t
+    toplevel .t2 ; tkwait visibility .t2
     raise .
     lower .t2
     raiseDelay
@@ -1688,13 +1684,13 @@ test wm-stackorder-2.4 {stacking order} -body {
 test wm-stackorder-2.5 {stacking order} -setup {
     destroy .parent
 } -body {
-    toplevel .parent ; update
+    toplevel .parent ; tkwait visibility .parent
     destroy .parent.child1
-    toplevel .parent.child1 ; update
+    toplevel .parent.child1 ; tkwait visibility .parent.child1
     destroy .parent.child2
-    toplevel .parent.child2 ; update
+    toplevel .parent.child2 ; tkwait visibility .parent.child2
     destroy .extra
-    toplevel .extra ; update
+    toplevel .extra ; tkwait visibility .extra
     raise .parent
     lower .parent.child2
     raiseDelay
@@ -1703,8 +1699,7 @@ test wm-stackorder-2.5 {stacking order} -setup {
     deleteWindows
 } -result {.parent.child2 .parent.child1 .parent}
 test wm-stackorder-2.6 {stacking order: non-toplevel widgets ignored} -body {
-    toplevel .t1
-    raiseDelay
+    toplevel .t1 ; tkwait visibility .t1
     button .t1.b
     pack .t1.b
     raiseDelay
@@ -1724,65 +1719,58 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
 deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body {
-    toplevel .t1 ; update
-    raiseDelay
-    toplevel .t2 ; update
-    raiseDelay
-    wm iconify .t1
-    raiseDelay
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t2 ; tkwait visibility .t2
+    wm iconify .t1 ; tkwait visibility .t1
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
 } -result {. .t2}
 test wm-stackorder-3.2 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t2 ; update
-    wm withdraw .t2
-    raiseDelay
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t2 ; tkwait visibility .t2
+    wm withdraw .t2 ; tkwait visibility .t2
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
 } -result {. .t1}
 test wm-stackorder-3.3 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t2 ; update
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t2 ; tkwait visibility .t2
     wm withdraw .t2
     wm stackorder .t2
 } -cleanup {
     destroy .t1 .t2
 } -result {}
 test wm-stackorder-3.4 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t1.t2 ; update
-    wm withdraw .t1.t2
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t1.t2 ; tkwait visibility .t1.t2
+    wm withdraw .t1.t2 ; tkwait visibility .t1.t2
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1}
 test wm-stackorder-3.5 {unmapped toplevel} -body {
-    toplevel .t1 ; update
-    toplevel .t1.t2 ; update
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t1.t2 ; tkwait visibility .t1.t2
     wm withdraw .t1
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1.t2}
 test wm-stackorder-3.6 {unmapped toplevel} -body {
-    toplevel .t1
-    tkwait visibility .t1
-    toplevel .t1.t2
-    tkwait visibility .t1.t2
-    toplevel .t1.t2.t3
-    tkwait visibility .t1.t2.t3
-    wm withdraw .t1.t2
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t1.t2 ; tkwait visibility .t1.t2
+    toplevel .t1.t2.t3 ; tkwait visibility .t1.t2.t3
+    wm withdraw .t1.t2 ; tkwait visibility .t1.t2
     raiseDelay
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1 .t1.t2.t3}
 test wm-stackorder-3.7 {unmapped toplevel, mapped children returned} -body {
-    toplevel .t1 ; update
-    toplevel .t1.t2 ; update
+    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t1.t2 ; tkwait visibility .t1.t2
     wm withdraw .t1
     wm stackorder .t1
 } -cleanup {
@@ -1801,22 +1789,21 @@ test wm-stackorder-3.8 {toplevel mapped in idle callback} -body {
 deleteWindows
 
 test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; update
+    toplevel .t ; tkwait visibility .t
     raise .t
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
 } -result 0
 test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; update
+    toplevel .t ; tkwait visibility .t
     raise .t
     wm stackorder . isbelow .t
 } -cleanup {
     destroy .t
 } -result 1
 test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
-    toplevel .t
-    tkwait visibility .t
+    toplevel .t ; tkwait visibility .t
     raise .
     raiseDelay
     wm stackorder .t isabove .
@@ -1824,7 +1811,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     destroy .t
 } -result 0
 test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; update
+    toplevel .t ; tkwait visibility .t
     raise .
     raiseDelay
     wm stackorder .t isb .
@@ -1838,7 +1825,7 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
-    toplevel .t
+    toplevel .t ; tkwait visibility .t
     menu .t.m -type menubar
     .t.m add cascade -label "File"
     .t configure -menu .t.m
