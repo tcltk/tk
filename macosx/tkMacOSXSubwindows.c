@@ -339,7 +339,7 @@ XMapWindow(
 	event.xany.display = display;
 	event.xvisibility.type = VisibilityNotify;
 	if (win.occlusionState & NSWindowOcclusionStateVisible) {
-	    /* OcclusionStateVisible iss 1 when any part of the window
+	    /* OcclusionStateVisible is 1 when any part of the window
 	     * is visible and 0 when the window is offscreen or completely
 	     * covered by other windows.  There is no notification that
 	     * the entire window is visible.  So we use PartlyObscured
