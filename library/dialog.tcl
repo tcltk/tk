@@ -49,7 +49,13 @@ proc ::tk_dialog {w title text bitmap default args} {
     # and bottom parts.
 
     destroy $w
-    toplevel $w -class Dialog
+    if {$windowingsystem eq "aqua"} {
+	toplevel $w -class Dialog
+	tkwait visibility $w;
+	wm attributes $w -stylemask {titled fullsizecontent}
+    } else {
+	toplevel $w -class Dialog
+    }
     wm title $w $title
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW { }
@@ -66,6 +72,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     }
 
 #    if {$windowingsystem eq "aqua"} {
+#	tkwait visibility $w; wm attributes $w -stylemask {titled fullsizecontent}
 #	after 100 {wm attributes $w -stylemask fullsizecontent}
 #    } else
     if {$windowingsystem eq "x11"} {
@@ -162,9 +169,9 @@ proc ::tk_dialog {w title text bitmap default args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    if {$windowingsystem eq "aqua"} {
-	wm attributes $w -stylemask titled
-    }
+#    if {$windowingsystem eq "aqua"} {
+#	wm attributes $w -stylemask titled
+#    }
 
     vwait ::tk::Priv(button)
 

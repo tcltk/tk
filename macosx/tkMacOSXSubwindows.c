@@ -31,7 +31,6 @@ static void		GenerateConfigureNotify(TkWindow *winPtr,
 			    int includeWin);
 static void		UpdateOffsets(TkWindow *winPtr, int deltaX,
 			    int deltaY);
-static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
 
 
 /*
@@ -329,29 +328,42 @@ XMapWindow(
     Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
 
     /*
-     * Generate VisibilityNotify events for window and all mapped children.
+     * Generate VisibilityNotify events for window and all mapped children.  Do
+     * not do this here for normal toplevels.  They are handled by the method
+     * [NSApplication windowBecameVisible].
      */
 
-    if (initialized) {
+    if (initialized && (!Tk_IsTopLevel(winPtr) || Tk_IsEmbedded(winPtr))) {
 	XEvent event;
 	event.xany.send_event = False;
 	event.xany.display = display;
 	event.xvisibility.type = VisibilityNotify;
-	event.xvisibility.state = VisibilityUnobscured;
-	NotifyVisibility(winPtr, &event);
-    } else {
-	initialized = true;
+	if (win.occlusionState & NSWindowOcclusionStateVisible) {
+	    /* OcclusionStateVisible iss 1 when any part of the window
+	     * is visible and 0 when the window is offscreen or completely
+	     * covered by other windows.  There is no notification that
+	     * the entire window is visible.  So we use PartlyObscured
+	     * here, treating FullyObscured a subcase of PartlyObscured.
+	     */
+	    event.xvisibility.state = VisibilityPartiallyObscured;
+	} else {
+	    event.xvisibility.state = VisibilityFullyObscured;
+	}
+	TkMacOSXNotifyVisibility(winPtr, &event);
     }
+    initialized = true;
     return Success;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * NotifyVisibility --
+ * TkMacOSXNotifyVisibility --
  *
- *	Helper for XMapWindow().  Generates VisibilityNotify events
- *      for the window and all of its descendants.
+ *	Generates VisibilityNotify events for the window and all of its
+ *      descendants.  The XEvent parameter should have filled in the fields
+ *	xany.send_event, event.xany.display, event.xvisibility.type, and
+ *	event.xvisibility.state.
  *
  * Results:
  *	None.
@@ -362,8 +374,8 @@ XMapWindow(
  *----------------------------------------------------------------------
  */
 
-static void
-NotifyVisibility(
+MODULE_SCOPE void
+TkMacOSXNotifyVisibility(
     TkWindow *winPtr,
     XEvent *eventPtr)
 {
@@ -375,7 +387,7 @@ NotifyVisibility(
     for (winPtr = winPtr->childList; winPtr != NULL;
 	    winPtr = winPtr->nextPtr) {
 	if (winPtr->flags & TK_MAPPED) {
-	    NotifyVisibility(winPtr, eventPtr);
+	    TkMacOSXNotifyVisibility(winPtr, eventPtr);
 	}
     }
 }
