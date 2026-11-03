@@ -183,7 +183,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
-          ref: manifest-main-rc-only
+          ref: main
           path: tcl
       - name: Prepare
         run: |
