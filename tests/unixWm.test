@@ -101,7 +101,7 @@ foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
 # error, then factor this error into the actual tests.  In other words,
 # this just makes sure that things are consistent between moves.
 destroy .t
-toplevel .t -width 100 -height 150
+toplevel .t -width 200 -height 150
 wm geom .t +200+200
 update
 wm geom .t +150+150
@@ -149,7 +149,7 @@ foreach geom "+$X+80 +$X+40 +$X+$Y0" {
 	wm deiconify .t
 	pause 10
 	wm geom .t
-    } 100x150$geom
+    } 200x150$geom
     incr i
 }
 
@@ -245,11 +245,11 @@ test unixWm-6.2 {size changes} unix {
 } 250x60+100+$Y0
 test unixWm-6.3 {size changes} unix {
     wm geom .t 250x60
-    .t config -width 170 -height 140
+    .t config -width 270 -height 140
     wm geom .t {}
     update
     wm geom .t
-} 170x140+100+$Y0
+} 270x140+100+$Y0
 test unixWm-6.4 {size changes} {unix nonPortable userInteraction} {
     wm minsize .t 1 1
     update
@@ -1429,13 +1429,13 @@ test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already 
     update
     toplevel .t
     wm geometry .t 200x100+100+$Y0
-    listbox .t.l -height 20 -width 20
+    listbox .t.l -height 20 -width 40
     pack .t.l -fill both -expand 1
     update
     .t.l configure -setgrid 1
     update
     wm geometry .t
-} "20x20+100+$Y0"
+} "40x20+100+$Y0"
 
 test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} unix {
     destroy .t
@@ -1492,10 +1492,10 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
     tkwait visibility .t
     set result {no event}
     bind .t <Configure> {set result "configured: %w %h"}
-    wm geometry .t 130x200
+    wm geometry .t 230x200
     update
     set result
-} {configured: 130 200}
+} {configured: 230 200}
 
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
@@ -1568,13 +1568,13 @@ test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} unix {
     wm geometry .t +30+40
     wm overrideredirect .t 1
     tkwait visibility .t
-    wm geometry .t 10x2
+    wm geometry .t 20x2
     update
     list [winfo width .t] [winfo height .t]
-} {130 36}
+} {230 36}
 test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
     destroy .t
-    toplevel .t -width 80 -height 60
+    toplevel .t -width 280 -height 60
     wm grid .t 5 4 10 12
     wm geometry .t +30+40
     wm overrideredirect .t 1
@@ -1582,7 +1582,7 @@ test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
     wm geometry .t 1x10
     update
     list [winfo width .t] [winfo height .t]
-} {40 132}
+} {240 132}
 test unixWm-44.4 {UpdateGeometryInfo procedure, width/height computation} unix {
     destroy .t
     toplevel .t -width 100 -height 200
@@ -1613,10 +1613,10 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} -constraints un
     wm geometry .t +30+40
     wm overrideredirect .t 1
     tkwait visibility .t
-    wm geometry .t 20x1
+    wm geometry .t 30x1
     update
     list [winfo width .t] [winfo height .t]
-} -result {100 1}
+} -result {200 1}
 
 #
 # COMMON TEST SETUP
@@ -1790,10 +1790,10 @@ wm geometry .t +0+0
 tkwait visibility .t
 
 test unixWm-48.1 {ParseGeometry procedure} unix {
-    wm geometry .t =100x120
+    wm geometry .t =200x120
     update
     list [winfo width .t] [winfo height .t]
-} {100 120}
+} {200 120}
 test unixWm-48.2 {ParseGeometry procedure} unix {
     list [catch {wm geometry .t =10zx120} msg] $msg
 } {1 {bad geometry specifier "=10zx120"}}
