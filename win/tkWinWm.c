@@ -3943,7 +3943,7 @@ WmGeometryCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     char xSign, ySign;
-    int width, height;
+    int x, y, width, height;
     const char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
@@ -3954,6 +3954,8 @@ WmGeometryCmd(
     if (objc == 3) {
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
+	x = wmPtr->x;
+	y = wmPtr->y;
 	if (wmPtr->gridWin != NULL) {
 	    width = wmPtr->reqGridWidth + (winPtr->changes.width
 		    - winPtr->reqWidth)/wmPtr->widthInc;
@@ -3966,11 +3968,20 @@ WmGeometryCmd(
 	if (winPtr->flags & TK_EMBEDDED) {
 	    LRESULT result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
 
-	    wmPtr->x = (short)(result >> 16);
-	    wmPtr->y = (short)(result & 0x0000ffff);
+	    x = wmPtr->x = (short)(result >> 16);
+	    y = wmPtr->y = (short)(result & 0x0000ffff);
+	} else if (wmPtr->hints.initial_state == ZoomState) {
+	    /*
+	     * wmPtr->x and wmPtr->y keep the position of the restored window,
+	     * report the actual position of the zoomed one.
+	     */
+
+	    xSign = ySign = '+';
+	    x = winPtr->changes.x;
+	    y = winPtr->changes.y;
 	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
-		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
+		width, height, xSign, x, ySign, y));
 	return TCL_OK;
     }
 
