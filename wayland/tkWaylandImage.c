@@ -733,6 +733,140 @@ XCreateBitmapFromData(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandGetStippleImage --
+ *
+ *	Return a NanoVG image id for a 1-bit stipple pixmap, creating and
+ *	caching it on the pixmap on first use.  The image is a white RGBA
+ *	mask: alpha is 255 where the stipple bit is 1 and 0 elsewhere.  It
+ *	is created with NVG_IMAGE_REPEATX/REPEATY so that nvgImagePattern
+ *	tiles it across the whole fill (the equivalent of a CGPattern on
+ *	macOS), and NVG_IMAGE_NEAREST so the bits stay crisp.  The caller
+ *	tints the mask by setting the paint's innerColor/outerColor to the
+ *	GC foreground, so one texture serves every foreground color.
+ *
+ *	The image is cached because nvgFill only queues its draw; deleting
+ *	it after each primitive would mean deferring the delete past
+ *	nvgEndFrame every time.  The cache is freed by
+ *	TkWaylandFreeStippleImage when the pixmap goes away.
+ *
+ * Results:
+ *	A NanoVG image id (> 0), or 0 if the pixmap is not a bitmap or
+ *	allocation fails.
+ *
+ * Side effects:
+ *	May create a GL texture in the context of vg.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandGetStippleImage(
+    NVGcontext      *vg,
+    TkWaylandPixmap *pixmapPtr)
+{
+    unsigned char *rgba;
+    int w, h, x, y, id;
+
+    if (vg == NULL || pixmapPtr == NULL || !pixmapPtr->isBitmap
+	    || pixmapPtr->bitmapData == NULL) {
+	return 0;
+    }
+    if (pixmapPtr->stippleImage > 0 && pixmapPtr->stippleVg == vg) {
+	return pixmapPtr->stippleImage;
+    }
+
+    w = pixmapPtr->width;
+    h = pixmapPtr->height;
+    if (w <= 0 || h <= 0 || (size_t)w * (size_t)h > SIZE_MAX / 4) {
+	return 0;
+    }
+    rgba = (unsigned char *)ckalloc((size_t)w * (size_t)h * 4);
+
+    for (y = 0; y < h; y++) {
+	const unsigned char *row = pixmapPtr->bitmapData
+		+ (size_t)y * pixmapPtr->bitmapBytesPerLine;
+	unsigned char *out = rgba + (size_t)y * w * 4;
+
+	for (x = 0; x < w; x++, out += 4) {
+	    out[0] = out[1] = out[2] = 0xFF;
+	    /* X11 bitmaps are LSB-first, matching XCopyPlane. */
+	    out[3] = (row[x >> 3] & (1 << (x & 7))) ? 0xFF : 0x00;
+	}
+    }
+
+    id = nvgCreateImageRGBA(vg, w, h,
+	    NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY | NVG_IMAGE_NEAREST, rgba);
+    ckfree(rgba);
+    if (id <= 0) {
+	return 0;
+    }
+
+    /*
+     * If the pixmap was last used with a different NanoVG context, that
+     * texture is not reachable from here; it is reclaimed when its
+     * context is deleted.
+     */
+
+    pixmapPtr->stippleImage = id;
+    pixmapPtr->stippleVg = vg;
+    return id;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandStippleDensity --
+ *
+ *	Fraction of set bits (0..1) in the GC's stipple bitmap, or 1.0 if
+ *	the GC is not stippled or the stipple is unusable.  Text is drawn
+ *	by NanoVG's glyph atlas, which cannot take an image-pattern paint,
+ *	so stippled text is approximated by scaling the foreground alpha by
+ *	this density (gray50 gives 50% text).
+ *
+ * Results:
+ *	A float in (0, 1].
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE float
+TkWaylandStippleDensity(
+    GC gc)
+{
+    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+    TkWaylandPixmap *pm;
+    long set = 0;
+    int x, y;
+
+    if (gcPtr == NULL || (gcPtr->fill_style != FillStippled
+	    && gcPtr->fill_style != FillOpaqueStippled)
+	    || gcPtr->stipple == None
+	    || !TkWaylandDrawableIsPixmap(gcPtr->stipple)) {
+	return 1.0f;
+    }
+    pm = TkWaylandPixmapFromPixmap(gcPtr->stipple);
+    if (pm == NULL || !pm->isBitmap || pm->bitmapData == NULL
+	    || pm->width <= 0 || pm->height <= 0) {
+	return 1.0f;
+    }
+    for (y = 0; y < pm->height; y++) {
+	const unsigned char *row = pm->bitmapData
+		+ (size_t)y * pm->bitmapBytesPerLine;
+	for (x = 0; x < pm->width; x++) {
+	    if (row[x >> 3] & (1 << (x & 7))) {
+		set++;
+	    }
+	}
+    }
+    return (float)set / (float)((long)pm->width * pm->height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XCopyPlane --
  *
  *      Copy a single bit plane from a source pixmap to a destination

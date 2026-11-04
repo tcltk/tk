@@ -112,6 +112,27 @@ GetNVGFont(NVGcontext *vg, GC gc, int *fontIdOut, float *fontSizeOut)
 /*
  *----------------------------------------------------------------------
  *
+ * StippleTextColor --
+ *
+ *	Foreground color for text drawn with a stippled GC: the GC
+ *	foreground with alpha scaled by the stipple density.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NVGcolor
+StippleTextColor(
+    GC gc)
+{
+    NVGcolor c = TkWaylandPixelToNVG(((TkWaylandGC *)gc)->foreground);
+
+    c.a *= TkWaylandStippleDensity(gc);
+    return c;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawString --
  *
  *	Draw a string of characters using NanoVG text rendering.
@@ -157,6 +178,9 @@ XDrawString(
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
     /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC. */
+    if (TkWaylandStippleDensity(gc) < 1.0f) {
+	nvgFillColor(dc.vg, StippleTextColor(gc));
+    }
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -234,6 +258,9 @@ XDrawImageString(
     nvgFontFaceId(dc.vg, fontId);
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+    if (TkWaylandStippleDensity(gc) < 1.0f) {
+	nvgFillColor(dc.vg, StippleTextColor(gc));
+    }
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -280,6 +307,149 @@ AlignStroke(
 /*
  *----------------------------------------------------------------------
  *
+ * Stipple support --
+ *
+ *	X11 stippling: with fill_style FillStippled, only the pixels whose
+ *	stipple bit is 1 are painted, in the GC foreground.  With
+ *	FillOpaqueStippled the 0 bits are painted in the GC background.
+ *	The stipple is anchored at (ts_x_origin, ts_y_origin) in drawable
+ *	coordinates and repeats every width x height pixels, independent
+ *	of the shape being drawn.
+ *
+ *	This is done with a repeating NanoVG image pattern built from the
+ *	stipple pixmap's bitmap data (see TkWaylandGetStippleImage), the
+ *	Wayland analogue of the CGPattern used on macOS.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ * StrokeBias --
+ *
+ *	The translation AlignStroke() applied to the transform, so the
+ *	stipple origin can be corrected back to drawable pixels.
+ */
+
+static float
+StrokeBias(
+    GC gc)
+{
+    XGCValues v;
+    int lineWidth = 0;
+
+    if (gc && TkWaylandGetGCValues(gc, GCLineWidth, &v)) {
+	lineWidth = v.line_width;
+    }
+    return (lineWidth <= 1 || (lineWidth & 1)) ? 0.5f : 0.0f;
+}
+
+/*
+ * SetupStipple --
+ *
+ *	Build the paint for a stippled GC.
+ *
+ * Results:
+ *	1 if gc is stippled and a usable stipple exists (paintPtr, bgPtr
+ *	and opaquePtr are filled in), else 0 and the caller draws solid.
+ */
+
+static int
+SetupStipple(
+    NVGcontext *vg,
+    GC          gc,
+    float       bias,
+    NVGpaint   *paintPtr,
+    NVGcolor   *bgPtr,
+    int        *opaquePtr)
+{
+    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+    TkWaylandPixmap *pm;
+    NVGcolor fg;
+    int image;
+
+    if (gcPtr == NULL || (gcPtr->fill_style != FillStippled
+	    && gcPtr->fill_style != FillOpaqueStippled)
+	    || gcPtr->stipple == None
+	    || !TkWaylandDrawableIsPixmap(gcPtr->stipple)) {
+	return 0;
+    }
+    pm = TkWaylandPixmapFromPixmap(gcPtr->stipple);
+    image = TkWaylandGetStippleImage(vg, pm);
+    if (image <= 0) {
+	return 0;
+    }
+
+    *paintPtr = nvgImagePattern(vg,
+	    (float)gcPtr->ts_x_origin - bias,
+	    (float)gcPtr->ts_y_origin - bias,
+	    (float)pm->width, (float)pm->height, 0.0f, image, 1.0f);
+    fg = TkWaylandPixelToNVG(gcPtr->foreground);
+    paintPtr->innerColor = fg;	/* Tint the white mask with the foreground. */
+    paintPtr->outerColor = fg;
+    *bgPtr = TkWaylandPixelToNVG(gcPtr->background);
+    *opaquePtr = (gcPtr->fill_style == FillOpaqueStippled);
+    return 1;
+}
+
+/*
+ * StippleFill / StippleStroke --
+ *
+ *	Fill or stroke the current NanoVG path with the GC's stipple.
+ *
+ * Results:
+ *	1 if the path was painted, 0 if the GC is not stippled (the caller
+ *	then does its ordinary nvgFill/nvgStroke).
+ */
+
+static int
+StippleFill(
+    NVGcontext *vg,
+    GC          gc)
+{
+    NVGpaint paint;
+    NVGcolor bg;
+    int opaque;
+
+    if (!SetupStipple(vg, gc, 0.0f, &paint, &bg, &opaque)) {
+	return 0;
+    }
+    nvgSave(vg);
+    if (opaque) {
+	nvgFillColor(vg, bg);
+	nvgFill(vg);
+    }
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+    nvgRestore(vg);
+    return 1;
+}
+
+static int
+StippleStroke(
+    NVGcontext *vg,
+    GC          gc)
+{
+    NVGpaint paint;
+    NVGcolor bg;
+    int opaque;
+
+    if (!SetupStipple(vg, gc, StrokeBias(gc), &paint, &bg, &opaque)) {
+	return 0;
+    }
+    nvgSave(vg);
+    if (opaque) {
+	nvgStrokeColor(vg, bg);
+	nvgStroke(vg);
+    }
+    nvgStrokePaint(vg, paint);
+    nvgStroke(vg);
+    nvgRestore(vg);
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawPoint --
  *
  *	Draw a single point (filled 1×1 rectangle).
@@ -307,7 +477,9 @@ XDrawPoint(
         return BadDrawable;
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)x, (float)y, 1.0f, 1.0f);
-    nvgFill(dc.vg);
+    if (!StippleFill(dc.vg, gc)) {
+        nvgFill(dc.vg);
+    }
     TkWaylandEndDraw(&dc);
     return Success;
 }
@@ -354,7 +526,9 @@ XDrawPoints(
         }
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, px, py, 1.0f, 1.0f);
-        nvgFill(dc.vg);
+        if (!StippleFill(dc.vg, gc)) {
+            nvgFill(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -410,7 +584,9 @@ XDrawLines(
         }
         nvgLineTo(dc.vg, px, py);
     }
-    nvgStroke(dc.vg);
+    if (!StippleStroke(dc.vg, gc)) {
+        nvgStroke(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -452,7 +628,9 @@ XDrawSegments(
         nvgBeginPath(dc.vg);
         nvgMoveTo(dc.vg, segments[i].x1, segments[i].y1);
         nvgLineTo(dc.vg, segments[i].x2, segments[i].y2);
-        nvgStroke(dc.vg);
+        if (!StippleStroke(dc.vg, gc)) {
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -516,7 +694,9 @@ XFillPolygon(
     else
         nvgPathWinding(dc.vg, NVG_SOLID);
 
-    nvgFill(dc.vg);
+    if (!StippleFill(dc.vg, gc)) {
+        nvgFill(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -557,7 +737,9 @@ XDrawRectangle(
     AlignStroke(dc.vg, gc);
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, x, y, width, height);
-    nvgStroke(dc.vg);
+    if (!StippleStroke(dc.vg, gc)) {
+        nvgStroke(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -599,7 +781,9 @@ XDrawRectangles(
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
                 rectArr[i].width, rectArr[i].height);
-        nvgStroke(dc.vg);
+        if (!StippleStroke(dc.vg, gc)) {
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -655,7 +839,9 @@ XFillRectangles(
                 (float)rectangles[i].width, 
                 (float)rectangles[i].height);
 	nvgFillColor(dc.vg, color);
-	nvgFill(dc.vg);
+	if (!StippleFill(dc.vg, gc)) {
+	    nvgFill(dc.vg);
+	}
     }
     TkWaylandEndDraw(&dc);
     return Success;
@@ -1087,7 +1273,9 @@ XDrawArc(
         nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
         nvgRestore(dc.vg);
     }
-    nvgStroke(dc.vg);
+    if (!StippleStroke(dc.vg, gc)) {
+        nvgStroke(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -1149,7 +1337,9 @@ XDrawArcs(
             nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
             nvgRestore(dc.vg);
         }
-        nvgStroke(dc.vg);
+        if (!StippleStroke(dc.vg, gc)) {
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -1221,7 +1411,9 @@ XFillArc(
         nvgLineTo(dc.vg, cx, cy);
 
     nvgClosePath(dc.vg);
-    nvgFill(dc.vg);
+    if (!StippleFill(dc.vg, gc)) {
+        nvgFill(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -1294,7 +1486,9 @@ XFillArcs(
             nvgLineTo(dc.vg, cx, cy);
 
         nvgClosePath(dc.vg);
-        nvgFill(dc.vg);
+        if (!StippleFill(dc.vg, gc)) {
+            nvgFill(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);

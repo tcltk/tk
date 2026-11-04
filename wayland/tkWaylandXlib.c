@@ -456,32 +456,6 @@ XSetIMValues(
 /*
  *----------------------------------------------------------------------
  *
- * XSetFillStyle --
- *
- *	Set GC fill style. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetFillStyle(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int))
-{
-    /* No-op - fill style handled by NanoVG. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XQueryColors --
  *
  *	Query color values from colormap. No-op in Wayland port.
@@ -576,32 +550,6 @@ XGContextFromGC(
     TCL_UNUSED(GC))
 {
     /* No-op - GContext not used in Wayland port. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetFillRule --
- *
- *	Set GC fill rule. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetFillRule(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int))
-{
-    /* No-op - fill rule handled by NanoVG. */
     return 0;
 }
 
@@ -850,32 +798,6 @@ XPointInRegion(
     TCL_UNUSED(int))
 {
     /* No-op - regions not used in Wayland port. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetFont --
- *
- *	Set GC font. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetFont(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(Font))
-{
-    /* No-op - font handling via NanoVG. */
     return 0;
 }
 
@@ -1624,33 +1546,6 @@ XkbOpenDisplay(
 /*
  *----------------------------------------------------------------------
  *
- * XSetTSOrigin --
- *
- *	Set tile/stipple origin in GC. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetTSOrigin(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-    /* No-op - tiling/stippling handled by NanoVG. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XGrabServer --
  *
  *	Grab the X server. No-op in Wayland port.
@@ -2227,32 +2122,6 @@ XNextEvent(
 /*
  *----------------------------------------------------------------------
  *
- * XSetStipple --
- *
- *	Set stipple pattern in GC. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetStipple(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(Pixmap))
-{
-    /* No-op - stippling handled by NanoVG. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XFlush --
  *
  *	Flush output buffer. No-op in Wayland port.
@@ -2722,32 +2591,6 @@ XSetClipRectangles(
     TCL_UNUSED(int))
 {
     /* No-op - clipping handled by NanoVG. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetArcMode --
- *
- *	Set arc mode in GC. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetArcMode(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int))
-{
-    /* No-op - arc drawing handled by NanoVG. */
     return 0;
 }
 

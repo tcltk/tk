@@ -4707,8 +4707,17 @@ ColorFromGC(GC gc)
 {
     if (gc) {
         XGCValues vals;
+        NVGcolor c;
+
         TkWaylandGetGCValues(gc, GCForeground, &vals);
-        return TkWaylandPixelToNVG(vals.foreground);
+        c = TkWaylandPixelToNVG(vals.foreground);
+        /*
+         * Stippled GCs (canvas text -stipple, ...): the glyph atlas cannot
+         * take an image-pattern paint, so approximate the stipple by the
+         * fraction of its bits that are set.  1.0 for unstippled GCs.
+         */
+        c.a *= TkWaylandStippleDensity(gc);
+        return c;
     }
     return nvgRGBA(0, 0, 0, 255);
 }

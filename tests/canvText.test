@@ -1028,7 +1028,7 @@ proc countPixels {w x1 y1 x2 y2} {
 }
 
 test canvText-21.1 {stippled text - bug 220796} -constraints {
-    testpixel && notAqua && !withXft && notWayland
+    testpixel && notAqua && !withXft
 } -setup {
     destroy .c
     canvas .c -width 200 -height 200 -background white -highlightthickness 0

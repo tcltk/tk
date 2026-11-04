@@ -371,6 +371,10 @@ typedef struct TkWaylandGC {
     int           fill_rule;  /* EvenOddRule or WindingRule */
     int           arc_mode;   /* ArcChord or ArcPieSlice */
     void         *font;       /* Font handle (reserved) */
+    int           fill_style; /* FillSolid, FillStippled, FillOpaqueStippled */
+    Pixmap        stipple;    /* 1-bit stipple pixmap, or None */
+    int           ts_x_origin;/* Stipple origin, drawable coordinates */
+    int           ts_y_origin;
 } TkWaylandGC;
 
 /*
@@ -393,6 +397,9 @@ typedef struct TkWaylandPixmap {
     int isBitmap;                   /* 1 if this is a 1‑bit bitmap pixmap */
     unsigned char *bitmapData;      /* Stored bitmap bits (only for isBitmap) */
     int bitmapBytesPerLine;         /* Bytes per row in bitmapData */
+    int stippleImage;               /* Cached NanoVG stipple mask image id
+                                     * (0 = none); see TkWaylandGetStippleImage */
+    NVGcontext *stippleVg;          /* NanoVG context that owns stippleImage */
 } TkWaylandPixmap;
 
 /*
@@ -411,6 +418,12 @@ MODULE_SCOPE void TkWaylandSetBitmapData(
     const char *data,
     int width,
     int height);
+
+/* Stippling (X11 FillStippled / FillOpaqueStippled) support. */
+MODULE_SCOPE int   TkWaylandGetStippleImage(NVGcontext *vg,
+                       TkWaylandPixmap *pixmapPtr);
+MODULE_SCOPE void  TkWaylandFreeStippleImage(TkWaylandPixmap *pixmapPtr);
+MODULE_SCOPE float TkWaylandStippleDensity(GC gc);
 
 /*
  *----------------------------------------------------------------------
