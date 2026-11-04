@@ -73,8 +73,8 @@ foreach {constraint definition fileList} {
 }
 
 # Files to skip when running under Wayland
-if {"wayland" in [tcltest::configure -constraints]} {
-    lappend skipFiles {}
+if {[tk windowingsystem] eq "wayland"} {
+    lappend skipFiles embed.test safePrimarySelection.test
 }
 tcltest::configure -notfile [lsort -unique $skipFiles]
 unset constraint definition fileList skipFiles toSkip

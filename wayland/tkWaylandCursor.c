@@ -1,8 +1,8 @@
 /*
  * tkWaylandCursor.c --
  *
- *	This file contains platform-specific cursor manipulation routines
- *	for Wayland/GLFW/nanovg.
+ *      This file contains platform-specific cursor manipulation routines
+ *      for Wayland/GLFW/nanovg.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -18,8 +18,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <limits.h>
 #include "stb_image.h"
 #include "x11_cursors.h"
+
+/*
+ * We deliberately DO NOT include <X11/Xcursor/Xcursor.h> to avoid
+ * type collisions (XcursorFileHeader). We use dlopen.
+*/
+#include <dlfcn.h>
 
 /*
  * The following data structure is a superset of the TkCursor structure
@@ -29,12 +37,12 @@
  */
 
 typedef struct {
-    TkCursor info;		/* Generic cursor info used by tkCursor.c */
-    GLFWcursor *cursor;		/* GLFW cursor handle */
-    GLFWwindow *glfwWindow;	/* GLFW window this cursor belongs to, captured
-				 * at allocation time by TkGetCursorByName. */
-    int standardShape;		/* GLFW standard cursor shape, or -1 for custom */
-    int width, height;		/* Dimensions for custom cursors */
+    TkCursor info;              /* Generic cursor info used by tkCursor.c */
+    GLFWcursor *cursor;         /* GLFW cursor handle */
+    GLFWwindow *glfwWindow;     /* GLFW window this cursor belongs to, captured
+                                 * at allocation time by TkGetCursorByName. */
+    int standardShape;          /* GLFW standard cursor shape, or -1 for custom */
+    int width, height;          /* Dimensions for custom cursors */
 } TkWaylandCursor;
 
 /*
@@ -74,86 +82,86 @@ struct BuiltinCursor {
 
 static const struct CursorName {
     const char *name;
-    int shape;			/* GLFW cursor shape enum, or -1 for bitmap */
+    int shape;                  /* GLFW cursor shape enum, or -1 for bitmap */
 } cursorNames[] = {
-    {"X_cursor",		GLFW_RESIZE_ALL_CURSOR},
-    {"arrow",			GLFW_ARROW_CURSOR},
-    {"based_arrow_down",	-1}, /* Will use bitmap */
-    {"based_arrow_up",		-1}, /* Will use bitmap */
-    {"boat",			-1}, /* Will use bitmap */
-    {"bogosity",		-1}, /* Will use bitmap */
-    {"bottom_left_corner",	GLFW_RESIZE_NESW_CURSOR},
-    {"bottom_right_corner",	GLFW_RESIZE_NWSE_CURSOR},
-    {"bottom_side",		GLFW_RESIZE_NS_CURSOR},
-    {"bottom_tee",		-1}, /* Will use bitmap */
-    {"box_spiral",		-1}, /* Will use bitmap */
-    {"center_ptr",		GLFW_ARROW_CURSOR},
-    {"circle",			-1}, /* Will use bitmap */
-    {"clock",			-1}, /* Will use bitmap */
-    {"coffee_mug",		-1}, /* Will use bitmap */
-    {"cross",			GLFW_CROSSHAIR_CURSOR},
-    {"cross_reverse",		-1}, /* Will use bitmap */
-    {"crosshair",		GLFW_CROSSHAIR_CURSOR},
-    {"diamond_cross",		-1}, /* Will use bitmap */
-    {"dot",			-1}, /* Will use bitmap */
-    {"dotbox",			-1}, /* Will use bitmap */
-    {"double_arrow",		GLFW_RESIZE_EW_CURSOR},
-    {"draft_large",		-1}, /* Will use bitmap */
-    {"draft_small",		-1}, /* Will use bitmap */
-    {"draped_box",		-1}, /* Will use bitmap */
-    {"exchange",		-1}, /* Will use bitmap */
-    {"fleur",			GLFW_RESIZE_ALL_CURSOR},
-    {"gobbler",			-1}, /* Will use bitmap */
-    {"gumby",			-1}, /* Will use bitmap */
-    {"hand1",			GLFW_HAND_CURSOR},
-    {"hand2",			GLFW_HAND_CURSOR},
-    {"heart",			-1}, /* Will use bitmap */
-    {"icon",			GLFW_ARROW_CURSOR},
-    {"iron_cross",		-1}, /* Will use bitmap */
-    {"left_ptr",		GLFW_ARROW_CURSOR},
-    {"left_side",		GLFW_RESIZE_EW_CURSOR},
-    {"left_tee",		-1}, /* Will use bitmap */
-    {"leftbutton",		-1}, /* Will use bitmap */
-    {"ll_angle",		GLFW_RESIZE_NESW_CURSOR},
-    {"lr_angle",		GLFW_RESIZE_NWSE_CURSOR},
-    {"man",			-1}, /* Will use bitmap */
-    {"middlebutton",		-1}, /* Will use bitmap */
-    {"mouse",			-1}, /* Will use bitmap */
-    {"pencil",			-1}, /* Will use bitmap */
-    {"pirate",			-1}, /* Will use bitmap */
-    {"plus",			GLFW_CROSSHAIR_CURSOR},
-    {"question_arrow",		GLFW_ARROW_CURSOR},
-    {"right_ptr",		GLFW_ARROW_CURSOR},
-    {"right_side",		GLFW_RESIZE_EW_CURSOR},
-    {"right_tee",		-1}, /* Will use bitmap */
-    {"rightbutton",		-1}, /* Will use bitmap */
-    {"rtl_logo",		-1}, /* Will use bitmap */
-    {"sailboat",		-1}, /* Will use bitmap */
-    {"sb_down_arrow",		-1}, /* Will use bitmap */
-    {"sb_h_double_arrow",	GLFW_RESIZE_EW_CURSOR},
-    {"sb_left_arrow",		GLFW_ARROW_CURSOR},
-    {"sb_right_arrow",		GLFW_ARROW_CURSOR},
-    {"sb_up_arrow",		GLFW_ARROW_CURSOR},
-    {"sb_v_double_arrow",	GLFW_RESIZE_NS_CURSOR},
-    {"shuttle",			-1}, /* Will use bitmap */
-    {"sizing",			GLFW_RESIZE_ALL_CURSOR},
-    {"spider",			-1}, /* Will use bitmap */
-    {"spraycan",		-1}, /* Will use bitmap */
-    {"star",			-1}, /* Will use bitmap */
-    {"target",			GLFW_CROSSHAIR_CURSOR},
-    {"tcross",			GLFW_CROSSHAIR_CURSOR},
-    {"top_left_arrow",		GLFW_ARROW_CURSOR},
-    {"top_left_corner",		GLFW_RESIZE_NWSE_CURSOR},
-    {"top_right_corner",	GLFW_RESIZE_NESW_CURSOR},
-    {"top_side",		GLFW_RESIZE_NS_CURSOR},
-    {"top_tee",			-1}, /* Will use bitmap */
-    {"trek",			-1}, /* Will use bitmap */
-    {"ul_angle",		GLFW_RESIZE_NWSE_CURSOR},
-    {"umbrella",		-1}, /* Will use bitmap */
-    {"ur_angle",		GLFW_RESIZE_NESW_CURSOR},
-    {"watch",			GLFW_ARROW_CURSOR},
-    {"xterm",			GLFW_IBEAM_CURSOR},
-    {NULL,			GLFW_ARROW_CURSOR}
+    {"X_cursor",                GLFW_RESIZE_ALL_CURSOR},
+    {"arrow",                   GLFW_ARROW_CURSOR},
+    {"based_arrow_down",        -1}, /* Will use bitmap */
+    {"based_arrow_up",          -1}, /* Will use bitmap */
+    {"boat",                    -1}, /* Will use bitmap */
+    {"bogosity",                -1}, /* Will use bitmap */
+    {"bottom_left_corner",      GLFW_RESIZE_NESW_CURSOR},
+    {"bottom_right_corner",     GLFW_RESIZE_NWSE_CURSOR},
+    {"bottom_side",             GLFW_RESIZE_NS_CURSOR},
+    {"bottom_tee",              -1}, /* Will use bitmap */
+    {"box_spiral",              -1}, /* Will use bitmap */
+    {"center_ptr",              GLFW_ARROW_CURSOR},
+    {"circle",                  -1}, /* Will use bitmap */
+    {"clock",                   -1}, /* Will use bitmap */
+    {"coffee_mug",              -1}, /* Will use bitmap */
+    {"cross",                   GLFW_CROSSHAIR_CURSOR},
+    {"cross_reverse",           -1}, /* Will use bitmap */
+    {"crosshair",               GLFW_CROSSHAIR_CURSOR},
+    {"diamond_cross",           -1}, /* Will use bitmap */
+    {"dot",                     -1}, /* Will use bitmap */
+    {"dotbox",                  -1}, /* Will use bitmap */
+    {"double_arrow",            GLFW_RESIZE_EW_CURSOR},
+    {"draft_large",             -1}, /* Will use bitmap */
+    {"draft_small",             -1}, /* Will use bitmap */
+    {"draped_box",              -1}, /* Will use bitmap */
+    {"exchange",                -1}, /* Will use bitmap */
+    {"fleur",                   GLFW_RESIZE_ALL_CURSOR},
+    {"gobbler",                 -1}, /* Will use bitmap */
+    {"gumby",                   -1}, /* Will use bitmap */
+    {"hand1",                   GLFW_HAND_CURSOR},
+    {"hand2",                   GLFW_HAND_CURSOR},
+    {"heart",                   -1}, /* Will use bitmap */
+    {"icon",                    GLFW_ARROW_CURSOR},
+    {"iron_cross",              -1}, /* Will use bitmap */
+    {"left_ptr",                GLFW_ARROW_CURSOR},
+    {"left_side",               GLFW_RESIZE_EW_CURSOR},
+    {"left_tee",                -1}, /* Will use bitmap */
+    {"leftbutton",              -1}, /* Will use bitmap */
+    {"ll_angle",                GLFW_RESIZE_NESW_CURSOR},
+    {"lr_angle",                GLFW_RESIZE_NWSE_CURSOR},
+    {"man",                     -1}, /* Will use bitmap */
+    {"middlebutton",            -1}, /* Will use bitmap */
+    {"mouse",                   -1}, /* Will use bitmap */
+    {"pencil",                  -1}, /* Will use bitmap */
+    {"pirate",                  -1}, /* Will use bitmap */
+    {"plus",                    GLFW_CROSSHAIR_CURSOR},
+    {"question_arrow",          GLFW_ARROW_CURSOR},
+    {"right_ptr",               GLFW_ARROW_CURSOR},
+    {"right_side",              GLFW_RESIZE_EW_CURSOR},
+    {"right_tee",               -1}, /* Will use bitmap */
+    {"rightbutton",             -1}, /* Will use bitmap */
+    {"rtl_logo",                -1}, /* Will use bitmap */
+    {"sailboat",                -1}, /* Will use bitmap */
+    {"sb_down_arrow",           -1}, /* Will use bitmap */
+    {"sb_h_double_arrow",       GLFW_RESIZE_EW_CURSOR},
+    {"sb_left_arrow",           GLFW_ARROW_CURSOR},
+    {"sb_right_arrow",          GLFW_ARROW_CURSOR},
+    {"sb_up_arrow",             GLFW_ARROW_CURSOR},
+    {"sb_v_double_arrow",       GLFW_RESIZE_NS_CURSOR},
+    {"shuttle",                 -1}, /* Will use bitmap */
+    {"sizing",                  GLFW_RESIZE_ALL_CURSOR},
+    {"spider",                  -1}, /* Will use bitmap */
+    {"spraycan",                -1}, /* Will use bitmap */
+    {"star",                    -1}, /* Will use bitmap */
+    {"target",                  GLFW_CROSSHAIR_CURSOR},
+    {"tcross",                  GLFW_CROSSHAIR_CURSOR},
+    {"top_left_arrow",          GLFW_ARROW_CURSOR},
+    {"top_left_corner",         GLFW_RESIZE_NWSE_CURSOR},
+    {"top_right_corner",        GLFW_RESIZE_NESW_CURSOR},
+    {"top_side",                GLFW_RESIZE_NS_CURSOR},
+    {"top_tee",                 -1}, /* Will use bitmap */
+    {"trek",                    -1}, /* Will use bitmap */
+    {"ul_angle",                GLFW_RESIZE_NWSE_CURSOR},
+    {"umbrella",                -1}, /* Will use bitmap */
+    {"ur_angle",                GLFW_RESIZE_NESW_CURSOR},
+    {"watch",                   GLFW_ARROW_CURSOR},
+    {"xterm",                   GLFW_IBEAM_CURSOR},
+    {NULL,                      GLFW_ARROW_CURSOR}
 };
 
 /*
@@ -243,77 +251,41 @@ static const struct BuiltinCursor builtinCursors[] = {
     {"lr_angle",           lr_angle_bits,           lr_angle_mask_bits,           12, 12, 10, 10},
     /* mask BBX 16 16 -14 -11 → xHot=14, yHot= 5 */
     {"man",                man_bits,                man_mask_bits,                16, 16, 14,  5},
-    /* mask BBX 15 16  -8  -8 → xHot= 8, yHot= 8 */
-    {"middlebutton",       middlebutton_bits,       middlebutton_mask_bits,       15, 16,  8,  8},
-    /* mask BBX 16 16  -4 -15 → xHot= 4, yHot= 1 */
-    {"mouse",              mouse_bits,              mouse_mask_bits,              16, 16,  4,  1},
-    /* mask BBX 13 16 -11  -1 → xHot=11, yHot=15 */
-    {"pencil",             pencil_bits,             pencil_mask_bits,             13, 16, 11, 15},
-    /* mask BBX 16 16  -7  -4 → xHot= 7, yHot=12 */
-    {"pirate",             pirate_bits,             pirate_mask_bits,             16, 16,  7, 12},
-    /* mask BBX 12 12  -5  -6 → xHot= 5, yHot= 6 */
-    {"plus",               plus_bits,               plus_mask_bits,               12, 12,  5,  6},
-    /* mask BBX 11 16  -5  -8 → xHot= 5, yHot= 8 */
-    {"question_arrow",     question_arrow_bits,     question_arrow_mask_bits,     11, 16,  5,  8},
-    /* mask BBX 10 16  -8 -15 → xHot= 8, yHot= 1 */
+    {"middlebutton",       middlebutton_bits,       middlebutton_mask_bits,       13, 14,  6,  7},
+    {"mouse",              mouse_bits,              mouse_mask_bits,              15, 16,  7,  8},
+    {"pencil",             pencil_bits,             pencil_mask_bits,             16, 16,  0, 15},
+    {"pirate",             pirate_bits,             pirate_mask_bits,             16, 16,  3,  3},
+    {"plus",               plus_bits,               plus_mask_bits,               16, 16,  8,  8},
+    {"question_arrow",     question_arrow_bits,     question_arrow_mask_bits,     16, 16, 14, 14},
     {"right_ptr",          right_ptr_bits,          right_ptr_mask_bits,          10, 16,  8,  1},
-    /* mask BBX 16 15 -14  -8 → xHot=14, yHot= 7 */
-    {"right_side",         right_side_bits,         right_side_mask_bits,         16, 15, 14,  7},
-    /* mask BBX 12 16 -10  -8 → xHot=10, yHot= 8 */
-    {"right_tee",          right_tee_bits,          right_tee_mask_bits,          12, 16, 10,  8},
-    /* mask BBX 15 16  -8  -8 → xHot= 8, yHot= 8 */
-    {"rightbutton",        rightbutton_bits,        rightbutton_mask_bits,        15, 16,  8,  8},
-    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
-    {"rtl_logo",           rtl_logo_bits,           rtl_logo_mask_bits,           16, 16,  7,  7},
-    /* mask BBX 16 16  -8 -16 → xHot= 8, yHot= 0 */
-    {"sailboat",           sailboat_bits,           sailboat_mask_bits,           16, 16,  8,  0},
-    /* mask BBX  9 16  -4  -1 → xHot= 4, yHot=15 */
-    {"sb_down_arrow",      sb_down_arrow_bits,      sb_down_arrow_mask_bits,       9, 16,  4, 15},
-    /* mask BBX 15  9  -7  -5 → xHot= 7, yHot= 4 */
-    {"sb_h_double_arrow",  sb_h_double_arrow_bits,  sb_h_double_arrow_mask_bits,  15,  9,  7,  4},
-    /* mask BBX 16  9   0  -5 → xHot= 0, yHot= 4 */
-    {"sb_left_arrow",      sb_left_arrow_bits,      sb_left_arrow_mask_bits,      16,  9,  0,  4},
-    /* mask BBX 16  9 -15  -5 → xHot=15, yHot= 4 */
-    {"sb_right_arrow",     sb_right_arrow_bits,     sb_right_arrow_mask_bits,     16,  9, 15,  4},
-    /* mask BBX  9 16  -4 -16 → xHot= 4, yHot= 0 */
-    {"sb_up_arrow",        sb_up_arrow_bits,        sb_up_arrow_mask_bits,         9, 16,  4,  0},
-    /* mask BBX  9 15  -4  -8 → xHot= 4, yHot= 7 */
-    {"sb_v_double_arrow",  sb_v_double_arrow_bits,  sb_v_double_arrow_mask_bits,   9, 15,  4,  7},
-    /* mask BBX 16 16 -11 -16 → xHot=11, yHot= 0 */
-    {"shuttle",            shuttle_bits,            shuttle_mask_bits,            16, 16, 11,  0},
-    /* mask BBX 16 16  -8  -8 → xHot= 8, yHot= 8 */
-    {"sizing",             sizing_bits,             sizing_mask_bits,             16, 16,  8,  8},
-    /* mask BBX 16 16  -6  -9 → xHot= 6, yHot= 7 */
-    {"spider",             spider_bits,             spider_mask_bits,             16, 16,  6,  7},
-    /* mask BBX 12 16 -10 -14 → xHot=10, yHot= 2 */
-    {"spraycan",           spraycan_bits,           spraycan_mask_bits,           12, 16, 10,  2},
-    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
-    {"star",               star_bits,               star_mask_bits,               16, 16,  7,  7},
-    /* mask BBX 16 14  -7  -7 → xHot= 7, yHot= 7 */
-    {"target",             target_bits,             target_mask_bits,             16, 14,  7,  7},
-    /* mask BBX 15 15  -7  -8 → xHot= 7, yHot= 7 */
-    {"tcross",             tcross_bits,             tcross_mask_bits,             15, 15,  7,  7},
-    /* mask BBX 16 16  -1 -15 → xHot= 1, yHot= 1 */
-    {"top_left_arrow",     top_left_arrow_bits,     top_left_arrow_mask_bits,     16, 16,  1,  1},
-    /* mask BBX 16 16  -1 -15 → xHot= 1, yHot= 1 */
-    {"top_left_corner",    top_left_corner_bits,    top_left_corner_mask_bits,    16, 16,  1,  1},
-    /* mask BBX 16 16 -14 -15 → xHot=14, yHot= 1 */
-    {"top_right_corner",   top_right_corner_bits,   top_right_corner_mask_bits,   16, 16, 14,  1},
-    /* mask BBX 15 16  -7 -15 → xHot= 7, yHot= 1 */
-    {"top_side",           top_side_bits,           top_side_mask_bits,           15, 16,  7,  1},
-    /* mask BBX 16 12  -8 -11 → xHot= 8, yHot= 1 */
-    {"top_tee",            top_tee_bits,            top_tee_mask_bits,            16, 12,  8,  1},
-    /* mask BBX  9 16  -4 -16 → xHot= 4, yHot= 0 */
-    {"trek",               trek_bits,               trek_mask_bits,                9, 16,  4,  0},
-    /* mask BBX 12 12  -1 -11 → xHot= 1, yHot= 1 */
-    {"ul_angle",           ul_angle_bits,           ul_angle_mask_bits,           12, 12,  1,  1},
-    /* mask BBX 16 16  -8 -14 → xHot= 8, yHot= 2 */
-    {"umbrella",           umbrella_bits,           umbrella_mask_bits,           16, 16,  8,  2},
-    /* mask BBX 12 12 -10 -11 → xHot=10, yHot= 1 */
-    {"ur_angle",           ur_angle_bits,           ur_angle_mask_bits,           12, 12, 10,  1},
-    /* mask BBX 16 16 -15  -7 → xHot=15, yHot= 9 */
+    {"right_side",         right_side_bits,         right_side_mask_bits,        16, 15, 14,  7},
+    {"right_tee",          right_tee_bits,          right_tee_mask_bits,         12, 16, 10,  8},
+    {"rightbutton",        rightbutton_bits,        rightbutton_mask_bits,       14, 14,  7,  7},
+    {"rtl_logo",           rtl_logo_bits,           rtl_logo_mask_bits,          16, 16,  8,  8},
+    {"sailboat",           sailboat_bits,           sailboat_mask_bits,          16, 15, 14,  7},
+    {"sb_down_arrow",      sb_down_arrow_bits,      sb_down_arrow_mask_bits,     16, 16,  8,  8},
+    {"sb_h_double_arrow",  sb_h_double_arrow_bits,  sb_h_double_arrow_mask_bits, 14, 16,  7,  8},
+    {"sb_left_arrow",      sb_left_arrow_bits,      sb_left_arrow_mask_bits,     16, 16,  1,  8},
+    {"sb_right_arrow",     sb_right_arrow_bits,     sb_right_arrow_mask_bits,    16, 16, 14,  8},
+    {"sb_up_arrow",        sb_up_arrow_bits,        sb_up_arrow_mask_bits,       16, 16,  8,  1},
+    {"sb_v_double_arrow",  sb_v_double_arrow_bits,  sb_v_double_arrow_mask_bits, 16, 14,  8,  7},
+    {"shuttle",            shuttle_bits,            shuttle_mask_bits,           16, 16,  8,  8},
+    {"sizing",             sizing_bits,             sizing_mask_bits,            16, 16,  8,  8},
+    {"spider",             spider_bits,             spider_mask_bits,            15, 16,  7,  7},
+    {"spraycan",           spraycan_bits,           spraycan_mask_bits,          15, 16,  3,  3},
+    {"star",               star_bits,               star_mask_bits,              15, 16,  7,  7},
+    {"target",             target_bits,             target_mask_bits,            16, 16,  7,  7},
+    {"tcross",             tcross_bits,             tcross_mask_bits,            16, 16,  8,  8},
+    {"top_left_arrow",     top_left_arrow_bits,     top_left_arrow_mask_bits,    16, 16,  0,  0},
+    {"top_left_corner",    top_left_corner_bits,    top_left_corner_mask_bits,   16, 16,  1,  1},
+    {"top_right_corner",   top_right_corner_bits,   top_right_corner_mask_bits,  16, 16, 14,  1},
+    {"top_side",           top_side_bits,           top_side_mask_bits,          15, 16,  7,  1},
+    {"top_tee",            top_tee_bits,            top_tee_mask_bits,           16, 12,  8,  1},
+    {"trek",               trek_bits,               trek_mask_bits,              16, 16,  8,  8},
+    {"ul_angle",           ul_angle_bits,           ul_angle_mask_bits,          12, 12,  1,  1},
+    {"umbrella",           umbrella_bits,           umbrella_mask_bits,          15, 16,  7, 15},
+    {"ur_angle",           ur_angle_bits,           ur_angle_mask_bits,          12, 12, 10,  1},
     {"watch",              watch_bits,              watch_mask_bits,              16, 16, 15,  9},
-    /* mask BBX  9 16  -4  -8 → xHot= 4, yHot= 8 */
     {"xterm",              xterm_bits,              xterm_mask_bits,               9, 16,  4,  8},
     {NULL, NULL, NULL, 0, 0, 0, 0}
 };
@@ -337,8 +309,8 @@ static const struct TkCursorName {
     const char *data;
     char *mask;
 } tkCursorNames[] = {
-    {"none",	CURSOR_NONE_DATA,	NULL},
-    {NULL,	NULL,			NULL}
+    {"none",    CURSOR_NONE_DATA,       NULL},
+    {NULL,      NULL,                   NULL}
 };
 
 /* Forward declarations. */
@@ -346,7 +318,7 @@ static GLFWcursor* CreateCursorFromBitmapData(const unsigned char* source,
     const unsigned char* mask, int width, int height, int xHot, int yHot,
     unsigned int fgColor, unsigned int bgColor);
 static bool LoadImageFile(const char* filename, unsigned char** pixels,
-    int* width, int* height);
+    int* width, int* height, int* xHot, int* yHot);
 static bool LoadXBMFile(const char* filename, unsigned char** pixels,
     int* width, int* height);
 static unsigned char* ParseXBMData(const char* data, int* width, int* height,
@@ -355,30 +327,460 @@ static unsigned int ParseColor(const char* colorName);
 static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
       int width, int height, int xHot, int yHot);
 
+/* XCursor forward decls */
+static bool LoadXcursorFile(const char* filename, unsigned char** pixels,
+    int* width, int* height, int* xHot, int* yHot);
+static bool TryLoadThemedXcursor(const char* name, unsigned char** pixels,
+    int* width, int* height, int* xHot, int* yHot);
+
 /*
- * Cursor application state. TkpSetCursor receives a bare Cursor XID with
- * no window argument, so we track (a) the GLFW window currently containing
- * the pointer (fed by the enter/motion callbacks in tkWaylandNotify.c) and
- * (b) every GLFW window whose cursor we have overridden, so that
- * TkpSetCursor(None) can restore the compositor default everywhere.
+ * Cursor application state.
  */
 
 static GLFWwindow *pointerWindow = NULL;
-static Tcl_HashTable appliedCursors;	/* GLFWwindow* -> TkWaylandCursor* */
+static Tcl_HashTable appliedCursors;
 static int appliedCursorsInit = 0;
+
+/* ======================================================================
+ * XCursor file format support
+ * https://keithp.com/~keithp/render/Xcursor-spec.html
+ * ====================================================================== */
+
+#define XCURSOR_MAGIC           0x72756358  /* "Xcur" little endian */
+#define XCURSOR_FILE_VERSION    0x00010000
+#define XCURSOR_FILE_HEADER_LEN 4
+#define XCURSOR_CHUNK_HEADER_LEN 4
+#define XCURSOR_IMAGE_TYPE      0xfffd0002
+
+typedef struct {
+    uint32_t magic;
+    uint32_t header;
+    uint32_t version;
+    uint32_t ntoc;
+} TkXcursorFileHeader;
+
+typedef struct {
+    uint32_t type;
+    uint32_t subtype;
+    uint32_t position;
+} TkXcursorFileToc;
+
+typedef struct {
+    uint32_t header;    /* chunk header len */
+    uint32_t type;
+    uint32_t subtype;
+    uint32_t version;
+    uint32_t width;
+    uint32_t height;
+    uint32_t xhot;
+    uint32_t yhot;
+    uint32_t delay;
+    /* then width*height uint32 ARGB pixels */
+} TkXcursorImageChunkHeader;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadU32LE --
+ *
+ *	Read a 32-bit unsigned integer stored in little-endian byte order
+ *	from a buffer. Used for parsing the Xcursor binary file format,
+ *	which is defined as little-endian regardless of host byte order.
+ *
+ * Results:
+ *	The 32-bit value assembled from the four bytes at p.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static uint32_t ReadU32LE(const unsigned char *p) {
+    return ((uint32_t)p[0]) | ((uint32_t)p[1] << 8) |
+           ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkIsXcursorMagic --
+ *
+ *	Check whether a buffer begins with the Xcursor file magic number
+ *	("Xcur" in little-endian byte order). Used to identify .xcur
+ *	content by inspection rather than trusting a file extension.
+ *
+ * Results:
+ *	true if the buffer is at least 16 bytes long and starts with the
+ *	Xcursor magic; false otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool TkIsXcursorMagic(const unsigned char *buf, size_t len) {
+    if (len < 16) return false;
+    uint32_t magic = ReadU32LE(buf);
+    return magic == XCURSOR_MAGIC;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LoadXcursorFile --
+ *
+ *	Native parser for .xcur files. Picks the largest image in the
+ *	file (most sizes store 24, 32, 48 variants) or the first if
+ *	several are equal in size. Converts ARGB (Xcursor's native pixel
+ *	layout) to RGBA for GLFW. If libXcursor is compiled in
+ *	(HAVE_XCURSOR_LIB), its higher-level loader is used first because
+ *	it also handles animation frames; on failure the native parser is
+ *	used as a fallback.
+ *
+ * Results:
+ *	true on success, with *pixels set to a Tcl-allocated RGBA buffer
+ *	(release with Tcl_Free) and *width, *height, *xHot, *yHot filled
+ *	in from the chosen image. false on any error.
+ *
+ * Side effects:
+ *	Allocates pixel data and reads the named file from disk.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+LoadXcursorFile(
+    const char* filename,
+    unsigned char** pixels,
+    int* width,
+    int* height,
+    int* xHot,
+    int* yHot)
+{
+#ifdef HAVE_XCURSOR_LIB
+    /* Fast path via libXcursor if available - handles animated cursors etc. */
+    {
+        XcursorImages *images = XcursorFilenameLoadImages(filename, 0);
+        if (images && images->nimage > 0) {
+            XcursorImage *img = images->images[0];
+            /* pick largest */
+            size_t best = 0;
+            size_t bestPixels = 0;
+            for (int i = 0; i < images->nimage; i++) {
+                size_t px = (size_t)images->images[i]->width * images->images[i]->height;
+                if (px > bestPixels) { bestPixels = px; best = i; }
+            }
+            img = images->images[best];
+            int w = img->width;
+            int h = img->height;
+            unsigned char *rgba = Tcl_Alloc(w * h * 4);
+            if (rgba) {
+                for (int i = 0; i < w*h; i++) {
+                    uint32_t argb = img->pixels[i];
+                    unsigned char a = (argb >> 24) & 0xFF;
+                    unsigned char r = (argb >> 16) & 0xFF;
+                    unsigned char g = (argb >> 8) & 0xFF;
+                    unsigned char b = argb & 0xFF;
+                    rgba[i*4+0] = r;
+                    rgba[i*4+1] = g;
+                    rgba[i*4+2] = b;
+                    rgba[i*4+3] = a;
+                }
+                *pixels = rgba;
+                *width = w;
+                *height = h;
+                *xHot = img->xhot;
+                *yHot = img->yhot;
+                XcursorImagesDestroy(images);
+                return true;
+            }
+            XcursorImagesDestroy(images);
+        }
+        /* fall through to native parser on failure */
+    }
+#endif
+
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) return false;
+
+    if (fseek(fp, 0, SEEK_END) != 0) { fclose(fp); return false; }
+    long fsize = ftell(fp);
+    if (fsize < 16 || fsize > 16*1024*1024) { fclose(fp); return false; }
+    rewind(fp);
+
+    unsigned char *fileData = Tcl_Alloc(fsize);
+    if (!fileData) { fclose(fp); return false; }
+    if (fread(fileData, 1, fsize, fp) != (size_t)fsize) {
+        Tcl_Free(fileData); fclose(fp); return false;
+    }
+    fclose(fp);
+
+    if (!TkIsXcursorMagic(fileData, fsize)) {
+        Tcl_Free(fileData); return false;
+    }
+
+    TkXcursorFileHeader fh;
+    fh.magic  = ReadU32LE(fileData + 0);
+    fh.header = ReadU32LE(fileData + 4);
+    fh.version= ReadU32LE(fileData + 8);
+    fh.ntoc   = ReadU32LE(fileData + 12);
+
+    if (fh.header < 16 || fh.ntoc > 100 || fh.ntoc == 0) {
+        Tcl_Free(fileData); return false;
+    }
+
+    size_t tocOffset = fh.header;
+    if (tocOffset + fh.ntoc * 12 > (size_t)fsize) {
+        Tcl_Free(fileData); return false;
+    }
+
+    int bestW = 0, bestH = 0;
+    int bestXHot = 0, bestYHot = 0;
+    unsigned char *bestRGBA = NULL;
+    size_t bestPixelsCount = 0;
+
+    for (uint32_t i = 0; i < fh.ntoc; i++) {
+        size_t off = tocOffset + i*12;
+        uint32_t type    = ReadU32LE(fileData + off);
+        uint32_t subtype = ReadU32LE(fileData + off + 4);
+        uint32_t position= ReadU32LE(fileData + off + 8);
+
+        if (type != XCURSOR_IMAGE_TYPE) continue;
+        if (position + 36 > (size_t)fsize) continue; /* at least header */
+
+        TkXcursorImageChunkHeader ch;
+        ch.header  = ReadU32LE(fileData + position);
+        ch.type    = ReadU32LE(fileData + position + 4);
+        ch.subtype = ReadU32LE(fileData + position + 8);
+        ch.version = ReadU32LE(fileData + position + 12);
+        ch.width   = ReadU32LE(fileData + position + 16);
+        ch.height  = ReadU32LE(fileData + position + 20);
+        ch.xhot    = ReadU32LE(fileData + position + 24);
+        ch.yhot    = ReadU32LE(fileData + position + 28);
+        ch.delay   = ReadU32LE(fileData + position + 32);
+
+        if (ch.width == 0 || ch.height == 0 || ch.width > 512 || ch.height > 512) continue;
+        size_t pixelCount = (size_t)ch.width * ch.height;
+        size_t dataOff = position + ch.header;
+        if (dataOff + pixelCount*4 > (size_t)fsize) continue;
+
+        /* Keep largest */
+        if (bestRGBA && pixelCount <= bestPixelsCount) {
+            /* prefer larger, but keep first if equal - skip smaller */
+            if (pixelCount < bestPixelsCount) continue;
+        }
+
+        unsigned char *rgba = Tcl_Alloc(pixelCount * 4);
+        if (!rgba) continue;
+
+        const unsigned char *src = fileData + dataOff;
+        for (size_t p = 0; p < pixelCount; p++) {
+            uint32_t argb = ReadU32LE(src + p*4);
+            unsigned char a = (argb >> 24) & 0xFF;
+            unsigned char r = (argb >> 16) & 0xFF;
+            unsigned char g = (argb >> 8) & 0xFF;
+            unsigned char b = argb & 0xFF;
+            rgba[p*4+0] = r;
+            rgba[p*4+1] = g;
+            rgba[p*4+2] = b;
+            rgba[p*4+3] = a;
+        }
+
+        if (bestRGBA) Tcl_Free(bestRGBA);
+        bestRGBA = rgba;
+        bestPixelsCount = pixelCount;
+        bestW = ch.width;
+        bestH = ch.height;
+        bestXHot = ch.xhot;
+        bestYHot = ch.yhot;
+        /* subtype is nominal size, we ignore for now */
+        (void)subtype;
+    }
+
+    Tcl_Free(fileData);
+
+    if (!bestRGBA) return false;
+
+    *pixels = bestRGBA;
+    *width = bestW;
+    *height = bestH;
+    *xHot = bestXHot;
+    *yHot = bestYHot;
+    return true;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TryLoadThemedXcursor --
+ *
+ *	Search for a cursor by name in the user's current cursor theme
+ *	and load it as RGBA pixel data. If libXcursor is compiled in
+ *	(HAVE_XCURSOR_LIB), its theme inheritance and XCURSOR_THEME /
+ *	XCURSOR_PATH resolution are used directly; otherwise this
+ *	function walks a hand-built list of standard icon directories
+ *	derived from XCURSOR_PATH, ~/.icons, ~/.local/share/icons, and
+ *	/usr/share/icons (plus /usr/local/share/icons and
+ *	/usr/share/pixmaps), falling back to the name treated as a path.
+ *
+ * Results:
+ *	true on success, with *pixels set to a Tcl-allocated RGBA buffer
+ *	(release with Tcl_Free) and *width, *height, *xHot, *yHot filled
+ *	in from the loaded cursor. false if no matching cursor was found
+ *	or loading failed.
+ *
+ * Side effects:
+ *	Allocates pixel data, reads files, and (in the manual fallback
+ *	path) allocates and frees temporary path strings via malloc/free.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+TryLoadThemedXcursor(
+    const char* name,
+    unsigned char** pixels,
+    int* width,
+    int* height,
+    int* xHot,
+    int* yHot)
+{
+    if (!name || !*name) return false;
+
+#ifdef HAVE_XCURSOR_LIB
+    /* libXcursor handles theme inheritance, XCURSOR_THEME, etc. */
+    {
+        XcursorImages *images = XcursorLibraryLoadImages(name, NULL, 0);
+        if (images && images->nimage > 0) {
+            XcursorImage *img = images->images[0];
+            size_t best = 0;
+            size_t bestPixels = 0;
+            for (int i = 0; i < images->nimage; i++) {
+                size_t px = (size_t)images->images[i]->width * images->images[i]->height;
+                if (px > bestPixels) { bestPixels = px; best = i; }
+            }
+            img = images->images[best];
+            int w = img->width;
+            int h = img->height;
+            unsigned char *rgba = Tcl_Alloc(w*h*4);
+            if (rgba) {
+                for (int i = 0; i < w*h; i++) {
+                    uint32_t argb = img->pixels[i];
+                    rgba[i*4+0] = (argb >> 16) & 0xFF;
+                    rgba[i*4+1] = (argb >> 8) & 0xFF;
+                    rgba[i*4+2] = argb & 0xFF;
+                    rgba[i*4+3] = (argb >> 24) & 0xFF;
+                }
+                *pixels = rgba;
+                *width = w;
+                *height = h;
+                *xHot = img->xhot;
+                *yHot = img->yhot;
+                XcursorImagesDestroy(images);
+                return true;
+            }
+            XcursorImagesDestroy(images);
+        }
+    }
+#endif
+
+    /* Manual theme search fallback */
+    const char *xcursorPath = getenv("XCURSOR_PATH");
+    const char *home = getenv("HOME");
+    const char *theme = getenv("XCURSOR_THEME");
+    if (!theme) theme = "default";
+
+    char candidate[PATH_MAX];
+    const char *searchPaths[16];
+    int nPaths = 0;
+
+    /* Build search path list */
+    if (xcursorPath) {
+        /* XCURSOR_PATH is colon-separated */
+        char *dup = strdup(xcursorPath);
+        if (dup) {
+            char *tok = strtok(dup, ":");
+            while (tok && nPaths < 12) {
+                snprintf(candidate, sizeof(candidate), "%s/%s", tok, name);
+                searchPaths[nPaths++] = strdup(candidate);
+                tok = strtok(NULL, ":");
+            }
+            free(dup);
+        }
+    }
+
+    /* User icon dirs */
+    if (home) {
+        snprintf(candidate, sizeof(candidate), "%s/.icons/%s/cursors/%s", home, theme, name);
+        if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
+        snprintf(candidate, sizeof(candidate), "%s/.icons/default/cursors/%s", home, name);
+        if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
+        snprintf(candidate, sizeof(candidate), "%s/.local/share/icons/%s/cursors/%s", home, theme, name);
+        if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
+        snprintf(candidate, sizeof(candidate), "%s/.local/share/icons/default/cursors/%s", home, name);
+        if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
+    }
+
+    /* System dirs */
+    static const char *sysPrefixes[] = {
+        "/usr/share/icons",
+        "/usr/local/share/icons",
+        "/usr/share/pixmaps",
+        NULL
+    };
+    for (int i = 0; sysPrefixes[i] && nPaths < 14; i++) {
+        snprintf(candidate, sizeof(candidate), "%s/%s/cursors/%s", sysPrefixes[i], theme, name);
+        searchPaths[nPaths++] = strdup(candidate);
+        if (strcmp(theme, "default") != 0) {
+            snprintf(candidate, sizeof(candidate), "%s/default/cursors/%s", sysPrefixes[i], name);
+            if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
+        }
+        snprintf(candidate, sizeof(candidate), "%s/%s", sysPrefixes[i], name);
+        if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
+    }
+
+    bool found = false;
+    for (int i = 0; i < nPaths && !found; i++) {
+        const char *p = searchPaths[i];
+        if (!p) continue;
+        FILE *f = fopen(p, "rb");
+        if (!f) continue;
+        unsigned char magic[16];
+        size_t n = fread(magic, 1, 16, f);
+        fclose(f);
+        if (n >= 4 && TkIsXcursorMagic(magic, n)) {
+            if (LoadXcursorFile(p, pixels, width, height, xHot, yHot)) {
+                found = true;
+            }
+        }
+    }
+
+    for (int i = 0; i < nPaths; i++) free((void*)searchPaths[i]);
+
+    /* Last resort: try absolute / named file as-is */
+    if (!found) {
+        if (LoadXcursorFile(name, pixels, width, height, xHot, yHot)) {
+            found = true;
+        }
+    }
+
+    return found;
+}
 
 /*
  *----------------------------------------------------------------------
  *
  * ConvertXBMToRGBA --
  *
- *	Convert X11 bitmap data to RGBA format for GLFW.
+ *      Convert X11 bitmap data to RGBA format for GLFW.
  *
  * Results:
- *	Returns allocated RGBA pixel data, or NULL on error.
+ *      Returns allocated RGBA pixel data, or NULL on error.
  *
  * Side effects:
- *	Allocates memory.
+ *      Allocates memory.
  *
  *----------------------------------------------------------------------
  */
@@ -408,23 +810,20 @@ ConvertXBMToRGBA(
             int rgbaIndex = (y * width + x) * 4;
 
             if (maskBit == 0) {
-                /* Transparent. */
-                rgba[rgbaIndex] = 0;     /* R */
-                rgba[rgbaIndex+1] = 0;   /* G */
-                rgba[rgbaIndex+2] = 0;   /* B */
-                rgba[rgbaIndex+3] = 0;   /* A */
+                rgba[rgbaIndex] = 0;
+                rgba[rgbaIndex+1] = 0;
+                rgba[rgbaIndex+2] = 0;
+                rgba[rgbaIndex+3] = 0;
             } else if (srcBit == 1) {
-                /* Foreground color. */
-                rgba[rgbaIndex] = (fgColor >> 16) & 0xFF;   /* R */
-                rgba[rgbaIndex+1] = (fgColor >> 8) & 0xFF;  /* G */
-                rgba[rgbaIndex+2] = fgColor & 0xFF;         /* B */
-                rgba[rgbaIndex+3] = (fgColor >> 24) & 0xFF; /* A */
+                rgba[rgbaIndex] = (fgColor >> 16) & 0xFF;
+                rgba[rgbaIndex+1] = (fgColor >> 8) & 0xFF;
+                rgba[rgbaIndex+2] = fgColor & 0xFF;
+                rgba[rgbaIndex+3] = (fgColor >> 24) & 0xFF;
             } else {
-                /* Background color. */
-                rgba[rgbaIndex] = (bgColor >> 16) & 0xFF;   /* R */
-                rgba[rgbaIndex+1] = (bgColor >> 8) & 0xFF;  /* G */
-                rgba[rgbaIndex+2] = bgColor & 0xFF;         /* B */
-                rgba[rgbaIndex+3] = (bgColor >> 24) & 0xFF; /* A */
+                rgba[rgbaIndex] = (bgColor >> 16) & 0xFF;
+                rgba[rgbaIndex+1] = (bgColor >> 8) & 0xFF;
+                rgba[rgbaIndex+2] = bgColor & 0xFF;
+                rgba[rgbaIndex+3] = (bgColor >> 24) & 0xFF;
             }
         }
     }
@@ -437,13 +836,13 @@ ConvertXBMToRGBA(
  *
  * CreateCursorFromBitmapData --
  *
- *	Creates a cursor from X11 bitmap data.
+ *      Creates a cursor from X11 bitmap data.
  *
  * Results:
- *	Returns a new GLFW cursor, or NULL on error.
+ *      Returns a new GLFW cursor, or NULL on error.
  *
  * Side effects:
- *	Allocates resources.
+ *      Allocates resources.
  *
  *----------------------------------------------------------------------
  */
@@ -486,15 +885,325 @@ CreateCursorFromBitmapData(
 /*
  *----------------------------------------------------------------------
  *
- * LoadImageFile --
+ * StbiToTclBuffer --
  *
- *	Load an image file (PNG or XBM) for cursor creation.
+ *      Copy an RGBA buffer allocated by stb_image into Tcl-allocated
+ *      memory and release the stb buffer, so that every pixel buffer
+ *      handed back by the loaders in this file can be released with
+ *      Tcl_Free.
  *
  * Results:
- *	Returns true on success, false on failure.
+ *      Returns the Tcl-allocated copy.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static unsigned char *
+StbiToTclBuffer(
+    unsigned char *src,
+    int width,
+    int height)
+{
+    size_t n = (size_t) width * (size_t) height * 4;
+    unsigned char *out = (unsigned char *) Tcl_Alloc(n);
+
+    memcpy(out, src, n);
+    stbi_image_free(src);
+    return out;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsWinCursorMagic --
+ *
+ *	Check whether a buffer begins with a Windows ICO/CUR file header:
+ *	reserved field = 0, type = 1 (icon) or 2 (cursor).
+ *
+ * Results:
+ *	true if the first six bytes match the Windows icon/cursor magic;
+ *	false otherwise.
  *
  * Side effects:
- *	Allocates pixel data.
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsWinCursorMagic(
+    const unsigned char *buf,
+    size_t len)
+{
+    return len >= 6 && buf[0] == 0 && buf[1] == 0 &&
+            (buf[2] == 1 || buf[2] == 2) && buf[3] == 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RdLE16 --
+ *
+ *	Read a 16-bit unsigned integer stored in little-endian byte order
+ *	from a buffer. Used for parsing the Windows ICO/CUR directory and
+ *	DIB headers, which are little-endian.
+ *
+ * Results:
+ *	The 16-bit value assembled from the two bytes at p.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static uint16_t
+RdLE16(const unsigned char *p)
+{
+    return (uint16_t) (p[0] | (p[1] << 8));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RdLE32 --
+ *
+ *	Read a 32-bit unsigned integer stored in little-endian byte order
+ *	from a buffer. Used for parsing the Windows ICO/CUR directory and
+ *	DIB headers, which are little-endian.
+ *
+ * Results:
+ *	The 32-bit value assembled from the four bytes at p.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static uint32_t
+RdLE32(const unsigned char *p)
+{
+    return (uint32_t) p[0] | ((uint32_t) p[1] << 8) |
+            ((uint32_t) p[2] << 16) | ((uint32_t) p[3] << 24);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LoadWinCursorFile --
+ *
+ *      Load a Windows .cur (or .ico) file. The largest image in the file
+ *      is used. PNG-compressed images and uncompressed 1, 4, 8, 24 and
+ *      32 bpp DIB images are supported.
+ *
+ * Results:
+ *      Returns true on success, with *pixels set to a Tcl-allocated RGBA
+ *      buffer, and the hot spot set from the directory entry (the image
+ *      center for .ico files).
+ *
+ * Side effects:
+ *      Allocates pixel data.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+LoadWinCursorFile(
+    const char *filename,
+    unsigned char **pixels,
+    int *width,
+    int *height,
+    int *xHot,
+    int *yHot)
+{
+    FILE *fp;
+    unsigned char *d = NULL, *out = NULL;
+    const unsigned char *e, *img;
+    long size;
+    bool ok = false;
+    int type, count, i, best = -1, w = 0, h = 0;
+    unsigned bestArea = 0;
+    uint32_t imgLen;
+
+    fp = fopen(filename, "rb");
+    if (!fp) {
+        return false;
+    }
+    if (fseek(fp, 0, SEEK_END) != 0 || (size = ftell(fp)) < 22 ||
+            size > 16*1024*1024 || fseek(fp, 0, SEEK_SET) != 0) {
+        fclose(fp);
+        return false;
+    }
+    d = (unsigned char *) Tcl_Alloc((size_t) size);
+    if (fread(d, 1, (size_t) size, fp) != (size_t) size) {
+        fclose(fp);
+        Tcl_Free(d);
+        return false;
+    }
+    fclose(fp);
+
+    type = RdLE16(d + 2);
+    count = RdLE16(d + 4);
+    if (RdLE16(d) != 0 || (type != 1 && type != 2) || count < 1 ||
+            size < 6 + 16 * (long) count) {
+        goto done;
+    }
+
+    /* Pick the largest image. */
+
+    for (i = 0; i < count; i++) {
+        const unsigned char *ent = d + 6 + 16 * i;
+        unsigned ew = ent[0] ? ent[0] : 256, eh = ent[1] ? ent[1] : 256;
+        uint32_t bytes = RdLE32(ent + 8), off = RdLE32(ent + 12);
+
+        if (off >= (unsigned long) size ||
+                bytes > (unsigned long) size - off) {
+            continue;
+        }
+        if (ew * eh > bestArea) {
+            bestArea = ew * eh;
+            best = i;
+        }
+    }
+    if (best < 0) {
+        goto done;
+    }
+
+    e = d + 6 + 16 * best;
+    img = d + RdLE32(e + 12);
+    imgLen = RdLE32(e + 8);
+
+    if (imgLen >= 8 && memcmp(img, "\x89PNG", 4) == 0) {
+        int ch;
+        unsigned char *p = stbi_load_from_memory(img, (int) imgLen, &w, &h,
+                &ch, 4);
+
+        if (!p) {
+            goto done;
+        }
+        out = StbiToTclBuffer(p, w, h);
+    } else {
+        uint32_t hdr = imgLen >= 40 ? RdLE32(img) : 0;
+        int bw, bh, bpp, y, x;
+        uint32_t comp, used, nPal;
+        size_t xorOff, xorStride, andStride;
+        bool hasMask, anyAlpha = false;
+        const unsigned char *pal, *andBits;
+
+        if (hdr < 40 || hdr > imgLen) {
+            goto done;
+        }
+        bw = (int32_t) RdLE32(img + 4);
+        bh = (int32_t) RdLE32(img + 8) / 2;     /* XOR image + AND mask */
+        bpp = RdLE16(img + 14);
+        comp = RdLE32(img + 16);
+        used = RdLE32(img + 32);
+        if (bw <= 0 || bh <= 0 || bw > 1024 || bh > 1024 || comp != 0 ||
+                (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 24 &&
+                bpp != 32)) {
+            goto done;
+        }
+        w = bw;
+        h = bh;
+        nPal = (bpp <= 8) ? (used ? used : (1u << bpp)) : 0;
+        if (nPal > 256) {
+            goto done;
+        }
+        xorOff = hdr + (size_t) nPal * 4;
+        xorStride = (((size_t) w * bpp + 31) / 32) * 4;
+        andStride = (((size_t) w + 31) / 32) * 4;
+        if (xorOff + xorStride * h > imgLen) {
+            goto done;
+        }
+        hasMask = xorOff + xorStride * h + andStride * h <= imgLen;
+        pal = img + hdr;
+        andBits = img + xorOff + xorStride * h;
+
+        out = (unsigned char *) Tcl_Alloc((size_t) w * h * 4);
+        for (y = 0; y < h; y++) {
+            const unsigned char *xr = img + xorOff + xorStride * (h - 1 - y);
+
+            for (x = 0; x < w; x++) {
+                unsigned char r, g, b, a = 255;
+                unsigned char *o = out + ((size_t) y * w + x) * 4;
+
+                if (bpp == 32) {
+                    b = xr[x*4]; g = xr[x*4+1]; r = xr[x*4+2]; a = xr[x*4+3];
+                    if (a) {
+                        anyAlpha = true;
+                    }
+                } else if (bpp == 24) {
+                    b = xr[x*3]; g = xr[x*3+1]; r = xr[x*3+2];
+                } else {
+                    uint32_t idx;
+
+                    if (bpp == 8) {
+                        idx = xr[x];
+                    } else if (bpp == 4) {
+                        idx = (x & 1) ? (xr[x/2] & 15) : (xr[x/2] >> 4);
+                    } else {
+                        idx = (xr[x/8] >> (7 - (x & 7))) & 1;
+                    }
+                    if (idx >= nPal) {
+                        idx = 0;
+                    }
+                    b = pal[idx*4]; g = pal[idx*4+1]; r = pal[idx*4+2];
+                }
+                o[0] = r; o[1] = g; o[2] = b; o[3] = a;
+            }
+        }
+
+        /* The AND mask supplies transparency unless 32bpp has real alpha. */
+
+        if (hasMask && !(bpp == 32 && anyAlpha)) {
+            for (y = 0; y < h; y++) {
+                const unsigned char *ar = andBits + andStride * (h - 1 - y);
+
+                for (x = 0; x < w; x++) {
+                    int bit = (ar[x/8] >> (7 - (x & 7))) & 1;
+
+                    out[((size_t) y * w + x) * 4 + 3] = bit ? 0 : 255;
+                }
+            }
+        }
+    }
+
+    *width = w;
+    *height = h;
+    *xHot = (type == 2) ? RdLE16(e + 4) : w / 2;
+    *yHot = (type == 2) ? RdLE16(e + 6) : h / 2;
+    if (*xHot >= w) *xHot = w - 1;
+    if (*yHot >= h) *yHot = h - 1;
+    *pixels = out;
+    out = NULL;
+    ok = true;
+
+  done:
+    if (out) {
+        Tcl_Free(out);
+    }
+    Tcl_Free(d);
+    return ok;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LoadImageFile --
+ *
+ *      Load a cursor image file for "@file" cursor specs. The file type
+ *      is determined by content, not extension: Xcursor, Windows
+ *      CUR/ICO, then (by extension) XBM, then anything stb_image can
+ *      decode (PNG etc.), then XBM as a last resort.
+ *
+ * Results:
+ *      Returns true on success, with *pixels set to a Tcl-allocated RGBA
+ *      buffer (release with Tcl_Free). *xHot and *yHot are the file's
+ *      hot spot, or -1 if the format has none.
+ *
+ * Side effects:
+ *      Allocates pixel data.
  *
  *----------------------------------------------------------------------
  */
@@ -504,26 +1213,48 @@ LoadImageFile(
     const char* filename,
     unsigned char** pixels,
     int* width,
-    int* height)
+    int* height,
+    int* xHot,
+    int* yHot)
 {
-    const char* ext = strrchr(filename, '.');
-    if (ext) {
-        if (strcasecmp(ext, ".png") == 0) {
-            /* Use stb_image for PNG files. */
-            int channels;
-            *pixels = stbi_load(filename, width, height, &channels, 4);
-            if (*pixels) {
-                /* stbi_load returns RGBA, which is what we need. */
-                return true;
-            }
-            return false;
-        } else if (strcasecmp(ext, ".xbm") == 0) {
-            /* Use LoadXBMFile for .xbm files. */
-            return LoadXBMFile(filename, pixels, width, height);
-        }
+    unsigned char magic[16];
+    size_t n = 0;
+    FILE *f;
+    const char *ext;
+    int channels;
+    unsigned char *data;
+
+    *xHot = *yHot = -1;
+
+    f = fopen(filename, "rb");
+    if (!f) {
+        return false;
+    }
+    n = fread(magic, 1, sizeof(magic), f);
+    fclose(f);
+
+    if (n >= 4 && TkIsXcursorMagic(magic, n)) {
+        return LoadXcursorFile(filename, pixels, width, height, xHot, yHot);
+    }
+    if (IsWinCursorMagic(magic, n)) {
+        return LoadWinCursorFile(filename, pixels, width, height, xHot, yHot);
     }
 
-    /* Try as XBM file by default. */
+    ext = strrchr(filename, '.');
+    if (ext && strcasecmp(ext, ".xbm") == 0) {
+        return LoadXBMFile(filename, pixels, width, height);
+    }
+
+    /* PNG and anything else stb_image decodes. */
+
+    data = stbi_load(filename, width, height, &channels, 4);
+    if (data) {
+        *pixels = StbiToTclBuffer(data, *width, *height);
+        return true;
+    }
+
+    /* Fallback: try as an XBM file. */
+
     return LoadXBMFile(filename, pixels, width, height);
 }
 
@@ -532,13 +1263,13 @@ LoadImageFile(
  *
  * ParseXBMData --
  *
- *	Parse XBM format data to extract bitmap.
+ *      Parse XBM format data to extract bitmap.
  *
  * Results:
- *	Returns allocated bitmap data, or NULL on error.
+ *      Returns allocated bitmap data, or NULL on error.
  *
  * Side effects:
- *	Allocates memory.
+ *      Allocates memory.
  *
  *----------------------------------------------------------------------
  */
@@ -551,11 +1282,10 @@ ParseXBMData(
     int* xHot,
     int* yHot)
 {
-    /* Simple XBM parser - looks for width, height, and data. */
     const char* ptr = data;
     char name[256];
 
-    *width = *height = 16; /* Default */
+    *width = *height = 16;
     *xHot = *yHot = 0;
 
     while (*ptr) {
@@ -573,7 +1303,6 @@ ParseXBMData(
         ptr++;
     }
 
-    /* Look for hotspot. */
     ptr = data;
     while (*ptr) {
         if (sscanf(ptr, "#define %255s %d", name, xHot) == 2) {
@@ -590,7 +1319,6 @@ ParseXBMData(
         ptr++;
     }
 
-    /* Find bitmap data. */
     ptr = strstr(data, "static char");
     if (!ptr) ptr = strstr(data, "static unsigned char");
     if (!ptr) return NULL;
@@ -624,13 +1352,13 @@ ParseXBMData(
  *
  * LoadXBMFile --
  *
- *	Load an XBM file specifically.
+ *      Load an XBM file specifically.
  *
  * Results:
- *	Returns true on success, false on failure.
+ *      Returns true on success, false on failure.
  *
  * Side effects:
- *	Allocates pixel data.
+ *      Allocates pixel data.
  *
  *----------------------------------------------------------------------
  */
@@ -647,7 +1375,6 @@ LoadXBMFile(
         return false;
     }
 
-    /* Read entire file. */
     if (fseek(fp, 0, SEEK_END) != 0) {
         fclose(fp);
         return false;
@@ -664,7 +1391,6 @@ LoadXBMFile(
         return false;
     }
 
-    /* Prevent overflow. */
     if ((unsigned long)fileSizeLong > SIZE_MAX - 1) {
         fclose(fp);
         return false;
@@ -688,7 +1414,6 @@ LoadXBMFile(
 
     fileData[fileSize] = '\0';
 
-    /* Parse XBM data. */
     int xHot, yHot;
     unsigned char* xbmBits = ParseXBMData(fileData, width, height, &xHot, &yHot);
     Tcl_Free(fileData);
@@ -697,7 +1422,6 @@ LoadXBMFile(
         return false;
     }
 
-    /* Convert XBM to RGBA (black on white by default for XBM). */
     *pixels = ConvertXBMToRGBA(xbmBits, NULL, *width, *height,
                                0xFF000000, 0xFFFFFFFF);
     Tcl_Free(xbmBits);
@@ -710,13 +1434,13 @@ LoadXBMFile(
  *
  * ParseColor --
  *
- *	Parse a color name or hex value to ARGB format.
+ *      Parse a color name or hex value to ARGB format.
  *
  * Results:
- *	Returns color in 0xAARRGGBB format.
+ *      Returns color in 0xAARRGGBB format.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -725,7 +1449,6 @@ static unsigned int
 ParseColor(
     const char* colorName)
 {
-    /* Simple color parser - supports named colors and hex. */
     static struct {
         const char* name;
         unsigned int value;
@@ -747,19 +1470,17 @@ ParseColor(
         }
     }
 
-    /* Try hex format. */
     if (colorName[0] == '#') {
         unsigned int rgb = 0;
         if (sscanf(colorName + 1, "%x", &rgb) == 1) {
-            if (strlen(colorName) <= 7) { /* #RRGGBB */
+            if (strlen(colorName) <= 7) {
                 return 0xFF000000 | rgb;
-            } else { /* #AARRGGBB */
+            } else {
                 return ((rgb & 0xFF) << 24) | ((rgb >> 8) & 0x00FFFFFF);
             }
         }
     }
 
-    /* Default to black. */
     return 0xFF000000;
 }
 
@@ -768,22 +1489,22 @@ ParseColor(
  *
  * CreateCursorFromImageData --
  *
- *	Creates a cursor from RGBA image data.
+ *      Creates a cursor from RGBA image data.
  *
  * Results:
- *	Returns a new GLFW cursor, or NULL on error.
+ *      Returns a new GLFW cursor, or NULL on error.
  *
  * Side effects:
- *	Allocates resources.
+ *      Allocates resources.
  *
  *----------------------------------------------------------------------
  */
 
 static GLFWcursor*
 CreateCursorFromImageData(
-    const unsigned char* rgba,      /* RGBA pixel data */
-    int width, int height,          /* Dimensions */
-    int xHot, int yHot)             /* Hot spot */
+    const unsigned char* rgba,
+    int width, int height,
+    int xHot, int yHot)
 {
     if (!rgba || width <= 0 || height <= 0) {
         return NULL;
@@ -792,7 +1513,7 @@ CreateCursorFromImageData(
     GLFWimage image;
     image.width = width;
     image.height = height;
-    image.pixels = (unsigned char*)rgba; /* GLFW will copy the data */
+    image.pixels = (unsigned char*)rgba;
 
     return glfwCreateCursor(&image, xHot, yHot);
 }
@@ -802,14 +1523,14 @@ CreateCursorFromImageData(
  *
  * TkGetCursorByName --
  *
- *	Retrieve a cursor by name. Parse the cursor name into fields and
- *	create a cursor.
+ *      Retrieve a cursor by name. Parse the cursor name into fields and
+ *      create a cursor. Now supports XCursor theme names.
  *
  * Results:
- *	Returns a new cursor, or NULL on errors.
+ *      Returns a new cursor, or NULL on errors.
  *
  * Side effects:
- *	Allocates a new cursor.
+ *      Allocates a new cursor.
  *
  *----------------------------------------------------------------------
  */
@@ -828,9 +1549,10 @@ TkGetCursorByName(
     const struct BuiltinCursor *builtinPtr = NULL;
     int standardShape = -1;
     GLFWcursor* glfwCursor = NULL;
-    unsigned int fgColor = 0xFF000000; /* Black */
-    unsigned int bgColor = 0xFFFFFFFF; /* White */
-    int fileWidth = 0, fileHeight = 0; /* Captured for '@' file cursors. */
+    unsigned int fgColor = 0xFF000000;
+    unsigned int bgColor = 0xFFFFFFFF;
+    int fileWidth = 0, fileHeight = 0;
+    int fileXHot = 0, fileYHot = 0;
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
         return NULL;
@@ -839,9 +1561,6 @@ TkGetCursorByName(
         goto badString;
     }
 
-    /*
-     * Check Tk-specific table first (currently only "none").
-     */
     if (argv[0][0] != '@') {
         for (tkCursorPtr = tkCursorNames; ; tkCursorPtr++) {
             if (tkCursorPtr->name == NULL) {
@@ -855,10 +1574,6 @@ TkGetCursorByName(
         }
     }
 
-    /*
-     * Check GLFW standard cursor table next — these take priority over
-     * the X11 bitmap fallbacks in builtinCursors[].
-     */
     if ((argv[0][0] != '@') && (tkCursorPtr == NULL)) {
         const struct CursorName *namePtr;
         for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
@@ -868,17 +1583,8 @@ TkGetCursorByName(
                 break;
             }
         }
-        /* standardShape stays -1 if not found in cursorNames[] */
     }
 
-    /*
-     * Only fall through to builtinCursors[] when:
-     *  - not a '@' file spec
-     *  - not a tkCursorNames match
-     *  - not a GLFW standard shape match (standardShape == -1) OR
-     *    the matched GLFW shape is -1 (meaning the cursorNames entry
-     *    explicitly has no GLFW equivalent and wants the bitmap).
-     */
     if ((argv[0][0] != '@') && (tkCursorPtr == NULL) && (standardShape == -1)) {
         for (builtinPtr = builtinCursors; builtinPtr->name != NULL; builtinPtr++) {
             if (strcmp(builtinPtr->name, argv[0]) == 0) {
@@ -890,7 +1596,6 @@ TkGetCursorByName(
         }
     }
 
-    /* Parse optional color arguments. */
     if (argc >= 2) {
         fgColor = ParseColor(argv[1]);
     }
@@ -898,10 +1603,9 @@ TkGetCursorByName(
         bgColor = ParseColor(argv[2]);
     }
 
-    /* Dispatch to the appropriate cursor-creation path. */
+    /* Dispatch */
 
     if (argv[0][0] == '@') {
-        /* File-based cursor. */
         if (Tcl_IsSafe(interp)) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj(
                     "cannot get cursor from a file in a safe interpreter",
@@ -909,23 +1613,33 @@ TkGetCursorByName(
             Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", (char *)NULL);
             goto cleanup;
         }
-        if ((argc != 2) && (argc != 4)) {
-            goto badString;
+        {
+            const char *filePath = argv[0] + 1;
+            unsigned char *px = NULL;
+            int hx = -1, hy = -1;
+
+            /*
+             * The file type is detected by content (Xcursor, Windows
+             * CUR/ICO, PNG, XBM), not by extension.
+             */
+
+            if (!LoadImageFile(filePath, &px, &fileWidth, &fileHeight,
+                    &hx, &hy)) {
+                goto badString;
+            }
+            if (hx < 0 || hy < 0) {
+                hx = fileWidth / 2;
+                hy = fileHeight / 2;
+            }
+            fileXHot = hx;
+            fileYHot = hy;
+            glfwCursor = CreateCursorFromImageData(px, fileWidth,
+                    fileHeight, hx, hy);
+            Tcl_Free(px);
         }
-        unsigned char* pixels = NULL;
-        if (!LoadImageFile(argv[0] + 1, &pixels, &fileWidth, &fileHeight)) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "could not load cursor file \"%s\"", argv[0] + 1));
-            Tcl_SetErrorCode(interp, "TK", "CURSOR", "FILE", (char *)NULL);
-            goto cleanup;
-        }
-        glfwCursor = CreateCursorFromImageData(pixels, fileWidth, fileHeight,
-                                               fileWidth/2, fileHeight/2);
-        Tcl_Free(pixels);
-        standardShape = -1; /* bitmap path */
+        standardShape = -1;
 
     } else if (tkCursorPtr != NULL) {
-        /* Tk built-in (currently only "none"). */
         if (strcmp(argv[0], "none") == 0) {
             unsigned char transparent[4] = {0, 0, 0, 0};
             GLFWimage image;
@@ -953,21 +1667,12 @@ TkGetCursorByName(
                 if (mask) Tcl_Free(mask);
             }
         }
-        standardShape = -1; /* bitmap path */
+        standardShape = -1;
 
     } else if (standardShape != -1) {
-        /*
-         * GLFW standard cursor. standardShape was set from cursorNames[].
-         * These use the compositor's native cursor; do NOT hide it.
-         */
         glfwCursor = glfwCreateStandardCursor(standardShape);
 
     } else if (builtinPtr != NULL) {
-        /*
-         * X11 bitmap fallback for cursors that have no GLFW equivalent
-         * (shape == -1 in cursorNames[]). standardShape stays -1 so
-         * TkpSetCursor knows to hide the compositor cursor.
-         */
         glfwCursor = CreateCursorFromBitmapData(builtinPtr->bits,
                                                 builtinPtr->mask,
                                                 builtinPtr->width,
@@ -976,38 +1681,53 @@ TkGetCursorByName(
                                                 builtinPtr->yHot,
                                                 fgColor,
                                                 bgColor);
-        /* standardShape == -1: TkpSetCursor hides compositor cursor. */
 
     } else {
-        /*
-         * Unknown cursor name - raise Tcl error "bad cursor spec".
-         * This matches X11/macOS/Win32 behavior and eliminates the
-         * stderr spam: tkWaylandCursor: unknown cursor "badValue", using arrow
-         *
-         * To restore old silent-fallback behavior (no error, use arrow),
-         * compile with -DTK_WAYLAND_CURSOR_SILENT_FALLBACK and optionally
-         * set env TK_WAYLAND_DEBUG_CURSOR=1 for debug logging.
-         */
+        /* Final attempt: try XCursor theme lookup by name (e.g. "left_ptr" 
+         * from Adwaita/Breeze maps to themed cursor). This also handles
+         * custom cursor names installed by user themes. */
+        unsigned char *xPixels = NULL;
+        int xW=0, xH=0, xHot=0, yHot=0;
+        if (TryLoadThemedXcursor(argv[0], &xPixels, &xW, &xH, &xHot, &yHot)) {
+            glfwCursor = CreateCursorFromImageData(xPixels, xW, xH, xHot, yHot);
+            Tcl_Free(xPixels);
+            fileWidth = xW;
+            fileHeight = xH;
+            fileXHot = xHot;
+            fileYHot = yHot;
+            standardShape = -1;
+            builtinPtr = NULL;
+        } else {
 #ifdef TK_WAYLAND_CURSOR_SILENT_FALLBACK
-        if (getenv("TK_WAYLAND_DEBUG_CURSOR") != NULL) {
-            fprintf(stderr, "tkWaylandCursor: unknown cursor \"%s\", using arrow\n", string);
-        }
-        glfwCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-        standardShape = GLFW_ARROW_CURSOR;
+            if (getenv("TK_WAYLAND_DEBUG_CURSOR") != NULL) {
+                fprintf(stderr, "tkWaylandCursor: unknown cursor \"%s\", using arrow\n", string);
+            }
+            glfwCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+            standardShape = GLFW_ARROW_CURSOR;
 #else
-        goto badString;
+            goto badString;
 #endif
+        }
+    }
+
+    if (glfwCursor == NULL) {
+        const char *glfwErr = NULL;
+        int glfwCode = glfwGetError(&glfwErr);
+
+        if (interp != NULL) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "couldn't create cursor \"%s\"%s%s", string,
+                    glfwCode ? ": " : "", glfwCode ? glfwErr : ""));
+            Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
+        }
+        Tcl_Free(argv);
+        return NULL;
     }
 
     if (glfwCursor != NULL) {
         cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
-        /*
-         * Use the struct pointer itself as the Tk_Cursor XID.
-         * TkpSetCursor casts it straight back — no hash
-         * lookup needed.
-         */
         cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
         cursorPtr->info.display = (tkwin != NULL) ? Tk_Display(tkwin) : NULL;
         cursorPtr->info.resourceRefCount = 1;
@@ -1021,20 +1741,12 @@ TkGetCursorByName(
         cursorPtr->standardShape = standardShape;
 
         if (standardShape != -1) {
-            /*
-             * GLFW standard shape: the compositor owns the actual cursor
-             * image so there are no local bitmap dimensions to record.
-             * Use a nominal nonzero size so that no downstream caller
-             * misinterprets width==0 as an invalid or empty cursor.
-             */
             cursorPtr->width = 16;
             cursorPtr->height = 16;
         } else if (builtinPtr != NULL && builtinPtr->name != NULL) {
-            /* X11 bitmap fallback: record the true bitmap dimensions. */
             cursorPtr->width = builtinPtr->width;
             cursorPtr->height = builtinPtr->height;
         } else if (strcmp(argv[0], "none") == 0) {
-            /* Invisible 1×1 cursor. */
             cursorPtr->width = 1;
             cursorPtr->height = 1;
         } else {
@@ -1042,12 +1754,6 @@ TkGetCursorByName(
             cursorPtr->height = fileHeight;
         }
 
-        /*
-         * Capture the GLFW window at allocation time by walking up to the
-         * toplevel. TkpSetCursor receives only a bare Cursor XID with no
-         * window argument, so this is the only opportunity to record which
-         * GLFW window the cursor belongs to.
-         */
         {
             TkWindow *w = (TkWindow *) tkwin;
             cursorPtr->glfwWindow = NULL;
@@ -1067,12 +1773,6 @@ cleanup:
         Tcl_Free(argv);
     }
 
-    /*
-     * No display side effect here: applying the cursor is the job of
-     * UpdateCursor in tkPointer.c, which calls TkpSetCursor whenever the
-     * pointer state changes.
-     */
-
     return (TkCursor *) cursorPtr;
 
   badString:
@@ -1089,28 +1789,27 @@ cleanup:
  *
  * TkCreateCursorFromData --
  *
- *	Creates a cursor from the source and mask bits.
+ *      Creates a cursor from the source and mask bits.
  *
  * Results:
- *	Returns a new cursor, or NULL on errors.
+ *      Returns a new cursor, or NULL on errors.
  *
  * Side effects:
- *	Allocates a new cursor.
+ *      Allocates a new cursor.
  *
  *----------------------------------------------------------------------
  */
 
 TkCursor *
 TkCreateCursorFromData(
-    TCL_UNUSED(Tk_Window),	/* Window in which cursor will be used. */
-    const char *source,		/* Bitmap data for cursor shape. */
-    const char *mask,		/* Bitmap data for cursor mask. */
-    int width, int height,	/* Dimensions of cursor. */
-    int xHot, int yHot,		/* Location of hot-spot in cursor. */
-    XColor fgColor,		/* Foreground color for cursor. */
-    XColor bgColor)		/* Background color for cursor. */
+    TCL_UNUSED(Tk_Window),
+    const char *source,
+    const char *mask,
+    int width, int height,
+    int xHot, int yHot,
+    XColor fgColor,
+    XColor bgColor)
 {
-    /* Convert XColor to ARGB format. */
     unsigned int fgARGB = 0xFF000000 |
                          ((fgColor.red >> 8) << 16) |
                          ((fgColor.green >> 8) << 8) |
@@ -1133,9 +1832,8 @@ TkCreateCursorFromData(
         TkWaylandCursor *cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
-        /* Initialize core header fields. */
         cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
-        cursorPtr->info.display = NULL; /* Will be overwritten/assigned by core TkcGetCursor. */
+        cursorPtr->info.display = NULL;
         cursorPtr->info.resourceRefCount = 1;
         cursorPtr->info.objRefCount = 0;
         cursorPtr->info.otherTable = NULL;
@@ -1143,9 +1841,8 @@ TkCreateCursorFromData(
         cursorPtr->info.idHashPtr = NULL;
         cursorPtr->info.nextPtr = NULL;
 
-        /* Initialize custom platform properties. */
         cursorPtr->cursor = glfwCursor;
-        cursorPtr->glfwWindow = NULL;	/* No tkwin available; set by caller if needed. */
+        cursorPtr->glfwWindow = NULL;
         cursorPtr->standardShape = -1;
         cursorPtr->width = width;
         cursorPtr->height = height;
@@ -1160,14 +1857,14 @@ TkCreateCursorFromData(
  *
  * TkpFreeCursor --
  *
- *	This function is called to release a cursor allocated by
- *	TkGetCursorByName.
+ *      This function is called to release a cursor allocated by
+ *      TkGetCursorByName.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The cursor data structure is deallocated.
+ *      The cursor data structure is deallocated.
  *
  *----------------------------------------------------------------------
  */
@@ -1182,12 +1879,6 @@ TkpFreeCursor(
         glfwDestroyCursor(waylandCursorPtr->cursor);
         waylandCursorPtr->cursor = NULL;
     }
-    /*
-     * Do NOT free cursorPtr here. The generic FreeCursor in tkCursor.c
-     * owns the struct lifetime and calls Tcl_Free(cursorPtr) itself after
-     * TkpFreeCursor returns, when objRefCount reaches zero. Freeing here
-     * causes a double-free and heap corruption.
-     */
 }
 
 /*
@@ -1195,27 +1886,26 @@ TkpFreeCursor(
  *
  * TkpSetCursor --
  *
- *	Set the current cursor and install it. Called by UpdateCursor in
- *	tkPointer.c with the Tk_Cursor XID extracted from winPtr->atts.cursor.
- *
- *	Since info.cursor is set to the TkWaylandCursor pointer itself
- *	(matching the macOS pattern), we cast directly back with no hash
- *	table lookup. The cursor is applied to the GLFW window currently
- *	containing the pointer; None restores the default cursor on every
- *	window this module has touched.
+ *	Set the current cursor on the active GLFW window and remember
+ *	which cursor was last installed on that window so redundant
+ *	glfwSetCursor calls are avoided. The active window is
+ *	pointerWindow if set, otherwise the window captured by
+ *	TkGetCursorByName at allocation time. Passing None clears the
+ *	cursor on every window that has had one applied.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Changes the cursor displayed in the GLFW window.
+ *	Initialises the appliedCursors hash table on first use, updates
+ *	it, and calls glfwSetCursor on the target window.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpSetCursor(
-    Cursor cursor)		/* Tk_Cursor or None */
+    Cursor cursor)
 {
     TkWaylandCursor *waylandCursorPtr;
     GLFWwindow *window;
@@ -1229,10 +1919,6 @@ TkpSetCursor(
     }
 
     if (cursor == None) {
-        /*
-         * None carries no window argument, so restore the compositor
-         * default on every window we overrode and forget them all.
-         */
         for (entry = Tcl_FirstHashEntry(&appliedCursors, &search);
                 entry != NULL; entry = Tcl_NextHashEntry(&search)) {
             GLFWwindow *w = (GLFWwindow *)Tcl_GetHashKey(&appliedCursors,
@@ -1250,13 +1936,6 @@ TkpSetCursor(
         return;
     }
 
-    /*
-     * Prefer the window that currently contains the pointer: cursor
-     * structs are shared across windows by the generic cursor cache, so
-     * the GLFW window recorded at allocation time may be a different
-     * toplevel. Fall back to the recorded window (e.g. XDefineCursor
-     * while no enter event has been seen yet).
-     */
     window = pointerWindow ? pointerWindow : waylandCursorPtr->glfwWindow;
     if (window == NULL) {
         return;
@@ -1265,7 +1944,7 @@ TkpSetCursor(
     entry = Tcl_CreateHashEntry(&appliedCursors, (char *)window, &isNew);
     if (!isNew &&
             (TkWaylandCursor *)Tcl_GetHashValue(entry) == waylandCursorPtr) {
-        return;			/* Already displayed on this window. */
+        return;
     }
     Tcl_SetHashValue(entry, waylandCursorPtr);
     glfwSetCursor(window, waylandCursorPtr->cursor);
@@ -1276,15 +1955,15 @@ TkpSetCursor(
  *
  * TkWaylandCursorPointerWindow --
  *
- *	Record which GLFW window currently contains the pointer (or NULL).
- *	Called from the GLFW enter/motion callbacks so that TkpSetCursor
- *	applies cursors to the surface under the pointer.
+ *	Record which GLFW window is currently under the pointer, so that
+ *	TkpSetCursor installs subsequent cursors on that window rather
+ *	than the one captured when the cursor was created.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Updates the cursor module's notion of the pointer window.
+ *	Updates the module-static pointerWindow variable.
  *
  *----------------------------------------------------------------------
  */
@@ -1301,14 +1980,17 @@ TkWaylandCursorPointerWindow(
  *
  * TkWaylandCursorForgetWindow --
  *
- *	Drop any cursor state referring to a GLFW window that is about to
- *	be destroyed, so the None-reset path never touches a dead handle.
+ *	Forget any cursor bookkeeping associated with a GLFW window that
+ *	is being destroyed: drop it from the appliedCursors table and
+ *	clear pointerWindow if it pointed at this window. Called by the
+ *	window teardown path so stale window pointers don't linger in the
+ *	cursor module.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Removes the window from the applied-cursor table.
+ *	Removes an entry from appliedCursors and may clear pointerWindow.
  *
  *----------------------------------------------------------------------
  */

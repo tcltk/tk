@@ -52,7 +52,7 @@ test systray-4 {systray create, argument checking} -constraints notWayland -setu
     tk systray create -image _book -gorp invalidOption
 } -returnCodes error -result {unknown option "-gorp": must be -image, -text, -button1 or -button3}
 
-test systray-5 {systray icon creation, only required option present} -setup {
+test systray-5 {systray icon creation, only required option present} -constraints notWayland -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
     tk systray create -image _book

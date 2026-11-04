@@ -465,6 +465,24 @@ StippleStroke(
 
 #define DASH_MAX 64
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsDashed --
+ *
+ *	Check whether a GC uses one of X11's dashed line styles
+ *	(LineOnOffDash or LineDoubleDash), which NanoVG cannot render
+ *	directly and so must be emulated on the CPU.
+ *
+ * Results:
+ *	1 if gc uses a dashed line style, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 IsDashed(
     GC gc)
@@ -623,6 +641,27 @@ StrokeDashed(
     return 1;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DashLines --
+ *
+ *	Resolve an XPoint array (interpreted according to mode,
+ *	CoordModeOrigin or CoordModePrevious) into absolute drawable
+ *	coordinates, then stroke it as a dashed polyline via
+ *	StrokeDashed.
+ *
+ * Results:
+ *	1 if the polyline was drawn with dashes, 0 if the GC's dash
+ *	pattern is unusable, in which case the caller must draw the
+ *	polyline solid itself.
+ *
+ * Side effects:
+ *	Allocates and frees a temporary float coordinate buffer.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 DashLines(
     NVGcontext *vg,
@@ -652,6 +691,27 @@ DashLines(
     return rc;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DashRect --
+ *
+ *	Stroke a rectangle outline with the GC's dash pattern. The four
+ *	corners are ordered to match X11's rectangle-outline rendering,
+ *	which walks the outline starting at the top-left corner and
+ *	proceeding clockwise.
+ *
+ * Results:
+ *	1 if the rectangle was drawn with dashes, 0 if the GC's dash
+ *	pattern is unusable, in which case the caller must stroke the
+ *	rectangle solid itself.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 DashRect(
     NVGcontext *vg,
@@ -666,6 +726,29 @@ DashRect(
 
     return StrokeDashed(vg, gc, p, 4, 1);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DashArc --
+ *
+ *	Sample an X11 elliptical arc (X11 angle units: 1/64 degree,
+ *	counter-clockwise with y up) into a polyline in drawable
+ *	coordinates, then stroke it with the GC's dash pattern via
+ *	StrokeDashed. The number of sample points scales with the arc's
+ *	size so short arcs stay cheap and long arcs stay smooth, clamped
+ *	to a sane range.
+ *
+ * Results:
+ *	1 if the arc was drawn with dashes, 0 if the GC's dash pattern
+ *	is unusable, in which case the caller must stroke the arc solid
+ *	itself.
+ *
+ * Side effects:
+ *	Allocates and frees a temporary float coordinate buffer.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static int
 DashArc(
