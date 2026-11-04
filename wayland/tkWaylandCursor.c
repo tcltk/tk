@@ -434,13 +434,13 @@ static bool TkIsXcursorMagic(const unsigned char *buf, size_t len) {
  *	Native parser for .xcur files. Picks the largest image in the
  *	file (most sizes store 24, 32, 48 variants) or the first if
  *	several are equal in size. Converts ARGB (Xcursor's native pixel
- *	layout) to RGBA for GLFW. If libXcursor is compiled in
- *	(HAVE_XCURSOR_LIB), its higher-level loader is used first because
+ *	layout) to RGBA for GLFW. If libXcursor is loaded, 
+ *  its higher-level loader is used first because
  *	it also handles animation frames; on failure the native parser is
  *	used as a fallback.
  *
  * Results:
- *	true on success, with *pixels set to a Tcl-allocated RGBA buffer
+ *	True on success, with *pixels set to a Tcl-allocated RGBA buffer
  *	(release with Tcl_Free) and *width, *height, *xHot, *yHot filled
  *	in from the chosen image. false on any error.
  *
@@ -460,12 +460,12 @@ LoadXcursorFile(
     int* yHot)
 {
 #ifdef HAVE_XCURSOR_LIB
-    /* Fast path via libXcursor if available - handles animated cursors etc. */
+    /* Fast path via libXcursor if available - handles animated cursors, etc. */
     {
         XcursorImages *images = XcursorFilenameLoadImages(filename, 0);
         if (images && images->nimage > 0) {
             XcursorImage *img = images->images[0];
-            /* pick largest */
+            /* Pick largest. */
             size_t best = 0;
             size_t bestPixels = 0;
             for (int i = 0; i < images->nimage; i++) {
@@ -498,7 +498,7 @@ LoadXcursorFile(
             }
             XcursorImagesDestroy(images);
         }
-        /* fall through to native parser on failure */
+        /* Fall through to native parser on failure. */
     }
 #endif
 
@@ -548,7 +548,7 @@ LoadXcursorFile(
         uint32_t position= ReadU32LE(fileData + off + 8);
 
         if (type != XCURSOR_IMAGE_TYPE) continue;
-        if (position + 36 > (size_t)fsize) continue; /* at least header */
+        if (position + 36 > (size_t)fsize) continue; /* At least header. */
 
         TkXcursorImageChunkHeader ch;
         ch.header  = ReadU32LE(fileData + position);
@@ -566,9 +566,9 @@ LoadXcursorFile(
         size_t dataOff = position + ch.header;
         if (dataOff + pixelCount*4 > (size_t)fsize) continue;
 
-        /* Keep largest */
+        /* Keep largest. */
         if (bestRGBA && pixelCount <= bestPixelsCount) {
-            /* prefer larger, but keep first if equal - skip smaller */
+            /* Prefer larger, but keep first if equal - skip smaller. */
             if (pixelCount < bestPixelsCount) continue;
         }
 
@@ -595,7 +595,7 @@ LoadXcursorFile(
         bestH = ch.height;
         bestXHot = ch.xhot;
         bestYHot = ch.yhot;
-        /* subtype is nominal size, we ignore for now */
+        /* Subtype is nominal size, we ignore for now. */
         (void)subtype;
     }
 
@@ -617,8 +617,8 @@ LoadXcursorFile(
  * TryLoadThemedXcursor --
  *
  *	Search for a cursor by name in the user's current cursor theme
- *	and load it as RGBA pixel data. If libXcursor is compiled in
- *	(HAVE_XCURSOR_LIB), its theme inheritance and XCURSOR_THEME /
+ *	and load it as RGBA pixel data. If libXcursor is loaded, 
+ *  its theme inheritance and XCURSOR_THEME /
  *	XCURSOR_PATH resolution are used directly; otherwise this
  *	function walks a hand-built list of standard icon directories
  *	derived from XCURSOR_PATH, ~/.icons, ~/.local/share/icons, and
@@ -686,7 +686,7 @@ TryLoadThemedXcursor(
     }
 #endif
 
-    /* Manual theme search fallback */
+    /* Manual theme search fallback. */
     const char *xcursorPath = getenv("XCURSOR_PATH");
     const char *home = getenv("HOME");
     const char *theme = getenv("XCURSOR_THEME");
@@ -696,9 +696,9 @@ TryLoadThemedXcursor(
     const char *searchPaths[16];
     int nPaths = 0;
 
-    /* Build search path list */
+    /* Build search path list. */
     if (xcursorPath) {
-        /* XCURSOR_PATH is colon-separated */
+        /* XCURSOR_PATH is colon-separated. */
         char *dup = strdup(xcursorPath);
         if (dup) {
             char *tok = strtok(dup, ":");
@@ -711,7 +711,7 @@ TryLoadThemedXcursor(
         }
     }
 
-    /* User icon dirs */
+    /* User icon dirs. */
     if (home) {
         snprintf(candidate, sizeof(candidate), "%s/.icons/%s/cursors/%s", home, theme, name);
         if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
@@ -723,7 +723,7 @@ TryLoadThemedXcursor(
         if (nPaths < 16) searchPaths[nPaths++] = strdup(candidate);
     }
 
-    /* System dirs */
+    /* System dirs. */
     static const char *sysPrefixes[] = {
         "/usr/share/icons",
         "/usr/local/share/icons",
@@ -759,7 +759,7 @@ TryLoadThemedXcursor(
 
     for (int i = 0; i < nPaths; i++) free((void*)searchPaths[i]);
 
-    /* Last resort: try absolute / named file as-is */
+    /* Last resort: try absolute / named file as-is. */
     if (!found) {
         if (LoadXcursorFile(name, pixels, width, height, xHot, yHot)) {
             found = true;
