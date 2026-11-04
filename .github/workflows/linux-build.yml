@@ -130,6 +130,7 @@ jobs:
           - "gcc"
         config:
           - ""
+          - "--disable-accessibility"
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
@@ -145,7 +146,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install libtommath-dev libxss-dev libxft-dev libcups2-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libwayland-egl1
+          sudo apt-get install libtommath-dev libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libwayland-egl1
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
