@@ -2069,34 +2069,6 @@ XFreeStringList(
 /*
  *----------------------------------------------------------------------
  *
- * XSetDashes --
- *
- *	Set line dashes in GC. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XSetDashes(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(const char *), /* dash_list */
-    TCL_UNUSED(int))
-{
-    /* No-op - line dashing handled by NanoVG. */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XNextEvent --
  *
  *	Get next event. No-op in Wayland port.

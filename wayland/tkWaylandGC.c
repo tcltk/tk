@@ -344,6 +344,9 @@ TkWaylandCreateGC(
     gc->stipple     = None;
     gc->ts_x_origin = 0;
     gc->ts_y_origin = 0;
+    gc->dash_list   = NULL;
+    gc->dash_count  = 0;
+    gc->dash_offset = 0;
 
     /* Override with caller-supplied values. */
     if (values != NULL) {
@@ -374,6 +377,9 @@ TkWaylandFreeGC(
     GC gc)
 {
     if (gc != NULL) {
+        if (((TkWaylandGC *)gc)->dash_list != NULL) {
+            Tcl_Free(((TkWaylandGC *)gc)->dash_list);
+        }
         Tcl_Free(gc);
     }
 }
@@ -419,6 +425,11 @@ TkWaylandGetGCValues(
     if (valuemask & GCStipple)     values->stipple     = gcPtr->stipple;
     if (valuemask & GCTileStipXOrigin) values->ts_x_origin = gcPtr->ts_x_origin;
     if (valuemask & GCTileStipYOrigin) values->ts_y_origin = gcPtr->ts_y_origin;
+    if (valuemask & GCDashOffset)  values->dash_offset = gcPtr->dash_offset;
+    if (valuemask & GCDashList) {
+        values->dashes = (gcPtr->dash_list && gcPtr->dash_count > 0)
+                ? (char)gcPtr->dash_list[0] : 4;
+    }
 
     return true;
 }
@@ -464,6 +475,20 @@ TkWaylandChangeGC(
     if (valuemask & GCStipple)     gcPtr->stipple    = values->stipple;
     if (valuemask & GCTileStipXOrigin) gcPtr->ts_x_origin = values->ts_x_origin;
     if (valuemask & GCTileStipYOrigin) gcPtr->ts_y_origin = values->ts_y_origin;
+    if (valuemask & GCDashOffset)  gcPtr->dash_offset = values->dash_offset;
+    if (valuemask & GCDashList) {
+        /* A single 'dashes' value means an even list {d, d}, as in Xlib. */
+        unsigned char d = (unsigned char)values->dashes;
+
+        if (d != 0) {
+            if (gcPtr->dash_list != NULL) {
+                Tcl_Free(gcPtr->dash_list);
+            }
+            gcPtr->dash_list = (unsigned char *)Tcl_Alloc(2);
+            gcPtr->dash_list[0] = gcPtr->dash_list[1] = d;
+            gcPtr->dash_count = 2;
+        }
+    }
 
     return true;
 }
@@ -499,6 +524,22 @@ TkWaylandCopyGC(
     /* Read from src, write to dst via the canonical helpers. */
     TkWaylandGetGCValues(src, valuemask, &tmp);
     TkWaylandChangeGC(dst, valuemask, &tmp);
+
+    /* The generic path only carries a single dash value; copy the list. */
+    if (valuemask & GCDashList) {
+        TkWaylandGC *s = (TkWaylandGC *)src, *d = (TkWaylandGC *)dst;
+
+        if (d->dash_list != NULL) {
+            Tcl_Free(d->dash_list);
+            d->dash_list = NULL;
+            d->dash_count = 0;
+        }
+        if (s->dash_list != NULL && s->dash_count > 0) {
+            d->dash_list = (unsigned char *)Tcl_Alloc(s->dash_count);
+            memcpy(d->dash_list, s->dash_list, s->dash_count);
+            d->dash_count = s->dash_count;
+        }
+    }
 
     return true;
 }
@@ -988,6 +1029,58 @@ XSetFont(
     XGCValues v;
     v.font = font;
     return TkWaylandChangeGC(gc, GCFont, &v) ? Success : BadGC;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetDashes --
+ *
+ *	Set the dash pattern of a GC.  The pattern is a list of alternating
+ *	"on" and "off" lengths in pixels, starting "on"; an odd-length list
+ *	is treated as repeated twice, as in Xlib.  Dashing is performed by
+ *	DashRuns() in tkWaylandDraw.c, since NanoVG has no dash support.
+ *
+ * Results:
+ *	Success, BadGC for a NULL GC, or BadValue for an empty list or a
+ *	zero-length dash.
+ *
+ * Side effects:
+ *	Replaces the GC's dash list and offset.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetDashes(
+    TCL_UNUSED(Display *),
+    GC          gc,
+    int         dash_offset,
+    const char *dash_list,
+    int         n)
+{
+    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+    int i;
+
+    if (gcPtr == NULL) {
+        return BadGC;
+    }
+    if (dash_list == NULL || n <= 0) {
+        return BadValue;
+    }
+    for (i = 0; i < n; i++) {
+        if (dash_list[i] == 0) {
+            return BadValue;
+        }
+    }
+    if (gcPtr->dash_list != NULL) {
+        Tcl_Free(gcPtr->dash_list);
+    }
+    gcPtr->dash_list = (unsigned char *)Tcl_Alloc(n);
+    memcpy(gcPtr->dash_list, dash_list, n);
+    gcPtr->dash_count = n;
+    gcPtr->dash_offset = dash_offset;
+    return Success;
 }
 
 /*

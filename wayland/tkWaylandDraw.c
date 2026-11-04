@@ -450,6 +450,263 @@ StippleStroke(
 /*
  *----------------------------------------------------------------------
  *
+ * Dashed lines --
+ *
+ *	NanoVG strokes only solid paths, so LineOnOffDash and
+ *	LineDoubleDash are done on the CPU: the polyline (arcs and
+ *	ellipses are sampled first) is walked with the GC's dash pattern
+ *	and each "on" run becomes one sub-path of a single nvgStroke, so
+ *	caps and joins apply per dash.  LineDoubleDash first strokes the
+ *	"off" runs in the GC background.  Stipples still apply, since
+ *	StippleStroke only changes the paint.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define DASH_MAX 64
+
+static int
+IsDashed(
+    GC gc)
+{
+    TkWaylandGC *g = (TkWaylandGC *)gc;
+
+    return g != NULL && (g->line_style == LineOnOffDash
+	    || g->line_style == LineDoubleDash);
+}
+
+/*
+ * GetDashPattern --
+ *
+ *	Expand the GC's dash list into pat[] (even length, so "on"/"off"
+ *	alternate), defaulting to {4, 4} like X11.  Returns the entry
+ *	count and stores the normalised starting phase in *phasePtr.
+ */
+
+static int
+GetDashPattern(
+    GC     gc,
+    float *pat,
+    float *phasePtr)
+{
+    TkWaylandGC *g = (TkWaylandGC *)gc;
+    int i, n = 0, count;
+    float total = 0.0f, phase;
+
+    if (g->dash_list == NULL || g->dash_count <= 0) {
+	pat[0] = pat[1] = 4.0f;
+	n = 2;
+    } else {
+	count = g->dash_count;
+	if (count > DASH_MAX / 2) {
+	    count = DASH_MAX / 2;
+	}
+	for (i = 0; i < count; i++) {
+	    pat[n++] = (float)g->dash_list[i];
+	}
+	if (count & 1) {	/* Odd list: repeat so on/off swap. */
+	    for (i = 0; i < count; i++) {
+		pat[n++] = (float)g->dash_list[i];
+	    }
+	}
+    }
+    for (i = 0; i < n; i++) {
+	total += pat[i];
+    }
+    if (total <= 0.0f) {
+	return 0;
+    }
+    phase = fmodf((float)g->dash_offset, total);
+    if (phase < 0.0f) {
+	phase += total;
+    }
+    *phasePtr = phase;
+    return n;
+}
+
+/*
+ * DashRuns --
+ *
+ *	Append to the current NanoVG path the "on" (wantOn=1) or "off"
+ *	(wantOn=0) runs of the polyline pts[0..n-1], closed or open.
+ */
+
+static void
+DashRuns(
+    NVGcontext  *vg,
+    const float *pts,
+    int          n,
+    int          closed,
+    const float *pat,
+    int          npat,
+    float        phase,
+    int          wantOn)
+{
+    int idx = 0, seg, nseg, open = 0;
+    float remaining;
+
+    /* Advance to the dash containing the starting phase. */
+    while (phase >= pat[idx]) {
+	phase -= pat[idx];
+	idx = (idx + 1) % npat;
+    }
+    remaining = pat[idx] - phase;
+
+    nseg = closed ? n : n - 1;
+    for (seg = 0; seg < nseg; seg++) {
+	float x0 = pts[2 * seg], y0 = pts[2 * seg + 1];
+	float x1 = pts[2 * ((seg + 1) % n)], y1 = pts[2 * ((seg + 1) % n) + 1];
+	float dx = x1 - x0, dy = y1 - y0;
+	float len = sqrtf(dx * dx + dy * dy), pos = 0.0f;
+
+	if (len <= 0.0f) {
+	    continue;
+	}
+	while (pos < len) {
+	    float step = remaining < len - pos ? remaining : len - pos;
+	    int on = !(idx & 1);
+
+	    if (on == wantOn) {
+		if (!open) {
+		    nvgMoveTo(vg, x0 + dx * pos / len, y0 + dy * pos / len);
+		    open = 1;
+		}
+		nvgLineTo(vg, x0 + dx * (pos + step) / len,
+			y0 + dy * (pos + step) / len);
+	    } else {
+		open = 0;
+	    }
+	    pos += step;
+	    remaining -= step;
+	    if (remaining <= 0.0f) {
+		idx = (idx + 1) % npat;
+		remaining = pat[idx];
+	    }
+	}
+    }
+}
+
+/*
+ * StrokeDashed --
+ *
+ *	Stroke a polyline with the GC's dash pattern.  Returns 1 if drawn,
+ *	0 if the pattern is unusable (caller falls back to a solid line).
+ */
+
+static int
+StrokeDashed(
+    NVGcontext  *vg,
+    GC           gc,
+    const float *pts,
+    int          n,
+    int          closed)
+{
+    float pat[DASH_MAX], phase;
+    int npat = GetDashPattern(gc, pat, &phase);
+
+    if (npat == 0 || n < 2) {
+	return 0;
+    }
+    if (((TkWaylandGC *)gc)->line_style == LineDoubleDash) {
+	nvgSave(vg);
+	nvgBeginPath(vg);
+	DashRuns(vg, pts, n, closed, pat, npat, phase, 0);
+	nvgStrokeColor(vg, TkWaylandPixelToNVG(((TkWaylandGC *)gc)->background));
+	nvgStroke(vg);
+	nvgRestore(vg);
+    }
+    nvgBeginPath(vg);
+    DashRuns(vg, pts, n, closed, pat, npat, phase, 1);
+    if (!StippleStroke(vg, gc)) {
+	nvgStroke(vg);
+    }
+    return 1;
+}
+
+static int
+DashLines(
+    NVGcontext *vg,
+    GC          gc,
+    XPoint     *points,
+    int         npoints,
+    int         mode)
+{
+    float *fp = (float *)ckalloc(sizeof(float) * 2 * (size_t)npoints);
+    int i, px = points[0].x, py = points[0].y, rc;
+
+    fp[0] = (float)px;
+    fp[1] = (float)py;
+    for (i = 1; i < npoints; i++) {
+	if (mode == CoordModeOrigin) {
+	    px = points[i].x;
+	    py = points[i].y;
+	} else {
+	    px += points[i].x;
+	    py += points[i].y;
+	}
+	fp[2 * i] = (float)px;
+	fp[2 * i + 1] = (float)py;
+    }
+    rc = StrokeDashed(vg, gc, fp, npoints, 0);
+    ckfree(fp);
+    return rc;
+}
+
+static int
+DashRect(
+    NVGcontext *vg,
+    GC          gc,
+    float       x,
+    float       y,
+    float       w,
+    float       h)
+{
+    /* X11 draws rectangle outlines starting top-left, clockwise. */
+    float p[8] = { x, y, x + w, y, x + w, y + h, x, y + h };
+
+    return StrokeDashed(vg, gc, p, 4, 1);
+}
+
+static int
+DashArc(
+    NVGcontext *vg,
+    GC          gc,
+    float       cx,
+    float       cy,
+    float       rx,
+    float       ry,
+    float       startAngle,
+    float       endAngle)
+{
+    float da = endAngle - startAngle, *fp;
+    int i, steps, rc;
+
+    if (da > 2.0f * (float)M_PI) {
+	da = 2.0f * (float)M_PI;
+    } else if (da < -2.0f * (float)M_PI) {
+	da = -2.0f * (float)M_PI;
+    }
+    steps = (int)ceilf(fabsf(da) * (rx > ry ? rx : ry) / 3.0f);
+    if (steps < 8) {
+	steps = 8;
+    } else if (steps > 720) {
+	steps = 720;
+    }
+    fp = (float *)ckalloc(sizeof(float) * 2 * (size_t)(steps + 1));
+    for (i = 0; i <= steps; i++) {
+	float a = startAngle + da * (float)i / (float)steps;
+
+	fp[2 * i] = cx + rx * cosf(a);
+	fp[2 * i + 1] = cy + ry * sinf(a);
+    }
+    rc = StrokeDashed(vg, gc, fp, steps + 1, 0);
+    ckfree(fp);
+    return rc;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawPoint --
  *
  *	Draw a single point (filled 1×1 rectangle).
@@ -569,6 +826,10 @@ XDrawLines(
         return BadDrawable;
 
     AlignStroke(dc.vg, gc);
+    if (IsDashed(gc) && DashLines(dc.vg, gc, points, npoints, mode)) {
+        TkWaylandEndDraw(&dc);
+        return Success;
+    }
     nvgBeginPath(dc.vg);
     int px = points[0].x, py = points[0].y;
     nvgMoveTo(dc.vg, px, py);
@@ -625,6 +886,13 @@ XDrawSegments(
 
     AlignStroke(dc.vg, gc);
     for (i = 0; i < nsegments; i++) {
+        if (IsDashed(gc)) {
+            float p[4] = { (float)segments[i].x1, (float)segments[i].y1,
+                           (float)segments[i].x2, (float)segments[i].y2 };
+            if (StrokeDashed(dc.vg, gc, p, 2, 0)) {
+                continue;
+            }
+        }
         nvgBeginPath(dc.vg);
         nvgMoveTo(dc.vg, segments[i].x1, segments[i].y1);
         nvgLineTo(dc.vg, segments[i].x2, segments[i].y2);
@@ -735,6 +1003,11 @@ XDrawRectangle(
         return BadDrawable;
     }
     AlignStroke(dc.vg, gc);
+    if (IsDashed(gc) && DashRect(dc.vg, gc, (float)x, (float)y,
+            (float)width, (float)height)) {
+        TkWaylandEndDraw(&dc);
+        return Success;
+    }
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, x, y, width, height);
     if (!StippleStroke(dc.vg, gc)) {
@@ -778,6 +1051,11 @@ XDrawRectangles(
 
     AlignStroke(dc.vg, gc);
     for (i = 0; i < nRects; i++) {
+        if (IsDashed(gc) && DashRect(dc.vg, gc, (float)rectArr[i].x,
+                (float)rectArr[i].y, (float)rectArr[i].width,
+                (float)rectArr[i].height)) {
+            continue;
+        }
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
                 rectArr[i].width, rectArr[i].height);
@@ -1262,6 +1540,12 @@ XDrawArc(
     startAngle = -radians(angle1 / 64.0);
     endAngle   = -radians((angle1 + angle2) / 64.0);
 
+    if (IsDashed(gc) && DashArc(dc.vg, gc, cx, cy, rx, ry,
+            startAngle, endAngle)) {
+        TkWaylandEndDraw(&dc);
+        return Success;
+    }
+
     nvgBeginPath(dc.vg);
     if (width == height) {
         nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
@@ -1325,6 +1609,11 @@ XDrawArcs(
         ry = arcArr[i].height / 2.0f;
         startAngle = -radians(arcArr[i].angle1 / 64.0);
         endAngle   = -radians((arcArr[i].angle1 + arcArr[i].angle2) / 64.0);
+
+        if (IsDashed(gc) && DashArc(dc.vg, gc, cx, cy, rx, ry,
+                startAngle, endAngle)) {
+            continue;
+        }
 
         nvgBeginPath(dc.vg);
         if (arcArr[i].width == arcArr[i].height) {

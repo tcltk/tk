@@ -375,6 +375,10 @@ typedef struct TkWaylandGC {
     Pixmap        stipple;    /* 1-bit stipple pixmap, or None */
     int           ts_x_origin;/* Stipple origin, drawable coordinates */
     int           ts_y_origin;
+    unsigned char *dash_list; /* Dash lengths (Tcl_Alloc'd), or NULL for the
+                               * X11 default of {4, 4} */
+    int           dash_count; /* Entries in dash_list */
+    int           dash_offset;/* Starting phase into the dash pattern */
 } TkWaylandGC;
 
 /*
