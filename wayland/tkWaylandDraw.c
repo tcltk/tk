@@ -1023,7 +1023,7 @@ XFillPolygon(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues))
+    if (!TkWaylandGetGCValues(gc, GCFillRule, &gcValues))
         gcValues.fill_rule = WindingRule;
 
     nvgBeginPath(dc.vg);
@@ -1631,13 +1631,15 @@ XDrawArc(
 
     nvgBeginPath(dc.vg);
     if (width == height) {
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
     } else {
         nvgSave(dc.vg);
         nvgTranslate(dc.vg, cx, cy);
         nvgScale(dc.vg, 1.0f, ry / rx);
         nvgTranslate(dc.vg, -cx, -cy);
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
         nvgRestore(dc.vg);
     }
     if (!StippleStroke(dc.vg, gc)) {
@@ -1700,13 +1702,15 @@ XDrawArcs(
 
         nvgBeginPath(dc.vg);
         if (arcArr[i].width == arcArr[i].height) {
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
         } else {
             nvgSave(dc.vg);
             nvgTranslate(dc.vg, cx, cy);
             nvgScale(dc.vg, 1.0f, ry / rx);
             nvgTranslate(dc.vg, -cx, -cy);
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
             nvgRestore(dc.vg);
         }
         if (!StippleStroke(dc.vg, gc)) {
@@ -1754,7 +1758,7 @@ XFillArc(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
+    if (!TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
     cx = x + width  / 2.0f;
@@ -1769,13 +1773,15 @@ XFillArc(
         nvgMoveTo(dc.vg, cx, cy);
 
     if (width == height) {
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
     } else {
         nvgSave(dc.vg);
         nvgTranslate(dc.vg, cx, cy);
         nvgScale(dc.vg, 1.0f, ry / rx);
         nvgTranslate(dc.vg, -cx, -cy);
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
         nvgRestore(dc.vg);
     }
 
@@ -1823,7 +1829,7 @@ XFillArcs(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
+    if (!TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
     for (i = 0; i < nArcs; i++) {
@@ -1844,13 +1850,15 @@ XFillArcs(
             nvgMoveTo(dc.vg, cx, cy);
 
         if (arcArr[i].width == arcArr[i].height) {
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
         } else {
             nvgSave(dc.vg);
             nvgTranslate(dc.vg, cx, cy);
             nvgScale(dc.vg, 1.0f, ry / rx);
             nvgTranslate(dc.vg, -cx, -cy);
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
             nvgRestore(dc.vg);
         }
 
