@@ -3970,15 +3970,31 @@ WmGeometryCmd(
 
 	    x = wmPtr->x = (short)(result >> 16);
 	    y = wmPtr->y = (short)(result & 0x0000ffff);
-	} else if (wmPtr->hints.initial_state == ZoomState) {
-	    /*
-	     * wmPtr->x and wmPtr->y keep the position of the restored window,
-	     * report the actual position of the zoomed one.
-	     */
+	} else {
+	    int zoomed = (wmPtr->hints.initial_state == ZoomState);
 
-	    xSign = ySign = '+';
-	    x = winPtr->changes.x;
-	    y = winPtr->changes.y;
+	    if (wmPtr->hints.initial_state == IconicState
+		    && wmPtr->wrapper != NULL) {
+		/*
+		 * An iconified window which will be restored zoomed.
+		 */
+
+		WINDOWPLACEMENT placement;
+
+		placement.length = sizeof(WINDOWPLACEMENT);
+		zoomed = GetWindowPlacement(wmPtr->wrapper, &placement)
+			&& (placement.flags & WPF_RESTORETOMAXIMIZED);
+	    }
+	    if (zoomed) {
+		/*
+		 * wmPtr->x and wmPtr->y keep the position of the restored
+		 * window, report the actual position of the zoomed one.
+		 */
+
+		xSign = ySign = '+';
+		x = winPtr->changes.x;
+		y = winPtr->changes.y;
+	    }
 	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
 		width, height, xSign, x, ySign, y));
