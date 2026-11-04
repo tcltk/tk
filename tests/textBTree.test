@@ -81,7 +81,7 @@ proc setupBig {} {
 #
 destroy .t
 text .t
-.t debug on
+.t debug 1
 
 #
 # TESTS
@@ -2878,7 +2878,7 @@ test btree-14.93 {elide walk: enforce reciprocity when the kept link claims the 
     # trusted it without checking reciprocity, leaving the pairing crossed
     # (BranchCheckProc: related link is not pointing to this branch).
     # Recorded fuzz sequence (fuzz_tagops seed 99).
-    .t debug on
+    .t debug 1
     .t insert end ktrrfgnzkgkhlltyqizicuec
     .t tag configure E0 -elide 1
     .t tag configure E1 -elide 1 -undo 0
@@ -2992,7 +2992,7 @@ test btree-14.94 {elide walk: a link insertion must not silently orphan the mutu
     # loop pairs a pending branch with a link stolen from another mutual
     # pair (LinkCheckProc: related branch is not pointing to this link).
     # Recorded fuzz sequence (fuzz_tagops seed 683, multiline).
-    .t debug on
+    .t debug 1
     .t insert end {gwodrykyt
 pnukgwqdbhmyxvqdxt
 gktecqwnscpozqkggbn
@@ -3148,7 +3148,7 @@ test btree-14.95 {elide walk: dangling switch beyond the range resolved by elide
     # its position (remove when the preceding content is not elided anymore,
     # recompute the surrounding tag-elided range otherwise). Recorded fuzz
     # sequence (fuzz_tagops seed 847, multiline).
-    .t debug on
+    .t debug 1
     .t insert end {mglwzjrvyvhhrmntppswcsixwjx
 phflavrk}
     .t tag configure E0 -elide 1

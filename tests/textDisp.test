@@ -157,7 +157,7 @@ Some of the upcoming tests will probably fail."
 text .t -font $fixedFont -width 20 -height 10 -yscrollcommand setScrollInfo
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
-.t debug on
+.t debug 1
 
 wm geometry . {}
 
@@ -5349,7 +5349,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     # if valgrind check is fully enabled. In this test case only the scrollbar
     # behavior is relevant, all other involved functions (insert, see, ...) are
     # already tested with debug mode in other test cases.
-    .t debug off
+    .t debug 0
     .t insert end "[string repeat a\nb\nc\n 500000]THE END\n"
     set res {}
 } -body {
@@ -5361,7 +5361,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
 } -cleanup {
-    .t debug on ;# re-enable debugging
+    .t debug 1;# re-enable debugging
     destroy .t1
 } -result {1 1}
 
@@ -6468,6 +6468,9 @@ test textDisp-50.1 {the char info of a chunk after a tag boundary is freed} -con
 	}
 	expr {$end - $tmp}
     }
+    # With debug 1, the text widgets log each line whose height they compute,
+    # and .t may still be computing those of its lines in the background.
+    .t debug 0
     text .t1 -font TkDefaultFont -width 60 -height 3 -wrap none
     pack .t1
     .t1 tag configure x -foreground red
@@ -6480,10 +6483,9 @@ test textDisp-50.1 {the char info of a chunk after a tag boundary is freed} -con
 	update
 	.t1 tag remove x 1.20 1.25
 	update
-	# The widget appends to this variable at each layout.
-	unset -nocomplain ::tkBidiLog
     }
 } -cleanup {
+    .t debug 1;# re-enable debugging
     destroy .t1
     rename getbytes {}
     rename growth {}

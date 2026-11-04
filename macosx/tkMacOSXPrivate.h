@@ -305,6 +305,7 @@ MODULE_SCOPE void TkMacOSXUpdatePointerBeforeUnmap(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXUpdatePointerAfterDestroy (NSWindow *deadNSWindow);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
+MODULE_SCOPE void TkMacOSXNotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
 
 #pragma mark Private Objective-C Classes
 

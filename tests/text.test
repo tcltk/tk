@@ -36,7 +36,7 @@ wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
 
-text .t; .t debug on; destroy .t
+text .t; .t debug 1; destroy .t
 
 testConstraint memory [llength [info commands memory]]
 
@@ -1422,7 +1422,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} -setup {
 } -body {
     .t debug 0 1
 } -cleanup {
-    .t debug on
+    .t debug 1
     destroy .t
 } -returnCodes {error} -result {wrong # args: should be ".t debug boolean"}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} -setup {
@@ -1430,7 +1430,7 @@ test text-7.2 {TextWidgetCmd procedure, "debug" option} -setup {
 } -body {
     .t de 0 1
 } -cleanup {
-    .t debug on
+    .t debug 1
     destroy .t
 } -returnCodes {error} -result {ambiguous option "de": must be bbox, brks, checksum, cget, clear, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, inspect, isclean, isdead, isempty, lineno, load, locale, mark, peer, pendingsync, replace, scan, search, see, sync, tag, watch, window, xview, or yview}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} -setup {
@@ -1447,7 +1447,7 @@ test text-7.4 {TextWidgetCmd procedure, "debug" option} -setup {
     .t debug false
     .t debug
 } -cleanup {
-    .t debug on
+    .t debug 1
     destroy .t
 } -result {0}
 

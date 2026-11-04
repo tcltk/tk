@@ -30,7 +30,7 @@ destroy .t
 text .t -width 20 -height 10
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 wm geometry . {}
 entry .t.e
 .t peer create .pt
@@ -389,7 +389,7 @@ test textMark-8.12 {MarkFindPrev - match pattern - discard special marks} -setup
 test textMark-9.1 {ChangeGravity - the insert mark must be re-linked too} -setup {
     destroy .tt
     text .tt
-    .tt debug on
+    .tt debug 1
 } -body {
     # Changing the gravity flips the segment type in place; without a re-link
     # the chain violates the gravity order (left-gravity marks first), which
@@ -405,7 +405,7 @@ test textMark-9.1 {ChangeGravity - the insert mark must be re-linked too} -setup
 test textMark-9.2 {ChangeGravity - left gravity insert mark honored on empty widget} -setup {
     destroy .tt
     text .tt
-    .tt debug on
+    .tt debug 1
 } -body {
     # The special mark "current" alone suffices to break the gravity order.
     .tt mark gravity insert left
@@ -443,7 +443,7 @@ test textMark-10.4 {TkTextMarkCmd - "compare" option - same position uses chain 
 test textMark-11.1 {steadymarks - create+unset in the same pending change annihilate} -setup {
     destroy .tt
     text .tt -undo 1 -steadymarks 1
-    .tt debug on
+    .tt debug 1
 } -body {
     # The creation token is still retained when the mark is unset: the pair
     # annihilates, the mark dies without an undo trace, and the undo reaches
@@ -463,7 +463,7 @@ test textMark-11.1 {steadymarks - create+unset in the same pending change annihi
 test textMark-11.2 {steadymarks - undo of mark unset revives the mark} -setup {
     destroy .tt
     text .tt -undo 1 -steadymarks 1
-    .tt debug on
+    .tt debug 1
 } -body {
     # The creation token is flushed to the undo stack by the delete; the
     # unset then records its own token. Undoing it must revive the mark and
@@ -487,7 +487,7 @@ test textMark-11.2 {steadymarks - undo of mark unset revives the mark} -setup {
 test textMark-11.3 {steadymarks - undo/redo drain around a revived mark} -setup {
     destroy .tt
     text .tt -undo 1 -steadymarks 1
-    .tt debug on
+    .tt debug 1
 } -body {
     .tt insert end "abcdef"
     .tt mark set m 1.2
@@ -506,7 +506,7 @@ test textMark-11.3 {steadymarks - undo/redo drain around a revived mark} -setup 
 test textMark-11.4 {steadymarks - undo of a mark move restores the position} -setup {
     destroy .tt
     text .tt -undo 1 -steadymarks 1
-    .tt debug on
+    .tt debug 1
 } -body {
     # The re-insertion of the mark used the index just computed for the redo
     # token (the current position) instead of the saved one: undoing a move
@@ -695,7 +695,7 @@ test textMark-12.6 {a destroyed token must not preserve a mark living in the tre
 test textMark-12.7 {mark set applies an explicit direction when the index is the mark itself} -setup {
     destroy .tt
     text .tt
-    .tt debug on
+    .tt debug 1
 } -body {
     # The early return of SetMark (index resolving to the mark's own
     # segment, via end or via the mark's name) skipped the application of
@@ -714,7 +714,7 @@ test textMark-12.7 {mark set applies an explicit direction when the index is the
 test textMark-12.8 {mark set with self-resolving index, steadymarks and undo} -setup {
     destroy .tt
     text .tt -undo 1 -steadymarks 1
-    .tt debug on
+    .tt debug 1
 } -body {
     .tt insert end "abc"
     .tt mark set m 1.1 left

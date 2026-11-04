@@ -58,7 +58,7 @@ Some of the upcoming tests will probably fail."
 text .t -font $fixedFont -width 30 -height 6 -borderwidth 2 -highlightthickness 2
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 
 wm geometry . {}
 

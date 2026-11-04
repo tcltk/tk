@@ -33,7 +33,7 @@ imageInit
 destroy .t
 font create test_font -family courier -size 14
 text .t -font test_font
-.t debug on
+.t debug 1
 destroy .t
 
 proc setup {} {

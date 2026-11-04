@@ -366,13 +366,9 @@ Icu_Init(
 	icu_fns.nopen += 5;
 #endif
     }
-#if defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK) || defined(_WIN32)
     Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", TkStartEndOfClusterCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", TkStartEndOfClusterCmd, INT2PTR(1), NULL);
-#elif defined(_WIN32)
-    /* No ICU on Windows for startOfCluster/endOfCluster -> use Uniscribe ScriptBreak fallback */
-    extern int TkpWinRegisterClusterCommands(Tcl_Interp *interp);
-    TkpWinRegisterClusterCommands(interp);
 #endif
 }
 

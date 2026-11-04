@@ -26,6 +26,18 @@
 #endif
 */
 
+#define PRINT_STACK					\
+    for (NSWindow *w in [NSApp orderedWindows]) {		\
+    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);			\
+	if (winPtr2) {						\
+	    fprintf(stderr, "%s ", Tk_PathName(winPtr2));	\
+	}							\
+    }								\
+    fprintf(stderr, "\n");					\
+    fflush(stderr)
+
+#import <QuartzCore/QuartzCore.h>
+
 extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
@@ -39,15 +51,12 @@ static void		GenerateWMDestroyEvent(Tk_Window tkwin);
 
 #pragma mark TKApplication(TKWindowEvent)
 
-#if 0
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
-#endif
-extern NSString *NSWindowWillCloseNotification;
-
-#ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
+extern NSString *NSWindowWillCloseNotification;
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -322,17 +331,36 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     return (winPtr ? NO : YES);
 }
 
-// Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
     if ([NSApp tkWillExit]) {
 	return;
     }
     NSWindow *window = [notification object];
+    NSString *name = [notification name];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
-    if (winPtr) {
-	fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
+    if (!winPtr) {
+	return;
     }
+    if ([name isEqualToString:NSWindowDidChangeOcclusionStateNotification]) {
+	XEvent event;
+	event.xany.send_event = False;
+	event.xany.display = Tk_Display(winPtr);
+	event.xvisibility.type = VisibilityNotify;
+	event.xvisibility.state = VisibilityUnobscured;
+	TkMacOSXNotifyVisibility(winPtr, &event);
+    }
+
+#if 0
+    if ([name isEqualToString:NSWindowDidOrderOnScreenNotification]) {
+	fprintf(stderr, "Window %s received DidOrderOnScreen @ %.8f\n", Tk_PathName(winPtr),
+		CACurrentMediaTime());
+    }
+    if ([name isEqualToString:NSWindowDidExposeNotification]) {
+	fprintf(stderr, "Window %s was exposed.\n", Tk_PathName(winPtr));
+    }
+    PRINT_STACK;
+#endif
 }
 
 // Not used by default - may be enabled for debugging.
@@ -345,7 +373,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
+	fprintf(stderr, "windowMapped: Window %s was ordered on screen.\n", Tk_PathName(winPtr));
     }
 }
 
@@ -391,6 +419,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
+    observe(NSWindowDidExposeNotification, windowBecameVisible:);
+    observe(NSWindowDidChangeOcclusionStateNotification, windowBecameVisible:);
 #if 0
     // These can be useful for debugging.
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
