@@ -2278,6 +2278,7 @@ test wm-state-2.8 {state change after map} -constraints withWindowManager -body 
     toplevel .t
     update
     wm state .t iconic
+    raiseDelay
     wm state .t
 } -cleanup {
     deleteWindows
@@ -2286,6 +2287,7 @@ test wm-state-2.9 {state change after map} -constraints withWindowManager -body 
     toplevel .t
     update
     wm iconify .t
+    raiseDelay
     wm state .t
 } -cleanup {
     deleteWindows
