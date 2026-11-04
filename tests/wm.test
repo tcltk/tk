@@ -1720,8 +1720,11 @@ deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body {
     toplevel .t1 ; tkwait visibility .t1
+    raiseDelay
     toplevel .t2 ; tkwait visibility .t2
-    wm iconify .t1 ; tkwait visibility .t1
+    raiseDelay
+    wm iconify .t1
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
@@ -1729,7 +1732,8 @@ test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body 
 test wm-stackorder-3.2 {unmapped toplevel} -body {
     toplevel .t1 ; tkwait visibility .t1
     toplevel .t2 ; tkwait visibility .t2
-    wm withdraw .t2 ; tkwait visibility .t2
+    wm withdraw .t2
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
@@ -1745,7 +1749,7 @@ test wm-stackorder-3.3 {unmapped toplevel} -body {
 test wm-stackorder-3.4 {unmapped toplevel} -body {
     toplevel .t1 ; tkwait visibility .t1
     toplevel .t1.t2 ; tkwait visibility .t1.t2
-    wm withdraw .t1.t2 ; tkwait visibility .t1.t2
+    wm withdraw .t1.t2
     wm stackorder .t1
 } -cleanup {
     destroy .t1
@@ -1762,7 +1766,7 @@ test wm-stackorder-3.6 {unmapped toplevel} -body {
     toplevel .t1 ; tkwait visibility .t1
     toplevel .t1.t2 ; tkwait visibility .t1.t2
     toplevel .t1.t2.t3 ; tkwait visibility .t1.t2.t3
-    wm withdraw .t1.t2 ; tkwait visibility .t1.t2
+    wm withdraw .t1.t2
     raiseDelay
     wm stackorder .t1
 } -cleanup {
