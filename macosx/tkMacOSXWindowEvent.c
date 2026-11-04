@@ -202,6 +202,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     // operation has completed.  If the window is iconified by clicking on its
     // dock icon, as opposed to calling wm deiconify, then the Tk state of
     // the window needs to be updated.  That is the purpose of this method.
+    // This includes clearing the WM_IS_HIDDEN flag..
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
@@ -209,6 +210,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    if (!winPtr) {
+	return;
+    }
+    winPtr->wmInfoPtr->flags &= ~WM_IS_HIDDEN;
     if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
@@ -410,8 +415,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  * Idle task which forces focus to a particular window.
  */
 
-static void RefocusGrabWindow(void *data) {
-    TkWindow *winPtr = (TkWindow *) data;
+static void RefocusGrabWindow(void *clientData) {
+    TkWindow *winPtr = (TkWindow *) clientData;
     TkpChangeFocus(winPtr, 1);
     Tcl_Release(winPtr);
 }
@@ -449,9 +454,9 @@ static void RefocusGrabWindow(void *data) {
 	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
-	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
-	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen:NO];
+	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState &&
+	    [win isVisible]) {
+		[win orderOut:nil];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -462,11 +467,8 @@ static void RefocusGrabWindow(void *data) {
 	}
     }
     if ([self keyWindow] == nil && iconifiedWindow != nil) {
-	[iconifiedWindow makeKeyAndOrderFront:self];
-    } else {
-	[[self keyWindow] orderFront:self];
+	[iconifiedWindow makeKeyAndOrderFront:nil];
     }
-
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
@@ -1027,20 +1029,16 @@ ExposeRestrictProc(
 {
     return YES;
 }
+#if 0
+static void DebugIdleTask(void *clientData) {
+    TKWindow *win = (TKWindow *)clientData;
+    printf("updateLayer visibility %d\n", [win isVisible]);
+}
+#endif
+
 - (void) updateLayer {
-    CGContextRef context = self.tkLayerBitmapContext;
-    if (context && ![NSApp tkWillExit]) {
-	/*
-	 * If this ContentView is off screen, Run any pending widget
-	 * display procs before updating the layer.
-	 */
-
-	if (! [self onScreen]) {
-	    //printf("Running event loop.\n");
-	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    [self setOnScreen:YES];
-	}
-
+    if (![NSApp tkWillExit]) {
+	//Tcl_DoWhenIdle(DebugIdleTask, [self window]);
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -1049,7 +1047,10 @@ ExposeRestrictProc(
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
-
+	CGContextRef context = self.tkLayerBitmapContext;
+	if (!context) {
+	    return;
+	}
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing

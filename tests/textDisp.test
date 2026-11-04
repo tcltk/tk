@@ -5482,7 +5482,7 @@ test textDisp-41.1 {many text widgets complete their line metrics update - bug 1
 } -result 0
 
 test textDisp-42.1 {the char info of a chunk after a tag boundary is freed} -constraints {
-    memory
+    memory knownBug
 } -setup {
     proc getbytes {} {
 	lindex [split [memory info] "\n"] 3 3

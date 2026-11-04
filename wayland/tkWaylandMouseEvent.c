@@ -35,6 +35,7 @@ int tkWaylandLastWinX = 0;
 int tkWaylandLastWinY = 0;
 TkWindow* tkWaylandLastPointerWinPtr = NULL;
 
+
 /*
  * Set when the pointer position was set by an emulated warp (Wayland cannot
  * warp the real pointer).  While set, XQueryPointer reports the emulated

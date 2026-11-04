@@ -521,7 +521,7 @@ Tk_ChooseColorObjCmd(
 	}
     }
     colorPanel = [NSColorPanel sharedColorPanel];
-    [colorPanel orderOut:NSApp];
+    [colorPanel orderOut:nil];
     [colorPanel setContinuous:NO];
     [colorPanel setBecomesKeyOnlyIfNeeded:NO];
     [colorPanel setShowsAlpha: NO];
@@ -2092,7 +2092,7 @@ FontchooserHideCmd(
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
 
     if ([fp isVisible]) {
-	[fp orderOut:NSApp];
+	[fp orderOut:nil];
     }
     return TCL_OK;
 }
