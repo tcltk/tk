@@ -8615,3 +8615,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-11-02 (bug) [220796] -stipple option for canvas text item disrupts positioning (storchaka)
 
 2026-11-03 (bug) [e02aac] Grab documentation does not have caveats for windows & mac (storchaka)
+
+2026-11-04 (bug) [d1a711] X11: wm geometry reports the requested position after the window manager moved the window out of a panel's area (storchaka)
