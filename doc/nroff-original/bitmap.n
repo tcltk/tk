@@ -15,8 +15,9 @@ bitmap \- Images that display two colors
 .nf
 \fBimage create bitmap \fR?\fIname\fR? ?\fIoptions\fR?
 
-\fIimageName \fBcget\fI option\fR
-\fIimageName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+\fIimageName \fBcget\fI \-option\fR
+\fIimageName \fBconfigure\fR ?\fI\-option\fR?
+\fIimageName \fBconfigure\fR \fI\-option value\fR ?\fI\-option value ...\fR?
 .fi
 .BE
 .SH DESCRIPTION
@@ -111,7 +112,9 @@ by \fIoption\fR.
 \fBimage create\fR \fBbitmap\fR command.
 .\" METHOD: configure
 .TP
-\fIimageName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+\fIimageName \fBconfigure\fR ?\fI\-option\fR?
+.TP
+\fIimageName \fBconfigure\fR \fI\-option value\fR ?\fI\-option value ...\fR?
 .
 Query or modify the configuration options for the image.
 If no \fIoption\fR is specified, returns a list describing all of

@@ -28,7 +28,9 @@ bind - Arrange for X events to invoke Tcl scripts
 # Synopsis
 
 ::: {.synopsis} :::
-[bind]{.cmd} [tag]{.arg} [sequence]{.optarg} [+=??+script]{.optlit}
+[bind]{.cmd} [tag]{.arg} [sequence]{.arg} [script]{.arg}
+[bind]{.cmd} [tag]{.arg} [sequence]{.arg} [+=+script]{.lit}
+[bind]{.cmd} [tag]{.arg} [sequence]{.optarg}
 :::
 
 # Introduction
