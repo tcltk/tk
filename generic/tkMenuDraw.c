@@ -1011,10 +1011,19 @@ AdjustMenuCoords(
     int *xPtr,
     int *yPtr)
 {
-    if (menuPtr->menuType == MENUBAR) {
-	TkMenu *childPtr = (mePtr->childMenuRefPtr != NULL)
-		? mePtr->childMenuRefPtr->menuPtr : NULL;
+    TkMenu *childPtr = (mePtr->childMenuRefPtr != NULL)
+	    ? mePtr->childMenuRefPtr->menuPtr : NULL;
+    int vRootX, vRootY, vRootWidth, vRootHeight;
 
+    if ((childPtr != NULL) && (childPtr->tkwin != NULL)) {
+	TkRecomputeMenu(childPtr);
+	Tk_GetVRootGeometry(menuPtr->tkwin, &vRootX, &vRootY,
+		&vRootWidth, &vRootHeight);
+    } else {
+	childPtr = NULL;
+    }
+
+    if (menuPtr->menuType == MENUBAR) {
 	*xPtr += mePtr->x;
 	*yPtr += mePtr->y + mePtr->height;
 
@@ -1025,31 +1034,54 @@ AdjustMenuCoords(
 	 * menu item under the pointer.
 	 */
 
-	if ((childPtr != NULL) && (childPtr->tkwin != NULL)) {
-	    int vRootX, vRootY, vRootWidth, vRootHeight, height;
+	if (childPtr != NULL) {
+	    int height = Tk_ReqHeight(childPtr->tkwin);
 
-	    TkRecomputeMenu(childPtr);
-	    height = Tk_ReqHeight(childPtr->tkwin);
-	    Tk_GetVRootGeometry(menuPtr->tkwin, &vRootX, &vRootY,
-		    &vRootWidth, &vRootHeight);
+	    childPtr->cascadeLeft = 0;
+
 	    if ((*yPtr + height > vRootY + vRootHeight)
 		    && (*yPtr - mePtr->height - height >= vRootY)) {
 		*yPtr -= mePtr->height + height;
 	    }
 	}
     } else {
-	int borderWidth, activeBorderWidth;
+	int borderWidth, activeBorderWidth, offset, right;
+	int left = 0;
 
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	offset = activeBorderWidth + 2;
+
+	/*
+	 * Post the cascade to the right of the entry's column (of the menu
+	 * for the last column), or to the left of the column if this menu
+	 * was itself posted to the left of its parent, as long as it fits
+	 * there. Otherwise post it on the other side if it fits there.
+	 * Otherwise it would be moved to overlap the menu, hiding its
+	 * entries and the pointer, or overlap the parent menu.
+	 */
+
 	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
-	    *xPtr += Tk_Width(menuPtr->tkwin) - borderWidth;
+	    right = *xPtr + Tk_Width(menuPtr->tkwin) - borderWidth - offset;
 	} else {
-	    *xPtr += mePtr->x + mePtr->width;
+	    right = *xPtr + mePtr->x + mePtr->width - offset;
 	}
-	*xPtr -= activeBorderWidth + 2;
+	if (childPtr != NULL) {
+	    int width = Tk_ReqWidth(childPtr->tkwin);
+	    int leftX = *xPtr + mePtr->x + offset - width;
+	    int fitsRight = (right + width <= vRootX + vRootWidth);
+	    int fitsLeft = (leftX >= vRootX);
+
+	    left = menuPtr->cascadeLeft ? (fitsLeft || !fitsRight)
+		    : (!fitsRight && fitsLeft);
+	    childPtr->cascadeLeft = left;
+	    if (left) {
+		right = leftX;
+	    }
+	}
+	*xPtr = right;
 	*yPtr += mePtr->y + activeBorderWidth + 2;
     }
 }
