@@ -490,13 +490,13 @@ static void showRootWindow(void *clientData) {
 	if (wmPtr->hints.initial_state == NormalState &
 	    (wmPtr->flags & WM_IS_HIDDEN) == 0) {
 	    [(TKWindow *)root tkOrderFront];
+	    /*
+	     * We move the root window to the bottom in case Tk managed to
+	     * create another toplevel before this idle task runs.
+	     */
+	    [root orderWindow:NSWindowBelow relativeTo:0];
+	    [NSApp activateIgnoringOtherApps: YES];
 	}
-	/*
-	 * We move the root window to the bottom in case Tk managed to
-	 * create another toplevel before this idle task runs.
-	 */
-	[root orderWindow:NSWindowBelow relativeTo:0];
-	[NSApp activateIgnoringOtherApps: YES];
     }
     /*
      * The root window may have been destroyed before this idle handler runs,
