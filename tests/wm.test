@@ -45,6 +45,44 @@ proc raiseDelay {} {
     update
 }
 
+# Zooming, iconifying and deiconifying a window are done by the window manager
+# asynchronously, sometimes in several steps.  waitForWm processes events until
+# the condition holds and the geometry of the window has not changed for 100
+# ms, for up to 2 seconds; without a window manager on X11 nothing would change.
+#
+proc waitForWm {w cond} {
+    if {[testConstraint withWindowManager]} {
+	set end [expr {[clock milliseconds] + 2000}]
+	set geometry {}
+	set stable 0
+	while {[clock milliseconds] < $end} {
+	    update
+	    if {[uplevel 1 [list expr $cond]]} {
+		if {[wm geometry $w] eq $geometry} {
+		    if {[incr stable] >= 5} {
+			break
+		    }
+		} else {
+		    set geometry [wm geometry $w]
+		    set stable 0
+		}
+	    }
+	    after 20
+	}
+    }
+    update
+}
+proc zoomWindow {w zoomed} {
+    if {[tk windowingsystem] eq "x11"} {
+	wm attributes $w -zoomed $zoomed
+	waitForWm $w {[wm attributes $w -zoomed] == $zoomed}
+    } else {
+	set state [expr {$zoomed ? "zoomed" : "normal"}]
+	wm state $w $state
+	waitForWm $w {[wm state $w] eq $state}
+    }
+}
+
 proc stdWindow {} {
     destroy .t
     toplevel .t -width 100 -height 50
@@ -768,6 +806,62 @@ test wm-geometry-2.2 {setting only the size does not move the window - bug 29953
     destroy .geom
     unset -nocomplain x y
 } -result {0 0 300 200}
+test wm-geometry-2.3 {the position of a zoomed toplevel - bug 557441302b} -setup {
+    destroy .geom
+    toplevel .geom
+    wm geometry .geom 480x200+303+210
+    waitForWm .geom {[winfo ismapped .geom]}
+    # The offset of the contents from the position [wm geometry] reports.
+    regexp {[+-](-?\d+)[+-](-?\d+)$} [wm geometry .geom] -> x y
+    set dx [expr {[winfo rootx .geom] - $x}]
+    set dy [expr {[winfo rooty .geom] - $y}]
+} -body {
+    zoomWindow .geom 1
+    regexp {[+-](-?\d+)[+-](-?\d+)$} [wm geometry .geom] -> x y
+    set res [list [expr {abs([winfo rootx .geom] - $x - $dx) < 10}] \
+	    [expr {abs([winfo rooty .geom] - $y - $dy) < 10}]]
+    zoomWindow .geom 0
+    lappend res [wm geometry .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain x y dx dy res
+} -result {1 1 480x200+303+210}
+test wm-geometry-2.4 {a toplevel iconified from zoomed - bug 557441302b} -setup {
+    destroy .geom
+    toplevel .geom
+    wm geometry .geom 480x200+303+210
+    waitForWm .geom {[winfo ismapped .geom]}
+} -body {
+    zoomWindow .geom 1
+    set zoomed [wm geometry .geom]
+    wm iconify .geom
+    waitForWm .geom {![winfo ismapped .geom]}
+    set res [list [expr {[wm geometry .geom] eq $zoomed}]]
+    wm deiconify .geom
+    waitForWm .geom {[winfo ismapped .geom]}
+    lappend res [expr {[wm geometry .geom] eq $zoomed}]
+    zoomWindow .geom 0
+    lappend res [wm geometry .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain zoomed res
+} -result {1 1 480x200+303+210}
+test wm-geometry-2.5 {a toplevel iconified from normal} -setup {
+    destroy .geom
+    toplevel .geom
+    wm geometry .geom 480x200+303+210
+    waitForWm .geom {[winfo ismapped .geom]}
+} -body {
+    wm iconify .geom
+    waitForWm .geom {![winfo ismapped .geom]}
+    set res [list [wm geometry .geom]]
+    wm deiconify .geom
+    waitForWm .geom {[winfo ismapped .geom]}
+    lappend res [wm geometry .geom]
+} -cleanup {
+    destroy .geom
+    unset -nocomplain res
+} -result {480x200+303+210 480x200+303+210}
 
 
 ### wm grid ###
