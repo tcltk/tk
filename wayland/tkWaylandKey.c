@@ -859,8 +859,24 @@ typedef struct IbusContext {
                                  * destroyed; guards signal handlers against
                                  * using a stale tkwin pointer. */
     char *preeditText;          /* Current preedit/composing text (owned). */
+    int caretSent;              /* Non-zero once a cursor rectangle has been
+                                 * sent to IBus for this context. */
+    int caretX, caretY;         /* Last surface-relative caret position sent. */
+    int caretHeight;            /* Last caret height sent. */
     struct IbusContext *next;   /* Linked list pointer. */
 } IbusContext;
+
+/*
+ * Last caret reported by Tk_SetCaretPos while no IBus context existed for
+ * its toplevel (the widget typically reports the caret before the context is
+ * created).  Replayed when the context is created or gains focus.  The
+ * toplevel pointer is only compared, never dereferenced.
+ */
+static struct {
+    Tk_Window top;
+    int x, y, height;
+    int valid;
+} pendingCaret = {NULL, 0, 0, 0, 0};
 
 /* Global IBus state. */
 sd_bus *ibus_bus = NULL;
@@ -1047,6 +1063,21 @@ IbusReadTextFromVariant(
     DEBUG_LOG("IbusReadTextFromVariant(read text): r=%d text='%s'",
 	      r, (r >= 0 && *text_out) ? *text_out : "(null)");
 
+    /*
+     * IBusText is (s a{sv} s v): the trailing variant holds the attribute
+     * list.  sd_bus_message_exit_container() fails with -EBUSY while items
+     * remain unread, which would leave the message cursor inside the struct
+     * and make any later read of the signal's remaining arguments (cursor
+     * position, visible flag) fail.  Skip whatever is left in the struct.
+     */
+    if (r >= 0) {
+        int r2 = sd_bus_message_skip(m, NULL);
+
+        /* The text is already read; a failed skip must not lose it. */
+        DEBUG_LOG("IbusReadTextFromVariant(skip attrs): r=%d", r2);
+        (void)r2;
+    }
+
 cleanup_struct:
     sd_bus_message_exit_container(m);
 
@@ -1149,6 +1180,37 @@ TkWaylandSendUnicodeString(
 
 /*
  * ----------------------------------------------------------------------------
+ * IbusTarget --
+ *
+ *         Return the window that should receive IME virtual events.  Key
+ *         events are redirected to the focus window by Tk, but virtual events
+ *         are not, so if focusedWidget is a toplevel the Entry/Text class
+ *         bindings for <<TkStartIMEMarkedText>> etc. would never fire.
+ *         Resolve the real focus window at signal time.
+ *
+ * Results:
+ *         A Tk_Window; never NULL when ctx->tkwin is valid.
+ *
+ * Side effects:
+ *         None.
+ * ----------------------------------------------------------------------------
+ */
+
+static Tk_Window
+IbusTarget(
+    IbusContext *ctx)
+{
+    Tk_Window w = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
+    TkWindow *f = w ? TkGetFocusWin((TkWindow *)w) : NULL;
+
+    if (f && !(f->flags & TK_ALREADY_DEAD)) {
+        return (Tk_Window)f;
+    }
+    return w;
+}
+
+/*
+ * ----------------------------------------------------------------------------
  * OnCommitText --
  *
  *	    D-Bus signal handler for the IBus "CommitText" signal.  Called when
@@ -1197,10 +1259,16 @@ OnCommitText(
      * reliably kept in sync and may be stale, causing "not found in
      * dictionary" errors and segfaults.
      */
-    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
+    Tk_Window focusWin = IbusTarget(ctx);
 
-    /* Clear any marked/preedit region before inserting committed text. */
-    Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+    /*
+     * Clear the marked/preedit region before inserting committed text, but
+     * only if a preedit is actually showing: the Tcl-side mark is stale
+     * otherwise and Clear could delete previously committed text.
+     */
+    if (ctx->preeditText) {
+        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+    }
 
     if (*text) {
         TkWaylandSendUnicodeString(focusWin, text);
@@ -1277,10 +1345,16 @@ OnUpdatePreedit(
      * Use the widget recorded at FocusIn time, not dispPtr->focusPtr.
      * See OnCommitText for rationale.
      */
-    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
+    Tk_Window focusWin = IbusTarget(ctx);
 
-    /* Always clear previous marked region first. */
-    Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+    DEBUG_LOG("OnUpdatePreedit: target=%s text='%s' cursor=%u visible=%d",
+              Tk_PathName(focusWin), text ? text : "(null)",
+              cursor_pos, visible);
+
+    /* Clear the previous marked region, if there is one. */
+    if (ctx->preeditText) {
+        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+    }
 
     if (!visible || !text || !*text) {
         if (ctx->preeditText) {
@@ -1338,10 +1412,10 @@ OnHidePreeditText(
         return 0;
     }
 
-    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
-    Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
-
     if (ctx->preeditText) {
+        Tk_Window focusWin = IbusTarget(ctx);
+
+        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
         free(ctx->preeditText);
         ctx->preeditText = NULL;
     }
@@ -1684,6 +1758,84 @@ static int IbusProcessKeyEvent(
 
 /*
  * ----------------------------------------------------------------------------
+ * IbusSendCaret --
+ *
+ *         Send a surface-relative caret rectangle to IBus and remember it on
+ *         the context.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         SetCursorLocationRelative D-Bus call; updates ctx->caret*.
+ * ----------------------------------------------------------------------------
+ */
+
+static void
+IbusSendCaret(
+    IbusContext *ctx,
+    int relX,
+    int relY,
+    int height)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+
+    if (!ctx || !ibus_bus || !ctx->obj_path) return;
+
+    sd_bus_call_method(ibus_bus,
+                       IBUS_SERVICE,
+                       ctx->obj_path,
+                       IBUS_IC_INTERFACE,
+                       "SetCursorLocationRelative",
+                       &error,
+                       NULL,
+                       "iiii",
+                       (int32_t) relX,
+                       (int32_t) relY,
+                       (int32_t) 0,      /* width = 0 (caret). */
+                       (int32_t) height);
+    sd_bus_error_free(&error);
+
+    ctx->caretSent   = 1;
+    ctx->caretX      = relX;
+    ctx->caretY      = relY;
+    ctx->caretHeight = height;
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * IbusReplayCaret --
+ *
+ *         Make sure IBus has a cursor rectangle for this context: resend the
+ *         last one sent, or the one saved while no context existed.  Called
+ *         after context creation and on focus-in, so the candidate window
+ *         does not open at 0,0 before the caret first moves.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         May send SetCursorLocationRelative.
+ * ----------------------------------------------------------------------------
+ */
+
+static void
+IbusReplayCaret(
+    IbusContext *ctx)
+{
+    if (!ctx) return;
+
+    if (ctx->caretSent) {
+        IbusSendCaret(ctx, ctx->caretX, ctx->caretY, ctx->caretHeight);
+    } else if (pendingCaret.valid && pendingCaret.top == ctx->tkwin) {
+        IbusSendCaret(ctx, pendingCaret.x, pendingCaret.y,
+                      pendingCaret.height);
+        pendingCaret.valid = 0;
+    }
+}
+
+/*
+ * ----------------------------------------------------------------------------
  * Tk_SetCaretPos --
  *
  *         Called by text widgets to report the screen position of the
@@ -1722,14 +1874,6 @@ Tk_SetCaretPos(
     /* Mark widget as capable of text input. */
     winPtr->flags |= TK_CAN_INPUT_TEXT;
 
-    /* Skip if nothing changed. */
-    if ((dispPtr->caret.winPtr == winPtr)
-            && (dispPtr->caret.x == x)
-            && (dispPtr->caret.y == y)
-            && (dispPtr->caret.height == height)) {
-        return;
-    }
-
     dispPtr->caret.winPtr = winPtr;
     dispPtr->caret.x      = x;
     dispPtr->caret.y      = y;
@@ -1743,9 +1887,6 @@ Tk_SetCaretPos(
         topPtr = (TkWindow *) Tk_Parent(topPtr);
     }
     if (!topPtr) return;
-
-    IbusContext *ctx = FindContext((Tk_Window) topPtr);
-    if (!ctx || !ctx->obj_path) return;
 
     /*
      * Compute the caret position relative to the GLFW/Wayland surface.
@@ -1770,20 +1911,28 @@ Tk_SetCaretPos(
         }
     }
 
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_call_method(ibus_bus,
-                       IBUS_SERVICE,
-                       ctx->obj_path,
-                       IBUS_IC_INTERFACE,
-                       "SetCursorLocationRelative",
-                       &error,
-                       NULL,
-                       "iiii",
-                       (int32_t) relX,
-                       (int32_t) relY,
-                       (int32_t) 0,      /* width = 0 (caret). */
-                       (int32_t) height);
-    sd_bus_error_free(&error);
+    IbusContext *ctx = FindContext((Tk_Window) topPtr);
+    if (!ctx || !ctx->obj_path) {
+        /* No context yet: remember the position for IbusSendCaret. */
+        pendingCaret.top    = (Tk_Window) topPtr;
+        pendingCaret.x      = relX;
+        pendingCaret.y      = relY;
+        pendingCaret.height = height;
+        pendingCaret.valid  = 1;
+        return;
+    }
+
+    /*
+     * Skip only if this exact surface-relative rectangle was already sent.
+     * Comparing surface-relative values (not the widget-local x/y) also
+     * catches a widget that moved inside the toplevel.
+     */
+    if (ctx->caretSent && ctx->caretX == relX && ctx->caretY == relY
+            && ctx->caretHeight == height) {
+        return;
+    }
+
+    IbusSendCaret(ctx, relX, relY, height);
 }
 
 /*
@@ -1946,6 +2095,7 @@ TkWaylandIbusCreateContext(
     IbusEnable(ctx);
     sd_bus_call_method(ibus_bus, IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
                    "Reset", &error, NULL, "");
+    IbusReplayCaret(ctx);
 
     DEBUG_LOG("CreateIbusContext: Successfully added context for window %p", tkwin);
 
@@ -2007,6 +2157,7 @@ TkWaylandIbusFocusIn(
 
     IbusFocusIn(ctx);
     IbusEnable(ctx);
+    IbusReplayCaret(ctx);
 }
 
 /*
@@ -2035,7 +2186,7 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
      * Use the widget we recorded at FocusIn time for the preedit cancel.
      * Fall back to the toplevel if no sub-widget was recorded.
      */
-    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
+    Tk_Window focusWin = IbusTarget(ctx);
 
     /* Cancel any ongoing composition. */
     if (ctx->preeditText) {
