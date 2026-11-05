@@ -663,10 +663,30 @@ QueueVisibilityNotify(TkWindow *winPtr) {
  * the toplevel draws empty and never redraws children.
  */
 static void
-QueueExposeTree(TkWindow *winPtr)
+QueueExposeChildren(
+    TkWindow *winPtr)
 {
     TkWindow *child;
+
+    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (child->parentPtr == winPtr
+                && !(child->flags & TK_ALREADY_DEAD)
+                && (child->flags & TK_MAPPED)
+                && !Tk_IsTopLevel(child)
+                && Tk_Width(child) > 0 && Tk_Height(child) > 0) {
+            TkWaylandQueueExposeEvent(child, 0, 0,
+                    Tk_Width(child), Tk_Height(child));
+            QueueExposeChildren(child);
+        }
+    }
+}
+
+static void
+QueueExposeTree(
+    TkWindow *winPtr)
+{
     int w, h;
+
     if (winPtr == NULL) return;
     if (winPtr->flags & TK_ALREADY_DEAD) return;
     if (!(winPtr->flags & TK_TOP_LEVEL)) return;
@@ -676,16 +696,7 @@ QueueExposeTree(TkWindow *winPtr)
     h = Tk_Height(winPtr);
     if (w <= 0 || h <= 0) return;
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
-    for (child = winPtr->childList; child != NULL; ) {
-        TkWindow *nextPtr = child->nextPtr;
-        if (child->parentPtr == winPtr
-                && !(child->flags & TK_ALREADY_DEAD)
-                && (child->flags & TK_MAPPED)
-                && !Tk_IsTopLevel(child)) {
-            QueueExposeTree(child);
-        }
-        child = nextPtr;
-    }
+    QueueExposeChildren(winPtr);
 }
 
 static void
@@ -6635,12 +6646,14 @@ XCreateSimpleWindow(
  *
  *	A child window is being unmapped or destroyed.  Children are painted
  *	straight into the toplevel's backing FBO, so the pixels the child
- *	covered remain there until its parent repaints them -- which an X
- *	server would arrange by sending Expose to the parent.  Do the
- *	equivalent here: expose the parent (and, via
- *	TkWaylandQueueExposeEvent, its still-live mapped children) and
- *	invalidate the clip rects so the parent is no longer clipped around
- *	the vanished window.
+ *	covered remain there until whatever lies beneath it repaints them --
+ *	which an X server would arrange by sending Expose to those windows.
+ *	Do the equivalent here: expose every mapped window in the toplevel
+ *	that overlaps the vacated rectangle (the parent, but also the
+ *	container when the child was placed -in another window, and any
+ *	sibling underneath), restricted to that rectangle, and invalidate
+ *	the clip rects so those windows are no longer clipped around the
+ *	vanished window.
  *
  * Results:
  *	None.
@@ -6658,6 +6671,7 @@ ExposeVacatedArea(
     TkWindow *winPtr)
 {
     TkWindow *parentPtr, *topPtr;
+    int rx, ry, rw, rh;
 
     if (winPtr == NULL) {
 	return;
@@ -6667,23 +6681,35 @@ ExposeVacatedArea(
 	    || (parentPtr->flags & TK_ALREADY_DEAD)) {
 	return;
     }
+    rw = Tk_Width(winPtr);
+    rh = Tk_Height(winPtr);
+    if (rw <= 0 || rh <= 0) {
+	return;
+    }
 
-    TkWaylandQueueExposeEvent(parentPtr, 0, 0,
-	    Tk_Width(parentPtr), Tk_Height(parentPtr));
+    /* Origin of winPtr in toplevel coordinates, as getBounds computes it. */
 
-    /*
-     * As in XMapWindow, invalidate the clip rects after queuing the
-     * exposes.
-     */
-
+    rx = winPtr->changes.x;
+    ry = winPtr->changes.y;
     for (topPtr = parentPtr;
 	    topPtr != NULL && !(topPtr->flags & TK_TOP_LEVEL);
 	    topPtr = topPtr->parentPtr) {
-	/* empty */
+	rx += topPtr->changes.x;
+	ry += topPtr->changes.y;
     }
+
     if (topPtr != NULL) {
+	TkWaylandExposeOverlapping(topPtr, 0, 0, winPtr, rx, ry, rw, rh);
+
+	/*
+	 * As in XMapWindow, invalidate the clip rects after queuing the
+	 * exposes.
+	 */
+
 	tkWaylandInvalidateClipRectsForTree(topPtr);
     } else {
+	TkWaylandQueueExposeEvent(parentPtr, 0, 0,
+		Tk_Width(parentPtr), Tk_Height(parentPtr));
 	tkWaylandInvalidateClipRects(parentPtr);
     }
 }

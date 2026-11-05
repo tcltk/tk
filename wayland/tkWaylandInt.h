@@ -964,6 +964,9 @@ MODULE_SCOPE void tkWaylandDrawClipMask(TkWindow* winPtr,
 					GLFWwindow* glfwWindow);
 MODULE_SCOPE void tkWaylandInvalidateClipRects(TkWindow *winPtr);
 MODULE_SCOPE void tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr);
+MODULE_SCOPE void TkWaylandExposeOverlapping(TkWindow *winPtr, int ox, int oy,
+					     TkWindow *skipPtr, int rx, int ry,
+					     int rw, int rh);
 void updateClipRects(TkWindow* winPtr, GLFWwindow* glfwWindow);
 /*
  *----------------------------------------------------------------------

@@ -1946,6 +1946,115 @@ TkpDrawFrameEx(
 /*
  *----------------------------------------------------------------------
  *
+ * ScrollConsiderObscurer --
+ *
+ *	Helper for ScrollAddObscuredDamage.  obsPtr is a mapped window that
+ *	lies above the scrolled window in the stacking order.  The blit in
+ *	TkScrollWindow moves whatever is in the backing FBO, including
+ *	obsPtr's pixels, so (1) the source area hidden under obsPtr has no
+ *	valid content to move and its destination must be redrawn (what
+ *	GraphicsExpose reports on X11), and (2) the destination area under
+ *	obsPtr has had obsPtr's pixels overwritten, so obsPtr must repaint.
+ *	All rectangles are in toplevel coordinates except the damage added
+ *	to damageRgn, which is widget-local.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ScrollConsiderObscurer(
+    TkWindow *obsPtr,
+    int ox, int oy,			/* obsPtr origin, toplevel coords. */
+    int sx, int sy, int sw, int sh,	/* Source rect, toplevel coords. */
+    int dx, int dy,
+    int offX, int offY,		/* Scrolled window origin, toplevel coords. */
+    Region damageRgn)
+{
+    int x0, y0, x1, y1;
+    int ox1 = ox + Tk_Width(obsPtr), oy1 = oy + Tk_Height(obsPtr);
+    XRectangle r;
+
+    if (Tk_IsTopLevel(obsPtr) || !Tk_IsMapped(obsPtr)
+	    || (obsPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
+
+    /* Source pixels hidden under the obscurer. */
+
+    x0 = (sx > ox) ? sx : ox;
+    y0 = (sy > oy) ? sy : oy;
+    x1 = (sx + sw < ox1) ? sx + sw : ox1;
+    y1 = (sy + sh < oy1) ? sy + sh : oy1;
+    if (x0 < x1 && y0 < y1) {
+	r.x = (short)(x0 + dx - offX);
+	r.y = (short)(y0 + dy - offY);
+	r.width = (unsigned short)(x1 - x0);
+	r.height = (unsigned short)(y1 - y0);
+	XUnionRectWithRegion(&r, damageRgn, damageRgn);
+    }
+
+    /* Destination pixels under the obscurer, overwritten by the blit. */
+
+    x0 = (sx + dx > ox) ? sx + dx : ox;
+    y0 = (sy + dy > oy) ? sy + dy : oy;
+    x1 = (sx + dx + sw < ox1) ? sx + dx + sw : ox1;
+    y1 = (sy + dy + sh < oy1) ? sy + dy + sh : oy1;
+    if (x0 < x1 && y0 < y1) {
+	TkWaylandExposeOverlapping(obsPtr, ox, oy, NULL,
+		x0, y0, x1 - x0, y1 - y0);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ScrollAddObscuredDamage --
+ *
+ *	Add to damageRgn the destination of every part of the scroll source
+ *	rectangle that is covered by a window above winPtr in the stacking
+ *	order, and re-expose those windows where the blit overwrote them.
+ *	The windows above winPtr are its mapped children plus the later
+ *	siblings of winPtr and of each of its ancestors, which extends the
+ *	rule updateClipRects uses to the whole ancestor chain.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ScrollAddObscuredDamage(
+    TkWindow *winPtr,		/* The scrolled window. */
+    int offX, int offY,		/* Its origin in toplevel coords. */
+    int x, int y, int w, int h,	/* Widget-local source rect. */
+    int dx, int dy,
+    Region damageRgn)
+{
+    TkWindow *anc = winPtr, *sibPtr, *childPtr;
+    int ax = offX, ay = offY;
+    int sx = offX + x, sy = offY + y;
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	ScrollConsiderObscurer(childPtr, offX + childPtr->changes.x,
+		offY + childPtr->changes.y, sx, sy, w, h, dx, dy,
+		offX, offY, damageRgn);
+    }
+    while (!Tk_IsTopLevel(anc) && anc->parentPtr != NULL) {
+	int px = ax - anc->changes.x, py = ay - anc->changes.y;
+
+	for (sibPtr = anc->nextPtr; sibPtr != NULL; sibPtr = sibPtr->nextPtr) {
+	    ScrollConsiderObscurer(sibPtr, px + sibPtr->changes.x,
+		    py + sibPtr->changes.y, sx, sy, w, h, dx, dy,
+		    offX, offY, damageRgn);
+	}
+	ax = px;
+	ay = py;
+	anc = anc->parentPtr;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkScrollWindow --
  *
  *	Scroll a rectangular area of a window by copying the pixel
@@ -2130,6 +2239,14 @@ TkScrollWindow(
     XUnionRectWithRegion(&srcRect, damageRgn, damageRgn);
     XSubtractRegion(damageRgn, coveredRgn, damageRgn);
     XDestroyRegion(coveredRgn);
+
+    /*
+     * This must come after XSubtractRegion: regions here are bounding boxes,
+     * so the subtraction above would otherwise swallow this damage.
+     */
+
+    ScrollAddObscuredDamage(childPtr, (int)offX, (int)offY,
+	    x, y, width, height, dx, dy, damageRgn);
 
     return 1;
 }
