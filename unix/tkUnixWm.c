@@ -378,7 +378,8 @@ static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
-static void		SetNetWmState(TkWindow*, const char *atomName, bool on);
+static void		SetNetWmState(TkWindow*, const char *atomName,
+			    const char *atomName2, bool on);
 static void		ActivateWindow(TkWindow *winPtr);
 static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void		UpdateNetWmState(WmInfo *);
@@ -1309,7 +1310,8 @@ WmSetAttribute(
 		&wmPtr->reqState.topmost) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
+	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", NULL,
+		wmPtr->reqState.topmost);
 	break;
     case WMATT_TYPE:
 	if (TCL_OK != SetNetWmType(winPtr, value))
@@ -1321,16 +1323,14 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_VERT",
-		wmPtr->reqState.zoomed);
-	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_HORZ",
-		wmPtr->reqState.zoomed);
+		"_NET_WM_STATE_MAXIMIZED_HORZ", wmPtr->reqState.zoomed);
 	break;
     case WMATT_FULLSCREEN:
 	if (Tcl_GetBooleanFromObj(interp, value,
 		&wmPtr->reqState.fullscreen) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
+	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN", NULL,
 		wmPtr->reqState.fullscreen);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
@@ -5282,8 +5282,11 @@ UpdatePhotoIcon(
  *
  * SetNetWmState --
  *
- *	Sets the specified state property by sending a _NET_WM_STATE
- *	ClientMessage to the root window.
+ *	Sets the specified state property, or two of them, by sending a
+ *	_NET_WM_STATE ClientMessage to the root window. Two properties which
+ *	go together, like _NET_WM_STATE_MAXIMIZED_VERT and
+ *	_NET_WM_STATE_MAXIMIZED_HORZ, must be changed in one message: some
+ *	window managers (xfwm4, fvwm) do not handle two separate messages.
  *
  * Preconditions:
  *	Wrapper window must be created.
@@ -5302,12 +5305,14 @@ static void
 SetNetWmState(
     TkWindow *winPtr,
     const char *atomName,
+    const char *atomName2,	/* A second property, or NULL. */
     bool on)
 {
     Tk_Window tkwin = (Tk_Window) winPtr;
     Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
     Atom action = on ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
     Atom property = Tk_InternAtom(tkwin, atomName);
+    Atom property2 = atomName2 ? Tk_InternAtom(tkwin, atomName2) : None;
     XEvent e;
 
     if (!winPtr->wmInfoPtr->wrapperPtr) {
@@ -5320,7 +5325,8 @@ SetNetWmState(
     e.xclient.format = 32;
     e.xclient.data.l[0] = action;
     e.xclient.data.l[1] = property;
-    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+    e.xclient.data.l[2] = property2;
+    e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
 
     XSendEvent(winPtr->display,
 	RootWindow(winPtr->display, winPtr->screenNum), 0,
