@@ -2316,11 +2316,10 @@ TestPhotoStringMatchCmd(
     }
 }
 
-#if 1 || !defined(MAC_OSX_TK)
 /*
  *----------------------------------------------------------------------
  *
- * PixelChannel --  (not on macOS, where testpixel reads via TkpReadPixelSRGB)
+ * PixelChannel --
  *
  *	Extract one color channel from a pixel value using the visual's
  *	channel mask, scaled to 8 bits.
@@ -2359,7 +2358,6 @@ PixelChannel(
     }
     return (int) ((value * 255) / ((1u << bits) - 1));
 }
-#endif /* !MAC_OSX_TK */
 
 /*
  *----------------------------------------------------------------------
@@ -2416,23 +2414,6 @@ TestpixelObjCmd(
 		x, y, Tk_PathName(tkwin)));
 	return TCL_ERROR;
     }
-#if 0 && defined(MAC_OSX_TK)
-    /*
-     * macOS composites windows through the display's color profile, so a raw
-     * read-back differs from the sRGB values that were drawn.  Read and
-     * convert to sRGB so results match X11 and Windows.
-     */
-    {
-	unsigned char cr, cg, cb;
-
-	if (TkpReadPixelSRGB(tkwin, x, y, &cr, &cg, &cb) != TCL_OK) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "could not read pixel from window", -1));
-	    return TCL_ERROR;
-	}
-	r = cr; g = cg; b = cb;
-    }
-#else
     {
 	Visual *visual = Tk_Visual(tkwin);
 	XImage *image;
@@ -2456,7 +2437,6 @@ TestpixelObjCmd(
 	b = PixelChannel(pixel, visual->blue_mask);
 	XDestroyImage(image);
     }
-#endif
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x", r, g, b));
     return TCL_OK;
 }
