@@ -50,7 +50,8 @@
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
-EXTERN int		Tktest_Init(Tcl_Interp *interp);
+EXTERN Tcl_LibraryInitProc Tktest_Init;
+
 /*
  * The following data structure represents the model for a test image:
  */
@@ -2280,14 +2281,25 @@ TestpixelObjCmd(
 	Visual *visual = Tk_Visual(tkwin);
 	XImage *image;
 	unsigned long pixel;
+	Tk_ErrorHandler handler;
 
 	if (visual->red_mask == 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "testpixel requires a TrueColor visual", -1));
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * XGetImage fails with BadMatch if the pixel is not on the screen
+	 * (e.g. the window extends past the edge of the screen). Report it as
+	 * a Tcl error rather than letting the X error abort the test suite.
+	 */
+
+	handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1, NULL,
+		NULL);
 	image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y, 1, 1,
 		AllPlanes, ZPixmap);
+	Tk_DeleteErrorHandler(handler);
 	if (image == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "could not read pixel from window", -1));
