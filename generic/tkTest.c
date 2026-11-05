@@ -50,7 +50,7 @@
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
-EXTERN Tcl_LibraryInitProc Tktest_Init;
+EXTERN Tcl_PackageInitProc Tktest_Init;
 
 /*
  * The following data structure represents the model for a test image:
