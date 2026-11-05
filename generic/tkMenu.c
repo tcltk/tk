@@ -3349,7 +3349,7 @@ TkMenubarCloneMissing(
     TkMenu *instancePtr;
 
     if (menuRefPtr == NULL || menuRefPtr->menuPtr == NULL) {
-	return false;
+	return 0;
     }
     for (instancePtr = menuRefPtr->menuPtr->masterMenuPtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextInstancePtr) {
