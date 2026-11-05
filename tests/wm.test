@@ -2930,7 +2930,6 @@ test wm-forget-3 {bug [9ab6e37e1ac] - [wm forget] segfault} -setup {
     wm forget .
 } -returnCodes error -result {window "." can not be forgotten}
 
->>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #
 # TESTFILE CLEANUP
 #
