@@ -70,6 +70,7 @@ static void showPreferencesWhenIdle(void *clientData) {
     if (code != TCL_OK) {
 	Tcl_BackgroundException(interp, code);
     }
+    Tcl_Release(clientData);
 }
 
 @implementation TKApplication(TKHLEvents)
@@ -156,6 +157,7 @@ static void showPreferencesWhenIdle(void *clientData) {
 
     if (_eventInterp && Tcl_FindCommand(
 	   _eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
+	Tcl_Preserve(_eventInterp);
 	Tcl_DoWhenIdle(showPreferencesWhenIdle, _eventInterp);
     }
 }
