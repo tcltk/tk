@@ -1,6 +1,6 @@
 ---
-CommandName: busy
-title: busy
+CommandName: tk busy
+title: tk busy
 ManualSection: n
 Version: unknown
 TclPart: Tk
@@ -19,7 +19,7 @@ Copyright:
 
 # Name
 
-busy - Make Tk widgets busy, temporarily blocking user interactions
+tk busy - Make Tk widgets busy, temporarily blocking user interactions
 
 # Synopsis
 
@@ -81,14 +81,14 @@ Destroying the widget will also clean up any resources allocated by the [tk busy
 
 The following operations are available for the [tk busy][tk] command:
 
-[tk busy][tk] *window* ?*option value ...*?
+[tk]{.cmd} [busy]{.sub} [window]{.arg} [option value]{.optdot}
 : Shortcut for **tk busy hold** command.
 
 [tk]{.cmd} [busy]{.sub} [busywindow]{.lit} [window]{.arg}
 : Returns the pathname of the busy window (i.e. the transparent window shielding the window appearing busy) created by the **tk busy hold** command for *window*, or the empty string if *window* is not busy.
 
 [tk]{.cmd} [busy]{.sub} [cget]{.lit} [window]{.arg} [option]{.arg}
-: Queries the [tk busy][tk] command configuration options for *window*. *Window* must be the path name of a widget previously made busy by the **hold** operation. The command returns the present value of the specified *option*. *Option* may have any of the values accepted by the **hold** operation.
+: Queries the [tk busy][tk] command configuration options for *window*. *Window* must be the path name of a widget previously made busy by the **hold** operation. The command returns the present value of the specified *option*. *option* may have any of the values accepted by the **hold** operation.
 
 [tk]{.cmd} [busy]{.sub} [configure]{.lit} [window]{.arg} [option value]{.optdot}
 : Queries or modifies the [tk busy][tk] command configuration options for *window*. *Window* must be the path name of a widget previously made busy by the **hold** operation.  If no options are specified, a list describing all of the available options for *window* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list) is returned. If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s); in this case the command returns the empty string. *Option* may have any of the values accepted by the **hold** operation.
@@ -110,10 +110,10 @@ The following operations are available for the [tk busy][tk] command:
 : Makes the specified *window* (and its descendants in the Tk window hierarchy) appear busy. *Window* must be a valid path name of a Tk widget. A transparent window is put in front of the specified window. This transparent window is mapped the next time idle tasks are processed, and the specified window and its descendants will be blocked from user interactions. Normally [update] should be called immediately afterward to insure that the hold operation is in effect before the application starts its processing. The command returns the pathname of the busy window that was created (i.e. the transparent window shielding the window appearing busy). The following configuration options are valid:
 
     [-cursor]{.lit} [cursorName]{.arg}
-    : Specifies the cursor to be displayed when the widget is made busy. *CursorName* can be in any form accepted by [Tk\_GetCursor][GetCursor]. The default cursor is **wait** on Windows and **watch** on other platforms.
+    : Specifies the cursor to be displayed when the widget is made busy. *cursorName* can be in any form accepted by [Tk\_GetCursor][GetCursor]. The default cursor is **wait** on Windows and **watch** on other platforms.
 
 
-**tk busy status** *window*
+[tk]{.cmd} [busy]{.sub} [status]{.lit} [window]{.arg}
 : Returns the status of a widget *window*. If *window* presently can not receive user interactions, **1** is returned, otherwise **0**.
 
 

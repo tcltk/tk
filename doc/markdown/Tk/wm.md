@@ -159,7 +159,7 @@ The legal forms for the **wm** command are:
     : [indicates a window that has no special interpretation.]{version="8.6"}
 
 
-**-zoomed**
+[-zoomed]{.lit}
 : Requests that the window should be maximized. This is the same as **wm state zoomed** on Windows and macOS.
 
 
@@ -227,7 +227,7 @@ On X11, changes to window attributes are performed asynchronously. Querying the 
     : If the **-default** flag is given, the icon is applied to all toplevel windows (existing and future) to which no other specific icon has yet been applied. In addition to bitmap image types, a full path specification to any file which contains a valid Windows icon is also accepted (usually .ico or .icr files), or any file for which the shell has assigned an icon.  Tcl will first test if the file contains an icon, then if it has an assigned icon, and finally, if that fails, test for a bitmap.
 
 
-**wm iconify** *window*
+[wm]{.cmd} [iconify]{.sub} [window]{.arg}
 : Arrange for *window* to be iconified.  It *window* has not yet been mapped for the first time, this command will arrange for it to appear in the iconified state when it is eventually mapped.
 
 [wm]{.cmd} [iconmask]{.sub} [window]{.arg} [bitmap]{.optarg}

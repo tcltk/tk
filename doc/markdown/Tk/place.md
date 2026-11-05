@@ -47,13 +47,13 @@ The placer is a geometry manager for Tk. It provides simple fixed placement of w
     [-anchor]{.lit} [where]{.arg}
     : *Where* specifies which point of *window* is to be positioned at the (x,y) location selected by the **-x**, **-y**, **-relx**, and **-rely** options. The anchor point is in terms of the outer area of *window* including its border, if any. Thus if *where* is **se** then the lower-right corner of *window*'s border will appear at the given (x,y) location in the container. The anchor position defaults to **nw**.
 
-    **-bordermode** *mode*
+    [-bordermode]{.lit} [mode]{.arg}
     : *Mode* determines the degree to which borders within the container are used in determining the placement of the content. The default and most common value is **inside**. In this case the placer considers the area of the container to be the innermost area of the container, inside any border: an option of **-x 0** corresponds to an x-coordinate just inside the border and an option of **-relwidth 1.0** means *window* will fill the area inside the container's border.
 
 
     If *mode* is **outside** then the placer considers the area of the container to include its border; this mode is typically used when placing *window* outside its container, as with the options **-x 0 -y 0 -anchor ne**. Lastly, *mode* may be specified as **ignore**, in which case borders are ignored:  the area of the container is considered to be its official X area, which includes any internal border but no external border.  A bordermode of **ignore** is probably not very useful.
 
-**-height** *size*
+[-height]{.lit} [size]{.arg}
 : *Size* specifies the height for *window* in screen units (i.e. any of the forms accepted by [Tk\_GetPixels][GetPixels]). The height will be the outer dimension of *window* including its border, if any. If *size* is an empty string, or if no **-height** or **-relheight** option is specified, then the height requested internally by the window will be used.
 
 [-in]{.lit} [container]{.arg}

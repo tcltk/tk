@@ -244,6 +244,7 @@ This form generates an error if no characters are currently tagged with
 Indicates the character just after the last one in the text that has been
 tagged with \fItag\fR. This form generates an error if no characters are
 currently tagged with \fItag\fR.
+.\" METHOD: method
 .TP 12
 \fIpathName\fR
 .
@@ -1356,16 +1357,19 @@ behavior of the command depends on the \fIoption\fR argument that follows the
 \fBedit\fR argument. The following forms of the command are currently
 supported:
 .RS
+.\" METHOD: edit canredo
 .TP
 \fIpathName \fBedit canredo\fR
 .
 Returns a boolean true if redo is possible, i.e. when the redo stack is not
 empty. Otherwise returns false.
+.\" METHOD: edit canundo
 .TP
 \fIpathName \fBedit canundo\fR
 .
 Returns a boolean true if undo is possible, i.e. when the undo stack is not
 empty. Otherwise returns false.
+.\" METHOD: edit modified
 .TP
 \fIpathName \fBedit modified \fR?\fIboolean\fR?
 .
@@ -1373,6 +1377,7 @@ If \fIboolean\fR is not specified, returns the modified flag of the widget.
 The insert, delete, edit undo and edit redo commands or the user can set or
 clear the modified flag. If \fIboolean\fR is specified, sets the modified flag
 of the widget to \fIboolean\fR.
+.\" METHOD: edit redo
 .TP
 \fIpathName \fBedit redo\fR
 .
@@ -1380,15 +1385,18 @@ When the \fB\-undo\fR option is true, reapplies the last undone edits provided
 no other edits were done since then, and returns a list of indices indicating
 what ranges were changed by the redo operation. Generates an error when the
 redo stack is empty. Does nothing when the \fB\-undo\fR option is false.
+.\" METHOD: edit reset
 .TP
 \fIpathName \fBedit reset\fR
 .
 Clears the undo and redo stacks.
+.\" METHOD: edit separator
 .TP
 \fIpathName \fBedit separator\fR
 .
 Inserts a separator (boundary) on the undo stack. Does nothing when the
 \fB\-undo\fR option is false.
+.\" METHOD: edit undo
 .TP
 \fIpathName \fBedit undo\fR
 .
@@ -1425,6 +1433,7 @@ This command is used to manipulate embedded images. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBimage\fR
 argument. The following forms of the command are currently supported:
 .RS
+.\" METHOD: image cget
 .TP
 \fIpathName \fBimage cget \fIindex option\fR
 .
@@ -1432,6 +1441,7 @@ Returns the value of a configuration option for an embedded image. \fIIndex\fR
 identifies the embedded image, and \fIoption\fR specifies a particular
 configuration option, which must be one of the ones listed in the section
 \fBEMBEDDED IMAGES\fR.
+.\" METHOD: image configure
 .TP
 \fIpathName \fBimage configure \fIindex\fR ?\fIoption value ...\fR?
 .
@@ -1445,6 +1455,7 @@ returned if no \fIoption\fR is specified). If one or more \fIoption\-value\fR
 pairs are specified, then the command modifies the given option(s) to have the
 given value(s); in this case the command returns an empty string. See
 \fBEMBEDDED IMAGES\fR for information on the options that are supported.
+.\" METHOD: image create
 .TP
 \fIpathName \fBimage create \fIindex\fR ?\fIoption value ...\fR?
 .
@@ -1454,6 +1465,7 @@ be specified to configure the annotation. Returns a unique identifier that may
 be used as an index to refer to this image. See \fBEMBEDDED IMAGES\fR for
 information on the options that are supported, and a description of the
 identifier returned.
+.\" METHOD: image names
 .TP
 \fIpathName \fBimage names\fR
 .
@@ -1498,6 +1510,7 @@ This command is used to manipulate marks. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBmark\fR argument. The
 following forms of the command are currently supported:
 .RS
+.\" METHOD: mark gravity
 .TP
 \fIpathName \fBmark gravity \fImarkName\fR ?\fIdirection\fR?
 .
@@ -1505,11 +1518,13 @@ If \fIdirection\fR is not specified, returns \fBleft\fR or \fBright\fR to
 indicate which of its adjacent characters \fImarkName\fR is attached to. If
 \fIdirection\fR is specified, it must be \fBleft\fR or \fBright\fR; the
 gravity of \fImarkName\fR is set to the given value.
+.\" METHOD: mark names
 .TP
 \fIpathName \fBmark names\fR
 .
 Returns a list whose elements are the names of all the marks that are
 currently set.
+.\" METHOD: mark next
 .TP
 \fIpathName \fBmark next \fIindex\fR
 .
@@ -1524,6 +1539,7 @@ in a text widget in the same order as the mark information returned by the
 \fBend\fR index, then it appears to be \fIafter \fBend\fR with respect to
 the \fIpathName \fBmark next\fR operation. An empty string is returned if
 there are no marks after \fIindex\fR.
+.\" METHOD: mark previous
 .TP
 \fIpathName \fBmark previous \fIindex\fR
 .
@@ -1537,6 +1553,7 @@ operation can be used to step through all the marks in a text widget in the
 reverse order as the mark information returned by the \fIpathName \fBdump\fR
 operation. An empty string is returned if there are no marks before
 \fIindex\fR.
+.\" METHOD: mark set
 .TP
 \fIpathName \fBmark set \fImarkName index\fR
 .
@@ -1544,6 +1561,7 @@ Sets the mark named \fImarkName\fR to a position just before the character at
 \fIindex\fR. If \fImarkName\fR already exists, it is moved from its old
 position; if it does not exist, a new mark is created. This command returns an
 empty string.
+.\" METHOD: mark unset
 .TP
 \fIpathName \fBmark unset \fImarkName \fR?\fImarkName markName ...\fR?
 .
@@ -1560,6 +1578,7 @@ This command returns an empty string.
 This command is used to create and query widget peers. It has two forms,
 depending on \fIoption\fR:
 .RS
+.\" METHOD: peer create
 .TP
 \fIpathName \fBpeer create \fInewPathName\fR ?\fIoptions\fR?
 .
@@ -1567,6 +1586,7 @@ Creates a peer text widget with the given \fInewPathName\fR, and any optional
 standard configuration options (as for the \fItext\fR command). By default the
 peer will have the same start and end line as the parent widget, but these can
 be overridden with the standard configuration options.
+.\" METHOD: peer names
 .TP
 \fIpathName \fBpeer names\fR
 .
@@ -1603,6 +1623,7 @@ widget. The command returns an empty string.
 This command is used to implement scanning on texts. It has two forms,
 depending on \fIoption\fR:
 .RS
+.\" METHOD: scan mark
 .TP
 \fIpathName \fBscan mark \fIx y\fR
 .
@@ -1610,6 +1631,7 @@ Records \fIx\fR and \fIy\fR and the current view in the text window, for use
 in conjunction with later \fIpathName \fBscan dragto\fR commands. Typically
 this command is associated with a mouse button press in the widget. It returns
 an empty string.
+.\" METHOD: scan dragto
 .TP
 \fIpathName \fBscan dragto \fIx y\fR
 .
@@ -1780,6 +1802,7 @@ window.
 .
 Controls the synchronization of the view of the text widget.
 .RS
+.\" METHOD: sync
 .TP
 \fIpathName \fBsync\fR
 .
@@ -1787,6 +1810,7 @@ Immediately brings the line metrics up-to-date by forcing computation of any
 outdated line heights. The command returns immediately if there is no such
 outdated line heights, otherwise it returns only at the end of the computation.
 The command returns an empty string.
+.\" METHOD: sync
 .TP
 \fIpathName \fBsync \-command \fIcommand\fR
 .
@@ -1803,6 +1827,7 @@ This command is used to manipulate tags. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBtag\fR argument. The
 following forms of the command are currently supported:
 .RS
+.\" METHOD: tag add
 .TP
 \fIpathName \fBtag add \fItagName index1 \fR?\fIindex2 index1 index2 ...\fR?
 .
@@ -1813,6 +1838,7 @@ Associate the tag \fItagName\fR with all of the characters starting with
 single character at \fIindex1\fR is tagged. If there are no characters in the
 specified range (e.g. \fIindex1\fR is past the end of the file or \fIindex2\fR
 is less than or equal to \fIindex1\fR) then the command has no effect.
+.\" METHOD: tag bind
 .TP
 \fIpathName \fBtag bind \fItagName\fR ?\fIsequence\fR? ?\fIscript\fR?
 .
@@ -1865,12 +1891,14 @@ command, then those bindings will supplement the tag bindings. The tag
 bindings will be invoked first, followed by bindings for the window as a
 whole.
 .RE
+.\" METHOD: tag cget
 .TP
 \fIpathName \fBtag cget \fItagName option\fR
 .
 This command returns the current value of the option named \fIoption\fR
 associated with the tag given by \fItagName\fR. \fIOption\fR may have any of
 the values accepted by the \fIpathName \fBtag configure\fR widget command.
+.\" METHOD: tag configure
 .TP
 \fIpathName \fBtag configure \fItagName\fR ?\fIoption\fR? ?\fIvalue\fR? ?\fIoption value ...\fR?
 .
@@ -1886,6 +1914,7 @@ identical to the corresponding sublist of the value returned if no
 specified, then the command modifies the given option(s) to have the given
 value(s) in \fItagName\fR; in this case the command returns an empty string.
 See \fBTAGS\fR above for details on the options available for tags.
+.\" METHOD: tag delete
 .TP
 \fIpathName \fBtag delete \fItagName \fR?\fItagName ...\fR?
 .
@@ -1893,6 +1922,7 @@ Deletes all tag information for each of the \fItagName\fR arguments. The
 command removes the tags from all characters in the file and also deletes any
 other information associated with the tags, such as bindings and display
 information. The command returns an empty string.
+.\" METHOD: tag lower
 .TP
 \fIpathName\fB tag lower \fItagName \fR?\fIbelowThis\fR?
 .
@@ -1900,6 +1930,7 @@ Changes the priority of tag \fItagName\fR so that it is just lower in priority
 than the tag whose name is \fIbelowThis\fR. If \fIbelowThis\fR is omitted,
 then \fItagName\fR's priority is changed to make it lowest priority of all
 tags.
+.\" METHOD: tag names
 .TP
 \fIpathName \fBtag names \fR?\fIindex\fR?
 .
@@ -1912,6 +1943,7 @@ widget command but have not been deleted by a
 .QW "\fIpathName \fBtag delete\fR"
 widget command, even if no characters are currently marked with the tag). The
 list will be sorted in order from lowest priority to highest priority.
+.\" METHOD: tag nextrange
 .TP
 \fIpathName \fBtag nextrange \fItagName index1 \fR?\fIindex2\fR?
 .
@@ -1924,6 +1956,7 @@ value is a list containing two elements, which are the index of the first
 character of the range and the index of the character just after the last one
 in the range. If no matching range is found then the return value is an empty
 string. If \fIindex2\fR is not given then it defaults to the end of the text.
+.\" METHOD: tag prevrange
 .TP
 \fIpathName \fBtag prevrange \fItagName index1 \fR?\fIindex2\fR?
 .
@@ -1936,6 +1969,7 @@ is a list containing two elements, which are the index of the first character
 of the range and the index of the character just after the last one in the
 range. If no matching range is found then the return value is an empty string.
 If \fIindex2\fR is not given then it defaults to the beginning of the text.
+.\" METHOD: tag raise
 .TP
 \fIpathName \fBtag raise \fItagName \fR?\fIaboveThis\fR?
 .
@@ -1943,6 +1977,7 @@ Changes the priority of tag \fItagName\fR so that it is just higher in
 priority than the tag whose name is \fIaboveThis\fR. If \fIaboveThis\fR is
 omitted, then \fItagName\fR's priority is changed to make it highest priority
 of all tags.
+.\" METHOD: tag ranges
 .TP
 \fIpathName \fBtag ranges \fItagName\fR
 .
@@ -1953,6 +1988,7 @@ The first element of each pair contains the index of the first character of
 the range, and the second element of the pair contains the index of the
 character just after the last one in the range. If there are no characters
 tagged with \fItag\fR then an empty string is returned.
+.\" METHOD: tag remove
 .TP
 \fIpathName \fBtag remove \fItagName index1 \fR?\fIindex2 index1 index2 ...\fR?
 .
@@ -1973,6 +2009,7 @@ This command is used to manipulate embedded windows. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBwindow\fR
 argument. The following forms of the command are currently supported:
 .RS
+.\" METHOD: window cget
 .TP
 \fIpathName \fBwindow cget \fIindex option\fR
 .
@@ -1980,6 +2017,7 @@ Returns the value of a configuration option for an embedded window.
 \fIIndex\fR identifies the embedded window, and \fIoption\fR specifies a
 particular configuration option, which must be one of the ones listed in the
 section \fBEMBEDDED WINDOWS\fR.
+.\" METHOD: window configure
 .TP
 \fIpathName \fBwindow configure \fIindex\fR ?\fIoption value ...\fR?
 .
@@ -1993,6 +2031,7 @@ returned if no \fIoption\fR is specified). If one or more \fIoption\-value\fR
 pairs are specified, then the command modifies the given option(s) to have the
 given value(s); in this case the command returns an empty string. See
 \fBEMBEDDED WINDOWS\fR for information on the options that are supported.
+.\" METHOD: window create
 .TP
 \fIpathName \fBwindow create \fIindex\fR ?\fIoption value ...\fR?
 .
@@ -2000,6 +2039,7 @@ This command creates a new window annotation, which will appear in the text at
 the position given by \fIindex\fR. Any number of \fIoption\-value\fR pairs may
 be specified to configure the annotation. See \fBEMBEDDED WINDOWS\fR for
 information on the options that are supported. Returns an empty string.
+.\" METHOD: window names
 .TP
 \fIpathName \fBwindow names\fR
 .
@@ -2013,6 +2053,7 @@ in \fIwindow\fR.
 This command is used to query and change the horizontal position of the text
 in the widget's window. It can take any of the following forms:
 .RS
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview\fR
 .
@@ -2027,12 +2068,14 @@ so that they are entirely visible, the returned fractions will be 0 and 1,
 even if there are other lines in the text that are much wider than the window.
 These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
+.\" METHOD: xview moveto
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
 .
 Adjusts the view in the window so that \fIfraction\fR of the horizontal span
 of the text is off-screen to the left. \fIFraction\fR is a fraction between 0
 and 1.
+.\" METHOD: xview scroll
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
 .
@@ -2059,6 +2102,7 @@ then characters farther to the right become visible.
 This command is used to query and change the vertical position of the text in
 the widget's window. It can take any of the following forms:
 .RS
+.\" METHOD: yview
 .TP
 \fIpathName \fByview\fR
 .
@@ -2070,6 +2114,7 @@ example). The second element gives the position of the first pixel just after
 the last visible one in the bottom line of the window, relative to the text as
 a whole. These are the same values passed to scrollbars via the
 \fB\-yscrollcommand\fR option.
+.\" METHOD: yview moveto
 .TP
 \fIpathName \fByview moveto\fI fraction\fR
 .
@@ -2082,6 +2127,7 @@ text (1 actually refers to one pixel beyond the last pixel), but in such cases
 the widget will never scroll beyond the last pixel, and so a value of 1 will
 effectively be rounded back to whatever fraction ensures the last pixel is at
 the bottom of the window, and some other pixel is at the top.
+.\" METHOD: yview scroll
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
 .
@@ -2100,6 +2146,7 @@ adjusts by \fInumber\fR screenfuls; if it is \fBpixels\fR then the view
 adjusts by \fInumber\fR pixels. If \fInumber\fR is negative then earlier
 positions in the text become visible; if it is positive then later positions
 in the text become visible.
+.\" METHOD: yview
 .TP
 \fIpathName \fByview \fR?\fB\-pickplace\fR? \fIindex\fR
 .
@@ -2125,6 +2172,7 @@ widget command (\fIpathName \fBsee\fR handles both x- and y-motion to make a
 location visible, whereas the \fB\-pickplace\fR mode only handles motion in
 y).
 .RE
+.\" METHOD: yview
 .TP
 \fIpathName \fByview \fInumber\fR
 .

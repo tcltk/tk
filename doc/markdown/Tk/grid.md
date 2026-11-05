@@ -52,37 +52,37 @@ The **grid** command is used to communicate with the grid geometry manager that 
     [-column]{.lit} [n]{.arg}
     : Insert the window so that it occupies the *n*th column in the grid. Column numbers start with 0.  If this option is not supplied, then the window is arranged just to the right of previous window specified on this call to **grid**, or column "0" if it is the first window.  For each **x** that immediately precedes the *window*, the column position is incremented by one.  Thus the **x** represents a blank column for this row in the grid.
 
-    **-columnspan** *n*
+    [-columnspan]{.lit} [n]{.arg}
     : Insert the window so that it occupies *n* columns in the grid. The default is one column, unless the window name is followed by a **-**, in which case the columnspan is incremented once for each immediately following **-**.
 
-    **-in** *container*
+    [-in]{.lit} [container]{.arg}
     : Insert the window(s) in the container window given by *container*.  The default is the first window's parent window.
 
-    **-ipadx** *amount*
+    [-ipadx]{.lit} [amount]{.arg}
     : The *amount* specifies how much horizontal internal padding to leave on each side of the content.  This is space is added inside the content border. The *amount* must be a valid screen distance, such as **2** or **.5c**. It defaults to 0.
 
-    **-ipady** *amount*
+    [-ipady]{.lit} [amount]{.arg}
     : The *amount* specifies how much vertical internal padding to leave on the top and bottom of the content. This space is added inside the content border. The *amount*  defaults to 0.
 
-    **-padx** *amount*
+    [-padx]{.lit} [amount]{.arg}
     : The *amount* specifies how much horizontal external padding to leave on each side of the content, in screen units. *Amount* may be a list of two values to specify padding for left and right separately. The *amount* defaults to 0. This space is added outside the content border.
 
-    **-pady** *amount*
+    [-pady]{.lit} [amount]{.arg}
     : The *amount* specifies how much vertical external padding to leave on the top and bottom of the content, in screen units. *Amount* may be a list of two values to specify padding for top and bottom separately. The *amount* defaults to 0. This space is added outside the content border.
 
-    **-row** *n*
+    [-row]{.lit} [n]{.arg}
     : Insert the content so that it occupies the *n*th row in the grid. Row numbers start with 0.  If this option is not supplied, then the content is arranged on the same row as the previous content specified on this call to **grid**, or the next row after the highest occupied row if this is the first content.
 
-    **-rowspan** *n*
+    [-rowspan]{.lit} [n]{.arg}
     : Insert the content so that it occupies *n* rows in the grid. The default is one row.  If the next **grid** command contains **^** characters instead of *content* that line up with the columns of this *content*, then the **rowspan** of this *content* is extended by one.
 
-    **-sticky** *style*
+    [-sticky]{.lit} [style]{.arg}
     : If a content's cell is larger than its requested dimensions, this option may be used to position (or stretch) the content within its cell. *Style*  is a string that contains zero or more of the characters **n**, **s**, **e** or **w**. The string can optionally contain spaces or commas, but they are ignored.  Each letter refers to a side (north, south, east, or west) that the content will "stick" to.  If both **n** and **s** (or **e** and **w**) are specified, the content will be stretched to fill the entire height (or width) of its cavity.  The **-sticky** option subsumes the combination of **-anchor** and **-fill** that is used by [pack]. The default is "", which causes the content to be centered in its cavity, at its requested size.
 
 
     If any of the content is already managed by the geometry manager then any unspecified options for them retain their previous values rather than receiving default values.
 
-**grid content** *window* ?*-option value*?
+[grid]{.cmd} [content]{.sub} [window]{.arg} [-option value]{.optarg}
 : If no options are supplied, a list of all of the content in *window* is returned, most recently managed first. *Option* can be either **-row** or **-column** which causes only the content in the row (or column) specified by *value* to be returned.
 
 [grid]{.cmd} [forget]{.sub} [window]{.arg} [window]{.optdot}

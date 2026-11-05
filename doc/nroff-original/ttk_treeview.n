@@ -205,6 +205,7 @@ offscreen), returns the empty list.
 If \fIcolumn\fR is specified and is not hidden (by the \fB\-displaycolumns\fR
 option), returns the bounding box of that cell within \fIitem\fR
 (even if the cell is horizontally scrolled offscreen).
+.\" METHOD: bbox
 .TP
 \fIpathname \fBbbox {*}\fIcell\fR
 .
@@ -239,51 +240,61 @@ A \fIcellList\fR argument may be a single cell or a list of cells.
 If \fIselop\fR is not specified, returns a list of selected cells.
 Otherwise, \fIselop\fR is one of the following:
 .RS
+.\" METHOD: cellselection add
 .TP
 \fIpathname \fBcellselection add \fIcellList\fR
 .
 Adds cells \fIcellList\fR to the cell selection.
+.\" METHOD: cellselection add
 .TP
 \fIpathname \fBcellselection add\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIcellFirst cellLast\fR
 .
 Add the cells within the rectangle defined by \fIcellFirst\fR and \fIcellLlast\fR to the
 cell selection. With \fB-nohidden\fR, hidden cells will be excluded and with
 \fB-norecurse\fR, cell in descendant items will be excluded.
+.\" METHOD: cellselection anchor
 .TP
 \fIpathname \fBcellselection anchor\fR ?\fIcell\fR?
 .
 Sets the cell selection anchor to \fIcell\fR. The anchor is used as the cellFirst
 for the selection extend bindings. Without \fIcell\fR, the current cell
 selection anchor is returned. Use empty string \fB{}\fR to unset the anchor.
+.\" METHOD: cellselection has
 .TP
 \fIpathname \fBcellselection has \fIcellList\fR
 .
 Returns 1 if cell selection includes all of the cells in \fIcellList\fR or 0 if
 any are not selected.
+.\" METHOD: cellselection includes
 .TP
 \fIpathname \fBcellselection includes \fIcellList\fR
 .
 Returns 1 if cell selection includes all of the cells in \fIcellList\fR or 0 if
 any are not selected.
+.\" METHOD: cellselection present
 .TP
 \fIpathname \fBcellselection present\fR
 .
 Returns 1 if there are selected cells or 0 if none.
+.\" METHOD: cellselection remove
 .TP
 \fIpathname \fBcellselection remove \fIcellList\fR
 .
 Remove each cell in \fIcellList\fR from the cell selection.
+.\" METHOD: cellselection remove
 .TP
 \fIpathname \fBcellselection remove\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIcellFirst cellLast\fR
 .
 Remove the cells within the rectangle defined by \fIcellFirst\fR and
 \fIcellLast\fR from the cell selection. With \fB-nohidden\fR, hidden cells will
 be excluded and with \fB-norecurse\fR, cell in descendant items will be excluded.
+.\" METHOD: cellselection set
 .TP
 \fIpathname \fBcellselection set \fIcellList\fR
 .
 Sets the selection to the cells in \fIcellList\fR. All other cells are
 unselected. Use an empty set \fB{}\fR to clear the selection.
+.\" METHOD: cellselection set
 .TP
 \fIpathname \fBcellselection set\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIcellFirst cellLast\fR
 .
@@ -291,16 +302,19 @@ Set the selection to the cells within the rectangle defined by \fIcellFirst\fR
 and \fIcellLast\fR. All other cells are unselected. With \fB-nohidden\fR, hidden
 cells will be excluded and with \fB-norecurse\fR, cell in descendant items will
 be excluded.
+.\" METHOD: cellselection size
 .TP
 \fIpathname \fBcellselection size\fR
 .
 Returns the count of selected cells.
+.\" METHOD: cellselection toggle
 .TP
 \fIpathname \fBcellselection toggle \fIcellList\fR
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
 If the element is partially visible, the result gives the full area of the
 element, including any parts that are not visible.
+.\" METHOD: cellselection toggle
 .TP
 \fIpathname \fBcellselection toggle\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIcellFirst cellLast\fR
 .
@@ -520,6 +534,7 @@ The values \fIx\fR and \fIy\fR may have any of the forms acceptable to
 \fBTk_GetPixels\fR.
 The following subcommands are supported:
 .RS
+.\" METHOD: identify region
 .TP
 \fIpathname \fBidentify region \fIx y\fR
 .RS
@@ -538,24 +553,29 @@ The tree area.
 .IP cell
 A data cell.
 .RE
+.\" METHOD: identify item
 .TP
 \fIpathname \fBidentify item \fIx y\fR
 .
 Returns the identifier of the item at position \fIx,y\fR.
+.\" METHOD: identify column
 .TP
 \fIpathname \fBidentify column \fIx y\fR
 .
 Returns the display column identifier of the cell at position \fIx,y\fR.
 The tree column has ID \fB#0\fR.
+.\" METHOD: identify cell
 .TP
 \fIpathname \fBidentify cell \fIx y\fR
 .
 Returns the cell identifier of the cell at position \fIx,y\fR.
 A cell identifier is a list of item ID and column ID.
+.\" METHOD: identify element
 .TP
 \fIpathname \fBidentify element \fIx y\fR
 .
 The element at position \fIx,y\fR.
+.\" METHOD: identify row
 .TP
 \fIpathname \fBidentify row \fIx y\fR
 .
@@ -584,6 +604,7 @@ new top-level item. See \fBINDICES\fR for valid forms of \fIindex\fR. If
 inserted at the end. If \fB\-id\fR is specified, then \fIid\fR is used as the
 identifier of the item; \fIid\fR must not already exist in the tree. Otherwise,
 a new unique identifier is generated.
+.\" METHOD: insert before after
 .TP
 \fIpathname \fBinsert before\fR|\fBafter\fR \fIitem\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
@@ -611,6 +632,7 @@ If \fIindex\fR is negative or zero, \fIitem\fR is moved to the beginning;
 if greater than or equal to the number of children, it is moved to the end.
 See \fBINDICES\fR for valid forms of \fIindex\fR.
 It is illegal to move an item under one of its descendants.
+.\" METHOD: move before after
 .TP
 \fIpathname \fBmove \fIitem\fR \fBbefore\fR|\fBafter\fR \fIotherItem\fR
 .
@@ -819,6 +841,7 @@ if necessary, so that \fIitem\fR is within the visible portion of the tree.
 If \fIcolumn\fR is specified, then the widget is scrolled in the horizontal
 direction, if necessary, so that \fIcolumn\fR is within the visible portion
 of the tree. Only non-title columns and rows will be scrolled.
+.\" METHOD: see
 .TP
 \fIpathname \fBsee {*}\fIcell\fR
 .
@@ -833,10 +856,12 @@ handled by the \fBcellselection\fR subcommand.
 If \fIselop\fR is not specified, returns a list of selected items.
 Otherwise, \fIselop\fR is one of the following:
 .RS
+.\" METHOD: selection add
 .TP
 \fIpathname \fBselection add \fIitemList\fR
 .
 Add items in \fIitemList\fR to the selection.
+.\" METHOD: selection add
 .TP
 \fIpathname \fBselection add\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
@@ -844,30 +869,36 @@ Add the items from \fIfirst\fR to \fIlast\fR (inclusive) to the selection.
 Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, all descendants of closed items will be included.
+.\" METHOD: selection anchor ?
 .TP
 \fIpathname \fBselection anchor ?\fIitem\fR?
 .
 Sets the selection anchor to \fIitem\fR. The anchor is used as the from item
 for the selection extend bindings. Without \fIitem\fR, the current selection
 anchor is returned. Use empty string {} to unset the anchor.
+.\" METHOD: selection has
 .TP
 \fIpathname \fBselection has \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
 not selected.
+.\" METHOD: selection includes
 .TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
 not selected.
+.\" METHOD: selection present
 .TP
 \fIpathname \fBselection present\fR
 .
 Returns 1 if there are selected items or 0 if none.
+.\" METHOD: selection remove
 .TP
 \fIpathname \fBselection remove \fIitemList\fR
 .
 Remove each item in \fIitemList\fR from the selection.
+.\" METHOD: selection remove
 .TP
 \fIpathname \fBselection remove\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
@@ -875,11 +906,13 @@ Remove the items from \fIfirst\fR to \fIlast\fR (inclusive) from the selection.
 Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
+.\" METHOD: selection set
 .TP
 \fIpathname \fBselection set \fIitemList\fR
 .
 Sets selection to the items in \fIitemList\fR. All other items are unselected.
 Use an empty set \fB{}\fR to clear the selection.
+.\" METHOD: selection set
 .TP
 \fIpathname \fBselection set\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
@@ -887,14 +920,17 @@ Sets selection to the items from \fIfirst\fR to \fIlast\fR (inclusive).
 Use \fB-hidden\fR to include hidden items (default) and \fB-nohidden\fR to exclude them.
 Use \fB-recurse\fR to include descendants and ancestors (default) and \fB-norecurse\fR to exclude them.
 If \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
+.\" METHOD: selection size
 .TP
 \fIpathname \fBselection size\fR
 .
 Returns the count of selected items.
+.\" METHOD: selection toggle
 .TP
 \fIpathname \fBselection toggle \fIitemList\fR
 .
 Toggle the selection state of each item in \fIitemList\fR.
+.\" METHOD: selection toggle
 .TP
 \fIpathname \fBselection toggle\fR ?\fB\-nohidden\fR? ?\fB\-norecurse\fR? \fIfirst last\fR
 .
@@ -1022,12 +1058,14 @@ not also add this tag on the cells in that item). Cell tags take precedence
 over item tags when drawing.
 The following subcommands are supported:
 .RS
+.\" METHOD: tag add
 .TP
 \fIpathName \fBtag add \fItagName itemList\fR
 .
 Adds tag \fItagName\fR to each of the items in \fIitemList\fR.
 If \fItagName\fR is already present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
+.\" METHOD: tag bind
 .TP
 \fIpathName \fBtag bind \fItagName\fR ?\fIsequence\fR? ?\fIscript\fR?
 .
@@ -1049,24 +1087,28 @@ No other event types are supported.
 The binding \fIscript\fR undergoes \fB%\fR-substitutions before evaluation;
 see \fBbind\fR(n) for details.
 .RE
+.\" METHOD: tag cell
 .TP
 \fIpathName \fBtag cell \fIsubcommand...\fR
 .
 Manages tags on individual cells.
 A \fIcellList\fR argument may be a single cell or a list of cells.
 .RS
+.\" METHOD: tag cell add
 .TP
 \fIpathName \fBtag cell add \fItagName cellList\fR
 .
 Adds tag \fItagName\fR to each of the cells in \fIcellList\fR.
 If \fItagName\fR is already present for a particular cell,
 then the tag list for that cell is not changed.
+.\" METHOD: tag cell has
 .TP
 \fIpathName \fBtag cell has \fItagName\fR ?\fIcell\fR?
 .
 If \fIcell\fR is specified, returns a boolean value with whether \fIcell\fR
 has tag \fItagName\fR. Without \fIcell\fR, a list of all cells which have
 tag \fItagName\fR is returned.
+.\" METHOD: tag cell remove
 .TP
 \fIpathName \fBtag cell remove \fItagName\fR ?\fIcellList\fR?
 .
@@ -1074,6 +1116,7 @@ Removes tag \fItagName\fR from each of the cells in \fIcellList\fR. If
 \fIcellList\fR is omitted, tag \fItagName\fR is removed from all cells in the
 tree.
 .RE
+.\" METHOD: tag configure
 .TP
 \fIpathName \fBtag configure \fItagName\fR ?\fIoption\fR? ?\fIvalue option value...\fR?
 .
@@ -1083,22 +1126,26 @@ If a single \fIoption\fR is specified, the value of that option is returned
 (or the empty string if the option has not been specified for \fItagName\fR).
 With no arguments, a dictionary of the option settings for tag \fItagName\fR is
 returned. See \fBTAG OPTIONS\fR for the list of available options.
+.\" METHOD: tag delete
 .TP
 \fIpathName \fBtag delete \fItagName\fR
 .
 Deletes tag \fItagName\fR and any associated information. The tag is deleted
 from all items and cells in the widget and also any other information
 associated with the tag is deleted, such as bindings and display information.
+.\" METHOD: tag has
 .TP
 \fIpathName \fBtag has \fItagName\fR ?\fIitem\fR?
 .
 If \fIitem\fR is specified, returns a boolean value with whether \fIitem\fR
 has tag \fItagName\fR or not. Without \fIitem\fR, returns a list of all items
 which have tag \fItagName\fR.
+.\" METHOD: tag names
 .TP
 \fIpathName \fBtag names\fR
 .
 Returns a list of all tags used by the widget.
+.\" METHOD: tag remove
 .TP
 \fIpathName \fBtag remove \fItagName\fR ?\fIitemList\fR?
 .

@@ -78,20 +78,20 @@ In addition to the standard **cget**, **configure**, **instate**, **state** and 
     [pathname]{.ins} [identify]{.sub} [element]{.lit} [x]{.arg} [y]{.arg}
     : Returns the name of the element at the specified location.
 
-    *pathname* **identify sash** *x y*
+    [pathname]{.ins} [identify]{.sub} [sash]{.lit} [x]{.arg} [y]{.arg}
     : Returns the index of the sash at the specified location.
 
 
-*pathname* **insert** *pos subwindow options...*
+[pathname]{.ins} [insert]{.sub} [pos]{.arg} [subwindow]{.arg} [options...]{.arg}
 : Inserts a pane at the specified position. *pos* is either the string **end**, an integer index, or the name of a managed subwindow. If *subwindow* is already managed by the paned window, moves it to the specified position. See [Pane options] for the list of available options.
 
 [pathname]{.ins} [pane]{.sub} [pane]{.arg}
 : see below ...
 
-*pathname* **pane** *pane -option*
+[pathname]{.ins} [pane]{.sub} [pane]{.arg} [-option]{.arg}
 : see below ...
 
-*pathname* **pane** *pane -option value* ?*-option value ...*?
+[pathname]{.ins} [pane]{.sub} [pane]{.arg} [-option]{.arg} [value]{.arg} [-option value]{.optdot}
 : Query or modify the options of the specified *pane*, where *pane* is either an integer index or the name of a managed subwindow. In its first form, when no *-option* is specified, the command returns a dictionary of the pane option values. In its second form, when one *-option* is specified, returns the value of that *option*. Otherwise, in its third form, sets the *-option*s to the corresponding *value*s.
 
 [pathname]{.ins} [panes]{.sub}

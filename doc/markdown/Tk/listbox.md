@@ -154,17 +154,17 @@ pathName option ?arg ...?
     [-background]{.lit} [color]{.arg}
     : *Color* specifies the background color to use when displaying the item. It may have any of the forms accepted by [Tk\_GetColor][GetColor].
 
-    **-foreground** *color*
+    [-foreground]{.lit} [color]{.arg}
     : *Color* specifies the foreground color to use when displaying the item. It may have any of the forms accepted by [Tk\_GetColor][GetColor].
 
-    **-selectbackground** *color*
+    [-selectbackground]{.lit} [color]{.arg}
     : *color* specifies the background color to use when displaying the item while it is selected. It may have any of the forms accepted by [Tk\_GetColor][GetColor].
 
-    **-selectforeground** *color*
+    [-selectforeground]{.lit} [color]{.arg}
     : *color* specifies the foreground color to use when displaying the item while it is selected. It may have any of the forms accepted by [Tk\_GetColor][GetColor].
 
 
-*pathName* **nearest** *y*
+[pathName]{.ins} [nearest]{.sub} [y]{.arg}
 : Given a y-coordinate within the listbox window, this command returns the index of the (visible) listbox element nearest to that y-coordinate.
 
 [pathName]{.ins} [scan]{.sub} [option]{.arg} [args]{.arg}
@@ -173,11 +173,11 @@ pathName option ?arg ...?
     [pathName]{.ins} [scan]{.sub} [mark]{.lit} [x]{.arg} [y]{.arg}
     : Records *x* and *y* and the current view in the listbox window;  used in conjunction with later [scan dragto][scan] commands. Typically this command is associated with a mouse button press in the widget.  It returns an empty string.
 
-    *pathName* [scan dragto][scan] *x y*.
+    [pathName]{.ins} [scan]{.sub} [dragto]{.lit} [x]{.arg} [y]{.arg}
     : This command computes the difference between its *x* and *y* arguments and the *x* and *y* arguments to the last [scan mark][scan] command for the widget. It then adjusts the view by 10 times the difference in coordinates.  This command is typically associated with mouse motion events in the widget, to produce the effect of dragging the list at high speed through the window.  The return value is an empty string.
 
 
-*pathName* **see** *index*
+[pathName]{.ins} [see]{.sub} [index]{.arg}
 : Adjust the view in the listbox so that the element given by *index* is visible. If the element is already visible then the command has no effect; if the element is near one edge of the window then the listbox scrolls to bring the element into view at the edge;  otherwise the listbox scrolls to center the element.
 
 [pathName]{.ins} [selection]{.sub} [option]{.arg} [arg]{.arg}
@@ -186,17 +186,17 @@ pathName option ?arg ...?
     [pathName]{.ins} [selection]{.sub} [anchor]{.lit} [index]{.arg}
     : Sets the selection anchor to the element given by *index*. If *index* refers to a non-existent element, then the closest element is used. The selection anchor is the end of the selection that is fixed while dragging out a selection with the mouse. The index **anchor** may be used to refer to the anchor element.
 
-    *pathName* [selection clear][selection] *first* ?*last*?
+    [pathName]{.ins} [selection]{.sub} [clear]{.lit} [first]{.arg} [last]{.optarg}
     : If any of the elements between *first* and *last* (inclusive) are selected, they are deselected. The selection state is not changed for elements outside this range.
 
-    *pathName* [selection includes][selection] *index*
+    [pathName]{.ins} [selection]{.sub} [includes]{.lit} [index]{.arg}
     : Returns 1 if the element indicated by *index* is currently selected, 0 if it is not.
 
-    *pathName* [selection set][selection] *first* ?*last*?
+    [pathName]{.ins} [selection]{.sub} [set]{.lit} [first]{.arg} [last]{.optarg}
     : Selects all of the elements in the range between *first* and *last*, inclusive, without affecting the selection state of elements outside that range.
 
 
-*pathName* **size**
+[pathName]{.ins} [size]{.sub}
 : Returns a decimal string indicating the total number of elements in the listbox.
 
 [pathName]{.ins} [xview]{.sub} [args]{.optarg}
@@ -205,29 +205,29 @@ pathName option ?arg ...?
     [pathName]{.ins} [xview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1;  together they describe the horizontal span that is visible in the window. For example, if the first element is .2 and the second element is .6, 20% of the listbox's text is off-screen to the left, the middle 40% is visible in the window, and 40% of the text is off-screen to the right. These are the same values passed to scrollbars via the **-xscrollcommand** option.
 
-    *pathName* **xview** *index*
+    [pathName]{.ins} [xview]{.sub} [index]{.arg}
     : Adjusts the view in the window so that the character position given by *index* is displayed at the left edge of the window. Character positions are defined by the width of the character **0**.
 
-    *pathName* **xview moveto** *fraction*
+    [pathName]{.ins} [xview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that *fraction* of the total width of the listbox text is off-screen to the left. *fraction* must be a fraction between 0 and 1.
 
-    *pathName* **xview scroll** *number what*
+    [pathName]{.ins} [xview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command shifts the view in the window left or right according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units** or an abbreviation of one of these. If *what* is **pages** then the view adjusts by *number* screenfuls. If *number* is negative then characters farther to the left become visible;  if it is positive then characters farther to the right become visible. If *what* is **units**, the view adjusts left or right by *number* character units (the width of the **0** character) on the display.
 
 
-*pathName* **yview** ?*args*?
+[pathName]{.ins} [yview]{.sub} [args]{.optarg}
 : This command is used to query and change the vertical position of the text in the widget's window. It can take any of the following forms:
 
-    *pathName* **yview**
+    [pathName]{.ins} [yview]{.sub}
     : Returns a list containing two elements, both of which are real fractions between 0 and 1. The first element gives the position of the listbox element at the top of the window, relative to the listbox as a whole (0.5 means it is halfway through the listbox, for example). The second element gives the position of the listbox element just after the last one in the window, relative to the listbox as a whole. These are the same values passed to scrollbars via the **-yscrollcommand** option.
 
-    *pathName* **yview** *index*
+    [pathName]{.ins} [yview]{.sub} [index]{.arg}
     : Adjusts the view in the window so that the element given by *index* is displayed at the top of the window.
 
-    *pathName* **yview moveto** *fraction*
+    [pathName]{.ins} [yview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that the element given by *fraction* appears at the top of the window. *Fraction* is a fraction between 0 and 1;  0 indicates the first element in the listbox, 0.33 indicates the element one-third the way through the listbox, and so on.
 
-    *pathName* **yview scroll** *number what*
+    [pathName]{.ins} [yview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command adjusts the view in the window up or down according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units**. If *what* is **pages** then the view adjusts by *number* screenfuls. If *number* is negative then earlier elements become visible;  if it is positive then later elements become visible. If *what* is **units**, the view adjusts up or down by *number* lines.
 
 

@@ -489,6 +489,7 @@ displayed.
 Allows examination and manipulation of the transparency information in
 the photo image.  Several subcommands are available:
 .RS
+.\" METHOD: transparency get
 .TP
 \fIimageName \fBtransparency get \fIx y\fR ?\fB\-alpha\fR?
 .VS 9.0
@@ -496,6 +497,7 @@ Returns true if the pixel at (\fIx\fR,\fIy\fR) is fully transparent,
 false otherwise.  If the option \fB\-alpha\fR is passed, returns the
 alpha value of the pixel instead, as an integer in the range 0 to 255.
 .VE 9.0
+.\" METHOD: transparency set
 .TP
 \fIimageName \fBtransparency set \fIx y newVal\fR ?\fB\-alpha\fR?
 .VS 9.0

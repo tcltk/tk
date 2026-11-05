@@ -259,6 +259,7 @@ This command is used to query and change the horizontal position of the
 content in the widget's window.  It can take any of the following
 forms:
 .RS
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview\fR
 .
@@ -270,17 +271,20 @@ For example, if the first element is .2 and the second element is .6,
 in the window, and 40% of the content is off-screen to the right.
 These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview\fI index\fR
 .
 Adjusts the view in the window so that the content given by \fIindex\fR
 is displayed at the left edge of the window.
+.\" METHOD: xview moveto
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
 .
 Adjusts the view in the window so that the character \fIfraction\fR of the
 way through the content appears at the left edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
+.\" METHOD: xview scroll
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
 .
@@ -306,6 +310,7 @@ This command is used to query and change the vertical position of the
 content in the widget's window.  It can take any of the following
 forms:
 .RS
+.\" METHOD: yview
 .TP
 \fIpathName \fByview\fR
 .
@@ -317,17 +322,20 @@ For example, if the first element is .2 and the second element is .6,
 in the window, and 40% of the content is off-screen to the bottom.
 These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
 option.
+.\" METHOD: yview
 .TP
 \fIpathName \fByview\fI index\fR
 .
 Adjusts the view in the window so that the content given by \fIindex\fR
 is displayed at the top edge of the window.
+.\" METHOD: yview moveto
 .TP
 \fIpathName \fByview moveto\fI fraction\fR
 .
 Adjusts the view in the window so that the item \fIfraction\fR of the
 way through the content appears at the top edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
+.\" METHOD: yview scroll
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
 .

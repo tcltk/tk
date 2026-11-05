@@ -111,7 +111,7 @@ operations on the widget.  It has the following general form:
 .CS
 \fIpathName option \fR?\fIarg ...\fR?
 .CE
-\fIOption\fR and the \fIarg\fRs
+\fIoption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for button widgets:
 .\" METHOD: cget
@@ -120,7 +120,7 @@ commands are possible for button widgets:
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
-\fIOption\fR may have any of the values accepted by the \fBbutton\fR
+\fIoption\fR may have any of the values accepted by the \fBbutton\fR
 command.
 .\" METHOD: configure
 .TP
@@ -136,7 +136,7 @@ sublist of the value returned if no \fIoption\fR is specified).  If
 one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
-\fIOption\fR may have any of the values accepted by the \fBbutton\fR
+\fIoption\fR may have any of the values accepted by the \fBbutton\fR
 command.
 .\" METHOD: flash
 .TP

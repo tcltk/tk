@@ -565,6 +565,7 @@ the arrows displayed at its top and bottom.  This is only done on X11;
 on Windows and macOS the system scrolls menus.
 It can take any of the following forms:
 .RS
+.\" METHOD: yview
 .TP
 \fIpathName \fByview\fR
 .
@@ -574,11 +575,13 @@ the top of the visible area, relative to the height of all entries (0.0
 means the first entry is at the top).  The second element gives the
 position just after the visible area.  For a menu which is not scrolled,
 the result is \fB0.0 1.0\fR.
+.\" METHOD: yview moveto
 .TP
 \fIpathName \fByview moveto \fIfraction\fR
 .
 Scrolls the entries so that the given fraction of their height is above
 the visible area.
+.\" METHOD: yview scroll
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
 .

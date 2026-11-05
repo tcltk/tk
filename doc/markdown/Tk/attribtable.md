@@ -63,7 +63,7 @@ In the description of the supported forms below, *pathName* specifies a widget w
 [tableName]{.ins} [get]{.sub} [pathName]{.arg} [name]{.optarg}
 : see below ...
 
-*tableName* **get** *pathName* ?*name defaultValue*?
+[tableName]{.ins} [get]{.sub} [pathName]{.arg} [name defaultValue]{.optarg}
 : If *name* is specified then returns the corresponding attribute value, or an empty string or *defaultValue* (if given) if no corresponding value exists.  Otherwise returns a list consisting of all attribute names and values of the widget *pathName*.  Example:
 
     ```

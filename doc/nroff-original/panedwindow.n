@@ -290,15 +290,18 @@ This command is used to query and change the position of the sash
 proxy, used for rubberband-style pane resizing. It can take any of
 the following forms:
 .RS
+.\" METHOD: proxy coord
 .TP
 \fIpathName \fBproxy coord\fR
 .
 Return a list containing the x and y coordinates of the most recent
 proxy location.
+.\" METHOD: proxy forget
 .TP
 \fIpathName \fBproxy forget\fR
 .
 Remove the proxy from the display.
+.\" METHOD: proxy place
 .TP
 \fIpathName \fBproxy place \fIx y\fR
 .
@@ -311,6 +314,7 @@ Place the proxy at the given \fIx\fR and \fIy\fR coordinates.
 This command is used to query and change the position of sashes in the
 panedwindow.  It can take any of the following forms:
 .RS
+.\" METHOD: sash coord
 .TP
 \fIpathName \fBsash coord \fIindex\fR
 .
@@ -318,6 +322,7 @@ Return the current x and y coordinate pair for the sash given by
 \fIindex\fR.  \fIIndex\fR must be an integer between 0 and 1 less than
 the number of panes in the panedwindow.  The coordinates given are
 those of the top left corner of the region containing the sash.
+.\" METHOD: sash dragto
 .TP
 \fIpathName \fBsash dragto \fIindex x y\fR
 .
@@ -325,11 +330,13 @@ This command computes the difference between the given coordinates and the
 coordinates given to the last \fBsash mark\fR command for the given
 sash.  It then moves that sash the computed difference.  The return
 value is the empty string.
+.\" METHOD: sash mark
 .TP
 \fIpathName \fBsash mark \fIindex x y\fR
 .
 Records \fIx\fR and \fIy\fR for the sash given by \fIindex\fR; used in
 conjunction with later \fBsash dragto\fR commands to move the sash.
+.\" METHOD: sash place
 .TP
 \fIpathName \fBsash place \fIindex x y\fR
 .

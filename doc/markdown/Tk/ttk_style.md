@@ -45,10 +45,10 @@ The **ttk::style** command takes the following arguments:
 [ttk::style]{.cmd} [configure]{.sub} [style]{.arg}
 : see below ...
 
-**ttk::style configure** *style* *-option*
+[ttk::style]{.cmd} [configure]{.sub} [style]{.arg} [-option]{.arg}
 : see below ...
 
-**ttk::style configure** *style* *-option value* ?*option value ...*?
+[ttk::style]{.cmd} [configure]{.sub} [style]{.arg} [-option]{.arg} [value]{.arg} [option value]{.optdot}
 : Get the value(s) or sets the default value(s) of the specified option(s) in *style*. If *style* does not exist, it is created. In its forst form (when only a *style* is specified), returns a list of all options and their default values of style *style*. In its second form (when only the *style* and an *-option* are specified), get the default value for option *-option* of style *style*. Otherwise, in its third form, set the specified *-option*s to the given *value*s.
 
 [ttk::style]{.cmd} [element]{.sub} [args]{.arg}
@@ -56,20 +56,20 @@ The **ttk::style** command takes the following arguments:
 [ttk::style]{.cmd} [element]{.sub} [create]{.lit} [elementName]{.arg} [type]{.arg} [args...]{.optarg}
 : Creates a new element in the current theme of type *type*. The only cross-platform built-in element type is *image* (see [ttk\_image][ttk_image](n)) but themes may define other element types (see **Ttk\_RegisterElementFactory**). On suitable versions of Windows an element factory is registered to create Windows theme elements (see [ttk\_vsapi][ttk_vsapi](n)).
 
-**ttk::style element names**
+[ttk::style]{.cmd} [element]{.sub} [names]{.lit}
 : Returns the list of elements defined in the current theme.
 
-**ttk::style element options** *element*
+[ttk::style]{.cmd} [element]{.sub} [options]{.lit} [element]{.arg}
 : Returns the list of *element*'s options.
 
 
-**ttk::style layout** *style* ?*layoutSpec*?
+[ttk::style]{.cmd} [layout]{.sub} [style]{.arg} [layoutSpec]{.optarg}
 : Define the widget layout for style *style*. See [Layouts] below for the format of *layoutSpec*. If *layoutSpec* is omitted, return the layout specification for style *style*.
 
 [ttk::style]{.cmd} [lookup]{.sub} [style]{.arg} [-option]{.arg} [state]{.optarg}
 : see below ...
 
-**ttk::style lookup** *style -option* *state* ?*default*?
+[ttk::style]{.cmd} [lookup]{.sub} [style]{.arg} [-option]{.arg} [state]{.arg} [default]{.optarg}
 : Returns the value(s) specified for *-option* in style *style*, using the standard lookup rules for element options. *state* is a list of state names; if omitted, it defaults to all bits off (the "normal" state). If the *default* argument is present, it is used as a fallback value in case no specification for *-option* is found. If *style* does not exist, it is created.
 
 [ttk::style]{.cmd} [map]{.sub} [style]{.arg} [-option statespecList]{.optdot}

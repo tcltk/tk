@@ -277,36 +277,36 @@ The following commands are possible for spinbox widgets:
     [pathName]{.ins} [scan]{.sub} [mark]{.lit} [x]{.arg}
     : Records *x* and the current view in the spinbox window;  used in conjunction with later [scan dragto][scan] commands.  Typically this command is associated with a mouse button press in the widget.  It returns an empty string.
 
-    *pathName* [scan dragto][scan] *x*
+    [pathName]{.ins} [scan]{.sub} [dragto]{.lit} [x]{.arg}
     : This command computes the difference between its *x* argument and the *x* argument to the last [scan mark][scan] command for the widget.  It then adjusts the view left or right by 10 times the difference in x-coordinates.  This command is typically associated with mouse motion events in the widget, to produce the effect of dragging the spinbox at high speed through the window.  The return value is an empty string.
 
 
-*pathName* [selection] *option arg*
+[pathName]{.ins} [selection]{.sub} [option]{.arg} [arg]{.arg}
 : This command is used to adjust the selection within a spinbox.  It has several forms, depending on *option*:
 
     [pathName]{.ins} [selection]{.sub} [adjust]{.lit} [index]{.arg}
     : Locate the end of the selection nearest to the character given by *index*, and adjust that end of the selection to be at *index* (i.e. including but not going beyond *index*).  The other end of the selection is made the anchor point for future **select to** commands.  If the selection is not currently in the spinbox, then a new selection is created to include the characters between *index* and the most recent selection anchor point, inclusive. Returns an empty string.
 
-    *pathName* [selection clear][selection]
+    [pathName]{.ins} [selection]{.sub} [clear]{.lit}
     : Clear the selection if it is currently in this widget.  If the selection is not in this widget then the command has no effect. Returns an empty string.
 
-    *pathName* [selection element][selection] ?*element*?
+    [pathName]{.ins} [selection]{.sub} [element]{.lit} [element]{.optarg}
     : Sets or gets the currently selected element.  If a spinbutton element is specified, it will be displayed depressed.
 
-    *pathName* [selection from][selection] *index*
+    [pathName]{.ins} [selection]{.sub} [from]{.lit} [index]{.arg}
     : Set the selection anchor point to just before the character given by *index*.  Does not change the selection. Returns an empty string.
 
-    *pathName* [selection present][selection]
+    [pathName]{.ins} [selection]{.sub} [present]{.lit}
     : Returns 1 if there is are characters selected in the spinbox, 0 if nothing is selected.
 
-    *pathName* [selection range][selection] *start end*
+    [pathName]{.ins} [selection]{.sub} [range]{.lit} [start]{.arg} [end]{.arg}
     : Sets the selection to include the characters starting with the one indexed by *start* and ending with the one just before *end*. If *end* refers to the same character as *start* or an earlier one, then the spinbox's selection is cleared.
 
-    *pathName* [selection to][selection] *index*
+    [pathName]{.ins} [selection]{.sub} [to]{.lit} [index]{.arg}
     : If *index* is before the anchor point, set the selection to the characters from *index* up to but not including the anchor point. If *index* is the same as the anchor point, do nothing. If *index* is after the anchor point, set the selection to the characters from the anchor point up to but not including *index*. The anchor point is determined by the most recent **select from** or **select adjust** command in this widget. If the selection is not in this widget then a new selection is created using the most recent anchor point specified for the widget. Returns an empty string.
 
 
-*pathName* [set] ?*string*?
+[pathName]{.ins} [set]{.sub} [string]{.optarg}
 : If *string* is specified, the spinbox will try and set it to this value, otherwise it just returns the spinbox's string. If validation is on, it will occur when setting the string.
 
 [pathName]{.ins} [validate]{.sub}
@@ -315,16 +315,16 @@ The following commands are possible for spinbox widgets:
 [pathName]{.ins} [xview]{.sub} [args]{.arg}
 : This command is used to query and change the horizontal position of the text in the widget's window.  It can take any of the following forms:
 
-    *pathName* **xview**
+    [pathName]{.ins} [xview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1;  together they describe the horizontal span that is visible in the window. For example, if the first element is .2 and the second element is .6, 20% of the spinbox's text is off-screen to the left, the middle 40% is visible in the window, and 40% of the text is off-screen to the right. These are the same values passed to scrollbars via the **-xscrollcommand** option.
 
-    *pathName* **xview** *index*
+    [pathName]{.ins} [xview]{.sub} [index]{.arg}
     : Adjusts the view in the window so that the character given by *index* is displayed at the left edge of the window.
 
-    *pathName* **xview moveto** *fraction*
+    [pathName]{.ins} [xview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that the character *fraction* of the way through the text appears at the left edge of the window. *Fraction* must be a fraction between 0 and 1.
 
-    *pathName* **xview scroll** *number what*
+    [pathName]{.ins} [xview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command shifts the view in the window left or right according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units** or an abbreviation of one of these. If *what* is **pages** then the view adjusts by *number* screenfuls. If *number* is negative then characters farther to the left become visible;  if it is positive then characters farther to the right become visible. If *what* is **units**, the view adjusts left or right by *number* average-width characters on the display.
 
 
@@ -391,7 +391,5 @@ The behavior of spinboxes can be changed by defining new bindings for individual
 [focus]: focus.md
 [options]: options.md
 [scan]: ../Tcl/scan.md
-[selection]: selection.md
-[set]: ../Tcl/set.md
 [string]: ../Tcl/string.md
 

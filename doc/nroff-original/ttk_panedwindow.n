@@ -81,10 +81,12 @@ or the empty string if no component is present at that location.
 If \fIcomponent\fR is omitted, it defaults to \fBsash\fR.
 The following subcommands are supported:
 .RS
+.\" METHOD: identify element
 .TP
 \fIpathname \fBidentify element \fIx y\fR
 .
 Returns the name of the element at the specified location.
+.\" METHOD: identify sash
 .TP
 \fIpathname \fBidentify sash \fIx y\fR
 .

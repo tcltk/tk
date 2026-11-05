@@ -185,7 +185,7 @@ The **canvas** command creates a new Tcl command whose name is *pathName*. This 
 pathName option ?arg ...?
 ```
 
-*Option* and the *arg*s determine the exact behavior of the command. The following widget commands are possible for canvas widgets:
+*option* and the *arg*s determine the exact behavior of the command. The following widget commands are possible for canvas widgets:
 
 [pathName]{.ins} [addtag]{.sub} [tag]{.arg} [searchSpec]{.arg} [arg]{.optdot}
 : For each item that meets the constraints specified by *searchSpec* and the *arg*s, add *tag* to the list of tags associated with the item if it is not already present on that list. It is possible that no items will satisfy the constraints given by *searchSpec* and *arg*s, in which case the command has no effect. This command returns an empty string as result. *SearchSpec* and *arg*'s may take any of the following forms:
@@ -231,15 +231,15 @@ pathName option ?arg ...?
 : Given a window y-coordinate in the canvas *screeny* this command returns the canvas y-coordinate that is displayed at that location. If *gridspacing* is specified, then the canvas coordinate is rounded to the nearest multiple of *gridspacing* units.
 
 [pathName]{.ins} [cget]{.sub} [option]{.arg}
-: Returns the current value of the configuration option given by *option*. *Option* may have any of the values accepted by the **canvas** command.
+: Returns the current value of the configuration option given by *option*. *option* may have any of the values accepted by the **canvas** command.
 
 [pathName]{.ins} [configure]{.sub} [option]{.optarg} [value]{.optarg} [option value]{.optdot}
-: Query or modify the configuration options of the widget. If no *option* is specified, returns a list describing all of the available options for *pathName* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s); in this case the command returns an empty string. *Option* may have any of the values accepted by the **canvas** command.
+: Query or modify the configuration options of the widget. If no *option* is specified, returns a list describing all of the available options for *pathName* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s); in this case the command returns an empty string. *option* may have any of the values accepted by the **canvas** command.
 
 [pathName]{.ins} [coords]{.sub} [tagOrId]{.arg} [x0 y0]{.optdot}
 : see below ...
 
-*pathName* **coords** *tagOrId* ?*coordList*?
+[pathName]{.ins} [coords]{.sub} [tagOrId]{.arg} [coordList]{.optarg}
 : Query or modify the coordinates that define an item. If no coordinates are specified, this command returns a list whose elements are the coordinates of the item named by *tagOrId*. If coordinates are specified, then they replace the current coordinates for the named item. If *tagOrId* refers to multiple items, then the first one in the display list is used.
 
     Note that for rectangles, ovals and arcs the returned list of coordinates has a fixed order, namely the left, top, right and bottom coordinates, which may not be the order originally given. Also the coordinates are always returned in screen units with no units (that is, in pixels). So if the original coordinates were specified for instance in centimeters or inches, the returned values will nevertheless be in pixels.
@@ -247,7 +247,7 @@ pathName option ?arg ...?
 [pathName]{.ins} [create]{.sub} [type]{.arg} [x]{.arg} [y]{.arg} [x y]{.optdot} [option value]{.optdot}
 : see below ...
 
-*pathName* **create** *type coordList* ?*option value ...*?
+[pathName]{.ins} [create]{.sub} [type]{.arg} [coordList]{.arg} [option value]{.optdot}
 : Create a new item in *pathName* of type *type*. The exact format of the arguments after *type* depends on *type*, but usually they consist of the coordinates for one or more points, followed by specifications for zero or more item options. See the subsections on individual item types below for more on the syntax of this command. This command returns the id for the new item.
 
 [pathName]{.ins} [dchars]{.sub} [tagOrId]{.arg} [first]{.arg} [last]{.optarg}
@@ -298,7 +298,7 @@ pathName option ?arg ...?
     This command returns an empty string.
 
 [pathName]{.ins} [itemcget]{.sub} [tagOrId]{.arg} [option]{.arg}
-: Returns the current value of the configuration option for the item given by *tagOrId* whose name is *option*. This command is similar to the **cget** widget command except that it applies to a particular item rather than the widget as a whole. *Option* may have any of the values accepted by the **create** widget command when the item was created. If *tagOrId* is a tag that refers to more than one item, the first (lowest) such item is used.
+: Returns the current value of the configuration option for the item given by *tagOrId* whose name is *option*. This command is similar to the **cget** widget command except that it applies to a particular item rather than the widget as a whole. *option* may have any of the values accepted by the **create** widget command when the item was created. If *tagOrId* is a tag that refers to more than one item, the first (lowest) such item is used.
 
 [pathName]{.ins} [itemconfigure]{.sub} [tagOrId]{.arg} [option]{.optarg} [value]{.optarg} [option value]{.optdot}
 : This command is similar to the **configure** widget command except that it modifies item-specific options for the items given by *tagOrId* instead of modifying options for the overall canvas widget. If no *option* is specified, returns a list describing all of the available options for the first item given by *tagOrId* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s) in each of the items given by *tagOrId*; in this case the command returns an empty string. The *option*s and *value*s are the same as those permissible in the **create** widget command when the item(s) were created; see the sections describing individual item types below for details on the legal options.
@@ -318,13 +318,13 @@ pathName option ?arg ...?
     [-channel]{.lit} [channelName]{.arg}
     : Specifies the name of the channel to which to write the Postscript. If this option and the **-file** option are not specified then the Postscript is returned as the result of the command.
 
-    **-colormap** *varName*
+    [-colormap]{.lit} [varName]{.arg}
     : *VarName* must be the name of an array variable that specifies a color mapping to use in the Postscript. Each element of *varName* must consist of Postscript code to set a particular color value (e.g. "**1.0 1.0 0.0 setrgbcolor**"). When outputting color information in the Postscript, Tk checks to see if there is an element of *varName* with the same name as the color. If so, Tk uses the value of the element as the Postscript command to set the color.
 
 
     If this option has not been specified, or if there is no entry in *varName* for a given color, then Tk uses the red, green, and blue intensities from the X color.
 
-**-colormode** *mode*
+[-colormode]{.lit} [mode]{.arg}
 : Specifies how to output color information. *Mode* must be either **color** (for full color output), **gray** (convert all colors to their gray-scale equivalents) or **mono** (convert all colors to black or white).
 
 [-file]{.lit} [fileName]{.arg}
@@ -393,30 +393,30 @@ pathName option ?arg ...?
     [pathName]{.ins} [scan]{.sub} [mark]{.lit} [x]{.arg} [y]{.arg}
     : Records *x* and *y* and the canvas's current view; used in conjunction with later [scan dragto][scan] commands. Typically this command is associated with a mouse button press in the widget and *x* and *y* are the coordinates of the mouse. It returns an empty string.
 
-    *pathName* [scan dragto][scan] *x y ?gain?*
+    [pathName]{.ins} [scan]{.sub} [dragto]{.lit} [x]{.arg} [y]{.arg} [?gain?]{.arg}
     : This command computes the difference between its *x* and *y* arguments (which are typically mouse coordinates) and the *x* and *y* arguments to the last [scan mark][scan] command for the widget. It then adjusts the view by *gain* times the difference in coordinates, where *gain* defaults to 10. This command is typically associated with mouse motion events in the widget, to produce the effect of dragging the canvas at high speed through its window. The return value is an empty string.
 
 
-*pathName* **select** *option* ?*tagOrId arg*?
+[pathName]{.ins} [select]{.sub} [option]{.arg} [tagOrId arg]{.optarg}
 : Manipulates the selection in one of several ways, depending on *option*. The command may take any of the forms described below. In all of the descriptions below, *tagOrId* must refer to an item that supports indexing and selection; if it refers to multiple items then the first of these that supports indexing and the selection is used. *Index* gives a textual description of a position within *tagOrId*, as described in [Indices] above.
 
     [pathName]{.ins} [select]{.sub} [adjust]{.lit} [tagOrId]{.arg} [index]{.arg}
     : Locate the end of the selection in *tagOrId* nearest to the character given by *index*, and adjust that end of the selection to be at *index* (i.e. including but not going beyond *index*). The other end of the selection is made the anchor point for future **select to** commands. If the selection is not currently in *tagOrId* then this command behaves the same as the **select to** widget command. Returns an empty string.
 
-    *pathName* **select clear**
+    [pathName]{.ins} [select]{.sub} [clear]{.lit}
     : Clear the selection if it is in this widget. If the selection is not in this widget then the command has no effect. Returns an empty string.
 
-    *pathName* **select from** *tagOrId index*
+    [pathName]{.ins} [select]{.sub} [from]{.lit} [tagOrId]{.arg} [index]{.arg}
     : Set the selection anchor point for the widget to be just before the character given by *index* in the item given by *tagOrId*. This command does not change the selection; it just sets the fixed end of the selection for future **select to** commands. Returns an empty string.
 
-    *pathName* **select item**
+    [pathName]{.ins} [select]{.sub} [item]{.lit}
     : Returns the id of the selected item, if the selection is in an item in this canvas. If the selection is not in this canvas then an empty string is returned.
 
-    *pathName* **select to** *tagOrId index*
+    [pathName]{.ins} [select]{.sub} [to]{.lit} [tagOrId]{.arg} [index]{.arg}
     : Set the selection to consist of those characters of *tagOrId* between the selection anchor point and *index*. The new selection will include the character given by *index*; it will include the character given by the anchor point only if *index* is greater than or equal to the anchor point. The anchor point is determined by the most recent **select adjust** or **select from** command for this widget. If the selection anchor point for the widget is not currently in *tagOrId*, then it is set to the same character given by *index*. Returns an empty string.
 
 
-*pathName* **type** *tagOrId*
+[pathName]{.ins} [type]{.sub} [tagOrId]{.arg}
 : Returns the type of the item given by *tagOrId*, such as **rectangle** or **text**. If *tagOrId* refers to more than one item, then the type of the first item in the display list is returned. If *tagOrId* does not refer to any items at all then an empty string is returned.
 
 [pathName]{.ins} [xview]{.sub} [args]{.optarg}
@@ -425,23 +425,23 @@ pathName option ?arg ...?
     [pathName]{.ins} [xview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1; together they describe the horizontal span that is visible in the window. For example, if the first element is .2 and the second element is .6, 20% of the canvas's area (as defined by the **-scrollregion** option) is off-screen to the left, the middle 40% is visible in the window, and 40% of the canvas is off-screen to the right. These are the same values passed to scrollbars via the **-xscrollcommand** option.
 
-    *pathName* **xview moveto** *fraction*
+    [pathName]{.ins} [xview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that *fraction* of the total width of the canvas is off-screen to the left. *Fraction* must be a fraction between 0 and 1.
 
-    *pathName* **xview scroll** *number what*
+    [pathName]{.ins} [xview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command shifts the view in the window left or right according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units** or an abbreviation of one of these. If *what is* **pages** then the view adjusts in units of nine-tenths the window's width. If *number* is negative then information farther to the left becomes visible; if it is positive then information farther to the right becomes visible. If *what* is **units**, the view adjusts left or right in units of the **xScrollIncrement** option, if it is greater than zero, or in units of one-tenth the window's width otherwise.
 
 
-*pathName* **yview** ?*args*?
+[pathName]{.ins} [yview]{.sub} [args]{.optarg}
 : This command is used to query and change the vertical position of the information displayed in the canvas's window. It can take any of the following forms:
 
-    *pathName* **yview**
+    [pathName]{.ins} [yview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1; together they describe the vertical span that is visible in the window. For example, if the first element is .6 and the second element is 1.0, the lowest 40% of the canvas's area (as defined by the **-scrollregion** option) is visible in the window. These are the same values passed to scrollbars via the **-yscrollcommand** option.
 
-    *pathName* **yview moveto** *fraction*
+    [pathName]{.ins} [yview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that *fraction* of the canvas's area is off-screen to the top. *Fraction* is a fraction between 0 and 1.
 
-    *pathName* **yview scroll** *number what*
+    [pathName]{.ins} [yview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command adjusts the view in the window up or down according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units**. If *what* is **pages** then the view adjusts in units of nine-tenths the window's height. If *number* is negative then higher information becomes visible; if it is positive then lower information becomes visible. If *what* is **units**, the view adjusts up or down in units of the **yScrollIncrement** option, if it is greater than zero, or in units of one-tenth the window's height otherwise.
 
 

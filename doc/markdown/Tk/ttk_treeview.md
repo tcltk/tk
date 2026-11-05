@@ -211,7 +211,7 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
     : Toggle the selection state of the cells within the rectangle defined by *cellFirst* and *cellLast*. With **-nohidden**, hidden cells will be excluded and with **-norecurse**, cell in descendant items will be excluded.
 
 
-*pathname* **children** *item* ?*newchildren*?
+[pathname]{.ins} [children]{.sub} [item]{.arg} [newchildren]{.optarg}
 : If *newchildren* is not specified, returns the list of children belonging to *item*. If *newchildren* is specified, replaces *item*'s child list with *newchildren*. Items in the old child list not present in the new child list are detached from the tree. None of the items in *newchildren* may be an ancestor of *item*.
 
 [pathname]{.ins} [collapse]{.sub} [-recurse]{.optarg} [itemList]{.arg}
@@ -241,7 +241,7 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
 
     Use *pathname* **column #0** to configure the tree column.
 
-*pathname* **current**
+[pathname]{.ins} [current]{.sub}
 : Returns the current item id and column id, if any, or {} if none. The current item is the item under the mouse pointer. It can be used in the **<Enter>** and **<Leave>** event handlers to get the item and column for the event.
 
 [pathname]{.ins} [delete]{.sub} [itemList]{.arg}
@@ -290,7 +290,7 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
     : Modify or inquire about heading state. If *stateSpec* is present, sets the widget state: for each flag in stateSpec, sets the corresponding flag or clears it if prefixed by an exclamation point. To use the default sort direction indicator, set the heading to **user1** state plus either **selected** for descending sorts or **alternate** for ascending sorts. Remember to clear the states when a new heading is to be used as the sort column. Themes may set and use other states as needed for visual effects.
 
 
-*pathname* **hide** ?*-recurse*? *itemList*
+[pathname]{.ins} [hide]{.sub} [-recurse]{.optarg} [itemList]{.arg}
 : Hide all of the items in *itemList* and all child items. Same as "*pathname* **item** *item* **-hidden 1**" for each item in *itemList*. With the *-recurse* option, will also hide all of their descendants. Use **{}** for root item.
 
 [pathname]{.ins} [identifier]{.sub} [item]{.arg} [index]{.arg}
@@ -427,7 +427,7 @@ See [Column identifiers] for a discussion of display columns and data columns.
     : Negates the match, so only the items that do not match *pattern*, will be returned.
 
 
-*pathname* **see** *item* ?*column*?
+[pathname]{.ins} [see]{.sub} [item]{.arg} [column]{.optarg}
 : Ensure that *item* is visible by setting all of *item*'s ancestors to **-open true**, and scroll the widget in the vertical direction, if necessary, so that *item* is within the visible portion of the tree. If *column* is specified, then the widget is scrolled in the horizontal direction, if necessary, so that *column* is within the visible portion of the tree. Only non-title columns and rows will be scrolled.
 
 *pathname* **see {\*}***cell*
@@ -476,7 +476,7 @@ See [Column identifiers] for a discussion of display columns and data columns.
     : Toggle the selection state of the items from *first* to *last* (inclusive). Use **-hidden** to include hidden items (default) and **-nohidden** to exclude them. Use **-recurse** to include descendants and ancestors (default) and **-norecurse** to exclude them. If **-hidden** and **-recurse** are used, descendants of closed items will be included.
 
 
-*pathname* [set] *item* ?*column*? ?*value*? ?*column value ...*?
+[pathname]{.ins} [set]{.sub} [item]{.arg} [column]{.optarg} [value]{.optarg} [column value]{.optdot}
 : Set or get *item* column values. With no *column* or *value* arguments, returns a dictionary of all column/value pairs. With only the *column* argument, returns the current value for *column*. With one or more *column* and *value* pair arguments, sets the value of each *column* to the associated *value*. Use column **#0** for the tree column. See [Column identifiers] for valid forms of *column*.
 
 [pathname]{.ins} [size]{.sub} [-hidden]{.optlit} [-recurse]{.optlit} [item]{.arg}
@@ -522,7 +522,7 @@ See [Column identifiers] for a discussion of display columns and data columns.
     : Sort all descendants of *parent*. The default is to only sort the children of *parent*.
 
 
-*pathName* **tag** *args...*
+[pathName]{.ins} [tag]{.sub} [args...]{.arg}
 : Manages tags. Tags can be set on items as well as on cells. The set of tags is shared between items and cells. However item tagging is independent from cell tagging (for instance adding a tag on an item does not also add this tag on the cells in that item). Cell tags take precedence over item tags when drawing. The following subcommands are supported:
 
     *pathName* **tag add** *tagName itemList*
@@ -883,7 +883,6 @@ See the [ttk::style][ttk_style] manual page for information on how to configure 
 [GetInt]: ../TclCAPI/GetInt.md
 [GetPixels]: ../TkCAPI/GetPixels.md
 [next]: ../Tcl/next.md
-[set]: ../Tcl/set.md
 [string]: ../Tcl/string.md
 [ttk_style]: ttk_style.md
 [ttk_widget]: ttk_widget.md

@@ -338,7 +338,7 @@ operations on the widget. It has the following general form:
 .CS
 \fIpathName option \fR?\fIarg ...\fR?
 .CE
-\fIOption\fR and the \fIarg\fRs
+\fIoption\fR and the \fIarg\fRs
 determine the exact behavior of the command.
 The following widget commands are possible for canvas widgets:
 .\" METHOD: addtag
@@ -502,7 +502,7 @@ rounded to the nearest multiple of \fIgridspacing\fR units.
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
-\fIOption\fR may have any of the values accepted by the \fBcanvas\fR
+\fIoption\fR may have any of the values accepted by the \fBcanvas\fR
 command.
 .\" METHOD: configure
 .TP
@@ -518,11 +518,12 @@ sublist of the value returned if no \fIoption\fR is specified). If
 one or more \fIoption\-value\fR pairs are specified, then the command
 modifies the given widget option(s) to have the given value(s); in
 this case the command returns an empty string.
-\fIOption\fR may have any of the values accepted by the \fBcanvas\fR
+\fIoption\fR may have any of the values accepted by the \fBcanvas\fR
 command.
 .\" METHOD: coords
 .TP
 \fIpathName \fBcoords \fItagOrId \fR?\fIx0 y0 ...\fR?
+.\" METHOD: coords
 .TP
 \fIpathName \fBcoords \fItagOrId \fR?\fIcoordList\fR?
 .
@@ -546,6 +547,7 @@ the returned values will nevertheless be in pixels.
 .\" METHOD: create
 .TP
 \fIpathName \fBcreate \fItype x y \fR?\fIx y ...\fR? ?\fIoption value ...\fR?
+.\" METHOD: create
 .TP
 \fIpathName \fBcreate \fItype coordList \fR?\fIoption value ...\fR?
 .
@@ -727,7 +729,7 @@ Returns the current value of the configuration option for the
 item given by \fItagOrId\fR whose name is \fIoption\fR.
 This command is similar to the \fBcget\fR widget command except that
 it applies to a particular item rather than the widget as a whole.
-\fIOption\fR may have any of the values accepted by the \fBcreate\fR
+\fIoption\fR may have any of the values accepted by the \fBcreate\fR
 widget command when the item was created.
 If \fItagOrId\fR is a tag that refers to more than one item,
 the first (lowest) such item is used.
@@ -1064,6 +1066,7 @@ around.
 This command is used to implement scanning on canvases. It has
 two forms, depending on \fIoption\fR:
 .RS
+.\" METHOD: scan mark
 .TP
 \fIpathName \fBscan mark \fIx y\fR
 .
@@ -1072,6 +1075,7 @@ in conjunction with later \fBscan dragto\fR commands.
 Typically this command is associated with a mouse button press in
 the widget and \fIx\fR and \fIy\fR are the coordinates of the
 mouse. It returns an empty string.
+.\" METHOD: scan dragto
 .TP
 \fIpathName \fBscan dragto \fIx y ?gain?\fR
 .
@@ -1099,6 +1103,7 @@ these that supports indexing and the selection is used.
 \fIIndex\fR gives a textual description of a position
 within \fItagOrId\fR, as described in \fBINDICES\fR above.
 .RS
+.\" METHOD: select adjust
 .TP
 \fIpathName \fBselect adjust \fItagOrId index\fR
 .
@@ -1112,6 +1117,7 @@ If the selection is not currently in \fItagOrId\fR then
 this command behaves the same as the \fBselect to\fR widget
 command.
 Returns an empty string.
+.\" METHOD: select clear
 .TP
 \fIpathName \fBselect clear\fR
 .
@@ -1119,6 +1125,7 @@ Clear the selection if it is in this widget.
 If the selection is not in this widget then the command
 has no effect.
 Returns an empty string.
+.\" METHOD: select from
 .TP
 \fIpathName \fBselect from \fItagOrId index\fR
 .
@@ -1129,6 +1136,7 @@ This command does not change the selection; it just sets
 the fixed end of the selection for future \fBselect to\fR
 commands.
 Returns an empty string.
+.\" METHOD: select item
 .TP
 \fIpathName \fBselect item\fR
 .
@@ -1136,6 +1144,7 @@ Returns the id of the selected item, if the selection is in an
 item in this canvas.
 If the selection is not in this canvas then an empty string
 is returned.
+.\" METHOD: select to
 .TP
 \fIpathName \fBselect to \fItagOrId index\fR
 .
@@ -1170,6 +1179,7 @@ This command is used to query and change the horizontal position of the
 information displayed in the canvas's window.
 It can take any of the following forms:
 .RS
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview\fR
 .
@@ -1182,12 +1192,14 @@ is off-screen to the left, the middle 40% is visible
 in the window, and 40% of the canvas is off-screen to the right.
 These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
+.\" METHOD: xview moveto
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
 .
 Adjusts the view in the window so that \fIfraction\fR of the
 total width of the canvas is off-screen to the left.
 \fIFraction\fR must be a fraction between 0 and 1.
+.\" METHOD: xview scroll
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
 .
@@ -1214,6 +1226,7 @@ This command is used to query and change the vertical position of the
 information displayed in the canvas's window.
 It can take any of the following forms:
 .RS
+.\" METHOD: yview
 .TP
 \fIpathName \fByview\fR
 .
@@ -1225,12 +1238,14 @@ the lowest 40% of the canvas's area (as defined by the \fB\-scrollregion\fR
 option) is visible in the window.
 These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
 option.
+.\" METHOD: yview moveto
 .TP
 \fIpathName \fByview moveto\fI fraction\fR
 .
 Adjusts the view in the window so that \fIfraction\fR of the canvas's
 area is off-screen to the top.
 \fIFraction\fR is a fraction between 0 and 1.
+.\" METHOD: yview scroll
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
 .

@@ -118,11 +118,11 @@ In addition to the standard **cget**, **configure**, **instate**, **state** and 
     [pathname]{.ins} [identify]{.sub} [element]{.lit} [x]{.arg} [y]{.arg}
     : Returns the name of the element at the specified location.
 
-    *pathname* **identify tab** *x y*
+    [pathname]{.ins} [identify]{.sub} [tab]{.lit} [x]{.arg} [y]{.arg}
     : Returns the index of the tab at the specified location.
 
 
-*pathname* **index** *tabid*
+[pathname]{.ins} [index]{.sub} [tabid]{.arg}
 : Returns the numeric index of the tab specified by *tabid*, or the total number of tabs if *tabid* is the string "**end**".
 
 [pathname]{.ins} [insert]{.sub} [pos]{.arg} [subwindow]{.arg} [options...]{.arg}
@@ -134,10 +134,10 @@ In addition to the standard **cget**, **configure**, **instate**, **state** and 
 [pathname]{.ins} [tab]{.sub} [tabid]{.arg}
 : see below ...
 
-*pathname* **tab** *tabid* *-option*
+[pathname]{.ins} [tab]{.sub} [tabid]{.arg} [-option]{.arg}
 : see below ...
 
-*pathname* **tab** *tabid* *-option value* ?*-option value ...*?
+[pathname]{.ins} [tab]{.sub} [tabid]{.arg} [-option]{.arg} [value]{.arg} [-option value]{.optdot}
 : Query or modify the options of the specific tab. In its first form, when no *-option* is specified, the command returns a dictionary of the tab options and their values. The second form, when one *-option* is specified, returns the value of that *option*. Otherwise, in its third form, it sets the *-option*s to the corresponding *value*s. See [Tab options] for the available options.
 
 [pathname]{.ins} [tabs]{.sub}

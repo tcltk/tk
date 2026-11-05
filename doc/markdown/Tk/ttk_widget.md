@@ -194,7 +194,7 @@ This option is only available for themed widgets that have "corresponding" tradi
     : This command shifts the view in the window left or right according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units**. If *what* is **pages** then the view adjusts by *number* screenfuls. If *number* is negative then characters farther to the left become visible;  if it is positive then characters farther to the right become visible. If *what* is **units**, the view adjusts left or right by *number* average-width characters on the display.
 
 
-*pathName* **yview** *args*
+[pathName]{.ins} [yview]{.sub} [args]{.arg}
 : This command is used to query and change the vertical position of the content in the widget's window.  It can take any of the following forms:
 
     *pathName* **yview**

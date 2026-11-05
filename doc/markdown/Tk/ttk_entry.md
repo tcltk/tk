@@ -140,14 +140,14 @@ In addition to the standard **cget**, **configure**, **identify element**, **ins
     [pathName]{.ins} [selection]{.sub} [clear]{.lit}
     : Clear the selection if it is currently in this widget. If the selection is not in this widget then the command has no effect. Returns the empty string.
 
-    *pathName* [selection present][selection]
+    [pathName]{.ins} [selection]{.sub} [present]{.lit}
     : Returns 1 if there is are characters selected in the entry, 0 if nothing is selected.
 
-    *pathName* [selection range][selection] *start end*
+    [pathName]{.ins} [selection]{.sub} [range]{.lit} [start]{.arg} [end]{.arg}
     : Sets the selection to include the characters starting with the one indexed by *start* and ending with the one just before *end*. If *end* refers to the same character as *start* or an earlier one, then the entry's selection is cleared.
 
 
-*pathName* **validate**
+[pathName]{.ins} [validate]{.sub}
 : Force revalidation, independent of the conditions specified by the **-validate** option. Returns 0 if validation fails, 1 if it succeeds. Sets or clears the **invalid** state accordingly. See [Validation] below for more details.
 
 
@@ -305,7 +305,6 @@ See the [ttk::style][ttk_style] manual page for information on how to configure 
 
 [bind]: bind.md
 [entry]: entry.md
-[selection]: selection.md
 [string]: ../Tcl/string.md
 [ttk_style]: ttk_style.md
 [ttk_widget]: ttk_widget.md

@@ -390,6 +390,7 @@ to be invoked, triggering the action associated with it.
 This command is used to implement scanning on spinboxes.  It has
 two forms, depending on \fIoption\fR:
 .RS
+.\" METHOD: scan mark
 .TP
 \fIpathName \fBscan mark \fIx\fR
 .
@@ -397,6 +398,7 @@ Records \fIx\fR and the current view in the spinbox window;  used in
 conjunction with later \fBscan dragto\fR commands.  Typically this
 command is associated with a mouse button press in the widget.  It
 returns an empty string.
+.\" METHOD: scan dragto
 .TP
 \fIpathName \fBscan dragto \fIx\fR
 .
@@ -415,6 +417,7 @@ value is an empty string.
 This command is used to adjust the selection within a spinbox.  It
 has several forms, depending on \fIoption\fR:
 .RS
+.\" METHOD: selection adjust
 .TP
 \fIpathName \fBselection adjust \fIindex\fR
 .
@@ -427,28 +430,33 @@ is not currently in the spinbox, then a new selection is created to
 include the characters between \fIindex\fR and the most recent
 selection anchor point, inclusive.
 Returns an empty string.
+.\" METHOD: selection clear
 .TP
 \fIpathName \fBselection clear\fR
 .
 Clear the selection if it is currently in this widget.  If the
 selection is not in this widget then the command has no effect.
 Returns an empty string.
+.\" METHOD: selection element
 .TP
 \fIpathName \fBselection element\fR ?\fIelement\fR?
 .
 Sets or gets the currently selected element.  If a spinbutton element
 is specified, it will be displayed depressed.
+.\" METHOD: selection from
 .TP
 \fIpathName \fBselection from \fIindex\fR
 .
 Set the selection anchor point to just before the character
 given by \fIindex\fR.  Does not change the selection.
 Returns an empty string.
+.\" METHOD: selection present
 .TP
 \fIpathName \fBselection present\fR
 .
 Returns 1 if there is are characters selected in the spinbox,
 0 if nothing is selected.
+.\" METHOD: selection range
 .TP
 \fIpathName \fBselection range \fIstart end\fR
 .
@@ -457,6 +465,7 @@ the one indexed by \fIstart\fR and ending with the one just
 before \fIend\fR.
 If \fIend\fR refers to the same character as \fIstart\fR or an
 earlier one, then the spinbox's selection is cleared.
+.\" METHOD: selection to
 .TP
 \fIpathName \fBselection to \fIindex\fR
 .
@@ -496,6 +505,7 @@ This command is used to query and change the horizontal position of the
 text in the widget's window.  It can take any of the following
 forms:
 .RS
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview\fR
 .
@@ -507,17 +517,20 @@ For example, if the first element is .2 and the second element is .6,
 in the window, and 40% of the text is off-screen to the right.
 These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview \fIindex\fR
 .
 Adjusts the view in the window so that the character given by \fIindex\fR
 is displayed at the left edge of the window.
+.\" METHOD: xview moveto
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
 .
 Adjusts the view in the window so that the character \fIfraction\fR of the
 way through the text appears at the left edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
+.\" METHOD: xview scroll
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
 .

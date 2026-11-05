@@ -165,7 +165,7 @@ The *base* for an index must have one of the following forms:
 *tag***.last**
 : Indicates the character just after the last one in the text that has been tagged with *tag*. This form generates an error if no characters are currently tagged with *tag*.
 
-*pathName*
+[pathName]{.ins}
 : Indicates the position of the embedded window whose name is *pathName*. This form generates an error if there is no embedded window by the given name.
 
 *imageName*
@@ -566,51 +566,51 @@ pathName option ?arg ...?
     [-all]{.lit}
     : Return information about all elements: text, marks, tags, images and windows. This is the default.
 
-    **-command** *command*
+    [-command]{.lit} [command]{.arg}
     : Instead of returning the information as the result of the dump operation, invoke the *command* on each element of the text widget within the range. The command has three arguments appended to it before it is evaluated: the *key*, *value*, and *index*.
 
-    **-image**
+    [-image]{.lit}
     : Include information about images in the dump results.
 
-    **-mark**
+    [-mark]{.lit}
     : Include information about marks in the dump results.
 
-    **-tag**
+    [-tag]{.lit}
     : Include information about tag transitions in the dump results. Tag information is returned as **tagon** and **tagoff** elements that indicate the begin and end of each range of each tag, respectively.
 
-    **-text**
+    [-text]{.lit}
     : Include information about text in the dump results. The value is the text up to the next element or the end of range indicated by *index2*. A text element does not span newlines. A multi-line block of text that contains no marks or tag transitions will still be dumped as a set of text segments that each end with a newline. The newline is part of the value.
 
-    **-window**
+    [-window]{.lit}
     : Include information about embedded windows in the dump results. The value of a window is its Tk pathname, unless the window has not been created yet. (It must have a create script.) In this case an empty string is returned, and you must query the window by its index position to get more information.
 
 
-*pathName* **edit** *option* ?*arg ...*?
+[pathName]{.ins} [edit]{.sub} [option]{.arg} [arg]{.optdot}
 : This command controls the undo mechanism and the modified flag. The exact behavior of the command depends on the *option* argument that follows the **edit** argument. The following forms of the command are currently supported:
 
     [pathName]{.ins} [edit]{.sub} [canredo]{.lit}
     : Returns a boolean true if redo is possible, i.e. when the redo stack is not empty. Otherwise returns false.
 
-    *pathName* **edit canundo**
+    [pathName]{.ins} [edit]{.sub} [canundo]{.lit}
     : Returns a boolean true if undo is possible, i.e. when the undo stack is not empty. Otherwise returns false.
 
-    *pathName* **edit modified** ?*boolean*?
+    [pathName]{.ins} [edit]{.sub} [modified]{.lit} [boolean]{.optarg}
     : If *boolean* is not specified, returns the modified flag of the widget. The insert, delete, edit undo and edit redo commands or the user can set or clear the modified flag. If *boolean* is specified, sets the modified flag of the widget to *boolean*.
 
-    *pathName* **edit redo**
+    [pathName]{.ins} [edit]{.sub} [redo]{.lit}
     : When the **-undo** option is true, reapplies the last undone edits provided no other edits were done since then, and returns a list of indices indicating what ranges were changed by the redo operation. Generates an error when the redo stack is empty. Does nothing when the **-undo** option is false.
 
-    *pathName* **edit reset**
+    [pathName]{.ins} [edit]{.sub} [reset]{.lit}
     : Clears the undo and redo stacks.
 
-    *pathName* **edit separator**
+    [pathName]{.ins} [edit]{.sub} [separator]{.lit}
     : Inserts a separator (boundary) on the undo stack. Does nothing when the **-undo** option is false.
 
-    *pathName* **edit undo**
+    [pathName]{.ins} [edit]{.sub} [undo]{.lit}
     : Undoes the last edit action when the **-undo** option is true, and returns a list of indices indicating what ranges were changed by the undo operation. An edit action is defined as all the insert and delete commands that are recorded on the undo stack in between two separators. Generates an error when the undo stack is empty. Does nothing when the **-undo** option is false.
 
 
-*pathName* **get** ?**-displaychars**? ?**--**? *index1* ?*index2 ...*?
+[pathName]{.ins} [get]{.sub} [-displaychars]{.optlit} [--]{.optlit} [index1]{.arg} [index2]{.optdot}
 : Return a range of characters from the text. The return value will be all the characters in the text starting with the one whose index is *index1* and ending just before the one whose index is *index2* (the character at *index2* will not be returned). If *index2* is omitted then the single character at *index1* is returned. If there are no characters in the specified range (e.g. *index1* is past the end of the file or *index2* is less than or equal to *index1*) then an empty string is returned. If the specified range contains embedded windows, no information about them is included in the returned string. If multiple index pairs are given, multiple ranges of text will be returned in a list. Invalid ranges will not be represented with empty strings in the list. The ranges are returned in the order passed to *pathName* **get**. If the **-displaychars** option is given, then, within each range, only those characters which are not elided will be returned. This may have the effect that some of the returned ranges are empty strings.
 
 [pathName]{.ins} [image]{.sub} [option]{.arg} [arg]{.optdot}
@@ -619,17 +619,17 @@ pathName option ?arg ...?
     [pathName]{.ins} [image]{.sub} [cget]{.lit} [index]{.arg} [option]{.arg}
     : Returns the value of a configuration option for an embedded image. *Index* identifies the embedded image, and *option* specifies a particular configuration option, which must be one of the ones listed in the section [Embedded images].
 
-    *pathName* **image configure** *index* ?*option value ...*?
+    [pathName]{.ins} [image]{.sub} [configure]{.lit} [index]{.arg} [option value]{.optdot}
     : Query or modify the configuration options for an embedded image. If no *option* is specified, returns a list describing all of the available options for the embedded image at *index* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given option(s) to have the given value(s); in this case the command returns an empty string. See [Embedded images] for information on the options that are supported.
 
-    *pathName* **image create** *index* ?*option value ...*?
+    [pathName]{.ins} [image]{.sub} [create]{.lit} [index]{.arg} [option value]{.optdot}
     : This command creates a new image annotation, which will appear in the text at the position given by *index*. Any number of *option-value* pairs may be specified to configure the annotation. Returns a unique identifier that may be used as an index to refer to this image. See [Embedded images] for information on the options that are supported, and a description of the identifier returned.
 
-    *pathName* **image names**
+    [pathName]{.ins} [image]{.sub} [names]{.lit}
     : Returns a list whose elements are the names of all image instances currently embedded in *window*.
 
 
-*pathName* **index** *index*
+[pathName]{.ins} [index]{.sub} [index]{.arg}
 : Returns the position corresponding to *index* in the form *line.char* where *line* is the line number and *char* is the character number. *Index* may have any of the forms described under [Indices] above.
 
 [pathName]{.ins} [insert]{.sub} [index]{.arg} [chars]{.arg} [tagList chars tagList]{.optdot}
@@ -644,33 +644,33 @@ pathName option ?arg ...?
     [pathName]{.ins} [mark]{.sub} [gravity]{.lit} [markName]{.arg} [direction]{.optarg}
     : If *direction* is not specified, returns **left** or **right** to indicate which of its adjacent characters *markName* is attached to. If *direction* is specified, it must be **left** or **right**; the gravity of *markName* is set to the given value.
 
-    *pathName* **mark names**
+    [pathName]{.ins} [mark]{.sub} [names]{.lit}
     : Returns a list whose elements are the names of all the marks that are currently set.
 
-    *pathName* **mark next** *index*
+    [pathName]{.ins} [mark]{.sub} [next]{.lit} [index]{.arg}
     : Returns the name of the next mark at or after *index*. If *index* is specified in numerical form, then the search for the next mark begins at that index. If *index* is the name of a mark, then the search for the next mark begins immediately after that mark. This can still return a mark at the same position if there are multiple marks at the same index. These semantics mean that the **mark next** operation can be used to step through all the marks in a text widget in the same order as the mark information returned by the *pathName* **dump** operation. If a mark has been set to the special **end** index, then it appears to be *after* **end** with respect to the *pathName* **mark next** operation. An empty string is returned if there are no marks after *index*.
 
-    *pathName* **mark previous** *index*
+    [pathName]{.ins} [mark]{.sub} [previous]{.lit} [index]{.arg}
     : Returns the name of the mark at or before *index*. If *index* is specified in numerical form, then the search for the previous mark begins with the character just before that index. If *index* is the name of a mark, then the search for the next mark begins immediately before that mark. This can still return a mark at the same position if there are multiple marks at the same index. These semantics mean that the *pathName* **mark previous** operation can be used to step through all the marks in a text widget in the reverse order as the mark information returned by the *pathName* **dump** operation. An empty string is returned if there are no marks before *index*.
 
-    *pathName* **mark set** *markName index*
+    [pathName]{.ins} [mark]{.sub} [set]{.lit} [markName]{.arg} [index]{.arg}
     : Sets the mark named *markName* to a position just before the character at *index*. If *markName* already exists, it is moved from its old position; if it does not exist, a new mark is created. This command returns an empty string.
 
-    *pathName* **mark unset** *markName* ?*markName markName ...*?
+    [pathName]{.ins} [mark]{.sub} [unset]{.lit} [markName]{.arg} [markName markName]{.optdot}
     : Remove the mark corresponding to each of the *markName* arguments. The removed marks will not be usable in indices and will not be returned by future calls to "*pathName* **mark names**". This command returns an empty string.
 
 
-*pathName* **peer** *option args*
+[pathName]{.ins} [peer]{.sub} [option]{.arg} [args]{.arg}
 : This command is used to create and query widget peers. It has two forms, depending on *option*:
 
     [pathName]{.ins} [peer]{.sub} [create]{.lit} [newPathName]{.arg} [options]{.optarg}
     : Creates a peer text widget with the given *newPathName*, and any optional standard configuration options (as for the *text* command). By default the peer will have the same start and end line as the parent widget, but these can be overridden with the standard configuration options.
 
-    *pathName* **peer names**
+    [pathName]{.ins} [peer]{.sub} [names]{.lit}
     : Returns a list of peers of this widget (this does not include the widget itself). The order within this list is undefined.
 
 
-*pathName* **pendingsync**
+[pathName]{.ins} [pendingsync]{.sub}
 : Returns 1 if the line heights calculations are not up-to-date, 0 otherwise.
 
 [pathName]{.ins} [replace]{.sub} [index1]{.arg} [index2]{.arg} [chars]{.arg} [tagList chars tagList]{.optdot}
@@ -684,53 +684,53 @@ pathName option ?arg ...?
     [pathName]{.ins} [scan]{.sub} [mark]{.lit} [x]{.arg} [y]{.arg}
     : Records *x* and *y* and the current view in the text window, for use in conjunction with later *pathName* [scan dragto][scan] commands. Typically this command is associated with a mouse button press in the widget. It returns an empty string.
 
-    *pathName* [scan dragto][scan] *x y*
+    [pathName]{.ins} [scan]{.sub} [dragto]{.lit} [x]{.arg} [y]{.arg}
     : This command computes the difference between its *x* and *y* arguments and the *x* and *y* arguments to the last *pathName* [scan mark][scan] command for the widget. It then adjusts the view by 10 times the difference in coordinates. This command is typically associated with mouse motion events in the widget, to produce the effect of dragging the text at high speed through the window. The return value is an empty string.
 
 
-*pathName* **search** ?*switches*? *pattern index* ?*stopIndex*?
+[pathName]{.ins} [search]{.sub} [switches]{.optarg} [pattern]{.arg} [index]{.arg} [stopIndex]{.optarg}
 : Searches the text in *pathName* starting at *index* for a range of characters that matches *pattern*. If a match is found, the index of the first character in the match is returned as result; otherwise an empty string is returned. One or more of the following switches (or abbreviations thereof) may be specified to control the search:
 
     [-forwards]{.lit}
     : The search will proceed forward through the text, finding the first matching range starting at or after the position given by *index*. This is the default.
 
-    **-backwards**
+    [-backwards]{.lit}
     : The search will proceed backward through the text, finding the matching range closest to *index* whose first character is before *index* (it is not allowed to be at *index*). Note that, for a variety of reasons, backwards searches can be substantially slower than forwards searches (particularly when using **-regexp**), so it is recommended that performance-critical code use forward searches.
 
-    **-exact**
+    [-exact]{.lit}
     : Use exact matching: the characters in the matching range must be identical to those in *pattern*. This is the default.
 
-    **-regexp**
+    [-regexp]{.lit}
     : Treat *pattern* as a regular expression and match it against the text using the rules for regular expressions (see the [regexp] command and the **re\_syntax** page for details). The default matching automatically passes both the **-lineanchor** and **-linestop** options to the regexp engine (unless **-nolinestop** is used), so that *^$* match beginning and end of line, and *.*, *\[^* sequences will never match the newline character *\\n*.
 
-    **-nolinestop**
+    [-nolinestop]{.lit}
     : This allows *.* and *\[^* sequences to match the newline character *\\n*, which they will otherwise not do (see the [regexp] command for details). This option is only meaningful if **-regexp** is also given, and an error will be thrown otherwise. For example, to match the entire text, use "*pathName* **search -nolinestop -regexp** \\".\*\\" 1.0".
 
-    **-nocase**
+    [-nocase]{.lit}
     : Ignore case differences between the pattern and the text.
 
-    **-count** *varName*
+    [-count]{.lit} [varName]{.arg}
     : The argument following **-count** gives the name of a variable; if a match is found, the number of index positions between beginning and end of the matching range will be stored in the variable. If there are no embedded images or windows in the matching range (and there are no elided characters if **-elide** is not given), this is equivalent to the number of characters matched. In either case, the range *matchIdx* to *matchIdx + $count chars* will return the entire matched text.
 
-    **-all**
+    [-all]{.lit}
     : Find all matches in the given range and return a list of the indices of the first character of each match. If a **-count** *varName* switch is given, then *varName* is also set to a list containing one element for each successful match. Note that, even for exact searches, the elements of this list may be different, if there are embedded images, windows or hidden text. Searches with **-all** behave very similarly to the Tcl command [regexp -all][regexp], in that overlapping matches are not normally returned. For example, applying an **-all** search of the pattern "\\w+" against "hello there" will just match twice, once for each word, and matching "Z\[a-z\]+Z" against "ZooZooZoo" will just match once.
 
-    **-overlap**
+    [-overlap]{.lit}
     : When performing **-all** searches, the normal behaviour is that matches which overlap an already-found match will not be returned. This switch changes that behaviour so that all matches which are not totally enclosed within another match are returned. For example, applying an **-overlap** search of the pattern "\\w+" against "hello there" will just match twice (i.e. no different to just **-all**), but matching "Z\[a-z\]+Z" against "ZooZooZoo" will now match twice. An error will be thrown if this switch is used without **-all**.
 
-    **-strictlimits**
+    [-strictlimits]{.lit}
     : When performing any search, the normal behaviour is that the start and stop limits are checked with respect to the start of the matching text. With the **-strictlimits** flag, the entire matching range must lie inside the start and stop limits specified for the match to be valid.
 
-    **-elide**
+    [-elide]{.lit}
     : Find elided (hidden) text as well. By default only displayed text is searched.
 
-    **--**
+    [--]{.lit}
     : This switch has no effect except to terminate the list of switches: the next argument will be treated as *pattern* even if it starts with **-**.
 
 
     The matching range may be within a single line of text, or run across multiple lines (if parts of the pattern can match a new-line). For regular expression matching one can use the various newline-matching features such as **$** to match the end of a line, **^** to match the beginning of a line, and to control whether **.** is allowed to match a new-line. If *stopIndex* is specified, the search stops at that index: for forward searches, no match at or after *stopIndex* will be considered; for backward searches, no match earlier in the text than *stopIndex* will be considered. If *stopIndex* is omitted, the entire text will be searched: when the beginning or end of the text is reached, the search continues at the other end until the starting location is reached again; if *stopIndex* is specified, no wrap-around will occur. This means that, for example, if the search is **-forwards** but *stopIndex* is earlier in the text than *startIndex*, nothing will ever be found. See [Known bugs] below for a number of minor limitations of the *pathName* **search** command.
 
-*pathName* **see** *index*
+[pathName]{.ins} [see]{.sub} [index]{.arg}
 : Adjusts the view in the window so that the character given by *index* is completely visible. If *index* is already visible then the command does nothing. If *index* is a short distance out of view, the command adjusts the view just enough to make *index* visible at the edge of the window. If *index* is far out of view, then the command centers *index* in the window.
 
 [pathName]{.ins} [sync]{.sub} [[-command]{.lit} [command]{.arg}]{.optarg}
@@ -739,17 +739,17 @@ pathName option ?arg ...?
     [pathName]{.ins} [sync]{.sub}
     : Immediately brings the line metrics up-to-date by forcing computation of any outdated line heights. The command returns immediately if there is no such outdated line heights, otherwise it returns only at the end of the computation. The command returns an empty string.
 
-    *pathName* **sync -command** *command*
+    [pathName]{.ins} [sync]{.sub} [-command]{.lit} [command]{.arg}
     : Schedules *command* to be executed (by the event loop) exactly once as soon as all line heights are up-to-date. If there are no pending line metrics calculations, the scheduling is immediate. The command returns the empty string. [bgerror] is called on *command* failure.
 
 
-*pathName* **tag** *option* ?*arg ...*?
+[pathName]{.ins} [tag]{.sub} [option]{.arg} [arg]{.optdot}
 : This command is used to manipulate tags. The exact behavior of the command depends on the *option* argument that follows the **tag** argument. The following forms of the command are currently supported:
 
-    *pathName* **tag add** *tagName index1* ?*index2 index1 index2 ...*?
+    [pathName]{.ins} [tag]{.sub} [add]{.lit} [tagName]{.arg} [index1]{.arg} [index2 index1 index2]{.optdot}
     : Associate the tag *tagName* with all of the characters starting with *index1* and ending just before *index2* (the character at *index2* is not tagged). A single command may contain any number of *index1*-*index2* pairs. If the last *index2* is omitted then the single character at *index1* is tagged. If there are no characters in the specified range (e.g. *index1* is past the end of the file or *index2* is less than or equal to *index1*) then the command has no effect.
 
-    *pathName* **tag bind** *tagName* ?*sequence*? ?*script*?
+    [pathName]{.ins} [tag]{.sub} [bind]{.lit} [tagName]{.arg} [sequence]{.optarg} [script]{.optarg}
     : This command associates *script* with the tag given by *tagName*. Whenever the event sequence given by *sequence* occurs for a character that has been tagged with *tagName*, the script will be invoked. This widget command is similar to the **bind** command except that it operates on characters in a text rather than entire widgets. See the **bind** manual entry for complete details on the syntax of *sequence* and the substitutions performed on *script* before invoking it. If all arguments are specified then a new binding is created, replacing any existing binding for the same *sequence* and *tagName* (if the first character of *script* is "+" then *script* augments an existing binding rather than replacing it). In this case the return value is an empty string. If *script* is omitted then the command returns the *script* associated with *tagName* and *sequence* (an error occurs if there is no such binding). If both *script* and *sequence* are omitted then the command returns a list of all the sequences for which bindings have been defined for *tagName*.
 
 
@@ -759,34 +759,34 @@ pathName option ?arg ...?
 
     If bindings are created for the widget as a whole using the **bind** command, then those bindings will supplement the tag bindings. The tag bindings will be invoked first, followed by bindings for the window as a whole.
 
-*pathName* **tag cget** *tagName option*
+[pathName]{.ins} [tag]{.sub} [cget]{.lit} [tagName]{.arg} [option]{.arg}
 : This command returns the current value of the option named *option* associated with the tag given by *tagName*. *Option* may have any of the values accepted by the *pathName* **tag configure** widget command.
 
-*pathName* **tag configure** *tagName* ?*option*? ?*value*? ?*option value ...*?
+[pathName]{.ins} [tag]{.sub} [configure]{.lit} [tagName]{.arg} [option]{.optarg} [value]{.optarg} [option value]{.optdot}
 : This command is similar to the *pathName* **configure** widget command except that it modifies options associated with the tag given by *tagName* instead of modifying options for the overall text widget. If no *option* is specified, the command returns a list describing all of the available options for *tagName* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given option(s) to have the given value(s) in *tagName*; in this case the command returns an empty string. See [Tags] above for details on the options available for tags.
 
-*pathName* **tag delete** *tagName* ?*tagName ...*?
+[pathName]{.ins} [tag]{.sub} [delete]{.lit} [tagName]{.arg} [tagName]{.optdot}
 : Deletes all tag information for each of the *tagName* arguments. The command removes the tags from all characters in the file and also deletes any other information associated with the tags, such as bindings and display information. The command returns an empty string.
 
-*pathName* **tag lower** *tagName* ?*belowThis*?
+[pathName]{.ins} [tag]{.sub} [lower]{.lit} [tagName]{.arg} [belowThis]{.optarg}
 : Changes the priority of tag *tagName* so that it is just lower in priority than the tag whose name is *belowThis*. If *belowThis* is omitted, then *tagName*'s priority is changed to make it lowest priority of all tags.
 
-*pathName* **tag names** ?*index*?
+[pathName]{.ins} [tag]{.sub} [names]{.lit} [index]{.optarg}
 : Returns a list whose elements are the names of all the tags that are active at the character position given by *index*. If *index* is omitted, then the return value will describe all of the tags that exist for the text (this includes all tags that have been named in a "*pathName* **tag**" widget command but have not been deleted by a "*pathName* **tag delete**" widget command, even if no characters are currently marked with the tag). The list will be sorted in order from lowest priority to highest priority.
 
-*pathName* **tag nextrange** *tagName index1* ?*index2*?
+[pathName]{.ins} [tag]{.sub} [nextrange]{.lit} [tagName]{.arg} [index1]{.arg} [index2]{.optarg}
 : This command searches the text for a range of characters tagged with *tagName* where the first character of the range is no earlier than the character at *index1* and no later than the character just before *index2* (a range starting at *index2* will not be considered). If several matching ranges exist, the first one is chosen. The command's return value is a list containing two elements, which are the index of the first character of the range and the index of the character just after the last one in the range. If no matching range is found then the return value is an empty string. If *index2* is not given then it defaults to the end of the text.
 
-*pathName* **tag prevrange** *tagName index1* ?*index2*?
+[pathName]{.ins} [tag]{.sub} [prevrange]{.lit} [tagName]{.arg} [index1]{.arg} [index2]{.optarg}
 : This command searches the text for a range of characters tagged with *tagName* where the first character of the range is before the character at *index1* and no earlier than the character at *index2* (a range starting at *index2* will be considered). If several matching ranges exist, the one closest to *index1* is chosen. The command's return value is a list containing two elements, which are the index of the first character of the range and the index of the character just after the last one in the range. If no matching range is found then the return value is an empty string. If *index2* is not given then it defaults to the beginning of the text.
 
-*pathName* **tag raise** *tagName* ?*aboveThis*?
+[pathName]{.ins} [tag]{.sub} [raise]{.lit} [tagName]{.arg} [aboveThis]{.optarg}
 : Changes the priority of tag *tagName* so that it is just higher in priority than the tag whose name is *aboveThis*. If *aboveThis* is omitted, then *tagName*'s priority is changed to make it highest priority of all tags.
 
-*pathName* **tag ranges** *tagName*
+[pathName]{.ins} [tag]{.sub} [ranges]{.lit} [tagName]{.arg}
 : Returns a list describing all of the ranges of text that have been tagged with *tagName*. The first two elements of the list describe the first tagged range in the text, the next two elements describe the second range, and so on. The first element of each pair contains the index of the first character of the range, and the second element of the pair contains the index of the character just after the last one in the range. If there are no characters tagged with *tag* then an empty string is returned.
 
-*pathName* **tag remove** *tagName index1* ?*index2 index1 index2 ...*?
+[pathName]{.ins} [tag]{.sub} [remove]{.lit} [tagName]{.arg} [index1]{.arg} [index2 index1 index2]{.optdot}
 : Remove the tag *tagName* from all of the characters starting at *index1* and ending just before *index2* (the character at *index2* is not affected). A single command may contain any number of *index1*-*index2* pairs. If the last *index2* is omitted then the tag is removed from the single character at *index1*. If there are no characters in the specified range (e.g. *index1* is past the end of the file or *index2* is less than or equal to *index1*) then the command has no effect. This command returns an empty string.
 
 [pathName]{.ins} [window]{.sub} [option]{.arg} [arg]{.optdot}
@@ -795,42 +795,42 @@ pathName option ?arg ...?
     [pathName]{.ins} [window]{.sub} [cget]{.lit} [index]{.arg} [option]{.arg}
     : Returns the value of a configuration option for an embedded window. *Index* identifies the embedded window, and *option* specifies a particular configuration option, which must be one of the ones listed in the section [Embedded windows].
 
-    *pathName* **window configure** *index* ?*option value ...*?
+    [pathName]{.ins} [window]{.sub} [configure]{.lit} [index]{.arg} [option value]{.optdot}
     : Query or modify the configuration options for an embedded window. If no *option* is specified, returns a list describing all of the available options for the embedded window at *index* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified). If one or more *option-value* pairs are specified, then the command modifies the given option(s) to have the given value(s); in this case the command returns an empty string. See [Embedded windows] for information on the options that are supported.
 
-    *pathName* **window create** *index* ?*option value ...*?
+    [pathName]{.ins} [window]{.sub} [create]{.lit} [index]{.arg} [option value]{.optdot}
     : This command creates a new window annotation, which will appear in the text at the position given by *index*. Any number of *option-value* pairs may be specified to configure the annotation. See [Embedded windows] for information on the options that are supported. Returns an empty string.
 
-    *pathName* **window names**
+    [pathName]{.ins} [window]{.sub} [names]{.lit}
     : Returns a list whose elements are the names of all windows currently embedded in *window*.
 
 
-*pathName* **xview** *option args*
+[pathName]{.ins} [xview]{.sub} [option]{.arg} [args]{.arg}
 : This command is used to query and change the horizontal position of the text in the widget's window. It can take any of the following forms:
 
     [pathName]{.ins} [xview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1; together they describe the portion of the document's horizontal span that is visible in the window. For example, if the first element is .2 and the second element is .6, 20% of the text is off-screen to the left, the middle 40% is visible in the window, and 40% of the text is off-screen to the right. The fractions refer only to the lines that are actually visible in the window: if the lines in the window are all very short, so that they are entirely visible, the returned fractions will be 0 and 1, even if there are other lines in the text that are much wider than the window. These are the same values passed to scrollbars via the **-xscrollcommand** option.
 
-    *pathName* **xview moveto** *fraction*
+    [pathName]{.ins} [xview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that *fraction* of the horizontal span of the text is off-screen to the left. *Fraction* is a fraction between 0 and 1.
 
-    *pathName* **xview scroll** *number what*
+    [pathName]{.ins} [xview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command shifts the view in the window left or right according to *number* and *what*. *What* must be **pages**, **pixels**, or **units**. If *what* is **pages** or **units** then *number* must be an integer, otherwise number may be specified in any of the forms acceptable to [Tk\_GetPixels][GetPixels], such as "2.0c" or "1i" (the result is rounded to the nearest integer value. If no units are given, pixels are assumed). If *what* is **pages** then the view adjusts by *number* screenfuls; if it is **pixels** then the view adjusts by *number* pixels; if it is **units**, the view adjusts left or right by *number* average-width characters on the display. If *number* is negative then characters farther to the left become visible; if it is positive then characters farther to the right become visible.
 
 
-*pathName* **yview** ?*args*?
+[pathName]{.ins} [yview]{.sub} [args]{.optarg}
 : This command is used to query and change the vertical position of the text in the widget's window. It can take any of the following forms:
 
-    *pathName* **yview**
+    [pathName]{.ins} [yview]{.sub}
     : Returns a list containing two elements, both of which are real fractions between 0 and 1. The first element gives the position of the first visible pixel of the first character (or image, etc) in the top line in the window, relative to the text as a whole (0.5 means it is halfway through the text, for example). The second element gives the position of the first pixel just after the last visible one in the bottom line of the window, relative to the text as a whole. These are the same values passed to scrollbars via the **-yscrollcommand** option.
 
-    *pathName* **yview moveto** *fraction*
+    [pathName]{.ins} [yview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that the pixel given by *fraction* appears at the top of the top line of the window. *Fraction* is a fraction between 0 and 1; 0 indicates the first pixel of the first character in the text, 0.33 indicates the pixel that is one-third the way through the text; and so on. Values close to 1 will indicate values close to the last pixel in the text (1 actually refers to one pixel beyond the last pixel), but in such cases the widget will never scroll beyond the last pixel, and so a value of 1 will effectively be rounded back to whatever fraction ensures the last pixel is at the bottom of the window, and some other pixel is at the top.
 
-    *pathName* **yview scroll** *number what*
+    [pathName]{.ins} [yview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command adjust the view in the window up or down according to *number* and *what*. *What* must be **pages**, **pixels**, or **units**. If *what* is **units** or **pages** then *number* must be an integer, otherwise number may be specified in any of the forms acceptable to [Tk\_GetPixels][GetPixels], such as "2.0c" or "1i" (the result is rounded to the nearest integer value. If no units are given, pixels are assumed). If *what* is **units**, the view adjusts up or down by *number* lines on the display; if it is **pages** then the view adjusts by *number* screenfuls; if it is **pixels** then the view adjusts by *number* pixels. If *number* is negative then earlier positions in the text become visible; if it is positive then later positions in the text become visible.
 
-    *pathName* **yview** ?**-pickplace**? *index*
+    [pathName]{.ins} [yview]{.sub} [-pickplace]{.optlit} [index]{.arg}
     : Changes the view in the widget's window to make *index* visible. If the **-pickplace** option is not specified then *index* will appear at the top of the window. If **-pickplace** is specified then the widget chooses where *index* appears in the window:
 
     \[1\]
@@ -848,7 +848,7 @@ pathName option ?arg ...?
 
     The **-pickplace** option has been obsoleted by the *pathName* **see** widget command (*pathName* **see** handles both x- and y-motion to make a location visible, whereas the **-pickplace** mode only handles motion in y).
 
-*pathName* **yview** *number*
+[pathName]{.ins} [yview]{.sub} [number]{.arg}
 : This command makes the first character on the line after the one given by *number* visible at the top of the window. *Number* must be an integer. This command used to be used for scrolling, but now it is obsolete.
 
 

@@ -93,13 +93,13 @@ The **button** command creates a new Tcl command whose name is *pathName*.  This
 pathName option ?arg ...?
 ```
 
-*Option* and the *arg*s determine the exact behavior of the command.  The following commands are possible for button widgets:
+*option* and the *arg*s determine the exact behavior of the command.  The following commands are possible for button widgets:
 
 [pathName]{.ins} [cget]{.sub} [option]{.arg}
-: Returns the current value of the configuration option given by *option*. *Option* may have any of the values accepted by the **button** command.
+: Returns the current value of the configuration option given by *option*. *option* may have any of the values accepted by the **button** command.
 
 [pathName]{.ins} [configure]{.sub} [option]{.optarg} [value option value]{.optdot}
-: Query or modify the configuration options of the widget. If no *option* is specified, returns a list describing all of the available options for *pathName* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list).  If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified).  If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s);  in this case the command returns an empty string. *Option* may have any of the values accepted by the **button** command.
+: Query or modify the configuration options of the widget. If no *option* is specified, returns a list describing all of the available options for *pathName* (see [Tk\_ConfigureInfo][ConfigWidg] for information on the format of this list).  If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no *option* is specified).  If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s);  in this case the command returns an empty string. *option* may have any of the values accepted by the **button** command.
 
 [pathName]{.ins} [flash]{.sub}
 : Flash the button.  This is accomplished by redisplaying the button several times, alternating between the configured activebackground and background colors.  At the end of the flash the button is left in the same normal/active state as when the command was invoked. This command is ignored if the button's state is **disabled**.

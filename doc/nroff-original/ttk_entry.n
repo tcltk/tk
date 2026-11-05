@@ -201,17 +201,20 @@ indicated by \fIindex\fR.  Returns the empty string.
 This command is used to adjust the selection within an entry.  It
 has several forms, depending on \fIoption\fR:
 .RS
+.\" METHOD: selection clear
 .TP
 \fIpathName \fBselection clear\fR
 .
 Clear the selection if it is currently in this widget.
 If the selection is not in this widget then the command has no effect.
 Returns the empty string.
+.\" METHOD: selection present
 .TP
 \fIpathName \fBselection present\fR
 .
 Returns 1 if there is are characters selected in the entry,
 0 if nothing is selected.
+.\" METHOD: selection range
 .TP
 \fIpathName \fBselection range \fIstart end\fR
 .

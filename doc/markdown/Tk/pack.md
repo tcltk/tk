@@ -43,16 +43,16 @@ The **pack** command is used to communicate with the packer, a geometry manager 
     [-after]{.lit} [other]{.arg}
     : *Other* must the name of another window. Use its container as the container for the content, and insert the content just after *other* in the packing order.
 
-    **-anchor** *anchor*
+    [-anchor]{.lit} [anchor]{.arg}
     : *Anchor* must be a valid anchor position such as **n** or **sw**; it specifies where to position each content in its parcel. Defaults to **center**.
 
-    **-before** *other*
+    [-before]{.lit} [other]{.arg}
     : *Other* must the name of another window. Use its container as the container for the content, and insert the content just before *other* in the packing order.
 
-    **-expand** *boolean*
+    [-expand]{.lit} [boolean]{.arg}
     : Specifies whether the content should be expanded to consume extra space in their container. *Boolean* may have any proper boolean value, such as **1** or **no**. Defaults to 0.
 
-    **-fill** *style*
+    [-fill]{.lit} [style]{.arg}
     : If a content's parcel is larger than its requested dimensions, this option may be used to stretch the content. *Style* must have one of the following values:
 
     **none**
@@ -68,7 +68,7 @@ The **pack** command is used to communicate with the packer, a geometry manager 
     : Stretch the content both horizontally and vertically.
 
 
-**-in** *container*
+[-in]{.lit} [container]{.arg}
 : Insert the window at the end of the packing order for the container window given by *container*.
 
 [-ipadx]{.lit} [amount]{.arg}

@@ -148,10 +148,12 @@ Returns the name of the element under the point given by \fIx\fR and \fIy\fR,
 or the empty string if no component is present at that location.
 The following subcommands are supported:
 .RS
+.\" METHOD: identify element
 .TP
 \fIpathname \fBidentify element\fI x y\fR
 .
 Returns the name of the element at the specified location.
+.\" METHOD: identify tab
 .TP
 \fIpathname \fBidentify tab\fI x y\fR
 .

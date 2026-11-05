@@ -180,19 +180,19 @@ There are a number of additional global configuration options that control the d
     [-file]{.lit}
     : icon of file at given path
 
-    **-fileType**
+    [-fileType]{.lit}
     : icon of given file type
 
-    **-osType**
+    [-osType]{.lit}
     : icon of given 4-char OSType file type
 
-    **-systemType**
+    [-systemType]{.lit}
     : icon for given IconServices 4-char OSType
 
-    **-namedImage**
+    [-namedImage]{.lit}
     : named NSImage for given name
 
-    **-imageFile**
+    [-imageFile]{.lit}
     : image at given path
 
 

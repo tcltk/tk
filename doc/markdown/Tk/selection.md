@@ -59,7 +59,7 @@ The first argument to **selection** determines the format of the rest of the arg
 [selection]{.cmd} [own]{.sub} [[-displayof]{.lit} [window]{.arg}]{.optarg} [[-selection]{.lit} [selection]{.arg}]{.optarg}
 : see below ...
 
-**selection own** ?**-command** *command*? ?**-selection** *selection*? *window*
+[selection]{.cmd} [own]{.sub} [[-command]{.lit} [command]{.arg}]{.optarg} [[-selection]{.lit} [selection]{.arg}]{.optarg} [window]{.arg}
 : The first form of **selection own** returns the path name of the window in this application that owns *selection* on the display containing *window*, or an empty string if no window in this application owns the selection.  *Selection* defaults to **PRIMARY** and *window* defaults to ".".
 
     The second form of **selection own** causes *window* to become the new owner of *selection* on *window*'s display, returning an empty string as result. The existing owner, if any, is notified that it has lost the selection. If *command* is specified, it is a Tcl script to execute when some other window claims ownership of the selection away from *window*.  *Selection* defaults to PRIMARY.

@@ -52,6 +52,7 @@ Otherwise, in its third form, set the specified \fI\-option\fRs to the given
 .TP
 \fBttk::style element\fI args\fR
 .RS
+.\" METHOD: element create
 .TP
 \fBttk::style element create\fI elementName type\fR ?\fIargs...\fR?
 .
@@ -61,10 +62,12 @@ The only cross-platform built-in element type is \fIimage\fR
 (see \fBTtk_RegisterElementFactory\fR). On suitable versions of Windows
 an element factory is registered to create Windows theme elements
 (see \fBttk_vsapi\fR(n)).
+.\" METHOD: element names
 .TP
 \fBttk::style element names\fR
 .
 Returns the list of elements defined in the current theme.
+.\" METHOD: element options
 .TP
 \fBttk::style element options \fIelement\fR
 .

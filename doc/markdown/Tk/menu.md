@@ -249,13 +249,13 @@ The following widget commands are possible for menu widgets:
 [pathName]{.ins} [yview]{.sub} [args]{.optarg}
 : This command is used to query and change the vertical scrolling of the entries of a menu which is higher than the screen.  Such a menu is limited to the height of the screen, and its entries can be scrolled with the arrows displayed at its top and bottom.  This is only done on X11; on Windows and macOS the system scrolls menus. It can take any of the following forms:
 
-    *pathName* **yview**
+    [pathName]{.ins} [yview]{.sub}
     : Returns a list containing two elements, both of which are real fractions between 0 and 1.  The first element gives the position of the entries at the top of the visible area, relative to the height of all entries (0.0 means the first entry is at the top).  The second element gives the position just after the visible area.  For a menu which is not scrolled, the result is **0.0 1.0**.
 
-    *pathName* **yview moveto** *fraction*
+    [pathName]{.ins} [yview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Scrolls the entries so that the given fraction of their height is above the visible area.
 
-    *pathName* **yview scroll** *number what*
+    [pathName]{.ins} [yview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : Scrolls the entries by *number* lines or pages.  *What* must be either **units** (the height of a line of the menu font) or **pages** (the height of the visible area, minus a line).
 
 

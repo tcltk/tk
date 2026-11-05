@@ -122,28 +122,28 @@ pathName option ?arg ...?
     [-after]{.lit} [window]{.arg}
     : Insert the window after the window specified.  *window* should be the name of a window already managed by *pathName*.
 
-    **-before** *window*
+    [-before]{.lit} [window]{.arg}
     : Insert the window before the window specified.  *window* should be the name of a window already managed by *pathName*.
 
-    **-height** *size*
+    [-height]{.lit} [size]{.arg}
     : Specify a height for the window.  The height will be the outer dimension of the window including its border, if any.  If *size* is an empty string, or if **-height** is not specified, then the height requested internally by the window will be used initially; the height may later be adjusted by the movement of sashes in the panedwindow.  *Size* may be any value accepted by [Tk\_GetPixels][GetPixels].
 
-    **-hide** *boolean*
+    [-hide]{.lit} [boolean]{.arg}
     : Controls the visibility of a pane.  When the *boolean* is true (according to [Tcl\_GetBoolean][GetInt]) the pane will not be visible, but it will still be maintained in the list of panes.
 
-    **-minsize** *n*
+    [-minsize]{.lit} [n]{.arg}
     : Specifies that the size of the window cannot be made less than *n*.  This constraint only affects the size of the widget in the paned dimension — the x dimension for horizontal panedwindows, the y dimension for vertical panedwindows.  May be any value accepted by [Tk\_GetPixels][GetPixels].
 
-    **-padx** *n*
+    [-padx]{.lit} [n]{.arg}
     : Specifies a non-negative value indicating how much extra space to leave on each side of the window in the X-direction.  The value may have any of the forms accepted by [Tk\_GetPixels][GetPixels].
 
-    **-pady** *n*
+    [-pady]{.lit} [n]{.arg}
     : Specifies a non-negative value indicating how much extra space to leave on each side of the window in the Y-direction.  The value may have any of the forms accepted by [Tk\_GetPixels][GetPixels].
 
-    **-sticky** *style*
+    [-sticky]{.lit} [style]{.arg}
     : If a window's pane is larger than the requested dimensions of the window, this option may be used to position (or stretch) the window within its pane.  *Style*  is a string that contains zero or more of the characters **n**, **s**, **e** or **w**.  The string can optionally contains spaces or commas, but they are ignored.  Each letter refers to a side (north, south, east, or west) that the window will "stick" to.  If both **n** and **s** (or **e** and **w**) are specified, the window will be stretched to fill the entire height (or width) of its cavity.
 
-    **-stretch** *when*
+    [-stretch]{.lit} [when]{.arg}
     : Controls how extra space is allocated to each of the panes. *When* is one of **always**, **first**, **last**, **middle**, and **never**. The panedwindow will calculate the required size of all its panes. Any remaining (or deficit) space will be distributed to those panes marked for stretching. The space will be distributed based on each panes current ratio of the whole.  The *when* values have the following definition:
 
     **always**
@@ -162,7 +162,7 @@ pathName option ?arg ...?
     : This pane will never stretch.
 
 
-**-width** *size*
+[-width]{.lit} [size]{.arg}
 : Specify a width for the window.  The width will be the outer dimension of the window including its border, if any.  If *size* is an empty string, or if **-width** is not specified, then the width requested internally by the window will be used initially; the width may later be adjusted by the movement of sashes in the panedwindow.  *Size* may be any value accepted by [Tk\_GetPixels][GetPixels].
 
 [pathName]{.ins} [panes]{.sub}
@@ -174,26 +174,26 @@ pathName option ?arg ...?
     [pathName]{.ins} [proxy]{.sub} [coord]{.lit}
     : Return a list containing the x and y coordinates of the most recent proxy location.
 
-    *pathName* **proxy forget**
+    [pathName]{.ins} [proxy]{.sub} [forget]{.lit}
     : Remove the proxy from the display.
 
-    *pathName* **proxy place** *x y*
+    [pathName]{.ins} [proxy]{.sub} [place]{.lit} [x]{.arg} [y]{.arg}
     : Place the proxy at the given *x* and *y* coordinates.
 
 
-*pathName* **sash** ?*args*?
+[pathName]{.ins} [sash]{.sub} [args]{.optarg}
 : This command is used to query and change the position of sashes in the panedwindow.  It can take any of the following forms:
 
-    *pathName* **sash coord** *index*
+    [pathName]{.ins} [sash]{.sub} [coord]{.lit} [index]{.arg}
     : Return the current x and y coordinate pair for the sash given by *index*.  *Index* must be an integer between 0 and 1 less than the number of panes in the panedwindow.  The coordinates given are those of the top left corner of the region containing the sash.
 
-    *pathName* **sash dragto** *index x y*
+    [pathName]{.ins} [sash]{.sub} [dragto]{.lit} [index]{.arg} [x]{.arg} [y]{.arg}
     : This command computes the difference between the given coordinates and the coordinates given to the last **sash mark** command for the given sash.  It then moves that sash the computed difference.  The return value is the empty string.
 
-    *pathName* **sash mark** *index x y*
+    [pathName]{.ins} [sash]{.sub} [mark]{.lit} [index]{.arg} [x]{.arg} [y]{.arg}
     : Records *x* and *y* for the sash given by *index*; used in conjunction with later **sash dragto** commands to move the sash.
 
-    *pathName* **sash place** *index x y*
+    [pathName]{.ins} [sash]{.sub} [place]{.lit} [index]{.arg} [x]{.arg} [y]{.arg}
     : Place the sash given by *index* at the given coordinates.
 
 

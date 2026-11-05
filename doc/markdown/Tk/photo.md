@@ -100,42 +100,42 @@ The following commands are possible for photo images:
     [-from]{.lit} [x1]{.arg} [y1]{.arg} [x2]{.arg} [y2]{.arg}
     : Specifies a rectangular sub-region of the source image to be copied. (*x1,y1*) and (*x2,y2*) specify diagonally opposite corners of the rectangle.  If *x2* and *y2* are not specified, the default value is the bottom-right corner of the source image.  The pixels copied will include the left and top edges of the specified rectangle but not the bottom or right edges.  If the **-from** option is not given, the default is the whole source image.
 
-    **-to** *x1 y1 x2 y2*
+    [-to]{.lit} [x1]{.arg} [y1]{.arg} [x2]{.arg} [y2]{.arg}
     : Specifies a rectangular sub-region of the destination image to be affected.  (*x1,y1*) and (*x2,y2*) specify diagonally opposite corners of the rectangle.  If *x2* and *y2* are not specified, the default value is (*x1,y1*) plus the size of the source region (after subsampling and zooming, if specified).  If *x2* and *y2* are specified, the source region will be replicated if necessary to fill the destination region in a tiled fashion.
 
-    **-shrink**
+    [-shrink]{.lit}
     : Specifies that the size of the destination image should be reduced, if necessary, so that the region being copied into is at the bottom-right corner of the image.  This option will not affect the width or height of the image if the user has specified a non-zero value for the **-width** or **-height** configuration option, respectively.
 
-    **-zoom** *x y*
+    [-zoom]{.lit} [x]{.arg} [y]{.arg}
     : Specifies that the source region should be magnified by a factor of *x* in the X direction and *y* in the Y direction.  If *y* is not given, the default value is the same as *x*.  With this option, each pixel in the source image will be expanded into a block of *x* x *y* pixels in the destination image, all the same color.  *x* and *y* must be greater than 0.
 
-    **-subsample** *x y*
+    [-subsample]{.lit} [x]{.arg} [y]{.arg}
     : Specifies that the source image should be reduced in size by using only every *x*th pixel in the X direction and *y*th pixel in the Y direction.  Negative values will cause the image to be flipped about the Y or X axes, respectively.  If *y* is not given, the default value is the same as *x*.
 
-    **-compositingrule** *rule*
+    [-compositingrule]{.lit} [rule]{.arg}
     : Specifies how transparent pixels in the source image are combined with the destination image.  When a compositing rule of *overlay* is set, the old contents of the destination image are visible, as if the source image were printed on a piece of transparent film and placed over the top of the destination.  When a compositing rule of *set* is set, the old contents of the destination image are discarded and the source image is used as-is.  The default compositing rule is *overlay*.
 
 
-*imageName* **data** ?*option value(s) ...*?
+[imageName]{.ins} [data]{.sub} [option value(s)]{.optdot}
 : Returns image data in the form of a string. [The format of the string depends on the format handler. By default, a human readable format as a list of lists of pixel data is used, other formats can be chosen with the **-format** option. See [Image formats] below for details.]{version="9.0"} The following options may be specified:
 
     [-background]{.lit} [color]{.arg}
     : If the color is specified, the data will not contain any transparency information. In all transparent pixels the color will be replaced by the specified color.
 
-    **-format** *formatSpec*
+    [-format]{.lit} [formatSpec]{.arg}
     : Specifies the image file format handler to use. In its simplest form, *formatSpec* is just the name of the format handler. Optionally, additional arguments can be passed to the format handler. In that case, *formatSpec* is a list starting with the format handler name as the first list element and followed by any number of *option value* pairs, using the options supported by the format handler (see section [Format suboptions] for details). Specifically, this subcommand searches for the first handler whose name matches an initial substring of the format handler name and which has the capability to write a string containing this image data. [If this option is not given, this subcommand uses the default format that consists of a list (one element per row) of lists (one element per pixel/column) of colors in "**#***rrggbb*" format (see [Image formats] below).]{version="9.0"}
 
-    **-from** *x1 y1 x2 y2*
+    [-from]{.lit} [x1]{.arg} [y1]{.arg} [x2]{.arg} [y2]{.arg}
     : Specifies a rectangular region of *imageName* to be returned. If only *x1* and *y1* are specified, the region extends from *(x1,y1)* to the bottom-right corner of *imageName*.  If all four coordinates are given, they specify diagonally opposite corners of the rectangular region, including x1,y1 and excluding x2,y2.  The default, if this option is not given, is the whole image.
 
-    **-grayscale**
+    [-grayscale]{.lit}
     : If this options is specified, the data will not contain color information. All pixel data will be transformed into grayscale. 
 
-    [**-metadata** *metadata*]{version="9.0"}
+    [-metadata]{.lit} [metadata]{.arg}
     : [Image format handler may use metadata to be included in the returned data string. The specified *metadata* is passed to the driver for inclusion in the data. If no **-metadata** option is given, the current metadata of the image is used.]{version="9.0"}
 
 
-*imageName* **get** *x y* ?**-withalpha**?
+[imageName]{.ins} [get]{.sub} [x]{.arg} [y]{.arg} [-withalpha]{.optlit}
 : Returns the color of the pixel at coordinates (*x*,*y*) in the image as a list of three integers between 0 and 255, representing the red, green and blue components respectively. If the **-withalpha** option is specified, the returned list will have a fourth element representing the alpha value of the pixel as an integer between 0 and 255.
 
 [imageName]{.ins} [put]{.sub} [data]{.arg} [option value(s)]{.optdot}
@@ -144,33 +144,33 @@ The following commands are possible for photo images:
     [-format]{.lit} [formatSpec]{.arg}
     : Specifies the format of the image data in *data*. In its simplest form, *formatSpec* is just the name of the format handler of the image data. Optionally, additional arguments can be passed to the format handler. In that case, *formatSpec* is a list starting with the format handler name as the first list element and followed by any number of *option value* pairs, using the options supported by the format handler (see section [Format suboptions] for details). Specifically, only image file format handlers whose names begin with the specified format handler name will be used while searching for an image data format handler to read the data. 
 
-    [**-metadata** *metadata*]{version="9.0"}
+    [-metadata]{.lit} [metadata]{.arg}
     : [A specified *metadata* is passed to the image format driver when interpreting the data. Note that the current metadata of the image is not passed to the format driver and is not changed by the command.]{version="9.0"}
 
-    **-to** *x1 y1* ?*x2 y2*?
+    [-to]{.lit} [x1]{.arg} [y1]{.arg} [x2 y2]{.optarg}
     : Specifies the coordinates of the top-left corner (*x1*,*y1*) of the region of *imageName* into which the image data will be copied.  The default position is (0,0).  If *x2*,*y2* is given and *data* is not large enough to cover the rectangle specified by this option, the image data extracted will be tiled so it covers the entire destination rectangle. If the region specified with this option is smaller than the supplied *data*, the exceeding data is silently discarded. Note that if *data* specifies a single color value, then a region extending to the bottom-right corner represented by (*x2*,*y2*) will be filled with that color.
 
 
-*imageName* [read] *filename* ?*option value(s) ...*?
+[imageName]{.ins} [read]{.sub} [filename]{.arg} [option value(s)]{.optdot}
 : Reads image data from the file named *filename* into the image. This command first searches the list of image file format handlers for a handler that can interpret the data in *filename*, and then reads the image in *filename* into *imageName* (the destination image).  The following options may be specified:
 
     [-format]{.lit} [formatSpec]{.arg}
     : Specifies the format of the image data in *filename*. In its simplest form, *formatSpec* is just the name of the format handler for the image data. Optionally, additional arguments can be passed to the format handler. In that case, *formatSpec* is a list starting with the format handler name as the first list element and followed by any number of *option value* pairs, using the options supported by the format handler (see section [Format suboptions] for details). Specifically, only image file format handlers that begin with the  specified handler name will be used while searching for an image data format handler to read the data.
 
-    **-from** *x1 y1 x2 y2*
+    [-from]{.lit} [x1]{.arg} [y1]{.arg} [x2]{.arg} [y2]{.arg}
     : Specifies a rectangular sub-region of the image file data to be copied to the destination image.  If only *x1* and *y1* are specified, the region extends from (*x1,y1*) to the bottom-right corner of the image in the image file.  If all four coordinates are specified, they specify diagonally opposite corners or the region. The default, if this option is not specified, is the whole of the image in the image file. 
 
-    [**-metadata** *metadata*]{version="9.0"}
+    [-metadata]{.lit} [metadata]{.arg}
     : [A specified *metadata* is passed to the image format driver when interpreting the data. Note that the current metadata of the image is not passed to the format driver and is not changed by the command.]{version="9.0"}
 
-    **-shrink**
+    [-shrink]{.lit}
     : If this option, the size of *imageName* will be reduced, if necessary, so that the region into which the image file data are read is at the bottom-right corner of the *imageName*.  This option will not affect the width or height of the image if the user has specified a non-zero value for the **-width** or **-height** configuration option, respectively.
 
-    **-to** *x y*
+    [-to]{.lit} [x]{.arg} [y]{.arg}
     : Specifies the coordinates of the top-left corner of the region of *imageName* into which data from *filename* are to be read. The default is (0,0).
 
 
-*imageName* **redither**
+[imageName]{.ins} [redither]{.sub}
 : The dithering algorithm used in displaying photo images propagates quantization errors from one pixel to its neighbors. If the image data for *imageName* is supplied in pieces, the dithered image may not be exactly correct.  Normally the difference is not noticeable, but if it is a problem, this command can be used to recalculate the dithered image in each window where the image is displayed.
 
 [imageName]{.ins} [transparency]{.sub} [subcommand]{.arg} [arg]{.optdot}
@@ -179,26 +179,26 @@ The following commands are possible for photo images:
     [imageName]{.ins} [transparency]{.sub} [get]{.lit} [x]{.arg} [y]{.arg} [-alpha]{.optlit}
     : [Returns true if the pixel at (*x*,*y*) is fully transparent, false otherwise.  If the option **-alpha** is passed, returns the alpha value of the pixel instead, as an integer in the range 0 to 255.]{version="9.0"}
 
-    *imageName* **transparency set** *x y newVal* ?**-alpha**?
+    [imageName]{.ins} [transparency]{.sub} [set]{.lit} [x]{.arg} [y]{.arg} [newVal]{.arg} [-alpha]{.optlit}
     : [Change the transparency of the pixel at (*x*,*y*) to *newVal.* If no additional option is passed, *newVal* is interpreted as a boolean and the pixel is made fully transparent if that value is true, fully opaque otherwise.  If the **-alpha** option is passed, *newVal* is interpreted as an integral alpha value for the pixel, which must be in the range 0 to 255.]{version="9.0"}
 
 
-*imageName* **write** *filename* ?*option value(s) ...*?
+[imageName]{.ins} [write]{.sub} [filename]{.arg} [option value(s)]{.optdot}
 : Writes image data from *imageName* to a file named *filename*. The following options may be specified:
 
     [-background]{.lit} [color]{.arg}
     : If the color is specified, the data will not contain any transparency information. In all transparent pixels the color will be replaced by the specified color.
 
-    **-format** *formatSpec*
+    [-format]{.lit} [formatSpec]{.arg}
     : Specifies the image file format handler to be used to write the data to the file. In its simplest form, *formatSpec* is just the name of the format handler for the data. Optionally, additional arguments can be passed to the format handler. In that case, *formatSpec* is a list starting with the format handler name as the first list element and followed by any number of *option value* pairs, using the options supported by the format handler (see section [Format suboptions] for details). Specifically, this subcommand searches for the first handler whose name matches an initial substring of the handler name and which has the capability to write an image file. If this option is not given, the format is guessed from the file extension. If that cannot be determined, this subcommand uses the first handler that has the capability to write an image file.
 
-    **-from** *x1 y1 x2 y2*
+    [-from]{.lit} [x1]{.arg} [y1]{.arg} [x2]{.arg} [y2]{.arg}
     : Specifies a rectangular region of *imageName* to be written to the image file.  If only *x1* and *y1* are specified, the region extends from *(x1,y1)* to the bottom-right corner of *imageName*.  If all four coordinates are given, they specify diagonally opposite corners of the rectangular region.  The default, if this option is not given, is the whole image.
 
-    **-grayscale**
+    [-grayscale]{.lit}
     : If this options is specified, the data will not contain color information. All pixel data will be transformed into grayscale. 
 
-    [**-metadata** *metadata*]{version="9.0"}
+    [-metadata]{.lit} [metadata]{.arg}
     : [Image format handler may use metadata to be included in the written file. The specified *metadata* is passed to the driver for inclusion in the file. If no **-metadata** option is given, the current metadata of the image is used.]{version="9.0"}
 
 
@@ -389,6 +389,5 @@ foo put #F080 -to 0 0 30 30
 [GetColor]: ../TkCAPI/GetColor.md
 [image]: image.md
 [list]: ../Tcl/list.md
-[read]: ../Tcl/read.md
 [update]: ../Tcl/update.md
 
