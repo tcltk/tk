@@ -167,6 +167,7 @@ to the userbase.
  - [Grab documentation does not have caveats for windows & mac](https://core.tcl-lang.org/tk/tktview/e02aac)
  - [X11: wm geometry reports the requested position after the window manager moved the window out of a panel's area](https://core.tcl-lang.org/tk/tktview/d1a711)
  - [Windows: -appearance set with wm attributes is lost when the wrapper is recreated](https://core.tcl-lang.org/tk/tktview/354fbe)
+ - [wm geometry returns wrong position for zoomed toplevels](https://core.tcl-lang.org/tk/tktview/557441)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
