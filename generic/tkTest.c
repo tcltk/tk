@@ -2316,7 +2316,7 @@ TestPhotoStringMatchCmd(
     }
 }
 
-#ifndef MAC_OSX_TK
+#if 1 || !defined(MAC_OSX_TK)
 /*
  *----------------------------------------------------------------------
  *
@@ -2416,7 +2416,7 @@ TestpixelObjCmd(
 		x, y, Tk_PathName(tkwin)));
 	return TCL_ERROR;
     }
-#ifdef MAC_OSX_TK
+#if 0 && defined(MAC_OSX_TK)
     /*
      * macOS composites windows through the display's color profile, so a raw
      * read-back differs from the sRGB values that were drawn.  Read and
