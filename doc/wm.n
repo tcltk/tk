@@ -68,6 +68,15 @@ Specifies the alpha transparency level of the toplevel. It accepts a value
 from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values outside that
 range will be constrained.  Where not supported, the \fB\-alpha\fR value
 remains at \fB1.0\fR.
+.\" OPTION: -appearance
+.TP
+\fB\-appearance\fR
+.
+Specifies whether the window is rendered in "dark mode" on Windows or
+macOS; on linux this command has no effect.  Allowed values are
+\fBauto\fR, \fBlight\fR and \fBdark\fR.  On macOS, if the setting is
+\fBauto\fR then the appearance of the window is controlled by the
+System Settings.  On Windows \fBauto\fR is equivalent to \fBlight\fR.
 .\" OPTION: -fullscreen
 .TP
 \fB\-fullscreen\fR
@@ -103,14 +112,6 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 at \fB{}\fR.
 .PP
 On macOS, the following attributes may be set.
-.\" OPTION: -appearance
-.TP
-\fB\-appearance\fR
-.
-Specifies whether the window is rendered in "dark mode".  Allowed
-values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
-is auto then the appearance of the window is controlled by the
-System Settings.
 .\" OPTION: -class
 .TP
 \fB\-class\fR
@@ -125,12 +126,36 @@ does not correspond to an existing window.  Doing that causes the
 class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
-.\" OPTION: -isdark
+.\" OPTION: -hidden
 .TP
-\fB\-isdark\fR
+\fB\-hidden\fR
 .
-Returns a boolean value which is true if the window is currently in
-dark mode.
+On macOS, setting this boolean attribute to true causes the toplevel
+\fIwindow\fR not to be displayed on the screen, but does not change
+any aspect of its Tk state.  All normal Tk operations are allowed for
+a hidden window, including configuring, withdrawing or iconifying the
+window. Drawing operations take place while a window is hidden,
+provided that the window is not \fI withdrawn\fR, but their effect is
+not visible to the user until the hidden attribut is set to false.
+This makes setting the hidden attribute very different from calling
+\fBwm withdraw\fR, because that command marks the toplevel and all of
+its widgets as unmapped, and drawing operations are not scheduled or
+run for unmapped widgets.
+.PP
+.RS
+The purpose of this is to make it possible for a complex window with
+many child widgets to be presented to the user only after it is fully
+rendeered, avoiding the visual artifacts that arise when a partly
+rendered window is visible.  To do this, set the hidden attribute to
+true immediately after creating the toplevel, configure the toplevel,
+then set its hidden attribute to false.
+.PP
+A raise operation, or clicking the dock icon of an iconified hidden
+window, will unhide the window.
+.PP
+A hidden window never contains the mouse pointer for the purpose of
+the crossing events \fBEnter\fR and \fBLeave\fR.
+.RE
 .\" OPTION: -modified
 .TP
 \fB\-modified\fR
@@ -689,6 +714,10 @@ that the window will not be reparented from the root window into a
 decorative frame and the user will not be able to manipulate the
 window using the normal window manager mechanisms.
 .RS
+.PP
+The window manager will not give the keyboard focus to such a window
+either; on X11 an application that needs key events in it has to claim the
+focus with \fBfocus \-force\fR.
 .PP
 Note that the override-redirect flag is only guaranteed to be taken notice of
 when the window is first mapped or when mapped after the state is changed from

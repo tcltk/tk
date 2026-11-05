@@ -15,7 +15,7 @@ wm title $w "Themed Nested Panes"
 wm iconname $w "ttkpane"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 4i -justify left -text "This demonstration shows off a nested set of themed paned windows. Their sizes can be changed by grabbing the area between each contained pane and dragging the divider."
+ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -text "This demonstration shows off a nested set of themed paned windows. Their sizes can be changed by grabbing the area between each contained pane and dragging the divider."
 pack $w.msg [ttk::separator $w.msgSep] -side top -fill x
 
 ## See Code / Dismiss

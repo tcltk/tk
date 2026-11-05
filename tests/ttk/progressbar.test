@@ -130,7 +130,7 @@ test progressbar-3.1 "progressbar non-core options" -setup {
 } -cleanup {
     unset res
     destroy .defaultpb
-} -result {w black left {} {} 0 75p 100.0 determinate horizontal 0 0.0 {}}
+} -result {{} {} {} {} {} {} 75p 100.0 determinate horizontal 0 0.0 {}}
 
 test progressbar-3.2 "TIP #442 options are taken into account" -setup {
     set res {}
@@ -178,6 +178,21 @@ test progressbar-3.3 {horizontal progressbar height with no -text (TIP #442) spe
     # there's no way I know to undo  '::ttk::style element create...'
 } -result {1 1}
 
+test progressbar-3.4 {text options are taken from the style - Bug [aba849a99b]} -setup {
+    ttk::style configure Test.Horizontal.TProgressbar -font {Helvetica 24}
+    ttk::progressbar .p -text "Hello"
+} -body {
+    set h0 [winfo reqheight .p]
+    .p configure -style Test.Horizontal.TProgressbar
+    set h1 [winfo reqheight .p]
+    .p configure -font {Helvetica 8}
+    set h2 [winfo reqheight .p]
+    list [expr {$h1 > $h0}] [expr {$h2 < $h1}]
+} -cleanup {
+    destroy .p
+    ttk::style configure Test.Horizontal.TProgressbar -font {}
+} -result {1 1}
+
 test progressbar-4.1 "style command" -body {
     ttk::progressbar .wh  ; # default is  -orient horizontal
     ttk::progressbar .wv -orient vertical
@@ -193,6 +208,26 @@ test progressbar-4.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.Vertical.TProgressbar Vertical.customStyle.Vertical.TProgressbar TProgressbar}
+
+test progressbar-5.1 "stopped indeterminate progressbar is not animated - Bug 89436bd244" -setup {
+    ttk::style configure Anim.Horizontal.TProgressbar -period 10 -maxphase 1000
+    ttk::progressbar .w -mode indeterminate -style Anim.Horizontal.TProgressbar
+    pack .w
+    update
+} -body {
+    after 100 {set ::done 1}; vwait ::done
+    set result [.w cget -phase]
+    .w step
+    after 100 {set ::done 1}; vwait ::done
+    lappend result [expr {[.w cget -phase] > 0}]
+    .w configure -value 0
+    set phase [.w cget -phase]
+    after 100 {set ::done 1}; vwait ::done
+    lappend result [expr {[.w cget -phase] - $phase}]
+} -cleanup {
+    destroy .w
+    unset -nocomplain ::done phase
+} -result {0 1 0}
 
 #
 # TESTFILE CLEANUP

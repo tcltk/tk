@@ -19,17 +19,55 @@ namespace eval ttk::theme::default {
 	-indicator		"#4a6984"
 	-disabledindicator	"#a3a3a3"
 	-pressedindicator	"#5895bc"
+	-inactiveselectbg	"#c3c3c3"
+	-inactiveselectfg	"#ffffff"
     }
 
-    # On X11, if the user specifies their own choice of colour scheme via
-    # X resources, then set the colour palette based on the user's choice.
-    if {[tk windowingsystem] eq "x11"} {
+    # DeriveMissingColors --
+    #
+    # seedColors --
+    #
+    # Sets the whole colour palette.  Every colour the option database
+    # answers for is taken from it, and every colour it does not answer for
+    # is computed from those which it did.
+    #
+    # Reading them from the option database, rather than being handed them,
+    # is what makes its priorities govern the ttk widgets as they govern the
+    # others: an X resource of the user's outranks anything Tk itself put
+    # there - including the colours Tk takes from the desktop, which
+    # ::tk::ApplyDesktopColorScheme writes at the widgetDefault priority.
+    #
+    # Computing the rest is necessary because the database rarely answers
+    # for all of it.  A desktop which translates its theme into X resources
+    # typically defines only background and foreground, and a user editing
+    # .Xdefaults by hand often defines fewer still: see ticket [807b2f8916].
+    # Whatever is left would otherwise keep a value chosen for some other
+    # colour scheme - a dark background beside Tk's near-white active
+    # background being the reported symptom, the text of a hovered button
+    # becoming illegible.
+    #
+    # Each colour is computed from the one it belongs with: what goes with
+    # the frame from the frame, what goes with the selection from the
+    # selection.  Where neither was supplied there is nothing better than
+    # the palette's own values, which go with one another already.
+    #
+    # The selection colour itself is never computed.  It is an accent, not a
+    # shade of the frame: nothing can derive an accent from a grey
+    # background, and the palette's own blue goes with a light frame and a
+    # dark one alike.  A desktop which has an accent colour of its own
+    # supplies it through the option database like any other colour.
+    #
+    # Arguments:
+    # None.
+
+    proc seedColors {} {
+	variable colors
+
+	set supplied {}
 	foreach \
 		xResourceName {
 		    {	background		Background		}
 		    {	foreground		Foreground		}
-		    {	background		Background		}
-		    {	background		Background		}
 		    {	foreground		Foreground		}
 		    {	activeBackground	ActiveBackground	}
 		    {	selectBackground	SelectBackground	}
@@ -38,18 +76,112 @@ namespace eval ttk::theme::default {
 		    {	disabledForeground	DisabledForeground	}
 		    {	selectBackground	SelectBackground	}
 		    {	disabledForeground	DisabledForeground	}
-		    {	selectBackground	SelectBackground	}
 		    {	windowColor		Background		} } \
 		colorName {
-		    -frame -foreground -window -alternate -text
+		    -frame -foreground -text
 		    -activebg -selectbg -selectfg
 		    -darker -disabledfg -indicator
-		    -disabledindicator -pressedindicator -window } {
+		    -disabledindicator -window } {
 	    set color [eval option get . $xResourceName]
 	    if {$color ne ""} {
 		set colors($colorName) $color
+		dict set supplied $colorName 1
 	    }
 	}
+
+	#
+	# What goes with the frame.  These are the rules tk_setPalette
+	# applies to the classic widgets, which keeps the two in agreement.
+	#
+
+	if {[dict exists $supplied -frame]} {
+	    set frame $colors(-frame)
+
+	    # A background given without a foreground is the common case: Tk's
+	    # own foreground is black, which a dark background would hide, so
+	    # choose one which can be read against the background - as
+	    # tk_setPalette does when it is given a background and nothing
+	    # else.
+	    if {![dict exists $supplied -foreground]} {
+		set colors(-foreground) [::tk::ContrastColor $frame]
+	    }
+	    if {![dict exists $supplied -text]} {
+		set colors(-text) $colors(-foreground)
+	    }
+	    set foreground $colors(-foreground)
+
+	    if {![dict exists $supplied -activebg]} {
+		set colors(-activebg) [::tk::Lighten $frame]
+	    }
+	    if {![dict exists $supplied -darker]} {
+		set colors(-darker) [::tk::Darken $frame 90]
+	    }
+	    if {![dict exists $supplied -disabledfg]} {
+		set colors(-disabledfg) [::tk::BlendColors $frame $foreground]
+	    }
+	    if {![dict exists $supplied -disabledindicator]} {
+		set colors(-disabledindicator) $colors(-disabledfg)
+	    }
+
+	    # The field of an entry or of a list is paper to the frame's
+	    # desk: white against a light frame, and darker than the frame
+	    # against a dark one, there being nothing lighter to go to.  It
+	    # is computed rather than read from a resource of its own,
+	    # because a resource which no user ever sets cannot be outranked
+	    # by one, and the user's own background would then be unable to
+	    # reach it.
+	    if {![dict exists $supplied -window]} {
+		if {[::tk::ContrastColor $frame] eq "white"} {
+		    set colors(-window) [::tk::Darken $frame 72]
+		} else {
+		    set colors(-window) #ffffff
+		}
+	    }
+	    if {![dict exists $supplied -alternate]} {
+		set colors(-alternate) \
+			[::tk::BlendColors $colors(-window) $frame 1 1]
+	    }
+	}
+
+	#
+	# What goes with the selection.
+	#
+
+	if {[dict exists $supplied -selectbg]} {
+	    # A selection colour without a foreground to put on it, or
+	    # without the lighter shade a pressed indicator takes, would
+	    # leave those at values chosen for a different selection colour.
+	    if {![dict exists $supplied -selectfg]} {
+		set colors(-selectfg) [::tk::ContrastColor $colors(-selectbg)]
+	    }
+	    if {![dict exists $supplied -pressedindicator]} {
+		set colors(-pressedindicator) \
+			[::tk::Lighten $colors(-indicator)]
+	    }
+	}
+
+	#
+	# What goes with both: the colours a selection takes once its window
+	# has lost the focus.  Tk used to show it in the trough colour, a
+	# shade of the frame, while leaving the text in the selection's own
+	# foreground - two colours chosen for different purposes and under no
+	# obligation to agree.  Against a dark frame the one is nearly the
+	# frame itself and the other can be black, which is how a selected
+	# row came to be invisible.  Dimming the selection towards the frame
+	# instead keeps it recognisable as a selection, and the foreground
+	# then follows from it.
+	#
+
+	if {[dict exists $supplied -frame] || [dict exists $supplied -selectbg]} {
+	    set colors(-inactiveselectbg) \
+		    [::tk::BlendColors $colors(-selectbg) $colors(-frame) 1 1]
+	    set colors(-inactiveselectfg) \
+		    [::tk::ContrastColor $colors(-inactiveselectbg)]
+	}
+    }
+
+    if {[tk windowingsystem] eq "x11"} {
+	seedColors
     }
 
     # This array is used to match up the tk widget options with
@@ -78,7 +210,10 @@ namespace eval ttk::theme::default {
 # None.
 
 proc ttk::theme::default::reconfigureDefaultTheme {} {
-    upvar ttk::theme::default::colors colors
+    # Note: a 'variable' declaration, not 'upvar ttk::theme::default::colors',
+    # because the latter resolves the name relative to the caller's namespace,
+    # and so only works for a caller in the global namespace.
+    variable colors
 
     # The definition of the 'default' theme.
 
@@ -92,7 +227,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -font		TkDefaultFont \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
-	    -insertwidth	1 \
+	    -insertwidth	0.75p \
 	    -insertcolor	$colors(-foreground) \
 	    -focuscolor		$colors(-text)
 
@@ -122,30 +257,34 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 		      pressed			$colors(-darker)]
 	}
 
+	# N.B.: The values of the -arrowsize option for the styles
+	# TMenubutton, TCombobox, TSpinbox, and TScrollbar must be specified
+	# in pixels, because they are used in SVG images for chevrons.
+
 	ttk::style configure TMenubutton \
-	    -relief raised -arrowsize 3.75p -arrowpadding 2.25p \
+	    -relief raised -arrowsize 5 -arrowpadding 2.25p \
 	    -arrowcolor $colors(-text) -padding {7.5p 2.25p}
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TEntry \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 2 -focuscolor $colors(-selectbg)
+	ttk::style configure TEntry -insertwidth 0.75p \
+	    -fieldbackground $colors(-window) -padding 0.75p \
+	    -focuswidth 1.5p -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox \
-	    -arrowsize 9p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	ttk::style configure TCombobox -insertwidth 0.75p \
+	    -arrowpadding 2.25p -arrowsize 4 -arrowcolor $colors(-text) \
+	    -fieldbackground $colors(-window) -padding 0.75p \
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TSpinbox \
-	    -arrowsize 7.5p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	ttk::style configure TSpinbox -insertwidth 0.75p \
+	    -arrowpadding 2.25p -arrowsize 3 -arrowcolor $colors(-text) \
+	    -fieldbackground $colors(-window) -padding {1.5p 0.75p 7.5p 0.75p} \
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -154,7 +293,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 9p -arrowsize 9p -arrowcolor $colors(-text)
+	    -width 6.75p -arrowpadding 1.5p -arrowsize 4 \
+	    -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
@@ -179,26 +319,43 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -highlight [list selected 1] \
 	    -highlightcolor [list selected $colors(-selectbg)]
 
-	# Treeview.
-	#
-	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item -indicatorsize 9p \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	# N.B.: The values of the -indicatorsize option for the
+	# treeview-related styles Heading and Item must be specified
+	# in pixels, because they are used in SVG images for chevrons.
+
+	# Treeview
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised -padding 2.25p \
+	    -indicatorsize 4 -indicatormargin {3p 1.5p 1.5p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Item -indicatorsize 4 \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
+	ttk::style map CheckTreeview.Item -indicatorbackground \
+	    [list {selected disabled}	$colors(-disabledindicator) \
+		  selected		$colors(-indicator) \
+		  disabled		$colors(-frame)]
+	ttk::style configure Treeview.Separator \
+	    -background $colors(-alternate)
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
 	    -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
-	ttk::setTreeviewRowHeight
-	ttk::style configure Treeview.Separator \
-	    -background $colors(-alternate)
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+	    -background [list	disabled $colors(-frame) \
+				background $colors(-inactiveselectbg) \
+				selected $colors(-selectbg) \
+				active   $colors(-activebg)] \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-inactiveselectfg) \
+				selected $colors(-selectfg) \
+				active   $colors(-foreground)]
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {
@@ -208,7 +365,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -borderwidth 1 -relief solid
 
 	#
-	# Toolbar buttons:
+	# Toolbar buttons
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
@@ -220,7 +377,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    }
 	}
 	ttk::style configure Toolbutton \
-	    -padding 1.5p -relief flat
+	    -anchor center -justify center -padding 1.5p -relief flat \
+	    -shiftrelief 1
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
@@ -229,3 +387,23 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 }
 
 ttk::theme::default::reconfigureDefaultTheme
+
+# ttk::theme::default::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook tab style $style.Tab.
+# Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::default::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n - s {
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
+	}
+	w - e {
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
+	}
+	default {
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
+	}
+    }
+}

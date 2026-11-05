@@ -56,10 +56,10 @@ typedef struct TagSearch {
     int type;			/* Search type (see #defs below) */
     Tcl_Size id;			/* Item id for searches by id */
     const char *string;		/* Tag expression string */
-    int stringIndex;		/* Current position in string scan */
-    int stringLength;		/* Length of tag expression string */
+    Tcl_Size stringIndex;		/* Current position in string scan */
+    Tcl_Size stringLength;		/* Length of tag expression string */
     char *rewritebuffer;	/* Tag string (after removing escapes) */
-    unsigned int rewritebufferAllocated;
+    size_t rewritebufferAllocated;
 				/* Available space for rewrites. */
     TagSearchExpr *expr;	/* Compiled tag expression. */
 } TagSearch;
@@ -400,7 +400,7 @@ static inline void
 ItemCursor(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int index)
+    Tcl_Size index)
 {
     itemPtr->typePtr->icursorProc((Tk_Canvas) canvasPtr, itemPtr, index);
 }
@@ -409,8 +409,8 @@ static inline void
 ItemDelChars(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int first,
-    int last)
+    Tcl_Size first,
+    Tcl_Size last)
 {
     itemPtr->typePtr->dCharsProc((Tk_Canvas) canvasPtr, itemPtr, first, last);
 }
@@ -456,7 +456,7 @@ static inline void
 ItemInsert(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int beforeThis,
+    Tcl_Size beforeThis,
     Tcl_Obj *toInsert)
 {
     itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
@@ -501,7 +501,7 @@ static inline Tcl_Size
 ItemSelection(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
-    int offset,
+    Tcl_Size offset,
     char *buffer,
     Tcl_Size maxBytes)
 {
@@ -510,7 +510,7 @@ ItemSelection(
     }
 
     return itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
-	    offset, buffer, (int)maxBytes);
+	    offset, buffer, maxBytes);
 }
 
 static inline void
@@ -600,7 +600,7 @@ DefaultRotateImplementation(
 	     * Write the coordinates back into the item.
 	     */
 
-	    newObjv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+	    newObjv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
 	    for (i=0 ; i<objc ; i++) {
 		newObjv[i] = Tcl_NewDoubleObj(coordv[i]);
 		Tcl_IncrRefCount(newObjv[i]);
@@ -952,7 +952,7 @@ CanvasWidgetCmd(
 	}
 
 	if (objc == 5) {
-	    int append = 0;
+	    bool append = false;
 	    unsigned int mask;
 	    const char *argv4 = Tcl_GetString(objv[4]);
 
@@ -993,7 +993,7 @@ CanvasWidgetCmd(
 	    }
 	    if (argv4[0] == '+') {
 		argv4++;
-		append = 1;
+		append = true;
 	    }
 	    mask = Tk_CreateBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]), argv4, append);
@@ -1466,7 +1466,7 @@ CanvasWidgetCmd(
 	if (canvasPtr->textInfo.gotFocus) {
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	}
-	if (Tcl_GetString(objv[2])[0] == 0) {
+	if (TkObjIsEmpty(objv[2])) {
 	    canvasPtr->textInfo.focusItemPtr = NULL;
 	    goto done;
 	}
@@ -1491,10 +1491,10 @@ CanvasWidgetCmd(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
-	    int i;
+	    Tcl_Size i;
 	    Tcl_Obj *resultObj = Tcl_NewObj();
 
-	    for (i = 0; i < (int)itemPtr->numTags; i++) {
+	    for (i = 0; i < itemPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
 			Tcl_NewStringObj(itemPtr->tagPtr[i], TCL_INDEX_NONE));
 	    }
@@ -1684,7 +1684,7 @@ CanvasWidgetCmd(
 	}
 
 	xBlank = 0;
-	if (Tcl_GetString(objv[3])[0] == '\0') {
+	if (TkObjIsEmpty(objv[3])) {
 	    xBlank = 1;
 	} else if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
 		objv[3], &newX) != TCL_OK) {
@@ -1693,7 +1693,7 @@ CanvasWidgetCmd(
 	}
 
 	yBlank = 0;
-	if (Tcl_GetString(objv[4])[0] == '\0') {
+	if (TkObjIsEmpty(objv[4])) {
 	    yBlank = 1;
 	} else if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
 		objv[4], &newY) != TCL_OK) {
@@ -2266,6 +2266,29 @@ ConfigureCanvas(
     Tk_State old_canvas_state=canvasPtr->canvas_state;
     int width, height, borderWidth, highlightWidth;
     int xScrollIncrement, yScrollIncrement;
+    Tcl_Size i;
+    int redrawItems = (objc == 0);
+
+    /*
+     * Options which do not affect the appearance of the items. If only such
+     * options are given, the items are not redrawn, which can be expensive
+     * for a canvas with many items. [Bug 1954833]
+     */
+
+    static const char *const noRedrawOptions[] = {
+	"-closeenough", "-cursor", "-takefocus", "-xscrollcommand",
+	"-xscrollincrement", "-yscrollcommand", "-yscrollincrement", NULL
+    };
+
+    for (i = 0; i < objc; i += 2) {
+	int index;
+
+	if (Tcl_GetIndexFromObj(NULL, objv[i], noRedrawOptions, "option", 0,
+		&index) != TCL_OK) {
+	    redrawItems = 1;
+	    break;
+	}
+    }
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, objv, canvasPtr,
@@ -2400,10 +2423,15 @@ ConfigureCanvas(
 
     CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, canvasPtr->yOrigin);
     canvasPtr->flags |= UPDATE_SCROLLBARS|REDRAW_BORDERS;
-    Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
-	    canvasPtr->xOrigin, canvasPtr->yOrigin,
-	    canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
-	    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
+    if (redrawItems) {
+	Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
+		canvasPtr->xOrigin, canvasPtr->yOrigin,
+		canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
+		canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
+    } else if (!(canvasPtr->flags & REDRAW_PENDING)) {
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+	canvasPtr->flags |= REDRAW_PENDING;
+    }
     return TCL_OK;
 }
 
@@ -3010,6 +3038,8 @@ DisplayCanvas(
     Pixmap pixmap;
     int screenX1, screenX2, screenY1, screenY2, width, height;
     int borderWidth, highlightWidth;
+    bool repickAgain = false;	/* A new current item is needed again after
+				 * the current one was chosen. */
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -3021,10 +3051,14 @@ DisplayCanvas(
 
     /*
      * Choose a new current item if that is needed (this could cause event
-     * handlers to be invoked).
+     * handlers to be invoked). This is done only once per redisplay: if the
+     * event handlers change the items so that a new current item is needed
+     * again, it is chosen at the next redisplay. Otherwise event handlers
+     * which move the current item away from the pointer and back would
+     * loop here forever without returning to the event loop. [Bug 1813595]
      */
 
-    while (canvasPtr->flags & REPICK_NEEDED) {
+    if (canvasPtr->flags & REPICK_NEEDED) {
 	Tcl_Preserve(canvasPtr);
 	canvasPtr->flags &= ~REPICK_NEEDED;
 	PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
@@ -3033,6 +3067,7 @@ DisplayCanvas(
 	if (tkwin == NULL) {
 	    return;
 	}
+	repickAgain = (canvasPtr->flags & REPICK_NEEDED) != 0;
     }
 
     /*
@@ -3241,8 +3276,18 @@ DisplayCanvas(
     canvasPtr->flags &= ~(REDRAW_PENDING|BBOX_NOT_EMPTY);
     canvasPtr->redrawX1 = canvasPtr->redrawX2 = 0;
     canvasPtr->redrawY1 = canvasPtr->redrawY2 = 0;
-    if (canvasPtr->flags & UPDATE_SCROLLBARS) {
+
+    /*
+     * Postpone the scrollbar update until the window is mapped: the size of
+     * an unmapped window is not final. [Bug 991849]
+     */
+
+    if ((canvasPtr->flags & UPDATE_SCROLLBARS) && Tk_IsMapped(tkwin)) {
 	CanvasUpdateScrollbars(canvasPtr);
+    }
+    if (repickAgain) {
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
+	canvasPtr->flags |= REDRAW_PENDING;
     }
 }
 
@@ -4103,7 +4148,7 @@ TagSearchScanExpr(
 		 * Remove trailing whitespace.
 		 */
 
-		while (1) {
+		while (true) {
 		    c = *--tag;
 
 		    /*
@@ -4799,7 +4844,7 @@ FindItems(
 	    return TCL_OK;
 	}
 	closestDist = ItemPoint(canvasPtr, itemPtr, coords, halo);
-	while (1) {
+	while (true) {
 	    double newDist;
 
 	    /*
@@ -4819,7 +4864,7 @@ FindItems(
 	     * the starting item.
 	     */
 
-	    while (1) {
+	    while (true) {
 		itemPtr = itemPtr->nextPtr;
 		if (itemPtr == NULL) {
 		    itemPtr = canvasPtr->firstItemPtr;
@@ -5140,7 +5185,17 @@ CanvasBindProc(
 	    CanvasDoEvent(canvasPtr, eventPtr);
 	    eventPtr->xbutton.state ^= mask;
 	    canvasPtr->state = eventPtr->xbutton.state;
-	    PickCurrentItem(canvasPtr, eventPtr);
+	    if ((long) (canvasPtr->pickEvent.xcrossing.time
+		    - eventPtr->xbutton.time) > 0) {
+		/*
+		 * The pointer moved while the binding script processed
+		 * events. [Bug 220902]
+		 */
+
+		PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
+	    } else {
+		PickCurrentItem(canvasPtr, eventPtr);
+	    }
 	    eventPtr->xbutton.state ^= mask;
 	}
 	break;
@@ -6016,7 +6071,16 @@ CanvasSetOrigin(
 	top = yOrigin + canvasPtr->inset - canvasPtr->scrollY1;
 	bottom = canvasPtr->scrollY2
 		- (yOrigin + Tk_Height(canvasPtr->tkwin) - canvasPtr->inset);
-	if ((left < 0) && (right > 0)) {
+	if (canvasPtr->scrollX2 - canvasPtr->scrollX1
+		<= Tk_Width(canvasPtr->tkwin) - 2 * canvasPtr->inset) {
+	    /*
+	     * The scroll region is not wider than the window, so there is
+	     * nothing to scroll: keep its left edge at the left edge of the
+	     * window. [Bug 2148529]
+	     */
+
+	    xOrigin = canvasPtr->scrollX1 - canvasPtr->inset;
+	} else if ((left < 0) && (right > 0)) {
 	    delta = (right > -left) ? -left : right;
 	    if (xScrollIncrement > 0) {
 		delta -= delta % xScrollIncrement;
@@ -6029,7 +6093,10 @@ CanvasSetOrigin(
 	    }
 	    xOrigin -= delta;
 	}
-	if ((top < 0) && (bottom > 0)) {
+	if (canvasPtr->scrollY2 - canvasPtr->scrollY1
+		<= Tk_Height(canvasPtr->tkwin) - 2 * canvasPtr->inset) {
+	    yOrigin = canvasPtr->scrollY1 - canvasPtr->inset;
+	} else if ((top < 0) && (bottom > 0)) {
 	    delta = (bottom > -top) ? -top : bottom;
 	    if (yScrollIncrement > 0) {
 		delta -= delta % yScrollIncrement;

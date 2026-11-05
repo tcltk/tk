@@ -193,8 +193,7 @@ static const TkCmd commands[] = {
     /*
      * Misc.
      */
-
-#ifdef MAC_OSX_TK
+#if 0 //#ifdef MAC_OSX_TK
     {"::tk::unsupported::MacWindowStyle",
 			TkUnsupported1ObjCmd,	PASSMAINWINDOW|ISSAFE},
 #endif
@@ -214,6 +213,7 @@ static void		DeleteWindowsExitProc(void *clientData);
 static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
 static int		Initialize(Tcl_Interp *interp);
+static int		IsInEmbeddedToplevel(const TkWindow *winPtr);
 static int		NameWindow(Tcl_Interp *interp, TkWindow *winPtr,
 			    TkWindow *parentPtr, const char *name);
 static void		UnlinkWindow(TkWindow *winPtr);
@@ -226,7 +226,7 @@ static void		UnlinkWindow(TkWindow *winPtr);
  * job is handled by the X server.
  */
 
-static int displayBeingClosed = 0;
+static bool displayBeingClosed = false;
 
 
 /*
@@ -252,7 +252,7 @@ static void
 TkCloseDisplay(
     TkDisplay *dispPtr)
 {
-    displayBeingClosed = 1;
+    displayBeingClosed = true;
     TkClipCleanup(dispPtr);
 
     if (dispPtr->name != NULL) {
@@ -286,6 +286,7 @@ TkCloseDisplay(
      */
 
     Tcl_DeleteHashTable(&dispPtr->winTable);
+    Tcl_DeleteHashTable(&dispPtr->deletedWinTable);
 
     Tcl_Free(dispPtr);
 
@@ -500,6 +501,7 @@ GetScreen(
 	    dispPtr->flags |= TK_DISPLAY_COLLAPSE_MOTION_EVENTS;
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
+	    Tcl_InitHashTable(&dispPtr->deletedWinTable, TCL_ONE_WORD_KEYS);
 
 	    dispPtr->name = (char *)Tcl_Alloc(length + 1);
 	    strncpy(dispPtr->name, screenName, length);
@@ -966,7 +968,7 @@ TkCreateMainWindow(
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
 #ifndef TCL_NO_DEPRECATED
 	    } else if (!cmdInfo.objClientData) {
-		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+		mainPtr->tclUpdateObjProc = (void *)cmdInfo.objProc;
 #endif /* TCL_NO_DEPRECATED */
 	    }
 	}
@@ -1017,8 +1019,11 @@ TkCreateMainWindow(
 #ifdef USE_NMAKE
 		".nmake"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(USE_ATK)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_ATK)
 		".no-atk"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !(defined(TK_USE_WAYLAND) || defined(HAVE_BIDI))
+		".no-bidi"
 #endif
 #ifdef TK_NO_DEPRECATED
 		".no-deprecate"
@@ -1026,8 +1031,11 @@ TkCreateMainWindow(
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_XFT)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XFT) && !defined(HAVE_BIDI)
 		".no-xft"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XSS)
+		".no-xss"
 #endif
 #ifdef __OBJC__
 		".objective-c"
@@ -1050,7 +1058,7 @@ TkCreateMainWindow(
 #if defined(_WIN32)
 		".win32"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND)
 		".x11"
 #endif
 		;
@@ -1327,6 +1335,34 @@ Tk_CreateWindowFromPath(
 /*
  *--------------------------------------------------------------
  *
+ * IsInEmbeddedToplevel --
+ *
+ *	Check whether a window belongs to an embedded toplevel. Only such
+ *	windows can be destroyed by the container before Tk knows it, so only
+ *	their deletion has to be recorded (see TkRecordDeletedWindow).
+ *
+ * Results:
+ *	Nonzero if the toplevel of the window is embedded.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+IsInEmbeddedToplevel(
+    const TkWindow *winPtr)
+{
+    while (winPtr && !(winPtr->flags & TK_TOP_HIERARCHY)) {
+	winPtr = winPtr->parentPtr;
+    }
+    return winPtr && (winPtr->flags & TK_EMBEDDED);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * Tk_DestroyWindow --
  *
  *	Destroy an existing window. After this call, the caller should never
@@ -1593,6 +1629,9 @@ Tk_DestroyWindow(
 #endif
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
 		winPtr->window));
+	if (IsInEmbeddedToplevel(winPtr)) {
+	    TkRecordDeletedWindow(dispPtr, winPtr->window);
+	}
 	winPtr->window = None;
     }
     UnlinkWindow(winPtr);

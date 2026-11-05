@@ -123,7 +123,7 @@ bind Text <<SelectNextLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+    tk::TextSetCursor %W [tk::TextPrevWord %W insert]
 }
 bind Text <<NextWord>> {
     tk::TextSetCursor %W [tk::TextNextWord %W insert]
@@ -135,7 +135,7 @@ bind Text <<NextPara>> {
     tk::TextSetCursor %W [tk::TextNextPara %W insert]
 }
 bind Text <<SelectPrevWord>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+    tk::TextKeySelect %W [tk::TextPrevWord %W insert]
 }
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextSelectNextWord %W insert]
@@ -217,6 +217,12 @@ bind Text <Return> {
 	%W edit separator
     }
 }
+
+# RTL Auto-Detection on Map Event
+bind Text <Map> {+
+    ::tk::TextAutoEnableRtl %W
+}
+
 bind Text <Delete> {
     if {[tk::TextCursorInSelection %W]} {
 	%W delete sel.first sel.last
@@ -358,7 +364,7 @@ bind Text <<Redo>> {
 
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
+	tk::TextSetCursor %W [tk::TextPrevWord %W insert]
     }
 }
 bind Text <Meta-d> {
@@ -383,12 +389,12 @@ bind Text <Meta-greater> {
 }
 bind Text <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
+	%W delete [tk::TextPrevWord %W insert] insert
     }
 }
 
@@ -478,10 +484,54 @@ bind Text <TouchpadScroll> {
     }
 }
 
+# ::tk::TextCharIsRtl --
+# Tells whether the character at pos is displayed right to left, which
+# [bbox] does not report: in right-to-left text the characters which follow
+# it in the logical order are displayed to its left.  The neighbours on the
+# same display line decide (the first one displayed at another x: marks and
+# zero-width characters share the x of their base); a character without
+# neighbours is taken as left to right.  Digits and Latin text inside
+# right-to-left text are therefore left to right, as they are displayed.
+#
+# Arguments:
+# w -		The text window.
+# pos -		Index of the character.
+# bbox -	The [bbox] of pos, which must not be empty.
+
+proc ::tk::TextCharIsRtl {w pos bbox} {
+    lassign $bbox bx by
+    foreach step {1 2 3 4} {
+	set nb [$w bbox [$w index "$pos + $step chars"]]
+	if {$nb eq "" || [lindex $nb 1] != $by} {
+	    break
+	}
+	if {[lindex $nb 0] != $bx} {
+	    return [expr {[lindex $nb 0] < $bx}]
+	}
+    }
+    foreach step {1 2 3 4} {
+	set pb [$w bbox [$w index "$pos - $step chars"]]
+	if {$pb eq "" || [lindex $pb 1] != $by} {
+	    break
+	}
+	if {[lindex $pb 0] != $bx} {
+	    return [expr {[lindex $pb 0] > $bx}]
+	}
+    }
+    return 0
+}
+
 # ::tk::TextClosestGap --
 # Given x and y coordinates, this procedure finds the closest boundary
 # between characters to the given coordinates and returns the index
 # of the character just after the boundary.
+#
+# In left-to-right text the boundary before a character is its left edge
+# and the one after it its right edge; in right-to-left text it is the
+# opposite: the characters are displayed from right to left, so the boundary
+# before a character is its right edge.  A click in the right half of a
+# right-to-left character is therefore closest to the boundary BEFORE it,
+# not after it.
 #
 # Arguments:
 # w -		The text window.
@@ -497,8 +547,56 @@ proc ::tk::TextClosestGap {w x y} {
     # The check on y coord of the line bbox with dlineinfo is to fix
     # [a9cf210a42] to properly handle selecting and moving the mouse
     # out of the widget.
-    if {$y < [lindex [$w dlineinfo $pos] 1] ||
-	    $x - [lindex $bbox 0] < [lindex $bbox 2]/2} {
+    # The bbox of a newline extends to the right edge of the widget, and
+    # the gap after it is on the next line. [13aabdb3c1]
+    if {$y < [lindex [$w dlineinfo $pos] 1] || [$w get $pos] eq "\n"} {
+	return $pos
+    }
+    # $nearLeft: the click is closest to the left edge of the character.
+    # That edge is the boundary before the character in left-to-right text
+    # and the one after it in right-to-left text.
+    set rtl [TextCharIsRtl $w $pos $bbox]
+    set nearLeft [expr {$x - [lindex $bbox 0] < [lindex $bbox 2]/2}]
+    set before [expr {$nearLeft != $rtl}]
+    # Keep the selection boundary out of grapheme clusters (a base
+    # character plus its combining marks, e.g. the nikkud and teamim of
+    # pointed Hebrew): a cluster occupies a single position on screen
+    # although it spans several indices, and a boundary landing inside it
+    # makes the mouse selection oscillate between those indices while
+    # dragging (the "dancing selection" bug).  Snap the boundary to the
+    # edge of the cluster, using the tk::startOfCluster / tk::endOfCluster
+    # commands (UAX #29), when they are available.
+    if {[llength [info commands ::tk::startOfCluster]]} {
+	# $cend is the first cluster boundary after $pos, so the cluster
+	# [$cstart, $cend) is the one containing $pos.  When $pos is itself
+	# a cluster boundary, $cstart == $pos.
+	set cend [TextNextPos $w $pos tk::endOfCluster]
+	if {[$w compare $cend != $pos]} {
+	    set cstart [TextPrevPos $w $cend tk::startOfCluster]
+	    if {[$w compare $cstart != $pos]} {
+		# $pos is strictly inside a cluster: decide with the base
+		# character of the cluster, and return the nearest cluster edge.
+		set bb [$w bbox $cstart]
+		if {$bb eq ""} {
+		    set bb $bbox
+		}
+		set rtl [TextCharIsRtl $w $cstart $bb]
+		set nearLeft [expr {$x - [lindex $bb 0] < [lindex $bb 2]/2}]
+		if {$nearLeft != $rtl} {
+		    return $cstart
+		}
+		return $cend
+	    }
+	    # $pos is the start of a multi-character cluster: the gap after
+	    # this cluster is $cend, NOT "$pos + 1 char" which would land
+	    # inside the cluster (on a combining mark).
+	    if {$before} {
+		return $pos
+	    }
+	    return $cend
+	}
+    }
+    if {$before} {
 	return $pos
     }
     $w index "$pos + 1 char"
@@ -657,6 +755,127 @@ proc ::tk::TextKeyExtend {w index} {
     $w tag remove sel 0.0 $first
     $w tag add sel $first $last
     $w tag remove sel $last end
+}
+
+# Characters with a strong right-to-left direction (Unicode Bidi_Class R or
+# AL): the RTL blocks of the BMP, RIGHT-TO-LEFT MARK, the Hebrew and Arabic
+# presentation forms (without U+FEFF ZERO WIDTH NO-BREAK SPACE), and the ranges
+# which Unicode reserves for RTL scripts.  This is used in bracket expressions
+# of regular expressions.
+
+set ::tk::RtlChars {֐-ࣿ‏יִ-﷿ﹰ-﻾\U00010800-\U00010FFF\U0001E800-\U0001EFFF}
+
+# ::tk::TextAutoEnableRtl --
+# Internal procedure: initial RTL detection on Map event, once per widget.
+# The tk_rtl_right tag exists after the first detection, so a text recreated
+# under the same name is checked again.
+#
+# Arguments:
+# w -		The text widget.
+
+proc ::tk::TextAutoEnableRtl {w} {
+    if {[winfo exists $w] && "tk_rtl_right" ni [$w tag names]} {
+	::tk::TextDetectAndTagRtl $w
+    }
+}
+
+# ::tk::TextScheduleRtlDetection --
+# Internal procedure: runs the RTL detection of a text widget at idle time,
+# once for all the edits made to that widget before.
+#
+# Arguments:
+# w -		The text widget.
+
+proc ::tk::TextScheduleRtlDetection {w} {
+    variable ::tk::Priv
+    if {![info exists Priv(rtlPending,$w)]} {
+	set Priv(rtlPending,$w) 1
+	after idle [list catch [list ::tk::TextDetectAndTagRtl $w]]
+    }
+}
+
+# ::tk::TextRtlLinePattern --
+# Internal procedure: returns a regexp matching the lines accepted by
+# ::tk::TextIsRtlLine.  \s and \x00-\x20 would also match the newline and let
+# a match run into the next lines, so Unicode white space is listed instead
+# (there is none outside the BMP).
+
+proc ::tk::TextRtlLinePattern {} {
+    variable ::tk::Priv
+    if {![info exists Priv(rtlLinePattern)]} {
+	set space ""
+	for {set c 0x21} {$c <= 0xFFFF} {incr c} {
+	    if {[string is space [format %c $c]]} {
+		append space [format %c $c]
+	    }
+	}
+	set rtl $::tk::RtlChars
+	set other "\\x00-\\x09\\x0B-\\x20$space\\-_:;,.!?$rtl"
+	set Priv(rtlLinePattern) "^\[$other\]*\[$rtl\]\[$other\]*\$"
+    }
+    return $Priv(rtlLinePattern)
+}
+
+# ::tk::TextDetectAndTagRtl --
+# Internal procedure: gives the tk_rtl_right tag (right-justification) to the
+# lines made only of RTL characters (see ::tk::RtlChars), as
+# ::tk::TextIsRtlLine decides, and takes it from the other lines.
+# The text is searched by the widget itself and the tag changed only where it
+# differs, so that each keystroke stays cheap in a long text.
+#
+# Arguments:
+# w -		The text window.
+
+proc ::tk::TextDetectAndTagRtl {w} {
+    variable ::tk::Priv
+    unset -nocomplain Priv(rtlPending,$w)
+    if {![winfo exists $w]} {
+	return
+    }
+    if {"tk_rtl_right" ni [$w tag names]} {
+	$w tag configure tk_rtl_right -justify right
+    }
+
+    set want {}
+    set rtl "\[$::tk::RtlChars\]"
+    if {[$w search -elide -regexp -- $rtl 1.0 end] ne ""} {
+	set lens {}
+	foreach start [$w search -all -elide -regexp -count lens -- \
+		[::tk::TextRtlLinePattern] 1.0 end] len $lens {
+	    lappend want $start [lindex [split $start .] 0].$len
+	}
+    }
+    set have [$w tag ranges tk_rtl_right]
+    if {$want eq $have} {
+	return
+    }
+    set wanted [dict create {*}$want]
+    foreach {first last} $have {
+	if {[dict exists $wanted $first] && [dict get $wanted $first] eq $last} {
+	    dict unset wanted $first
+	} else {
+	    $w tag remove tk_rtl_right $first $last
+	}
+    }
+    dict for {first last} $wanted {
+	$w tag add tk_rtl_right $first $last
+    }
+}
+
+# ::tk::TextIsRtlLine --
+# Internal helper: determines if a line contains only RTL characters.
+#
+# Returns 1 if the line contains RTL characters (see ::tk::RtlChars) and no
+# other characters except whitespace, control characters and the punctuation
+# characters "-_:;,.!?", 0 otherwise.
+#
+# Arguments:
+# line -	The text line to check.
+
+proc ::tk::TextIsRtlLine {line} {
+    variable RtlChars
+    expr {[regexp "\[$RtlChars\]" $line]
+	    && ![regexp "\[^$RtlChars\\s\\x00-\\x20_:;,.!?-\]" $line]}
 }
 
 # ::tk::TextPasteSelection --
@@ -878,6 +1097,8 @@ proc ::tk::TextInsert {w s} {
 	$w edit separator
 	$w configure -autoseparators 1
     }
+
+    ::tk::TextScheduleRtlDetection $w
 }
 
 # ::tk::TextUpDownLine --
@@ -1082,6 +1303,8 @@ proc ::tk_textPaste w {
 	    $w edit separator
 	    $w configure -autoseparators 1
 	}
+
+	::tk::TextScheduleRtlDetection $w
     }
 }
 
@@ -1096,6 +1319,18 @@ proc ::tk_textPaste w {
 proc ::tk::TextNextWord {w start} {
     TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
 	    tk::startOfNextWord
+}
+
+# ::tk::TextPrevWord --
+# Returns the index of the start of the word before a given position in
+# the text.
+#
+# Arguments:
+# w -		The text window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::TextPrevWord {w start} {
+    TextPrevPos $w $start tk::startOfPreviousWord end+1
 }
 
 # ::tk::TextSelectNextWord --
@@ -1125,7 +1360,7 @@ proc ::tk::TextNextPos {w start op} {
     set cur $start
     while {[$w compare $cur < end]} {
 	set text $text[$w get -displaychars $cur "$cur lineend + 1c"]
-	set pos [$op $text 0]
+	set pos [$op $text 0 [$w locale $cur]]
 	if {$pos >= 0} {
 	    return [$w index "$start + $pos display chars"]
 	}
@@ -1142,13 +1377,15 @@ proc ::tk::TextNextPos {w start op} {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 # op -		Function to use to find next position.
+# index -	Index to pass to the function: "end" is the character before
+#		the starting position, "end+1" is the starting position.
 
-proc ::tk::TextPrevPos {w start op} {
+proc ::tk::TextPrevPos {w start op {index end}} {
     set text ""
     set cur $start
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
-	set pos [$op $text end]
+	set pos [$op $text $index [$w locale $cur]]
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}

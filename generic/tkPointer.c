@@ -39,7 +39,7 @@ static Tcl_ThreadDataKey dataKey;
  * Forward declarations of procedures used in this file.
  */
 
-static int		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
+static bool		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
 			    int state);
 static void		InitializeEvent(XEvent *eventPtr, TkWindow *winPtr,
 			    int type, int x, int y, int state, int detail);
@@ -76,7 +76,7 @@ InitializeEvent(
     eventPtr->xany.display = winPtr->display;
 
     eventPtr->xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
-    eventPtr->xcrossing.time = TkpGetMS();
+    eventPtr->xcrossing.time = TkpGetEventTime();
     eventPtr->xcrossing.x_root = x;
     eventPtr->xcrossing.y_root = y;
 
@@ -110,7 +110,7 @@ InitializeEvent(
  *	enter/leave events that are needed.
  *
  * Results:
- *	Returns 1 if enter/leave events were generated.
+ *	Returns true if enter/leave events were generated.
  *
  * Side effects:
  *	May insert events into the Tk event queue.
@@ -118,13 +118,13 @@ InitializeEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 GenerateEnterLeave(
     TkWindow *winPtr,		/* Current Tk window (or NULL). */
     int x, int y,		/* Current mouse position in root coords. */
     int state)			/* State flags. */
 {
-    int crossed = 0;		/* 1 if mouse crossed a window boundary */
+    bool crossed = false;		/* true if mouse crossed a window boundary */
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     TkWindow *restrictWinPtr = tsdPtr->restrictWinPtr;
@@ -185,7 +185,7 @@ GenerateEnterLeave(
 
 		TkInOutEvents(&event, lastWinPtr, winPtr, LeaveNotify,
 			EnterNotify, TCL_QUEUE_TAIL);
-		crossed = 1;
+		crossed = true;
 	    }
 	}
 	tsdPtr->lastWinPtr = winPtr;
@@ -473,6 +473,39 @@ XUngrabPointer(
 /*
  *----------------------------------------------------------------------
  *
+ * TkPointerClearButtons --
+ *
+ *	This function is called when the mouse buttons were released while
+ *	a native modal loop (e.g. a native popup menu) was active, which
+ *	consumed the release events. It forgets the buttons and the implicit
+ *	grab without generating ButtonRelease events. [Bug 869305]
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The mouse capture is released.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkPointerClearButtons(void)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (!(tsdPtr->lastState & ALL_BUTTONS)) {
+	return;
+    }
+    tsdPtr->lastState &= ~ALL_BUTTONS;
+    tsdPtr->restrictWinPtr = NULL;
+    TkpSetCapture(tsdPtr->grabWinPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkPointerDeadWindow --
  *
  *	Clean up pointer module state when a window is destroyed.
@@ -541,11 +574,20 @@ UpdateCursor(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
+     * If the pointer is not over a window managed by Tk, leave the cursor to
+     * whoever owns that window.  [Bug 546607]
+     */
+
+    tsdPtr->cursorWinPtr = winPtr;
+    if (winPtr == NULL) {
+	return;
+    }
+
+    /*
      * A window inherits its cursor from its parent if it doesn't have one of
      * its own. Top level windows inherit the default cursor.
      */
 
-    tsdPtr->cursorWinPtr = winPtr;
     while (winPtr != NULL) {
 	if (winPtr->atts.cursor != None) {
 	    cursor = winPtr->atts.cursor;
@@ -555,7 +597,7 @@ UpdateCursor(
 	}
 	winPtr = winPtr->parentPtr;
     }
-    TkpSetCursor((TkpCursor) cursor);
+    TkpSetCursor(cursor);
 }
 
 /*

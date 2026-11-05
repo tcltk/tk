@@ -30,10 +30,20 @@
 
 #define NS_KEYLOG 0
 #define XEVENT_MOD_MASK (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask)
+
+/*
+ * Virtual keycode of the space bar (kVK_Space in HIToolbox/Events.h) and the
+ * modifier mask used to recognize the system shortcut for the Emoji & Symbols
+ * character palette, Control-Command-Space.
+ */
+
+#define TK_VK_SPACE 49
+#define TK_PALETTE_MODS (NSShiftKeyMask | NSControlKeyMask | \
+			 NSAlternateKeyMask | NSCommandKeyMask)
 static Tk_Window keyboardGrabWinPtr = NULL; /* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil; /* Its underlying NSWindow.*/
 static NSModalSession modalSession = nil;
-static BOOL processingCompose = NO;
+static bool processingCompose = false;
 static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
 static void setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers);
@@ -59,13 +69,13 @@ static NSUInteger textInputModifiers;
     XEvent xEvent;
     MacKeycode macKC;
     UniChar keychar = 0;
-    Bool can_input_text, has_modifiers = NO, use_text_input = NO;
+    bool can_input_text, has_modifiers = false, use_text_input = false;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray = nil;
 
     if (nsEvArray == nil) {
 	nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
-	processingCompose = NO;
+	processingCompose = false;
     }
     if (!winPtr) {
 	return theEvent;
@@ -132,7 +142,7 @@ static NSUInteger textInputModifiers;
 	     */
 
 	    if (!(modifiers & NSCommandKeyMask)) {
-		use_text_input = YES;
+		use_text_input = true;
 	    }
 	}
 
@@ -178,9 +188,33 @@ static NSUInteger textInputModifiers;
     }
     can_input_text = ((focusWinPtr->flags & TK_CAN_INPUT_TEXT) != 0);
 
+    /*
+     * The system shortcut Control-Command-Space is normally the key equivalent
+     * of the "Emoji & Symbols" item which AppKit adds to a menu titled "Edit".
+     * An application which installs its own menubar without an Edit menu has
+     * no such item, so the shortcut does nothing.  To make the palette
+     * available regardless of the menubar, we handle the shortcut here by
+     * sending the same action which the menu item would send.  The action is
+     * only sent when the focus widget can input text, and when no composition
+     * is in progress.  The palette is positioned using the caret information
+     * recorded by Tk_SetCaretPos, and the selected characters are delivered
+     * through insertText:replacementRange: below.
+     *
+     * We return nil so that the event is not also passed to NSApp sendEvent:,
+     * where a menu item with the same key equivalent, if there is one, would
+     * invoke the palette a second time.
+     */
+
+    if (type == NSKeyDown && virt == TK_VK_SPACE && can_input_text
+	    && !processingCompose && ![theEvent isARepeat]
+	    && (modifiers & TK_PALETTE_MODS) == (NSControlKeyMask | NSCommandKeyMask)) {
+	[NSApp orderFrontCharacterPalette:nil];
+	return nil;
+    }
+
 #if (NS_KEYLOG)
     TKLog(@"keyDown: %s compose sequence.\n",
-	  processingCompose == YES ? "Continue" : "Begin");
+	  processingCompose ? "Continue" : "Begin");
 #endif
 
     /*
@@ -192,7 +226,7 @@ static NSUInteger textInputModifiers;
 	(type == NSKeyDown && can_input_text && !has_modifiers &&
 	 IS_PRINTABLE(keychar))
 	) {
-	use_text_input = YES;
+	use_text_input = true;
     }
 
     /*
@@ -210,16 +244,26 @@ static NSUInteger textInputModifiers;
 	 * In IME the Enter key is used to terminate a composition sequence.
 	 * When there are multiple choices of input text available, and the
 	 * user's selected choice is not the default, it may be necessary to
-	 * hit the Enter key multiple times before the text is accepted and
-	 * rendered (See ticket 39de9677aa]). So when sending an Enter key
-	 * during composition, we continue sending Enter keys until the
-	 * inputText method has cleared the processingCompose flag.
+	 * hit the Enter key twice before the text is accepted and rendered
+	 * (See ticket [39de9677aa]). So when sending an Enter key during
+	 * composition, we continue sending Enter keys until the inputText
+	 * method has cleared the processingCompose flag.  However, ticket
+	 * [0fb2a9cd132] reported that it is possible for the processingCompose
+	 * flag to not get set in spite of repeatedly sending Enter keys,
+	 * leading to a hang.  To avoid this we exit the loop after 10
+	 * attempts.
 	 */
 
 	if (processingCompose && [theEvent keyCode] == 36) {
 	    [nsEvArray addObject: theEvent];
-	    while(processingCompose) {
-		[[w contentView] interpretKeyEvents: nsEvArray];
+	    int counter = 0;
+	    TKContentView *view = [w contentView];
+	    while (processingCompose) {
+		[view interpretKeyEvents: nsEvArray];
+		if (++counter > 10) {
+		    [view cancelComposingText];
+		    break;
+		}
 	    }
 	    [nsEvArray removeObject: theEvent];
 	} else {
@@ -289,8 +333,6 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 
-@synthesize onScreen = _onScreen;
-
 /*
  * Implementation of the NSTextInputClient protocol.
  */
@@ -308,7 +350,7 @@ static NSUInteger textInputModifiers;
     NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window)winPtr;
-    Bool sendingIMEText = NO;
+    bool sendingIMEText = false;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
 	[aString string] : aString;
@@ -323,7 +365,7 @@ static NSUInteger textInputModifiers;
      */
 
     if (privateWorkingText != nil) {
-	sendingIMEText = YES;
+	sendingIMEText = true;
 	[self deleteWorkingText];
     }
 
@@ -457,7 +499,7 @@ static NSUInteger textInputModifiers;
      */
 
     Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
-    processingCompose = YES;
+    processingCompose = true;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
@@ -487,7 +529,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"unmarkText");
     }
     [self deleteWorkingText];
-    processingCompose = NO;
+    processingCompose = false;
 }
 
 /*
@@ -526,7 +568,7 @@ static NSUInteger textInputModifiers;
     if (NS_KEYLOG) {
 	TKLog(@"doCommandBySelector: %@", NSStringFromSelector(aSelector));
     }
-    processingCompose = NO;
+    processingCompose = false;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
@@ -602,7 +644,7 @@ static NSUInteger textInputModifiers;
 
 	[privateWorkingText release];
 	privateWorkingText = nil;
-	processingCompose = NO;
+	processingCompose = false;
 	if (composeWin) {
 	    Tk_SendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
 	}
@@ -615,7 +657,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"cancelComposingText");
     }
     [self deleteWorkingText];
-    processingCompose = NO;
+    processingCompose = false;
 }
 
 @end
@@ -649,7 +691,7 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
     xEvent->xany.window = Tk_WindowId(tkwin);
 
     xEvent->xkey.root = XRootWindow(display, 0);
-    xEvent->xkey.time = TkpGetMS();
+    xEvent->xkey.time = TkGetMS();
     xEvent->xkey.state = state;
     xEvent->xkey.same_screen = true;
     /* No need to initialize other fields implicitly here,

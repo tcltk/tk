@@ -91,7 +91,7 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static Bool   inPostMenu = false;
+static bool   inPostMenu = false;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -103,6 +103,8 @@ static int	GenerateMenuSelectEvent(TKMenu *menu, NSMenuItem *menuItem);
 static void	MenuSelectEvent(TkMenu *menuPtr);
 static void	RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static int	ModifierCharWidth(Tk_Font tkfont);
+static void ClearMenubarActive(void);
+
 
 #pragma mark TkBackgroundLoop
 
@@ -164,6 +166,25 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 TKBackgroundLoop *backgroundLoop = nil;
 
+typedef struct invokeArgs {
+    TkMenu *menuPtr;
+    Tcl_Size itemIndex;
+} invokeArgs;
+
+static void invokeMenuIdleTask(void *clientData) {
+    invokeArgs *args = (invokeArgs *) clientData;
+    int result = TkInvokeMenu(args->menuPtr->interp, args->menuPtr,
+			      args->itemIndex);
+    if (result != TCL_OK && result != TCL_CONTINUE &&
+	result != TCL_BREAK) {
+	Tcl_AddErrorInfo(args->menuPtr->interp, "\n    (menu invoke)");
+	Tcl_BackgroundException(args->menuPtr->interp, result);
+    }
+    Tcl_Release(args->menuPtr);
+    Tcl_Release(args->menuPtr->interp);
+    Tcl_Free(clientData);
+}
+
 #pragma mark TKMenu
 
 /*
@@ -217,7 +238,7 @@ TKBackgroundLoop *backgroundLoop = nil;
  * sets the flag and then calls super. See ticket [ead70921a9].
  */
 
-static Bool runMenuCommand = true;
+static bool runMenuCommand = true;
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
     if ([[event characters] length] == 0) {
@@ -362,19 +383,13 @@ static Bool runMenuCommand = true;
 	NSMenuItem *menuItem = (NSMenuItem *) sender;
 	TkMenu *menuPtr = (TkMenu *) _tkMenu;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
-
 	if (menuPtr && mePtr) {
-	    Tcl_Interp *interp = menuPtr->interp;
-	    Tcl_Preserve(interp);
-	    Tcl_Preserve(menuPtr);
-	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-	    if (result != TCL_OK && result != TCL_CONTINUE &&
-		    result != TCL_BREAK) {
-		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundException(interp, result);
-	    }
-	    Tcl_Release(menuPtr);
-	    Tcl_Release(interp);
+	    invokeArgs *args = Tcl_Alloc(sizeof(invokeArgs));
+	    args->menuPtr = menuPtr;
+	    args->itemIndex = mePtr->index;
+	    Tcl_Preserve(args->menuPtr);
+	    Tcl_Preserve(args->menuPtr->interp);
+	    Tcl_DoWhenIdle(invokeMenuIdleTask, args);
 	}
     }
 }
@@ -530,7 +545,7 @@ static Bool runMenuCommand = true;
 	backgroundLoop = nil;
     }
     if (!inPostMenu) {
-	TkMacOSXClearMenubarActive();
+	ClearMenubarActive();
     }
 }
 
@@ -759,6 +774,24 @@ TkpConfigureMenuEntry(
 	[image setTemplate:YES];
     }
     [menuItem setImage:image];
+
+#if defined(MAC_OS_VERSION_27_0) && \
+	MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_27_0
+
+    /*
+     * Starting with macOS 27 (Golden Gate), AppKit decides whether menu item
+     * images are visible and will typically hide them unless the item asks
+     * otherwise.  Tk entries only have an image if the script requested one,
+     * so ask that it always be shown.
+     */
+
+    if (@available(macOS 27.0, *)) {
+	[menuItem setPreferredImageVisibility:(image ?
+		NSMenuItemImageVisibilityVisible :
+		NSMenuItemImageVisibilityAutomatic)];
+    }
+#endif
+
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
 	title = [[[TKNSString alloc]
@@ -794,12 +827,12 @@ TkpConfigureMenuEntry(
 	Tcl_Free(tkColPtr);
     }
     if (gc->foreground != defaultFg) {
-	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);
+	NSColor *fgcolor = TkMacOSXGetNSColor(gc->foreground);
 	[attributes setObject:fgcolor
 		       forKey:NSForegroundColorAttributeName];
     }
     if (gc->background != defaultBg) {
-	NSColor *bgcolor = TkMacOSXGetNSColor(gc, gc->background);
+	NSColor *bgcolor = TkMacOSXGetNSColor(gc->background);
 	[attributes setObject:bgcolor
 		       forKey:NSBackgroundColorAttributeName];
     }
@@ -942,7 +975,7 @@ TkpPostMenu(
     TkWindow *realWinPtr;
     NSView *realWinView;
 
-    while (1) {
+    while (true) {
 	if (realWin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -972,20 +1005,20 @@ TkpPostMenu(
 	inPostMenu = false;
 	return result;
     }
-    if (itemIndex >= numItems) {
-	itemIndex = numItems - 1;
-    }
-    if (itemIndex >= 0) {
-	item = [menu itemAtIndex:itemIndex];
-    }
 
     /*
      * The post commands could have deleted the menu, which means we are dead
      * and should go away.
      */
-
     if (menuPtr->tkwin == NULL) {
 	return TCL_OK;
+    }
+
+    if (itemIndex >= numItems) {
+	itemIndex = numItems - 1;
+    }
+    if (itemIndex >= 0) {
+	item = [menu itemAtIndex:itemIndex];
     }
 
     [menu popUpMenuPositioningItem:item
@@ -1133,17 +1166,145 @@ TkpSetWindowMenuBar(
     }
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * getMenubarOwner --
+ *
+ *	Finds the toplevel whose menu belongs in the menubar: the key window,
+ *	or else the frontmost visible toplevel that can become key, which is
+ *	normally the one made key next.  If no window can become key, it is
+ *	the main window, as in an application that only shows its menubar.  A
+ *	toplevel being destroyed never qualifies.
+ *
+ * Results:
+ *	The owner, or NULL if no Tk toplevel qualifies.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkWindow*
+getMenubarOwner(
+    TkWindow *winPtr)	/* Used to identify the application. */
+{
+    NSWindow *keyWindow = [NSApp keyWindow];
+    /* If there is a viable keyWindow, it is the owner. */
+    if (keyWindow) {
+	TkWindow *keyWinPtr = TkMacOSXGetTkWindow(keyWindow);
+	if (keyWinPtr &&
+	    keyWinPtr->wmInfoPtr &&
+	    (keyWinPtr->flags & TK_ALREADY_DEAD) == 0) {
+	return keyWinPtr;
+	}
+    }
+    /* Otherwise, if there is a successor keyWindow, it is the owner. */
+    NSWindow *successor = TkMacOSXGetKeyWindowSuccessor(
+	    Tk_Interp((Tk_Window) winPtr), NULL);
+    if (successor) {
+	return TkMacOSXGetTkWindow(successor);
+    }
+    /* Otherise, the owner is the main window of the application. */
+    TkWindow *mainWinPtr = winPtr->mainPtr->winPtr;
+    if (mainWinPtr && mainWinPtr->wmInfoPtr
+	    && !(mainWinPtr->flags & TK_ALREADY_DEAD)) {
+	return mainWinPtr;
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInstallWindowMenubar --
+ *
+ *	Puts the menu of a toplevel into the menubar, or the default menu if
+ *	the toplevel has none, unless that menu is already installed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The menubar may be changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXInstallWindowMenubar(
+    TkWindow *winPtr)		/* A toplevel. */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    TKMenu *menu = nil;
+
+    if (wmPtr && wmPtr->menuPtr && wmPtr->menuPtr->mainMenuPtr) {
+	menu = (TKMenu *) wmPtr->menuPtr->platformData;
+    }
+    if (!menu || menu != (TKMenu *) [NSApp mainMenu]) {
+	[NSApp tkSetMainMenu:menu];
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInstallMainMenubar --
+ *
+ *	Puts the menu of the main window of an application into the menubar,
+ *	or the default menu if it has none.  Called when no window can become
+ *	key, so that an application that only shows its menubar keeps it.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The menubar may be changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXInstallMainMenubar(
+    Tcl_Interp *interp)		/* The application, or NULL for the first
+				 * one. */
+{
+    TkMainInfo *mainPtr;
+
+    for (mainPtr = TkGetMainInfoList(); mainPtr != NULL;
+	    mainPtr = mainPtr->nextPtr) {
+	if (!interp || mainPtr->interp == interp) {
+	    break;
+	}
+    }
+    if (mainPtr && mainPtr->winPtr
+	    && !(mainPtr->winPtr->flags & TK_ALREADY_DEAD)) {
+	TkMacOSXInstallWindowMenubar(mainPtr->winPtr);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
  * Tk_SetMainMenubar --
  *
- *	Puts the menu associated with a window into the menubar. Should only be
- *	called when the window is in front.
+ *      This stub function calls getMenubarOwner to find the correct owner of
+ *      the menubar in the application to which the specified window belongs,
+ *      and intalls the menu associated to the owner as the menubar.  This
+ *      ensures that the menubar is the menu associated to the key window when
+ *      there is a key window, and that When a key window is destroyed the menu
+ *      associated to the next key window is assigned as the menubar.  When the
+ *      application has no key window, the menubar is set to the menu
+ *      associated with the root window of the application, which may be off
+ *      screen.
  *
- *      This is a no-op on all other platforms.  On OS X it installs the
- *      menubar with the specified menuName, if possible.  If the name is NULL
- *      it installs the default menu.
+ *      The name is used to determine which menu is associated with a
+ *      window.  If the name is NULL or cannot be found then the default
+ *      Wish menu is used.
+ *
+ *      This stub is a no-op on other platforms.
  *
  * Results:
  *	None.
@@ -1162,6 +1323,7 @@ Tk_SetMainMenubar(
 {
     TKMenu *menu = nil;
     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *ownerPtr;
 
     /*
      * We will be called when an embedded window receives an ActivationNotify
@@ -1169,6 +1331,12 @@ Tk_SetMainMenubar(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
+	return;
+    }
+
+    ownerPtr = getMenubarOwner(winPtr);
+    if (ownerPtr && ownerPtr != winPtr) {
+	TkMacOSXInstallWindowMenubar(ownerPtr);
 	return;
     }
 
@@ -1286,7 +1454,7 @@ ParseAccelerator(
     int i;
 
     *maskPtr = 0;
-    while (1) {
+    while (true) {
 	i = 0;
 	while (allModifiers[i].name) {
 	    size_t l = allModifiers[i].len;
@@ -1399,7 +1567,7 @@ TkpComputeStandardMenuGeometry(
     Tcl_Size i;
     int entryWidth, maxIndicatorSpace, borderWidth, activeBorderWidth;
     TkMenuEntry *mePtr;
-    int haveAccel = 0;
+    bool haveAccel = false;
 
     /*
      * Do nothing if this menu is a clone.
@@ -1435,7 +1603,7 @@ TkpComputeStandardMenuGeometry(
     for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == CASCADE_ENTRY || mePtr->accelLength > 0) {
-	    haveAccel = 1;
+	    haveAccel = true;
 	    break;
 	}
     }
@@ -1467,18 +1635,19 @@ TkpComputeStandardMenuGeometry(
 	     */
 
 	    NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	    int haveImage = 0, width = 0, height = 0;
+	    bool haveImage = false;
+	    int width = 0, height = 0;
 
 	    if (mePtr->image) {
 		Tk_SizeOfImage(mePtr->image, &width, &height);
-		haveImage = 1;
+		haveImage = true;
 		height += 2; /* tweak */
 	    } else if (mePtr->bitmapPtr) {
 		Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin,
 			mePtr->bitmapPtr);
 
 		Tk_SizeOfBitmap(menuPtr->display, bitmap, &width, &height);
-		haveImage = 1;
+		haveImage = true;
 		height += 2; /* tweak */
 	    }
 	    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
@@ -1631,7 +1800,7 @@ MenuSelectEvent(
     event.virt.event = Tk_WindowId(menuPtr->tkwin);
     event.virt.root = XRootWindow(menuPtr->display, 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, None, NULL, NULL, &event.virt.x_root, &event.virt.y_root, NULL,
 	    NULL, &event.virt.state);
     event.virt.same_screen = true;
@@ -1681,7 +1850,7 @@ RecursivelyClearActiveMenu(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXClearMenubarActive --
+ * ClearMenubarActive --
  *
  *	Recursively clears the active entry in the current menubar hierarchy.
  *
@@ -1695,7 +1864,7 @@ RecursivelyClearActiveMenu(
  */
 
 void
-TkMacOSXClearMenubarActive(void)
+ClearMenubarActive(void)
 {
     NSMenu *mainMenu = [NSApp mainMenu];
 
@@ -1895,155 +2064,7 @@ TkpDrawMenuEntry(
     TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
     TCL_UNUSED(int),			/* Width of the entry rectangle */
     TCL_UNUSED(int),			/* Height of the current rectangle */
-    TCL_UNUSED(int),		/* Boolean flag */
-    TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
-				 * for cascade items. */
-{
-}
-
-#pragma mark Obsolete
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXPreprocessMenu --
- *
- *    Handle preprocessing of menubar if it exists.
- *
- * Results:
- *    None.
- *
- * Side effects:
- *    All post commands for the current menubar get executed.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXPreprocessMenu(void)
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXUseID --
- *
- *	Take the ID out of the available list for new menus. Used by the
- *	default menu bar's menus so that they do not get created at the Tk
- *	level. See TkMacOSXGetNewMenuID for more information.
- *
- * Results:
- *	Returns TCL_OK if the id was not in use. Returns TCL_ERROR if the id
- *	was in use.
- *
- * Side effects:
- *	A hash table entry in the command table is created with a NULL value.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXUseMenuID(
-    TCL_UNUSED(short))		/* The id to take out of the table */
-{
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXDispatchMenuEvent --
- *
- *	Given a menu id and an item, dispatches the command associated with it.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Commands for the event are scheduled for execution at idle time.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXDispatchMenuEvent(
-    TCL_UNUSED(int),			/* The menu id of the menu we are invoking */
-    TCL_UNUSED(int))			/* The one-based index of the item that was
-				 * selected. */
-{
-    return TCL_ERROR;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXHandleTearoffMenu() --
- *
- *	This routine sees if the MDEF has set a menu and a mouse position for
- *	tearing off and makes a tearoff menu if it has.
- *
- * Results:
- *	menuPtr->interp will have the result of the tearoff command.
- *
- * Side effects:
- *	A new tearoff menu is created if it is supposed to be.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXHandleTearoffMenu(void)
-{
-    /*
-     * Obsolete: Nothing to do.
-     */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXSetHelpMenuItemCount --
- *
- *	Has to be called after the first call to InsertMenu. Sets up the global
- *	variable for the number of items in the unmodified help menu.
- *
- *	NB: Nobody uses this any more, since you can get the number of system
- *	help items from HMGetHelpMenu trivially. But it is in the stubs
- *	table...
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Nothing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetHelpMenuItemCount(void)
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXMenuClick --
- *
- *	Prepares a menubar for MenuSelect or MenuKey.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Any pending configurations of the menubar are completed.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXMenuClick(void)
+    TCL_UNUSED(DrawMenuFlags))		/* flags */
 {
 }
 

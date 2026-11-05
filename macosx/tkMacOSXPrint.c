@@ -10,9 +10,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <tcl.h>
-#include <tk.h>
-#include <tkInt.h>
 #include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
@@ -20,7 +17,6 @@
 #include <tkMacOSXInt.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <fcntl.h>
 #include "tkMacOSXImage.h"
 #include "tkMacOSXPrivate.h"

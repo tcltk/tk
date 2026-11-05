@@ -47,8 +47,12 @@ always returns an empty string.
 .\" METHOD: get
 The \fBoption get\fR command returns the value of the option
 specified for \fIwindow\fR
-under \fIname\fR and \fIclass\fR.  If several entries in the option
-database match \fIwindow\fR, \fIname\fR, and \fIclass\fR, then
+under \fIname\fR or \fIclass\fR.  An entry matches if its pattern
+matches \fIwindow\fR and the last word of the pattern is either
+\fIname\fR or \fIclass\fR; the other one does not need to be related
+to it, e.g. an entry for \fB*Button.background\fR is returned for
+\fIname\fR \fBbackground\fR with any \fIclass\fR.  If several entries
+in the option database match, then
 the command returns whichever was created with highest
 \fIpriority\fR level.  If there are several matching
 entries at the same priority level, then it returns whichever entry
@@ -63,6 +67,21 @@ options specified in that file to the option database.  If \fIpriority\fR
 is specified, it indicates the priority level at which to enter the
 options;  \fIpriority\fR defaults to \fBinteractive\fR.
 .PP
+In the values in the file, the escape sequences of the X resource file
+syntax are recognized: a backslash followed by a newline is removed
+(so that the value continues on the next line), \fB\en\fR is replaced
+by a newline, a backslash followed by a space or a tab is replaced by
+that character, \fB\e\e\fR by a single backslash, and a backslash
+followed by three octal digits by the byte with that value (so a
+character outside ASCII can be written as the octal escapes of its
+UTF-8 bytes).
+Therefore a value which contains backslashes or newlines, such as a Tcl
+list, must be escaped before it is written to the file, for example:
+.PP
+.CS
+puts $file "*items: [string map {\e\e \e\e\e\e \en \e\en} $value]"
+.CE
+.PP
 The file is read through a channel which is in "utf-8" encoding,
 invalid byte sequences are automatically converted to valid ones.
 This means that encodings like ISO 8859-1 or cp1252 with high
@@ -71,7 +90,7 @@ This cannot be changed, setting the [encoding system] has no effect.
 .PP
 The \fIpriority\fR arguments to the \fBoption\fR command are
 normally specified symbolically using one of the following values:
-.IP \fBwidgetDefault\fR3
+.IP \fBwidgetDefault\fR
 Level 20.  Used for default values hard-coded into widgets.
 .IP \fBstartupFile\fR
 Level 40.  Used for options specified in application-specific

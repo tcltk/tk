@@ -28,8 +28,6 @@ typedef struct {
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
-static int		GenerateButtonEvent(MouseEventData *medPtr);
-
 #pragma mark TKApplication(TKMouseEvent)
 
 enum {
@@ -83,18 +81,19 @@ enum {
     NSPoint location = [theEvent locationInWindow];
     //NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
+    TkWindow *buttonTarget = NULL;
     Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
     NSInteger button;
     TkWindow *newFocus = NULL;
     int win_x, win_y;
     unsigned int buttonState = 0;
-    Bool isTestingEvent = NO;
-    Bool isMotionEvent = NO;
-    Bool isOutside = NO;
-    Bool firstDrag = NO;
-    static Bool ignoreDrags = NO;
-    static Bool ignoreUpDown = NO;
+    bool isTestingEvent = false;
+    bool isMotionEvent = false;
+    bool isOutside = false;
+    bool firstDrag = false;
+    static bool ignoreDrags = false;
+    static bool ignoreUpDown = false;
     static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -113,19 +112,19 @@ enum {
     if (![eventWindow isMemberOfClass:[TKWindow class]] &&
 	![eventWindow isMemberOfClass:[TKPanel class]]) {
 	if ([theEvent timestamp] == 0) {
-	    isTestingEvent = YES;
+	    isTestingEvent = true;
 	    eventWindow = [NSApp keyWindow];
 	}
 	if (eventType == NSLeftMouseDragged ||
 	    eventType == NSMouseMoved) {
 	    eventWindow = [NSApp keyWindow];
-	    isMotionEvent = YES;
+	    isMotionEvent = true;
 	}
 	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
 	}
     } else if (!NSPointInRect(location, [contentView bounds])) {
-	isOutside = YES;
+	isOutside = true;
     }
     button = [theEvent buttonNumber] + Button1;
     if ((button & -2) == Button2) {
@@ -140,9 +139,9 @@ enum {
 	buttonState |= Tk_GetButtonMask(button);
 	if (![NSApp tkDragTarget]) {
 	    if (isOutside) {
-		ignoreDrags = YES;
+		ignoreDrags = true;
 	    } else {
-		firstDrag = YES;
+		firstDrag = true;
 	    }
 	}
 	if (ignoreDrags) {
@@ -154,7 +153,7 @@ enum {
 	break;
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
-	isMotionEvent = YES;
+	isMotionEvent = true;
     case NSRightMouseDown:
     case NSOtherMouseDown:
 	buttonState |= Tk_GetButtonMask(button);
@@ -163,7 +162,6 @@ enum {
 	if (![eventWindow isKeyWindow] || isOutside) {
 	    return theEvent;
 	}
-	[NSApp setTkLiveResizeEnded:NO];
 	[NSApp setTkPointerWindow:[NSApp tkEventTarget]];
 	break;
     case NSMouseExited:
@@ -175,13 +173,13 @@ enum {
     case NSLeftMouseUp:
 	[NSApp setTkDragTarget: nil];
 	if ([theEvent clickCount] == 2) {
-	    ignoreUpDown = NO;
+	    ignoreUpDown = false;
 	}
 	if (ignoreUpDown) {
 	    return theEvent;
 	}
 	if (ignoreDrags) {
-	    ignoreDrags = NO;
+	    ignoreDrags = false;
 	    return theEvent;
 	}
 	buttonState &= ~Tk_GetButtonMask(Button1);
@@ -226,14 +224,14 @@ enum {
 	 */
 
 	if ([theEvent timestamp] - timestamp > 1) {
-	    ignoreUpDown = NO;
+	    ignoreUpDown = false;
 	}
 	if ([theEvent clickCount] == 2) {
-	    if (ignoreUpDown == YES) {
+	    if (ignoreUpDown == true) {
 		return theEvent;
 	    } else {
 		timestamp = [theEvent timestamp];
-		ignoreUpDown = YES;
+		ignoreUpDown = true;
 	    }
 	}
 	if (!isTestingEvent) {
@@ -247,7 +245,7 @@ enum {
 		return theEvent;
 	    }
 	    if ([NSApp tkLiveResizeEnded]) {
-		[NSApp setTkLiveResizeEnded:NO];
+		[NSApp setTkLiveResizeEnded:false];
 		return theEvent;
 	    }
 	}
@@ -282,7 +280,7 @@ enum {
 	if (eventWindow && eventWindow != [NSApp keyWindow]) {
 	    return theEvent;
 	}
-	isMotionEvent = YES;
+	isMotionEvent = true;
 	break;
     case NSScrollWheel:
 
@@ -303,6 +301,27 @@ enum {
 	break;
     default: /* This type of event is ignored. */
 	return theEvent;
+    }
+
+    /*
+     * Clicking with the right or middle button does not make the window the
+     * key window, so tkEventTarget is still the toplevel which has the focus.
+     * These events should be sent to the toplevel which was clicked.
+     */
+
+    switch (eventType) {
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+    case NSRightMouseDragged:
+    case NSOtherMouseDown:
+    case NSOtherMouseUp:
+    case NSOtherMouseDragged:
+	if (!isTestingEvent && eventWindow != [NSApp keyWindow]) {
+	    buttonTarget = TkMacOSXGetTkWindow(eventWindow);
+	}
+	break;
+    default:
+	break;
     }
 
     /*
@@ -328,6 +347,8 @@ enum {
 	}
     } else if (eventType == NSScrollWheel) {
 	winPtr = scrollTarget;
+    } else if (buttonTarget) {
+	winPtr = buttonTarget;
     } else {
 	winPtr = [NSApp tkEventTarget];
     }
@@ -407,7 +428,6 @@ enum {
     } else {
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
-
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
 
@@ -547,7 +567,7 @@ enum {
 	static unsigned long scrollCounter = 0;
 	unsigned delta;
 	CGFloat Delta;
-	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
+	bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
 	xEvent.xbutton.x = win_x;
 	xEvent.xbutton.y = win_y;
@@ -619,29 +639,6 @@ enum {
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXButtonKeyState --
- *
- *	Returns the current state of the button & modifier keys.
- *
- * Results:
- *	A bitwise inclusive OR of a subset of the following: Button1Mask,
- *	ShiftMask, LockMask, ControlMask, Mod*Mask.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-unsigned int
-TkMacOSXButtonKeyState(void)
-{
-    return [NSApp tkButtonState];
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XQueryPointer --
  *
  *	Check the current state of the mouse. This is not a complete
@@ -699,153 +696,9 @@ XQueryPointer(
 	}
     }
     if (mask_return) {
-	*mask_return = TkMacOSXButtonKeyState();
+	*mask_return = [NSApp tkButtonState];
     }
     return True;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGenerateButtonEventForXPointer --
- *
- *	This procedure generates an X button event for the current pointer
- *	state as reported by XQueryPointer().
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE int
-TkGenerateButtonEventForXPointer(
-    Window window)		/* X Window containing button event. */
-{
-    MouseEventData med;
-    int global_x, global_y, local_x, local_y;
-
-    bzero(&med, sizeof(MouseEventData));
-    XQueryPointer(NULL, window, NULL, NULL, &global_x, &global_y,
-	    &local_x, &local_y, &med.state);
-    med.global.h = global_x;
-    med.global.v = global_y;
-    med.local.h = local_x;
-    med.local.v = local_y;
-    med.window = window;
-
-    return GenerateButtonEvent(&med);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGenerateButtonEvent --
- *
- *	Given a global x & y position and the button key status this procedure
- *	generates the appropriate X button event. It also handles the state
- *	changes needed to implement implicit grabs.
- *
- * Results:
- *	True if event(s) are generated, false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkGenerateButtonEvent(
-    int x,			/* X location of mouse, */
-    int y,			/* Y location of mouse. */
-    Window window,		/* X Window containing button event. */
-    unsigned int state)		/* Button Key state suitable for X event. */
-{
-    MacDrawable *macWin = (MacDrawable *)window;
-    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-    MouseEventData med;
-
-    bzero(&med, sizeof(MouseEventData));
-    med.state = state;
-    med.window = window;
-    med.global.h = x;
-    med.global.v = y;
-    med.local = med.global;
-
-    if (win) {
-	NSPoint local = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
-
-	local = [win tkConvertPointFromScreen:local];
-	local.y = [win frame].size.height - local.y;
-	if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
-	    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
-	    local.y -= macWin->winPtr->wmInfoPtr->yInParent;
-	}
-	med.local.h = local.x;
-	med.local.v = TkMacOSXZeroScreenHeight() - local.y;
-    }
-
-    return GenerateButtonEvent(&med);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GenerateButtonEvent --
- *
- *	Generate an X button event from a MouseEventData structure. Handles
- *	the state changes needed to implement implicit grabs.
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-GenerateButtonEvent(
-    MouseEventData *medPtr)
-{
-    Tk_Window tkwin;
-    int dummy;
-    TkDisplay *dispPtr;
-
-#ifdef UNUSED
-
-    /*
-     * ButtonDown events will always occur in the front window. ButtonUp
-     * events, however, may occur anywhere on the screen. ButtonUp events
-     * should only be sent to Tk if in the front window or during an implicit
-     * grab.
-     */
-
-    if ((medPtr->activeNonFloating == NULL)
-	    || ((!(TkpIsWindowFloating(medPtr->whichWin))
-	    && (medPtr->activeNonFloating != medPtr->whichWin))
-	    && TkpGetCapture() == NULL)) {
-	return false;
-    }
-#endif
-
-    dispPtr = TkGetDisplayList();
-    tkwin = Tk_IdToWindow(dispPtr->display, medPtr->window);
-
-    if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
-		&dummy, &dummy);
-    }
-    Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
-    return true;
 }
 
 /*
@@ -870,24 +723,28 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
+    Window window;
+    int rootx, rooty;
+    unsigned int modifierState;
 
     if (dispPtr->warpWindow) {
 	int x, y;
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
+	window = Tk_WindowId(dispPtr->warpWindow);
     } else {
 	pt.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
+	window = None;
     }
-
     CGWarpMouseCursorPosition(pt);
 
-    if (dispPtr->warpWindow) {
-	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
-    } else {
-	TkGenerateButtonEventForXPointer(None);
-    }
+    XQueryPointer(NULL, window, NULL, NULL, &rootx, &rooty, NULL, NULL,
+	    &modifierState);
+    Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
+	    dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, rootx, rooty, modifierState);
 }
 
 /*

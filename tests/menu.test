@@ -1825,7 +1825,7 @@ test menu-3.67 {MenuWidgetCmd procedure, bad option} -setup {
     .m1 foo
 } -cleanup {
     destroy .m1
-} -returnCodes error -result {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, id, index, insert, invoke, post, postcascade, type, unpost, xposition, or yposition}
+} -returnCodes error -result {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, id, index, insert, invoke, post, postcascade, type, unpost, xposition, yposition, or yview}
 test menu-3.68 {MenuWidgetCmd procedure, fix for bug#508988} -setup {
     deleteWindows
 } -body {
@@ -2001,6 +2001,18 @@ test menu-4.12 {TkInvokeMenu} -setup {
 } -cleanup {
     destroy .m1
 } -result {0 {} 1 {bad menu entry index "test"}}
+test menu-4.13 {TkInvokeMenu: cascade - bug 220868} -setup {
+    destroy .m1
+} -body {
+    menu .m1 -tearoff 0
+    menu .m1.c -tearoff 0
+    .m1.c add command -label "sub"
+    .m1 add cascade -menu .m1.c -label "test" -command {set foo invoked}
+    list [catch {.m1 invoke "test"} msg] $msg [catch {set foo} msg2] $msg2
+} -cleanup {
+    destroy .m1
+    unset -nocomplain foo
+} -result {0 invoked 0 invoked}
 
 test menu-5.1 {DestroyMenuInstance} -setup {
     destroy .m1
@@ -3794,6 +3806,21 @@ test menu-25.16 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -result {.t2 {}}
 
+test menu-25.17 {Tk_SetWindowMenubar: clone destroyed with the children of the toplevel} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -label foo
+    toplevel .t2 -menu .m1
+    update
+    destroy {*}[winfo children .t2]
+    set res [winfo exists .t2.#m1]
+    .t2 configure -menu .m1
+    lappend res [winfo exists .t2.#m1]
+} -cleanup {
+    deleteWindows
+} -result {0 1}
+
 
 test menu-26.1 {DestroyMenuHashTable} -setup {
     catch {interp delete testinterp}
@@ -4064,7 +4091,53 @@ test menu-35.1 {menu -underline string overruns Bug 1599877} -setup {
     tk::TraverseToMenu . "e"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result 0
+test menu-35.2 {tk::TraverseToMenu posts a menubutton from another window} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    # On Windows the native menu would wait for input.
+    menubutton .mb -text File -underline 0 -menu .mb.m
+    menu .mb.m -tearoff 0
+    .mb.m add command -label Dummy
+    entry .e
+    pack .mb .e
+    update
+    list [tk::TraverseToMenu .e f] $tk::Priv(postedMb)
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result {1 .mb}
+test menu-35.3 {tk::TraverseToMenu traverses to a menubar entry} -constraints {
+    x11
+} -setup {
+    deleteWindows
+} -body {
+    menu .m -tearoff 0
+    menu .m.file -tearoff 0
+    .m add cascade -label File -underline 0 -menu .m.file
+    .m.file add command -label Dummy
+    . configure -menu .m
+    update
+    list [tk::TraverseToMenu . f] [$tk::Priv(window) cget -type]
+} -cleanup {
+    tk::MenuUnpost $tk::Priv(window)
+    set tk::Priv(window) {}
+    . configure -menu {}
+    deleteWindows
+} -result {1 menubar}
+test menu-35.4 {tk::TraverseToMenu without a matching menu} -setup {
+    deleteWindows
+} -body {
+    menubutton .mb -text File -underline 0 -menu .mb.m
+    menu .mb.m -tearoff 0
+    pack .mb
+    update
+    list [tk::TraverseToMenu .mb q] $tk::Priv(postedMb)
+} -cleanup {
+    deleteWindows
+} -result {0 {}}
 
 test menu-37.1 {menubar menues cannot be posted - bug 2160206} -setup {
     catch {destroy .m}
@@ -4163,6 +4236,21 @@ test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
     tkwait variable done
     testpressbutton 530 510
 }
+
+test menu-40.3 {tk::MenuFind finds the menubar clone, not the original created with -type menubar - bug 223112} -constraints x11 -setup {
+    deleteWindows
+} -body {
+    menu .m -type menubar
+    menu .m.file
+    .m.file add command -label Open -underline 0
+    .m add cascade -label File -menu .m.file -underline 0
+    . configure -menu .m
+    update
+    list [tk::MenuFind . f] [tk::MenuFind . ""]
+} -cleanup {
+    . configure -menu {}
+    deleteWindows
+} -result {.#m .#m}
 
 test menu-41.1 {identifiers - auto generated} -setup {
     destroy .m
@@ -4315,6 +4403,638 @@ test menu-41.14 {identifiers - reserved word} -setup {
 } -cleanup {
     destroy .m
 } -result {2}
+
+test menu-42.1 {the release of the click on a menubar entry over its posted
+	cascade does not invoke an entry - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    toplevel .t
+    menu .t.mb -tearoff 0
+    .t.mb add cascade -label File -menu .t.mb.file
+    menu .t.mb.file -tearoff 0
+    # The cascade is taller than the screen, so it is posted over the
+    # menubar entry, under the pointer.
+    for {set i 0} {$i < [winfo screenheight .] / 10} {incr i} {
+	.t.mb.file add command -label "Item $i" -command {set res invoked}
+    }
+    .t configure -menu .t.mb
+    wm geometry .t 200x100+100+100
+    update
+    set res {}
+} -body {
+    foreach w [winfo children .t] {
+	if {[winfo class $w] eq "Menu" && [$w cget -type] eq "menubar"} {
+	    break
+	}
+    }
+    set x [expr {[$w xposition 0] + 5}]
+    event generate $w <Motion> -warp 1 -x $x -y 5
+    update
+    event generate $w <Button-1> -x $x -y 5
+    update
+    # The cascade of a menubar is a clone of .t.mb.file.
+    set m [$w entrycget 0 -menu]
+    lassign [winfo pointerxy .] x y
+    lappend res [winfo containing $x $y]
+    event generate $m <ButtonRelease-1> \
+	    -x [expr {$x - [winfo rootx $m]}] -y [expr {$y - [winfo rooty $m]}]
+    update
+    lappend res [expr {[winfo ismapped $m] ? "mapped" : "unmapped"}]
+    # The entry under the pointer is not activated until the pointer moves.
+    lappend res [$m index active]
+    list [expr {[lindex $res 0] eq $m}] {*}[lrange $res 1 end]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain res x y w m i
+} -result {1 mapped {}}
+test menu-43.1 {tk_popup posts the menu to the left of and above the point
+	if it does not fit to the right and below - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    for {set i 0} {$i < 10} {incr i} {
+	.m1 add command -label "A context menu entry $i"
+    }
+} -body {
+    set x [expr {[winfo screenwidth .] - 10}]
+    set y [expr {[winfo screenheight .] - 10}]
+    tk_popup .m1 $x $y
+    update
+    list [expr {[winfo rootx .m1] + [winfo width .m1]}] \
+	    [expr {[winfo rooty .m1] + [winfo height .m1]}]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain x y
+} -result [list [expr {[winfo screenwidth .] - 10}] [expr {[winfo screenheight .] - 10}]]
+test menu-43.2 {tk_popup posts the menu to the right of and below the point
+	if it fits there} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "A context menu entry"
+} -body {
+    tk_popup .m1 100 100
+    update
+    list [winfo rootx .m1] [winfo rooty .m1]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+} -result {100 100}
+test menu-43.3 {the release of the click which popped up the menu under the
+	pointer does not invoke an entry - bug 470331} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    toplevel .t
+    wm geometry .t 200x200+100+100
+    menu .t.m -tearoff 0
+    .t.m add command -label One -command {set res invoked}
+    .t.m add command -label Two -command {set res invoked}
+    update
+    set res {}
+} -body {
+    event generate .t <Motion> -warp 1 -x 50 -y 50
+    update
+    lassign [winfo pointerxy .t] x y
+    # With an entry index, the entry is posted under the pointer.  The
+    # menu is moved left, as if to fit on the screen.
+    tk_popup .t.m [expr {$x - 20}] $y 1
+    update
+    lappend res [winfo containing $x $y]
+    event generate .t.m <ButtonRelease-3> \
+	    -x [expr {$x - [winfo rootx .t.m]}] -y [expr {$y - [winfo rooty .t.m]}]
+    update
+    lappend res [winfo ismapped .t.m]
+} -cleanup {
+    tk::MenuUnpost {}
+    deleteWindows
+    unset -nocomplain res x y
+} -result {.t.m 1}
+proc tallMenu {} {
+    menu .m1 -tearoff 0
+    for {set i 0} {$i < [winfo screenheight .] / 5} {incr i} {
+	.m1 add command -label "Entry $i"
+    }
+    .m1 post 100 0
+    update
+}
+test menu-44.1 {menu higher than the screen is limited to the screen} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    lassign [.m1 yview] first last
+    list [expr {[winfo height .m1] <= [winfo screenheight .]}] $first \
+	    [expr {$last > 0.0 && $last < 1.0}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result {1 0.0 1}
+test menu-44.2 {no entries in the areas with the scroll arrows} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    list [.m1 index @20,1] [.m1 index @20,[expr {[winfo height .m1] - 2}]] \
+	    [string is integer -strict \
+		[.m1 index @20,[expr {[winfo height .m1] / 2}]]]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+} -result {{} {} 1}
+test menu-44.3 {yview scroll and moveto} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    set y [expr {[winfo height .m1] / 2}]
+    set i0 [.m1 index @20,$y]
+    .m1 yview scroll 5 units
+    set i1 [.m1 index @20,$y]
+    set f1 [lindex [.m1 yview] 0]
+    .m1 yview scroll 1 pages
+    set f2 [lindex [.m1 yview] 0]
+    .m1 yview moveto 1.0
+    set f3 [lindex [.m1 yview] 1]
+    .m1 yview moveto 0.0
+    list [expr {$i1 > $i0}] [expr {$f1 > 0}] [expr {$f2 > $f1}] $f3 \
+	    [lindex [.m1 yview] 0]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain y i0 i1 f1 f2 f3
+} -result {1 1 1 1.0 0.0}
+test menu-44.4 {activating an entry scrolls it into view} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    .m1 activate last
+    set last [lindex [.m1 yview] 1]
+    .m1 activate 0
+    list $last [lindex [.m1 yview] 0]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain last
+} -result {1.0 0.0}
+test menu-44.5 {menu which fits on the screen is not scrolled} -setup {
+    deleteWindows
+    menu .m1 -tearoff 0
+    .m1 add command -label "Entry"
+} -body {
+    .m1 yview scroll 1 units
+    .m1 yview
+} -cleanup {
+    deleteWindows
+} -result {0.0 1.0}
+test menu-44.6 {mouse wheel scrolls the menu} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    event generate .m1 <MouseWheel> -delta -120 -x 20 \
+	    -y [expr {[winfo height .m1] / 2}]
+    update
+    set down [lindex [.m1 yview] 0]
+    event generate .m1 <MouseWheel> -delta 120 -x 20 \
+	    -y [expr {[winfo height .m1] / 2}]
+    update
+    list [expr {$down > 0}] [lindex [.m1 yview] 0]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain down
+} -result {1 0.0}
+test menu-44.7 {the menu scrolls while the mouse is over the scroll arrow} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    set y [expr {[winfo height .m1] - 2}]
+    event generate .m1 <Enter> -x 20 -y $y
+    event generate .m1 <Motion> -warp 1 -x 20 -y $y
+    after 300
+    update
+    set first [lindex [.m1 yview] 0]
+    event generate .m1 <Motion> -warp 1 -x 20 -y [expr {$y / 2}]
+    update
+    set first2 [lindex [.m1 yview] 0]
+    after 200
+    update
+    list [expr {$first > 0}] [expr {[lindex [.m1 yview] 0] == $first2}]
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain y first first2
+} -result {1 1}
+test menu-44.9 {the menu does not scroll while the mouse is over its side border} -constraints {
+    x11
+} -setup {
+    deleteWindows
+    tallMenu
+} -body {
+    # tk_popup posts the menu with its left border under the pointer.
+    set y [expr {[winfo height .m1] - 2 * [font metrics [.m1 cget -font] -linespace]}]
+    event generate .m1 <Enter> -x 0 -y $y
+    event generate .m1 <Motion> -warp 1 -x 0 -y $y
+    after 300
+    update
+    .m1 yview
+} -cleanup {
+    .m1 unpost
+    deleteWindows
+    unset -nocomplain y
+} -result {0.0 *} -match glob
+test menu-44.8 {yview errors} -setup {
+    deleteWindows
+    menu .m1
+} -body {
+    .m1 yview scroll 1 foo
+} -cleanup {
+    deleteWindows
+} -returnCodes error -result {bad argument "foo": must be pages or units}
+rename tallMenu {}
+
+test menu-45.1 {tk_popup followed by postcascade generates Leave - bug 873655ffff} -setup {
+    destroy .top .m
+    set log {}
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top +100+100
+    button .top.b -text Button
+    pack .top.b -padx 50 -pady 50
+    menu .m -tearoff 0
+    menu .m.c -tearoff 0
+    .m add cascade -menu .m.c -label cascade
+    .m.c add command -label Hi
+    update
+    event generate .top.b <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
+    update
+    bind .top.b <Leave> {lappend log %m}
+    tk_popup .m [winfo rootx .top.b] \
+	    [expr {[winfo rooty .top.b] + [winfo height .top.b]}]
+    .m activate 0
+    .m postcascade 0
+    update
+    set log
+} -cleanup {
+    .m unpost
+    grab release .m
+    destroy .top .m
+    unset log
+} -result {NotifyGrab}
+
+test menu-46.1 {tk_popup: menu destroyed while it is posted - bug a4c72a04e3} -setup {
+    menu .m -tearoff 0 -postcommand {destroy .m}
+    .m add command -label One
+    .m add command -label Two
+} -body {
+    tk_popup .m 10 10 1
+    winfo exists .m
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .m
+} -result 0
+
+test menu-47.1 {configuring a cascade entry of a menubar with the menu it
+	already has must not destroy that menu - bug 1723059} -setup {
+    destroy .bar
+    . configure -menu {}
+} -body {
+    menu .bar
+    . configure -menu .bar
+    .bar add cascade
+    menu .bar.sub1
+    menu .bar.sub2
+    .bar entryconfigure 1 -menu .bar.sub1
+    # the same menu once more, and then another one
+    .bar entryconfigure 1 -menu .bar.sub1
+    .bar entryconfigure 1 -menu .bar.sub2
+    list [winfo exists .bar.sub1] [winfo exists .bar.sub2] \
+	    [.bar entrycget 1 -menu]
+} -cleanup {
+    . configure -menu {}
+    destroy .bar
+} -result {1 1 .bar.sub2}
+
+# Aqua: only the key toplevel, or the one that becomes key when the key
+# toplevel is destroyed, sets the menubar.
+proc menubarTop {w label} {
+    toplevel $w
+    wm withdraw $w
+    if {$label ne ""} {
+	menu $w.mb
+	$w.mb add cascade -label $label -menu [menu $w.mb.m]
+	$w configure -menu $w.mb
+    }
+    wm geometry $w +100+100
+}
+proc menubarShow {w label} {
+    wm deiconify $w
+    focus -force $w
+    update
+    for {set i 0} {$i < 100 && [testmenubaritems] ne $label} {incr i} {
+	after 10 {set ::menubarWait 1}
+	vwait ::menubarWait
+    }
+    update
+}
+test menu-48.1 {aqua menubar: -menu of a withdrawn toplevel does not replace
+	the menubar of the key toplevel - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 KeyBar
+    menubarShow .t1 KeyBar
+} -body {
+    menubarTop .t2 OtherBar
+    testmenubaritems
+} -cleanup {
+    destroy .t1 .t2
+} -result KeyBar
+test menu-48.2 {aqua menubar: destroying the key toplevel installs the
+	menubar of the next one, not the default one - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 FirstBar
+    menubarShow .t1 FirstBar
+    menubarTop .t2 SecondBar
+    wm geometry .t2 +150+150
+    menubarShow .t2 SecondBar
+    set ::bars {}
+    bind .t2 <Destroy> {
+	if {"%W" eq ".t2"} {
+	    lappend ::bars [testmenubaritems]
+	}
+    }
+} -body {
+    destroy .t2
+    update
+    lappend ::bars [testmenubaritems]
+} -cleanup {
+    destroy .t1
+    unset ::bars
+} -result {FirstBar FirstBar}
+test menu-48.3 {aqua menubar: installed as soon as the toplevel becomes key,
+	before its Activate event is serviced - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    menubarTop .t1 FirstBar
+    menubarShow .t1 FirstBar
+    menubarTop .t2 SecondBar
+    update
+} -body {
+    wm deiconify .t2
+    focus -force .t2
+    testmenubaritems
+} -cleanup {
+    destroy .t1 .t2
+} -result SecondBar
+test menu-48.4 {aqua menubar: once no window can become key, the menubar
+	of "." comes back - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    set oldMenu [. cget -menu]
+    set oldState [wm state .]
+    menu .mb48
+    .mb48 add cascade -label RootBar -menu [menu .mb48.m]
+    wm withdraw .
+    . configure -menu .mb48
+    menubarTop .t1 DialogBar
+    menubarShow .t1 DialogBar
+} -body {
+    destroy .t1
+    update
+    testmenubaritems
+} -cleanup {
+    . configure -menu $oldMenu
+    destroy .mb48
+    if {$oldState ne "withdrawn"} {
+	wm deiconify .
+    }
+    unset oldMenu oldState
+} -result RootBar
+test menu-48.5 {aqua menubar: "." given its menubar while a toplevel
+	without one is key, then that toplevel destroyed - bug [c70fe74bc4]} -constraints {
+    aqua testmenubaritems
+} -setup {
+    set oldMenu [. cget -menu]
+    set oldState [wm state .]
+    menu .mb48
+    .mb48 add cascade -label RootBar -menu [menu .mb48.m]
+    wm withdraw .
+    menubarTop .t1 {}
+    menubarShow .t1 {File Edit Window Help}
+} -body {
+    . configure -menu .mb48
+    destroy .t1
+    update
+    testmenubaritems
+} -cleanup {
+    . configure -menu $oldMenu
+    destroy .mb48
+    if {$oldState ne "withdrawn"} {
+	wm deiconify .
+    }
+    unset oldMenu oldState
+} -result RootBar
+rename menubarTop {}
+rename menubarShow {}
+
+testutils import child
+# Posts the cascade of the first entry of the menubar of $top, as a click
+# on it does, and returns the posted menu.
+proc postMenubarCascade {top} {
+    set bar [lsearch -inline -glob [winfo children $top] *#*]
+    update
+    set y [expr {[winfo height $bar] / 2}]
+    event generate $bar <Motion> -x 10 -y $y -warp 1
+    update
+    event generate $bar <Button-1> -x 10 -y $y
+    update
+    return [$bar entrycget 0 -menu]
+}
+# Makes another application take the focus.
+proc otherAppTakesFocus {} {
+    childTkProcess create
+    childTkProcess eval {
+	wm geometry . 100x100+600+100
+	update
+	focus -force .
+    }
+    pause 200
+    update
+}
+test menu-49.1 {a posted menubar menu is unposted when its toplevel is moved
+	- bug 2e3d6cdae4} -setup {
+    destroy .top
+} -constraints {x11} -body {
+    toplevel .top
+    menu .top.m
+    menu .top.m.file -tearoff 0
+    .top.m add cascade -label File -menu .top.m.file
+    .top.m.file add command -label Open
+    .top configure -menu .top.m
+    wm geometry .top 200x100+100+100
+    update
+    set m [postMenubarCascade .top]
+    set res [list [winfo ismapped $m] [expr {[grab current .top] ne ""}]]
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped $m] [grab current .top]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain m res
+} -result {1 1 0 {}}
+test menu-49.2 {a posted menubar menu is unposted when another application
+	takes the focus - bug 2e3d6cdae4} -setup {
+    destroy .top
+} -constraints {x11} -body {
+    toplevel .top
+    menu .top.m
+    menu .top.m.file -tearoff 0
+    .top.m add cascade -label File -menu .top.m.file
+    .top.m.file add command -label Open
+    .top configure -menu .top.m
+    wm geometry .top 200x100+100+100
+    update
+    focus -force .top
+    update
+    set m [postMenubarCascade .top]
+    set res [winfo ismapped $m]
+    otherAppTakesFocus
+    lappend res [winfo ismapped $m] [grab current .top]
+} -cleanup {
+    childTkProcess exit
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain m res
+} -result {1 0 {}}
+test menu-49.3 {a posted menubutton menu is unposted when its toplevel is
+	moved, not when it is resized - bug 2e3d6cdae4} -setup {
+    destroy .top
+} -constraints {x11} -body {
+    toplevel .top
+    menubutton .top.mb -text Menu -menu .top.mb.m
+    menu .top.mb.m -tearoff 0
+    .top.mb.m add command -label Open
+    pack .top.mb
+    wm geometry .top 200x100+100+100
+    update
+    tk::MbPost .top.mb
+    update
+    set res [winfo ismapped .top.mb.m]
+    wm geometry .top 250x150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped .top.mb.m]
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped .top.mb.m] [grab current .top]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain res
+} -result {1 1 0 {}}
+test menu-49.4 {a popup menu is unposted when the toplevel which had the
+	focus is moved - bug 2e3d6cdae4} -setup {
+    destroy .top .m
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top 200x100+100+100
+    menu .m -tearoff 0
+    .m add command -label Open
+    update
+    focus -force .top
+    update
+    tk_popup .m 150 150
+    update
+    set res [winfo ismapped .m]
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [winfo ismapped .m] [grab current .m]
+} -cleanup {
+    tk::MenuUnpost {}
+    destroy .top .m
+    unset -nocomplain res
+} -result {1 0 {}}
+test menu-49.5 {a torn-off menu stays when another application takes the
+	focus, its cascade is unposted - bug 2e3d6cdae4} -setup {
+    destroy .top .m
+} -constraints {x11} -body {
+    menu .m
+    menu .m.sub -tearoff 0
+    .m add cascade -label Sub -menu .m.sub
+    .m.sub add command -label Open
+    set t [tk::TearOffMenu .m 100 100]
+    update
+    focus -force $t
+    update
+    set y [expr {[$t yposition 0] + 5}]
+    event generate $t <Motion> -x 10 -y $y -warp 1
+    update
+    event generate $t <Button-1> -x 10 -y $y
+    update
+    set sub [$t entrycget 0 -menu]
+    set res [list [winfo ismapped $t] [winfo ismapped $sub]]
+    otherAppTakesFocus
+    lappend res [winfo ismapped $t] [winfo ismapped $sub]
+} -cleanup {
+    childTkProcess exit
+    tk::MenuUnpost {}
+    destroy $t .m
+    unset -nocomplain t y sub res
+} -result {1 1 1 0}
+test menu-49.6 {no error when the toplevel is moved after a posted popup menu
+	was destroyed - bug 2e3d6cdae4} -setup {
+    destroy .top .m
+    set res {}
+    proc bgerror {msg} {lappend ::res $msg}
+} -constraints {x11} -body {
+    toplevel .top
+    wm geometry .top 200x100+100+100
+    menu .m -tearoff 0
+    .m add command -label Open
+    update
+    focus -force .top
+    update
+    tk_popup .m 150 150
+    update
+    destroy .m
+    wm geometry .top +150+150
+    update
+    pause 200
+    update
+    lappend res [lsearch -exact [bindtags .top] TkMenuWatch]
+} -cleanup {
+    rename bgerror {}
+    tk::MenuUnpost {}
+    destroy .top
+    unset -nocomplain res
+} -result -1
+rename postMenubarCascade {}
+rename otherAppTakesFocus {}
+testutils forget child
 
 #
 # TESTFILE CLEANUP

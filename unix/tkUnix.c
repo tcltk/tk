@@ -139,11 +139,11 @@ extern int XUnionRegion(Region srca, Region srcb, Region dr_return);
 
 void
 TkpCopyRegion(
-    TkRegion dst,
-    TkRegion src)
+    Region dst,
+    Region src)
 {
     /* XUnionRegion() in Xlib is optimized to detect copying */
-    XUnionRegion((Region)src, (Region)src, (Region)dst);
+    XUnionRegion(src, src, dst);
 }
 
 /*
@@ -165,7 +165,7 @@ TkpCopyRegion(
 
 void
 TkpBuildRegionFromAlphaData(
-    TkRegion region,		/* Region to be updated. */
+    Region region,		/* Region to be updated. */
     unsigned x, unsigned y,	/* Where in region to update. */
     unsigned width, unsigned height,
 				/* Size of rectangle to update. */
@@ -205,7 +205,7 @@ TkpBuildRegionFromAlphaData(
 		rect.y = (short)(y + y1);
 		rect.width = (unsigned short)(end - x1);
 		rect.height = 1;
-		TkUnionRectWithRegion(&rect, region, region);
+		XUnionRectWithRegion(&rect, region, region);
 	    }
 	}
 	dataPtr += lineStride;
@@ -230,7 +230,7 @@ TkpBuildRegionFromAlphaData(
  *----------------------------------------------------------------------
  */
 
-long
+long long
 Tk_GetUserInactiveTime(
  #ifdef HAVE_XSS
    Display *dpy)		/* The display for which to query the inactive
@@ -239,7 +239,7 @@ Tk_GetUserInactiveTime(
   TCL_UNUSED(Display *))
 #endif /* HAVE_XSS */
 {
-    long inactiveTime = -1;
+    long long inactiveTime = -1;
 #ifdef HAVE_XSS
     int eventBase, errorBase, major, minor;
 
@@ -261,7 +261,7 @@ Tk_GetUserInactiveTime(
 	    Tcl_Panic("Out of memory: XScreenSaverAllocInfo failed in Tk_GetUserInactiveTime");
 	}
 	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
-	    inactiveTime = (long)info->idle;
+	    inactiveTime = (long long)info->idle;
 	}
 	XFree(info);
     }

@@ -22,7 +22,9 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
+#include "tkFont.h"
 #include "tkText.h"
+#include <locale.h>
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -31,10 +33,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define LOG_DISPLAY(drawable) TkTestLogDisplay(drawable)
 #else
-#define LOG_DISPLAY(drawable) 1
 #endif
+#define LOG_DISPLAY(drawable) 1
 
 #ifdef __UNIX__
 #include "tkUnixInt.h"
@@ -51,7 +52,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-EXTERN int		Tktest_Init(Tcl_Interp *interp);
+EXTERN Tcl_LibraryInitProc Tktest_Init;
 #ifdef __cplusplus
 }
 #endif
@@ -78,7 +79,7 @@ typedef struct TImageInstance {
     TImageModel *modelPtr;	/* Pointer to model for image. */
     XColor *fg;			/* Foreground color for drawing in image. */
     GC gc;			/* Graphics context for drawing in image. */
-    Bool displayFailed;         /* macOS display attempted out of drawRect. */
+    bool displayFailed;         /* macOS display attempted out of drawRect. */
     char buffer[200 + TCL_INTEGER_SPACE * 6]; /* message to log on display. */
 } TImageInstance;
 
@@ -157,6 +158,7 @@ static Tcl_ObjCmdProc2 TestborderObjCmd;
 static Tcl_ObjCmdProc2 TestcolorObjCmd;
 static Tcl_ObjCmdProc2 TestcursorObjCmd;
 static Tcl_ObjCmdProc2 TestdeleteappsObjCmd;
+static Tcl_ObjCmdProc2 TestemojiObjCmd;
 static Tcl_ObjCmdProc2 TestfontObjCmd;
 static Tcl_ObjCmdProc2 TestmakeexistObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
@@ -166,14 +168,17 @@ static Tcl_ObjCmdProc2 TestmenubarObjCmd;
 static Tcl_ObjCmdProc2 TestmetricsObjCmd;
 #endif
 static Tcl_ObjCmdProc2 TestobjconfigObjCmd;
+static Tcl_ObjCmdProc2 TestpixelObjCmd;
 static Tk_CustomOptionSetProc CustomOptionSet;
 static Tk_CustomOptionGetProc CustomOptionGet;
 static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
 static Tcl_ObjCmdProc2 TestpropObjCmd;
 static Tcl_ObjCmdProc2 TestprintfObjCmd;
+static Tcl_ObjCmdProc2 TestsetlocaleObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static Tcl_ObjCmdProc2 TestwrapperObjCmd;
+static Tcl_ObjCmdProc2 TestxfocusObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(void *clientData);
 static Tcl_ObjCmdProc2 TrivialConfigObjCmd;
@@ -234,13 +239,18 @@ Tktest_Init(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testobjconfig", TestobjconfigObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testemoji", TestemojiObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testfont", TestfontObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testmakeexist", TestmakeexistObjCmd,
 	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testpixel", TestpixelObjCmd,
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testsetlocale", TestsetlocaleObjCmd, NULL,
+	    NULL);
     Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testphotostringmatch",
@@ -256,6 +266,8 @@ Tktest_Init(
     Tcl_CreateObjCommand2(interp, "testsend", TkpTestsendCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testwrapper", TestwrapperObjCmd,
+	    Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand2(interp, "testxfocus", TestxfocusObjCmd,
 	    Tk_MainWindow(interp), NULL);
 #endif /* _WIN32 */
 
@@ -1266,6 +1278,63 @@ TrivialEventProc(
 /*
  *----------------------------------------------------------------------
  *
+ * TestemojiObjCmd --
+ *
+ *	This function implements the "testemoji" command, which exposes the
+ *	emoji classification shared by the font engines:
+ *	    testemoji presentation codePoint ?nextCodePoint?
+ *	    testemoji continuation codePoint ?inEmoji?
+ *
+ * Results:
+ *	A standard Tcl result: the value of TkFontEmojiPresentation or
+ *	TkFontEmojiContinuation.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestemojiObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    static const char *const options[] = {"continuation", "presentation", NULL};
+    enum option {CONTINUATION, PRESENTATION};
+    int index, ch, arg = -1, result = 0;
+
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option codePoint ?arg?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &ch) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (objc == 4 && Tcl_GetIntFromObj(interp, objv[3], &arg) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    switch ((enum option) index) {
+    case CONTINUATION:
+	result = TkFontEmojiContinuation(ch, objc == 4 && arg != 0);
+	break;
+    case PRESENTATION:
+	result = TkFontEmojiPresentation(ch, arg);
+	break;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TestfontObjCmd --
  *
  *	This function implements the "testfont" command, which is used to test
@@ -1436,7 +1505,7 @@ ImageObjCmd(
 		timPtr->height);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be changed", NULL);
+		"\": must be changed", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1480,7 +1549,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    instPtr->displayFailed = False;
+    instPtr->displayFailed = false;
     return instPtr;
 }
 
@@ -1532,34 +1601,20 @@ ImageDisplay(
      * how damage regions are computed.
      */
 
-    if (LOG_DISPLAY(drawable)) {
-	if (instPtr->displayFailed == False) {
+    if (!instPtr->displayFailed) {
 
-	    /*
-	     * Drawing is possible on the first call to DisplayImage.
-	     * Log the message.
-	     */
+	/*
+	 * Drawing is possible on the first call to DisplayImage.
+	 * Log the message.
+	 */
 
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-	    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
+	snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
+	instPtr->modelPtr->imageName, imageX, imageY, width, height);
+    }
 	Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName,
 		    NULL, instPtr->buffer,
 		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-	instPtr->displayFailed = False;
-    } else {
-
-	/*
-	 * Drawing is not possible on the first call to DisplayImage.
-	 * Save the message, but do not log it until the actual display.
-	 */
-
-	if (instPtr->displayFailed == False) {
-	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
-		    instPtr->modelPtr->imageName, imageX, imageY, width, height);
-	}
-	instPtr->displayFailed = True;
-    }
+	instPtr->displayFailed = false;
     if (width > (instPtr->modelPtr->width - imageX)) {
 	width = instPtr->modelPtr->width - imageX;
     }
@@ -1740,13 +1795,13 @@ TestmenubarObjCmd(
 	}
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be  window", NULL);
+		"\": must be  window", (char *)NULL);
 	return TCL_ERROR;
     }
 
     return TCL_OK;
 #else
-    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", NULL);
+    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", (char *)NULL);
     return TCL_ERROR;
 #endif
 }
@@ -1791,11 +1846,11 @@ TestmetricsObjCmd(
 	val = GetSystemMetrics(SM_CXHSCROLL);
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
-		"\": must be cxhscroll or cyvscroll", NULL);
+		"\": must be cxhscroll or cyvscroll", (char *)NULL);
 	return TCL_ERROR;
     }
     snprintf(buf, sizeof(buf), "%d", val);
-    Tcl_AppendResult(interp, buf, NULL);
+    Tcl_AppendResult(interp, buf, (char *)NULL);
     return TCL_OK;
 }
 #endif
@@ -1921,7 +1976,50 @@ TestprintfObjCmd(
     snprintf(buffer, sizeof(buffer), "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
 	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
 	    longLongInt, (unsigned long long)longLongInt);
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestsetlocaleObjCmd --
+ *
+ *	This function implements the "testsetlocale" command, which sets the
+ *	LC_NUMERIC locale of the C library, as an extension or the embedding
+ *	application could do.  It lets the test suite check that Tk does not
+ *	depend on it.
+ *
+ * Results:
+ *	A standard Tcl result.  The result is the name of the new locale, or
+ *	of the current one if no argument is given.
+ *
+ * Side effects:
+ *	The LC_NUMERIC locale is changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestsetlocaleObjCmd(
+    TCL_UNUSED(void *),	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    const char *locale;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?locale?");
+	return TCL_ERROR;
+    }
+    locale = setlocale(LC_NUMERIC, (objc > 1) ? Tcl_GetString(objv[1]) : NULL);
+    if (locale == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("unsupported locale \"%s\"",
+		Tcl_GetString(objv[1])));
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(locale, TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -1971,6 +2069,85 @@ TestwrapperObjCmd(
 
 	TkpPrintWindowId(buf, Tk_WindowId(wrapperPtr));
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestxfocusObjCmd --
+ *
+ *	This function implements the "testxfocus" command. It returns the
+ *	Tk window which has the input focus of the X server (the toplevel if
+ *	the focus is on its wrapper window), or an empty string if it is on
+ *	a window of another application or on no window. With a window
+ *	argument it first sets the input focus to the wrapper window of the
+ *	toplevel of that window, as a window manager would do. With "none"
+ *	or "pointerroot" it sets the input focus to None or PointerRoot.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	With an argument, changes the input focus of the X server.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestxfocusObjCmd(
+    void *clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_Window tkwin = (Tk_Window)clientData, focusWin;
+    Window window;
+    int revert;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?window|none|pointerroot?");
+	return TCL_ERROR;
+    }
+    if (objc == 2) {
+	const char *arg = Tcl_GetString(objv[1]);
+
+	if (strcmp(arg, "none") == 0) {
+	    XSetInputFocus(Tk_Display(tkwin), None, RevertToNone,
+		    CurrentTime);
+	} else if (strcmp(arg, "pointerroot") == 0) {
+	    XSetInputFocus(Tk_Display(tkwin), PointerRoot, RevertToPointerRoot,
+		    CurrentTime);
+	} else {
+	    TkWindow *winPtr = (TkWindow *) Tk_NameToWindow(interp, arg, tkwin);
+	    TkWindow *wrapperPtr;
+
+	    if (winPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
+		winPtr = winPtr->parentPtr;
+	    }
+	    wrapperPtr = TkpGetWrapperWindow(winPtr);
+	    if (wrapperPtr == NULL) {
+		wrapperPtr = winPtr;
+	    }
+	    XSetInputFocus(Tk_Display(tkwin), Tk_WindowId(wrapperPtr),
+		    RevertToParent, CurrentTime);
+	}
+	XSync(Tk_Display(tkwin), False);
+    }
+    XGetInputFocus(Tk_Display(tkwin), &window, &revert);
+    focusWin = Tk_IdToWindow(Tk_Display(tkwin), window);
+    if (focusWin != NULL) {
+	if (((TkWindow *) focusWin)->flags & TK_WRAPPER) {
+	    focusWin = (Tk_Window) TkWmFocusToplevel((TkWindow *) focusWin);
+	}
+	if (focusWin != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(focusWin),
+		    TCL_INDEX_NONE));
+	}
     }
     return TCL_OK;
 }
@@ -2137,6 +2314,151 @@ TestPhotoStringMatchCmd(
     } else {
 	return TCL_ERROR;
     }
+}
+
+#ifndef MAC_OSX_TK
+/*
+ *----------------------------------------------------------------------
+ *
+ * PixelChannel --  (not on macOS, where testpixel reads via TkpReadPixelSRGB)
+ *
+ *	Extract one color channel from a pixel value using the visual's
+ *	channel mask, scaled to 8 bits.
+ *
+ * Results:
+ *	The channel value in the range 0..255, or 0 for an empty mask.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+PixelChannel(
+    unsigned long pixel,
+    unsigned long mask)
+{
+    int bits = 0;
+    unsigned long value;
+
+    if (mask == 0) {
+	return 0;
+    }
+    while ((mask & 1) == 0) {
+	mask >>= 1;
+	pixel >>= 1;
+    }
+    value = pixel & mask;
+    while (mask & 1) {
+	mask >>= 1;
+	bits++;
+    }
+    if (bits >= 8) {
+	return (int) (value >> (bits - 8));
+    }
+    return (int) ((value * 255) / ((1u << bits) - 1));
+}
+#endif /* !MAC_OSX_TK */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestpixelObjCmd --
+ *
+ *	This function implements the "testpixel" command, which reads one
+ *	pixel back from a mapped window and returns it in #rrggbb form.  It
+ *	lets the test suite verify actually rendered output -- e.g. the photo
+ *	alpha-compositing path in tkImgPhotoDisplay/TkpPutRGBAImage and the
+ *	ttk per-node render cache -- for which no script-level facility
+ *	exists.  The x and y coordinates are relative to the window.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestpixelObjCmd(
+    void *clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    Tk_Window tkwin;
+    int x, y, r, g, b;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window x y");
+	return TCL_ERROR;
+    }
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
+	    (Tk_Window) clientData);
+    if (tkwin == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (Tk_WindowId(tkwin) == None || !Tk_IsMapped(tkwin)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" is not mapped", Tk_PathName(tkwin)));
+	return TCL_ERROR;
+    }
+    if (x < 0 || y < 0 || x >= Tk_Width(tkwin) || y >= Tk_Height(tkwin)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"coordinates %d,%d are outside window \"%s\"",
+		x, y, Tk_PathName(tkwin)));
+	return TCL_ERROR;
+    }
+#ifdef MAC_OSX_TK
+    /*
+     * macOS composites windows through the display's color profile, so a raw
+     * read-back differs from the sRGB values that were drawn.  Read and
+     * convert to sRGB so results match X11 and Windows.
+     */
+    {
+	unsigned char cr, cg, cb;
+
+	if (TkpReadPixelSRGB(tkwin, x, y, &cr, &cg, &cb) != TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	r = cr; g = cg; b = cb;
+    }
+#else
+    {
+	Visual *visual = Tk_Visual(tkwin);
+	XImage *image;
+	unsigned long pixel;
+
+	if (visual->red_mask == 0) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "testpixel requires a TrueColor visual", -1));
+	    return TCL_ERROR;
+	}
+	image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y, 1, 1,
+		AllPlanes, ZPixmap);
+	if (image == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	pixel = XGetPixel(image, 0, 0);
+	r = PixelChannel(pixel, visual->red_mask);
+	g = PixelChannel(pixel, visual->green_mask);
+	b = PixelChannel(pixel, visual->blue_mask);
+	XDestroyImage(image);
+    }
+#endif
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x", r, g, b));
+    return TCL_OK;
 }
 
 

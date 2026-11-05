@@ -425,9 +425,9 @@ CreateNamedSystemFont(
 /*
  *----------------------------------------------------------------------
  *
- * startOfClusterObjCmd --
+ * TkStartEndOfClusterCmd --
  *
- *      This function is invoked to process the startOfCluster command.
+ *      This function is invoked to process the tk::(start|end)OfCluster commands.
  *
  * Results:
  *      A standard Tcl result.
@@ -438,9 +438,9 @@ CreateNamedSystemFont(
  *----------------------------------------------------------------------
  */
 
-static int
-startOfClusterObjCmd(
-    TCL_UNUSED(void *),
+int
+TkStartEndOfClusterCmd(
+    void *clientData,           /* != NULL means 'end' */
     Tcl_Interp *interp,         /* Current interpreter. */
     Tcl_Size objc,              /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
@@ -482,6 +482,9 @@ startOfClusterObjCmd(
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
 	    idx = range.location;
+        if (clientData) {
+            idx += range.length;
+        }
 	}
 	if (idx > 0 && len != ulen) {
 	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
@@ -490,65 +493,6 @@ startOfClusterObjCmd(
 		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
 	    }
 	    idx = newIdx;
-	}
-	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
-    }
-    return TCL_OK;
-}
-
-static int
-endOfClusterObjCmd(
-    TCL_UNUSED(void *),
-    Tcl_Interp *interp,         /* Current interpreter. */
-    Tcl_Size objc,              /* Number of arguments. */
-    Tcl_Obj *const objv[])      /* Argument objects. */
-{
-    TKNSString *S;
-    char *stringArg;
-    Tcl_Size idx, len;
-
-    if ((size_t)(objc - 3) > 1) {
-	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
-	return TCL_ERROR;
-    }
-    stringArg = Tcl_GetStringFromObj(objv[1], &len);
-    if (stringArg == NULL) {
-	return TCL_ERROR;
-    }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
-    len = [S length];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
-		Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
-	return TCL_ERROR;
-    }
-    if (idx >= ulen) {
-	idx = len;
-    } else if (idx > 0 && len != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
-	}
-	idx = newIdx;
-    }
-    if (idx + 1 <= len) {
-	if (idx < 0) {
-	    idx = 0;
-	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
-	    idx = range.location + range.length;
-	    if (idx > 0 && len != ulen) {
-		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-		Tcl_Size newIdx = 1;
-		for (Tcl_Size i = 1; i < idx; i++) {
-		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
-		}
-		idx = newIdx;
-	    }
 	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
@@ -651,8 +595,6 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*
@@ -1076,6 +1018,7 @@ Tk_MeasureCharsInContext(
     }
     if (maxLength < 0) {
 	index = len;
+	range.location = start;
 	range.length = len;
 	line = CTTypesetterCreateLine(typesetter, range);
 	width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
@@ -1103,7 +1046,7 @@ Tk_MeasureCharsInContext(
 	 * Trim right whitespace/lineending characters.
 	 */
 
-	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
+	cs = (index <= start + len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
@@ -1120,7 +1063,7 @@ Tk_MeasureCharsInContext(
 	 * smallest word of the source string is still larger than maxWidth).
 	 */
 
-	if ((index >= start) && (index < len) &&
+	if ((index >= start) && (index < start + len) &&
 		(flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
 		![cs characterIsMember:[string characterAtIndex:index]]) {
 	    index = start;
@@ -1142,7 +1085,7 @@ Tk_MeasureCharsInContext(
 	} else {
 	    width = 0;
 	}
-	if (width < maxWidth && (flags & TK_PARTIAL_OK) && index < len) {
+	if (width < maxWidth && (flags & TK_PARTIAL_OK) && index < start + len) {
 	    range.length = ++index;
 	    line = CTTypesetterCreateLine(typesetter, range);
 	    width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
@@ -1321,14 +1264,14 @@ TkpDrawAngledCharsInContext(
     NSAttributedString *attributedString;
     CTTypesetterRef typesetter;
     CFIndex start, length;
-    CTLineRef line, full=nil;
+    CTLineRef full;
     MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
     CGColorRef fg = NULL;
     NSFont *nsFont;
     CGAffineTransform t;
-    CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
+    CGFloat height, textX = (CGFloat) x, textY = (CGFloat) y;
 
     if (rangeStart < 0 || rangeLength <= 0
 	    || rangeStart + rangeLength > numBytes
@@ -1337,6 +1280,7 @@ TkpDrawAngledCharsInContext(
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
     if (!string) {
+	TkMacOSXRestoreDrawingContext(&drawingContext);
 	return;
     }
 
@@ -1369,24 +1313,106 @@ TkpDrawAngledCharsInContext(
     CGContextConcatCTM(context, t);
     start = TclNumUtfChars(source, rangeStart);
     length = TclNumUtfChars(source, rangeStart + rangeLength) - start;
-    line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
-    if (start > 0) {
+
+    /*
+     * Create a CTLine from the FULL source string so that CoreText can apply
+     * correct inter-character shaping (Arabic joining, ligatures, kerning)
+     * across the entire line.  Drawing a sub-range in isolation breaks joining
+     * at the boundaries — e.g. Arabic letters that should be in medial form
+     * appear in initial/final/isolated form because CoreText cannot see the
+     * neighboring characters.
+     *
+     * We draw the full line but clip to the pixel span that corresponds to
+     * [rangeStart, rangeStart+rangeLength] so that only the requested glyphs
+     * are painted.  The clip rect is derived from the typographic offsets of
+     * the range boundaries within the full line.
+     */
+
+    {
+	CFIndex fullLength = TclNumUtfChars(source, numBytes);
+	CGFloat rangeStartX, rangeEndX, clipWidth;
+
+	/* Full-context line covering the entire source string. */
+	full = CTTypesetterCreateLine(typesetter, CFRangeMake(0, fullLength));
 
 	/*
-	 * We are only drawing part of the string.  To compute the x coordinate
-	 * of the part we are drawing we subtract its typographical length from
-	 * the typographical length of the full string.  This accounts for the
-	 * kerning after the initial part of the string.
+	 * Compute the pixel x-offset of the start of our range within the
+	 * full line.  CTLineGetOffsetForStringIndex gives the visual (not
+	 * logical) x position, which is what we need for both LTR and RTL.
+	 */
+	rangeStartX = CTLineGetOffsetForStringIndex(full, start, NULL);
+	rangeEndX   = CTLineGetOffsetForStringIndex(full, start + length, NULL);
+
+	/*
+	 * Put an edge between two characters on a pixel boundary, or
+	 * CoreGraphics renders some pixels of the glyphs differently than in
+	 * the whole line (seen in joined letters).  Round towards the logical
+	 * end: the range next to this one rounds their shared edge alike, and
+	 * an end edge never cuts into the last glyph.
 	 */
 
-	full = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start + length));
-	width = CTLineGetTypographicBounds(full, NULL, NULL, NULL);
+	if (rangeEndX < rangeStartX) {
+	    if (start > 0) {
+		rangeStartX = floor(textX + rangeStartX) - textX;
+	    }
+	    if (start + length < fullLength) {
+		rangeEndX = floor(textX + rangeEndX) - textX;
+	    }
+	} else {
+	    if (start > 0) {
+		rangeStartX = ceil(textX + rangeStartX) - textX;
+	    }
+	    if (start + length < fullLength) {
+		rangeEndX = ceil(textX + rangeEndX) - textX;
+	    }
+	}
+
+	/*
+	 * For RTL runs rangeEndX < rangeStartX.  Normalise so clipX is always
+	 * the left edge of the clip rectangle.
+	 */
+	if (rangeEndX < rangeStartX) {
+	    CGFloat tmp = rangeStartX;
+	    rangeStartX = rangeEndX;
+	    rangeEndX   = tmp;
+	}
+	clipWidth = rangeEndX - rangeStartX;
+
+	/*
+	 * Oblique (italic) fonts have glyphs whose ink extends past their
+	 * advance width — the slanted upper part of a glyph sticks out to
+	 * one side of its advance box.  CTLineGetOffsetForStringIndex
+	 * returns advance positions, so a clip rect of
+	 * [rangeStartX, rangeEndX] would cut the slanted overhang off the
+	 * leftmost and rightmost glyphs in the range.  Compensate by
+	 * widening the clip on both sides by the worst-case horizontal
+	 * extent of a slanted glyph: glyph-height * |tan(italicAngle)|.
+	 * For a 12pt Helvetica Oblique (italicAngle = -12°) this is ~3px.
+	 */
+
+	CGFloat italicOvershoot = 0.0;
+	if ([nsFont italicAngle] != 0.0) {
+	    CGFloat glyphHeight = [nsFont ascender] - [nsFont descender];
+	    italicOvershoot = ceil(glyphHeight *
+		    fabs(tan([nsFont italicAngle] * PI / 180.0)));
+	}
+
+	/*
+	 * Position the full line so that its origin aligns with textX/textY,
+	 * then clip to the requested range's visual span (widened by the
+	 * italic overshoot computed above).
+	 * The clip rect uses an effectively infinite height so we don't
+	 * accidentally clip ascenders/descenders.
+	 */
+	CGContextSaveGState(context);
+	CGContextClipToRect(context, CGRectMake(
+		textX + rangeStartX - italicOvershoot, textY - 32768.0,
+		clipWidth + 2.0 * italicOvershoot, 65536.0));
+	CGContextSetTextPosition(context, textX, textY);
+	CTLineDraw(full, context);
+	CGContextRestoreGState(context);
 	CFRelease(full);
-	textX += (width - CTLineGetTypographicBounds(line, NULL, NULL, NULL));
     }
-    CGContextSetTextPosition(context, textX, textY);
-    CTLineDraw(line, context);
-    CFRelease(line);
     CFRelease(typesetter);
     [attributedString release];
     [attributes release];

@@ -18,6 +18,17 @@
 static void		GenerateEditEvent(const char *name);
 static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
+static void ShowAboutIdleTask(void *clientData) {
+    Tcl_Interp *interp = (Tcl_Interp *) clientData;
+    int code = Tcl_EvalEx(interp, "tkAboutDialog", TCL_INDEX_NONE,
+			  TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+    Tcl_ResetResult(interp);
+    Tcl_Release(interp);
+}
+
 
 #pragma mark TKApplication(TKMenus)
 
@@ -180,7 +191,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	return (_eventInterp && Tcl_FindCommand(_eventInterp,
 		"::tk::mac::ShowPreferences", NULL, 0));
     } else if (sel_isEqual(action, @selector(tkDemo:))) {
-	BOOL haveDemo = NO;
+	bool haveDemo = false;
 
 	if (_eventInterp) {
 	    Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
@@ -205,13 +216,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	[super orderFrontStandardAboutPanel:NSApp];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", TCL_INDEX_NONE,
-		TCL_EVAL_GLOBAL);
-
-	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
-	}
-	Tcl_ResetResult(_eventInterp);
+	Tcl_Preserve(_eventInterp);
+	Tcl_DoWhenIdle(ShowAboutIdleTask, _eventInterp);
     }
 }
 
@@ -350,31 +356,6 @@ GetWidgetDemoPath(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXHandleMenuSelect --
- *
- *	Handles events that occur in the Menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXHandleMenuSelect(
-    TCL_UNUSED(short),
-    TCL_UNUSED(unsigned short),
-    TCL_UNUSED(int))
-{
-    Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * GenerateEditEvent --
  *
  *	Takes an edit menu item and posts the corasponding a virtual event to
@@ -413,7 +394,7 @@ GenerateEditEvent(
     event.virt.event = Tk_WindowId(tkwin);
     event.virt.root = XRootWindow(Tk_Display(tkwin), 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, winPtr->window, NULL, NULL,
 	    &event.virt.x_root, &event.virt.y_root, &x, &y, &event.virt.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.virt.x, &event.virt.y);

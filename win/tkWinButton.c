@@ -762,22 +762,47 @@ TkpDisplayButton(
 
 	    if (gc->background == GetSysColor(COLOR_BTNFACE)) {
 		gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-		Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x + textXOffset + 1,
-		    y + textYOffset + 1, 0, -1);
-		Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x + textXOffset + 1,
-		    y + textYOffset + 1,
-		    butPtr->underline);
+
+		if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+		    TkDrawAngledTextLayout(butPtr->display, pixmap, gc,
+			    butPtr->textLayout,
+			    x + textXOffset + 1 + butPtr->xoffset,
+			    y + textYOffset + 1 + butPtr->yoffset,
+			    butPtr->angle, 0, -1);
+		    TkUnderlineAngledTextLayout(butPtr->display, pixmap, gc,
+			    butPtr->textLayout,
+			    x + textXOffset + 1 + butPtr->xoffset,
+			    y + textYOffset + 1 + butPtr->yoffset,
+			    butPtr->angle, butPtr->underline);
+		} else {
+		    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+			    butPtr->textLayout, x + textXOffset + 1,
+			    y + textYOffset + 1, 0, -1);
+		    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+			    butPtr->textLayout, x + textXOffset + 1,
+			    y + textYOffset + 1,
+			    butPtr->underline);
+		}
 		gc->foreground = oldFgColor;
 	    }
 	}
 
-	Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
-	Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		butPtr->textLayout, x + textXOffset, y + textYOffset,
-		butPtr->underline);
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkDrawAngledTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset + butPtr->xoffset,
+		    y + textYOffset + butPtr->yoffset, butPtr->angle, 0, -1);
+	    TkUnderlineAngledTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset + butPtr->xoffset,
+		    y + textYOffset + butPtr->yoffset, butPtr->angle,
+		    butPtr->underline);
+	} else {
+	    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
+	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+		    butPtr->textLayout, x + textXOffset, y + textYOffset,
+		    butPtr->underline);
+	}
+
 	height = fullHeight;
 	drawRing = 1;
     } else {
@@ -827,18 +852,40 @@ TkpDisplayButton(
 		COLORREF oldFgColor = gc->foreground;
 		if (gc->background == GetSysColor(COLOR_BTNFACE)) {
 		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-		    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-			    butPtr->textLayout, x + 1, y + 1, 0, -1);
-		    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-			    butPtr->textLayout, x + 1, y + 1, butPtr->underline);
+
+		    if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+			TkDrawAngledTextLayout(butPtr->display, pixmap, gc,
+				butPtr->textLayout, x + 1 + butPtr->xoffset,
+				y + 1 + butPtr->yoffset, butPtr->angle, 0, -1);
+			TkUnderlineAngledTextLayout(butPtr->display, pixmap, gc,
+				butPtr->textLayout, x + 1 + butPtr->xoffset,
+				y + 1 + butPtr->yoffset, butPtr->angle,
+				butPtr->underline);
+		    } else {
+			Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+				butPtr->textLayout, x + 1, y + 1, 0, -1);
+			Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+				butPtr->textLayout, x + 1, y + 1, butPtr->underline);
+		    }
+
 		    gc->foreground = oldFgColor;
 		}
 	    }
-	    Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
-		    x, y, 0, -1);
-	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x, y, butPtr->underline);
 
+	    if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+		TkDrawAngledTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
+			x + butPtr->xoffset, y + butPtr->yoffset,
+			butPtr->angle, 0, -1);
+		TkUnderlineAngledTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x + butPtr->xoffset,
+			y + butPtr->yoffset,
+			butPtr->angle, butPtr->underline);
+	    } else {
+		Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
+			x, y, 0, -1);
+		Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+			butPtr->textLayout, x, y, butPtr->underline);
+	    }
 	    height = butPtr->textHeight;
 	    drawRing = 1;
 	}
@@ -1041,6 +1088,11 @@ TkpComputeButtonGeometry(
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
 	    Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, wrapLength,
 	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+
+    if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	TkAdjustAngledTextLayout(butPtr->angle, &butPtr->textWidth,
+		&butPtr->textHeight, &butPtr->xoffset, &butPtr->yoffset);
+    }
 
     txtWidth = butPtr->textWidth;
     txtHeight = butPtr->textHeight;
@@ -1324,6 +1376,11 @@ TkpComputeButtonGeometry(
 		break;
 	    }
 	    }
+	}
+	if (butPtrWidth > 0 && butPtrHeight > 0 &&
+		butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkAdjustAngledTextLayout(butPtr->angle, &width, &height,
+		    NULL, NULL);
 	}
 
 	width += 2 * padX;

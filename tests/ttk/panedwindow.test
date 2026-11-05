@@ -360,6 +360,31 @@ test panedwindow-6.2 "style command" -body {
     destroy .w
 } -result {customStyle.TPanedwindow customStyle.TPanedwindow TPanedwindow}
 
+test panedwindow-7.1 {sash positions are kept while unmapped [b086bb1d61]} -setup {
+    ttk::panedwindow .pw -orient vertical -width 200 -height 200
+    ttk::label .pw.a -text a
+    ttk::label .pw.b -text b
+    .pw add .pw.a
+    .pw add .pw.b
+    pack .pw
+    update
+} -body {
+    .pw sashpos 0 150
+    update
+    pack forget .pw
+    update
+    .pw.a configure -text "a\nb\nc"
+    ttk::style configure Toolbutton -relief raised
+    update
+    pack .pw
+    .pw configure -height 220
+    update
+    .pw sashpos 0
+} -cleanup {
+    destroy .pw
+    ttk::style configure Toolbutton -relief {}
+} -result 150
+
 #
 # TESTFILE CLEANUP
 #

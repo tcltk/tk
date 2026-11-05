@@ -1,7 +1,7 @@
 /*
  * tkMacOSXDraw.c --
  *
- *	This file contains functions that draw to windows. Many of thees
+ *	This file contains functions that draw to windows. Many of these
  *	functions emulate Xlib functions.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
@@ -299,7 +299,7 @@ Tk_MacOSXGetCGContextForDrawable(
 void
 TkMacOSXDrawCGImage(
     Drawable d,
-    GC gc,
+    TCL_UNUSED(GC),
     CGContextRef context,
     CGImageRef image,
     unsigned long imageForeground,
@@ -324,11 +324,11 @@ TkMacOSXDrawCGImage(
 		CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
 	    } else {
 		if (imageBackground != transparentColor) {
-		    TkMacOSXSetColorInContext(gc, imageBackground, context,
+		    TkMacOSXSetColorInContext(imageBackground, context,
 			    TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 		    CGContextFillRect(context, dstBounds);
 		}
-		TkMacOSXSetColorInContext(gc, imageForeground, context,
+		TkMacOSXSetColorInContext(imageForeground, context,
 			TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	    }
 	}
@@ -391,9 +391,8 @@ XDrawLines(
 {
     MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
-    int i, lw = gc->line_width;
 
-    if (npoints < 2) {
+    if (npoints < 2 || (mode != CoordModeOrigin && mode != CoordModePrevious)) {
 	return BadValue;
     }
 
@@ -401,24 +400,56 @@ XDrawLines(
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
-	double prevx, prevy;
-	double o = (lw % 2) ? .5 : 0;
+	double o = (gc->line_width % 2) ? .5 : 0;
+	short x0 = points[0].x, y0 = points[0].y;
+	short x1 = (mode == CoordModeOrigin) ? points[1].x : x0 + points[1].x;
+	short y1 = (mode == CoordModeOrigin) ? points[1].y : y0 + points[1].y;
+	double prevx = macWin->xOff + x0 + o, prevy = macWin->yOff + y0 + o;
+	int i;
 
 	CGContextBeginPath(dc.context);
-	prevx = macWin->xOff + points[0].x + o;
-	prevy = macWin->yOff + points[0].y + o;
-	CGContextMoveToPoint(dc.context, prevx, prevy);
-	for (i = 1; i < npoints; i++) {
-	    if (mode == CoordModeOrigin) {
-		CGContextAddLineToPoint(dc.context,
-			macWin->xOff + points[i].x + o,
-			macWin->yOff + points[i].y + o);
+	if (y1 == y0) {					/* horiz. line */
+	    if (x0 <= x1) {
+		prevx = macWin->xOff + x0;
 	    } else {
-		prevx += points[i].x;
-		prevy += points[i].y;
-		CGContextAddLineToPoint(dc.context, prevx, prevy);
+		prevx = macWin->xOff + x0 + 1;
 	    }
+	} else if (x1 == x0) {				/* vert. line */
+	    if (y0 <= y1) {
+		prevy = macWin->yOff + y0;
+	    } else {
+		prevy = macWin->yOff + y0 + 1;
+	    }
+	}
+	CGContextMoveToPoint(dc.context, prevx, prevy);
+
+	for (i = 1; i < npoints; i++) {
+	    double nextx, nexty;
+
+	    x1 = (mode == CoordModeOrigin) ? points[i].x : x0 + points[i].x;
+	    y1 = (mode == CoordModeOrigin) ? points[i].y : y0 + points[i].y;
+	    nextx = macWin->xOff + x1 + o;
+	    nexty = macWin->yOff + y1 + o;
+
+	    if (i == npoints-1) {
+		if (y1 == y0) {				/* horiz. line */
+		    if (x0 <= x1) {
+			nextx = macWin->xOff + x1 + 1;
+		    } else {
+			nextx = macWin->xOff + x1;
+		    }
+		} else if (x1 == x0) {			/* vert. line */
+		    if (y0 <= y1) {
+			nexty = macWin->yOff + y1 + 1;
+		    } else {
+			nexty = macWin->yOff + y1;
+		    }
+		}
+	    }
+	    CGContextAddLineToPoint(dc.context, nextx, nexty);
+	    x0 = x1; y0 = y1;
 	}
 
 	/*
@@ -427,8 +458,7 @@ XDrawLines(
 	 * this needs telling CoreGraphics that the path is closed.
 	 */
 
-	if ((points[0].x == points[npoints-1].x) &&
-		(points[0].y == points[npoints-1].y)) {
+	if (points[0].x == x1 && points[0].y == y1) {
 	    CGContextClosePath(dc.context);
 	}
 	CGContextStrokePath(dc.context);
@@ -463,23 +493,43 @@ XDrawSegments(
 {
     MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
-    int i, lw = gc->line_width;
 
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
-	double o = (lw % 2) ? .5 : 0;
+	int i;
+	double o = (gc->line_width % 2) ? .5 : 0;
 
 	for (i = 0; i < nsegments; i++) {
+	    double prevx = macWin->xOff + segments[i].x1 + o;
+	    double prevy = macWin->yOff + segments[i].y1 + o;
+	    double nextx = macWin->xOff + segments[i].x2 + o;
+	    double nexty = macWin->yOff + segments[i].y2 + o;
+
+	    if (segments[i].y2 == segments[i].y1) {	      /* horiz. line */
+		if (segments[i].x1 <= segments[i].x2) {
+		    prevx = macWin->xOff + segments[i].x1;
+		    nextx = macWin->xOff + segments[i].x2 + 1;
+		} else {
+		    prevx = macWin->xOff + segments[i].x1 + 1;
+		    nextx = macWin->xOff + segments[i].x2;
+		}
+	    } else if (segments[i].x2 == segments[i].x1) {    /* vert. line */
+		if (segments[i].y1 <= segments[i].y2) {
+		    prevy = macWin->yOff + segments[i].y1;
+		    nexty = macWin->yOff + segments[i].y2 + 1;
+		} else {
+		    prevy = macWin->yOff + segments[i].y1 + 1;
+		    nexty = macWin->yOff + segments[i].y2;
+		}
+	    }
+
 	    CGContextBeginPath(dc.context);
-	    CGContextMoveToPoint(dc.context,
-		    macWin->xOff + segments[i].x1 + o,
-		    macWin->yOff + segments[i].y1 + o);
-	    CGContextAddLineToPoint(dc.context,
-		    macWin->xOff + segments[i].x2 + o,
-		    macWin->yOff + segments[i].y2 + o);
+	    CGContextMoveToPoint(dc.context, prevx, prevy);
+	    CGContextAddLineToPoint(dc.context, nextx, nexty);
 	    CGContextStrokePath(dc.context);
 	}
     }
@@ -515,31 +565,67 @@ XFillPolygon(
 {
     MacDrawable *macWin = (MacDrawable *)d;
     TkMacOSXDrawingContext dc;
-    int i;
+
+    if (npoints < 2 || (mode != CoordModeOrigin && mode != CoordModePrevious)) {
+	return BadValue;
+    }
 
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
+
     if (dc.context) {
-	double prevx, prevy;
 	double o = (gc->line_width % 2) ? .5 : 0;
+	short x0 = points[0].x, y0 = points[0].y;
+	short x1 = (mode == CoordModeOrigin) ? points[1].x : x0 + points[1].x;
+	short y1 = (mode == CoordModeOrigin) ? points[1].y : y0 + points[1].y;
+	double prevx = macWin->xOff + x0 + o, prevy = macWin->yOff + y0 + o;
+	int i;
 
 	CGContextBeginPath(dc.context);
-	prevx = macWin->xOff + points[0].x + o;
-	prevy = macWin->yOff + points[0].y + o;
-	CGContextMoveToPoint(dc.context, prevx, prevy);
-	for (i = 1; i < npoints; i++) {
-	    if (mode == CoordModeOrigin) {
-		CGContextAddLineToPoint(dc.context,
-			macWin->xOff + points[i].x + o,
-			macWin->yOff + points[i].y + o);
+	if (y1 == y0) {					/* horiz. line */
+	    if (x0 <= x1) {
+		prevx = macWin->xOff + x0;
 	    } else {
-		prevx += points[i].x;
-		prevy += points[i].y;
-		CGContextAddLineToPoint(dc.context, prevx, prevy);
+		prevx = macWin->xOff + x0 + 1;
+	    }
+	} else if (x1 == x0) {				/* vert. line */
+	    if (y0 <= y1) {
+		prevy = macWin->yOff + y0;
+	    } else {
+		prevy = macWin->yOff + y0 + 1;
 	    }
 	}
+	CGContextMoveToPoint(dc.context, prevx, prevy);
+
+	for (i = 1; i < npoints; i++) {
+	    double nextx, nexty;
+
+	    x1 = (mode == CoordModeOrigin) ? points[i].x : x0 + points[i].x;
+	    y1 = (mode == CoordModeOrigin) ? points[i].y : y0 + points[i].y;
+	    nextx = macWin->xOff + x1 + o;
+	    nexty = macWin->yOff + y1 + o;
+
+	    if (i == npoints-1) {
+		if (y1 == y0) {				/* horiz. line */
+		    if (x0 <= x1) {
+			nextx = macWin->xOff + x1 + 1;
+		    } else {
+			nextx = macWin->xOff + x1;
+		    }
+		} else if (x1 == x0) {			/* vert. line */
+		    if (y0 <= y1) {
+			nexty = macWin->yOff + y1 + 1;
+		    } else {
+			nexty = macWin->yOff + y1;
+		    }
+		}
+	    }
+	    CGContextAddLineToPoint(dc.context, nextx, nexty);
+	    x0 = x1; y0 = y1;
+	}
+
 	(gc->fill_rule == EvenOddRule)
 		? CGContextEOFillPath(dc.context)
 		: CGContextFillPath(dc.context);
@@ -1069,15 +1155,122 @@ XFillArcs(
     return Success;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetUpGraphicsPort --
+ * Stipple support (FillStippled / FillOpaqueStippled) --
  *
- *	Set up the graphics port from the given GC.
+ *	An X stipple is a 1-bit-deep Pixmap tiled over the drawable with its
+ *	origin at (ts_x_origin, ts_y_origin).  We emulate it with a *colored*
+ *	CGPattern whose cell is drawn by StippleDrawCell(): the cell is filled
+ *	with the GC background (opaque case only) and then the stipple, turned
+ *	into a CGImage mask, is painted in the GC foreground.  Installing the
+ *	pattern as both the fill and stroke "color" of the context means that
+ *	every fill, stroke and text-fill operation in the context honors the
+ *	stipple without any change to the individual X drawing functions.
+ *
+ *	CoreGraphics owns the lifetime of everything allocated here: the
+ *	CGColor created with the pattern is retained by the context's GState,
+ *	so StippleReleaseInfo() runs when TkMacOSXRestoreDrawingContext() pops
+ *	that GState.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct {
+    CGImageRef mask;		/* Image mask made from the stipple bitmap. */
+    CGColorRef fg;		/* Foreground color. */
+    CGColorRef bg;		/* Background color; NULL for FillStippled. */
+    CGSize size;		/* Size of one stipple tile. */
+} StippleInfo;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StippleDrawCell --
+ *
+ *	CGPattern cell-drawing callback.  Paints one tile of the stipple
+ *	pattern: first the background color (only when an opaque stipple
+ *	is in use), then the stipple mask image in the foreground color.
+ *	The mask is drawn with interpolation disabled so that stipple
+ *	pixels stay crisp.
  *
  * Results:
  *	None.
+ *
+ * Side effects:
+ *	Draws into the supplied CGContext, which is owned by CoreGraphics
+ *	and is only valid for the duration of the call.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StippleDrawCell(
+    void *clientData,
+    CGContextRef context)
+{
+    StippleInfo *info = (StippleInfo *)clientData;
+    CGRect cell = CGRectMake(0, 0, info->size.width, info->size.height);
+
+    CGContextSetInterpolationQuality(context, kCGInterpolationNone);
+    if (info->bg) {
+	CGContextSetFillColorWithColor(context, info->bg);
+	CGContextFillRect(context, cell);
+    }
+    CGContextSetFillColorWithColor(context, info->fg);
+    CGContextDrawImage(context, cell, info->mask);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StippleReleaseInfo --
+ *
+ *	CGPattern release callback.  Frees the StippleInfo structure and
+ *	releases the CGImage mask and CGColor objects it owns.  This is
+ *	called by CoreGraphics when the last reference to the CGPattern
+ *	is dropped, typically when the GState that holds the pattern
+ *	color is restored by TkMacOSXRestoreDrawingContext().
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees memory; the clientData must not be used afterwards.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StippleReleaseInfo(
+    void *clientData)
+{
+    StippleInfo *info = (StippleInfo *)clientData;
+
+    CGImageRelease(info->mask);
+    CGColorRelease(info->fg);
+    CGColorRelease(info->bg);
+    Tcl_Free(info);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreateStippleMask --
+ *
+ *	Build an 8-bit CGImage mask from a Tk 1-bit (BW) pixmap.  Tk's
+ *	BW pixmaps are alpha-only bitmap contexts in which a set bit has
+ *	alpha 255.  Image mask samples paint where the sample is 0, so an
+ *	inverted decode array is supplied.  The pixel data is copied out
+ *	of the bitmap context, so the returned mask does not depend on
+ *	the lifetime of the pixmap.
+ *
+ * Results:
+ *	Returns a newly created CGImage mask, or NULL if the pixmap is
+ *	not a BW pixmap or has no usable backing store.  The caller owns
+ *	a reference to the returned image and must release it.
  *
  * Side effects:
  *	None.
@@ -1085,14 +1278,186 @@ XFillArcs(
  *----------------------------------------------------------------------
  */
 
-void
-TkMacOSXSetUpGraphicsPort(
-    TCL_UNUSED(GC),			/* GC to apply to current port. */
-    TCL_UNUSED(void *))
+/*
+ * Build an 8-bit image mask from a Tk bitmap.  Tk's BW pixmaps are
+ * alpha-only bitmap contexts in which a set bit has alpha 255.  Image mask
+ * samples paint where the sample is 0, so use an inverted decode array.  The
+ * pixel data is copied, so the mask does not depend on the pixmap's lifetime.
+ */
+
+static CGImageRef
+CreateStippleMask(
+    Pixmap stipple)
 {
-    Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
+    MacDrawable *macStipple = (MacDrawable *)stipple;
+    CGContextRef bc;
+    CGDataProviderRef provider;
+    CFDataRef copy;
+    CGImageRef mask;
+    const void *data;
+    size_t w, h, bytesPerRow;
+    static const CGFloat decode[2] = {1.0, 0.0};
+
+    if (!macStipple || !(macStipple->flags & TK_IS_PIXMAP)
+	    || !(macStipple->flags & TK_IS_BW_PIXMAP)) {
+	return NULL;
+    }
+    bc = TkMacOSXGetCGContextForDrawable(stipple);
+    if (!bc) {
+	return NULL;
+    }
+    w = CGBitmapContextGetWidth(bc);
+    h = CGBitmapContextGetHeight(bc);
+    bytesPerRow = CGBitmapContextGetBytesPerRow(bc);
+    data = CGBitmapContextGetData(bc);
+    if (!data || !w || !h) {
+	return NULL;
+    }
+    copy = CFDataCreate(NULL, (const UInt8 *)data, (CFIndex)(bytesPerRow * h));
+    provider = CGDataProviderCreateWithCFData(copy);
+    CFRelease(copy);
+    mask = CGImageMaskCreate(w, h, 8, 8, bytesPerRow, provider, decode, false);
+    CGDataProviderRelease(provider);
+    return mask;
 }
-
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetStipplePattern --
+ *
+ *	Replace the fill and stroke colors of the supplied CGContext
+ *	with a colored CGPattern that emulates the X stipple described by
+ *	the GC.  Each pattern cell is drawn by StippleDrawCell(), which
+ *	fills with the GC background (opaque stipples only) and then
+ *	paints the stipple mask in the GC foreground.  Because the
+ *	pattern is installed as both the fill and stroke color, every
+ *	subsequent fill, stroke and text-fill operation in the context
+ *	honors the stipple without changes to the individual X drawing
+ *	functions.
+ *
+ *	The pattern matrix is scaled by the current CTM so that pattern
+ *	tiles line up with device pixels on Retina displays, and the
+ *	pattern phase is set so that the X tile origin
+ *	(ts_x_origin, ts_y_origin) lands on a tile corner.
+ *
+ *	If the GC has no stipple, if the stipple cannot be converted to a
+ *	mask, or if the foreground or background color is itself a
+ *	pattern-valued color (which cannot be nested inside a pattern
+ *	cell), the solid foreground color already installed by the
+ *	caller is left in place.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The context's fill and stroke colors are replaced by a pattern
+ *	color.  Memory allocated here is owned by CoreGraphics and is
+ *	freed by StippleReleaseInfo() when the enclosing GState is
+ *	restored.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ * Replace the fill and stroke colors of the context by the stipple pattern.
+ * If anything goes wrong the solid foreground color that the caller already
+ * installed is left in place.
+ */
+
+static void
+SetStipplePattern(
+    MacDrawable *macDraw,
+    GC gc,
+    CGContextRef context)
+{
+    static const CGPatternCallbacks callbacks = {
+	0, StippleDrawCell, StippleReleaseInfo
+    };
+    CGFloat alpha = 1.0, scale;
+    CGAffineTransform ctm;
+    CGPoint origin;
+    StippleInfo *info;
+    CGPatternRef pattern;
+    CGColorSpaceRef patternSpace;
+    CGColorRef patternColor;
+    CGImageRef mask;
+    CGColorRef fg = NULL, bg = NULL;
+
+    if (!gc->stipple || !(mask = CreateStippleMask(gc->stipple))) {
+	return;
+    }
+	bool useDarkAppearance = TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr);
+    TkSetMacColor2(gc->foreground, &fg, useDarkAppearance);
+    if (gc->fill_style == FillOpaqueStippled) {
+	TkSetMacColor2(gc->background, &bg, useDarkAppearance);
+    }
+
+    /*
+     * Pattern-valued colors (possible with some HITheme brushes) can't be
+     * nested inside a pattern cell; fall back to the solid color.
+     */
+
+    if (!fg || CGColorGetPattern(fg) || (bg && CGColorGetPattern(bg))) {
+	CGImageRelease(mask);
+	CGColorRelease(fg);
+	CGColorRelease(bg);
+	return;
+    }
+
+    info = (StippleInfo *)Tcl_Alloc(sizeof(StippleInfo));
+    info->mask = mask;
+    info->fg = fg;
+    info->bg = bg;
+    info->size = CGSizeMake((CGFloat)CGImageGetWidth(mask),
+	    (CGFloat)CGImageGetHeight(mask));
+
+    /*
+     * A pattern lives in the context's *default* space, which is not affected
+     * by the scale and flip that were concatenated to the CTM.  Use the
+     * current CTM to find the number of device pixels per Tk pixel (2 on a
+     * Retina display) and scale the pattern matrix by it; otherwise each
+     * stipple pixel shrinks to one device pixel and the pattern turns into a
+     * fine gray mesh.
+     */
+
+    ctm = CGContextGetCTM(context);
+    scale = sqrt(ctm.a * ctm.a + ctm.b * ctm.b);
+    if (scale <= 0.0) {
+	scale = 1.0;
+    }
+
+    pattern = CGPatternCreate(info, CGRectMake(0, 0, info->size.width,
+	    info->size.height), CGAffineTransformMakeScale(scale, scale),
+	    info->size.width,
+	    info->size.height, kCGPatternTilingConstantSpacing,
+	    true /* colored */, &callbacks);
+    if (!pattern) {
+	StippleReleaseInfo(info);
+	return;
+    }
+    patternSpace = CGColorSpaceCreatePattern(NULL);
+    patternColor = CGColorCreateWithPattern(patternSpace, pattern, &alpha);
+    CGContextSetFillColorWithColor(context, patternColor);
+    CGContextSetStrokeColorWithColor(context, patternColor);
+
+    /*
+     * The X tile origin is the top left corner of a tile in y-down Tk
+     * coordinates, i.e. the bottom left corner (y + height) of an upright
+     * tile in the flipped user space.  Map it through the CTM to get the
+     * position of the tile in default (device) space, which is what the
+     * pattern phase is expressed in.
+     */
+
+    origin = CGPointApplyAffineTransform(CGPointMake(
+	    macDraw->xOff + gc->ts_x_origin,
+	    macDraw->yOff + gc->ts_y_origin + info->size.height), ctm);
+    CGContextSetPatternPhase(context, CGSizeMake(origin.x, origin.y));
+
+    CGColorRelease(patternColor);
+    CGColorSpaceRelease(patternSpace);
+    CGPatternRelease(pattern);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1262,11 +1627,15 @@ TkMacOSXSetupDrawingContext(
 	bool shouldAntialias = !notAA(gc->line_width);
 	double w = gc->line_width;
 
-	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context,
+	TkMacOSXSetColorInContext(gc->foreground, dc.context,
 		TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	if (view) {
 	    CGSize size = NSSizeToCGSize([view bounds].size);
 	    CGContextSetPatternPhase(dc.context, size);
+	}
+	if (gc->fill_style == FillStippled
+		|| gc->fill_style == FillOpaqueStippled) {
+	    SetStipplePattern(macDraw, gc, dc.context);
 	}
 	if (gc->function != GXcopy) {
 	    TkMacOSXDbgMsg("Logical functions other than GXcopy are "
@@ -1375,8 +1744,8 @@ TkMacOSXRestoreDrawingContext(
      * backing layer.
      */
 
-    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
-    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, dcPtr->view);
+    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, dcPtr->view);
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
@@ -1530,32 +1899,6 @@ ClipToGC(
 	CFRelease(gcClipRgn);
 	XOffsetRegion(gcClip, -xOffset, -yOffset);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXMakeStippleMap --
- *
- *	Given a drawable and a stipple pattern this function draws the pattern
- *	repeatedly over the drawable. The drawable can then be used as a mask
- *	for bit-bliting a stipple pattern over an object.
- *
- * Results:
- *	A BitMap data structure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void *
-TkMacOSXMakeStippleMap(
-    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
-    TCL_UNUSED(Drawable))	/* The stipple pattern. */
-{
-    return NULL;
 }
 
 /*

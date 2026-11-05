@@ -64,6 +64,25 @@ static struct {
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
+const char *const compatFunctions[] = {
+    NULL,
+    "tcl_startOfPreviousWord",
+    NULL,
+    NULL,
+    NULL,
+    "tcl_startOfNextWord",
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    "tcl_endOfWord",
+    NULL,
+    NULL,
+};
+
 static int
 startEndOfCmd(
     void *clientData,
@@ -77,7 +96,7 @@ startEndOfCmd(
     UErrorCodex errorCode = U_ZERO_ERRORZ;
     void *it;
     Tcl_Size idx;
-    int flags = PTR2INT(clientData);
+    int flags = (int)PTR2INT(clientData);
     const uint16_t *ustr;
     char locale[128];
 
@@ -87,7 +106,15 @@ startEndOfCmd(
     }
     locale[0] = '\0';
     if (objc > 3) {
-	if (!TkObjIsEmpty(objv[3]) && icu_canonicalize) {
+	if (strncasecmp(Tcl_GetString(objv[3]), "TCL8", 5) == 0) {
+	    if (compatFunctions[flags]) {
+		Tcl_Obj *args[3];
+		args[0] = Tcl_NewStringObj(compatFunctions[flags], -1);
+		args[1] = objv[1];
+		args[2] = objv[2];
+		return Tcl_EvalObjv(interp, 3, args, TCL_EVAL_GLOBAL|TCL_EVAL_DIRECT);
+	    }
+	} else if (icu_canonicalize) {
 	    icu_canonicalize(Tcl_GetString(objv[3]), locale, sizeof(locale), &errorCode);
 	} else {
 	    strncpy(locale, Tcl_GetString(objv[3]), sizeof(locale));
@@ -110,7 +137,7 @@ startEndOfCmd(
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
 	ustr = (const uint16_t *)Tcl_DStringValue(&ds);
-	icu_setText(it, ustr, len, &errorCode);
+	icu_setText(it, ustr, (int32_t)len, &errorCode);
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
 	Tcl_DStringFree(&ds);
@@ -132,7 +159,7 @@ startEndOfCmd(
 	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
 	}
-	idx = icu_following(it, idx);
+	idx = icu_following(it, (int32_t)idx);
 	if ((flags & FLAG_WORD) && idx >= len) {
 	    idx = -1;
 	}
@@ -140,9 +167,12 @@ startEndOfCmd(
 	if (!(flags & FLAG_WORD)) {
 	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
-	idx = icu_preceding(it, idx);
+	idx = icu_preceding(it, (int32_t)idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
 	    flags &= ~FLAG_WORD; /* If 0 is reached here, don't do a further search */
+	    if (Tcl_UniCharIsSpace(ustr[0])) {
+		idx = TCL_INDEX_NONE; /* Only spaces before the start: no word */
+	    }
 	}
     }
     if ((flags & FLAG_WORD) && (idx != TCL_INDEX_NONE)) {
@@ -153,7 +183,13 @@ startEndOfCmd(
 		    idx = TCL_INDEX_NONE;
 		}
 	    } else {
-		idx = icu_previous(it);
+		/* Skip all space segments, e.g. " " followed by "\n" */
+		do {
+		    idx = icu_previous(it);
+		} while (idx > 0 && Tcl_UniCharIsSpace(ustr[idx]));
+		if (idx == 0 && Tcl_UniCharIsSpace(ustr[0])) {
+		    idx = TCL_INDEX_NONE;
+		}
 	    }
 	} else if (idx == 0 && !(flags & FLAG_FOLLOWING)) {
 	    idx = TCL_INDEX_NONE;
@@ -216,7 +252,7 @@ Icu_Init(
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
-	static const char *iculibs[] = {
+	static const char *const iculibs[] = {
 #if defined(_WIN32)
 	    "icuuc??.dll", /* When running under Windows, user-provided */
 	    NULL,
@@ -314,18 +350,26 @@ Icu_Init(
     Tcl_MutexUnlock(&icu_mutex);
 
     if (icu_fns.lib != NULL) {
-	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
-		INT2PTR(0), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::startOfNextWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::startOfPreviousWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD), icuCleanup);
-	Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", startEndOfCmd,
-		INT2PTR(FLAG_FOLLOWING), icuCleanup);
 	Tcl_CreateObjCommand2(interp, "::tk::endOfWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING|FLAG_SPACE), icuCleanup);
-    icu_fns.nopen += 5;
+#if defined(_WIN32) || defined(MAC_OSX_TK)
+	icu_fns.nopen += 3;
+#else
+	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
+		INT2PTR(0), icuCleanup);
+	Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", startEndOfCmd,
+		INT2PTR(FLAG_FOLLOWING), icuCleanup);
+	icu_fns.nopen += 5;
+#endif
     }
+#if defined(MAC_OSX_TK) || defined(_WIN32)
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", TkStartEndOfClusterCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", TkStartEndOfClusterCmd, INT2PTR(1), NULL);
+#endif
 }
 
 /*

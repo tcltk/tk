@@ -15,13 +15,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWinInt.h"
 #include "tkInt.h"
 #include <windows.h>
 #include <shobjidl.h>
 #include <propvarutil.h>
 #include <propkey.h>
 #include "tkWin.h"
-#include "tkWinInt.h"
 #include "tkWinIco.h"
 
 #ifndef NOTIFYICON_VERSION_4
@@ -387,7 +387,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-	"\" does not exist", NULL);
+	"\" does not exist", (char *)NULL);
     return NULL;
 }
 
@@ -621,7 +621,7 @@ TaskbarEval(
     char evalspace[200];
     size_t evalsize = 200;
     char *expanded;
-    int fixup = 0;
+    bool fixup = false;
 
     switch (lParam) {
     case WM_MOUSEMOVE:
@@ -630,43 +630,43 @@ TaskbarEval(
 	break;
     case WM_LBUTTONDOWN:
 	msgstring = "WM_LBUTTONDOWN";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_LBUTTONUP:
 	msgstring = "WM_LBUTTONUP";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_LBUTTONDBLCLK:
 	msgstring = "WM_LBUTTONDBLCLK";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_RBUTTONDOWN:
 	msgstring = "WM_RBUTTONDOWN";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_RBUTTONUP:
 	msgstring = "WM_RBUTTONUP";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_RBUTTONDBLCLK:
 	msgstring = "WM_RBUTTONDBLCLK";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_MBUTTONDOWN:
 	msgstring = "WM_MBUTTONDOWN";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_MBUTTONUP:
 	msgstring = "WM_MBUTTONUP";
-	fixup = 1;
+	fixup = true;
 	break;
     case WM_MBUTTONDBLCLK:
 	msgstring = "WM_MBUTTONDBLCLK";
-	fixup = 1;
+	fixup = true;
 	break;
     default:
 	msgstring = "WM_NULL";
-	fixup = 0;
+	fixup = false;
     }
     expanded = TaskbarExpandPercents(icoPtr, msgstring, wParam, lParam,
 	    Tcl_GetString(icoPtr->taskbar_command), evalspace, &evalsize);
@@ -833,13 +833,13 @@ RegisterHandlerClass(
 
 static HWND
 CreateTaskbarHandlerWindow(void) {
-    static int registered = 0;
+    static bool registered = false;
     HINSTANCE hInstance = GETHINSTANCE;
     if (!registered) {
 	if (!RegisterHandlerClass(hInstance)) {
 	    return 0;
 	}
-	registered = 1;
+	registered = true;
     }
     return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
 	    CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
@@ -970,7 +970,7 @@ WinSystrayCmd(
 		if (i+1 >= objc) {
 		    Tcl_AppendResult(interp,
 			    "missing value for option \"", Tcl_GetString(objv[i]),
-			    "\"", NULL);
+			    "\"", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		switch (opt) {
@@ -1088,7 +1088,7 @@ WinSysNotifyCmd(
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
 	Tcl_AppendResult(interp, "unknown subcommand \"",
-	    Tcl_GetString(objv[1]), "\": must be notify", NULL);
+	    Tcl_GetString(objv[1]), "\": must be notify", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1102,16 +1102,16 @@ WinSysNotifyCmd(
      *  We only set the AppID *once* the first time this routine runs.
      *  Setting it after the tray icon exists breaks callbacks + image.
      */
-    static int appidSet = 0;
+    static bool appidSet = false;
     if (!appidSet) {
 	Tk_Window mainWin = Tk_MainWindow(interp);
 	if (mainWin == NULL) {
-	    Tcl_AppendResult(interp, "No main window available", NULL);
+	    Tcl_AppendResult(interp, "No main window available", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
-	    Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
+	    Tcl_AppendResult(interp, "Failed to obtain window title", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1135,7 +1135,7 @@ WinSysNotifyCmd(
 	}
 
 	SetCurrentProcessExplicitAppUserModelID(appid);
-	appidSet = 1;
+	appidSet = true;
     }
 
     /*
@@ -1173,7 +1173,7 @@ WinSysNotifyCmd(
 	sprintf_s(buf, sizeof(buf),
 		  "Notification failed (error %lu)",
 		  GetLastError());
-	Tcl_AppendResult(interp, buf, NULL);
+	Tcl_AppendResult(interp, buf, (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1225,7 +1225,7 @@ WinIcoInit(
 	* This command is defined in tkWinIco.c, but that file does not have
 	* any hooks for script command creation.
 	*/
-	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	Tcl_CreateObjCommand2(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
 	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,

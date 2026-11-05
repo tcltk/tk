@@ -82,14 +82,6 @@ const int tkpWinBltModes[] = {
 #define MASKPAT		0x00E20746 /* dest = (src & pat) | (!src & dst) */
 
 /*
- * The following two raster ops are used to copy the foreground and background
- * bits of a source pattern as defined by a stipple used as the pattern.
- */
-
-#define COPYFG		0x00CA0749 /* dest = (pat & src) | (!pat & dst) */
-#define COPYBG		0x00AC0744 /* dest = (!pat & src) | (pat & dst) */
-
-/*
  * Macros used later in the file.
  */
 #ifndef MIN
@@ -102,6 +94,33 @@ const int tkpWinBltModes[] = {
  */
 
 typedef BOOL (CALLBACK *WinDrawFunc)(HDC dc, const POINT *points, int npoints);
+
+/*
+ * The following typedef is used to pass a drawing procedure to
+ * RenderStippled. It draws the object into the given DC, shifted by (-dx,
+ * -dy), with the current pen and brush.
+ */
+
+typedef void (StippleDrawProc)(HDC dc, void *clientData, int dx, int dy);
+
+/*
+ * Data for the drawing procedures used with RenderStippled.
+ */
+
+typedef struct {
+    POINT *points;
+    int npoints;
+    WinDrawFunc func;
+    bool drawEndPoint;		/* Draw the last point after the path, see
+				 * ThinLineEndPoint(). */
+} PathData;
+
+typedef struct {
+    int x1, y1, x2, y2;		/* Bounding rectangle of the ellipse. */
+    int xstart, ystart, xend, yend;
+    int arcMode;		/* ArcChord or ArcPieSlice; -1 to draw the
+				 * arc only. */
+} ArcData;
 
 typedef struct {
     POINT *winPoints;		/* Array of points that is reused. */
@@ -118,9 +137,17 @@ static POINT *		ConvertPoints(XPoint *points, int npoints, int mode,
 static int		DrawOrFillArc(Display *display, Drawable d, GC gc,
 			    int x, int y, unsigned int width,
 			    unsigned int height, int start, int extent,
-			    int fill);
+			    bool fill);
 static void		RenderObject(HDC dc, GC gc, XPoint* points,
 			    int npoints, int mode, HPEN pen, WinDrawFunc func);
+static void		RenderStippled(HDC dc, GC gc, const RECT *rectPtr,
+			    HPEN pen, HBRUSH brush, StippleDrawProc *proc,
+			    void *clientData);
+static StippleDrawProc	DrawPathProc;
+static StippleDrawProc	DrawArcProc;
+static StippleDrawProc	DrawRectangleProc;
+static bool		ThinLineEndPoint(GC gc, POINT *winPoints,
+			    int npoints);
 static HPEN		SetUpGraphicsPort(GC gc);
 
 /*
@@ -541,8 +568,15 @@ TkPutImage(
 	    bitmap = CreateBitmap(image->width, image->height, 1, 1,
 		    image->data);
 	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
+
+	/*
+	 * Windows draws the 1 bits of a monochrome bitmap with the background
+	 * color and the 0 bits with the text color, while X draws the 1 bits
+	 * with the foreground color. [Bug 481255]
+	 */
+
+	SetTextColor(dc, gc->background);
+	SetBkColor(dc, gc->foreground);
     } else {
 	int i, usePalette;
 
@@ -739,6 +773,183 @@ XFillRectangles(
 }
 
 /*
+ * A polyline with more than MAX_STROKE_POINTS points is stroked in pieces
+ * of STROKE_PIECE_POINTS points. [Bug 630171]
+ */
+
+#define MAX_STROKE_POINTS 64
+#define STROKE_PIECE_POINTS 32
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StrokeEndCap --
+ *
+ *	Draws the cap at an end of a polyline stroked in pieces with a
+ *	flat-capped pen: strokes the beginning of the polyline with the
+ *	current (capped) pen, long enough for the cap at its other end to
+ *	stay inside the body of the polyline.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StrokeEndCap(
+    HDC dc,
+    POINT *points,		/* Points of the polyline, starting from the
+				 * end to be capped. */
+    int npoints,		/* Number of points. */
+    int step,			/* 1 or -1: direction to walk the points. */
+    DWORD width)		/* The width of the pen. */
+{
+    POINT seg[STROKE_PIECE_POINTS];
+    double len = 0;
+    int n = 1;
+
+    seg[0] = points[0];
+    while ((n < npoints) && (n < STROKE_PIECE_POINTS)) {
+	POINT *pt = points + n * step;
+	double dx = pt->x - seg[n-1].x, dy = pt->y - seg[n-1].y;
+	double segLen = hypot(dx, dy);
+
+	if (len + segLen > 2 * width) {
+	    /*
+	     * Stop in the middle of this segment, so that the cap at the
+	     * end of the stroke is covered by the rest of the polyline.
+	     */
+
+	    double f = (2 * width - len) / segLen;
+
+	    seg[n].x = seg[n-1].x + (LONG) (dx * f);
+	    seg[n].y = seg[n-1].y + (LONG) (dy * f);
+	    n++;
+	    break;
+	}
+	seg[n] = *pt;
+	len += segLen;
+	n++;
+    }
+    BeginPath(dc);
+    Polyline(dc, seg, n);
+    EndPath(dc);
+    StrokePath(dc);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StrokeInPieces --
+ *
+ *	Strokes a polyline with the current pen in pieces of at most
+ *	STROKE_PIECE_POINTS points. The time GDI takes to stroke a path with
+ *	a geometric pen grows quadratically with the number of points, so a
+ *	wide polyline with thousands of points takes many seconds or hangs.
+ *	[Bug 630171]
+ *
+ *	The pieces overlap by two segments, so that every vertex is rendered
+ *	with its join in one of them, and are stroked with a flat-capped
+ *	copy of the pen, because a round or projecting cap at the end of a
+ *	piece would stick out of a miter or bevel join. For an open polyline
+ *	the caps at the ends are then added with the real pen; a closed one
+ *	is continued over its first two segments instead.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StrokeInPieces(
+    HDC dc,
+    POINT *winPoints,
+    int npoints,
+    int closed)			/* True if the last point is the same as the
+				 * first one. */
+{
+    HPEN pen = (HPEN) GetCurrentObject(dc, OBJ_PEN), flatPen = NULL;
+    EXTLOGPEN elp;
+    POINT piece[STROKE_PIECE_POINTS];
+    int i, j, size, total = closed ? npoints + 2 : npoints;
+
+    size = GetObject(pen, 0, NULL);
+    if ((size > 0) && (size <= (int) sizeof(elp))
+	    && (GetObject(pen, size, &elp) == size)
+	    && ((elp.elpPenStyle & PS_ENDCAP_MASK) != PS_ENDCAP_FLAT)) {
+	LOGBRUSH lb;
+
+	lb.lbStyle = elp.elpBrushStyle;
+	lb.lbColor = elp.elpColor;
+	lb.lbHatch = elp.elpHatch;
+	flatPen = ExtCreatePen((elp.elpPenStyle & ~PS_ENDCAP_MASK)
+		| PS_ENDCAP_FLAT, elp.elpWidth, &lb, 0, NULL);
+	if (flatPen != NULL) {
+	    SelectObject(dc, flatPen);
+	}
+    }
+    for (i = 0; i < total - 2; i += STROKE_PIECE_POINTS - 2) {
+	int n = total - i;
+
+	if (n > STROKE_PIECE_POINTS) {
+	    n = STROKE_PIECE_POINTS;
+	}
+	for (j = 0; j < n; j++) {
+	    /*
+	     * A closed polyline is continued over its first two segments;
+	     * its last point is the same as the first one.
+	     */
+
+	    piece[j] = winPoints[closed ? (i + j) % (npoints - 1) : i + j];
+	}
+	BeginPath(dc);
+	Polyline(dc, piece, n);
+	EndPath(dc);
+	StrokePath(dc);
+    }
+    if (flatPen != NULL) {
+	SelectObject(dc, pen);
+	DeleteObject(flatPen);
+	if (!closed) {
+	    StrokeEndCap(dc, winPoints, npoints, 1, elp.elpWidth);
+	    StrokeEndCap(dc, winPoints + npoints - 1, npoints, -1,
+		    elp.elpWidth);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CanStrokeInPieces --
+ *
+ *	Whether the current pen allows stroking a polyline in pieces: a
+ *	solid geometric pen. The dash pattern of a dashed pen would restart
+ *	in every piece, and a cosmetic pen (width 1) or the null pen do not
+ *	need it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CanStrokeInPieces(
+    HDC dc)
+{
+    HPEN pen = (HPEN) GetCurrentObject(dc, OBJ_PEN);
+    EXTLOGPEN elp;
+    int size = GetObject(pen, 0, NULL);
+
+    if ((size <= 0) || (size > (int) sizeof(elp))
+	    || (GetObject(pen, size, &elp) != size)) {
+	return 0;
+    }
+    return ((elp.elpPenStyle & PS_TYPE_MASK) == PS_GEOMETRIC)
+	    && ((elp.elpPenStyle & PS_STYLE_MASK) == PS_SOLID);
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * MakeAndStrokePath --
@@ -763,6 +974,15 @@ MakeAndStrokePath(
     WinDrawFunc func)        /* Name of the Windows GDI drawing function:
 				this is either Polyline or Polygon. */
 {
+    int closed = (winPoints[0].x == winPoints[npoints-1].x)
+	    && (winPoints[0].y == winPoints[npoints-1].y);
+
+    if ((func == Polyline) && (npoints > MAX_STROKE_POINTS)
+	    && CanStrokeInPieces(dc)) {
+	StrokeInPieces(dc, winPoints, npoints, closed);
+	return;
+    }
+
     BeginPath(dc);
     func(dc, winPoints, (int)npoints);
     /*
@@ -772,8 +992,7 @@ MakeAndStrokePath(
      * path is closed.
      */
     if (func == Polyline) {
-	if ((winPoints[0].x == winPoints[npoints-1].x) &&
-		(winPoints[0].y == winPoints[npoints-1].y)) {
+	if (closed) {
 	    CloseFigure(dc);
 	}
 	EndPath(dc);
@@ -815,21 +1034,16 @@ RenderObject(
     HPEN oldPen;
     HBRUSH oldBrush;
     POINT *winPoints = ConvertPoints(points, npoints, mode, &rect);
+    bool drawEndPoint = false;
+
+    if (func == Polyline) {
+	drawEndPoint = ThinLineEndPoint(gc, winPoints, npoints);
+    }
 
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
 	    && gc->stipple != None) {
-
-	TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
-	HDC dcMem;
-	LONG width, height;
-	HBITMAP oldBitmap;
-	int i;
-	HBRUSH oldMemBrush;
-
-	if (twdPtr->type != TWD_BITMAP) {
-	    Tcl_Panic("unexpected drawable type in stipple");
-	}
+	PathData data;
 
 	/*
 	 * Grow the bounding box enough to account for line width.
@@ -840,66 +1054,11 @@ RenderObject(
 	rect.right += gc->line_width;
 	rect.bottom += gc->line_width;
 
-	width = rect.right - rect.left;
-	height = rect.bottom - rect.top;
-
-	/*
-	 * Select stipple pattern into destination dc.
-	 */
-
-	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = (HBRUSH)SelectObject(dc, CreatePatternBrush(twdPtr->bitmap.handle));
-
-	/*
-	 * Create temporary drawing surface containing a copy of the
-	 * destination equal in size to the bounding box of the object.
-	 */
-
-	dcMem = CreateCompatibleDC(dc);
-	oldBitmap = (HBITMAP)SelectObject(dcMem, CreateCompatibleBitmap(dc, width,
-		height));
-	oldPen = (HPEN)SelectObject(dcMem, pen);
-	BitBlt(dcMem, 0, 0, width, height, dc, rect.left, rect.top, SRCCOPY);
-
-	/*
-	 * Translate the object for rendering in the temporary drawing
-	 * surface.
-	 */
-
-	for (i = 0; i < npoints; i++) {
-	    winPoints[i].x -= rect.left;
-	    winPoints[i].y -= rect.top;
-	}
-
-	/*
-	 * Draw the object in the foreground color and copy it to the
-	 * destination wherever the pattern is set.
-	 */
-
-	SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
-		: WINDING);
-	oldMemBrush = (HBRUSH)SelectObject(dcMem, CreateSolidBrush(gc->foreground));
-	MakeAndStrokePath(dcMem, winPoints, npoints, func);
-	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
-
-	/*
-	 * If we are rendering an opaque stipple, then draw the polygon in the
-	 * background color and copy it to the destination wherever the
-	 * pattern is clear.
-	 */
-
-	if (gc->fill_style == FillOpaqueStippled) {
-	    DeleteObject(SelectObject(dcMem,
-		    CreateSolidBrush(gc->background)));
-	    MakeAndStrokePath(dcMem, winPoints, npoints, func);
-	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
-		    COPYBG);
-	}
-
-	SelectObject(dcMem, oldPen);
-	DeleteObject(SelectObject(dcMem, oldMemBrush));
-	DeleteObject(SelectObject(dcMem, oldBitmap));
-	DeleteDC(dcMem);
+	data.points = winPoints;
+	data.npoints = npoints;
+	data.func = func;
+	data.drawEndPoint = drawEndPoint;
+	RenderStippled(dc, gc, &rect, pen, NULL, DrawPathProc, &data);
     } else {
 	oldPen = (HPEN)SelectObject(dc, pen);
 	oldBrush = (HBRUSH)SelectObject(dc, CreateSolidBrush(gc->foreground));
@@ -908,11 +1067,286 @@ RenderObject(
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
 	MakeAndStrokePath(dc, winPoints, npoints, func);
+	if (drawEndPoint) {
+	    MoveToEx(dc, winPoints[npoints-1].x, winPoints[npoints-1].y, NULL);
+	    LineTo(dc, winPoints[npoints-1].x + 1, winPoints[npoints-1].y);
+	}
 	SelectObject(dc, oldPen);
+	DeleteObject(SelectObject(dc, oldBrush));
     }
-    DeleteObject(SelectObject(dc, oldBrush));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ThinLineEndPoint --
+ *
+ *	GDI does not draw the last point of a polyline drawn with a cosmetic
+ *	pen, so which end of a line of width 1 is missing depends on the
+ *	order of its points, while X11 draws an end point of such a line if
+ *	and only if it is the left (or top) end of its segment, independently
+ *	of the order. This procedure reverses the points if that makes GDI
+ *	draw the right ends, and tells whether the last point must be drawn
+ *	in addition. [Bug 220895]
+ *
+ *	Lines of width 0 are left as they are: X11 draws both of their end
+ *	points, and the code which draws them (Ttk) compensates for the
+ *	missing last point itself (WIN32_XDRAWLINE_HACK).
+ *
+ * Results:
+ *	true if the last point must be drawn after the polyline, false otherwise.
+ *
+ * Side effects:
+ *	May reverse the order of the points.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define POINT_BEFORE(a, b) \
+	((a).x < (b).x || ((a).x == (b).x && (a).y < (b).y))
+
+static bool
+ThinLineEndPoint(
+    GC gc,
+    POINT *winPoints,
+    int npoints)
+{
+    int firstDrawn, lastDrawn;
+
+    if (gc->line_width != 1 || npoints < 2 || gc->cap_style == CapNotLast
+	    || (winPoints[0].x == winPoints[npoints-1].x
+	    && winPoints[0].y == winPoints[npoints-1].y)) {
+	return 0;
+    }
+    firstDrawn = !POINT_BEFORE(winPoints[1], winPoints[0]);
+    lastDrawn = POINT_BEFORE(winPoints[npoints-1], winPoints[npoints-2]);
+    if (!lastDrawn) {
+	return 0;
+    }
+    if (!firstDrawn && gc->line_style == LineSolid) {
+	/*
+	 * Reversed, GDI draws the last point and omits the first one.
+	 */
+
+	int i, j;
+
+	for (i = 0, j = npoints - 1; i < j; i++, j--) {
+	    POINT tmp = winPoints[i];
+
+	    winPoints[i] = winPoints[j];
+	    winPoints[j] = tmp;
+	}
+	return 0;
+    }
+    return 1;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RenderStippled --
+ *
+ *	Draws an object with a stipple pattern: the object is drawn with
+ *	proc in the foreground color into a temporary drawing surface and
+ *	copied to the destination wherever the pattern is set. If the fill
+ *	style is FillOpaqueStippled, the object is also drawn in the
+ *	background color and copied wherever the pattern is clear.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders the object in the rectangle rectPtr of the destination.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RenderStippled(
+    HDC dc,			/* Destination DC. */
+    GC gc,			/* Graphics context with the stipple. */
+    const RECT *rectPtr,	/* Bounding box of the object, including the
+				 * line width. */
+    HPEN pen,			/* Pen for drawing the object. */
+    HBRUSH brush,		/* Brush for drawing the object, or NULL to
+				 * use a solid brush of the current color. */
+    StippleDrawProc *proc,	/* Procedure which draws the object. */
+    void *clientData)		/* Argument for proc. */
+{
+    TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
+    HDC dcMem;
+    LONG width, height;
+    HBITMAP oldBitmap;
+    HPEN oldPen;
+    HBRUSH oldBrush, oldMemBrush, fgBrush;
+
+    if (twdPtr->type != TWD_BITMAP) {
+	Tcl_Panic("unexpected drawable type in stipple");
+    }
+
+    width = rectPtr->right - rectPtr->left;
+    height = rectPtr->bottom - rectPtr->top;
+
+    /*
+     * Select stipple pattern into destination dc.
+     */
+
+    SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
+    oldBrush = (HBRUSH)SelectObject(dc,
+	    CreatePatternBrush(twdPtr->bitmap.handle));
+
+    /*
+     * Create temporary drawing surface containing a copy of the destination
+     * equal in size to the bounding box of the object.
+     */
+
+    dcMem = CreateCompatibleDC(dc);
+    oldBitmap = (HBITMAP)SelectObject(dcMem,
+	    CreateCompatibleBitmap(dc, width, height));
+    oldPen = (HPEN)SelectObject(dcMem, pen);
+    SetBkMode(dcMem, TRANSPARENT);
+    BitBlt(dcMem, 0, 0, width, height, dc, rectPtr->left, rectPtr->top,
+	    SRCCOPY);
+
+    /*
+     * Draw the object in the foreground color and copy it to the destination
+     * wherever the pattern is set.
+     */
+
+    SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
+	    : WINDING);
+    fgBrush = (brush != NULL) ? brush : CreateSolidBrush(gc->foreground);
+    oldMemBrush = (HBRUSH)SelectObject(dcMem, fgBrush);
+    proc(dcMem, clientData, rectPtr->left, rectPtr->top);
+    BitBlt(dc, rectPtr->left, rectPtr->top, width, height, dcMem, 0, 0,
+	    COPYFG);
+
+    /*
+     * If we are rendering an opaque stipple, then draw the object in the
+     * background color and copy it to the destination wherever the pattern
+     * is clear.
+     */
+
+    if (gc->fill_style == FillOpaqueStippled) {
+	HBRUSH bgBrush = (brush != NULL) ? brush
+		: CreateSolidBrush(gc->background);
+	unsigned long foreground = gc->foreground;
+	HPEN bgPen;
+
+	/*
+	 * The same pen in the background color.
+	 */
+
+	gc->foreground = gc->background;
+	bgPen = SetUpGraphicsPort(gc);
+	gc->foreground = foreground;
+
+	SelectObject(dcMem, bgBrush);
+	SelectObject(dcMem, bgPen);
+	proc(dcMem, clientData, rectPtr->left, rectPtr->top);
+	BitBlt(dc, rectPtr->left, rectPtr->top, width, height, dcMem, 0, 0,
+		COPYBG);
+	SelectObject(dcMem, fgBrush);
+	SelectObject(dcMem, pen);
+	DeleteObject(bgPen);
+	if (brush == NULL) {
+	    DeleteObject(bgBrush);
+	}
+    }
+
+    SelectObject(dcMem, oldPen);
+    SelectObject(dcMem, oldMemBrush);
+    if (brush == NULL) {
+	DeleteObject(fgBrush);
+    }
+    DeleteObject(SelectObject(dcMem, oldBitmap));
+    DeleteDC(dcMem);
+    DeleteObject(SelectObject(dc, oldBrush));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawPathProc, DrawArcProc, DrawRectangleProc --
+ *
+ *	Drawing procedures for RenderStippled: draw a path (polygon or
+ *	polyline), an arc, chord or pie slice, or a rectangle, shifted by
+ *	(-dx, -dy).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws into the DC.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DrawPathProc(
+    HDC dc,
+    void *clientData,
+    int dx,
+    int dy)
+{
+    PathData *dataPtr = (PathData *)clientData;
+    int i;
+
+    for (i = 0; i < dataPtr->npoints; i++) {
+	dataPtr->points[i].x -= dx;
+	dataPtr->points[i].y -= dy;
+    }
+    MakeAndStrokePath(dc, dataPtr->points, dataPtr->npoints, dataPtr->func);
+    if (dataPtr->drawEndPoint) {
+	POINT *lastPtr = &dataPtr->points[dataPtr->npoints - 1];
+
+	MoveToEx(dc, lastPtr->x, lastPtr->y, NULL);
+	LineTo(dc, lastPtr->x + 1, lastPtr->y);
+    }
+    for (i = 0; i < dataPtr->npoints; i++) {
+	dataPtr->points[i].x += dx;
+	dataPtr->points[i].y += dy;
+    }
+}
+
+static void
+DrawArcProc(
+    HDC dc,
+    void *clientData,
+    int dx,
+    int dy)
+{
+    ArcData *dataPtr = (ArcData *)clientData;
+
+    if (dataPtr->arcMode == ArcChord) {
+	Chord(dc, dataPtr->x1 - dx, dataPtr->y1 - dy, dataPtr->x2 - dx,
+		dataPtr->y2 - dy, dataPtr->xstart - dx, dataPtr->ystart - dy,
+		dataPtr->xend - dx, dataPtr->yend - dy);
+    } else if (dataPtr->arcMode == ArcPieSlice) {
+	Pie(dc, dataPtr->x1 - dx, dataPtr->y1 - dy, dataPtr->x2 - dx,
+		dataPtr->y2 - dy, dataPtr->xstart - dx, dataPtr->ystart - dy,
+		dataPtr->xend - dx, dataPtr->yend - dy);
+    } else {
+	Arc(dc, dataPtr->x1 - dx, dataPtr->y1 - dy, dataPtr->x2 - dx,
+		dataPtr->y2 - dy, dataPtr->xstart - dx, dataPtr->ystart - dy,
+		dataPtr->xend - dx, dataPtr->yend - dy);
+    }
+}
+
+static void
+DrawRectangleProc(
+    HDC dc,
+    void *clientData,
+    int dx,
+    int dy)
+{
+    const RECT *rectPtr = (const RECT *)clientData;
+
+    Rectangle(dc, rectPtr->left - dx, rectPtr->top - dy, rectPtr->right - dx,
+	    rectPtr->bottom - dy);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1037,6 +1471,25 @@ XDrawRectangle(
 
     pen = SetUpGraphicsPort(gc);
     SetBkMode(dc, TRANSPARENT);
+    if ((gc->fill_style == FillStippled
+	    || gc->fill_style == FillOpaqueStippled)
+	    && gc->stipple != None) {
+	RECT rect, bbox;
+
+	rect.left = x;
+	rect.top = y;
+	rect.right = x + (int)width + 1;
+	rect.bottom = y + (int)height + 1;
+	bbox.left = rect.left - gc->line_width;
+	bbox.top = rect.top - gc->line_width;
+	bbox.right = rect.right + gc->line_width;
+	bbox.bottom = rect.bottom + gc->line_width;
+	RenderStippled(dc, gc, &bbox, pen, (HBRUSH)GetStockObject(NULL_BRUSH),
+		DrawRectangleProc, &rect);
+	DeleteObject(pen);
+	TkWinReleaseDrawableDC(d, dc, &state);
+	return Success;
+    }
     oldPen = (HPEN)SelectObject(dc, pen);
     oldBrush = (HBRUSH)SelectObject(dc, GetStockObject(NULL_BRUSH));
     SetROP2(dc, tkpWinRopModes[gc->function]);
@@ -1097,7 +1550,7 @@ XDrawArc(
 {
     LastKnownRequestProcessed(display)++;
 
-    return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
+    return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, false);
 }
 
 int
@@ -1115,7 +1568,7 @@ XDrawArcs(
     while (narcs-- > 0) {
 	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
 		    arcs[0].width, arcs[0].height,
-		    arcs[0].angle1, arcs[0].angle2, 0);
+		    arcs[0].angle1, arcs[0].angle2, false);
 	if (ret != Success) {
 	    break;
 	}
@@ -1151,7 +1604,7 @@ XFillArc(
 {
     LastKnownRequestProcessed(display)++;
 
-    return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
+    return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, true);
 }
 
 int
@@ -1169,7 +1622,7 @@ XFillArcs(
     while (narcs-- > 0) {
 	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
 		    arcs[0].width, arcs[0].height,
-		    arcs[0].angle1, arcs[0].angle2, 1);
+		    arcs[0].angle1, arcs[0].angle2, true);
 	if (ret != Success) {
 	    break;
 	}
@@ -1204,7 +1657,7 @@ DrawOrFillArc(
     unsigned int width, unsigned int height,
     int start,			/* start: three-o'clock (deg*64) */
     int extent,			/* extent: relative (deg*64) */
-    int fill)			/* ==0 draw, !=0 fill */
+    bool fill)			/* true = fill, false = draw */
 {
     HDC dc;
     HBRUSH brush, oldBrush;
@@ -1290,6 +1743,32 @@ DrawOrFillArc(
      */
 
     pen = SetUpGraphicsPort(gc);
+    if ((gc->fill_style == FillStippled
+	    || gc->fill_style == FillOpaqueStippled)
+	    && gc->stipple != None) {
+	ArcData data;
+	RECT bbox;
+
+	data.x1 = x;
+	data.y1 = y;
+	data.x2 = x + (int)width + 1;
+	data.y2 = y + (int)height + 1;
+	data.xstart = xstart;
+	data.ystart = ystart;
+	data.xend = xend;
+	data.yend = yend;
+	data.arcMode = fill ? gc->arc_mode : -1;
+	bbox.left = x - gc->line_width;
+	bbox.top = y - gc->line_width;
+	bbox.right = data.x2 + gc->line_width;
+	bbox.bottom = data.y2 + gc->line_width;
+	RenderStippled(dc, gc, &bbox, pen,
+		fill ? NULL : (HBRUSH)GetStockObject(NULL_BRUSH),
+		DrawArcProc, &data);
+	DeleteObject(pen);
+	TkWinReleaseDrawableDC(d, dc, &state);
+	return Success;
+    }
     oldPen = (HPEN)SelectObject(dc, pen);
     if (!fill) {
 	/*
@@ -1412,9 +1891,9 @@ SetUpGraphicsPort(
  *	region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage. Otherwise,
+ *	Returns false if the scroll genereated no additional damage. Otherwise,
  *	sets the region that needs to be repainted after scrolling and returns
- *	1.
+ *	true.
  *
  * Side effects:
  *	Scrolls the bits in the window.
@@ -1422,7 +1901,7 @@ SetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
     TCL_UNUSED(GC),			/* GC for window to be scrolled. */
@@ -1439,7 +1918,7 @@ TkScrollWindow(
     scrollRect.right = x + width;
     scrollRect.bottom = y + height;
     return (ScrollWindowEx(hwnd, dx, dy, &scrollRect, NULL, (HRGN) damageRgn,
-	    NULL, 0) == NULLREGION) ? 0 : 1;
+	    NULL, 0) != NULLREGION);
 }
 
 /*

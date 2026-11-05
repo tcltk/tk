@@ -928,7 +928,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     set c [canvas .c -bg black -width 964]
     pack $c
     $c delete all
-    after 100 "set done 1"; vwait done
+    pause 100
 } -body {
     set f {Arial 28 bold}
     set s1 {    Yeah-ah-ah-ah-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-oh-Yow}
@@ -949,7 +949,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
 	-anchor nw \
 	-tags tbox2
     $c create rect {*}[$c bbox tbox2] -outline red
-    after 500 "set done 1" ; vwait done
+    pause 500
     set results [list]
     $c select from tbox2 4
     $c select to tbox2 8
@@ -1012,6 +1012,91 @@ test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712
 } -cleanup {
     destroy .c
 } -result {}
+
+# Returns the number of pixels of the canvas which are not white in the
+# given rectangle.
+proc countPixels {w x1 y1 x2 y2} {
+    set n 0
+    for {set y $y1} {$y < $y2} {incr y} {
+	for {set x $x1} {$x < $x2} {incr x} {
+	    if {[testpixel $w $x $y] ne "#ffffff"} {
+		incr n
+	    }
+	}
+    }
+    return $n
+}
+
+test canvText-21.1 {stippled text - bug 220796} -constraints {
+    testpixel && notAqua && !withXft
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 200 -background white -highlightthickness 0
+    pack .c
+} -body {
+    .c create text 10 10 -anchor nw -text M -font {Courier 30 bold} -fill black
+    update
+    set bbox [.c bbox 1]
+    set plain [countPixels .c {*}$bbox]
+    .c itemconfigure 1 -stipple gray50
+    update
+    set stippled [countPixels .c {*}$bbox]
+    # About half of the pixels are drawn with a gray50 stipple.
+    list [expr {[.c bbox 1] eq $bbox}] \
+	    [expr {$stippled > $plain * 0.4}] [expr {$stippled < $plain * 0.6}]
+} -cleanup {
+    destroy .c
+    unset -nocomplain bbox plain stippled
+} -result {1 1 1}
+
+test canvText-22.1 {text item longer than 512 characters} -constraints {
+    testpixel
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
+	    -scrollregion {0 0 100000 40}
+    pack .c
+    update
+} -body {
+    # The leading CJK character makes the whole text shaped (by HarfBuzz on
+    # X11), which drew and measured at most 512 glyphs (bug 4eef1fa86e).
+    set font {Courier 14}
+    .c create text 0 20 -anchor w -fill black -text \u4e2d[string repeat M 1000] \
+	    -font $font
+    # Scroll to the 1000th character.  Measure parts shorter than 512
+    # characters: with the bug a longer text is measured short.  Do not
+    # multiply the width of one character: the advance width can be
+    # fractional (on Aqua), and the measured width is rounded.
+    set x [expr {[font measure $font \u4e2d]
+	    + 2 * [font measure $font [string repeat M 499]]}]
+    .c xview moveto [expr {$x / 100000.0}]
+    update
+    expr {[countPixels .c 0 10 [font measure $font MM] 30] > 0}
+} -cleanup {
+    destroy .c
+    unset -nocomplain font x
+} -result 1
+
+test canvText-22.2 {very long text item scrolled far away - bug 770578} -constraints {
+    testpixel && (withXft || !x11)
+} -setup {
+    destroy .c
+    canvas .c -width 200 -height 40 -background white -highlightthickness 0 \
+	    -scrollregion {0 0 200000 40}
+    pack .c
+    update
+} -body {
+    .c create text 0 20 -anchor w -fill black -text [string repeat bug!_ 10000] -font {Courier 14}
+    set res {}
+    foreach frac {0 0.25 0.5} {
+	.c xview moveto $frac
+	update
+	lappend res [expr {[countPixels .c 0 10 200 30] > 0}]
+    }
+    set res
+} -cleanup {
+    destroy .c
+} -result {1 1 1}
 
 #
 # TESTFILE CLEANUP

@@ -33,6 +33,7 @@ image create photo image1b \
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copies will only be effectively magnified if $tk::scalingPct >= 200.
 set zoomFactor [expr {$tk::scalingPct / 100}]
+if {$zoomFactor == 0} { set zoomFactor 1 }
 image create photo image1a2
 image1a2 copy image1a -zoom $zoomFactor
 image create photo image1b2

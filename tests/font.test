@@ -329,6 +329,25 @@ test font-6.7 {font command: create: already exists} -setup {
     font delete xyz
 } -returnCodes error -result {named font "xyz" already exists}
 
+test font-6.8 {font command: create: unused font cached under the name} -body {
+    set x [font actual font-6.8_font -underline]
+    font create font-6.8_font -underline 1
+    list $x [font actual font-6.8_font -underline]
+} -cleanup {
+    font delete font-6.8_font
+} -result {0 1}
+test font-6.9 {font command: create: font used by a widget before it was created, bug c81e0ccee2} -setup {
+    destroy .l
+} -body {
+    label .l -font font-6.9_font -text LARGE
+    set x [font actual [.l cget -font] -underline]
+    font create font-6.9_font -underline 1
+    list $x [font actual [.l cget -font] -underline]
+} -cleanup {
+    destroy .l
+    font delete font-6.9_font
+} -result {0 1}
+
 test font-7.1 {font command: delete: arguments} -body {
     # (objc < 3)
     font delete
@@ -459,6 +478,9 @@ test font-9.7 {font command: measure -d with -displayof} -body {
 test font-9.8 {font command: measure: arguments} -body {
     font measure $fixed -displayof .
 } -returnCodes error -result {wrong # args: should be "font measure font ?-displayof window? text"}
+test font-9.9 {font command: measure: replacement character only, bug 6f054bf319} -body {
+     expr {[font measure TkDefaultFont \uFFFD] > 0}
+} -result 1
 
 
 test font-10.1 {font command: metrics: arguments} -body {
@@ -654,6 +676,7 @@ test font-15.2 {Tk_AllocFontFromObj - discard stale font} -constraints {
     set x [font create font-15.2_font -family Times -size 16]
     button .b1 -font $x
     destroy .b1
+    update idletasks
     lappend result [testfont counts $x]
     button .b2 -font $x
     lappend result [testfont counts $x]
@@ -805,10 +828,29 @@ test font-17.1 {Tk_FreeFontFromObj - reference counts} -constraints {
     destroy .b2
     lappend result [testfont counts $x]
     destroy .b3
+    update idletasks
     lappend result [testfont counts $x]
 } -cleanup {
     font delete font-17.1_font
 } -result {{{3 1}} {{2 1}} {{1 1}} {}}
+test font-17.1.1 {Tk_FreeFont - unused font is kept until idle time} -constraints {
+    testfont
+} -setup {
+    destroy .b1
+    set result {}
+} -body {
+    set x [font create font-17.2_font -family Courier -size 12]
+    button .b1 -font $x
+    destroy .b1
+    lappend result [testfont counts $x]
+    button .b1 -font $x
+    lappend result [testfont counts $x]
+    destroy .b1
+    update idletasks
+    lappend result [testfont counts $x]
+} -cleanup {
+    font delete font-17.2_font
+} -result {{{0 1}} {{1 1}} {}}
 test font-17.2 {Tk_FreeFont procedure: one ref} -setup {
     destroy .t.f
     pack [label .t.f]
@@ -855,6 +897,7 @@ test font-17.5 {Tk_FreeFont procedure: named font} -setup {
     font delete xyz
     set x [font actual xyz -underline]
     destroy .t.f
+    update idletasks
     list [font actual xyz -underline] $x
 } -result {0 1}
 test font-17.6 {Tk_FreeFont procedure: named font not deleted yet} -setup {
@@ -892,6 +935,7 @@ test font-18.1 {FreeFontObjProc} -constraints testfont -setup {
     set z 32
     lappend result [testfont counts [list $f 50]]
     destroy .b1
+    update idletasks
     lappend result [testfont counts [list $f 50]]
     set y bogus
     return $result
@@ -1607,6 +1651,8 @@ test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} -body {
 } -cleanup {
     .t.l config -wrap 0
 } -result {1 1 1 1}
+
+
 test font-24.12 {Tk_ComputeTextLayout: append non-printing spaces to chunk} -body {
     set x {}
     .t.l config -text "000            0000" -wrap [expr {$ax * 5}]
@@ -1665,6 +1711,22 @@ test font-24.15 {Tk_ComputeTextLayout: justification} -setup {
 } -cleanup {
     destroy .t.c
 } -result {2 1 0}
+test font-24.16 {Tk_ComputeTextLayout: replacement character only, bug 6f054bf319} -constraints {
+    x11
+} -setup {
+    # A fresh process: the bug depends on what was shaped before.
+    set script [makeFile {
+	label .l -text \uFFFD
+	puts [expr {[winfo reqwidth .l] > 0}]
+	exit
+    } fffd.tcl]
+} -body {
+    # This hung before the fix.
+    exec [interpreter] $script 2>@stderr
+} -cleanup {
+    removeFile fffd.tcl
+    unset -nocomplain script
+} -result 1
 
 
 test font-25.1 {Tk_FreeTextLayout procedure} -setup {
@@ -2463,25 +2525,20 @@ test font-45.3 {TkFontGetAliasList: match} -constraints haveTimesFamilyFont -bod
     }
 } -result 1
 
-
 test font-46.1 {font actual, with character, no option, no --} -body {
     font actual {times 10} a
 } -match glob -result [list -family [font actual {times 10} -family] -size *\
 		 -slant roman -underline 0 -overstrike 0]
-
 test font-46.2 {font actual, with character introduced by --} -body {
     font actual {times 10} -- -
 } -match glob -result [list -family [font actual {times 10} -family] -size *\
 		 -slant roman -underline 0 -overstrike 0]
-
 test font-46.3 {font actual, with character and option} -body {
     font actual {times 10} -family a
 } -result [font actual {times 10} -family]
-
-test font-46.4 {font actual, with character, option and --} -body {
+test font-46.4 {font actual, with character, option and --} -constraints {!win32} -body {
     font actual {times 10} -family -- -
 } -result [font actual {times 10} -family]
-
 test font-46.5 {font actual, too many chars} -body {
     font actual {times 10} 123456789012345678901234567890123456789012345678901
 } -returnCodes error -result {expected a single character but got "1234567890123456789012345678901234567..."}
@@ -2637,6 +2694,83 @@ test font-47.3 {Bug 3049518 - Label} -body {
     destroy $l
     unset -nocomplain ::results
 } -result {{1 1} {1 1} {1 1} {1 1}}
+
+test font-47.4 {named font changed while used on another display, Bug 483387} -constraints {
+    altDisplay
+} -setup {
+    catch {font delete xyz}
+} -body {
+    font create xyz
+    toplevel .t2 -screen $env(TK_ALT_DISPLAY)
+    pack [button .t2.b -font xyz -text xyz]
+    update
+    font configure xyz -size 20
+    update
+    font delete xyz
+    font create xyz
+    update
+    .t2.b cget -font
+} -cleanup {
+    destroy .t2
+    catch {font delete xyz}
+} -result xyz
+
+# Emoji classification shared by the font engines (UTS #51, mojibake):
+# which characters prefer a color font, which characters stay in the font
+# of the character before them.
+
+testConstraint testemoji [llength [info commands testemoji]]
+
+test font-48.1 {emoji presentation: by default} -constraints testemoji -body {
+    # grinning face, sun (text by default), "a"
+    list [testemoji presentation 0x1F600] [testemoji presentation 0x2600] \
+	    [testemoji presentation 0x61]
+} -result {1 0 0}
+test font-48.2 {emoji presentation: VS16 asks for the emoji glyph, VS15 for the text one} -constraints testemoji -body {
+    # sun + VS16, grinning face + VS15, "#" + VS16 (keycap base), "a" + VS16
+    list [testemoji presentation 0x2600 0xFE0F] [testemoji presentation 0x1F600 0xFE0E] \
+	    [testemoji presentation 0x23 0xFE0F] [testemoji presentation 0x61 0xFE0F]
+} -result {2 0 2 0}
+test font-48.3 {emoji presentation: a skin tone modifier on its own is a swatch} -constraints testemoji -body {
+    testemoji presentation 0x1F3FD
+} -result 1
+test font-48.4 {emoji continuation: selectors, ZWJ, keycap and tags always} -constraints testemoji -body {
+    list [testemoji continuation 0xFE0F] [testemoji continuation 0xFE0E] \
+	    [testemoji continuation 0x200D] [testemoji continuation 0x20E3] \
+	    [testemoji continuation 0xE0067] [testemoji continuation 0x61]
+} -result {1 1 1 1 1 0}
+test font-48.5 {emoji continuation: a skin tone modifier only inside an emoji cluster} -constraints testemoji -body {
+    list [testemoji continuation 0x1F3FD 1] [testemoji continuation 0x1F3FD 0]
+} -result {1 0}
+
+test font-49.4 {Bug c81e0ccee2 - define named font after use causes widget update} -setup {
+    # Be sure, fonts do not exist
+    catch {font delete F1}
+    catch {font delete F2}
+    # Get a measurement of the Widget size as normal
+    font create F1 -family Helvetica -size 100
+    label .l -font F1 -text LARGE
+    pack .l
+    update
+    set W1 [winfo width .l]
+    destroy .l
+    font delete F1
+} -body {
+    # Create with undefined font, so default is used
+    label .l -font F2 -text LARGE
+    pack .l
+    update
+    # create the used font
+    # Within label widget, the default font should be replaced by this font
+    font create F2 -family Helvetica -size 100
+    update
+    # compare size, so check, if label got rescaled
+    set W2 [winfo width .l]
+    expr {$W1 == $W2}
+} -cleanup {
+    destroy .l
+    font delete F2
+} -result 1
 
 #
 # TESTFILE CLEANUP

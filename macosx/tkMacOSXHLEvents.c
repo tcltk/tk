@@ -63,6 +63,16 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
 #pragma mark TKApplication(TKHLEvents)
 
+static void showPreferencesWhenIdle(void *clientData) {
+    (void) clientData;
+    Tcl_Interp *interp = [NSApp _eventInterp];
+    int code = Tcl_EvalEx(interp, "::tk::mac::ShowPreferences",
+			  TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+}
+
 @implementation TKApplication(TKHLEvents)
 - (void) terminate: (id) sender
 {
@@ -145,13 +155,9 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     (void)event;
     (void)replyEvent;
 
-    if (_eventInterp &&
-	    Tcl_FindCommand(_eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
-	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowPreferences",
-			      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
-	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
-	}
+    if (_eventInterp && Tcl_FindCommand(
+	   _eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
+	Tcl_DoWhenIdle(showPreferencesWhenIdle, NULL);
     }
 }
 
@@ -468,7 +474,7 @@ static void ProcessAppleEvent(
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
 			  keyErrorNumber, typeSInt32, &code, 4);
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
-	    			  keyErrorString, typeUTF8Text, result, reslen);
+			  keyErrorString, typeUTF8Text, result, reslen);
 	}
     } else if (code != TCL_OK) {
 	Tcl_BackgroundException(AEInfo->interp, code);

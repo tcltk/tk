@@ -53,7 +53,7 @@ test tk-2.1 {tk command: appname} -body {
 test tk-2.2 {tk command: appname} -body {
     tk appname foobazgarply
 } -result {foobazgarply}
-test tk-2.3 {tk command: appname} -constraints unix -body {
+test tk-2.3 {tk command: appname} -constraints {unix notMacCI} -body {
     tk appname bazfoogarply
     expr {[lsearch -exact [winfo interps] [tk appname]] >= 0}
 } -result 1

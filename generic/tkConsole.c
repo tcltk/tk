@@ -103,7 +103,7 @@ static const Tcl_ChannelType consoleChannelType = {
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ShouldUseConsoleChannel(
     int type)
 {
@@ -124,7 +124,7 @@ ShouldUseConsoleChannel(
 	handleId = STD_ERROR_HANDLE;
 	break;
     default:
-	return 0;
+	return false;
 	break;
     }
 
@@ -137,7 +137,7 @@ ShouldUseConsoleChannel(
      */
 
     if ((handle == INVALID_HANDLE_VALUE) || (handle == 0)) {
-	return 1;
+	return true;
     }
 
     /*
@@ -152,7 +152,7 @@ ShouldUseConsoleChannel(
      *
      *    if ((type == TCL_STDOUT)
      *		&& !WriteFile(handle, dummyBuff, 0, &dummyWritten, NULL)) {
-     *	     return 1;
+     *	     return true;
      *    }
      */
 
@@ -173,22 +173,22 @@ ShouldUseConsoleChannel(
 	     * trouble with the MS DevStudio debugger.
 	     */
 
-	    return 1;
+	    return true;
 	}
     } else if (fileType == FILE_TYPE_UNKNOWN) {
-	return 1;
+	return true;
     } else if (Tcl_GetStdChannel(type) == NULL) {
-	return 1;
+	return true;
     }
 
-    return 0;
+    return false;
 }
 #else
 /*
  * Mac should always use a console channel, Unix should if it's trying to
  */
 
-#define ShouldUseConsoleChannel(chan) (1)
+#define ShouldUseConsoleChannel(chan) (true)
 #endif
 
 /*
@@ -214,9 +214,10 @@ Tk_InitConsoleChannels(
     Tcl_Interp *interp)
 {
     static Tcl_ThreadDataKey consoleInitKey;
-    int *consoleInitPtr, doIn, doOut, doErr;
+    int *consoleInitPtr;
     ConsoleInfo *info;
     Tcl_Channel consoleChannel;
+    bool doIn, doOut, doErr;
 
     /*
      * Ensure that we are getting a compatible version of Tcl.
@@ -226,7 +227,7 @@ Tk_InitConsoleChannels(
 	return;
     }
 
-    consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, (int) sizeof(int));
+    consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, sizeof(int));
     if (*consoleInitPtr) {
 	/*
 	 * We've already initialized console channels in this thread.

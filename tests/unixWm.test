@@ -70,10 +70,19 @@ if {[tk windowingsystem] eq "aqua"} {
     set Y2 [expr {$mb + 2}]
     set Y5 [expr {$mb + 5}]
 } else {
+    # Window managers may keep windows out of an area at the top of the
+    # screen which is reserved e.g. for a panel.  Use the top-most position
+    # which a window can actually get.
     set X  20
-    set Y0 0
-    set Y2 2
-    set Y5 5
+    toplevel .t -width 200 -height 150
+    wm geom .t +$X+0
+    update
+    # Give the window manager time to move the window.
+    pause 100
+    scan [wm geom .t] %*dx%*d+%*d+%d Y0
+    destroy .t
+    set Y2 [expr {$Y0 + 2}]
+    set Y5 [expr {$Y0 + 5}]
 }
 
 #
@@ -337,7 +346,7 @@ test unixWm-8.3 {icon windows} unix {
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t b c} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
-test unixWm-8.4 {icon windows} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-8.4 {icon windows} {unix withWindowManager} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -690,7 +699,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     set result
 } {1 {can't deiconify .icon: it is an icon for .t}}
-test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix withWindowManager} {
     wm iconify .t
     set result {}
     lappend result [winfo ismapped .t] [wm state .t]
@@ -907,7 +916,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is an icon for ".t"}}
-test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix withWindowManager} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -918,7 +927,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux fai
     destroy .t2
     set result
 } 0
-test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix withWindowManager} {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -1500,7 +1509,7 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
 
-test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} unix {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1509,7 +1518,7 @@ test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsO
     bind .t <Map> {set x "mapped"}
     bind .t <Unmap> {set x "unmapped"}
     set x {no event}
-    wm iconify .t
+    wm withdraw .t
     update idletasks
     lappend result $x [winfo ismapped .t]
     set x {no event}
@@ -1893,7 +1902,7 @@ if {[tk windowingsystem] eq "aqua"} {
     after 1000; # Give Apple's _windowserver some time to catch up.
 }
 
-test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix withWindowManager} {
     update
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +100+100
@@ -1979,7 +1988,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
     update
     interp create child
     load {} Tk child
-    child eval {wm geometry . 200x200+100+100; after 100; update}
+    child eval {wm geometry . 200x200+100+100; after 150; update}
     set result [list [winfo containing 200 200] \
 	[child eval {winfo containing 200 200}]]
     interp delete child
@@ -2058,7 +2067,7 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 	    [winfo containing [expr {$x + 350}] $y] \
 	    [winfo containing [expr {$x + 450}] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnCILinux failsOnXQuartz} {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     destroy .t
     destroy .t2
     update
@@ -2179,10 +2188,14 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
     }
     update
     raise .t .t2
+    update idletasks
     update
+    after 300
     set result [list [winfo containing 200 200]]
     lower .t3
+    update idletasks
     update
+    after 300
     lappend result [winfo containing 200 200]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
@@ -2632,7 +2645,7 @@ test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark [01] -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
+} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -hidden 0 -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 
 test unixWm-60.2 {wm attributes - test} -constraints unix -body {
     destroy .t
@@ -2718,6 +2731,39 @@ test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
 } -cleanup {
     destroy .t
 } -result {}
+
+test unixWm-63.1 {UpdateSizeHints procedure, the size hints of a toplevel
+	with a menubar include the height of the menubar - bug 726351} -constraints {
+    unix testwrapper
+} -setup {
+    destroy .t
+    toplevel .t
+    frame .t.f -width 200 -height 100
+    pack .t.f
+    update
+} -body {
+    # The size hints are set on the wrapper, which is higher than the toplevel
+    # by the height of the menubar.
+    wm minsize .t [winfo reqwidth .t] [winfo reqheight .t]
+    update
+    set before [expr {[lindex [testprop [testwrapper .t] WM_NORMAL_HINTS] 6]}]
+    set rooty [winfo rooty .t]
+    menu .t.m
+    .t.m add cascade -label Bar -menu .t.m.sub
+    menu .t.m.sub -tearoff 0
+    .t.m.sub add command -label Barian
+    .t configure -menu .t.m
+    update
+    wm minsize .t [winfo reqwidth .t] [winfo reqheight .t]
+    update
+    set after [expr {[lindex [testprop [testwrapper .t] WM_NORMAL_HINTS] 6]}]
+    # Both differences are 0; without the fix the second one is minus the
+    # height of the menubar.
+    list [expr {$before - [winfo reqheight .t]}] \
+	    [expr {$after - [winfo reqheight .t] - [winfo rooty .t] + $rooty}]
+} -cleanup {
+    destroy .t
+} -result {0 0}
 
 #
 # TESTFILE CLEANUP

@@ -42,7 +42,8 @@ namespace eval ::tk::systray {
 	wm overrideredirect $top 1
 	wm state $top withdrawn
 	if {[tk windowingsystem] eq "aqua"}  {
-	    ::tk::unsupported::MacWindowStyle style $top help none
+	    update idletasks
+	    wm attributes $top -stylemask docmodal
 	}
 	pack [message $top._txt -aspect 10000 -text $msg]
 

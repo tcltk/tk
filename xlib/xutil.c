@@ -32,7 +32,7 @@
 Atom
 XInternAtom(
     Display *display,
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(Bool))
 {
     static Atom atom = XA_LAST_PREDEFINED;

@@ -3,16 +3,16 @@ on:
   push:
     branches:
     - "main"
-    - "core-9-0-branch"
+    - "core-9-1-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 env:
   ERROR_ON_FAILURES: 1
 jobs:
   msvc:
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
     defaults:
       run:
         shell: powershell
@@ -26,11 +26,11 @@ jobs:
           - "OPTS=static"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: tk
       - name: Checkout Tcl 9.1
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: main
@@ -99,7 +99,7 @@ jobs:
              throw "nmake exit code: $lastexitcode"
           }
   gcc:
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
     defaults:
       run:
         shell: msys2 {0}
@@ -118,9 +118,9 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Checkout Tcl 9.1
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: tcltk/tcl
           ref: main

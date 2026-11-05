@@ -35,8 +35,7 @@ the undo stack. Only meaningful when the \fB\-undo\fR option is true.
 .OP \-blockcursor blockCursor BlockCursor
 Specifies a boolean that says whether the blinking insertion cursor should be
 drawn as a character-sized rectangular block. If false (the default) a thin
-vertical line is used for the insertion cursor. For further discussion
-refer to section \fBTHE INSERTION CURSOR\fR below.
+vertical line is used for the insertion cursor.
 .OP \-endline endLine EndLine
 Specifies an integer line index representing the line of the underlying
 textual data store that should be just after the last line contained in
@@ -509,6 +508,12 @@ contain characters because they are indented by \fB\-lmargin1\fR or
 specified as an empty string, then the color used is specified by the
 \fB\-background\fR tag option (or, if this is also unspecified, by the
 \fB\-background\fR widget option).
+.\" OPTION: -locale
+.TP
+\fB\-locale \fIlocale\fR
+.
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .\" OPTION: -offset
 .TP
 \fB\-offset \fIpixels\fR
@@ -918,13 +923,6 @@ with the
 widget command. The \fBinsert\fR mark represents the position of the insertion
 cursor, and the insertion cursor will automatically be drawn at this point
 whenever the text widget has the input focus.
-.PP
-The \fB\-blockcursor\fR widget option controls the drawing of the cursor.
-However, drawing the cursor as a solid blinking block is not exactly
-performed as in real or emulated terminals. The character at the cursor
-position is always drawn in it's foreground color, i.e. not in
-"reverse video", which can lead to unwanted visual effects and even
-hide the character entirely, when the cursor is in its on-state.
 .SH "THE MODIFIED FLAG"
 .PP
 The text widget can keep track of changes to the content of the widget by
@@ -1487,6 +1485,11 @@ of the tags present around the insertion point. If multiple
 effect as if a separate \fIpathName \fBinsert\fR widget command had been
 issued for each pair, in order. The last \fItagList\fR argument may be
 omitted.
+.\" METHOD: locale
+.TP
+\fIpathName \fBlocale \fIindex\fR
+.
+Returns the locale belonging to this \fIindex\fR.
 .\" METHOD: mark
 .TP
 \fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?

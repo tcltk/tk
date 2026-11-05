@@ -208,8 +208,10 @@ On other platforms, the platform's native code takes care of unposting the
 menu.
 .PP
 If a \fB\-command\fR option is specified for a cascade entry then it is
-evaluated as a Tcl command whenever the entry is invoked. This is not
-supported on Windows.
+not evaluated when the user selects the entry: selecting it posts the
+associated submenu.  It is evaluated only if the entry is invoked with
+the \fBinvoke\fR widget command.  Use the \fB\-postcommand\fR option of
+the submenu for a command evaluated when the submenu is posted.
 .SS "TEAR-OFF ENTRIES"
 .PP
 A tear-off entry appears at the top of the menu if enabled with the
@@ -301,6 +303,12 @@ clone. Additionally, any cascades that are pointed to are also cloned
 so that menu traversal will work right. Clones are destroyed when
 either the tearoff or menubar goes away, or when the original menu is
 destroyed.
+.PP
+It is the clone which is posted and displayed, not the original menu, and on
+Windows and macOS the menus are drawn by the system, so no Tk window is mapped
+at all.  Therefore \fBwinfo\fR and \fBwm\fR do not return any meaningful
+geometry information for a menu which is used as a menubar or is torn off, nor
+for the menus of its cascade entries.
 .SH "WIDGET COMMAND"
 .PP
 The \fBmenu\fR command creates a new Tcl command whose
@@ -503,6 +511,9 @@ posting the menu and the result of that script is returned as the
 result of the \fBpost\fR widget command.  If an error returns while
 executing the command, then the error is returned without posting the
 menu.
+On X11 this command returns as soon as the menu is posted.  On Windows and
+macOS the menu is displayed by the system, which runs its own event loop, and
+the command does not return before the menu is unposted again.
 .\" METHOD: postcascade
 .TP
 \fIpathName \fBpostcascade \fIindex\fR
@@ -541,6 +552,40 @@ window of the leftmost pixel in the entry specified by \fIindex\fR.
 .
 Returns a decimal string giving the y-coordinate within the menu
 window of the topmost pixel in the entry specified by \fIindex\fR.
+If the menu is scrolled (see \fByview\fR), the coordinate is given as if
+the menu was not scrolled.
+.\" METHOD: yview
+.TP
+\fIpathName \fByview \fR?\fIargs\fR?
+.
+This command is used to query and change the vertical scrolling of the
+entries of a menu which is higher than the screen.  Such a menu is
+limited to the height of the screen, and its entries can be scrolled with
+the arrows displayed at its top and bottom.  This is only done on X11;
+on Windows and macOS the system scrolls menus.
+It can take any of the following forms:
+.RS
+.TP
+\fIpathName \fByview\fR
+.
+Returns a list containing two elements, both of which are real fractions
+between 0 and 1.  The first element gives the position of the entries at
+the top of the visible area, relative to the height of all entries (0.0
+means the first entry is at the top).  The second element gives the
+position just after the visible area.  For a menu which is not scrolled,
+the result is \fB0.0 1.0\fR.
+.TP
+\fIpathName \fByview moveto \fIfraction\fR
+.
+Scrolls the entries so that the given fraction of their height is above
+the visible area.
+.TP
+\fIpathName \fByview scroll \fInumber what\fR
+.
+Scrolls the entries by \fInumber\fR lines or pages.  \fIWhat\fR must be
+either \fBunits\fR (the height of a line of the menu font) or
+\fBpages\fR (the height of the visible area, minus a line).
+.RE
 .SH "MENU ENTRY OPTIONS"
 The following options are allowed on menu entries. Most options are not
 supported by all entry types.
@@ -831,6 +876,9 @@ a menu to a cascaded submenu.
 .IP [3]
 When a button is released over a menu, the active entry (if any) is invoked.
 The menu also unposts unless it is a torn-off menu.
+However, if the menu was posted under the mouse cursor by the button press
+(for example, a menu moved to fit on the screen), the release is ignored
+and no entry is activated until the mouse moves.
 .IP [4]
 The Space and Return keys invoke the active entry and
 unpost the menu.
@@ -866,6 +914,10 @@ in the submenu.
 Otherwise, if the current menu was posted from a
 menubutton, then the current menubutton is unposted and the
 next menubutton to the right is posted.
+.IP [10]
+On X11, a menu higher than the screen is scrolled with the mouse wheel, or
+while the mouse is over the arrow at its top or bottom.  An entry which
+is activated with the keyboard is scrolled into view.
 .PP
 Disabled menu entries are non-responsive:  they do not activate and
 they ignore mouse button presses and releases.
@@ -881,6 +933,20 @@ individual widgets or by redefining the class bindings.
 At present it is not possible to use the
 option database to specify values for the options to individual
 entries.
+.SH PLATFORM NOTES
+.TP
+\fBWindows\fR
+.
+The menubar of a toplevel may only honor font and color options when
+the not documented MS-Windows messages
+WM_UAHDRAWMENU, WM_UAHDRAWMENUITEM and WM_UAHMEASUREMENUITEM are sent
+by the system.
+Currently, this is the case for MS-Windows 8 to 11, but not for Wine.
+Any sub-menu will always honor those options.
+.TP
+\fBmacOS\fR
+.
+font and colors of menus may not be customized.
 .SH "SEE ALSO"
 bind(n), menubutton(n), ttk::menubutton(n), toplevel(n)
 .SH KEYWORDS

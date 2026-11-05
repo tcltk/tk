@@ -124,8 +124,8 @@ typedef struct TkScale {
 				 * borders. */
     Tcl_Obj *sliderLengthObj;	/* Length of slider, measured in pixels along
 				 * long dimension of scale. */
-    int showValue;		/* Non-zero means to display the scale value
-				 * below or to the left of the slider; zero
+    bool showValue;		/* True means to display the scale value
+				 * below or to the left of the slider; false
 				 * means don't display the value. */
 
     /*

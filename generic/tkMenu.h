@@ -44,12 +44,16 @@ enum compound {
  * itself when cascade entry is disabled.
  * DRAW_MENU_ENTRY_NOUNDERLINE forbids underline when ODS_NOACCEL
  * is set, thus obeying the system-wide Windows UI setting.
+ * Additional menu entry drawing parameter for UNIX platform.
+ * DRAW_MENU_ENTRY_STRICTMOTIF.
  */
 
-enum drawingParameters {
+typedef enum {
+    DRAW_MENU_ENTRY_DEFAULT = (0),
     DRAW_MENU_ENTRY_ARROW = (1<<0),
-    DRAW_MENU_ENTRY_NOUNDERLINE = (1<<1)
-};
+    DRAW_MENU_ENTRY_NOUNDERLINE = (1<<1),
+    DRAW_MENU_ENTRY_STRICTMOTIF = (1<<2)
+} DrawMenuFlags;
 
 /*
  * One of the following data structures is kept for each entry of each menu
@@ -87,7 +91,7 @@ typedef struct TkMenuEntry {
 				 * Malloc'ed. */
     Tcl_Size accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
-    int indicatorOn;		/* True means draw indicator, false means
+    bool indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
 				 * the entry is a radio or check button. */
     /*
@@ -110,14 +114,14 @@ typedef struct TkMenuEntry {
 				 * GC from menu. */
     Tcl_Obj *fontPtr;		/* Text font for menu entries. NULL means use
 				 * overall font for menu. */
-    int columnBreak;		/* If this is 0, this item appears below the
-				 * item in front of it. If this is 1, this
+    bool columnBreak;		/* If this is false, this item appears below the
+				 * item in front of it. If this is true, this
 				 * item starts a new column. This field is
-				 * always 0 for tearoff and separator
+				 * always false for tearoff and separator
 				 * entries. */
-    int hideMargin;		/* If this is 0, then the item has enough
+    bool hideMargin;		/* If this is false, then the item has enough
 				 * margin to accommodate a standard check mark
-				 * and a default right margin. If this is 1,
+				 * and a default right margin. If this is true,
 				 * then the item has no such margins, and
 				 * checkbuttons and radiobuttons with this set
 				 * will have a rectangle drawn in the
@@ -320,7 +324,7 @@ typedef struct TkMenu {
      * Miscellaneous information:
      */
 
-    int tearoff;		/* 1 means this menu can be torn off. On some
+    bool tearoff;		/* True means this menu can be torn off. On some
 				 * platforms, the user can drag an outline of
 				 * the menu by just dragging outside of the
 				 * menu, and the tearoff is created where the
@@ -348,6 +352,13 @@ typedef struct TkMenu {
     TkMenuEntry *postedCascade;	/* Points to menu entry for cascaded submenu
 				 * that is currently posted or NULL if no
 				 * submenu posted. */
+    int scrollOffset;		/* Number of pixels by which the entries of
+				 * a menu higher than the screen are scrolled
+				 * up. */
+    int scrollArrowHeight;	/* Height of the areas with the scroll arrows
+				 * at the top and the bottom of a menu higher
+				 * than the screen, including the border, or
+				 * 0 if the menu is not scrolled. */
     struct TkMenu *nextInstancePtr;
 				/* The next instance of this menu in the
 				 * chain. */
@@ -355,7 +366,9 @@ typedef struct TkMenu {
 				/* A pointer to the original menu for this
 				 * clone chain. Points back to this structure
 				 * if this menu is a main menu. */
-    void *reserved1; /* not used any more. */
+    bool cascadeLeft;		/* True if this menu was posted as a cascade
+				 * to the left of its parent menu, so that its
+				 * own cascades are posted to the left too. */
     Tk_Window parentTopLevelPtr;/* If this menu is a menubar, this is the
 				 * toplevel that owns the menu. Only
 				 * applicable for menubar clones. */
@@ -491,7 +504,7 @@ MODULE_SCOPE void	TkEventuallyRedrawMenu(TkMenu *menuPtr,
 MODULE_SCOPE TkMenuReferences*TkFindMenuReferences(Tcl_Interp *interp, const char *name);
 MODULE_SCOPE TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
 			    Tcl_Obj *namePtr);
-MODULE_SCOPE int	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
+MODULE_SCOPE bool	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
 MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
 MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
@@ -527,6 +540,11 @@ MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
  */
 
 MODULE_SCOPE void	TkpComputeMenubarGeometry(TkMenu *menuPtr);
+MODULE_SCOPE int	TkMenuScrollDelta(TkMenu *menuPtr);
+MODULE_SCOPE void	TkMenuGetScrollRange(TkMenu *menuPtr, int *contentPtr,
+			    int *visiblePtr);
+MODULE_SCOPE void	TkMenuSetScrollOffset(TkMenu *menuPtr, int offset);
+MODULE_SCOPE void	TkMenuSeeEntry(TkMenu *menuPtr, TkMenuEntry *mePtr);
 MODULE_SCOPE void	TkpComputeStandardMenuGeometry(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpConfigureMenuEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE void	TkpDestroyMenu(TkMenu *menuPtr);
@@ -534,8 +552,8 @@ MODULE_SCOPE void	TkpDestroyMenuEntry(TkMenuEntry *mEntryPtr);
 MODULE_SCOPE void	TkpDrawMenuEntry(TkMenuEntry *mePtr,
 			    Drawable d, Tk_Font tkfont,
 			    const Tk_FontMetrics *menuMetricsPtr, int x,
-			    int y, int width, int height, int strictMotif,
-			    int drawingParameters);
+			    int y, int width, int height,
+			    DrawMenuFlags drawingParameters);
 MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);

@@ -99,7 +99,7 @@ typedef struct Pane {
 				 * sash. */
     int handlex, handley;	/* Coordinates of the sash handle. */
     enum stretch stretch;	/* Controls how pane grows/shrinks */
-    int hide;			/* Controls visibility of pane */
+    bool hide;			/* Controls visibility of pane */
     struct PanedWindow *containerPtr;
 				/* Paned window managing the window. */
     Tk_Window after;		/* Placeholder for parsing options. */
@@ -129,12 +129,12 @@ typedef struct PanedWindow {
     Tcl_Obj *heightObj;		/* Tcl_Obj rep for height. */
     enum orient orient;		/* Orientation of the widget. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    int resizeOpaque;		/* Boolean indicating whether resize should be
+    bool resizeOpaque;		/* Boolean indicating whether resize should be
 				 * opaque or rubberband style. */
     int sashRelief;		/* Relief used to draw sash. */
     Tcl_Obj *sashWidthObj;	/* Tcl_Obj rep for sash width. */
     Tcl_Obj *sashPadObj;	/* Tcl_Obj rep for sash padding. */
-    int showHandle;		/* Boolean indicating whether sash handles
+    bool showHandle;		/* Boolean indicating whether sash handles
 				 * should be drawn. */
     Tcl_Obj *handleSizeObj;	/* Size of one side of a sash handle (handles
 				 * are square), in pixels. */
@@ -288,7 +288,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-opaqueresize", "opaqueResize", "OpaqueResize",
 	DEF_PANEDWINDOW_OPAQUERESIZE, TCL_INDEX_NONE,
-	offsetof(PanedWindow, resizeOpaque), 0, 0, 0},
+	offsetof(PanedWindow, resizeOpaque), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	DEF_PANEDWINDOW_ORIENT, TCL_INDEX_NONE, offsetof(PanedWindow, orient),
 	TK_OPTION_ENUM_VAR, orientStrings, GEOMETRY},
@@ -317,7 +317,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TCL_INDEX_NONE, 0, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-showhandle", "showHandle", "ShowHandle",
 	DEF_PANEDWINDOW_SHOWHANDLE, TCL_INDEX_NONE, offsetof(PanedWindow, showHandle),
-	0, 0, GEOMETRY},
+	TK_OPTION_VAR(bool), 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_PANEDWINDOW_WIDTH, offsetof(PanedWindow, widthObj),
 	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY},
@@ -335,7 +335,7 @@ static const Tk_OptionSpec paneOptionSpecs[] = {
 	DEF_PANEDWINDOW_PANE_HEIGHT, offsetof(Pane, heightObj),
 	offsetof(Pane, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-hide", "hide", "Hide",
-	DEF_PANEDWINDOW_PANE_HIDE, TCL_INDEX_NONE, offsetof(Pane, hide), 0,0,GEOMETRY},
+	DEF_PANEDWINDOW_PANE_HIDE, TCL_INDEX_NONE, offsetof(Pane, hide), TK_OPTION_VAR(bool), 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-minsize", NULL, NULL,
 	DEF_PANEDWINDOW_PANE_MINSIZE, offsetof(Pane, minSizeObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
@@ -2648,9 +2648,28 @@ MoveSash(
     int nextSash = sash + 1;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int handleSize, sashPad, sashWidth;
+    int first, last, extra = 0;
 
     if (diff == 0)
 	return;
+
+    /*
+     * Remember how much the real sizes of the panes differ from their
+     * requested sizes because of stretching, see below.
+     */
+
+    GetFirstLastVisiblePane(pwPtr, &first, &last);
+    for (i = 0; i < pwPtr->numPanes; i++) {
+	panePtr = pwPtr->panes[i];
+	if (panePtr->hide) {
+	    continue;
+	}
+	if (horizontal) {
+	    extra -= (panePtr->width > 0 ? panePtr->width : panePtr->paneWidth);
+	} else {
+	    extra -= (panePtr->height > 0 ? panePtr->height : panePtr->paneHeight);
+	}
+    }
 
     /*
      * Update the pane sizes with their real sizes.
@@ -2676,9 +2695,11 @@ MoveSash(
 	if (horizontal) {
 	    panePtr->paneWidth = panePtr->width = panePtr->sashx
 		    - sashOffset - panePtr->x - (2 * padX);
+	    extra += panePtr->width;
 	} else {
 	    panePtr->paneHeight = panePtr->height = panePtr->sashy
 		    - sashOffset - panePtr->y - (2 * padY);
+	    extra += panePtr->height;
 	}
     }
 
@@ -2728,9 +2749,8 @@ MoveSash(
 	}
     }
     if (stretchReserve <= 0) {
-	return;
-    }
-    if (diff > stretchReserve) {
+	diff = 0;
+    } else if (diff > stretchReserve) {
 	diff = stretchReserve;
     }
 
@@ -2773,6 +2793,74 @@ MoveSash(
 	    panePtr->paneWidth = panePtr->width = paneSize;
 	} else {
 	    panePtr->paneHeight = panePtr->height = paneSize;
+	}
+    }
+
+    /*
+     * The stretchable panes include the extra space distributed by
+     * ArrangePanes in proportion to their sizes. Remove it, so that the
+     * requested size of the panedwindow does not change: otherwise a sash
+     * move in an enlarged window makes it request its current size, which
+     * breaks a gridded toplevel. [7c51624a96]
+     */
+
+    if (extra != 0 && Tk_IsMapped(pwPtr->tkwin)) {
+	int stretchSize = 0, dynSize, reserve, newSize, lastStretch = -1;
+
+	for (i = 0; i < pwPtr->numPanes; i++) {
+	    panePtr = pwPtr->panes[i];
+	    if (!panePtr->hide
+		    && IsStretchable(panePtr->stretch, i, first, last)) {
+		stretchSize += horizontal ? panePtr->width : panePtr->height;
+		lastStretch = i;
+	    }
+	}
+
+	/*
+	 * Find for every stretchable pane the size which ArrangePanes
+	 * stretches to its current size, using the same computation.
+	 */
+
+	dynSize = stretchSize - extra;
+	reserve = extra;
+	if (lastStretch >= 0 && stretchSize > 0 && dynSize > 0) {
+	    for (i = 0; i <= lastStretch; i++) {
+		int k;
+
+		panePtr = pwPtr->panes[i];
+		if (panePtr->hide
+			|| !IsStretchable(panePtr->stretch, i, first, last)) {
+		    continue;
+		}
+		if (dynSize <= 0) {
+		    break;
+		}
+		paneSize = horizontal ? panePtr->width : panePtr->height;
+		if (i == lastStretch) {
+		    newSize = dynSize;
+		} else {
+		    newSize = (int) ((double) paneSize * dynSize
+			    / (dynSize + reserve) + 0.5);
+		    for (k = 0; k < 4; k++) {
+			int amount = (int) ((double) newSize / dynSize * reserve);
+
+			if (newSize + amount < paneSize) {
+			    newSize++;
+			} else if (newSize + amount > paneSize) {
+			    newSize--;
+			} else {
+			    break;
+			}
+		    }
+		    reserve -= (int) ((double) newSize / dynSize * reserve);
+		    dynSize -= newSize;
+		}
+		if (horizontal) {
+		    panePtr->paneWidth = panePtr->width = newSize;
+		} else {
+		    panePtr->paneHeight = panePtr->height = newSize;
+		}
+	    }
 	}
     }
 }
@@ -3092,19 +3180,18 @@ PanedWindowIdentifyCoords(
 	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->showHandle && handleSize > sashWidth) {
 	    lpad = (handleSize - sashWidth) / 2;
-	    rpad = handleSize - lpad;
+	    rpad = handleSize - sashWidth - lpad;
 	    lpad += sashPad;
 	    rpad += sashPad;
-	    sashWidth = handleSize;
 	} else {
 	    lpad = rpad = sashPad;
 	}
 	tpad = bpad = 0;
     } else {
 	if (pwPtr->showHandle && handleSize > sashWidth) {
-	    sashHeight = handleSize;
+	    sashHeight = sashWidth;
 	    tpad = (handleSize - sashWidth) / 2;
-	    bpad = handleSize - tpad;
+	    bpad = handleSize - sashWidth - tpad;
 	    tpad += sashPad;
 	    bpad += sashPad;
 	} else {
@@ -3130,8 +3217,8 @@ PanedWindowIdentifyCoords(
 	thisx = pwPtr->panes[i]->sashx;
 	thisy = pwPtr->panes[i]->sashy;
 
-	if (((thisx - lpad) <= x && x <= (thisx + rpad + sashWidth)) &&
-		((thisy - tpad) <= y && y <= (thisy + bpad + sashHeight))) {
+	if (((thisx - lpad) <= x && x < (thisx + rpad + sashWidth)) &&
+		((thisy - tpad) <= y && y < (thisy + bpad + sashHeight))) {
 	    found = i;
 
 	    /*
@@ -3142,11 +3229,11 @@ PanedWindowIdentifyCoords(
 		thisx = pwPtr->panes[i]->handlex;
 		thisy = pwPtr->panes[i]->handley;
 		if (pwPtr->orient == ORIENT_HORIZONTAL) {
-		    if (thisy <= y && y <= (thisy + handleSize)) {
+		    if (thisy <= y && y < (thisy + handleSize)) {
 			isHandle = true;
 		    }
 		} else {
-		    if (thisx <= x && x <= (thisx + handleSize)) {
+		    if (thisx <= x && x < (thisx + handleSize)) {
 			isHandle = true;
 		    }
 		}

@@ -85,7 +85,7 @@ ClipboardHandler(
     srcPtr = cbPtr->buffer + (offset - scanned);
     destPtr = buffer;
     length = cbPtr->length - (offset - scanned);
-    while (1) {
+    while (true) {
 	if (length > freeCount) {
 	    strncpy(destPtr, srcPtr, freeCount);
 	    return maxBytes;
@@ -428,8 +428,8 @@ Tk_ClipboardObjCmd(
     Atom selection;
     static const char *const optionStrings[] = {
 	"append", "clear", "get", NULL };
-    int index;
-    Tcl_Size i, result;
+    int index, result;
+    Tcl_Size i;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -546,7 +546,14 @@ Tk_ClipboardObjCmd(
 	}
 	result = Tk_ClipboardClear(interp, tkwin);
 	if (result == TCL_OK) {
-	    TkSelUpdateClipboard((TkWindow *) tkwin, CLIPBOARD_CLEAR);
+	    /*
+	     * Use the clipboard window, as Tk_ClipboardAppend does: the
+	     * -displayof window may not have been made yet.
+	     */
+
+	    TkSelUpdateClipboard(
+		    (TkWindow *) ((TkWindow *) tkwin)->dispPtr->clipWindow,
+		    CLIPBOARD_CLEAR);
 	}
 	return result;
     }

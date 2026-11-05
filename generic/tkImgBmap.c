@@ -537,7 +537,7 @@ TkGetBitmapData(
     height = 0;
     hotX = -1;
     hotY = -1;
-    while (1) {
+    while (true) {
 	if (NextBitmapWord(&pi) != TCL_OK) {
 	    goto error;
 	}
@@ -578,7 +578,7 @@ TkGetBitmapData(
 		goto error;
 	    }
 	} else if ((pi.word[0] == 'c') && (strcmp(pi.word, "char") == 0)) {
-	    while (1) {
+	    while (true) {
 		if (NextBitmapWord(&pi) != TCL_OK) {
 		    goto error;
 		}
@@ -704,7 +704,7 @@ NextBitmapWord(
 	}
 	for ( ; !isspace(UCHAR(c)) && (c != ',') && (c != EOF);
 		c = GetByte(parseInfoPtr->chan)) {
-	    *dst = c;
+	    *dst = (char)c;
 	    dst++;
 	    parseInfoPtr->wordLength++;
 	    if (parseInfoPtr->wordLength > MAX_WORD_LENGTH) {
@@ -883,7 +883,7 @@ ImgBmapDisplay(
 				 * to imageX and imageY. */
 {
     BitmapInstance *instancePtr = (BitmapInstance *)clientData;
-    int masking;
+    bool masking;
 
     /*
      * If there's no graphics context, it means that an error occurred while

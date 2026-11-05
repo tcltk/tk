@@ -28,6 +28,8 @@
 #include "tkInt.h"
 #endif
 
+#include <usp10.h>		/* Uniscribe types of the font interfaces. */
+
 /*
  * Define constants missing from older Win32 SDK header files.
  */
@@ -131,12 +133,27 @@ MODULE_SCOPE const int tkpWinRopModes[];
 MODULE_SCOPE const int tkpWinBltModes[];
 
 /*
+ * The following two raster ops are used to copy the foreground and background
+ * bits of a source pattern as defined by a stipple used as the pattern.
+ */
+
+#define COPYFG		0x00CA0749 /* dest = (pat & src) | (!pat & dst) */
+#define COPYBG		0x00AC0744 /* dest = (!pat & src) | (pat & dst) */
+
+/*
  * The following defines are used with TkWinGetBorderPixels to get the extra 2
  * border colors from a Tk_3DBorder.
  */
 
 #define TK_3D_LIGHT2 TK_3D_DARK_GC+1
 #define TK_3D_DARK2 TK_3D_DARK_GC+2
+
+/*
+ * Defines for tkTextDisp.c and tkFont.c
+ */
+
+#define TK_LAYOUT_WITH_BASE_CHUNKS	1
+#define TK_DRAW_IN_CONTEXT		1
 
 /*
  * Internal functions used by more than one source file.
@@ -166,21 +183,92 @@ MODULE_SCOPE HICON TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
  */
 
 MODULE_SCOPE void TkWinDisplayChanged(Display *display);
+typedef struct TkWinColorGlyphCache TkWinColorGlyphCache;
+				/* Color emoji cache of a subfont (tkWinColorEmoji.c). */
+MODULE_SCOPE int TkWinDrawColorGlyphs(HDC hdc, HFONT hFont,
+	TkWinColorGlyphCache **cachePtr, int x, int y,
+	const SCRIPT_ANALYSIS *saPtr, const WORD *glyphs, const int *advances,
+	const GOFFSET *offsets, int glyphCount);
+MODULE_SCOPE void TkWinFreeColorGlyphCache(TkWinColorGlyphCache **cachePtr);
 MODULE_SCOPE void TkWinCleanupContainerList(void);
+MODULE_SCOPE LRESULT TkWinEmbeddedEventProc(HWND, UINT, WPARAM, LPARAM);
+MODULE_SCOPE unsigned int TkWinGetModifierState(void);
+MODULE_SCOPE HPALETTE TkWinGetSystemPalette(void);
+MODULE_SCOPE int TkWinIndexOfColor(XColor *colorPtr);
+MODULE_SCOPE HWND TkWinGetWrapperWindow(Tk_Window tkwin);
+MODULE_SCOPE HPALETTE TkWinSelectPalette(HDC, Colormap);
+
 
 /*
- * Used by tkWinWm.c for embedded menu handling. May become public.
+ * Undocumented messages which Windows sends to a window to let it draw its
+ * menu bar, and their parameters.
  */
 
-MODULE_SCOPE HWND Tk_GetMenuHWND(Tk_Window tkwin);
-MODULE_SCOPE HWND Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
+#define WM_UAHDRAWMENU		0x0091
+#define WM_UAHDRAWMENUITEM	0x0092
+#define WM_UAHMEASUREMENUITEM	0x0094
+
+typedef struct {
+    HMENU hmenu;
+    HDC hdc;
+    DWORD dwFlags;
+} UAHMENU;
+
+typedef union {
+    struct {
+	DWORD cx;
+	DWORD cy;
+    } rgsizeBar[2];
+    struct {
+	DWORD cx;
+	DWORD cy;
+    } rgsizePopup[4];
+} UAHMENUITEMMETRICS;
+
+typedef struct {
+    DWORD rgcx[4];
+    DWORD fUpdateMaxWidths : 2;
+} UAHMENUPOPUPMETRICS;
+
+typedef struct {
+    int iPosition;
+    UAHMENUITEMMETRICS umim;
+    UAHMENUPOPUPMETRICS umpm;
+} UAHMENUITEM;
+
+typedef struct {
+    DRAWITEMSTRUCT dis;
+    UAHMENU um;
+    UAHMENUITEM umi;
+} UAHDRAWMENUITEM;
+
+typedef struct {
+    MEASUREITEMSTRUCT mis;
+    UAHMENU um;
+    UAHMENUITEM umi;
+} UAHMEASUREMENUITEM;
+
+/*
+ * Used by tkWinWm.c for embedded menu handling.
+ */
+
+MODULE_SCOPE HWND TkGetMenuHWND(Tk_Window tkwin);
+MODULE_SCOPE HWND TkGetEmbeddedMenuHWND(Tk_Window tkwin);
+MODULE_SCOPE void TkWinCancelMouseTimer(void);
+MODULE_SCOPE void TkWinSuspendPointer(int suspend);
+MODULE_SCOPE int TkWinHandleMenuEvent(HWND *, UINT *, WPARAM *, LPARAM *, LRESULT *);
+MODULE_SCOPE int TkWinHandleMenubarDraw(HWND, UINT, WPARAM, LPARAM, LRESULT *);
+MODULE_SCOPE void TkWinDrawMenubarLine(HWND);
+MODULE_SCOPE void TkWinSetMenu(Tk_Window, HMENU);
+MODULE_SCOPE void TkWinMenuWrapperChanged(HMENU);
+MODULE_SCOPE Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window, const char *, const char *);
+
 
 /*
  * The following allows us to cache these encoding for multiple functions.
  */
 
 
-MODULE_SCOPE Tcl_Encoding	TkWinGetKeyInputEncoding(void);
 MODULE_SCOPE Tcl_Encoding	TkWinGetUnicodeEncoding(void);
 MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 
@@ -211,6 +299,8 @@ MODULE_SCOPE int	TkpWmGetState(TkWindow *winPtr);
 MODULE_SCOPE int	TkTranslateWinEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam, LRESULT *result);
 MODULE_SCOPE void	TkWinPointerEvent(HWND hwnd, int x, int y);
+MODULE_SCOPE void	TkWinNonClientButtons(unsigned int buttons);
+MODULE_SCOPE unsigned int TkWinGetPointerState(void);
 
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c

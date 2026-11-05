@@ -505,7 +505,7 @@ Tk_ChooseColorObjCmd(
 	    if (colorPtr == NULL) {
 		goto end;
 	    }
-	    initialColor = TkMacOSXGetNSColor(NULL, colorPtr->pixel);
+	    initialColor = TkMacOSXGetNSColor(colorPtr->pixel);
 	    Tk_FreeColor(colorPtr);
 	    break;
 	}
@@ -521,7 +521,7 @@ Tk_ChooseColorObjCmd(
 	}
     }
     colorPanel = [NSColorPanel sharedColorPanel];
-    [colorPanel orderOut:NSApp];
+    [colorPanel orderOut:nil];
     [colorPanel setContinuous:NO];
     [colorPanel setBecomesKeyOnlyIfNeeded:NO];
     [colorPanel setShowsAlpha: NO];
@@ -594,7 +594,7 @@ parseFileFilters(
     filterInfo.fileTypeAllowsAll = [NSMutableArray array];
 
     filterInfo.allowedExtensions = [NSMutableArray array];
-    filterInfo.allowedExtensionsAllowAll = NO;
+    filterInfo.allowedExtensionsAllowAll = false;
 
     if (filterInfo.doFileTypes) {
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
@@ -605,7 +605,7 @@ parseFileFilters(
 	    [name release];
 	    NSMutableArray *clauseextensions = [NSMutableArray array];
 	    NSMutableArray *displayextensions = [NSMutableArray array];
-	    bool allowsAll = NO;
+	    bool allowsAll = false;
 
 	    for (FileFilterClause *clausePtr = filterPtr->clauses; clausePtr;
 		    clausePtr = clausePtr->next) {
@@ -631,8 +631,8 @@ parseFileFilters(
 			 * It is the all pattern (*, .* or *.*)
 			 */
 
-			allowsAll = YES;
-			filterInfo.allowedExtensionsAllowAll = YES;
+			allowsAll = true;
+			filterInfo.allowedExtensionsAllowAll = true;
 			[displayextensions addObject:@"*"];
 		    }
 		}
@@ -732,7 +732,8 @@ Tk_GetOpenFileObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     Tcl_Size i;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int index, multiple = 0;
     Tcl_Size len;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
@@ -741,7 +742,7 @@ Tk_GetOpenFileObjCmd(
     NSWindow *parent;
     openpanel =  [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
@@ -791,7 +792,7 @@ Tk_GetOpenFileObjCmd(
 	    if (!tkwin) {
 		goto end;
 	    }
-	    haveParentOption = 1;
+	    haveParentOption = true;
 	    break;
 	case OPEN_TITLE:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -1018,7 +1019,8 @@ Tk_GetSaveFileObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     Tcl_Size i;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int confirmOverwrite = 1;
     int index;
     Tcl_Size len;
@@ -1028,7 +1030,7 @@ Tk_GetSaveFileObjCmd(
     NSWindow *parent;
     savepanel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
@@ -1081,7 +1083,7 @@ Tk_GetSaveFileObjCmd(
 		if (!tkwin) {
 		    goto end;
 		}
-		haveParentOption = 1;
+		haveParentOption = true;
 		break;
 	    case SAVE_TITLE:
 		str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -1261,7 +1263,8 @@ Tk_ChooseDirectoryObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int index, mustexist = 0;
     Tcl_Size len;
     Tcl_Size i;
@@ -1271,7 +1274,7 @@ Tk_ChooseDirectoryObjCmd(
     NSWindow *parent;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
@@ -1311,7 +1314,7 @@ Tk_ChooseDirectoryObjCmd(
 	    if (!tkwin) {
 		goto end;
 	    }
-	    haveParentOption = 1;
+	    haveParentOption = true;
 	    break;
 	case CHOOSE_TITLE:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -1351,7 +1354,7 @@ Tk_ChooseDirectoryObjCmd(
 	parentIsKey = parent && [parent isKeyWindow];
     } else {
 	parent = nil;
-	parentIsKey = False;
+	parentIsKey = false;
     }
     modalReturnCode = showOpenSavePanel(panel, parent, interp, cmdObj, 0);
     if (cmdObj) {
@@ -1444,7 +1447,8 @@ Tk_MessageBoxObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
     Tcl_Size i;
-    int result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR;
+    bool haveParentOption = false;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
     int defaultNativeButtonIndex = 1; /* 1, 2, 3: right to left */
     Tcl_Obj *cmdObj = NULL;
@@ -1454,7 +1458,7 @@ Tk_MessageBoxObjCmd(
     NSArray *buttons;
     NSAlert *alert = [NSAlert new];
     NSInteger modalReturnCode = 1;
-    BOOL parentIsKey = NO;
+    bool parentIsKey = false;
 
     iconIndex = ICON_INFO;
     typeIndex = TYPE_OK;
@@ -1508,7 +1512,7 @@ Tk_MessageBoxObjCmd(
 	    if (!tkwin) {
 		goto end;
 	    }
-	    haveParentOption = 1;
+	    haveParentOption = true;
 	    break;
 
 	case ALERT_TITLE:
@@ -2088,7 +2092,7 @@ FontchooserHideCmd(
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
 
     if ([fp isVisible]) {
-	[fp orderOut:NSApp];
+	[fp orderOut:nil];
     }
     return TCL_OK;
 }

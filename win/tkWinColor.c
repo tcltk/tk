@@ -173,7 +173,7 @@ TkpGetColor(
     if (((strncasecmp(name, "system", 6) == 0)
 	    && FindSystemColor(name+6, &color, &index))
 	    || TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), name,
-		    &color)) {
+		    &color) != 0) {
 	winColPtr = (WinColor *)Tcl_Alloc(sizeof(WinColor));
 	winColPtr->info.color = color;
 	winColPtr->index = index;

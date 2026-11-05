@@ -91,9 +91,8 @@ proc ::tk::dialog::error::ReturnInDetails w {
 # ::tk::dialog::error::bgerror --
 #
 #	This is the default version of bgerror.
-#	It tries to execute tkerror, if that fails it posts a dialog box
-#	containing the error message and gives the user a chance to ask
-#	to see a stack trace.
+#	It posts a dialog box containing the error message and gives
+#	the user a chance to ask to see a stack trace.
 #
 # Arguments:
 #	err - The error message.
@@ -104,17 +103,17 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 
     set info $errorInfo
 
-    set ret [catch {::tkerror $err} msg];
-    if {$ret != 1} {return -code $ret $msg}
+    if {![tk::build-info no-deprecate]} {
+	set ret [catch {::tkerror $err} msg];
+	if {$ret != 1} {return -code $ret $msg}
+    }
 
-    # The application's tkerror either failed or was not found
-    # so we use the default dialog.  But on Aqua we cannot display
-    # the dialog if the background error occurs in an idle task
-    # being processed inside of [NSView drawRect].  In that case
+    # On Aqua we cannot display the dialog if the background error occurs in
+    # an idle task being processed inside of [NSView drawRect]. In that case
     # we post the dialog as an after task instead.
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
-	if $flag {
+	if {$flag} {
 	    set errorInfo $info
 	    after 500 [list bgerror "$err" 0]
 	    return
@@ -169,9 +168,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     wm iconname $dlg ErrorDialog
     wm protocol $dlg WM_DELETE_WINDOW [namespace code DeleteByProtocol]
 
-    if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
-    } elseif {$windowingsystem eq "x11"} {
+    if {$windowingsystem eq "x11"} {
 	wm attributes $dlg -type dialog
     }
 
@@ -256,6 +253,10 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 	if {[lindex [wm stackorder .] end] ne "$dlg"} {
 	    wm attributes $dlg -topmost 1
 	}
+    }
+
+    if {$windowingsystem eq "aqua"} {
+	wm attributes $dlg -stylemask titled
     }
 
     # 9. Wait for the user to respond, then restore the focus and

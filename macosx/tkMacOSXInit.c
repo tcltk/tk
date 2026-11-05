@@ -37,6 +37,47 @@ static char tkLibPath[PATH_MAX + 1] = "";
 static char scriptPath[PATH_MAX + 1] = "";
 
 /*
+ * The first Tcl interpreter created when initializing the NSApplication is
+ * saved as the attribute _eventInterp and used in a few places by Tk apps.
+ * For instance, it is used by the default "File -> Run Widget Demo" menu item
+ * to look up the path to the demo script, and to look up the definitions of
+ * the "::tk::mac::OnShow" and "::tk::mac::OnHide" procedures.
+ */
+
+static NSWindow *firstRootNSWindow = NULL;
+static void showRootWindow(void *clientData);
+
+/*
+ * This is the delete proc for the interpreter saved as _eventInterp, which
+ * can be deleted by a Tcl script after loading the Tk package.
+ */
+
+static void InterpDeleteProc(
+    void *clientData,
+    Tcl_Interp *interp) {
+    (void) clientData;
+    (void) interp;
+
+    /*
+     * It is possible for the interpreter to be deleted before its root window
+     * has been ordered front.  Deleting the interpreter will destroy the
+     * window, and cause the idle task which orders it front to crash.  So we
+     * cancel that idle task, if it has not run yet.
+     */
+    
+    Tcl_CancelIdleCall(showRootWindow, firstRootNSWindow);
+    firstRootNSWindow = NULL;
+
+    /*
+     * To avoid use-after-free crashes, we set the _eventInterp attribute to
+     * NULL when the interpreter it points to is deleted.  This will disable
+     * the features which use that interpreter.
+     */
+
+     [NSApp _clearEventInterp];
+}
+
+/*
  * Forward declarations...
  */
 
@@ -230,12 +271,19 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 	 }];
 }
 
+- (void) _clearEventInterp
+{
+    _eventInterp = NULL;
+}
+
 - (void) _setup: (Tcl_Interp *) interp
 {
     /*
      * Remember our interpreter.
      */
+
     _eventInterp = interp;
+    Tcl_CallWhenDeleted(interp, InterpDeleteProc, NULL);
 
     /*
      * Install the global autoreleasePool.
@@ -411,11 +459,6 @@ TCL_NORETURN void TkpExitProc(
     void *clientdata)
 {
     bool doCleanup = doCleanupFromExit;
-    if (doCleanupFromExit) {
-	doCleanupFromExit = false; /* prevent possible recursive call. */
-	closePanels();
-    }
-
     /*
      * At this point it is too late to be looking up the Tk window associated
      * to any NSWindows, but it can happen.  This makes sure the answer is None
@@ -425,6 +468,12 @@ TCL_NORETURN void TkpExitProc(
      */
 
     [NSApp setTkWillExit:YES];
+
+    if (doCleanupFromExit) {
+	doCleanupFromExit = false; /* prevent possible recursive call. */
+	closePanels();
+    }
+    
     for (TKWindow *w in [NSApp orderedWindows]) {
 	if ([w respondsToSelector: @selector (tkWindow)]) {
 	    [w setTkWindow: None];
@@ -436,7 +485,7 @@ TCL_NORETURN void TkpExitProc(
      */
 
     Tcl_Finalize();
-    if (doCleanup == YES) {
+    if (doCleanup) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
     exit((int)PTR2INT(clientdata)); /* Convince the compiler that we don't return. */
@@ -459,6 +508,23 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 }
 
 /*
+ * Install TkMacOSXSignalHandler for the given signal, unless the application
+ * which embeds Tk has installed its own handler (e.g. Python raises
+ * KeyboardInterrupt from its SIGINT handler).
+ */
+
+static void
+InstallSignalHandler(
+    int sig)
+{
+    struct sigaction action;
+
+    if (sigaction(sig, NULL, &action) == 0 && action.sa_handler == SIG_DFL) {
+	signal(sig, TkMacOSXSignalHandler);
+    }
+}
+
+/*
  * This static function is run as an idle task to order the root window front.
  * This is only done if the window is in the normal state.  This avoids
  * flashing the root window on the screen if it was withdrawn immediately after
@@ -467,15 +533,25 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
 
 static void showRootWindow(void *clientData) {
     NSWindow *root = (NSWindow *) clientData;
-    if ([NSApp tkWillExit]) {
-	return;
+    TkWindow *winPtr;
+    if (![NSApp tkWillExit] && (winPtr = TkMacOSXGetTkWindow(root))) {
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+	if (wmPtr->hints.initial_state == NormalState &
+	    (wmPtr->flags & WM_IS_HIDDEN) == 0) {
+	    [(TKWindow *)root tkOrderFront];
+	    /*
+	     * We move the root window to the bottom in case Tk managed to
+	     * create another toplevel before this idle task runs.
+	     */
+	    [root orderWindow:NSWindowBelow relativeTo:0];
+	    [NSApp activateIgnoringOtherApps: YES];
+	}
     }
-    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr->hints.initial_state == NormalState) {
-	[root makeKeyAndOrderFront:NSApp];
-    }
-    [NSApp activateIgnoringOtherApps: YES];
+    /*
+     * The root window may have been destroyed before this idle handler runs,
+     * e.g. by [after 0 {destroy .}].
+     */
+    [root release];
 }
 
 int
@@ -645,6 +721,7 @@ TkpInit(
 	TkMacOSXServices_Init(interp);
 	TkMacOSXNSImage_Init(interp);
 	TkMacOSXAccessibility_Init(interp);
+	Icu_Init(interp);
 
 	/*
 	 * The root window has been created and mapped, but XMapWindow deferred its
@@ -665,7 +742,9 @@ TkpInit(
 		 * therefore does not need to be placed on the screen.
 		 */
 
+		[window retain];
 		Tcl_DoWhenIdle(showRootWindow, window);
+		firstRootNSWindow = window;
 		break;
 	    }
 	}
@@ -684,9 +763,9 @@ TkpInit(
 	 * application is killed with one of these signals.
 	 */
 
-	signal(SIGINT, TkMacOSXSignalHandler);
-	signal(SIGHUP, TkMacOSXSignalHandler);
-	signal(SIGTERM, TkMacOSXSignalHandler);
+	InstallSignalHandler(SIGINT);
+	InstallSignalHandler(SIGHUP);
+	InstallSignalHandler(SIGTERM);
     }
     /*
      * Initialization steps that are needed for all interpreters.
@@ -881,8 +960,8 @@ TkMacOSXGetInfoAsJSONObjCmd(
 					      error:nil];
 	if (infoAsJSON.length) {
 	    int buffer_size = (int) infoAsJSON.length + 1;
-	    bytes = malloc(buffer_size);
-	    strlcpy(bytes, infoAsJSON.bytes, buffer_size);
+	    bytes = (char *)malloc(buffer_size);
+	    strlcpy(bytes, (char *)infoAsJSON.bytes, buffer_size);
 	}
     }
     if (bytes) {

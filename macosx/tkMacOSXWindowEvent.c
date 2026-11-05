@@ -26,6 +26,18 @@
 #endif
 */
 
+#define PRINT_STACK					\
+    for (NSWindow *w in [NSApp orderedWindows]) {		\
+    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);			\
+	if (winPtr2) {						\
+	    fprintf(stderr, "%s ", Tk_PathName(winPtr2));	\
+	}							\
+    }								\
+    fprintf(stderr, "\n");					\
+    fflush(stderr)
+
+#import <QuartzCore/QuartzCore.h>
+
 extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
@@ -35,16 +47,16 @@ static int		GenerateUpdates(
 			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
+static void		GenerateWMDestroyEvent(Tk_Window tkwin);
 
 #pragma mark TKApplication(TKWindowEvent)
 
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
-extern NSString *NSWindowWillCloseNotification;
-
-#ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
+extern NSString *NSWindowWillCloseNotification;
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -103,6 +115,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [NSApp setTkEventTarget: winPtr];
 
 	    /*
+	     * Put the menu of the new key window into the menubar now: the
+	     * ActivateNotify event that also does it waits in the Tcl event
+	     * queue until the application services it.
+	     */
+
+	    if (!Tk_IsEmbedded(winPtr) && !(winPtr->flags & TK_ALREADY_DEAD)) {
+		TkMacOSXInstallWindowMenubar(winPtr);
+	    }
+
+	    /*
 	     * Call Tk_UpdatePointer if the pointer is in the window.
 	     */
 
@@ -139,7 +161,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    BOOL movedOnly = [[notification name]
+    bool movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -189,6 +211,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     // operation has completed.  If the window is iconified by clicking on its
     // dock icon, as opposed to calling wm deiconify, then the Tk state of
     // the window needs to be updated.  That is the purpose of this method.
+    // This includes clearing the WM_IS_HIDDEN flag..
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
@@ -196,6 +219,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    if (!winPtr) {
+	return;
+    }
+    winPtr->wmInfoPtr->flags &= ~WM_IS_HIDDEN;
     if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
@@ -293,35 +320,60 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	TkGenWMDestroyEvent((Tk_Window)winPtr);
+	GenerateWMDestroyEvent((Tk_Window)winPtr);
     }
 
     /*
-     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
+     * If necessary, GenerateWMDestroyEvent() handles [close]ing the window, so
      * can always return NO from -windowShouldClose: for a Tk window.
      */
 
     return (winPtr ? NO : YES);
 }
 
-// Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
-    NSWindow *window = [notification object];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
-    if (winPtr) {
-	fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
+    if ([NSApp tkWillExit]) {
+	return;
     }
+    NSWindow *window = [notification object];
+    NSString *name = [notification name];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
+    if (!winPtr) {
+	return;
+    }
+    if ([name isEqualToString:NSWindowDidChangeOcclusionStateNotification]) {
+	XEvent event;
+	event.xany.send_event = False;
+	event.xany.display = Tk_Display(winPtr);
+	event.xvisibility.type = VisibilityNotify;
+	event.xvisibility.state = VisibilityUnobscured;
+	TkMacOSXNotifyVisibility(winPtr, &event);
+    }
+
+#if 0
+    if ([name isEqualToString:NSWindowDidOrderOnScreenNotification]) {
+	fprintf(stderr, "Window %s received DidOrderOnScreen @ %.8f\n", Tk_PathName(winPtr),
+		CACurrentMediaTime());
+    }
+    if ([name isEqualToString:NSWindowDidExposeNotification]) {
+	fprintf(stderr, "Window %s was exposed.\n", Tk_PathName(winPtr));
+    }
+    PRINT_STACK;
+#endif
 }
 
 // Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
+	fprintf(stderr, "windowMapped: Window %s was ordered on screen.\n", Tk_PathName(winPtr));
     }
 }
 
@@ -367,6 +419,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
+    observe(NSWindowDidExposeNotification, windowBecameVisible:);
+    observe(NSWindowDidChangeOcclusionStateNotification, windowBecameVisible:);
 #if 0
     // These can be useful for debugging.
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
@@ -391,8 +445,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  * Idle task which forces focus to a particular window.
  */
 
-static void RefocusGrabWindow(void *data) {
-    TkWindow *winPtr = (TkWindow *) data;
+static void RefocusGrabWindow(void *clientData) {
+    TkWindow *winPtr = (TkWindow *) clientData;
     TkpChangeFocus(winPtr, 1);
     Tcl_Release(winPtr);
 }
@@ -430,9 +484,9 @@ static void RefocusGrabWindow(void *data) {
 	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
-	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
-	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen:NO];
+	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState &&
+	    [win isVisible]) {
+		[win orderOut:nil];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -443,11 +497,8 @@ static void RefocusGrabWindow(void *data) {
 	}
     }
     if ([self keyWindow] == nil && iconifiedWindow != nil) {
-	[iconifiedWindow makeKeyAndOrderFront:self];
-    } else {
-	[[self keyWindow] orderFront:self];
+	[iconifiedWindow makeKeyAndOrderFront:nil];
     }
-
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
@@ -525,38 +576,6 @@ static void RefocusGrabWindow(void *data) {
 @end
 
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWillDrawWidget --
- *
- *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. If not, it may be desirable
- *      for the display procedure to simply clear the REDRAW_PENDING flag
- *      and return.  The widget can be recorded in order to schedule a
- *      redraw, via an Expose event, from within drawRect.
- *
- *      This is also needed for some tests, especially of the Text widget,
- *      which record data in a global Tcl variable and assume that display
- *      procedures will be run in a predictable sequence as Tcl idle tasks.
- *
- * Results:
- *      True if called from the drawRect method of a TKContentView with
- *      tkwin NULL or pointing to a widget in the current focusView.
- *
- * Side effects:
- *	Currently none.  One day the tkwin parameter may be recorded to
- *      handle redrawing the widget later.
- *
- *----------------------------------------------------------------------
- */
-// This stub is no longer used, but is expected by the stub mechanism.
-int
-TkpWillDrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-    return false;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -860,7 +879,7 @@ TkGenWMConfigureEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenWMDestroyEvent --
+ * GenerateWMDestroyEvent --
  *
  *	Generate a WM Destroy event for Tk.
  *
@@ -874,7 +893,7 @@ TkGenWMConfigureEvent(
  */
 
 void
-TkGenWMDestroyEvent(
+GenerateWMDestroyEvent(
     Tk_Window tkwin)
 {
     XEvent event;
@@ -1018,7 +1037,7 @@ ExposeRestrictProc(
 {
     self = [super initWithFrame:frame];
     if (self) {
-	self.wantsLayer = YES;
+	self.wantsLayer = true;
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;
@@ -1040,20 +1059,16 @@ ExposeRestrictProc(
 {
     return YES;
 }
+#if 0
+static void DebugIdleTask(void *clientData) {
+    TKWindow *win = (TKWindow *)clientData;
+    printf("updateLayer visibility %d\n", [win isVisible]);
+}
+#endif
+
 - (void) updateLayer {
-    CGContextRef context = self.tkLayerBitmapContext;
-    if (context && ![NSApp tkWillExit]) {
-	/*
-	 * If this ContentView is off screen, Run any pending widget
-	 * display procs before updating the layer.
-	 */
-
-	if (! [self onScreen]) {
-	    //printf("Running event loop.\n");
-	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    [self setOnScreen:YES];
-	}
-
+    if (![NSApp tkWillExit]) {
+	//Tcl_DoWhenIdle(DebugIdleTask, [self window]);
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -1062,7 +1077,10 @@ ExposeRestrictProc(
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
-
+	CGContextRef context = self.tkLayerBitmapContext;
+	if (!context) {
+	    return;
+	}
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
@@ -1159,7 +1177,7 @@ ExposeRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     void *oldArg;
     Tk_RestrictProc *oldProc;
-    static int reentered = 0;
+    static bool reentered = false;
 
     if (!winPtr ||
 	(winPtr->flags & (TK_ALREADY_DEAD)) ||
@@ -1178,7 +1196,7 @@ ExposeRestrictProc(
 	// fprintf(stderr, "Recursive call to generateExposeEvents\n");
 	return;
     }
-    reentered = 1;
+    reentered = true;
 
     /*
      * Generate Tk Expose events.  All of these events will share the same
@@ -1197,10 +1215,10 @@ ExposeRestrictProc(
 	 * generated.  This will create idle drawing tasks, which we handle
 	 * before we return in the case of a live resize.
 	 */
-	unsigned int serial = LastKnownRequestProcessed(Tk_Display(winPtr));
+	unsigned long serial = LastKnownRequestProcessed(Tk_Display(winPtr));
 	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
 	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
-	Tk_RestrictEvents(oldProc, NULL, &oldArg);
+	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
 	 * During a LiveResize we process all idle tasks generated by the
@@ -1210,15 +1228,15 @@ ExposeRestrictProc(
 	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
     }
-    reentered = 0;
+    reentered = false;
 }
 
 /*
  * In macOS 10.14 and later this method is called when a user changes between
  * light and dark mode or changes the accent color. The implementation
- * generates two virtual events.  The first is either <<LightAqua>> or
- * <<DarkAqua>>, depending on the view's current effective appearance.  The
- * second is <<AppearnceChanged>> and has a data string describing the
+ * generates two virtual events.  The first is either <<LightAppearance>> or
+ * <<DarkAppearance>>, depending on the view's current effective appearance.
+ * The second is <<AppearnceChanged>> and has a data string describing the
  * effective appearance of the view and the current accent and highlight
  * colors.
  */
@@ -1245,11 +1263,17 @@ static const char *const accentNames[] = {
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     static const char *defaultColor = NULL;
+    const char *newAppearance;
 
-    if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
+    if (effectiveAppearanceName == NSAppearanceNameDarkAqua
+	    || effectiveAppearanceName == NSAppearanceNameVibrantDark
+	    || effectiveAppearanceName == NSAppearanceNameAccessibilityHighContrastDarkAqua
+	    || effectiveAppearanceName == NSAppearanceNameAccessibilityHighContrastVibrantDark) {
+	newAppearance = "dark";
+	Tk_SendVirtualEvent(tkwin, "DarkAppearance", NULL);
+    } else {
+	newAppearance = "light";
+	Tk_SendVirtualEvent(tkwin, "LightAppearance", NULL);
     }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
@@ -1262,9 +1286,9 @@ static const char *const accentNames[] = {
     const char *highlightName = highlight ? highlight.UTF8String: defaultColor;
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
-	     effectiveAppearanceName.UTF8String, accentName,
-	     highlightName);
-    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
+	     newAppearance, accentName, highlightName);
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+			Tcl_NewStringObj(data, TCL_INDEX_NONE));
     // Force a redraw of the view.
     [self setFrameSize:self.frame.size];
 
@@ -1323,7 +1347,7 @@ static const char *const accentNames[] = {
     event.virt.event = Tk_WindowId(tkwin);
     event.virt.root = XRootWindow(Tk_Display(tkwin), 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, winPtr->window, NULL, NULL,
 	    &event.virt.x_root, &event.virt.y_root, &x, &y, &event.virt.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.virt.x, &event.virt.y);
@@ -1393,6 +1417,7 @@ static const char *const accentNames[] = {
     );
     // CGDisplayCopyColorSpace retains the colorspace.
     CGColorSpaceRelease(colorspace);
+    CGContextSetInterpolationQuality(newCtx, kCGInterpolationNone);
     CGContextScaleCTM(newCtx, self.layer.contentsScale,
 		      self.layer.contentsScale);
 #if 0

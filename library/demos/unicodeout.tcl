@@ -42,48 +42,6 @@ proc addSample {w language args} {
     grid configure $w.f.l$j -padx 1m
 }
 
-## A helper procedure that determines what form to use to express languages
-## that have complex rendering rules...
-proc usePresentationFormsFor {language} {
-    switch [tk windowingsystem] {
-	aqua {
-	    # OSX wants natural character order; the renderer knows how to
-	    # compose things for display for all languages.
-	    return false
-	}
-	x11 {
-	    # The X11 font renderers that Tk supports all know nothing about
-	    # composing characters, so we need to use presentation forms.
-	    return true
-	}
-	win32 {
-	    # On Windows, we need to determine whether the font system will
-	    # render right-to-left text. This varies by language!
-	    try {
-		package require registry
-		set rkey [join {
-		    HKEY_LOCAL_MACHINE
-		    SOFTWARE
-		    Microsoft
-		    {Windows NT}
-		    CurrentVersion
-		    LanguagePack
-		} \\]
-		return [expr {
-		    [string toupper $language] ni [registry values $rkey]
-		}]
-	    } trap error {} {
-		# Cannot work it out, so use presentation forms.
-		return true
-	    }
-	}
-	default {
-	    # Default to using presentation forms.
-	    return true
-	}
-    }
-}
-
 ## Processing when some characters are not currently cached by the display
 ## engine might take a while, so make sure we're displaying something in the
 ## meantime...
@@ -94,30 +52,30 @@ $w conf -cursor watch
 update
 
 ## Add the samples...
-if {[usePresentationFormsFor Arabic]} {
+if {[tk::build-info no-bidi]} {
     # Using presentation forms (pre-layouted)
     addSample $w Arabic "ﺔﻴﺑﺮﻌﻟﺍ ﺔﻤﻠﻜﻟﺍ"
 } else {
     # Using standard text characters
-    addSample $w Arabic "الكلمة العربية"
+addSample $w Arabic "الكلمة العربية"
 }
 addSample $w "Trad. Chinese"  "中國的漢字"
 addSample $w "Simpl. Chinese" "汉语"
 addSample $w French "Langue française"
 addSample $w Greek "Ελληνική γλώσσα"
-if {[usePresentationFormsFor Hebrew]} {
+if {[tk::build-info no-bidi]} {
     # Visual order (pre-layouted)
     addSample $w Hebrew "תירבע בתכ"
 } else {
     # Standard logical order
-    addSample $w Hebrew "כתב עברית"
+addSample $w Hebrew "כתב עברית"
 }
 addSample $w Hindi "हिन्दी भाषा"
 addSample $w Icelandic "Íslenska"
 addSample $w Japanese "日本語のひらがな, 漢字とカタカナ"
 addSample $w Korean "대한민국의 한글"
 addSample $w Russian "Русский язык"
-if {([tk windowingsystem] ne "x11") || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))} {
+if {![tk::build-info no-xft]} {
     addSample $w Emoji "😀💩👍🇳🇱"
 }
 

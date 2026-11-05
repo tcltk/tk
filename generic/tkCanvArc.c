@@ -814,8 +814,10 @@ ComputeArcBbox(
      * positions, if they are relevant.
      */
 
-    arcPtr->header.x1 = arcPtr->header.x2 = (int) arcPtr->center1[0];
-    arcPtr->header.y1 = arcPtr->header.y2 = (int) arcPtr->center1[1];
+    arcPtr->header.x1 = arcPtr->header.x2 =
+	    (int) TkCanvClampCoord(arcPtr->center1[0]);
+    arcPtr->header.y1 = arcPtr->header.y2 =
+	    (int) TkCanvClampCoord(arcPtr->center1[1]);
     TkIncludePoint((Tk_Item *) arcPtr, arcPtr->center2);
     center[0] = (arcPtr->bbox[0] + arcPtr->bbox[2])/2;
     center[1] = (arcPtr->bbox[1] + arcPtr->bbox[3])/2;

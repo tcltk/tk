@@ -124,12 +124,70 @@ test toggleswitch-2.4 "-style option" -body {
     destroy .sw
 } -result {3 My.Toggleswitch3 My.Toggleswitch3 Toggleswitch}
 
-test toggleswitch-2.5 "-size option takes precedence over -style" -body {
+test toggleswitch-2.5 "-size option takes precedence over -style (1)" -body {
     ttk::toggleswitch .sw -style My.Toggleswitch3	;# intentionally 3
     list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
 } -cleanup {
     destroy .sw
 } -result {2 My.Toggleswitch2 My.Toggleswitch2 Toggleswitch}
+
+test toggleswitch-2.6 "nonempty -text value changes the style" -body {
+    ttk::toggleswitch .sw -text "Nonempty text"
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {2 ToggleswitchEx2 ToggleswitchEx2 Toggleswitch}
+
+test toggleswitch-2.7 "-size and -style options with nonempty text" -body {
+    ttk::toggleswitch .sw -size 3 -style My.Toggleswitch3 -text "Nonempty text"
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {3 My.ToggleswitchEx3 My.ToggleswitchEx3 Toggleswitch}
+
+test toggleswitch-2.8 "-style option with nonempty text" -body {
+    ttk::toggleswitch .sw -text "Nonempty text"
+    .sw configure -style My.ToggleswitchEx3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {3 My.ToggleswitchEx3 My.ToggleswitchEx3 Toggleswitch}
+
+test toggleswitch-2.9 "-size option takes precedence over -style (2)" -body {
+    ttk::toggleswitch .sw -text "Nonempty text" -style My.ToggleswitchEx3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {2 My.ToggleswitchEx2 My.ToggleswitchEx2 Toggleswitch}
+
+test toggleswitch-2.10 "nonzero -width value changes the style" -body {
+    ttk::toggleswitch .sw -width 5
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {2 ToggleswitchEx2 ToggleswitchEx2 Toggleswitch}
+
+test toggleswitch-2.11 "-size and -style options with nonzero width" -body {
+    ttk::toggleswitch .sw -size 3 -style My.Toggleswitch3 -width -5
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {3 My.ToggleswitchEx3 My.ToggleswitchEx3 Toggleswitch}
+
+test toggleswitch-2.12 "-style option with nonzero width" -body {
+    ttk::toggleswitch .sw -width 5
+    .sw configure -style My.ToggleswitchEx3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {3 My.ToggleswitchEx3 My.ToggleswitchEx3 Toggleswitch}
+
+test toggleswitch-2.13 "-size option takes precedence over -style (3)" -body {
+    ttk::toggleswitch .sw -width -5 -style My.ToggleswitchEx3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {2 My.ToggleswitchEx2 My.ToggleswitchEx2 Toggleswitch}
 
 test toggleswitch-3.1 "switchstate triggers the associated cmd" -body {
     ttk::toggleswitch .sw -command { expr {10 * [.sw switchstate]} }

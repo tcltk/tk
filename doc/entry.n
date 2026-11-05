@@ -15,15 +15,15 @@ entry \- Create and manipulate 'entry' one-line text entry widgets
 .SH SYNOPSIS
 \fBentry\fI pathName \fR?\fIoptions\fR?
 .SO
-\-background	\-highlightthickness	\-selectbackground
-\-borderwidth	\-insertbackground	\-selectborderwidth
-\-cursor	\-insertborderwidth	\-selectforeground
-\-exportselection	\-insertofftime	\-takefocus
-\-font	\-insertontime	\-textvariable
-\-foreground	\-insertwidth	\-xscrollcommand
-\-highlightbackground	\-justify
-\-highlightcolor	\-relief
-\-placeholder	\-placeholderforeground
+\-background	\-insertbackground	\-relief
+\-borderwidth	\-insertborderwidth	\-selectbackground
+\-cursor	\-insertofftime	\-selectborderwidth
+\-exportselection	\-insertontime	\-selectforeground
+\-font	\-insertwidth	\-takefocus
+\-foreground	\-justify	\-textvariable
+\-highlightbackground	\-locale	\-xscrollcommand
+\-highlightcolor	\-placeholder
+\-highlightthickness	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-disabledbackground disabledBackground DisabledBackground

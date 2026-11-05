@@ -271,7 +271,7 @@ AT##_Resize(AT **arrp, size_t newSize)						\
 	Tcl_Free(*arrp);								\
 	*arrp = NULL;								\
     } else {									\
-	int init = *arrp == NULL;						\
+	bool init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newSize - 1) + sizeof(AT);		\
 	*arrp = (AT *)Tcl_Realloc(*arrp, memSize);					\
 	if (init) {								\
@@ -482,7 +482,7 @@ AT##_Resize(AT **arrp, size_t newCapacity)					\
 	Tcl_Free(*arrp);								\
 	*arrp = NULL;								\
     } else {									\
-	int init = *arrp == NULL;						\
+	bool init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newCapacity - 1) + sizeof(AT);		\
 	*arrp = (AT *)Tcl_Realloc(*arrp, memSize);					\
 	if (init) {								\

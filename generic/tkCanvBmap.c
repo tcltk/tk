@@ -497,8 +497,8 @@ ComputeBitmapBbox(
 	}
     }
 
-    x = (int) (bmapPtr->x + ((bmapPtr->x >= 0) ? 0.5 : - 0.5));
-    y = (int) (bmapPtr->y + ((bmapPtr->y >= 0) ? 0.5 : - 0.5));
+    x = (int) (TkCanvClampCoord(bmapPtr->x) + ((bmapPtr->x >= 0) ? 0.5 : - 0.5));
+    y = (int) (TkCanvClampCoord(bmapPtr->y) + ((bmapPtr->y >= 0) ? 0.5 : - 0.5));
 
     if (state==TK_STATE_HIDDEN || bitmap == None) {
 	bmapPtr->header.x1 = bmapPtr->header.x2 = x;

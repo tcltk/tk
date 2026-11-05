@@ -277,10 +277,7 @@ Tk_PackObjCmd(
 	    return TCL_OK;
 	}
 	if (contentPtr->containerPtr == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window \"%s\" isn't packed", argv2));
-	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", (char *)NULL);
-	    return TCL_ERROR;
+	    return TCL_OK;
 	}
 
 	infoObj = Tcl_NewObj();
@@ -1306,7 +1303,7 @@ ConfigureContent(
 				"window \"%s\" isn't packed",
 				Tcl_GetString(objv[i+1])));
 			Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED",
-				NULL);
+				(char *)NULL);
 			return TCL_ERROR;
 		    }
 		    containerPtr = prevPtr->containerPtr;

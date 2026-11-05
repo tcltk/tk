@@ -124,6 +124,8 @@ struct Ttk_ElementClass_ {
     int nResources;		/* #Element options */
     Tcl_Obj **defaultValues;	/* Array of option default values */
     Tcl_HashTable optMapCache;	/* Map: Tk_OptionTable * -> OptionMap */
+    unsigned cacheFlags;	/* Render-cache policy (TTK_ELEMENT_* flags) */
+    Ttk_ElementCacheProc *cacheProc;	/* Cache-info query, or NULL */
 };
 
 /* TTKGetOptionSpec --
@@ -252,7 +254,41 @@ NewElementClass(const char *name, const Ttk_ElementSpec *specPtr, void *clientDa
      */
     Tcl_InitHashTable(&elementClass->optMapCache, TCL_ONE_WORD_KEYS);
 
+    /* Render-cache policy: off until the element opts in. */
+    elementClass->cacheFlags = 0;
+    elementClass->cacheProc = NULL;
+
     return elementClass;
+}
+
+/* TtkSetElementCachePolicy --
+ *	Record an element class's render-cache policy and optional cache-info
+ *	query.  Called once by an element after registration.
+ */
+void TtkSetElementCachePolicy(
+    Ttk_ElementClass *eclass,
+    unsigned cacheFlags,
+    Ttk_ElementCacheProc *cacheProc)
+{
+    eclass->cacheFlags = cacheFlags;
+    eclass->cacheProc = cacheProc;
+}
+
+/* Ttk_ElementClassCacheable --
+ *	Return nonzero if the element class opted into per-node render caching.
+ */
+int Ttk_ElementClassCacheable(Ttk_ElementClass *eclass)
+{
+    return (eclass->cacheFlags & TTK_ELEMENT_CACHEABLE) != 0;
+}
+
+/* Ttk_ElementClassStable --
+ *	Return nonzero if the element class declared its draw deterministic
+ *	for an unchanged (parcel, state, content epoch).
+ */
+int Ttk_ElementClassStable(Ttk_ElementClass *eclass)
+{
+    return (eclass->cacheFlags & TTK_ELEMENT_STABLE) != 0;
 }
 
 /*
@@ -901,7 +937,7 @@ Ttk_ElementClass *Ttk_RegisterElement(
 		"Internal error: Ttk_RegisterElement (%s): invalid version",
 		name));
 	    Tcl_SetErrorCode(interp, "TTK", "REGISTER_ELEMENT", "VERSION",
-		NULL);
+		(char *)NULL);
 	}
 	return 0;
     }
@@ -944,14 +980,14 @@ int Ttk_RegisterElementSpec(Ttk_Theme theme,
  * AllocateResource --
  *	Extra initialization for element options like TK_OPTION_COLOR, etc.
  *
- * Returns: 1 if OK, 0 on failure.
+ * Returns: true if OK, false on failure.
  *
  * Note: if resource allocation fails at this point (just prior
  * to drawing an element), there's really no good place to
  * report the error.  Instead we just silently fail.
  */
 
-static int AllocateResource(
+static bool AllocateResource(
     Ttk_ResourceCache cache,
     Tk_Window tkwin,
     Tcl_Obj **destPtr,
@@ -969,7 +1005,7 @@ static int AllocateResource(
 	    return (*destPtr = Ttk_UseBorder(cache, tkwin, resource)) != NULL;
 	default:
 	    /* no-op; always succeeds */
-	    return 1;
+	    return true;
     }
 }
 
@@ -984,14 +1020,14 @@ static int AllocateResource(
  *	otherwise the default value specified at registration time.
  *
  * Returns:
- *	1 if OK, 0 if an error is detected.
+ *	true if OK, false if an error is detected.
  *
  * NOTES:
  *	Tcl_Obj * reference counts are _NOT_ adjusted.
  */
 
 static
-int InitializeElementRecord(
+bool InitializeElementRecord(
     Ttk_ElementClass *eclass,	/* Element instance to initialize */
     Ttk_Style style,		/* Style table */
     void *widgetRecord,		/* Source of widget option values */
@@ -1029,11 +1065,11 @@ int InitializeElementRecord(
 	}
 
 	if (!AllocateResource(cache, tkwin, dest, elementOption->type)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*------------------------------------------------------------------------
@@ -1106,7 +1142,7 @@ Ttk_ElementSize(
     }
     eclass->specPtr->size(
 	eclass->clientData, eclass->elementRecord,
-	tkwin, widthPtr, heightPtr, paddingPtr);
+	tkwin, state, widthPtr, heightPtr, paddingPtr);
 }
 
 /*
@@ -1135,6 +1171,34 @@ Ttk_DrawElement(
     eclass->specPtr->draw(
 	eclass->clientData, eclass->elementRecord,
 	tkwin, d, b, state);
+}
+
+/* Ttk_ElementGetCacheInfo --
+ *	Query a cacheable element's opacity and content epoch for (tkwin, state).
+ *	Defaults to {not opaque, epoch 0} when no cache proc is registered.
+ */
+void
+Ttk_ElementGetCacheInfo(
+    Ttk_ElementClass *eclass,
+    Ttk_Style style,
+    void *recordPtr,
+    Tk_OptionTable optionTable,
+    Tk_Window tkwin,
+    Ttk_Box b,
+    Ttk_State state,
+    Ttk_ElementCacheInfo *info)
+{
+    info->opaque = 0;
+    info->epoch = 0;
+    if (eclass->cacheProc == NULL) {
+	return;
+    }
+    if (!InitializeElementRecord(
+	    eclass, style, recordPtr, optionTable, tkwin, state)) {
+	return;
+    }
+    eclass->cacheProc(
+	eclass->clientData, eclass->elementRecord, tkwin, b, state, info);
 }
 
 /*------------------------------------------------------------------------
@@ -1529,7 +1593,7 @@ static int StyleElementCreateCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"No such element type %s", factoryName));
 	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT_TYPE", factoryName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1617,7 +1681,7 @@ static int StyleLayoutCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", layoutName));
 	    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", layoutName,
-		NULL);
+		(char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Ttk_UnparseLayoutTemplate(layoutTemplate));

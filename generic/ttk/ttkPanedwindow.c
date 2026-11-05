@@ -448,19 +448,19 @@ static int AddPane(
 }
 
 /* PaneRequest --
- *	Only update pane request size if pane is currently unmapped.
- *	Geometry requests from mapped panes are not directly honored
+ *	Only update pane request size if pane is not placed yet.
+ *	Geometry requests from placed panes are not directly honored
  *	in order to avoid unexpected pane resizes (esp. while the
- *	user is dragging a sash [#1325286]).
+ *	user is dragging a sash [#1325286]), also while the panedwindow
+ *	is temporarily unmapped, e.g. in a hidden notebook tab [b086bb1d61].
  */
 static int PaneRequest(void *managerData, Tcl_Size index, int width, int height)
 {
     Paned *pw = (Paned *)managerData;
     Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
-    Tk_Window window = Ttk_ContentWindow(pw->paned.mgr, index);
     int horizontal = pw->paned.orient == TTK_ORIENT_HORIZONTAL;
 
-    if (!Tk_IsMapped(window)) {
+    if (!Ttk_ContentIsMapped(pw->paned.mgr, index)) {
 	pane->reqSize = horizontal ? width : height;
     }
     return 1;
@@ -948,6 +948,7 @@ static void SashElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -986,6 +987,7 @@ static void GripElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))

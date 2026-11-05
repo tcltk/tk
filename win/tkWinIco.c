@@ -4,15 +4,20 @@
  *	This file contains functions for icon-manipulation routines
  *      in Windows.
  *
- * Copyright Â© 1995-1996 Microsoft Corp.
- * Copyright Â© 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
+ * Copyright © 1995-1996 Microsoft Corp.
+ * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include <sys/stat.h>	/* before tcl.h, for Tcl_StatBuf with MinGW */
 #include "tkInt.h"
 #include "tkWinIco.h"
+
+#ifndef S_ISDIR
+#   define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
 
 #ifndef SHIL_JUMBO
 #   define SHIL_JUMBO 0x4
@@ -247,9 +252,8 @@ int
 GetFileIcon(
     TCL_UNUSED(void *),         /* Not used. */
     Tcl_Interp *interp,         /* Current interpreter */
-    int objc,                   /* Number of arguments */
-    Tcl_Obj *const objv[]       /* Argument strings */
-)
+    Tcl_Size objc,                   /* Number of arguments */
+    Tcl_Obj *const objv[])      /* Argument strings */
 {
     SHFILEINFOW shfi;
     ICONINFO iconInfo;
@@ -266,7 +270,7 @@ GetFileIcon(
     int shil;
     DWORD attrs = 0;
     DWORD flags = SHGFI_SYSICONINDEX;
-
+    Tcl_StatBuf buf;
     IImageList *iml = NULL;
     HICON hIcon = NULL;
 
@@ -293,9 +297,10 @@ GetFileIcon(
 
     if (iconPath == NULL) {
 	/* Virtual filesystem fallback. */
-	flags |= SHGFI_USEFILEATTRIBUTES;
-	attrs = FILE_ATTRIBUTE_DIRECTORY;
 	iconPath = L"dummy";
+	flags |= SHGFI_USEFILEATTRIBUTES;
+	attrs = Tcl_FSStat(objv[1], &buf) == 0 && S_ISDIR(buf.st_mode)
+		? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
     }
 
     if (!SHGetFileInfoW(
@@ -333,12 +338,12 @@ GetFileIcon(
 
     GetObject(iconInfo.hbmMask, sizeof(BITMAP), &bmp);
     bitSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-    bitBuffer = ckalloc(bitSize);
+    bitBuffer = (char *)Tcl_Alloc(bitSize);
     GetBitmapBits(iconInfo.hbmMask, bitSize, bitBuffer);
 
     GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmp);
     imageSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-    byteBuffer = ckalloc(imageSize);
+    byteBuffer = (unsigned char *)Tcl_Alloc(imageSize);
     GetBitmapBits(iconInfo.hbmColor, imageSize, byteBuffer);
 
     hasAlpha = 0;
@@ -383,8 +388,8 @@ GetFileIcon(
 	TK_PHOTO_COMPOSITE_SET);
 
 cleanup:
-    if (bitBuffer) ckfree(bitBuffer);
-    if (byteBuffer) ckfree(byteBuffer);
+    if (bitBuffer) Tcl_Free(bitBuffer);
+    if (byteBuffer) Tcl_Free(byteBuffer);
 
     DeleteObject(iconInfo.hbmMask);
     DeleteObject(iconInfo.hbmColor);

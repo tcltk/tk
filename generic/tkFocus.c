@@ -58,7 +58,7 @@ typedef struct TkDisplayFocusInfo {
     int forceFocus;		/* Associated with focusOnMapPtr: non-zero
 				 * means claim the focus even if some other
 				 * application currently has it. */
-    unsigned long focusSerial;	/* Serial number of last request this
+    size_t focusSerial;	/* Serial number of last request this
 				 * application made to change the focus on
 				 * this display. Used to identify stale focus
 				 * notifications coming from the X server. */
@@ -246,7 +246,7 @@ Tk_FocusObjCmd(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkFocusFilterEvent(
     TkWindow *winPtr,		/* Window that focus event is directed to. */
     XEvent *eventPtr)		/* FocusIn, FocusOut, Enter, or Leave
@@ -272,7 +272,7 @@ TkFocusFilterEvent(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkWindow *newFocusPtr;
-    int retValue, delta;
+    bool retValue;
 
     /*
      * If this was a generated event, just turn off the generated flag and
@@ -281,7 +281,7 @@ TkFocusFilterEvent(
 
     if ((eventPtr->xfocus.send_event & GENERATED_FOCUS_EVENT_MAGIC) == GENERATED_FOCUS_EVENT_MAGIC) {
 	eventPtr->xfocus.send_event &= ~GENERATED_FOCUS_EVENT_MAGIC;
-	return 1;
+	return true;
     }
 
     /*
@@ -295,7 +295,7 @@ TkFocusFilterEvent(
     if ((eventPtr->xfocus.mode == EMBEDDED_APP_WANTS_FOCUS)
 	    && (eventPtr->type == FocusIn)) {
 	TkSetFocusWin(winPtr, eventPtr->xfocus.detail);
-	return 0;
+	return false;
     }
 
     /*
@@ -304,7 +304,7 @@ TkFocusFilterEvent(
      * won't be processed) if it's a FocusIn or FocusOut event.
      */
 
-    retValue = 0;
+    retValue = false;
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
     if (eventPtr->type == FocusIn) {
 	/*
@@ -342,7 +342,10 @@ TkFocusFilterEvent(
 	 * Skip FocusOut events that cause confusion.
 	 * NotifyPointer - the pointer is in us or a child, and we are losing
 	 *	focus because of an XSetInputFocus. Other focus events will
-	 *	set our state properly.
+	 *	set our state properly. But if we only had the focus because
+	 *	of the pointer (see NotifyPointer for FocusIn below), the focus
+	 *	was taken by another application, and no other event will
+	 *	come.
 	 * NotifyPointerRoot - should never happen because this is sent to the
 	 *	root window.
 	 * NotifyInferior - focus leaving us for an embedded child. We retain
@@ -357,12 +360,16 @@ TkFocusFilterEvent(
 	 */
 
 	if ((eventPtr->xfocus.detail == NotifyPointer)
+		&& (dispPtr->implicitWinPtr != NULL)
+		&& (dispPtr->implicitWinPtr == TkWmFocusToplevel(winPtr))) {
+	    dispPtr->implicitWinPtr = NULL;
+	} else if ((eventPtr->xfocus.detail == NotifyPointer)
 		|| (eventPtr->xfocus.detail == NotifyPointerRoot)
 		|| (eventPtr->xfocus.detail == NotifyInferior)) {
 	    return retValue;
 	}
     } else {
-	retValue = 1;
+	retValue = true;
 	if (eventPtr->xcrossing.detail == NotifyInferior) {
 	    return retValue;
 	}
@@ -379,11 +386,17 @@ TkFocusFilterEvent(
 
     /*
      * If there is a grab in effect and this window is outside the grabbed
-     * tree, then ignore the event.
+     * tree, then ignore the event, but remember the window which got the
+     * focus, to process its FocusIn event when the grab is released.
+     * [Bug 220892]
      */
 
     if (TkGrabState(winPtr) == TK_GRAB_EXCLUDED) {
+	dispPtr->focusInGrabPtr = (eventPtr->type == FocusIn) ? winPtr : NULL;
 	return retValue;
+    }
+    if (eventPtr->type == FocusIn || eventPtr->type == FocusOut) {
+	dispPtr->focusInGrabPtr = NULL;
     }
 
     /*
@@ -398,8 +411,7 @@ TkFocusFilterEvent(
      * Tk 4.2 there was always a nop marker generated.
      */
 
-    delta = eventPtr->xfocus.serial - displayFocusPtr->focusSerial;
-    if (delta < 0) {
+    if (eventPtr->xfocus.serial < displayFocusPtr->focusSerial) {
 	return retValue;
     }
 
@@ -541,8 +553,9 @@ TkSetFocusWin(
 {
     ToplevelFocusInfo *tlFocusPtr;
     DisplayFocusInfo *displayFocusPtr;
-    TkWindow *topLevelPtr;
-    int allMapped, serial;
+    TkWindow *topLevelPtr, *wrapperPtr;
+    size_t serial;
+    bool allMapped;
 
     /*
      * Don't set focus if window is already dead. [Bug 3574708]
@@ -575,7 +588,7 @@ TkSetFocusWin(
      * mapped.
      */
 
-    allMapped = 1;
+    allMapped = true;
     for (topLevelPtr = winPtr; ; topLevelPtr = topLevelPtr->parentPtr) {
 	if (topLevelPtr == NULL) {
 
@@ -587,7 +600,7 @@ TkSetFocusWin(
 	    return;
 	}
 	if (!(topLevelPtr->flags & TK_MAPPED)) {
-	    allMapped = 0;
+	    allMapped = false;
 	}
 	if (topLevelPtr->flags & TK_TOP_HIERARCHY) {
 	    break;
@@ -660,10 +673,15 @@ TkSetFocusWin(
 
 	/*
 	 * Call the platform specific function TkpChangeFocus to move the
-	 * window manager's focus to a new toplevel.
+	 * window manager's focus to a new toplevel. A top of hierarchy window
+	 * created by an extension may have no wrapper. [Bug 704212]
 	 */
 
-	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
+	wrapperPtr = TkpGetWrapperWindow(topLevelPtr);
+	if (wrapperPtr == NULL) {
+	    wrapperPtr = topLevelPtr;
+	}
+	serial = TkpChangeFocus(wrapperPtr, force);
 	if (serial != 0) {
 	    displayFocusPtr->focusSerial = serial;
 	}
@@ -792,6 +810,49 @@ TkFocusKeyEvent(
 /*
  *----------------------------------------------------------------------
  *
+ * TkFocusGrabReleased --
+ *
+ *	This function is invoked when a grab is released. If a toplevel
+ *	window received the focus while it was excluded by the grab, its
+ *	FocusIn event is processed now.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The focus may change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkFocusGrabReleased(
+    TkDisplay *dispPtr)		/* Display on which the grab was released. */
+{
+    TkWindow *winPtr = dispPtr->focusInGrabPtr, *wrapperPtr;
+    XEvent event;
+
+    if (winPtr == NULL) {
+	return;
+    }
+    dispPtr->focusInGrabPtr = NULL;
+    wrapperPtr = TkpGetWrapperWindow(winPtr);
+    if ((wrapperPtr == NULL) || !Tk_IsMapped(winPtr)) {
+	return;
+    }
+    memset(&event, 0, sizeof(event));
+    event.xfocus.type = FocusIn;
+    event.xfocus.serial = LastKnownRequestProcessed(dispPtr->display);
+    event.xfocus.display = dispPtr->display;
+    event.xfocus.window = wrapperPtr->window;
+    event.xfocus.mode = NotifyNormal;
+    event.xfocus.detail = NotifyNonlinear;
+    TkFocusFilterEvent(wrapperPtr, &event);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkFocusDeadWindow --
  *
  *	This function is invoked when it is determined that a window is dead.
@@ -823,6 +884,9 @@ TkFocusDeadWindow(
 
     if (winPtr->mainPtr == NULL) {
 	return;
+    }
+    if (dispPtr->focusInGrabPtr == winPtr) {
+	dispPtr->focusInGrabPtr = NULL;
     }
 
     /*

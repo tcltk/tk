@@ -31,9 +31,36 @@ testConstraint aquaOrWin32 [expr {
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 
+# constraint for tests that need a window manager, e.g. to iconify a toplevel.
+# On X11 there may be none (e.g. on GitHub CI). A window manager sets the
+# WM_STATE property on the toplevels it manages before mapping them, so check
+# it when the main window is mapped. Without the test commands, check whether
+# the main window was reparented, as most (but not all) window managers do.
+if {[testConstraint x11]} {
+    wm deiconify .
+    if {![winfo ismapped .]} {
+	tkwait visibility .
+    }
+    if {[llength [info commands testprop]] && [llength [info commands testwrapper]]} {
+	testConstraint withWindowManager [expr {
+	    [testprop [testwrapper .] WM_STATE] ne ""
+	}]
+    } else {
+	testConstraint withWindowManager [expr {[wm frame .] ne [winfo id .]}]
+    }
+} else {
+    testConstraint withWindowManager 1
+}
+
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
+
+# This constraint is for running an aqua test only when user interaction is
+# possible, not on a CI runner.  Some actions, such as writing to the
+# filesystem, require that the user review and dismiss a system dialog, which
+# cannot be done on a CI runner.
+testConstraint notMacCI [expr {[testConstraint notAqua] || ![info exists ::env(CI)]}]
 
 # constraint based on whether our display is secure
 testutils import child
@@ -157,25 +184,40 @@ testConstraint nonUnixUserInteraction [expr {
 
 testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 
+# a test that must be run by the installed wish, not by the tktest executable
+
+testConstraint useInstalledWish [expr {
+    "useInstalledWish" in [tcltest::configure -constraints]
+}]
+
 # constraints for testing facilities defined in the tktest executable
 testConstraint testbitmap      [llength [info commands testbitmap]]
 testConstraint testborder      [llength [info commands testborder]]
 testConstraint testcbind       [llength [info commands testcbind]]
+testConstraint testalignimagedata [llength [info commands testalignimagedata]]
 testConstraint testclipboard   [llength [info commands testclipboard]]
 testConstraint testcolor       [llength [info commands testcolor]]
 testConstraint testcursor      [llength [info commands testcursor]]
 testConstraint testembed       [llength [info commands testembed]]
 testConstraint testfont        [llength [info commands testfont]]
+testConstraint testgetwindowinfo [llength [info commands testgetwindowinfo]]
 testConstraint testImageType   [expr {"test" in [image types]}]
 testConstraint testmakeexist   [llength [info commands testmakeexist]]
 testConstraint testmenubar     [llength [info commands testmenubar]]
+testConstraint testmenubaritems [llength [info commands testmenubaritems]]
 testConstraint testmetrics     [llength [info commands testmetrics]]
 testConstraint testmovemouse   [llength [info commands testmovemouse]]
 testConstraint testobjconfig   [llength [info commands testobjconfig]]
+testConstraint testpixel       [llength [info commands testpixel]]
 testConstraint testpressbutton [llength [info commands testpressbutton]]
 testConstraint testsend        [llength [info commands testsend]]
+testConstraint testsendinput   [llength [info commands testsendinput]]
+testConstraint testsetlocale   [llength [info commands testsetlocale]]
 testConstraint testtext        [llength [info commands testtext]]
+testConstraint testforeignwindow [llength [info commands testforeignwindow]]
 testConstraint testwinevent    [llength [info commands testwinevent]]
+testConstraint testwindowposchanged [llength [info commands testwindowposchanged]]
 testConstraint testwrapper     [llength [info commands testwrapper]]
+testConstraint testxfocus      [llength [info commands testxfocus]]
 
 # EOF

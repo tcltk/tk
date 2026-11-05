@@ -20,6 +20,7 @@ typedef struct PixelRep {
     int units;
     Tk_Window tkwin;
     int returnValue;
+    int scaling;
 } PixelRep;
 
 #define SIMPLE_PIXELREP(objPtr)				\
@@ -300,23 +301,27 @@ GetPixelsFromObjEx(
 	}
     } else {
 	pixelPtr = GET_COMPLEXPIXEL(objPtr);
-	if ((!fresh) && (pixelPtr->tkwin != tkwin)) {
-	    /*
-	     * In the case of exo-screen conversions of non-pixels, we force a
-	     * recomputation from the string.
-	     */
 
+	/* In the case of exo-screen conversions of non-pixels, we force a
+	 * re-computation from the string. */
+	if ((!fresh) && ((pixelPtr->tkwin != tkwin))) {
 	    FreePixelInternalRep(objPtr);
 	    goto retry;
 	}
-	if ((pixelPtr->tkwin != tkwin) || dblPtr) {
+
+	/* Force recalc of conversion of units to pixels */
+	if ((pixelPtr->tkwin != tkwin) || dblPtr ||
+		(pixelPtr->scaling != WidthMMOfScreen(Tk_Screen(tkwin)))) {
 	    d = pixelPtr->value;
 	    if (pixelPtr->units >= 0) {
+		/* This depends on tk scaling factor for MM value */
 		d *= bias[pixelPtr->units] * WidthOfScreen(Tk_Screen(tkwin));
 		d /= WidthMMOfScreen(Tk_Screen(tkwin));
 	    }
 	    pixelPtr->returnValue = (int) (d<0 ? d-0.5 : d+0.5);
 	    pixelPtr->tkwin = tkwin;
+	    /* Track scaling value used for this conversion */
+	    pixelPtr->scaling = WidthMMOfScreen(Tk_Screen(tkwin));
 	    if (dblPtr) {
 		*dblPtr = d;
 	    }
@@ -396,12 +401,12 @@ Tk_GetDoublePixelsFromObj(
 	PixelRep *pixelPtr = GET_COMPLEXPIXEL(objPtr);
 
 	if (pixelPtr->units >= 0) {
-	    /*
-	     * Internally "shimmer" to pixel units.
-	     */
-
-	    pixelPtr->units = -1;
+	    /* Internally "shimmer" to pixel units.
+	     * Doesn't support scaling changes. */
+/*	    pixelPtr->units = -1;
 	    pixelPtr->value = d;
+	    pixelPtr->scaling = WidthMMOfScreen(Tk_Screen(tkwin));
+*/
 	}
     }
     *doublePtr = d;
@@ -475,6 +480,7 @@ DupPixelInternalRep(
 	newPtr->units = oldPtr->units;
 	newPtr->tkwin = oldPtr->tkwin;
 	newPtr->returnValue = oldPtr->returnValue;
+	newPtr->scaling = oldPtr->scaling;
 	SET_COMPLEXPIXEL(copyPtr, newPtr);
     }
 }
@@ -591,6 +597,7 @@ SetPixelFromAny(
 	pixelPtr->units = units;
 	pixelPtr->tkwin = NULL;
 	pixelPtr->returnValue = i;
+	pixelPtr->scaling = 0;
 	SET_COMPLEXPIXEL(objPtr, pixelPtr);
     }
     return TCL_OK;

@@ -83,8 +83,11 @@ It will continue processing commands until all windows have been
 deleted or until end-of-file is reached on standard input.
 If there exists a file
 .QW \fB.wishrc\fR
-in the home directory of the user, \fBwish\fR evaluates the file as a
-Tcl script just before reading the first command from standard input.
+(or
+.QW \fBwishrc.tcl\fR
+on the Windows platforms) in the home directory of the user, \fBwish\fR
+evaluates the file as a Tcl script just before reading the first command from
+standard input.
 .PP
 If arguments to \fBwish\fR do specify a \fIfileName\fR, then
 \fIfileName\fR is treated as the name of a script file.
