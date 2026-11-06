@@ -1390,6 +1390,7 @@ static const char *const accentNames[] = {
     );
     // CGDisplayCopyColorSpace retains the colorspace.
     CGColorSpaceRelease(colorspace);
+    CGContextSetInterpolationQuality(newCtx, kCGInterpolationNone);
     CGContextScaleCTM(newCtx, self.layer.contentsScale,
 		      self.layer.contentsScale);
 #if 0
