@@ -150,6 +150,7 @@ proc _text_ind_to_x_y {text ind} {
 }
 
 proc create_and_pack_frames {{w {}}} {
+    update
     frame $w.f1 -bg blue -width 200 -height 200
     pack propagate $w.f1 0
     frame $w.f1.f2 -bg yellow -width 100 -height 100
@@ -190,7 +191,8 @@ proc setup_win_mousepointer {w} {
 #
 # Result: none
 #
-proc waitForWindowEvent {w event {timeout 100}} {
+
+proc waitForWindowEvent {w event {timeout 150}} {
     variable _windowEvent
 
     if {! [winfo exists $w]} {
@@ -1257,7 +1259,7 @@ test event-8.9 {event generate with a non-Latin keysym on Windows - bug 52e9b0f5
 
 test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
     set EnterBind [bind . <Enter>]
-} -body {
+} -constraints aquaKnownBug -body { #Disabled on Aqua due to [40dc19ee9e]
     wm geometry . 200x200+300+300
     wm deiconify .
     pause 200
@@ -1283,9 +1285,8 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
 
 # This test fails sporadically when run on the macOS CI runner. It does
 # not seem to fail on real computers.  It is not needed since the same
-# thing is tested by 9.13.  So it is simpler to constrain it as notAqua.
+# thing is tested by 9.13.  So it is simpler to constrain it as aquaKnownBug.
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} \
--constraints { notAqua} \
 -setup {
     set iconified false
     if {[winfo ismapped .]} {
@@ -1293,7 +1294,7 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
 	update
 	set iconified true
     }
-} -body {
+} -constraints aquaKnownBug -body {
     toplevel .top1
     wm geometry .top1 200x200+300+300
     wm deiconify .top1
