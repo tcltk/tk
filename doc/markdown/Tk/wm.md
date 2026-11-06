@@ -51,10 +51,10 @@ The legal forms for the **wm** command are:
 [wm]{.cmd} [attributes]{.sub} [window]{.arg}
 : see below ...
 
-**wm attributes** *window* ?[option]?
+[wm]{.cmd} [attributes]{.sub} [window]{.arg} [-option]{.optarg}
 : see below ...
 
-**wm attributes** *window* ?**option value option value...**?
+[wm]{.cmd} [attributes]{.sub} [window]{.arg} [-option value]{.optdot}
 : This subcommand returns or sets platform specific attributes associated with a window. The first form returns a list of the platform specific flags and their values. The second form returns the value for the specific option. The third form sets one or more of the values. The values are as follows:
 
     All platforms support the following attributes (though X11 users should see the notes below):
@@ -62,58 +62,58 @@ The legal forms for the **wm** command are:
     [-alpha]{.lit}
     : Specifies the alpha transparency level of the toplevel. It accepts a value from **0.0** (fully transparent) to **1.0** (opaque).  Values outside that range will be constrained.  Where not supported, the **-alpha** value remains at **1.0**.
 
-    **-appearance**
+    [-appearance]{.lit}
     : Specifies whether the window is rendered in "dark mode" on Windows or macOS; on linux this command has no effect.  Allowed values are **auto**, **light** and **dark**.  On macOS, if the setting is **auto** then the appearance of the window is controlled by the System Settings.  On Windows **auto** is equivalent to **light**.
 
-    **-fullscreen**
+    [-fullscreen]{.lit}
     : Places the window in a mode that takes up the entire screen, has no borders, and covers the general use area (i.e. Start menu and taskbar on Windows, dock and menubar on macOS, general window decorations on X11).
 
-    **-topmost**
+    [-topmost]{.lit}
     : Specifies whether this is a topmost window (displays above all other windows).
 
 
     On Windows, the following attributes may be set.
 
-    **-disabled**
+    [-disabled]{.lit}
     : Specifies whether the window is in a disabled state.
 
-    **-toolwindow**
+    [-toolwindow]{.lit}
     : Specifies a toolwindow style window (as defined in the MSDN).
 
-    **-transparentcolor**
+    [-transparentcolor]{.lit}
     : Specifies the transparent color index of the toplevel.  It takes any color value accepted by [Tk\_GetColor][GetColor].  If the empty string is specified (default), no transparent color is used.  This is supported on Windows 2000/XP+.  Where not supported, the **-transparentcolor** value remains at **{}**.
 
 
     On macOS, the following attributes may be set.
 
-    **-class**
+    [-class]{.lit}
     : Specifies whether the underlying Aqua window for a toplevel is an object of the NSWindow class or the NSPanel class.  The two allowed values for this option are **nswindow** and **nspanel**.  It is not possible to change the class of the underlying Aqua window once that window has been instantiated, and attempting to do that is an error.  However it is allowed to set this option for a pathname that does not correspond to an existing window.  Doing that causes the class name to be cached for later use.  When a toplevel with that pathname is eventually created, the cached class name will determine which class is used for the underlying Aqua window.
 
-    **-modified**
+    [-modified]{.lit}
     : Specifies the modification state of the window (determines whether the window close widget contains the modification indicator and whether the proxy icon is draggable).
 
-    **-notify**
+    [-notify]{.lit}
     : Specifies process notification state (bouncing of the application dock icon).
 
-    **-stylemask**
+    [-stylemask]{.lit}
     : Specifies an integer to be assigned as the styleMask of the underlying Aqua window.  (See the Apple documentation for styleMask property of the NSWindow class.) The value of this option should be a list of bitnames.  Each bit named in the list will be set to 1, and all other bits will be set to 0.  The allowed bitnames are: **titled**, **closable**, **miniaturizable**, **resizable**, **fullsizecontentview**, **docmodal**, **utility**, **nonactivatingpanel**, and **HUDwindow**.  Note that a side effect of setting the fullsizecontentview bit is that the window title bar becomes transparent.
 
-    **-tabbingid**
+    [-tabbingid]{.lit}
     : Controls how tabbed toplevel windows are grouped together.  Two tabs in the same group must correspond to toplevels with the same tabbingid, which can be an arbitrary UTF8 string.  In the Tk implementation, changing the tabbingid of a toplevel in a tab group will cause it to be moved into a different group, in which all tabs have the new tabbingid or, if the new tabbingid is unique, to become a normal non-tabbed toplevel.   It is allowed to set the tabbingid before the toplevel is created.  If the pathname provided in the command does not correspond to a toplevel, the value will be cached and used later when the toplevel is actually created.
 
-    **-tabbingmode**
+    [-tabbingmode]{.lit}
     : Controls whether a toplevel can be opened as a tab within a tab group. The allowed values are **auto**, **preferred** or **disallowed**.  A toplevel can be opened as a tab in exactly two situations: if its tabbingmode is **preferred**; or if its tabbingmode is **auto** and the user has selected "prefer tabs when opening documents" in the Desktop and Dock panel of the System Settings application.  It is allowed to set the tabbingmode before the toplevel is created.  If the pathname provided in the command does not correspond to a toplevel, the value will be cached and used later when the toplevel is actually created.
 
-    **-titlepath**
+    [-titlepath]{.lit}
     : Specifies the path of the file referenced as the window proxy icon (which can be dragged and dropped in lieu of the file's finder icon).
 
-    **-transparent**
+    [-transparent]{.lit}
     : Makes the window content area transparent and turns off the window shadow. For the transparency to be effective, the toplevel background needs to be set to a color with some alpha, e.g. "systemTransparent".
 
 
     On X11, the following attributes may be set. These are not supported by all window managers, and will have no effect under older WMs.
 
-    **-type**
+    [-type]{.lit}
     : [Requests that the window should be interpreted by the window manager as being of the specified type(s). This may cause the window to be decorated in a different way or otherwise managed differently, though exactly what happens is entirely up to the window manager. A list of types may be used, in order of preference. The following values are mapped to constants defined in the EWMH specification (using others is possible, but not advised):]{version="8.6"}
 
     [**desktop**]{version="8.6"}
@@ -223,7 +223,7 @@ On X11, changes to window attributes are performed asynchronously. Querying the 
 [wm]{.cmd} [iconbitmap]{.sub} [window]{.arg} [bitmap]{.optarg}
 : If *bitmap* is specified, then it names a bitmap in the standard forms accepted by Tk (see the [Tk\_GetBitmap][GetBitmap] manual entry for details). This bitmap is passed to the window manager to be displayed in *window*'s icon, and the command returns an empty string.  If an empty string is specified for *bitmap*, then any current icon bitmap is cancelled for *window*. If *bitmap* is specified then the command returns an empty string. Otherwise it returns the name of the current icon bitmap associated with *window*, or an empty string if *window* has no icon bitmap.  On the Windows operating system, an additional flag is supported:
 
-    [wm]{.cmd} [iconbitmap]{.sub} [window]{.arg} [-default]{.optlit} [image]{.optarg}
+    **wm iconbitmap** *window* ?**-default**? ?*image*?
     : If the **-default** flag is given, the icon is applied to all toplevel windows (existing and future) to which no other specific icon has yet been applied. In addition to bitmap image types, a full path specification to any file which contains a valid Windows icon is also accepted (usually .ico or .icr files), or any file for which the shell has assigned an icon.  Tcl will first test if the file contains an icon, then if it has an assigned icon, and finally, if that fails, test for a bitmap.
 
 
@@ -364,7 +364,6 @@ wm deiconify .msg
 [GetColor]: ../TkCAPI/GetColor.md
 [GetPixels]: ../TkCAPI/GetPixels.md
 [menu]: menu.md
-[option]: option.md
 [SetGrid]: ../TkCAPI/SetGrid.md
 [toplevel]: toplevel.md
 [winfo]: winfo.md

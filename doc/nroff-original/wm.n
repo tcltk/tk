@@ -47,9 +47,9 @@ returned).
 .TP
 \fBwm attributes \fIwindow\fR
 .TP
-\fBwm attributes \fIwindow\fR ?\fBoption\fR?
+\fBwm attributes \fIwindow\fR ?\fI\-option\fR?
 .TP
-\fBwm attributes \fIwindow\fR ?\fBoption value option value...\fR?
+\fBwm attributes \fIwindow\fR ?\fI\-option value ...\fR?
 .
 This subcommand returns or sets platform specific attributes associated
 with a window. The first form returns a list of the platform specific
