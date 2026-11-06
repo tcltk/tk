@@ -2489,6 +2489,18 @@ test wm-state-2.19 {deiconify keeps a withdrawn window zoomed} -constraints win 
 } -cleanup {
     deleteWindows
 } -result {zoomed}
+test wm-state-2.20 {a zoomed window is maximized in both directions - bug f126a096e2} -constraints {
+    withWindowManager
+} -body {
+    toplevel .t
+    wm geometry .t 200x200
+    update
+    zoomWindow .t 1
+    list [expr {[winfo width .t] > [winfo screenwidth .] / 2}] \
+	    [expr {[winfo height .t] > [winfo screenheight .] / 2}]
+} -cleanup {
+    deleteWindows
+} -result {1 1}
 
 
 ### wm withdraw ###
