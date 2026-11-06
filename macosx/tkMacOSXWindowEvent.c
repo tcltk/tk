@@ -1041,7 +1041,7 @@ ExposeRestrictProc(
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;
-	trackingArea = [[NSTrackingArea alloc]
+	NSTrackingArea *trackingArea = [[NSTrackingArea alloc]
 			   initWithRect:[self bounds]
 				options:(NSTrackingMouseEnteredAndExited |
 					 NSTrackingMouseMoved |
@@ -1051,6 +1051,7 @@ ExposeRestrictProc(
 				  owner:self
 			       userInfo:nil];
 	[self addTrackingArea:trackingArea];
+	[trackingArea release];
     }
     return self;
 }
