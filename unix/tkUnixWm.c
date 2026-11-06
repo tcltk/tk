@@ -347,6 +347,7 @@ typedef struct WaitRestrictInfo {
  */
 
 static bool		ComputeReparentGeometry(WmInfo *wmPtr);
+static void		ComputeUnparentedGeometry(WmInfo *wmPtr);
 static bool		GetFrameExtents(WmInfo *wmPtr, int *leftPtr,
 			    int *rightPtr, int *topPtr, int *bottomPtr);
 static bool		GetWorkArea(WmInfo *wmPtr, int *xPtr, int *yPtr,
@@ -378,7 +379,8 @@ static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
-static void		SetNetWmState(TkWindow*, const char *atomName, bool on);
+static void		SetNetWmState(TkWindow*, const char *atomName,
+			    const char *atomName2, bool on);
 static void		ActivateWindow(TkWindow *winPtr);
 static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void		UpdateNetWmState(WmInfo *);
@@ -1309,7 +1311,8 @@ WmSetAttribute(
 		&wmPtr->reqState.topmost) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
+	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", NULL,
+		wmPtr->reqState.topmost);
 	break;
     case WMATT_TYPE:
 	if (TCL_OK != SetNetWmType(winPtr, value))
@@ -1321,16 +1324,14 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_VERT",
-		wmPtr->reqState.zoomed);
-	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_HORZ",
-		wmPtr->reqState.zoomed);
+		"_NET_WM_STATE_MAXIMIZED_HORZ", wmPtr->reqState.zoomed);
 	break;
     case WMATT_FULLSCREEN:
 	if (Tcl_GetBooleanFromObj(interp, value,
 		&wmPtr->reqState.fullscreen) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
+	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN", NULL,
 		wmPtr->reqState.fullscreen);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
@@ -4143,37 +4144,9 @@ ConfigureEvent(
     }
 
     if ((wmPtr->reparent == None) || !ComputeReparentGeometry(wmPtr)) {
-	int left, right, top, bottom;
-
-	wmPtr->parentWidth = configEventPtr->width
-		+ 2*configEventPtr->border_width;
-	wmPtr->parentHeight = configEventPtr->height
-		+ 2*configEventPtr->border_width;
-	wrapperPtr->changes.x = wmPtr->x = configEventPtr->x;
-	wrapperPtr->changes.y = wmPtr->y = configEventPtr->y;
-
-	/*
-	 * A window manager which draws the decorations without reparenting
-	 * the window (e.g. KWin for Xwayland clients) reports them in
-	 * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
-	 * decorations, as for reparenting window managers. Only do this for
-	 * a mapped window: reparenting window managers may set the property
-	 * before they reparent the window.
-	 */
-
-	if ((winPtr->flags & TK_MAPPED)
-		&& GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
-	    wmPtr->x -= left;
-	    wmPtr->y -= top;
-	    wmPtr->parentWidth += left + right;
-	    wmPtr->parentHeight += top + bottom;
-	}
-	if (wmPtr->flags & WM_NEGATIVE_X) {
-	    wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
-	}
-	if (wmPtr->flags & WM_NEGATIVE_Y) {
-	    wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
-	}
+	wrapperPtr->changes.x = configEventPtr->x;
+	wrapperPtr->changes.y = configEventPtr->y;
+	ComputeUnparentedGeometry(wmPtr);
     }
 
     /*
@@ -4208,6 +4181,64 @@ ConfigureEvent(
     TkDoConfigureNotify(winPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ComputeUnparentedGeometry --
+ *
+ *	Computes the position and the outer size of a top-level window which
+ *	has not been reparented by the window manager, from the geometry of
+ *	its wrapper.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	wmPtr->x, wmPtr->y, wmPtr->parentWidth and wmPtr->parentHeight are
+ *	updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ComputeUnparentedGeometry(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    int left, right, top, bottom;
+
+    wmPtr->parentWidth = wrapperPtr->changes.width
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->parentHeight = wrapperPtr->changes.height
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->x = wrapperPtr->changes.x;
+    wmPtr->y = wrapperPtr->changes.y;
+
+    /*
+     * A window manager which draws the decorations without reparenting the
+     * window (e.g. KWin for Xwayland clients) reports them in
+     * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
+     * decorations, as for reparenting window managers. Only do this for a
+     * mapped window: reparenting window managers may set the property before
+     * they reparent the window. A window which was moved while it was
+     * unmapped (e.g. iconified) is corrected when it is mapped again.
+     */
+
+    if ((wmPtr->winPtr->flags & TK_MAPPED)
+	    && GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
+	wmPtr->x -= left;
+	wmPtr->y -= top;
+	wmPtr->parentWidth += left + right;
+	wmPtr->parentHeight += top + bottom;
+    }
+    if (wmPtr->flags & WM_NEGATIVE_X) {
+	wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
+    }
+    if (wmPtr->flags & WM_NEGATIVE_Y) {
+	wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4337,14 +4368,17 @@ ReparentEvent(
 /*
  *----------------------------------------------------------------------
  *
- * GetFrameExtents --
+ * GetExtents, GetFrameExtents --
  *
- *	Gets the widths of the decorations which the window manager added
- *	around a top-level window, from the _NET_FRAME_EXTENTS property.
+ *	GetExtents gets four widths (left, right, top, bottom) from a
+ *	property of a window, such as _NET_FRAME_EXTENTS or
+ *	_GTK_FRAME_EXTENTS. GetFrameExtents gets the widths of the
+ *	decorations which the window manager added around a top-level window,
+ *	from the _NET_FRAME_EXTENTS property of the wrapper.
  *
  * Results:
- *	Returns true and stores the widths if the window manager set the
- *	property, otherwise returns false.
+ *	Returns true and stores the widths if the property is set, otherwise
+ *	returns false.
  *
  * Side effects:
  *	None.
@@ -4353,12 +4387,13 @@ ReparentEvent(
  */
 
 static bool
-GetFrameExtents(
-    WmInfo *wmPtr,		/* Information about the toplevel window. */
+GetExtents(
+    TkWindow *wrapperPtr,	/* The wrapper of the toplevel window. */
+    Window window,		/* Window which has the property. */
+    const char *atomName,	/* Name of the property. */
     int *leftPtr, int *rightPtr,/* Where to store the widths of the left, */
-    int *topPtr, int *bottomPtr)/* right, top and bottom decorations. */
+    int *topPtr, int *bottomPtr)/* right, top and bottom parts. */
 {
-    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     Atom actualType;
     int actualFormat;
     unsigned long numItems, bytesAfter;
@@ -4366,14 +4401,11 @@ GetFrameExtents(
     bool result = false;
     Tk_ErrorHandler handler;
 
-    if (wrapperPtr == NULL) {
-	return false;
-    }
     handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
-    if (GetWindowProperty(wrapperPtr,
-	    Tk_InternAtom((Tk_Window) wrapperPtr, "_NET_FRAME_EXTENTS"), 4,
+    if (XGetWindowProperty(wrapperPtr->display, window,
+	    Tk_InternAtom((Tk_Window) wrapperPtr, atomName), 0, 4, False,
 	    XA_CARDINAL, &actualType, &actualFormat, &numItems, &bytesAfter,
-	    &extents)) {
+	    (unsigned char **) &extents) == Success) {
 	if (actualType == XA_CARDINAL && actualFormat == 32
 		&& numItems == 4) {
 	    *leftPtr = (int) extents[0];
@@ -4388,6 +4420,21 @@ GetFrameExtents(
     }
     Tk_DeleteErrorHandler(handler);
     return result;
+}
+
+static bool
+GetFrameExtents(
+    WmInfo *wmPtr,		/* Information about the toplevel window. */
+    int *leftPtr, int *rightPtr,/* Where to store the widths of the left, */
+    int *topPtr, int *bottomPtr)/* right, top and bottom decorations. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+
+    if (wrapperPtr == NULL) {
+	return false;
+    }
+    return GetExtents(wrapperPtr, wrapperPtr->window, "_NET_FRAME_EXTENTS",
+	    leftPtr, rightPtr, topPtr, bottomPtr);
 }
 
 /*
@@ -4551,7 +4598,7 @@ ComputeReparentGeometry(
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     int width, height, bd;
     unsigned dummy;
-    int xOffset, yOffset, x, y;
+    int xOffset, yOffset, x, y, left, right, top, bottom;
     Window dummy2;
     Status status;
     Tk_ErrorHandler handler;
@@ -4578,6 +4625,23 @@ ComputeReparentGeometry(
     wmPtr->yInParent = yOffset + bd;
     wmPtr->parentWidth = width + 2*bd;
     wmPtr->parentHeight = height + 2*bd;
+
+    /*
+     * A window manager may draw invisible borders (for resizing or a shadow)
+     * around the visible frame, and report them in _GTK_FRAME_EXTENTS of
+     * the frame window (e.g. Mutter). The position of the toplevel is that
+     * of the visible frame.
+     */
+
+    if (GetExtents(wrapperPtr, wmPtr->reparent, "_GTK_FRAME_EXTENTS",
+	    &left, &right, &top, &bottom)) {
+	x += left;
+	y += top;
+	wmPtr->xInParent -= left;
+	wmPtr->yInParent -= top;
+	wmPtr->parentWidth -= left + right;
+	wmPtr->parentHeight -= top + bottom;
+    }
 
     /*
      * Some tricky issues in updating wmPtr->x and wmPtr->y:
@@ -4735,6 +4799,16 @@ WrapperEventProc(
     } else if (eventPtr->type == MapNotify) {
 	wmPtr->wrapperPtr->flags |= TK_MAPPED;
 	wmPtr->winPtr->flags |= TK_MAPPED;
+
+	/*
+	 * The decorations of a window which is not reparented are only taken
+	 * into account while it is mapped, and the window may have been moved
+	 * while it was unmapped.
+	 */
+
+	if ((wmPtr->reparent == None) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    ComputeUnparentedGeometry(wmPtr);
+	}
 	XMapWindow(wmPtr->winPtr->display, wmPtr->winPtr->window);
 	goto doMapEvent;
     } else if (eventPtr->type == UnmapNotify) {
@@ -5282,8 +5356,11 @@ UpdatePhotoIcon(
  *
  * SetNetWmState --
  *
- *	Sets the specified state property by sending a _NET_WM_STATE
- *	ClientMessage to the root window.
+ *	Sets the specified state property, or two of them, by sending a
+ *	_NET_WM_STATE ClientMessage to the root window. Two properties which
+ *	go together, like _NET_WM_STATE_MAXIMIZED_VERT and
+ *	_NET_WM_STATE_MAXIMIZED_HORZ, must be changed in one message: some
+ *	window managers (xfwm4, fvwm) do not handle two separate messages.
  *
  * Preconditions:
  *	Wrapper window must be created.
@@ -5302,12 +5379,14 @@ static void
 SetNetWmState(
     TkWindow *winPtr,
     const char *atomName,
+    const char *atomName2,	/* A second property, or NULL. */
     bool on)
 {
     Tk_Window tkwin = (Tk_Window) winPtr;
     Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
     Atom action = on ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
     Atom property = Tk_InternAtom(tkwin, atomName);
+    Atom property2 = atomName2 ? Tk_InternAtom(tkwin, atomName2) : None;
     XEvent e;
 
     if (!winPtr->wmInfoPtr->wrapperPtr) {
@@ -5320,7 +5399,8 @@ SetNetWmState(
     e.xclient.format = 32;
     e.xclient.data.l[0] = action;
     e.xclient.data.l[1] = property;
-    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+    e.xclient.data.l[2] = property2;
+    e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
 
     XSendEvent(winPtr->display,
 	RootWindow(winPtr->display, winPtr->screenNum), 0,
