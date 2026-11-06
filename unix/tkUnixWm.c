@@ -171,6 +171,9 @@ typedef struct TkWmInfo {
 				 * corner of reparent's border to upper-left
 				 * outer corner of wrapperPtr's border. If not
 				 * reparented then these are zero. */
+    int decorWidth, decorHeight;/* Size of the window manager's decorations
+				 * around the wrapper, as last seen, or -1 if
+				 * not known yet. */
     int configWidth, configHeight;
 				/* Dimensions passed to last request that we
 				 * issued to change geometry of the wrapper.
@@ -355,6 +358,8 @@ static void		CheckWorkAreaMove(WmInfo *wmPtr, int reqX, int reqY);
 static void		ConfigureEvent(WmInfo *wmPtr,
 			    XConfigureEvent *eventPtr);
 static void		CreateWrapper(WmInfo *wmPtr);
+static void		PlaceInWrapper(WmInfo *wmPtr);
+static bool		IsPlacedInWrapper(WmInfo *wmPtr);
 static void		GetMaxSize(WmInfo *wmPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		MenubarDestroyProc(void *clientData,
@@ -630,6 +635,8 @@ TkWmNewWindow(
 	    + 2*winPtr->changes.border_width;
     wmPtr->parentHeight = winPtr->changes.height
 	    + 2*winPtr->changes.border_width;
+    wmPtr->decorWidth = -1;
+    wmPtr->decorHeight = -1;
     wmPtr->configWidth = -1;
     wmPtr->configHeight = -1;
     wmPtr->vRoot = None;
@@ -4026,7 +4033,6 @@ ConfigureEvent(
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     TkWindow *winPtr = wmPtr->winPtr;
     TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
-    Tk_ErrorHandler handler;
 
     /*
      * Update size information from the event. There are a couple of tricky
@@ -4177,6 +4183,53 @@ ConfigureEvent(
     }
 
     /*
+     * The default maximum size depends on the size of the decorations. If it
+     * has changed, recompute the natural size of the window.
+     */
+
+    if ((wmPtr->parentWidth - wrapperPtr->changes.width != wmPtr->decorWidth)
+	    || (wmPtr->parentHeight - wrapperPtr->changes.height
+		!= wmPtr->decorHeight)) {
+	wmPtr->decorWidth = wmPtr->parentWidth - wrapperPtr->changes.width;
+	wmPtr->decorHeight = wmPtr->parentHeight - wrapperPtr->changes.height;
+	if (((wmPtr->width == -1 && wmPtr->maxWidth <= 0)
+		|| (wmPtr->height == -1 && wmPtr->maxHeight <= 0))
+		&& !(wmPtr->flags & WM_UPDATE_PENDING)) {
+	    Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
+	    wmPtr->flags |= WM_UPDATE_PENDING;
+	}
+    }
+
+    PlaceInWrapper(wmPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * PlaceInWrapper --
+ *
+ *	Places the toplevel below the menubar in the wrapper, after the size
+ *	of the wrapper or the height of the menubar has changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The toplevel and the menubar are moved and resized, and a
+ *	ConfigureNotify event is synthesized for the toplevel.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+PlaceInWrapper(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    TkWindow *winPtr = wmPtr->winPtr;
+    Tk_ErrorHandler handler;
+
+    /*
      * Make sure that the toplevel and menubar are properly positioned within
      * the wrapper. If the menuHeight happens to be zero, we'll get a BadValue
      * X error that we want to ignore [Bug: 3377]
@@ -4206,6 +4259,40 @@ ConfigureEvent(
     winPtr->changes.width = wrapperPtr->changes.width;
     winPtr->changes.height = wrapperPtr->changes.height - wmPtr->menuHeight;
     TkDoConfigureNotify(winPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsPlacedInWrapper --
+ *
+ *	Checks whether the toplevel and the menubar fill the wrapper, as
+ *	PlaceInWrapper placed them for its current size and menubar height.
+ *
+ * Results:
+ *	Returns true if they do.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsPlacedInWrapper(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    TkWindow *winPtr = wmPtr->winPtr;
+
+    if ((winPtr->changes.width != wrapperPtr->changes.width)
+	    || (winPtr->changes.height
+		!= wrapperPtr->changes.height - wmPtr->menuHeight)) {
+	return false;
+    }
+    return (wmPtr->menubar == NULL)
+	    || ((Tk_Width(wmPtr->menubar) == wrapperPtr->changes.width)
+	    && (Tk_Height(wmPtr->menubar) == wmPtr->menuHeight));
 }
 
 /*
@@ -4845,7 +4932,7 @@ UpdateGeometryInfo(
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int x, y, width, height, min, max;
+    int x, y, width, height, min, max, maxWidth, maxHeight;
     unsigned long serial;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -4873,21 +4960,24 @@ UpdateGeometryInfo(
     }
 
     /*
-     * Account for window max/min width
+     * Account for window max/min width. The natural size is also limited
+     * by the default maximum, so that the window fits in the work area.
      */
+
+    GetMaxSize(wmPtr, &maxWidth, &maxHeight);
 
     if (wmPtr->gridWin != NULL) {
 	min = winPtr->reqWidth
 		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	if (wmPtr->maxWidth > 0) {
+	if (wmPtr->maxWidth > 0 || wmPtr->width == -1) {
 	    max = winPtr->reqWidth
-		+ (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+		+ (maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
 	} else {
 	    max = 0;
 	}
     } else {
 	min = wmPtr->minWidth;
-	max = wmPtr->maxWidth;
+	max = (wmPtr->maxWidth > 0 || wmPtr->width == -1) ? maxWidth : 0;
     }
     if (width < min) {
 	width = min;
@@ -4914,15 +5004,15 @@ UpdateGeometryInfo(
     if (wmPtr->gridWin != NULL) {
 	min = winPtr->reqHeight
 		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
-	if (wmPtr->maxHeight > 0) {
+	if (wmPtr->maxHeight > 0 || wmPtr->height == -1) {
 	    max = winPtr->reqHeight
-		+ (wmPtr->maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+		+ (maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
 	} else {
 	    max = 0;
 	}
     } else {
 	min = wmPtr->minHeight;
-	max = wmPtr->maxHeight;
+	max = (wmPtr->maxHeight > 0 || wmPtr->height == -1) ? maxHeight : 0;
     }
     if (height < min) {
 	height = min;
@@ -5045,6 +5135,9 @@ UpdateGeometryInfo(
 	     * WaitForConfigureNotify call below will hang for a while.
 	     */
 
+	    if (!IsPlacedInWrapper(wmPtr)) {
+		PlaceInWrapper(wmPtr);
+	    }
 	    return;
 	}
 	wmPtr->configWidth = width;
@@ -5055,19 +5148,16 @@ UpdateGeometryInfo(
 	}
 	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		(unsigned) width, (unsigned) height);
-    } else if ((wmPtr->menubar != NULL)
-	    && ((Tk_Width(wmPtr->menubar) != wmPtr->wrapperPtr->changes.width)
-	    || (Tk_Height(wmPtr->menubar) != wmPtr->menuHeight))) {
+    } else {
 	/*
 	 * It is possible that the window's overall size has not changed but
-	 * the menu size has.
+	 * the menu size has. Since no ConfigureNotify event will come for the
+	 * wrapper, place the toplevel and the menubar in it now.
 	 */
 
-	Tk_MoveResizeWindow(wmPtr->menubar, 0, 0,
-		wmPtr->wrapperPtr->changes.width, wmPtr->menuHeight);
-	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
-		(unsigned) width, (unsigned) height);
-    } else {
+	if (!IsPlacedInWrapper(wmPtr)) {
+	    PlaceInWrapper(wmPtr);
+	}
 	return;
     }
 
@@ -7188,7 +7278,7 @@ TkGetPointerCoords(
  *	The values at *maxWidthPtr and *maxHeightPtr are filled in with the
  *	maximum allowable dimensions of wmPtr's window, in grid units. If no
  *	maximum has been specified for the window, then this function computes
- *	the largest sizes that will fit on the screen.
+ *	the largest sizes that will fit in the work area.
  *
  * Side effects:
  *	None.
@@ -7205,18 +7295,33 @@ GetMaxSize(
     int *maxHeightPtr)		/* Where to store the current maximum height
 				 * of the window. */
 {
-    int tmp;
+    int tmp, x, y, width, height, decorWidth, decorHeight;
 
+    /*
+     * The default fills up the work area (the display without the panels),
+     * leaving space for the window manager's decorations and the menubar.
+     * The size of the decorations is known after the first ConfigureNotify
+     * event for the window; before that, guess it.
+     */
+
+    if ((wmPtr->maxWidth <= 0 || wmPtr->maxHeight <= 0)
+	    && (wmPtr->wrapperPtr == NULL
+	    || !GetWorkArea(wmPtr, &x, &y, &width, &height))) {
+	width = DisplayWidth(wmPtr->winPtr->display, wmPtr->winPtr->screenNum);
+	height = DisplayHeight(wmPtr->winPtr->display,
+		wmPtr->winPtr->screenNum);
+    }
+    if (wmPtr->decorWidth < 0) {
+	decorWidth = 15;
+	decorHeight = 30;
+    } else {
+	decorWidth = wmPtr->decorWidth;
+	decorHeight = wmPtr->decorHeight;
+    }
     if (wmPtr->maxWidth > 0) {
 	*maxWidthPtr = wmPtr->maxWidth;
     } else {
-	/*
-	 * Must compute a default width. Fill up the display, leaving a bit of
-	 * extra space for the window manager's borders.
-	 */
-
-	tmp = DisplayWidth(wmPtr->winPtr->display, wmPtr->winPtr->screenNum)
-	    - 15;
+	tmp = width - decorWidth;
 	if (wmPtr->gridWin != NULL) {
 	    /*
 	     * Gridding is turned on; convert from pixels to grid units.
@@ -7230,8 +7335,7 @@ GetMaxSize(
     if (wmPtr->maxHeight > 0) {
 	*maxHeightPtr = wmPtr->maxHeight;
     } else {
-	tmp = DisplayHeight(wmPtr->winPtr->display, wmPtr->winPtr->screenNum)
-	    - 30;
+	tmp = height - decorHeight - wmPtr->menuHeight;
 	if (wmPtr->gridWin != NULL) {
 	    tmp = wmPtr->reqGridHeight
 		    + (tmp - wmPtr->winPtr->reqHeight)/wmPtr->heightInc;
