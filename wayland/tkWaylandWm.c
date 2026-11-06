@@ -29,6 +29,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* Defined in tkWaylandInit.c; move to tkWaylandInt.h. */
+MODULE_SCOPE void TkWaylandWaitForWindowSize(GLFWwindow *, int, int);
+MODULE_SCOPE void TkWaylandWaitForWindowVisible(GLFWwindow *);
+
 /*
  * Undefine X11 macros that might conflict with our local definitions.
  */
@@ -663,10 +667,30 @@ QueueVisibilityNotify(TkWindow *winPtr) {
  * the toplevel draws empty and never redraws children.
  */
 static void
-QueueExposeTree(TkWindow *winPtr)
+QueueExposeChildren(
+    TkWindow *winPtr)
 {
     TkWindow *child;
+
+    for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
+        if (child->parentPtr == winPtr
+                && !(child->flags & TK_ALREADY_DEAD)
+                && (child->flags & TK_MAPPED)
+                && !Tk_IsTopLevel(child)
+                && Tk_Width(child) > 0 && Tk_Height(child) > 0) {
+            TkWaylandQueueExposeEvent(child, 0, 0,
+                    Tk_Width(child), Tk_Height(child));
+            QueueExposeChildren(child);
+        }
+    }
+}
+
+static void
+QueueExposeTree(
+    TkWindow *winPtr)
+{
     int w, h;
+
     if (winPtr == NULL) return;
     if (winPtr->flags & TK_ALREADY_DEAD) return;
     if (!(winPtr->flags & TK_TOP_LEVEL)) return;
@@ -676,16 +700,7 @@ QueueExposeTree(TkWindow *winPtr)
     h = Tk_Height(winPtr);
     if (w <= 0 || h <= 0) return;
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
-    for (child = winPtr->childList; child != NULL; ) {
-        TkWindow *nextPtr = child->nextPtr;
-        if (child->parentPtr == winPtr
-                && !(child->flags & TK_ALREADY_DEAD)
-                && (child->flags & TK_MAPPED)
-                && !Tk_IsTopLevel(child)) {
-            QueueExposeTree(child);
-        }
-        child = nextPtr;
-    }
+    QueueExposeChildren(winPtr);
 }
 
 static void
@@ -3926,15 +3941,40 @@ WmGeometryCmd(
 
     /* Immediately set GLFW window size and position. */
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	/*
+	 * A window that is being mapped but was never shown cannot be resized
+	 * yet (see UpdateGeometryInfo), and a timer would postpone the resize
+	 * past the end of "update".  Wait for the compositor to show it.
+	 */
+
+	if (!wmPtr->withdrawn && !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	    glfwTkInfo *shownInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+
+	    if (shownInfoPtr != NULL && !(shownInfoPtr->flags & TKWL_SHOWN)) {
+		TkWaylandWaitForWindowVisible(glfwWindow);
+	    }
+	}
+
         /*
          * Set size only if positive values were provided.  The size of a
          * gridded window is in grid units and is set by UpdateGeometryInfo.
          */
         if (wmPtr->gridWin == NULL && wmPtr->width > 0 && wmPtr->height > 0) {
+	    /*
+	     * Limit the size passed to GLFW to the min/max size, as
+	     * ApplyPendingGeometry does.  wmPtr->width/height keep the size
+	     * that was requested.
+	     */
+	    int w = wmPtr->width, h = wmPtr->height;
+
+	    if (wmPtr->maxWidth > 0 && w > wmPtr->maxWidth) w = wmPtr->maxWidth;
+	    if (wmPtr->maxHeight > 0 && h > wmPtr->maxHeight) h = wmPtr->maxHeight;
+	    if (w < wmPtr->minWidth) w = wmPtr->minWidth;
+	    if (h < wmPtr->minHeight) h = wmPtr->minHeight;
 	    DEBUG_LOG("GeometryCmd setting window size %s -> %dx%d",
-		Tk_PathName(winPtr), wmPtr->width, wmPtr->height);
+		    Tk_PathName(winPtr), w, h);
 	    TkWaylandFlushConfigures();
-            glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
+            glfwSetWindowSize(glfwWindow, w, h);
         }
 
         /* Cancel any pending idle callback. */
@@ -3947,26 +3987,16 @@ WmGeometryCmd(
 	DEBUG_LOG("WmGeometryCmd: calling UpdateGeometryInfo");
         UpdateGeometryInfo((void *)winPtr);
 
-        /* Verify the change actually took effect. */
-        int newWidth, newHeight;
-        glfwGetWindowSize(glfwWindow, &newWidth, &newHeight);
-
-        /* 
-         * If the size didn't change (e.g., constrained by min/max),
-	     * update wmPtr. 
-	     */
-        if (wmPtr->gridWin == NULL) {
-            if (wmPtr->width > 0 && wmPtr->width != newWidth) {
-                wmPtr->width = newWidth;
-            }
-            if (wmPtr->height > 0 && wmPtr->height != newHeight) {
-                wmPtr->height = newHeight;
-            }
-        }
-
-        /* Update Tk's changes structure. */
-        winPtr->changes.width = newWidth;
-        winPtr->changes.height = newHeight;
+        /*
+         * Do not read the size back from GLFW here and store it in wmPtr or
+         * winPtr->changes: glfwSetWindowSize is asynchronous on Wayland, so
+         * glfwGetWindowSize still returns the old size until the compositor
+         * has configured the window.  Doing so overwrote the requested size
+         * with the old one, and the next UpdateGeometryInfo then resized the
+         * window back.  ApplyPendingGeometry, called by UpdateGeometryInfo
+         * above, has already set winPtr->changes to the clamped size, and
+         * the FramebufferSizeCallback updates it again from the real size.
+         */
     }
 
     return TCL_OK;
@@ -5977,6 +6007,15 @@ ApplyPendingGeometry(
 	 */
 	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
 	    TkWaylandPresentWindow(glfwWindow);
+
+	    /*
+	     * Wait for the compositor to answer with the new size, so the
+	     * resize is complete when this returns, as on X11.  Use the size
+	     * the window actually has, as the compositor can choose another.
+	     */
+
+	    TkWaylandWaitForWindowSize(glfwWindow, tw, th);
+	    glfwGetWindowSize(glfwWindow, &tw, &th);
 	}
 
 	/* Update the window data. */
@@ -6635,12 +6674,14 @@ XCreateSimpleWindow(
  *
  *	A child window is being unmapped or destroyed.  Children are painted
  *	straight into the toplevel's backing FBO, so the pixels the child
- *	covered remain there until its parent repaints them -- which an X
- *	server would arrange by sending Expose to the parent.  Do the
- *	equivalent here: expose the parent (and, via
- *	TkWaylandQueueExposeEvent, its still-live mapped children) and
- *	invalidate the clip rects so the parent is no longer clipped around
- *	the vanished window.
+ *	covered remain there until whatever lies beneath it repaints them --
+ *	which an X server would arrange by sending Expose to those windows.
+ *	Do the equivalent here: expose every mapped window in the toplevel
+ *	that overlaps the vacated rectangle (the parent, but also the
+ *	container when the child was placed -in another window, and any
+ *	sibling underneath), restricted to that rectangle, and invalidate
+ *	the clip rects so those windows are no longer clipped around the
+ *	vanished window.
  *
  * Results:
  *	None.
@@ -6658,6 +6699,7 @@ ExposeVacatedArea(
     TkWindow *winPtr)
 {
     TkWindow *parentPtr, *topPtr;
+    int rx, ry, rw, rh;
 
     if (winPtr == NULL) {
 	return;
@@ -6667,23 +6709,35 @@ ExposeVacatedArea(
 	    || (parentPtr->flags & TK_ALREADY_DEAD)) {
 	return;
     }
+    rw = Tk_Width(winPtr);
+    rh = Tk_Height(winPtr);
+    if (rw <= 0 || rh <= 0) {
+	return;
+    }
 
-    TkWaylandQueueExposeEvent(parentPtr, 0, 0,
-	    Tk_Width(parentPtr), Tk_Height(parentPtr));
+    /* Origin of winPtr in toplevel coordinates, as getBounds computes it. */
 
-    /*
-     * As in XMapWindow, invalidate the clip rects after queuing the
-     * exposes.
-     */
-
+    rx = winPtr->changes.x;
+    ry = winPtr->changes.y;
     for (topPtr = parentPtr;
 	    topPtr != NULL && !(topPtr->flags & TK_TOP_LEVEL);
 	    topPtr = topPtr->parentPtr) {
-	/* empty */
+	rx += topPtr->changes.x;
+	ry += topPtr->changes.y;
     }
+
     if (topPtr != NULL) {
+	TkWaylandExposeOverlapping(topPtr, 0, 0, winPtr, rx, ry, rw, rh);
+
+	/*
+	 * As in XMapWindow, invalidate the clip rects after queuing the
+	 * exposes.
+	 */
+
 	tkWaylandInvalidateClipRectsForTree(topPtr);
     } else {
+	TkWaylandQueueExposeEvent(parentPtr, 0, 0,
+		Tk_Width(parentPtr), Tk_Height(parentPtr));
 	tkWaylandInvalidateClipRects(parentPtr);
     }
 }

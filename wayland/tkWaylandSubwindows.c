@@ -462,6 +462,66 @@ TkWaylandGetContainer(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandExposeOverlapping --
+ *
+ *	Queue an Expose for every mapped non-toplevel window in the subtree
+ *	rooted at winPtr that overlaps the rectangle (rx, ry, rw, rh), which
+ *	is given in toplevel coordinates.  (ox, oy) is winPtr's origin in the
+ *	same coordinates.  The subtree rooted at skipPtr (a window that is
+ *	going away) is ignored.  updateClipRects clips every child to its
+ *	parent, so a subtree that misses the rectangle can be pruned.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues Expose events, each restricted to the overlapping part of the
+ *	window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandExposeOverlapping(
+    TkWindow *winPtr,
+    int ox, int oy,
+    TkWindow *skipPtr,
+    int rx, int ry, int rw, int rh)
+{
+    TkWindow *childPtr;
+    int x0, y0, x1, y1, wx1, wy1;
+
+    if (winPtr == NULL || winPtr == skipPtr
+	    || (winPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
+    wx1 = ox + Tk_Width(winPtr);
+    wy1 = oy + Tk_Height(winPtr);
+    x0 = (rx > ox) ? rx : ox;
+    y0 = (ry > oy) ? ry : oy;
+    x1 = (rx + rw < wx1) ? rx + rw : wx1;
+    y1 = (ry + rh < wy1) ? ry + rh : wy1;
+    if (x0 >= x1 || y0 >= y1) {
+	return;
+    }
+    if (Tk_IsTopLevel(winPtr) || Tk_IsMapped(winPtr)) {
+	TkWaylandQueueExposeEvent(winPtr, x0 - ox, y0 - oy,
+		x1 - x0, y1 - y0);
+    }
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	if (childPtr->parentPtr == winPtr && !Tk_IsTopLevel(childPtr)
+		&& Tk_IsMapped(childPtr)) {
+	    TkWaylandExposeOverlapping(childPtr,
+		    ox + childPtr->changes.x, oy + childPtr->changes.y,
+		    skipPtr, rx, ry, rw, rh);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * updateClipRects --
  *
  *	Rebuilds the list of clipping rectangles for a window based on the

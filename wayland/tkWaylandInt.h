@@ -80,7 +80,7 @@ extern struct wl_seat *waylandSeat;
 
 /* Tuning constants for font shaping */
 #define MAX_FACES           64      /* Max fallback faces per logical font.  */
-#define MAX_GLYPHS          512     /* Max glyphs per shaped buffer.         */
+#define MAX_GLYPHS          5120    /* Max glyphs per shaped buffer.         */
 #define MAX_BIDI_RUNS       32      /* Max bidi level runs.                  */
 #define MAX_CLUSTER_BREAKS  512     /* Max cluster break positions.          */
 #define MAX_STRING_CACHE    1024    /* Max bytes stored in one cache slot.   */
@@ -371,6 +371,14 @@ typedef struct TkWaylandGC {
     int           fill_rule;  /* EvenOddRule or WindingRule */
     int           arc_mode;   /* ArcChord or ArcPieSlice */
     void         *font;       /* Font handle (reserved) */
+    int           fill_style; /* FillSolid, FillStippled, FillOpaqueStippled */
+    Pixmap        stipple;    /* 1-bit stipple pixmap, or None */
+    int           ts_x_origin;/* Stipple origin, drawable coordinates */
+    int           ts_y_origin;
+    unsigned char *dash_list; /* Dash lengths (Tcl_Alloc'd), or NULL for the
+                               * X11 default of {4, 4} */
+    int           dash_count; /* Entries in dash_list */
+    int           dash_offset;/* Starting phase into the dash pattern */
 } TkWaylandGC;
 
 /*
@@ -393,6 +401,9 @@ typedef struct TkWaylandPixmap {
     int isBitmap;                   /* 1 if this is a 1‑bit bitmap pixmap */
     unsigned char *bitmapData;      /* Stored bitmap bits (only for isBitmap) */
     int bitmapBytesPerLine;         /* Bytes per row in bitmapData */
+    int stippleImage;               /* Cached NanoVG stipple mask image id
+                                     * (0 = none); see TkWaylandGetStippleImage */
+    NVGcontext *stippleVg;          /* NanoVG context that owns stippleImage */
 } TkWaylandPixmap;
 
 /*
@@ -411,6 +422,12 @@ MODULE_SCOPE void TkWaylandSetBitmapData(
     const char *data,
     int width,
     int height);
+
+/* Stippling (X11 FillStippled / FillOpaqueStippled) support. */
+MODULE_SCOPE int   TkWaylandGetStippleImage(NVGcontext *vg,
+                       TkWaylandPixmap *pixmapPtr);
+MODULE_SCOPE void  TkWaylandFreeStippleImage(TkWaylandPixmap *pixmapPtr);
+MODULE_SCOPE float TkWaylandStippleDensity(GC gc);
 
 /*
  *----------------------------------------------------------------------
@@ -947,6 +964,9 @@ MODULE_SCOPE void tkWaylandDrawClipMask(TkWindow* winPtr,
 					GLFWwindow* glfwWindow);
 MODULE_SCOPE void tkWaylandInvalidateClipRects(TkWindow *winPtr);
 MODULE_SCOPE void tkWaylandInvalidateClipRectsForTree(TkWindow *winPtr);
+MODULE_SCOPE void TkWaylandExposeOverlapping(TkWindow *winPtr, int ox, int oy,
+					     TkWindow *skipPtr, int rx, int ry,
+					     int rw, int rh);
 void updateClipRects(TkWindow* winPtr, GLFWwindow* glfwWindow);
 /*
  *----------------------------------------------------------------------

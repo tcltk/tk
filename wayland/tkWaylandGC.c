@@ -340,6 +340,13 @@ TkWaylandCreateGC(
     gc->fill_rule  = WindingRule;
     gc->arc_mode   = ArcPieSlice;
     gc->font       = NULL;
+    gc->fill_style  = FillSolid;
+    gc->stipple     = None;
+    gc->ts_x_origin = 0;
+    gc->ts_y_origin = 0;
+    gc->dash_list   = NULL;
+    gc->dash_count  = 0;
+    gc->dash_offset = 0;
 
     /* Override with caller-supplied values. */
     if (values != NULL) {
@@ -370,6 +377,9 @@ TkWaylandFreeGC(
     GC gc)
 {
     if (gc != NULL) {
+        if (((TkWaylandGC *)gc)->dash_list != NULL) {
+            Tcl_Free(((TkWaylandGC *)gc)->dash_list);
+        }
         Tcl_Free(gc);
     }
 }
@@ -411,6 +421,15 @@ TkWaylandGetGCValues(
     if (valuemask & GCFillRule)    values->fill_rule   = gcPtr->fill_rule;
     if (valuemask & GCArcMode)     values->arc_mode    = gcPtr->arc_mode;
     if (valuemask & GCFont)        values->font        = (Font)(uintptr_t)gcPtr->font;
+    if (valuemask & GCFillStyle)   values->fill_style  = gcPtr->fill_style;
+    if (valuemask & GCStipple)     values->stipple     = gcPtr->stipple;
+    if (valuemask & GCTileStipXOrigin) values->ts_x_origin = gcPtr->ts_x_origin;
+    if (valuemask & GCTileStipYOrigin) values->ts_y_origin = gcPtr->ts_y_origin;
+    if (valuemask & GCDashOffset)  values->dash_offset = gcPtr->dash_offset;
+    if (valuemask & GCDashList) {
+        values->dashes = (gcPtr->dash_list && gcPtr->dash_count > 0)
+                ? (char)gcPtr->dash_list[0] : 4;
+    }
 
     return true;
 }
@@ -452,6 +471,24 @@ TkWaylandChangeGC(
     if (valuemask & GCFillRule)    gcPtr->fill_rule  = values->fill_rule;
     if (valuemask & GCArcMode)     gcPtr->arc_mode   = values->arc_mode;
     if (valuemask & GCFont)        gcPtr->font       = (void *)(uintptr_t)values->font;
+    if (valuemask & GCFillStyle)   gcPtr->fill_style = values->fill_style;
+    if (valuemask & GCStipple)     gcPtr->stipple    = values->stipple;
+    if (valuemask & GCTileStipXOrigin) gcPtr->ts_x_origin = values->ts_x_origin;
+    if (valuemask & GCTileStipYOrigin) gcPtr->ts_y_origin = values->ts_y_origin;
+    if (valuemask & GCDashOffset)  gcPtr->dash_offset = values->dash_offset;
+    if (valuemask & GCDashList) {
+        /* A single 'dashes' value means an even list {d, d}, as in Xlib. */
+        unsigned char d = (unsigned char)values->dashes;
+
+        if (d != 0) {
+            if (gcPtr->dash_list != NULL) {
+                Tcl_Free(gcPtr->dash_list);
+            }
+            gcPtr->dash_list = (unsigned char *)Tcl_Alloc(2);
+            gcPtr->dash_list[0] = gcPtr->dash_list[1] = d;
+            gcPtr->dash_count = 2;
+        }
+    }
 
     return true;
 }
@@ -488,6 +525,22 @@ TkWaylandCopyGC(
     TkWaylandGetGCValues(src, valuemask, &tmp);
     TkWaylandChangeGC(dst, valuemask, &tmp);
 
+    /* The generic path only carries a single dash value; copy the list. */
+    if (valuemask & GCDashList) {
+        TkWaylandGC *s = (TkWaylandGC *)src, *d = (TkWaylandGC *)dst;
+
+        if (d->dash_list != NULL) {
+            Tcl_Free(d->dash_list);
+            d->dash_list = NULL;
+            d->dash_count = 0;
+        }
+        if (s->dash_list != NULL && s->dash_count > 0) {
+            d->dash_list = (unsigned char *)Tcl_Alloc(s->dash_count);
+            memcpy(d->dash_list, s->dash_list, s->dash_count);
+            d->dash_count = s->dash_count;
+        }
+    }
+
     return true;
 }
 
@@ -513,6 +566,52 @@ static inline Pixmap PixmapFromTkWaylandPixmap(
     TkWaylandPixmap *pixmapPtr)
 {
     return pixmapPtr ? 3 + (Pixmap)pixmapPtr : None;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandFreeStippleImage --
+ *
+ *	Release the cached NanoVG stipple mask texture (see
+ *	TkWaylandGetStippleImage in tkWaylandImage.c) belonging to a
+ *	pixmap.  Called when the pixmap is freed and when its bitmap data
+ *	is replaced.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Deletes a NanoVG image if its context is still alive.  If the
+ *	context is gone the texture went with it.  This is never called
+ *	between nvgFill and nvgEndFrame, since every Xlib primitive
+ *	completes its own frame.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandFreeStippleImage(
+    TkWaylandPixmap *pixmapPtr)
+{
+    if (pixmapPtr == NULL || pixmapPtr->stippleImage <= 0) {
+	return;
+    }
+    if (pixmapPtr->stippleVg != NULL) {
+	GLFWwindow *win = pixmapPtr->glfwWindow ? pixmapPtr->glfwWindow
+		: mainGlfwWindow;
+
+	if (win && !glfwWindowShouldClose(win)) {
+	    glfwTkInfo *info = glfwGetWindowUserPointer(win);
+
+	    if (info && info->vg == pixmapPtr->stippleVg) {
+		glfwMakeContextCurrent(win);
+		nvgDeleteImage(pixmapPtr->stippleVg, pixmapPtr->stippleImage);
+	    }
+	}
+    }
+    pixmapPtr->stippleImage = 0;
+    pixmapPtr->stippleVg = NULL;
 }
 
 /*
@@ -639,6 +738,8 @@ Tk_FreePixmap(
     if (pixmapPtr->fb == NULL && pixmapPtr->bitmapData == NULL) {
         return;
     }
+
+    TkWaylandFreeStippleImage(pixmapPtr);
 
     if (pixmapPtr->fb) {
         GLFWwindow *win = pixmapPtr->glfwWindow
@@ -824,6 +925,162 @@ XSetLineAttributes(
         gc,
         GCLineWidth | GCLineStyle | GCCapStyle | GCJoinStyle,
         &v) ? Success : BadGC;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetFillStyle, XSetStipple, XSetTSOrigin --
+ *
+ *	Xlib-compatible wrappers that set the stipple-related fields of a
+ *	GC.  The drawing primitives in tkWaylandDraw.c honour FillStippled
+ *	and FillOpaqueStippled (see TkWaylandGetStippleImage).
+ *
+ * Results:
+ *	Success on success, BadGC on failure.
+ *
+ * Side effects:
+ *	Updates the GC via TkWaylandChangeGC.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetFillStyle(
+    TCL_UNUSED(Display *),
+    GC  gc,
+    int fill_style)
+{
+    XGCValues v;
+    v.fill_style = fill_style;
+    return TkWaylandChangeGC(gc, GCFillStyle, &v) ? Success : BadGC;
+}
+
+int
+XSetStipple(
+    TCL_UNUSED(Display *),
+    GC     gc,
+    Pixmap stipple)
+{
+    XGCValues v;
+    v.stipple = stipple;
+    return TkWaylandChangeGC(gc, GCStipple, &v) ? Success : BadGC;
+}
+
+int
+XSetTSOrigin(
+    TCL_UNUSED(Display *),
+    GC  gc,
+    int ts_x_origin,
+    int ts_y_origin)
+{
+    XGCValues v;
+    v.ts_x_origin = ts_x_origin;
+    v.ts_y_origin = ts_y_origin;
+    return TkWaylandChangeGC(gc, GCTileStipXOrigin | GCTileStipYOrigin, &v)
+	    ? Success : BadGC;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetFillRule, XSetArcMode, XSetFont --
+ *
+ *	Xlib-compatible wrappers that record the fill rule, arc mode and
+ *	font in the GC.  These were no-op stubs in tkWaylandXlib.c.
+ *
+ * Results:
+ *	Success on success, BadGC on failure.
+ *
+ * Side effects:
+ *	Updates the GC via TkWaylandChangeGC.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetFillRule(
+    TCL_UNUSED(Display *),
+    GC  gc,
+    int fill_rule)
+{
+    XGCValues v;
+    v.fill_rule = fill_rule;
+    return TkWaylandChangeGC(gc, GCFillRule, &v) ? Success : BadGC;
+}
+
+int
+XSetArcMode(
+    TCL_UNUSED(Display *),
+    GC  gc,
+    int arc_mode)
+{
+    XGCValues v;
+    v.arc_mode = arc_mode;
+    return TkWaylandChangeGC(gc, GCArcMode, &v) ? Success : BadGC;
+}
+
+int
+XSetFont(
+    TCL_UNUSED(Display *),
+    GC   gc,
+    Font font)
+{
+    XGCValues v;
+    v.font = font;
+    return TkWaylandChangeGC(gc, GCFont, &v) ? Success : BadGC;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetDashes --
+ *
+ *	Set the dash pattern of a GC.  The pattern is a list of alternating
+ *	"on" and "off" lengths in pixels, starting "on"; an odd-length list
+ *	is treated as repeated twice, as in Xlib.  Dashing is performed by
+ *	DashRuns() in tkWaylandDraw.c, since NanoVG has no dash support.
+ *
+ * Results:
+ *	Success, BadGC for a NULL GC, or BadValue for an empty list or a
+ *	zero-length dash.
+ *
+ * Side effects:
+ *	Replaces the GC's dash list and offset.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetDashes(
+    TCL_UNUSED(Display *),
+    GC          gc,
+    int         dash_offset,
+    const char *dash_list,
+    int         n)
+{
+    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+    int i;
+
+    if (gcPtr == NULL) {
+        return BadGC;
+    }
+    if (dash_list == NULL || n <= 0) {
+        return BadValue;
+    }
+    for (i = 0; i < n; i++) {
+        if (dash_list[i] == 0) {
+            return BadValue;
+        }
+    }
+    if (gcPtr->dash_list != NULL) {
+        Tcl_Free(gcPtr->dash_list);
+    }
+    gcPtr->dash_list = (unsigned char *)Tcl_Alloc(n);
+    memcpy(gcPtr->dash_list, dash_list, n);
+    gcPtr->dash_count = n;
+    gcPtr->dash_offset = dash_offset;
+    return Success;
 }
 
 /*
@@ -1159,6 +1416,9 @@ TkWaylandSetBitmapData(
     if (!pixmapPtr || !data || width <= 0 || height <= 0) {
         return;
     }
+
+    /* Any cached stipple texture is now stale. */
+    TkWaylandFreeStippleImage(pixmapPtr);
 
     /* Free any existing bitmap data. */
     if (pixmapPtr->bitmapData) {
