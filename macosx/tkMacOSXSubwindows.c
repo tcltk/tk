@@ -256,7 +256,8 @@ XMapWindow(
 		[(TKWindow *) win tkOrderFront];
 		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 		[NSApp activateIgnoringOtherApps:YES];
-	    } else {
+	    } else if (winPtr->wmInfoPtr &&
+		       (winPtr->wmInfoPtr->flags & WM_IS_HIDDEN == 0)){
 		/* OverrideRedirect windows can't become key. */
 		[win orderFrontRegardless];
 	    }
