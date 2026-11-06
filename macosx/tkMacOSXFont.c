@@ -285,7 +285,6 @@ FindNSFont(
 	nsFont = [fm convertFont:nsFont toSize:size];
 	nsFont = [fm convertFont:nsFont toHaveTrait:traits];
     }
-    [nsFont retain];
     #undef defaultFont
     return nsFont;
 }
