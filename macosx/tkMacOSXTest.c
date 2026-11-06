@@ -431,7 +431,7 @@ InjectKeyEventObjCmd(
     }
     if (type != NSFlagsChanged) {
 	UniChar keychar = macKC.v.keychar;
-	chars = [[NSString alloc] initWithCharacters: &keychar length:1];
+	chars = [NSString stringWithCharacters: &keychar length:1];
 	upper = [chars uppercaseString];
 	lower = [chars lowercaseString];
 	if (![upper isEqual: lower] && [chars isEqual: upper]) {
