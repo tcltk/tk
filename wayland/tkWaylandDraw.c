@@ -117,6 +117,12 @@ GetNVGFont(NVGcontext *vg, GC gc, int *fontIdOut, float *fontSizeOut)
  *	Foreground color for text drawn with a stippled GC: the GC
  *	foreground with alpha scaled by the stipple density.
  *
+ * Results:
+ *	The stipple-weighted foreground color.
+ *
+ * Side effects:
+ *	None.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -324,10 +330,21 @@ AlignStroke(
  */
 
 /*
+ *----------------------------------------------------------------------
+ *
  * StrokeBias --
  *
  *	The translation AlignStroke() applied to the transform, so the
  *	stipple origin can be corrected back to drawable pixels.
+ *
+ * Results:
+ *	0.5 if AlignStroke() would shift the transform by half a pixel
+ *	for this GC's line width, 0.0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static float
@@ -344,6 +361,8 @@ StrokeBias(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * SetupStipple --
  *
  *	Build the paint for a stippled GC.
@@ -351,6 +370,11 @@ StrokeBias(
  * Results:
  *	1 if gc is stippled and a usable stipple exists (paintPtr, bgPtr
  *	and opaquePtr are filled in), else 0 and the caller draws solid.
+ *
+ * Side effects:
+ *	Fills the caller-supplied NVGpaint, NVGcolor, and int slots.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -392,6 +416,8 @@ SetupStipple(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * StippleFill / StippleStroke --
  *
  *	Fill or stroke the current NanoVG path with the GC's stipple.
@@ -399,6 +425,13 @@ SetupStipple(
  * Results:
  *	1 if the path was painted, 0 if the GC is not stippled (the caller
  *	then does its ordinary nvgFill/nvgStroke).
+ *
+ * Side effects:
+ *	Paints to the current NanoVG context, saving and restoring the
+ *	context state around the stipple paint operations. For opaque
+ *	stipples, also fills/strokes the gaps in the GC background first.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -494,11 +527,23 @@ IsDashed(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * GetDashPattern --
  *
  *	Expand the GC's dash list into pat[] (even length, so "on"/"off"
  *	alternate), defaulting to {4, 4} like X11.  Returns the entry
  *	count and stores the normalised starting phase in *phasePtr.
+ *
+ * Results:
+ *	The number of entries written to pat[], or 0 if the pattern has
+ *	zero total length (unusable, caller should fall back to solid).
+ *
+ * Side effects:
+ *	Fills pat[] with the expanded dash sequence and *phasePtr with
+ *	the normalised starting phase.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -543,10 +588,21 @@ GetDashPattern(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * DashRuns --
  *
  *	Append to the current NanoVG path the "on" (wantOn=1) or "off"
  *	(wantOn=0) runs of the polyline pts[0..n-1], closed or open.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Appends move-to and line-to operations to the current NanoVG
+ *	path. The caller is responsible for stroking it.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -605,10 +661,22 @@ DashRuns(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * StrokeDashed --
  *
  *	Stroke a polyline with the GC's dash pattern.  Returns 1 if drawn,
  *	0 if the pattern is unusable (caller falls back to a solid line).
+ *
+ * Results:
+ *	1 if the polyline was drawn with the dash pattern, 0 if the
+ *	pattern was unusable and the caller must stroke solid.
+ *
+ * Side effects:
+ *	Paints the dashed polyline to the current NanoVG context. For
+ *	LineDoubleDash, also strokes the gaps in the GC background.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -1958,6 +2026,13 @@ TkpDrawFrameEx(
  *	All rectangles are in toplevel coordinates except the damage added
  *	to damageRgn, which is widget-local.
  *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds any newly-revealed destination rectangle to damageRgn and
+ *	re-exposes obsPtr for the pixels the blit overwrote.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -2016,6 +2091,14 @@ ScrollConsiderObscurer(
  *	The windows above winPtr are its mapped children plus the later
  *	siblings of winPtr and of each of its ancestors, which extends the
  *	rule updateClipRects uses to the whole ancestor chain.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Grows damageRgn with the widget-local destination of every hidden
+ *	source region, and re-exposes every obscuring window whose pixels
+ *	the blit overwrote.
  *
  *----------------------------------------------------------------------
  */
