@@ -1186,6 +1186,21 @@ test wm-iconify-3.1 {iconify behavior} -constraints withWindowManager -body {
 } -cleanup {
     destroy .t2
 } -result {1 0}
+test wm-iconify-3.2 {a toplevel moved while iconified - bug f23a58ce24} -setup {
+    destroy .icon
+    toplevel .icon
+    wm geometry .icon 480x200+303+210
+    waitForWm .icon {[winfo ismapped .icon]}
+} -body {
+    wm iconify .icon
+    waitForWm .icon {![winfo ismapped .icon]}
+    wm geometry .icon +100+105
+    wm deiconify .icon
+    waitForWm .icon {[winfo ismapped .icon]}
+    wm geometry .icon
+} -cleanup {
+    destroy .icon
+} -result {480x200+100+105}
 
 
 ### wm iconmask ###
