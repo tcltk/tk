@@ -81,7 +81,7 @@ proc setupBig {} {
 #
 destroy .t
 text .t
-.t debug on
+.t debug 1
 
 #
 # TESTS

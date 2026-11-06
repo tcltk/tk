@@ -46,7 +46,7 @@ text .t -width 20 -height 10 -font $fixedFont2
 
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 
 wm geometry . {}
 

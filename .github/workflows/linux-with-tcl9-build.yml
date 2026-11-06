@@ -84,6 +84,7 @@ jobs:
           - "gcc"
         config:
           - ""
+          - "--disable-accessibility"
           - "--enable-symbols"
     steps:
       - name: Checkout
@@ -99,7 +100,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install tcl9.0-dev libtommath-dev xvfb libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libwayland-egl1
+          sudo apt-get install tcl9.0-dev libtommath-dev xvfb libx11-dev libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libwayland-egl1
           mkdir "$HOME/install dir"
           touch doc/man.macros generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

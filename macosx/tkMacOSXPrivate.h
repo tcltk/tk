@@ -305,6 +305,7 @@ MODULE_SCOPE void TkMacOSXUpdatePointerBeforeUnmap(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXUpdatePointerAfterDestroy (NSWindow *deadNSWindow);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
+MODULE_SCOPE void TkMacOSXNotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
 
 #pragma mark Private Objective-C Classes
 
@@ -353,6 +354,7 @@ VISIBILITY_HIDDEN
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
+- (void)_clearEventInterp;
 - (void)_resetAutoreleasePool;
 - (void)_lockAutoreleasePool;
 - (void)_unlockAutoreleasePool;
