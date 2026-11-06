@@ -92,6 +92,15 @@ AC_PROG_CPP
 AC_C_INLINE
 
 #------------------------------------------------------------------------
+# pkg-config is used to find HarfBuzz, Xft, Xrender, ATK and libspeechd.
+# When cross-compiling, PKG_PROG_PKG_CONFIG looks for the pkg-config of the
+# host first (e.g. aarch64-linux-gnu-pkg-config). The macros come from
+# pkg.m4, included by aclocal.m4.
+#------------------------------------------------------------------------
+
+PKG_PROG_PKG_CONFIG
+
+#------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
 # It makes compiling go faster.  (This is only a performance feature.)
 #------------------------------------------------------------------------
@@ -355,7 +364,7 @@ fi
 #	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no; then
+AS_IF([test $tk_aqua = no],[
 
     #--------------------------------------------------------------------
     # --enable-xft (default: yes) — independent switch
@@ -381,7 +390,7 @@ if test $tk_aqua = no; then
 	[enable_bidi=$enableval], [enable_bidi="yes"])
     AC_MSG_RESULT([$enable_bidi])
 
-    if test "$enable_bidi" = "yes"; then
+    AS_IF([test "$enable_bidi" = "yes"],[
 	AC_MSG_NOTICE([Bidi enabled: forcing Xft on as well])
 	if test "$enable_xft" = "no"; then
 	   enable_xft=yes
@@ -397,48 +406,8 @@ if test $tk_aqua = no; then
 	#--------------------------------------------------------------------
 	# HarfBuzz - version check (minimum 2.8.2)
 	#--------------------------------------------------------------------
-	AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
-	if pkg-config --exists harfbuzz; then
-	    HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
-	    AC_MSG_RESULT([found version $HB_VERSION])
-
-	    # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
-	    if test -n "$HB_VERSION"; then
-		# Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
-		HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
-		HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
-		HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
-
-		REQ_MAJOR=2
-		REQ_MINOR=8
-		REQ_PATCH=2
-
-		too_old=no
-		if test $HB_MAJOR -lt $REQ_MAJOR; then
-		    too_old=yes
-		elif test $HB_MAJOR -eq $REQ_MAJOR; then
-		    if test $HB_MINOR -lt $REQ_MINOR; then
-			too_old=yes
-		    elif test $HB_MINOR -eq $REQ_MINOR; then
-			if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
-			    too_old=yes
-			fi
-		    fi
-		fi
-
-		if test "$too_old" = "yes"; then
-		    AC_MSG_WARN([HarfBuzz version $HB_VERSION is too old (need >= 2.8.2).])
-		    AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
-		    enable_bidi=no
-		else
-		    AC_MSG_RESULT([HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2).])
-		fi
-	    fi
-
+	PKG_CHECK_MODULES([HB],[harfbuzz >= 2.8.2],[
 	    if test "$enable_bidi" = "yes"; then
-		HB_CFLAGS=`pkg-config --cflags harfbuzz`
-		HB_LIBS=`pkg-config --libs harfbuzz`
-
 		tk_oldCFlags=$CFLAGS
 		tk_oldLibs=$LIBS
 		CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
@@ -459,16 +428,22 @@ if test $tk_aqua = no; then
 		AC_SUBST(HB_CFLAGS)
 		AC_SUBST(HB_LIBS)
 	    fi
-	else
-	    AC_MSG_RESULT([no])
-	    AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+	],[
+	    PKG_CHECK_EXISTS([harfbuzz], [
+		HB_VERSION=`$PKG_CONFIG --modversion harfbuzz 2>/dev/null`
+		AC_MSG_WARN([HarfBuzz version $HB_VERSION is too old (need >= 2.8.2).])
+		AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
+		enable_bidi=no
+	    ], [
+		AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
 Please install the HarfBuzz development package:
   - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
   - Fedora/RHEL:     sudo dnf install harfbuzz-devel
   - Arch:            sudo pacman -S harfbuzz
   - macOS (Homebrew): brew install harfbuzz])
-	fi
-    fi
+	    ])
+	])
+    ])
 
     if test "$enable_bidi" = "no"; then
 	# Bidi disabled
@@ -484,16 +459,14 @@ Please install the HarfBuzz development package:
     fi
 
     # Now actually enable Xft if requested (or forced by bidi)
-    if test "$enable_xft" = "yes" ; then
+    AS_IF([test "$enable_xft" = "yes"],[
 	found_xft="yes"
 
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
-	if test "$found_xft" = "no" ; then
-	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
-	fi
+	AS_IF([test "$found_xft" = "no"],[
+	    PKG_CHECK_MODULES([XFT],[xft fontconfig],[found_xft=yes],[found_xft=no])
+	])
 
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
@@ -531,7 +504,7 @@ Please install the HarfBuzz development package:
 	else
 	    enable_xft=yes
 	fi
-    fi
+    ])
 
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
@@ -552,7 +525,7 @@ Please install the HarfBuzz development package:
     fi
     AC_SUBST(FONTSYSTEM)
 
-else
+],[
     # Aqua (macOS) path
     enable_xft=no
     enable_bidi=no
@@ -562,7 +535,7 @@ else
     HB_LIBS=""
     FONTSYSTEM="core"
     AC_SUBST(FONTSYSTEM)
-fi
+])
 
 #--------------------------------------------------------------------
 #	Check for the X RENDER extension client library (Xrender), used
@@ -571,7 +544,7 @@ fi
 
 XRENDER_CFLAGS=""
 XRENDER_LIBS=""
-if test $tk_aqua = no; then
+AS_IF([test $tk_aqua = no],[
     AC_MSG_CHECKING([whether to use xrender])
     AC_ARG_ENABLE(xrender,
 	AS_HELP_STRING([--enable-xrender],
@@ -579,10 +552,8 @@ if test $tk_aqua = no; then
 	[enable_xrender=$enableval], [enable_xrender="yes"])
     AC_MSG_RESULT([$enable_xrender])
 
-    if test "$enable_xrender" = "yes" ; then
-	found_xrender="yes"
-	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
-	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
+    AS_IF([test "$enable_xrender" = "yes"],[
+	PKG_CHECK_MODULES([XRENDER],[xrender],[found_xrender=yes],[found_xrender=no])
 	if test "$found_xrender" = "no" ; then
 	    found_xrender="yes"
 	    XRENDER_CFLAGS=""
@@ -611,8 +582,8 @@ if test $tk_aqua = no; then
 	    XRENDER_CFLAGS=""
 	    XRENDER_LIBS=""
 	fi
-    fi
-fi
+    ])
+])
 AC_SUBST(XRENDER_CFLAGS)
 AC_SUBST(XRENDER_LIBS)
 
@@ -698,13 +669,7 @@ if test "$tk_aqua" = no; then
     #------------------------------------------------------------------
     # ATK and Atk-bridge (required for accessibility)
     #------------------------------------------------------------------
-    AC_MSG_CHECKING([for ATK and Atk-bridge])
-    if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
-      AC_MSG_RESULT([yes])
-      ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-      ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-    else
-      AC_MSG_RESULT([no])
+    PKG_CHECK_MODULES([ATK], [atk atk-bridge-2.0], [], [
       AC_MSG_WARN([ATK and/or Atk-bridge were not found.])
       AC_MSG_WARN([Disabling accessibility support (--disable-accessibility).])
       AC_MSG_WARN([To enable accessibility, install the ATK development packages:])
@@ -715,20 +680,14 @@ if test "$tk_aqua" = no; then
       enable_accessibility=no
       ATK_CFLAGS=""
       ATK_LIBS=""
-    fi
+    ])
   fi
 
   #------------------------------------------------------------------
   # libspeechd (Speech Dispatcher) — required for accessibility
   #------------------------------------------------------------------
   if test "$enable_accessibility" = "yes"; then
-    AC_MSG_CHECKING([for libspeechd])
-    if pkg-config --exists speech-dispatcher; then
-      AC_MSG_RESULT([yes])
-      SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
-      SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
-    else
-      AC_MSG_RESULT([no])
+    PKG_CHECK_MODULES([SPEECHD], [speech-dispatcher], [], [
       AC_MSG_WARN([libspeechd (Speech Dispatcher) was not found.])
       AC_MSG_WARN([Disabling accessibility support (--disable-accessibility).])
       AC_MSG_WARN([To enable accessibility, install the Speech Dispatcher development package:])
@@ -741,7 +700,7 @@ if test "$tk_aqua" = no; then
       ATK_LIBS=""
       SPEECHD_CFLAGS=""
       SPEECHD_LIBS=""
-    fi
+    ])
   fi
 
   # Now that both checks have passed (or not), define the feature macros.
