@@ -347,9 +347,7 @@ typedef struct WaitRestrictInfo {
  */
 
 static int		ComputeReparentGeometry(WmInfo *wmPtr);
-static int		GetExtents(TkWindow *wrapperPtr, Window window,
-			    const char *atomName, int *leftPtr, int *rightPtr,
-			    int *topPtr, int *bottomPtr);
+static void		ComputeUnparentedGeometry(WmInfo *wmPtr);
 static int		GetFrameExtents(WmInfo *wmPtr, int *leftPtr,
 			    int *rightPtr, int *topPtr, int *bottomPtr);
 static int		GetWorkArea(WmInfo *wmPtr, int *xPtr, int *yPtr,
@@ -4146,37 +4144,9 @@ ConfigureEvent(
     }
 
     if ((wmPtr->reparent == None) || !ComputeReparentGeometry(wmPtr)) {
-	int left, right, top, bottom;
-
-	wmPtr->parentWidth = configEventPtr->width
-		+ 2*configEventPtr->border_width;
-	wmPtr->parentHeight = configEventPtr->height
-		+ 2*configEventPtr->border_width;
-	wrapperPtr->changes.x = wmPtr->x = configEventPtr->x;
-	wrapperPtr->changes.y = wmPtr->y = configEventPtr->y;
-
-	/*
-	 * A window manager which draws the decorations without reparenting
-	 * the window (e.g. KWin for Xwayland clients) reports them in
-	 * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
-	 * decorations, as for reparenting window managers. Only do this for
-	 * a mapped window: reparenting window managers may set the property
-	 * before they reparent the window.
-	 */
-
-	if ((winPtr->flags & TK_MAPPED)
-		&& GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
-	    wmPtr->x -= left;
-	    wmPtr->y -= top;
-	    wmPtr->parentWidth += left + right;
-	    wmPtr->parentHeight += top + bottom;
-	}
-	if (wmPtr->flags & WM_NEGATIVE_X) {
-	    wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
-	}
-	if (wmPtr->flags & WM_NEGATIVE_Y) {
-	    wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
-	}
+	wrapperPtr->changes.x = configEventPtr->x;
+	wrapperPtr->changes.y = configEventPtr->y;
+	ComputeUnparentedGeometry(wmPtr);
     }
 
     /*
@@ -4211,6 +4181,64 @@ ConfigureEvent(
     TkDoConfigureNotify(winPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ComputeUnparentedGeometry --
+ *
+ *	Computes the position and the outer size of a top-level window which
+ *	has not been reparented by the window manager, from the geometry of
+ *	its wrapper.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	wmPtr->x, wmPtr->y, wmPtr->parentWidth and wmPtr->parentHeight are
+ *	updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ComputeUnparentedGeometry(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    int left, right, top, bottom;
+
+    wmPtr->parentWidth = wrapperPtr->changes.width
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->parentHeight = wrapperPtr->changes.height
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->x = wrapperPtr->changes.x;
+    wmPtr->y = wrapperPtr->changes.y;
+
+    /*
+     * A window manager which draws the decorations without reparenting the
+     * window (e.g. KWin for Xwayland clients) reports them in
+     * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
+     * decorations, as for reparenting window managers. Only do this for a
+     * mapped window: reparenting window managers may set the property before
+     * they reparent the window. A window which was moved while it was
+     * unmapped (e.g. iconified) is corrected when it is mapped again.
+     */
+
+    if ((wmPtr->winPtr->flags & TK_MAPPED)
+	    && GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
+	wmPtr->x -= left;
+	wmPtr->y -= top;
+	wmPtr->parentWidth += left + right;
+	wmPtr->parentHeight += top + bottom;
+    }
+    if (wmPtr->flags & WM_NEGATIVE_X) {
+	wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
+    }
+    if (wmPtr->flags & WM_NEGATIVE_Y) {
+	wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4771,6 +4799,16 @@ WrapperEventProc(
     } else if (eventPtr->type == MapNotify) {
 	wmPtr->wrapperPtr->flags |= TK_MAPPED;
 	wmPtr->winPtr->flags |= TK_MAPPED;
+
+	/*
+	 * The decorations of a window which is not reparented are only taken
+	 * into account while it is mapped, and the window may have been moved
+	 * while it was unmapped.
+	 */
+
+	if ((wmPtr->reparent == None) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    ComputeUnparentedGeometry(wmPtr);
+	}
 	XMapWindow(wmPtr->winPtr->display, wmPtr->winPtr->window);
 	goto doMapEvent;
     } else if (eventPtr->type == UnmapNotify) {
