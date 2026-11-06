@@ -174,6 +174,8 @@ to the userbase.
  - [Grab documentation does not have caveats for windows & mac](https://core.tcl-lang.org/tk/tktview/e02aac)
  - [X11: wm geometry reports the requested position after the window manager moved the window out of a panel's area](https://core.tcl-lang.org/tk/tktview/d1a711)
  - [wm geometry returns wrong position for zoomed toplevels](https://core.tcl-lang.org/tk/tktview/557441)
+ - [Window gives false geometry information](https://core.tcl-lang.org/tk/tktview/220791)
+ - [X11: under Mutter wm geometry of a zoomed toplevel is offset by the invisible borders](https://core.tcl-lang.org/tk/tktview/6fa236)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
