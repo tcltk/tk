@@ -918,6 +918,7 @@ Tk_GetOpenFileObjCmd(
 					multiple);
     if (testsAreRunning) {
 	[monitor cancel];
+	[monitor release];
     }
     if (cmdObj) {
 	Tcl_DecrRefCount(cmdObj);
