@@ -184,29 +184,29 @@ This option is only available for themed widgets that have "corresponding" tradi
     [pathName]{.ins} [xview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1; together they describe the horizontal span that is visible in the window. For example, if the first element is .2 and the second element is .6, 20% of the widget's content is off-screen to the left, the middle 40% is visible in the window, and 40% of the content is off-screen to the right. These are the same values passed to scrollbars via the **-xscrollcommand** option.
 
-    *pathName* **xview** *index*
+    [pathName]{.ins} [xview]{.sub} [index]{.arg}
     : Adjusts the view in the window so that the content given by *index* is displayed at the left edge of the window.
 
-    *pathName* **xview moveto** *fraction*
+    [pathName]{.ins} [xview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that the character *fraction* of the way through the content appears at the left edge of the window. *Fraction* must be a fraction between 0 and 1.
 
-    *pathName* **xview scroll** *number what*
+    [pathName]{.ins} [xview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command shifts the view in the window left or right according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units**. If *what* is **pages** then the view adjusts by *number* screenfuls. If *number* is negative then characters farther to the left become visible;  if it is positive then characters farther to the right become visible. If *what* is **units**, the view adjusts left or right by *number* average-width characters on the display.
 
 
 [pathName]{.ins} [yview]{.sub} [args]{.arg}
 : This command is used to query and change the vertical position of the content in the widget's window.  It can take any of the following forms:
 
-    *pathName* **yview**
+    [pathName]{.ins} [yview]{.sub}
     : Returns a list containing two elements. Each element is a real fraction between 0 and 1; together they describe the vertical span that is visible in the window. For example, if the first element is .2 and the second element is .6, 20% of the widget's content is off-screen to the top, the middle 40% is visible in the window, and 40% of the content is off-screen to the bottom. These are the same values passed to scrollbars via the **-yscrollcommand** option.
 
-    *pathName* **yview** *index*
+    [pathName]{.ins} [yview]{.sub} [index]{.arg}
     : Adjusts the view in the window so that the content given by *index* is displayed at the top edge of the window.
 
-    *pathName* **yview moveto** *fraction*
+    [pathName]{.ins} [yview]{.sub} [moveto]{.lit} [fraction]{.arg}
     : Adjusts the view in the window so that the item *fraction* of the way through the content appears at the top edge of the window. *Fraction* must be a fraction between 0 and 1.
 
-    *pathName* **yview scroll** *number what*
+    [pathName]{.ins} [yview]{.sub} [scroll]{.lit} [number]{.arg} [what]{.arg}
     : This command shifts the view in the window up or down according to *number* and *what*. *Number* must be an integer or a float, but if it is a float then it is converted to an integer, rounded away from 0. *What* must be either **pages** or **units**. If *what* is **pages** then the view adjusts by *number* screenfuls. If *number* is negative then items farther to the top become visible;  if it is positive then items farther to the bottom become visible. If *what* is **units**, the view adjusts up or down by *number* average-width characters on the display.
 
 

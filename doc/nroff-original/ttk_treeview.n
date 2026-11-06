@@ -204,13 +204,10 @@ If the \fIitem\fR is not visible
 offscreen), returns the empty list.
 If \fIcolumn\fR is specified and is not hidden (by the \fB\-displaycolumns\fR
 option), returns the bounding box of that cell within \fIitem\fR
-(even if the cell is horizontally scrolled offscreen).
-.\" METHOD: bbox
-.TP
-\fIpathname \fBbbox {*}\fIcell\fR
-.
-Same as previous subcommand, but uses the expand operator to convert \fIcell\fR
-into item and column components.
+(even if the cell is horizontally scrolled offscreen). Hint: if you only
+have the \fIcell\fR, use the expand operator
+.QW {*}
+to convert it into item and column components.
 .\" METHOD: before
 .TP
 \fIpathname \fBbefore\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIitem\fR
@@ -840,13 +837,10 @@ Ensure that \fIitem\fR is visible by setting all of \fIitem\fR's ancestors to
 if necessary, so that \fIitem\fR is within the visible portion of the tree.
 If \fIcolumn\fR is specified, then the widget is scrolled in the horizontal
 direction, if necessary, so that \fIcolumn\fR is within the visible portion
-of the tree. Only non-title columns and rows will be scrolled.
-.\" METHOD: see
-.TP
-\fIpathname \fBsee {*}\fIcell\fR
-.
-Same as previous subcommand, but uses the expand operator to convert \fIcell\fR
-into item and column components.
+of the tree. Only non-title columns and rows will be scrolled. Hint: if you only
+have the \fIcell\fR, use the expand operator
+.QW {*}
+to convert it into item and column components.
 .\" METHOD: selection
 .TP
 \fIpathname \fBselection\fR ?\fIselop itemList|first last\fR?

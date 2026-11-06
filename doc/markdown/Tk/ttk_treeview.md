@@ -157,10 +157,7 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
 : Returns the identifier of the item after *item* in the current view. It can be the first child, next sibling, next sibling of an ancestor, or {} for none. Use **-hidden** to include hidden items and **-nohidden** (default) to exclude them. Use **-recurse** to include descendants/ancestors of *item* (default) and **-norecurse** to exclude them. If both **-hidden** and **-recurse** are used, descendants of closed items will be included. The [next] method is equivalent to "**after -hidden -norecurse**"
 
 [pathname]{.ins} [bbox]{.sub} [item]{.arg} [column]{.optarg}
-: Returns the bounding box (relative to the treeview widget's window) of the specified *item* in the form *x y width height*. If the *item* is not visible (i.e., if it is a descendant of a closed item or is vertically scrolled offscreen), returns the empty list. If *column* is specified and is not hidden (by the **-displaycolumns** option), returns the bounding box of that cell within *item* (even if the cell is horizontally scrolled offscreen).
-
-*pathname* **bbox {\*}***cell*
-: Same as previous subcommand, but uses the expand operator to convert *cell* into item and column components.
+: Returns the bounding box (relative to the treeview widget's window) of the specified *item* in the form *x y width height*. If the *item* is not visible (i.e., if it is a descendant of a closed item or is vertically scrolled offscreen), returns the empty list. If *column* is specified and is not hidden (by the **-displaycolumns** option), returns the bounding box of that cell within *item* (even if the cell is horizontally scrolled offscreen). Hint: if you only have the *cell*, use the expand operator "{\*}" to convert it into item and column components.
 
 [pathname]{.ins} [before]{.sub} [-hidden]{.optlit} [-norecurse]{.optlit} [item]{.arg}
 : Returns the identifier of the item before *item* in the current view. It can be the previous sibling, parent of *item*, or {} for none. Use **-hidden** to include hidden items and **-nohidden** (default) to exclude them. Use **-recurse** to include descendants/ancestors of *item* (default) and **-norecurse** to exclude them. If both **-hidden** and **-recurse** are used, descendants of closed items will be included. The **prev** method is equivalent to "**before -hidden -norecurse**"
@@ -174,40 +171,40 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
     [pathname]{.ins} [cellselection]{.sub} [add]{.lit} [cellList]{.arg}
     : Adds cells *cellList* to the cell selection.
 
-    *pathname* **cellselection add** ?**-nohidden**? ?**-norecurse**? *cellFirst cellLast*
+    [pathname]{.ins} [cellselection]{.sub} [add]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [cellFirst]{.arg} [cellLast]{.arg}
     : Add the cells within the rectangle defined by *cellFirst* and *cellLlast* to the cell selection. With **-nohidden**, hidden cells will be excluded and with **-norecurse**, cell in descendant items will be excluded.
 
-    *pathname* **cellselection anchor** ?*cell*?
+    [pathname]{.ins} [cellselection]{.sub} [anchor]{.lit} [cell]{.optarg}
     : Sets the cell selection anchor to *cell*. The anchor is used as the cellFirst for the selection extend bindings. Without *cell*, the current cell selection anchor is returned. Use empty string **{}** to unset the anchor.
 
-    *pathname* **cellselection has** *cellList*
+    [pathname]{.ins} [cellselection]{.sub} [has]{.lit} [cellList]{.arg}
     : Returns 1 if cell selection includes all of the cells in *cellList* or 0 if any are not selected.
 
-    *pathname* **cellselection includes** *cellList*
+    [pathname]{.ins} [cellselection]{.sub} [includes]{.lit} [cellList]{.arg}
     : Returns 1 if cell selection includes all of the cells in *cellList* or 0 if any are not selected.
 
-    *pathname* **cellselection present**
+    [pathname]{.ins} [cellselection]{.sub} [present]{.lit}
     : Returns 1 if there are selected cells or 0 if none.
 
-    *pathname* **cellselection remove** *cellList*
+    [pathname]{.ins} [cellselection]{.sub} [remove]{.lit} [cellList]{.arg}
     : Remove each cell in *cellList* from the cell selection.
 
-    *pathname* **cellselection remove** ?**-nohidden**? ?**-norecurse**? *cellFirst cellLast*
+    [pathname]{.ins} [cellselection]{.sub} [remove]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [cellFirst]{.arg} [cellLast]{.arg}
     : Remove the cells within the rectangle defined by *cellFirst* and *cellLast* from the cell selection. With **-nohidden**, hidden cells will be excluded and with **-norecurse**, cell in descendant items will be excluded.
 
-    *pathname* **cellselection set** *cellList*
+    [pathname]{.ins} [cellselection]{.sub} [set]{.lit} [cellList]{.arg}
     : Sets the selection to the cells in *cellList*. All other cells are unselected. Use an empty set **{}** to clear the selection.
 
-    *pathname* **cellselection set** ?**-nohidden**? ?**-norecurse**? *cellFirst cellLast*
+    [pathname]{.ins} [cellselection]{.sub} [set]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [cellFirst]{.arg} [cellLast]{.arg}
     : Set the selection to the cells within the rectangle defined by *cellFirst* and *cellLast*. All other cells are unselected. With **-nohidden**, hidden cells will be excluded and with **-norecurse**, cell in descendant items will be excluded.
 
-    *pathname* **cellselection size**
+    [pathname]{.ins} [cellselection]{.sub} [size]{.lit}
     : Returns the count of selected cells.
 
-    *pathname* **cellselection toggle** *cellList*
+    [pathname]{.ins} [cellselection]{.sub} [toggle]{.lit} [cellList]{.arg}
     : Toggle the cell selection state of each cell in *cellList*. If the element is partially visible, the result gives the full area of the element, including any parts that are not visible.
 
-    *pathname* **cellselection toggle** ?**-nohidden**? ?**-norecurse**? *cellFirst cellLast*
+    [pathname]{.ins} [cellselection]{.sub} [toggle]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [cellFirst]{.arg} [cellLast]{.arg}
     : Toggle the selection state of the cells within the rectangle defined by *cellFirst* and *cellLast*. With **-nohidden**, hidden cells will be excluded and with **-norecurse**, cell in descendant items will be excluded.
 
 
@@ -223,19 +220,19 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
     [-id]{.lit} [name]{.arg}
     : The column name. This is a read-only option. For example, \[*$pathname* **column #***n* **-id**\] returns the data column associated with display column *n*. The tree column has **-id #0**.
 
-    **-anchor** *anchor*
+    [-anchor]{.lit} [anchor]{.arg}
     : Specifies how the text in this column should be aligned with respect to the cell. *Anchor* is one of **n**, **ne**, **e**, **se**, **s**, **sw**, **w**, **nw**, or **center**. See [Tk\_GetAnchor][GetAnchor] for more information.
 
-    **-minwidth** *minwidth*
+    [-minwidth]{.lit} [minwidth]{.arg}
     : The minimum width of the column in pixels. The treeview widget will not make the column any smaller than **-minwidth** when the widget is resized or the user drags a heading column separator. The default is 20 pixels.
 
-    **-separator** *boolean*
+    [-separator]{.lit} [boolean]{.arg}
     : Specifies whether or not a column separator should be drawn to the right of the column. The default is false.
 
-    **-stretch** *boolean*
+    [-stretch]{.lit} [boolean]{.arg}
     : Specifies whether or not the column width should be adjusted when the widget is resized or the user drags a heading column separator. *Boolean* may have any of the forms accepted by [Tcl\_GetBoolean][GetInt]. By default columns are stretchable.
 
-    **-width** *width*
+    [-width]{.lit} [width]{.arg}
     : The width of the column in pixels. The default is 200 pixels. The specified column width may be changed by Tk in order to honor **-stretch** and/or **-minwidth**, or when the widget is resized or the user drags a heading column separator.
 
 
@@ -274,19 +271,19 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
     [-anchor]{.lit} [anchor]{.arg}
     : Specifies how the heading text should be aligned. See [Tk\_GetAnchor][GetAnchor] for valid values.
 
-    **-command** *script*
+    [-command]{.lit} [script]{.arg}
     : A script to evaluate when the heading label is pressed.
 
 
     Use *pathname heading #0* to configure the tree column heading.
 
-    **-image** *imageName*
+    [-image]{.lit} [imageName]{.arg}
     : Specifies an image to display to the right of the column heading. Ignored by Mac Aqua theme.
 
-    **-text** *text*
+    [-text]{.lit} [text]{.arg}
     : The text to display in the column heading.
 
-    **state** *stateSpec*
+    [state]{.cmd} [stateSpec]{.arg}
     : Modify or inquire about heading state. If *stateSpec* is present, sets the widget state: for each flag in stateSpec, sets the corresponding flag or clears it if prefixed by an exclamation point. To use the default sort direction indicator, set the heading to **user1** state plus either **selected** for descending sorts or **alternate** for ascending sorts. Remember to clear the states when a new heading is to be used as the sort column. Themes may set and use other states as needed for visual effects.
 
 
@@ -299,7 +296,7 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
 [pathname]{.ins} [identify]{.sub} [component]{.arg} [x]{.arg} [y]{.arg}
 : Returns a description of the specified *component* under the point given by *x* and *y*, or the empty string if no such *component* is present at that position. The values *x* and *y* may have any of the forms acceptable to [Tk\_GetPixels][GetPixels]. The following subcommands are supported:
 
-    *pathname* **identify region** *x y*
+    [pathname]{.ins} [identify]{.sub} [region]{.lit} [x]{.arg} [y]{.arg}
     : Returns one of:
 
     heading
@@ -315,19 +312,19 @@ In addition to the standard **cget**, **configure**, **instate**, **state**, **s
     : A data cell.
 
 
-*pathname* **identify item** *x y*
+[pathname]{.ins} [identify]{.sub} [item]{.lit} [x]{.arg} [y]{.arg}
 : Returns the identifier of the item at position *x,y*.
 
-*pathname* **identify column** *x y*
+[pathname]{.ins} [identify]{.sub} [column]{.lit} [x]{.arg} [y]{.arg}
 : Returns the display column identifier of the cell at position *x,y*. The tree column has ID **#0**.
 
-*pathname* **identify cell** *x y*
+[pathname]{.ins} [identify]{.sub} [cell]{.lit} [x]{.arg} [y]{.arg}
 : Returns the cell identifier of the cell at position *x,y*. A cell identifier is a list of item ID and column ID.
 
-*pathname* **identify element** *x y*
+[pathname]{.ins} [identify]{.sub} [element]{.lit} [x]{.arg} [y]{.arg}
 : The element at position *x,y*.
 
-*pathname* **identify row** *x y*
+[pathname]{.ins} [identify]{.sub} [row]{.lit} [x]{.arg} [y]{.arg}
 : Obsolescent synonym for *pathname* **identify item**.
 
 
@@ -339,7 +336,7 @@ See [Column identifiers] for a discussion of display columns and data columns.
 [pathname]{.ins} [insert]{.sub} [parent]{.arg} [index]{.arg} [[-id]{.lit} [id]{.arg}]{.optarg} [options...]{.arg}
 : Creates a new item, inserts it in *parent*'s children at position *index*, and returns its identifier. See [Item options] for the list of available options. Use the empty string **{}** for *parent* to create a new top-level item. See [Indices] for valid forms of *index*. If *index* is negative or zero, the new item is inserted at the beginning; if *index* is greater than or equal to the current number of children, it is inserted at the end. If **-id** is specified, then *id* is used as the identifier of the item; *id* must not already exist in the tree. Otherwise, a new unique identifier is generated.
 
-*pathname* **insert before**|[after] *item* ?**-id** *id*? *options...*
+[pathname]{.ins} [insert]{.sub} [before=|§after]{.lit} [item]{.arg} [[-id]{.lit} [id]{.arg}]{.optarg} [options...]{.arg}
 : Creates a new item, inserts it in *item*'s parent before or after *item*, and returns its identifier. See [Item options] for the list of available options. If **-id** is specified, it is used as the identifier of the item; *id* must not already exist in the tree. Otherwise, a new unique identifier is generated.
 
 [pathname]{.ins} [item]{.sub} [item]{.arg} [-option= ?+value -option value...]{.optarg}
@@ -348,7 +345,7 @@ See [Column identifiers] for a discussion of display columns and data columns.
 [pathname]{.ins} [move]{.sub} [item]{.arg} [parent]{.arg} [index]{.arg}
 : Moves *item* to position *index* in *parent*'s list of children. If *index* is negative or zero, *item* is moved to the beginning; if greater than or equal to the number of children, it is moved to the end. See [Indices] for valid forms of *index*. It is illegal to move an item under one of its descendants.
 
-*pathname* **move** *item* **before**|[after] *otherItem*
+[pathname]{.ins} [move]{.sub} [item]{.arg} [before=|§after]{.lit} [otherItem]{.arg}
 : Moves *item* to before or after *otherItem* in *otherItem*'s parent's children. It is illegal to move an item under one of its descendants.
 
 [pathname]{.ins} [next]{.sub} [item]{.arg}
@@ -369,69 +366,66 @@ See [Column identifiers] for a discussion of display columns and data columns.
     [-ascii]{.lit}
     : The values are to be compared to *pattern* as Unicode strings (the name is for backward-compatibility reasons.) This is the default.
 
-    **-dictionary**
+    [-dictionary]{.lit}
     : The values are to be compared to *pattern* using dictionary-style comparisons. For search, this is the same as **-ascii** but also sets **-nocase**. NOTE: This means I18n and I018N are not the same.
 
-    **-integer**
+    [-integer]{.lit}
     : The values are to be compared to *pattern* as integers. Empty values will be ignored, but non-numeric values will generate an error.
 
-    **-nocase**
+    [-nocase]{.lit}
     : Comparisons are to be performed in a case-insensitive manner. Only used with **-ascii** and **-dictionary** options for the **-exact**, **-glob**, and **-regexp** matching.
 
-    **-real**
+    [-real]{.lit}
     : The values are to be compared to *pattern* as floating-point values. Empty values will be ignored, but non-numeric values will generate an error.
 
-    **-unicode**
+    [-unicode]{.lit}
     : Alias for **-ascii**. Direction
 
-    **-backwards**
+    [-backwards]{.lit}
     : The search is to be performed backwards starting from **-start** item or cell.
 
-    **-forwards**
+    [-forwards]{.lit}
     : The search is to be performed forwards starting from **-start** item or cell. This is the default. Pattern Matching
 
-    **-exact**
+    [-exact]{.lit}
     : *Pattern* is a literal string that is compared for exact equality against each cell value. Used with **-ascii** and **-dictionary** options. This is the default.
 
-    **-glob**
+    [-glob]{.lit}
     : *Pattern* is a glob-style pattern which is matched against each cell value using the same rules as the [string match][string] command. Used with **-ascii** and **-dictionary** options.
 
-    **-regexp**
+    [-regexp]{.lit}
     : *Pattern* is an advanced regular expression that is matched against each cell value using the rules described in the **re\_syntax** reference page. Used with **-ascii** and **-dictionary** options. Search Modifiers
 
-    **-columns** *columns*
+    [-columns]{.lit} [columns]{.arg}
     : Limit search to only the columns specified in *columns* list. The default is to search in all displayed columns. See [Column identifiers] for valid forms of *column*.
 
-    **-hidden**
+    [-hidden]{.lit}
     : Search within hidden and closed items too. The default is to exclude hidden and descendants of closed items from the search.
 
-    **-recurse**
+    [-recurse]{.lit}
     : Search within all descendants of *parent*. The default is to only search within the children of *parent*.
 
-    **-start** *item*|*cell*
+    [-start]{.lit} [item=|+cell]{.arg}
     : Start the search at *item* or if the **-cell** option is also specified, then start the search at *cell*. The default start item and cell when used with the **-forwards** option is the first child of *parent* and the first display column. For the **-backwards** option, the default is the last child of *parent* (or descendant when used with **-recurse**) and the last display column. The *item* or *cell* must be a descendant of *parent*. When resuming a search, use the **before** or [after] subcommands to get the previous or next item to start the search at. All other options should be the same as the initial search including *parent*.
 
-    **-stop** *item*|*cell*
+    [-stop]{.lit} [item=|+cell]{.arg}
     : Stop the search at *item* or if the **-cell** option is also specified, then stop the search at *cell*. The default stop item and cell when used with the **-forwards** option is the last child of *parent* (or descendant when used with **-recurse**) and the last display column. For the **-backwards** option, the default is the first child of *parent* and the first display column. When used with the **-wraparound** option, the default is just before the start item or cell (in other words, the start item or cell won't be searched again). This means, to wrap-around and stop at the start item, only use the **-start** and **-wraparound** options. If the **-start** and **-stop** options both use the same item, then only that item will be searched. The *item* or *cell* must be a descendant of *parent*.
 
-    **-wraparound**
+    [-wraparound]{.lit}
     : When used with the **-start** option, enables the search to wrap-round to the first/last item in *parent* to continue to the **-stop** item or cell. Result Modifiers
 
-    **-all**
+    [-all]{.lit}
     : Return the identifiers of all of the items that match *pattern* rather than only the first one.
 
-    **-cell**
+    [-cell]{.lit}
     : Return cell ids instead of item ids. The default is to return item ids. Also switches the **-start** and **-stop** options to use cell values.
 
-    **-not**
+    [-not]{.lit}
     : Negates the match, so only the items that do not match *pattern*, will be returned.
 
 
 [pathname]{.ins} [see]{.sub} [item]{.arg} [column]{.optarg}
-: Ensure that *item* is visible by setting all of *item*'s ancestors to **-open true**, and scroll the widget in the vertical direction, if necessary, so that *item* is within the visible portion of the tree. If *column* is specified, then the widget is scrolled in the horizontal direction, if necessary, so that *column* is within the visible portion of the tree. Only non-title columns and rows will be scrolled.
-
-*pathname* **see {\*}***cell*
-: Same as previous subcommand, but uses the expand operator to convert *cell* into item and column components.
+: Ensure that *item* is visible by setting all of *item*'s ancestors to **-open true**, and scroll the widget in the vertical direction, if necessary, so that *item* is within the visible portion of the tree. If *column* is specified, then the widget is scrolled in the horizontal direction, if necessary, so that *column* is within the visible portion of the tree. Only non-title columns and rows will be scrolled. Hint: if you only have the *cell*, use the expand operator "{\*}" to convert it into item and column components.
 
 [pathname]{.ins} [selection]{.sub} [selop itemList|first last]{.optarg}
 : Manages item selection. The item selection is independent from the cell selection handled by the **cellselection** subcommand. If *selop* is not specified, returns a list of selected items. Otherwise, *selop* is one of the following:
@@ -439,40 +433,40 @@ See [Column identifiers] for a discussion of display columns and data columns.
     [pathname]{.ins} [selection]{.sub} [add]{.lit} [itemList]{.arg}
     : Add items in *itemList* to the selection.
 
-    *pathname* **selection add** ?**-nohidden**? ?**-norecurse**? *first last*
+    [pathname]{.ins} [selection]{.sub} [add]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [first]{.arg} [last]{.arg}
     : Add the items from *first* to *last* (inclusive) to the selection. Use **-hidden** to include hidden items (default) and **-nohidden** to exclude them. Use **-recurse** to include descendants and ancestors (default) and **-norecurse** to exclude them. If **-hidden** and **-recurse** are used, all descendants of closed items will be included.
 
-    *pathname* **selection anchor** ?*item*?
+    [pathname]{.ins} [selection]{.sub} [anchor]{.lit} [item]{.optarg}
     : Sets the selection anchor to *item*. The anchor is used as the from item for the selection extend bindings. Without *item*, the current selection anchor is returned. Use empty string {} to unset the anchor.
 
-    *pathname* **selection has** *itemList*
+    [pathname]{.ins} [selection]{.sub} [has]{.lit} [itemList]{.arg}
     : Returns 1 if selection includes all items in *itemList* or 0 if any are not selected.
 
-    *pathname* **selection includes** *itemList*
+    [pathname]{.ins} [selection]{.sub} [includes]{.lit} [itemList]{.arg}
     : Returns 1 if selection includes all items in *itemList* or 0 if any are not selected.
 
-    *pathname* **selection present**
+    [pathname]{.ins} [selection]{.sub} [present]{.lit}
     : Returns 1 if there are selected items or 0 if none.
 
-    *pathname* **selection remove** *itemList*
+    [pathname]{.ins} [selection]{.sub} [remove]{.lit} [itemList]{.arg}
     : Remove each item in *itemList* from the selection.
 
-    *pathname* **selection remove** ?**-nohidden**? ?**-norecurse**? *first last*
+    [pathname]{.ins} [selection]{.sub} [remove]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [first]{.arg} [last]{.arg}
     : Remove the items from *first* to *last* (inclusive) from the selection. Use **-hidden** to include hidden items (default) and **-nohidden** to exclude them. Use **-recurse** to include descendants and ancestors (default) and **-norecurse** to exclude them. If **-hidden** and **-recurse** are used, descendants of closed items will be included.
 
-    *pathname* **selection set** *itemList*
+    [pathname]{.ins} [selection]{.sub} [set]{.lit} [itemList]{.arg}
     : Sets selection to the items in *itemList*. All other items are unselected. Use an empty set **{}** to clear the selection.
 
-    *pathname* **selection set** ?**-nohidden**? ?**-norecurse**? *first last*
+    [pathname]{.ins} [selection]{.sub} [set]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [first]{.arg} [last]{.arg}
     : Sets selection to the items from *first* to *last* (inclusive). Use **-hidden** to include hidden items (default) and **-nohidden** to exclude them. Use **-recurse** to include descendants and ancestors (default) and **-norecurse** to exclude them. If **-hidden** and **-recurse** are used, descendants of closed items will be included.
 
-    *pathname* **selection size**
+    [pathname]{.ins} [selection]{.sub} [size]{.lit}
     : Returns the count of selected items.
 
-    *pathname* **selection toggle** *itemList*
+    [pathname]{.ins} [selection]{.sub} [toggle]{.lit} [itemList]{.arg}
     : Toggle the selection state of each item in *itemList*.
 
-    *pathname* **selection toggle** ?**-nohidden**? ?**-norecurse**? *first last*
+    [pathname]{.ins} [selection]{.sub} [toggle]{.lit} [-nohidden]{.optlit} [-norecurse]{.optlit} [first]{.arg} [last]{.arg}
     : Toggle the selection state of the items from *first* to *last* (inclusive). Use **-hidden** to include hidden items (default) and **-nohidden** to exclude them. Use **-recurse** to include descendants and ancestors (default) and **-norecurse** to exclude them. If **-hidden** and **-recurse** are used, descendants of closed items will be included.
 
 
@@ -488,47 +482,47 @@ See [Column identifiers] for a discussion of display columns and data columns.
     [-ascii]{.lit}
     : The values are to be sorted in Unicode character code order (the name is for backward-compatibility reasons.) This is the default.
 
-    **-dictionary**
+    [-dictionary]{.lit}
     : The values are to be sorted using dictionary-style comparisons. This is the same as **-ascii** except (a) case is ignored except as a tie-breaker and (b) if two strings contain embedded numbers, the numbers compare as integers, not characters. For example, in **-dictionary** mode, "bigBoy" sorts between "bigbang" and "bigboy", and "x10y" sorts between "x9y" and "x11y". Overrides the **-nocase** option.
 
-    **-integer**
+    [-integer]{.lit}
     : The values are to be sorted as integers. Non-integer values will generate an error.
 
-    **-nocase**
+    [-nocase]{.lit}
     : Comparisons are to be performed in a case-insensitive manner. Only used with **-ascii** option.
 
-    **-real**
+    [-real]{.lit}
     : The values are to be sorted as floating-point values. Non-numeric values will generate an error.
 
-    **-unicode**
+    [-unicode]{.lit}
     : Alias for **-ascii**.
 
-    **-command** *command*
+    [-command]{.lit} [command]{.arg}
     : Use *command* as a comparison command. To compare two elements, evaluate a Tcl script consisting of command with the two elements appended as additional arguments. The script should return an integer less than, equal to, or greater than zero if the first element is to be considered less than, equal to, or greater than the second, respectively.
 
-    **-increasing**
+    [-increasing]{.lit}
     : Sort the list in increasing order ("smallest" items first). This is the default.
 
-    **-decreasing**
+    [-decreasing]{.lit}
     : Sort the list in decreasing order ("largest" items first).
 
-    **-column** *column*
+    [-column]{.lit} [column]{.arg}
     : Sort based on values in column *column*. See [Column identifiers] for valid forms of *column*. The default is the first display column (**#0** if tree in -show or **#1** if not).
 
-    **-ignoreempty**
+    [-ignoreempty]{.lit}
     : Used with **-integer** or **-real** to ignore empty entries. Normally these would trigger an error and abort the sort. Empty entries will be sorted first for **-increasing** and last for **-decreasing**.
 
-    **-recurse**
+    [-recurse]{.lit}
     : Sort all descendants of *parent*. The default is to only sort the children of *parent*.
 
 
 [pathName]{.ins} [tag]{.sub} [args...]{.arg}
 : Manages tags. Tags can be set on items as well as on cells. The set of tags is shared between items and cells. However item tagging is independent from cell tagging (for instance adding a tag on an item does not also add this tag on the cells in that item). Cell tags take precedence over item tags when drawing. The following subcommands are supported:
 
-    *pathName* **tag add** *tagName itemList*
+    [pathName]{.ins} [tag]{.sub} [add]{.lit} [tagName]{.arg} [itemList]{.arg}
     : Adds tag *tagName* to each of the items in *itemList*. If *tagName* is already present for a particular item, then the **-tags** for that item are unchanged.
 
-    *pathName* **tag bind** *tagName* ?*sequence*? ?*script*?
+    [pathName]{.ins} [tag]{.sub} [bind]{.lit} [tagName]{.arg} [sequence]{.optarg} [script]{.optarg}
     : Add a Tk binding script for the event sequence *sequence* to the tag *tagName*. When an X event is delivered to an item, binding scripts for each of the item's **-tags** are evaluated in order as per *bindtags(n)*. If the event can be associated with a cell (i.e. mouse events) any bindings for the cell's **-tags** are evaluated as well.
 
 
@@ -536,32 +530,32 @@ See [Column identifiers] for a discussion of display columns and data columns.
 
     The binding *script* undergoes **%**-substitutions before evaluation; see [bind](n) for details.
 
-*pathName* **tag cell** *subcommand...*
+[pathName]{.ins} [tag]{.sub} [cell]{.lit} [subcommand...]{.arg}
 : Manages tags on individual cells. A *cellList* argument may be a single cell or a list of cells.
 
-    *pathName* **tag cell add** *tagName cellList*
+    [pathName]{.ins} [tag]{.sub} [cell]{.lit} [add]{.lit} [tagName]{.arg} [cellList]{.arg}
     : Adds tag *tagName* to each of the cells in *cellList*. If *tagName* is already present for a particular cell, then the tag list for that cell is not changed.
 
-    *pathName* **tag cell has** *tagName* ?*cell*?
+    [pathName]{.ins} [tag]{.sub} [cell]{.lit} [has]{.lit} [tagName]{.arg} [cell]{.optarg}
     : If *cell* is specified, returns a boolean value with whether *cell* has tag *tagName*. Without *cell*, a list of all cells which have tag *tagName* is returned.
 
-    *pathName* **tag cell remove** *tagName* ?*cellList*?
+    [pathName]{.ins} [tag]{.sub} [cell]{.lit} [remove]{.lit} [tagName]{.arg} [cellList]{.optarg}
     : Removes tag *tagName* from each of the cells in *cellList*. If *cellList* is omitted, tag *tagName* is removed from all cells in the tree.
 
 
-*pathName* **tag configure** *tagName* ?*option*? ?*value option value...*?
+[pathName]{.ins} [tag]{.sub} [configure]{.lit} [tagName]{.arg} [option]{.optarg} [value option value...]{.optarg}
 : Query or modify the options for tag *tagName*. If one or more *option* and *value* pairs are specified, each option is set to the following value. If a single *option* is specified, the value of that option is returned (or the empty string if the option has not been specified for *tagName*). With no arguments, a dictionary of the option settings for tag *tagName* is returned. See [Tag options] for the list of available options.
 
-*pathName* **tag delete** *tagName*
+[pathName]{.ins} [tag]{.sub} [delete]{.lit} [tagName]{.arg}
 : Deletes tag *tagName* and any associated information. The tag is deleted from all items and cells in the widget and also any other information associated with the tag is deleted, such as bindings and display information.
 
-*pathName* **tag has** *tagName* ?*item*?
+[pathName]{.ins} [tag]{.sub} [has]{.lit} [tagName]{.arg} [item]{.optarg}
 : If *item* is specified, returns a boolean value with whether *item* has tag *tagName* or not. Without *item*, returns a list of all items which have tag *tagName*.
 
-*pathName* **tag names**
+[pathName]{.ins} [tag]{.sub} [names]{.lit}
 : Returns a list of all tags used by the widget.
 
-*pathName* **tag remove** *tagName* ?*itemList*?
+[pathName]{.ins} [tag]{.sub} [remove]{.lit} [tagName]{.arg} [itemList]{.optarg}
 : Removes tag *tagName* from each of the items in *itemList*. If *itemList* is omitted, then tag *tagName* is removed from all items in the tree. If tag *tagName* is not present for an item, then the **-tags** for that item are not changed.
 
 [pathname]{.ins} [unhide]{.sub} [-recurse]{.optarg} [itemList]{.arg}
