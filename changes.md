@@ -166,6 +166,13 @@ to the userbase.
  - [Inconsistency between grid info, place info and pack info](https://core.tcl-lang.org/tk/tktview/3f5867)
  - [Grab documentation does not have caveats for windows & mac](https://core.tcl-lang.org/tk/tktview/e02aac)
  - [X11: wm geometry reports the requested position after the window manager moved the window out of a panel's area](https://core.tcl-lang.org/tk/tktview/d1a711)
+ - [Windows: -appearance set with wm attributes is lost when the wrapper is recreated](https://core.tcl-lang.org/tk/tktview/354fbe)
+ - [wm geometry returns wrong position for zoomed toplevels](https://core.tcl-lang.org/tk/tktview/557441)
+ - [Window gives false geometry information](https://core.tcl-lang.org/tk/tktview/220791)
+ - [X11: under Mutter wm geometry of a zoomed toplevel is offset by the invisible borders](https://core.tcl-lang.org/tk/tktview/6fa236)
+ - [Tk 9.1.0 fails to cross-build from sources](https://core.tcl-lang.org/tk/tktview/acb368)
+ - [X11: wm attributes -zoomed does not maximize the window under xfwm4 and fvwm](https://core.tcl-lang.org/tk/tktview/f126a0)
+ - [X11: wm geometry of a toplevel moved while iconified is too low by the title bar under KWin](https://core.tcl-lang.org/tk/tktview/f23a58)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

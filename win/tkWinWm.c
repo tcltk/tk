@@ -3943,7 +3943,7 @@ WmGeometryCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     char xSign, ySign;
-    int width, height;
+    int x, y, width, height;
     const char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
@@ -3954,6 +3954,8 @@ WmGeometryCmd(
     if (objc == 3) {
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
+	x = wmPtr->x;
+	y = wmPtr->y;
 	if (wmPtr->gridWin != NULL) {
 	    width = wmPtr->reqGridWidth + (winPtr->changes.width
 		    - winPtr->reqWidth)/wmPtr->widthInc;
@@ -3966,11 +3968,36 @@ WmGeometryCmd(
 	if (winPtr->flags & TK_EMBEDDED) {
 	    LRESULT result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
 
-	    wmPtr->x = (short)(result >> 16);
-	    wmPtr->y = (short)(result & 0x0000ffff);
+	    x = wmPtr->x = (short)(result >> 16);
+	    y = wmPtr->y = (short)(result & 0x0000ffff);
+	} else {
+	    int zoomed = (wmPtr->hints.initial_state == ZoomState);
+
+	    if (wmPtr->hints.initial_state == IconicState
+		    && wmPtr->wrapper != NULL) {
+		/*
+		 * An iconified window which will be restored zoomed.
+		 */
+
+		WINDOWPLACEMENT placement;
+
+		placement.length = sizeof(WINDOWPLACEMENT);
+		zoomed = GetWindowPlacement(wmPtr->wrapper, &placement)
+			&& (placement.flags & WPF_RESTORETOMAXIMIZED);
+	    }
+	    if (zoomed) {
+		/*
+		 * wmPtr->x and wmPtr->y keep the position of the restored
+		 * window, report the actual position of the zoomed one.
+		 */
+
+		xSign = ySign = '+';
+		x = winPtr->changes.x;
+		y = winPtr->changes.y;
+	    }
 	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
-		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
+		width, height, xSign, x, ySign, y));
 	return TCL_OK;
     }
 
@@ -8158,21 +8185,27 @@ static int SynchronizeAppearance(
     if (wmPtr == NULL) {
 	return TCL_ERROR;
     }
-    if (wmPtr->flags & WM_OVERRIDE_APPEARANCE) {
-	return TCL_OK;
-    }
-    bool appsShouldBeDark = !AppsShouldUseLightTheme();
+
+    /*
+     * An appearance forced to light or dark with "wm attributes -appearance"
+     * does not follow the system setting, but it must be applied again to a
+     * wrapper recreated by UpdateWrapper (wm resizable, wm transient...).
+     */
+
+    bool isOverridden = (wmPtr->flags & WM_OVERRIDE_APPEARANCE) != 0;
+    bool shouldBeDark = isOverridden ? (wmPtr->flags & WM_APPEARANCE_DARK) != 0
+	    : !AppsShouldUseLightTheme();
     long long isDarkParam; /* Alignment matters! */
     bool windowIsDark;
     TkpWindowIsDark(tkwin, &windowIsDark);
-    if (appsShouldBeDark == windowIsDark) {
+    if (shouldBeDark == windowIsDark) {
 #if 0 /* for debugging */
 	 Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 	    Tcl_ObjPrintf("Already in sync"));
 #endif
 	return TCL_OK;
     }
-    isDarkParam = appsShouldBeDark ? 1 : 0;
+    isDarkParam = shouldBeDark ? 1 : 0;
     long status = DwmSetWindowAttribute(
 	wmPtr->wrapper,
 	DWMWA_USE_IMMERSIVE_DARK_MODE,
@@ -8195,7 +8228,10 @@ static int SynchronizeAppearance(
     SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, !isWindowFocused, 0);
     SendMessageW(wmPtr->wrapper, WM_NCACTIVATE, isWindowFocused, 0);
 
-    const char *newAppearance = appsShouldBeDark ? "dark" : "light";
+    if (isOverridden) {
+	return TCL_OK;
+    }
+    const char *newAppearance = shouldBeDark ? "dark" : "light";
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 			Tcl_ObjPrintf("appearance %s ", newAppearance));
     return TCL_OK;
