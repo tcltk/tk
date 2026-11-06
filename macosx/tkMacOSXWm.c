@@ -635,6 +635,12 @@ static void placeAsTab(TKWindow *macWindow) {
 
 - (void) tkOrderFront
 {
+#if 0
+    NSArray *stack = [NSThread callStackSymbols];
+    if ([stack count] > 1) { // Fixed syntax error here
+	NSLog(@"Caller: %@", stack[1]);
+    }
+#endif
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -642,7 +648,6 @@ static void placeAsTab(TKWindow *macWindow) {
 #if 0
 	    fprintf(stderr, "Window %s was ordered front @ %.8f\n", Tk_PathName(winPtr),
 		CACurrentMediaTime());
-	    PRINT_STACK;
 #endif
 	    [self makeKeyAndOrderFront:nil];
 #if 0
@@ -1310,7 +1315,7 @@ TkWmDeadWindow(
 	wmPtr->transientPtr = transientPtr->nextPtr;
 	Tcl_Free(transientPtr);
     }
-    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);				    
+    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
      * data structures.  If the NSWindow is a child, disassociate it from
@@ -6827,7 +6832,7 @@ TkMacOSXMakeRealWindowExist(
     [window orderOut:nil];
     [window setAlphaValue: 1.0];
     [window setAnimationBehavior: savedBehavior];
-						
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     if (tabbingId) {
 	identifier = [NSString stringWithUTF8String:tabbingId];
