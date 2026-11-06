@@ -7108,7 +7108,8 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 } -cleanup {
 } -result pass
 
-test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]}  -setup {
+# Warping is not well supported on Wayland
+test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -constraints notWayland  -setup {
     event generate {} <Motion> -warp 1 -x 50 -y 50
     controlPointerWarpTiming
     toplevel .top

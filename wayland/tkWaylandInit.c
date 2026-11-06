@@ -1660,6 +1660,97 @@ TkWaylandFlushConfigures(void)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandWaitForWindowSize --
+ *
+ *	Wait until the compositor has configured a window to the given size.
+ *	glfwSetWindowSize is asynchronous: GLFW only reports the new size,
+ *	and the FramebufferSizeCallback only runs, when the configure event
+ *	answering the commit arrives.  X11 Tk programs, and the Tk tests,
+ *	assume that a resize is done when "update" returns.
+ *
+ *	The wait is bounded, because the compositor may legitimately choose
+ *	another size (tiling, minimum size of the decorations).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Dispatches pending Wayland events, which can call the GLFW callbacks
+ *	of any window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandWaitForWindowSize(
+    GLFWwindow *glfwWindow,
+    int width,
+    int height)
+{
+    int i, w, h;
+
+    if (glfwWindow == NULL || waylandDisplay == NULL || shutdownInProgress) {
+	return;
+    }
+    for (i = 0; i < 20; i++) {
+	glfwGetWindowSize(glfwWindow, &w, &h);
+	if (w == width && h == height) {
+	    return;
+	}
+	wl_display_roundtrip(waylandDisplay);
+	glfwGetWindowSize(glfwWindow, &w, &h);
+	if (w == width && h == height) {
+	    return;
+	}
+	Tcl_Sleep(5);
+    }
+    DEBUG_LOG("TkWaylandWaitForWindowSize: gave up waiting for %dx%d, got %dx%d",
+	    width, height, w, h);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWaitForWindowVisible --
+ *
+ *	Wait until GLFW reports a window as visible, which happens when the
+ *	compositor has configured it for the first time.  The wait is
+ *	bounded.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Dispatches pending Wayland events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandWaitForWindowVisible(
+    GLFWwindow *glfwWindow)
+{
+    int i;
+
+    if (glfwWindow == NULL || waylandDisplay == NULL || shutdownInProgress) {
+	return;
+    }
+    for (i = 0; i < 20; i++) {
+	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	    return;
+	}
+	wl_display_roundtrip(waylandDisplay);
+	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	    return;
+	}
+	Tcl_Sleep(5);
+    }
+    DEBUG_LOG("TkWaylandWaitForWindowVisible: gave up waiting");
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandGetNVGContextForMeasure --
  *
  *	Return the NanoVG context with the shared GL context current,

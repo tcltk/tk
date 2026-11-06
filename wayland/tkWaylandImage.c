@@ -24,6 +24,7 @@
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 #include <limits.h>
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -1030,6 +1031,113 @@ XCopyPlane(
 /*
  *----------------------------------------------------------------------
  *
+ * PutBitmapImage --
+ *
+ *	Draw a 1-bit (XYBitmap) XImage the way Xlib's XPutImage does: set
+ *	bits in the GC foreground color, clear bits in the GC background
+ *	color, both opaque.  Tk's photo code sends such an image when the
+ *	image has "-palette 2".  TkpPutRGBAImage only takes 24 and 32 bits
+ *	per pixel, so the bits are expanded to RGBA first.
+ *
+ * Results:
+ *	Success, BadValue for a rectangle outside the image, or BadAlloc.
+ *
+ * Side effects:
+ *	Draws the image.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+PutBitmapImage(
+    Display      *display,
+    Drawable      drawable,
+    GC            gc,
+    XImage       *image,
+    int           src_x,
+    int           src_y,
+    int           dest_x,
+    int           dest_y,
+    unsigned int  width,
+    unsigned int  height)
+{
+    XGCValues v;
+    unsigned char fg[3] = {0x00, 0x00, 0x00};
+    unsigned char bg[3] = {0xFF, 0xFF, 0xFF};
+    int unit = (image->bitmap_unit > 0) ? image->bitmap_unit : 8;
+    int unitBytes = unit / 8;
+    XImage rgba;
+    unsigned int i, j;
+    int rc;
+
+    if (src_x < 0 || src_y < 0 || width == 0 || height == 0
+	    || image->width <= 0 || image->height <= 0
+	    || (unsigned int)src_x + width > (unsigned int)image->width
+	    || (unsigned int)src_y + height > (unsigned int)image->height
+	    || (size_t)image->bytes_per_line < (size_t)unitBytes
+		* (((size_t)src_x + width + unit - 1) / unit)) {
+	return BadValue;
+    }
+
+    if (gc && TkWaylandGetGCValues(gc, GCForeground | GCBackground, &v)) {
+	NVGcolor c = TkWaylandPixelToNVG(v.foreground);
+
+	fg[0] = (unsigned char)lroundf(c.r * 255.0f);
+	fg[1] = (unsigned char)lroundf(c.g * 255.0f);
+	fg[2] = (unsigned char)lroundf(c.b * 255.0f);
+	c = TkWaylandPixelToNVG(v.background);
+	bg[0] = (unsigned char)lroundf(c.r * 255.0f);
+	bg[1] = (unsigned char)lroundf(c.g * 255.0f);
+	bg[2] = (unsigned char)lroundf(c.b * 255.0f);
+    }
+
+    rgba = *image;
+    rgba.width = (int)width;
+    rgba.height = (int)height;
+    rgba.format = ZPixmap;
+    rgba.xoffset = 0;
+    rgba.depth = 24;
+    rgba.bits_per_pixel = 32;
+    rgba.bytes_per_line = (int)(width * 4);
+    rgba.data = (char *)ckalloc((size_t)width * height * 4);
+    if (rgba.data == NULL) {
+	return BadAlloc;
+    }
+
+    for (j = 0; j < height; j++) {
+	const unsigned char *row = (const unsigned char *)image->data
+		+ (size_t)(src_y + j) * image->bytes_per_line;
+	unsigned char *dst = (unsigned char *)rgba.data + (size_t)j * width * 4;
+
+	for (i = 0; i < width; i++, dst += 4) {
+	    unsigned int x = (unsigned int)src_x + i;
+	    unsigned int word = x / unit;
+	    unsigned int bit = x % unit;
+	    /* Position of the pixel's bit counted from the least significant
+	     * bit of its unit, and the byte of the unit that holds it. */
+	    unsigned int p = (image->bitmap_bit_order == MSBFirst)
+		    ? (unsigned int)unit - 1 - bit : bit;
+	    unsigned int byteIdx = (image->byte_order == LSBFirst)
+		    ? p / 8 : (unsigned int)unitBytes - 1 - p / 8;
+	    int set = (row[word * unitBytes + byteIdx] >> (p % 8)) & 1;
+	    const unsigned char *color = set ? fg : bg;
+
+	    dst[0] = color[0];
+	    dst[1] = color[1];
+	    dst[2] = color[2];
+	    dst[3] = 0xFF;
+	}
+    }
+
+    rc = TkpPutRGBAImage(display, drawable, gc, &rgba, 0, 0,
+	    dest_x, dest_y, width, height);
+    ckfree(rgba.data);
+    return (rc == 0) ? Success : BadAlloc;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XPutImage --
  *
  *      Standard Xlib entry point for image drawing. This function
@@ -1059,6 +1167,10 @@ XPutImage(
 {
     int rc;
 
+    if (image && image->data && image->bits_per_pixel == 1) {
+	return PutBitmapImage(display, drawable, gc, image, src_x, src_y,
+		dest_x, dest_y, width, height);
+    }
     if (image && image->data
 	    && (image->bits_per_pixel == 32 || image->bits_per_pixel == 24)) {
 	/*

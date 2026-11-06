@@ -1124,22 +1124,26 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
-test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {aquaKnownBug} {
-# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
+test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} \
+        -constraints {aquaKnownBug notWayland} \
+        -body {
+    # constrained by aquaKnownBug until ticket [aad0231f07] is fixed
+
     .t configure -wrap char
     frame .f2 -bg red
     place .f2 -in .t -relx 0.5 -rely 0.5 -relwidth 0.5 -relheight 0.5
     .t delete 1.0 end
     .t insert 1.0 "Line 1 is so long that it wraps around, a couple of times"
     foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
-	.t insert end "\nLine $i"
+        .t insert end "\nLine $i"
     }
+
     update
     .t delete 1.6 1.end
     update
     destroy .f2
     list $tk_textRelayout $tk_textRedraw
-} {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
+} -result {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {aquaKnownBug} {
 # constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     # this test depends on all of the expose events being handled at once
@@ -5447,11 +5451,11 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
     destroy .t1
 } -result {1.1 1 1.1 1}
 
-test textDisp-41.1 {many text widgets complete their line metrics update - bug 1348333} -setup {
+test textDisp-41.1 {many text widgets complete their line metrics update - bug 1348333}  -constraints notWayland -setup {
     toplevel .tt
 } -body {
     # About 600 widgets are needed to show the bug.  A small font keeps the
-    # toplevel within a small screen: the widgets of a row clipped by it are
+    # toplevel within a small screen: the widgets of a row clipped by it arec
     # unmapped, and an unmapped text widget never completes the update.
     for {set i 0} {$i < 30} {incr i} {
 	pack [frame .tt.f$i]

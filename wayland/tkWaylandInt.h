@@ -80,7 +80,7 @@ extern struct wl_seat *waylandSeat;
 
 /* Tuning constants for font shaping */
 #define MAX_FACES           64      /* Max fallback faces per logical font.  */
-#define MAX_GLYPHS          512     /* Max glyphs per shaped buffer.         */
+#define MAX_GLYPHS          5120    /* Max glyphs per shaped buffer.         */
 #define MAX_BIDI_RUNS       32      /* Max bidi level runs.                  */
 #define MAX_CLUSTER_BREAKS  512     /* Max cluster break positions.          */
 #define MAX_STRING_CACHE    1024    /* Max bytes stored in one cache slot.   */

@@ -1200,13 +1200,52 @@ static Tk_Window
 IbusTarget(
     IbusContext *ctx)
 {
-    Tk_Window w = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
-    TkWindow *f = w ? TkGetFocusWin((TkWindow *)w) : NULL;
+    TkWindow *candidate = NULL;
 
-    if (f && !(f->flags & TK_ALREADY_DEAD)) {
-        return (Tk_Window)f;
+    if (ctx->focusedWidget) {
+        candidate = (TkWindow *)ctx->focusedWidget;
+    } else if (ctx->tkwin) {
+        candidate = (TkWindow *)ctx->tkwin;
     }
-    return w;
+
+    if (candidate) {
+        /* Guard against half-destroyed windows where Tk has cleared mainPtr/dispPtr */
+        if ((candidate->flags & TK_ALREADY_DEAD)
+                || candidate->mainPtr == NULL
+                || candidate->dispPtr == NULL) {
+            /* If the dead window was the focused subwidget, try to fall back to toplevel */
+            if (candidate == (TkWindow *)ctx->focusedWidget && ctx->tkwin) {
+                TkWindow *top = (TkWindow *)ctx->tkwin;
+                if (!(top->flags & TK_ALREADY_DEAD) && top->mainPtr != NULL
+                        && top->dispPtr != NULL) {
+                    /* Try focus win from toplevel */
+                    TkWindow *f2 = TkGetFocusWin(top);
+                    if (f2 && !(f2->flags & TK_ALREADY_DEAD)
+                            && f2->mainPtr != NULL) {
+                        return (Tk_Window)f2;
+                    }
+                    return ctx->tkwin;
+                }
+            }
+            return NULL;
+        }
+
+        TkWindow *f = TkGetFocusWin(candidate);
+        if (f && !(f->flags & TK_ALREADY_DEAD) && f->mainPtr != NULL
+                && f->dispPtr != NULL) {
+            return (Tk_Window)f;
+        }
+        return (Tk_Window)candidate;
+    }
+
+    if (ctx->tkwin) {
+        TkWindow *t = (TkWindow *)ctx->tkwin;
+        if (!(t->flags & TK_ALREADY_DEAD) && t->mainPtr != NULL
+                && t->dispPtr != NULL) {
+            return ctx->tkwin;
+        }
+    }
+    return NULL;
 }
 
 /*
@@ -1260,6 +1299,16 @@ OnCommitText(
      * dictionary" errors and segfaults.
      */
     Tk_Window focusWin = IbusTarget(ctx);
+
+    if (!focusWin) {
+        /* Target window destroyed while D-Bus message was in flight. */
+        if (ctx->preeditText) {
+            free(ctx->preeditText);
+            ctx->preeditText = NULL;
+        }
+        ctx->composing = 0;
+        return 0;
+    }
 
     /*
      * Clear the marked/preedit region before inserting committed text, but
@@ -1347,6 +1396,15 @@ OnUpdatePreedit(
      */
     Tk_Window focusWin = IbusTarget(ctx);
 
+    if (!focusWin) {
+        if (ctx->preeditText) {
+            free(ctx->preeditText);
+            ctx->preeditText = NULL;
+        }
+        ctx->composing = 0;
+        return 0;
+    }
+
     DEBUG_LOG("OnUpdatePreedit: target=%s text='%s' cursor=%u visible=%d",
               Tk_PathName(focusWin), text ? text : "(null)",
               cursor_pos, visible);
@@ -1414,8 +1472,9 @@ OnHidePreeditText(
 
     if (ctx->preeditText) {
         Tk_Window focusWin = IbusTarget(ctx);
-
-        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+        if (focusWin) {
+            Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+        }
         free(ctx->preeditText);
         ctx->preeditText = NULL;
     }

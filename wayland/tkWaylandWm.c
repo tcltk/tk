@@ -29,6 +29,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* Defined in tkWaylandInit.c; move to tkWaylandInt.h. */
+MODULE_SCOPE void TkWaylandWaitForWindowSize(GLFWwindow *, int, int);
+MODULE_SCOPE void TkWaylandWaitForWindowVisible(GLFWwindow *);
+
 /*
  * Undefine X11 macros that might conflict with our local definitions.
  */
@@ -3937,15 +3941,40 @@ WmGeometryCmd(
 
     /* Immediately set GLFW window size and position. */
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	/*
+	 * A window that is being mapped but was never shown cannot be resized
+	 * yet (see UpdateGeometryInfo), and a timer would postpone the resize
+	 * past the end of "update".  Wait for the compositor to show it.
+	 */
+
+	if (!wmPtr->withdrawn && !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+	    glfwTkInfo *shownInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+
+	    if (shownInfoPtr != NULL && !(shownInfoPtr->flags & TKWL_SHOWN)) {
+		TkWaylandWaitForWindowVisible(glfwWindow);
+	    }
+	}
+
         /*
          * Set size only if positive values were provided.  The size of a
          * gridded window is in grid units and is set by UpdateGeometryInfo.
          */
         if (wmPtr->gridWin == NULL && wmPtr->width > 0 && wmPtr->height > 0) {
+	    /*
+	     * Limit the size passed to GLFW to the min/max size, as
+	     * ApplyPendingGeometry does.  wmPtr->width/height keep the size
+	     * that was requested.
+	     */
+	    int w = wmPtr->width, h = wmPtr->height;
+
+	    if (wmPtr->maxWidth > 0 && w > wmPtr->maxWidth) w = wmPtr->maxWidth;
+	    if (wmPtr->maxHeight > 0 && h > wmPtr->maxHeight) h = wmPtr->maxHeight;
+	    if (w < wmPtr->minWidth) w = wmPtr->minWidth;
+	    if (h < wmPtr->minHeight) h = wmPtr->minHeight;
 	    DEBUG_LOG("GeometryCmd setting window size %s -> %dx%d",
-		Tk_PathName(winPtr), wmPtr->width, wmPtr->height);
+		    Tk_PathName(winPtr), w, h);
 	    TkWaylandFlushConfigures();
-            glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
+            glfwSetWindowSize(glfwWindow, w, h);
         }
 
         /* Cancel any pending idle callback. */
@@ -3958,26 +3987,16 @@ WmGeometryCmd(
 	DEBUG_LOG("WmGeometryCmd: calling UpdateGeometryInfo");
         UpdateGeometryInfo((void *)winPtr);
 
-        /* Verify the change actually took effect. */
-        int newWidth, newHeight;
-        glfwGetWindowSize(glfwWindow, &newWidth, &newHeight);
-
-        /* 
-         * If the size didn't change (e.g., constrained by min/max),
-	     * update wmPtr. 
-	     */
-        if (wmPtr->gridWin == NULL) {
-            if (wmPtr->width > 0 && wmPtr->width != newWidth) {
-                wmPtr->width = newWidth;
-            }
-            if (wmPtr->height > 0 && wmPtr->height != newHeight) {
-                wmPtr->height = newHeight;
-            }
-        }
-
-        /* Update Tk's changes structure. */
-        winPtr->changes.width = newWidth;
-        winPtr->changes.height = newHeight;
+        /*
+         * Do not read the size back from GLFW here and store it in wmPtr or
+         * winPtr->changes: glfwSetWindowSize is asynchronous on Wayland, so
+         * glfwGetWindowSize still returns the old size until the compositor
+         * has configured the window.  Doing so overwrote the requested size
+         * with the old one, and the next UpdateGeometryInfo then resized the
+         * window back.  ApplyPendingGeometry, called by UpdateGeometryInfo
+         * above, has already set winPtr->changes to the clamped size, and
+         * the FramebufferSizeCallback updates it again from the real size.
+         */
     }
 
     return TCL_OK;
@@ -5988,6 +6007,15 @@ ApplyPendingGeometry(
 	 */
 	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
 	    TkWaylandPresentWindow(glfwWindow);
+
+	    /*
+	     * Wait for the compositor to answer with the new size, so the
+	     * resize is complete when this returns, as on X11.  Use the size
+	     * the window actually has, as the compositor can choose another.
+	     */
+
+	    TkWaylandWaitForWindowSize(glfwWindow, tw, th);
+	    glfwGetWindowSize(glfwWindow, &tw, &th);
 	}
 
 	/* Update the window data. */
