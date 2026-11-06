@@ -427,7 +427,6 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
 @end
