@@ -2623,6 +2623,10 @@ WmForgetCmd(
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
 
+    /*
+     * Tk ticket 9ab6e37e: forget "." not allowed
+     */
+
     if (frameWin == mainWin) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"window \".\" can not be forgotten", TCL_INDEX_NONE));

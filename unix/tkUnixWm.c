@@ -1836,7 +1836,7 @@ WmForgetCmd(
     Tk_Window frameWin = (Tk_Window) winPtr;
 
     /*
-     * Tk ticket 9ab6e37e: forget main not allowed
+     * Tk ticket 9ab6e37e: forget "." not allowed
      */
 
     if (frameWin == mainWin) {
