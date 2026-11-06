@@ -347,6 +347,9 @@ typedef struct WaitRestrictInfo {
  */
 
 static int		ComputeReparentGeometry(WmInfo *wmPtr);
+static int		GetExtents(TkWindow *wrapperPtr, Window window,
+			    const char *atomName, int *leftPtr, int *rightPtr,
+			    int *topPtr, int *bottomPtr);
 static int		GetFrameExtents(WmInfo *wmPtr, int *leftPtr,
 			    int *rightPtr, int *topPtr, int *bottomPtr);
 static int		GetWorkArea(WmInfo *wmPtr, int *xPtr, int *yPtr,
@@ -4337,14 +4340,17 @@ ReparentEvent(
 /*
  *----------------------------------------------------------------------
  *
- * GetFrameExtents --
+ * GetExtents, GetFrameExtents --
  *
- *	Gets the widths of the decorations which the window manager added
- *	around a top-level window, from the _NET_FRAME_EXTENTS property.
+ *	GetExtents gets four widths (left, right, top, bottom) from a
+ *	property of a window, such as _NET_FRAME_EXTENTS or
+ *	_GTK_FRAME_EXTENTS. GetFrameExtents gets the widths of the
+ *	decorations which the window manager added around a top-level window,
+ *	from the _NET_FRAME_EXTENTS property of the wrapper.
  *
  * Results:
- *	Returns 1 and stores the widths if the window manager set the
- *	property, otherwise returns 0.
+ *	Returns 1 and stores the widths if the property is set, otherwise
+ *	returns 0.
  *
  * Side effects:
  *	None.
@@ -4353,12 +4359,13 @@ ReparentEvent(
  */
 
 static int
-GetFrameExtents(
-    WmInfo *wmPtr,		/* Information about the toplevel window. */
+GetExtents(
+    TkWindow *wrapperPtr,	/* The wrapper of the toplevel window. */
+    Window window,		/* Window which has the property. */
+    const char *atomName,	/* Name of the property. */
     int *leftPtr, int *rightPtr,/* Where to store the widths of the left, */
-    int *topPtr, int *bottomPtr)/* right, top and bottom decorations. */
+    int *topPtr, int *bottomPtr)/* right, top and bottom parts. */
 {
-    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     Atom actualType;
     int actualFormat;
     unsigned long numItems, bytesAfter;
@@ -4366,14 +4373,11 @@ GetFrameExtents(
     int result = 0;
     Tk_ErrorHandler handler;
 
-    if (wrapperPtr == NULL) {
-	return 0;
-    }
     handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
-    if (GetWindowProperty(wrapperPtr,
-	    Tk_InternAtom((Tk_Window) wrapperPtr, "_NET_FRAME_EXTENTS"), 4,
+    if (XGetWindowProperty(wrapperPtr->display, window,
+	    Tk_InternAtom((Tk_Window) wrapperPtr, atomName), 0, 4, False,
 	    XA_CARDINAL, &actualType, &actualFormat, &numItems, &bytesAfter,
-	    &extents)) {
+	    (unsigned char **) &extents) == Success) {
 	if (actualType == XA_CARDINAL && actualFormat == 32
 		&& numItems == 4) {
 	    *leftPtr = (int) extents[0];
@@ -4388,6 +4392,21 @@ GetFrameExtents(
     }
     Tk_DeleteErrorHandler(handler);
     return result;
+}
+
+static int
+GetFrameExtents(
+    WmInfo *wmPtr,		/* Information about the toplevel window. */
+    int *leftPtr, int *rightPtr,/* Where to store the widths of the left, */
+    int *topPtr, int *bottomPtr)/* right, top and bottom decorations. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+
+    if (wrapperPtr == NULL) {
+	return 0;
+    }
+    return GetExtents(wrapperPtr, wrapperPtr->window, "_NET_FRAME_EXTENTS",
+	    leftPtr, rightPtr, topPtr, bottomPtr);
 }
 
 /*
@@ -4551,7 +4570,7 @@ ComputeReparentGeometry(
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     int width, height, bd;
     unsigned dummy;
-    int xOffset, yOffset, x, y;
+    int xOffset, yOffset, x, y, left, right, top, bottom;
     Window dummy2;
     Status status;
     Tk_ErrorHandler handler;
@@ -4578,6 +4597,23 @@ ComputeReparentGeometry(
     wmPtr->yInParent = yOffset + bd;
     wmPtr->parentWidth = width + 2*bd;
     wmPtr->parentHeight = height + 2*bd;
+
+    /*
+     * A window manager may draw invisible borders (for resizing or a shadow)
+     * around the visible frame, and report them in _GTK_FRAME_EXTENTS of
+     * the frame window (e.g. Mutter). The position of the toplevel is that
+     * of the visible frame.
+     */
+
+    if (GetExtents(wrapperPtr, wmPtr->reparent, "_GTK_FRAME_EXTENTS",
+	    &left, &right, &top, &bottom)) {
+	x += left;
+	y += top;
+	wmPtr->xInParent -= left;
+	wmPtr->yInParent -= top;
+	wmPtr->parentWidth -= left + right;
+	wmPtr->parentHeight -= top + bottom;
+    }
 
     /*
      * Some tricky issues in updating wmPtr->x and wmPtr->y:
