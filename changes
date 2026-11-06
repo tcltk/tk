@@ -8623,3 +8623,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-11-06 (bug) [220791] Window gives false geometry information (storchaka)
 
 2026-11-06 (bug) [6fa236] X11: under Mutter wm geometry of a zoomed toplevel is offset by the invisible borders (storchaka)
+
+2026-11-06 (bug) [f126a0] X11: wm attributes -zoomed does not maximize the window under xfwm4 and fvwm (storchaka)
