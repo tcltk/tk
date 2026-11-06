@@ -570,7 +570,9 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *
  * TkWaylandQueueExposeEvent --
  *
- *      Queue Expose events for a window and all of its children.
+ *      Queue a single Expose event for the given rectangle of a window.
+ *      This does not expose the window's children; see ExposeSubtree
+ *      (here) and TkWaylandExposeOverlapping (tkWaylandSubwindows.c).
  *
  * Results:
  *      None.
@@ -595,8 +597,9 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  * a descendent of a sibling of the content's parent which appears later in
  * the parent's list of children.  However, an additional unenforced rule is
  * that the container must actually be lower in the stacking order than its
- * content.  The following function generates expose events for a widget
- * and its descendents in the stacking order.
+ * content.  Callers that need a widget and its descendents exposed in
+ * stacking order must queue one event per window; this function queues
+ * only the one event.
  */
 
 void

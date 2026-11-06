@@ -112,6 +112,27 @@ GetNVGFont(NVGcontext *vg, GC gc, int *fontIdOut, float *fontSizeOut)
 /*
  *----------------------------------------------------------------------
  *
+ * StippleTextColor --
+ *
+ *	Foreground color for text drawn with a stippled GC: the GC
+ *	foreground with alpha scaled by the stipple density.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NVGcolor
+StippleTextColor(
+    GC gc)
+{
+    NVGcolor c = TkWaylandPixelToNVG(((TkWaylandGC *)gc)->foreground);
+
+    c.a *= TkWaylandStippleDensity(gc);
+    return c;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawString --
  *
  *	Draw a string of characters using NanoVG text rendering.
@@ -157,6 +178,9 @@ XDrawString(
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
     /* Foreground color is already set by TkWaylandBeginDraw via TkWaylandApplyGC. */
+    if (TkWaylandStippleDensity(gc) < 1.0f) {
+	nvgFillColor(dc.vg, StippleTextColor(gc));
+    }
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -234,6 +258,9 @@ XDrawImageString(
     nvgFontFaceId(dc.vg, fontId);
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+    if (TkWaylandStippleDensity(gc) < 1.0f) {
+	nvgFillColor(dc.vg, StippleTextColor(gc));
+    }
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -280,6 +307,489 @@ AlignStroke(
 /*
  *----------------------------------------------------------------------
  *
+ * Stipple support --
+ *
+ *	X11 stippling: with fill_style FillStippled, only the pixels whose
+ *	stipple bit is 1 are painted, in the GC foreground.  With
+ *	FillOpaqueStippled the 0 bits are painted in the GC background.
+ *	The stipple is anchored at (ts_x_origin, ts_y_origin) in drawable
+ *	coordinates and repeats every width x height pixels, independent
+ *	of the shape being drawn.
+ *
+ *	This is done with a repeating NanoVG image pattern built from the
+ *	stipple pixmap's bitmap data (see TkWaylandGetStippleImage), the
+ *	Wayland analogue of the CGPattern used on macOS.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ * StrokeBias --
+ *
+ *	The translation AlignStroke() applied to the transform, so the
+ *	stipple origin can be corrected back to drawable pixels.
+ */
+
+static float
+StrokeBias(
+    GC gc)
+{
+    XGCValues v;
+    int lineWidth = 0;
+
+    if (gc && TkWaylandGetGCValues(gc, GCLineWidth, &v)) {
+	lineWidth = v.line_width;
+    }
+    return (lineWidth <= 1 || (lineWidth & 1)) ? 0.5f : 0.0f;
+}
+
+/*
+ * SetupStipple --
+ *
+ *	Build the paint for a stippled GC.
+ *
+ * Results:
+ *	1 if gc is stippled and a usable stipple exists (paintPtr, bgPtr
+ *	and opaquePtr are filled in), else 0 and the caller draws solid.
+ */
+
+static int
+SetupStipple(
+    NVGcontext *vg,
+    GC          gc,
+    float       bias,
+    NVGpaint   *paintPtr,
+    NVGcolor   *bgPtr,
+    int        *opaquePtr)
+{
+    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+    TkWaylandPixmap *pm;
+    NVGcolor fg;
+    int image;
+
+    if (gcPtr == NULL || (gcPtr->fill_style != FillStippled
+	    && gcPtr->fill_style != FillOpaqueStippled)
+	    || gcPtr->stipple == None
+	    || !TkWaylandDrawableIsPixmap(gcPtr->stipple)) {
+	return 0;
+    }
+    pm = TkWaylandPixmapFromPixmap(gcPtr->stipple);
+    image = TkWaylandGetStippleImage(vg, pm);
+    if (image <= 0) {
+	return 0;
+    }
+
+    *paintPtr = nvgImagePattern(vg,
+	    (float)gcPtr->ts_x_origin - bias,
+	    (float)gcPtr->ts_y_origin - bias,
+	    (float)pm->width, (float)pm->height, 0.0f, image, 1.0f);
+    fg = TkWaylandPixelToNVG(gcPtr->foreground);
+    paintPtr->innerColor = fg;	/* Tint the white mask with the foreground. */
+    paintPtr->outerColor = fg;
+    *bgPtr = TkWaylandPixelToNVG(gcPtr->background);
+    *opaquePtr = (gcPtr->fill_style == FillOpaqueStippled);
+    return 1;
+}
+
+/*
+ * StippleFill / StippleStroke --
+ *
+ *	Fill or stroke the current NanoVG path with the GC's stipple.
+ *
+ * Results:
+ *	1 if the path was painted, 0 if the GC is not stippled (the caller
+ *	then does its ordinary nvgFill/nvgStroke).
+ */
+
+static int
+StippleFill(
+    NVGcontext *vg,
+    GC          gc)
+{
+    NVGpaint paint;
+    NVGcolor bg;
+    int opaque;
+
+    if (!SetupStipple(vg, gc, 0.0f, &paint, &bg, &opaque)) {
+	return 0;
+    }
+    nvgSave(vg);
+    if (opaque) {
+	nvgFillColor(vg, bg);
+	nvgFill(vg);
+    }
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+    nvgRestore(vg);
+    return 1;
+}
+
+static int
+StippleStroke(
+    NVGcontext *vg,
+    GC          gc)
+{
+    NVGpaint paint;
+    NVGcolor bg;
+    int opaque;
+
+    if (!SetupStipple(vg, gc, StrokeBias(gc), &paint, &bg, &opaque)) {
+	return 0;
+    }
+    nvgSave(vg);
+    if (opaque) {
+	nvgStrokeColor(vg, bg);
+	nvgStroke(vg);
+    }
+    nvgStrokePaint(vg, paint);
+    nvgStroke(vg);
+    nvgRestore(vg);
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Dashed lines --
+ *
+ *	NanoVG strokes only solid paths, so LineOnOffDash and
+ *	LineDoubleDash are done on the CPU: the polyline (arcs and
+ *	ellipses are sampled first) is walked with the GC's dash pattern
+ *	and each "on" run becomes one sub-path of a single nvgStroke, so
+ *	caps and joins apply per dash.  LineDoubleDash first strokes the
+ *	"off" runs in the GC background.  Stipples still apply, since
+ *	StippleStroke only changes the paint.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define DASH_MAX 64
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsDashed --
+ *
+ *	Check whether a GC uses one of X11's dashed line styles
+ *	(LineOnOffDash or LineDoubleDash), which NanoVG cannot render
+ *	directly and so must be emulated on the CPU.
+ *
+ * Results:
+ *	1 if gc uses a dashed line style, 0 otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+IsDashed(
+    GC gc)
+{
+    TkWaylandGC *g = (TkWaylandGC *)gc;
+
+    return g != NULL && (g->line_style == LineOnOffDash
+	    || g->line_style == LineDoubleDash);
+}
+
+/*
+ * GetDashPattern --
+ *
+ *	Expand the GC's dash list into pat[] (even length, so "on"/"off"
+ *	alternate), defaulting to {4, 4} like X11.  Returns the entry
+ *	count and stores the normalised starting phase in *phasePtr.
+ */
+
+static int
+GetDashPattern(
+    GC     gc,
+    float *pat,
+    float *phasePtr)
+{
+    TkWaylandGC *g = (TkWaylandGC *)gc;
+    int i, n = 0, count;
+    float total = 0.0f, phase;
+
+    if (g->dash_list == NULL || g->dash_count <= 0) {
+	pat[0] = pat[1] = 4.0f;
+	n = 2;
+    } else {
+	count = g->dash_count;
+	if (count > DASH_MAX / 2) {
+	    count = DASH_MAX / 2;
+	}
+	for (i = 0; i < count; i++) {
+	    pat[n++] = (float)g->dash_list[i];
+	}
+	if (count & 1) {	/* Odd list: repeat so on/off swap. */
+	    for (i = 0; i < count; i++) {
+		pat[n++] = (float)g->dash_list[i];
+	    }
+	}
+    }
+    for (i = 0; i < n; i++) {
+	total += pat[i];
+    }
+    if (total <= 0.0f) {
+	return 0;
+    }
+    phase = fmodf((float)g->dash_offset, total);
+    if (phase < 0.0f) {
+	phase += total;
+    }
+    *phasePtr = phase;
+    return n;
+}
+
+/*
+ * DashRuns --
+ *
+ *	Append to the current NanoVG path the "on" (wantOn=1) or "off"
+ *	(wantOn=0) runs of the polyline pts[0..n-1], closed or open.
+ */
+
+static void
+DashRuns(
+    NVGcontext  *vg,
+    const float *pts,
+    int          n,
+    int          closed,
+    const float *pat,
+    int          npat,
+    float        phase,
+    int          wantOn)
+{
+    int idx = 0, seg, nseg, open = 0;
+    float remaining;
+
+    /* Advance to the dash containing the starting phase. */
+    while (phase >= pat[idx]) {
+	phase -= pat[idx];
+	idx = (idx + 1) % npat;
+    }
+    remaining = pat[idx] - phase;
+
+    nseg = closed ? n : n - 1;
+    for (seg = 0; seg < nseg; seg++) {
+	float x0 = pts[2 * seg], y0 = pts[2 * seg + 1];
+	float x1 = pts[2 * ((seg + 1) % n)], y1 = pts[2 * ((seg + 1) % n) + 1];
+	float dx = x1 - x0, dy = y1 - y0;
+	float len = sqrtf(dx * dx + dy * dy), pos = 0.0f;
+
+	if (len <= 0.0f) {
+	    continue;
+	}
+	while (pos < len) {
+	    float step = remaining < len - pos ? remaining : len - pos;
+	    int on = !(idx & 1);
+
+	    if (on == wantOn) {
+		if (!open) {
+		    nvgMoveTo(vg, x0 + dx * pos / len, y0 + dy * pos / len);
+		    open = 1;
+		}
+		nvgLineTo(vg, x0 + dx * (pos + step) / len,
+			y0 + dy * (pos + step) / len);
+	    } else {
+		open = 0;
+	    }
+	    pos += step;
+	    remaining -= step;
+	    if (remaining <= 0.0f) {
+		idx = (idx + 1) % npat;
+		remaining = pat[idx];
+	    }
+	}
+    }
+}
+
+/*
+ * StrokeDashed --
+ *
+ *	Stroke a polyline with the GC's dash pattern.  Returns 1 if drawn,
+ *	0 if the pattern is unusable (caller falls back to a solid line).
+ */
+
+static int
+StrokeDashed(
+    NVGcontext  *vg,
+    GC           gc,
+    const float *pts,
+    int          n,
+    int          closed)
+{
+    float pat[DASH_MAX], phase;
+    int npat = GetDashPattern(gc, pat, &phase);
+
+    if (npat == 0 || n < 2) {
+	return 0;
+    }
+    if (((TkWaylandGC *)gc)->line_style == LineDoubleDash) {
+	nvgSave(vg);
+	nvgBeginPath(vg);
+	DashRuns(vg, pts, n, closed, pat, npat, phase, 0);
+	nvgStrokeColor(vg, TkWaylandPixelToNVG(((TkWaylandGC *)gc)->background));
+	nvgStroke(vg);
+	nvgRestore(vg);
+    }
+    nvgBeginPath(vg);
+    DashRuns(vg, pts, n, closed, pat, npat, phase, 1);
+    if (!StippleStroke(vg, gc)) {
+	nvgStroke(vg);
+    }
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DashLines --
+ *
+ *	Resolve an XPoint array (interpreted according to mode,
+ *	CoordModeOrigin or CoordModePrevious) into absolute drawable
+ *	coordinates, then stroke it as a dashed polyline via
+ *	StrokeDashed.
+ *
+ * Results:
+ *	1 if the polyline was drawn with dashes, 0 if the GC's dash
+ *	pattern is unusable, in which case the caller must draw the
+ *	polyline solid itself.
+ *
+ * Side effects:
+ *	Allocates and frees a temporary float coordinate buffer.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DashLines(
+    NVGcontext *vg,
+    GC          gc,
+    XPoint     *points,
+    int         npoints,
+    int         mode)
+{
+    float *fp = (float *)ckalloc(sizeof(float) * 2 * (size_t)npoints);
+    int i, px = points[0].x, py = points[0].y, rc;
+
+    fp[0] = (float)px;
+    fp[1] = (float)py;
+    for (i = 1; i < npoints; i++) {
+	if (mode == CoordModeOrigin) {
+	    px = points[i].x;
+	    py = points[i].y;
+	} else {
+	    px += points[i].x;
+	    py += points[i].y;
+	}
+	fp[2 * i] = (float)px;
+	fp[2 * i + 1] = (float)py;
+    }
+    rc = StrokeDashed(vg, gc, fp, npoints, 0);
+    ckfree(fp);
+    return rc;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DashRect --
+ *
+ *	Stroke a rectangle outline with the GC's dash pattern. The four
+ *	corners are ordered to match X11's rectangle-outline rendering,
+ *	which walks the outline starting at the top-left corner and
+ *	proceeding clockwise.
+ *
+ * Results:
+ *	1 if the rectangle was drawn with dashes, 0 if the GC's dash
+ *	pattern is unusable, in which case the caller must stroke the
+ *	rectangle solid itself.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DashRect(
+    NVGcontext *vg,
+    GC          gc,
+    float       x,
+    float       y,
+    float       w,
+    float       h)
+{
+    /* X11 draws rectangle outlines starting top-left, clockwise. */
+    float p[8] = { x, y, x + w, y, x + w, y + h, x, y + h };
+
+    return StrokeDashed(vg, gc, p, 4, 1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DashArc --
+ *
+ *	Sample an X11 elliptical arc (X11 angle units: 1/64 degree,
+ *	counter-clockwise with y up) into a polyline in drawable
+ *	coordinates, then stroke it with the GC's dash pattern via
+ *	StrokeDashed. The number of sample points scales with the arc's
+ *	size so short arcs stay cheap and long arcs stay smooth, clamped
+ *	to a sane range.
+ *
+ * Results:
+ *	1 if the arc was drawn with dashes, 0 if the GC's dash pattern
+ *	is unusable, in which case the caller must stroke the arc solid
+ *	itself.
+ *
+ * Side effects:
+ *	Allocates and frees a temporary float coordinate buffer.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DashArc(
+    NVGcontext *vg,
+    GC          gc,
+    float       cx,
+    float       cy,
+    float       rx,
+    float       ry,
+    float       startAngle,
+    float       endAngle)
+{
+    float da = endAngle - startAngle, *fp;
+    int i, steps, rc;
+
+    if (da > 2.0f * (float)M_PI) {
+	da = 2.0f * (float)M_PI;
+    } else if (da < -2.0f * (float)M_PI) {
+	da = -2.0f * (float)M_PI;
+    }
+    steps = (int)ceilf(fabsf(da) * (rx > ry ? rx : ry) / 3.0f);
+    if (steps < 8) {
+	steps = 8;
+    } else if (steps > 720) {
+	steps = 720;
+    }
+    fp = (float *)ckalloc(sizeof(float) * 2 * (size_t)(steps + 1));
+    for (i = 0; i <= steps; i++) {
+	float a = startAngle + da * (float)i / (float)steps;
+
+	fp[2 * i] = cx + rx * cosf(a);
+	fp[2 * i + 1] = cy + ry * sinf(a);
+    }
+    rc = StrokeDashed(vg, gc, fp, steps + 1, 0);
+    ckfree(fp);
+    return rc;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawPoint --
  *
  *	Draw a single point (filled 1×1 rectangle).
@@ -307,7 +817,9 @@ XDrawPoint(
         return BadDrawable;
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)x, (float)y, 1.0f, 1.0f);
-    nvgFill(dc.vg);
+    if (!StippleFill(dc.vg, gc)) {
+        nvgFill(dc.vg);
+    }
     TkWaylandEndDraw(&dc);
     return Success;
 }
@@ -354,7 +866,9 @@ XDrawPoints(
         }
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, px, py, 1.0f, 1.0f);
-        nvgFill(dc.vg);
+        if (!StippleFill(dc.vg, gc)) {
+            nvgFill(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -395,6 +909,10 @@ XDrawLines(
         return BadDrawable;
 
     AlignStroke(dc.vg, gc);
+    if (IsDashed(gc) && DashLines(dc.vg, gc, points, npoints, mode)) {
+        TkWaylandEndDraw(&dc);
+        return Success;
+    }
     nvgBeginPath(dc.vg);
     int px = points[0].x, py = points[0].y;
     nvgMoveTo(dc.vg, px, py);
@@ -410,7 +928,9 @@ XDrawLines(
         }
         nvgLineTo(dc.vg, px, py);
     }
-    nvgStroke(dc.vg);
+    if (!StippleStroke(dc.vg, gc)) {
+        nvgStroke(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -449,10 +969,19 @@ XDrawSegments(
 
     AlignStroke(dc.vg, gc);
     for (i = 0; i < nsegments; i++) {
+        if (IsDashed(gc)) {
+            float p[4] = { (float)segments[i].x1, (float)segments[i].y1,
+                           (float)segments[i].x2, (float)segments[i].y2 };
+            if (StrokeDashed(dc.vg, gc, p, 2, 0)) {
+                continue;
+            }
+        }
         nvgBeginPath(dc.vg);
         nvgMoveTo(dc.vg, segments[i].x1, segments[i].y1);
         nvgLineTo(dc.vg, segments[i].x2, segments[i].y2);
-        nvgStroke(dc.vg);
+        if (!StippleStroke(dc.vg, gc)) {
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -494,7 +1023,7 @@ XFillPolygon(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues))
+    if (!TkWaylandGetGCValues(gc, GCFillRule, &gcValues))
         gcValues.fill_rule = WindingRule;
 
     nvgBeginPath(dc.vg);
@@ -516,7 +1045,9 @@ XFillPolygon(
     else
         nvgPathWinding(dc.vg, NVG_SOLID);
 
-    nvgFill(dc.vg);
+    if (!StippleFill(dc.vg, gc)) {
+        nvgFill(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -555,9 +1086,16 @@ XDrawRectangle(
         return BadDrawable;
     }
     AlignStroke(dc.vg, gc);
+    if (IsDashed(gc) && DashRect(dc.vg, gc, (float)x, (float)y,
+            (float)width, (float)height)) {
+        TkWaylandEndDraw(&dc);
+        return Success;
+    }
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, x, y, width, height);
-    nvgStroke(dc.vg);
+    if (!StippleStroke(dc.vg, gc)) {
+        nvgStroke(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -596,10 +1134,17 @@ XDrawRectangles(
 
     AlignStroke(dc.vg, gc);
     for (i = 0; i < nRects; i++) {
+        if (IsDashed(gc) && DashRect(dc.vg, gc, (float)rectArr[i].x,
+                (float)rectArr[i].y, (float)rectArr[i].width,
+                (float)rectArr[i].height)) {
+            continue;
+        }
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
                 rectArr[i].width, rectArr[i].height);
-        nvgStroke(dc.vg);
+        if (!StippleStroke(dc.vg, gc)) {
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -655,7 +1200,9 @@ XFillRectangles(
                 (float)rectangles[i].width, 
                 (float)rectangles[i].height);
 	nvgFillColor(dc.vg, color);
-	nvgFill(dc.vg);
+	if (!StippleFill(dc.vg, gc)) {
+	    nvgFill(dc.vg);
+	}
     }
     TkWaylandEndDraw(&dc);
     return Success;
@@ -1076,18 +1623,28 @@ XDrawArc(
     startAngle = -radians(angle1 / 64.0);
     endAngle   = -radians((angle1 + angle2) / 64.0);
 
+    if (IsDashed(gc) && DashArc(dc.vg, gc, cx, cy, rx, ry,
+            startAngle, endAngle)) {
+        TkWaylandEndDraw(&dc);
+        return Success;
+    }
+
     nvgBeginPath(dc.vg);
     if (width == height) {
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
     } else {
         nvgSave(dc.vg);
         nvgTranslate(dc.vg, cx, cy);
         nvgScale(dc.vg, 1.0f, ry / rx);
         nvgTranslate(dc.vg, -cx, -cy);
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
         nvgRestore(dc.vg);
     }
-    nvgStroke(dc.vg);
+    if (!StippleStroke(dc.vg, gc)) {
+        nvgStroke(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -1138,18 +1695,27 @@ XDrawArcs(
         startAngle = -radians(arcArr[i].angle1 / 64.0);
         endAngle   = -radians((arcArr[i].angle1 + arcArr[i].angle2) / 64.0);
 
+        if (IsDashed(gc) && DashArc(dc.vg, gc, cx, cy, rx, ry,
+                startAngle, endAngle)) {
+            continue;
+        }
+
         nvgBeginPath(dc.vg);
         if (arcArr[i].width == arcArr[i].height) {
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
         } else {
             nvgSave(dc.vg);
             nvgTranslate(dc.vg, cx, cy);
             nvgScale(dc.vg, 1.0f, ry / rx);
             nvgTranslate(dc.vg, -cx, -cy);
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
             nvgRestore(dc.vg);
         }
-        nvgStroke(dc.vg);
+        if (!StippleStroke(dc.vg, gc)) {
+            nvgStroke(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -1192,7 +1758,7 @@ XFillArc(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
+    if (!TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
     cx = x + width  / 2.0f;
@@ -1207,13 +1773,15 @@ XFillArc(
         nvgMoveTo(dc.vg, cx, cy);
 
     if (width == height) {
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
     } else {
         nvgSave(dc.vg);
         nvgTranslate(dc.vg, cx, cy);
         nvgScale(dc.vg, 1.0f, ry / rx);
         nvgTranslate(dc.vg, -cx, -cy);
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (angle2 > 0) ? NVG_CCW : NVG_CW);
         nvgRestore(dc.vg);
     }
 
@@ -1221,7 +1789,9 @@ XFillArc(
         nvgLineTo(dc.vg, cx, cy);
 
     nvgClosePath(dc.vg);
-    nvgFill(dc.vg);
+    if (!StippleFill(dc.vg, gc)) {
+        nvgFill(dc.vg);
+    }
 
     TkWaylandEndDraw(&dc);
     return Success;
@@ -1259,7 +1829,7 @@ XFillArcs(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
+    if (!TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
     for (i = 0; i < nArcs; i++) {
@@ -1280,13 +1850,15 @@ XFillArcs(
             nvgMoveTo(dc.vg, cx, cy);
 
         if (arcArr[i].width == arcArr[i].height) {
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
         } else {
             nvgSave(dc.vg);
             nvgTranslate(dc.vg, cx, cy);
             nvgScale(dc.vg, 1.0f, ry / rx);
             nvgTranslate(dc.vg, -cx, -cy);
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle,
+                (arcArr[i].angle2 > 0) ? NVG_CCW : NVG_CW);
             nvgRestore(dc.vg);
         }
 
@@ -1294,7 +1866,9 @@ XFillArcs(
             nvgLineTo(dc.vg, cx, cy);
 
         nvgClosePath(dc.vg);
-        nvgFill(dc.vg);
+        if (!StippleFill(dc.vg, gc)) {
+            nvgFill(dc.vg);
+        }
     }
 
     TkWaylandEndDraw(&dc);
@@ -1368,6 +1942,115 @@ TkpDrawFrameEx(
                        borderWidth, relief);
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ScrollConsiderObscurer --
+ *
+ *	Helper for ScrollAddObscuredDamage.  obsPtr is a mapped window that
+ *	lies above the scrolled window in the stacking order.  The blit in
+ *	TkScrollWindow moves whatever is in the backing FBO, including
+ *	obsPtr's pixels, so (1) the source area hidden under obsPtr has no
+ *	valid content to move and its destination must be redrawn (what
+ *	GraphicsExpose reports on X11), and (2) the destination area under
+ *	obsPtr has had obsPtr's pixels overwritten, so obsPtr must repaint.
+ *	All rectangles are in toplevel coordinates except the damage added
+ *	to damageRgn, which is widget-local.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ScrollConsiderObscurer(
+    TkWindow *obsPtr,
+    int ox, int oy,			/* obsPtr origin, toplevel coords. */
+    int sx, int sy, int sw, int sh,	/* Source rect, toplevel coords. */
+    int dx, int dy,
+    int offX, int offY,		/* Scrolled window origin, toplevel coords. */
+    Region damageRgn)
+{
+    int x0, y0, x1, y1;
+    int ox1 = ox + Tk_Width(obsPtr), oy1 = oy + Tk_Height(obsPtr);
+    XRectangle r;
+
+    if (Tk_IsTopLevel(obsPtr) || !Tk_IsMapped(obsPtr)
+	    || (obsPtr->flags & TK_ALREADY_DEAD)) {
+	return;
+    }
+
+    /* Source pixels hidden under the obscurer. */
+
+    x0 = (sx > ox) ? sx : ox;
+    y0 = (sy > oy) ? sy : oy;
+    x1 = (sx + sw < ox1) ? sx + sw : ox1;
+    y1 = (sy + sh < oy1) ? sy + sh : oy1;
+    if (x0 < x1 && y0 < y1) {
+	r.x = (short)(x0 + dx - offX);
+	r.y = (short)(y0 + dy - offY);
+	r.width = (unsigned short)(x1 - x0);
+	r.height = (unsigned short)(y1 - y0);
+	XUnionRectWithRegion(&r, damageRgn, damageRgn);
+    }
+
+    /* Destination pixels under the obscurer, overwritten by the blit. */
+
+    x0 = (sx + dx > ox) ? sx + dx : ox;
+    y0 = (sy + dy > oy) ? sy + dy : oy;
+    x1 = (sx + dx + sw < ox1) ? sx + dx + sw : ox1;
+    y1 = (sy + dy + sh < oy1) ? sy + dy + sh : oy1;
+    if (x0 < x1 && y0 < y1) {
+	TkWaylandExposeOverlapping(obsPtr, ox, oy, NULL,
+		x0, y0, x1 - x0, y1 - y0);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ScrollAddObscuredDamage --
+ *
+ *	Add to damageRgn the destination of every part of the scroll source
+ *	rectangle that is covered by a window above winPtr in the stacking
+ *	order, and re-expose those windows where the blit overwrote them.
+ *	The windows above winPtr are its mapped children plus the later
+ *	siblings of winPtr and of each of its ancestors, which extends the
+ *	rule updateClipRects uses to the whole ancestor chain.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ScrollAddObscuredDamage(
+    TkWindow *winPtr,		/* The scrolled window. */
+    int offX, int offY,		/* Its origin in toplevel coords. */
+    int x, int y, int w, int h,	/* Widget-local source rect. */
+    int dx, int dy,
+    Region damageRgn)
+{
+    TkWindow *anc = winPtr, *sibPtr, *childPtr;
+    int ax = offX, ay = offY;
+    int sx = offX + x, sy = offY + y;
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	    childPtr = childPtr->nextPtr) {
+	ScrollConsiderObscurer(childPtr, offX + childPtr->changes.x,
+		offY + childPtr->changes.y, sx, sy, w, h, dx, dy,
+		offX, offY, damageRgn);
+    }
+    while (!Tk_IsTopLevel(anc) && anc->parentPtr != NULL) {
+	int px = ax - anc->changes.x, py = ay - anc->changes.y;
+
+	for (sibPtr = anc->nextPtr; sibPtr != NULL; sibPtr = sibPtr->nextPtr) {
+	    ScrollConsiderObscurer(sibPtr, px + sibPtr->changes.x,
+		    py + sibPtr->changes.y, sx, sy, w, h, dx, dy,
+		    offX, offY, damageRgn);
+	}
+	ax = px;
+	ay = py;
+	anc = anc->parentPtr;
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1556,6 +2239,14 @@ TkScrollWindow(
     XUnionRectWithRegion(&srcRect, damageRgn, damageRgn);
     XSubtractRegion(damageRgn, coveredRgn, damageRgn);
     XDestroyRegion(coveredRgn);
+
+    /*
+     * This must come after XSubtractRegion: regions here are bounding boxes,
+     * so the subtraction above would otherwise swallow this damage.
+     */
+
+    ScrollAddObscuredDamage(childPtr, (int)offX, (int)offY,
+	    x, y, width, height, dx, dy, damageRgn);
 
     return 1;
 }

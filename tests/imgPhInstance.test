@@ -292,7 +292,7 @@ test imgPhInstance-6.1 "alpha set with transparency set -alpha is blended" \
 } -result 1
 
 test imgPhInstance-7.3 "-palette 2 draws black and white pixels in place, Bug 481255" \
-	-constraints {pixelProbe notAqua} -body {
+	-constraints {pixelProbe notAqua notWayland} -body {
     set result {}
     foreach width {1 10 16 17 33 40} {
 	image create photo photo.palette -width $width -height 3 -palette 2

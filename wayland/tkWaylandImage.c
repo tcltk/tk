@@ -24,6 +24,7 @@
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 #include <limits.h>
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -733,6 +734,140 @@ XCreateBitmapFromData(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandGetStippleImage --
+ *
+ *	Return a NanoVG image id for a 1-bit stipple pixmap, creating and
+ *	caching it on the pixmap on first use.  The image is a white RGBA
+ *	mask: alpha is 255 where the stipple bit is 1 and 0 elsewhere.  It
+ *	is created with NVG_IMAGE_REPEATX/REPEATY so that nvgImagePattern
+ *	tiles it across the whole fill (the equivalent of a CGPattern on
+ *	macOS), and NVG_IMAGE_NEAREST so the bits stay crisp.  The caller
+ *	tints the mask by setting the paint's innerColor/outerColor to the
+ *	GC foreground, so one texture serves every foreground color.
+ *
+ *	The image is cached because nvgFill only queues its draw; deleting
+ *	it after each primitive would mean deferring the delete past
+ *	nvgEndFrame every time.  The cache is freed by
+ *	TkWaylandFreeStippleImage when the pixmap goes away.
+ *
+ * Results:
+ *	A NanoVG image id (> 0), or 0 if the pixmap is not a bitmap or
+ *	allocation fails.
+ *
+ * Side effects:
+ *	May create a GL texture in the context of vg.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandGetStippleImage(
+    NVGcontext      *vg,
+    TkWaylandPixmap *pixmapPtr)
+{
+    unsigned char *rgba;
+    int w, h, x, y, id;
+
+    if (vg == NULL || pixmapPtr == NULL || !pixmapPtr->isBitmap
+	    || pixmapPtr->bitmapData == NULL) {
+	return 0;
+    }
+    if (pixmapPtr->stippleImage > 0 && pixmapPtr->stippleVg == vg) {
+	return pixmapPtr->stippleImage;
+    }
+
+    w = pixmapPtr->width;
+    h = pixmapPtr->height;
+    if (w <= 0 || h <= 0 || (size_t)w * (size_t)h > SIZE_MAX / 4) {
+	return 0;
+    }
+    rgba = (unsigned char *)ckalloc((size_t)w * (size_t)h * 4);
+
+    for (y = 0; y < h; y++) {
+	const unsigned char *row = pixmapPtr->bitmapData
+		+ (size_t)y * pixmapPtr->bitmapBytesPerLine;
+	unsigned char *out = rgba + (size_t)y * w * 4;
+
+	for (x = 0; x < w; x++, out += 4) {
+	    out[0] = out[1] = out[2] = 0xFF;
+	    /* X11 bitmaps are LSB-first, matching XCopyPlane. */
+	    out[3] = (row[x >> 3] & (1 << (x & 7))) ? 0xFF : 0x00;
+	}
+    }
+
+    id = nvgCreateImageRGBA(vg, w, h,
+	    NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY | NVG_IMAGE_NEAREST, rgba);
+    ckfree(rgba);
+    if (id <= 0) {
+	return 0;
+    }
+
+    /*
+     * If the pixmap was last used with a different NanoVG context, that
+     * texture is not reachable from here; it is reclaimed when its
+     * context is deleted.
+     */
+
+    pixmapPtr->stippleImage = id;
+    pixmapPtr->stippleVg = vg;
+    return id;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandStippleDensity --
+ *
+ *	Fraction of set bits (0..1) in the GC's stipple bitmap, or 1.0 if
+ *	the GC is not stippled or the stipple is unusable.  Text is drawn
+ *	by NanoVG's glyph atlas, which cannot take an image-pattern paint,
+ *	so stippled text is approximated by scaling the foreground alpha by
+ *	this density (gray50 gives 50% text).
+ *
+ * Results:
+ *	A float in (0, 1].
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE float
+TkWaylandStippleDensity(
+    GC gc)
+{
+    TkWaylandGC *gcPtr = (TkWaylandGC *)gc;
+    TkWaylandPixmap *pm;
+    long set = 0;
+    int x, y;
+
+    if (gcPtr == NULL || (gcPtr->fill_style != FillStippled
+	    && gcPtr->fill_style != FillOpaqueStippled)
+	    || gcPtr->stipple == None
+	    || !TkWaylandDrawableIsPixmap(gcPtr->stipple)) {
+	return 1.0f;
+    }
+    pm = TkWaylandPixmapFromPixmap(gcPtr->stipple);
+    if (pm == NULL || !pm->isBitmap || pm->bitmapData == NULL
+	    || pm->width <= 0 || pm->height <= 0) {
+	return 1.0f;
+    }
+    for (y = 0; y < pm->height; y++) {
+	const unsigned char *row = pm->bitmapData
+		+ (size_t)y * pm->bitmapBytesPerLine;
+	for (x = 0; x < pm->width; x++) {
+	    if (row[x >> 3] & (1 << (x & 7))) {
+		set++;
+	    }
+	}
+    }
+    return (float)set / (float)((long)pm->width * pm->height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XCopyPlane --
  *
  *      Copy a single bit plane from a source pixmap to a destination
@@ -896,6 +1031,113 @@ XCopyPlane(
 /*
  *----------------------------------------------------------------------
  *
+ * PutBitmapImage --
+ *
+ *	Draw a 1-bit (XYBitmap) XImage the way Xlib's XPutImage does: set
+ *	bits in the GC foreground color, clear bits in the GC background
+ *	color, both opaque.  Tk's photo code sends such an image when the
+ *	image has "-palette 2".  TkpPutRGBAImage only takes 24 and 32 bits
+ *	per pixel, so the bits are expanded to RGBA first.
+ *
+ * Results:
+ *	Success, BadValue for a rectangle outside the image, or BadAlloc.
+ *
+ * Side effects:
+ *	Draws the image.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+PutBitmapImage(
+    Display      *display,
+    Drawable      drawable,
+    GC            gc,
+    XImage       *image,
+    int           src_x,
+    int           src_y,
+    int           dest_x,
+    int           dest_y,
+    unsigned int  width,
+    unsigned int  height)
+{
+    XGCValues v;
+    unsigned char fg[3] = {0x00, 0x00, 0x00};
+    unsigned char bg[3] = {0xFF, 0xFF, 0xFF};
+    int unit = (image->bitmap_unit > 0) ? image->bitmap_unit : 8;
+    int unitBytes = unit / 8;
+    XImage rgba;
+    unsigned int i, j;
+    int rc;
+
+    if (src_x < 0 || src_y < 0 || width == 0 || height == 0
+	    || image->width <= 0 || image->height <= 0
+	    || (unsigned int)src_x + width > (unsigned int)image->width
+	    || (unsigned int)src_y + height > (unsigned int)image->height
+	    || (size_t)image->bytes_per_line < (size_t)unitBytes
+		* (((size_t)src_x + width + unit - 1) / unit)) {
+	return BadValue;
+    }
+
+    if (gc && TkWaylandGetGCValues(gc, GCForeground | GCBackground, &v)) {
+	NVGcolor c = TkWaylandPixelToNVG(v.foreground);
+
+	fg[0] = (unsigned char)lroundf(c.r * 255.0f);
+	fg[1] = (unsigned char)lroundf(c.g * 255.0f);
+	fg[2] = (unsigned char)lroundf(c.b * 255.0f);
+	c = TkWaylandPixelToNVG(v.background);
+	bg[0] = (unsigned char)lroundf(c.r * 255.0f);
+	bg[1] = (unsigned char)lroundf(c.g * 255.0f);
+	bg[2] = (unsigned char)lroundf(c.b * 255.0f);
+    }
+
+    rgba = *image;
+    rgba.width = (int)width;
+    rgba.height = (int)height;
+    rgba.format = ZPixmap;
+    rgba.xoffset = 0;
+    rgba.depth = 24;
+    rgba.bits_per_pixel = 32;
+    rgba.bytes_per_line = (int)(width * 4);
+    rgba.data = (char *)ckalloc((size_t)width * height * 4);
+    if (rgba.data == NULL) {
+	return BadAlloc;
+    }
+
+    for (j = 0; j < height; j++) {
+	const unsigned char *row = (const unsigned char *)image->data
+		+ (size_t)(src_y + j) * image->bytes_per_line;
+	unsigned char *dst = (unsigned char *)rgba.data + (size_t)j * width * 4;
+
+	for (i = 0; i < width; i++, dst += 4) {
+	    unsigned int x = (unsigned int)src_x + i;
+	    unsigned int word = x / unit;
+	    unsigned int bit = x % unit;
+	    /* Position of the pixel's bit counted from the least significant
+	     * bit of its unit, and the byte of the unit that holds it. */
+	    unsigned int p = (image->bitmap_bit_order == MSBFirst)
+		    ? (unsigned int)unit - 1 - bit : bit;
+	    unsigned int byteIdx = (image->byte_order == LSBFirst)
+		    ? p / 8 : (unsigned int)unitBytes - 1 - p / 8;
+	    int set = (row[word * unitBytes + byteIdx] >> (p % 8)) & 1;
+	    const unsigned char *color = set ? fg : bg;
+
+	    dst[0] = color[0];
+	    dst[1] = color[1];
+	    dst[2] = color[2];
+	    dst[3] = 0xFF;
+	}
+    }
+
+    rc = TkpPutRGBAImage(display, drawable, gc, &rgba, 0, 0,
+	    dest_x, dest_y, width, height);
+    ckfree(rgba.data);
+    return (rc == 0) ? Success : BadAlloc;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XPutImage --
  *
  *      Standard Xlib entry point for image drawing. This function
@@ -925,6 +1167,10 @@ XPutImage(
 {
     int rc;
 
+    if (image && image->data && image->bits_per_pixel == 1) {
+	return PutBitmapImage(display, drawable, gc, image, src_x, src_y,
+		dest_x, dest_y, width, height);
+    }
     if (image && image->data
 	    && (image->bits_per_pixel == 32 || image->bits_per_pixel == 24)) {
 	/*

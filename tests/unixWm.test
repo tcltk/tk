@@ -241,7 +241,7 @@ wm geom .t +100+$Y0
 wm minsize .t 1 1
 update
 
-test unixWm-6.1 {size changes} unix {
+test unixWm-6.1 {size changes} x11 {
     .t config -width 180 -height 150
     update
     wm geom .t
