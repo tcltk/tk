@@ -36,6 +36,18 @@
 #endif
 */
 
+#import <QuartzCore/QuartzCore.h>
+
+#define PRINT_STACK					\
+    for (NSWindow *w in [NSApp orderedWindows]) {		\
+    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);			\
+	if (winPtr2) {						\
+	    fprintf(stderr, "%s ", Tk_PathName(winPtr2));	\
+	}							\
+    }								\
+    fprintf(stderr, "\n");					\
+    fflush(stderr)
+
 /*
  * Carbon window attributes and classes.
  */
@@ -582,7 +594,7 @@ static void placeAsTab(TKWindow *macWindow) {
 }
 
 /*
- *  This method calls orderFront if the WM_IS_HIDDEN flag is not set.
+ *  This TKPanel method calls orderFront if the WM_IS_HIDDEN flag is not set.
  *  Otherwise it does nothing.
  */
 
@@ -617,7 +629,7 @@ static void placeAsTab(TKWindow *macWindow) {
 }
 
 /*
- *  This method calls orderFront if the WM_IS_HIDDEN flag is not set.
+ *  This TKWindow method calls orderFront if the WM_IS_HIDDEN flag is not set.
  *  Otherwise it does nothing.
  */
 
@@ -627,7 +639,16 @@ static void placeAsTab(TKWindow *macWindow) {
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	if (!wmPtr || (wmPtr->flags & WM_IS_HIDDEN) == 0) {
+#if 0
+	    fprintf(stderr, "Window %s was ordered front @ %.8f\n", Tk_PathName(winPtr),
+		CACurrentMediaTime());
+	    PRINT_STACK;
+#endif
 	    [self makeKeyAndOrderFront:nil];
+#if 0
+	    fprintf(stderr, "Orderfront returned @ %.8f\n", CACurrentMediaTime());
+	    PRINT_STACK;
+#endif
 	}
     }
 }
@@ -5709,15 +5730,6 @@ Tk_MoveToplevelWindow(
  *
  *----------------------------------------------------------------------
  */
-#define PRINT_STACK					\
-    for (NSWindow *w in [NSApp orderedWindows]) {		\
-    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);			\
-	if (winPtr2) {						\
-	    fprintf(stderr, "%s ", Tk_PathName(winPtr2));	\
-	}							\
-    }								\
-    fprintf(stderr, "\n");					\
-    fflush(stderr)
 
 void
 TkWmRestackToplevel(

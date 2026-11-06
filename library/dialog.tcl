@@ -49,7 +49,13 @@ proc ::tk_dialog {w title text bitmap default args} {
     # and bottom parts.
 
     destroy $w
-    toplevel $w -class Dialog
+    if {$windowingsystem eq "aqua"} {
+	toplevel $w -class Dialog
+	tkwait visibility $w;
+	wm attributes $w -stylemask {titled fullsizecontent}
+    } else {
+	toplevel $w -class Dialog
+    }
     wm title $w $title
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW { }
@@ -64,15 +70,18 @@ proc ::tk_dialog {w title text bitmap default args} {
     if {[winfo viewable [winfo toplevel [winfo parent $w]]] } {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
-    if {$windowingsystem eq "aqua"} {
-	after 100 {wm attributes $w -stylemask fullsizecontent}
-    } elseif {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
+
+#    if {$windowingsystem eq "aqua"} {
+#	tkwait visibility $w; wm attributes $w -stylemask {titled fullsizecontent}
+#	after 100 {wm attributes $w -stylemask fullsizecontent}
+#    } else
+    if {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
 	wm attributes $w -type dialog
     }
 
     frame $w.bot
     frame $w.top
-    if {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
+    if {$windowingsystem eq "x11"} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -159,10 +168,10 @@ proc ::tk_dialog {w title text bitmap default args} {
     # before deleting the window, since otherwise the window manager
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
-    
-	if {$windowingsystem eq "aqua"} {
-	wm attributes $w -stylemask titled
-    }
+
+#    if {$windowingsystem eq "aqua"} {
+#	wm attributes $w -stylemask titled
+#    }
 
     vwait ::tk::Priv(button)
 
