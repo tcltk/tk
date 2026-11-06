@@ -46,9 +46,9 @@ test dialog-1.3 {tk_dialog command} -body {
 test dialog-2.1 {tk_dialog operation} -constraints notWayland -body {
     set x [after 5000 [list set tk::Priv(button) "no response"]]
     after 500 {
-#	if {![winfo ismapped .d.button0]} {
-#	    update
-#	}
+	if {![winfo ismapped .d.button0]} {
+	    update
+	}
 	PressButton .d.button0
     }
     set res [tk_dialog .d foo foo info 0 click]
