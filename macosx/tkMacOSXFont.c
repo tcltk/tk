@@ -330,7 +330,7 @@ InitFont(
     } else {
 	TkInitFontAttributes(faPtr);
     }
-    fontPtr->nsFont = nsFont;
+    fontPtr->nsFont = [nsFont retain];
 
     /*
      * Some don't like antialiasing on fixed-width even if bigger than limit
@@ -647,6 +647,7 @@ TkpGetNativeFont(
     if (ctFont) {
 	fontPtr = (MacFont *)Tcl_Alloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
+	CFRelease(ctFont);
     }
 
     return (TkFont *) fontPtr;
@@ -718,7 +719,6 @@ TkpGetFontFromAttributes(
 	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
-    CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
     InitFont(nsFont, faPtr, fontPtr);
 
     return (TkFont *) fontPtr;
