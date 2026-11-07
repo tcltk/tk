@@ -169,6 +169,7 @@ static void initColorTable()
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
 	    [oldEntry->selector release];
+	    oldEntry->selector = nil;
 	} else {
 	    entry->index = index++;
 	}
@@ -203,6 +204,7 @@ static void initColorTable()
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
 	    [oldEntry->selector release];
+	    oldEntry->selector = nil;
 	} else {
 	    entry->index = index++;
 	}
