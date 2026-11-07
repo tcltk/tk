@@ -34,6 +34,21 @@ resetWindows
 #
 # LOCAL UTILITY PROCS
 #
+# [raise] and [lower] may return before the window manager has completed the
+# operation. The raiseDelay procedure idles for a while to give the operation
+# a chance to complete.
+#
+
+if {[tk windowingsystem] eq "x11"} {
+    proc raiseDelay {} {
+	after 300
+        update idletasks
+        update
+    }
+} else {
+    proc raiseDelay {} {
+    }
+}
 
 # Zooming, iconifying and deiconifying a window are done by the window manager
 # asynchronously, sometimes in several steps.  waitForWm processes events until
@@ -1660,6 +1675,7 @@ deleteWindows
 
 test wm-stackorder-2.1 {stacking order} -body {
     toplevel .t ; update idletasks
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t
@@ -1667,6 +1683,7 @@ test wm-stackorder-2.1 {stacking order} -body {
 test wm-stackorder-2.2 {stacking order} -body {
     toplevel .t ; update idletasks
     raise .
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t
@@ -1678,8 +1695,10 @@ test wm-stackorder-2.3 {stacking order} -body {
     toplevel .t2 ; update idletasks
     lappend res [wm stackorder .]
     raise .
+    raiseDelay
     lappend res [wm stackorder .]
     raise .t2
+    raiseDelay
     lappend res [wm stackorder .]
     set res
 } -cleanup {
@@ -1690,6 +1709,7 @@ test wm-stackorder-2.4 {stacking order} -body {
     toplevel .t2 ; update idletasks
     raise .
     lower .t2
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t .t2
@@ -1706,6 +1726,7 @@ test wm-stackorder-2.5 {stacking order} -setup {
     toplevel .extra ; update idletasks
     raise .parent
     lower .parent.child2
+    raiseDelay
     wm stackorder .parent
 } -cleanup {
     deleteWindows
@@ -1734,6 +1755,7 @@ test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body 
     toplevel .t1 ; update idletasks
     toplevel .t2 ; update idletasks
     wm iconify .t1
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
@@ -1742,6 +1764,7 @@ test wm-stackorder-3.2 {unmapped toplevel} -body {
     toplevel .t1 ; update idletasks
     toplevel .t2 ; update idletasks
     wm withdraw .t2
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t1 .t2
@@ -1802,6 +1825,7 @@ deleteWindows
 test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update idletasks
     raise .t
+    raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
@@ -1809,6 +1833,7 @@ test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
 test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update idletasks
     raise .t
+    raiseDelay
     wm stackorder . isbelow .t
 } -cleanup {
     destroy .t
@@ -1816,6 +1841,7 @@ test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
 test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update idletasks
     raise .
+    raiseDelay
     wm stackorder .t isabove .
 } -cleanup {
     destroy .t
@@ -1823,6 +1849,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
 test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update idletasks
     raise .
+    raiseDelay
     wm stackorder .t isb .
 } -cleanup {
     destroy .t
@@ -1840,6 +1867,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     .t configure -menu .t.m
     update idletasks
     raise .
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t
@@ -1850,6 +1878,7 @@ test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
     wm overrideredirect .t 1
     update idletasks
     raise .
+    raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
@@ -1860,6 +1889,7 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     wm overrideredirect .t 1
     update idletasks
     raise .
+    raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
@@ -1870,6 +1900,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
     wm overrideredirect .t 1
     update idletasks
     lower .t
+    raiseDelay
     wm stackorder .t isbelow .
 } -cleanup {
     destroy .t
@@ -1878,6 +1909,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
 	 stacking order} -body {
     toplevel .real -container 1 ; update idletasks
+    raiseDelay
     toplevel .embd -bg blue -use [winfo id .real] ; update idletasks
     wm stackorder .
 } -cleanup {
@@ -2059,6 +2091,7 @@ test wm-transient-4.1 {transient toplevel is withdrawn
 test wm-transient-4.2 {already mapped transient toplevel
 	is withdrawn if toplevel is iconic} -constraints withWindowManager -body {
     toplevel .top
+    raiseDelay
     wm iconify .top
     update idletasks
     toplevel .subject
@@ -2257,7 +2290,7 @@ test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints 
     lappend result [winfo ismapped .t1] [winfo ismapped .t2]
     wm deiconify .t1; update
     lappend result [winfo ismapped .t1] [winfo ismapped .t2]
-    raise .t1; update
+    raise .t1; raiseDelay; update
     lappend result [lsearch -all -inline -glob [wm stackorder .] ".t?"]
 } -cleanup {
     deleteWindows
@@ -2346,6 +2379,7 @@ test wm-state-2.8 {state change after map} -constraints withWindowManager -body 
     toplevel .t
     update
     wm state .t iconic
+    raiseDelay
     wm state .t
 } -cleanup {
     deleteWindows
@@ -2354,6 +2388,7 @@ test wm-state-2.9 {state change after map} -constraints withWindowManager -body 
     toplevel .t
     update
     wm iconify .t
+    raiseDelay
     wm state .t
 } -cleanup {
     deleteWindows
