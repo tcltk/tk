@@ -159,6 +159,7 @@ static void initColorTable()
 			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
+		    [colorName release];
 		    continue;
 		}
 	    }
