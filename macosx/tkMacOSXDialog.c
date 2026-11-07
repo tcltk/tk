@@ -42,13 +42,10 @@ static void setAllowedFileTypes(
 	    }
 	}
 	[panel setAllowedContentTypes:allowedTypes];
-    } else {
-# if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-/* setAllowedFileTypes is not deprecated */
-	[panel setAllowedFileTypes:extensions];
-#endif
+	return;
     }
-#else
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     [panel setAllowedFileTypes:extensions];
 #endif
 }
