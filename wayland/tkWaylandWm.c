@@ -29,9 +29,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Defined in tkWaylandInit.c; move to tkWaylandInt.h. */
+/* External functions. */
 MODULE_SCOPE void TkWaylandWaitForWindowSize(GLFWwindow *, int, int);
 MODULE_SCOPE void TkWaylandWaitForWindowVisible(GLFWwindow *);
+extern void TkWaylandMenubarResize(TkWindow *winPtr);
+extern void ExposeSubtree(void *clientData);
 
 /*
  * Undefine X11 macros that might conflict with our local definitions.
@@ -594,14 +596,6 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
 }
 
 /*
- * Declared MODULE_SCOPE and defined in tkWaylandMenu.c. Not in a shared
- * header (tkWaylandNotify.c declares it the same way locally), so we
- * follow the same convention here.
- */
-extern void TkWaylandMenubarResize(TkWindow *winPtr);
-
-
-/*
  *----------------------------------------------------------------------
  *
  * QueueVisibilityNotify --
@@ -663,8 +657,13 @@ QueueVisibilityNotify(TkWindow *winPtr) {
 /*
  * Queue Expose for a window and all mapped descendants.
  * This is needed on Wayland because the first toplevel Expose is queued
- * in TkWmMapWindow before pack/grid has mapped the children.  Without this
- * the toplevel draws empty and never redraws children.
+ * in TkWmMapWindow before pack/grid/panedwindow has finished laying out
+ * the children.  Without this the toplevel draws empty and never redraws
+ * children.
+ *
+ * Also expose any child that already has a positive size even if the
+ * TK_MAPPED flag has not yet been set by its geometry manager; this
+ * closes a race seen with panedwindow panes.
  */
 static void
 QueueExposeChildren(
@@ -673,13 +672,25 @@ QueueExposeChildren(
     TkWindow *child;
 
     for (child = winPtr->childList; child != NULL; child = child->nextPtr) {
-        if (child->parentPtr == winPtr
-                && !(child->flags & TK_ALREADY_DEAD)
-                && (child->flags & TK_MAPPED)
-                && !Tk_IsTopLevel(child)
-                && Tk_Width(child) > 0 && Tk_Height(child) > 0) {
-            TkWaylandQueueExposeEvent(child, 0, 0,
-                    Tk_Width(child), Tk_Height(child));
+        if (child->parentPtr != winPtr
+                || (child->flags & TK_ALREADY_DEAD)
+                || Tk_IsTopLevel(child)) {
+            continue;
+        }
+        int w = Tk_Width(child);
+        int h = Tk_Height(child);
+        if (w <= 0 || h <= 0) {
+            continue;
+        }
+        /*
+         * Accept either the formal mapped flag or a positive size that
+         * indicates the geometry manager has already decided the child
+         * should be visible.  Panedwindow sometimes sets size before
+         * the final MapWindow call.
+         */
+        if ((child->flags & TK_MAPPED) || Tk_IsMapped((Tk_Window)child)
+                || (w > 1 && h > 1)) {
+            TkWaylandQueueExposeEvent(child, 0, 0, w, h);
             QueueExposeChildren(child);
         }
     }
@@ -696,11 +707,87 @@ QueueExposeTree(
     if (!(winPtr->flags & TK_TOP_LEVEL)) return;
     if (winPtr->wmInfoPtr == NULL) return;
     if (winPtr->dispPtr == NULL) return;
+
     w = Tk_Width(winPtr);
     h = Tk_Height(winPtr);
     if (w <= 0 || h <= 0) return;
+
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
     QueueExposeChildren(winPtr);
+}
+
+
+/* Forward declaration */
+static void ReExposeDelayed(void *clientData);
+
+/*
+ * Force the same full rebuild that a real user resize performs.
+ * See ReExposeIdle() for adaptation notes on the draft.
+ */
+static void
+ForceFullRebuild(TkWindow *winPtr)
+{
+    GLFWwindow *gw;
+    glfwTkInfo *infoPtr;
+    int w, h;
+    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)
+            || !(winPtr->flags & TK_TOP_LEVEL)
+            || winPtr->privatePtr == NULL) {
+        return;
+    }
+    gw = winPtr->privatePtr->glfwWindow;
+    if (gw == NULL) {
+        return;
+    }
+    infoPtr = (glfwTkInfo *)glfwGetWindowUserPointer(gw);
+    if (infoPtr == NULL) {
+        return;
+    }
+    w = Tk_Width(winPtr);
+    h = Tk_Height(winPtr);
+    if (w <= 0 || h <= 0) {
+        glfwGetWindowSize(gw, &w, &h);
+    }
+    if (w <= 0 || h <= 0) {
+        return;
+    }
+    glfwSetWindowSize(gw, w + 1, h);
+    TkWaylandWaitForWindowSize(gw, w + 1, h);
+    glfwSetWindowSize(gw, w, h);
+    TkWaylandWaitForWindowSize(gw, w, h);
+    tkWaylandInvalidateClipRectsForTree(winPtr);
+    QueueExposeTree(winPtr);
+    infoPtr = (glfwTkInfo *)glfwGetWindowUserPointer(gw);
+    if (infoPtr) {
+        infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+        infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
+    }
+}
+
+/*
+ * Delayed third-chance re-expose. Now a force-rebuild, not a pure
+ * expose: only a size change makes geometry managers / the resize
+ * path re-run. 30 ms lets panedwindow's final sash calculation and
+ * ConfigureNotify traffic settle.
+ *
+ * Adaptation notes vs. draft: this file has no isGlfwWindowValid()
+ * and no waylandDisplay / wl_display_roundtrip() symbol (no Wayland
+ * headers included), so validity uses gw != NULL + non-NULL user
+ * pointer (the pattern used elsewhere here) and the compositor
+ * round-trip uses TkWaylandWaitForWindowSize(), declared at the top
+ * of this file and already used by ApplyPendingGeometry() after
+ * glfwSetWindowSize(). The draft's DeleteTimerHandler with a null
+ * token was dropped: that is not a valid token.
+ */
+static void
+ReExposeDelayed(void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)
+            || !(winPtr->flags & TK_TOP_LEVEL)) {
+        return;
+    }
+    ForceFullRebuild(winPtr);
 }
 
 static void
@@ -712,15 +799,42 @@ ReExposeIdle(void *clientData)
     if (!(winPtr->flags & TK_TOP_LEVEL)) return;
     if (winPtr->wmInfoPtr == NULL) return;
     if (winPtr->dispPtr == NULL) return;
+
+    /*
+     * Second-chance pass: pack/grid/panedwindow have now run their idle
+     * layout, so children are at (or closer to) their real geometry.
+     * The first expose queued in TkWmMapWindow ran against pre-layout
+     * geometry and any clip mask built from it is stale.  Invalidate
+     * the whole subtree first so the re-exposed children draw with a
+     * mask built from the current geometry.
+     */
+    tkWaylandInvalidateClipRectsForTree(winPtr);
     QueueExposeTree(winPtr);
+
     if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
         GLFWwindow *gw = winPtr->privatePtr->glfwWindow;
-        glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(gw);
+        glfwTkInfo *infoPtr = (glfwTkInfo *)glfwGetWindowUserPointer(gw);
         if (infoPtr) {
             infoPtr->flags |= TKWL_NEEDS_DISPLAY;
             infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
         }
     }
+
+    /*
+     * Schedule one further delayed pass.  Panedwindow (and a few other
+     * managers) still adjust sash positions / pane sizes after the
+     * ordinary idle handlers; the timer catches that final layout.
+     * 15 ms is short enough to be invisible and long enough for the
+     * compositor + geometry-manager work to finish.
+     */
+    /*
+     * Schedule the delayed force-rebuild. No stored timer token
+     * exists for this handler (WmInfo lives in the header), so a
+     * previous timer cannot be deleted by token here. Safe: the
+     * handler is idempotent, and a stale firing is rejected by
+     * the guards in ReExposeDelayed.
+     */
+    Tcl_CreateTimerHandler(30, ReExposeDelayed, clientData);
 }
 
 /*
@@ -1651,16 +1765,23 @@ TkWmMapWindow(TkWindow *winPtr)
          * else asks the toplevel itself to redraw after it is shown.  The
          * Expose queued at creation time is consumed while the window is
          * still unmapped (DisplayFrame drops it), so queue a fresh one now.
-         * This also makes an empty root produce a first frame to present.
          *
-         * Child widgets may not yet be mapped when this first Expose
-         * runs (pack/grid runs as idle tasks after MapNotify).  Queue exposes
-         * for the whole subtree now, and schedule a second re-expose idle
-         * after the geometry managers have had a chance to map children.
+         * Child widgets (especially those managed by panedwindow) may not
+         * yet have their final geometry when this first Expose runs.
+         * We therefore:
+         *   1. queue an immediate expose + invalidate (covers the empty-root
+         *      and simple pack/grid cases),
+         *   2. schedule ReExposeIdle (second chance after ordinary idle
+         *      layout),
+         *   3. let ReExposeIdle itself schedule a short delayed third pass
+         *      that catches the late sash/pane adjustments performed by
+         *      panedwindow.
          */
         QueueExposeTree(winPtr);
-        /* Second pass after idle handlers (pack/grid) */
-        Tcl_DoWhenIdle(ReExposeIdle, (void*)winPtr);
+        tkWaylandInvalidateClipRectsForTree(winPtr);
+        Tcl_DoWhenIdle(ReExposeIdle, (void *)winPtr);
+        Tcl_CreateTimerHandler(25, ExposeSubtree, (void *)winPtr);
+
         /* Ensure we will swap buffers even if BeginDraw early-exits */
         if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
             glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(winPtr->privatePtr->glfwWindow);
@@ -1860,6 +1981,7 @@ TkWmDeadWindow(
      */
     CancelGeometryUpdate(winPtr);
     Tcl_CancelIdleCall(ReExposeIdle, (void *)winPtr);
+    Tcl_CancelIdleCall(ReExposeDelayed, (void *)winPtr);
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
     /* Destroy wrapper window if present. */
@@ -6972,10 +7094,74 @@ XUnmapSubwindows(
     return Success;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandInvalidateClipRectsForMovedWindow --
+ *
+ *      A child window was moved and/or resized by a geometry manager
+ *      (e.g. panedwindow laying out panes -> labelframes -> canvases).
+ *      On this backend every widget is composited into its toplevel's
+ *      backing FBO and clipped by a depth-buffer mask built from
+ *      cached containerRect/clipRects. Moving one window therefore
+ *      invalidates the mask of every window whose clip is computed
+ *      relative to it: its container (-in / -container parent), its
+ *      parent, its siblings underneath/above it, and its descendants.
+ *      Invalidating only the moved window itself leaves the rest of
+ *      the subtree drawing with stale rectangles -- the truncated /
+ *      offset canvases seen in a panedwindow inside the widget demo,
+ *      where the toplevel itself never resizes and so the
+ *      FramebufferSizeCallback -> InvalidateClipRectsForTree path
+ *      never runs.
+ *
+ *      Walk to the enclosing toplevel and invalidate the whole tree,
+ *      exactly as XMapWindow / the framebuffer-size path already do.
+ *      Fall back to the window + parent + container when no toplevel
+ *      is found. Must be called *after* queuing exposes, otherwise
+ *      a clip rebuild may happen with stale geometry.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Marks clip rects dirty for the toplevel subtree.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+TkWaylandInvalidateClipRectsForMovedWindow(
+    TkWindow *winPtr)
+{
+    TkWindow *topPtr;
+    TkWindow *contPtr;
+
+    if (winPtr == NULL) {
+        return;
+    }
+    contPtr = TkWaylandGetContainer(winPtr);
+    if (contPtr != NULL) {
+        tkWaylandInvalidateClipRects(contPtr);
+    }
+    topPtr = winPtr;
+    while (topPtr != NULL && !(topPtr->flags & TK_TOP_LEVEL)) {
+        topPtr = topPtr->parentPtr;
+    }
+    if (topPtr != NULL) {
+        tkWaylandInvalidateClipRectsForTree(topPtr);
+    } else {
+        tkWaylandInvalidateClipRects(winPtr);
+        if (winPtr->parentPtr != NULL) {
+            tkWaylandInvalidateClipRects(winPtr->parentPtr);
+        }
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
  * XResizeWindow --
+
  *
  *	Change the size of a window.  Position and size themselves are
  *	tracked purely in Tk's own bookkeeping (winPtr->changes) and read
@@ -7016,7 +7202,7 @@ XResizeWindow(
     DEBUG_LOG("XResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
-    tkWaylandInvalidateClipRects(winPtr);
+    TkWaylandInvalidateClipRectsForMovedWindow(winPtr);
     return Success;
 }
 
@@ -7066,7 +7252,7 @@ XMoveWindow(
     DEBUG_LOG("XMoveWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
-    tkWaylandInvalidateClipRects(winPtr);
+    TkWaylandInvalidateClipRectsForMovedWindow(winPtr);
     return Success;
 }
 
@@ -7121,7 +7307,7 @@ XMoveResizeWindow(
     DEBUG_LOG("XMoveResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
-    tkWaylandInvalidateClipRects(winPtr);
+    TkWaylandInvalidateClipRectsForMovedWindow(winPtr);
     return Success;
 }
 
