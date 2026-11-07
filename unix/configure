@@ -679,9 +679,9 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
+enable_accessibility
 SPEECHD_LIBS
 SPEECHD_CFLAGS
-enable_accessibility
 CUPS_LIBS
 CUPS_CFLAGS
 XRENDER_LIBS
@@ -750,6 +750,9 @@ LIBOBJS
 AR
 RANLIB
 SHARED_BUILD
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
+PKG_CONFIG
 CPP
 OBJEXT
 EXEEXT
@@ -848,7 +851,20 @@ LDFLAGS
 LIBS
 CPPFLAGS
 CPP
-XMKMF'
+PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
+XMKMF
+HB_CFLAGS
+HB_LIBS
+XFT_CFLAGS
+XFT_LIBS
+XRENDER_CFLAGS
+XRENDER_LIBS
+ATK_CFLAGS
+ATK_LIBS
+SPEECHD_CFLAGS
+SPEECHD_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1524,7 +1540,26 @@ Some influential environment variables:
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
+  PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR
+              path overriding pkg-config's built-in search path
   XMKMF       Path to xmkmf, Makefile generator for X Window System
+  HB_CFLAGS   C compiler flags for HB, overriding pkg-config
+  HB_LIBS     linker flags for HB, overriding pkg-config
+  XFT_CFLAGS  C compiler flags for XFT, overriding pkg-config
+  XFT_LIBS    linker flags for XFT, overriding pkg-config
+  XRENDER_CFLAGS
+              C compiler flags for XRENDER, overriding pkg-config
+  XRENDER_LIBS
+              linker flags for XRENDER, overriding pkg-config
+  ATK_CFLAGS  C compiler flags for ATK, overriding pkg-config
+  ATK_LIBS    linker flags for ATK, overriding pkg-config
+  SPEECHD_CFLAGS
+              C compiler flags for SPEECHD, overriding pkg-config
+  SPEECHD_LIBS
+              linker flags for SPEECHD, overriding pkg-config
 
 Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2971,9 +3006,12 @@ printf '%s\n' "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 
-if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
+if test "${TCL_MAJOR_VERSION}" -lt 9
+then :
+
     as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
+
 fi
 
 #------------------------------------------------------------------------
@@ -2981,10 +3019,16 @@ fi
 # the installed Tcl headers.
 #------------------------------------------------------------------------
 
-if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"
+then :
+
     TCL_INCLUDES='-I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR}'
-else
+
+else case e in #(
+  e)
     TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
+ ;;
+esac
 fi
 
 
@@ -3043,11 +3087,17 @@ printf '%s\n' "$BUILD_TCLSH" >&6; }
 # Handle the --prefix=... option
 #------------------------------------------------------------------------
 
-if test "${prefix}" = "NONE"; then
+if test "${prefix}" = "NONE"
+then :
+
     prefix="$TCL_PREFIX"
+
 fi
-if test "${exec_prefix}" = "NONE"; then
+if test "${exec_prefix}" = "NONE"
+then :
+
     exec_prefix=$prefix
+
 fi
 # Make sure srcdir is fully qualified!
 srcdir="`cd "$srcdir" ; pwd`"
@@ -3128,8 +3178,11 @@ printf '%s\n' "$enableval" >&6; }
 
 # If the user did not set CFLAGS, set it now to keep
 # the AC_PROG_CC macro from adding "-g -O2".
-if test "${CFLAGS+set}" != "set" ; then
+if test "${CFLAGS+set}" != "set"
+then :
+
     CFLAGS=""
+
 fi
 
 
@@ -4395,11 +4448,156 @@ esac
 
 
 #------------------------------------------------------------------------
+# pkg-config is used to find HarfBuzz, Xft, Xrender, ATK and libspeechd.
+# When cross-compiling, PKG_PROG_PKG_CONFIG looks for the pkg-config of the
+# host first (e.g. aarch64-linux-gnu-pkg-config). The macros come from
+# pkg.m4, included by aclocal.m4.
+#------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+printf '%s\n' "$PKG_CONFIG" >&6; }
+else
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_ac_pt_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+printf '%s\n' "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf '%s\n' "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+	else
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+		PKG_CONFIG=""
+	fi
+fi
+if test -z "$PKG_CONFIG"; then
+	as_fn_error $? "pkg-config not found" "$LINENO" 5
+fi
+
+#------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
 # It makes compiling go faster.  (This is only a performance feature.)
 #------------------------------------------------------------------------
 
-if test -z "$no_pipe" && test -n "$GCC"; then
+if test -z "$no_pipe" && test -n "$GCC"
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking if the compiler understands -pipe" >&5
 printf %s "checking if the compiler understands -pipe... " >&6; }
 if test ${tcl_cv_cc_pipe+y}
@@ -4432,9 +4630,13 @@ esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cc_pipe" >&5
 printf '%s\n' "$tcl_cv_cc_pipe" >&6; }
-    if test $tcl_cv_cc_pipe = yes; then
+    if test $tcl_cv_cc_pipe = yes
+then :
+
 	CFLAGS="$CFLAGS -pipe"
-    fi
+
+fi
+
 fi
 
 #------------------------------------------------------------------------
@@ -7542,17 +7744,23 @@ printf '%s\n' "$ac_cv_c_bigendian" >&6; }
 
 LIB_RUNTIME_DIR='$(libdir)'
 
-if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
+if test "$TCL_EXEC_PREFIX" != "$exec_prefix"
+then :
+
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
+
 fi
 
-if test "$TCL_PREFIX" != "$prefix"; then
+if test "$TCL_PREFIX" != "$prefix"
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:
 	Different --prefix selected for Tk and Tcl!
-	package require tk may not work correctly in tclsh." >&5
+	[package require tk] may not work correctly in tclsh." >&5
 printf '%s\n' "$as_me: WARNING:
 	Different --prefix selected for Tk and Tcl!
-	package require tk may not work correctly in tclsh." >&2;}
+	[package require tk] may not work correctly in tclsh." >&2;}
+
 fi
 
 #--------------------------------------------------------------------
@@ -7596,7 +7804,6 @@ fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_type_fd_set" >&5
 printf '%s\n' "$tcl_cv_type_fd_set" >&6; }
 tk_ok=$tcl_cv_type_fd_set
-if test $tk_ok = no; then
 
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for egrep -e" >&5
 printf %s "checking for egrep -e... " >&6; }
@@ -7732,7 +7939,10 @@ fi
 printf '%s\n' "$ac_cv_path_EGREP_TRADITIONAL" >&6; }
  EGREP_TRADITIONAL=$ac_cv_path_EGREP_TRADITIONAL
 
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for fd_mask in sys/select" >&5
+if test $tk_ok = no
+then :
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for fd_mask in sys/select" >&5
 printf %s "checking for fd_mask in sys/select... " >&6; }
 if test ${tcl_cv_grep_fd_mask+y}
 then :
@@ -7758,16 +7968,23 @@ esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_grep_fd_mask" >&5
 printf '%s\n' "$tcl_cv_grep_fd_mask" >&6; }
-    if test $tcl_cv_grep_fd_mask = present; then
+    if test $tcl_cv_grep_fd_mask = present
+then :
+
 
 printf '%s\n' "#define HAVE_SYS_SELECT_H 1" >>confdefs.h
 
 	tk_ok=yes
-    fi
+
 fi
-if test $tk_ok = no; then
+
+fi
+if test $tk_ok = no
+then :
+
 
 printf '%s\n' "#define NO_FD_SET 1" >>confdefs.h
+
 
 fi
 
@@ -7903,9 +8120,12 @@ esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_pwd_pw_gecos" >&5
 printf '%s\n' "$tcl_cv_pwd_pw_gecos" >&6; }
-if test $tcl_cv_pwd_pw_gecos = yes; then
+if test $tcl_cv_pwd_pw_gecos = yes
+then :
+
 
 printf '%s\n' "#define HAVE_PW_GECOS 1" >>confdefs.h
+
 
 fi
 
@@ -7913,7 +8133,9 @@ fi
 #	On Mac OS X, we can build either with X11 or with Aqua
 #--------------------------------------------------------------------
 
-if test "`uname -s`" = "Darwin" ; then
+if test "`uname -s`" = "Darwin"
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use Aqua" >&5
 printf %s "checking whether to use Aqua... " >&6; }
     # Check whether --enable-aqua was given.
@@ -7925,27 +8147,41 @@ else case e in #(
 esac
 fi
 
-    if test $tk_aqua = yes -o $tk_aqua = cocoa; then
+    if test $tk_aqua = yes -o $tk_aqua = cocoa
+then :
+
 	tk_aqua=yes
-	if test $tcl_corefoundation = no; then
+	if test $tcl_corefoundation = no
+then :
+
 	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Aqua can only be used when CoreFoundation is available" >&5
 printf '%s\n' "$as_me: WARNING: Aqua can only be used when CoreFoundation is available" >&2;}
 	    tk_aqua=no
-	fi
-	if test ! -d /System/Library/Frameworks/Cocoa.framework; then
+
+fi
+	if test ! -d /System/Library/Frameworks/Cocoa.framework
+then :
+
 	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Aqua can only be used when Cocoa is available" >&5
 printf '%s\n' "$as_me: WARNING: Aqua can only be used when Cocoa is available" >&2;}
 	    tk_aqua=no
-	fi
-	if test "`uname -r | awk -F. '{print $1}'`" -lt 9; then
+
+fi
+	if test "`uname -r | awk -F. '{print $1}'`" -lt 9
+then :
+
 	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Aqua requires Mac OS X 10.5 or later" >&5
 printf '%s\n' "$as_me: WARNING: Aqua requires Mac OS X 10.5 or later" >&2;}
 	    tk_aqua=no
-	fi
-    fi
+
+fi
+
+fi
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tk_aqua" >&5
 printf '%s\n' "$tk_aqua" >&6; }
-    if test $tk_aqua = no; then
+    if test $tk_aqua = no
+then :
+
 	# check if weak linking whole libraries is possible.
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking if ld accepts -weak-l flag" >&5
 printf %s "checking if ld accepts -weak-l flag... " >&6; }
@@ -7981,7 +8217,8 @@ esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_ld_weak_l" >&5
 printf '%s\n' "$tcl_cv_ld_weak_l" >&6; }
-    fi
+
+fi
     ac_fn_c_check_header_compile "$LINENO" "AvailabilityMacros.h" "ac_cv_header_AvailabilityMacros_h" "$ac_includes_default"
 if test "x$ac_cv_header_AvailabilityMacros_h" = xyes
 then :
@@ -7989,8 +8226,12 @@ then :
 
 fi
 
-else
+
+else case e in #(
+  e)
     tk_aqua=no
+ ;;
+esac
 fi
 
 #--------------------------------------------------------------------
@@ -8599,22 +8840,32 @@ printf '%s\n' "#define X11_BACKEND_DISABLED_FOR_WAYLAND 1" >>confdefs.h
     fi
 fi
 
-if test $tk_aqua = yes; then
+if test $tk_aqua = yes
+then :
+
 
 printf '%s\n' "#define MAC_OSX_TK 1" >>confdefs.h
 
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
-    if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
+    if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"
+then :
+
 	LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
-    fi
+
+fi
     EXTRA_CC_SWITCHES='-x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
-    if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
+    if test -n "${enable_symbols}" -a "${enable_symbols}" != no
+then :
+
 
 printf '%s\n' "#define TK_MAC_DEBUG 1" >>confdefs.h
 
-    fi
-else
+
+fi
+
+else case e in #(
+  e)
     # Final windowing system decision
     if test "$enable_wayland" = "yes"; then
         TK_WINDOWINGSYSTEM=WAYLAND
@@ -8996,6 +9247,8 @@ printf '%s\n' "could not find any!  Using -lX11." >&6; }
     fi
 
     fi
+ ;;
+esac
 fi
 
 #--------------------------------------------------------------------
@@ -9029,16 +9282,28 @@ fi
 #	   be replaced by spaces.
 #--------------------------------------------------------------------
 
-if test "$TK_WINDOWINGSYSTEM" = "X11"; then
-    if test "x${x_libraries}" != "x"; then
-      if test "x${x_libraries}" != "xNONE"; then
+if test "$TK_WINDOWINGSYSTEM" = "X11"
+then :
+
+    if test "x${x_libraries}" != "x"
+then :
+
+      if test "x${x_libraries}" != "xNONE"
+then :
+
         LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${x_libraries}"
-      fi
-    fi
+
 fi
 
-if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
+fi
+
+fi
+
+if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'
+then :
+
     LIB_RUNTIME_DIR=`echo ${LIB_RUNTIME_DIR} |sed -e 's/:/ -L/g'`
+
 fi
 
 #--------------------------------------------------------------------
@@ -9059,7 +9324,9 @@ fi
 #	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for main in -lXbsd" >&5
 printf %s "checking for main in -lXbsd... " >&6; }
 if test ${ac_cv_lib_Xbsd_main+y}
@@ -9099,6 +9366,7 @@ then :
   LIBS="$LIBS -lXbsd"
 fi
 
+
 fi
 
 #--------------------------------------------------------------------
@@ -9112,7 +9380,9 @@ fi
 # because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
-if test -d /usr/include/mit -a $tk_aqua = no; then
+if test -d /usr/include/mit -a $tk_aqua = no
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking MIT X libraries" >&5
 printf %s "checking MIT X libraries... " >&6; }
     tk_oldCFlags=$CFLAGS
@@ -9151,13 +9421,16 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
+
 fi
 
 #--------------------------------------------------------------------
 #	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
-if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
+if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"
+then :
+
     #--------------------------------------------------------------------
     # Wayland bidi path: Xft is irrelevant; SheenBidi + HarfBuzz only.
     # fontconfig and HarfBuzz are already checked as part of the Wayland
@@ -9219,8 +9492,13 @@ printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
     FONTSYSTEM="wayland"
 
 
-elif test "$TK_WINDOWINGSYSTEM" = "X11"; then
-  if test $tk_aqua = no; then
+
+elif test "$TK_WINDOWINGSYSTEM" = "X11"
+then :
+
+  if test $tk_aqua = no
+then :
+
 
     #--------------------------------------------------------------------
     # --enable-xft (default: yes)
@@ -9260,12 +9538,17 @@ fi
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_bidi" >&5
 printf '%s\n' "$enable_bidi" >&6; }
 
-    if test "$enable_bidi" = "yes"; then
+    if test "$enable_bidi" = "yes"
+then :
+
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: Bidi enabled: forcing Xft on as well" >&5
 printf '%s\n' "$as_me: Bidi enabled: forcing Xft on as well" >&6;}
-	if test "$enable_xft" = "no"; then
+	if test "$enable_xft" = "no"
+then :
+
 	   enable_xft=yes
-	fi
+
+fi
 
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
 		     -I${TK_SRC_DIR}/unix/bidi/Source \
@@ -9279,52 +9562,128 @@ printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
 	#--------------------------------------------------------------------
 	# HarfBuzz - version check (minimum 2.8.2)
 	#--------------------------------------------------------------------
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for HarfBuzz (required for --enable-bidi)" >&5
-printf %s "checking for HarfBuzz (required for --enable-bidi)... " >&6; }
-	if pkg-config --exists harfbuzz; then
-	    HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
-	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: found version $HB_VERSION" >&5
-printf '%s\n' "found version $HB_VERSION" >&6; }
 
-	    # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
-	    if test -n "$HB_VERSION"; then
-		# Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
-		HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
-		HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
-		HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
+pkg_failed=no
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for harfbuzz >= 2.8.2" >&5
+printf %s "checking for harfbuzz >= 2.8.2... " >&6; }
 
-		REQ_MAJOR=2
-		REQ_MINOR=8
-		REQ_PATCH=2
+if test -n "$HB_CFLAGS"; then
+    pkg_cv_HB_CFLAGS="$HB_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"harfbuzz >= 2.8.2\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "harfbuzz >= 2.8.2") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_HB_CFLAGS=`$PKG_CONFIG --cflags "harfbuzz >= 2.8.2" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$HB_LIBS"; then
+    pkg_cv_HB_LIBS="$HB_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"harfbuzz >= 2.8.2\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "harfbuzz >= 2.8.2") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_HB_LIBS=`$PKG_CONFIG --libs "harfbuzz >= 2.8.2" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
 
-		too_old=no
-		if test $HB_MAJOR -lt $REQ_MAJOR; then
-		    too_old=yes
-		elif test $HB_MAJOR -eq $REQ_MAJOR; then
-		    if test $HB_MINOR -lt $REQ_MINOR; then
-			too_old=yes
-		    elif test $HB_MINOR -eq $REQ_MINOR; then
-			if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
-			    too_old=yes
-			fi
-		    fi
-		fi
 
-		if test "$too_old" = "yes"; then
-		    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&5
+
+if test $pkg_failed = yes; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                HB_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "harfbuzz >= 2.8.2" 2>&1`
+        else
+                HB_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "harfbuzz >= 2.8.2" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$HB_PKG_ERRORS" >&5
+
+
+	    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"harfbuzz\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "harfbuzz") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+
+		HB_VERSION=`$PKG_CONFIG --modversion harfbuzz 2>/dev/null`
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&5
 printf '%s\n' "$as_me: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&2;}
-		    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling bidirectional text support (--disable-bidi)." >&5
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling bidirectional text support (--disable-bidi)." >&5
 printf '%s\n' "$as_me: WARNING: Disabling bidirectional text support (--disable-bidi)." >&2;}
-		    enable_bidi=no
-		else
-		    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&5
-printf '%s\n' "HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&6; }
-		fi
-	    fi
+		enable_bidi=no
 
-	    if test "$enable_bidi" = "yes"; then
-		HB_CFLAGS=`pkg-config --cflags harfbuzz`
-		HB_LIBS=`pkg-config --libs harfbuzz`
+else
+
+		as_fn_error $? "--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
+
+fi
+
+elif test $pkg_failed = untried; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+
+	    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"harfbuzz\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "harfbuzz") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+
+		HB_VERSION=`$PKG_CONFIG --modversion harfbuzz 2>/dev/null`
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&5
+printf '%s\n' "$as_me: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&2;}
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling bidirectional text support (--disable-bidi)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling bidirectional text support (--disable-bidi)." >&2;}
+		enable_bidi=no
+
+else
+
+		as_fn_error $? "--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
+
+fi
+
+else
+        HB_CFLAGS=$pkg_cv_HB_CFLAGS
+        HB_LIBS=$pkg_cv_HB_LIBS
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+	    if test "$enable_bidi" = "yes"
+then :
 
 		tk_oldCFlags=$CFLAGS
 		tk_oldLibs=$LIBS
@@ -9407,50 +9766,128 @@ fi
 		BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
 
 
-	    fi
-	else
-	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-	    as_fn_error $? "--enable-bidi requires HarfBuzz development files.
-Please install the HarfBuzz development package:
-  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
-  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
-  - Arch:            sudo pacman -S harfbuzz
-  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
-	fi
-    fi
 
-    if test "$enable_bidi" = "no"; then
+fi
+
+fi
+
+fi
+
+    if test "$enable_bidi" = "no"
+then :
+
 	# Bidi disabled
 	BIDI_CFLAGS=""
 	HB_CFLAGS=""
 	HB_LIBS=""
-	if test "$enable_xft" = "yes" ; then
+	if test "$enable_xft" = "yes"
+then :
+
 	    UNIX_FONT_OBJS="tkUnixRFont.o"
 
 printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
 
-	else
+
+else case e in #(
+  e)
 	    UNIX_FONT_OBJS="tkUnixFont.o"
-	fi
-    fi
+	 ;;
+esac
+fi
+
+fi
 
     # Now actually enable Xft if requested (or forced by bidi)
-    if test "$enable_xft" = "yes" ; then
+    if test "$enable_xft" = "yes"
+then :
+
 	found_xft="yes"
 
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
-	if test "$found_xft" = "no" ; then
-	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
-	fi
+	if test "$found_xft" = "no"
+then :
+
+
+pkg_failed=no
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for xft fontconfig" >&5
+printf %s "checking for xft fontconfig... " >&6; }
+
+if test -n "$XFT_CFLAGS"; then
+    pkg_cv_XFT_CFLAGS="$XFT_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"xft fontconfig\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "xft fontconfig") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_XFT_CFLAGS=`$PKG_CONFIG --cflags "xft fontconfig" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$XFT_LIBS"; then
+    pkg_cv_XFT_LIBS="$XFT_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"xft fontconfig\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "xft fontconfig") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_XFT_LIBS=`$PKG_CONFIG --libs "xft fontconfig" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                XFT_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "xft fontconfig" 2>&1`
+        else
+                XFT_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "xft fontconfig" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$XFT_PKG_ERRORS" >&5
+
+        found_xft=no
+elif test $pkg_failed = untried; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+        found_xft=no
+else
+        XFT_CFLAGS=$pkg_cv_XFT_CFLAGS
+        XFT_LIBS=$pkg_cv_XFT_LIBS
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+        found_xft=yes
+fi
+
+fi
 
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_xft" >&5
 printf '%s\n' "$found_xft" >&6; }
 
-	if test "$found_xft" = "yes" ; then
+	if test "$found_xft" = "yes"
+then :
+
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
@@ -9467,7 +9904,9 @@ esac
 fi
 
 
-	    if test "$found_xft" = "yes" ; then
+	    if test "$found_xft" = "yes"
+then :
+
 		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for XftFontOpen in -lXft" >&5
 printf %s "checking for XftFontOpen in -lXft... " >&6; }
 if test ${ac_cv_lib_Xft_XftFontOpen+y}
@@ -9522,9 +9961,12 @@ else case e in #(
 esac
 fi
 
-	    fi
 
-	    if test "$found_xft" = "yes" ; then
+fi
+
+	    if test "$found_xft" = "yes"
+then :
+
 		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
 		XFT_DEPS="xft"
 		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for FcFontSort in -lfontconfig" >&5
@@ -9578,25 +10020,37 @@ then :
 
 fi
 
-	    fi
+
+fi
 
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
-	fi
 
-	if test "$found_xft" = "no" ; then
-	    if test "$enable_xft" = "yes" ; then
+fi
+
+	if test "$found_xft" = "no"
+then :
+
+	    if test "$enable_xft" = "yes"
+then :
+
 		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Can't find xft configuration or xft is unusable -- falling back to classic fonts" >&5
 printf '%s\n' "$as_me: WARNING: Can't find xft configuration or xft is unusable -- falling back to classic fonts" >&2;}
-	    fi
+
+fi
 	    enable_xft=no
 	    XFT_CFLAGS=""
 	    XFT_LIBS=""
 	    XFT_DEPS=""
-	else
+
+else case e in #(
+  e)
 	    enable_xft=yes
-	fi
-    fi
+	 ;;
+esac
+fi
+
+fi
 
 
 
@@ -9676,16 +10130,28 @@ printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
 
 
     # Set font system for pkgconfig
-    if test "$enable_bidi" = "yes"; then
-	FONTSYSTEM="xft"
-    elif test "$enable_xft" = "yes" ; then
-	FONTSYSTEM="xft"
-    else
-	FONTSYSTEM="core"
-    fi
+    if test "$enable_bidi" = "yes"
+then :
 
-  fi
-else
+	FONTSYSTEM="xft"
+
+elif test "$enable_xft" = "yes"
+then :
+
+	FONTSYSTEM="xft"
+
+else case e in #(
+  e)
+	FONTSYSTEM="core"
+     ;;
+esac
+fi
+
+
+fi
+
+else case e in #(
+  e)
     # Aqua (macOS) path
     enable_xft=no
     enable_bidi=no
@@ -9703,6 +10169,8 @@ else
 
 
 
+ ;;
+esac
 fi
 
 #--------------------------------------------------------------------
@@ -9713,7 +10181,9 @@ fi
 
 XRENDER_CFLAGS=""
 XRENDER_LIBS=""
-if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xrender" >&5
 printf %s "checking whether to use xrender... " >&6; }
     # Check whether --enable-xrender was given.
@@ -9728,15 +10198,88 @@ fi
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xrender" >&5
 printf '%s\n' "$enable_xrender" >&6; }
 
-    if test "$enable_xrender" = "yes" ; then
-	found_xrender="yes"
-	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
-	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
-	if test "$found_xrender" = "no" ; then
+    if test "$enable_xrender" = "yes"
+then :
+
+
+pkg_failed=no
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for xrender" >&5
+printf %s "checking for xrender... " >&6; }
+
+if test -n "$XRENDER_CFLAGS"; then
+    pkg_cv_XRENDER_CFLAGS="$XRENDER_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"xrender\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "xrender") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_XRENDER_CFLAGS=`$PKG_CONFIG --cflags "xrender" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$XRENDER_LIBS"; then
+    pkg_cv_XRENDER_LIBS="$XRENDER_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"xrender\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "xrender") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_XRENDER_LIBS=`$PKG_CONFIG --libs "xrender" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                XRENDER_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "xrender" 2>&1`
+        else
+                XRENDER_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "xrender" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$XRENDER_PKG_ERRORS" >&5
+
+        found_xrender=no
+elif test $pkg_failed = untried; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+        found_xrender=no
+else
+        XRENDER_CFLAGS=$pkg_cv_XRENDER_CFLAGS
+        XRENDER_LIBS=$pkg_cv_XRENDER_LIBS
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+        found_xrender=yes
+fi
+	if test "$found_xrender" = "no"
+then :
+
 	    found_xrender="yes"
 	    XRENDER_CFLAGS=""
 	    XRENDER_LIBS="-lXrender"
-	fi
+
+fi
 
 	tk_oldCFlags=$CFLAGS
 	CFLAGS="$CFLAGS $XINCLUDES $XRENDER_CFLAGS"
@@ -9753,7 +10296,9 @@ else case e in #(
 esac
 fi
 
-	if test "$found_xrender" = "yes" ; then
+	if test "$found_xrender" = "yes"
+then :
+
 	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for XRenderQueryExtension in -lXrender" >&5
 printf %s "checking for XRenderQueryExtension in -lXrender... " >&6; }
 if test ${ac_cv_lib_Xrender_XRenderQueryExtension+y}
@@ -9808,26 +10353,38 @@ else case e in #(
 esac
 fi
 
-	fi
+
+fi
 
 	CFLAGS=$tk_oldCFlags
 	LIBS=$tk_oldLibs
 
-	if test "$found_xrender" = "yes" ; then
+	if test "$found_xrender" = "yes"
+then :
+
 
 printf '%s\n' "#define HAVE_XRENDER 1" >>confdefs.h
 
-	else
+
+else case e in #(
+  e)
 	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Can't find xrender configuration -- photo images will composite in software" >&5
 printf '%s\n' "$as_me: WARNING: Can't find xrender configuration -- photo images will composite in software" >&2;}
 	    enable_xrender=no
 	    XRENDER_CFLAGS=""
 	    XRENDER_LIBS=""
-	fi
-    fi
-else
+	 ;;
+esac
+fi
+
+fi
+
+else case e in #(
+  e)
     # Wayland / Aqua: Xrender is irrelevant
     enable_xrender=no
+ ;;
+esac
 fi
 
 
@@ -9836,7 +10393,9 @@ fi
 #	Check for libcups support — allowed on both X11 and Wayland
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no; then
+if test $tk_aqua = no
+then :
+
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use libcups" >&5
 printf %s "checking whether to use libcups... " >&6; }
     # Check whether --enable-libcups was given.
@@ -9850,21 +10409,33 @@ fi
 
     CUPS_CFLAGS=""
     CUPS_LIBS=""
-    if test "$enable_libcups" = "no" ; then
+    if test "$enable_libcups" = "no"
+then :
+
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_libcups" >&5
 printf '%s\n' "$enable_libcups" >&6; }
-    else
+
+else case e in #(
+  e)
 	found_cups=`cups-config 2>/dev/null`
-	if test "$found_cups" = ""; then
+	if test "$found_cups" = ""
+then :
+
 	    found_cups=no
-	else
+
+else case e in #(
+  e)
 	    found_cups=yes
 	    CUPS_CFLAGS="-DHAVE_CUPS `cups-config --cflags`"
 	    CUPS_LIBS="`cups-config --ldflags` `cups-config --libs`"
-	fi
+	 ;;
+esac
+fi
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_cups" >&5
 printf '%s\n' "$found_cups" >&6; }
-	if test "$found_cups" = "yes" ; then
+	if test "$found_cups" = "yes"
+then :
+
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
@@ -9883,7 +10454,9 @@ else case e in #(
 esac
 fi
 
-	    if test "$found_cups" = "yes" ; then
+	    if test "$found_cups" = "yes"
+then :
+
 		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether libcups can be linked" >&5
 printf %s "checking whether libcups can be linked... " >&6; }
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -9913,11 +10486,16 @@ esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
-	    fi
+
+fi
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
-	fi
-    fi
+
+fi
+     ;;
+esac
+fi
+
 
 
 fi
@@ -9939,7 +10517,9 @@ ATK_LIBS=""
 SPEECHD_CFLAGS=""
 SPEECHD_LIBS=""
 
-if test "$tk_aqua" = no; then
+if test "$tk_aqua" = no
+then :
+
   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable accessibility support" >&5
 printf %s "checking whether to enable accessibility support... " >&6; }
   # Check whether --enable-accessibility was given.
@@ -9954,20 +10534,72 @@ fi
   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_accessibility" >&5
 printf '%s\n' "$enable_accessibility" >&6; }
 
-  if test "$enable_accessibility" = "yes"; then
+  if test "$enable_accessibility" = "yes"
+then :
+
     #------------------------------------------------------------------
     # ATK and Atk-bridge (required for accessibility)
     #------------------------------------------------------------------
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge" >&5
-printf %s "checking for ATK and Atk-bridge... " >&6; }
-    if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-      ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-      ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-    else
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+
+pkg_failed=no
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for atk atk-bridge-2.0" >&5
+printf %s "checking for atk atk-bridge-2.0... " >&6; }
+
+if test -n "$ATK_CFLAGS"; then
+    pkg_cv_ATK_CFLAGS="$ATK_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"atk atk-bridge-2.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "atk atk-bridge-2.0") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_ATK_CFLAGS=`$PKG_CONFIG --cflags "atk atk-bridge-2.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$ATK_LIBS"; then
+    pkg_cv_ATK_LIBS="$ATK_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"atk atk-bridge-2.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "atk atk-bridge-2.0") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_ATK_LIBS=`$PKG_CONFIG --libs "atk atk-bridge-2.0" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                ATK_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "atk atk-bridge-2.0" 2>&1`
+        else
+                ATK_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "atk atk-bridge-2.0" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$ATK_PKG_ERRORS" >&5
+
+
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: ATK and/or Atk-bridge were not found." >&5
 printf '%s\n' "$as_me: WARNING: ATK and/or Atk-bridge were not found." >&2;}
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
@@ -9985,23 +10617,105 @@ printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install atk at-spi2-a
       enable_accessibility=no
       ATK_CFLAGS=""
       ATK_LIBS=""
-    fi
-  fi
+
+elif test $pkg_failed = untried; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: ATK and/or Atk-bridge were not found." >&5
+printf '%s\n' "$as_me: WARNING: ATK and/or Atk-bridge were not found." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling accessibility support (--disable-accessibility)." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable accessibility, install the ATK development packages:" >&5
+printf '%s\n' "$as_me: WARNING: To enable accessibility, install the ATK development packages:" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libatk1.0-dev libatk-bridge2.0-dev" >&5
+printf '%s\n' "$as_me: WARNING:   - Debian/Ubuntu:    sudo apt install libatk1.0-dev libatk-bridge2.0-dev" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Fedora/RHEL:      sudo dnf install atk-devel at-spi2-atk-devel" >&5
+printf '%s\n' "$as_me: WARNING:   - Fedora/RHEL:      sudo dnf install atk-devel at-spi2-atk-devel" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Arch:             sudo pacman -S atk at-spi2-atk" >&5
+printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S atk at-spi2-atk" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install atk at-spi2-atk" >&5
+printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install atk at-spi2-atk" >&2;}
+      enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+
+else
+        ATK_CFLAGS=$pkg_cv_ATK_CFLAGS
+        ATK_LIBS=$pkg_cv_ATK_LIBS
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+fi
+
+fi
 
   #------------------------------------------------------------------
   # libspeechd (Speech Dispatcher) — required for accessibility
   #------------------------------------------------------------------
-  if test "$enable_accessibility" = "yes"; then
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for libspeechd" >&5
-printf %s "checking for libspeechd... " >&6; }
-    if pkg-config --exists speech-dispatcher; then
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-      SPEECHD_CFLAGS="`pkg-config --cflags speech-dispatcher`"
-      SPEECHD_LIBS="`pkg-config --libs speech-dispatcher`"
-    else
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+  if test "$enable_accessibility" = "yes"
+then :
+
+
+pkg_failed=no
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for speech-dispatcher" >&5
+printf %s "checking for speech-dispatcher... " >&6; }
+
+if test -n "$SPEECHD_CFLAGS"; then
+    pkg_cv_SPEECHD_CFLAGS="$SPEECHD_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"speech-dispatcher\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "speech-dispatcher") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_SPEECHD_CFLAGS=`$PKG_CONFIG --cflags "speech-dispatcher" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$SPEECHD_LIBS"; then
+    pkg_cv_SPEECHD_LIBS="$SPEECHD_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"speech-dispatcher\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "speech-dispatcher") 2>&5
+  ac_status=$?
+  printf '%s\n' "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_SPEECHD_LIBS=`$PKG_CONFIG --libs "speech-dispatcher" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+                SPEECHD_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "speech-dispatcher" 2>&1`
+        else
+                SPEECHD_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "speech-dispatcher" 2>&1`
+        fi
+        # Put the nasty error message in config.log where it belongs
+        echo "$SPEECHD_PKG_ERRORS" >&5
+
+
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: libspeechd (Speech Dispatcher) was not found." >&5
 printf '%s\n' "$as_me: WARNING: libspeechd (Speech Dispatcher) was not found." >&2;}
       { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
@@ -10021,20 +10735,59 @@ printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install speech-dispat
       ATK_LIBS=""
       SPEECHD_CFLAGS=""
       SPEECHD_LIBS=""
-    fi
-  fi
+
+elif test $pkg_failed = untried; then
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: libspeechd (Speech Dispatcher) was not found." >&5
+printf '%s\n' "$as_me: WARNING: libspeechd (Speech Dispatcher) was not found." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling accessibility support (--disable-accessibility)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling accessibility support (--disable-accessibility)." >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: To enable accessibility, install the Speech Dispatcher development package:" >&5
+printf '%s\n' "$as_me: WARNING: To enable accessibility, install the Speech Dispatcher development package:" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&5
+printf '%s\n' "$as_me: WARNING:   - Debian/Ubuntu:    sudo apt install libspeechd-dev" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&5
+printf '%s\n' "$as_me: WARNING:   - Fedora/RHEL:      sudo dnf install speech-dispatcher-devel" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&5
+printf '%s\n' "$as_me: WARNING:   - Arch:             sudo pacman -S speech-dispatcher" >&2;}
+      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&5
+printf '%s\n' "$as_me: WARNING:   - macOS (Homebrew): brew install speech-dispatcher" >&2;}
+      enable_accessibility=no
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+      SPEECHD_CFLAGS=""
+      SPEECHD_LIBS=""
+
+else
+        SPEECHD_CFLAGS=$pkg_cv_SPEECHD_CFLAGS
+        SPEECHD_LIBS=$pkg_cv_SPEECHD_LIBS
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+fi
+
+fi
 
   # Now that both checks have passed (or not), define the feature macros.
-  if test "$enable_accessibility" = "yes"; then
+  if test "$enable_accessibility" = "yes"
+then :
+
 
 printf '%s\n' "#define HAVE_ATK 1" >>confdefs.h
 
 
 printf '%s\n' "#define HAVE_SPEECHD 1" >>confdefs.h
 
-  fi
-else
+
+fi
+
+else case e in #(
+  e)
   enable_accessibility=no
+ ;;
+esac
 fi
 
 
@@ -10049,7 +10802,9 @@ fi
 # extension are available, and set HAVE_XSS if so.
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"
+then :
+
     tk_oldCFlags=$CFLAGS
     CFLAGS="$CFLAGS $XINCLUDES"
     tk_oldLibs=$LIBS
@@ -10067,10 +10822,14 @@ else case e in #(
 esac
 fi
 
-    if test "$enable_xss" = "no" ; then
+    if test "$enable_xss" = "no"
+then :
+
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xss" >&5
 printf '%s\n' "$enable_xss" >&6; }
-    else
+
+else case e in #(
+  e)
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xss" >&5
 printf '%s\n' "$enable_xss" >&6; }
 	ac_fn_c_check_header_compile "$LINENO" "X11/extensions/scrnsaver.h" "ac_cv_header_X11_extensions_scrnsaver_h" "#include <X11/Xlib.h>
@@ -10185,11 +10944,17 @@ printf '%s\n' "$ac_cv_lib_Xss_XScreenSaverQueryInfo" >&6; }
 if test "x$ac_cv_lib_Xss_XScreenSaverQueryInfo" = xyes
 then :
 
-		    if test "$tcl_cv_ld_weak_l" = yes; then
+		    if test "$tcl_cv_ld_weak_l" = yes
+then :
+
 			XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
-		    else
+
+else case e in #(
+  e)
 			XLIBSW="$XLIBSW -lXss -lXext"
-		    fi
+		     ;;
+esac
+fi
 		    xss_lib_found=yes
 
 fi
@@ -10202,14 +10967,20 @@ fi
 esac
 fi
 
-    fi
-    if test $enable_xss = yes -a $xss_lib_found = yes -a $xss_header_found = yes; then
+     ;;
+esac
+fi
+    if test $enable_xss = yes -a $xss_lib_found = yes -a $xss_header_found = yes
+then :
+
 
 printf '%s\n' "#define HAVE_XSS 1" >>confdefs.h
 
-    fi
+
+fi
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
+
 fi
 
 #--------------------------------------------------------------------
@@ -10261,11 +11032,17 @@ fi
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
 eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
-if test "$ac_cv_cygwin" = "yes" -a "$SHARED_BUILD" != "0"; then
+if test "$ac_cv_cygwin" = "yes" -a "$SHARED_BUILD" != "0"
+then :
+
 eval "TK_LIB_FILE=cygtcl9tk${LIB_SUFFIX}"
 EXTRA_INSTALL_BINARIES='$(INSTALL_LIBRARY) $(patsubst cyg%.dll,lib%.dll.a,${LIB_FILE}) "$(LIB_INSTALL_DIR)"'
-else
+
+else case e in #(
+  e)
 eval "TK_LIB_FILE=libtcl9tk${LIB_SUFFIX}"
+ ;;
+esac
 fi
 
 eval "TK_LIB_FILE=${TK_LIB_FILE}"
@@ -10273,9 +11050,12 @@ eval "TK_LIB_FILE=${TK_LIB_FILE}"
 # tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
 # since on some platforms TK_LIB_FILE contains shell escapes.
 
-if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
+if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""
+then :
+
     SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
+
 fi
 
 # Note:  in the following variable, it's important to use the absolute
@@ -10283,14 +11063,19 @@ fi
 # AIX remembers this path and will attempt to use it at run-time to look
 # up the Tcl library.
 
-test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
+if test -z "$TK_LIBRARY"
+then :
+  TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
+fi
 PRIVATE_INCLUDE_DIR='$(includedir)'
 HTML_DIR='$(DISTDIR)/html'
 TK_PKG_DIR='tk$(VERSION)'
 TK_RSRC_FILE='tk$(VERSION).rsrc'
 WISH_RSRC_FILE='wish$(VERSION).rsrc'
 
-if test "`uname -s`" = "Darwin" ; then
+if test "`uname -s`" = "Darwin"
+then :
+
 
     if test "`uname -s`" = "Darwin" ; then
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking how to package libraries" >&5
@@ -10338,25 +11123,34 @@ printf '%s\n' "static library" >&6; }
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -sectcreate __TEXT __credits_html Credits.html'
-    if test "${SHARED_BUILD}" = "0"; then
+    if test "${SHARED_BUILD}" = "0"
+then :
+
 	EXTRA_WISH_LIBS=${EXTRA_WISH_LIBS}' -ObjC'
-    fi
+
+fi
     ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in Credits.html:../macosx/Credits.html.in"
 
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
+
 fi
 
-if test "$FRAMEWORK_BUILD" = "1" ; then
+if test "$FRAMEWORK_BUILD" = "1"
+then :
+
 
 printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
 
     ac_config_commands="$ac_config_commands Tk.framework"
 
     LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
-    if test "${libdir}" = '${exec_prefix}/lib'; then
+    if test "${libdir}" = '${exec_prefix}/lib'
+then :
+
 	libdir="/Library/Frameworks"
-    fi
+
+fi
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
@@ -10374,7 +11168,9 @@ printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
     EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
-    if test $tk_aqua = yes; then
+    if test $tk_aqua = yes
+then :
+
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing wish$(VERSION) script to $(INSTALL_ROOT)/'"${bindir}"'/" && $(INSTALL_DATA_DIR) "$(INSTALL_ROOT)/'"${bindir}"'" && printf > "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)" "#!/bin/sh\n\"\$$(dirname \$$0)'"`eval d="${bindir}"; echo "$d" | sed -e 's#/[^/][^/]*#/..#g'`"'$(bindir)/Wish\" \"\$$@\"" && chmod +x "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)"'
 	bindir="${libdir}/Resources/Wish.app/Contents/MacOS"
@@ -10383,31 +11179,51 @@ printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
-    fi
+
+fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
     # Don't use AC_DEFINE for the following as the framework version define
     # needs to go into the Makefile even when using autoheader, so that we
     # can pick up a potential make override of VERSION. Also, don't put this
     # into CFLAGS as it should not go into tkConfig.sh
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
-else
-    if test $tk_aqua = yes; then
+
+else case e in #(
+  e)
+    if test $tk_aqua = yes
+then :
+
 	EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
-    fi
+
+fi
     eval libdir="$libdir"
     TK_LIB_FLAG="-ltcl9"
-    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
+    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"
+then :
+
 	TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
-    else
-	if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+
+else case e in #(
+  e)
+	if test "${TCL_LIB_VERSIONS_OK}" = "ok"
+then :
+
 	    TK_LIB_FLAG="${TK_LIB_FLAG}tk${TK_VERSION}"
-	else
+
+else case e in #(
+  e)
 	    TK_LIB_FLAG="${TK_LIB_FLAG}tk`echo ${TK_VERSION} | tr -d .`"
-	fi
+	 ;;
+esac
+fi
 	TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
-    fi
+     ;;
+esac
+fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
+ ;;
+esac
 fi
 
 #--------------------------------------------------------------------
@@ -10422,7 +11238,9 @@ else case e in #(
 esac
 fi
 
-if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"; then
+if test "$tcl_ok" = "yes" -a "x$enable_framework" != "xyes"
+then :
+
     # Put a plausible default for CC_FOR_BUILD in Makefile.
     if test -z "$CC_FOR_BUILD"; then
       if test "x$cross_compiling" = "xno"; then
@@ -10572,14 +11390,22 @@ printf '%s\n' "No zip found on PATH. Building minizip" >&6; }
 
 	ZIPFS_BUILD=1
 	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
-else
+
+else case e in #(
+  e)
 	ZIPFS_BUILD=0
 	TK_ZIP_FILE=
+ ;;
+esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for building with zipfs" >&5
 printf %s "checking for building with zipfs... " >&6; }
-if test "${ZIPFS_BUILD}" = 1; then
-    if test "${SHARED_BUILD}" = 0; then
+if test "${ZIPFS_BUILD}" = 1
+then :
+
+    if test "${SHARED_BUILD}" = 0
+then :
+
        ZIPFS_BUILD=2;
 
 printf '%s\n' "#define ZIPFS_BUILD 2" >>confdefs.h
@@ -10587,19 +11413,27 @@ printf '%s\n' "#define ZIPFS_BUILD 2" >>confdefs.h
        INSTALL_LIBRARIES=install-demos
        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-     else
+
+else case e in #(
+  e)
 
 printf '%s\n' "#define ZIPFS_BUILD 1" >>confdefs.h
 
        INSTALL_LIBRARIES=install-demos
        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-    fi
-else
+     ;;
+esac
+fi
+
+else case e in #(
+  e)
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
 INSTALL_LIBRARIES=install-libraries
 INSTALL_MSGS=install-msgs
+ ;;
+esac
 fi
 
 
