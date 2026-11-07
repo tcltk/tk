@@ -12,7 +12,7 @@
 .SH NAME
 destroy \- Destroy one or more windows
 .SH SYNOPSIS
-\fBdestroy \fR?\fIwindow window ...\fR?
+\fBdestroy \fR?\fIwindow ...\fR?
 .BE
 .SH DESCRIPTION
 .PP

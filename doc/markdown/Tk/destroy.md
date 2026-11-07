@@ -21,7 +21,7 @@ destroy - Destroy one or more windows
 # Synopsis
 
 ::: {.synopsis} :::
-[destroy]{.cmd} [window window]{.optdot}
+[destroy]{.cmd} [window]{.optdot}
 :::
 
 # Description
