@@ -665,7 +665,7 @@ static void TkWaylandKeyCallback(GLFWwindow *window, int key,
 				 int scancode, int action, int mods);
 static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
 static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
-static void ExposeSubtree(TkWindow *winPtr);
+void ExposeSubtree(void *clientData);
 static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 
 /*
@@ -1964,9 +1964,14 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
  *
  * ExposeSubtree --
  *
- *      Queues an Expose event for a window and all of its mapped
- *      non-toplevel descendants.  Child toplevels are skipped: they have
- *      their own GLFW window and backing store.
+ *	Queues an Expose event for a window and all of its mapped
+ *	non-toplevel descendants.  Also used as the single post-layout
+ *	refresh entry point for first-map of complex geometry managers
+ *	(panedwindow etc.).
+ *
+ *	When called from the delayed path it first invalidates every
+ *	clip mask in the toplevel tree so the subsequent exposes are
+ *	drawn against final geometry.
  *
  * Results:
  *      None.
@@ -1977,28 +1982,53 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
  *----------------------------------------------------------------------
  */
 
-static void
-ExposeSubtree(TkWindow *winPtr)
+void
+ExposeSubtree(void *clientData)
 {
+    TkWindow *winPtr = (TkWindow *)clientData;
     TkWindow *childPtr;
     int w, h;
 
     if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
         return;
     }
+
+    /*
+     * If this is a toplevel, force a full clip-tree rebuild first.
+     * This is the work that a real resize does and is what makes
+     * panedwindow + canvas draw correctly on first map.
+     */
+    if (winPtr->flags & TK_TOP_LEVEL) {
+        tkWaylandInvalidateClipRectsForTree(winPtr);
+    }
+
     w = Tk_Width(winPtr);
     h = Tk_Height(winPtr);
-    if (w <= 0 || h <= 0) return;
+    if (w <= 0 || h <= 0) {
+        return;
+    }
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+
     for (childPtr = winPtr->childList; childPtr != NULL; ) {
         TkWindow *nextPtr = childPtr->nextPtr;
         if (childPtr->parentPtr == winPtr
                 && !(childPtr->flags & TK_ALREADY_DEAD)
-                && Tk_IsMapped(childPtr)
-                && !Tk_IsTopLevel(childPtr)) {
-            ExposeSubtree(childPtr);
+                && !Tk_IsTopLevel(childPtr)
+                && (Tk_IsMapped(childPtr)
+                    || (Tk_Width(childPtr) > 1 && Tk_Height(childPtr) > 1))) {
+            ExposeSubtree(childPtr);   /* recursive call still works */
         }
         childPtr = nextPtr;
+    }
+
+    if ((winPtr->flags & TK_TOP_LEVEL) && winPtr->privatePtr
+            && winPtr->privatePtr->glfwWindow) {
+        glfwTkInfo *infoPtr = (glfwTkInfo *)glfwGetWindowUserPointer(
+                winPtr->privatePtr->glfwWindow);
+        if (infoPtr) {
+            infoPtr->flags |= TKWL_NEEDS_DISPLAY;
+            infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
+        }
     }
 }
 
