@@ -183,8 +183,6 @@ static void initColorTable()
     for (key in [systemColorList allKeys]) {
 	NSUInteger length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = (SystemColorDatum *)Tcl_Alloc(sizeof(SystemColorDatum));
-	bzero(entry, sizeof(SystemColorDatum));
 	name = (char *)Tcl_Alloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = (char)toupper(UCHAR(name[0]));
@@ -194,8 +192,11 @@ static void initColorTable()
 	     * Avoid black windows on old systems.
 	     */
 
+	    Tcl_Free(name);
 	    continue;
 	}
+	entry = (SystemColorDatum *)Tcl_Alloc(sizeof(SystemColorDatum));
+	bzero(entry, sizeof(SystemColorDatum));
 	entry->type=semantic;
 	entry->name = name;
 	entry->selector = [key retain];
