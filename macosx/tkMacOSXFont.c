@@ -812,6 +812,7 @@ TkpDeleteFont(
     [fontPtr->nsAttributes release];
     fontPtr->nsAttributes = NULL;
     CFRelease(fontPtr->nsFont); /* Either a CTFontRef or a CFRetained NSFont */
+    fontPtr->nsFont = nil;
 }
 
 /*
