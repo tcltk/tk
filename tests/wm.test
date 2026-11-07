@@ -2158,7 +2158,7 @@ test wm-transient-3.3 {withdraw/deiconify on the toplevel
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-4.1 {transient toplevel is withdrawn
-	when mapped if toplevel is iconic} -constraints withWindowManager notWayland -body {
+	when mapped if toplevel is iconic} -constraints {withWindowManager notWayland} -body {
     toplevel .top
     wm iconify .top
     update
