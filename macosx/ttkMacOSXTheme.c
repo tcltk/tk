@@ -417,7 +417,6 @@ static void FillBorder(
     CGPoint end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
     CGFloat corner = (radius > 0 ? radius : 2.0) / bounds.size.height;
     CGFloat locations[4] = {0.0, corner, 1.0 - corner, 1.0};
-    CGPathRef path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGFloat colors[16];
     colors[0] = colors[1] = colors[2] = palette.top / 255.0;
     colors[4] = colors[5] = colors[6] = palette.side / 255.0;
@@ -429,6 +428,7 @@ static void FillBorder(
     if (!gradient) {
 	return;
     }
+    CGPathRef path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextSaveGState(context);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
