@@ -68,7 +68,7 @@ static void initColorTable()
 		    continue;
 		}
 	    }
-	    entry->selector = [colorName retain];
+	    entry->selector = colorName;
 	}
 	if (newPtr == 0) {
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
