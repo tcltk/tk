@@ -73,6 +73,7 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkWillExit = _tkWillExit;
 @synthesize tkPointerWindow = _tkPointerWindow;
+@synthesize eventInterp = _eventInterp;
 
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
