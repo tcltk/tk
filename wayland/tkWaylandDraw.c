@@ -3,7 +3,7 @@
  *
  *	This file contains functions that draw to windows using Wayland,
  *	GLFW, and NanoVG. Many of these functions emulate Xlib functions
- *  for compatibility with Tk's traditional API.
+ *      for compatibility with Tk's traditional API.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -2287,7 +2287,7 @@ TkScrollWindow(
                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    /* Keep scratch FBO cached on toplevel - do not delete */
+    /* Keep scratch FBO cached on toplevel - do not delete. */
 
     /*
      * This changes the backing store outside the normal
