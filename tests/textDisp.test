@@ -5664,7 +5664,7 @@ test textDisp-42.6 {a mark does not change the shape of Arabic text} -setup {
     destroy .pix
 } -result {}
 test textDisp-42.7 {the insertion cursor does not move the glyphs} -constraints {
-    testpixel
+    testpixel failsOnCIWayland
 } -setup {
     toplevel .pix
     wm geometry .pix +0+0

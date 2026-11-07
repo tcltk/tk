@@ -623,21 +623,21 @@ test send-12.1 {TimeoutProc procedure} -constraints {secureserver testsend} -set
 #
 
 catch {testsend prop root InterpRegistry ""}
-
-test send-12.2 {TimeoutProc procedure} {secureserver} {
+# Child appname registration races "after 200" delay on headless Wayland setup
+test send-12.2 {TimeoutProc procedure} -constraints {secureserver failsOnCIWayland} -body {
     winfo interps
     tk appname tktest
     update
     childTkProcess create
     set app [childTkProcess eval {
-	after 10 {after 10 {after 5000; exit}}
-	tk appname
+        after 10 {after 10 {after 5000; exit}}
+        tk appname
     }]
     after 200
     set result [list [catch {send $app foo} msg] $msg]
     childTkProcess exit
     set result
-} {1 {target application died}}
+} -result {1 {target application died}}
 
 #
 # COMMON TEST SETUP

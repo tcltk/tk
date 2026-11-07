@@ -388,7 +388,7 @@ test nodecache-6.1 "Destroying a widget with populated node caches" \
 } -result {}
 
 test nodecache-6.2 "Deleting a displayed element image" \
-	-constraints notAqua notWayland -setup {
+	-constraints {notAqua notWayland} -setup {
     pack [ttk::frame .nc -style NodeCacheDel.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
