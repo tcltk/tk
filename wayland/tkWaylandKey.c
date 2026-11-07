@@ -919,6 +919,71 @@ FindContext(Tk_Window tkwin)
 
 /*
  * ----------------------------------------------------------------------------
+ * IbusWidgetEventProc, IbusWatchWindow, IbusSetFocusedWidget --
+ *
+ *         A context keeps raw pointers to the toplevel it belongs to and to
+ *         the widget that has keyboard focus.  D-Bus signals arrive at any
+ *         time (they are dispatched from the notifier), so a widget destroyed
+ *         since the pointer was stored left a dangling TkWindow pointer, and
+ *         IbusTarget then dereferenced freed memory.  Checking mainPtr/dispPtr
+ *         for NULL cannot detect that: the freed memory holds garbage, not
+ *         NULL.
+ *
+ *         Every window whose pointer is stored gets a StructureNotify handler.
+ *         On DestroyNotify, which Tk delivers while the TkWindow is still
+ *         valid, all stored references to it are cleared, and the context of
+ *         a destroyed toplevel is removed.  The handler's clientData is the
+ *         window itself, never a context, so it stays safe if the context was
+ *         freed earlier.  Tk_CreateEventHandler is a no-op for a handler that
+ *         is already registered with the same proc and clientData.
+ * ----------------------------------------------------------------------------
+ */
+
+static void
+IbusWidgetEventProc(
+    void *clientData,
+    XEvent *eventPtr)
+{
+    Tk_Window w = (Tk_Window) clientData;
+    IbusContext *ctx;
+
+    if (eventPtr->type != DestroyNotify) {
+        return;
+    }
+    for (ctx = all_contexts; ctx != NULL; ctx = ctx->next) {
+        if (ctx->focusedWidget == w) {
+            ctx->focusedWidget = NULL;
+        }
+    }
+
+    /* A no-op unless w is a toplevel that has a context. */
+    RemoveIbusContext(w);
+}
+
+static void
+IbusWatchWindow(
+    Tk_Window w)
+{
+    if (w != NULL && !(((TkWindow *) w)->flags & TK_ALREADY_DEAD)) {
+        Tk_CreateEventHandler(w, StructureNotifyMask, IbusWidgetEventProc,
+                (void *) w);
+    }
+}
+
+static void
+IbusSetFocusedWidget(
+    IbusContext *ctx,
+    Tk_Window w)
+{
+    if (w != NULL && (((TkWindow *) w)->flags & TK_ALREADY_DEAD)) {
+        w = NULL;
+    }
+    ctx->focusedWidget = w;
+    IbusWatchWindow(w);
+}
+
+/*
+ * ----------------------------------------------------------------------------
  * IbusReadTextFromVariant --
  *
  * 		Helper to safely unpack an IBusText object wrapped inside a
@@ -2068,13 +2133,14 @@ TkWaylandIbusCreateContext(
 
     ctx->tkwin = tkwin;
     ctx->focusedWidget = NULL;
+    IbusWatchWindow(tkwin);
     {
         TkWindow *topPtr = (TkWindow *)tkwin;
         TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
         if (focusPtr && !Tk_IsTopLevel(focusPtr)) {
-            ctx->focusedWidget = (Tk_Window)focusPtr;
+            IbusSetFocusedWidget(ctx, (Tk_Window)focusPtr);
         } else {
-            ctx->focusedWidget = tkwin;
+            IbusSetFocusedWidget(ctx, tkwin);
         }
     }
     ctx->obj_path = strdup(path_tmp);
@@ -2212,7 +2278,7 @@ TkWaylandIbusFocusIn(
      * OnCommitText and OnUpdatePreedit can route events to it directly,
      * without trusting dispPtr->focusPtr (unreliable on Wayland).
      */
-    ctx->focusedWidget = tkwin;
+    IbusSetFocusedWidget(ctx, tkwin);
 
     IbusFocusIn(ctx);
     IbusEnable(ctx);

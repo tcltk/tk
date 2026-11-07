@@ -1234,6 +1234,26 @@ sendRequest(
 	snprintf(qnameReply, NAME_MAX, "/tkreply_%d_%u", (int) getpid(),
 		++replySerial);
 	strings[0] = qnameReply;
+
+	/*
+	 * Create the reply queue BEFORE the request is sent.  Otherwise the
+	 * recipient can handle the request and try to open the reply queue
+	 * before it exists (the sender can be descheduled between mq_send
+	 * and mq_open).  The recipient then drops the reply silently, and
+	 * this process waits forever for a peer that is alive and idle.
+	 */
+
+	struct mq_attr replyAttr = {
+	    .mq_maxmsg = TK_MQ_MAXMSG,
+	    .mq_msgsize = TK_MQ_MSGSIZE,
+	};
+
+	qdReply = mq_open(qnameReply, O_RDWR|O_CREAT, 0660, &replyAttr);
+	if (qdReply == -1) {
+	    fprintf(stderr, "failed to open queue %s\n", qnameReply);
+	    mq_close(qd);
+	    goto error;
+	}
     } else {
 	strings[0] = sender;
     }
@@ -1244,6 +1264,10 @@ sendRequest(
     Tcl_Free(m);
     mq_close(qd);
     if (status == -1) {
+	if (!async) {
+	    mq_close(qdReply);
+	    mq_unlink(qnameReply);
+	}
 	// This does not mean that the message was not sent.
 	// What should we do about this?  We want to report an
 	// error if the recipient dies.  But what about the
@@ -1256,18 +1280,8 @@ sendRequest(
     if (async) {
 	return TCL_OK;
     }
-    /* Open a new message queue for the reply. */
-    struct mq_attr attr = {
-	.mq_maxmsg = TK_MQ_MAXMSG,
-	.mq_msgsize = TK_MQ_MSGSIZE,
-    };
-
+    /* The reply queue was created above, before the request was sent. */
     struct timespec abs_timeout;
-    qdReply = mq_open(qnameReply, O_RDWR|O_CREAT, 0660, &attr);
-    if (qdReply == -1) {
-	fprintf(stderr, "failed to open queue %s\n", qnameReply);
-	goto error;
-    }
 
     char msg[TK_MQ_MSGSIZE];
 
