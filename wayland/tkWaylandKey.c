@@ -919,26 +919,25 @@ FindContext(Tk_Window tkwin)
 
 /*
  * ----------------------------------------------------------------------------
- * IbusWidgetEventProc, IbusWatchWindow, IbusSetFocusedWidget --
+ * IbusWidgetEventProc --
  *
- *         A context keeps raw pointers to the toplevel it belongs to and to
- *         the widget that has keyboard focus.  D-Bus signals arrive at any
- *         time (they are dispatched from the notifier), so a widget destroyed
- *         since the pointer was stored left a dangling TkWindow pointer, and
- *         IbusTarget then dereferenced freed memory.  Checking mainPtr/dispPtr
- *         for NULL cannot detect that: the freed memory holds garbage, not
- *         NULL.
+ *         StructureNotify event handler installed on every Tk window whose
+ *         pointer is stored in an IbusContext.  On DestroyNotify (delivered
+ *         while the TkWindow is still valid) it clears any focusedWidget
+ *         reference to the dying window in every context, then removes the
+ *         context of the toplevel if the window is one.  The clientData is
+ *         the window itself, never a context, so the handler remains safe
+ *         even if the context was freed earlier.  Tk_CreateEventHandler is a
+ *         no-op when the same proc/clientData pair is already registered.
  *
- *         Every window whose pointer is stored gets a StructureNotify handler.
- *         On DestroyNotify, which Tk delivers while the TkWindow is still
- *         valid, all stored references to it are cleared, and the context of
- *         a destroyed toplevel is removed.  The handler's clientData is the
- *         window itself, never a context, so it stays safe if the context was
- *         freed earlier.  Tk_CreateEventHandler is a no-op for a handler that
- *         is already registered with the same proc and clientData.
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         Clears dangling focusedWidget pointers and may destroy an
+ *         IbusContext via RemoveIbusContext.
  * ----------------------------------------------------------------------------
  */
-
 static void
 IbusWidgetEventProc(
     void *clientData,
@@ -960,6 +959,25 @@ IbusWidgetEventProc(
     RemoveIbusContext(w);
 }
 
+/*
+ * ----------------------------------------------------------------------------
+ * IbusWatchWindow --
+ *
+ *         Registers IbusWidgetEventProc as a StructureNotify handler on the
+ *         given window so that stored pointers to it can be cleared when it
+ *         is destroyed.  Windows that are NULL or already marked
+ *         TK_ALREADY_DEAD are ignored.  Repeated calls for the same window
+ *         are harmless because Tk_CreateEventHandler ignores a handler that
+ *         is already registered with the same proc and clientData.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         May add an event handler to the window's handler list.
+ * ----------------------------------------------------------------------------
+ */
+
 static void
 IbusWatchWindow(
     Tk_Window w)
@@ -969,6 +987,25 @@ IbusWatchWindow(
                 (void *) w);
     }
 }
+
+/*
+ * ----------------------------------------------------------------------------
+ * IbusSetFocusedWidget --
+ *
+ *         Records w as the focused widget of the given context and arranges
+ *         for that reference to be cleared automatically if the window is
+ *         destroyed.  A window that is NULL or already marked
+ *         TK_ALREADY_DEAD is stored as NULL so that no dangling pointer is
+ *         kept.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         Updates ctx->focusedWidget and may register a StructureNotify
+ *         handler on w via IbusWatchWindow.
+ * ----------------------------------------------------------------------------
+ */
 
 static void
 IbusSetFocusedWidget(
