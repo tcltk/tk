@@ -587,6 +587,7 @@ RegClose(
     if (regPtr->modified) {
 	saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
     }
+    Tcl_DecrRefCount(regPtr->appNameDict);
     Tcl_Free(regPtr);
 }
 
