@@ -2182,17 +2182,19 @@ WmIconbitmapCmd(
     }
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_pixmap != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
-	    wmPtr->hints.icon_pixmap = None;
-	}
-	wmPtr->hints.flags &= ~IconPixmapHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_pixmap = pixmap;
+    }
+    if (wmPtr->hints.icon_pixmap != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+    }
+    wmPtr->hints.icon_pixmap = pixmap;
+    wmPtr->hints.flags &= ~IconPixmapHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconPixmapHint;
     }
     UpdateHints(winPtr);
@@ -2311,16 +2313,19 @@ WmIconmaskCmd(
     }
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_mask != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
-	}
-	wmPtr->hints.flags &= ~IconMaskHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, tkwin, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_mask = pixmap;
+    }
+    if (wmPtr->hints.icon_mask != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
+    }
+    wmPtr->hints.icon_mask = pixmap;
+    wmPtr->hints.flags &= ~IconMaskHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconMaskHint;
     }
     UpdateHints(winPtr);
