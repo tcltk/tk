@@ -3573,7 +3573,7 @@ test textDisp-22.4 {TkTextCharBbox, cut-off lines} {
 		       [list [xchar 1] [yline 11] $fixedWidth [expr {($height+1)-$oriHeight}]]]
     lequal [list [.t bbox 19.1] [.t bbox 20.1]] $expected
 } {1}
-test textDisp-22.5 {TkTextCharBbox, cut-off char} notWayland {
+test textDisp-22.5 {TkTextCharBbox, cut-off char} {
     wm geometry . {}
     update
     .t config -wrap none

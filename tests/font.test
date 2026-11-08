@@ -98,8 +98,7 @@ update idletasks
 # TESTS
 #
 
-# This hangs on Wayland 
-test font-1.1 {TkFontPkgInit} -constraints notWayland -setup {
+test font-1.1 {TkFontPkgInit} -setup {
     catch {interp delete foo}
 } -body {
     interp create foo
@@ -112,8 +111,7 @@ test font-1.1 {TkFontPkgInit} -constraints notWayland -setup {
 } -result {}
 
 
-# This hangs on Wayland 
-test font-2.1 {TkFontPkgFree} -constraints notWayland -setup {
+test font-2.1 {TkFontPkgFree} -setup {
     catch {interp delete foo}
     set x {}
 } -body {

@@ -150,7 +150,7 @@ foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
 
 set i 1
 foreach geom "+$X+80 +$X+40 +$X+$Y0" {
-    test unixWm-4.$i {moving window while withdrawn} {unix notWayland} {
+    test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
 	pause 10
 	wm geom .t $geom
@@ -1584,7 +1584,7 @@ test unixWm-44.2 {UpdateGeometryInfo procedure, width/height computation} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {230 36}
-test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} {unix notWayland} {
+test unixWm-44.3 {UpdateGeometryInfo procedure, width/height computation} unix {
     destroy .t
     toplevel .t -width 280 -height 60
     wm grid .t 5 4 10 12

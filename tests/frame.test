@@ -74,8 +74,7 @@ test frame-1.2 {frame configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -class option after widget is created}
-# Colormap is unsupported on Wayland.
-test frame-1.3 {frame configuration options} -constraints notWayland -setup {
+test frame-1.3 {frame configuration options} -setup {
     deleteWindows
 } -body {
     frame .f -colormap new
@@ -83,8 +82,7 @@ test frame-1.3 {frame configuration options} -constraints notWayland -setup {
 } -cleanup {
     deleteWindows
 } -result {-colormap colormap Colormap {} new}
-# Colormap is unsupported on Wayland.
-test frame-1.4 {frame configuration options} -constraints notWayland  -setup {
+test frame-1.4 {frame configuration options}  -setup {
     deleteWindows
 } -body {
     frame .f -colormap new
@@ -315,8 +313,7 @@ test frame-2.2 {toplevel configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -class option after widget is created}
-# Colormap is unsupported on Wayland.
-test frame-2.3 {toplevel configuration options} -constraints notWayland -setup {
+test frame-2.3 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -colormap new
@@ -325,8 +322,7 @@ test frame-2.3 {toplevel configuration options} -constraints notWayland -setup {
 } -cleanup {
     deleteWindows
 } -result {-colormap colormap Colormap {} new}
-# Colormap is unsupported on Wayland.
-test frame-2.4 {toplevel configuration options} -constraints notWayland -setup {
+test frame-2.4 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -colormap new
@@ -354,8 +350,7 @@ test frame-2.6 {toplevel configuration options} -setup {
 } -cleanup {
     deleteWindows
 } -result {-container container Container 0 0}
-# Colormap is unsupported on Wayland.
-test frame-2.7 {toplevel configuration options} -constraints notWayland -setup {
+test frame-2.7 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -colormap bogus
@@ -409,8 +404,7 @@ test frame-2.12 {toplevel configuration options} -setup {
 } -cleanup {
     deleteWindows
 } -result {-visual visual Visual {} default}
-# cget -visual not supported on Wayland. 
-test frame-2.13 {toplevel configuration options} -constraints notWayland -setup {
+test frame-2.13 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -visual default
@@ -419,8 +413,7 @@ test frame-2.13 {toplevel configuration options} -constraints notWayland -setup 
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -visual option after widget is created}
-# cget -visual not supported on Wayland. 
-test frame-2.14 {toplevel configuration options} -constraints notWayland -setup {
+test frame-2.14 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -visual who_knows?
@@ -863,8 +856,7 @@ test frame-3.23 {TkCreateFrame procedure} -setup {
 } -body {
     frame .f -gorp glob
 } -returnCodes error -result {unknown option "-gorp"}
-# Colormap is unsupported on Wayland.
-test frame-3.24 {TkCreateFrame procedure} -constraints notWayland -setup {
+test frame-3.24 {TkCreateFrame procedure} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 300 -height 200 -colormap new -bogus option
@@ -916,8 +908,7 @@ test frame-5.7 {FrameWidgetCommand procedure, cget option} -setup {
 } -cleanup {
     destroy .t
 } -returnCodes ok -match glob -result *
-# Colormap is unsupported on Wayland.
-test frame-5.8 {FrameWidgetCommand procedure, configure option} -constraints notWayland -body {
+test frame-5.8 {FrameWidgetCommand procedure, configure option} -body {
     optnames [.f configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -padx -pady -relief -takefocus -tile -visual -width}
 test frame-5.9 {FrameWidgetCommand procedure, configure option} -body {
@@ -932,8 +923,7 @@ test frame-5.11 {FrameWidgetCommand procedure, configure option} -body {
 test frame-5.12 {FrameWidgetCommand procedure} -body {
     .f swizzle
 } -returnCodes error -result {bad option "swizzle": must be cget or configure}
-# Colormap is unsupported on Wayland.
-test frame-5.13 {FrameWidgetCommand procedure, configure option} -constraints notWayland -body {
+test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
     optnames [. configure]
 } -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -tile -use -visual -width}
 
@@ -1187,8 +1177,7 @@ test frame-13.2 {labelframe configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -class option after widget is created}
-# Colormap not supported on Wayland. 
-test frame-13.3 {labelframe configuration options} -constraints notWayland -setup {
+test frame-13.3 {labelframe configuration options} -setup {
     deleteWindows
 } -body {
     labelframe .f -colormap new
@@ -1769,8 +1758,7 @@ test frame-15.12 {TIP 262: toplevel background images} -setup {
     catch {image delete gorp}
     deleteWindows
 } -result {gorp 1 gorp}
-# wm overrideredirect not well-supported on Wayland 
-test frame-15.13 {TIP 262: toplevel background images} -constraints notWayland -setup {
+test frame-15.13 {TIP 262: toplevel background images} -setup {
     deleteWindows
     set result {}
 } -constraints testImageType -body {
@@ -1783,11 +1771,10 @@ test frame-15.13 {TIP 262: toplevel background images} -constraints notWayland -
     deleteWindows
     catch {image delete gorp}
 } -result {{gorp get} {gorp display 0 0 30 15}}
-#overrideredirect not well-supported on Wayland
 test frame-15.14 {TIP 262: toplevel background images} -setup {
     deleteWindows
     set result {}
-} -constraints {testImageType notWayland}  -body {
+} -constraints {testImageType}  -body {
     image create test gorp -variable result
     toplevel .t -width 200 -height 25 -bgimg gorp -tile 1
     wm overrideredirect .t 1;	# Reduce trouble from window managers

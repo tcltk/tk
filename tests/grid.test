@@ -1872,7 +1872,7 @@ test grid-17.1 {forget and pending idle handlers} -body {
     set result ok
 } -result ok
 
-test grid-18.1 {test respect for internalborder} -constraints {notWayland} -body {
+test grid-18.1 {test respect for internalborder} -body {
     toplevel .pack
     wm geometry .pack 480x200
     frame .pack.l -width 15 -height 10

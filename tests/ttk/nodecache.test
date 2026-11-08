@@ -216,7 +216,7 @@ test nodecache-1.2 "Repeated redraws stay cached" \
 # 2.* -- state is part of the cache key
 
 test nodecache-2.1 "State change rebuilds with the state-selected image" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
@@ -230,7 +230,7 @@ test nodecache-2.1 "State change rebuilds with the state-selected image" \
 } -result {1 0}
 
 test nodecache-2.2 "Returning to an earlier state rebuilds (one cached variant per node)" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
     tkwait visibility .nc
     .nc state alternate
@@ -261,7 +261,7 @@ test nodecache-2.3 "Redraw after a state change hits again" \
 # 3.* -- parcel geometry is part of the cache key
 
 test nodecache-3.1 "Growing the widget rebuilds" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
@@ -275,7 +275,7 @@ test nodecache-3.1 "Growing the widget rebuilds" \
 } -result 1
 
 test nodecache-3.2 "Shrinking the widget rebuilds" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCache.TFrame -width 90 -height 70]
     tkwait visibility .nc
     update
@@ -306,7 +306,7 @@ test nodecache-3.3 "Redraw after a resize hits again" \
 # 4.* -- content epoch
 
 test nodecache-4.1 "Image content change bumps the epoch but does not repaint by itself" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCache.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
@@ -327,7 +327,7 @@ test nodecache-4.1 "Image content change bumps the epoch but does not repaint by
 # do-nothing callback instead, the node cache would keep serving the stale
 # pixmap for widgets in that state.
 test nodecache-4.2 "Content change to a state-mapped image invalidates the cache" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
     tkwait visibility .nc
     .nc state alternate
@@ -345,7 +345,7 @@ test nodecache-4.2 "Content change to a state-mapped image invalidates the cache
 # translucent nodes above it to recomposite
 
 test nodecache-5.1 "Content change below rebuilds the translucent node above" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCacheStack.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
@@ -377,7 +377,7 @@ test nodecache-5.2 "Content change above leaves the node below cached" \
 # 6.* -- lifecycle
 
 test nodecache-6.1 "Destroying a widget with populated node caches" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     pack [ttk::frame .nc -style NodeCacheStack.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
@@ -388,7 +388,7 @@ test nodecache-6.1 "Destroying a widget with populated node caches" \
 } -result {}
 
 test nodecache-6.2 "Deleting a displayed element image" \
-	-constraints {notAqua notWayland} -setup {
+	-constraints {notAqua} -setup {
     pack [ttk::frame .nc -style NodeCacheDel.TFrame -width 60 -height 40]
     tkwait visibility .nc
     update
@@ -401,7 +401,7 @@ test nodecache-6.2 "Deleting a displayed element image" \
 } -result {}
 
 test nodecache-6.3 "Theme switch rebuilds the layout and its caches" \
-	-constraints {testImageType notAqua notWayland} -setup {
+	-constraints {testImageType notAqua} -setup {
     # The fixture styles live in the theme that was current when this file
     # was sourced; return to that exact theme, not to a hardcoded one.
     set origTheme [ttk::style theme use]
@@ -423,7 +423,7 @@ test nodecache-6.3 "Theme switch rebuilds the layout and its caches" \
 } -result 1
 
 test nodecache-6.4 "Widget create/destroy churn" \
-	-constraints {testImageType notAqua notWayland} -body {
+	-constraints {testImageType notAqua} -body {
     for {set i 0} {$i < 10} {incr i} {
 	pack [ttk::frame .nc -style NodeCacheMap.TFrame -width 60 -height 40]
 	update idletasks
@@ -434,7 +434,7 @@ test nodecache-6.4 "Widget create/destroy churn" \
 # 7.* -- rendered output (pixel probes)
 
 test nodecache-7.1 "Translucent node recomposites against changed content beneath" \
-	-constraints {pixelProbe notAqua notWayland} -setup {
+	-constraints {pixelProbe notAqua} -setup {
     nc.punder put #00c000 -to 0 0 16 16
     pack [ttk::frame .nc -style NodeCachePx.TFrame -width 64 -height 64]
     tkwait visibility .nc
@@ -455,7 +455,7 @@ test nodecache-7.1 "Translucent node recomposites against changed content beneat
 } -result {1 1 1 1}
 
 test nodecache-7.2 "Non-filling -sticky leaves live margins" \
-	-constraints {pixelProbe notAqua notWayland} -setup {
+	-constraints {pixelProbe notAqua} -setup {
     nc.punder put #00c000 -to 0 0 16 16
     pack [ttk::frame .nc -style NodeCacheCtr.TFrame -width 64 -height 64]
     tkwait visibility .nc
@@ -476,7 +476,7 @@ test nodecache-7.2 "Non-filling -sticky leaves live margins" \
 } -result {1 1 1 1}
 
 test nodecache-7.3 "Opaque filling node renders correctly over changed content" \
-	-constraints {pixelProbe notAqua notWayland} -setup {
+	-constraints {pixelProbe notAqua} -setup {
     nc.punder put #00c000 -to 0 0 16 16
     pack [ttk::frame .nc -style NodeCacheOpq.TFrame -width 64 -height 64]
     tkwait visibility .nc
