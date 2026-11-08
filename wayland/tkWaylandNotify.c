@@ -1095,6 +1095,7 @@ TkWaylandWindowMaximizeCallback(
     if (winPtr->wmInfoPtr) {
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         wmPtr->attributes.zoomed = maximized;
+        wmPtr->reqState.zoomed = maximized;
     }
     
     /* Note: No X event needed for maximize state changes. */

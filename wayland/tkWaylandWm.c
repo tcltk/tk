@@ -1684,6 +1684,13 @@ TkWmMapWindow(TkWindow *winPtr)
             UpdateGeometryInfo(winPtr);
         }
 
+        /* Apply a zoom requested before the window was shown. */
+        if (wmPtr->reqState.zoomed
+                && !glfwGetWindowAttrib(glfwWindow, GLFW_MAXIMIZED)) {
+            wmPtr->attributes.zoomed = 0;
+            glfwMaximizeWindow(glfwWindow);
+        }
+
         /*
          * Dispatch a MapNotify event synchronously so any
          * resulting cascade (e.g. pack mapping child frames, which in turn
@@ -3518,8 +3525,18 @@ WmAttributesCmd(
                 if (Tcl_GetBooleanFromObj(interp, objv[i+1], &zoomed) != TCL_OK) {
                     return TCL_ERROR;
                 }
-                wmPtr->reqState.zoomed = wmPtr->attributes.zoomed = zoomed;
+                wmPtr->reqState.zoomed = zoomed;
 
+                /*
+                 * The compositor can refuse to maximize a window (sway does),
+                 * so a shown window is zoomed only when the compositor
+                 * reports it (TkWaylandWindowMaximizeCallback).  A zoom of a
+                 * window not shown yet is applied in TkWmMapWindow.
+                 */
+                if (!glfwWindow
+                        || !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+                    wmPtr->attributes.zoomed = zoomed;
+                }
                 if (glfwWindow) {
                     if (zoomed) {
                         glfwMaximizeWindow(glfwWindow);
@@ -5320,7 +5337,12 @@ WmStateCmd(
     switch (idx) {
         case OPT_NORMAL:
             wmPtr->initialState = NormalState;
-            wmPtr->attributes.zoomed = 0;
+            /* See WMATT_ZOOMED in WmAttributesCmd. */
+            wmPtr->reqState.zoomed = 0;
+            if (glfwWindow == NULL
+                    || !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+                wmPtr->attributes.zoomed = 0;
+            }
             wmPtr->flags &= ~WM_WITHDRAWN;
 
             if (glfwWindow != NULL) {
@@ -5349,7 +5371,12 @@ WmStateCmd(
             break;
 
         case OPT_ZOOMED:
-            wmPtr->attributes.zoomed = 1;
+            /* See WMATT_ZOOMED in WmAttributesCmd. */
+            wmPtr->reqState.zoomed = 1;
+            if (glfwWindow == NULL
+                    || !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+                wmPtr->attributes.zoomed = 1;
+            }
 
             if (glfwWindow != NULL) {
                 glfwMaximizeWindow(glfwWindow);
