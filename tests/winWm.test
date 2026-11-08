@@ -151,18 +151,20 @@ test winWm-2.3 {TkpWmSetState} -constraints win -setup {
 } -cleanup {
     destroy .t
 } -result {normal withdrawn iconic normal}
+# The window cannot be narrower than its title bar.
+set width [expr {max(150, [lindex [wm minsize .] 0])}]
 test winWm-2.4 {TkpWmSetState} -constraints win -setup {
     destroy .t
     set result {}
 } -body {
     toplevel .t
-    wm geometry .t 150x50+10+10
+    wm geometry .t ${width}x50+10+10
     update
     lappend result [list [wm state .t] [wm geometry .t]]
     wm iconify .t
     update
     lappend result [list [wm state .t] [wm geometry .t]]
-    wm geometry .t 200x50+10+10
+    wm geometry .t [expr {$width + 50}]x50+10+10
     update
     lappend result [list [wm state .t] [wm geometry .t]]
     wm deiconify .t
@@ -170,7 +172,9 @@ test winWm-2.4 {TkpWmSetState} -constraints win -setup {
     lappend result [list [wm state .t] [wm geometry .t]]
 } -cleanup {
     destroy .t
-} -result {{normal 150x50+10+10} {iconic 150x50+10+10} {iconic 150x50+10+10} {normal 200x50+10+10}}
+} -result [list "normal ${width}x50+10+10" "iconic ${width}x50+10+10" \
+	"iconic ${width}x50+10+10" "normal [expr {$width + 50}]x50+10+10"]
+unset width
 
 
 test winWm-3.1 {ConfigureTopLevel: window geometry propagation} -constraints {
@@ -241,7 +245,7 @@ test winWm-5.1 {UpdateGeometryInfo: menu resizing} -constraints win -setup {
     set result {}
 } -body {
     toplevel .t
-    frame .t.f -width 150 -height 50 -background red
+    frame .t.f -width 150 -height 200 -background red
     pack .t.f
     update
     set result [winfo height .t]
@@ -250,13 +254,17 @@ test winWm-5.1 {UpdateGeometryInfo: menu resizing} -constraints win -setup {
     .t configure -menu .t.m
     update
     lappend result [winfo height .t]
+    set y [winfo rooty .t]
     .t.m add command -label "thisisreallylong"
     .t.m add command -label "thisisreallylong"
     update
-    lappend result [winfo height .t]
+    # The menubar wraps, and its new lines take the space from the window.
+    # The number of lines depends on the scale.
+    lappend result [expr {[winfo rooty .t] > $y}] \
+	    [expr {[winfo height .t] + [winfo rooty .t] - $y}]
 } -cleanup {
     destroy .t
-} -result {50 50 31}
+} -result {200 200 1 200}
 test winWm-5.2 {UpdateGeometryInfo: menu resizing} -constraints win -setup {
     destroy .t
 } -body {
