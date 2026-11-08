@@ -592,7 +592,7 @@ test scrollbar-6.25 {ScrollbarPosition procedure} unix {
     .s identify 8 179
 } {trough2}
 test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr {[winfo width .s] / 2}] [expr {int(.4 / [.s delta 0 1])
+    .s identify [expr {[winfo width .s] / 2}] [expr {int(.4 * [getTroughSize .s])
 						 + [testmetrics cyvscroll .s]}]
 } {trough2}
 test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
@@ -632,10 +632,10 @@ test scrollbar-6.35 {ScrollbarPosition procedure} unix {
     .s identify 14 100
 } {trough2}
 test scrollbar-6.37 {ScrollbarPosition procedure} win {
-    .s identify 0 100
+    .s identify 0 [expr {[winfo height .s] / 2}]
 } {trough2}
 test scrollbar-6.38 {ScrollbarPosition procedure} win {
-    .s identify [expr {[winfo width .s] - 1}] 100
+    .s identify [expr {[winfo width .s] - 1}] [expr {[winfo height .s] / 2}]
 } {trough2}
 
 #
@@ -643,10 +643,10 @@ test scrollbar-6.38 {ScrollbarPosition procedure} win {
 #
 
 catch {destroy .t}
-toplevel .t -width 250 -height 150
+toplevel .t -width [expr {$length + 50}] -height 150
 wm geometry .t +0+0
 scrollbar .t.s -orient horizontal -relief sunken -bd 2 -highlightthickness 2
-place .t.s -width 200
+place .t.s -width $length
 .t.s set .2 .4
 update
 
@@ -678,7 +678,7 @@ test scrollbar-6.44 {ScrollbarPosition procedure} unix {
     .t.s identify 100 14
 } {trough2}
 test scrollbar-6.46 {ScrollbarPosition procedure} win {
-    .t.s identify 100 [expr {[winfo height .t.s] - 1}]
+    .t.s identify [expr {[winfo width .t.s] / 2}] [expr {[winfo height .t.s] - 1}]
 } {trough2}
 
 test scrollbar-7.1 {EventuallyRedraw} {
