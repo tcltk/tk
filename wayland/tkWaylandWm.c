@@ -205,6 +205,22 @@ static void UpdateSizeHints(TkWindow *winPtr);
 static void UpdateTitle(TkWindow *winPtr);
 static void UpdatePhotoIcon(TkWindow *winPtr);
 static void UpdateVRootGeometry(WmInfo *wmPtr);
+/*
+ * Wayland does not tell a client where the panels are, or how big the
+ * decorations drawn by libdecor are, so a window is limited to the output
+ * less these allowances.  Override them on the compiler command line.
+ */
+
+#ifndef TKWL_PANEL_RESERVE
+#define TKWL_PANEL_RESERVE		48
+#endif
+#ifndef TKWL_CSD_TITLEBAR_HEIGHT
+#define TKWL_CSD_TITLEBAR_HEIGHT	40
+#endif
+
+static int  GetUsableScreenSize(TkWindow *winPtr, int *widthPtr,
+			    int *heightPtr);
+static void ClampToScreen(TkWindow *winPtr, int *widthPtr, int *heightPtr);
 static void WaitForMapNotify(TkWindow *winPtr, int mapped);
 static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
@@ -721,6 +737,46 @@ ReExposeIdle(void *clientData)
             infoPtr->flags &= ~TKWL_EARLY_EXPOSE_QUEUED;
         }
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ClampRefreshIdle --
+ *
+ *	Repaint a toplevel whose size was limited to the screen, once Tk has
+ *	finished laying out its children.  The toplevel is smaller than the
+ *	size its content asked for, so the geometry manager lays the
+ *	children out again after the window has been given its (limited)
+ *	size.  If that size is the one the window already has, the compositor
+ *	sends no configure event, so the framebuffer-size callback does not
+ *	run, the backing store is not cleared and the whole tree is not
+ *	exposed: whatever was drawn before the last layout stays on the
+ *	screen.  A window with the size its content asked for always gets
+ *	that resize, which hid the problem.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Invalidates the clip rectangles of the toplevel's tree and queues
+ *	exposes for all of it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ClampRefreshIdle(void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+
+    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)
+	    || winPtr->wmInfoPtr == NULL) {
+	return;
+    }
+    DEBUG_LOG("ClampRefreshIdle: repainting %s", Tk_PathName(winPtr));
+    tkWaylandInvalidateClipRectsForTree(winPtr);
+    ReExposeIdle(clientData);
 }
 
 /*
@@ -1860,6 +1916,7 @@ TkWmDeadWindow(
      */
     CancelGeometryUpdate(winPtr);
     Tcl_CancelIdleCall(ReExposeIdle, (void *)winPtr);
+    Tcl_CancelIdleCall(ClampRefreshIdle, (void *)winPtr);
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
     /* Destroy wrapper window if present. */
@@ -2659,6 +2716,13 @@ Tk_GetVRootGeometry(
         *widthPtr = 1920; *heightPtr = 1080;
         return;
     }
+
+    /*
+     * The geometry is cached in the WmInfo when the window is created; the
+     * monitor can change after that (resolution, hotplug), so refresh it.
+     */
+
+    UpdateVRootGeometry(wmPtr);
 
     *xPtr      = wmPtr->vRootX;
     *yPtr      = wmPtr->vRootY;
@@ -3971,6 +4035,7 @@ WmGeometryCmd(
 	    if (wmPtr->maxHeight > 0 && h > wmPtr->maxHeight) h = wmPtr->maxHeight;
 	    if (w < wmPtr->minWidth) w = wmPtr->minWidth;
 	    if (h < wmPtr->minHeight) h = wmPtr->minHeight;
+	    ClampToScreen(winPtr, &w, &h);
 	    DEBUG_LOG("GeometryCmd setting window size %s -> %dx%d",
 		    Tk_PathName(winPtr), w, h);
 	    TkWaylandFlushConfigures();
@@ -5970,6 +6035,50 @@ ApplyPendingGeometry(
 	return;
     }
 
+    /*
+     * A toplevel must not be larger than the screen.  The requested size
+     * (wmPtr->width/height or the requested size of the window) is kept;
+     * only the size given to the compositor is limited.
+     */
+
+    {
+	int reqW = tw, reqH = th;
+
+	ClampToScreen(winPtr, &tw, &th);
+
+	/*
+	 * The content asked for more than the screen allows, so its children
+	 * will be laid out again for the smaller window; repaint everything
+	 * when that has happened.  Coalesced: only the last request counts.
+	 */
+
+	if (tw != reqW || th != reqH) {
+	    Tcl_CancelIdleCall(ClampRefreshIdle, (void *)winPtr);
+	    Tcl_DoWhenIdle(ClampRefreshIdle, (void *)winPtr);
+	}
+
+	/*
+	 * A gridded window must stay on a grid line: round the limited size
+	 * down to a whole number of grid units, but not below the minimum.
+	 */
+
+	if (wmPtr->gridWin != NULL) {
+	    int minW, minH, maxW, maxH;
+	    int baseW = winPtr->reqWidth - wmPtr->reqGridWidth * wmPtr->widthInc;
+	    int baseH = winPtr->reqHeight - wmPtr->reqGridHeight * wmPtr->heightInc;
+
+	    WmPixelLimits(winPtr, &minW, &minH, &maxW, &maxH);
+	    if (tw != reqW && wmPtr->widthInc > 1 && tw > baseW) {
+		tw = baseW + ((tw - baseW) / wmPtr->widthInc) * wmPtr->widthInc;
+		if (tw < minW && minW <= reqW) tw = minW;
+	    }
+	    if (th != reqH && wmPtr->heightInc > 1 && th > baseH) {
+		th = baseH + ((th - baseH) / wmPtr->heightInc) * wmPtr->heightInc;
+		if (th < minH && minH <= reqH) th = minH;
+	    }
+	}
+    }
+
     /* Apply size change if the target size is different from the
        configured. */
     //if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
@@ -6238,6 +6347,26 @@ UpdateSizeHints(TkWindow *winPtr)
     int minW, minH, maxW, maxH;
 
     WmPixelLimits(winPtr, &minW, &minH, &maxW, &maxH);
+
+    /*
+     * A minimum size larger than the screen cannot be honoured, and would
+     * make the compositor enlarge a window that was limited to the screen.
+     * No maximum is passed for an unset "wm maxsize": the limit to the
+     * screen is applied to the requested size instead, so that maximizing
+     * and compositor-chosen sizes are not affected.
+     */
+
+    if (!wmPtr->attributes.fullscreen) {
+	int sw, sh;
+
+	if (GetUsableScreenSize(winPtr, &sw, &sh)) {
+	    if (minW > sw) minW = sw;
+	    if (minH > sh) minH = sh;
+	    if (maxW > 0 && maxW < minW) maxW = minW;
+	    if (maxH > 0 && maxH < minH) maxH = minH;
+	}
+    }
+
     glfwSetWindowSizeLimits(glfwWindow, minW, minH,
 	 (maxW > 0) ? maxW : GLFW_DONT_CARE,
 	 (maxH > 0) ? maxH : GLFW_DONT_CARE);
@@ -6334,6 +6463,196 @@ UpdateVRootGeometry(WmInfo *wmPtr)
     wmPtr->vRootX = wmPtr->vRootY = 0;
     wmPtr->vRootWidth  = 1920;
     wmPtr->vRootHeight = 1080;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetUsableScreenSize --
+ *
+ *	Compute the largest size, in logical (window) pixels, that a
+ *	toplevel can have and still fit on the screen: the work area of the
+ *	primary monitor, less an allowance for panels (unless the platform
+ *	reports a real work area) and for the window's decorations.  Wayland
+ *	clients do not know which output a window is on, so the primary
+ *	monitor is used.
+ *
+ *	GLFW reports video modes and work areas in screen coordinates, the
+ *	same units as glfwSetWindowSize.  If your GLFW reports the mode of a
+ *	scaled output in physical pixels, define TKWL_VIDMODE_IS_PHYSICAL to
+ *	divide by the content scale.
+ *
+ * Results:
+ *	1 and the size in *widthPtr and *heightPtr, or 0 if the screen size
+ *	is not known (in which case the size is not limited).
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GetUsableScreenSize(
+    TkWindow *winPtr,
+    int *widthPtr,
+    int *heightPtr)
+{
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    GLFWwindow *glfwWindow = (winPtr != NULL)
+	    ? TkWaylandGetGLFWwindow(winPtr) : NULL;
+    int w = 0, h = 0, modeW = 0, modeH = 0;
+    int haveRealWorkarea = 0;
+
+    if (monitor == NULL) {
+	return 0;
+    }
+
+    {
+	const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
+	if (mode != NULL) {
+	    modeW = mode->width;
+	    modeH = mode->height;
+	}
+    }
+
+#if GLFW_VERSION_MAJOR > 3 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 3)
+    glfwGetMonitorWorkarea(monitor, NULL, NULL, &w, &h);
+#endif
+    if (w <= 0 || h <= 0) {
+	w = modeW;
+	h = modeH;
+    } else if (modeW > 0 && modeH > 0 && (w < modeW || h < modeH)) {
+	/* The platform really did subtract panels and docks. */
+	haveRealWorkarea = 1;
+    }
+    if (w <= 0 || h <= 0) {
+	return 0;
+    }
+
+#ifdef TKWL_VIDMODE_IS_PHYSICAL
+    {
+	float xScale = 1.0f, yScale = 1.0f;
+
+	glfwGetMonitorContentScale(monitor, &xScale, &yScale);
+	if (xScale > 1.0f) {
+	    w = (int)(w / xScale + 0.5f);
+	}
+	if (yScale > 1.0f) {
+	    h = (int)(h / yScale + 0.5f);
+	}
+    }
+#endif
+
+    /*
+     * Wayland has no way for a client to ask where the panels and docks are:
+     * GLFW reports the whole output as the work area.  Reserve room for a
+     * panel (GNOME's top bar, a KDE or Xfce panel) so that a window as high
+     * as the screen is not pushed off its bottom edge.  Only the height is
+     * reduced: panels are almost always along the top or bottom.
+     */
+
+    if (!haveRealWorkarea) {
+	if (h > TKWL_PANEL_RESERVE) {
+	    h -= TKWL_PANEL_RESERVE;
+	}
+    }
+
+    /*
+     * Leave room for the decorations.  The result must be the same every
+     * time it is computed for a window: this runs before the window is
+     * shown and again whenever the geometry is updated, and GLFW's idea of
+     * the frame size changes once the compositor has configured the window
+     * (zero before, something else after, for decorations drawn by
+     * libdecor).  A clamp that differs by a few pixels between two calls
+     * makes the window resize a second time, and Tk lays out and draws its
+     * widgets twice before the compositor's configure event arrives.
+     *
+     * So for client-drawn decorations use only a fixed allowance for the
+     * title bar; the shadows and borders are outside the window geometry.
+     * For decorations drawn by the compositor use the frame size GLFW
+     * reports.
+     */
+
+    {
+	int left = 0, top = 0, right = 0, bottom = 0;
+
+	if (tkWaylandServerDecorations) {
+	    if (glfwWindow != NULL) {
+		glfwGetWindowFrameSize(glfwWindow, &left, &top, &right,
+			&bottom);
+	    }
+	} else {
+	    top = TKWL_CSD_TITLEBAR_HEIGHT;
+	}
+	if (left > 0 && right > 0 && left + right < w) {
+	    w -= left + right;
+	}
+	if (top > 0 && top < h) {
+	    h -= top;
+	}
+	if (bottom > 0 && bottom < h) {
+	    h -= bottom;
+	}
+    }
+
+    DEBUG_LOG("GetUsableScreenSize: mode %dx%d usable %dx%d (workarea %s)",
+	    modeW, modeH, w, h, haveRealWorkarea ? "real" : "whole output");
+
+    if (w < 1 || h < 1) {
+	return 0;
+    }
+    *widthPtr = w;
+    *heightPtr = h;
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ClampToScreen --
+ *
+ *	Limit a requested toplevel size so that the window is not larger
+ *	than the screen.  Fullscreen windows are left alone.  This only
+ *	limits the size handed to the compositor: wmPtr->width/height keep
+ *	the size that was requested, so the window can grow again if the
+ *	screen does.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May reduce *widthPtr and *heightPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ClampToScreen(
+    TkWindow *winPtr,
+    int *widthPtr,
+    int *heightPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    int sw, sh;
+
+    if (wmPtr == NULL || wmPtr->attributes.fullscreen) {
+	return;
+    }
+    if (!GetUsableScreenSize(winPtr, &sw, &sh)) {
+	return;
+    }
+    if (*widthPtr > sw) {
+	DEBUG_LOG("ClampToScreen: %s width %d -> %d", Tk_PathName(winPtr),
+		*widthPtr, sw);
+	*widthPtr = sw;
+    }
+    if (*heightPtr > sh) {
+	DEBUG_LOG("ClampToScreen: %s height %d -> %d", Tk_PathName(winPtr),
+		*heightPtr, sh);
+	*heightPtr = sh;
+    }
 }
 
 /*
@@ -6975,6 +7294,54 @@ XUnmapSubwindows(
 /*
  *----------------------------------------------------------------------
  *
+ * InvalidateClipAfterGeometryChange --
+ *
+ *	Called after a child window has been moved or resized.  Each window
+ *	caches clip rectangles that exclude the rectangles of its children
+ *	and of the windows stacked above it.  When a child moves, the cached
+ *	rectangles of its parent and siblings still describe its old place:
+ *	the parent's redraw (queued by the caller) is then masked out where
+ *	the child used to be, so what was drawn there stays on the screen,
+ *	and is painted over where the child now is.  The stale image is only
+ *	removed by the next resize of the toplevel, which clears the backing
+ *	store.  As in XMapWindow and ExposeVacatedArea, invalidate the clip
+ *	rectangles of the whole toplevel, after the exposes are queued.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Invalidates cached clip rectangles.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+InvalidateClipAfterGeometryChange(
+    TkWindow *winPtr)
+{
+    TkWindow *topPtr;
+
+    if (winPtr == NULL) {
+	return;
+    }
+    for (topPtr = winPtr; topPtr != NULL && !(topPtr->flags & TK_TOP_LEVEL);
+	    topPtr = topPtr->parentPtr) {
+	/* Empty loop body. */
+    }
+    if (topPtr != NULL) {
+	tkWaylandInvalidateClipRectsForTree(topPtr);
+    } else {
+	tkWaylandInvalidateClipRects(winPtr);
+	if (winPtr->parentPtr != NULL) {
+	    tkWaylandInvalidateClipRects(winPtr->parentPtr);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XResizeWindow --
  *
  *	Change the size of a window.  Position and size themselves are
@@ -7016,7 +7383,7 @@ XResizeWindow(
     DEBUG_LOG("XResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
-    tkWaylandInvalidateClipRects(winPtr);
+    InvalidateClipAfterGeometryChange(winPtr);
     return Success;
 }
 
@@ -7066,7 +7433,7 @@ XMoveWindow(
     DEBUG_LOG("XMoveWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
-    tkWaylandInvalidateClipRects(winPtr);
+    InvalidateClipAfterGeometryChange(winPtr);
     return Success;
 }
 
@@ -7121,7 +7488,7 @@ XMoveResizeWindow(
     DEBUG_LOG("XMoveResizeWindow: Exposing content %s", Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
-    tkWaylandInvalidateClipRects(winPtr);
+    InvalidateClipAfterGeometryChange(winPtr);
     return Success;
 }
 
