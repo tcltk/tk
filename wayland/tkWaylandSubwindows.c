@@ -11,7 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* Debugging
+/* Debugging.
 #define DEBUG_CHANNEL stdout
 #define DEBUG_LABEL "subwindows"
 */
@@ -429,8 +429,32 @@ addClipRect(
      * subwindow.
      */
 
-    subwinPtr->privatePtr->container = Tk_WindowId(winPtr);
-    subwinPtr->privatePtr->containerRect = data->clipRectBuffer[n];
+    /*
+     * Do not let a larger outer window overwrite a tighter container
+     * already recorded for this subwindow.  For pack -in windows the
+     * visual container (.l1) is not the Tk parent (.pendulum): when
+     * updateClipRects(.pendulum) runs it would otherwise clobber
+     * .c.container = .l1 with .pendulum, and .l1 would never be
+     * known as .c's container again.
+     */
+    {
+        TkWindow *existing = TkWaylandGetContainer(subwinPtr);
+        int keepExisting = 0;
+        if (existing != NULL && existing != winPtr) {
+            clipRect eb = getBounds(existing, scale);
+            clipRect wb = getBounds(winPtr, scale);
+            /* Existing container is inside (tighter than) this window. */
+            if (eb.x >= wb.x && eb.y >= wb.y
+                    && eb.x + eb.w <= wb.x + wb.w
+                    && eb.y + eb.h <= wb.y + wb.h) {
+                keepExisting = 1;
+            }
+        }
+        if (!keepExisting) {
+            subwinPtr->privatePtr->container = Tk_WindowId(winPtr);
+            subwinPtr->privatePtr->containerRect = data->clipRectBuffer[n];
+        }
+    }
 }
 
 /*
@@ -682,6 +706,56 @@ void updateClipRects(
 	     DEBUG_LOG("    UpdateClipRects: Not clipping disjoint child %s",
 		 Tk_PathName(childPtr));
 	}
+    }
+    /*
+     * Pack -in windows: a window can be visually inside this window
+     * without being a Tk child of it (e.g. .pendulum.c has Tk parent
+     * .pendulum but is packed -in .pendulum.p.l1).  The children loop
+     * above therefore never clips this window around it, so this
+     * window's background can paint over it -- the grey labelframe
+     * painting over the canvas in the Pendulum demo.  Scan the whole
+     * toplevel subtree for mapped windows whose bounds are contained
+     * in this window's bounds and which are not already Tk children
+     * of it, and clip around them too.  Containment (not mere
+     * overlap) is required so unrelated overlapping windows are not
+     * clipped here; those are handled by the sibling loop below.
+     */
+    {
+        TkWindow *topPtr = winPtr;
+        while (topPtr != NULL && !Tk_IsTopLevel(topPtr)) {
+            topPtr = topPtr->parentPtr;
+        }
+        if (topPtr != NULL) {
+            /* Walk the toplevel subtree iteratively via recursion helper:
+             * reuse childList traversal with an explicit stack-free
+             * depth-first walk implemented as a nested function is not
+             * possible in C89, so do a simple recursive scan by
+             * calling a local lambda-equivalent: fall through to the
+             * helper below via a static forward declaration is
+             * avoided by inlining the walk with a small manual stack. */
+            TkWindow *stack[256];
+            int sp = 0;
+            stack[sp++] = topPtr;
+            while (sp > 0) {
+                TkWindow *cur = stack[--sp];
+                TkWindow *ch;
+                for (ch = cur->childList; ch != NULL; ch = ch->nextPtr) {
+                    if (sp < 256) stack[sp++] = ch;
+                }
+                if (cur == winPtr || cur == topPtr) continue;
+                if (cur->parentPtr == winPtr) continue; /* already handled */
+                if (!Tk_IsMapped(cur) || Tk_IsTopLevel(cur)) continue;
+                {
+                    clipRect cb = getBounds(cur, scale);
+                    if (cb.x >= bounds.x && cb.y >= bounds.y
+                            && cb.x + cb.w <= bounds.x + bounds.w
+                            && cb.y + cb.h <= bounds.y + bounds.h
+                            && !disjoint(bounds, cb)) {
+                        addClipRect(cur, winPtr, scale);
+                    }
+                }
+            }
+        }
     }
     /* Add clipRects for non-toplevel siblings higher in the stacking order
      * that overlap the window . */

@@ -728,6 +728,10 @@ ReExposeIdle(void *clientData)
     if (!(winPtr->flags & TK_TOP_LEVEL)) return;
     if (winPtr->wmInfoPtr == NULL) return;
     if (winPtr->dispPtr == NULL) return;
+    /* First expose in TkWmMapWindow runs before pack/grid settles, so it
+     * paints children at pre-layout geometry. Invalidate first, or this
+     * re-expose is clipped to the stale rectangles. */
+    tkWaylandInvalidateClipRectsForTree(winPtr);
     QueueExposeTree(winPtr);
     if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
         GLFWwindow *gw = winPtr->privatePtr->glfwWindow;
@@ -1258,6 +1262,32 @@ MarkNeedsDisplay(
 }
 
 /*
+ * MarkSubtreeNeedsDisplay --
+ *
+ *      Queue exposes for winPtr's whole mapped subtree and mark the
+ *      owning toplevel NEEDS_DISPLAY. The existing MarkNeedsDisplay
+ *      only works on a window with its own GLFW window (i.e. a
+ *      toplevel), so calling it on a child is a no-op -- which is why
+ *      a child moved by its geometry manager (e.g. a canvas inside a
+ *      labelframe inside a panedwindow) was never repainted at its
+ *      final geometry: its first-frame pixels, painted at pre-layout
+ *      geometry, stayed on screen.
+ */
+static void
+MarkSubtreeNeedsDisplay(TkWindow *winPtr)
+{
+    TkWindow *topPtr = winPtr;
+    if (winPtr == NULL) return;
+    QueueExposeChildren(winPtr);
+    while (topPtr != NULL && !(topPtr->flags & TK_TOP_LEVEL)) {
+        topPtr = topPtr->parentPtr;
+    }
+    if (topPtr != NULL) {
+        MarkNeedsDisplay(topPtr);
+    }
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * RaiseOverridePopup --
@@ -1682,13 +1712,6 @@ TkWmMapWindow(TkWindow *winPtr)
         if (wmPtr->flags & WM_UPDATE_PENDING) {
             CancelGeometryUpdate(winPtr);
             UpdateGeometryInfo(winPtr);
-        }
-
-        /* Apply a zoom requested before the window was shown. */
-        if (wmPtr->reqState.zoomed
-                && !glfwGetWindowAttrib(glfwWindow, GLFW_MAXIMIZED)) {
-            wmPtr->attributes.zoomed = 0;
-            glfwMaximizeWindow(glfwWindow);
         }
 
         /*
@@ -3525,18 +3548,8 @@ WmAttributesCmd(
                 if (Tcl_GetBooleanFromObj(interp, objv[i+1], &zoomed) != TCL_OK) {
                     return TCL_ERROR;
                 }
-                wmPtr->reqState.zoomed = zoomed;
+                wmPtr->reqState.zoomed = wmPtr->attributes.zoomed = zoomed;
 
-                /*
-                 * The compositor can refuse to maximize a window (sway does),
-                 * so a shown window is zoomed only when the compositor
-                 * reports it (TkWaylandWindowMaximizeCallback).  A zoom of a
-                 * window not shown yet is applied in TkWmMapWindow.
-                 */
-                if (!glfwWindow
-                        || !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
-                    wmPtr->attributes.zoomed = zoomed;
-                }
                 if (glfwWindow) {
                     if (zoomed) {
                         glfwMaximizeWindow(glfwWindow);
@@ -5337,12 +5350,7 @@ WmStateCmd(
     switch (idx) {
         case OPT_NORMAL:
             wmPtr->initialState = NormalState;
-            /* See WMATT_ZOOMED in WmAttributesCmd. */
-            wmPtr->reqState.zoomed = 0;
-            if (glfwWindow == NULL
-                    || !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
-                wmPtr->attributes.zoomed = 0;
-            }
+            wmPtr->attributes.zoomed = 0;
             wmPtr->flags &= ~WM_WITHDRAWN;
 
             if (glfwWindow != NULL) {
@@ -5371,12 +5379,7 @@ WmStateCmd(
             break;
 
         case OPT_ZOOMED:
-            /* See WMATT_ZOOMED in WmAttributesCmd. */
-            wmPtr->reqState.zoomed = 1;
-            if (glfwWindow == NULL
-                    || !glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
-                wmPtr->attributes.zoomed = 1;
-            }
+            wmPtr->attributes.zoomed = 1;
 
             if (glfwWindow != NULL) {
                 glfwMaximizeWindow(glfwWindow);
@@ -7185,6 +7188,12 @@ XMapWindow(
     if (winPtr == NULL) {
         return Success;
     }
+    
+    DEBUG_LOG("XMapWindow: %s queuing expose %dx%d at %d,%d (req %dx%d)",
+    Tk_PathName(winPtr),
+    Tk_Width(winPtr), Tk_Height(winPtr),
+    winPtr->changes.x, winPtr->changes.y,
+    winPtr->reqWidth, winPtr->reqHeight);
 
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
         Tk_Width(winPtr), Tk_Height(winPtr));
@@ -7412,6 +7421,7 @@ XResizeWindow(
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
     InvalidateClipAfterGeometryChange(winPtr);
+    MarkSubtreeNeedsDisplay(winPtr);
     return Success;
 }
 
@@ -7462,6 +7472,7 @@ XMoveWindow(
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
     InvalidateClipAfterGeometryChange(winPtr);
+    MarkSubtreeNeedsDisplay(winPtr);
     return Success;
 }
 
@@ -7517,6 +7528,7 @@ XMoveResizeWindow(
     TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	Tk_Width(winPtr), Tk_Height(winPtr));
     InvalidateClipAfterGeometryChange(winPtr);
+    MarkSubtreeNeedsDisplay(winPtr);
     return Success;
 }
 
