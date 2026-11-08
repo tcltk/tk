@@ -60,6 +60,7 @@ proc grid_reset {{test ?} {top .}} {
 
 grid_reset 0.0
 wm geometry . {}
+removeTitleBar .
 
 #
 # TESTS
@@ -1875,6 +1876,7 @@ test grid-17.1 {forget and pending idle handlers} -body {
 test grid-18.1 {test respect for internalborder} -body {
     toplevel .pack
     wm geometry .pack 480x200
+    removeTitleBar .pack
     frame .pack.l -width 15 -height 10
     labelframe .pack.lf -labelwidget .pack.l
     pack .pack.lf -fill both -expand 1
@@ -2243,6 +2245,7 @@ test grid-25.2 {grid -in half-dead window unmanages content - bug 3020550} -setu
 # TESTFILE CLEANUP
 #
 
+wm overrideredirect . 0
 cleanupTests
 
 # Local Variables:
