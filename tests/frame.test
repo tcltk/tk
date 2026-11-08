@@ -440,8 +440,7 @@ test frame-2.16 {toplevel configuration options} -constraints {haveDISPLAY notWa
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -screen option after widget is created}
-# cget -screen not supported on Wayland. 
-test frame-2.17 {toplevel configuration options} -constraints notWayland -setup {
+test frame-2.17 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
     toplevel .t -width 200 -height 100 -screen bogus

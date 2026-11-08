@@ -155,9 +155,21 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
      * multiple calls to TkpOpenDisplay (e.g. from multiple interpreters)
      * each allocate a fresh Display*, making the comparison fail and causing
      * tkCursor.c to walk a stale hash-chain pointer — segfault.
+     *
+     * If the display is already in the display list of the thread, another
+     * display was requested ("toplevel -screen bogus"), which cannot be
+     * connected.  Returning the display would make the list circular.
      */
     static TkDisplay *dispPtr = NULL;
     if (dispPtr != NULL) {
+	TkDisplay *listPtr;
+
+	for (listPtr = TkGetDisplayList(); listPtr != NULL;
+		listPtr = listPtr->nextPtr) {
+	    if (listPtr == dispPtr) {
+		return NULL;
+	    }
+	}
         return dispPtr;
     }
 
