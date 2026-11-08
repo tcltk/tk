@@ -83,7 +83,7 @@ set defaultfontlist [font names]
 
 switch [tk windowingsystem] {
     x11		{set fixed "TkFixedFont"}
-    win32	{set fixed "courier 12"}
+    win32	{set fixed "TkFixedFont"}
     aqua	{set fixed "monaco 9"}
 }
 
