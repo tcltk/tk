@@ -24,11 +24,15 @@ source [file join [tcltest::configure -testdir] main.tcl]
 resetWindows
 
 # Create entries in the option database to be sure that geometry options
-# like border width have predictable values.
+# like border width have predictable values. The default sizes set in
+# tk.tcl are scaled with the DPI.
 
 option add *Scale.borderWidth 2
 option add *Scale.highlightThickness 2
 option add *Scale.font {Helvetica -12 bold}
+option add *Scale.length 100
+option add *Scale.sliderLength 30
+option add *Scale.width 15
 
 #
 # COMMON TEST SETUP
