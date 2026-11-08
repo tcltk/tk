@@ -448,6 +448,7 @@ TkStartEndOfClusterCmd(
     TKNSString *S;
     const char *stringArg;
     Tcl_Size len, idx;
+
     if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -477,23 +478,25 @@ TkStartEndOfClusterCmd(
 	}
 	idx = newIdx;
     }
-    if (idx >= 0) {
-	if (idx >= len) {
+    if (clientData ? idx + 1 <= len : idx >= 0) {
+	if (idx < 0) {
+	    idx = 0;
+	} else if (idx >= len) {
 	    idx = len;
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
 	    idx = range.location;
-        if (clientData) {
-            idx += range.length;
-        }
-	}
-	if (idx > 0 && len != ulen) {
-	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-	    Tcl_Size newIdx = 1;
-	    for (Tcl_Size i = 1; i < idx; i++) {
-		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+	    if (clientData) {
+		idx += range.length;
 	    }
-	    idx = newIdx;
+	    if (idx > 0 && len != ulen) {
+		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+		Tcl_Size newIdx = 1;
+		for (Tcl_Size i = 1; i < idx; i++) {
+		    if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+		}
+		idx = newIdx;
+	    }
 	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }

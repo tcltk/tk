@@ -480,7 +480,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
-static void             RemoveTransient(TkWindow *winPtr);
+static void	     RemoveTransient(TkWindow *winPtr);
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
@@ -1310,7 +1310,7 @@ TkWmDeadWindow(
 	wmPtr->transientPtr = transientPtr->nextPtr;
 	Tcl_Free(transientPtr);
     }
-    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);				    
+    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
      * data structures.  If the NSWindow is a child, disassociate it from
@@ -1797,20 +1797,20 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_HIDDEN:
-        if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        if (boolValue != ((wmPtr->flags & WM_IS_HIDDEN) != 0)) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (boolValue != ((wmPtr->flags & WM_IS_HIDDEN) != 0)) {
 	    int oldFlags = wmPtr->flags;
-            if (boolValue) {
-                wmPtr->flags |= WM_IS_HIDDEN;
-            } else {
-                wmPtr->flags &= ~WM_IS_HIDDEN;
-            }
+	    if (boolValue) {
+		wmPtr->flags |= WM_IS_HIDDEN;
+	    } else {
+		wmPtr->flags &= ~WM_IS_HIDDEN;
+	    }
 	    ApplyWindowAttributeFlagChanges(winPtr, macWindow,
 		wmPtr->attributes, oldFlags, 1, 0);
-        }
-        break;
+	}
+	break;
     case WMATT_MODIFIED:
 	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
@@ -2079,8 +2079,8 @@ WmGetAttribute(
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
     case WMATT_HIDDEN:
-        result = Tcl_NewBooleanObj((wmPtr->flags & WM_IS_HIDDEN) != 0);
-        break;
+	result = Tcl_NewBooleanObj((wmPtr->flags & WM_IS_HIDDEN) != 0);
+	break;
     case WMATT_MODIFIED:
 	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
 	break;
@@ -6838,7 +6838,7 @@ TkMacOSXMakeRealWindowExist(
     [window orderOut:nil];
     [window setAlphaValue: 1.0];
     [window setAnimationBehavior: savedBehavior];
-						
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     if (tabbingId) {
 	identifier = [NSString stringWithUTF8String:tabbingId];
@@ -7540,15 +7540,15 @@ ApplyWindowAttributeFlagChanges(
 	    if (wmPtr->flags & WM_IS_HIDDEN) {
 		TkMacOSXUpdatePointerBeforeUnmap(winPtr);
 		[macWin orderOut:nil];
-            } else {
-                switch (wmPtr->hints.initial_state) {
-                case IconicState:
-	        case WithdrawnState:
+	    } else {
+		switch (wmPtr->hints.initial_state) {
+		case IconicState:
+		case WithdrawnState:
 		    TkMacOSXUpdatePointerBeforeUnmap(winPtr);
 		    [macWin orderOut:nil];
-                    break;
-                case NormalState:
-                case ZoomState:
+		    break;
+		case NormalState:
+		case ZoomState:
 		    [(TKWindow *)macWin tkOrderFront];
 		    TkMacOSXUpdatePointerAfterMap(winPtr);
 		    break;
