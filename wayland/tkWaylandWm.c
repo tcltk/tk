@@ -1262,6 +1262,7 @@ MarkNeedsDisplay(
 }
 
 /*
+ *----------------------------------------------------------------------
  * MarkSubtreeNeedsDisplay --
  *
  *      Queue exposes for winPtr's whole mapped subtree and mark the
@@ -1272,6 +1273,14 @@ MarkNeedsDisplay(
  *      labelframe inside a panedwindow) was never repainted at its
  *      final geometry: its first-frame pixels, painted at pre-layout
  *      geometry, stayed on screen.
+ * 
+ * Results: 
+ * 		Subtree elements receive display flag.
+ * 
+ * Side effects:
+ *      None.
+ * 
+ *----------------------------------------------------------------------
  */
 static void
 MarkSubtreeNeedsDisplay(TkWindow *winPtr)

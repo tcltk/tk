@@ -432,10 +432,7 @@ addClipRect(
     /*
      * Do not let a larger outer window overwrite a tighter container
      * already recorded for this subwindow.  For pack -in windows the
-     * visual container (.l1) is not the Tk parent (.pendulum): when
-     * updateClipRects(.pendulum) runs it would otherwise clobber
-     * .c.container = .l1 with .pendulum, and .l1 would never be
-     * known as .c's container again.
+     * visual container is not the Tk parent.
      */
     {
         TkWindow *existing = TkWaylandGetContainer(subwinPtr);
@@ -709,11 +706,9 @@ void updateClipRects(
     }
     /*
      * Pack -in windows: a window can be visually inside this window
-     * without being a Tk child of it (e.g. .pendulum.c has Tk parent
-     * .pendulum but is packed -in .pendulum.p.l1).  The children loop
+     * without being a Tk child of it. The children loop
      * above therefore never clips this window around it, so this
-     * window's background can paint over it -- the grey labelframe
-     * painting over the canvas in the Pendulum demo.  Scan the whole
+     * window's background can paint over it.  Scan the whole
      * toplevel subtree for mapped windows whose bounds are contained
      * in this window's bounds and which are not already Tk children
      * of it, and clip around them too.  Containment (not mere
