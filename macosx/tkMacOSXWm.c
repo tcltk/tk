@@ -36,6 +36,7 @@
 #endif
 */
 
+#ifdef TK_MAC_DEBUG
 #import <QuartzCore/QuartzCore.h>
 
 #define PRINT_STACK					\
@@ -47,7 +48,7 @@
     }								\
     fprintf(stderr, "\n");					\
     fflush(stderr)
-
+#endif
 /*
  * Carbon window attributes and classes.
  */
@@ -167,6 +168,7 @@ static const struct {
  */
 
 /* Hash tables for attributes which can be set before a window exists */
+static bool rootExists = false;
 static Tcl_HashTable pathnameToSubclass;
 static Tcl_HashTable pathnameToTabbingId;
 static Tcl_HashTable pathnameToTabbingMode;
@@ -2159,7 +2161,7 @@ WmGetAttribute(
 
 static int
 WmAttributesCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    Tk_Window main,	        /* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
@@ -2167,6 +2169,13 @@ WmAttributesCmd(
 {
     int attribute = 0;
     NSWindow *macWindow;
+    if (!rootExists) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	   "Window attributes cannot be set before the root window exists."));
+	Tcl_SetErrorCode(interp, "TK", "NO_WINDOW", (char *)NULL);
+	return TCL_ERROR;
+    }
+
     if (winPtr == NULL && objc == 5) {
 	int index, isNew = 0;
 	Tcl_Size length;
@@ -6676,7 +6685,6 @@ TkMacOSXMakeRealWindowExist(
     NSString *identifier;
     char *tabbingId = NULL;
     long tabbingMode = NSWindowTabbingModeAutomatic;
-    static bool initialized = false;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
@@ -6714,11 +6722,11 @@ TkMacOSXMakeRealWindowExist(
 	 * attributes.
 	 */
 	int index;
-	if (!initialized) {
+	if (!rootExists) {
 	    Tcl_InitHashTable(&pathnameToSubclass, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&pathnameToTabbingId, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&pathnameToTabbingMode, TCL_STRING_KEYS);
-	    initialized = true;
+	    rootExists = true;
 	}
 	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr));
 	index = hPtr ? PTR2INT(Tcl_GetHashValue(hPtr)) : subclassNSWindow;
