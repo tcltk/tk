@@ -6081,7 +6081,6 @@ ApplyPendingGeometry(
 
     /* Apply size change if the target size is different from the
        configured. */
-    //if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
     {
 	/*
 	 * Wayland won't allow a window to be so narrow that the title bar
@@ -6135,6 +6134,39 @@ ApplyPendingGeometry(
     }
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CancelGeometryUpdate --
+ *
+ *	Cancel a pending call of UpdateGeometryInfo: the idle call, and the
+ *	timer which repeats it while the window waits for its first focus.
+ *	The timer must be deleted with the window, or it fires on freed
+ *	memory.
+ *
+ * Results:
+ *      Update is cancelled.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+CancelGeometryUpdate(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
+    if (wmPtr != NULL && wmPtr->updateTimer != NULL) {
+	Tcl_DeleteTimerHandler(wmPtr->updateTimer);
+	wmPtr->updateTimer = NULL;
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -6153,31 +6185,6 @@ ApplyPendingGeometry(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * CancelGeometryUpdate --
- *
- *	Cancel a pending call of UpdateGeometryInfo: the idle call, and the
- *	timer which repeats it while the window waits for its first focus.
- *	The timer must be deleted with the window, or it fires on freed
- *	memory.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-CancelGeometryUpdate(
-    TkWindow *winPtr)
-{
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-
-    Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
-    if (wmPtr != NULL && wmPtr->updateTimer != NULL) {
-	Tcl_DeleteTimerHandler(wmPtr->updateTimer);
-	wmPtr->updateTimer = NULL;
-    }
-}
 
 static void
 UpdateGeometryInfo(
@@ -6349,7 +6356,7 @@ UpdateSizeHints(TkWindow *winPtr)
     WmPixelLimits(winPtr, &minW, &minH, &maxW, &maxH);
 
     /*
-     * A minimum size larger than the screen cannot be honoured, and would
+     * A minimum size larger than the screen cannot be honored, and would
      * make the compositor enlarge a window that was limited to the screen.
      * No maximum is passed for an unset "wm maxsize": the limit to the
      * screen is applied to the requested size instead, so that maximizing
@@ -6561,16 +6568,10 @@ GetUsableScreenSize(
 
     /*
      * Leave room for the decorations.  The result must be the same every
-     * time it is computed for a window: this runs before the window is
-     * shown and again whenever the geometry is updated, and GLFW's idea of
-     * the frame size changes once the compositor has configured the window
-     * (zero before, something else after, for decorations drawn by
-     * libdecor).  A clamp that differs by a few pixels between two calls
-     * makes the window resize a second time, and Tk lays out and draws its
-     * widgets twice before the compositor's configure event arrives.
+     * time it is computed for a window. So for client-drawn decorations use
+     * only a fixed allowance for the title bar;  the shadows and borders
+     * are outside the window geometry.
      *
-     * So for client-drawn decorations use only a fixed allowance for the
-     * title bar; the shadows and borders are outside the window geometry.
      * For decorations drawn by the compositor use the frame size GLFW
      * reports.
      */
