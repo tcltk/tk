@@ -1275,13 +1275,14 @@ MarkNeedsDisplay(
  *      geometry, stayed on screen.
  * 
  * Results: 
- * 		Subtree elements receive display flag.
+ *      Subtree elements receive display flag.
  * 
  * Side effects:
  *      None.
  * 
  *----------------------------------------------------------------------
  */
+
 static void
 MarkSubtreeNeedsDisplay(TkWindow *winPtr)
 {
