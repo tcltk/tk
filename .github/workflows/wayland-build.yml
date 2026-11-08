@@ -198,7 +198,7 @@ jobs:
       - name: Run Tests
         # Replaces unix/run_wayland_tests. Runs in tk/unix (see defaults above).
         # GitHub's default "bash -e -o pipefail" is relaxed below so that a failing
-        # classic suite doesn't skip the ttk suite; the grep gates at the end decide.
+        # classic suite doesn't skip the ttk suite; check_suite at the end decides.
         run: |
           set -eu
           set +o pipefail
@@ -292,8 +292,28 @@ jobs:
           export TCL_LIBRARY="$TCL_CONFIG_PATH/../library"
           export TK_LIBRARY="$ROOT/library"
 
+          # The result is decided only by the tcltest summary line. Startup and
+          # shutdown noise (compositor warnings, a non-zero exit or crash after the
+          # summary has printed) does not affect it.
           ./tktest ../tests/all.tcl -singleproc 1 | tee out-classic.txt
           ./tktest ../tests/ttk/all.tcl -singleproc 1 | tee out-ttk.txt
-          grep -q "Failed     0" out-classic.txt
-          grep -q "Failed     0" out-ttk.txt
+
+          # check_suite <name> <output file>
+          # Fails only if the suite reported failures, or never reached its summary
+          # (i.e. tktest died mid-run). The summary is tab-separated:
+          #   all.tcl:<TAB>Total<TAB>N<TAB>Passed<TAB>N<TAB>Skipped<TAB>N<TAB>Failed<TAB>N
+          status=0
+          check_suite() {
+            summary=$(grep -E 'Total[[:space:]]+[0-9]+[[:space:]]+Passed[[:space:]]+[0-9]+[[:space:]]+Skipped[[:space:]]+[0-9]+[[:space:]]+Failed[[:space:]]+[0-9]+' "$2" | tail -n 1 || true)
+            if [ -z "$summary" ]; then
+              echo "::error::$1: no test summary found (tktest died before finishing)"
+              status=1
+            elif ! printf '%s\n' "$summary" | grep -Eq 'Failed[[:space:]]+0([[:space:]]|$)'; then
+              echo "::error::$1: test failures reported: $summary"
+              status=1
+            fi
+          }
+          check_suite classic out-classic.txt
+          check_suite ttk out-ttk.txt
+          exit "$status"
         timeout-minutes: 15
