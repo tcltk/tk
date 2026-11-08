@@ -464,6 +464,7 @@ TkStartEndOfClusterCmd(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
+	[S release];
 	return TCL_ERROR;
     }
     if (idx >= ulen) {
@@ -496,6 +497,7 @@ TkStartEndOfClusterCmd(
 	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
+    [S release];
     return TCL_OK;
 }
 
