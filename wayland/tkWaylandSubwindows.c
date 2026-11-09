@@ -739,6 +739,28 @@ void updateClipRects(
                 }
                 if (cur == winPtr || cur == topPtr) continue;
                 if (cur->parentPtr == winPtr) continue; /* already handled */
+                /*
+                 * Never clip an ancestor out of its descendant.  A child
+                 * that exactly fills its parent (a scrollbar in a frame
+                 * of the same size, a label in a status-bar frame) has
+                 * bounds "contained" in the ancestor's bounds, and the
+                 * containment test below is not strict, so without this
+                 * the ancestor is masked out of the child's whole area
+                 * and the child can never draw anything.
+                 */
+                {
+                    TkWindow *anc;
+                    int isAncestor = 0;
+
+                    for (anc = winPtr->parentPtr; anc != NULL;
+                            anc = anc->parentPtr) {
+                        if (anc == cur) {
+                            isAncestor = 1;
+                            break;
+                        }
+                    }
+                    if (isAncestor) continue;
+                }
                 if (!Tk_IsMapped(cur) || Tk_IsTopLevel(cur)) continue;
                 {
                     clipRect cb = getBounds(cur, scale);
