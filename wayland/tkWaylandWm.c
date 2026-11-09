@@ -5362,10 +5362,6 @@ WmStateCmd(
             wmPtr->initialState = NormalState;
             wmPtr->attributes.zoomed = 0;
             wmPtr->flags &= ~WM_WITHDRAWN;
-
-            if (glfwWindow != NULL) {
-                glfwRestoreWindow(glfwWindow);
-            }
             TkpWmSetState(winPtr, NormalState);
             break;
 
