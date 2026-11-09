@@ -41,14 +41,14 @@ resetWindows
 #
 if {[tk windowingsystem] eq "aqua"} {
     proc raiseDelay {} {
-        update idletasks
+	update idletasks
 	after 200
     }
 } else {
     proc raiseDelay {} {
 	after 300
-        update idletasks
-        update
+	update idletasks
+	update
     }
  }
 
@@ -2361,7 +2361,7 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
 test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
     deleteWindows
     set result {}
-} -constrants {aquaKnownBug withWindowManager} -body {
+} -constraints {aquaKnownBug withWindowManager} -body {
     # Verifies that transients stay on top of their toplevels, even if they were
     # made transients when those toplevels were withdrawn.
     toplevel .t1; wm withdraw  .t1;     update

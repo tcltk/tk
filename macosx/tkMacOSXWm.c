@@ -480,7 +480,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
-static void             RemoveTransient(TkWindow *winPtr);
+static void		RemoveTransient(TkWindow *winPtr);
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
