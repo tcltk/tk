@@ -2198,7 +2198,6 @@ CommonWriteGIF(
 		c = 0;
 		writeProc(handle, (char *) &c, 1);
 	    }
-	    Tcl_BounceRefCount(itemData);
 	}
     }
     c = GIF_TERMINATOR;

@@ -3567,7 +3567,7 @@ WriteExtraChunks(
 
     if (metadataInObj != NULL) {
 
-	Tcl_Obj *aspectObj, *valueObj, *keyObj;
+	Tcl_Obj *valueObj, *keyObj;
 	double aspectValue, DPIValue;
 	unsigned long PPUx, PPUy;
 	char unitSpecifier;
@@ -3588,9 +3588,7 @@ WriteExtraChunks(
 	    DPIValue = -1;
 	    PPUx = 65536;
 	} else {
-	    result = Tcl_GetDoubleFromObj(interp, valueObj, &DPIValue);
-	    Tcl_BounceRefCount(valueObj);
-	    if (result != TCL_OK) {
+	    if (TCL_OK != Tcl_GetDoubleFromObj(interp, valueObj, &DPIValue)) {
 		return TCL_ERROR;
 	    }
 	    PPUx = (unsigned long)floor(DPIValue / 0.0254+0.5);
@@ -3611,9 +3609,7 @@ WriteExtraChunks(
 	    aspectValue = -1;
 	    PPUy = PPUx;
 	} else {
-	    result = Tcl_GetDoubleFromObj(interp, valueObj, &aspectValue);
-	    Tcl_BounceRefCount(valueObj);
-	    if (result != TCL_OK) {
+	    if (TCL_OK != Tcl_GetDoubleFromObj(interp, valueObj, &aspectValue)) {
 		return TCL_ERROR;
 	    }
 
