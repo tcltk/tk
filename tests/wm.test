@@ -2358,10 +2358,10 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints withWindowManager -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
     deleteWindows
     set result {}
-} -body {
+} -constrants {aquaKnownBug withWindowManager} -body {
     # Verifies that transients stay on top of their toplevels, even if they were
     # made transients when those toplevels were withdrawn.
     toplevel .t1; wm withdraw  .t1;     update
