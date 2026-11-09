@@ -28,18 +28,18 @@ Associates the virtual event \fIvirtual\fR with the physical
 event sequence(s) given by the \fIsequence\fR arguments, so that
 the virtual event will trigger whenever any one of the \fIsequence\fRs
 occurs.
-\fIVirtual\fR may be any string value and \fIsequence\fR may have
+\fIvirtual\fR may be any string value and \fIsequence\fR may have
 any of the values allowed for the \fIsequence\fR argument to the
 \fBbind\fR command.
 If \fIvirtual\fR is already defined, the new physical event sequences
 add to the existing sequences for the event.
 .\" METHOD: delete
 .TP
-\fBevent delete <<\fIvirtual\fB>> \fR?\fIsequence sequence ...\fR?
+\fBevent delete <<\fIvirtual\fB>> \fR?\fIsequence ...\fR?
 .
 Deletes each of the \fIsequence\fRs from those associated with
 the virtual event given by \fIvirtual\fR.
-\fIVirtual\fR may be any string value and \fIsequence\fR may have
+\fIvirtual\fR may be any string value and \fIsequence\fR may have
 any of the values allowed for the \fIsequence\fR argument to the
 \fBbind\fR command.
 Any \fIsequence\fRs not currently associated with \fIvirtual\fR
@@ -49,7 +49,7 @@ are removed for \fIvirtual\fR, so that the virtual event will not
 trigger anymore.
 .\" METHOD: generate
 .TP
-\fBevent generate \fIwindow event \fR?\fIoption value option value ...\fR?
+\fBevent generate \fIwindow event \fR?\fIoption value ...\fR?
 .
 Generates a window event and arranges for it to be processed just as if
 it had come from the window system.

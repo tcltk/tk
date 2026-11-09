@@ -32,16 +32,16 @@ event - Miscellaneous event facilities: define virtual events and generate event
 
 The **event** command provides several facilities for dealing with window system events, such as defining virtual events and synthesizing events.  The command has several different forms, determined by the first argument.  The following forms are currently supported:
 
-[event]{.cmd} [add]{.sub} [<<=+virtual=§>>]{.lit} [sequence]{.arg} [sequence]{.optdot}
-: Associates the virtual event *virtual* with the physical event sequence(s) given by the *sequence* arguments, so that the virtual event will trigger whenever any one of the *sequence*s occurs. *Virtual* may be any string value and *sequence* may have any of the values allowed for the *sequence* argument to the [bind] command. If *virtual* is already defined, the new physical event sequences add to the existing sequences for the event.
+[event]{.cmd} [add]{.sub} [<<]{.lit}[virtual]{.arg}[>>]{.lit} [sequence]{.arg} [sequence]{.optdot}
+: Associates the virtual event *virtual* with the physical event sequence(s) given by the *sequence* arguments, so that the virtual event will trigger whenever any one of the *sequence*s occurs. *virtual* may be any string value and *sequence* may have any of the values allowed for the *sequence* argument to the [bind] command. If *virtual* is already defined, the new physical event sequences add to the existing sequences for the event.
 
-[event]{.cmd} [delete]{.sub} [<<=+virtual=§>>]{.lit} [sequence sequence]{.optdot}
-: Deletes each of the *sequence*s from those associated with the virtual event given by *virtual*. *Virtual* may be any string value and *sequence* may have any of the values allowed for the *sequence* argument to the [bind] command. Any *sequence*s not currently associated with *virtual* are ignored. If no *sequence* argument is provided, all physical event sequences are removed for *virtual*, so that the virtual event will not trigger anymore.
+[event]{.cmd} [delete]{.sub} [<<]{.lit}[virtual]{.arg}[>>]{.lit} [sequence]{.optdot}
+: Deletes each of the *sequence*s from those associated with the virtual event given by *virtual*. *virtual* may be any string value and *sequence* may have any of the values allowed for the *sequence* argument to the [bind] command. Any *sequence*s not currently associated with *virtual* are ignored. If no *sequence* argument is provided, all physical event sequences are removed for *virtual*, so that the virtual event will not trigger anymore.
 
-[event]{.cmd} [generate]{.sub} [window]{.arg} [event]{.arg} [option value option value]{.optdot}
+[event]{.cmd} [generate]{.sub} [window]{.arg} [event]{.arg} [option value]{.optdot}
 : Generates a window event and arranges for it to be processed just as if it had come from the window system. *Window* gives the path name of the window for which the event will be generated; it may also be an identifier (such as returned by [winfo id][winfo]) as long as it is for a window in the current application. *Event* provides a basic description of the event, such as **<Shift-Button-2>** or **<<Paste>>**. If *Window* is empty the whole screen is meant, and coordinates are relative to the screen. *Event* may have any of the forms allowed for the *sequence* argument of the [bind] command except that it must consist of a single event pattern, not a sequence. *Option-value* pairs may be used to specify additional attributes of the event, such as the x and y mouse position;  see [Event fields] below.  If the **-when** option is not specified, the event is processed immediately:  all of the handlers for the event will complete before the **event generate** command returns. If the **-when** option is specified then it determines when the event is processed.  Certain events, such as key events, require that the window has focus to receive the event properly.
 
-[event]{.cmd} [info]{.sub} [<<=+virtual=§>>]{.optlit}
+[event]{.cmd} [info]{.sub} [[<<]{.lit}[virtual]{.arg}[>>]{.lit}]{.optarg}
 : Returns information about virtual events. If the **<<***virtual***>>** argument is omitted, the return value is a list of all the virtual events that are currently defined. If **<<***virtual***>>** is specified then the return value is a list whose elements are the physical event sequences currently defined for the given virtual event;  if the virtual event is not defined then an empty string is returned.
 
     Note that virtual events that are not bound to physical event sequences are *not* returned by **event info**.

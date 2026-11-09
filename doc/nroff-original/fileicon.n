@@ -9,7 +9,7 @@
 .so man.macros
 .BS
 .SH NAME
-fileicon \- Platform-native icon image for file type/extension.
+tk fileicon \- Platform-native icon image for file type/extension.
 .SH SYNOPSIS
 \fBtk fileicon\fI file size\fR
 .BE

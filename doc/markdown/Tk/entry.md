@@ -66,8 +66,8 @@ See the [options] manual entry for details on the standard options.
 [-disabledforeground]{.cmdline} [disabledForeground]{.dbname} [DisabledForeground]{.dbclass}
 : Specifies the foreground color to use when the entry is disabled.  If this option is the empty string, the normal foreground color is used.
 
-[-invalidcommand or -invcmd]{.cmdline} [invalidCommand]{.dbname} [InvalidCommand]{.dbclass}
-: Specifies a script to eval when **-validatecommand** returns 0. Setting it to {} disables this feature (the default).  The best use of this option is to set it to *bell*.  See [Validation] below for more information.
+[-invalidcommand]{.cmdline} [invalidCommand]{.dbname} [InvalidCommand]{.dbclass}
+: (May be abbreviated as **-invcmd**) Specifies a script to eval when **-validatecommand** returns 0. Setting it to {} disables this feature (the default).  The best use of this option is to set it to *bell*.  See [Validation] below for more information.
 
 [-readonlybackground]{.cmdline} [readonlyBackground]{.dbname} [ReadonlyBackground]{.dbclass}
 : Specifies the background color to use when the entry is readonly.  If this option is the empty string, the normal background color is used.
@@ -79,10 +79,10 @@ See the [options] manual entry for details on the standard options.
 : Specifies one of three states for the entry:  **normal**, **disabled**, or **readonly**.  If the entry is readonly, then the value may not be changed using widget commands and no insertion cursor will be displayed, even if the input focus is in the widget; the contents of the widget may still be selected.  If the entry is disabled, the value may not be changed, no insertion cursor will be displayed, the contents will not be selectable, and the entry may be displayed in a different color, depending on the values of the **-disabledforeground** and **-disabledbackground** options.
 
 [-validate]{.cmdline} [validate]{.dbname} [Validate]{.dbclass}
-: Specifies the mode in which validation should operate: **none**, [focus], **focusin**, **focusout**, **key**, or **all**. It defaults to **none**.  When you want validation, you must explicitly state which mode you wish to use.  See [Validation] below for more.
+: Specifies the mode in which validation should operate: **none**, **focus**, **focusin**, **focusout**, **key**, or **all**. It defaults to **none**.  When you want validation, you must explicitly state which mode you wish to use.  See [Validation] below for more.
 
-[-validatecommand or -vcmd]{.cmdline} [validateCommand]{.dbname} [ValidateCommand]{.dbclass}
-: Specifies a script to eval when you want to validate the input into the entry widget.  Setting it to {} disables this feature (the default). This command must return a valid Tcl boolean value.  If it returns 0 (or the valid Tcl boolean equivalent) then it means you reject the new edition and it will not occur and the **-invalidcommand** will be evaluated if it is set. If it returns 1, then the new edition occurs. See [Validation] below for more information.
+[-validatecommand]{.cmdline} [validateCommand]{.dbname} [ValidateCommand]{.dbclass}
+: (May be abbreviated as **-vcmd***) Specifies a script to eval when you want to validate the input into the entry widget.  Setting it to {} disables this feature (the default). This command must return a valid Tcl boolean value.  If it returns 0 (or the valid Tcl boolean equivalent) then it means you reject the new edition and it will not occur and the* **-invalidcommand** will be evaluated if it is set. If it returns 1, then the new edition occurs. See [Validation] below for more information.
 
 [-width]{.cmdline} [width]{.dbname} [Width]{.dbclass}
 : Specifies an integer value indicating the desired width of the entry window, in average-size characters of the widget's font. If the value is negative or zero, the widget picks a size just large enough to hold its current text.
@@ -103,7 +103,7 @@ Validation works by setting the **-validatecommand** option to a script (*valida
 **none**
 : Default.  This means no validation will occur.
 
-[focus]
+**focus**
 : *validateCommand* will be called when the entry receives or loses focus.
 
 **focusin**
@@ -332,7 +332,6 @@ The behavior of entries can be changed by defining new bindings for individual w
 
 [bind]: bind.md
 [ConfigWidg]: ../TkCAPI/ConfigWidg.md
-[focus]: focus.md
 [options]: options.md
 [scan]: ../Tcl/scan.md
 

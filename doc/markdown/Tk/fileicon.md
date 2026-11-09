@@ -14,7 +14,7 @@ Copyright:
 
 # Name
 
-fileicon - Platform-native icon image for file type/extension.
+tk fileicon - Platform-native icon image for file type/extension.
 
 # Synopsis
 
