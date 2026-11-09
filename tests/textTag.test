@@ -1546,7 +1546,7 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
-} -constrants aquaKnownBug -body {
+} -constraints aquaKnownBug -body {
     # Move the cursor out of the way.
     event generate . <Motion> -warp 1 -x 800 -y 500
     controlPointerWarpTiming
