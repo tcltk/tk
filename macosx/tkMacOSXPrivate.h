@@ -431,6 +431,8 @@ VISIBILITY_HIDDEN
     NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
+@property Bool hasBeenExposed;
+@property int orderFrontCount;
 @end
 
 @interface TKContentView(TKKeyEvent)

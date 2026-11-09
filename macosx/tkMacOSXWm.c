@@ -600,10 +600,24 @@ static void placeAsTab(TKWindow *macWindow) {
  *  Otherwise it does nothing.
  */
 
+static void orderPanelFrontLater(void *clientData) {
+    TKPanel *macWin = (TKPanel*)clientData;
+    TKContentView *view = [macWin contentView];
+    view.orderFrontCount += 1;
+    [macWin tkOrderFront];
+    [macWin release];
+}
+
 - (void) tkOrderFront
 {
+    TKContentView *view = (TKContentView*)[self contentView];
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	if (!view.hasBeenExposed && view.orderFrontCount < 5) {
+	    [self retain];
+	    Tcl_DoWhenIdle(orderPanelFrontLater, self);
+	    return;
+	}
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	if (!wmPtr || (wmPtr->flags & WM_IS_HIDDEN) == 0) {
 	    [self makeKeyAndOrderFront:nil];
@@ -635,25 +649,40 @@ static void placeAsTab(TKWindow *macWindow) {
  *  Otherwise it does nothing.
  */
 
+static void orderWindowFrontLater(void *clientData) {
+    TKWindow *macWin = (TKWindow *)clientData;
+    TKContentView *view = [macWin contentView];
+    view.orderFrontCount += 1;
+    [macWin tkOrderFront];
+    [macWin release];
+}
+
 - (void) tkOrderFront
 {
 #if 0
     NSArray *stack = [NSThread callStackSymbols];
-    if ([stack count] > 1) { // Fixed syntax error here
+    if ([stack count] > 1) {
 	NSLog(@"Caller: %@", stack[1]);
     }
 #endif
+    TKContentView *view = (TKContentView*)[self contentView];
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	if (!view.hasBeenExposed && view.orderFrontCount < 5) {
+	    [self retain];
+	    Tcl_DoWhenIdle(orderWindowFrontLater, self);
+	    return;
+	}
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	if (!wmPtr || (wmPtr->flags & WM_IS_HIDDEN) == 0) {
 #if 0
-	    fprintf(stderr, "Window %s was ordered front @ %.8f\n", Tk_PathName(winPtr),
-		CACurrentMediaTime());
+	    fprintf(stderr, "Window %s was ordered front @ %.8f\n",
+		    Tk_PathName(winPtr), CACurrentMediaTime());
 #endif
 	    [self makeKeyAndOrderFront:nil];
 #if 0
-	    fprintf(stderr, "Orderfront returned @ %.8f\n", CACurrentMediaTime());
+	    fprintf(stderr, "Orderfront returned @ %.8f\n",
+		    CACurrentMediaTime());
 	    PRINT_STACK;
 #endif
 	}
@@ -1847,18 +1876,21 @@ WmSetAttribute(
 	unsigned long styleMaskValue = 0;
 	Tcl_Obj **elements;
 	Tcl_Size nElements, i;
-	if (Tcl_ListObjGetElements(interp, value, &nElements, &elements) == TCL_OK) {
+	if (Tcl_ListObjGetElements(interp, value, &nElements,
+				   &elements) == TCL_OK) {
 	    int index;
 	    for (i = 0; i < nElements; i++) {
-		if (Tcl_GetIndexFromObjStruct(interp, elements[i], styleMaskBits,
-		       sizeof(styleMaskBit), "styleMask bit", 0, &index) != TCL_OK) {
+		if (Tcl_GetIndexFromObjStruct(interp, elements[i],
+		       styleMaskBits, sizeof(styleMaskBit), "styleMask bit",
+		       0, &index) != TCL_OK) {
 		    return TCL_ERROR;
 		} else if (![macWindow isKindOfClass: [NSPanel class]] &&
-			   styleMaskBits[index].allowed == NSWindowClass_panel) {
+		    styleMaskBits[index].allowed == NSWindowClass_panel) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"styleMask bit \"%s\" can only be used with an NSPanel",
+		      "styleMask bit \"%s\" can only be used with an NSPanel",
 			styleMaskBits[index].bitname));
-		    Tcl_SetErrorCode(interp, "TK", "INVALID_STYLEMASK_BIT", (char *)NULL);
+		    Tcl_SetErrorCode(interp, "TK", "INVALID_STYLEMASK_BIT",
+			(char *)NULL);
 		    return TCL_ERROR;
 		} else {
 		    styleMaskValue |= styleMaskBits[index].bitvalue;
@@ -1892,16 +1924,21 @@ WmSetAttribute(
 		    styleMaskValue |= NSWindowStyleMaskNonactivatingPanel;
 		}
 	    }
-	    macWindow.titlebarAppearsTransparent = (styleMaskValue & NSWindowStyleMaskFullSizeContentView) != 0;
+	    macWindow.titlebarAppearsTransparent = (
+	       styleMaskValue & NSWindowStyleMaskFullSizeContentView) != 0;
 } else {
 	    return TCL_ERROR;
 	}
 	NSRect oldFrame = [macWindow frame];
+	if (oldFrame.size.width == 1) {
+	    oldFrame.size = NSMakeSize(200, 200);
+	}
 #ifdef DEBUG
 	fprintf(stderr, "Current styleMask: %lx\n", [macWindow styleMask]);
 	fprintf(stderr, "Setting styleMask to %lx\n", styleMaskValue);
 #endif
 	macWindow.styleMask = (unsigned long) styleMaskValue;
+	[macWindow setFrame: oldFrame display:YES];
 	NSRect newFrame = [macWindow frame];
 	int heightDiff = newFrame.size.height - oldFrame.size.height;
 	int newHeight = heightDiff < 0 ? newFrame.size.height :
