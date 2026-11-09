@@ -173,7 +173,8 @@ to the userbase.
  - [Tk 9.1.0 fails to cross-build from sources](https://core.tcl-lang.org/tk/tktview/acb368)
  - [X11: wm attributes -zoomed does not maximize the window under xfwm4 and fvwm](https://core.tcl-lang.org/tk/tktview/f126a0)
  - [X11: wm geometry of a toplevel moved while iconified is too low by the title bar under KWin](https://core.tcl-lang.org/tk/tktview/f23a58)
- - [disallow "wm forget ."](https://core.tcl-lang.org/tk/tktview/9ab6e37e1acbcd9a)
+ - [disallow "wm forget ."](https://core.tcl-lang.org/tk/tktview/9ab6e3)
+ - [wm iconbitmap/wm iconmask leak previously set bitmap](https://core.tcl-lang.org/tk/tktview/f13541)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
