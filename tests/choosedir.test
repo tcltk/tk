@@ -145,6 +145,36 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 	    -parent $parent
 } -result $real
 
+test choosedir-6.1 {tk_chooseDirectory, tk_getOpenFile after auto_reset} -constraints {
+	unix notAqua
+} -setup {
+    set child [interp create]
+    $child eval {
+	package require tk
+	set errors {}
+	interp bgerror {} {apply {{msg opts} {lappend ::errors $msg}}}
+	proc Cancel {w} {
+	    after 100 [list after idle [list $w.contents.f2.cancel invoke]]
+	}
+    }
+} -body {
+    $child eval {
+	Cancel .__tk_choosedir
+	tk_chooseDirectory
+	Cancel .__tk_filedialog
+	tk_getOpenFile
+	auto_reset
+	Cancel .__tk_choosedir
+	tk_chooseDirectory
+	Cancel .__tk_filedialog
+	tk_getOpenFile
+	set errors
+    }
+} -cleanup {
+    interp delete $child
+    unset child
+} -result {}
+
 #
 # TESTFILE CLEANUP
 #
