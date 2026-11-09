@@ -37,7 +37,8 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     #
     if {![winfo exists $w]} {
 	::tk::dialog::file::Create $w TkChooseDir
-    } elseif {[winfo class $w] ne "TkChooseDir"} {
+    } elseif {[winfo class $w] ne "TkChooseDir"
+	    || [info commands $w.contents.icons] eq ""} {
 	destroy $w
 	::tk::dialog::file::Create $w TkChooseDir
     } else {

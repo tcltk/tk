@@ -12,6 +12,12 @@
 
 package require tk
 
+# Allow re-sourcing this file after [auto_reset] destroyed ::tk::Megawidget
+# (and with it all classes it created) but left ::tk::MegawidgetClass behind.
+if {[info commands ::tk::Megawidget] eq ""} {
+    catch {::tk::MegawidgetClass destroy}
+}
+
 ::oo::class create ::tk::Megawidget {
     superclass ::oo::class
     method unknown {w args} {

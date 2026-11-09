@@ -175,6 +175,7 @@ to the userbase.
  - [X11: wm geometry of a toplevel moved while iconified is too low by the title bar under KWin](https://core.tcl-lang.org/tk/tktview/f23a58)
  - [disallow "wm forget ."](https://core.tcl-lang.org/tk/tktview/9ab6e3)
  - [wm iconbitmap/wm iconmask leak previously set bitmap](https://core.tcl-lang.org/tk/tktview/f13541)
+ - [Filesystem dialogs conflict with auto_reset (under Linux)](https://core.tcl-lang.org/tk/tktview/3da059)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
