@@ -637,7 +637,7 @@ if {$::tk_library ne ""} {
 	    SourceLibFile systray
 	}
 	SourceLibFile text
-	SourceLibFile wayland
+	#SourceLibFile wayland
     }
 }
 
@@ -1016,7 +1016,7 @@ if {$::ttk::library ne ""} {
 }
 
 if {[tk windowingsystem] eq "wayland"} {
-    after idle rename_wayland_clipboard
+  # after idle rename_wayland_clipboard
 }
 
 # Local Variables:
