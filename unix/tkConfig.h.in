@@ -241,12 +241,6 @@
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type 'char' is unsigned and your compiler does not
-   predefine this macro.  */
-#ifndef __CHAR_UNSIGNED__
-# undef __CHAR_UNSIGNED__
-#endif
-
 /* Define as 'int' if <sys/types.h> doesn't define. */
 #undef gid_t
 
