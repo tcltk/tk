@@ -3898,14 +3898,20 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-            TCL_UNUSED(Tk_Window),
+            Tk_Window mainWin,
             TkWindow *winPtr,
-            TCL_UNUSED(Tcl_Interp *),
+            Tcl_Interp *interp,
             TCL_UNUSED(int),
             TCL_UNUSED(Tcl_Obj *const *))
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
 
+    if (frameWin == mainWin) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"window \".\" can not be forgotten", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "WM", "FORGET", ".", (char *)NULL);
+	return TCL_ERROR;
+    }
     if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
 	TkFocusJoin(winPtr);
 	Tk_UnmapWindow(frameWin);
