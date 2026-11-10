@@ -880,6 +880,15 @@ static struct {
 
 /* Global IBus state. */
 sd_bus *ibus_bus = NULL;
+
+/*
+ * IBus does not always answer promptly, and a synchronous call blocks the
+ * event loop of Tk (under GNOME, for up to the default timeout of 25 s on
+ * every focus change).  Calls whose reply is not needed are therefore sent
+ * without waiting for it, and the calls whose reply is needed wait at most
+ * IBUS_CALL_TIMEOUT microseconds.
+ */
+#define IBUS_CALL_TIMEOUT 500000
 IbusContext *all_contexts = NULL;
 
 /*
@@ -1740,16 +1749,13 @@ RemoveIbusContext(Tk_Window tkwin)
 static void IbusFocusIn(IbusContext *ctx)
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return;
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_call_method(ibus_bus,
+    sd_bus_call_method_async(ibus_bus, NULL,
                        IBUS_SERVICE,
                        ctx->obj_path,
                        IBUS_IC_INTERFACE,
                        "FocusIn",
-                       &error,
-                       NULL,
+                       NULL, NULL,
                        "");
-    sd_bus_error_free(&error);
 }
 
 /*
@@ -1769,16 +1775,13 @@ static void IbusFocusIn(IbusContext *ctx)
 static void IbusFocusOut(IbusContext *ctx)
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return;
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_call_method(ibus_bus,
+    sd_bus_call_method_async(ibus_bus, NULL,
                        IBUS_SERVICE,
                        ctx->obj_path,
                        IBUS_IC_INTERFACE,
                        "FocusOut",
-                       &error,
-                       NULL,
+                       NULL, NULL,
                        "");
-    sd_bus_error_free(&error);
 }
 
 /*
@@ -1799,16 +1802,13 @@ static void IbusEnable(IbusContext *ctx)
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return;
     if (ctx->enabled) return;
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_call_method(ibus_bus,
+    sd_bus_call_method_async(ibus_bus, NULL,
                        IBUS_SERVICE,
                        ctx->obj_path,
                        IBUS_IC_INTERFACE,
                        "Enable",
-                       &error,
-                       NULL,
+                       NULL, NULL,
                        "");
-    sd_bus_error_free(&error);
     ctx->enabled = 1;
 }
 
@@ -1830,16 +1830,13 @@ static void IbusDisable(IbusContext *ctx)
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return;
     if (!ctx->enabled) return;
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_call_method(ibus_bus,
+    sd_bus_call_method_async(ibus_bus, NULL,
                        IBUS_SERVICE,
                        ctx->obj_path,
                        IBUS_IC_INTERFACE,
                        "Disable",
-                       &error,
-                       NULL,
+                       NULL, NULL,
                        "");
-    sd_bus_error_free(&error);
     ctx->enabled = 0;
 }
 
@@ -1889,6 +1886,15 @@ static int IbusProcessKeyEvent(
         DEBUG_LOG("    ProcessKeyEvent failed: %s",
                 error.message ? error.message : strerror(-r));
         sd_bus_error_free(&error);
+        if (r == -ETIMEDOUT) {
+            /*
+             * Tk handles the key itself.  Discard what IBus may still
+             * compose from it, so that the key is not committed twice.
+             */
+            sd_bus_call_method_async(ibus_bus, NULL, IBUS_SERVICE,
+                    ctx->obj_path, IBUS_IC_INTERFACE, "Reset",
+                    NULL, NULL, "");
+        }
         return 0;
     }
 
@@ -1939,23 +1945,19 @@ IbusSendCaret(
     int relY,
     int height)
 {
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-
     if (!ctx || !ibus_bus || !ctx->obj_path) return;
 
-    sd_bus_call_method(ibus_bus,
+    sd_bus_call_method_async(ibus_bus, NULL,
                        IBUS_SERVICE,
                        ctx->obj_path,
                        IBUS_IC_INTERFACE,
                        "SetCursorLocationRelative",
-                       &error,
-                       NULL,
+                       NULL, NULL,
                        "iiii",
                        (int32_t) relX,
                        (int32_t) relY,
                        (int32_t) 0,      /* width = 0 (caret). */
                        (int32_t) height);
-    sd_bus_error_free(&error);
 
     ctx->caretSent   = 1;
     ctx->caretX      = relX;
@@ -2234,7 +2236,7 @@ TkWaylandIbusCreateContext(
 
     /* Set capabilities. */
     uint32_t caps = IBUS_CAP_PREEDIT_TEXT | IBUS_CAP_FOCUS;
-    r = sd_bus_call_method(ibus_bus,
+    r = sd_bus_call_method_async(ibus_bus, NULL,
                            IBUS_SERVICE,
                            ctx->obj_path,
                            IBUS_IC_INTERFACE,
@@ -2255,8 +2257,8 @@ TkWaylandIbusCreateContext(
      */
     IbusFocusIn(ctx);
     IbusEnable(ctx);
-    sd_bus_call_method(ibus_bus, IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
-                   "Reset", &error, NULL, "");
+    sd_bus_call_method_async(ibus_bus, NULL, IBUS_SERVICE, ctx->obj_path,
+                   IBUS_IC_INTERFACE, "Reset", NULL, NULL, "");
     IbusReplayCaret(ctx);
 
     DEBUG_LOG("CreateIbusContext: Successfully added context for window %p", tkwin);
@@ -2784,6 +2786,7 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
         ibus_bus = NULL;
         return TCL_ERROR;
     }
+    sd_bus_set_method_call_timeout(ibus_bus, IBUS_CALL_TIMEOUT);
 
     /*
      * Sanity-check: call GetGlobalEngine to confirm the IBus object exists.
