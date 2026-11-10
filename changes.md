@@ -176,6 +176,7 @@ to the userbase.
  - [disallow "wm forget ."](https://core.tcl-lang.org/tk/tktview/9ab6e3)
  - [wm iconbitmap/wm iconmask leak previously set bitmap](https://core.tcl-lang.org/tk/tktview/f13541)
  - [Filesystem dialogs conflict with auto_reset (under Linux)](https://core.tcl-lang.org/tk/tktview/3da059)
+ - [text widget, Windows: newline chunk gets a negative width](https://core.tcl-lang.org/tk/tktview/f3d964)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

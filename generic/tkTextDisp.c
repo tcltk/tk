@@ -10262,6 +10262,19 @@ CharChunkMeasureChars(
 	    *nextXPtr = (ciPtr->numBytes > 0) ? startX + 1 : startX;
 	}
 
+	/*
+	 * The Windows backend (Uniscribe) can return a non-monotonic
+	 * position when the measured range ends with a control character
+	 * such as '\n': the returned right edge may be to the left of the
+	 * span start, producing chunks with negative width (e.g. the
+	 * newline chunk), which corrupts DLine length and justification.
+	 * Clamp to the span start so such characters get zero width.
+	 */
+
+	if (*nextXPtr < startX) {
+	    *nextXPtr = startX;
+	}
+
 	if (fit < bstart) {
 	    return 0;
 	} else {
