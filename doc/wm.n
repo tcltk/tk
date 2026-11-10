@@ -67,7 +67,7 @@ should see the notes below):
 Specifies the alpha transparency level of the toplevel. It accepts a value
 from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values outside that
 range will be constrained.  Where not supported, the \fB\-alpha\fR value
-remains at \fB1.0\fR.
+remains at \fB1.0\fR. This setting may not be honored on Wayland. 
 .\" OPTION: -appearance
 .TP
 \fB\-appearance\fR
@@ -88,7 +88,7 @@ Windows, dock and menubar on macOS, general window decorations on X11).
 .TP
 \fB\-topmost\fR
 .
-Specifies whether this is a topmost window (displays above all other windows).
+Specifies whether this is a topmost window (displays above all other windows). This setting may not be honored on Wayland.
 .PP
 On Windows, the following attributes may be set.
 .\" OPTION: -disabled
@@ -419,7 +419,7 @@ may be omitted.  \fIWidth\fR and \fIheight\fR are positive integers
 specifying the desired dimensions of \fIwindow\fR.  If \fIwindow\fR
 is gridded (see \fBGRIDDED GEOMETRY MANAGEMENT\fR below) then the dimensions
 are specified in grid units;  otherwise they are specified in pixel
-units.
+units. On Wayland, this command will support the window width and height, but screen position may be ignored.
 .RS
 .PP
 \fIX\fR and \fIy\fR specify the desired location of
@@ -529,6 +529,8 @@ otherwise each button in the taskbar shows the badge it was assigned.
 Badge display on macOS is configured in the system preferences. App
 panel display behavior on X11 will depend on the window manager and/or
 desktop environment.
+.PP
+On Wayland, this command has no effect. 
 .RE
 .\" METHOD: iconbitmap
 .TP
@@ -559,6 +561,8 @@ file for which the shell has assigned an icon.  Tcl will
 first test if the file contains an icon, then if it has an assigned
 icon, and finally, if that fails, test for
 a bitmap.
+.PP
+On Wayland, this command is not supported. 
 .RE
 .\" METHOD: iconify
 .TP
@@ -625,6 +629,8 @@ script level the command will accept only the first image passed in the
 parameters as support for multiple sizes/resolutions on macOS is outside Tk's
 scope. Developers should use the largest icon they can support
 (preferably 512 pixels) to ensure smooth rendering on the Mac.
+.PP
+On Wayland, this command has no effect. Custom icons can specificed in the XDG-protocol .deskstop file.
 .RE
 .\" METHOD: iconposition
 .TP
@@ -723,6 +729,8 @@ Note that the override-redirect flag is only guaranteed to be taken notice of
 when the window is first mapped or when mapped after the state is changed from
 withdrawn to normal. Some, but not all, platforms will take notice at
 additional times.
+.PP
+On Wayland, overrideredirect is implemented as a subsurface of a toplevel window, and is not an independent toplevel. 
 .RE
 .\" METHOD: positionfrom
 .TP
@@ -886,7 +894,7 @@ acyclic.  In particular, it is an error to attempt to make a window a
 transient of itself.  The window manager may also decorate a transient
 window differently, removing some features normally present (e.g.,
 minimize and maximize buttons) though this is entirely at the
-discretion of the window manager.
+discretion of the window manager or compositor.
 .\" METHOD: widthdraw
 .TP
 \fBwm withdraw \fIwindow\fR

@@ -45,7 +45,7 @@ API. Because there are slight differences in how GDI and Tk's \fBcanvas\fR
 widget display graphics, printed output from the \fBcanvas\fR on Windows may
 not be identical to screen rendering.
 .TP
-\fBX11\fR
+\fBX11 and Wayland\fR
 .
 The X11 implementation uses a Tk GUI to configure print jobs for sending to a
 printer via the

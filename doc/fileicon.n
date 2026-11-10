@@ -26,7 +26,7 @@ pack [label .l -text "text.txt" -image $img -compound top]
 .CE
 .SH PLATFORM NOTES
 .PP
-On Windows and macOS, system API's are used; on X11, icons from the Tango project - the default icon theme for the Gnome desktop - are used.
+On Windows and macOS, system API's are used; on X11 and Wayland, icons from the Tango project - the default icon theme for the Gnome desktop - are used.
 .
 .SH KEYWORDS
 image, icon

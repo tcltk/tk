@@ -71,6 +71,8 @@ A \fB\-\|\-\fR argument may be specified to mark the end of options:  the
 next argument will always be used as \fIdata\fR.
 This feature may be convenient if, for example, \fIdata\fR starts
 with a \fB\-\fR.
+.PP
+On Wayland, STRING formats are supported.
 .RE
 .\" METHOD: clear
 .TP

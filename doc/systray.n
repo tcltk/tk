@@ -72,6 +72,8 @@ dependent on the window manager. The "text" flag, which is implemented as
 a tooltip, does not always display if the WM does not support such features;
 the systray icon itself may not even display with some window managers.
 .PP
+On Wayland, compositor support for the systray may vary, and require the separate installation of libraries supporting the D-Bus StatusNotifierItem protocol.
+.PP
 On Windows, the Tk image provided in the \fB\-image\fR option must be a
 photo image. On other platforms either a bitmap image or a photo image
 may be provided.

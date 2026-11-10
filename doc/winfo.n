@@ -92,7 +92,7 @@ or border of its highest containing toplevel in this application.
 (Note that with some window managers the borders may be invisible.)
 In selecting the containing window, children are given higher priority
 than parents and among siblings the highest one in the stacking order is
-chosen.
+chosen. On Wayland this command is defined in window-local coordinates, not global coordinates.
 .\" METHOD: depth
 .TP
 \fBwinfo depth \fIwindow\fR
@@ -144,7 +144,7 @@ instead of its actual height.
 Returns a hexadecimal string giving a low-level platform-specific
 identifier for \fIwindow\fR.  On Unix platforms, this is the X
 window identifier.  Under Windows, this is the Windows
-HWND.  On the Macintosh the value has no meaning outside Tk.
+HWND.  On the Macintosh and Wayalnd the value has no meaning outside Tk.
 .\" METHOD: interps
 .TP
 \fBwinfo interps \fR?\fB\-displayof \fIwindow\fR?
@@ -221,7 +221,7 @@ pointer's x coordinate, measured in pixels in the screen's root window.
 If a virtual root window is in use on the screen, the position is
 measured in the virtual root.
 If the mouse pointer is not on the same screen as \fIwindow\fR then
--1 is returned.
+-1 is returned. On Wayland this is always defined relative to the toplevel. 
 .\" METHOD: pointerxy
 .TP
 \fBwinfo pointerxy \fIwindow\fR
@@ -232,7 +232,7 @@ in pixels in the screen's root window.
 If a virtual root window is in use on the screen, the position
 is computed in the virtual root.
 If the mouse pointer is not on the same screen as \fIwindow\fR then
-both of the returned coordinates are \-1.
+both of the returned coordinates are \-1.  On Wayland this is always defined relative to the toplevel.
 .\" METHOD: pointery
 .TP
 \fBwinfo pointery \fIwindow\fR
@@ -242,7 +242,7 @@ pointer's y coordinate, measured in pixels in the screen's root window.
 If a virtual root window is in use on the screen, the position
 is computed in the virtual root.
 If the mouse pointer is not on the same screen as \fIwindow\fR then
--1 is returned.
+-1 is returned.  On Wayland this is always defined relative to the toplevel.
 .\" METHOD: reqheight
 .TP
 \fBwinfo reqheight \fIwindow\fR
@@ -274,7 +274,7 @@ option.
 Returns a decimal string giving the x-coordinate, in the root
 window of the screen, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
-has no border).
+has no border). On Wayland this is always defined relative to the toplevel coordinates because Wayland has no concept of absolute screen coordinates. 
 .\" METHOD: rooty
 .TP
 \fBwinfo rooty \fIwindow\fR
@@ -282,7 +282,7 @@ has no border).
 Returns a decimal string giving the y-coordinate, in the root
 window of the screen, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
-has no border).
+has no border). On Wayland this is always defined relative to the toplevel coordinates because Wayland has no concept of absolute screen coordinates. 
 .\" METHOD: screen
 .TP
 \fBwinfo screen \fIwindow\fR
