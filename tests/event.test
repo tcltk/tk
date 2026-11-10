@@ -88,12 +88,12 @@ proc _keypress {win key} {
 	focus -force $win
     }
     event generate $win <Key-$keysym>
-    pause 50
+    pause -eyefriendly 50
     if {[focus] ne $win} {
 	focus -force $win
     }
     event generate $win <KeyRelease-$keysym>
-    pause 50
+    pause -eyefriendly 50
 }
 
 # _keypress_lookup --
@@ -326,9 +326,9 @@ test event-2.3(keypress) {type into entry widget, triple click, hit Delete key,
 
     event generate $e <Enter>
     for {set i 0} {$i < 3} {incr i} {
-	pause 100
+	pause -eyefriendly 100
 	event generate $e <Button-1>
-	pause 100
+	pause -eyefriendly 100
 	event generate $e <ButtonRelease-1>
     }
 
@@ -381,9 +381,9 @@ test event-2.6(keypress) {type into text widget, triple click,
 
     event generate $e <Enter>
     for {set i 0} {$i < 3} {incr i} {
-	pause 100
+	pause -eyefriendly 100
 	event generate $e <Button-1>
-	pause 100
+	pause -eyefriendly 100
 	event generate $e <ButtonRelease-1>
     }
 
@@ -426,11 +426,11 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 	event generate $e <B1-Motion> -x $current_x -y $current_y
 	set current [$e index [list $current + 1 char]]
-	pause 50
+	pause -eyefriendly 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
-    pause 200
+    pause -eyefriendly 200
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
@@ -446,11 +446,11 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 	event generate $e <B1-Motion> -x $current_x -y $current_y
 	set current [$e index [list $current - 1 char]]
-	pause 50
+	pause -eyefriendly 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
-    pause 200
+    pause -eyefriendly 200
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
@@ -493,11 +493,11 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 	event generate $e <B1-Motion> -x $current_x -y $current_y
 	incr current
-	pause 50
+	pause -eyefriendly 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
-    pause 200
+    pause -eyefriendly 200
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
@@ -513,11 +513,11 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 	event generate $e <B1-Motion> -x $current_x -y $current_y
 	incr current -1
-	pause 50
+	pause -eyefriendly 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
-    pause 200
+    pause -eyefriendly 200
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
@@ -547,11 +547,11 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
     # Click down, release, then click down again
     event generate $e <Enter>
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
 
     # Save the highlighted text
     set result [list]
@@ -565,7 +565,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     # Insert cursor should be before the l in "select"
     lappend result [$e index insert]
@@ -578,7 +578,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
 
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 200
+    pause -eyefriendly 200
 
     lappend result [$e index insert]
     lappend result [_get_selection $e]
@@ -588,7 +588,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     # Selection should now be "Word select"
     lappend result [_get_selection $e]
@@ -618,11 +618,11 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
     # Click down, release, then click down again
     event generate $e <Enter>
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
 
     set result [list]
     lappend result [_get_selection $e]
@@ -635,7 +635,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     # Insert cursor should be before the l in "select"
     lappend result [$e index insert]
@@ -648,7 +648,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     lappend result [$e index insert]
     lappend result [_get_selection $e]
@@ -658,7 +658,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     # Selection should now be "Word select"
     lappend result [_get_selection $e]
@@ -690,17 +690,17 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
     event generate $e <Enter>
 
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
 
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
 
     event generate $e <Button-1> -x $anchor_x -y $anchor_y
-    pause 50
+    pause -eyefriendly 50
 
     set result [list]
     lappend result [_get_selection $e]
@@ -711,7 +711,7 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     lappend result [_get_selection $e]
 
@@ -721,7 +721,7 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
     foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
-    pause 50
+    pause -eyefriendly 50
 
     lappend result [_get_selection $e]
 
@@ -779,13 +779,13 @@ test event-7.1(double-click) {A double click on a lone character
 
     event generate $e <Enter>
     event generate $e <Button-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <Button-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
 
     set result [list]
     lappend result [$e index insert]
@@ -794,20 +794,20 @@ test event-7.1(double-click) {A double click on a lone character
     # Clear selection by clicking at 0,0
 
     event generate $e <Button-1> -x 0 -y 0
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x 0 -y 0
-    pause 50
+    pause -eyefriendly 50
 
     # Double click near right hand edge of the letter A
 
     event generate $e <Button-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <Button-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
 
     lappend result [$e index insert]
     lappend result [_get_selection $e]
@@ -846,13 +846,13 @@ test event-7.2(double-click) {A double click on a lone character
 
     event generate $e <Enter>
     event generate $e <Button-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <Button-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
-    pause 50
+    pause -eyefriendly 50
 
     set result [list]
     lappend result [$e index insert]
@@ -861,20 +861,20 @@ test event-7.2(double-click) {A double click on a lone character
     # Clear selection by clicking at 0,0
 
     event generate $e <Button-1> -x 0 -y 0
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x 0 -y 0
-    pause 50
+    pause -eyefriendly 50
 
     # Double click near right hand edge of the letter A
 
     event generate $e <Button-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <Button-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
-    pause 50
+    pause -eyefriendly 50
 
     lappend result [$e index insert]
     lappend result [_get_selection $e]

@@ -56,12 +56,17 @@ test bell-1.7 {bell command} -body {
 test bell-1.8 {bell command} -body {
     puts "Bell should ring now ..."
     flush stdout
-    after 200
+    #
+    # Pause after each invocation of "bell" to let the human ear discern the
+    # three separate beeps, if the test suite was invoked with the option
+    # "-eyefriendly 1". (This test ought interpret "eyefriendly" as "-earfriendly".)
+    #
     bell -displayof .
-    after 200
+    pause -eyefriendly 200
     bell -nice
-    after 200
+    pause -eyefriendly 200
     bell
+    pause -eyefriendly 200
 } -result {}
 
 #
