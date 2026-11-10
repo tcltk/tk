@@ -613,6 +613,13 @@ static void orderPanelFrontLater(void *clientData) {
     TKContentView *view = (TKContentView*)[self contentView];
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	/*
+	 * If we order a newly created panel front before any drawing has been
+	 * done then we get a very ugly black window or a flash of black before
+	 * the contents appear.  So we wait, by scheduling an idle task to call
+	 * to this method, until the first Expose event is received.  We only
+	 * allow 5 reschedulings, to avoid a loop.
+	 */
 	if (!view.hasBeenExposed && view.orderFrontCount < 5) {
 	    [self retain];
 	    Tcl_DoWhenIdle(orderPanelFrontLater, self);
@@ -659,15 +666,16 @@ static void orderWindowFrontLater(void *clientData) {
 
 - (void) tkOrderFront
 {
-#if 0
-    NSArray *stack = [NSThread callStackSymbols];
-    if ([stack count] > 1) {
-	NSLog(@"Caller: %@", stack[1]);
-    }
-#endif
     TKContentView *view = (TKContentView*)[self contentView];
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     if (winPtr && (winPtr->flags & TK_ALREADY_DEAD) == 0) {
+	/*
+	 * If we order a newly created window front before any drawing has been
+	 * done then we get a very ugly black window or a flash of black before
+	 * the contents appear.  So we wait, by scheduling an idle task to call
+	 * to this method, until the first Expose event is received.  We only
+	 * allow 5 reschedulings, to avoid a loop.
+	 */
 	if (!view.hasBeenExposed && view.orderFrontCount < 5) {
 	    [self retain];
 	    Tcl_DoWhenIdle(orderWindowFrontLater, self);
@@ -675,16 +683,7 @@ static void orderWindowFrontLater(void *clientData) {
 	}
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	if (!wmPtr || (wmPtr->flags & WM_IS_HIDDEN) == 0) {
-#if 0
-	    fprintf(stderr, "Window %s was ordered front @ %.8f\n",
-		    Tk_PathName(winPtr), CACurrentMediaTime());
-#endif
 	    [self makeKeyAndOrderFront:nil];
-#if 0
-	    fprintf(stderr, "Orderfront returned @ %.8f\n",
-		    CACurrentMediaTime());
-	    PRINT_STACK;
-#endif
 	}
     }
 }
