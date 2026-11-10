@@ -553,6 +553,7 @@ VISIBILITY_HIDDEN
 }
 @property const char *UTF8String;
 @property (readonly) Tcl_DString DString;
+- (instancetype)initWithTclObj:(Tcl_Obj *)obj;
 - (instancetype)initWithTclUtfBytes:(const void *)bytes
 			     length:(NSUInteger)len;
 @end

@@ -104,6 +104,13 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 
 @implementation TKNSString
 
+- (instancetype)initWithTclObj:(Tcl_Obj *)objPtr
+{
+    Tcl_Size len;
+    const char *bytes = Tcl_GetStringFromObj(objPtr, &len);
+    return [self initWithTclUtfBytes:bytes length:len];
+}
+
 - (instancetype)initWithTclUtfBytes:(const void *)bytes
 		       length:(NSUInteger)len
 {
