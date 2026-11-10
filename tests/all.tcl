@@ -16,7 +16,7 @@ package require tk ;# This is the Tk test suite; fail early if no Tk!
 package require tcltest 2.2
 
 #
-# TCLTEST CONFIGURATION
+# TCLTEST AND TKTEST CONFIGURATION
 #
 
 # Set defaults for the Tk test suite
@@ -27,22 +27,46 @@ if {[llength $argv] & 1} {
     puts stderr "error: the number of command line parameters must be even (name - value pairs)."
     exit 1
 }
+
+# tcltest options that are not configurable for the Tk test suite
 set ignoredOptions [list -testdir]
-set ignoredIndices [list ]
+
+#
+# Options that are specific for the Tk test suite:
+#
+# -eyefriendly	 : if set to one, test execution halts at appropriate places to
+#		   allow the human eye to follow the changes on the screen.
+#
+# -eyefriendlyMs : the time in milliseconds that program execution halts
+#		   to provide opportunity for the human eye to view the state
+#		   on the screen.
+#
+array set tktestConf {
+    -eyefriendly 0
+    -eyefriendlyMs 800
+}
+
 set index 0
+array set indices {
+    ignored {}
+    tkTestSuite {}
+}
 foreach {key value} $argv {
     if {$key in $ignoredOptions} {
-	lappend ignoredIndices $index
+	lappend indices(ignored) $index
 	puts stderr "warning: the Tk test suite ignores the option \"$key\" on the command line."
+    } elseif {$key in [array names tktestConf]} {
+	set tktestConf($key) $value
+	lappend indices(tkTestSuite) $index
     }
     incr index 2
 }
 set tcltestOptions $argv
-foreach index [lreverse $ignoredIndices] {
+foreach index [lsort -integer -decreasing [concat $indices(ignored) $indices(tkTestSuite)]] {
     set tcltestOptions [lreplace $tcltestOptions $index [expr {$index + 1}]]
 }
 tcltest::configure {*}$tcltestOptions
-unset ignoredIndices ignoredOptions index tcltestOptions
+unset ignoredOptions index indices tcltestOptions
 
 # Set tcltest options that are not user-configurable for the Tk test suite
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
