@@ -129,6 +129,7 @@ StartPrint(
     [printDelegate printPanelDidEnd: printPanel
 			 returnCode: accepted
 			contextInfo: printInfo];
+    [printDelegate release];
 
     return TCL_OK;
 }
