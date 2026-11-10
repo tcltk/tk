@@ -371,6 +371,7 @@ int MakePDF(
 
     NSData *viewData = (NSData*)pdfData;
     [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
+    [viewData release];
     return TCL_OK;
 
 }
