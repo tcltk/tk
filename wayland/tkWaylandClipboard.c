@@ -59,7 +59,9 @@ typedef struct WaylandClipboard {
     int sourceConfirmed;            /* Compositor echoed our source back. */
     int Initialized;                /* First-touch setup performed. */
     int ready;                      /* manager + seat + device all bound. */
-    int pumpInstalled;              /* Tcl file handler installed. */
+    struct wl_event_queue *queue;   /* Private queue for all our objects. */
+    int sourceInstalled;            /* Tcl event source registered. */
+    int kickLoop;                   /* Default queue left non-empty. */
     char *text;                     /* Owned copy, what we published. */
     size_t textLen;
 } WaylandClipboard;
@@ -69,7 +71,10 @@ static WaylandClipboard clip = {0};
 /* Forward declarations. */
 static void WaylandPublish(const char *text, size_t len);
 static void WaylandClear(void);
-static void WaylandPump(ClientData clientData, int mask);
+static void WaylandDispatch(void);
+static void ClipSourceSetup(ClientData clientData, int flags);
+static void ClipSourceCheck(ClientData clientData, int flags);
+static void ClipExitHandler(ClientData clientData);
 static void WaylandTryClaimSource(void);
 static void QueueClipboardLost(void);
 
@@ -745,23 +750,28 @@ static const struct wl_registry_listener registryListener = {
  * WaylandEnsureInitialized --
  *
  *      Non-blocking lazy initialization.  On first touch, grab the
- *      wl_display GLFW already owns, install the registry listener,
- *      and register the display fd with Tcl's event loop so incoming
- *      events (including the globals for wl_data_device_manager and
- *      wl_seat) are delivered by the normal event pump.  Do NOT
+ *      wl_display GLFW already owns and create a private wl_event_queue
+ *      for every clipboard object (registry, seat, keyboard, data
+ *      device, data source, data offers).  Objects inherit the queue of
+ *      the proxy that creates them, so everything below the registry
+ *      lands in this queue and GLFW's own objects stay in the default
+ *      queue.  The queue is serviced by a Tcl event source; no Tcl file
+ *      handler is installed on the display fd, because Tcl keeps one
+ *      handler per fd and ours would replace the notifier's.  Do NOT
  *      roundtrip here: that would block the main thread.
  *
  *      Returns 1 only when the clipboard is fully ready (display,
  *      manager, seat, and data device all present).  Callers that get
  *      0 simply drop their request; the next clipboard operation
- *      retries after the pump has had a chance to deliver globals.
+ *      retries after the globals have been delivered.
  *
  * Results:
  *      Returns 1 if the clipboard is ready, 0 otherwise.
  *
  * Side effects:
- *      On first call: creates registry, adds listener, registers
- *      display fd with Tcl.  Subsequent calls are cheap.
+ *      On first call: creates the event queue and registry, adds the
+ *      registry listener, registers the Tcl event source and a thread
+ *      exit handler.  Subsequent calls are cheap.
  *
  *----------------------------------------------------------------------
  */
@@ -770,6 +780,8 @@ static int
 WaylandEnsureInitialized(void)
 {
     if (!clip.Initialized) {
+	struct wl_display *wrapper;
+
 	clip.Initialized = 1;
 
 	clip.display = glfwGetWaylandDisplay();
@@ -779,22 +791,32 @@ WaylandEnsureInitialized(void)
 	    return 0;
 	}
 
-	clip.registry = wl_display_get_registry(clip.display);
-	wl_registry_add_listener(clip.registry, &registryListener, &clip);
+	clip.queue = wl_display_create_queue(clip.display);
+	if (clip.queue == NULL) {
+	    clip.display = NULL;
+	    return 0;
+	}
 
 	/*
-	 * Register the display fd before anything can block.  The pump
-	 * drains events, including the registry globals; SeatCapabilities
-	 * or RegistryGlobal install the device and set clip.ready.
+	 * Create the registry through a proxy wrapper that already
+	 * points at our queue; this is the race-free way to get the
+	 * registry (and everything bound from it) into a private queue.
 	 */
-	{
-	    int fd = wl_display_get_fd(clip.display);
-	    DEBUG_LOG("WaylandEnsureInitialized: display fd=%d", fd);
-	    if (fd >= 0) {
-		Tcl_CreateFileHandler(fd, TCL_READABLE, WaylandPump, NULL);
-		clip.pumpInstalled = 1;
-	    }
+	wrapper = (struct wl_display *)wl_proxy_create_wrapper(clip.display);
+	if (wrapper == NULL) {
+	    wl_event_queue_destroy(clip.queue);
+	    clip.queue = NULL;
+	    clip.display = NULL;
+	    return 0;
 	}
+	wl_proxy_set_queue((struct wl_proxy *)wrapper, clip.queue);
+	clip.registry = wl_display_get_registry(wrapper);
+	wl_proxy_wrapper_destroy(wrapper);
+	wl_registry_add_listener(clip.registry, &registryListener, &clip);
+
+	Tcl_CreateEventSource(ClipSourceSetup, ClipSourceCheck, NULL);
+	clip.sourceInstalled = 1;
+	Tcl_CreateThreadExitHandler(ClipExitHandler, NULL);
 
 	/*
 	 * Flush the registry request now so the globals start arriving.
@@ -806,7 +828,8 @@ WaylandEnsureInitialized(void)
     if (!clip.ready) {
 	DEBUG_LOG("WaylandEnsureInitialized: not ready yet "
 		  "(manager=%p seat=%p device=%p)",
-		  (void *)clip.manager, (void *)clip.seat, (void *)clip.device);
+		  (void *)clip.manager, (void *)clip.seat,
+		  (void *)clip.device);
 	return 0;
     }
     return 1;
@@ -815,36 +838,86 @@ WaylandEnsureInitialized(void)
 /*
  *----------------------------------------------------------------------
  *
- * WaylandPump --
+ * WaylandDispatch --
  *
- *      Drain pending Wayland events from the display fd.  Called by
- *      Tcl's file handler (or directly by TkWaylandClipboardPump) when
- *      the display fd is readable.  Uses prepare_read/read_events so it
- *      never blocks, then dispatches pending callbacks and flushes.
+ *      Run the callbacks of events already queued for the clipboard's
+ *      private queue, then flush outgoing requests.  Never reads the
+ *      socket and never touches the default queue, so GLFW callbacks
+ *      cannot run from here (e.g. inside [clipboard get]).  Events reach
+ *      the clipboard queue whenever anyone reads the display fd, which
+ *      GLFW/the notifier already does.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Delivers Wayland events to our listeners and flushes outgoing
- *      requests.
+ *      Delivers Wayland events to our listeners.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-WaylandPump(TCL_UNUSED(ClientData), 
-	    TCL_UNUSED(int))
+WaylandDispatch(void)
 {
-    if (clip.display == NULL) {
+    if (clip.display == NULL || clip.queue == NULL) {
 	return;
     }
-    if (wl_display_prepare_read(clip.display) == 0) {
-	wl_display_read_events(clip.display);
-	DEBUG_LOG("WaylandPump: read events");
-    }
-    wl_display_dispatch_pending(clip.display);
+    wl_display_dispatch_queue_pending(clip.display, clip.queue);
     wl_display_flush(clip.display);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ClipSourceSetup, ClipSourceCheck --
+ *
+ *      Tcl event source for the clipboard queue.  Setup keeps the event
+ *      loop from sleeping while events are queued (or when
+ *      WaylandReadOffer left GLFW events in the default queue); check
+ *      dispatches the clipboard queue from Tk's event loop, never from
+ *      inside glfwPollEvents().
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      May set the maximum block time to zero; check runs callbacks.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ClipSourceSetup(TCL_UNUSED(ClientData),
+		int flags)
+{
+    static const Tcl_Time zero = {0, 0};
+    int pending = 0;
+
+    if (!(flags & TCL_FILE_EVENTS) || clip.display == NULL ||
+	clip.queue == NULL) {
+	return;
+    }
+    if (clip.kickLoop) {
+	clip.kickLoop = 0;
+	pending = 1;
+    }
+    if (wl_display_prepare_read_queue(clip.display, clip.queue) != 0) {
+	pending = 1;            /* Events are waiting in our queue. */
+    } else {
+	wl_display_cancel_read(clip.display);
+    }
+    if (pending) {
+	Tcl_SetMaxBlockTime(&zero);
+    }
+}
+
+static void
+ClipSourceCheck(TCL_UNUSED(ClientData),
+		int flags)
+{
+    if (flags & TCL_FILE_EVENTS) {
+	WaylandDispatch();
+    }
 }
 
 /*
@@ -852,16 +925,15 @@ WaylandPump(TCL_UNUSED(ClientData),
  *
  * TkWaylandClipboardPump --
  *
- *      Public pump entry point.  Call this from the Tk/GLFW main loop
- *      if Tcl file handlers are not running.  Safe to call often;
- *      never blocks.  Also drives asynchronous initialization when
- *      the file handler is not installed.
+ *      Public entry point; dispatches already-queued clipboard events.
+ *      Safe to call often; never blocks, never reads the socket, never
+ *      runs GLFW callbacks.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Same as WaylandPump.
+ *      Same as WaylandDispatch.
  *
  *----------------------------------------------------------------------
  */
@@ -869,11 +941,104 @@ WaylandPump(TCL_UNUSED(ClientData),
 void
 TkWaylandClipboardPump(void)
 {
-    if (!clip.Initialized && glfwGetWaylandDisplay() == NULL) {
-	/* Nothing to pump; GLFW is not on Wayland. */
+    WaylandDispatch();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandClipboardCleanup --
+ *
+ *      Destroy every Wayland object the clipboard created, then its
+ *      event queue, and unregister the event source.  Idempotent.
+ *
+ *      MUST run before glfwTerminate() closes the wl_display.  The
+ *      backend's shutdown path should call this directly, immediately
+ *      before glfwTerminate(); the thread exit handler registered at
+ *      initialization is only a safety net, and its ordering relative
+ *      to glfwTerminate() is not guaranteed.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Destroys proxies, flushes the display, frees clipboard state,
+ *      resets it so a later initialization starts clean.  If we own the
+ *      selection, destroying our source drops it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandClipboardCleanup(void)
+{
+    int i;
+
+    if (!clip.Initialized) {
 	return;
     }
-    WaylandPump(NULL, 0);
+    if (clip.sourceInstalled) {
+	Tcl_DeleteEventSource(ClipSourceSetup, ClipSourceCheck, NULL);
+	clip.sourceInstalled = 0;
+    }
+    Tcl_DeleteThreadExitHandler(ClipExitHandler, NULL);
+
+    if (clip.display != NULL) {
+	if (clip.source != NULL) {
+	    wl_data_source_destroy(clip.source);
+	}
+	if (clip.offer != NULL) {
+	    wl_data_offer_destroy(clip.offer);
+	}
+	if (clip.incoming != NULL && clip.incoming != clip.offer) {
+	    wl_data_offer_destroy(clip.incoming);
+	}
+	if (clip.keyboard != NULL) {
+	    if (wl_proxy_get_version((struct wl_proxy *)clip.keyboard) >= 3) {
+		wl_keyboard_release(clip.keyboard);
+	    } else {
+		wl_keyboard_destroy(clip.keyboard);
+	    }
+	}
+	if (clip.device != NULL) {
+	    if (wl_proxy_get_version((struct wl_proxy *)clip.device) >= 2) {
+		wl_data_device_release(clip.device);
+	    } else {
+		wl_data_device_destroy(clip.device);
+	    }
+	}
+	if (clip.manager != NULL) {
+	    wl_data_device_manager_destroy(clip.manager);
+	}
+	if (clip.seat != NULL) {
+	    if (wl_proxy_get_version((struct wl_proxy *)clip.seat) >= 5) {
+		wl_seat_release(clip.seat);
+	    } else {
+		wl_seat_destroy(clip.seat);
+	    }
+	}
+	if (clip.registry != NULL) {
+	    wl_registry_destroy(clip.registry);
+	}
+	wl_display_flush(clip.display);
+	if (clip.queue != NULL) {
+	    /* All proxies attached to the queue are gone by now. */
+	    wl_event_queue_destroy(clip.queue);
+	}
+    }
+
+    for (i = 0; i < clip.numOfferMimes; i++) {
+	ckfree(clip.offerMimes[i]);
+    }
+    ckfree((char *)clip.offerMimes);
+    ckfree(clip.text);
+    memset(&clip, 0, sizeof(clip));
+}
+
+static void
+ClipExitHandler(TCL_UNUSED(ClientData))
+{
+    TkWaylandClipboardCleanup();
 }
 
 /* 
@@ -1088,6 +1253,9 @@ WaylandReadOffer(size_t *lenPtr)
 	DEBUG_LOG("WaylandReadOffer: clipboard not ready");
 	return NULL;
     }
+
+    /* Make sure a selection/offer already received is the one we read. */
+    WaylandDispatch();
     if (clip.offer == NULL) {
 	DEBUG_LOG("WaylandReadOffer: no offer");
 	return NULL;
@@ -1152,8 +1320,9 @@ WaylandReadOffer(size_t *lenPtr)
 	    struct pollfd pfds[2];
 	    int rc;
 
-	    while (wl_display_prepare_read(clip.display) != 0) {
-		wl_display_dispatch_pending(clip.display);
+	    while (wl_display_prepare_read_queue(clip.display,
+						 clip.queue) != 0) {
+		wl_display_dispatch_queue_pending(clip.display, clip.queue);
 	    }
 	    wl_display_flush(clip.display);
 
@@ -1169,7 +1338,7 @@ WaylandReadOffer(size_t *lenPtr)
 	    } else {
 		wl_display_cancel_read(clip.display);
 	    }
-	    wl_display_dispatch_pending(clip.display);
+	    wl_display_dispatch_queue_pending(clip.display, clip.queue);
 
 	    if (rc < 0 && errno != EINTR) {
 		break;
@@ -1206,6 +1375,19 @@ WaylandReadOffer(size_t *lenPtr)
     }
 done:
     close(pipefd[0]);
+
+    /*
+     * We may have read GLFW's events off the socket while waiting for
+     * the clipboard data.  They now sit, undispatched, in the default
+     * queue, and the socket will not look readable again.  Make the next
+     * pass through Tcl's event loop run without blocking so whoever
+     * services GLFW gets to them.  Nothing is dispatched from here.
+     */
+    if (wl_display_prepare_read(clip.display) != 0) {
+	clip.kickLoop = 1;
+    } else {
+	wl_display_cancel_read(clip.display);
+    }
     DEBUG_LOG("WaylandReadOffer: read %zu bytes", len);
     if (buf != NULL) {
 	buf[len] = '\0';

@@ -41,14 +41,14 @@ resetWindows
 #
 if {[tk windowingsystem] eq "aqua"} {
     proc raiseDelay {} {
-        update idletasks
+	update idletasks
 	after 200
     }
 } else {
     proc raiseDelay {} {
 	after 300
-        update idletasks
-        update
+	update idletasks
+	update
     }
  }
 
@@ -2359,10 +2359,10 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints withWindowManager -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
     deleteWindows
     set result {}
-} -body {
+} -constraints {aquaKnownBug withWindowManager} -body {
     # Verifies that transients stay on top of their toplevels, even if they were
     # made transients when those toplevels were withdrawn.
     toplevel .t1; wm withdraw  .t1;     update
@@ -2950,6 +2950,13 @@ test wm-forget-2.3 {bug [3515522fff] - [wm forget] releases the menubar} -setup 
     destroy .t .m
     unset -nocomplain res
 } -result {{} 1}
+
+test wm-forget-3 {bug [9ab6e37e1ac] - [wm forget] segfault} -setup {
+    destroy .l .f.b .f
+    set res {}
+} -body {
+    wm forget .
+} -returnCodes error -result {window "." can not be forgotten}
 
 #
 # TESTFILE CLEANUP

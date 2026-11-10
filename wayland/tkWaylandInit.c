@@ -194,6 +194,7 @@ static glfwTkInfo* createGlfwTkInfo(
     if (!infoPtr->vg) {
         DEBUG_LOG("createGlfwTkInfo: nvgCreateGLES3() failed");
         glfwDestroyWindow(glfwWindow);
+        TkWaylandClipboardCleanup();	/* Before the display goes away. */
         glfwTerminate();
         return NULL;
     }
@@ -929,6 +930,12 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         glfwMakeContextCurrent(NULL);
         glfwSetErrorCallback(NULL);
     }
+
+    /*
+     * The clipboard owns Wayland proxies on GLFW's wl_display; they must
+     * be destroyed before glfwTerminate() closes the display.
+     */
+    TkWaylandClipboardCleanup();
 
     if (GlfwIsInitialized) {
         glfwTerminate();

@@ -544,8 +544,8 @@ BaseOriginX(
  *
  * Results:
  *	true if the chunk is RTL, false if LTR or neutral.
- * 
- * Side effects: 
+ *
+ * Side effects:
  *  None.
  */
 
@@ -562,7 +562,7 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 	if (chLen <= 0) {
 	    break;
 	}
-	
+
 	/*
 	 * Combining marks are not strong characters: UAX #9 rule P2
 	 * skips nonspacing marks when searching for the first strong
@@ -1394,7 +1394,7 @@ IsEntirelyElidedLine(
  *
  * Results:
 	0, 1 or 2 as described above.
- *	
+ *
  * Side effects:
  *  None.
  *

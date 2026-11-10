@@ -179,8 +179,10 @@ static Tk_CustomOptionFreeProc CustomOptionFree;
 static Tcl_ObjCmdProc2 TestpropObjCmd;
 static Tcl_ObjCmdProc2 TestprintfObjCmd;
 static Tcl_ObjCmdProc2 TestsetlocaleObjCmd;
-#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__) || defined(TK_USE_WAYLAND))
+#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static Tcl_ObjCmdProc2 TestwrapperObjCmd;
+#endif
+#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__) || defined(TK_USE_WAYLAND))
 static Tcl_ObjCmdProc2 TestxfocusObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(void *clientData);
@@ -263,15 +265,17 @@ Tktest_Init(
 #if defined(_WIN32)
     Tcl_CreateObjCommand2(interp, "testmetrics", TestmetricsObjCmd,
 	    Tk_MainWindow(interp), NULL);
-#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND)
+#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
+    Tcl_CreateObjCommand2(interp, "testwrapper", TestwrapperObjCmd,
+	    Tk_MainWindow(interp), NULL);
+#if !defined(TK_USE_WAYLAND)
     Tcl_CreateObjCommand2(interp, "testmenubar", TestmenubarObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testsend", TkpTestsendCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand2(interp, "testwrapper", TestwrapperObjCmd,
-	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand2(interp, "testxfocus", TestxfocusObjCmd,
 	    Tk_MainWindow(interp), NULL);
+#endif
 #endif /* _WIN32 */
 
     /*

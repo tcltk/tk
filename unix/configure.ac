@@ -539,11 +539,6 @@ Please install the ATK and at-spi2-atk development packages:
         #--------------------------------------------------------------------
         AC_MSG_NOTICE([NanoVG will be built from bundled sources in wayland/nanovg.c])
 
-        # Clipboard on Wayland is handled by the native implementation
-        # (tkWaylandClipboard.c, via zwlr_data_control / wl_data_device);
-        # wl-clipboard (wl-copy / wl-paste) is no longer required at
-        # build time or run time.
-
         # Final check — everything must be present
         if test "$found_wayland" = yes \
            && test "$found_wayland_egl" = yes \

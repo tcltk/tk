@@ -480,7 +480,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
-static void             RemoveTransient(TkWindow *winPtr);
+static void		RemoveTransient(TkWindow *winPtr);
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
@@ -1310,7 +1310,7 @@ TkWmDeadWindow(
 	wmPtr->transientPtr = transientPtr->nextPtr;
 	Tcl_Free(transientPtr);
     }
-    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);				    
+    TkMacOSXUpdatePointerAfterDestroy(deadNSWindow);
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
      * data structures.  If the NSWindow is a child, disassociate it from
@@ -1797,20 +1797,20 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_HIDDEN:
-        if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        if (boolValue != ((wmPtr->flags & WM_IS_HIDDEN) != 0)) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (boolValue != ((wmPtr->flags & WM_IS_HIDDEN) != 0)) {
 	    int oldFlags = wmPtr->flags;
-            if (boolValue) {
-                wmPtr->flags |= WM_IS_HIDDEN;
-            } else {
-                wmPtr->flags &= ~WM_IS_HIDDEN;
-            }
+	    if (boolValue) {
+		wmPtr->flags |= WM_IS_HIDDEN;
+	    } else {
+		wmPtr->flags &= ~WM_IS_HIDDEN;
+	    }
 	    ApplyWindowAttributeFlagChanges(winPtr, macWindow,
 		wmPtr->attributes, oldFlags, 1, 0);
-        }
-        break;
+	}
+	break;
     case WMATT_MODIFIED:
 	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
@@ -2079,8 +2079,8 @@ WmGetAttribute(
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
     case WMATT_HIDDEN:
-        result = Tcl_NewBooleanObj((wmPtr->flags & WM_IS_HIDDEN) != 0);
-        break;
+	result = Tcl_NewBooleanObj((wmPtr->flags & WM_IS_HIDDEN) != 0);
+	break;
     case WMATT_MODIFIED:
 	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
 	break;
@@ -2615,13 +2615,24 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window mainWin,		/* Main window of the application. */
     TkWindow *winPtr,			/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
     TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
+
+    /*
+     * Tk ticket 9ab6e37e: forget "." not allowed
+     */
+
+    if (frameWin == mainWin) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"window \".\" can not be forgotten", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "WM", "FORGET", ".", NULL);
+	return TCL_ERROR;
+    }
 
     /*
      * Tk ticket c77b426d: avoid panic on usage after wm forget
@@ -3061,17 +3072,19 @@ WmIconbitmapCmd(
 	return TCL_ERROR;
     }
     if (!len) {
-	if (wmPtr->hints.icon_pixmap != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
-	    wmPtr->hints.icon_pixmap = None;
-	}
-	wmPtr->hints.flags &= ~IconPixmapHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, str);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_pixmap = pixmap;
+    }
+    if (wmPtr->hints.icon_pixmap != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+    }
+    wmPtr->hints.icon_pixmap = pixmap;
+    wmPtr->hints.flags &= ~IconPixmapHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconPixmapHint;
     }
     return TCL_OK;
@@ -3203,16 +3216,19 @@ WmIconmaskCmd(
 
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_mask != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
-	}
-	wmPtr->hints.flags &= ~IconMaskHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, tkwin, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_mask = pixmap;
+    }
+    if (wmPtr->hints.icon_mask != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
+    }
+    wmPtr->hints.icon_mask = pixmap;
+    wmPtr->hints.flags &= ~IconMaskHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconMaskHint;
     }
     return TCL_OK;
@@ -6827,7 +6843,7 @@ TkMacOSXMakeRealWindowExist(
     [window orderOut:nil];
     [window setAlphaValue: 1.0];
     [window setAnimationBehavior: savedBehavior];
-						
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     if (tabbingId) {
 	identifier = [NSString stringWithUTF8String:tabbingId];
@@ -7529,15 +7545,15 @@ ApplyWindowAttributeFlagChanges(
 	    if (wmPtr->flags & WM_IS_HIDDEN) {
 		TkMacOSXUpdatePointerBeforeUnmap(winPtr);
 		[macWin orderOut:nil];
-            } else {
-                switch (wmPtr->hints.initial_state) {
-                case IconicState:
-	        case WithdrawnState:
+	    } else {
+		switch (wmPtr->hints.initial_state) {
+		case IconicState:
+		case WithdrawnState:
 		    TkMacOSXUpdatePointerBeforeUnmap(winPtr);
 		    [macWin orderOut:nil];
-                    break;
-                case NormalState:
-                case ZoomState:
+		    break;
+		case NormalState:
+		case ZoomState:
 		    [(TKWindow *)macWin tkOrderFront];
 		    TkMacOSXUpdatePointerAfterMap(winPtr);
 		    break;

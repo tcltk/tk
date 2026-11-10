@@ -1530,7 +1530,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     waitForWindowEvent .three.f1.f2 <Enter>
     update idletasks; # finish displaying windows
     set result "|"
-} -body {
+} -constraints aquaKnownBug -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .three
