@@ -419,6 +419,19 @@ AS_IF([test $tk_aqua = no],[
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
 	])
+	dnl tkUnixEvent.c calls XRenderQueryExtension; Xft uses Xrender, but
+	dnl a static link needs -lXrender on the command line.
+	AS_IF([test "$found_xft" = "yes" ], [
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lXrender"
+	    AC_CHECK_LIB(Xrender, XRenderQueryExtension, [
+		XFT_LIBS="$XFT_LIBS -lXrender"
+	    ], [])
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	])
 
 	AS_IF([test "$found_xft" = "no" ], [
 	    AS_IF([test "$enable_xft" = "yes" ], [
