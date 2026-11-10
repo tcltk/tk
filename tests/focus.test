@@ -42,7 +42,9 @@ testConstraint noWindowManager [expr {![testConstraint withWindowManager]}]
 #    through the X server and possibly also the window manager.  Some window
 #    managers refuse to give the focus to another application or give it back
 #    later; if the testxfocus command is available, the X input focus is then
-#    set to None until this application no longer has it.
+#    set to None until this application no longer has it.  On Wayland neither
+#    works, so tests which need the application to lose the focus are
+#    constrained with x11.
 #
 if {[tk windowingsystem] eq "aqua"} {
     proc focusClear {} {
@@ -419,7 +421,7 @@ test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     lappend x [focus]
 } -result {.b . {}}
 test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -body {
     set result {}
     focus .t.b1
@@ -454,7 +456,7 @@ test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -body {
     focus .t.b1
     focusClear
@@ -481,7 +483,7 @@ test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when 
     destroy .t2
 } -result {}
 test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -body {
     set result {}
     focus .t.b1
@@ -497,7 +499,7 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
     return $result
 } -result {{} .t.b1 {} {} {}}
 test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -body {
     focusClear
     focus .t.b1
@@ -511,7 +513,7 @@ test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
 out .t NotifyVirtual
 }
 test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -body {
     focusClear
     focus .t.b1
@@ -674,7 +676,7 @@ childTkProcess exit
 
 # Test 5.1 fails (before and after update)
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix testwrapper secureserver
+    x11 testwrapper secureserver
 } -body {
     childTkProcess create
     focusSetup
@@ -701,7 +703,7 @@ bind all <Key> {}
 fixfocus
 
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -setup {
     eval interp delete [interp children]
 } -body {
@@ -757,7 +759,7 @@ test focus-6.1 {miscellaneous - embedded application in same process} -constrain
 } -result {{.t.f2.e1 {} {focus out .t.f2.e1 NotifyNonlinear} {focus out .t.f2 NotifyNonlinearVirtual} {focus in .t.f1 NotifyNonlinear} | {focus out .t.f1 NotifyNonlinear} {focus in .t.f2 NotifyNonlinearVirtual} {focus in .t.f2.e1 NotifyNonlinear}} {{focus in . NotifyVirtual} {focus in .e1 NotifyAncestor} | {focus out .e1 NotifyAncestor} {focus out . NotifyVirtual}}}
 
 test focus-6.2 {miscellaneous - embedded application in different process} -constraints {
-    unix  testwrapper
+    x11 testwrapper
 } -body {
     childTkProcess create
     toplevel .t
