@@ -183,6 +183,7 @@ to the userbase.
  - [Filesystem dialogs conflict with auto_reset (under Linux)](https://core.tcl-lang.org/tk/tktview/3da059)
  - [New test winfo-4.8 fails](https://core.tcl-lang.org/tk/tktview/586f72)
  - [Possible Tk regression when loading into threads](https://core.tcl-lang.org/tk/tktview/b298b9)
+ - [bound buttonpress is passed on to other program](https://core.tcl-lang.org/tk/tktview/131adc)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
