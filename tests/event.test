@@ -1511,7 +1511,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     unset -nocomplain result
 } -result {|<Enter> NotifyNonlinear .one|}
 
-test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -constraints pointerWarp -setup {
+test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -constraints {pointerWarp aquaKnownBug} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     wm geometry . +500+500; # avoid an extraneous <Leave> event
     update idletasks
@@ -1530,7 +1530,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     waitForWindowEvent .three.f1.f2 <Enter>
     update idletasks; # finish displaying windows
     set result "|"
-} -constraints aquaKnownBug -body {
+} -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .three
