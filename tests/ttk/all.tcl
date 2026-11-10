@@ -37,13 +37,8 @@ set ignoredOptions [list -testdir]
 # -eyefriendly	 : if set to one, test execution halts at appropriate places to
 #		   allow the human eye to follow the changes on the screen.
 #
-# -eyefriendlyMs : the time duration in milliseconds that program execution halts
-#		   to provide opportunity for the human eye to view the state
-#		   on the screen.
-#
 array set tktestConf {
     -eyefriendly 0
-    -eyefriendlyMs 800
 }
 
 set index 0
