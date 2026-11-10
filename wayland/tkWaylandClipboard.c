@@ -5,7 +5,9 @@
  *
  *      Tk owns the Wayland selection itself via wl_data_device /
  *      wl_data_source / wl_data_offer, using the same wl_display and
- *      wl_surface GLFW already owns.  
+ *      wl_surface GLFW already owns. Supports both external integration
+ *      with Wayland system clipboard and Tk's internal clipboard. 
+
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -15,6 +17,7 @@
 
 #include "tkInt.h"
 #include "tkSelect.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <wayland-client.h>
@@ -25,7 +28,14 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+
+/*
+ * Debugging.
+ #define DEBUG_CHANNEL stdout
+ #define DEBUG_LABEL "clipboard"
+*/
 
 /*
  *  Wayland state.                                                      
@@ -38,20 +48,20 @@ typedef struct WaylandClipboard {
     struct wl_seat *seat;
     struct wl_data_device *device;
     struct wl_keyboard *keyboard;
-    struct wl_pointer *pointer;
-    struct wl_data_source *source;  /* Uur current offer, or NULL.*/
-    struct wl_data_offer *offer;    /* Current incoming offer, or NULL. */
+    struct wl_data_source *source;  /* Our current source, or NULL. */
+    struct wl_data_offer *offer;    /* Current selection offer, or NULL. */
+    struct wl_data_offer *incoming; /* Introduced, not yet the selection. */
     char **offerMimes;              /* Strdup'd mime list for offer. */
     int numOfferMimes;
-    uint32_t lastEnterSerial;       /* Last keyboard/pointer enter serial. */
+    uint32_t lastSerial;            /* Most recent keyboard enter serial. */
     int haveSerial;
-    int Initialized;
+    int claimIssued;                /* set_selection() sent for c->source. */
+    int sourceConfirmed;            /* Compositor echoed our source back. */
+    int Initialized;                /* First-touch setup performed. */
+    int ready;                      /* manager + seat + device all bound. */
     int pumpInstalled;              /* Tcl file handler installed. */
     char *text;                     /* Owned copy, what we published. */
     size_t textLen;
-    char *pendingText;              /* Queued publish, no serial yet. */
-    size_t pendingLen;
-    int pendingClear;               /* Queued clear, no serial yet. */
 } WaylandClipboard;
 
 static WaylandClipboard clip = {0};
@@ -60,6 +70,52 @@ static WaylandClipboard clip = {0};
 static void WaylandPublish(const char *text, size_t len);
 static void WaylandClear(void);
 static void WaylandPump(ClientData clientData, int mask);
+static void WaylandTryClaimSource(void);
+static void QueueClipboardLost(void);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * QueueClipboardLost --
+ *
+ *      Tell Tk's generic code that some other Wayland client now owns
+ *      the clipboard.  Tk's generic [clipboard append] registered Tk
+ *      as owner of CLIPBOARD via Tk_OwnSelection (XSetSelectionOwner
+ *      is a stub here), so until Tk is told otherwise, [clipboard get]
+ *      and Ctrl+V are answered from Tk's own buffers and never reach
+ *      TkSelGetSelection -- external copies would be invisible.  On
+ *      X11 the server sends SelectionClear; here we synthesize one and
+ *      queue it so it runs from Tk's event loop, never from inside a
+ *      Wayland dispatch callback.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      May queue a SelectionClear event for the CLIPBOARD selection.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+QueueClipboardLost(void)
+{
+    TkDisplay *dispPtr = TkGetDisplayList();
+    XEvent event;
+
+    if (dispPtr == NULL || dispPtr->clipWindow == NULL ||
+	!dispPtr->clipboardActive) {
+	return;
+    }
+    DEBUG_LOG("QueueClipboardLost: queueing SelectionClear");
+    memset(&event, 0, sizeof(event));
+    event.xselectionclear.type = SelectionClear;
+    event.xselectionclear.display = Tk_Display(dispPtr->clipWindow);
+    event.xselectionclear.window = Tk_WindowId(dispPtr->clipWindow);
+    event.xselectionclear.selection = dispPtr->clipboardAtom;
+    event.xselectionclear.time = dispPtr->lastEventTime;
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+}
 
 /*
  *  wl_data_source listener -- we are the clipboard owner.             
@@ -97,9 +153,9 @@ SourceSend(void *data,
      * Compositor (on behalf of the pasting app) wants our data.
      * Write it, close the fd, return. Never block: the fd is
      * non-blocking by contract and our text is in memory.
-     * Accept the UTF-8 family; everything else gets an empty reply
-     * (close without writing) so the paster does not hang.
      */
+    DEBUG_LOG("SourceSend: mime=%s fd=%d textLen=%zu",
+	      mimeType, fd, c->textLen);
     if (c->text != NULL && c->textLen > 0 &&
         (strcmp(mimeType, "text/plain") == 0 ||
          strcmp(mimeType, "text/plain;charset=utf-8") == 0 ||
@@ -113,6 +169,7 @@ SourceSend(void *data,
                 if (errno == EINTR) {
                     continue;
                 }
+                DEBUG_LOG("SourceSend: write failed: %s", strerror(errno));
                 break;
             }
             if (n == 0) {
@@ -120,6 +177,9 @@ SourceSend(void *data,
             }
             off += (size_t)n;
         }
+        DEBUG_LOG("SourceSend: wrote %zu of %zu bytes", off, c->textLen);
+    } else {
+        DEBUG_LOG("SourceSend: empty reply for mime=%s", mimeType);
     }
     close(fd);
 }
@@ -130,17 +190,16 @@ SourceSend(void *data,
  * SourceCancelled --
  *
  *      wl_data_source "cancelled" handler.  Fires when another client
- *      has taken the selection, or when we cleared it ourselves.  We
- *      drop the source pointer and destroy the object.  c->text is
- *      deliberately retained so a subsequent re-publish (or a get()
- *      that raced the cancel) still has data; it is freed by the next
- *      WaylandPublish/WaylandClear.
+ *      has taken the selection.  We drop the source pointer, destroy
+ *      the object, free our text, and tell Tk it has lost ownership of
+ *      CLIPBOARD so later pastes read the new owner's data.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Destroys the wl_data_source and clears c->source.
+ *      Destroys the wl_data_source, clears c->source, frees c->text,
+ *      queues a SelectionClear for Tk.
  *
  *----------------------------------------------------------------------
  */
@@ -149,18 +208,22 @@ static void
 SourceCancelled(void *data, struct wl_data_source *source)
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
-    /* Someone else took the selection, or we cleared it. */
-    if (c->source == source) {
-        c->source = NULL;
+    int wasOurs = (c->source == source);
+
+    DEBUG_LOG("SourceCancelled: source=%p (ours=%d)",
+	      (void *)source, wasOurs);
+    if (wasOurs) {
+	c->source = NULL;
+	c->sourceConfirmed = 0;
+	c->claimIssued = 0;
+	ckfree(c->text);
+	c->text = NULL;
+	c->textLen = 0;
     }
     wl_data_source_destroy(source);
-    /*
-     * Tell generic Tk the selection is gone. 
-     * TkSelClearSelection is driven via SelectionClear in TkSelEventProc
-     * on X11; on Wayland we have no XEvent, so free our copy here and
-     * let the next publish replace it. Keep c->text until replaced so
-     * a re-publish after a spurious cancel still works.
-     */
+    if (wasOurs) {
+	QueueClipboardLost();
+    }
 }
 
 static const struct wl_data_source_listener sourceListener = {
@@ -200,6 +263,8 @@ OfferOffer(void *data,
 	   const char *mimeType)
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
+    DEBUG_LOG("OfferOffer: mime=%s (now %d mimes)",
+	      mimeType, c->numOfferMimes + 1);
     c->offerMimes = (char **)ckrealloc((char *)c->offerMimes,
 				       sizeof(char *) * (size_t)(c->numOfferMimes + 1));
     {
@@ -225,15 +290,17 @@ static const struct wl_data_offer_listener offerListener = {
  * DeviceDataOffer --
  *
  *      wl_data_device "data_offer" handler.  A new offer has been
- *      introduced.  We discard the previous offer's mime list, install
- *      the new offer, and attach the offer listener so its mime types
- *      are recorded as they arrive.
+ *      introduced.  It is not necessarily the selection (it could be
+ *      drag-and-drop), so it is parked in c->incoming until a
+ *      "selection" event adopts it.  An earlier offer that was never
+ *      adopted is destroyed.  The mime list is reset and the offer
+ *      listener attached so its types are recorded as they arrive.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Frees old mime strings, replaces c->offer, registers listener.
+ *      Frees old mime strings, replaces c->incoming, registers listener.
  *
  *----------------------------------------------------------------------
  */
@@ -245,120 +312,19 @@ DeviceDataOffer(void *data,
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
     int i;
-    /* Previous offer is superseded. */
+    DEBUG_LOG("DeviceDataOffer: offer=%p supersedes %d old mimes",
+	      (void *)offer, c->numOfferMimes);
+    if (c->incoming != NULL && c->incoming != c->offer) {
+	wl_data_offer_destroy(c->incoming);
+    }
     for (i = 0; i < c->numOfferMimes; i++) {
-        ckfree(c->offerMimes[i]);
+	ckfree(c->offerMimes[i]);
     }
     ckfree((char *)c->offerMimes);
     c->offerMimes = NULL;
     c->numOfferMimes = 0;
-    c->offer = offer;
+    c->incoming = offer;
     wl_data_offer_add_listener(offer, &offerListener, c);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DeviceEnter --
- *
- *      wl_data_device "enter" handler (drag-and-drop).  Unused by the
- *      clipboard path; all arguments are ignored.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-DeviceEnter(TCL_UNUSED(void *), /* data */
-	    TCL_UNUSED(struct wl_data_device *), /* device */
-	    TCL_UNUSED(uint32_t), /* serial */
-	    TCL_UNUSED(struct wl_surface * ), /* surface */
-	    TCL_UNUSED(wl_fixed_t), /* x */
-	    TCL_UNUSED(wl_fixed_t), /* y */
-	    TCL_UNUSED(struct wl_data_offer *)) /* offer */
-{
-    /* Drag-and-drop enter: not used by clipboard. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DeviceLeave --
- *
- *      wl_data_device "leave" handler (drag-and-drop).  Unused by the
- *      clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-DeviceLeave(
-	    TCL_UNUSED(void *), /*data */
-	    TCL_UNUSED(struct wl_data_device * )) /* device */
-{
-    /* No-op .*/
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DeviceMotion --
- *
- *      wl_data_device "motion" handler (drag-and-drop).  Unused by the
- *      clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-DeviceMotion(TCL_UNUSED(void *), /* data */
-	     TCL_UNUSED(struct wl_data_device *), /* device */
-	     TCL_UNUSED(uint32_t), /* time */
-	     TCL_UNUSED(wl_fixed_t), /* x */
-	     TCL_UNUSED(wl_fixed_t)) /* y */
-{
-    /* No-op. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DeviceDrop --
- *
- *      wl_data_device "drop" handler (drag-and-drop).  Unused by the
- *      clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-DeviceDrop(TCL_UNUSED(void *),
-	   TCL_UNUSED(struct wl_data_device * ))
-{
-    /* No-op. */
 }
 
 /*
@@ -368,14 +334,27 @@ DeviceDrop(TCL_UNUSED(void *),
  *
  *      wl_data_device "selection" handler.  Announces the current
  *      selection owner's offer (or NULL when the clipboard is empty).
- *      On a NULL offer the stale mime list is freed so a later get()
- *      correctly reports "no selection".
+ *
+ *      If our source has had set_selection() issued but is not yet
+ *      confirmed, a non-NULL offer is taken to be our own echo.  A NULL
+ *      offer is ignored in that state: it is normally the echo of an
+ *      earlier clear (Tk's copy is "clear" then "append", and both
+ *      requests are sent before either reply is read), not a rejection.
+ *
+ *      If our source was never claimed (no serial yet) and another
+ *      client's offer arrives, our provisional source is dropped so it
+ *      cannot later overwrite the new owner.
+ *
+ *      Whenever a foreign owner appears, Tk is told it lost CLIPBOARD
+ *      (QueueClipboardLost) so that paste reads from the offer.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      May free c->offerMimes; updates c->offer.
+ *      Adopts/destroys offers, may destroy a stale provisional source,
+ *      updates c->offer and c->sourceConfirmed, may queue a
+ *      SelectionClear for Tk.
  *
  *----------------------------------------------------------------------
  */
@@ -385,31 +364,63 @@ DeviceSelection(void *data, struct wl_data_device *device,
 		struct wl_data_offer *offer)
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
+    int foreign = 0;
     (void)device;
-    /* offer == NULL means clipboard is now empty. */
+    DEBUG_LOG("DeviceSelection: offer=%s sourceConfirmed=%d claimIssued=%d",
+	      offer ? "present" : "NULL (clipboard empty)",
+	      c->sourceConfirmed, c->claimIssued);
+
+    if (c->source != NULL && !c->sourceConfirmed) {
+	if (offer == NULL) {
+	    DEBUG_LOG("DeviceSelection: NULL while unconfirmed, ignoring");
+	} else if (c->claimIssued) {
+	    DEBUG_LOG("DeviceSelection: source confirmed");
+	    c->sourceConfirmed = 1;
+	} else {
+	    struct wl_data_source *old = c->source;
+	    DEBUG_LOG("DeviceSelection: foreign owner beat provisional "
+		      "source, dropping it");
+	    c->source = NULL;
+	    wl_data_source_destroy(old);
+	    ckfree(c->text);
+	    c->text = NULL;
+	    c->textLen = 0;
+	    foreign = 1;
+	}
+    } else if (c->source == NULL && offer != NULL) {
+	foreign = 1;
+    }
+
+    if (c->offer != NULL && c->offer != offer) {
+	wl_data_offer_destroy(c->offer);
+    }
     c->offer = offer;
+    c->incoming = NULL;
     if (offer == NULL) {
-        int i;
-        for (i = 0; i < c->numOfferMimes; i++) {
-            ckfree(c->offerMimes[i]);
-        }
-        ckfree((char *)c->offerMimes);
-        c->offerMimes = NULL;
-        c->numOfferMimes = 0;
+	int i;
+	for (i = 0; i < c->numOfferMimes; i++) {
+	    ckfree(c->offerMimes[i]);
+	}
+	ckfree((char *)c->offerMimes);
+	c->offerMimes = NULL;
+	c->numOfferMimes = 0;
+    }
+    if (foreign) {
+	QueueClipboardLost();
     }
 }
 
 static const struct wl_data_device_listener deviceListener = {
     .data_offer = DeviceDataOffer,
-    .enter = DeviceEnter,
-    .leave = DeviceLeave,
-    .motion = DeviceMotion,
-    .drop = DeviceDrop,
+    .enter = NULL,
+    .leave = NULL,
+    .motion = NULL,
+    .drop = NULL,
     .selection = DeviceSelection,
 };
 
 /* 
- *  Keyboard / pointer: serial tracking.
+ *  Keyboard: serial tracking only.  We do not need wl_pointer.
  */
 
 /*
@@ -417,8 +428,7 @@ static const struct wl_data_device_listener deviceListener = {
  *
  * KeyboardKeymap --
  *
- *      wl_keyboard "keymap" handler.  We do not interpret keymaps in
- *      this backend, so the received fd is simply closed.
+ *      wl_keyboard "keymap" handler.  The received fd is closed.
  *
  * Results:
  *      None.
@@ -445,41 +455,31 @@ KeyboardKeymap(TCL_UNUSED(void *), /* data */
  * KeyboardEnter --
  *
  *      wl_keyboard "enter" handler.  Records the enter serial, which
- *      is the only serial GNOME will accept for set_selection().  If a
- *      publish or clear was queued waiting for focus, it is flushed now.
+ *      is the serial set_selection() will accept.  If our source is
+ *      still provisional, attempt to claim it now.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Updates lastEnterSerial/haveSerial; may publish or clear the
- *      clipboard and free the pending buffer.
+ *      Updates lastSerial/haveSerial; may issue set_selection.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 KeyboardEnter(void *data,
-	      TCL_UNUSED(struct wl_keyboard *), /* kbd */
+	      TCL_UNUSED(struct wl_keyboard *),
 	      uint32_t serial,
-	      TCL_UNUSED(struct wl_surface *), /* surface */
-	      TCL_UNUSED(struct wl_array * )) /* keys */
+	      TCL_UNUSED(struct wl_surface *),
+	      TCL_UNUSED(struct wl_array *))
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
-    c->lastEnterSerial = serial;
+    DEBUG_LOG("KeyboardEnter: serial=%u source=%p",
+	      serial, (void *)c->source);
+    c->lastSerial = serial;
     c->haveSerial = 1;
-    /* Flush any publish/clear that was waiting for focus. */
-    if (c->pendingText != NULL) {
-        char *t = c->pendingText;
-        size_t len = c->pendingLen;
-        c->pendingText = NULL;
-        c->pendingLen = 0;
-        WaylandPublish(t, len);
-        ckfree(t);
-    } else if (c->pendingClear) {
-        c->pendingClear = 0;
-        WaylandClear();
-    }
+    WaylandTryClaimSource();
 }
 
 /*
@@ -487,9 +487,8 @@ KeyboardEnter(void *data,
  *
  * KeyboardLeave --
  *
- *      wl_keyboard "leave" handler.  The last enter serial is
- *      deliberately retained: GNOME in practice still accepts the most
- *      recent enter serial for set_selection() after leave.
+ *      wl_keyboard "leave" handler.  We retain the last serial; GNOME
+ *      in practice still accepts it for set_selection after leave.
  *
  * Results:
  *      None.
@@ -501,94 +500,68 @@ KeyboardEnter(void *data,
  */
 
 static void
-KeyboardLeave(TCL_UNUSED(void *), /* data */
-	      TCL_UNUSED(struct wl_keyboard *), /* kbd */
-	      TCL_UNUSED(uint32_t), /* serial */
-	      TCL_UNUSED(struct wl_surface *)) /* surface */
+KeyboardLeave(TCL_UNUSED(void *), 
+	      TCL_UNUSED(struct wl_keyboard *),
+	      TCL_UNUSED(uint32_t), 
+	      TCL_UNUSED(struct wl_surface *))
+{
+    DEBUG_LOG("KeyboardLeave: retaining serial=%u", clip.lastSerial);
+}
+
+static void
+KeyboardKey(void *data,
+	    TCL_UNUSED(struct wl_keyboard *),
+	    uint32_t serial,
+	    TCL_UNUSED(uint32_t),
+	    TCL_UNUSED(uint32_t),
+	    TCL_UNUSED(uint32_t))
 {
     /*
-     * Keep lastEnterSerial: GNOME accepts the most recent enter serial
-     * even after leave for set_selection in practice; do not clear.
+     * Keep the freshest input serial: Ctrl+C reaches us as a key event
+     * immediately before [clipboard append], and compositors are most
+     * willing to honor set_selection() with a recent serial.  The
+     * keyboard enter serial can be too old by then.
      */
+    WaylandClipboard *c = (WaylandClipboard *)data;
+    c->lastSerial = serial;
+    c->haveSerial = 1;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * KeyboardKey --
- *
- *      wl_keyboard "key" handler.  Unused by the clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
 static void
-KeyboardKey(TCL_UNUSED(void *), /* data */
-	    TCL_UNUSED(struct wl_keyboard *), /*kbd */
-	    TCL_UNUSED(uint32_t),  /* serial */
-	    TCL_UNUSED(uint32_t),  /* time */
-	    TCL_UNUSED(uint32_t), /* key */
-	    TCL_UNUSED(uint32_t)) /* state */
+KeyboardModifiers(void *data,
+		  TCL_UNUSED(struct wl_keyboard *),
+		  uint32_t serial,
+		  TCL_UNUSED(uint32_t),
+		  TCL_UNUSED(uint32_t),
+		  TCL_UNUSED(uint32_t),
+		  TCL_UNUSED(uint32_t))
 {
-    /* No-op. */
+    WaylandClipboard *c = (WaylandClipboard *)data;
+    c->lastSerial = serial;
+    c->haveSerial = 1;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * KeyboardModifiers --
+ * KeyboardRepeatInfo  --
  *
- *      wl_keyboard "modifiers" handler.  Unused by the clipboard path.
+ *      Info on keyboard repeating. 
  *
  * Results:
- *      None.
+ *      None. No-op with GLFW. 
  *
  * Side effects:
  *      None.
- *
+ * 
  *----------------------------------------------------------------------
  */
 
 static void
-KeyboardModifiers(TCL_UNUSED(void *), /* data */
-		  TCL_UNUSED(struct wl_keyboard *), /*kbd */
-		  TCL_UNUSED(uint32_t),  /* serial */
-		  TCL_UNUSED(uint32_t),  /* depressed */
-		  TCL_UNUSED(uint32_t), /* latched */
-		  TCL_UNUSED(uint32_t), /* locked */
-		  TCL_UNUSED(uint32_t)) /* group */
-		  
-{
-    /* No-op. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * KeyboardRepeatInfo --
- *
- *      wl_keyboard "repeat_info" handler.  Unused by the clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-KeyboardRepeatInfo(TCL_UNUSED(void *), /* data */
-		   TCL_UNUSED(struct wl_keyboard *), /*kbd */
-		   TCL_UNUSED(int32_t),  /* rate */
-		   TCL_UNUSED(int32_t))/* delay */
+KeyboardRepeatInfo(TCL_UNUSED(void *), 
+		   TCL_UNUSED(struct wl_keyboard *),
+		   TCL_UNUSED(int32_t), 
+		   TCL_UNUSED(int32_t))
 {
     /* No-op. */
 }
@@ -602,157 +575,6 @@ static const struct wl_keyboard_listener keyboardListener = {
     .repeat_info = KeyboardRepeatInfo,
 };
 
-/*
- *----------------------------------------------------------------------
- *
- * PointerEnter --
- *
- *      wl_pointer "enter" handler.  Captures a pointer enter serial
- *      as a fallback for set_selection() when no keyboard enter serial
- *      has been seen yet.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      May set lastEnterSerial/haveSerial.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-PointerEnter(void *data,
-	     TCL_UNUSED(struct wl_pointer *), /* pointer */
-	     uint32_t serial,
-	     TCL_UNUSED(struct wl_surface *), /* surface */
-	     TCL_UNUSED(wl_fixed_t), /* sx */
-	     TCL_UNUSED(wl_fixed_t)) /* sy */
-{
-    WaylandClipboard *c = (WaylandClipboard *)data;
-    if (!c->haveSerial) {
-        c->lastEnterSerial = serial;
-        c->haveSerial = 1;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PointerLeave --
- *
- *      wl_pointer "leave" handler.  Unused by the clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-PointerLeave(TCL_UNUSED(void *), /* data */
-	     TCL_UNUSED(struct wl_pointer *), /* pointer */
-	     TCL_UNUSED(uint32_t), /* serial */
-	     TCL_UNUSED(struct wl_surface *)) /* surface */
-{
-    /* No-op. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PointerMotion --
- *
- *      wl_pointer "motion" handler.  Unused by the clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-PointerMotion(TCL_UNUSED(void *), /* data */
-	      TCL_UNUSED(struct wl_pointer *), /* pointer */
-	      TCL_UNUSED(uint32_t), /* time */
-	      TCL_UNUSED(wl_fixed_t), /* sx */
-	      TCL_UNUSED(wl_fixed_t)) /* sy */
-{
-    /* No-op. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PointerButton --
- *
- *      wl_pointer "button" handler.  Unused by the clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-PointerButton(TCL_UNUSED(void *), /* data */
-	      TCL_UNUSED(struct wl_pointer *), /* pointer */
-	      TCL_UNUSED(uint32_t), /* serial */
-	      TCL_UNUSED(uint32_t), /* time */
-	      TCL_UNUSED(uint32_t), /* button */
-	      TCL_UNUSED(uint32_t)) /* state */
-{
-    /* No-op. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PointerAxis --
- *
- *      wl_pointer "axis" handler.  Unused by the clipboard path.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-PointerAxis(TCL_UNUSED(void *), /* data */
-	    TCL_UNUSED(struct wl_pointer *), /* pointer */
-	    TCL_UNUSED(uint32_t), /* time */
-	    TCL_UNUSED(uint32_t), /* axis */
-	    TCL_UNUSED( wl_fixed_t)) /* value */
-{
-    /* No-op. */
-}
-
-static const struct wl_pointer_listener pointerListener = {
-    .enter = PointerEnter,
-    .leave = PointerLeave,
-    .motion = PointerMotion,
-    .button = PointerButton,
-    .axis = PointerAxis,
-    .frame = NULL,
-    .axis_source = NULL,
-    .axis_stop = NULL,
-    .axis_discrete = NULL,
-    .axis_value120 = NULL,
-    .axis_relative_direction = NULL,
-};
-
 /* 
  *  Seat + registry. 
  */
@@ -762,16 +584,16 @@ static const struct wl_pointer_listener pointerListener = {
  *
  * SeatCapabilities --
  *
- *      wl_seat "capabilities" handler.  Binds our own wl_keyboard and
- *      wl_pointer (for serial tracking) when the seat supports them,
- *      and creates the wl_data_device once both the manager and the
- *      seat are known.  Idempotent: existing objects are not recreated.
+ *      wl_seat "capabilities" handler.  Binds wl_keyboard (for serial
+ *      tracking) and creates the wl_data_device once both the manager
+ *      and the seat are known.  Idempotent.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      May create keyboard/pointer/device objects and add listeners.
+ *      May create keyboard/device objects and add listeners; sets
+ *      clip.ready when the device is installed.
  *
  *----------------------------------------------------------------------
  */
@@ -780,17 +602,23 @@ static void
 SeatCapabilities(void *data, struct wl_seat *seat, uint32_t caps)
 {
     WaylandClipboard *c = (WaylandClipboard *)data;
+    DEBUG_LOG("SeatCapabilities: caps=0x%x kbd=%p dev=%p",
+	      caps, (void *)c->keyboard, (void *)c->device);
     if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && c->keyboard == NULL) {
         c->keyboard = wl_seat_get_keyboard(seat);
         wl_keyboard_add_listener(c->keyboard, &keyboardListener, c);
     }
-    if ((caps & WL_SEAT_CAPABILITY_POINTER) && c->pointer == NULL) {
-        c->pointer = wl_seat_get_pointer(seat);
-        wl_pointer_add_listener(c->pointer, &pointerListener, c);
-    }
     if (c->device == NULL && c->manager != NULL) {
         c->device = wl_data_device_manager_get_data_device(c->manager, seat);
         wl_data_device_add_listener(c->device, &deviceListener, c);
+        DEBUG_LOG("SeatCapabilities: created data device %p",
+		  (void *)c->device);
+    }
+    if (c->device != NULL) {
+        if (!c->ready) {
+            DEBUG_LOG("SeatCapabilities: clipboard ready");
+        }
+        c->ready = 1;
     }
 }
 
@@ -799,21 +627,23 @@ SeatCapabilities(void *data, struct wl_seat *seat, uint32_t caps)
  *
  * SeatName --
  *
- *      wl_seat "name" handler.  Unused by the clipboard path.
+ *      wl_seat identifier. 
  *
  * Results:
- *      None.
+ *      None. No-op with GLFW. 
  *
  * Side effects:
  *      None.
- *
+ * 
  *----------------------------------------------------------------------
  */
 
 static void
-SeatName(void *data, struct wl_seat *seat, const char *name)
+SeatName(TCL_UNUSED(void *), 
+	 TCL_UNUSED(struct wl_seat *),
+	 TCL_UNUSED(const char *))
 {
-    (void)data; (void)seat; (void)name;
+    /* No-op. */
 }
 
 static const struct wl_seat_listener seatListener = {
@@ -826,16 +656,17 @@ static const struct wl_seat_listener seatListener = {
  *
  * RegistryGlobal --
  *
- *      wl_registry "global" handler.  Binds the interfaces the
- *      clipboard needs: wl_data_device_manager (v3) and wl_seat (v7,
- *      capped to the advertised version).  A seat listener is attached
- *      so SeatCapabilities can create the data device.
+ *      wl_registry "global" handler.  Binds wl_data_device_manager
+ *      (v3) and wl_seat (v7, capped).  A seat listener is attached so
+ *      SeatCapabilities can create the data device.  After the seat
+ *      is bound, capabilities arrive on the next event dispatch and
+ *      SeatCapabilities installs the device.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Binds globals; may replace c->manager / c->seat.
+ *      Binds globals.
  *
  *----------------------------------------------------------------------
  */
@@ -847,13 +678,31 @@ RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name,
     WaylandClipboard *c = (WaylandClipboard *)data;
     if (strcmp(interface, wl_data_device_manager_interface.name) == 0) {
         uint32_t v = version < 3 ? version : 3;
+        DEBUG_LOG("RegistryGlobal: binding %s v%u (advertised %u)",
+		  interface, v, version);
         c->manager = wl_registry_bind(registry, name,
 				      &wl_data_device_manager_interface, v);
     } else if (strcmp(interface, wl_seat_interface.name) == 0) {
         uint32_t v = version < 7 ? version : 7;
+        DEBUG_LOG("RegistryGlobal: binding %s v%u (advertised %u)",
+		  interface, v, version);
         c->seat = wl_registry_bind(registry, name,
 				   &wl_seat_interface, v);
         wl_seat_add_listener(c->seat, &seatListener, c);
+    }
+
+    /*
+     * If both globals have now been bound and the seat already
+     * delivered its capabilities, SeatCapabilities created the device
+     * inline.  If capabilities have not arrived yet, they will on the
+     * next pump and SeatCapabilities will set ready then.
+     */
+    if (c->manager != NULL && c->seat != NULL && c->device == NULL) {
+        c->device = wl_data_device_manager_get_data_device(c->manager, c->seat);
+        wl_data_device_add_listener(c->device, &deviceListener, c);
+        DEBUG_LOG("RegistryGlobal: created data device %p", (void *)c->device);
+        c->ready = 1;
+        DEBUG_LOG("RegistryGlobal: clipboard ready");
     }
 }
 
@@ -862,22 +711,21 @@ RegistryGlobal(void *data, struct wl_registry *registry, uint32_t name,
  *
  * RegistryGlobalRemove --
  *
- *      wl_registry "global_remove" handler.  Unused; we do not track
- *      global lifetimes past binding.
+ *      wl_registry "global" handler.  
  *
  * Results:
- *      None.
+ *      None. No-op with GLFW.
  *
  * Side effects:
  *      None.
  *
  *----------------------------------------------------------------------
  */
-
+ 
 static void
-RegistryGlobalRemove(TCL_UNUSED(void *), /* data */
-		     TCL_UNUSED(struct wl_registry *), /* registry */
-		     TCL_UNUSED(uint32_t)) /* name */
+RegistryGlobalRemove(TCL_UNUSED(void *), 
+		     TCL_UNUSED(struct wl_registry *),
+		     TCL_UNUSED(uint32_t))
 {
     /* No-op. */
 }
@@ -896,21 +744,24 @@ static const struct wl_registry_listener registryListener = {
  *
  * WaylandEnsureInitialized --
  *
- *      Lazily initialize the Wayland clipboard state: grab the
- *      wl_display GLFW already owns (never wl_display_connect), bind
- *      our own registry objects via one roundtrip, create the data
- *      device, and install a Tcl file handler on the display fd so
- *      events are pumped by Tk's event loop.  This roundtrip is the
- *      only blocking call in the clipboard path, and it happens once,
- *      on first use.
+ *      Non-blocking lazy initialization.  On first touch, grab the
+ *      wl_display GLFW already owns, install the registry listener,
+ *      and register the display fd with Tcl's event loop so incoming
+ *      events (including the globals for wl_data_device_manager and
+ *      wl_seat) are delivered by the normal event pump.  Do NOT
+ *      roundtrip here: that would block the main thread.
+ *
+ *      Returns 1 only when the clipboard is fully ready (display,
+ *      manager, seat, and data device all present).  Callers that get
+ *      0 simply drop their request; the next clipboard operation
+ *      retries after the pump has had a chance to deliver globals.
  *
  * Results:
- *      Returns 1 if a display is available (possibly already
- *      Initialized), 0 if GLFW has no Wayland display.
+ *      Returns 1 if the clipboard is ready, 0 otherwise.
  *
  * Side effects:
- *      Creates registry, binds globals, creates data device, registers
- *      Tcl file handler.  Sets clip.Initialized.
+ *      On first call: creates registry, adds listener, registers
+ *      display fd with Tcl.  Subsequent calls are cheap.
  *
  *----------------------------------------------------------------------
  */
@@ -918,41 +769,47 @@ static const struct wl_registry_listener registryListener = {
 static int
 WaylandEnsureInitialized(void)
 {
-    if (clip.Initialized) {
-	return clip.display != NULL;
-    }
-    clip.Initialized = 1;
+    if (!clip.Initialized) {
+	clip.Initialized = 1;
 
-    clip.display = glfwGetWaylandDisplay();
-    if (clip.display == NULL) {
+	clip.display = glfwGetWaylandDisplay();
+	DEBUG_LOG("WaylandEnsureInitialized: glfwGetWaylandDisplay()=%p",
+		  (void *)clip.display);
+	if (clip.display == NULL) {
+	    return 0;
+	}
+
+	clip.registry = wl_display_get_registry(clip.display);
+	wl_registry_add_listener(clip.registry, &registryListener, &clip);
+
+	/*
+	 * Register the display fd before anything can block.  The pump
+	 * drains events, including the registry globals; SeatCapabilities
+	 * or RegistryGlobal install the device and set clip.ready.
+	 */
+	{
+	    int fd = wl_display_get_fd(clip.display);
+	    DEBUG_LOG("WaylandEnsureInitialized: display fd=%d", fd);
+	    if (fd >= 0) {
+		Tcl_CreateFileHandler(fd, TCL_READABLE, WaylandPump, NULL);
+		clip.pumpInstalled = 1;
+	    }
+	}
+
+	/*
+	 * Flush the registry request now so the globals start arriving.
+	 * No read/wait here.
+	 */
+	wl_display_flush(clip.display);
+    }
+
+    if (!clip.ready) {
+	DEBUG_LOG("WaylandEnsureInitialized: not ready yet "
+		  "(manager=%p seat=%p device=%p)",
+		  (void *)clip.manager, (void *)clip.seat, (void *)clip.device);
 	return 0;
     }
-    clip.registry = wl_display_get_registry(clip.display);
-    wl_registry_add_listener(clip.registry, &registryListener, &clip);
-
-    /*
-     * One roundtrip here is safe: it happens once, on first clipboard
-     * use, not on every append/clear. It lets the registry deliver
-     * manager + seat so device can be created. Do NOT roundtrip per
-     * operation. After this, events flow via the pump below.
-     */
-    wl_display_roundtrip(clip.display);
-
-    if (clip.manager != NULL && clip.seat != NULL && clip.device == NULL) {
-	clip.device = wl_data_device_manager_get_data_device(
-							     clip.manager, clip.seat);
-	wl_data_device_add_listener(clip.device, &deviceListener, &clip);
-    }
-
-    /* Pump Wayland fd through Tcl's event loop. */
-    if (!clip.pumpInstalled) {
-	int fd = wl_display_get_fd(clip.display);
-	if (fd >= 0) {
-	    Tcl_CreateFileHandler(fd, TCL_READABLE, WaylandPump, NULL);
-	    clip.pumpInstalled = 1;
-	}
-    }
-    return clip.display != NULL;
+    return 1;
 }
 
 /*
@@ -969,22 +826,22 @@ WaylandEnsureInitialized(void)
  *      None.
  *
  * Side effects:
- *      Delivers Wayland events (send, cancelled, selection, enter...)
- *      to our listeners and flushes outgoing requests.
+ *      Delivers Wayland events to our listeners and flushes outgoing
+ *      requests.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-WaylandPump(TCL_UNUSED(ClientData), /* clientData */
-	    TCL_UNUSED(int)) /* mask */
+WaylandPump(TCL_UNUSED(ClientData), 
+	    TCL_UNUSED(int))
 {
     if (clip.display == NULL) {
 	return;
     }
-    /* Drain pending events; never blocks. */
     if (wl_display_prepare_read(clip.display) == 0) {
 	wl_display_read_events(clip.display);
+	DEBUG_LOG("WaylandPump: read events");
     }
     wl_display_dispatch_pending(clip.display);
     wl_display_flush(clip.display);
@@ -996,8 +853,9 @@ WaylandPump(TCL_UNUSED(ClientData), /* clientData */
  * TkWaylandClipboardPump --
  *
  *      Public pump entry point.  Call this from the Tk/GLFW main loop
- *      if Tcl file handlers are not running (e.g. a pure glfwPollEvents
- *      loop).  Safe to call often; never blocks.
+ *      if Tcl file handlers are not running.  Safe to call often;
+ *      never blocks.  Also drives asynchronous initialization when
+ *      the file handler is not installed.
  *
  * Results:
  *      None.
@@ -1011,6 +869,10 @@ WaylandPump(TCL_UNUSED(ClientData), /* clientData */
 void
 TkWaylandClipboardPump(void)
 {
+    if (!clip.Initialized && glfwGetWaylandDisplay() == NULL) {
+	/* Nothing to pump; GLFW is not on Wayland. */
+	return;
+    }
     WaylandPump(NULL, 0);
 }
 
@@ -1018,24 +880,65 @@ TkWaylandClipboardPump(void)
  *  Publish / clear.
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WaylandTryClaimSource --
+ *
+ *      If a wl_data_source is installed but not yet confirmed, and a
+ *      serial is available, issue set_selection() with the current
+ *      serial.  This is the only place set_selection() is called for
+ *      a publish.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      May issue set_selection and flush the display.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WaylandTryClaimSource(void)
+{
+    if (clip.source == NULL || clip.sourceConfirmed) {
+	return;
+    }
+    if (!clip.ready) {
+	DEBUG_LOG("WaylandTryClaimSource: clipboard not ready, deferring");
+	return;
+    }
+    if (!clip.haveSerial) {
+	DEBUG_LOG("WaylandTryClaimSource: no serial yet, deferring");
+	return;
+    }
+    DEBUG_LOG("WaylandTryClaimSource: set_selection source=%p serial=%u",
+	      (void *)clip.source, clip.lastSerial);
+    wl_data_device_set_selection(clip.device, clip.source, clip.lastSerial);
+    clip.claimIssued = 1;
+    wl_display_flush(clip.display);
+}
 
 /*
  *----------------------------------------------------------------------
  *
  * WaylandPublish --
  *
- *      Publish text as the Wayland selection.  If no enter serial has
- *      been seen yet, the text is queued (pendingText) and published on
- *      the next KeyboardEnter.  Otherwise a fresh wl_data_source is
- *      created, the UTF-8 mime family offered, and set_selection() is
- *      issued.  Any previous source is destroyed first.  Never blocks.
+ *      Publish text as the Wayland selection.  Creates a
+ *      wl_data_source immediately, offers the UTF-8 mime family, and
+ *      attempts to claim it with the current serial.  If no serial is
+ *      available yet, the source stays provisional and is claimed on
+ *      the next KeyboardEnter.  If the clipboard is not yet ready
+ *      (asynchronous init), the request is dropped; the next
+ *      [clipboard append] retries once the pump has delivered globals.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Replaces clip.text, creates/destroys wl_data_source objects,
- *      issues set_selection and flushes the display.
+ *      Destroys any previous source, allocates clip.text, creates a
+ *      new wl_data_source, may issue set_selection.
  *
  *----------------------------------------------------------------------
  */
@@ -1043,27 +946,21 @@ TkWaylandClipboardPump(void)
 static void
 WaylandPublish(const char *text, size_t len)
 {
+    DEBUG_LOG("WaylandPublish: len=%zu haveSerial=%d ready=%d",
+	      len, clip.haveSerial, clip.ready);
     if (!WaylandEnsureInitialized()) {
-	return;
-    }
-    if (clip.manager == NULL || clip.device == NULL) {
-	return;
-    }
-    if (!clip.haveSerial) {
-	/* No focus yet: queue until KeyboardEnter. */
-	ckfree(clip.pendingText);
-	clip.pendingText = (char *)ckalloc(len + 1);
-	memcpy(clip.pendingText, text, len);
-	clip.pendingText[len] = '\0';
-	clip.pendingLen = len;
-	clip.pendingClear = 0;
+	DEBUG_LOG("WaylandPublish: clipboard not ready, dropping");
 	return;
     }
 
     /* Replace any previous source; its cancelled() will fire. */
     if (clip.source != NULL) {
 	struct wl_data_source *old = clip.source;
+	DEBUG_LOG("WaylandPublish: destroying previous source %p",
+		  (void *)old);
 	clip.source = NULL;
+	clip.sourceConfirmed = 0;
+	clip.claimIssued = 0;
 	wl_data_source_destroy(old);
     }
     ckfree(clip.text);
@@ -1080,9 +977,8 @@ WaylandPublish(const char *text, size_t len)
     wl_data_source_offer(clip.source, "STRING");
     wl_data_source_offer(clip.source, "COMPOUND_TEXT");
 
-    wl_data_device_set_selection(clip.device, clip.source,
-				 clip.lastEnterSerial);
-    wl_display_flush(clip.display);
+    DEBUG_LOG("WaylandPublish: new source=%p", (void *)clip.source);
+    WaylandTryClaimSource();
 }
 
 /*
@@ -1090,17 +986,19 @@ WaylandPublish(const char *text, size_t len)
  *
  * WaylandClear --
  *
- *      Clear the Wayland selection.  If no enter serial is available
- *      the clear is queued (pendingClear) until the next KeyboardEnter.
- *      Otherwise set_selection(NULL) is issued, which causes the
- *      compositor to fire cancelled() on our source (cleaning it up);
- *      our in-memory text is freed here.
+ *      Clear the Wayland selection, but only if we own it.  If we have
+ *      a source installed, destroy it (and drop our text) and issue
+ *      set_selection(NULL) with the current serial if one is available.
+ *      If we do NOT own the selection (another client does, e.g. after
+ *      an external copy), nothing is sent: Tk's own buffers are cleared
+ *      by generic code, but we must never wipe someone else's clipboard.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Issues set_selection, frees clip.text, flushes the display.
+ *      Destroys wl_data_source, frees clip.text, may issue
+ *      set_selection(NULL).
  *
  *----------------------------------------------------------------------
  */
@@ -1108,42 +1006,62 @@ WaylandPublish(const char *text, size_t len)
 static void
 WaylandClear(void)
 {
+    int owned;
+
+    DEBUG_LOG("WaylandClear: haveSerial=%d source=%p ready=%d",
+	      clip.haveSerial, (void *)clip.source, clip.ready);
     if (!WaylandEnsureInitialized()) {
+	DEBUG_LOG("WaylandClear: clipboard not ready, dropping");
 	return;
     }
-    if (clip.device == NULL) {
-	return;
+
+    owned = (clip.source != NULL);
+    if (clip.source != NULL) {
+	struct wl_data_source *old = clip.source;
+	clip.source = NULL;
+	clip.sourceConfirmed = 0;
+	clip.claimIssued = 0;
+	wl_data_source_destroy(old);
     }
-    if (!clip.haveSerial) {
-	clip.pendingClear = 1;
-	ckfree(clip.pendingText);
-	clip.pendingText = NULL;
-	clip.pendingLen = 0;
-	return;
-    }
-    wl_data_device_set_selection(clip.device, NULL, clip.lastEnterSerial);
-    wl_display_flush(clip.display);
-    /* cancelled() cleans up clip.source. */
     ckfree(clip.text);
     clip.text = NULL;
     clip.textLen = 0;
+
+    if (owned && clip.haveSerial) {
+	DEBUG_LOG("WaylandClear: set_selection(NULL) serial=%u",
+		  clip.lastSerial);
+	wl_data_device_set_selection(clip.device, NULL, clip.lastSerial);
+	wl_display_flush(clip.display);
+    } else {
+	DEBUG_LOG("WaylandClear: nothing to clear on the compositor");
+    }
 }
 
 /*
  *  Read incoming offer (clipboard get).
  */
 
+static long
+MonotonicMs(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long)ts.tv_sec * 1000L + (long)(ts.tv_nsec / 1000000L);
+}
+
 /*
  *----------------------------------------------------------------------
  *
  * WaylandReadOffer --
  *
- *      Read the current incoming offer (owned by another application)
- *      into a newly allocated, NUL-terminated buffer.  Picks the best
- *      available UTF-8 mime type, requests it via wl_data_offer_receive
- *      through a non-blocking pipe, then pumps and polls the pipe in
- *      short slices so a misbehaving owner cannot freeze Tk.  Returns
- *      NULL if no offer exists or no suitable mime type is offered.
+ *      Read the current incoming offer (owned by another application,
+ *      or echoed back to us by the compositor if we are the owner) into
+ *      a newly allocated, NUL-terminated buffer.  Picks the best
+ *      available UTF-8 mime type, requests it via
+ *      wl_data_offer_receive through a non-blocking pipe, then pumps
+ *      and polls the pipe in short slices so a misbehaving owner cannot
+ *      freeze Tk.  Returns NULL if no offer exists or no suitable mime
+ *      type is offered.
  *
  * Results:
  *      Returns a ckalloc'd buffer and stores its length in *lenPtr,
@@ -1167,12 +1085,14 @@ WaylandReadOffer(size_t *lenPtr)
 
     *lenPtr = 0;
     if (!WaylandEnsureInitialized()) {
+	DEBUG_LOG("WaylandReadOffer: clipboard not ready");
 	return NULL;
     }
     if (clip.offer == NULL) {
+	DEBUG_LOG("WaylandReadOffer: no offer");
 	return NULL;
     }
-    /* Prefer UTF-8 mime. */
+    DEBUG_LOG("WaylandReadOffer: %d mime(s) available", clip.numOfferMimes);
     for (i = 0; i < clip.numOfferMimes; i++) {
 	if (strcmp(clip.offerMimes[i], "text/plain;charset=utf-8") == 0) {
 	    mime = clip.offerMimes[i];
@@ -1190,12 +1110,13 @@ WaylandReadOffer(size_t *lenPtr)
 	}
     }
     if (mime == NULL) {
+	DEBUG_LOG("WaylandReadOffer: no suitable UTF-8 mime");
 	return NULL;
     }
     if (pipe(pipefd) != 0) {
+	DEBUG_LOG("WaylandReadOffer: pipe() failed: %s", strerror(errno));
 	return NULL;
     }
-    /* Set CLOEXEC | NONBLOCK on both ends via fcntl(). */
     {
 	int i;
 	for (i = 0; i < 2; i++) {
@@ -1209,32 +1130,52 @@ WaylandReadOffer(size_t *lenPtr)
 	    }
 	}
     }
+    DEBUG_LOG("WaylandReadOffer: requesting mime=%s via fd=%d",
+	      mime, pipefd[1]);
     wl_data_offer_receive(clip.offer, mime, pipefd[1]);
     close(pipefd[1]);
     wl_display_flush(clip.display);
 
-    /*
-     * Pump + poll: owner writes, then closes. 500ms cap so a
-     * misbehaving owner cannot freeze Tk.
-     */
     {
-	int slices = 0;
+	/*
+	 * Wait for data, bounded.  The display fd is polled too and
+	 * events are read with the proper prepare_read protocol: when
+	 * the current owner is our own source, the compositor delivers
+	 * the "send" request over the display connection, and nothing
+	 * would ever arrive on the pipe if we only polled the pipe.
+	 * The deadline is pushed back whenever data arrives.
+	 */
+	int displayFd = wl_display_get_fd(clip.display);
+	long deadline = MonotonicMs() + 500;
+
 	for (;;) {
-	    struct pollfd pfd;
-	    pfd.fd = pipefd[0];
-	    pfd.events = POLLIN;
-	    pfd.revents = 0;
-	    /* Let Wayland deliver send() completion while we wait. */
-	    wl_display_dispatch_pending(clip.display);
-	    if (poll(&pfd, 1, 50) == 0) {
-		/* Timeout slice: keep looping up to ~500ms total. */
-		/* slices is local: reset on every call. */
-		if (++slices >= 10) {
-		    break;
-		}
-		continue;
+	    struct pollfd pfds[2];
+	    int rc;
+
+	    while (wl_display_prepare_read(clip.display) != 0) {
+		wl_display_dispatch_pending(clip.display);
 	    }
-	    if (pfd.revents & (POLLIN | POLLHUP | POLLERR)) {
+	    wl_display_flush(clip.display);
+
+	    pfds[0].fd = pipefd[0];
+	    pfds[0].events = POLLIN;
+	    pfds[0].revents = 0;
+	    pfds[1].fd = displayFd;
+	    pfds[1].events = POLLIN;
+	    pfds[1].revents = 0;
+	    rc = poll(pfds, 2, 50);
+	    if (rc > 0 && (pfds[1].revents & POLLIN)) {
+		wl_display_read_events(clip.display);
+	    } else {
+		wl_display_cancel_read(clip.display);
+	    }
+	    wl_display_dispatch_pending(clip.display);
+
+	    if (rc < 0 && errno != EINTR) {
+		break;
+	    }
+	    if (rc > 0 &&
+		(pfds[0].revents & (POLLIN | POLLHUP | POLLERR))) {
 		char tmp[4096];
 		ssize_t n;
 		for (;;) {
@@ -1246,6 +1187,7 @@ WaylandReadOffer(size_t *lenPtr)
 			}
 			memcpy(buf + len, tmp, (size_t)n);
 			len += (size_t)n;
+			deadline = MonotonicMs() + 500;
 		    } else if (n == 0) {
 			goto done;
 		    } else {
@@ -1255,22 +1197,21 @@ WaylandReadOffer(size_t *lenPtr)
 			goto done;
 		    }
 		}
-		if (pfd.revents & (POLLHUP | POLLERR)) {
-		    /* Drain once more, then finish. */
-		    continue;
-		}
-	    } else {
+	    }
+	    if (MonotonicMs() >= deadline) {
+		DEBUG_LOG("WaylandReadOffer: timed out");
 		break;
 	    }
 	}
-    done:
-	close(pipefd[0]);
-	if (buf != NULL) {
-	    buf[len] = '\0';
-	}
-	*lenPtr = len;
-	return buf;
     }
+done:
+    close(pipefd[0]);
+    DEBUG_LOG("WaylandReadOffer: read %zu bytes", len);
+    if (buf != NULL) {
+	buf[len] = '\0';
+    }
+    *lenPtr = len;
+    return buf;
 }
 
 /*
@@ -1283,20 +1224,18 @@ WaylandReadOffer(size_t *lenPtr)
  * CollectClipboardText --
  *
  *      Assemble the current clipboard text from Tk's own selection
- *      handlers.  Tk stores clipboard append data as selection handlers
- *      on TkDisplay->clipTargetPtr; this routine walks them, finds the first
- *      UTF-8/STRING target, and pulls its data in chunks via the
- *      buffer chain of the first usable target.  Used by
- *      TkSelUpdateClipboard to obtain the text to hand to
- *      WaylandPublish.
+ *      handlers.  Tk stores clipboard append data as a linked list of
+ *      targets on TkDisplay->clipTargetPtr, each holding a chain of
+ *      buffers.  Concatenate every buffer of the first UTF-8/STRING
+ *      target.
  *
  * Results:
  *      Returns TCL_OK and stores a ckalloc'd, NUL-terminated buffer in
- *      *outText with its length in *outLen if any usable target yields
- *      data; returns TCL_ERROR otherwise (with *outText == NULL).
+ *      *outText with its length in *outLen; returns TCL_ERROR
+ *      otherwise.
  *
  * Side effects:
- *      Allocates via ckalloc; calls the target's proc callback.
+ *      Allocates via ckalloc.
  *
  *----------------------------------------------------------------------
  */
@@ -1315,22 +1254,18 @@ CollectClipboardText(TkWindow *winPtr,
     *outText = NULL;
     *outLen = 0;
     if (winPtr == NULL || winPtr->dispPtr == NULL) {
+	DEBUG_LOG("CollectClipboardText: no window/display");
 	return TCL_ERROR;
     }
-    /*
-     * Tk stores clipboard appends as a linked list of targets
-     * (TkDisplay->clipTargetPtr, via TkClipboardTarget.nextPtr),
-     * each holding a chain of buffers (firstBufferPtr via
-     * TkClipboardBuffer.nextPtr). There is no proc/clientData:
-     * the data is already in the buffers. Concatenate every
-     * buffer of the first UTF-8/STRING target.
-     */
+    DEBUG_LOG("CollectClipboardText: scanning targets for %s",
+	      Tk_PathName(winPtr));
     for (targetPtr = winPtr->dispPtr->clipTargetPtr; targetPtr != NULL;
 	 targetPtr = targetPtr->nextPtr) {
 	const char *name = Tk_GetAtomName((Tk_Window)winPtr, targetPtr->type);
 	if (name == NULL) {
 	    continue;
 	}
+	DEBUG_LOG("CollectClipboardText: considering target %s", name);
 	if (strcmp(name, "UTF8_STRING") != 0 &&
 	    strcmp(name, "STRING") != 0 &&
 	    strcmp(name, "text/plain") != 0 &&
@@ -1349,12 +1284,14 @@ CollectClipboardText(TkWindow *winPtr,
 	    memcpy(buf + len, cbPtr->buffer, (size_t)cbPtr->length);
 	    len += (size_t)cbPtr->length;
 	}
-	break; /* first usable target wins */
+	break;
     }
 
     if (buf == NULL) {
+	DEBUG_LOG("CollectClipboardText: no usable target produced data");
 	return TCL_ERROR;
     }
+    DEBUG_LOG("CollectClipboardText: assembled %zu bytes", len);
     buf[len] = '\0';
     *outText = buf;
     *outLen = len;
@@ -1370,13 +1307,21 @@ CollectClipboardText(TkWindow *winPtr,
  *
  * TkSelGetSelection --
  *
- *      Retrieve the CLIPBOARD selection. On Wayland this means reading
- *      from the current wl_data_offer (owned by another app) if any,
- *      or from our own published text if we are the owner.
+ *      Retrieve the CLIPBOARD selection from whichever Wayland client
+ *      owns it.  Reads from the current wl_data_offer, which the
+ *      compositor routes either to another client's source or back to
+ *      our own.  We deliberately do NOT return clip.text directly, even
+ *      when clip.source is installed: set_selection() may have been
+ *      silently rejected, in which case our own copy is stale.
+ *
+ *      Generic Tk (e.g. [clipboard get], [selection get]) collects the
+ *      result through the Tk_GetSelProc callback, so the text is
+ *      delivered via proc(); setting only the interpreter result would
+ *      be overwritten by the caller's empty accumulator.
  *
  * Results:
- *      TCL_OK with the selection text as the interp result, or
- *      TCL_ERROR if no selection exists.
+ *      The result of proc (TCL_OK normally), or TCL_ERROR with an error
+ *      message if no selection exists.
  *
  * Side effects:
  *      May pump the Wayland connection briefly (bounded poll).
@@ -1390,15 +1335,17 @@ TkSelGetSelection(
 		  Tk_Window tkwin,
 		  Atom selection,
 		  Atom target,
-		  TCL_UNUSED(Tk_GetSelProc *),
-		  TCL_UNUSED(void *))
+		  Tk_GetSelProc *proc,
+		  void *clientData)
 {
     const char *selName = Tk_GetAtomName(tkwin, selection);
     const char *targetName = Tk_GetAtomName(tkwin, target);
     char *text = NULL;
     size_t len = 0;
+    int result;
 
-    (void)tkwin;
+    DEBUG_LOG("TkSelGetSelection: selection=%s target=%s",
+	      selName ? selName : "?", targetName ? targetName : "?");
 
     if (selName == NULL || strcmp(selName, "CLIPBOARD") != 0) {
 	goto error;
@@ -1412,14 +1359,12 @@ TkSelGetSelection(
 	goto error;
     }
     if (targetName != NULL && strcmp(targetName, "TARGETS") == 0) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-						  "UTF8_STRING STRING text/plain text/plain;charset=utf-8", -1));
-	return TCL_OK;
-    }
-
-    /* If we own it, return our copy directly -- no round-trip. */
-    if (clip.source != NULL && clip.text != NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(clip.text, (int)clip.textLen));
+	static const char targets[] =
+	    "UTF8_STRING STRING text/plain text/plain;charset=utf-8";
+	if (proc != NULL) {
+	    return proc(clientData, interp, targets);
+	}
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(targets, -1));
 	return TCL_OK;
     }
 
@@ -1427,15 +1372,20 @@ TkSelGetSelection(
     if (text == NULL) {
 	goto error;
     }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(text, (int)len));
+    if (proc != NULL) {
+	result = proc(clientData, interp, text);
+    } else {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(text, (Tcl_Size)len));
+	result = TCL_OK;
+    }
     ckfree(text);
-    return TCL_OK;
+    return result;
 
  error:
+    DEBUG_LOG("TkSelGetSelection: no selection or unsupported target");
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-					   "%s selection doesn't exist or form \"%s\" not defined",
-					   selName ? selName : "?",
-					   targetName ? targetName : "?"));
+		     "%s selection doesn't exist or form \"%s\" not defined",
+		     selName ? selName : "?", targetName ? targetName : "?"));
     Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
     return TCL_ERROR;
 }
@@ -1445,8 +1395,8 @@ TkSelGetSelection(
  *
  * XSetSelectionOwner --
  *
- *      Stub kept for Tk's generic code. Real ownership is via
- *      wl_data_device_set_selection() in WaylandPublish/WaylandClear.
+ *      Stub kept for Tk's generic code.  Real ownership is via
+ *      wl_data_device_set_selection() in WaylandPublish.
  *
  * Results:
  *      Always Success.
@@ -1458,10 +1408,9 @@ TkSelGetSelection(
  */
 
 int
-XSetSelectionOwner(
-		   TCL_UNUSED(Display *),
+XSetSelectionOwner(TCL_UNUSED(Display *), 
 		   TCL_UNUSED(Atom),
-		   TCL_UNUSED(Window),
+		   TCL_UNUSED(Window), 
 		   TCL_UNUSED(Time))
 {
     return Success;
@@ -1474,7 +1423,7 @@ XSetSelectionOwner(
  *
  *      Handle SelectionClear events (ownership lost).  Forwards the
  *      event to TkSelClearSelection so Tk's generic bookkeeping stays
- *      consistent when a SelectionClear reaches us.
+ *      consistent.
  *
  * Results:
  *      None.
@@ -1486,10 +1435,9 @@ XSetSelectionOwner(
  */
 
 void
-TkSelEventProc(
-	       Tk_Window tkwin,
-	       XEvent *eventPtr)
+TkSelEventProc(Tk_Window tkwin, XEvent *eventPtr)
 {
+    DEBUG_LOG("TkSelEventProc: type=%d", eventPtr->type);
     if (eventPtr->type == SelectionClear) {
 	TkSelClearSelection(tkwin, eventPtr);
     }
@@ -1512,8 +1460,7 @@ TkSelEventProc(
  */
 
 void
-TkSelPropProc(
-	      TCL_UNUSED(XEvent *))
+TkSelPropProc(TCL_UNUSED(XEvent *))
 {
     /* No-op */
 }
@@ -1524,37 +1471,40 @@ TkSelPropProc(
  * TkSelUpdateClipboard --
  *
  *      Called by generic Tk after [clipboard append] or
- *      [clipboard clear]. Publish our assembled clipboard text as a
+ *      [clipboard clear].  Publish our assembled clipboard text as a
  *      wl_data_source, or clear the Wayland selection if there are no
  *      clipboard targets left.
  *
  *      This is the ONLY place that talks to wl_data_device for writes.
- *      It never blocks.
+ *      It never blocks.  If asynchronous initialization has not yet
+ *      completed, the publish is dropped; the next [clipboard append]
+ *      retries once the pump has delivered the registry globals.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      May publish or clear the Wayland selection; may allocate/free
- *      clipboard text via CollectClipboardText.
+ *      May publish or clear the Wayland selection.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkSelUpdateClipboard(
-		     TkWindow *winPtr,
-		     clipboardOption option)
+TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option)
 {
     char *text = NULL;
     size_t len = 0;
 
     (void)option;
 
+    DEBUG_LOG("TkSelUpdateClipboard: win=%s targets=%s",
+	      winPtr ? Tk_PathName(winPtr) : "(null)",
+	      (winPtr && winPtr->dispPtr && winPtr->dispPtr->clipTargetPtr)
+	      ? "yes" : "none");
+
     if (winPtr == NULL) {
 	return;
     }
-    /* clipboard clear -> no targets remain. */
     if (winPtr->dispPtr == NULL ||
 	winPtr->dispPtr->clipTargetPtr == NULL) {
 	WaylandClear();
@@ -1563,6 +1513,7 @@ TkSelUpdateClipboard(
     if (CollectClipboardText(winPtr, NULL, &text, &len) != TCL_OK) {
 	return;
     }
+    DEBUG_LOG("TkSelUpdateClipboard: publishing %zu bytes", len);
     WaylandPublish(text, len);
     ckfree(text);
 }

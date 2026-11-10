@@ -637,7 +637,6 @@ if {$::tk_library ne ""} {
 	    SourceLibFile systray
 	}
 	SourceLibFile text
-	#SourceLibFile wayland
     }
 }
 
@@ -1013,10 +1012,6 @@ if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
-}
-
-if {[tk windowingsystem] eq "wayland"} {
-  # after idle rename_wayland_clipboard
 }
 
 # Local Variables:

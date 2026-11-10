@@ -696,8 +696,6 @@ INSTALL_DESKTOP_ENTRY
 XMKMF
 WAYLAND_LDFLAGS
 TK_USE_WAYLAND
-WL_PASTE
-WL_COPY
 ATK_LIBS
 ATK_CFLAGS
 HB_LIBS
@@ -8654,117 +8652,10 @@ Please install the ATK and at-spi2-atk development packages:
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: NanoVG will be built from bundled sources in wayland/nanovg.c" >&5
 printf '%s\n' "$as_me: NanoVG will be built from bundled sources in wayland/nanovg.c" >&6;}
 
-        #--------------------------------------------------------------------
-        # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
-        #--------------------------------------------------------------------
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wl-copy and wl-paste" >&5
-printf %s "checking for wl-copy and wl-paste... " >&6; }
-        # Extract the first word of "wl-copy", so it can be a program name with args.
-set dummy wl-copy; ac_word=$2
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_WL_COPY+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) case $WL_COPY in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_WL_COPY="$WL_COPY" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_WL_COPY="$as_dir$ac_word$ac_exec_ext"
-    printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac ;;
-esac
-fi
-WL_COPY=$ac_cv_path_WL_COPY
-if test -n "$WL_COPY"; then
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WL_COPY" >&5
-printf '%s\n' "$WL_COPY" >&6; }
-else
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-fi
-
-
-        # Extract the first word of "wl-paste", so it can be a program name with args.
-set dummy wl-paste; ac_word=$2
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_WL_PASTE+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) case $WL_PASTE in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_WL_PASTE="$WL_PASTE" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_WL_PASTE="$as_dir$ac_word$ac_exec_ext"
-    printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac ;;
-esac
-fi
-WL_PASTE=$ac_cv_path_WL_PASTE
-if test -n "$WL_PASTE"; then
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WL_PASTE" >&5
-printf '%s\n' "$WL_PASTE" >&6; }
-else
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-fi
-
-
-        if test "x$WL_COPY" = x || test "x$WL_PASTE" = x; then
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-            as_fn_error $? "wl-copy and wl-paste (from wl-clipboard package) are required for Wayland backend clipboard support.
-
-Please install wl-clipboard:
-  - Debian/Ubuntu:   sudo apt install wl-clipboard
-  - Fedora:          sudo dnf install wl-clipboard
-  - Arch:            sudo pacman -S wl-clipboard" "$LINENO" 5
-        fi
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-
-
+        # Clipboard on Wayland is handled by the native implementation
+        # (tkWaylandClipboard.c, via zwlr_data_control / wl_data_device);
+        # wl-clipboard (wl-copy / wl-paste) is no longer required at
+        # build time or run time.
 
         # Final check — everything must be present
         if test "$found_wayland" = yes \
@@ -8776,9 +8667,7 @@ printf '%s\n' "yes" >&6; }
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
            && test "$found_harfbuzz" = yes \
-           && test "$found_atk" = yes \
-           && test -n "$WL_COPY" \
-           && test -n "$WL_PASTE"; then
+           && test "$found_atk" = yes; then
 
             TK_USE_WAYLAND=1
 
@@ -8789,8 +8678,8 @@ printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + wl-clipboard" >&5
-printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + wl-clipboard" >&6;}
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + native clipboard" >&5
+printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + native clipboard" >&6;}
         else
             as_fn_error $? "Wayland backend requested but one or more required components missing.
 
@@ -8807,14 +8696,13 @@ Required (all mandatory when --enable-wayland is used):
   - HarfBuzz >= 2.8.2
   - ATK + Atk-bridge (accessibility)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
-  - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
     libdecor-0-dev libfontconfig-dev libsystemd-dev \
     libharfbuzz-dev libatk1.0-dev libatk-bridge2.0-dev \
-    wl-clipboard libwayland-egl1
+    libwayland-egl1
 " "$LINENO" 5
         fi
     fi
