@@ -122,7 +122,8 @@ proc ::tk::dialog::file:: {type args} {
     #
     if {![winfo exists $w]} {
 	Create $w TkFDialog
-    } elseif {[winfo class $w] ne "TkFDialog"} {
+    } elseif {[winfo class $w] ne "TkFDialog"
+	    || [info commands $w.contents.icons] eq ""} {
 	destroy $w
 	Create $w TkFDialog
     } else {
