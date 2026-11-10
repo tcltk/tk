@@ -667,10 +667,8 @@ parseFileFilters(
 	     */
 
 	    if (selectedFileTypeObj != NULL) {
-		const char *selectedFileType =
-			Tcl_GetString(selectedFileTypeObj);
 		NSString *selectedFileTypeStr =
-			[[TKNSString alloc] initWithTclUtfBytes:selectedFileType length:TCL_INDEX_NONE];
+			[[TKNSString alloc] initWithTclObj:selectedFileTypeObj];
 		NSUInteger index =
 			[filterInfo.fileTypeNames indexOfObject:selectedFileTypeStr];
 
