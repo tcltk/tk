@@ -167,11 +167,34 @@ static const struct {
  * Structures and data for the wm attributes command (macOS 10.13 and later):
  */
 
-/* Hash tables for attributes which can be set before a window exists */
-static bool rootExists = false;
+/*
+ * These hash tables are for looking up values of attributes which must be set
+ * before a window exists, namely -class, -tabbingid, and -tabbingMode. Entries
+ * Entries are created in WmAttributesObjCmd and used when a window is created
+ * by TkMacOSXMakeRealWindowExist.  The class attribute determines which
+ * Objective C class (TKWindow or TKPanel) should be used for the native window,
+ * so it must be known before the window is created.  The tabbing data must
+ * exist before the window is ordered front, since it may either be displayed as
+ * a tab or as a standalone window.  The hash entries are removed as soon as
+ * they are read.  Note that if the wm attributes command appears in a script
+ * immediately after the toplevel command it will be executed before the
+ * native window for the toplevel is created but after the TkWindow has been
+ * created.
+ */
 static Tcl_HashTable pathnameToSubclass;
 static Tcl_HashTable pathnameToTabbingId;
 static Tcl_HashTable pathnameToTabbingMode;
+
+static void ensureHashTablesExist() {
+    static bool initialized = false;
+    /* Create the hash tables if they don't exist yet. */
+    if (!initialized) {
+	Tcl_InitHashTable(&pathnameToSubclass, TCL_STRING_KEYS);
+	Tcl_InitHashTable(&pathnameToTabbingId, TCL_STRING_KEYS);
+	Tcl_InitHashTable(&pathnameToTabbingMode, TCL_STRING_KEYS);
+	initialized = true;
+    }
+}
 
 enum NSWindowSubclass {
     subclassNSWindow = 0,
@@ -2205,26 +2228,25 @@ WmAttributesCmd(
 {
     int attribute = 0;
     NSWindow *macWindow;
-    if (!rootExists) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	   "Window attributes cannot be set before the root window exists."));
-	Tcl_SetErrorCode(interp, "TK", "NO_WINDOW", (char *)NULL);
-	return TCL_ERROR;
+    if (winPtr == NULL) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Window does not exist", -1));
+	    Tcl_SetErrorCode(interp, "TK", "NO_WINDOW", "ATTRIBUTES", (char *)NULL);
+	    return TCL_ERROR;
     }
-
-    if (winPtr == NULL && objc == 5) {
+    if (winPtr->window == None && objc == 5) {
 	int index, isNew = 0;
 	Tcl_Size length;
+	ensureHashTablesExist();
 
 	/*
-	 * If we are setting an atttribute of a future window, save the value
+	 * We are setting an atttribute of a future window. Save the value
 	 * in a hash table so we can look it up when the window is actually
-	 * created.
+	 * created below.
 	 */
 
 	if (strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[4], subclassNames,
-		    sizeof(char *), "NSWindow subclass", 0, &index) != TCL_OK) {
+		sizeof(char *), "NSWindow subclass", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToSubclass,
@@ -2247,7 +2269,8 @@ WmAttributesCmd(
 	    long value = NSWindowTabbingModeAutomatic;
 	    int modeIndex;
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[4], tabbingModes,
-	       sizeof(tabbingMode), "NSWindow Tabbing Mode", 0, &modeIndex) == TCL_OK) {
+	        sizeof(tabbingMode), "NSWindow Tabbing Mode", 0,
+		&modeIndex) == TCL_OK) {
 		value = tabbingModes[modeIndex].modeValue;
 	    }
 	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToTabbingMode,
@@ -2258,13 +2281,7 @@ WmAttributesCmd(
 	    }
 	}
     }
-    if (!winPtr) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	   "Only -class, -tabbingid, or -tabbingmode can be set before the window exists."));
-	Tcl_SetErrorCode(interp, "TK", "NO_WINDOW", (char *)NULL);
-	return TCL_ERROR;
-    }
-    if (winPtr && winPtr->window == None) {
+    if (winPtr->window == None) {
 	Tk_MakeWindowExist((Tk_Window)winPtr);
     }
     if (!TkMacOSXHostToplevelExists(winPtr)) {
@@ -6757,13 +6774,8 @@ TkMacOSXMakeRealWindowExist(
 	 * onward, the styleMask can replace the Carbon window classes and
 	 * attributes.
 	 */
+        ensureHashTablesExist();
 	int index;
-	if (!rootExists) {
-	    Tcl_InitHashTable(&pathnameToSubclass, TCL_STRING_KEYS);
-	    Tcl_InitHashTable(&pathnameToTabbingId, TCL_STRING_KEYS);
-	    Tcl_InitHashTable(&pathnameToTabbingMode, TCL_STRING_KEYS);
-	    rootExists = true;
-	}
 	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr));
 	index = hPtr ? PTR2INT(Tcl_GetHashValue(hPtr)) : subclassNSWindow;
 	switch(index) {
@@ -6806,8 +6818,8 @@ TkMacOSXMakeRealWindowExist(
     } else {
 
 	/*
-	 * If this is an override-redirect window, the NSWindow is created first as
-	 * a document window then converted to a simple window.
+	 * If this is an override-redirect window, the NSWindow is created
+	 * first as a document window then converted to a simple window.
 	 */
 
 	if (overrideRedirect) {
@@ -6845,7 +6857,7 @@ TkMacOSXMakeRealWindowExist(
 	    TkMacOSXZeroScreenHeight() - (TkMacOSXZeroScreenTop() + 5 +
 	    structureRect.origin.y + structureRect.size.height + 200), 200, 200);
     if (wmPtr->hints.initial_state == WithdrawnState) {
-	//// ???????
+	//// Do we need to do something here?
     }
     TKWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
