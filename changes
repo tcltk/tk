@@ -8631,3 +8631,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-11-09 (bug) [3da059] Filesystem dialogs conflict with auto_reset (under Linux) (storchaka)
 
 2026-11-10 (bug) [586f72] New test winfo-4.8 fails (storchaka)
+
+2026-11-10 (bug) [b298b9] Possible Tk regression when loading into threads (storchaka)
