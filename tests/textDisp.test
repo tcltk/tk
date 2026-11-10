@@ -160,6 +160,9 @@ if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
     wm geom . +50+50
 }
 
+# The natural size of the main window, used by many tests.
+scan [wm geom .] %dx%d width height
+
 #
 # TESTS
 #
@@ -374,9 +377,7 @@ foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
 
-test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
-    scan [wm geom .] %dx%d width height
-} -body {
+test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -body {
     wm geom . [expr {$width+1}]x$height
     update
     .t configure -wrap char
