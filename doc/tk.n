@@ -51,9 +51,7 @@ capitals are assumed to be classes;  as a result, Tk may not
 be able to find some options for the application.
 If sends have been disabled by deleting the \fBsend\fR command,
 this command will reenable them and recreate the \fBsend\fR
-command.
-.PP
-On Wayland, setting tk appname also sets the Wayland app_id, which is used by compositors for various things, including matching custom icons in a .desktop file. 
+command. On Wayland, setting tk appname also sets the Wayland app_id, which is used by compositors for various things, including matching custom icons in a .desktop file. 
 .\" METHOD: attribtable
 .TP
 \fBtk attribtable \fItableName\fR
