@@ -539,25 +539,6 @@ Please install the ATK and at-spi2-atk development packages:
         #--------------------------------------------------------------------
         AC_MSG_NOTICE([NanoVG will be built from bundled sources in wayland/nanovg.c])
 
-        #--------------------------------------------------------------------
-        # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for wl-copy and wl-paste])
-        AC_PATH_PROG([WL_COPY], [wl-copy])
-        AC_PATH_PROG([WL_PASTE], [wl-paste])
-        if test "x$WL_COPY" = x || test "x$WL_PASTE" = x; then
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([wl-copy and wl-paste (from wl-clipboard package) are required for Wayland backend clipboard support.
-
-Please install wl-clipboard:
-  - Debian/Ubuntu:   sudo apt install wl-clipboard
-  - Fedora:          sudo dnf install wl-clipboard
-  - Arch:            sudo pacman -S wl-clipboard])
-        fi
-        AC_MSG_RESULT([yes])
-        AC_SUBST([WL_COPY])
-        AC_SUBST([WL_PASTE])
-
         # Final check — everything must be present
         if test "$found_wayland" = yes \
            && test "$found_wayland_egl" = yes \
@@ -568,9 +549,7 @@ Please install wl-clipboard:
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
            && test "$found_harfbuzz" = yes \
-           && test "$found_atk" = yes \
-           && test -n "$WL_COPY" \
-           && test -n "$WL_PASTE"; then
+           && test "$found_atk" = yes; then
 
             TK_USE_WAYLAND=1
 
@@ -579,7 +558,7 @@ Please install wl-clipboard:
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + wl-clipboard])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + HarfBuzz + ATK + native clipboard])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
@@ -596,14 +575,13 @@ Required (all mandatory when --enable-wayland is used):
   - HarfBuzz >= 2.8.2
   - ATK + Atk-bridge (accessibility)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
-  - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
     libdecor-0-dev libfontconfig-dev libsystemd-dev \
     libharfbuzz-dev libatk1.0-dev libatk-bridge2.0-dev \
-    wl-clipboard libwayland-egl1
+    libwayland-egl1
 ])
         fi
     fi
