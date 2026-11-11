@@ -59,7 +59,7 @@ test bell-1.8 {bell command} -body {
     #
     # Pause after each invocation of "bell" to let the human ear discern the
     # three separate beeps, if the test suite was invoked with the option
-    # "-eyefriendly 1". (This test ought interpret "eyefriendly" as "-earfriendly".)
+    # "-eyefriendly 1". (This test ought interpret "eyefriendly" as "earfriendly".)
     #
     bell -displayof .
     pause -eyefriendly 200

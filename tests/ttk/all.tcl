@@ -16,7 +16,7 @@ package require tk ;# This is the Tk test suite; fail early if no Tk!
 package require tcltest 2.2
 
 #
-# TCLTEST AND TKTEST CONFIGURATION
+# CONFIGURATION FOR TCLTEST AND THE TK TEST SUITE
 #
 
 # Set defaults for the Tk test suite
@@ -34,8 +34,8 @@ set ignoredOptions [list -testdir]
 #
 # Options that are specific for the Tk test suite:
 #
-# -eyefriendly	 : if set to one, test execution halts at appropriate places to
-#		   allow the human eye to follow the changes on the screen.
+# -eyefriendly	: if set to one, test execution halts at appropriate places to
+#		  allow the human eye to follow the changes on the screen.
 #
 array set tktestConf {
     -eyefriendly 0
