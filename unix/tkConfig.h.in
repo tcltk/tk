@@ -228,12 +228,6 @@
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type 'char' is unsigned and your compiler does not
-   predefine this macro.  */
-#ifndef __CHAR_UNSIGNED__
-# undef __CHAR_UNSIGNED__
-#endif
-
 /* Define to '__inline__' or '__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus

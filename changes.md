@@ -181,6 +181,7 @@ to the userbase.
  - [bound buttonpress is passed on to other program](https://core.tcl-lang.org/tk/tktview/131adc)
  - [Leaks in image write when reading metadata dict](https://core.tcl-lang.org/tk/tktview/0a62b5450b)
  - [tk panedwindow: cursor changing code does not work well](https://core.tcl-lang.org/tk/tktview/ac7f77)
+ - [remove pre-C89 support from tkImgPhoto.h](https://core.tcl-lang.org/tk/tktview/3dcdc9)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
