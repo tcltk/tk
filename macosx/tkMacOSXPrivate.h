@@ -341,6 +341,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
 @property Bool tkWillExit;
+@property Tcl_Interp* eventInterp;
 
 /*
  * Persistent state variables used by processMouseEvent.
@@ -430,6 +431,8 @@ VISIBILITY_HIDDEN
     NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
+@property Bool hasBeenExposed;
+@property int orderFrontCount;
 @end
 
 @interface TKContentView(TKKeyEvent)

@@ -1227,6 +1227,7 @@ static void DebugIdleTask(void *clientData) {
 	if ([self inLiveResize]) {
 	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
+	self.hasBeenExposed = YES;
     }
     reentered = false;
 }
