@@ -148,8 +148,10 @@ XDestroyWindow(
 
 static bool mouseIsInTkWindow(TkWindow *winPtr)
 {
+    if (!winPtr || winPtr->window == None) {
+	return false;
+    }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
-
     NSRect toplevelFrame = [macWin frame];
     int viewHeight = (int) [[macWin contentView] frame].size.height;
     int widgetY = viewHeight - Tk_Height(winPtr) - winPtr->privatePtr->yOff;
@@ -199,6 +201,9 @@ updatePointerForUnmap(
     }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
     TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
+    if (!toplevelPtr) {
+	return;
+    }
     NSPoint mouse = [NSEvent mouseLocation];
     NSPoint local = [macWin tkConvertPointFromScreen: mouse];
     int top_x = floor(local.x),
