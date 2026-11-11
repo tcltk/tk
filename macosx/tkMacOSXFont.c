@@ -425,9 +425,9 @@ CreateNamedSystemFont(
 /*
  *----------------------------------------------------------------------
  *
- * startOfClusterObjCmd --
+ * TkStartEndOfClusterCmd --
  *
- *      This function is invoked to process the startOfCluster command.
+ *      This function is invoked to process the tk::(start|end)OfCluster commands.
  *
  * Results:
  *      A standard Tcl result.
@@ -438,9 +438,9 @@ CreateNamedSystemFont(
  *----------------------------------------------------------------------
  */
 
-static int
-startOfClusterObjCmd(
-    TCL_UNUSED(void *),
+int
+TkStartEndOfClusterCmd(
+    void *clientData,           /* != NULL means 'end' */
     Tcl_Interp *interp,         /* Current interpreter. */
     int objc,                   /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
@@ -448,6 +448,7 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     Tcl_Size len, idx;
+
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -464,6 +465,7 @@ startOfClusterObjCmd(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
+	[S release];
 	return TCL_ERROR;
     }
     if (idx >= ulen) {
@@ -476,82 +478,29 @@ startOfClusterObjCmd(
 	}
 	idx = newIdx;
     }
-    if (idx >= 0) {
-	if (idx >= len) {
+    if (clientData ? idx + 1 <= len : idx >= 0) {
+	if (idx < 0) {
+	    idx = 0;
+	} else if (idx >= len) {
 	    idx = len;
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
 	    idx = range.location;
-	}
-	if (idx > 0 && len != ulen) {
-	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-	    Tcl_Size newIdx = 1;
-	    for (Tcl_Size i = 1; i < idx; i++) {
-		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+	    if (clientData) {
+		idx += range.length;
 	    }
-	    idx = newIdx;
-	}
-	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
-    }
-    return TCL_OK;
-}
-
-static int
-endOfClusterObjCmd(
-    TCL_UNUSED(void *),
-    Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
-    Tcl_Obj *const objv[])      /* Argument objects. */
-{
-    TKNSString *S;
-    char *stringArg;
-    Tcl_Size idx, len;
-
-    if ((unsigned)(objc - 3) > 1) {
-	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
-	return TCL_ERROR;
-    }
-    stringArg = Tcl_GetStringFromObj(objv[1], &len);
-    if (stringArg == NULL) {
-	return TCL_ERROR;
-    }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
-    len = [S length];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
-		Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
-	return TCL_ERROR;
-    }
-    if (idx >= ulen) {
-	idx = len;
-    } else if (idx > 0 && len != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
-	}
-	idx = newIdx;
-    }
-    if (idx + 1 <= len) {
-	if (idx < 0) {
-	    idx = 0;
-	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
-	    idx = range.location + range.length;
 	    if (idx > 0 && len != ulen) {
 		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 		Tcl_Size newIdx = 1;
 		for (Tcl_Size i = 1; i < idx; i++) {
-		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+		    if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
 		}
 		idx = newIdx;
 	    }
 	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
+    [S release];
     return TCL_OK;
 }
 
@@ -651,8 +600,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", TkStartEndOfClusterCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", TkStartEndOfClusterCmd, INT2PTR(1), NULL);
 }
 
 /*

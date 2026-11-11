@@ -16,6 +16,9 @@
 #define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
 #include <X11/XKBlib.h>
 #undef XkbOpenDisplay
+#if defined(HAVE_XFT)
+#   include <X11/extensions/Xrender.h>
+#endif
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -163,6 +166,22 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
+#if defined(HAVE_XFT)
+    {
+	/*
+	 * Initialize the RENDER extension before Xft does. Close-display
+	 * hooks run in reverse order of registration, so this makes the
+	 * Xft hook, which still uses RENDER to free cached glyphs, run
+	 * before the RENDER one. Otherwise RENDER re-registers the dying
+	 * display, and a new display allocated at the same address later
+	 * inherits stale extension codes. [Bug b298b92ba7]
+	 */
+
+	int eventBase, errorBase;
+
+	XRenderQueryExtension(display, &eventBase, &errorBase);
+    }
+#endif
 
     /*
      * Do not generate KeyRelease events for auto-repeated keys, as on

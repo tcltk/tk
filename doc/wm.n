@@ -368,6 +368,7 @@ be managed by \fBwm\fR.  Windows created with the \fBtoplevel\fR
 command will be treated like \fBframe\fR windows once they are no
 longer managed by \fBwm\fR, however, the \fB\-menu\fR configuration will be
 remembered and the menus will return once the widget is managed again.
+If \fIwindow\fR is ".", an error is raised.
 .\" METHOD: frame
 .TP
 \fBwm frame \fIwindow\fR
