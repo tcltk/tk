@@ -1115,7 +1115,7 @@ AC_DEFUN([SC_EMBED_MANIFEST], [
     AC_MSG_CHECKING(whether to embed manifest)
     AC_ARG_ENABLE(embedded-manifest,
 	AS_HELP_STRING([--enable-embedded-manifest],
-		[embed manifest if possible (default: yes)]),
+		[embed manifest if possible (default: on)]),
 	[embed_ok=$enableval], [embed_ok=yes])
 
     VC_MANIFEST_EMBED_DLL=

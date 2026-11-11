@@ -1417,7 +1417,7 @@ Optional Features:
   --enable-64bit          enable 64bit support (where applicable)
   --enable-symbols        build with debugging symbols (default: off)
   --enable-embedded-manifest
-                          embed manifest if possible (default: yes)
+                          embed manifest if possible (default: on)
   --enable-zipfs          build with Zipfs support (default: on)
 
 Optional Packages:

@@ -742,7 +742,7 @@ AC_DEFUN([SC_CONFIG_MANPAGES], [
     AC_MSG_CHECKING([whether to add a package name suffix for the manpages])
     AC_ARG_ENABLE(man-suffix,
 	AS_HELP_STRING([--enable-man-suffix=STRING],
-	    [use STRING as a suffix to manpage file names (default: no, AC_PACKAGE_NAME if enabled without specifying STRING)]),
+	    [use STRING as a suffix to manpage file names (default: off, AC_PACKAGE_NAME if enabled without specifying STRING)]),
 	[case $enableval in
 	    yes) enableval="AC_PACKAGE_NAME" MAN_FLAGS="$MAN_FLAGS --suffix $enableval";;
 	    no)  ;;

@@ -184,8 +184,9 @@ to the userbase.
  - [New test winfo-4.8 fails](https://core.tcl-lang.org/tk/tktview/586f72)
  - [Possible Tk regression when loading into threads](https://core.tcl-lang.org/tk/tktview/b298b9)
  - [bound buttonpress is passed on to other program](https://core.tcl-lang.org/tk/tktview/131adc)
- - [Leaks in image write when reading metadata dict](https://core.tcl-lang.org/tk/tktview/0a62b5450b)
+ - [Leaks in image write when reading metadata dict](https://core.tcl-lang.org/tk/tktview/0a62b5)
  - [tk panedwindow: cursor changing code does not work well](https://core.tcl-lang.org/tk/tktview/ac7f77)
+ - [remove pre-C89 support from tkImgPhoto.h](https://core.tcl-lang.org/tk/tktview/3dcdc9)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 

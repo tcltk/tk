@@ -1,4 +1,4 @@
-! /bin/bash -norc
+#! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
@@ -219,7 +219,7 @@ AS_IF([test "`uname -s`" = "Darwin" ], [
     AC_MSG_CHECKING([whether to use Aqua])
     AC_ARG_ENABLE(aqua,
 	AS_HELP_STRING([--enable-aqua=yes|no],
-	    [use Aqua windowingsystem on Mac OS X (default: no)]),
+	    [use Aqua windowingsystem on Mac OS X (default: off)]),
 	[tk_aqua=$enableval], [tk_aqua=no])
     AS_IF([test $tk_aqua = yes -o $tk_aqua = cocoa], [
 	tk_aqua=yes
@@ -358,7 +358,7 @@ AS_IF([test -d /usr/include/mit -a $tk_aqua = no], [
 AS_IF([test $tk_aqua = no],[
 
     #--------------------------------------------------------------------
-    # --enable-xft (default: yes) — independent switch
+    # --enable-xft (default: on) — independent switch
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
@@ -533,7 +533,7 @@ AS_IF([test $tk_aqua = no], [
     AC_MSG_CHECKING([whether to try to use XScreenSaver])
     AC_ARG_ENABLE(xss,
 	AS_HELP_STRING([--enable-xss],
-	    [use XScreenSaver for activity timer (default: on)]),
+	    [use XScreenSaver for activity timer yes)]),
 	[enable_xss=$enableval], [enable_xss=yes])
     AS_IF([test "$enable_xss" = "no" ], [
 	AC_MSG_RESULT([$enable_xss])
@@ -566,13 +566,6 @@ AS_IF([test $tk_aqua = no], [
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 ])
-
-#--------------------------------------------------------------------
-#	Figure out whether "char" is unsigned.  If so, set a
-#	#define for __CHAR_UNSIGNED__.
-#--------------------------------------------------------------------
-
-AC_C_CHAR_UNSIGNED
 
 #--------------------------------------------------------------------
 #	The statements below define a collection of symbols related to

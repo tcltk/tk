@@ -1442,7 +1442,7 @@ Optional Features:
                           compress the manpages with PROG (default: off)
   --enable-man-suffix=STRING
                           use STRING as a suffix to manpage file names
-                          (default: no, tk if enabled without
+                          (default: off, tk if enabled without
                           specifying STRING)
   --enable-shared         build and link with shared libraries (default: on)
   --enable-64bit          enable 64bit support (default: off)
@@ -1452,10 +1452,10 @@ Optional Features:
   --enable-load           allow dynamic loading and "load" command (default:
                           on)
   --enable-symbols        build with debugging symbols (default: off)
-  --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
+  --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: off)
   --enable-xft            use freetype/fontconfig/xft (default: on)
   --enable-libcups        use libcups (default: on)
-  --enable-xss            use XScreenSaver for activity timer (default: on)
+  --enable-xss            use XScreenSaver for activity timer yes)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
   --enable-zipfs          build with Zipfs support (default: on)
@@ -8573,7 +8573,7 @@ then :
 
 
     #--------------------------------------------------------------------
-    # --enable-xft (default: yes) — independent switch
+    # --enable-xft (default: on) — independent switch
     #--------------------------------------------------------------------
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xft" >&5
 printf %s "checking whether to use xft... " >&6; }
@@ -9172,49 +9172,6 @@ fi
     LIBS=$tk_oldLibs
 
 fi
-
-#--------------------------------------------------------------------
-#	Figure out whether "char" is unsigned.  If so, set a
-#	#define for __CHAR_UNSIGNED__.
-#--------------------------------------------------------------------
-
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether char is unsigned" >&5
-printf %s "checking whether char is unsigned... " >&6; }
-if test ${ac_cv_c_char_unsigned+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$ac_includes_default
-int
-main (void)
-{
-static int test_array [1 - 2 * !(((char) -1) < 0)];
-test_array [0] = 0;
-return test_array [0];
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  ac_cv_c_char_unsigned=no
-else case e in #(
-  e) ac_cv_c_char_unsigned=yes ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
-esac
-fi
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_char_unsigned" >&5
-printf '%s\n' "$ac_cv_c_char_unsigned" >&6; }
-if test $ac_cv_c_char_unsigned = yes; then
-  printf '%s\n' "#define __CHAR_UNSIGNED__ 1" >>confdefs.h
-
-fi
-
 
 #--------------------------------------------------------------------
 #	The statements below define a collection of symbols related to
