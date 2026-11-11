@@ -70,10 +70,6 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
 
-#    if {$windowingsystem eq "aqua"} {
-#	tkwait visibility $w; wm attributes $w -stylemask {titled fullsizecontent}
-#	after 100 {wm attributes $w -stylemask fullsizecontent}
-#    } else
     if {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
@@ -85,6 +81,9 @@ proc ::tk_dialog {w title text bitmap default args} {
 	$w.top configure -relief raised -bd 1
     }
     pack $w.bot -side bottom -fill both
+    if {$windowingsystem eq "aqua"} {
+	pack configure $w.top -pady {30 10}
+    }
     pack $w.top -side top -fill both -expand 1
     grid anchor $w.bot center
 
