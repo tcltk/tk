@@ -64,7 +64,8 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 #pragma mark TKApplication(TKHLEvents)
 
 static void showPreferencesWhenIdle(void *clientData) {
-    Tcl_Interp *interp = (Tcl_Interp *) clientData;
+    (void) clientData;
+    Tcl_Interp *interp = [(TKApplication *)NSApp eventInterp];
     int code = Tcl_EvalEx(interp, "::tk::mac::ShowPreferences",
 			  TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {

@@ -56,10 +56,11 @@ XDestroyWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
-    //fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
-    //	    Tk_PathName(macWin->winPtr),
-    //	    Tk_PathName(macWin->winPtr->parentPtr));
-
+#if 0
+    fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
+    	    Tk_PathName(macWin->winPtr),
+    	    Tk_PathName(macWin->winPtr->parentPtr));
+#endif
     /*
      * Remove any dangling pointers that may exist if the window we are
      * deleting is being tracked by the grab code.
@@ -148,8 +149,10 @@ XDestroyWindow(
 
 static bool mouseIsInTkWindow(TkWindow *winPtr)
 {
+    if (!winPtr || winPtr->window == None) {
+	return false;
+    }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
-
     NSRect toplevelFrame = [macWin frame];
     int viewHeight = (int) [[macWin contentView] frame].size.height;
     int widgetY = viewHeight - Tk_Height(winPtr) - winPtr->privatePtr->yOff;
@@ -199,6 +202,9 @@ updatePointerForUnmap(
     }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
     TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
+    if (!toplevelPtr) {
+	return;
+    }
     NSPoint mouse = [NSEvent mouseLocation];
     NSPoint local = [macWin tkConvertPointFromScreen: mouse];
     int top_x = floor(local.x),
@@ -228,9 +234,11 @@ XMapWindow(
 	return BadWindow;
     }
     MacDrawable *macWin = (MacDrawable *)window;
-    static bool initialized = false;
-    //fprintf(stderr, "XMapWindow: mapping %s\n", Tk_PathName(macWin->winPtr));
-
+#if 0
+    fprintf(stderr, "XMapWindow: mapping %s\n", Tk_PathName(macWin->winPtr));
+    NSArray *stack = [NSThread callStackSymbols];
+    NSLog(@"Full Stack Trace:\n%@", [stack componentsJoinedByString:@"\n"]);
+#endif
     /*
      * In certain situations it's possible for this function to be called
      * before the toplevel window it's associated with has actually been
@@ -238,7 +246,6 @@ XMapWindow(
      * this function as well as other X functions assume that the portPtr is
      * valid.
      */
-
     if (!TkMacOSXHostToplevelExists(macWin->toplevel->winPtr)) {
 	TkMacOSXMakeRealWindowExist(macWin->toplevel->winPtr);
     }
@@ -249,43 +256,16 @@ XMapWindow(
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
-
-	    /*
-	     * We want to activate Tk when a toplevel is mapped but we can't
-	     * always specify activateIgnoringOtherApps to be YES.  This is
-	     * because during Tk initialization the root window is mapped
-	     * before applicationDidFinishLaunching returns. Forcing the app to
-	     * activate too early can make the menu bar unresponsive.
-	     */
-
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
-	    [NSApp activateIgnoringOtherApps:initialized];
-	    if (initialized) {
-		if ([win canBecomeKeyWindow]) {
-		    [(TKWindow *) win tkOrderFront];
-		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
-		} else if ((winPtr->wmInfoPtr->flags & WM_IS_HIDDEN) == 0) {
-		    [win orderFrontRegardless];
-		}
-
-		////XXXX Do we need this at all????
-		////XXXX Should hidden windows get Visibility Notifications?
-		/*
-		 * Delay for up to 20 milliseconds until the toplevel has
-		 * actually become the highest toplevel.  This is to ensure
-		 * that the Visibility event occurs after the toplevel is
-		 * visible.  We don't do this for hidden windows.
-		 */
-
-		if ((winPtr->wmInfoPtr->flags & WM_IS_HIDDEN) == 0) {
-		    for (int count = 0; count < 20; count++) {
-			if ([[NSApp orderedWindows] firstObject] == win) {
-			    break;
-			}
-			[NSThread sleepForTimeInterval:.001];
-		    }
-		}
+	    if ([win canBecomeKeyWindow]) {
+		[(TKWindow *) win tkOrderFront];
+		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
+		[NSApp activateIgnoringOtherApps:YES];
+	    } else if (winPtr->wmInfoPtr &&
+		       (winPtr->wmInfoPtr->flags & WM_IS_HIDDEN) == 0){
+		/* OverrideRedirect windows can't become key. */
+		[win orderFrontRegardless];
 	    }
 
 	    /*
@@ -333,7 +313,7 @@ XMapWindow(
      * [NSApplication windowBecameVisible].
      */
 
-    if (initialized && (!Tk_IsTopLevel(winPtr) || Tk_IsEmbedded(winPtr))) {
+    if (!Tk_IsTopLevel(winPtr) || Tk_IsEmbedded(winPtr)) {
 	XEvent event;
 	event.xany.send_event = False;
 	event.xany.display = display;
@@ -351,7 +331,6 @@ XMapWindow(
 	}
 	TkMacOSXNotifyVisibility(winPtr, &event);
     }
-    initialized = true;
     return Success;
 }
 
