@@ -676,6 +676,7 @@ parseFileFilters(
 		    filterInfo.fileTypeIndex = index;
 		    filterInfo.preselectFilter = true;
 		}
+		[selectedFileTypeStr release];
 	    }
 	}
 
