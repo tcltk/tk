@@ -33,21 +33,7 @@ typedef struct ColorTable	ColorTable;
 typedef struct PhotoInstance	PhotoInstance;
 typedef struct PhotoModel	PhotoModel;
 
-/*
- * A signed 8-bit integral type. If chars are unsigned and the compiler isn't
- * an ANSI one, then we have to use short instead (which wastes space) to get
- * signed behavior.
- */
-
-#if defined(__STDC__) || defined(_AIX)
-    typedef signed char schar;
-#else
-#   ifndef __CHAR_UNSIGNED__
-	typedef char schar;
-#   else
-	typedef short schar;
-#   endif
-#endif
+typedef signed char schar;
 
 /*
  * The maximum number of pixels to transmit to the server in a single

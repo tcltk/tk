@@ -568,13 +568,6 @@ AS_IF([test $tk_aqua = no], [
 ])
 
 #--------------------------------------------------------------------
-#	Figure out whether "char" is unsigned.  If so, set a
-#	#define for __CHAR_UNSIGNED__.
-#--------------------------------------------------------------------
-
-AC_C_CHAR_UNSIGNED
-
-#--------------------------------------------------------------------
 #	The statements below define a collection of symbols related to
 #	building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
