@@ -1119,13 +1119,6 @@ static void DebugIdleTask(void *clientData) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height= (unsigned int)newsize.height;
 
-	/*
-	 * This function can be re-entered, so we need to make sure we don't
-	 * clobber any AutoreleasePool set up by the caller.
-	 */
-
-	[NSApp _lockAutoreleasePool];
-
 	 /*
 	  * Generate and handle a ConfigureNotify event for the new size.
 	  */
@@ -1155,12 +1148,6 @@ static void DebugIdleTask(void *clientData) {
 	if ([self inLiveResize]) {
 	    [self generateExposeEvents:self.bounds];
 	}
-
-	/*
-	 * Finally, unlock the main autoreleasePool.
-	 */
-
-	[NSApp _unlockAutoreleasePool];
     }
 }
 

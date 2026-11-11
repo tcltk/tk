@@ -335,9 +335,7 @@ VISIBILITY_HIDDEN
     NSMenuItem *_demoMenuItem;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
-    NSAutoreleasePool *_mainPool;
 }
-@property int poolLock;
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
 @property Bool tkWillExit;
@@ -356,9 +354,6 @@ VISIBILITY_HIDDEN
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
 - (void)_clearEventInterp;
-- (void)_resetAutoreleasePool;
-- (void)_lockAutoreleasePool;
-- (void)_unlockAutoreleasePool;
 @end
 @interface TKApplication(TKColor)
 - (void) performAsCurrentDrawingAppearance:(void (^)(void))block

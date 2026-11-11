@@ -68,7 +68,6 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
-@synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkWillExit = _tkWillExit;
@@ -113,32 +112,8 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 @synthesize tkButtonState = _tkButtonState;
 @end
 
-/*
- * #define this to see a message on stderr whenever _resetAutoreleasePool is
- * called while the pool is locked.
- */
-#undef DEBUG_LOCK
-
 @implementation TKApplication(TKInit)
-- (void) _resetAutoreleasePool
-{
-    if ([self poolLock] == 0) {
-	[_mainPool drain];
-	_mainPool = [NSAutoreleasePool new];
-    } else {
-#ifdef DEBUG_LOCK
-	fprintf(stderr, "Pool is locked with count %d!!!!\n", [self poolLock]);
-#endif
-    }
-}
-- (void) _lockAutoreleasePool
-{
-    [self setPoolLock:[self poolLock] + 1];
-}
-- (void) _unlockAutoreleasePool
-{
-    [self setPoolLock:[self poolLock] - 1];
-}
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
@@ -264,12 +239,6 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 
     _eventInterp = interp;
     Tcl_CallWhenDeleted(interp, InterpDeleteProc, NULL);
-
-    /*
-     * Install the global autoreleasePool.
-     */
-    _mainPool = [NSAutoreleasePool new];
-    [NSApp setPoolLock:0];
 
     /*
      * Record the OS version we are running on.

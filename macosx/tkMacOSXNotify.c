@@ -352,8 +352,6 @@ TkMacOSXEventsSetupProc(
 
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 
-	[NSApp _resetAutoreleasePool];
-
 	/*
 	 * After calling this setup proc, Tcl_DoOneEvent will call
 	 * Tcl_WaitForEvent.  Then it will call check proc to collect the
@@ -429,7 +427,6 @@ TkMacOSXEventsCheckProc(
 	 * we must lock it here.
 	 */
 
-	[NSApp _lockAutoreleasePool];
 	do {
 	    modalSession = TkMacOSXGetModalSession();
 	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
@@ -471,12 +468,6 @@ TkMacOSXEventsCheckProc(
 		break;
 	    }
 	} while (true);
-
-	/*
-	 * Now we can unlock the pool.
-	 */
-
-	[NSApp _unlockAutoreleasePool];
     }
 }
 

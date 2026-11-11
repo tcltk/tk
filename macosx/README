@@ -519,42 +519,7 @@ specific SetupProc and then a platform specific CheckProc.  In
 the macOS port, these are named TkMacOSXEventsSetupProc and
 TkMacOSXEventsCheckProc.
 
-5.2 Autorelease pools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In order to carry out the job of managing autorelease pools, which
-would normally be handled by the [NSApp run] method, a private
-NSAutoreleasePool* property is added to the TkApplication subclass of
-NSApplication. The TkpInit function calls [NSApp _setup] which
-initializes this property by creating an NSAutoreleasePool prior to
-calling [NSApp finishLaunching].  This mimics the behavior of the
-[NSApp run] method, which calls [NSApp finishLaunching] just before
-starting the event loop.
-
-Since the CheckProc function gets called for every Tk event, it is an
-appropriate place to drain the main NSAutoreleasePool and replace it
-with a new pool.  This is done by calling the method [NSApp
-_resetAutoreleasePool], where _resetAutoreleasePool is a method which
-we define for the subclass.  Unfortunately, by itself this is not
-sufficient for safe memory management because, as was made painfully
-evident with the release of OS X 10.13, it is possible for calls to
-TclDoOneEvent, and hence to CheckProc, to be nested.  Draining the
-autorelease pool in a nested call leads to crashes as objects in use
-by the outer call can get freed by the inner call and then reused later.
-One particular situation where this happens is when a modal dialogue
-gets posted by a Tk Application.  To address this, the NSApp object
-also implements a semaphore to prevent draining the autorelease pool
-in nested calls to CheckProc.
-
-One additional minor caveat for developers is that there are several
-steps of the Tk initialization which precede the call to TkpInit.
-Notably, the font package is initialized first.  Since there is no
-NSAutoreleasePool in scope prior to calling TkpInit, the functions
-called in these preliminary stages need to create and drain their own
-NSAutoreleasePools whenever they call methods of Appkit objects
-(e.g. NSFont).
-
-5.3 Clipping regions and "ghost windows"
+5.2 Clipping regions and "ghost windows"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another aspect of the macOS port which does not appear in the X11
