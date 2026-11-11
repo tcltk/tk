@@ -182,7 +182,7 @@ test winfo-4.8 {"winfo containing": don't consider unmapped toplevel windows (bu
 } -cleanup {
     wm deiconify .
 } -result ""
-test winfo-4.9 {"winfo containing": withdrawn toplevel whose WM frame is still mapped} -setup {
+test winfo-4.9 {"winfo containing": withdrawn toplevel whose WM frame is still mapped} -constraints screenCoords -setup {
     wm geometry . 200x200+100+100
     after 10; update
     wm withdraw .
