@@ -51,6 +51,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     destroy $w
     if {$windowingsystem eq "aqua"} {
 	toplevel $w -class Dialog
+	wm attributes $w -hidden 1 
 	wm attributes $w -stylemask {titled fullsizecontent}
     } else {
 	toplevel $w -class Dialog
@@ -150,8 +151,11 @@ proc ::tk_dialog {w title text bitmap default args} {
     # parent (or in the display if the parent is not mapped) and de-iconify it.
 
     ::tk::PlaceWindow $w widget [winfo parent $w]
-    tkwait visibility $w
-
+    if {$windowingsystem eq "aqua"} {
+        wm attributes $w -hidden 0
+    } else {
+        tkwait visibility $w
+    }
     # 7. Set a grab and claim the focus too.
 
     if {$default >= 0} {
