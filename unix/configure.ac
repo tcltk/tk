@@ -1273,12 +1273,6 @@ AS_IF([test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"], [
 ])
 
 #--------------------------------------------------------------------
-#	Figure out whether "char" is unsigned.
-#--------------------------------------------------------------------
-
-AC_C_CHAR_UNSIGNED
-
-#--------------------------------------------------------------------
 #	The statements below define a collection of symbols related to
 #	building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
