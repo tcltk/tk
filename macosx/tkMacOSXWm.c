@@ -6218,9 +6218,8 @@ Tk_Window
 Tk_MacOSXGetTkWindow(
     void *w)
 {
-    Window window = None;
-    if ([(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
-	window = [(TKWindow *)w tkWindow];
+    if (w && [(NSWindow *)w respondsToSelector: @selector (tkWindow)]) {
+	Window window = [(TKWindow *)w tkWindow];
 	TkDisplay *dispPtr = TkGetDisplayList();
 	if (window && dispPtr && dispPtr->display) {
 	    return Tk_IdToWindow(dispPtr->display, window);
