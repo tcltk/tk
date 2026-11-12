@@ -2538,11 +2538,17 @@ VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 # Handle the --prefix=... option
 #------------------------------------------------------------------------
 
-if test "${prefix}" = "NONE"; then
+if test "${prefix}" = "NONE"
+then :
+
     prefix=/usr/local
+
 fi
-if test "${exec_prefix}" = "NONE"; then
+if test "${exec_prefix}" = "NONE"
+then :
+
     exec_prefix=$prefix
+
 fi
 # libdir must be a fully qualified path (not ${exec_prefix}/lib)
 eval libdir="$libdir"
@@ -2553,8 +2559,11 @@ eval libdir="$libdir"
 
 # If the user did not set CFLAGS, set it now to keep
 # the AC_PROG_CC macro from adding "-g -O2".
-if test "${CFLAGS+set}" != "set" ; then
+if test "${CFLAGS+set}" != "set"
+then :
+
     CFLAGS=""
+
 fi
 
 
@@ -4263,10 +4272,13 @@ printf '%s\n' "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 
-if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
+if test "${TCL_MAJOR_VERSION}" -lt 9
+then :
+
     as_fn_error $? "${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better." "$LINENO" 5
+
 fi
 
 #------------------------------------------------------------------------
@@ -4274,12 +4286,18 @@ fi
 # the installed Tcl headers.
 #------------------------------------------------------------------------
 
-if test -r "${TCL_SRC_DIR}/generic/tcl.h"; then
+if test -r "${TCL_SRC_DIR}/generic/tcl.h"
+then :
+
     TCL_INCLUDES='-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}"'
     TCL_RC_INCLUDE_DIR='${TCL_GENERIC_NATIVE}'
-else
+
+else case e in #(
+  e)
     TCL_INCLUDES="${TCL_INCLUDE_SPEC}"
     TCL_RC_INCLUDE_DIR=`echo "${TCL_INCLUDE_SPEC}" | sed 's/^-I//'`
+ ;;
+esac
 fi
 
 
@@ -5147,9 +5165,12 @@ esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_strtoi64" >&5
 printf '%s\n' "$tcl_cv_strtoi64" >&6; }
-if test $tcl_cv_strtoi64 = no; then
+if test $tcl_cv_strtoi64 = no
+then :
+
 
 printf '%s\n' "#define NO_STRTOI64 1" >>confdefs.h
+
 
 fi
 
@@ -5170,7 +5191,9 @@ then :
 else case e in #(
   e)
     for tcl_cv_intptr_t in "int" "long" "__int64" none; do
-	if test "$tcl_cv_intptr_t" != none; then
+	if test "$tcl_cv_intptr_t" != none
+then :
+
 	    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 $ac_includes_default
@@ -5193,17 +5216,25 @@ else case e in #(
 esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-	    test "$tcl_ok" = yes && break; fi
+	    if test "$tcl_ok" = yes
+then :
+  break
+fi
+
+fi
     done ;;
 esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_intptr_t" >&5
 printf '%s\n' "$tcl_cv_intptr_t" >&6; }
-    if test "$tcl_cv_intptr_t" != none; then
+    if test "$tcl_cv_intptr_t" != none
+then :
+
 
 printf '%s\n' "#define intptr_t $tcl_cv_intptr_t" >>confdefs.h
 
-    fi
+
+fi
  ;;
 esac
 fi
@@ -5226,7 +5257,9 @@ else case e in #(
   e)
     for tcl_cv_uintptr_t in "unsigned int" "unsigned long" "unsigned __int64" \
 	    none; do
-	if test "$tcl_cv_uintptr_t" != none; then
+	if test "$tcl_cv_uintptr_t" != none
+then :
+
 	    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 $ac_includes_default
@@ -5249,17 +5282,25 @@ else case e in #(
 esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-	    test "$tcl_ok" = yes && break; fi
+	    if test "$tcl_ok" = yes
+then :
+  break
+fi
+
+fi
     done ;;
 esac
 fi
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_uintptr_t" >&5
 printf '%s\n' "$tcl_cv_uintptr_t" >&6; }
-    if test "$tcl_cv_uintptr_t" != none; then
+    if test "$tcl_cv_uintptr_t" != none
+then :
+
 
 printf '%s\n' "#define uintptr_t $tcl_cv_uintptr_t" >>confdefs.h
 
-    fi
+
+fi
  ;;
 esac
 fi
@@ -5391,7 +5432,9 @@ else case e in #(
 esac
 fi
 
-if test "$tcl_ok" = "yes" ; then
+if test "$tcl_ok" = "yes"
+then :
+
     #
     # Find a native compiler
     #
@@ -5516,15 +5559,23 @@ printf '%s\n' "No zip found on PATH building minizip" >&6; }
 
 	ZIPFS_BUILD=1
 	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
-else
+
+else case e in #(
+  e)
 	ZIPFS_BUILD=0
 	TCL_ZIP_FILE=
+ ;;
+esac
 fi
 # Do checking message here to not mess up interleaved configure output
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for building with zipfs" >&5
 printf %s "checking for building with zipfs... " >&6; }
-if test "${ZIPFS_BUILD}" = 1; then
-    if test "${SHARED_BUILD}" = 0; then
+if test "${ZIPFS_BUILD}" = 1
+then :
+
+    if test "${SHARED_BUILD}" = 0
+then :
+
        ZIPFS_BUILD=2;
 
 printf '%s\n' "#define ZIPFS_BUILD 2" >>confdefs.h
@@ -5532,19 +5583,27 @@ printf '%s\n' "#define ZIPFS_BUILD 2" >>confdefs.h
        INSTALL_LIBRARIES=install-libraries-zipfs-static
        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-     else
+
+else case e in #(
+  e)
 
 printf '%s\n' "#define ZIPFS_BUILD 1" >>confdefs.h
 \
        INSTALL_LIBRARIES=install-libraries-zipfs-shared
        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-    fi
-else
+     ;;
+esac
+fi
+
+else case e in #(
+  e)
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
 INSTALL_LIBRARIES=install-libraries
 INSTALL_MSGS=install-msgs
+ ;;
+esac
 fi
 
 
@@ -5568,10 +5627,16 @@ TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
 eval "TK_DLL_FILE=tcl9tk$VER${DLLSUFFIX}"
-if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
+if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes"
+then :
+
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
-else
+
+else case e in #(
+  e)
  eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
+ ;;
+esac
 fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
@@ -5603,12 +5668,18 @@ CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test ${SHARED_BUILD} = 0; then
+if test ${SHARED_BUILD} = 0
+then :
+
     RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
-else
+
+else case e in #(
+  e)
     RC_DEFINES=""
     TK_RES='tk.$(RES)'
+ ;;
+esac
 fi
 
 # The wish.exe.manifest requires these

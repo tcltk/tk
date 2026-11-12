@@ -106,7 +106,7 @@ typedef struct GridLayout {
     int minSize;		/* Minimum size needed for this slot, in
 				 * pixels. This is the space required to hold
 				 * any content contained entirely in this slot,
-				 * adjusted for any slot constrants, such as
+				 * adjusted for any slot constraints, such as
 				 * size or padding. */
     int pad;			/* Padding needed for this slot */
     int weight;			/* Slot weight, controls resizing. */
