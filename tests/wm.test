@@ -867,6 +867,27 @@ test wm-geometry-2.5 {a toplevel iconified from normal} -setup {
     destroy .geom
     unset -nocomplain res
 } -result {480x200+303+210 480x200+303+210}
+test wm-geometry-2.6 {the menubar set again in fullscreen - bug 2865578fff} -setup {
+    destroy .geom .m
+    menu .m
+    .m add command -label Entry
+    toplevel .geom -menu .m
+    pack [label .geom.l -text Label]
+    waitForWm .geom {[winfo ismapped .geom]}
+    regexp {^\d+x\d+} [wm geometry .geom] size
+} -body {
+    # No events are processed before the window leaves the fullscreen state.
+    wm attributes .geom -fullscreen 1
+    .geom configure -menu {}
+    .geom configure -menu .m
+    wm attributes .geom -fullscreen 0
+    waitForWm .geom {![wm attributes .geom -fullscreen]}
+    regexp {^\d+x\d+} [wm geometry .geom] newSize
+    expr {$newSize eq $size}
+} -cleanup {
+    destroy .geom .m
+    unset -nocomplain size newSize
+} -result 1
 
 
 ### wm grid ###
