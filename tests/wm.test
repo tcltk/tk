@@ -942,7 +942,10 @@ test wm-geometry-2.5 {a toplevel iconified from normal} -setup {
     destroy .geom
     unset -nocomplain res
 } -result {480x200+303+210 480x200+303+210}
-test wm-geometry-2.6 {the menubar set again in fullscreen - bug 2865578fff} -setup {
+# On macOS the menubar is not in the window.
+test wm-geometry-2.6 {the menubar set again in fullscreen - bug 2865578fff} -constraints {
+    notAqua
+} -setup {
     destroy .geom .m
     menu .m
     .m add command -label Entry
