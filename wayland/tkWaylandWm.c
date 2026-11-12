@@ -6127,6 +6127,16 @@ ApplyPendingGeometry(
 	}
     }
 
+    /*
+     * The compositor decides the size of a maximized or fullscreen window;
+     * a size set now would replace it (e.g. the normal size of a zoomed
+     * window when it is deiconified).  As a window manager on X11, keep it.
+     */
+    if (glfwGetWindowAttrib(glfwWindow, GLFW_MAXIMIZED)
+	    || glfwGetWindowMonitor(glfwWindow) != NULL) {
+	return;
+    }
+
     /* Apply size change if the target size is different from the
        configured. */
     {
