@@ -1882,8 +1882,9 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
-    toplevel .t ; update idletasks
+    toplevel .t
     menu .t.m -type menubar
+    update idletasks; # Fluxbox needs to add the menubar before .t is mapped.
     .t.m add cascade -label "File"
     .t configure -menu .t.m
     update idletasks
