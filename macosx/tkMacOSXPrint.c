@@ -96,9 +96,8 @@ StartPrint(
 	return TCL_ERROR;
     }
 
-    fileName = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
+    fileName = [[NSString alloc] initWithUTF8String: Tcl_GetString(objv[1])];
     urlFile = (CFStringRef) fileName;
-    CFRetain(urlFile);
 
     /* Initialize the delegate for the callback from the page panel. */
     PrintDelegate * printDelegate = [[PrintDelegate alloc] init];
