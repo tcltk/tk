@@ -1247,11 +1247,11 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
     }
     glfwDestroyWindow(glfwWindow);
 
-    /* Check if this was the last window. */
-    if (Tk_GetNumMainWindows() == 0 && !shutdownInProgress) {
-        /* Schedule shutdown via idle callback. */
-        Tcl_DoWhenIdle(TkWaylandShutdown, NULL);
-    }
+    /*
+     * GLFW is not shut down when the last main window is destroyed: the
+     * process can create a new main window later (e.g. in another
+     * interpreter).  TkWaylandShutdown runs as an exit handler.
+     */
 }
 
 /*
