@@ -5547,7 +5547,13 @@ WmTransientCmd(
 		WmWaitMapProc, winPtr);
 	wmPtr->containerPtr = containerPtr;
     }
-    if (!Tk_IsMapped(containerPtr) && !wmPtr->withdrawn) {
+    /*
+     * As on X11, only a transient that was already mapped is withdrawn with
+     * its unmapped container; one that was never mapped keeps its state, and
+     * WmWaitMapProc maps or unmaps it with its container later.
+     */
+    if (!(wmPtr->flags & WM_NEVER_MAPPED) && !Tk_IsMapped(containerPtr)
+	    && !wmPtr->withdrawn) {
 	wmPtr->withdrawn = 1;
 	wmPtr->initialState = WithdrawnState;
 	TkWmUnmapWindow(winPtr);
