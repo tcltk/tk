@@ -1471,6 +1471,40 @@ test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
 } -cleanup {
     destroy .t
 } -result {{400 400} {300 300}}
+test wm-maxsize-2.6 {use the default max size if the window size is not\
+	explicitly set and the reqheight is bigger than the screen - bug 3598564fff} -body {
+    toplevel .t
+    pack [frame .t.f -width 200 -height [expr {2*[winfo screenheight .]}]]
+    update
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list [expr {[winfo height .t] <= $maxHeight}] \
+	    [expr {$maxHeight <= [winfo screenheight .]}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight
+} -result {1 1}
+test wm-maxsize-2.7 {the default max size fits in the work area - bug 3598564fff} -constraints {
+    withWindowManager
+} -body {
+    toplevel .t
+    update
+    zoomWindow .t 1
+    if {[tk windowingsystem] eq "x11"} {
+	set zoomed [wm attributes .t -zoomed]
+	# At a fractional scale KWin can make a zoomed window a pixel smaller
+	# than the work area it reports.
+	set tolerance 1
+    } else {
+	set zoomed [expr {[wm state .t] eq "zoomed"}]
+	set tolerance 0
+    }
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list $zoomed [expr {$maxWidth <= [winfo width .t] + $tolerance}] \
+	    [expr {$maxHeight <= [winfo height .t] + $tolerance}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight tolerance zoomed
+} -result {1 1 1}
 
 
 ### wm minsize ###
