@@ -62,7 +62,6 @@ static void InterpDeleteProc(
 
 static Tcl_ObjCmdProc2 TkMacOSXGetAppPathObjCmd;
 static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
-int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 
 #pragma mark TKApplication(TKInit)
