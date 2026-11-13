@@ -2457,10 +2457,8 @@ Tk_SetGrid(
     wmPtr->sizeHintsFlags |= WM_PBaseSize;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        wmPtr->flags |= WM_UPDATE_PENDING;
-	DEBUG_LOG("Tk_SetGrid: scheduling UpdateGeometryInfo");
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+	WmUpdateGeom(winPtr);
     }
 }
 
@@ -2508,10 +2506,8 @@ Tk_UnsetGrid(
     wmPtr->heightInc = 1;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        wmPtr->flags |= WM_UPDATE_PENDING;
-	DEBUG_LOG("Tk_UnsetGrid: scheduling UpdateGeometryInfo");
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+	WmUpdateGeom(winPtr);
     }
 }
 
@@ -4005,30 +4001,30 @@ WmGeometryCmd(
 
     /* Return current geometry. */
     if (objc == 0) {
-        int width, height;
-        if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-            glfwGetWindowSize(glfwWindow, &width, &height);
-        } else {
-	    /* As on X11, the size of the window, not yet computed. */
-            width = winPtr->changes.width;
-            height = winPtr->changes.height;
-        }
-        if (wmPtr->gridWin != NULL) {
-            /* As on X11, the size of a gridded window is in grid units. */
-            if (glfwWindow == NULL || (wmPtr->flags & WM_NEVER_MAPPED)) {
-                width = winPtr->changes.width;
-                height = winPtr->changes.height;
-            }
-            width = wmPtr->reqGridWidth
-                    + (width - winPtr->reqWidth) / wmPtr->widthInc;
-            height = wmPtr->reqGridHeight
-                    + (height - winPtr->reqHeight) / wmPtr->heightInc;
-        }
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
-		 width, height,
-		 (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+', wmPtr->x,
-		 (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+', wmPtr->y));
-        return TCL_OK;
+	int width, height;
+	static int inQuery = 0;
+
+	/* Apply a pending change first, as on X11: it may be pending only as
+	 * the "wait to be shown" timer, which [update] does not run. */
+	if (!inQuery) {
+	    inQuery = 1;
+	    UpdateGeometryInfo((void *)winPtr);
+	    inQuery = 0;
+	}
+
+	width  = winPtr->changes.width;
+	height = winPtr->changes.height;
+	if (wmPtr->gridWin != NULL) {
+	    width  = wmPtr->reqGridWidth
+		   + (width  - winPtr->reqWidth)  / wmPtr->widthInc;
+	    height = wmPtr->reqGridHeight
+		   + (height - winPtr->reqHeight) / wmPtr->heightInc;
+	}
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
+	    width, height,
+	    (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+', wmPtr->x,
+	    (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+', wmPtr->y));
+	return TCL_OK;
     }
 
     /* Handle empty string - reset to default. */
@@ -4815,9 +4811,38 @@ WmMaxsizeCmd(
         return TCL_ERROR;
     }
     if (objc == 0) {
-        Tcl_Obj *r[2];
-        r[0]=Tcl_NewIntObj(wmPtr->maxWidth); r[1]=Tcl_NewIntObj(wmPtr->maxHeight);
-        Tcl_SetObjResult(interp,Tcl_NewListObj(2,r)); return TCL_OK;
+	Tcl_Obj *r[2];
+	int maxW, maxH;
+
+	if (wmPtr->sizeHintsFlags & WM_PMaxSize) {
+	    maxW = wmPtr->maxWidth;
+	    maxH = wmPtr->maxHeight;
+	} else {
+	    /* As on X11: with no "wm maxsize" the default maximum is what
+	     * fits on the screen (bug 3598564fff), i.e. the work area.  Use
+	     * the same size ClampToScreen() limits windows to, so a zoomed
+	     * window is never smaller than the reported maximum.  Report
+	     * grid units when gridded, exactly like an explicitly set
+	     * maximum. */
+	    int vx, vy, vw, vh;
+
+	    if (GetUsableScreenSize(winPtr, &vw, &vh)) {
+		/* Usable work area. */
+	    } else {
+		Tk_GetVRootGeometry((Tk_Window)winPtr, &vx, &vy, &vw, &vh);
+	    }
+	    maxW = vw; maxH = vh;
+	    if (wmPtr->gridWin != NULL) {
+		maxW = wmPtr->reqGridWidth
+		     + (maxW - winPtr->reqWidth)  / wmPtr->widthInc;
+		maxH = wmPtr->reqGridHeight
+		     + (maxH - winPtr->reqHeight) / wmPtr->heightInc;
+	    }
+	}
+	r[0] = Tcl_NewIntObj(maxW);
+	r[1] = Tcl_NewIntObj(maxH);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, r));
+	return TCL_OK;
     }
     Tk_Window tkwin = (Tk_Window)winPtr;
     if ((Tk_GetPixelsFromObj(interp, tkwin, objv[0], &w) != TCL_OK)
@@ -4825,6 +4850,7 @@ WmMaxsizeCmd(
 	return TCL_ERROR;
     }
     wmPtr->maxWidth=w; wmPtr->maxHeight=h;
+    wmPtr->sizeHintsFlags |= WM_PMaxSize;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(winPtr);
     return TCL_OK;
@@ -5986,10 +6012,8 @@ TopLevelReqProc(
      * before; see UpdateGeometryInfo.
      */
     if (Tk_IsMapped(winPtr) || !(wmPtr->flags & WM_NEVER_MAPPED)) {
-	wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
-	DEBUG_LOG("TopLevelReqProc: scheduling UpdateGeometryInfo %s",
-	    Tk_PathName(winPtr));
-	/* Schedule a size update. */
+	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+	WmUpdateGeom(winPtr);
 	Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
     } else {
 	DEBUG_LOG("TopLevelReqProc: %s is not mapped", Tk_PathName(winPtr));
@@ -6158,37 +6182,40 @@ ApplyPendingGeometry(
 	 * any width.
 	 */
 
-	if (!tkWaylandServerDecorations && tw < TK_WAYLAND_CSD_MIN_WIDTH) {
-	    tw = TK_WAYLAND_CSD_MIN_WIDTH;
+	{
+	    int oldW = 0, oldH = 0, newW = 0, newH = 0;
+
+	    if (!tkWaylandServerDecorations && tw < TK_WAYLAND_CSD_MIN_WIDTH) {
+		tw = TK_WAYLAND_CSD_MIN_WIDTH;
+	    }
+	    TkWaylandFlushConfigures();
+	    glfwGetWindowSize(glfwWindow, &oldW, &oldH);
+	    DEBUG_LOG("ApplyPendingGeometry: glfwSetWindowSize %s -> %dx%d",
+		Tk_PathName(winPtr), tw, th);
+	    glfwSetWindowSize(glfwWindow, tw, th);
+
+	    if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
+		TkWaylandPresentWindow(glfwWindow);
+		TkWaylandWaitForWindowSize(glfwWindow, tw, th);
+		glfwGetWindowSize(glfwWindow, &newW, &newH);
+		/*
+		 * glfwSetWindowSize is asynchronous.  If the compositor has not
+		 * configured the window yet, glfwGetWindowSize still returns the
+		 * size from *before* the request.  Only believe it when it really
+		 * changed; otherwise keep the size we asked for and let the
+		 * framebuffer-size callback correct it.  Writing the old size
+		 * here made "wm geometry" report the previous size and made the
+		 * next UpdateGeometryInfo resize the window back
+		 * (unixWm-40.2, wm-geometry-2.1).
+		 */
+		if (newW > 0 && newH > 0 && (newW != oldW || newH != oldH)) {
+		    tw = newW;
+		    th = newH;
+		}
+	    }
+	    winPtr->changes.width  = tw;
+	    winPtr->changes.height = th;
 	}
-
-	DEBUG_LOG("ApplyPendingGeometry: calling glfwSetWindowSize %s -> %dx%d",
-	    Tk_PathName(winPtr), tw, th);
-	TkWaylandFlushConfigures();
-        glfwSetWindowSize(glfwWindow, tw, th);
-
-	/*
-	 * Commit the new size at once, even if nothing is redrawn, or the
-	 * compositor (e.g. sway) can send the old size back.
-	 */
-	if (glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) {
-	    TkWaylandPresentWindow(glfwWindow);
-
-	    /*
-	     * Wait for the compositor to answer with the new size, so the
-	     * resize is complete when this returns, as on X11.  Use the size
-	     * the window actually has, as the compositor can choose another.
-	     */
-
-	    TkWaylandWaitForWindowSize(glfwWindow, tw, th);
-	    glfwGetWindowSize(glfwWindow, &tw, &th);
-	}
-
-	/* Update the window data. */
-        winPtr->changes.width = tw;
-        winPtr->changes.height = th;
-	//        wmPtr->configWidth  = tw;
-	//        wmPtr->configHeight = th;
     }
 }
 
