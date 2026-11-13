@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[9.1])
+AC_INIT([tk],[9.2])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.73])
 
@@ -12,10 +12,10 @@ AC_PREREQ([2.73])
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=9.1
+TK_VERSION=9.2
 TK_MAJOR_VERSION=9
-TK_MINOR_VERSION=1
-TK_PATCH_LEVEL=".1"
+TK_MINOR_VERSION=2
+TK_PATCH_LEVEL="a0"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -76,10 +76,10 @@ SC_ENABLE_SHARED
 SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
-AS_IF([test "${TCL_MAJOR_VERSION}" -lt 9 ], [
+AS_IF([test "${TCL_MAJOR_VERSION}" -lt 9 -o "${TCL_MINOR_VERSION}" -lt 1], [
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.0+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.0 or better.])
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 9.1+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 9.1 or better.])
 ])
 
 #------------------------------------------------------------------------

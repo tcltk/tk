@@ -666,14 +666,10 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
-    void *tclUpdateObjProc;
-				/* Saved Tcl [update] command, used to restore
-				 * Tcl's version of [update] after Tk is shut
-				 * down. Only for Tcl 9.0 */
+    void *notUsed;
     Tcl_ObjCmdProc2 *tclUpdateObjProc2;
 				/* Saved Tcl [update] command, used to restore
-				 * Tcl's version of [update] after Tk is shut
-				 * down. For Tcl 9.1+ */
+				 * Tcl's version of [update] after Tk is shut down. */
     unsigned int nbTabPosition, nbTabPlacement;
 				/* Information used by ttk::notebook. */
     int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;

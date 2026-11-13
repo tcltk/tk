@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([tk],[9.1])
+AC_INIT([tk],[9.2])
 AC_PREREQ([2.73])
 
 dnl This is only used when included from macosx/configure.ac
@@ -23,10 +23,10 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     #endif /* _TKCONFIG */])
 ])
 
-TK_VERSION=9.1
+TK_VERSION=9.2
 TK_MAJOR_VERSION=9
-TK_MINOR_VERSION=1
-TK_PATCH_LEVEL=".1"
+TK_MINOR_VERSION=2
+TK_PATCH_LEVEL="a0"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -37,8 +37,8 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
-AS_IF([test "${TCL_MAJOR_VERSION}" -lt 9 ], [
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.0+
+AS_IF([test "${TCL_MAJOR_VERSION}" -lt 9 -o "${TCL_MINOR_VERSION}" -lt 1], [
+    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 9.1+
 Found config for Tcl ${TCL_VERSION}])
 ])
 

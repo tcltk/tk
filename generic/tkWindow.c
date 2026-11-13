@@ -903,7 +903,6 @@ TkCreateMainWindow(
     Tcl_InitHashTable(&mainPtr->imageTable, TCL_STRING_KEYS);
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
-    mainPtr->tclUpdateObjProc = NULL;
     mainPtr->tclUpdateObjProc2 = NULL;
     if (Tcl_LinkVar(interp, "tk_strictMotif", &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
@@ -970,10 +969,6 @@ TkCreateMainWindow(
 	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
 	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
-#ifndef TCL_NO_DEPRECATED
-	    } else if (!cmdInfo.objClientData) {
-		mainPtr->tclUpdateObjProc = (void *)cmdInfo.objProc;
-#endif /* TCL_NO_DEPRECATED */
 	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
@@ -1701,13 +1696,6 @@ Tk_DestroyWindow(
 				    cmdPtr->name,
 				    winPtr->mainPtr->tclUpdateObjProc2,
 				    NULL, NULL);
-#ifndef TCL_NO_DEPRECATED
-			} else if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
-			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
-				    cmdPtr->name,
-				    (Tcl_ObjCmdProc *)winPtr->mainPtr->tclUpdateObjProc,
-				    NULL, NULL);
-#endif /* TCL_NO_DEPRECATED */
 			}
 		    } else {
 			Tcl_CreateObjCommand2(winPtr->mainPtr->interp,

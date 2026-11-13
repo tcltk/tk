@@ -17,8 +17,8 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 9)
-#	error Tk 9.1 must be compiled with tcl.h from Tcl 9.0 or better
+#if (TCL_MAJOR_VERSION < 9 || TCL_MINOR_VERSION < 1)
+#	error Tk 9.2 must be compiled with tcl.h from Tcl 9.1 or better
 #endif
 
 #ifndef EXTERN
@@ -70,12 +70,12 @@ extern "C" {
 #if TK_MAJOR_VERSION != 9
 #   error "This header-file is for Tk 9 only"
 #endif
-#   define TK_MINOR_VERSION	1
-#   define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#   define TK_RELEASE_SERIAL	1
+#   define TK_MINOR_VERSION	2
+#   define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
+#   define TK_RELEASE_SERIAL	0
 
-#   define TK_VERSION		"9.1"
-#   define TK_PATCH_LEVEL	"9.1.1"
+#   define TK_VERSION		"9.2"
+#   define TK_PATCH_LEVEL	"9.2a0"
 
 /*
  * A special definition used to allow this header file to be included from
