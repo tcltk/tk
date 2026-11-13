@@ -187,6 +187,7 @@ to the userbase.
  - [tk panedwindow: cursor changing code does not work well](https://core.tcl-lang.org/tk/tktview/ac7f77)
  - [remove pre-C89 support from tkImgPhoto.h](https://core.tcl-lang.org/tk/tktview/3dcdc9)
  - [Changing menu in fullscreen mode messes with geometry](https://core.tcl-lang.org/tk/tktview/286557)
+ - [wm maxsize does not take into account task bar on Windows](https://core.tcl-lang.org/tk/tktview/359856)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
