@@ -4163,6 +4163,8 @@ WmIconbitmapCmd(
 	    return TCL_ERROR;
 	}
     } else {
+	Pixmap pixmap = None;
+
 	/*
 	 * In the future this block of code will use Tk's 'image'
 	 * functionality to allow all supported image formats. However, this
@@ -4205,15 +4207,11 @@ WmIconbitmapCmd(
 	     * placed in the interpreter.
 	     */
 
-	    Pixmap pixmap;
-
 	    Tcl_ResetResult(interp);
 	    pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr, string);
 	    if (pixmap == None) {
 		return TCL_ERROR;
 	    }
-	    wmPtr->hints.icon_pixmap = pixmap;
-	    wmPtr->hints.flags |= IconPixmapHint;
 	    titlebaricon = GetIconFromPixmap(Tk_Display(winPtr), pixmap);
 	    if (titlebaricon != NULL && WinSetIcon(interp, titlebaricon,
 		    (Tk_Window) useWinPtr) != TCL_OK) {
@@ -4224,6 +4222,14 @@ WmIconbitmapCmd(
 		DecrIconRefCount(titlebaricon);
 		titlebaricon = NULL;
 	    }
+	}
+	if (wmPtr->hints.icon_pixmap != None) {
+	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+	}
+	wmPtr->hints.icon_pixmap = pixmap;
+	wmPtr->hints.flags &= ~IconPixmapHint;
+	if (pixmap != None) {
+	    wmPtr->hints.flags |= IconPixmapHint;
 	}
     }
     return TCL_OK;
@@ -4338,16 +4344,19 @@ WmIconmaskCmd(
     }
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_mask != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
-	}
-	wmPtr->hints.flags &= ~IconMaskHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, tkwin, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_mask = pixmap;
+    }
+    if (wmPtr->hints.icon_mask != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
+    }
+    wmPtr->hints.icon_mask = pixmap;
+    wmPtr->hints.flags &= ~IconMaskHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconMaskHint;
     }
     return TCL_OK;
@@ -7895,7 +7904,7 @@ GetMinSize(
  *	The values at *maxWidthPtr and *maxHeightPtr are filled in with the
  *	maximum allowable dimensions of wmPtr's window, in grid units. If no
  *	maximum has been specified for the window, then this function computes
- *	the largest sizes that will fit on the screen.
+ *	the largest sizes that will fit in the work area.
  *
  * Side effects:
  *	None.
@@ -7912,17 +7921,29 @@ GetMaxSize(
     int *maxHeightPtr)		/* Where to store the current maximum height
 				 * of the window. */
 {
-    int tmp;
+    int tmp, width = wmPtr->defMaxWidth, height = wmPtr->defMaxHeight;
 
+    /*
+     * The default fills up the work area of the monitor (the display without
+     * the taskbar), leaving space for the window's decorations.
+     */
+
+    if (wmPtr->maxWidth <= 0 || wmPtr->maxHeight <= 0) {
+	POINT origin = {0, 0};
+	MONITORINFO mi;
+
+	mi.cbSize = sizeof(mi);
+	if (GetMonitorInfoW(wmPtr->wrapper != NULL
+		? MonitorFromWindow(wmPtr->wrapper, MONITOR_DEFAULTTONEAREST)
+		: MonitorFromPoint(origin, MONITOR_DEFAULTTOPRIMARY), &mi)) {
+	    width = mi.rcWork.right - mi.rcWork.left;
+	    height = mi.rcWork.bottom - mi.rcWork.top;
+	}
+    }
     if (wmPtr->maxWidth > 0) {
 	*maxWidthPtr = wmPtr->maxWidth;
     } else {
-	/*
-	 * Must compute a default width. Fill up the display, leaving a bit of
-	 * extra space for the window manager's borders.
-	 */
-
-	tmp = wmPtr->defMaxWidth - wmPtr->borderWidth;
+	tmp = width - wmPtr->borderWidth;
 	if (wmPtr->gridWin != NULL) {
 	    /*
 	     * Gridding is turned on; convert from pixels to grid units.
@@ -7936,7 +7957,7 @@ GetMaxSize(
     if (wmPtr->maxHeight > 0) {
 	*maxHeightPtr = wmPtr->maxHeight;
     } else {
-	tmp = wmPtr->defMaxHeight - wmPtr->borderHeight;
+	tmp = height - wmPtr->borderHeight;
 	if (wmPtr->gridWin != NULL) {
 	    tmp = wmPtr->reqGridHeight
 		    + (tmp - wmPtr->winPtr->reqHeight)/wmPtr->heightInc;

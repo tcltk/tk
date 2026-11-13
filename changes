@@ -8552,8 +8552,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-10-20 (bug) [701d8f] X11: <Alt-key> bindings and %K do not work with a non-Latin keyboard layout (storchaka)
 
-2026-10-20 (bug) [88ffa7] Above roughly 10000 widgets wish hangs on Windows (storchaka)
-
 2026-10-20 (bug) [0625d1] Segmentation fault in menu-46.1 on MacOS (nijtmans)
 
 2026-10-20 (bug) [630171] long, fat lines fail on Windows (storchaka)
@@ -8623,3 +8621,21 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-11-06 (bug) [220791] Window gives false geometry information (storchaka)
 
 2026-11-06 (bug) [6fa236] X11: under Mutter wm geometry of a zoomed toplevel is offset by the invisible borders (storchaka)
+
+2026-11-06 (bug) [f126a0] X11: wm attributes -zoomed does not maximize the window under xfwm4 and fvwm (storchaka)
+
+2026-11-06 (bug) [f23a58] X11: wm geometry of a toplevel moved while iconified is too low by the title bar under KWin (storchaka)
+
+2026-11-09 (bug) [3da059] Filesystem dialogs conflict with auto_reset (under Linux) (storchaka)
+
+2026-11-10 (bug) [586f72] New test winfo-4.8 fails (storchaka)
+
+2026-11-10 (bug) [b298b9] Possible Tk regression when loading into threads (storchaka)
+
+2026-11-10 (bug) [131adc] bound buttonpress is passed on to other program (storchaka)
+
+2026-11-11 (bug) [ac7f77] tk panedwindow: cursor changing code does not work well (storchaka)
+
+2026-11-11 (bug) [286557] Changing menu in fullscreen mode messes with geometry (storchaka)
+
+2026-11-13 (bug) [359856] wm maxsize does not take into account task bar on Windows (storchaka)

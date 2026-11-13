@@ -176,6 +176,88 @@ TkTestLogDisplay(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpReadPixelSRGB --
+ *
+ *	Read one pixel from a window and convert it from the display's color
+ *	profile to sRGB.  macOS composites windows through the display profile,
+ *	so a raw read-back differs from the sRGB color values that were drawn;
+ *	this returns the drawn values, matching what X11 and Windows read back.
+ *	Used only by the "testpixel" test command.
+ *
+ * Results:
+ *	TCL_OK with the sRGB channels in *r, *g, *b, or TCL_ERROR if the pixel
+ *	could not be read.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpReadPixelSRGB(
+    Tk_Window tkwin,
+    int x,
+    int y,
+    unsigned char *r,
+    unsigned char *g,
+    unsigned char *b)
+{
+    Drawable d = Tk_WindowId(tkwin);
+    XImage *image = XGetImage(Tk_Display(tkwin), d, x, y, 1, 1,
+	    AllPlanes, ZPixmap);
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(d);
+    NSNumber *screenNumber = [[[win screen] deviceDescription]
+	    objectForKey:@"NSScreenNumber"];
+    CGColorSpaceRef displaySpace = screenNumber ?
+	    CGDisplayCopyColorSpace([screenNumber unsignedIntValue]) : NULL;
+    CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    unsigned long pixel;
+    CGFloat comps[4], cr, cg, cb;
+    CGColorRef src, dst;
+    const CGFloat *out;
+
+    if (!image || !displaySpace || !srgb) {
+	if (image) XDestroyImage(image);
+	if (displaySpace) CGColorSpaceRelease(displaySpace);
+	if (srgb) CGColorSpaceRelease(srgb);
+	return TCL_ERROR;
+    }
+
+    /*
+     * The captured pixel is in the window's display profile.  Wrap it in a
+     * CGColor tagged with that profile and match it to sRGB, the space the
+     * drawn color values were specified in.  (macOS XGetImage returns a 32bpp
+     * image with R, G, B in bits 16, 8, 0.)
+     */
+
+    pixel = XGetPixel(image, 0, 0);
+    comps[0] = ((pixel & image->red_mask)   >> 16) / 255.0;
+    comps[1] = ((pixel & image->green_mask) >>  8) / 255.0;
+    comps[2] =  (pixel & image->blue_mask)         / 255.0;
+    comps[3] = 1.0;
+    XDestroyImage(image);
+
+    src = CGColorCreate(displaySpace, comps);
+    dst = CGColorCreateCopyByMatchingToColorSpace(srgb,
+	    kCGRenderingIntentDefault, src, NULL);
+    out = dst ? CGColorGetComponents(dst) : NULL;
+    if (out) {
+	cr = out[0] < 0.0 ? 0.0 : (out[0] > 1.0 ? 1.0 : out[0]);
+	cg = out[1] < 0.0 ? 0.0 : (out[1] > 1.0 ? 1.0 : out[1]);
+	cb = out[2] < 0.0 ? 0.0 : (out[2] > 1.0 ? 1.0 : out[2]);
+	*r = (unsigned char) (cr * 255.0 + 0.5);
+	*g = (unsigned char) (cg * 255.0 + 0.5);
+	*b = (unsigned char) (cb * 255.0 + 0.5);
+    }
+
+    if (src) CGColorRelease(src);
+    if (dst) CGColorRelease(dst);
+    CGColorSpaceRelease(displaySpace);
+    CGColorSpaceRelease(srgb);
+    return out ? TCL_OK : TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * PressButtonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
@@ -214,8 +296,8 @@ PressButtonObjCmd(
     }
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "x y");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "x y");
+	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
 	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
@@ -313,8 +395,8 @@ MoveMouseObjCmd(
     }
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "x y");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "x y");
+	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
 	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
@@ -375,12 +457,12 @@ InjectKeyEventObjCmd(
 
     if (objc < 3) {
     wrongArgs:
-        Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
+	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-            sizeof(char *), "option", 0, &index) != TCL_OK) {
-        return TCL_ERROR;
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
     }
     type = types[index];
     if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
@@ -392,37 +474,37 @@ InjectKeyEventObjCmd(
     macKC.uint = XKeysymToKeycode(NULL, keysym);
     for (i = 3; i < objc; i++) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], argStrings,
-                sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        switch ((enum args) index) {
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum args) index) {
 	case KEYEVENT_SHIFT:
 	    mods |= NSShiftKeyMask;
-            break;
+	    break;
 	case KEYEVENT_CONTROL:
 	    mods |= NSControlKeyMask;
-            break;
+	    break;
 	case KEYEVENT_OPTION:
 	    mods |= NSAlternateKeyMask;
-            break;
+	    break;
 	case KEYEVENT_COMMAND:
 	    mods |= NSCommandKeyMask;
-            break;
+	    break;
 	case KEYEVENT_FUNCTION:
 	    mods |= NSFunctionKeyMask;
-            break;
+	    break;
 	case KEYEVENT_X:
 	    if (++i >= objc) {
-                goto wrongArgs;
-            }
+		goto wrongArgs;
+	    }
 	    if (Tcl_GetIntFromObj(interp,objv[i], &x) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case KEYEVENT_Y:
 	    if (++i >= objc) {
-                goto wrongArgs;
-            }
+		goto wrongArgs;
+	    }
 	    if (Tcl_GetIntFromObj(interp,objv[i], &y) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -450,7 +532,7 @@ InjectKeyEventObjCmd(
     }
     keyEvent = [NSEvent keyEventWithType:type
 	location:NSMakePoint(x, y)
-        modifierFlags:mods
+	modifierFlags:mods
 	timestamp:GetCurrentEventTime()
 	windowNumber:0
 	context:nil
