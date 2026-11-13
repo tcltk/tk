@@ -37,6 +37,11 @@
 #include <X11/Xlibint.h>
 #include <tcl.h>
 #include <wayland-client.h>
+#ifndef GLFW_EXPOSE_NATIVE_WAYLAND
+#define GLFW_EXPOSE_NATIVE_WAYLAND
+#endif
+#include <GLFW/glfw3native.h>
+#include "xdg-output-client-protocol.h"
 
 #define NANOVG_GLES3 1
 #include "nanovg_gl.h"
@@ -122,6 +127,271 @@ CompositorHasSeat(void)
     wl_registry_destroy(registry);
     wl_display_disconnect(wlDisplay);
     return hasSeat;
+}
+
+/*
+ * Logical sizes of the outputs.
+ *
+ * Tk works in logical pixels, the units of the window sizes (GLFW "screen
+ * coordinates").  GLFW only reports the video mode of a monitor, which is in
+ * physical pixels, and the integer scale of the output, which is the scale
+ * rounded up.  So the logical size of a scaled output is taken from the
+ * xdg-output protocol.  The objects are kept, so the sizes follow changes of
+ * the resolution or the scale.
+ */
+
+#define TKWL_MAX_OUTPUTS 16
+
+typedef struct {
+    struct wl_output *output;
+    struct zxdg_output_v1 *xdgOutput;
+    uint32_t globalName;	/* Name of the wl_output global. */
+    int x, y;			/* Logical position. */
+    int width, height;		/* Logical size, 0 if not known. */
+    char *name;			/* Output name, e.g. "eDP-1". */
+} TkWaylandOutput;
+
+static struct {
+    int initialized;
+    struct zxdg_output_manager_v1 *manager;
+    int numOutputs;
+    TkWaylandOutput outputs[TKWL_MAX_OUTPUTS];
+} outputInfo;
+
+static void
+XdgOutputLogicalPosition(
+    void *data,
+    TCL_UNUSED(struct zxdg_output_v1 *),
+    int32_t x,
+    int32_t y)
+{
+    TkWaylandOutput *outPtr = (TkWaylandOutput *)data;
+
+    outPtr->x = x;
+    outPtr->y = y;
+}
+
+static void
+XdgOutputLogicalSize(
+    void *data,
+    TCL_UNUSED(struct zxdg_output_v1 *),
+    int32_t width,
+    int32_t height)
+{
+    TkWaylandOutput *outPtr = (TkWaylandOutput *)data;
+
+    outPtr->width = width;
+    outPtr->height = height;
+}
+
+static void
+XdgOutputDone(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(struct zxdg_output_v1 *))
+{
+}
+
+static void
+XdgOutputName(
+    void *data,
+    TCL_UNUSED(struct zxdg_output_v1 *),
+    const char *name)
+{
+    TkWaylandOutput *outPtr = (TkWaylandOutput *)data;
+
+    if (outPtr->name != NULL) {
+	Tcl_Free(outPtr->name);
+    }
+    outPtr->name = (char *)Tcl_Alloc(strlen(name) + 1);
+    strcpy(outPtr->name, name);
+}
+
+static void
+XdgOutputDescription(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(struct zxdg_output_v1 *),
+    TCL_UNUSED(const char *))
+{
+}
+
+static const struct zxdg_output_v1_listener xdgOutputListener = {
+    XdgOutputLogicalPosition,
+    XdgOutputLogicalSize,
+    XdgOutputDone,
+    XdgOutputName,
+    XdgOutputDescription
+};
+
+static void
+OutputGetXdgOutput(
+    TkWaylandOutput *outPtr)
+{
+    if (outputInfo.manager != NULL && outPtr->xdgOutput == NULL) {
+	outPtr->xdgOutput = zxdg_output_manager_v1_get_xdg_output(
+		outputInfo.manager, outPtr->output);
+	zxdg_output_v1_add_listener(outPtr->xdgOutput, &xdgOutputListener,
+		outPtr);
+    }
+}
+
+static void
+OutputRegistryGlobal(
+    TCL_UNUSED(void *),
+    struct wl_registry *registry,
+    uint32_t name,
+    const char *interface,
+    uint32_t version)
+{
+    if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0) {
+	int i;
+
+	outputInfo.manager = (struct zxdg_output_manager_v1 *)
+		wl_registry_bind(registry, name,
+		&zxdg_output_manager_v1_interface, version > 3 ? 3 : version);
+	for (i = 0; i < outputInfo.numOutputs; i++) {
+	    OutputGetXdgOutput(&outputInfo.outputs[i]);
+	}
+    } else if (strcmp(interface, wl_output_interface.name) == 0
+	    && outputInfo.numOutputs < TKWL_MAX_OUTPUTS) {
+	TkWaylandOutput *outPtr = &outputInfo.outputs[outputInfo.numOutputs++];
+
+	memset(outPtr, 0, sizeof(TkWaylandOutput));
+	outPtr->globalName = name;
+	outPtr->output = (struct wl_output *)wl_registry_bind(registry, name,
+		&wl_output_interface, 1);
+	OutputGetXdgOutput(outPtr);
+    }
+}
+
+static void
+OutputRegistryGlobalRemove(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(struct wl_registry *),
+    uint32_t name)
+{
+    int i;
+
+    for (i = 0; i < outputInfo.numOutputs; i++) {
+	TkWaylandOutput *outPtr = &outputInfo.outputs[i];
+
+	if (outPtr->globalName == name) {
+	    if (outPtr->xdgOutput != NULL) {
+		zxdg_output_v1_destroy(outPtr->xdgOutput);
+	    }
+	    wl_output_destroy(outPtr->output);
+	    if (outPtr->name != NULL) {
+		Tcl_Free(outPtr->name);
+	    }
+	    outputInfo.outputs[i] = outputInfo.outputs[--outputInfo.numOutputs];
+	    return;
+	}
+    }
+}
+
+static const struct wl_registry_listener outputRegistryListener = {
+    OutputRegistryGlobal,
+    OutputRegistryGlobalRemove
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetScreenSize --
+ *
+ *	Get the logical geometry of the screen: the rectangle which contains
+ *	all outputs, as the screen of X11 contains all monitors.  The outputs
+ *	can have different scales; their positions and sizes are all in the
+ *	logical coordinates of the compositor.
+ *
+ *	If mmWidthPtr is not NULL, also compute the size of the screen in
+ *	millimeters, as if all of it had the resolution of the largest output,
+ *	so that [tk scaling] is right on that output.
+ *
+ * Results:
+ *	1 and the geometry in *xPtr, *yPtr, *widthPtr, *heightPtr (and the size
+ *	in millimeters), or 0 if the compositor does not support xdg-output or
+ *	the sizes are not known.
+ *
+ * Side effects:
+ *	The first call binds the outputs and the xdg-output manager.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkWaylandGetScreenSize(
+    int *xPtr, int *yPtr,
+    int *widthPtr, int *heightPtr,
+    int *mmWidthPtr, int *mmHeightPtr)
+{
+    TkWaylandOutput *largest = NULL;
+    int i, x0 = 0, y0 = 0, x1 = 0, y1 = 0, found = 0;
+
+    if (!outputInfo.initialized) {
+	struct wl_display *wlDisplay = glfwGetWaylandDisplay();
+	struct wl_registry *registry;
+
+	outputInfo.initialized = 1;
+	if (wlDisplay == NULL) {
+	    return 0;
+	}
+	registry = wl_display_get_registry(wlDisplay);
+	wl_registry_add_listener(registry, &outputRegistryListener, NULL);
+	wl_display_roundtrip(wlDisplay);	/* The globals. */
+	wl_display_roundtrip(wlDisplay);	/* The xdg-output events. */
+    }
+
+    for (i = 0; i < outputInfo.numOutputs; i++) {
+	TkWaylandOutput *outPtr = &outputInfo.outputs[i];
+
+	if (outPtr->width <= 0 || outPtr->height <= 0) {
+	    continue;
+	}
+	if (!found || outPtr->x < x0) x0 = outPtr->x;
+	if (!found || outPtr->y < y0) y0 = outPtr->y;
+	if (!found || outPtr->x + outPtr->width > x1) {
+	    x1 = outPtr->x + outPtr->width;
+	}
+	if (!found || outPtr->y + outPtr->height > y1) {
+	    y1 = outPtr->y + outPtr->height;
+	}
+	if (largest == NULL || (long)outPtr->width * outPtr->height
+		> (long)largest->width * largest->height) {
+	    largest = outPtr;
+	}
+	found = 1;
+    }
+    if (!found) {
+	return 0;
+    }
+    *xPtr = x0;
+    *yPtr = y0;
+    *widthPtr = x1 - x0;
+    *heightPtr = y1 - y0;
+
+    if (mmWidthPtr != NULL) {
+	int mmW = 0, mmH = 0, count;
+	GLFWmonitor **monitors = glfwGetMonitors(&count);
+
+	/* GLFW knows the physical size of the outputs. */
+	for (i = 0; i < count; i++) {
+	    const char *name = glfwGetMonitorName(monitors[i]);
+
+	    if (largest->name != NULL && name != NULL
+		    && strcmp(largest->name, name) == 0) {
+		glfwGetMonitorPhysicalSize(monitors[i], &mmW, &mmH);
+		break;
+	    }
+	}
+	if (mmW <= 0 || mmH <= 0) {
+	    /* Assume 96 logical pixels per inch. */
+	    mmW = (int) (largest->width * 25.4 / 96.0 + 0.5);
+	    mmH = (int) (largest->height * 25.4 / 96.0 + 0.5);
+	}
+	*mmWidthPtr = (int) ((double) mmW * *widthPtr / largest->width + 0.5);
+	*mmHeightPtr = (int) ((double) mmH * *heightPtr / largest->height + 0.5);
+    }
+    return 1;
 }
 
 /*
@@ -213,7 +483,14 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 	glfwGetMonitorContentScale(monitor, &scale, NULL);
 	glfwGetMonitorPhysicalSize(monitor, &width_mm, &height_mm);
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        if (mode) {
+	int x, y;
+
+        if (TkWaylandGetScreenSize(&x, &y, &width_px, &height_px,
+		&width_mm, &height_mm)) {
+	    /* The logical size of all outputs. */
+	} else if (mode) {
+	    /* The scale is rounded up, so this is only right at an integer
+	     * scale. */
 	    width_px = (int) (float) mode->width / scale;
 	    height_px = (int) (float) mode->height / scale;
 	}
