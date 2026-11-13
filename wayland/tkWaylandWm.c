@@ -6546,9 +6546,21 @@ UpdateVRootGeometry(WmInfo *wmPtr)
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     if (monitor != NULL) {
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+        if (TkWaylandGetScreenSize(&wmPtr->vRootX, &wmPtr->vRootY,
+		&wmPtr->vRootWidth, &wmPtr->vRootHeight, NULL, NULL)) {
+	    /* All outputs, in the same units as the window sizes. */
+            return;
+	}
         if (mode != NULL) {
-            wmPtr->vRootWidth  = mode->width;
-            wmPtr->vRootHeight = mode->height;
+	    float scale = 1.0f;
+
+	    /* The mode is in physical pixels, and the scale is rounded up. */
+	    glfwGetMonitorContentScale(monitor, &scale, NULL);
+	    if (scale < 1.0f) {
+		scale = 1.0f;
+	    }
+            wmPtr->vRootWidth  = (int) (mode->width / scale);
+            wmPtr->vRootHeight = (int) (mode->height / scale);
             glfwGetMonitorPos(monitor, &wmPtr->vRootX, &wmPtr->vRootY);
             return;
         }
@@ -6571,10 +6583,9 @@ UpdateVRootGeometry(WmInfo *wmPtr)
  *	clients do not know which output a window is on, so the primary
  *	monitor is used.
  *
- *	GLFW reports video modes and work areas in screen coordinates, the
- *	same units as glfwSetWindowSize.  If your GLFW reports the mode of a
- *	scaled output in physical pixels, define TKWL_VIDMODE_IS_PHYSICAL to
- *	divide by the content scale.
+ *	GLFW reports video modes and work areas in physical pixels, and only
+ *	the integer scale of the output, so the logical size of the output is
+ *	taken from xdg-output (TkWaylandGetScreenSize) if possible.
  *
  * Results:
  *	1 and the size in *widthPtr and *heightPtr, or 0 if the screen size
@@ -6595,7 +6606,7 @@ GetUsableScreenSize(
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     GLFWwindow *glfwWindow = (winPtr != NULL)
 	    ? TkWaylandGetGLFWwindow(winPtr) : NULL;
-    int w = 0, h = 0, modeW = 0, modeH = 0;
+    int w = 0, h = 0, modeW = 0, modeH = 0, vx, vy;
     int haveRealWorkarea = 0;
 
     if (monitor == NULL) {
@@ -6611,9 +6622,29 @@ GetUsableScreenSize(
 	}
     }
 
+    /*
+     * Wayland clients get no work area: GLFW reports the whole output, in
+     * physical pixels, like the video mode.  Use the logical size of all
+     * outputs (as on X11), the units of the window sizes.
+     */
+    if (TkWaylandGetScreenSize(&vx, &vy, &w, &h, NULL, NULL)) {
+	modeW = w;
+	modeH = h;
+    } else {
 #if GLFW_VERSION_MAJOR > 3 || (GLFW_VERSION_MAJOR == 3 && GLFW_VERSION_MINOR >= 3)
-    glfwGetMonitorWorkarea(monitor, NULL, NULL, &w, &h);
+	glfwGetMonitorWorkarea(monitor, NULL, NULL, &w, &h);
 #endif
+	float scale = 1.0f;
+
+	/* Physical pixels; the scale is rounded up. */
+	glfwGetMonitorContentScale(monitor, &scale, NULL);
+	if (scale > 1.0f) {
+	    w = (int) (w / scale);
+	    h = (int) (h / scale);
+	    modeW = (int) (modeW / scale);
+	    modeH = (int) (modeH / scale);
+	}
+    }
     if (w <= 0 || h <= 0) {
 	w = modeW;
 	h = modeH;
@@ -6625,19 +6656,6 @@ GetUsableScreenSize(
 	return 0;
     }
 
-#ifdef TKWL_VIDMODE_IS_PHYSICAL
-    {
-	float xScale = 1.0f, yScale = 1.0f;
-
-	glfwGetMonitorContentScale(monitor, &xScale, &yScale);
-	if (xScale > 1.0f) {
-	    w = (int)(w / xScale + 0.5f);
-	}
-	if (yScale > 1.0f) {
-	    h = (int)(h / yScale + 0.5f);
-	}
-    }
-#endif
 
     /*
      * Wayland has no way for a client to ask where the panels and docks are:

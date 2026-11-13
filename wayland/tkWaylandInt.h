@@ -588,6 +588,9 @@ MODULE_SCOPE const char *TkWaylandGetAppId(void);
  */
 
 MODULE_SCOPE GLFWwindow *TkWaylandGetGLFWwindow(TkWindow *winPtr);
+MODULE_SCOPE int	TkWaylandGetScreenSize(int *xPtr, int *yPtr,
+			    int *widthPtr, int *heightPtr,
+			    int *mmWidthPtr, int *mmHeightPtr);
 
 MODULE_SCOPE GLFWwindow *TkWaylandCreateWindow(
     TkWindow   *tkWin,
