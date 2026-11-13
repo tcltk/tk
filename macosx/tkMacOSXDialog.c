@@ -678,6 +678,7 @@ parseFileFilters(
 		    filterInfo.fileTypeIndex = index;
 		    filterInfo.preselectFilter = true;
 		}
+		[selectedFileTypeStr release];
 	    }
 	}
 
@@ -880,6 +881,9 @@ Tk_GetOpenFileObjCmd(
 	    [openpanel setAllowsOtherFileTypes:NO];
 	}
 	[openpanel setAccessoryView:accessoryView];
+	[accessoryView release];
+	[popupButton release];
+	[label release];
     } else {
 	/*
 	 * No filters are given. Allow picking all files.
@@ -918,6 +922,7 @@ Tk_GetOpenFileObjCmd(
 					multiple);
     if (testsAreRunning) {
 	[monitor cancel];
+	[monitor release];
     }
     if (cmdObj) {
 	Tcl_DecrRefCount(cmdObj);
@@ -1154,8 +1159,11 @@ Tk_GetSaveFileObjCmd(
 	[popupButton setAction:@selector(saveFormat:)];
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
+	[popupButton release];
+	[label release];
 
 	[savepanel setAccessoryView:accessoryView];
+	[accessoryView release];
 
 	setAllowedFileTypes(savepanel,
 	    [filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]);

@@ -65,15 +65,17 @@ static void initColorTable()
 			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
+		    [colorName release];
 		    continue;
 		}
 	    }
-	    entry->selector = [colorName retain];
+	    entry->selector = colorName;
 	}
 	if (newPtr == 0) {
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
 	    [oldEntry->selector release];
+	    oldEntry->selector = nil;
 	} else {
 	    entry->index = index++;
 	}
@@ -87,8 +89,6 @@ static void initColorTable()
     for (key in [systemColorList allKeys]) {
 	NSUInteger length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
-	bzero(entry, sizeof(SystemColorDatum));
 	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = (char)toupper(UCHAR(name[0]));
@@ -98,8 +98,11 @@ static void initColorTable()
 	     * Avoid black windows on old systems.
 	     */
 
+	    ckfree(name);
 	    continue;
 	}
+	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
+	bzero(entry, sizeof(SystemColorDatum));
 	entry->type=semantic;
 	entry->name = name;
 	entry->selector = [key retain];
@@ -108,6 +111,7 @@ static void initColorTable()
 	    oldEntry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
 	    entry->index = oldEntry->index;
 	    [oldEntry->selector release];
+	    oldEntry->selector = nil;
 	} else {
 	    entry->index = index++;
 	}
