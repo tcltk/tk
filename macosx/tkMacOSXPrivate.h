@@ -223,8 +223,7 @@ typedef struct TkMacOSXDrawingContext {
  */
 
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
-MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
-			    HIShapeRef rgn);
+MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r, HIShapeRef rgn);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
@@ -306,6 +305,7 @@ MODULE_SCOPE void TkMacOSXUpdatePointerAfterDestroy (NSWindow *deadNSWindow);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
 MODULE_SCOPE void TkMacOSXNotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
+MODULE_SCOPE int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 
 #pragma mark Private Objective-C Classes
 
@@ -341,6 +341,7 @@ VISIBILITY_HIDDEN
 @property int macOSVersion;
 @property Bool tkLiveResizeEnded;
 @property Bool tkWillExit;
+@property Tcl_Interp* eventInterp;
 
 /*
  * Persistent state variables used by processMouseEvent.
@@ -427,9 +428,10 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
+@property Bool hasBeenExposed;
+@property int orderFrontCount;
 @end
 
 @interface TKContentView(TKKeyEvent)

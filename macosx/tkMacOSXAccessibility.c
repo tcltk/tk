@@ -38,9 +38,7 @@ static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip, Tcl_Size ob
 static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *eventPtr);
 void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
 int IsVoiceOverRunning(void *clientData, Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 
 char *callback_command;
@@ -1106,13 +1104,16 @@ static int TkMacOSXAccessibleObjCmd(
  *----------------------------------------------------------------------
  */
 
-int TkMacOSXAccessibility_Init(Tcl_Interp * interp)
+MODULE_SCOPE int TkMacOSXAccessibility_Init(
+    Tcl_Interp * interp)
 {
-
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object",
+			  TkMacOSXAccessibleObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change",
+			  EmitSelectionChanged, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader",
+			  IsVoiceOverRunning, NULL, NULL);
     [pool release];
     return TCL_OK;
 }

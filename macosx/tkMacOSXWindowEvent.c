@@ -1041,7 +1041,7 @@ ExposeRestrictProc(
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;
-	trackingArea = [[NSTrackingArea alloc]
+	NSTrackingArea *trackingArea = [[NSTrackingArea alloc]
 			   initWithRect:[self bounds]
 				options:(NSTrackingMouseEnteredAndExited |
 					 NSTrackingMouseMoved |
@@ -1051,6 +1051,7 @@ ExposeRestrictProc(
 				  owner:self
 			       userInfo:nil];
 	[self addTrackingArea:trackingArea];
+	[trackingArea release];
     }
     return self;
 }
@@ -1227,6 +1228,7 @@ static void DebugIdleTask(void *clientData) {
 	if ([self inLiveResize]) {
 	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
+	self.hasBeenExposed = YES;
     }
     reentered = false;
 }

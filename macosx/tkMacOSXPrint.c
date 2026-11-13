@@ -92,9 +92,8 @@ StartPrint(
 	return TCL_ERROR;
     }
 
-    fileName = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
+    fileName = [[NSString alloc] initWithUTF8String: Tcl_GetString(objv[1])];
     urlFile = (CFStringRef) fileName;
-    CFRetain(urlFile);
 
     /* Initialize the delegate for the callback from the page panel. */
     PrintDelegate * printDelegate = [[PrintDelegate alloc] init];
@@ -125,6 +124,7 @@ StartPrint(
     [printDelegate printPanelDidEnd: printPanel
 			 returnCode: accepted
 			contextInfo: printInfo];
+    [printDelegate release];
 
     return TCL_OK;
 }
@@ -371,6 +371,7 @@ int MakePDF(
 
     NSData *viewData = (NSData*)pdfData;
     [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
+    [viewData release];
     return TCL_OK;
 
 }
