@@ -2269,7 +2269,7 @@ WmAttributesCmd(
 	    long value = NSWindowTabbingModeAutomatic;
 	    int modeIndex;
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[4], tabbingModes,
-	        sizeof(tabbingMode), "NSWindow Tabbing Mode", 0,
+		sizeof(tabbingMode), "NSWindow Tabbing Mode", 0,
 		&modeIndex) == TCL_OK) {
 		value = tabbingModes[modeIndex].modeValue;
 	    }
@@ -6792,7 +6792,7 @@ TkMacOSXMakeRealWindowExist(
 	 * onward, the styleMask can replace the Carbon window classes and
 	 * attributes.
 	 */
-        ensureHashTablesExist();
+	ensureHashTablesExist();
 	int index;
 	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr));
 	index = hPtr ? PTR2INT(Tcl_GetHashValue(hPtr)) : subclassNSWindow;
