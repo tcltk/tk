@@ -45,7 +45,7 @@ static int		CountBits(pixel mask);
 static void		GetColorTable(PhotoInstance *instancePtr);
 static void		FreeColorTable(ColorTable *colorPtr, int force);
 static void		AllocateColors(ColorTable *colorPtr);
-static void		DisposeColorTable(ClientData clientData);
+static void		DisposeColorTable(void *clientData);
 static int		ReclaimColors(ColorTableId *id, int numColors);
 
 /*
@@ -117,7 +117,7 @@ TkImgPhotoConfigureInstance(
 	 */
 
 	if (colorTablePtr != NULL) {
-	    colorTablePtr->liveRefCount -= 1;
+	    colorTablePtr->liveRefCount--;
 	    FreeColorTable(colorTablePtr, 0);
 	}
 	GetColorTable(instancePtr);
@@ -207,17 +207,18 @@ TkImgPhotoConfigureInstance(
  *----------------------------------------------------------------------
  */
 
-ClientData
+void *
 TkImgPhotoGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData modelData)	/* Pointer to our model structure for the
+    void *modelData)	/* Pointer to our model structure for the
 				 * image. */
 {
-    PhotoModel *modelPtr = modelData;
+    PhotoModel *modelPtr = (PhotoModel *)modelData;
     PhotoInstance *instancePtr;
     Colormap colormap;
-    int mono, nRed, nGreen, nBlue, numVisuals;
+    int mono;
+    int nRed, nGreen, nBlue, numVisuals;
     XVisualInfo visualInfo, *visInfoPtr;
     char buf[TCL_INTEGER_SPACE * 3];
     XColor *white, *black;
@@ -287,7 +288,7 @@ TkImgPhotoGet(
      * a new instance of the image.
      */
 
-    instancePtr = ckalloc(sizeof(PhotoInstance));
+    instancePtr = (PhotoInstance *)ckalloc(sizeof(PhotoInstance));
     instancePtr->masterPtr = modelPtr;
     instancePtr->display = Tk_Display(tkwin);
     instancePtr->colormap = Tk_Colormap(tkwin);
@@ -359,7 +360,7 @@ TkImgPhotoGet(
 	nRed = 1 << visInfoPtr->depth;
 	break;
     }
-    XFree((char *) visInfoPtr);
+    XFree((char *)visInfoPtr);
 
     if (mono) {
 	snprintf(buf, sizeof(buf), "%d", nRed);
@@ -608,6 +609,53 @@ BlendComplexAlpha(
 /*
  *----------------------------------------------------------------------
  *
+ * DisplayInstancePixmap --
+ *
+ *	Draws a portion of the pixmap of a photo image instance, which has
+ *	the -gamma and -palette of the image applied, clipped to the valid
+ *	region of the image.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A portion of the image gets rendered in a pixmap or window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DisplayInstancePixmap(
+    PhotoInstance *instancePtr,	/* Instance to be displayed. */
+    Display *display,		/* Display on which to draw image. */
+    Drawable drawable,		/* Pixmap or window in which to draw image. */
+    int imageX, int imageY,	/* Upper-left corner of region within image to
+				 * draw. */
+    int width, int height,	/* Dimensions of region within image to
+				 * draw. */
+    int drawableX,int drawableY)/* Coordinates within drawable that correspond
+				 * to imageX and imageY. */
+{
+    /*
+     * modelPtr->validRegion describes which parts of the image contain valid
+     * data. We set this region as the clip mask for the gc, setting its
+     * origin appropriately, and use it when drawing the image.
+     */
+
+    TkSetRegion(display, instancePtr->gc,
+	    instancePtr->masterPtr->validRegion);
+    XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
+	    drawableY - imageY);
+    XCopyArea(display, instancePtr->pixels, drawable, instancePtr->gc,
+	    imageX, imageY, (unsigned) width, (unsigned) height,
+	    drawableX, drawableY);
+    XSetClipMask(display, instancePtr->gc, None);
+    XSetClipOrigin(display, instancePtr->gc, 0, 0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkImgPhotoDisplay --
  *
  *	This function is invoked to draw a photo image.
@@ -623,7 +671,7 @@ BlendComplexAlpha(
 
 void
 TkImgPhotoDisplay(
-    ClientData clientData,	/* Pointer to PhotoInstance structure for
+    void *clientData,	/* Pointer to PhotoInstance structure for
 				 * instance to be displayed. */
     Display *display,		/* Display on which to draw image. */
     Drawable drawable,		/* Pixmap or window in which to draw image. */
@@ -634,7 +682,7 @@ TkImgPhotoDisplay(
     int drawableX,int drawableY)/* Coordinates within drawable that correspond
 				 * to imageX and imageY. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
 #ifndef TK_CAN_RENDER_RGBA
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
@@ -649,6 +697,22 @@ TkImgPhotoDisplay(
     }
 
 #ifdef TK_CAN_RENDER_RGBA
+
+    /*
+     * The RGBA rendering below draws the pixels of the model, so it ignores
+     * -gamma and -palette, which are only applied to the pixmap of the
+     * instance. Draw images without partial transparency from that pixmap
+     * if they have a non-default gamma or palette.
+     */
+
+    if (!(instancePtr->masterPtr->flags & COMPLEX_ALPHA)
+	    && ((instancePtr->gamma != 1.0)
+	    || (instancePtr->palette != instancePtr->defaultPalette))) {
+	DisplayInstancePixmap(instancePtr, display, drawable, imageX, imageY,
+		width, height, drawableX, drawableY);
+	(void)XFlush(display);
+	return;
+    }
 
     /*
      * We can use TkpPutRGBAImage to render RGBA Ximages directly so there is
@@ -708,22 +772,9 @@ TkImgPhotoDisplay(
 	XDestroyImage(bgImg);
 	Tk_DeleteErrorHandler(handler);
     } else {
-	/*
-	 * modelPtr->validRegion describes which parts of the image contain valid
-	 * data. We set this region as the clip mask for the gc, setting its
-	 * origin appropriately, and use it when drawing the image.
-	 */
-
     fallBack:
-	TkSetRegion(display, instancePtr->gc,
-		instancePtr->masterPtr->validRegion);
-	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
-		drawableY - imageY);
-	XCopyArea(display, instancePtr->pixels, drawable, instancePtr->gc,
-		imageX, imageY, (unsigned) width, (unsigned) height,
-		drawableX, drawableY);
-	XSetClipMask(display, instancePtr->gc, None);
-	XSetClipOrigin(display, instancePtr->gc, 0, 0);
+	DisplayInstancePixmap(instancePtr, display, drawable, imageX, imageY,
+		width, height, drawableX, drawableY);
     }
     (void)XFlush(display);
 #endif
@@ -749,12 +800,12 @@ TkImgPhotoDisplay(
 
 void
 TkImgPhotoFree(
-    ClientData clientData,	/* Pointer to PhotoInstance structure for
+    void *clientData,	/* Pointer to PhotoInstance structure for
 				 * instance to be displayed. */
-    Display *display)		/* Display containing window that used
+    TCL_UNUSED(Display *))	/* Display containing window that used
 				 * image. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     ColorTable *colorPtr;
 
     if (instancePtr->refCount-- > 1) {
@@ -770,7 +821,7 @@ TkImgPhotoFree(
 
     colorPtr = instancePtr->colorTablePtr;
     if (colorPtr != NULL) {
-	colorPtr->liveRefCount -= 1;
+	colorPtr->liveRefCount--;
     }
 
     Tcl_DoWhenIdle(TkImgDisposeInstance, instancePtr);
@@ -854,7 +905,7 @@ TkImgPhotoInstanceSetSize(
 	     * such possibility.
 	     */
 
-	    newError = ckalloc(modelPtr->height * modelPtr->width
+	    newError = (schar *)ckalloc(modelPtr->height * modelPtr->width
 		    * 3 * sizeof(schar));
 
 	    /*
@@ -892,8 +943,8 @@ TkImgPhotoInstanceSetSize(
 	    if (modelPtr->width == instancePtr->width) {
 		offset = validBox.y * modelPtr->width * 3;
 		memcpy(newError + offset, instancePtr->error + offset,
-			(size_t) (validBox.height
-			* modelPtr->width * 3 * sizeof(schar)));
+			(size_t) validBox.height
+			* modelPtr->width * 3 * sizeof(schar));
 
 	    } else if (validBox.width > 0 && validBox.height > 0) {
 		errDestPtr = newError +
@@ -941,7 +992,8 @@ IsValidPalette(
 				 * is to be applied. */
     const char *palette)	/* Palette specification string. */
 {
-    int nRed, nGreen, nBlue, mono, numColors;
+    int nRed, nGreen, nBlue, numColors;
+    int mono;
     char *endp;
 
     /*
@@ -1083,13 +1135,13 @@ GetColorTable(
 	 * Re-use the existing entry.
 	 */
 
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
     } else {
 	/*
 	 * No color table currently available; need to make one.
 	 */
 
-	colorPtr = ckalloc(sizeof(ColorTable));
+	colorPtr = (ColorTable *)ckalloc(sizeof(ColorTable));
 
 	/* Make sure padding bytes are copied as well */
 	memcpy(&colorPtr->id, &id, sizeof(ColorTableId));
@@ -1144,8 +1196,7 @@ FreeColorTable(
 				 * longer required by an instance. */
     int force)			/* Force free to happen immediately. */
 {
-    colorPtr->refCount--;
-    if (colorPtr->refCount > 0) {
+    if (colorPtr->refCount-- > 1) {
 	return;
     }
 
@@ -1185,7 +1236,8 @@ AllocateColors(
     ColorTable *colorPtr)	/* Pointer to the color table requiring colors
 				 * to be allocated. */
 {
-    int i, r, g, b, rMult, mono;
+    int i, r, g, b, rMult;
+    int mono;
     int numColors, nRed, nGreen, nBlue;
     double fr, fg, fb, igam;
     XColor *colors;
@@ -1242,7 +1294,7 @@ AllocateColors(
 	    } else {
 		numColors = MAX(MAX(nRed, nGreen), nBlue);
 	    }
-	    colors = ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
 
 	    for (i = 0; i < numColors; ++i) {
 		if (igam == 1.0) {
@@ -1262,7 +1314,7 @@ AllocateColors(
 	     */
 
 	    numColors = (mono) ? nRed: (nRed * nGreen * nBlue);
-	    colors = ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
 
 	    if (!mono) {
 		/*
@@ -1306,7 +1358,7 @@ AllocateColors(
 	 * Now try to allocate the colors we've calculated.
 	 */
 
-	pixels = ckalloc(numColors * sizeof(unsigned long));
+	pixels = (unsigned long *)ckalloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
 	    if (!XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
 		    &colors[i])) {
@@ -1463,10 +1515,10 @@ AllocateColors(
 
 static void
 DisposeColorTable(
-    ClientData clientData)	/* Pointer to the ColorTable whose
+    void *clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
-    ColorTable *colorPtr = clientData;
+    ColorTable *colorPtr = (ColorTable *)clientData;
     Tcl_HashEntry *entry;
 
     if (colorPtr->pixelMap != NULL) {
@@ -1478,7 +1530,7 @@ DisposeColorTable(
 	ckfree(colorPtr->pixelMap);
     }
 
-    entry = Tcl_FindHashEntry(&imgPhotoColorHash, (char *) &colorPtr->id);
+    entry = Tcl_FindHashEntry(&imgPhotoColorHash, (char *)&colorPtr->id);
     if (entry == NULL) {
 	Tcl_Panic("DisposeColorTable couldn't find hash entry");
     }
@@ -1526,7 +1578,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while (entry != NULL) {
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0 )&& (colorPtr->numColors != 0)
@@ -1555,7 +1607,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while ((entry != NULL) && (numColors > 0)) {
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0) && (colorPtr->numColors != 0)
@@ -1597,10 +1649,10 @@ ReclaimColors(
 
 void
 TkImgDisposeInstance(
-    ClientData clientData)	/* Pointer to the instance whose resources are
+    void *clientData)	/* Pointer to the instance whose resources are
 				 * to be released. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     PhotoInstance *prevPtr;
 
     if (instancePtr->pixels != None) {
@@ -1659,7 +1711,8 @@ TkImgDitherInstance(
     PhotoModel *modelPtr = instancePtr->masterPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
-    int nLines, bigEndian, i, c, x, y, xEnd, doDithering = 1;
+    int nLines, bigEndian, i, c, x, y, xEnd;
+    int doDithering = 1;
     int bitsPerPixel, bytesPerLine, lineLength;
     unsigned char *srcLinePtr;
     schar *errLinePtr;
@@ -1710,7 +1763,7 @@ TkImgDitherInstance(
      * recovering from the failure.
      */
 
-    imagePtr->data = ckalloc(imagePtr->bytes_per_line * nLines);
+    imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * nLines);
     bigEndian = imagePtr->bitmap_bit_order == MSBFirst;
     firstBit = bigEndian? (1 << (imagePtr->bitmap_unit - 1)): 1;
 
@@ -1736,7 +1789,7 @@ TkImgDitherInstance(
 	    unsigned char *srcPtr = srcLinePtr;
 	    schar *errPtr = errLinePtr;
 	    unsigned char *destBytePtr = dstLinePtr;
-	    pixel *destLongPtr = (pixel *) dstLinePtr;
+	    pixel *destLongPtr = (pixel *)dstLinePtr;
 
 	    if (colorPtr->flags & COLOR_WINDOW) {
 		/*
@@ -1999,8 +2052,8 @@ TkImgResetDither(
 {
     if (instancePtr->error) {
 	memset(instancePtr->error, 0,
-	       /*(size_t)*/ (instancePtr->masterPtr->width
-		* instancePtr->masterPtr->height * 3 * sizeof(schar)));
+		(size_t) instancePtr->masterPtr->width
+		* instancePtr->masterPtr->height * 3 * sizeof(schar));
     }
 }
 
