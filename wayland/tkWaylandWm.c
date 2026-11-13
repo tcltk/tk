@@ -4005,10 +4005,8 @@ WmGeometryCmd(
 	static int inQuery = 0;
 
 	/* Apply a pending change first, as on X11: it may be pending only as
-	 * the "wait to be shown" timer, which [update] does not run.  Do not
-	 * apply the size again if nothing is pending: it would replace the
-	 * size the compositor is giving the window (e.g. maximizing). */
-	if (!inQuery && (wmPtr->flags & WM_UPDATE_PENDING)) {
+	 * the "wait to be shown" timer, which [update] does not run. */
+	if (!inQuery) {
 	    inQuery = 1;
 	    UpdateGeometryInfo((void *)winPtr);
 	    inQuery = 0;
@@ -6160,6 +6158,14 @@ ApplyPendingGeometry(
      */
     if (glfwGetWindowAttrib(glfwWindow, GLFW_MAXIMIZED)
 	    || glfwGetWindowMonitor(glfwWindow) != NULL) {
+	return;
+    }
+
+    /*
+     * Likewise while the window is being maximized or made fullscreen: the
+     * compositor may not have done it yet.
+     */
+    if (wmPtr->attributes.zoomed || wmPtr->attributes.fullscreen) {
 	return;
     }
 
