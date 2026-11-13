@@ -347,9 +347,7 @@ typedef struct WaitRestrictInfo {
  */
 
 static int		ComputeReparentGeometry(WmInfo *wmPtr);
-static int		GetExtents(TkWindow *wrapperPtr, Window window,
-			    const char *atomName, int *leftPtr, int *rightPtr,
-			    int *topPtr, int *bottomPtr);
+static void		ComputeUnparentedGeometry(WmInfo *wmPtr);
 static int		GetFrameExtents(WmInfo *wmPtr, int *leftPtr,
 			    int *rightPtr, int *topPtr, int *bottomPtr);
 static int		GetWorkArea(WmInfo *wmPtr, int *xPtr, int *yPtr,
@@ -381,7 +379,8 @@ static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
-static void		SetNetWmState(TkWindow*, const char *atomName, int on);
+static void		SetNetWmState(TkWindow*, const char *atomName,
+			    const char *atomName2, int on);
 static void		ActivateWindow(TkWindow *winPtr);
 static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void		UpdateNetWmState(WmInfo *);
@@ -1312,7 +1311,8 @@ WmSetAttribute(
 		&wmPtr->reqState.topmost) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
+	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", NULL,
+		wmPtr->reqState.topmost);
 	break;
     case WMATT_TYPE:
 	if (TCL_OK != SetNetWmType(winPtr, value))
@@ -1324,16 +1324,14 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_VERT",
-		wmPtr->reqState.zoomed);
-	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_HORZ",
-		wmPtr->reqState.zoomed);
+		"_NET_WM_STATE_MAXIMIZED_HORZ", wmPtr->reqState.zoomed);
 	break;
     case WMATT_FULLSCREEN:
 	if (Tcl_GetBooleanFromObj(interp, value,
 		&wmPtr->reqState.fullscreen) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
+	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN", NULL,
 		wmPtr->reqState.fullscreen);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
@@ -1830,13 +1828,24 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window mainWin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
     TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
+
+    /*
+     * Tk ticket 9ab6e37e: forget "." not allowed
+     */
+
+    if (frameWin == mainWin) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"window \".\" can not be forgotten", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "WM", "FORGET", ".", NULL);
+	return TCL_ERROR;
+    }
 
     /*
      * Tk ticket c77b426d: avoid panic on usage after wm forget
@@ -4146,37 +4155,9 @@ ConfigureEvent(
     }
 
     if ((wmPtr->reparent == None) || !ComputeReparentGeometry(wmPtr)) {
-	int left, right, top, bottom;
-
-	wmPtr->parentWidth = configEventPtr->width
-		+ 2*configEventPtr->border_width;
-	wmPtr->parentHeight = configEventPtr->height
-		+ 2*configEventPtr->border_width;
-	wrapperPtr->changes.x = wmPtr->x = configEventPtr->x;
-	wrapperPtr->changes.y = wmPtr->y = configEventPtr->y;
-
-	/*
-	 * A window manager which draws the decorations without reparenting
-	 * the window (e.g. KWin for Xwayland clients) reports them in
-	 * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
-	 * decorations, as for reparenting window managers. Only do this for
-	 * a mapped window: reparenting window managers may set the property
-	 * before they reparent the window.
-	 */
-
-	if ((winPtr->flags & TK_MAPPED)
-		&& GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
-	    wmPtr->x -= left;
-	    wmPtr->y -= top;
-	    wmPtr->parentWidth += left + right;
-	    wmPtr->parentHeight += top + bottom;
-	}
-	if (wmPtr->flags & WM_NEGATIVE_X) {
-	    wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
-	}
-	if (wmPtr->flags & WM_NEGATIVE_Y) {
-	    wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
-	}
+	wrapperPtr->changes.x = configEventPtr->x;
+	wrapperPtr->changes.y = configEventPtr->y;
+	ComputeUnparentedGeometry(wmPtr);
     }
 
     /*
@@ -4211,6 +4192,64 @@ ConfigureEvent(
     TkDoConfigureNotify(winPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ComputeUnparentedGeometry --
+ *
+ *	Computes the position and the outer size of a top-level window which
+ *	has not been reparented by the window manager, from the geometry of
+ *	its wrapper.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	wmPtr->x, wmPtr->y, wmPtr->parentWidth and wmPtr->parentHeight are
+ *	updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ComputeUnparentedGeometry(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    int left, right, top, bottom;
+
+    wmPtr->parentWidth = wrapperPtr->changes.width
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->parentHeight = wrapperPtr->changes.height
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->x = wrapperPtr->changes.x;
+    wmPtr->y = wrapperPtr->changes.y;
+
+    /*
+     * A window manager which draws the decorations without reparenting the
+     * window (e.g. KWin for Xwayland clients) reports them in
+     * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
+     * decorations, as for reparenting window managers. Only do this for a
+     * mapped window: reparenting window managers may set the property before
+     * they reparent the window. A window which was moved while it was
+     * unmapped (e.g. iconified) is corrected when it is mapped again.
+     */
+
+    if ((wmPtr->winPtr->flags & TK_MAPPED)
+	    && GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
+	wmPtr->x -= left;
+	wmPtr->y -= top;
+	wmPtr->parentWidth += left + right;
+	wmPtr->parentHeight += top + bottom;
+    }
+    if (wmPtr->flags & WM_NEGATIVE_X) {
+	wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
+    }
+    if (wmPtr->flags & WM_NEGATIVE_Y) {
+	wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4771,6 +4810,16 @@ WrapperEventProc(
     } else if (eventPtr->type == MapNotify) {
 	wmPtr->wrapperPtr->flags |= TK_MAPPED;
 	wmPtr->winPtr->flags |= TK_MAPPED;
+
+	/*
+	 * The decorations of a window which is not reparented are only taken
+	 * into account while it is mapped, and the window may have been moved
+	 * while it was unmapped.
+	 */
+
+	if ((wmPtr->reparent == None) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    ComputeUnparentedGeometry(wmPtr);
+	}
 	XMapWindow(wmPtr->winPtr->display, wmPtr->winPtr->window);
 	goto doMapEvent;
     } else if (eventPtr->type == UnmapNotify) {
@@ -5318,8 +5367,11 @@ UpdatePhotoIcon(
  *
  * SetNetWmState --
  *
- *	Sets the specified state property by sending a _NET_WM_STATE
- *	ClientMessage to the root window.
+ *	Sets the specified state property, or two of them, by sending a
+ *	_NET_WM_STATE ClientMessage to the root window. Two properties which
+ *	go together, like _NET_WM_STATE_MAXIMIZED_VERT and
+ *	_NET_WM_STATE_MAXIMIZED_HORZ, must be changed in one message: some
+ *	window managers (xfwm4, fvwm) do not handle two separate messages.
  *
  * Preconditions:
  *	Wrapper window must be created.
@@ -5338,12 +5390,14 @@ static void
 SetNetWmState(
     TkWindow *winPtr,
     const char *atomName,
+    const char *atomName2,	/* A second property, or NULL. */
     int on)
 {
     Tk_Window tkwin = (Tk_Window) winPtr;
     Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
     Atom action = on ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
     Atom property = Tk_InternAtom(tkwin, atomName);
+    Atom property2 = atomName2 ? Tk_InternAtom(tkwin, atomName2) : None;
     XEvent e;
 
     if (!winPtr->wmInfoPtr->wrapperPtr) {
@@ -5356,7 +5410,8 @@ SetNetWmState(
     e.xclient.format = 32;
     e.xclient.data.l[0] = action;
     e.xclient.data.l[1] = property;
-    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+    e.xclient.data.l[2] = property2;
+    e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
 
     XSendEvent(winPtr->display,
 	RootWindow(winPtr->display, winPtr->screenNum), 0,
