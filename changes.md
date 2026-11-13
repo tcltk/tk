@@ -188,6 +188,9 @@ to the userbase.
  - [remove pre-C89 support from tkImgPhoto.h](https://core.tcl-lang.org/tk/tktview/3dcdc9)
  - [Changing menu in fullscreen mode messes with geometry](https://core.tcl-lang.org/tk/tktview/286557)
  - [wm maxsize does not take into account task bar on Windows](https://core.tcl-lang.org/tk/tktview/359856)
+ - [select-10.4 hangs](https://core.tcl-lang.org/tk/tktview/610188)
+ - [select test cases fail](https://core.tcl-lang.org/tk/tktview/171927)
+ - [test suite tests 10.2, 11.1 failed](https://core.tcl-lang.org/tk/tktview/159148)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
