@@ -106,7 +106,7 @@ jobs:
           mkdir -p install/contents
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c || true
           touch tk/generic/tkStubInit.c || true
-          wget https://github.com/culler/macher/releases/download/v1.8/macher
+          wget https://github.com/culler/macher/releases/download/v1.9/macher
           sudo cp macher /usr/local/bin
           sudo chmod a+x /usr/local/bin/macher
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
