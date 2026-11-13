@@ -8641,3 +8641,9 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-11-13 (bug) [359856] wm maxsize does not take into account task bar on Windows (storchaka)
 
 2026-11-13 (bug) [de6ef8] photo -gamma and -palette had no effect on macOS (storchaka)
+
+2026-11-13 (bug) [610188] select-10.4 hangs (storchaka)
+
+2026-11-13 (bug) [171927] select test cases fail (storchaka)
+
+2026-11-13 (bug) [159148] test suite tests 10.2, 11.1 failed (storchaka)
