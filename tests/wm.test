@@ -1485,7 +1485,7 @@ test wm-maxsize-2.6 {use the default max size if the window size is not\
     unset -nocomplain maxWidth maxHeight
 } -result {1 1}
 test wm-maxsize-2.7 {the default max size fits in the work area - bug 3598564fff} -constraints {
-    withWindowManager
+    withWindowManager notWayland
 } -body {
     toplevel .t
     update
