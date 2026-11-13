@@ -183,6 +183,7 @@ to the userbase.
  - [remove pre-C89 support from tkImgPhoto.h](https://core.tcl-lang.org/tk/tktview/3dcdc9)
  - [Changing menu in fullscreen mode messes with geometry](https://core.tcl-lang.org/tk/tktview/286557)
  - [wm maxsize does not take into account task bar on Windows](https://core.tcl-lang.org/tk/tktview/359856)
+ - [tk fileicon failed on Windows for a file which does not exist](https://core.tcl-lang.org/tk/tktview/a9ed4a)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 
