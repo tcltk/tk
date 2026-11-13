@@ -467,7 +467,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
-static void             RemoveTransient(TkWindow *winPtr);
+static void		RemoveTransient(TkWindow *winPtr);
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 
@@ -886,6 +886,7 @@ void TkMacOSXAssignNewKeyWindow(
      */
 
     [NSApp setTkEventTarget: NULL];
+
     NSWindow *successor = TkMacOSXGetKeyWindowSuccessor(interp, ignore);
     if (successor) {
 	TkWindow *winPtr= TkMacOSXGetTkWindow(successor);
@@ -3093,17 +3094,19 @@ WmIconbitmapCmd(
 	return TCL_ERROR;
     }
     if (!len) {
-	if (wmPtr->hints.icon_pixmap != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
-	    wmPtr->hints.icon_pixmap = None;
-	}
-	wmPtr->hints.flags &= ~IconPixmapHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, (Tk_Window)winPtr, str);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_pixmap = pixmap;
+    }
+    if (wmPtr->hints.icon_pixmap != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+    }
+    wmPtr->hints.icon_pixmap = pixmap;
+    wmPtr->hints.flags &= ~IconPixmapHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconPixmapHint;
     }
     return TCL_OK;
@@ -3235,16 +3238,19 @@ WmIconmaskCmd(
 
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_mask != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
-	}
-	wmPtr->hints.flags &= ~IconMaskHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, tkwin, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_mask = pixmap;
+    }
+    if (wmPtr->hints.icon_mask != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
+    }
+    wmPtr->hints.icon_mask = pixmap;
+    wmPtr->hints.flags &= ~IconMaskHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconMaskHint;
     }
     return TCL_OK;
@@ -4934,7 +4940,7 @@ UpdateGeometryInfo(
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int x, y, width, height, min, max;
+    int x, y, width, height, min, max, maxWidth, maxHeight;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
@@ -4964,21 +4970,24 @@ UpdateGeometryInfo(
     }
 
     /*
-     * Account for window max/min width
+     * Account for window max/min width. The natural size is also limited
+     * by the default maximum, so that the window fits on the screen.
      */
+
+    GetMaxSize(winPtr, &maxWidth, &maxHeight);
 
     if (wmPtr->gridWin != NULL) {
 	min = winPtr->reqWidth
 		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	if (wmPtr->maxWidth > 0) {
+	if (wmPtr->maxWidth > 0 || wmPtr->width == -1) {
 	    max = winPtr->reqWidth
-		    + (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+		    + (maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
 	} else {
 	    max = 0;
 	}
     } else {
 	min = wmPtr->minWidth;
-	max = wmPtr->maxWidth;
+	max = (wmPtr->maxWidth > 0 || wmPtr->width == -1) ? maxWidth : 0;
     }
     if (width < min) {
 	width = min;
@@ -5005,15 +5014,15 @@ UpdateGeometryInfo(
     if (wmPtr->gridWin != NULL) {
 	min = winPtr->reqHeight
 		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
-	if (wmPtr->maxHeight > 0) {
+	if (wmPtr->maxHeight > 0 || wmPtr->height == -1) {
 	    max = winPtr->reqHeight
-		    + (wmPtr->maxHeight-wmPtr->reqGridHeight)*wmPtr->heightInc;
+		    + (maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
 	} else {
 	    max = 0;
 	}
     } else {
 	min = wmPtr->minHeight;
-	max = wmPtr->maxHeight;
+	max = (wmPtr->maxHeight > 0 || wmPtr->height == -1) ? maxHeight : 0;
     }
     if (height < min) {
 	height = min;

@@ -64,7 +64,7 @@ static void InterpDeleteProc(
      * window, and cause the idle task which orders it front to crash.  So we
      * cancel that idle task, if it has not run yet.
      */
-    
+
     Tcl_CancelIdleCall(showRootWindow, firstRootNSWindow);
     firstRootNSWindow = NULL;
 
@@ -471,7 +471,7 @@ TCL_NORETURN void TkpExitProc(
 	doCleanupFromExit = false; /* prevent possible recursive call. */
 	closePanels();
     }
-    
+
     for (TKWindow *w in [NSApp orderedWindows]) {
 	if ([w respondsToSelector: @selector (tkWindow)]) {
 	    [w setTkWindow: None];

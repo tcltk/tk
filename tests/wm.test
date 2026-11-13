@@ -42,8 +42,8 @@ resetWindows
 if {[tk windowingsystem] eq "x11"} {
     proc raiseDelay {} {
 	after 300
-        update idletasks
-        update
+	update idletasks
+	update
     }
 } else {
     proc raiseDelay {} {
@@ -867,6 +867,30 @@ test wm-geometry-2.5 {a toplevel iconified from normal} -setup {
     destroy .geom
     unset -nocomplain res
 } -result {480x200+303+210 480x200+303+210}
+# On macOS the menubar is not in the window.
+test wm-geometry-2.6 {the menubar set again in fullscreen - bug 2865578fff} -constraints {
+    notAqua
+} -setup {
+    destroy .geom .m
+    menu .m
+    .m add command -label Entry
+    toplevel .geom -menu .m
+    pack [label .geom.l -text Label]
+    waitForWm .geom {[winfo ismapped .geom]}
+    regexp {^\d+x\d+} [wm geometry .geom] size
+} -body {
+    # No events are processed before the window leaves the fullscreen state.
+    wm attributes .geom -fullscreen 1
+    .geom configure -menu {}
+    .geom configure -menu .m
+    wm attributes .geom -fullscreen 0
+    waitForWm .geom {![wm attributes .geom -fullscreen]}
+    regexp {^\d+x\d+} [wm geometry .geom] newSize
+    expr {$newSize eq $size}
+} -cleanup {
+    destroy .geom .m
+    unset -nocomplain size newSize
+} -result 1
 
 
 ### wm grid ###
@@ -1372,6 +1396,40 @@ test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
 } -cleanup {
     destroy .t
 } -result {{400 400} {300 300}}
+test wm-maxsize-2.6 {use the default max size if the window size is not\
+	explicitly set and the reqheight is bigger than the screen - bug 3598564fff} -body {
+    toplevel .t
+    pack [frame .t.f -width 200 -height [expr {2*[winfo screenheight .]}]]
+    update
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list [expr {[winfo height .t] <= $maxHeight}] \
+	    [expr {$maxHeight <= [winfo screenheight .]}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight
+} -result {1 1}
+test wm-maxsize-2.7 {the default max size fits in the work area - bug 3598564fff} -constraints {
+    withWindowManager
+} -body {
+    toplevel .t
+    update
+    zoomWindow .t 1
+    if {[tk windowingsystem] eq "x11"} {
+	set zoomed [wm attributes .t -zoomed]
+	# At a fractional scale KWin can make a zoomed window a pixel smaller
+	# than the work area it reports.
+	set tolerance 1
+    } else {
+	set zoomed [expr {[wm state .t] eq "zoomed"}]
+	set tolerance 0
+    }
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list $zoomed [expr {$maxWidth <= [winfo width .t] + $tolerance}] \
+	    [expr {$maxHeight <= [winfo height .t] + $tolerance}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight tolerance zoomed
+} -result {1 1 1}
 
 
 ### wm minsize ###
@@ -1861,8 +1919,9 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
-    toplevel .t ; update idletasks
+    toplevel .t
     menu .t.m -type menubar
+    update idletasks; # Fluxbox needs to add the menubar before .t is mapped.
     .t.m add cascade -label "File"
     .t configure -menu .t.m
     update idletasks
@@ -2279,10 +2338,10 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints withWindowManager -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
     deleteWindows
     set result {}
-} -body {
+} -constraints {aquaKnownBug withWindowManager} -body {
     # Verifies that transients stay on top of their toplevels, even if they were
     # made transients when those toplevels were withdrawn.
     toplevel .t1; wm withdraw  .t1;     update
