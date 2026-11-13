@@ -8637,3 +8637,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-11-11 (bug) [ac7f77] tk panedwindow: cursor changing code does not work well (storchaka)
 
 2026-11-11 (bug) [286557] Changing menu in fullscreen mode messes with geometry (storchaka)
+
+2026-11-13 (bug) [359856] wm maxsize does not take into account task bar on Windows (storchaka)

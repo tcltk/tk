@@ -552,7 +552,9 @@ If \fIwidth\fR and \fIheight\fR are
 specified, then the command returns an empty string.  Otherwise
 it returns a Tcl list with two elements, which are the
 maximum width and height currently in effect.
-The maximum size defaults to the size of the screen.
+The maximum size defaults to the size of the work area of the screen (the
+screen without the taskbar, panels or the Dock), less the window's
+decorations.
 See the sections on geometry management below for more information.
 .\" METHOD: minsize
 .TP
