@@ -303,13 +303,14 @@ GetFileIcon(
 		? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
     }
 
-    if (!SHGetFileInfoW(
-	    iconPath,
-	    attrs,
-	    &shfi,
-	    sizeof(shfi),
-	    flags))
-    {
+    /*
+     * A file which does not exist gets the icon of its type (extension), as
+     * a file in a virtual filesystem above.
+     */
+    if (!SHGetFileInfoW(iconPath, attrs, &shfi, sizeof(shfi), flags)
+	    && ((flags & SHGFI_USEFILEATTRIBUTES)
+	    || !SHGetFileInfoW(iconPath, FILE_ATTRIBUTE_NORMAL, &shfi,
+		    sizeof(shfi), flags | SHGFI_USEFILEATTRIBUTES))) {
 	Tcl_SetObjResult(interp,
 	    Tcl_NewStringObj("Unable to retrieve system icon index", -1));
 	return TCL_ERROR;
