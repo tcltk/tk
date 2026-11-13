@@ -1221,6 +1221,7 @@ readCleanup:
 	    bool boolMode;
 	    XRectangle setBox;
 	    Region modRegion;
+	    PhotoInstance *instancePtr;
 
 	    /*
 	     * Parse args and option, check for valid values
@@ -1293,6 +1294,13 @@ readCleanup:
 		pixelPtr[3] = newVal;
 		if (newVal > 0 && newVal < 255) {
 		    modelPtr->flags |= COMPLEX_ALPHA;
+		}
+	    }
+	    for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
+		    instancePtr = instancePtr->nextPtr) {
+		if (instancePtr->pix32 != NULL) {
+		    instancePtr->pix32[(y * modelPtr->width + x) * 4 + 3] =
+			    pixelPtr[3];
 		}
 	    }
 
