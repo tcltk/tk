@@ -1438,13 +1438,13 @@ test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already 
     update
     toplevel .t
     wm geometry .t 200x100+100+$Y0
-    listbox .t.l -height 20 -width 40
+    listbox .t.l -height 20 -width 80
     pack .t.l -fill both -expand 1
     update
     .t.l configure -setgrid 1
     update
     wm geometry .t
-} "40x20+100+$Y0"
+} "80x20+100+$Y0"
 
 test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} unix {
     destroy .t
