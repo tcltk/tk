@@ -285,7 +285,6 @@ FindNSFont(
 	nsFont = [fm convertFont:nsFont toSize:size];
 	nsFont = [fm convertFont:nsFont toHaveTrait:traits];
     }
-    [nsFont retain];
     #undef defaultFont
     return nsFont;
 }
@@ -332,7 +331,7 @@ InitFont(
     } else {
 	TkInitFontAttributes(faPtr);
     }
-    fontPtr->nsFont = nsFont;
+    fontPtr->nsFont = [nsFont retain];
 
     /*
      * Some don't like antialiasing on fixed-width even if bigger than limit
@@ -566,6 +565,7 @@ TkpGetNativeFont(
     if (ctFont) {
 	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
+	CFRelease(ctFont);
     }
 
     return (TkFont *) fontPtr;
@@ -637,7 +637,6 @@ TkpGetFontFromAttributes(
 	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
-    CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
     InitFont(nsFont, faPtr, fontPtr);
 
     return (TkFont *) fontPtr;
@@ -671,6 +670,7 @@ TkpDeleteFont(
     [fontPtr->nsAttributes release];
     fontPtr->nsAttributes = NULL;
     CFRelease(fontPtr->nsFont); /* Either a CTFontRef or a CFRetained NSFont */
+    fontPtr->nsFont = nil;
 }
 
 /*

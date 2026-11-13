@@ -999,7 +999,7 @@ ConfigureRestrictProc(
 	 */
 
 	self.layer.delegate = (id) self;
-	trackingArea = [[NSTrackingArea alloc]
+	NSTrackingArea *trackingArea = [[NSTrackingArea alloc]
 			   initWithRect:[self bounds]
 				options:(NSTrackingMouseEnteredAndExited |
 					 NSTrackingMouseMoved |
@@ -1008,7 +1008,8 @@ ConfigureRestrictProc(
 					 NSTrackingActiveAlways)
 				  owner:self
 			       userInfo:nil];
-        [self addTrackingArea:trackingArea];
+	[self addTrackingArea:trackingArea];
+	[trackingArea release];
     }
     return self;
 }
