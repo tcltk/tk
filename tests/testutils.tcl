@@ -1073,6 +1073,153 @@ namespace eval ::tk::test::entry {
     testutils export
 }
 
+namespace eval ::tk::test::event {
+
+    # mwe --
+    #
+    #	"mwe" stands for "monitor window events"
+    #
+    #	Writes a notification to a log variable or stdout each time when
+    #	selected window events are serviced.
+    #
+    #	See the tests mwe-* in testutils.test for examples
+    #
+    proc mwe {subCmd args} {
+	variable mweBind
+	variable mweConfig
+	variable mweLog
+	variable mweState
+
+	switch -- $subCmd {
+	    setdefaults {
+		array set mweConfig {
+		    -logvar ""
+		    -events "<Destroy> <Configure> <Unmap> <Map> <Visibility> \
+			    <Expose> <Leave> <Enter> <FocusOut> <FocusIn>"
+		}
+	    }
+	    configure {
+		if {! [info exists mweConfig]} {
+		    mwe setdefaults
+		}
+
+		set modify 1
+		set argc [llength $args]
+		if {($argc == 0) || (($argc == 1) && ($args ne "{}"))} {
+		    set modify 0
+		} elseif {[mwe state] eq "on"} {
+		    return -code error "mwe must be switched off before configuring"
+		}
+
+		if {$modify} {
+		    if {$args eq "{}"} {
+			# reset to defaults
+			mwe setdefaults
+		    } else {
+			set validOptions [list -events -logvar]
+			foreach {option value} $args {
+			    if {$option ni $validOptions} {
+				return -code error "invalid parameter \"$option\""
+			    }
+			    set mweConfig($option) $value
+			}
+			if {$mweConfig(-logvar) ne ""} {
+			    unset -nocomplain mweLog
+			    uplevel 1 [list upvar 0 ::tk::test::event::mweLog $mweConfig(-logvar)]
+			}
+		    }
+		}
+
+		if {$argc == 0} {
+		    foreach key [lsort [array names mweConfig]] {
+			lappend result $key $mweConfig($key)
+		    }
+		    return $result
+		} elseif {($argc == 1) && ($args ne "{}")} {
+		    return $mweConfig([lindex $args 0])
+		}
+	    }
+	    on {
+		if {[mwe state] eq "on"} {
+		    return
+		}
+		if {! [info exists mweConfig]} {
+		    mwe setdefaults
+		}
+		if {[llength $args]} {
+		    uplevel 1 [list mwe configure {*}$args]
+		}
+
+		foreach event $mweConfig(-events) {
+		    if {! [info exists mweBind($event)]} {
+			set mweBind($event) [bind all $event]
+			if {$mweConfig(-logvar) eq ""} {
+			    bind all $event [list +::tk::test::event::notifyWindowEvent %W $event]
+			} else {
+			    bind all $event [list +::tk::test::event::logWindowEvent %W $event]
+			}
+		    }
+		}
+		set mweState on
+	    }
+	    off {
+		if {[mwe state] eq "off"} {
+		    return
+		}
+		foreach event $mweConfig(-events) {
+		    if {[info exists mweBind($event)]} {
+			bind all $event $mweBind($event)
+			unset mweBind($event)
+		    }
+		}
+		unset -nocomplain mweLog
+		set mweState off
+		mwe setdefaults
+	    }
+	    pause {
+		set argc [llength $args]
+		if {$argc != 1} {
+		    return -code error "invalid # args"
+		}
+		set duration [lindex $args 0]
+		if {(! [string is integer $duration]) || ($duration < 0)} {
+		    return -code error "invalid parameter \"$duration\""
+		}
+		if {(! [info exists mweConfig(-logvar)]) || ($mweConfig(-logvar) eq "")} {
+		    puts MWE_ON
+		}
+		mwe on
+		pause $duration
+		mwe off
+		if {(! [info exists mweConfig(-logvar)]) || ($mweConfig(-logvar) eq "")} {
+		    puts MWE_OFF
+		}
+	    }
+	    state {
+		return [expr {[info exists mweState]?$mweState:"off"}]
+	    }
+	    default {
+		return -code error "invalid value \"$subCmd\" for argument subCmd"
+	    }
+	}
+    }
+
+    testutils export
+
+    #
+    # The procs defined after the above "testutils export" are not exported
+    #
+
+    proc logWindowEvent {w event args} {
+	variable mweLog
+	append mweLog "$w|$event|"
+    }
+
+    proc notifyWindowEvent {w event args} {
+	puts "\t|$w|$event|"
+    }
+}
+
 namespace eval ::tk::test::geometry {
     proc getsize {w} {
 	update

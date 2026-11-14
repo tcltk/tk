@@ -396,6 +396,97 @@ test waitUntil-2.4 {condition reached by waiting, return duration in result vari
 } -result 15
 
 #
+# COMMON TEST SETUP
+#
+# Domain event
+#
+testutils import event
+
+test mwe-1.0 {initial state is off} -body {
+    mwe state
+} -result "off"
+
+test mwe-1.1 {mwe on/state} -setup {
+    mwe off
+} -body {
+    mwe on
+    mwe on
+    mwe state
+} -cleanup {
+    mwe off
+} -result "on"
+
+test mwe-1.2 {mwe off/state} -setup {
+    mwe off
+} -body {
+    mwe on
+    mwe off
+    mwe state
+} -result "off"
+
+test mwe-2.1 {configure, without args return current settings regardless state} -body {
+    mwe off
+    set result [expr {[mwe configure] eq "-events {<Destroy> <Configure> <Unmap> <Map> <Visibility>  <Expose> <Leave> <Enter> <FocusOut> <FocusIn>} -logvar {}"}]
+    mwe on
+    lappend result [expr {[mwe configure] eq "-events {<Destroy> <Configure> <Unmap> <Map> <Visibility>  <Expose> <Leave> <Enter> <FocusOut> <FocusIn>} -logvar {}"}]
+} -cleanup {
+    unset -nocomplain result
+    mwe off
+} -result {1 1}
+
+test mwe-2.2 {configure, raise error upon mwe reconfigure when on} -setup {
+    mwe on
+} -body {
+    mwe configure {}
+} -cleanup {
+    mwe off
+} -result "mwe must be switched off before configuring" -returnCodes error
+
+test mwe-2.3 {configure, restore defaults} -setup {
+    mwe off
+    unset -nocomplain result
+} -body {
+    mwe configure -events dummy1 -logvar dummy2
+    set result [expr {[mwe configure] eq "-events dummy1 -logvar dummy2"}]
+    mwe configure {}
+    lappend result [expr {[mwe configure] eq "-events {<Destroy> <Configure> <Unmap> <Map> <Visibility>  <Expose> <Leave> <Enter> <FocusOut> <FocusIn>} -logvar {}"}]
+} -cleanup {
+    mwe off
+    unset -nocomplain result
+} -result {1 1}
+
+test mwe-3.1 {log monitoring result in log variable} -setup {
+    mwe off
+} -body {
+    toplevel .tmp
+    mwe on -logvar mweLog
+    event generate .tmp <Configure>
+    update
+    set mweLog
+} -cleanup {
+    mwe off
+    destroy .tmp
+} -result {*.tmp|<Configure>|*} -match glob
+
+test mwe-3.2 {log monitoring result to stdout using "mwe pause"} -setup {
+    mwe off
+} -body {
+    toplevel .tmp
+    tkwait visibility .tmp
+    update
+    after idle {event generate .tmp <Configure>}
+    mwe pause 10
+    mwe state
+} -cleanup {
+    destroy .tmp
+} -result "off" -output {MWE_ON\s+.*\|\.tmp\|<Configure>\|.*\s+MWE_OFF} -match regexp
+
+#
+# COMMON TEST CLEANUP
+#
+testutils forget event
+
+#
 # Testutils domain "pointer"
 #
 
