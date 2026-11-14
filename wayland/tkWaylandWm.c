@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Defined in tkWaylandInit.c; move to tkWaylandInt.h. */
 MODULE_SCOPE void TkWaylandWaitForWindowSize(GLFWwindow *, int, int);
 MODULE_SCOPE void TkWaylandWaitForWindowVisible(GLFWwindow *);
 
@@ -388,7 +387,6 @@ TkWmNewWindow(
     wmPtr->width = wmPtr->height = -1;
     wmPtr->x           = winPtr->changes.x;
     wmPtr->y           = winPtr->changes.y;
-    //wmPtr->configWidth = wmPtr->configHeight = -1;
     wmPtr->vRootWidth  = 800;
     wmPtr->vRootHeight = 600;
     wmPtr->attributes.alpha = 1.0;
@@ -411,7 +409,7 @@ TkWmNewWindow(
  * IsPopupMenuWindow --
  *
  *	Checks whether a toplevel is a menu that is displayed in an
- *	xdg_popup surface (or in the menubar) rather than in a GLFW window
+ *	wl_subsurface (or in the menubar) rather than in a GLFW window
  *	of its own.  Tear-off menus are shown as ordinary toplevels.
  *
  * Results:
@@ -507,7 +505,7 @@ TkWaylandHandleProtocol(WmInfo *wmPtr, int protocol)
  *
  * Side effects:
  *	Applies initial window properties (title, size hints, etc.).
- *      Creates event handler.
+ *  Creates event handler.
  *
  *----------------------------------------------------------------------
  */
@@ -549,7 +547,7 @@ InitializeGlfwWindow(TkWindow *winPtr)
         glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED, GLFW_FALSE);
     }
 
-    /* Register wm event handler */
+    /* Register wm event handler. */
     Tk_CreateEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
 			  TopLevelEventProc, (void *)winPtr);
@@ -596,7 +594,7 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
     
     if (glfwWindow) {
         /* 
-         * IMPORTANT: Detach the user pointer to prevent double-free
+         * Detach the user pointer to prevent double-free
          * when the GLFW window is destroyed.
          */
         glfwSetWindowUserPointer(glfwWindow, NULL);
@@ -606,11 +604,6 @@ static void DestroyGlfwWindow(TkWindow *winPtr) {
     }
 }
 
-/*
- * Declared MODULE_SCOPE and defined in tkWaylandMenu.c. Not in a shared
- * header (tkWaylandNotify.c declares it the same way locally), so we
- * follow the same convention here.
- */
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 
 
@@ -1752,9 +1745,9 @@ TkWmMapWindow(TkWindow *winPtr)
          * after the geometry managers have had a chance to map children.
          */
         QueueExposeTree(winPtr);
-        /* Second pass after idle handlers (pack/grid) */
+        /* Second pass after idle handlers (pack/grid). */
         Tcl_DoWhenIdle(ReExposeIdle, (void*)winPtr);
-        /* Ensure we will swap buffers even if BeginDraw early-exits */
+        /* Ensure we will swap buffers even if BeginDraw early-exits. */
         if (winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
             glfwTkInfo *infoPtr = (glfwTkInfo*)glfwGetWindowUserPointer(winPtr->privatePtr->glfwWindow);
             if (infoPtr) {
@@ -2136,7 +2129,7 @@ TkWmDeadWindow(
                 ev.xcrossing.focus = False;
                 ev.xcrossing.state = 0;
                 Tk_QueueWindowEvent(&ev, TCL_QUEUE_TAIL);
-                /* Note: no dispPtr->pointerWinPtr in Tk 9.1, so we don't set it */
+                /* Note: no dispPtr->pointerWinPtr in Tk 9.1, so we don't set it. */
             }
         }
     }
@@ -2292,7 +2285,7 @@ Tk_MakeWindow(
          * will never be mapped or rendered.
          */
         if (!winPtr->mainPtr || !winPtr->mainPtr->interp) {
-            /* Clipboard/selection internal toplevel - keep Drawable but no GLFW surface */
+            /* Clipboard/selection internal toplevel - keep Drawable but no GLFW surface. */
             if (winPtr->privatePtr == NULL) {
                 winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
                 memset(winPtr->privatePtr, 0, sizeof(glfwData));
@@ -2862,7 +2855,7 @@ TkWmRestackToplevel(
 	return;
     }
 
-    /* Put it between the other window and its neighbour. */
+    /* Put it between the other window and its neighbor. */
     double pos = ((WmInfo *)otherPtr->wmInfoPtr)->stackPos;
     double next = pos;
     int found = 0;
@@ -2965,24 +2958,26 @@ TkWmProtocolEventProc(
     if (eventPtr && eventPtr->type == ClientMessage) {
         /* Try to map Atom/string to our internal id */
         const char *msg = NULL;
-        /* XClientMessageEvent message_type may hold protocol name */
-        /* For safety, if data.l[0] matches our constants, use it */
+        /* 
+         * XClientMessageEvent message_type may hold protocol 
+         * name. For safety, if data.l[0] matches our constants, 
+         * use it.
+         */
         long l0 = eventPtr->xclient.data.l[0];
         if (l0 == WM_DELETE_WINDOW || l0 == WM_TAKE_FOCUS || l0 == WM_SAVE_YOURSELF) {
             protocol = (int)l0;
         } else {
-            /* Fallback: treat any ClientMessage as DELETE_WINDOW if handler exists */
+            /* Fallback: treat any ClientMessage as DELETE_WINDOW if handler exists. */
             protocol = WM_DELETE_WINDOW;
         }
     } else {
-        /* Direct invocation (e.g., from generic code) – treat as DELETE_WINDOW
-         * if handler exists, but allow explicit protocol via event? */
+        /* Direct invocation (e.g., from generic code) – treat as DELETE_WINDOW. */
         protocol = WM_DELETE_WINDOW;
     }
 
     if (protocol != -1) {
         if (!TkWaylandHandleProtocol(wmPtr, protocol)) {
-            /* No handler: for DELETE_WINDOW emulate default destroy */
+            /* No handler: for DELETE_WINDOW emulate default destroy. */
             if (protocol == WM_DELETE_WINDOW) {
                 if (!(winPtr->flags & TK_ALREADY_DEAD)) {
                     Tcl_DoWhenIdle(WaylandDoDestroyWindow, (void *)winPtr);
