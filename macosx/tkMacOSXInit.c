@@ -37,17 +37,6 @@ static char tkLibPath[PATH_MAX + 1] = "";
 static char scriptPath[PATH_MAX + 1] = "";
 
 /*
- * The first Tcl interpreter created when initializing the NSApplication is
- * saved as the attribute _eventInterp and used in a few places by Tk apps.
- * For instance, it is used by the default "File -> Run Widget Demo" menu item
- * to look up the path to the demo script, and to look up the definitions of
- * the "::tk::mac::OnShow" and "::tk::mac::OnHide" procedures.
- */
-
-static NSWindow *firstRootNSWindow = NULL;
-static void showRootWindow(void *clientData);
-
-/*
  * This is the delete proc for the interpreter saved as _eventInterp, which
  * can be deleted by a Tcl script after loading the Tk package.
  */
@@ -59,22 +48,12 @@ static void InterpDeleteProc(
     (void) interp;
 
     /*
-     * It is possible for the interpreter to be deleted before its root window
-     * has been ordered front.  Deleting the interpreter will destroy the
-     * window, and cause the idle task which orders it front to crash.  So we
-     * cancel that idle task, if it has not run yet.
-     */
-
-    Tcl_CancelIdleCall(showRootWindow, firstRootNSWindow);
-    firstRootNSWindow = NULL;
-
-    /*
      * To avoid use-after-free crashes, we set the _eventInterp attribute to
      * NULL when the interpreter it points to is deleted.  This will disable
      * the features which use that interpreter.
      */
 
-     [NSApp _clearEventInterp];
+    [NSApp _clearEventInterp];
 }
 
 /*
@@ -83,7 +62,6 @@ static void InterpDeleteProc(
 
 static Tcl_ObjCmdProc2 TkMacOSXGetAppPathObjCmd;
 static Tcl_ObjCmdProc2 TkMacOSVersionObjCmd;
-int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 
 #pragma mark TKApplication(TKInit)
@@ -94,6 +72,7 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkWillExit = _tkWillExit;
 @synthesize tkPointerWindow = _tkPointerWindow;
+@synthesize eventInterp = _eventInterp;
 
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
@@ -524,36 +503,6 @@ InstallSignalHandler(
     }
 }
 
-/*
- * This static function is run as an idle task to order the root window front.
- * This is only done if the window is in the normal state.  This avoids
- * flashing the root window on the screen if it was withdrawn immediately after
- * loading Tk.
- */
-
-static void showRootWindow(void *clientData) {
-    NSWindow *root = (NSWindow *) clientData;
-    TkWindow *winPtr;
-    if (![NSApp tkWillExit] && (winPtr = TkMacOSXGetTkWindow(root))) {
-	WmInfo *wmPtr = winPtr->wmInfoPtr;
-	if (wmPtr->hints.initial_state == NormalState &
-	    (wmPtr->flags & WM_IS_HIDDEN) == 0) {
-	    [(TKWindow *)root tkOrderFront];
-	    /*
-	     * We move the root window to the bottom in case Tk managed to
-	     * create another toplevel before this idle task runs.
-	     */
-	    [root orderWindow:NSWindowBelow relativeTo:0];
-	    [NSApp activateIgnoringOtherApps: YES];
-	}
-    }
-    /*
-     * The root window may have been destroyed before this idle handler runs,
-     * e.g. by [after 0 {destroy .}].
-     */
-    [root release];
-}
-
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -722,32 +671,6 @@ TkpInit(
 	TkMacOSXNSImage_Init(interp);
 	TkMacOSXAccessibility_Init(interp);
 	Icu_Init(interp);
-
-	/*
-	 * The root window has been created and mapped, but XMapWindow deferred its
-	 * call to makeKeyAndOrderFront because the first call to XMapWindow
-	 * occurs too early in the initialization process for that.  Process idle
-	 * tasks now, so the root window is configured.
-	 */
-
-	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-
-	for (NSWindow *window in [NSApp windows]) {
-	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
-	    if (winPtr && Tk_IsMapped(winPtr)) {
-
-		/*
-		 * Ordering the root window front in an idle task allows
-		 * checking whether it was immediately withdrawn, and
-		 * therefore does not need to be placed on the screen.
-		 */
-
-		[window retain];
-		Tcl_DoWhenIdle(showRootWindow, window);
-		firstRootNSWindow = window;
-		break;
-	    }
-	}
 
 # if defined(USE_CUSTOM_EXIT_PROC)
 

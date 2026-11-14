@@ -125,7 +125,6 @@ to the userbase.
  - [Windows: pointer warp could land one pixel short of the requested position](https://core.tcl-lang.org/tk/tktview/3f1ad1)
  - [MS-Win: activation if embedded application within tk window](https://core.tcl-lang.org/tk/tktview/564897)
  - [<Alt-key> bindings and %K do not work with a non-Latin keyboard layout on X11](https://core.tcl-lang.org/tk/tktview/701d8f89)
- - [Above roughly 10000 widgets wish hangs on Windows](https://core.tcl-lang.org/tk/tktview/88ffa7)
  - [Segmentation fault in menu-46.1 on MacOS](https://core.tcl-lang.org/tk/tktview/0625d1)
  - [long, fat lines fail on Windows](https://core.tcl-lang.org/tk/tktview/630171)
  - [phantom events with tk_popup](https://core.tcl-lang.org/tk/tktview/869305)
@@ -175,6 +174,19 @@ to the userbase.
  - [X11: wm geometry of a toplevel moved while iconified is too low by the title bar under KWin](https://core.tcl-lang.org/tk/tktview/f23a58)
  - [disallow "wm forget ."](https://core.tcl-lang.org/tk/tktview/9ab6e3)
  - [wm iconbitmap/wm iconmask leak previously set bitmap](https://core.tcl-lang.org/tk/tktview/f13541)
+ - [Filesystem dialogs conflict with auto_reset (under Linux)](https://core.tcl-lang.org/tk/tktview/3da059)
+ - [New test winfo-4.8 fails](https://core.tcl-lang.org/tk/tktview/586f72)
+ - [Possible Tk regression when loading into threads](https://core.tcl-lang.org/tk/tktview/b298b9)
+ - [bound buttonpress is passed on to other program](https://core.tcl-lang.org/tk/tktview/131adc)
+ - [Leaks in image write when reading metadata dict](https://core.tcl-lang.org/tk/tktview/0a62b5450b)
+ - [tk panedwindow: cursor changing code does not work well](https://core.tcl-lang.org/tk/tktview/ac7f77)
+ - [remove pre-C89 support from tkImgPhoto.h](https://core.tcl-lang.org/tk/tktview/3dcdc9)
+ - [Changing menu in fullscreen mode messes with geometry](https://core.tcl-lang.org/tk/tktview/286557)
+ - [wm maxsize does not take into account task bar on Windows](https://core.tcl-lang.org/tk/tktview/359856)
+ - [tk fileicon failed on Windows for a file which does not exist](https://core.tcl-lang.org/tk/tktview/a9ed4a)
+ - [select-10.4 hangs](https://core.tcl-lang.org/tk/tktview/610188)
+ - [select test cases fail](https://core.tcl-lang.org/tk/tktview/171927)
+ - [test suite tests 10.2, 11.1 failed](https://core.tcl-lang.org/tk/tktview/159148)
 
 Release Tk 9.1.0 arises from the check-in with tag `core-9-1-0`.
 

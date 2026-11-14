@@ -263,6 +263,12 @@ TkpSetWindowMenuBar(
     if (menuPtr == NULL) {
 	TkUnixSetMenubar(tkwin, NULL);
     } else {
+	/*
+	 * Compute the menubar height now, before it is used for the size of
+	 * the toplevel.
+	 */
+
+	TkRecomputeMenu(menuPtr);
 	TkUnixSetMenubar(tkwin, menuPtr->tkwin);
     }
 }

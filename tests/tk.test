@@ -227,6 +227,69 @@ test tk-8.1 {Test for ticket [1cc44617e2], see if TCL_LL_MODIFIER works as expec
     testprintf -21474836480
 } -result {-21474836480 18446744052234715136}
 
+testConstraint zipfs [llength [info commands zipfs]]
+
+test tk-9.1 {tk fileicon: no arguments} -body {
+    tk fileicon
+} -returnCodes error -result {wrong # args: should be "tk fileicon filename size"}
+test tk-9.2 {tk fileicon: one argument} -body {
+    tk fileicon a.txt
+} -returnCodes error -result {wrong # args: should be "tk fileicon filename size"}
+test tk-9.3 {tk fileicon: too many arguments} -body {
+    tk fileicon a.txt 32 x
+} -returnCodes error -result {wrong # args: should be "tk fileicon filename size"}
+test tk-9.4 {tk fileicon: non-integer size} -body {
+    tk fileicon [info nameofexecutable] foobar
+} -returnCodes error -match glob -result {*"foobar"*}
+test tk-9.5 {tk fileicon: existing file} -setup {
+    set file [makeFile {} fileicon.txt]
+} -body {
+    set img [tk fileicon [file normalize $file] 32]
+    expr {$img in [image names]}
+} -cleanup {
+    catch {image delete $img}
+    removeFile fileicon.txt
+    unset -nocomplain file img
+} -result 1
+test tk-9.6 {tk fileicon: file which does not exist} -body {
+    set img [tk fileicon [file normalize non-existent.txt] 32]
+    expr {$img in [image names]}
+} -cleanup {
+    catch {image delete $img}
+    unset -nocomplain img
+} -result 1
+test tk-9.7 {tk fileicon: directory} -body {
+    set img [tk fileicon [file normalize [::tcltest::temporaryDirectory]] 32]
+    expr {$img in [image names]}
+} -cleanup {
+    catch {image delete $img}
+    unset -nocomplain img
+} -result 1
+test tk-9.8 {tk fileicon: file and directory in a virtual filesystem} -constraints {
+    zipfs
+} -setup {
+    set dir [makeDirectory fileicon]
+    makeFile {} a.txt $dir
+    set zip [file join [::tcltest::temporaryDirectory] fileicon.zip]
+    zipfs mkzip $zip $dir $dir
+    set mnt [file join [zipfs root] fileicon]
+    zipfs mount $zip $mnt
+    set imgs {}
+} -body {
+    foreach path [list [file join $mnt a.txt] $mnt] {
+	lappend imgs [tk fileicon $path 32]
+    }
+    lmap img $imgs {expr {$img in [image names]}}
+} -cleanup {
+    foreach img $imgs {
+	image delete $img
+    }
+    zipfs unmount $mnt
+    file delete $zip
+    removeDirectory fileicon
+    unset -nocomplain dir zip mnt imgs img path
+} -result {1 1}
+
 #
 # TESTFILE CLEANUP
 #

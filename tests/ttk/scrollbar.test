@@ -105,8 +105,7 @@ test scrollbar-1.3 "Change orientation" -body {
 } -result 1
 
 test scrollbar-10.1.1 {<MouseWheel> event on scrollbar} -setup {
-    destroy .t .s .tsb
-    wm geometry . {}
+    destroy .t .s
 } -body {
     pack [text .t -yscrollcommand {.s set}] -side left
     for {set i 1} {$i < 100} {incr i} {.t insert end "Line $i\n"}

@@ -2037,6 +2037,7 @@ test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
     destroy .t
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +0+0
+    update idletasks
     frame .t.f -width 100 -height 200 -bd 2 -relief raised
     place .t.f -x 100 -y 100
     frame .t.f.f -width 100 -height 200 -bd 2 -relief raised

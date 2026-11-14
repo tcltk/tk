@@ -49,6 +49,7 @@ MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
 #endif
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     result = (NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassOSType, (CFStringRef)tag, NULL);
+    [result autorelease];
 #endif
     return result;
 }

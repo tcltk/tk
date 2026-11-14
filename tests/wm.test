@@ -41,8 +41,6 @@ resetWindows
 #
 if {[tk windowingsystem] eq "aqua"} {
     proc raiseDelay {} {
-	update idletasks
-	after 200
     }
 } else {
     proc raiseDelay {} {
@@ -944,6 +942,30 @@ test wm-geometry-2.5 {a toplevel iconified from normal} -setup {
     destroy .geom
     unset -nocomplain res
 } -result {480x200+303+210 480x200+303+210}
+# On macOS the menubar is not in the window.
+test wm-geometry-2.6 {the menubar set again in fullscreen - bug 2865578fff} -constraints {
+    notAqua
+} -setup {
+    destroy .geom .m
+    menu .m
+    .m add command -label Entry
+    toplevel .geom -menu .m
+    pack [label .geom.l -text Label]
+    waitForWm .geom {[winfo ismapped .geom]}
+    regexp {^\d+x\d+} [wm geometry .geom] size
+} -body {
+    # No events are processed before the window leaves the fullscreen state.
+    wm attributes .geom -fullscreen 1
+    .geom configure -menu {}
+    .geom configure -menu .m
+    wm attributes .geom -fullscreen 0
+    waitForWm .geom {![wm attributes .geom -fullscreen]}
+    regexp {^\d+x\d+} [wm geometry .geom] newSize
+    expr {$newSize eq $size}
+} -cleanup {
+    destroy .geom .m
+    unset -nocomplain size newSize
+} -result 1
 
 
 ### wm grid ###
@@ -1449,6 +1471,40 @@ test wm-maxsize-2.5 {Use max size if window size is not explicitly set\
 } -cleanup {
     destroy .t
 } -result {{400 400} {300 300}}
+test wm-maxsize-2.6 {use the default max size if the window size is not\
+	explicitly set and the reqheight is bigger than the screen - bug 3598564fff} -body {
+    toplevel .t
+    pack [frame .t.f -width 200 -height [expr {2*[winfo screenheight .]}]]
+    update
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list [expr {[winfo height .t] <= $maxHeight}] \
+	    [expr {$maxHeight <= [winfo screenheight .]}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight
+} -result {1 1}
+test wm-maxsize-2.7 {the default max size fits in the work area - bug 3598564fff} -constraints {
+    withWindowManager
+} -body {
+    toplevel .t
+    update
+    zoomWindow .t 1
+    if {[tk windowingsystem] eq "x11"} {
+	set zoomed [wm attributes .t -zoomed]
+	# At a fractional scale KWin can make a zoomed window a pixel smaller
+	# than the work area it reports.
+	set tolerance 1
+    } else {
+	set zoomed [expr {[wm state .t] eq "zoomed"}]
+	set tolerance 0
+    }
+    lassign [wm maxsize .t] maxWidth maxHeight
+    list $zoomed [expr {$maxWidth <= [winfo width .t] + $tolerance}] \
+	    [expr {$maxHeight <= [winfo height .t] + $tolerance}]
+} -cleanup {
+    destroy .t
+    unset -nocomplain maxWidth maxHeight tolerance zoomed
+} -result {1 1 1}
 
 
 ### wm minsize ###
@@ -1751,14 +1807,13 @@ test wm-stackorder-1.11 {usage, isabove|isbelow toplevels must be mapped} -body 
 deleteWindows
 
 test wm-stackorder-2.1 {stacking order} -body {
-    toplevel .t ; tkwait visibility .t
-    raiseDelay
+    toplevel .t ; update idletasks
     wm stackorder .
 } -cleanup {
     destroy .t
 } -result {. .t}
 test wm-stackorder-2.2 {stacking order} -body {
-    toplevel .t ; tkwait visibility .t
+    toplevel .t ; update idletasks
     raise .
     raiseDelay
     wm stackorder .
@@ -1767,8 +1822,8 @@ test wm-stackorder-2.2 {stacking order} -body {
 } -result {.t .}
 test wm-stackorder-2.3 {stacking order} -body {
     set res {}
-    toplevel .t ; tkwait visibility .t
-    toplevel .t2 ; tkwait visibility .t2
+    toplevel .t ; update idletasks
+    toplevel .t2 ; update idletasks
     lappend res [wm stackorder .]
     raise .
     raiseDelay
@@ -1781,8 +1836,8 @@ test wm-stackorder-2.3 {stacking order} -body {
     destroy .t .t2
 } -result {{. .t .t2} {.t .t2 .} {.t . .t2}}
 test wm-stackorder-2.4 {stacking order} -body {
-    toplevel .t ; tkwait visibility .t
-    toplevel .t2 ; tkwait visibility .t2
+    toplevel .t ; update idletasks
+    toplevel .t2 ; update idletasks
     raise .
     lower .t2
     raiseDelay
@@ -1793,13 +1848,13 @@ test wm-stackorder-2.4 {stacking order} -body {
 test wm-stackorder-2.5 {stacking order} -setup {
     destroy .parent
 } -body {
-    toplevel .parent ; tkwait visibility .parent
+    toplevel .parent ; update idletasks
     destroy .parent.child1
-    toplevel .parent.child1 ; tkwait visibility .parent.child1
+    toplevel .parent.child1 ; update idletasks
     destroy .parent.child2
-    toplevel .parent.child2 ; tkwait visibility .parent.child2
+    toplevel .parent.child2 ; update idletasks
     destroy .extra
-    toplevel .extra ; tkwait visibility .extra
+    toplevel .extra ; update idletasks
     raise .parent
     lower .parent.child2
     raiseDelay
@@ -1808,7 +1863,7 @@ test wm-stackorder-2.5 {stacking order} -setup {
     deleteWindows
 } -result {.parent.child2 .parent.child1 .parent}
 test wm-stackorder-2.6 {stacking order: non-toplevel widgets ignored} -body {
-    toplevel .t1 ; tkwait visibility .t1
+    toplevel .t1 ; update idletasks
     button .t1.b
     pack .t1.b
     raiseDelay
@@ -1828,8 +1883,8 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
 deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t2 ; tkwait visibility .t2
+    toplevel .t1 ; update idletasks
+    toplevel .t2 ; update idletasks
     wm iconify .t1
     raiseDelay ;# Windows does not generate a VisibilityNotification for iconify
     wm stackorder .
@@ -1837,8 +1892,8 @@ test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body 
     destroy .t1 .t2
 } -result {. .t2}
 test wm-stackorder-3.2 {unmapped toplevel} -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t2 ; tkwait visibility .t2
+    toplevel .t1 ; update idletasks
+    toplevel .t2 ; update idletasks
     wm withdraw .t2
     raiseDelay ;# Windows does not generate a VisibilityNotification for withdraw
     wm stackorder .
@@ -1846,33 +1901,33 @@ test wm-stackorder-3.2 {unmapped toplevel} -body {
     destroy .t1 .t2
 } -result {. .t1}
 test wm-stackorder-3.3 {unmapped toplevel} -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t2 ; tkwait visibility .t2
+    toplevel .t1 ; update idletasks
+    toplevel .t2 ; update idletasks
     wm withdraw .t2
     wm stackorder .t2
 } -cleanup {
     destroy .t1 .t2
 } -result {}
 test wm-stackorder-3.4 {unmapped toplevel} -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t1.t2 ; tkwait visibility .t1.t2
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
     wm withdraw .t1.t2
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1}
 test wm-stackorder-3.5 {unmapped toplevel} -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t1.t2 ; tkwait visibility .t1.t2
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
     wm withdraw .t1
     wm stackorder .t1
 } -cleanup {
     destroy .t1
 } -result {.t1.t2}
 test wm-stackorder-3.6 {unmapped toplevel} -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t1.t2 ; tkwait visibility .t1.t2
-    toplevel .t1.t2.t3 ; tkwait visibility .t1.t2.t3
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
+    toplevel .t1.t2.t3 ; update idletasks
     wm withdraw .t1.t2
     raiseDelay ;# Windows does not generate a VisibilityNotification for withdraw
     wm stackorder .t1
@@ -1880,8 +1935,8 @@ test wm-stackorder-3.6 {unmapped toplevel} -body {
     destroy .t1
 } -result {.t1 .t1.t2.t3}
 test wm-stackorder-3.7 {unmapped toplevel, mapped children returned} -body {
-    toplevel .t1 ; tkwait visibility .t1
-    toplevel .t1.t2 ; tkwait visibility .t1.t2
+    toplevel .t1 ; update idletasks
+    toplevel .t1.t2 ; update idletasks
     wm withdraw .t1
     wm stackorder .t1
 } -cleanup {
@@ -1900,21 +1955,21 @@ test wm-stackorder-3.8 {toplevel mapped in idle callback} -body {
 deleteWindows
 
 test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; tkwait visibility .t
+    toplevel .t ; update idletasks
     raise .t
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
 } -result 0
 test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; tkwait visibility .t
+    toplevel .t ; update idletasks
     raise .t
     wm stackorder . isbelow .t
 } -cleanup {
     destroy .t
 } -result 1
 test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; tkwait visibility .t
+    toplevel .t ; update idletasks
     raise .
     raiseDelay
     wm stackorder .t isabove .
@@ -1922,7 +1977,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     destroy .t
 } -result 0
 test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
-    toplevel .t ; tkwait visibility .t
+    toplevel .t ; update idletasks
     raise .
     raiseDelay
     wm stackorder .t isb .
@@ -1936,8 +1991,9 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
-    toplevel .t ; tkwait visibility .t
+    toplevel .t
     menu .t.m -type menubar
+    update idletasks; # Fluxbox needs to add the menubar before .t is mapped.
     .t.m add cascade -label "File"
     .t configure -menu .t.m
     update
@@ -1951,9 +2007,8 @@ test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
     overrideredirect toplevel on unix} -constraints {x11 withWindowManager} -body {
     toplevel .t
     wm overrideredirect .t 1
-    tkwait visibility .t
+    update idletasks
     raise .
-    update
     raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
@@ -1963,9 +2018,8 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     overrideredirect toplevel on macOS or win} -constraints aquaOrWin32 -body {
     toplevel .t
     wm overrideredirect .t 1
-    tkwait visibility .t
+    update idletasks
     raise .
-    update
     raiseDelay
     wm stackorder . isabove .t
 } -cleanup {
@@ -1975,7 +2029,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 	can be explicitly lowered} -body {
     toplevel .t
     wm overrideredirect .t 1
-    tkwait visibility .t
+    update idletasks
     lower .t
     update
     raiseDelay
@@ -1986,10 +2040,8 @@ test wm-stackorder-5.3 {An overrideredirect window\
 
 test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
 	 stacking order} -body {
-    toplevel .real -container 1
-    raiseDelay
-    toplevel .embd -bg blue -use [winfo id .real]
-    raiseDelay
+    toplevel .real -container 1 ; update idletasks
+    toplevel .embd -bg blue -use [winfo id .real] ; update idletasks
     wm stackorder .
 } -cleanup {
     deleteWindows
