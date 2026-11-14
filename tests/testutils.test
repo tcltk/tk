@@ -43,6 +43,107 @@ assert {"testutils" in [info procs testutils]}
 # Testutils domain "generic"
 #
 
+test evalOnWindowEvent-1.0 {timeout} -body {
+    proc evalOnWindowEventTimeout {args} {
+	puts -nonewline [lindex $args 0]
+    }
+    set savBgerrorCmd [interp bgerror {}]
+    interp bgerror {} evalOnWindowEventTimeout
+    set x 0
+    evalOnWindowEvent . <<EvalOnEvent>> {set x 22} 10
+    pause 20
+    list $x [bind . <<EvalOnEvent>>] [after info]
+} -cleanup {
+    interp bgerror {} $savBgerrorCmd
+    rename evalOnWindowEventTimeout {}
+    unset -nocomplain x savBgerrorCmd
+} -result "0 {} {}" -output "evalOnWindowEvent onevent#* timed out" -match glob
+
+test evalOnWindowEvent-1.1 {script evaluation skipped for child of intended toplevel} -setup {
+    pack [frame .f]; # Apparently the frame needs to be mapped once to receive
+    update;	     # the window event generated in the test's body. You may
+		     # "pack forget .f" after the first mapping, but we don't
+		     # care about that.
+    proc evalOnWindowEventTimeout {args} {
+	puts -nonewline [lindex $args 0]
+    }
+    set savBgerrorCmd [interp bgerror {}]
+    interp bgerror {} evalOnWindowEventTimeout
+} -body {
+    set x 0
+    after 50 {event generate .f <<EvalOnEvent>>}
+    set evalOnWindowEventID [evalOnWindowEvent . <<EvalOnEvent>> {set x 22} 100]
+    pause 200
+    lappend result $x [bind . <<EvalOnEvent>>] [after info]
+} -cleanup {
+    interp bgerror {} $savBgerrorCmd
+    rename evalOnWindowEventTimeout {}
+    destroy .f
+    unset -nocomplain evalOnWindowEventID result x
+} -result "0 {} {}" -output "evalOnWindowEvent onevent#* timed out" -match glob
+
+test evalOnWindowEvent-1.2 {script evaluation triggered for intended toplevel} -body {
+    set x 0
+    after 50 {event generate . <<EvalOnEvent>>}
+    set evalOnWindowEventID [evalOnWindowEvent . <<EvalOnEvent>> {set x 22}]
+    pause 100
+    lappend result $x [bind . <<EvalOnEvent>>] [after info]
+} -cleanup {
+    unset -nocomplain evalOnWindowEventID result x
+} -result "22 {} {}"
+
+test evalOnWindowEvent-2.0 {cancel} -body {
+    set x 0
+    set y 0
+    after 100 {set x 11}
+    set evalOnWindowEventID [evalOnWindowEvent . <<EvalOnEvent>> {set y 22}]
+    after 50 [list evalOnWindowEvent cancel $evalOnWindowEventID]
+    pause 200
+    list $y [bind . <<EvalOnEvent>>] [after info]
+} -cleanup {
+    unset -nocomplain evalOnWindowEventID x y
+} -result "0 {} {}"
+
+test evalWhen-1.0 {timeout} -body {
+    proc evalWhenTimeout {args} {
+	puts -nonewline [lindex $args 0]
+    }
+    set savBgerrorCmd [interp bgerror {}]
+    interp bgerror {} evalWhenTimeout
+    set x 0
+    set y 0
+    evalWhen {$x == 11} {set y 22} 10
+    pause 20
+    list $y [after info]
+} -cleanup {
+    interp bgerror {} $savBgerrorCmd
+    rename evalWhenTimeout {}
+    unset -nocomplain x y savBgerrorCmd
+} -result "0 {}" -output "evalWhen when#* timed out" -match glob
+
+test evalWhen-1.1 {success} -body {
+    set x 0
+    set y 0
+    after 50 {set x 11}
+    evalWhen {$x == 11} {set y 22}
+    pause 200
+    list $y [after info]
+} -cleanup {
+    unset -nocomplain x y
+} -result "22 {}"
+
+test evalWhen-1.2 {cancel} -body {
+    set x 0
+    set y 0
+    after 100 {set x 11}
+    set evalWhenID [evalWhen {$x == 11} {set y 22}]
+    after 50 [list evalWhen cancel $evalWhenID]
+    pause 200
+    list $y [after info]
+} -cleanup {
+    unset -nocomplain x y evalWhenID
+} -result "0 {}"
+
 test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
     unset -nocomplain result
     # Beware that some windowing systems / window managers impose a minimum
@@ -227,6 +328,111 @@ test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't f
     namespace delete ::zez
 }
 
+test waitForWindowEvent-1.0 {timeout} -body {
+    waitForWindowEvent . <<WaitForEvent>> 10
+} -result "wait for <<WaitForEvent>> event on . timed out (> 10 ms)" -returnCodes error
+
+test waitForWindowEvent-1.1 {don't stop waiting if event received by child of intended toplevel} -setup {
+    pack [frame .f]; # Apparently the frame needs to be mapped once to receive
+    update;	     # the window event generated in the test's body. You may
+		     # "pack forget .f" after the first mapping, but we don't
+		     # care about that.
+} -body {
+    after 50 {event generate .f <<WaitForEvent>>}
+    waitForWindowEvent . <<WaitForEvent>> 100
+} -cleanup {
+    destroy .f
+} -result "wait for <<WaitForEvent>> event on . timed out (> 100 ms)" -returnCodes error
+
+test waitForWindowEvent-1.2 {stop waiting if event received by intended toplevel} -setup {
+    testutils import timing
+} -body {
+    dt.reset
+    after 50 {event generate . <<WaitForEvent>>}
+    waitForWindowEvent . <<WaitForEvent>> 100
+    set duration [dt.get]
+    expr {($duration >= 50) && ($duration < 60)}
+} -cleanup {
+    unset -nocomplain duration
+    testutils forget timing
+} -result 1
+
+test waitUntil-1.1 {invalid timeout value} -body {
+    waitUntil {whatever} duration
+} -result {invalid timeout value "duration"} -returnCodes error
+
+test waitUntil-2.1 {timeout} -body {
+    set x 0
+    set afterID [after 50 {set x 1}]
+    waitUntil {$x == 1} 19
+} -cleanup {
+    after cancel $afterID
+    unset afterID x
+} -result {wait for condition "$x == 1" timed out (> 19 ms)} -returnCodes error
+
+test waitUntil-2.2 {condition reached by waiting, no result variable} -body {
+    set x 0
+    after 10 {set x 1}
+    waitUntil {$x == 1}
+} -cleanup {
+    unset x
+} -result {}
+
+test waitUntil-2.3 {condition reached without waiting, return duration in result variable} -body {
+    set x 1
+    waitUntil {$x == 1} 11 duration
+    set duration
+} -cleanup {
+    unset x
+} -result 0
+
+test waitUntil-2.4 {condition reached by waiting, return duration in result variable} -body {
+    set x 0
+    after 10 {set x 1}
+    waitUntil {$x == 1} 100 duration
+    set duration; # 1+2+4+8=15 ms
+} -cleanup {
+    unset duration x
+} -result 15
+
+#
+# Testutils domain "pointer"
+#
+
+#
+# COMMON TEST SETUP
+#
+testutils import pointer
+
+test waitForPointerWin-1.0 {timeout} -setup {
+    wm deiconify .
+    wm geometry . 200x200+100+100
+    update
+    event generate . <Motion> -warp 1 -x -50 -y 100
+    update
+    assert {[getPointerWin] eq ""}
+} -body {
+    after 10 {event generate . <Motion> -warp 1 -x 100 -y 100}
+    waitForPointerWin . 1
+} -result {waiting for window "." to become the pointer window timed out (> 1 ms)} -returnCodes error
+
+test waitForPointerWin-1.1 {condition reached} -setup {
+    wm deiconify .
+    wm geometry . 200x200+100+100
+    update
+    event generate . <Motion> -warp 1 -x -50 -y 100
+    update
+    assert {[getPointerWin] eq ""}
+} -body {
+    after 10 {event generate . <Motion> -warp 1 -x 100 -y 100}
+    waitForPointerWin .
+} -result {} -returnCodes ok
+
+#
+# COMMON TEST CLEANUP
+#
+testutils forget pointer
+
 #
 # Testutils domain "timing"
 #
@@ -270,7 +476,6 @@ test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -
 # COMMON TEST CLEANUP
 #
 testutils forget timing
-
 
 #
 # TESTFILE CLEANUP
