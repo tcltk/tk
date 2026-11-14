@@ -446,25 +446,6 @@ IsPopupMenuWindow(
     return 1;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * InitializeGlfwWindow --
- *
- *      Applies attributes specified in the WmInfo struct to the GLFWwindow,
- *      which should have been created by Tk_MakeWindow, then creates an
- *      event handler for the window.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Applies initial window properties (title, size hints, etc.).
- *      Creates event handler.
- *
- *----------------------------------------------------------------------
- */
-
 
 /*
  * Helper to safely destroy a toplevel from an idle callback (avoids
@@ -512,6 +493,25 @@ TkWaylandHandleProtocol(WmInfo *wmPtr, int protocol)
     return 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitializeGlfwWindow --
+ *
+ *      Applies attributes specified in the WmInfo struct to the GLFWwindow,
+ *      which should have been created by Tk_MakeWindow, then creates an
+ *      event handler for the window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Applies initial window properties (title, size hints, etc.).
+ *      Creates event handler.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static void
 InitializeGlfwWindow(TkWindow *winPtr)
 {
