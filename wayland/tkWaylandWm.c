@@ -1917,7 +1917,7 @@ TkWmDeadWindow(
         /* Free the pendingText DString. */
         Tcl_DStringFree(&winPtr->privatePtr->pendingText);
         
-        /* Free scroll scratch if any */
+        /* Free scroll scratch if any. */
         if (winPtr->privatePtr->scrollScratchFBO) {
             glDeleteFramebuffers(1, &winPtr->privatePtr->scrollScratchFBO);
         }
