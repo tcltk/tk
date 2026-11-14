@@ -282,10 +282,10 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 # configure script.
 # On Wayland, X11_LIB_SWITCHES expands to empty (XLIBSW is cleared by configure),
 # so this definition is safe for both X11 and Wayland builds.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @SPEECHD_LIBS@ @HB_LIBS@ \
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ \
 	$(WAYLAND_LIBS) @WAYLAND_LDFLAGS@
 
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @SPEECHD_LIBS@ @HB_LIBS@ \
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ \
 	$(WAYLAND_LIBS) @WAYLAND_LDFLAGS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
@@ -375,7 +375,10 @@ WAYLAND_CFLAGS		= $(WAYLAND_CLIENT_CFLAGS) $(WAYLAND_EGL_CFLAGS) $(XKBCOMMON_CFL
 			  $(FONTCONFIG_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 WAYLAND_LIBS		= $(WAYLAND_CLIENT_LIBS) $(WAYLAND_EGL_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) \
 			  $(GLES_LIBS) $(LIBDECOR_LIBS) $(SDBUSD_LIBS) \
-			  $(FONTCONFIG_LIBS) $(HB_LIBS) "-lspeechd"
+			  $(FONTCONFIG_LIBS) $(HB_LIBS)
+# NOTE: libspeechd is NOT listed here. It is added by configure to LIBS
+# (below, via @LIBS@) only when accessibility is enabled, so it never
+# leaks into Aqua/macOS or --disable-accessibility builds.
 
 # Font system token (core | xft | wayland) — set by configure
 FONTSYSTEM		= @FONTSYSTEM@
@@ -1596,7 +1599,7 @@ tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 
 nanovg.o: $(WAYLAND_DIR)/nanovg.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
-	
+
 xdg-shell-protocol.o: $(WAYLAND_DIR)/xdg-shell-protocol.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/xdg-shell-protocol.c
 
@@ -1662,7 +1665,7 @@ tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandMouseEvent.c
 
 tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
-	
+
 tkWaylandPopup.o: $(WAYLAND_DIR)/tkWaylandPopup.c 
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandPopup.c 
 
@@ -1872,7 +1875,7 @@ ttkLayout.o: $(TTK_DIR)/ttkLayout.c
 
 ttkManager.o: $(TTK_DIR)/ttkManager.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkManager.c
-	
+
 ttkNodeCache.o: $(TTK_DIR)/ttkNodeCache.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkNodeCache.c
 
