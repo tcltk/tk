@@ -538,7 +538,7 @@ namespace eval ::tk::test::generic {
 	    # The following default timeout value reflects this variability.
 	    #
 	    set timeout 100
-	    if {($::ws eq "win32") && ($event in {<Enter> <Leave>})} {
+	    if {([tk windowingsystem] eq "win32") && ($event in {<Enter> <Leave>})} {
 		set timeout 300
 	    }
 	}

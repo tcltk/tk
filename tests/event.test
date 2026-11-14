@@ -180,64 +180,6 @@ proc setup_win_mousepointer {w} {
     }
 }
 
-# waitForWindowEvent --
-#
-#    Wait for a specific window event to be serviced from the event queue.
-#
-# Arguments:
-#    w       : the event window
-#    event   : the event type
-#    timeout : time after which waiting stops
-#
-# Result: none
-#
-
-proc waitForWindowEvent {w event {timeout 150}} {
-    variable _windowEvent
-
-    if {! [winfo exists $w]} {
-	return -code error "window $w doesn't exist"
-    }
-
-    # Use counter as a unique ID to prevent subsequent waits
-    # from interfering with each other.
-    set counter [incr _windowEvent(counter)]
-    set _windowEvent($counter) -1
-    set savedBinding [bind $w $event]
-    bind $w $event [list +waitForWindowEvent.signal $counter $w %W]
-    set afterID [after $timeout [list set ::[namespace current]::_windowEvent($counter) 0]]
-    vwait ::[namespace current]::_windowEvent($counter)
-    bind $w $event $savedBinding
-    set result $_windowEvent($counter)
-    unset _windowEvent($counter)
-    if {$result} {
-	after cancel $afterID
-    } else {
-	return -code error "wait for $event event on $w timed out (> $timeout ms)"
-    }
-}
-
-# waitForWindowEvent.signal --
-#
-#    Sets the wait variable used by proc waitForWindowEvent, thus
-#    unblocking the vwait command in that proc.
-#
-proc waitForWindowEvent.signal {counter w W} {
-    if {$w ne $W} {
-	# Beware that:
-	# - "w" is the name of a window as a binding tag
-	# - all children of a toplevel window carry the name of their
-	#   toplevel window as a binding tag.
-	# Therefore, this handler may be triggered by the servicing of an event
-	# on a child "W" of toplevel "w" rather than the toplevel "w" itself.
-	# Such cases are contrary to the intention of waitForWindowEvent,
-	# so we leave the wait variable untouched.
-	return
-    }
-    variable _windowEvent
-    set _windowEvent($counter) 1
-}
-
 #
 # TESTS
 #
