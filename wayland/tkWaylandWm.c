@@ -206,14 +206,11 @@ static void UpdateTitle(TkWindow *winPtr);
 static void UpdatePhotoIcon(TkWindow *winPtr);
 static void UpdateVRootGeometry(WmInfo *wmPtr);
 /*
- * Wayland does not tell a client where the panels are, or how big the
- * decorations drawn by libdecor are, so a window is limited to the output
- * less these allowances.  Override them on the compiler command line.
+ * Wayland does not tell a client how big the decorations drawn by libdecor
+ * are, so a window is limited to the output less this allowance.  Override
+ * it on the compiler command line.
  */
 
-#ifndef TKWL_PANEL_RESERVE
-#define TKWL_PANEL_RESERVE		48
-#endif
 #ifndef TKWL_CSD_TITLEBAR_HEIGHT
 #define TKWL_CSD_TITLEBAR_HEIGHT	40
 #endif
@@ -6583,11 +6580,10 @@ UpdateVRootGeometry(WmInfo *wmPtr)
  * GetUsableScreenSize --
  *
  *	Compute the largest size, in logical (window) pixels, that a
- *	toplevel can have and still fit on the screen: the work area of the
- *	primary monitor, less an allowance for panels (unless the platform
- *	reports a real work area) and for the window's decorations.  Wayland
- *	clients do not know which output a window is on, so the primary
- *	monitor is used.
+ *	toplevel can have and still fit on the screen: the screen, less the
+ *	window's decorations.  Wayland clients do not know the work area
+ *	(where the panels are), so the whole screen is used, as in other
+ *	toolkits.
  *
  *	GLFW reports video modes and work areas in physical pixels, and only
  *	the integer scale of the output, so the logical size of the output is
@@ -6613,7 +6609,6 @@ GetUsableScreenSize(
     GLFWwindow *glfwWindow = (winPtr != NULL)
 	    ? TkWaylandGetGLFWwindow(winPtr) : NULL;
     int w = 0, h = 0, modeW = 0, modeH = 0, vx, vy;
-    int haveRealWorkarea = 0;
 
     if (monitor == NULL) {
 	return 0;
@@ -6654,28 +6649,16 @@ GetUsableScreenSize(
     if (w <= 0 || h <= 0) {
 	w = modeW;
 	h = modeH;
-    } else if (modeW > 0 && modeH > 0 && (w < modeW || h < modeH)) {
-	/* The platform really did subtract panels and docks. */
-	haveRealWorkarea = 1;
     }
     if (w <= 0 || h <= 0) {
 	return 0;
     }
 
-
     /*
-     * Wayland has no way for a client to ask where the panels and docks are:
-     * GLFW reports the whole output as the work area.  Reserve room for a
-     * panel (GNOME's top bar, a KDE or Xfce panel) so that a window as high
-     * as the screen is not pushed off its bottom edge.  Only the height is
-     * reduced: panels are almost always along the top or bottom.
+     * Wayland has no way for a client to ask where the panels and docks are,
+     * so, as in other toolkits, the whole output is used.  The compositor
+     * keeps a maximized window out of the panels.
      */
-
-    if (!haveRealWorkarea) {
-	if (h > TKWL_PANEL_RESERVE) {
-	    h -= TKWL_PANEL_RESERVE;
-	}
-    }
 
     /*
      * Leave room for the decorations.  The result must be the same every
@@ -6709,8 +6692,8 @@ GetUsableScreenSize(
 	}
     }
 
-    DEBUG_LOG("GetUsableScreenSize: mode %dx%d usable %dx%d (workarea %s)",
-	    modeW, modeH, w, h, haveRealWorkarea ? "real" : "whole output");
+    DEBUG_LOG("GetUsableScreenSize: mode %dx%d usable %dx%d",
+	    modeW, modeH, w, h);
 
     if (w < 1 || h < 1) {
 	return 0;
