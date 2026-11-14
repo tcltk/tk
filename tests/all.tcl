@@ -19,6 +19,9 @@ package require tcltest 2.2
 # TCLTEST CONFIGURATION
 #
 
+# Temporary configuration for branch ftd-progstate
+tcltest::configure -file testutils.test -match "eval* wait* mwe-*" -constraints testutils -verbose beps
+
 # Set defaults for the Tk test suite
 tcltest::configure -singleproc 1
 
