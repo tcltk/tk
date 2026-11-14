@@ -2957,7 +2957,7 @@ TkWmProtocolEventProc(
      * DELETE_WINDOW as fallback (preserves old comment's intent).
      */
     if (eventPtr && eventPtr->type == ClientMessage) {
-        /* Try to map Atom/string to our internal id */
+        /* Try to map Atom/string to our internal id. */
         const char *msg = NULL;
         /* 
          * XClientMessageEvent message_type may hold protocol 
