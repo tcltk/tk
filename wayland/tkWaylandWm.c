@@ -6996,8 +6996,8 @@ WmWaitMapProc(
  *
  *	Helper function to find a GLFWwindow from an opaque Window handle.
  *	A Window in this port is either:
- *   (a) a GLFWwindow pointer cast to Window (toplevel), or
- *   (b) a synthetic child-window ID produced in Tk_MakeWindow.
+ *  (a) a GLFWwindow pointer cast to Window (toplevel), or
+ *  (b) a synthetic child-window ID produced in Tk_MakeWindow.
  *
  * Results:
  *	Pointer to the associated GLFWwindow, or NULL if not found.

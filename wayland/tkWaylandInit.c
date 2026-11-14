@@ -205,6 +205,7 @@ glfwTkInfo* glfwTkInfoList = NULL;
  *
  *----------------------------------------------------------------------
  */
+ 
 static glfwTkInfo* createGlfwTkInfo(
     GLFWwindow* glfwWindow,
     TkWindow* winPtr)
@@ -273,6 +274,7 @@ static glfwTkInfo* createGlfwTkInfo(
  *
  *----------------------------------------------------------------------
  */
+ 
 static void destroyGlfwTkInfo(
     GLFWwindow* glfwWindow)
 {
@@ -324,6 +326,7 @@ static void destroyGlfwTkInfo(
  *
  *----------------------------------------------------------------------
  */
+ 
 static glfwTkInfo*
 getGlfwTkInfo(
     GLFWwindow *glfwWindow)
@@ -1106,14 +1109,13 @@ TkWaylandCreateWindow(
 
         glfwWindow = mainGlfwWindow;
 
-        /*
-	 	 * Make sure the root window's context is current and configured.
-         * Keep the window hidden; TkWmMapWindow is responsible for the
-         * first show so the user never sees an unpainted frame.
-	 */
-        glfwMakeContextCurrent(glfwWindow);
+
+	   /* Make sure the root window's context is current and configured.
+	    * Keep the window hidden; TkWmMapWindow is responsible for the 
+	    * first show so the user never sees an unpainted frame. */
+
+	glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
-        //glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
         glfwHideWindow(glfwWindow);
     } else {
