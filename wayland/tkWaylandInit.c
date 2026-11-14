@@ -39,7 +39,7 @@
  * an early Expose for a window that has never been focused, so that the
  * request is made only once.  It belongs next to the other TKWL_* flags in
  * tkWaylandInt.h; this fallback definition uses a high bit so it cannot
- * collide with them.  Move it into the header and drop this block.
+ * collide with them.
  */
 #ifndef TKWL_EARLY_EXPOSE_QUEUED
 #define TKWL_EARLY_EXPOSE_QUEUED (1 << 30)
@@ -141,7 +141,7 @@ static void freeFonts()
 
 GLFWwindow *mainGlfwWindow;
 
-/* Quick GL text .*/
+/* Quick GL test .*/
 #if 0
 static void GLtest(GLFWwindow *window) {
     int fbWidth = 0, fbHeight = 0;
@@ -176,6 +176,35 @@ static void GLtest(GLFWwindow *window) {
 
 glfwTkInfo* glfwTkInfoList = NULL;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * createGlfwTkInfo --
+ *
+ *	Allocate and initialize a new glfwTkInfo record, link it into
+ *	the global glfwTkInfoList, and create the associated NanoVG
+ *	GLES3 context. Registers the bundled sans, sans-bold, and mono
+ *	fonts with the newly created NanoVG context when their data is
+ *	available.
+ *
+ *	On failure to create the NanoVG context, the given GLFW window
+ *	is destroyed, the clipboard and GLFW are torn down, and NULL is
+ *	returned. The partially constructed record is left on the list
+ *	in that case; callers must not treat a NULL return as a usable
+ *	info pointer.
+ *
+ * Results:
+ *	Returns a pointer to the newly created glfwTkInfo record, or
+ *	NULL if the NanoVG context could not be created.
+ *
+ * Side effects:
+ *	Allocates memory via Tcl_Alloc, prepends the new record to the
+ *	global glfwTkInfoList, creates a NanoVG context, and registers
+ *	fonts with that context. On failure, destroys the GLFW window,
+ *	cleans up the Wayland clipboard, and terminates GLFW.
+ *
+ *----------------------------------------------------------------------
+ */
 static glfwTkInfo* createGlfwTkInfo(
     GLFWwindow* glfwWindow,
     TkWindow* winPtr)
@@ -198,7 +227,7 @@ static glfwTkInfo* createGlfwTkInfo(
         glfwTerminate();
         return NULL;
     }
-    /* Guard: readFont() can return NULL; nvgCreateFontMem derefs immediately */
+    /* Guard: readFont() can return NULL; nvgCreateFontMem derefs immediately. */
     if (sans_data && sans_size > 0) {
         nvgCreateFontMem(infoPtr->vg, "sans", sans_data, (int)sans_size, 0);
     } else {
@@ -217,6 +246,33 @@ static glfwTkInfo* createGlfwTkInfo(
     return infoPtr;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * destroyGlfwTkInfo --
+ *
+ *	Locate the glfwTkInfo record associated with the given GLFW
+ *	window, unlink it from the global glfwTkInfoList, detach it
+ *	from the font registry, and release its NanoVG context and
+ *	memory.
+ *
+ *	The GLFW context is made current before the NanoVG context is
+ *	deleted, and the window user pointer is cleared. The font
+ *	registry is notified via TkWaylandFontContextDestroyed() so
+ *	that no stale references to the NVGcontext remain; otherwise
+ *	subsequent windows would render without text.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Makes the GLFW context current, clears the window user pointer,
+ *	unlinks and frees the info record, destroys the NanoVG context,
+ *	and updates the font registry. Panics via Tcl_Panic if no record
+ *	matches the given window.
+ *
+ *----------------------------------------------------------------------
+ */
 static void destroyGlfwTkInfo(
     GLFWwindow* glfwWindow)
 {
@@ -251,6 +307,23 @@ static void destroyGlfwTkInfo(
     Tcl_Panic("DestroyGlfwTkInfo received unknown window");
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * getGlfwTkInfo --
+ *
+ *	Search the global glfwTkInfoList for the record whose GLFW
+ *	window matches the given window and return it.
+ *
+ * Results:
+ *	Returns a pointer to the matching glfwTkInfo record. Panics via
+ *	Tcl_Panic if no record matches the given window.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 static glfwTkInfo*
 getGlfwTkInfo(
     GLFWwindow *glfwWindow)
@@ -291,7 +364,6 @@ isGlfwWindowValid(GLFWwindow *win)
 	if (p->glfwWindow==win) return 1;
     return 0;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -729,7 +801,7 @@ TkWaylandInitialize(Tcl_Interp *interp)
     }
 
     /*
-     * IMPORTANT: do NOT force EGL here.
+     * Do not force EGL here.
      * GLFW on Wayland will choose EGL automatically.
      */
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
@@ -743,7 +815,7 @@ TkWaylandInitialize(Tcl_Interp *interp)
      * associates the window with the desktop entry (and therefore with
      * Icon=) even when the binary is invoked as a versioned name such
      * as "wish9.1".  A later explicit [tk appname newName] is still
-     * honoured for subsequently created toplevels via TkWaylandSyncAppId.
+     * honored for subsequently created toplevels via TkWaylandSyncAppId.
      *
      * Stock GLFW cannot change a toplevel's app_id after creation, so
      * this is the only point at which the root window's app_id can be set.
@@ -773,7 +845,7 @@ TkWaylandInitialize(Tcl_Interp *interp)
     }
 
     /*
-     * CRITICAL: make context current BEFORE any GL/EGL assumptions.
+     *  Make context current BEFORE any GL/EGL assumptions.
      */
     glfwMakeContextCurrent(mainGlfwWindow);
     glfwPollEvents();
@@ -1035,7 +1107,7 @@ TkWaylandCreateWindow(
         glfwWindow = mainGlfwWindow;
 
         /*
-	 * Make sure the root window's context is current and configured.
+	 	 * Make sure the root window's context is current and configured.
          * Keep the window hidden; TkWmMapWindow is responsible for the
          * first show so the user never sees an unpainted frame.
 	 */
@@ -1489,7 +1561,6 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
         return;
     }
 
-    
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
      * nvgEndFrame.  The drawing commands have just been queued.  Now they
@@ -1562,32 +1633,6 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
      */
 
     nvgRestore(dcPtr->vg);
-
-#if 0
-    // These extra expose events help, but do not completely fix some
-    // artifacts, like labelframes not updating the text.  This is
-    // probably the wrong approach.
-    /* Children */
-    for (TkWindow *childPtr = winPtr->childList;
-         childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped(childPtr)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-                                  Tk_Height(childPtr));
-    } 
-    /* Higher siblings. */
-    for (TkWindow *childPtr = childPtr->nextPtr;
-         childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped(childPtr)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-                                  Tk_Height(childPtr));
-    }
-#endif
 
     /*
      * Mark the toplevel as needing display unless the dontSwap flag was set
@@ -1999,7 +2044,7 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
  *	The wl app_id is the portable, compositor-native way toplevel
  *	icons (and taskbar/dock grouping) work on Wayland: the compositor
  *	matches app_id against an installed .desktop file's basename
- *	(and secondarily StartupWMClass) and draws that icon itself..
+ *	(and secondarily StartupWMClass) and draws that icon itself.
  *
  *	We force the root window's app_id to "tk" (the installed
  *	tk.desktop basename) so the custom Icon= is used even when

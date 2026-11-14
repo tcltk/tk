@@ -420,7 +420,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
         Tcl_SetMaxBlockTime(&noBlock);
         return;
     }
-    /* Set up poll descriptors for Wayland, IBus, and AT-SPI sockets */
+    /* Set up poll descriptors for Wayland and IBus sockets */
     struct pollfd pfds[3];
     int nfds = 0;
 
@@ -435,18 +435,6 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
         pfds[nfds].revents = 0;
         nfds++;
     }
-
-    /* Note: atspi_bus is not directly accessible here, but we can check
-     * if we have an AT-SPI bus via a global. For now, we only poll
-     * Wayland and IBus. The AT-SPI bus will be handled in CheckProc.
-     * If we had a global atspi_bus, we would add it here with:
-     * if (atspi_bus && sd_bus_get_fd(atspi_bus) >= 0) {
-     *     pfds[nfds].fd = sd_bus_get_fd(atspi_bus);
-     *     pfds[nfds].events = POLLIN | (sd_bus_wqueue_size(atspi_bus) > 0 ? POLLOUT : 0);
-     *     pfds[nfds].revents = 0;
-     *     nfds++;
-     * }
-     */
 
     /*
      * Wake Tcl immediately on Wayland/IBus socket activity rather than
@@ -498,7 +486,7 @@ static void
 TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
     /*
-     * Drain IME/IBus and AT-SPI accessibility messages unconditionally.
+     * Drain IME/IBus messages unconditionally.
      * Flush outgoing buffers to ensure queued packets are written to the wire
      * immediately, preventing D-Bus reply deadlocks.
      */
@@ -617,8 +605,11 @@ TkWaylandQueueExposeEvent(
     if (winPtr->flags & TK_ALREADY_DEAD) return;
     if (width <= 0 || height <= 0) return;
     if (!Tk_IsMapped(winPtr) && !(winPtr->flags & TK_TOP_LEVEL)) {
-        /* For non-toplevels, don't queue expose if not mapped */
-        /* Top-levels may need expose even if not yet mapped for initial draw */
+        /* 
+         * For non-toplevels, don't queue expose if not mapped.
+         * Top-levels may need expose even if not yet mapped for 
+         * initial draw. 
+         */
     }
 
     /* Create expose event. */
@@ -671,16 +662,16 @@ static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandSetupCallbacks --
+ * TkWaylandSetupCallbacks, TkWaylandClearCallbacks --
  *
- *      Register the standard GLFW callbacks for a window.  Called by
+ *      Register/clear the standard GLFW callbacks for a window.  Called by
  *      glfwCreateWindow.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Registers all standard callbacks.
+ *      Registers/clears all standard callbacks.
  *
  *----------------------------------------------------------------------
  */
@@ -721,22 +712,7 @@ TkWaylandClearCallbacks(
     glfwSetCharCallback               (glfwWindow, NULL);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWindowCloseCallback --
- *
- *      Called when user requests window close.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Destroys the Tk window.
- *
- *----------------------------------------------------------------------
- */
- 
+
 /*
  * Idle-time close dispatch. Deferring keeps user handlers (which commonly
  * call "destroy .") from running re-entrantly inside GLFW's callback.
@@ -757,6 +733,22 @@ CloseRequestIdleProc(void *clientData)
     Tcl_Release(winPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWindowCloseCallback --
+ *
+ *      Called when user requests window close.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Destroys the Tk window.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
 static void
 TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
@@ -1346,7 +1338,7 @@ TkWaylandMouseButtonCallback(
             /* Force redraw after button click to update state. */
             TkWaylandMenuRedrawActive();
         }
-        /* Swallow both press and release â€” do not deliver to Tk widgets. */
+        /* Swallow both press and release -- do not deliver to Tk widgets. */
         return;
     }
     Tk_Window target = TkWaylandPointerTarget((int) xpos, (int) ypos,
@@ -1453,11 +1445,11 @@ TkWaylandScrollCallback(
     glfwGetCursorPos(window, &xpos, &ypos);
 
     if (TkWaylandMenuPopupActive()) {
-        /* Let menu handle scroll if active - could dismiss or scroll */
+        /* Let menu handle scroll if active - could dismiss or scroll. */
         return;
     }
 
-    /* Coords to child window */
+    /* Coords to child window. */
     Tk_Window target = TkWaylandPointerTarget((int)xpos, (int)ypos, (Tk_Window)winPtr);
     if (!target) {
         target = (Tk_Window)winPtr;
@@ -1476,7 +1468,7 @@ TkWaylandScrollCallback(
     yRemainder += yoffset;
     xRemainder += xoffset;
 
-    /* Process vertical scroll */
+    /* Process vertical scroll. */
     while (fabs(yRemainder) >= 0.01) {
         /* Clamp to one notch per event to match Tk expectations */
         double use = yRemainder;
@@ -1485,7 +1477,7 @@ TkWaylandScrollCallback(
 
         long delta = (long)(use * 120.0); /* Tk: 120 per detent */
 
-        /* MouseWheelEvent for <MouseWheel> */
+        /* MouseWheelEvent for <MouseWheel>. */
         XEvent event;
         memset(&event, 0, sizeof(XEvent));
         event.type = MouseWheelEvent;
@@ -1505,7 +1497,7 @@ TkWaylandScrollCallback(
         event.xbutton.same_screen = True;
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-        /* Compat Button-4/5 for <Button-4>/<Button-5> bindings */
+        /* Compat Button-4/5 for <Button-4>/<Button-5> bindings. */
         XEvent bevent;
         memset(&bevent, 0, sizeof(XEvent));
         bevent.type = ButtonPress;
@@ -1530,11 +1522,14 @@ TkWaylandScrollCallback(
         Tk_QueueWindowEvent(&bevent, TCL_QUEUE_TAIL);
 
         yRemainder -= use;
-        /* Only one notch per callback to avoid flooding; remainder will be processed on next axis event */
+        /* 
+         * Only one notch per callback to avoid flooding; 
+         * remainder will be processed on next axis event. 
+         */
         break;
     }
 
-    /* Process horizontal scroll - generates Shift+MouseWheel style */
+    /* Process horizontal scroll - generates Shift+MouseWheel style. */
     while (fabs(xRemainder) >= 0.01) {
         double use = xRemainder;
         if (use > 1.0) use = 1.0;
@@ -1556,7 +1551,8 @@ TkWaylandScrollCallback(
         event.xbutton.y = (int)ypos - tgtRootY;
         event.xbutton.x_root = (int)xpos;
         event.xbutton.y_root = (int)ypos;
-        /* Mark horizontal: Tk convention is to add Shift or use separate handling.
+        /* 
+         *  Mark horizontal: Tk convention is to add Shift or use separate handling.
          * We set state with ShiftMask already if user holds Shift, but for
          * pure horizontal we queue with Button 6/7 compat and MouseWheel with
          * horizontal flag in state. Use bit 1 for horizontal (matching X11).
@@ -1564,8 +1560,9 @@ TkWaylandScrollCallback(
         event.xbutton.state = glfwButtonState | glfwModifierState;
         event.xbutton.button = delta;
         event.xbutton.same_screen = True;
-        /* For horizontal, Tk's generic handling checks xoffset separately;
-         * We queue as MouseWheel and also as Button 6/7
+        /* 
+         * For horizontal, Tk's generic handling checks xoffset separately;
+         * we queue as MouseWheel and also as Button 6/7.
          */
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 

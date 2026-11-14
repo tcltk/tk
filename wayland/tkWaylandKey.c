@@ -1320,7 +1320,7 @@ IbusTarget(
     }
 
     if (candidate) {
-        /* Guard against half-destroyed windows where Tk has cleared mainPtr/dispPtr */
+        /* Guard against half-destroyed windows where Tk has cleared mainPtr/dispPtr. */
         if ((candidate->flags & TK_ALREADY_DEAD)
                 || candidate->mainPtr == NULL
                 || candidate->dispPtr == NULL) {

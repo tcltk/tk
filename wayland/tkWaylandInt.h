@@ -416,7 +416,7 @@ typedef struct TkWaylandPixmap {
 
 TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
 
-/* Store bitmap data in a pixmap (called from XCreateBitmapFromData) */
+/* Store bitmap data in a pixmap (called from XCreateBitmapFromData). */
 MODULE_SCOPE void TkWaylandSetBitmapData(
     Pixmap pixmap,
     const char *data,
@@ -454,7 +454,7 @@ typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
     Tcl_DString pendingText;
-    // Support for subwindow clipping
+    /* Support for subwindow clipping. */
     clipRect *clipRectBuffer;
     int clipRectBufferSize;
     int clipRectCount;
@@ -800,7 +800,7 @@ MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
 /* Resize an existing subsurface popup (recreates renderer and buffer). */
 MODULE_SCOPE int TkWaylandPopupResize(TkWaylandPopup *popup, int width, int height);
 
-/* Rendering */
+/* Rendering. */
 MODULE_SCOPE NVGcontext *TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
 MODULE_SCOPE int          TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void         TkWaylandPopupEndDraw(TkWaylandPopup *popup);

@@ -85,6 +85,27 @@ static int pixmapTableInitialized = 0;
 /* Whether the compositor draws the window decorations. */
 int tkWaylandServerDecorations = 0;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegistryGlobal --
+ *
+ *	Callback invoked for each global object advertised by the Wayland
+ *	registry.  Detects whether the compositor offers a wl_seat (needed
+ *	by GLFW) and whether it offers server-side decorations via
+ *	zxdg_decoration_manager_v1.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets *data to 1 when a wl_seat is seen, and sets the module-level
+ *	tkWaylandServerDecorations flag when the decoration manager is
+ *	seen.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 RegistryGlobal(
     void *data,
@@ -100,6 +121,23 @@ RegistryGlobal(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegistryGlobalRemove --
+ *
+ *	Callback invoked when a global object is removed from the Wayland
+ *	registry.  No action is needed for the seat-detection pass.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 RegistryGlobalRemove(
     TCL_UNUSED(void *),
@@ -107,6 +145,25 @@ RegistryGlobalRemove(
     TCL_UNUSED(uint32_t))	/* name */
 {
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CompositorHasSeat --
+ *
+ *	Connect to the Wayland compositor and check whether it advertises
+ *	a wl_seat.  GLFW's glfwInit() crashes when no seat is present, so
+ *	this check must be performed before calling glfwInit().
+ *
+ * Results:
+ *	1 if a connection could be made and a seat is present, else 0.
+ *
+ * Side effects:
+ *	Opens and closes a temporary Wayland display connection; may set
+ *	tkWaylandServerDecorations via RegistryGlobal.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static int
 CompositorHasSeat(void)
@@ -158,6 +215,23 @@ static struct {
     TkWaylandOutput outputs[TKWL_MAX_OUTPUTS];
 } outputInfo;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XdgOutputLogicalPosition --
+ *
+ *	Listener for the zxdg_output_v1.logical_position event.  Records
+ *	the logical position of an output in its TkWaylandOutput struct.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates outPtr->x and outPtr->y.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 XdgOutputLogicalPosition(
     void *data,
@@ -170,6 +244,23 @@ XdgOutputLogicalPosition(
     outPtr->x = x;
     outPtr->y = y;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XdgOutputLogicalSize --
+ *
+ *	Listener for the zxdg_output_v1.logical_size event.  Records the
+ *	logical size of an output in its TkWaylandOutput struct.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates outPtr->width and outPtr->height.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 XdgOutputLogicalSize(
@@ -184,12 +275,48 @@ XdgOutputLogicalSize(
     outPtr->height = height;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XdgOutputDone --
+ *
+ *	Listener for the zxdg_output_v1.done event.  In protocol version 3
+ *	and later, this signals that the batch of output properties is
+ *	complete.  No action is required by this backend.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 XdgOutputDone(
     TCL_UNUSED(void *),
     TCL_UNUSED(struct zxdg_output_v1 *))
 {
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XdgOutputName --
+ *
+ *	Listener for the zxdg_output_v1.name event.  Records the output
+ *	name (e.g. "eDP-1") in the TkWaylandOutput struct so it can be
+ *	matched against GLFW monitor names later.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Replaces outPtr->name with a Tcl-allocated copy of the name.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 XdgOutputName(
@@ -205,6 +332,23 @@ XdgOutputName(
     outPtr->name = (char *)Tcl_Alloc(strlen(name) + 1);
     strcpy(outPtr->name, name);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XdgOutputDescription --
+ *
+ *	Listener for the zxdg_output_v1.description event.  The description
+ *	is human-readable text and is not needed by this backend.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 XdgOutputDescription(
@@ -222,6 +366,24 @@ static const struct zxdg_output_v1_listener xdgOutputListener = {
     XdgOutputDescription
 };
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * OutputGetXdgOutput --
+ *
+ *	If the xdg-output manager is available and this output does not
+ *	already have a zxdg_output_v1 object, create one and attach the
+ *	listener so its logical size and position are tracked.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Creates a zxdg_output_v1 and adds a listener to it.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 OutputGetXdgOutput(
     TkWaylandOutput *outPtr)
@@ -233,6 +395,25 @@ OutputGetXdgOutput(
 		outPtr);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * OutputRegistryGlobal --
+ *
+ *	Registry callback that binds the xdg-output manager and each
+ *	wl_output global.  Newly-bound outputs are added to outputInfo and
+ *	their xdg-output objects created so logical geometry can be read.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Binds globals and grows outputInfo.outputs; may call
+ *	OutputGetXdgOutput.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 OutputRegistryGlobal(
@@ -262,6 +443,24 @@ OutputRegistryGlobal(
 	OutputGetXdgOutput(outPtr);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * OutputRegistryGlobalRemove --
+ *
+ *	Registry callback invoked when a global is removed.  If it was a
+ *	wl_output we are tracking, destroy its xdg-output object and
+ *	wl_output, free the name, and compact the outputs array.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Destroys Wayland objects and shrinks outputInfo.numOutputs.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 OutputRegistryGlobalRemove(
@@ -836,8 +1035,26 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
- * The Pixmap XID is the unsgined int value of a pointer to a
+ * The Pixmap XID is the unsigned int value of a pointer to a
  * TkWaylandPixmap.
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPixmapFromPixmap --
+ *
+ *	Recover the TkWaylandPixmap pointer from a Pixmap XID, masking
+ *	off the low two tag bits used by the drawable encoding scheme.
+ *
+ * Results:
+ *	The underlying TkWaylandPixmap pointer (may be NULL if the XID
+ *	was zero).
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 TkWaylandPixmap* TkWaylandPixmapFromPixmap(
@@ -849,6 +1066,23 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(
 /*
  * A Pixmap is a Drawable, so it must carry the low-bit tag that
  * TkWaylandDrawableIsPixmap tests; see the XID scheme in tkWaylandWm.c.
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * PixmapFromTkWaylandPixmap --
+ *
+ *	Encode a TkWaylandPixmap pointer as a Pixmap XID, setting the
+ *	low tag bits so the result is recognised as a pixmap drawable.
+ *
+ * Results:
+ *	A tagged Pixmap XID, or None if pixmapPtr is NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 static inline Pixmap PixmapFromTkWaylandPixmap(

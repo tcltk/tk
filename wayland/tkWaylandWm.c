@@ -3207,7 +3207,7 @@ TkpGetSystemDefault(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_WmObjCmd â€“
+ * Tk_WmObjCmd --
  *
  *	Implementation of the "wm" Tcl command.
  *
@@ -4511,8 +4511,9 @@ WmIconnameCmd(
  *
  * Side effects:
  *	No-op on Wayland. Toplevel icons on Wayland are instead set via the 
- *  wl app_id, which the compositor resolves against a matching .desktop 
- *  file's Icon=key - see TkWaylandSetAppId() / TkpSetAppName() in tkWaylandInit.c.
+ *      wl app_id, which the compositor resolves against a matching .desktop 
+ *      file's Icon=key - see TkWaylandSetAppId() / TkpSetAppName() in
+ *      tkWaylandInit.c.
  *
  *----------------------------------------------------------------------
  */
@@ -5111,6 +5112,22 @@ WmProtocolCmd(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmResizableCmd --
+ *
+ *	Implements the "wm resizable" subcommand.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Sets whether a window can be resized.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 WmResizableCmd(
 	       TCL_UNUSED(Tk_Window),
@@ -5478,7 +5495,7 @@ WmTitleCmd(
  *	Implements the "wm transient" subcommand.
  *
  * Results:
- *	None - no-ope on Wayland. 
+ *	None - no-op on Wayland. 
  *
  * Side effects:
  *	Sets or clears transient-for relationship.
@@ -6564,7 +6581,7 @@ UpdateVRootGeometry(WmInfo *wmPtr)
             return;
         }
     }
-    ////XXXX FIX THIS!
+    /* This may need revision. */
     wmPtr->vRootX = wmPtr->vRootY = 0;
     wmPtr->vRootWidth  = 1920;
     wmPtr->vRootHeight = 1080;
@@ -6859,7 +6876,7 @@ ParseGeometry(
         wmPtr->height = height;
     }
 
-    /* Apply position if specified */
+    /* Apply position if specified. */
     if (hasPos) {
         /*
          * As on X11, a negative offset is the distance from the right or
@@ -6978,9 +6995,9 @@ WmWaitMapProc(
  * WindowToGLFW --
  *
  *	Helper function to find a GLFWwindow from an opaque Window handle.
- *	XXXXXA Window in this port is either:
- *	XXXXX  (a) a GLFWwindow pointer cast to Window (toplevel), or
- *	XXXXX  (b) a synthetic child-window ID produced in Tk_MakeWindow.
+ *	A Window in this port is either:
+ *   (a) a GLFWwindow pointer cast to Window (toplevel), or
+ *   (b) a synthetic child-window ID produced in Tk_MakeWindow.
  *
  * Results:
  *	Pointer to the associated GLFWwindow, or NULL if not found.
@@ -8005,7 +8022,7 @@ XSetWindowBorderPixmap(
  *	Set keyboard input focus to a window.
  *	GLFW's glfwFocusWindow requests focus from the compositor; the
  *	Wayland protocol makes no guarantee that the compositor will
- *	honour the request.
+ *	honor the request.
  *
  * Results:
  *	Success.
