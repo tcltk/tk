@@ -209,7 +209,8 @@ typedef struct TextStyle {
  */
 
 #define LOG(toVar,what)							\
-    Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),			\
+    Tcl_SetVar2Ex(textPtr->interp, (toVar), NULL,			\
+		Tcl_NewStringObj((what), TCL_INDEX_NONE),		\
 		TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
 #define CLEAR(var)							\
     Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
