@@ -696,10 +696,8 @@ INSTALL_DESKTOP_ENTRY
 XMKMF
 WAYLAND_LDFLAGS
 TK_USE_WAYLAND
-ATK_LIBS
-ATK_CFLAGS
-HB_LIBS
-HB_CFLAGS
+WAYLAND_LIBS
+WAYLAND_CFLAGS
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
 SDBUSD_LIBS
@@ -712,10 +710,14 @@ GLFW_LIBS
 GLFW_CFLAGS
 XKBCOMMON_LIBS
 XKBCOMMON_CFLAGS
-WAYLAND_CLIENT_LIBS
-WAYLAND_CLIENT_CFLAGS
 WAYLAND_EGL_LIBS
 WAYLAND_EGL_CFLAGS
+WAYLAND_CLIENT_LIBS
+WAYLAND_CLIENT_CFLAGS
+ATK_LIBS
+ATK_CFLAGS
+HB_LIBS
+HB_CFLAGS
 LDFLAGS_DEFAULT
 CFLAGS_DEFAULT
 INSTALL_STUB_LIB
@@ -8236,6 +8238,26 @@ fi
 #       Check for Wayland support (non-X11 backend)
 #--------------------------------------------------------------------
 
+WAYLAND_CLIENT_CFLAGS=""
+WAYLAND_CLIENT_LIBS=""
+WAYLAND_EGL_CFLAGS=""
+WAYLAND_EGL_LIBS=""
+XKBCOMMON_CFLAGS=""
+XKBCOMMON_LIBS=""
+GLFW_CFLAGS=""
+GLFW_LIBS=""
+LIBDECOR_CFLAGS=""
+LIBDECOR_LIBS=""
+GLES_CFLAGS=""
+GLES_LIBS=""
+SDBUSD_CFLAGS=""
+SDBUSD_LIBS=""
+FONTCONFIG_CFLAGS=""
+FONTCONFIG_LIBS=""
+WAYLAND_CFLAGS=""
+WAYLAND_LIBS=""
+TK_USE_WAYLAND=""
+
 if test $tk_aqua = no; then
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use Wayland" >&5
 printf %s "checking whether to use Wayland... " >&6; }
@@ -8287,8 +8309,6 @@ Please install libwayland development package:
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland" "$LINENO" 5
         fi
-
-
 
         #--------------------------------------------------------------------
         # Check for wayland-egl headers (must be present)
@@ -8357,8 +8377,6 @@ Please install libwayland development package:
   - Arch:            sudo pacman -S wayland" "$LINENO" 5
         fi
 
-
-
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for xkbcommon >= 0.5.0" >&5
 printf %s "checking for xkbcommon >= 0.5.0... " >&6; }
         if pkg-config --exists "xkbcommon >= 0.5.0"; then
@@ -8379,8 +8397,6 @@ Please install libxkbcommon development package:
   - Fedora/RHEL:     sudo dnf install libxkbcommon-devel
   - Arch:            sudo pacman -S libxkbcommon" "$LINENO" 5
         fi
-
-
 
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for glfw3 >= 3.4 with Wayland support" >&5
 printf %s "checking for glfw3 >= 3.4 with Wayland support... " >&6; }
@@ -8414,8 +8430,6 @@ Please install GLFW development package with Wayland support:
   - Arch:            sudo pacman -S glfw-wayland" "$LINENO" 5
         fi
 
-
-
         #--------------------------------------------------------------------
         # Check for libdecor (client-side decorations) – hard requirement
         #--------------------------------------------------------------------
@@ -8437,8 +8451,6 @@ printf '%s\n' "no" >&6; }
 Please install the libdecor development package (usually libdecor-0-dev on Debian/Ubuntu or libdecor-devel on Fedora).
 Without client-side decorations most Wayland compositors will show broken or missing window decorations." "$LINENO" 5
         fi
-
-
 
         # OpenGL ES support (required for NanoVG rendering)
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for OpenGL ES 3.0 (glesv2)" >&5
@@ -8538,8 +8550,6 @@ Please install OpenGL ES development package:
             fi
         fi
 
-
-
         # sd-bus (system tray)
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for sd-bus (system tray/status notifier support)" >&5
 printf %s "checking for sd-bus (system tray/status notifier support)... " >&6; }
@@ -8565,8 +8575,6 @@ Please install libsystemd development package:
   - Arch:            sudo pacman -S systemd-libs" "$LINENO" 5
         fi
 
-
-
         # fontconfig
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for fontconfig >= 2.12 (Wayland font support)" >&5
 printf %s "checking for fontconfig >= 2.12 (Wayland font support)... " >&6; }
@@ -8588,8 +8596,6 @@ Please install fontconfig development package:
   - Fedora/RHEL:     sudo dnf install fontconfig-devel
   - Arch:            sudo pacman -S fontconfig" "$LINENO" 5
         fi
-
-
 
         #--------------------------------------------------------------------
         # HarfBuzz — REQUIRED for Wayland (text shaping), minimum 2.8.2
@@ -8667,7 +8673,9 @@ printf '%s\n' "$as_me: NanoVG will be built from bundled sources in wayland/nano
             TK_USE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS $ATK_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS $ATK_LIBS -lspeechd"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS $ATK_LIBS"
+            # NOTE: libspeechd is NOT added here.  It is added to LIBS
+            # after the accessibility check below, only if enabled.
 
 printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
@@ -8703,11 +8711,6 @@ On Debian/Ubuntu:
     fi
 
 
-
-
-
-
-
     # Force-disable X11 linkage variables when Wayland is active
     if test "$enable_wayland" = "yes"; then
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland selected → clearing X11 linkage variables (XLIBSW, XINCLUDES)" >&5
@@ -8722,6 +8725,33 @@ printf '%s\n' "#define X11_BACKEND_DISABLED_FOR_WAYLAND 1" >>confdefs.h
 
     fi
 fi
+
+# Wayland variables are referenced unconditionally in Makefile.in
+# (CC_SWITCHES, DEPEND_SWITCHES, WAYLAND_INCLUDES, WAYLAND_CFLAGS/LIBS),
+# so they must be substituted on EVERY build, including Aqua and plain X11.
+# AC_SUBST inside 'if $tk_aqua = no' / 'if $enable_wayland = yes' never runs
+# there, leaving literal @VAR@ in the generated Makefile which clang then
+# tries to open as filenames. Initialised to "" above; filled in only when
+# --enable-wayland actually runs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if test $tk_aqua = yes
 then :
@@ -10677,6 +10707,23 @@ fi
 
 
 
+
+# Add libspeechd to the link line for X11 and Wayland builds, but only
+# when accessibility is enabled (SPEECHD_LIBS is empty otherwise, and
+# this block is skipped entirely for Aqua, where enable_accessibility=no).
+# LIBS is used by both backends via @LIBS@ in Makefile.in, so a single
+# append here covers X11 and Wayland with no hard-coded "-lspeechd".
+if test "$enable_accessibility" = "yes"
+then :
+
+  if test "$TK_WINDOWINGSYSTEM" = "X11" -o "$TK_WINDOWINGSYSTEM" = "WAYLAND"
+then :
+
+    LIBS="$LIBS $SPEECHD_LIBS"
+
+fi
+
+fi
 
 #--------------------------------------------------------------------
 # XXX Do this last.

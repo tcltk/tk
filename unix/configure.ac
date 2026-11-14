@@ -264,6 +264,26 @@ AS_IF([test "`uname -s`" = "Darwin" ], [
 #       Check for Wayland support (non-X11 backend)
 #--------------------------------------------------------------------
 
+WAYLAND_CLIENT_CFLAGS=""
+WAYLAND_CLIENT_LIBS=""
+WAYLAND_EGL_CFLAGS=""
+WAYLAND_EGL_LIBS=""
+XKBCOMMON_CFLAGS=""
+XKBCOMMON_LIBS=""
+GLFW_CFLAGS=""
+GLFW_LIBS=""
+LIBDECOR_CFLAGS=""
+LIBDECOR_LIBS=""
+GLES_CFLAGS=""
+GLES_LIBS=""
+SDBUSD_CFLAGS=""
+SDBUSD_LIBS=""
+FONTCONFIG_CFLAGS=""
+FONTCONFIG_LIBS=""
+WAYLAND_CFLAGS=""
+WAYLAND_LIBS=""
+TK_USE_WAYLAND=""
+
 if test $tk_aqua = no; then
     AC_MSG_CHECKING([whether to use Wayland])
     AC_ARG_ENABLE(wayland,
@@ -303,8 +323,6 @@ Please install libwayland development package:
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland])
         fi
-        AC_SUBST([WAYLAND_EGL_CFLAGS])
-        AC_SUBST([WAYLAND_EGL_LIBS])
 
         #--------------------------------------------------------------------
         # Check for wayland-egl headers (must be present)
@@ -344,8 +362,6 @@ Please install libwayland development package:
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland])
         fi
-        AC_SUBST([WAYLAND_CLIENT_CFLAGS])
-        AC_SUBST([WAYLAND_CLIENT_LIBS])
 
         AC_MSG_CHECKING([for xkbcommon >= 0.5.0])
         if pkg-config --exists "xkbcommon >= 0.5.0"; then
@@ -362,8 +378,6 @@ Please install libxkbcommon development package:
   - Fedora/RHEL:     sudo dnf install libxkbcommon-devel
   - Arch:            sudo pacman -S libxkbcommon])
         fi
-        AC_SUBST([XKBCOMMON_CFLAGS])
-        AC_SUBST([XKBCOMMON_LIBS])
 
         AC_MSG_CHECKING([for glfw3 >= 3.4 with Wayland support])
         if pkg-config --exists "glfw3 >= 3.4"; then
@@ -391,8 +405,6 @@ Please install GLFW development package with Wayland support:
   - Fedora/RHEL:     sudo dnf install glfw-devel
   - Arch:            sudo pacman -S glfw-wayland])
         fi
-        AC_SUBST([GLFW_CFLAGS])
-        AC_SUBST([GLFW_LIBS])
 
         #--------------------------------------------------------------------
         # Check for libdecor (client-side decorations) – hard requirement
@@ -410,8 +422,6 @@ Please install GLFW development package with Wayland support:
 Please install the libdecor development package (usually libdecor-0-dev on Debian/Ubuntu or libdecor-devel on Fedora).
 Without client-side decorations most Wayland compositors will show broken or missing window decorations.])
         fi
-        AC_SUBST([LIBDECOR_CFLAGS])
-        AC_SUBST([LIBDECOR_LIBS])
 
         # OpenGL ES support (required for NanoVG rendering)
         AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
@@ -443,8 +453,6 @@ Please install OpenGL ES development package:
   - Arch:            sudo pacman -S mesa])
             fi
         fi
-        AC_SUBST([GLES_CFLAGS])
-        AC_SUBST([GLES_LIBS])
 
         # sd-bus (system tray)
         AC_MSG_CHECKING([for sd-bus (system tray/status notifier support)])
@@ -466,8 +474,6 @@ Please install libsystemd development package:
   - Fedora/RHEL:     sudo dnf install systemd-devel
   - Arch:            sudo pacman -S systemd-libs])
         fi
-        AC_SUBST([SDBUSD_CFLAGS])
-        AC_SUBST([SDBUSD_LIBS])
 
         # fontconfig
         AC_MSG_CHECKING([for fontconfig >= 2.12 (Wayland font support)])
@@ -485,8 +491,6 @@ Please install fontconfig development package:
   - Fedora/RHEL:     sudo dnf install fontconfig-devel
   - Arch:            sudo pacman -S fontconfig])
         fi
-        AC_SUBST([FONTCONFIG_CFLAGS])
-        AC_SUBST([FONTCONFIG_LIBS])
 
         #--------------------------------------------------------------------
         # HarfBuzz — REQUIRED for Wayland (text shaping), minimum 2.8.2
@@ -554,7 +558,9 @@ Please install the ATK and at-spi2-atk development packages:
             TK_USE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS $HB_CFLAGS $ATK_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS $ATK_LIBS -lspeechd"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS $HB_LIBS $ATK_LIBS"
+            # NOTE: libspeechd is NOT added here.  It is added to LIBS
+            # after the accessibility check below, only if enabled.
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
@@ -586,11 +592,6 @@ On Debian/Ubuntu:
         fi
     fi
 
-    AC_SUBST([WAYLAND_CLIENT_CFLAGS])
-    AC_SUBST([WAYLAND_CLIENT_LIBS])
-    AC_SUBST([WAYLAND_EGL_CFLAGS])
-    AC_SUBST([WAYLAND_EGL_LIBS])
-    AC_SUBST([TK_USE_WAYLAND])
 
     # Force-disable X11 linkage variables when Wayland is active
     if test "$enable_wayland" = "yes"; then
@@ -603,7 +604,34 @@ On Debian/Ubuntu:
         AC_DEFINE([X11_BACKEND_DISABLED_FOR_WAYLAND], [1],
             [X11 support deliberately disabled because Wayland backend is active])
     fi
-fi  
+fi
+
+# Wayland variables are referenced unconditionally in Makefile.in
+# (CC_SWITCHES, DEPEND_SWITCHES, WAYLAND_INCLUDES, WAYLAND_CFLAGS/LIBS),
+# so they must be substituted on EVERY build, including Aqua and plain X11.
+# AC_SUBST inside 'if $tk_aqua = no' / 'if $enable_wayland = yes' never runs
+# there, leaving literal @VAR@ in the generated Makefile which clang then
+# tries to open as filenames. Initialised to "" above; filled in only when
+# --enable-wayland actually runs.
+AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+AC_SUBST([WAYLAND_CLIENT_LIBS])
+AC_SUBST([WAYLAND_EGL_CFLAGS])
+AC_SUBST([WAYLAND_EGL_LIBS])
+AC_SUBST([XKBCOMMON_CFLAGS])
+AC_SUBST([XKBCOMMON_LIBS])
+AC_SUBST([GLFW_CFLAGS])
+AC_SUBST([GLFW_LIBS])
+AC_SUBST([LIBDECOR_CFLAGS])
+AC_SUBST([LIBDECOR_LIBS])
+AC_SUBST([GLES_CFLAGS])
+AC_SUBST([GLES_LIBS])
+AC_SUBST([SDBUSD_CFLAGS])
+AC_SUBST([SDBUSD_LIBS])
+AC_SUBST([FONTCONFIG_CFLAGS])
+AC_SUBST([FONTCONFIG_LIBS])
+AC_SUBST([WAYLAND_CFLAGS])
+AC_SUBST([WAYLAND_LIBS])
+AC_SUBST([TK_USE_WAYLAND])
 
 AS_IF([test $tk_aqua = yes], [
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
@@ -1200,6 +1228,17 @@ AC_SUBST([ATK_CFLAGS])
 AC_SUBST([ATK_LIBS])
 AC_SUBST([SPEECHD_CFLAGS])
 AC_SUBST([SPEECHD_LIBS])
+
+# Add libspeechd to the link line for X11 and Wayland builds, but only
+# when accessibility is enabled (SPEECHD_LIBS is empty otherwise, and
+# this block is skipped entirely for Aqua, where enable_accessibility=no).
+# LIBS is used by both backends via @LIBS@ in Makefile.in, so a single
+# append here covers X11 and Wayland with no hard-coded "-lspeechd".
+AS_IF([test "$enable_accessibility" = "yes"], [
+  AS_IF([test "$TK_WINDOWINGSYSTEM" = "X11" -o "$TK_WINDOWINGSYSTEM" = "WAYLAND"], [
+    LIBS="$LIBS $SPEECHD_LIBS"
+  ])
+])
 
 #--------------------------------------------------------------------
 # XXX Do this last.
