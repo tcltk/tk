@@ -361,39 +361,74 @@ test waitUntil-1.1 {invalid timeout value} -body {
     waitUntil {whatever} duration
 } -result {invalid timeout value "duration"} -returnCodes error
 
-test waitUntil-2.1 {timeout} -body {
+test waitUntil-2.1 {timeout default} -body {
     set x 0
-    set afterID [after 50 {set x 1}]
-    waitUntil {$x == 1} 19
+    set afterID [after 150 {set x 1}]
+    waitUntil {$x == 1}
 } -cleanup {
     after cancel $afterID
     unset afterID x
-} -result {wait for condition "$x == 1" timed out (> 19 ms)} -returnCodes error
+} -result {wait for condition "$x == 1" timed out (> 100 ms)} -returnCodes error
 
-test waitUntil-2.2 {condition reached by waiting, no result variable} -body {
+test waitUntil-2.2 {timeout argument} -body {
+    set result [list]
     set x 0
-    after 10 {set x 1}
+    set afterID [after 50 {set x 1}]
+    lappend result [catch {waitUntil {$x == 1} 19} errMsg]
+    lappend result $errMsg
+    lappend result [expr {[after info] eq $afterID}]
+} -cleanup {
+    after cancel $afterID
+    unset -nocomplain afterID errMsg x
+} -result {1 {wait for condition "$x == 1" timed out (> 19 ms)} 1}
+
+test waitUntil-3.0 {condition true before invocation, complain} -body {
+    set x 1
     waitUntil {$x == 1}
+} -cleanup {
+    unset x
+} -result {condition "$x == 1" was true already before the proc's invocation} \
+-returnCodes error
+
+test waitUntil-3.1 {condition reached by waiting} -body {
+    set x 0
+    after 15 {set x 1}
+    waitUntil {$x == 1} 20
 } -cleanup {
     unset x
 } -result {}
 
-test waitUntil-2.3 {condition reached without waiting, return duration in result variable} -body {
-    set x 1
-    waitUntil {$x == 1} 11 duration
-    set duration
-} -cleanup {
-    unset x
-} -result 0
+test waitUntil-4.1 {invalid condition syntax} -body {
+    waitUntil {bogusCondition} 10
+} -result {*invalid*expression*"bogusCondition"*} -returnCodes error -match glob
 
-test waitUntil-2.4 {condition reached by waiting, return duration in result variable} -body {
+test waitUntil-4.2 {evaluation of condition results in error} -body {
+    waitUntil {$_nonExistentVariable} 10
+} -result {can't read "_nonExistentVariable": no such variable} -returnCodes error -match glob
+
+test waitUntil-4.3.1 {reentrancy 1} -body {
     set x 0
     after 10 {set x 1}
-    waitUntil {$x == 1} 100 duration
-    set duration; # 1+2+4+8=15 ms
+    waitUntil {[waitUntil {$x == 1}] eq ""}
 } -cleanup {
-    unset duration x
-} -result 15
+    unset -nocomplain x
+} -result {condition "[waitUntil {$x == 1}] eq """ was true already before the proc's invocation} -returnCodes error
+
+test waitUntil-4.3.2 {reentrancy 2} -body {
+    set x 0
+    waitUntil {[waitUntil {$x == 1} 10] eq ""} 20
+} -cleanup {
+    unset -nocomplain x
+} -result {wait for condition "$x == 1" timed out (> 10 ms)} -returnCodes error
+
+test waitUntil-4.3.3 {reentrancy 3} -body {
+    set x 0
+    set y 0
+    after 10 {set x 1}
+    waitUntil {([catch {waitUntil {$x == 1} 20}] == 0) && ($y == 1)} 30
+} -cleanup {
+    unset -nocomplain x y
+} -result {*wait for condition "*" timed out (> 30 ms)} -returnCodes error -match glob
 
 #
 # COMMON TEST SETUP

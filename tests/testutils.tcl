@@ -585,27 +585,34 @@ namespace eval ::tk::test::generic {
 
     # waitUntil --
     #
-    #  Wait for a condition to become satisfied.
+    #	Wait for a condition to become satisfied. If the condition is true
+    #	already before waitUntil was invoked, an error is returned.
     #
     # Arguments:
     #	condition : the condition to be satisfied over time
-    #	timeout   : time after which waiting stops
-    #	resultVar : variable which is assigned the total waiting duration
-    #	            before the condition was determined satisfied.
+    #	?timeout? : duration in ms after which waiting stops. Default is 100.
     #
     # Return value: empty string
     #
-    proc waitUntil {condition {timeout 100} {resultVar ""}} {
+    proc waitUntil {condition {timeout 100}} {
 	if {! ([string is integer $timeout] && ($timeout >= 0))} {
 	    return -code error "invalid timeout value \"$timeout\""
 	}
+
+	variable waitUntil
+	set ID [incr waitUntil(count)]
 	set duration 0
-	set totalDuration 0
-	set timeoutReached 0
 	set cmd [list expr $condition]
-	while {! [uplevel 1 $cmd]} {
-	    if {$timeoutReached} {
+	set waitUntil(timeoutReached,$ID) 0
+	set timeoutID [after $timeout [namespace code [list set waitUntil(timeoutReached,$ID) 1]]]
+	while {1} {
+	    if {$waitUntil(timeoutReached,$ID)} {
 		return -code error "wait for condition \"$condition\" timed out (> $timeout ms)"
+	    }
+	    if {[catch {uplevel 1 $cmd} result]} {
+		return -code error $result
+	    } elseif {$result} {
+		break
 	    }
 
 	    #
@@ -613,18 +620,11 @@ namespace eval ::tk::test::generic {
 	    # from the minimum 1 ms.
 	    #
 	    set duration [expr {$duration == 0?1:2 * $duration}]
-	    set totalDuration [expr {$totalDuration + $duration}]
-	    if {$totalDuration >= $timeout} {
-		set timeoutReached 1
-		if {$totalDuration > $timeout} {
-		    set duration [expr {$timeout - $totalDuration + $duration}]
-		    set totalDuration $timeout
-		}
-	    }
 	    pause $duration
 	}
-	if {$resultVar ne ""} {
-	    uplevel 1 set $resultVar $totalDuration
+	after cancel $timeoutID
+	if {$duration == 0} {
+	    return -code error "condition \"$condition\" was true already before the proc's invocation"
 	}
     }
 
@@ -1298,15 +1298,19 @@ namespace eval ::tk::test::pointer {
 	    return -code error "window $w doesn't exist"
 	}
 	if {[catch {
-		waitUntil {[getPointerWin] eq $w} $timeout duration
-	    } errMsg]} {
-		if {[string match "*timed out*" $errMsg]} {
+	    waitUntil {[getPointerWin] eq $w} $timeout
+	} errMsg]} {
+	    switch -glob -- $errMsg {
+		"*timed out*" {
 		    return -code error "waiting for window \"$w\" to become the pointer window timed out (> $timeout ms)"
-		} else {
+		}
+		"*was true already before*" {
+		    return -code error "\"$w\" was the pointer window already before the invocation of waitForPointerWin"
+		}
+		default {
 		    return -code error $errMsg
 		}
-	} elseif {$duration == 0} {
-	    return -code error "window \"$w\" is the pointer window already"
+	    }
 	}
     }
 
