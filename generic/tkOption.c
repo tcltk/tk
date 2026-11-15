@@ -221,6 +221,8 @@ static int		GetDefaultOptions(Tcl_Interp *interp,
 static ElArray *	NewArray(int numEls);
 static void		OptionThreadExitProc(void *clientData);
 static void		OptionInit(TkMainInfo *mainPtr);
+static Element *	FindOption(Tk_Window tkwin, const char *name,
+			    const char *className);
 static int		ParsePriority(Tcl_Interp *interp, const char *string);
 static int		ReadOptionFile(Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *fileName, int priority);
@@ -398,6 +400,34 @@ Tk_AddOption(
 
 Tk_Uid
 Tk_GetOption(
+    Tk_Window tkwin,		/* Token for window that option is associated
+				 * with. */
+    const char *name,		/* Name of option. */
+    const char *className)	/* Class of option. NULL means there is no
+				 * class for this option: just check for
+				 * name. */
+{
+    return FindOption(tkwin, name, className)->child.valueUid;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * FindOption --
+ *
+ *	Finds the entry of the option database which governs an option of a
+ *	window: the one which matches it at the highest priority.
+ *
+ * Results:
+ *	The entry.  Where none matches, the entry returned is the one which
+ *	stands for no match at all, whose priority is negative and whose
+ *	value is NULL.
+ *
+ *--------------------------------------------------------------
+ */
+
+static Element *
+FindOption(
     Tk_Window tkwin,		/* Token for window that option is associated
 				 * with. */
     const char *name,		/* Name of option. */
@@ -588,7 +618,7 @@ Tk_GetOption(
 	}
     }
 
-    return bestPtr->child.valueUid;
+    return bestPtr;
 }
 
 /*
@@ -620,10 +650,10 @@ Tk_OptionObjCmd(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static const char *const optionCmds[] = {
-	"add", "clear", "get", "readfile", NULL
+	"add", "clear", "get", "priority", "readfile", NULL
     };
     enum optionVals {
-	OPTION_ADD, OPTION_CLEAR, OPTION_GET, OPTION_READFILE
+	OPTION_ADD, OPTION_CLEAR, OPTION_GET, OPTION_PRIORITY, OPTION_READFILE
     };
 
     if (objc < 2) {
@@ -691,6 +721,32 @@ Tk_OptionObjCmd(
 		Tcl_GetString(objv[4]));
 	if (value != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, TCL_INDEX_NONE));
+	}
+	break;
+    }
+    case OPTION_PRIORITY: {
+	Tk_Window window;
+	Element *elPtr;
+
+	if (objc != 5) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window name class");
+	    return TCL_ERROR;
+	}
+	window = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
+	if (window == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * The priority of the entry which governs the option, as "option
+	 * add" takes it.  Nothing is returned where no entry governs it and
+	 * the window falls back on a default of its own.
+	 */
+
+	elPtr = FindOption(window, Tcl_GetString(objv[3]),
+		Tcl_GetString(objv[4]));
+	if (elPtr->priority >= 0) {
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(elPtr->priority >> 24));
 	}
 	break;
     }
