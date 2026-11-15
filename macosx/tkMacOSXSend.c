@@ -424,12 +424,8 @@ loadAppNameRegistry(
     length = ftell(appNameFile);
     if (length > 0) {
 	bytes = (char *)Tcl_Alloc(length);
-	if (bytes) {
-	    fseek(appNameFile, 0, SEEK_SET);
-	    bytesRead = fread(bytes, 1, length, appNameFile);
-	} else {
-	    Tcl_Panic("Out of memory");
-	}
+	fseek(appNameFile, 0, SEEK_SET);
+	bytesRead = fread(bytes, 1, length, appNameFile);
     }
     flock(fileno(appNameFile), LOCK_UN);
     fclose(appNameFile);
