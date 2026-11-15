@@ -365,10 +365,10 @@ test option-14.1 {error conditions} -body {
 } -returnCodes error -result {wrong # args: should be "option cmd arg ?arg ...?"}
 test option-14.2 {error conditions} -body {
     option x
-} -returnCodes error -result {bad option "x": must be add, clear, get, or readfile}
+} -returnCodes error -result {bad option "x": must be add, clear, get, priority, or readfile}
 test option-14.3 {error conditions} -body {
     option foo 3
-} -returnCodes error -result {bad option "foo": must be add, clear, get, or readfile}
+} -returnCodes error -result {bad option "foo": must be add, clear, get, priority, or readfile}
 test option-14.4 {error conditions} -body {
     option add 3
 } -returnCodes error -result {wrong # args: should be "option add pattern value ?priority?"}
@@ -512,4 +512,32 @@ test option-17.1 {SetupStacks: stack reallocated while scanned, bug 1652598} -se
 #
 
 deleteWindows
+test option-18.1 {option priority: the priority of the entry which governs} -setup {
+    frame .f
+} -body {
+    # The value alone does not say whether the user asked for it or Tk did.
+    set none [option priority .f background Background]
+    option add *background red widgetDefault
+    set low [option priority .f background Background]
+    option add *background green userDefault
+    list $none $low [option priority .f background Background]
+} -cleanup {
+    destroy .f
+    option clear
+} -result {{} 20 60}
+
+test option-18.2 {option priority: a numeric priority is reported as given} -setup {
+    frame .f
+} -body {
+    option add *Frame.background blue 42
+    option priority .f background Background
+} -cleanup {
+    destroy .f
+    option clear
+} -result 42
+
+test option-18.3 {option priority: usage} -returnCodes error -body {
+    option priority .
+} -result {wrong # args: should be "option priority window name class"}
+
 cleanupTests

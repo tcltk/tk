@@ -27,6 +27,28 @@ proc ::tk_setPalette {args} {
 	return
     }
 
+    # The priority of the entries the palette leaves in the option database.
+    # The default is the one a user's X resources have, so that a palette
+    # asked for by the application outranks them, having been asked for.  A
+    # caller which would rather the user kept the say gives a lower one.
+
+    # The entries of a widget's own class are what govern it, so they are
+    # the ones which go at the priority the caller asked for; the entries
+    # which name no class are a fallback for the widgets Tk did not walk,
+    # and go below them unless the caller has lowered both.
+
+    set priority userDefault
+    set fallbackPriority widgetDefault
+    if {[lindex $args 0] eq "-priority"} {
+	if {[llength $args] < 3} {
+	    return -code error -errorcode {TK SET_PALETTE PRIORITY} \
+		"no priority given"
+	}
+	set priority [lindex $args 1]
+	set fallbackPriority $priority
+	set args [lrange $args 2 end]
+    }
+
     # Create an array that has the complete new palette.  If some colors
     # aren't specified, compute them from other colors that are specified.
 
@@ -106,7 +128,7 @@ proc ::tk_setPalette {args} {
     # of widgets that we don't currently know about, so we'll
     # walk the whole hierarchy just in case.
 
-    eval [tk::RecolorTree . new]
+    eval [tk::RecolorTree . new $priority]
 
     destroy .___tk_set_palette
 
@@ -114,7 +136,7 @@ proc ::tk_setPalette {args} {
     # same colors.
 
     foreach option [array names new] {
-	option add *$option $new($option) widgetDefault
+	option add *$option $new($option) $fallbackPriority
     }
 
     # Save the options in the variable ::tk::Palette, for use the
@@ -161,9 +183,19 @@ proc ::tk_setPalette {args} {
 #                       A list of commands which can be run to update
 #                       the defaults database when exec'ed.
 
-proc ::tk::RecolorTree {w colors} {
+proc ::tk::RecolorTree {w colors {priority userDefault}} {
     upvar $colors c
     set result {}
+
+    # The priority as a number, to compare with the one the database
+    # reports for an entry.
+    if {[string is integer -strict $priority]} {
+	set level $priority
+    } else {
+	set level [dict get {
+	    widgetDefault 20 startupFile 40 userDefault 60 interactive 80
+	} $priority]
+    }
     set prototype .___tk_set_palette.[string tolower [winfo class $w]]
     if {![winfo exists $prototype]} {
 	unset prototype
@@ -174,6 +206,14 @@ proc ::tk::RecolorTree {w colors} {
 	     [string index $dbOption 0]]]
 	# Make sure this option is valid for this window.
 	if {![catch {$w configure $option} value]} {
+	    # Leave the window alone where the colour it wears was asked for
+	    # at a priority above the one this palette is written at: the
+	    # entry which governs it outranks the palette.  At the same
+	    # priority the palette wins, having been added later.
+	    set claimed [option priority $w $dbOption $class]
+	    if {$claimed ne "" && $claimed > $level} {
+		continue
+	    }
 	    # Retrieve a default value for this option.  First check
 	    # the option database. If it is not in the database use
 	    # the value for the temporary prototype widget.
@@ -197,13 +237,13 @@ proc ::tk::RecolorTree {w colors} {
 		# give it the one the new palette has for it, and change the
 		# option database so that the windows made later get it too.
 		append result ";\noption add [list \
-		    *[winfo class $w].$dbOption $c($dbOption) 60]"
+		    *[winfo class $w].$dbOption $c($dbOption) $priority]"
 		$w configure $option $c($dbOption)
 	    }
 	}
     }
     foreach child [winfo children $w] {
-	append result ";\n[::tk::RecolorTree $child c]"
+	append result ";\n[::tk::RecolorTree $child c $priority]"
     }
     return $result
 }
@@ -434,8 +474,15 @@ proc ::tk::SetAppearance {appearance} {
     set themed [expr {[tk windowingsystem] eq "x11"
 	    && [ttk::style theme use] eq "default"}]
 
+    # A palette goes below the priority a user's X resources have, so that a
+    # colour the user chose is kept whoever asks for another: the option
+    # database is consulted before a window falls back on anything the
+    # appearance would give it, as it is on the other platforms.  One
+    # palette follows another, all of them being written at the one
+    # priority.
+
     if {$appearance eq "auto" && $scheme eq ""} {
-	tk_setPalette {*}$SavedPalette
+	tk_setPalette -priority widgetDefault {*}$SavedPalette
 	array set ::ttk::theme::default::colors $SavedTtkColors
     } else {
 	if {$appearance ne "auto"} {
@@ -466,7 +513,7 @@ proc ::tk::SetAppearance {appearance} {
 	if {$appearance eq "auto"} {
 	    set palette [dict merge $palette $SavedDatabaseColors]
 	}
-	tk_setPalette {*}$palette
+	tk_setPalette -priority widgetDefault {*}$palette
 	if {$themed} {
 	    # tk_setPalette reaches three of the theme's thirteen colours, so
 	    # compute the rest from the ones the option database now holds,

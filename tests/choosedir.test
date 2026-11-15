@@ -22,7 +22,7 @@ source [file join [tcltest::configure -testdir] main.tcl]
 resetWindows
 
 # Import utility procs for specific functional areas
-testutils import dialog
+testutils import child dialog
 
 #
 # LOCAL UTILITY PROCS
@@ -144,6 +144,34 @@ test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
     tk_chooseDirectory -title "Clear entry, Press OK; Enter $real, press OK" \
 	    -parent $parent
 } -result $real
+
+test choosedir-6.1 {tk_chooseDirectory, tk_getOpenFile after auto_reset} -constraints {
+	unix notAqua
+} -setup {
+    childTkInterp child
+    child eval {
+	set errors {}
+	interp bgerror {} {apply {{msg opts} {lappend ::errors $msg}}}
+	proc Cancel {w} {
+	    after 100 [list after idle [list $w.contents.f2.cancel invoke]]
+	}
+    }
+} -body {
+    child eval {
+	Cancel .__tk_choosedir
+	tk_chooseDirectory
+	Cancel .__tk_filedialog
+	tk_getOpenFile
+	auto_reset
+	Cancel .__tk_choosedir
+	tk_chooseDirectory
+	Cancel .__tk_filedialog
+	tk_getOpenFile
+	set errors
+    }
+} -cleanup {
+    interp delete child
+} -result {}
 
 #
 # TESTFILE CLEANUP

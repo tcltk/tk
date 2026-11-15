@@ -49,7 +49,13 @@ proc ::tk_dialog {w title text bitmap default args} {
     # and bottom parts.
 
     destroy $w
-    toplevel $w -class Dialog
+    if {$windowingsystem eq "aqua"} {
+	toplevel $w -class Dialog
+	wm attributes $w -hidden 1
+	wm attributes $w -stylemask {titled fullsizecontent}
+    } else {
+	toplevel $w -class Dialog
+    }
     wm title $w $title
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW { }
@@ -65,9 +71,6 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
 
-#    if {$windowingsystem eq "aqua"} {
-#	after 100 {wm attributes $w -stylemask fullsizecontent}
-#    } else
     if {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
@@ -79,6 +82,9 @@ proc ::tk_dialog {w title text bitmap default args} {
 	$w.top configure -relief raised -bd 1
     }
     pack $w.bot -side bottom -fill both
+    if {$windowingsystem eq "aqua"} {
+	pack configure $w.top -pady {30 10}
+    }
     pack $w.top -side top -fill both -expand 1
     grid anchor $w.bot center
 
@@ -145,8 +151,11 @@ proc ::tk_dialog {w title text bitmap default args} {
     # parent (or in the display if the parent is not mapped) and de-iconify it.
 
     ::tk::PlaceWindow $w widget [winfo parent $w]
-    tkwait visibility $w
-
+    if {$windowingsystem eq "aqua"} {
+        wm attributes $w -hidden 0
+    } else {
+        tkwait visibility $w
+    }
     # 7. Set a grab and claim the focus too.
 
     if {$default >= 0} {
@@ -162,9 +171,9 @@ proc ::tk_dialog {w title text bitmap default args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    if {$windowingsystem eq "aqua"} {
-	wm attributes $w -stylemask titled
-    }
+#    if {$windowingsystem eq "aqua"} {
+#	wm attributes $w -stylemask titled
+#    }
 
     vwait ::tk::Priv(button)
 

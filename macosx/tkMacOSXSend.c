@@ -271,6 +271,7 @@ sendAEDoScript(
 	    // check if the target interpreter is alive.
 	    Tcl_DoOneEvent(TCL_ALL_EVENTS);
 	}
+	[replyThread release];
 	if (status) {
 	    const char *msg = "target application died";
 	    Tcl_AddErrorInfo(interp, msg);
@@ -586,6 +587,7 @@ RegClose(
     if (regPtr->modified) {
 	saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
     }
+    Tcl_DecrRefCount(regPtr->appNameDict);
     Tcl_Free(regPtr);
 }
 

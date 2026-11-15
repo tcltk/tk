@@ -16,6 +16,7 @@ option \- Add/retrieve window options to/from the option database
 \fBoption add \fIpattern value \fR?\fIpriority\fR?
 \fBoption clear\fR
 \fBoption get \fIwindow name class\fR
+\fBoption priority \fIwindow name class\fR
 \fBoption readfile \fIfileName \fR?\fIpriority\fR?
 .fi
 .BE
@@ -58,6 +59,14 @@ the command returns whichever was created with highest
 entries at the same priority level, then it returns whichever entry
 was most recently entered into the option database.  If there are
 no matching entries, then the empty string is returned.
+.PP
+.\" METHOD: priority
+The \fBpriority\fR form of the command returns the priority level of the
+entry which the \fBget\fR form would answer with, as a number between 0 and
+100: the one that entry was created with.  Where no entry matches, and the
+window therefore falls back on a default of its own, the result is an empty
+string.  This tells an option a window was given by its user from one it was
+given by Tk, which the value alone does not.
 .PP
 .\" METHOD: readfile
 The \fBreadfile\fR form of the command reads \fIfileName\fR,

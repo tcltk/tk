@@ -150,6 +150,42 @@ test palette-6.2 {tk_setPalette: an explicit colour is not derived} -setup {
     option clear
 } -result #123456
 
+test palette-5.3 {tk_setPalette: -priority leaves the user the say} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    # Below the priority a user's X resources have, a colour the database
+    # already answers for is kept and the palette supplies the rest.
+    option add *background #2e3436 userDefault
+    tk_setPalette -priority widgetDefault #d9d9d9
+    join [list [option get . background Background] \
+	    [option get . troughColor TroughColor]]
+} -cleanup {
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result "#2e3436 #c4c4c4"
+
+test palette-5.4 {tk_setPalette: a palette does not undo a higher one} -setup {
+    set saved [array get ::tk::Palette]
+} -body {
+    # An entry is not replaced by one of lower priority, so this is not the
+    # way back to an earlier palette.
+    tk_setPalette #3c3c3c
+    tk_setPalette -priority widgetDefault #d9d9d9
+    frame .f
+    set result [.f cget -background]
+    destroy .f
+    set result
+} -cleanup {
+    array set ::tk::Palette $saved
+    restorePalette
+    option clear
+} -result #3c3c3c
+
+test palette-5.5 {tk_setPalette: -priority without a priority} -returnCodes error -body {
+    tk_setPalette -priority
+} -result {no priority given}
+
 #
 # Deriving the colours which no X resource supplied: ticket [807b2f8916].
 #
@@ -413,45 +449,36 @@ test palette-8.5 {SetAppearance: the value may be abbreviated} -constraints x11 
     option clear
 } -result dark
 
-#
-# tk_setPalette recolours the windows which already exist, but only those
-# which still have the colour they were given by default.
-#
-
-test palette-6.1 {tk_setPalette keeps a colour the application chose} -setup {
-    set saved [array get ::tk::Palette]
-} -body {
-    # The palette is for the windows which take Tk's own colours.  A window
-    # the application has coloured itself is not one of them.
-    frame .chosen -background red
-    frame .default
-    tk_setPalette #3c3c3c
-    join [list [.chosen cget -background] [.default cget -background]]
-} -cleanup {
-    destroy .chosen .default
-    array set ::tk::Palette $saved
-    restorePalette
-    option clear
-} -result "red #3c3c3c"
-
-test palette-6.2 {tk_setPalette reaches the windows made after it} -setup {
-    set saved [array get ::tk::Palette]
-} -body {
-    # Each palette must leave the option database holding the colours it
-    # chose, whatever palettes came before it.
-    tk_setPalette #3c3c3c
-    tk_setPalette #d9d9d9
-    tk_setPalette #3c3c3c
-    frame .f
-    set result [join [list [.f cget -background] \
-	    [option get .f background Background]]]
-    destroy .f
+test palette-8.7 {the appearance keeps what the user asked for} -constraints x11 -body {
+    # The option database is consulted before a window falls back on what
+    # the appearance would give it, as it is on the other platforms, so a
+    # colour the user chose is kept whoever asks for another.
+    option add *background #2e3436 userDefault
+    frame .before
+    wm attributes . -appearance light
+    frame .after
+    set result [join [list [.before cget -bg] [.after cget -bg]]]
+    destroy .before .after
     set result
 } -cleanup {
-    array set ::tk::Palette $saved
-    restorePalette
+    wm attributes . -appearance auto
     option clear
-} -result "#3c3c3c #3c3c3c"
+} -result "#2e3436 #2e3436"
+
+test palette-8.8 {the appearance leaves alone what the user claimed above it} -constraints x11 -body {
+    # A colour asked for above the priority the palette is written at is the
+    # user's, and the windows made before and after it must agree on it.
+    option add *background #2e3436 interactive
+    frame .before
+    wm attributes . -appearance light
+    frame .after
+    set result [join [list [.before cget -bg] [.after cget -bg]]]
+    destroy .before .after
+    set result
+} -cleanup {
+    wm attributes . -appearance auto
+    option clear
+} -result "#2e3436 #2e3436"
 
 #
 # The events which tell an application that the desktop has changed its

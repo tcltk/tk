@@ -1942,6 +1942,7 @@ test Current-19.2 {Too many args} -body {
 } -result {wrong # args: should be ".tv current"} -returnCodes {1}
 
 test Current-19.3 {Default current} -body {
+    event generate .tv <Motion> -warp 1 -x 1000 -y 1000
     .tv current
 }
 

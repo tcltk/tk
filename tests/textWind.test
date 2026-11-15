@@ -58,7 +58,7 @@ Some of the upcoming tests will probably fail."
 text .t -font $fixedFont -width 30 -height 6 -borderwidth 2 -highlightthickness 2
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 
 wm geometry . {}
 
@@ -345,6 +345,7 @@ test textWind-2.24 {TkTextWindowCmd procedure, "names" option} -setup {
 test textWind-2.25 {TkTextWindowCmd procedure, "names" option} -setup {
     .t delete 1.0 end
     destroy .f .f2 .t.f .t.f2
+    update idletasks; # make sure the frames are destroyed
 } -body {
     foreach i {.f .f2 .t.f .t.f2} {
 	frame $i -width 20 -height 20

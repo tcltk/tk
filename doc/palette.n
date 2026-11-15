@@ -12,8 +12,8 @@
 tk_setPalette, tk_bisque \- Modify the Tk color palette
 .SH SYNOPSIS
 .nf
-\fBtk_setPalette \fIbackground\fR
-\fBtk_setPalette \fIname value \fR?\fIname value ...\fR?
+\fBtk_setPalette \fR?\fB\-priority \fIpriority\fR? \fIbackground\fR
+\fBtk_setPalette \fR?\fB\-priority \fIpriority\fR? \fIname value \fR?\fIname value ...\fR?
 \fBtk_bisque\fR
 .fi
 .BE
@@ -38,6 +38,16 @@ database names are currently supported:
 \fBbackground\fR	\fBhighlightColor\fR	\fBselectForeground\fR
 \fBdisabledForeground\fR	\fBinsertBackground\fR	\fBtroughColor\fR
 .DE
+.PP
+The entries \fBtk_setPalette\fR leaves in the option database are made at
+the \fBuserDefault\fR priority, so that a palette the application asked for
+outranks the colours the user asked for in X resources.  \fB\-priority\fR
+gives them another priority, named or numeric as \fBoption add\fR takes it.
+At a priority below the user's, the colours the user has chosen are kept and
+the palette supplies only the rest.  This works from a database which holds
+no palette already: an entry is not replaced by one of lower priority, so a
+palette made at a low priority does not undo one made at a higher one.
+
 \fBtk_setPalette\fR tries to compute reasonable defaults for any
 options that you do not specify.  You can specify options other
 than the above ones and Tk will change those options on widgets as
