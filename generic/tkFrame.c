@@ -342,6 +342,23 @@ static void		FrameStructureProc(void *clientData,
 static Tcl_ObjCmdProc2 FrameWidgetObjCmd;
 static void		FrameWorldChanged(void *instanceData);
 static void		MapFrame(void *clientData);
+static void		MapFrameNow(Frame *framePtr);
+
+/*
+ * Frames waiting in MapFrame to be mapped, in the order of their creation.
+ */
+
+typedef struct PendingMap {
+    Frame *framePtr;
+    struct PendingMap *nextPtr;
+} PendingMap;
+
+typedef struct {
+    PendingMap *firstPendingPtr;
+    PendingMap *lastPendingPtr;
+    bool mapping;		/* True while MapFrame maps frames. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * The structure below defines frame class behavior by means of functions that
@@ -1854,31 +1871,83 @@ MapFrame(
     void *clientData)		/* Pointer to frame structure. */
 {
     Frame *framePtr = (Frame *)clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    PendingMap *pendPtr;
 
     /*
-     * Wait for all other background events to be processed before mapping
+     * Wait for all other background events to be processed before mapping a
      * window. This ensures that the window's correct geometry will have been
      * determined before it is first mapped, so that the window manager
      * doesn't get a false idea of its desired geometry.
+     *
+     * If called from that event loop for another toplevel, only remember the
+     * frame: it is mapped after that toplevel, so that toplevels are mapped
+     * in the order of their creation. An embedded toplevel is mapped at once,
+     * so that its container gets its size from it before it is mapped.
      */
 
     Tcl_Preserve(framePtr);
-    while (true) {
+    if (tsdPtr->mapping && !Tk_IsEmbedded(framePtr->tkwin)) {
+	pendPtr = (PendingMap *)Tcl_Alloc(sizeof(PendingMap));
+	pendPtr->framePtr = framePtr;
+	pendPtr->nextPtr = NULL;
+	if (tsdPtr->lastPendingPtr) {
+	    tsdPtr->lastPendingPtr->nextPtr = pendPtr;
+	} else {
+	    tsdPtr->firstPendingPtr = pendPtr;
+	}
+	tsdPtr->lastPendingPtr = pendPtr;
+	return;
+    }
+
+    if (Tk_IsEmbedded(framePtr->tkwin)) {
+	MapFrameNow(framePtr);
+	return;
+    }
+    tsdPtr->mapping = true;
+    MapFrameNow(framePtr);
+    while ((pendPtr = tsdPtr->firstPendingPtr) != NULL) {
+	tsdPtr->firstPendingPtr = pendPtr->nextPtr;
+	if (tsdPtr->firstPendingPtr == NULL) {
+	    tsdPtr->lastPendingPtr = NULL;
+	}
+	framePtr = pendPtr->framePtr;
+	Tcl_Free(pendPtr);
+	MapFrameNow(framePtr);
+    }
+    tsdPtr->mapping = false;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MapFrameNow --
+ *
+ *	Processes the idle events and maps the frame, unless it has been
+ *	destroyed meanwhile. Releases the frame.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A window gets mapped.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MapFrameNow(
+    Frame *framePtr)		/* Pointer to frame structure. */
+{
+    while (framePtr->tkwin != NULL) {
 	if (Tcl_DoOneEvent(TCL_IDLE_EVENTS) == 0) {
 	    break;
 	}
-
-	/*
-	 * After each event, make sure that the window still exists and quit
-	 * if the window has been destroyed.
-	 */
-
-	if (framePtr->tkwin == NULL) {
-	    Tcl_Release(framePtr);
-	    return;
-	}
     }
-    Tk_MapWindow(framePtr->tkwin);
+    if (framePtr->tkwin != NULL) {
+	Tk_MapWindow(framePtr->tkwin);
+    }
     Tcl_Release(framePtr);
 }
 
