@@ -439,6 +439,7 @@ static int SysNotifyObjCmd(
     NSAppleEventDescriptor *result = [scpt executeAndReturnError:&errorInfo];
     NSString *info = [result stringValue];
     const char* output = [info UTF8String];
+    [notify release];
 
     Tcl_AppendResult(interp,
 		     output,

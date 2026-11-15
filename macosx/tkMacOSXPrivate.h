@@ -223,8 +223,7 @@ typedef struct TkMacOSXDrawingContext {
  */
 
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
-MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
-			    HIShapeRef rgn);
+MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r, HIShapeRef rgn);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
@@ -295,6 +294,7 @@ MODULE_SCOPE void TkMacOSXAssignNewKeyWindow(Tcl_Interp *interp,
 					     NSWindow *ignore);
 MODULE_SCOPE void TkMacOSXInstallWindowMenubar(TkWindow *winPtr);
 MODULE_SCOPE void TkMacOSXInstallMainMenubar(Tcl_Interp *interp);
+MODULE_SCOPE int TkMacOSXAccessibility_Init(Tcl_Interp *interp);
 
 #pragma mark Private Objective-C Classes
 
@@ -412,7 +412,6 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
 @property Bool onScreen;
