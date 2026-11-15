@@ -655,6 +655,7 @@ RegDeleteName(
 {
     Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjRemove(NULL, regPtr->appNameDict, keyPtr);
+    Tcl_BounceRefCount(keyPtr);
     regPtr->modified = 1;
 }
 
