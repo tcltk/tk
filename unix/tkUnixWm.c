@@ -171,6 +171,9 @@ typedef struct TkWmInfo {
 				 * corner of reparent's border to upper-left
 				 * outer corner of wrapperPtr's border. If not
 				 * reparented then these are zero. */
+    int decorWidth, decorHeight;/* Size of the window manager's decorations
+				 * around the wrapper, as last seen, or -1 if
+				 * not known yet. */
     int configWidth, configHeight;
 				/* Dimensions passed to last request that we
 				 * issued to change geometry of the wrapper.
@@ -347,9 +350,7 @@ typedef struct WaitRestrictInfo {
  */
 
 static bool		ComputeReparentGeometry(WmInfo *wmPtr);
-static bool		GetExtents(TkWindow *wrapperPtr, Window window,
-			    const char *atomName, int *leftPtr, int *rightPtr,
-			    int *topPtr, int *bottomPtr);
+static void		ComputeUnparentedGeometry(WmInfo *wmPtr);
 static bool		GetFrameExtents(WmInfo *wmPtr, int *leftPtr,
 			    int *rightPtr, int *topPtr, int *bottomPtr);
 static bool		GetWorkArea(WmInfo *wmPtr, int *xPtr, int *yPtr,
@@ -358,6 +359,8 @@ static void		CheckWorkAreaMove(WmInfo *wmPtr, int reqX, int reqY);
 static void		ConfigureEvent(WmInfo *wmPtr,
 			    XConfigureEvent *eventPtr);
 static void		CreateWrapper(WmInfo *wmPtr);
+static void		PlaceInWrapper(WmInfo *wmPtr);
+static bool		IsPlacedInWrapper(WmInfo *wmPtr);
 static void		GetMaxSize(WmInfo *wmPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		MenubarDestroyProc(void *clientData,
@@ -381,7 +384,8 @@ static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
 static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
 static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
-static void		SetNetWmState(TkWindow*, const char *atomName, bool on);
+static void		SetNetWmState(TkWindow*, const char *atomName,
+			    const char *atomName2, bool on);
 static void		ActivateWindow(TkWindow *winPtr);
 static void		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void		UpdateNetWmState(WmInfo *);
@@ -633,6 +637,8 @@ TkWmNewWindow(
 	    + 2*winPtr->changes.border_width;
     wmPtr->parentHeight = winPtr->changes.height
 	    + 2*winPtr->changes.border_width;
+    wmPtr->decorWidth = -1;
+    wmPtr->decorHeight = -1;
     wmPtr->configWidth = -1;
     wmPtr->configHeight = -1;
     wmPtr->vRoot = None;
@@ -1312,7 +1318,8 @@ WmSetAttribute(
 		&wmPtr->reqState.topmost) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
+	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", NULL,
+		wmPtr->reqState.topmost);
 	break;
     case WMATT_TYPE:
 	if (TCL_OK != SetNetWmType(winPtr, value))
@@ -1324,16 +1331,14 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_VERT",
-		wmPtr->reqState.zoomed);
-	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_HORZ",
-		wmPtr->reqState.zoomed);
+		"_NET_WM_STATE_MAXIMIZED_HORZ", wmPtr->reqState.zoomed);
 	break;
     case WMATT_FULLSCREEN:
 	if (Tcl_GetBooleanFromObj(interp, value,
 		&wmPtr->reqState.fullscreen) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
+	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN", NULL,
 		wmPtr->reqState.fullscreen);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
@@ -1830,13 +1835,24 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window mainWin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
     TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
+
+    /*
+     * Tk ticket 9ab6e37e: forget "." not allowed
+     */
+
+    if (frameWin == mainWin) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"window \".\" can not be forgotten", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "WM", "FORGET", ".", NULL);
+	return TCL_ERROR;
+    }
 
     /*
      * Tk ticket c77b426d: avoid panic on usage after wm forget
@@ -2229,17 +2245,19 @@ WmIconbitmapCmd(
     }
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_pixmap != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
-	    wmPtr->hints.icon_pixmap = None;
-	}
-	wmPtr->hints.flags &= ~IconPixmapHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_pixmap = pixmap;
+    }
+    if (wmPtr->hints.icon_pixmap != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+    }
+    wmPtr->hints.icon_pixmap = pixmap;
+    wmPtr->hints.flags &= ~IconPixmapHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconPixmapHint;
     }
     UpdateHints(winPtr);
@@ -2358,16 +2376,19 @@ WmIconmaskCmd(
     }
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
-	if (wmPtr->hints.icon_mask != None) {
-	    Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
-	}
-	wmPtr->hints.flags &= ~IconMaskHint;
+	pixmap = None;
     } else {
 	pixmap = Tk_GetBitmap(interp, tkwin, argv3);
 	if (pixmap == None) {
 	    return TCL_ERROR;
 	}
-	wmPtr->hints.icon_mask = pixmap;
+    }
+    if (wmPtr->hints.icon_mask != None) {
+	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
+    }
+    wmPtr->hints.icon_mask = pixmap;
+    wmPtr->hints.flags &= ~IconMaskHint;
+    if (pixmap != None) {
 	wmPtr->hints.flags |= IconMaskHint;
     }
     UpdateHints(winPtr);
@@ -4029,7 +4050,6 @@ ConfigureEvent(
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     TkWindow *winPtr = wmPtr->winPtr;
     TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
-    Tk_ErrorHandler handler;
 
     /*
      * Update size information from the event. There are a couple of tricky
@@ -4146,38 +4166,57 @@ ConfigureEvent(
     }
 
     if ((wmPtr->reparent == None) || !ComputeReparentGeometry(wmPtr)) {
-	int left, right, top, bottom;
+	wrapperPtr->changes.x = configEventPtr->x;
+	wrapperPtr->changes.y = configEventPtr->y;
+	ComputeUnparentedGeometry(wmPtr);
+    }
 
-	wmPtr->parentWidth = configEventPtr->width
-		+ 2*configEventPtr->border_width;
-	wmPtr->parentHeight = configEventPtr->height
-		+ 2*configEventPtr->border_width;
-	wrapperPtr->changes.x = wmPtr->x = configEventPtr->x;
-	wrapperPtr->changes.y = wmPtr->y = configEventPtr->y;
+    /*
+     * The default maximum size depends on the size of the decorations. If it
+     * has changed, recompute the natural size of the window.
+     */
 
-	/*
-	 * A window manager which draws the decorations without reparenting
-	 * the window (e.g. KWin for Xwayland clients) reports them in
-	 * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
-	 * decorations, as for reparenting window managers. Only do this for
-	 * a mapped window: reparenting window managers may set the property
-	 * before they reparent the window.
-	 */
-
-	if ((winPtr->flags & TK_MAPPED)
-		&& GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
-	    wmPtr->x -= left;
-	    wmPtr->y -= top;
-	    wmPtr->parentWidth += left + right;
-	    wmPtr->parentHeight += top + bottom;
-	}
-	if (wmPtr->flags & WM_NEGATIVE_X) {
-	    wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
-	}
-	if (wmPtr->flags & WM_NEGATIVE_Y) {
-	    wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
+    if ((wmPtr->parentWidth - wrapperPtr->changes.width != wmPtr->decorWidth)
+	    || (wmPtr->parentHeight - wrapperPtr->changes.height
+		!= wmPtr->decorHeight)) {
+	wmPtr->decorWidth = wmPtr->parentWidth - wrapperPtr->changes.width;
+	wmPtr->decorHeight = wmPtr->parentHeight - wrapperPtr->changes.height;
+	if (((wmPtr->width == -1 && wmPtr->maxWidth <= 0)
+		|| (wmPtr->height == -1 && wmPtr->maxHeight <= 0))
+		&& !(wmPtr->flags & WM_UPDATE_PENDING)) {
+	    Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
+	    wmPtr->flags |= WM_UPDATE_PENDING;
 	}
     }
+
+    PlaceInWrapper(wmPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * PlaceInWrapper --
+ *
+ *	Places the toplevel below the menubar in the wrapper, after the size
+ *	of the wrapper or the height of the menubar has changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The toplevel and the menubar are moved and resized, and a
+ *	ConfigureNotify event is synthesized for the toplevel.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+PlaceInWrapper(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    TkWindow *winPtr = wmPtr->winPtr;
+    Tk_ErrorHandler handler;
 
     /*
      * Make sure that the toplevel and menubar are properly positioned within
@@ -4210,7 +4249,99 @@ ConfigureEvent(
     winPtr->changes.height = wrapperPtr->changes.height - wmPtr->menuHeight;
     TkDoConfigureNotify(winPtr);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsPlacedInWrapper --
+ *
+ *	Checks whether the toplevel and the menubar fill the wrapper, as
+ *	PlaceInWrapper placed them for its current size and menubar height.
+ *
+ * Results:
+ *	Returns true if they do.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsPlacedInWrapper(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    TkWindow *winPtr = wmPtr->winPtr;
+
+    if ((winPtr->changes.width != wrapperPtr->changes.width)
+	    || (winPtr->changes.height
+		!= wrapperPtr->changes.height - wmPtr->menuHeight)) {
+	return false;
+    }
+    return (wmPtr->menubar == NULL)
+	    || ((Tk_Width(wmPtr->menubar) == wrapperPtr->changes.width)
+	    && (Tk_Height(wmPtr->menubar) == wmPtr->menuHeight));
+}
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ComputeUnparentedGeometry --
+ *
+ *	Computes the position and the outer size of a top-level window which
+ *	has not been reparented by the window manager, from the geometry of
+ *	its wrapper.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	wmPtr->x, wmPtr->y, wmPtr->parentWidth and wmPtr->parentHeight are
+ *	updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ComputeUnparentedGeometry(
+    WmInfo *wmPtr)		/* Information about toplevel window. */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    int left, right, top, bottom;
+
+    wmPtr->parentWidth = wrapperPtr->changes.width
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->parentHeight = wrapperPtr->changes.height
+	    + 2*wrapperPtr->changes.border_width;
+    wmPtr->x = wrapperPtr->changes.x;
+    wmPtr->y = wrapperPtr->changes.y;
+
+    /*
+     * A window manager which draws the decorations without reparenting the
+     * window (e.g. KWin for Xwayland clients) reports them in
+     * _NET_FRAME_EXTENTS. The position of the toplevel is that of the
+     * decorations, as for reparenting window managers. Only do this for a
+     * mapped window: reparenting window managers may set the property before
+     * they reparent the window. A window which was moved while it was
+     * unmapped (e.g. iconified) is corrected when it is mapped again.
+     */
+
+    if ((wmPtr->winPtr->flags & TK_MAPPED)
+	    && GetFrameExtents(wmPtr, &left, &right, &top, &bottom)) {
+	wmPtr->x -= left;
+	wmPtr->y -= top;
+	wmPtr->parentWidth += left + right;
+	wmPtr->parentHeight += top + bottom;
+    }
+    if (wmPtr->flags & WM_NEGATIVE_X) {
+	wmPtr->x = wmPtr->vRootWidth - (wmPtr->x + wmPtr->parentWidth);
+    }
+    if (wmPtr->flags & WM_NEGATIVE_Y) {
+	wmPtr->y = wmPtr->vRootHeight - (wmPtr->y + wmPtr->parentHeight);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4771,6 +4902,16 @@ WrapperEventProc(
     } else if (eventPtr->type == MapNotify) {
 	wmPtr->wrapperPtr->flags |= TK_MAPPED;
 	wmPtr->winPtr->flags |= TK_MAPPED;
+
+	/*
+	 * The decorations of a window which is not reparented are only taken
+	 * into account while it is mapped, and the window may have been moved
+	 * while it was unmapped.
+	 */
+
+	if ((wmPtr->reparent == None) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    ComputeUnparentedGeometry(wmPtr);
+	}
 	XMapWindow(wmPtr->winPtr->display, wmPtr->winPtr->window);
 	goto doMapEvent;
     } else if (eventPtr->type == UnmapNotify) {
@@ -4881,7 +5022,7 @@ UpdateGeometryInfo(
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int x, y, width, height, min, max;
+    int x, y, width, height, min, max, maxWidth, maxHeight;
     unsigned long serial;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -4909,21 +5050,24 @@ UpdateGeometryInfo(
     }
 
     /*
-     * Account for window max/min width
+     * Account for window max/min width. The natural size is also limited
+     * by the default maximum, so that the window fits in the work area.
      */
+
+    GetMaxSize(wmPtr, &maxWidth, &maxHeight);
 
     if (wmPtr->gridWin != NULL) {
 	min = winPtr->reqWidth
 		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
-	if (wmPtr->maxWidth > 0) {
+	if (wmPtr->maxWidth > 0 || wmPtr->width == -1) {
 	    max = winPtr->reqWidth
-		+ (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+		+ (maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
 	} else {
 	    max = 0;
 	}
     } else {
 	min = wmPtr->minWidth;
-	max = wmPtr->maxWidth;
+	max = (wmPtr->maxWidth > 0 || wmPtr->width == -1) ? maxWidth : 0;
     }
     if (width < min) {
 	width = min;
@@ -4950,15 +5094,15 @@ UpdateGeometryInfo(
     if (wmPtr->gridWin != NULL) {
 	min = winPtr->reqHeight
 		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
-	if (wmPtr->maxHeight > 0) {
+	if (wmPtr->maxHeight > 0 || wmPtr->height == -1) {
 	    max = winPtr->reqHeight
-		+ (wmPtr->maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+		+ (maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
 	} else {
 	    max = 0;
 	}
     } else {
 	min = wmPtr->minHeight;
-	max = wmPtr->maxHeight;
+	max = (wmPtr->maxHeight > 0 || wmPtr->height == -1) ? maxHeight : 0;
     }
     if (height < min) {
 	height = min;
@@ -5081,6 +5225,9 @@ UpdateGeometryInfo(
 	     * WaitForConfigureNotify call below will hang for a while.
 	     */
 
+	    if (!IsPlacedInWrapper(wmPtr)) {
+		PlaceInWrapper(wmPtr);
+	    }
 	    return;
 	}
 	wmPtr->configWidth = width;
@@ -5091,19 +5238,16 @@ UpdateGeometryInfo(
 	}
 	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		(unsigned) width, (unsigned) height);
-    } else if ((wmPtr->menubar != NULL)
-	    && ((Tk_Width(wmPtr->menubar) != wmPtr->wrapperPtr->changes.width)
-	    || (Tk_Height(wmPtr->menubar) != wmPtr->menuHeight))) {
+    } else {
 	/*
 	 * It is possible that the window's overall size has not changed but
-	 * the menu size has.
+	 * the menu size has. Since no ConfigureNotify event will come for the
+	 * wrapper, place the toplevel and the menubar in it now.
 	 */
 
-	Tk_MoveResizeWindow(wmPtr->menubar, 0, 0,
-		wmPtr->wrapperPtr->changes.width, wmPtr->menuHeight);
-	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
-		(unsigned) width, (unsigned) height);
-    } else {
+	if (!IsPlacedInWrapper(wmPtr)) {
+	    PlaceInWrapper(wmPtr);
+	}
 	return;
     }
 
@@ -5318,8 +5462,11 @@ UpdatePhotoIcon(
  *
  * SetNetWmState --
  *
- *	Sets the specified state property by sending a _NET_WM_STATE
- *	ClientMessage to the root window.
+ *	Sets the specified state property, or two of them, by sending a
+ *	_NET_WM_STATE ClientMessage to the root window. Two properties which
+ *	go together, like _NET_WM_STATE_MAXIMIZED_VERT and
+ *	_NET_WM_STATE_MAXIMIZED_HORZ, must be changed in one message: some
+ *	window managers (xfwm4, fvwm) do not handle two separate messages.
  *
  * Preconditions:
  *	Wrapper window must be created.
@@ -5338,12 +5485,14 @@ static void
 SetNetWmState(
     TkWindow *winPtr,
     const char *atomName,
+    const char *atomName2,	/* A second property, or NULL. */
     bool on)
 {
     Tk_Window tkwin = (Tk_Window) winPtr;
     Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
     Atom action = on ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
     Atom property = Tk_InternAtom(tkwin, atomName);
+    Atom property2 = atomName2 ? Tk_InternAtom(tkwin, atomName2) : None;
     XEvent e;
 
     if (!winPtr->wmInfoPtr->wrapperPtr) {
@@ -5356,7 +5505,8 @@ SetNetWmState(
     e.xclient.format = 32;
     e.xclient.data.l[0] = action;
     e.xclient.data.l[1] = property;
-    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+    e.xclient.data.l[2] = property2;
+    e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
 
     XSendEvent(winPtr->display,
 	RootWindow(winPtr->display, winPtr->screenNum), 0,
@@ -6274,16 +6424,15 @@ Tk_CoordsToWindow(
 		continue;
 	    }
 	    if (child == wmPtr->reparent) {
-		if (PointInWindow(x, y, wmPtr)) {
+		/*
+		 * Several toplevels may share this window, so look further if
+		 * the point is not in this one. [Bug 220856]
+		 */
+
+		if (PointInWindow(childX, childY, wmPtr)) {
 		    goto gotToplevel;
-		} else {
-
-		    /*
-		     * Return NULL if the point is in the title bar or border.
-		     */
-
-		    return NULL;
 		}
+		continue;
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
@@ -6323,6 +6472,15 @@ Tk_CoordsToWindow(
 	handler = NULL;
     }
     winPtr = wmPtr->winPtr;
+
+    /*
+     * The window manager may not have unmapped the frame of a withdrawn
+     * toplevel yet. [Bug 586f722cdd]
+     */
+
+    if (!Tk_IsMapped(winPtr)) {
+	return NULL;
+    }
 
     /*
      * Step 3: at this point winPtr and wmPtr refer to the toplevel that
@@ -7224,7 +7382,7 @@ TkGetPointerCoords(
  *	The values at *maxWidthPtr and *maxHeightPtr are filled in with the
  *	maximum allowable dimensions of wmPtr's window, in grid units. If no
  *	maximum has been specified for the window, then this function computes
- *	the largest sizes that will fit on the screen.
+ *	the largest sizes that will fit in the work area.
  *
  * Side effects:
  *	None.
@@ -7241,18 +7399,33 @@ GetMaxSize(
     int *maxHeightPtr)		/* Where to store the current maximum height
 				 * of the window. */
 {
-    int tmp;
+    int tmp, x, y, width, height, decorWidth, decorHeight;
 
+    /*
+     * The default fills up the work area (the display without the panels),
+     * leaving space for the window manager's decorations and the menubar.
+     * The size of the decorations is known after the first ConfigureNotify
+     * event for the window; before that, guess it.
+     */
+
+    if ((wmPtr->maxWidth <= 0 || wmPtr->maxHeight <= 0)
+	    && (wmPtr->wrapperPtr == NULL
+	    || !GetWorkArea(wmPtr, &x, &y, &width, &height))) {
+	width = DisplayWidth(wmPtr->winPtr->display, wmPtr->winPtr->screenNum);
+	height = DisplayHeight(wmPtr->winPtr->display,
+		wmPtr->winPtr->screenNum);
+    }
+    if (wmPtr->decorWidth < 0) {
+	decorWidth = 15;
+	decorHeight = 30;
+    } else {
+	decorWidth = wmPtr->decorWidth;
+	decorHeight = wmPtr->decorHeight;
+    }
     if (wmPtr->maxWidth > 0) {
 	*maxWidthPtr = wmPtr->maxWidth;
     } else {
-	/*
-	 * Must compute a default width. Fill up the display, leaving a bit of
-	 * extra space for the window manager's borders.
-	 */
-
-	tmp = DisplayWidth(wmPtr->winPtr->display, wmPtr->winPtr->screenNum)
-	    - 15;
+	tmp = width - decorWidth;
 	if (wmPtr->gridWin != NULL) {
 	    /*
 	     * Gridding is turned on; convert from pixels to grid units.
@@ -7266,8 +7439,7 @@ GetMaxSize(
     if (wmPtr->maxHeight > 0) {
 	*maxHeightPtr = wmPtr->maxHeight;
     } else {
-	tmp = DisplayHeight(wmPtr->winPtr->display, wmPtr->winPtr->screenNum)
-	    - 30;
+	tmp = height - decorHeight - wmPtr->menuHeight;
 	if (wmPtr->gridWin != NULL) {
 	    tmp = wmPtr->reqGridHeight
 		    + (tmp - wmPtr->winPtr->reqHeight)/wmPtr->heightInc;

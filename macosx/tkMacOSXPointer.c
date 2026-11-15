@@ -30,7 +30,7 @@
  * coordinates of the mouse pointer and a pointer to the highest Tk
  * Window in the stacking order which is mapped and not hidden and
  * contains the mouse pointer.  This module contains functions for
- * performing those chores. 
+ * performing those chores.
  */
 
 /*
@@ -48,7 +48,7 @@
  *	True if the pointer is in the window, false otherwise.
  *
  * Side effects:
- *      None	
+ *      None
  *
  *----------------------------------------------------------------------
  */
@@ -80,7 +80,7 @@ static bool mouseIsInTkWindow(
  *	None
  *
  * Side effects:
- *      The core pointer window may be changed.	
+ *      The core pointer window may be changed.
  *
  *----------------------------------------------------------------------
  */
@@ -93,7 +93,7 @@ TkMacOSXUpdatePointerAfterMap(
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
     if (!mouseIsInTkWindow(winPtr)) {
 	/* If the mouse is not in the new window no update is needed. */
-    	return;
+	return;
     }
     TKWindow *macWin = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
     TkWindow *toplevelPtr = TkMacOSXGetTkWindow(macWin);
@@ -118,7 +118,7 @@ TkMacOSXUpdatePointerAfterMap(
  *	None
  *
  * Side effects:
- *      The core pointer window may be changed.	
+ *      The core pointer window may be changed.
  *
  *----------------------------------------------------------------------
  */
@@ -135,7 +135,7 @@ TkMacOSXUpdatePointerBeforeUnmap(
 	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
     if (!mouseIsInTkWindow(winPtr)) {
 	/* This is not the pointer window. No update is needed. */
-    	return;
+	return;
     }
     if (Tk_IsTopLevel(winPtr)) {
 	/*

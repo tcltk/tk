@@ -101,10 +101,10 @@ option add *Text.padY 1  ; # same padding in x and y, see proc bo; tests work wi
 # The frame .f is needed to make sure that the overall window is always
 # fairly wide, even if the text window is very narrow.  This is needed
 # because some window managers don't allow the overall width of a window
-# to get very narrow.
+# to get very narrow (e.g. about 400 pixels on Windows with 350% scaling).
 
 catch {destroy .f .t}
-frame .f -width 100 -height 20
+frame .f -width 480 -height 20
 pack .f -side left
 
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
@@ -161,6 +161,9 @@ update
 if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
     wm geom . +50+50
 }
+
+# The natural size of the main window, used by many tests.
+scan [wm geom .] %dx%d width height
 
 #
 # TESTS
@@ -376,9 +379,7 @@ foreach m [.t mark names] {
     catch {.t mark unset $m}
 }
 
-test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -setup {
-    scan [wm geom .] %dx%d width height
-} -body {
+test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} -body {
     wm geom . [expr {$width+1}]x$height
     update
     .t configure -wrap char
@@ -776,10 +777,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
-    wm geom . 103x$height
+    wm geom . [expr {[winfo reqwidth .f] + 3}]x$height
     update
     .t configure -wrap none
     .t delete 1.0 end
@@ -791,35 +789,16 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
 
-#
-# COMMON TEST SETUP
-#
-
-if {[tk windowingsystem] eq "win32"} {
-    wm overrideredirect . 0
-}
-
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
-    # This test was failing on Windows because the title bar on .
-    # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so
-    # the toplevel can shrink to the appropriate size.  On Unix, setting
-    # the overrideredirect on "." confuses the window manager and
-    # causes subsequent tests to fail.
-
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     frame .f2 -width 20 -height 100
     pack .f2 -before .f
-    wm geom . 103x103
+    wm geom . [expr {[winfo reqwidth .f] + 3}]x103
     update
     .t configure -wrap none -borderwidth 2
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
     set x [list [.t bbox 1.0] [.t bbox 2.0] $tk_textRelayout]
-    wm overrideredirect . 0
     update
     set expected [list [list [xchar 0] [yline 1] 1 1] {} 1.0]
     lequal $x $expected
@@ -835,16 +814,6 @@ wm geom . {}
 update
 
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
-    # This test was failing on Windows because the title bar on .
-    # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so
-    # the toplevel can shrink to the appropriate size.  On Unix, setting
-    # the overrideredirect on "." confuses the window manager and
-    # causes subsequent tests to fail.
-
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     .t delete 1.0 end
     .t insert end "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17"
     .t yview 1.0
@@ -852,7 +821,6 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview 16.0
     update
     set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
-    wm overrideredirect . 0
     update
     set x
 } {8.0 {16.0 17.0 15.0 14.0 13.0 12.0 11.0 10.0 9.0 8.0} {8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0}}
@@ -4029,9 +3997,6 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
-    if {[tk windowingsystem] eq "win32"} {
-	wm overrideredirect . 1
-    }
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
@@ -4043,14 +4008,6 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
 	[list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
-
-#
-# COMMON TEST SETUP
-#
-
-if {[tk windowingsystem] eq "win32"} {
-    wm overrideredirect . 0
-}
 
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
     .t configure -wrap word
@@ -4195,7 +4152,7 @@ test textDisp-25.2 {CharBboxProc procedure, multi-byte characters - bug 7579c335
     .t tag configure prop -font {Helvetica 14}
 } -constraints nonPortable -body {
     .t delete 1.0 end
-    .t insert 1.0 "\u0414\u043e\u0431\u0440\u043e\u0433\u043e \u0440\u0430\u043d\u043a\u0443, \u0441\u0432\u0456\u0442\u0435" prop
+    .t insert 1.0 "Доброго ранку, світе" prop
     update
     set result {}
     for {set i 0} {$i < 19} {incr i} {
@@ -5152,16 +5109,20 @@ test textDisp-33.2 {one line longer than fits in the widget} {
     after cancel $timer
     set tk_textHeightCalc
 } {1.0}
-test textDisp-33.3 {one line longer than fits in the widget} {
-    destroy .tt
-    pack [text .tt -wrap char]
+test textDisp-33.3 {one line longer than fits in the widget} -setup {
+    destroy .top
+    toplevel .top
+} -body {
+    pack [text .top.tt -wrap char]
     set tk_textHeightCalc ""
-    .tt insert 1.0 [string repeat "more wrap + " 300]
+    .top.tt insert 1.0 [string repeat "more wrap + " 300]
     update
-    .tt sync
+    .top.tt sync
     # Each line should have been recalculated just once
-    expr {[llength $tk_textHeightCalc] == [.tt count -displaylines 1.0 end]}
-} 1
+    expr {[llength $tk_textHeightCalc] == [.top.tt count -displaylines 1.0 end]}
+} -cleanup {
+    destroy .top
+} -result 1
 test textDisp-33.4 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
@@ -5272,7 +5233,7 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 } -result {}
 
 test textDisp-37.1 {RTL text rendering in label widget} -setup {
-    label .l1 -text "\u05d0\u05d1\u05d2 \u05d3\u05d4\u05d5" -font $fixedFont
+    label .l1 -text "אבג דהו" -font $fixedFont
     pack .l1
 } -body {
     update
@@ -5284,7 +5245,7 @@ test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
     text .t1 -font $fixedFont -width 30 -height 3
     pack .t1
 } -body {
-    .t1 insert end "English \u05d0\u05d1\u05d2 Arabic \u0627\u0644\u0639\u0631\u0628\u064a Mixed"
+    .t1 insert end "English אבג Arabic العربي Mixed"
     update
 } -cleanup {
     destroy .t1
@@ -5297,7 +5258,7 @@ test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
     # word. Not the space: when the widget font has no Hebrew, it is shaped with
     # the words by another font. The letters whose bbox is wider or narrower than
     # their glyph:
-    set heb "\u05e9\u05dc\u05d5\u05dd \u05e2\u05d5\u05dc\u05dd"
+    set heb "שלום עולם"
     .t1 insert end $heb
     update
     set res {}
@@ -5318,7 +5279,7 @@ test textDisp-37.3 {RTL text: each letter has the width of its glyph} -setup {
 
 test textDisp-38.1 {Thai line breaking in label widget (UAX 14)} -setup {
     # Thai phrase: "ประเทศไทยมีประชากรมาก" (no spaces)
-    label .l1 -text "\u0e1b\u0e23\u0e30\u0e40\u0e17\u0e28\u0e44\u0e17\u0e22\u0e21\u0e35\u0e1b\u0e23\u0e30\u0e0a\u0e32\u0e01\u0e23\u0e21\u0e32\u0e01" \
+    label .l1 -text "ประเทศไทยมีประชากรมาก" \
 	-font $fixedFont -width 20
     pack .l1
 } -body {
@@ -5332,7 +5293,7 @@ test textDisp-38.2 {Mixed Thai text insertion in text widget (UAX 29)} -setup {
     pack .t1
 } -body {
     # "ภาษาไทย mixed" — includes combining marks and cluster boundaries
-    .t1 insert end "Mixed \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 text"
+    .t1 insert end "Mixed ภาษาไทย text"
     update
 } -cleanup {
     destroy .t1
@@ -5414,7 +5375,7 @@ test textDisp-40.1 {index @x,y inside a multi-byte character in a font of its ow
     text .t1 -font {Courier -12} -wrap none
     .t1 tag configure big -font $bigFont
     pack .t1
-    foreach ch [list \u00e9 \u2611] {
+    foreach ch [list é ☑] {
 	.t1 delete 1.0 end
 	.t1 insert end $ch big " text"
 	update
@@ -5435,7 +5396,7 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
 } -body {
     text .t1 -font {Courier -12} -width 1 -wrap char
     pack .t1
-    foreach ch [list \u00e4 \u2611] {
+    foreach ch [list ä ☑] {
 	.t1 delete 1.0 end
 	.t1 insert end a${ch}b
 	update
@@ -5632,7 +5593,7 @@ test textDisp-42.4 {the insertion cursor does not move right-to-left text} -setu
     text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
     pack .pix.t
 } -body {
-    .pix.t insert end "\u05d6\u05d4\u05d5 \u05d8\u05e7\u05e1\u05d8 \u05dc\u05d3\u05d5\u05d2\u05de\u05d4 \u05d1\u05e2\u05d1\u05e8\u05d9\u05ea.\n"
+    .pix.t insert end "זהו טקסט לדוגמה בעברית.\n"
     markMovesText .pix.t insert
 } -cleanup {
     destroy .pix
@@ -5643,7 +5604,7 @@ test textDisp-42.5 {the insertion cursor does not change the shape of Arabic tex
     text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
     pack .pix.t
 } -body {
-    .pix.t insert end "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\n"
+    .pix.t insert end "مرحبا بالعالم\n"
     markMovesText .pix.t insert
 } -cleanup {
     destroy .pix
@@ -5654,13 +5615,13 @@ test textDisp-42.6 {a mark does not change the shape of Arabic text} -setup {
     text .pix.t -font TkDefaultFont -width 60 -height 3 -wrap none
     pack .pix.t
 } -body {
-    .pix.t insert end "\u0645\u0631\u062d\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\n"
+    .pix.t insert end "مرحبا بالعالم\n"
     markMovesText .pix.t m
 } -cleanup {
     destroy .pix
 } -result {}
 test textDisp-42.7 {the insertion cursor does not move the glyphs} -constraints {
-    testpixel
+    testpixel nonPortable
 } -setup {
     toplevel .pix
     wm geometry .pix +0+0
@@ -5669,7 +5630,7 @@ test textDisp-42.7 {the insertion cursor does not move the glyphs} -constraints 
 	    -borderwidth 0 -highlightthickness 0
     pack .pix.t
 } -body {
-    .pix.t insert end "The price is 100 USD (LTR) while \u0627\u0644\u0633\u0639\u0631 \u0647\u0648 \u0661\u0660\u0660 \u062f\u0648\u0644\u0627\u0631 (RTL).\n"
+    .pix.t insert end "The price is 100 USD (LTR) while السعر هو ١٠٠ دولار (RTL).\n"
     .pix.t mark set insert 2.0
     set ref [linePixels .pix.t]
     set res {}
@@ -5731,7 +5692,7 @@ test textDisp-42.9 {the edge of the selection does not change the drawing of joi
 	    -inactiveselectbackground white -borderwidth 0 -highlightthickness 0
     pack .pix.t
 } -body {
-    .pix.t insert end "The price is 100 USD (LTR) while \u0627\u0644\u0633\u0639\u0631 \u0647\u0648 \u0661\u0660\u0660 \u062f\u0648\u0644\u0627\u0631 (RTL).\n"
+    .pix.t insert end "The price is 100 USD (LTR) while السعر هو ١٠٠ دولار (RTL).\n"
     set ref [linePixels .pix.t 1]
     set res {}
     for {set i 1} {$i < [.pix.t count -chars 1.0 "1.0 lineend"]} {incr i} {

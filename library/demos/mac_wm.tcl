@@ -29,7 +29,8 @@ proc launch {name windowInfo class} {
 	focus -force $name
 	return
     }
-    wm attributes $name -class $class; toplevel $name
+    toplevel $name
+    wm attributes $name -class $class
     wm title $name $class
     set f $name.f
     ttk::frame $f

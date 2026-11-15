@@ -246,7 +246,7 @@ typedef struct TkWmInfo {
  * WM_HEIGHT_NOT_RESIZABLE -	non-zero means that we're not supposed to
  *				allow the user to change the height of the
  *				window (controlled by "wm resizable" command).
- * WM_IS_HIDDEN - 			The window is off screen.  This is independent
+ * WM_IS_HIDDEN -			The window is off screen.  This is independent
  *				from being mapped, and from states like
  *				deiconified, withddrawn, etc.  Tk is completely
  *				unaware of this property, but when non-zero
