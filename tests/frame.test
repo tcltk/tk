@@ -1783,7 +1783,7 @@ test frame-15.14 {TIP 262: toplevel background images} -setup {
     set result {}
 } -constraints testImageType -body {
     image create test gorp -variable result
-    toplevel .t -width 50 -height 25 -bgimg gorp -tile 1
+    toplevel .t -width 200 -height 25 -bgimg gorp -tile 1
     wm overrideredirect .t 1;	# Reduce trouble from window managers
     update idletasks; update
     # On MacOS must wait for the test image display procedure to run.

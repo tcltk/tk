@@ -94,6 +94,10 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 	return ""
     }
 
+    if {[tk windowingsystem] eq "aqua"} {
+	wm attributes $menu -hidden 1
+    }
+
     # Set tk::Priv(focus) on entry:  otherwise the focus will get lost
     # after keyboard invocation of a sub-menu (it will stay on the
     # submenu).

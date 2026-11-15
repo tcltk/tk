@@ -57,7 +57,7 @@ catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 wm geometry . {}
 
 # The statements below reset the main window;  it's needed if the window
@@ -777,7 +777,7 @@ destroy .t
 text .t -font $fixedFont -width 20 -height 10 -wrap char
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
-.t debug on
+.t debug 1
 wm geometry . {}
 
 # The statements below reset the main window;  it's needed if the window

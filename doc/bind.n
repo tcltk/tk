@@ -262,6 +262,11 @@ Subsequent \fBButton\fR, \fBButtonRelease\fR, and \fBMotion\fR
 events will be sent to that window,
 regardless of which window contains the pointer,
 until all buttons have been released.
+If that window is destroyed while a button is pressed, these events
+are discarded until all buttons have been released.
+On Windows and macOS, the release can still reach another application
+under the pointer, for instance when the application exits from a
+\fBButton\fR binding; bind such actions to \fBButtonRelease\fR instead.
 .RE
 .IP \fBConfigure\fR 5
 A \fBConfigure\fR event is sent to a window whenever its

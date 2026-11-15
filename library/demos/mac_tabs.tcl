@@ -54,23 +54,23 @@ ttk::menubutton $w.f.modebutton -menu $w.modemenu -text "tabbingmode"\
 grid $w.f.modebutton -row 1 -column 0
 pack $w.f
 
+toplevel $w.a
 wm attributes $w.a -tabbingid groupA
 wm attributes $w.a -tabbingmode preferred
-toplevel $w.a
 wm geometry $w.a +50+100
 wm title $w.a "Window A"
 pack [ttk::label $w.a.l -text A -font giant] -padx 100 -pady 30
 
+toplevel $w.b
 wm attributes $w.b -tabbingid groupB
 wm attributes $w.b -tabbingmode preferred
-toplevel $w.b
 wm geometry $w.b +400+100
 wm title $w.b "Window B"
 pack [ttk::label $w.b.l -text B -font giant] -padx 100 -pady 30
 
+toplevel $w.c
 wm attributes $w.c -tabbingid groupC
 wm attributes $w.c -tabbingmode preferred
-toplevel $w.c
 wm geometry $w.c +750+100
 wm title $w.c "Window C"
 pack [ttk::label $w.c.l -text C -font giant] -padx 100 -pady 30

@@ -42,13 +42,10 @@ static void setAllowedFileTypes(
 	    }
 	}
 	[panel setAllowedContentTypes:allowedTypes];
-    } else {
-# if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-/* setAllowedFileTypes is not deprecated */
-	[panel setAllowedFileTypes:extensions];
-#endif
+	return;
     }
-#else
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     [panel setAllowedFileTypes:extensions];
 #endif
 }
@@ -521,7 +518,7 @@ Tk_ChooseColorObjCmd(
 	}
     }
     colorPanel = [NSColorPanel sharedColorPanel];
-    [colorPanel orderOut:NSApp];
+    [colorPanel orderOut:nil];
     [colorPanel setContinuous:NO];
     [colorPanel setBecomesKeyOnlyIfNeeded:NO];
     [colorPanel setShowsAlpha: NO];
@@ -678,6 +675,7 @@ parseFileFilters(
 		    filterInfo.fileTypeIndex = index;
 		    filterInfo.preselectFilter = true;
 		}
+		[selectedFileTypeStr release];
 	    }
 	}
 
@@ -882,6 +880,9 @@ Tk_GetOpenFileObjCmd(
 	    [openpanel setAllowsOtherFileTypes:NO];
 	}
 	[openpanel setAccessoryView:accessoryView];
+	[accessoryView release];
+	[popupButton release];
+	[label release];
     } else {
 	/*
 	 * No filters are given. Allow picking all files.
@@ -920,6 +921,7 @@ Tk_GetOpenFileObjCmd(
 					multiple);
     if (testsAreRunning) {
 	[monitor cancel];
+	[monitor release];
     }
     if (cmdObj) {
 	Tcl_DecrRefCount(cmdObj);
@@ -1158,8 +1160,11 @@ Tk_GetSaveFileObjCmd(
 	[popupButton setAction:@selector(saveFormat:)];
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
+	[popupButton release];
+	[label release];
 
 	[savepanel setAccessoryView:accessoryView];
+	[accessoryView release];
 
 	setAllowedFileTypes(savepanel,
 	    [filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]);
@@ -2092,7 +2097,7 @@ FontchooserHideCmd(
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
 
     if ([fp isVisible]) {
-	[fp orderOut:NSApp];
+	[fp orderOut:nil];
     }
     return TCL_OK;
 }

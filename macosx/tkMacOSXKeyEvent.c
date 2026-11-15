@@ -333,8 +333,6 @@ static NSUInteger textInputModifiers;
 
 @implementation TKContentView
 
-@synthesize onScreen = _onScreen;
-
 /*
  * Implementation of the NSTextInputClient protocol.
  */
@@ -421,7 +419,7 @@ static NSUInteger textInputModifiers;
 	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
 	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
 	}
-	keystr = [[NSString alloc] initWithCharacters:&keychar length:1];
+	keystr = [NSString stringWithCharacters:&keychar length:1];
 	lower = [keystr lowercaseString];
 	if (![keystr isEqual: lower]) {
 	    macKC.v.o_s |= INDEX_SHIFT;

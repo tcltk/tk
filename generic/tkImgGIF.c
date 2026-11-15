@@ -2158,15 +2158,17 @@ CommonWriteGIF(
      * Check for metadata keys to add to file
      */
     if (NULL != metadataInObj) {
-	Tcl_Obj *itemData;
+	Tcl_Obj *itemData, *keyObj;
+	int result;
 
 	/*
 	 * Check and code comment block
 	 */
 
-	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
-		Tcl_NewStringObj("comment",-1),
-		&itemData)) {
+	keyObj = Tcl_NewStringObj("comment",-1);
+	result = Tcl_DictObjGet(interp, metadataInObj, keyObj, &itemData);
+	Tcl_BounceRefCount(keyObj);
+	if (result != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (itemData != NULL) {

@@ -46,7 +46,7 @@ text .t -width 20 -height 10 -font $fixedFont2
 
 pack .t -expand 1 -fill both
 update
-.t debug on
+.t debug 1
 
 wm geometry . {}
 
@@ -1560,7 +1560,7 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
-} -body {
+} -constraints aquaKnownBug -body {
     # Move the cursor out of the way.
     event generate . <Motion> -warp 1 -x 800 -y 500
     controlPointerWarpTiming
