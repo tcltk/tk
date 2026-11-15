@@ -82,6 +82,27 @@ proc ::tk_setPalette {args} {
 	set new(troughColor) $darkerBg
     }
 
+    # Remember what we are about to change, so that tk_restorePalette can
+    # put it back.  The original state is captured once, by the first call;
+    # later calls only add to it.
+
+    if {![info exists ::tk::PaletteSaved]} {
+	set ::tk::PaletteSaved [array get ::tk::Palette]
+	if {[tk windowingsystem] eq "x11"
+		&& [array exists ::ttk::theme::default::colors]} {
+	    set ::tk::PaletteTtk [array get ::ttk::theme::default::colors]
+	}
+    }
+    # This must happen before ::tk::RecolorTree runs, because that adds
+    # class-specific entries to the option database that would hide the
+    # original value of the wildcard entries.
+    foreach option [array names new] {
+	if {![info exists ::tk::PaletteDb($option)]} {
+	    set ::tk::PaletteDb($option) \
+		    [option get . $option [string totitle $option 0 0]]
+	}
+    }
+
     # let's make one of each of the widgets so we know what the
     # defaults are currently for this platform.
     toplevel .___tk_set_palette
@@ -183,12 +204,13 @@ proc ::tk::RecolorTree {w colors} {
 		    [$prototype cget $option] ne "$defaultcolor")} {
 		set defaultcolor [lindex $value 3]
 	    }
+	    set rawDefault $defaultcolor
 	    if {$defaultcolor ne ""} {
 		set defaultcolor [winfo rgb . $defaultcolor]
 	    }
 	    # The colour the window has now, which is not the default one
 	    # when the application has given the window a colour of its own.
-	    set currentcolor [lindex $value 4]
+	    set currentcolor [set rawCurrent [lindex $value 4]]
 	    if {$currentcolor ne ""} {
 		set currentcolor [winfo rgb . $currentcolor]
 	    }
@@ -196,6 +218,29 @@ proc ::tk::RecolorTree {w colors} {
 		# The window still has the colour it was given by default, so
 		# give it the one the new palette has for it, and change the
 		# option database so that the windows made later get it too.
+		# Keep what is being replaced for tk_restorePalette: the
+		# default for the class (for windows made later), and the
+		# value of this particular window.
+
+		set pattern *[winfo class $w].$dbOption
+		if {$rawDefault ne ""
+			&& ![info exists ::tk::PaletteClass($pattern)]} {
+		    set ::tk::PaletteClass($pattern) $rawDefault
+		}
+		# A window that has the previous palette's color was made
+		# after it, so it has no color of its own to go back to.
+		set key [list $w $option]
+		set own 1
+		if {[info exists ::tk::Palette($dbOption)]
+			&& ![catch {winfo rgb . $::tk::Palette($dbOption)} prev]
+			&& $prev eq $currentcolor} {
+		    set own 0
+		}
+		if {$own && ![string match .___tk_set_palette* $w]
+			&& ![info exists ::tk::PaletteWidget($key)]} {
+		    set ::tk::PaletteWidget($key) \
+			    [list $rawCurrent [winfo class $w]]
+		}
 		append result ";\noption add [list \
 		    *[winfo class $w].$dbOption $c($dbOption) 60]"
 		$w configure $option $c($dbOption)
@@ -206,6 +251,105 @@ proc ::tk::RecolorTree {w colors} {
 	append result ";\n[::tk::RecolorTree $child c]"
     }
     return $result
+}
+
+# ::tk_restorePalette --
+# Undoes tk_setPalette (and tk_bisque): windows that still have a color
+# the palette gave them get back the color they had before the first
+# tk_setPalette call, and the option database is changed so that windows
+# made later get the original defaults again.  Windows whose colors the
+# application has set itself since are left alone.  It does nothing if
+# tk_setPalette has not changed anything.
+#
+# Arguments:
+# None.
+
+proc ::tk_restorePalette {} {
+    if {![info exists ::tk::PaletteSaved]} {
+	return
+    }
+
+    # Existing windows first.  Nothing here touches the option database.
+
+    ::tk::RestorePaletteTree .
+
+    # Windows made from now on.  Entries are overwritten rather than
+    # removed, because the option database has no way to remove one.
+
+    foreach {pattern value} [array get ::tk::PaletteClass] {
+	option add $pattern $value 60
+    }
+    foreach {option value} [array get ::tk::PaletteDb] {
+	if {$value ne ""} {
+	    option add *$option $value widgetDefault
+	}
+    }
+
+    array unset ::tk::Palette
+    array set ::tk::Palette $::tk::PaletteSaved
+
+    if {[info exists ::tk::PaletteTtk]} {
+	array set ::ttk::theme::default::colors $::tk::PaletteTtk
+	ttk::theme::default::reconfigureDefaultTheme
+	if {[ttk::style theme use] eq "default"} {
+	    ttk::setTheme default
+	}
+    }
+
+    # Forget everything: the next tk_setPalette starts a new history.
+
+    array unset ::tk::PaletteDb
+    array unset ::tk::PaletteClass
+    array unset ::tk::PaletteWidget
+    catch {unset ::tk::PaletteTtk}
+    unset ::tk::PaletteSaved
+    return
+}
+
+# ::tk::RestorePaletteTree --
+# Restores the colors of a window and all of its descendants for
+# tk_restorePalette.  A color is only changed if it is the one the current
+# palette has for that option.  The value to go back to is the one recorded
+# for that window if there is one, else the recorded default of its class.
+#
+# Arguments:
+# w -		The name of a window.
+
+proc ::tk::RestorePaletteTree {w} {
+    variable Palette
+    variable PaletteDb
+    variable PaletteClass
+    variable PaletteWidget
+
+    set class [winfo class $w]
+    foreach dbOption [array names PaletteDb] {
+	if {![info exists Palette($dbOption)]} {
+	    continue
+	}
+	set option -[string tolower $dbOption]
+	if {[catch {$w configure $option} value]} {
+	    continue
+	}
+	set current [lindex $value 4]
+	if {$current eq "" || [catch {winfo rgb . $current} rgb1]
+		|| [catch {winfo rgb . $Palette($dbOption)} rgb2]
+		|| $rgb1 ne $rgb2} {
+	    continue
+	}
+	set key [list $w $option]
+	if {[info exists PaletteWidget($key)]
+		&& [lindex $PaletteWidget($key) 1] eq $class} {
+	    set original [lindex $PaletteWidget($key) 0]
+	} elseif {[info exists PaletteClass(*$class.$dbOption)]} {
+	    set original $PaletteClass(*$class.$dbOption)
+	} else {
+	    continue
+	}
+	$w configure $option $original
+    }
+    foreach child [winfo children $w] {
+	RestorePaletteTree $child
+    }
 }
 
 # ::tk::ContrastColor --
