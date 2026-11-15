@@ -1096,7 +1096,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
     switch (idx) {
     case CMD_CREATE: {
         if (icon) {
-            Tcl_AppendResult(interp, "only one systray icon per interpreter", NULL);
+            Tcl_AppendResult(interp, "only one systray icon per interpreter", (char *)NULL);
             return TCL_ERROR;
         }
         if (objc != 6) {
@@ -1110,7 +1110,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
         icon->interp = interp;
         icon->tkwin = Tk_MainWindow(interp);
         if (!icon->tkwin) {
-            Tcl_AppendResult(interp, "no main window", NULL);
+            Tcl_AppendResult(interp, "no main window", (char *)NULL);
             Tcl_Free(icon); *iconPtr = NULL;
             return TCL_ERROR;
         }
@@ -1158,7 +1158,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
 
         /* Now register the StatusNotifierItem. */
         if (RegisterStatusNotifierItem(icon) < 0) {
-            Tcl_AppendResult(interp, "failed to register StatusNotifierItem", NULL);
+            Tcl_AppendResult(interp, "failed to register StatusNotifierItem", (char *)NULL);
             WaylandSystrayDeleteProc(iconPtr);
             return TCL_ERROR;
         }
@@ -1168,7 +1168,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
 
     case CMD_CONFIGURE: {
         if (!icon) {
-            Tcl_AppendResult(interp, "systray icon does not exist", NULL);
+            Tcl_AppendResult(interp, "systray icon does not exist", (char *)NULL);
             return TCL_ERROR;
         }
         if (objc != 4) {
@@ -1212,7 +1212,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
             icon->b3Command = value;
             Tcl_IncrRefCount(icon->b3Command);
         } else {
-            Tcl_AppendResult(interp, "unknown option: must be -image, -text, -button1, or -button3", NULL);
+            Tcl_AppendResult(interp, "unknown option: must be -image, -text, -button1, or -button3", (char *)NULL);
             return TCL_ERROR;
         }
         return TCL_OK;
@@ -1220,7 +1220,7 @@ WaylandSystrayObjCmd(void *clientData, Tcl_Interp *interp,
 
     case CMD_DESTROY: {
         if (!icon) {
-            Tcl_AppendResult(interp, "systray icon does not exist", NULL);
+            Tcl_AppendResult(interp, "systray icon does not exist", (char *)NULL);
             return TCL_ERROR;
         }
         WaylandSystrayDeleteProc(iconPtr);

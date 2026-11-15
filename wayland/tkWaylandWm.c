@@ -3276,7 +3276,7 @@ Tk_WmObjCmd(
 		&& index != WMOPT_MANAGE && index != WMOPT_FORGET) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 						   "window \"%s\" isn't a top-level window", argv1));
-            Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", argv1, NULL);
+            Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", argv1, (char *)NULL);
             return TCL_ERROR;
         }
         objc -= 3; objv += 3;
@@ -3298,7 +3298,7 @@ Tk_WmObjCmd(
 						   "window \"%s\" isn't a top-level window",
 						   Tcl_GetString(objv[2])));
             Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL",
-			     Tcl_GetString(objv[2]), NULL);
+			     Tcl_GetString(objv[2]), (char *)NULL);
             return TCL_ERROR;
         }
         objc -= 3; objv += 3;
@@ -3405,7 +3405,7 @@ WmAspectCmd(
         if (n1<=0||d1<=0||n2<=0||d2<=0) {
             Tcl_SetObjResult(interp,
 			     Tcl_NewStringObj("aspect number can't be <= 0",-1));
-            Tcl_SetErrorCode(interp,"TK","WM","ASPECT",NULL);
+            Tcl_SetErrorCode(interp,"TK","WM","ASPECT",(char *)NULL);
             return TCL_ERROR;
         }
         wmPtr->minAspect.x = n1; wmPtr->minAspect.y = d1;
@@ -4169,7 +4169,7 @@ WmGridCmd(
         }
         if (msg != NULL) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
-            Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
+            Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", (char *)NULL);
             return TCL_ERROR;
         }
         /* As on X11, the toplevel becomes the gridded window. */
@@ -5392,7 +5392,7 @@ WmStateCmd(
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
             "can't change state of %s: it is an icon for %s",
             Tk_PathName(winPtr), Tk_PathName(wmPtr->iconFor)));
-        Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
+        Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", (char *)NULL);
         return TCL_ERROR;
     }
 
