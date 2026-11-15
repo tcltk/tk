@@ -1,4 +1,4 @@
-name: Linux (with Tcl 9.0)
+name: Linux (with Tcl 9.1)
 on:
   push:
     branches:
@@ -35,7 +35,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install xvfb tcl9.0-dev libtommath-dev libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libspeechd-dev libwayland-egl1
+          sudo apt-get install xvfb tcl9.1-dev libtommath-dev libx11-dev libxss-dev libxft-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libspeechd-dev libwayland-egl1
           mkdir "$HOME/install dir"
           touch doc/man.macros generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -48,7 +48,7 @@ jobs:
           OPTS: ${{ matrix.compiler }}${{ matrix.config }}
       - name: Configure (opts=${{ matrix.config }})
         run: |
-          ./configure $CFGOPT --with-tcl=/usr/lib/tcl9.0 "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --with-tcl=/usr/lib/tcl9.1 "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -92,16 +92,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: "."
-      - name: Checkout Tcl 9.0
-        uses: actions/checkout@v7
-        with:
-          repository: tcltk/tcl
-          ref: core-9-0-branch
-          path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install tcl9.0-dev libtommath-dev xvfb libx11-dev libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libspeechd-dev at-spi2-core
+          sudo apt-get install tcl9.1-dev libtommath-dev xvfb libx11-dev libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont libharfbuzz-dev libspeechd-dev at-spi2-core
           mkdir "$HOME/install dir"
           touch doc/man.macros generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -112,7 +106,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure ${{ matrix.config }}
         run: |
-          ./configure $CFGOPT --with-tcl=/usr/lib/tcl9.0 "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --with-tcl=/usr/lib/tcl9.1 "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
