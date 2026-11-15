@@ -62,6 +62,13 @@ priority \fBwidgetDefault\fR, so they will be overridden by options
 from the .Xdefaults file or options specified on the command-line
 that creates a widget.
 .PP
+The procedure \fBtk_restorePalette\fR undoes tk_setPalette: windows that still have a color
+the palette gave them get back the color they had before the first
+tk_setPalette call, and the option database is changed so that windows
+made later get the original defaults again.  Windows whose colors the
+ application has set itself since are left alone.  It does nothing if
+tk_setPalette has not changed anything.
+.PP
 The procedure \fBtk_bisque\fR is provided for backward compatibility:
 it restores the application's colors to the light brown
 .PQ bisque
