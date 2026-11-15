@@ -395,7 +395,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		    set data [wm title $w]
 		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
-		    if {[tk windowingsystem] eq "x11"} {
+		    if {[::tk::accessible::_isunix]} {
 			::tk::accessible::speak "$data"
 		    }
 		}
