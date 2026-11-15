@@ -480,6 +480,29 @@ test palette-8.8 {the appearance leaves alone what the user claimed above it} -c
     option clear
 } -result "#2e3436 #2e3436"
 
+test palette-8.9 {the appearance gives the colours the user did not ask for} \
+	-constraints x11 -setup {
+    # A desktop which asks for a dark scheme, as the portal would answer.
+    set ::tk::portal::appearance {colorScheme dark accentColor {} \
+	    contrast normal reducedMotion 0}
+} -body {
+    # The colours which are derived follow the appearance rather than the
+    # one colour the user chose: an entry of the user's governs the option
+    # it names and no other, as on the other platforms, where a window
+    # falls back on a colour of the system's for each option separately.
+    option add *background #abcdef userDefault
+    ::tk::SetAppearance auto
+    frame .f
+    set result [join [list [.f cget -bg] \
+	    [option get .f troughColor TroughColor]]]
+    destroy .f
+    set result
+} -cleanup {
+    unset -nocomplain ::tk::portal::appearance
+    wm attributes . -appearance auto
+    option clear
+} -result "#abcdef #363636"
+
 #
 # The events which tell an application that the desktop has changed its
 # mind.  What the desktop says is not reachable from here, so the change is

@@ -398,34 +398,6 @@ proc ::tk::CapturePalette {} {
     return $palette
 }
 
-# ::tk::DatabaseColors --
-# The palette colours the option database answers for, in the form
-# tk_setPalette accepts.  Read before Tk has written a palette of its own,
-# these are the colours the user asked for in X resources, which outrank
-# anything the desktop asks for through the portal.
-#
-# Arguments:
-# None.
-
-proc ::tk::DatabaseColors {} {
-    set colors {}
-    foreach {option class} {
-	activeBackground	ActiveBackground
-	background		Background
-	disabledForeground	DisabledForeground
-	foreground		Foreground
-	selectBackground	SelectBackground
-	selectForeground	SelectForeground
-	troughColor		TroughColor
-    } {
-	set color [option get . $option $class]
-	if {$color ne ""} {
-	    dict set colors $option $color
-	}
-    }
-    return $colors
-}
-
 # ::tk::SetAppearance --
 # Applies the palette which [wm attributes $window -appearance] asks for.
 # On X11 a window has no appearance of its own, so this is the palette of
@@ -447,7 +419,6 @@ proc ::tk::DatabaseColors {} {
 proc ::tk::SetAppearance {appearance} {
     variable SavedPalette
     variable SavedTtkColors
-    variable SavedDatabaseColors
 
     # What the desktop asks for, which only "auto" follows.
     set desktop {colorScheme {} accentColor {}}
@@ -466,7 +437,6 @@ proc ::tk::SetAppearance {appearance} {
     if {![info exists SavedPalette]} {
 	set SavedPalette [CapturePalette]
 	set SavedTtkColors [array get ::ttk::theme::default::colors]
-	set SavedDatabaseColors [DatabaseColors]
     }
 
     # The themed widgets are kept in step only where tk_setPalette keeps
@@ -509,10 +479,6 @@ proc ::tk::SetAppearance {appearance} {
 		    -pressedindicator [Lighten $accentColor]]
 	}
 
-	# A colour the user chose in X resources outranks the desktop's.
-	if {$appearance eq "auto"} {
-	    set palette [dict merge $palette $SavedDatabaseColors]
-	}
 	tk_setPalette -priority widgetDefault {*}$palette
 	if {$themed} {
 	    # tk_setPalette reaches three of the theme's thirteen colours, so
