@@ -619,6 +619,8 @@ RegFindName(
 {
     Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjGet(NULL, regPtr->appNameDict, keyPtr, &valuePtr);
+    Tcl_BounceRefCount(keyPtr);
+
     // Maybe using pid 0 as the default is a bad idea?
     AppInfo resultTcl = {0, NULL};
     if (valuePtr) {
