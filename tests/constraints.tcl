@@ -103,7 +103,6 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 }
 
 testConstraint withXft [expr {[tk::build-info x11] && ![tk::build-info no-xft]}]
-unset fs
 
 # Expected results of some tests on Linux rely on availability of the "times"
 # font. This font is generally provided when Tk uses the old X font system,
