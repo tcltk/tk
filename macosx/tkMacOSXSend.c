@@ -528,6 +528,7 @@ RegOpen(
     } else {
 	regPtr->appNameDict = Tcl_NewDictObj();
     }
+    Tcl_IncrRefCount(regPtr->appNameDict);
 
     /*
      * Find and remove any interpreter name for which the process is no longer
