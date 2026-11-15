@@ -25,6 +25,7 @@ static Tcl_ObjCmdProc2 TestmovemouseObjCmd;
 static Tcl_ObjCmdProc2 TestinjectkeyeventObjCmd;
 static Tcl_ObjCmdProc2 TestmenubarheightObjCmd;
 static Tcl_ObjCmdProc2 TestmenubaritemsObjCmd;
+static Tcl_ObjCmdProc2 TestverifysnapshotObjCmd;
 
 
 /*
@@ -63,6 +64,7 @@ TkplatformtestInit(
     Tcl_CreateObjCommand2(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "testmenubaritems", TestmenubaritemsObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testverifysnapshot", TestverifysnapshotObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -510,9 +512,182 @@ TestinjectkeyeventObjCmd(
     return TCL_OK;
 }
 /*
+ *----------------------------------------------------------------------
+ *
+ * TestverifysnapshotObjCmd --
+ *
+ *  The testverifysnapshot command is used to verify that an operation, such as
+ *  moving a Text cursor past a ligature or a pair of joined letters, did not
+ *  change any pixel in a specified winow.  It returns a bool value.  The
+ *  command signature is:
+ *
+ *  testverifysnapshot <pathname>
+ *
+ *  The command should be called before the operation and again after the
+ *  operation, with the same window pathname argument.  The first call takes a
+ *  snapshot of the window and saves it.  The return value is true if the
+ *  snapshot succeeded.  The second call returns true if the same window is
+ *  used as for the first call and if the pixel data for the window is
+ *  identical to that of the saved snapshot and false if not.  A nonexistent
+ *  window will or a failed snapshot generates an error.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkMacOSXSnapshot {
+    Tk_Window tkwin;
+    int width;
+    int height;
+    int bytesPerRow;
+    char *data;
+} TkMacOSXSnapshot;
+
+static TkMacOSXSnapshot *createSnapshot(
+    Tk_Window tkwin)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkMacOSXSnapshot *pixels = Tcl_Alloc(sizeof(TkMacOSXSnapshot));
+    memset(pixels, 0, sizeof(TkMacOSXSnapshot));
+    NSWindow *macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    TKContentView *view = (TKContentView *)[macWin contentView];
+    CGContextRef bc = [view tkLayerBitmapContext];
+    pixels->tkwin = tkwin;
+    pixels->width = CGBitmapContextGetWidth(bc);
+    pixels->height = CGBitmapContextGetHeight(bc);
+    pixels->bytesPerRow = CGBitmapContextGetBytesPerRow(bc);
+    Tcl_Size dataSize = pixels->height * pixels->bytesPerRow;
+    pixels->data = Tcl_Alloc(dataSize);
+    memcpy(pixels->data, CGBitmapContextGetData(bc), dataSize);
+    return pixels;
+}
+
+static void freeSnapshot(TkMacOSXSnapshot *pixels)
+{
+    if (pixels) {
+        if (pixels->data) {
+            Tcl_Free(pixels->data);
+        }
+        Tcl_Free(pixels);
+    }
+}
+
+static bool snapshotsAgree(
+    TkMacOSXSnapshot *shot1,
+    TkMacOSXSnapshot *shot2)
+{
+    if (
+	shot1->tkwin != shot2->tkwin ||
+	shot1->width != shot2->width ||
+        shot1->height != shot2->height ||
+        shot1->bytesPerRow != shot2->bytesPerRow) {
+        return false;
+    }
+    if ((shot1->data == NULL && shot2->data != NULL) ||
+        (shot1->data != NULL && shot2->data == NULL)) {
+        return false;
+    }
+    if (shot1->data == NULL && shot2->data == NULL) {
+        return true;
+    }
+    int height = shot1->height;
+    int bpr = shot1->bytesPerRow;
+    Tcl_Size size = height * bpr;
+    for (int rowStart = 0; rowStart < size; rowStart += bpr) {
+        if (memcmp(shot1->data + rowStart,
+                   shot2->data + rowStart, bpr) != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/*
+ * Returns -1 if the window is None or if there was an error taking a snapshot
+ * of the window.
+ * Returns -2 if the provided window is not the same as the saved window..
+ * Returns 1 if there is no saved snapshot or if the saved snapshot is identical
+ * to the snapshot of tkwin.
+ * Returns 0 if there is a saved snapshot is different from the snapshot of
+ * tkwin.
+ */
+static int checkSnapshot(
+    Tk_Window tkwin)
+{
+    static TkMacOSXSnapshot *savedSnapshot = NULL;
+    bool agrees = false;
+    if (!tkwin) {
+	return -1;
+    }
+    TkMacOSXSnapshot *newSnapshot = createSnapshot(tkwin);
+    if (newSnapshot == NULL) {
+	if (savedSnapshot) {
+	    freeSnapshot(savedSnapshot);
+	    savedSnapshot = NULL;
+	}
+	return -2;
+    }
+    if (savedSnapshot) {
+	int result;
+	if (savedSnapshot->tkwin != newSnapshot->tkwin) {
+	    result = -1;
+	} else {
+	    result = (int) snapshotsAgree(savedSnapshot, newSnapshot);
+	}
+	freeSnapshot(savedSnapshot);
+	savedSnapshot = NULL;
+	freeSnapshot(newSnapshot);
+	return result;
+    } else {
+	savedSnapshot = newSnapshot;
+	return 1;
+    }
+}
+
+static int
+TestverifysnapshotObjCmd(
+    TCL_UNUSED(void*),    /* clientData */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
+{
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window");
+	return TCL_ERROR;
+    }
+    Tk_Window main = Tk_MainWindow(interp);
+    Tk_Window window = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), main);
+    if (window == NULL) {
+	Tcl_SetErrorCode(interp, "TK", "TEST", "SNAPSHOT", "WINDOW", (char *)NULL);
+	return TCL_ERROR;
+    }
+    int code = checkSnapshot(window);
+    switch (code) {
+    case -2:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("snapshot failed"));
+	Tcl_SetErrorCode(interp, "TK", "TEST", "SNAPSHOT", "FAILED", (char *)NULL);
+	return TCL_ERROR;
+    case -1:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad window"));
+	Tcl_SetErrorCode(interp, "TK", "TEST", "SNAPSHOT", "WINDOW", (char *)NULL);
+	return TCL_ERROR;
+    default:
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(code));
+        return TCL_OK;
+    }
+}
+
+/*
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4
+ * eval: (c-set-offset 'arglist-intro '+)
+ * eval: (c-set-offset 'arglist-cont-nonempty '+)
  * fill-column: 79
  * coding: utf-8
  * End:
