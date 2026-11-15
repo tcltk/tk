@@ -444,6 +444,7 @@ loadAppNameRegistry(
      */
     Tcl_Size size;
     if (TCL_OK != Tcl_DictObjSize(NULL, result, &size)){
+	Tcl_BounceRefCount(result);
 	result = Tcl_NewDictObj();
     }
     return result;
