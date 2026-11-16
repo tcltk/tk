@@ -2450,7 +2450,7 @@ ImgPhotoSetSize(
     int width, int height)
 {
     unsigned char *newPix32 = NULL;
-    int h, offset, pitch;
+    int h, pitch;
     unsigned char *srcPtr, *destPtr;
     XRectangle validBox, clipBox;
     Region clipRegion;

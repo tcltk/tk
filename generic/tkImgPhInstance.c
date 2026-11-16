@@ -941,7 +941,7 @@ TkImgPhotoInstanceSetSize(
 {
     PhotoModel *modelPtr;
     schar *newError, *errSrcPtr, *errDestPtr;
-    int h, offset;
+    int h;
     XRectangle validBox;
     Pixmap newPixmap;
 
