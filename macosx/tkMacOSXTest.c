@@ -542,11 +542,11 @@ TestinjectkeyeventObjCmd(
 
 typedef struct TkMacOSXSnapshot {
     Tk_Window tkwin;
-    int width;
-    int height;
-    int bytesPerRow;
-    char *data;
-    int copied;
+    Tcl_Size width;
+    Tcl_Size height;
+    Tcl_Size bytesPerRow;
+    void *data;
+    bool copied;
 } TkMacOSXSnapshot;
 
 static TkMacOSXSnapshot *createSnapshot(
@@ -554,21 +554,20 @@ static TkMacOSXSnapshot *createSnapshot(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkMacOSXSnapshot *pixels = Tcl_Alloc(sizeof(TkMacOSXSnapshot));
-    if (pixels) {
-	NSWindow *macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-	TKContentView *view = (TKContentView *)[macWin contentView];
-	CGContextRef bc = [view tkLayerBitmapContext];
-	if (!bc) {
-	    Tcl_Free(pixels);
-	    return NULL;
-	}
-	memset(pixels, 0, sizeof(TkMacOSXSnapshot));
-	pixels->tkwin = tkwin;
-	pixels->width = CGBitmapContextGetWidth(bc);
-	pixels->height = CGBitmapContextGetHeight(bc);
-	pixels->bytesPerRow = CGBitmapContextGetBytesPerRow(bc);
-	pixels->data = CGBitmapContextGetData(bc);
+    NSWindow *macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+    TKContentView *view = (TKContentView *)[macWin contentView];
+    CGContextRef bc = [view tkLayerBitmapContext];
+    if (!bc) {
+	fprintf(stderr, "The tkLayerBitmapContext does not exist yet!");
+	Tcl_Free(pixels);
+	return NULL;
     }
+    memset(pixels, 0, sizeof(TkMacOSXSnapshot));
+    pixels->tkwin = tkwin;
+    pixels->width = CGBitmapContextGetWidth(bc);
+    pixels->height = CGBitmapContextGetHeight(bc);
+    pixels->bytesPerRow = CGBitmapContextGetBytesPerRow(bc);
+    pixels->data = CGBitmapContextGetData(bc);
     return pixels;
 }
 
@@ -586,41 +585,45 @@ static bool snapshotsAgree(
     TkMacOSXSnapshot *shot1,
     TkMacOSXSnapshot *shot2)
 {
-    if (
-	shot1->tkwin != shot2->tkwin ||
+    if (shot1 == NULL || shot2 == NULL){
+	/* Something is very wrong.  Let the test fail. */
+	fprintf(stderr, "A null shapshot was passed to snapshotsAgree!");
+	return false;
+    }
+    if (shot1->tkwin != shot2->tkwin ||
 	shot1->width != shot2->width ||
         shot1->height != shot2->height ||
         shot1->bytesPerRow != shot2->bytesPerRow) {
         return false;
     }
-    if ((shot1->data == NULL && shot2->data != NULL) ||
-        (shot1->data != NULL && shot2->data == NULL)) {
-        return false;
-    }
-    if (shot1->data == NULL && shot2->data == NULL) {
-        return true;
-    }
-    int height = shot1->height;
-    int bpr = shot1->bytesPerRow;
-    Tcl_Size size = height * bpr;
-    for (int rowStart = 0; rowStart < size; rowStart += bpr) {
-        if (memcmp(shot1->data + rowStart,
-                   shot2->data + rowStart, bpr) != 0) {
-            return false;
+    Tcl_Size height = shot1->height;
+    Tcl_Size width = shot1->width;
+    Tcl_Size pixelsPerRow = shot1->bytesPerRow / 4;
+    const uint32_t rgbMask = CFSwapInt32HostToBig(0xFFFFFF00U);
+    const uint32_t *row1 = (const uint32_t *)shot1->data;
+    const uint32_t *row2 = (const uint32_t *)shot2->data;
+    for (Tcl_Size y = 0; y < height; y++) {
+        for (Tcl_Size x = 0; x < width; x++) {
+            if (((row1[x] ^ row2[x]) & rgbMask) != 0) {
+                return false;
+            }
         }
+        row1 += pixelsPerRow;
+        row2 += pixelsPerRow;
     }
     return true;
 }
 
 /*
- * Returns -1 if the window is None or if there was an error taking a snapshot
- * of the window.
- * Returns -2 if the provided window is not the same as the saved window..
- * Returns 1 if there is no saved snapshot or if the saved snapshot is identical
- * to the snapshot of tkwin.
- * Returns 0 if there is a saved snapshot is different from the snapshot of
- * tkwin.
+ * Return codes for checkSnapShot:
+ * -1  if the window is None or if there was an error taking the snapshot;
+ * -2  if the provided window is not the same as the saved window;
+ *  1  if there is no saved snapshot or if the saved snapshot is identical
+ *     to the snapshot of tkwin.
+ *  0  if there is a saved snapshot and it is different from the snapshot of
+ *     tkwin.
  */
+
 static int checkSnapshot(
     Tk_Window tkwin)
 {

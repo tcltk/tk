@@ -5701,11 +5701,14 @@ test textDisp-42.9 {the edge of the selection does not change the drawing of joi
 	    -selectforeground black -selectbackground white \
 	    -inactiveselectbackground white -borderwidth 0 -highlightthickness 0
     pack .pix.t
+    update idletasks; # Make sure the window is mapped..
 } -body {
-    .pix.t insert end "The price is 100 USD (LTR) while السعر هو ١٠٠ دولار (RTL).\n"
+    .pix.t insert end \
+    "The price is 100 USD (LTR) while السعر هو ١٠٠ دولار (RTL).\n"
+    update idletasks; # Make sure the text has been rendered.
+    after 1000; # Let humans see the window.
     set res {}
     for {set i 1} {$i < [.pix.t count -chars 1.0 "1.0 lineend"]} {incr i} {
-	testverifysnapshot .pix
 	.pix.t tag add sel 1.0 1.$i
 	if {![testverifysnapshot .pix]} {
  	    lappend res 1.$i
