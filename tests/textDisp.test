@@ -5207,11 +5207,11 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     # if valgrind check is fully enabled. In this test case only the scrollbar
     # behavior is relevant, all other involved functions (insert, see, ...) are
     # already tested with debug mode in other test cases.
-    .t debug 0
-    .t insert end "[string repeat a\nb\nc\n 500000]THE END\n"
+    .t1 debug 0
+    .t1 insert end "[string repeat a\nb\nc\n 500000]THE END\n"
     set res {}
 } -body {
-    .t see 10000.0
+    .t1 see 10000.0
     after 300 {set fr1 [.t yview] ; set done 1}
     vwait done
     after 300 {set fr2 [.t yview] ; set done 1}
@@ -5219,7 +5219,9 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
 } -cleanup {
-    .t debug 1;# re-enable debugging
+    .t1 delete 1.0 end
+    update idletasks
+    .t1 debug 1;# re-enable debugging
     destroy .t1
 } -result {1 1}
 
@@ -5417,6 +5419,7 @@ test textDisp-40.2 {display lineend at a multi-byte character ending the display
 
 test textDisp-41.1 {many text widgets complete their line metrics update - bug 1348333} -setup {
     toplevel .tt
+    update idletasks;
 } -body {
     # About 600 widgets are needed to show the bug.  A small font keeps the
     # toplevel within a small screen: the widgets of a row clipped by it are

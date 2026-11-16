@@ -628,7 +628,6 @@ static int checkSnapshot(
     Tk_Window tkwin)
 {
     static TkMacOSXSnapshot *savedSnapshot = NULL;
-    bool agrees = false;
     if (!tkwin) {
 	return -1;
     }
