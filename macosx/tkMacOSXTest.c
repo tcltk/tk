@@ -546,6 +546,7 @@ typedef struct TkMacOSXSnapshot {
     int height;
     int bytesPerRow;
     char *data;
+    int copied;
 } TkMacOSXSnapshot;
 
 static TkMacOSXSnapshot *createSnapshot(
@@ -553,24 +554,28 @@ static TkMacOSXSnapshot *createSnapshot(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkMacOSXSnapshot *pixels = Tcl_Alloc(sizeof(TkMacOSXSnapshot));
-    memset(pixels, 0, sizeof(TkMacOSXSnapshot));
-    NSWindow *macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    TKContentView *view = (TKContentView *)[macWin contentView];
-    CGContextRef bc = [view tkLayerBitmapContext];
-    pixels->tkwin = tkwin;
-    pixels->width = CGBitmapContextGetWidth(bc);
-    pixels->height = CGBitmapContextGetHeight(bc);
-    pixels->bytesPerRow = CGBitmapContextGetBytesPerRow(bc);
-    Tcl_Size dataSize = pixels->height * pixels->bytesPerRow;
-    pixels->data = Tcl_Alloc(dataSize);
-    memcpy(pixels->data, CGBitmapContextGetData(bc), dataSize);
+    if (pixels) {
+	NSWindow *macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+	TKContentView *view = (TKContentView *)[macWin contentView];
+	CGContextRef bc = [view tkLayerBitmapContext];
+	if (!bc) {
+	    Tcl_Free(pixels);
+	    return NULL;
+	}
+	memset(pixels, 0, sizeof(TkMacOSXSnapshot));
+	pixels->tkwin = tkwin;
+	pixels->width = CGBitmapContextGetWidth(bc);
+	pixels->height = CGBitmapContextGetHeight(bc);
+	pixels->bytesPerRow = CGBitmapContextGetBytesPerRow(bc);
+	pixels->data = CGBitmapContextGetData(bc);
+    }
     return pixels;
 }
 
 static void freeSnapshot(TkMacOSXSnapshot *pixels)
 {
     if (pixels) {
-        if (pixels->data) {
+        if (pixels->data && pixels->copied) {
             Tcl_Free(pixels->data);
         }
         Tcl_Free(pixels);
@@ -645,6 +650,11 @@ static int checkSnapshot(
 	return result;
     } else {
 	savedSnapshot = newSnapshot;
+	Tcl_Size dataSize = savedSnapshot->height * savedSnapshot->bytesPerRow;
+	char *data = savedSnapshot->data; 
+	savedSnapshot->data = Tcl_Alloc(dataSize);
+	memcpy(savedSnapshot->data, data, dataSize);
+	savedSnapshot->copied = 1;
 	return 1;
     }
 }
