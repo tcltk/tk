@@ -124,21 +124,21 @@ namespace eval ::tk::test::generic {
     # Result: an ID that may be used to cancel the scheduled script evaluation.
     #
     proc evalOnWindowEvent {w event {script "invalid"} {timeout 1000}} {
-	variable evalOnEvent
+	variable evalOnWindowEvent
 	if {$w eq "cancel"} {
 	    set ID [string range $event 8 end]
-	    bind $evalOnEvent($ID,w) $evalOnEvent($ID,event) $evalOnEvent($ID,savedBinding)
-	    after cancel $evalOnEvent($ID,timeout)
-	    array unset evalOnEvent $ID,*
+	    bind $evalOnWindowEvent($ID,w) $evalOnWindowEvent($ID,event) $evalOnWindowEvent($ID,savedBinding)
+	    after cancel $evalOnWindowEvent($ID,timeout)
+	    array unset evalOnWindowEvent $ID,*
 	    return
 	}
-	set ID [incr evalOnEvent(count)]
-	set evalOnEvent($ID,w) $w
-	set evalOnEvent($ID,event) $event
-	set evalOnEvent($ID,script) $script
-	set evalOnEvent($ID,savedBinding) [bind $w $event]
+	set ID [incr evalOnWindowEvent(count)]
+	set evalOnWindowEvent($ID,w) $w
+	set evalOnWindowEvent($ID,event) $event
+	set evalOnWindowEvent($ID,script) $script
+	set evalOnWindowEvent($ID,savedBinding) [bind $w $event]
 	bind $w $event [list +evalOnWindowEvent.signal $ID %W 0]
-	set evalOnEvent($ID,timeout) [after $timeout [list evalOnWindowEvent.signal $ID $w 1]]
+	set evalOnWindowEvent($ID,timeout) [after $timeout [list evalOnWindowEvent.signal $ID $w 1]]
 	return "onevent#$ID"
     }
 
@@ -152,39 +152,32 @@ namespace eval ::tk::test::generic {
     #	timeout : boolean indicating timeout condition
     #
     proc evalOnWindowEvent.signal {ID W timeout} {
-	variable evalOnEvent
+	variable evalOnWindowEvent
 	if {$timeout} {
-	    if  {[info procs ::evalOnEventTimeout] ne ""} {
-		evalOnEventTimeout onevent#$ID
+	    if  {[info procs ::evalOnWindowEventTimeout] ne ""} {
+		# invoke custom timeout handler
+		::evalOnWindowEventTimeout onevent#$ID
 	    } else {
 		after idle [list error "evalOnWindowEvent onevent#$ID timed out"]
 	    }
 	} else {
-	    if {$W ne $evalOnEvent($ID,w)} {
+	    if {$W ne $evalOnWindowEvent($ID,w)} {
 		# Beware that:
-		# - evalOnEvent(ID,w) is the name of a window as a binding tag
+		# - evalOnWindowEvent(ID,w) is the name of a window as a binding tag
 		# - all children of a toplevel window carry the name of their
 		#   toplevel window as a binding tag.
 		# Therefore, this handler may be triggered by the servicing of
-		# an event on a child "W" of toplevel "evalOnEvent($ID,w)"
-		# rather than the toplevel "evalOnEvent($ID,w)" itself. Such
+		# an event on a child "W" of toplevel "evalOnWindowEvent($ID,w)"
+		# rather than the toplevel "evalOnWindowEvent($ID,w)" itself. Such
 		# cases are contrary to the intention of evalOnWindowEvent, so
 		# we refrain from evaluating the script.
 		return
 	    }
-	    after cancel $evalOnEvent($ID,timeout)
-	    after idle $evalOnEvent($ID,script)
+	    after cancel $evalOnWindowEvent($ID,timeout)
+	    after idle $evalOnWindowEvent($ID,script)
 	}
-	bind $evalOnEvent($ID,w) $evalOnEvent($ID,event) $evalOnEvent($ID,savedBinding)
-	array unset evalOnEvent $ID,*
-    }
-
-    # evalOnWindowEventTimeout --
-    #
-    #	Default timeout handler for evalOnWindowEvent
-    #
-    proc evalOnWindowEventTimeout {ID} {
-	return -code error "evalOnWindowEvent $ID timed out"
+	bind $evalOnWindowEvent($ID,w) $evalOnWindowEvent($ID,event) $evalOnWindowEvent($ID,savedBinding)
+	array unset evalOnWindowEvent $ID,*
     }
 
     # evalWhen --
@@ -221,7 +214,8 @@ namespace eval ::tk::test::generic {
 	    after cancel \$evalWhen($ID,after)
 	    array unset evalWhen $ID,*
 	    if  {[info procs ::evalWhenTimeout] ne ""} {
-		evalWhenTimeout when#$ID
+		# invoke custom timeout handler
+		::evalWhenTimeout when#$ID
 	    } else {
 		after idle [list error "evalWhen when#$ID timed out"]
 	    }
@@ -252,14 +246,6 @@ namespace eval ::tk::test::generic {
 	# reschedule yourself after a duration that is twice the previous duration
 	set evalWhen($ID,duration) [expr {$evalWhen($ID,duration) == 0?1:2 * $evalWhen($ID,duration)}]
 	set evalWhen($ID,after) [after $evalWhen($ID,duration) [list evalWhenCheckCondition $ID]]
-    }
-
-    # evalWhenTimeout --
-    #
-    #	Default timeout handler for evalWhen
-    #
-    proc evalWhenTimeout {evalWhenID} {
-	return -code error "evalWhen $evalWhenID timed out"
     }
 
     proc fixfocus {} {
@@ -512,7 +498,7 @@ namespace eval ::tk::test::generic {
     # Result: none
     #
     proc waitForWindowEvent {w event {timeout -1}} {
-	variable _windowEvent
+	variable waitForwindowEvent
 
 	if {! [winfo exists $w]} {
 	    return -code error "window $w doesn't exist"
@@ -543,17 +529,16 @@ namespace eval ::tk::test::generic {
 	    }
 	}
 
-	# Use counter as a unique ID to prevent subsequent waits
-	# from interfering with each other.
-	set counter [incr _windowEvent(counter)]
-	set _windowEvent($counter) -1
+	# Use a unique ID to prevent subsequent waits from interfering with each other.
+	set ID [incr waitForwindowEvent(count)]
+	set waitForwindowEvent($ID) -1
 	set savedBinding [bind $w $event]
-	bind $w $event [list +waitForWindowEvent.signal $counter $w %W]
-	set afterID [after $timeout [list set ::[namespace current]::_windowEvent($counter) 0]]
-	vwait ::[namespace current]::_windowEvent($counter)
+	bind $w $event [list +waitForWindowEvent.signal $ID $w %W]
+	set afterID [after $timeout [list set ::[namespace current]::waitForwindowEvent($ID) 0]]
+	vwait ::[namespace current]::waitForwindowEvent($ID)
 	bind $w $event $savedBinding
-	set result $_windowEvent($counter)
-	unset _windowEvent($counter)
+	set result $waitForwindowEvent($ID)
+	unset waitForwindowEvent($ID)
 	if {$result} {
 	    after cancel $afterID
 	} else {
@@ -567,7 +552,7 @@ namespace eval ::tk::test::generic {
     #	Sets the wait variable used by that proc, thus unblocking the vwait
     #	command.
     #
-    proc waitForWindowEvent.signal {counter w W} {
+    proc waitForWindowEvent.signal {ID w W} {
 	if {$w ne $W} {
 	    # Beware that:
 	    # - "w" is the name of a window as a binding tag
@@ -579,14 +564,15 @@ namespace eval ::tk::test::generic {
 	    # so we don't unlock the wait variable.
 	    return
 	}
-	variable _windowEvent
-	set _windowEvent($counter) 1
+	variable waitForwindowEvent
+	set waitForwindowEvent($ID) 1
     }
 
     # waitUntil --
     #
     #	Wait for a condition to become satisfied. If the condition is true
-    #	already before waitUntil was invoked, an error is returned.
+    #	already before waitUntil was invoked, an error is returned. This proc
+    #	is not intended as a replacement for "vwait".
     #
     # Arguments:
     #	condition : the condition to be satisfied over time
@@ -607,11 +593,18 @@ namespace eval ::tk::test::generic {
 	set timeoutID [after $timeout [namespace code [list set waitUntil(timeoutReached,$ID) 1]]]
 	while {1} {
 	    if {$waitUntil(timeoutReached,$ID)} {
+		unset waitUntil(timeoutReached,$ID)
 		return -code error "wait for condition \"$condition\" timed out (> $timeout ms)"
 	    }
 	    if {[catch {uplevel 1 $cmd} result]} {
+		# evaluating the condition resulted in an error
+		after cancel $timeoutID
+		unset waitUntil(timeoutReached,$ID)
 		return -code error $result
 	    } elseif {$result} {
+		# condition true
+		after cancel $timeoutID
+		unset waitUntil(timeoutReached,$ID)
 		break
 	    }
 
@@ -622,7 +615,6 @@ namespace eval ::tk::test::generic {
 	    set duration [expr {$duration == 0?1:2 * $duration}]
 	    pause $duration
 	}
-	after cancel $timeoutID
 	if {$duration == 0} {
 	    return -code error "condition \"$condition\" was true already before the proc's invocation"
 	}

@@ -1,4 +1,4 @@
-# Tests for the "testutils" command, defined in testutils.tcl
+# Tests for utilities provided by testutils.tcl
 #
 # © 2025 Erik Leunissen
 #
@@ -36,6 +36,17 @@ resetWindows
 assert {"testutils" in [info procs testutils]}
 
 #
+# LOCAL UTILITY PROCS
+#
+
+proc deleteTimerEvents {} {
+    foreach id [after info] {
+	after cancel $id
+	puts "Warning: left-over timer event $id was cancelled"
+    }
+}
+
+#
 # TESTS
 #
 
@@ -43,106 +54,181 @@ assert {"testutils" in [info procs testutils]}
 # Testutils domain "generic"
 #
 
-test evalOnWindowEvent-1.0 {timeout} -body {
-    proc evalOnWindowEventTimeout {args} {
+test evalOnWindowEvent-1.0 {timeout} -setup {
+    deleteTimerEvents
+    proc myBgerrorCmd {args} {
+	set ::x "timeout"
 	puts -nonewline [lindex $args 0]
     }
     set savBgerrorCmd [interp bgerror {}]
-    interp bgerror {} evalOnWindowEventTimeout
-    set x 0
-    evalOnWindowEvent . <<EvalOnEvent>> {set x 22} 10
-    pause 20
+    interp bgerror {} myBgerrorCmd
+    set x "init"
+} -body {
+    evalOnWindowEvent . <<EvalOnEvent>> {set x "triggered"} 10
+    vwait x
     list $x [bind . <<EvalOnEvent>>] [after info]
 } -cleanup {
     interp bgerror {} $savBgerrorCmd
-    rename evalOnWindowEventTimeout {}
-    unset -nocomplain x savBgerrorCmd
-} -result "0 {} {}" -output "evalOnWindowEvent onevent#* timed out" -match glob
+    rename myBgerrorCmd {}
+    unset -nocomplain savBgerrorCmd x
+} -result "timeout {} {}" -output "evalOnWindowEvent onevent#* timed out" -match glob
 
-test evalOnWindowEvent-1.1 {script evaluation skipped for child of intended toplevel} -setup {
-    pack [frame .f]; # Apparently the frame needs to be mapped once to receive
-    update;	     # the window event generated in the test's body. You may
-		     # "pack forget .f" after the first mapping, but we don't
-		     # care about that.
-    proc evalOnWindowEventTimeout {args} {
-	puts -nonewline [lindex $args 0]
+test evalOnWindowEvent-1.1 {custom timeout handler} -setup {
+    deleteTimerEvents
+    proc evalOnWindowEventTimeout {ID} {
+	set ::x "timeout"
+	puts -nonewline "custom time out for $ID"
     }
-    set savBgerrorCmd [interp bgerror {}]
-    interp bgerror {} evalOnWindowEventTimeout
+    set x "init"
 } -body {
-    set x 0
-    after 50 {event generate .f <<EvalOnEvent>>}
-    set evalOnWindowEventID [evalOnWindowEvent . <<EvalOnEvent>> {set x 22} 100]
-    pause 200
-    lappend result $x [bind . <<EvalOnEvent>>] [after info]
+    evalOnWindowEvent . <<EvalOnEvent>> {set x "triggered"} 10
+    vwait x
+    list $x [bind . <<EvalOnEvent>>] [after info]
 } -cleanup {
-    interp bgerror {} $savBgerrorCmd
+    rename evalOnWindowEventTimeout {}
+    unset -nocomplain x
+} -result "timeout {} {}" -output "custom time out for onevent#*" -match glob
+
+test evalOnWindowEvent-2.1 {script evaluation skipped for child of intended toplevel} -setup {
+    deleteTimerEvents
+    pack [frame .f]; # Apparently the frame needs to be mapped once to receive
+    update;	     # the window event generated in the test's body. After the
+		     # first mapping, one may "pack forget .f", but we don't
+		     # really care about that.
+    proc evalOnWindowEventTimeout {ID} {
+	set ::x "timeout"
+	puts -nonewline "custom time out for $ID"
+    }
+} -body {
+    set x "init"
+    after 10 {event generate .f <<EvalOnEvent>>}
+    evalOnWindowEvent . <<EvalOnEvent>> {set x "triggered"} 100
+    vwait x
+    list $x [bind . <<EvalOnEvent>>] [after info]
+} -cleanup {
     rename evalOnWindowEventTimeout {}
     destroy .f
-    unset -nocomplain evalOnWindowEventID result x
-} -result "0 {} {}" -output "evalOnWindowEvent onevent#* timed out" -match glob
+    unset -nocomplain x
+} -result "timeout {} {}" -output "custom time out for onevent#*" -match glob
 
-test evalOnWindowEvent-1.2 {script evaluation triggered for intended toplevel} -body {
-    set x 0
-    after 50 {event generate . <<EvalOnEvent>>}
-    set evalOnWindowEventID [evalOnWindowEvent . <<EvalOnEvent>> {set x 22}]
-    pause 100
-    lappend result $x [bind . <<EvalOnEvent>>] [after info]
+test evalOnWindowEvent-2.2 {script evaluation triggered for intended toplevel} -setup {
+    deleteTimerEvents
+} -body {
+    set x "init"
+    after 10 {event generate . <<EvalOnEvent>>}
+    evalOnWindowEvent . <<EvalOnEvent>> {set x "triggered"}
+    vwait x
+    list $x [bind . <<EvalOnEvent>>] [after info]
 } -cleanup {
-    unset -nocomplain evalOnWindowEventID result x
-} -result "22 {} {}"
+    unset -nocomplain x
+} -result "triggered {} {}"
 
-test evalOnWindowEvent-2.0 {cancel} -body {
-    set x 0
-    set y 0
-    after 100 {set x 11}
-    set evalOnWindowEventID [evalOnWindowEvent . <<EvalOnEvent>> {set y 22}]
-    after 50 [list evalOnWindowEvent cancel $evalOnWindowEventID]
-    pause 200
-    list $y [bind . <<EvalOnEvent>>] [after info]
+test evalOnWindowEvent-2.3 {cancel} -setup {
+    deleteTimerEvents
+} -body {
+    set x "init"
+    set y "init"
+    after 50 {
+	event generate . <<EvalOnEvent>>
+	set y "done"
+    }
+    set ID [evalOnWindowEvent . <<EvalOnEvent>> {set x "triggered"} 100]
+    after 10 [list evalOnWindowEvent cancel $ID]
+    vwait y; # allow cancel operation and event generation to happen in the meantime
+    list $x [bind . <<EvalOnEvent>>] [after info]
 } -cleanup {
-    unset -nocomplain evalOnWindowEventID x y
-} -result "0 {} {}"
+    unset -nocomplain ID x y
+} -result "init {} {}" -output ""
 
-test evalWhen-1.0 {timeout} -body {
-    proc evalWhenTimeout {args} {
+#
+# NOTES regarding testing of evalWhen
+#
+# * proc evalWhen is intended for conditions that are more involved than the
+#   value of a single variable. Specifically, conditions related to a window's
+#   state are intended. This ought be considered for the test cases that exercise
+#   success. For other test cases, targetting the value of a single variable is
+#   entirely OK.
+#
+# * evalWhen uses iterations where the waiting duration increases by powers
+#   of 2. For this reason the condition passed to evalWhen is evaluated
+#   after durations of 1, 2, 4, 8, 16, 32, 64 ms .... etc.
+#   Tests scheduling timer events need to take these step sizes into account.
+#
+test evalWhen-1.0 {default timeout} -setup {
+    deleteTimerEvents
+    proc myBgerrorCmd {args} {
+	set ::z 1
 	puts -nonewline [lindex $args 0]
     }
     set savBgerrorCmd [interp bgerror {}]
-    interp bgerror {} evalWhenTimeout
+    interp bgerror {} myBgerrorCmd
+} -body {
     set x 0
     set y 0
     evalWhen {$x == 11} {set y 22} 10
-    pause 20
-    list $y [after info]
+    vwait z
+    list $x $y [after info]
 } -cleanup {
     interp bgerror {} $savBgerrorCmd
+    rename myBgerrorCmd {}
+    unset -nocomplain x y z savBgerrorCmd
+} -result "0 0 {}" -output "evalWhen when#* timed out" -match glob
+
+test evalWhen-1.1 {custom timeout handler} -setup {
+    deleteTimerEvents
+    proc evalWhenTimeout {ID} {
+	puts -nonewline "custom time out for $ID"
+	set ::z 1
+    }
+} -body {
+    set x 0
+    set y 0
+    set z 0
+    evalWhen {$x == 11} {set y 22} 10
+    vwait z
+    list $y [after info]
+} -cleanup {
     rename evalWhenTimeout {}
-    unset -nocomplain x y savBgerrorCmd
-} -result "0 {}" -output "evalWhen when#* timed out" -match glob
+    unset -nocomplain x y z savBgerrorCmd
+} -result "0 {}" -output "custom time out for when#*" -match glob
 
-test evalWhen-1.1 {success} -body {
+test evalWhen-2.1 {success} -setup {
+    deleteTimerEvents
+    testutils import timing
+    wm deiconify .
+} -body {
+    set x 0
+    frame .f
+    after 20 {pack .f}
+    evalWhen {[winfo ismapped .f]} {
+	set x 22
+    }
+    vwait x
+    set duration [dt.get];# expected duration: 31 ms (== 2^5 - 1)
+    list [expr {($duration > 25) && ($duration < 40)}] $x [after info]
+} -cleanup {
+    destroy .f
+    unset -nocomplain duration x
+    testutils forget timing
+} -result "1 22 {}"
+
+test evalWhen-2.2 {cancel} -setup {
+    deleteTimerEvents
+} -body {
     set x 0
     set y 0
-    after 50 {set x 11}
-    evalWhen {$x == 11} {set y 22}
-    pause 200
-    list $y [after info]
+    set z 0
+    after 50 {
+	set x 11
+	set z 1
+    }
+    set evalWhenID [evalWhen {$x == 11} {set y 22}]; # would become true after 64 ms
+    after 10 [list evalWhen cancel $evalWhenID]
+    vwait z; # allow cancel operation and timer event on x to happen in the meantime
+    list $x $y [after info]
 } -cleanup {
-    unset -nocomplain x y
-} -result "22 {}"
-
-test evalWhen-1.2 {cancel} -body {
-    set x 0
-    set y 0
-    after 100 {set x 11}
-    set evalWhenID [evalWhen {$x == 11} {set y 22}]
-    after 50 [list evalWhen cancel $evalWhenID]
-    pause 200
-    list $y [after info]
-} -cleanup {
-    unset -nocomplain x y evalWhenID
-} -result "0 {}"
+    unset -nocomplain x y z evalWhenID
+} -result "11 0 {}"
 
 test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
     unset -nocomplain result
@@ -357,30 +443,45 @@ test waitForWindowEvent-1.2 {stop waiting if event received by intended toplevel
     testutils forget timing
 } -result 1
 
+#
+# NOTES regarding testing of waitUntil
+#
+# * proc waitUntil is intended for conditions that are more involved than the
+#   value of a single variable. Specifically, conditions related to a window's
+#   state are intended. This ought be considered for the test cases that exercise
+#   success. For other test cases, targetting the value of a single variable is
+#   entirely OK.
+#
+# * waitUntil uses iterations where the waiting duration increases by powers
+#   of 2. For this reason the condition passed to waitUntil is evaluated
+#   after durations of 1, 2, 4, 8, 16, 32, 64 ms .... etc.
+#   Tests scheduling timer events need to take these step sizes into account.
+#
 test waitUntil-1.1 {invalid timeout value} -body {
-    waitUntil {whatever} duration
-} -result {invalid timeout value "duration"} -returnCodes error
+    waitUntil {whatever} bogus
+} -result {invalid timeout value "bogus"} -returnCodes error
 
-test waitUntil-2.1 {timeout default} -body {
+test waitUntil-2.1 {timeout default value} -body {
     set x 0
-    set afterID [after 150 {set x 1}]
+    set afterID [after 150 {set x 1}]; # expected time out after 127 ms
     waitUntil {$x == 1}
 } -cleanup {
     after cancel $afterID
     unset afterID x
 } -result {wait for condition "$x == 1" timed out (> 100 ms)} -returnCodes error
 
-test waitUntil-2.2 {timeout argument} -body {
+test waitUntil-2.2 {custom timeout argument} -body {
     set result [list]
     set x 0
     set afterID [after 50 {set x 1}]
-    lappend result [catch {waitUntil {$x == 1} 19} errMsg]
+    lappend result [catch {waitUntil {$x == 1} 19} errMsg]; # expected time out after 31 ms
     lappend result $errMsg
     lappend result [expr {[after info] eq $afterID}]
+    lappend result $x
 } -cleanup {
     after cancel $afterID
-    unset -nocomplain afterID errMsg x
-} -result {1 {wait for condition "$x == 1" timed out (> 19 ms)} 1}
+    unset -nocomplain afterID errMsg result x
+} -result {1 {wait for condition "$x == 1" timed out (> 19 ms)} 1 0}
 
 test waitUntil-3.0 {condition true before invocation, complain} -body {
     set x 1
@@ -390,13 +491,19 @@ test waitUntil-3.0 {condition true before invocation, complain} -body {
 } -result {condition "$x == 1" was true already before the proc's invocation} \
 -returnCodes error
 
-test waitUntil-3.1 {condition reached by waiting} -body {
-    set x 0
-    after 15 {set x 1}
-    waitUntil {$x == 1} 20
+test waitUntil-3.1 {condition reached by waiting} -setup {
+    testutils import timing
+} -body {
+    dt.reset
+    after 20 {toplevel .t}
+    waitUntil {[winfo exists .t] && [winfo ismapped .t]}
+    set duration [dt.get];# expected duration: 31 ms (== 2^5 - 1)
+    expr {($duration > 25) && ($duration < 40)}
 } -cleanup {
-    unset x
-} -result {}
+    unset -nocomplain duration
+    destroy .t
+    testutils forget timing
+} -result 1
 
 test waitUntil-4.1 {invalid condition syntax} -body {
     waitUntil {bogusCondition} 10
@@ -406,7 +513,7 @@ test waitUntil-4.2 {evaluation of condition results in error} -body {
     waitUntil {$_nonExistentVariable} 10
 } -result {can't read "_nonExistentVariable": no such variable} -returnCodes error -match glob
 
-test waitUntil-4.3.1 {reentrancy 1} -body {
+test waitUntil-4.3.1 {reentrancy, two simultaneous waiting procs -> condition true before on #2} -body {
     set x 0
     after 10 {set x 1}
     waitUntil {[waitUntil {$x == 1}] eq ""}
@@ -414,21 +521,68 @@ test waitUntil-4.3.1 {reentrancy 1} -body {
     unset -nocomplain x
 } -result {condition "[waitUntil {$x == 1}] eq """ was true already before the proc's invocation} -returnCodes error
 
-test waitUntil-4.3.2 {reentrancy 2} -body {
+test waitUntil-4.3.2 {reentrancy, two simultaneous waitings -> timeout on #1} -body {
     set x 0
     waitUntil {[waitUntil {$x == 1} 10] eq ""} 20
 } -cleanup {
     unset -nocomplain x
 } -result {wait for condition "$x == 1" timed out (> 10 ms)} -returnCodes error
 
-test waitUntil-4.3.3 {reentrancy 3} -body {
+test waitUntil-4.3.3 {reentrancy, two simultaneous waitings, blocking order xy} -body {
     set x 0
     set y 0
-    after 10 {set x 1}
-    waitUntil {([catch {waitUntil {$x == 1} 20}] == 0) && ($y == 1)} 30
+    set result [list ]
+    after 50 {set x 1; set y 1}; # detect condition true at 64 ms (is first after 32)
+    after idle {
+	waitUntil {($y == 1) && ([lappend result y:$x$y] ne "dummy")}
+    }
+    waitUntil {($x == 1) && ([lappend result x:$x$y] ne "dummy")}
+    set result
 } -cleanup {
-    unset -nocomplain x y
-} -result {*wait for condition "*" timed out (> 30 ms)} -returnCodes error -match glob
+    unset -nocomplain x y result
+} -result {y:11 x:11}
+
+test waitUntil-4.3.4 {reentrancy, three simultaneous waitings, blocking order xyz} -body {
+    set x 0
+    set y 0
+    set z 0
+    set result [list ]
+    after 10 {set x 1}
+    after 20 {set y 1}
+    after 50 {set z 1}; # detect condition true at 64 ms (is first after 32)
+			# x and y conditions are evaluated to true immediately
+			# after z-condition is evaluated to true
+    after idle {
+	after idle {
+	    waitUntil {($z == 1) && ([lappend result z:$x$y$z] ne "dummy")}
+	}
+	waitUntil {($y == 1) && ([lappend result y:$x$y$z] ne "dummy")}
+    }
+    waitUntil {($x == 1) && ([lappend result x:$x$y$z] ne "dummy")}
+    set result
+} -cleanup {
+    unset -nocomplain x y z result
+} -result {z:111 y:111 x:111}
+
+test waitUntil-4.3.5 {reentrancy, three simultaneous waitings, blocking order xyz} -body {
+    set x 0
+    set y 0
+    set z 0
+    set result [list ]
+    after 10 {set z 1}; # detect condition true at 16 ms (first after 8)
+    after 25 {set y 1}; # detect condition true at 32 ms (first after 16)
+    after 50 {set x 1}; # detect condition true after 64 ms (first after 32)
+    after idle {
+	after idle {
+	    waitUntil {($z == 1) && ([lappend result z:$x$y$z] ne "dummy")}
+	}
+	waitUntil {($y == 1) && ([lappend result y:$x$y$z] ne "dummy")}
+    }
+    waitUntil {($x == 1) && ([lappend result x:$x$y$z] ne "dummy")}
+    set result
+} -cleanup {
+    unset -nocomplain x y z result
+} -result {z:001 y:011 x:111}
 
 #
 # COMMON TEST SETUP
