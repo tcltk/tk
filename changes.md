@@ -191,6 +191,7 @@ to the userbase.
  - [select-10.4 hangs](https://core.tcl-lang.org/tk/tktview/610188)
  - [select test cases fail](https://core.tcl-lang.org/tk/tktview/171927)
  - [test suite tests 10.2, 11.1 failed](https://core.tcl-lang.org/tk/tktview/159148)
+ - [Every Tk_Init registers another thread exit handler](https://core.tcl-lang.org/tk/tktview/703a7f)
 
 Release Tk 9.0.4 arises from the check-in with tag `core-9-0-4`.
 
