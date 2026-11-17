@@ -1379,7 +1379,7 @@ static const char *const accentNames[] = {
 	// TODO: should Tk allow programs to request this?
 	colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
     } else {
-	// Avoid colorspace conversion for performance. See [9108ce12]
+	// Avoid color space conversion for performance. See [9108ce12]
 	NSScreen *screen = [[self window] screen];
 	NSNumber *screenNumber = [[screen deviceDescription]
 				     objectForKey:@"NSScreenNumber"];
