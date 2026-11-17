@@ -896,6 +896,88 @@ TkpPutRGBAImage(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpCaptureWindow --
+ *
+ *	Read the pixels of a rectangle of a window, including its child
+ *	windows. Used by the "snapshot" photo image subcommand.
+ *
+ *	The pixels are copied from the device context of the window, as
+ *	XGetImage does for a ZPixmap, so they are those just drawn by Tk.
+ *
+ * Results:
+ *	A standard Tcl result. On success, rgba is filled with width*height
+ *	pixels of 4 bytes each (red, green, blue, alpha), row by row.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpCaptureWindow(
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    int x, int y,
+    int width, int height,
+    unsigned char *rgba)
+{
+    HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    HDC windowDC, memDC;
+    HBITMAP bitmap = NULL, oldBitmap = NULL;
+    BITMAPINFO bmi;
+    unsigned char *bits = NULL;
+    int i, j, ok = 0;
+
+    windowDC = GetDC(hwnd);
+    if (windowDC == NULL) {
+	goto error;
+    }
+    memDC = CreateCompatibleDC(windowDC);
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biHeight = -height;	/* Top-down rows. */
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bitmap = CreateDIBSection(memDC, &bmi, DIB_RGB_COLORS, (void **) &bits,
+	    NULL, 0);
+    if (bitmap != NULL) {
+	oldBitmap = (HBITMAP) SelectObject(memDC, bitmap);
+	ok = BitBlt(memDC, 0, 0, width, height, windowDC, x, y, SRCCOPY);
+	GdiFlush();
+    }
+    if (ok) {
+	unsigned char *src = bits;
+
+	for (j = 0; j < height; j++) {
+	    for (i = 0; i < width; i++, src += 4) {
+		*rgba++ = src[2];
+		*rgba++ = src[1];
+		*rgba++ = src[0];
+		*rgba++ = 255;
+	    }
+	}
+    }
+    if (bitmap != NULL) {
+	SelectObject(memDC, oldBitmap);
+	DeleteObject(bitmap);
+    }
+    DeleteDC(memDC);
+    ReleaseDC(hwnd, windowDC);
+    if (ok) {
+	return TCL_OK;
+    }
+
+  error:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("could not read window \"%s\"",
+	    Tk_PathName(tkwin)));
+    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SNAPSHOT", "READ",
+	    (char *)NULL);
+    return TCL_ERROR;
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

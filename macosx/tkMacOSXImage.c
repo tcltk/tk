@@ -1957,6 +1957,97 @@ TkMacOSXNSImage_Init(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpCaptureWindow --
+ *
+ *	Read the pixels of a rectangle of a window, including its child
+ *	windows, and convert them from the color profile of the display to
+ *	sRGB, the space in which they were drawn (as testpixel does). Used by
+ *	the "snapshot" photo image subcommand.
+ *
+ * Results:
+ *	A standard Tcl result. On success, rgba is filled with width*height
+ *	pixels of 4 bytes each (red, green, blue, alpha), row by row.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpCaptureWindow(
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    int x, int y,
+    int width, int height,
+    unsigned char *rgba)
+{
+    Drawable d = Tk_WindowId(tkwin);
+    XImage *image = XGetImage(Tk_Display(tkwin), d, x, y, (unsigned) width,
+	    (unsigned) height, AllPlanes, ZPixmap);
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(d);
+    NSNumber *screenNumber = [[[win screen] deviceDescription]
+	    objectForKey:@"NSScreenNumber"];
+    CGColorSpaceRef displaySpace = screenNumber ?
+	    CGDisplayCopyColorSpace([screenNumber unsignedIntValue]) : NULL;
+    CGColorSpaceRef srgb = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    unsigned char *raw = NULL, *p;
+    CGDataProviderRef provider = NULL;
+    CGImageRef cgImage = NULL;
+    CGContextRef context = NULL;
+    int i, j, ok = 0;
+
+    if (image && displaySpace && srgb) {
+	/*
+	 * XGetImage returns a 32bpp image with red, green and blue in bits
+	 * 16, 8 and 0. Unpack it as R, G, B, X bytes, tag it with the color
+	 * space of the display and draw it into an sRGB bitmap.
+	 */
+
+	raw = (unsigned char *) Tcl_Alloc((size_t) width * height * 4);
+	for (j = 0, p = raw; j < height; j++) {
+	    for (i = 0; i < width; i++) {
+		unsigned long pixel = XGetPixel(image, i, j);
+
+		*p++ = (pixel & image->red_mask) >> 16;
+		*p++ = (pixel & image->green_mask) >> 8;
+		*p++ = pixel & image->blue_mask;
+		*p++ = 255;
+	    }
+	}
+	provider = CGDataProviderCreateWithData(NULL, raw,
+		(size_t) width * height * 4, NULL);
+	cgImage = CGImageCreate(width, height, 8, 32, width * 4, displaySpace,
+		kCGImageAlphaNoneSkipLast | kCGBitmapByteOrder32Big, provider,
+		NULL, false, kCGRenderingIntentDefault);
+	context = CGBitmapContextCreate(rgba, width, height, 8, width * 4,
+		srgb, kCGImageAlphaNoneSkipLast | kCGBitmapByteOrder32Big);
+	if (cgImage && context) {
+	    CGContextDrawImage(context, CGRectMake(0, 0, width, height),
+		    cgImage);
+	    for (i = 0, p = rgba; i < width * height; i++, p += 4) {
+		p[3] = 255;
+	    }
+	    ok = 1;
+	}
+    }
+    if (context) CGContextRelease(context);
+    if (cgImage) CGImageRelease(cgImage);
+    if (provider) CGDataProviderRelease(provider);
+    if (raw) Tcl_Free(raw);
+    if (image) XDestroyImage(image);
+    if (displaySpace) CGColorSpaceRelease(displaySpace);
+    if (srgb) CGColorSpaceRelease(srgb);
+    if (!ok) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("could not read window \"%s\"",
+		Tk_PathName(tkwin)));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SNAPSHOT", "READ",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4

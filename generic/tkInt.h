@@ -1315,6 +1315,9 @@ MODULE_SCOPE Tcl_ObjCmdProc2 SquareObjCmd;
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
+MODULE_SCOPE int	TkpCaptureWindow(Tcl_Interp *interp, Tk_Window tkwin,
+			    int x, int y, int width, int height,
+			    unsigned char *rgba);
 
 #ifdef __cplusplus
 }

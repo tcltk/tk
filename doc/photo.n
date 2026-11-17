@@ -28,6 +28,7 @@ photo \- Full-color images
 \fIimageName \fBput \fIdata\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBread \fIfilename\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBredither\fR
+\fIimageName \fBsnapshot \fIwindow\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBtransparency \fIsubcommand \fR?\fIarg ...\fR?
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
 .fi
@@ -475,6 +476,31 @@ dithered image may not be exactly correct.  Normally the difference is
 not noticeable, but if it is a problem, this command can be used to
 recalculate the dithered image in each window where the image is
 displayed.
+.\" METHOD: snapshot
+.TP
+\fIimageName \fBsnapshot \fIwindow\fR ?\fIoption value(s) ...\fR?
+.
+.VS "TIP ???"
+Copies a region of the window \fIwindow\fR, as it is shown, into the image
+\fIimageName\fR, possibly with pixel zooming and/or subsampling.  The
+window must be a mapped window of the application.  The captured pixels
+include its child windows, but not other toplevels covering it.  Pending
+redraws are done first, as by \fBupdate idletasks\fR.  The image is in device
+pixels, and its pixels are fully opaque.  If no options are specified, this
+command copies the whole window into \fIimageName\fR, starting at
+coordinates (0,0) in \fIimageName\fR.  The options \fB\-from\fR (in the
+coordinates of \fIwindow\fR), \fB\-to\fR, \fB\-shrink\fR, \fB\-zoom\fR and
+\fB\-subsample\fR have the same meaning as for \fBcopy\fR.
+.RS
+.PP
+What is captured of parts of the window that are covered by other windows or
+are outside the screen depends on the platform.  On Windows and macOS they are
+captured as drawn.  On X11 they are undefined, unless the X server keeps their
+contents, and a window which is not entirely on the screen may fail to be
+captured.  On macOS, the colors are converted from the color profile of the
+display to sRGB, the space in which they were drawn.
+.RE
+.VE "TIP ???"
 .\" METHOD: transparency
 .TP
 \fIimageName \fBtransparency \fIsubcommand \fR?\fIarg ...\fR?

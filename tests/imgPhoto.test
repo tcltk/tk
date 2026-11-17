@@ -2774,6 +2774,140 @@ test imgPhoto-26.3 {TkAlignImageData, lines shorter than the input, Bug 481255} 
 #
 
 unset ousterPhotoFile
+
+# ----------------------------------------------------------------------
+
+test imgPhoto-27.1 {ImgPhotoCmd procedure: snapshot option, wrong # args} -setup {
+    image create photo photo1
+} -body {
+    photo1 snapshot
+} -cleanup {
+    image delete photo1
+} -returnCodes error -result {wrong # args: should be "photo1 snapshot window ?-from x1 y1 x2 y2? ?-to x1 y1 x2 y2? ?-zoom x y? ?-subsample x y? ?-shrink?"}
+test imgPhoto-27.2 {ImgPhotoCmd procedure: snapshot option, no such window} -setup {
+    image create photo photo1
+} -body {
+    photo1 snapshot .nosuchwindow
+} -cleanup {
+    image delete photo1
+} -returnCodes error -result {bad window path name ".nosuchwindow"}
+test imgPhoto-27.3 {ImgPhotoCmd procedure: snapshot option, unmapped window} -setup {
+    image create photo photo1
+    toplevel .snap
+    wm withdraw .snap
+} -body {
+    photo1 snapshot .snap
+} -cleanup {
+    image delete photo1
+    destroy .snap
+} -returnCodes error -result {window ".snap" is not mapped}
+
+# A toplevel with a red frame and a blue child, at the top left of the screen.
+proc snapshotWindow {} {
+    toplevel .snap -borderwidth 0 -highlightthickness 0
+    wm geometry .snap +0+0
+    frame .snap.f -width 100 -height 60 -background red \
+	-borderwidth 0 -highlightthickness 0
+    frame .snap.f.c -background blue -borderwidth 0 -highlightthickness 0
+    place .snap.f.c -x 60 -y 20 -width 30 -height 20
+    pack .snap.f
+    update
+    raise .snap
+    update
+}
+# Whether the color at x y of an image is within 8 of a color name.
+proc snapshotColor {image x y color} {
+    lassign [$image get $x $y] r g b
+    lassign [winfo rgb . $color] er eg eb
+    foreach c {r g b} {
+	if {abs([set $c] - [set e$c] / 257) > 8} {
+	    return "[$image get $x $y] instead of $color"
+	}
+    }
+    return $color
+}
+testConstraint snapshotColors [expr {[winfo visual .] eq "truecolor"}]
+
+test imgPhoto-27.4 {ImgPhotoCmd procedure: snapshot option, bad -from} -setup {
+    image create photo photo1
+    snapshotWindow
+} -body {
+    photo1 snapshot .snap.f -from 0 0 101 10
+} -cleanup {
+    image delete photo1
+    destroy .snap
+} -returnCodes error -result {coordinates for -from option extend outside the window}
+test imgPhoto-27.5 {ImgPhotoCmd procedure: snapshot option, whole window with a child} -constraints {
+    snapshotColors
+} -setup {
+    image create photo photo1
+    snapshotWindow
+} -body {
+    photo1 snapshot .snap.f
+    list [image width photo1] [image height photo1] \
+	[snapshotColor photo1 5 5 red] [snapshotColor photo1 70 30 blue] \
+	[snapshotColor photo1 95 55 red]
+} -cleanup {
+    image delete photo1
+    destroy .snap
+} -result {100 60 red blue red}
+test imgPhoto-27.6 {ImgPhotoCmd procedure: snapshot option, -from and -shrink} -constraints {
+    snapshotColors
+} -setup {
+    image create photo photo1 -width 200 -height 200
+    photo1 configure -width 0 -height 0
+    snapshotWindow
+} -body {
+    photo1 snapshot .snap.f -from 50 10 100 60 -shrink
+    list [image width photo1] [image height photo1] \
+	[snapshotColor photo1 0 0 red] [snapshotColor photo1 20 20 blue]
+} -cleanup {
+    image delete photo1
+    destroy .snap
+} -result {50 50 red blue}
+test imgPhoto-27.7 {ImgPhotoCmd procedure: snapshot option, child window} -constraints {
+    snapshotColors
+} -setup {
+    image create photo photo1
+    snapshotWindow
+} -body {
+    photo1 snapshot .snap.f.c
+    list [image width photo1] [image height photo1] \
+	[snapshotColor photo1 15 10 blue]
+} -cleanup {
+    image delete photo1
+    destroy .snap
+} -result {30 20 blue}
+test imgPhoto-27.8 {ImgPhotoCmd procedure: snapshot option, -subsample and -zoom} -setup {
+    image create photo photo1
+    image create photo photo2
+    snapshotWindow
+} -body {
+    photo1 snapshot .snap.f -subsample 2
+    photo2 snapshot .snap.f.c -zoom 2 3
+    list [image width photo1] [image height photo1] \
+	[image width photo2] [image height photo2]
+} -cleanup {
+    image delete photo1 photo2
+    destroy .snap
+} -result {50 30 60 60}
+test imgPhoto-27.9 {ImgPhotoCmd procedure: snapshot option, pending redraws are done} -constraints {
+    snapshotColors
+} -setup {
+    image create photo photo1
+    snapshotWindow
+} -body {
+    .snap.f configure -background green
+    photo1 snapshot .snap.f
+    snapshotColor photo1 5 5 green
+} -cleanup {
+    image delete photo1
+    destroy .snap
+} -result green
+
+rename snapshotWindow {}
+rename snapshotColor {}
+
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoop {}}

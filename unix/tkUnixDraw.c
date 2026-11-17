@@ -379,6 +379,115 @@ TkpPutRGBAImage(
 #endif /* HAVE_XRENDER */
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpCaptureWindow --
+ *
+ *	Read the pixels of a rectangle of a window as shown on the screen,
+ *	including its child windows. Used by the "snapshot" photo image
+ *	subcommand.
+ *
+ * Results:
+ *	A standard Tcl result. On success, rgba is filled with width*height
+ *	pixels of 4 bytes each (red, green, blue, alpha), row by row.
+ *	Parts of the window covered by other windows or outside the screen
+ *	are undefined, unless the X server keeps their contents.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MaskShift(
+    unsigned long mask,
+    int *shiftPtr,
+    int *bitsPtr)
+{
+    int shift = 0, bits = 0;
+
+    while (mask && !(mask & 1)) {
+	mask >>= 1;
+	shift++;
+    }
+    while (mask & 1) {
+	mask >>= 1;
+	bits++;
+    }
+    *shiftPtr = shift;
+    *bitsPtr = bits;
+}
+
+static unsigned char
+MaskedChannel(
+    unsigned long pixel,
+    int shift,
+    int bits)
+{
+    unsigned long value = (pixel >> shift) & ((1UL << bits) - 1);
+
+    if (bits >= 8) {
+	return (unsigned char) (value >> (bits - 8));
+    }
+    return (unsigned char) (value * 255 / ((1UL << bits) - 1));
+}
+
+int
+TkpCaptureWindow(
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    int x, int y,
+    int width, int height,
+    unsigned char *rgba)
+{
+    Visual *visual = Tk_Visual(tkwin);
+    XImage *image;
+    Tk_ErrorHandler handler;
+    int i, j, rs, rb, gs, gb, bs, bb;
+
+    if (visual->red_mask == 0 || visual->green_mask == 0
+	    || visual->blue_mask == 0) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"capturing a window requires a TrueColor visual", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SNAPSHOT", "VISUAL",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * XGetImage fails with BadMatch if a part of the rectangle is not on the
+     * screen. Report it as a Tcl error rather than as an X error.
+     */
+
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1, NULL, NULL);
+    image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y,
+	    (unsigned) width, (unsigned) height, AllPlanes, ZPixmap);
+    Tk_DeleteErrorHandler(handler);
+    if (image == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"could not read window \"%s\": is it entirely on the screen?",
+		Tk_PathName(tkwin)));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SNAPSHOT", "READ",
+		(char *)NULL);
+	return TCL_ERROR;
+    }
+
+    MaskShift(visual->red_mask, &rs, &rb);
+    MaskShift(visual->green_mask, &gs, &gb);
+    MaskShift(visual->blue_mask, &bs, &bb);
+    for (j = 0; j < height; j++) {
+	for (i = 0; i < width; i++) {
+	    unsigned long pixel = XGetPixel(image, i, j);
+
+	    *rgba++ = MaskedChannel(pixel, rs, rb);
+	    *rgba++ = MaskedChannel(pixel, gs, gb);
+	    *rgba++ = MaskedChannel(pixel, bs, bb);
+	    *rgba++ = 255;
+	}
+    }
+    XDestroyImage(image);
+    return TCL_OK;
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

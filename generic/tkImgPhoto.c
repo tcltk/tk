@@ -418,12 +418,12 @@ ImgPhotoCmd(
 {
     static const char *const photoOptions[] = {
 	"blank", "cget", "configure", "copy", "data", "get", "put",
-	"read", "redither", "transparency", "write", NULL
+	"read", "redither", "snapshot", "transparency", "write", NULL
     };
     enum PhotoOptions {
 	PHOTO_BLANK, PHOTO_CGET, PHOTO_CONFIGURE, PHOTO_COPY, PHOTO_DATA,
-	PHOTO_GET, PHOTO_PUT, PHOTO_READ, PHOTO_REDITHER, PHOTO_TRANS,
-	PHOTO_WRITE
+	PHOTO_GET, PHOTO_PUT, PHOTO_READ, PHOTO_REDITHER, PHOTO_SNAPSHOT,
+	PHOTO_TRANS, PHOTO_WRITE
     };
 
     PhotoModel *modelPtr = (PhotoModel *)clientData;
@@ -1140,6 +1140,137 @@ readCleanup:
 		    modelPtr->width, modelPtr->height);
 	}
 	return TCL_OK;
+
+    case PHOTO_SNAPSHOT: {
+	Tk_Window tkwin;
+	int winWidth, winHeight;
+
+	/*
+	 * photo snapshot command - capture a window of this application as
+	 * it is shown, with its child windows. First parse options.
+	 */
+
+	index = 2;
+	memset(&options, 0, sizeof(options));
+	options.zoomX = options.zoomY = 1;
+	options.subsampleX = options.subsampleY = 1;
+	options.name = NULL;
+	if (ParseSubcommandOptions(&options, interp,
+		OPT_FROM | OPT_TO | OPT_ZOOM | OPT_SUBSAMPLE | OPT_SHRINK,
+		&index, objc, objv) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (options.name == NULL || index < objc) {
+	    Tcl_WrongNumArgs(interp, 2, objv,
+		    "window ?-from x1 y1 x2 y2? ?-to x1 y1 x2 y2? ?-zoom x y? ?-subsample x y? ?-shrink?");
+	    return TCL_ERROR;
+	}
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(options.name),
+		Tk_MainWindow(interp));
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Finish the pending redraws and geometry changes, so that the
+	 * window is captured as it should look.
+	 */
+
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS | TCL_DONT_WAIT)) {
+	    /* Empty loop body. */
+	}
+	if (Tk_WindowId(tkwin) == None || !Tk_IsMapped(tkwin)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" is not mapped", Tk_PathName(tkwin)));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SNAPSHOT",
+		    "UNMAPPED", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	winWidth = Tk_Width(tkwin);
+	winHeight = Tk_Height(tkwin);
+	if (!(options.options & OPT_FROM) || (options.fromX2 < 0)) {
+	    options.fromX2 = winWidth;
+	    options.fromY2 = winHeight;
+	}
+	if ((options.fromX2 > winWidth) || (options.fromY2 > winHeight)
+		|| (options.fromX >= options.fromX2)
+		|| (options.fromY >= options.fromY2)) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "coordinates for -from option extend outside the window",
+		    TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM",
+		    (char *)NULL);
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Capture the rectangle and put it into the image as copy does.
+	 */
+
+	block.width = options.fromX2 - options.fromX;
+	block.height = options.fromY2 - options.fromY;
+	block.pixelSize = 4;
+	block.pitch = 4 * block.width;
+	block.offset[0] = 0;
+	block.offset[1] = 1;
+	block.offset[2] = 2;
+	block.offset[3] = 3;
+	block.pixelPtr = (unsigned char *) Tcl_AttemptAlloc(
+		(size_t) block.pitch * block.height);
+	if (block.pixelPtr == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    TK_PHOTO_ALLOC_FAILURE_MESSAGE, TCL_INDEX_NONE));
+	    Tcl_SetErrorCode(interp, "TK", "MALLOC", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	if (TkpCaptureWindow(interp, tkwin, options.fromX, options.fromY,
+		block.width, block.height, block.pixelPtr) != TCL_OK) {
+	    Tcl_Free(block.pixelPtr);
+	    return TCL_ERROR;
+	}
+
+	if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
+	    width = block.width;
+	    if (options.subsampleX > 0) {
+		width = (width + options.subsampleX - 1) / options.subsampleX;
+	    } else if (options.subsampleX == 0) {
+		width = 0;
+	    } else {
+		width = (width - options.subsampleX - 1) / -options.subsampleX;
+	    }
+	    options.toX2 = options.toX + width * options.zoomX;
+
+	    height = block.height;
+	    if (options.subsampleY > 0) {
+		height = (height + options.subsampleY - 1)
+			/ options.subsampleY;
+	    } else if (options.subsampleY == 0) {
+		height = 0;
+	    } else {
+		height = (height - options.subsampleY - 1)
+			/ -options.subsampleY;
+	    }
+	    options.toY2 = options.toY + height * options.zoomY;
+	}
+	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
+		&block, options.toX, options.toY, options.toX2 - options.toX,
+		options.toY2 - options.toY, options.zoomX, options.zoomY,
+		options.subsampleX, options.subsampleY,
+		TK_PHOTO_COMPOSITE_SET);
+	Tcl_Free(block.pixelPtr);
+	if (result == TCL_OK && (options.options & OPT_SHRINK)) {
+	    if (ImgPhotoSetSize(modelPtr, options.toX2,
+		    options.toY2) != TCL_OK) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, TCL_INDEX_NONE));
+		Tcl_SetErrorCode(interp, "TK", "MALLOC", (char *)NULL);
+		return TCL_ERROR;
+	    }
+	    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
+		    modelPtr->width, modelPtr->height);
+	}
+	return result;
+    }
 
     case PHOTO_TRANS: {
 	static const char *const photoTransOptions[] = {
