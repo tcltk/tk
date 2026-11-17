@@ -597,28 +597,6 @@ TkWaylandPresentWindow(
     }
 }
 
-
-/*
- * TkWaylandBeginResize / TkWaylandSettleResizes --
- *	Formerly: hold resize frames until Tk went "quiet", then drain
- *	Tcl_ServiceAll() to settle.  That blocked the event loop, starved
- *	the compositor, and produced lag-then-jump (bounce).  Resizes are
- *	now coalesced once per loop pass in TkWaylandApplyPendingResizes
- *	(tkWaylandNotify.c) and the preserved buffer is presentable
- *	immediately, Gtk-style.  Kept as no-ops so existing callers link.
- */
-MODULE_SCOPE void
-TkWaylandBeginResize(GLFWwindow *glfwWindow)
-{
-    (void) glfwWindow;
-}
-
-MODULE_SCOPE int
-TkWaylandSettleResizes(void)
-{
-    return 0;
-}
-
 /*
  *----------------------------------------------------------------------
  *

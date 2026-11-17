@@ -107,6 +107,9 @@ extern void TkWaylandMenuDismissAll(void);
 extern void TkWaylandActivateMenuEntry(TkMenu *menuPtr, int index);
 extern void TkWaylandMenuInvokeTearoff(TkMenu *menuPtr);
 static void GenerateConfigureNotify(TkWindow *winPtr, int includeWin);
+static void TkWaylandApplyPendingResizes(void);
+
+static int tkWaylandFlushingIdle = 0;
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -183,7 +186,7 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandStoreTextInput --
+ * TkWaylandStoreText --
  *
  *      Converts a codepoint to UTF-8 and appends the Utf-8 string to the
  *      pendingText DString stored in the window's TkWindowPrivate struct.
@@ -295,6 +298,24 @@ static void TkWaylandCheckProc(void *clientData, int flags);
 
 static int displayIdleQueued = 0;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandDisplayIdleCallback --
+ *
+ *      Idle callback that presents all windows. Clears the
+ *      displayIdleQueued flag and calls TkWaylandDisplayAllWindows to
+ *      blit and swap any windows with pending drawing.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Presents all windows with pending drawing.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
 {
@@ -303,8 +324,23 @@ TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
 }
 
 /*
- * Dummy function for pending redraw check - can be extended later.
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandHasPendingRedraw --
+ *
+ *      Dummy function for pending redraw check - can be extended later.
+ *      Currently always returns 0 because redraws are performed
+ *      synchronously in every loop iteration.
+ *
+ * Results:
+ *      Returns 0 (no pending redraw).
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
  */
+
 static inline int TkWaylandHasPendingRedraw(void) {
     return 0;  /* currently we redraw synchronously in every iteration */
 }
@@ -347,18 +383,48 @@ Tk_WaylandSetupTkNotifier(void)
     
 }
 
-/* 
- * No-op: the file handler exists only to wake Tcl_WaitForEvent. 
- * This is still a required parameter. The CheckProc
- * drains the sockets on every pass through the loop. 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandFdProc --
+ *
+ *      No-op file handler. This handler exists only to wake
+ *      Tcl_WaitForEvent when one of the registered descriptors becomes
+ *      readable. The actual draining of the sockets happens in
+ *      TkWaylandCheckProc on every pass through the loop.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      None. This is still a required parameter.
+ *
+ *----------------------------------------------------------------------
  */
+ 
 static void
 TkWaylandFdProc(TCL_UNUSED(void *), 
 	TCL_UNUSED(int))
 {
 }
 
-/* Keep one descriptor registered with Tcl (re-register only on change). */
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWatchFd --
+ *
+ *      Keep one descriptor registered with Tcl. Re-registers only when
+ *      the requested fd differs from the currently tracked one.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      May delete the old file handler and create a new one.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 TkWaylandWatchFd(int *slot, int fd)
 {
@@ -398,15 +464,6 @@ TkWaylandWatchFd(int *slot, int fd)
  */
 
 
-/* Forward declaration: defined below with the resize callback.
- * Must be here, before SetupProc/CheckProc use it. */
-static void TkWaylandApplyPendingResizes(void);
-
-/* Set while SetupProc drains idle callbacks (below).  Draining
- * re-enters SetupProc via the nested Tcl_DoOneEvent; the nested call
- * must NOT drain again or it recurses forever. */
-static int tkWaylandFlushingIdle = 0;
-
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), 
 	TCL_UNUSED(int))
@@ -423,7 +480,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
 
     TkWaylandApplyPendingResizes();
     /*
-     * CLAMP TO THE EDGE: GenerateConfigureNotify above only QUEUED
+     * GenerateConfigureNotify above only queued
      * Tk geometry/display work as idle callbacks.  If we swap now,
      * we present the previous frame's layout and the content
      * "chases" the window edge by one iteration in every direction.
@@ -690,16 +747,16 @@ static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandSetupCallbacks, TkWaylandClearCallbacks --
+ * TkWaylandSetupCallbacks --
  *
- *      Register/clear the standard GLFW callbacks for a window.  Called by
+ *      Register the standard GLFW callbacks for a window.  Called by
  *      glfwCreateWindow.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Registers/clears all standard callbacks.
+ *      Registers all standard callbacks.
  *
  *----------------------------------------------------------------------
  */
@@ -722,6 +779,23 @@ TkWaylandSetupCallbacks(
     glfwSetCharCallback            (glfwWindow, TkWaylandCharCallback);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandClearCallbacks --
+ *
+ *      Clear the standard GLFW callbacks for a window.  Called when a
+ *      window is being destroyed.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Clears all standard callbacks.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE void
 TkWaylandClearCallbacks(
 			GLFWwindow *glfwWindow)
@@ -742,9 +816,24 @@ TkWaylandClearCallbacks(
 
 
 /*
- * Idle-time close dispatch. Deferring keeps user handlers (which commonly
- * call "destroy .") from running re-entrantly inside GLFW's callback.
+ *----------------------------------------------------------------------
+ *
+ * CloseRequestIdleProc --
+ *
+ *      Idle-time close dispatch. Deferring keeps user handlers (which
+ *      commonly call "destroy .") from running re-entrantly inside
+ *      GLFW's callback.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Runs the [wm protocol] handler for WM_DELETE_WINDOW, or the
+ *      default destroy, and releases the TkWindow reference.
+ *
+ *----------------------------------------------------------------------
  */
+
 static void
 CloseRequestIdleProc(void *clientData)
 {
@@ -772,7 +861,7 @@ CloseRequestIdleProc(void *clientData)
  *      None.
  *
  * Side effects:
- *      Destroys the Tk window.
+ *      Schedules the Tk window for destruction via an idle callback.
  *
  *----------------------------------------------------------------------
  */
@@ -804,11 +893,15 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *      TkWaylandWindowRefreshCallback generates ExposeNotify events for the window 
  * 		and all of its children.
  *
+ *      This callback only records the newest size; the actual layout, FBO,
+ *      and damage work is coalesced into TkWaylandApplyPendingResizes(),
+ *      called once per event-loop pass.
+ *
  * Results:
  *      None.
  *
  * Side effects:
- *      Rebuilds the backing store framebuffer. 
+ *      Records the pending framebuffer size for later processing.
  *
  *----------------------------------------------------------------------
  */
@@ -829,6 +922,24 @@ typedef struct {
 } TkWaylandResizeState;
 static TkWaylandResizeState resizeStates[TKWL_MAX_RESIZE_WINDOWS];
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandResizeStateFor --
+ *
+ *      Look up (or optionally create) the resize state entry for a
+ *      given GLFW window.
+ *
+ * Results:
+ *      Returns a pointer to the resize state, or NULL if not found and
+ *      creation was not requested or no slot is available.
+ *
+ * Side effects:
+ *      May initialize a new resize state entry.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static TkWaylandResizeState *
 TkWaylandResizeStateFor(GLFWwindow *window, int create)
 {
@@ -843,6 +954,24 @@ TkWaylandResizeStateFor(GLFWwindow *window, int create)
     resizeStates[freeSlot].appliedFbW = resizeStates[freeSlot].appliedFbH = -1;
     return &resizeStates[freeSlot];
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandFramebufferSizeCallback --
+ *
+ *      Called when framebuffer size changes.  This callback only records
+ *      the newest size; the actual layout, FBO, and damage work is
+ *      coalesced into TkWaylandApplyPendingResizes().
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Records the pending framebuffer size for later processing.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 TkWaylandFramebufferSizeCallback(
@@ -862,16 +991,29 @@ TkWaylandFramebufferSizeCallback(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandApplyPendingResizes --
- *	One coalesced resize pass per event-loop iteration.  Grow-only FBO
- *	with headroom (realloc only when the window outgrows the allocated
- *	FBO, and then by 1.5x, not by 1px), preserve old pixels, and damage
- *	only the newly exposed strips.  On shrink, reuse the FBO untouched:
- *	the old pixels are already correct, there is nothing to copy/clear.
- *	Presenting happens in DisplayAllWindows, which no longer holds
- *	resize frames until "quiet" -- the preserved buffer is presentable
- *	immediately, exactly like Gtk.
+ *
+ *      One coalesced resize pass per event-loop iteration.  Grow-only FBO
+ *      with headroom (realloc only when the window outgrows the allocated
+ *      FBO, and then by 1.5x, not by 1px), preserve old pixels, and damage
+ *      only the newly exposed strips.  On shrink, reuse the FBO untouched:
+ *      the old pixels are already correct, there is nothing to copy/clear.
+ *      Presenting happens in DisplayAllWindows, which no longer holds
+ *      resize frames until "quiet" -- the preserved buffer is presentable
+ *      immediately, exactly like Gtk.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      May reallocate and blit FBOs, generate ConfigureNotify events,
+ *      and queue Expose events for newly exposed strips.
+ *
+ *----------------------------------------------------------------------
  */
+
 static void
 TkWaylandApplyPendingResizes(void)
 {
@@ -984,7 +1126,23 @@ TkWaylandApplyPendingResizes(void)
     }
 }
 
-/* Helper function to process configure events. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateConfigureNotify --
+ *
+ *      Recursively generate ConfigureNotify events for a window and all
+ *      of its mapped non-toplevel descendants.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Queues ConfigureNotify events for the window and its children.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 GenerateConfigureNotify(
     TkWindow *winPtr,
@@ -1016,7 +1174,7 @@ GenerateConfigureNotify(
  *      None.
  *
  * Side effects:
- *      Generates FocusIn/FocusOut events.
+ *      Generates FocusIn/FocusOut events and manages IBus focus.
  *
  *----------------------------------------------------------------------
  */
@@ -1087,7 +1245,7 @@ TkWaylandWindowFocusCallback(
  *      None.
  *
  * Side effects:
- *      Generates Map/Unmap events.
+ *      Generates Map/Unmap events and updates the TK_MAPPED flag.
  *
  *----------------------------------------------------------------------
  */
@@ -1181,12 +1339,11 @@ TkWaylandWindowMaximizeCallback(
  *      (tkPointer.c), which generates the proper Enter/Leave event chains
  *      and, on leave.
  *
- * 		This is distinct from the widget-level crossing logic in
+ *      This is distinct from the widget-level crossing logic in
  *      Tk_UpdatePointer (called by TkWaylandCursorPosCallback), which tracks
  *      transitions between child widgets while the pointer is already inside
  *      the GLFW window.  This callback handles the coarser, compositor-level
  *      event that GLFW delivers when the pointer crosses the window border.
- *
  *
  * Results:
  *      None.
