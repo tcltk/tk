@@ -398,6 +398,15 @@ TkWaylandWatchFd(int *slot, int fd)
  */
 
 
+/* Forward declaration: defined below with the resize callback.
+ * Must be here, before SetupProc/CheckProc use it. */
+static void TkWaylandApplyPendingResizes(void);
+
+/* Set while SetupProc drains idle callbacks (below).  Draining
+ * re-enters SetupProc via the nested Tcl_DoOneEvent; the nested call
+ * must NOT drain again or it recurses forever. */
+static int tkWaylandFlushingIdle = 0;
+
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), 
 	TCL_UNUSED(int))
@@ -412,6 +421,24 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
      * for any window on which some drawing has been done.
      */
 
+    TkWaylandApplyPendingResizes();
+    /*
+     * CLAMP TO THE EDGE: GenerateConfigureNotify above only QUEUED
+     * Tk geometry/display work as idle callbacks.  If we swap now,
+     * we present the previous frame's layout and the content
+     * "chases" the window edge by one iteration in every direction.
+     * Drain the idle queue first, in this same pass, so the display
+     * procs draw the new layout into the FBO before DisplayAllWindows
+     * swaps it.  The inner edges then move with the outer edge.
+     */
+    if (!tkWaylandFlushingIdle) {
+	int idleRuns;
+	tkWaylandFlushingIdle = 1;
+	for (idleRuns = 0; idleRuns < 200; idleRuns++) {
+	    if (Tcl_DoOneEvent(TCL_IDLE_EVENTS | TCL_DONT_WAIT) == 0) break;
+	}
+	tkWaylandFlushingIdle = 0;
+    }
     TkWaylandDisplayAllWindows();
 
     struct wl_display *display = glfwGetWaylandDisplay();
@@ -497,6 +524,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 
     /* Process events for GLFW windows. */
     glfwPollEvents();
+    TkWaylandApplyPendingResizes();
     
     /* Process events for popup windows */
     struct wl_display *display = glfwGetWaylandDisplay();
@@ -785,124 +813,174 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *----------------------------------------------------------------------
  */
 
+/* Coalesced resize state: GLFW/Wayland can deliver many configures
+ * per drag tick.  The callback below only records the newest size;
+ * TkWaylandApplyPendingResizes() (called once per event-loop pass, in
+ * CheckProc/SetupProc) does the one layout + FBO + damage pass for it.
+ * This is the Gtk model: one frame of work per frame, never one per tick.
+ * Per-window state lives here (glfwTkInfo is defined in the shared header,
+ * which these two files do not own) in a small fixed table.
+ */
+#define TKWL_MAX_RESIZE_WINDOWS 32
+typedef struct {
+    GLFWwindow *window;
+    int pendingFbW, pendingFbH; /* newest framebuffer size, -1 = none */
+    int appliedFbW, appliedFbH; /* size the FBO/layout were last built for */
+} TkWaylandResizeState;
+static TkWaylandResizeState resizeStates[TKWL_MAX_RESIZE_WINDOWS];
+
+static TkWaylandResizeState *
+TkWaylandResizeStateFor(GLFWwindow *window, int create)
+{
+    int i, freeSlot = -1;
+    for (i = 0; i < TKWL_MAX_RESIZE_WINDOWS; i++) {
+        if (resizeStates[i].window == window) return &resizeStates[i];
+        if (freeSlot < 0 && resizeStates[i].window == NULL) freeSlot = i;
+    }
+    if (!create || freeSlot < 0) return NULL;
+    resizeStates[freeSlot].window = window;
+    resizeStates[freeSlot].pendingFbW = resizeStates[freeSlot].pendingFbH = -1;
+    resizeStates[freeSlot].appliedFbW = resizeStates[freeSlot].appliedFbH = -1;
+    return &resizeStates[freeSlot];
+}
+
 static void
 TkWaylandFramebufferSizeCallback(
     GLFWwindow *window,
     int width,
     int height)
 {
-    
-    /* Validate parameters. */
-    if (width <= 0 || height <= 0) {
-        DEBUG_LOG("FramebufferSizeCallback: invalid size %dx%d",
-		  width, height);
-        return;
-    }
-    
-    TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-        DEBUG_LOG("FramebufferSizeCallback: No Tk window!");
-        return;
-    }
-    
-    if (!winPtr->privatePtr) {
-        DEBUG_LOG("TkWaylandFramebufferSizeCallback:"
-		  "privatePtr is NULL for %s -> %dx%d",
-		  Tk_PathName(winPtr), width, height);
-        return;
-    }
+    TkWaylandResizeState *st;
+    if (width <= 0 || height <= 0) return;
+    /* Never do layout / GL work inside the GLFW callback: it can fire
+     * many times per drag tick, re-entrantly, mid-event-loop.  Just
+     * remember the newest size; intermediates are dropped. */
+    st = TkWaylandResizeStateFor(window, 1);
+    if (!st) return;
+    st->pendingFbW = width;
+    st->pendingFbH = height;
+}
 
-    glfwGetWindowSize(window, &(winPtr->changes.width),
-		      &(winPtr->changes.height));
-    DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
-	"Setting Tk size of %s to %dx%d",
-	 Tk_PathName(winPtr), winPtr->changes.width, winPtr->changes.height);
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+/*
+ * TkWaylandApplyPendingResizes --
+ *	One coalesced resize pass per event-loop iteration.  Grow-only FBO
+ *	with headroom (realloc only when the window outgrows the allocated
+ *	FBO, and then by 1.5x, not by 1px), preserve old pixels, and damage
+ *	only the newly exposed strips.  On shrink, reuse the FBO untouched:
+ *	the old pixels are already correct, there is nothing to copy/clear.
+ *	Presenting happens in DisplayAllWindows, which no longer holds
+ *	resize frames until "quiet" -- the preserved buffer is presentable
+ *	immediately, exactly like Gtk.
+ */
+static void
+TkWaylandApplyPendingResizes(void)
+{
+    int i;
+    for (i = 0; i < TKWL_MAX_RESIZE_WINDOWS; i++) {
+	TkWaylandResizeState *st = &resizeStates[i];
+	GLFWwindow *window;
+	TkWindow *winPtr;
+	glfwTkInfo *infoPtr;
+	int fbW, fbH, oldWinW, oldWinH, newWinW, newWinH;
+	if (!st->window || st->pendingFbW < 0) continue;
+	window = st->window;
+	fbW = st->pendingFbW; fbH = st->pendingFbH;
+	st->pendingFbW = st->pendingFbH = -1;
+	if (fbW == st->appliedFbW && fbH == st->appliedFbH) continue;
+	winPtr = TkWaylandGetTkWindow(window);
+	if (!winPtr || !winPtr->privatePtr) continue;
+	infoPtr = glfwGetWindowUserPointer(window);
+	if (!infoPtr || !infoPtr->vg) continue;
 
-    if (!infoPtr) {
-        DEBUG_LOG("TkWaylandFramebufferSizeCallback: infoPtr is NULL");
-        return;
-    }
+	oldWinW = winPtr->changes.width;
+	oldWinH = winPtr->changes.height;
+	glfwGetWindowSize(window, &newWinW, &newWinH);
+	if (newWinW <= 0 || newWinH <= 0) continue;
 
-    /*
-     * The FBO belongs to the GL context of this window, which need not be
-     * current: e.g. after another toplevel was destroyed.  Without it
-     * nvgluCreateFramebuffer() fails.  Even if the FBO cannot be created,
-     * Tk must still learn the new size below.
-     */
-    glfwMakeContextCurrent(window);
-
-    NVGcontext *vg = infoPtr->vg;
-    if (vg == NULL) {
-        DEBUG_LOG("TkWaylandFramebufferSizeCallback: No NVG context!");
-    } else {
-	/* Delete the old FBO if it exists. */
-	if (winPtr->privatePtr->fb) {
-	    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-	    winPtr->privatePtr->fb = NULL;
-	}
-	/* Create a new FBO. */
-	winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-	if (!winPtr->privatePtr->fb) {
-	    DEBUG_LOG("TkWaylandFramebufferSizeCallback: Failed to create FBO");
-	} else {
-	    /* Check FBO completeness. */
-	    nvgluBindFramebuffer(winPtr->privatePtr->fb);
-	    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	    if (status != GL_FRAMEBUFFER_COMPLETE) {
-		DEBUG_LOG("FBO incomplete (status=0x%x)", status);
-		nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+	glfwMakeContextCurrent(window);
+	{
+	    NVGLUframebuffer *oldFb = winPtr->privatePtr->fb;
+	    int allocW = 0, allocH = 0;
+	    if (oldFb) nvgImageSize(infoPtr->vg, oldFb->image, &allocW, &allocH);
+	    if (!oldFb || fbW > allocW || fbH > allocH) {
+		/* Grow (with headroom) or first FBO: realloc once, copy old
+		 * pixels top-anchored, clear only the fresh allocation first
+		 * so the new strip never shows raw GPU memory. */
+		int growW = fbW, growH = fbH;
+		NVGLUframebuffer *newFb;
+		if (oldFb) {
+		    if (growW < allocW * 3 / 2) growW = allocW * 3 / 2;
+		    if (growH < allocH * 3 / 2) growH = allocH * 3 / 2;
+		    if (growW < fbW) growW = fbW;
+		    if (growH < fbH) growH = fbH;
+		}
 		winPtr->privatePtr->fb = NULL;
-	    } else {
-		DEBUG_LOG("TkWaylandFramebufferSizeCallback: "
-			"FBO created successfully: %dx%d", width, height);
+		newFb = nvgluCreateFramebuffer(infoPtr->vg, growW, growH, 0);
+		if (newFb) {
+		    nvgluBindFramebuffer(newFb);
+		    if (glCheckFramebufferStatus(GL_FRAMEBUFFER)
+			    == GL_FRAMEBUFFER_COMPLETE) {
+			glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			if (oldFb && oldFb->fbo != 0) {
+			    int oldW = 0, oldH = 0, copyW, copyH;
+			    nvgImageSize(infoPtr->vg, oldFb->image, &oldW, &oldH);
+			    copyW = oldW < fbW ? oldW : fbW;
+			    copyH = oldH < fbH ? oldH : fbH;
+			    if (copyW > 0 && copyH > 0) {
+				glDisable(GL_SCISSOR_TEST);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER,
+					oldFb->fbo);
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
+					newFb->fbo);
+				glBlitFramebuffer(0, 0, copyW, copyH,
+				    0, 0, copyW, copyH,
+				    GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			    }
+			}
+			winPtr->privatePtr->fb = newFb;
+		    } else {
+			nvgluDeleteFramebuffer(newFb);
+			winPtr->privatePtr->fb = oldFb;
+		    }
+		    nvgluBindFramebuffer(NULL);
+		} else {
+		    winPtr->privatePtr->fb = oldFb;
+		}
+		if (oldFb && winPtr->privatePtr->fb != oldFb)
+		    nvgluDeleteFramebuffer(oldFb);
+	    }
+	    /* Else: shrink, or grow inside the headroom allocation:
+	     * reuse the FBO untouched.  No copy, no clear, no realloc.
+	     * The delta expose below repaints the new strip. */
+	}
+	st->appliedFbW = fbW; st->appliedFbH = fbH;
 
-		/*
-		 * nvgluCreateFramebuffer does not clear the color attachment
-		 * it allocates, and this resize path unconditionally discards
-		 * the old FBO and its content along with it. Without an
-		 * explicit clear here, every resize (including the handful
-		 * that happen during initial layout) briefly/permanently
-		 * exposes raw GPU memory as visible static in any region a
-		 * widget hasn't repainted yet.
-		 */
-		glClearColor(0.831f, 0.815f, 0.784f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+	winPtr->changes.width = newWinW;
+	winPtr->changes.height = newWinH;
+	/* Only re-lay-out when the logical size actually changed
+	 * (a scale-only framebuffer change must not ping-pong). */
+	if (newWinW != oldWinW || newWinH != oldWinH) {
+	    TkWaylandMenubarResize(winPtr);
+	    GenerateConfigureNotify(winPtr, 1);
+	    /* Damage only the newly exposed strips.  Everything else
+	     * is preserved pixels; ExposeSubtree() over the whole tree
+	     * forced every widget to re-render (NanoVG text included)
+	     * on every drag tick, which was most of the lag.  Children
+	     * whose allocation changed repaint via their own
+	     * ConfigureNotify/display procs. */
+	    if (winPtr->privatePtr->fb) {
+		tkWaylandInvalidateClipRectsForTree(winPtr);
+		if (newWinW > oldWinW)
+		    TkWaylandQueueExposeEvent(winPtr, oldWinW, 0,
+			newWinW - oldWinW, newWinH);
+		if (newWinH > oldWinH)
+		    TkWaylandQueueExposeEvent(winPtr, 0, oldWinH,
+			newWinW, newWinH - oldWinH);
+		if (newWinW <= oldWinW && newWinH <= oldWinH)
+		    TkWaylandQueueExposeEvent(winPtr, 0, 0, newWinW, newWinH);
 	    }
 	}
-    }
-
-    /*
-     * Notify the menubar subsurface to recreate itself at the new width.
-     * This must happen before TkDoConfigureNotify so that internalBorderTop
-     * is already accurate when Tk re-lays out children in response to the
-     * configure event.  MenubarResizeIdleProc defers the actual EGL
-     * surface recreate to the next idle pass to avoid corrupting the GL
-     * state mid-resize.
-     */
-
-    TkWaylandMenubarResize(winPtr);
-    
-    /*
-     * Update Tk's geometry from the GLFW window size and generate the
-     * configure notification.  The actual repaint will happen through the
-     * normal Tk event/display cycle.
-     */
-    glfwGetWindowSize(window, &(winPtr->changes.width),
-		      &(winPtr->changes.height));
-    
-    DEBUG_LOG("TkWaylandFramebufferSizeCallback: configuring %s",
-	      Tk_PathName(winPtr));
-    GenerateConfigureNotify(winPtr, 1);
-
-    /*
-     * The backing store was just replaced and cleared, so everything that
-     * had been drawn in it is gone.  Widgets whose size did not change do
-     * not redisplay on ConfigureNotify, so expose the whole mapped subtree.
-     */
-    if (winPtr->privatePtr->fb) {
-	tkWaylandInvalidateClipRectsForTree(winPtr);
-	ExposeSubtree(winPtr);
     }
 }
 

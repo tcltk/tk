@@ -449,7 +449,7 @@ static int renderFBO(
     if (!isGlfwWindowValid(glfwWindow)) return 1;
     if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
     static double lastSwap=0; double now=glfwGetTime();
-    if (!force && now-lastSwap<0.008) return 0;  /* throttled: caller keeps NEEDS_DISPLAY */
+    /* No swap throttle. */
     glfwSwapBuffers(glfwWindow);
     lastSwap=glfwGetTime();
     return 1;
@@ -597,6 +597,28 @@ TkWaylandPresentWindow(
     }
 }
 
+
+/*
+ * TkWaylandBeginResize / TkWaylandSettleResizes --
+ *	Formerly: hold resize frames until Tk went "quiet", then drain
+ *	Tcl_ServiceAll() to settle.  That blocked the event loop, starved
+ *	the compositor, and produced lag-then-jump (bounce).  Resizes are
+ *	now coalesced once per loop pass in TkWaylandApplyPendingResizes
+ *	(tkWaylandNotify.c) and the preserved buffer is presentable
+ *	immediately, Gtk-style.  Kept as no-ops so existing callers link.
+ */
+MODULE_SCOPE void
+TkWaylandBeginResize(GLFWwindow *glfwWindow)
+{
+    (void) glfwWindow;
+}
+
+MODULE_SCOPE int
+TkWaylandSettleResizes(void)
+{
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -676,10 +698,6 @@ PresentOverridePopup(
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
-    static double lastDisplay=0;
-    double nowDisp=glfwGetTime();
-    if (nowDisp-lastDisplay<0.005) return;
-    lastDisplay=nowDisp;
     if (shutdownInProgress) return;
     if (glfwTkInfoList==NULL) return;
 
