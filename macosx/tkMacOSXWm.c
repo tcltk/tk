@@ -336,14 +336,14 @@ typedef enum {
     WMATT_ALPHA, WMATT_APPEARANCE, WMATT_BUTTONS, WMATT_FULLSCREEN,
     WMATT_HIDDEN, WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH,
     WMATT_TOPMOST, WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS,
-    WMATT_TABBINGID, WMATT_TABBINGMODE, WMATT_TYPE,
+    WMATT_TABBINGID, WMATT_TABBINGMODE, WMATT_TYPE, WMATT_SRGB,
     _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-appearance", "-buttons", "-fullscreen", "-hidden", "-modified",
     "-notify", "-titlepath", "-topmost", "-transparent", "-stylemask", "-class",
-    "-tabbingid", "-tabbingmode", "-type", NULL
+    "-tabbingid", "-tabbingmode", "-type", "-srgb", NULL
 };
 
 /*
@@ -1894,6 +1894,21 @@ WmSetAttribute(
 	    tkMacOSXWmAttrNotifyVal = boolValue;
 	}
 	break;
+    case WMATT_SRGB:
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (boolValue != ((wmPtr->flags & WM_SRGB) != 0)) {
+	    int oldFlags = wmPtr->flags;
+	    if (boolValue) {
+		wmPtr->flags |= WM_SRGB;
+	    } else {
+		wmPtr->flags &= ~WM_SRGB;
+	    }
+	    ApplyWindowAttributeFlagChanges(winPtr, macWindow,
+		wmPtr->attributes, oldFlags, 1, 0);
+	}
+	break;
     case WMATT_STYLEMASK: {
 	unsigned long styleMaskValue = 0;
 	Tcl_Obj **elements;
@@ -2152,6 +2167,9 @@ WmGetAttribute(
 	break;
     case WMATT_NOTIFY:
 	result = Tcl_NewBooleanObj(tkMacOSXWmAttrNotifyVal);
+	break;
+    case WMATT_SRGB:
+	result = Tcl_NewBooleanObj((wmPtr->flags & WM_SRGB) != 0);
 	break;
     case WMATT_STYLEMASK: {
 	unsigned long styleMaskValue = [macWindow styleMask];
@@ -7628,6 +7646,11 @@ ApplyWindowAttributeFlagChanges(
 		    kCGUtilityWindowLevel : ([macWindow isKindOfClass:
 		    [TKPanel class]] && [macWindow isFloatingPanel] ?
 		    kCGFloatingWindowLevel : kCGNormalWindowLevel)];
+	}
+	if ((wmPtr->flags & WM_SRGB) != (oldFlags & WM_SRGB)) {
+	    // Call viewDidChangeBackingProperties since that is what
+	    // the system calls to handle screen color space changes.
+	    [[macWindow contentView] viewDidChangeBackingProperties];
 	}
 
 	/*

@@ -167,6 +167,13 @@ proxy icon is draggable).
 \fB\-notify\fR
 .
 Specifies process notification state (bouncing of the application dock icon).
+.\" OPTION: -srgb
+.TP
+\fB\-stylemask\fR
+.
+Specifies whether the window uses the sRGB color space or the screen's
+color space for drawing. Disabling this option may improve performance
+but reduce color accuracy.
 .\" OPTION: -stylemask
 .TP
 \fB\-stylemask\fR

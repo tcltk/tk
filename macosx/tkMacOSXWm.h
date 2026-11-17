@@ -272,6 +272,7 @@ typedef struct TkWmInfo {
 #define WM_FULLSCREEN			0x4000
 #define WM_TRANSPARENT			0x8000
 #define WM_IS_HIDDEN			0x10000
+#define WM_SRGB				0x20000
 
 #endif /* _TKMACWM */
 
