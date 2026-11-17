@@ -1801,7 +1801,7 @@ TkImgDitherInstance(
 				 * block to be dithered. */
     int width, int height)	/* Dimensions of the block to be dithered. */
 {
-#ifdef TK_CAN_RENDER_RGBA
+#ifdef TK_USE_WAYLAND
     /* Images with 8-bit color do not need dithering. */
     return;
 #else
@@ -2125,7 +2125,7 @@ TkImgDitherInstance(
 
     Tcl_Free(imagePtr->data);
     imagePtr->data = NULL;
-#endif  /*TK_CAN_RENDER_RGBA*/
+#endif  /* TK_USE_WAYLAND */
 }
 
 /*
