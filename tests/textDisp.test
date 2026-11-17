@@ -5212,9 +5212,9 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     set res {}
 } -body {
     .t1 see 10000.0
-    after 300 {set fr1 [.t yview] ; set done 1}
+    after 300 {set fr1 [.t1 yview] ; set done 1}
     vwait done
-    after 300 {set fr2 [.t yview] ; set done 1}
+    after 300 {set fr2 [.t1 yview] ; set done 1}
     vwait done
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
