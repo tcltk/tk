@@ -46,11 +46,14 @@ static int cgAntiAliasLimit = 0;
 static int useThemedToplevel = 0;
 static int useThemedFrame = 0;
 static unsigned long transparentColor;
+int useSRGB = 0;
 
 /*
  * Prototypes for functions used only in this file.
  */
 
+static Tcl_VarTraceProc useSRGBTraceProc;
+static Tcl_IdleProc pretendViewsChangedBackingProperties;
 static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 static NSImage *CreateNSImageFromPixmap(Pixmap pixmap, int width, int height);
 static HIShapeRef GetClipRgn(Drawable drawable);
@@ -70,6 +73,67 @@ static HIShapeRef GetClipRgn(Drawable drawable);
  *
  *----------------------------------------------------------------------
  */
+
+static void pretendViewsChangedBackingProperties(
+    TCL_UNUSED(void *)) /* clientData */
+{
+    for (NSWindow *win in [NSApp windows]) {
+	if (! [win isKindOfClass:[TKWindow class]]) {
+	    continue;
+	}
+
+	/*
+	 * Call viewDidChangeBackingProperties since that is what
+	 * the system calls to handle screen color space changes.
+	 */
+	[[win contentView] viewDidChangeBackingProperties];
+    }
+}
+
+static char *useSRGBTraceProc(
+    void *clientData,
+    Tcl_Interp *interp,
+    const char *part1,
+    const char *part2,
+    int flags)
+{
+    /*
+     * If useSRGB changes, then windows should redraw. That seemingly can't be done using Tcl_LinkVar,
+     * but maybe this trace proc can try to match the behavior of LinkTraceProc (tclLink.c) somewhat.
+     */
+
+    if ((flags & TCL_TRACE_UNSETS) && (flags & TCL_TRACE_DESTROYED) && !Tcl_InterpDeleted(interp)) {
+	Tcl_SetVar2Ex(interp, part1, part2, Tcl_NewBooleanObj(useSRGB), TCL_GLOBAL_ONLY);
+	Tcl_TraceVar2(interp, part1, part2,
+		TCL_GLOBAL_ONLY|TCL_TRACE_READS|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		useSRGBTraceProc, clientData);
+    }
+
+    if (flags & TCL_TRACE_READS) {
+	Tcl_SetVar2Ex(interp, part1, part2, Tcl_NewBooleanObj(useSRGB), TCL_GLOBAL_ONLY);
+    }
+
+    int newVal = useSRGB;
+    if (flags & TCL_TRACE_WRITES) {
+	Tcl_Obj *objPtr = Tcl_GetVar2Ex(interp, part1, part2, TCL_GLOBAL_ONLY);
+	if (objPtr == NULL) {
+	    // as LinkTracProc says: "This shouldn't ever happen."
+	    return (char *) "internal error: linked variable couldn't be read";
+	}
+	if (TCL_OK != Tcl_GetBooleanFromObj(NULL, objPtr, &newVal)) {
+	    Tcl_SetVar2Ex(interp, part1, part2, Tcl_NewBooleanObj(useSRGB), TCL_GLOBAL_ONLY);
+	    // same error message as LinkTraceProc
+	    return (char *) "variable must have boolean value";
+	}
+    }
+    if (newVal != useSRGB) {
+	useSRGB = newVal;
+
+	// Schedule an idle task in case it does too much work for a trace proc.
+	Tcl_DoWhenIdle(pretendViewsChangedBackingProperties, NULL);
+    }
+    return NULL;
+}
 
 MODULE_SCOPE int
 TkMacOSXInitCGDrawing(
@@ -93,8 +157,16 @@ TkMacOSXInitCGDrawing(
 	cgAntiAliasLimit = limit;
 
 	/*
-	 * Piggy-back the themed drawing var init here.
+	 * Piggy-back the sRGB and themed drawing var init here.
 	 */
+
+	Tcl_SetVar2Ex(interp, "::tk::mac::useSRGB", NULL,
+		Tcl_NewBooleanObj(useSRGB), TCL_GLOBAL_ONLY);
+	if (Tcl_TraceVar(interp, "::tk::mac::useSRGB",
+		TCL_GLOBAL_ONLY|TCL_TRACE_READS|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		useSRGBTraceProc, NULL) != TCL_OK) {
+	    Tcl_ResetResult(interp);
+	}
 
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
 		&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {

@@ -141,6 +141,12 @@
 extern bool testsAreRunning;
 
 /*
+ *  This is set to 1 if sRGB color space is requested. Defined in tkMacOSXDraw.c.
+ */
+
+MODULE_SCOPE int useSRGB;
+
+/*
  *  The structure of a 32-bit XEvent keycode on macOS. It may be viewed as
  *  an unsigned int or as having either two or three bitfields.
  */

@@ -263,6 +263,12 @@ more native spacing.
 .
 Sets the antialiasing limit; lines thinner that \fIlimit\fR pixels will not be
 antialiased. Integer, set to 0 by default, making all lines be antialiased.
+.\" COMMAND: useSRGB
+.TP
+\fB::tk::mac::useSRGB \fIboolean\fR
+.
+Use the sRGB color space instead of the color space for a window's screen.
+May improve color accuracy but reduce performance.
 .\" COMMAND: antialiasedtext
 .TP
 \fB::tk::mac::antialiasedtext \fInumber\fR
