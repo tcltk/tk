@@ -449,7 +449,7 @@ static int renderFBO(
     if (!isGlfwWindowValid(glfwWindow)) return 1;
     if (!glfwGetWindowAttrib(glfwWindow, GLFW_VISIBLE)) return 1;
     static double lastSwap=0; double now=glfwGetTime();
-    /* No swap throttle. */
+    if (!force && now-lastSwap<0.008) return 0;  /* throttled: caller keeps NEEDS_DISPLAY */
     glfwSwapBuffers(glfwWindow);
     lastSwap=glfwGetTime();
     return 1;
@@ -676,6 +676,10 @@ PresentOverridePopup(
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
+    static double lastDisplay=0;
+    double nowDisp=glfwGetTime();
+    if (nowDisp-lastDisplay<0.005) return;
+    lastDisplay=nowDisp;
     if (shutdownInProgress) return;
     if (glfwTkInfoList==NULL) return;
 
