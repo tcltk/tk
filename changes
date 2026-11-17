@@ -8650,4 +8650,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-11-17 (bug) [703a7f] Every Tk_Init registers another thread exit handler (storchaka)
 
+2026-11-17 (patch) [f64df5] Remove unused troughGC and copyGC from MacScrollbar (chavez)
+
 - Released 8.6.19, Dec ??, 2026 - https://core.tcl-lang.org/tk/ for details
