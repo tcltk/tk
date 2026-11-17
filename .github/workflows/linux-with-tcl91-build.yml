@@ -30,7 +30,7 @@ jobs:
           - "--disable-xss"
           - "--enable-symbols"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v7
         with:
           path: tk
@@ -115,7 +115,7 @@ jobs:
           - "--disable-xft"
           - "--enable-symbols"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v7
         with:
           path: tk
@@ -164,8 +164,10 @@ jobs:
           }
       - name: Run Tests
         run: |
-          xvfb-run --auto-servernum make test-classic | tee out-classic.txt
-          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt
+          # Run both, then fail if either failed.
+          rc=0
+          xvfb-run --auto-servernum make test-classic | tee out-classic.txt || rc=1
+          xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt || rc=1
           grep -q "Failed	0" out-classic.txt || {
             echo "::error::Failure during Test"
             exit 1
@@ -174,4 +176,8 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
-        timeout-minutes: 15
+          [ $rc -eq 0 ] || {
+            echo "::error::Failure during Test"
+            exit 1
+          }
+        timeout-minutes: 10
