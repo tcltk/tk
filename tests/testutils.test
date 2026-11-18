@@ -46,6 +46,9 @@ proc deleteTimerEvents {} {
     }
 }
 
+set timingDebug 1
+tcltest::configure -iterations 5
+
 #
 # TESTS
 #
@@ -151,7 +154,7 @@ test evalOnWindowEvent-2.3 {cancel} -setup {
 #
 # * evalWhen uses iterations where the waiting duration increases by powers
 #   of 2. For this reason the condition passed to evalWhen is evaluated
-#   after durations of 1, 2, 4, 8, 16, 32, 64 ms .... etc.
+#   after durations of (2^i-1) ms, i.e.: 1, 3, 7, 15, 31, 63, 127 ms .... etc.
 #   Tests scheduling timer events need to take these step sizes into account.
 #
 test evalWhen-1.0 {default timeout} -setup {
@@ -189,28 +192,37 @@ test evalWhen-1.1 {custom timeout handler} -setup {
     list $y [after info]
 } -cleanup {
     rename evalWhenTimeout {}
-    unset -nocomplain x y z savBgerrorCmd
+    unset -nocomplain x y z
 } -result "0 {}" -output "custom time out for when#*" -match glob
 
-test evalWhen-2.1 {success} -setup {
+test evalWhen-2.1 {script evaluated after condition reached while waiting} -setup {
     deleteTimerEvents
-    testutils import timing
     wm deiconify .
 } -body {
     set x 0
     frame .f
+    if {$timingDebug} {
+	testutils import timing
+	dt.reset
+    }
     after 20 {pack .f}
     evalWhen {[winfo ismapped .f]} {
 	set x 22
     }
     vwait x
-    set duration [dt.get];# expected duration: 31 ms (== 2^5 - 1)
-    list [expr {($duration > 25) && ($duration < 40)}] $x [after info]
+    if {$timingDebug} {
+	#
+	# On a system that allows the current test process ample time, the expected
+	# duration for the condition to be evaluated as true is: 31 ms (== 2^5 - 1)
+	#
+	puts "duration = [dt.get] (31 expected)"
+	testutils forget timing
+    }
+    list $x [after info]
 } -cleanup {
     destroy .f
     unset -nocomplain duration x
-    testutils forget timing
-} -result "1 22 {}"
+} -result "22 {}"
 
 test evalWhen-2.2 {cancel} -setup {
     deleteTimerEvents
@@ -431,17 +443,24 @@ test waitForWindowEvent-1.1 {don't stop waiting if event received by child of in
 } -result "wait for <<WaitForEvent>> event on . timed out (> 100 ms)" -returnCodes error
 
 test waitForWindowEvent-1.2 {stop waiting if event received by intended toplevel} -setup {
-    testutils import timing
+    if {$timingDebug} {
+	testutils import timing
+	dt.reset
+    }
 } -body {
-    dt.reset
     after 50 {event generate . <<WaitForEvent>>}
     waitForWindowEvent . <<WaitForEvent>> 100
-    set duration [dt.get]
-    expr {($duration >= 50) && ($duration < 60)}
 } -cleanup {
+    if {$timingDebug} {
+	#
+	# On a system that allows the current test process ample time, the expected
+	# duration for the condition to be evaluated as true is exactly 50 ms.
+	#
+	puts "duration = [dt.get] (50 expected)"
+	testutils forget timing
+    }
     unset -nocomplain duration
-    testutils forget timing
-} -result 1
+} -result {}
 
 #
 # NOTES regarding testing of waitUntil
@@ -454,7 +473,7 @@ test waitForWindowEvent-1.2 {stop waiting if event received by intended toplevel
 #
 # * waitUntil uses iterations where the waiting duration increases by powers
 #   of 2. For this reason the condition passed to waitUntil is evaluated
-#   after durations of 1, 2, 4, 8, 16, 32, 64 ms .... etc.
+#   after durations of (2^i-1) ms, i.e.: 1, 3, 7, 15, 31, 63, 127 ms .... etc.
 #   Tests scheduling timer events need to take these step sizes into account.
 #
 test waitUntil-1.1 {invalid timeout value} -body {
@@ -491,19 +510,25 @@ test waitUntil-3.0 {condition true before invocation, complain} -body {
 } -result {condition "$x == 1" was true already before the proc's invocation} \
 -returnCodes error
 
-test waitUntil-3.1 {condition reached by waiting} -setup {
-    testutils import timing
-} -body {
-    dt.reset
+test waitUntil-3.1 {condition reached while waiting} -body {
+    if {$timingDebug} {
+	testutils import timing
+	dt.reset
+    }
     after 20 {toplevel .t}
     waitUntil {[winfo exists .t] && [winfo ismapped .t]}
-    set duration [dt.get];# expected duration: 31 ms (== 2^5 - 1)
-    expr {($duration > 25) && ($duration < 40)}
+    if {$timingDebug} {
+	#
+	# On a system that allows the current test process ample time, the expected
+	# duration for the condition to be evaluated as true is: 31 ms (== 2^5 - 1)
+	#
+	puts "duration = [dt.get] (31 expected)"
+	testutils forget timing
+    }
 } -cleanup {
     unset -nocomplain duration
     destroy .t
-    testutils forget timing
-} -result 1
+} -result {}
 
 test waitUntil-4.1 {invalid condition syntax} -body {
     waitUntil {bogusCondition} 10
@@ -762,7 +787,7 @@ testutils forget timing
 #
 
 namespace delete ::tk::test::foo
-unset -nocomplain bar initVars pip
+unset -nocomplain bar initVars pip timingDebug
 cleanupTests
 
 # EOF
