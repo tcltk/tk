@@ -1692,21 +1692,25 @@ mojibake_line_breaks_with_dict(const char *buf,
 
 /*
  * ---------------------------------------------------------------
- * mojibake_word_breaks / mojibake_line_breaks --
+ * mojibake_word_breaks --
  *
- *   Plain entry points used by the text widget (double-click word
- *   selection, word wrap). They MUST NOT be bare mojibake: bare
- *   UAX #29 marks a word break after every cluster in Thai/Lao/
- *   Khmer runs (double-click then selects one cluster, not a
- *   word -- textGrapheme-4.2), and it can return word/line breaks
- *   inside a grapheme cluster (double-click on e+acute selects
- *   only 'e' -- textGrapheme-2.2; ZWJ emoji splits --
- *   textGrapheme-2.4; Lao/Khmer vowel signs / combining marks
- *   strand at a line start -- textGrapheme-5.2, 5.3). Delegate
- *   to the _with_dict implementations, which apply the dictionary
- *   segmenter for complex scripts and the grapheme-subset filter
- *   (a word/line break is kept only if it is also a grapheme
- *   break) for everything else.
+ *   Plain entry point used by the text widget (double-click word
+ *   selection). It MUST NOT be bare mojibake: bare UAX #29 marks
+ *   a word break after every cluster in Thai/Lao/Khmer runs
+ *   (double-click then selects one cluster, not a word --
+ *   textGrapheme-4.2), and it can return word breaks inside a
+ *   grapheme cluster (double-click on e+acute selects only 'e' --
+ *   textGrapheme-2.2; ZWJ emoji splits -- textGrapheme-2.4).
+ *   Delegates to the _with_dict implementation, which applies
+ *   the dictionary segmenter for complex scripts and the
+ *   grapheme-subset filter (a word break is kept only if it is
+ *   also a grapheme break) for everything else.
+ *
+ * Results:
+ *   Returns 1 on success.
+ *
+ * Side effects:
+ *   None.
  * ---------------------------------------------------------------
  */
 
@@ -1717,6 +1721,27 @@ mojibake_word_breaks(const char *buf,
 {
     return WordBreaksWithDictInternal(buf, byteLen, breaks, NULL, NULL);
 }
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_line_breaks --
+ *
+ *   Plain entry point used by the text widget (word wrap). It
+ *   MUST NOT be bare mojibake: bare UAX #14 can return line
+ *   breaks inside a grapheme cluster (Lao/Khmer vowel signs /
+ *   combining marks strand at a line start -- textGrapheme-5.2,
+ *   5.3). Delegates to the _with_dict implementation, which
+ *   applies the dictionary segmenter for complex scripts and
+ *   the grapheme-subset filter (a line break is kept only if it
+ *   is also a grapheme break) for everything else.
+ *
+ * Results:
+ *   Returns 1 on success.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
 
 int
 mojibake_line_breaks(const char *buf,
