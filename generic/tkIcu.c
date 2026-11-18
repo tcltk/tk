@@ -658,7 +658,7 @@ TkIcuWordCmd(
  *	TCL_OK on success. wordBreakAfter sets the result to the CHAR
  *	index of the first word break strictly after index; wordBreakBefore
  *	sets it to the CHAR index of the last word break at or before
- *	index. The result is left unset when there is no such break (for
+ *	index, ignoring a break at the end of the string. The result is left unset when there is no such break (for
  *	wordBreakAfter, a break at the end of the string does not count; for
  *	wordBreakBefore, a break at 0 does not count), so the caller goes on
  *	to the adjacent line. TCL_ERROR if the arguments are bad or word
@@ -742,6 +742,10 @@ TkIcuWordBreakCmd(
 	    idx = TCL_INDEX_NONE;
 	}
     } else {
+	/* A break at the very end of the string does not count. */
+	if (idx > tclLen - 1) {
+	    idx = tclLen - 1;
+	}
 	idx = BreakPreceding(offsets, numBreaks, &pos, idx + 1);
 	if (idx <= 0) {
 	    idx = TCL_INDEX_NONE;
