@@ -48,8 +48,6 @@
 
 typedef struct MacScrollbar {
     TkScrollbar information;	/* Generic scrollbar info. */
-    GC troughGC;		/* For drawing trough. */
-    GC copyGC;			/* Used for copying from pixmap onto screen. */
     bool buttonDown;            /* Is the mouse button down? */
     bool mouseOver;             /* Is the pointer over the scrollbar. */
     HIThemeTrackDrawInfo info;	/* Controls how the scrollbar is drawn. */
@@ -123,8 +121,6 @@ TkpCreateScrollbar(
 {
     MacScrollbar *scrollPtr = (MacScrollbar *)Tcl_Alloc(sizeof(MacScrollbar));
 
-    scrollPtr->troughGC = NULL;
-    scrollPtr->copyGC = NULL;
     scrollPtr->info = defaultInfo;
     scrollPtr->buttonDown = false;
     scrollPtr->mouseOver = false;
@@ -440,23 +436,16 @@ TkpComputeScrollbarGeometry(
  *	None.
  *
  * Side effects:
- *	Frees the GCs associated with the scrollbar.
+ *	Currently, none.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpDestroyScrollbar(
-    TkScrollbar *scrollPtr)
+    TCL_UNUSED(TkScrollbar *))
 {
-    MacScrollbar *macScrollPtr = (MacScrollbar *) scrollPtr;
-
-    if (macScrollPtr->troughGC != NULL) {
-	Tk_FreeGC(scrollPtr->display, macScrollPtr->troughGC);
-    }
-    if (macScrollPtr->copyGC != NULL) {
-	Tk_FreeGC(scrollPtr->display, macScrollPtr->copyGC);
-    }
+    /* empty */
 }
 
 /*
