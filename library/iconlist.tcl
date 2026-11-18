@@ -170,6 +170,13 @@ package require tk
 		set selection [lsort -integer -unique $selection]
 		event generate $w <<ListboxSelect>>
 		my DrawSelection
+		# Speak what is now selected so screen reader users hear it,
+		# as the emoji picker does.
+		if {$first == $last} {
+			my Announce [$w get $first]
+		} else {
+			my Announce "[expr {$last - $first + 1}] items selected"
+		}
 	    }
 	}
     }
@@ -396,6 +403,21 @@ package require tk
 	return
     }
 
+    #	Speak the given text through the accessibility layer if a screen
+    #	reader is running and the speak command is available; otherwise do
+    #	nothing. Only speaks while the canvas has focus, so programmatic
+    #	selection changes (e.g. typing in a file dialog's entry) do not
+    #	interrupt other speech.
+    #
+    method Announce {text} {
+	if {$text eq ""} return
+	if {![llength [info commands ::tk::accessible::speak]]} return
+	if {[focus] ne $canvas} return
+	if {[catch {::tk::accessible::check_screenreader} r]} return
+	if {$r ne "1"} return
+	catch {::tk::accessible::speak $text}
+    }
+
     #	Creates an IconList widget by assembling a canvas widget and a
     #	scrollbar widget. Sets all the bindings necessary for the IconList's
     #	operations.
@@ -409,6 +431,17 @@ package require tk
 			-background [ttk::style lookup Treeview -background {} white]]
 	pack $sbar -side bottom -fill x -padx 1.5p -pady {0 1.5p}
 	pack $canvas -expand yes -fill both -padx 1.5p -pady {1.5p 0}
+
+	# Override the generic "canvas is not accessible" help text so screen
+	# readers describe the list and its navigation keys.
+	if {[llength [info commands ::tk::accessible::set_acc_help]]} {
+		catch {
+			::tk::accessible::set_acc_name $canvas "File list"
+			::tk::accessible::set_acc_role $canvas "List"
+			::tk::accessible::set_acc_help $canvas \
+				"File list. Use arrow keys to move, Return to open."
+		}
+	}
 
 	$sbar configure -command [list $canvas xview]
 	$canvas configure -xscrollcommand [list $sbar set]

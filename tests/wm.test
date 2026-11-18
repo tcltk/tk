@@ -41,6 +41,7 @@ resetWindows
 #
 if {[tk windowingsystem] eq "aqua"} {
     proc raiseDelay {} {
+	after 100
     }
 } else {
     proc raiseDelay {} {
@@ -1808,6 +1809,7 @@ deleteWindows
 
 test wm-stackorder-2.1 {stacking order} -body {
     toplevel .t ; update idletasks
+    raiseDelay
     wm stackorder .
 } -cleanup {
     destroy .t
@@ -1885,6 +1887,7 @@ deleteWindows
 test wm-stackorder-3.1 {unmapped toplevel} -constraints withWindowManager -body {
     toplevel .t1 ; update idletasks
     toplevel .t2 ; update idletasks
+    raiseDelay
     wm iconify .t1
     raiseDelay ;# Windows does not generate a VisibilityNotification for iconify
     wm stackorder .
