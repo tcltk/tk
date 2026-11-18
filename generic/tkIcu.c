@@ -636,6 +636,128 @@ TkIcuWordCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * TkIcuWordBreakCmd --
+ *
+ *	Implementation of the ::tk::wordBreakBefore and
+ *	::tk::wordBreakAfter commands, which tk::TextSelectTo (double-click
+ *	word selection) reaches through tk::TextPrevPos and
+ *	tk::TextNextPos. Without these commands, tk.tcl falls back to
+ *	tcl_wordBreakBefore/After, which only classify characters as word
+ *	or non-word and so split grapheme clusters and Thai words.
+ *
+ *	clientData is 0 for wordBreakBefore and 1 for wordBreakAfter. The
+ *	command syntax is:
+ *
+ *	    ::tk::wordBreakBefore str index ?locale?
+ *	    ::tk::wordBreakAfter  str index ?locale?
+ *
+ *	If locale is the literal string "TCL8", the command is delegated
+ *	to tcl_wordBreakBefore or tcl_wordBreakAfter.
+ *
+ * Results:
+ *	TCL_OK on success. wordBreakAfter sets the result to the CHAR
+ *	index of the first word break strictly after index; wordBreakBefore
+ *	sets it to the CHAR index of the last word break at or before
+ *	index. The result is left unset when there is no such break (for
+ *	wordBreakAfter, a break at the end of the string does not count; for
+ *	wordBreakBefore, a break at 0 does not count), so the caller goes on
+ *	to the adjacent line. TCL_ERROR if the arguments are bad or word
+ *	segmentation fails.
+ *
+ * Side effects:
+ *	Allocates temporary break arrays and frees them before returning.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkIcuWordBreakCmd(
+    ClientData clientData,	/* 0 = wordBreakBefore, 1 = wordBreakAfter. */
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    Tcl_Size objc,		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    int after = (int) (intptr_t) clientData;
+    Tcl_Size tclLen, ulen, index, idx, pos = 0, numBreaks = 0, k;
+    const char *tclBytes;
+    unsigned char *breakArr;
+    Tcl_Size *offsets;
+
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 1, objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    if (objc == 4 && strcmp(Tcl_GetString(objv[3]), "TCL8") == 0) {
+	Tcl_Obj *cmdObjv[3];
+	int code;
+
+	cmdObjv[0] = Tcl_NewStringObj(
+		after ? "tcl_wordBreakAfter" : "tcl_wordBreakBefore", -1);
+	cmdObjv[1] = objv[1];
+	cmdObjv[2] = objv[2];
+	Tcl_IncrRefCount(cmdObjv[0]);
+	code = Tcl_EvalObjv(interp, 3, cmdObjv, 0);
+	Tcl_DecrRefCount(cmdObjv[0]);
+	return code;
+    }
+    tclBytes = Tcl_GetStringFromObj(objv[1], &tclLen);
+    ulen = Tcl_GetCharLength(objv[1]);
+    if (ulen == 0) {
+	return TCL_OK;
+    }
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &index) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, "
+		"end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", (char *)NULL);
+	return TCL_ERROR;
+    }
+    if (index < 0) {
+	index = 0;
+    } else if (index > ulen) {
+	index = ulen;
+    }
+    idx = ByteOffsetForCharIndex(tclBytes, index);
+
+    breakArr = (unsigned char *) ckalloc((size_t) tclLen + 1);
+    if (!mojibake_word_breaks_with_dict(tclBytes, (size_t) tclLen,
+	    breakArr, NULL)) {
+	ckfree((char *) breakArr);
+	Tcl_SetResult(interp, "mojibake word segmentation failed",
+		TCL_STATIC);
+	return TCL_ERROR;
+    }
+    offsets = (Tcl_Size *) ckalloc(
+	    (size_t) (tclLen + 1) * sizeof(Tcl_Size));
+    for (k = 0; k <= tclLen; k++) {
+	if (breakArr[k]) {
+	    offsets[numBreaks++] = k;
+	}
+    }
+    ckfree((char *) breakArr);
+
+    if (after) {
+	idx = BreakFollowing(offsets, numBreaks, &pos, idx);
+	if (idx >= tclLen) {
+	    idx = TCL_INDEX_NONE;
+	}
+    } else {
+	idx = BreakPreceding(offsets, numBreaks, &pos, idx + 1);
+	if (idx <= 0) {
+	    idx = TCL_INDEX_NONE;
+	}
+    }
+    ckfree((char *) offsets);
+    if (idx != TCL_INDEX_NONE) {
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
+		CharIndexForByteOffset(tclBytes, idx)));
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Icu_Init --
  *
  *	Register the ICU-backed Tk commands in the given interpreter.
@@ -645,9 +767,10 @@ TkIcuWordCmd(
  *	None.
  *
  * Side effects:
- *	Creates five interpreter commands: ::tk::startOfCluster,
+ *	Creates seven interpreter commands: ::tk::startOfCluster,
  *	::tk::endOfCluster, ::tk::startOfNextWord,
- *	::tk::startOfPreviousWord, and ::tk::endOfWord. Each is
+ *	::tk::startOfPreviousWord, ::tk::endOfWord, ::tk::wordBreakBefore,
+ *	and ::tk::wordBreakAfter. Each is
  *	associated with the appropriate TkIcu*Cmd implementation and
  *	ClientData flags.
  *
@@ -670,6 +793,10 @@ Icu_Init(
 	    TkIcuWordCmd,
 	    (ClientData) (intptr_t) (ICU_WORD_FOLLOWING | ICU_WORD_SPACE),
 	    NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::wordBreakBefore",
+	    TkIcuWordBreakCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::wordBreakAfter",
+	    TkIcuWordBreakCmd, (ClientData) (intptr_t) 1, NULL);
 }
 
 

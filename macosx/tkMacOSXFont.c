@@ -856,22 +856,33 @@ Tk_MeasureChars(
 	    maxLength, flags, lengthPtr);
 }
 
-/*
- * mojibake_grapheme_breaks() in tkTextGrapheme.c -- the ONLY
- * string-level mojibake entry point this file may call. It owns
- * the Tcl (modified UTF-8, NUL as C0 80) -> strict UTF-8
- * conversion and remaps breaks back to Tcl byte offsets.
- * This file must never call any mjb_* string function directly
- * on a Tcl string: mojibake rejects C0 80 as malformed.
- */
+/* Wrappers from tkTextGrapheme.c. */
 extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
 	unsigned char *breaks);
 
 /*
- * SnapToGraphemeBreak -- largest grapheme break <= candidate,
- * in Tcl byte offsets, or the first break > 0 if candidate lands
- * inside the first cluster. Never returns a split cluster.
+ * ----------------------------------------------------------------------
+ *
+ * SnapToGraphemeBreak --
+ *
+ *	Largest grapheme break <= candidate, in Tcl byte offsets, or the
+ *	first break > 0 if candidate lands inside the first cluster.
+ *	Never returns a split cluster.
+ *
+ *	If the temporary break table cannot be allocated or the grapheme
+ *	break computation fails, the function fails open and returns the
+ *	(possibly mid-cluster) candidate offset unchanged.
+ *
+ * Results:
+ *	Returns a byte offset in [0, rangeLength] that lies on a grapheme
+ *	cluster boundary, or the adjusted candidate on failure.
+ *
+ * Side effects:
+ *	None; a temporary break table is allocated and freed.
+ *
+ * ----------------------------------------------------------------------
  */
+ 
 static Tcl_Size
 SnapToGraphemeBreak(
     const char *source,
@@ -881,6 +892,7 @@ SnapToGraphemeBreak(
 {
     unsigned char *breaks;
     Tcl_Size snapped, i;
+
     if (candidateBytes <= 0 || rangeLength <= 0) {
 	return 0;
     }
@@ -906,12 +918,16 @@ SnapToGraphemeBreak(
     }
     if (snapped == 0) {
 	for (i = 1; i <= rangeLength; i++) {
-	    if (breaks[i]) { snapped = i; break; }
+	    if (breaks[i]) {
+		snapped = i;
+		break;
+	    }
 	}
     }
     ckfree((char *) breaks);
     return snapped;
 }
+    
 
 /*
  *---------------------------------------------------------------------------

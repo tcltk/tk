@@ -358,7 +358,7 @@ test textGrapheme-2.2 {double-click on e+acute selects whole cluster} -setup {
     }
 } -cleanup {
     destroy .t1
-} -result {e\u0301}
+} -result "e\u0301"
 
 test textGrapheme-2.3 {ZWJ emoji + NUL: codepoint stepping} -setup {
     .t delete 1.0 end
@@ -389,7 +389,7 @@ test textGrapheme-2.4 {double-click on ZWJ emoji selects whole emoji, never spli
     }
 } -cleanup {
     destroy .t1
-} -result {\U0001F468\u200D\U0001F469\u200D\U0001F467}
+} -result "\U0001F468\u200D\U0001F469\u200D\U0001F467"
 
 test textGrapheme-2.5 {multi-byte + NUL stepping} -setup {
     .t delete 1.0 end

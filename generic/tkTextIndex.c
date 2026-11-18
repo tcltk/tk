@@ -22,8 +22,6 @@
 /* Wrappers from tkTextGrapheme.c. */
 extern int mojibake_word_breaks_with_dict(const char *buf, size_t byteLen,
 	unsigned char *wBreaks, unsigned char *gBreaks_tmp);
-extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
-	unsigned char *breaks);
 
 /*
  * ----------------------------------------------------------------------
@@ -38,11 +36,9 @@ extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
  *	together, because those cases are handled as single word
  *	segments by the word breaker.
  *
- *	Word breaks are also reconciled with grapheme cluster breaks:
- *	any word break that falls inside a grapheme cluster is cleared,
- *	and when moving forward with no word break available the index
- *	advances only to the end of the current grapheme cluster rather
- *	than to the end of the line.
+ *	mojibake_word_breaks_with_dict already guarantees that no word
+ *	break falls inside a grapheme cluster, so no further
+ *	reconciliation with grapheme breaks is done here.
  *
  *	The trailing newline of the line is never crossed; the last
  *	break considered is the one before it.
@@ -100,48 +96,9 @@ TextWordBreak(
 	return 0;
     }
     /*
-     * A word break must never split a grapheme cluster. Recompute
-     * grapheme breaks for this line and clear any word break that
-     * is not also a grapheme break. This is what keeps e+acute
-     * (2.2) and a ZWJ emoji (2.4) whole even if the word path
-     * reports a break inside the cluster.
+     * Word breaks from mojibake_word_breaks_with_dict never split a
+     * grapheme cluster, so no further reconciliation is needed here.
      */
-    {
-	unsigned char *gBreaks = (unsigned char *) Tcl_Alloc(n + 1);
-	if (mojibake_grapheme_breaks(chars, (size_t) n, gBreaks)) {
-	    Tcl_Size k;
-	    for (k = 1; k < n; k++) {
-		if (breaks[k] && !gBreaks[k]) {
-		    breaks[k] = 0;
-		}
-	    }
-	    /*
-	     * Fallback for a missing word break: if no word break was
-	     * found, wordend must stop at the end of the current
-	     * grapheme cluster, never at the end of the line. The
-	     * old fallback (target = n) is what selected the whole
-	     * line in 2.4 when the word breaker returned no
-	     * internal break for the ZWJ-emoji line.
-	     */
-	    if (forward) {
-		Tcl_Size j;
-		for (j = byteIndex + 1; j <= n; j++) {
-		    if (breaks[j]) {
-			break;
-		    }
-		}
-		if (j > n) {
-		    for (j = byteIndex + 1; j <= n; j++) {
-			if (gBreaks[j]) {
-			    breaks[j] = 1;
-			    break;
-			}
-		    }
-		}
-	    }
-	}
-	Tcl_Free((char *) gBreaks);
-    }
     /*
      * The line's last byte is '\n'. Do not let a break at/past it
      * pull the index onto the next line; the break before it is

@@ -19,81 +19,78 @@
 #include <usp10.h>      /* Uniscribe */
 #include <mojibake.h>   /* mjb_codepoint_is_combining */
 
-    /*
-     * mojibake_grapheme_breaks() in tkTextGrapheme.c -- the ONLY
-     * string-level mojibake entry point this file may call. It owns
-     * the Tcl (modified UTF-8, NUL as C0 80) -> strict UTF-8
-     * conversion and remaps breaks back to Tcl byte offsets.
-     * This file must never call any mjb_* string function directly
-     * on a Tcl string: mojibake rejects C0 80 as malformed.
-     */
-    extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
-    	unsigned char *breaks);
-
-    /*
-     * SnapToGraphemeBreak -- largest grapheme break <= candidate,
-     * in Tcl byte offsets, or the first break > 0 if candidate lands
-     * inside the first cluster. Never returns a split cluster.
-     */
-    static Tcl_Size
-    SnapToGraphemeBreak(
-        const char *source,
-        Tcl_Size rangeStart,
-        Tcl_Size rangeLength,
-        Tcl_Size candidateBytes)
-    {
-        unsigned char *breaks;
-        Tcl_Size snapped, i;
-        if (candidateBytes <= 0 || rangeLength <= 0) {
-    	return 0;
-        }
-        if (candidateBytes > rangeLength) {
-    	 candidateBytes = rangeLength;
-        }
-        breaks = (unsigned char *) ckalloc((size_t) rangeLength + 1);
-        if (breaks == NULL) {
-    	return candidateBytes;
-        }
-        if (!mojibake_grapheme_breaks(source + rangeStart,
-    	    (size_t) rangeLength, breaks)) {
-    	ckfree((char *) breaks);
-    	return candidateBytes;
-        }
-        snapped = 0;
-        for (i = 0; i <= rangeLength; i++) {
-    	if (breaks[i] && i <= candidateBytes) {
-    	    snapped = i;
-    	} else if (i > candidateBytes) {
-    	    break;
-    	}
-        }
-        if (snapped == 0) {
-    	for (i = 1; i <= rangeLength; i++) {
-    	    if (breaks[i]) { snapped = i; break; }
-    	}
-        }
-        ckfree((char *) breaks);
-        return snapped;
-    }
-    
+/* Wrappers from tkTextGrapheme.c. */
+extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
+	unsigned char *breaks);
 
 /*
- * Grapheme cluster indexing is NOT implemented here.
+ * ----------------------------------------------------------------------
  *
- * ::tk::startOfCluster / ::tk::endOfCluster are implemented once,
- * in tkIcu.c on top of mojibake (Tk-internal). The previous
- * Uniscribe implementation (ScriptItemize + ScriptBreak +
- * fCharStop) was deleted: it disagreed with mojibake on ZWJ
- * sequences, flags, and other UAX #29 cases, and it is no longer
- * registered anywhere. This file keeps Uniscribe for shaping
- * (TkWinShapeString), measuring, and the mjb_codepoint_is_combining
- * property query in the shaping helpers -- shaping is not break
- * decisions. Measure paths snap through TkMojibakeSnapBreak in
- * tkTextGrapheme.c.
+ * SnapToGraphemeBreak --
+ *
+ *	Largest grapheme break <= candidate, in Tcl byte offsets, or the
+ *	first break > 0 if candidate lands inside the first cluster.
+ *	Never returns a split cluster.
+ *
+ *	If the temporary break table cannot be allocated or the grapheme
+ *	break computation fails, the function fails open and returns the
+ *	(possibly mid-cluster) candidate offset unchanged.
+ *
+ * Results:
+ *	Returns a byte offset in [0, rangeLength] that lies on a grapheme
+ *	cluster boundary, or the adjusted candidate on failure.
+ *
+ * Side effects:
+ *	None; a temporary break table is allocated and freed.
+ *
+ * ----------------------------------------------------------------------
  */
+ 
+static Tcl_Size
+SnapToGraphemeBreak(
+    const char *source,
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    Tcl_Size candidateBytes)
+{
+    unsigned char *breaks;
+    Tcl_Size snapped, i;
 
-
-
+    if (candidateBytes <= 0 || rangeLength <= 0) {
+	return 0;
+    }
+    if (candidateBytes > rangeLength) {
+	candidateBytes = rangeLength;
+    }
+    breaks = (unsigned char *) ckalloc((size_t) rangeLength + 1);
+    if (breaks == NULL) {
+	return candidateBytes;
+    }
+    if (!mojibake_grapheme_breaks(source + rangeStart,
+	    (size_t) rangeLength, breaks)) {
+	ckfree((char *) breaks);
+	return candidateBytes;
+    }
+    snapped = 0;
+    for (i = 0; i <= rangeLength; i++) {
+	if (breaks[i] && i <= candidateBytes) {
+	    snapped = i;
+	} else if (i > candidateBytes) {
+	    break;
+	}
+    }
+    if (snapped == 0) {
+	for (i = 1; i <= rangeLength; i++) {
+	    if (breaks[i]) {
+		snapped = i;
+		break;
+	    }
+	}
+    }
+    ckfree((char *) breaks);
+    return snapped;
+}
+    
 /*
  * The following structure represents a font family. It is assumed that all
  * screen fonts constructed from the same "font family" share certain
