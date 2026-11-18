@@ -419,92 +419,21 @@ CreateNamedSystemFont(
 
 #pragma mark -
 
-#pragma mark Grapheme Cluster indexing
-
 /*
- *----------------------------------------------------------------------
+ * Grapheme cluster indexing is NOT implemented here.
  *
- * TkStartEndOfClusterCmd --
- *
- *      This function is invoked to process the tk::(start|end)OfCluster commands.
- *
- * Results:
- *      A standard Tcl result.
- *
- * Side effects:
- *      None
- *
- *----------------------------------------------------------------------
+ * ::tk::startOfCluster / ::tk::endOfCluster are implemented once,
+ * in tkIcu.c on top of mojibake (Tk-internal). The previous
+ * CoreText implementation (rangeOfComposedCharacterSequenceAtIndex:)
+ * was deleted: it disagreed with mojibake on ZWJ sequences, flags,
+ * and other UAX #29 cases, and it is no longer registered anywhere.
+ * This file keeps only font handling, measuring, and shaping.
+ * Measure paths snap through TkMojibakeSnapBreak in tkTextGrapheme.c.
  */
-
-int
-TkStartEndOfClusterCmd(
-    void *clientData,           /* != NULL means 'end' */
-    Tcl_Interp *interp,         /* Current interpreter. */
-    Tcl_Size objc,              /* Number of arguments. */
-    Tcl_Obj *const objv[])      /* Argument objects. */
-{
-    TKNSString *S;
-    const char *stringArg;
-    Tcl_Size len, idx;
-
-    if ((size_t)(objc - 3) > 1) {
-	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
-	return TCL_ERROR;
-    }
-    stringArg = Tcl_GetStringFromObj(objv[1], &len);
-    if (stringArg == NULL) {
-	return TCL_ERROR;
-    }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
-    len = [S length];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
-		Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", (char *)NULL);
-	[S release];
-	return TCL_ERROR;
-    }
-    if (idx >= ulen) {
-	idx = len;
-    } else if (idx > 0 && len != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
-	}
-	idx = newIdx;
-    }
-    if (clientData ? idx + 1 <= len : idx >= 0) {
-	if (idx < 0) {
-	    idx = 0;
-	} else if (idx >= len) {
-	    idx = len;
-	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
-	    idx = range.location;
-	    if (clientData) {
-		idx += range.length;
-	    }
-	    if (idx > 0 && len != ulen) {
-		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-		Tcl_Size newIdx = 1;
-		for (Tcl_Size i = 1; i < idx; i++) {
-		    if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
-		}
-		idx = newIdx;
-	    }
-	}
-	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
-    }
-    [S release];
-    return TCL_OK;
-}
 
 #pragma mark -
 #pragma mark Font handling:
+
 
 /*
  *-------------------------------------------------------------------------
@@ -928,6 +857,63 @@ Tk_MeasureChars(
 }
 
 /*
+ * mojibake_grapheme_breaks() in tkTextGrapheme.c -- the ONLY
+ * string-level mojibake entry point this file may call. It owns
+ * the Tcl (modified UTF-8, NUL as C0 80) -> strict UTF-8
+ * conversion and remaps breaks back to Tcl byte offsets.
+ * This file must never call any mjb_* string function directly
+ * on a Tcl string: mojibake rejects C0 80 as malformed.
+ */
+extern int mojibake_grapheme_breaks(const char *buf, size_t byteLen,
+	unsigned char *breaks);
+
+/*
+ * SnapToGraphemeBreak -- largest grapheme break <= candidate,
+ * in Tcl byte offsets, or the first break > 0 if candidate lands
+ * inside the first cluster. Never returns a split cluster.
+ */
+static Tcl_Size
+SnapToGraphemeBreak(
+    const char *source,
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    Tcl_Size candidateBytes)
+{
+    unsigned char *breaks;
+    Tcl_Size snapped, i;
+    if (candidateBytes <= 0 || rangeLength <= 0) {
+	return 0;
+    }
+    if (candidateBytes > rangeLength) {
+	candidateBytes = rangeLength;
+    }
+    breaks = (unsigned char *) ckalloc((size_t) rangeLength + 1);
+    if (breaks == NULL) {
+	return candidateBytes;
+    }
+    if (!mojibake_grapheme_breaks(source + rangeStart,
+	    (size_t) rangeLength, breaks)) {
+	ckfree((char *) breaks);
+	return candidateBytes;
+    }
+    snapped = 0;
+    for (i = 0; i <= rangeLength; i++) {
+	if (breaks[i] && i <= candidateBytes) {
+	    snapped = i;
+	} else if (i > candidateBytes) {
+	    break;
+	}
+    }
+    if (snapped == 0) {
+	for (i = 1; i <= rangeLength; i++) {
+	    if (breaks[i]) { snapped = i; break; }
+	}
+    }
+    ckfree((char *) breaks);
+    return snapped;
+}
+
+/*
  *---------------------------------------------------------------------------
  *
  * Tk_MeasureCharsInContext --
@@ -1111,6 +1097,32 @@ Tk_MeasureCharsInContext(
 	    CFRelease(line);
 	}
 
+    }
+    /*
+     * Snap to a mojibake grapheme break. CTTypesetterSuggestLineBreak /
+     * SuggestClusterBreak use CoreText's break definition, which can
+     * end inside a mojibake cluster (ZWJ emoji, flags, base +
+     * combining marks). fit is Tcl bytes from rangeStart; snap it
+     * via the wrapper, which converts C0 80 (Tcl NUL) to strict
+     * UTF-8 before calling mojibake and remaps breaks back to
+     * Tcl offsets. Then re-derive index and re-measure the
+     * snapped prefix so width and byte count agree.
+     */
+    {
+	Tcl_Size curFit = (TclUtfAtIndex(source, index) - source) - rangeStart;
+	Tcl_Size snappedFit = SnapToGraphemeBreak(source, rangeStart,
+		rangeLength, curFit);
+	if (snappedFit != curFit) {
+	    CFIndex snappedCharCount = TclNumUtfChars(source + rangeStart, snappedFit);
+	    CFIndex snappedIndex = start + snappedCharCount;
+	    CFRange snappedRange = {0, snappedIndex};
+	    CTLineRef snappedLine = CTTypesetterCreateLine(typesetter, snappedRange);
+	    CGFloat snappedWidth = CTLineGetTypographicBounds(snappedLine, NULL, NULL, NULL);
+	    CFRelease(snappedLine);
+	    /* snappedWidth is absolute (includes pre-range offset). */
+	    width = snappedWidth;
+	    index = snappedIndex;
+	}
     }
     CFRelease(typesetter);
     [attributedString release];
