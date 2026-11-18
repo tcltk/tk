@@ -145,15 +145,43 @@ namespace eval ::tk::test::generic {
 	controlPointerWarpTiming
     }
 
-    # Suspend script execution for a given amount of time, but continue
-    # processing events.
-    proc pause {ms} {
-	variable _pause
+    # pause --
+    #
+    #	Suspend command evaluation for a certain duration.
+    #
+    # Usage: pause ?-eyefriendly? duration
+    #
+    # Arguments:
+    #	duration     : the duration in milliseconds (required)
+    #	-eyefriendly : the pause is intended to satisfy the human eye; it
+    #		     : only pauses if the the Tk test suite was invoked with
+    #		     : the option "-eyefriendly 1".
+    #
+    proc pause {args} {
+	# Process arguments
+	set usage "pause ?-eyefriendly? duration"
+	set argc [llength $args]
+	if {($argc < 1) || ($argc > 2)} {
+	    return -code error "invalid # args. Usage: $usage"
+	}
+	set duration [lindex $args end]
+	if {(! [string is integer $duration]) || ($duration < 1)} {
+	    return -code error "invalid value \"$duration\" for argument \"duration\""
+	}
+	if {$argc == 2} {
+	    if {[lindex $args 0] eq "-eyefriendly"} {
+		if {! $::tktestConf(-eyefriendly)} {
+		    return
+		}
+	    } else {
+		return -code error "invalid parameter \"[lindex $args 0]\". Usage: $usage"
+	    }
+	}
 
+	variable _pause
 	set num [incr _pause(count)]
 	set _pause($num) 1
-
-	after $ms [list unset [namespace current]::_pause($num)]
+	after $duration [list unset [namespace current]::_pause($num)]
 	vwait [namespace current]::_pause($num)
     }
 
