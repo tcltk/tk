@@ -9634,11 +9634,9 @@ ElideMeasureProc(
 }
 
 /*
- * mojibake_cannot_start_line_at is defined in tkTextGrapheme.c.
- * It is declared here (rather than in a shared header) because
- * this file is the only other consumer.
+ * Helper from tkTextGrapheme.c.
  */
-int mojibake_cannot_start_line_at(const char *buf, size_t byteLen, size_t pos);
+extern int mojibake_cannot_start_line_at(const char *buf, size_t byteLen, size_t pos);
 
 /*
  *--------------------------------------------------------------
@@ -9716,18 +9714,7 @@ WordBreakIndex(
     for (i = bytesThatFit; i > 0; --i) {
 	/*
 	 * A break is only usable if the next line would not start
-	 * with a character that may not start a line. The
-	 * whitespace case below used to accept unconditionally:
-	 * a break after a space before Lao U+0EC6 or Khmer
-	 * U+17D4 was taken as a wrap point, and the next line
-	 * started with the repetition sign -- the whole
-	 * textGrapheme-5.2 / 5.3 failure at width 5 on X11, where
-	 * that space was the last fitting break. The break arrays
-	 * already filter those positions, but this whitespace
-	 * path bypasses them, so it needs the same check. When
-	 * the break is rejected, the scan keeps going for an
-	 * earlier break, which pulls the repetition sign onto the
-	 * preceding line with the word it belongs to.
+	 * with a character that may not start a line. 
 	 */
 	if (i < n && mojibake_cannot_start_line_at(chars, (size_t) n, (size_t) i)) {
 	    continue;
@@ -9904,9 +9891,8 @@ TkTextCharLayoutProc(
      * before Lao U+0EC6 or Khmer U+17D4. When no allowed break
      * is found later, LayoutDLine falls back to cutting at this
      * chunk's full fitted length, and the next line would start
-     * with the repetition sign (textGrapheme-5.3, width 5).
-     * Pull the whole cluster onto this line instead: a
-     * repetition sign belongs to the preceding word, so it
+     * with the repetition sign. Pull the whole cluster onto this line instead:
+     * a repetition sign belongs to the preceding word, so it
      * stays with it even if that overflows the width by one
      * cluster. This only changes the fallback cut -- when a
      * real break is found below, breakIndex trims the chunk

@@ -1558,10 +1558,9 @@ WordBreaksWithDictInternal(const char *buf,
      * line-break wrapper filters them again for line breaks,
      * but word wrap also consumes this word-break array, so a
      * break before U+0EC6 / U+17D4 here is what put a wrapped
-     * line starting with U+0EC6 at widths 12 and 20
-     * (textGrapheme-5.2). Clearing the break merges the
-     * repetition sign / mark into the preceding word, which is
-     * what it belongs to: it repeats or modifies that word, it
+     * line starting with U+0EC6 at widths 12 and 20. Clearing the 
+     * break merges the repetition sign / mark into the preceding word, 
+     * which is what it belongs to: it repeats or modifies that word, it
      * does not start a new one. Breaks at 0 and byteLen are
      * always kept. The same filter is applied to lBreaks when
      * the caller supplied it, so the dictionary fallback's
@@ -1686,8 +1685,8 @@ mojibake_line_breaks_with_dict(const char *buf,
      * Lo vowel sign (U+0EC6, class SA, treated as AL by the base
      * rules) and can leave a break before a Khmer combining
      * mark (U+17D4). Those breaks put a vowel sign / mark at
-     * the start of a wrapped line -- an orphan line start
-     * (textGraphemeNul-5.2, 5.3). UAX #14 LB9 already forbids
+     * the start of a wrapped line -- an orphan line start.
+     * UAX #14 LB9 already forbids
      * breaking a combining sequence; clearing every line break
      * that is not also a grapheme break enforces it uniformly.
      * Dictionary boundaries are snapped to grapheme boundaries,
@@ -1706,7 +1705,7 @@ mojibake_line_breaks_with_dict(const char *buf,
      * and the dictionary-fallback breaks (ForwardMaxMatchRun
      * marks a line break at every grapheme of an unknown run)
      * at those positions, so the next line never starts with
-     * e.g. Lao U+0EC6 or Khmer U+17D4 (textGrapheme-5.2, 5.3).
+     * e.g. Lao U+0EC6 or Khmer U+17D4.
      * The wrap search then falls through to the next allowed
      * break instead.
      */
@@ -1729,9 +1728,7 @@ mojibake_line_breaks_with_dict(const char *buf,
  *   selection). It MUST NOT be bare mojibake: bare UAX #29 marks
  *   a word break after every cluster in Thai/Lao/Khmer runs
  *   (double-click then selects one cluster, not a word --
- *   textGrapheme-4.2), and it can return word breaks inside a
- *   grapheme cluster (double-click on e+acute selects only 'e' --
- *   textGrapheme-2.2; ZWJ emoji splits -- textGrapheme-2.4).
+ *   and it can return word breaks inside a grapheme cluster. 
  *   Delegates to the _with_dict implementation, which applies
  *   the dictionary segmenter for complex scripts and the
  *   grapheme-subset filter (a word break is kept only if it is
@@ -1760,8 +1757,8 @@ mojibake_word_breaks(const char *buf,
  *   Plain entry point used by the text widget (word wrap). It
  *   MUST NOT be bare mojibake: bare UAX #14 can return line
  *   breaks inside a grapheme cluster (Lao/Khmer vowel signs /
- *   combining marks strand at a line start -- textGrapheme-5.2,
- *   5.3). Delegates to the _with_dict implementation, which
+ *   combining marks strand at a line start.
+ *   Delegates to the _with_dict implementation, which
  *   applies the dictionary segmenter for complex scripts and
  *   the grapheme-subset filter (a line break is kept only if it
  *   is also a grapheme break) for everything else.
@@ -1793,7 +1790,7 @@ mojibake_line_breaks(const char *buf,
  *   point if the next character may start a line. Without this
  *   check a space before Lao U+0EC6 or Khmer U+17D4 is taken
  *   as a wrap point and the next line starts with the
- *   repetition sign (textGrapheme-5.2, 5.3).
+ *   repetition sign.
  *
  * Results:
  *   Returns 1 if the character at pos may not start a line,
