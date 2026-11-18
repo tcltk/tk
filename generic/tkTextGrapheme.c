@@ -1547,6 +1547,37 @@ WordBreaksWithDictInternal(const char *buf,
 	}
     }
 
+    /*
+     * No-line-start / no-word-start filter: a word break must
+     * never sit before a character that may not start a line
+     * or a word. The grapheme-subset filter above does NOT
+     * catch these: Lao U+0EC6 (KO LA, repetition), Khmer
+     * U+17D4 (SIGN KHAN, repetition) and the other marks in
+     * CannotStartLine are each their own grapheme cluster, so
+     * a break before them survives the grapheme filter. The
+     * line-break wrapper filters them again for line breaks,
+     * but word wrap also consumes this word-break array, so a
+     * break before U+0EC6 / U+17D4 here is what put a wrapped
+     * line starting with U+0EC6 at widths 12 and 20
+     * (textGrapheme-5.2). Clearing the break merges the
+     * repetition sign / mark into the preceding word, which is
+     * what it belongs to: it repeats or modifies that word, it
+     * does not start a new one. Breaks at 0 and byteLen are
+     * always kept. The same filter is applied to lBreaks when
+     * the caller supplied it, so the dictionary fallback's
+     * per-grapheme line breaks get the same treatment here as
+     * in the line-break wrapper.
+     */
+    for (i = 1; i < byteLen; i++) {
+	if (wBreaks[i] && CannotStartLine(DecodeUtf8At(buf, byteLen, i))) {
+	    wBreaks[i] = 0;
+	}
+	if (lBreaks != NULL && lBreaks[i]
+		&& CannotStartLine(DecodeUtf8At(buf, byteLen, i))) {
+	    lBreaks[i] = 0;
+	}
+    }
+
     if (localG) free(localG);
     return 1;
 }
@@ -1749,6 +1780,104 @@ mojibake_line_breaks(const char *buf,
 		     unsigned char *breaks)
 {
     return mojibake_line_breaks_with_dict(buf, byteLen, breaks, NULL, NULL);
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_cannot_start_line_at --
+ *
+ *   Test whether the character starting at byte offset pos in
+ *   buf may start a line. Used by tkTextDisp.c's WordBreakIndex,
+ *   which has a break-after-whitespace path that bypasses the
+ *   break arrays: a break after a space is only a valid wrap
+ *   point if the next character may start a line. Without this
+ *   check a space before Lao U+0EC6 or Khmer U+17D4 is taken
+ *   as a wrap point and the next line starts with the
+ *   repetition sign (textGrapheme-5.2, 5.3).
+ *
+ * Results:
+ *   Returns 1 if the character at pos may not start a line,
+ *   0 otherwise (including pos >= byteLen, where there is no
+ *   next character to orphan).
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_cannot_start_line_at(const char *buf,
+			      size_t byteLen,
+			      size_t pos)
+{
+    if (buf == NULL || pos >= byteLen) {
+	return 0;
+    }
+    return CannotStartLine(DecodeUtf8At(buf, byteLen, pos));
+}
+
+/*
+ * ---------------------------------------------------------------
+ * mojibake_snap_wrap_break --
+ *
+ *   Snap a proposed hard (character-wrap) break so the next line
+ *   never starts inside a grapheme cluster or with a character
+ *   that may not start a line. The break arrays already clear
+ *   those positions, but the text widget's wrap code has a
+ *   second path: when no allowed break fits inside the line
+ *   width, it hard-breaks at the width boundary without
+ *   consulting the array. Call this from that path: pass the
+ *   proposed byte offset and use *adjusted instead. The break
+ *   moves forward to the next grapheme boundary whose first
+ *   codepoint may start a line, pulling the whole cluster onto
+ *   the current line instead of orphaning it. It never moves
+ *   backward, so it never re-opens a line that is already laid
+ *   out.
+ *
+ * Results:
+ *   Returns 1 on success, with *adjusted set to the snapped
+ *   byte offset (byteLen if no such boundary exists).
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+int
+mojibake_snap_wrap_break(const char *buf,
+			 size_t byteLen,
+			 size_t proposed,
+			 size_t *adjusted)
+{
+    unsigned char *gBreaks;
+    size_t pos;
+
+    if (!adjusted) return 0;
+    if (!buf || proposed >= byteLen) {
+	*adjusted = byteLen;
+	return 1;
+    }
+    if (proposed == 0) {
+	*adjusted = 0;
+	return 1;
+    }
+
+    gBreaks = (unsigned char *) malloc(byteLen + 1);
+    if (gBreaks == NULL) {
+	*adjusted = proposed;
+	return 0;
+    }
+    mojibake_grapheme_breaks(buf, byteLen, gBreaks);
+
+    pos = proposed;
+    while (pos < byteLen
+	   && (!gBreaks[pos]
+	       || CannotStartLine(DecodeUtf8At(buf, byteLen, pos)))) {
+	pos++;
+    }
+    *adjusted = pos;
+    free(gBreaks);
+    return 1;
 }
 
 /*

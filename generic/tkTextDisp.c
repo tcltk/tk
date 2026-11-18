@@ -9634,6 +9634,13 @@ ElideMeasureProc(
 }
 
 /*
+ * mojibake_cannot_start_line_at is defined in tkTextGrapheme.c.
+ * It is declared here (rather than in a shared header) because
+ * this file is the only other consumer.
+ */
+int mojibake_cannot_start_line_at(const char *buf, size_t byteLen, size_t pos);
+
+/*
  *--------------------------------------------------------------
  *
  * WordBreakIndex --
@@ -9707,6 +9714,24 @@ WordBreakIndex(
     mojibake_line_breaks_with_dict(chars, (size_t) n, breaks,
 	    breaks + (n + 1), breaks + 2 * (n + 1));
     for (i = bytesThatFit; i > 0; --i) {
+	/*
+	 * A break is only usable if the next line would not start
+	 * with a character that may not start a line. The
+	 * whitespace case below used to accept unconditionally:
+	 * a break after a space before Lao U+0EC6 or Khmer
+	 * U+17D4 was taken as a wrap point, and the next line
+	 * started with the repetition sign -- the whole
+	 * textGrapheme-5.2 / 5.3 failure at width 5 on X11, where
+	 * that space was the last fitting break. The break arrays
+	 * already filter those positions, but this whitespace
+	 * path bypasses them, so it needs the same check. When
+	 * the break is rejected, the scan keeps going for an
+	 * earlier break, which pulls the repetition sign onto the
+	 * preceding line with the word it belongs to.
+	 */
+	if (i < n && mojibake_cannot_start_line_at(chars, (size_t) n, (size_t) i)) {
+	    continue;
+	}
 	switch (chars[i - 1]) {
 	case ' ': case '\t': case '\n': case '\v': case '\f': case '\r':
 	    best = i;
@@ -9861,6 +9886,41 @@ TkTextCharLayoutProc(
 		(size_t) bytesThatFit + 1, &clusterStart)
 		&& clusterStart < (size_t) bytesThatFit) {
 	    bytesThatFit = (Tcl_Size) clusterStart;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
+		    lineOffset + bytesThatFit, lineOffset, -1, chunkPtr->x,
+		    -1, 0, &nextX);
+#else /* !TK_LAYOUT_WITH_BASE_CHUNKS */
+	    bytesThatFit = CharChunkMeasureChars(chunkPtr, p, bytesThatFit,
+		    0, -1, chunkPtr->x, -1, 0, &nextX);
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	}
+    }
+
+    /*
+     * Forward-snap the fitted cut past a character that may not
+     * start a line. The snap above only moves the cut backward
+     * to a cluster boundary; it can still leave the cut exactly
+     * before Lao U+0EC6 or Khmer U+17D4. When no allowed break
+     * is found later, LayoutDLine falls back to cutting at this
+     * chunk's full fitted length, and the next line would start
+     * with the repetition sign (textGrapheme-5.3, width 5).
+     * Pull the whole cluster onto this line instead: a
+     * repetition sign belongs to the preceding word, so it
+     * stays with it even if that overflows the width by one
+     * cluster. This only changes the fallback cut -- when a
+     * real break is found below, breakIndex trims the chunk
+     * back to that break anyway.
+     */
+    if (bytesThatFit > 0 && bytesThatFit < maxBytes
+	    && mojibake_cannot_start_line_at(p, (size_t) maxBytes,
+					     (size_t) bytesThatFit)) {
+	size_t clusterEnd;
+
+	if (mojibake_grapheme_next(p, (size_t) maxBytes,
+		(size_t) bytesThatFit, &clusterEnd)
+		&& clusterEnd > (size_t) bytesThatFit) {
+	    bytesThatFit = (Tcl_Size) clusterEnd;
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
 		    lineOffset + bytesThatFit, lineOffset, -1, chunkPtr->x,
