@@ -1,9 +1,10 @@
 /*
  * tkUnixAccessibility.c --
  *
- * This file implements accessibility/screen-reader support
- * on X11 systems based on the Gnome Accessibility Toolkit.
- * the standard accessibility library for Unix-like systems.
+ * This file implements accessibility/screen-reader support on X11 systems
+ * based on the Gnome Accessibility Toolkit (ATK), the standard accessibility
+ * library for Unix-like systems. The Wayland backend lives in
+ * tkWaylandAccessibility.c.
  *
  * Copyright © 1995 Sun Microsystems, Inc.
  * Copyright © 2006, Marcus von Appen
@@ -13,8 +14,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-
 #include <stdlib.h>
+#include <stdbool.h>
 #include "tkInt.h"
 
 #ifdef HAVE_ATK
@@ -30,8 +31,9 @@ typedef struct _TkAtkAccessible {
     gint x, y, width, height;
     char *path;
     bool is_focused;
-    bool is_active;     /* Toplevels only: window has keyboard focus. */
+    bool is_active;       /* Toplevels only: window has keyboard focus. */
     bool focus_announced; /* Last FOCUSED value sent to AT-SPI (dedupe). */
+    bool visible_announced; /* Last VISIBLE/SHOWING value sent (dedupe). */
     int virtual_count;
 } TkAtkAccessible;
 
@@ -39,7 +41,7 @@ typedef struct _TkAtkAccessibleClass {
     AtkObjectClass parent_class;
 } TkAtkAccessibleClass;
 
-/* Structs to map Tk roles into ATK roles. */
+/* Map Tk roles into ATK roles. */
 
 static const struct AtkRoleMap {
     const char *tkrole;
@@ -148,11 +150,12 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 /* Registration and mapping functions. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 static void UnregisterToplevelWindow(AtkObject *accessible);
-static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
+static bool RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
 static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin);
 static void UpdateAtkFocusChain(Tk_Window focused);
 static void SetWindowActive(TkAtkAccessible *acc, bool active);
 static void NotifyFocus(TkAtkAccessible *acc, bool focused);
+static void NotifyVisible(TkAtkAccessible *acc, bool visible);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 void InitAtkTkMapping(void);
@@ -181,6 +184,8 @@ static void StopSpeech(void);
 static void SpeechExitProc(void *clientData);
 int TkAtkAccessibleObjCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
+int TkUnixAccessibility_Init(Tcl_Interp *interp);
+void TkUnixAccessibility_Finalize(void);
 
 /* Signal IDs for custom AT-SPI signals. */
 static guint window_create_signal_id;
@@ -355,9 +360,9 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 }
 
 /*
- * Accessible children, attributes and state. Here we create create accessible
- * objects from native Tk widgets (buttons, entries, etc.), map them them to
- * the appropriate role, and track them.
+ * Accessible children, attributes and state. Here we create accessible
+ * objects from native Tk widgets (buttons, entries, etc.), map them to the
+ * appropriate role, and track them.
  */
 
 static gint tk_get_n_children(AtkObject *obj)
@@ -610,7 +615,15 @@ static gchar *GetAtkDescriptionForWidget(Tk_Window win)
 static const gchar *tk_get_description(AtkObject *obj)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    return GetAtkDescriptionForWidget(acc->tkwin);
+
+    if (!acc || !acc->tkwin) return NULL;
+
+    /* Store in obj->description so the returned pointer stays valid and
+     * the previous string is released instead of leaked. */
+    gchar *desc = GetAtkDescriptionForWidget(acc->tkwin);
+    g_free(obj->description);
+    obj->description = desc;
+    return obj->description;
 }
 
 static AtkStateSet *tk_ref_state_set(AtkObject *obj)
@@ -1028,7 +1041,7 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
 }
 
 /*
- * ATK select interface. Stubs only since we handle selection at
+ * ATK selection interface. Stubs only since we handle selection at
  * script level for virtual widgets.
  */
 
@@ -1247,8 +1260,7 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
     TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)accessible);
 
     if (Tk_IsMapped(tkwin)) {
-	atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_VISIBLE, TRUE);
-	atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_SHOWING, TRUE);
+	NotifyVisible((TkAtkAccessible *)accessible, true);
     }
 }
 
@@ -1272,16 +1284,17 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 }
 
 /* Recursively register widget and all its children with proper events. */
-static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
+static bool RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 {
-    if (!tkwin) return;
+    if (!tkwin) return false;
 
     AtkObject *acc = GetAtkObjectForTkWindow(tkwin);
+    bool createdAny = (acc == NULL);
 
     /* Create accessible object if it doesn't exist. */
     if (!acc) {
 	acc = TkCreateAccessibleAtkObject(interp, tkwin, Tk_PathName(tkwin));
-	if (!acc) return;
+	if (!acc) return false;
 
 	AtkObject *parentAcc = NULL;
 
@@ -1320,19 +1333,18 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 	    TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)acc);
 	}
 
-	/* Notify visibility if already mapped. */
+	/* Notify visibility if already mapped (once per transition). */
 	if (Tk_IsMapped(tkwin)) {
-	    atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
-	    atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+	    NotifyVisible((TkAtkAccessible *)acc, true);
 
-	    /* Also ensure SHOWING state is set for parents. */
+	    /* Also ensure ancestors that are mapped have been announced. */
 	    Tk_Window current = tkwin;
 	    while (current && !Tk_IsTopLevel(current)) {
 		Tk_Window parent = Tk_Parent(current);
-		if (parent) {
+		if (parent && Tk_IsMapped(parent)) {
 		    AtkObject *pAcc = GetAtkObjectForTkWindow(parent);
 		    if (pAcc) {
-			atk_object_notify_state_change(pAcc, ATK_STATE_SHOWING, TRUE);
+			NotifyVisible((TkAtkAccessible *)pAcc, true);
 		    }
 		}
 		current = parent;
@@ -1353,16 +1365,22 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
     for (child = ((TkWindow*)tkwin)->childList;
 	 child != NULL;
 	 child = child->nextPtr) {
-	RegisterWidgetRecursive(interp, (Tk_Window)child);
+	if (RegisterWidgetRecursive(interp, (Tk_Window)child)) {
+	    createdAny = true;
+	}
     }
 
-    /* After registering all children, emit one more children-changed
-     * for this container to ensure ATK sees all children. */
-    if (acc) {
+    /* After registering new children, emit one more children-changed
+     * for this container so ATK sees all of them. Only when something was
+     * actually created: add_acc_object is called repeatedly on the same
+     * widgets, and re-announcing an unchanged subtree every time floods
+     * Orca with ChildrenChanged signals. */
+    if (acc && createdAny) {
 	g_signal_emit_by_name(acc, "children-changed::add",
 			      atk_object_get_n_accessible_children(acc),
 			      NULL);
     }
+    return createdAny;
 }
 
  /*  Function to ensure a widget and all its ancestors are in the ATK hierarchy. */
@@ -1408,8 +1426,7 @@ static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
 
 		/* Update state if widget is mapped. */
 		if (Tk_IsMapped(win)) {
-		    atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
-		    atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+		    NotifyVisible((TkAtkAccessible *)acc, true);
 		}
 	    }
 	}
@@ -1462,12 +1479,11 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 }
 
 /*
- * Root window setup. These are the foundation of the
- * accessibility object system in ATK. The root object is the
- * critical link to at-spi - atk_get_root() returns it and at-spi
- * bridge initialization fails if it is not provided. It is
- * provided by setting the get_root method of the AtkUtil class,
- * see TkAtkAccessibility_Init().
+ * Root window setup. These are the foundation of the accessibility object
+ * system in ATK. The root object is the critical link to at-spi:
+ * atk_get_root() returns it and at-spi bridge initialization fails if it is
+ * not provided. It is provided by setting the get_root method of the AtkUtil
+ * class, see TkUnixAccessibility_Init().
  */
 
 static AtkObject *tk_util_get_root(void)
@@ -1599,7 +1615,8 @@ void TkAtkAccessible_RegisterEventHandlers(Tk_Window tkwin, void *tkAccessible)
 
 }
 
-/* Respond to widget creation - Wayland-safe, no X11 Window ID lookup */
+/* Respond to widget creation. No X11 Window ID lookup, so it also works
+ * under any future backend that reuses the X event source. */
 static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
@@ -1630,15 +1647,14 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
 	gint idx = atk_object_get_n_accessible_children(parentAcc);
 	g_signal_emit_by_name(parentAcc, "children-changed::add", idx > 0 ? idx - 1 : 0, childAcc);
 	if (Tk_IsMapped(childWin)) {
-	    atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
-	    atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
+	    NotifyVisible((TkAtkAccessible *)childAcc, true);
 	}
     }
 }
 
 
 
-/* Respond to destroy - Wayland-safe */
+/* Respond to destroy. */
 static void TkAtkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
@@ -1672,7 +1688,7 @@ static void TkAtkAccessible_DestroyHandler(void *clientData, XEvent *eventPtr)
 }
 
 
-/* Respond to configure - Wayland-safe */
+/* Respond to configure. */
 static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
@@ -1685,10 +1701,14 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
     if (!accObj) return;
     gint x, y, w, h;
     tk_get_extents(ATK_COMPONENT(accObj), &x, &y, &w, &h, ATK_XY_SCREEN);
+    /*
+     * ConfigureNotify arrives for every geometry change. Announce only real
+     * mapped/unmapped transitions, not every resize/move.
+     */
     if (Tk_IsMapped(tkwin)) {
-	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, TRUE);
-	atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, TRUE);
-	if (!Tk_IsTopLevel(tkwin)) {
+	bool wasVisible = ((TkAtkAccessible *)accObj)->visible_announced;
+	NotifyVisible((TkAtkAccessible *)accObj, true);
+	if (!wasVisible && !Tk_IsTopLevel(tkwin)) {
 	    AtkObject *parentAcc = GetAtkObjectForTkWindow(Tk_Parent(tkwin));
 	    if (parentAcc) {
 		gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
@@ -1697,8 +1717,7 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
 	    }
 	}
     } else {
-	atk_object_notify_state_change(accObj, ATK_STATE_SHOWING, FALSE);
-	atk_object_notify_state_change(accObj, ATK_STATE_VISIBLE, FALSE);
+	NotifyVisible((TkAtkAccessible *)accObj, false);
     }
 }
 
@@ -1718,6 +1737,25 @@ static void NotifyFocus(TkAtkAccessible *acc, bool focused)
     atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_FOCUSED, focused);
 }
 
+/*
+ * Tell AT-SPI that a widget became visible/hidden - once per real transition.
+ * Every extra VISIBLE/SHOWING emission is a D-Bus signal that Orca has to
+ * receive and react to, so repeats (e.g. one per ConfigureNotify, or one per
+ * ancestor every time a child registers) must not be sent.
+ */
+static void NotifyVisible(TkAtkAccessible *acc, bool visible)
+{
+    if (!acc || acc->visible_announced == visible) return;
+    acc->visible_announced = visible;
+    if (visible) {
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_VISIBLE, TRUE);
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_SHOWING, TRUE);
+    } else {
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_SHOWING, FALSE);
+	atk_object_notify_state_change(ATK_OBJECT(acc), ATK_STATE_VISIBLE, FALSE);
+    }
+}
+
 /* Mark a toplevel (frame) active/inactive and tell AT-SPI. */
 static void SetWindowActive(TkAtkAccessible *acc, bool active)
 {
@@ -1729,7 +1767,7 @@ static void SetWindowActive(TkAtkAccessible *acc, bool active)
     g_signal_emit_by_name(obj, active ? "activate" : "deactivate");
 }
 
-/* Respond to focus - Wayland-safe, driven by the FocusIn/FocusOut event type. */
+/* Respond to focus, driven by the FocusIn/FocusOut event type. */
 static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
@@ -1768,7 +1806,7 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 /*
  *----------------------------------------------------------------------
  *
- * Tcl command implementations - expose these API's to Tcl scripts and
+ * Tcl command implementations - expose these APIs to Tcl scripts and
  * initialize ATK integration in Tcl/Tk.
  *
  *----------------------------------------------------------------------
@@ -1871,7 +1909,7 @@ static int EmitFocusChanged(
 	return TCL_ERROR;
     }
 
-    /* No-op on Wayland. All work is done in FocusHandler. */
+    /* No-op: the FocusIn/FocusOut handler already does all the work. */
 
     return TCL_OK;
 }
@@ -2117,7 +2155,7 @@ SpeakCmd(
  * TkAtkAccessibleObjCmd --
  *
  *   Main command for adding and managing accessibility objects to Tk
- *   widgets on Linux using the ATK accessibility API.
+ *   widgets on X11 using the ATK accessibility API.
  *
  * Results:
  *
@@ -2172,9 +2210,8 @@ int TkAtkAccessibleObjCmd(
 
 #ifdef HAVE_ATK
 int
-TkWaylandAccessibility_Init(Tcl_Interp *interp)
+TkUnixAccessibility_Init(Tcl_Interp *interp)
 {
-
     AtkUtilClass *utilClass;
 
     /*
@@ -2225,8 +2262,7 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
 	    g_signal_emit_by_name(tk_root_accessible, "children-changed::add", idx, top);
 	}
 	if (Tk_IsMapped(((TkAtkAccessible*)top)->tkwin)) {
-	    atk_object_notify_state_change(top, ATK_STATE_SHOWING, TRUE);
-	    atk_object_notify_state_change(top, ATK_STATE_VISIBLE, TRUE);
+	    NotifyVisible((TkAtkAccessible *)top, true);
 	}
     }
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
@@ -2244,11 +2280,11 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
 int
 TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-    return TkWaylandAccessibility_Init(interp);
+    return TkUnixAccessibility_Init(interp);
 }
 
 void
-TkWaylandAccessibility_Finalize(void)
+TkUnixAccessibility_Finalize(void)
 {
     StopSpeech();
     if (tk_to_atk_map) {
@@ -2282,7 +2318,7 @@ TkAccessibleStubObjCmd(TCL_UNUSED(void *), Tcl_Interp *interp,
 }
 
 int
-TkWaylandAccessibility_Init(Tcl_Interp *interp)
+TkUnixAccessibility_Init(Tcl_Interp *interp)
 {
     Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkAccessibleStubObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", TkAccessibleStubObjCmd, NULL, NULL);
@@ -2295,11 +2331,11 @@ TkWaylandAccessibility_Init(Tcl_Interp *interp)
 int
 TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-    return TkWaylandAccessibility_Init(interp);
+    return TkUnixAccessibility_Init(interp);
 }
 
 void
-TkWaylandAccessibility_Finalize(void)
+TkUnixAccessibility_Finalize(void)
 {
 }
 
@@ -2312,4 +2348,3 @@ TkWaylandAccessibility_Finalize(void)
  * fill-column: 78
  * End:
  */
-

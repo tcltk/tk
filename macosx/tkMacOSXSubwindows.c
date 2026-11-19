@@ -58,8 +58,8 @@ XDestroyWindow(
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
 #if 0
     fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
-    	    Tk_PathName(macWin->winPtr),
-    	    Tk_PathName(macWin->winPtr->parentPtr));
+	    Tk_PathName(macWin->winPtr),
+	    Tk_PathName(macWin->winPtr->parentPtr));
 #endif
     /*
      * Remove any dangling pointers that may exist if the window we are
