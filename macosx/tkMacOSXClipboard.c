@@ -61,6 +61,8 @@ static Tk_Window tkClipboardOwner = NULL;
 - (void) pasteboard: (NSPasteboard *) sender
 	provideDataForType: (NSString *) type
 {
+    (void) sender;
+    (void) type;
     TkDisplay *dispPtr = TkGetDisplayList();
     [self tkProvidePasteboard:dispPtr
 		   pasteboard:[NSPasteboard generalPasteboard]
