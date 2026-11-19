@@ -1,12 +1,10 @@
 # icu.test -- direct tests for the ::tk:: break commands.
 #
 # These test the PUBLIC contract, which the widget-level tests in
-# textGraphemeNul.test cannot: the index argument and the result are
+# textGrapheme.test cannot: the index argument and the result are
 # Tcl CHAR indices, not byte offsets. The byte-vs-char bug (returning
 # 4 for ::tk::startOfCluster "\U0001F600x" 1 instead of 1) passes
 # every ASCII test and every widget test, and fails only here.
-# Run with: tclsh icu.test  (from the Tk tests directory, as for
-# the other .test files) -- no GUI needed, these are pure commands.
 
 package require tcltest 2.2
 source [file join [tcltest::configure -testdir] main.tcl]

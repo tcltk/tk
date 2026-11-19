@@ -1,7 +1,6 @@
 # This file is a Tcl script to test the NUL / grapheme-cluster handling
 # in the text widget display code (tkTextDisp.c / tkTextGrapheme.c).
 #
-# Copyright © 2026 Kevin Walzer. All rights reserved.
 #
 # The test is widget-level, not C-level: it exercises the paths a user
 # actually hits -- wrapping, cursor movement, double-click word
