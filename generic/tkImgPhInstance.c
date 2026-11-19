@@ -990,7 +990,7 @@ TkImgPhotoInstanceSetSize(
 	    || (instancePtr->error == NULL)) {
 	if (modelPtr->height > 0 && modelPtr->width > 0) {
 	    size_t newErrSize;
-	    if (modelPtr->width > SIZE_MAX / 3 / modelPtr->height) {
+	    if ((size_t)modelPtr->width > SIZE_MAX / 3 / modelPtr->height) {
 		Tcl_Panic("image too large");
 	    }
 	    newErrSize = (size_t)modelPtr->height * modelPtr->width * 3 * sizeof(schar);
@@ -1011,8 +1011,6 @@ TkImgPhotoInstanceSetSize(
 	    if (validBox.y + validBox.height > instancePtr->height) {
 		validBox.height = instancePtr->height - validBox.y;
 	    }
-	    if (validBox.width < 0) validBox.width = 0;
-	    if (validBox.height < 0) validBox.height = 0;
 
 	    if ((instancePtr->error != NULL)
 		    && ((instancePtr->width == modelPtr->width)
