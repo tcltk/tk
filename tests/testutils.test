@@ -713,28 +713,36 @@ testutils forget event
 #
 testutils import pointer
 
-test waitForPointerWin-1.0 {timeout} -setup {
-    wm deiconify .
-    wm geometry . 200x200+100+100
-    update
-    event generate . <Motion> -warp 1 -x -50 -y 100
-    update
-    assert {[getPointerWin] eq ""}
-} -body {
-    after 10 {event generate . <Motion> -warp 1 -x 100 -y 100}
-    waitForPointerWin . 1
-} -result {waiting for window "." to become the pointer window timed out (> 1 ms)} -returnCodes error
+test waitForPointerWin-1.0 {timeout} -body {
+    #
+    # Let the initial pointer position determine the window parameter passed to
+    # waitForPointerWin.
+    #
+    waitForPointerWin [expr {[getPointerWin] eq "."?{}:"."}] 1
+} -result {waiting for window * to become the pointer window timed out (> 1 ms)} -returnCodes error -match glob
 
-test waitForPointerWin-1.1 {condition reached} -setup {
+test waitForPointerWin-1.1 {condition reached, two cases: warp into Tk root window and into root window of the screen} -setup {
+    deleteWindows
     wm deiconify .
     wm geometry . 200x200+100+100
     update
-    event generate . <Motion> -warp 1 -x -50 -y 100
-    update
-    assert {[getPointerWin] eq ""}
 } -body {
-    after 10 {event generate . <Motion> -warp 1 -x 100 -y 100}
+    #
+    # Let the initial pointer position determine the order of the two cases
+    #
+    set initPos [getPointerWin]
+    if {$initPos eq "."} {
+	after 1 {event generate . <Motion> -warp 1 -x 250 -y 100}
+	waitForPointerWin {}
+    }
+    after 1 {event generate . <Motion> -warp 1 -x 100 -y 100}
     waitForPointerWin .
+    if {$initPos eq {}} {
+	after 1 {event generate . <Motion> -warp 1 -x 250 -y 100}
+	waitForPointerWin {}
+    }
+} -cleanup {
+    unset -nocomplain initPos
 } -result {} -returnCodes ok
 
 #
