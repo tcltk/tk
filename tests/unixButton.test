@@ -259,10 +259,7 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     deleteWindows
     catch {unset value}
 } -body {
-    #
-    # This test is only meant to show an appearance-related bug. It doesn't
-    # FAIL if the bug is present.
-    #
+    # this was just a visual bug, but at least this shows the visual
     set on 1
     set off 0
     label .l -text "The following widgets should\
@@ -285,7 +282,7 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
     radiobutton .rb3 -anchor w -state disabled \
 	-text Selected -variable on -value 1 -disabledforeground ""
     pack .l .cb0 .cb1 .cb2 .cb3 .rb0 .rb1 .rb2 .rb3 -side top -fill x
-    pause -eyefriendly 5000
+    after 400
     set on
 } -cleanup {
     deleteWindows
