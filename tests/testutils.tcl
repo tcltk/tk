@@ -181,7 +181,7 @@ proc deleteWindows {} {
 	}
 	if {$argc == 2} {
 	    if {[lindex $args 0] eq "-eyefriendly"} {
-		if {! $::tktestConf(-eyefriendly)} {
+		if {![info exists ::tktestConf(-eyefriendly)] || !$::tktestConf(-eyefriendly)} {
 		    return
 		}
 	    } else {
