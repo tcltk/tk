@@ -195,7 +195,7 @@ test evalWhen-1.1 {custom timeout handler} -setup {
     unset -nocomplain x y z
 } -result "0 {}" -output "custom time out for when#*" -match glob
 
-test evalWhen-2.1 {script evaluated after condition reached while waiting} -setup {
+test evalWhen-2.1 {script evaluated after condition was reached while waiting} -setup {
     deleteTimerEvents
     wm deiconify .
 } -body {
@@ -221,7 +221,7 @@ test evalWhen-2.1 {script evaluated after condition reached while waiting} -setu
     list $x [after info]
 } -cleanup {
     destroy .f
-    unset -nocomplain duration x
+    unset -nocomplain x
 } -result "22 {}"
 
 test evalWhen-2.2 {cancel} -setup {
@@ -436,6 +436,11 @@ test waitForWindowEvent-1.1 {don't stop waiting if event received by child of in
 		     # "pack forget .f" after the first mapping, but we don't
 		     # care about that.
 } -body {
+    #
+    # Note: we generate the event for ".f", and wait for it to be received by "."
+    # While "." is included in the binding tags for ".f", waitForWindowEvent
+    # should not be led astray by that.
+    #
     after 50 {event generate .f <<WaitForEvent>>}
     waitForWindowEvent . <<WaitForEvent>> 100
 } -cleanup {
@@ -454,12 +459,11 @@ test waitForWindowEvent-1.2 {stop waiting if event received by intended toplevel
     if {$timingDebug} {
 	#
 	# On a system that allows the current test process ample time, the expected
-	# duration for the condition to be evaluated as true is exactly 50 ms.
+	# duration for the condition to be evaluated as true is 50 ms.
 	#
 	puts "duration = [dt.get] (50 expected)"
 	testutils forget timing
     }
-    unset -nocomplain duration
 } -result {}
 
 #
